@@ -1,0 +1,108 @@
+/* dataTables overrides */
+.dataTables_filter {
+	float: none;
+	text-align: left;
+	display:inline-block;
+}
+.dataTables_paginate {
+	float: none;
+	text-align: left;
+	vertical-align: middle;
+	padding-left: 25px;
+	display:inline-block;
+}
+.dataTables_info {
+	float: none;
+	display:inline-block;
+	padding-left: 18px;
+}
+.dataTables_wrapper .myHeader {
+	padding-bottom: 5px;
+}
+
+/* imgareaselect overrides */
+.imgareaselect-outer {
+    background-color: #000000;
+    opacity: 0;
+}
+.imgareaselect-selection {
+    background-color: #ffffff;
+	opacity: .7;
+}
+.imgareaselect-border1,
+.imgareaselect-border2,
+.imgareaselect-border3,
+.imgareaselect-border4 {
+	opacity: 1;
+}
+
+/* clueTip overrides */
+div.ui-cluetip {
+    font-size: .8em;
+}
+.cluetip-inner {
+	border: 0px;
+	border-radius: 5px;
+}
+.ui-widget-content a {
+	color: #3a6fff;
+}
+div.clue-right-rounded .cluetip-arrows {
+	border-right-color: #f00;
+}
+div.clue-top-rounded .cluetip-arrows {
+	border-top-color: #f00;
+}
+div.clue-left-rounded .cluetip-arrows {
+	border-left-color: #f00;
+}
+div.clue-bottom-rounded .cluetip-arrows {
+	border-bottom-color: #f00;
+}
+.ui-cluetip-header, .ui-cluetip-content {
+    padding: .4em .4em .4em .7em;
+}
+
+/* jQuery-UI overrides */
+.ui-widget {
+	font-size: .8em;
+}
+/*
+.ui-widget-header {
+	font-weight: normal;
+}
+*/
+.ui-icon {
+	cursor: pointer;
+}
+.ui-button {
+    margin-right: 0;
+}
+.ui-buttonset .ui-button {
+    margin-right: -1px;
+}
+.ui-button-text-only .ui-button-text {
+	font-size: .85em;
+}
+.ui-button-text-only .ui-button-text, input.ui-button {
+	padding: .1em .4em;
+}
+.ui-dialog .ui-dialog-titlebar {
+	height: 1.2em;
+}
+.ui-dialog .ui-dialog-content {
+	padding-top: .8em;
+	padding-left: .8em;
+	padding-right: .8em;
+}
+.ui-dialog .ui-dialog-content p {
+	margin-top: 0;
+	margin-bottom: .8em;
+}
+.ui-dialog .ui-dialog-buttonpane {
+	padding: 0;
+	margin: 0;
+}
+.ui-resizable-handle {
+	z-index: auto;
+}

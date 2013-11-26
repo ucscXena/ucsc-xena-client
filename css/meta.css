@@ -1,0 +1,97 @@
+#body {
+	overflow-x: scroll;
+	overflow-y: hidden;
+	font-size: .95em;
+}
+.cbHeader,
+.cbHeader>.ui-buttonset,
+.cbHeader>button,
+.cbHeader>span,
+.cbHeader>img {
+	vertical-align: top;
+}
+.cbHeader {
+	display: table-cell;
+	border: 1px solid transparent;
+}
+.cbHeader>.ui-buttonset,
+.cbHeader>button {
+	margin-top: 3px;
+}
+.cbHeader>select,
+.cbHeader>span {
+	margin-top: 2px;
+}
+.cbHeader>img {
+	padding: 2px;
+	margin-top: 2px;
+	cursor: pointer;
+}
+.cbHeader>img.inactive {
+	opacity: .3;
+	cursor: default;
+	background: transparent;
+	border: 1px solid transparent;
+}
+.cbHeader>img.invisible {
+	cursor: default;
+}
+.tupleLabel,
+.tupleLabelLeft,
+.tupleLabelBold,
+.tupleLabelBoldLeft {
+	text-align: right;
+	font-weight: normal;
+	vertical-align: middle;
+	padding: .2em .3em;
+	white-space: nowrap;
+}
+.tupleLabelLeft,
+.tupleLabelBoldLeft {
+	text-align: left;
+}
+.tupleLabelBold,
+.tupleLabelBoldLeft {
+	font-weight: bold;
+}
+.tupleButton {
+	text-align: right;
+	padding: .2em .3em;
+	white-space: nowrap;
+}
+.tupleValue {
+	text-align: left;
+	vertical-align: middle;
+	padding: .2em .3em;
+}
+select { /* fix up webkit font-size */
+	border-style: inset;
+	font-size: inherit;
+	background: -moz-linear-gradient(top, #ffffff, #e5e5e5);
+}
+option {
+	background-color: #ffffff;
+}
+.left {
+	float: left;
+}
+.right {
+	float: right;
+}
+.ui-button.iconButton {
+	padding: 2px;
+}
+.iconButton>.ui-button-text {
+	height: 16px;
+	padding: 0;
+}
+.ui-button.shy {
+	border: 1px solid transparent;
+	background: transparent;
+}
+.stripe1 {
+	background-color: #f4f4f4;
+}
+.stripe2 {
+	background-color: #ffffff;
+}

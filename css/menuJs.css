@@ -1,0 +1,40 @@
+/* extensions to menu.css used for javaScript-enabled menus */
+
+.menu .dropDown {
+	border: 2px inset #cccccc;
+	white-space: nowrap;
+}
+.menu .dropDown .rolledUpLabel {
+	padding-left: 3px;
+}
+.menu .dropDown .triangle {
+	vertical-align: middle;
+	border: 2px outset #cccccc;
+}
+.menu .list {
+	display: block;
+	position: fixed;
+}
+.menu .itemAlt:nth-child(odd) {
+	background: #ffffff;
+}
+.menu .hoverIcon {
+	display: inline-block;
+	vertical-align: bottom;
+	opacity: 0;
+}
+.menu .ui-icon-search {
+	display: inline-block;
+	vertical-align: middle;
+	margin-bottom: 4px;
+	cursor: default;
+}
+.menu .search {
+	margin-left: -3px;
+	margin-top: 2px;
+	margin-bottom: 2px;
+	width: 10em;
+}
+.menu .checkbox {
+	margin-left: 0;
+}

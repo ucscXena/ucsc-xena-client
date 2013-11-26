@@ -1,0 +1,6 @@
+%ul{class:'list'}
+  - if(topLabel !== undefined) {
+    %li{class:'noSelect'} =topLabel
+  %li{class:'noSelect', style:'padding-left:0'}
+    %div{class:'noSelect ui-icon ui-icon-search'}
+    %input{class:'search noSelect focus', type:'text', title:'Enter part of feature name'}

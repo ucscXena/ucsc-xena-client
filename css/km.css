@@ -1,0 +1,100 @@
+
+.kmDialog .axis path,
+.kmDialog .axis line {
+	fill: none;
+	stroke: #000;
+	shape-rendering: crispEdges;
+}
+
+.kmDialog .x.axis path {
+	display: none;
+}
+
+.kmDialog path.line {
+	fill: none;
+	stroke-width: 2.0px;
+}
+
+path.outline {
+	fill: none;
+	stroke: gray !important;
+	stroke-width: 3.0px;
+}
+
+.kmDialog line.line {
+	fill: none;
+	stroke-width: 1.0px;
+}
+
+.kmDialog line.outline {
+	fill: none;
+	stroke: gray !important;
+	stroke-width: 2.0px;
+}
+
+
+.kmDialog .subgroup:hover text {
+	font-weight: bold;
+}
+
+.kmDialog .subgroup:hover path.line {
+	stroke-width: 3.0px;
+}
+
+.kmDialog .subgroup:hover path.outline {
+	stroke-width: 5.0px;
+}
+
+.kmDialog .subgroup:hover line.line {
+	stroke-width: 2.0px;
+}
+
+.kmDialog .subgroup:hover line.outline {
+	stroke-width: 3.0px;
+}
+
+
+.kmdiv {
+	position: relative;
+}
+
+.kmopts {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: white;
+	border-color: black;
+	border-width: 2px;
+	border-style: solid;
+	margin: 5px;
+	padding: 10px;
+	width: auto;
+	display: none;
+	z-index: 10;
+}
+
+.kmopts p {
+	width: 60em;
+}
+
+.kmScreen {
+	position: absolute;
+	background-color: #F8F8F8;
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	z-index: 5;
+	display: none;
+}
+
+.kmScreen.notify {
+	display: block;
+}
+.kmDialog .featureLabel {
+	float: left;
+	padding-top: 5px;
+	padding-right: 20px;
+	font-weight: bold;
+}

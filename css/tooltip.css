@@ -1,0 +1,18 @@
+#tooltip
+{
+	padding: 2px 4px;
+	display: none;
+	position: absolute;
+	overflow: hidden;
+	text-align: left;
+	font-size: .7em;
+	z-index: 1;
+}
+#tooltip .tupleLabel {
+	vertical-align: top;
+	padding: 0 .4em 0 0;
+}
+#tooltip .tupleValue {
+	vertical-align: top;
+	padding: 0;
+}
