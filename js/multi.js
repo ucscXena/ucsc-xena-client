@@ -15,8 +15,7 @@ define([], function () {
 	function multi(dispatchfn) {
 		var methods = {},
 			fn = function () {
-				var dispatch = fn.dispatchfn.apply(this, arguments),
-					method = methods[dispatch] || fn.dflt;
+				var method = fn.getmethod.apply(this, arguments);
 
 				if (typeof method !== 'function') {
 					throw new Error('No method for ' + dispatch);
@@ -24,6 +23,10 @@ define([], function () {
 				return method.apply(this, arguments);
 			};
 
+		fn.getmethod = function() {
+			var dispatch = fn.dispatchfn.apply(this, arguments);
+			return methods[dispatch] || fn.dflt;
+		};
 		fn.dispatchfn = dispatchfn;
 		fn.add = function (dispatch, fn) {
 			methods[dispatch] = fn;

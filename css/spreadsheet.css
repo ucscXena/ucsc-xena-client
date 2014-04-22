@@ -1,0 +1,12 @@
+div.spreadsheet {
+	background-color: LightGray;
+}
+
+div.spreadsheet div {
+	display: inline-block;
+}
+
+div.spreadsheet-column {
+	background-color: white;
+	border: 1px solid black;
+}

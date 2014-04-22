@@ -41,4 +41,3 @@ define(["jquery", "lib/underscore"], function ($, _) {
 		return _.defer;
 	}
 });
-

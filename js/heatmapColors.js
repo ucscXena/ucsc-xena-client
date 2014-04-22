@@ -30,8 +30,13 @@ define(["lib/d3",
 		};
 	}
 
-	color_range = multi(function (settings, feature) {
-		return feature.model.filtertype;
+	// XXX this is wrong. Need to figure out the correct dispatch
+	// fn.
+	color_range = multi(function (settings, features, codes) {
+		if (features && features.VALUETYPE === 'category' && codes) {
+			return 'coded';
+		}
+		return 'minMax';
 	});
 
 	function color_float_negative(low, zero, min, max) {
@@ -54,9 +59,9 @@ define(["lib/d3",
 			.range([low, zero, high]);
 	}
 
-	function color_float(low, zero, high, settings, feature) {
+	function color_float(low, zero, high, settings, feature, codes, data) {
 		var colorfn,
-			values = _.values(feature.values),
+			values = _.values(data || [0]), // handle degenerate case
 			max = d3.max(values),
 			min;
 
@@ -74,8 +79,8 @@ define(["lib/d3",
 		return saveUndefined(colorfn);
 	}
 
-	function color_category(settings, feature) {
-		return saveUndefined(scale_category19().domain(range(feature.codes.length)));
+	function color_category(settings, feature, codes) {
+		return saveUndefined(scale_category19().domain(range(codes.length)));
 	}
 
 	return {
