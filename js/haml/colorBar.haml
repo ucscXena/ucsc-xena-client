@@ -1,0 +1,6 @@
+%table
+  %tbody
+    %tr
+      - _.each(colors, function (color, i) {
+        %td{class:'color', title:tooltips[i], style:'background-color:' + color} =labels[i]
+        -#%td{class:'color', style:'background-color:' + color, title:tooltips[i]} =labels[i]

@@ -1,0 +1,49 @@
+%table
+    %colgroup
+      %col{class:'labelCol'}
+      %col{class:'valueCol'}
+      %col{class:'closeCol'}
+
+    %tr
+    - if (sampleID) {
+        %td{class: 'tupleLabel'} Sample:
+        %td{class: 'tupleValue'} = sampleID
+    - } else {
+        %td
+        %td
+    - }
+      %td
+        %div{id:'tooltipClose', class:'ui-icon ui-icon-closethick', title:'Close and unfreeze'}
+        %div{style:'clear:both'}
+
+    - if (dsID) {
+      %tr
+        %td{class: 'tupleLabel'} Dataset:
+        %td{class: 'tupleValue', colspan:2} = dsID
+    - if (pos) {
+      %tr
+        %td{class: 'tupleLabel'} GRCh37/hg19:
+        %td{class: 'tupleValue', colspan:2} = pos
+    - if (gene) {
+      %tr
+        %td{class: 'tupleLabel'} Gene:
+        %td{class: 'tupleValue', colspan:2} = gene
+    - if (probe) {
+      %tr
+        %td{class: 'tupleLabel'} Probe:
+        %td{class: 'tupleValue', colspan:2} = probe
+    - if (feature) {
+      %tr
+        %td{class: 'tupleLabel'} Feature:
+        %td{class: 'tupleValue', colspan:2} = feature
+    - if (val !== undefined) {
+      %tr
+        %td{class: 'tupleLabel'} Value:
+        %td{id: 'tooltipVal', class: 'tupleValue', colspan:2} = val
+    - _.each(vals, function(s, i) {
+      %tr
+        %td{class: 'tupleLabel'} = s.label + ':'
+        %td{id: s.val + 'Val', class: 'tupleValue', colspan:2} = s.val
+    %tr
+      %td
+      %td{id:'tooltipPrompt', class:'tupleValue', colspan:2}

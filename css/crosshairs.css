@@ -1,0 +1,15 @@
+.crosshairH {
+	width: 100%;
+	height: 1px;
+}
+.crosshairV {
+	height: 100%;
+	width: 1px;
+}
+.crosshair {
+	display: none;
+	position: fixed;
+	background-image:url('../images/dots.gif');
+	pointer-events: none;
+	z-index: 999999;
+}

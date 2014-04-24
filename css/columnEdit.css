@@ -1,0 +1,16 @@
+.columnEdit {
+	margin-bottom: 10px;
+}
+.columnEdit .geneValues {
+	white-space: nowrap;
+}
+.columnEdit .columnTypeLabel,
+.columnEdit .advancedLabel {
+	padding-top: .5em;
+}
+.columnEdit .advancedLabel {
+	cursor: pointer;
+}
+.columnEdit .advancedLabel:hover {
+	text-decoration: underline;
+}
