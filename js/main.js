@@ -1,7 +1,8 @@
 /*jslint browser: true, regexp: true */
 /*global define: false, require: false */
 
-define(['jquery',
+define(['haml!haml/spreadsheet',
+		'jquery',
 		'underscore_ext',
 		'rx',
 		'columnModels',
@@ -12,6 +13,7 @@ define(['jquery',
 		'cursor',
 		'lib/jquery-ui',
 		'rx.async'], function (
+			template,
 			$,
 			_,
 			Rx,
@@ -54,9 +56,10 @@ define(['jquery',
 		sessionStorage['state'] = JSON.stringify(state);
 	});
 
-	var topdiv = $('#testing');
+	$('#main').append(template());
+	var topdiv = $('.spreadsheet');
 
-	topdiv.addClass('spreadsheet').css({height: 100}).resizable();
+	topdiv.css({height: 100}).resizable();
 
 	// XXX handler might leak
 	var resizes = topdiv.onAsObservable("resizestop")
@@ -88,12 +91,12 @@ define(['jquery',
 	};
 	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths);
 	var spreadsheetCursor = cursor(writeState, spreadsheetPaths);
-	var colsub = spreadsheet(spreadsheetState, spreadsheetCursor, $('#testing')); // XXX returns disposable
+	var colsub = spreadsheet(spreadsheetState, spreadsheetCursor, topdiv); // XXX returns disposable
 
 	var debugstream = new Rx.Subject();
 	model.addStream(debugstream);
 	var debugtext = $('<textarea></textarea>');
-	$('#testing').parent().append(debugtext);
+	topdiv.parent().append(debugtext);
 	debugtext.on('keydown', function (ev) {
 		var newcol;
 		if (ev.keyCode === 13 && ev.shiftKey === true) {
@@ -110,7 +113,7 @@ define(['jquery',
 		}
 	});
 	var debugstate = $('<textarea></textarea>');
-	$('#testing').parent().append(debugstate);
+	topdiv.parent().append(debugstate);
 	debugstate.on('keydown', function (ev) {
 		var newcol;
 		if (ev.keyCode === 13 && ev.shiftKey === true) {
@@ -136,7 +139,7 @@ define(['jquery',
 
 
 //	var cols = $('<div></div>');
-//	$('#testing').append(cols);
+//	topdiv.append(cols);
 //	cols.append($('<div style="display:inline-block">one</div><div style="display:inline-block">two</div><div style="display:inline-block">three</div>'));
 //	$(cols).children().resizable({handles: "e"});
 });

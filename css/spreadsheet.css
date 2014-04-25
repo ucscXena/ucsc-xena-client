@@ -1,12 +1,26 @@
-div.spreadsheet {
+.spreadsheet {
+	position: relative;
+	/*display: inline-block; TODO was used before merge with brian's initial code */
 	background-color: LightGray;
 }
-
-div.spreadsheet div {
+.spreadsheet .ui-resizable-handle,
+.spreadsheet .ui-sortable { /* TODO does ui-sortable need to be here? */
 	display: inline-block;
 }
-
-div.spreadsheet-column {
+.spreadsheet-column {
 	background-color: white;
 	border: 1px solid black;
+}
+.spreadsheet .spreadsheetTitle {
+	font-size: 1.2em;
+	background-color: rgba(0,0,0,0);
+	border: 0px;
+}
+.spreadsheet .spreadsheetTitle.untitled {
+	font-style: italic;
+	color: #cccccc;
+}
+.spreadsheet .columns {
+	display: inline-block;
+	background-color: #ff0000; /* TODO */
 }
