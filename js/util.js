@@ -1,3 +1,4 @@
+/*jslint browser: true, nomen: true */
 /*global define: false, navigator: false */
 define([ "jquery" ], function ($) {
 	'use strict';
@@ -53,9 +54,19 @@ define([ "jquery" ], function ($) {
 			}
 		},
 
+		caseInsensitiveSortByLabel: function (a, b) {
+			if (a.label.toUpperCase() < b.label.toUpperCase()) {
+				return -1;
+			} else if (a.label.toUpperCase() > b.label.toUpperCase()) {
+				return 1;
+			} else {
+				return 0;
+			}
+		},
+
 		// Initialize a jquery-ui button whose border & background only show on hover.
-		shyButton: function (el) {
-			el.button();
+		shyButton: function (el, options) {
+			el.button(options);
 			el.addClass('shy')
 				.hover(function () {
 					el.removeClass('shy');
@@ -86,6 +97,14 @@ define([ "jquery" ], function ($) {
 				newName = name + '_' + i;
 			}
 			return newName;
+		},
+
+
+		getParameterByName: function (name) {
+			// TODO duplicates galaxy.js, so extract into common file
+			// see http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values/901144#901144
+			var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+			return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
 		},
 
 		cleanDecimalNumberKeyPress: (function () {
@@ -131,7 +150,15 @@ define([ "jquery" ], function ($) {
 				}
 				return true;
 			};
-		}())
+		}()),
 
+		eventOffset: function (ev) {
+			// event mouse offset not working under firefox
+			var offset = {},
+				targetOffset = $(ev.target).offset();
+			offset.x = ev.pageX - targetOffset.left;
+			offset.y = ev.pageY - targetOffset.top;
+			return offset;
+		}
 	};
 });

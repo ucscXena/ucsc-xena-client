@@ -1,12 +1,25 @@
-#tooltip
-{
-	padding: 2px 4px;
+#tooltip:not(.frozen) {
+	background: #eeeeee;
+}
+#tooltip {
+	padding: 4px 6px;
 	display: none;
 	position: absolute;
 	overflow: hidden;
 	text-align: left;
-	font-size: .7em;
 	z-index: 1;
+}
+#tooltip table {
+	font-size: .8em;
+}
+#tooltip .labelCol {
+	width: 5em;
+}
+#tooltip .valueCol {
+	width: 25em;
+}
+#tooltip .closeCol {
+	width: 16px;
 }
 #tooltip .tupleLabel {
 	vertical-align: top;
@@ -15,4 +28,9 @@
 #tooltip .tupleValue {
 	vertical-align: top;
 	padding: 0;
+}
+#tooltipClose {
+	display: none;
+	float: right;
+	margin-top: -3px;
 }

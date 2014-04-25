@@ -19,9 +19,10 @@ define(["haml!haml/dropDownTemplate", "tooltip", "lib/underscore", "jquery"], fu
 					this.$list.remove();
 					this.$list = undefined;
 					this.$el.attr('title', this.anchorTitle);
-					$(document).off('click.menu');
+					$(document).off('click.' + this.menuId);
 					$('*').off('scroll.menu');
-					tooltip.activate(true);
+					//tooltip.activate(true); // TODO
+					this.$el.removeClass('ui-state-hover');
 				}
 			};
 
@@ -40,6 +41,12 @@ define(["haml!haml/dropDownTemplate", "tooltip", "lib/underscore", "jquery"], fu
 				if (menu.length && menu[0] === this.$el[0]) {
 					return;
 				}
+
+				if (this.fromSubmenu) {
+					this.fromSubmenu -= 1;
+					return;
+				}
+
 				this.destroyList();
 			};
 
@@ -49,7 +56,7 @@ define(["haml!haml/dropDownTemplate", "tooltip", "lib/underscore", "jquery"], fu
 				}
 			};
 
-			// position of list in options:
+			// position of list in these optional options:
 			//		leftAdd: additive relative to anchor left; defaults to 0
 			//		left: relative to window; overrides leftAdd
 			//		topAdd: additive relative to anchor bottom; defaults to 0
@@ -64,7 +71,7 @@ define(["haml!haml/dropDownTemplate", "tooltip", "lib/underscore", "jquery"], fu
 					if (this.$list) {
 						this.destroyList();
 					} else {
-						tooltip.activate(false);
+						//tooltip.activate(false); // TODO
 						this.render();
 						this.$list.css({
 							top: top,
@@ -79,13 +86,13 @@ define(["haml!haml/dropDownTemplate", "tooltip", "lib/underscore", "jquery"], fu
 						}
 						this.$list.scrollLeft(0);
 						this.$el.find('.focus').focus();
-						$(document).trigger('click.menu'); // to collapse any other expanded menus
+
 						// bindings
-						$(document).on('click.menu', this.clickOutsideThis);
+						this.menuId = _.uniqueId('menu_');
+						$(document).on('click.' + this.menuId, this.clickOutsideThis);
 						$('*').on('scroll.menu', this.scrollAnywhere);
 					}
 				}
-				//event.stopPropagation(); // XXX don't think we need this anymore
 			};
 
 			this.anchorClick = function (event, options) {

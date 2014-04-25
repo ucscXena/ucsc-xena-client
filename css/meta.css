@@ -1,7 +1,8 @@
 #body {
 	overflow-x: scroll;
-	overflow-y: hidden;
+	/*overflow-y: hidden;*/
 	font-size: .95em;
+	background: #ffffff;
 }
 .cbHeader,
 .cbHeader>.ui-buttonset,
