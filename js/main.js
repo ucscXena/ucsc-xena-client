@@ -128,7 +128,62 @@ define(['haml!haml/spreadsheet',
 		}
 	});
 
+	var example_samples = $('<button>Pick samples</button>');
+	$('#testing').parent().append(example_samples);
+	example_samples.on('click',function (ev) {
+		debugstream.onNext(function(s) {
+			return _.extend({}, s, {
+				"samples": [
+					"TCGA-E9-A1RD-11", "TCGA-E9-A1RC-01", "TCGA-AC-A3TN-01", "TCGA-BH-A0B1-01", "TCGA-B6-A0RG-01", "TCGA-A8-A07P-01",
+					"TCGA-D8-A1JH-01", "TCGA-A2-A0CR-01", "TCGA-BH-A0DS-01", "TCGA-E2-A14S-01", "TCGA-BH-A0HK-11", "TCGA-A2-A0D1-01",
+					"TCGA-BH-A18R-01", "TCGA-BH-A0HW-01", "TCGA-E9-A1N8-01", "TCGA-E2-A152-01", "TCGA-BH-A0DQ-01", "TCGA-AO-A0JC-01",
+					"TCGA-BH-A18U-11", "TCGA-BH-A0GY-01", "TCGA-B6-A0RO-01", "TCGA-OL-A5RU-01", "TCGA-LL-A50Y-01", "TCGA-LL-A5YM-01",
+					"TCGA-AC-A23G-01", "TCGA-AC-A62Y-01", "TCGA-A8-A08B-01", "TCGA-D8-A1XO-01", "TCGA-A8-A07W-01", "TCGA-BH-A18S-01",
+					"TCGA-A8-A085-01", "TCGA-B6-A0X1-01", "TCGA-A8-A08X-01", "TCGA-PE-A5DE-01", "TCGA-A2-A3XX-01", "TCGA-A7-A0CD-01",
+					"TCGA-AR-A2LK-01", "TCGA-OL-A66K-01", "TCGA-E2-A14Z-01", "TCGA-A2-A0CO-01", "TCGA-B6-A0WT-01", "TCGA-AR-A0TZ-01",
+					"TCGA-AC-A23C-01", "TCGA-E2-A1L9-01", "TCGA-AO-A12F-01", "TCGA-A8-A08G-01", "TCGA-E2-A10F-01", "TCGA-D8-A1XY-01",
+					"TCGA-D8-A3Z6-01", "TCGA-BH-A0B0-01", "TCGA-BH-A1FU-01", "TCGA-PE-A5DC-01", "TCGA-A2-A0SU-01", "TCGA-AN-A0AK-01",
+					"TCGA-E9-A1N6-01", "TCGA-A2-A0T5-01", "TCGA-D8-A1JA-01", "TCGA-A7-A0CH-01", "TCGA-D8-A1JI-01", "TCGA-D8-A1XU-01",
+					"TCGA-A8-A086-01", "TCGA-AR-A251-01", "TCGA-E9-A1NA-01", "TCGA-A2-A0D3-01", "TCGA-B6-A0IE-01", "TCGA-AR-A24M-01",
+					"TCGA-A1-A0SD-01", "TCGA-A8-A09W-01", "TCGA-AC-A3W6-01", "TCGA-E9-A1NI-01", "TCGA-BH-A1F5-01", "TCGA-A2-A0T0-01",
+					"TCGA-A2-A0YK-01", "TCGA-E9-A1R5-01", "TCGA-AR-A1AP-01", "TCGA-BH-A18P-11", "TCGA-BH-A0C7-01", "TCGA-BH-A1FL-01",
+					"TCGA-GM-A2DN-01", "TCGA-AC-A2BK-01", "TCGA-C8-A12T-01", "TCGA-A2-A04X-01", "TCGA-AN-A04A-01", "TCGA-AR-A0TX-01",
+					"TCGA-BH-A0B7-01", "TCGA-E2-A1IN-01", "TCGA-D8-A27T-01", "TCGA-D8-A1JJ-01", "TCGA-E9-A248-01", "TCGA-C8-A1HG-01",
+					"TCGA-EW-A1OW-01", "TCGA-A2-A0T4-01", "TCGA-AO-A12H-01", "TCGA-E9-A1RE-01", "TCGA-B6-A0I6-01", "TCGA-A8-A099-01",
+					"TCGA-BH-A0DV-11", "TCGA-E2-A15D-01", "TCGA-A8-A06N-01"
+				],
+				"height": 100,
+				"zoomIndex": 0,
+				"zoomCount": 100,
+				"column_rendering": {},
+				"column_order": []
+			});
+		});
+	});
 
+	var example_column1 = $('<button>Sample column 1</button>');
+
+	$('#testing').parent().append(example_column1);
+	example_column1.on('click',function (ev) {
+		var newcol =  {
+			"width":100,
+			"dsID": "http://cancerdb:7222/public/TCGA/TCGA.BRCA.sampleMap/Gistic2_CopyNumber_Gistic2_all_data_by_genes",
+			"dataType": "nonspatial",
+			"fields": [
+				"ACAP3", "ACTRT2", "AGRN", "ANKRD65", "ATAD3A", "ATAD3B", "ATAD3C", "AURKAIP1",
+				"B3GALT6", "C1orf159", "C1orf170", "C1orf233", "C1orf86", "CALML6", "CCNL2",
+				"CDK11A", "CDK11B", "CPSF3L", "DDX11L1", "DVL1", "FAM132A", "FAM138A", "FAM138F",
+				"FAM213B", "FAM41C", "FLJ42875", "GABRD", "GLTPD1", "GNB1", "HES4", "HES5",
+				"ISG15", "KIAA1751", "KLHL17", "LINC00115", "LOC100129534", "LOC100130417", "LOC100132062",
+				"LOC100132287"
+			]
+		};
+		debugstream.onNext(function (s) {
+			var id = uuid();
+			return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
+				'column_order', s.column_order.concat([id]));
+		});
+	});
 
 	$(document).ready(function () {
 		if (sessionStorage && sessionStorage['state']) {
