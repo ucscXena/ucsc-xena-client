@@ -14,14 +14,16 @@
 /* @import url("cbList.css"); */
 @import url("browser.css");
 @import url("menuJs.css");
-
-/* The above are order-dependent.
-	 The below are not order-dependent within themselves, but need to be below the above. */
-
+/*
+	The above are order-dependent.
+	The below need to be below the above,
+	& are not order-dependent within themselves.
+*/
+@import url("sheetWrap.css");
 @import url("spreadsheet.css");
-@import url("colorBar.css");
-@import url("column.css");
+@import url("columnUi.css");
 @import url("columnEdit.css");
+@import url("colorBar.css");
 @import url("crosshairs.css");
 @import url("tooltip.css");
 /*

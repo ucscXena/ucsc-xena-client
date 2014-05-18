@@ -49,6 +49,18 @@ define(['underscore_ext',
 		return 0;
 	}
 
+	function findTargetColumn(ev) {
+		var $target = $(ev.target);
+		if (!$target.hasClass('spreadsheet-column')) {
+			$target = $target.parents('.spreadsheet-column');
+		}
+		return $target;
+	}
+
+	function deleteHandler(id, cursor) {
+		return cursor.set(_.partial(deleteColumn, id));
+	}
+
 	function spreadsheetWidget(state, cursor, parent) {
 		// XXX why is replay necessary? Seems to be so we get the sessionStorage, but is this
 		// really the right way to get it??
@@ -58,7 +70,7 @@ define(['underscore_ext',
 			el = $('<div></div>'),
 			subs = new Rx.CompositeDisposable();
 
-		 state = state.replayWhileObserved(1); // XXX move this to columnModels? So widgets can get latest state?
+		state = state.replayWhileObserved(1); // XXX move this to columnModels? So widgets can get latest state?
 		el.sortable({
 			axis: 'x',
 			placeholder: "ui-state-highlight",
@@ -96,11 +108,14 @@ define(['underscore_ext',
 
 		subs.add(el.onAsObservable('click')
 			.filter(function (ev) {
-				return $(ev.target).hasClass('spreadsheet-column') 
+				return findTargetColumn(ev).length
 					&& ev.shiftKey === true;
 			})
+
 			.subscribe(function (ev) {
-				return cursor.set(_.partial(deleteColumn, ev.target.id));
+				var $target = findTargetColumn(ev),
+					id = $target.attr('id');
+				return deleteHandler(id, cursor);
 			})
 		);
 
@@ -220,7 +235,8 @@ define(['underscore_ext',
 				_.each(addcols, function (uuid) {
 					cels[uuid] = $('<div></div>')
 						.addClass('spreadsheet-column')
-						.css({height: ws[uuid].height, width: 100})
+						.css({height: 'auto', width: 'auto'})
+						//.css({height: ws[uuid].height, width: 100})
 						.prop('id', uuid)
 						.resizable({handles: 'e'})[0];
 

@@ -35,6 +35,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'Menu', 'jquery', 'lib/underscore'
 
 			this.duplicateClick = function (ev) {
 				console.log('duplicate');
+				this.duplicateColumn(this.id);
 			};
 
 			this.mupitClick = function (ev) {
@@ -45,7 +46,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'Menu', 'jquery', 'lib/underscore'
 			};
 
 			this.removeClick = function (ev) {
-				console.log('remove');
+				this.deleteColumn(this.id);
 			};
 
 			this.render = function () {
@@ -71,16 +72,19 @@ define(['haml!haml/columnMenu', 'columnEdit', 'Menu', 'jquery', 'lib/underscore'
 
 			this.initialize = function (options) {
 				var self = this;
-				_(this).bindAll();
+				_.bindAll.apply(_, [this].concat(_.functions(this)));
+				//_(this).bindAll();
 				APPLY_BUTTON = options.APPLY_BUTTON;
 				this.column = options.column;
+				this.deleteColumn = options.deleteColumn;
+				this.duplicateColumn = options.duplicateColumn;
 				this.moreItems = options.moreItems;
 				this.show = {};
 				this.show.mupit = false;
 				this.menuInitialize(options);
 
 				// bindings
-				this.$el
+				this.$el // TODO replace with Rx bindings
 					.on('click', '.duplicate', this.duplicateClick)
 					.on('click', '.mupit', this.mupitClick)
 					.on('click', '.remove', this.removeClick)

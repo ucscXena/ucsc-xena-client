@@ -14,3 +14,6 @@
 .columnEdit .advancedLabel:hover {
 	text-decoration: underline;
 }
+.columnEdit .tupleLabel {
+	min-width: 5em;
+}

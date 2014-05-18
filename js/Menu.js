@@ -135,7 +135,8 @@ define(["haml!haml/dropDownTemplate", "tooltip", "lib/underscore", "jquery"], fu
 					this.$rolledUpLabel = options.anchor.find('.rolledUpLabel');
 				}
 
-				_(this).bindAll();
+				_.bindAll.apply(_, [this].concat(_.functions(this)));
+				//_(this).bindAll();
 				this.$el.on('click', function (event) {
 					self.anchorClick(event, options);
 				});

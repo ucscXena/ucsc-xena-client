@@ -1,7 +1,6 @@
 .spreadsheet {
 	position: relative;
-	/*display: inline-block; TODO was used before merge with brian's initial code */
-	background-color: LightGray;
+	display: inline-block;
 }
 .spreadsheet .ui-resizable-handle,
 .spreadsheet .ui-sortable { /* TODO does ui-sortable need to be here? */
@@ -9,24 +8,6 @@
 }
 .spreadsheet-column {
 	background-color: white;
-	border: 1px solid black;
 	display: inline-block;
-}
-.spreadsheet .spreadsheetTitle {
-	font-size: 1.2em;
-	background-color: rgba(0,0,0,0);
-	border: 0px;
-}
-.spreadsheet .spreadsheetTitle.untitled {
-	font-style: italic;
-	color: #cccccc;
-}
-.spreadsheet .columns {
-	display: inline-block;
-	background-color: #ff0000; /* TODO */
-}
-.spreadsheet .addColumn {
-	font-size: 1.5em;
-	cursor: pointer;
-	vertical-align: top;
+	margin-right: 5px;
 }

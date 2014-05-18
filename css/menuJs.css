@@ -16,6 +16,9 @@
 	position: fixed;
 	text-indent: 0;
 }
+.menu li {
+	font-size: 0.85em;
+}
 .menu .itemAlt:nth-child(odd) {
 	background: #f4f4f4;
 }

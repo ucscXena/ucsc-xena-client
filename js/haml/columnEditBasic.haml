@@ -1,32 +1,37 @@
 %table
   %tbody
-    %tr
+    %tr{class:'static'}
       %td{class:'tupleLabel'} Dataset:
       %td{class:'tupleValue', style:'width:550px'}
-        %select{id:datasetSelectId, class:'datasetSelect'}
+        %select{class:'dataset'}
           %option
           - _.each(datasets, function (f) {
-            %option{value:f.name} =f.title
-          %option{value:'more'} More...
-    %tr{style:'display:none'}
-      %td{class:'geneValues tupleValue', colspan:2}
-        %select{id:geneSelectId, class:'geneSelect'}
-          - _.each(genes, function (gene) {
-            %option{value:gene} =gene
-        %input{class:'geneInput'}
-    %tr{class:'modeRow', style:'display:none'}
+            %option{value:f.dsID} =f.title
+          -# %option{value:'more'} More...
+
+    %tr{class:'inputModeRow', style:'display:none'}
       %td{class:'tupleLabel'} Input:
-      %td{class:'mode tupleValue'}
-    %tr{style:'display:none'}
-      %td{class:'tupleLabel'} Feature:
-      %td{class:'tupleValue'}
-        %select{id:featureSelectId, class:'featureSelect'}
-          - _.each(features, function (f) {
-            %option{value:f.name} =f.title
-    %tr{style:'display:none'}
+      %td{class:'inputModeAnchor tupleValue'}
+
+    %tr{class:'listRow', style:'display:none'}
+      %td
+      %td
+        %textarea{class:'list', rows:7, columns:40}
+
+    %tr{class:'chromRow', style:'display:none'}
+      %td
+      %td
+        %input{class:'chrom', type:'text', columns:40}
+
+    %tr{class:'displayModeRow', style:'display:none'}
+      %td{class:'tupleLabel'} Display as:
+      %td{class:'displayModeAnchor tupleValue'}
+
+    %tr{class:'columnTitleRow', style:'display:none'}
       %td{class:'tupleLabel'} Title:
       %td{class:'tupleValue'}
         %input{class:'columnTitleEdit'}
+
     %tr{style:'display:none'}
       %td
       %td{class:'tupleValue'}

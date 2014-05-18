@@ -1,175 +1,93 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/columnEditMode', 'haml!haml/columnEditAdvanced', 'defer', 'stub', 'lib/select2', 'jquery', 'lib/underscore',
+define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select', 'haml!haml/columnEditAdvanced', 'defer', 'stub', 'lib/select2', 'jquery', 'underscore_ext',
 	// non-object dependencies
 	'lib/jquery-ui'
-	], function (template, basicTemplate, modeTemplate, advancedTemplate, defer, stub, select2, $, _) {
+	], function (template, basicTemplate, selectTemplate, advancedTemplate, defer, stub, select2, $, _) {
 	'use strict';
 
-	var TEST = stub.TEST(),
-		APPLY_BUTTON,
+	var datasetsStub = stub.getDatasets(),
+
+		// TODO: make these more global
+		defaultGene = 'TP53',
+		defaultGenes = 'TP53, PTEN',
+		defaultProbes = 'no probes entered', // TODO
+		defaultChrom = 'chr1-chrY',
+		defaultFeature = 'days_to_birth',
+		defaultField = 'fields for this option',
+		defaultWidth = 100,
+
+		displaysByDataSubType = {
+			cna: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
+			DNAMethylation: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			geneExp: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with RNAseqExp & arrayExp
+			RNAseqExp: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
+			arrayExp: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			somaticMutation: ['dGene', 'dGenes'],
+			sparseMutation: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
+			protein: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			null: ['dClinical']
+		},
+		displaysByInput = {
+			iGene: ['dGene', 'dGeneProbes', 'dGeneChrom', 'dExonDense', 'dExonSparse'],
+			iGenes: ['dGenes'],
+			iProbes: ['dProbes'],
+			iChrom: ['dChrom'],
+			iClinical: ['dClinical']
+		},
+		inputModeLabels = {
+			iGene: 'single gene',
+			iGenes: 'list of genes',
+			iProbes: 'list of probes',
+			iChrom: 'chromosome coordinates',
+			iClinical: 'clinical'
+		},
+		displayModeLabels = {
+			dGene: 'gene',
+			dGeneProbes: 'probes',
+			dExonDense: 'exons',
+			dExonSparse: 'exons',
+			dGeneChrom: 'chromosomes'
+		},
+		dataTypeByDisplay = {
+			dGene: 'nonspatial',
+			dGeneProbes: 'nonspatial',
+			dExonDense: 'spatialExonDense',
+			dExonSparse: 'spatialExonSparse',
+			dGeneChrom: 'spatialGeneChrom',
+			dGenes: 'nonspatial',
+			dProbes: 'nonspatial',
+			dClinical: 'nonspatial',
+			dChrom: 'spatialChrom'
+		},
 		widgets = {},
-		datasets = [
-			{
-				name: 'allData',
-				title: 'all sparse mutation datasets',
-				dataType: 'sparseMutation'
-			},
-			{
-				name: 'TCGA_LUAD_mutation_RADIA',
-				title: 'TCGA lung adenocarcinoma (LUAD) somatic SNPs by RADIA',
-				dataType: 'sparseMutation'
-			},
-			{
-				name: 'TCGA_UCEC_mutation_RADIA',
-				title: 'TCGA uterine corpus endometrioid carcinoma (UCEC) somatic SNPs by RADIA',
-				dataType: 'sparseMutation'
-			},
-			{
-				name: '8132-002-NWMS-CO_somaticNonSilentSNP',
-				title: 'CCI trial patient 8132-002-NWMS-CO somatic non-silent SNPs by RADIA using triple bams',
-				dataType: 'sparseMutation'
-			},
-			{
-				name: 'testData',
-				title: 'test data',
-				dataType: 'sparseMutation'
-			},
-			{
-				name: 'TCGA_LUAD_clinical',
-				title: 'TCGA lung adenocarcinoma (LUAD) clinical',
-				dataType: 'clinical'
-			},
-			{
-				name: 'TCGA_LUAD_hMethyl450',
-				title: 'TCGA lung adenocarcinoma (LUAD) DNA methylation (HumanMethylation450)',
-				dataType: 'DNAMethylation'
-			},
-			{
-				name: 'TCGA_LUAD_exp_HiSeqV2_exon',
-				title: 'TCGA lung adenocarcinoma (LUAD) exon expression by RNAseq (IlluminaHiSeq)',
-				dataType: 'expression'
-			},
-			{
-				name: 'TCGA_LUAD_G44502A_07_3',
-				title: 'TCGA lung adenocarcinoma (LUAD) gene expression (AgilentG4502A_07_3 array)',
-				dataType: 'expression'
-			},
-			{
-				name: 'TCGA_LUAD_RPPA',
-				title: 'TCGA lung adenocarcinoma (LUAD) reverse phase protein array',
-				dataType: 'protein'
-			},
-			{
-				name: 'TCGA_LUAD_GSNP6raw',
-				title: 'TCGA lung adenocarcinoma (LUAD) segmented copy number',
-				dataType: 'CNV'
-			},
-			{
-				name: 'TCGA_LUAD_mutation',
-				title: 'TCGA lung adenocarcinoma (LUAD) somatic mutation',
-				dataType: 'somaticMutation'
-			}
-		],
-		modeLabels = {
-			gene: 'single gene',
-			genes: 'list of genes',
-			probes: 'list of probes',
-			chrom: 'chromosome coordinates',
-			clinical: 'clinical'
-		},
-		modes = {
-			CNV: ['gene', 'genes', 'chrom'],
-			DNAMethylation: ['gene', 'genes', 'probes', 'chrom'],
-			expression: ['gene', 'genes', 'probes', 'chrom'],
-			somaticMutation: ['gene', 'genes'],
-			sparseMutation: ['gene', 'genes', 'chrom'],
-			protein: ['gene', 'genes', 'probes', 'chrom'],
-			clinical: ['clinical']
-		},
-		// TODO moved to column.js
-		features = [
-			{name: 'impact', title: 'impact'}, // shorttitle ?
-			{name: 'DNA_AF', title: 'DNA allele frequency'},
-			{name: 'RNA_AF', title: 'RNA allele frequency'},
-			{name: 'dataset', title: 'dataset'}
-		],
-		colors = [
-			'grey_green_blue_red',
-			'category_50', //'yellow_green_blue_red_rgb50',
-			'category_25',
-			'category_0',
-			'scale_25',
-			'category_transparent_25',
-			'category_line',
-			'category_gradient',
-			'duplicate_checker'
-		],
-		pixs = ['fit to inherited height', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30],
-		radii = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-		points = [0.1, 0.5, 0.75, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],
-		refHeights = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-		sorts = ['impact, then position', 'position, then impact', 'sample ID'],
-		genes = stub.getRefGeneNames2(),
 		aWidget;
 
-	function defaultDataset() {
-		return datasets[0].name;
-	}
-
-	function defaultMode() {
-		return modes[datasets[0].dataType][0];
-		//return modes[0].name;
-	}
-
-	function defaultFeature() {
-		return features[0].name;
-	}
-
-	function defaultColor() {
-		return colors[2];
-	}
-
-	function defaultPix() {
-		return pixs[0];
-	}
-
-	function defaultRadius() {
-		if (TEST) {
-			return radii[9];
-		} else {
-			return radii[4];
-		}
-	}
-
-	function defaultPoint() {
-		return points[1];
-	}
-
-	function defaultRefHeight() {
-		return refHeights[6];
-	}
-
-	function defaultSort() {
-		return sorts[0];
-	}
-
-	function defaultGene() {
-		if (TEST) {
-			return 'TP53';
-		} else {
-			return 'CDKN2A';
-		}
-	}
-
-	function getDataType(datasetName) {
-		var datasetInfo = _.find(datasets, function (d) {
-				return d.name === datasetName; // TODO
+	function getDataSubType(dsID) {
+		var datasetInfo = _.find(datasetsStub, function (d) {
+				return d.dsID === dsID; // TODO
 			});
-		return datasetInfo.dataType;
+		return datasetInfo.dataSubType;
 	}
 
+	function getInputModesByDataSubType(dataSubType) {
+		var inputs = [];
+		_.each(displaysByInput, function (displays, input) {
+			var intersect = _.intersection(displays, displaysByDataSubType[dataSubType]);
+			if (intersect.length) {
+				inputs.push(input);
+			}
+		});
+		return inputs;
+	}
+
+	function getDisplayModes(dataSubType, inputMode) {
+		return _.intersection(
+			displaysByDataSubType[dataSubType],
+			displaysByInput[inputMode]
+		);
+	}
 
 	aWidget = {
 
@@ -184,75 +102,173 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/columnEd
 			}
 		},
 
-		renderMode: function (id) {
-			var dataType = getDataType(this.$datasetSelect2.select2('val')),
-				$mode,
-				$modeAnchor;
-			/*
-			if (modes[dataType] === undefined) {
-				this.$el.find('.modeRow').hide();
-				return;
-			}
-			*/
-			$mode = modeTemplate({
-				modeSelectId: this.id.modeSelect,
-				modes: modes[dataType],
-				modeLabels: modeLabels
-			});
-			$modeAnchor = this.$el.find('.mode');
-			$modeAnchor.empty();
-			$modeAnchor.append($mode);
-			this.$modeSelect2 = this.$el.find('#' + this.id.modeSelect);
-			this.$el.find('.modeRow').show();
-			this.$modeSelect2.select2({
-				minimumResultsForSearch: -1,
-				dropdownAutoWidth: true,
-				val: 'exons'
-			});
-		},
-
-		setFieldVisibility: function () {
-			var dataset = this.$datasetSelect2.select2('val'),
-				dataType;
-			if (dataset === '') {
-				this.$el.find('.modeRow, .advancedLabel').hide();
+		renderDisplayModes: function (dataSubType) {
+			var modes = getDisplayModes(dataSubType, this.state.inputMode);
+			if (modes.length === 1) {
+				this.state.displayMode = modes[0];
 			} else {
-				// TODO set the displayMode options depending on dataType
-				this.renderMode();
-				dataType = getDataType(dataset);
-				if (dataType === 'sparseMutation') {
-					this.$el.find('.advancedLabel').show();
+				this.$displayModeAnchor.append(
+					selectTemplate({
+						klass: 'displayMode',
+						options: modes,
+						labels: displayModeLabels
+					})
+				);
+				this.$displayModeRow.show();
+				this.$el.find('.displayMode').select2({
+					minimumResultsForSearch: -1,
+					dropdownAutoWidth: true
+				});
+				this.$displayMode = this.$el.find('.select2-container.displayMode');
+				if (modes.indexOf(this.state.displayMode) > -1) {
+					this.$displayMode.select2('val', this.state.displayMode);
 				} else {
-					this.$el.find('.advancedLabel').hide();
+					this.state.displayMode = modes[0];
 				}
 			}
 		},
 
-		datasetChange: function (e) {
-			this.setFieldVisibility();
-			if (!APPLY_BUTTON) {
-				this.column.datasetChange(this.$datasetSelect2.select2('val'));
-			}
-		},
-
-		modeChange: function (e) {
-			if (!APPLY_BUTTON) {
-				this.column.modeChange(this.$modeSelect2.select2('val'));
-			}
-		},
-
-		goClick: function (e) {
-			if (APPLY_BUTTON) {
-				this.column.editGo(
-					this.$datasetSelect2.select2('val'),
-					this.$modeSelect2.select2('val')
+		renderInputModes: function (dataSubType) {
+			var modes = getInputModesByDataSubType(dataSubType);
+			if (modes.length === 1) {
+				this.state.inputMode = modes[0];
+			} else {
+				this.$inputModeAnchor.append(
+					selectTemplate({
+						klass: 'inputMode',
+						options: modes,
+						labels: inputModeLabels
+					})
 				);
-				this.destroy();
+				this.$el.find('.inputMode').select2({
+					minimumResultsForSearch: -1,
+					dropdownAutoWidth: true
+				});
+				this.$inputModeRow.show();
+				this.$inputMode = this.$el.find('.select2-container.inputMode');
+				if (modes.indexOf(this.state.inputMode) > -1) {
+					this.$inputMode.select2('val', this.state.inputMode);
+				} else {
+					this.state.inputMode = modes[0];
+				}
+			}
+			// TODO should this be somewhere else?
+			if (!this.state.gene) {
+				this.state.gene = defaultGene;
+			}
+			if (!this.state.feature) {
+				this.state.feature = defaultFeature;
 			}
 		},
 
-		featureChange: function (e) {
-			this.column.featureChange(this.$featureSelect2.select2('val'));
+		renderList: function () {
+			if (this.state.inputMode === 'iGenes') {
+				if (!this.state.genes || this.state.genes === '') {
+					this.state.genes = defaultGenes;
+				}
+				this.$list.val(this.state.genes);
+				this.$listRow.show();
+			} else if (this.state.inputMode === 'iProbes') {
+				if (!this.state.probes || this.state.probes === '') {
+					this.state.probes = defaultProbes;
+				}
+				this.$list.val(this.state.probes);
+				this.$listRow.show();
+			}
+		},
+
+		renderChrom: function () {
+			if (this.state.inputMode === 'iChrom') {
+				if (!this.state.chrom || this.state.chrom === '') {
+					this.state.chrom = defaultChrom;
+				}
+				this.$chrom.val(this.state.chrom);
+				this.$chromRow.show();
+			}
+		},
+
+		getFields: function () {
+			var fields;
+			switch (this.state.inputMode) {
+			case 'iGene':
+				fields = [this.state.gene];
+				break;
+			case 'iGenes':
+				fields = this.state.genes.split(', '); // TODO use named text?
+				break;
+			case 'iProbes':
+				fields = this.state.probes.split(', '); // TODO use named text?
+				break;
+			case 'iClinical':
+				fields = [this.state.feature];
+				break;
+			default:
+				fields = [defaultField];
+				break;
+			}
+			return fields;
+		},
+
+		renderColumn: function () { // TODO shouldn't have to go through debug widgets
+			if (this.state.displayMode === 'dClinical') { // not yet
+				return;
+			}
+			var fields = this.getFields(),
+				json = {
+					"width": 300,
+					"dsID": this.state.dsID,
+					"dataType": dataTypeByDisplay[this.state.displayMode],
+					"fields": fields,
+					"ui": this.state
+				};
+			$('#columnStub').val(JSON.stringify(json, undefined, 4));
+			//this.updateColumn(this.id);
+		},
+
+		reRender: function () {
+			console.log('columnEdit.reRender(): id: ' + this.id);
+			var dataSubType = getDataSubType(this.state.dsID);
+			this.$el.find('tr:not(.static)').hide();
+			this.$inputModeAnchor.empty();
+			this.$displayModeAnchor.empty();
+			this.$inputMode = undefined;
+			this.$displayMode = undefined;
+
+			this.renderInputModes(dataSubType);
+			this.renderList();
+			this.renderChrom();
+			this.renderDisplayModes(dataSubType);
+
+			this.renderColumn();
+		},
+
+		displayModeChange: function () {
+			this.state.displayMode = this.$displayMode.select2('val');
+			this.reRender();
+		},
+
+		chromBlur: function () {
+			this.state.chrom = this.$chrom.val();
+			this.reRender();
+		},
+
+		listBlur: function () {
+			if (this.state.inputMode === 'iGenes') {
+				this.state.genes = this.$list.val();
+			} else {
+				this.state.probes = this.$list.val();
+			}
+			this.reRender();
+		},
+
+		inputModeChange: function () {
+			this.state.inputMode = this.$inputMode.select2('val');
+			this.reRender();
+		},
+
+		datasetChange: function () {
+			this.state.dsID = this.$dataset.select2('val');
+			this.reRender();
 		},
 
 		toggleAdvanced: function (e) {
@@ -263,225 +279,87 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/columnEd
 			this.$advancedLabel.text(label);
 		},
 
-		colorChange: function (e) {
-			this.column.colorChange(this.$colorSelect2.select2('val'));
-		},
-
-		pixChange: function (e) {
-			this.column.pixChange(this.$pixSelect2.select2('val'));
-		},
-
-		radiusChange: function (e) {
-			this.column.radiusChange(Number(this.$radiusSelect2.select2('val')));
-		},
-
-		pointChange: function (e) {
-			this.column.pointChange(Number(this.$pointSelect2.select2('val')));
-		},
-
-		refHeightChange: function (e) {
-			this.column.refHeightChange(Number(this.$refHeightSelect2.select2('val')));
-		},
-
-		sortChange: function (e) {
-			this.column.sortChange(this.$sortSelect2.select2('val'));
-		},
-
-		geneChange: function (e) {
-			this.column.geneChange(this.$geneSelect2.select2('val'));
-		},
-
-		geneInputChange: function (e) {
-			var RETURN = 13,
-				val;
-			this.$geneInput.css('color', 'black');
-			if (e.keyCode === RETURN) {
-				val = this.$geneInput.val();
-				if (genes.indexOf(val.toUpperCase()) > -1) {
-					this.column.geneChange(val);
-				} else {
-					this.$geneInput.val(val + ' not found');
-					this.$geneInput.css('color', 'red');
-				}
+		position: function () {
+			var self = this,
+				offset,
+				of;
+			if (this.column) {
+				offset = 10;
+				of = this.column.$el;
+			} else {
+				offset = defaultWidth - 12;
+				of = this.sheetWrap.$addColumn;
 			}
+			defer(function () {
+				self.$el.dialog('option', 'position', {
+					my: 'left+' + offset + ' top+105',
+					//my: 'left+' + offset + ' top-10',
+					at: 'right top',
+					of: of
+				});
+			});
 		},
 
-		renderFields: function (id) {
-			this.$el.find('.datasetSelect').select2({
+		render: function () {
+			console.log('columnEdit.render(): id: ' + this.id);
+			var self = this,
+				basic;
+			basic = basicTemplate({
+				datasets: this.datasets
+			});
+			this.$el = $(template({
+				basic: basic,
+				advanced: undefined
+				//advanced: advanced
+			}));
+
+			this.$el.find('.dataset').select2({
 				minimumResultsForSearch: -1,
 				dropdownAutoWidth: true,
 				placeholder: 'Select...',
 				placeholderOption: 'first'
 			});
-			this.$datasetSelect2 = this.$el.find('#' + id.datasetSelect);
-
-			this.$el.find('.geneSelect').select2({
-				dropdownAutoWidth: true
-			});
-			this.$geneSelect2 = this.$el.find('#' + id.geneSelect);
-
-			if (this.$datasetSelect2.select2('val') !== '') {
-				this.renderMode(id);
-			}
-
-			this.$el.find('.featureSelect').select2({
-				minimumResultsForSearch: -1,
-				dropdownAutoWidth: true
-			});
-			this.$featureSelect2 = this.$el.find('#' + id.featureSelect);
-
-			this.$el.find('.colorSelect').select2({
-				minimumResultsForSearch: -1,
-				dropdownAutoWidth: true
-			});
-			this.$colorSelect2 = this.$el.find('#' + id.colorSelect);
-
-			this.$el.find('.pixSelect').select2({
-				minimumResultsForSearch: -1,
-				dropdownAutoWidth: true
-			});
-			this.$pixSelect2 = this.$el.find('#' + id.pixSelect);
-
-			this.$el.find('.radiusSelect').select2({
-				minimumResultsForSearch: -1,
-				dropdownAutoWidth: true
-			});
-			this.$radiusSelect2 = this.$el.find('#' + id.radiusSelect);
-
-			this.$el.find('.pointSelect').select2({
-				minimumResultsForSearch: -1,
-				dropdownAutoWidth: true
-			});
-			this.$pointSelect2 = this.$el.find('#' + id.pointSelect);
-
-			this.$el.find('.refHeightSelect').select2({
-				minimumResultsForSearch: -1,
-				dropdownAutoWidth: true
-			});
-			this.$refHeightSelect2 = this.$el.find('#' + id.refHeightSelect);
-
-			this.$el.find('.sortSelect').select2({
-				minimumResultsForSearch: -1,
-				dropdownAutoWidth: true
-			});
-			this.$sortSelect2 = this.$el.find('#' + id.sortSelect);
-
-			this.setFieldVisibility();
-		},
-
-		position: function () {
-			var self = this;
-			defer(function () {
-				self.$el.dialog('option', 'position', {
-					my: 'left+10 top-2',
-					at: 'right top',
-					of: self.column.$el
-				});
-			});
-		},
-
-		render: function (options) {
-			var self = this,
-				id,
-				basic,
-				advanced;
-			this.id = {
-				datasetSelect: _.uniqueId(),
-				geneSelect: _.uniqueId(),
-				modeSelect: _.uniqueId(),
-				featureSelect: _.uniqueId(),
-				colorSelect: _.uniqueId(),
-				pixSelect: _.uniqueId(),
-				radiusSelect: _.uniqueId(),
-				pointSelect: _.uniqueId(),
-				refHeightSelect: _.uniqueId(),
-				sortSelect: _.uniqueId()
-			};
-			id = this.id;
-			basic = basicTemplate({
-				datasetSelectId: id.datasetSelect,
-				datasets: datasets,
-				modeSelectId: id.modeSelect,
-				//modes: modes[datasets[0].dataType],
-				featureSelectId: id.featureSelect,
-				features: features,
-				geneSelectId: id.geneSelect,
-				genes: genes
-			});
-			advanced = advancedTemplate({
-				sortSelectId: id.sortSelect,
-				sorts: sorts,
-				colorSelectId: id.colorSelect,
-				colors: colors,
-				pixSelectId: id.pixSelect,
-				pixs: pixs,
-				radiusSelectId: id.radiusSelect,
-				radii: radii,
-				pointSelectId: id.pointSelect,
-				points: points,
-				refHeightSelectId: id.refHeightSelect,
-				refHeights: refHeights
-			});
-			this.$el = $(template({
-				basic: basic,
-				advanced: advanced
-			}));
-
-			this.renderFields(id);
+			this.$dataset = this.$el.find('.select2-container.dataset');
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['geneInput', 'advanced', 'advancedLabel'];
+			this.cache = ['inputModeRow', 'inputModeAnchor', 'listRow', 'list', 'chromRow', 'chrom',
+				'displayModeRow', 'displayModeAnchor', 'columnTitleRow', 'advanced', 'advancedLabel'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
 				return a;
 			}, {}));
 
-			if (!TEST) {
-				this.$el.find('.geneSelect').css('display', 'none');
-			}
-
 			this.$el.dialog({
 				title: 'Define Column',
-				//position: dialogPosition,
-				width: '725', // TODO make dynamic
+				width: '600', // TODO make dynamic ?
 				close: this.destroy
 			});
 			this.position();
 		},
 
 		initialize: function (options) {
-			_(this).bindAll();
-			APPLY_BUTTON = options.APPLY_BUTTON;
+			_.bindAll.apply(_, [this].concat(_.functions(this)));
+			//_(this).bindAll();
 			this.$anchor = options.$anchor;
+			this.sheetWrap = options.sheetWrap;
 			this.column = options.column;
+			this.updateColumn = options.updateColumn;
 			this.firstRenderDataset = true;
-			this.render(options);
-
-			this.$colorSelect2.select2('val', defaultColor());
-			this.$pixSelect2.select2('val', defaultPix());
-			this.$radiusSelect2.select2('val', defaultRadius());
-			this.$pointSelect2.select2('val', defaultPoint());
-			this.$refHeightSelect2.select2('val', defaultRefHeight());
-			this.$sortSelect2.select2('val', defaultSort());
-			this.$el
-				.on('mouseenter mouseleave', this.column.mouseenterLeave)
-				.on('change', '.datasetSelect', this.datasetChange)
-				//.on('change', '.geneSelect', this.geneChange)
-				//.on('keydown', '.geneInput', this.geneInputChange)
-				//.on('change', '.modeSelect', this.modeChange)
-				//.on('change', '.featureSelect', this.featureChange)
-				.on('click', '.advancedLabel', this.toggleAdvanced)
-				.on('change', '.sortSelect', this.sortChange)
-				.on('change', '.colorSelect', this.colorChange)
-				.on('change', '.pixSelect', this.pixChange)
-				.on('change', '.radiusSelect', this.radiusChange)
-				.on('change', '.pointSelect', this.pointChange)
-				.on('change', '.refHeightSelect', this.refHeightChange);
-			if (APPLY_BUTTON) {
-				this.$el.on('click', '.go', this.goClick);
-			}
+			this.state = {};
+			this.datasets = datasetsStub; // TODO
+			this.render();
 			if (options.dataset) {
-				this.$datasetSelect2.select2('val', options.dataset);
+				this.$dataset.select2('val', options.dataset);
+			}
+
+			this.$el // TODO replace with rx event handlers
+				.on('change', '.dataset', this.datasetChange)
+				.on('change', '.inputMode', this.inputModeChange)
+				.on('blur', '.list', this.listBlur)
+				.on('blur', '.chrom', this.chromBlur)
+				.on('change', '.displayMode', this.displayModeChange);
+			if (this.column) {
+				this.$el.on('mouseenter mouseleave', this.column.mouseenterLeave);
 			}
 		}
 	};
@@ -508,16 +386,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/columnEd
 			return create(id, options);
 		},
 
-		getDataType: getDataType,
-		defaultDataset: defaultDataset,
-		defaultMode: defaultMode,
-		defaultFeature: defaultFeature,
-		defaultColor: defaultColor,
-		defaultPix: defaultPix,
-		defaultRadius: defaultRadius,
-		defaultPoint: defaultPoint,
-		defaultRefHeight: defaultRefHeight,
-		defaultSort: defaultSort,
-		defaultGene: defaultGene
+		getDataSubType: getDataSubType
 	};
 });

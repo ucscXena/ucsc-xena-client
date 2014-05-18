@@ -1,0 +1,26 @@
+.sheetWrap {
+	display: inline-block;
+}
+.sheetWrap .spreadsheetTitle {
+	font-size: 1.2em;
+	background-color: rgba(0,0,0,0);
+	border: 0px;
+}
+.sheetWrap .spreadsheetTitle.untitled {
+	font-style: italic;
+	color: #cccccc;
+}
+.sheetWrap .showLegend {
+	vertical-align: bottom;
+}
+.sheetWrap .addColumn {
+	font-size: 1.5em;
+	cursor: pointer;
+	vertical-align: top;
+}
+.sheetWrap .debug {
+	background: Lavender;
+}
+.sheetWrap .debug button {
+	vertical-align: top;
+}

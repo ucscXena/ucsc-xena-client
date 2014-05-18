@@ -1,26 +1,30 @@
 /*jslint browser: true, regexp: true */
 /*global define: false, require: false */
 
-define(['haml!haml/spreadsheet',
-		'jquery',
+define(['jquery',
 		'underscore_ext',
 		'rx',
 		'columnModels',
 		'spreadsheet',
+		'sheetWrap',
 		'multi',
+		'columnNew',
 		'probe_column',
+		'spatialExonSparsePlot',
 		'uuid',
 		'cursor',
 		'lib/jquery-ui',
 		'rx.async'], function (
-			template,
 			$,
 			_,
 			Rx,
 			columnModels,
 			spreadsheet,
+			sheetWrap,
 			multi,
+			columnNew,
 			probe_column,
+			spatialExonSparsePlot,
 			uuid,
 			cursor) {
 
@@ -56,30 +60,9 @@ define(['haml!haml/spreadsheet',
 		sessionStorage['state'] = JSON.stringify(state);
 	});
 
-	$('#main').append(template());
-	var topdiv = $('.spreadsheet');
-
-	topdiv.css({height: 100}).resizable();
-
-	// XXX handler might leak
-	var resizes = topdiv.onAsObservable("resizestop")
-		.select(function (ev) {
-				return function (s) { return _.assoc(s, 'height', ev.additionalArguments[0].size.height) };
-		});
-
-	model.addStream(resizes);
-
-	model.state.select(function (s) {
-		if (topdiv.height() !== s.height) {
-			topdiv.height(s.height);
-		}
-	}).subscribe(); // XXX leaking disposable
-
 	var childrenStream = new Rx.Subject();
 	model.addStream(childrenStream);
-
 	var writeState = function (fn) { childrenStream.onNext(fn); };
-
 	var spreadsheetPaths = {
 		height: ['height'],
 		zoomIndex: ['zoomIndex'],
@@ -91,13 +74,78 @@ define(['haml!haml/spreadsheet',
 	};
 	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths);
 	var spreadsheetCursor = cursor(writeState, spreadsheetPaths);
-	var colsub = spreadsheet(spreadsheetState, spreadsheetCursor, topdiv); // XXX returns disposable
+
+/*
+	var childrenStream = new Rx.Subject();
+	model.addStream(childrenStream);
+	var writeState = function (fn) { childrenStream.onNext(fn); };
+*/
+	var $sheetWrap = sheetWrap.create({
+		$anchor: $('#main'),
+		updateColumn: updateColumn,
+		state: spreadsheetState,
+		cursor: spreadsheetCursor
+	});
+	var $spreadsheet = $('.spreadsheet');
+	var $debug = $('.debug');
+
+	$spreadsheet.css({height: 300}).resizable();
+
+	// XXX handler might leak
+	var resizes = $spreadsheet.onAsObservable("resizestop")
+		.select(function (ev) {
+				return function (s) { return _.assoc(s, 'height', ev.additionalArguments[0].size.height) };
+		});
+
+	model.addStream(resizes);
+
+	model.state.select(function (s) {
+		if ($spreadsheet.height() !== s.height) {
+			$spreadsheet.height(s.height);
+		}
+	}).subscribe(); // XXX leaking disposable
+/*
+	var childrenStream = new Rx.Subject();
+	model.addStream(childrenStream);
+	var writeState = function (fn) { childrenStream.onNext(fn); };
+	var spreadsheetPaths = {
+		height: ['height'],
+		zoomIndex: ['zoomIndex'],
+		zoomCount: ['zoomCount'],
+		samples: ['samples'],
+		column_rendering: ['column_rendering'],
+		column_order: ['column_order'],
+		data: ['_column_data']
+	};
+	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths);
+	var spreadsheetCursor = cursor(writeState, spreadsheetPaths);
+*/
+	var colsub = spreadsheet(spreadsheetState, spreadsheetCursor, $spreadsheet); // XXX returns disposable
 
 	// COLUMN STUB
 
-	function applyColumn(ev) {
+	function updateColumn(id) {
 		try {
 			var newcol = JSON.parse($('#columnStub').val());
+			console.log('updateColumn val length: ' + $('#columnStub').val().length);
+			debugstream.onNext(function (s) {
+				var assoc_in = _.assoc_in(s, ['column_rendering', id], newcol);
+				var newOrder = s.column_order.concat([id]);
+				var assoc = _.assoc(assoc_in, 'column_order', newOrder);
+				return assoc;
+				//return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
+				//	'column_order', s.column_order.concat([id]));
+			});
+		} catch (e) {
+			console.log('error', e);
+			console.trace();
+		}
+	}
+
+	function createColumn() {
+		try {
+			var newcol = JSON.parse($('#columnStub').val());
+			console.log('createColumn val length: ' + $('#columnStub').val().length);
 			debugstream.onNext(function (s) {
 				var id = uuid();
 				return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
@@ -111,12 +159,12 @@ define(['haml!haml/spreadsheet',
 	var debugstream = new Rx.Subject();
 	model.addStream(debugstream);
 	var debugtext = $('<textarea  id="columnStub" rows=20 cols=25></textarea>');
-	var columnButton = $('<button>apply column</button>');
-	topdiv.parent().append(debugtext).append(columnButton);
-	columnButton.on('click', applyColumn);
+	var columnButton = $('<button id="columnStubApply">apply column</button>');
+	$debug.append(debugtext).append(columnButton);
+	columnButton.on('click', createColumn);
 	debugtext.on('keydown', function (ev) {
 		if (ev.keyCode === 13 && ev.shiftKey === true) {
-			applyColumn(ev);
+			createColumn(ev);
 		}
 	});
 
@@ -135,7 +183,7 @@ define(['haml!haml/spreadsheet',
 
 	var debugstate = $('<textarea id="samplesStub" rows=20 cols=25></textarea>');
 	var samplesButton = $('<button>apply samples</button>');
-	topdiv.parent().append(debugstate).append(samplesButton);
+	$debug.append(debugstate).append(samplesButton);
 	samplesButton.on('click', applySamples);
 	debugstate.on('keydown', function (ev) {
 		if (ev.keyCode === 13 && ev.shiftKey === true) {
@@ -143,9 +191,9 @@ define(['haml!haml/spreadsheet',
 		}
 	});
 
-	var example_samples = $('<button>Pick samples</button>');
+	var example_samples = $('<button id="pickSamples">Pick samples</button>');
 
-	$('#testing').parent().append(example_samples);
+	$debug.append(example_samples);
 	example_samples.on('click',function (ev) {
 		var json = {
 			"samples": [
@@ -167,7 +215,7 @@ define(['haml!haml/spreadsheet',
 				"TCGA-EW-A1OW-01", "TCGA-A2-A0T4-01", "TCGA-AO-A12H-01", "TCGA-E9-A1RE-01", "TCGA-B6-A0I6-01", "TCGA-A8-A099-01",
 				"TCGA-BH-A0DV-11", "TCGA-E2-A15D-01", "TCGA-A8-A06N-01"
 			],
-			"height": 100,
+			"height": 400,
 			"zoomIndex": 0,
 			"zoomCount": 100,
 			"column_rendering": {},
@@ -181,10 +229,10 @@ define(['haml!haml/spreadsheet',
 
 	var example_column1 = $('<button>Sample column 1</button>');
 
-	$('#testing').parent().append(example_column1);
+	$debug.append(example_column1);
 	example_column1.on('click',function (ev) {
 		var newcol =  {
-			"width":100,
+			"width":300,
 			"dsID": "http://cancerdb:7222/public/TCGA/TCGA.BRCA.sampleMap/Gistic2_CopyNumber_Gistic2_all_data_by_genes",
 			"dataType": "nonspatial",
 			"fields": [
@@ -209,11 +257,14 @@ define(['haml!haml/spreadsheet',
 			// XXX error handling?
 			model.addStream(Rx.Observable.returnValue(function () { return JSON.parse(sessionStorage['state']) }));
 		}
+		//$('.debug').hide();
+		$('#pickSamples').click();
+		$('.addColumn').click();
 	});
 
 
 //	var cols = $('<div></div>');
-//	topdiv.append(cols);
+//	$spreadsheet.append(cols);
 //	cols.append($('<div style="display:inline-block">one</div><div style="display:inline-block">two</div><div style="display:inline-block">three</div>'));
 //	$(cols).children().resizable({handles: "e"});
 });

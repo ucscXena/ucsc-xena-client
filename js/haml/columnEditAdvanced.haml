@@ -3,36 +3,36 @@
     %tr{class:'dev'}
       %td{class:'sortLabel tupleLabel'} Sort:
       %td{class:'tupleValue'}
-        %select{id:sortSelectId, class:'sortSelect'}
+        %select{class:'sortSelect'}
           - _.each(sorts, function (sort) {
             %option{value:sort} =sort
     %tr{class:'dev'}
       %td{class:'tupleLabel'} Impact color:
       %td{class:'tupleValue'}
-        %select{id:colorSelectId, class:'colorSelect'}
+        %select{class:'colorSelect'}
           - _.each(colors, function (color) {
             %option{value:color} =color
     %tr{class:'dev'}
       %td{class:'tupleLabel'} Pixel height per sample:
       %td{class:'tupleValue'}
-        %select{id:pixSelectId, class:'pixSelect'}
+        %select{class:'pixSelect'}
           - _.each(pixs, function (pix) {
             %option{value:pix} =pix
     %tr{class:'dev'}
       %td{class:'tupleLabel'} Halo radius:
       %td{class:'tupleValue'}
-        %select{id:radiusSelectId, class:'radiusSelect'}
+        %select{class:'radiusSelect'}
           - _.each(radii, function (radius) {
             %option{value:radius} =radius
     %tr{class:'dev'}
       %td{class:'tupleLabel'} Point radius:
       %td{class:'tupleValue'}
-        %select{id:pointSelectId, class:'pointSelect'}
+        %select{class:'pointSelect'}
           - _.each(points, function (point) {
             %option{value:point} =point
     %tr{class:'dev'}
       %td{class:'tupleLabel'} RefGene height:
       %td{class:'tupleValue'}
-        %select{id:refHeightSelectId, class:'refHeightSelect'}
+        %select{class:'refHeightSelect'}
           - _.each(refHeights, function (refHeight) {
             %option{value:refHeight} =refHeight
