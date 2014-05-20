@@ -210,9 +210,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		renderColumn: function () { // TODO shouldn't have to go through debug widgets
-			if (this.state.displayMode === 'dClinical') { // not yet
-				return;
-			}
 			var fields = this.getFields(),
 				json = {
 					"width": 300,
@@ -222,7 +219,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 					"ui": this.state
 				};
 			$('#columnStub').val(JSON.stringify(json, undefined, 4));
-			//this.updateColumn(this.id);
+			this.updateColumn(this.id);
 		},
 
 		reRender: function () {

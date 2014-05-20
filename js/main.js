@@ -13,6 +13,7 @@ define(['jquery',
 		'spatialExonSparsePlot',
 		'uuid',
 		'cursor',
+		'stub',
 		'lib/jquery-ui',
 		'rx.async'], function (
 			$,
@@ -26,7 +27,8 @@ define(['jquery',
 			probe_column,
 			spatialExonSparsePlot,
 			uuid,
-			cursor) {
+			cursor,
+			stub) {
 
 	'use strict';
 
@@ -196,7 +198,8 @@ define(['jquery',
 	$debug.append(example_samples);
 	example_samples.on('click',function (ev) {
 		var json = {
-			"samples": [
+			"samples": stub.getSamples(),
+/*			"samples": [
 				"TCGA-E9-A1RD-11", "TCGA-E9-A1RC-01", "TCGA-AC-A3TN-01", "TCGA-BH-A0B1-01", "TCGA-B6-A0RG-01", "TCGA-A8-A07P-01",
 				"TCGA-D8-A1JH-01", "TCGA-A2-A0CR-01", "TCGA-BH-A0DS-01", "TCGA-E2-A14S-01", "TCGA-BH-A0HK-11", "TCGA-A2-A0D1-01",
 				"TCGA-BH-A18R-01", "TCGA-BH-A0HW-01", "TCGA-E9-A1N8-01", "TCGA-E2-A152-01", "TCGA-BH-A0DQ-01", "TCGA-AO-A0JC-01",
@@ -215,6 +218,7 @@ define(['jquery',
 				"TCGA-EW-A1OW-01", "TCGA-A2-A0T4-01", "TCGA-AO-A12H-01", "TCGA-E9-A1RE-01", "TCGA-B6-A0I6-01", "TCGA-A8-A099-01",
 				"TCGA-BH-A0DV-11", "TCGA-E2-A15D-01", "TCGA-A8-A06N-01"
 			],
+*/
 			"height": 400,
 			"zoomIndex": 0,
 			"zoomCount": 100,
