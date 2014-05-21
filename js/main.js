@@ -161,9 +161,12 @@ define(['jquery',
 	var debugstream = new Rx.Subject();
 	model.addStream(debugstream);
 	var debugtext = $('<textarea  id="columnStub" rows=20 cols=25></textarea>');
+	$debug.append(debugtext);
+/*
 	var columnButton = $('<button id="columnStubApply">apply column</button>');
-	$debug.append(debugtext).append(columnButton);
+	$debug.append(columnButton);
 	columnButton.on('click', createColumn);
+*/
 	debugtext.on('keydown', function (ev) {
 		if (ev.keyCode === 13 && ev.shiftKey === true) {
 			createColumn(ev);
@@ -184,22 +187,25 @@ define(['jquery',
 	}
 
 	var debugstate = $('<textarea id="samplesStub" rows=20 cols=25></textarea>');
+	$debug.append(debugstate);
+	/*
 	var samplesButton = $('<button>apply samples</button>');
-	$debug.append(debugstate).append(samplesButton);
+	$debug.append(samplesButton);
 	samplesButton.on('click', applySamples);
+	*/
 	debugstate.on('keydown', function (ev) {
 		if (ev.keyCode === 13 && ev.shiftKey === true) {
 			applySamples(ev);
 		}
 	});
 
-	var example_samples = $('<button id="pickSamples">Pick samples</button>');
-
+	var example_samples = $('<button id="pickBrcaSamples">BRCA samples</button>');
 	$debug.append(example_samples);
 	example_samples.on('click',function (ev) {
 		var json = {
-			"samples": stub.getSamples(),
-/*			"samples": [
+			"samples": stub.getSamples('brca'),
+			/*
+			"samples": [
 				"TCGA-E9-A1RD-11", "TCGA-E9-A1RC-01", "TCGA-AC-A3TN-01", "TCGA-BH-A0B1-01", "TCGA-B6-A0RG-01", "TCGA-A8-A07P-01",
 				"TCGA-D8-A1JH-01", "TCGA-A2-A0CR-01", "TCGA-BH-A0DS-01", "TCGA-E2-A14S-01", "TCGA-BH-A0HK-11", "TCGA-A2-A0D1-01",
 				"TCGA-BH-A18R-01", "TCGA-BH-A0HW-01", "TCGA-E9-A1N8-01", "TCGA-E2-A152-01", "TCGA-BH-A0DQ-01", "TCGA-AO-A0JC-01",
@@ -218,10 +224,28 @@ define(['jquery',
 				"TCGA-EW-A1OW-01", "TCGA-A2-A0T4-01", "TCGA-AO-A12H-01", "TCGA-E9-A1RE-01", "TCGA-B6-A0I6-01", "TCGA-A8-A099-01",
 				"TCGA-BH-A0DV-11", "TCGA-E2-A15D-01", "TCGA-A8-A06N-01"
 			],
-*/
+			*/
 			"height": 400,
 			"zoomIndex": 0,
 			"zoomCount": 100,
+			"column_rendering": {},
+			"column_order": []
+		};
+		debugstream.onNext(function(s) {
+			return _.extend({}, s, json);
+		});
+		$('#samplesStub').val(JSON.stringify(json, undefined, 4));
+	});
+
+	var nbl_samples = $('<button id="pickSamples">NBL samples</button>');
+	$debug.append(nbl_samples);
+	nbl_samples.on('click',function (ev) {
+		var samples = stub.getSamples('nbl'),
+			json = {
+			"samples": samples,
+			"height": 400,
+			"zoomIndex": 0,
+			"zoomCount": samples.length,
 			"column_rendering": {},
 			"column_order": []
 		};

@@ -16,6 +16,17 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 		toNumber = _.toNumber,
 		uniqueId = _.uniqueId,
 		genes = stub.getRefGeneNames2(),
+		columnUntitles = {
+			cna: 'copy number',
+			DNAMethylation: 'DNA methylation',
+			geneExp: 'gene expression',
+			RNAseqExp: 'RNA sequence expression',
+			arrayExp: 'array expression',
+			somaticMutation: 'somatic mutation',
+			sparseMutation: 'sparse mutation',
+			protein: 'protein',
+			null: 'clinical feature'
+		},
 		features = [
 			{name: 'impact', title: 'Impact:'}, // shorttitle ?
 			{name: 'DNA_AF', title: 'DNA allele frequency:'},
@@ -32,16 +43,16 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 			},
 
 			titleChange: function (e) {
-				if (this.$title.val() === untitle) {
-					this.$title.addClass('untitled');
+				if (this.$columnTitle.val() === this.untitle) {
+					this.$columnTitle.addClass('untitled');
 				} else {
-					this.$title.removeClass('untitled');
+					this.$columnTitle.removeClass('untitled');
 				}
 			},
 
 			titleFocusout: function (e) {
-				if (this.$title.val() === '') {
-					this.$title.val(untitle);
+				if (this.$columnTitle.val() === '') {
+					this.$columnTitle.val(this.untitle);
 				}
 				this.titleChange();
 			},
@@ -82,6 +93,33 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 				*/
 			},
 
+			resize: function () {
+				var self = this;
+				setTimeout(function () {
+					var width = self.$el.width()
+						- self.$columnTitle.css('padding-left').replace('px', '')
+						- self.$columnTitle.css('padding-right').replace('px', '')
+						- self.$columnTitle.css('border-left-width').replace('px', '')
+						- self.$columnTitle.css('border-right-width').replace('px', '')
+						- self.$more.width()
+						- 4; // for don't know what
+					self.$columnTitle.width(width);
+				}, 200);
+			},
+
+			render: function (options) {
+				var ui = options.ws.column.ui,
+					untitle = columnUntitles[ui.dataSubType];
+				if (!this.untitle || (this.$columnTitle.val() === this.untitle)) {
+					this.untitle = untitle;
+					this.$columnTitle.val(untitle);
+					this.titleChange();
+				} else {
+					this.untitle = untitle;
+				}
+				this.resize();
+			},
+
 			initialize: function (options) {
 				var self = this,
 					ws = options.ws;
@@ -91,19 +129,27 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 				this.width = ws.column.width;
 				this.height = ws.height;
 				this.sheetWrap = options.sheetWrap;
-				this.$el = $(template());
+				this.$el = $(template({
+					features: undefined
+				}));
 				this.$anchor.append(this.$el);
 
 				// cache jquery objects for active DOM elements
-				this.cache = ['more', 'samplePlot'];
+				this.cache = ['columnTitle', 'more', 'samplePlot'];
 				_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
-
 				this.columnMenu = columnMenu.create(this.id, {
 					anchor: this.$more,
 					column: this,
 					deleteColumn: this.sheetWrap.deleteColumn,
 					duplicateColumn: this.sheetWrap.duplicateColumn
 				});
+				//this.$columnTitle.on('blur', this.titleFocusOut);
+				this.$el // TODO use rx handlers?
+					.on('resize', this.resize)
+					.on('keyup change', '.columnTitle', this.titleChange)
+					.on('focusout', '.columnTitle', this.titleFocusout);
+
+				this.render(options);
 			}
 		};
 
@@ -118,7 +164,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 		show: function (id, options) {
 			var widget = widgets[id];
 			if (widget) {
-				widget.show();
+				widget.render(options);
 			} else {
 				widget = widgets[id] = create(id, options);
 			}

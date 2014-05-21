@@ -1,10 +1,17 @@
 %table{class:'columnUi'}
 
-  %tr{class:'header'}
+  %tr{class:'header static'}
     %td{colspan:2}
-      -# %input{class:'columnTitle', type:'text'}
+      %input{class:'columnTitle', type:'text'}
       %span{class:'more menu ui-icon ui-icon-triangle-1-s', title:'More...', style:'float:right'}
       %div{style:'clear:both'}
+
+  - if (features) {
+    %tr{class:'header'}
+      %td{colspan:2}
+        %select{class:'feature'}
+          - _.each(features, function (f) {
+            %option{value:f.name} =f.title
 
   %tr{style:'vertical-align:bottom'}
     %td{class:'sampleSidebar sidebar'}

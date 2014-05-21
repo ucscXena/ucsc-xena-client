@@ -1,13 +1,14 @@
 .spreadsheet {
 	position: relative;
 	display: inline-block;
+	background-color: #eeeeff;
 }
 .spreadsheet .ui-resizable-handle,
 .spreadsheet .ui-sortable { /* TODO does ui-sortable need to be here? */
 	display: inline-block;
 }
 .spreadsheet-column {
-	background-color: white;
+	background-color: #eeffee;
 	display: inline-block;
 	margin-right: 5px;
 }

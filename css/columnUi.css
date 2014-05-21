@@ -1,5 +1,5 @@
 .columnUi {
-	background-color: #ffffff;
+	background-color: #ffeeee;
 	/*border: 1px dashed transparent;*/
 }
 /*
@@ -15,13 +15,13 @@
 	display:none;
 }
 .columnUi .columnTitle {
-	font-size: 1.1em;
+	font-size: 0.75em;
 	/*border: 0px;*/
 	background-color: rgba(0,0,0,0);
 }
 .columnUi .columnTitle.untitled {
 	font-style: italic;
-	color: #cccccc;
+	/*color: #cccccc;*/
 }
 .columnUi .more {
 	display: inline-block;

@@ -10,11 +10,12 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 	var datasetsStub = stub.getDatasets(),
 
 		// TODO: make these more global
-		defaultGene = 'TP53',
-		defaultGenes = 'TP53, PTEN',
+		defaultGene = 'ALK',
+		defaultGenes = 'ALK, PTEN',
 		defaultProbes = 'no probes entered', // TODO
 		defaultChrom = 'chr1-chrY',
-		defaultFeature = 'days_to_birth',
+		defaultFeature = '_INTEGRATION',
+		//defaultFeature = 'days_to_birth',
 		defaultField = 'fields for this option',
 		defaultWidth = 100,
 
@@ -130,6 +131,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 		renderInputModes: function (dataSubType) {
 			var modes = getInputModesByDataSubType(dataSubType);
+			this.state.dataSubType = dataSubType;
 			if (modes.length === 1) {
 				this.state.inputMode = modes[0];
 			} else {
@@ -343,6 +345,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			this.updateColumn = options.updateColumn;
 			this.firstRenderDataset = true;
 			this.state = {};
+			datasetsStub = stub.getDatasets(),
 			this.datasets = datasetsStub; // TODO
 			this.render();
 			if (options.dataset) {
