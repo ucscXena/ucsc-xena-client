@@ -1,0 +1,5 @@
+%tr{class:klass + 'Row header'}
+    %td{colspan:2}
+      %select{class:klass}
+        - _.each(list, function (val, key) {
+          %option{value:key} =val

@@ -1,18 +1,17 @@
 %table{class:'columnUi'}
 
-  %tr{class:'header static'}
+  %tr{class:'titleRow header'}
     %td{colspan:2}
       %input{class:'columnTitle', type:'text'}
       %span{class:'more menu ui-icon ui-icon-triangle-1-s', title:'More...', style:'float:right'}
       %div{style:'clear:both'}
 
-  - if (features) {
-    %tr{class:'header'}
-      %td{colspan:2}
-        %select{class:'feature'}
-          - _.each(features, function (f) {
-            %option{value:f.name} =f.title
+  %tr{class:'plotAlignRow'}
+    %td{class:'plotAlign', colspan:2}
 
-  %tr{style:'vertical-align:bottom'}
+  %tr
     %td{class:'sampleSidebar sidebar'}
     %td{class:'samplePlot plot',}
+
+  %tr{class:'haloFillerRow'}
+    %td{class:'haloFiller', colspan:2}
