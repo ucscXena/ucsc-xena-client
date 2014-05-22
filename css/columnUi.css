@@ -1,5 +1,7 @@
 .columnUi {
 	background-color: #ffeeee;
+	font-size: 0.8em;
+	vertical-align: bottom;
 	/*border: 1px dashed transparent;*/
 }
 /*
@@ -15,7 +17,7 @@
 	display:none;
 }
 .columnUi .columnTitle {
-	font-size: 0.75em;
+	font-size: 1em;
 	/*border: 0px;*/
 	background-color: rgba(0,0,0,0);
 }

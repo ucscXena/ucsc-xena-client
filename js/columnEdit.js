@@ -19,7 +19,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		defaultField = 'fields for this option',
 		defaultWidth = 100,
 
-		displaysByDataSubType = {
+		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles
 			cna: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
 			DNAMethylation: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
 			geneExp: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with RNAseqExp & arrayExp
@@ -37,14 +37,14 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			iChrom: ['dChrom'],
 			iClinical: ['dClinical']
 		},
-		inputModeLabels = {
+		inputModeLabels = { // TODO combine with displaysByInput
 			iGene: 'single gene',
 			iGenes: 'list of genes',
 			iProbes: 'list of probes',
 			iChrom: 'chromosome coordinates',
 			iClinical: 'clinical'
 		},
-		displayModeLabels = {
+		displayModeLabels = { // TODO combine with dataTypeByDisplay
 			dGene: 'gene',
 			dGeneProbes: 'probes',
 			dExonDense: 'exons',
@@ -227,6 +227,9 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		reRender: function () {
 			console.log('columnEdit.reRender(): id: ' + this.id);
 			var dataSubType = getDataSubType(this.state.dsID);
+			if (dataSubType === 'mutationVector' || dataSubType === 'sparseMutation') {
+				return;
+			}
 			this.$el.find('tr:not(.static)').hide();
 			this.$inputModeAnchor.empty();
 			this.$displayModeAnchor.empty();
