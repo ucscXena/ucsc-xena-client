@@ -50,14 +50,14 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			dGeneChrom: 'chromosomes'
 		},
 		dataTypeByDisplay = {
-			dGene: 'nonspatial',
-			dGeneProbes: 'nonspatial',
+			dGene: 'gene', //'nonspatial',
+			dGeneProbes: 'gene', //'nonspatial',
 			dExonDense: 'spatialExonDense',
 			dExonSparse: 'spatialExonSparse',
 			dGeneChrom: 'spatialGeneChrom',
-			dGenes: 'nonspatial',
-			dProbes: 'nonspatial',
-			dClinical: 'nonspatial',
+			dGenes: 'gene', //'nonspatial',
+			dProbes: 'probe', //'nonspatial',
+			dClinical: 'feature', //'nonspatial',
 			dChrom: 'spatialChrom'
 		},
 		widgets = {},
@@ -387,7 +387,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 			this.$el.dialog({
 				title: 'Define Column',
-				width: '600', // TODO make dynamic ?
+				width: '650', // TODO make dynamic
 				close: this.destroy
 			});
 			this.position();
