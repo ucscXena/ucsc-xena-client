@@ -18,10 +18,14 @@
       %td
         %textarea{class:'list', rows:7, columns:40}
 
-    %tr{class:'chromRow', style:'display:none'}
+    %tr{class:'singleRow', style:'display:none'}
       %td
       %td
-        %input{class:'chrom', type:'text', columns:40}
+        %input{class:'single', type:'text', columns:40}
+
+    %tr{class:'selectRow', style:'display:none'}
+      %td
+      %td{class:'selectAnchor tupleValue'}
 
     %tr{class:'displayModeRow', style:'display:none'}
       %td{class:'tupleLabel'} Display as:
@@ -35,4 +39,4 @@
     %tr{class:'goRow', style:'display:none'}
       %td
       %td{class:'tupleValue'}
-        %button{class:'go'} Create
+        %button{class:'go'} Apply

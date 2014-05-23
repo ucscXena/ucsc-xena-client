@@ -8,7 +8,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 	var TEST = stub.TEST(),
 		APPLY = true,
-		defaultFeature = '_INTEGRATION',
+		//defaultFeature = '_INTEGRATION',
 		each = _.each,
 		filter = _.filter,
 		find = _.find,
@@ -51,14 +51,14 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				}
 				this.titleChange();
 			},
-
+/*
 			featureChange: function (e) {
 				this.ws.column.ui.feature = this.$feature.select2('val');
 				this.ws.column.fields = [this.ws.column.ui.feature];
 				$('#columnStub').val(JSON.stringify(this.ws.column, undefined, 4));
 				this.updateColumn(this.id);
 			},
-
+*/
 			renderPlots: function () {
 				console.log('columnUi.renderPlots()');
 			/*
@@ -119,7 +119,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					this.untitle = untitle;
 				}
 			},
-
+/*
 			renderFeature: function(ui) {
 				var features = stub.getFeatures();
 				this.$el.find('.featureRow').remove();
@@ -137,13 +137,13 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				this.$feature = this.$el.find('.select2-container.feature');
 				this.$feature.select2('val', this.ws.column.ui.feature);
 			},
-
+*/
 			reRender: function (options) {
 				console.log('columnUi.reRender');
 				var ui = options.ws.column.ui;
 				this.ws = options.ws;
 				this.renderTitle(ui);
-				this.renderFeature(ui);
+				//this.renderFeature(ui);
 				//this.resize();
 			},
 
@@ -172,8 +172,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				this.$el // TODO use rx handlers?
 					.on('resize', this.resize)
 					.on('keyup change', '.columnTitle', this.titleChange)
-					.on('focusout', '.columnTitle', this.titleFocusout)
-					.on('change', '.feature', this.featureChange);
+					.on('focusout', '.columnTitle', this.titleFocusout);
+					//.on('change', '.feature', this.featureChange);
 
 				this.reRender(options);
 			},
@@ -199,8 +199,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					this.columnEdit = columnEdit.show(this.id, {
 						sheetWrap: this.sheetwrap,
 						columnUi: this,
-						updateColumn: this.updateColumn,
-						state: { feature: defaultFeature }
+						updateColumn: this.updateColumn
+						//state: { feature: defaultFeature }
 					});
 				}
 			}

@@ -263,6 +263,12 @@ define(['jquery',
 	var example_column1 = $('<button>Sample column 1</button>');
 
 	$debug.append(example_column1);
+
+	$debug.offset({
+		top: $debug.offset().top + 50,
+		left: $debug.offset().left
+	});
+
 	example_column1.on('click',function (ev) {
 		var newcol =  {
 			"width":200,
@@ -277,6 +283,7 @@ define(['jquery',
 				"LOC100132287"
 			]
 		};
+
 		debugstream.onNext(function (s) {
 			var id = uuid();
 			return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
