@@ -8,7 +8,7 @@ define(['jquery',
 		'spreadsheet',
 		'sheetWrap',
 		'multi',
-		'columnNew',
+		'columnUi',
 		'probe_column',
 		'spatialExonSparsePlot',
 		'uuid',
@@ -23,7 +23,7 @@ define(['jquery',
 			spreadsheet,
 			sheetWrap,
 			multi,
-			columnNew,
+			columnUi,
 			probe_column,
 			spatialExonSparsePlot,
 			uuid,
@@ -48,6 +48,7 @@ define(['jquery',
 	};
 
 	var model = columnModels(); // XXX global for testing
+	var HEIGHT = 300;
 
 	var unload = Rx.Observable.fromEvent(window, 'beforeunload');
 	// XXX does this work if no state events occur?? Looks like not.
@@ -82,7 +83,7 @@ define(['jquery',
 	model.addStream(childrenStream);
 	var writeState = function (fn) { childrenStream.onNext(fn); };
 */
-	var $sheetWrap = sheetWrap.create({
+	var thisSheetWrap = sheetWrap.create({
 		$anchor: $('#main'),
 		updateColumn: updateColumn,
 		state: spreadsheetState,
@@ -91,7 +92,7 @@ define(['jquery',
 	var $spreadsheet = $('.spreadsheet');
 	var $debug = $('.debug');
 
-	$spreadsheet.css({height: 300}).resizable();
+	$spreadsheet.css({height: HEIGHT}).resizable();
 
 	// XXX handler might leak
 	var resizes = $spreadsheet.onAsObservable("resizestop")
@@ -150,6 +151,10 @@ define(['jquery',
 			console.log('createColumn val length: ' + $('#columnStub').val().length);
 			debugstream.onNext(function (s) {
 				var id = uuid();
+				columnUi.create(id, {
+					sheetWrap: thisSheetWrap,
+					updateColumn: updateColumn
+				});
 				return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
 					'column_order', s.column_order.concat([id]));
 			});
@@ -225,7 +230,7 @@ define(['jquery',
 				"TCGA-BH-A0DV-11", "TCGA-E2-A15D-01", "TCGA-A8-A06N-01"
 			],
 			*/
-			"height": 400,
+			"height": HEIGHT,
 			"zoomIndex": 0,
 			"zoomCount": 100,
 			"column_rendering": {},
@@ -243,7 +248,7 @@ define(['jquery',
 		var samples = stub.getSamples('nbl'),
 			json = {
 			"samples": samples,
-			"height": 400,
+			"height": HEIGHT,
 			"zoomIndex": 0,
 			"zoomCount": samples.length,
 			"column_rendering": {},
@@ -260,7 +265,7 @@ define(['jquery',
 	$debug.append(example_column1);
 	example_column1.on('click',function (ev) {
 		var newcol =  {
-			"width":300,
+			"width":200,
 			"dsID": "http://cancerdb:7222/public/TCGA/TCGA.BRCA.sampleMap/Gistic2_CopyNumber_Gistic2_all_data_by_genes",
 			"dataType": "nonspatial",
 			"fields": [

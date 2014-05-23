@@ -35,9 +35,10 @@ define(['haml!haml/sheetWrap',
 		},
 
 		addColumnClick: function (ev) {
-			this.columnEdit = columnEdit.show(uuid(), {
+			var id = uuid();
+			columnUi.create(id, {
+				edit: true,
 				sheetWrap: this,
-				column: undefined,
 				updateColumn: this.updateColumn
 			});
 		},
@@ -45,7 +46,7 @@ define(['haml!haml/sheetWrap',
 		initialize: function (options) {
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
-			this.sheetWrap = options.sheetWrap;
+			//this.sheetWrap = options.sheetWrap;
 			this.updateColumn = options.updateColumn;
 			this.state = options.state;
 			this.cursor = options.cursor;
@@ -65,8 +66,13 @@ define(['haml!haml/sheetWrap',
 
 	return {
 
+		get: function () {
+			return widget;
+		},
+		
 		columnShow: function (id, ws) {
-			return columnUi.show(id, { ws: ws, sheetWrap: widget });
+			var column = columnUi.show(id, { ws: ws, sheetWrap: widget });
+			return column.$samplePlot;
 		},
 
 		create: function (options) {

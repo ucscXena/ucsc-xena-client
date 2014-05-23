@@ -14,8 +14,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		defaultGenes = 'ALK, PTEN',
 		defaultProbes = 'no probes entered', // TODO
 		defaultChrom = 'chr1-chrY',
-		defaultFeature = '_INTEGRATION',
-		//defaultFeature = 'days_to_birth',
 		defaultField = 'fields for this option',
 		defaultWidth = 100,
 
@@ -28,7 +26,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			somaticMutation: ['dGene', 'dGenes'],
 			sparseMutation: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
 			protein: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			null: ['dClinical']
+			clinical: ['dClinical']
 		},
 		displaysByInput = {
 			iGene: ['dGene', 'dGeneProbes', 'dGeneChrom', 'dExonDense', 'dExonSparse'],
@@ -158,9 +156,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			if (!this.state.gene) {
 				this.state.gene = defaultGene;
 			}
-			if (!this.state.feature) {
-				this.state.feature = defaultFeature;
-			}
 		},
 
 		renderList: function () {
@@ -189,6 +184,14 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			}
 		},
 
+		renderTitle: function (dataSubType) {
+			//this.$title.val(this.columnUi.getTitle(dataSubType));
+		},
+
+		renderGo: function () {
+			//if (this.state.dsID && this.state.
+		},
+
 		getFields: function () {
 			var fields;
 			switch (this.state.inputMode) {
@@ -214,8 +217,8 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		renderColumn: function () { // TODO shouldn't have to go through debug widgets
 			var fields = this.getFields(),
 				json = {
-					"width": 300,
-					"dsID": this.state.dsID,
+					"width": 200,
+					"dsID": this.state.dsID, // TODO we don't need dsID in this.state too
 					"dataType": dataTypeByDisplay[this.state.displayMode],
 					"fields": fields,
 					"ui": this.state
@@ -240,6 +243,8 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			this.renderList();
 			this.renderChrom();
 			this.renderDisplayModes(dataSubType);
+			this.renderTitle(dataSubType);
+			this.renderGo();
 
 			this.renderColumn();
 		},
@@ -285,9 +290,9 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			var self = this,
 				offset,
 				of;
-			if (this.column) {
+			if (this.columnUi) {
 				offset = 10;
-				of = this.column.$el;
+				of = this.columnUi.$el;
 			} else {
 				offset = defaultWidth - 12;
 				of = this.sheetWrap.$addColumn;
@@ -344,10 +349,10 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			//_(this).bindAll();
 			this.$anchor = options.$anchor;
 			this.sheetWrap = options.sheetWrap;
-			this.column = options.column;
+			this.columnUi = options.columnUi;
 			this.updateColumn = options.updateColumn;
 			this.firstRenderDataset = true;
-			this.state = {};
+			this.state = options.state;
 			datasetsStub = stub.getDatasets(),
 			this.datasets = datasetsStub; // TODO
 			this.render();
@@ -361,8 +366,8 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 				.on('blur', '.list', this.listBlur)
 				.on('blur', '.chrom', this.chromBlur)
 				.on('change', '.displayMode', this.displayModeChange);
-			if (this.column) {
-				this.$el.on('mouseenter mouseleave', this.column.mouseenterLeave);
+			if (this.columnUi) {
+				this.$el.on('mouseenter mouseleave', this.columnUi.mouseenterLeave);
 			}
 		}
 	};

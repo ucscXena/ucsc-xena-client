@@ -1,13 +1,14 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'columnEdit', 'columnMenu', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore'
+define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnEdit', 'columnMenu', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore'
 	// non-object dependenciies
-	], function (stub, template, tupleTemplate, colorBar, columnEdit, columnMenu, defer, /*mutation,*/ refGene, util, d3, $, select2, _) {
+	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnEdit, columnMenu, defer, /*mutation,*/ refGene, util, d3, $, select2, _) {
 	'use strict';
 
 	var TEST = stub.TEST(),
-		untitle = 'untitled column',
+		APPLY = true,
+		defaultFeature = '_INTEGRATION',
 		each = _.each,
 		filter = _.filter,
 		find = _.find,
@@ -25,14 +26,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 			somaticMutation: 'somatic mutation',
 			sparseMutation: 'sparse mutation',
 			protein: 'protein',
-			null: 'clinical feature'
+			clinical: 'clinical feature'
 		},
-		features = [
-			{name: 'impact', title: 'Impact:'}, // shorttitle ?
-			{name: 'DNA_AF', title: 'DNA allele frequency:'},
-			{name: 'RNA_AF', title: 'RNA allele frequency:'},
-			{name: 'dataset', title: 'Dataset:'}
-		],
 		widgets = {},
 		aWidget = {
 
@@ -55,6 +50,13 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 					this.$columnTitle.val(this.untitle);
 				}
 				this.titleChange();
+			},
+
+			featureChange: function (e) {
+				this.ws.column.ui.feature = this.$feature.select2('val');
+				this.ws.column.fields = [this.ws.column.ui.feature];
+				$('#columnStub').val(JSON.stringify(this.ws.column, undefined, 4));
+				this.updateColumn(this.id);
 			},
 
 			renderPlots: function () {
@@ -107,9 +109,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 				}, 200);
 			},
 
-			render: function (options) {
-				var ui = options.ws.column.ui,
-					untitle = columnUntitles[ui.dataSubType];
+			renderTitle: function (ui) {
+				var untitle = columnUntitles[ui.dataSubType];
 				if (!this.untitle || (this.$columnTitle.val() === this.untitle)) {
 					this.untitle = untitle;
 					this.$columnTitle.val(untitle);
@@ -117,25 +118,50 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 				} else {
 					this.untitle = untitle;
 				}
-				this.resize();
 			},
 
-			initialize: function (options) {
+			renderFeature: function(ui) {
+				var features = stub.getFeatures();
+				this.$el.find('.featureRow').remove();
+				this.$feature = undefined;
+				if (ui.dataSubType === 'clinical') {
+					this.$titleRow.after($(selectTemplate({
+						klass: 'feature',
+						list: features
+					})));
+				}
+				this.$el.find('.feature').select2({
+					minimumResultsForSearch: 20,
+					dropdownAutoWidth: true
+				});
+				this.$feature = this.$el.find('.select2-container.feature');
+				this.$feature.select2('val', this.ws.column.ui.feature);
+			},
+
+			reRender: function (options) {
+				console.log('columnUi.reRender');
+				var ui = options.ws.column.ui;
+				this.ws = options.ws;
+				this.renderTitle(ui);
+				this.renderFeature(ui);
+				//this.resize();
+			},
+
+			firstRender: function (options) {
 				var self = this,
 					ws = options.ws;
-				_.bindAll.apply(_, [this].concat(_.functions(this)));
-				//_(this).bindAll();
 				this.$anchor = $(ws.el);
 				this.width = ws.column.width;
 				this.height = ws.height;
 				this.sheetWrap = options.sheetWrap;
 				this.$el = $(template({
-					features: undefined
+					features: undefined,
+					debugId: this.id
 				}));
 				this.$anchor.append(this.$el);
 
 				// cache jquery objects for active DOM elements
-				this.cache = ['columnTitle', 'more', 'samplePlot'];
+				this.cache = ['titleRow', 'columnTitle', 'more', 'samplePlot'];
 				_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
 				this.columnMenu = columnMenu.create(this.id, {
 					anchor: this.$more,
@@ -143,13 +169,40 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 					deleteColumn: this.sheetWrap.deleteColumn,
 					duplicateColumn: this.sheetWrap.duplicateColumn
 				});
-				//this.$columnTitle.on('blur', this.titleFocusOut);
 				this.$el // TODO use rx handlers?
 					.on('resize', this.resize)
 					.on('keyup change', '.columnTitle', this.titleChange)
-					.on('focusout', '.columnTitle', this.titleFocusout);
+					.on('focusout', '.columnTitle', this.titleFocusout)
+					.on('change', '.feature', this.featureChange);
 
-				this.render(options);
+				this.reRender(options);
+			},
+
+			render: function (options) {
+				if (this.$el) {
+					// TODO this should be smarter about using the state tree
+					//      and only reRender when needed
+					this.reRender(options);
+				} else {
+					this.firstRender(options);
+				}
+			},
+
+			initialize: function (options) {
+				_.bindAll.apply(_, [this].concat(_.functions(this)));
+				//_(this).bindAll();
+				this.updateColumn = options.updateColumn;
+				this.sheetWrap = options.sheetWrap;
+				if (options.ws) {
+					this.render(options);
+				} else if (options.edit) {
+					this.columnEdit = columnEdit.show(this.id, {
+						sheetWrap: this.sheetwrap,
+						columnUi: this,
+						updateColumn: this.updateColumn,
+						state: { feature: defaultFeature }
+					});
+				}
 			}
 		};
 
@@ -161,14 +214,20 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/tupleDisplay', 'colorBar', 'col
 	}
 
 	return {
-		show: function (id, options) {
+		create: function (id, options) {
 			var widget = widgets[id];
 			if (widget) {
 				widget.render(options);
 			} else {
 				widget = widgets[id] = create(id, options);
 			}
-			return widget.$samplePlot;
+			return widget;
+		},
+
+		show: function (id, options) {
+			var widget = widgets[id];
+			widget.render(options);
+			return widget;
 		}
 	};
 });

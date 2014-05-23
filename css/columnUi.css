@@ -18,12 +18,13 @@
 }
 .columnUi .columnTitle {
 	font-size: 1em;
+	width: 80%;
 	/*border: 0px;*/
 	background-color: rgba(0,0,0,0);
 }
 .columnUi .columnTitle.untitled {
 	font-style: italic;
-	/*color: #cccccc;*/
+	color: #888888;
 }
 .columnUi .more {
 	display: inline-block;
