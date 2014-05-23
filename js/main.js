@@ -276,7 +276,7 @@ define(['jquery',
 		var newcol =  {
 			"width":200,
 			"dsID": "http://cancerdb:7222/public/TCGA/TCGA.BRCA.sampleMap/Gistic2_CopyNumber_Gistic2_all_data_by_genes",
-			"dataType": "nonspatial",
+			"dataType": "gene",
 			"fields": [
 				"ACAP3", "ACTRT2", "AGRN", "ANKRD65", "ATAD3A", "ATAD3B", "ATAD3C", "AURKAIP1",
 				"B3GALT6", "C1orf159", "C1orf170", "C1orf233", "C1orf86", "CALML6", "CCNL2",
