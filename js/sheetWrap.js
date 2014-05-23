@@ -36,9 +36,16 @@ define(['haml!haml/sheetWrap',
 
 		addColumnClick: function (ev) {
 			var id = uuid();
+			/* TODO: maybe later to allow edit of existing column
 			columnUi.create(id, {
 				edit: true,
 				sheetWrap: this,
+				updateColumn: this.updateColumn
+			});
+			*/
+			columnEdit.show(id, {
+				sheetWrap: this,
+				columnUi: undefined,
 				updateColumn: this.updateColumn
 			});
 		},

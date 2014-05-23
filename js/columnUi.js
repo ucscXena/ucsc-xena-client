@@ -195,7 +195,10 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				this.sheetWrap = options.sheetWrap;
 				if (options.ws) {
 					this.render(options);
-				} else if (options.edit) {
+				}
+
+				/* TODO maybe later to allow edit of column
+				else if (options.edit) {
 					this.columnEdit = columnEdit.show(this.id, {
 						sheetWrap: this.sheetwrap,
 						columnUi: this,
@@ -203,6 +206,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 						//state: { feature: defaultFeature }
 					});
 				}
+				*/
 			}
 		};
 
@@ -214,7 +218,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 	}
 
 	return {
-		create: function (id, options) {
+		show: function (id, options) {
 			var widget = widgets[id];
 			if (widget) {
 				widget.render(options);
@@ -222,12 +226,14 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				widget = widgets[id] = create(id, options);
 			}
 			return widget;
-		},
+		}
 
+		/* TODO maybe later to allow edit of columns
 		show: function (id, options) {
 			var widget = widgets[id];
 			widget.render(options);
 			return widget;
 		}
+		*/
 	};
 });

@@ -47,6 +47,7 @@ define(['jquery',
 			}
 	};
 
+	var DEMO = false;
 	var model = columnModels(); // XXX global for testing
 	var HEIGHT = 300;
 
@@ -151,10 +152,12 @@ define(['jquery',
 			console.log('createColumn val length: ' + $('#columnStub').val().length);
 			debugstream.onNext(function (s) {
 				var id = uuid();
+				/* TODO maybe later to allow edits of existing columns
 				columnUi.create(id, {
 					sheetWrap: thisSheetWrap,
 					updateColumn: updateColumn
 				});
+				*/
 				return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
 					'column_order', s.column_order.concat([id]));
 			});
@@ -297,9 +300,11 @@ define(['jquery',
 			// XXX error handling?
 			model.addStream(Rx.Observable.returnValue(function () { return JSON.parse(sessionStorage['state']) }));
 		}
-		//$('.debug').hide();
-		$('#pickSamples').click();
-		$('.addColumn').click();
+		if (DEMO) {
+			$('.debug').hide();
+			$('#pickSamples').click();
+			$('.addColumn').click();
+		}
 	});
 
 
