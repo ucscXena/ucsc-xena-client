@@ -205,9 +205,10 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 					dropdownAutoWidth: true
 				});
 				this.$feature = this.$el.find('.select2-container.feature');
-				if (this.state.feature) {
-					this.$feature.select2('val', this.state.feature);
+				if (!this.state.feature) {
+					this.state.feature = 'age';
 				}
+				this.$feature.select2('val', this.state.feature);
 			}
 		},
 
@@ -388,9 +389,14 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			this.$el.dialog({
 				title: 'Define Column',
 				width: '650', // TODO make dynamic
+				position: {
+					my: 'left+10 top',
+					at: 'right top',
+					of: $('.addColumn')
+				},
 				close: this.destroy
 			});
-			this.position();
+			//this.position();
 		},
 
 		initialize: function (options) {
@@ -401,9 +407,9 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			this.columnUi = options.columnUi;
 			this.updateColumn = options.updateColumn;
 			this.firstRenderDataset = true;
-			this.state = {},
+			this.state = {};
 			//this.state = options.state;
-			datasetsStub = stub.getDatasets(),
+			datasetsStub = stub.getDatasets();
 			this.datasets = datasetsStub; // TODO
 			this.render();
 			if (options.dataset) {

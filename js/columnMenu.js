@@ -49,6 +49,11 @@ define(['haml!haml/columnMenu', 'columnEdit', 'Menu', 'jquery', 'lib/underscore'
 				this.deleteColumn(this.id);
 			};
 
+			this.anchorClick = function (event, options) {
+				options.topAdd = -3;
+				this.menuAnchorClick(event, options);
+			};
+
 			this.render = function () {
 				var cache,
 					list = $(template({

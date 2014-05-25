@@ -17,7 +17,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		toNumber = _.toNumber,
 		uniqueId = _.uniqueId,
 		genes = stub.getRefGeneNames2(),
-		columnUntitles = {
+		defTitles = {
 			cna: 'copy number',
 			DNAMethylation: 'DNA methylation',
 			geneExp: 'gene expression',
@@ -37,20 +37,71 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				delete widgets[this.id];
 			},
 
-			titleChange: function (e) {
-				if (this.$columnTitle.val() === this.untitle) {
-					this.$columnTitle.addClass('untitled');
+			featureLabel: function (ui) {
+				return _.find(stub.getFeatures(), function (val, key) {
+					return key === ui.feature;
+				});
+			},
+
+			someMouseenterLeave: function (e) {
+				var $hoverShow = $(e.target);
+				if (e.type === 'mouseenter') {
+					$hoverShow.removeClass('recede');
 				} else {
-					this.$columnTitle.removeClass('untitled');
+					$hoverShow.addClass('recede');
+					$hoverShow.blur();
 				}
 			},
 
-			titleFocusout: function (e) {
+			mouseenterLeave: function (e) {
+				var $hoverShow = this.$el.find('.hoverShow');
+				if (e.type === 'mouseenter') {
+					$hoverShow.removeClass('recede');
+				} else {
+					$hoverShow.addClass('recede');
+					$hoverShow.blur();
+				}
+			},
+
+			titleChange: function () {
+				if (this.$columnTitle.val() === this.defTitle) {
+					this.$columnTitle.addClass('defalt');
+				} else {
+					this.$columnTitle.removeClass('defalt');
+				}
+			},
+
+			titleFocusout: function () {
 				if (this.$columnTitle.val() === '') {
-					this.$columnTitle.val(this.untitle);
+					this.$columnTitle.val(this.defTitle);
 				}
 				this.titleChange();
 			},
+
+			getDefField: function () {
+				var defalt = this.ws.column.fields.toString(),
+					ui = this.ws.column.ui;
+				if (ui.dataSubType === 'clinical') {
+					defalt = this.featureLabel(ui);
+				}
+				return defalt;
+			},
+
+			fieldChange: function () {
+				if (this.$field.val() === this.defField) {
+					this.$field.addClass('defalt');
+				} else {
+					this.$field.removeClass('defalt');
+				}
+			},
+
+			fieldFocusout: function () {
+				if (this.$field.val() === '') {
+					this.$field.val(this.defField);
+				}
+				this.fieldChange();
+			},
+
 /*
 			featureChange: function (e) {
 				this.ws.column.ui.feature = this.$feature.select2('val');
@@ -110,13 +161,24 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			},
 
 			renderTitle: function (ui) {
-				var untitle = columnUntitles[ui.dataSubType];
-				if (!this.untitle || (this.$columnTitle.val() === this.untitle)) {
-					this.untitle = untitle;
-					this.$columnTitle.val(untitle);
+				var defTitle = defTitles[ui.dataSubType];
+				if (!this.defTitle || (this.$columnTitle.val() === this.defTitle)) {
+					this.defTitle = defTitle;
+					this.$columnTitle.val(defTitle);
 					this.titleChange();
 				} else {
-					this.untitle = untitle;
+					this.defTitle = defTitle;
+				}
+			},
+
+			renderField: function (ui) {
+				var defField = this.getDefField();
+				if (!this.defField || (this.$field.val() === this.defField)) {
+					this.defField = defField;
+					this.$field.val(defField);
+					this.fieldChange();
+				} else {
+					this.defField = defField;
 				}
 			},
 /*
@@ -143,6 +205,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				var ui = options.ws.column.ui;
 				this.ws = options.ws;
 				this.renderTitle(ui);
+				this.renderField(ui);
 				//this.renderFeature(ui);
 				//this.resize();
 			},
@@ -161,7 +224,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				this.$anchor.append(this.$el);
 
 				// cache jquery objects for active DOM elements
-				this.cache = ['titleRow', 'columnTitle', 'more', 'samplePlot'];
+				this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'samplePlot'];
 				_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
 				this.columnMenu = columnMenu.create(this.id, {
 					anchor: this.$more,
@@ -170,10 +233,14 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					duplicateColumn: this.sheetWrap.duplicateColumn
 				});
 				this.$el // TODO use rx handlers?
+					.on('mouseenter mouseleave', '.columnTitle, .field', this.someMouseenterLeave)
+					.on('mouseenter mouseleave', this.mouseenterLeave)
 					.on('resize', this.resize)
 					.on('keyup change', '.columnTitle', this.titleChange)
-					.on('focusout', '.columnTitle', this.titleFocusout);
-					//.on('change', '.feature', this.featureChange);
+					.on('focusout', '.columnTitle', this.titleFocusout)
+					.on('keyup change', '.field', this.fieldChange)
+					.on('focusout', '.field', this.fieldFocusout);
+					//.on('change', '.feature', this.featureChange)
 
 				this.reRender(options);
 			},
