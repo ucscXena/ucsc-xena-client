@@ -1,3 +1,9 @@
+.columnEdit .tupleLabel {
+	min-width: 5em;
+}
+.columnEdit .listLabel {
+	vertical-align: top;
+}
 .columnEdit .geneValues {
 	white-space: nowrap;
 }
@@ -10,7 +16,4 @@
 }
 .columnEdit .advancedLabel:hover {
 	text-decoration: underline;
-}
-.columnEdit .tupleLabel {
-	min-width: 5em;
 }

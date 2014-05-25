@@ -37,7 +37,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 		inputModeLabels = { // TODO combine with displaysByInput
 			iGene: 'single gene',
-			iGenes: 'list of genes',
+			iGenes: 'list of genes', // 'genes',
 			iProbes: 'list of probes',
 			iChrom: 'chromosome coordinates',
 			iClinical: 'clinical'
@@ -101,7 +101,37 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			}
 		},
 
+		getFields: function () {
+			var fields;
+			switch (this.state.inputMode) {
+			case 'iGene':
+				fields = [this.state.gene];
+				break;
+			case 'iGenes':
+				fields = this.state.genes.split(', '); // TODO use named text?
+				break;
+			case 'iProbes':
+				fields = this.state.probes.split(', '); // TODO use named text?
+				break;
+			case 'iClinical':
+				fields = [this.state.feature];
+				break;
+			default:
+				fields = [defaultField];
+				break;
+			}
+			return fields;
+		},
+
 		renderDisplayModes: function (dataSubType) {
+			/* a way to combine entry for single and multiple genes:
+			var modes,
+				inputMode = this.state.inputMode;
+			if (inputMode === 'iGenes' && this.getFields().length === 1) {
+				inputMode = 'iGene';
+			}
+			modes = getDisplayModes(dataSubType, inputMode);
+			*/
 			var modes = getDisplayModes(dataSubType, this.state.inputMode);
 			if (modes.length === 1) {
 				this.state.displayMode = modes[0];
@@ -164,12 +194,14 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 					this.state.genes = defaultGenes;
 				}
 				this.$list.val(this.state.genes);
+				this.$listLabel.text('Genes:');
 				this.$listRow.show();
 			} else if (this.state.inputMode === 'iProbes') {
 				if (!this.state.probes || this.state.probes === '') {
 					this.state.probes = defaultProbes;
 				}
 				this.$list.val(this.state.probes);
+				this.$listLabel.text('Probes:');
 				this.$listRow.show();
 			}
 		},
@@ -180,12 +212,14 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 					this.state.chrom = defaultChrom;
 				}
 				this.$single.val(this.state.chrom);
+				this.$singleLabel.text('Chromosomal Position:');
 				this.$singleRow.show();
 			} else if (this.state.inputMode === 'iGene') {
 				if (!this.state.gene || this.state.gene === '') {
 					this.state.gene = defaultGene;
 				}
 				this.$single.val(this.state.gene);
+				this.$singleLabel.text('Gene:');
 				this.$singleRow.show();
 			}
 		},
@@ -199,6 +233,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 						labels: undefined
 					})
 				);
+				this.$selectLabel.text('Feature:');
 				this.$selectRow.show();
 				this.$el.find('.feature').select2({
 					minimumResultsForSearch: 20,
@@ -220,28 +255,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			if (this.state.dsID) {
 				this.$goRow.show();
 			}
-		},
-
-		getFields: function () {
-			var fields;
-			switch (this.state.inputMode) {
-			case 'iGene':
-				fields = [this.state.gene];
-				break;
-			case 'iGenes':
-				fields = this.state.genes.split(', '); // TODO use named text?
-				break;
-			case 'iProbes':
-				fields = this.state.probes.split(', '); // TODO use named text?
-				break;
-			case 'iClinical':
-				fields = [this.state.feature];
-				break;
-			default:
-				fields = [defaultField];
-				break;
-			}
-			return fields;
 		},
 
 		renderColumn: function () { // TODO shouldn't have to go through debug widgets
@@ -268,6 +281,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			this.$inputMode = undefined;
 			this.$displayModeAnchor.empty();
 			this.$displayMode = undefined;
+			//this.$selectRow.empty();
 			this.$selectAnchor.empty();
 			this.$feature = undefined;
 
@@ -309,6 +323,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		listBlur: function () {
 			if (this.state.inputMode === 'iGenes') {
 				this.state.genes = this.$list.val();
+				//this.state.inputMode = this.getFields().length === 1 ? 'iGene' : 'iGenes';
 			} else {
 				this.state.probes = this.$list.val();
 			}
@@ -378,9 +393,11 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			this.$dataset = this.$el.find('.select2-container.dataset');
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['inputModeRow', 'inputModeAnchor', 'listRow', 'list', 'singleRow', 'single',
-				'selectRow', 'selectAnchor',
-				'displayModeRow', 'displayModeAnchor', 'columnTitleRow', 'goRow', 'advanced', 'advancedLabel'];
+			this.cache = ['inputModeRow', 'inputModeAnchor',
+				'listRow', 'listLabel', 'list', 'singleRow', 'singleLabel', 'single',
+				'selectRow', 'selectLabel', 'selectAnchor',
+				'displayModeRow', 'displayModeAnchor', 'columnTitleRow',
+				'goRow', 'advanced', 'advancedLabel'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
 				return a;
