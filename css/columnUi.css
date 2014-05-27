@@ -32,7 +32,7 @@
 	color: #666666;
 }
 .columnUi .more {
-	margin-bottom: -3px;
+	margin-bottom: 3px;
 	display: inline-block;
 }
 .columnUi .hoverShow.recede,
