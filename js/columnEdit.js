@@ -19,13 +19,13 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles
 			cna: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			DNAMethylation: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			geneExp: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with RNAseqExp & arrayExp
+			DNAMethylation: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes'/*, 'dGeneChrom', 'dChrom'*/],
+			geneExp: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes'/*, 'dGeneChrom', 'dChrom'*/], // TODO replace with RNAseqExp & arrayExp
 			RNAseqExp: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			arrayExp: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			arrayExp: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes'/*, 'dGeneChrom', 'dChrom'*/],
 			somaticMutation: ['dGene', 'dGenes'],
 			sparseMutation: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
-			protein: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			protein: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes'/*, 'dGeneChrom', 'dChrom'*/],
 			clinical: ['dClinical']
 		},
 		displaysByInput = {
@@ -77,6 +77,10 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			if (intersect.length) {
 				inputs.push(input);
 			}
+		});
+		// remove any iGene because iGenes will handle the input for single genes
+		inputs = _.filter(inputs, function (i) {
+			return i !== 'iGene';
 		});
 		return inputs;
 	}
@@ -159,16 +163,18 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		renderInputModes: function (dataSubType) {
-			var modes = getInputModesByDataSubType(dataSubType),
-				geneSlice0 = modes[0].slice(0, 5);
+			var modes = getInputModesByDataSubType(dataSubType);
+				//geneSlice0 = modes[0].slice(0, 5);
 			this.state.dataSubType = dataSubType;
 			if (modes.length === 1) {
 				this.state.inputMode = modes[0];
+			/*
 			} else if (modes.length === 2
 					&& geneSlice0 === 'iGene'
 					&& geneSlice0 === modes[1].slice(0, 5)) {
 				this.state.inputMode = 'iGenes';
 				modes = [this.state.inputMode];
+			*/
 			} else {
 				this.$inputModeAnchor.append(
 					selectTemplate({

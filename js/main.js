@@ -49,7 +49,7 @@ define(['jquery',
 
 	var DEMO = false;
 	var model = columnModels(); // XXX global for testing
-	var HEIGHT = 300;
+	var HEIGHT = 719;
 
 	var unload = Rx.Observable.fromEvent(window, 'beforeunload');
 	// XXX does this work if no state events occur?? Looks like not.
