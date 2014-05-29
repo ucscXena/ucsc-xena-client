@@ -24,7 +24,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			RNAseqExp: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
 			arrayExp: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes'/*, 'dGeneChrom', 'dChrom'*/],
 			somaticMutation: ['dGene', 'dGenes'],
-			sparseMutation: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
+			mutationVector: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
 			protein: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes'/*, 'dGeneChrom', 'dChrom'*/],
 			clinical: ['dClinical']
 		},
@@ -36,9 +36,9 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			iClinical: ['dClinical']
 		},
 		inputModeLabels = { // TODO combine with displaysByInput
-			iGene: 'genes', // 'single gene',
-			iGenes: 'genes', // 'list of genes',
-			iProbes: 'probes', // 'list of probes',
+			iGene: 'single gene',
+			iGenes: 'list of genes',
+			iProbes: 'list of probes',
 			iChrom: 'chromosome coordinates',
 			iClinical: 'clinical'
 		},
@@ -78,10 +78,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 				inputs.push(input);
 			}
 		});
-		// remove any iGene because iGenes will handle the input for single genes
-		inputs = _.filter(inputs, function (i) {
-			return i !== 'iGene';
-		});
 		return inputs;
 	}
 
@@ -109,10 +105,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			var fields;
 			switch (this.state.inputMode) {
 			case 'iGene':
-			/*
-				fields = [this.state.gene];
-				break;
-			*/
 			case 'iGenes':
 				fields = this.state.genes.split(', '); // TODO use named text?
 				break;
@@ -130,14 +122,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		renderDisplayModes: function (dataSubType) {
-			// a way to combine entry for single and multiple genes:
-			var modes,
-				inputMode = this.state.inputMode;
-			if (inputMode === 'iGenes' && this.getFields().length <= 1) {
-				inputMode = 'iGene';
-			}
-			modes = getDisplayModes(dataSubType, inputMode);
-			//var modes = getDisplayModes(dataSubType, this.state.inputMode);
+			var modes = getDisplayModes(dataSubType, this.state.inputMode);
 			if (modes.length === 1) {
 				this.state.displayMode = modes[0];
 			} else {
@@ -164,17 +149,9 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 		renderInputModes: function (dataSubType) {
 			var modes = getInputModesByDataSubType(dataSubType);
-				//geneSlice0 = modes[0].slice(0, 5);
 			this.state.dataSubType = dataSubType;
 			if (modes.length === 1) {
 				this.state.inputMode = modes[0];
-			/*
-			} else if (modes.length === 2
-					&& geneSlice0 === 'iGene'
-					&& geneSlice0 === modes[1].slice(0, 5)) {
-				this.state.inputMode = 'iGenes';
-				modes = [this.state.inputMode];
-			*/
 			} else {
 				this.$inputModeAnchor.append(
 					selectTemplate({
@@ -202,8 +179,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		renderList: function () {
-			if (this.state.inputMode === 'iGene'
-					|| this.state.inputMode === 'iGenes') {
+			if (this.state.inputMode === 'iGenes') {
 				if (!this.state.genes || this.state.genes === '') {
 					this.state.genes = defaultGenes;
 				}
@@ -228,7 +204,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 				this.$single.val(this.state.chrom);
 				this.$singleLabel.text('Chromosomal Position:');
 				this.$singleRow.show();
-/*
 			} else if (this.state.inputMode === 'iGene') {
 				if (!this.state.gene || this.state.gene === '') {
 					this.state.gene = defaultGene;
@@ -236,7 +211,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 				this.$single.val(this.state.gene);
 				this.$singleLabel.text('Gene:');
 				this.$singleRow.show();
-*/
 			}
 		},
 
@@ -287,13 +261,12 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		reRender: function () {
-			console.log('columnEdit.reRender(): id: ' + this.id);
 			var dataSubType = getDataSubType(this.state.dsID);
-			if (dataSubType === 'mutationVector'
-					|| dataSubType === 'sparseMutation') {
+			/*
+			if (dataSubType === 'mutationVector') {
 				return;
 			}
-
+			*/
 			// reset the dynamic portion of column, excluding the plot
 			this.$el.find('tr:not(.static)').hide();
 			this.$inputModeAnchor.empty();
@@ -338,12 +311,8 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		listBlur: function () {
-			var count;
-			if (this.state.inputMode === 'iGene'
-					|| this.state.inputMode === 'iGenes') {
+			if (this.state.inputMode === 'iGenes') {
 				this.state.genes = this.$list.val();
-				count = this.getFields().length;
-				this.state.inputMode = (count <= 1) ? 'iGene' : 'iGenes';
 			} else {
 				this.state.probes = this.$list.val();
 			}
@@ -392,7 +361,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		render: function () {
-			console.log('columnEdit.render(): id: ' + this.id);
 			var self = this,
 				basic;
 			basic = basicTemplate({
