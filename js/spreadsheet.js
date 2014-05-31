@@ -122,6 +122,7 @@ define(['underscore_ext',
 		var widgetStates = state.select(function (s) {
 			return _.fmap(s.column_rendering, function (col, uuid) {
 				return _.pluckPaths({
+					cohort: ['cohort'],
 					height: ['height'], // XXX refactor vertical position info into an object
 					zoomIndex: ['zoomIndex'],
 					zoomCount: ['zoomCount'],

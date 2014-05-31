@@ -6,8 +6,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnEdit, columnMenu, defer, /*mutation,*/ refGene, util, d3, $, select2, _) {
 	'use strict';
 
-	var TEST = stub.TEST(),
-		APPLY = true,
+	var APPLY = true,
 		//defaultFeature = '_INTEGRATION',
 		each = _.each,
 		filter = _.filter,
@@ -24,7 +23,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			RNAseqExp: 'RNA sequence expression',
 			arrayExp: 'array expression',
 			somaticMutation: 'somatic mutation',
-			sparseMutation: 'sparse mutation',
+			mutationVector: 'mutation vector',
 			protein: 'protein',
 			clinical: 'clinical feature'
 		},
@@ -120,7 +119,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					$plot = this.$el.find('.samplePlot'),
 					$stub;
 				switch (dataType) {
-				case 'sparseMutation':
+				case 'mutationVector':
 					this.columnMenu.showItem('mupit');
 					this.renderPlotsMutation();
 					break;
@@ -201,7 +200,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			},
 */
 			reRender: function (options) {
-				console.log('columnUi.reRender');
 				var ui = options.ws.column.ui;
 				this.ws = options.ws;
 				this.renderTitle(ui);
@@ -224,7 +222,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				this.$anchor.append(this.$el);
 
 				// cache jquery objects for active DOM elements
-				this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'samplePlot'];
+				this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'samplePlot'];
 				_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
 				this.columnMenu = columnMenu.create(this.id, {
 					anchor: this.$more,
@@ -286,6 +284,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 	return {
 		show: function (id, options) {
+			//console.log(id + ', ' + options.ws.column.fields[0] + '  columnUi.show()');
 			var widget = widgets[id];
 			if (widget) {
 				widget.render(options);
@@ -294,13 +293,5 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			}
 			return widget;
 		}
-
-		/* TODO maybe later to allow edit of columns
-		show: function (id, options) {
-			var widget = widgets[id];
-			widget.render(options);
-			return widget;
-		}
-		*/
 	};
 });

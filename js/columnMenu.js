@@ -51,6 +51,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'Menu', 'jquery', 'lib/underscore'
 
 			this.anchorClick = function (event, options) {
 				options.topAdd = -3;
+				options.leftAdd = -10;
 				this.menuAnchorClick(event, options);
 			};
 

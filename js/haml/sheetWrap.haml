@@ -1,9 +1,13 @@
 %div{class:'sheetWrap'}
-  %div{style:'display:none'}
-    %input{class:'sheetTitle', type:'text'}
+  %div{class:'header'}
+    %label Cohort:
+      %select{class:'cohort'}
+        %option
+        %option{value:'TARGET_Neuroblastoma'} TARGET Neuroblastoma
+        %option{value:'TCGA_BRCA'} TCGA BRCA
   %div
     -# %button{class:'showLegend'}Legend
     %div{id:'testing', class:'spreadsheet'}
-    %span{class:'addColumn'} +
+    %span{class:'addColumn', style:'display:none'} +
   %div{class:'crosshairH crosshair'}
   %div{class:'debug'}

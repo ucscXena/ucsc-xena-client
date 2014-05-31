@@ -51,14 +51,14 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 		dataTypeByDisplay = {
 			dGene: 'gene', //'nonspatial',
-			dGeneProbes: 'gene', //'nonspatial',
-			dExonDense: 'spatialExonDense',
-			dExonSparse: 'spatialExonSparse',
-			dGeneChrom: 'spatialGeneChrom',
+			dGeneProbes: 'probe', //'nonspatial',
+			dExonDense: 'exonDense', // spatial
+			dExonSparse: 'exonSparse', //spatial
+			dGeneChrom: 'geneChrom', // spatial
 			dGenes: 'gene', //'nonspatial',
 			dProbes: 'probe', //'nonspatial',
 			dClinical: 'feature', //'nonspatial',
-			dChrom: 'spatialChrom'
+			dChrom: 'chrom' // spatial
 		},
 		widgets = {},
 		aWidget;
@@ -105,6 +105,8 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			var fields;
 			switch (this.state.inputMode) {
 			case 'iGene':
+				fields = [this.state.gene]; // TODO use named text?
+				break;
 			case 'iGenes':
 				fields = this.state.genes.split(', '); // TODO use named text?
 				break;
@@ -443,6 +445,14 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 	}
 
 	return {
+		getDataSubType: getDataSubType,
+
+		destroyAll: function () {
+			_.each(widgets, function (w) {
+				w.destroy();
+			});
+		},
+
 		show: function (id, options) {
 			var widget = widgets[id];
 			if (widget) {
@@ -455,8 +465,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 		showDataset: function (id, options) {
 			return create(id, options);
-		},
-
-		getDataSubType: getDataSubType
+		}
 	};
 });
