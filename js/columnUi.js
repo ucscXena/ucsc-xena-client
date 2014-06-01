@@ -62,17 +62,36 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				}
 			},
 
+			getDefTitle: function (dsID) {
+				var dataset = _.find(stub.getDatasets(), function (d) {
+					return d.dsID === dsID;
+				});
+				if (dataset.dataSubType === 'clinical') {
+					return '';
+				} else {
+					return dataset.title;
+				}
+			},
+
+			setTitleVal: function (val) {
+				this.$columnTitle
+					.val(val)
+					.prop('title', val);
+			},
+
 			titleChange: function () {
 				if (this.$columnTitle.val() === this.defTitle) {
 					this.$columnTitle.addClass('defalt');
 				} else {
 					this.$columnTitle.removeClass('defalt');
 				}
+				this.setTitleVal(this.$columnTitle.val());
 			},
 
 			titleFocusout: function () {
 				if (this.$columnTitle.val() === '') {
-					this.$columnTitle.val(this.defTitle);
+					this.setTitleVal(this.defTitle);
+					//this.$columnTitle.val(this.defTitle);
 				}
 				this.titleChange();
 			},
@@ -86,12 +105,19 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				return defalt;
 			},
 
+			setFieldVal: function (val) {
+				this.$field
+					.val(val)
+					.prop('title', val);
+			},
+
 			fieldChange: function () {
 				if (this.$field.val() === this.defField) {
 					this.$field.addClass('defalt');
 				} else {
 					this.$field.removeClass('defalt');
 				}
+				this.setFieldVal(this.$field.val());
 			},
 
 			fieldFocusout: function () {
@@ -160,10 +186,12 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			},
 
 			renderTitle: function (ui) {
-				var defTitle = defTitles[ui.dataSubType];
+				var defTitle = this.getDefTitle(this.ws.column.dsID);
+				//var defTitle = defTitles[ui.dataSubType];
 				if (!this.defTitle || (this.$columnTitle.val() === this.defTitle)) {
 					this.defTitle = defTitle;
-					this.$columnTitle.val(defTitle);
+					this.setTitleVal(defTitle);
+					//this.$columnTitle.val(defTitle);
 					this.titleChange();
 				} else {
 					this.defTitle = defTitle;

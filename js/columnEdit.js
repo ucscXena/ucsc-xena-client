@@ -185,16 +185,16 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 				if (!this.state.genes || this.state.genes === '') {
 					this.state.genes = defaultGenes;
 				}
-				this.$list.val(this.state.genes);
 				this.$listLabel.text('Genes:');
 				this.$listRow.show();
+				this.$list.val(this.state.genes);
 			} else if (this.state.inputMode === 'iProbes') {
 				if (!this.state.probes || this.state.probes === '') {
 					this.state.probes = defaultProbes;
 				}
-				this.$list.val(this.state.probes);
 				this.$listLabel.text('Probes:');
 				this.$listRow.show();
+				this.$list.val(this.state.probes);
 			}
 		},
 
@@ -203,17 +203,18 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 				if (!this.state.chrom || this.state.chrom === '') {
 					this.state.chrom = defaultChrom;
 				}
-				this.$single.val(this.state.chrom);
 				this.$singleLabel.text('Chromosomal Position:');
 				this.$singleRow.show();
+				this.$single.val(this.state.chrom);
 			} else if (this.state.inputMode === 'iGene') {
 				if (!this.state.gene || this.state.gene === '') {
 					this.state.gene = defaultGene;
 				}
-				this.$single.val(this.state.gene);
 				this.$singleLabel.text('Gene:');
 				this.$singleRow.show();
+				this.$single.val(this.state.gene);
 			}
+
 		},
 
 		renderSelect: function () {
@@ -239,10 +240,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			}
 		},
 
-		renderTitle: function (dataSubType) {
-			//this.$title.val(this.columnUi.getTitle(dataSubType));
-		},
-
 		renderGo: function () {
 			if (this.state.dsID) {
 				this.$goRow.show();
@@ -264,11 +261,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 		reRender: function () {
 			var dataSubType = getDataSubType(this.state.dsID);
-			/*
-			if (dataSubType === 'mutationVector') {
-				return;
-			}
-			*/
+
 			// reset the dynamic portion of column, excluding the plot
 			this.$el.find('tr:not(.static)').hide();
 			this.$inputModeAnchor.empty();
@@ -284,7 +277,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			this.renderSingle();
 			this.renderDisplayModes(dataSubType);
 			this.renderSelect();
-			this.renderTitle(dataSubType);
 			this.renderGo();
 		},
 
@@ -395,10 +387,12 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 			this.$el.dialog({
 				title: 'Define Column',
-				width: '650', // TODO make dynamic
+				width: '500', // TODO make dynamic
 				position: {
-					my: 'left+10 top',
-					at: 'right top',
+					my: 'left top',
+					at: 'left top',
+					//my: 'left+10 top',
+					//at: 'right top',
 					of: $('.addColumn')
 				},
 				close: this.destroy

@@ -236,7 +236,7 @@ define(['jquery',
 	});
 
 	$debug.offset({
-		top: $debug.offset().top + 70,
+		top: $debug.offset().top + 90,
 		left: $debug.offset().left
 	});
 
