@@ -241,6 +241,12 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					//.on('change', '.feature', this.featureChange)
 
 				this.reRender(options);
+
+				// TODO in case we are restoring session store for demo
+				$('.addColumn').show();
+				if (!$('.cohort').select2('val')) {
+					$('.cohort').select2('val', 'TARGET_Neuroblastoma');
+				}
 			},
 
 			render: function (options) {

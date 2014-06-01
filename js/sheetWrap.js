@@ -81,8 +81,6 @@ define(['haml!haml/sheetWrap',
 				placeholderOption: 'first'
 			});
 			this.$cohort = this.$el.find('.select2-container.cohort');
-			this.$cohort.select2('val', 'TARGET_Neuroblastoma');
-			this.cohortChange();
 
 			this.$el // TODO replace with rx event handlers
 				.on('change', '.cohort', this.cohortChange)
