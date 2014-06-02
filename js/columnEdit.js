@@ -19,13 +19,13 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles
 			cna: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			DNAMethylation: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes'/*, 'dGeneChrom', 'dChrom'*/],
-			geneExp: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes'/*, 'dGeneChrom', 'dChrom'*/], // TODO replace with RNAseqExp & arrayExp
+			DNAMethylation: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			geneExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with RNAseqExp & arrayExp
 			RNAseqExp: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			arrayExp: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes'/*, 'dGeneChrom', 'dChrom'*/],
+			arrayExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
 			somaticMutation: ['dGene', 'dGenes'],
 			mutationVector: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
-			protein: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes'/*, 'dGeneChrom', 'dChrom'*/],
+			protein: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
 			clinical: ['dClinical']
 		},
 		displaysByInput = {
@@ -319,8 +319,13 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		datasetChange: function () {
-			this.state.dsID = this.$dataset.select2('val');
-			this.reRender();
+			var dsID = this.$dataset.select2('val');
+			if (dsID === 'mine') {
+				this.state.dsID = undefined;
+			} else {
+				this.state.dsID = dsID;
+				this.reRender();
+			}
 		},
 
 		toggleAdvanced: function (e) {
@@ -358,7 +363,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			var self = this,
 				basic;
 			basic = basicTemplate({
-				datasets: this.datasets
+				sources: this.sources
 			});
 			this.$el = $(template({
 				basic: basic,
@@ -391,8 +396,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 				position: {
 					my: 'left top',
 					at: 'left top',
-					//my: 'left+10 top',
-					//at: 'right top',
 					of: $('.addColumn')
 				},
 				close: this.destroy
@@ -411,7 +414,22 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			this.state = {};
 			//this.state = options.state;
 			datasetsStub = stub.getDatasets();
-			this.datasets = datasetsStub; // TODO
+			this.sources = [
+				{
+					title: 'localhost',
+					datasets: [
+						{
+							title: 'my local dataset',
+							dsID: 'mine'
+						}
+					]
+				},
+				{
+					title: 'cancerdb.ucsc.edu',
+					datasets: datasetsStub
+				}
+			];
+			//this.datasets = datasetsStub; // TODO
 			this.render();
 			if (options.dataset) {
 				this.$dataset.select2('val', options.dataset);

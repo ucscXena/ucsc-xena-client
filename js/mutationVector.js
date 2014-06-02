@@ -140,6 +140,15 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				tooltip.toggleFreeze();
 			},
 
+			drawNa: function (d) {
+				this.d2.beginPath();
+				this.d2.fillStyle = 'grey';
+				this.d2.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+			},
+
+			drawNonNaRows: function () {
+			},
+
 			drawCenter: function (d, highlight) {
 				var r = highlight ? this.point * 2 : this.point,
 					cx = this.x(d.x) + this.radius,
@@ -188,6 +197,8 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			draw: function () {
 				var self = this;
 				this.d2.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+				this.drawNa();
+				this.drawNonNaRows();
 				each(this.nodes, function (d) {
 					self.drawHalo(d);
 				});
@@ -366,90 +377,85 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			},
 
 			receiveData: function (data) {
-				var self = this,
-					y = 0,
-					i = 0,
+				var index = 0,
 					chrEnd = 10000000000;  // TODO use max number of base pairs of all genes
-				this.values = sortBy(data.values, function (row) {
-					var weight = impactMax - impact[row.effect],
-						rightness = (self.gene.strand === '+') // TODO Math.abs() ?
-							? row.start - self.gene.txStart
-							: self.gene.txStart - row.start;
-					if (self.sort === 'impact, then position') {
-						return (weight * chrEnd) + rightness;
-					} else if (self.sort === 'position, then impact') {
-						return (rightness * chrEnd) + weight;
-					} else {
-						return row.sample;
-					}
+				this.values = _.map(data.vals, function (v) {
+					var row = $.extend(true, [], v); // TODO, could this be just a simple assignment?
+					row.index = index;
+					index += 1;
+					return row;
 				});
-				this.yPositions = [];
-				_.each(this.values, function (val) {
-					var yFound = _.find(self.yPositions, function (y) {
-						return (val.dataset === y.dataset && val.sample === y.sample);
-					});
-					if (!yFound) {
-						self.yPositions.push({
-							dataset: val.dataset,
-							sample: val.sample,
-							index: i
-						});
-						i += 1;
-					}
-				});
+				this.nonNaSamples = data.samples;
 				this.render();
 			},
 
 			findNodes: function () {
 				var self = this,
-					line,
-					gradient,
-					nodeCount = this.values.length,
-					nodes = _.map(this.values, function (val) {
-						var rgba,
-							yPos,
-							y,
-							x = (0.5 + self.refGene.mapChromPosToX(val.start)) * self.gene.scaleX;
-						if (x >= 0) {
-							rgba = self.findRgba(val);
-							line = self.findLine(val);
-							gradient = self.findGradient(val);
-						}
-						yPos = _.find(self.yPositions, function (yPos) {
-							return (yPos.dataset === val.dataset && yPos.sample === val.sample);
-						});
-						y = self.yMax - (yPos.index * self.pixPerRow);
-						return {
-							x: x,
-							y: y,
-							r: self.radius,
-							impact: impact[val.effect],
-							rgba: rgba,
-							line: line,
-							gradient: gradient,
-							data: val
-						};
-					}),
-					// remove nodes not mapped to an exon
-					mappedNodes = _.filter(nodes, function (n) {
-						return (n.x >= 0);
+					nodes = [],
+					nodeValues = _.filter(this.values, function (value) {
+						return value.vals.length;
 					});
+				_.each(nodeValues, function (value) {
+					var y = self.yMax - (value.index * self.pixPerRow);
+					_.each(value.vals, function (val) {
+						var x = (0.5 + self.refGene.mapChromPosToX(val.start)) * self.gene.scaleX;
+						if (x >= 0) {
+							nodes.push({
+								x: x,
+								y: y,
+								r: self.radius,
+								impact: impact[val.effect],
+								rgba: self.findRgba(val),
+								line: self.findLine(val),
+								gradient: self.findGradient(val),
+								data: val
+							});
+						}
+					});
+				});
 
 				// sort so most severe draw on top
-				return sortBy(mappedNodes, function (n) {
+				return sortBy(nodes, function (n) {
 					return n.impact;
 				});
 			},
 
+			findNonNaRows: function () {
+				/*
+				nonNaRows = _.map(this.nonNaSamples, function (s) {
+					return 
+				});
+				*/
+			},
+
+			/*
+			findNaRows: function () {
+				var self = this,
+					naValues = _.filter(this.values, function (value) {
+						return value.vals.length === 0;
+					}),
+					naRows = _.map(naValues, function (value) {
+						return {
+							x: 0,
+							y: self.yMax - (value.index * self.pixPerRow),
+							width: self.width,
+							height: self.pixPerRow,
+							rgba: 'rgba(63, 63, 63, 1)'  // TODO where is our standard gray NA color?
+						};
+					});
+				return naRows;
+			},
+			*/
+
 			render: function () {
 				var self = this;
 				if (this.pix === 'fit to inherited height') {
-					this.pixPerRow = this.height / this.yPositions.length;
+					this.pixPerRow = this.height / this.values.length;
 					this.canvasHeight = this.height + ((this.radius - 1) * 2);
 				} else {
 					// TODO this is only an estimate when using pixPerRow
 					this.pixPerRow = this.pix;
-					this.canvasHeight = (this.pixPerRow * this.yPositions.length) + ((this.radius - 1) * 2);
+					this.canvasHeight = (this.pixPerRow * this.values.length) + ((this.radius - 1) * 2);
 				}
 				this.yMax = this.canvasHeight - this.radius;
 
@@ -472,6 +478,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 					.on('click', this.click)
 					.on('mousemove mouseleave mouseenter', this.hover);
 				this.nodes = this.findNodes();
+				this.nonNaRows = this.findNonNaRows();
 				this.draw();
 			},
 
@@ -495,7 +502,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 
 				crosshairs.create($(this.anchor));
 
-				this.receiveData({ values: options.data });
+				this.receiveData(options.data);
 			}
 		};
 

@@ -5,9 +5,10 @@
       %td{class:'tupleValue', style:'width:550px'}
         %select{class:'dataset'}
           %option
-          - _.each(datasets, function (f) {
-            %option{value:f.dsID} =f.title
-          -# %option{value:'more'} More...
+          - _.each(sources, function (source) {
+            %optgroup{label:source.title}
+              - _.each(source.datasets, function (d) {
+                %option{value:d.dsID} =d.title
 
     %tr{class:'inputModeRow', style:'display:none'}
       %td{class:'tupleLabel'} Input:
