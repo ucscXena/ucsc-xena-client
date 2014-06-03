@@ -167,7 +167,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			drawHalo: function (d) {
 				var gradient,
 					cx = this.x(d.x) + this.radius,
-					cy = this.y(d.y);
+					cy = this.y(d.y); // TODO placing this at the top of the row for pixPerRow != 1
 				this.d2.beginPath();
 				this.d2.arc(cx, cy, d.r, 0, 2 * Math.PI);
 				if (d.line) {
@@ -390,7 +390,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 					index += 1;
 					return row;
 				});
-				this.nonNaSamples = data.samples;
+				this.nonNaSamples = data.nonNaSamples;
 				this.render();
 			},
 
