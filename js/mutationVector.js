@@ -146,7 +146,10 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				this.d2.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
 			},
 
-			drawNonNaRows: function () {
+			drawNonNaRows: function (d) {
+				this.d2.beginPath();
+				this.d2.fillStyle = 'white';
+				this.d2.fillRect(0, this.y(d.y), this.canvasWidth, this.pixPerRow);
 			},
 
 			drawCenter: function (d, highlight) {
@@ -198,7 +201,9 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				var self = this;
 				this.d2.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 				this.drawNa();
-				this.drawNonNaRows();
+				each(this.nonNaRows, function (d) {
+					self.drawNonNaRows(d);
+				});
 				each(this.nodes, function (d) {
 					self.drawHalo(d);
 				});
@@ -389,6 +394,19 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				this.render();
 			},
 
+			findNonNaRows: function () {
+				var self = this,
+					nonNaRows = _.map(this.nonNaSamples, function (s) {
+						var val = _.find(self.values, function (v) {
+							return v.sample === s;
+						});
+						return {
+							y: self.yMax - (val.index * self.pixPerRow)
+						};
+					});
+				return nonNaRows;
+			},
+
 			findNodes: function () {
 				var self = this,
 					nodes = [],
@@ -419,33 +437,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 					return n.impact;
 				});
 			},
-
-			findNonNaRows: function () {
-				/*
-				nonNaRows = _.map(this.nonNaSamples, function (s) {
-					return 
-				});
-				*/
-			},
-
-			/*
-			findNaRows: function () {
-				var self = this,
-					naValues = _.filter(this.values, function (value) {
-						return value.vals.length === 0;
-					}),
-					naRows = _.map(naValues, function (value) {
-						return {
-							x: 0,
-							y: self.yMax - (value.index * self.pixPerRow),
-							width: self.width,
-							height: self.pixPerRow,
-							rgba: 'rgba(63, 63, 63, 1)'  // TODO where is our standard gray NA color?
-						};
-					});
-				return naRows;
-			},
-			*/
 
 			render: function () {
 				var self = this;
