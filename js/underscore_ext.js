@@ -1,3 +1,4 @@
+/*globals define: false */
 define(['lib/underscore', 'immutable', 'defer'], function(_, immtable, defer) {
 	'use strict';
 
@@ -15,7 +16,7 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immtable, defer) {
 	// Return function that takes an array
 	function apply(fn, self) {
 		return fn.apply.bind(fn, self);
-	};
+	}
 
 	// Create array from arguments
 	function array() {

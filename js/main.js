@@ -1,4 +1,4 @@
-/*jslint browser: true, regexp: true */
+/*jslint browser: true, regexp: true, vars: true */
 /*global define: false, require: false */
 
 define(['jquery',
@@ -44,8 +44,8 @@ define(['jquery',
 			var cache = {};
 			return function (key) {
 					return cache[key] || (cache[key] = observableFactory(key).finally(function (key) { delete cache[key]; }).share());
-			}
-	};
+			};
+	}
 
 	var DEMO = false;
 	var model = columnModels(); // XXX global for testing
@@ -61,7 +61,7 @@ define(['jquery',
 	unload.combineLatest(model.state, function (_e, state) {
 		return _.pick(state, keysNot_(state));
 	}).subscribe(function (state) {
-		sessionStorage['state'] = JSON.stringify(state);
+		sessionStorage.state = JSON.stringify(state);
 	});
 
 	var childrenStream = new Rx.Subject();
@@ -98,7 +98,7 @@ define(['jquery',
 	// XXX handler might leak
 	var resizes = $spreadsheet.onAsObservable("resizestop")
 		.select(function (ev) {
-				return function (s) { return _.assoc(s, 'height', ev.additionalArguments[0].size.height) };
+				return function (s) { return _.assoc(s, 'height', ev.additionalArguments[0].size.height); };
 		});
 
 	model.addStream(resizes);
@@ -240,9 +240,9 @@ define(['jquery',
 	});
 
 	$(document).ready(function () {
-		if (sessionStorage && sessionStorage['state']) {
+		if (sessionStorage && sessionStorage.state) {
 			// XXX error handling?
-			model.addStream(Rx.Observable.returnValue(function () { return JSON.parse(sessionStorage['state']) }));
+			model.addStream(Rx.Observable.returnValue(function () { return JSON.parse(sessionStorage.state); }));
 		}
 		if (DEMO) {
 			$('.debug').hide();
