@@ -10,7 +10,7 @@ define(['jquery',
 		'multi',
 		'columnUi',
 		'probe_column',
-		'spatialExonSparsePlot',
+		'exonSparse_column',
 		'uuid',
 		'cursor',
 		'stub',
@@ -25,7 +25,7 @@ define(['jquery',
 			multi,
 			columnUi,
 			probe_column,
-			spatialExonSparsePlot,
+			exonSparse_column,
 			uuid,
 			cursor,
 			stub) {
@@ -49,7 +49,7 @@ define(['jquery',
 
 	var DEMO = false;
 	var model = columnModels(); // XXX global for testing
-	var HEIGHT = 300;
+	var HEIGHT = 719;
 
 	var unload = Rx.Observable.fromEvent(window, 'beforeunload');
 	// XXX does this work if no state events occur?? Looks like not.
@@ -68,6 +68,7 @@ define(['jquery',
 	model.addStream(childrenStream);
 	var writeState = function (fn) { childrenStream.onNext(fn); };
 	var spreadsheetPaths = {
+		cohort: ['cohort'],
 		height: ['height'],
 		zoomIndex: ['zoomIndex'],
 		zoomCount: ['zoomCount'],
@@ -129,9 +130,8 @@ define(['jquery',
 	// COLUMN STUB
 
 	function updateColumn(id) {
-		try {
+		//try {
 			var newcol = JSON.parse($('#columnStub').val());
-			console.log('updateColumn val length: ' + $('#columnStub').val().length);
 			debugstream.onNext(function (s) {
 				var assoc_in = _.assoc_in(s, ['column_rendering', id], newcol);
 				var newOrder = s.column_order.concat([id]);
@@ -140,16 +140,15 @@ define(['jquery',
 				//return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
 				//	'column_order', s.column_order.concat([id]));
 			});
-		} catch (e) {
-			console.log('error', e);
-			console.trace();
-		}
+		//} catch (e) {
+		//	console.log('error', e);
+		//	console.trace();
+		//}
 	}
 
 	function createColumn() {
 		try {
 			var newcol = JSON.parse($('#columnStub').val());
-			console.log('createColumn val length: ' + $('#columnStub').val().length);
 			debugstream.onNext(function (s) {
 				var id = uuid();
 				/* TODO maybe later to allow edits of existing columns
@@ -199,10 +198,11 @@ define(['jquery',
 		}
 	});
 
-	var example_samples = $('<button id="pickBrcaSamples">BRCA samples</button>');
+	var example_samples = $('<button id="pickBrcaSamples" style="display:none">BRCA samples</button>');
 	$debug.append(example_samples);
 	example_samples.on('click',function (ev) {
 		var json = {
+			"cohort": "TCGA_BRCA",
 			"samples": stub.getSamples('brca'),
 			"height": HEIGHT,
 			"zoomIndex": 0,
@@ -216,11 +216,12 @@ define(['jquery',
 		$('#samplesStub').val(JSON.stringify(json, undefined, 4));
 	});
 
-	var nbl_samples = $('<button id="pickSamples">NBL samples</button>');
+	var nbl_samples = $('<button id="pickSamples" style="display:none">NBL samples</button>');
 	$debug.append(nbl_samples);
 	nbl_samples.on('click',function (ev) {
 		var samples = stub.getSamples('nbl'),
 			json = {
+			"cohort": "TARGET_Neuroblastoma",
 			"samples": samples,
 			"height": HEIGHT,
 			"zoomIndex": 0,
@@ -235,7 +236,7 @@ define(['jquery',
 	});
 
 	$debug.offset({
-		top: $debug.offset().top + 50,
+		top: $debug.offset().top + 90,
 		left: $debug.offset().left
 	});
 

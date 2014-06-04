@@ -32,7 +32,7 @@
 	color: #666666;
 }
 .columnUi .more {
-	margin-bottom: -3px;
+	margin-bottom: 3px;
 	display: inline-block;
 }
 .columnUi .hoverShow.recede,
@@ -48,7 +48,6 @@
 }
 .columnUi .sidebar,
 .columnUi .plot {
-	/*background-color: #ffffff;*/
 	display: inline-block;
 }
 .columnUi .samplePlot {
@@ -56,5 +55,5 @@
 }
 .columnUi .crosshairPlot {
 	position: relative;
-	cursor: none;
+	cursor: crosshair;/* TODO none; */
 }

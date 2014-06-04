@@ -11,6 +11,9 @@
 .columnEdit .advancedLabel {
 	padding-top: .5em;
 }
+.columnEdit .singleMsg {
+	color: red;
+}
 .columnEdit .advancedLabel {
 	cursor: pointer;
 }

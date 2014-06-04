@@ -9,23 +9,23 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 	var datasetsStub = stub.getDatasets(),
 
-		// TODO: make these more global
+		// TODO: make these more global ?
 		defaultGene = 'ALK',
 		defaultGenes = 'ALK, PTEN',
-		defaultProbes = 'no probes entered', // TODO
+		defaultProbes = '(no default probes)', // TODO
 		defaultChrom = 'chr1-chrY',
-		defaultField = 'fields for this option',
+		defaultField = '(fields for this option)', // TODO
 		defaultWidth = 100,
 
 		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles
 			cna: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			DNAMethylation: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			geneExp: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with RNAseqExp & arrayExp
+			DNAMethylation: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			geneExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with RNAseqExp & arrayExp
 			RNAseqExp: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			arrayExp: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			arrayExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
 			somaticMutation: ['dGene', 'dGenes'],
-			sparseMutation: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
-			protein: ['dGene', 'dGenes', /*'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			mutationVector: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
+			protein: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
 			clinical: ['dClinical']
 		},
 		displaysByInput = {
@@ -37,7 +37,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 		inputModeLabels = { // TODO combine with displaysByInput
 			iGene: 'single gene',
-			iGenes: 'list of genes', // 'genes',
+			iGenes: 'list of genes',
 			iProbes: 'list of probes',
 			iChrom: 'chromosome coordinates',
 			iClinical: 'clinical'
@@ -51,14 +51,14 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 		dataTypeByDisplay = {
 			dGene: 'gene', //'nonspatial',
-			dGeneProbes: 'gene', //'nonspatial',
-			dExonDense: 'spatialExonDense',
-			dExonSparse: 'spatialExonSparse',
-			dGeneChrom: 'spatialGeneChrom',
+			dGeneProbes: 'probe', //'nonspatial',
+			dExonDense: 'exonDense', // spatial
+			dExonSparse: 'exonSparse', //spatial
+			dGeneChrom: 'geneChrom', // spatial
 			dGenes: 'gene', //'nonspatial',
 			dProbes: 'probe', //'nonspatial',
 			dClinical: 'feature', //'nonspatial',
-			dChrom: 'spatialChrom'
+			dChrom: 'chrom' // spatial
 		},
 		widgets = {},
 		aWidget;
@@ -105,7 +105,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			var fields;
 			switch (this.state.inputMode) {
 			case 'iGene':
-				fields = [this.state.gene];
+				fields = [this.state.gene]; // TODO use named text?
 				break;
 			case 'iGenes':
 				fields = this.state.genes.split(', '); // TODO use named text?
@@ -124,14 +124,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		renderDisplayModes: function (dataSubType) {
-			/* a way to combine entry for single and multiple genes:
-			var modes,
-				inputMode = this.state.inputMode;
-			if (inputMode === 'iGenes' && this.getFields().length === 1) {
-				inputMode = 'iGene';
-			}
-			modes = getDisplayModes(dataSubType, inputMode);
-			*/
 			var modes = getDisplayModes(dataSubType, this.state.inputMode);
 			if (modes.length === 1) {
 				this.state.displayMode = modes[0];
@@ -193,16 +185,16 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 				if (!this.state.genes || this.state.genes === '') {
 					this.state.genes = defaultGenes;
 				}
-				this.$list.val(this.state.genes);
 				this.$listLabel.text('Genes:');
 				this.$listRow.show();
+				this.$list.val(this.state.genes);
 			} else if (this.state.inputMode === 'iProbes') {
 				if (!this.state.probes || this.state.probes === '') {
 					this.state.probes = defaultProbes;
 				}
-				this.$list.val(this.state.probes);
 				this.$listLabel.text('Probes:');
 				this.$listRow.show();
+				this.$list.val(this.state.probes);
 			}
 		},
 
@@ -211,17 +203,18 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 				if (!this.state.chrom || this.state.chrom === '') {
 					this.state.chrom = defaultChrom;
 				}
-				this.$single.val(this.state.chrom);
 				this.$singleLabel.text('Chromosomal Position:');
 				this.$singleRow.show();
+				this.$single.val(this.state.chrom);
 			} else if (this.state.inputMode === 'iGene') {
 				if (!this.state.gene || this.state.gene === '') {
 					this.state.gene = defaultGene;
 				}
-				this.$single.val(this.state.gene);
 				this.$singleLabel.text('Gene:');
 				this.$singleRow.show();
+				this.$single.val(this.state.gene);
 			}
+
 		},
 
 		renderSelect: function () {
@@ -247,10 +240,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			}
 		},
 
-		renderTitle: function (dataSubType) {
-			//this.$title.val(this.columnUi.getTitle(dataSubType));
-		},
-
 		renderGo: function () {
 			if (this.state.dsID) {
 				this.$goRow.show();
@@ -271,29 +260,24 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		reRender: function () {
-			console.log('columnEdit.reRender(): id: ' + this.id);
 			var dataSubType = getDataSubType(this.state.dsID);
-			if (dataSubType === 'mutationVector' || dataSubType === 'sparseMutation') {
-				return;
-			}
+
+			// reset the dynamic portion of column, excluding the plot
 			this.$el.find('tr:not(.static)').hide();
 			this.$inputModeAnchor.empty();
 			this.$inputMode = undefined;
 			this.$displayModeAnchor.empty();
 			this.$displayMode = undefined;
-			//this.$selectRow.empty();
 			this.$selectAnchor.empty();
 			this.$feature = undefined;
 
+			// render by row
 			this.renderInputModes(dataSubType);
 			this.renderList();
 			this.renderSingle();
 			this.renderDisplayModes(dataSubType);
 			this.renderSelect();
-			this.renderTitle(dataSubType);
 			this.renderGo();
-
-			//this.renderColumn();
 		},
 
 		goClick: function () {
@@ -323,7 +307,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		listBlur: function () {
 			if (this.state.inputMode === 'iGenes') {
 				this.state.genes = this.$list.val();
-				//this.state.inputMode = this.getFields().length === 1 ? 'iGene' : 'iGenes';
 			} else {
 				this.state.probes = this.$list.val();
 			}
@@ -336,8 +319,13 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		datasetChange: function () {
-			this.state.dsID = this.$dataset.select2('val');
-			this.reRender();
+			var dsID = this.$dataset.select2('val');
+			if (dsID === 'mine') {
+				this.state.dsID = undefined;
+			} else {
+				this.state.dsID = dsID;
+				this.reRender();
+			}
 		},
 
 		toggleAdvanced: function (e) {
@@ -372,11 +360,10 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		render: function () {
-			console.log('columnEdit.render(): id: ' + this.id);
 			var self = this,
 				basic;
 			basic = basicTemplate({
-				datasets: this.datasets
+				sources: this.sources
 			});
 			this.$el = $(template({
 				basic: basic,
@@ -405,10 +392,10 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 			this.$el.dialog({
 				title: 'Define Column',
-				width: '650', // TODO make dynamic
+				width: '500', // TODO make dynamic
 				position: {
-					my: 'left+10 top',
-					at: 'right top',
+					my: 'left top',
+					at: 'left top',
 					of: $('.addColumn')
 				},
 				close: this.destroy
@@ -427,7 +414,22 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			this.state = {};
 			//this.state = options.state;
 			datasetsStub = stub.getDatasets();
-			this.datasets = datasetsStub; // TODO
+			this.sources = [
+				{
+					title: 'localhost',
+					datasets: [
+						{
+							title: 'my local dataset',
+							dsID: 'mine'
+						}
+					]
+				},
+				{
+					title: 'cancerdb.ucsc.edu',
+					datasets: datasetsStub
+				}
+			];
+			//this.datasets = datasetsStub; // TODO
 			this.render();
 			if (options.dataset) {
 				this.$dataset.select2('val', options.dataset);
@@ -455,6 +457,14 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 	}
 
 	return {
+		getDataSubType: getDataSubType,
+
+		destroyAll: function () {
+			_.each(widgets, function (w) {
+				w.destroy();
+			});
+		},
+
 		show: function (id, options) {
 			var widget = widgets[id];
 			if (widget) {
@@ -467,8 +477,6 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 
 		showDataset: function (id, options) {
 			return create(id, options);
-		},
-
-		getDataSubType: getDataSubType
+		}
 	};
 });

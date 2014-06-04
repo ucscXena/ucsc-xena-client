@@ -36,13 +36,6 @@ define(['haml!haml/sheetWrap',
 
 		addColumnClick: function (ev) {
 			var id = uuid();
-			/* TODO: maybe later to allow edit of existing column
-			columnUi.create(id, {
-				edit: true,
-				sheetWrap: this,
-				updateColumn: this.updateColumn
-			});
-			*/
 			columnEdit.show(id, {
 				sheetWrap: this,
 				columnUi: undefined,
@@ -50,18 +43,48 @@ define(['haml!haml/sheetWrap',
 			});
 		},
 
+		cohortChange: function (ev) {
+			this.cohort = this.$cohort.select2('val');
+			if (this.cohort === 'TARGET_Neuroblastoma') { // TODO make dynamic
+				$('#pickSamples').click();
+			} else if (this.cohort === 'TCGA_BRCA') {
+				$('#pickBrcaSamples').click();
+			}
+			columnEdit.destroyAll();
+			this.$addColumn.show().click();
+
+		},
+
 		initialize: function (options) {
+			var self = this;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
-			//this.sheetWrap = options.sheetWrap;
 			this.updateColumn = options.updateColumn;
 			this.state = options.state;
 			this.cursor = options.cursor;
+			//this.cohort = this.state.pluck('cohort');
 
 			this.$el = $(template());
 			options.$anchor.append(this.$el);
-			this.$addColumn = this.$el.find('.addColumn');
-			this.$addColumn.on('click', this.addColumnClick); // TODO make this Rx
+
+			// cache jquery objects for active DOM elements
+			this.cache = ['addColumn'];
+			_(self).extend(_(self.cache).reduce(function (a, e) {
+				a['$' + e] = self.$el.find('.' + e);
+				return a;
+			}, {}));
+
+			this.$el.find('.cohort').select2({
+				minimumResultsForSearch: -1,
+				dropdownAutoWidth: true,
+				placeholder: 'Select...',
+				placeholderOption: 'first'
+			});
+			this.$cohort = this.$el.find('.select2-container.cohort');
+
+			this.$el // TODO replace with rx event handlers
+				.on('change', '.cohort', this.cohortChange)
+				.on('click', '.addColumn', this.addColumnClick);
 		}
 	};
 
@@ -76,10 +99,9 @@ define(['haml!haml/sheetWrap',
 		get: function () {
 			return widget;
 		},
-		
+
 		columnShow: function (id, ws) {
-			var column = columnUi.show(id, { ws: ws, sheetWrap: widget });
-			return column.$samplePlot;
+			return columnUi.show(id, { ws: ws, sheetWrap: widget });
 		},
 
 		create: function (options) {

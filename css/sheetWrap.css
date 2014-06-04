@@ -1,21 +1,23 @@
 .sheetWrap {
 	display: inline-block;
 }
-.sheetWrap .spreadsheetTitle {
-	font-size: 1.2em;
-	background-color: rgba(0,0,0,0);
-	border: 0px;
+.sheetWrap>.header {
+	font-size: 0.85em;
+	margin-top: 5px;
 }
-.sheetWrap .spreadsheetTitle.untitled {
-	font-style: italic;
-	color: #cccccc;
+.sheetWrap>.header label {
+	margin-left: 10px;
+}
+.sheetWrap>.header .sources {
+	font-size: 1em;
+	width: 20em;
 }
 .sheetWrap .showLegend {
 	vertical-align: bottom;
 }
 .sheetWrap .addColumn {
 	font-size: 1.5em;
-	line-height: 1.5;
+	line-height: 3;
 	cursor: pointer;
 	vertical-align: top;
 }

@@ -1,5 +1,8 @@
 
 /* select2 overrides */
+.select2-default {
+    color: #000 !important;
+}
 .select2-container .select2-choice > .select2-chosen {
 	margin-right: 20px;
 }
