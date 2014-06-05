@@ -226,7 +226,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
 				this.columnMenu = columnMenu.create(this.id, {
 					anchor: this.$more,
-					column: this,
+					columnUi: this,
+					ws: ws,
 					deleteColumn: this.sheetWrap.deleteColumn,
 					duplicateColumn: this.sheetWrap.duplicateColumn
 				});

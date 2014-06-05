@@ -507,22 +507,22 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 	}
 
 	return {
+		mupitClick: function (id) {
+			if (widgets[id]) {
+				widgets[id].mupitClick();
+			}
+		},
+
 		cmpValue: function (row) {
 			var chrEnd = 10000000000,  // TODO some number larger than use max number of base pairs of longest genes
 				mut,
-				refGene,
-				weight,
-				rightness;
+				weight;
 			if (row.length) {
 				mut = _.max(row, function (mut) { return impact[mut.effect]; });
-				refGene = stub.getRefGene(mut.gene);
 				weight = impactMax - impact[mut.effect];
-				rightness = (refGene.strand === '+') // TODO Math.abs() or -Math.abs() ?
-					? mut.start - refGene.txStart
-					: refGene.txStart - mut.start;
-				return (weight * chrEnd) + rightness;
+				return (weight * chrEnd) - mut.start;
 			} else {
-				return (impactMax * chrEnd) + chrEnd + 1;
+				return (impactMax * chrEnd) + chrEnd + 1; // force no mutations to the bottom
 			}
 		},
 
