@@ -12,16 +12,18 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			return {
 				dsID: host + '/' + ds.NAME,
 				title: ds.SHORTTITLE || ds.NAME,
-				// dataSubType is not the right thing to be using in this
-				// file, but so long as it's here, check for a probemap
-				// to see if it has a gene view.
-				dataSubType: ds.PROBEMAP ? 'cna' : 'clinical'
+				// XXX wonky fix to work around dataSubType.
+				// Use basename of ds.DATASUBTYPE if it's there. Otherwise
+				// default to cna if there's a gene view, and clinical otherwise.
+				dataSubType: ds.DATASUBTYPE ?
+					ds.DATASUBTYPE.split(/[\/]/).reverse()[0] :
+					(ds.PROBEMAP ? 'cna' : 'clinical')
 			};
 		});
 	}
 
 	dataset_list_query =
-		'(query {:select [:name :shorttitle :probemap] :from [:experiments]})';
+		'(query {:select [:name :shorttitle :datasubtype :probemap] :from [:experiments]})';
 
 	function quote(s) {
 		return '"' + s + '"'; // XXX should escape "
