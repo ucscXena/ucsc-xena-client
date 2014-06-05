@@ -53,6 +53,9 @@
 .columnUi .samplePlot {
 	vertical-align: bottom;
 }
+.columnUi .headerPlotRow {
+	line-height: 1px;
+}
 .columnUi .crosshairPlot {
 	position: relative;
 	cursor: crosshair;/* TODO none; */

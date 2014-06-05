@@ -1,5 +1,6 @@
 .sheetWrap {
 	display: inline-block;
+	margin-left: 5px;
 }
 .sheetWrap>.header {
 	font-size: 0.85em;

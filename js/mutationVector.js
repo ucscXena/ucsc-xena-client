@@ -143,7 +143,9 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			drawNa: function (d) {
 				this.d2.beginPath();
 				this.d2.fillStyle = 'grey';
-				this.d2.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+				this.d2.fillRect(this.radius, this.radius + 1,
+					this.canvasWidth - (this.radius * 2),
+					this.canvasHeight - (this.radius * 2));
 			},
 
 			drawNonNaRows: function (d) {
@@ -154,7 +156,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 
 			drawCenter: function (d, highlight) {
 				var r = highlight ? this.point * 2 : this.point,
-					cx = this.x(d.x) + this.radius,
+					cx = this.x(d.x) + this.sparsePad,
 					cy = this.y(d.y);
 				if (d.r > 1) {
 					this.d2.beginPath();
@@ -166,8 +168,8 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 
 			drawHalo: function (d) {
 				var gradient,
-					cx = this.x(d.x) + this.radius,
-					cy = this.y(d.y); // TODO placing this at the top of the row for pixPerRow != 1
+					cx = this.x(d.x) + this.sparsePad,
+					cy = this.y(d.y); // TODO placing this at the top of the row for pixPerRow != 1, should place it in the middle of row
 				this.d2.beginPath();
 				this.d2.arc(cx, cy, d.r, 0, 2 * Math.PI);
 				if (d.line) {
@@ -186,7 +188,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			},
 
 			highlight: function (d) {
-				var cx = this.x(d.x) + this.radius,
+				var cx = this.x(d.x) + this.sparsePad,
 					cy = this.y(d.y);
 				this.draw(); // remove any previous highlights
 				this.d2.beginPath();
@@ -263,8 +265,8 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 					offsetX = offset.x;
 					offsetY = offset.y;
 				}
-				x = offsetX - this.radius;
-				y = this.yMax + this.radius - 1 - offsetY;
+				x = offsetX - this.sparsePad;
+				y = this.yMax + this.sparsePad - 1 - offsetY;
 				node = this.closestNode(x, y);
 				if (node) {
 					this.highlight(node);
@@ -382,27 +384,22 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			},
 
 			receiveData: function (data) {
-				var index = 0,
-					chrEnd = 10000000000;  // TODO use max number of base pairs of all genes
-				this.values = _.map(data.vals, function (v) {
-					var row = $.extend(true, [], v); // TODO, could this be just a simple assignment?
+				var index = 0;
+				this.values = _.map(data, function (d) {
+					var row = $.extend(true, [], d);
 					row.index = index;
 					index += 1;
 					return row;
 				});
-				this.nonNaSamples = data.nonNaSamples;
 				this.render();
 			},
 
 			findNonNaRows: function () {
 				var self = this,
-					nonNaRows = _.map(this.nonNaSamples, function (s) {
-						var val = _.find(self.values, function (v) {
-							return v.sample === s;
-						});
-						return {
-							y: self.yMax - (val.index * self.pixPerRow)
-						};
+					nonNaRows = _.map(filter(self.values, function (r) {
+						return r.vals;
+					}), function (r) {
+						return { y: self.yMax - (r.index * self.pixPerRow) };
 					});
 				return nonNaRows;
 			},
@@ -411,7 +408,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				var self = this,
 					nodes = [],
 					nodeValues = _.filter(this.values, function (value) {
-						return value.vals.length;
+						return value.vals && value.vals.length;
 					});
 				_.each(nodeValues, function (value) {
 					var y = self.yMax - (value.index * self.pixPerRow);
@@ -442,13 +439,13 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				var self = this;
 				if (this.pix === 'fit to inherited height') {
 					this.pixPerRow = this.height / this.values.length;
-					this.canvasHeight = this.height + ((this.radius - 1) * 2);
+					this.canvasHeight = this.height + ((this.sparsePad - 1) * 2);
 				} else {
 					// TODO this is only an estimate when using pixPerRow
 					this.pixPerRow = this.pix;
-					this.canvasHeight = (this.pixPerRow * this.values.length) + ((this.radius - 1) * 2);
+					this.canvasHeight = (this.pixPerRow * this.values.length) + ((this.sparsePad - 1) * 2);
 				}
-				this.yMax = this.canvasHeight - this.radius;
+				this.yMax = this.canvasHeight - this.sparsePad;
 
 				// set up environment
 				this.x = d3.scale.linear()
@@ -474,10 +471,11 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			},
 
 			initialize: function (options) {
+				var horizontalMargin = '-' + options.horizontalMargin.toString() + 'px';
 				_.bindAll.apply(_, [this].concat(_.functions(this)));
 				//_(this).bindAll();
 				this.anchor = options.anchor;
-				this.column = options.column;
+				this.columnUi = options.columnUi;
 				this.refGene = options.refGene;
 				this.dataset = options.dataset;
 				this.gene = options.gene;
@@ -486,10 +484,14 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				this.canvasWidth = options.width || 960;
 				this.pix = options.pix;
 				this.height = options.height;
+				this.sparsePad = options.sparsePad;
 				this.radius = options.radius;
 				this.point = options.point;
 				this.refHeight = options.refHeight;
 				this.sort = options.sort;
+				this.columnUi.$sparsePad.height(0);
+				this.columnUi.$el.parent().css('margin-left', horizontalMargin);
+				this.columnUi.$el.parent().css('margin-right', horizontalMargin);
 
 				crosshairs.create($(this.anchor));
 
@@ -505,6 +507,25 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 	}
 
 	return {
+		cmpValue: function (row) {
+			var chrEnd = 10000000000,  // TODO some number larger than use max number of base pairs of longest genes
+				mut,
+				refGene,
+				weight,
+				rightness;
+			if (row.length) {
+				mut = _.max(row, function (mut) { return impact[mut.effect]; });
+				refGene = stub.getRefGene(mut.gene);
+				weight = impactMax - impact[mut.effect];
+				rightness = (refGene.strand === '+') // TODO Math.abs() or -Math.abs() ?
+					? mut.start - refGene.txStart
+					: refGene.txStart - mut.start;
+				return (weight * chrEnd) + rightness;
+			} else {
+				return (impactMax * chrEnd) + chrEnd + 1;
+			}
+		},
+
 		show: function (id, options) {
 			//console.log(id + ', ' + options.gene.name + '  mutationVector.show()');
 			if (widgets[id]) {

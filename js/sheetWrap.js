@@ -10,7 +10,12 @@ define(['haml!haml/sheetWrap',
 
 	"use strict";
 
-	var widget,
+		// constants for all columns:
+	var horizontalMargin = 3,
+		sparseRadius = horizontalMargin * 2,
+		sparsePad = sparseRadius + 1,
+		headerPlotHeight = 12, // TOOD why is it 15 on chrome ?
+		widget,
 		aWidget;
 
 	// TODO copied from main.js 
@@ -100,8 +105,23 @@ define(['haml!haml/sheetWrap',
 			return widget;
 		},
 
+		columnDims: function () {
+			return {
+				horizontalMargin: horizontalMargin,
+				sparseRadius: sparseRadius,
+				sparsePad: sparsePad,
+				headerPlotHeight: headerPlotHeight
+			};
+		},
+
 		columnShow: function (id, ws) {
-			return columnUi.show(id, { ws: ws, sheetWrap: widget });
+			return columnUi.show(id, {
+				ws: ws,
+				sheetWrap: widget,
+				horizontalMargin: horizontalMargin,
+				sparsePad: sparsePad,
+				headerPlotHeight: headerPlotHeight
+			});
 		},
 
 		create: function (options) {

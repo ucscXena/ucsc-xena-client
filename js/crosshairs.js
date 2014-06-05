@@ -27,10 +27,12 @@ define(['lib/d3', 'jquery', 'lib/underscore'
 
 	return {
 		create: function ($anchor) {
-			$anchor
-				.addClass('crosshairPlot')
-				.append($("<div class='crosshairV crosshair'></div>"))
-				.on('mousemove mouseenter mouseleave', mousing);
+			if (!$anchor.hasClass('crosshairPlot')) {
+				$anchor
+					.addClass('crosshairPlot')
+					.append($("<div class='crosshairV crosshair'></div>"))
+					.on('mousemove mouseenter mouseleave', mousing);
+			}
 		}
 	};
 });
