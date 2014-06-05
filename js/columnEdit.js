@@ -1,16 +1,13 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select', 'haml!haml/columnEditAdvanced', 'defer', 'stub', 'lib/select2', 'jquery', 'underscore_ext',
+define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select', 'haml!haml/columnEditAdvanced', 'defer', 'stub', 'lib/select2', 'jquery', 'underscore_ext', 'xenaQuery',
 	// non-object dependencies
 	'lib/jquery-ui'
-	], function (template, basicTemplate, selectTemplate, advancedTemplate, defer, stub, select2, $, _) {
+	], function (Rx, template, basicTemplate, selectTemplate, advancedTemplate, defer, stub, select2, $, _, xenaQuery) {
 	'use strict';
 
-	var datasetsStub = stub.getDatasets(),
-
-		// TODO: make these more global ?
-		defaultGene = 'ALK',
+	var defaultGene = 'ALK', // TODO: make these more global ?
 		defaultGenes = 'ALK, PTEN',
 		defaultProbes = '(no default probes)', // TODO
 		defaultChrom = 'chr1-chrY',
@@ -61,13 +58,11 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			dChrom: 'chrom' // spatial
 		},
 		widgets = {},
-		aWidget;
+		aWidget,
+		dataset_list_query;
 
-	function getDataSubType(dsID) {
-		var datasetInfo = _.find(datasetsStub, function (d) {
-				return d.dsID === dsID; // TODO
-			});
-		return datasetInfo.dataSubType;
+	function getDataSubType(sources, hdsID) {
+		return xenaQuery.find_dataset(sources, hdsID).dataSubType;
 	}
 
 	function getInputModesByDataSubType(dataSubType) {
@@ -218,25 +213,28 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		renderSelect: function () {
-			if (this.state.inputMode === 'iClinical') {
-				this.$selectAnchor.append(
-					selectTemplate({
-						klass: 'feature',
-						options: stub.getFeatures(),
-						labels: undefined
-					})
-				);
-				this.$selectLabel.text('Feature:');
-				this.$selectRow.show();
-				this.$el.find('.feature').select2({
-					minimumResultsForSearch: 20,
-					dropdownAutoWidth: true
+			var self = this;
+			if (self.state.inputMode === 'iClinical') {
+				xenaQuery.feature_list(self.state.dsID).subscribe(function (features) {
+					self.$selectAnchor.append(
+						selectTemplate({
+							klass: 'feature',
+							options: features,
+							labels: undefined
+						})
+					);
+					self.$selectLabel.text('Feature:');
+					self.$selectRow.show();
+					self.$el.find('.feature').select2({
+						minimumResultsForSearch: 20,
+						dropdownAutoWidth: true
+					});
+					self.$feature = self.$el.find('.select2-container.feature');
+					if (!self.state.feature) {
+						self.state.feature = 'age';
+					}
+					self.$feature.select2('val', self.state.feature);
 				});
-				this.$feature = this.$el.find('.select2-container.feature');
-				if (!this.state.feature) {
-					this.state.feature = 'age';
-				}
-				this.$feature.select2('val', this.state.feature);
 			}
 		},
 
@@ -260,7 +258,7 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		reRender: function () {
-			var dataSubType = getDataSubType(this.state.dsID);
+			var dataSubType = getDataSubType(this.sources, this.state.dsID);
 
 			// reset the dynamic portion of column, excluding the plot
 			this.$el.find('tr:not(.static)').hide();
@@ -404,6 +402,8 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 		},
 
 		initialize: function (options) {
+			var self = this;
+
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
 			this.$anchor = options.$anchor;
@@ -413,39 +413,29 @@ define(['haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select',
 			this.firstRenderDataset = true;
 			this.state = {};
 			//this.state = options.state;
-			datasetsStub = stub.getDatasets();
-			this.sources = [
-				{
-					title: 'localhost',
-					datasets: [
-						{
-							title: 'my local dataset',
-							dsID: 'mine'
-						}
-					]
-				},
-				{
-					title: 'cancerdb.ucsc.edu',
-					datasets: datasetsStub
-				}
-			];
-			//this.datasets = datasetsStub; // TODO
-			this.render();
-			if (options.dataset) {
-				this.$dataset.select2('val', options.dataset);
-			}
 
-			this.$el // TODO replace with rx event handlers
-				.on('change', '.dataset', this.datasetChange)
-				.on('change', '.inputMode', this.inputModeChange)
-				.on('blur', '.list', this.listBlur)
-				.on('blur', '.single', this.singleBlur)
-				.on('change', '.displayMode', this.displayModeChange)
-				.on('change', '.feature', this.featureChange)
-				.on('click', '.go', this.goClick);
-			if (this.columnUi) {
-				this.$el.on('mouseenter mouseleave', this.columnUi.mouseenterLeave);
-			}
+
+			this.sheetWrap.sources.subscribe(function (sources) {
+				self.sources = sources;
+
+				//self.datasets = datasetsStub; // TODO
+				self.render();
+				if (options.dataset) {
+					self.$dataset.select2('val', options.dataset);
+				}
+
+				self.$el // TODO replace with rx event handlers
+				.on('change', '.dataset', self.datasetChange)
+				.on('change', '.inputMode', self.inputModeChange)
+				.on('blur', '.list', self.listBlur)
+				.on('blur', '.single', self.singleBlur)
+				.on('change', '.displayMode', self.displayModeChange)
+				.on('change', '.feature', self.featureChange)
+				.on('click', '.go', self.goClick);
+				if (self.columnUi) {
+					self.$el.on('mouseenter mouseleave', self.columnUi.mouseenterLeave);
+				}
+			});
 		}
 	};
 

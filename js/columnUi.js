@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnEdit', 'columnMenu', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore'
+define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnEdit', 'columnMenu', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
 	// non-object dependenciies
-	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnEdit, columnMenu, defer, /*mutation,*/ refGene, util, d3, $, select2, _) {
+	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnEdit, columnMenu, defer, /*mutation,*/ refGene, util, d3, $, select2, _, xenaQuery, Rx) {
 	'use strict';
 
 	var APPLY = true,
@@ -63,14 +63,14 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			},
 
 			getDefTitle: function (dsID) {
-				var dataset = _.find(stub.getDatasets(), function (d) {
-					return d.dsID === dsID;
+				return this.sheetWrap.sources.map(function (sources) {
+					var dataset = xenaQuery.find_dataset(sources, dsID);
+					if (!dataset) {
+						return "<unknown>";
+					} else {
+						return dataset.title;
+					}
 				});
-				if (dataset.dataSubType === 'clinical') {
-					return '';
-				} else {
-					return dataset.title;
-				}
 			},
 
 			setTitleVal: function (val) {
@@ -97,10 +97,11 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			},
 
 			getDefField: function () {
-				var defalt = this.ws.column.fields.toString(),
+				var defalt = Rx.Observable.return(this.ws.column.fields.toString()),
 					ui = this.ws.column.ui;
 				if (ui.dataSubType === 'clinical') {
-					defalt = this.featureLabel(ui);
+					defalt = xenaQuery.feature_list(this.ws.column.dsID)
+						.pluck(ui.feature);
 				}
 				return defalt;
 			},
@@ -186,27 +187,31 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			},
 
 			renderTitle: function (ui) {
-				var defTitle = this.getDefTitle(this.ws.column.dsID);
-				//var defTitle = defTitles[ui.dataSubType];
-				if (!this.defTitle || (this.$columnTitle.val() === this.defTitle)) {
-					this.defTitle = defTitle;
-					this.setTitleVal(defTitle);
-					//this.$columnTitle.val(defTitle);
-					this.titleChange();
-				} else {
-					this.defTitle = defTitle;
-				}
+				var self = this;
+				self.getDefTitle(self.ws.column.dsID).subscribe(function (defTitle) {
+					//var defTitle = defTitles[ui.dataSubType];
+					if (!self.defTitle || (self.$columnTitle.val() === self.defTitle)) {
+						self.defTitle = defTitle;
+						self.setTitleVal(defTitle);
+						//self.$columnTitle.val(defTitle);
+						self.titleChange();
+					} else {
+						self.defTitle = defTitle;
+					}
+				});
 			},
 
 			renderField: function (ui) {
-				var defField = this.getDefField();
-				if (!this.defField || (this.$field.val() === this.defField)) {
-					this.defField = defField;
-					this.$field.val(defField);
-					this.fieldChange();
-				} else {
-					this.defField = defField;
-				}
+				var self = this;
+				self.getDefField().subscribe(function (defField) {
+					if (!self.defField || (self.$field.val() === self.defField)) {
+						self.defField = defField;
+						self.$field.val(defField);
+						self.fieldChange();
+					} else {
+						self.defField = defField;
+					}
+				});
 			},
 /*
 			renderFeature: function(ui) {
