@@ -17,9 +17,9 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles
 			cna: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
 			DNAMethylation: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			geneExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with RNAseqExp & arrayExp
-			RNAseqExp: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			arrayExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			geneExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with geneRNAseq & geneArray
+			geneRNAseq: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
+			geneArray: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
 			somaticMutation: ['dGene', 'dGenes'],
 			mutationVector: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
 			protein: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
