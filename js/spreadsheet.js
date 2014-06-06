@@ -1,3 +1,4 @@
+/*jslint vars:true */
 /*globals define: false, $: false */
 define(['underscore_ext',
 		'jquery',

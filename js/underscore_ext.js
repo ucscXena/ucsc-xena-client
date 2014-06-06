@@ -1,10 +1,11 @@
-define(['lib/underscore', 'immutable', 'defer'], function(_, immtable, defer) {
+/*globals define: false */
+define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	'use strict';
 
 	var slice = Array.prototype.slice;
 
 	_.mixin({defer: defer}); // override underscore defer
-	_.mixin(immtable);       // add immutable methods
+	_.mixin(immutable);       // add immutable methods
 
 	function fmap(m, fn) {
 		var x = {};
@@ -15,7 +16,7 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immtable, defer) {
 	// Return function that takes an array
 	function apply(fn, self) {
 		return fn.apply.bind(fn, self);
-	};
+	}
 
 	// Create array from arguments
 	function array() {

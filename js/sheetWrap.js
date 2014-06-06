@@ -6,7 +6,9 @@ define(['haml!haml/sheetWrap',
 		'uuid',
 		'underscore_ext',
 		'jquery',
-		], function (template, columnEdit, columnUi, uuid, _, $) {
+		'xenaQuery',
+		'rx.binding'
+		], function (template, columnEdit, columnUi, uuid, _, $, xenaQuery) {
 
 	"use strict";
 
@@ -60,6 +62,17 @@ define(['haml!haml/sheetWrap',
 
 		},
 
+		servers: [
+			{
+				title: 'localhost',
+				url: 'http://localhost:7222'
+			},
+			{
+				title: 'cancerdb',
+				url: 'http://cancerdb:7222'
+			}
+		],
+
 		initialize: function (options) {
 			var self = this;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
@@ -90,6 +103,14 @@ define(['haml!haml/sheetWrap',
 			this.$el // TODO replace with rx event handlers
 				.on('change', '.cohort', this.cohortChange)
 				.on('click', '.addColumn', this.addColumnClick);
+
+			this.sources = xenaQuery.dataset_list(this.servers)
+			.map(function (dataset_lists) {
+				return _.map(dataset_lists, function (l, i) {
+					return _.assoc(self.servers[i], 'datasets', l);
+				});
+			}).replay();
+			this.sources.connect(); // XXX leaking subscription
 		}
 	};
 

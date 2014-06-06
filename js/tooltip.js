@@ -1,8 +1,8 @@
 /*jslint browser: true, nomen: true */
 /*global define: false  */
 
-define(["haml!haml/tooltip", "jquery", "error", "tutor", "lib/underscore"
-	], function (template, $, error, tutor, _) {
+define(["haml!haml/tooltip", "jquery", "error", /*"tutor",*/ "lib/underscore"
+	], function (template, $, error, /*tutor,*/ _) {
 	'use strict';
 
 	// utility fxn to add commas to a number str
@@ -155,9 +155,12 @@ define(["haml!haml/tooltip", "jquery", "error", "tutor", "lib/underscore"
 				hide();
 				return false;
 			}
-			if (tutor.deactivateTooltip(dsID)) {
-				return false;
-			}
+			// XXX this is killing our load times, due to
+			// dependencies on dataTables. These dependencies should
+			// be removed.
+//			if (tutor.deactivateTooltip(dsID)) {
+//				return false;
+//			}
 			return true;
 		},
 
