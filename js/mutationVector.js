@@ -493,8 +493,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				this.columnUi.$el.parent().css('margin-left', horizontalMargin);
 				this.columnUi.$el.parent().css('margin-right', horizontalMargin);
 
-				crosshairs.create($(this.anchor));
-
 				this.receiveData(options.data);
 			}
 		};
@@ -522,7 +520,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				weight = impactMax - impact[mut.effect];
 				return (weight * chrEnd) - mut.start;
 			} else {
-				return (impactMax * chrEnd) + chrEnd + 1; // force no mutations to the bottom
+				return (impactMax * chrEnd) + chrEnd + 1; // force mutation-less rows to the end
 			}
 		},
 

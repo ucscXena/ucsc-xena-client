@@ -58,5 +58,5 @@
 }
 .columnUi .crosshairPlot {
 	position: relative;
-	cursor: crosshair;/* TODO none; */
+	cursor: none;
 }
