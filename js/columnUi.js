@@ -30,6 +30,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		widgets = {},
 		aWidget = {
 
+			// XXX this needs to be invoked somewhere.
 			destroy: function () {
 				this.$el.remove();
 				// TODO clean up subWidgets
@@ -277,9 +278,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 				// TODO in case we are restoring session store for demo
 				$('.addColumn').show();
-				if (!$('.cohort').select2('val')) {
-					$('.cohort').select2('val', 'TARGET_Neuroblastoma');
-				}
 			},
 
 			render: function (options) {

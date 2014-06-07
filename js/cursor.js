@@ -4,6 +4,7 @@
 
 define(['underscore_ext'], function (_) {
 	'use strict';
+	var slice = Array.prototype.slice;
 
 	function cursor(setOrUpdater, newpaths) {
 		var updater, paths;
@@ -25,6 +26,16 @@ define(['underscore_ext'], function (_) {
 					var udr = this;
 					setOrUpdater(function (s) {
 						var methods = {
+							assoc: function (t) {
+								var kvs;
+								for (kvs = slice.call(arguments, 1);
+									 kvs.length;
+									 kvs = kvs.slice(2)) {
+
+									t = _.assoc_in(t, udr.paths[kvs[0]], kvs[1]);
+								}
+								return t;
+							},
 							assoc_in: function(t, ks, v) {
 								return _.assoc_in(t, udr.paths[ks[0]].concat(ks.slice(1)), v);
 							},

@@ -1,19 +1,33 @@
 /*jslint browser: true, nomen: true */
 /*globals define: false, $: false, _: false */
 define(['haml!haml/sheetWrap',
+		'haml!haml/cohorts',
 		'columnEdit',
 		'columnUi',
 		'uuid',
 		'underscore_ext',
 		'jquery',
 		'xenaQuery',
+		'rx.jquery',
 		'rx.binding'
-		], function (template, columnEdit, columnUi, uuid, _, $, xenaQuery) {
+		], function (template,
+					cohortsTemplate,
+					columnEdit,
+					columnUi,
+					uuid,
+					_,
+					$,
+					xenaQuery,
+					Rx) {
 
 	"use strict";
 
 	var widget,
 		aWidget;
+
+	function toLower(s) {
+		return s.toLowerCase();
+	}
 
 	// TODO copied from main.js 
 	function deleteColumn(uuid, upd, state) {
@@ -24,6 +38,21 @@ define(['haml!haml/sheetWrap',
 			['column_rendering'],
 			cols
 		);
+	}
+
+	// set cohort and clear columns
+	function setCohort(cohort, upd, state) {
+		return upd.assoc(state,
+					'cohort', cohort,
+					'column_rendering', {},
+					'column_order', []);
+	}
+
+	function setSamples(samples, upd, state) {
+		return upd.assoc(state,
+						 'samples', samples,
+						 'zoomCount', samples.length,
+						 'zoomIndex', 0);
 	}
 
 	aWidget = {
@@ -41,20 +70,13 @@ define(['haml!haml/sheetWrap',
 			columnEdit.show(id, {
 				sheetWrap: this,
 				columnUi: undefined,
-				updateColumn: this.updateColumn
+				updateColumn: this.updateColumn // XXX ugh
 			});
 		},
 
-		cohortChange: function (ev) {
-			this.cohort = this.$cohort.select2('val');
-			if (this.cohort === 'TARGET_Neuroblastoma') { // TODO make dynamic
-				$('#pickSamples').click();
-			} else if (this.cohort === 'TCGA_BRCA') {
-				$('#pickBrcaSamples').click();
-			}
+		cohortChange: function (cohort) {
 			columnEdit.destroyAll();
 			this.$addColumn.show().click();
-
 		},
 
 		servers: [
@@ -64,15 +86,17 @@ define(['haml!haml/sheetWrap',
 			},
 			{
 				title: 'cancerdb',
-				url: 'http://cancerdb:7222'
+				url: 'http://cancerdb:7223'
 			}
 		],
 
 		initialize: function (options) {
-			var self = this;
+			var self = this,
+				cohortState,
+				serverCohorts;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
-			this.updateColumn = options.updateColumn;
+			this.updateColumn = options.updateColumn; // XXX
 			this.state = options.state;
 			this.cursor = options.cursor;
 			//this.cohort = this.state.pluck('cohort');
@@ -87,25 +111,68 @@ define(['haml!haml/sheetWrap',
 				return a;
 			}, {}));
 
-			this.$el.find('.cohort').select2({
-				minimumResultsForSearch: -1,
-				dropdownAutoWidth: true,
-				placeholder: 'Select...',
-				placeholderOption: 'first'
+			cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
+
+			serverCohorts = Rx.Observable.zipArray(_.map(self.servers, function (s) {
+				return xenaQuery.all_cohorts(s.url);
+			})).map(_.apply(_.union)); // probably want distinctUntilChanged once servers is dynamic
+
+			serverCohorts.startWith([]).combineLatest(cohortState, function (server, state) {
+				return [server, state];
+			}).subscribe(_.apply(function (server, state) {
+				var cohorts = state ? _.union([state], server) : server,
+					opts = $(cohortsTemplate({cohorts: _.sortBy(cohorts, toLower)}));
+
+				if (self.$cohort) {
+					self.$cohort.select2('destroy');
+				}
+				self.$el.find('.cohort').replaceWith(opts);
+				opts.select2({
+					minimumResultsForSearch: -1,
+					dropdownAutoWidth: true,
+					placeholder: 'Select...',
+					placeholderOption: 'first'
+				});
+
+				self.$cohort = self.$el.find('.select2-container.cohort'); // XXX
+			}));
+
+			cohortState.subscribe(function (c) {
+				if (self.$cohort.select2('val') !== c) {
+					self.$cohort.select2('val', c);
+				}
 			});
-			this.$cohort = this.$el.find('.select2-container.cohort');
 
 			this.$el // TODO replace with rx event handlers
-				.on('change', '.cohort', this.cohortChange)
 				.on('click', '.addColumn', this.addColumnClick);
 
-			this.sources = xenaQuery.dataset_list(this.servers)
-			.map(function (dataset_lists) {
+			this.cohort = this.$el.onAsObservable('change', '.cohort')
+				.pluck('val').share();
+
+			// XXX On first load, no add button if there are no
+			// columns?
+			this.cohort.subscribe(self.cohortChange);
+
+			this.cohort.subscribe(function (cohort) {
+				self.cursor.set(_.partial(setCohort, cohort));
+			});
+
+			this.sources = cohortState.map(function (cohort) { // state driven?
+				return xenaQuery.dataset_list(self.servers, cohort);
+			}).switch().map(function (dataset_lists) {
 				return _.map(dataset_lists, function (l, i) {
 					return _.assoc(self.servers[i], 'datasets', l);
 				});
-			}).replay();
+			}).replay(null, 1);
 			this.sources.connect(); // XXX leaking subscription
+
+			this.cohort.map(function (cohort) {
+				return Rx.Observable.zipArray(_.map(self.servers, function (s) {
+					return xenaQuery.all_samples(s.url, cohort);
+				})).map(_.apply(_.union));
+			}).switch().subscribe(function (samples) {
+				self.cursor.set(_.partial(setSamples, samples));
+			});
 		}
 	};
 

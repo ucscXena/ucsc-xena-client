@@ -58,6 +58,10 @@ define(['jquery',
 		return _.filter(_.keys(obj), function (x) { return x.indexOf('_') !== 0; });
 	}
 
+	function keys_(obj) {
+		return _.filter(_.keys(obj), function (x) { return x.indexOf('_') === 0; });
+	}
+
 	unload.combineLatest(model.state, function (_e, state) {
 		return _.pick(state, keysNot_(state));
 	}).subscribe(function (state) {
@@ -77,7 +81,7 @@ define(['jquery',
 		column_order: ['column_order'],
 		data: ['_column_data']
 	};
-	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths);
+	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths).share();
 	var spreadsheetCursor = cursor(writeState, spreadsheetPaths);
 
 /*
@@ -168,6 +172,7 @@ define(['jquery',
 	var debugstream = new Rx.Subject();
 	model.addStream(debugstream);
 	var debugtext = $('<textarea  id="columnStub" rows=20 cols=25></textarea>');
+	debugtext.hide();
 	$debug.append(debugtext);
 
 	debugtext.on('keydown', function (ev) {
@@ -180,9 +185,10 @@ define(['jquery',
 
 	function applySamples(ev) {
 		try {
-			var newprops = JSON.parse($('#samplesStub').val());
+			var json = JSON.parse($('#samplesStub').val());
 			debugstream.onNext(function (s) {
-				return _.extend({}, s, newprops);
+				return _.extend(_.pick(s, keys_(s)),
+								_.pick(json, keysNot_(json)));
 			});
 		} catch (e) {
 			console.log('error', e);
@@ -200,7 +206,7 @@ define(['jquery',
 
 	var example_samples = $('<button id="pickBrcaSamples" style="display:none">BRCA samples</button>');
 	$debug.append(example_samples);
-	example_samples.on('click',function (ev) {
+	example_samples.on('click',function (ev) { // XXX cut this
 		var json = {
 			"cohort": "TCGA_BRCA",
 			"samples": stub.getSamples('brca'),
@@ -218,10 +224,10 @@ define(['jquery',
 
 	var nbl_samples = $('<button id="pickSamples" style="display:none">NBL samples</button>');
 	$debug.append(nbl_samples);
-	nbl_samples.on('click',function (ev) {
+	nbl_samples.on('click',function (ev) { // XXX cut this
 		var samples = stub.getSamples('nbl'),
 			json = {
-			"cohort": "TARGET_Neuroblastoma",
+			"cohort": "TARGET_neuroblastoma",
 			"samples": samples,
 			"height": HEIGHT,
 			"zoomIndex": 0,
@@ -230,9 +236,13 @@ define(['jquery',
 			"column_order": []
 		};
 		debugstream.onNext(function(s) {
-			return _.extend({}, s, json);
+			return _.extend(_.pick(s, keys_(s)),
+							_.pick(json, keysNot_(json)));
 		});
-		$('#samplesStub').val(JSON.stringify(json, undefined, 4));
+	});
+
+	model.state.subscribe(function (s) {
+		$('#samplesStub').val(JSON.stringify(_.pick(s, keysNot_(s)), undefined, 4));
 	});
 
 	$debug.offset({
@@ -241,10 +251,22 @@ define(['jquery',
 	});
 
 	$(document).ready(function () {
+		var start;
 		if (sessionStorage && sessionStorage.state) {
 			// XXX error handling?
-			model.addStream(Rx.Observable.returnValue(function () { return JSON.parse(sessionStorage.state); }));
+			start = JSON.parse(sessionStorage.state);
+		} else {
+			start = {
+				"cohort": "TARGET_neuroblastoma",
+				"samples": [],
+				"height": HEIGHT,
+				"zoomIndex": 0,
+				"zoomCount": 100,
+				"column_rendering": {},
+				"column_order": []
+			};
 		}
+		model.addStream(Rx.Observable.returnValue(function (s) { return start; }));
 		if (DEMO) {
 			$('.debug').hide();
 			$('#pickSamples').click();
