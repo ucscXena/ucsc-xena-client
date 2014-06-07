@@ -196,7 +196,6 @@ define(['jquery',
 			start = JSON.parse(sessionStorage.state);
 		} else {
 			start = {
-				"cohort": "TARGET_neuroblastoma",
 				"samples": [],
 				"height": HEIGHT,
 				"zoomIndex": 0,
