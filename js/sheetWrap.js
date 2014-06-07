@@ -91,7 +91,7 @@ define(['haml!haml/sheetWrap',
 			},
 			{
 				title: 'cancerdb',
-				url: 'http://cancerdb:7223'
+				url: 'http://cancerdb:7222'
 			}
 		],
 
