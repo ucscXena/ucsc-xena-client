@@ -36,9 +36,14 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function xena_dataset_list_transform(host, list) {
 		return _.map(list, function (ds) {
+			var text = JSON.parse(ds.TEXT) || {};
+
+			// merge curated fields over raw metadata
+			// XXX note that we're case sensitive on raw metadata
+			ds = _.extend(text, _.dissoc(ds, 'TEXT'));
 			return {
 				dsID: host + '/' + ds.NAME,
-				title: ds.SHORTTITLE || ds.NAME,
+				title: ds.label || ds.NAME,
 				// XXX wonky fix to work around dataSubType.
 				// Use basename of ds.DATASUBTYPE if it's there. Otherwise
 				// default to cna if there's a gene view, and clinical otherwise.
@@ -50,7 +55,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function dataset_list_query(cohort) {
-		return  '(query {:select [:name :shorttitle :datasubtype :probemap] ' +
+		return  '(query {:select [:name :shorttitle :datasubtype :probemap :text] ' +
 				'        :from [:experiments] ' +
 				'        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
 	}
