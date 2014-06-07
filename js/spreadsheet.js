@@ -237,14 +237,21 @@ define(['underscore_ext',
 				_.each(addcols, function (uuid) {
 					cels[uuid] = $('<div></div>')
 						.addClass('spreadsheet-column')
-						.css({height: 'auto', width: 'auto'})
-						//.css({height: ws[uuid].height, width: 100})
 						.prop('id', uuid)
 						.resizable({handles: 'e'})[0];
 
 					children[uuid] = new Rx.SerialDisposable();
 
 					subs.add(children[uuid]);
+				});
+
+				// XXX should cache the DOM size info so we don't have to
+				// query it.
+				_.each(ws, function (c, uuid) {
+					var cel = $(cels[uuid]);
+					if (cel.width() !== c.column.width) {
+						cel.width(c.column.width);
+					}
 				});
 
 				if (colupdate) { // correct the display order

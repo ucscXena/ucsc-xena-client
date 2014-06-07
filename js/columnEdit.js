@@ -226,7 +226,7 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 					self.$selectLabel.text('Feature:');
 					self.$selectRow.show();
 					self.$el.find('.feature').select2({
-						minimumResultsForSearch: 20,
+						minimumResultsForSearch: 12,
 						dropdownAutoWidth: true
 					});
 					self.$feature = self.$el.find('.select2-container.feature');
@@ -370,7 +370,7 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 			}));
 
 			this.$el.find('.dataset').select2({
-				minimumResultsForSearch: -1,
+				minimumResultsForSearch: 12,
 				dropdownAutoWidth: true,
 				placeholder: 'Select...',
 				placeholderOption: 'first'

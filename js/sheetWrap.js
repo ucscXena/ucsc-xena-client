@@ -16,7 +16,7 @@ define(['haml!haml/sheetWrap',
 	var horizontalMargin = 3,
 		sparseRadius = horizontalMargin * 2,
 		sparsePad = sparseRadius + 1,
-		headerPlotHeight = 12, // TOOD why is it 15 on chrome ?
+		headerPlotHeight = 12,
 		widget,
 		aWidget;
 
@@ -93,7 +93,7 @@ define(['haml!haml/sheetWrap',
 			}, {}));
 
 			this.$el.find('.cohort').select2({
-				minimumResultsForSearch: -1,
+				minimumResultsForSearch: 12,
 				dropdownAutoWidth: true,
 				placeholder: 'Select...',
 				placeholderOption: 'first'
