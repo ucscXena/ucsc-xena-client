@@ -126,11 +126,14 @@ define(['haml!haml/sheetWrap',
 				return [server, state];
 			}).subscribe(_.apply(function (server, state) {
 				var cohorts = state ? _.union([state], server) : server,
-					opts = $(cohortsTemplate({cohorts: _.sortBy(cohorts, toLower)}));
+					opts = $(cohortsTemplate({cohorts: _.sortBy(cohorts, toLower)})),
+					current;
 
 				if (self.$cohort) {
+					current = self.$cohort.select2('val');
 					self.$cohort.select2('destroy');
 				}
+
 				self.$el.find('.cohort').replaceWith(opts);
 				opts.select2({
 					minimumResultsForSearch: 12,
@@ -140,6 +143,9 @@ define(['haml!haml/sheetWrap',
 				});
 
 				self.$cohort = self.$el.find('.select2-container.cohort'); // XXX
+				if (current) {
+					self.$cohort.select2('val', current);
+				}
 			}));
 
 			cohortState.subscribe(function (c) {
