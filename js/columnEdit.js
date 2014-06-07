@@ -37,9 +37,9 @@ define(['haml!haml/columnEdit',
 		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles
 			cna: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
 			DNAMethylation: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			geneExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with RNAseqExp & arrayExp
-			RNAseqExp: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			arrayExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
+			geneExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with geneRNAseq & geneArray
+			geneRNAseq: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
+			geneArray: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
 			somaticMutation: ['dGene', 'dGenes'],
 			mutationVector: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
 			protein: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
@@ -247,7 +247,7 @@ define(['haml!haml/columnEdit',
 					self.$selectLabel.text('Feature:');
 					self.$selectRow.show();
 					self.$el.find('.feature').select2({
-						minimumResultsForSearch: 20,
+						minimumResultsForSearch: 12,
 						dropdownAutoWidth: true
 					});
 					self.$feature = self.$el.find('.select2-container.feature');
@@ -459,7 +459,7 @@ define(['haml!haml/columnEdit',
 				}
 				self.$el.find('.dataset').replaceWith(opts);
 				opts.select2({
-					minimumResultsForSearch: -1,
+					minimumResultsForSearch: 12,
 					dropdownAutoWidth: true,
 					placeholder: 'Select...',
 					placeholderOption: 'first'

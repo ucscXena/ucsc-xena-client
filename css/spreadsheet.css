@@ -1,14 +1,15 @@
 .spreadsheet {
 	position: relative;
 	display: inline-block;
-	/* background-color: #eeeeff;*/
+	word-wrap: nowrap;
 }
-.spreadsheet .ui-resizable-handle,
-.spreadsheet .ui-sortable { /* TODO does ui-sortable need to be here? */
-	display: inline-block;
+.spreadsheet .ui-resizable-s {
+	cursor: ns-resize;
 }
 .spreadsheet-column {
-	/*background-color: #eeffee;*/
 	display: inline-block;
-	margin-left: 5px;
 }
+.spreadsheet-column .ui-resizable-e {
+	cursor: ew-resize;
+}
+

@@ -1,20 +1,9 @@
 .columnUi {
-	/*background-color: #ffeeee;*/
 	font-size: 0.8em;
 	vertical-align: bottom;
-	/*border: 1px dashed transparent;*/
 }
-/* recedeback
-.columnUi.new {
-	border-color: grey;
-}
-*/
 .columnUi tr {
-	/* vertical-align: top;*/
 	white-space: nowrap;
-}
-.columnUi .hideOnNew.new {
-	display:none;
 }
 .columnUi input {
 	margin-top: -4px;
@@ -31,9 +20,20 @@
 	font-style: italic;
 	color: #666666;
 }
-.columnUi .more {
-	margin-bottom: 3px;
+.columnUi .moveHandle {
+	background-color: #eeeeee;
+	width: 100%;
+	height: 12px;
+	margin-top: 4px;
+	margin-bottom: 4px;
 	display: inline-block;
+	cursor: move;
+}
+.columnUi .more {
+	margin-bottom: 2px;
+	margin-left: -21px;
+	display: inline-block;
+	line-height: normal;
 }
 .columnUi .hoverShow.recede,
 .columnUi .select2-arrow.recede {
@@ -55,5 +55,5 @@
 }
 .columnUi .crosshairPlot {
 	position: relative;
-	cursor: crosshair;/* TODO none; */
+	cursor: none;
 }

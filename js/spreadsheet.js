@@ -73,9 +73,7 @@ define(['underscore_ext',
 
 		state = state.replayWhileObserved(1); // XXX move this to columnModels? So widgets can get latest state?
 		el.sortable({
-			axis: 'x',
-			placeholder: "ui-state-highlight",
-			forcePlaceholderSize: true
+			axis: 'x'
 		});
 
 		// jquery-ui horizontal sortable bug
@@ -237,8 +235,6 @@ define(['underscore_ext',
 				_.each(addcols, function (uuid) {
 					cels[uuid] = $('<div></div>')
 						.addClass('spreadsheet-column')
-						.css({height: 'auto', width: 'auto'})
-						//.css({height: ws[uuid].height, width: 100})
 						.prop('id', uuid)
 						.resizable({handles: 'e'})[0];
 
@@ -253,9 +249,6 @@ define(['underscore_ext',
 					var cel = $(cels[uuid]);
 					if (cel.width() !== c.column.width) {
 						cel.width(c.column.width);
-					}
-					if (cel.height() !== c.height) {
-						cel.height(c.height);
 					}
 				});
 

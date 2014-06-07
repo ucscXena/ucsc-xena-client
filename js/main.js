@@ -98,37 +98,21 @@ define(['jquery',
 	var $spreadsheet = $('.spreadsheet');
 	var $debug = $('.debug');
 
-	$spreadsheet.css({height: HEIGHT}).resizable();
+	$spreadsheet.resizable({ handles: 's' });
 
 	// XXX handler might leak
+	// changing either the canvas or the .samplePlot
 	var resizes = $spreadsheet.onAsObservable("resizestop")
 		.select(function (ev) {
-				return function (s) { return _.assoc(s, 'height', ev.additionalArguments[0].size.height); };
+				return function (s) {
+					var $column = $('.spreadsheet-column:first'),
+						headHeight = $column.height() - $column.find('.samplePlot canvas').height();
+					return _.assoc(s, 'height', ev.additionalArguments[0].size.height - headHeight);
+				};
 		});
 
 	model.addStream(resizes);
 
-	model.state.select(function (s) {
-		if ($spreadsheet.height() !== s.height) {
-			$spreadsheet.height(s.height);
-		}
-	}).subscribe(); // XXX leaking disposable
-/*
-	var childrenStream = new Rx.Subject();
-	model.addStream(childrenStream);
-	var writeState = function (fn) { childrenStream.onNext(fn); };
-	var spreadsheetPaths = {
-		height: ['height'],
-		zoomIndex: ['zoomIndex'],
-		zoomCount: ['zoomCount'],
-		samples: ['samples'],
-		column_rendering: ['column_rendering'],
-		column_order: ['column_order'],
-		data: ['_column_data']
-	};
-	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths);
-	var spreadsheetCursor = cursor(writeState, spreadsheetPaths);
-*/
 	var colsub = spreadsheet(spreadsheetState, spreadsheetCursor, $spreadsheet); // XXX returns disposable
 
 	// COLUMN STUB
@@ -155,12 +139,6 @@ define(['jquery',
 			var newcol = JSON.parse($('#columnStub').val());
 			debugstream.onNext(function (s) {
 				var id = uuid();
-				/* TODO maybe later to allow edits of existing columns
-				columnUi.create(id, {
-					sheetWrap: thisSheetWrap,
-					updateColumn: updateColumn
-				});
-				*/
 				return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
 					'column_order', s.column_order.concat([id]));
 			});
@@ -244,12 +222,6 @@ define(['jquery',
 	model.state.subscribe(function (s) {
 		$('#samplesStub').val(JSON.stringify(_.pick(s, keysNot_(s)), undefined, 4));
 	});
-
-	$debug.offset({
-		top: $debug.offset().top + 90,
-		left: $debug.offset().left
-	});
-
 	$(document).ready(function () {
 		var start;
 		if (sessionStorage && sessionStorage.state) {
@@ -269,8 +241,6 @@ define(['jquery',
 		model.addStream(Rx.Observable.returnValue(function (s) { return start; }));
 		if (DEMO) {
 			$('.debug').hide();
-			$('#pickSamples').click();
-			$('.addColumn').click();
 		}
 	});
 

@@ -1,21 +1,13 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['haml!haml/columnMenu', 'columnEdit', 'Menu', 'jquery', 'lib/underscore'
+define(['haml!haml/columnMenu', 'columnEdit', 'mutationVector', 'Menu', 'jquery', 'lib/underscore'
 	// non-object dependencies
-	], function (template, columnEdit, Menu, $, _) {
+	], function (template, columnEdit, mutationVector, Menu, $, _) {
 	'use strict';
 
 	var APPLY_BUTTON,
 		ColumnMenu = function () {
-
-			this.showItem = function (item) {
-				this.show[item] = true;
-			};
-
-			this.hideItem = function (item) {
-				this.show[item] = false;
-			};
 
 			this.docClick = function () {
 				console.log('docClick');
@@ -27,8 +19,8 @@ define(['haml!haml/columnMenu', 'columnEdit', 'Menu', 'jquery', 'lib/underscore'
 			};
 
 			this.editClick = function (ev) {
-				this.column.columnEdit = columnEdit.show(this.id, {
-					column: this.column,
+				this.columnUi.columnEdit = columnEdit.show(this.id, {
+					columnUi: this.columnUi,
 					APPLY_BUTTON: APPLY_BUTTON
 				});
 			};
@@ -40,9 +32,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'Menu', 'jquery', 'lib/underscore'
 
 			this.mupitClick = function (ev) {
 				console.log('mupitView');
-				if (this.column.mutation) {
-					this.column.mutation.mupitClick();
-				}
+				mutationVector.mupitClick(this.id);
 			};
 
 			this.removeClick = function (ev) {
@@ -58,22 +48,10 @@ define(['haml!haml/columnMenu', 'columnEdit', 'Menu', 'jquery', 'lib/underscore'
 			this.render = function () {
 				var cache,
 					list = $(template({
+						type: this.ws.column.dataType, // TODO should be more specifically mutation exon sparse
 						moreItems: this.moreItems
 					}));
 				this.menuRender(list);
-				this.$mupit = this.$el.find('.mupit');
-				/*
-				cache = ['mupit'];
-					_(self).extend(_(self.cache).reduce(function (a, e) {
-						a['$' + e] = self.$el.find('.' + e);
-						return a;
-					}, {}));
-				if (this.show.mupit) {
-					this.$mupit.show();
-				} else {
-					this.$mupit.hide();
-				}
-				*/
 			};
 
 			this.initialize = function (options) {
@@ -81,12 +59,11 @@ define(['haml!haml/columnMenu', 'columnEdit', 'Menu', 'jquery', 'lib/underscore'
 				_.bindAll.apply(_, [this].concat(_.functions(this)));
 				//_(this).bindAll();
 				APPLY_BUTTON = options.APPLY_BUTTON;
-				this.column = options.column;
+				this.columnUi = options.columnUi;
+				this.ws = options.ws;
 				this.deleteColumn = options.deleteColumn;
 				this.duplicateColumn = options.duplicateColumn;
 				this.moreItems = options.moreItems;
-				this.show = {};
-				this.show.mupit = false;
 				this.menuInitialize(options);
 
 				// bindings

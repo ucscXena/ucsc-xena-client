@@ -22,7 +22,12 @@ define(['haml!haml/sheetWrap',
 
 	"use strict";
 
-	var widget,
+		// constants for all columns:
+	var horizontalMargin = 3,
+		sparseRadius = horizontalMargin * 2,
+		sparsePad = sparseRadius + 1,
+		headerPlotHeight = 12,
+		widget,
 		aWidget;
 
 	function toLower(s) {
@@ -128,7 +133,7 @@ define(['haml!haml/sheetWrap',
 				}
 				self.$el.find('.cohort').replaceWith(opts);
 				opts.select2({
-					minimumResultsForSearch: -1,
+					minimumResultsForSearch: 12,
 					dropdownAutoWidth: true,
 					placeholder: 'Select...',
 					placeholderOption: 'first'
@@ -188,8 +193,23 @@ define(['haml!haml/sheetWrap',
 			return widget;
 		},
 
+		columnDims: function () {
+			return {
+				horizontalMargin: horizontalMargin,
+				sparseRadius: sparseRadius,
+				sparsePad: sparsePad,
+				headerPlotHeight: headerPlotHeight
+			};
+		},
+
 		columnShow: function (id, ws) {
-			return columnUi.show(id, { ws: ws, sheetWrap: widget });
+			return columnUi.show(id, {
+				ws: ws,
+				sheetWrap: widget,
+				horizontalMargin: horizontalMargin,
+				sparsePad: sparsePad,
+				headerPlotHeight: headerPlotHeight
+			});
 		},
 
 		create: function (options) {

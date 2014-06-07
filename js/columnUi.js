@@ -16,6 +16,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		toNumber = _.toNumber,
 		uniqueId = _.uniqueId,
 		genes = stub.getRefGeneNames2(),
+		/*
 		defTitles = {
 			cna: 'copy number',
 			DNAMethylation: 'DNA methylation',
@@ -27,6 +28,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			protein: 'protein',
 			clinical: 'clinical feature'
 		},
+		*/
 		widgets = {},
 		aWidget = {
 
@@ -137,42 +139,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				this.updateColumn(this.id);
 			},
 */
-			renderPlots: function () {
-				console.log('columnUi.renderPlots()');
-			/*
-				var datasetName = this.columnEdit.$datasetSelect2.select2('val'),
-					dataType = columnEdit.getDataType(datasetName),
-					mode,
-					text,
-					$plot = this.$el.find('.samplePlot'),
-					$stub;
-				switch (dataType) {
-				case 'mutationVector':
-					this.columnMenu.showItem('mupit');
-					this.renderPlotsMutation();
-					break;
-				default:
-					this.columnMenu.hideItem('mupit');
-					if (this.columnEdit.$modeSelect2) {
-						mode = this.columnEdit.$modeSelect2.select2('val');
-					}
-					$stub = $(tupleTemplate({
-						header: 'future plot of:',
-						labels: ['dataset:', 'dataType:', 'displayMode:'],
-						values: [datasetName, dataType, mode]
-					}));
-					$plot.append($stub);
-					$plot.find('.tupleDisplay').css({
-						'margin-top': '130px',
-						'margin-left': '5px',
-						'font-style': 'italic'
-					});
-					$plot.parents('tr').removeClass('new');
-					break;
-				}
-				*/
-			},
-
 			resize: function () {
 				var self = this;
 				setTimeout(function () {
@@ -255,12 +221,19 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				}));
 				this.$anchor.append(this.$el);
 
+				// adjust to default column dimensions
+				this.$el.parent().css('margin-left', this.horizontalMargin);
+				this.$el.parent().css('margin-right', this.horizontalMargin);
+				this.$el.find('.sparsePad').height(this.sparsePad);
+				this.$el.find('.headerPlot').height(this.headerPlotHeight);
+
 				// cache jquery objects for active DOM elements
-				this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'samplePlot'];
+				this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot'];
 				_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
 				this.columnMenu = columnMenu.create(this.id, {
 					anchor: this.$more,
-					column: this,
+					columnUi: this,
+					ws: ws,
 					deleteColumn: this.sheetWrap.deleteColumn,
 					duplicateColumn: this.sheetWrap.duplicateColumn
 				});
@@ -295,6 +268,9 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				//_(this).bindAll();
 				this.updateColumn = options.updateColumn;
 				this.sheetWrap = options.sheetWrap;
+				this.sparsePad = options.sparsePad;
+				this.headerPlotHeight = options.headerPlotHeight;
+				this.horizontalMargin = options.horizontalMargin.toString() + 'px';
 				if (options.ws) {
 					this.render(options);
 				}
