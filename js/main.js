@@ -177,7 +177,7 @@ define(['jquery',
 	$debug.append(debugstate);
 
 	debugstate.on('keydown', function (ev) {
-		if (ev.keyCode === 13 && ev.shiftKey === true) {
+		if (ev.keyCode === 13 && ev.ctrlKey === true) {
 			applySamples(ev);
 		}
 	});
