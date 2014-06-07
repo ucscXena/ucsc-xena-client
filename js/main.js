@@ -84,11 +84,6 @@ define(['jquery',
 	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths).share();
 	var spreadsheetCursor = cursor(writeState, spreadsheetPaths);
 
-/*
-	var childrenStream = new Rx.Subject();
-	model.addStream(childrenStream);
-	var writeState = function (fn) { childrenStream.onNext(fn); };
-*/
 	var thisSheetWrap = sheetWrap.create({
 		$anchor: $('#main'),
 		updateColumn: updateColumn,
@@ -105,6 +100,15 @@ define(['jquery',
 	var resizes = $spreadsheet.onAsObservable("resizestop")
 		.select(function (ev) {
 				return function (s) {
+					// The state-mutating functions should really be pure functions, for the sake
+					// of our sanity. So, DOM lookups should be done elsewhere.
+					// headHeight is really a constant & could be looked up once. This handler should
+					// see it as a constant.
+					// The reason we have to do this at all is that the resize handles are on a different
+					// element than the one we resize. The real fix is to resolve that discrepancy such
+					// that we're getting the correct height values. Dunno if jquery-ui will let us
+					// resize with a proxy element, but if not we should write our own resize. We should
+					// really do that anyway, and ditch jquery-ui. :-p
 					var $column = $('.spreadsheet-column:first'),
 						headHeight = $column.height() - $column.find('.samplePlot canvas').height();
 					return _.assoc(s, 'height', ev.additionalArguments[0].size.height - headHeight);
@@ -180,43 +184,6 @@ define(['jquery',
 		if (ev.keyCode === 13 && ev.ctrlKey === true) {
 			applySamples(ev);
 		}
-	});
-
-	var example_samples = $('<button id="pickBrcaSamples" style="display:none">BRCA samples</button>');
-	$debug.append(example_samples);
-	example_samples.on('click',function (ev) { // XXX cut this
-		var json = {
-			"cohort": "TCGA_BRCA",
-			"samples": stub.getSamples('brca'),
-			"height": HEIGHT,
-			"zoomIndex": 0,
-			"zoomCount": 100,
-			"column_rendering": {},
-			"column_order": []
-		};
-		debugstream.onNext(function(s) {
-			return _.extend({}, s, json);
-		});
-		$('#samplesStub').val(JSON.stringify(json, undefined, 4));
-	});
-
-	var nbl_samples = $('<button id="pickSamples" style="display:none">NBL samples</button>');
-	$debug.append(nbl_samples);
-	nbl_samples.on('click',function (ev) { // XXX cut this
-		var samples = stub.getSamples('nbl'),
-			json = {
-			"cohort": "TARGET_neuroblastoma",
-			"samples": samples,
-			"height": HEIGHT,
-			"zoomIndex": 0,
-			"zoomCount": samples.length,
-			"column_rendering": {},
-			"column_order": []
-		};
-		debugstream.onNext(function(s) {
-			return _.extend(_.pick(s, keys_(s)),
-							_.pick(json, keysNot_(json)));
-		});
 	});
 
 	model.state.subscribe(function (s) {
