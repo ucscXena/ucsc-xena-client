@@ -73,9 +73,7 @@ define(['underscore_ext',
 
 		state = state.replayWhileObserved(1); // XXX move this to columnModels? So widgets can get latest state?
 		el.sortable({
-			axis: 'x',
-			placeholder: "ui-state-highlight",
-			forcePlaceholderSize: true
+			axis: 'x'
 		});
 
 		// jquery-ui horizontal sortable bug
