@@ -1,7 +1,8 @@
 .spreadsheet {
 	position: relative;
 	display: inline-block;
-	/* background-color: #eeeeff;*/
+	/*background-color: #eeeeff;*/
+	word-wrap: nowrap;
 }
 .spreadsheet .ui-resizable-handle,
 .spreadsheet .ui-sortable { /* TODO does ui-sortable need to be here? */

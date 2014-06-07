@@ -1,4 +1,6 @@
 .sheetWrap {
+	line-height: 1px;
+	/*background-color: #ffeeee;*/
 	display: inline-block;
 	margin-left: 5px;
 }

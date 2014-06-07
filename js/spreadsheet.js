@@ -247,18 +247,6 @@ define(['underscore_ext',
 					subs.add(children[uuid]);
 				});
 
-				// XXX should cache the DOM size info so we don't have to
-				// query it.
-				_.each(ws, function (c, uuid) {
-					var cel = $(cels[uuid]);
-					if (cel.width() !== c.column.width) {
-						cel.width(c.column.width);
-					}
-					if (cel.height() !== c.height) {
-						cel.height(c.height);
-					}
-				});
-
 				if (colupdate) { // correct the display order
 					_.each(order, function (uuid) {
 						$(cels[uuid]).detach();

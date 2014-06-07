@@ -1,16 +1,8 @@
 .columnUi {
-	/*background-color: #ffeeee;*/
 	font-size: 0.8em;
 	vertical-align: bottom;
-	/*border: 1px dashed transparent;*/
 }
-/* recedeback
-.columnUi.new {
-	border-color: grey;
-}
-*/
 .columnUi tr {
-	/* vertical-align: top;*/
 	white-space: nowrap;
 }
 .columnUi .hideOnNew.new {
@@ -34,6 +26,7 @@
 .columnUi .more {
 	margin-bottom: 3px;
 	display: inline-block;
+	line-height: normal;
 }
 .columnUi .hoverShow.recede,
 .columnUi .select2-arrow.recede {
@@ -52,9 +45,6 @@
 }
 .columnUi .samplePlot {
 	vertical-align: bottom;
-}
-.columnUi .headerPlotRow {
-	line-height: 1px;
 }
 .columnUi .crosshairPlot {
 	position: relative;

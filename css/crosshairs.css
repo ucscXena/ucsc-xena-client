@@ -1,4 +1,5 @@
 .crosshair {
+	display: none;
 	position: fixed;
 	background-image:url('../images/dots.gif');
 	pointer-events: none;
