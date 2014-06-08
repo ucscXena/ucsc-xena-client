@@ -7,7 +7,14 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 	], function (Rx, template, basicTemplate, selectTemplate, advancedTemplate, defer, stub, select2, $, _, xenaQuery) {
 	'use strict';
 
-	var defaultGene = 'ALK', // TODO: make these more global ?
+	var dsTitles = { // TODO for demo
+			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/cnv.matrix": 'Copy number',
+			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/rma.Target190.Probeset.Full": 'Gene expression, array',
+			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/NBL_10_RNAseq_log2": 'Gene expression, RNAseq',
+			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/mutationGene": 'Mutations, gene',
+			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_clinicalMatrix": 'Phenotypical, Clinical'
+		},
+		defaultGene = 'ALK', // TODO: make these more global ?
 		defaultGenes = 'ALK, PTEN',
 		defaultProbes = '(no default probes)', // TODO
 		defaultChrom = 'chr1-chrY',
@@ -57,11 +64,16 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 			dClinical: 'feature', //'nonspatial',
 			dChrom: 'chrom' // spatial
 		},
+		map = _.map,
 		widgets = {},
 		aWidget,
 		dataset_list_query;
 
 	function getDataSubType(sources, hdsID) {
+		// TODO for demo, our mutationVector dataset is in the cgi
+		if (hdsID === 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
+			return 'mutationVector';
+		}
 		return xenaQuery.find_dataset(sources, hdsID).dataSubType;
 	}
 
@@ -81,6 +93,10 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 			displaysByDataSubType[dataSubType],
 			displaysByInput[inputMode]
 		);
+	}
+
+	function datasetTitle(dsID, title) {
+		return dsTitles[dsID] || title;
 	}
 
 	aWidget = {
@@ -412,26 +428,50 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 			this.updateColumn = options.updateColumn;
 			this.firstRenderDataset = true;
 			this.state = {};
-			//this.state = options.state;
-
 
 			this.sheetWrap.sources.subscribe(function (sources) {
-				self.sources = sources;
+				var index;
+				// TODO for demo, rename ucsc source and dataset titles
+				self.sources = map(sources, function (s) {
+					return {
+						url: s.url,
+						title: (s.title === 'cancerdb') ? 'cancerdb.ucsc.edu' : s.title,
+						datasets: map(s.datasets, function (d) {
+							return {
+								dataSubType: d.dataSubType,
+								dsID: d.dsID,
+								title: datasetTitle(d.dsID, d.title)
+								//title: dsTitles[d.dsID] || d.title // TODO reassign titles for demo
+							};
+						})
+					};
+				});
 
-				//self.datasets = datasetsStub; // TODO
+				// TODO for demo, insert mutationVector dataset
+				_.each(self.sources[1].datasets, function (d, i) {
+					if (d.title === 'Mutations, gene') {
+						index = i;
+					}
+				});
+				self.sources[1].datasets.splice(index, 0, {
+					dataSubType: 'mutationVector',
+					dsID: 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector',
+					title: 'Mutation'
+				});
+
 				self.render();
 				if (options.dataset) {
 					self.$dataset.select2('val', options.dataset);
 				}
 
-				self.$el // TODO replace with rx event handlers
-				.on('change', '.dataset', self.datasetChange)
-				.on('change', '.inputMode', self.inputModeChange)
-				.on('blur', '.list', self.listBlur)
-				.on('blur', '.single', self.singleBlur)
-				.on('change', '.displayMode', self.displayModeChange)
-				.on('change', '.feature', self.featureChange)
-				.on('click', '.go', self.goClick);
+				self.$el // TODO replace with rx event handlers?
+					.on('change', '.dataset', self.datasetChange)
+					.on('change', '.inputMode', self.inputModeChange)
+					.on('blur', '.list', self.listBlur)
+					.on('blur', '.single', self.singleBlur)
+					.on('change', '.displayMode', self.displayModeChange)
+					.on('change', '.feature', self.featureChange)
+					.on('click', '.go', self.goClick);
 				if (self.columnUi) {
 					self.$el.on('mouseenter mouseleave', self.columnUi.mouseenterLeave);
 				}

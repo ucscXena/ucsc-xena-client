@@ -101,7 +101,12 @@ define(['jquery',
 	var resizes = $spreadsheet.onAsObservable("resizestop")
 		.select(function (ev) {
 				return function (s) {
-					var $column = $('.spreadsheet-column:first'),
+					var diff = ev.additionalArguments[0].size.height
+							- ev.additionalArguments[0].originalSize.height,
+						// TODO it would be best to retrieve the state.height here
+						// and replace it with: diff + state.height
+						// The below does not work if a sparse mutation plot is first
+						$column = $('.spreadsheet-column:first'),
 						headHeight = $column.height() - $column.find('.samplePlot canvas').height();
 					return _.assoc(s, 'height', ev.additionalArguments[0].size.height - headHeight);
 				};
