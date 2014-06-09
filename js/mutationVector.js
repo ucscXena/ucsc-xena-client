@@ -372,8 +372,8 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				if (this.feature === 'impact') {
 					imp = impact[val.effect];
 					c = colors[this.color][imp];
-				} else if (this.feature === 'dataset') {
-					c = colors.dataset[val.dataset];
+				//} else if (this.feature === 'dataset') {
+				//	c = colors.dataset[val.dataset];
 				} else if (val[this.feature] === 'NA') { // DNA_AF or RNA_AF with NA value
 					c = colors.af[0];
 				} else {  // DNA_AF or RNA_AF, but not NA

@@ -7,7 +7,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 	'use strict';
 
 	var APPLY = true,
-		//defaultFeature = '_INTEGRATION',
 		each = _.each,
 		filter = _.filter,
 		find = _.find,
@@ -16,6 +15,11 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		toNumber = _.toNumber,
 		uniqueId = _.uniqueId,
 		genes = stub.getRefGeneNames2(),
+		sFeatures = { // TODO for demo
+			impact: 'impact', // shorttitle ?
+			DNA_AF: 'DNA allele frequency',
+			RNA_AF: 'RNA allele frequency'
+		},
 		dsTitles = { // TODO for demo
 			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/cnv.matrix": 'Copy number',
 			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/rma.Target190.Probeset.Full": 'Gene expression, array',
@@ -50,12 +54,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			// TODO clean up subWidgets
 			delete widgets[this.id];
 			$('.spreadsheet').resize();
-		},
-
-		featureLabel: function (ui) {
-			return _.find(stub.getFeatures(), function (val, key) {
-				return key === ui.feature;
-			});
 		},
 
 		someMouseenterLeave: function (e) {
@@ -115,6 +113,17 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		},
 
 		getDefField: function () {
+			var defalt = this.ws.column.fields.toString(),
+			ui = this.ws.column.ui;
+			if (ui.dataSubType === 'clinical') {
+				defalt = ui.feature; // TODO we need the label here, rather than the name
+			} else if (ui.dataSubType ==='mutationVector') {
+				defalt += ': ' + sFeatures[ui.sFeature];
+			}
+			return defalt;
+		/*
+			// TODO Rx seems overkill here because the strings in ws.column.fields cannot
+			// change between columnEdit.js setting them, and this module looking at them.
 			var defalt = Rx.Observable.return(this.ws.column.fields.toString()),
 				ui = this.ws.column.ui;
 			if (ui.dataSubType === 'clinical') {
@@ -122,6 +131,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					.pluck(ui.feature);
 			}
 			return defalt;
+		*/
 		},
 
 		setFieldVal: function (val) {
@@ -146,15 +156,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.fieldChange();
 		},
 
-/*
-		featureChange: function (e) {
-			this.ws.column.ui.feature = this.$feature.select2('val');
-			this.ws.column.fields = [this.ws.column.ui.feature];
-			$('#columnStub').val(JSON.stringify(this.ws.column, undefined, 4));
-			this.updateColumn(this.id);
-		},
-*/
-		resize: function () {
+		resize: function () { // TODO needed?
+		/*
 			var self = this;
 			setTimeout(function () {
 				var width = self.$el.width()
@@ -166,6 +169,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					- 4; // for don't know what
 				self.$columnTitle.width(width);
 			}, 200);
+		*/
 		},
 
 		renderTitle: function (ui) {
@@ -184,6 +188,16 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		},
 
 		renderField: function (ui) {
+			var defField = this.getDefField();
+			if (!this.defField || (this.$field.val() === this.defField)) {
+				this.defField = defField;
+				this.$field.val(defField);
+				this.fieldChange();
+			} else {
+				this.defField = defField;
+			}
+		/*
+			// TODO Rx overkill
 			var self = this;
 			self.getDefField().subscribe(function (defField) {
 				if (!self.defField || (self.$field.val() === self.defField)) {
@@ -194,32 +208,14 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					self.defField = defField;
 				}
 			});
+		*/
 		},
-/*
-		renderFeature: function(ui) {
-			var features = stub.getFeatures();
-			this.$el.find('.featureRow').remove();
-			this.$feature = undefined;
-			if (ui.dataSubType === 'clinical') {
-				this.$titleRow.after($(selectTemplate({
-					klass: 'feature',
-					list: features
-				})));
-			}
-			this.$el.find('.feature').select2({
-				minimumResultsForSearch: 12,
-				dropdownAutoWidth: true
-			});
-			this.$feature = this.$el.find('.select2-container.feature');
-			this.$feature.select2('val', this.ws.column.ui.feature);
-		},
-*/
+
 		reRender: function (options) {
 			var ui = options.ws.column.ui;
 			this.ws = options.ws;
 			this.renderTitle(ui);
 			this.renderField(ui);
-			//this.renderFeature(ui);
 			//this.resize();
 		},
 
@@ -260,7 +256,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				.on('focusout', '.columnTitle', this.titleFocusout)
 				.on('keyup change', '.field', this.fieldChange)
 				.on('focusout', '.field', this.fieldFocusout);
-				//.on('change', '.feature', this.featureChange)
 
 			this.reRender(options);
 
@@ -292,17 +287,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			if (options.ws) {
 				this.render(options);
 			}
-
-			/* TODO maybe later to allow edit of column
-			else if (options.edit) {
-				this.columnEdit = columnEdit.show(this.id, {
-					sheetWrap: this.sheetwrap,
-					columnUi: this,
-					updateColumn: this.updateColumn
-					//state: { feature: defaultFeature }
-				});
-			}
-			*/
 		}
 	};
 

@@ -34,6 +34,11 @@ define(['haml!haml/columnEdit',
 			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/mutationGene": 'Mutations, gene',
 			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_clinicalMatrix": 'Phenotypical, Clinical'
 		},
+		sFeatures = { // TODO for demo
+			impact: 'impact', // shorttitle ?
+			DNA_AF: 'DNA allele frequency',
+			RNA_AF: 'RNA allele frequency'
+		},
 		defaultGene = 'ALK', // TODO: make these more global ?
 		defaultGenes = 'ALK, PTEN',
 		defaultProbes = '(no default probes)', // TODO
@@ -155,32 +160,6 @@ define(['haml!haml/columnEdit',
 			return fields;
 		},
 
-		renderDisplayModes: function (dataSubType) {
-			var modes = getDisplayModes(dataSubType, this.state.inputMode);
-			if (modes.length === 1) {
-				this.state.displayMode = modes[0];
-			} else {
-				this.$displayModeAnchor.append(
-					selectTemplate({
-						klass: 'displayMode',
-						options: modes,
-						labels: displayModeLabels
-					})
-				);
-				this.$displayModeRow.show();
-				this.$el.find('.displayMode').select2({
-					minimumResultsForSearch: -1,
-					dropdownAutoWidth: true
-				});
-				this.$displayMode = this.$el.find('.select2-container.displayMode');
-				if (modes.indexOf(this.state.displayMode) > -1) {
-					this.$displayMode.select2('val', this.state.displayMode);
-				} else {
-					this.state.displayMode = modes[0];
-				}
-			}
-		},
-
 		renderInputModes: function (dataSubType) {
 			var modes = getInputModesByDataSubType(dataSubType);
 			this.state.dataSubType = dataSubType;
@@ -251,7 +230,7 @@ define(['haml!haml/columnEdit',
 
 		renderSelect: function () {
 			var self = this;
-			if (self.state.inputMode === 'iClinical') {
+			if (self.state.dataSubType === 'clinical') {
 				xenaQuery.feature_list(self.state.dsID).subscribe(function (features) {
 					self.$selectAnchor.append(
 						selectTemplate({
@@ -272,6 +251,51 @@ define(['haml!haml/columnEdit',
 					}
 					self.$feature.select2('val', self.state.feature);
 				});
+			} else if (self.state.dataSubType === 'mutationVector') {
+				self.$selectAnchor.append(
+					selectTemplate({
+						klass: 'sFeature',
+						options: sFeatures,
+						labels: undefined
+					})
+				);
+				self.$selectLabel.text('Variable:');
+				self.$selectRow.show();
+				self.$el.find('.sFeature').select2({
+					minimumResultsForSearch: -1,
+					dropdownAutoWidth: true
+				});
+				self.$sFeature = self.$el.find('.select2-container.sFeature');
+				if (!self.state.sFeature) {
+					self.state.sFeature = 'impact';
+				}
+				self.$sFeature.select2('val', self.state.sFeature);
+			}
+		},
+
+		renderDisplayModes: function (dataSubType) {
+			var modes = getDisplayModes(dataSubType, this.state.inputMode);
+			if (modes.length === 1) {
+				this.state.displayMode = modes[0];
+			} else {
+				this.$displayModeAnchor.append(
+					selectTemplate({
+						klass: 'displayMode',
+						options: modes,
+						labels: displayModeLabels
+					})
+				);
+				this.$displayModeRow.show();
+				this.$el.find('.displayMode').select2({
+					minimumResultsForSearch: -1,
+					dropdownAutoWidth: true
+				});
+				this.$displayMode = this.$el.find('.select2-container.displayMode');
+				if (modes.indexOf(this.state.displayMode) > -1) {
+					this.$displayMode.select2('val', this.state.displayMode);
+				} else {
+					this.state.displayMode = modes[0];
+				}
 			}
 		},
 
@@ -310,8 +334,8 @@ define(['haml!haml/columnEdit',
 			this.renderInputModes(dataSubType);
 			this.renderList();
 			this.renderSingle();
-			this.renderDisplayModes(dataSubType);
 			this.renderSelect();
+			this.renderDisplayModes(dataSubType);
 			this.renderGo();
 		},
 
@@ -322,6 +346,11 @@ define(['haml!haml/columnEdit',
 
 		featureChange: function () {
 			this.state.feature = this.$feature.select2('val');
+			this.reRender();
+		},
+
+		sFeatureChange: function () {
+			this.state.sFeature = this.$sFeature.select2('val');
 			this.reRender();
 		},
 
@@ -451,19 +480,20 @@ define(['haml!haml/columnEdit',
 				.on('blur', '.single', self.singleBlur)
 				.on('change', '.displayMode', self.displayModeChange)
 				.on('change', '.feature', self.featureChange)
+				.on('change', '.sFeature', self.sFeatureChange)
 				.on('click', '.go', self.goClick);
 			if (self.columnUi) {
 				self.$el.on('mouseenter mouseleave', self.columnUi.mouseenterLeave);
 			}
 
 			// TODO yikes, these columnEdit widgets are destroyed whenever the sources
-			// change, rather than attempting to modify any of them. (using destroyAll() called
-			// from the cohortSelect change handler.) These widgets should not be able to be
-			// created until a cohort is selected, and should be uncreatable between the time
-			// the user has selected a new cohort, and the new cohort's dataset list has showed
-			// up.
+			// change, rather than attempting to modify any of them. (Using destroyAll() called
+			// from the cohortSelect change handler in sheetWrap.js.) These widgets
+			// should be uncreatable between the time the user has selected a new cohort,
+			// and the new cohort's dataset list has showed up.
 			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
-				var index;
+				var index,
+					opts;
 				// TODO for demo, rename ucsc source and dataset titles
 				self.sources = map(sources, function (s) {
 					return {
@@ -491,7 +521,7 @@ define(['haml!haml/columnEdit',
 					title: 'Mutation'
 				});
 
-				var opts = $(datasetsTemplate({sources: self.sources}));
+				opts = $(datasetsTemplate({sources: self.sources}));
 
 				// there might or might not be a a select2 element.
 				// need to find it & do a destroy.
