@@ -58,6 +58,10 @@ define(['jquery',
 		return _.filter(_.keys(obj), function (x) { return x.indexOf('_') !== 0; });
 	}
 
+	function keys_(obj) {
+		return _.filter(_.keys(obj), function (x) { return x.indexOf('_') === 0; });
+	}
+
 	unload.combineLatest(model.state, function (_e, state) {
 		return _.pick(state, keysNot_(state));
 	}).subscribe(function (state) {
@@ -77,14 +81,9 @@ define(['jquery',
 		column_order: ['column_order'],
 		data: ['_column_data']
 	};
-	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths);
+	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths).share();
 	var spreadsheetCursor = cursor(writeState, spreadsheetPaths);
 
-/*
-	var childrenStream = new Rx.Subject();
-	model.addStream(childrenStream);
-	var writeState = function (fn) { childrenStream.onNext(fn); };
-*/
 	var thisSheetWrap = sheetWrap.create({
 		$anchor: $('#main'),
 		updateColumn: updateColumn,
@@ -105,8 +104,22 @@ define(['jquery',
 							- ev.additionalArguments[0].originalSize.height,
 						// TODO it would be best to retrieve the state.height here
 						// and replace it with: diff + state.height
-						// The below does not work if a sparse mutation plot is first
+						// The below does not work if a sparse mutation plot is first.
+						// If we do the above, we won't have a DOM lookup, so the below
+						// concern about DOM lookup is not an issue. The use of the jquery-ui
+						// resize has been greatly simplified by allowing the elements to 
+						// shrink-wrap around their content, rather than trying to calc their sizes.
+						// Only the canvas size is set, nothing else.
 						$column = $('.spreadsheet-column:first'),
+					// The state-mutating functions should really be pure functions, for the sake
+					// of our sanity. So, DOM lookups should be done elsewhere.
+					// headHeight is really a constant & could be looked up once. This handler should
+					// see it as a constant.
+					// The reason we have to do this at all is that the resize handles are on a different
+					// element than the one we resize. The real fix is to resolve that discrepancy such
+					// that we're getting the correct height values. Dunno if jquery-ui will let us
+					// resize with a proxy element, but if not we should write our own resize. We should
+					// really do that anyway, and ditch jquery-ui. :-p
 						headHeight = $column.height() - $column.find('.samplePlot canvas').height();
 					return _.assoc(s, 'height', ev.additionalArguments[0].size.height - headHeight);
 				};
@@ -151,6 +164,7 @@ define(['jquery',
 	var debugstream = new Rx.Subject();
 	model.addStream(debugstream);
 	var debugtext = $('<textarea  id="columnStub" rows=20 cols=25></textarea>');
+	debugtext.hide();
 	$debug.append(debugtext);
 
 	debugtext.on('keydown', function (ev) {
@@ -163,9 +177,10 @@ define(['jquery',
 
 	function applySamples(ev) {
 		try {
-			var newprops = JSON.parse($('#samplesStub').val());
+			var json = JSON.parse($('#samplesStub').val());
 			debugstream.onNext(function (s) {
-				return _.extend({}, s, newprops);
+				return _.extend(_.pick(s, keys_(s)),
+								_.pick(json, keysNot_(json)));
 			});
 		} catch (e) {
 			console.log('error', e);
@@ -176,52 +191,30 @@ define(['jquery',
 	$debug.append(debugstate);
 
 	debugstate.on('keydown', function (ev) {
-		if (ev.keyCode === 13 && ev.shiftKey === true) {
+		if (ev.keyCode === 13 && ev.ctrlKey === true) {
 			applySamples(ev);
 		}
 	});
 
-	var example_samples = $('<button id="pickBrcaSamples" style="display:none">BRCA samples</button>');
-	$debug.append(example_samples);
-	example_samples.on('click',function (ev) {
-		var json = {
-			"cohort": "TCGA_BRCA",
-			"samples": stub.getSamples('brca'),
-			"height": HEIGHT,
-			"zoomIndex": 0,
-			"zoomCount": 100,
-			"column_rendering": {},
-			"column_order": []
-		};
-		debugstream.onNext(function(s) {
-			return _.extend({}, s, json);
-		});
-		$('#samplesStub').val(JSON.stringify(json, undefined, 4));
-	});
-
-	var nbl_samples = $('<button id="pickSamples" style="display:none">NBL samples</button>');
-	$debug.append(nbl_samples);
-	nbl_samples.on('click',function (ev) {
-		var samples = stub.getSamples('nbl'),
-			json = {
-			"cohort": "TARGET_Neuroblastoma",
-			"samples": samples,
-			"height": HEIGHT,
-			"zoomIndex": 0,
-			"zoomCount": samples.length,
-			"column_rendering": {},
-			"column_order": []
-		};
-		debugstream.onNext(function(s) {
-			return _.extend({}, s, json);
-		});
-		$('#samplesStub').val(JSON.stringify(json, undefined, 4));
+	model.state.subscribe(function (s) {
+		$('#samplesStub').val(JSON.stringify(_.pick(s, keysNot_(s)), undefined, 4));
 	});
 	$(document).ready(function () {
+		var start;
 		if (sessionStorage && sessionStorage.state) {
 			// XXX error handling?
-			model.addStream(Rx.Observable.returnValue(function () { return JSON.parse(sessionStorage.state); }));
+			start = JSON.parse(sessionStorage.state);
+		} else {
+			start = {
+				"samples": [],
+				"height": HEIGHT,
+				"zoomIndex": 0,
+				"zoomCount": 100,
+				"column_rendering": {},
+				"column_order": []
+			};
 		}
+		model.addStream(Rx.Observable.returnValue(function (s) { return start; }));
 		if (DEMO) {
 			$('.debug').hide();
 		}

@@ -1,10 +1,30 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!haml/select', 'haml!haml/columnEditAdvanced', 'defer', 'stub', 'lib/select2', 'jquery', 'underscore_ext', 'xenaQuery',
-	// non-object dependencies
-	'lib/jquery-ui'
-	], function (Rx, template, basicTemplate, selectTemplate, advancedTemplate, defer, stub, select2, $, _, xenaQuery) {
+define(['haml!haml/columnEdit',
+	   'haml!haml/columnEditBasic',
+	   'haml!haml/columnEditDatasets',
+	   'haml!haml/select',
+	   'haml!haml/columnEditAdvanced',
+	   'defer',
+	   'stub',
+	   'lib/select2',
+	   'jquery',
+	   'underscore_ext',
+	   'xenaQuery',
+	   // non-object dependencies
+	   'lib/jquery-ui'
+	], function (template,
+				 basicTemplate,
+				 datasetsTemplate,
+				 selectTemplate,
+				 advancedTemplate,
+				 defer,
+				 stub,
+				 select2,
+				 $,
+				 _,
+				 xenaQuery) {
 	'use strict';
 
 	var dsTitles = { // TODO for demo
@@ -103,6 +123,7 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 
 		destroy: function () {
 			this.$el.dialog('destroy').remove();
+			this.subs.dispose();
 			delete widgets[this.id];
 		},
 
@@ -376,22 +397,14 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 		render: function () {
 			var self = this,
 				basic;
-			basic = basicTemplate({
-				sources: this.sources
-			});
+			basic = basicTemplate();
 			this.$el = $(template({
 				basic: basic,
 				advanced: undefined
 				//advanced: advanced
 			}));
 
-			this.$el.find('.dataset').select2({
-				minimumResultsForSearch: 12,
-				dropdownAutoWidth: true,
-				placeholder: 'Select...',
-				placeholderOption: 'first'
-			});
-			this.$dataset = this.$el.find('.select2-container.dataset');
+			this.$dataset_plain = this.$el.find('.dataset');
 
 			// cache jquery objects for active DOM elements
 			this.cache = ['inputModeRow', 'inputModeAnchor',
@@ -429,7 +442,27 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 			this.firstRenderDataset = true;
 			this.state = {};
 
-			this.sheetWrap.sources.subscribe(function (sources) {
+			self.render();
+
+			self.$el // TODO replace with rx event handlers
+				.on('change', '.dataset', self.datasetChange)
+				.on('change', '.inputMode', self.inputModeChange)
+				.on('blur', '.list', self.listBlur)
+				.on('blur', '.single', self.singleBlur)
+				.on('change', '.displayMode', self.displayModeChange)
+				.on('change', '.feature', self.featureChange)
+				.on('click', '.go', self.goClick);
+			if (self.columnUi) {
+				self.$el.on('mouseenter mouseleave', self.columnUi.mouseenterLeave);
+			}
+
+			// TODO yikes, these columnEdit widgets are destroyed whenever the sources
+			// change, rather than attempting to modify any of them. (using destroyAll() called
+			// from the cohortSelect change handler.) These widgets should not be able to be
+			// created until a cohort is selected, and should be uncreatable between the time
+			// the user has selected a new cohort, and the new cohort's dataset list has showed
+			// up.
+			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
 				var index;
 				// TODO for demo, rename ucsc source and dataset titles
 				self.sources = map(sources, function (s) {
@@ -441,7 +474,6 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 								dataSubType: d.dataSubType,
 								dsID: d.dsID,
 								title: datasetTitle(d.dsID, d.title)
-								//title: dsTitles[d.dsID] || d.title // TODO reassign titles for demo
 							};
 						})
 					};
@@ -459,22 +491,25 @@ define(['rx.dom', 'haml!haml/columnEdit', 'haml!haml/columnEditBasic', 'haml!ham
 					title: 'Mutation'
 				});
 
-				self.render();
-				if (options.dataset) {
-					self.$dataset.select2('val', options.dataset);
-				}
+				var opts = $(datasetsTemplate({sources: self.sources}));
 
-				self.$el // TODO replace with rx event handlers?
-					.on('change', '.dataset', self.datasetChange)
-					.on('change', '.inputMode', self.inputModeChange)
-					.on('blur', '.list', self.listBlur)
-					.on('blur', '.single', self.singleBlur)
-					.on('change', '.displayMode', self.displayModeChange)
-					.on('change', '.feature', self.featureChange)
-					.on('click', '.go', self.goClick);
-				if (self.columnUi) {
-					self.$el.on('mouseenter mouseleave', self.columnUi.mouseenterLeave);
+				// there might or might not be a a select2 element.
+				// need to find it & do a destroy.
+				// replaceWith returns the removed elements.
+				if (self.$dataset) {
+					self.$dataset.select2('destroy');
 				}
+				self.$el.find('.dataset').replaceWith(opts);
+				opts.select2({
+					minimumResultsForSearch: 12,
+					dropdownAutoWidth: true,
+					placeholder: 'Select...',
+					placeholderOption: 'first'
+				});
+
+				// XXX State should be in the monad, not fetched from
+				// the DOM elements like $dataset.
+				self.$dataset = self.$el.find('.select2-container.dataset');
 			});
 		}
 	};

@@ -44,7 +44,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 	}
 
 	aWidget = {
-
+		// XXX this needs to be invoked somewhere. (It is, from columnMenu.js)
 		destroy: function () {
 			this.$el.remove();
 			// TODO clean up subWidgets

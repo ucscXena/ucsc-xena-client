@@ -1,17 +1,49 @@
 /*global define: false */
 
 define(['rx.dom', 'underscore_ext'], function (Rx, _) {
-	var dataset_list_query;
+	'use strict';
+
+	var null_cohort = '(unassigned)';
 
 	function json_resp(xhr) {
 		return JSON.parse(xhr.response);
 	}
 
+	function quote(s) {
+		return '"' + s + '"'; // XXX should escape "
+	}
+
+	// XXX should make this the default quote(), since all null
+	// values should be mapped to nil. Should drop null_cohort, and
+	// deal with null->"" in the cohort selection UI code. option
+	// elements always have string values, so need a special null value.
+	function quote_cohort(cohort) {
+		return (cohort === null_cohort) ? 'nil' : quote(cohort);
+	}
+
+	function all_samples_query(cohort) {
+		return '(query {:select [:%distinct.exp_samples.name] ' +
+		       '        :from [:exp_samples] ' +
+		       '        :where [:in :experiments_id {:select [:id] ' +
+		       '                                     :from [:experiments] ' +
+		       '                                     :where [:= :cohort ' + quote_cohort(cohort) + ']}]})';
+	}
+
+	function all_cohorts_query() {
+		return '(query {:select [:name [#sql/call [:ifnull :cohort "' + null_cohort + '"] :cohort]] ' +
+		       '        :from [:experiments]})';
+	}
+
 	function xena_dataset_list_transform(host, list) {
 		return _.map(list, function (ds) {
+			var text = JSON.parse(ds.TEXT) || {};
+
+			// merge curated fields over raw metadata
+			// XXX note that we're case sensitive on raw metadata
+			ds = _.extend(text, _.dissoc(ds, 'TEXT'));
 			return {
 				dsID: host + '/' + ds.NAME,
-				title: ds.SHORTTITLE || ds.NAME,
+				title: ds.label || ds.NAME,
 				// XXX wonky fix to work around dataSubType.
 				// Use basename of ds.DATASUBTYPE if it's there. Otherwise
 				// default to cna if there's a gene view, and clinical otherwise.
@@ -22,11 +54,10 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		});
 	}
 
-	dataset_list_query =
-		'(query {:select [:name :shorttitle :datasubtype :probemap] :from [:experiments]})';
-
-	function quote(s) {
-		return '"' + s + '"'; // XXX should escape "
+	function dataset_list_query(cohort) {
+		return  '(query {:select [:name :shorttitle :datasubtype :probemap :text] ' +
+				'        :from [:experiments] ' +
+				'        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
 	}
 
 	function feature_list_query(dataset) {
@@ -65,13 +96,13 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		return _.findWhere(source.datasets, {dsID: hdsID});
 	}
 
-	function dataset_list(servers) {
+	function dataset_list(servers, cohort) {
 		return Rx.Observable.zipArray(_.map(servers, function (s) {
 			return Rx.DOM.Request.ajax(
-				xena_get(s.url, dataset_list_query)
+				xena_get(s.url, dataset_list_query(cohort))
 			).map(
 				_.compose(_.partial(xena_dataset_list_transform, s.url), json_resp)
-			).catch(Rx.Observable.return([]));
+			).catch(Rx.Observable.return([])); // XXX display message?
 		}));
 	}
 
@@ -84,11 +115,27 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		).map(_.compose(indexFeatures, json_resp));
 	}
 
+	function all_samples(host, cohort) {
+		return Rx.DOM.Request.ajax(
+			xena_get(host, all_samples_query(cohort))
+		).map(_.compose(function (l) { return _.pluck(l, 'NAME'); }, json_resp))
+		.catch(Rx.Observable.return([])); // XXX display message?
+	}
+
+	function all_cohorts(host) {
+		return Rx.DOM.Request.ajax(
+			xena_get(host, all_cohorts_query())
+		).map(_.compose(function (l) { return _.pluck(l, 'COHORT'); }, json_resp))
+		.catch(Rx.Observable.return([])); // XXX display message?
+	}
+
 	return {
 		parse_host: parse_host,
 		dataset_list: dataset_list,
 		feature_list: feature_list,
-		find_dataset: find_dataset
+		find_dataset: find_dataset,
+		all_samples: all_samples,
+		all_cohorts: all_cohorts
 	};
 
 });
