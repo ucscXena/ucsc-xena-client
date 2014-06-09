@@ -107,31 +107,22 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		titleFocusout: function () {
 			if (this.$columnTitle.val() === '') {
 				this.setTitleVal(this.defTitle);
-				//this.$columnTitle.val(this.defTitle);
 			}
 			this.titleChange();
 		},
 
 		getDefField: function () {
-			var defalt = this.ws.column.fields.toString(),
-			ui = this.ws.column.ui;
-			if (ui.dataSubType === 'clinical') {
-				defalt = ui.feature; // TODO we need the label here, rather than the name
-			} else if (ui.dataSubType ==='mutationVector') {
-				defalt += ': ' + sFeatures[ui.sFeature];
-			}
-			return defalt;
-		/*
-			// TODO Rx seems overkill here because the strings in ws.column.fields cannot
-			// change between columnEdit.js setting them, and this module looking at them.
-			var defalt = Rx.Observable.return(this.ws.column.fields.toString()),
-				ui = this.ws.column.ui;
+			var ui = this.ws.column.ui,
+				text = this.ws.column.fields.toString(),
+				moreText = (ui.dataSubType === 'mutationVector')
+					? ': ' + sFeatures[ui.sFeature]
+					: '',
+				defalt = Rx.Observable.return(text + moreText);
 			if (ui.dataSubType === 'clinical') {
 				defalt = xenaQuery.feature_list(this.ws.column.dsID)
 					.pluck(ui.feature);
 			}
 			return defalt;
-		*/
 		},
 
 		setFieldVal: function (val) {
@@ -156,22 +147,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.fieldChange();
 		},
 
-		resize: function () { // TODO needed?
-		/*
-			var self = this;
-			setTimeout(function () {
-				var width = self.$el.width()
-					- self.$columnTitle.css('padding-left').replace('px', '')
-					- self.$columnTitle.css('padding-right').replace('px', '')
-					- self.$columnTitle.css('border-left-width').replace('px', '')
-					- self.$columnTitle.css('border-right-width').replace('px', '')
-					- self.$more.width()
-					- 4; // for don't know what
-				self.$columnTitle.width(width);
-			}, 200);
-		*/
-		},
-
 		renderTitle: function (ui) {
 			var self = this;
 			self.getDefTitle(self.ws.column.dsID).subscribe(function (defTitle) {
@@ -188,16 +163,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		},
 
 		renderField: function (ui) {
-			var defField = this.getDefField();
-			if (!this.defField || (this.$field.val() === this.defField)) {
-				this.defField = defField;
-				this.$field.val(defField);
-				this.fieldChange();
-			} else {
-				this.defField = defField;
-			}
-		/*
-			// TODO Rx overkill
 			var self = this;
 			self.getDefField().subscribe(function (defField) {
 				if (!self.defField || (self.$field.val() === self.defField)) {
@@ -208,7 +173,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					self.defField = defField;
 				}
 			});
-		*/
 		},
 
 		reRender: function (options) {
@@ -216,7 +180,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.ws = options.ws;
 			this.renderTitle(ui);
 			this.renderField(ui);
-			//this.resize();
 		},
 
 		firstRender: function (options) {
@@ -251,7 +214,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el // TODO use rx handlers?
 				.on('mouseenter mouseleave', '.columnTitle, .field', this.someMouseenterLeave)
 				.on('mouseenter mouseleave', this.mouseenterLeave)
-				.on('resize', this.resize)
 				.on('keyup change', '.columnTitle', this.titleChange)
 				.on('focusout', '.columnTitle', this.titleFocusout)
 				.on('keyup change', '.field', this.fieldChange)

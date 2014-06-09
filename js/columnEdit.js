@@ -247,7 +247,7 @@ define(['haml!haml/columnEdit',
 					});
 					self.$feature = self.$el.find('.select2-container.feature');
 					if (!self.state.feature) {
-						self.state.feature = 'age';
+						self.state.feature = features[0].title;
 					}
 					self.$feature.select2('val', self.state.feature);
 				});
@@ -267,7 +267,7 @@ define(['haml!haml/columnEdit',
 				});
 				self.$sFeature = self.$el.find('.select2-container.sFeature');
 				if (!self.state.sFeature) {
-					self.state.sFeature = 'impact';
+					self.state.sFeature = 'impact'; // TODO should be first in list, dynamically
 				}
 				self.$sFeature.select2('val', self.state.sFeature);
 			}

@@ -90,7 +90,7 @@ define(['haml!haml/sheetWrap',
 				url: 'http://localhost:7222'
 			},
 			{
-				title: 'cancerdb',
+				title: 'genome-cancer.ucsc.edu',
 				url: 'http://cancerdb:7222'
 			}
 		],
