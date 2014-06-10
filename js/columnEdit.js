@@ -247,7 +247,7 @@ define(['haml!haml/columnEdit',
 					});
 					self.$feature = self.$el.find('.select2-container.feature');
 					if (!self.state.feature) {
-						self.state.feature = features[0].title;
+						self.state.feature = 'age';
 					}
 					self.$feature.select2('val', self.state.feature);
 				});
