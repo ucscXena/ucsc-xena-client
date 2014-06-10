@@ -246,10 +246,11 @@ define(['haml!haml/columnEdit',
 						dropdownAutoWidth: true
 					});
 					self.$feature = self.$el.find('.select2-container.feature');
-					if (!self.state.feature) {
-						self.state.feature = 'age';
+					if (self.state.feature) {
+						self.$feature.select2('val', self.state.feature);
+					} else {
+						self.state.feature = self.$feature.select2('val');
 					}
-					self.$feature.select2('val', self.state.feature);
 				});
 			} else if (self.state.dataSubType === 'mutationVector') {
 				self.$selectAnchor.append(
@@ -266,10 +267,12 @@ define(['haml!haml/columnEdit',
 					dropdownAutoWidth: true
 				});
 				self.$sFeature = self.$el.find('.select2-container.sFeature');
-				if (!self.state.sFeature) {
-					self.state.sFeature = 'impact'; // TODO should be first in list, dynamically
+				if (self.state.sFeature) {
+					self.$sFeature.select2('val', self.state.sFeature);
+				} else {
+					self.state.sFeature = self.$sFeature.select2('val');
 				}
-				self.$sFeature.select2('val', self.state.sFeature);
+				//self.$sFeature.select2('val', self.state.sFeature);
 			}
 		},
 
