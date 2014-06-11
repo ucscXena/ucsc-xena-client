@@ -163,7 +163,7 @@ define(['jquery',
 
 	var debugstream = new Rx.Subject();
 	model.addStream(debugstream);
-	var debugtext = $('<textarea  id="columnStub" rows=20 cols=25></textarea>');
+	var debugtext = $('<textarea  id="columnStub" rows=20 cols=50></textarea>');
 	debugtext.hide();
 	$debug.append(debugtext);
 
@@ -187,7 +187,7 @@ define(['jquery',
 		}
 	}
 
-	var debugstate = $('<textarea id="samplesStub" rows=20 cols=25></textarea>');
+	var debugstate = $('<textarea id="samplesStub" rows=20 cols=50></textarea>');
 	$debug.append(debugstate);
 
 	debugstate.on('keydown', function (ev) {

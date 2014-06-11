@@ -149,9 +149,11 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			},
 
 			drawNonNaRows: function (d) {
+				var nixArtifact = Math.max(0.75, (this.pixPerRow * 0.05)); // TODO quick attempt to remove rendering artifacts
 				this.d2.beginPath();
 				this.d2.fillStyle = 'white';
-				this.d2.fillRect(0, this.y(d.y), this.canvasWidth, this.pixPerRow);
+				this.d2.fillRect(0, this.y(d.y), this.canvasWidth, this.pixPerRow + nixArtifact);
+				//this.d2.fillRect(0, this.y(d.y), this.canvasWidth, this.pixPerRow);
 			},
 
 			drawCenter: function (d, highlight) {
@@ -199,9 +201,17 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				this.drawCenter(d, true);
 			},
 
+			smoothing: function (s) { // TODO should use vgcanvas
+				var ctx = this.d2;
+				ctx.imageSmoothingEnabled = s;
+				ctx.mozImageSmoothingEnabled = s;
+				ctx.webkitImageSmoothingEnabled = s;
+			},
+
 			draw: function () {
 				var self = this;
 				this.d2.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+				this.smoothing(false);
 				this.drawNa();
 				each(this.nonNaRows, function (d) {
 					self.drawNonNaRows(d);
@@ -384,11 +394,10 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			},
 
 			receiveData: function (data) {
-				var index = 0;
-				this.values = _.map(data, function (d) {
-					var row = $.extend(true, [], d);
-					row.index = index;
-					index += 1;
+				var drawValues = data.slice(this.zoomIndex, this.zoomIndex + this.zoomCount);
+				this.values = _.map(drawValues, function (v, i) {
+					var row = $.extend(true, [], v);
+					row.index = i;
 					return row;
 				});
 				this.render();
@@ -396,10 +405,12 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 
 			findNonNaRows: function () {
 				var self = this,
+					nixArtifact = Math.max(0.5, (this.pixPerRow * 0.05)),
 					nonNaRows = _.map(filter(self.values, function (r) {
 						return r.vals;
 					}), function (r) {
-						return { y: self.yMax - (r.index * self.pixPerRow) };
+						return { y: self.yMax - (r.index * self.pixPerRow) + nixArtifact }; // TODO quick attempt to remove rendering artifacts
+						//return { y: self.yMax - (r.index * self.pixPerRow) };
 					});
 				return nonNaRows;
 			},
@@ -411,7 +422,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 						return value.vals && value.vals.length;
 					});
 				_.each(nodeValues, function (value) {
-					var y = self.yMax - (value.index * self.pixPerRow);
+					var y = self.yMax - (value.index * self.pixPerRow) - (self.pixPerRow / 2);
 					_.each(value.vals, function (val) {
 						var x = (0.5 + self.refGene.mapChromPosToX(val.start)) * self.gene.scaleX;
 						if (x >= 0) {
@@ -481,9 +492,11 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				this.gene = options.gene;
 				this.feature = options.feature;
 				this.color = options.color;
-				this.canvasWidth = options.width || 960;
+				this.canvasWidth = options.width;
 				this.pix = options.pix;
 				this.height = options.height;
+				this.zoomCount = options.zoomCount;
+				this.zoomIndex = options.zoomIndex;
 				this.sparsePad = options.sparsePad;
 				this.radius = options.radius;
 				this.point = options.point;
