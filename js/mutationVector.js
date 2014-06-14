@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/underscore'
+define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery', 'lib/underscore'
 	// non-object dependencies
-	], function (stub, crosshairs, linkTo, tooltip, util, d3, $, _) {
+	], function (stub, crosshairs, linkTo, tooltip, util, vgcanvas, d3, $, _) {
 	'use strict';
 
 	var impactMax = 3,
@@ -150,14 +150,26 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			},
 
 			draw: function () {
-				var self = this;
+				var self = this,
+					buffWidth = this.canvasWidth - (this.sparsePad * 2),
+					buff = vgcanvas(buffWidth, 1);
 				this.vg.smoothing(false);
 				this.vg.clear(0, 0, this.canvasWidth, this.canvasHeight);
-				this.vg.box(this.sparsePad, this.sparsePad, this.canvasWidth - this.sparsePad * 2,
-					this.canvasHeight - this.sparsePad * 2, 'grey'); // NA rows
-				each(this.nonNaRows, function (d) {
-					self.vg.box(0, d.y, self.canvasWidth, self.pixPerRow, 'white'); // sample rows examined for mutations
+
+				// draw each of the rows either grey for NA or white for sample examined for mutations
+				each(this.values, function (r, i) {
+					var color = (r.vals) ? 'white' : 'grey';
+					buff.box(0, 0, buffWidth, 1, color);
+					self.vg.drawImage(
+						buff.element(),
+						self.sparsePad,
+						(i * self.pixPerRow) + self.sparsePad,
+						buffWidth,
+						self.pixPerRow
+					);
 				});
+
+				// draw the mutations
 				each(this.nodes, function (d) {
 					self.drawHalo(d);
 				});
