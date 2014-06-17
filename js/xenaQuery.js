@@ -3,6 +3,8 @@
 define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	'use strict';
 
+	// HELPERS
+
 	var null_cohort = '(unassigned)';
 
 	function json_resp(xhr) {
@@ -13,6 +15,25 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		return '"' + s + '"'; // XXX should escape "
 	}
 
+	function sep(l) {
+		return _.map(l, quote).join(' ');
+	}
+
+	function listfmt(l) {
+		return '(' + sep(l) + ')';
+	}
+
+	function arrayfmt(l) {
+		return '[' + sep(l) + ']';
+	}
+
+	function nanstr(v) {
+		if (v === "NaN") {
+			return undefined;
+		}
+		return v;
+	}
+
 	// XXX should make this the default quote(), since all null
 	// values should be mapped to nil. Should drop null_cohort, and
 	// deal with null->"" in the cohort selection UI code. option
@@ -21,17 +42,24 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		return (cohort === null_cohort) ? 'nil' : quote(cohort);
 	}
 
-	function all_samples_query(cohort) {
-		return '(query {:select [:%distinct.exp_samples.name] ' +
-		       '        :from [:exp_samples] ' +
-		       '        :where [:in :experiments_id {:select [:id] ' +
-		       '                                     :from [:experiments] ' +
-		       '                                     :where [:= :cohort ' + quote_cohort(cohort) + ']}]})';
+	function parse_host(dsID) {
+		return dsID.match(/([^\/]*\/\/[^\/]*)\/(.*)/);
 	}
 
-	function all_cohorts_query() {
-		return '(query {:select [:name [#sql/call [:ifnull :cohort "' + null_cohort + '"] :cohort]] ' +
-		       '        :from [:experiments]})';
+	// Returns a object with key equal to the serialization of
+	// the request, and value equal to a thunk that returns
+	// an Observable of the data.
+	function reqObj(req, fn) { // TODO may not belong in this file
+		return {
+			id: JSON.stringify(req),
+			query:  Rx.Observable.defer(_.partial(fn, req))
+		};
+	}
+
+	function indexFeatures(features) {
+		return _.object(_.map(features, function (f) {
+			return [f.NAME, f.SHORTTITLE || f.NAME];
+		}));
 	}
 
 	function xena_dataset_list_transform(host, list) {
@@ -54,10 +82,86 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		});
 	}
 
+	function xena_get(host, query) {
+		return {
+			url: host + '/data/' + encodeURIComponent(query),
+			method: 'GET'
+		};
+	}
+
+	function xena_post(host, query) {
+		return {
+			headers: {'Content-Type': 'text/plain' },
+			url: host + '/data/',
+			body: query,
+			method: 'POST'
+		};
+	}
+
+	// QUERY STRINGS
+
+	function all_samples_query(cohort) {
+		return '(query {:select [:%distinct.exp_samples.name] ' +
+		       '        :from [:exp_samples] ' +
+		       '        :where [:in :experiments_id {:select [:id] ' +
+		       '                                     :from [:experiments] ' +
+		       '                                     :where [:= :cohort ' + quote_cohort(cohort) + ']}]})';
+	}
+
+	function all_cohorts_query() {
+		return '(query {:select [:name [#sql/call [:ifnull :cohort "' + null_cohort + '"] :cohort]] ' +
+		       '        :from [:experiments]})';
+	}
+
 	function dataset_list_query(cohort) {
 		return  '(query {:select [:name :shorttitle :datasubtype :probemap :text] ' +
 				'        :from [:experiments] ' +
 				'        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
+	}
+
+	function dataset_probe_string(dataset, samples, probes) {
+		return '(fetch (quote ({' +
+					['table', quote(dataset),
+					'columns', listfmt(probes),
+					'samples', listfmt(samples)].join(' ')
+					+ '})))';
+	}
+
+	function dataset_gene_string(dataset, samples, genes) {
+		return '((fn [probes merge-scores avg] ' +
+			'     (avg ' +
+			'       (group-by :GENE ' +
+			'         (merge-scores ' +
+			'           probes ' +
+			'           (fetch (cons ' +
+			'                   (assoc {table ' + quote(dataset) +
+			'                           samples ' + arrayfmt(samples) + '} ' +
+			'                          (quote columns) (map :PROBE probes)) ' +
+			'                   (quote ()))))))) ' +
+			'     (query {:select [:P.gene :probe] ' +
+			'             :from [[{:select [:gene :probemap_probes_id] ' +
+			'                      :from [:probemap_genes] ' +
+			'                      :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :probemap_genes.gene]] ' +
+			'                      :where [:= :probemaps_id {:select [:id] ' +
+			'                                                :from [:probemaps] ' +
+			'                                                :where [:= :name {:select [:probemap] ' +
+			'                                                                  :from [:experiments] ' +
+			'                                                                  :where [:= :name ' + quote(dataset) + ']}]}]} :P]] ' +
+			'             :left-join [:probemap_probes [:= :probemap_probes.id :probemap_probes_id]]}) ' +
+			'     (fn [probes scores] ' +
+			'         (map (fn [p s] (assoc p :SCORES s)) probes scores)) ' +
+			'     (fn [genes] (map (fn [gp] (assoc {} ' +
+			'                                      :GENE (car gp) ' +
+			'                                      :SCORES (mean ' +
+			'                                               (map :SCORES (car (cdr gp))) ' +
+			'                                               0))) ' +
+			'                      genes))) ';
+	}
+
+	function dataset_string(dataset) {
+		return  '(:TEXT (car (query {:select [:text] ' +
+				'                    :from [:experiments] ' +
+				'                    :where [:= name ' + quote(dataset) + ']})))';
 	}
 
 	function feature_list_query(dataset) {
@@ -69,22 +173,43 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 				'        :left-join [:features [:= :features.probes_id :probes.id]]})';
 	}
 
-	function indexFeatures(features) {
-		return _.object(_.map(features, function (f) {
-			return [f.NAME, f.SHORTTITLE || f.NAME];
-		}));
+	// XXX drop (quote)
+	function features_string(dataset, probes) {
+		return  '(query (quote ' +
+				'{:select [:P.name :features.*] ' +
+				' :from [[{:select [:probes.name :probes.id] ' +
+				'          :from [:probes] ' +
+				'          :join [{:table [[[:name :varchar ' + arrayfmt(probes) + ']] :T]} [:= :T.name :probes.name]] ' +
+				'          :where [:= :eid {:select [:id] ' +
+				'                           :from [:experiments] ' +
+				'                           :where [:= :name ' + quote(dataset) + ']}]} :P]] ' +
+				' :left-join [:features [:= :features.probes_id :P.id]]}))';
 	}
 
-	function xena_get(host, query) {
-		return {
-			url: host + '/data/' + encodeURIComponent(query),
-			method: 'GET'
-		};
+	// XXX drop (quote)
+	function codes_string(dataset, probes) {
+		return '(query (quote ' +
+			'{:select [:P.name [#sql/call [:group_concat :value :order :ordering :separator #sql/call [:chr 9]] :codes]] ' +
+			' :from [[{:select [:probes.id :probes.name] ' +
+			'          :from [:probes] ' +
+			'          :join [{:table [[[:name :varchar ' + arrayfmt(probes) + ']] :T]} [:= :T.name :probes.name]] ' +
+			'          :where [:= :eid {:select [:id] ' +
+			'                           :from [:experiments] ' +
+			'                           :where [:= :name ' + quote(dataset) + ']}]} :P]] ' +
+			' :left-join [:features [:= :features.probes_id :P.id] ' +
+			'             :codes [:= :features.id :features_id]] ' +
+			' :group-by [:P.id]}))';
 	}
 
-	function parse_host(dsID) {
-		return dsID.match(/([^\/]*\/\/[^\/]*)\/(.*)/);
+	function sparse_data_string(dataset, samples, genes) {
+		return 'sparse_exon_query'; // TODO implement  after data is on server
 	}
+
+	function refGene_exon_string(genes) {
+		return 'refGene_exon_string'; // TODO implement after data is on server
+	}
+
+	// QUERY PREP
 
 	// XXX Should consider making sources indexed so we can do simple
 	// lookups. Would need to update haml/columnEditBasic.haml.
@@ -130,12 +255,27 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	return {
+		// helpers:
 		parse_host: parse_host,
+		json_resp: json_resp,
+		nanstr: nanstr,
+		reqObj: reqObj,
+		xena_post: xena_post,
+
+		// query strings:
+		codes_string: codes_string,
+		features_string: features_string,
+		dataset_string: dataset_string,
+		dataset_gene_string: dataset_gene_string,
+		dataset_probe_string: dataset_probe_string,
+		sparse_data_string: sparse_data_string,
+		refGene_exon_string: refGene_exon_string,
+
+		// query prep:
 		dataset_list: dataset_list,
 		feature_list: feature_list,
 		find_dataset: find_dataset,
 		all_samples: all_samples,
 		all_cohorts: all_cohorts
 	};
-
 });

@@ -433,11 +433,10 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				this.columnUi = options.columnUi;
 				this.refGene = options.refGene;
 				this.dataset = options.dataset;
-				this.gene = options.gene;
+				this.gene = options.refGene.getGeneInfo();
 				this.feature = options.feature;
 				this.color = options.color;
 				this.canvasWidth = options.width;
-				this.pix = options.pix;
 				this.height = options.height;
 				this.zoomCount = options.zoomCount;
 				this.zoomIndex = options.zoomIndex;
@@ -445,7 +444,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				this.radius = options.radius;
 				this.point = options.point;
 				this.refHeight = options.refHeight;
-				this.sort = options.sort;
 				this.columnUi.$sparsePad.height(0);
 				this.columnUi.$el.parent().css('margin-left', horizontalMargin);
 				this.columnUi.$el.parent().css('margin-right', horizontalMargin);
