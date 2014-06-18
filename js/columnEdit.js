@@ -79,15 +79,15 @@ define(['haml!haml/columnEdit',
 			dGeneChrom: 'chromosomes'
 		},
 		dataTypeByDisplay = {
-			dGene: 'gene', //'nonspatial',
-			dGeneProbes: 'probe', //'nonspatial',
-			dExonDense: 'exonDense', // spatial
-			dExonSparse: 'exonSparse', //spatial
-			dGeneChrom: 'geneChrom', // spatial
-			dGenes: 'gene', //'nonspatial',
-			dProbes: 'probe', //'nonspatial',
-			dClinical: 'feature', //'nonspatial',
-			dChrom: 'chrom' // spatial
+			dGene: 'probeGene', //'nonspatial',
+			dGenes: 'probeGene', //'nonspatial',
+			dExonSparse: 'sparse', //spatial
+			dClinical: 'probeFeature', //'nonspatial',
+			//dGeneProbes: 'probe', //'nonspatial',
+			//dExonDense: 'exonDense', // spatial
+			//dGeneChrom: 'geneChrom', // spatial
+			//dProbes: 'probe', //'nonspatial',
+			//dChrom: 'chrom' // spatial
 		},
 		map = _.map,
 		widgets = {},

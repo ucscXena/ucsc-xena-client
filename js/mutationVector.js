@@ -414,11 +414,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				this.canvasHeight = this.height; // TODO init elsewhere
 				this.d2 = this.vg.context();
 
-				// bindings
-				$(this.anchor + ' canvas')
-					.addClass('mutationCanvas')
-					.on('click', this.click)
-					.on('mousemove mouseleave mouseenter', this.hover);
 				this.nodes = this.findNodes();
 				this.nonNaRows = this.findNonNaRows();
 				this.draw();
@@ -428,7 +423,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				var horizontalMargin = '-' + options.horizontalMargin.toString() + 'px';
 				_.bindAll.apply(_, [this].concat(_.functions(this)));
 				//_(this).bindAll();
-				this.anchor = options.anchor;
+				this.$anchor = options.$anchor;
 				this.vg = options.vg;
 				this.columnUi = options.columnUi;
 				this.refGene = options.refGene;
@@ -447,6 +442,11 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				this.columnUi.$sparsePad.height(0);
 				this.columnUi.$el.parent().css('margin-left', horizontalMargin);
 				this.columnUi.$el.parent().css('margin-right', horizontalMargin);
+
+				// bindings
+				this.$anchor
+					.on('click', 'canvas', this.click)
+					.on('mousemove mouseleave mouseenter', 'canvas', this.hover);
 
 				this.receiveData(options.data);
 			}
@@ -480,7 +480,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 		},
 
 		show: function (id, options) {
-			//console.log(id + ', ' + options.gene.name + '  mutationVector.show()');
 			if (widgets[id]) {
 				widgets[id].destroy();
 			}
