@@ -30,11 +30,12 @@ define(["lib/d3",
 		};
 	}
 
-	// XXX this is wrong. Need to figure out the correct dispatch
-	// fn.
-	color_range = multi(function (settings, features, codes) {
+	color_range = multi(function (column, features, codes) {
 		if (features && features.VALUETYPE === 'category' && codes) {
 			return 'coded';
+		}
+		if (column.min && column.max) {
+			return 'scaled';
 		}
 		return 'minMax';
 	});
@@ -59,10 +60,13 @@ define(["lib/d3",
 			.range([low, zero, high]);
 	}
 
-	function color_float(low, zero, high, settings, feature, codes, data) {
+	function color_float(column, feature, codes, data) {
 		var colorfn,
 			values = _.values(data || [0]), // handle degenerate case
 			max = d3.max(values),
+			low = column.colors[0],
+			zero = column.colors[1],
+			high = column.colors[2],
 			min;
 
 		if (!isNumber(max)) {
@@ -79,13 +83,24 @@ define(["lib/d3",
 		return saveUndefined(colorfn);
 	}
 
-	function color_category(settings, feature, codes) {
+	function color_category(column, feature, codes) {
 		return saveUndefined(scale_category19().domain(range(codes.length)));
+	}
+
+	function color_scaled(column) {
+			var low = column.colors[0],
+				zero = column.colors[1],
+				high = column.colors[2];
+
+		return saveUndefined(d3.scale.linear()
+			.domain([column.min, (column.min + column.max) / 2, column.max])
+			.range([low, zero, high]));
 	}
 
 	return {
 		range: color_range,
 		float: color_float,
+		scaled: color_scaled,
 		category: color_category
 	};
 });
