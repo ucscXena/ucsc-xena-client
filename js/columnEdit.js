@@ -494,14 +494,17 @@ define(['haml!haml/columnEdit',
 			// from the cohortSelect change handler in sheetWrap.js.) These widgets
 			// should be uncreatable between the time the user has selected a new cohort,
 			// and the new cohort's dataset list has showed up.
+			// However, eventually we should be able to add datasets from existing sources
+			// whenever new datasets are added to say, localhost. For now the user
+			// reloads the browser to pick up new datasets. 
 			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
 				var index,
 					opts;
-				// TODO for demo, rename ucsc source and dataset titles
+				// TODO for demo, rename dataset titles
 				self.sources = map(sources, function (s) {
 					return {
 						url: s.url,
-						title: (s.title === 'cancerdb') ? 'cancerdb.ucsc.edu' : s.title,
+						title: s.title,
 						datasets: map(s.datasets, function (d) {
 							return {
 								dataSubType: d.dataSubType,

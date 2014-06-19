@@ -4,6 +4,7 @@ define(['haml!haml/sheetWrap',
 		'haml!haml/cohorts',
 		'columnEdit',
 		'columnUi',
+		'defaultTextInput',
 		'uuid',
 		'underscore_ext',
 		'jquery',
@@ -14,6 +15,7 @@ define(['haml!haml/sheetWrap',
 					cohortsTemplate,
 					columnEdit,
 					columnUi,
+					defaultTextInput,
 					uuid,
 					_,
 					$,
@@ -27,6 +29,17 @@ define(['haml!haml/sheetWrap',
 		sparseRadius = horizontalMargin * 2,
 		sparsePad = sparseRadius + 1,
 		headerPlotHeight = 12,
+		defaultServers = [
+			{
+				title: 'localhost',
+				url: 'http://localhost:7222'
+			},
+			{
+				title: 'genome-cancer.ucsc.edu',
+				url: 'http://cancerdb:7222'
+			}
+		],
+		map = _.map,
 		widget,
 		aWidget;
 
@@ -83,17 +96,34 @@ define(['haml!haml/sheetWrap',
 			columnEdit.destroyAll();
 			this.$addColumn.show().click();
 		},
+		serversInput: function () {
+			return _.map(this.servers, function (s) {
+				return s.title;
+			}).join(', ');
+		},
 
-		servers: [
-			{
-				title: 'localhost',
-				url: 'http://localhost:7222'
-			},
-			{
-				title: 'genome-cancer.ucsc.edu',
-				url: 'http://cancerdb:7222'
-			}
-		],
+		getDefServersInput: function () {
+			return Rx.Observable.return(_.map(defaultServers, function (s) {
+				return s.title;
+			}).join(', '));
+		},
+
+		serversInputChanged: function () {
+			var inputArray = map(this.$servers.val().split(','), function (s) {
+				return s.trim();
+			});
+			this.servers = map(inputArray, function (s) {
+				//'http://cancerdb:7222'
+				var url = 'http://' + s + ((s.indexOf(':') > -1) ? '' : ':7222');
+				if (s === 'genome-cancer.ucsc.edu' || s === 'genome-cancer.ucsc.edu:7222') {
+					url = 'http//cancerdb:7222'; // TODO only for dev !
+				}
+				return {
+					title: s,
+					url: url
+				};
+			});
+		},
 
 		initialize: function (options) {
 			var self = this,
@@ -106,17 +136,26 @@ define(['haml!haml/sheetWrap',
 			this.cursor = options.cursor;
 			//this.cohort = this.state.pluck('cohort');
 
-			this.$el = $(template());
+			this.servers = defaultServers; // TODO make servers dynamic from state
+			this.$el = $(template({
+				servers: this.serversInput()
+			}));
 			options.$anchor.append(this.$el);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['addColumn'];
+			this.cache = ['servers', 'addColumn'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
 				return a;
 			}, {}));
 
 			cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
+
+			this.serversInput = defaultTextInput.create('serversInput', {
+				$el: this.$servers,
+				getDefault: this.getDefServersInput,
+				focusOutChanged: this.serversInputChanged
+			});
 
 			serverCohorts = Rx.Observable.zipArray(_.map(self.servers, function (s) {
 				return xenaQuery.all_cohorts(s.url);

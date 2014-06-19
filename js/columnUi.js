@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnEdit', 'columnMenu', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
+define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnEdit', 'columnMenu', 'defaultTextInput', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
 	// non-object dependenciies
-	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnEdit, columnMenu, defer, /*mutation,*/ refGene, util, d3, $, select2, _, xenaQuery, Rx) {
+	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnEdit, columnMenu, defaultTextInput, defer, /*mutation,*/ refGene, util, d3, $, select2, _, xenaQuery, Rx) {
 	'use strict';
 
 	var APPLY = true,
@@ -50,6 +50,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 	aWidget = {
 		// XXX this needs to be invoked somewhere. (It is, from columnMenu.js)
 		destroy: function () {
+			this.title.destroy();
+			this.field.destroy();
 			this.$el.remove();
 			// TODO clean up subWidgets
 			delete widgets[this.id];
@@ -76,7 +78,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			}
 		},
 
-		getDefTitle: function (dsID) {
+		getDefTitle: function () {
+			var dsID = this.ws.column.dsID;
 			return this.sheetWrap.sources.map(function (sources) {
 				var dataset = xenaQuery.find_dataset(sources, dsID);
 				if (dsID === 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
@@ -87,28 +90,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					return datasetTitle(dsID, dataset.title);
 				}
 			});
-		},
-
-		setTitleVal: function (val) {
-			this.$columnTitle
-				.val(val)
-				.prop('title', val);
-		},
-
-		titleChange: function () {
-			if (this.$columnTitle.val() === this.defTitle) {
-				this.$columnTitle.addClass('defalt');
-			} else {
-				this.$columnTitle.removeClass('defalt');
-			}
-			this.setTitleVal(this.$columnTitle.val());
-		},
-
-		titleFocusout: function () {
-			if (this.$columnTitle.val() === '') {
-				this.setTitleVal(this.defTitle);
-			}
-			this.titleChange();
 		},
 
 		getDefField: function () {
@@ -125,61 +106,17 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			return defalt;
 		},
 
-		setFieldVal: function (val) {
-			this.$field
-				.val(val)
-				.prop('title', val);
-		},
-
-		fieldChange: function () {
-			if (this.$field.val() === this.defField) {
-				this.$field.addClass('defalt');
-			} else {
-				this.$field.removeClass('defalt');
-			}
-			this.setFieldVal(this.$field.val());
-		},
-
-		fieldFocusout: function () {
-			if (this.$field.val() === '') {
-				this.$field.val(this.defField);
-			}
-			this.fieldChange();
-		},
-
-		renderTitle: function (ui) {
-			var self = this;
-			self.getDefTitle(self.ws.column.dsID).subscribe(function (defTitle) {
-				//var defTitle = defTitles[ui.dataSubType];
-				if (!self.defTitle || (self.$columnTitle.val() === self.defTitle)) {
-					self.defTitle = defTitle;
-					self.setTitleVal(defTitle);
-					//self.$columnTitle.val(defTitle);
-					self.titleChange();
-				} else {
-					self.defTitle = defTitle;
-				}
-			});
-		},
-
-		renderField: function (ui) {
-			var self = this;
-			self.getDefField().subscribe(function (defField) {
-				if (!self.defField || (self.$field.val() === self.defField)) {
-					self.defField = defField;
-					self.$field.val(defField);
-					self.fieldChange();
-				} else {
-					self.defField = defField;
-				}
-			});
-		},
-
 		reRender: function (options) {
 			var ui = options.ws.column.ui;
 			this.ws = options.ws;
-			this.renderTitle(ui);
-			this.renderField(ui);
+			this.title = defaultTextInput.create('title_' + this.id, {
+				$el: this.$columnTitle,
+				getDefault: this.getDefTitle
+			});
+			this.field = defaultTextInput.create('field_' + this.id, {
+				$el: this.$field,
+				getDefault: this.getDefField
+			});
 		},
 
 		firstRender: function (options) {
@@ -213,11 +150,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			});
 			this.$el // TODO use rx handlers?
 				.on('mouseenter mouseleave', '.columnTitle, .field', this.someMouseenterLeave)
-				.on('mouseenter mouseleave', this.mouseenterLeave)
-				.on('keyup change', '.columnTitle', this.titleChange)
-				.on('focusout', '.columnTitle', this.titleFocusout)
-				.on('keyup change', '.field', this.fieldChange)
-				.on('focusout', '.field', this.fieldFocusout);
+				.on('mouseenter mouseleave', this.mouseenterLeave);
 
 			this.reRender(options);
 
@@ -261,7 +194,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 	return {
 		show: function (id, options) {
-			//console.log(id + ', ' + options.ws.column.fields[0] + '  columnUi.show()');
 			var widget = widgets[id];
 			if (widget) {
 				widget.render(options);

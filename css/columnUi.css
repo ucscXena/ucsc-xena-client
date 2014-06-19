@@ -16,11 +16,6 @@
 	text-align: center;
 	background-color: transparent;
 }
-.columnUi .columnTitle.defalt,
-.columnUi .field.defalt {
-	font-style: italic;
-	color: #666666;
-}
 .columnUi .moveHandle {
 	background-color: #eeeeee;
 	width: 100%;
