@@ -502,6 +502,7 @@ define(['haml!haml/columnEdit',
 			// reloads the browser to pick up new datasets. 
 			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
 				var index,
+					serverIndex,
 					opts;
 				// TODO for demo, rename dataset titles
 				self.sources = map(sources, function (s) {
@@ -519,12 +520,17 @@ define(['haml!haml/columnEdit',
 				});
 
 				// TODO for demo, insert mutationVector dataset
-				_.each(self.sources[1].datasets, function (d, i) {
+				_.each(self.sources, function (s, i) {
+					if (s.title === 'genome-cancer.ucsc.edu') {
+						serverIndex = i;
+					}
+				});
+				_.each(self.sources[serverIndex].datasets, function (d, i) {
 					if (d.title === 'Mutations, gene') {
 						index = i;
 					}
 				});
-				self.sources[1].datasets.splice(index, 0, {
+				self.sources[serverIndex].datasets.splice(index, 0, {
 					dataSubType: 'mutationVector',
 					dsID: 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector',
 					title: 'Mutation'
