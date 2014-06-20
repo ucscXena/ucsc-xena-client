@@ -35,6 +35,10 @@ define(['haml!haml/sheetWrap',
 				url: 'http://localhost:7222'
 			},
 			{
+				title: 'tcga1:1236',
+				url: 'http://tcga1:1236'
+			},
+			{
 				title: 'genome-cancer.ucsc.edu',
 				url: 'http://cancerdb:7222'
 			}
@@ -113,7 +117,6 @@ define(['haml!haml/sheetWrap',
 				return s.trim();
 			});
 			this.servers = map(inputArray, function (s) {
-				//'http://cancerdb:7222'
 				var url = 'http://' + s + ((s.indexOf(':') > -1) ? '' : ':7222');
 				if (s === 'genome-cancer.ucsc.edu' || s === 'genome-cancer.ucsc.edu:7222') {
 					url = 'http//cancerdb:7222'; // TODO only for dev !
