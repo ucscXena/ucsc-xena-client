@@ -46,19 +46,20 @@ define(['haml!haml/columnEdit',
 		defaultField = '(fields for this option)', // TODO
 		defaultWidth = 100,
 
-		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles
-			cna: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			DNAMethylation: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			geneExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with geneRNAseq & geneArray
-			geneRNAseq: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			geneArray: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			somaticMutation: ['dGene', 'dGenes'],
+		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles?
+			cns: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
 			mutationVector: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
-			protein: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			clinical: ['dClinical']
+			clinical: ['dClinical'],
+			cna: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes', /*'dGeneChrom', 'dChrom'*/],
+			DNAMethylation: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
+			geneExp: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
+			geneRNAseq: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
+			geneArray: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
+			somaticMutation: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
+			protein: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/]
 		},
 		displaysByInput = {
-			iGene: ['dGene', 'dGeneProbes', 'dGeneChrom', 'dExonDense', 'dExonSparse'],
+			iGene: ['dGene', 'dGeneProbes', 'dGeneChrom', 'dExonSparse'],
 			iGenes: ['dGenes'],
 			iProbes: ['dProbes'],
 			iChrom: ['dChrom'],
@@ -74,7 +75,6 @@ define(['haml!haml/columnEdit',
 		displayModeLabels = { // TODO combine with dataTypeByDisplay
 			dGene: 'gene',
 			dGeneProbes: 'probes',
-			dExonDense: 'exons',
 			dExonSparse: 'exons',
 			dGeneChrom: 'chromosomes'
 		},
@@ -83,10 +83,9 @@ define(['haml!haml/columnEdit',
 			dGenes: 'probeGene', //'nonspatial',
 			dExonSparse: 'sparse', //spatial
 			dClinical: 'probeFeature', //'nonspatial',
-			//dGeneProbes: 'probe', //'nonspatial',
-			//dExonDense: 'exonDense', // spatial
+			dGeneProbes: 'probe', //'nonspatial',
+			dProbes: 'probe', //'nonspatial',
 			//dGeneChrom: 'geneChrom', // spatial
-			//dProbes: 'probe', //'nonspatial',
 			//dChrom: 'chrom' // spatial
 		},
 		map = _.map,
@@ -98,6 +97,10 @@ define(['haml!haml/columnEdit',
 		// TODO for demo, our mutationVector dataset is in the cgi
 		if (hdsID === 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
 			return 'mutationVector';
+		} else if (hdsID === 'http://cancerdb:7222/public/TCGA/TCGA.BRCA.sampleMap/SNP6_nocnv.matrix'
+				|| hdsID === 'http://cancerdb:7222/public/TCGA/TCGA.BRCA.sampleMap/SNP6.matrix'
+				|| hdsID === 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/cnv.matrix') {
+			return 'cns';
 		}
 		return xenaQuery.find_dataset(sources, hdsID).dataSubType;
 	}
