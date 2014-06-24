@@ -101,21 +101,21 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	// QUERY STRINGS
 
 	function all_samples_query(cohort) {
-		return '(query {:select [:%distinct.exp_samples.name] ' +
-		       '        :from [:exp_samples] ' +
-		       '        :where [:in :experiments_id {:select [:id] ' +
-		       '                                     :from [:experiments] ' +
+		return '(query {:select [:%distinct.sample.name] ' +
+		       '        :from [:sample] ' +
+		       '        :where [:in :dataset_id {:select [:id] ' +
+		       '                                     :from [:dataset] ' +
 		       '                                     :where [:= :cohort ' + quote_cohort(cohort) + ']}]})';
 	}
 
 	function all_cohorts_query() {
 		return '(query {:select [:name [#sql/call [:ifnull :cohort "' + null_cohort + '"] :cohort]] ' +
-		       '        :from [:experiments]})';
+		       '        :from [:dataset]})';
 	}
 
 	function dataset_list_query(cohort) {
 		return  '(query {:select [:name :shorttitle :datasubtype :probemap :text] ' +
-				'        :from [:experiments] ' +
+				'        :from [:dataset] ' +
 				'        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
 	}
 
@@ -136,18 +136,18 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			'           (fetch (cons ' +
 			'                   (assoc {table ' + quote(dataset) +
 			'                           samples ' + arrayfmt(samples) + '} ' +
-			'                          (quote columns) (map :PROBE probes)) ' +
+			'                          (quote columns) (map :NAME probes)) ' +
 			'                   (quote ()))))))) ' +
-			'     (query {:select [:P.gene :probe] ' +
-			'             :from [[{:select [:gene :probemap_probes_id] ' +
-			'                      :from [:probemap_genes] ' +
-			'                      :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :probemap_genes.gene]] ' +
-			'                      :where [:= :probemaps_id {:select [:id] ' +
-			'                                                :from [:probemaps] ' +
+			'     (query {:select [:P.gene :name] ' +
+			'             :from [[{:select [:gene :probe_id] ' +
+			'                      :from [:probe_gene] ' +
+			'                      :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :probe_gene.gene]] ' +
+			'                      :where [:= :probemap_id {:select [:id] ' +
+			'                                                :from [:probemap] ' +
 			'                                                :where [:= :name {:select [:probemap] ' +
-			'                                                                  :from [:experiments] ' +
+			'                                                                  :from [:dataset] ' +
 			'                                                                  :where [:= :name ' + quote(dataset) + ']}]}]} :P]] ' +
-			'             :left-join [:probemap_probes [:= :probemap_probes.id :probemap_probes_id]]}) ' +
+			'             :left-join [:probe [:= :probe.id :probe_id]]}) ' +
 			'     (fn [probes scores] ' +
 			'         (map (fn [p s] (assoc p :SCORES s)) probes scores)) ' +
 			'     (fn [genes] (map (fn [gp] (assoc {} ' +
@@ -160,44 +160,44 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function dataset_string(dataset) {
 		return  '(:TEXT (car (query {:select [:text] ' +
-				'                    :from [:experiments] ' +
+				'                    :from [:dataset] ' +
 				'                    :where [:= name ' + quote(dataset) + ']})))';
 	}
 
 	function feature_list_query(dataset) {
-		return  '(query {:select [:probes.name :features.shorttitle] ' +
-				'        :from [:probes] ' +
-				'        :where [:= :eid {:select [:id] ' +
-				'                         :from [:experiments] ' +
+		return  '(query {:select [:field.name :feature.shorttitle] ' +
+				'        :from [:field] ' +
+				'        :where [:= :dataset_id {:select [:id] ' +
+				'                         :from [:dataset] ' +
 				'                         :where [:= :name ' + quote(dataset) + ']}] ' +
-				'        :left-join [:features [:= :features.probes_id :probes.id]]})';
+				'        :left-join [:feature [:= :feature.field_id :field.id]]})';
 	}
 
 	// XXX drop (quote)
 	function features_string(dataset, probes) {
 		return  '(query (quote ' +
-				'{:select [:P.name :features.*] ' +
-				' :from [[{:select [:probes.name :probes.id] ' +
-				'          :from [:probes] ' +
-				'          :join [{:table [[[:name :varchar ' + arrayfmt(probes) + ']] :T]} [:= :T.name :probes.name]] ' +
-				'          :where [:= :eid {:select [:id] ' +
-				'                           :from [:experiments] ' +
+				'{:select [:P.name :feature.*] ' +
+				' :from [[{:select [:field.name :field.id] ' +
+				'          :from [:field] ' +
+				'          :join [{:table [[[:name :varchar ' + arrayfmt(probes) + ']] :T]} [:= :T.name :field.name]] ' +
+				'          :where [:= :dataset_id {:select [:id] ' +
+				'                           :from [:dataset] ' +
 				'                           :where [:= :name ' + quote(dataset) + ']}]} :P]] ' +
-				' :left-join [:features [:= :features.probes_id :P.id]]}))';
+				' :left-join [:feature [:= :feature.field_id :P.id]]}))';
 	}
 
 	// XXX drop (quote)
 	function codes_string(dataset, probes) {
 		return '(query (quote ' +
-			'{:select [:P.name [#sql/call [:group_concat :value :order :ordering :separator #sql/call [:chr 9]] :codes]] ' +
-			' :from [[{:select [:probes.id :probes.name] ' +
-			'          :from [:probes] ' +
-			'          :join [{:table [[[:name :varchar ' + arrayfmt(probes) + ']] :T]} [:= :T.name :probes.name]] ' +
-			'          :where [:= :eid {:select [:id] ' +
-			'                           :from [:experiments] ' +
+			'{:select [:P.name [#sql/call [:group_concat :value :order :ordering :separator #sql/call [:chr 9]] :code]] ' +
+			' :from [[{:select [:field.id :field.name] ' +
+			'          :from [:field] ' +
+			'          :join [{:table [[[:name :varchar ' + arrayfmt(probes) + ']] :T]} [:= :T.name :field.name]] ' +
+			'          :where [:= :dataset_id {:select [:id] ' +
+			'                           :from [:dataset] ' +
 			'                           :where [:= :name ' + quote(dataset) + ']}]} :P]] ' +
-			' :left-join [:features [:= :features.probes_id :P.id] ' +
-			'             :codes [:= :features.id :features_id]] ' +
+			' :left-join [:feature [:= :feature.field_id :P.id] ' +
+			'             :code [:= :feature.id :feature_id]] ' +
 			' :group-by [:P.id]}))';
 	}
 
