@@ -22,16 +22,16 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function all_samples_query(cohort) {
-		return '(query {:select [:%distinct.exp_samples.name] ' +
-		       '        :from [:exp_samples] ' +
-		       '        :where [:in :experiments_id {:select [:id] ' +
-		       '                                     :from [:experiments] ' +
+		return '(query {:select [:%distinct.sample.name] ' +
+		       '        :from [:sample] ' +
+		       '        :where [:in :dataset_id {:select [:id] ' +
+		       '                                     :from [:dataset] ' +
 		       '                                     :where [:= :cohort ' + quote_cohort(cohort) + ']}]})';
 	}
 
 	function all_cohorts_query() {
 		return '(query {:select [:name [#sql/call [:ifnull :cohort "' + null_cohort + '"] :cohort]] ' +
-		       '        :from [:experiments]})';
+		       '        :from [:dataset]})';
 	}
 
 	function xena_dataset_list_transform(host, list) {
@@ -56,17 +56,17 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function dataset_list_query(cohort) {
 		return  '(query {:select [:name :shorttitle :datasubtype :probemap :text] ' +
-				'        :from [:experiments] ' +
+				'        :from [:dataset] ' +
 				'        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
 	}
 
 	function feature_list_query(dataset) {
-		return  '(query {:select [:probes.name :features.shorttitle] ' +
-				'        :from [:probes] ' +
-				'        :where [:= :eid {:select [:id] ' +
-				'                         :from [:experiments] ' +
+		return  '(query {:select [:field.name :feature.shorttitle] ' +
+				'        :from [:field] ' +
+				'        :where [:= :dataset_id {:select [:id] ' +
+				'                         :from [:dataset] ' +
 				'                         :where [:= :name ' + quote(dataset) + ']}] ' +
-				'        :left-join [:features [:= :features.probes_id :probes.id]]})';
+				'        :left-join [:feature [:= :feature.field_id :field.id]]})';
 	}
 
 	function indexFeatures(features) {
