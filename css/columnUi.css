@@ -1,8 +1,9 @@
 .columnUi {
 	font-size: 0.8em;
-	vertical-align: bottom;
+	vertical-align: top;
 }
 .columnUi tr {
+	vertical-align: top;
 	white-space: nowrap;
 }
 .columnUi input {
@@ -15,11 +16,6 @@
 	text-align: center;
 	background-color: transparent;
 }
-.columnUi .columnTitle.defalt,
-.columnUi .field.defalt {
-	font-style: italic;
-	color: #666666;
-}
 .columnUi .moveHandle {
 	background-color: #eeeeee;
 	width: 100%;
@@ -27,7 +23,7 @@
 	margin-top: 4px;
 	margin-bottom: 4px;
 	display: inline-block;
-	cursor: move;
+	cursor: ew-resize;
 }
 .columnUi .more {
 	margin-bottom: 2px;

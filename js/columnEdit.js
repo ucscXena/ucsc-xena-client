@@ -27,26 +27,39 @@ define(['haml!haml/columnEdit',
 				 xenaQuery) {
 	'use strict';
 
-	var defaultGene = 'ALK', // TODO: make these more global ?
+	var dsTitles = { // TODO for demo
+			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/cnv.matrix": 'Copy number',
+			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/rma.Target190.Probeset.Full": 'Gene expression, array',
+			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/NBL_10_RNAseq_log2": 'Gene expression, RNAseq',
+			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/mutationGene": 'Mutations, gene',
+			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_clinicalMatrix": 'Phenotypical, Clinical'
+		},
+		sFeatures = { // TODO for demo
+			impact: 'impact', // shorttitle ?
+			DNA_AF: 'DNA allele frequency',
+			RNA_AF: 'RNA allele frequency'
+		},
+		defaultGene = 'ALK', // TODO: make these more global ?
 		defaultGenes = 'ALK, PTEN',
 		defaultProbes = '(no default probes)', // TODO
 		defaultChrom = 'chr1-chrY',
 		defaultField = '(fields for this option)', // TODO
 		defaultWidth = 100,
 
-		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles
-			cna: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			DNAMethylation: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			geneExp: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/], // TODO replace with geneRNAseq & geneArray
-			geneRNAseq: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			geneArray: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			somaticMutation: ['dGene', 'dGenes'],
+		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles?
+			cns: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
 			mutationVector: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
-			protein: ['dGene', 'dGenes'/*, 'dGeneProbes', 'dProbes', 'dGeneChrom', 'dChrom'*/],
-			clinical: ['dClinical']
+			clinical: ['dClinical'],
+			cna: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes', /*'dGeneChrom', 'dChrom'*/],
+			DNAMethylation: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
+			geneExp: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
+			geneRNAseq: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
+			geneArray: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
+			somaticMutation: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
+			protein: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/]
 		},
 		displaysByInput = {
-			iGene: ['dGene', 'dGeneProbes', 'dGeneChrom', 'dExonDense', 'dExonSparse'],
+			iGene: ['dGene', 'dGeneProbes', 'dGeneChrom', 'dExonSparse'],
 			iGenes: ['dGenes'],
 			iProbes: ['dProbes'],
 			iChrom: ['dChrom'],
@@ -62,26 +75,33 @@ define(['haml!haml/columnEdit',
 		displayModeLabels = { // TODO combine with dataTypeByDisplay
 			dGene: 'gene',
 			dGeneProbes: 'probes',
-			dExonDense: 'exons',
 			dExonSparse: 'exons',
 			dGeneChrom: 'chromosomes'
 		},
 		dataTypeByDisplay = {
-			dGene: 'gene', //'nonspatial',
+			dGene: 'probeGene', //'nonspatial',
+			dGenes: 'probeGene', //'nonspatial',
+			dExonSparse: 'sparse', //spatial
+			dClinical: 'probeFeature', //'nonspatial',
 			dGeneProbes: 'probe', //'nonspatial',
-			dExonDense: 'exonDense', // spatial
-			dExonSparse: 'exonSparse', //spatial
-			dGeneChrom: 'geneChrom', // spatial
-			dGenes: 'gene', //'nonspatial',
 			dProbes: 'probe', //'nonspatial',
-			dClinical: 'feature', //'nonspatial',
-			dChrom: 'chrom' // spatial
+			//dGeneChrom: 'geneChrom', // spatial
+			//dChrom: 'chrom' // spatial
 		},
+		map = _.map,
 		widgets = {},
 		aWidget,
 		dataset_list_query;
 
 	function getDataSubType(sources, hdsID) {
+		// TODO for demo, our mutationVector dataset is in the cgi
+		if (hdsID === 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
+			return 'mutationVector';
+		} else if (hdsID === 'http://cancerdb:7222/public/TCGA/TCGA.BRCA.sampleMap/SNP6_nocnv.matrix'
+				|| hdsID === 'http://cancerdb:7222/public/TCGA/TCGA.BRCA.sampleMap/SNP6.matrix'
+				|| hdsID === 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/cnv.matrix') {
+			return 'cns';
+		}
 		return xenaQuery.find_dataset(sources, hdsID).dataSubType;
 	}
 
@@ -101,6 +121,10 @@ define(['haml!haml/columnEdit',
 			displaysByDataSubType[dataSubType],
 			displaysByInput[inputMode]
 		);
+	}
+
+	function datasetTitle(dsID, title) {
+		return dsTitles[dsID] || title;
 	}
 
 	aWidget = {
@@ -137,32 +161,6 @@ define(['haml!haml/columnEdit',
 				break;
 			}
 			return fields;
-		},
-
-		renderDisplayModes: function (dataSubType) {
-			var modes = getDisplayModes(dataSubType, this.state.inputMode);
-			if (modes.length === 1) {
-				this.state.displayMode = modes[0];
-			} else {
-				this.$displayModeAnchor.append(
-					selectTemplate({
-						klass: 'displayMode',
-						options: modes,
-						labels: displayModeLabels
-					})
-				);
-				this.$displayModeRow.show();
-				this.$el.find('.displayMode').select2({
-					minimumResultsForSearch: -1,
-					dropdownAutoWidth: true
-				});
-				this.$displayMode = this.$el.find('.select2-container.displayMode');
-				if (modes.indexOf(this.state.displayMode) > -1) {
-					this.$displayMode.select2('val', this.state.displayMode);
-				} else {
-					this.state.displayMode = modes[0];
-				}
-			}
 		},
 
 		renderInputModes: function (dataSubType) {
@@ -235,7 +233,7 @@ define(['haml!haml/columnEdit',
 
 		renderSelect: function () {
 			var self = this;
-			if (self.state.inputMode === 'iClinical') {
+			if (self.state.dataSubType === 'clinical') {
 				xenaQuery.feature_list(self.state.dsID).subscribe(function (features) {
 					self.$selectAnchor.append(
 						selectTemplate({
@@ -251,11 +249,59 @@ define(['haml!haml/columnEdit',
 						dropdownAutoWidth: true
 					});
 					self.$feature = self.$el.find('.select2-container.feature');
-					if (!self.state.feature) {
-						self.state.feature = 'age';
+					if (self.state.feature) {
+						self.$feature.select2('val', self.state.feature);
+					} else {
+						self.state.feature = self.$feature.select2('val');
 					}
-					self.$feature.select2('val', self.state.feature);
 				});
+			} else if (self.state.dataSubType === 'mutationVector') {
+				self.$selectAnchor.append(
+					selectTemplate({
+						klass: 'sFeature',
+						options: sFeatures,
+						labels: undefined
+					})
+				);
+				self.$selectLabel.text('Variable:');
+				self.$selectRow.show();
+				self.$el.find('.sFeature').select2({
+					minimumResultsForSearch: -1,
+					dropdownAutoWidth: true
+				});
+				self.$sFeature = self.$el.find('.select2-container.sFeature');
+				if (self.state.sFeature) {
+					self.$sFeature.select2('val', self.state.sFeature);
+				} else {
+					self.state.sFeature = self.$sFeature.select2('val');
+				}
+				//self.$sFeature.select2('val', self.state.sFeature);
+			}
+		},
+
+		renderDisplayModes: function (dataSubType) {
+			var modes = getDisplayModes(dataSubType, this.state.inputMode);
+			if (modes.length === 1) {
+				this.state.displayMode = modes[0];
+			} else {
+				this.$displayModeAnchor.append(
+					selectTemplate({
+						klass: 'displayMode',
+						options: modes,
+						labels: displayModeLabels
+					})
+				);
+				this.$displayModeRow.show();
+				this.$el.find('.displayMode').select2({
+					minimumResultsForSearch: -1,
+					dropdownAutoWidth: true
+				});
+				this.$displayMode = this.$el.find('.select2-container.displayMode');
+				if (modes.indexOf(this.state.displayMode) > -1) {
+					this.$displayMode.select2('val', this.state.displayMode);
+				} else {
+					this.state.displayMode = modes[0];
+				}
 			}
 		},
 
@@ -294,8 +340,8 @@ define(['haml!haml/columnEdit',
 			this.renderInputModes(dataSubType);
 			this.renderList();
 			this.renderSingle();
-			this.renderDisplayModes(dataSubType);
 			this.renderSelect();
+			this.renderDisplayModes(dataSubType);
 			this.renderGo();
 		},
 
@@ -306,6 +352,11 @@ define(['haml!haml/columnEdit',
 
 		featureChange: function () {
 			this.state.feature = this.$feature.select2('val');
+			this.reRender();
+		},
+
+		sFeatureChange: function () {
+			this.state.sFeature = this.$sFeature.select2('val');
 			this.reRender();
 		},
 
@@ -425,14 +476,8 @@ define(['haml!haml/columnEdit',
 			this.updateColumn = options.updateColumn;
 			this.firstRenderDataset = true;
 			this.state = {};
-			//this.state = options.state;
-
-
 
 			self.render();
-			if (options.dataset) { // XXX what?
-				self.$dataset.select2('val', options.dataset);
-			}
 
 			self.$el // TODO replace with rx event handlers
 				.on('change', '.dataset', self.datasetChange)
@@ -441,15 +486,57 @@ define(['haml!haml/columnEdit',
 				.on('blur', '.single', self.singleBlur)
 				.on('change', '.displayMode', self.displayModeChange)
 				.on('change', '.feature', self.featureChange)
+				.on('change', '.sFeature', self.sFeatureChange)
 				.on('click', '.go', self.goClick);
 			if (self.columnUi) {
 				self.$el.on('mouseenter mouseleave', self.columnUi.mouseenterLeave);
 			}
 
+			// TODO yikes, these columnEdit widgets are destroyed whenever the sources
+			// change, rather than attempting to modify any of them. (Using destroyAll() called
+			// from the cohortSelect change handler in sheetWrap.js.) These widgets
+			// should be uncreatable between the time the user has selected a new cohort,
+			// and the new cohort's dataset list has showed up.
+			// However, eventually we should be able to add datasets from existing sources
+			// whenever new datasets are added to say, localhost. For now the user
+			// reloads the browser to pick up new datasets. 
 			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
-				self.sources = sources; // XXX ugh.
+				var index,
+					serverIndex,
+					opts;
+				// TODO for demo, rename dataset titles
+				self.sources = map(sources, function (s) {
+					return {
+						url: s.url,
+						title: s.title,
+						datasets: map(s.datasets, function (d) {
+							return {
+								dataSubType: d.dataSubType,
+								dsID: d.dsID,
+								title: datasetTitle(d.dsID, d.title)
+							};
+						})
+					};
+				});
 
-				var opts = $(datasetsTemplate({sources: sources}));
+				// TODO for demo, insert mutationVector dataset
+				_.each(self.sources, function (s, i) {
+					if (s.title === 'genome-cancer.ucsc.edu') {
+						serverIndex = i;
+					}
+				});
+				_.each(self.sources[serverIndex].datasets, function (d, i) {
+					if (d.title === 'Mutations, gene') {
+						index = i;
+					}
+				});
+				self.sources[serverIndex].datasets.splice(index, 0, {
+					dataSubType: 'mutationVector',
+					dsID: 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector',
+					title: 'Mutation'
+				});
+
+				opts = $(datasetsTemplate({sources: self.sources}));
 
 				// there might or might not be a a select2 element.
 				// need to find it & do a destroy.

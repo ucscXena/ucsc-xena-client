@@ -32,6 +32,10 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		return _.fmap(paths, _.partial(_.get_in, obj));
 	}
 
+	function pluckPathsArray(paths, obj) {
+		return _.map(paths, _.partial(_.get_in, obj));
+	}
+
 	function partition_n(arr, n, step, pad) {
 		var i, last, len, ret = [];
 
@@ -50,17 +54,15 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		return ret;
 	}
 
-
-
 	_.mixin({
 		fmap: fmap,
 		apply: apply,
 		pluckPaths: pluckPaths,
+		pluckPathsArray: pluckPathsArray,
 		array: array,
 		concat: concat,
 		partition_n: partition_n
 	});
-
 
 	return _;
 });

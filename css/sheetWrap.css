@@ -1,6 +1,6 @@
 .sheetWrap {
+	margin-top: 50px;
 	line-height: 1px;
-	/*background-color: #ffeeee;*/
 	display: inline-block;
 	margin-left: 5px;
 }
@@ -11,10 +11,16 @@
 .sheetWrap>.header label {
 	margin-left: 10px;
 }
-.sheetWrap>.header .sources {
+.sheetWrap>.header .servers {
 	font-size: 1em;
-	width: 20em;
+	width: 40em;
 }
+/* TODO maybe later
+.sheetWrap .help {
+	display: inline-block;
+	vertical-align: middle;
+}
+*/
 .sheetWrap .showLegend {
 	vertical-align: bottom;
 }
@@ -23,9 +29,6 @@
 	line-height: 3;
 	cursor: pointer;
 	vertical-align: top;
-}
-.sheetWrap .debug {
-	background: Lavender;
 }
 .sheetWrap .debug button {
 	vertical-align: top;

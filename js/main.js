@@ -9,11 +9,11 @@ define(['jquery',
 		'sheetWrap',
 		'multi',
 		'columnUi',
-		'probe_column',
-		'exonSparse_column',
 		'uuid',
 		'cursor',
 		'stub',
+		'plotProbe',
+		'plotSparse',
 		'lib/jquery-ui',
 		'rx.async'], function (
 			$,
@@ -24,8 +24,6 @@ define(['jquery',
 			sheetWrap,
 			multi,
 			columnUi,
-			probe_column,
-			exonSparse_column,
 			uuid,
 			cursor,
 			stub) {
@@ -49,7 +47,7 @@ define(['jquery',
 
 	var DEMO = false;
 	var model = columnModels(); // XXX global for testing
-	var HEIGHT = 719;
+	var HEIGHT = 717;
 
 	var unload = Rx.Observable.fromEvent(window, 'beforeunload');
 	// XXX does this work if no state events occur?? Looks like not.
@@ -100,6 +98,17 @@ define(['jquery',
 	var resizes = $spreadsheet.onAsObservable("resizestop")
 		.select(function (ev) {
 				return function (s) {
+					var diff = ev.additionalArguments[0].size.height
+							- ev.additionalArguments[0].originalSize.height,
+						// TODO it would be best to retrieve the state.height here
+						// and replace it with: diff + state.height
+						// The below does not work if a sparse mutation plot is first.
+						// If we do the above, we won't have a DOM lookup, so the below
+						// concern about DOM lookup is not an issue. The use of the jquery-ui
+						// resize has been greatly simplified by allowing the elements to 
+						// shrink-wrap around their content, rather than trying to calc their sizes.
+						// Only the canvas size is set, nothing else.
+						$column = $('.spreadsheet-column:first'),
 					// The state-mutating functions should really be pure functions, for the sake
 					// of our sanity. So, DOM lookups should be done elsewhere.
 					// headHeight is really a constant & could be looked up once. This handler should
@@ -109,7 +118,6 @@ define(['jquery',
 					// that we're getting the correct height values. Dunno if jquery-ui will let us
 					// resize with a proxy element, but if not we should write our own resize. We should
 					// really do that anyway, and ditch jquery-ui. :-p
-					var $column = $('.spreadsheet-column:first'),
 						headHeight = $column.height() - $column.find('.samplePlot canvas').height();
 					return _.assoc(s, 'height', ev.additionalArguments[0].size.height - headHeight);
 				};
@@ -153,7 +161,7 @@ define(['jquery',
 
 	var debugstream = new Rx.Subject();
 	model.addStream(debugstream);
-	var debugtext = $('<textarea  id="columnStub" rows=20 cols=25></textarea>');
+	var debugtext = $('<textarea  id="columnStub" rows=20 cols=50></textarea>');
 	debugtext.hide();
 	$debug.append(debugtext);
 
@@ -177,7 +185,7 @@ define(['jquery',
 		}
 	}
 
-	var debugstate = $('<textarea id="samplesStub" rows=20 cols=25></textarea>');
+	var debugstate = $('<textarea id="samplesStub" rows=20 cols=50></textarea>');
 	$debug.append(debugstate);
 
 	debugstate.on('keydown', function (ev) {

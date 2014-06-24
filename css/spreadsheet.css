@@ -7,6 +7,7 @@
 	cursor: ns-resize;
 }
 .spreadsheet-column {
+	vertical-align: top;
 	display: inline-block;
 }
 .spreadsheet-column .ui-resizable-e {

@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/underscore'
+define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery', 'lib/underscore'
 	// non-object dependencies
-	], function (stub, crosshairs, linkTo, tooltip, util, d3, $, _) {
+	], function (stub, crosshairs, linkTo, tooltip, util, vgcanvas, d3, $, _) {
 	'use strict';
 
 	var impactMax = 3,
@@ -122,7 +122,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 		aWidget = {
 
 			destroy: function () {
-				this.d3Select.remove();
+				//this.d3Select.remove();
 				delete widgets[this.id];
 			},
 
@@ -140,78 +140,49 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				tooltip.toggleFreeze();
 			},
 
-			drawNa: function (d) {
-				this.d2.beginPath();
-				this.d2.fillStyle = 'grey';
-				this.d2.fillRect(this.radius, this.radius + 1,
-					this.canvasWidth - (this.radius * 2),
-					this.canvasHeight - (this.radius * 2));
-			},
-
-			drawNonNaRows: function (d) {
-				this.d2.beginPath();
-				this.d2.fillStyle = 'white';
-				this.d2.fillRect(0, this.y(d.y), this.canvasWidth, this.pixPerRow);
-			},
-
 			drawCenter: function (d, highlight) {
-				var r = highlight ? this.point * 2 : this.point,
-					cx = this.x(d.x) + this.sparsePad,
-					cy = this.y(d.y);
-				if (d.r > 1) {
-					this.d2.beginPath();
-					this.d2.fillStyle = 'black';
-					this.d2.arc(cx, cy, r, 0, 2 * Math.PI);
-					this.d2.fill();
-				}
+				var r = highlight ? this.point * 2 : this.point;
+				this.vg.circle(d.x, d.y, r, 'black');
 			},
 
 			drawHalo: function (d) {
-				var gradient,
-					cx = this.x(d.x) + this.sparsePad,
-					cy = this.y(d.y); // TODO placing this at the top of the row for pixPerRow != 1, should place it in the middle of row
-				this.d2.beginPath();
-				this.d2.arc(cx, cy, d.r, 0, 2 * Math.PI);
-				if (d.line) {
-					this.d2.strokeStyle = d.rgba;
-					this.d2.stroke();
-				} else if (d.gradient) {
-					gradient = this.d2.createRadialGradient(cx, cy, d.r, cx, cy, 1);
-					gradient.addColorStop(0, d.rgba);
-					gradient.addColorStop(1, "white");
-					this.d2.fillStyle = gradient;
-					this.d2.fill();
-				} else {
-					this.d2.fillStyle = d.rgba;
-					this.d2.fill();
-				}
-			},
-
-			highlight: function (d) {
-				var cx = this.x(d.x) + this.sparsePad,
-					cy = this.y(d.y);
-				this.draw(); // remove any previous highlights
-				this.d2.beginPath();
-				this.d2.arc(cx, cy, d.r, 0, 2 * Math.PI);
-				this.d2.strokeStyle = highlightRgba;
-				this.d2.stroke();
-				this.drawHalo(d); // to bring this node's color to the top
-				this.drawCenter(d, true);
+				this.vg.circle(d.x, d.y, d.r, d.rgba);
 			},
 
 			draw: function () {
-				var self = this;
-				this.d2.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-				this.drawNa();
-				each(this.nonNaRows, function (d) {
-					self.drawNonNaRows(d);
+				var self = this,
+					buffWidth = this.canvasWidth - (this.sparsePad * 2),
+					buff = vgcanvas(buffWidth, 1);
+				this.vg.smoothing(false);
+				this.vg.clear(0, 0, this.canvasWidth, this.canvasHeight);
+
+				// draw each of the rows either grey for NA or white for sample examined for mutations
+				each(this.values, function (r, i) {
+					var color = (r.vals) ? 'white' : 'grey';
+					buff.box(0, 0, buffWidth, 1, color);
+					self.vg.drawImage(
+						buff.element(),
+						self.sparsePad,
+						(i * self.pixPerRow) + self.sparsePad,
+						buffWidth,
+						self.pixPerRow
+					);
 				});
+
+				// draw the mutations
 				each(this.nodes, function (d) {
 					self.drawHalo(d);
 				});
 				each(this.nodes, function (d) { // draw black dots on top
 					self.drawCenter(d);
 				});
+			},
+
+			highlight: function (d) {
+				this.draw(); // remove any previous highlights
+				this.vg.circle(d.x, d.y, d.r, highlightRgba, true);
+				this.drawHalo(d); // to bring this node's color to the top
+				this.drawCenter(d, true);
 			},
 
 			closestNode: function (x, y) { // XXX this should be optimized for a large number of mutations
@@ -265,8 +236,8 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 					offsetX = offset.x;
 					offsetY = offset.y;
 				}
-				x = offsetX - this.sparsePad;
-				y = this.yMax + this.sparsePad - 1 - offsetY;
+				x = offsetX;
+				y = offsetY;
 				node = this.closestNode(x, y);
 				if (node) {
 					this.highlight(node);
@@ -372,8 +343,8 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				if (this.feature === 'impact') {
 					imp = impact[val.effect];
 					c = colors[this.color][imp];
-				} else if (this.feature === 'dataset') {
-					c = colors.dataset[val.dataset];
+				//} else if (this.feature === 'dataset') {
+				//	c = colors.dataset[val.dataset];
 				} else if (val[this.feature] === 'NA') { // DNA_AF or RNA_AF with NA value
 					c = colors.af[0];
 				} else {  // DNA_AF or RNA_AF, but not NA
@@ -384,11 +355,10 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 			},
 
 			receiveData: function (data) {
-				var index = 0;
-				this.values = _.map(data, function (d) {
-					var row = $.extend(true, [], d);
-					row.index = index;
-					index += 1;
+				var drawValues = data.slice(this.zoomIndex, this.zoomIndex + this.zoomCount);
+				this.values = _.map(drawValues, function (v, i) {
+					var row = $.extend(true, [], v);
+					row.index = i;
 					return row;
 				});
 				this.render();
@@ -399,7 +369,10 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 					nonNaRows = _.map(filter(self.values, function (r) {
 						return r.vals;
 					}), function (r) {
-						return { y: self.yMax - (r.index * self.pixPerRow) };
+						return {
+							x: self.sparsePad,
+							y: r.index * self.pixPerRow + self.sparsePad
+						};
 					});
 				return nonNaRows;
 			},
@@ -411,9 +384,9 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 						return value.vals && value.vals.length;
 					});
 				_.each(nodeValues, function (value) {
-					var y = self.yMax - (value.index * self.pixPerRow);
+					var y = (value.index * self.pixPerRow) + (self.pixPerRow / 2) + self.sparsePad;
 					_.each(value.vals, function (val) {
-						var x = (0.5 + self.refGene.mapChromPosToX(val.start)) * self.gene.scaleX;
+						var x = (self.refGene.mapChromPosToX(val.start) * self.gene.scaleX) + self.sparsePad;
 						if (x >= 0) {
 							nodes.push({
 								x: x,
@@ -437,34 +410,10 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 
 			render: function () {
 				var self = this;
-				if (this.pix === 'fit to inherited height') {
-					this.pixPerRow = this.height / this.values.length;
-					this.canvasHeight = this.height + ((this.sparsePad - 1) * 2);
-				} else {
-					// TODO this is only an estimate when using pixPerRow
-					this.pixPerRow = this.pix;
-					this.canvasHeight = (this.pixPerRow * this.values.length) + ((this.sparsePad - 1) * 2);
-				}
-				this.yMax = this.canvasHeight - this.sparsePad;
+				this.pixPerRow = (this.height - (this.sparsePad * 2))  / this.values.length;
+				this.canvasHeight = this.height; // TODO init elsewhere
+				this.d2 = this.vg.context();
 
-				// set up environment
-				this.x = d3.scale.linear()
-					.domain([0, this.canvasWidth])
-					.range([0, this.canvasWidth]);
-				this.y = d3.scale.linear()
-					.domain([0, this.canvasHeight])
-					.range([this.canvasHeight, 0]);
-				this.d3Select = d3.select(this.anchor).append('canvas');
-				this.d2 = this.d3Select
-					.attr('width', this.canvasWidth)
-					.attr('height', this.canvasHeight)
-					.node().getContext('2d');
-
-				// bindings
-				$(this.anchor + ' canvas')
-					.addClass('mutationCanvas')
-					.on('click', this.click)
-					.on('mousemove mouseleave mouseenter', this.hover);
 				this.nodes = this.findNodes();
 				this.nonNaRows = this.findNonNaRows();
 				this.draw();
@@ -474,24 +423,30 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 				var horizontalMargin = '-' + options.horizontalMargin.toString() + 'px';
 				_.bindAll.apply(_, [this].concat(_.functions(this)));
 				//_(this).bindAll();
-				this.anchor = options.anchor;
+				this.$anchor = options.$anchor;
+				this.vg = options.vg;
 				this.columnUi = options.columnUi;
 				this.refGene = options.refGene;
 				this.dataset = options.dataset;
-				this.gene = options.gene;
+				this.gene = options.refGene.getGeneInfo();
 				this.feature = options.feature;
 				this.color = options.color;
-				this.canvasWidth = options.width || 960;
-				this.pix = options.pix;
+				this.canvasWidth = options.width;
 				this.height = options.height;
+				this.zoomCount = options.zoomCount;
+				this.zoomIndex = options.zoomIndex;
 				this.sparsePad = options.sparsePad;
 				this.radius = options.radius;
 				this.point = options.point;
 				this.refHeight = options.refHeight;
-				this.sort = options.sort;
 				this.columnUi.$sparsePad.height(0);
 				this.columnUi.$el.parent().css('margin-left', horizontalMargin);
 				this.columnUi.$el.parent().css('margin-right', horizontalMargin);
+
+				// bindings
+				this.$anchor
+					.on('click', 'canvas', this.click)
+					.on('mousemove mouseleave mouseenter', 'canvas', this.hover);
 
 				this.receiveData(options.data);
 			}
@@ -525,7 +480,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'lib/d3', 'jquery', '
 		},
 
 		show: function (id, options) {
-			//console.log(id + ', ' + options.gene.name + '  mutationVector.show()');
 			if (widgets[id]) {
 				widgets[id].destroy();
 			}

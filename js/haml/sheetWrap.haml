@@ -3,10 +3,11 @@
     %label Cohort:
       %select{class:'cohort'}
     %label Data Sources:
-      %input{class:'sources', type:'text', value:'localhost, cancerdb.ucsc.edu'}
+      %input{class:'servers', type:'text', value: servers, title:'Comma-separated list of data servers, in the form "server:port" or "server" if port is 7222'}
+	  -#%span{class:'help ui-icon ui-icon-help'}
   %div
     -# %button{class:'showLegend'} Legend
     %div{id:'testing', class:'spreadsheet'}
       %div{class:'crosshairH crosshair'}
     %span{class:'addColumn', style:'display:none'} +
-  %div{class:'debug'}
+  %div{class:'debug', style:'margin-top:10px'}

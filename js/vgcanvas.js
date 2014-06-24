@@ -55,6 +55,22 @@ define(["jquery", "lib/underscore"], function ($, _) {
 				ctx.fillRect(x, y, w, h);
 			},
 
+			clear = function (x, y, w, h) {
+				ctx.clearRect(x, y, w, h);
+			},
+
+			circle = function (x, y, r, c, noFill) {
+				ctx.beginPath();
+				ctx.arc(x, y, r, 0, 2 * Math.PI);
+				if (noFill) {
+					ctx.strokeStyle = c;
+					ctx.stroke();
+				} else {
+					ctx.fillStyle = c;
+					ctx.fill();
+				}
+			},
+
 			clipRect = function (x, y, w, h) {
 				ctx.save();
 				ctx.beginPath();
@@ -82,6 +98,10 @@ define(["jquery", "lib/underscore"], function ($, _) {
 
 			element = function () {
 				return el;
+			},
+
+			context = function () {
+				return ctx;
 			},
 
 			text = function (x, y, c, font, txt) {
@@ -197,6 +217,9 @@ define(["jquery", "lib/underscore"], function ($, _) {
 
 		return {
 			box: box,
+			circle: circle,
+			clear: clear,
+			context: context,
 			width: width,
 			height: height,
 			clipRect: clipRect,
