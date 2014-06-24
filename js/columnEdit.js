@@ -81,7 +81,7 @@ define(['haml!haml/columnEdit',
 		dataTypeByDisplay = {
 			dGene: 'probeGene', //'nonspatial',
 			dGenes: 'probeGene', //'nonspatial',
-			dExonSparse: 'sparse', //spatial
+			dExonSparse: 'exonSparse', //spatial
 			dClinical: 'probeFeature', //'nonspatial',
 			dGeneProbes: 'probe', //'nonspatial',
 			dProbes: 'probe', //'nonspatial',
