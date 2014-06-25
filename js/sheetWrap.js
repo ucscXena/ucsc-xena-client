@@ -2,6 +2,7 @@
 /*globals define: false, $: false, _: false */
 define(['haml!haml/sheetWrap',
 		'haml!haml/cohorts',
+		'stub',
 		'columnEdit',
 		'columnUi',
 		'defaultTextInput',
@@ -13,6 +14,7 @@ define(['haml!haml/sheetWrap',
 		'rx.binding'
 		], function (template,
 					cohortsTemplate,
+					stub,
 					columnEdit,
 					columnUi,
 					defaultTextInput,
@@ -40,7 +42,7 @@ define(['haml!haml/sheetWrap',
 			},
 			{
 				title: 'genome-cancer.ucsc.edu',
-				url: 'http://cancerdb:7222'
+				url: stub.getDEV_URL() // TODO only for dev
 			}
 		],
 		map = _.map,
@@ -119,7 +121,7 @@ define(['haml!haml/sheetWrap',
 			this.servers = map(inputArray, function (s) {
 				var url = 'http://' + s + ((s.indexOf(':') > -1) ? '' : ':7222');
 				if (s === 'genome-cancer.ucsc.edu' || s === 'genome-cancer.ucsc.edu:7222') {
-					url = 'http//cancerdb:7222'; // TODO only for dev !
+					url = stub.getDEV_URL(); // TODO only for dev !
 				}
 				return {
 					title: s,

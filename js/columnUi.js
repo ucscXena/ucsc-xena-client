@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnEdit', 'columnMenu', 'defaultTextInput', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
+define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'defaultTextInput', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
 	// non-object dependenciies
-	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnEdit, columnMenu, defaultTextInput, defer, /*mutation,*/ refGene, util, d3, $, select2, _, xenaQuery, Rx) {
+	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, defaultTextInput, defer, /*mutation,*/ refGene, util, d3, $, select2, _, xenaQuery, Rx) {
 	'use strict';
 
 	var APPLY = true,
@@ -20,13 +20,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			DNA_AF: 'DNA allele frequency',
 			RNA_AF: 'RNA allele frequency'
 		},
-		dsTitles = { // TODO for demo
-			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/cnv.matrix": 'Copy number',
-			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/rma.Target190.Probeset.Full": 'Gene expression, array',
-			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/NBL_10_RNAseq_log2": 'Gene expression, RNAseq',
-			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/mutationGene": 'Mutations, gene',
-			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_clinicalMatrix": ' '
-		},
+		//dsTitles = {}, // TODO for demo
 		/*
 		defTitles = {
 			cna: 'copy number',
@@ -42,11 +36,17 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		*/
 		widgets = {},
 		aWidget;
+	/*
+	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/cnv.matrix"] = 'Copy number';
+	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/rma.Target190.Probeset.Full"] = 'Gene expression, array';
+	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/NBL_10_RNAseq_log2"] = 'Gene expression, RNAseq';
+	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/mutationGene"] = 'Mutations, gene';
+	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_clinicalMatrix"] = ' ';
 
 	function datasetTitle(dsID, title) {
 		return dsTitles[dsID] || title;
 	}
-
+	*/
 	aWidget = {
 		// XXX this needs to be invoked somewhere. (It is, from columnMenu.js)
 		destroy: function () {
@@ -82,12 +82,13 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			var dsID = this.ws.column.dsID;
 			return this.sheetWrap.sources.map(function (sources) {
 				var dataset = xenaQuery.find_dataset(sources, dsID);
-				if (dsID === 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
+				if (dsID === stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
 					return 'Mutation';
 				} else if (!dataset) {
 					return "<unknown>";
 				} else {
-					return datasetTitle(dsID, dataset.title);
+					return dataset.title;
+					//return datasetTitle(dsID, dataset.title);
 				}
 			});
 		},
@@ -146,7 +147,9 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				columnUi: this,
 				ws: ws,
 				deleteColumn: this.sheetWrap.deleteColumn,
-				duplicateColumn: this.sheetWrap.duplicateColumn
+				duplicateColumn: this.sheetWrap.duplicateColumn,
+				updateColumn: this.updateColumn,
+				sheetWrap: this.sheetWrap
 			});
 			this.$el // TODO use rx handlers?
 				.on('mouseenter mouseleave', '.columnTitle, .field', this.someMouseenterLeave)

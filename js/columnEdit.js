@@ -27,18 +27,12 @@ define(['haml!haml/columnEdit',
 				 xenaQuery) {
 	'use strict';
 
-	var dsTitles = { // TODO for demo
-			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/cnv.matrix": 'Copy number',
-			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/rma.Target190.Probeset.Full": 'Gene expression, array',
-			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/NBL_10_RNAseq_log2": 'Gene expression, RNAseq',
-			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/mutationGene": 'Mutations, gene',
-			"http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_clinicalMatrix": 'Phenotypical, Clinical'
-		},
-		sFeatures = { // TODO for demo
+	var sFeatures = { // TODO for demo
 			impact: 'impact', // shorttitle ?
 			DNA_AF: 'DNA allele frequency',
 			RNA_AF: 'RNA allele frequency'
 		},
+		//dsTitles = {}, // TODO for demo
 		defaultGene = 'ALK', // TODO: make these more global ?
 		defaultGenes = 'ALK, PTEN',
 		defaultProbes = '(no default probes)', // TODO
@@ -93,13 +87,21 @@ define(['haml!haml/columnEdit',
 		aWidget,
 		dataset_list_query;
 
+	/*
+	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/cnv.matrix"] = 'Copy number';
+	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/rma.Target190.Probeset.Full"] = 'Gene expression, array';
+	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/NBL_10_RNAseq_log2"] = 'Gene expression, RNAseq';
+	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/mutationGene"] = 'Mutations, gene';
+	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_clinicalMatrix"] = ' ';
+	*/
+
 	function getDataSubType(sources, hdsID) {
 		// TODO for demo, our mutationVector dataset is in the cgi
-		if (hdsID === 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
+		if (hdsID === stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
 			return 'mutationVector';
-		} else if (hdsID === 'http://cancerdb:7222/public/TCGA/TCGA.BRCA.sampleMap/SNP6_nocnv.matrix'
-				|| hdsID === 'http://cancerdb:7222/public/TCGA/TCGA.BRCA.sampleMap/SNP6.matrix'
-				|| hdsID === 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/cnv.matrix') {
+		} else if (hdsID === stub.getDEV_URL() + '/public/TCGA/TCGA.BRCA.sampleMap/SNP6_nocnv.matrix'
+				|| hdsID === stub.getDEV_URL() + '/public/TCGA/TCGA.BRCA.sampleMap/SNP6.matrix'
+				|| hdsID === stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/cnv.matrix') {
 			return 'cns';
 		}
 		return xenaQuery.find_dataset(sources, hdsID).dataSubType;
@@ -123,10 +125,11 @@ define(['haml!haml/columnEdit',
 		);
 	}
 
+/*
 	function datasetTitle(dsID, title) {
 		return dsTitles[dsID] || title;
 	}
-
+*/
 	aWidget = {
 
 		destroy: function () {
@@ -503,7 +506,10 @@ define(['haml!haml/columnEdit',
 			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
 				var index,
 					serverIndex,
-					opts;
+					opts,
+					mutationDS;
+				self.sources = sources;
+				/*
 				// TODO for demo, rename dataset titles
 				self.sources = map(sources, function (s) {
 					return {
@@ -518,23 +524,29 @@ define(['haml!haml/columnEdit',
 						})
 					};
 				});
+				*/
 
 				// TODO for demo, insert mutationVector dataset
-				_.each(self.sources, function (s, i) {
+				_.each(self.sources, function (s, i) { // find server index
 					if (s.title === 'genome-cancer.ucsc.edu') {
 						serverIndex = i;
 					}
 				});
-				_.each(self.sources[serverIndex].datasets, function (d, i) {
+				_.each(self.sources[serverIndex].datasets, function (d, i) { // find mutation dataset insertion index
 					if (d.title === 'Mutations, gene') {
 						index = i;
 					}
 				});
-				self.sources[serverIndex].datasets.splice(index, 0, {
-					dataSubType: 'mutationVector',
-					dsID: 'http://cancerdb:7222/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector',
-					title: 'Mutation'
+				mutationDS = _.find(self.sources[serverIndex].datasets, function (d, i) {
+					return (d.title === 'Mutation');
 				});
+				if (!mutationDS || mutationDS.length === 0) {
+					self.sources[serverIndex].datasets.splice(index, 0, { // insert mutation dataset
+						dataSubType: 'mutationVector',
+						dsID: stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector',
+						title: 'Mutation'
+					});
+				}
 
 				opts = $(datasetsTemplate({sources: self.sources}));
 
