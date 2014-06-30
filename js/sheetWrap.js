@@ -1,8 +1,8 @@
 /*jslint browser: true, nomen: true */
 /*globals define: false, $: false, _: false */
 define(['haml!haml/sheetWrap',
-		'haml!haml/cohorts',
 		'stub',
+		'cohortSelect',
 		'columnEdit',
 		'columnUi',
 		'defaultTextInput',
@@ -13,8 +13,8 @@ define(['haml!haml/sheetWrap',
 		'rx.jquery',
 		'rx.binding'
 		], function (template,
-					cohortsTemplate,
 					stub,
+					cohortSelect,
 					columnEdit,
 					columnUi,
 					defaultTextInput,
@@ -49,11 +49,7 @@ define(['haml!haml/sheetWrap',
 		widget,
 		aWidget;
 
-	function toLower(s) {
-		return s.toLowerCase();
-	}
-
-	// TODO copied from main.js 
+	// TODO copied from main.js
 	function deleteColumn(uuid, upd, state) {
 		var cols = _.dissoc(upd.get_in(state, ['column_rendering']), uuid),
 			order = _.without(upd.get_in(state, ['column_order']), uuid);
@@ -62,14 +58,6 @@ define(['haml!haml/sheetWrap',
 			['column_rendering'],
 			cols
 		);
-	}
-
-	// set cohort and clear columns
-	function setCohort(cohort, upd, state) {
-		return upd.assoc(state,
-					'cohort', cohort,
-					'column_rendering', {},
-					'column_order', []);
 	}
 
 	function setSamples(samples, upd, state) {
@@ -98,10 +86,11 @@ define(['haml!haml/sheetWrap',
 			});
 		},
 
-		cohortChange: function (cohort) {
+		cohortChange: function () {
 			columnEdit.destroyAll();
 			this.$addColumn.show().click();
 		},
+
 		serversInput: function () {
 			return _.map(this.servers, function (s) {
 				return s.title;
@@ -130,31 +119,9 @@ define(['haml!haml/sheetWrap',
 			});
 		},
 
-		initialize: function (options) {
+		initCohortsAndSources: function (options) {
 			var self = this,
-				cohortState,
-				serverCohorts;
-			_.bindAll.apply(_, [this].concat(_.functions(this)));
-			//_(this).bindAll();
-			this.updateColumn = options.updateColumn; // XXX
-			this.state = options.state;
-			this.cursor = options.cursor;
-			//this.cohort = this.state.pluck('cohort');
-
-			this.servers = defaultServers; // TODO make servers dynamic from state
-			this.$el = $(template({
-				servers: this.serversInput()
-			}));
-			options.$anchor.append(this.$el);
-
-			// cache jquery objects for active DOM elements
-			this.cache = ['servers', 'addColumn'];
-			_(self).extend(_(self.cache).reduce(function (a, e) {
-				a['$' + e] = self.$el.find('.' + e);
-				return a;
-			}, {}));
-
-			cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
+				cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
 
 			this.serversInput = defaultTextInput.create('serversInput', {
 				$el: this.$servers,
@@ -162,55 +129,13 @@ define(['haml!haml/sheetWrap',
 				focusOutChanged: this.serversInputChanged
 			});
 
-			serverCohorts = Rx.Observable.zipArray(_.map(self.servers, function (s) {
-				return xenaQuery.all_cohorts(s.url);
-			})).map(_.apply(_.union)); // probably want distinctUntilChanged once servers is dynamic
-
-			serverCohorts.startWith([]).combineLatest(cohortState, function (server, state) {
-				return [server, state];
-			}).subscribe(_.apply(function (server, state) {
-				var cohorts = state ? _.union([state], server) : server,
-					opts = $(cohortsTemplate({cohorts: _.sortBy(cohorts, toLower)})),
-					current;
-
-				if (self.$cohort) {
-					current = self.$cohort.select2('val');
-					self.$cohort.select2('destroy');
-				}
-
-				self.$el.find('.cohort').replaceWith(opts);
-				opts.select2({
-					minimumResultsForSearch: 12,
-					dropdownAutoWidth: true,
-					placeholder: 'Select...',
-					placeholderOption: 'first'
-				});
-
-				self.$cohort = self.$el.find('.select2-container.cohort'); // XXX
-				if (current) {
-					self.$cohort.select2('val', current);
-				}
-			}));
-
-			cohortState.subscribe(function (c) {
-				if (self.$cohort.select2('val') !== c) {
-					self.$cohort.select2('val', c);
-				}
+			this.cohortSelect = cohortSelect.create('cohortSelect', {
+				$anchor: this.$cohortAnchor,
+				state: cohortState,
+				cursor: this.cursor,
+				servers: this.servers
 			});
-
-			this.$el // TODO replace with rx event handlers
-				.on('click', '.addColumn', this.addColumnClick);
-
-			this.cohort = this.$el.onAsObservable('change', '.cohort')
-				.pluck('val').share();
-
-			// XXX On first load, no add button if there are no
-			// columns?
-			this.cohort.subscribe(self.cohortChange);
-
-			this.cohort.subscribe(function (cohort) {
-				self.cursor.set(_.partial(setCohort, cohort));
-			});
+			this.cohort = this.cohortSelect.val;
 
 			this.sources = cohortState.map(function (cohort) { // state driven?
 				return xenaQuery.dataset_list(self.servers, cohort);
@@ -227,6 +152,48 @@ define(['haml!haml/sheetWrap',
 				})).map(_.apply(_.union));
 			}).switch().subscribe(function (samples) {
 				self.cursor.set(_.partial(setSamples, samples));
+			});
+
+			// when cohort DOM value changes, update the UI
+			this.cohortSelect.val.subscribe(this.cohortChange);
+		},
+
+		initialize: function (options) {
+			var self = this,
+				column_orderState;
+			_.bindAll.apply(_, [this].concat(_.functions(this)));
+			//_(this).bindAll();
+			this.updateColumn = options.updateColumn; // XXX
+			this.state = options.state;
+			this.cursor = options.cursor;
+
+			this.servers = defaultServers; // TODO make servers dynamic from state
+			this.$el = $(template({
+				servers: this.serversInput()
+			}));
+			options.$anchor.append(this.$el);
+
+			// cache jquery objects for active DOM elements
+			this.cache = ['cohortAnchor', 'servers', 'addColumn'];
+			_(self).extend(_(self.cache).reduce(function (a, e) {
+				a['$' + e] = self.$el.find('.' + e);
+				return a;
+			}, {}));
+
+			this.initCohortsAndSources(options);
+
+			this.$el
+				.on('click', '.addColumn', this.addColumnClick);
+
+			// if there are no columns, prepare for the user to easily add a column
+			// TODO this works fine on reload when a cohort is already selected
+			//      make it work when no cohort is yet selected on load
+			//      like, how do we simultaneously subscribe to cohort state?
+			column_orderState = this.state.pluck('column_order').distinctUntilChanged().share(); // need distinctUntilChanged ?
+			column_orderState.subscribe(function (c) {
+				if (c.length === 0) {
+					self.cohortChange();
+				}
 			});
 		}
 	};
