@@ -157,7 +157,7 @@ define(['haml!haml/sheetWrap',
 				self.cursor.set(_.partial(setSamples, samples));
 			});
 
-			// when cohort DOM value changes, update the UI
+			// when cohort DOM value changes, update other parts of the UI
 			this.cohortSelect.val.subscribe(this.cohortChange);
 		},
 
@@ -168,6 +168,8 @@ define(['haml!haml/sheetWrap',
 			this.samplesFrom = datasetSelect.create('samplesFrom', {
 				$anchor: this.$samplesFromAnchor,
 				state: samplesFromState,
+				cohort: this.cohort,
+				servers: this.servers,
 				cursor: this.cursor,
 				sheetWrap: this,
 				sources: this.sources,
