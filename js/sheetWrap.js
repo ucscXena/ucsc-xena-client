@@ -5,6 +5,7 @@ define(['haml!haml/sheetWrap',
 		'cohortSelect',
 		'columnEdit',
 		'columnUi',
+		'datasetSelect',
 		'defaultTextInput',
 		'uuid',
 		'underscore_ext',
@@ -17,6 +18,7 @@ define(['haml!haml/sheetWrap',
 					cohortSelect,
 					columnEdit,
 					columnUi,
+					datasetSelect,
 					defaultTextInput,
 					uuid,
 					_,
@@ -119,7 +121,7 @@ define(['haml!haml/sheetWrap',
 			});
 		},
 
-		initCohortsAndSources: function (options) {
+		initCohortsAndSources: function () {
 			var self = this,
 				cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
 
@@ -146,6 +148,7 @@ define(['haml!haml/sheetWrap',
 			}).replay(null, 1);
 			this.sources.connect(); // XXX leaking subscription
 
+			// retrieve all samples in this cohort
 			this.cohort.map(function (cohort) {
 				return Rx.Observable.zipArray(_.map(self.servers, function (s) {
 					return xenaQuery.all_samples(s.url, cohort);
@@ -156,6 +159,21 @@ define(['haml!haml/sheetWrap',
 
 			// when cohort DOM value changes, update the UI
 			this.cohortSelect.val.subscribe(this.cohortChange);
+		},
+
+		initSamplesFrom: function () {
+			var self = this,
+				samplesFromState = this.state.pluck('samplesFrom').distinctUntilChanged().share();
+
+			this.samplesFrom = datasetSelect.create('samplesFrom', {
+				$anchor: this.$samplesFromAnchor,
+				state: samplesFromState,
+				cursor: this.cursor,
+				sheetWrap: this,
+				sources: this.sources,
+				placeholder: 'All datasets'
+			});
+
 		},
 
 		initialize: function (options) {
@@ -174,13 +192,14 @@ define(['haml!haml/sheetWrap',
 			options.$anchor.append(this.$el);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['cohortAnchor', 'servers', 'addColumn'];
+			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'servers', 'addColumn'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
 				return a;
 			}, {}));
 
-			this.initCohortsAndSources(options);
+			this.initCohortsAndSources();
+			this.initSamplesFrom();
 
 			this.$el
 				.on('click', '.addColumn', this.addColumnClick);
@@ -189,6 +208,7 @@ define(['haml!haml/sheetWrap',
 			// TODO this works fine on reload when a cohort is already selected
 			//      make it work when no cohort is yet selected on load
 			//      like, how do we simultaneously subscribe to cohort state?
+			// multiple plucks and a zipArray?
 			column_orderState = this.state.pluck('column_order').distinctUntilChanged().share(); // need distinctUntilChanged ?
 			column_orderState.subscribe(function (c) {
 				if (c.length === 0) {

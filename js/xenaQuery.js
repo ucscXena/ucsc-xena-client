@@ -100,6 +100,13 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	// QUERY STRINGS
 
+	function dataset_samples_query(dataset) {
+		return '(map :NAME (query {:select [:sample.name] ' +
+		       '                   :from [:dataset] ' +
+		       '                   :where [:= :dataset.name ' + quote(dataset) + ']' +
+		       '                   :left-join [:sample [:= :dataset.id :dataset_id]]}))';
+	}
+
 	function all_samples_query(cohort) {
 		return '(query {:select [:%distinct.sample.name] ' +
 		       '        :from [:sample] ' +
@@ -240,6 +247,18 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		).map(_.compose(indexFeatures, json_resp));
 	}
 
+	function dataset_samples(dsID) {
+		if (dsID === '') { // TODO shouldn't need to handle this
+			return Rx.Observable.return([]);
+		}
+		var hostds = parse_host(dsID),
+			host = hostds[1],
+			ds = hostds[2];
+		return Rx.DOM.Request.ajax(
+			xena_get(host, dataset_samples_query(ds))
+		).map(json_resp);
+	}
+
 	function all_samples(host, cohort) {
 		return Rx.DOM.Request.ajax(
 			xena_get(host, all_samples_query(cohort))
@@ -275,6 +294,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		dataset_list: dataset_list,
 		feature_list: feature_list,
 		find_dataset: find_dataset,
+		dataset_samples: dataset_samples,
 		all_samples: all_samples,
 		all_cohorts: all_cohorts
 	};

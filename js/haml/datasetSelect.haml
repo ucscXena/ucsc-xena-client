@@ -1,0 +1,7 @@
+%select{class:'dataset'}
+  %option{value:''} =placeholder
+  - _.each(sources, function (source) {
+    %optgroup{label:source.title}
+      - _.each(source.datasets, function (d) {
+        %option{value:d.dsID} =d.title
+-#%input{type:"hidden", id:"rox", style:"width:300px"}

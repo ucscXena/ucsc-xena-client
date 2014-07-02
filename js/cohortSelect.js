@@ -10,9 +10,10 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 
 	// set cohort and clear columns
 	// TODO should this be in sheetWrap.js?
-	function setCohort(cohort, upd, state) {
+	function setState(cohort, upd, state) {
 		return upd.assoc(state,
 					'cohort', cohort,
+					'samplesFrom', '', // TODO reset to null or undefined instead?
 					'column_rendering', {},
 					'column_order', []);
 	}
@@ -29,6 +30,9 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			this.$el.select2('destroy');
 			this.$el.remove();
 			this.$el = undefined;
+			_.each(this.subs, function (s) {
+				s.dispose();
+			});
 			delete widgets[this.id];
 		},
 
@@ -37,8 +41,9 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 				$el = $(template({cohorts: _.sortBy(cohorts, toLower)}));
 			if (this.$el) {
 				this.$el.select2('destroy');
+				this.$anchor.find('.cohort').remove();
 			}
-			this.$anchor.empty().append($el);
+			this.$anchor.append($el);
 			$el.select2({
 				minimumResultsForSearch: 12,
 				dropdownAutoWidth: true,
@@ -61,34 +66,35 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
 			this.$anchor = options.$anchor;
+			this.subs = [];
 
-			// create an observable cohort list from the union of cohorts from all servers
+			// create an observable on a cohort list, which is the union of cohorts from all servers
 			cohortList = Rx.Observable.zipArray(_.map(servers, function (s) {
 				return xenaQuery.all_cohorts(s.url);
 			})).map(_.apply(_.union)); // probably want distinctUntilChanged once servers is dynamic
 
-			// render the cohort list, and re-render whenever the cohort state or server list changes ?
-			cohortList.startWith([]).combineLatest(state, function (server, state) {
+			// render immediately, and re-render whenever cohortList or state changes
+			cohortList.startWith([]).combineLatest(state, function (server, state) { // TODO why call it "server" ?
 				return [server, state];
 			}).subscribe(_.apply(function (server, state) {
 				self.render(server, state);
+			})); // XXX leaked subscription?
+
+			// when state changes, update the DOM value
+			this.subs.push(state.subscribe(function (val) {
+				if (self.$el.select2('val') !== val) { // is self.$el always created by the time this is called ?
+					self.$el.select2('val', val);
+				}
 			}));
 
-			// when cohort state changes, update the cohort DOM value
-			state.subscribe(function (c) {
-				if (self.$el.select2('val') !== c) { // is self.$el always created by the time this is called ?
-					self.$el.select2('val', c);
-				}
-			});
-
-			// create an observable value, notifying subscribers when the DOM value changes
+			// create an observable on the DOM value
 			this.val = this.$anchor.onAsObservable('change', '.cohort')
 				.pluck('val').share();
 
 			// when DOM value changes, update state tree
-			this.val.subscribe(function (cohort) {
-				cursor.set(_.partial(setCohort, cohort));
-			});
+			this.subs.push(this.val.subscribe(function (val) {
+				cursor.set(_.partial(setState, val));
+			}));
 		}
 	};
 

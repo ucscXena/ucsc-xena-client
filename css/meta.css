@@ -40,21 +40,25 @@
 .tupleLabel,
 .tupleLabelLeft,
 .tupleLabelBold,
-.tupleLabelBoldLeft {
+.tupleLabelBoldLeft,
+.tupleButton,
+.tupleValue {
 	text-align: right;
 	font-weight: normal;
 	vertical-align: middle;
-	padding: .4em .3em;
+	padding: .6em .3em;
 	white-space: nowrap;
 }
 .tupleLabelLeft,
-.tupleLabelBoldLeft {
+.tupleLabelBoldLeft,
+.tupleValue {
 	text-align: left;
 }
 .tupleLabelBold,
 .tupleLabelBoldLeft {
 	font-weight: bold;
 }
+/*
 .tupleButton {
 	text-align: right;
 	padding: .4em .3em;
@@ -65,6 +69,7 @@
 	vertical-align: middle;
 	padding: .4em .3em;
 }
+*/
 select { /* fix up webkit font-size */
 	border-style: inset;
 	font-size: inherit;
