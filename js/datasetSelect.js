@@ -43,9 +43,11 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 			var sources = sources_in,
 				index,
 				serverIndex,
-				mutationDS;
+				mutationDS,
+				cohort = $('.select2-container.cohort').select2('val'); // TODO: get cohort from the state instead;
 
-			if (sources.length === 0) {
+
+			if (sources.length === 0 || cohort !== 'TARGET_neuroblastoma') {
 				return sources;
 			}
 
