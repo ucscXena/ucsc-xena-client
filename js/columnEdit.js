@@ -39,18 +39,19 @@ define(['haml!haml/columnEdit',
 		defaultChrom = 'chr1-chrY',
 		defaultField = '(fields for this option)', // TODO
 		defaultWidth = 100,
+		defaultDisplayModes = ['dGene', 'dGenes', 'dGeneProbes', 'dProbes', /*'dGeneChrom', 'dChrom'*/],
 
 		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles?
 			cns: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
 			mutationVector: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
 			clinical: ['dClinical'],
-			cna: ['dGene', 'dGenes', 'dGeneProbes', 'dProbes', /*'dGeneChrom', 'dChrom'*/],
-			DNAMethylation: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
-			geneExp: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
-			geneRNAseq: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
-			geneArray: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
-			somaticMutation: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/],
-			protein: ['dGene', 'dGenes', 'dGeneProbes', 'dGeneProbes', /*'dGeneChrom', 'dChrom'*/]
+			cna: defaultDisplayModes,
+			DNAMethylation: defaultDisplayModes,
+			geneExp: defaultDisplayModes,
+			geneRNAseq: defaultDisplayModes,
+			geneArray: defaultDisplayModes,
+			somaticMutation: defaultDisplayModes,
+			protein: defaultDisplayModes
 		},
 		displaysByInput = {
 			iGene: ['dGene', 'dGeneProbes', 'dGeneChrom', 'dExonSparse'],
