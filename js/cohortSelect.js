@@ -45,7 +45,7 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			}
 			this.$anchor.append($el);
 			$el.select2({
-				minimumResultsForSearch: 12,
+				minimumResultsForSearch: 3,
 				dropdownAutoWidth: true,
 				placeholder: 'Select...',
 				placeholderOption: 'first'

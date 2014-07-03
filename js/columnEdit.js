@@ -249,7 +249,7 @@ define(['haml!haml/columnEdit',
 					self.$selectLabel.text('Feature:');
 					self.$selectRow.show();
 					self.$el.find('.feature').select2({
-						minimumResultsForSearch: 12,
+						minimumResultsForSearch: 3,
 						dropdownAutoWidth: true
 					});
 					self.$feature = self.$el.find('.select2-container.feature');
@@ -562,7 +562,7 @@ define(['haml!haml/columnEdit',
 				}
 				self.$el.find('.dataset').replaceWith(opts);
 				opts.select2({
-					minimumResultsForSearch: 12,
+					minimumResultsForSearch: 3,
 					dropdownAutoWidth: true,
 					placeholder: 'Select...',
 					placeholderOption: 'first'

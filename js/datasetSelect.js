@@ -88,7 +88,7 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 			this.$anchor.append($el);
 
 			$el.select2({
-				minimumResultsForSearch: 12,
+				minimumResultsForSearch: 3,
 				dropdownAutoWidth: true,
 			});
 
