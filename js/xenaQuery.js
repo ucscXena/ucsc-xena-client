@@ -209,11 +209,11 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function sparse_data_string(dataset, samples, genes) {
-		return 'sparse_exon_query'; // TODO implement  after data is on server
+		return 'sparse_exon_query' + dataset + genes[0]; // TODO implement  after data is on server
 	}
 
 	function refGene_exon_string(genes) {
-		return 'refGene_exon_string'; // TODO implement after data is on server
+		return 'refGene_exon_string' + genes[0]; // TODO implement after data is on server
 	}
 
 	// QUERY PREP
