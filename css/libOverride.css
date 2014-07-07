@@ -117,6 +117,10 @@ div.clue-bottom-rounded .cluetip-arrows {
 .ui-widget {
 	font-size: .8em;
 }
+.ui-widget-content {
+	background-color: white;
+	background-image: none;
+}
 .ui-icon {
 	cursor: pointer;
 }
