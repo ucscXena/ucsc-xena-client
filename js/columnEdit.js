@@ -74,14 +74,14 @@ define(['haml!haml/columnEdit',
 			dGeneChrom: 'chromosomes'
 		},
 		dataTypeByDisplay = {
-			dGene: 'probeGene', //'nonspatial',
-			dGenes: 'probeGene', //'nonspatial',
-			dExonSparse: 'exonSparse', //spatial
-			dClinical: 'probeFeature', //'nonspatial',
-			dGeneProbes: 'probe', //'nonspatial',
-			dProbes: 'probe', //'nonspatial',
-			//dGeneChrom: 'geneChrom', // spatial
-			//dChrom: 'chrom' // spatial
+			dGene: 'probeGene', // geneMatrix
+			dGenes: 'probeGene', // geneMatrix
+			dExonSparse: 'exonSparse', // mutationVector
+			dClinical: 'probeFeature', // clinicalMatrix
+			dGeneProbes: 'geneProbesMatrix',
+			dProbes: 'probe', // probeMatrix
+			//dGeneChrom: 'geneChrom', //
+			//dChrom: 'chrom' //
 		},
 		map = _.map,
 		widgets = {},
@@ -235,29 +235,34 @@ define(['haml!haml/columnEdit',
 
 		},
 
+		renderFeatures: function (features) {
+			var self = this;
+			self.$selectAnchor.append(
+				selectTemplate({
+					klass: 'feature',
+					options: features,
+					labels: undefined
+				})
+			);
+			self.$selectLabel.text('Feature:');
+			self.$selectRow.show();
+			self.$el.find('.feature').select2({
+				minimumResultsForSearch: 3,
+				dropdownAutoWidth: true
+			});
+			self.$feature = self.$el.find('.select2-container.feature');
+			if (self.state.feature) {
+				self.$feature.select2('val', self.state.feature);
+			} else {
+				self.state.feature = self.$feature.select2('val');
+			}
+		},
+
 		renderSelect: function () {
 			var self = this;
 			if (self.state.dataSubType === 'clinical') {
 				xenaQuery.feature_list(self.state.dsID).subscribe(function (features) {
-					self.$selectAnchor.append(
-						selectTemplate({
-							klass: 'feature',
-							options: features,
-							labels: undefined
-						})
-					);
-					self.$selectLabel.text('Feature:');
-					self.$selectRow.show();
-					self.$el.find('.feature').select2({
-						minimumResultsForSearch: 3,
-						dropdownAutoWidth: true
-					});
-					self.$feature = self.$el.find('.select2-container.feature');
-					if (self.state.feature) {
-						self.$feature.select2('val', self.state.feature);
-					} else {
-						self.state.feature = self.$feature.select2('val');
-					}
+					self.renderFeatures(features);
 				});
 			} else if (self.state.dataSubType === 'mutationVector') {
 				self.$selectAnchor.append(
