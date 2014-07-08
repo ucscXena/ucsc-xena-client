@@ -1,0 +1,29 @@
+%table{style:'width:100%'}
+  %tbody
+    -#%tr
+    -#  %td{class:'tupleValue', colspan:2, style:'padding-left:3em'}
+    -#    %label
+    -#      %input{class:'dataset radio', name:'scope', type:'radio', value:'dataset', checked:'true'} Clinical data in view
+    -#%tr
+    -#  %td{class:'tupleValue', colspan:2, style:'padding-left:3em'}
+    -#    %label
+    -#      %input{class:'cohort radio', name:'scope', type:'radio', value:'cohort'} Clinical data in cohort
+    -#%tr
+    -#  %td{class:'tupleValue', colspan:2, style:'padding-left:3em'}
+    -#    %label
+    -#      %input{class:'full radio', name:'scope', type:'radio', value:'full'} Full processed dataset
+    %tr
+      %td Download this column's data?
+    - if (tcga) {
+      %tr
+        %td
+          %a{href:'http://cancergenome.nih.gov/publications/publicationguidelines', target:'_blank', style:'font-size:0.8em'}TCGA moratorium policy
+    %tr
+      %td{class:'tupleButton'}
+        -#- if (galaxy) {
+        -#  %button{class:'galaxy'} Send to Galaxy
+        %a{href:"mailto:genome-cancer@soe.ucsc.edu?subject=I wish the download would..."} I wish this would ...
+        %button{class:'ok'} Download
+        -#%button{class:'cancel'} Cancel
+        -#%button{class:'help'} Help
+        %a{class:'link', style:'display:none'}

@@ -1,0 +1,95 @@
+.ui-dialog .filterUi.ui-dialog-content {
+	padding-top: 0;
+}
+.filterUi {
+	background-color: #ffffff;
+}
+.filterUi .subHeader {
+	white-space: nowrap;
+}
+.filterUi .label {
+	font-style: italic;
+	white-space: nowrap;
+}
+.filterUi hr {
+	margin-top: 1px;
+	margin-right: 30px;
+	border-style: solid;
+	border-top-color: #cccccc;
+	border-bottom-color: transparent;
+}
+.filterUi .dents {
+	display: inline-block;
+	vertical-align: middle;
+	cursor: pointer;
+}
+.filterUi .row .indent {
+	margin-top: -4px;
+	margin-bottom: -5px;
+}
+.filterUi .row .undent {
+	margin-top: -5px;
+	margin-bottom: -2px;
+}
+.filterUi .row .indent,
+.filterUi .row .undent {
+	opacity: 0;
+}
+.filterUi .row:hover .indent,
+.filterUi .row:hover .undent {
+	opacity: 1;
+}
+.filterUi .row .select2-container {
+	margin: 2px 1px;
+	padding-bottom: 0;
+}
+.filterUi .row .select2-container.dataTypeSelect {
+	margin-right: -4px;
+}
+.filterUi .row .select2-container.valueSelect {
+	margin-left: 3px;
+}
+.filterUi .row .select2-container .select2-choice {
+	background-image: none;
+	background-color: transparent;
+}
+.filterUi .row .select2-drop {
+	height: 100%;
+}
+.filterUi .value,
+.filterUi .valueTo {
+	width: 8em;
+}
+.filterUi .valueString,
+.filterUi .value {
+	margin-left: 0.5em;
+}
+.filterUi .dataTypeSelect,
+.filterUi .operatorSelect {
+	width: 100%;
+}
+.filterUi .displayCol {
+	padding-left: 5px;
+}
+.filterUi .plusMinusCol {
+	padding-left: 20px;
+	cursor: pointer;
+}
+.filterUi .minus,
+.filterUi .plus {
+	display: inline-block;
+	vertical-align: middle;
+}
+.filterUi .minus {
+	margin-right: -5px;
+}
+.filterUi .footer td {
+	padding-top: 10px;
+}
+.filterUi .metrics {
+	margin-left: 9em;
+}
+.filterUi .update,
+.filterUi .close {
+	float: right;
+}

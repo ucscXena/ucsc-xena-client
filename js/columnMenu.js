@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['haml!haml/columnMenu', 'columnEdit', 'mutationVector', 'Menu', 'jquery', 'lib/underscore'
+define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Menu', 'jquery', 'lib/underscore'
 	// non-object dependencies
-	], function (template, columnEdit, mutationVector, Menu, $, _) {
+	], function (template, columnEdit, download, mutationVector, Menu, $, _) {
 	'use strict';
 
 	var APPLY_BUTTON,
@@ -35,6 +35,11 @@ define(['haml!haml/columnMenu', 'columnEdit', 'mutationVector', 'Menu', 'jquery'
 				mutationVector.mupitClick(this.id);
 			};
 
+			this.downloadClick = function (ev) {
+				console.log('downloadClick');
+				download.create({ ws: this.ws });
+			};
+
 			this.removeClick = function (ev) {
 				this.deleteColumn(this.id);
 			};
@@ -46,8 +51,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'mutationVector', 'Menu', 'jquery'
 			};
 
 			this.render = function () {
-				var cache,
-					list = $(template({
+				var list = $(template({
 						type: this.ws.column.dataType, // TODO should be more specifically mutation exon sparse
 						moreItems: this.moreItems
 					}));
@@ -70,6 +74,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'mutationVector', 'Menu', 'jquery'
 				this.$el // TODO replace with Rx bindings
 					.on('click', '.duplicate', this.duplicateClick)
 					.on('click', '.mupit', this.mupitClick)
+					.on('click', '.download', this.downloadClick)
 					.on('click', '.remove', this.removeClick)
 					.on('click', '.edit', this.editClick);
 			};

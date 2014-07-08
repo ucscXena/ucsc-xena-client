@@ -7,13 +7,21 @@
     %span{class:'label'} =dataset
   %table
     %tbody
-        %td
-          %span Displayed Columns:
-        %td{colspan:2} Filter
+      %tr
+        %td{colspan:2}
+          %span
+            Match
+            %select{id:anyAllSelectId, class:'anyAllPrime'}
+              %option{value:'all'} all
+              %option{value:'any'} any
+            of the following rules:
+        %td{colspan:2}
+        %td{colspan:2} Display
       %tr
         %td{colspan:7}
           %hr{width:'100%'}
       %tr{class:'footer', style:'margin-top:10px'}
-        %td{colspan:7}
+        %td{class:'metrics'} XXX samples of YYYY
+        %td{colspan:6}
           %button{class:'close'} Close
           %button{class:'update'} Update Map

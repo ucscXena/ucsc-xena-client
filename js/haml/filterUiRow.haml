@@ -1,0 +1,29 @@
+%tr{id:rid, class:rowClass, data:{level:level}}
+  - if (anyAllSelectId) {
+    %td{colspan:4}
+      %select{id:anyAllSelectId, class:'anyAll'}
+        %option{value:'all'} all
+        %option{value:'any'} any
+      of the following are true:
+    %td
+      -#%hr{class:'inline'}
+  - } else {
+    %td{class:'operandCol'}
+      %span{class:'dents'}
+        %div{class:'indent ui-icon ui-icon-arrowthick-1-e', title:'indent as a subfilter'}
+        %div{class:'undent ui-icon ui-icon-arrowthick-1-w', title:'move out of subfilter'}
+      %select{id:dataTypeSelectId, class:'dataTypeSelect'}
+        - _.each(dataTypes, function (type) {
+          %option{value:type} =type
+    %td{class:'operatorCol'}
+    %td{class:'valueCol'}
+    %td{class:'helperCol'}
+    %td{class:'displayCol'}
+      %input{class:'display', type:'checkbox', checked:'checked'}
+      %span{class:'filterCheck ui-icon ui-icon-check'}
+  %td{class:'plusMinusCol'}
+    %span{class:'minus ui-icon ui-icon-minusthick', title:'remove this row'}
+    %span{class:'plus ui-icon ui-icon-plusthick', title:'add a row'}
+%tr
+  %td{colspan:7}
+    %hr{width:'100%'}
