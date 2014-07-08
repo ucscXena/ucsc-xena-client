@@ -1,12 +1,15 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'defaultTextInput', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
+define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'defaultTextInput', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
 	// non-object dependenciies
-	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, defaultTextInput, defer, /*mutation,*/ refGene, util, d3, $, select2, _, xenaQuery, Rx) {
+	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, defaultTextInput, defer, /*mutation,*/ refGene, util, d3, $, select2, _, xenaQuery, Rx) {
 	'use strict';
 
 	var APPLY = true,
+		STATIC_URL = config.STATIC_URL,
+		legendImg = STATIC_URL + 'heatmap/images/mutationLegend.png',
+		legendScaleImg = STATIC_URL + 'heatmap/images/mutationScaleLegend.png',
 		each = _.each,
 		filter = _.filter,
 		find = _.find,
@@ -122,13 +125,15 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 		firstRender: function (options) {
 			var self = this,
-				ws = options.ws;
+				ws = options.ws,
+				ui = ws.column.ui;;
 			this.$anchor = $(ws.el);
 			this.width = ws.column.width;
 			this.height = ws.height;
 			this.sheetWrap = options.sheetWrap;
 			this.$el = $(template({
 				features: undefined,
+				legendImg: (ui.sFeature === 'impact') ? legendImg : legendScaleImg,
 				debugId: this.id
 			}));
 			this.$anchor.append(this.$el);
@@ -140,7 +145,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el.find('.headerPlot').height(this.headerPlotHeight);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot'];
+			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'legendRow', 'legend'];
 			_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
 			this.columnMenu = columnMenu.create(this.id, {
 				anchor: this.$more,
@@ -159,8 +164,16 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 			// TODO in case we are restoring session store for demo
 			$('.addColumn').show();
+			/*
 			if (!$('.cohort').select2('val')) {
 				$('.cohort').select2('val', 'TARGET_Neuroblastoma');
+			}
+			*/
+
+			if (ui.dataSubType === 'mutationVector') { // TODO make dynamic
+				this.$legendRow.show();
+			} else {
+				this.$legendRow.hide();
 			}
 		},
 

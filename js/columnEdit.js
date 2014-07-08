@@ -98,7 +98,8 @@ define(['haml!haml/columnEdit',
 
 	function getDataSubType(sources, hdsID) {
 		// TODO for demo, our mutationVector dataset is in the cgi
-		if (hdsID === stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
+		if (hdsID === stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector' ||
+				hdsID === stub.getDEV_URL() + '/public/TCGA/TCGA_LUAD_mutation_RADIA') {
 			return 'mutationVector';
 		} else if (hdsID === stub.getDEV_URL() + '/public/TCGA/TCGA.BRCA.sampleMap/SNP6_nocnv.matrix'
 				|| hdsID === stub.getDEV_URL() + '/public/TCGA/TCGA.BRCA.sampleMap/SNP6.matrix'
@@ -512,10 +513,12 @@ define(['haml!haml/columnEdit',
 					serverIndex,
 					opts,
 					mutationDS,
+					dsID,
 					cohort = $('.select2-container.cohort').select2('val'); // TODO: get cohort from the state instead;
 				self.sources = sources;
 
-				if (sources.length > 0 && cohort === 'TARGET_neuroblastoma') {
+				if (sources.length > 0 &&
+						(cohort === 'TARGET_neuroblastoma' || cohort === 'TCGA.LUAD.sampleMap')) {
 
 					/*
 					// TODO for demo, rename dataset titles
@@ -548,10 +551,13 @@ define(['haml!haml/columnEdit',
 					mutationDS = _.find(self.sources[serverIndex].datasets, function (d, i) {
 						return (d.title === 'Mutation');
 					});
+					dsID = stub.getDEV_URL() + (cohort === 'TARGET_neuroblastoma'
+						? '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector'
+						: '/public/TCGA/TCGA_LUAD_mutation_RADIA');
 					if (!mutationDS || mutationDS.length === 0) {
 						self.sources[serverIndex].datasets.splice(index, 0, { // insert mutation dataset
 							dataSubType: 'mutationVector',
-							dsID: stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector',
+							dsID: dsID,
 							title: 'Mutation'
 						});
 					}
