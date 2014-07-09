@@ -134,6 +134,33 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 					+ '})))';
 	}
 
+	function dataset_gene_probes_string(dataset, samples, gene)
+	{
+		return '((fn [probes] ' +
+		       '   (cons ' +
+		       '     probes ' +
+		       '     (cons ' +
+		       '       (fetch (cons ' +
+		       '                (assoc {table ' + quote(dataset) +
+		       '                        samples ' + arrayfmt(samples) + '} ' +
+		       '                       (quote columns) probes) ' +
+		       '                [])) ' +
+		       '       []))) ' +
+		       ' (map :NAME ' +
+		       '   (query {:select [:probe.name] ' +
+		       '           :from [:probe] ' +
+		       '           :left-join [:probe_gene [:= :probe.id :probe_gene.probe_id] ' +
+		       '                       :probe_position [:= probe.id :probe_position.probe_id]] ' +
+		       '           :order-by [:probe_position.chromStart] ' +
+		       '           :where [:and ' +
+		       '                   [:= :probe_gene.gene ' + quote(gene) + '] ' +
+		       '                   [:= :probe.probemap_id  ' +
+		       '                       {:select [:probemap.id] ' +
+		       '                        :from [:dataset] ' +
+		       '                        :where [:= :dataset.name ' + quote(dataset) + '] ' +
+		       '                        :left-join [:probemap [:= :probemap.name :probemap]]}]]})))';
+	}
+
 	function dataset_gene_string(dataset, samples, genes) {
 		return '((fn [probes merge-scores avg] ' +
 			'     (avg ' +
@@ -286,6 +313,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		features_string: features_string,
 		dataset_string: dataset_string,
 		dataset_gene_string: dataset_gene_string,
+		dataset_gene_probes_string: dataset_gene_probes_string,
 		dataset_probe_string: dataset_probe_string,
 		sparse_data_string: sparse_data_string,
 		refGene_exon_string: refGene_exon_string,
