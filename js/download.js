@@ -8,6 +8,7 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 	var bind = _.bind,
 		each = _.each,
 		filter = _.filter,
+		flatten = _.flatten,
 		keys = _.keys,
 		map = _.map,
 		toArray = _.toArray,
@@ -48,173 +49,134 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 			widget = undefined;
 		},
 
-		valToCode: function (data, i, feat, j) {
-			var val = data[j][i];
-			if (feat.model.filtertype === 'coded' && val >= 0) {
-				val = feat.codes[val];
-			}
-			return (val === null || val === undefined) ? '' : val;
-		},
-
 		populateLink: function (tsv, scope) {
-			var $li = this.$el.find('.' + scope),
-				$link = this.$link,
+			var $link = this.$link,
 				self = this,
-				prefix = (scope === 'dataset') ? this.track.id : scope;
+				prefix = 'column_label', // TODO use a scrubbed column label after it is being stored in state tree
+				//prefix = this.ws.column.label;
+				blob,
+				url;
+				//blob = new Blob([tsv], { type: 'text/tsv' }),
+				//url = URL.createObjectURL(blob);
+			blob = new Blob([tsv], { type: 'text/tsv' });
+			url = URL.createObjectURL(blob);
 			$link.attr({
+				// patch for bug in chrome:
+				// https://code.google.com/p/chromium/issues/detail?id=373182
+				'href': url,
+				/* works for firefox in cancer_browser:clinicalDownload.js, except should be data:text/tsv:
 				'href': "data:application/x-download;charset=utf-8," + encodeURIComponent(tsv),
-				'download': prefix + '_clinical.tsv'
+				*/
+				'download': prefix + '.tsv'
 			});
-			defer(function () { // allow link to update
+			defer(function () { // allow link to update, then click it
 				var evt = document.createEvent('MouseEvents');
 				self.destroy();
-				evt.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+				evt.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0,
+					false, false, false, false, 0, null);
 				$link[0].dispatchEvent(evt);
 			});
 		},
 
-		buildTsv: function (data, features, scope) {
+		buildTsv: function (data, varNames, scope) {
 			var self = this,
 				tsv,
 				row,
-				rows = map(data[0], function (sample, i) {
-					return map(features, bind(self.valToCode, null, data, i)).join('\t');
-				});
+				rows;
+			rows = map(data, function (row, i) {
+				return row.join('\t');
+			});
 			defer(function () { // prevent client timeout
-				rows = uniq(rows);
+				rows.unshift(varNames.join('\t'));
 				defer(function () { // prevent client timeout
-					row = map(features, function (feat) {
-						return feat.model.shortlabel;
-					});
-					rows.unshift(row.join('\t'));
-					defer(function () { // prevent client timeout
-						tsv = rows.join('\n');
-						self.populateLink(tsv, scope);
-					});
+					tsv = rows.join('\n');
+					self.populateLink(tsv, scope);
 				});
 			});
 		},
 
-		sort: function (features, sampleName, keys, scope) {
-			console.log('sort');
-			/*
-			var self = this,
-				data = heatmapWidget.dataToHeatmap({type: 'heatmap'}, keys, features, sampleName); // order: <visible columns>, _INTEGRATION
-			data.unshift(data.pop()); // order: _INTEGRATION, <visible columns>
-			features.unshift(features.pop()); // order: _INTEGRATION, <visible-features>
-			defer(function () { // prevent client timeout
-				self.buildTsv(data, features, scope);
-			});
-			*/
-		},
-
-		buildCohortFile: function (features, sampleName, subgroup) {
-			var self = this;
-			defer(function () { // allow loading feedback to show
-				var cKeys = keys(features[features.length - 1].values), // _INTEGRATION should have all of the keys across the cohort
-					cleanFeatures = filter(features, function (f) {
-						return (f.model.name.indexOf('profile') !== 0
-							&& f.model.name !== 'subgroup');
-					});
-				self.sort(cleanFeatures, sampleName, cKeys, 'cohort');
-			});
-		},
-
-		buildDatasetFile: function (features, sampleName, subgroup, samples) {
-			console.log('buildDatasetFile');
-			/*
-			var self = this;
-			defer(function () { // prevent client timeout
-				var groups = heatmapWidget.dataToGroups({type: 'heatmap'}, samples, subgroup);
-				// XXX because we're using the heatmap map type sort,
-				//     we're relying on there only being one element in groups
-				self.sort(features, sampleName, groups[0], 'dataset');
-			});
-			*/
-		},
-
-		prepare: function (samples, mapFeatures, mapSetting) {
-			var self = this,
-				fids = mapSetting.get('features'),
-				actives = ['sampleName', 'subgroup'].concat(fids);
-			actives.push('_INTEGRATION'); // order: sampleName, subgroup, <visible columns>, _INTEGRATION
-			mapFeatures.when(actives).then(function (sampleName, subgroup) {
-				var features = toArray(arguments).slice(2); // order: <visible-features>, _INTEGRATION
-				defer(function () { // prevent client timeout
-					if (self.$cohort.attr('checked')) {
-						self.buildCohortFile(features, sampleName, subgroup);
+		xformMutationVector: function () {
+			// TODO make vars from 'gene' on dynamic according to what is in the data
+			var varNames = ['sample', 'chr', 'start', 'end', 'reference', 'alt',
+				'gene', 'effect', 'DNA_AF', 'RNA_AF', 'Amino_Acid_Change'],
+				//vars = stableVars.concat(filter(stableVars, function () {
+				//})),
+				tsvData = flatten(this.columnUi.values.map(function (sample) {
+					if (sample.vals) {
+						if (sample.vals.length) {
+							return sample.vals.map(function (vals) {
+								return varNames.map(function (varName) {
+									return vals[varName];
+								});
+							});
+						} else {
+							return [
+								varNames.map(function (varName) {
+									if (varName === 'sample') {
+										return sample.sample;
+									} else {
+										return 'no mutation';
+									}
+								})
+							];
+						}
 					} else {
-						self.buildDatasetFile(features, sampleName, subgroup, samples);
+						return [[sample.sample]];
 					}
-				});
-			});
+				}), true);
+			this.buildTsv(tsvData, varNames);
 		},
 
 		now: function () {
-			console.log('now');
-			/*
 			var self = this;
-			if (self.$full.attr('checked')) {
-				self.destroy();
-				openTrack(self.track);
-				//download.now(self.track);
-				return;
-			}
 			this.$el.loading('show');
-			defer(function () { // allow loading feedback to show
-				$.when(self.track.samples(), self.mapFeatures.ready, self.mapSetting.ready)
-					.then(function (samples, mapFeatures, mapSetting) {
-						self.prepare(samples, mapFeatures, mapSetting);
-					});
+
+			defer(function () { // defer to allow loading feedback to show
+				switch (self.ws.column.dataType) {
+				case 'exonSparse':
+					self.xformMutationVector();
+					break;
+				default:
+					console.log('not yet');
+					self.destroy();
+				}
 			});
 			analytics.report({
 				category: 'output',
 				action: 'download',
 				label: this.ws.column.dsID
-				//label: this.track.id
 			});
-			*/
-		},
-
-		radioChange: function (ev) {
-			var $target = $(ev.target);
-			if ($target.hasClass('full')) {
-				this.$galaxy.show();
-			} else {
-				this.$galaxy.hide();
-			}
 		},
 
 		render: function () {
 			this.$el = $('<div>')
+				.html(template({
+					tcga: tcga(this.ws.column.dsID)
+					//tcga: download.tcga(this.track.id),
+					//galaxy: galaxy.downloadableProject(this.track.collection.project)
+				}))
 				.dialog({
 					title: 'Download',
-					minWidth: 200,
-					minHeight: 100,
+					width: 'auto',
+					height: 'auto',
+					minHeight: 60,
 					close: this.destroy
-				});
-			this.$el.html(template({
-				tcga: tcga(this.ws.column.dsID)
-				//tcga: tcga(this.track.id),
-				//tcga: download.tcga(this.track.id),
-				//galaxy: galaxy.downloadableProject(this.track.collection.project)
-			}));
-			this.$el.loading({ height: 32 });
+				})
+				.loading({ height: 32 });
 		},
 
 		initialize: function (options) {
 			var self = this,
-				cache = [ 'dataset', 'cohort', 'full', 'galaxy', 'ok', 'cancel', 'help', 'link' ];
+				cache = [ /*'dataset', 'cohort', 'full', 'galaxy',*/ 'ok', /*'cancel', 'help',*/ 'link' ];
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
 			this.ws = options.ws;
-			//this.mapSetting = options.mapSetting;
-			//this.mapFeatures = this.mapSetting.features();
-			//this.track = this.mapSetting.track();
+			this.columnUi = options.columnUi;
 			this.render();
 
 			_(self).extend(_(cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
 
+			/*
 			this.$el.on('change', '.radio', this.radioChange);
 			this.$galaxy
 				.button()
@@ -223,9 +185,11 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 					//download.galaxyDownload(self.track);
 				})
 				.hide();
+			*/
 			this.$ok
 				.button()
 				.click(this.now);
+			/*
 			this.$cancel
 				.button()
 				.click(this.destroy);
@@ -234,6 +198,7 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 				.click(function () {
 					window.open('../help#clinical_download');
 				});
+			*/
 		}
 	};
 

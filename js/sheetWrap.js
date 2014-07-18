@@ -122,8 +122,8 @@ define(['haml!haml/sheetWrap',
 		},
 
 		initCohortsAndSources: function () {
-			var self = this,
-				cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
+			var self = this;
+			this.cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
 
 			this.serversInput = defaultTextInput.create('serversInput', {
 				$el: this.$servers,
@@ -133,13 +133,14 @@ define(['haml!haml/sheetWrap',
 
 			this.cohortSelect = cohortSelect.create('cohortSelect', {
 				$anchor: this.$cohortAnchor,
-				state: cohortState,
+				state: this.cohortState,
 				cursor: this.cursor,
 				servers: this.servers
 			});
 			this.cohort = this.cohortSelect.val;
 
-			this.sources = cohortState.map(function (cohort) { // state driven?
+			// ???
+			this.sources = this.cohortState.map(function (cohort) {
 				return xenaQuery.dataset_list(self.servers, cohort);
 			}).switch().map(function (dataset_lists) {
 				return _.map(dataset_lists, function (l, i) {
@@ -157,13 +158,14 @@ define(['haml!haml/sheetWrap',
 				self.cursor.set(_.partial(setSamples, samples));
 			});
 
+			// when cohort state changes, update other parts of the UI
+			this.cohortState.subscribe(this.cohortchange);
 			// when cohort DOM value changes, update other parts of the UI
-			this.cohortSelect.val.subscribe(this.cohortChange);
+			//this.cohortSelect.val.subscribe(this.cohortChange);
 		},
 
 		initSamplesFrom: function () {
-			var self = this,
-				samplesFromState = this.state.pluck('samplesFrom').distinctUntilChanged().share();
+			var samplesFromState = this.state.pluck('samplesFrom').distinctUntilChanged().share();
 
 			this.samplesFrom = datasetSelect.create('samplesFrom', {
 				$anchor: this.$samplesFromAnchor,
@@ -175,7 +177,6 @@ define(['haml!haml/sheetWrap',
 				sources: this.sources,
 				placeholder: 'All datasets'
 			});
-
 		},
 
 		initialize: function (options) {
@@ -211,12 +212,49 @@ define(['haml!haml/sheetWrap',
 			//      make it work when no cohort is yet selected on load
 			//      like, how do we simultaneously subscribe to cohort state?
 			// multiple plucks and a zipArray?
-			column_orderState = this.state.pluck('column_order').distinctUntilChanged().share(); // need distinctUntilChanged ?
+
+			column_orderState = this.state.pluck('column_order').distinctUntilChanged().share();
 			column_orderState.subscribe(function (c) {
 				if (c.length === 0) {
 					self.cohortChange();
 				}
 			});
+
+			/* failed attempt
+			column_orderState = this.state.pluck('column_order').distinctUntilChanged().share();
+			var test = Rx.Observable.return(this.cohortState, column_orderState);
+			test.subscribe(_.apply(function (cohort, order) {
+					if (cohort && cohort !== '' && order.length === 0) {
+						self.$addColumn.show().click();
+					}
+				}));
+			*/
+			/*
+			.subscribe(_.apply(function (server, state) {
+				self.render(server, state);
+			})); // XXX leaked subscription?
+			*/
+
+			/* from spreadsheet.js:
+			var sort = Rx.Observable.zipArray(
+				state.pluck('samples'),
+				state.pluck('column_order'),
+				cmpfns
+			).selectMemoize1(_.apply(function (samples, order, cmpfns) {
+				console.log('sorting');
+				function cmp(s1, s2) {
+					var r = 0;
+					_.find(order, function (uuid) {
+						r = cmpfns[uuid](s1, s2);
+						return r !== 0;
+					});
+
+					return (r === 0) ? cmpString(s1, s2) : r; // XXX add cohort as well
+				}
+				return _.clone(samples).sort(cmp);
+			}));
+
+			*/
 		}
 	};
 

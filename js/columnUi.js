@@ -8,6 +8,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 	var APPLY = true,
 		STATIC_URL = config.STATIC_URL,
+		menuImg = STATIC_URL + 'heatmap-cavm/images/menu.png',
 		legendImg = STATIC_URL + 'heatmap/images/mutationLegend.png',
 		legendScaleImg = STATIC_URL + 'heatmap/images/mutationScaleLegend.png',
 		each = _.each,
@@ -126,13 +127,14 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		firstRender: function (options) {
 			var self = this,
 				ws = options.ws,
-				ui = ws.column.ui;;
+				ui = ws.column.ui;
 			this.$anchor = $(ws.el);
 			this.width = ws.column.width;
 			this.height = ws.height;
 			this.sheetWrap = options.sheetWrap;
 			this.$el = $(template({
 				features: undefined,
+				menuImg: menuImg,
 				legendImg: (ui.sFeature === 'impact') ? legendImg : legendScaleImg,
 				debugId: this.id
 			}));

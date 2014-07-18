@@ -31,13 +31,14 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 			};
 
 			this.mupitClick = function (ev) {
-				console.log('mupitView');
 				mutationVector.mupitClick(this.id);
 			};
 
 			this.downloadClick = function (ev) {
-				console.log('downloadClick');
-				download.create({ ws: this.ws });
+				download.create({
+					ws: this.ws,
+					columnUi: this.columnUi
+				});
 			};
 
 			this.removeClick = function (ev) {

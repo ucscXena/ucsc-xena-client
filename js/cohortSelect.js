@@ -37,7 +37,14 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 		},
 
 		render: function (server, state) {
-			var cohorts = state ? _.union([state], server) : server, // ???
+
+			// On reload we take the stored state and render while waiting for
+			// the servers to report available cohorts. If we don't add the
+			// cohort in the state, we will drop the user setting on the floor
+			// because the selected cohort will not yet be in the list of cohorts
+			// from the servers. Basically, this ensures that the current state
+			// is always selectable.
+			var cohorts = state ? _.union([state], server) : server,
 				$el = $(template({cohorts: _.sortBy(cohorts, toLower)}));
 			if (this.$el) {
 				this.$el.select2('destroy');
@@ -51,7 +58,10 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 				placeholderOption: 'first'
 			});
 
-			this.$el = this.$anchor.find('.select2-container.cohort'); // XXX Brian, what don't you like here?
+			// TODO this dom element val is subscribed to elsewhere,
+			// where state should be subscribed to instead
+			this.$el = this.$anchor.find('.select2-container.cohort');
+
 			if (state) {
 				this.$el.select2('val', state);
 			}
@@ -73,7 +83,13 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 				return xenaQuery.all_cohorts(s.url);
 			})).map(_.apply(_.union)); // probably want distinctUntilChanged once servers is dynamic
 
-			// render immediately, and re-render whenever cohortList or state changes
+			// Render immediately, and re-render whenever cohortList or state changes.
+			// "server" here is just to distinguish it from the cohort
+			// setting in the state. We have the cohort in the state and the
+			// cohorts from the servers, and they don't always overlap, e.g.
+			// during reload, or (in the future) due to authorization. So that's
+			// why the parameters are "server" and "state". I have no opinion
+			// about renaming them.
 			cohortList.startWith([]).combineLatest(state, function (server, state) { // TODO why call it "server" ?
 				return [server, state];
 			}).subscribe(_.apply(function (server, state) {
@@ -82,7 +98,7 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 
 			// when state changes, update the DOM value
 			this.subs.push(state.subscribe(function (val) {
-				if (self.$el.select2('val') !== val) { // is self.$el always created by the time this is called ?
+				if (self.$el.select2('val') !== val) {
 					self.$el.select2('val', val);
 				}
 			}));
