@@ -96,12 +96,12 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 		},
 
 		xformMutationVector: function () {
-			// TODO make vars from 'gene' on dynamic according to what is in the data
-			var varNames = ['sample', 'chr', 'start', 'end', 'reference', 'alt',
-				'gene', 'effect', 'DNA_AF', 'RNA_AF', 'Amino_Acid_Change'],
-				//vars = stableVars.concat(filter(stableVars, function () {
-				//})),
-				tsvData = flatten(this.columnUi.values.map(function (sample) {
+			var stableVars = ['sample', 'chr', 'start', 'end', 'reference', 'alt'],
+				derivedVars = this.columnUi.plotData.derivedVars.sort(util.caseInsensitiveSort),
+				varNames = stableVars.concat(filter(derivedVars, function (dv) {
+					return (stableVars.indexOf(dv) === -1);
+				})),
+				tsvData = flatten(this.columnUi.plotData.values.map(function (sample) {
 					if (sample.vals) {
 						if (sample.vals.length) {
 							return sample.vals.map(function (vals) {
