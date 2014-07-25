@@ -3,7 +3,8 @@
 define([ "jquery" ], function ($) {
 	'use strict';
 
-	var scrollbarWidth;
+	var scrollbarWidth,
+		cleanNameAllowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _";
 
 	return {
 		focus: function (el, initial) {
@@ -129,7 +130,7 @@ define([ "jquery" ], function ($) {
 				RIGHT = 39,
 				LEFT = 37,
 				RETURN = 13, // TODO test with named text and replace that handler with this
-				allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _";
+				allowed = cleanNameAllowed;
 			return function (ev) {
 				if (ev.keyCode === BS || ev.keyCode === RIGHT || ev.keyCode === LEFT || ev.keyCode === RETURN) {
 					return true;
@@ -140,6 +141,17 @@ define([ "jquery" ], function ($) {
 				return false;
 			};
 		}()),
+
+		/* untested
+		cleanName: function (name) {
+			var allowed = cleanNameAllowed,
+				array = name.toArray(),
+				cleanArray = array.map(function (c) {
+					return (allowed.indexOf(c) < 0) ? '_' : c;
+				});
+			return cleanArray.join('');
+		},
+		*/
 
 		cleanTextKeyDown: (function () {
 			// keypress not working under firefox

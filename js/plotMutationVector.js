@@ -204,7 +204,7 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 		}
 	);
 
-	widgets.cmp.add("exonSparse", cmp);
-	widgets.fetch.add("exonSparse", fetch);
-	widgets.render.add("exonSparse", render);
+	widgets.cmp.add("mutationVector", cmp);
+	widgets.fetch.add("mutationVector", fetch);
+	widgets.render.add("mutationVector", render);
 });

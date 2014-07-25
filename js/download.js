@@ -14,59 +14,23 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 		toArray = _.toArray,
 		uniq = _.uniq,
 		widget,
-		aWidget,
-
-		url = function (track) {
-			return track.procFile.urlPrefix + track.procFile.name;
-		},
-
-		opentrack = function (track) {
-			window.open(url(track));
-			analytics.report({
-				category: 'output',
-				action: 'download',
-				label: track.id
-			});
-		},
-
-		galaxyDownload = function (track) {
-			galaxy.download(url(track));
-			analytics.report({
-				category: 'output',
-				action: 'galaxyDownload',
-				label: track // or track.id ?
-			});
-		},
-
-		tcga = function (dsID) {
-			return (dsID.toLowerCase().indexOf('tcga') > -1);
-		};
+		aWidget;
 
 	aWidget = {
 
 		destroy: function () {
-			this.$el.dialog('destroy').remove();
+			this.$el.remove();
 			widget = undefined;
 		},
 
 		populateLink: function (tsv, scope) {
 			var $link = this.$link,
 				self = this,
-				prefix = 'column_label', // TODO use a scrubbed column label after it is being stored in state tree
-				//prefix = this.ws.column.label;
-				blob,
-				url;
-				//blob = new Blob([tsv], { type: 'text/tsv' }),
-				//url = URL.createObjectURL(blob);
-			blob = new Blob([tsv], { type: 'text/tsv' });
-			url = URL.createObjectURL(blob);
+				prefix = 'xenaDownload', // TODO use a scrubbed column label after it is being stored in state tree
+				//prefix = util.cleanName(this.ws.column.label1 + '_' + this.ws.column.label2),
+				url = URL.createObjectURL(new Blob([tsv], { type: 'text/tsv' })); // use blob for bug in chrome: https://code.google.com/p/chromium/issues/detail?id=373182
 			$link.attr({
-				// patch for bug in chrome:
-				// https://code.google.com/p/chromium/issues/detail?id=373182
 				'href': url,
-				/* works for firefox in cancer_browser:clinicalDownload.js, except should be data:text/tsv:
-				'href': "data:application/x-download;charset=utf-8," + encodeURIComponent(tsv),
-				*/
 				'download': prefix + '.tsv'
 			});
 			defer(function () { // allow link to update, then click it
@@ -99,45 +63,79 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 			var stableVars = ['sample', 'chr', 'start', 'end', 'reference', 'alt'],
 				derivedVars = this.columnUi.plotData.derivedVars.sort(util.caseInsensitiveSort),
 				varNames = stableVars.concat(filter(derivedVars, function (dv) {
-					return (stableVars.indexOf(dv) === -1);
+					return (stableVars.indexOf(dv) < 0);
 				})),
 				tsvData = flatten(this.columnUi.plotData.values.map(function (sample) {
 					if (sample.vals) {
-						if (sample.vals.length) {
+						if (sample.vals.length) { // value(s) for this sample & identifier
 							return sample.vals.map(function (vals) {
 								return varNames.map(function (varName) {
 									return vals[varName];
 								});
 							});
-						} else {
+						} else { // no value for this sample & identifier
 							return [
 								varNames.map(function (varName) {
-									if (varName === 'sample') {
-										return sample.sample;
-									} else {
-										return 'no mutation';
-									}
+									return (varName === 'sample')
+										? sample.sample
+										: 'no mutation';
 								})
 							];
 						}
-					} else {
-						return [[sample.sample]];
+					} else { // no data for this sample & identifier
+						return [
+							varNames.map(function (varName) {
+								return (varName === 'sample')
+									? sample.sample
+									: null;
+							})
+						];
 					}
 				}), true);
 			this.buildTsv(tsvData, varNames);
 		},
 
+		xformProbeMatrix: function () {
+			var self = this,
+				varNames = ['identifier', 'sample', 'value'],
+				heatmapData = this.columnUi.plotData.heatmapData,
+				fields = this.columnUi.plotData.fields,
+				codes = this.columnUi.plotData.codes,
+				identifier = {
+					probe: 'probe',
+					geneProbesMatrix: 'probe',
+					clinicalMatrix: 'feature'
+				},
+				tsvData = flatten(fields.map(function (field, i) {
+					return self.ws.samples.map(function (sample, j) {
+						var value = codes[field]
+							? codes[field][heatmapData[i][j]]
+							: heatmapData[i][j];
+						return [field, sample, value];
+					});
+				}), true);
+			if (identifier[self.ws.column.dataType]) {
+				varNames[0] = identifier[self.ws.column.dataType];
+			}
+			this.buildTsv(tsvData, varNames);
+		},
+
 		now: function () {
-			var self = this;
-			this.$el.loading('show');
+			var self = this,
+				func = {
+					mutationVector: this.xformMutationVector,
+					geneMatrix: this.xformProbeMatrix,
+					geneProbesMatrix: this.xformProbeMatrix,
+					probeMatrix: this.xformProbeMatrix,
+					clinicalMatrix: this.xformProbeMatrix
+				};
+			this.$anchor.loading('show');
 
 			defer(function () { // defer to allow loading feedback to show
-				switch (self.ws.column.dataType) {
-				case 'exonSparse':
-					self.xformMutationVector();
-					break;
-				default:
-					console.log('not yet');
+				if (func[self.ws.column.dataType]) {
+					func[self.ws.column.dataType]();
+				} else {
+					alert('not yet');
 					self.destroy();
 				}
 			});
@@ -149,56 +147,24 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 		},
 
 		render: function () {
-			this.$el = $('<div>')
-				.html(template({
-					tcga: tcga(this.ws.column.dsID)
-					//tcga: download.tcga(this.track.id),
-					//galaxy: galaxy.downloadableProject(this.track.collection.project)
-				}))
-				.dialog({
-					title: 'Download',
-					width: 'auto',
-					height: 'auto',
-					minHeight: 60,
-					close: this.destroy
-				})
+			this.$el = $(template());
+			this.$anchor
+				.append(this.$el)
 				.loading({ height: 32 });
+			this.now();
 		},
 
 		initialize: function (options) {
 			var self = this,
-				cache = [ /*'dataset', 'cohort', 'full', 'galaxy',*/ 'ok', /*'cancel', 'help',*/ 'link' ];
+				cache = [ 'link' ];
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
 			this.ws = options.ws;
+			this.$anchor = options.$anchor;
 			this.columnUi = options.columnUi;
 			this.render();
 
 			_(self).extend(_(cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
-
-			/*
-			this.$el.on('change', '.radio', this.radioChange);
-			this.$galaxy
-				.button()
-				.on('click', function () {
-					galaxyDownload(self.track);
-					//download.galaxyDownload(self.track);
-				})
-				.hide();
-			*/
-			this.$ok
-				.button()
-				.click(this.now);
-			/*
-			this.$cancel
-				.button()
-				.click(this.destroy);
-			this.$help
-				.button()
-				.click(function () {
-					window.open('../help#clinical_download');
-				});
-			*/
 		}
 	};
 

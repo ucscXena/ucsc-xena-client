@@ -440,10 +440,11 @@ define(['underscore_ext',
 				features = data.features || {},
 				codes = data.codes || {},
 				metadata = data.metadata || {},
+				columnUi,
 				defaults = {
 					min: metadata.min,
 					max: metadata.max,
-					colors: default_colors(ws.column.dataType === "probeFeature" ?
+					colors: default_colors(ws.column.dataType === "clinicalMatrix" ?
 										   "clinical" :
 										   metadata.dataSubType),
 					colnormalization: metadata.colnormalization
@@ -462,12 +463,13 @@ define(['underscore_ext',
 					$(vg.element).remove();
 				});
 				local.render = render;
+				local.columnUi = sheetWrap.columnShow(el.id, ws);
 				disp.setDisposable(local);
 				local.vg = vgcanvas(column.width, ws.height);
 				$anchorEl.append(local.vg.element());
 			}
-
 			vg = local.vg;
+			columnUi = local.columnUi;
 
 			if (vg.width() !== column.width) {
 				vg.width(column.width);
@@ -478,6 +480,13 @@ define(['underscore_ext',
 			}
 
 			heatmapData = dataToHeatmap(sort, data.req.values, fields, transform);
+			if (columnUi && heatmapData.length) {
+				columnUi.plotData = {
+					heatmapData: heatmapData,
+					fields: fields,
+					codes: codes
+				}
+			}
 			colors = map(fields, function (p, i) {
 				return heatmapColors.range(column, features[p], codes[p], heatmapData[i]);
 			});
@@ -496,19 +505,19 @@ define(['underscore_ext',
 		}
 	);
 
-	widgets.cmp.add("probe", cmp);
-	widgets.fetch.add("probe", fetch);
-	widgets.render.add("probe", render);
+	widgets.cmp.add("probeMatrix", cmp);
+	widgets.fetch.add("probeMatrix", fetch);
+	widgets.render.add("probeMatrix", render);
 
 	widgets.cmp.add("geneProbesMatrix", cmp);
 	widgets.fetch.add("geneProbesMatrix", fetch_gene_probes);
 	widgets.render.add("geneProbesMatrix", render);
 
-	widgets.cmp.add("probeGene", cmp);
-	widgets.fetch.add("probeGene", fetch_gene);
-	widgets.render.add("probeGene", render);
+	widgets.cmp.add("geneMatrix", cmp);
+	widgets.fetch.add("geneMatrix", fetch_gene);
+	widgets.render.add("geneMatrix", render);
 
-	widgets.cmp.add("probeFeature", cmp);
-	widgets.fetch.add("probeFeature", fetch_feature);
-	widgets.render.add("probeFeature", render);
+	widgets.cmp.add("clinicalMatrix", cmp);
+	widgets.fetch.add("clinicalMatrix", fetch_feature);
+	widgets.render.add("clinicalMatrix", render);
 });

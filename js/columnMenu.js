@@ -37,7 +37,8 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 			this.downloadClick = function (ev) {
 				download.create({
 					ws: this.ws,
-					columnUi: this.columnUi
+					columnUi: this.columnUi,
+					$anchor: this.$el
 				});
 			};
 
@@ -46,9 +47,13 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 			};
 
 			this.anchorClick = function (event, options) {
-				options.topAdd = -3;
-				options.leftAdd = -10;
-				this.menuAnchorClick(event, options);
+				if ($(event.target).hasClass('link')) {
+					event.stopPropagation();
+				} else {
+					options.topAdd = -3;
+					options.leftAdd = -25;
+					this.menuAnchorClick(event, options);
+				}
 			};
 
 			this.render = function () {

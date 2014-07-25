@@ -74,14 +74,14 @@ define(['haml!haml/columnEdit',
 			dGeneChrom: 'chromosomes'
 		},
 		dataTypeByDisplay = {
-			dGene: 'probeGene', // geneMatrix
-			dGenes: 'probeGene', // geneMatrix
-			dExonSparse: 'exonSparse', // mutationVector
-			dClinical: 'probeFeature', // clinicalMatrix
+			dGene: 'geneMatrix',
+			dGenes: 'geneMatrix',
+			dExonSparse: 'mutationVector',
+			dClinical: 'clinicalMatrix',
 			dGeneProbes: 'geneProbesMatrix',
-			dProbes: 'probe', // probeMatrix
-			//dGeneChrom: 'geneChrom', //
-			//dChrom: 'chrom' //
+			dProbes: 'probeMatrix',
+			//dGeneChrom: TBD,
+			//dChrom: TBD
 		},
 		map = _.map,
 		widgets = {},
