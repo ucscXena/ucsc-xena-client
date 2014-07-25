@@ -97,26 +97,18 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 
 		xformProbeMatrix: function () {
 			var self = this,
-				varNames = ['identifier', 'sample', 'value'],
 				heatmapData = this.columnUi.plotData.heatmapData,
 				fields = this.columnUi.plotData.fields,
 				codes = this.columnUi.plotData.codes,
-				identifier = {
-					probe: 'probe',
-					geneProbesMatrix: 'probe',
-					clinicalMatrix: 'feature'
-				},
-				tsvData = flatten(fields.map(function (field, i) {
-					return self.ws.samples.map(function (sample, j) {
+				varNames = ['sample'].concat(fields),
+				tsvData = this.ws.samples.map(function (sample, i) {
+					return [sample].concat(fields.map(function (field, j) {
 						var value = codes[field]
-							? codes[field][heatmapData[i][j]]
-							: heatmapData[i][j];
-						return [field, sample, value];
-					});
-				}), true);
-			if (identifier[self.ws.column.dataType]) {
-				varNames[0] = identifier[self.ws.column.dataType];
-			}
+							? codes[field][heatmapData[j][i]]
+							: heatmapData[j][i];
+						return value;
+					}));
+				});
 			this.buildTsv(tsvData, varNames);
 		},
 
@@ -129,7 +121,7 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 					probeMatrix: this.xformProbeMatrix,
 					clinicalMatrix: this.xformProbeMatrix
 				};
-			this.$anchor.loading('show');
+			//this.$anchor.loading('show');
 
 			defer(function () { // defer to allow loading feedback to show
 				if (func[self.ws.column.dataType]) {
@@ -149,8 +141,8 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 		render: function () {
 			this.$el = $(template());
 			this.$anchor
-				.append(this.$el)
-				.loading({ height: 32 });
+				.append(this.$el);
+				//.loading({ height: 32 });
 			this.now();
 		},
 

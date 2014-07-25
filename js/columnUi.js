@@ -152,7 +152,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.columnMenu = columnMenu.create(this.id, {
 				anchor: this.$more,
 				columnUi: this,
-				ws: ws,
 				deleteColumn: this.sheetWrap.deleteColumn,
 				duplicateColumn: this.sheetWrap.duplicateColumn,
 				updateColumn: this.updateColumn,

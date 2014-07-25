@@ -36,7 +36,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 
 			this.downloadClick = function (ev) {
 				download.create({
-					ws: this.ws,
+					ws: this.columnUi.ws,
 					columnUi: this.columnUi,
 					$anchor: this.$el
 				});
@@ -58,7 +58,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 
 			this.render = function () {
 				var list = $(template({
-						type: this.ws.column.dataType, // TODO should be more specifically mutation exon sparse
+						type: this.columnUi.ws.column.dataType, // TODO should be more specifically mutation exon sparse
 						moreItems: this.moreItems
 					}));
 				this.menuRender(list);
@@ -70,7 +70,6 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 				//_(this).bindAll();
 				APPLY_BUTTON = options.APPLY_BUTTON;
 				this.columnUi = options.columnUi;
-				this.ws = options.ws;
 				this.deleteColumn = options.deleteColumn;
 				this.duplicateColumn = options.duplicateColumn;
 				this.moreItems = options.moreItems;
