@@ -163,14 +163,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 			this.reRender(options);
 
-			// TODO in case we are restoring session store for demo
-			$('.addColumn').show();
-			/*
-			if (!$('.cohort').select2('val')) {
-				$('.cohort').select2('val', 'TARGET_Neuroblastoma');
-			}
-			*/
-
 			if (ui.dataSubType === 'mutationVector') { // TODO make dynamic
 				this.$legendRow.show();
 			} else {

@@ -88,9 +88,20 @@ define(['haml!haml/sheetWrap',
 			});
 		},
 
-		cohortChange: function () {
+		cohortChange: function (cohort) {
+			var self = this,
+				stream;
 			columnEdit.destroyAll();
-			this.$addColumn.show().click();
+			if (cohort) {
+				if (this.column_orderSub) { this.column_orderSub.dispose(); } // TODO there may be some better way to do this so we only show the edit column dialog once
+				stream = this.state.pluck('column_order').distinctUntilChanged();
+				this.column_orderSub = stream.subscribe(function (column_order) {
+					self.$addColumn.show();
+					if (!column_order || column_order.length < 1) {
+						self.$addColumn.click();
+					}
+				});
+			}
 		},
 
 		serversInput: function () {
@@ -137,9 +148,9 @@ define(['haml!haml/sheetWrap',
 				cursor: this.cursor,
 				servers: this.servers
 			});
-			this.cohort = this.cohortSelect.val;
+			this.cohort = this.cohortSelect.val; // TODO should get this from state rather than DOM val
 
-			// ???
+			// retrieve all datasets in this cohort, from all servers
 			this.sources = this.cohortState.map(function (cohort) {
 				return xenaQuery.dataset_list(self.servers, cohort);
 			}).switch().map(function (dataset_lists) {
@@ -149,8 +160,8 @@ define(['haml!haml/sheetWrap',
 			}).replay(null, 1);
 			this.sources.connect(); // XXX leaking subscription
 
-			// retrieve all samples in this cohort
-			this.cohort.map(function (cohort) {
+			// retrieve all samples in this cohort, from all servers
+			this.cohortState.map(function (cohort) {
 				return Rx.Observable.zipArray(_.map(self.servers, function (s) {
 					return xenaQuery.all_samples(s.url, cohort);
 				})).map(_.apply(_.union));
@@ -159,9 +170,9 @@ define(['haml!haml/sheetWrap',
 			});
 
 			// when cohort state changes, update other parts of the UI
-			this.cohortState.subscribe(this.cohortchange);
-			// when cohort DOM value changes, update other parts of the UI
-			//this.cohortSelect.val.subscribe(this.cohortChange);
+			this.cohortState.subscribe(function (cohort) {
+				self.cohortChange(cohort);
+			});
 		},
 
 		initSamplesFrom: function () {
@@ -170,7 +181,7 @@ define(['haml!haml/sheetWrap',
 			this.samplesFrom = datasetSelect.create('samplesFrom', {
 				$anchor: this.$samplesFromAnchor,
 				state: samplesFromState,
-				cohort: this.cohort,
+				cohort: this.cohort, // TODO: should this be passed as an observable?
 				servers: this.servers,
 				cursor: this.cursor,
 				sheetWrap: this,
@@ -180,8 +191,7 @@ define(['haml!haml/sheetWrap',
 		},
 
 		initialize: function (options) {
-			var self = this,
-				column_orderState;
+			var self = this;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
 			this.updateColumn = options.updateColumn; // XXX
@@ -206,55 +216,6 @@ define(['haml!haml/sheetWrap',
 
 			this.$el
 				.on('click', '.addColumn', this.addColumnClick);
-
-			// if there are no columns, prepare for the user to easily add a column
-			// TODO this works fine on reload when a cohort is already selected
-			//      make it work when no cohort is yet selected on load
-			//      like, how do we simultaneously subscribe to cohort state?
-			// multiple plucks and a zipArray?
-
-			column_orderState = this.state.pluck('column_order').distinctUntilChanged().share();
-			column_orderState.subscribe(function (c) {
-				if (c.length === 0) {
-					self.cohortChange();
-				}
-			});
-
-			/* failed attempt
-			column_orderState = this.state.pluck('column_order').distinctUntilChanged().share();
-			var test = Rx.Observable.return(this.cohortState, column_orderState);
-			test.subscribe(_.apply(function (cohort, order) {
-					if (cohort && cohort !== '' && order.length === 0) {
-						self.$addColumn.show().click();
-					}
-				}));
-			*/
-			/*
-			.subscribe(_.apply(function (server, state) {
-				self.render(server, state);
-			})); // XXX leaked subscription?
-			*/
-
-			/* from spreadsheet.js:
-			var sort = Rx.Observable.zipArray(
-				state.pluck('samples'),
-				state.pluck('column_order'),
-				cmpfns
-			).selectMemoize1(_.apply(function (samples, order, cmpfns) {
-				console.log('sorting');
-				function cmp(s1, s2) {
-					var r = 0;
-					_.find(order, function (uuid) {
-						r = cmpfns[uuid](s1, s2);
-						return r !== 0;
-					});
-
-					return (r === 0) ? cmpString(s1, s2) : r; // XXX add cohort as well
-				}
-				return _.clone(samples).sort(cmp);
-			}));
-
-			*/
 		}
 	};
 
