@@ -98,10 +98,11 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 		xformProbeMatrix: function () {
 			var self = this,
 				heatmapData = this.columnUi.plotData.heatmapData,
+				samples = this.columnUi.plotData.samples,
 				fields = this.columnUi.plotData.fields,
 				codes = this.columnUi.plotData.codes,
 				varNames = ['sample'].concat(fields),
-				tsvData = this.ws.samples.map(function (sample, i) {
+				tsvData = samples.map(function (sample, i) {
 					return [sample].concat(fields.map(function (field, j) {
 						var value = codes[field]
 							? codes[field][heatmapData[j][i]]
