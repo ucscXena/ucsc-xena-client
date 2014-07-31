@@ -417,29 +417,6 @@ define(['haml!haml/columnEdit',
 			this.$advancedLabel.text(label);
 		},
 
-		position: function () {
-			var self = this,
-				offset,
-				of;
-			if (this.columnUi && this.columnUi.$el) {
-				offset = 10;
-				of = this.columnUi.$el;
-			} else {
-				offset = 10;
-				//offset = defaultWidth - 12;
-				of = $('.addColumn');
-			}
-			defer(function () {
-				self.$el.dialog('option', 'position', {
-					my: 'left+' + offset + ' top',
-					//my: 'left+' + offset + ' top+105',
-					//my: 'left+' + offset + ' top-10',
-					at: 'right top',
-					of: of
-				});
-			});
-		},
-
 		render: function () {
 			var self = this,
 				basic;
@@ -464,14 +441,15 @@ define(['haml!haml/columnEdit',
 			this.$el.dialog({
 				title: 'Define Column',
 				width: '500', // TODO make dynamic
+				/*
 				position: {
 					my: 'left top',
-					at: 'left top',
-					of: $('.addColumn')
+					at: 'right top',
+					of: $('.columnUi:last')
 				},
+				*/
 				close: this.destroy
 			});
-			//this.position();
 		},
 
 		initialize: function (options) {
