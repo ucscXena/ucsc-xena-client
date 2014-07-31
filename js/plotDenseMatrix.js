@@ -72,6 +72,9 @@ define(['underscore_ext',
 
 	function meannan(values) {
 		var count = 0, sum = 0, i, v;
+		if (!values) {
+			return NaN;
+		}
 		for (i = 0; i < values.length; ++i) {
 			v = values[i];
 			if (!isNaN(v)) {
