@@ -474,7 +474,7 @@ define(['underscore_ext',
 			}
 			vg = local.vg;
 			columnUi = local.columnUi;
-			$anchorEl = local.$anchor;
+			$anchorEl = local.$anchorEl;
 
 			if (vg.width() !== column.width) {
 				vg.width(column.width);
