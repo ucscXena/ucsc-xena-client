@@ -51,7 +51,8 @@ define(['haml!haml/columnEdit',
 			geneRNAseq: defaultDisplayModes,
 			geneArray: defaultDisplayModes,
 			somaticMutation: defaultDisplayModes,
-			protein: defaultDisplayModes
+			protein: defaultDisplayModes,
+			PARADIGM: defaultDisplayModes
 		},
 		displaysByInput = {
 			iGene: ['dGene', 'dGeneProbes', 'dGeneChrom', 'dExonSparse'],
