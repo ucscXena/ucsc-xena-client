@@ -45,7 +45,6 @@ define(['jquery',
 			};
 	}
 
-	var DEMO = false;
 	var model = columnModels(); // XXX global for testing
 	var HEIGHT = 717;
 
@@ -215,9 +214,11 @@ define(['jquery',
 			};
 		}
 		model.addStream(Rx.Observable.returnValue(function (s) { return start; }));
-		if (DEMO) {
-			$('.debug').hide();
-		}
+
+		$('.samplesFromAnchor').onAsObservable('click')
+			.subscribe(function (ev) {
+				$('.debug').toggle();
+			});
 	});
 
 
