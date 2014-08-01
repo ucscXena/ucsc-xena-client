@@ -12,27 +12,50 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 			stop_gained: 3,
 			splice_acceptor_variant: 3,
 			splice_donor_variant: 3,
+			Splice_Site: 3,
 			frameshift_variant: 3,
+			Frame_Shift_Del: 3,
+			Frame_Shift_Ins: 3,
 			splice_region_variant: 3,
-			missense: 2,
+			Nonsense_Mutation: 3,
+
 			missense_variant: 2,
+			missense: 2,
+			Missense_Mutation: 2,
 			non_coding_exon_variant: 2,
 			exon_variant: 2,
-			stop_lost: 1,
-			start_gained: 1,
-			initiator_codon_variant: 1,
-			'5_prime_UTR_premature_start_codon_gain_variant': 1,
-			disruptive_inframe_deletion: 1,
-			inframe_deletion: 1,
-			inframe_insertion: 1,
-			'5_prime_UTR_variant': 0,
-			'3_prime_UTR_variant': 0,
+			RNA: 2,
+			Indel: 2,
+			start_lost: 2,
+			start_gained: 2,
+			De_novo_Start_OutOfFrame: 2,
+			Translation_Start_Site: 2,
+			De_novo_Start_InFrame: 2,
+			stop_lost: 2,
+			Nonstop_Mutation: 2,
+			initiator_codon_variant: 2,
+			"5_prime_UTR_premature_start_codon_gain_variant": 2,
+			disruptive_inframe_deletion: 2,
+			inframe_deletion: 2,
+			inframe_insertion: 2,
+			In_Frame_Del: 2,
+			In_Frame_Ins: 2,
+
+			"5_prime_UTR_variant": 0,
+			"3_prime_UTR_variant": 0,
+			"5'Flank": 0,
+			"3'Flank": 0,
+			"3'UTR": 0,
+			"5'UTR": 0,
 			synonymous_variant: 0,
+			Silent: 0,
 			stop_retained_variant: 0,
 			upstream_gene_variant: 0,
 			downstream_gene_variant: 0,
 			intron_variant: 0,
-			intergenic_region: 0
+			Intron: 0,
+			intergenic_region: 0,
+			IGR: 0
 		},
 		impactLabels = [
 			'silent or outside CDS',
@@ -157,6 +180,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				this.vg.clear(0, 0, this.canvasWidth, this.canvasHeight);
 
 				// draw each of the rows either grey for NA or white for sample examined for mutations
+				// more crisp lines if both white and grey are drawn, rather than a background of one
 				each(this.values, function (r, i) {
 					var color = (r.vals) ? 'white' : 'grey';
 					buff.box(0, 0, buffWidth, 1, color);
@@ -185,33 +209,21 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				this.drawCenter(d, true);
 			},
 
-			closestNode: function (x, y) { // XXX this should be optimized for a large number of mutations
-				var node,
-					sortedNodes,
-					nodes = map(this.nodes, function (n, i) {
-						var node = clone(n);
-						node.distance = Math.sqrt(Math.pow((x - n.x), 2) + Math.pow((y - n.y), 2));
-						return node;
-					}),
-					closeNodes = filter(nodes, function (n, i) {
-						return (n.distance < n.r);
-					});
-				if (closeNodes.length === 0) {
-					node = undefined;
-				} else if (closeNodes.length === 1) {
-					node = closeNodes[0];
-				} else {
-					sortedNodes = sortBy(closeNodes, function (n, i) {
-						//console.log('distance, sample: ' + n.distance + ', ' + n.data.sample);
-						return n.distance;
-					});
-					node = sortedNodes[0];
-				}
-				return node;
+			closestNode: function (x, y) {
+				var min = this.radius;
+				return reduce(this.nodes, function (closest, n) {
+					var distance = Math.sqrt(Math.pow((x - n.x), 2) + Math.pow((y - n.y), 2));
+					if (distance < min) {
+						min = distance;
+						return n;
+					} else {
+						return closest;
+					}
+				}, undefined);
 			},
 
 			formatAf: function (af) {
-				if (af === 'NA') {
+				if (af === 'NA' || af === '') {
 					return 'NA';
 				} else {
 					return Math.round(af * 100) + '%';
@@ -249,8 +261,12 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 						{label: 'Base change', val: node.data.reference + ' > ' + node.data.alt},
 						{label: 'Amino acid change', val: node.data.Amino_Acid_Change},
 						{label: 'Effect', val: node.data.effect},
-						{label: 'DNA allele frequency', val: this.formatAf(node.data.DNA_AF)},
-						{label: 'RNA allele frequency', val: this.formatAf(node.data.RNA_AF)}
+						{label: 'DNA allele frequency', val: (node.data.DNA_AF)
+							? this.formatAf(node.data.DNA_AF)
+							: this.formatAf(node.data.DNA_VAF)},
+						{label: 'RNA allele frequency', val: (node.data.RNA_AF)
+							? this.formatAf(node.data.RNA_AF)
+							: this.formatAf(node.data.RNA_VAF)}
 					];
 					tooltip.mutation({
 						ev: ev,
@@ -305,7 +321,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 					featureColors = colors.dataset;
 					labels = ['LUAD', 'UCEC', 'CCI'];
 				} else {
-					if (this.feature === 'DNA_AF') {
+					if (this.feature === 'DNA_AF' || this.feature === 'DNA_VAF') {
 						barLabel = 'DNA Allele Frequency:';
 					} else {
 						barLabel = 'RNA Allele Frequency:';
@@ -345,11 +361,11 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 					c = colors[this.color][imp];
 				//} else if (this.feature === 'dataset') {
 				//	c = colors.dataset[val.dataset];
-				} else if (val[this.feature] === 'NA') { // DNA_AF or RNA_AF with NA value
+				} else if (val[this.feature] === 'NA' || val[this.feature] === '') { // _VAF with NA value
 					c = colors.af[0];
-				} else {  // DNA_AF or RNA_AF, but not NA
+				} else {  // _VAF, but not NA
 					c = clone(colors.af[1]);
-					c.a = (this.feature === 'DNA_AF') ? val.DNA_AF : val.RNA_AF;
+					c.a = val[this.feature];
 				}
 				return 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
 			},
@@ -446,7 +462,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 
 				// bindings
 				this.columnUi.$samplePlot
-					.on('click', 'canvas', this.click);
+					.on('click', 'canvas', this.click); // TODO use Rx
 				this.sub = this.columnUi.crosshairs.mousingStream.subscribe(this.mousing);
 
 				this.receiveData(options.data);
