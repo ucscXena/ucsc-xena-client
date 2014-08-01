@@ -64,6 +64,7 @@ define(['lib/d3', 'jquery', 'lib/underscore'
 				.addClass('crosshairPlot')
 				.append($("<div class='crosshairV crosshair'></div>"));
 			this.mousingStream = options.$anchor.onAsObservable('mousemove mouseenter mouseleave');
+			this.mousemoveStream = options.$anchor.onAsObservable('mousemove');
 			this.sub = this.mousingStream.subscribe(mousing);
 		}
 	};

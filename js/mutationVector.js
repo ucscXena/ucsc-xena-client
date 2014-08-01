@@ -203,6 +203,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 			},
 
 			highlight: function (d) {
+				this.highlightOn = true;
 				this.draw(); // remove any previous highlights
 				this.vg.circle(d.x, d.y, d.r, highlightRgba, true);
 				this.drawHalo(d); // to bring this node's color to the top
@@ -282,7 +283,10 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				} else {
 					if (!tooltip.frozen()) {
 						tooltip.hide();
-						this.draw();
+						if (this.highlightOn) {
+							this.draw();
+							this.highlightOn = false;
+						}
 					}
 				}
 			},
@@ -463,7 +467,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				// bindings
 				this.columnUi.$samplePlot
 					.on('click', 'canvas', this.click); // TODO use Rx
-				this.sub = this.columnUi.crosshairs.mousingStream.subscribe(this.mousing);
+				this.sub = this.columnUi.crosshairs.mousemoveStream.subscribe(this.mousing);
 
 				this.receiveData(options.data);
 			}
