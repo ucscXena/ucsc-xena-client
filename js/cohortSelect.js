@@ -116,7 +116,7 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 
 	function create(id, options) {
 		var w = Object.create(aWidget);
-		w.id = options.id;
+		w.id = id;
 		w.initialize(options);
 		return w;
 	}

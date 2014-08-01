@@ -454,7 +454,6 @@ define(['underscore_ext',
 				},
 				column = _.extend(defaults, ws.column),
 				fields = data.req.probes || column.fields, // prefer field list from server
-				$anchorEl,
 				mean = _.get_in(data, ["req", "mean"]),
 				transform = (column.colnormalization && mean && _.partial(subbykey, mean())) || second,
 				vg,
@@ -466,15 +465,13 @@ define(['underscore_ext',
 					$(vg.element).remove();
 				});
 				local.render = render;
-				local.columnUi = sheetWrap.columnShow(el.id, ws);
-				local.$anchorEl = local.columnUi.$samplePlot;
-				disp.setDisposable(local);
 				local.vg = vgcanvas(column.width, ws.height);
-				local.$anchorEl.append(local.vg.element());
+				local.columnUi = sheetWrap.columnShow(el.id, ws);
+				local.columnUi.$samplePlot.append(local.vg.element());
+				disp.setDisposable(local);
 			}
 			vg = local.vg;
 			columnUi = local.columnUi;
-			$anchorEl = local.$anchorEl;
 
 			if (vg.width() !== column.width) {
 				vg.width(column.width);
@@ -506,10 +503,6 @@ define(['underscore_ext',
 				layout: partition.offsets(column.width, 0, heatmapData.length),
 				color_scale: colors
 			});
-
-			if ($anchorEl) {
-				crosshairs.create($anchorEl);
-			}
 		}
 	);
 

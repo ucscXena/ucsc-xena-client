@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'defaultTextInput', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
+define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
 	// non-object dependenciies
-	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, defaultTextInput, defer, /*mutation,*/ refGene, util, d3, $, select2, _, xenaQuery, Rx) {
+	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, util, d3, $, select2, _, xenaQuery, Rx) {
 	'use strict';
 
 	var APPLY = true,
@@ -52,12 +52,13 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 	}
 	*/
 	aWidget = {
-		// XXX this needs to be invoked somewhere. (It is, from columnMenu.js)
+		// this is invoked from columnMenu.js: remove menu function
 		destroy: function () {
 			this.title.destroy();
 			this.field.destroy();
 			this.$el.remove();
-			// TODO clean up subWidgets
+			this.crosshairs.destroy();
+			// TODO clean up subWidgets, like exonRefGene, mutationVector
 			delete widgets[this.id];
 			$('.spreadsheet').resize();
 		},
@@ -126,11 +127,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 		firstRender: function (options) {
 			var self = this,
-				ws = options.ws,
-				ui = ws.column.ui;
-			this.$anchor = $(ws.el);
-			this.width = ws.column.width;
-			this.height = ws.height;
+				$anchor = $(options.ws.el),
+				ui = options.ws.column.ui;
 			this.sheetWrap = options.sheetWrap;
 			this.$el = $(template({
 				features: undefined,
@@ -138,7 +136,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				legendImg: (ui.sFeature === 'impact') ? legendImg : legendScaleImg,
 				debugId: this.id
 			}));
-			this.$anchor.append(this.$el);
+			$anchor.append(this.$el);
 
 			// adjust to default column dimensions
 			this.$el.parent().css('margin-left', this.horizontalMargin);
@@ -191,6 +189,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			if (options.ws) {
 				this.render(options);
 			}
+			this.crosshairs = crosshairs.create(this.id, { $anchor: this.$samplePlot });
 		}
 	};
 

@@ -135,7 +135,6 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 				dims = sheetWrap.columnDims(),
 				refGeneData,
 				refGene,
-				$anchor = sheetWrap.columnShow(el.id, ws).$samplePlot,
 				canvasHeight = ws.height + (dims.sparsePad * 2);
 
 			if (!local || local.render !== render) { // Test if we own this state
@@ -145,10 +144,12 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 				local.render = render;
 				disp.setDisposable(local);
 				local.vg = vgcanvas(column.width, canvasHeight);
-				$anchor.append(local.vg.element());
+				local.columnUi = sheetWrap.columnShow(el.id, ws);
+				local.columnUi.$samplePlot.append(local.vg.element());
 			}
 
 			vg = local.vg;
+			columnUi = local.columnUi;
 
 			if (vg.width() !== column.width) {
 				vg.width(column.width);
@@ -158,7 +159,6 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 				vg.height(canvasHeight);
 			}
 
-			columnUi = sheetWrap.columnShow(el.id, ws);
 			refGeneData = stub.getRefGene(ws.column.fields[0]); // TODO yikes, forcing proper refGene for demo
 			if (refGeneData) {
 				exonRefGene.show(el.id, {
@@ -187,17 +187,14 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 							data: plotData[0].values,
 							color: 'category_25', // TODO make dynamic
 							dataset: column.dsID,
-							feature: column.ui.sFeature, // TODO column.fields[0] instead?
+							feature: column.ui.sFeature,
 							radius: dims.sparseRadius,
 							sparsePad: dims.sparsePad,
 							horizontalMargin: dims.horizontalMargin,
 							point: 0.5, // TODO make dynamic
-							$anchor: $anchor,
 							columnUi: columnUi,
 							refGene: refGene
 						});
-
-						crosshairs.create($anchor);
 					}
 				}
 			}

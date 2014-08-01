@@ -122,7 +122,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 		aWidget = {
 
 			destroy: function () {
-				//this.d3Select.remove();
+				this.sub.dispose();
 				delete widgets[this.id];
 			},
 
@@ -135,9 +135,9 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				// If the mouse has moved between mouseup and mousedown...
 				//if (!e.shiftKey || this.heatmapImgPageX !== e.pageX || this.heatmapImgPageY !== e.pageY) {
 				if (!e.shiftKey) {
-					return; // prevent freeze/thaw of tooltip
+					return;
 				}
-				tooltip.toggleFreeze();
+				tooltip.toggleFreeze(); // TODO make this part of tooltip code ?
 			},
 
 			drawCenter: function (d, highlight) {
@@ -218,7 +218,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				}
 			},
 
-			hover: function (ev) {
+			mousing: function (ev) {
 				var x,
 					y,
 					pos = {},
@@ -423,7 +423,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				var horizontalMargin = '-' + options.horizontalMargin.toString() + 'px';
 				_.bindAll.apply(_, [this].concat(_.functions(this)));
 				//_(this).bindAll();
-				this.$anchor = options.$anchor;
 				this.vg = options.vg;
 				this.columnUi = options.columnUi;
 				this.refGene = options.refGene;
@@ -440,13 +439,15 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				this.point = options.point;
 				this.refHeight = options.refHeight;
 				this.columnUi.$sparsePad.height(0);
-				this.columnUi.$el.parent().css('margin-left', horizontalMargin);
-				this.columnUi.$el.parent().css('margin-right', horizontalMargin);
+				this.columnUi.$el.parent().css({
+					'margin-left': horizontalMargin,
+					'margin-right': horizontalMargin
+				});
 
 				// bindings
-				this.$anchor
-					.on('click', 'canvas', this.click)
-					.on('mousemove mouseleave mouseenter', 'canvas', this.hover);
+				this.columnUi.$samplePlot
+					.on('click', 'canvas', this.click);
+				this.sub = this.columnUi.crosshairs.mousingStream.subscribe(this.mousing);
 
 				this.receiveData(options.data);
 			}
