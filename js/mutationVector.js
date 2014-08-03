@@ -153,16 +153,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				console.log(message); // TODO
 			},
 
-			click: function (e) {
-				// classic
-				// If the mouse has moved between mouseup and mousedown...
-				//if (!e.shiftKey || this.heatmapImgPageX !== e.pageX || this.heatmapImgPageY !== e.pageY) {
-				if (!e.shiftKey) {
-					return;
-				}
-				tooltip.toggleFreeze(); // TODO make this part of tooltip code ?
-			},
-
 			drawCenter: function (d, highlight) {
 				var r = highlight ? this.point * 2 : this.point;
 				this.vg.circle(d.x, d.y, r, 'black');
@@ -231,62 +221,85 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				}
 			},
 
+			plotCoords: function (ev) {
+				var offset,
+					x = ev.offsetX,
+					y = ev.offsetY;
+				if (x === undefined) { // fix up for firefox
+					offset = util.eventOffset(ev);
+					x = offset.x;
+					y = offset.y;
+				}
+				return { x: x, y: y };
+			},
+
 			mousing: function (ev) {
-				var x,
-					y,
-					pos = {},
+				var pos,
 					node,
-					vals = [],
+					coords,
+					rows = [],
 					mode = 'genesets',
-					offsetX = ev.offsetX,
-					offsetY = ev.offsetY,
-					offset;
+					valWidth,
+					dnaAf,
+					rnaAf,
+					option = 'a';
 				if (tooltip.frozen()) {
 					return;
 				}
-				if (offsetX === undefined) { // fix up for firefox
-					offset = util.eventOffset(ev);
-					offsetX = offset.x;
-					offsetY = offset.y;
-				}
-				x = offsetX;
-				y = offsetY;
-				node = this.closestNode(x, y);
+				coords = this.plotCoords(ev);
+				node = this.closestNode(coords.x, coords.y);
 				if (node) {
 					this.highlight(node);
-					pos.geneName = this.gene.name;
-					pos.chrom = node.data.chr;
-					pos.start = node.data.start;
-					pos.end = node.data.end;
-					vals = [
-						{label: 'Base change', val: node.data.reference + ' > ' + node.data.alt},
-						{label: 'Amino acid change', val: node.data.Amino_Acid_Change},
-						{label: 'Effect', val: node.data.effect},
-						{label: 'DNA allele frequency', val: (node.data.DNA_AF)
-							? this.formatAf(node.data.DNA_AF)
-							: this.formatAf(node.data.DNA_VAF)},
-						{label: 'RNA allele frequency', val: (node.data.RNA_AF)
-							? this.formatAf(node.data.RNA_AF)
-							: this.formatAf(node.data.RNA_VAF)}
-					];
-					tooltip.mutation({
+					pos = node.data.chr + ':'
+						+ util.addCommas(node.data.start)
+						+ '-' + util.addCommas(node.data.end);
+					dnaAf = (node.data.DNA_AF)
+						? this.formatAf(node.data.DNA_AF)
+						: this.formatAf(node.data.DNA_VAF);
+					rnaAf = (node.data.RNA_AF)
+						? this.formatAf(node.data.RNA_AF)
+						: this.formatAf(node.data.RNA_VAF);
+					if (option === 'a') {
+						rows = [
+							{ val: node.data.effect},
+							{ val: 'hg19 ' + pos + ' ' + node.data.reference + '>' + node.data.alt },
+							{ val: this.gene.name + ' (' + node.data.Amino_Acid_Change + ')' },
+							{ val: 'DNA / RNA variant allele freq: ' + dnaAf + ' / ' + rnaAf }
+						];
+						valWidth = '18em';
+					} else if (option === 'b') {
+						rows = [
+							{ label: 'Effect', val: node.data.effect},
+							{ label: 'hg19 ' + pos, val: node.data.reference + '>' + node.data.alt },
+							{ label: this.gene.name, val: '(' + node.data.Amino_Acid_Change + ')' },
+							{ label: 'DNA / RNA variant allele freq', val: dnaAf + ' / ' + rnaAf }
+						];
+						valWidth = '12em';
+					} else {
+						rows = [
+							{ label: 'Effect', val: node.data.effect},
+							{ label: node.data.reference + ' > ' + node.data.alt, val: 'hg19 ' + pos },
+							{ label: this.gene.name, val: '(' + node.data.Amino_Acid_Change + ')' },
+							{ label: 'Variant allele freq', val: 'DNA: ' + dnaAf + ' RNA: ' + rnaAf }
+						];
+						valWidth = '15em';
+					}
+					tooltip.mousing({
 						ev: ev,
-						pos: pos,
-						dsID: node.data.dataset,
+						//dsID: node.data.dataset,
 						sampleID: node.data.sample,
 						el: '#nav',
 						my: 'top',
 						at: 'top',
 						mode: mode,
-						vals: vals
+						rows: rows,
+						valWidth: valWidth
 					});
 				} else {
-					if (!tooltip.frozen()) {
-						tooltip.hide();
-						if (this.highlightOn) {
-							this.draw();
-							this.highlightOn = false;
-						}
+					tooltip.hide();
+					if (this.highlightOn) {
+						this.draw();
+						this.highlightOn = false;
 					}
 				}
 			},
@@ -465,8 +478,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				});
 
 				// bindings
-				this.columnUi.$samplePlot
-					.on('click', 'canvas', this.click); // TODO use Rx
 				this.sub = this.columnUi.crosshairs.mousemoveStream.subscribe(this.mousing);
 
 				this.receiveData(options.data);

@@ -106,6 +106,8 @@ define(['underscore_ext',
 			})
 		);
 
+/* sorry Brian, this is interfering with freezing the tooltip,
+   You will have to use the menu like the mortals ;)
 		subs.add(el.onAsObservable('click')
 			.filter(function (ev) {
 				return findTargetColumn(ev).length
@@ -118,7 +120,7 @@ define(['underscore_ext',
 				return deleteHandler(id, cursor);
 			})
 		);
-
+*/
 		var widgetStates = state.select(function (s) {
 			return _.fmap(s.column_rendering, function (col, uuid) {
 				return _.pluckPaths({
@@ -206,7 +208,7 @@ define(['underscore_ext',
 			state.pluck('column_order'),
 			cmpfns
 		).selectMemoize1(_.apply(function (samples, order, cmpfns) {
-			console.log('sorting');
+			//console.log('sorting');
 			function cmp(s1, s2) {
 				var r = 0;
 				_.find(order, function (uuid) {

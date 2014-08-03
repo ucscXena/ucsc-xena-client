@@ -1,5 +1,5 @@
 #tooltip:not(.frozen) {
-	background: #eeeeee;
+	background: white;
 }
 #tooltip {
 	padding: 4px 6px;
@@ -16,7 +16,7 @@
 	width: 5em;
 }
 #tooltip .valueCol {
-	width: 25em;
+	width: 16em;
 }
 #tooltip .closeCol {
 	width: 16px;
@@ -30,7 +30,6 @@
 	padding: 0;
 }
 #tooltipClose {
-	display: none;
 	float: right;
 	margin-top: -3px;
 }

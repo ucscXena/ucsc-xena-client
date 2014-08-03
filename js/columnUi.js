@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
+define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
 	// non-object dependenciies
-	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, util, d3, $, select2, _, xenaQuery, Rx) {
+	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, tooltip, util, d3, $, select2, _, xenaQuery, Rx) {
 	'use strict';
 
 	var APPLY = true,
@@ -58,7 +58,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.field.destroy();
 			this.$el.remove();
 			this.crosshairs.destroy();
-			// TODO clean up subWidgets, like exonRefGene, mutationVector
+			// TODO clean up subscriptions, subWidgets, like exonRefGene, mutationVector
 			delete widgets[this.id];
 			$('.spreadsheet').resize();
 		},
@@ -190,6 +190,13 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				this.render(options);
 			}
 			this.crosshairs = crosshairs.create(this.id, { $anchor: this.$samplePlot });
+
+			this.$samplePlot.onAsObservable('click')
+				.filter(function (ev) {
+					return ev.altKey === true;
+					//return ev.shiftKey === true;
+				})
+				.subscribe(tooltip.toggleFreeze); // TODO free subscription
 		}
 	};
 

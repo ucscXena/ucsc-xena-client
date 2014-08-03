@@ -9,6 +9,8 @@ define(['underscore_ext',
 		'heatmapColors',
 		'partition',
 		'sheetWrap',
+		'tooltip',
+		'util',
 		'xenaQuery',
 		'rx.jquery'
 	], function (
@@ -22,6 +24,8 @@ define(['underscore_ext',
 		heatmapColors,
 		partition,
 		sheetWrap,
+		tooltip,
+		util,
 		xenaQuery) {
 
 	"use strict";
@@ -75,13 +79,13 @@ define(['underscore_ext',
 		if (!values) {
 			return NaN;
 		}
-		for (i = 0; i < values.length; ++i) {
-			v = values[i];
+		sum = _.reduce(values, function (sum, v) {
 			if (!isNaN(v)) {
 				count += 1;
-				sum += v;
+				return sum + v;
 			}
-		}
+			return sum;
+		}, 0);
 		if (count > 0) {
 			return sum / count;
 		}
@@ -427,6 +431,89 @@ define(['underscore_ext',
 	heatmapColors.range.add("coded", heatmapColors.category);
 	heatmapColors.range.add("scaled", heatmapColors.scaled);
 
+	function plotCoords(ev) {
+		var offset,
+			x = ev.offsetX,
+			y = ev.offsetY;
+		if (x === undefined) { // fix up for firefox
+			offset = util.eventOffset(ev);
+			x = offset.x;
+			y = offset.y;
+		}
+		return { x: x, y: y };
+	}
+
+	function prec(val) {
+		var precision = 6,
+			factor = Math.pow(10, precision);
+		return Math.round((val * factor)) / factor
+	}
+
+	function mousing(ev) {
+		var serverData = ev.data.plotData.serverData,
+			heatmapData = ev.data.plotData.heatmapData,
+			fields = ev.data.plotData.fields,
+			codes = ev.data.plotData.codes,
+			column = ev.data.column,
+			ws = ev.data.ws,
+			mode = 'genesets',
+			rows = [],
+			coord,
+			sampleIndex,
+			fieldIndex,
+			field,
+			label,
+			val,
+			valWidth;
+
+		if (tooltip.frozen()) {
+			return;
+		}
+		if (ev.type === 'mouseleave') {
+			tooltip.hide();
+			return;
+		}
+		coord = plotCoords(ev);
+		sampleIndex = Math.floor((coord.y * ws.zoomCount / ws.height) + ws.zoomIndex);
+		fieldIndex = Math.floor(coord.x * fields.length / ws.column.width);
+		field = fields[fieldIndex];
+
+		if (column.dataType === 'geneProbesMatrix') {
+			label = column.fields[0] + ' (' + field + ')';
+		} else {
+			label = field;
+		}
+		val = heatmapData[fieldIndex][sampleIndex];
+		if (column.dataType === 'clinicalMatrix' && codes[label]) {
+			val = codes[label][val];
+		} else if (val !== undefined) {
+			val = prec(val);
+			if (column.dataType !== 'clinicalMatrix') {
+				val += ' (after subtracting mean)';
+			}
+		}
+		rows.push({ label: label, val: (val === undefined) ? 'N/A' : val });
+		if (column.dataType === 'clinicalMatrix') {
+			valWidth = '25em';
+		} else {
+			rows.push({ label: 'Column mean', val: prec(meannan(serverData[field])) });
+			//rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
+			valWidth = '15em';
+		}
+
+		tooltip.mousing({
+			ev: ev,
+			//dsID: node.data.dataset, // later
+			sampleID: ev.data.plotData.samples[sampleIndex],
+			el: '#nav',
+			my: 'top',
+			at: 'top',
+			mode: mode,
+			rows: rows,
+			valWidth: valWidth
+		});
+	}
+
 	// memoize doesn't help us here, because we haven't allocated a render routine
 	// for each widget. Maybe we should???
 	render = ifChanged(
@@ -484,11 +571,21 @@ define(['underscore_ext',
 			heatmapData = dataToHeatmap(sort, data.req.values, fields, transform);
 			if (columnUi && heatmapData.length) {
 				columnUi.plotData = {
+					serverData: data.req.values,
 					heatmapData: heatmapData,
 					samples: sort,
 					fields: fields,
-					codes: codes
+					codes: codes,
+					mean: mean
 				}
+				local.sub = columnUi.crosshairs.mousingStream.subscribe(function (ev) {
+					ev.data = {
+						plotData: columnUi.plotData,
+						column: column,
+						ws: ws
+					};
+					mousing(ev);
+				}); // TODO free this somewhere
 			}
 			colors = map(fields, function (p, i) {
 				return heatmapColors.range(column, features[p], codes[p], heatmapData[i]);

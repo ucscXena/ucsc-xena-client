@@ -171,6 +171,20 @@ define([ "jquery" ], function ($) {
 			offset.x = ev.pageX - targetOffset.left;
 			offset.y = ev.pageY - targetOffset.top;
 			return offset;
+		},
+
+		// utility fxn to add commas to a number str
+		// found at: http://www.mredkj.com/javascript/numberFormat.html
+		addCommas: function (nStr) {
+			nStr += '';
+			var x = nStr.split('.'),
+				x1 = x[0],
+				x2 = x.length > 1 ? '.' + x[1] : '',
+				rgx = /(\d+)(\d{3})/;
+			while (rgx.test(x1)) {
+				x1 = x1.replace(rgx, '$1' + ',' + '$2');
+			}
+			return x1 + x2;
 		}
 	};
 });
