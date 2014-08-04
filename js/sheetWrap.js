@@ -88,9 +88,20 @@ define(['haml!haml/sheetWrap',
 			});
 		},
 
-		cohortChange: function () {
+		cohortChange: function (cohort) {
+			var self = this,
+				stream;
 			columnEdit.destroyAll();
-			this.$addColumn.show().click();
+			if (cohort) {
+				if (this.column_orderSub) { this.column_orderSub.dispose(); } // TODO there may be some better way to do this so we only show the edit column dialog once
+				stream = this.state.pluck('column_order').distinctUntilChanged();
+				this.column_orderSub = stream.subscribe(function (column_order) {
+					self.$addColumn.show();
+					if (!column_order || column_order.length < 1) {
+						self.$addColumn.click();
+					}
+				});
+			}
 		},
 
 		serversInput: function () {
@@ -122,8 +133,8 @@ define(['haml!haml/sheetWrap',
 		},
 
 		initCohortsAndSources: function () {
-			var self = this,
-				cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
+			var self = this;
+			this.cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
 
 			this.serversInput = defaultTextInput.create('serversInput', {
 				$el: this.$servers,
@@ -133,13 +144,14 @@ define(['haml!haml/sheetWrap',
 
 			this.cohortSelect = cohortSelect.create('cohortSelect', {
 				$anchor: this.$cohortAnchor,
-				state: cohortState,
+				state: this.cohortState,
 				cursor: this.cursor,
 				servers: this.servers
 			});
-			this.cohort = this.cohortSelect.val;
+			this.cohort = this.cohortSelect.val; // TODO should get this from state rather than DOM val
 
-			this.sources = cohortState.map(function (cohort) { // state driven?
+			// retrieve all datasets in this cohort, from all servers
+			this.sources = this.cohortState.map(function (cohort) {
 				return xenaQuery.dataset_list(self.servers, cohort);
 			}).switch().map(function (dataset_lists) {
 				return _.map(dataset_lists, function (l, i) {
@@ -148,8 +160,8 @@ define(['haml!haml/sheetWrap',
 			}).replay(null, 1);
 			this.sources.connect(); // XXX leaking subscription
 
-			// retrieve all samples in this cohort
-			this.cohort.map(function (cohort) {
+			// retrieve all samples in this cohort, from all servers
+			this.cohortState.map(function (cohort) {
 				return Rx.Observable.zipArray(_.map(self.servers, function (s) {
 					return xenaQuery.all_samples(s.url, cohort);
 				})).map(_.apply(_.union));
@@ -157,30 +169,29 @@ define(['haml!haml/sheetWrap',
 				self.cursor.set(_.partial(setSamples, samples));
 			});
 
-			// when cohort DOM value changes, update other parts of the UI
-			this.cohortSelect.val.subscribe(this.cohortChange);
+			// when cohort state changes, update other parts of the UI
+			this.cohortState.subscribe(function (cohort) {
+				self.cohortChange(cohort);
+			});
 		},
 
 		initSamplesFrom: function () {
-			var self = this,
-				samplesFromState = this.state.pluck('samplesFrom').distinctUntilChanged().share();
+			var samplesFromState = this.state.pluck('samplesFrom').distinctUntilChanged().share();
 
 			this.samplesFrom = datasetSelect.create('samplesFrom', {
 				$anchor: this.$samplesFromAnchor,
 				state: samplesFromState,
-				cohort: this.cohort,
+				cohort: this.cohort, // TODO: should this be passed as an observable?
 				servers: this.servers,
 				cursor: this.cursor,
 				sheetWrap: this,
 				sources: this.sources,
 				placeholder: 'All datasets'
 			});
-
 		},
 
 		initialize: function (options) {
-			var self = this,
-				column_orderState;
+			var self = this;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
 			this.updateColumn = options.updateColumn; // XXX
@@ -205,18 +216,6 @@ define(['haml!haml/sheetWrap',
 
 			this.$el
 				.on('click', '.addColumn', this.addColumnClick);
-
-			// if there are no columns, prepare for the user to easily add a column
-			// TODO this works fine on reload when a cohort is already selected
-			//      make it work when no cohort is yet selected on load
-			//      like, how do we simultaneously subscribe to cohort state?
-			// multiple plucks and a zipArray?
-			column_orderState = this.state.pluck('column_order').distinctUntilChanged().share(); // need distinctUntilChanged ?
-			column_orderState.subscribe(function (c) {
-				if (c.length === 0) {
-					self.cohortChange();
-				}
-			});
 		}
 	};
 

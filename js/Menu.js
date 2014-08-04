@@ -68,6 +68,7 @@ define(["haml!haml/dropDownTemplate", "tooltip", "lib/underscore", "jquery"], fu
 						left = options.left || (offset.left + (options.leftAdd || 0)),
 						maxHeight = $(window).height() - top - 20;
 					left -= $(window).scrollLeft();
+					top -= $(window).scrollTop();
 					if (this.$list) {
 						this.destroyList();
 					} else {

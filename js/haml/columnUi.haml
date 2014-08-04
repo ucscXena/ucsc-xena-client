@@ -3,7 +3,8 @@
   %tr
     %td{colspan:2}
       %div{class:'moveHandle hoverShow recede'}
-      %span{class:'more hoverShow recede menu ui-icon ui-icon-triangle-1-s', title:'More...'}
+      %span{class:'more hoverShow recede menu', title:'More...'}
+        %img{src:menuImg, alt:''}
 
   %tr
     %td{colspan:2}
@@ -23,6 +24,10 @@
   %tr
     %td{class:'sampleSidebar sidebar'}
     %td{class:'samplePlot plot',}
+
+  %tr{class:'legendRow', style:'display:none'}
+    %td{class:'legend', style:'text-align:center'}
+      %img{src:legendImg, alt:'', width:130}
 
   %tr{style:'display:none'}
     %td{colspan:2} =debugId

@@ -1,12 +1,16 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'defaultTextInput', 'defer', /*'mutation',*/ 'refGene', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
+define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
 	// non-object dependenciies
-	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, defaultTextInput, defer, /*mutation,*/ refGene, util, d3, $, select2, _, xenaQuery, Rx) {
+	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, tooltip, util, d3, $, select2, _, xenaQuery, Rx) {
 	'use strict';
 
 	var APPLY = true,
+		STATIC_URL = config.STATIC_URL,
+		menuImg = STATIC_URL + 'heatmap-cavm/images/menu.png',
+		legendImg = STATIC_URL + 'heatmap/images/mutationLegend.png',
+		legendScaleImg = STATIC_URL + 'heatmap/images/mutationScaleLegend.png',
 		each = _.each,
 		filter = _.filter,
 		find = _.find,
@@ -48,12 +52,13 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 	}
 	*/
 	aWidget = {
-		// XXX this needs to be invoked somewhere. (It is, from columnMenu.js)
+		// this is invoked from columnMenu.js: remove menu function
 		destroy: function () {
 			this.title.destroy();
 			this.field.destroy();
 			this.$el.remove();
-			// TODO clean up subWidgets
+			this.crosshairs.destroy();
+			// TODO clean up subscriptions, subWidgets, like exonRefGene, mutationVector
 			delete widgets[this.id];
 			$('.spreadsheet').resize();
 		},
@@ -122,16 +127,16 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 		firstRender: function (options) {
 			var self = this,
-				ws = options.ws;
-			this.$anchor = $(ws.el);
-			this.width = ws.column.width;
-			this.height = ws.height;
+				$anchor = $(options.ws.el),
+				ui = options.ws.column.ui;
 			this.sheetWrap = options.sheetWrap;
 			this.$el = $(template({
 				features: undefined,
+				menuImg: menuImg,
+				legendImg: (ui.sFeature === 'impact') ? legendImg : legendScaleImg,
 				debugId: this.id
 			}));
-			this.$anchor.append(this.$el);
+			$anchor.append(this.$el);
 
 			// adjust to default column dimensions
 			this.$el.parent().css('margin-left', this.horizontalMargin);
@@ -140,12 +145,11 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el.find('.headerPlot').height(this.headerPlotHeight);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot'];
+			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'legendRow', 'legend'];
 			_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
 			this.columnMenu = columnMenu.create(this.id, {
 				anchor: this.$more,
 				columnUi: this,
-				ws: ws,
 				deleteColumn: this.sheetWrap.deleteColumn,
 				duplicateColumn: this.sheetWrap.duplicateColumn,
 				updateColumn: this.updateColumn,
@@ -157,10 +161,10 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 			this.reRender(options);
 
-			// TODO in case we are restoring session store for demo
-			$('.addColumn').show();
-			if (!$('.cohort').select2('val')) {
-				$('.cohort').select2('val', 'TARGET_Neuroblastoma');
+			if (ui.dataSubType === 'mutationVector') { // TODO make dynamic
+				this.$legendRow.show();
+			} else {
+				this.$legendRow.hide();
 			}
 		},
 
@@ -185,6 +189,14 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			if (options.ws) {
 				this.render(options);
 			}
+			this.crosshairs = crosshairs.create(this.id, { $anchor: this.$samplePlot });
+
+			this.$samplePlot.onAsObservable('click')
+				.filter(function (ev) {
+					return ev.altKey === true;
+					//return ev.shiftKey === true;
+				})
+				.subscribe(tooltip.toggleFreeze); // TODO free subscription
 		}
 	};
 

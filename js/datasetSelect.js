@@ -44,10 +44,12 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 				index,
 				serverIndex,
 				mutationDS,
+				dsID,
 				cohort = $('.select2-container.cohort').select2('val'); // TODO: get cohort from the state instead;
 
+			this.cohort = cohort; // TODO hack for local mutations
 
-			if (sources.length === 0 || cohort !== 'TARGET_neuroblastoma') {
+			if (sources.length === 0 || (cohort !== 'TARGET_neuroblastoma' && cohort !== 'TCGA.LUAD.sampleMap')) {
 				return sources;
 			}
 
@@ -64,10 +66,13 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 			mutationDS = _.find(sources[serverIndex].datasets, function (d, i) {
 				return (d.title === 'Mutation');
 			});
+			dsID = stub.getDEV_URL() + (cohort === 'TARGET_neuroblastoma'
+				? '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector'
+				: '/public/TCGA/TCGA_LUAD_mutation_RADIA');
 			if (!mutationDS || mutationDS.length === 0) {
 				sources[serverIndex].datasets.splice(index, 0, { // insert mutation dataset
 					dataSubType: 'mutationVector',
-					dsID: stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector',
+					dsID: dsID,
 					title: 'Mutation'
 				});
 			}
@@ -132,7 +137,13 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 					})).map(_.apply(_.union));
 
 				} else { // retrieve the sample IDs in this dataset
-					sampleList = xenaQuery.dataset_samples(val);
+					if (self.cohort === 'TARGET_neuroblastoma') {
+						sampleList = Rx.Observable.return(stub.getMutation(val, 'ALK').samples);
+					} else if (self.cohort === 'TCGA.LUAD.sampleMap') {
+						sampleList = Rx.Observable.return(stub.getMutation(val, 'TP53').samples);
+					} else {
+						sampleList = xenaQuery.dataset_samples(val);
+					}
 				}
 				sampleList.subscribe(function (samples) {
 					self.cursor.set(_.partial(setSamples, samples));

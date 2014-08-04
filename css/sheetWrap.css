@@ -1,5 +1,4 @@
 .sheetWrap {
-	margin-top: 50px;
 	line-height: 1px;
 	display: inline-block;
 	margin-left: 5px;
@@ -25,7 +24,7 @@
 	vertical-align: bottom;
 }
 .sheetWrap .addColumn {
-	font-size: 1.5em;
+	font-size: 2em;
 	line-height: 3;
 	cursor: pointer;
 	vertical-align: top;

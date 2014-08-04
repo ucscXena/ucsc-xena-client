@@ -1,161 +1,178 @@
 /*jslint nomen:true, browser: true */
 /*global define: false  */
 
-define(["galaxy", "haml!haml/downloadTemplate", "jquery", "util", "lib/underscore", "analytics"
-	], function (galaxy, template, $, util, _, analytics) {
+define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_ext", "analytics",
+	"loading"], function (template, defer, galaxy, $, util, _, analytics) {
 	'use strict';
 
-	var widgets = {},
+	var bind = _.bind,
+		each = _.each,
+		filter = _.filter,
+		flatten = _.flatten,
+		keys = _.keys,
+		map = _.map,
+		toArray = _.toArray,
+		uniq = _.uniq,
+		widget,
+		aWidget;
 
-		url = function (track) {
-			return track.procFile.urlPrefix + track.procFile.name;
+	aWidget = {
+
+		destroy: function () {
+			this.$el.remove();
+			widget = undefined;
 		},
 
-		opentrack = function (track) {
-			window.open(url(track));
+		populateLink: function (tsv, scope) {
+			var $link = this.$link,
+				self = this,
+				prefix = 'xenaDownload', // TODO use a scrubbed column label after it is being stored in state tree
+				//prefix = util.cleanName(this.ws.column.label1 + '_' + this.ws.column.label2),
+				url = URL.createObjectURL(new Blob([tsv], { type: 'text/tsv' })); // use blob for bug in chrome: https://code.google.com/p/chromium/issues/detail?id=373182
+			$link.attr({
+				'href': url,
+				'download': prefix + '.tsv'
+			});
+			defer(function () { // allow link to update, then click it
+				var evt = document.createEvent('MouseEvents');
+				self.destroy();
+				evt.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0,
+					false, false, false, false, 0, null);
+				$link[0].dispatchEvent(evt);
+			});
 		},
 
-		widget = {
-
-			moveToTop: function () {
-				this.$el.dialog('moveToTop');
-			},
-
-			destroy: function () {
-				this.$el.dialog('destroy').remove();
-				delete widgets[this.dsID];
-			},
-
-			now: function () {
-				this.destroy();
-				opentrack(this.track);
-				analytics.report({
-					category: 'output',
-					action: 'download',
-					label: this.track.id
+		buildTsv: function (data, varNames, scope) {
+			var self = this,
+				tsv,
+				row,
+				rows;
+			rows = map(data, function (row, i) {
+				return row.join('\t');
+			});
+			defer(function () { // prevent client timeout
+				rows.unshift(varNames.join('\t'));
+				defer(function () { // prevent client timeout
+					tsv = rows.join('\n');
+					self.populateLink(tsv, scope);
 				});
-			},
+			});
+		},
 
-			galaxy: function () {
-				this.destroy();
-				galaxy.download(url(this.track));
-				analytics.report({
-					category: 'output',
-					action: 'galaxyDownload',
-					label: this.track.id
+		xformMutationVector: function () {
+			var stableVars = ['sample', 'chr', 'start', 'end', 'reference', 'alt'],
+				derivedVars = this.columnUi.plotData.derivedVars.sort(util.caseInsensitiveSort),
+				varNames = stableVars.concat(filter(derivedVars, function (dv) {
+					return (stableVars.indexOf(dv) < 0);
+				})),
+				tsvData = flatten(this.columnUi.plotData.values.map(function (sample) {
+					if (sample.vals) {
+						if (sample.vals.length) { // value(s) for this sample & identifier
+							return sample.vals.map(function (vals) {
+								return varNames.map(function (varName) {
+									return vals[varName];
+								});
+							});
+						} else { // no value for this sample & identifier
+							return [
+								varNames.map(function (varName) {
+									return (varName === 'sample')
+										? sample.sample
+										: 'no mutation';
+								})
+							];
+						}
+					} else { // no data for this sample & identifier
+						return [
+							varNames.map(function (varName) {
+								return (varName === 'sample')
+									? sample.sample
+									: null;
+							})
+						];
+					}
+				}), true);
+			this.buildTsv(tsvData, varNames);
+		},
+
+		xformProbeMatrix: function () {
+			var self = this,
+				heatmapData = this.columnUi.plotData.heatmapData,
+				samples = this.columnUi.plotData.samples,
+				fields = this.columnUi.plotData.fields,
+				codes = this.columnUi.plotData.codes,
+				varNames = ['sample'].concat(fields),
+				tsvData = samples.map(function (sample, i) {
+					return [sample].concat(fields.map(function (field, j) {
+						var value = codes[field]
+							? codes[field][heatmapData[j][i]]
+							: heatmapData[j][i];
+						return value;
+					}));
 				});
-			},
+			this.buildTsv(tsvData, varNames);
+		},
 
-			render: function () {
-				var fromGalaxy = false;
-				if (this.track.collection.project === 'public') {
-					fromGalaxy = galaxy.fromGalaxy();
+		now: function () {
+			var self = this,
+				func = {
+					mutationVector: this.xformMutationVector,
+					geneMatrix: this.xformProbeMatrix,
+					geneProbesMatrix: this.xformProbeMatrix,
+					probeMatrix: this.xformProbeMatrix,
+					clinicalMatrix: this.xformProbeMatrix
+				};
+			//this.$anchor.loading('show');
+
+			defer(function () { // defer to allow loading feedback to show
+				if (func[self.ws.column.dataType]) {
+					func[self.ws.column.dataType]();
+				} else {
+					alert('not yet');
+					self.destroy();
 				}
-				this.$el.html(template({
-					filename: this.track.procFile.name,
-					mBytes: this.track.procFile.mBytes,
-					version: this.track.get('version'),
-					galaxy: fromGalaxy
-				}));
-			},
+			});
+			analytics.report({
+				category: 'output',
+				action: 'download',
+				label: this.ws.column.dsID
+			});
+		},
 
-			initialize: function (track) {
-				var $galaxy;
-				_(this).bindAll(); // force all of the functions' "this" be this widget
-				this.$el = $('<div>')
-					.dialog({
-						title: 'Download Processed Dataset',
-						minWidth: 600,
-						minHeight: 100,
-						close: this.destroy
-					});
-				this.track = track;
-				this.render();
-				$galaxy = this.$el.find('.galaxy');
-				if ($galaxy.length) {
-					$galaxy.button()
-						.click(this.galaxy);
-				}
-				this.$el.find('.downloadOk')
-					.button()
-					.click(this.now);
-				this.$el.find('.downloadCancel')
-					.button()
-					.click(this.destroy);
-				this.$el.find('.downloadHelp')
-					.button()
-					.click(function () {
-						window.open('../help#download');
-					});
-			}
-		};
+		render: function () {
+			this.$el = $(template());
+			this.$anchor
+				.append(this.$el);
+				//.loading({ height: 32 });
+			this.now();
+		},
 
-	function downloadCreate(track) {
-		var w = Object.create(widget);
-		w.dsID = track.id;
-		w.initialize(track);
+		initialize: function (options) {
+			var self = this,
+				cache = [ 'link' ];
+			_.bindAll.apply(_, [this].concat(_.functions(this)));
+			//_(this).bindAll();
+			this.ws = options.ws;
+			this.$anchor = options.$anchor;
+			this.columnUi = options.columnUi;
+			this.render();
+
+			_(self).extend(_(cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
+		}
+	};
+
+	function create(options) {
+		var w = Object.create(aWidget);
+		w.initialize(options);
 		return w;
 	}
 
-	return (function () {
-		var ext = '.tgz',
-			dlUrlPrefix = '/download/';
-
-		function show(track) {
-			var dsID = track.id,
-				w = widgets[dsID];
-			if (w) {
-				w.moveToTop();
-			} else {
-				widgets[dsID] = downloadCreate(track);
+	return {
+		create: function (options) {
+			if (widget) {
+				widget.destroy();
 			}
+			widget = create(options);
 		}
-
-		function headerDownloadClick(e, track) {
-			show(track);
-			e.stopPropagation();
-		}
-
-		function findFile(track) {
-			var userDsID,
-				urlPrefix,
-				name,
-				mBytes,
-				found = false;
-			if (track.get('procFile')) {
-				found = true;
-			} else {
-				userDsID = util.userDsID(track.id);
-				urlPrefix = dlUrlPrefix + track.collection.project + '/';
-				name = userDsID + '-' + track.get('version') + ext;
-				mBytes = '666';
-				found = true; // XXX stub until we are really finding file
-				if (found) {
-					track.procFile = {};
-					track.procFile.name = name;
-					track.procFile.mBytes = mBytes;
-					track.procFile.urlPrefix = urlPrefix;
-				}
-			}
-			return found;
-		}
-
-		return {
-
-			now: opentrack,
-			findFile: findFile,
-			show: show,
-
-			initialize: function (track, headerDownload) {
-				if (track.get('redistribution') && findFile(track)) {
-					headerDownload.click(function (e) {
-						headerDownloadClick(e, track);
-					});
-					headerDownload.attr('title', 'Download processed dataset');
-				} else {
-					headerDownload.css('opacity', 0).addClass('invisible');
-				}
-			}
-		};
-	}());
+	};
 });

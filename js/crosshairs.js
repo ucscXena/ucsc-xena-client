@@ -6,6 +6,9 @@ define(['lib/d3', 'jquery', 'lib/underscore'
 	], function (d3, $, _) {
 	'use strict';
 
+	var widgets = [],
+		aWidget;
+
 	function mousing(e) {
 		var plot = $(e.target),
 			column = plot.parents('.columnUi'),
@@ -33,7 +36,7 @@ define(['lib/d3', 'jquery', 'lib/underscore'
 		} else if (e.type === 'mouseenter') {
 			crosshairV.show();
 			crosshairH.show();
-			/* TODO when we have a cursor, we could skip the horizontal crosshair on headerPlots
+			/* TODO when we have a decent cursor, we could skip the horizontal crosshair on headerPlots
 			if (!plot.hasClass('plot')) {
 				plot = plot.parents('.plot');
 			}
@@ -47,14 +50,38 @@ define(['lib/d3', 'jquery', 'lib/underscore'
 		}
 	}
 
+	aWidget = {
+
+		destroy: function () {
+			this.sub.dispose();
+			delete widgets[this.id];
+		},
+
+		initialize: function (options) {
+			_.bindAll.apply(_, [this].concat(_.functions(this)));
+			//_(this).bindAll();
+			options.$anchor
+				.addClass('crosshairPlot')
+				.append($("<div class='crosshairV crosshair'></div>"));
+			this.mousingStream = options.$anchor.onAsObservable('mousemove mouseenter mouseleave');
+			this.mousemoveStream = options.$anchor.onAsObservable('mousemove');
+			this.sub = this.mousingStream.subscribe(mousing);
+		}
+	};
+
+	function create(id, options) {
+		var w = Object.create(aWidget);
+		w.id = id;
+		w.initialize(options);
+		return w;
+	}
+
 	return {
-		create: function ($anchor) {
-			if (!$anchor.hasClass('crosshairPlot')) { // so we only add it once
-				$anchor
-					.addClass('crosshairPlot')
-					.append($("<div class='crosshairV crosshair'></div>"))
-					.on('mousemove mouseenter mouseleave', mousing);
+		create: function (id, options) {
+			if (!widgets[id]) {
+				widgets[id] = create(id, options);
 			}
+			return widgets[id];
 		}
 	};
 });

@@ -51,6 +51,7 @@
 }
 .tupleLabelLeft,
 .tupleLabelBoldLeft,
+.tupleButton,
 .tupleValue {
 	text-align: left;
 }
@@ -58,18 +59,6 @@
 .tupleLabelBoldLeft {
 	font-weight: bold;
 }
-/*
-.tupleButton {
-	text-align: right;
-	padding: .4em .3em;
-	white-space: nowrap;
-}
-.tupleValue {
-	text-align: left;
-	vertical-align: middle;
-	padding: .4em .3em;
-}
-*/
 select { /* fix up webkit font-size */
 	border-style: inset;
 	font-size: inherit;

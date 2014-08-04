@@ -3,7 +3,8 @@
 define([ "jquery" ], function ($) {
 	'use strict';
 
-	var scrollbarWidth;
+	var scrollbarWidth,
+		cleanNameAllowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _";
 
 	return {
 		focus: function (el, initial) {
@@ -129,7 +130,7 @@ define([ "jquery" ], function ($) {
 				RIGHT = 39,
 				LEFT = 37,
 				RETURN = 13, // TODO test with named text and replace that handler with this
-				allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _";
+				allowed = cleanNameAllowed;
 			return function (ev) {
 				if (ev.keyCode === BS || ev.keyCode === RIGHT || ev.keyCode === LEFT || ev.keyCode === RETURN) {
 					return true;
@@ -140,6 +141,17 @@ define([ "jquery" ], function ($) {
 				return false;
 			};
 		}()),
+
+		/* untested
+		cleanName: function (name) {
+			var allowed = cleanNameAllowed,
+				array = name.toArray(),
+				cleanArray = array.map(function (c) {
+					return (allowed.indexOf(c) < 0) ? '_' : c;
+				});
+			return cleanArray.join('');
+		},
+		*/
 
 		cleanTextKeyDown: (function () {
 			// keypress not working under firefox
@@ -159,6 +171,20 @@ define([ "jquery" ], function ($) {
 			offset.x = ev.pageX - targetOffset.left;
 			offset.y = ev.pageY - targetOffset.top;
 			return offset;
+		},
+
+		// utility fxn to add commas to a number str
+		// found at: http://www.mredkj.com/javascript/numberFormat.html
+		addCommas: function (nStr) {
+			nStr += '';
+			var x = nStr.split('.'),
+				x1 = x[0],
+				x2 = x.length > 1 ? '.' + x[1] : '',
+				rgx = /(\d+)(\d{3})/;
+			while (rgx.test(x1)) {
+				x1 = x1.replace(rgx, '$1' + ',' + '$2');
+			}
+			return x1 + x2;
 		}
 	};
 });
