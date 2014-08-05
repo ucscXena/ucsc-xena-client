@@ -56,6 +56,39 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 		}
 	}
 
+	function mutation_attrs(list) {
+		return _.map(list, function (row) {
+			return {
+				"Amino_Acid_Change": row["AMINO-ACID"],
+				"end": row.CHROMEND,
+				"reference": row.REF,
+				"RNA_AF": xenaQuery.nanstr(row.RNA_VAF),
+				"effect": row.EFFECT,
+				"sample": row.SAMPLEID,
+				"start": row.CHROMSTART,
+				"chr": row.CHROM,
+				"alt": row.ALT,
+				"gene": row.GENE,
+				"DNA_AF": xenaQuery.nanstr(row.DNA_VAF),
+			};
+		});
+	}
+
+	// Build index of genes -> samples -> matching rows.
+	// If the sample appears in the dataset but has no matching rows, matching rows should be set to [].
+	// If the sample does not appear in the dataset, matching rows should be undefined.
+	// Requested samples that appear in the dataset are in resp.sample.
+	function index_mutations(gene, samples, resp) {
+		var rows_by_sample = _.groupBy(mutation_attrs(resp.rows), 'sample'),
+			no_rows = _.difference(resp.samples, _.keys(rows_by_sample)),
+			vals = _.extend(rows_by_sample, _.object_fn(no_rows, _.constant([]))), // merge in empty arrays for samples w/o matching rows.
+			obj = {};
+
+		obj[gene] = vals;
+		return {values: obj};
+	}
+
+
 	cmp = ifChanged(
 		[
 			['column', 'fields'],
@@ -75,26 +108,10 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 		function (dsID, probes, samples) {
 			var hostds = xenaQuery.parse_host(dsID),
 				host = hostds[1],
-				ds = hostds[2],
-				sparse = stub.getMutation(dsID, probes[0]),
-
-				// transform sparse data to one row per sample
-				// TODO this maybe should go in the render routine.
-				//      not sure of the format from the server.
-				data = _.object(probes, _.map(probes, function (v, i) {
-					return _.object(samples, _.map(samples, function (s) {
-						if (sparse.samples.indexOf(s) > -1) {
-							return _.filter(sparse.vals, function (v) {
-								return v.sample === s;
-							});
-						} else {
-							return undefined;
-						}
-					}));
-				}));
+				ds = hostds[2];
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
-					return Rx.Observable.return({ values: data });
+					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
 				}),
 			};
 		}
