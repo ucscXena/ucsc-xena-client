@@ -75,9 +75,11 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 				// XXX wonky fix to work around dataSubType.
 				// Use basename of ds.DATASUBTYPE if it's there. Otherwise
 				// default to cna if there's a gene view, and clinical otherwise.
-				dataSubType: ds.DATASUBTYPE ?
-					ds.DATASUBTYPE.split(/[\/]/).reverse()[0] :
-					(ds.PROBEMAP ? 'cna' : 'clinical')
+				// Also, copy type mutationVector to dataSubType.
+				dataSubType: ds.type === "mutationVector" ? ds.type :
+					(ds.DATASUBTYPE ?
+					 ds.DATASUBTYPE.split(/[\/]/).reverse()[0] :
+					 (ds.PROBEMAP ? 'cna' : 'clinical'))
 			};
 		});
 	}
