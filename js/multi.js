@@ -17,15 +17,17 @@ define([], function () {
 			fn = function () {
 				var method = fn.getmethod.apply(this, arguments);
 
-				if (typeof method !== 'function') {
-					throw new Error('No method for ' + dispatch);
-				}
 				return method.apply(this, arguments);
 			};
 
 		fn.getmethod = function() {
-			var dispatch = fn.dispatchfn.apply(this, arguments);
-			return methods[dispatch] || fn.dflt;
+			var dispatch = fn.dispatchfn.apply(this, arguments),
+				method = methods[dispatch] || fn.dflt;
+
+			if (typeof method !== 'function') {
+				throw new Error('No method for ' + dispatch);
+			}
+			return method;
 		};
 		fn.dispatchfn = dispatchfn;
 		fn.add = function (dispatch, fn) {
