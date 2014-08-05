@@ -134,9 +134,9 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function dataset_probe_string(dataset, samples, probes) {
 		return '(fetch (quote ({' +
-					['table', quote(dataset),
-					'columns', listfmt(probes),
-					'samples', listfmt(samples)].join(' ')
+					[':table', quote(dataset),
+					':columns', listfmt(probes),
+					':samples', listfmt(samples)].join(' ')
 					+ '})))';
 	}
 
