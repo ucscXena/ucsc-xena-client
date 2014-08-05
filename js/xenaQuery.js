@@ -186,6 +186,42 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		'                                                                :columns (map :PROBE probes)}])))))';
 	}
 
+	// It might be possible to better optimize this join. The scan counts seem high.
+	function sparse_data_string(dataset, samples, genes) {
+		return '(let [getfield (fn [field] ' +
+		'                        (:ID (car (query {:select [:field.id] ' +
+		'                                          :from [:dataset] ' +
+		'                                          :join [:field [:= :dataset.id :field.dataset_id]] ' +
+		'                                          :where [:and [:= :field.name field] [:= :dataset.name ' + quote(dataset) + ']]})))) ' +
+		'             genes (getfield "genes") ' +
+		'             sampleID (getfield "sampleID") ' +
+		'             position (getfield "position") ' +
+		'             alt (getfield "alt") ' +
+		'             effect (getfield "effect") ' +
+		'             ref (getfield "ref") ' +
+		'             dna-vaf (getfield "dna-vaf") ' +
+		'             amino-acid (getfield "amino-acid") ' +
+		'             rna-vaf (getfield "rna-vaf")] ' +
+		'         {:samples (map :VALUE (query {:select [:value] ' +
+	    '                                       :from [:field] ' +
+	    '                                       :join [:feature [:= :field.id :field_id] ' +
+		'                                              :code [:= :feature.id :feature_id] ' +
+		'                                              {:table [[[:sampleID :varchar ' + arrayfmt(samples) + ']] :T]} [:= :T.sampleID :value]] ' +
+		'                                       :where [:= :field_id sampleID]})) ' +
+		'          :rows (query {:select [:chrom :chromStart :chromEnd :gene :T2.sampleID' +
+		'                                 [#sql/call ["unpackValue" ref :field_gene.row] :ref] ' +
+		'                                 [#sql/call ["unpackValue" alt :field_gene.row] :alt] ' +
+		'                                 [#sql/call ["unpackValue" effect :field_gene.row] :effect] ' +
+		'                                 [#sql/call ["unpack" dna-vaf :field_gene.row] :dna-vaf] ' +
+		'                                 [#sql/call ["unpack" rna-vaf :field_gene.row] :rna-vaf] ' +
+		'                                 [#sql/call ["unpackValue" amino-acid :field_gene.row] :amino-acid]] ' +
+		'                        :from [:field_gene] ' +
+		'                        :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :field_gene.gene] ' +
+		'                               {:table [[[:sampleID :varchar ' + arrayfmt(samples) + ']] :T2]} [:= :T2.sampleID #sql/call ["unpackValue" sampleID :field_gene.row]] ' +
+		'                               :field_position [:= :field_position.row :field_gene.row]] ' +
+		'                        :where [:and [:= :field_gene.field_id genes] [:= :field_position.field_id position]]})})';
+	}
+
 	function dataset_string(dataset) {
 		return  '(:TEXT (car (query {:select [:text] ' +
 				'                    :from [:dataset] ' +
@@ -227,10 +263,6 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			' :left-join [:feature [:= :feature.field_id :P.id] ' +
 			'             :code [:= :feature.id :feature_id]] ' +
 			' :group-by [:P.id]}))';
-	}
-
-	function sparse_data_string(dataset, samples, genes) {
-		return 'sparse_exon_query' + dataset + genes[0]; // TODO implement  after data is on server
 	}
 
 	function refGene_exon_string(genes) {
