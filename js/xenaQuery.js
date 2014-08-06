@@ -75,9 +75,11 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 				// XXX wonky fix to work around dataSubType.
 				// Use basename of ds.DATASUBTYPE if it's there. Otherwise
 				// default to cna if there's a gene view, and clinical otherwise.
-				dataSubType: ds.DATASUBTYPE ?
-					ds.DATASUBTYPE.split(/[\/]/).reverse()[0] :
-					(ds.PROBEMAP ? 'cna' : 'clinical')
+				// Also, copy type mutationVector to dataSubType.
+				dataSubType: ds.type === "mutationVector" ? ds.type :
+					(ds.DATASUBTYPE ?
+					 ds.DATASUBTYPE.split(/[\/]/).reverse()[0] :
+					 (ds.PROBEMAP ? 'cna' : 'clinical'))
 			};
 		});
 	}
@@ -101,18 +103,31 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	// QUERY STRINGS
 
 	function dataset_samples_query(dataset) {
-		return '(map :NAME (query {:select [:sample.name] ' +
-		       '                   :from [:dataset] ' +
-		       '                   :where [:= :dataset.name ' + quote(dataset) + ']' +
-		       '                   :left-join [:sample [:= :dataset.id :dataset_id]]}))';
+		return '(map :VALUE ' +
+		       '  (query ' +
+		       '    {:select [:value] ' +
+		       '     :from [:dataset] ' +
+		       '     :where [:= :name ' + quote(dataset) + '] ' +
+		       '     :left-join ' +
+		       '       [[{:select [:id :dataset_id] ' +
+		       '          :from [:field] ' +
+		       '          :where [:= :name "sampleID"]} :F] [:= :dataset.id :dataset_id] ' +
+		       '        :feature [:= :feature.field_id :F.id] ' +
+		       '        :code [:= :feature.id :feature_id]]}))';
 	}
 
 	function all_samples_query(cohort) {
-		return '(query {:select [:%distinct.sample.name] ' +
-		       '        :from [:sample] ' +
-		       '        :where [:in :dataset_id {:select [:id] ' +
-		       '                                     :from [:dataset] ' +
-		       '                                     :where [:= :cohort ' + quote_cohort(cohort) + ']}]})';
+		return '(map :VALUE ' +
+		       '  (query ' +
+		       '    {:select [:%distinct.value] ' +
+		       '     :from [:dataset] ' +
+		       '     :where [:= :cohort ' + quote_cohort(cohort) + '] ' +
+		       '     :left-join ' +
+		       '       [[{:select [:id :dataset_id] ' +
+		       '          :from [:field] ' +
+		       '          :where [:= :name "sampleID"]} :F] [:= :dataset.id :dataset_id] ' +
+		       '        :feature [:= :feature.field_id :F.id] ' +
+		       '        :code [:= :feature.id :feature_id]]}))';
 	}
 
 	function all_cohorts_query() {
@@ -128,74 +143,100 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function dataset_probe_string(dataset, samples, probes) {
 		return '(fetch (quote ({' +
-					['table', quote(dataset),
-					'columns', listfmt(probes),
-					'samples', listfmt(samples)].join(' ')
+					[':table', quote(dataset),
+					':columns', listfmt(probes),
+					':samples', listfmt(samples)].join(' ')
 					+ '})))';
 	}
 
-	function dataset_gene_probes_string(dataset, samples, gene)
-	{
-		return '((fn [probes] ' +
-		       '   (cons ' +
-		       '     probes ' +
-		       '     (cons ' +
-		       '       (fetch (cons ' +
-		       '                (assoc {table ' + quote(dataset) +
-		       '                        samples ' + arrayfmt(samples) + '} ' +
-		       '                       (quote columns) probes) ' +
-		       '                [])) ' +
-		       '       []))) ' +
-		       ' (map :NAME ' +
-		       '   (query {:select [:probe.name] ' +
-		       '           :from [:probe] ' +
-		       '           :left-join [:probe_gene [:= :probe.id :probe_gene.probe_id] ' +
-		       '                       :probe_position [:= probe.id :probe_position.probe_id]] ' +
-		       '           :order-by [:probe_position.chromStart] ' +
-		       '           :where [:and ' +
-		       '                   [:= :probe_gene.gene ' + quote(gene) + '] ' +
-		       '                   [:= :probe.probemap_id  ' +
-		       '                       {:select [:probemap.id] ' +
-		       '                        :from [:dataset] ' +
-		       '                        :where [:= :dataset.name ' + quote(dataset) + '] ' +
-		       '                        :left-join [:probemap [:= :probemap.name :probemap]]}]]})))';
+	function dataset_gene_probes_string(dataset, samples, gene) {
+		return '(let [getfield (fn [dsID field] ' +
+		'                        (:ID (car (query {:select [:id] ' +
+		'                                          :from [:field] ' +
+		'                                          :where [:and [:= :name field] [:= :dataset_id dsID]]})))) ' +
+		'             pmid (:ID (car (query {:select [:d2.id] ' +
+		'                                    :from [:dataset] ' +
+		'                                    :join [[:dataset :d2] [:= :dataset.probemap :d2.name]] ' +
+		'                                    :where [:= :dataset.name ' + quote(dataset) + ']}))) ' +
+		'             genes (getfield pmid "genes") ' +
+		'             name (getfield pmid "name") ' +
+		'             probes (map :PROBE (query {:select [[#sql/call [:unpackValue name :row] :probe]] ' +
+		'                                        :from [:field_gene] ' +
+		'                                        :where [:and [:= :field_id genes] [:= :gene ' + quote(gene) + ']]}))] ' +
+		'         [probes ' +
+		'           (fetch [{:table ' + quote(dataset) + ' ' +
+		'                    :samples ' + arrayfmt(samples) + ' ' +
+		'                    :columns probes}])]) ';
 	}
 
+
 	function dataset_gene_string(dataset, samples, genes) {
-		return '((fn [probes merge-scores avg] ' +
-			'     (avg ' +
-			'       (group-by :GENE ' +
-			'         (merge-scores ' +
-			'           probes ' +
-			'           (fetch (cons ' +
-			'                   (assoc {table ' + quote(dataset) +
-			'                           samples ' + arrayfmt(samples) + '} ' +
-			'                          (quote columns) (map :NAME probes)) ' +
-			'                   (quote ()))))))) ' +
-			'     (query {:select [:P.gene :name] ' +
-			'             :from [[{:select [:gene :probe_id] ' +
-			'                      :from [:probe_gene] ' +
-			'                      :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :probe_gene.gene]] ' +
-			'                      :where [:= :probemap_id {:select [:id] ' +
-			'                                                :from [:probemap] ' +
-			'                                                :where [:= :name {:select [:probemap] ' +
-			'                                                                  :from [:dataset] ' +
-			'                                                                  :where [:= :name ' + quote(dataset) + ']}]}]} :P]] ' +
-			'             :left-join [:probe [:= :probe.id :probe_id]]}) ' +
-			'     (fn [probes scores] ' +
-			'         (map (fn [p s] (assoc p :SCORES s)) probes scores)) ' +
-			'     (fn [genes] (map (fn [gp] (assoc {} ' +
-			'                                      :GENE (car gp) ' +
-			'                                      :SCORES (mean ' +
-			'                                               (map :SCORES (car (cdr gp))) ' +
-			'                                               0))) ' +
-			'                      genes))) ';
+		return '(let [average (fn [genes] (map (fn [gp] {:GENE (car gp) ' +
+		'                                                :SCORES (mean (map :SCORES (car (cdr gp))) 0)}) ' +
+		'                                      genes)) ' +
+		'             merge-scores (fn [probes scores] ' +
+		'                            (map (fn [p s] (assoc p :SCORES s)) probes scores)) ' +
+		'             getfield (fn [dsID field] ' +
+		'                        (:ID (car (query {:select [:id] ' +
+		'                                          :from [:field] ' +
+		'                                          :where [:and [:= :name field] [:= :dataset_id dsID]]})))) ' +
+		'             pmid (:ID (car (query {:select [:d2.id] ' +
+		'                                    :from [:dataset] ' +
+		'                                    :join [[:dataset :d2] [:= :dataset.probemap :d2.name]] ' +
+		'                                    :where [:= :dataset.name ' + quote(dataset) + ']}))) ' +
+		'             genes (getfield pmid "genes") ' +
+		'             name (getfield pmid "name") ' +
+		'             probes (query {:select [:gene [#sql/call [:unpackValue name :row] :probe]] ' +
+		'                            :from [:field_gene] ' +
+		'                            :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :field_gene.gene]] ' +
+		'                            :where [:= :field_id genes]})] ' +
+		'         (average (group-by :GENE (merge-scores probes (fetch [{:table ' + quote(dataset) + ' ' +
+		'                                                                :samples ' + arrayfmt(samples) + ' ' +
+		'                                                                :columns (map :PROBE probes)}])))))';
+	}
+
+	// It might be possible to better optimize this join. The scan counts seem high.
+	function sparse_data_string(dataset, samples, genes) {
+		return '(let [getfield (fn [field] ' +
+		'                        (:ID (car (query {:select [:field.id] ' +
+		'                                          :from [:dataset] ' +
+		'                                          :join [:field [:= :dataset.id :field.dataset_id]] ' +
+		'                                          :where [:and [:= :field.name field] [:= :dataset.name ' + quote(dataset) + ']]})))) ' +
+		'             genes (getfield "genes") ' +
+		'             sampleID (getfield "sampleID") ' +
+		'             position (getfield "position") ' +
+		'             alt (getfield "alt") ' +
+		'             effect (getfield "effect") ' +
+		'             ref (getfield "ref") ' +
+		'             dna-vaf (getfield "dna-vaf") ' +
+		'             amino-acid (getfield "amino-acid") ' +
+		'             rna-vaf (getfield "rna-vaf")] ' +
+		'         {:samples (map :VALUE (query {:select [:value] ' +
+	    '                                       :from [:field] ' +
+	    '                                       :join [:feature [:= :field.id :field_id] ' +
+		'                                              :code [:= :feature.id :feature_id] ' +
+		'                                              {:table [[[:sampleID :varchar ' + arrayfmt(samples) + ']] :T]} [:= :T.sampleID :value]] ' +
+		'                                       :where [:= :field_id sampleID]})) ' +
+		'          :rows (query {:select [:chrom :chromStart :chromEnd :gene [#sql/call ["unpackValue" sampleID :field_gene.row] :sampleID]' +
+		'                                 [#sql/call ["unpackValue" ref :field_gene.row] :ref] ' +
+		'                                 [#sql/call ["unpackValue" alt :field_gene.row] :alt] ' +
+		'                                 [#sql/call ["unpackValue" effect :field_gene.row] :effect] ' +
+		'                                 [#sql/call ["unpack" dna-vaf :field_gene.row] :dna-vaf] ' +
+		'                                 [#sql/call ["unpack" rna-vaf :field_gene.row] :rna-vaf] ' +
+		'                                 [#sql/call ["unpackValue" amino-acid :field_gene.row] :amino-acid]] ' +
+		'                        :from [:field_gene] ' +
+		'                        :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :field_gene.gene] ' +
+		'                               :field_position [:= :field_position.row :field_gene.row]] ' +
+		'                        :where [:and ' +
+		'                                [:= :field_gene.field_id genes] ' +
+		'                                [:= :field_position.field_id position] ' +
+		'                                [:in #sql/call ["unpackValue" sampleID :field_gene.row] ' + arrayfmt(samples) + ']]})})';
 	}
 
 	function dataset_string(dataset) {
 		return  '(:TEXT (car (query {:select [:text] ' +
 				'                    :from [:dataset] ' +
-				'                    :where [:= name ' + quote(dataset) + ']})))';
+				'                    :where [:= :name ' + quote(dataset) + ']})))';
 	}
 
 	function feature_list_query(dataset) {
@@ -233,10 +274,6 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			' :left-join [:feature [:= :feature.field_id :P.id] ' +
 			'             :code [:= :feature.id :feature_id]] ' +
 			' :group-by [:P.id]}))';
-	}
-
-	function sparse_data_string(dataset, samples, genes) {
-		return 'sparse_exon_query' + dataset + genes[0]; // TODO implement  after data is on server
 	}
 
 	function refGene_exon_string(genes) {
@@ -289,7 +326,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	function all_samples(host, cohort) {
 		return Rx.DOM.Request.ajax(
 			xena_get(host, all_samples_query(cohort))
-		).map(_.compose(function (l) { return _.pluck(l, 'NAME'); }, json_resp))
+		).map(json_resp)
 		.catch(Rx.Observable.return([])); // XXX display message?
 	}
 

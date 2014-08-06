@@ -54,6 +54,13 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		return ret;
 	}
 
+	function object_fn(keys, fn) {
+		return _.reduce(keys, function (acc, k) {
+			acc[k] = fn(k);
+			return acc;
+		}, {});
+	}
+
 	_.mixin({
 		fmap: fmap,
 		apply: apply,
@@ -61,7 +68,8 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		pluckPathsArray: pluckPathsArray,
 		array: array,
 		concat: concat,
-		partition_n: partition_n
+		partition_n: partition_n,
+		object_fn: object_fn
 	});
 
 	return _;

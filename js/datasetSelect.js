@@ -38,49 +38,8 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 			delete widgets[this.id];
 		},
 
-		// TODO for demo, insert mutationVector dataset
-		insertLocalMutations: function (sources_in) {
-			var sources = sources_in,
-				index,
-				serverIndex,
-				mutationDS,
-				dsID,
-				cohort = $('.select2-container.cohort').select2('val'); // TODO: get cohort from the state instead;
-
-			this.cohort = cohort; // TODO hack for local mutations
-
-			if (sources.length === 0 || (cohort !== 'TARGET_neuroblastoma' && cohort !== 'TCGA.LUAD.sampleMap')) {
-				return sources;
-			}
-
-			_.each(sources, function (s, i) { // find server index
-				if (s.title === 'genome-cancer.ucsc.edu') {
-					serverIndex = i;
-				}
-			});
-			_.each(sources[serverIndex].datasets, function (d, i) { // find mutation dataset insertion index
-				if (d.title === 'Mutations, gene') {
-					index = i;
-				}
-			});
-			mutationDS = _.find(sources[serverIndex].datasets, function (d, i) {
-				return (d.title === 'Mutation');
-			});
-			dsID = stub.getDEV_URL() + (cohort === 'TARGET_neuroblastoma'
-				? '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector'
-				: '/public/TCGA/TCGA_LUAD_mutation_RADIA');
-			if (!mutationDS || mutationDS.length === 0) {
-				sources[serverIndex].datasets.splice(index, 0, { // insert mutation dataset
-					dataSubType: 'mutationVector',
-					dsID: dsID,
-					title: 'Mutation'
-				});
-			}
-			return sources;
-		},
-
 		render: function (sources_in, state) {
-			var sources = this.insertLocalMutations(sources_in),
+			var sources = sources_in,
 				$el = $(template({
 					sources: sources,
 					placeholder: this.placeholder
@@ -137,13 +96,7 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 					})).map(_.apply(_.union));
 
 				} else { // retrieve the sample IDs in this dataset
-					if (self.cohort === 'TARGET_neuroblastoma') {
-						sampleList = Rx.Observable.return(stub.getMutation(val, 'ALK').samples);
-					} else if (self.cohort === 'TCGA.LUAD.sampleMap') {
-						sampleList = Rx.Observable.return(stub.getMutation(val, 'TP53').samples);
-					} else {
-						sampleList = xenaQuery.dataset_samples(val);
-					}
+					sampleList = xenaQuery.dataset_samples(val);
 				}
 				sampleList.subscribe(function (samples) {
 					self.cursor.set(_.partial(setSamples, samples));

@@ -98,16 +98,7 @@ define(['haml!haml/columnEdit',
 	*/
 
 	function getDataSubType(sources, hdsID) {
-		// TODO for demo, our mutationVector dataset is in the cgi
-		if (hdsID === stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector' ||
-				hdsID === stub.getDEV_URL() + '/public/TCGA/TCGA_LUAD_mutation_RADIA') {
-			return 'mutationVector';
-		} else if (hdsID === stub.getDEV_URL() + '/public/TCGA/TCGA.BRCA.sampleMap/SNP6_nocnv.matrix'
-				|| hdsID === stub.getDEV_URL() + '/public/TCGA/TCGA.BRCA.sampleMap/SNP6.matrix'
-				|| hdsID === stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/cnv.matrix') {
-			return 'cns';
-		}
-		return xenaQuery.find_dataset(sources, hdsID).dataSubType;
+		return  xenaQuery.find_dataset(sources, hdsID).dataSubType;
 	}
 
 	function getInputModesByDataSubType(dataSubType) {
@@ -489,52 +480,6 @@ define(['haml!haml/columnEdit',
 					dsID,
 					cohort = $('.select2-container.cohort').select2('val'); // TODO: get cohort from the state instead;
 				self.sources = sources;
-
-				if (sources.length > 0 &&
-						(cohort === 'TARGET_neuroblastoma' || cohort === 'TCGA.LUAD.sampleMap')) {
-
-					/*
-					// TODO for demo, rename dataset titles
-					self.sources = map(sources, function (s) {
-						return {
-							url: s.url,
-							title: s.title,
-							datasets: map(s.datasets, function (d) {
-								return {
-									dataSubType: d.dataSubType,
-									dsID: d.dsID,
-									title: datasetTitle(d.dsID, d.title)
-								};
-							})
-						};
-					});
-					*/
-
-					// TODO for demo, insert mutationVector dataset
-					_.each(self.sources, function (s, i) { // find server index
-						if (s.title === 'genome-cancer.ucsc.edu') {
-							serverIndex = i;
-						}
-					});
-					_.each(self.sources[serverIndex].datasets, function (d, i) { // find mutation dataset insertion index
-						if (d.title === 'Mutations, gene') {
-							index = i;
-						}
-					});
-					mutationDS = _.find(self.sources[serverIndex].datasets, function (d, i) {
-						return (d.title === 'Mutation');
-					});
-					dsID = stub.getDEV_URL() + (cohort === 'TARGET_neuroblastoma'
-						? '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector'
-						: '/public/TCGA/TCGA_LUAD_mutation_RADIA');
-					if (!mutationDS || mutationDS.length === 0) {
-						self.sources[serverIndex].datasets.splice(index, 0, { // insert mutation dataset
-							dataSubType: 'mutationVector',
-							dsID: dsID,
-							title: 'Mutation'
-						});
-					}
-				}
 
 				opts = $(datasetsTemplate({sources: self.sources}));
 

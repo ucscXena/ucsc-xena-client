@@ -378,7 +378,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 					c = colors[this.color][imp];
 				//} else if (this.feature === 'dataset') {
 				//	c = colors.dataset[val.dataset];
-				} else if (val[this.feature] === 'NA' || val[this.feature] === '') { // _VAF with NA value
+				} else if (_.isUndefined(val[this.feature])) { // _VAF with NA value
 					c = colors.af[0];
 				} else {  // _VAF, but not NA
 					c = clone(colors.af[1]);
