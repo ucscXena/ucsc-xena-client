@@ -488,22 +488,18 @@ define(['underscore_ext',
 			val = codes[label][val];
 		} else if (val !== undefined) {
 			val = prec(val);
-			if (column.dataType !== 'clinicalMatrix') {
-				val += ' (after subtracting mean)';
-			}
 		}
 		rows.push({ label: label, val: (val === undefined) ? 'N/A' : val });
 		if (column.dataType === 'clinicalMatrix') {
 			valWidth = '25em';
 		} else {
-			rows.push({ label: 'Column mean', val: prec(meannan(serverData[field])) });
-			//rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
+			//rows.push({ label: 'Column mean', val: prec(meannan(serverData[field])) });
+			rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
 			valWidth = '15em';
 		}
 
 		tooltip.mousing({
 			ev: ev,
-			//dsID: node.data.dataset, // later
 			sampleID: ev.data.plotData.samples[sampleIndex],
 			el: '#nav',
 			my: 'top',
@@ -575,8 +571,10 @@ define(['underscore_ext',
 					heatmapData: heatmapData,
 					samples: sort,
 					fields: fields,
-					codes: codes,
-					mean: mean
+					codes: codes
+				}
+				if (local.sub) {
+					local.sub.dispose();
 				}
 				local.sub = columnUi.crosshairs.mousingStream.subscribe(function (ev) {
 					ev.data = {
@@ -585,7 +583,7 @@ define(['underscore_ext',
 						ws: ws
 					};
 					mousing(ev);
-				}); // TODO free this somewhere
+				}); // TODO free this somewhere, maybe by moving it to columnUi.js
 			}
 			colors = map(fields, function (p, i) {
 				return heatmapColors.range(column, features[p], codes[p], heatmapData[i]);
