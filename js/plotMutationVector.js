@@ -59,17 +59,17 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 	function mutation_attrs(list) {
 		return _.map(list, function (row) {
 			return {
-				"Amino_Acid_Change": row["AMINO-ACID"],
-				"end": row.CHROMEND,
-				"reference": row.REF,
-				"RNA_AF": xenaQuery.nanstr(row.RNA_VAF),
-				"effect": row.EFFECT,
 				"sample": row.SAMPLEID,
-				"start": row.CHROMSTART,
 				"chr": row.CHROM,
-				"alt": row.ALT,
+				"start": row.CHROMSTART,
+				"end": row.CHROMEND,
 				"gene": row.GENE,
-				"DNA_AF": xenaQuery.nanstr(row.DNA_VAF),
+				"reference": row.REF,
+				"alt": row.ALT,
+				"effect": row.EFFECT,
+				"Amino_Acid_Change": row["AMINO-ACID"],
+				"RNA_AF": xenaQuery.nanstr(row.RNA_VAF),
+				"DNA_AF": xenaQuery.nanstr(row.DNA_VAF)
 			};
 		});
 	}
