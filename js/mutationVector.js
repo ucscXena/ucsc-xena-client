@@ -132,6 +132,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				{r: 228, g: 26, b: 28, a: 1}
 			]
 		},
+		refGeneInfo = {},
 		clone = _.clone,
 		each = _.each,
 		filter = _.filter,
@@ -491,6 +492,16 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 		return w;
 	}
 
+	function getRefGeneInfo(gene) {
+		// TODO Hack until we are pulling refGene from the server and combining
+		//      its data with mutation data so the refGene strand and txStart
+		//      can be included in the data received by cmpValue.
+		if (refGeneInfo[gene] === undefined) {
+			refGeneInfo[gene] = stub.getRefGene(gene);
+		}
+		return refGeneInfo[gene];
+	}
+
 	return {
 		mupitClick: function (id) {
 			if (widgets[id]) {
@@ -501,11 +512,17 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 		cmpValue: function (row) {
 			var chrEnd = 10000000000,  // TODO some number larger than use max number of base pairs of longest genes
 				mut,
-				weight;
+				weight,
+				refGeneInfo,
+				rightness;
 			if (row.length) {
 				mut = _.max(row, function (mut) { return impact[mut.effect]; });
 				weight = impactMax - impact[mut.effect];
-				return (weight * chrEnd) - mut.start;
+				refGeneInfo = getRefGeneInfo(mut.gene);
+				rightness = (refGeneInfo.strand === '+')
+					? mut.start - refGeneInfo.txStart
+					: refGeneInfo.txStart - mut.start;
+				return (weight * chrEnd) + rightness;
 			} else {
 				return (impactMax * chrEnd) + chrEnd + 1; // force mutation-less rows to the end
 			}
