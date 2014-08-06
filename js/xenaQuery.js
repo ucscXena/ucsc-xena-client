@@ -103,10 +103,17 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	// QUERY STRINGS
 
 	function dataset_samples_query(dataset) {
-		return '(map :NAME (query {:select [:sample.name] ' +
-		       '                   :from [:dataset] ' +
-		       '                   :where [:= :dataset.name ' + quote(dataset) + ']' +
-		       '                   :left-join [:sample [:= :dataset.id :dataset_id]]}))';
+		return '(map :VALUE ' +
+		       '  (query ' +
+		       '    {:select [:value] ' +
+		       '     :from [:dataset] ' +
+		       '     :where [:= :name ' + quote(dataset) + '] ' +
+		       '     :left-join ' +
+		       '       [[{:select [:id :dataset_id] ' +
+		       '          :from [:field] ' +
+		       '          :where [:= :name "sampleID"]} :F] [:= :dataset.id :dataset_id] ' +
+		       '        :feature [:= :feature.field_id :F.id] ' +
+		       '        :code [:= :feature.id :feature_id]]}))';
 	}
 
 	function all_samples_query(cohort) {
