@@ -217,7 +217,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		'                                              :code [:= :feature.id :feature_id] ' +
 		'                                              {:table [[[:sampleID :varchar ' + arrayfmt(samples) + ']] :T]} [:= :T.sampleID :value]] ' +
 		'                                       :where [:= :field_id sampleID]})) ' +
-		'          :rows (query {:select [:chrom :chromStart :chromEnd :gene :T2.sampleID' +
+		'          :rows (query {:select [:chrom :chromStart :chromEnd :gene [#sql/call ["unpackValue" sampleID :field_gene.row] :sampleID]' +
 		'                                 [#sql/call ["unpackValue" ref :field_gene.row] :ref] ' +
 		'                                 [#sql/call ["unpackValue" alt :field_gene.row] :alt] ' +
 		'                                 [#sql/call ["unpackValue" effect :field_gene.row] :effect] ' +
@@ -226,9 +226,11 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		'                                 [#sql/call ["unpackValue" amino-acid :field_gene.row] :amino-acid]] ' +
 		'                        :from [:field_gene] ' +
 		'                        :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :field_gene.gene] ' +
-		'                               {:table [[[:sampleID :varchar ' + arrayfmt(samples) + ']] :T2]} [:= :T2.sampleID #sql/call ["unpackValue" sampleID :field_gene.row]] ' +
 		'                               :field_position [:= :field_position.row :field_gene.row]] ' +
-		'                        :where [:and [:= :field_gene.field_id genes] [:= :field_position.field_id position]]})})';
+		'                        :where [:and ' +
+		'                                [:= :field_gene.field_id genes] ' +
+		'                                [:= :field_position.field_id position] ' +
+		'                                [:in #sql/call ["unpackValue" sampleID :field_gene.row] ' + arrayfmt(samples) + ']]})})';
 	}
 
 	function dataset_string(dataset) {
