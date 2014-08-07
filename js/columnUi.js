@@ -105,7 +105,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 						? ': ' + sFeatures[ui.sFeature]
 						: ''));
 
-			if (ui.dataSubType === 'clinical') {
+			if (ui.dataSubType === 'phenotype') {
 				defalt = xenaQuery.feature_list(this.ws.column.dsID)
 					.pluck(ui.feature);
 			}

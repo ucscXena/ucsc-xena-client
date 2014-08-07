@@ -79,7 +79,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 				dataSubType: ds.type === "mutationVector" ? ds.type :
 					(ds.DATASUBTYPE ?
 					 ds.DATASUBTYPE.split(/[\/]/).reverse()[0] :
-					 (ds.PROBEMAP ? 'cna' : 'clinical'))
+					 (ds.PROBEMAP ? 'cna' : 'phenotype'))
 			};
 		});
 	}

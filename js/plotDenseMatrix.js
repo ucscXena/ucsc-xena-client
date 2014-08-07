@@ -1,6 +1,6 @@
 /*global define: false */
 define(['underscore_ext',
-	    'jquery',
+		'jquery',
 		'rx',
 		'multi',
 		'vgcanvas',
@@ -71,7 +71,7 @@ define(['underscore_ext',
 		"common/dataSubType/phenotype": color_schemes.blue_white_red,
 		"common/dataSubType/protein": color_schemes.blue_white_red,
 		"common/dataSubType/somaticMutation": color_schemes.blue_white_red,
-		clinical: color_schemes.green_black_yellow
+		phenotype: color_schemes.green_black_yellow
 	};
 
 	function meannan(values) {
@@ -446,7 +446,7 @@ define(['underscore_ext',
 	function prec(val) {
 		var precision = 6,
 			factor = Math.pow(10, precision);
-		return Math.round((val * factor)) / factor
+		return Math.round((val * factor)) / factor;
 	}
 
 	function mousing(ev) {
@@ -531,7 +531,7 @@ define(['underscore_ext',
 					min: metadata.min,
 					max: metadata.max,
 					colors: default_colors(ws.column.dataType === "clinicalMatrix" ?
-										   "clinical" :
+										   "phenotype" :
 										   metadata.dataSubType),
 					colnormalization: metadata.colnormalization
 				},
@@ -572,7 +572,7 @@ define(['underscore_ext',
 					samples: sort,
 					fields: fields,
 					codes: codes
-				}
+				};
 				if (local.sub) {
 					local.sub.dispose();
 				}

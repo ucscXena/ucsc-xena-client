@@ -44,7 +44,7 @@ define(['haml!haml/columnEdit',
 		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles?
 			cns: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
 			mutationVector: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
-			clinical: ['dClinical'],
+			phenotype: ['dClinical'],
 			cna: defaultDisplayModes,
 			DNAMethylation: defaultDisplayModes,
 			geneExp: defaultDisplayModes,
@@ -66,7 +66,7 @@ define(['haml!haml/columnEdit',
 			iGenes: 'list of genes',
 			iProbes: 'list of probes',
 			iChrom: 'chromosome coordinates',
-			iClinical: 'clinical'
+			iClinical: 'phenotype'
 		},
 		displayModeLabels = { // TODO combine with dataTypeByDisplay
 			dGene: 'gene',
@@ -253,7 +253,7 @@ define(['haml!haml/columnEdit',
 
 		renderSelect: function () {
 			var self = this;
-			if (self.state.dataSubType === 'clinical') {
+			if (self.state.dataSubType === 'phenotype') {
 				xenaQuery.feature_list(self.state.dsID).subscribe(function (features) {
 					self.renderFeatures(features);
 				});
