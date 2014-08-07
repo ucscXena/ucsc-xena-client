@@ -432,13 +432,7 @@ define(['haml!haml/columnEdit',
 			this.$el.dialog({
 				title: 'Define Column',
 				width: '500', // TODO make dynamic
-				/*
-				position: {
-					my: 'left top',
-					at: 'right top',
-					of: $('.columnUi:last')
-				},
-				*/
+				position: { my: "top", at: "top+70", of: window },
 				close: this.destroy
 			});
 		},

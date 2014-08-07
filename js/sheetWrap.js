@@ -97,9 +97,11 @@ define(['haml!haml/sheetWrap',
 				stream = this.state.pluck('column_order').distinctUntilChanged();
 				this.column_orderSub = stream.subscribe(function (column_order) {
 					self.$addColumn.show();
+					/*
 					if (!column_order || column_order.length < 1) {
 						self.$addColumn.click();
 					}
+					*/
 				});
 			}
 		},
