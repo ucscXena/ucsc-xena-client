@@ -3,6 +3,7 @@
   %tr
     %td{colspan:2}
       %div{class:'moveHandle hoverShow recede'}
+        %span{class:'ui-icon ui-icon-arrowthick-2-e-w', title:'Move column'}
       %span{class:'more hoverShow recede menu', title:'More...'}
         %img{src:menuImg, alt:''}
 
@@ -25,9 +26,15 @@
     %td{class:'sampleSidebar sidebar'}
     %td{class:'samplePlot plot',}
 
-  %tr{class:'legendRow', style:'display:none'}
-    %td{class:'legend', style:'text-align:center'}
-      %img{src:legendImg, alt:'', width:130}
+  %tr
+    %td{class:'colorBarLabel', colspan:2}
+
+  %tr{class:'colorBarRow'}
+    %td{colspan:2, style:'text-align:center'}
+      %span{class:'colorBar'}
+	  
+  %tr
+    %td{class:'colorBarEllipsis', style:'text-align:center', colspan:2}
 
   %tr{style:'display:none'}
     %td{colspan:2} =debugId

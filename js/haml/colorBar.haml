@@ -1,6 +1,10 @@
 %table
   %tbody
-    %tr
+    - if (vertical) {
       - _.each(colors, function (color, i) {
-        %td{class:'color', title:tooltips[i], style:'background-color:' + color} =labels[i]
-        -#%td{class:'color', style:'background-color:' + color, title:tooltips[i]} =labels[i]
+        %tr
+          %td{class:'color', title:tooltips[i], style:'background-color:' + color + ';color:' + textColors[i] + ';text-align:' + align} =labels[i]
+	- if (!vertical) {
+      %tr
+        - _.each(colors, function (color, i) {
+          %td{class:'color', title:tooltips[i], style:'background-color:' + color + ';color:' + textColors[i] + ';text-align:' + align} =labels[i]

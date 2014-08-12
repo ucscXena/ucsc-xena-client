@@ -4,6 +4,7 @@ define(['underscore_ext',
 		'rx',
 		'multi',
 		'vgcanvas',
+		'colorBar',
 		'columnWidgets',
 		'crosshairs',
 		'heatmapColors',
@@ -19,6 +20,7 @@ define(['underscore_ext',
 		Rx,
 		multi,
 		vgcanvas,
+		colorBar,
 		widgets,
 		crosshairs,
 		heatmapColors,
@@ -54,9 +56,14 @@ define(['underscore_ext',
 		render;
 
 	color_schemes = {
-		blue_white_red: ['blue', 'white', 'red'],
-		green_black_red: ['green', 'black', 'red'],
-		green_black_yellow: ['green', 'black', 'yellow']
+		blue_white_red: ['#0000ff', '#ffffff', '#ff0000'],
+		green_black_red: ['#007f00', '#000000', '#ff0000'],
+		green_black_yellow: ['#007f00', '#000000', '#ffff00']
+		/* with clinical category palette:
+		blue_white_red: ['#377eb8', '#ffffff', '#e41a1c'],
+		green_black_red: ['#4daf4a', '#000000', '#e41a1c'],
+		green_black_yellow: ['#4daf4a', '#000000', '#ffff33']
+		*/
 	};
 
 	default_colors_map = {
@@ -510,6 +517,66 @@ define(['underscore_ext',
 		});
 	}
 
+	function categoryLegendColors(dataIn, color_scale) {
+		// only finds categories for the current data in the column
+		var data = uniq(dataIn).sort(function (v1, v2) {
+				return v1 - v2;
+			}),
+			colors,
+			justColors;
+
+		if (color_scale) { // then there exist some non-null values
+			// zip colors and their indexes, then filter out the nulls
+			colors = filter(zip(range(data.length), map(data, color_scale)), secondNotUndefined);
+			return map(colors, function (color) {
+				return color[1];
+			});
+		} else {
+			return undefined;
+		}
+	}
+
+	function drawLegend(column, columnUi, data, fields, codes, color_scale, categoryLength) {
+		var myColorBar,
+			label = '',
+			ellipsis = '',
+			align = 'center',
+			vertical = true,
+			colors = [].concat(column.colors),
+			labels = [column.min, 0, column.max];
+		if (data.length === 0) { // no features to draw
+			return;
+		}
+		if ($('.columnUi').index(columnUi.$el) === 0) {
+			label = 'Legend';
+		}
+		columnUi.$colorBarLabel.text(label);
+		if (column.dataType === 'clinicalMatrix') {
+			if (codes[fields[0]]) { // category
+				colors = categoryLegendColors(data[0], color_scale[0]);
+				if (colors.length > categoryLength) {
+					ellipsis = '...';
+				}
+				colors = colors.slice(0, categoryLength);
+				//colors = categoryLegendColors(data[0], color_scale[0]).slice(0, categoryLength);
+				labels = codes[fields[0]].slice(0, colors.length);
+				align = 'left';
+			} else { // float
+				// TODO need min and max of full dataset from server
+			}
+		}
+		labels.reverse();
+		columnUi.$colorBarEllipsis.text(ellipsis);
+		myColorBar = colorBar.create(columnUi.id, {
+			$anchor: columnUi.$el.find('.colorBar'),
+			colors: colors.reverse().concat('#808080'),
+			labels: labels.concat('NA'),
+			tooltips: labels.concat('No data'),
+			align: align,
+			vertical: vertical
+		});
+	}
+
 	// memoize doesn't help us here, because we haven't allocated a render routine
 	// for each widget. Maybe we should???
 	render = ifChanged(
@@ -528,8 +595,8 @@ define(['underscore_ext',
 				metadata = data.metadata || {},
 				columnUi,
 				defaults = {
-					min: metadata.min,
-					max: metadata.max,
+					min: (metadata.min === undefined) ? -1 : metadata.min,
+					max: (metadata.max === undefined) ? 1 :metadata.max,
 					colors: default_colors(ws.column.dataType === "clinicalMatrix" ?
 										   "phenotype" :
 										   metadata.dataSubType),
@@ -569,7 +636,8 @@ define(['underscore_ext',
 				columnUi.plotData = {
 					serverData: data.req.values,
 					heatmapData: heatmapData,
-					samples: sort,
+					column: column,
+					samples: sort, // TODO should samples, fields, codes be gotten from ws?
 					fields: fields,
 					codes: codes
 				};
@@ -588,6 +656,7 @@ define(['underscore_ext',
 			colors = map(fields, function (p, i) {
 				return heatmapColors.range(column, features[p], codes[p], heatmapData[i]);
 			});
+			drawLegend(column, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryLength);
 			renderHeatmap({
 				vg: vg,
 				height: ws.height,

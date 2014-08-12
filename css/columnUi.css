@@ -23,8 +23,18 @@
 	height: 12px;
 	margin-top: 4px;
 	margin-bottom: 4px;
+	padding-bottom: 4px;
 	display: inline-block;
 	cursor: ew-resize;
+	text-align: center;
+}
+.columnUi .moveHandle .ui-icon {
+	transform: scale(1.5);
+	cursor: ew-resize;
+  	display: inline-block;
+	line-height: normal;
+	vertical-align: top;
+	text-align: center;
 }
 .columnUi .more {
 	vertical-align: middle;
@@ -54,4 +64,9 @@
 .columnUi .crosshairPlot {
 	position: relative;
 	cursor: none;
+}
+.columnUi .colorBarLabel {
+	line-height: normal;
+	height: 1.2em;
+	padding-bottom: 3px;
 }

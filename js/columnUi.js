@@ -9,8 +9,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 	var APPLY = true,
 		STATIC_URL = config.STATIC_URL,
 		menuImg = STATIC_URL + 'heatmap-cavm/images/menu.png',
-		legendImg = STATIC_URL + 'heatmap/images/mutationLegend.png',
-		legendScaleImg = STATIC_URL + 'heatmap/images/mutationScaleLegend.png',
 		each = _.each,
 		filter = _.filter,
 		find = _.find,
@@ -133,7 +131,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el = $(template({
 				features: undefined,
 				menuImg: menuImg,
-				legendImg: (ui.sFeature === 'impact') ? legendImg : legendScaleImg,
 				debugId: this.id
 			}));
 			$anchor.append(this.$el);
@@ -145,7 +142,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el.find('.headerPlot').height(this.headerPlotHeight);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'legendRow', 'legend'];
+			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'colorBarLabel', 'colorBarEllipsis'];
 			_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
 			this.columnMenu = columnMenu.create(this.id, {
 				anchor: this.$more,
@@ -160,12 +157,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				.on('mouseenter mouseleave', this.mouseenterLeave);
 
 			this.reRender(options);
-
-			if (ui.dataSubType === 'mutationVector') { // TODO make dynamic
-				this.$legendRow.show();
-			} else {
-				this.$legendRow.hide();
-			}
 		},
 
 		render: function (options) {

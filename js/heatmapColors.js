@@ -15,11 +15,17 @@ define(["lib/d3",
 		range = _.range,
 		color_range,
 		// d3_category20, without the #7f7f7f gray that aliases with our N/A gray of #808080
-		category19 = [ "#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5" ];
+		//category = [ "#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c", "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5" ],
+		// bright: colorBrewer.org 9-class Set1, without the  gray
+		//            red        blue       green      purple     orange     yellow     brown      pink
+		category = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf"];
+		// less pastel: colorBrewer.org 8-class Set2, without the  gray
+		//category = ["#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494"];
+		// most pastel: colorBrewer.org 9-class Set3, without the  gray
+		//category = ["#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5"];
 
-
-	function scale_category19() {
-		return d3.scale.ordinal().range(category19);
+	function scale_category() {
+		return d3.scale.ordinal().range(category);
 	}
 
 	// Return a new function that preserves undefined arguments, otherwise calls the original function.
@@ -84,13 +90,13 @@ define(["lib/d3",
 	}
 
 	function color_category(column, feature, codes) {
-		return saveUndefined(scale_category19().domain(range(codes.length)));
+		return saveUndefined(scale_category().domain(range(codes.length)));
 	}
 
 	function color_scaled(column) {
-			var low = column.colors[0],
-				zero = column.colors[1],
-				high = column.colors[2];
+		var low = column.colors[0],
+			zero = column.colors[1],
+			high = column.colors[2];
 
 		return saveUndefined(d3.scale.linear()
 			.domain([column.min, (column.min + column.max) / 2, column.max])
@@ -101,6 +107,7 @@ define(["lib/d3",
 		range: color_range,
 		float: color_float,
 		scaled: color_scaled,
-		category: color_category
+		category: color_category,
+		categoryLength: category.length
 	};
 });
