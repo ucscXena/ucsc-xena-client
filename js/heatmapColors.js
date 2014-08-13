@@ -37,7 +37,7 @@ define(["lib/d3",
 	}
 
 	color_range = multi(function (column, features, codes) {
-		if (features && features.VALUETYPE === 'category' && codes) {
+		if (features && features.valuetype === 'category' && codes) {
 			return 'coded';
 		}
 		if (column.min && column.max) {

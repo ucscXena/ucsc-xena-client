@@ -301,10 +301,10 @@ define(['underscore_ext',
 	}
 
 	function orderByQuery(genes, data) {
-		var indx = _.invert(_.pluck(data, 'GENE'));
+		var indx = _.invert(_.pluck(data, 'gene'));
 		return _.map(genes, function (g) {
 			var i = indx[g];
-			return i && data[i].SCORES[0]; // XXX extra level of array in g.SCORES??
+			return i && data[i].scores[0]; // XXX extra level of array in g.SCORES??
 		});
 	}
 
@@ -322,7 +322,7 @@ define(['underscore_ext',
 	function indexFeatures(xhr) {
 		var features = JSON.parse(xhr.response);
 		return _.reduce(features, function (acc, row) {
-			acc[row.NAME] = row;
+			acc[row.name] = row;
 			return acc;
 		}, {});
 	}
@@ -330,7 +330,7 @@ define(['underscore_ext',
 	function indexCodes(xhr) {
 		var codes = JSON.parse(xhr.response);
 		return _.object(_.map(codes, function (row) {
-			return [row.NAME, row.CODE && row.CODE.split('\t')];
+			return [row.name, row.code && row.code.split('\t')];
 		}));
 	}
 
