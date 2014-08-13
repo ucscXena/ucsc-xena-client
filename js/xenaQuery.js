@@ -58,28 +58,28 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function indexFeatures(features) {
 		return _.object(_.map(features, function (f) {
-			return [f.NAME, f.SHORTTITLE || f.NAME];
+			return [f.name, f.shorttitle || f.name];
 		}));
 	}
 
 	function xena_dataset_list_transform(host, list) {
 		return _.map(list, function (ds) {
-			var text = JSON.parse(ds.TEXT) || {};
+			var text = JSON.parse(ds.text) || {};
 
 			// merge curated fields over raw metadata
 			// XXX note that we're case sensitive on raw metadata
 			ds = _.extend(text, _.dissoc(ds, 'TEXT'));
 			return {
-				dsID: host + '/' + ds.NAME,
-				title: ds.label || ds.NAME,
+				dsID: host + '/' + ds.name,
+				title: ds.label || ds.name,
 				// XXX wonky fix to work around dataSubType.
-				// Use basename of ds.DATASUBTYPE if it's there. Otherwise
+				// Use basename of ds.datasubtype if it's there. Otherwise
 				// default to cna if there's a gene view, and clinical otherwise.
 				// Also, copy type mutationVector to dataSubType.
 				dataSubType: ds.type === "mutationVector" ? ds.type :
-					(ds.DATASUBTYPE ?
-					 ds.DATASUBTYPE.split(/[\/]/).reverse()[0] :
-					 (ds.PROBEMAP ? 'cna' : 'phenotype'))
+					(ds.datasubtype ?
+					 ds.datasubtype.split(/[\/]/).reverse()[0] :
+					 (ds.probemap ? 'cna' : 'phenotype'))
 			};
 		});
 	}
@@ -103,7 +103,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	// QUERY STRINGS
 
 	function dataset_samples_query(dataset) {
-		return '(map :VALUE ' +
+		return '(map :value ' +
 		       '  (query ' +
 		       '    {:select [:value] ' +
 		       '     :from [:dataset] ' +
@@ -112,12 +112,11 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		       '       [[{:select [:id :dataset_id] ' +
 		       '          :from [:field] ' +
 		       '          :where [:= :name "sampleID"]} :F] [:= :dataset.id :dataset_id] ' +
-		       '        :feature [:= :feature.field_id :F.id] ' +
-		       '        :code [:= :feature.id :feature_id]]}))';
+		       '        :code [:= :F.id :field_id]]}))';
 	}
 
 	function all_samples_query(cohort) {
-		return '(map :VALUE ' +
+		return '(map :value ' +
 		       '  (query ' +
 		       '    {:select [:%distinct.value] ' +
 		       '     :from [:dataset] ' +
@@ -126,8 +125,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		       '       [[{:select [:id :dataset_id] ' +
 		       '          :from [:field] ' +
 		       '          :where [:= :name "sampleID"]} :F] [:= :dataset.id :dataset_id] ' +
-		       '        :feature [:= :feature.field_id :F.id] ' +
-		       '        :code [:= :feature.id :feature_id]]}))';
+		       '        :code [:= :F.id :field_id]]}))';
 	}
 
 	function all_cohorts_query() {
@@ -151,16 +149,16 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function dataset_gene_probes_string(dataset, samples, gene) {
 		return '(let [getfield (fn [dsID field] ' +
-		'                        (:ID (car (query {:select [:id] ' +
+		'                        (:id (car (query {:select [:id] ' +
 		'                                          :from [:field] ' +
 		'                                          :where [:and [:= :name field] [:= :dataset_id dsID]]})))) ' +
-		'             pmid (:ID (car (query {:select [:d2.id] ' +
+		'             pmid (:id (car (query {:select [:d2.id] ' +
 		'                                    :from [:dataset] ' +
 		'                                    :join [[:dataset :d2] [:= :dataset.probemap :d2.name]] ' +
 		'                                    :where [:= :dataset.name ' + quote(dataset) + ']}))) ' +
 		'             genes (getfield pmid "genes") ' +
 		'             name (getfield pmid "name") ' +
-		'             probes (map :PROBE (query {:select [[#sql/call [:unpackValue name :row] :probe]] ' +
+		'             probes (map :probe (query {:select [[#sql/call [:unpackValue name :row] :probe]] ' +
 		'                                        :from [:field_gene] ' +
 		'                                        :where [:and [:= :field_id genes] [:= :gene ' + quote(gene) + ']]}))] ' +
 		'         [probes ' +
@@ -171,16 +169,16 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 
 	function dataset_gene_string(dataset, samples, genes) {
-		return '(let [average (fn [genes] (map (fn [gp] {:GENE (car gp) ' +
-		'                                                :SCORES (mean (map :SCORES (car (cdr gp))) 0)}) ' +
+		return '(let [average (fn [genes] (map (fn [gp] {:gene (car gp) ' +
+		'                                                :scores (mean (map :scores (car (cdr gp))) 0)}) ' +
 		'                                      genes)) ' +
 		'             merge-scores (fn [probes scores] ' +
-		'                            (map (fn [p s] (assoc p :SCORES s)) probes scores)) ' +
+		'                            (map (fn [p s] (assoc p :scores s)) probes scores)) ' +
 		'             getfield (fn [dsID field] ' +
-		'                        (:ID (car (query {:select [:id] ' +
+		'                        (:id (car (query {:select [:id] ' +
 		'                                          :from [:field] ' +
 		'                                          :where [:and [:= :name field] [:= :dataset_id dsID]]})))) ' +
-		'             pmid (:ID (car (query {:select [:d2.id] ' +
+		'             pmid (:id (car (query {:select [:d2.id] ' +
 		'                                    :from [:dataset] ' +
 		'                                    :join [[:dataset :d2] [:= :dataset.probemap :d2.name]] ' +
 		'                                    :where [:= :dataset.name ' + quote(dataset) + ']}))) ' +
@@ -190,15 +188,15 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		'                            :from [:field_gene] ' +
 		'                            :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :field_gene.gene]] ' +
 		'                            :where [:= :field_id genes]})] ' +
-		'         (average (group-by :GENE (merge-scores probes (fetch [{:table ' + quote(dataset) + ' ' +
+		'         (average (group-by :gene (merge-scores probes (fetch [{:table ' + quote(dataset) + ' ' +
 		'                                                                :samples ' + arrayfmt(samples) + ' ' +
-		'                                                                :columns (map :PROBE probes)}])))))';
+		'                                                                :columns (map :probe probes)}])))))';
 	}
 
 	// It might be possible to better optimize this join. The scan counts seem high.
 	function sparse_data_string(dataset, samples, genes) {
 		return '(let [getfield (fn [field] ' +
-		'                        (:ID (car (query {:select [:field.id] ' +
+		'                        (:id (car (query {:select [:field.id] ' +
 		'                                          :from [:dataset] ' +
 		'                                          :join [:field [:= :dataset.id :field.dataset_id]] ' +
 		'                                          :where [:and [:= :field.name field] [:= :dataset.name ' + quote(dataset) + ']]})))) ' +
@@ -211,10 +209,9 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		'             dna-vaf (getfield "dna-vaf") ' +
 		'             amino-acid (getfield "amino-acid") ' +
 		'             rna-vaf (getfield "rna-vaf")] ' +
-		'         {:samples (map :VALUE (query {:select [:value] ' +
+		'         {:samples (map :value (query {:select [:value] ' +
 	    '                                       :from [:field] ' +
-	    '                                       :join [:feature [:= :field.id :field_id] ' +
-		'                                              :code [:= :feature.id :feature_id] ' +
+	    '                                       :join [:code [:= :field.id :field_id] ' +
 		'                                              {:table [[[:sampleID :varchar ' + arrayfmt(samples) + ']] :T]} [:= :T.sampleID :value]] ' +
 		'                                       :where [:= :field_id sampleID]})) ' +
 		'          :rows (query {:select [:chrom :chromStart :chromEnd :gene [#sql/call ["unpackValue" sampleID :field_gene.row] :sampleID]' +
@@ -234,7 +231,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function dataset_string(dataset) {
-		return  '(:TEXT (car (query {:select [:text] ' +
+		return  '(:text (car (query {:select [:text] ' +
 				'                    :from [:dataset] ' +
 				'                    :where [:= :name ' + quote(dataset) + ']})))';
 	}
@@ -271,8 +268,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			'          :where [:= :dataset_id {:select [:id] ' +
 			'                           :from [:dataset] ' +
 			'                           :where [:= :name ' + quote(dataset) + ']}]} :P]] ' +
-			' :left-join [:feature [:= :feature.field_id :P.id] ' +
-			'             :code [:= :feature.id :feature_id]] ' +
+			' :left-join [:code [:= :P.id :field_id]] ' +
 			' :group-by [:P.id]}))';
 	}
 
@@ -333,7 +329,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	function all_cohorts(host) {
 		return Rx.DOM.Request.ajax(
 			xena_get(host, all_cohorts_query())
-		).map(_.compose(function (l) { return _.pluck(l, 'COHORT'); }, json_resp))
+		).map(_.compose(function (l) { return _.pluck(l, 'cohort'); }, json_resp))
 		.catch(Rx.Observable.return([])); // XXX display message?
 	}
 
