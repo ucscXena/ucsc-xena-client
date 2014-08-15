@@ -11,6 +11,9 @@
 	vertical-align: top;
 	display: inline-block;
 }
+.spreadsheet-column:last-child {
+	border-right: solid 5px #eeeeee;
+}
 .spreadsheet-column .ui-resizable-e {
 	cursor: ew-resize;
 }
