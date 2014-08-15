@@ -19,7 +19,11 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 	}
 
 	function toLower(s) {
-		return s.toLowerCase();
+		if (s) {
+			return s.toLowerCase();
+		} else {
+			return '';
+		}
 	}
 
 	aWidget = {

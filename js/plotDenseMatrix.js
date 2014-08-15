@@ -537,20 +537,13 @@ define(['underscore_ext',
 	}
 
 	function drawLegend(column, columnUi, data, fields, codes, color_scale, categoryLength) {
-		var myColorBar,
-			label = '',
-			ellipsis = '',
+		var ellipsis = '',
 			align = 'center',
-			vertical = true,
 			colors = [].concat(column.colors),
 			labels = [column.min, 0, column.max];
 		if (data.length === 0) { // no features to draw
 			return;
 		}
-		if ($('.columnUi').index(columnUi.$el) === 0) {
-			label = 'Legend';
-		}
-		columnUi.$colorBarLabel.text(label);
 		if (column.dataType === 'clinicalMatrix') {
 			if (codes[fields[0]]) { // category
 				colors = categoryLegendColors(data[0], color_scale[0]);
@@ -558,23 +551,13 @@ define(['underscore_ext',
 					ellipsis = '...';
 				}
 				colors = colors.slice(0, categoryLength);
-				//colors = categoryLegendColors(data[0], color_scale[0]).slice(0, categoryLength);
 				labels = codes[fields[0]].slice(0, colors.length);
 				align = 'left';
 			} else { // float
 				// TODO need min and max of full dataset from server
 			}
 		}
-		labels.reverse();
-		columnUi.$colorBarEllipsis.text(ellipsis);
-		myColorBar = colorBar.create(columnUi.id, {
-			$anchor: columnUi.$el.find('.colorBar'),
-			colors: colors.reverse().concat('#808080'),
-			labels: labels.concat('NA'),
-			tooltips: labels.concat('No data'),
-			align: align,
-			vertical: vertical
-		});
+		columnUi.drawLegend(colors, labels, align, ellipsis);
 	}
 
 	// memoize doesn't help us here, because we haven't allocated a render routine

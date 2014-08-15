@@ -2,6 +2,7 @@
 	position: relative;
 	display: inline-block;
 	word-wrap: nowrap;
+	border-bottom: solid 5px #eeeeee;
 }
 .spreadsheet .ui-resizable-s {
 	cursor: ns-resize;

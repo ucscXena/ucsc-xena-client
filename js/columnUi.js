@@ -110,6 +110,26 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			return defalt;
 		},
 
+		drawLegend: function (colors, labels, align, ellipsis, klass) {
+			var label = '';
+			if ($('.columnUi').index(this.$el) === 0) {
+				label = 'Legend';
+			}
+			this.$colorBarLabel
+				.val(label)
+				.addClass(klass);
+			labels.reverse();
+			this.$colorBarEllipsis.text(ellipsis);
+			colorBar.create(this.id, {
+				$prevRow: this.$colorBarLabelRow,
+				colors: colors.reverse().concat('#808080'),
+				labels: labels.concat('NA'),
+				tooltips: labels.concat('No data'),
+				align: align,
+				klass: klass
+			});
+		},
+
 		reRender: function (options) {
 			var ui = options.ws.column.ui;
 			this.ws = options.ws;
@@ -142,7 +162,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el.find('.headerPlot').height(this.headerPlotHeight);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'colorBarLabel', 'colorBarEllipsis'];
+			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'colorBarLabelRow', 'colorBarLabel', 'colorBarEllipsis'];
 			_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
 			this.columnMenu = columnMenu.create(this.id, {
 				anchor: this.$more,
@@ -185,7 +205,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$samplePlot.onAsObservable('click')
 				.filter(function (ev) {
 					return ev.altKey === true;
-					//return ev.shiftKey === true;
 				})
 				.subscribe(tooltip.toggleFreeze); // TODO free subscription
 		}
