@@ -61,6 +61,16 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		}, {});
 	}
 
+	/* Like _.find, but return the result of the predicate */
+	function findValue(obj, predicate, context) {
+		var result;
+		_.any(obj, function (value, index, list) {
+			result = predicate.call(context, value, index, list);
+			return result;
+		});
+		return result;
+	}
+
 	_.mixin({
 		fmap: fmap,
 		apply: apply,
@@ -69,7 +79,8 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		array: array,
 		concat: concat,
 		partition_n: partition_n,
-		object_fn: object_fn
+		object_fn: object_fn,
+		findValue: findValue
 	});
 
 	return _;

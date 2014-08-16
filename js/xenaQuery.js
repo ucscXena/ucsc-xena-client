@@ -273,7 +273,26 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function refGene_exon_string(genes) {
-		return 'refGene_exon_string' + genes[0]; // TODO implement after data is on server
+		return '(let [getfield (fn [field]\n' +
+		       '                 (:id (car (query {:select [:field.id]\n' +
+		       '                                   :from [:dataset]\n' +
+		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
+		       '                                   :where [:and [:= :field.name field] [:= :dataset.name "common/GB/refgene_good"]]}))))\n' +
+		       '      unpack (fn [field] [#sql/call [:unpack (getfield field) :row] field])\n' +
+		       '      unpackValue (fn [field] [#sql/call [:unpackValue (getfield field) :row] field])\n' +
+		       '      name2 (getfield "name2")]\n' +
+		       '  (query {:select [[:gene :name2]\n' +
+		       '                   (unpackValue "strand")\n' +
+		       '                   (unpack "txStart")\n' +
+		       '                   (unpack "cdsStart")\n' +
+		       '                   (unpack "exonCount")\n' +
+		       '                   (unpackValue "exonStarts")\n' +
+		       '                   (unpackValue "exonEnds")\n' +
+		       '                   (unpack "cdsEnd")\n' +
+		       '                   (unpack "txEnd")]\n' +
+		       '          :from [:field_gene]\n' +
+		       '          :join [{:table [[[:name :varchar\n' + arrayfmt(genes) + ' ]] :T]} [:= :T.name :field_gene.gene]]\n' +
+		       '          :where [:and [:= :field_gene.field_id name2]]}))';
 	}
 
 	// QUERY PREP

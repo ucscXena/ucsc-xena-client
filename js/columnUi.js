@@ -18,7 +18,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		reduce = _.reduce,
 		toNumber = _.toNumber,
 		uniqueId = _.uniqueId,
-		genes = stub.getRefGeneNames2(),
 		sFeatures = { // TODO for demo
 			impact: 'impact', // shorttitle ?
 			DNA_AF: 'DNA allele frequency',
