@@ -107,12 +107,11 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		       '  (query\n' +
 		       '    {:select [:value]\n' +
 		       '     :from [:dataset]\n' +
-		       '     :where [:= :name ' + quote(dataset) + ']\n' +
-		       '     :left-join\n' +
-		       '       [[{:select [:id :dataset_id]\n' +
-		       '          :from [:field]\n' +
-		       '          :where [:= :name "sampleID"]} :F] [:= :dataset.id :dataset_id]\n' +
-		       '        :code [:= :F.id :field_id]]}))';
+		       '     :join [:field [:= :dataset.id :dataset_id]\n' +
+		       '            :code [:= :field.id :field_id]]\n' +
+		       '     :where [:and\n' +
+		       '             [:= :dataset.name ' + quote(dataset) + ']\n' +
+		       '             [:= :field.name "sampleID"]]}))';
 	}
 
 	function all_samples_query(cohort) {
@@ -162,7 +161,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		       '  [probes\n' +
 		       '    (fetch [{:table ' + quote(dataset) + '\n' +
 		       '             :samples ' + arrayfmt(samples) + '\n' +
-		       '             :columns probes}])]) ';
+		       '             :columns probes}])])';
 	}
 
 
@@ -198,27 +197,23 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		       '                                   :from [:dataset]\n' +
 		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
 		       '                                   :where [:and [:= :field.name field] [:= :dataset.name ' + quote(dataset) + ']]}))))\n' +
+		       '      unpack (fn [field] [#sql/call [:unpack (getfield field) :field_gene.row] field])\n' +
+		       '      unpackValue (fn [field] [#sql/call [:unpackValue (getfield field) :field_gene.row] field])\n' +
 		       '      genes (getfield "genes")\n' +
 		       '      sampleID (getfield "sampleID")\n' +
-		       '      position (getfield "position")\n' +
-		       '      alt (getfield "alt")\n' +
-		       '      effect (getfield "effect")\n' +
-		       '      ref (getfield "ref")\n' +
-		       '      dna-vaf (getfield "dna-vaf")\n' +
-		       '      amino-acid (getfield "amino-acid")\n' +
-		       '      rna-vaf (getfield "rna-vaf")]\n' +
+		       '      position (getfield "position")]\n' +
 		       '  {:samples (map :value (query {:select [:value]\n' +
 		       '                                :from [:field]\n' +
 		       '                                :join [:code [:= :field.id :field_id]\n' +
 		       '                                       {:table [[[:sampleID :varchar ' + arrayfmt(samples) + ']] :T]} [:= :T.sampleID :value]]\n' +
 		       '                                :where [:= :field_id sampleID]}))\n' +
 		       '   :rows (query {:select [:chrom :chromStart :chromEnd :gene [#sql/call ["unpackValue" sampleID :field_gene.row] :sampleID]' +
-		       '                          [#sql/call ["unpackValue" ref :field_gene.row] :ref]\n' +
-		       '                          [#sql/call ["unpackValue" alt :field_gene.row] :alt]\n' +
-		       '                          [#sql/call ["unpackValue" effect :field_gene.row] :effect]\n' +
-		       '                          [#sql/call ["unpack" dna-vaf :field_gene.row] :dna-vaf]\n' +
-		       '                          [#sql/call ["unpack" rna-vaf :field_gene.row] :rna-vaf]\n' +
-		       '                          [#sql/call ["unpackValue" amino-acid :field_gene.row] :amino-acid]]\n' +
+		       '                          (unpackValue "ref")\n' +
+		       '                          (unpackValue "alt")\n' +
+		       '                          (unpackValue "effect")\n' +
+		       '                          (unpack "dna-vaf")\n' +
+		       '                          (unpack "rna-vaf")\n' +
+		       '                          (unpackValue "amino-acid")]\n' +
 		       '                 :from [:field_gene]\n' +
 		       '                 :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :field_gene.gene]\n' +
 		       '                        :field_position [:= :field_position.row :field_gene.row]]\n' +
@@ -243,7 +238,6 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		       '        :left-join [:feature [:= :feature.field_id :field.id]]})';
 	}
 
-	// XXX drop (quote)
 	function features_string(dataset, probes) {
 		return '(query\n' +
 		       '  {:select [:P.name :feature.*]\n' +
@@ -256,7 +250,6 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		       '   :left-join [:feature [:= :feature.field_id :P.id]]})';
 	}
 
-	// XXX drop (quote)
 	function codes_string(dataset, probes) {
 		return '(query\n' +
 		       '  {:select [:P.name [#sql/call [:group_concat :value :order :ordering :separator #sql/call [:chr 9]] :code]]\n' +
