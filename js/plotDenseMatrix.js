@@ -517,27 +517,36 @@ define(['underscore_ext',
 		});
 	}
 
-	function categoryLegendColors(dataIn, color_scale) {
+	function categoryLegend(dataIn, color_scale, codes) {
 		// only finds categories for the current data in the column
 		var data = uniq(dataIn).sort(function (v1, v2) {
 				return v1 - v2;
 			}),
 			colors,
-			justColors;
+			justColors,
+			labels;
 
 		if (color_scale) { // then there exist some non-null values
 			// zip colors and their indexes, then filter out the nulls
 			colors = filter(zip(range(data.length), map(data, color_scale)), secondNotUndefined);
-			return map(colors, function (color) {
+			justColors =  map(colors, function (color) {
 				return color[1];
 			});
+			if (data[data.length - 1] === undefined) {
+				data.pop();
+			}
+			labels = map(data, function(d) {
+				return(codes[d]);
+			});
+			return { colors: justColors, labels: labels };
 		} else {
-			return undefined;
+			return { colors: [], labels: [] };
 		}
 	}
 
 	function drawLegend(column, columnUi, data, fields, codes, color_scale, categoryLength) {
-		var ellipsis = '',
+		var c,
+			ellipsis = '',
 			align = 'center',
 			colors = [].concat(column.colors),
 			labels = [column.min, 0, column.max];
@@ -546,12 +555,15 @@ define(['underscore_ext',
 		}
 		if (column.dataType === 'clinicalMatrix') {
 			if (codes[fields[0]]) { // category
-				colors = categoryLegendColors(data[0], color_scale[0]);
-				if (colors.length > categoryLength) {
+				c = categoryLegend(data[0], color_scale[0], codes[fields[0]]);
+				if (c.colors.length > categoryLength) {
 					ellipsis = '...';
+					colors = c.colors.slice(c.colors.length - categoryLength, c.colors.length);
+					labels = c.labels.slice(c.colors.length - categoryLength, c.colors.length);
+				} else {
+					colors = c.colors;
+					labels = c.labels;
 				}
-				colors = colors.slice(0, categoryLength);
-				labels = codes[fields[0]].slice(0, colors.length);
 				align = 'left';
 			} else { // float
 				// TODO need min and max of full dataset from server
