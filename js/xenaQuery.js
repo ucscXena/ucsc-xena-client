@@ -140,8 +140,8 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function dataset_probe_string(dataset, samples, probes) {
 		return '(fetch [{:table ' + quote(dataset) + '\n' +
-		       '         :columns ' +  listfmt(probes) + '\n' +
-		       '         :samples ' + listfmt(samples) + '}])';
+		       '         :columns ' +  arrayfmt(probes) + '\n' +
+		       '         :samples ' + arrayfmt(samples) + '}])';
 	}
 
 	function dataset_gene_probes_string(dataset, samples, gene) {
