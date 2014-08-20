@@ -65,15 +65,9 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 		],
 		colors = {
 			category_25: [
-				{r: 77, g: 175, b: 74, a: 1}, // green
-				{r: 55, g: 126, b: 184, a: 1}, // blue
-				{r: 228, g: 26, b: 28, a: 1}    // red
-				/* older
-				{r: 235, g: 255, b: 102, a: 1},
-				{r: 122, g: 195, b: 119, a: 1},
-				{r: 105, g: 158, b: 202, a: 1},
-				{r: 235, g: 83, b: 85, a: 1}
-				*/
+				{r: 44, g: 160, b: 44, a: 1}, // green #2ca02c
+				{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
+				{r: 214, g: 39, b: 40, a: 1}    // red #d62728
 			],
 			af: [
 				{r: 228, g: 26, b: 28, a: 0},

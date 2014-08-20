@@ -435,7 +435,8 @@ define(['underscore_ext',
 	);
 
 	heatmapColors.range.add("minMax", heatmapColors.float);
-	heatmapColors.range.add("coded", heatmapColors.category);
+	heatmapColors.range.add("codedMore", heatmapColors.categoryMore);
+	heatmapColors.range.add("codedLess", heatmapColors.categoryLess);
 	heatmapColors.range.add("scaled", heatmapColors.scaled);
 
 	function plotCoords(ev) {
@@ -544,17 +545,22 @@ define(['underscore_ext',
 		}
 	}
 
-	function drawLegend(column, columnUi, data, fields, codes, color_scale, categoryLength) {
+	function drawLegend(column, columnUi, data, fields, codes, color_scale, categoryBreak) {
+	//function drawLegend(column, columnUi, data, fields, codes, color_scale, categoryLength) {
 		var c,
 			ellipsis = '',
 			align = 'center',
 			colors = [].concat(column.colors),
-			labels = [column.min, 0, column.max];
+			labels = [column.min, 0, column.max],
+			categoryLength = categoryBreak;
 		if (data.length === 0) { // no features to draw
 			return;
 		}
 		if (column.dataType === 'clinicalMatrix') {
 			if (codes[fields[0]]) { // category
+				if (codes[fields[0]].length > categoryBreak) {
+					categoryLength = 19;
+				}
 				c = categoryLegend(data[0], color_scale[0], codes[fields[0]]);
 				if (c.colors.length > categoryLength) {
 					ellipsis = '...';
@@ -651,7 +657,8 @@ define(['underscore_ext',
 			colors = map(fields, function (p, i) {
 				return heatmapColors.range(column, features[p], codes[p], heatmapData[i]);
 			});
-			drawLegend(column, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryLength);
+			drawLegend(column, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryBreak);
+			//drawLegend(column, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryLength);
 			renderHeatmap({
 				vg: vg,
 				height: ws.height,
