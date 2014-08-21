@@ -72,6 +72,8 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			return {
 				dsID: host + '/' + ds.name,
 				title: ds.label || ds.name,
+				type: ds.type,
+				probemap: ds.probemap,
 				// XXX wonky fix to work around dataSubType.
 				// Use basename of ds.datasubtype if it's there. Otherwise
 				// default to cna if there's a gene view, and clinical otherwise.
@@ -134,7 +136,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function dataset_list_query(cohort) {
-		return  '(query {:select [:name :shorttitle :datasubtype :probemap :text] ' +
+		return  '(query {:select [:name :shorttitle :type :datasubtype :probemap :text] ' +
 				'        :from [:dataset] ' +
 				'        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
 	}

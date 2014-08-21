@@ -99,11 +99,11 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		getDefField: function () {
 			var ui = this.ws.column.ui,
 				defalt = Rx.Observable.return(this.ws.column.fields.toString()
-					+ ((ui.dataSubType === 'mutationVector')
+					+ ((this.ws.dataType === 'mutationVector')
 						? ': ' + sFeatures[ui.sFeature]
 						: ''));
 
-			if (ui.dataSubType === 'phenotype') {
+			if (this.ws.dataType === 'clinicalMatrix') {
 				defalt = xenaQuery.feature_list(this.ws.column.dsID)
 					.pluck(ui.feature);
 			}

@@ -1,20 +1,16 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.jquery'
-	], function (template, stub, xenaQuery, _, $, Rx) {
+define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.jquery'
+	], function (template, xenaQuery, _, $, Rx) {
 	'use strict';
 
 	var widgets = [],
 		aWidget;
 
-	function toLower(s) {
-		return s.toLowerCase();
-	}
-
 	// set samplesFrom state
 	// TODO should this be in sheetWrap.js?
-	function setState(samplesFrom, upd, state) {
+	function setStateSamplesFrom(samplesFrom, upd, state) {
 		return upd.assoc(state,
 					'samplesFrom', samplesFrom);
 	}
@@ -47,9 +43,10 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 
 			if (this.$el) {
 				this.$el.select2('destroy');
-				this.$anchor.find('.dataset').remove();
+				this.$anchor.find('.dataset').replaceWith($el);
+			} else {
+				this.$anchor.append($el);
 			}
-			this.$anchor.append($el);
 
 			$el.select2({
 				minimumResultsForSearch: 3,
@@ -62,30 +59,13 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 			}
 		},
 
-		initialize: function (options) {
-			var self = this,
-				sources = options.sources,
-				state = options.state;
-			_.bindAll.apply(_, [this].concat(_.functions(this)));
-			//_(this).bindAll();
-			this.sheetWrap = options.sheetWrap;
-			this.$anchor = options.$anchor;
-			this.placeholder = options.placeholder;
-			this.cohort = options.cohort;
-			this.servers = options.servers;
-			this.cursor = options.cursor;
-			this.subs = [];
-
-			// render immediately, and re-render whenever sources or state changes
-			sources.startWith([]).combineLatest(state, function (sources, state) {
-				return [sources, state];
-			}).subscribe(_.apply(function (sources, state) {
-				self.render(sources, state);
-			}));
+		samplesFrom: function () {
+			var self = this;
+			// TODO this should move to sheetWrap.js to keep this file generic for other datasetSelects
 
 			// when state changes, retrieve the sample IDs,
 			// when sampleList is received, update samples state
-			state.subscribe(function (val) {
+			this.state.subscribe(function (val) {
 				var sampleList,
 					cohort;
 				if (val === '') { // retrieve all sample IDs in this cohort
@@ -103,6 +83,33 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 				});
 			});
 
+			// when DOM value changes, update state tree
+			this.subs.push(this.valStream.subscribe(function (val) {
+				self.cursor.set(_.partial(setStateSamplesFrom, val));
+			}));
+		},
+
+		initialize: function (options) {
+			var self = this,
+				sources = options.sources,
+				state = options.state;
+			_.bindAll.apply(_, [this].concat(_.functions(this)));
+			//_(this).bindAll();
+			this.$anchor = options.$anchor;
+			this.placeholder = options.placeholder;
+			this.cohort = options.cohort;
+			this.servers = options.servers;
+			this.state = options.state;
+			this.cursor = options.cursor;
+			this.subs = [];
+
+			// render immediately, and re-render whenever sources or state changes
+			sources.startWith([]).combineLatest(state, function (sources, state) {
+				return [sources, state];
+			}).subscribe(_.apply(function (sources, state) {
+				self.render(sources, state);
+			}));
+
 			// when state changes, update the DOM value
 			this.subs.push(state.subscribe(function (val) {
 				if (self.$el.select2('val') !== val) {
@@ -111,13 +118,12 @@ define(['haml!haml/datasetSelect', 'stub', 'xenaQuery', 'lib/underscore', 'jquer
 			}));
 
 			// create an observable on the DOM value
-			this.val = this.$anchor.onAsObservable('change', '.dataset')
+			this.valStream = this.$anchor.onAsObservable('change', '.dataset')
 				.pluck('val').share();
 
-			// when DOM value changes, update state tree
-			this.subs.push(this.val.subscribe(function (val) {
-				self.cursor.set(_.partial(setState, val));
-			}));
+			if (this.id === 'samplesFrom') {
+				this.samplesFrom();
+			}
 		}
 	};
 

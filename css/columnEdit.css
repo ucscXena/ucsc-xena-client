@@ -1,15 +1,25 @@
 .columnEdit .tupleLabel {
 	min-width: 5em;
 }
+.columnEdit .egValueTd {
+	padding-bottom: 0
+}
+.columnEdit .eg {
+	font-size: 0.9em;
+	padding-left: 0.5em;
+	padding-top: 0;
+}
+.columnEdit .inputMode1td {
+	padding-top: 0;
+}
 .columnEdit .listLabel {
 	vertical-align: top;
 }
+.columnEdit .list {
+	width: 100%;
+}
 .columnEdit .geneValues {
 	white-space: nowrap;
-}
-.columnEdit .columnTypeLabel,
-.columnEdit .advancedLabel {
-	padding-top: .5em;
 }
 .columnEdit .singleMsg {
 	color: red;

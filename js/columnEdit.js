@@ -27,84 +27,35 @@ define(['haml!haml/columnEdit',
 				 xenaQuery) {
 	'use strict';
 
-	var sFeatures = { // TODO for demo
-			impact: 'impact', // shorttitle ?
-			DNA_AF: 'DNA allele frequency',
-			RNA_AF: 'RNA allele frequency'
+	var dataTypeByMetadata = {
+			mutationVector: ['mutationVector'],
+			clinicalMatrix: ['clinicalMatrix'],
+			genomicMatrix: ['probeMatrix'],
+			genomicMatrixProbemap: ['probeMatrix', 'geneMatrix'],
 		},
-		//dsTitles = {}, // TODO for demo
-		defaultGene = 'ALK', // TODO: make these more global ?
-		defaultGenes = 'ALK, PTEN',
-		defaultProbes = '(no default probes)', // TODO
-		defaultChrom = 'chr1-chrY',
-		defaultField = '(fields for this option)', // TODO
-		defaultWidth = 100,
-		defaultDisplayModes = ['dGene', 'dGenes', 'dGeneProbes', 'dProbes', /*'dGeneChrom', 'dChrom'*/],
-
-		displaysByDataSubType = { // TODO combine with columnUi:columnUntitles?
-			cns: ['dGene', 'dGenes', /*'dGeneChrom', 'dChrom'*/],
-			mutationVector: ['dExonSparse', /*'dGeneChrom', 'dChrom'*/],
-			phenotype: ['dClinical'],
-			cna: defaultDisplayModes,
-			DNAMethylation: defaultDisplayModes,
-			geneExp: defaultDisplayModes,
-			geneRNAseq: defaultDisplayModes,
-			geneArray: defaultDisplayModes,
-			somaticMutation: defaultDisplayModes,
-			protein: defaultDisplayModes,
-			PARADIGM: defaultDisplayModes
-		},
-		displaysByInput = {
-			iGene: ['dGene', 'dGeneProbes', 'dGeneChrom', 'dExonSparse'],
-			iGenes: ['dGenes'],
-			iProbes: ['dProbes'],
-			iChrom: ['dChrom'],
-			iClinical: ['dClinical']
-		},
-		inputModeLabels = { // TODO combine with displaysByInput
-			iGene: 'single gene',
-			iGenes: 'list of genes',
-			iProbes: 'list of probes',
-			iChrom: 'chromosome coordinates',
-			iClinical: 'phenotype'
-		},
-		displayModeLabels = { // TODO combine with dataTypeByDisplay
-			dGene: 'gene',
-			dGeneProbes: 'probes',
-			dExonSparse: 'exons',
-			dGeneChrom: 'chromosomes'
-		},
-		dataTypeByDisplay = {
-			dGene: 'geneMatrix',
-			dGenes: 'geneMatrix',
-			dExonSparse: 'mutationVector',
-			dClinical: 'clinicalMatrix',
-			dGeneProbes: 'geneProbesMatrix',
-			dProbes: 'probeMatrix',
-			//dGeneChrom: TBD,
-			//dChrom: TBD
+		dataTypeByInput = {
+			iFeature: ['clinicalMatrix'],
+			iGene: ['mutationVector'],
+			iGenes: ['geneMatrix'],
+			iProbes: ['probeMatrix']
 		},
 		map = _.map,
 		widgets = {},
-		aWidget,
-		dataset_list_query;
+		aWidget;
 
-	/*
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/cnv.matrix"] = 'Copy number';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/rma.Target190.Probeset.Full"] = 'Gene expression, array';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/NBL_10_RNAseq_log2"] = 'Gene expression, RNAseq';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/mutationGene"] = 'Mutations, gene';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_clinicalMatrix"] = ' ';
-	*/
-
-	function getDataSubType(sources, hdsID) {
-		return  xenaQuery.find_dataset(sources, hdsID).dataSubType;
+	function getMetadata(sources, hdsID) {
+		var info = xenaQuery.find_dataset(sources, hdsID),
+			metadata = info.type;
+		if (metadata === 'genomicMatrix' && info.probemap) {
+			metadata += 'Probemap';
+		}
+		return metadata;
 	}
 
-	function getInputModesByDataSubType(dataSubType) {
+	function getInputModesByMetadata(metadata) {
 		var inputs = [];
-		_.each(displaysByInput, function (displays, input) {
-			var intersect = _.intersection(displays, displaysByDataSubType[dataSubType]);
+		_.each(dataTypeByInput, function (dataType, input) {
+			var intersect = _.intersection(dataType, dataTypeByMetadata[metadata]);
 			if (intersect.length) {
 				inputs.push(input);
 			}
@@ -112,18 +63,6 @@ define(['haml!haml/columnEdit',
 		return inputs;
 	}
 
-	function getDisplayModes(dataSubType, inputMode) {
-		return _.intersection(
-			displaysByDataSubType[dataSubType],
-			displaysByInput[inputMode]
-		);
-	}
-
-/*
-	function datasetTitle(dsID, title) {
-		return dsTitles[dsID] || title;
-	}
-*/
 	aWidget = {
 
 		destroy: function () {
@@ -150,82 +89,56 @@ define(['haml!haml/columnEdit',
 			case 'iProbes':
 				fields = this.state.probes.split(', '); // TODO use named text?
 				break;
-			case 'iClinical':
+			case 'iFeature':
 				fields = [this.state.feature];
-				break;
-			default:
-				fields = [defaultField];
 				break;
 			}
 			return fields;
 		},
 
-		renderInputModes: function (dataSubType) {
-			var modes = getInputModesByDataSubType(dataSubType);
-			this.state.dataSubType = dataSubType;
+		renderInputModes: function (metadata) {
+			var self = this,
+				modes = getInputModesByMetadata(metadata);
+			this.state.metadata = metadata;
 			if (modes.length === 1) {
 				this.state.inputMode = modes[0];
 			} else {
-				this.$inputModeAnchor.append(
-					selectTemplate({
-						klass: 'inputMode',
-						options: modes,
-						labels: inputModeLabels
-					})
-				);
-				this.$el.find('.inputMode').select2({
-					minimumResultsForSearch: -1,
-					dropdownAutoWidth: true
-				});
-				this.$inputModeRow.show();
-				this.$inputMode = this.$el.find('.select2-container.inputMode');
+				this.inputModesDisplayed = modes;
 				if (modes.indexOf(this.state.inputMode) > -1) {
-					this.$inputMode.select2('val', this.state.inputMode);
+					_.each(modes, function (mode, i) {
+						if (mode === self.state.inputMode) {
+							self.$el.find('inputMode' + i).prop('checked', true);
+						}
+					});
 				} else {
+					this.$el.find('.inputMode0').prop('checked', true);
 					this.state.inputMode = modes[0];
 				}
-			}
-			// TODO should this be somewhere else?
-			if (!this.state.gene) {
-				this.state.gene = defaultGene;
+				this.$inputModeRow.show();
 			}
 		},
 
 		renderList: function () {
 			if (this.state.inputMode === 'iGenes') {
-				if (!this.state.genes || this.state.genes === '') {
-					this.state.genes = defaultGenes;
-				}
 				this.$listLabel.text('Genes:');
-				this.$listRow.show();
 				this.$list.val(this.state.genes);
-			} else if (this.state.inputMode === 'iProbes') {
-				if (!this.state.probes || this.state.probes === '') {
-					this.state.probes = defaultProbes;
-				}
-				this.$listLabel.text('Probes:');
+				this.$listEg.text('e.g. TP53 or TP53, PTEN');
 				this.$listRow.show();
+			} else if (this.state.inputMode === 'iProbes') {
+				this.$listLabel.text('Identifiers:');
 				this.$list.val(this.state.probes);
+				this.$listEg.text(''); // TODO should be first 3 identfiers in probemap
+				this.$listRow.show();
 			}
 		},
 
 		renderSingle: function () {
-			if (this.state.inputMode === 'iChrom') {
-				if (!this.state.chrom || this.state.chrom === '') {
-					this.state.chrom = defaultChrom;
-				}
-				this.$singleLabel.text('Chromosomal Position:');
-				this.$singleRow.show();
-				this.$single.val(this.state.chrom);
-			} else if (this.state.inputMode === 'iGene') {
-				if (!this.state.gene || this.state.gene === '') {
-					this.state.gene = defaultGene;
-				}
+			if (this.state.inputMode === 'iGene') {
 				this.$singleLabel.text('Gene:');
-				this.$singleRow.show();
+				this.$singleEg.text('e.g. TP53');
 				this.$single.val(this.state.gene);
+				this.$singleRow.show();
 			}
-
 		},
 
 		renderFeatures: function (features) {
@@ -237,11 +150,13 @@ define(['haml!haml/columnEdit',
 					labels: undefined
 				})
 			);
-			self.$selectLabel.text('Feature:');
+			self.$selectLabel.text('View:');
 			self.$selectRow.show();
 			self.$el.find('.feature').select2({
 				minimumResultsForSearch: 3,
-				dropdownAutoWidth: true
+				dropdownAutoWidth: true,
+				placeholder: 'Select...',
+				placeholderOption: 'first'
 			});
 			self.$feature = self.$el.find('.select2-container.feature');
 			if (self.state.feature) {
@@ -253,98 +168,51 @@ define(['haml!haml/columnEdit',
 
 		renderSelect: function () {
 			var self = this;
-			if (self.state.dataSubType === 'phenotype') {
-				xenaQuery.feature_list(self.state.dsID).subscribe(function (features) {
+			if (this.state.metadata === 'clinicalMatrix') {
+				xenaQuery.feature_list(this.state.dsID).subscribe(function (features) {
 					self.renderFeatures(features);
 				});
-			} else if (self.state.dataSubType === 'mutationVector') {
-				self.$selectAnchor.append(
-					selectTemplate({
-						klass: 'sFeature',
-						options: sFeatures,
-						labels: undefined
-					})
-				);
-				self.$selectLabel.text('Variable:');
-				self.$selectRow.show();
-				self.$el.find('.sFeature').select2({
-					minimumResultsForSearch: -1,
-					dropdownAutoWidth: true
-				});
-				self.$sFeature = self.$el.find('.select2-container.sFeature');
-				if (self.state.sFeature) {
-					self.$sFeature.select2('val', self.state.sFeature);
-				} else {
-					self.state.sFeature = self.$sFeature.select2('val');
-				}
-				//self.$sFeature.select2('val', self.state.sFeature);
 			}
 		},
 
-		renderDisplayModes: function (dataSubType) {
-			var modes = getDisplayModes(dataSubType, this.state.inputMode);
-			if (modes.length === 1) {
-				this.state.displayMode = modes[0];
+		findDataType: function () {
+			var types = dataTypeByMetadata[this.state.metadata];
+			if (types.length === 1) {
+				return types[0];
 			} else {
-				this.$displayModeAnchor.append(
-					selectTemplate({
-						klass: 'displayMode',
-						options: modes,
-						labels: displayModeLabels
-					})
-				);
-				this.$displayModeRow.show();
-				this.$el.find('.displayMode').select2({
-					minimumResultsForSearch: -1,
-					dropdownAutoWidth: true
-				});
-				this.$displayMode = this.$el.find('.select2-container.displayMode');
-				if (modes.indexOf(this.state.displayMode) > -1) {
-					this.$displayMode.select2('val', this.state.displayMode);
-				} else {
-					this.state.displayMode = modes[0];
-				}
-			}
-		},
-
-		renderGo: function () {
-			if (this.state.dsID) {
-				this.$goRow.show();
+				return dataTypeByInput[this.state.inputMode];
 			}
 		},
 
 		renderColumn: function () { // TODO shouldn't have to go through debug widgets
-			var fields = this.getFields(),
-				json = {
-					"width": 200,
-					"dsID": this.state.dsID, // TODO we don't need dsID in this.state too
-					"dataType": dataTypeByDisplay[this.state.displayMode],
-					"fields": fields,
-					"ui": this.state
-				};
+			var json;
+			if (this.state.metadata === 'mutationVector') {
+				this.state.sFeature = 'impact';
+			}
+			json = {
+				"width": 200,
+				"dsID": this.state.dsID, // TODO we don't need dsID in this.state too
+				"dataType": this.findDataType(),
+				"fields": this.getFields(),
+				"ui": this.state
+			};
 			$('#columnStub').val(JSON.stringify(json, undefined, 4));
 			this.updateColumn(this.id);
 		},
 
 		reRender: function () {
-			var dataSubType = getDataSubType(this.sources, this.state.dsID);
+			var metadata = getMetadata(this.sources, this.state.dsID);
 
 			// reset the dynamic portion of column, excluding the plot
 			this.$el.find('tr:not(.static)').hide();
-			this.$inputModeAnchor.empty();
-			this.$inputMode = undefined;
-			this.$displayModeAnchor.empty();
-			this.$displayMode = undefined;
 			this.$selectAnchor.empty();
 			this.$feature = undefined;
 
 			// render by row
-			this.renderInputModes(dataSubType);
+			this.renderInputModes(metadata);
 			this.renderList();
 			this.renderSingle();
 			this.renderSelect();
-			this.renderDisplayModes(dataSubType);
-			this.renderGo();
 		},
 
 		goClick: function () {
@@ -354,26 +222,19 @@ define(['haml!haml/columnEdit',
 
 		featureChange: function () {
 			this.state.feature = this.$feature.select2('val');
-			this.reRender();
+			this.$goRow.show();
 		},
 
-		sFeatureChange: function () {
-			this.state.sFeature = this.$sFeature.select2('val');
-			this.reRender();
-		},
-
-		displayModeChange: function () {
-			this.state.displayMode = this.$displayMode.select2('val');
-			this.reRender();
+		singleListKeyup: function (ev) {
+			if ($(ev.target).val() === "") {
+				this.$goRow.hide();
+			} else {
+				this.$goRow.show();
+			}
 		},
 
 		singleBlur: function () {
-			if (this.state.inputMode === 'iChrom') {
-				this.state.chrom = this.$single.val();
-			} else {
-				this.state.gene = this.$single.val();
-			}
-			this.reRender();
+			this.state.gene = this.$single.val();
 		},
 
 		listBlur: function () {
@@ -382,22 +243,22 @@ define(['haml!haml/columnEdit',
 			} else {
 				this.state.probes = this.$list.val();
 			}
-			this.reRender();
 		},
 
-		inputModeChange: function () {
-			this.state.inputMode = this.$inputMode.select2('val');
+		inputModeClick: function () {
+			var self = this;
+			_.each(this.inputModesDisplayed, function (mode, i) {
+				if (self.$el.find('.inputMode' + i).prop('checked')) {
+					self.state.inputMode = mode;
+				}
+			});
 			this.reRender();
 		},
 
 		datasetChange: function () {
 			var dsID = this.$dataset.select2('val');
-			if (dsID === 'mine') {
-				this.state.dsID = undefined;
-			} else {
-				this.state.dsID = dsID;
-				this.reRender();
-			}
+			this.state.dsID = dsID;
+			this.reRender();
 		},
 
 		toggleAdvanced: function (e) {
@@ -411,7 +272,9 @@ define(['haml!haml/columnEdit',
 		render: function () {
 			var self = this,
 				basic;
-			basic = basicTemplate();
+			basic = basicTemplate({
+				inputModes: ['genes', 'identifiers']
+			});
 			this.$el = $(template({
 				basic: basic,
 				advanced: undefined
@@ -420,9 +283,9 @@ define(['haml!haml/columnEdit',
 
 			// cache jquery objects for active DOM elements
 			this.cache = ['inputModeRow', 'inputModeAnchor',
-				'listRow', 'listLabel', 'list', 'singleRow', 'singleLabel', 'single',
+				'listRow', 'listLabel', 'list', 'listEg',
+				'singleRow', 'singleLabel', 'single', 'singleEg',
 				'selectRow', 'selectLabel', 'selectAnchor',
-				'displayModeRow', 'displayModeAnchor', 'columnTitleRow',
 				'goRow', 'advanced', 'advancedLabel'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
@@ -430,7 +293,7 @@ define(['haml!haml/columnEdit',
 			}, {}));
 
 			this.$el.dialog({
-				title: 'Define Column',
+				title: 'Create Column',
 				width: '500', // TODO make dynamic
 				position: { my: "top", at: "top+70", of: window },
 				close: this.destroy
@@ -453,32 +316,20 @@ define(['haml!haml/columnEdit',
 
 			self.$el // TODO replace with rx event handlers
 				.on('change', '.dataset', self.datasetChange)
-				.on('change', '.inputMode', self.inputModeChange)
+				.on('click', '.inputMode', self.inputModeClick)
 				.on('blur', '.list', self.listBlur)
 				.on('blur', '.single', self.singleBlur)
-				.on('change', '.displayMode', self.displayModeChange)
+				.on('keyup', '.single, .list', self.singleListKeyup)
 				.on('change', '.feature', self.featureChange)
-				.on('change', '.sFeature', self.sFeatureChange)
 				.on('click', '.go', self.goClick);
 			if (self.columnUi) {
 				self.$el.on('mouseenter mouseleave', self.columnUi.mouseenterLeave);
 			}
 
-			// TODO yikes, these columnEdit widgets are destroyed whenever the sources
-			// change, rather than attempting to modify any of them. (Using destroyAll() called
-			// from the cohortSelect change handler in sheetWrap.js.) These widgets
-			// should be uncreatable between the time the user has selected a new cohort,
-			// and the new cohort's dataset list has showed up.
-			// However, eventually we should be able to add datasets from existing sources
-			// whenever new datasets are added to say, localhost. For now the user
-			// reloads the browser to pick up new datasets. 
+			// TODO this should use datasetSelect.js instead of this block of code
+			// as soon as I know how to update one piece of state in the column: dsID
 			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
-				var index,
-					serverIndex,
-					opts,
-					mutationDS,
-					dsID,
-					cohort = $('.select2-container.cohort').select2('val'); // TODO: get cohort from the state instead;
+				var opts;
 				self.sources = sources;
 
 				opts = $(datasetsTemplate({sources: self.sources}));
@@ -502,6 +353,7 @@ define(['haml!haml/columnEdit',
 				self.$dataset = self.$el.find('.select2-container.dataset');
 			});
 		}
+
 	};
 
 	function create(id, options) {
@@ -512,7 +364,7 @@ define(['haml!haml/columnEdit',
 	}
 
 	return {
-		getDataSubType: getDataSubType,
+		getMetadata: getMetadata,
 
 		destroyAll: function () {
 			_.each(widgets, function (w) {
