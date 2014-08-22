@@ -52,27 +52,25 @@ define(['haml!haml/sheetWrap',
 		aWidget;
 
 	// TODO copied from main.js
-	function deleteColumn(uuid, upd, state) {
-		var cols = _.dissoc(upd.get_in(state, ['column_rendering']), uuid),
-			order = _.without(upd.get_in(state, ['column_order']), uuid);
-		return upd.assoc_in(
-			upd.assoc_in(state, ['column_order'], order),
-			['column_rendering'],
-			cols
-		);
+	function deleteColumn(uuid, state) {
+		var cols = _.dissoc(state.column_rendering, uuid),
+			order = _.without(state.column_order, uuid);
+		return _.assoc(state,
+					   'column_order', order,
+					   'column_rendering', cols);
 	}
 
-	function setSamples(samples, upd, state) {
-		return upd.assoc(state,
-						 'samples', samples,
-						 'zoomCount', samples.length,
-						 'zoomIndex', 0);
+	function setSamples(samples, state) {
+		return _.assoc(state,
+					   'samples', samples,
+					   'zoomCount', samples.length,
+					   'zoomIndex', 0);
 	}
 
 	aWidget = {
 
 		deleteColumn: function (id) {
-			return this.cursor.set(_.partial(deleteColumn, id));
+			return this.cursor.update(_.partial(deleteColumn, id));
 		},
 
 		duplicateColumn: function (id) {
@@ -168,7 +166,7 @@ define(['haml!haml/sheetWrap',
 					return xenaQuery.all_samples(s.url, cohort);
 				})).map(_.apply(_.union));
 			}).switch().subscribe(function (samples) {
-				self.cursor.set(_.partial(setSamples, samples));
+				self.cursor.update(_.partial(setSamples, samples));
 			});
 
 			// when cohort state changes, update other parts of the UI

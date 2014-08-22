@@ -22,23 +22,12 @@ define(['underscore_ext',
 	// of wanting relational data model, but also needing indexes. The add and
 	// remove methods would simply add or remove from the index. The sort method
 	// would rebuild the index. How would loading from history/session work?
-	function reorderColumns(order, upd, state) {
-		return upd.assoc_in(state, ["column_order"], order);
+	function reorderColumns(order, state) {
+		return _.assoc(state, "column_order", order);
 	}
 
-	function setWidth(uuid, width, upd, state) {
-		return upd.assoc_in(state, ['column_rendering', uuid, 'width'], width);
-	}
-
-	// could use a _.curry call to make this simpler
-	function deleteColumn(uuid, upd, state) {
-		var cols = _.dissoc(upd.get_in(state, ['column_rendering']), uuid),
-			order = _.without(upd.get_in(state, ['column_order']), uuid);
-		return upd.assoc_in(
-			upd.assoc_in(state, ['column_order'], order),
-			['column_rendering'],
-			cols
-		);
+	function setWidth(uuid, width, state) {
+		return _.assoc_in(state, ['column_rendering', uuid, 'width'], width);
 	}
 
 	function cmpString(s1, s2) {
@@ -56,10 +45,6 @@ define(['underscore_ext',
 			$target = $target.parents('.spreadsheet-column');
 		}
 		return $target;
-	}
-
-	function deleteHandler(id, cursor) {
-		return cursor.set(_.partial(deleteColumn, id));
 	}
 
 	function spreadsheetWidget(state, cursor, parent) {
@@ -91,14 +76,14 @@ define(['underscore_ext',
 				var allcols = el.children();
 				curr = _.map(allcols, function (e) { return e.id; });
 				cels = _.object(curr, allcols);
-				return cursor.set(_.partial(reorderColumns, curr));
+				cursor.update(_.partial(reorderColumns, curr));
 			})
 		);
 
 		subs.add(el.onAsObservable("resizestop")
 			.subscribe(function (ev) {
 				ev.stopPropagation();
-				cursor.set(
+				cursor.update(
 					_.partial(setWidth,
 						ev.additionalArguments[0].element.prop('id'),
 						ev.additionalArguments[0].size.width)
@@ -106,21 +91,6 @@ define(['underscore_ext',
 			})
 		);
 
-/* sorry Brian, this is interfering with freezing the tooltip,
-   You will have to use the menu like the mortals ;)
-		subs.add(el.onAsObservable('click')
-			.filter(function (ev) {
-				return findTargetColumn(ev).length
-					&& ev.shiftKey === true;
-			})
-
-			.subscribe(function (ev) {
-				var $target = findTargetColumn(ev),
-					id = $target.attr('id');
-				return deleteHandler(id, cursor);
-			})
-		);
-*/
 		var widgetStates = state.select(function (s) {
 			return _.fmap(s.column_rendering, function (col, uuid) {
 				return _.pluckPaths({
@@ -169,8 +139,8 @@ define(['underscore_ext',
 			}, {});
 		}).fmap().subscribe(function (d) {
 			// inject the async results into app state
-			cursor.set(function (upd, state) {
-				return upd.assoc_in(state, ['data'], d);
+			cursor.update(function (state) {
+				return _.assoc(state, 'data', d);
 			});
 		}));
 

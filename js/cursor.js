@@ -1,61 +1,70 @@
+/*global define: false */
 
-// I won't claim these are actually proper cursors, or lenses. They
+// I won't claim these are actually proper cursors. They
 // provide an update view to a subset of a nested data structure.
+//
+// An update function is a function that takes a value and returns
+// a new value. Ex:
+//
+// function add_one(x) { return x + 1; }
+// add_one(5) // -> 6
+//
+// We are generally working with nested structures so an update function
+// looks more like this:
+//
+// function add_one_a(obj) { return {a: obj.a + 1}; }
+// add_one_a({a: 5}) // -> {a: 6}
+//
+// Update functions do *not* modify their arguments:
+//
+// function add_one_a(obj) { obj.a++; return obj; } // WRONG
+//
+// Use immutable methods to ease updating just part of an object:
+//
+// function add_one_a(obj) { return _.assoc(obj, 'a', obj.a + 1); }
+// add_one_a({a:5, b: 12}) // -> {a:6, b: 12}
+//
+// cursor(updater, paths) returns an object with a update(updatefn) method that
+// will apply an update function to a subset of an object, defined by paths.
+// updater is a function to update the underlying object. paths is a map of
+// keys to key paths, e.g. if
+//
+// var foo = {a: 1, b: {c: 2}}
+//
+// then
+//
+// { one: ['a'], two: ['b', c'] }
+//
+// defines a cursor {one: 1, two: 2} when applied to foo. An update function applied
+// to the cursor will be passed this value.
 
 define(['underscore_ext'], function (_) {
 	'use strict';
-	var slice = Array.prototype.slice;
 
-	function cursor(setOrUpdater, newpaths) {
-		var updater, paths;
+	function splice_paths(oldpaths, newpaths) {
+		return _.fmap(newpaths, function (path) {
+			return oldpaths[path[0]].concat(path.slice(1));
+		});
+	}
 
-		if (setOrUpdater.paths) {
-			paths = {};
-			_.each(newpaths, function (path, key) {
-				paths[key] = setOrUpdater.paths[path[0]].concat(path.slice(1));
-			});
-		} else {
-			paths = newpaths;
-		}
-
-		if (setOrUpdater.set) {
-			updater = Object.create(Object.getPrototypeOf(setOrUpdater));
-		} else {
-			updater = Object.create({
-				set: function (fn) {
-					var udr = this;
-					setOrUpdater(function (s) {
-						var methods = {
-							assoc: function (t) {
-								var kvs;
-								for (kvs = slice.call(arguments, 1);
-									 kvs.length;
-									 kvs = kvs.slice(2)) {
-
-									t = _.assoc_in(t, udr.paths[kvs[0]], kvs[1]);
-								}
-								return t;
-							},
-							assoc_in: function(t, ks, v) {
-								return _.assoc_in(t, udr.paths[ks[0]].concat(ks.slice(1)), v);
-							},
-							update_in: function(t, ks, fn) {
-								return _.update_in(t, udr.paths[ks[0]].concat(ks.slice(1)), fn);
-							},
-							get_in: function(t, ks) {
-								return _.get_in(t, udr.paths[ks[0]].concat(ks.slice(1)));
-							}
-						}
-						return fn(methods, s);
-					});
-				},
-				derive: function (paths) {
-					return cursor(this, paths);
-				}
-			});
-		}
-		updater.paths = paths;
-		return updater;
+	function cursor(updater, paths) {
+		return {
+			update: function (fn) {
+				updater(function (root) {
+					var val = _.fmap(paths, function (path) {
+							return _.get_in(root, path);
+						}),
+						newval = fn(val);
+					return _.reduce(_.pairs(newval), function (newroot, pv) {
+						var p = pv[0], v = pv[1];
+						return _.assoc_in(newroot, paths[p], v);
+					}, root);
+				});
+			},
+			derive: function (newpaths) {
+				return cursor(updater, splice_paths(paths, newpaths));
+			}
+		};
 	}
 
 	return cursor;
