@@ -84,7 +84,6 @@ define(['jquery',
 
 	var thisSheetWrap = sheetWrap.create({
 		$anchor: $('#main'),
-		updateColumn: updateColumn,
 		state: spreadsheetState,
 		cursor: spreadsheetCursor
 	});
@@ -128,23 +127,6 @@ define(['jquery',
 	var colsub = spreadsheet(spreadsheetState, spreadsheetCursor, $spreadsheet); // XXX returns disposable
 
 	// COLUMN STUB
-
-	function updateColumn(id) {
-		//try {
-			var newcol = JSON.parse($('#columnStub').val());
-			debugstream.onNext(function (s) {
-				var assoc_in = _.assoc_in(s, ['column_rendering', id], newcol);
-				var newOrder = s.column_order.concat([id]);
-				var assoc = _.assoc(assoc_in, 'column_order', newOrder);
-				return assoc;
-				//return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
-				//	'column_order', s.column_order.concat([id]));
-			});
-		//} catch (e) {
-		//	console.log('error', e);
-		//	console.trace();
-		//}
-	}
 
 	function createColumn() {
 		try {

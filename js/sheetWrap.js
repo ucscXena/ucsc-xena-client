@@ -82,7 +82,7 @@ define(['haml!haml/sheetWrap',
 			columnEdit.show(id, {
 				sheetWrap: this,
 				columnUi: undefined,
-				updateColumn: this.updateColumn // XXX ugh
+				cursor: this.cursor
 			});
 		},
 
@@ -194,7 +194,6 @@ define(['haml!haml/sheetWrap',
 			var self = this;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
-			this.updateColumn = options.updateColumn; // XXX
 			this.state = options.state;
 			this.cursor = options.cursor;
 

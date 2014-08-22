@@ -314,7 +314,8 @@ define(['haml!haml/columnEdit',
 		},
 
 		renderColumn: function () { // TODO shouldn't have to go through debug widgets
-			var fields = this.getFields(),
+			var id = this.id,
+				fields = this.getFields(),
 				json = {
 					"width": 200,
 					"dsID": this.state.dsID, // TODO we don't need dsID in this.state too
@@ -322,8 +323,13 @@ define(['haml!haml/columnEdit',
 					"fields": fields,
 					"ui": this.state
 				};
-			$('#columnStub').val(JSON.stringify(json, undefined, 4));
-			this.updateColumn(this.id);
+			this.cursor.update(function (state) {
+				var column_rendering = _.assoc(state.column_rendering, id, json),
+					column_order = _.conj(state.column_order, id);
+				return _.assoc(state,
+							  'column_rendering', column_rendering,
+							  'column_order', column_order);
+			});
 		},
 
 		reRender: function () {
@@ -445,7 +451,7 @@ define(['haml!haml/columnEdit',
 			this.$anchor = options.$anchor;
 			this.sheetWrap = options.sheetWrap;
 			this.columnUi = options.columnUi;
-			this.updateColumn = options.updateColumn;
+			this.cursor = options.cursor;
 			this.firstRenderDataset = true;
 			this.state = {};
 
