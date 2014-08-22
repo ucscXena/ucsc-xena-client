@@ -1,6 +1,4 @@
-%table
-  %tbody
-    %tr
-      - _.each(colors, function (color, i) {
-        %td{class:'color', title:tooltips[i], style:'background-color:' + color} =labels[i]
-        -#%td{class:'color', style:'background-color:' + color, title:tooltips[i]} =labels[i]
+- _.each(colors, function (color, i) {
+  %tr
+    %td{class:'colorTd', colspan:2}
+      %input{class:'color ' + align, type:'text', value:labels[i], title:tooltips[i], style:'background-color:' + color + ';color:' + textColors[i] + ';text-align:' + align, readonly:true}

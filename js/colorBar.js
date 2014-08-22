@@ -9,21 +9,61 @@ define(['haml!haml/colorBar', 'lib/underscore', 'jquery'
 		Awidget = function () {
 
 			this.destroy = function () {
-				this.$anchor.empty();
+				this.$bar.remove();
+				delete widgets[this.id];
 			};
 
 			this.render = function (options) {
-				var bar = template({
+				var sum,
+					$color,
+					textColors = _.map(options.colors, function (color) {
+						var c,
+							lightness = 0;
+						if (color.indexOf('rgba') === 0) { // rgba
+							c = _.map(color.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)$/), function (clr) {
+								return Number(clr);
+							});
+							return (c[4] === 1) ? 'white' : 'black';
+						} else {
+							if (color.indexOf('#') === 0) { // hexidecimal
+								c = [
+									parseInt(color.substring(1, 3), 16),
+									parseInt(color.substring(3, 5), 16),
+									parseInt(color.substring(5, 7), 16)
+								];
+							} else { // assume rgb
+								c = _.map(color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/), function (clr) {
+									return Number(clr);
+								});
+								c.shift();
+							}
+							sum = c[0] + c[1] + c[2];
+							if (sum > 0) {
+								lightness = sum / 3;
+							}
+						}
+						return (lightness < 132) ? 'white' : 'black';
+					});
+				this.$bar = $(template({
 					colors: options.colors,
+					textColors: textColors,
 					labels: options.labels,
-					tooltips: options.tooltips
-				});
-				this.$anchor.append(bar);
-				options.$barLabel.text(options.barLabel);
+					tooltips: options.tooltips,
+					align: options.align
+				}));
+				options.$prevRow.after(this.$bar);
+				$color = this.$bar.find('.color');
+				$($color[0]).css('border-top', '1px #bbbbbb solid');
+				$($color[$color.length - 1]).css('border-bottom', '1px #bbbbbb solid');
+				this.$bar.find('.colorTd').addClass(options.klass);
+				if (options.$barLabel) {
+					options.$barLabel.text(options.barLabel);
+				}
 			};
 
 			this.initialize = function (options) {
-				this.$anchor = options.$anchor;
+				_.bindAll.apply(_, [this].concat(_.functions(this)));
+				//_(this).bindAll();
 				this.render(options);
 				return this;
 			};

@@ -2,6 +2,7 @@
 	position: relative;
 	display: inline-block;
 	word-wrap: nowrap;
+	border-bottom: solid 5px #eeeeee;
 }
 .spreadsheet .ui-resizable-s {
 	cursor: ns-resize;
@@ -9,6 +10,9 @@
 .spreadsheet-column {
 	vertical-align: top;
 	display: inline-block;
+}
+.spreadsheet-column:last-child {
+	border-right: solid 5px #eeeeee;
 }
 .spreadsheet-column .ui-resizable-e {
 	cursor: ew-resize;

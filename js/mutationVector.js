@@ -9,37 +9,37 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 	var impactMax = 3,
 		highlightRgba = 'rgba(0, 0, 0, 1)',
 		impact = {
-			stop_gained: 3,
-			splice_acceptor_variant: 3,
-			splice_donor_variant: 3,
-			Splice_Site: 3,
-			frameshift_variant: 3,
-			Frame_Shift_Del: 3,
-			Frame_Shift_Ins: 3,
-			splice_region_variant: 3,
-			Nonsense_Mutation: 3,
+			stop_gained: 2,
+			splice_acceptor_variant: 2,
+			splice_donor_variant: 2,
+			Splice_Site: 2,
+			frameshift_variant: 2,
+			Frame_Shift_Del: 2,
+			Frame_Shift_Ins: 2,
+			splice_region_variant: 2,
+			Nonsense_Mutation: 2,
 
-			missense_variant: 2,
-			missense: 2,
-			Missense_Mutation: 2,
-			non_coding_exon_variant: 2,
-			exon_variant: 2,
-			RNA: 2,
-			Indel: 2,
-			start_lost: 2,
-			start_gained: 2,
-			De_novo_Start_OutOfFrame: 2,
-			Translation_Start_Site: 2,
-			De_novo_Start_InFrame: 2,
-			stop_lost: 2,
-			Nonstop_Mutation: 2,
-			initiator_codon_variant: 2,
-			"5_prime_UTR_premature_start_codon_gain_variant": 2,
-			disruptive_inframe_deletion: 2,
-			inframe_deletion: 2,
-			inframe_insertion: 2,
-			In_Frame_Del: 2,
-			In_Frame_Ins: 2,
+			missense_variant: 1,
+			missense: 1,
+			Missense_Mutation: 1,
+			non_coding_exon_variant: 1,
+			exon_variant: 1,
+			RNA: 1,
+			Indel: 1,
+			start_lost: 1,
+			start_gained: 1,
+			De_novo_Start_OutOfFrame: 1,
+			Translation_Start_Site: 1,
+			De_novo_Start_InFrame: 1,
+			stop_lost: 1,
+			Nonstop_Mutation: 1,
+			initiator_codon_variant: 1,
+			"5_prime_UTR_premature_start_codon_gain_variant": 1,
+			disruptive_inframe_deletion: 1,
+			inframe_deletion: 1,
+			inframe_insertion: 1,
+			In_Frame_Del: 1,
+			In_Frame_Ins: 1,
 
 			"5_prime_UTR_variant": 0,
 			"3_prime_UTR_variant": 0,
@@ -64,68 +64,17 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 			'nonsense or splice site'
 		],
 		colors = {
-			grey_green_blue_red: [
-				{r: 0, g: 0, b: 0, a: 0.1},
-				{r: 0, g: 255, b: 0, a: 0.3},
-				{r: 0, g: 0, b: 255, a: 0.2},
-				{r: 255, g: 0, b: 0, a: 0.6}
-			],
-			category_50: [
-				{r: 255, g: 255, b: 153, a: 1},
-				{r: 166, g: 215, b: 165, a: 1},
-				{r: 155, g: 191, b: 220, a: 1},
-				{r: 242, g: 141, b: 142, a: 1}
-			],
 			category_25: [
+				{r: 77, g: 175, b: 74, a: 1}, // green
+				{r: 55, g: 126, b: 184, a: 1}, // blue
+				{r: 228, g: 26, b: 28, a: 1}    // red
+				/* older
 				{r: 235, g: 255, b: 102, a: 1},
 				{r: 122, g: 195, b: 119, a: 1},
 				{r: 105, g: 158, b: 202, a: 1},
 				{r: 235, g: 83, b: 85, a: 1}
+				*/
 			],
-			category_0: [
-				{r: 255, g: 255, b: 51, a: 1},
-				{r: 77, g: 175, b: 74, a: 1},
-				{r: 55, g: 126, b: 184, a: 1},
-				{r: 228, g: 26, b: 28, a: 1}
-			],
-			scale_25: [
-				{r: 255, g: 255, b: 102, a: 1},
-				{r: 255, g: 207, b: 83, a: 1},
-				{r: 255, g: 159, b: 64, a: 1},
-				{r: 235, g: 83, b: 85, a: 1}
-			],
-			category_transparent_25: [
-				{r: 235, g: 255, b: 102, a: 0.5},
-				{r: 122, g: 195, b: 119, a: 0.5},
-				{r: 105, g: 158, b: 202, a: 0.5},
-				{r: 235, g: 83, b: 85, a: 0.5}
-			],
-			category_line: [
-				{r: 255, g: 255, b: 51, a: 1, line: true},
-				{r: 77, g: 175, b: 74, a: 1, line: true},
-				{r: 55, g: 126, b: 184, a: 1, line: true},
-				{r: 228, g: 26, b: 28, a: 1, line: true}
-			],
-			category_gradient: [
-				{r: 255, g: 255, b: 51, a: 1, gradient: true},
-				{r: 77, g: 175, b: 74, a: 1, gradient: true},
-				{r: 55, g: 126, b: 184, a: 1, gradient: true},
-				{r: 228, g: 26, b: 28, a: 1, gradient: true}
-			],
-			duplicate_checker: [
-				{r: 16, g: 16, b: 16, a: 0.2},
-				{r: 0, g: 255, b: 0, a: 0.2},
-				{r: 0, g: 0, b: 255, a: 0.2},
-				{r: 255, g: 0, b: 0, a: 0.2}
-			],
-			dataset: {
-				'TCGA_LUAD_mutation_RADIA':
-					{r: 0, g: 0, b: 255, a: 0.5},
-				'TCGA_UCEC_mutation_RADIA':
-					{r: 0, g: 255, b: 0, a: 0.5 },
-				'8132-002-NWMS-CO_somaticNonSilentSNP':
-					{r: 255, g: 0, b: 0, a: 0.5 }
-			},
 			af: [
 				{r: 228, g: 26, b: 28, a: 0},
 				{r: 228, g: 26, b: 28, a: 0.5},
@@ -316,61 +265,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				linkTo.mupit(positions.join('\n'));
 			},
 
-			findLegend: function () {
-				var featureColors,
-					legendColors,
-					labels,
-					barLabel,
-					tooltips;
-				if (this.feature === 'impact') {
-					barLabel = 'Impact:';
-					featureColors = [
-						colors[this.color][0],
-						colors[this.color][2],
-						colors[this.color][3]
-					];
-					labels = [
-						'mild',
-						'',
-						'severe'
-					];
-				} else if (this.feature === 'dataset') {
-					barLabel = 'Dataset:';
-					featureColors = colors.dataset;
-					labels = ['LUAD', 'UCEC', 'CCI'];
-				} else {
-					if (this.feature === 'DNA_AF' || this.feature === 'DNA_VAF') {
-						barLabel = 'DNA Allele Frequency:';
-					} else {
-						barLabel = 'RNA Allele Frequency:';
-					}
-					featureColors = colors.af;
-					labels = ['0%', '50%', '100%'];
-				}
-				legendColors = map(featureColors, function (c) {
-					return 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
-				});
-				return {barLabel: barLabel, colors: legendColors, labels: labels, tooltips: impactLabels};
-			},
-
-			findLine: function (val) {
-				var imp, line;
-				if (this.feature === 'impact') {
-					imp = impact[val.effect];
-					line = colors[this.color][imp].line;
-				}
-				return line;
-			},
-
-			findGradient: function (val) {
-				var imp, gradient;
-				if (this.feature === 'impact') {
-					imp = impact[val.effect];
-					gradient = colors[this.color][imp].gradient;
-				}
-				return gradient;
-			},
-
 			findRgba: function (val) {
 				var imp,
 					c;
@@ -428,8 +322,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 								r: self.radius,
 								impact: impact[val.effect],
 								rgba: self.findRgba(val),
-								line: self.findLine(val),
-								gradient: self.findGradient(val),
 								data: val
 							});
 						}
@@ -442,6 +334,36 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				});
 			},
 
+			drawLegend: function () {
+				var myColors,
+					c,
+					rgba,
+					labels,
+					align;
+				if (this.feature === 'impact') {
+					myColors = _.map(colors[this.color], function (c) {
+						return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
+					});
+					labels = [
+						'synonymous, UTR, ...',
+						'missense, non-coding, inframe indel, ...',
+						'nonsense, frameshift, ...'
+					];
+					align = 'left';
+				} else { // feature is one of allele frequencies
+					c = colors[this.color][2];
+					rgba = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',';
+					myColors = [
+						rgba + '0)',
+						rgba + '0.5)',
+						rgba + '1)'
+					];
+					labels = ['0%', '50%', '100%'];
+					align = 'center';
+				}
+				this.columnUi.drawLegend(myColors, labels, align, '', 'mutationVector');
+			},
+
 			render: function () {
 				var self = this;
 				this.pixPerRow = (this.height - (this.sparsePad * 2))  / this.values.length;
@@ -450,6 +372,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 
 				this.nodes = this.findNodes();
 				this.nonNaRows = this.findNonNaRows();
+				this.drawLegend();
 				this.draw();
 			},
 

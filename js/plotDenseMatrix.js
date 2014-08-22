@@ -4,6 +4,7 @@ define(['underscore_ext',
 		'rx',
 		'multi',
 		'vgcanvas',
+		'colorBar',
 		'columnWidgets',
 		'crosshairs',
 		'heatmapColors',
@@ -19,6 +20,7 @@ define(['underscore_ext',
 		Rx,
 		multi,
 		vgcanvas,
+		colorBar,
 		widgets,
 		crosshairs,
 		heatmapColors,
@@ -54,9 +56,14 @@ define(['underscore_ext',
 		render;
 
 	color_schemes = {
-		blue_white_red: ['blue', 'white', 'red'],
-		green_black_red: ['green', 'black', 'red'],
-		green_black_yellow: ['green', 'black', 'yellow']
+		blue_white_red: ['#0000ff', '#ffffff', '#ff0000'],
+		green_black_red: ['#007f00', '#000000', '#ff0000'],
+		green_black_yellow: ['#007f00', '#000000', '#ffff00']
+		/* with clinical category palette:
+		blue_white_red: ['#377eb8', '#ffffff', '#e41a1c'],
+		green_black_red: ['#4daf4a', '#000000', '#e41a1c'],
+		green_black_yellow: ['#4daf4a', '#000000', '#ffff33']
+		*/
 	};
 
 	default_colors_map = {
@@ -510,6 +517,61 @@ define(['underscore_ext',
 		});
 	}
 
+	function categoryLegend(dataIn, color_scale, codes) {
+		// only finds categories for the current data in the column
+		var data = uniq(dataIn).sort(function (v1, v2) {
+				return v1 - v2;
+			}),
+			colors,
+			justColors,
+			labels;
+
+		if (color_scale) { // then there exist some non-null values
+			// zip colors and their indexes, then filter out the nulls
+			colors = filter(zip(range(data.length), map(data, color_scale)), secondNotUndefined);
+			justColors =  map(colors, function (color) {
+				return color[1];
+			});
+			if (data[data.length - 1] === undefined) {
+				data.pop();
+			}
+			labels = map(data, function(d) {
+				return(codes[d]);
+			});
+			return { colors: justColors, labels: labels };
+		} else {
+			return { colors: [], labels: [] };
+		}
+	}
+
+	function drawLegend(column, columnUi, data, fields, codes, color_scale, categoryLength) {
+		var c,
+			ellipsis = '',
+			align = 'center',
+			colors = [].concat(column.colors),
+			labels = [column.min, 0, column.max];
+		if (data.length === 0) { // no features to draw
+			return;
+		}
+		if (column.dataType === 'clinicalMatrix') {
+			if (codes[fields[0]]) { // category
+				c = categoryLegend(data[0], color_scale[0], codes[fields[0]]);
+				if (c.colors.length > categoryLength) {
+					ellipsis = '...';
+					colors = c.colors.slice(c.colors.length - categoryLength, c.colors.length);
+					labels = c.labels.slice(c.colors.length - categoryLength, c.colors.length);
+				} else {
+					colors = c.colors;
+					labels = c.labels;
+				}
+				align = 'left';
+			} else { // float
+				// TODO need min and max of full dataset from server
+			}
+		}
+		columnUi.drawLegend(colors, labels, align, ellipsis);
+	}
+
 	// memoize doesn't help us here, because we haven't allocated a render routine
 	// for each widget. Maybe we should???
 	render = ifChanged(
@@ -528,8 +590,8 @@ define(['underscore_ext',
 				metadata = data.metadata || {},
 				columnUi,
 				defaults = {
-					min: metadata.min,
-					max: metadata.max,
+					min: (metadata.min === undefined) ? -1 : metadata.min,
+					max: (metadata.max === undefined) ? 1 :metadata.max,
 					colors: default_colors(ws.column.dataType === "clinicalMatrix" ?
 										   "phenotype" :
 										   metadata.dataSubType),
@@ -569,7 +631,8 @@ define(['underscore_ext',
 				columnUi.plotData = {
 					serverData: data.req.values,
 					heatmapData: heatmapData,
-					samples: sort,
+					column: column,
+					samples: sort, // TODO should samples, fields, codes be gotten from ws?
 					fields: fields,
 					codes: codes
 				};
@@ -588,6 +651,7 @@ define(['underscore_ext',
 			colors = map(fields, function (p, i) {
 				return heatmapColors.range(column, features[p], codes[p], heatmapData[i]);
 			});
+			drawLegend(column, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryLength);
 			renderHeatmap({
 				vg: vg,
 				height: ws.height,
