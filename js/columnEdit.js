@@ -313,7 +313,7 @@ define(['haml!haml/columnEdit',
 			}
 		},
 
-		renderColumn: function () { // TODO shouldn't have to go through debug widgets
+		renderColumn: function () {
 			var id = this.id,
 				fields = this.getFields(),
 				json = {
