@@ -2,6 +2,7 @@
 /*globals define: false, $: false, _: false */
 define(['haml!haml/sheetWrap',
 		'stub',
+		'spreadsheet',
 		'cohortSelect',
 		'columnEdit',
 		'columnUi',
@@ -15,6 +16,7 @@ define(['haml!haml/sheetWrap',
 		'rx.binding'
 		], function (template,
 					stub,
+					spreadsheet,
 					cohortSelect,
 					columnEdit,
 					columnUi,
@@ -204,7 +206,8 @@ define(['haml!haml/sheetWrap',
 			options.$anchor.append(this.$el);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'servers', 'addColumn'];
+			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'servers', 'addColumn',
+				'spreadsheet'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
 				return a;
@@ -212,7 +215,8 @@ define(['haml!haml/sheetWrap',
 
 			this.initCohortsAndSources();
 			this.initSamplesFrom();
-
+			// XXX leaking disposable
+			spreadsheet(options.state, options.cursor, this.$spreadsheet);
 			this.$el
 				.on('click', '.addColumn', this.addColumnClick);
 		}

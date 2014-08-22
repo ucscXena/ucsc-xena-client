@@ -124,7 +124,6 @@ define(['jquery',
 
 	model.addStream(resizes);
 
-	var colsub = spreadsheet(spreadsheetState, spreadsheetCursor, $spreadsheet); // XXX returns disposable
 
 	// COLUMN STUB
 
