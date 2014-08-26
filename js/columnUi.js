@@ -97,15 +97,14 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		},
 
 		getDefField: function () {
-			var ui = this.ws.column.ui,
-				defalt = Rx.Observable.return(this.ws.column.fields.toString()
+			var defalt = Rx.Observable.return(this.ws.column.fields.toString()
 					+ ((this.ws.dataType === 'mutationVector')
-						? ': ' + sFeatures[ui.sFeature]
+						? ': ' + sFeatures[this.ws.column.sFeature]
 						: ''));
 
 			if (this.ws.dataType === 'clinicalMatrix') {
 				defalt = xenaQuery.feature_list(this.ws.column.dsID)
-					.pluck(ui.feature);
+					.pluck(this.ws.column.fields[0]);
 			}
 			return defalt;
 		},
@@ -131,7 +130,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		},
 
 		reRender: function (options) {
-			var ui = options.ws.column.ui;
 			this.ws = options.ws;
 			this.title = defaultTextInput.create('title_' + this.id, {
 				$el: this.$columnTitle,
@@ -145,8 +143,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 		firstRender: function (options) {
 			var self = this,
-				$anchor = $(options.ws.el),
-				ui = options.ws.column.ui;
+				$anchor = $(options.ws.el);
 			this.sheetWrap = options.sheetWrap;
 			this.$el = $(template({
 				features: undefined,

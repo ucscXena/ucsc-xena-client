@@ -204,7 +204,7 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 							data: plotData[0].values,
 							color: 'category_25', // TODO make dynamic
 							dataset: column.dsID,
-							feature: column.ui.sFeature,
+							feature: column.sFeature,
 							radius: dims.sparseRadius,
 							sparsePad: dims.sparsePad,
 							horizontalMargin: dims.horizontalMargin,

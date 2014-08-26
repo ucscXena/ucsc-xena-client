@@ -56,43 +56,47 @@ define(["haml!haml/dropDownTemplate", "tooltip", "lib/underscore", "jquery"], fu
 				}
 			};
 
-			// position of list in these optional options:
+			// list is positioned using these optional options:
 			//		leftAdd: additive relative to anchor left; defaults to 0
 			//		left: relative to window; overrides leftAdd
 			//		topAdd: additive relative to anchor bottom; defaults to 0
 			//		top: relative to window; overrides topAdd
-			this.menuAnchorClick = function (event, options) {
-				if (!($(event.target).hasClass('noSelect'))) {
-					var offset = this.$el.offset(),
-						top = options.top || (offset.top + this.$el.height() + (options.topAdd || 0)),
-						left = options.left || (offset.left + (options.leftAdd || 0)),
-						maxHeight = $(window).height() - top - 20;
-					left -= $(window).scrollLeft();
-					top -= $(window).scrollTop();
-					if (this.$list) {
-						this.destroyList();
-					} else {
-						//tooltip.activate(false); // TODO
-						this.render();
-						this.$list.css({
-							top: top,
-							left: left,
-							'max-height': maxHeight.toString() + 'px'
-						});
-						this.$el.removeAttr('title');
-						if (this.geometryCallback) {
-							this.geometryCallback();
-						} else if (this.adjustGeometry) { // XXX could replace all uses of adjustGeometry() with geometryCallback
-							this.adjustGeometry();
-						}
-						this.$list.scrollLeft(0);
-						this.$el.find('.focus').focus();
+			this.showList = function (options) {
+				var offset = this.$el.offset(),
+					top = options.top || (offset.top + this.$el.height() + (options.topAdd || 0)),
+					left = options.left || (offset.left + (options.leftAdd || 0)),
+					maxHeight = $(window).height() - top - 20;
+				left -= $(window).scrollLeft();
+				top -= $(window).scrollTop();
+				//tooltip.activate(false); // TODO
+				this.render();
+				this.$list.css({
+					top: top,
+					left: left,
+					'max-height': maxHeight.toString() + 'px'
+				});
+				this.$el.removeAttr('title');
+				if (this.geometryCallback) {
+					this.geometryCallback();
+				} else if (this.adjustGeometry) { // XXX could replace all uses of adjustGeometry() with geometryCallback
+					this.adjustGeometry();
+				}
+				this.$list.scrollLeft(0);
+				this.$el.find('.focus').focus();
 
-						// bindings
-						this.menuId = _.uniqueId('menu_');
-						$(document).on('click.' + this.menuId, this.clickOutsideThis);
-						$('*').on('scroll.menu', this.scrollAnywhere);
-					}
+				// bindings
+				this.menuId = _.uniqueId('menu_');
+				$(document).on('click.' + this.menuId, this.clickOutsideThis);
+				$('*').on('scroll.menu', this.scrollAnywhere);
+			};
+
+			this.menuAnchorClick = function (event, options) {
+				if ($(event.target).hasClass('noSelect')) {
+					return;
+				} else if (this.$list) {
+					this.destroyList();
+				} else {
+					this.showList(options);
 				}
 			};
 

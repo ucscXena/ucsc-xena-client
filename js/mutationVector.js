@@ -249,11 +249,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 			},
 
 			mupitClick: function () {
-				var self = this,
-					nodes =  _.filter(self.nodes, function (n) {
-						return (n.impact === 2);
-					}),
-					positions = _.map(nodes, function (n, i) {
+				var positions = _.map(this.nodes, function (n, i) {
 						return n.data.chr + ' ' + (n.data.start + 1).toString();
 					});
 				linkTo.mupit(positions.join('\n'));

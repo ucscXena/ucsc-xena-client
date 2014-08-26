@@ -1,8 +1,26 @@
-%ul{class:'columnMenu list'}
-  - if (type === "mutationVector") {
-    %li{class:'mupit'} MuPIT View
+%ul{class:'columnMenu list', style:'overflow:visible'}
+  %li{class:'mupit opt'} MuPIT View
   %hr{style:'display:none;width:100%'}
-  %li{class:'edit', style:'display:none'} Edit
-  %li{class:'duplicate', style:'display:none'} Duplicate
+  %li{class:'edit opt'} Edit
+  %li{class:'duplicate opt'} Duplicate
   %li{class:'download'} Download
+  %li{class:'view opt'}
+    %span View
+    %span{class:'ui-icon ui-icon-play'}
+    %ul{class:'viewList opt'}
+      %li{class:'detail opt'}
+        %span{class:'ui-icon ui-icon-check'}
+        %span Detail
+      %li{class:'geneAverage opt'}
+        %span{class:'ui-icon ui-icon-check'}
+        %span Gene average
+      %li{class:'impact opt'}
+        %span{class:'ui-icon ui-icon-check'}
+        %span Impact
+      %li{class:'dnaAf opt'}
+        %span{class:'ui-icon ui-icon-check'}
+        %span DNA variant allele frequency
+      %li{class:'rnaAf opt'}
+        %span{class:'ui-icon ui-icon-check'}
+        %span RNA variant allele frequency
   %li{class:'remove'} Remove

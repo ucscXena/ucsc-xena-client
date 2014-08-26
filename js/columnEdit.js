@@ -31,12 +31,12 @@ define(['haml!haml/columnEdit',
 			mutationVector: ['mutationVector'],
 			clinicalMatrix: ['clinicalMatrix'],
 			genomicMatrix: ['probeMatrix'],
-			genomicMatrixProbemap: ['probeMatrix', 'geneMatrix'],
+			genomicMatrixProbemap: ['geneMatrix', 'probeMatrix', 'geneProbesMatrix'],
 		},
 		dataTypeByInput = {
-			iFeature: ['clinicalMatrix'],
 			iGene: ['mutationVector'],
-			iGenes: ['geneMatrix'],
+			iFeature: ['clinicalMatrix'],
+			iGenes: ['geneMatrix', 'geneProbesMatrix'],
 			iProbes: ['probeMatrix']
 		},
 		map = _.map,
@@ -77,66 +77,52 @@ define(['haml!haml/columnEdit',
 			}
 		},
 
-		getFields: function () {
-			var fields;
-			switch (this.state.inputMode) {
-			case 'iGene':
-				fields = [this.state.gene]; // TODO use named text?
-				break;
-			case 'iGenes':
-				fields = this.state.genes.split(', '); // TODO use named text?
-				break;
-			case 'iProbes':
-				fields = this.state.probes.split(', '); // TODO use named text?
-				break;
-			case 'iFeature':
-				fields = [this.state.feature];
-				break;
-			}
-			return fields;
-		},
-
-		renderInputModes: function (metadata) {
+		renderInputModes: function () {
 			var self = this,
-				modes = getInputModesByMetadata(metadata);
-			this.state.metadata = metadata;
+				modes = getInputModesByMetadata(this.metadata);
 			if (modes.length === 1) {
-				this.state.inputMode = modes[0];
-			} else {
+				this.stateTmp.inputMode = modes[0];
+			} else { // must be [iGenes, iProbes]
 				this.inputModesDisplayed = modes;
-				if (modes.indexOf(this.state.inputMode) > -1) {
-					_.each(modes, function (mode, i) {
-						if (mode === self.state.inputMode) {
-							self.$el.find('inputMode' + i).prop('checked', true);
-						}
-					});
+				if (this.stateTmp.inputMode === modes[1]) {
+					this.$el.find('.inputMode1').prop('checked', true);
 				} else {
 					this.$el.find('.inputMode0').prop('checked', true);
-					this.state.inputMode = modes[0];
+					this.stateTmp.inputMode = modes[0];
 				}
 				this.$inputModeRow.show();
 			}
 		},
 
+		renderProbeEg: function (probes) {
+			this.$listEg.text(
+				'e.g. ' + probes[0].name + ' or ' + probes[0].name + ', ' + probes[1].name
+			);
+		},
+
 		renderList: function () {
-			if (this.state.inputMode === 'iGenes') {
+			var self = this;
+			if (this.stateTmp.inputMode === 'iGenes') {
 				this.$listLabel.text('Genes:');
-				this.$list.val(this.state.genes);
+				this.$list.val(this.stateTmp.genes);
 				this.$listEg.text('e.g. TP53 or TP53, PTEN');
 				this.$listRow.show();
-			} else if (this.state.inputMode === 'iProbes') {
+			} else if (this.stateTmp.inputMode === 'iProbes') {
 				this.$listLabel.text('Identifiers:');
-				this.$list.val(this.state.probes);
-				this.$listEg.text(''); // TODO should be first 3 identfiers in probemap
+				this.$list.val(this.stateTmp.probes);
+				xenaQuery.dataset_field_examples(this.state.dsID)
+					.subscribe(function (probes) {
+						self.renderProbeEg(probes);
+					});
 				this.$listRow.show();
 			}
 		},
 
 		renderSingle: function () {
-			if (this.state.inputMode === 'iGene') {
+			if (this.stateTmp.inputMode === 'iGene') {
 				this.$singleLabel.text('Gene:');
 				this.$singleEg.text('e.g. TP53');
-				this.$single.val(this.state.gene);
+				this.$single.val(this.stateTmp.gene);
 				this.$singleRow.show();
 			}
 		},
@@ -159,49 +145,76 @@ define(['haml!haml/columnEdit',
 				placeholderOption: 'first'
 			});
 			self.$feature = self.$el.find('.select2-container.feature');
-			if (self.state.feature) {
-				self.$feature.select2('val', self.state.feature);
+			if (self.stateTmp.feature) {
+				self.$feature.select2('val', self.stateTmp.feature);
 			} else {
-				self.state.feature = self.$feature.select2('val');
+				self.stateTmp.feature = self.$feature.select2('val');
 			}
 		},
 
 		renderSelect: function () {
 			var self = this;
-			if (this.state.metadata === 'clinicalMatrix') {
+			if (this.metadata === 'clinicalMatrix') {
 				xenaQuery.feature_list(this.state.dsID).subscribe(function (features) {
 					self.renderFeatures(features);
 				});
 			}
 		},
 
-		findDataType: function () {
-			var types = dataTypeByMetadata[this.state.metadata];
+		getFields: function () {
+			var fields;
+			switch (this.stateTmp.inputMode) {
+			case 'iGene':
+				fields = [this.stateTmp.gene]; // TODO use named text?
+				break;
+			case 'iGenes':
+				fields = this.stateTmp.genes.split(', '); // TODO use named text?
+				break;
+			case 'iProbes':
+				fields = this.stateTmp.probes.split(', '); // TODO use named text?
+				break;
+			case 'iFeature':
+				fields = [this.stateTmp.feature];
+				break;
+			}
+			return fields;
+		},
+
+		findDataType: function (fields) {
+			var types = dataTypeByMetadata[this.metadata];
 			if (types.length === 1) {
 				return types[0];
-			} else {
-				return dataTypeByInput[this.state.inputMode];
+			} else { // assume metadata is genomicMatrixProbemap
+				if (fields.length > 1) {
+					return 'geneMatrix';
+				} else {
+					return 'geneProbesMatrix';
+				}
 			}
 		},
 
-		renderColumn: function () { // TODO shouldn't have to go through debug widgets
-			var json;
-			if (this.state.metadata === 'mutationVector') {
-				this.state.sFeature = 'impact';
+		renderColumn: function () { // TODO need individual state access for updates
+			var json,
+				fields = this.getFields(),
+				sFeature;
+			if (this.metadata === 'mutationVector') {
+				sFeature = 'impact';
 			}
 			json = {
 				"width": 200,
-				"dsID": this.state.dsID, // TODO we don't need dsID in this.state too
-				"dataType": this.findDataType(),
-				"fields": this.getFields(),
-				"ui": this.state
+				"dsID": this.state.dsID,
+				"dataType": this.findDataType(fields),
+				"fields": fields
 			};
+			if (sFeature) {
+				json.sFeature = sFeature;
+			}
 			$('#columnStub').val(JSON.stringify(json, undefined, 4));
 			this.updateColumn(this.id);
 		},
 
 		reRender: function () {
-			var metadata = getMetadata(this.sources, this.state.dsID);
+			this.metadata = getMetadata(this.sources, this.state.dsID);
 
 			// reset the dynamic portion of column, excluding the plot
 			this.$el.find('tr:not(.static)').hide();
@@ -209,7 +222,7 @@ define(['haml!haml/columnEdit',
 			this.$feature = undefined;
 
 			// render by row
-			this.renderInputModes(metadata);
+			this.renderInputModes();
 			this.renderList();
 			this.renderSingle();
 			this.renderSelect();
@@ -221,7 +234,7 @@ define(['haml!haml/columnEdit',
 		},
 
 		featureChange: function () {
-			this.state.feature = this.$feature.select2('val');
+			this.stateTmp.feature = this.$feature.select2('val');
 			this.$goRow.show();
 		},
 
@@ -234,14 +247,14 @@ define(['haml!haml/columnEdit',
 		},
 
 		singleBlur: function () {
-			this.state.gene = this.$single.val();
+			this.stateTmp.gene = this.$single.val();
 		},
 
 		listBlur: function () {
-			if (this.state.inputMode === 'iGenes') {
-				this.state.genes = this.$list.val();
+			if (this.stateTmp.inputMode === 'iGenes') {
+				this.stateTmp.genes = this.$list.val();
 			} else {
-				this.state.probes = this.$list.val();
+				this.stateTmp.probes = this.$list.val();
 			}
 		},
 
@@ -249,7 +262,7 @@ define(['haml!haml/columnEdit',
 			var self = this;
 			_.each(this.inputModesDisplayed, function (mode, i) {
 				if (self.$el.find('.inputMode' + i).prop('checked')) {
-					self.state.inputMode = mode;
+					self.stateTmp.inputMode = mode;
 				}
 			});
 			this.reRender();
@@ -311,6 +324,7 @@ define(['haml!haml/columnEdit',
 			this.updateColumn = options.updateColumn;
 			this.firstRenderDataset = true;
 			this.state = {};
+			this.stateTmp = {};
 
 			self.render();
 

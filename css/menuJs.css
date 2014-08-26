@@ -16,6 +16,16 @@
 	position: fixed;
 	text-indent: 0;
 }
+.menu .ui-icon-play {
+	display: inline-block;
+	vertical-align: bottom;
+	float: right;
+}
+.menu .ui-icon-check {
+	display: inline-block;
+	vertical-align: bottom;
+	opacity: 0;
+}
 .menu .itemAlt:nth-child(odd) {
 	background: #f4f4f4;
 }

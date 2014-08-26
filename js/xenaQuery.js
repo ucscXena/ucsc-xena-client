@@ -149,6 +149,14 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 					+ '})))';
 	}
 
+	function dataset_field_examples_string(dataset) {
+		return '(query {:select [:field.name] ' +
+			   '        :from [:dataset] ' +
+		       '        :join [:field [:= :dataset.id :dataset_id]] ' +
+		       '        :where [:= :dataset.name ' + quote(dataset) + '] ' +
+               '        :limit 2})';
+	}
+
 	function dataset_gene_probes_string(dataset, samples, gene) {
 		return '(let [getfield (fn [dsID field] ' +
 		'                        (:id (car (query {:select [:id] ' +
@@ -300,6 +308,15 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		}));
 	}
 
+	function dataset_field_examples(dsID) {
+		var hostds = parse_host(dsID),
+			host = hostds[1],
+			ds = hostds[2];
+		return Rx.DOM.Request.ajax(
+			xena_get(host, dataset_field_examples_string(ds))
+		).map(json_resp);
+	}
+
 	function feature_list(dsID) {
 		var hostds = parse_host(dsID),
 			host = hostds[1],
@@ -356,6 +373,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		// query prep:
 		dataset_list: dataset_list,
 		feature_list: feature_list,
+		dataset_field_examples: dataset_field_examples,
 		find_dataset: find_dataset,
 		dataset_samples: dataset_samples,
 		all_samples: all_samples,
