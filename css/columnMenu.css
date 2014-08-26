@@ -1,0 +1,10 @@
+.columnMenu .opt {
+	display: none;
+}
+.columnMenu .view {
+	position: relative;
+}
+.columnMenu .viewList {
+	position: absolute;
+}
+ 
