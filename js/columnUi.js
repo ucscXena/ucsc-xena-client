@@ -97,7 +97,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 		getDefField: function () {
 			var defalt = Rx.Observable.return(this.ws.column.fields.toString()
-					+ ((this.ws.dataType === 'mutationVector')
+					+ ((this.ws.column.dataType === 'mutationVector')
 						? ': ' + sFeatures[this.ws.column.sFeature]
 						: ''));
 
