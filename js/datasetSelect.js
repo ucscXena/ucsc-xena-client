@@ -10,16 +10,16 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 
 	// set samplesFrom state
 	// TODO should this be in sheetWrap.js?
-	function setStateSamplesFrom(samplesFrom, upd, state) {
-		return upd.assoc(state,
-					'samplesFrom', samplesFrom);
+	function setStateSamplesFrom(samplesFrom, state) {
+		return _.assoc(state,
+					   'samplesFrom', samplesFrom);
 	}
 
-	function setSamples(samples, upd, state) { // TODO dup of that in sheetWrap.js
-		return upd.assoc(state,
-						 'samples', samples,
-						 'zoomCount', samples.length,
-						 'zoomIndex', 0);
+	function setSamples(samples, state) {
+		return _.assoc(state,
+					   'samples', samples,
+					   'zoomCount', samples.length,
+					   'zoomIndex', 0);
 	}
 
 	aWidget = {
@@ -79,14 +79,20 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 					sampleList = xenaQuery.dataset_samples(val);
 				}
 				sampleList.subscribe(function (samples) {
-					self.cursor.set(_.partial(setSamples, samples));
+					self.cursor.update(_.partial(setSamples, samples));
 				});
 			});
-
+/*
 			// when DOM value changes, update state tree
 			this.subs.push(this.valStream.subscribe(function (val) {
 				self.cursor.set(_.partial(setStateSamplesFrom, val));
 			}));
+*/
+			// when DOM value changes, update state
+			this.subs.push(this.valStream.subscribe(function (val) {
+				self.cursor.update(_.partial(setStateSamplesFrom, val));
+			}));
+
 		},
 
 		initialize: function (options) {
@@ -120,7 +126,12 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 			// create an observable on the DOM value
 			this.valStream = this.$anchor.onAsObservable('change', '.dataset')
 				.pluck('val').share();
-
+/*
+			// when DOM value changes, update state tree
+			this.subs.push(this.val.subscribe(function (val) {
+				self.cursor.update(_.partial(setState, val));
+			}));
+*/
 			if (this.id === 'samplesFrom') {
 				this.samplesFrom();
 			}

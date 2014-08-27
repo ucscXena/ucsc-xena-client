@@ -196,7 +196,8 @@ define(['haml!haml/columnEdit',
 		renderColumn: function () { // TODO need individual state access for updates
 			var json,
 				fields = this.getFields(),
-				sFeature;
+				sFeature,
+				id = this.id;
 			if (this.metadata === 'mutationVector') {
 				sFeature = 'impact';
 			}
@@ -209,8 +210,13 @@ define(['haml!haml/columnEdit',
 			if (sFeature) {
 				json.sFeature = sFeature;
 			}
-			$('#columnStub').val(JSON.stringify(json, undefined, 4));
-			this.updateColumn(this.id);
+			this.cursor.update(function (state) {
+				var column_rendering = _.assoc(state.column_rendering, id, json),
+					column_order = _.conj(state.column_order, id);
+				return _.assoc(state,
+							  'column_rendering', column_rendering,
+							  'column_order', column_order);
+			});
 		},
 
 		reRender: function () {
@@ -321,7 +327,7 @@ define(['haml!haml/columnEdit',
 			this.$anchor = options.$anchor;
 			this.sheetWrap = options.sheetWrap;
 			this.columnUi = options.columnUi;
-			this.updateColumn = options.updateColumn;
+			this.cursor = options.cursor;
 			this.firstRenderDataset = true;
 			this.state = {};
 			this.stateTmp = {};

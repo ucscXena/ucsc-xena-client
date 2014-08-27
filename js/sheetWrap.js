@@ -2,6 +2,7 @@
 /*globals define: false, $: false, _: false */
 define(['haml!haml/sheetWrap',
 		'stub',
+		'spreadsheet',
 		'cohortSelect',
 		'columnEdit',
 		'columnUi',
@@ -15,6 +16,7 @@ define(['haml!haml/sheetWrap',
 		'rx.binding'
 		], function (template,
 					stub,
+					spreadsheet,
 					cohortSelect,
 					columnEdit,
 					columnUi,
@@ -52,27 +54,25 @@ define(['haml!haml/sheetWrap',
 		aWidget;
 
 	// TODO copied from main.js
-	function deleteColumn(uuid, upd, state) {
-		var cols = _.dissoc(upd.get_in(state, ['column_rendering']), uuid),
-			order = _.without(upd.get_in(state, ['column_order']), uuid);
-		return upd.assoc_in(
-			upd.assoc_in(state, ['column_order'], order),
-			['column_rendering'],
-			cols
-		);
+	function deleteColumn(uuid, state) {
+		var cols = _.dissoc(state.column_rendering, uuid),
+			order = _.without(state.column_order, uuid);
+		return _.assoc(state,
+					   'column_order', order,
+					   'column_rendering', cols);
 	}
 
-	function setSamples(samples, upd, state) {
-		return upd.assoc(state,
-						 'samples', samples,
-						 'zoomCount', samples.length,
-						 'zoomIndex', 0);
+	function setSamples(samples, state) {
+		return _.assoc(state,
+					   'samples', samples,
+					   'zoomCount', samples.length,
+					   'zoomIndex', 0);
 	}
 
 	aWidget = {
 
 		deleteColumn: function (id) {
-			return this.cursor.set(_.partial(deleteColumn, id));
+			return this.cursor.update(_.partial(deleteColumn, id));
 		},
 
 		duplicateColumn: function (id) {
@@ -84,7 +84,7 @@ define(['haml!haml/sheetWrap',
 			columnEdit.show(id, {
 				sheetWrap: this,
 				columnUi: undefined,
-				updateColumn: this.updateColumn // XXX ugh
+				cursor: this.cursor
 			});
 		},
 
@@ -168,7 +168,7 @@ define(['haml!haml/sheetWrap',
 					return xenaQuery.all_samples(s.url, cohort);
 				})).map(_.apply(_.union));
 			}).switch().subscribe(function (samples) {
-				self.cursor.set(_.partial(setSamples, samples));
+				self.cursor.update(_.partial(setSamples, samples));
 			});
 
 			// when cohort state changes, update other parts of the UI
@@ -196,7 +196,6 @@ define(['haml!haml/sheetWrap',
 			var self = this;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
-			this.updateColumn = options.updateColumn; // XXX
 			this.state = options.state;
 			this.cursor = options.cursor;
 
@@ -207,7 +206,8 @@ define(['haml!haml/sheetWrap',
 			options.$anchor.append(this.$el);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'servers', 'addColumn'];
+			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'servers', 'addColumn',
+				'spreadsheet'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
 				return a;
@@ -215,7 +215,8 @@ define(['haml!haml/sheetWrap',
 
 			this.initCohortsAndSources();
 			this.initSamplesFrom();
-
+			// XXX leaking disposable
+			spreadsheet(options.state, options.cursor, this.$spreadsheet);
 			this.$el
 				.on('click', '.addColumn', this.addColumnClick);
 		}

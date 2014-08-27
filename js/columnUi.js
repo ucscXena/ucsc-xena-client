@@ -16,7 +16,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		reduce = _.reduce,
 		toNumber = _.toNumber,
 		uniqueId = _.uniqueId,
-		genes = stub.getRefGeneNames2(),
 		sFeatures = { // TODO for demo
 			impact: 'impact', // shorttitle ?
 			DNA_AF: 'DNA allele frequency',
@@ -166,7 +165,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				columnUi: this,
 				deleteColumn: this.sheetWrap.deleteColumn,
 				duplicateColumn: this.sheetWrap.duplicateColumn,
-				updateColumn: this.updateColumn,
 				sheetWrap: this.sheetWrap
 			});
 			this.$el // TODO use rx handlers?
@@ -189,7 +187,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		initialize: function (options) {
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
-			this.updateColumn = options.updateColumn;
 			this.sheetWrap = options.sheetWrap;
 			this.sparsePad = options.sparsePad;
 			this.headerPlotHeight = options.headerPlotHeight;

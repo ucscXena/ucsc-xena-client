@@ -422,7 +422,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 			}
 		},
 
-		cmpValue: function (row) {
+		rowOrder: function (row, refGene) {
 			var chrEnd = 10000000000,  // TODO some number larger than use max number of base pairs of longest genes
 				mut,
 				weight,
@@ -431,7 +431,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 			if (row.length) {
 				mut = _.max(row, function (mut) { return impact[mut.effect]; });
 				weight = impactMax - impact[mut.effect];
-				refGeneInfo = getRefGeneInfo(mut.gene);
+				refGeneInfo = refGene[mut.gene];
 				rightness = (refGeneInfo.strand === '+')
 					? mut.start - refGeneInfo.txStart
 					: refGeneInfo.txStart - mut.start;

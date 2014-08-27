@@ -10,12 +10,12 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 
 	// set cohort and clear columns
 	// TODO should this be in sheetWrap.js?
-	function setState(cohort, upd, state) {
-		return upd.assoc(state,
-					'cohort', cohort,
-					'samplesFrom', '', // TODO reset to null or undefined instead?
-					'column_rendering', {},
-					'column_order', []);
+	function setState(cohort, state) {
+		return _.assoc(state,
+					   'cohort', cohort,
+					   'samplesFrom', '', // TODO reset to null or undefined instead?
+					   'column_rendering', {},
+					   'column_order', []);
 	}
 
 	function toLower(s) {
@@ -113,7 +113,7 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 
 			// when DOM value changes, update state tree
 			this.subs.push(this.val.subscribe(function (val) {
-				cursor.set(_.partial(setState, val));
+				cursor.update(_.partial(setState, val));
 			}));
 		}
 	};

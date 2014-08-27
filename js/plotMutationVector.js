@@ -34,7 +34,7 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 		};
 	}
 
-	function cmpNumberOrNull(v1, v2) {
+	function cmpRowOrNull(v1, v2, refGene) {
 		if (isUndefined(v1) && isUndefined(v2)) {
 			return 0;
 		} else if (isUndefined(v1)) {
@@ -42,18 +42,13 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 		} else if (isUndefined(v2)) {
 			return -1;
 		}
-		return mutationVector.cmpValue(v1) - mutationVector.cmpValue(v2);
+		return mutationVector.rowOrder(v1, refGene) - mutationVector.rowOrder(v2, refGene);
 	}
 
-	function cmpSamples(probes, data, s1, s2) {
-		var diff = data && find(probes, function (f) {
-				return data[f] && cmpNumberOrNull(data[f][s1], data[f][s2]);
-			});
-		if (diff) {
-			return cmpNumberOrNull(data[diff][s1], data[diff][s2]);
-		} else {
-			return 0;
-		}
+	function cmpSamples(probes, data, refGene, s1, s2) {
+		return _.findValue(probes, function (f) {
+			return (data && data[f] && refGene) ? cmpRowOrNull(data[f][s1], data[f][s2], refGene) : 0;
+		});
 	}
 
 	function mutation_attrs(list) {
@@ -88,14 +83,36 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 		return {values: obj};
 	}
 
+	function splitExon(s) {
+		return _.map(s.replace(/,$/, '').split(','), _.partial(parseInt, _, 10));
+	}
+
+	function refGene_attrs(row) {
+		return {
+			name2: row.name2,
+			strand: row.strand,
+			txStart: row.txstart,
+			txEnd: row.txend,
+			cdsStart: row.cdsstart,
+			cdsEnd: row.cdsend,
+			exonCount: row.exoncount,
+			exonStarts: splitExon(row.exonstarts),
+			exonEnds: splitExon(row.exonends)
+		};
+	}
+
+	function index_refGene(resp) {
+		return _.object(_.pluck(resp, 'name2'), _.map(resp, refGene_attrs));
+	}
 
 	cmp = ifChanged(
 		[
 			['column', 'fields'],
-			['data', 'req', 'values']
+			['data', 'req', 'values'],
+			['data', 'refGene']
 		],
-		function (fields, data) {
-			return _.partial(cmpSamples, fields, data);
+		function (fields, data, refGene) {
+			return _.partial(cmpSamples, fields, data, refGene);
 		}
 	);
 
@@ -113,6 +130,9 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
 				}),
+				refGene: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.refGene_exon_string(probes)), function (r) {
+					return Rx.DOM.Request.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp));
+				})
 			};
 		}
 	);
@@ -176,7 +196,7 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 				vg.height(canvasHeight);
 			}
 
-			refGeneData = stub.getRefGene(ws.column.fields[0]); // TODO yikes, forcing proper refGene for demo
+			refGeneData = data.refGene[column.fields[0]];
 			if (refGeneData) {
 				exonRefGene.show(el.id, {
 					data: { gene: refGeneData }, // data.refGene,
