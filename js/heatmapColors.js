@@ -22,10 +22,10 @@ define(["lib/d3",
 			"#98df8a", // light green
 			"#d62728", // dark red
 			"#ff9896", // light salmon
-			"#9467bd", // dark purple
-			"#c5b0d5", // light lavender
 			"#ff7f0e", // dark orange
 			"#ffbb78", // light orange
+			"#9467bd", // dark purple
+			"#c5b0d5", // light lavender
 			"#8c564b", // dark brown
 			"#c49c94", // light tan
 			"#e377c2", // dark pink
@@ -34,7 +34,7 @@ define(["lib/d3",
 			"#dbdb8d", // light mustard
 			"#17becf", // dark blue-green
 			"#9edae5", // light blue-green
-			"#c7c7c7" // light grey
+			"#c7c7c7"  // light grey
 		],
 
 		// d3_category20, without grey or pastels
@@ -42,54 +42,13 @@ define(["lib/d3",
 			"#1f77b4", // dark blue
 			"#2ca02c", // dark green
 			"#d62728", // dark red
-			"#9467bd", // dark purple
 			"#ff7f0e", // dark orange
-			"#8c564b", // dark brown
-			"#e377c2", // dark pink
-			"#bcbd22", // dark mustard
-			"#17becf" // dark blue-green
-		];
-
-		// d3_category20, reordered dark to light, without the #7f7f7f gray that aliases with our N/A gray of #808080
-		/*category = [
-			"#1f77b4", // dark blue
-			"#ff7f0e", // dark orange
-			"#2ca02c", // dark green
-			"#d62728", // dark red
 			"#9467bd", // dark purple
 			"#8c564b", // dark brown
 			"#e377c2", // dark pink
-			"#c7c7c7", // light grey
-			"#dbdb8d", // light mustard
-			"#9edae5", // light blue-green
-			"#aec7e8", // light blue
-			"#ffbb78", // light orange
-			"#98df8a", // light green
-			"#ff9896", // light salmon
-			"#c5b0d5", // light lavender
-			"#c49c94", // light tan
-			"#f7b6d2", // light pink
 			"#bcbd22", // dark mustard
 			"#17becf"  // dark blue-green
-		];*/
-
-		// bright: colorBrewer.org 9-class Set1, without the  gray
-		//            red        blue       green      purple     orange     yellow     brown      pink
-		//category = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf"];
-
-		// bright reversed: colorBrewer.org 9-class Set1, without the  gray
-		//            pink       brown      yellow     orange     purple     green      blue       red
-		// category = ["#f781bf", "#a65628", "#ffff33", "#ff7f00", "#984ea3", "#4daf4a", "#377eb8", "#e41a1c"];
-
-		// bright, red third: colorBrewer.org 9-class Set1, without the  gray
-		//             blue       green      red        purple     orange     yellow     brown      pink
-		//category = ["#377eb8", "#4daf4a", "#e41a1c", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf"];
-
-		// less pastel: colorBrewer.org 8-class Set2, without the  gray
-		//category = ["#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494"];
-
-		// most pastel: colorBrewer.org 9-class Set3, without the  gray
-		//category = ["#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5"];
+		];
 
 	function scale_categoryMore() {
 		return d3.scale.ordinal().range(categoryMore);
