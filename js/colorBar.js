@@ -42,7 +42,7 @@ define(['haml!haml/colorBar', 'lib/underscore', 'jquery'
 								lightness = sum / 3;
 							}
 						}
-						return (lightness < 132) ? 'white' : 'black';
+						return (lightness < 147) ? 'white' : 'black';
 					});
 				this.$bar = $(template({
 					colors: options.colors,
