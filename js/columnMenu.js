@@ -50,48 +50,34 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 				this.$el.find('.viewList').hide();
 			};
 
-			this.renderColumn = function (dataType) {
-				return; // TODO
-				var json;
-				json = {
-					"width": this.column.width,
-					"dsID": this.column.dsID,
-					"dataType": dataType,
-					"fields": this.column.fields
-				};
-				if (this.column.sFeature) {
-					json.sFeature = this.column.sFeature;
-				}
-				$('#columnStub').val(JSON.stringify(json, undefined, 4));
-				this.updateColumn(this.id);
+			this.updateColumn = function (key, val) {
+				var id = this.id;
+				this.cursor.update(function (state) {
+					var newState = _.assoc_in(state, ['column_rendering', id, key], val);
+					return newState;
+				});
 			};
 
 			this.detailClick = function (ev) {
 				console.log('detailClick');
-				this.renderColumn('geneProbesMatrix');
+				this.updateColumn('dataType', 'geneProbesMatrix');
 			};
 
 			this.geneAverageClick = function (ev) {
 				console.log('geneAverageClick');
-				this.renderColumn('geneMatrix');
+				this.updateColumn('dataType', 'geneMatrix');
 			};
 
 			this.impactClick = function (ev) {
-				console.log('impactClick');
-				this.column.sFeature = 'impact';
-				this.renderColumn('mutationMatrix');
+				this.updateColumn('sFeature', 'impact');
 			};
 
 			this.dnaAfClick = function (ev) {
-				console.log('dnaAfClick');
-				this.column.sFeature = 'dnaAf';
-				this.renderColumn('mutationMatrix');
+				this.updateColumn('sFeature', 'dnaAf');
 			};
 
 			this.rnaAfClick = function (ev) {
-				console.log('rnaAfClick');
-				this.column.sFeature = 'rnaAf';
-				this.renderColumn('mutationMatrix');
+				this.updateColumn('sFeature', 'rnaAf');
 			};
 
 			this.removeClick = function (ev) {
@@ -109,16 +95,21 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 			};
 
 			this.render = function () {
-				this.column = this.columnUi.ws.column;
+				//var column = _.get_in(this.state, ['column_rendering', this.id]);
+				//           _.get_in(state, ['column_rendering', id])]
+				//columnsState = this.state.pluck('column_rendering').distinctUntilChanged().share();
+				//this.cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
+				//var column = state.pluck('column_rendering');
+				var column = this.columnUi.ws.column; // gives stale state
 				this.menuRender($(template()));
-				if (this.column.dataType === 'mutationVector') {
-					this.$el.find('.mupit, .view, .impact, .dnaAf, .rnaAf').show();
-					this.$el.find('.' + this.column.sFeature + ' .ui-icon-check').css('opacity', 1);
-				} else if (this.column.dataType === 'geneProbesMatrix') {
-					this.$el.find('.view, .detail, .geneAverage').show();
+				if (column.dataType === 'mutationVector') {
+					this.$el.find('.mupit, .view, .impact, .dnaAf, .rnaAf, hr').show();
+					this.$el.find('.' + column.sFeature + ' .ui-icon-check').css('opacity', 1);
+				} else if (column.dataType === 'geneProbesMatrix') {
+					this.$el.find('.view, .detail, .geneAverage, hr').show();
 					this.$el.find('.detail .ui-icon-check').css('opacity', 1);
-				} else if (this.column.dataType === 'geneMatrix' && this.column.fields.length === 1) {
-					this.$el.find('.view, .detail, .geneAverage').show();
+				} else if (column.dataType === 'geneMatrix' && column.fields.length === 1) {
+					this.$el.find('.view, .detail, .geneAverage, hr').show();
 					this.$el.find('.geneAverage .ui-icon-check').css('opacity', 1);
 				}
 			};
@@ -129,7 +120,8 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 				//_(this).bindAll();
 				APPLY_BUTTON = options.APPLY_BUTTON;
 				this.columnUi = options.columnUi;
-				this.updateColumn = options.updateColumn;
+				this.cursor = options.cursor;
+				this.state = options.state;
 				this.deleteColumn = options.deleteColumn;
 				this.duplicateColumn = options.duplicateColumn;
 				this.moreItems = options.moreItems;
@@ -137,9 +129,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 
 				// bindings
 				this.$el // TODO replace with Rx bindings ?
-					.on('click', '.duplicate', this.duplicateClick)
 					.on('click', '.mupit', this.mupitClick)
-					.on('click', '.download', this.downloadClick)
 					.on('mouseenter', '.view', this.viewMouseenter)
 					.on('mouseleave', '.view', this.viewMouseleave)
 					.on('click', '.detail', this.detailClick)
@@ -147,8 +137,10 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 					.on('click', '.impact', this.impactClick)
 					.on('click', '.dnaAf', this.dnaAfClick)
 					.on('click', '.rnaAf', this.rnaAfClick)
-					.on('click', '.remove', this.removeClick)
-					.on('click', '.edit', this.editClick);
+					.on('click', '.edit', this.editClick)
+					.on('click', '.duplicate', this.duplicateClick)
+					.on('click', '.download', this.downloadClick)
+					.on('click', '.remove', this.removeClick);
 			};
 		};
 

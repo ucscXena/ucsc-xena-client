@@ -96,14 +96,21 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		},
 
 		getDefField: function () {
-			var defalt = Rx.Observable.return(this.ws.column.fields.toString()
-					+ ((this.ws.column.dataType === 'mutationVector')
-						? ': ' + sFeatures[this.ws.column.sFeature]
-						: ''));
-
+			// TODO we should be caching the labels somewhere, maybe in tmp state
+			var label = this.ws.column.fields.toString(),
+				defalt;
 			if (this.ws.dataType === 'clinicalMatrix') {
 				defalt = xenaQuery.feature_list(this.ws.column.dsID)
 					.pluck(this.ws.column.fields[0]);
+			} else {
+				if (this.ws.column.dataType === 'mutationVector') {
+					if (this.ws.column.sFeature === 'dnaAf') {
+						label += ': DNA variant allele freq';
+					} else if (this.ws.column.sFeature === 'rnaAf') {
+						label += ': RNA variant allele freq';
+					}
+				}
+				defalt = Rx.Observable.return(label);
 			}
 			return defalt;
 		},
@@ -163,6 +170,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.columnMenu = columnMenu.create(this.id, {
 				anchor: this.$more,
 				columnUi: this,
+				cursor: this.cursor,
+				state: this.state,
 				deleteColumn: this.sheetWrap.deleteColumn,
 				duplicateColumn: this.sheetWrap.duplicateColumn,
 				sheetWrap: this.sheetWrap
@@ -188,6 +197,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 			//_(this).bindAll();
 			this.sheetWrap = options.sheetWrap;
+			this.cursor = options.cursor;
+			this.state = options.state;
 			this.sparsePad = options.sparsePad;
 			this.headerPlotHeight = options.headerPlotHeight;
 			this.horizontalMargin = options.horizontalMargin.toString() + 'px';

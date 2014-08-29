@@ -159,10 +159,11 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 			['el'],
 			[],
 			['sort'],
+			['sFeature'], // TODO ref sFeature rather than column.sFeature
 			['data']
 		],
 		// samples are in sorted order
-		function (disp, el, ws, sort, data) {
+		function (disp, el, ws, sort, sFeature, data) {
 			var local = disp.getDisposable(),
 				column = ws.column,
 				vg,

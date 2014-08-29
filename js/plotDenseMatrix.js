@@ -370,9 +370,10 @@ define(['underscore_ext',
 		[
 			['column', 'dsID'],
 			['column', 'fields'],
+			['column', 'dataType'],
 			['samples']
 		],
-		function (dsID, probes, samples) {
+		function (dsID, probes, dataType, samples) {
 			var hostds = xenaQuery.parse_host(dsID),
 				host = hostds[1],
 				ds = hostds[2];
@@ -417,9 +418,10 @@ define(['underscore_ext',
 		[
 			['column', 'dsID'],
 			['column', 'fields'],
+			['column', 'dataType'],
 			['samples']
 		],
-		function (dsID, fields, samples) {
+		function (dsID, fields, dataType, samples) {
 			var hostds = xenaQuery.parse_host(dsID),
 				host = hostds[1],
 				ds = hostds[2];

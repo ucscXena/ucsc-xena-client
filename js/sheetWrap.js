@@ -245,6 +245,8 @@ define(['haml!haml/sheetWrap',
 
 		columnShow: function (id, ws) {
 			return columnUi.show(id, {
+				cursor: widget.cursor,
+				state: widget.state,
 				ws: ws,
 				sheetWrap: widget,
 				horizontalMargin: horizontalMargin,
