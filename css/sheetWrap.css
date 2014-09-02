@@ -15,12 +15,11 @@
 	font-size: 1em;
 	width: 30em;
 }
-/* TODO maybe later
-.sheetWrap .help {
-	display: inline-block;
-	vertical-align: middle;
+.sheetWrap .yAxisLabel {
+	/*display: none;*/
+	transform: rotate(270deg);
+	width: 2em;
 }
-*/
 .sheetWrap .showLegend {
 	vertical-align: bottom;
 }

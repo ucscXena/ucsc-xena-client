@@ -193,7 +193,7 @@ define(['haml!haml/columnEdit',
 			}
 		},
 
-		renderColumn: function () { // TODO need individual state access for updates
+		renderColumn: function () {
 			var json,
 				fields = this.getFields(),
 				sFeature,
