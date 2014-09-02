@@ -8,8 +8,6 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 	var widgets = [],
 		aWidget;
 
-	// set samplesFrom state
-	// TODO should this be in sheetWrap.js?
 	function setState(samplesFrom, state) {
 		return _.assoc(state,
 					   'samplesFrom', samplesFrom);
@@ -54,6 +52,7 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 			});
 
 			this.$el = this.$anchor.find('.select2-container.dataset');
+
 			if (state) {
 				this.$el.select2('val', state);
 			}
@@ -61,59 +60,42 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 
 		initialize: function (options) {
 			var self = this,
+				samples,
 				sources = options.sources,
-				state = options.state;
+				state = options.state.share();
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
-			//_(this).bindAll();
+
 			this.$anchor = options.$anchor;
 			this.placeholder = options.placeholder;
-			this.cohort = options.cohort;
-			this.servers = options.servers;
-			this.cursor = options.cursor;
-			this.subs = [];
+			this.subs = new Rx.CompositeDisposable();
 
 			// render immediately, and re-render whenever sources or state changes
-			sources.startWith([]).combineLatest(state, function (sources, state) {
-				return [sources, state];
-			}).subscribe(_.apply(function (sources, state) {
-				self.render(sources, state);
-			}));
+			sources.startWith([]).combineLatest(state.refine('samplesFrom'),
+				function (sources, state) {
+					return [sources, state.samplesFrom];
+				}).subscribe(_.apply(self.render));
 
-			// when state changes, retrieve the sample IDs,
-			// when sampleList is received, update samples state
-			state.subscribe(function (val) {
-				var sampleList,
-					cohort;
-				if (val === '') { // retrieve all sample IDs in this cohort
-					// TODO: this duplicates sheetWrap.js
-					cohort = $('.select2-container.cohort').select2('val'); // TODO: get cohort from the state instead
-					sampleList = Rx.Observable.zipArray(_.map(self.servers, function (s) {
-						return xenaQuery.all_samples(s.url, cohort);
+			// retrieve all samples in this cohort, from all servers
+			samples = state.map(function (state) {
+				if (state.samplesFrom) {
+					return xenaQuery.dataset_samples(state.samplesFrom);
+				} else {
+					return Rx.Observable.zipArray(_.map(state.servers, function (s) {
+						return xenaQuery.all_samples(s.url, state.cohort);
 					})).map(_.apply(_.union));
-
-				} else { // retrieve the sample IDs in this dataset
-					sampleList = xenaQuery.dataset_samples(val);
 				}
-				sampleList.subscribe(function (samples) {
-					self.cursor.update(_.partial(setSamples, samples));
-				});
-			});
+			}).switchLatest();
 
-			// when state changes, update the DOM value
-			this.subs.push(state.subscribe(function (val) {
-				if (self.$el.select2('val') !== val) {
-					self.$el.select2('val', val);
-				}
+			this.subs.add(samples.subscribe(function (samples) {
+				options.cursor.update(_.partial(setSamples, samples));
 			}));
-
-			// create an observable on the DOM value
-			this.val = this.$anchor.onAsObservable('change', '.dataset')
-				.pluck('val').share();
 
 			// when DOM value changes, update state tree
-			this.subs.push(this.val.subscribe(function (val) {
-				self.cursor.update(_.partial(setState, val));
-			}));
+			this.subs.add(this.$anchor.onAsObservable('change', '.dataset')
+				.pluck('val').subscribe(function (val) {
+					options.cursor.update(_.partial(setState, val));
+				})
+			);
 		}
 	};
 

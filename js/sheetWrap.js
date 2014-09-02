@@ -12,6 +12,7 @@ define(['haml!haml/sheetWrap',
 		'underscore_ext',
 		'jquery',
 		'xenaQuery',
+		'rx',
 		'rx.jquery',
 		'rx.binding'
 		], function (template,
@@ -35,25 +36,11 @@ define(['haml!haml/sheetWrap',
 		sparseRadius = horizontalMargin * 2,
 		sparsePad = sparseRadius + 1,
 		headerPlotHeight = 12,
-		defaultServers = [
-			{
-				title: 'localhost',
-				url: 'http://localhost:7222'
-			},
-			{
-				title: 'tcga1:1236',
-				url: 'http://tcga1:1236'
-			},
-			{
-				title: 'genome-cancer.ucsc.edu',
-				url: stub.getDEV_URL() // TODO only for dev
-			}
-		],
 		map = _.map,
 		widget,
-		aWidget;
+		aWidget,
+		defaultPort;
 
-	// TODO copied from main.js
 	function deleteColumn(uuid, state) {
 		var cols = _.dissoc(state.column_rendering, uuid),
 			order = _.without(state.column_order, uuid);
@@ -62,147 +49,107 @@ define(['haml!haml/sheetWrap',
 					   'column_rendering', cols);
 	}
 
-	function setSamples(samples, state) {
-		return _.assoc(state,
-					   'samples', samples,
-					   'zoomCount', samples.length,
-					   'zoomIndex', 0);
+	function columnShow(deleteColumn, id, ws) {
+		return columnUi.show(id, {
+			ws: ws,
+			sheetWrap: widget,
+			deleteColumn: deleteColumn,
+			horizontalMargin: horizontalMargin,
+			sparsePad: sparsePad,
+			headerPlotHeight: headerPlotHeight
+		});
+	}
+
+	function serverTitles(servers) {
+		return _.pluck(servers, 'title').join(', ');
+	}
+
+	defaultPort = {
+		'http://': 80,
+		'https://': 433
+	};
+
+	function serverFromString(s) {
+		// XXX should throw or otherwise indicate parse error on no match
+		var tokens = s.match(/^(https?:\/\/)?([^:]+)(:([0-9]+))?$/),
+			host = tokens[2],
+			prod = (host.indexOf('genome-cancer.ucsc.edu') === 0),
+			defproto = prod ? 'https://' : 'http://',
+			proto = tokens[1] || (prod ? 'https://' : 'http://'),
+			port = tokens[4] || (prod ? '433' : '7222'),
+			defport = defaultPort[proto],
+			url = proto + host + ':' + port;
+
+		return {
+			title: (proto === defproto ? '' : proto) +
+				host +
+				(port === defport ? '' : (':' + port)),
+			url: url
+		};
 	}
 
 	aWidget = {
-
-		deleteColumn: function (id) {
-			return this.cursor.update(_.partial(deleteColumn, id));
-		},
-
-		duplicateColumn: function (id) {
-			console.log('sheetWrap:duplicateColumn()');
-		},
-
-		addColumnClick: function (ev) {
-			var id = uuid();
-			columnEdit.show(id, {
-				sheetWrap: this,
-				columnUi: undefined,
-				cursor: this.cursor
-			});
-		},
-
-		cohortChange: function (cohort) {
-			var self = this,
-				stream;
-			columnEdit.destroyAll();
-			if (cohort) {
-				if (this.column_orderSub) { this.column_orderSub.dispose(); } // TODO there may be some better way to do this so we only show the edit column dialog once
-				stream = this.state.pluck('column_order').distinctUntilChanged();
-				this.column_orderSub = stream.subscribe(function (column_order) {
-					self.$addColumn.show();
-					/*
-					if (!column_order || column_order.length < 1) {
-						self.$addColumn.click();
-					}
-					*/
-				});
-			}
-		},
-
-		serversInput: function () {
-			return _.map(this.servers, function (s) {
-				return s.title;
-			}).join(', ');
-		},
-
-		getDefServersInput: function () {
-			return Rx.Observable.return(_.map(defaultServers, function (s) {
-				return s.title;
-			}).join(', '));
-		},
-
-		serversInputChanged: function () {
-			var inputArray = map(this.$servers.val().split(','), function (s) {
-				return s.trim();
-			});
-			this.servers = map(inputArray, function (s) {
-				var url = 'http://' + s + ((s.indexOf(':') > -1) ? '' : ':7222');
-				if (s === 'genome-cancer.ucsc.edu' || s === 'genome-cancer.ucsc.edu:7222') {
-					url = stub.getDEV_URL(); // TODO only for dev !
-				}
-				return {
-					title: s,
-					url: url
-				};
-			});
-		},
-
-		initCohortsAndSources: function () {
-			var self = this;
-			this.cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
-
+		initCohortsAndSources: function (state, cursor, defaultServers) {
 			this.serversInput = defaultTextInput.create('serversInput', {
 				$el: this.$servers,
-				getDefault: this.getDefServersInput,
-				focusOutChanged: this.serversInputChanged
+				getDefault: Rx.Observable.return(serverTitles(defaultServers)),
+				focusOutChanged: function(val) {
+					cursor.update(function (s) {
+						return _.assoc(s,
+							'servers',
+							map(_.filter(val.split(/[, ]+/), _.identity),
+								serverFromString)
+						);
+					});
+				}
 			});
 
 			this.cohortSelect = cohortSelect.create('cohortSelect', {
 				$anchor: this.$cohortAnchor,
-				state: this.cohortState,
-				cursor: this.cursor,
-				servers: this.servers
+				state: state,
+				cursor: cursor
 			});
-			this.cohort = this.cohortSelect.val; // TODO should get this from state rather than DOM val
 
 			// retrieve all datasets in this cohort, from all servers
-			this.sources = this.cohortState.map(function (cohort) {
-				return xenaQuery.dataset_list(self.servers, cohort);
-			}).switch().map(function (dataset_lists) {
-				return _.map(dataset_lists, function (l, i) {
-					return _.assoc(self.servers[i], 'datasets', l);
-				});
-			}).replay(null, 1);
-			this.sources.connect(); // XXX leaking subscription
+			this.sources = state.refine(['servers', 'cohort'])
+				.map(function (state) {
+					if (state.servers && state.cohort) {
+						return xenaQuery.dataset_list(state.servers, state.cohort);
+					} else {
+						return Rx.Observable.return([]);
+					}
+				}).switchLatest().replay(null, 1); // replay for late subscribers
+			this.subs.add(this.sources.connect());
 
-			// retrieve all samples in this cohort, from all servers
-			this.cohortState.map(function (cohort) {
-				return Rx.Observable.zipArray(_.map(self.servers, function (s) {
-					return xenaQuery.all_samples(s.url, cohort);
-				})).map(_.apply(_.union));
-			}).switch().subscribe(function (samples) {
-				self.cursor.update(_.partial(setSamples, samples));
-			});
-
-			// when cohort state changes, update other parts of the UI
-			this.cohortState.subscribe(function (cohort) {
-				self.cohortChange(cohort);
-			});
 		},
 
-		initSamplesFrom: function () {
-			var samplesFromState = this.state.pluck('samplesFrom').distinctUntilChanged().share();
+		initSamplesFrom: function (state, cursor) {
+			var paths = ['samplesFrom', 'samples', 'cohort', 'servers', 'zoomCount', 'zoomIndex'],
+				dsstate = state.refine(paths),
+				dscursor = cursor.refine(paths);
 
 			this.samplesFrom = datasetSelect.create('samplesFrom', {
 				$anchor: this.$samplesFromAnchor,
-				state: samplesFromState,
-				cohort: this.cohort, // TODO: should this be passed as an observable?
-				servers: this.servers,
-				cursor: this.cursor,
-				sheetWrap: this,
+				state: dsstate,
+				cursor: dscursor,
 				sources: this.sources,
 				placeholder: 'All datasets'
 			});
 		},
 
 		initialize: function (options) {
-			var self = this;
-			_.bindAll.apply(_, [this].concat(_.functions(this)));
-			//_(this).bindAll();
-			this.state = options.state;
-			this.cursor = options.cursor;
+			var self = this,
+				columnEditOpen = false,
+				cohort,
+				state,
+				deleteColumnCb;
+			this.subs = new Rx.CompositeDisposable();
 
-			this.servers = defaultServers; // TODO make servers dynamic from state
-			this.$el = $(template({
-				servers: this.serversInput()
-			}));
+			_.bindAll.apply(_, [this].concat(_.functions(this)));
+
+			state = options.state.share();
+
+			this.$el = $(template());
 			options.$anchor.append(this.$el);
 
 			// cache jquery objects for active DOM elements
@@ -213,12 +160,43 @@ define(['haml!haml/sheetWrap',
 				return a;
 			}, {}));
 
-			this.initCohortsAndSources();
-			this.initSamplesFrom();
-			// XXX leaking disposable
-			spreadsheet(options.state, options.cursor, this.$spreadsheet);
+			this.initCohortsAndSources(state, options.cursor, options.servers);
+			this.initSamplesFrom(state, options.cursor);
+
+			deleteColumnCb = function (id) {
+				options.cursor.update(_.partial(deleteColumn, id));
+			};
+
+			this.subs.add(spreadsheet(state, options.cursor, this.$spreadsheet, _.partial(columnShow, deleteColumnCb)));
 			this.$el
-				.on('click', '.addColumn', this.addColumnClick);
+				.on('click', '.addColumn', function () {
+					options.cursor.update(function (state) {
+						return _.assoc(state, 'columnEditOpen', 'true');
+					});
+				});
+
+			this.subs.add(
+				state.refine(['columnEditOpen', 'cohort'])
+				.subscribe(function (state) {
+					var id;
+					if (columnEditOpen && !state.columnEditOpen) {
+						columnEdit.destroyAll();
+					}
+					if (!columnEditOpen && state.columnEditOpen) {
+						id = uuid();
+						columnEdit.show(id, {
+							sheetWrap: self,
+							columnUi: undefined,
+							cursor: options.cursor
+						});
+					}
+					columnEditOpen = state.columnEditOpen;
+					if (!state.columnEditOpen && state.cohort) {
+						self.$addColumn.show();
+					} else {
+						self.$addColumn.hide();
+					}
+			}));
 		}
 	};
 
@@ -241,16 +219,6 @@ define(['haml!haml/sheetWrap',
 				sparsePad: sparsePad,
 				headerPlotHeight: headerPlotHeight
 			};
-		},
-
-		columnShow: function (id, ws) {
-			return columnUi.show(id, {
-				ws: ws,
-				sheetWrap: widget,
-				horizontalMargin: horizontalMargin,
-				sparsePad: sparsePad,
-				headerPlotHeight: headerPlotHeight
-			});
 		},
 
 		create: function (options) {

@@ -132,11 +132,11 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.ws = options.ws;
 			this.title = defaultTextInput.create('title_' + this.id, {
 				$el: this.$columnTitle,
-				getDefault: this.getDefTitle
+				getDefault: this.getDefTitle()
 			});
 			this.field = defaultTextInput.create('field_' + this.id, {
 				$el: this.$field,
-				getDefault: this.getDefField
+				getDefault: this.getDefField()
 			});
 		},
 
@@ -163,8 +163,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.columnMenu = columnMenu.create(this.id, {
 				anchor: this.$more,
 				columnUi: this,
-				deleteColumn: this.sheetWrap.deleteColumn,
-				duplicateColumn: this.sheetWrap.duplicateColumn,
+				deleteColumn: options.deleteColumn,
 				sheetWrap: this.sheetWrap
 			});
 			this.$el // TODO use rx handlers?

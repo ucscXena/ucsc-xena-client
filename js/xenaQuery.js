@@ -130,8 +130,10 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function all_cohorts_query() {
-		return '(query {:select [:name [#sql/call [:ifnull :cohort "' + null_cohort + '"] :cohort]]\n' +
-		       '        :from [:dataset]})';
+		return '(map :cohort\n' +
+		       '  (query\n' +
+		       '    {:select [[#sql/call [:distinct #sql/call [:ifnull :cohort "(unassigned)"]] :cohort]]\n' +
+			   '     :from [:dataset]}))';
 	}
 
 	function dataset_list_query(cohort) {
@@ -301,21 +303,24 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	// XXX Should consider making sources indexed so we can do simple
 	// lookups. Would need to update haml/columnEditBasic.haml.
 	function find_dataset(sources, hdsID) {
-		var hostdsID = parse_host(hdsID),
-			host = hostdsID[1],
-			dsID = hostdsID[2],
-			source = _.findWhere(sources, {url: host});
-		return _.findWhere(source.datasets, {dsID: hdsID});
+		var result;
+		return _.findValue(sources, function (source) {
+			return _.findWhere(source.datasets, {dsID: hdsID});
+		});
 	}
 
 	function dataset_list(servers, cohort) {
 		return Rx.Observable.zipArray(_.map(servers, function (s) {
 			return Rx.DOM.Request.ajax(
-				xena_get(s.url, dataset_list_query(cohort))
+				xena_post(s.url, dataset_list_query(cohort))
 			).map(
 				_.compose(_.partial(xena_dataset_list_transform, s.url), json_resp)
 			).catch(Rx.Observable.return([])); // XXX display message?
-		}));
+		})).map(function (datasets_by_server) {
+			return _.map(servers, function (server, i) {
+				return _.assoc(server, 'datasets', datasets_by_server[i]);
+			});
+		});
 	}
 
 	function dataset_field_examples(dsID) {
@@ -323,7 +328,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			host = hostds[1],
 			ds = hostds[2];
 		return Rx.DOM.Request.ajax(
-			xena_get(host, dataset_field_examples_string(ds))
+			xena_post(host, dataset_field_examples_string(ds))
 		).map(json_resp);
 	}
 
@@ -332,7 +337,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			host = hostds[1],
 			ds = hostds[2];
 		return Rx.DOM.Request.ajax(
-			xena_get(host, feature_list_query(ds))
+			xena_post(host, feature_list_query(ds))
 		).map(_.compose(indexFeatures, json_resp));
 	}
 
@@ -344,21 +349,24 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			host = hostds[1],
 			ds = hostds[2];
 		return Rx.DOM.Request.ajax(
-			xena_get(host, dataset_samples_query(ds))
+			xena_post(host, dataset_samples_query(ds))
 		).map(json_resp);
 	}
 
 	function all_samples(host, cohort) {
 		return Rx.DOM.Request.ajax(
-			xena_get(host, all_samples_query(cohort))
+			xena_post(host, all_samples_query(cohort))
 		).map(json_resp)
 		.catch(Rx.Observable.return([])); // XXX display message?
 	}
 
+	// XXX Have to use POST here because the genome-cancer reverse proxy fails
+	// on odd characters, such as "/".
+	// http://stackoverflow.com/questions/3235219/urlencoded-forward-slash-is-breaking-url
 	function all_cohorts(host) {
 		return Rx.DOM.Request.ajax(
-			xena_get(host, all_cohorts_query())
-		).map(_.compose(function (l) { return _.pluck(l, 'cohort'); }, json_resp))
+			xena_post(host, all_cohorts_query())
+		).map(json_resp)
 		.catch(Rx.Observable.return([])); // XXX display message?
 	}
 

@@ -34,13 +34,11 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			this.$el.select2('destroy');
 			this.$el.remove();
 			this.$el = undefined;
-			_.each(this.subs, function (s) {
-				s.dispose();
-			});
+			this.subs.dispose();
 			delete widgets[this.id];
 		},
 
-		render: function (server, state) {
+		render: function (server, cohort) {
 
 			// On reload we take the stored state and render while waiting for
 			// the servers to report available cohorts. If we don't add the
@@ -48,7 +46,7 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			// because the selected cohort will not yet be in the list of cohorts
 			// from the servers. Basically, this ensures that the current state
 			// is always selectable.
-			var cohorts = state ? _.union([state], server) : server,
+			var cohorts = cohort ? _.union([cohort], server) : server,
 				$el = $(template({cohorts: _.sortBy(cohorts, toLower)}));
 			if (this.$el) {
 				this.$el.select2('destroy');
@@ -66,55 +64,52 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			// where state should be subscribed to instead
 			this.$el = this.$anchor.find('.select2-container.cohort');
 
-			if (state) {
-				this.$el.select2('val', state);
+			if (cohort) {
+				this.$el.select2('val', cohort);
 			}
 		},
 
 		initialize: function (options) {
 			var self = this,
-				state = options.state,
+				state = options.state.share(),
 				cursor = options.cursor,
-				servers = options.servers,
-				cohortList;
+				cohortList,
+				val;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
-			//_(this).bindAll();
+
 			this.$anchor = options.$anchor;
-			this.subs = [];
+			this.subs = new Rx.CompositeDisposable();
 
-			// create an observable on a cohort list, which is the union of cohorts from all servers
-			cohortList = Rx.Observable.zipArray(_.map(servers, function (s) {
-				return xenaQuery.all_cohorts(s.url);
-			})).map(_.apply(_.union)); // probably want distinctUntilChanged once servers is dynamic
+			// create an observable on a cohort list, which is the union of cohorts from all servers,
+			// and mix in the current cohort in the UI.
+			cohortList = state.refine('servers', 'cohort')
+				.map(function (state) {
+					return Rx.Observable.zipArray(_.map(state.servers, function (s) {
+						return xenaQuery.all_cohorts(s.url);
+					})).map(_.apply(_.union));
+				}).switchLatest()
+				.startWith([])
+				.combineLatest(state.refine('cohort'), function (serverCohorts, state) {
+					return [serverCohorts, state.cohort];
+				});
 
-			// Render immediately, and re-render whenever cohortList or state changes.
-			// "server" here is just to distinguish it from the cohort
-			// setting in the state. We have the cohort in the state and the
-			// cohorts from the servers, and they don't always overlap, e.g.
-			// during reload, or (in the future) due to authorization. So that's
-			// why the parameters are "server" and "state". I have no opinion
-			// about renaming them.
-			cohortList.startWith([]).combineLatest(state, function (server, state) { // TODO why call it "server" ?
-				return [server, state];
-			}).subscribe(_.apply(function (server, state) {
-				self.render(server, state);
-			})); // XXX leaked subscription?
+			this.subs.add(cohortList.subscribe(_.apply(self.render)));
 
 			// when state changes, update the DOM value
-			this.subs.push(state.subscribe(function (val) {
-				if (self.$el.select2('val') !== val) {
-					self.$el.select2('val', val);
-				}
-			}));
-
-			// create an observable on the DOM value
-			this.val = this.$anchor.onAsObservable('change', '.cohort')
-				.pluck('val').share();
+			this.subs.add(state.pluck('cohort')
+				.distinctUntilChanged().subscribe(function (val) {
+					if (self.$el.select2('val') !== val) {
+						self.$el.select2('val', val);
+					}
+				})
+			);
 
 			// when DOM value changes, update state tree
-			this.subs.push(this.val.subscribe(function (val) {
-				cursor.update(_.partial(setState, val));
-			}));
+			this.subs.add(this.$anchor.onAsObservable('change', '.cohort')
+				.pluck('val').subscribe(function (val) {
+					cursor.update(_.partial(setState, val));
+				})
+			);
 		}
 	};
 

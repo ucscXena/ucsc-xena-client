@@ -12,11 +12,6 @@ define(['underscore_ext',
 
 	"use strict";
 
-	function snoop(x) {
-		console.log(x);
-		return x;
-	}
-
 	// XXX If we created utility functions for updating the column list/table,
 	// we could have them maintain an index. That would resolve the problem
 	// of wanting relational data model, but also needing indexes. The add and
@@ -47,7 +42,7 @@ define(['underscore_ext',
 		return $target;
 	}
 
-	function spreadsheetWidget(state, cursor, parent) {
+	function spreadsheetWidget(state, cursor, parent, wrapper) {
 		// XXX why is replay necessary? Seems to be so we get the sessionStorage, but is this
 		// really the right way to get it??
 		var curr = [],    // current uuids in order
@@ -178,7 +173,6 @@ define(['underscore_ext',
 			state.pluck('column_order'),
 			cmpfns
 		).selectMemoize1(_.apply(function (samples, order, cmpfns) {
-			//console.log('sorting');
 			function cmp(s1, s2) {
 				var r = 0;
 				_.find(order, function (uuid) {
@@ -254,8 +248,10 @@ define(['underscore_ext',
 		subs.add(wsSort.zip(domUpdater, _.identity).subscribe(
 			_.apply(function (prevState, state) {
 				_.each(state, function (ws, uuid) {
-					var wsdom = _.assoc(ws, "disp", children[uuid], "el", cels[uuid]);
-					widgets.render(wsdom, prevState[uuid], null);
+					var wsdom = _.assoc(ws, "disp", children[uuid], "el", cels[uuid], "wrapper", wrapper),
+					    prevdom = _.assoc(prevState[uuid] || {}, "disp", children[uuid],
+								  "el", cels[uuid], "wrapper", wrapper);
+					widgets.render(wsdom, prevdom, null);
 				});
 				return state;
 			}),

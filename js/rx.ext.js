@@ -1,3 +1,4 @@
+/*global define: true */
 // Extensions to rx for the cancer browser
 
 define(['rx', 'underscore_ext'], function (Rx, _) {
@@ -33,9 +34,24 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 		return x;
 	}
 
+	// This uses a mutable cache object to avoid building a new
+	// plucked object on every event. Quite possibly this is a waste
+	// of time. Should do some profiling.
+	//
+	// Accepts object of keys -> path arrays, or array of keys, or
+	// key arguments, to select what should be plucked from the stream.
+	//
+	// {width: ['column', 'width']}   ->  pluck column.width into key 'width'
+	// ['width', 'height'] -> pluck width & height into keys of same name.
+	// 'width', 'height'  -> pluck width & height into keys of same name.
 	observableProto.pluckPathsDistinctUntilChanged = function (paths) {
 		var observable = this,
-			current = fmap(paths, function () { return null; }); // mutable
+			current;
+
+		paths = _.isString(paths) ? _.toArray(arguments) : paths;
+		paths = _.isArray(paths) ? _.object_fn(paths, _.array) : paths;
+
+		current = fmap(paths, function () { return null; }); // mutable
 
 		return Rx.Observable.create(function (observer) {
 			return observable.subscribe(
@@ -43,8 +59,17 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 					var shouldPush = false;
 					_.each(paths, function (path, key) {
 						var ni = _.get_in(next, path);
-						if (ni !== current[key]) {
+						if (ni !== current[key] && _.isEqual(ni, current[key])) {
+							console.log("isEqual not ===", ni);
+						}
+						if (!_.isEqual(ni, current[key])) {
 							shouldPush = true;
+						}
+						if (ni !== current[key]) {
+							// This is separate from isEqual so that we update
+							// current[key] even when _.isEqual is true, so
+							// future compares will exit on === instead of
+							// having to do a full deep compare.
 							current[key] = ni;
 						}
 					});
@@ -57,6 +82,8 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 			);
 		});
 	};
+
+	observableProto.refine = observableProto.pluckPathsDistinctUntilChanged;
 
 	observableProto.selectMemoize1 = function (selector) {
 		var last;

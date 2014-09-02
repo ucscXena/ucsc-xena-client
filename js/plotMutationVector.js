@@ -157,12 +157,13 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 		[
 			['disp'],
 			['el'],
+			['wrapper'],
 			[],
 			['sort'],
 			['data']
 		],
 		// samples are in sorted order
-		function (disp, el, ws, sort, data) {
+		function (disp, el, wrapper, ws, sort, data) {
 			var local = disp.getDisposable(),
 				column = ws.column,
 				vg,
@@ -181,7 +182,7 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 				local.render = render;
 				disp.setDisposable(local);
 				local.vg = vgcanvas(column.width, canvasHeight);
-				local.columnUi = sheetWrap.columnShow(el.id, ws);
+				local.columnUi = wrapper(el.id, ws);
 				local.columnUi.$samplePlot.append(local.vg.element());
 			}
 

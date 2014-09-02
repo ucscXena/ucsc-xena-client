@@ -9,7 +9,6 @@ define(['underscore_ext',
 		'crosshairs',
 		'heatmapColors',
 		'partition',
-		'sheetWrap',
 		'tooltip',
 		'util',
 		'xenaQuery',
@@ -25,7 +24,6 @@ define(['underscore_ext',
 		crosshairs,
 		heatmapColors,
 		partition,
-		sheetWrap,
 		tooltip,
 		util,
 		xenaQuery) {
@@ -572,6 +570,7 @@ define(['underscore_ext',
 				}
 				align = 'left';
 			} else { // float
+				_.identity(); // shut up jslint
 				// TODO need min and max of full dataset from server
 			}
 		}
@@ -584,12 +583,13 @@ define(['underscore_ext',
 		[
 			['disp'],
 			['el'],
+			['wrapper'],
 			[],
 			['sort'],
 			['data']
 		],
 		// samples are in sorted order
-		function (disp, el, ws, sort, data) {
+		function (disp, el, wrapper, ws, sort, data) {
 			var local = disp.getDisposable(),
 				features = data.features || {},
 				codes = data.codes || {},
@@ -617,7 +617,7 @@ define(['underscore_ext',
 				});
 				local.render = render;
 				local.vg = vgcanvas(column.width, ws.height);
-				local.columnUi = sheetWrap.columnShow(el.id, ws);
+				local.columnUi = wrapper(el.id, ws);
 				local.columnUi.$samplePlot.append(local.vg.element());
 				disp.setDisposable(local);
 			}

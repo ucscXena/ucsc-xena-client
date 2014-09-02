@@ -41,13 +41,19 @@
 define(['underscore_ext'], function (_) {
 	'use strict';
 
+	function pathsOrKeys(args) {
+		var paths = _.isString(args[0]) ? _.toArray(args) : args[0];
+		return _.isArray(paths) ? _.object_fn(paths, _.array) : paths;
+	}
+
 	function splice_paths(oldpaths, newpaths) {
 		return _.fmap(newpaths, function (path) {
 			return oldpaths[path[0]].concat(path.slice(1));
 		});
 	}
 
-	function cursor(updater, paths) {
+	function cursor(updater) {
+		var paths = pathsOrKeys(Array.prototype.slice.call(arguments, 1));
 		return {
 			update: function (fn) {
 				updater(function (root) {
@@ -61,7 +67,8 @@ define(['underscore_ext'], function (_) {
 					}, root);
 				});
 			},
-			derive: function (newpaths) {
+			refine: function () {
+				var newpaths = pathsOrKeys(arguments);
 				return cursor(updater, splice_paths(paths, newpaths));
 			}
 		};
