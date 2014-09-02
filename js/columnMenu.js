@@ -73,11 +73,11 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 			};
 
 			this.dnaAfClick = function (ev) {
-				this.updateColumn('sFeature', 'dnaAf');
+				this.updateColumn('sFeature', 'dna_vaf');
 			};
 
 			this.rnaAfClick = function (ev) {
-				this.updateColumn('sFeature', 'rnaAf');
+				this.updateColumn('sFeature', 'rna_vaf');
 			};
 
 			this.removeClick = function (ev) {

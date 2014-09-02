@@ -28,7 +28,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function nanstr(v) {
-		if (v === "NaN") {
+		if (isNaN(v)) {
 			return undefined;
 		}
 		return v;

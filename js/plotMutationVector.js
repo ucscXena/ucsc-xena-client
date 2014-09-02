@@ -62,9 +62,9 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 				"reference": row.ref,
 				"alt": row.alt,
 				"effect": row.effect,
-				"Amino_Acid_Change": row["amino-acid"],
-				"RNA_AF": xenaQuery.nanstr(row.rna_vaf),
-				"DNA_AF": xenaQuery.nanstr(row.dna_vaf)
+				"amino_acid": row.amino_acid,
+				"rna_vaf": xenaQuery.nanstr(row.rna_vaf),
+				"dna_vaf": xenaQuery.nanstr(row.dna_vaf)
 			};
 		});
 	}
@@ -213,8 +213,7 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 						plotData = dataToPlot(sort, data.req.values, ws.column.fields);
 						columnUi.plotData = {
 							values: plotData[0].values,
-							// TODO derivedVars should come in server response
-							derivedVars: ['gene', 'effect', 'DNA_AF', 'RNA_AF', 'Amino_Acid_Change']
+							derivedVars: ['gene', 'effect', 'dna_vaf', 'rna_vaf', 'amino_acid'] // TODO not yet being used
 						};
 						mutationVector.show(el.id, {
 							vg: vg,

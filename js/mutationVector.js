@@ -158,7 +158,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 			},
 
 			formatAf: function (af) {
-				if (af === 'NA' || af === '') {
+				if (af === 'NA' || af === '' || af === undefined) {
 					return 'NA';
 				} else {
 					return Math.round(af * 100) + '%';
@@ -197,17 +197,13 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 					pos = node.data.chr + ':'
 						+ util.addCommas(node.data.start)
 						+ '-' + util.addCommas(node.data.end);
-					dnaAf = (node.data.DNA_AF)
-						? this.formatAf(node.data.DNA_AF)
-						: this.formatAf(node.data.DNA_VAF);
-					rnaAf = (node.data.RNA_AF)
-						? this.formatAf(node.data.RNA_AF)
-						: this.formatAf(node.data.RNA_VAF);
+					dnaAf = this.formatAf(node.data.dna_vaf);
+					rnaAf = this.formatAf(node.data.rna_vaf);
 					if (option === 'a') {
 						rows = [
 							{ val: node.data.effect},
 							{ val: 'hg19 ' + pos + ' ' + node.data.reference + '>' + node.data.alt },
-							{ val: this.gene.name + ' (' + node.data.Amino_Acid_Change + ')' },
+							{ val: this.gene.name + ' (' + node.data.amino_acid + ')' },
 							{ val: 'DNA / RNA variant allele freq: ' + dnaAf + ' / ' + rnaAf }
 						];
 						valWidth = '18em';
@@ -215,7 +211,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 						rows = [
 							{ label: 'Effect', val: node.data.effect},
 							{ label: 'hg19 ' + pos, val: node.data.reference + '>' + node.data.alt },
-							{ label: this.gene.name, val: '(' + node.data.Amino_Acid_Change + ')' },
+							{ label: this.gene.name, val: '(' + node.data.amino_acid + ')' },
 							{ label: 'DNA / RNA variant allele freq', val: dnaAf + ' / ' + rnaAf }
 						];
 						valWidth = '12em';
@@ -223,7 +219,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 						rows = [
 							{ label: 'Effect', val: node.data.effect},
 							{ label: node.data.reference + ' > ' + node.data.alt, val: 'hg19 ' + pos },
-							{ label: this.gene.name, val: '(' + node.data.Amino_Acid_Change + ')' },
+							{ label: this.gene.name, val: '(' + node.data.amino_acid + ')' },
 							{ label: 'Variant allele freq', val: 'DNA: ' + dnaAf + ' RNA: ' + rnaAf }
 						];
 						valWidth = '15em';
