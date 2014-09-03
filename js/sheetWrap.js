@@ -1,4 +1,4 @@
-/*jslint browser: true, nomen: true */
+/*jslint nomen:true, regexp: true */
 /*globals define: false, $: false, _: false */
 define(['haml!haml/sheetWrap',
 		'stub',
@@ -95,13 +95,13 @@ define(['haml!haml/sheetWrap',
 			this.serversInput = defaultTextInput.create('serversInput', {
 				$el: this.$servers,
 				getDefault: Rx.Observable.return(serverTitles(defaultServers)),
-				focusOutChanged: function(val) {
+				focusOutChanged: function (val) {
 					cursor.update(function (s) {
 						return _.assoc(s,
 							'servers',
 							map(_.filter(val.split(/[, ]+/), _.identity),
 								serverFromString)
-						);
+							);
 					});
 				}
 			});
@@ -181,26 +181,27 @@ define(['haml!haml/sheetWrap',
 
 			this.subs.add(
 				state.refine(['columnEditOpen', 'cohort'])
-				.subscribe(function (state) {
-					var id;
-					if (columnEditOpen && !state.columnEditOpen) {
-						columnEdit.destroyAll();
-					}
-					if (!columnEditOpen && state.columnEditOpen) {
-						id = uuid();
-						columnEdit.show(id, {
-							sheetWrap: self,
-							columnUi: undefined,
-							cursor: options.cursor
-						});
-					}
-					columnEditOpen = state.columnEditOpen;
-					if (!state.columnEditOpen && state.cohort) {
-						self.$addColumn.show();
-					} else {
-						self.$addColumn.hide();
-					}
-			}));
+					.subscribe(function (state) {
+						var id;
+						if (columnEditOpen && !state.columnEditOpen) {
+							columnEdit.destroyAll();
+						}
+						if (!columnEditOpen && state.columnEditOpen) {
+							id = uuid();
+							columnEdit.show(id, {
+								sheetWrap: self,
+								columnUi: undefined,
+								cursor: options.cursor
+							});
+						}
+						columnEditOpen = state.columnEditOpen;
+						if (!state.columnEditOpen && state.cohort) {
+							self.$addColumn.show();
+						} else {
+							self.$addColumn.hide();
+						}
+					})
+			);
 		}
 	};
 

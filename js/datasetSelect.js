@@ -94,8 +94,7 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 			this.subs.add(this.$anchor.onAsObservable('change', '.dataset')
 				.pluck('val').subscribe(function (val) {
 					options.cursor.update(_.partial(setState, val));
-				})
-			);
+				}));
 		}
 	};
 

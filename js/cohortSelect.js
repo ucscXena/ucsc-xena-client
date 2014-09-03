@@ -101,15 +101,13 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 					if (self.$el.select2('val') !== val) {
 						self.$el.select2('val', val);
 					}
-				})
-			);
+				}));
 
 			// when DOM value changes, update state tree
 			this.subs.add(this.$anchor.onAsObservable('change', '.cohort')
 				.pluck('val').subscribe(function (val) {
 					cursor.update(_.partial(setState, val));
-				})
-			);
+				}));
 		}
 	};
 
