@@ -1,8 +1,8 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(['lib/underscore', 'jquery'
-	], function (_, $) {
+define(['lib/underscore', 'jquery', 'rx'
+	], function (_, $, Rx) {
 	'use strict';
 
 	var widgets = [],
@@ -24,13 +24,16 @@ define(['lib/underscore', 'jquery'
 				.prop('title', val);
 		},
 
-		change: function () {
-			if (this.$el.val() === this.defalt) {
-				this.$el.addClass('defalt');
+		change: function (ev) {
+			if (ev && ev.keyCode === 13) {
+				this.focusout();
 			} else {
-				this.$el.removeClass('defalt');
+				if (this.$el.val() === this.defalt) {
+					this.$el.addClass('defalt');
+				} else {
+					this.$el.removeClass('defalt');
+				}
 			}
-			this.setVal(this.$el.val());
 		},
 
 		focusout: function () {
@@ -39,21 +42,23 @@ define(['lib/underscore', 'jquery'
 			}
 			this.change();
 			if (this.focusOutChanged) {
-				this.focusOutChanged();
+				this.focusOutChanged(this.$el.val());
 			}
 		},
 
 		initialize: function (options) {
 			var self = this;
+
+			this.subs = new Rx.CompositeDisposable();
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
-			//_(this).bindAll();
 			this.$el = options.$el;
-			this.getDefault = options.getDefault;
+
 			this.focusOutChanged = options.focusOutChanged;
 			if (!this.$el.hasClass('defaultTextInput')) {
 				this.$el.addClass('defaultTextInput');
 			}
-			this.getDefault().subscribe(function (defalt) {
+
+			this.subs.add(options.getDefault.subscribe(function (defalt) {
 				if (!self.defalt || (self.$el.val() === self.defalt)) {
 					self.defalt = defalt;
 					self.setVal(defalt);
@@ -61,7 +66,7 @@ define(['lib/underscore', 'jquery'
 				} else {
 					self.defalt = defalt;
 				}
-			});
+			}));
 			this.$el // TODO use rx handlers?
 				.on('keyup change', this.change)
 				.on('focusout', this.focusout);

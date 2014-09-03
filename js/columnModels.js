@@ -1,4 +1,13 @@
-define(['underscore_ext', 'rx', 'partition', 'rx.binding'], function (_, rx, partition) {
+/*global define: false */
+define(['underscore_ext',
+		'uuid',
+		'rx',
+		'partition',
+		'rx.binding'
+		], function (_,
+					 uuid,
+					 rx,
+					 partition) {
 	'use strict';
 
 	function normalize_column(c) {
@@ -27,8 +36,8 @@ define(['underscore_ext', 'rx', 'partition', 'rx.binding'], function (_, rx, par
 
 	return function() {
 		// column rendering settings
-		var updaters = new rx.ReplaySubject();
-		var state = updaters
+		var updaters = new rx.ReplaySubject(),
+			state = updaters
 			.mergeAll()
 			.scan({}, function (currstate, mut) {
 					return normalize_model(mut(currstate));
@@ -42,6 +51,6 @@ define(['underscore_ext', 'rx', 'partition', 'rx.binding'], function (_, rx, par
 		return {
 			state: state,
 			addStream: addStream,
-		}
+		};
 	};
 });

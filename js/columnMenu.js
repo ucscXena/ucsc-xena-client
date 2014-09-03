@@ -117,13 +117,13 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 			this.initialize = function (options) {
 				var self = this;
 				_.bindAll.apply(_, [this].concat(_.functions(this)));
-				//_(this).bindAll();
+
 				APPLY_BUTTON = options.APPLY_BUTTON;
 				this.columnUi = options.columnUi;
 				this.cursor = options.cursor;
 				this.state = options.state;
 				this.deleteColumn = options.deleteColumn;
-				this.duplicateColumn = options.duplicateColumn;
+//				this.duplicateColumn = options.duplicateColumn;
 				this.moreItems = options.moreItems;
 				this.menuInitialize(options);
 
