@@ -214,8 +214,9 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 						plotData = dataToPlot(sort, data.req.values, ws.column.fields);
 						columnUi.plotData = {
 							values: plotData[0].values,
-							derivedVars: ['gene', 'effect', 'dna_vaf', 'rna_vaf', 'amino_acid'] // TODO not yet being used
+							derivedVars: ['gene', 'effect', 'dna_vaf', 'rna_vaf', 'amino_acid']
 						};
+						columnUi.ws = ws;
 						mutationVector.show(el.id, {
 							vg: vg,
 							width: column.width,

@@ -72,11 +72,11 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 				this.updateColumn('sFeature', 'impact');
 			};
 
-			this.dnaAfClick = function (ev) {
+			this.dna_vafClick = function (ev) {
 				this.updateColumn('sFeature', 'dna_vaf');
 			};
 
-			this.rnaAfClick = function (ev) {
+			this.rna_vafClick = function (ev) {
 				this.updateColumn('sFeature', 'rna_vaf');
 			};
 
@@ -95,15 +95,10 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 			};
 
 			this.render = function () {
-				//var column = _.get_in(this.state, ['column_rendering', this.id]);
-				//           _.get_in(state, ['column_rendering', id])]
-				//columnsState = this.state.pluck('column_rendering').distinctUntilChanged().share();
-				//this.cohortState = this.state.pluck('cohort').distinctUntilChanged().share();
-				//var column = state.pluck('column_rendering');
-				var column = this.columnUi.ws.column; // gives stale state
+				var column = this.columnUi.ws.column;
 				this.menuRender($(template()));
 				if (column.dataType === 'mutationVector') {
-					this.$el.find('.mupit, .view, .impact, .dnaAf, .rnaAf, hr').show();
+					this.$el.find('.mupit, .view, .impact, .dna_vaf, .rna_vaf, hr').show();
 					this.$el.find('.' + column.sFeature + ' .ui-icon-check').css('opacity', 1);
 				} else if (column.dataType === 'geneProbesMatrix') {
 					this.$el.find('.view, .detail, .geneAverage, hr').show();
@@ -123,11 +118,12 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 				this.cursor = options.cursor;
 				this.state = options.state;
 				this.deleteColumn = options.deleteColumn;
-//				this.duplicateColumn = options.duplicateColumn;
+
 				this.moreItems = options.moreItems;
 				this.menuInitialize(options);
 
 				// bindings
+
 				this.$el // TODO replace with Rx bindings ?
 					.on('click', '.mupit', this.mupitClick)
 					.on('mouseenter', '.view', this.viewMouseenter)
@@ -135,8 +131,8 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 					.on('click', '.detail', this.detailClick)
 					.on('click', '.geneAverage', this.geneAverageClick)
 					.on('click', '.impact', this.impactClick)
-					.on('click', '.dnaAf', this.dnaAfClick)
-					.on('click', '.rnaAf', this.rnaAfClick)
+					.on('click', '.dna_vaf', this.dna_vafClick)
+					.on('click', '.rna_vaf', this.rna_vafClick)
 					.on('click', '.edit', this.editClick)
 					.on('click', '.duplicate', this.duplicateClick)
 					.on('click', '.download', this.downloadClick)

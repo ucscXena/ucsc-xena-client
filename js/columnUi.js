@@ -104,9 +104,9 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					.pluck(this.ws.column.fields[0]);
 			} else {
 				if (this.ws.column.dataType === 'mutationVector') {
-					if (this.ws.column.sFeature === 'dnaAf') {
+					if (this.ws.column.sFeature === 'dna_vaf') {
 						label += ': DNA variant allele freq';
-					} else if (this.ws.column.sFeature === 'rnaAf') {
+					} else if (this.ws.column.sFeature === 'rna_vaf') {
 						label += ': RNA variant allele freq';
 					}
 				}

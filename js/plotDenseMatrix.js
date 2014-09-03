@@ -644,6 +644,7 @@ define(['underscore_ext',
 					fields: fields,
 					codes: codes
 				};
+				columnUi.ws = ws;
 				if (local.sub) {
 					local.sub.dispose();
 				}
