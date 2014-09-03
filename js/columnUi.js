@@ -84,19 +84,16 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			var dsID = this.ws.column.dsID;
 			return this.sheetWrap.sources.map(function (sources) {
 				var dataset = xenaQuery.find_dataset(sources, dsID);
-				if (dsID === stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
-					return 'Mutation';
-				} else if (!dataset) {
-					return "<unknown>";
-				} else {
+				if (dataset) {
 					return dataset.title;
-					//return datasetTitle(dsID, dataset.title);
+				} else {
+					return "<unknown>";
 				}
 			});
 		},
 
 		getDefField: function () {
-			// TODO we should be caching the labels somewhere, maybe in tmp state
+			// TODO store label in state
 			var label = this.ws.column.fields.toString(),
 				defalt;
 			if (this.ws.dataType === 'clinicalMatrix') {
@@ -184,8 +181,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 		render: function (options) {
 			if (this.$el) {
-				// TODO this should be smarter about using the state tree
-				//      and only reRender when needed
 				this.reRender(options);
 			} else {
 				this.firstRender(options);

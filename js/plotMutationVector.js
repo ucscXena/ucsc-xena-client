@@ -216,7 +216,7 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 							values: plotData[0].values,
 							derivedVars: ['gene', 'effect', 'dna_vaf', 'rna_vaf', 'amino_acid']
 						};
-						columnUi.ws = ws;
+						columnUi = wrapper(el.id, ws);
 						mutationVector.show(el.id, {
 							vg: vg,
 							width: column.width,
