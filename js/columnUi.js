@@ -84,9 +84,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			var dsID = this.ws.column.dsID;
 			return this.sheetWrap.sources.map(function (sources) {
 				var dataset = xenaQuery.find_dataset(sources, dsID);
-				if (dsID === stub.getDEV_URL() + '/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_mutationVector') {
-					return 'Mutation';
-				} else if (!dataset) {
+				if (!dataset) {
 					return "<unknown>";
 				} else {
 					return dataset.title;
