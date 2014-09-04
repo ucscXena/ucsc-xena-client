@@ -181,10 +181,10 @@ define(['haml!haml/columnEdit',
 		},
 
 		findDataType: function (fields) {
-			var types = dataTypeByMetadata[this.metadata];
+			var types = dataTypeByInput[this.stateTmp.inputMode];
 			if (types.length === 1) {
 				return types[0];
-			} else { // assume metadata is genomicMatrixProbemap
+			} else { // for now, only inputMode of iGenes has multiple possible dataTypes
 				if (fields.length > 1) {
 					return 'geneMatrix';
 				} else {
