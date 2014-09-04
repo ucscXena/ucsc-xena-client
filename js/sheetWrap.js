@@ -157,7 +157,7 @@ define(['haml!haml/sheetWrap',
 			options.$anchor.append(this.$el);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'servers', 'addColumn',
+			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'servers', 'yAxisLabel', 'addColumn',
 				'spreadsheet'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
@@ -178,6 +178,30 @@ define(['haml!haml/sheetWrap',
 						return _.assoc(state, 'columnEditOpen', 'true');
 					});
 				});
+
+			this.subs.add(
+				state.refine(['cohort'])
+					.subscribe(function (state) {
+						if (state.cohort) {
+							self.$yAxisLabel.show();
+						}
+					})
+			);
+
+			this.subs.add(
+				state.refine(['samples', 'column_order'])
+					.subscribe(function (state) {
+						var text = 'Samples (N=' + state.samples.length + ')',
+							marginT = '7em',
+							marginB = '0';
+						if (state.column_order.length) {
+							marginT = '0';
+							marginB = '7em';
+						}
+						self.$yAxisLabel.text(text)
+							.css({ 'margin-top': marginT, 'margin-bottom': marginB });
+					})
+			);
 
 			this.subs.add(
 				state.refine(['columnEditOpen', 'cohort'])

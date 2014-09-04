@@ -16,9 +16,15 @@
 	width: 30em;
 }
 .sheetWrap .yAxisLabel {
-	/*display: none;*/
+	display: none;
+	font-size: 1.1em;
 	transform: rotate(270deg);
-	width: 2em;
+	width: 12em;
+	margin-left: -5em;
+	margin-right: -5em;
+}
+.sheetWrap .body {
+	vertical-align: top;
 }
 .sheetWrap .showLegend {
 	vertical-align: bottom;
