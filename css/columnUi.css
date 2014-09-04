@@ -71,7 +71,6 @@ table.columnUi td.fullWidth {
 .columnUi .colorBarLabel,
 .columnUi .color {
 	width: 100%;
-	margin-top: 0;
 	/*text-overflow: ellipsis;*/
 	font-size: 1em;
 	border: none;
@@ -88,6 +87,16 @@ table.columnUi td.fullWidth {
 .columnUi .colorBarLabel.mutationVector {
 	margin-top: 0;
 }
+.columnUi .color {
+	margin-top: 0;
+	padding: 2px 5px 2px 5px;
+	border-left: 1px #bbbbbb solid;
+	border-right: 1px #bbbbbb solid;
+	overflow: hidden;
+}
+.columnUi .color.center {
+	max-width: 5.5em;
+}
 .columnUi .colorTd {
 	text-align: center;
 	padding-right: 12px;
@@ -95,19 +104,3 @@ table.columnUi td.fullWidth {
 .columnUi .colorTd.mutationVector {
 	padding: 0 18px 0 7px;
 }
-.columnUi .color {
-	padding: 2px 5px 2px 5px;
-	border-left: 1px #bbbbbb solid;
-	border-right: 1px #bbbbbb solid;
-	overflow: hidden;
-	line-height: normal;
-}
-.columnUi .color.center {
-	max-width: 5em;
-}
-/*
-.columnUi .color.left {
-	width: 100%;
-}
-*/
-
