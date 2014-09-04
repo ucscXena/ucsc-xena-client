@@ -6,7 +6,8 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 	], function (stub, crosshairs, linkTo, tooltip, util, vgcanvas, d3, $, _) {
 	'use strict';
 
-	var impactMax = 3,
+	var impactMax = 4,
+		unknownEffect = 3,
 		highlightRgba = 'rgba(0, 0, 0, 1)',
 		impact = {
 			stop_gained: 2,
@@ -57,17 +58,12 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 			intergenic_region: 0,
 			IGR: 0
 		},
-		impactLabels = [
-			'silent or outside CDS',
-			'NOT_USED',
-			'missense or non-coding',
-			'nonsense or splice site'
-		],
 		colors = {
 			category_25: [
-				{r: 44, g: 160, b: 44, a: 1}, // green #2ca02c
+				{r: 44, g: 160, b: 44, a: 1},  // green #2ca02c
 				{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
-				{r: 214, g: 39, b: 40, a: 1}    // red #d62728
+				{r: 214, g: 39, b: 40, a: 1},  // red #d62728
+				{r: 255, g: 127, b: 14, a: 1}  // orange #ff7f0e
 			],
 			af: [
 				{r: 228, g: 26, b: 28, a: 0},
@@ -273,6 +269,11 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				this.values = _.map(drawValues, function (v, i) {
 					var row = $.extend(true, [], v);
 					row.index = i;
+					_.each(row.vals, function (val) {
+						if (impact[val.effect] === undefined) {
+							impact[val.effect] = unknownEffect;
+						}
+					});
 					return row;
 				});
 				this.render();
@@ -325,6 +326,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 					c,
 					rgba,
 					labels,
+					unknownEffects,
 					align;
 				if (this.feature === 'impact') {
 					myColors = _.map(colors[this.color], function (c) {
@@ -333,8 +335,16 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 					labels = [
 						'synonymous, UTR, ...',
 						'missense, non-coding, inframe indel, ...',
-						'nonsense, frameshift, ...'
+						'nonsense, frameshift, ...',
+						'unknown effect'
 					];
+					unknownEffects = filter(impact, function (key, val) {
+						return impact[val] === unknownEffect;
+					});
+					if (unknownEffects.length === 0) {
+						myColors.pop();
+						labels.pop();
+					}
 					align = 'left';
 				} else { // feature is one of allele frequencies
 					c = colors[this.color][2];
@@ -345,8 +355,15 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 						rgba + '1)'
 					];
 					labels = ['0%', '50%', '100%'];
+					/*  for the white 'no mutation'
+					labels = ['.  0%', '.  50%', '.  100%'];
+					*/
 					align = 'center';
 				}
+				/* for the white 'no mutation'
+				myColors.unshift('rgb(255,255,255)');
+				labels.unshift('no mutation');
+				*/
 				this.columnUi.drawLegend(myColors, labels, align, '', 'mutationVector');
 			},
 
