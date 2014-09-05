@@ -214,7 +214,7 @@ define(['haml!haml/columnEdit',
 				var column_rendering = _.assoc(state.column_rendering, id, json),
 					column_order = _.conj(state.column_order, id);
 				return _.assoc(state,
-							  'columnEditOpen', false,
+							  //'columnEditOpen', false,
 							  'column_rendering', column_rendering,
 							  'column_order', column_order);
 			});
@@ -237,6 +237,7 @@ define(['haml!haml/columnEdit',
 
 		goClick: function () {
 			this.renderColumn();
+			this.destroy();
 		},
 
 		featureChange: function () {
@@ -315,11 +316,14 @@ define(['haml!haml/columnEdit',
 				title: 'Create Column',
 				width: '500', // TODO make dynamic
 				position: { my: "top", at: "top+70", of: window },
+				close: this.destroy
+				/*
 				close: function () {
 					self.cursor.update(function (state) {
 						return _.assoc(state, 'columnEditOpen', false);
 					});
 				}
+				*/
 			});
 		},
 

@@ -91,6 +91,16 @@ define(['haml!haml/sheetWrap',
 	}
 
 	aWidget = {
+
+		columnAddClick: function () {
+			var id = uuid();
+			columnEdit.show(id, {
+				sheetWrap: this,
+				columnUi: undefined,
+				cursor: this.cursor
+			});
+		},
+
 		initCohortsAndSources: function (state, cursor, defaultServers) {
 			this.serversInput = defaultTextInput.create('serversInput', {
 				$el: this.$servers,
@@ -141,7 +151,7 @@ define(['haml!haml/sheetWrap',
 
 		initialize: function (options) {
 			var self = this,
-				columnEditOpen = false,
+				//columnEditOpen = false,
 				cohort,
 				state,
 				deleteColumnCb;
@@ -173,17 +183,22 @@ define(['haml!haml/sheetWrap',
 
 			this.subs.add(spreadsheet(state, options.cursor, this.$spreadsheet, _.partial(columnShow, deleteColumnCb)));
 			this.$el
+				.on('click', '.addColumn', this.columnAddClick);
+				/*
 				.on('click', '.addColumn', function () {
 					options.cursor.update(function (state) {
 						return _.assoc(state, 'columnEditOpen', 'true');
 					});
 				});
+				*/
 
 			this.subs.add(
 				state.refine(['cohort'])
 					.subscribe(function (state) {
+						columnEdit.destroyAll();
 						if (state.cohort) {
 							self.$yAxisLabel.show();
+							self.$addColumn.show();
 							self.$samplesFromAnchor.show();
 						}
 					})
@@ -204,6 +219,7 @@ define(['haml!haml/sheetWrap',
 					})
 			);
 
+			/*
 			this.subs.add(
 				state.refine(['columnEditOpen', 'cohort'])
 					.subscribe(function (state) {
@@ -227,6 +243,7 @@ define(['haml!haml/sheetWrap',
 						}
 					})
 			);
+			*/
 		}
 	};
 

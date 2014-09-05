@@ -88,7 +88,7 @@ define(['jquery',
 		servers: ['servers'],
 		column_rendering: ['column_rendering'],
 		column_order: ['column_order'],
-		columnEditOpen: ['columnEditOpen'],
+		//columnEditOpen: ['columnEditOpen'],
 		data: ['_column_data']
 	};
 	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths).share();
