@@ -135,7 +135,7 @@ define(['haml!haml/sheetWrap',
 				state: dsstate,
 				cursor: dscursor,
 				sources: this.sources,
-				placeholder: 'All datasets'
+				placeholder: 'all datasets'
 			});
 		},
 
@@ -184,6 +184,7 @@ define(['haml!haml/sheetWrap',
 					.subscribe(function (state) {
 						if (state.cohort) {
 							self.$yAxisLabel.show();
+							self.$samplesFromAnchor.show();
 						}
 					})
 			);
