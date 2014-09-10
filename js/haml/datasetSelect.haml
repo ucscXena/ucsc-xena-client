@@ -3,5 +3,5 @@
   - _.each(sources, function (source) {
     %optgroup{label:source.title}
       - _.each(source.datasets, function (d) {
-        - if (d.type !== 'probeMap') {
+        - if (d.type !== 'probeMap' && d.type !== 'genePredExt') {
           %option{value:d.dsID} =d.title
