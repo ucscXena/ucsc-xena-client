@@ -242,7 +242,7 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 
 			mupitClick: function () {
 				var positions = _.map(this.nodes, function (n, i) {
-						return n.data.chr + ' ' + (n.data.start + 1).toString();
+						return n.data.chr + ' ' + (n.data.start).toString();
 					});
 				linkTo.mupit(positions.join('\n'));
 			},
