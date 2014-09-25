@@ -1,4 +1,5 @@
 %select{class:klass}
+  %option
   - if (labels) {
     - _.each(options, function (option) {
       %option{value:option} =labels[option]
