@@ -1,3 +1,6 @@
+.columnEdit tr:not(.static) {
+	display: none;
+}
 .columnEdit .tupleLabel {
 	min-width: 5em;
 }
@@ -20,9 +23,6 @@
 }
 .columnEdit .geneValues {
 	white-space: nowrap;
-}
-.columnEdit .singleMsg {
-	color: red;
 }
 .columnEdit .advancedLabel {
 	cursor: pointer;

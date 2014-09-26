@@ -4,7 +4,7 @@ define(['haml!haml/sheetWrap',
 		'stub',
 		'spreadsheet',
 		'cohortSelect',
-		'columnEdit',
+		'columnEditRx',
 		'columnUi',
 		'datasetSelect',
 		'defaultTextInput',
@@ -96,7 +96,7 @@ define(['haml!haml/sheetWrap',
 			var id = uuid();
 			columnEdit.show(id, {
 				sheetWrap: this,
-				columnUi: undefined,
+				state: this.state,
 				cursor: this.cursor
 			});
 		},
@@ -132,6 +132,14 @@ define(['haml!haml/sheetWrap',
 					}
 				}).switchLatest().replay(null, 1); // replay for late subscribers
 			this.subs.add(this.sources.connect());
+
+
+			// store the sources in state, for easy access later
+			this.subs.add(this.sources.subscribe(function (sources) {
+				cursor.update(function (t) {
+					return _.assoc(t, '_sources', Object.create(sources).__proto__);
+				});
+			}));
 
 		},
 
@@ -195,7 +203,7 @@ define(['haml!haml/sheetWrap',
 			this.subs.add(
 				state.refine(['cohort'])
 					.subscribe(function (state) {
-						columnEdit.destroyAll();
+						//columnEdit.destroyAll();
 						if (state.cohort) {
 							self.$yAxisLabel.show();
 							self.$addColumn.show();
