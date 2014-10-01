@@ -5,8 +5,7 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 	], function (template, xenaQuery, _, $, Rx) {
 	'use strict';
 
-	var widgets = [],
-		aWidget;
+	var aWidget;
 
 	// set cohort and clear columns
 	// TODO should this be in sheetWrap.js?
@@ -35,7 +34,6 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			this.$el.remove();
 			this.$el = undefined;
 			this.subs.dispose();
-			delete widgets[this.id];
 		},
 
 		render: function (server, cohort) {
@@ -84,8 +82,8 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			// and mix in the current cohort in the UI.
 			cohortList = state.refine('servers', 'cohort')
 				.map(function (state) {
-					return Rx.Observable.zipArray(_.map(state.servers, function (s) {
-						return xenaQuery.all_cohorts(s.url);
+					return Rx.Observable.zipArray(_.map(state.servers.user, function (s) {
+						return xenaQuery.all_cohorts(s);
 					})).map(_.apply(_.union));
 				}).switchLatest()
 				.startWith([])
@@ -111,22 +109,13 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 		}
 	};
 
-	function create(id, options) {
+	function create(options) {
 		var w = Object.create(aWidget);
-		w.id = id;
 		w.initialize(options);
 		return w;
 	}
 
 	return {
-		create: function (id, options) {
-			// this should only be called once per page load,
-			// but keeping array and destroy here as a pattern
-			if (widgets[id]) {
-				widgets[id].destroy();
-			}
-			widgets[id] = create(id, options);
-			return widgets[id];
-		}
+		create: create
 	};
 });

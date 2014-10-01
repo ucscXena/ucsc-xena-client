@@ -1,6 +1,7 @@
 /*jslint nomen:true, regexp: true */
 /*globals define: false, $: false, _: false */
 define(['haml!haml/sheetWrap',
+		'cursor',
 		'stub',
 		'spreadsheet',
 		'cohortSelect',
@@ -16,6 +17,7 @@ define(['haml!haml/sheetWrap',
 		'rx.jquery',
 		'rx.binding'
 		], function (template,
+					new_cursor,
 					stub,
 					spreadsheet,
 					cohortSelect,
@@ -62,51 +64,35 @@ define(['haml!haml/sheetWrap',
 		});
 	}
 
-	function serverTitles(servers) {
-		return _.pluck(servers, 'title').join(', ');
+	function serversFromString(s) {
+		return map(_.filter(s.split(/[, ]+/), _.identity), xenaQuery.server_url);
 	}
 
-	defaultPort = {
-		'http://': 80,
-		'https://': 433
-	};
-
-	function serverFromString(s) {
-		// XXX should throw or otherwise indicate parse error on no match
-		var tokens = s.match(/^(https?:\/\/)?([^:]+)(:([0-9]+))?$/),
-			host = tokens[2],
-			prod = (host.indexOf('genome-cancer.ucsc.edu') === 0),
-			defproto = prod ? 'https://' : 'http://',
-			proto = tokens[1] || (prod ? 'https://' : 'http://'),
-			port = tokens[4] || (prod ? '433' : '7222'),
-			defport = defaultPort[proto],
-			url = proto + host + ':' + port;
-
-		return {
-			title: (proto === defproto ? '' : proto) +
-				host +
-				(port === defport ? '' : (':' + port)),
-			url: url
-		};
+	function serversToString(servers) {
+		return map(servers, xenaQuery.server_title).join(', ');
 	}
 
 	aWidget = {
 		initCohortsAndSources: function (state, cursor, defaultServers) {
-			this.serversInput = defaultTextInput.create('serversInput', {
+			this.serversInput = defaultTextInput.create({
 				$el: this.$servers,
-				getDefault: Rx.Observable.return(serverTitles(defaultServers)),
-				focusOutChanged: function (val) {
+				state: state.pluck('servers')
+					.map(function (servers) { return _.fmap(servers, serversToString); }),
+				// fn (from defaultTextInput) is
+				// {user: <string>, default: <string>}
+				//                     -> {user: <string>, default: <string>}
+				// We wrap that in a function that does
+				// {user: <array>, default: <array>} -> {user: <array>, default: <array>}
+				cursor: new_cursor(function (fn) {
 					cursor.update(function (s) {
 						return _.assoc(s,
 							'servers',
-							map(_.filter(val.split(/[, ]+/), _.identity),
-								serverFromString)
-							);
+							_.fmap(fn(_.fmap(s.servers, serversToString)), serversFromString));
 					});
-				}
+				}, ['default', 'user'])
 			});
 
-			this.cohortSelect = cohortSelect.create('cohortSelect', {
+			this.cohortSelect = cohortSelect.create({
 				$anchor: this.$cohortAnchor,
 				state: state,
 				cursor: cursor
@@ -115,8 +101,8 @@ define(['haml!haml/sheetWrap',
 			// retrieve all datasets in this cohort, from all servers
 			this.sources = state.refine(['servers', 'cohort'])
 				.map(function (state) {
-					if (state.servers && state.cohort) {
-						return xenaQuery.dataset_list(state.servers, state.cohort);
+					if (state.cohort) {
+						return xenaQuery.dataset_list(state.servers.user, state.cohort);
 					} else {
 						return Rx.Observable.return([]);
 					}

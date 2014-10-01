@@ -180,6 +180,13 @@ define(['haml!haml/columnEdit',
 			return fields;
 		},
 
+		getFieldLabel: function () {
+			if (this.stateTmp.inputMode === 'iFeature') {
+				return this.$feature.parent().find('select option:selected').text().trim();
+			}
+			return this.getFields().join(', ');
+		},
+
 		findDataType: function (fields) {
 			var types = dataTypeByMetadata[this.metadata];
 			if (types.length === 1) {
@@ -196,6 +203,8 @@ define(['haml!haml/columnEdit',
 		renderColumn: function () {
 			var json,
 				fields = this.getFields(),
+				label = this.getFieldLabel(),
+				columnLabel = this.$dataset.parent().find('select option:selected').text().trim(),
 				sFeature,
 				id = this.id;
 			if (this.metadata === 'mutationVector') {
@@ -205,7 +214,11 @@ define(['haml!haml/columnEdit',
 				"width": 200,
 				"dsID": this.state.dsID,
 				"dataType": this.findDataType(fields),
-				"fields": fields
+				"fields": fields,
+				// XXX If defaults should follow the db, we need to refactor to listen to db changes and
+				// update the state. Hacking this in for now.
+				"fieldLabel": {user: label, 'default': label},
+				"columnLabel": {user: columnLabel, 'default': columnLabel}
 			};
 			if (sFeature) {
 				json.sFeature = sFeature;
@@ -354,7 +367,9 @@ define(['haml!haml/columnEdit',
 			// as soon as I know how to update one piece of state in the column: dsID
 			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
 				var opts;
-				self.sources = sources;
+				self.sources = _.map(sources, function (s) {
+					return _.assoc(s, 'title', xenaQuery.server_title(s.server));
+				});
 
 				opts = $(datasetsTemplate({sources: self.sources}));
 

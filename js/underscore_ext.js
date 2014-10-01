@@ -71,6 +71,18 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		return result;
 	}
 
+	// XXX Drop this when upgrading underscore
+	function negate(predicate) {
+		return function () {
+			return !predicate.apply(this, slice.call(arguments, 0));
+		};
+	}
+
+	function spy(msg, x) {
+		console.log(msg, x);
+		return x;
+	}
+
 	_.mixin({
 		fmap: fmap,
 		apply: apply,
@@ -80,7 +92,9 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		concat: concat,
 		partition_n: partition_n,
 		object_fn: object_fn,
-		findValue: findValue
+		findValue: findValue,
+		negate: negate,
+		spy: spy
 	});
 
 	return _;

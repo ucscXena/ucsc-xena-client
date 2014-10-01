@@ -33,7 +33,9 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 		},
 
 		render: function (sources_in, state) {
-			var sources = sources_in,
+			var sources = _.map(sources_in, function (s) {
+					return _.assoc(s, 'title', xenaQuery.server_title(s.server));
+				}),
 				$el = $(template({
 					sources: sources,
 					placeholder: this.placeholder
@@ -80,8 +82,8 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 				if (state.samplesFrom) {
 					return xenaQuery.dataset_samples(state.samplesFrom);
 				} else {
-					return Rx.Observable.zipArray(_.map(state.servers, function (s) {
-						return xenaQuery.all_samples(s.url, state.cohort);
+					return Rx.Observable.zipArray(_.map(state.servers.user, function (s) {
+						return xenaQuery.all_samples(s, state.cohort);
 					})).map(_.apply(_.union));
 				}
 			}).switchLatest();

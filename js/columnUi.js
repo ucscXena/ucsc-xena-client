@@ -48,11 +48,11 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		return dsTitles[dsID] || title;
 	}
 	*/
+
 	aWidget = {
 		// this is invoked from columnMenu.js: remove menu function
 		destroy: function () {
-			this.title.destroy();
-			this.field.destroy();
+			this.subs.dispose();
 			this.$el.remove();
 			this.crosshairs.destroy();
 			// TODO clean up subscriptions, subWidgets, like exonRefGene, mutationVector
@@ -80,38 +80,25 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			}
 		},
 
-		getDefTitle: function () {
-			var dsID = this.ws.column.dsID;
-			return this.sheetWrap.sources.map(function (sources) {
-				var dataset = xenaQuery.find_dataset(sources, dsID);
-				if (!dataset) {
-					return "<unknown>";
-				} else {
-					return dataset.title;
-					//return datasetTitle(dsID, dataset.title);
-				}
-			});
-		},
-
-		getDefField: function () {
-			// TODO we should be caching the labels somewhere, maybe in tmp state
-			var label = this.ws.column.fields.toString(),
-				defalt;
-			if (this.ws.dataType === 'clinicalMatrix') {
-				defalt = xenaQuery.feature_list(this.ws.column.dsID)
-					.pluck(this.ws.column.fields[0]);
-			} else {
-				if (this.ws.column.dataType === 'mutationVector') {
-					if (this.ws.column.sFeature === 'dnaAf') {
-						label += ': DNA variant allele freq';
-					} else if (this.ws.column.sFeature === 'rnaAf') {
-						label += ': RNA variant allele freq';
-					}
-				}
-				defalt = Rx.Observable.return(label);
-			}
-			return defalt;
-		},
+//		getDefField: function () {
+//			// TODO we should be caching the labels somewhere, maybe in tmp state
+//			var label = this.ws.column.fields.toString(),
+//				defalt;
+//			if (this.ws.dataType === 'clinicalMatrix') {
+//				defalt = xenaQuery.feature_list(this.ws.column.dsID)
+//					.pluck(this.ws.column.fields[0]);
+//			} else {
+//				if (this.ws.column.dataType === 'mutationVector') {
+//					if (this.ws.column.sFeature === 'dnaAf') {
+//						label += ': DNA variant allele freq';
+//					} else if (this.ws.column.sFeature === 'rnaAf') {
+//						label += ': RNA variant allele freq';
+//					}
+//				}
+//				defalt = Rx.Observable.never().startWith(Rx.Scheduler.currentThread, label);
+//			}
+//			return defalt;
+//		},
 
 		drawLegend: function (colors, labels, align, ellipsis, klass) {
 			var label = '';
@@ -134,15 +121,27 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		},
 
 		reRender: function (options) {
+			var titlePath = {
+					'user': ['column_rendering', this.id, 'columnLabel', 'user'],
+					'default': ['column_rendering', this.id, 'columnLabel', 'default']
+				},
+				fieldPath = {
+					'user': ['column_rendering', this.id, 'fieldLabel', 'user'],
+					'default': ['column_rendering', this.id, 'fieldLabel', 'default']
+				};
 			this.ws = options.ws;
-			this.title = defaultTextInput.create('title_' + this.id, {
+			this.subs.add(defaultTextInput.create({
 				$el: this.$columnTitle,
-				getDefault: this.getDefTitle()
-			});
-			this.field = defaultTextInput.create('field_' + this.id, {
+				state: this.state.refine(titlePath),
+				cursor: options.cursor.refine(titlePath),
+				id: 'title'
+			}));
+			this.subs.add(defaultTextInput.create({
 				$el: this.$field,
-				getDefault: this.getDefField()
-			});
+				state: this.state.refine(fieldPath),
+				cursor: options.cursor.refine(fieldPath),
+				id: 'field'
+			}));
 		},
 
 		firstRender: function (options) {
@@ -192,13 +191,15 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 		initialize: function (options) {
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
-			//_(this).bindAll();
+
+			this.subs = new Rx.CompositeDisposable();
 			this.sheetWrap = options.sheetWrap;
 			this.cursor = options.cursor;
-			this.state = options.state;
+			this.state = options.state.share();
 			this.sparsePad = options.sparsePad;
 			this.headerPlotHeight = options.headerPlotHeight;
 			this.horizontalMargin = options.horizontalMargin.toString() + 'px';
+
 			if (options.ws) {
 				this.render(options);
 			}

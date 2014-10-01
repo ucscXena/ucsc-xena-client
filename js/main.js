@@ -65,15 +65,7 @@ define(['jquery',
 		sessionStorage.state = JSON.stringify(state);
 	});
 
-	var defaultServers = [{
-//			title: 'genome-cancer.ucsc.edu/proj/public/xena',
-//			url: 'https://genome-cancer.ucsc.edu/proj/public/xena'
-			title: 'tcga1:7223',
-			url: 'http://tcga1:7223'
-		}, {
-			title: "localhost",
-			url: "http://localhost:7222"
-	}];
+	var defaultServers = ['http://tcga1:7223', 'http://localhost:7222'];
 
 	var childrenStream = new Rx.Subject();
 	model.addStream(childrenStream);
@@ -200,7 +192,7 @@ define(['jquery',
 			start = {
 				"samples": [],
 				"samplesFrom": "",
-				"servers": defaultServers,
+				"servers": {'default': defaultServers, user: defaultServers},
 				"height": HEIGHT,
 				"zoomIndex": 0,
 				"zoomCount": 100,

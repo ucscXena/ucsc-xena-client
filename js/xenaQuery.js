@@ -42,8 +42,36 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		return (cohort === null_cohort) ? 'nil' : quote(cohort);
 	}
 
+	// XXX deprecate this
 	function parse_host(dsID) {
 		return dsID.match(/([^\/]*\/\/[^\/]*)\/(.*)/);
+	}
+
+	function parse_server(s) {
+		// XXX should throw or otherwise indicate parse error on no match
+		var tokens = s.match(/^(https?:\/\/)?([^:]+)(:([0-9]+))?$/),
+			host = tokens[2],
+			prod = (host.indexOf('genome-cancer.ucsc.edu') === 0),
+			defproto = prod ? 'https://' : 'http://',
+			proto = tokens[1] || (prod ? 'https://' : 'http://'),
+			defport = (prod ? '433' : '7222'),
+			port = tokens[4] || defport,
+			url = proto + host + ':' + port;
+
+		return {
+			title: (proto === defproto ? '' : proto) +
+				host +
+				(port === defport ? '' : (':' + port)),
+			url: url
+		};
+	}
+
+	function server_title(s) {
+		return parse_server(s).title;
+	}
+
+	function server_url(s) {
+		return parse_server(s).url;
 	}
 
 	// Returns a object with key equal to the serialization of
@@ -312,13 +340,13 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	function dataset_list(servers, cohort) {
 		return Rx.Observable.zipArray(_.map(servers, function (s) {
 			return Rx.DOM.Request.ajax(
-				xena_post(s.url, dataset_list_query(cohort))
+				xena_post(s, dataset_list_query(cohort))
 			).map(
-				_.compose(_.partial(xena_dataset_list_transform, s.url), json_resp)
+				_.compose(_.partial(xena_dataset_list_transform, s), json_resp)
 			).catch(Rx.Observable.return([])); // XXX display message?
 		})).map(function (datasets_by_server) {
 			return _.map(servers, function (server, i) {
-				return _.assoc(server, 'datasets', datasets_by_server[i]);
+				return {server: server, datasets: datasets_by_server[i]};
 			});
 		});
 	}
@@ -373,6 +401,8 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	return {
 		// helpers:
 		parse_host: parse_host,
+		server_title: server_title,
+		server_url: server_url,
 		json_resp: json_resp,
 		nanstr: nanstr,
 		reqObj: reqObj,
