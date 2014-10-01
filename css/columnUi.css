@@ -50,9 +50,7 @@ table.columnUi td.fullWidth {
 .columnUi .select2-arrow.recede {
 	visibility: hidden;
 }
-.columnUi .columnTitle.recede,
-.columnUi .field.recede,
-.columnUi .select2-choice.recede {
+.columnUi .hoverChange.recede {
 	border-color: transparent;
 	background-image: none;
 	box-shadow: none;

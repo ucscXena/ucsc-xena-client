@@ -60,22 +60,15 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			$('.spreadsheet').resize();
 		},
 
-		someMouseenterLeave: function (e) {
-			var $hoverShow = $(e.target);
-			if (e.type === 'mouseenter') {
-				$hoverShow.removeClass('recede');
-			} else {
-				$hoverShow.addClass('recede');
-				$hoverShow.blur();
-			}
-		},
-
 		mouseenterLeave: function (e) {
-			var $hoverShow = this.$el.find('.hoverShow');
+			var $hoverShow = this.$el.find('.hoverShow'),
+				$hoverChange = this.$el.find('.hoverChange');
 			if (e.type === 'mouseenter') {
 				$hoverShow.removeClass('recede');
+				$hoverChange.removeClass('recede');
 			} else {
 				$hoverShow.addClass('recede');
+				$hoverChange.addClass('recede');
 				$hoverShow.blur();
 			}
 		},
@@ -173,7 +166,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				sheetWrap: this.sheetWrap
 			});
 			this.$el // TODO use rx handlers?
-				.on('mouseenter mouseleave', '.columnTitle, .field', this.someMouseenterLeave)
 				.on('mouseenter mouseleave', this.mouseenterLeave);
 
 			this.reRender(options);
