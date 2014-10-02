@@ -188,10 +188,10 @@ define(['haml!haml/columnEdit',
 		},
 
 		findDataType: function (fields) {
-			var types = dataTypeByMetadata[this.metadata];
+			var types = dataTypeByInput[this.stateTmp.inputMode];
 			if (types.length === 1) {
 				return types[0];
-			} else { // assume metadata is genomicMatrixProbemap
+			} else { // for now, only inputMode of iGenes has multiple possible dataTypes
 				if (fields.length > 1) {
 					return 'geneMatrix';
 				} else {
@@ -227,7 +227,7 @@ define(['haml!haml/columnEdit',
 				var column_rendering = _.assoc(state.column_rendering, id, json),
 					column_order = _.conj(state.column_order, id);
 				return _.assoc(state,
-							  'columnEditOpen', false,
+							  //'columnEditOpen', false,
 							  'column_rendering', column_rendering,
 							  'column_order', column_order);
 			});
@@ -250,6 +250,7 @@ define(['haml!haml/columnEdit',
 
 		goClick: function () {
 			this.renderColumn();
+			this.destroy();
 		},
 
 		featureChange: function () {
@@ -328,11 +329,14 @@ define(['haml!haml/columnEdit',
 				title: 'Create Column',
 				width: '500', // TODO make dynamic
 				position: { my: "top", at: "top+70", of: window },
+				close: this.destroy
+				/*
 				close: function () {
 					self.cursor.update(function (state) {
 						return _.assoc(state, 'columnEditOpen', false);
 					});
 				}
+				*/
 			});
 		},
 

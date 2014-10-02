@@ -1,13 +1,14 @@
 %div{class:'sheetWrap'}
   %div{class:'header'}
-    %label{class:'cohortAnchor'} Cohort:
-    %label{class:'samplesFromAnchor'} Samples from:
-    %label Data Sources:
+    %label{class:'cohortAnchor'} Select samples from cohort
+    %label{class:'samplesFromAnchor'} with values in
+    %label{class:'serversWrap'} Data Servers:
       %input{class:'servers', type:'text', title:'Comma-separated list of data servers, in the form "server:port" or "server" if port is 7222'}
+    %div{style:'clear:both'}
   %table
     %tr
       %td
-        %div{class:'yAxisLabel'} Samples
+        %div{class:'yAxisLabel'}
       %td{class:'body'}
         %div{id:'spreadsheet', class:'spreadsheet'}
           %div{class:'crosshairH crosshair'}

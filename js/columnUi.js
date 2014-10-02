@@ -173,8 +173,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 		render: function (options) {
 			if (this.$el) {
-				// TODO this should be smarter about using the state tree
-				//      and only reRender when needed
 				this.reRender(options);
 			} else {
 				this.firstRender(options);

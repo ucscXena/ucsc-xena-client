@@ -1,24 +1,43 @@
 .sheetWrap {
+	width: 100%;
 	line-height: 1px;
 	display: inline-block;
-	margin-left: 5px;
 	padding-bottom: 100px;
 }
 .sheetWrap>.header {
 	font-size: 0.85em;
-	margin-top: 5px;
+	margin-top: .5em;
 }
-.sheetWrap>.header label {
-	margin-left: 10px;
+.sheetWrap>.header label.cohortAnchor {
+	margin-left: 1em;
+}
+.sheetWrap>.header label.samplesFromAnchor {
+	display: none;
+	margin-left: 0.2em;
+}
+.sheetWrap>.header .select2-container {
+	margin-left: 0.2em;
+}
+.sheetWrap>.header label.serversWrap {
+	float: right;
+	padding-right: 1em;
 }
 .sheetWrap>.header .servers {
+	margin-top: 0;
+	padding-top: 0;
 	font-size: 1em;
-	width: 30em;
+	width: 20em;
 }
 .sheetWrap .yAxisLabel {
-	/*display: none;*/
+	display: none;
+	font-size: 1.1em;
 	transform: rotate(270deg);
-	width: 2em;
+	width: 12em;
+	margin-left: -5em;
+	margin-right: -5em;
+}
+.sheetWrap .body {
+	vertical-align: top;
 }
 .sheetWrap .showLegend {
 	vertical-align: bottom;

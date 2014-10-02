@@ -59,9 +59,11 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 					var shouldPush = false;
 					_.each(paths, function (path, key) {
 						var ni = _.get_in(next, path);
+						/*
 						if (ni !== current[key] && _.isEqual(ni, current[key])) {
 							console.log("isEqual not ===", ni);
 						}
+						*/
 						if (!_.isEqual(ni, current[key])) {
 							shouldPush = true;
 						}
