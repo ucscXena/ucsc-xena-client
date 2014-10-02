@@ -6,6 +6,10 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, tooltip, util, d3, $, select2, _, xenaQuery, Rx) {
 	'use strict';
 
+	function columnExists(uuid, state) {
+		return !!_.get_in(state, ['column_rendering', uuid]);
+	}
+
 	var APPLY = true,
 		STATIC_URL = config.STATIC_URL,
 		menuImg = STATIC_URL + 'heatmap-cavm/images/menu.png',
@@ -123,18 +127,18 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 					'default': ['column_rendering', this.id, 'fieldLabel', 'default']
 				};
 			this.ws = options.ws;
-			this.subs.add(defaultTextInput.create({
+			defaultTextInput.create({
 				$el: this.$columnTitle,
 				state: this.state.refine(titlePath),
 				cursor: options.cursor.refine(titlePath),
 				id: 'title'
-			}));
-			this.subs.add(defaultTextInput.create({
+			});
+			defaultTextInput.create({
 				$el: this.$field,
 				state: this.state.refine(fieldPath),
 				cursor: options.cursor.refine(fieldPath),
 				id: 'field'
-			}));
+			});
 		},
 
 		firstRender: function (options) {
@@ -185,7 +189,10 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.subs = new Rx.CompositeDisposable();
 			this.sheetWrap = options.sheetWrap;
 			this.cursor = options.cursor;
-			this.state = options.state.share();
+			this.state = options.state
+				.takeWhile(_.partial(columnExists, this.id))
+				.finally(this.destroy)
+				.share();
 			this.sparsePad = options.sparsePad;
 			this.headerPlotHeight = options.headerPlotHeight;
 			this.horizontalMargin = options.horizontalMargin.toString() + 'px';

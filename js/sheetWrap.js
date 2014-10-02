@@ -84,9 +84,9 @@ define(['haml!haml/sheetWrap',
 		},
 
 		initCohortsAndSources: function (state, cursor, defaultServers) {
-			this.serversInput = defaultTextInput.create({
+			defaultTextInput.create({
 				$el: this.$servers,
-				state: state.pluck('servers')
+				state: state.pluck('servers') // XXX we never complete this, since it's always on the page
 					.map(function (servers) { return _.fmap(servers, serversToString); }),
 				// fn (from defaultTextInput) is
 				// {user: <string>, default: <string>}
