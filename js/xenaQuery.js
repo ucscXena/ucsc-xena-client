@@ -309,21 +309,27 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		       '                                   :from [:dataset]\n' +
 		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
 		       '                                   :where [:and [:= :field.name field] [:= :dataset.name "common/GB/refgene_good"]]}))))\n' +
-		       '      unpack (fn [field] [#sql/call [:unpack (getfield field) :row] field])\n' +
-		       '      unpackValue (fn [field] [#sql/call [:unpackValue (getfield field) :row] field])\n' +
+		       '      unpack (fn [field] [#sql/call [:unpack (getfield field) :field_gene.row] field])\n' +
+		       '      unpackValue (fn [field] [#sql/call [:unpackValue (getfield field) :field_gene.row] field])\n' +
+		       '      tx (getfield "position")\n' +
+		       '      cds (getfield "position (2)")\n' +
 		       '      name2 (getfield "name2")]\n' +
 		       '  (query {:select [[:gene :name2]\n' +
-		       '                   (unpackValue "strand")\n' +
-		       '                   (unpack "txStart")\n' +
-		       '                   (unpack "cdsStart")\n' +
+		       '                   [:tx.strand :strand]\n' +
+		       '                   [:tx.chromStart :txStart]\n' +
+		       '                   [:cds.chromStart :cdsStart]\n' +
 		       '                   (unpack "exonCount")\n' +
 		       '                   (unpackValue "exonStarts")\n' +
 		       '                   (unpackValue "exonEnds")\n' +
-		       '                   (unpack "cdsEnd")\n' +
-		       '                   (unpack "txEnd")]\n' +
+		       '                   [:cds.chromEnd :cdsEnd]\n' +
+		       '                   [:tx.chromEnd :txEnd]]\n' +
 		       '          :from [:field_gene]\n' +
-		       '          :join [{:table [[[:name :varchar\n' + arrayfmt(genes) + ' ]] :T]} [:= :T.name :field_gene.gene]]\n' +
-		       '          :where [:and [:= :field_gene.field_id name2]]}))';
+		       '          :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ' ]] :T]} [:= :T.name :field_gene.gene]\n' +
+		       '                 [:field_position :tx] [:= :tx.row :field_gene.row]\n' +
+		       '                 [:field_position :cds] [:= :cds.row :field_gene.row]]\n' +
+		       '          :where [:and [:= :field_gene.field_id name2]\n' +
+		       '                       [:= :tx.field_id tx]\n' +
+		       '                       [:= :cds.field_id cds]]}))';
 	}
 
 	// QUERY PREP
