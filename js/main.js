@@ -65,7 +65,7 @@ define(['jquery',
 		sessionStorage.state = JSON.stringify(state);
 	});
 
-	var defaultServers = ['http://tcga1:7223', 'http://localhost:7222'];
+	var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena', 'http://localhost:7222'];
 
 	var childrenStream = new Rx.Subject();
 	model.addStream(childrenStream);
