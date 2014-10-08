@@ -48,19 +48,21 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function parse_server(s) {
 		// XXX should throw or otherwise indicate parse error on no match
-		var tokens = s.match(/^(https?:\/\/)?([^:]+)(:([0-9]+))?$/),
+		var tokens = s.match(/^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/(.*))?$/),
 			host = tokens[2],
 			prod = (host.indexOf('genome-cancer.ucsc.edu') === 0),
 			defproto = prod ? 'https://' : 'http://',
 			proto = tokens[1] || (prod ? 'https://' : 'http://'),
-			defport = (prod ? '433' : '7222'),
+			defport = (prod ? '443' : '7222'),
 			port = tokens[4] || defport,
-			url = proto + host + ':' + port;
+			path = tokens[5] || '',
+			url = proto + host + ':' + port + path;
 
 		return {
 			title: (proto === defproto ? '' : proto) +
 				host +
-				(port === defport ? '' : (':' + port)),
+				(port === defport ? '' : (':' + port)) +
+				path,
 			url: url
 		};
 	}
