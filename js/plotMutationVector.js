@@ -124,8 +124,8 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 		],
 		function (dsID, probes, samples) {
 			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds[1],
-				ds = hostds[2];
+				host = hostds.host,
+				ds = hostds.name;
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));

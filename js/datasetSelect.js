@@ -56,7 +56,7 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 			this.$el = this.$anchor.find('.select2-container.dataset');
 
 			if (state) {
-				this.$el.select2('val', state);
+				this.$el.select2('val', encodeURIComponent(state));
 			}
 		},
 
@@ -94,7 +94,7 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 
 			// when DOM value changes, update state tree
 			this.subs.add(this.$anchor.onAsObservable('change', '.dataset')
-				.pluck('val').subscribe(function (val) {
+				.pluck('val').map(decodeURIComponent).subscribe(function (val) {
 					options.cursor.update(_.partial(setState, val));
 				}));
 		}

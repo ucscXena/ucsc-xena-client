@@ -351,8 +351,8 @@ define(['underscore_ext',
 		],
 		function (dsID, probes, samples) {
 			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds[1],
-				ds = hostds[2];
+				host = hostds.host,
+				ds = hostds.name;
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
@@ -373,8 +373,8 @@ define(['underscore_ext',
 		],
 		function (dsID, probes, dataType, samples) {
 			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds[1],
-				ds = hostds[2];
+				host = hostds.host,
+				ds = hostds.name;
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_probes_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexProbeGeneResponse, samples), xenaQuery.json_resp));
@@ -396,8 +396,8 @@ define(['underscore_ext',
 		// Need a better way than ifChanged of checking for changes.
 		function (dsID, probes, samples) {
 			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds[1],
-				ds = hostds[2];
+				host = hostds.host,
+				ds = hostds.name;
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
@@ -421,8 +421,8 @@ define(['underscore_ext',
 		],
 		function (dsID, fields, dataType, samples) {
 			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds[1],
-				ds = hostds[2];
+				host = hostds.host,
+				ds = hostds.name;
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_string(ds, samples, fields)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexGeneResponse, fields, samples), xenaQuery.json_resp));

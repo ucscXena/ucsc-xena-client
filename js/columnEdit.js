@@ -289,7 +289,7 @@ define(['haml!haml/columnEdit',
 		},
 
 		datasetChange: function () {
-			var dsID = this.$dataset.select2('val');
+			var dsID = decodeURIComponent(this.$dataset.select2('val'));
 			this.state.dsID = dsID;
 			this.reRender();
 		},

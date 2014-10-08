@@ -42,9 +42,8 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		return (cohort === null_cohort) ? 'nil' : quote(cohort);
 	}
 
-	// XXX deprecate this
 	function parse_host(dsID) {
-		return dsID.match(/([^\/]*\/\/[^\/]*)\/(.*)/);
+		return JSON.parse(dsID);
 	}
 
 	function parse_server(s) {
@@ -98,7 +97,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			// XXX note that we're case sensitive on raw metadata
 			ds = _.extend(text, _.dissoc(ds, 'TEXT'));
 			return {
-				dsID: host + '/' + ds.name,
+				dsID: JSON.stringify({host: host, name: ds.name}),
 				title: ds.label || ds.name,
 				type: ds.type,
 				probemap: ds.probemap,
@@ -359,8 +358,8 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function dataset_field_examples(dsID) {
 		var hostds = parse_host(dsID),
-			host = hostds[1],
-			ds = hostds[2];
+			host = hostds.host,
+			ds = hostds.name;
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_field_examples_string(ds))
 		).map(json_resp);
@@ -368,8 +367,8 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	function feature_list(dsID) {
 		var hostds = parse_host(dsID),
-			host = hostds[1],
-			ds = hostds[2];
+			host = hostds.host,
+			ds = hostds.name;
 		return Rx.DOM.Request.ajax(
 			xena_post(host, feature_list_query(ds))
 		).map(_.compose(indexFeatures, json_resp));
@@ -380,8 +379,8 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			return Rx.Observable.return([]);
 		}
 		var hostds = parse_host(dsID),
-			host = hostds[1],
-			ds = hostds[2];
+			host = hostds.host,
+			ds = hostds.name;
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_samples_query(ds))
 		).map(json_resp);
