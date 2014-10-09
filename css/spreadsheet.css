@@ -2,7 +2,10 @@
 	position: relative;
 	display: inline-block;
 	word-wrap: nowrap;
-	border-bottom: solid 5px #eeeeee;
+	border-bottom: solid 3px transparent;
+}
+.spreadsheet:hover {
+	border-bottom: solid 3px #909090;
 }
 .spreadsheet .ui-resizable-s {
 	cursor: ns-resize;
@@ -11,8 +14,11 @@
 	vertical-align: top;
 	display: inline-block;
 }
-.spreadsheet-column:last-child {
-	border-right: solid 5px #eeeeee;
+.spreadsheet-column {
+	border-right: solid 3px transparent;
+}
+.spreadsheet-column:hover {
+	border-right: solid 3px #909090;
 }
 .spreadsheet-column .ui-resizable-e {
 	cursor: ew-resize;

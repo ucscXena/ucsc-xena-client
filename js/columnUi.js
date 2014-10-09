@@ -12,6 +12,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 	var APPLY = true,
 		STATIC_URL = config.STATIC_URL,
+		moveImg = STATIC_URL + 'heatmap-cavm/images/moveHorizontal.png',
 		menuImg = STATIC_URL + 'heatmap-cavm/images/menu.png',
 		each = _.each,
 		filter = _.filter,
@@ -117,6 +118,10 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			});
 		},
 
+		setWidth: function (width) {
+			this.$moveHandle.width(width - this.$more.width() - 10);
+		},
+
 		reRender: function (options) {
 			var titlePath = {
 					'user': ['column_rendering', this.id, 'columnLabel', 'user'],
@@ -145,10 +150,11 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			var self = this,
 				$anchor = $(options.ws.el);
 			this.sheetWrap = options.sheetWrap;
+			this.ws = options.ws;
 			this.$el = $(template({
 				features: undefined,
-				menuImg: menuImg,
-				debugId: this.id
+				moveImg: moveImg,
+				menuImg: menuImg
 			}));
 			$anchor.append(this.$el);
 
@@ -159,8 +165,9 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el.find('.headerPlot').height(this.headerPlotHeight);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'colorBarLabelRow', 'colorBarLabel', 'colorBarEllipsis'];
+			this.cache = ['moveHandle', 'more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'colorBarLabelRow', 'colorBarLabel', 'colorBarEllipsis'];
 			_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
+
 			this.columnMenu = columnMenu.create(this.id, {
 				anchor: this.$more,
 				columnUi: this,
@@ -171,6 +178,14 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			});
 			this.$el // TODO use rx handlers?
 				.on('mouseenter mouseleave', this.mouseenterLeave);
+
+			setTimeout(function () {
+				self.setWidth(options.ws.column.width);
+			}, 500);
+			this.subs.add(this.state.refine({ 'width': ['column_rendering', this.id, 'width'] })
+				.subscribe(function (s) {
+					self.setWidth(s.width);
+				}));
 
 			this.reRender(options);
 		},
