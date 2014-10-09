@@ -178,11 +178,31 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function dataset_field_examples_string(dataset) {
-		return '(query {:select [:field.name] ' +
-			   '        :from [:dataset] ' +
-		       '        :join [:field [:= :dataset.id :dataset_id]] ' +
-		       '        :where [:= :dataset.name ' + quote(dataset) + '] ' +
-               '        :limit 2})';
+		return '(query {:select [:field.name]\n' +
+		       '        :from [:dataset]\n' +
+		       '        :join [:field [:= :dataset.id :dataset_id]]\n' +
+		       '        :where [:= :dataset.name ' + quote(dataset) + ']\n' +
+		       '        :limit 2})';
+	}
+
+	function field_bounds_string(dataset, fields) {
+		return '(let [dataset ' + quote(dataset) + '\n' +
+		       '      fields ' + arrayfmt(fields) + '\n' +
+		       '      rows (- (:rows (car (query {:select [:rows] :from [:dataset]\n' +
+		       '                                  :where [:= :dataset.name dataset]}))) 1)\n' +
+		       '      field_ids (map\n' +
+		       '                  :id\n' +
+		       '                  (query {:select [:field.id] :from [:field]\n' +
+		       '                          :join [:dataset [:= :dataset.id :dataset_id]]\n' +
+		       '                          :where [:and\n' +
+		       '                                  [:= :dataset.name dataset]\n' +
+		       '                                  [:in :field.name fields]]}))\n' +
+		       '      bounds (fn [id]\n' +
+		       '                 (let [c #sql/call [:unpack id :x]]\n' +
+		       '                   (car (query {:select [[#sql/call [:max c] :max] [#sql/call [:min c] :min]]\n' +
+		       '                                :from [#sql/call [:system_range 0 rows]]\n' +
+		       '                                :where [:not [:=  c "NaN"]]}))))]\n' +
+		       '      (map (fn [x y] (assoc y :field x)) fields (map bounds field_ids)))';
 	}
 
 	function dataset_gene_probes_string(dataset, samples, gene) {
@@ -424,6 +444,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		dataset_probe_string: dataset_probe_string,
 		sparse_data_string: sparse_data_string,
 		refGene_exon_string: refGene_exon_string,
+		field_bounds_string: field_bounds_string,
 
 		// query prep:
 		dataset_list: dataset_list,

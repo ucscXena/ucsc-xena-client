@@ -74,7 +74,7 @@ define(["lib/d3",
 				return 'codedLess';
 			}
 		}
-		if (column.min && column.max) {
+		if (column.dataType !== "clinicalMatrix" && column.min && column.max) {
 			return 'scaled';
 		}
 		return 'minMax';

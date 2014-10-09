@@ -332,6 +332,12 @@ define(['underscore_ext',
 		}));
 	}
 
+	function indexBounds(bounds) {
+		return _.object(_.map(bounds, function (row) {
+			return [row.field, row];
+		}));
+	}
+
 	// Where do we get the URL? XXX
 	//    URL is associated with the dataset, per-sample.
 	//    Have to parse the URL to get the server??
@@ -407,6 +413,9 @@ define(['underscore_ext',
 				}),
 				codes: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.codes_string(ds, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(indexCodes);
+				}),
+				bounds: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.field_bounds_string(ds, probes)), function (r) {
+					return Rx.DOM.Request.ajax(r).select(_.compose(indexBounds, xenaQuery.json_resp));
 				})
 			};
 		}
@@ -550,8 +559,8 @@ define(['underscore_ext',
 		var c,
 			ellipsis = '',
 			align = 'center',
+			labels = [column.min, (column.max + column.min) / 2, column.max],
 			colors = [].concat(column.colors),
-			labels = [column.min, 0, column.max],
 			categoryLength = categoryBreak;
 		if (data.length === 0) { // no features to draw
 			return;
@@ -572,8 +581,7 @@ define(['underscore_ext',
 				}
 				align = 'left';
 			} else { // float
-				_.identity(); // shut up jslint
-				// TODO need min and max of full dataset from server
+				colors = _.map(labels, color_scale[0]);
 			}
 		}
 		columnUi.drawLegend(colors, labels, align, ellipsis);
@@ -596,17 +604,20 @@ define(['underscore_ext',
 				features = data.features || {},
 				codes = data.codes || {},
 				metadata = data.metadata || {},
+				bounds = data.bounds || {},
 				columnUi,
+				fields = data.req.probes || ws.column.fields, // prefer field list from server
+				// XXX note that field min & max only apply to the first field. This is a hack
+				// around the 1-field-per-column design for clinical matrices.
 				defaults = {
-					min: (metadata.min === undefined) ? -1 : metadata.min,
-					max: (metadata.max === undefined) ? 1 :metadata.max,
+					min: (_.has(bounds, fields[0]) && bounds[fields[0]].min) || metadata.min || -1,
+					max: (_.has(bounds, fields[0]) && bounds[fields[0]].max) || metadata.max || -1,
 					colors: default_colors(ws.column.dataType === "clinicalMatrix" ?
 										   "phenotype" :
 										   metadata.dataSubType),
 					colnormalization: metadata.colnormalization
 				},
 				column = _.extend(defaults, ws.column),
-				fields = data.req.probes || column.fields, // prefer field list from server
 				mean = _.get_in(data, ["req", "mean"]),
 				transform = (column.colnormalization && mean && _.partial(subbykey, mean())) || second,
 				vg,
