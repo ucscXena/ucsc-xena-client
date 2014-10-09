@@ -366,6 +366,15 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		).map(json_resp);
 	}
 
+	function dataset_probe_values(dsID, samples, probes) {
+		var hostds = parse_host(dsID),
+			host = hostds[1],
+			ds = hostds[2];
+		return Rx.DOM.Request.ajax(
+			xena_post(host, dataset_probe_string(ds, samples, probes))
+		).map(json_resp);
+	}
+
 	function feature_list(dsID) {
 		var hostds = parse_host(dsID),
 			host = hostds[1],
@@ -428,6 +437,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		dataset_list: dataset_list,
 		feature_list: feature_list,
 		dataset_field_examples: dataset_field_examples,
+		dataset_probe_values: dataset_probe_values,
 		find_dataset: find_dataset,
 		dataset_samples: dataset_samples,
 		all_samples: all_samples,

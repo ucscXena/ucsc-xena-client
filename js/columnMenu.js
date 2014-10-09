@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Menu', 'jquery', 'lib/underscore'
+define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVector', 'Menu', 'jquery', 'lib/underscore'
 	// non-object dependencies
-	], function (template, columnEdit, download, mutationVector, Menu, $, _) {
+	], function (template, columnEdit, download, kmPlot, mutationVector, Menu, $, _) {
 	'use strict';
 
 	var APPLY_BUTTON,
@@ -26,6 +26,13 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 
 			this.duplicateClick = function (ev) {
 				this.duplicateColumn(this.id);
+			};
+
+			this.kmPlotClick = function (ev) {
+				var self = this;
+				this.cursor.update(function (s) {
+					return _.assoc_in(s, ['column_rendering', self.id, 'kmPlot'], { geometry: 'default' });
+				});
 			};
 
 			this.mupitClick = function (ev) {
@@ -95,7 +102,8 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 			};
 
 			this.render = function () {
-				var column = this.columnUi.ws.column;
+				var column = this.columnUi.ws.column,
+					$kmPlot;
 				this.menuRender($(template()));
 				if (column.dataType === 'mutationVector') {
 					this.$el.find('.mupit, .view, .impact, .dna_vaf, .rna_vaf, hr').show();
@@ -106,6 +114,17 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 				} else if (column.dataType === 'geneMatrix' && column.fields.length === 1) {
 					this.$el.find('.view, .detail, .geneAverage, hr').show();
 					this.$el.find('.geneAverage .ui-icon-check').css('opacity', 1);
+				}
+				if (column.fields.length === 1) {
+					$kmPlot = this.$el.find('.kmPlot');
+					$kmPlot.show();
+					if (column.kmPlot) {
+						$kmPlot.css('color', 'grey')
+							.prop('disabled', true);
+					} else {
+						$kmPlot.css('color', 'auto')
+							.prop('disabled', false);
+					}
 				}
 			};
 
@@ -123,7 +142,6 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 				this.menuInitialize(options);
 
 				// bindings
-
 				this.$el // TODO replace with Rx bindings ?
 					.on('click', '.mupit', this.mupitClick)
 					.on('mouseenter', '.view', this.viewMouseenter)
@@ -133,6 +151,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 					.on('click', '.impact', this.impactClick)
 					.on('click', '.dna_vaf', this.dna_vafClick)
 					.on('click', '.rna_vaf', this.rna_vafClick)
+					.on('click', '.kmPlot', this.kmPlotClick)
 					.on('click', '.edit', this.editClick)
 					.on('click', '.duplicate', this.duplicateClick)
 					.on('click', '.download', this.downloadClick)

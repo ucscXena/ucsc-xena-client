@@ -94,6 +94,7 @@ define(['underscore_ext',
 					zoomIndex: ['zoomIndex'],
 					zoomCount: ['zoomCount'],
 					samples: ['samples'],
+					_sources: ['_sources'],
 					column: ['column_rendering', uuid]
 				}, s);
 			});
