@@ -8,21 +8,15 @@
         %table{class: 'kmOpts'}
           %tr
             %td{class: 'tupleLabel'} Event Column:
-            - if (customDropDown) {
-              %td{class: 'eventfeature menu tupleValue'}
-            - } else {
-              %td{class: 'tupleValue'}
-                %select{class: 'eventfeature'}
+            %td{class: 'tupleValue'}
+              %select{class: 'eventfeature'}
           %tr
             %td{class: 'tupleLabel'} Time Column:
-            - if (customDropDown) {
-              %td{class: 'timefeature menu tupleValue'}
-            - } else {
-              %td{class: 'tupleValue'}
-                %select{class: 'timefeature'}
+            %td{class: 'tupleValue'}
+              %select{class: 'timefeature'}
   %div
     %span{class:'featureLabel'}
-    %button{class:'help right'} Help
-    %button{class: 'kmoptsbutton right', style:'margin-right:10px'} Advanced Options
-    %a{class:'wish right', style:'padding-top:5px;padding-right:20px', href:"mailto:genome-cancer@soe.ucsc.edu?subject=I wish the Kaplan-Meier plot would..."} I wish this would ...
-	%div{style:'clear:both'}
+    -#%button{class:'help right'} Help
+    -#%button{class: 'kmoptsbutton right', style:'margin-right:10px'} Advanced Options
+    -#%a{class:'wish right', style:'padding-top:5px;padding-right:20px', href:"mailto:genome-cancer@soe.ucsc.edu?subject=I wish the Kaplan-Meier plot would..."} I wish this would ...
+	-#%div{style:'clear:both'}

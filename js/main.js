@@ -78,6 +78,7 @@ define(['jquery',
 		samplesFrom: ['samplesFrom'],
 		samples: ['samples'],
 		servers: ['servers'],
+		_sources: ['_sources'],
 		column_rendering: ['column_rendering'],
 		column_order: ['column_order'],
 		//columnEditOpen: ['columnEditOpen'],
@@ -188,11 +189,13 @@ define(['jquery',
 		if (sessionStorage && sessionStorage.state) {
 			// XXX error handling?
 			start = JSON.parse(sessionStorage.state);
+			start["_sources"] = [];
 		} else {
 			start = {
 				"samples": [],
 				"samplesFrom": "",
 				"servers": {'default': defaultServers, user: defaultServers},
+				 "_sources": [],
 				"height": HEIGHT,
 				"zoomIndex": 0,
 				"zoomCount": 100,

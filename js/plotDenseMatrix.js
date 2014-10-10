@@ -606,23 +606,21 @@ define(['underscore_ext',
 				metadata = data.metadata || {},
 				bounds = data.bounds || {},
 				columnUi,
-				fields = data.req.probes || ws.column.fields, // prefer field list from server
-				// XXX note that field min & max only apply to the first field. This is a hack
-				// around the 1-field-per-column design for clinical matrices.
-				defaults = {
-					min: (_.has(bounds, fields[0]) && bounds[fields[0]].min) || metadata.min || -1,
-					max: (_.has(bounds, fields[0]) && bounds[fields[0]].max) || metadata.max || -1,
-					colors: default_colors(ws.column.dataType === "clinicalMatrix" ?
-										   "phenotype" :
-										   metadata.dataSubType),
-					colnormalization: metadata.colnormalization
-				},
-				column = _.extend(defaults, ws.column),
+				column = ws.column,
+				fields = data.req.probes || column.fields, // prefer field list from server
 				mean = _.get_in(data, ["req", "mean"]),
 				transform = (column.colnormalization && mean && _.partial(subbykey, mean())) || second,
 				vg,
 				heatmapData,
 				colors;
+
+			column.min = (_.has(bounds, fields[0]) && bounds[fields[0]].min) || metadata.min || -1;
+			column.max = (_.has(bounds, fields[0]) && bounds[fields[0]].max) || metadata.max || -1;
+			column.colors = default_colors(
+				column.dataType === "clinicalMatrix"
+				? "phenotype"
+				: metadata.dataSubType);
+			column.colnormalization = metadata.colnormalization
 
 			if (!local || local.render !== render) { // Test if we own this state
 				local = new Rx.Disposable(function () {
@@ -648,6 +646,7 @@ define(['underscore_ext',
 			heatmapData = dataToHeatmap(sort, data.req.values, fields, transform);
 			if (columnUi && heatmapData.length) {
 				columnUi.plotData = {
+					// TODO we don't need all these parms
 					serverData: data.req.values,
 					heatmapData: heatmapData,
 					column: column,
@@ -671,8 +670,8 @@ define(['underscore_ext',
 			colors = map(fields, function (p, i) {
 				return heatmapColors.range(column, features[p], codes[p], heatmapData[i]);
 			});
+			column.colorFn = colors;
 			drawLegend(column, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryBreak);
-			//drawLegend(column, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryLength);
 			renderHeatmap({
 				vg: vg,
 				height: ws.height,

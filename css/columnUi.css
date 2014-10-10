@@ -22,26 +22,18 @@ table.columnUi td.fullWidth {
 .columnUi .moveHandle {
 	vertical-align: middle;
 	background-color: #eeeeee;
-	width: 100%;
-	height: 12px;
-	margin-top: 4px;
-	margin-bottom: 4px;
+	height: 10px;
+	margin-bottom: 8px;
 	padding-bottom: 4px;
 	display: inline-block;
 	cursor: ew-resize;
 	text-align: center;
 }
-.columnUi .moveHandle .ui-icon {
-	transform: scale(1.5);
-	cursor: ew-resize;
-  	display: inline-block;
-	line-height: normal;
-	vertical-align: top;
-	text-align: center;
+.columnUi .moveHandle img {
+	margin-top: -1px;
 }
 .columnUi .more {
-	vertical-align: middle;
-	margin-top: 3px;
+	vertical-align: top;
 	margin-left: -21px;
 	display: inline-block;
 	line-height: normal;
@@ -69,7 +61,6 @@ table.columnUi td.fullWidth {
 .columnUi .colorBarLabel,
 .columnUi .color {
 	width: 100%;
-	/*text-overflow: ellipsis;*/
 	font-size: 1em;
 	border: none;
 	background-image: none;

@@ -119,6 +119,12 @@ define(['haml!haml/sheetWrap',
 				}).switchLatest().replay(null, 1); // replay for late subscribers
 			this.subs.add(this.sources.connect());
 
+			// store the sources in state, for easy access later
+			this.subs.add(this.sources.subscribe(function (sources) {
+				cursor.update(function (t) {
+					return _.assoc(t, '_sources', Object.create(sources).__proto__);
+				});
+			}));
 		},
 
 		initSamplesFrom: function (state, cursor) {

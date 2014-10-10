@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
+define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'kmPlot', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
 	// non-object dependenciies
-	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, tooltip, util, d3, $, select2, _, xenaQuery, Rx) {
+	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, kmPlot, tooltip, util, d3, $, select2, _, xenaQuery, Rx) {
 	'use strict';
 
 	function columnExists(uuid, state) {
@@ -12,6 +12,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 
 	var APPLY = true,
 		STATIC_URL = config.STATIC_URL,
+		moveImg = STATIC_URL + 'heatmap-cavm/images/moveHorizontal.png',
 		menuImg = STATIC_URL + 'heatmap-cavm/images/menu.png',
 		each = _.each,
 		filter = _.filter,
@@ -41,18 +42,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		*/
 		widgets = {},
 		aWidget;
-	/*
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/cnv.matrix"] = 'Copy number';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/rma.Target190.Probeset.Full"] = 'Gene expression, array';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/NBL_10_RNAseq_log2"] = 'Gene expression, RNAseq';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/mutationGene"] = 'Mutations, gene';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_clinicalMatrix"] = ' ';
-
-	function datasetTitle(dsID, title) {
-		return dsTitles[dsID] || title;
-	}
-	*/
-
 	aWidget = {
 		// this is invoked from columnMenu.js: remove menu function
 		destroy: function () {
@@ -60,6 +49,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el.remove();
 			this.crosshairs.destroy();
 			// TODO clean up subscriptions, subWidgets, like exonRefGene, mutationVector
+			kmPlot.destroy(this.id);
 			delete widgets[this.id];
 			$('.spreadsheet').resize();
 		},
@@ -76,26 +66,6 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				$hoverShow.blur();
 			}
 		},
-
-//		getDefField: function () {
-//			// TODO we should be caching the labels somewhere, maybe in tmp state
-//			var label = this.ws.column.fields.toString(),
-//				defalt;
-//			if (this.ws.dataType === 'clinicalMatrix') {
-//				defalt = xenaQuery.feature_list(this.ws.column.dsID)
-//					.pluck(this.ws.column.fields[0]);
-//			} else {
-//				if (this.ws.column.dataType === 'mutationVector') {
-//					if (this.ws.column.sFeature === 'dnaAf') {
-//						label += ': DNA variant allele freq';
-//					} else if (this.ws.column.sFeature === 'rnaAf') {
-//						label += ': RNA variant allele freq';
-//					}
-//				}
-//				defalt = Rx.Observable.never().startWith(Rx.Scheduler.currentThread, label);
-//			}
-//			return defalt;
-//		},
 
 		drawLegend: function (colors, labels, align, ellipsis, klass) {
 			var label = '';
@@ -115,6 +85,10 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				align: align,
 				klass: klass
 			});
+		},
+
+		setWidth: function (width) {
+			this.$moveHandle.width(width - this.$more.width() - 10);
 		},
 
 		reRender: function (options) {
@@ -145,10 +119,11 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			var self = this,
 				$anchor = $(options.ws.el);
 			this.sheetWrap = options.sheetWrap;
+			this.ws = options.ws;
 			this.$el = $(template({
 				features: undefined,
-				menuImg: menuImg,
-				debugId: this.id
+				moveImg: moveImg,
+				menuImg: menuImg
 			}));
 			$anchor.append(this.$el);
 
@@ -159,8 +134,9 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el.find('.headerPlot').height(this.headerPlotHeight);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'colorBarLabelRow', 'colorBarLabel', 'colorBarEllipsis'];
+			this.cache = ['moveHandle', 'more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'colorBarLabelRow', 'colorBarLabel', 'colorBarEllipsis'];
 			_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
+
 			this.columnMenu = columnMenu.create(this.id, {
 				anchor: this.$more,
 				columnUi: this,
@@ -172,6 +148,14 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el // TODO use rx handlers?
 				.on('mouseenter mouseleave', this.mouseenterLeave);
 
+			setTimeout(function () {
+				self.setWidth(options.ws.column.width);
+			}, 500);
+			this.subs.add(this.state.refine({ 'width': ['column_rendering', this.id, 'width'] })
+				.subscribe(function (s) {
+					self.setWidth(s.width);
+				}));
+
 			this.reRender(options);
 		},
 
@@ -181,6 +165,31 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			} else {
 				this.firstRender(options);
 			}
+		},
+
+		kmPlotVisibility: function () {
+			var myKmState,
+				self = this;
+
+			// when sources change, redraw the datasets,
+			// retaining the selection if it's still an option
+			this.subs.add(this.state.distinctUntilChanged(function (s) {
+				return s.column_rendering[self.id].kmPlot;
+			})
+				.subscribe(function (s) {
+					var kmState = s.column_rendering[self.id].kmPlot;
+					if (myKmState && !kmState) {
+						myKmState = kmState;
+						kmPlot.destroy(self.id);
+					}
+					if (!myKmState && kmState) {
+						myKmState = kmState;
+						kmPlot.show(self.id, {
+							cursor: self.cursor.refine({ 'kmPlot': ['column_rendering', self.id, 'kmPlot'] }),
+							columnUi: self
+						});
+					}
+				}));
 		},
 
 		initialize: function (options) {
@@ -202,11 +211,13 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			}
 			this.crosshairs = crosshairs.create(this.id, { $anchor: this.$samplePlot });
 
-			this.$samplePlot.onAsObservable('click')
+			this.subs.add(this.$samplePlot.onAsObservable('click')
 				.filter(function (ev) {
 					return ev.altKey === true;
 				})
-				.subscribe(tooltip.toggleFreeze); // TODO free subscription
+				.subscribe(tooltip.toggleFreeze));
+
+			this.kmPlotVisibility();
 		}
 	};
 
