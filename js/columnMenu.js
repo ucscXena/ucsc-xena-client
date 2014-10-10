@@ -115,7 +115,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					this.$el.find('.view, .detail, .geneAverage, hr').show();
 					this.$el.find('.geneAverage .ui-icon-check').css('opacity', 1);
 				}
-				if (column.fields.length === 1) {
+				if (column.fields.length === 1 && column.dataType === 'clinicalMatrix') {
 					$kmPlot = this.$el.find('.kmPlot');
 					$kmPlot.show();
 					if (column.kmPlot) {
