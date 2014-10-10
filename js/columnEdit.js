@@ -7,6 +7,7 @@ define(['haml!haml/columnEdit',
 	   'haml!haml/select',
 	   'haml!haml/columnEditAdvanced',
 	   'defer',
+	   'genomicPosition',
 	   'stub',
 	   'lib/select2',
 	   'jquery',
@@ -20,6 +21,7 @@ define(['haml!haml/columnEdit',
 				 selectTemplate,
 				 advancedTemplate,
 				 defer,
+				 genomicPosition,
 				 stub,
 				 select2,
 				 $,
@@ -168,10 +170,10 @@ define(['haml!haml/columnEdit',
 				fields = [this.stateTmp.gene]; // TODO use named text?
 				break;
 			case 'iGenes':
-				fields = this.stateTmp.genes.split(', '); // TODO use named text?
+				fields = this.stateTmp.genes;
 				break;
 			case 'iProbes':
-				fields = this.stateTmp.probes.split(', '); // TODO use named text?
+				fields = this.stateTmp.probes;
 				break;
 			case 'iFeature':
 				fields = [this.stateTmp.feature];
@@ -271,10 +273,11 @@ define(['haml!haml/columnEdit',
 		},
 
 		listBlur: function () {
+			var list = genomicPosition.genesetParse(this.$list.val());
 			if (this.stateTmp.inputMode === 'iGenes') {
-				this.stateTmp.genes = this.$list.val();
+				this.stateTmp.genes = list;
 			} else {
-				this.stateTmp.probes = this.$list.val();
+				this.stateTmp.probes = list;
 			}
 		},
 
