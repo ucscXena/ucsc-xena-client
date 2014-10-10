@@ -110,6 +110,9 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 						return value;
 					}));
 				});
+			if (this.ws.column.dataType === 'clinicalMatrix') {
+				varNames = ['sample'].concat([this.ws.column.fieldLabel.default]);
+			}
 			this.buildTsv(tsvData, varNames);
 		},
 
