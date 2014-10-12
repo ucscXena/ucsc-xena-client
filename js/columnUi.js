@@ -67,7 +67,7 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			}
 		},
 
-		drawLegend: function (colors, labels, align, ellipsis, klass) {
+		drawLegend: function (colors, labels, align, ellipsis, klass, upperBorderIndex) {
 			var label = '';
 			if ($('.columnUi').index(this.$el) === 0) {
 				label = 'Legend';
@@ -85,6 +85,8 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				align: align,
 				klass: klass
 			});
+			$(this.$el.find('.colorTd')[upperBorderIndex]).find('input')
+				.css('border-top', '1px #bbbbbb solid');
 		},
 
 		setWidth: function (width) {

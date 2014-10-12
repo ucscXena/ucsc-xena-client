@@ -355,16 +355,11 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 						rgba + '1)'
 					];
 					labels = ['0%', '50%', '100%'];
-					/*  for the white 'no mutation'
-					labels = ['.  0%', '.  50%', '.  100%'];
-					*/
 					align = 'center';
 				}
-				/* for the white 'no mutation'
 				myColors.unshift('rgb(255,255,255)');
 				labels.unshift('no mutation');
-				*/
-				this.columnUi.drawLegend(myColors, labels, align, '', 'mutationVector');
+				this.columnUi.drawLegend(myColors, labels, align, '', 'mutationVector', 3);
 			},
 
 			render: function () {
