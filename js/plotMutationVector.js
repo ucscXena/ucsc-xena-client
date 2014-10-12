@@ -198,7 +198,8 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 				vg.height(canvasHeight);
 			}
 
-			refGeneData = data.refGene[column.fields[0]];
+			refGeneData = stub.getRefGene(column.fields[0]);
+			//refGeneData = data.refGene[column.fields[0]];
 			if (refGeneData) {
 				exonRefGene.show(el.id, {
 					data: { gene: refGeneData }, // data.refGene,

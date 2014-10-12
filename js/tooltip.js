@@ -54,7 +54,7 @@ define(["haml!haml/tooltip", "haml!haml/tooltipClose", "jquery", "defer", "error
 			show();
 			position(t.el, t.my, t.at);
 			$tooltip.html(template({
-				sampleID: t.sampleID,
+				sampleID: t.sampleID || null,
 				rows: t.rows,
 			}));
 			if (t.valWidth) {
