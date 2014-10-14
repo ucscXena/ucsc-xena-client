@@ -11,7 +11,6 @@ define(['jquery',
 		'columnUi',
 		'uuid',
 		'cursor',
-		'stub',
 		'plotDenseMatrix',
 		'plotMutationVector',
 		'lib/jquery-ui',
@@ -25,8 +24,7 @@ define(['jquery',
 			multi,
 			columnUi,
 			uuid,
-			cursor,
-			stub) {
+			cursor) {
 
 	'use strict';
 

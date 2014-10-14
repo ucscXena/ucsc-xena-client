@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery', 'lib/underscore'
+define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery', 'lib/underscore'
 	// non-object dependencies
-	], function (stub, crosshairs, linkTo, tooltip, util, vgcanvas, d3, $, _) {
+	], function (crosshairs, linkTo, tooltip, util, vgcanvas, d3, $, _) {
 	'use strict';
 
 	var impactMax = 4,
@@ -411,16 +411,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 		w.id = id;
 		w.initialize(options);
 		return w;
-	}
-
-	function getRefGeneInfo(gene) {
-		// TODO Hack until we are pulling refGene from the server and combining
-		//      its data with mutation data so the refGene strand and txStart
-		//      can be included in the data received by cmpValue.
-		if (refGeneInfo[gene] === undefined) {
-			refGeneInfo[gene] = stub.getRefGene(gene);
-		}
-		return refGeneInfo[gene];
 	}
 
 	return {
