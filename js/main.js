@@ -62,7 +62,7 @@ define(['jquery',
 	unload.combineLatest(model.state, function (_e, state) {
 		return _.pick(state, keysNot_(state));
 	}).subscribe(function (state) {
-		sessionStorage.state = JSON.stringify(state);
+		sessionStorage.xena = JSON.stringify(state);
 	});
 
 	var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena', 'http://localhost:7222'];
@@ -186,9 +186,9 @@ define(['jquery',
 	});
 	$(document).ready(function () {
 		var start;
-		if (sessionStorage && sessionStorage.state) {
+		if (sessionStorage && sessionStorage.xena) {
 			// XXX error handling?
-			start = JSON.parse(sessionStorage.state);
+			start = JSON.parse(sessionStorage.xena);
 			start["_sources"] = [];
 		} else {
 			start = {
