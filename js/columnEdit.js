@@ -33,6 +33,7 @@ define(['haml!haml/columnEdit',
 			mutationVector: ['mutationVector'],
 			clinicalMatrix: ['clinicalMatrix'],
 			genomicMatrix: ['probeMatrix'],
+			null: ['probeMatrix'],
 			genomicMatrixProbemap: ['geneMatrix', 'probeMatrix', 'geneProbesMatrix'],
 		},
 		dataTypeByInput = {
