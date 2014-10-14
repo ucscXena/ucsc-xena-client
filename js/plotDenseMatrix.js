@@ -355,10 +355,7 @@ define(['underscore_ext',
 			['column', 'fields'],
 			['samples']
 		],
-		function (dsID, probes, samples) {
-			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds.host,
-				ds = hostds.name;
+		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
@@ -367,7 +364,7 @@ define(['underscore_ext',
 					return Rx.DOM.Request.ajax(r).select(xenaQuery.json_resp);
 				})
 			};
-		}
+		})
 	);
 
 	fetch_gene_probes = ifChanged(
@@ -377,10 +374,7 @@ define(['underscore_ext',
 			['column', 'dataType'],
 			['samples']
 		],
-		function (dsID, probes, dataType, samples) {
-			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds.host,
-				ds = hostds.name;
+		xenaQuery.dsID_fn(function (host, ds, probes, dataType, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_probes_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexProbeGeneResponse, samples), xenaQuery.json_resp));
@@ -389,7 +383,7 @@ define(['underscore_ext',
 					return Rx.DOM.Request.ajax(r).select(xenaQuery.json_resp);
 				})
 			};
-		}
+		})
 	);
 
 	fetch_feature = ifChanged(
@@ -400,10 +394,7 @@ define(['underscore_ext',
 		],
 		// XXX Note that we re-fetch metadata even if the probe set hasn't changed.
 		// Need a better way than ifChanged of checking for changes.
-		function (dsID, probes, samples) {
-			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds.host,
-				ds = hostds.name;
+		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
@@ -418,7 +409,7 @@ define(['underscore_ext',
 					return Rx.DOM.Request.ajax(r).select(_.compose(indexBounds, xenaQuery.json_resp));
 				})
 			};
-		}
+		})
 	);
 
 	fetch_gene = ifChanged(
@@ -428,10 +419,7 @@ define(['underscore_ext',
 			['column', 'dataType'],
 			['samples']
 		],
-		function (dsID, fields, dataType, samples) {
-			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds.host,
-				ds = hostds.name;
+		xenaQuery.dsID_fn(function (host, ds, fields, dataType, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_string(ds, samples, fields)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexGeneResponse, fields, samples), xenaQuery.json_resp));
@@ -440,7 +428,7 @@ define(['underscore_ext',
 					return Rx.DOM.Request.ajax(r).select(xenaQuery.json_resp);
 				})
 			};
-		}
+		})
 	);
 
 	heatmapColors.range.add("minMax", heatmapColors.float);
@@ -620,7 +608,7 @@ define(['underscore_ext',
 				column.dataType === "clinicalMatrix"
 				? "phenotype"
 				: metadata.dataSubType);
-			column.colnormalization = metadata.colnormalization
+			column.colnormalization = metadata.colnormalization;
 
 			if (!local || local.render !== render) { // Test if we own this state
 				local = new Rx.Disposable(function () {

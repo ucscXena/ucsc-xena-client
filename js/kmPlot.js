@@ -27,6 +27,7 @@ define([ "lib/d3",
 		isNull = _.isNull,
 		range = _.range,
 		keys = _.keys,
+		dataset_probe_values = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values),
 		MAX = 30, // max number of categories
 		kmWidget,
 		widgets = {};
@@ -78,7 +79,7 @@ define([ "lib/d3",
 			this.kmScreen.removeClass('notify');
 
 			// retrieve the values for each of the event features
-			this.subs.add(xenaQuery.dataset_probe_values(eventDsID, samples, probes)
+			this.subs.add(dataset_probe_values(eventDsID, samples, probes)
 				.subscribe(function (v) {
 					var ws = self.columnUi.ws,
 						field = ws.column.fields[0],

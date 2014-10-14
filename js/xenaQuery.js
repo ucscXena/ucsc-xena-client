@@ -43,7 +43,16 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function parse_host(dsID) {
-		return JSON.parse(dsID);
+		var host_name = JSON.parse(dsID);
+		return [host_name.host, host_name.name];
+	}
+
+	function dsID_fn(fn) {
+		return function (dsID) {
+			var args = Array.prototype.slice.call(arguments, 1),
+				p = parse_host(dsID);
+			return fn.apply(this, p.concat(args));
+		};
 	}
 
 	function parse_server(s) {
@@ -378,40 +387,25 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		});
 	}
 
-	function dataset_field_examples(dsID) {
-		var hostds = parse_host(dsID),
-			host = hostds.host,
-			ds = hostds.name;
+	function dataset_field_examples(host, ds) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_field_examples_string(ds))
 		).map(json_resp);
 	}
 
-	function dataset_probe_values(dsID, samples, probes) {
-		var hostds = parse_host(dsID),
-			host = hostds.host,
-			ds = hostds.name;
+	function dataset_probe_values(host, ds, samples, probes) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_probe_string(ds, samples, probes))
 		).map(json_resp);
 	}
 
-	function feature_list(dsID) {
-		var hostds = parse_host(dsID),
-			host = hostds.host,
-			ds = hostds.name;
+	function feature_list(host, ds) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, feature_list_query(ds))
 		).map(_.compose(indexFeatures, json_resp));
 	}
 
-	function dataset_samples(dsID) {
-		if (dsID === '') { // TODO shouldn't need to handle this
-			return Rx.Observable.return([]);
-		}
-		var hostds = parse_host(dsID),
-			host = hostds.host,
-			ds = hostds.name;
+	function dataset_samples(host, ds) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_samples_query(ds))
 		).map(json_resp);
@@ -436,6 +430,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 	return {
 		// helpers:
+		dsID_fn: dsID_fn,
 		parse_host: parse_host,
 		server_title: server_title,
 		server_url: server_url,

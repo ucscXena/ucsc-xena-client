@@ -42,6 +42,8 @@ define(['haml!haml/columnEdit',
 			iGenes: ['geneMatrix', 'geneProbesMatrix'],
 			iProbes: ['probeMatrix']
 		},
+		feature_list = xenaQuery.dsID_fn(xenaQuery.feature_list),
+		dataset_field_examples = xenaQuery.dsID_fn(xenaQuery.dataset_field_examples),
 		map = _.map,
 		widgets = {},
 		aWidget;
@@ -113,7 +115,7 @@ define(['haml!haml/columnEdit',
 			} else if (this.stateTmp.inputMode === 'iProbes') {
 				this.$listLabel.text('Identifiers:');
 				this.$list.val(this.stateTmp.probes);
-				xenaQuery.dataset_field_examples(this.state.dsID)
+				dataset_field_examples(this.state.dsID)
 					.subscribe(function (probes) {
 						self.renderProbeEg(probes);
 					});
@@ -158,7 +160,7 @@ define(['haml!haml/columnEdit',
 		renderSelect: function () {
 			var self = this;
 			if (this.metadata === 'clinicalMatrix') {
-				xenaQuery.feature_list(this.state.dsID).subscribe(function (features) {
+				feature_list(this.state.dsID).subscribe(function (features) {
 					self.renderFeatures(features);
 				});
 			}

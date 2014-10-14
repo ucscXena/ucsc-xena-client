@@ -5,7 +5,8 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 	], function (template, xenaQuery, _, $, Rx) {
 	'use strict';
 
-	var widgets = [],
+	var dataset_samples = xenaQuery.dsID_fn(xenaQuery.dataset_samples),
+	widgets = [],
 		aWidget;
 
 	function setState(samplesFrom, state) {
@@ -80,7 +81,7 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 			// retrieve all samples in this cohort, from all servers
 			samples = state.map(function (state) {
 				if (state.samplesFrom) {
-					return xenaQuery.dataset_samples(state.samplesFrom);
+					return dataset_samples(state.samplesFrom);
 				} else {
 					return Rx.Observable.zipArray(_.map(state.servers.user, function (s) {
 						return xenaQuery.all_samples(s, state.cohort);
