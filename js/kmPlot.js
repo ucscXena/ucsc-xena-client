@@ -33,7 +33,7 @@ define([ "lib/d3",
 		widgets = {};
 
 	function notNull(x) {
-		return !isNull(x);
+		return !(isNull(x) || x === 'NaN' || x === undefined);
 	}
 
 	function attr(obj, a) {
@@ -54,6 +54,15 @@ define([ "lib/d3",
 			});
 		},
 
+		regroup: function (values) {
+			var vals = _.without(values, null).sort(function (a, b) { return a - b; });
+			return [ // XXX only works for a regroup count of 3
+				vals[Math.round(vals.length / 3)],
+				vals[Math.round(2 * vals.length / 3)],
+				666 // a dummy just to make the array have 3 elements
+			];
+		},
+
 		render: function (eventDsID, survival) {
 			var self = this,
 				data = [],
@@ -62,7 +71,7 @@ define([ "lib/d3",
 				patient_fid = survival.patient,
 				ws = this.columnUi.ws,
 				field = ws.column.fields[0],
-				all = false, // XXX make this a checkbox, for whole-cohort display
+				all = false, // XXX make this a checkbox, for whole-cohort display grouping, not implemented for regrouping
 				samples = ws.samples,
 				probes = [event_fid, ttevent_fid, patient_fid];
 
@@ -83,60 +92,101 @@ define([ "lib/d3",
 				.subscribe(function (v) {
 					var ws = self.columnUi.ws,
 						field = ws.column.fields[0],
-						allVals = [_.object(samples, v[0]), _.object(samples, v[1]), ws.data.req.values[field]],
-						patient = { values: _.object(samples, v[2]) },
 						ev = { values: {} },
 						ttev = { values: {} },
 						feat = {
 							codes: ws.data.codes[field],
 							metadata: {
+								name: ws.data.features[field].name,
 								valuetype: ws.data.features[field].valuetype,
 								longtitle: ws.data.features[field].longtitle
 							},
 							values: {}
 						},
+						patient = { values: _.object(samples, v[2]) },
+						allVals = [_.object(samples, v[0]), _.object(samples, v[1]), ws.data.req.values[field]],
 						definedVals = [ev.values, ttev.values, feat.values],
 						isfloat = feat.metadata.valuetype === 'float',
-						values = all ? null : _.values(feat.values),
-						// Group by unique values. Coded feature values are always indexes 0..N-1.
-						groups = all ? ['All samples'] : (isfloat ? filter(uniq(values), notNull) : range(feat.codes.length)),
+						values,
+						groups,
+						regroup,
 						ttev_fn,
 						ev_fn,
 						patient_fn,
 						min_t;
+
 					_.each(allVals, function (vals, i) {
 						_.each(vals, function (val, key) {
-							if (val !== "NaN" && val !== undefined) {
+							if (notNull(val)) {
 								definedVals[i][key] = val;
 							}
 						});
 					});
+
+					values = all ? null : _.values(feat.values);
+					// Group by unique values. Coded feature values are always indexes 0..N-1.
+					groups = all ? ['All samples'] : (isfloat ? filter(uniq(values), notNull) : range(feat.codes.length));
+					regroup = (isfloat && groups.length > 10);
 					ttev_fn    = bind(attr, null, ttev.values);    // fn sample -> ttev
 					ev_fn      = bind(attr, null, ev.values);      // fn sample -> ev
 					patient_fn = bind(attr, null, patient.values); // fn sample -> patient
 					min_t = d3.min(_.values(ttev.values));
 
+					if (regroup) {
+						groups = self.regroup(values);
+					} else if (feat.metadata.name === 'subgroup') {
+						groups.shift(); // remove the 'neither' category
+					}
+
 					each(groups.slice(0, MAX), function (group, i) {
 						/*jslint eqeq: true */
-						var samples = all ? _.keys(ttev.values) : filter(keys(feat.values), function (s) { return feat.values[s] === group; }), // All samples in category 
+						var label,
+							colorGroup,
+							samples = all ? _.keys(ttev.values) : filter(keys(feat.values), function (s) {
+								if (regroup) {
+									return (i === 0 && feat.values[s] < groups[0])
+										|| (i === 2 && feat.values[s] > groups[1])
+										|| (i === 1 && feat.values[s] >= groups[0] && feat.values[s] <= groups[1]);
+								} else {
+									return feat.values[s] === group;
+								}
+							}),
 							uniq_samp = uniq(filter(samples, function (s) { return ttev_fn(s) != null; }), false, patient_fn),
 							res = km.compute(map(uniq_samp, ttev_fn), map(uniq_samp, ev_fn));
 
 						if (res.length > 0) {
-							data.push({name: (isfloat ? group : feat.codes[group]) + " (n=" + uniq_samp.length + ")", group: group, values: res});
+							if (regroup) {
+								if (i === 0) {
+									label = '< ' + groups[0];
+									colorGroup = d3.min(values);
+								} else if (i === 2) {
+									label = '> ' + groups[1];
+									colorGroup = d3.max(values);
+								} else {
+									label = groups[0] + ' to ' + groups[1];
+									colorGroup = (d3.min(values) + d3.max(values)) / 2;
+								}
+							} else {
+								label = (isfloat ? group : feat.codes[group]);
+							}
+							data.push({
+								name: label + " (n=" + uniq_samp.length + ")",
+								group: (regroup ? colorGroup : group),
+								values: res
+							});
 						}
 					});
 
 					self.featureLabel.text('Grouped by: '
 						+ (all ? 'All samples' : feat.metadata.longtitle)
-						+ (groups.length > MAX ? " (Limited to " + MAX + " categories)" : ""));
+						+ (groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : ""));
 					self.renderNow(data, feat);
 				}));
 		},
 
 		setupSvg: function () {
 			var margin = {top: 20, right: 200, bottom: 30, left: 50},
-				width = 1050 - margin.left - margin.right,
+				width = 845 - margin.left - margin.right,
 				height = 500 - margin.top - margin.bottom,
 
 				x = d3.scale.linear().range([0, width]),
@@ -226,10 +276,10 @@ define([ "lib/d3",
 
 			update = function (s) {
 				var d = this.getAttribute('d');
+				// TODO d is always null
 				d3.select(this).transition()
 					.duration(300)
 					.attrTween("d", pathTween(d))
-					//.style("stroke", color(d.group));
 					.style("stroke", function (d) { return color(d.group); });
 			};
 
@@ -243,11 +293,10 @@ define([ "lib/d3",
 
 			sgg = subgroup.enter().append("g").attr("class", "subgroup");
 
-			//subgroup.style("stroke", color(d.group));
 			subgroup.style("stroke", function (d) { return color(d.group); });
 
-			sgg.append("path").attr("class", "outline");
-			sgg.append("path").attr("class", "line");
+			sgg.append("path").attr("class", "outline").attr("d", "M0,0");
+			sgg.append("path").attr("class", "line").attr("d", "M0,0");
 			sgg.append("text")
 				.attr("x", 3)
 				.attr("dy", ".35em")

@@ -494,13 +494,15 @@ define(['underscore_ext',
 		} else if (val !== undefined) {
 			val = prec(val);
 		}
-		rows.push({ label: label, val: (val === undefined) ? 'N/A' : val });
-		if (column.dataType === 'clinicalMatrix') {
-			valWidth = '25em';
-		} else {
-			//rows.push({ label: 'Column mean', val: prec(meannan(serverData[field])) });
-			rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
-			valWidth = '15em';
+		if (val !== undefined) {
+			rows.push({ label: label, val: val });
+			if (column.dataType === 'clinicalMatrix') {
+				valWidth = '25em';
+			} else {
+				//rows.push({ label: 'Column mean', val: prec(meannan(serverData[field])) });
+				rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
+				valWidth = '15em';
+			}
 		}
 
 		tooltip.mousing({
