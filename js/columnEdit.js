@@ -263,7 +263,18 @@ define(['haml!haml/columnEdit',
 			this.$goRow.show();
 		},
 
-		singleListKeyup: function (ev) {
+		singleKeyup: function (ev) {
+			if ($(ev.target).val() === "") {
+				this.$goRow.hide();
+			} else if (ev.keyCode === 13) { // return key pressed
+				this.singleBlur();
+				this.goClick();
+			} else {
+				this.$goRow.show();
+			}
+		},
+
+		listKeyup: function (ev) {
 			if ($(ev.target).val() === "") {
 				this.$goRow.hide();
 			} else {
@@ -366,7 +377,8 @@ define(['haml!haml/columnEdit',
 				.on('click', '.inputMode', self.inputModeClick)
 				.on('blur', '.list', self.listBlur)
 				.on('blur', '.single', self.singleBlur)
-				.on('keyup', '.single, .list', self.singleListKeyup)
+				.on('keyup', '.single', self.singleKeyup)
+				.on('keyup', '.list', self.listKeyup)
 				.on('change', '.feature', self.featureChange)
 				.on('click', '.go', self.goClick);
 			if (self.columnUi) {
