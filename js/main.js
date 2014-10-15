@@ -146,7 +146,7 @@ define(['jquery',
 
 	var debugstream = new Rx.Subject();
 	model.addStream(debugstream);
-	var debugtext = $('<textarea  id="columnStub" rows=20 cols=50></textarea>');
+	var debugtext = $('<textarea  id="columnStub" rows=20 cols=130></textarea>');
 	debugtext.hide();
 	$debug.append(debugtext);
 
