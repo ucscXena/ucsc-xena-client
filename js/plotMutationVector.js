@@ -1,7 +1,7 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
-define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'crosshairs', 'heatmapColors', 'mutationVector', 'sheetWrap', 'stub', 'vgcanvas', 'xenaQuery', 'rx.jquery'
-	], function (_, $, Rx, exonRefGene, widgets, crosshairs, heatmapColors, mutationVector, sheetWrap, stub, vgcanvas, xenaQuery) {
+define(['underscore_ext', 'jquery', 'rx', 'refGeneExons', 'columnWidgets', 'crosshairs', 'heatmapColors', 'mutationVector', 'sheetWrap', 'stub', 'vgcanvas', 'xenaQuery', 'rx.jquery'
+	], function (_, $, Rx, refGeneExons, widgets, crosshairs, heatmapColors, mutationVector, sheetWrap, stub, vgcanvas, xenaQuery) {
 
 	"use strict";
 
@@ -199,7 +199,7 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 			refGeneData = stub.getRefGene(column.fields[0]);
 			//refGeneData = data.refGene[column.fields[0]];
 			if (refGeneData) {
-				exonRefGene.show(el.id, {
+				refGeneExons.show(el.id, {
 					data: { gene: refGeneData }, // data.refGene,
 					plotAnchor: '#' + el.id + ' .headerPlot',
 					$sidebarAnchor: columnUi.$headerSidebar,
@@ -208,7 +208,7 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 					refHeight: sheetWrap.columnDims().headerPlotHeight
 				});
 				if (data.req.values) { // TODO sometimes data.req is empty
-					refGene = exonRefGene.get(el.id);
+					refGene = refGeneExons.get(el.id);
 					if (refGene) {
 						plotData = dataToPlot(sort, data.req.values, ws.column.fields);
 						columnUi.plotData = {
