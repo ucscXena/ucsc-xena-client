@@ -439,7 +439,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 
 		// host title
 		var node = dom_helper.sectionNode("host");
-		var tmpNode = dom_helper.hrefLink(host + " (connecting)", "index.html?host=" + host);
+		var tmpNode = dom_helper.hrefLink(host + " (connecting)", "?host=" + host);
 		tmpNode.setAttribute("id", "status" + host);
 
 		node.appendChild(dom_helper.elt("h3", tmpNode));
@@ -489,11 +489,11 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 
 		var checkNode = dom_helper.sectionNode("sidehub");
 
-		checkNode.appendChild(dom_helper.elt("h2", dom_helper.hrefLink("Current Data Hubs", "hub.html")));
+		checkNode.appendChild(dom_helper.elt("h2", dom_helper.hrefLink("Current Data Hubs", "../hub")));
 		checkNode.appendChild(dom_helper.elt("br"));
 
 		userHosts.forEach(function (host) {
-			var tmpNode = dom_helper.elt("result2", dom_helper.hrefLink(host + " (connecting)", "index.html?host=" + host));
+			var tmpNode = dom_helper.elt("result2", dom_helper.hrefLink(host + " (connecting)", "?host=" + host));
 			tmpNode.setAttribute("id", "status" + host);
 			checkNode.appendChild(dom_helper.elt("h4", tmpNode));
 			checkNode.appendChild(dom_helper.elt("br"));

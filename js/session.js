@@ -179,7 +179,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 					if (s.length > 0) {
 						if (node) {
 							node.parentNode.replaceChild(
-								dom_helper.hrefLink(host, "index.html?host=" + host), node);
+								dom_helper.hrefLink(host, "?host=" + host), node);
 						}
 						addHostToActiveHostsInSession(host);
 					} else {
@@ -187,12 +187,12 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 						if (duration > 3000) {
 							if (node) {
 								node.parentNode.replaceChild(
-									dom_helper.elt("result2", dom_helper.hrefLink(host + " (there is a problem)", "index.html?host=" + host)), node);
+									dom_helper.elt("result2", dom_helper.hrefLink(host + " (there is a problem)", "?host=" + host)), node);
 							}
 						} else {
 							if (node) {
 								node.parentNode.replaceChild(
-									dom_helper.elt("result2", dom_helper.hrefLink(host + " (no data)", "index.html?host=" + host)), node);
+									dom_helper.elt("result2", dom_helper.hrefLink(host + " (no data)", "?host=" + host)), node);
 							}
 						}
 						removeHostFromActiveHostsInSession(host);
@@ -202,7 +202,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 				node = document.getElementById("status" + host);
 				if (node) {
 					node.parentNode.replaceChild(
-						dom_helper.elt("result2", dom_helper.hrefLink(host + " (not running)", "index.html?host=" + host)), node);
+						dom_helper.elt("result2", dom_helper.hrefLink(host + " (not running)", "?host=" + host)), node);
 				}
 				removeHostFromActiveHostsInSession(host);
 			}

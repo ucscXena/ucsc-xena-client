@@ -7,7 +7,7 @@ define(["dom_helper", "session", "xenaQuery"], function (dom_helper, session, xe
 	function newHubNode(host) {
 		//build checkbox
 		var checkbox = session.hostCheckBox(host),
-			tmpNode = dom_helper.elt("result2", dom_helper.hrefLink(host + " (connecting)", "index.html?host=" + host));
+			tmpNode = dom_helper.elt("result2", dom_helper.hrefLink(host + " (connecting)", "?host=" + host));
 		tmpNode.setAttribute("id", "status" + host);
 		return dom_helper.elt("h3", checkbox, " ", tmpNode);
 	}
