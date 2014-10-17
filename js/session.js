@@ -90,44 +90,33 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		checkbox.setAttribute("type", "checkbox");
 		checkbox.setAttribute("id", "checkbox" + host);
 
-		if (userHosts.indexOf(host) !== -1) {
+		if (_.contains(userHosts, host)) {
 			checkbox.checked = true;
 		}
 
 		checkbox.addEventListener('click', function () {
 			var checked = checkbox.checked,
 				stateJSON = JSON.parse(sessionStorage.state),
-				changed = false;
-			if (checked !== (stateJSON.userHosts.indexOf(host) !== -1)) {
-				changed = true;
-
+				newList;
+			if (checked !== _.contains(stateJSON.userHosts, host)) {
 				if (checked) { // add host
-					stateJSON.userHosts.push(host);
+					newList = _.conj(stateJSON.userHosts, host);
 				} else { // remove host
-					var list = stateJSON.userHosts,
-						i,
-						newList = [];
-					for (i = 0; i < list.length; i = i + 1) {
-						if (host !== list[i]) {
-							newList.push(list[i]);
-						}
-					}
-					list = newList;
-					stateJSON.userHosts = list;
+					newList = _.filter(stateJSON.userHosts, function (h) { return h !== host; });
 
 					//check if host that will be removed has the "cohort" in the xena heatmap state setting ///////////TODO
-
 					xenaQuery.all_cohorts(host).subscribe(function (s) {
-						stateJSON = JSON.parse(sessionStorage.xena);
-						if (stateJSON.hasOwnProperty("cohort") && s.indexOf(stateJSON.cohort) !== -1) { // reset xenaHeatmap
+						var xenaState = JSON.parse(sessionStorage.xena);
+						if (xenaState.cohort && _.contains(s, xenaState.cohort)) { // reset xenaHeatmap
 							xenaHeatmapStateReset();
 						}
 					});
 				}
+				stateJSON.userHosts = newList;
 				sessionStorage.state = JSON.stringify(stateJSON);
 				setXenaUserServer();
 
-				if (changed && ifChangedAction) {
+				if (ifChangedAction) {
 					ifChangedAction.apply(null, arguments);
 				}
 			}
