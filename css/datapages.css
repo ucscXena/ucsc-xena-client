@@ -1,0 +1,349 @@
+
+/* default elements */
+
+*{margin:0px;padding:0px}
+
+#content-container
+{
+float: left;
+width: 100%;
+}
+
+#main {
+width:85%;
+}
+
+#sidebar {
+float:right;
+margin-left: auto;
+margin-right: auto;
+width: 25%;
+font-family: arial, Verdana,'Lucida Grande', Verdana, Helvetica, sans-serif;
+}
+
+
+h1
+{
+font-family:arial, verdana, helvetica, sans-serif;
+font-size:1.9em;
+font-weight: bold;
+color:#333333;
+line-height:1.6em;
+text-align:center;
+}
+
+p
+{
+font-family:Verdana, Arial, helvetica, sans-serif;
+font-size:0.8em;
+font-weight: normal;
+color:#333333;
+padding-left:5px;
+line-height:1.6em
+}
+
+/* Rounded Corner */
+.tb5 {
+	border:1px solid #456879;
+	border-radius:20px;
+	height: 22px;
+	width: 300px;
+	padding: 2px 10px;
+	font-size: 16px;
+	margin-left: 5px;
+	color:gray;
+}
+.tb5:focus {
+    outline: 0;
+}
+
+a
+{
+font-size:0.9em;
+font-weight:normal;
+font-style:normal;
+text-decoration:none;
+}
+
+
+a:link
+{
+font-weight:normal;
+font-style:normal;
+text-decoration:none;
+}
+
+
+a:visited
+{
+font-style:normal;
+font-weight:normal;
+text-decoration:none;
+}
+
+
+a:hover
+{
+color:#ff6600;
+font-style:normal;
+text-decoration:none;
+}
+
+
+/* Layout */
+body
+{
+margin: 0;
+padding:0;
+font-family: arial, Verdana,'Lucida Grande', Verdana, Helvetica, sans-serif;
+background-color:#ffffff;
+list-style:none;
+}
+
+
+#topnav
+{
+height: 28px;
+line-height: 28px;
+background: url(Img/bg.jpg) repeat-x;
+font-size: 1em;
+font-style: bold;
+margin-bottom: 20px;
+}
+
+#topnav li
+{
+display:inline;
+margin-right:30px;
+}
+
+
+#topnav a
+{
+color:#FFFFFF;
+}
+
+#topnav a:hover
+{
+color:#ff6600;
+font-style:normal;
+}
+
+#topnav .logo
+{
+float:left;
+padding-left:20px;
+}
+
+
+#nav .selected {
+color: #ffffff;
+border-left:4px solid #facd00;
+}
+
+label
+{
+color:#006600;
+margin-right: 3px;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+
+label result{
+color:black;
+}
+
+
+#others label
+{
+color:#000000;
+font-weight: bold;
+font-family:sans-serif;
+margin-right: 3px;
+margin-top: 5px;
+margin-bottom: 5px;
+font-size: 0.9em;
+}
+
+result
+{
+margin-right: 10px;
+}
+
+result1
+{
+color:black;
+margin-right: 2px;
+}
+
+result2 a
+{
+color:gray;
+margin-right: 2px;
+}
+
+result a
+{
+font-size:1em;
+}
+
+#others result
+{
+font-size:0.9em;
+}
+
+summary
+{
+color:#505050;
+margin-top: 5px;
+font-size: 0.8em;
+}
+
+description
+{
+font-size: 0.95em;
+}
+
+
+identifiers
+{
+font-size: 0.9em;
+color:#505050;
+}
+
+identifiers li
+{
+margin-left: 20px;
+margin-top: 5px;
+}
+
+
+identifiers1
+{
+margin-left: 20px;
+color:#505050;
+}
+
+.line-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#sidehub {
+margin-right:10px;
+margin-top: 15px;
+}
+
+#main h2,#cohort,#dataType,#dataset,#others,#description,#samples,#host,#hub
+{
+padding:15px;
+margin-left: auto;
+margin-right: auto;
+width: 65%;
+}
+
+#sidehub h2 a {
+color: #000066;
+}
+
+#sidehub h2 a:hover{
+color:#ff6600;
+}
+
+#cohort h2,#dataset h2,#host h2,#hub h2
+{
+color:#000099;
+}
+
+#cohort h3 a,#dataset h3 a,#host h3 a,#host h3
+{
+font-size:1.3em;
+font-weight: bold;
+}
+
+#cohort h3 multiple a
+{
+font-size:0.9em;
+font-weight: normal;
+color:#330099;
+}
+
+#cohort h3 multiple a:hover
+{
+color:#ff6600;
+}
+
+#dataType header,#samples header,#others header
+{
+font-size:1.2em;
+}
+
+#dataType li,#other li
+{
+color:#0033FF;
+margin-left: 50px;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+
+#dataType li a
+{
+font-size: 1em;
+margin-right: 5px;
+}
+
+
+#samples li,sampleid
+{
+font-size:0.9em;
+margin-left: 50px;
+margin-bottom: 5px;
+}
+
+
+#footer
+{
+clear: both;
+margin-right: 0px;
+margin-bottom:0px;
+margin-left: 0px;
+background-color:black;
+text-align:center;
+padding:8px;
+}
+
+#footer p
+{
+font-size: 0.7em;
+line-height:3em;
+font-family: arial;
+font-weight: normal;
+color: #5b5b5b;
+padding-top: 10px;
+padding-right: 0px;
+padding-bottom: 10px;
+padding-left: 10px;
+text-align: center;
+}
+
+#footer a
+
+{
+font-size: 1em;
+font-weight: normal;
+color: #facd00;
+text-align: center;
+}
+
+#footer a:hover
+
+{
+text-decoration: underline;
+font-weight: normal;
+color: #facd00;
+text-align: center;
+}
+
+
