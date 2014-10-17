@@ -196,8 +196,9 @@ define(['underscore_ext', 'jquery', 'rx', 'refGeneExons', 'columnWidgets', 'cros
 				vg.height(canvasHeight);
 			}
 
-			refGeneData = stub.getRefGene(column.fields[0]);
-			//refGeneData = data.refGene[column.fields[0]];
+			refGeneData = data.refGene[column.fields[0]];
+			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
+			//data.req.values = stub.getMutation(column.fields[0]); // for testing
 			if (refGeneData) {
 				refGeneExons.show(el.id, {
 					data: { gene: refGeneData }, // data.refGene,

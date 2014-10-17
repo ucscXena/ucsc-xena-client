@@ -6,8 +6,7 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 	], function (crosshairs, tooltip, util, d3, $, select2, _) {
 	'use strict';
 
-	var TEST = true,
-		shade1 = '#cccccc',
+	var shade1 = '#cccccc',
 		shade2 = '#999999',
 		labels = {
 			coding: "CDS, exon ",
@@ -17,6 +16,10 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 			threeSplice: "splice site, exon ",
 		},
 		spLen = 2, // splice site base pairs
+		utrY = 10,
+		utrHeight = 8,
+		cdsY = 12,
+		cdsHeight = 12,
 		clone = _.clone,
 		each = _.each,
 		filter = _.filter,
@@ -39,8 +42,17 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 			},
 
 			mapChromPosToX: function (chromPos) {
-				var self = this,
-					positiveChromPos = (this.data.strand === '-') ? this.flip(chromPos, true) : chromPos, // TODO test this flip
+				var posChromPos = (this.data.strand === '-') ? this.flip(chromPos, true) : chromPos, // TODO test this flip
+					splexon = find(this.splexons, function (s, i) {
+						return (posChromPos >= s.start && posChromPos <= s.end);
+					});
+				if (splexon) {
+					return splexon.x + (posChromPos - splexon.start) + 0.5;
+				} else {
+					console.log('mutation at ' + chromPos + ' not on an exon or splice site');
+					return -1;
+				}
+/*
 					offset,
 					splexon = find(this.splexons, function (s, i) {
 						var start = s.x + s.exonXoffset,
@@ -48,80 +60,48 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 						if (i > 0 && i < self.splexons.length - 1) { // not first or last
 							end += spLen;
 						}
-						return (positiveChromPos >= start && positiveChromPos <= end);
+						return (posChromPos >= start && posChromPos <= end);
 					});
 				if (splexon) {
-					return positiveChromPos - splexon.exonXoffset;
+					return posChromPos - splexon.exonXoffset;
 				} else {
 					console.log('mutation at ' + chromPos + ' not on an exon or splice site');
 					return -1;
 				}
+*/
 			},
 
 /* splexons broken:
 			mapXtoChromPos: function (elementX) {
-				var self = this,
-					x = elementX / this.scaleX,
-					splexon,
-					val,
-					node = find(this.nodes, function (n, i) {
-						var s = self.splexons[n.splexonI],
-							endX = (i === (self.nodes.length - 1))
-								? s.exonX + (s.exonEnd + 1 - s.exonStart) // TODO adjust exonX?
-								//? s.exonX + (s.exonEnd - s.exonStart) // TODO adjust exonX?
-								: self.nodes[i + 1].x;
-						return (x >= n.x && x < endX);
-
-					});
-				if (node) {
-					splexon = this.splexons[node.splexonI];
-					if (node.type === 'fiveSplice') {
-						val = (node.splexonI).toString() + '-' + (node.splexonI + 1).toString() + ' splice site';
-					} else if (node.type === 'threeSplice') {
-						val = (node.splexonI + 1).toString() + '-' + (node.splexonI + 2).toString() + ' splice site';
-					} else {
-						val = (node.splexonI + 1).toString();
-					}
-					val += ' of composite transcript';
-					return {
-						start: Math.round(splexon.exonXoffset + x),
-						end: Math.round(splexon.exonXoffset + x),
-						vals: [{label: 'Exon', val: val }]
-					};
-				} else {
-					return {chromPos: 'N/A', value: 'N/A'};
-				}
 			},
 
 			mousing: function (ev) {
-				if (TEST) {
-					var pos = {},
-						rows = [],
-						offsetX = ev.offsetX;
-					if (tooltip.frozen()) {
-						return;
-					}
-					if (ev.type === 'mouseleave') {
-						tooltip.hide();
-						return;
-					}
-					if (offsetX === undefined) {
-						offsetX = util.eventOffset(ev).x;
-					}
-					offsetX -= this.radius;
-					pos = this.mapXtoChromPos(offsetX);
-					rows.push({ label: 'gene', val: this.data.name2 });
-					rows.push({ label: 'splexon start', val: pos.start });
-					rows.push({ label: 'splexon end', val: pos.end });
-					rows = rows.concat(pos.vals);
-					tooltip.mousing({
-						ev: ev,
-						el: '#nav',
-						my: 'top',
-						at: 'top',
-						rows: rows
-					});
+				var pos = {},
+					rows = [],
+					offsetX = ev.offsetX;
+				if (tooltip.frozen()) {
+					return;
 				}
+				if (ev.type === 'mouseleave') {
+					tooltip.hide();
+					return;
+				}
+				if (offsetX === undefined) {
+					offsetX = util.eventOffset(ev).x;
+				}
+				offsetX -= this.radius;
+				pos = this.mapXtoChromPos(offsetX);
+				rows.push({ label: 'gene', val: this.data.name2 });
+				rows.push({ label: 'splexon start', val: pos.start });
+				rows.push({ label: 'splexon end', val: pos.end });
+				rows = rows.concat(pos.vals);
+				tooltip.mousing({
+					ev: ev,
+					el: '#nav',
+					my: 'top',
+					at: 'top',
+					rows: rows
+				});
 			},
 */
 			flip: function (val, start) {
@@ -158,50 +138,12 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 					this.error('gene not found');
 					return;
 				}
-				this.data = data.gene;
+				this.data = Object.create(data.gene);
 
 				if (this.data.strand === '-') {
 					this.flipNegativeStrand();
 				}
 				this.render();
-			},
-
-			drawTestSplexon: function (n, width) {
-				var x = this.x(n.x) + this.radius / this.scaleX,
-					y = this.y(5);
-				this.d2.moveTo(x, (y / 2) + 1);
-				this.d2.fillStyle = (n.shade) ? 'Orchid' : 'Orange';
-				this.d2.fillRect(x, y, width, 5);
-			},
-
-			drawTestSplexons: function (lastNodeEndX) {
-				var self = this,
-					data = this.data,
-					x,
-					y,
-					prevSplexon;
-				each(this.splexons, function (n) {
-					if (prevSplexon) {
-						self.drawTestSplexon(prevSplexon, n.x - prevSplexon.x);
-					}
-					prevSplexon = n;
-				});
-				this.drawTestSplexon(prevSplexon, lastNodeEndX + 1 - prevSplexon.x);
-
-				// red bars on top of cds end-points:
-				if (data.cdsEnd + 1 !== data.cdsStart) {
-					x = this.x(this.cdsStartX) + this.radius / this.scaleX;
-					y = this.y(this.codingHeight);
-					this.d2.moveTo(x, (y / 2) + 1);
-					this.d2.fillStyle = 'red';
-					this.d2.fillRect(x, y, 1, 2);
-
-					x = this.x(this.cdsEndX) + this.radius / this.scaleX;
-					y = this.y(this.codingHeight);
-					this.d2.moveTo(x, (y / 2) + 1);
-					this.d2.fillStyle = 'red';
-					this.d2.fillRect(x, y, 1, 2);
-				}
 			},
 
 			draw: function () {
@@ -216,234 +158,14 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 					x = self.x(n.x) + self.radius / self.scaleX;
 					y = self.y(n.y);
 					self.d2.moveTo(x, y);
-					if (TEST) {
-						if (n.type === 'fiveSplice') {
-							self.d2.fillStyle = 'DeepSkyBlue';
-						} else if (n.type === 'threeSplice') {
-							self.d2.fillStyle = 'GreenYellow ';
-						} else {
-							self.d2.fillStyle = n.shade ? shade1 : shade2;
-						}
-					} else {
-						self.d2.fillStyle = n.shade ? shade1 : shade2;
-					}
+					self.d2.fillStyle = n.shade ? shade1 : shade2;
 					self.d2.fillRect(x, y, n.width, n.height);
 					lastNodeEndX = n.x + n.width - 1;
 				});
-				if (TEST) { this.drawTestSplexons(lastNodeEndX); }
 				this.d2.scale(1 / this.scaleX, 1);
 				this.d2.font = "12px Verdana";
 				this.d2.strokeText("5'", 5, this.canvasHeight - 2);
 				this.d2.strokeText("3'", this.canvasWidth - 15, this.canvasHeight - 2);
-			},
-
-		    loadExons: function () {
-				// prepare data using absolute chromosomal coordinates
-				// coordinate system is one-based, closed;
-				// the start & end coords are included in the range.
-				var self = this,
-					shade = true,
-					exonXoffset = this.data.txStart - 1, // offset of exon with introns removed
-					prevExonEnd = this.data.txStart - 1,
-					exons = map(this.data.exonStarts, function (exonStart, i) {
-						var exonEnd = self.data.exonEnds[i],
-							exon;
-						exonXoffset += exonStart - prevExonEnd - 1;
-						exon = {
-							exonStart: exonStart, // for finding CDS & UTRs
-							exonEnd: exonEnd, // for finding CDS & UTRs & width
-							exonX: exonStart - exonXoffset - 1,
-							exonXoffset: exonXoffset,
-							shade: shade,
-						};
-						shade = !shade;
-						prevExonEnd = exonEnd;
-						return exon;
-					});
-				return exons;
-			},
-
-			insertSpliceSites: function (exonsIn) {
-				// a "splexon" is an exon plus its splice sites
-				var self = this,
-					exons = exonsIn,
-					xOffset = -spLen, // additional offset to be applied due to addition of splice sites
-					nodes = [],
-					splexons = map(exons, function (e, i) {
-						var s = clone(e);
-						if (i === 0) {
-							s.x = s.exonX;
-						} else {
-							xOffset += spLen * 2;
-							s.x = e.exonX + xOffset;
-							s.exonX = s.x + spLen;
-							s.exonXoffset -= (xOffset + spLen);
-						}
-						return s;
-					});
-
-				// build the first set of nodes
-				each(splexons, function (s, i) {
-					var a,
-						n = {
-							x: s.x,
-							splexonI: i,
-						};
-					if (i === 0) {
-						n.type = 'coding'; // could be utr, but coding for color here
-						nodes.push(n);
-
-					} else {
-						n.type = 'fiveSplice';
-						nodes.push(n);
-
-						a = clone(n);
-						a.x = s.x + spLen;
-						a.type = 'coding'; // could be utr, but coding for color here
-						nodes.push(a);
-					}
-					if (i !== self.data.exonCount - 1) { // not the last node
-						a = clone(n);
-						a.x = splexons[i + 1].x - spLen;
-						a.type = 'threeSplice';
-						nodes.push(a);
-					}
-				});
-				this.nodes = nodes;
-				return splexons;
-			},
-
-			offsetCds: function () {
-				var self = this,
-					data = this.data,
-					index,
-					splexon = find(this.splexons, function (s, i) {
-						index = i;
-						return (s.exonStart <= data.cdsStart && data.cdsStart <= s.exonEnd);
-					});
-				if (!splexon) {
-					this.error('cdsStart is not on an exon');
-					return false;
-				}
-				this.cdsStartX = data.cdsStart - splexon.exonXoffset - 1;
-
-				splexon = find(this.splexons, function (n, i) {
-					index = i;
-					return (n.exonStart <= data.cdsEnd && data.cdsEnd <= n.exonEnd);
-				});
-				if (!splexon) {
-					this.error('cdsEnd is not on an exon');
-					return false;
-				}
-				this.cdsEndX = data.cdsEnd - splexon.exonXoffset - 1;
-			},
-
-			pushNode: function (nodes, node, codingChangeTo) {
-				if (codingChangeTo && node.type === 'coding') {
-					node.type = codingChangeTo;
-				}
-				nodes.push(node);
-			},
-
-			findUtrs: function (nodes) {
-				var self = this,
-					startNodes = [],
-					newNodes = [],
-					lastNode,
-					cStartX = this.cdsStartX,
-					cEndX = this.cdsEndX;
-
-				// mark the 5'UTR nodes
-				each(nodes, function (node, i) {
-					var n = clone(node);
-					if (n.x < cStartX) {
-						self.pushNode(startNodes, n, 'fiveUtr');
-						lastNode = node;
-					} else if (n.x === cStartX) {
-						startNodes.push(n);
-						lastNode = undefined;
-					} else { // n.x > cStartX
-						if (lastNode && lastNode.type === 'coding') {
-							lastNode = clone(lastNode);
-							lastNode.x = cStartX;
-							startNodes.push(lastNode);
-						}
-						lastNode = undefined;
-						startNodes.push(n);
-					}
-				});
-				if (lastNode && lastNode.type === 'coding') {
-					lastNode.x = cStartX;
-					startNodes.push(lastNode);
-				}
-
-				// mark the 3'UTR nodes
-				lastNode = undefined;
-				each(startNodes, function (node, i) {
-					var n = clone(node);
-					if (n.x <= cEndX) {
-						newNodes.push(n);
-						lastNode = node;
-					} else if (n.x === cEndX + 1) {
-						if (lastNode && lastNode.type === 'coding') {
-							lastNode = clone(lastNode);
-							lastNode.x = cEndX + 1;
-							self.pushNode(newNodes, lastNode, 'threeUtr');
-						}
-						lastNode = undefined;
-						self.pushNode(newNodes, n, 'threeUtr');
-					} else { // n.x > cEndX
-						self.pushNode(newNodes, n, 'threeUtr');
-					}
-				});
-				if (lastNode && lastNode.type === 'coding') {
-					lastNode.x = cEndX + 1;
-					self.pushNode(newNodes, lastNode, 'threeUtr');
-				}
-
-				return newNodes;
-			},
-
-			makeNodesDrawable: function (nodes) {
-				var self = this,
-					utrY = this.codingHeight - 2,
-					utrHeight = this.codingHeight - 4,
-					spliceY = TEST ? utrY : this.codingHeight / 2,
-					spliceHeight = TEST ? utrHeight : 1,
-					splexons = this.splexons,
-					prevSplexonI = -1,
-					s,
-					exonXend,
-					newNodes = map(nodes, function (node, j) {
-						var n = clone(node);
-						if (n.splexonI !== prevSplexonI) {
-							s = splexons[n.splexonI];
-							prevSplexonI = n.splexonI;
-							if (n.splexonI === splexons.length - 1) { // last splexon
-								exonXend = s.exonX + (s.exonEnd + 1 - s.exonStart);
-							}
-						}
-						if (n.type === 'coding') {
-							n.y = n.height = self.codingHeight;
-						} else if (n.type === 'fiveSplice') {
-							n.y = spliceY;
-							n.height = spliceHeight;
-						} else if (n.type === 'threeSplice') {
-							n.y = spliceY;
-							n.height = spliceHeight;
-						} else {
-							n.y = utrY;
-							n.height = utrHeight;
-						}
-						if (j === nodes.length - 1) { // last node
-							n.width = exonXend - n.x;
-						} else {
-							n.width = nodes[j + 1].x - n.x;
-						}
-						n.shade = s.shade;
-						return n;
-					});
-				return newNodes;
 			},
 
 			findScale: function (nodes) {
@@ -462,22 +184,139 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 				};
 			},
 
+			makeSplexons: function () {
+				// A splexon is the exon plus its splice sites,
+				// since we want to show mutations on splice sites as well as on exons.
+				var self = this,
+					shade = true,
+					offset, // drawing offset for splexon start
+					lastExon = this.data.exonStarts.length - 1,
+					splexons = map(this.data.exonStarts, function (exonStart, i) {
+						var s = {
+							exonStart: self.data.exonStarts[i],
+							exonEnd: self.data.exonEnds[i],
+							start: self.data.exonStarts[i] - spLen,
+							end: self.data.exonEnds[i] + spLen,
+							shade: shade
+						};
+						if (i === 0) {
+							s.exonX = s.x = 0;
+							s.start += spLen;
+						} else {
+							s.x = offset;
+							s.exonX = s.x + spLen;
+							if (i === lastExon) {
+								s.end = s.exonEnd;
+							}
+						}
+						offset = s.x + s.end - s.start + 1;
+						shade = !shade;
+						return s;
+					});
+				this.splexons = splexons;
+			},
+
+			makeNodes: function () {
+				// Nodes are used to draw the refGene.
+				// Splice sites are not drawn and are represented as spaces between exons
+				var self = this,
+					nodes = [],
+					cdsStart = this.data.cdsStart,
+					cdsEnd = this.data.cdsEnd,
+					cdsStartHit,
+					cdsEndHit;
+				if (cdsStart === cdsEnd + 1) {
+					cdsStartHit = cdsEndHit = true;
+				}
+				_.each(this.splexons, function (s, i) {
+					var n = { x: s.exonX, splexon: i };
+					if (!cdsStartHit) {
+						if (s.exonStart === cdsStart) {
+							cdsStartHit = true;
+							n.y = cdsY;
+							if (s.exonEnd <= cdsEnd) {
+								n.width = s.exonEnd - s.exonStart + 1;
+								nodes.push(n); // cds
+								cdsEndHit = (s.exonEnd === cdsEnd);
+							} else { // s.exonEnd > cdsEnd
+								cdsEndHit = true;
+								n.width = cdsEnd - s.exonStart + 1;
+								nodes.push(n); // cds
+								n = clone(n);
+								n.y = utrY;
+								n.x += n.width;
+								n.width = s.exonEnd - cdsEnd;
+								nodes.push(n); // 3'utr
+							}
+						} else { // exonStart < cdsStart
+							n.y = utrY;
+							if (s.exonEnd < cdsStart) {
+								n.width = s.exonEnd - s.exonStart + 1;
+								nodes.push(n); // 5'utr
+							} else { // exonEnd >= cdsStart
+								cdsStartHit = true;
+								n.width = cdsStart - s.exonStart;
+								nodes.push(n); // 5'utr
+								n = clone(n);
+								n.y = cdsY;
+								n.x += n.width;
+								if (s.exonEnd <= cdsEnd) {
+									n.width = s.exonEnd - cdsStart + 1;
+									nodes.push(n); // cds
+									cdsEndHit = (s.exonEnd === cdsEnd);
+								} else { // exonEnd > cdsEnd
+									cdsEndHit = true;
+									n.width = cdsEnd - cdsStart + 1;
+									nodes.push(n); // cds
+									n = clone(n);
+									n.y = utrY;
+									n.x += n.width;
+									n.width = s.exonEnd - cdsEnd;
+									nodes.push(n); // 3'utr
+								}
+							}
+						}
+					} else if (!cdsEndHit) {
+						n.y = cdsY;
+						if (s.exonEnd <= cdsEnd) {
+							n.width = s.exonEnd - s.exonStart + 1;
+							nodes.push(n); // cds
+							cdsEndHit = (s.exonEnd === cdsEnd);
+						} else { // exonEnd > cdsEnd
+							cdsEndHit = true;
+							n.width = cdsEnd - s.exonStart + 1;
+							nodes.push(n); // cds
+							n = clone(n);
+							n.y = utrY;
+							n.x += n.width;
+							n.width = s.exonEnd - cdsEnd;
+							nodes.push(n); // 3'utr
+						}
+					} else { // cdsStartHit && cdsEndHit
+						n.y = utrY;
+						n.width = s.exonEnd - s.exonStart + 1;
+						nodes.push(n); // utr
+					}
+				});
+				this.nodes = nodes;
+			},
+
+			makeNodesDrawable: function () {
+				var self = this,
+					nodes = _.map(this.nodes, function (old) {
+						var n = Object.create(old);
+						n.height = (n.y === utrY) ? utrHeight : cdsHeight;
+						n.shade = self.splexons[n.splexon].shade;
+						return n;
+					});
+				this.nodes = nodes;
+			},
+
 			render: function () {
-				var exons, nodes, rc = true;
 				this.d2.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-
-				// load exons and collapse introns
-				exons = this.loadExons();
-
-				// insert splice sites between exons
-				this.splexons = this.insertSpliceSites(exons);
-
-				// offset the coding DNA sequence start & end since collapsing the introns
-				rc = this.offsetCds(this.splexons);
-				if (rc === false) { return; }
-
-				this.nodes = this.findUtrs(this.nodes);
-				this.nodes = this.makeNodesDrawable(this.nodes);
+				this.makeSplexons();
+				this.makeNodes();
+				this.makeNodesDrawable();
 				this.scaleX = this.findScale();
 				this.draw();
 			},
@@ -497,11 +336,7 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 				this.crosshairs = crosshairs.create('exonRefGene-' + this.id, {
 					$anchor: $(options.plotAnchor)
 				});
-				/*
-				if (TEST) {
-					this.sub = this.crosshairs.mousingStream.subscribe(this.mousing);
-				}
-				*/
+				//this.sub = this.crosshairs.mousingStream.subscribe(this.mousing);
 				this.x = d3.scale.linear()
 					.domain([0, this.canvasWidth])
 					.range([0, this.canvasWidth]);

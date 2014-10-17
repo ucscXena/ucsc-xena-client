@@ -222,7 +222,6 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 					}
 					tooltip.mousing({
 						ev: ev,
-						//dsID: node.data.dataset,
 						sampleID: node.data.sample,
 						el: '#nav',
 						my: 'top',
@@ -301,8 +300,9 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				_.each(nodeValues, function (value) {
 					var y = (value.index * self.pixPerRow) + (self.pixPerRow / 2) + self.sparsePad;
 					_.each(value.vals, function (val) {
-						var x = (self.refGene.mapChromPosToX(val.start) * self.gene.scaleX) + self.sparsePad;
+						var x = self.refGene.mapChromPosToX(val.start);
 						if (x >= 0) {
+							x = x * self.gene.scaleX + self.sparsePad;
 							nodes.push({
 								x: x,
 								y: y,
@@ -327,7 +327,8 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 					rgba,
 					labels,
 					unknownEffects,
-					align;
+					align,
+					topBorderIndex;
 				if (this.feature === 'impact') {
 					myColors = _.map(colors[this.color], function (c) {
 						return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
@@ -356,10 +357,11 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 					];
 					labels = ['0%', '50%', '100%'];
 					align = 'center';
+					topBorderIndex = 3;
 				}
 				myColors.unshift('rgb(255,255,255)');
 				labels.unshift('no mutation');
-				this.columnUi.drawLegend(myColors, labels, align, '', 'mutationVector', 3);
+				this.columnUi.drawLegend(myColors, labels, align, '', 'mutationVector', topBorderIndex);
 			},
 
 			render: function () {
