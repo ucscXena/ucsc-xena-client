@@ -84,24 +84,6 @@ define(['haml!haml/sheetWrap',
 		},
 
 		initCohortsAndSources: function (state, cursor, defaultServers) {
-			defaultTextInput.create({
-				$el: this.$servers,
-				state: state.pluck('servers') // XXX we never complete this, since it's always on the page
-					.map(function (servers) { return _.fmap(servers, serversToString); }),
-				// fn (from defaultTextInput) is
-				// {user: <string>, default: <string>}
-				//                     -> {user: <string>, default: <string>}
-				// We wrap that in a function that does
-				// {user: <array>, default: <array>} -> {user: <array>, default: <array>}
-				cursor: new_cursor(function (fn) {
-					cursor.update(function (s) {
-						return _.assoc(s,
-							'servers',
-							_.fmap(fn(_.fmap(s.servers, serversToString)), serversFromString));
-					});
-				}, ['default', 'user'])
-			});
-
 			this.cohortSelect = cohortSelect.create({
 				$anchor: this.$cohortAnchor,
 				state: state,
@@ -159,7 +141,7 @@ define(['haml!haml/sheetWrap',
 			options.$anchor.append(this.$el);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'servers', 'yAxisLabel', 'addColumn',
+			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'yAxisLabel', 'addColumn',
 				'spreadsheet'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
