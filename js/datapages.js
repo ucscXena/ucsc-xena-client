@@ -1,7 +1,7 @@
 /*jslint browser:true, nomen: true*/
 /*global define: false */
 
-define(["dom_helper", "xenaQuery", "session", "underscore_ext"], function (dom_helper, xenaQuery, session, _) {
+define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], function (dom_helper, xenaQuery, session, _, Rx) {
 	'use strict';
 
 	var hosts, /* hosts is the variable holds all hosts*/
