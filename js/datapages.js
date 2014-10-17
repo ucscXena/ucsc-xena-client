@@ -18,6 +18,41 @@ define(["dom_helper", "xenaQuery", "data", "underscore_ext"], function (dom_help
 		data.updateHostStatus(host);
 	});
 
+	// check if there is valid genomic data for the cohort
+	function checkGenomicDataset(hosts, cohort) {
+		return xenaQuery.dataset_list(hosts, cohort).map(function (s) {
+			return s.some(function (r) {
+				if (r.hasOwnProperty("datasets")) {
+					return r.datasets.some(function (dataset) {
+						var format = dataset.type;
+						return ["genomicMatrix", "clinicalMatrix", "mutationVector"].indexOf(format) !== -1;
+					});
+				}
+				return false;
+			});
+		});
+	}
+
+
+	// test if a legit chort exits, (i.e. with real genomic data), carry out function f
+	function ifCohortExistDo(cohort, hosts, f) {
+		var cohortCollection = [];
+		Rx.Observable.merge(_.map(hosts, xenaQuery.all_cohorts)).subscribe(function (s) {
+			if (s.some(function (c) {
+					return c === cohort;
+				})) {
+				if (cohortCollection.indexOf(cohort) === -1) {
+					cohortCollection.push(cohort);
+					checkGenomicDataset(hosts, cohort).subscribe(function (s) {
+						if (s) {
+							f.apply(null, arguments);
+						}
+					});
+				}
+			}
+		});
+	}
+
 	// the short COHORT section
 	function eachCohort(cohortName, hosts, mode) {
 		var node = dom_helper.sectionNode("cohort"),
@@ -97,7 +132,7 @@ define(["dom_helper", "xenaQuery", "data", "underscore_ext"], function (dom_help
 						return;
 					}
 					cohortC.push(cohort);
-					data.checkGenomicDataset(hosts, cohort).subscribe(function (s) {
+					checkGenomicDataset(hosts, cohort).subscribe(function (s) {
 						if (s) {
 							mode = "multiple";
 							node = eachCohort(cohort, hosts, mode);
@@ -418,7 +453,7 @@ define(["dom_helper", "xenaQuery", "data", "underscore_ext"], function (dom_help
 	// ?cohort=id
 	else if ((query_string.hasOwnProperty("cohort")) && !(query_string.hasOwnProperty("sample"))) {
 		cohort = decodeURIComponent(query_string.cohort);
-		data.ifCohortExistDo(cohort, activeHosts, function () {
+		ifCohortExistDo(cohort, activeHosts, function () {
 			cohortPage(cohort, _.intersection(activeHosts, userHosts));
 		});
 	}
@@ -440,7 +475,7 @@ define(["dom_helper", "xenaQuery", "data", "underscore_ext"], function (dom_help
 	else if ((query_string.hasOwnProperty("cohort")) && (query_string.hasOwnProperty("sample"))) {
 		var sample = decodeURIComponent(query_string.sample);
 		cohort = decodeURIComponent(query_string.cohort);
-		data.ifCohortExistDo(cohort, activeHosts, function () {
+		ifCohortExistDo(cohort, activeHosts, function () {
 			samplePage(sample, cohort);
 		});
 	} else {
