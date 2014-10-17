@@ -1,18 +1,18 @@
 /*jslint browser: true,  nomen: true*/
 /*global define: false */
 
-define(["dom_helper", "data", "xenaQuery"], function (dom_helper, data, xenaQuery) {
+define(["dom_helper", "session", "xenaQuery"], function (dom_helper, session, xenaQuery) {
 	'use strict';
 
 	function newHubNode(host) {
 		//build checkbox
-		var checkbox = data.hostCheckBox(host),
+		var checkbox = session.hostCheckBox(host),
 			tmpNode = dom_helper.elt("result2", dom_helper.hrefLink(host + " (connecting)", "index.html?host=" + host));
 		tmpNode.setAttribute("id", "status" + host);
 		return dom_helper.elt("h3", checkbox, " ", tmpNode);
 	}
 
-	data.sessionStorageInitialize();
+	session.sessionStorageInitialize();
 	var hosts = JSON.parse(sessionStorage.state).allHosts,
 		node = dom_helper.sectionNode("hub"),
 		newText;
@@ -22,7 +22,7 @@ define(["dom_helper", "data", "xenaQuery"], function (dom_helper, data, xenaQuer
 	hosts.forEach(function (host) {
 		node.appendChild(newHubNode(host));
 		node.appendChild(dom_helper.elt("br"));
-		data.updateHostStatus(host);
+		session.updateHostStatus(host);
 	});
 
 	newText = document.createElement("INPUT");
@@ -59,7 +59,7 @@ define(["dom_helper", "data", "xenaQuery"], function (dom_helper, data, xenaQuer
 			node.parentNode.insertBefore(dom_helper.elt("br"), node.previousSibling);
 			hosts.push(host);
 			node.value = "";
-			data.updateHostStatus(host);
+			session.updateHostStatus(host);
 		}
 	});
 });

@@ -1,7 +1,7 @@
 /*jslint browser:true, nomen: true*/
 /*global define: false */
 
-define(["dom_helper", "xenaQuery", "data", "underscore_ext"], function (dom_helper, xenaQuery, data, _) {
+define(["dom_helper", "xenaQuery", "session", "underscore_ext"], function (dom_helper, xenaQuery, session, _) {
 	'use strict';
 
 	var hosts, /* hosts is the variable holds all hosts*/
@@ -9,13 +9,13 @@ define(["dom_helper", "xenaQuery", "data", "underscore_ext"], function (dom_help
 		userHosts,
 		query_string = dom_helper.queryStringToJSON();
 
-	data.sessionStorageInitialize();
+	session.sessionStorageInitialize();
 	hosts = JSON.parse(sessionStorage.state).allHosts; // all hosts
 	activeHosts = JSON.parse(sessionStorage.state).activeHosts; // activatHosts
 	userHosts = JSON.parse(sessionStorage.state).userHosts; // activatHosts
 
 	hosts.forEach(function (host) {
-		data.updateHostStatus(host);
+		session.updateHostStatus(host);
 	});
 
 	// check if there is valid genomic data for the cohort
@@ -443,7 +443,7 @@ define(["dom_helper", "xenaQuery", "data", "underscore_ext"], function (dom_help
 		tmpNode.setAttribute("id", "status" + host);
 
 		node.appendChild(dom_helper.elt("h3", tmpNode));
-		data.updateHostStatus(host);
+		session.updateHostStatus(host);
 		document.body.appendChild(node);
 
 		// cohort list
