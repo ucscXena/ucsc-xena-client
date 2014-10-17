@@ -122,7 +122,7 @@ define(['haml!haml/sheetWrap',
 			// store the sources in state, for easy access later
 			this.subs.add(this.sources.subscribe(function (sources) {
 				cursor.update(function (t) {
-					return _.assoc(t, '_sources', Object.create(sources).__proto__);
+					return _.assoc(t, '_sources', sources);
 				});
 			}));
 		},
