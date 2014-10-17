@@ -40,7 +40,7 @@ define(["jing_helper", "data", "xenaQuery"], function (jing_helper, data, xenaQu
 			//if host is not start with http(s)
 			if (host === "") {return;}
 
-			host = xenaQuery.parse_server(host).url;
+			host = xenaQuery.server_url(host);
 
 			/*
 			   if (( host.search("http") !== 0) || ( host.search("://")===-1 ))
