@@ -65,6 +65,17 @@ define(['underscore_ext',
 	};
 
 	default_colors_map = {
+		"gene expression": color_schemes.green_black_red,
+		"gene expression RNAseq": color_schemes.green_black_red,
+		"gene expression array": color_schemes.green_black_red,
+		"exon expression RNAseq": color_schemes.green_black_red,
+		"copy number": color_schemes.blue_white_red,
+		"DNA methylation": color_schemes.blue_white_red,
+		"PARADIGM pathway activity": color_schemes.blue_white_red,
+		"protein expression RPPA": color_schemes.blue_white_red,
+		"somaticMutation": color_schemes.blue_white_red,
+		"phenotype": color_schemes.green_black_yellow,
+
 		"common/dataSubType/geneRNAseq": color_schemes.green_black_red,
 		"common/dataSubType/geneArray": color_schemes.green_black_red,
 		"common/dataSubType/geneExp": color_schemes.green_black_red,
@@ -75,8 +86,7 @@ define(['underscore_ext',
 		"common/dataSubType/PARADIGM": color_schemes.blue_white_red,
 		"common/dataSubType/phenotype": color_schemes.blue_white_red,
 		"common/dataSubType/protein": color_schemes.blue_white_red,
-		"common/dataSubType/somaticMutation": color_schemes.blue_white_red,
-		phenotype: color_schemes.green_black_yellow
+		"common/dataSubType/somaticMutation": color_schemes.blue_white_red
 	};
 
 	function meannan(values) {
