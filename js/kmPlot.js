@@ -27,6 +27,7 @@ define([ "lib/d3",
 		isNull = _.isNull,
 		range = _.range,
 		keys = _.keys,
+		feature_list = xenaQuery.dsID_fn(xenaQuery.feature_list),
 		dataset_probe_values = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values),
 		MAX = 30, // max number of categories
 		kmWidget,
@@ -63,15 +64,120 @@ define([ "lib/d3",
 			];
 		},
 
-		render: function (eventDsID, survival) {
+		cleanValues: function (vals) {
+			var definedVals = {};
+			_.each(vals, function (val, key) {
+				if (notNull(val)) {
+					definedVals[key] = val;
+				}
+			});
+			return definedVals;
+		},
+
+		findColorGroup: function (groups, values, groupIndex) {
+			var label,
+				colorGroup;
+			if (groupIndex === 0) {
+				label = '< ' + groups[0];
+				colorGroup = d3.min(values);
+			} else if (groupIndex === 2) {
+				label = '> ' + groups[1];
+				colorGroup = d3.max(values);
+			} else {
+				label = groups[0] + ' to ' + groups[1];
+				colorGroup = (d3.min(values) + d3.max(values)) / 2;
+			}
+			return { label: label, colorGroup: colorGroup };
+		},
+
+		receiveData: function (data) {
 			var self = this,
-				data = [],
+				subgroups = [],
+				ws = self.columnUi.ws,
+				field = ws.column.fields[0],
+				all = false, // XXX make this a checkbox, for whole-cohort display grouping, not implemented for regrouping
+				samples = ws.samples,
+				evValues = this.cleanValues(_.object(samples, data[0])),
+				ttevValues = this.cleanValues(_.object(samples, data[1])),
+				patientValues = _.object(samples, data[2]),
+				ttev_fn    = bind(attr, null, ttevValues),    // fn sample -> ttev,
+				ev_fn      = bind(attr, null, evValues),      // fn sample -> ev,
+				patient_fn = bind(attr, null, patientValues), // fn sample -> patient,
+				min_t = d3.min(_.values(ttevValues)),
+				chief = {
+					dataType: ws.column.dataType,
+					values: this.cleanValues(_.object(samples, this.columnUi.plotData.heatmapData[0])),
+					colorValues: this.columnUi.plotData.heatmapData[0],
+					valuetype: null,
+					codes: null
+				},
+				values = all ? null : _.values(chief.values),
+				isfloat,
+				groups,
+				regroup;
+
+			if (chief.dataType === 'clinicalMatrix') {
+				chief.valuetype = ws.data.features[field].valuetype;
+				chief.codes = ws.data.codes[field];
+			} else if (ws.data.metadata) {
+				chief.label = ws.data.metadata.label;
+				//chief.label = ws.data.metadata.longTitle;
+			} else {
+				chief.label = 'TBD, dataType: ' + chief.dataType;
+			}
+			isfloat = !(chief.dataType === 'clinicalMatrix' && chief.valuetype === 'category');
+			// Group by unique values. Coded feature values are always indexes 0..N-1.
+			groups = all ? ['All samples'] : (isfloat ? filter(uniq(values), notNull) : range(chief.codes.length));
+			regroup = (isfloat && groups.length > 10);
+
+			if (regroup) {
+				groups = self.regroup(values);
+			}
+
+			each(groups.slice(0, MAX), function (group, i) {
+				/*jslint eqeq: true */
+				var label,
+					r,
+					samples = all ? _.keys(ttevValues) : filter(keys(chief.values), function (s) {
+						if (regroup) {
+							return (i === 0 && chief.values[s] < groups[0])
+								|| (i === 2 && chief.values[s] > groups[1])
+								|| (i === 1 && chief.values[s] >= groups[0] && chief.values[s] <= groups[1]);
+						} else {
+							return chief.values[s] === group;
+						}
+					}),
+					uniq_samp = uniq(filter(samples, function (s) { return ttev_fn(s) != null; }), false, patient_fn),
+					res = km.compute(map(uniq_samp, ttev_fn), map(uniq_samp, ev_fn));
+
+				if (res.length > 0) {
+					if (regroup) {
+						r = self.findColorGroup(groups, values, i);
+						label = r.label;
+					} else {
+						label = (isfloat ? group : chief.codes[group]);
+					}
+					subgroups.push({
+						name: label + " (n=" + uniq_samp.length + ")",
+						group: (regroup ? r.colorGroup : group),
+						values: res
+					});
+				}
+			});
+
+			self.featureLabel.text('Grouped by: '
+				+ (all ? 'All samples' : chief.label)
+				+ (groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : ""));
+			self.render(subgroups, chief);
+		},
+
+		getData: function (eventDsID, survival) {
+			var self = this,
 				event_fid = survival.event,
 				ttevent_fid = survival.tte,
 				patient_fid = survival.patient,
 				ws = this.columnUi.ws,
 				field = ws.column.fields[0],
-				all = false, // XXX make this a checkbox, for whole-cohort display grouping, not implemented for regrouping
 				samples = ws.samples,
 				probes = [event_fid, ttevent_fid, patient_fid];
 
@@ -89,99 +195,7 @@ define([ "lib/d3",
 
 			// retrieve the values for each of the event features
 			this.subs.add(dataset_probe_values(eventDsID, samples, probes)
-				.subscribe(function (v) {
-					var ws = self.columnUi.ws,
-						field = ws.column.fields[0],
-						ev = { values: {} },
-						ttev = { values: {} },
-						feat = {
-							codes: ws.data.codes[field],
-							metadata: {
-								name: ws.data.features[field].name,
-								valuetype: ws.data.features[field].valuetype,
-								longtitle: ws.data.features[field].longtitle
-							},
-							values: {}
-						},
-						patient = { values: _.object(samples, v[2]) },
-						allVals = [_.object(samples, v[0]), _.object(samples, v[1]), ws.data.req.values[field]],
-						definedVals = [ev.values, ttev.values, feat.values],
-						isfloat = feat.metadata.valuetype === 'float',
-						values,
-						groups,
-						regroup,
-						ttev_fn,
-						ev_fn,
-						patient_fn,
-						min_t;
-
-					_.each(allVals, function (vals, i) {
-						_.each(vals, function (val, key) {
-							if (notNull(val)) {
-								definedVals[i][key] = val;
-							}
-						});
-					});
-
-					values = all ? null : _.values(feat.values);
-					// Group by unique values. Coded feature values are always indexes 0..N-1.
-					groups = all ? ['All samples'] : (isfloat ? filter(uniq(values), notNull) : range(feat.codes.length));
-					regroup = (isfloat && groups.length > 10);
-					ttev_fn    = bind(attr, null, ttev.values);    // fn sample -> ttev
-					ev_fn      = bind(attr, null, ev.values);      // fn sample -> ev
-					patient_fn = bind(attr, null, patient.values); // fn sample -> patient
-					min_t = d3.min(_.values(ttev.values));
-
-					if (regroup) {
-						groups = self.regroup(values);
-					} else if (feat.metadata.name === 'subgroup') {
-						groups.shift(); // remove the 'neither' category
-					}
-
-					each(groups.slice(0, MAX), function (group, i) {
-						/*jslint eqeq: true */
-						var label,
-							colorGroup,
-							samples = all ? _.keys(ttev.values) : filter(keys(feat.values), function (s) {
-								if (regroup) {
-									return (i === 0 && feat.values[s] < groups[0])
-										|| (i === 2 && feat.values[s] > groups[1])
-										|| (i === 1 && feat.values[s] >= groups[0] && feat.values[s] <= groups[1]);
-								} else {
-									return feat.values[s] === group;
-								}
-							}),
-							uniq_samp = uniq(filter(samples, function (s) { return ttev_fn(s) != null; }), false, patient_fn),
-							res = km.compute(map(uniq_samp, ttev_fn), map(uniq_samp, ev_fn));
-
-						if (res.length > 0) {
-							if (regroup) {
-								if (i === 0) {
-									label = '< ' + groups[0];
-									colorGroup = d3.min(values);
-								} else if (i === 2) {
-									label = '> ' + groups[1];
-									colorGroup = d3.max(values);
-								} else {
-									label = groups[0] + ' to ' + groups[1];
-									colorGroup = (d3.min(values) + d3.max(values)) / 2;
-								}
-							} else {
-								label = (isfloat ? group : feat.codes[group]);
-							}
-							data.push({
-								name: label + " (n=" + uniq_samp.length + ")",
-								group: (regroup ? colorGroup : group),
-								values: res
-							});
-						}
-					});
-
-					self.featureLabel.text('Grouped by: '
-						+ (all ? 'All samples' : feat.metadata.longtitle)
-						+ (groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : ""));
-					self.renderNow(data, feat);
-				}));
+				.subscribe(self.receiveData));
 		},
 
 		setupSvg: function () {
@@ -225,14 +239,14 @@ define([ "lib/d3",
 			this.xAxis = xAxis;
 		},
 
-		renderNow: function (subgroups, feature) {
+		render: function (subgroups, chief) {
 			var x = this.x,
 				y = this.y,
 				// TODO we're already storing some sort of color in this.columnUi.ws.column,
 				// so we should be able to use that, or store the colorFn there to use here
 				//color = this.columnUi.ws.column.colorFn,
 				//color = this.columnUi.ws.column.color,
-				color = heatmapColors.range(this.columnUi.ws.column, feature.metadata, feature.codes),
+				color = heatmapColors.range(this.columnUi.ws.column, chief, chief.codes, chief.colorValues),
 				line = d3.svg.line().interpolate("step-after")
 					.x(function (d) { return x(d.t); })
 					.y(function (d) { return y(d.s); }),
@@ -356,9 +370,8 @@ define([ "lib/d3",
 				})),
 				dsIDs = _.map(clinicalMatrices, function (cm) { return cm.dsID; });
 
-			// for each clinicalMatrix, find survival vars
 			this.subs.add(Rx.Observable.zipArray(_.map(dsIDs, function (dsID) {
-				return xenaQuery.feature_list(dsID);
+				return feature_list(dsID);
 			}))
 				.subscribe(function (features_by_dataset) {
 					var eventDsID,
@@ -388,7 +401,7 @@ define([ "lib/d3",
 						self.cursor.update(function (s) {
 							return _.assoc_in(s, ['kmPlot', 'survival'], survival);
 						});
-						self.render(eventDsID, survival);
+						self.getData(eventDsID, survival);
 					}
 				}));
 		},
@@ -460,7 +473,7 @@ define([ "lib/d3",
 			if (geometry === 'default') {
 				this.setSurvivalVars();
 			} else if (myWs.eventDsID && myWs.survival) {
-				this.render(myWs.eventDsID, myWs.survival);
+				this.getData(myWs.eventDsID, myWs.survival);
 				// TODO for now, assume survival vars are still in the saved eventDsID.
 			}
 		}
@@ -484,6 +497,12 @@ define([ "lib/d3",
 	return {
 
 		show: show,
+
+		moveToTop: function (id) {
+			if (widgets[id]) {
+				widgets[id].$el.dialog('moveToTop');
+			}
+		},
 
 		destroy: function (id, options) {
 			if (widgets[id]) {
