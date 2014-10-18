@@ -1,3 +1,4 @@
+/*global define: false */
 define([], function() {
 	var hasOwnProperty = Object.prototype.hasOwnProperty,
 		slice = Array.prototype.slice;
@@ -21,7 +22,9 @@ define([], function() {
 	}
 
 	function objAssoc(x, k, v) {
-		var y = {};
+		/*jslint forin: true */
+		var y = {}, i;
+		x = x || {};
 		for (i in x) {
 			if (has(x, i)) {
 				y[i] = x[i];
@@ -32,10 +35,11 @@ define([], function() {
 	}
 
 	function dissoc(x, k) {
+		/*jslint forin: true */
 		if (!has(x, k)) { // avoid new object if we can.
 			return x;
 		}
-		var y = {};
+		var y = {}, i;
 		for (i in x) {
 			if (has(x, i) && i !== k) {
 				y[i] = x[i];
@@ -45,7 +49,7 @@ define([], function() {
 	}
 
 	function assoc1(x, k, v) {
-		if (x[k] === v) { // avoid new object if we can.
+		if (x && x[k] === v) { // avoid new object if we can.
 			return x;
 		}
 		if (x instanceof Array) {
@@ -68,7 +72,7 @@ define([], function() {
 		if (keys.length === i + 1) {
 			return assoc(x, ki, v);
 		}
-		return assoc(x, ki, assoc_in_i(x[ki], keys, v, i + 1));
+		return assoc(x, ki, assoc_in_i(x && x[ki], keys, v, i + 1));
 	}
 
 	function assoc_in(x, keys, v) {
@@ -87,7 +91,7 @@ define([], function() {
 		if (keys.length === i + 1) {
 			return assoc(x, ki, fn(x[ki]));
 		}
-		return assoc(x, ki, update_in_i(x[ki], keys, fn, i + 1));
+		return assoc(x, ki, update_in_i(x && x[ki], keys, fn, i + 1));
 	}
 
 	function update_in(x, keys, fn) {
@@ -97,7 +101,7 @@ define([], function() {
 	function get_in_i(x, keys, i) {
 		var ki;
 
-		if (x == null) {
+		if (x === null || x === undefined) {
 			return x;
 		}
 		ki = keys[i];
