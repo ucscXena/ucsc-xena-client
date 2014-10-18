@@ -485,6 +485,8 @@ define(['underscore_ext',
 
 		if (column.dataType === 'geneProbesMatrix') {
 			label = column.fields[0] + ' (' + field + ')';
+		} else if (column.dataType === 'clinicalMatrix') {
+			label = column.fieldLabel.default;
 		} else {
 			label = field;
 		}
