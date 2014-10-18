@@ -109,7 +109,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 			ds = _.extend(text, _.dissoc(ds, 'TEXT'));
 			return {
 				dsID: JSON.stringify({host: host, name: ds.name}),
-				title: ds.label || ds.name,
+				label: ds.label || ds.name,
 				type: ds.type,
 				probemap: ds.probemap,
 				// XXX wonky fix to work around dataSubType.
@@ -175,7 +175,7 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function dataset_list_query(cohort) {
-		return '(query {:select [:name :shorttitle :type :datasubtype :probemap :text]\n' +
+		return '(query {:select [:name :type :datasubtype :probemap :text]\n' +
 		       '        :from [:dataset]\n' +
 		       '        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
 	}

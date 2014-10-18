@@ -4,4 +4,4 @@
     %optgroup{label:source.title}
       - _.each(source.datasets, function (d) {
         - if (d.type !== 'probeMap' && d.type !== 'genePredExt') {
-          %option{value:encodeURIComponent(d.dsID)} =d.title
+          %option{value:encodeURIComponent(d.dsID)} =d.label

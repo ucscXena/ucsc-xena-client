@@ -3,7 +3,7 @@
 
 define(['haml!haml/columnEdit',
 	   'haml!haml/columnEditBasic',
-	   'haml!haml/columnEditDatasets',
+	   'haml!haml/datasetSelect',
 	   'haml!haml/select',
 	   'haml!haml/columnEditAdvanced',
 	   'defer',
@@ -393,7 +393,7 @@ define(['haml!haml/columnEdit',
 					return _.assoc(s, 'title', xenaQuery.server_title(s.server));
 				});
 
-				opts = $(datasetsTemplate({sources: self.sources}));
+				opts = $(datasetsTemplate({sources: self.sources, placeholder: 'Select...'}));
 
 				// there might or might not be a a select2 element.
 				// need to find it & do a destroy.
@@ -404,9 +404,7 @@ define(['haml!haml/columnEdit',
 				self.$el.find('.dataset').replaceWith(opts);
 				opts.select2({
 					minimumResultsForSearch: 3,
-					dropdownAutoWidth: true,
-					placeholder: 'Select...',
-					placeholderOption: 'first'
+					dropdownAutoWidth: true
 				});
 
 				// XXX State should be in the monad, not fetched from
