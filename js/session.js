@@ -3,81 +3,55 @@
 define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery, Rx, dom_helper, _) {
 	'use strict';
 
-	var stateJSON;
+	var resetXenaState = {
+			samples: [],
+			samplesFrom: "",
+			height: 717,
+			zoomIndex: 0,
+			zoomCount: 0,
+			column_rendering: {},
+			column_order: [],
+			cohort: ""
+		}, defaultHosts = [
+			"https://genome-cancer.ucsc.edu/proj/public/xena",
+			"http://localhost:7222",
+			"http://tcga1:1236"
+		], defaultState = {
+			activeHosts: defaultHosts,
+			allHosts: defaultHosts,
+			userHosts: defaultHosts
+		}, stateJSON;
 
 	function xenaHeatmapStateReset() {
 		//all the initialization for xena heatmap is here // but does not reset servers.
-		if (sessionStorage.hasOwnProperty("xena")) {
-			stateJSON = JSON.parse(sessionStorage.xena);
-		} else {
-			stateJSON = {};
-			stateJSON.servers = {
-				"user": []
-			};
-		}
+		var state = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : {servers: {user: []}};
 
-		stateJSON.samples = [];
-		stateJSON.samplesFrom = "";
-		stateJSON.height = 717;
-		stateJSON.zoomIndex = 0;
-		stateJSON.zoomCount = 0;
-		stateJSON.column_rendering = {};
-		stateJSON.column_order = [];
-		stateJSON.cohort = "";
-
-		sessionStorage.xena = JSON.stringify(stateJSON);
+		sessionStorage.xena = JSON.stringify(_.extend(state, resetXenaState));
 	}
 
 	//set xena user server
 	function setXenaUserServer() {
-		if (!sessionStorage.hasOwnProperty("xena")) {
+		if (!sessionStorage.xena) {
 			xenaHeatmapStateReset();
 		}
-		stateJSON = JSON.parse(sessionStorage.xena);
-		stateJSON.servers.user = JSON.parse(sessionStorage.state).userHosts;
+		// genome-cancer :443 switch XXX why?
+		var state = JSON.parse(sessionStorage.xena),
+			oldHost = "https://genome-cancer.ucsc.edu/proj/public/xena",
+			newHost = "https://genome-cancer.ucsc.edu:443/proj/public/xena";
 
-		// genome-cancer :443 switch
-		var oldHost = "https://genome-cancer.ucsc.edu/proj/public/xena",
-			newHost = "https://genome-cancer.ucsc.edu:443/proj/public/xena",
-			pos;
+		state.servers.user = _.map(JSON.parse(sessionStorage.state).userHosts, function (host) {
+			return host === oldHost ? newHost : host;
+		});
 
-		if (stateJSON.servers.user.indexOf(oldHost) !== -1) {
-			pos = stateJSON.servers.user.indexOf(oldHost);
-			stateJSON.servers.user.splice(pos, 1, newHost);
-		}
-		sessionStorage.xena = JSON.stringify(stateJSON);
+		sessionStorage.xena = JSON.stringify(state);
 	}
 
 	function sessionStorageInitialize() {
-		var defaultHosts = [
-			"https://genome-cancer.ucsc.edu/proj/public/xena",
-			"http://localhost:7222",
-			"http://tcga1:1236"
-			//"http://tcga1:7223",
-		];
+		var state = sessionStorage.state ? JSON.parse(sessionStorage.state) : {};
+		sessionStorage.state = JSON.stringify(_.extend(defaultState, state));
 
-		//activeHosts from sessionStorage
-		if (!sessionStorage.hasOwnProperty('state')) {
-			stateJSON = {};
-			sessionStorage.state = JSON.stringify(stateJSON);
-		}
-		if (!JSON.parse(sessionStorage.state).hasOwnProperty('activeHosts')) {
-			stateJSON = JSON.parse(sessionStorage.state);
-			stateJSON.activeHosts = defaultHosts;
-			sessionStorage.state = JSON.stringify(stateJSON);
-		}
-		if (!JSON.parse(sessionStorage.state).hasOwnProperty('allHosts')) {
-			stateJSON = JSON.parse(sessionStorage.state);
-			stateJSON.allHosts = defaultHosts;
-			sessionStorage.state = JSON.stringify(stateJSON);
-		}
-		if (!JSON.parse(sessionStorage.state).hasOwnProperty('userHosts')) {
-			stateJSON = JSON.parse(sessionStorage.state);
-			stateJSON.userHosts = defaultHosts;
-			sessionStorage.state = JSON.stringify(stateJSON);
-		}
 		// the initialization for xena heatmap is here
-		if (!sessionStorage.hasOwnProperty('xena')) {
+		if (!sessionStorage.xena) {
 			xenaHeatmapStateReset();
 		}
 
@@ -125,40 +99,23 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		return checkbox;
 	}
 
-	function removeHostFromActiveHostsInSession(host) {
-		if (sessionStorage.hasOwnProperty("state") && JSON.parse(sessionStorage.state).hasOwnProperty("activeHosts")) {
-			stateJSON = JSON.parse(sessionStorage.state);
-			if (stateJSON.activeHosts.indexOf(host) !== -1) {
-				stateJSON.activeHosts.splice(stateJSON.activeHosts.indexOf(host), 1);
-				sessionStorage.state = JSON.stringify(stateJSON);
-			}
-		} else {
-			stateJSON.activeHosts = [host];
-			sessionStorage.state = JSON.stringify(stateJSON);
-		}
+	function removeHostFromListInSession(list, host) {
+		var state = JSON.parse(sessionStorage.state);
+		state[list] = _.difference(state[list], [host]);
+		sessionStorage.state = JSON.stringify(state);
 	}
 
-	function addHostToActiveHostsInSession(host) {
-		if (sessionStorage.hasOwnProperty("state") && JSON.parse(sessionStorage.state).hasOwnProperty("activeHosts")) {
-			stateJSON = JSON.parse(sessionStorage.state);
-			if (stateJSON.activeHosts.indexOf(host) === -1) {
-				stateJSON.activeHosts.push(host);
-				sessionStorage.state = JSON.stringify(stateJSON);
-			}
-		}
+	function addHostToListInSession(list, host) {
+		var state = JSON.parse(sessionStorage.state);
+		state[list] = _.union(state[list], [host]);
+		sessionStorage.state = JSON.stringify(state);
 	}
 
 	function updateHostStatus(host) {
-		// JSON.parse(sessionStorage.state).allHosts
-		if (JSON.parse(sessionStorage.state).allHosts.indexOf(host) === -1) {
-			stateJSON = JSON.parse(sessionStorage.state);
-			stateJSON.allHosts.push(host);
-			sessionStorage.state = JSON.stringify(stateJSON);
-		}
+		addHostToListInSession('allHosts', host);
 
 		var node;
 
-		// JSON.parse(sessionStorage.state).activeHosts is the hosts that we think are currently functional
 		xenaQuery.test_host(host).subscribe(function (s) {
 			if (s) {
 				// test if host can return useful data
@@ -170,7 +127,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 							node.parentNode.replaceChild(
 								dom_helper.hrefLink(host, "?host=" + host), node);
 						}
-						addHostToActiveHostsInSession(host);
+						addHostToListInSession('activeHosts', host);
 					} else {
 						var duration = Date.now() - start;
 						if (duration > 3000) {
@@ -184,7 +141,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 									dom_helper.elt("result2", dom_helper.hrefLink(host + " (no data)", "?host=" + host)), node);
 							}
 						}
-						removeHostFromActiveHostsInSession(host);
+						removeHostFromListInSession('activeHosts', host);
 					}
 				});
 			} else {
@@ -193,7 +150,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 					node.parentNode.replaceChild(
 						dom_helper.elt("result2", dom_helper.hrefLink(host + " (not running)", "?host=" + host)), node);
 				}
-				removeHostFromActiveHostsInSession(host);
+				removeHostFromListInSession('activeHosts', host);
 			}
 		});
 	}
