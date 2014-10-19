@@ -90,6 +90,45 @@ define([ "lib/d3",
 			return { label: label, colorGroup: colorGroup };
 		},
 
+		findChiefAttrs: function (samples, field) {
+			var vals,
+				ws = this.columnUi.ws,
+				c = {
+					dataType: ws.column.dataType,
+					label: ws.column.columnLabel.default,
+					isfloat: true,
+					valuetype: null, // only used by heatmapColors.range();
+					codes: null
+				};
+
+			// find values and colorValues
+			if (c.dataType === 'mutationVector') {
+				c.values = this.cleanValues(_.object(samples, _.map(ws.data.req.values[field], function (mutations) {
+					return mutations.length > 0 ? 1 : 0;
+				})));
+				c.colorValues = [0, 1];
+			} else {
+				c.values = this.cleanValues(_.object(samples, this.columnUi.plotData.heatmapData[0]));
+				c.colorValues = this.columnUi.plotData.heatmapData[0];
+			}
+			// find clinical & mutation info
+			if (c.dataType === 'clinicalMatrix') {
+				c.label = ws.column.fieldLabel.default;
+				c.valuetype = ws.data.features[field].valuetype;
+				c.isfloat = (c.valuetype === 'float');
+				c.codes = ws.data.codes[field];
+			} else if (c.dataType === 'mutationVector') {
+				c.label = ws.column.fieldLabel.default;
+				c.valuetype = 'category';
+				c.isfloat = false;
+				c.codes = [
+					'No Mutation',
+					'Has Mutation'
+				];
+			}
+			return c;
+		},
+
 		receiveData: function (data) {
 			var self = this,
 				subgroups = [],
@@ -97,39 +136,22 @@ define([ "lib/d3",
 				field = ws.column.fields[0],
 				all = false, // XXX make this a checkbox, for whole-cohort display grouping, not implemented for regrouping
 				samples = ws.samples,
-				evValues = this.cleanValues(_.object(samples, data[0])),
 				ttevValues = this.cleanValues(_.object(samples, data[1])),
-				patientValues = _.object(samples, data[2]),
-				ttev_fn    = bind(attr, null, ttevValues),    // fn sample -> ttev,
-				ev_fn      = bind(attr, null, evValues),      // fn sample -> ev,
-				patient_fn = bind(attr, null, patientValues), // fn sample -> patient,
+				ttev_fn    = bind(attr, null, ttevValues), // fn sample -> ttev,
+				ev_fn      = bind(attr, null, this.cleanValues(_.object(samples, data[0]))), // fn sample -> ev,
+				patient_fn = bind(attr, null, _.object(samples, data[2])), // fn sample -> patient,
 				min_t = d3.min(_.values(ttevValues)),
-				chief = {
-					dataType: ws.column.dataType,
-					values: this.cleanValues(_.object(samples, this.columnUi.plotData.heatmapData[0])),
-					colorValues: this.columnUi.plotData.heatmapData[0],
-					valuetype: null,
-					codes: null
-				},
-				values = all ? null : _.values(chief.values),
-				isfloat,
+				chief,
+				values,
 				groups,
 				regroup;
 
-			if (chief.dataType === 'clinicalMatrix') {
-				chief.valuetype = ws.data.features[field].valuetype;
-				chief.codes = ws.data.codes[field];
-			} else if (ws.data.metadata) {
-				chief.label = ws.data.metadata.label;
-				//chief.label = ws.data.metadata.longTitle;
-			} else {
-				chief.label = 'TBD, dataType: ' + chief.dataType;
-			}
-			isfloat = !(chief.dataType === 'clinicalMatrix' && chief.valuetype === 'category');
-			// Group by unique values. Coded feature values are always indexes 0..N-1.
-			groups = all ? ['All samples'] : (isfloat ? filter(uniq(values), notNull) : range(chief.codes.length));
-			regroup = (isfloat && groups.length > 10);
+			chief = self.findChiefAttrs(samples, field);
+			values = all ? null : _.values(chief.values);
 
+			// Group by unique values. Coded feature values are always indexes 0..N-1.
+			groups = all ? ['All samples'] : (chief.isfloat ? filter(uniq(values), notNull) : range(chief.codes.length));
+			regroup = (chief.isfloat && groups.length > 10);
 			if (regroup) {
 				groups = self.regroup(values);
 			}
@@ -155,7 +177,7 @@ define([ "lib/d3",
 						r = self.findColorGroup(groups, values, i);
 						label = r.label;
 					} else {
-						label = (isfloat ? group : chief.codes[group]);
+						label = (chief.isfloat ? group : chief.codes[group]);
 					}
 					subgroups.push({
 						name: label + " (n=" + uniq_samp.length + ")",

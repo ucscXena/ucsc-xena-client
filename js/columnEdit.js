@@ -277,7 +277,18 @@ define(['haml!haml/columnEdit',
 		listKeyup: function (ev) {
 			if ($(ev.target).val() === "") {
 				this.$goRow.hide();
+			} else if (ev.keyCode === 13) { // return key pressed
+				if (this.listReturn === 1) {
+					this.listReturn += 1;
+					this.$goRow.show();
+				} else if (this.listReturn === 2) {
+					this.listBlur();
+					this.goClick();
+				} else {
+					this.listReturn = 1;
+				}
 			} else {
+				this.listReturn = 1;
 				this.$goRow.show();
 			}
 		},
