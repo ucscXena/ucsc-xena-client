@@ -109,7 +109,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 			ds = _.extend(text, _.dissoc(ds, 'text'));
 			return _.extend(ds, {
 				dsID: JSON.stringify({host: host, name: ds.name}),
-				title: ds.label || ds.name
+				label: ds.label || ds.name
 			});
 		});
 	}
