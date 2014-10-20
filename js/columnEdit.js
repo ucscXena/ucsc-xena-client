@@ -3,7 +3,7 @@
 
 define(['haml!haml/columnEdit',
 	   'haml!haml/columnEditBasic',
-	   'haml!haml/columnEditDatasets',
+	   'haml!haml/datasetSelect',
 	   'haml!haml/select',
 	   'haml!haml/columnEditAdvanced',
 	   'defer',
@@ -261,10 +261,32 @@ define(['haml!haml/columnEdit',
 			this.$goRow.show();
 		},
 
-		singleListKeyup: function (ev) {
+		singleKeyup: function (ev) {
 			if ($(ev.target).val() === "") {
 				this.$goRow.hide();
+			} else if (ev.keyCode === 13) { // return key pressed
+				this.singleBlur();
+				this.goClick();
 			} else {
+				this.$goRow.show();
+			}
+		},
+
+		listKeyup: function (ev) {
+			if ($(ev.target).val() === "") {
+				this.$goRow.hide();
+			} else if (ev.keyCode === 13) { // return key pressed
+				if (this.listReturn === 1) {
+					this.listReturn += 1;
+					this.$goRow.show();
+				} else if (this.listReturn === 2) {
+					this.listBlur();
+					this.goClick();
+				} else {
+					this.listReturn = 1;
+				}
+			} else {
+				this.listReturn = 1;
 				this.$goRow.show();
 			}
 		},
@@ -364,7 +386,8 @@ define(['haml!haml/columnEdit',
 				.on('click', '.inputMode', self.inputModeClick)
 				.on('blur', '.list', self.listBlur)
 				.on('blur', '.single', self.singleBlur)
-				.on('keyup', '.single, .list', self.singleListKeyup)
+				.on('keyup', '.single', self.singleKeyup)
+				.on('keyup', '.list', self.listKeyup)
 				.on('change', '.feature', self.featureChange)
 				.on('click', '.go', self.goClick);
 			if (self.columnUi) {
@@ -379,7 +402,7 @@ define(['haml!haml/columnEdit',
 					return _.assoc(s, 'title', xenaQuery.server_title(s.server));
 				});
 
-				opts = $(datasetsTemplate({sources: self.sources}));
+				opts = $(datasetsTemplate({sources: self.sources, placeholder: 'Select...'}));
 
 				// there might or might not be a a select2 element.
 				// need to find it & do a destroy.
@@ -390,9 +413,7 @@ define(['haml!haml/columnEdit',
 				self.$el.find('.dataset').replaceWith(opts);
 				opts.select2({
 					minimumResultsForSearch: 3,
-					dropdownAutoWidth: true,
-					placeholder: 'Select...',
-					placeholderOption: 'first'
+					dropdownAutoWidth: true
 				});
 
 				// XXX State should be in the monad, not fetched from

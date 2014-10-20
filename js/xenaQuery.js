@@ -165,7 +165,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	}
 
 	function dataset_list_query(cohort) {
-		return '(query {:select [:name :shorttitle :type :datasubtype :probemap :text]\n' +
+		return '(query {:select [:name :type :datasubtype :probemap :text]\n' +
 		       '        :from [:dataset]\n' +
 		       '        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
 	}

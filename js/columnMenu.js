@@ -1,5 +1,6 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
+/*global alert: false */
 
 define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVector', 'Menu', 'jquery', 'lib/underscore'
 	// non-object dependencies
@@ -29,10 +30,24 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 			};
 
 			this.kmPlotClick = function (ev) {
-				var self = this;
-				this.cursor.update(function (s) {
-					return _.assoc_in(s, ['column_rendering', self.id, 'kmPlot'], { geometry: 'default' });
-				});
+				var self = this,
+					msg,
+					column = this.columnUi.ws.column;
+				if (column.dataType === 'geneProbesMatrix') {
+					msg = 'To generate a Kaplan-Meier plot, please select the View: Gene average.';
+				} else if (column.fields.length > 1) {
+					msg = 'The Kaplan-Meier plot cannot be generated for a multi-variable column.'
+						+ '\n\nTo generate the plot, please create a new column with the one variable of interest.';
+				} else if (column.kmPlot) {
+					kmPlot.moveToTop(this.id);
+				} else {
+					this.cursor.update(function (s) {
+						return _.assoc_in(s, ['column_rendering', self.id, 'kmPlot'], { geometry: 'default' });
+					});
+				}
+				if (msg) {
+					alert(msg); // TODO need a standard user message module
+				}
 			};
 
 			this.mupitClick = function (ev) {
@@ -66,12 +81,10 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 			};
 
 			this.detailClick = function (ev) {
-				console.log('detailClick');
 				this.updateColumn('dataType', 'geneProbesMatrix');
 			};
 
 			this.geneAverageClick = function (ev) {
-				console.log('geneAverageClick');
 				this.updateColumn('dataType', 'geneMatrix');
 			};
 
@@ -102,8 +115,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 			};
 
 			this.render = function () {
-				var column = this.columnUi.ws.column,
-					$kmPlot;
+				var column = this.columnUi.ws.column;
 				this.menuRender($(template()));
 				if (column.dataType === 'mutationVector') {
 					this.$el.find('.mupit, .view, .impact, .dna_vaf, .rna_vaf, hr').show();
@@ -115,19 +127,8 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					this.$el.find('.view, .detail, .geneAverage, hr').show();
 					this.$el.find('.geneAverage .ui-icon-check').css('opacity', 1);
 				}
-				/* disable for beta
-				if (column.fields.length === 1 && column.dataType === 'clinicalMatrix') {
-					$kmPlot = this.$el.find('.kmPlot');
-					$kmPlot.show();
-					if (column.kmPlot) {
-						$kmPlot.css('color', 'grey')
-							.prop('disabled', true);
-					} else {
-						$kmPlot.css('color', 'auto')
-							.prop('disabled', false);
-					}
-				}
-				*/
+				// TODO disable KM for beta
+				//this.$el.find('.kmPlot').show();
 			};
 
 			this.initialize = function (options) {
