@@ -617,7 +617,7 @@ define(['underscore_ext',
 				colors;
 
 			column.min = (_.has(bounds, fields[0]) && bounds[fields[0]].min) || metadata.min || -1;
-			column.max = (_.has(bounds, fields[0]) && bounds[fields[0]].max) || metadata.max || -1;
+			column.max = (_.has(bounds, fields[0]) && bounds[fields[0]].max) || metadata.max || 1;
 			column.colors = default_colors(
 				column.dataType === "clinicalMatrix"
 				? "phenotype"
