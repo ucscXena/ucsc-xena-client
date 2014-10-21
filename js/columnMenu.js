@@ -127,8 +127,8 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					this.$el.find('.view, .detail, .geneAverage, hr').show();
 					this.$el.find('.geneAverage .ui-icon-check').css('opacity', 1);
 				}
-				// TODO disable KM for beta
-				//this.$el.find('.kmPlot').show();
+				// comment out to disable KM
+				this.$el.find('.kmPlot').show();
 			};
 
 			this.initialize = function (options) {
