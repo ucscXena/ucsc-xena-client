@@ -1,6 +1,6 @@
 /*global define: false */
 
-define(['rx.dom', 'underscore_ext'], function (Rx, _) {
+define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	'use strict';
 
 	// HELPERS
@@ -106,21 +106,11 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 
 			// merge curated fields over raw metadata
 			// XXX note that we're case sensitive on raw metadata
-			ds = _.extend(text, _.dissoc(ds, 'TEXT'));
-			return {
+			ds = _.extend(text, _.dissoc(ds, 'text'));
+			return _.extend(ds, {
 				dsID: JSON.stringify({host: host, name: ds.name}),
-				label: ds.label || ds.name,
-				type: ds.type,
-				probemap: ds.probemap,
-				// XXX wonky fix to work around dataSubType.
-				// Use basename of ds.datasubtype if it's there. Otherwise
-				// default to cna if there's a gene view, and clinical otherwise.
-				// Also, copy type mutationVector to dataSubType.
-				dataSubType: ds.type === "mutationVector" ? ds.type :
-					(ds.datasubtype ?
-					 ds.datasubtype.split(/[\/]/).reverse()[0] :
-					 (ds.probemap ? 'cna' : 'phenotype'))
-			};
+				label: ds.label || ds.name
+			});
 		});
 	}
 
@@ -178,6 +168,12 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		return '(query {:select [:name :type :datasubtype :probemap :text]\n' +
 		       '        :from [:dataset]\n' +
 		       '        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
+	}
+
+	function dataset_query (dataset) {
+		return '(query {:select [:name :shorttitle :type :datasubtype :probemap :text]\n' +
+		       '        :from [:dataset]\n' +
+		       '        :where [:= :dataset.name ' + quote(dataset) + ']})';
 	}
 
 	function dataset_probe_string(dataset, samples, probes) {
@@ -387,6 +383,14 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		});
 	}
 
+	function dataset_by_name(host, name) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, dataset_query(name))
+		).map(_.compose(_.partial(xena_dataset_list_transform, host),
+						json_resp))
+		.catch(Rx.Observable.return([]));  // XXX display message?
+	}
+
 	function dataset_field_examples(host, ds) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_field_examples_string(ds))
@@ -428,6 +432,18 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		.catch(Rx.Observable.return([])); // XXX display message?
 	}
 
+	// test if host is up
+	function test_host (host) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, '(+ 1 2)')
+		).map(function(s) {
+			if (s.responseText) {
+				return (3 === JSON.parse(s.responseText));
+			}
+			return false;
+		});//.catch(Rx.Observable.return([]));  // XXX display message?
+	}
+
 	return {
 		// helpers:
 		dsID_fn: dsID_fn,
@@ -458,6 +474,9 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		find_dataset: find_dataset,
 		dataset_samples: dataset_samples,
 		all_samples: all_samples,
-		all_cohorts: all_cohorts
+		all_cohorts: all_cohorts,
+		dataset_by_name: dataset_by_name,
+
+		test_host: test_host
 	};
 });
