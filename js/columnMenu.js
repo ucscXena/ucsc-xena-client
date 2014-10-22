@@ -128,7 +128,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					this.$el.find('.geneAverage .ui-icon-check').css('opacity', 1);
 				}
 				// comment out to disable KM
-				this.$el.find('.kmPlot').show();
+				//this.$el.find('.kmPlot').show();
 			};
 
 			this.initialize = function (options) {
