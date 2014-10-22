@@ -149,12 +149,10 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '  (query\n' +
 		       '    {:select [:%distinct.value]\n' +
 		       '     :from [:dataset]\n' +
-		       '     :where [:= :cohort ' + quote_cohort(cohort) + ']\n' +
-		       '     :left-join\n' +
-		       '       [[{:select [:id :dataset_id]\n' +
-		       '          :from [:field]\n' +
-		       '          :where [:= :name "sampleID"]} :F] [:= :dataset.id :dataset_id]\n' +
-		       '        :code [:= :F.id :field_id]]}))';
+		       '     :join [:field [:= :dataset.id :dataset_id]\n' +
+		       '            :code [:= :field_id :field.id]]\n' +
+		       '     :where [:and [:= :cohort ' + quote_cohort(cohort) + ']\n' +
+		       '                  [:= :field.name "sampleID"]]}))';
 	}
 
 	function all_cohorts_query() {
