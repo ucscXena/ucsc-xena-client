@@ -7,7 +7,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 	var hosts, /* hosts is the variable holds all hosts*/
 		activeHosts,
 		userHosts,
-		query_string = dom_helper.queryStringToJSON();
+		query_string = dom_helper.queryStringToJSON(),
+		baseNode = document.getElementById('main');
 
 	session.sessionStorageInitialize();
 	hosts = JSON.parse(sessionStorage.state).allHosts; // all hosts
@@ -150,7 +151,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 		//cohort section
 		var mode = "single",
 			node = eachCohort(cohortName, hosts, mode);
-		document.body.appendChild(node);
+		baseNode.appendChild(node);
 
 		xenaQuery.dataset_list(hosts, cohortName).subscribe(
 			function (s) {
@@ -232,13 +233,13 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 					nodeDataType.appendChild(listNode);
 				}
 
-				document.body.appendChild(nodeDataType);
+				baseNode.appendChild(nodeDataType);
 
 				// samples section
 				var nodeSamples = dom_helper.elt("section");
 				nodeSamples.setAttribute("id", "samples");
 				nodeSamples.appendChild(dom_helper.elt("header", "Samples"));
-				document.body.appendChild(nodeSamples);
+				baseNode.appendChild(nodeSamples);
 
 				//////////////kind of hacky
 				xenaQuery.all_samples(_.uniq(_.values(dataHost))[0], cohortName).subscribe(
@@ -253,7 +254,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 						}
 						nodeSamples.appendChild(listNode);
 					});
-				document.body.appendChild(dom_helper.elt("br"));
+				baseNode.appendChild(dom_helper.elt("br"));
 			});
 	}
 
@@ -347,7 +348,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 
 			sectionNode.appendChild(tmpNode);
 		}
-		document.body.appendChild(sectionNode);
+		baseNode.appendChild(sectionNode);
 
 		// others
 		sectionNode = dom_helper.sectionNode("others");
@@ -389,7 +390,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 			sectionNode.appendChild(dom_helper.elt("br"));
 		}
 		if (sectionNode.children.length > 0) {
-			document.body.appendChild(sectionNode);
+			baseNode.appendChild(sectionNode);
 		}
 
 		sectionNode = dom_helper.sectionNode("others");
@@ -410,7 +411,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 			}
 			sectionNode.appendChild(listNode);
 		});
-		document.body.appendChild(sectionNode);
+		baseNode.appendChild(sectionNode);
 	}
 
 	// build single SAMPLE page
@@ -424,7 +425,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 		sectionNode.appendChild(dom_helper.elt("label", "cohort:"));
 		sectionNode.appendChild(dom_helper.elt("result", dom_helper.hrefLink(cohort, "?&cohort=" + cohort)));
 
-		document.body.appendChild(sectionNode);
+		baseNode.appendChild(sectionNode);
 	}
 
 	//parse current url to see if it is a query string
@@ -444,10 +445,10 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 
 		node.appendChild(dom_helper.elt("h3", tmpNode));
 		session.updateHostStatus(host);
-		document.body.appendChild(node);
+		baseNode.appendChild(node);
 
 		// cohort list
-		cohortListPage([host], document.body);
+		cohortListPage([host], baseNode);
 	}
 
 	// ?cohort=id
@@ -503,11 +504,11 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 
 		//cohort list page
 		var mainNode = dom_helper.elt("div");
-		mainNode.setAttribute("id", "main");
+		mainNode.setAttribute("id", "dataPagesMain");
 		mainNode.appendChild(dom_helper.elt("h2", "Cohorts"));
 
 		cohortListPage(_.intersection(activeHosts, userHosts), mainNode);
 		container.appendChild(mainNode);
-		document.body.appendChild(container);
+		baseNode.appendChild(container);
 	}
 });

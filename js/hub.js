@@ -30,7 +30,7 @@ define(["dom_helper", "session", "xenaQuery"], function (dom_helper, session, xe
 	newText.setAttribute("id", "textHub");
 	node.appendChild(dom_helper.elt("italic", "Add  "));
 	node.appendChild(newText);
-	document.body.appendChild(node);
+	document.getElementById('main').appendChild(node);
 
 	window.addEventListener("keydown", function (event) {
 		if (event.keyCode === 13) {
