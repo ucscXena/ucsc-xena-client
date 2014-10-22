@@ -61,9 +61,10 @@ define(["lib/d3",
 	// Return a new function that preserves undefined arguments, otherwise calls the original function.
 	// This is to work-around d3 scales.
 	function saveUndefined(fn) {
-		return function (v) {
+		var newfn = function (v) {
 			return isUndefined(v) ? v : fn(v);
 		};
+		return _.extend(newfn, fn); // XXX This weirdness copies d3 fn methods
 	}
 
 	color_range = multi(function (column, features, codes) {

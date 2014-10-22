@@ -561,13 +561,13 @@ define(['underscore_ext',
 		var c,
 			ellipsis = '',
 			align = 'center',
-			labels = [column.min, (column.max + column.min) / 2, column.max],
-			colors = [].concat(column.colors),
+			labels = color_scale[0].domain(),
+			colors = _.map(labels, color_scale[0]),
 			categoryLength = categoryBreak;
 		if (data.length === 0) { // no features to draw
 			return;
 		}
-		if (column.dataType === 'clinicalMatrix') {
+		if (column.dataType === 'clinicalMatrix') { // XXX can we use domain() for categorical?
 			if (codes[fields[0]]) { // category
 				if (codes[fields[0]].length > categoryBreak) {
 					categoryLength = 19;
@@ -582,8 +582,6 @@ define(['underscore_ext',
 					labels = c.labels;
 				}
 				align = 'left';
-			} else { // float
-				colors = _.map(labels, color_scale[0]);
 			}
 		}
 		columnUi.drawLegend(colors, labels, align, ellipsis);
