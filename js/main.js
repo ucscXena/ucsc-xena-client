@@ -179,11 +179,13 @@ define(['jquery',
 		}
 	});
 
-	model.state.subscribe(function (s) {
-		$('#samplesStub').val(JSON.stringify(_.pick(s, keysNot_(s)), undefined, 4));
-	});
 	$(document).ready(function () {
-		var start;
+		var debug_stream = model.state.replay(null, 1),
+			start,
+			sub;
+
+		debug_stream.connect();
+
 		if (sessionStorage && sessionStorage.xena) {
 			// XXX error handling?
 			start = JSON.parse(sessionStorage.xena);
@@ -206,6 +208,13 @@ define(['jquery',
 		$('.samplesFromAnchor').onAsObservable('click')
 			.subscribe(function (ev) {
 				$('.debug').toggle();
+				if (sub) {
+					sub.dispose();
+				} else {
+					sub = debug_stream.subscribe(function (s) {
+						$('#samplesStub').val(JSON.stringify(_.pick(s, keysNot_(s)), undefined, 4));
+					});
+				}
 			});
 	});
 
