@@ -95,7 +95,7 @@ define([ "lib/d3",
 				ws = this.columnUi.ws,
 				c = {
 					dataType: ws.column.dataType,
-					label: ws.column.columnLabel.default,
+					label: ws.column.fieldLabel.user,
 					isfloat: true,
 					valuetype: null, // only used by heatmapColors.range();
 					codes: null
@@ -113,12 +113,15 @@ define([ "lib/d3",
 			}
 			// find clinical & mutation info
 			if (c.dataType === 'clinicalMatrix') {
-				c.label = ws.column.fieldLabel.default;
 				c.valuetype = ws.data.features[field].valuetype;
+				if (c.valuetype !== 'category' || !(ws.data.codes[field])) {
+					c.valuetype = 'float';
+				}
 				c.isfloat = (c.valuetype === 'float');
-				c.codes = ws.data.codes[field];
+				if (!c.isfloat) {
+					c.codes = ws.data.codes[field];
+				}
 			} else if (c.dataType === 'mutationVector') {
-				c.label = ws.column.fieldLabel.default;
 				c.valuetype = 'category';
 				c.isfloat = false;
 				c.codes = [

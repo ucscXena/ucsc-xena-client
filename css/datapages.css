@@ -1,19 +1,19 @@
 
 /* default elements */
 
-*{margin:0px;padding:0px}
+#main *{margin:0px;padding:0px}
 
-#content-container
+#main #content-container
 {
 float: left;
 width: 100%;
 }
 
-#main {
+#dataPagesMain {
 width:85%;
 }
 
-#sidebar {
+#main #sidebar {
 float:right;
 margin-left: auto;
 margin-right: auto;
@@ -22,7 +22,7 @@ font-family: arial, Verdana,'Lucida Grande', Verdana, Helvetica, sans-serif;
 }
 
 
-h1
+#main h1
 {
 font-family:arial, verdana, helvetica, sans-serif;
 font-size:1.9em;
@@ -32,7 +32,7 @@ line-height:1.6em;
 text-align:center;
 }
 
-p
+#main p
 {
 font-family:Verdana, Arial, helvetica, sans-serif;
 font-size:0.8em;
@@ -43,7 +43,7 @@ line-height:1.6em
 }
 
 /* Rounded Corner */
-.tb5 {
+#main .tb5 {
 	border:1px solid #456879;
 	border-radius:20px;
 	height: 22px;
@@ -53,11 +53,11 @@ line-height:1.6em
 	margin-left: 5px;
 	color:gray;
 }
-.tb5:focus {
+#main .tb5:focus {
     outline: 0;
 }
 
-a
+#main a
 {
 font-size:0.9em;
 font-weight:normal;
@@ -66,7 +66,7 @@ text-decoration:none;
 }
 
 
-a:link
+#main a:link
 {
 font-weight:normal;
 font-style:normal;
@@ -74,7 +74,7 @@ text-decoration:none;
 }
 
 
-a:visited
+#main a:visited
 {
 font-style:normal;
 font-weight:normal;
@@ -82,7 +82,7 @@ text-decoration:none;
 }
 
 
-a:hover
+#main a:hover
 {
 color:#ff6600;
 font-style:normal;
@@ -91,7 +91,7 @@ text-decoration:none;
 
 
 /* Layout */
-body
+body #main
 {
 margin: 0;
 padding:0;
@@ -100,48 +100,7 @@ background-color:#ffffff;
 list-style:none;
 }
 
-
-#topnav
-{
-height: 28px;
-line-height: 28px;
-background: url(Img/bg.jpg) repeat-x;
-font-size: 1em;
-font-style: bold;
-margin-bottom: 20px;
-}
-
-#topnav li
-{
-display:inline;
-margin-right:30px;
-}
-
-
-#topnav a
-{
-color:#FFFFFF;
-}
-
-#topnav a:hover
-{
-color:#ff6600;
-font-style:normal;
-}
-
-#topnav .logo
-{
-float:left;
-padding-left:20px;
-}
-
-
-#nav .selected {
-color: #ffffff;
-border-left:4px solid #facd00;
-}
-
-label
+#main label
 {
 color:#006600;
 margin-right: 3px;
@@ -149,12 +108,12 @@ margin-top: 5px;
 margin-bottom: 5px;
 }
 
-label result{
+#main label result{
 color:black;
 }
 
 
-#others label
+#main #others label
 {
 color:#000000;
 font-weight: bold;
@@ -165,78 +124,78 @@ margin-bottom: 5px;
 font-size: 0.9em;
 }
 
-result
+#main result
 {
 margin-right: 10px;
 }
 
-result1
+#main result1
 {
 color:black;
 margin-right: 2px;
 }
 
-result2 a
+#main result2 a
 {
 color:gray;
 margin-right: 2px;
 }
 
-result a
+#main result a
 {
 font-size:1em;
 }
 
-#others result
+#main #others result
 {
 font-size:0.9em;
 }
 
-summary
+#main summary
 {
 color:#505050;
 margin-top: 5px;
 font-size: 0.8em;
 }
 
-description
+#main description
 {
 font-size: 0.95em;
 }
 
 
-identifiers
+#main identifiers
 {
 font-size: 0.9em;
 color:#505050;
 }
 
-identifiers li
+#main identifiers li
 {
 margin-left: 20px;
 margin-top: 5px;
 }
 
 
-identifiers1
+#main identifiers1
 {
 margin-left: 20px;
 color:#505050;
 }
 
-.line-clamp {
+#main .line-clamp {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-#sidehub {
+#main #sidehub {
 margin-right:10px;
 margin-top: 15px;
 }
 
-#main h2,#cohort,#dataType,#dataset,#others,#description,#samples,#host,#hub
+#dataPagesMain h2,#cohort,#dataType,#dataset,#others,#description,#samples,#host,#hub
 {
 padding:15px;
 margin-left: auto;
@@ -244,43 +203,43 @@ margin-right: auto;
 width: 65%;
 }
 
-#sidehub h2 a {
+#main #sidehub h2 a {
 color: #000066;
 }
 
-#sidehub h2 a:hover{
+#main #sidehub h2 a:hover{
 color:#ff6600;
 }
 
-#cohort h2,#dataset h2,#host h2,#hub h2
+#main #cohort h2,#dataset h2,#host h2,#hub h2
 {
 color:#000099;
 }
 
-#cohort h3 a,#dataset h3 a,#host h3 a,#host h3
+#main #cohort h3 a,#dataset h3 a,#host h3 a,#host h3
 {
 font-size:1.3em;
 font-weight: bold;
 }
 
-#cohort h3 multiple a
+#main #cohort h3 multiple a
 {
 font-size:0.9em;
 font-weight: normal;
 color:#330099;
 }
 
-#cohort h3 multiple a:hover
+#main #cohort h3 multiple a:hover
 {
 color:#ff6600;
 }
 
-#dataType header,#samples header,#others header
+#main #dataType header,#samples header,#others header
 {
 font-size:1.2em;
 }
 
-#dataType li,#other li
+#main #dataType li,#other li
 {
 color:#0033FF;
 margin-left: 50px;
@@ -288,14 +247,14 @@ margin-top: 5px;
 margin-bottom: 5px;
 }
 
-#dataType li a
+#main #dataType li a
 {
 font-size: 1em;
 margin-right: 5px;
 }
 
 
-#samples li,sampleid
+#main #samples li,sampleid
 {
 font-size:0.9em;
 margin-left: 50px;
@@ -303,7 +262,7 @@ margin-bottom: 5px;
 }
 
 
-#footer
+#main #footer
 {
 clear: both;
 margin-right: 0px;
@@ -314,7 +273,7 @@ text-align:center;
 padding:8px;
 }
 
-#footer p
+#main #footer p
 {
 font-size: 0.7em;
 line-height:3em;
@@ -328,7 +287,7 @@ padding-left: 10px;
 text-align: center;
 }
 
-#footer a
+#main #footer a
 
 {
 font-size: 1em;
@@ -337,7 +296,7 @@ color: #facd00;
 text-align: center;
 }
 
-#footer a:hover
+#main #footer a:hover
 
 {
 text-decoration: underline;
