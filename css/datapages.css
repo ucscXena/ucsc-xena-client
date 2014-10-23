@@ -5,6 +5,7 @@
 
 #main #content-container
 {
+margin-top: 20px;
 float: left;
 width: 100%;
 }
@@ -213,11 +214,13 @@ color:#ff6600;
 
 #main #cohort h2,#dataset h2,#host h2,#hub h2
 {
+margin-top: 20px;
 color:#000099;
 }
 
 #main #cohort h3 a,#dataset h3 a,#host h3 a,#host h3
 {
+margin-top: 20px;
 font-size:1.3em;
 font-weight: bold;
 }

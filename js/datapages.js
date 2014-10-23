@@ -1,14 +1,15 @@
 /*jslint browser:true, nomen: true*/
 /*global define: false */
 
-define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], function (dom_helper, xenaQuery, session, _, Rx) {
+define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], function ($, dom_helper, xenaQuery, session, _, Rx) {
 	'use strict';
 
 	var hosts, /* hosts is the variable holds all hosts*/
 		activeHosts,
 		userHosts,
 		query_string = dom_helper.queryStringToJSON(),
-		baseNode = document.getElementById('main');
+		baseNode = document.getElementById('main'),
+		COHORT_NULL = '(unassigned)';
 
 	session.sessionStorageInitialize();
 	hosts = JSON.parse(sessionStorage.state).allHosts; // all hosts
@@ -26,7 +27,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 				if (r.hasOwnProperty("datasets")) {
 					return r.datasets.some(function (dataset) {
 						var format = dataset.type;
-						return ["genomicMatrix", "clinicalMatrix", "mutationVector"].indexOf(format) !== -1;
+						return ["sampleMap", "probeMap", "genePred"].indexOf(format) === -1;
 					});
 				}
 				return false;
@@ -119,6 +120,16 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 		return node;
 	}
 
+	function cmpCohort(a, b) {
+		if (a === b) {
+			return 0;
+		}
+		if (a === COHORT_NULL || a.toLowerCase() < b.toLowerCase()) {
+			return -1;
+		}
+		return 1;
+	}
+
 	function cohortListPage(hosts, rootNode) {
 		if (!hosts || hosts.length === 0) {
 			return;
@@ -128,7 +139,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 		hosts.forEach(function (host) {
 			xenaQuery.all_cohorts(host).subscribe(function (s) {
 				var mode, node;
-				s.sort().forEach(function (cohort) {
+				s.forEach(function (cohort) {
 					if (cohortC.indexOf(cohort) !== -1) {
 						return;
 					}
@@ -138,6 +149,11 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 							mode = "multiple";
 							node = eachCohort(cohort, hosts, mode);
 							rootNode.appendChild(node);
+							$('#dataPagesMain section').detach().sort(function (a, b) {
+								var txta = $(a).find('h3 multiple a').text(),
+									txtb = $(b).find('h3 multiple a').text();
+								return cmpCohort(txta, txtb);
+							}).appendTo($('#dataPagesMain'));
 						}
 					});
 				});
@@ -172,7 +188,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 							description = dataset.description,
 							name = dataset.name,
 							fullname = host + name;
-						if (["genomicMatrix", "clinicalMatrix", "mutationVector"].indexOf(format) !== -1) {
+						if (["sampleMap", "probeMap", "genePred"].indexOf(format) === -1) {
 							if (!label) {
 								label = name;
 							}
@@ -265,7 +281,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 			label = dataset.label || name,
 			description = dataset.description,
 			longTitle = dataset.longTitle,
-			cohort = dataset.cohort,
+			cohort = dataset.cohort || COHORT_NULL,
 			platform = dataset.platform,
 			assembly = dataset.assembly,
 			version = dataset.version,
@@ -438,6 +454,10 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 
 		host = decodeURIComponent(query_string.host);
 
+		if (JSON.parse(sessionStorage.state).allHosts.indexOf(host) === -1) {
+		    return;
+		}
+
 		// host title
 		var node = dom_helper.sectionNode("host");
 		var tmpNode = dom_helper.hrefLink(host + " (connecting)", "?host=" + host);
@@ -509,6 +529,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom"], funct
 
 		cohortListPage(_.intersection(activeHosts, userHosts), mainNode);
 		container.appendChild(mainNode);
+		container.appendChild(dom_helper.elt("br"));
 		baseNode.appendChild(container);
 	}
 });

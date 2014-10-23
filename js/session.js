@@ -28,9 +28,10 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			oldHost = "https://genome-cancer.ucsc.edu/proj/public/xena",
 			newHost = "https://genome-cancer.ucsc.edu:443/proj/public/xena";
 
-		state.servers.user = _.map(JSON.parse(sessionStorage.state).userHosts, function (host) {
-			return host === oldHost ? newHost : host;
-		});
+		state.servers.user = _.map(_.intersection(JSON.parse(sessionStorage.state).activeHosts,
+			JSON.parse(sessionStorage.state).userHosts), function (host) {
+				return host === oldHost ? newHost : host;
+			});
 
 		sessionStorage.xena = JSON.stringify(state);
 	}
@@ -39,13 +40,12 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 	function sessionStorageInitialize() {
 		var defaultHosts = [
 				"https://genome-cancer.ucsc.edu/proj/public/xena",
-				"http://localhost:7222",
-				"http://tcga1:1236"
+				"http://localhost:7222"
 			],
 			defaultState = {
-				activeHosts: defaultHosts,
+				activeHosts: ["https://genome-cancer.ucsc.edu/proj/public/xena"],
 				allHosts: defaultHosts,
-				userHosts: defaultHosts
+				userHosts: ["https://genome-cancer.ucsc.edu/proj/public/xena"]
 			},
 			state = sessionStorage.state ? JSON.parse(sessionStorage.state) : {};
 		sessionStorage.state = JSON.stringify(_.extend(defaultState, state));
@@ -56,12 +56,14 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		var state = JSON.parse(sessionStorage.state);
 		state[list] = _.difference(state[list], [host]);
 		sessionStorage.state = JSON.stringify(state);
+		setXenaUserServer();
 	}
 
 	function addHostToListInSession(list, host) {
 		var state = JSON.parse(sessionStorage.state);
 		state[list] = _.union(state[list], [host]);
 		sessionStorage.state = JSON.stringify(state);
+		setXenaUserServer();
 	}
 
 	function hostCheckBox(host, ifChangedAction) {
