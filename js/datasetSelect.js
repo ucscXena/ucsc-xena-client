@@ -15,10 +15,14 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 	}
 
 	function setSamples(samples, state) {
-		return _.assoc(state,
-					   'samples', samples,
-					   'zoomCount', samples.length,
-					   'zoomIndex', 0);
+		if (!_.isEqual(samples, state.samples)) {
+			return _.assoc(state,
+						   'samples', samples,
+						   'zoomCount', samples.length,
+						   'zoomIndex', 0);
+		} else {
+			return state;
+		}
 	}
 
 	aWidget = {
@@ -79,11 +83,12 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 				}).subscribe(_.apply(self.render));
 
 			// retrieve all samples in this cohort, from all servers
-			samples = state.map(function (state) {
+			samples = state.refine({samplesFrom: ['samplesFrom'], servers: ['servers', 'user'], cohort: ['cohort']})
+				.map(function (state) {
 				if (state.samplesFrom) {
 					return dataset_samples(state.samplesFrom);
 				} else {
-					return Rx.Observable.zipArray(_.map(state.servers.user, function (s) {
+					return Rx.Observable.zipArray(_.map(state.servers, function (s) {
 						return xenaQuery.all_samples(s, state.cohort);
 					})).map(_.apply(_.union));
 				}
