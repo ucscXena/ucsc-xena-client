@@ -179,10 +179,18 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 					coords,
 					rows = [],
 					mode = 'genesets',
-					valWidth,
 					dnaAf,
 					rnaAf,
-					option = 'a';
+					sampleIndex,
+					ws = ev.data.plotData.ws,
+					tip = {
+						ev: ev,
+						el: '#nav',
+						my: 'top',
+						at: 'top',
+						mode: mode,
+						valWidth: '18em'
+					};
 				if (tooltip.frozen()) {
 					return;
 				}
@@ -195,48 +203,23 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 						+ '-' + util.addCommas(node.data.end);
 					dnaAf = this.formatAf(node.data.dna_vaf);
 					rnaAf = this.formatAf(node.data.rna_vaf);
-					if (option === 'a') {
-						rows = [
-							{ val: node.data.effect},
-							{ val: 'hg19 ' + pos + ' ' + node.data.reference + '>' + node.data.alt },
-							{ val: this.gene.name + ' (' + node.data.amino_acid + ')' },
-							{ val: 'DNA / RNA variant allele freq: ' + dnaAf + ' / ' + rnaAf }
-						];
-						valWidth = '18em';
-					} else if (option === 'b') {
-						rows = [
-							{ label: 'Effect', val: node.data.effect},
-							{ label: 'hg19 ' + pos, val: node.data.reference + '>' + node.data.alt },
-							{ label: this.gene.name, val: '(' + node.data.amino_acid + ')' },
-							{ label: 'DNA / RNA variant allele freq', val: dnaAf + ' / ' + rnaAf }
-						];
-						valWidth = '12em';
-					} else {
-						rows = [
-							{ label: 'Effect', val: node.data.effect},
-							{ label: node.data.reference + ' > ' + node.data.alt, val: 'hg19 ' + pos },
-							{ label: this.gene.name, val: '(' + node.data.amino_acid + ')' },
-							{ label: 'Variant allele freq', val: 'DNA: ' + dnaAf + ' RNA: ' + rnaAf }
-						];
-						valWidth = '15em';
-					}
-					tooltip.mousing({
-						ev: ev,
-						sampleID: node.data.sample,
-						el: '#nav',
-						my: 'top',
-						at: 'top',
-						mode: mode,
-						rows: rows,
-						valWidth: valWidth
-					});
+					rows = [
+						{ val: node.data.effect},
+						{ val: 'hg19 ' + pos + ' ' + node.data.reference + '>' + node.data.alt },
+						{ val: this.gene.name + ' (' + node.data.amino_acid + ')' },
+						{ val: 'DNA / RNA variant allele freq: ' + dnaAf + ' / ' + rnaAf }
+					];
+					tip.sampleID = node.data.sample;
+					tip.rows = rows;
 				} else {
-					tooltip.hide();
+					sampleIndex = Math.floor((coords.y * ws.zoomCount / ws.height) + ws.zoomIndex);
+					tip.sampleID = ev.data.plotData.samples[sampleIndex];
 					if (this.highlightOn) {
 						this.draw();
 						this.highlightOn = false;
 					}
 				}
+				tooltip.mousing(tip);
 			},
 
 			mupitClick: function () {
@@ -377,7 +360,8 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 			},
 
 			initialize: function (options) {
-				var horizontalMargin = '-' + options.horizontalMargin.toString() + 'px';
+				var self = this,
+					horizontalMargin = '-' + options.horizontalMargin.toString() + 'px';
 				_.bindAll.apply(_, [this].concat(_.functions(this)));
 				//_(this).bindAll();
 				this.vg = options.vg;
@@ -402,7 +386,10 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				});
 
 				// bindings
-				this.sub = this.columnUi.crosshairs.mousemoveStream.subscribe(this.mousing);
+				this.sub = this.columnUi.crosshairs.mousingStream.subscribe(function (ev) {
+					ev.data = { plotData: self.columnUi.plotData };
+					self.mousing(ev);
+				});
 
 				this.receiveData(options.data);
 			}
