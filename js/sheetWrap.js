@@ -2,7 +2,6 @@
 /*globals define: false, $: false, _: false */
 define(['haml!haml/sheetWrap',
 		'cursor',
-		'stub',
 		'spreadsheet',
 		'cohortSelect',
 		'columnEdit',
@@ -18,7 +17,6 @@ define(['haml!haml/sheetWrap',
 		'rx.binding'
 		], function (template,
 					new_cursor,
-					stub,
 					spreadsheet,
 					cohortSelect,
 					columnEdit,
