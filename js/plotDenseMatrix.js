@@ -465,11 +465,10 @@ define(['underscore_ext',
 	}
 
 	function mousing(ev) {
-		var serverData = ev.data.plotData.serverData,
-			heatmapData = ev.data.plotData.heatmapData,
+		var heatmapData = ev.data.plotData.heatmapData,
 			fields = ev.data.plotData.fields,
-			codes = ev.data.plotData.codes,
 			column = ev.data.column,
+			codes = ev.data.plotData.codes[column.fields[0]],
 			ws = ev.data.ws,
 			mode = 'genesets',
 			rows = [],
@@ -479,7 +478,15 @@ define(['underscore_ext',
 			field,
 			label,
 			val,
-			valWidth;
+			valWidth,
+			labelWidth,
+			tip = {
+				ev: ev,
+				el: '#nav',
+				my: 'top',
+				at: 'top',
+				mode: mode
+			};
 
 		if (tooltip.frozen()) {
 			return;
@@ -491,6 +498,7 @@ define(['underscore_ext',
 		coord = plotCoords(ev);
 		sampleIndex = Math.floor((coord.y * ws.zoomCount / ws.height) + ws.zoomIndex);
 		fieldIndex = Math.floor(coord.x * fields.length / ws.column.width);
+		tip.sampleID = ev.data.plotData.samples[sampleIndex];
 		field = fields[fieldIndex];
 
 		if (column.dataType === 'geneProbesMatrix') {
@@ -501,32 +509,24 @@ define(['underscore_ext',
 			label = field;
 		}
 		val = heatmapData[fieldIndex][sampleIndex];
-		if (column.dataType === 'clinicalMatrix' && codes[label]) {
-			val = codes[label][val];
-		} else if (val !== undefined) {
-			val = prec(val);
+		val = (column.dataType === 'clinicalMatrix' && codes)
+			? codes[val]
+			: prec(val);
+		if (val === undefined || _.isNaN(val)) {
+			val = 'NA';
 		}
-		if (val !== undefined) {
-			rows.push({ label: label, val: val });
-			if (column.dataType === 'clinicalMatrix') {
-				valWidth = '25em';
-			} else {
-				//rows.push({ label: 'Column mean', val: prec(meannan(serverData[field])) });
-				rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
-				valWidth = '15em';
-			}
+		rows.push({ label: label, val: val });
+		if (column.dataType === 'clinicalMatrix') {
+			tip.valWidth = '25em';
+		} else {
+			tip.labelWidth = '8em';
+			tip.valWidth = '15em';
 		}
-
-		tooltip.mousing({
-			ev: ev,
-			sampleID: ev.data.plotData.samples[sampleIndex],
-			el: '#nav',
-			my: 'top',
-			at: 'top',
-			mode: mode,
-			rows: rows,
-			valWidth: valWidth
-		});
+		if (val !== 'NA' && column.dataType !== 'clinicalMatrix') {
+			rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
+		}
+		tip.rows = rows;
+		tooltip.mousing(tip);
 	}
 
 	function categoryLegend(dataIn, color_scale, codes) {
@@ -650,7 +650,7 @@ define(['underscore_ext',
 					serverData: data.req.values,
 					heatmapData: heatmapData,
 					column: column,
-					samples: sort, // TODO should samples, fields, codes be gotten from ws?
+					samples: sort,
 					fields: fields,
 					codes: codes
 				};

@@ -57,6 +57,9 @@ define(["haml!haml/tooltip", "haml!haml/tooltipClose", "jquery", "defer", "error
 				sampleID: t.sampleID || null,
 				rows: t.rows,
 			}));
+			if (t.labelWidth) {
+				$tooltip.find('.labelCol').width(t.labelWidth);
+			}
 			if (t.valWidth) {
 				$tooltip.find('.valueCol').width(t.valWidth);
 			}

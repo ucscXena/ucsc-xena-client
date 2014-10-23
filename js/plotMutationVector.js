@@ -214,6 +214,8 @@ define(['underscore_ext', 'jquery', 'rx', 'refGeneExons', 'columnWidgets', 'cros
 						plotData = dataToPlot(sort, data.req.values, ws.column.fields);
 						columnUi.plotData = {
 							values: plotData[0].values,
+							samples: sort,
+							ws: ws,
 							derivedVars: ['gene', 'effect', 'dna_vaf', 'rna_vaf', 'amino_acid']
 						};
 						columnUi = wrapper(el.id, ws);
