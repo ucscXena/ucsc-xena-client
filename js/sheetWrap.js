@@ -179,9 +179,11 @@ define(['haml!haml/sheetWrap',
 			);
 
 			this.subs.add(
-				state.refine(['samples', 'column_order'])
+				state.refine(['samples', 'column_order', 'zoomCount', 'zoomIndex'])
 					.subscribe(function (state) {
-						var text = 'Samples (N=' + state.samples.length + ')',
+						var text = 'Samples (N=' + state.samples.length + ')' +
+								((state.zoomCount === state.samples.length) ? '' :
+								(', showing ' + state.zoomIndex + '-' + (state.zoomIndex + state.zoomCount - 1))),
 							marginT = '7em',
 							marginB = '0';
 						if (state.column_order.length) {
