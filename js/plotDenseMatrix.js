@@ -561,8 +561,8 @@ define(['underscore_ext',
 		var c,
 			ellipsis = '',
 			align = 'center',
-			labels = color_scale[0].domain(),
-			colors = _.map(labels, color_scale[0]),
+			labels = color_scale[0] ? color_scale[0].domain() : [],
+			colors = color_scale[0] ? _.map(labels, color_scale[0]) : [],
 			categoryLength = categoryBreak;
 		if (data.length === 0) { // no features to draw
 			return;
