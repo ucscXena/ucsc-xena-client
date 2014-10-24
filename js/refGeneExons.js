@@ -8,13 +8,6 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 
 	var shade1 = '#cccccc',
 		shade2 = '#999999',
-		labels = {
-			coding: "CDS, exon ",
-			fiveUtr: "5' UTR, exon ",
-			threeUtr: "3' UTR, exon ",
-			fiveSplice: "splice site, exon ",
-			threeSplice: "splice site, exon ",
-		},
 		spLen = 2, // splice site base pairs
 		utrY = 10,
 		utrHeight = 8,
@@ -42,7 +35,7 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 			},
 
 			mapChromPosToX: function (chromPos) {
-				var posChromPos = (this.data.strand === '-') ? this.flip(chromPos, true) : chromPos, // TODO test this flip
+				var posChromPos = (this.data.strand === '-') ? this.flip(chromPos) : chromPos,
 					splexon = find(this.splexons, function (s, i) {
 						return (posChromPos >= s.start && posChromPos <= s.end);
 					});
@@ -52,27 +45,11 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 					console.log('mutation at ' + chromPos + ' not on an exon or splice site');
 					return -1;
 				}
-/*
-					offset,
-					splexon = find(this.splexons, function (s, i) {
-						var start = s.x + s.exonXoffset,
-							end = start + (s.exonEnd + 1 - s.exonStart) + (spLen * 2);
-						if (i > 0 && i < self.splexons.length - 1) { // not first or last
-							end += spLen;
-						}
-						return (posChromPos >= start && posChromPos <= end);
-					});
-				if (splexon) {
-					return posChromPos - splexon.exonXoffset;
-				} else {
-					console.log('mutation at ' + chromPos + ' not on an exon or splice site');
-					return -1;
-				}
-*/
 			},
 
-/* splexons broken:
+/* tooltip is inactive here:
 			mapXtoChromPos: function (elementX) {
+				TBD if we ever want a tooltip on refGene
 			},
 
 			mousing: function (ev) {
@@ -104,15 +81,33 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 				});
 			},
 */
-			flip: function (val, start) {
-				if (start) {
-					return (this.data.txEnd - val) + this.data.txStart;
-				} else {
-					return this.data.txEnd - (val - this.data.txStart);
-				}
+			flip: function (ES) {
+				var C = this.data.txEnd - this.data.txStart + 1;
+				return C - ES + 1;
+				// from http://genomewiki.ucsc.edu/index.php/Visualizing_Coordinates
+				// if you use one-based closed coordinates then the picture
+				// looks like this:  coord range both strands: [1,chromSize]
+				// <pre>
+				//                           e     s                ...321  (neg strand coords)
+				//  eziSmorhc=C              YYYYYYY
+				//            nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+				//            pppppppppppppppppppppppppppppppppppppppppppp
+				//                           XXXXXXX                     C=chromSize
+				//            123...         S     E                        (pos strand coords)
+				//
+				// s = C - E + 1
+				// e = C - S + 1
+				//
+				// So in these coordinates, there is usually some extra +1 or -1 that is needed
+				// in coordinate calculations.
 			},
 
 			flipNegativeStrand: function () {
+				// RefGene data in general, and in our database are stored in
+				// positive strand coordinates, however, we want to view them in
+				// order of transcription. So we flip any negative strand genes
+				// into order-of-transcription coordinates. 5'utr is always on
+				// the left in our view, and indicates the start of transcription
 				var self = this,
 					data = this.data,
 					neg = {
@@ -121,10 +116,10 @@ define(['crosshairs', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib
 						exonStarts: data.exonStarts,
 						exonEnds: data.exonEnds
 					};
-				data.cdsStart = this.flip(neg.cdsEnd, true);
+				data.cdsStart = this.flip(neg.cdsEnd);
 				data.cdsEnd = this.flip(neg.cdsStart);
 				data.exonStarts = map(neg.exonEnds, function (e, i) {
-					return self.flip(e, true);
+					return self.flip(e);
 				});
 				data.exonStarts.reverse();
 				data.exonEnds = map(neg.exonStarts, function (e, i) {
