@@ -138,7 +138,7 @@ define([ "lib/d3",
 				ws = self.columnUi.ws,
 				field = ws.column.fields[0],
 				all = false, // XXX make this a checkbox, for whole-cohort display grouping, not implemented for regrouping
-				samples = ws.samples,
+				samples = this.columnUi.plotData.samples,
 				ttevValues = this.cleanValues(_.object(samples, data[1])),
 				ttev_fn    = bind(attr, null, ttevValues), // fn sample -> ttev,
 				ev_fn      = bind(attr, null, this.cleanValues(_.object(samples, data[0]))), // fn sample -> ev,
@@ -203,7 +203,7 @@ define([ "lib/d3",
 				patient_fid = survival.patient,
 				ws = this.columnUi.ws,
 				field = ws.column.fields[0],
-				samples = ws.samples,
+				samples = this.columnUi.plotData.samples,
 				probes = [event_fid, ttevent_fid, patient_fid];
 
 			if (!event_fid || !ttevent_fid || !patient_fid) {
@@ -393,7 +393,16 @@ define([ "lib/d3",
 						return dataset.type === 'clinicalMatrix';
 					});
 				})),
-				dsIDs = _.map(clinicalMatrices, function (cm) { return cm.dsID; });
+				dsIDs;
+
+			if (clinicalMatrices.length < 1) {
+				this.kmScreen.text("Cannot find the phenotype data.");
+				this.kmScreen.addClass('notify');
+				return;
+			}
+			this.kmScreen.removeClass('notify');
+
+			dsIDs = _.map(clinicalMatrices, function (cm) { return cm.dsID; });
 
 			this.subs.add(Rx.Observable.zipArray(_.map(dsIDs, function (dsID) {
 				return feature_list(dsID);
