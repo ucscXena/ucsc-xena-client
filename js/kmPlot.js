@@ -101,28 +101,29 @@ define([ "lib/d3",
 					codes: null
 				};
 
-			// find values and colorValues
+			// find values
 			if (c.dataType === 'mutationVector') {
 				c.values = this.cleanValues(_.object(samples, _.map(ws.data.req.values[field], function (mutations) {
 					return mutations.length > 0 ? 1 : 0;
 				})));
-				c.colorValues = [0, 1];
 			} else {
 				c.values = this.cleanValues(_.object(samples, this.columnUi.plotData.heatmapData[0]));
-				c.colorValues = this.columnUi.plotData.heatmapData[0];
 			}
-			// find clinical & mutation info
+			// find additional clinical & mutation info
 			if (c.dataType === 'clinicalMatrix') {
 				c.valuetype = ws.data.features[field].valuetype;
 				if (c.valuetype !== 'category' || !(ws.data.codes[field])) {
 					c.valuetype = 'float';
+					c.colorValues = this.columnUi.plotData.heatmapData[0];
 				}
 				c.isfloat = (c.valuetype === 'float');
 				if (!c.isfloat) {
 					c.codes = ws.data.codes[field];
 				}
 			} else if (c.dataType === 'mutationVector') {
-				c.valuetype = 'category';
+				heatmapColors.range.add('codedWhite', heatmapColors.codedWhite);
+				c.valuetype = 'codedWhite';
+				c.colorValues = [0, 1];
 				c.isfloat = false;
 				c.codes = [
 					'No Mutation',
@@ -151,6 +152,24 @@ define([ "lib/d3",
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
+			/*
+			var test = _.map(chief.values, function (val, attr) {
+					return attr;
+				});
+			console.log(test.slice(0, 99));
+			console.log(test.slice(100, 199));
+			console.log(test.slice(200, 299));
+			console.log(test.slice(300, 399));
+			console.log(test.slice(400, 499));
+			console.log(test.slice(500, 599));
+			console.log(test.slice(600, 699));
+			console.log(test.slice(700, 799));
+			console.log(test.slice(800, 899));
+			console.log(test.slice(900, 999));
+			console.log(test.slice(1000, 1099));
+			console.log(test.slice(1100, 1199));
+			console.log(test.slice(1200));
+			*/
 
 			// Group by unique values. Coded feature values are always indexes 0..N-1.
 			groups = all ? ['All samples'] : (chief.isfloat ? filter(uniq(values), notNull) : range(chief.codes.length));
@@ -267,10 +286,6 @@ define([ "lib/d3",
 		render: function (subgroups, chief) {
 			var x = this.x,
 				y = this.y,
-				// TODO we're already storing some sort of color in this.columnUi.ws.column,
-				// so we should be able to use that, or store the colorFn there to use here
-				//color = this.columnUi.ws.column.colorFn,
-				//color = this.columnUi.ws.column.color,
 				color = heatmapColors.range(this.columnUi.ws.column, chief, chief.codes, chief.colorValues),
 				line = d3.svg.line().interpolate("step-after")
 					.x(function (d) { return x(d.t); })
@@ -409,24 +424,28 @@ define([ "lib/d3",
 			}))
 				.subscribe(function (features_by_dataset) {
 					var eventDsID,
-						survival = {};
+						survival = {},
+						survivalFound;
 					if (features_by_dataset.length === dsIDs.length) {
 						_.each(features_by_dataset, function (features, i) {
-							var dsID = dsIDs[i],
-								featureKeys = _.map(features, function (val, key) { return key; });
-							survival.event = _.find(featureKeys, function (key) {
-								return key === '_EVENT';
-							});
-							survival.tte = _.find(featureKeys, function (key) {
-								return key === '_TIME_TO_EVENT';
-							});
-							survival.patient = _.find(featureKeys, function (key) {
-								return key === '_PATIENT';
-							});
-							eventDsID = dsID;
-							if (survival.event && survival.tte && survival.patient) {
-								// find the first dataset with survival vars (refine later)
-								return;
+							if (!survivalFound) {
+								var dsID = dsIDs[i],
+									featureKeys = _.map(features, function (val, key) { return key; });
+								survival.event = _.find(featureKeys, function (key) {
+									return key === '_EVENT';
+								});
+								survival.tte = _.find(featureKeys, function (key) {
+									return key === '_TIME_TO_EVENT';
+								});
+								survival.patient = _.find(featureKeys, function (key) {
+									return key === '_PATIENT';
+								});
+								eventDsID = dsID;
+								if (survival.event && survival.tte && survival.patient) {
+									// find the first dataset with survival vars (refine later)
+									survivalFound = true;
+									return;
+								}
 							}
 						});
 						self.cursor.update(function (s) {
@@ -471,15 +490,15 @@ define([ "lib/d3",
 			if (geometry === 'default') {
 				position = {
 					my: 'left top',
-					at: 'right top',
-					of: options.columnUi.$el
+					at: 'left+100, top+100',
+					of:  $(window)
 				};
 				width = height = 'auto';
 			} else {
 				position = {
 					my: 'left top',
 					at: 'left+' + geometry.left + ' top+' + geometry.top,
-					of: $(document)
+					of: $(window)
 				};
 				width = geometry.width;
 				height = geometry.height;
