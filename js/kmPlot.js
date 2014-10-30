@@ -33,8 +33,8 @@ define([ "lib/d3",
 		kmWidget,
 		widgets = {};
 
-	function notNull(x) {
-		return !(isNull(x) || x === 'NaN' || x === undefined);
+	function isVal(v) {
+		return _.isNumber(v) && !isNaN(v);
 	}
 
 	function attr(obj, a) {
@@ -67,7 +67,7 @@ define([ "lib/d3",
 		cleanValues: function (vals) {
 			var definedVals = {};
 			_.each(vals, function (val, key) {
-				if (notNull(val)) {
+				if (isVal(val)) {
 					definedVals[key] = val;
 				}
 			});
@@ -90,6 +90,36 @@ define([ "lib/d3",
 			return { label: label, colorGroup: colorGroup };
 		},
 
+		findGeneAverage: function (values) {
+			var probeCount = values.length,
+				sampleCount = values[0].length,
+				sums = [],
+				counts = [],
+				averages,
+				averageValues,
+				i;
+			for (i = 0; i < sampleCount; i += 1) {
+				sums.push(0);
+				counts.push(0);
+			}
+			each(values, function (probeVals, i) {
+				each(probeVals, function (val, j) {
+					if (isVal(val)) {
+						sums[j] += val;
+						counts[j] += 1;
+					}
+				});
+			});
+			averages = map(sums, function (sum, i) {
+				if (counts[i] > 0) {
+					return Number((sum / counts[i]).toPrecision(6));
+				} else {
+					return undefined;
+				}
+			});
+			return averages;
+		},
+
 		findChiefAttrs: function (samples, field) {
 			var vals,
 				ws = this.columnUi.ws,
@@ -99,16 +129,21 @@ define([ "lib/d3",
 					isfloat: true,
 					valuetype: null, // only used by heatmapColors.range();
 					codes: null
-				};
+				},
+				uncleanVals;
 
 			// find values
 			if (c.dataType === 'mutationVector') {
-				c.values = this.cleanValues(_.object(samples, _.map(ws.data.req.values[field], function (mutations) {
+				uncleanVals = _.map(ws.data.req.values[field], function (mutations) {
 					return mutations.length > 0 ? 1 : 0;
-				})));
+				});
+			} else if (c.dataType === 'geneProbesMatrix') {
+				uncleanVals = this.findGeneAverage(this.columnUi.plotData.heatmapData);
 			} else {
-				c.values = this.cleanValues(_.object(samples, this.columnUi.plotData.heatmapData[0]));
+				uncleanVals = this.columnUi.plotData.heatmapData[0];
 			}
+			c.values = this.cleanValues(_.object(samples, uncleanVals));
+
 			// find additional clinical & mutation info
 			if (c.dataType === 'clinicalMatrix') {
 				c.valuetype = ws.data.features[field].valuetype;
@@ -152,27 +187,9 @@ define([ "lib/d3",
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
-			/*
-			var test = _.map(chief.values, function (val, attr) {
-					return attr;
-				});
-			console.log(test.slice(0, 99));
-			console.log(test.slice(100, 199));
-			console.log(test.slice(200, 299));
-			console.log(test.slice(300, 399));
-			console.log(test.slice(400, 499));
-			console.log(test.slice(500, 599));
-			console.log(test.slice(600, 699));
-			console.log(test.slice(700, 799));
-			console.log(test.slice(800, 899));
-			console.log(test.slice(900, 999));
-			console.log(test.slice(1000, 1099));
-			console.log(test.slice(1100, 1199));
-			console.log(test.slice(1200));
-			*/
 
 			// Group by unique values. Coded feature values are always indexes 0..N-1.
-			groups = all ? ['All samples'] : (chief.isfloat ? filter(uniq(values), notNull) : range(chief.codes.length));
+			groups = all ? ['All samples'] : (chief.isfloat ? filter(uniq(values), isVal) : range(chief.codes.length));
 			regroup = (chief.isfloat && groups.length > 10);
 			if (regroup) {
 				groups = self.regroup(values);

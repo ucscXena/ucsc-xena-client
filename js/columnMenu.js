@@ -33,9 +33,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 				var self = this,
 					msg,
 					column = this.columnUi.ws.column;
-				if (column.dataType === 'geneProbesMatrix') {
-					msg = 'To generate a Kaplan-Meier plot, please select the View: Gene average.';
-				} else if (column.fields.length > 1) {
+				if (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1) {
 					msg = 'The Kaplan-Meier plot cannot be generated for a multi-variable column.'
 						+ '\n\nTo generate the plot, please create a new column with the one variable of interest.';
 				} else if (column.kmPlot) {
