@@ -228,7 +228,8 @@ define([ "lib/d3",
 
 			self.featureLabel.text('Grouped by: '
 				+ (all ? 'All samples' : chief.label)
-				+ (groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : ""));
+				+ (groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "")
+				+ (chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
 			self.render(subgroups, chief);
 		},
 

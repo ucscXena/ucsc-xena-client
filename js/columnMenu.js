@@ -31,20 +31,16 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 
 			this.kmPlotClick = function (ev) {
 				var self = this,
-					msg,
 					column = this.columnUi.ws.column;
-				if (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1) {
-					msg = 'The Kaplan-Meier plot cannot be generated for a multi-variable column.'
-						+ '\n\nTo generate the plot, please create a new column with the one variable of interest.';
-				} else if (column.kmPlot) {
+				if (this.$kmPlot.hasClass('disabled')) {
+					return;
+				}
+				if (column.kmPlot) {
 					kmPlot.moveToTop(this.id);
 				} else {
 					this.cursor.update(function (s) {
 						return _.assoc_in(s, ['column_rendering', self.id, 'kmPlot'], { geometry: 'default' });
 					});
-				}
-				if (msg) {
-					alert(msg); // TODO need a standard user message module
 				}
 			};
 
@@ -58,6 +54,10 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					columnUi: this.columnUi,
 					$anchor: this.$el
 				});
+			};
+
+			this.mouseleave = function (ev) {
+				this.destroyList();
 			};
 
 			this.viewMouseenter = function (ev) {
@@ -113,7 +113,8 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 			};
 
 			this.render = function () {
-				var column = this.columnUi.ws.column;
+				var column = this.columnUi.ws.column,
+					$kmPlot;
 				this.menuRender($(template()));
 				if (column.dataType === 'mutationVector') {
 					this.$el.find('.mupit, .view, .impact, .dna_vaf, .rna_vaf, hr').show();
@@ -125,8 +126,13 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					this.$el.find('.view, .detail, .geneAverage, hr').show();
 					this.$el.find('.geneAverage .ui-icon-check').css('opacity', 1);
 				}
-				// comment out to disable KM
-				this.$el.find('.kmPlot').show();
+				if (this.columnUi.plotData) {
+					this.$kmPlot = this.$el.find('.kmPlot');
+					this.$kmPlot.show();
+					if (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1) {
+						this.$kmPlot.addClass('disabled');
+					}
+				}
 			};
 
 			this.initialize = function (options) {
@@ -144,6 +150,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 
 				// bindings
 				this.$el // TODO replace with Rx bindings ?
+					.on('mouseleave', this.mouseleave)
 					.on('click', '.mupit', this.mupitClick)
 					.on('mouseenter', '.view', this.viewMouseenter)
 					.on('mouseleave', '.view', this.viewMouseleave)
