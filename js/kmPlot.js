@@ -4,6 +4,7 @@
 define([ "lib/d3",
 		"jquery",
 		"lib/underscore",
+		"config",
 		"defer",
 		"km",
 		"haml!haml/km",
@@ -12,11 +13,13 @@ define([ "lib/d3",
 		"xenaQuery",
 		// non-object dependencies
 		"lib/jquery-ui"
-	], function (d3, $, _, defer, km, template, heatmapColors, Rx, xenaQuery) {
+	], function (d3, $, _, config, defer, km, template, heatmapColors, Rx, xenaQuery) {
 
 	'use strict';
 
-	var each = _.each,
+	var STATIC_URL = config.STATIC_URL,
+		warningImg = STATIC_URL + 'heatmap-cavm/images/warning.png',
+		each = _.each,
 		bind = _.bind,
 		map = _.map,
 		uniq = _.uniq,
@@ -183,12 +186,21 @@ define([ "lib/d3",
 				chief,
 				values,
 				groups,
-				regroup;
+				regroup,
+				ttevSamples,
+				patientUniqueSamples;
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
 
+			// check for duplicate patients ending up on the plot
+			// This is after those without survival values are thrown out,
+			// but before grouping. Not sure why we do grouping before purging non-survival-value samples.
+			ttevSamples = filter(samples, function (s) { return ttev_fn(s) !== null; });
+			patientUniqueSamples = uniq(ttevSamples, false, patient_fn);
+
 			// Group by unique values. Coded feature values are always indexes 0..N-1.
+			// This may result in unequal counts in groups if there are any without ttev values.
 			groups = all ? ['All samples'] : (chief.isfloat ? filter(uniq(values), isVal) : range(chief.codes.length));
 			regroup = (chief.isfloat && groups.length > 10);
 			if (regroup) {
@@ -212,6 +224,9 @@ define([ "lib/d3",
 					res = km.compute(map(uniq_samp, ttev_fn), map(uniq_samp, ev_fn));
 
 				if (res.length > 0) {
+					if (ttevSamples.length !== patientUniqueSamples.length) {
+						self.warningIcon.show();
+					}
 					if (regroup) {
 						r = self.findColorGroup(groups, values, i);
 						label = r.label;
@@ -243,7 +258,7 @@ define([ "lib/d3",
 				samples = this.columnUi.plotData.samples,
 				probes = [event_fid, ttevent_fid, patient_fid];
 
-			if (!event_fid || !ttevent_fid || !patient_fid) {
+			if (!event_fid || !ttevent_fid) {
 				this.kmScreen.text("Cannot find the curated survival data.");
 				this.kmScreen.addClass('notify');
 				return;
@@ -459,7 +474,7 @@ define([ "lib/d3",
 									return key === '_PATIENT';
 								});
 								eventDsID = dsID;
-								if (survival.event && survival.tte && survival.patient) {
+								if (survival.event && survival.tte) {
 									// find the first dataset with survival vars (refine later)
 									survivalFound = true;
 									return;
@@ -477,7 +492,7 @@ define([ "lib/d3",
 				}));
 		},
 
-		cache: [ 'kmScreen', 'kmplot', 'featureLabel' ],
+		cache: [ 'kmScreen', 'kmplot', 'featureLabel', 'warningIcon' ],
 
 		geometryChange: function () {
 			var self = this,
@@ -522,7 +537,9 @@ define([ "lib/d3",
 				height = geometry.height;
 			}
 
-			this.$el = $(template())
+			this.$el = $(template({
+				warningImg: warningImg
+			}))
 				.dialog({
 					dialogClass: dialogClass,
 					title: 'Kaplan-Meier: ' + this.columnUi.ws.column.columnLabel.user,
