@@ -100,6 +100,13 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		}));
 	}
 
+	function indexCodes(xhr) {
+		var codes = JSON.parse(xhr.response);
+		return _.object(_.map(codes, function (row) {
+			return [row.name, row.code && row.code.split('\t')];
+		}));
+	}
+
 	function xena_dataset_list_transform(host, list) {
 		return _.map(list, function (ds) {
 			var text = JSON.parse(ds.text) || {};
@@ -381,6 +388,12 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		});
 	}
 
+	function code_list(host, ds, probes) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, codes_string(ds, probes))
+		).select(indexCodes);
+	}
+
 	function dataset_by_name(host, name) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_query(name))
@@ -467,6 +480,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		// query prep:
 		dataset_list: dataset_list,
 		feature_list: feature_list,
+		code_list: code_list,
 		dataset_field_examples: dataset_field_examples,
 		dataset_probe_values: dataset_probe_values,
 		find_dataset: find_dataset,

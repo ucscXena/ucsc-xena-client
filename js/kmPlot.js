@@ -32,6 +32,7 @@ define([ "lib/d3",
 		keys = _.keys,
 		feature_list = xenaQuery.dsID_fn(xenaQuery.feature_list),
 		dataset_probe_values = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values),
+		code_list = xenaQuery.dsID_fn(xenaQuery.code_list),
 		MAX = 30, // max number of categories
 		kmWidget,
 		widgets = {};
@@ -171,6 +172,25 @@ define([ "lib/d3",
 			return c;
 		},
 
+		receiveCodes: function (codes, dupPatientSamples, samplesToCodes) {
+			var dupCodes = filter(samplesToCodes, function (code, sample) {
+					return _.find(dupPatientSamples, function (dup) {
+						return dup === sample;
+					});
+				}),
+				dupArray = map(dupCodes, function (pc) {
+					return codes[pc];
+				}),
+				dupSamples = filter(samplesToCodes, function (code, sample) {
+					return dupCodes.indexOf(code) > -1;
+				}),
+				msg = 'There are '
+					+ dupSamples.length
+					+ ' samples in this plot mapped to the same _PATIENT IDs of: '
+					+ dupArray.join(', ');
+			this.warningIcon.prop('title', msg);
+		},
+
 		receiveData: function (data) {
 			var self = this,
 				subgroups = [],
@@ -181,26 +201,32 @@ define([ "lib/d3",
 				ttevValues = this.cleanValues(_.object(samples, data[1])),
 				ttev_fn    = bind(attr, null, ttevValues), // fn sample -> ttev,
 				ev_fn      = bind(attr, null, this.cleanValues(_.object(samples, data[0]))), // fn sample -> ev,
-				patient_fn = bind(attr, null, _.object(samples, data[2])), // fn sample -> patient,
+				samplesToCodes = _.object(samples, data[2]),
+				patient_fn = bind(attr, null, samplesToCodes), // fn sample -> patient,
 				min_t = d3.min(_.values(ttevValues)),
 				chief,
 				values,
 				groups,
 				regroup,
 				ttevSamples,
-				patientUniqueSamples;
+				patientUniqueSamples,
+				dupPatientSamples;
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
 
-			// check for duplicate patients ending up on the plot
-			// This is after those without survival values are thrown out,
-			// but before grouping. Not sure why we do grouping before purging non-survival-value samples.
+			// check for duplicate patients ending up on the plot, to give a warning
 			ttevSamples = filter(samples, function (s) { return ttev_fn(s) !== null; });
 			patientUniqueSamples = uniq(ttevSamples, false, patient_fn);
+			dupPatientSamples = _.difference(ttevSamples, patientUniqueSamples);
+			if (dupPatientSamples.length) {
+				this.subs.add(code_list(this.survivalDsID, [this.survivalPatient])
+					.subscribe(function (codes) {
+						self.receiveCodes(codes[self.survivalPatient], dupPatientSamples, samplesToCodes);
+					}));
+			}
 
-			// Group by unique values. Coded feature values are always indexes 0..N-1.
-			// This may result in unequal counts in groups if there are any without ttev values.
+			// Group by unique values, throwing out non-values. Coded feature values are always indexes 0..N-1.
 			groups = all ? ['All samples'] : (chief.isfloat ? filter(uniq(values), isVal) : range(chief.codes.length));
 			regroup = (chief.isfloat && groups.length > 10);
 			if (regroup) {
@@ -220,11 +246,11 @@ define([ "lib/d3",
 							return chief.values[s] === group;
 						}
 					}),
-					uniq_samp = uniq(filter(samples, function (s) { return ttev_fn(s) != null; }), false, patient_fn),
-					res = km.compute(map(uniq_samp, ttev_fn), map(uniq_samp, ev_fn));
+					samplesNotNullTtevFn = filter(samples, function (s) { return ttev_fn(s) != null; }),
+					res = km.compute(map(samplesNotNullTtevFn, ttev_fn), map(samplesNotNullTtevFn, ev_fn));
 
 				if (res.length > 0) {
-					if (ttevSamples.length !== patientUniqueSamples.length) {
+					if (dupPatientSamples.length) {
 						self.warningIcon.show();
 					}
 					if (regroup) {
@@ -234,7 +260,7 @@ define([ "lib/d3",
 						label = (chief.isfloat ? group : chief.codes[group]);
 					}
 					subgroups.push({
-						name: label + " (n=" + uniq_samp.length + ")",
+						name: label + " (n=" + samplesNotNullTtevFn.length + ")",
 						group: (regroup ? r.colorGroup : group),
 						values: res
 					});
@@ -255,8 +281,7 @@ define([ "lib/d3",
 				patient_fid = survival.patient,
 				ws = this.columnUi.ws,
 				field = ws.column.fields[0],
-				samples = this.columnUi.plotData.samples,
-				probes = [event_fid, ttevent_fid, patient_fid];
+				samples = this.columnUi.plotData.samples;
 
 			if (!event_fid || !ttevent_fid) {
 				this.kmScreen.text("Cannot find the curated survival data.");
@@ -271,7 +296,7 @@ define([ "lib/d3",
 			this.kmScreen.removeClass('notify');
 
 			// retrieve the values for each of the event features
-			this.subs.add(dataset_probe_values(eventDsID, samples, probes)
+			this.subs.add(dataset_probe_values(eventDsID, samples, [event_fid, ttevent_fid, patient_fid])
 				.subscribe(self.receiveData));
 		},
 
@@ -487,6 +512,8 @@ define([ "lib/d3",
 						self.cursor.update(function (s) {
 							return _.assoc_in(s, ['kmPlot', 'survival'], survival);
 						});
+						self.survivalDsID = eventDsID;
+						self.survivalPatient = survival.patient;
 						self.getData(eventDsID, survival);
 					}
 				}));
