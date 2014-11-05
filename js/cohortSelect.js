@@ -1,8 +1,8 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.jquery'
-	], function (template, xenaQuery, _, $, Rx) {
+define(['haml!haml/cohortSelect', 'util', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.jquery'
+	], function (template, util, xenaQuery, _, $, Rx) {
 	'use strict';
 
 	var aWidget;
@@ -66,6 +66,7 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			if (cohort) {
 				this.$el.select2('val', cohort);
 			}
+			this.$el.parent().on('select2-open', util.setSelect2height);
 		},
 
 		initialize: function (options) {

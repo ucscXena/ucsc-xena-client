@@ -8,6 +8,7 @@ define(['haml!haml/columnEdit',
 	   'haml!haml/columnEditAdvanced',
 	   'defer',
 	   'genomicPosition',
+	   'util',
 	   'lib/select2',
 	   'jquery',
 	   'underscore_ext',
@@ -21,6 +22,7 @@ define(['haml!haml/columnEdit',
 				 advancedTemplate,
 				 defer,
 				 genomicPosition,
+				 util,
 				 select2,
 				 $,
 				 _,
@@ -416,9 +418,8 @@ define(['haml!haml/columnEdit',
 					dropdownAutoWidth: true
 				});
 
-				// XXX State should be in the monad, not fetched from
-				// the DOM elements like $dataset.
 				self.$dataset = self.$el.find('.select2-container.dataset');
+				self.$el.on('select2-open', '.dataset, .feature', util.setSelect2height);
 			});
 		}
 
