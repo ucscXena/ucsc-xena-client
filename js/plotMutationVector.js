@@ -219,6 +219,7 @@ define(['underscore_ext', 'jquery', 'rx', 'refGeneExons', 'columnWidgets', 'cros
 							derivedVars: ['gene', 'effect', 'dna_vaf', 'rna_vaf', 'amino_acid']
 						};
 						columnUi = wrapper(el.id, ws);
+						columnUi.setPlotted();
 						mutationVector.show(el.id, {
 							vg: vg,
 							width: column.width,

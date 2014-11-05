@@ -52,6 +52,7 @@ define(['haml!haml/sheetWrap',
 	function columnShow(deleteColumn, id, ws) {
 		return columnUi.show(id, {
 			cursor: widget.cursor,
+			xenaCursor: widget.cursor,
 			state: widget.state,
 			ws: ws,
 			sheetWrap: widget,
@@ -81,7 +82,7 @@ define(['haml!haml/sheetWrap',
 			});
 		},
 
-		initCohortsAndSources: function (state, cursor, defaultServers) {
+		initCohortsAndSources: function (state, cursor) {
 			this.cohortSelect = cohortSelect.create({
 				$anchor: this.$cohortAnchor,
 				state: state,
@@ -146,7 +147,7 @@ define(['haml!haml/sheetWrap',
 				return a;
 			}, {}));
 
-			this.initCohortsAndSources(state, options.cursor, options.servers);
+			this.initCohortsAndSources(state, options.cursor);
 			this.initSamplesFrom(state, options.cursor);
 
 			deleteColumnCb = function (id) {
@@ -180,8 +181,9 @@ define(['haml!haml/sheetWrap',
 				state.refine(['samples', 'column_order', 'zoomCount', 'zoomIndex'])
 					.subscribe(function (state) {
 						var text = 'Samples (N=' + state.samples.length + ')' +
-								((state.zoomCount === state.samples.length) ? '' :
-								(', showing ' + state.zoomIndex + '-' + (state.zoomIndex + state.zoomCount - 1))),
+							((state.zoomCount === state.samples.length)
+								? ''
+								: (', showing ' + state.zoomIndex + '-' + (state.zoomIndex + state.zoomCount - 1))),
 							marginT = '7em',
 							marginB = '0';
 						if (state.column_order.length) {

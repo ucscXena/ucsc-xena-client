@@ -126,12 +126,11 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					this.$el.find('.view, .detail, .geneAverage, hr').show();
 					this.$el.find('.geneAverage .ui-icon-check').css('opacity', 1);
 				}
-				if (this.columnUi.plotData) {
-					this.$kmPlot = this.$el.find('.kmPlot');
-					this.$kmPlot.show();
-					if (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1) {
-						this.$kmPlot.addClass('disabled');
-					}
+				this.$kmPlot = this.$el.find('.kmPlot');
+				this.$kmPlot.show();
+				if (!this.columnUi.plotData
+						|| (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1)) {
+					this.$kmPlot.addClass('disabled');
 				}
 			};
 

@@ -78,6 +78,7 @@ define(['jquery',
 		servers: ['servers'],
 		_sources: ['_sources'],
 		column_rendering: ['column_rendering'],
+		_column: ['_column'],
 		column_order: ['column_order'],
 		//columnEditOpen: ['columnEditOpen'],
 		data: ['_column_data']
@@ -189,6 +190,7 @@ define(['jquery',
 		if (sessionStorage && sessionStorage.xena) {
 			// XXX error handling?
 			start = JSON.parse(sessionStorage.xena);
+			start["_column"] = {};
 			start["_sources"] = [];
 		} else {
 			start = {
@@ -200,6 +202,7 @@ define(['jquery',
 				"zoomIndex": 0,
 				"zoomCount": 100,
 				"column_rendering": {},
+				"_column": {},
 				"column_order": []
 			};
 		}

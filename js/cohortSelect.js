@@ -14,6 +14,7 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 					   'cohort', cohort,
 					   'samplesFrom', '', // TODO reset to null or undefined instead?
 					   'column_rendering', {},
+					   '_column', {},
 					   'column_order', []);
 	}
 

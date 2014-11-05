@@ -120,6 +120,7 @@ define(['underscore_ext',
 					zoomCount: ['zoomCount'],
 					samples: ['samples'],
 					_sources: ['_sources'],
+					_column: ['_column', uuid],
 					column: ['column_rendering', uuid]
 				}, s);
 			});

@@ -98,3 +98,6 @@ path.outline {
 	padding-right: 20px;
 	font-weight: bold;
 }
+.kmDialog .warningIcon {
+	display: none;
+}

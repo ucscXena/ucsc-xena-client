@@ -655,6 +655,7 @@ define(['underscore_ext',
 					codes: codes
 				};
 				columnUi.ws = ws;
+				columnUi.setPlotted();
 				if (local.sub) {
 					local.sub.dispose();
 				}

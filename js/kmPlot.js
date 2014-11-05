@@ -186,7 +186,7 @@ define([ "lib/d3",
 				}),
 				msg = 'There are '
 					+ dupSamples.length
-					+ ' samples in this plot mapped to the same _PATIENT IDs of: '
+					+ ' samples in this plot mapped to the same _PATIENT IDs: '
 					+ dupArray.join(', ');
 			this.warningIcon.prop('title', msg);
 		},
@@ -274,7 +274,7 @@ define([ "lib/d3",
 			self.render(subgroups, chief);
 		},
 
-		getData: function (eventDsID, survival) {
+		getSurvivalData: function (eventDsID, survival) {
 			var self = this,
 				event_fid = survival.event,
 				ttevent_fid = survival.tte,
@@ -282,6 +282,9 @@ define([ "lib/d3",
 				ws = this.columnUi.ws,
 				field = ws.column.fields[0],
 				samples = this.columnUi.plotData.samples;
+
+			this.survivalDsID = eventDsID;
+			this.survivalPatient = survival.patient;
 
 			if (!event_fid || !ttevent_fid) {
 				this.kmScreen.text("Cannot find the curated survival data.");
@@ -512,9 +515,7 @@ define([ "lib/d3",
 						self.cursor.update(function (s) {
 							return _.assoc_in(s, ['kmPlot', 'survival'], survival);
 						});
-						self.survivalDsID = eventDsID;
-						self.survivalPatient = survival.patient;
-						self.getData(eventDsID, survival);
+						self.getSurvivalData(eventDsID, survival);
 					}
 				}));
 		},
@@ -588,7 +589,7 @@ define([ "lib/d3",
 			if (geometry === 'default') {
 				this.setSurvivalVars();
 			} else if (myWs.eventDsID && myWs.survival) {
-				this.getData(myWs.eventDsID, myWs.survival);
+				this.getSurvivalData(myWs.eventDsID, myWs.survival);
 				// TODO for now, assume survival vars are still in the saved eventDsID.
 			}
 		}
@@ -604,9 +605,10 @@ define([ "lib/d3",
 	function show(id, options) {
 		var mapId = id,
 			w = widgets[id];
-		if (!w) {
-			w = widgets[id] = kmCreate(id, options);
+		if (w) {
+			w.destroy();
 		}
+		w = widgets[id] = kmCreate(id, options);
 	}
 
 	return {

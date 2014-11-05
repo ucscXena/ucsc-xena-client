@@ -21,25 +21,6 @@ define(['haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDispla
 		reduce = _.reduce,
 		toNumber = _.toNumber,
 		uniqueId = _.uniqueId,
-		sFeatures = { // TODO for demo
-			impact: 'impact', // shorttitle ?
-			DNA_AF: 'DNA allele frequency',
-			RNA_AF: 'RNA allele frequency'
-		},
-		//dsTitles = {}, // TODO for demo
-		/*
-		defTitles = {
-			cna: 'copy number',
-			DNAMethylation: 'DNA methylation',
-			geneExp: 'gene expression',
-			RNAseqExp: 'RNA sequence expression',
-			arrayExp: 'array expression',
-			somaticMutation: 'somatic mutation',
-			mutationVector: 'mutation vector',
-			protein: 'protein',
-			clinical: 'clinical feature'
-		},
-		*/
 		widgets = {},
 		aWidget;
 	aWidget = {
@@ -52,6 +33,14 @@ define(['haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDispla
 			kmPlot.destroy(this.id);
 			delete widgets[this.id];
 			$('.spreadsheet').resize();
+		},
+
+		setPlotted: function () {
+			var self = this,
+				cursor = this.xenaCursor.refine({ '_column': ['_column', self.id] });
+			cursor.update(function (s) {
+				return _.assoc_in(s, ['_column', 'plotted'], true);
+			});
 		},
 
 		mouseenterLeave: function (e) {
@@ -169,37 +158,60 @@ define(['haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDispla
 			}
 		},
 
+		kmPlotShow: function () {
+			kmPlot.show(this.id, {
+				cursor: this.cursor.refine({ 'kmPlot': ['column_rendering', this.id, 'kmPlot'] }),
+				columnUi: this
+			});
+		},
+
 		kmPlotVisibility: function () {
 			var myKmState,
+				myPlotted,
 				self = this;
-
-			// when sources change, redraw the datasets,
-			// retaining the selection if it's still an option
 			this.subs.add(this.state.distinctUntilChanged(function (s) {
 				return s.column_rendering[self.id].kmPlot;
 			})
 				.subscribe(function (s) {
-					var kmState = s.column_rendering[self.id].kmPlot;
+					var kmState = s.column_rendering[self.id].kmPlot,
+						plotted = s._column[self.id].plotted;
 					if (myKmState && !kmState) {
 						myKmState = kmState;
 						kmPlot.destroy(self.id);
 					}
 					if (!myKmState && kmState) {
 						myKmState = kmState;
-						kmPlot.show(self.id, {
-							cursor: self.cursor.refine({ 'kmPlot': ['column_rendering', self.id, 'kmPlot'] }),
-							columnUi: self
-						});
+						if (plotted) {
+							self.kmPlotShow();
+						}
+					}
+				}));
+			this.subs.add(this.state.distinctUntilChanged(function (s) {
+				return s._column[self.id].plotted;
+			})
+				.subscribe(function (s) {
+					var kmState = s.column_rendering[self.id].kmPlot,
+						plotted = s._column[self.id].plotted;
+					if (myPlotted && !plotted) {
+						myPlotted = plotted;
+					}
+					if (!myPlotted && plotted) {
+						myPlotted = plotted;
+						if (kmState) {
+							self.kmPlotShow();
+						}
 					}
 				}));
 		},
 
 		initialize: function (options) {
+			var self = this;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 
 			this.subs = new Rx.CompositeDisposable();
 			this.sheetWrap = options.sheetWrap;
 			this.cursor = options.cursor;
+			this.xenaCursor = options.xenaCursor;
 			this.state = options.state
 				.takeWhile(_.partial(columnExists, this.id))
 				.finally(this.destroy)
@@ -207,6 +219,11 @@ define(['haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDispla
 			this.sparsePad = options.sparsePad;
 			this.headerPlotHeight = options.headerPlotHeight;
 			this.horizontalMargin = options.horizontalMargin.toString() + 'px';
+
+			// initialize the root of this _column in the state tree
+			this.xenaCursor.update(function (state) {
+				return _.assoc(state, '_column', _.assoc(state._column, self.id, {}));
+			});
 
 			if (options.ws) {
 				this.render(options);
