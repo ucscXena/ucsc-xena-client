@@ -189,7 +189,7 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 						my: 'top',
 						at: 'top',
 						mode: mode,
-						valWidth: '18em'
+						valWidth: '22em'
 					};
 				if (tooltip.frozen()) {
 					return;
@@ -197,6 +197,7 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				coords = this.plotCoords(ev);
 				node = this.closestNode(coords.x, coords.y);
 				if (node) {
+					// TODO this is slow mousing when a node is involved
 					this.highlight(node);
 					pos = node.data.chr + ':'
 						+ util.addCommas(node.data.start)
