@@ -132,12 +132,19 @@ define(['haml!haml/columnEdit',
 			}
 		},
 
+		sortFeatures: function (features) {
+			var fArray = map(features, function (val, key) {
+					return ({ name: key, label: val });
+				});
+			return fArray.sort(util.caseInsensitiveSortByLabel);
+		},
+
 		renderFeatures: function (features) {
 			var self = this;
 			self.$selectAnchor.append(
 				selectTemplate({
 					klass: 'feature',
-					options: features,
+					options: this.sortFeatures(features),
 					labels: undefined
 				})
 			);
