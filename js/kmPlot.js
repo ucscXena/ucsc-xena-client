@@ -191,7 +191,7 @@ define([ "lib/d3",
 			this.warningIcon.prop('title', msg);
 		},
 
-		receiveData: function (data) {
+		receiveSurvivalData: function (data) {
 			var self = this,
 				subgroups = [],
 				ws = self.columnUi.ws,
@@ -208,17 +208,26 @@ define([ "lib/d3",
 				values,
 				groups,
 				regroup,
-				ttevSamples,
+				samplesWithTtev,
+				samplesWithValues,
 				patientUniqueSamples,
 				dupPatientSamples;
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
 
-			// check for duplicate patients ending up on the plot, to give a warning
-			ttevSamples = filter(samples, function (s) { return ttev_fn(s) !== null; });
-			patientUniqueSamples = uniq(ttevSamples, false, patient_fn);
-			dupPatientSamples = _.difference(ttevSamples, patientUniqueSamples);
+			// reduce sample list to those that have values in each of chief & _TIME_TO_EVENT.
+			samplesWithTtev = filter(samples, function (s) { return ttev_fn(s) !== null; });
+			samplesWithValues = filter(samplesWithTtev, function (s) {
+				var inChiefValues = _.find(chief.values, function (val, key) {
+					return key === s;
+				});
+				return (inChiefValues !== undefined);
+			});
+
+			// check for duplicate patients ending up on the plot, to give a warning.
+			patientUniqueSamples = uniq(samplesWithValues, false, patient_fn);
+			dupPatientSamples = _.difference(samplesWithValues, patientUniqueSamples);
 			if (dupPatientSamples.length) {
 				this.subs.add(code_list(this.survivalDsID, [this.survivalPatient])
 					.subscribe(function (codes) {
@@ -300,7 +309,7 @@ define([ "lib/d3",
 
 			// retrieve the values for each of the event features
 			this.subs.add(dataset_probe_values(eventDsID, samples, [event_fid, ttevent_fid, patient_fid])
-				.subscribe(self.receiveData));
+				.subscribe(self.receiveSurvivalData));
 		},
 
 		setupSvg: function () {
