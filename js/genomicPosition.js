@@ -1,7 +1,7 @@
 /*jslint nomen:true, regexp: true */
 /*global define: false */
 
-define(['jquery', 'lib/underscore', 'lib/backbone', 'unicode_utils', 'persistingModel'], function ($, _, Backbone, unicode) {
+define(['jquery', 'lib/underscore', 'lib/backbone', 'unicode_utils'], function ($, _, Backbone, unicode) {
 	"use strict";
 
 	// Return a slice of genesets over the current position.
@@ -39,8 +39,11 @@ define(['jquery', 'lib/underscore', 'lib/backbone', 'unicode_utils', 'persisting
 			var e = new Error(msg);
 			e.name = 'genomicPositionError';
 			return e;
-		},
+		};
 
+/*
+		},
+		
 		GenomicPosition = Backbone.PersistingModel.extend({
 			defaults: {
 				ntList: [],
@@ -218,11 +221,14 @@ define(['jquery', 'lib/underscore', 'lib/backbone', 'unicode_utils', 'persisting
 				return this;
 			}
 		});
+*/
 
 	return {
+/*
 		factory : function (options) {
 			return new GenomicPosition(null, options);
 		},
+*/
 		genesetParse : genesetParse
 	};
 

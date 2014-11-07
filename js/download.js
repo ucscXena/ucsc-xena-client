@@ -1,8 +1,8 @@
 /*jslint nomen:true, browser: true */
 /*global define: false  */
 
-define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_ext", "analytics",
-	"loading"], function (template, defer, galaxy, $, util, _, analytics) {
+define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_ext",
+	"loading"], function (template, defer, galaxy, $, util, _) {
 	'use strict';
 
 	var bind = _.bind,
@@ -134,11 +134,6 @@ define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_e
 					alert('not yet');
 					self.destroy();
 				}
-			});
-			analytics.report({
-				category: 'output',
-				action: 'download',
-				label: this.ws.column.dsID
 			});
 		},
 

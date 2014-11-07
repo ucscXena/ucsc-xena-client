@@ -1,8 +1,8 @@
 /*jslint browser: true, nomen: true */
 /*global define: false  */
 
-define(["haml!haml/tooltip", "haml!haml/tooltipClose", "jquery", "defer", "error", /*"tutor",*/ "lib/underscore"
-	], function (template, closeTemplate, $, defer, error, /*tutor,*/ _) {
+define(["haml!haml/tooltip", "haml!haml/tooltipClose", "jquery", "defer", "lib/underscore"
+	], function (template, closeTemplate, $, defer, _) {
 	'use strict';
 
 	var freezeText = '(alt-click to freeze)',
