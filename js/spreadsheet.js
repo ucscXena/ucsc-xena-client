@@ -25,6 +25,22 @@ define(['underscore_ext',
 		return _.assoc_in(state, ['column_rendering', uuid, 'width'], width);
 	}
 
+	function zoomIn(pos, state) {
+		var count = Math.max(1, Math.floor(state.zoomCount / 3)),
+			maxIndex = state.samples.length - count,
+			index = Math.max(0, Math.min(Math.round(state.zoomIndex + pos * state.zoomCount - count / 2), maxIndex));
+
+		return _.assoc(state, 'zoomCount', count, 'zoomIndex', index);
+	}
+
+	function zoomOut(state) {
+		var count = Math.min(state.samples.length, Math.round(state.zoomCount * 3)),
+			maxIndex = state.samples.length - count,
+			index = Math.max(0, Math.min(Math.round(state.zoomIndex + (state.zoomCount - count) / 2), maxIndex));
+
+		return _.assoc(state, 'zoomCount', count, 'zoomIndex', index);
+	}
+
 	function cmpString(s1, s2) {
 		if (s1 > s2) {
 			return 1;
@@ -86,6 +102,15 @@ define(['underscore_ext',
 			})
 		);
 
+		subs.add(el.onAsObservable("dblclick", '.samplePlot').subscribe(function (ev) {
+			var pos = (ev.pageY - $(ev.currentTarget).offset().top) / $(ev.currentTarget).height();
+			cursor.update(_.partial(zoomIn, pos));
+		}));
+
+		subs.add(el.onAsObservable("click").filter(function (ev) { return ev.shiftKey; }).subscribe(function (ev) {
+			cursor.update(zoomOut);
+		}));
+
 		var widgetStates = state.select(function (s) {
 			return _.fmap(s.column_rendering, function (col, uuid) {
 				return _.pluckPaths({
@@ -94,6 +119,8 @@ define(['underscore_ext',
 					zoomIndex: ['zoomIndex'],
 					zoomCount: ['zoomCount'],
 					samples: ['samples'],
+					_sources: ['_sources'],
+					_column: ['_column', uuid],
 					column: ['column_rendering', uuid]
 				}, s);
 			});

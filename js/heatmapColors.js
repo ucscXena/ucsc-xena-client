@@ -48,6 +48,12 @@ define(["lib/d3",
 			"#e377c2", // dark pink
 			"#bcbd22", // dark mustard
 			"#17becf"  // dark blue-green
+		],
+
+		// special category of white and purple
+		codedWhite = [
+			"#ffffff", // white
+			"#9467bd" // dark purple
 		];
 
 	function scale_categoryMore() {
@@ -58,23 +64,32 @@ define(["lib/d3",
 		return d3.scale.ordinal().range(categoryLess);
 	}
 
+	function scale_codedWhite() {
+		return d3.scale.ordinal().range(codedWhite);
+	}
+
 	// Return a new function that preserves undefined arguments, otherwise calls the original function.
 	// This is to work-around d3 scales.
 	function saveUndefined(fn) {
-		return function (v) {
+		var newfn = function (v) {
 			return isUndefined(v) ? v : fn(v);
 		};
+		return _.extend(newfn, fn); // XXX This weirdness copies d3 fn methods
 	}
 
 	color_range = multi(function (column, features, codes) {
-		if (features && features.valuetype === 'category' && codes) {
-			if (codes.length > 9) {
-				return 'codedMore';
+		if (features && codes) {
+			if (features.valuetype === 'category') {
+				if (codes.length > 9) {
+					return 'codedMore';
+				} else {
+					return 'codedLess';
+				}
 			} else {
-				return 'codedLess';
+				return 'codedWhite';
 			}
 		}
-		if (column.min && column.max) {
+		if (column.dataType !== "clinicalMatrix" && column.min && column.max) {
 			return 'scaled';
 		}
 		return 'minMax';
@@ -131,6 +146,10 @@ define(["lib/d3",
 		return saveUndefined(scale_categoryLess().domain(range(codes.length)));
 	}
 
+	function color_codedWhite(column, feature, codes) {
+		return saveUndefined(scale_codedWhite().domain(range(codes.length)));
+	}
+
 	function color_scaled(column) {
 		var low = column.colors[0],
 			zero = column.colors[1],
@@ -145,8 +164,9 @@ define(["lib/d3",
 		range: color_range,
 		float: color_float,
 		scaled: color_scaled,
+		codedWhite: color_codedWhite,
 		categoryMore: color_categoryMore,
 		categoryLess: color_categoryLess,
-		categoryBreak: 9 // more codes than this uses categoryMore
+		categoryBreak: 9 // more codes than this uses categoryMore, otherwise, categoryLess
 	};
 });

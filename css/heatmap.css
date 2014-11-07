@@ -1,18 +1,7 @@
 @import url("lib/jquery-ui.css");
-/*
-@import url("lib/jquery.asmselect.css");
-@import url("lib/jquery.autocomplete.css");
-@import url("lib/jquery.cluetip.css");
-@import url("lib/jquery.contextMenu.css");
-@import url("lib/jquery.dataTables.css");
-@import url("lib/dataTables.scroller.css");
-*/
 @import url("lib/select2.css");
-/* @import url("lib/imgareaselect-default.css"); */
 @import url("libOverride.css");
 @import url("meta.css");
-/* @import url("cbList.css"); */
-@import url("browser.css");
 @import url("menuJs.css");
 @import url("defaultTextInput.css");
 /*
@@ -28,15 +17,4 @@
 @import url("sheetWrap.css");
 @import url("spreadsheet.css");
 @import url("tooltip.css");
-/*
-@import url("details.css");
-@import url("namedText.css");
-@import url("genomicColor.css");
-@import url("clinicalConfig.css");
-@import url("mapIndex.css");
-@import url("maps.css");
-@import url("tutor.css");
-@import url("clinicalMenu.css");
-@import url("pdf.css");
 @import url("km.css");
-*/

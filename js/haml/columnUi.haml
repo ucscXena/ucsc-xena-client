@@ -2,37 +2,34 @@
   %tbody
 
     %tr
-      %td{colspan:2}
-        %div{class:'moveHandle hoverShow recede'}
-          %span{class:'ui-icon ui-icon-arrowthick-2-e-w', title:'Move column'}
-        %span{class:'more hoverShow recede menu', title:'More...'}
+      %td{class:'moveHandle hoverShow recede', colspan:2, title:'Move column & change sort by dragging this bar'}
+        %img{class:'move', src:moveImg, alt:''}
+      %td
+        %span{class:'more hoverShow recede menu', style:'background:white', title:'More options...'}
           %img{src:menuImg, alt:''}
 
     %tr
-      %td{class:'fullWidth', colspan:2}
-        %input{class:'columnTitle recede', type:'text'}
+      %td{class:'fullWidth', colspan:3}
+        %input{class:'columnTitle hoverChange recede', type:'text'}
 
     %tr{class:'fieldRow'}
-      %td{class:'fullWidth', colspan:2}
-        %input{class:'field recede', type:'text'}
+      %td{class:'fullWidth', colspan:3}
+        %input{class:'field hoverChange recede', type:'text'}
 
     %tr{class:'headerPlotRow'}
       %td{class:'headerSidebar sidebar'}
-      %td{class:'headerPlot plot'}
+      %td{class:'headerPlot plot',colspan:2}
 
     %tr
       %td{class:'sparsePad'}
 
     %tr
       %td{class:'sampleSidebar sidebar'}
-      %td{class:'samplePlot plot'}
+      %td{class:'samplePlot plot', colspan:2}
 
     %tr{class:'colorBarLabelRow'}
-      %td{class:'fullWidth', colspan:2}
+      %td{class:'fullWidth', colspan:3}
         %input{class:'colorBarLabel', type:'text', readonly:true}
 	  
     %tr
-      %td{class:'colorBarEllipsis', style:'text-align:center', colspan:2}
-
-    %tr{style:'display:none'}
-      %td{colspan:2} =debugId
+      %td{class:'colorBarEllipsis', style:'text-align:center', colspan:3}

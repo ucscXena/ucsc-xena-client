@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery', 'lib/underscore'
+define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery', 'lib/underscore'
 	// non-object dependencies
-	], function (stub, crosshairs, linkTo, tooltip, util, vgcanvas, d3, $, _) {
+	], function (crosshairs, linkTo, tooltip, util, vgcanvas, d3, $, _) {
 	'use strict';
 
 	var impactMax = 4,
@@ -179,71 +179,54 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 					coords,
 					rows = [],
 					mode = 'genesets',
-					valWidth,
 					dnaAf,
 					rnaAf,
-					option = 'a';
+					sampleIndex,
+					ws = ev.data.plotData.ws,
+					tip = {
+						ev: ev,
+						el: '#nav',
+						my: 'top',
+						at: 'top',
+						mode: mode,
+						valWidth: '22em'
+					};
 				if (tooltip.frozen()) {
 					return;
 				}
 				coords = this.plotCoords(ev);
 				node = this.closestNode(coords.x, coords.y);
 				if (node) {
+					// TODO this is slow mousing when a node is involved
 					this.highlight(node);
 					pos = node.data.chr + ':'
 						+ util.addCommas(node.data.start)
 						+ '-' + util.addCommas(node.data.end);
 					dnaAf = this.formatAf(node.data.dna_vaf);
 					rnaAf = this.formatAf(node.data.rna_vaf);
-					if (option === 'a') {
-						rows = [
-							{ val: node.data.effect},
-							{ val: 'hg19 ' + pos + ' ' + node.data.reference + '>' + node.data.alt },
-							{ val: this.gene.name + ' (' + node.data.amino_acid + ')' },
-							{ val: 'DNA / RNA variant allele freq: ' + dnaAf + ' / ' + rnaAf }
-						];
-						valWidth = '18em';
-					} else if (option === 'b') {
-						rows = [
-							{ label: 'Effect', val: node.data.effect},
-							{ label: 'hg19 ' + pos, val: node.data.reference + '>' + node.data.alt },
-							{ label: this.gene.name, val: '(' + node.data.amino_acid + ')' },
-							{ label: 'DNA / RNA variant allele freq', val: dnaAf + ' / ' + rnaAf }
-						];
-						valWidth = '12em';
-					} else {
-						rows = [
-							{ label: 'Effect', val: node.data.effect},
-							{ label: node.data.reference + ' > ' + node.data.alt, val: 'hg19 ' + pos },
-							{ label: this.gene.name, val: '(' + node.data.amino_acid + ')' },
-							{ label: 'Variant allele freq', val: 'DNA: ' + dnaAf + ' RNA: ' + rnaAf }
-						];
-						valWidth = '15em';
-					}
-					tooltip.mousing({
-						ev: ev,
-						//dsID: node.data.dataset,
-						sampleID: node.data.sample,
-						el: '#nav',
-						my: 'top',
-						at: 'top',
-						mode: mode,
-						rows: rows,
-						valWidth: valWidth
-					});
+					rows = [
+						{ val: node.data.effect},
+						{ val: 'hg19 ' + pos + ' ' + node.data.reference + '>' + node.data.alt },
+						{ val: this.gene.name + ' (' + node.data.amino_acid + ')' },
+						{ val: 'DNA / RNA variant allele freq: ' + dnaAf + ' / ' + rnaAf }
+					];
+					tip.sampleID = node.data.sample;
+					tip.rows = rows;
 				} else {
-					tooltip.hide();
+					sampleIndex = Math.floor((coords.y * ws.zoomCount / ws.height) + ws.zoomIndex);
+					tip.sampleID = ev.data.plotData.samples[sampleIndex];
 					if (this.highlightOn) {
 						this.draw();
 						this.highlightOn = false;
 					}
 				}
+				tooltip.mousing(tip);
 			},
 
 			mupitClick: function () {
-				var positions = _.map(this.nodes, function (n, i) {
+				var positions = _.unique(_.map(this.nodes, function (n, i) {
 						return n.data.chr + ' ' + (n.data.start).toString();
-					});
+					}));
 				linkTo.mupit(positions.join('\n'));
 			},
 
@@ -301,8 +284,9 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				_.each(nodeValues, function (value) {
 					var y = (value.index * self.pixPerRow) + (self.pixPerRow / 2) + self.sparsePad;
 					_.each(value.vals, function (val) {
-						var x = (self.refGene.mapChromPosToX(val.start) * self.gene.scaleX) + self.sparsePad;
+						var x = self.refGene.mapChromPosToX(val.start);
 						if (x >= 0) {
+							x = x * self.gene.scaleX + self.sparsePad;
 							nodes.push({
 								x: x,
 								y: y,
@@ -327,7 +311,8 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 					rgba,
 					labels,
 					unknownEffects,
-					align;
+					align,
+					topBorderIndex;
 				if (this.feature === 'impact') {
 					myColors = _.map(colors[this.color], function (c) {
 						return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
@@ -355,16 +340,12 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 						rgba + '1)'
 					];
 					labels = ['0%', '50%', '100%'];
-					/*  for the white 'no mutation'
-					labels = ['.  0%', '.  50%', '.  100%'];
-					*/
 					align = 'center';
+					topBorderIndex = 3;
 				}
-				/* for the white 'no mutation'
 				myColors.unshift('rgb(255,255,255)');
 				labels.unshift('no mutation');
-				*/
-				this.columnUi.drawLegend(myColors, labels, align, '', 'mutationVector');
+				this.columnUi.drawLegend(myColors, labels, align, '', 'mutationVector', topBorderIndex);
 			},
 
 			render: function () {
@@ -380,7 +361,8 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 			},
 
 			initialize: function (options) {
-				var horizontalMargin = '-' + options.horizontalMargin.toString() + 'px';
+				var self = this,
+					horizontalMargin = '-' + options.horizontalMargin.toString() + 'px';
 				_.bindAll.apply(_, [this].concat(_.functions(this)));
 				//_(this).bindAll();
 				this.vg = options.vg;
@@ -405,7 +387,10 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 				});
 
 				// bindings
-				this.sub = this.columnUi.crosshairs.mousemoveStream.subscribe(this.mousing);
+				this.sub = this.columnUi.crosshairs.mousingStream.subscribe(function (ev) {
+					ev.data = { plotData: self.columnUi.plotData };
+					self.mousing(ev);
+				});
 
 				this.receiveData(options.data);
 			}
@@ -416,16 +401,6 @@ define(['stub', 'crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3',
 		w.id = id;
 		w.initialize(options);
 		return w;
-	}
-
-	function getRefGeneInfo(gene) {
-		// TODO Hack until we are pulling refGene from the server and combining
-		//      its data with mutation data so the refGene strand and txStart
-		//      can be included in the data received by cmpValue.
-		if (refGeneInfo[gene] === undefined) {
-			refGeneInfo[gene] = stub.getRefGene(gene);
-		}
-		return refGeneInfo[gene];
 	}
 
 	return {

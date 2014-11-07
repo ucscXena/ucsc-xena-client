@@ -1,7 +1,7 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
-define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'crosshairs', 'heatmapColors', 'mutationVector', 'sheetWrap', 'stub', 'vgcanvas', 'xenaQuery', 'rx.jquery'
-	], function (_, $, Rx, exonRefGene, widgets, crosshairs, heatmapColors, mutationVector, sheetWrap, stub, vgcanvas, xenaQuery) {
+define(['underscore_ext', 'jquery', 'rx', 'refGeneExons', 'columnWidgets', 'crosshairs', 'heatmapColors', 'mutationVector', 'sheetWrap', 'vgcanvas', 'xenaQuery', 'rx.jquery'
+	], function (_, $, Rx, refGeneExons, widgets, crosshairs, heatmapColors, mutationVector, sheetWrap, vgcanvas, xenaQuery) {
 
 	"use strict";
 
@@ -122,19 +122,17 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 			['column', 'fields'],
 			['samples']
 		],
-		function (dsID, probes, samples) {
-			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds[1],
-				ds = hostds[2];
+		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
+			var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
 				}),
-				refGene: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.refGene_exon_string(probes)), function (r) {
+				refGene: xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_exon_string(probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp));
 				})
 			};
-		}
+		})
 	);
 
 	function dataToPlot(sorted_samples, dataIn, probes) {
@@ -199,8 +197,10 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 			}
 
 			refGeneData = data.refGene[column.fields[0]];
+			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
+			//data.req.values = stub.getMutation(column.fields[0]); // for testing
 			if (refGeneData) {
-				exonRefGene.show(el.id, {
+				refGeneExons.show(el.id, {
 					data: { gene: refGeneData }, // data.refGene,
 					plotAnchor: '#' + el.id + ' .headerPlot',
 					$sidebarAnchor: columnUi.$headerSidebar,
@@ -209,14 +209,17 @@ define(['underscore_ext', 'jquery', 'rx', 'exonRefGene', 'columnWidgets', 'cross
 					refHeight: sheetWrap.columnDims().headerPlotHeight
 				});
 				if (data.req.values) { // TODO sometimes data.req is empty
-					refGene = exonRefGene.get(el.id);
+					refGene = refGeneExons.get(el.id);
 					if (refGene) {
 						plotData = dataToPlot(sort, data.req.values, ws.column.fields);
 						columnUi.plotData = {
 							values: plotData[0].values,
+							samples: sort,
+							ws: ws,
 							derivedVars: ['gene', 'effect', 'dna_vaf', 'rna_vaf', 'amino_acid']
 						};
 						columnUi = wrapper(el.id, ws);
+						columnUi.setPlotted();
 						mutationVector.show(el.id, {
 							vg: vg,
 							width: column.width,

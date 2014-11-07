@@ -209,5 +209,48 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 		});
 	};
 
+	/*
+	 * Sample the observable sequence at the time of each event on a different
+	 * observable.
+	 *
+	 * Like sample(), except it doesn't wait for a new value on
+	 * the sampled observable. Every event on sampler returns the current
+	 * value of the sampled observable.
+	 */
+	observableProto.sampleAll = function (sampler, selector) {
+		var observable = this;
+		selector = selector || _.identity;
+
+		return this.join(sampler,
+						_.constant(this),
+						_.partial(Rx.Observable.empty, null),
+						selector);
+	};
+
+	observableProto.spy = function (msg) {
+		var observable = this;
+		return Rx.Observable.create(function (observer) {
+			console.log(msg, "subscribed");
+			var inner = observable.subscribe(
+				function (next) {
+					console.log(msg, "sending", next);
+					observer.onNext(next);
+				},
+				function () {
+					console.log(msg, "error");
+					observer.onError();
+				},
+				function () {
+					console.log(msg, "complete");
+					observer.onCompleted();
+				}
+			);
+			return new Rx.Disposable(function () {
+				inner.dispose();
+				console.log(msg, "disposed");
+			});
+		});
+	};
+
 	return Rx;
 });

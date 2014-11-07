@@ -1,12 +1,11 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.jquery'
-	], function (template, xenaQuery, _, $, Rx) {
+define(['haml!haml/cohortSelect', 'util', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.jquery'
+	], function (template, util, xenaQuery, _, $, Rx) {
 	'use strict';
 
-	var widgets = [],
-		aWidget;
+	var aWidget;
 
 	// set cohort and clear columns
 	// TODO should this be in sheetWrap.js?
@@ -36,7 +35,6 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			this.$el.remove();
 			this.$el = undefined;
 			this.subs.dispose();
-			delete widgets[this.id];
 		},
 
 		render: function (server, cohort) {
@@ -68,6 +66,7 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			if (cohort) {
 				this.$el.select2('val', cohort);
 			}
+			this.$el.parent().on('select2-open', util.setSelect2height);
 		},
 
 		initialize: function (options) {
@@ -85,8 +84,8 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 			// and mix in the current cohort in the UI.
 			cohortList = state.refine('servers', 'cohort')
 				.map(function (state) {
-					return Rx.Observable.zipArray(_.map(state.servers, function (s) {
-						return xenaQuery.all_cohorts(s.url);
+					return Rx.Observable.zipArray(_.map(state.servers.user, function (s) {
+						return xenaQuery.all_cohorts(s);
 					})).map(_.apply(_.union));
 				}).switchLatest()
 				.startWith([])
@@ -112,22 +111,13 @@ define(['haml!haml/cohortSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.j
 		}
 	};
 
-	function create(id, options) {
+	function create(options) {
 		var w = Object.create(aWidget);
-		w.id = id;
 		w.initialize(options);
 		return w;
 	}
 
 	return {
-		create: function (id, options) {
-			// this should only be called once per page load,
-			// but keeping array and destroy here as a pattern
-			if (widgets[id]) {
-				widgets[id].destroy();
-			}
-			widgets[id] = create(id, options);
-			return widgets[id];
-		}
+		create: create
 	};
 });

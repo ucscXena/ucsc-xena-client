@@ -1,6 +1,6 @@
 /*global define: false */
 
-define(['rx.dom', 'underscore_ext'], function (Rx, _) {
+define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	'use strict';
 
 	// HELPERS
@@ -43,7 +43,45 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function parse_host(dsID) {
-		return dsID.match(/([^\/]*\/\/[^\/]*)\/(.*)/);
+		var host_name = JSON.parse(dsID);
+		return [host_name.host, host_name.name];
+	}
+
+	function dsID_fn(fn) {
+		return function (dsID) {
+			var args = Array.prototype.slice.call(arguments, 1),
+				p = parse_host(dsID);
+			return fn.apply(this, p.concat(args));
+		};
+	}
+
+	function parse_server(s) {
+		// XXX should throw or otherwise indicate parse error on no match
+		var tokens = s.match(/^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/(.*))?$/),
+			host = tokens[2],
+			prod = (host.indexOf('genome-cancer.ucsc.edu') === 0),
+			defproto = prod ? 'https://' : 'http://',
+			proto = tokens[1] || (prod ? 'https://' : 'http://'),
+			defport = (prod ? '443' : '7222'),
+			port = tokens[4] || defport,
+			path = tokens[5] || '',
+			url = proto + host + ':' + port + path;
+
+		return {
+			title: (proto === defproto ? '' : proto) +
+				host +
+				(port === defport ? '' : (':' + port)) +
+				path,
+			url: url
+		};
+	}
+
+	function server_title(s) {
+		return parse_server(s).title;
+	}
+
+	function server_url(s) {
+		return parse_server(s).url;
 	}
 
 	// Returns a object with key equal to the serialization of
@@ -62,27 +100,24 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		}));
 	}
 
+	function indexCodes(xhr) {
+		var codes = JSON.parse(xhr.response);
+		return _.object(_.map(codes, function (row) {
+			return [row.name, row.code && row.code.split('\t')];
+		}));
+	}
+
 	function xena_dataset_list_transform(host, list) {
 		return _.map(list, function (ds) {
 			var text = JSON.parse(ds.text) || {};
 
 			// merge curated fields over raw metadata
 			// XXX note that we're case sensitive on raw metadata
-			ds = _.extend(text, _.dissoc(ds, 'TEXT'));
-			return {
-				dsID: host + '/' + ds.name,
-				title: ds.label || ds.name,
-				type: ds.type,
-				probemap: ds.probemap,
-				// XXX wonky fix to work around dataSubType.
-				// Use basename of ds.datasubtype if it's there. Otherwise
-				// default to cna if there's a gene view, and clinical otherwise.
-				// Also, copy type mutationVector to dataSubType.
-				dataSubType: ds.type === "mutationVector" ? ds.type :
-					(ds.datasubtype ?
-					 ds.datasubtype.split(/[\/]/).reverse()[0] :
-					 (ds.probemap ? 'cna' : 'phenotype'))
-			};
+			ds = _.extend(text, _.dissoc(ds, 'text'));
+			return _.extend(ds, {
+				dsID: JSON.stringify({host: host, name: ds.name}),
+				label: ds.label || ds.name
+			});
 		});
 	}
 
@@ -121,12 +156,10 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		       '  (query\n' +
 		       '    {:select [:%distinct.value]\n' +
 		       '     :from [:dataset]\n' +
-		       '     :where [:= :cohort ' + quote_cohort(cohort) + ']\n' +
-		       '     :left-join\n' +
-		       '       [[{:select [:id :dataset_id]\n' +
-		       '          :from [:field]\n' +
-		       '          :where [:= :name "sampleID"]} :F] [:= :dataset.id :dataset_id]\n' +
-		       '        :code [:= :F.id :field_id]]}))';
+		       '     :join [:field [:= :dataset.id :dataset_id]\n' +
+		       '            :code [:= :field_id :field.id]]\n' +
+		       '     :where [:and [:= :cohort ' + quote_cohort(cohort) + ']\n' +
+		       '                  [:= :field.name "sampleID"]]}))';
 	}
 
 	function all_cohorts_query() {
@@ -137,9 +170,15 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function dataset_list_query(cohort) {
-		return '(query {:select [:name :shorttitle :type :datasubtype :probemap :text]\n' +
+		return '(query {:select [:name :type :datasubtype :probemap :text]\n' +
 		       '        :from [:dataset]\n' +
 		       '        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
+	}
+
+	function dataset_query (dataset) {
+		return '(query {:select [:name :shorttitle :type :datasubtype :probemap :text]\n' +
+		       '        :from [:dataset]\n' +
+		       '        :where [:= :dataset.name ' + quote(dataset) + ']})';
 	}
 
 	function dataset_probe_string(dataset, samples, probes) {
@@ -149,11 +188,31 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	}
 
 	function dataset_field_examples_string(dataset) {
-		return '(query {:select [:field.name] ' +
-			   '        :from [:dataset] ' +
-		       '        :join [:field [:= :dataset.id :dataset_id]] ' +
-		       '        :where [:= :dataset.name ' + quote(dataset) + '] ' +
-               '        :limit 2})';
+		return '(query {:select [:field.name]\n' +
+		       '        :from [:dataset]\n' +
+		       '        :join [:field [:= :dataset.id :dataset_id]]\n' +
+		       '        :where [:= :dataset.name ' + quote(dataset) + ']\n' +
+		       '        :limit 2})';
+	}
+
+	function field_bounds_string(dataset, fields) {
+		return '(let [dataset ' + quote(dataset) + '\n' +
+		       '      fields ' + arrayfmt(fields) + '\n' +
+		       '      rows (- (:rows (car (query {:select [:rows] :from [:dataset]\n' +
+		       '                                  :where [:= :dataset.name dataset]}))) 1)\n' +
+		       '      field_ids (map\n' +
+		       '                  :id\n' +
+		       '                  (query {:select [:field.id] :from [:field]\n' +
+		       '                          :join [:dataset [:= :dataset.id :dataset_id]]\n' +
+		       '                          :where [:and\n' +
+		       '                                  [:= :dataset.name dataset]\n' +
+		       '                                  [:in :field.name fields]]}))\n' +
+		       '      bounds (fn [id]\n' +
+		       '                 (let [c #sql/call [:unpack id :x]]\n' +
+		       '                   (car (query {:select [[#sql/call [:max c] :max] [#sql/call [:min c] :min]]\n' +
+		       '                                :from [#sql/call [:system_range 0 rows]]\n' +
+		       '                                :where [:not [:=  c "NaN"]]}))))]\n' +
+		       '      (map (fn [x y] (assoc y :field x)) fields (map bounds field_ids)))';
 	}
 
 	function dataset_gene_probes_string(dataset, samples, gene) {
@@ -281,21 +340,27 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		       '                                   :from [:dataset]\n' +
 		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
 		       '                                   :where [:and [:= :field.name field] [:= :dataset.name "common/GB/refgene_good"]]}))))\n' +
-		       '      unpack (fn [field] [#sql/call [:unpack (getfield field) :row] field])\n' +
-		       '      unpackValue (fn [field] [#sql/call [:unpackValue (getfield field) :row] field])\n' +
+		       '      unpack (fn [field] [#sql/call [:unpack (getfield field) :field_gene.row] field])\n' +
+		       '      unpackValue (fn [field] [#sql/call [:unpackValue (getfield field) :field_gene.row] field])\n' +
+		       '      tx (getfield "position")\n' +
+		       '      cds (getfield "position (2)")\n' +
 		       '      name2 (getfield "name2")]\n' +
 		       '  (query {:select [[:gene :name2]\n' +
-		       '                   (unpackValue "strand")\n' +
-		       '                   (unpack "txStart")\n' +
-		       '                   (unpack "cdsStart")\n' +
+		       '                   [:tx.strand :strand]\n' +
+		       '                   [:tx.chromStart :txStart]\n' +
+		       '                   [:cds.chromStart :cdsStart]\n' +
 		       '                   (unpack "exonCount")\n' +
 		       '                   (unpackValue "exonStarts")\n' +
 		       '                   (unpackValue "exonEnds")\n' +
-		       '                   (unpack "cdsEnd")\n' +
-		       '                   (unpack "txEnd")]\n' +
+		       '                   [:cds.chromEnd :cdsEnd]\n' +
+		       '                   [:tx.chromEnd :txEnd]]\n' +
 		       '          :from [:field_gene]\n' +
-		       '          :join [{:table [[[:name :varchar\n' + arrayfmt(genes) + ' ]] :T]} [:= :T.name :field_gene.gene]]\n' +
-		       '          :where [:and [:= :field_gene.field_id name2]]}))';
+		       '          :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ' ]] :T]} [:= :T.name :field_gene.gene]\n' +
+		       '                 [:field_position :tx] [:= :tx.row :field_gene.row]\n' +
+		       '                 [:field_position :cds] [:= :cds.row :field_gene.row]]\n' +
+		       '          :where [:and [:= :field_gene.field_id name2]\n' +
+		       '                       [:= :tx.field_id tx]\n' +
+		       '                       [:= :cds.field_id cds]]}))';
 	}
 
 	// QUERY PREP
@@ -312,42 +377,50 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 	function dataset_list(servers, cohort) {
 		return Rx.Observable.zipArray(_.map(servers, function (s) {
 			return Rx.DOM.Request.ajax(
-				xena_post(s.url, dataset_list_query(cohort))
+				xena_post(s, dataset_list_query(cohort))
 			).map(
-				_.compose(_.partial(xena_dataset_list_transform, s.url), json_resp)
+				_.compose(_.partial(xena_dataset_list_transform, s), json_resp)
 			).catch(Rx.Observable.return([])); // XXX display message?
 		})).map(function (datasets_by_server) {
 			return _.map(servers, function (server, i) {
-				return _.assoc(server, 'datasets', datasets_by_server[i]);
+				return {server: server, datasets: datasets_by_server[i]};
 			});
 		});
 	}
 
-	function dataset_field_examples(dsID) {
-		var hostds = parse_host(dsID),
-			host = hostds[1],
-			ds = hostds[2];
+	function code_list(host, ds, probes) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, codes_string(ds, probes))
+		).select(indexCodes);
+	}
+
+	function dataset_by_name(host, name) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, dataset_query(name))
+		).map(_.compose(_.partial(xena_dataset_list_transform, host),
+						json_resp))
+		.catch(Rx.Observable.return([]));  // XXX display message?
+	}
+
+	function dataset_field_examples(host, ds) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_field_examples_string(ds))
 		).map(json_resp);
 	}
 
-	function feature_list(dsID) {
-		var hostds = parse_host(dsID),
-			host = hostds[1],
-			ds = hostds[2];
+	function dataset_probe_values(host, ds, samples, probes) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, dataset_probe_string(ds, samples, probes))
+		).map(json_resp);
+	}
+
+	function feature_list(host, ds) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, feature_list_query(ds))
 		).map(_.compose(indexFeatures, json_resp));
 	}
 
-	function dataset_samples(dsID) {
-		if (dsID === '') { // TODO shouldn't need to handle this
-			return Rx.Observable.return([]);
-		}
-		var hostds = parse_host(dsID),
-			host = hostds[1],
-			ds = hostds[2];
+	function dataset_samples(host, ds) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_samples_query(ds))
 		).map(json_resp);
@@ -370,9 +443,24 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		.catch(Rx.Observable.return([])); // XXX display message?
 	}
 
+	// test if host is up
+	function test_host (host) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, '(+ 1 2)')
+		).map(function(s) {
+			if (s.responseText) {
+				return (3 === JSON.parse(s.responseText));
+			}
+			return false;
+		});//.catch(Rx.Observable.return([]));  // XXX display message?
+	}
+
 	return {
 		// helpers:
+		dsID_fn: dsID_fn,
 		parse_host: parse_host,
+		server_title: server_title,
+		server_url: server_url,
 		json_resp: json_resp,
 		nanstr: nanstr,
 		reqObj: reqObj,
@@ -387,14 +475,20 @@ define(['rx.dom', 'underscore_ext'], function (Rx, _) {
 		dataset_probe_string: dataset_probe_string,
 		sparse_data_string: sparse_data_string,
 		refGene_exon_string: refGene_exon_string,
+		field_bounds_string: field_bounds_string,
 
 		// query prep:
 		dataset_list: dataset_list,
 		feature_list: feature_list,
+		code_list: code_list,
 		dataset_field_examples: dataset_field_examples,
+		dataset_probe_values: dataset_probe_values,
 		find_dataset: find_dataset,
 		dataset_samples: dataset_samples,
 		all_samples: all_samples,
-		all_cohorts: all_cohorts
+		all_cohorts: all_cohorts,
+		dataset_by_name: dataset_by_name,
+
+		test_host: test_host
 	};
 });

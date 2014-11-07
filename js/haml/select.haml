@@ -4,5 +4,5 @@
     - _.each(options, function (option) {
       %option{value:option} =labels[option]
   - if (!labels) {
-    - _.each(options, function (val, key) {
-      %option{value:key} =val
+    - _.each(options, function (o) {
+      %option{value:o.name} =o.label

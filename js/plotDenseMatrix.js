@@ -65,6 +65,17 @@ define(['underscore_ext',
 	};
 
 	default_colors_map = {
+		"gene expression": color_schemes.green_black_red,
+		"gene expression RNAseq": color_schemes.green_black_red,
+		"gene expression array": color_schemes.green_black_red,
+		"exon expression RNAseq": color_schemes.green_black_red,
+		"copy number": color_schemes.blue_white_red,
+		"DNA methylation": color_schemes.blue_white_red,
+		"PARADIGM pathway activity": color_schemes.blue_white_red,
+		"protein expression RPPA": color_schemes.blue_white_red,
+		"somaticMutation": color_schemes.blue_white_red,
+		"phenotype": color_schemes.green_black_yellow,
+
 		"common/dataSubType/geneRNAseq": color_schemes.green_black_red,
 		"common/dataSubType/geneArray": color_schemes.green_black_red,
 		"common/dataSubType/geneExp": color_schemes.green_black_red,
@@ -75,8 +86,7 @@ define(['underscore_ext',
 		"common/dataSubType/PARADIGM": color_schemes.blue_white_red,
 		"common/dataSubType/phenotype": color_schemes.blue_white_red,
 		"common/dataSubType/protein": color_schemes.blue_white_red,
-		"common/dataSubType/somaticMutation": color_schemes.blue_white_red,
-		phenotype: color_schemes.green_black_yellow
+		"common/dataSubType/somaticMutation": color_schemes.blue_white_red
 	};
 
 	function meannan(values) {
@@ -332,6 +342,12 @@ define(['underscore_ext',
 		}));
 	}
 
+	function indexBounds(bounds) {
+		return _.object(_.map(bounds, function (row) {
+			return [row.field, row];
+		}));
+	}
+
 	// Where do we get the URL? XXX
 	//    URL is associated with the dataset, per-sample.
 	//    Have to parse the URL to get the server??
@@ -349,10 +365,7 @@ define(['underscore_ext',
 			['column', 'fields'],
 			['samples']
 		],
-		function (dsID, probes, samples) {
-			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds[1],
-				ds = hostds[2];
+		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
@@ -361,7 +374,7 @@ define(['underscore_ext',
 					return Rx.DOM.Request.ajax(r).select(xenaQuery.json_resp);
 				})
 			};
-		}
+		})
 	);
 
 	fetch_gene_probes = ifChanged(
@@ -371,10 +384,7 @@ define(['underscore_ext',
 			['column', 'dataType'],
 			['samples']
 		],
-		function (dsID, probes, dataType, samples) {
-			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds[1],
-				ds = hostds[2];
+		xenaQuery.dsID_fn(function (host, ds, probes, dataType, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_probes_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexProbeGeneResponse, samples), xenaQuery.json_resp));
@@ -383,7 +393,7 @@ define(['underscore_ext',
 					return Rx.DOM.Request.ajax(r).select(xenaQuery.json_resp);
 				})
 			};
-		}
+		})
 	);
 
 	fetch_feature = ifChanged(
@@ -394,10 +404,7 @@ define(['underscore_ext',
 		],
 		// XXX Note that we re-fetch metadata even if the probe set hasn't changed.
 		// Need a better way than ifChanged of checking for changes.
-		function (dsID, probes, samples) {
-			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds[1],
-				ds = hostds[2];
+		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
@@ -407,9 +414,12 @@ define(['underscore_ext',
 				}),
 				codes: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.codes_string(ds, probes)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(indexCodes);
+				}),
+				bounds: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.field_bounds_string(ds, probes)), function (r) {
+					return Rx.DOM.Request.ajax(r).select(_.compose(indexBounds, xenaQuery.json_resp));
 				})
 			};
-		}
+		})
 	);
 
 	fetch_gene = ifChanged(
@@ -419,10 +429,7 @@ define(['underscore_ext',
 			['column', 'dataType'],
 			['samples']
 		],
-		function (dsID, fields, dataType, samples) {
-			var hostds = xenaQuery.parse_host(dsID),
-				host = hostds[1],
-				ds = hostds[2];
+		xenaQuery.dsID_fn(function (host, ds, fields, dataType, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_string(ds, samples, fields)), function (r) {
 					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexGeneResponse, fields, samples), xenaQuery.json_resp));
@@ -431,7 +438,7 @@ define(['underscore_ext',
 					return Rx.DOM.Request.ajax(r).select(xenaQuery.json_resp);
 				})
 			};
-		}
+		})
 	);
 
 	heatmapColors.range.add("minMax", heatmapColors.float);
@@ -458,11 +465,10 @@ define(['underscore_ext',
 	}
 
 	function mousing(ev) {
-		var serverData = ev.data.plotData.serverData,
-			heatmapData = ev.data.plotData.heatmapData,
+		var heatmapData = ev.data.plotData.heatmapData,
 			fields = ev.data.plotData.fields,
-			codes = ev.data.plotData.codes,
 			column = ev.data.column,
+			codes = ev.data.plotData.codes[column.fields[0]],
 			ws = ev.data.ws,
 			mode = 'genesets',
 			rows = [],
@@ -472,7 +478,15 @@ define(['underscore_ext',
 			field,
 			label,
 			val,
-			valWidth;
+			valWidth,
+			labelWidth,
+			tip = {
+				ev: ev,
+				el: '#nav',
+				my: 'top',
+				at: 'top',
+				mode: mode
+			};
 
 		if (tooltip.frozen()) {
 			return;
@@ -484,38 +498,35 @@ define(['underscore_ext',
 		coord = plotCoords(ev);
 		sampleIndex = Math.floor((coord.y * ws.zoomCount / ws.height) + ws.zoomIndex);
 		fieldIndex = Math.floor(coord.x * fields.length / ws.column.width);
+		tip.sampleID = ev.data.plotData.samples[sampleIndex];
 		field = fields[fieldIndex];
 
 		if (column.dataType === 'geneProbesMatrix') {
 			label = column.fields[0] + ' (' + field + ')';
+		} else if (column.dataType === 'clinicalMatrix') {
+			label = column.fieldLabel.default;
 		} else {
 			label = field;
 		}
 		val = heatmapData[fieldIndex][sampleIndex];
-		if (column.dataType === 'clinicalMatrix' && codes[label]) {
-			val = codes[label][val];
-		} else if (val !== undefined) {
-			val = prec(val);
+		val = (column.dataType === 'clinicalMatrix' && codes)
+			? codes[val]
+			: prec(val);
+		if (val === undefined || _.isNaN(val)) {
+			val = 'NA';
 		}
-		rows.push({ label: label, val: (val === undefined) ? 'N/A' : val });
+		rows.push({ label: label, val: val });
 		if (column.dataType === 'clinicalMatrix') {
-			valWidth = '25em';
+			tip.valWidth = '25em';
 		} else {
-			//rows.push({ label: 'Column mean', val: prec(meannan(serverData[field])) });
-			rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
-			valWidth = '15em';
+			tip.labelWidth = '8em';
+			tip.valWidth = '15em';
 		}
-
-		tooltip.mousing({
-			ev: ev,
-			sampleID: ev.data.plotData.samples[sampleIndex],
-			el: '#nav',
-			my: 'top',
-			at: 'top',
-			mode: mode,
-			rows: rows,
-			valWidth: valWidth
-		});
+		if (val !== 'NA' && column.dataType !== 'clinicalMatrix') {
+			rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
+		}
+		tip.rows = rows;
+		tooltip.mousing(tip);
 	}
 
 	function categoryLegend(dataIn, color_scale, codes) {
@@ -550,13 +561,13 @@ define(['underscore_ext',
 		var c,
 			ellipsis = '',
 			align = 'center',
-			colors = [].concat(column.colors),
-			labels = [column.min, 0, column.max],
+			labels = color_scale[0] ? color_scale[0].domain() : [],
+			colors = color_scale[0] ? _.map(labels, color_scale[0]) : [],
 			categoryLength = categoryBreak;
 		if (data.length === 0) { // no features to draw
 			return;
 		}
-		if (column.dataType === 'clinicalMatrix') {
+		if (column.dataType === 'clinicalMatrix') { // XXX can we use domain() for categorical?
 			if (codes[fields[0]]) { // category
 				if (codes[fields[0]].length > categoryBreak) {
 					categoryLength = 19;
@@ -571,9 +582,6 @@ define(['underscore_ext',
 					labels = c.labels;
 				}
 				align = 'left';
-			} else { // float
-				_.identity(); // shut up jslint
-				// TODO need min and max of full dataset from server
 			}
 		}
 		columnUi.drawLegend(colors, labels, align, ellipsis);
@@ -596,22 +604,23 @@ define(['underscore_ext',
 				features = data.features || {},
 				codes = data.codes || {},
 				metadata = data.metadata || {},
+				bounds = data.bounds || {},
 				columnUi,
-				defaults = {
-					min: (metadata.min === undefined) ? -1 : metadata.min,
-					max: (metadata.max === undefined) ? 1 :metadata.max,
-					colors: default_colors(ws.column.dataType === "clinicalMatrix" ?
-										   "phenotype" :
-										   metadata.dataSubType),
-					colnormalization: metadata.colnormalization
-				},
-				column = _.extend(defaults, ws.column),
+				column = ws.column,
 				fields = data.req.probes || column.fields, // prefer field list from server
 				mean = _.get_in(data, ["req", "mean"]),
 				transform = (column.colnormalization && mean && _.partial(subbykey, mean())) || second,
 				vg,
 				heatmapData,
 				colors;
+
+			column.min = (_.has(bounds, fields[0]) && bounds[fields[0]].min) || metadata.min || -1;
+			column.max = (_.has(bounds, fields[0]) && bounds[fields[0]].max) || metadata.max || 1;
+			column.colors = default_colors(
+				column.dataType === "clinicalMatrix"
+				? "phenotype"
+				: metadata.dataSubType);
+			column.colnormalization = metadata.colnormalization;
 
 			if (!local || local.render !== render) { // Test if we own this state
 				local = new Rx.Disposable(function () {
@@ -637,14 +646,16 @@ define(['underscore_ext',
 			heatmapData = dataToHeatmap(sort, data.req.values, fields, transform);
 			if (columnUi && heatmapData.length) {
 				columnUi.plotData = {
+					// TODO we don't need all these parms
 					serverData: data.req.values,
 					heatmapData: heatmapData,
 					column: column,
-					samples: sort, // TODO should samples, fields, codes be gotten from ws?
+					samples: sort,
 					fields: fields,
 					codes: codes
 				};
 				columnUi.ws = ws;
+				columnUi.setPlotted();
 				if (local.sub) {
 					local.sub.dispose();
 				}
@@ -660,8 +671,8 @@ define(['underscore_ext',
 			colors = map(fields, function (p, i) {
 				return heatmapColors.range(column, features[p], codes[p], heatmapData[i]);
 			});
+			column.colorFn = colors;
 			drawLegend(column, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryBreak);
-			//drawLegend(column, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryLength);
 			renderHeatmap({
 				vg: vg,
 				height: ws.height,

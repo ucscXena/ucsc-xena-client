@@ -80,7 +80,7 @@ path.outline {
 
 .kmScreen {
 	position: absolute;
-	background-color: #F8F8F8;
+	background-color: #ffffff;
 	top: 0px;
 	bottom: 0px;
 	left: 0px;
@@ -97,4 +97,7 @@ path.outline {
 	padding-top: 5px;
 	padding-right: 20px;
 	font-weight: bold;
+}
+.kmDialog .warningIcon {
+	display: none;
 }

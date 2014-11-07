@@ -1,13 +1,18 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
+define(['haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'kmPlot', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
 	// non-object dependenciies
-	], function (stub, template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, tooltip, util, d3, $, select2, _, xenaQuery, Rx) {
+	], function (template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, kmPlot, tooltip, util, d3, $, select2, _, xenaQuery, Rx) {
 	'use strict';
+
+	function columnExists(uuid, state) {
+		return !!_.get_in(state, ['column_rendering', uuid]);
+	}
 
 	var APPLY = true,
 		STATIC_URL = config.STATIC_URL,
+		moveImg = STATIC_URL + 'heatmap-cavm/images/moveHorizontal.png',
 		menuImg = STATIC_URL + 'heatmap-cavm/images/menu.png',
 		each = _.each,
 		filter = _.filter,
@@ -16,103 +21,42 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 		reduce = _.reduce,
 		toNumber = _.toNumber,
 		uniqueId = _.uniqueId,
-		sFeatures = { // TODO for demo
-			impact: 'impact', // shorttitle ?
-			DNA_AF: 'DNA allele frequency',
-			RNA_AF: 'RNA allele frequency'
-		},
-		//dsTitles = {}, // TODO for demo
-		/*
-		defTitles = {
-			cna: 'copy number',
-			DNAMethylation: 'DNA methylation',
-			geneExp: 'gene expression',
-			RNAseqExp: 'RNA sequence expression',
-			arrayExp: 'array expression',
-			somaticMutation: 'somatic mutation',
-			mutationVector: 'mutation vector',
-			protein: 'protein',
-			clinical: 'clinical feature'
-		},
-		*/
 		widgets = {},
 		aWidget;
-	/*
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/cnv.matrix"] = 'Copy number';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/rma.Target190.Probeset.Full"] = 'Gene expression, array';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/NBL_10_RNAseq_log2"] = 'Gene expression, RNAseq';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/mutationGene"] = 'Mutations, gene';
-	dsTitles[stub.getDEV_URL() + "/TARGET/TARGET_neuroblastoma/TARGET_neuroblastoma_clinicalMatrix"] = ' ';
-
-	function datasetTitle(dsID, title) {
-		return dsTitles[dsID] || title;
-	}
-	*/
 	aWidget = {
 		// this is invoked from columnMenu.js: remove menu function
 		destroy: function () {
-			this.title.destroy();
-			this.field.destroy();
+			this.subs.dispose();
 			this.$el.remove();
 			this.crosshairs.destroy();
 			// TODO clean up subscriptions, subWidgets, like exonRefGene, mutationVector
+			kmPlot.destroy(this.id);
 			delete widgets[this.id];
 			$('.spreadsheet').resize();
 		},
 
-		someMouseenterLeave: function (e) {
-			var $hoverShow = $(e.target);
-			if (e.type === 'mouseenter') {
-				$hoverShow.removeClass('recede');
-			} else {
-				$hoverShow.addClass('recede');
-				$hoverShow.blur();
-			}
-		},
-
-		mouseenterLeave: function (e) {
-			var $hoverShow = this.$el.find('.hoverShow');
-			if (e.type === 'mouseenter') {
-				$hoverShow.removeClass('recede');
-			} else {
-				$hoverShow.addClass('recede');
-				$hoverShow.blur();
-			}
-		},
-
-		getDefTitle: function () {
-			var dsID = this.ws.column.dsID;
-			return this.sheetWrap.sources.map(function (sources) {
-				var dataset = xenaQuery.find_dataset(sources, dsID);
-				if (dataset) {
-					return dataset.title;
-				} else {
-					return "<unknown>";
-				}
+		setPlotted: function () {
+			var self = this,
+				cursor = this.xenaCursor.refine({ '_column': ['_column', self.id] });
+			cursor.update(function (s) {
+				return _.assoc_in(s, ['_column', 'plotted'], true);
 			});
 		},
 
-		getDefField: function () {
-			// TODO store label in state
-			var label = this.ws.column.fields.toString(),
-				defalt;
-			if (this.ws.dataType === 'clinicalMatrix') {
-				defalt = xenaQuery.feature_list(this.ws.column.dsID)
-					.pluck(this.ws.column.fields[0]);
+		mouseenterLeave: function (e) {
+			var $hoverShow = this.$el.find('.hoverShow'),
+				$hoverChange = this.$el.find('.hoverChange');
+			if (e.type === 'mouseenter') {
+				$hoverShow.removeClass('recede');
+				$hoverChange.removeClass('recede');
 			} else {
-				if (this.ws.column.dataType === 'mutationVector') {
-					if (this.ws.column.sFeature === 'dna_vaf') {
-						label += ': DNA variant allele freq';
-					} else if (this.ws.column.sFeature === 'rna_vaf') {
-						label += ': RNA variant allele freq';
-					}
-				}
-				defalt = Rx.Observable.return(label);
+				$hoverShow.addClass('recede');
+				$hoverChange.addClass('recede');
+				$hoverShow.blur();
 			}
-			return defalt;
 		},
 
-		drawLegend: function (colors, labels, align, ellipsis, klass) {
+		drawLegend: function (colors, labels, align, ellipsis, klass, upperBorderIndex) {
 			var label = '';
 			if ($('.columnUi').index(this.$el) === 0) {
 				label = 'Legend';
@@ -130,17 +74,35 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				align: align,
 				klass: klass
 			});
+			$(this.$el.find('.colorTd')[upperBorderIndex]).find('input')
+				.css('border-top', '1px #bbbbbb solid');
+		},
+
+		setWidth: function (width) {
+			this.$moveHandle.width(width - this.$more.width() - 10);
 		},
 
 		reRender: function (options) {
+			var titlePath = {
+					'user': ['column_rendering', this.id, 'columnLabel', 'user'],
+					'default': ['column_rendering', this.id, 'columnLabel', 'default']
+				},
+				fieldPath = {
+					'user': ['column_rendering', this.id, 'fieldLabel', 'user'],
+					'default': ['column_rendering', this.id, 'fieldLabel', 'default']
+				};
 			this.ws = options.ws;
-			this.title = defaultTextInput.create('title_' + this.id, {
+			defaultTextInput.create({
 				$el: this.$columnTitle,
-				getDefault: this.getDefTitle()
+				state: this.state.refine(titlePath),
+				cursor: options.cursor.refine(titlePath),
+				id: 'title'
 			});
-			this.field = defaultTextInput.create('field_' + this.id, {
+			defaultTextInput.create({
 				$el: this.$field,
-				getDefault: this.getDefField()
+				state: this.state.refine(fieldPath),
+				cursor: options.cursor.refine(fieldPath),
+				id: 'field'
 			});
 		},
 
@@ -148,10 +110,11 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			var self = this,
 				$anchor = $(options.ws.el);
 			this.sheetWrap = options.sheetWrap;
+			this.ws = options.ws;
 			this.$el = $(template({
 				features: undefined,
-				menuImg: menuImg,
-				debugId: this.id
+				moveImg: moveImg,
+				menuImg: menuImg
 			}));
 			$anchor.append(this.$el);
 
@@ -162,8 +125,9 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			this.$el.find('.headerPlot').height(this.headerPlotHeight);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'colorBarLabelRow', 'colorBarLabel', 'colorBarEllipsis'];
+			this.cache = ['moveHandle', 'more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'colorBarLabelRow', 'colorBarLabel', 'colorBarEllipsis'];
 			_(self).extend(_(self.cache).reduce(function (a, e) { a['$' + e] = self.$el.find('.' + e); return a; }, {}));
+
 			this.columnMenu = columnMenu.create(this.id, {
 				anchor: this.$more,
 				columnUi: this,
@@ -173,8 +137,15 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 				sheetWrap: this.sheetWrap
 			});
 			this.$el // TODO use rx handlers?
-				.on('mouseenter mouseleave', '.columnTitle, .field', this.someMouseenterLeave)
 				.on('mouseenter mouseleave', this.mouseenterLeave);
+
+			setTimeout(function () {
+				self.setWidth(options.ws.column.width);
+			}, 500);
+			this.subs.add(this.state.refine({ 'width': ['column_rendering', this.id, 'width'] })
+				.subscribe(function (s) {
+					self.setWidth(s.width);
+				}));
 
 			this.reRender(options);
 		},
@@ -187,25 +158,85 @@ define(['stub', 'haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tup
 			}
 		},
 
+		kmPlotShow: function () {
+			kmPlot.show(this.id, {
+				cursor: this.cursor.refine({ 'kmPlot': ['column_rendering', this.id, 'kmPlot'] }),
+				columnUi: this
+			});
+		},
+
+		kmPlotVisibility: function () {
+			var myKmState,
+				myPlotted,
+				self = this;
+			this.subs.add(this.state.distinctUntilChanged(function (s) {
+				return s.column_rendering[self.id].kmPlot;
+			})
+				.subscribe(function (s) {
+					var kmState = s.column_rendering[self.id].kmPlot,
+						plotted = s._column[self.id].plotted;
+					if (myKmState && !kmState) {
+						myKmState = kmState;
+						kmPlot.destroy(self.id);
+					}
+					if (!myKmState && kmState) {
+						myKmState = kmState;
+						if (plotted) {
+							self.kmPlotShow();
+						}
+					}
+				}));
+			this.subs.add(this.state.distinctUntilChanged(function (s) {
+				return s._column[self.id].plotted;
+			})
+				.subscribe(function (s) {
+					var kmState = s.column_rendering[self.id].kmPlot,
+						plotted = s._column[self.id].plotted;
+					if (myPlotted && !plotted) {
+						myPlotted = plotted;
+					}
+					if (!myPlotted && plotted) {
+						myPlotted = plotted;
+						if (kmState) {
+							self.kmPlotShow();
+						}
+					}
+				}));
+		},
+
 		initialize: function (options) {
+			var self = this;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
-			//_(this).bindAll();
+
+			this.subs = new Rx.CompositeDisposable();
 			this.sheetWrap = options.sheetWrap;
 			this.cursor = options.cursor;
-			this.state = options.state;
+			this.xenaCursor = options.xenaCursor;
+			this.state = options.state
+				.takeWhile(_.partial(columnExists, this.id))
+				.finally(this.destroy)
+				.share();
 			this.sparsePad = options.sparsePad;
 			this.headerPlotHeight = options.headerPlotHeight;
 			this.horizontalMargin = options.horizontalMargin.toString() + 'px';
+
+			// initialize the root of this _column in the state tree
+			this.xenaCursor.update(function (state) {
+				return _.assoc(state, '_column', _.assoc(state._column, self.id, {}));
+			});
+
 			if (options.ws) {
 				this.render(options);
 			}
 			this.crosshairs = crosshairs.create(this.id, { $anchor: this.$samplePlot });
 
-			this.$samplePlot.onAsObservable('click')
+			this.subs.add(this.$samplePlot.onAsObservable('click')
 				.filter(function (ev) {
 					return ev.altKey === true;
 				})
-				.subscribe(tooltip.toggleFreeze); // TODO free subscription
+				.subscribe(tooltip.toggleFreeze));
+
+			this.kmPlotVisibility();
 		}
 	};
 

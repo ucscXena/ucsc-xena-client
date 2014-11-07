@@ -1,9 +1,10 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
+/*global alert: false */
 
-define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Menu', 'jquery', 'lib/underscore'
+define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVector', 'Menu', 'jquery', 'lib/underscore'
 	// non-object dependencies
-	], function (template, columnEdit, download, mutationVector, Menu, $, _) {
+	], function (template, columnEdit, download, kmPlot, mutationVector, Menu, $, _) {
 	'use strict';
 
 	var APPLY_BUTTON,
@@ -28,6 +29,21 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 				this.duplicateColumn(this.id);
 			};
 
+			this.kmPlotClick = function (ev) {
+				var self = this,
+					column = this.columnUi.ws.column;
+				if (this.$kmPlot.hasClass('disabled')) {
+					return;
+				}
+				if (column.kmPlot) {
+					kmPlot.moveToTop(this.id);
+				} else {
+					this.cursor.update(function (s) {
+						return _.assoc_in(s, ['column_rendering', self.id, 'kmPlot'], { geometry: 'default' });
+					});
+				}
+			};
+
 			this.mupitClick = function (ev) {
 				mutationVector.mupitClick(this.id);
 			};
@@ -38,6 +54,10 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 					columnUi: this.columnUi,
 					$anchor: this.$el
 				});
+			};
+
+			this.mouseleave = function (ev) {
+				this.destroyList();
 			};
 
 			this.viewMouseenter = function (ev) {
@@ -59,12 +79,10 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 			};
 
 			this.detailClick = function (ev) {
-				console.log('detailClick');
 				this.updateColumn('dataType', 'geneProbesMatrix');
 			};
 
 			this.geneAverageClick = function (ev) {
-				console.log('geneAverageClick');
 				this.updateColumn('dataType', 'geneMatrix');
 			};
 
@@ -95,7 +113,8 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 			};
 
 			this.render = function () {
-				var column = this.columnUi.ws.column;
+				var column = this.columnUi.ws.column,
+					$kmPlot;
 				this.menuRender($(template()));
 				if (column.dataType === 'mutationVector') {
 					this.$el.find('.mupit, .view, .impact, .dna_vaf, .rna_vaf, hr').show();
@@ -106,6 +125,12 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 				} else if (column.dataType === 'geneMatrix' && column.fields.length === 1) {
 					this.$el.find('.view, .detail, .geneAverage, hr').show();
 					this.$el.find('.geneAverage .ui-icon-check').css('opacity', 1);
+				}
+				this.$kmPlot = this.$el.find('.kmPlot');
+				this.$kmPlot.show();
+				if (!this.columnUi.plotData
+						|| (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1)) {
+					this.$kmPlot.addClass('disabled');
 				}
 			};
 
@@ -123,8 +148,8 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 				this.menuInitialize(options);
 
 				// bindings
-
 				this.$el // TODO replace with Rx bindings ?
+					.on('mouseleave', this.mouseleave)
 					.on('click', '.mupit', this.mupitClick)
 					.on('mouseenter', '.view', this.viewMouseenter)
 					.on('mouseleave', '.view', this.viewMouseleave)
@@ -133,6 +158,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'mutationVector', 'Men
 					.on('click', '.impact', this.impactClick)
 					.on('click', '.dna_vaf', this.dna_vafClick)
 					.on('click', '.rna_vaf', this.rna_vafClick)
+					.on('click', '.kmPlot', this.kmPlotClick)
 					.on('click', '.edit', this.editClick)
 					.on('click', '.duplicate', this.duplicateClick)
 					.on('click', '.download', this.downloadClick)

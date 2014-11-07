@@ -11,7 +11,6 @@ define(['jquery',
 		'columnUi',
 		'uuid',
 		'cursor',
-		'stub',
 		'plotDenseMatrix',
 		'plotMutationVector',
 		'lib/jquery-ui',
@@ -25,8 +24,7 @@ define(['jquery',
 			multi,
 			columnUi,
 			uuid,
-			cursor,
-			stub) {
+			cursor) {
 
 	'use strict';
 
@@ -62,18 +60,10 @@ define(['jquery',
 	unload.combineLatest(model.state, function (_e, state) {
 		return _.pick(state, keysNot_(state));
 	}).subscribe(function (state) {
-		sessionStorage.state = JSON.stringify(state);
+		sessionStorage.xena = JSON.stringify(state);
 	});
 
-	var defaultServers = [{
-//			title: 'genome-cancer.ucsc.edu/proj/public/xena',
-//			url: 'https://genome-cancer.ucsc.edu/proj/public/xena'
-			title: 'tcga1:7223',
-			url: 'http://tcga1:7223'
-		}, {
-			title: "localhost",
-			url: "http://localhost:7222"
-	}];
+	var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena', 'http://localhost:7222'];
 
 	var childrenStream = new Rx.Subject();
 	model.addStream(childrenStream);
@@ -86,9 +76,9 @@ define(['jquery',
 		samplesFrom: ['samplesFrom'],
 		samples: ['samples'],
 		servers: ['servers'],
+		_sources: ['_sources'],
 		column_rendering: ['column_rendering'],
 		_column: ['_column'],
-		_sources: ['_sources'],
 		column_order: ['column_order'],
 		//columnEditOpen: ['columnEditOpen'],
 		data: ['_column_data']
@@ -157,7 +147,7 @@ define(['jquery',
 
 	var debugstream = new Rx.Subject();
 	model.addStream(debugstream);
-	var debugtext = $('<textarea  id="columnStub" rows=20 cols=50></textarea>');
+	var debugtext = $('<textarea  id="columnStub" rows=20 cols=130></textarea>');
 	debugtext.hide();
 	$debug.append(debugtext);
 
@@ -190,27 +180,29 @@ define(['jquery',
 		}
 	});
 
-	model.state.subscribe(function (s) {
-		$('#samplesStub').val(JSON.stringify(_.pick(s, keysNot_(s)), undefined, 4));
-	});
 	$(document).ready(function () {
-		var start;
-		if (sessionStorage && sessionStorage.state) {
+		var debug_stream = model.state.replay(null, 1),
+			start,
+			sub;
+
+		debug_stream.connect();
+
+		if (sessionStorage && sessionStorage.xena) {
 			// XXX error handling?
-			start = JSON.parse(sessionStorage.state);
+			start = JSON.parse(sessionStorage.xena);
 			start["_column"] = {};
 			start["_sources"] = [];
 		} else {
 			start = {
 				"samples": [],
 				"samplesFrom": "",
-				"servers": defaultServers,
+				"servers": {'default': defaultServers, user: defaultServers},
+				 "_sources": [],
 				"height": HEIGHT,
 				"zoomIndex": 0,
 				"zoomCount": 100,
 				"column_rendering": {},
 				"_column": {},
-				"_sources": [],
 				"column_order": []
 			};
 		}
@@ -219,6 +211,13 @@ define(['jquery',
 		$('.samplesFromAnchor').onAsObservable('click')
 			.subscribe(function (ev) {
 				$('.debug').toggle();
+				if (sub) {
+					sub.dispose();
+				} else {
+					sub = debug_stream.subscribe(function (s) {
+						$('#samplesStub').val(JSON.stringify(_.pick(s, keysNot_(s)), undefined, 4));
+					});
+				}
 			});
 	});
 

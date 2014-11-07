@@ -1,7 +1,7 @@
 /*jslint nomen:true, regexp: true */
 /*globals define: false, $: false, _: false */
 define(['haml!haml/sheetWrap',
-		'stub',
+		'cursor',
 		'spreadsheet',
 		'cohortSelect',
 		'columnEditRx',
@@ -16,7 +16,7 @@ define(['haml!haml/sheetWrap',
 		'rx.jquery',
 		'rx.binding'
 		], function (template,
-					stub,
+					new_cursor,
 					spreadsheet,
 					cohortSelect,
 					columnEdit,
@@ -52,6 +52,7 @@ define(['haml!haml/sheetWrap',
 	function columnShow(deleteColumn, id, ws) {
 		return columnUi.show(id, {
 			cursor: widget.cursor,
+			xenaCursor: widget.cursor,
 			state: widget.state,
 			ws: ws,
 			sheetWrap: widget,
@@ -62,32 +63,12 @@ define(['haml!haml/sheetWrap',
 		});
 	}
 
-	function serverTitles(servers) {
-		return _.pluck(servers, 'title').join(', ');
+	function serversFromString(s) {
+		return map(_.filter(s.split(/[, ]+/), _.identity), xenaQuery.server_url);
 	}
 
-	defaultPort = {
-		'http://': 80,
-		'https://': 433
-	};
-
-	function serverFromString(s) {
-		// XXX should throw or otherwise indicate parse error on no match
-		var tokens = s.match(/^(https?:\/\/)?([^:]+)(:([0-9]+))?$/),
-			host = tokens[2],
-			prod = (host.indexOf('genome-cancer.ucsc.edu') === 0),
-			defproto = prod ? 'https://' : 'http://',
-			proto = tokens[1] || (prod ? 'https://' : 'http://'),
-			port = tokens[4] || (prod ? '433' : '7222'),
-			defport = defaultPort[proto],
-			url = proto + host + ':' + port;
-
-		return {
-			title: (proto === defproto ? '' : proto) +
-				host +
-				(port === defport ? '' : (':' + port)),
-			url: url
-		};
+	function serversToString(servers) {
+		return map(servers, xenaQuery.server_title).join(', ');
 	}
 
 	aWidget = {
@@ -101,22 +82,8 @@ define(['haml!haml/sheetWrap',
 			});
 		},
 
-		initCohortsAndSources: function (state, cursor, defaultServers) {
-			this.serversInput = defaultTextInput.create('serversInput', {
-				$el: this.$servers,
-				getDefault: Rx.Observable.return(serverTitles(defaultServers)),
-				focusOutChanged: function (val) {
-					cursor.update(function (s) {
-						return _.assoc(s,
-							'servers',
-							map(_.filter(val.split(/[, ]+/), _.identity),
-								serverFromString)
-							);
-					});
-				}
-			});
-
-			this.cohortSelect = cohortSelect.create('cohortSelect', {
+		initCohortsAndSources: function (state, cursor) {
+			this.cohortSelect = cohortSelect.create({
 				$anchor: this.$cohortAnchor,
 				state: state,
 				cursor: cursor
@@ -125,22 +92,21 @@ define(['haml!haml/sheetWrap',
 			// retrieve all datasets in this cohort, from all servers
 			this.sources = state.refine(['servers', 'cohort'])
 				.map(function (state) {
-					if (state.servers && state.cohort) {
-						return xenaQuery.dataset_list(state.servers, state.cohort);
+					if (state.cohort) {
+						return xenaQuery.dataset_list(state.servers.user, state.cohort);
 					} else {
 						return Rx.Observable.return([]);
 					}
 				}).switchLatest().replay(null, 1); // replay for late subscribers
 			this.subs.add(this.sources.connect());
 
-
 			// store the sources in state, for easy access later
 			this.subs.add(this.sources.subscribe(function (sources) {
 				cursor.update(function (t) {
-					return _.assoc(t, '_sources', Object.create(sources).__proto__);
+					return _.assoc(t, '_sources', sources);
+					//return _.assoc(t, '_sources', Object.create(sources).__proto__);
 				});
 			}));
-
 		},
 
 		initSamplesFrom: function (state, cursor) {
@@ -175,14 +141,14 @@ define(['haml!haml/sheetWrap',
 			options.$anchor.append(this.$el);
 
 			// cache jquery objects for active DOM elements
-			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'servers', 'yAxisLabel', 'addColumn',
+			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'yAxisLabel', 'addColumn',
 				'spreadsheet'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
 				return a;
 			}, {}));
 
-			this.initCohortsAndSources(state, options.cursor, options.servers);
+			this.initCohortsAndSources(state, options.cursor);
 			this.initSamplesFrom(state, options.cursor);
 
 			deleteColumnCb = function (id) {
@@ -213,9 +179,12 @@ define(['haml!haml/sheetWrap',
 			);
 
 			this.subs.add(
-				state.refine(['samples', 'column_order'])
+				state.refine(['samples', 'column_order', 'zoomCount', 'zoomIndex'])
 					.subscribe(function (state) {
-						var text = 'Samples (N=' + state.samples.length + ')',
+						var text = 'Samples (N=' + state.samples.length + ')' +
+							((state.zoomCount === state.samples.length)
+								? ''
+								: (', showing ' + state.zoomIndex + '-' + (state.zoomIndex + state.zoomCount - 1))),
 							marginT = '7em',
 							marginB = '0';
 						if (state.column_order.length) {

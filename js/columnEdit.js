@@ -3,11 +3,12 @@
 
 define(['haml!haml/columnEdit',
 	   'haml!haml/columnEditBasic',
-	   'haml!haml/columnEditDatasets',
+	   'haml!haml/datasetSelect',
 	   'haml!haml/select',
 	   'haml!haml/columnEditAdvanced',
 	   'defer',
-	   'stub',
+	   'genomicPosition',
+	   'util',
 	   'lib/select2',
 	   'jquery',
 	   'underscore_ext',
@@ -20,7 +21,8 @@ define(['haml!haml/columnEdit',
 				 selectTemplate,
 				 advancedTemplate,
 				 defer,
-				 stub,
+				 genomicPosition,
+				 util,
 				 select2,
 				 $,
 				 _,
@@ -31,6 +33,7 @@ define(['haml!haml/columnEdit',
 			mutationVector: ['mutationVector'],
 			clinicalMatrix: ['clinicalMatrix'],
 			genomicMatrix: ['probeMatrix'],
+			null: ['probeMatrix'],
 			genomicMatrixProbemap: ['geneMatrix', 'probeMatrix', 'geneProbesMatrix'],
 		},
 		dataTypeByInput = {
@@ -39,6 +42,8 @@ define(['haml!haml/columnEdit',
 			iGenes: ['geneMatrix', 'geneProbesMatrix'],
 			iProbes: ['probeMatrix']
 		},
+		feature_list = xenaQuery.dsID_fn(xenaQuery.feature_list),
+		dataset_field_examples = xenaQuery.dsID_fn(xenaQuery.dataset_field_examples),
 		map = _.map,
 		widgets = {},
 		aWidget;
@@ -110,7 +115,7 @@ define(['haml!haml/columnEdit',
 			} else if (this.stateTmp.inputMode === 'iProbes') {
 				this.$listLabel.text('Identifiers:');
 				this.$list.val(this.stateTmp.probes);
-				xenaQuery.dataset_field_examples(this.state.dsID)
+				dataset_field_examples(this.state.dsID)
 					.subscribe(function (probes) {
 						self.renderProbeEg(probes);
 					});
@@ -127,12 +132,19 @@ define(['haml!haml/columnEdit',
 			}
 		},
 
+		sortFeatures: function (features) {
+			var fArray = map(features, function (val, key) {
+					return ({ name: key, label: val });
+				});
+			return fArray.sort(util.caseInsensitiveSortByLabel);
+		},
+
 		renderFeatures: function (features) {
 			var self = this;
 			self.$selectAnchor.append(
 				selectTemplate({
 					klass: 'feature',
-					options: features,
+					options: this.sortFeatures(features),
 					labels: undefined
 				})
 			);
@@ -155,7 +167,7 @@ define(['haml!haml/columnEdit',
 		renderSelect: function () {
 			var self = this;
 			if (this.metadata === 'clinicalMatrix') {
-				xenaQuery.feature_list(this.state.dsID).subscribe(function (features) {
+				feature_list(this.state.dsID).subscribe(function (features) {
 					self.renderFeatures(features);
 				});
 			}
@@ -168,16 +180,23 @@ define(['haml!haml/columnEdit',
 				fields = [this.stateTmp.gene]; // TODO use named text?
 				break;
 			case 'iGenes':
-				fields = this.stateTmp.genes.split(', '); // TODO use named text?
+				fields = this.stateTmp.genes;
 				break;
 			case 'iProbes':
-				fields = this.stateTmp.probes.split(', '); // TODO use named text?
+				fields = this.stateTmp.probes;
 				break;
 			case 'iFeature':
 				fields = [this.stateTmp.feature];
 				break;
 			}
 			return fields;
+		},
+
+		getFieldLabel: function () {
+			if (this.stateTmp.inputMode === 'iFeature') {
+				return this.$feature.parent().find('select option:selected').text().trim();
+			}
+			return this.getFields().join(', ');
 		},
 
 		findDataType: function (fields) {
@@ -196,6 +215,8 @@ define(['haml!haml/columnEdit',
 		renderColumn: function () {
 			var json,
 				fields = this.getFields(),
+				label = this.getFieldLabel(),
+				columnLabel = this.$dataset.parent().find('select option:selected').text().trim(),
 				sFeature,
 				id = this.id;
 			if (this.metadata === 'mutationVector') {
@@ -205,7 +226,11 @@ define(['haml!haml/columnEdit',
 				"width": 200,
 				"dsID": this.state.dsID,
 				"dataType": this.findDataType(fields),
-				"fields": fields
+				"fields": fields,
+				// XXX If defaults should follow the db, we need to refactor to listen to db changes and
+				// update the state. Hacking this in for now.
+				"fieldLabel": {user: label, 'default': label},
+				"columnLabel": {user: columnLabel, 'default': columnLabel}
 			};
 			if (sFeature) {
 				json.sFeature = sFeature;
@@ -245,10 +270,32 @@ define(['haml!haml/columnEdit',
 			this.$goRow.show();
 		},
 
-		singleListKeyup: function (ev) {
+		singleKeyup: function (ev) {
 			if ($(ev.target).val() === "") {
 				this.$goRow.hide();
+			} else if (ev.keyCode === 13) { // return key pressed
+				this.singleBlur();
+				this.goClick();
 			} else {
+				this.$goRow.show();
+			}
+		},
+
+		listKeyup: function (ev) {
+			if ($(ev.target).val() === "") {
+				this.$goRow.hide();
+			} else if (ev.keyCode === 13) { // return key pressed
+				if (this.listReturn === 1) {
+					this.listReturn += 1;
+					this.$goRow.show();
+				} else if (this.listReturn === 2) {
+					this.listBlur();
+					this.goClick();
+				} else {
+					this.listReturn = 1;
+				}
+			} else {
+				this.listReturn = 1;
 				this.$goRow.show();
 			}
 		},
@@ -258,10 +305,11 @@ define(['haml!haml/columnEdit',
 		},
 
 		listBlur: function () {
+			var list = genomicPosition.genesetParse(this.$list.val());
 			if (this.stateTmp.inputMode === 'iGenes') {
-				this.stateTmp.genes = this.$list.val();
+				this.stateTmp.genes = list;
 			} else {
-				this.stateTmp.probes = this.$list.val();
+				this.stateTmp.probes = list;
 			}
 		},
 
@@ -276,7 +324,7 @@ define(['haml!haml/columnEdit',
 		},
 
 		datasetChange: function () {
-			var dsID = this.$dataset.select2('val');
+			var dsID = decodeURIComponent(this.$dataset.select2('val'));
 			this.state.dsID = dsID;
 			this.reRender();
 		},
@@ -347,7 +395,8 @@ define(['haml!haml/columnEdit',
 				.on('click', '.inputMode', self.inputModeClick)
 				.on('blur', '.list', self.listBlur)
 				.on('blur', '.single', self.singleBlur)
-				.on('keyup', '.single, .list', self.singleListKeyup)
+				.on('keyup', '.single', self.singleKeyup)
+				.on('keyup', '.list', self.listKeyup)
 				.on('change', '.feature', self.featureChange)
 				.on('click', '.go', self.goClick);
 			if (self.columnUi) {
@@ -358,9 +407,11 @@ define(['haml!haml/columnEdit',
 			// as soon as I know how to update one piece of state in the column: dsID
 			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
 				var opts;
-				self.sources = sources;
+				self.sources = _.map(sources, function (s) {
+					return _.assoc(s, 'title', xenaQuery.server_title(s.server));
+				});
 
-				opts = $(datasetsTemplate({sources: self.sources}));
+				opts = $(datasetsTemplate({sources: self.sources, placeholder: 'Select...'}));
 
 				// there might or might not be a a select2 element.
 				// need to find it & do a destroy.
@@ -371,14 +422,11 @@ define(['haml!haml/columnEdit',
 				self.$el.find('.dataset').replaceWith(opts);
 				opts.select2({
 					minimumResultsForSearch: 3,
-					dropdownAutoWidth: true,
-					placeholder: 'Select...',
-					placeholderOption: 'first'
+					dropdownAutoWidth: true
 				});
 
-				// XXX State should be in the monad, not fetched from
-				// the DOM elements like $dataset.
 				self.$dataset = self.$el.find('.select2-container.dataset');
+				self.$el.on('select2-open', '.dataset, .feature', util.setSelect2height);
 			});
 		}
 

@@ -1,11 +1,12 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.jquery'
-	], function (template, xenaQuery, _, $, Rx) {
+define(['haml!haml/datasetSelect', 'util', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.jquery'
+	], function (template, util, xenaQuery, _, $, Rx) {
 	'use strict';
 
-	var widgets = [],
+	var dataset_samples = xenaQuery.dsID_fn(xenaQuery.dataset_samples),
+		widgets = [],
 		aWidget;
 
 	function setState(samplesFrom, state) {
@@ -14,10 +15,14 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 	}
 
 	function setSamples(samples, state) {
-		return _.assoc(state,
-					   'samples', samples,
-					   'zoomCount', samples.length,
-					   'zoomIndex', 0);
+		if (!_.isEqual(samples, state.samples)) {
+			return _.assoc(state,
+						   'samples', samples,
+						   'zoomCount', samples.length,
+						   'zoomIndex', 0);
+		} else {
+			return state;
+		}
 	}
 
 	aWidget = {
@@ -33,7 +38,9 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 		},
 
 		render: function (sources_in, state) {
-			var sources = sources_in,
+			var sources = _.map(sources_in, function (s) {
+					return _.assoc(s, 'title', xenaQuery.server_title(s.server));
+				}),
 				$el = $(template({
 					sources: sources,
 					placeholder: this.placeholder
@@ -54,8 +61,9 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 			this.$el = this.$anchor.find('.select2-container.dataset');
 
 			if (state) {
-				this.$el.select2('val', state);
+				this.$el.select2('val', encodeURIComponent(state));
 			}
+			this.$el.parent().on('select2-open', util.setSelect2height);
 		},
 
 		initialize: function (options) {
@@ -76,15 +84,16 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 				}).subscribe(_.apply(self.render));
 
 			// retrieve all samples in this cohort, from all servers
-			samples = state.map(function (state) {
-				if (state.samplesFrom) {
-					return xenaQuery.dataset_samples(state.samplesFrom);
-				} else {
-					return Rx.Observable.zipArray(_.map(state.servers, function (s) {
-						return xenaQuery.all_samples(s.url, state.cohort);
-					})).map(_.apply(_.union));
-				}
-			}).switchLatest();
+			samples = state.refine({samplesFrom: ['samplesFrom'], servers: ['servers', 'user'], cohort: ['cohort']})
+				.map(function (state) {
+					if (state.samplesFrom) {
+						return dataset_samples(state.samplesFrom);
+					} else {
+						return Rx.Observable.zipArray(_.map(state.servers, function (s) {
+							return xenaQuery.all_samples(s, state.cohort);
+						})).map(_.apply(_.union));
+					}
+				}).switchLatest();
 
 			this.subs.add(samples.subscribe(function (samples) {
 				options.cursor.update(_.partial(setSamples, samples));
@@ -92,7 +101,7 @@ define(['haml!haml/datasetSelect', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.
 
 			// when DOM value changes, update state tree
 			this.subs.add(this.$anchor.onAsObservable('change', '.dataset')
-				.pluck('val').subscribe(function (val) {
+				.pluck('val').map(decodeURIComponent).subscribe(function (val) {
 					options.cursor.update(_.partial(setState, val));
 				}));
 		}

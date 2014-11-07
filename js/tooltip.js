@@ -1,8 +1,8 @@
 /*jslint browser: true, nomen: true */
 /*global define: false  */
 
-define(["haml!haml/tooltip", "haml!haml/tooltipClose", "jquery", "defer", "error", /*"tutor",*/ "lib/underscore"
-	], function (template, closeTemplate, $, defer, error, /*tutor,*/ _) {
+define(["haml!haml/tooltip", "haml!haml/tooltipClose", "jquery", "defer", "lib/underscore"
+	], function (template, closeTemplate, $, defer, _) {
 	'use strict';
 
 	var freezeText = '(alt-click to freeze)',
@@ -54,9 +54,12 @@ define(["haml!haml/tooltip", "haml!haml/tooltipClose", "jquery", "defer", "error
 			show();
 			position(t.el, t.my, t.at);
 			$tooltip.html(template({
-				sampleID: t.sampleID,
+				sampleID: t.sampleID || null,
 				rows: t.rows,
 			}));
+			if (t.labelWidth) {
+				$tooltip.find('.labelCol').width(t.labelWidth);
+			}
 			if (t.valWidth) {
 				$tooltip.find('.valueCol').width(t.valWidth);
 			}

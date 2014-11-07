@@ -33,7 +33,6 @@
 .select2-results {
 	margin: 0;
 	padding-left: 0;
-	max-height: 30em;
 	line-height: 2em;
 }
 .select2-results .select2-result-label,
