@@ -54,8 +54,12 @@ define([ "lib/d3",
 		},
 
 		close: function () {
-			this.cursor.update(function (s) {
-				return _.assoc(s, 'kmPlot', false);
+			var self = this;
+			this.destroy(); // depending on the state change to trigger this is too sluggish
+			defer(function () { // allow dialog to close
+				self.cursor.update(function (s) {
+					return _.assoc(s, 'kmPlot', false);
+				});
 			});
 		},
 
@@ -208,26 +212,26 @@ define([ "lib/d3",
 				values,
 				groups,
 				regroup,
-				samplesWithTtev,
-				samplesWithValues,
 				patientUniqueSamples,
 				dupPatientSamples;
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
 
-			// reduce sample list to those that have values in each of chief & _TIME_TO_EVENT.
-			samplesWithTtev = filter(samples, function (s) { return ttev_fn(s) !== null; });
-			samplesWithValues = filter(samplesWithTtev, function (s) {
-				var inChiefValues = _.find(chief.values, function (val, key) {
-					return key === s;
-				});
-				return (inChiefValues !== undefined);
-			});
+			// reduce sample list to those that have values in each of chief, _EVENT & _TIME_TO_EVENT.
+			samples = filter(
+				filter(
+					keys(chief.values),
+					function (t) { return isVal(ttev_fn(t)); }
+				),
+				function (e) {
+					return isVal(ev_fn(e));
+				}
+			);
 
 			// check for duplicate patients ending up on the plot, to give a warning.
-			patientUniqueSamples = uniq(samplesWithValues, false, patient_fn);
-			dupPatientSamples = _.difference(samplesWithValues, patientUniqueSamples);
+			patientUniqueSamples = uniq(samples, false, patient_fn);
+			dupPatientSamples = _.difference(samples, patientUniqueSamples);
 			if (dupPatientSamples.length) {
 				this.subs.add(code_list(this.survivalDsID, [this.survivalPatient])
 					.subscribe(function (codes) {
