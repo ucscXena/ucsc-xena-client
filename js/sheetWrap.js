@@ -4,7 +4,8 @@ define(['haml!haml/sheetWrap',
 		'cursor',
 		'spreadsheet',
 		'cohortSelect',
-		'columnEditRx',
+		'columnEdit',
+		//'columnEditRx',
 		'columnUi',
 		'datasetSelect',
 		'defaultTextInput',
@@ -75,9 +76,16 @@ define(['haml!haml/sheetWrap',
 
 		columnAddClick: function () {
 			var id = uuid();
+
+			// initialize the root of this _column in the state tree
+			this.cursor.update(function (state) {
+				return _.assoc(state, '_column', _.assoc(state._column, id, {}));
+			});
+
 			columnEdit.show(id, {
 				sheetWrap: this,
 				state: this.state,
+				columnUi: undefined, // TODO not needed for columnEditRx
 				cursor: this.cursor
 			});
 		},

@@ -220,6 +220,11 @@ define(['haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDispla
 			this.headerPlotHeight = options.headerPlotHeight;
 			this.horizontalMargin = options.horizontalMargin.toString() + 'px';
 
+			// initialize the root of this _column in the state tree when restoring session
+			this.xenaCursor.update(function (state) {
+				return _.assoc(state, '_column', _.assoc(state._column, self.id, {}));
+			});
+
 			if (options.ws) {
 				this.render(options);
 			}
