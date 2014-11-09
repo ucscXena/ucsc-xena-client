@@ -1,0 +1,38 @@
+%table{class:'columnEdit'}
+  %tbody
+    %tr{class:'static'}
+      %td{class:'tupleLabel'} Dataset:
+      %td{class:'datasetAnchor tupleValue', style:'width:550px'}
+
+    - _.each(inputModes, function (mode, i) {
+      %tr{class:'inputModeRow'}
+        - if (i < 1) {
+          %td{class:'tupleLabel'} Input:
+        - } else {
+          %td
+        %td{class:'inputMode' + i + 'td tupleValue'}
+          %label
+            %input{class:'inputMode inputMode' + i, name:'inputMode', type:'radio', value:mode} =mode
+
+    %tr{class:'listRow'}
+      %td{class:'listLabel tupleLabel'}
+      %td{class:'egValueTd tupleValue'}
+        %textarea{class:'list', rows:7}
+    %tr{class:'listRow'}
+      %td
+      %td{class:'listEg eg tupleValue'}
+
+    %tr{class:'singleRow'}
+      %td{class:'singleLabel tupleLabel'}
+      %td{class:'egValueTd tupleValue'}
+    %tr{class:'singleRow'}
+      %td
+      %td{class:'singleEg eg tupleValue'}
+
+    %tr{class:'featureRow'}
+      %td{class:'tupleLabel'} View:
+      %td{class:'featureAnchor tupleValue'}
+
+    %tr{class:'static'}
+      %td
+      %td{class:'goAnchor tupleValue'}
