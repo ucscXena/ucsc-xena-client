@@ -275,9 +275,8 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '      position (getfield "position")]\n' +
 		       '  {:samples (map :value (query {:select [:value]\n' +
 		       '                                :from [:field]\n' +
-		       '                                :join [:code [:= :field.id :field_id]\n' +
-		       '                                       {:table [[[:sampleID :varchar ' + arrayfmt(samples) + ']] :T]} [:= :T.sampleID :value]]\n' +
-		       '                                :where [:= :field_id sampleID]}))\n' +
+		       '                                :join [:code [:= :field.id :field_id]]\n' +
+		       '                                :where [:and [:in :value ' + arrayfmt(samples) + '][:= :field_id sampleID]]}))\n' +
 		       '   :rows (query {:select [:chrom :chromStart :chromEnd :gene [#sql/call ["unpackValue" sampleID :field_gene.row] :sampleID]' +
 		       '                          (unpackValue "ref")\n' +
 		       '                          (unpackValue "alt")\n' +
