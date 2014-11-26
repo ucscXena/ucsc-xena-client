@@ -94,7 +94,8 @@ define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		object_fn: object_fn,
 		findValue: findValue,
 		negate: negate,
-		spy: spy
+		spy: spy,
+		flatmap: _.compose(_.partial(_.flatten, _, 1), _.map)
 	});
 
 	return _;
