@@ -38,6 +38,7 @@ define(['haml!haml/datasetSelect', 'util', 'xenaQuery', 'lib/underscore', 'jquer
 		},
 
 		render: function (sources_in, state) {
+			sources_in.reverse(); // reverse the hub list
 			var sources = _.map(sources_in, function (s) {
 					return _.assoc(s, 'title', xenaQuery.server_title(s.server));
 				}),

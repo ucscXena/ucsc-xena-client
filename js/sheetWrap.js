@@ -127,7 +127,7 @@ define(['haml!haml/sheetWrap',
 				state: dsstate,
 				cursor: dscursor,
 				sources: this.sources,
-				placeholder: 'all datasets'
+				placeholder: 'All Samples'
 			});
 		},
 

@@ -7,7 +7,7 @@
 	white-space: nowrap;
 }
 table.columnUi td.fullWidth {
-	padding-right: 2px;
+	padding-right: 3px;
 }
 .columnUi input {
 	margin-top: -4px;
@@ -21,16 +21,10 @@ table.columnUi td.fullWidth {
 }
 .columnUi .moveHandle {
 	vertical-align: middle;
-	background-color: #eeeeee;
 	height: 10px;
-	margin-bottom: 8px;
-	padding-bottom: 4px;
 	display: inline-block;
-	cursor: ew-resize;
+	cursor: move;
 	text-align: center;
-}
-.columnUi .moveHandle img {
-	margin-top: -1px;
 }
 .columnUi .more {
 	vertical-align: top;
@@ -77,10 +71,9 @@ table.columnUi td.fullWidth {
 .columnUi .colorBarLabel {
 	margin-top: 7px;
 	margin-bottom: 3px;
+	width:95%;
 }
-.columnUi .colorBarLabel.mutationVector {
-	margin-top: 0;
-}
+
 .columnUi .color {
 	margin-top: -1px;
 	padding: 2px 5px 2px 5px;
@@ -94,7 +87,4 @@ table.columnUi td.fullWidth {
 .columnUi .colorTd {
 	text-align: center;
 	padding-right: 12px;
-}
-.columnUi .colorTd.mutationVector {
-	padding: 0 18px 0 7px;
 }

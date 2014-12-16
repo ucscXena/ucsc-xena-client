@@ -75,7 +75,8 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 	function updataDOM_xenaDataSet_sampleN(DOM_id, host, dataset) {
 		xenaQuery.dataset_samples(host, dataset).subscribe(function (s) {
 			var tag = "result";
-			document.getElementById(DOM_id).appendChild(elt(tag, (s.length.toLocaleString())));
+			var node = document.getElementById(DOM_id);
+			node.parentNode.replaceChild(elt(tag, (s.length.toLocaleString())), node);
 		});
 	}
 
@@ -96,6 +97,23 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 		});
 	}
 
+	function tableCreate(row, column){
+	  var tbl  = document.createElement('table'), tr, td, i,j;
+	  tbl.setAttribute("class","dataSnippetTable");
+	  for(i = 0; i < row; i++){
+      tr = tbl.insertRow(i);
+      for(j = 0; j < column; j++){
+        td = tr.insertCell(j);
+        td.innerHTML="...";
+      }
+	  }
+	  return tbl;
+	}
+
+	function setTableCellValue (tbl, row, column, value) {
+		tbl.rows[row].cells[column].innerHTML = value;
+	}
+
 	return {
 		elt: elt,
 		hrefLink: hrefLink,
@@ -104,6 +122,8 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 		sectionNode: sectionNode,
 		stripHTML: stripHTML,
 		stripScripts: stripScripts,
+		tableCreate: tableCreate,
+		setTableCellValue: setTableCellValue,
 		updataDOM_xenaDataSet_sampleN: updataDOM_xenaDataSet_sampleN,
 		updateDOM_xenaCohort_sampleN: updateDOM_xenaCohort_sampleN,
 		queryStringToJSON: queryStringToJSON

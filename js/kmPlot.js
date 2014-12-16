@@ -141,16 +141,18 @@ define([ "lib/d3",
 				uncleanVals;
 
 			// find values
+			c.values={};
 			if (c.dataType === 'mutationVector') {
-				uncleanVals = _.map(ws.data.req.values[field], function (mutations) {
-					return mutations.length > 0 ? 1 : 0;
+				_.map(ws.data.req.values[field], function (mutations,sample) {
+					c.values[sample]= mutations.length > 0 ? 1 : 0;
 				});
 			} else if (c.dataType === 'geneProbesMatrix') {
 				uncleanVals = this.findGeneAverage(this.columnUi.plotData.heatmapData);
+				c.values = this.cleanValues(_.object(samples, uncleanVals));
 			} else {
 				uncleanVals = this.columnUi.plotData.heatmapData[0];
+				c.values = this.cleanValues(_.object(samples, uncleanVals));
 			}
-			c.values = this.cleanValues(_.object(samples, uncleanVals));
 
 			// find additional clinical & mutation info
 			if (c.dataType === 'clinicalMatrix') {
@@ -176,6 +178,10 @@ define([ "lib/d3",
 			return c;
 		},
 
+		///////// problematic code, that if there is no _PATIANT variable, it generates error,
+		///////// if the _PATIENT is not in the same dataset as _EVENT etc , it fails. I suspect that if not all
+		/////////  _EVENT _TTE _PATIANT are in the same datafile, it will fail.
+		/////////  very sloppy code.
 		receiveCodes: function (codes, dupPatientSamples, samplesToCodes) {
 			var dupCodes = filter(samplesToCodes, function (code, sample) {
 					return _.find(dupPatientSamples, function (dup) {
@@ -202,6 +208,7 @@ define([ "lib/d3",
 				field = ws.column.fields[0],
 				all = false, // XXX make this a checkbox, for whole-cohort display grouping, not implemented for regrouping
 				samples = this.columnUi.plotData.samples,
+				//data is  [event_fid, ttevent_fid, patient_fid])
 				ttevValues = this.cleanValues(_.object(samples, data[1])),
 				ttev_fn    = bind(attr, null, ttevValues), // fn sample -> ttev,
 				ev_fn      = bind(attr, null, this.cleanValues(_.object(samples, data[0]))), // fn sample -> ev,
@@ -215,10 +222,12 @@ define([ "lib/d3",
 				patientUniqueSamples,
 				dupPatientSamples;
 
+
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
 
 			// reduce sample list to those that have values in each of chief, _EVENT & _TIME_TO_EVENT.
+
 			samples = filter(
 				filter(
 					keys(chief.values),

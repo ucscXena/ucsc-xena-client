@@ -1,10 +1,21 @@
 .columnMenu .opt {
 	display: none;
+  padding: 10px;
+}
+.columnMenu .non-opt {
+  padding: 10px;
+}
+.columnMenu .ui-icon-play
+{
+  position: absolute;
+  margin-left: 20px;
 }
 .columnMenu .view {
 	position: relative;
 }
 .columnMenu .viewList {
 	position: absolute;
+  padding:0;
+  background-color: white;
 }
- 
+

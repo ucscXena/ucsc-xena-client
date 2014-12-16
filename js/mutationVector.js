@@ -89,10 +89,6 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				delete widgets[this.id];
 			},
 
-			error: function (message) {
-				console.log(message); // TODO
-			},
-
 			drawCenter: function (d, highlight) {
 				var r = highlight ? this.point * 2 : this.point;
 				this.vg.circle(d.x, d.y, r, 'black');
@@ -361,8 +357,8 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 			},
 
 			initialize: function (options) {
-				var self = this,
-					horizontalMargin = '-' + options.horizontalMargin.toString() + 'px';
+				var self = this;
+
 				_.bindAll.apply(_, [this].concat(_.functions(this)));
 				//_(this).bindAll();
 				this.vg = options.vg;
@@ -381,10 +377,6 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				this.point = options.point;
 				this.refHeight = options.refHeight;
 				this.columnUi.$sparsePad.height(0);
-				this.columnUi.$el.parent().css({
-					'margin-left': horizontalMargin,
-					'margin-right': horizontalMargin
-				});
 
 				// bindings
 				this.sub = this.columnUi.crosshairs.mousingStream.subscribe(function (ev) {

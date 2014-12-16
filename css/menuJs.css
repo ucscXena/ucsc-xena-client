@@ -15,6 +15,7 @@
 	display: block;
 	position: fixed;
 	text-indent: 0;
+	background-color: white;
 }
 .menu .ui-icon-play {
 	display: inline-block;

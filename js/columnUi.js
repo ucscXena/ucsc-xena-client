@@ -61,6 +61,7 @@ define(['haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDispla
 			if ($('.columnUi').index(this.$el) === 0) {
 				label = 'Legend';
 			}
+
 			this.$colorBarLabel
 				.val(label)
 				.addClass(klass);

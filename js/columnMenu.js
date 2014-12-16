@@ -2,9 +2,9 @@
 /*global define: false */
 /*global alert: false */
 
-define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVector', 'Menu', 'jquery', 'lib/underscore'
+define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVector', 'Menu', 'jquery', 'lib/underscore', 'xenaQuery'
 	// non-object dependencies
-	], function (template, columnEdit, download, kmPlot, mutationVector, Menu, $, _) {
+	], function (template, columnEdit, download, kmPlot, mutationVector, Menu, $, _, xenaQuery) {
 	'use strict';
 
 	var APPLY_BUTTON,
@@ -28,6 +28,22 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 			this.duplicateClick = function (ev) {
 				this.duplicateColumn(this.id);
 			};
+
+			this.aboutClick = function (ev) {
+				var column = this.columnUi.ws.column,
+					dsID = JSON.parse(column.dsID),
+					host= dsID.host,
+					dataset = dsID.name;
+
+			  // genome-cancer :443 switch
+				var oldHost = "https://genome-cancer.ucsc.edu/proj/public/xena",
+					newHost = "https://genome-cancer.ucsc.edu:443/proj/public/xena";
+				if (host === newHost){
+					host = oldHost;
+				}
+				var url ="datapages?dataset="+dataset+"&host="+host;
+				location.href=url;
+			}
 
 			this.kmPlotClick = function (ev) {
 				var self = this,
@@ -115,6 +131,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 			this.render = function () {
 				var column = this.columnUi.ws.column,
 					$kmPlot;
+
 				this.menuRender($(template()));
 				if (column.dataType === 'mutationVector') {
 					this.$el.find('.mupit, .view, .impact, .dna_vaf, .rna_vaf, hr').show();
@@ -143,7 +160,6 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 				this.cursor = options.cursor;
 				this.state = options.state;
 				this.deleteColumn = options.deleteColumn;
-
 				this.moreItems = options.moreItems;
 				this.menuInitialize(options);
 
@@ -161,6 +177,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					.on('click', '.kmPlot', this.kmPlotClick)
 					.on('click', '.edit', this.editClick)
 					.on('click', '.duplicate', this.duplicateClick)
+					.on('click', '.about', this.aboutClick)
 					.on('click', '.download', this.downloadClick)
 					.on('click', '.remove', this.removeClick);
 			};

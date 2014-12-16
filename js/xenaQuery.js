@@ -110,7 +110,6 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	function xena_dataset_list_transform(host, list) {
 		return _.map(list, function (ds) {
 			var text = JSON.parse(ds.text) || {};
-
 			// merge curated fields over raw metadata
 			// XXX note that we're case sensitive on raw metadata
 			ds = _.extend(text, _.dissoc(ds, 'text'));
@@ -169,14 +168,14 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 			   '     :from [:dataset]}))';
 	}
 
-	function dataset_list_query(cohort) {
-		return '(query {:select [:name :type :datasubtype :probemap :text]\n' +
+	function dataset_list_query(cohort) { /// jing modify add status
+		return '(query {:select [:name :type :datasubtype :probemap :text :status]\n' +
 		       '        :from [:dataset]\n' +
 		       '        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
 	}
 
-	function dataset_query (dataset) {
-		return '(query {:select [:name :shorttitle :type :datasubtype :probemap :text]\n' +
+	function dataset_query (dataset) {  ////jing modify add status
+		return '(query {:select [:name :shorttitle :type :datasubtype :probemap :text :status]\n' +
 		       '        :from [:dataset]\n' +
 		       '        :where [:= :dataset.name ' + quote(dataset) + ']})';
 	}
@@ -192,7 +191,14 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '        :from [:dataset]\n' +
 		       '        :join [:field [:= :dataset.id :dataset_id]]\n' +
 		       '        :where [:= :dataset.name ' + quote(dataset) + ']\n' +
-		       '        :limit 2})';
+		       '        :limit 10})';
+	}
+
+	function dataset_field_string(dataset) {
+		return '(query {:select [:field.name]\n' +
+		       '        :from [:dataset]\n' +
+		       '        :join [:field [:= :dataset.id :dataset_id]]\n' +
+		       '        :where [:= :dataset.name ' + quote(dataset) + ']})';
 	}
 
 	function field_bounds_string(dataset, fields) {
@@ -407,6 +413,12 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		).map(json_resp);
 	}
 
+	function dataset_field(host, ds) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, dataset_field_string(ds))
+		).map(json_resp);
+	}
+
 	function dataset_probe_values(host, ds, samples, probes) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_probe_string(ds, samples, probes))
@@ -481,6 +493,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		feature_list: feature_list,
 		code_list: code_list,
 		dataset_field_examples: dataset_field_examples,
+		dataset_field: dataset_field,
 		dataset_probe_values: dataset_probe_values,
 		find_dataset: find_dataset,
 		dataset_samples: dataset_samples,

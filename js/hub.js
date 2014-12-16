@@ -7,15 +7,17 @@ define(["dom_helper", "session", "xenaQuery"], function (dom_helper, session, xe
 	function newHubNode(host) {
 		//build checkbox
 		var checkbox = session.hostCheckBox(host),
-			tmpNode = dom_helper.elt("result2", dom_helper.hrefLink(host + " (connecting)", "?host=" + host));
-		tmpNode.setAttribute("id", "status" + host);
-		return dom_helper.elt("h3", checkbox, " ", tmpNode);
+			 	tmpNode = dom_helper.elt("result2",
+			 		dom_helper.hrefLink(host + " (connecting)", "../datapages/?host=" + host));
+		tmpNode.setAttribute("id", "statusHub" + host);
+		checkbox.appendChild(tmpNode);
+		return dom_helper.elt("h4", checkbox);
 	}
 
 	session.sessionStorageInitialize();
 	var hosts = JSON.parse(sessionStorage.state).allHosts,
-		node = dom_helper.sectionNode("hub"),
-		newText;
+			node = dom_helper.sectionNode("hub"),
+			newText;
 
 	node.appendChild(dom_helper.elt("h2", "Data Hubs"));
 	node.appendChild(dom_helper.elt("br"));
@@ -23,7 +25,8 @@ define(["dom_helper", "session", "xenaQuery"], function (dom_helper, session, xe
 		node.appendChild(newHubNode(host));
 		node.appendChild(dom_helper.elt("br"));
 		session.updateHostStatus(host);
-	});
+		});
+
 
 	newText = document.createElement("INPUT");
 	newText.setAttribute("class", "tb5");
@@ -35,7 +38,7 @@ define(["dom_helper", "session", "xenaQuery"], function (dom_helper, session, xe
 	window.addEventListener("keydown", function (event) {
 		if (event.keyCode === 13) {
 			var node = document.getElementById("textHub"),
-				host = node.value;
+					host = node.value;
 			host = host.trim();
 			//if host is not start with http(s)
 			if (host === "") {
@@ -55,6 +58,7 @@ define(["dom_helper", "session", "xenaQuery"], function (dom_helper, session, xe
 				node.value = "";
 				return;
 			}
+
 			node.parentNode.insertBefore(newHubNode(host), node.previousSibling);
 			node.parentNode.insertBefore(dom_helper.elt("br"), node.previousSibling);
 			hosts.push(host);

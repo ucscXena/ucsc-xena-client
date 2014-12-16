@@ -18,19 +18,8 @@
 .sheetWrap>.header .select2-container {
 	margin-left: 0.2em;
 }
-.sheetWrap>.header label.serversWrap {
-	float: right;
-	padding-right: 1em;
-}
-.sheetWrap>.header .servers {
-	margin-top: 0;
-	padding-top: 0;
-	font-size: 1em;
-	width: 20em;
-}
 .sheetWrap .yAxisLabel {
 	display: none;
-	font-size: 1.1em;
 	transform: rotate(270deg);
 	width: 24em;
 	margin-left: -11em;

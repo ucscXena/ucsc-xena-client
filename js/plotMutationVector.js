@@ -1,7 +1,29 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
-define(['underscore_ext', 'jquery', 'rx', 'refGeneExons', 'columnWidgets', 'crosshairs', 'heatmapColors', 'mutationVector', 'sheetWrap', 'vgcanvas', 'xenaQuery', 'rx.jquery'
-	], function (_, $, Rx, refGeneExons, widgets, crosshairs, heatmapColors, mutationVector, sheetWrap, vgcanvas, xenaQuery) {
+define(['underscore_ext',
+		'jquery',
+		'rx',
+		'refGeneExons',
+		'columnWidgets',
+		'crosshairs',
+		'heatmapColors',
+		'mutationVector',
+		'sheetWrap',
+		'vgcanvas',
+		'xenaQuery',
+		'rx.jquery'
+	], function (
+		_,
+		$,
+		Rx,
+		refGeneExons,
+		widgets,
+		crosshairs,
+		heatmapColors,
+		mutationVector,
+		sheetWrap,
+		vgcanvas,
+		xenaQuery) {
 
 	"use strict";
 

@@ -7,7 +7,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		var xenaStateResets = {
 				samples: [],
 				samplesFrom: "",
-				height: 717,
+				height: window.innerHeight-200,
 				zoomIndex: 0,
 				zoomCount: 0,
 				column_rendering: {},
@@ -18,11 +18,25 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		sessionStorage.xena = JSON.stringify(_.extend(state, xenaStateResets));
 	}
 
+	function xenaHeatmapSetCohort(cohortname) {
+		var xenaState = {
+				cohort: cohortname
+			},
+			state = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : {servers: {user: []}};
+
+		if ( state.cohort && state.cohort!==cohortname) {
+			xenaHeatmapStateReset();
+			state = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : {servers: {user: []}};
+		}
+		sessionStorage.xena = JSON.stringify(_.extend(state, xenaState));
+	}
+
 	//set xena user server
 	function setXenaUserServer() {
 		if (!sessionStorage.xena) {
 			xenaHeatmapStateReset();
 		}
+
 		// genome-cancer :443 switch XXX why?
 		var state = JSON.parse(sessionStorage.xena),
 			oldHost = "https://genome-cancer.ucsc.edu/proj/public/xena",
@@ -36,20 +50,28 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		sessionStorage.xena = JSON.stringify(state);
 	}
 
-
 	function sessionStorageInitialize() {
 		var defaultHosts = [
 				"https://genome-cancer.ucsc.edu/proj/public/xena",
 				"http://localhost:7222"
+				/*"http://tcga1:1236"*/
 			],
+			defaultActive =["https://genome-cancer.ucsc.edu/proj/public/xena"],
+			defaultLocal = "http://localhost:7222",
 			defaultState = {
-				activeHosts: ["https://genome-cancer.ucsc.edu/proj/public/xena"],
+				activeHosts: defaultActive,
 				allHosts: defaultHosts,
-				userHosts: ["https://genome-cancer.ucsc.edu/proj/public/xena"]
+				userHosts: defaultHosts,
+				localHost: defaultLocal,
+				metadataFilterHosts: defaultHosts
 			},
-			state = sessionStorage.state ? JSON.parse(sessionStorage.state) : {};
+			state = getSessionStorageState(); //sessionStorage.state ? JSON.parse(sessionStorage.state) : {};
 		sessionStorage.state = JSON.stringify(_.extend(defaultState, state));
 		setXenaUserServer();
+	}
+
+	function getSessionStorageState () {
+			return sessionStorage.state ? JSON.parse(sessionStorage.state) : {};
 	}
 
 	function removeHostFromListInSession(list, host) {
@@ -66,13 +88,33 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		setXenaUserServer();
 	}
 
-	function hostCheckBox(host, ifChangedAction) {
+	function hostCheckBox(host) {
 		var userHosts = JSON.parse(sessionStorage.state).userHosts,
-			checkbox = document.createElement("INPUT");
+			node = dom_helper.elt("section"),
+			checkbox = document.createElement("INPUT"),
+			labelText = dom_helper.elt('label');
+
+		function checkBoxLabel() {
+			if (checkbox.checked){
+				labelText.style.color="gray";
+				labelText.innerHTML= "selected";
+			}
+			else {
+				labelText.innerHTML= "&nbsp";
+			}
+			updateHostStatus(host);
+		}
+
 		checkbox.setAttribute("type", "checkbox");
 		checkbox.setAttribute("id", "checkbox" + host);
-
+		checkbox.setAttribute("class","switch");
 		checkbox.checked = _.contains(userHosts, host);
+		labelText.setAttribute("for", "checkbox" + host);
+		labelText.setAttribute("id", "hubLabel"+host);
+		checkBoxLabel();
+
+		node.appendChild(checkbox);
+		node.appendChild(labelText);
 
 		checkbox.addEventListener('click', function () {
 			var checked = checkbox.checked,
@@ -81,8 +123,10 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			if (checked !== _.contains(stateJSON.userHosts, host)) {
 				if (checked) { // add host
 					addHostToListInSession('userHosts', host);
+					addHostToListInSession('metadataFilterHosts', host);
 				} else { // remove host
 					removeHostFromListInSession('userHosts', host);
+					removeHostFromListInSession('metadataFilterHosts', host);
 
 					//check if host that will be removed has the "cohort" in the xena heatmap state setting ///////////TODO
 					xenaQuery.all_cohorts(host).subscribe(function (s) {
@@ -93,7 +137,32 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 					});
 				}
 				setXenaUserServer();
+				checkBoxLabel();
+			}
+		});
 
+		return node;
+	}
+
+	function metaDataFilterCheckBox(host, ifChangedAction) {
+		var userHosts = JSON.parse(sessionStorage.state).userHosts,
+				metadataFilterHosts= JSON.parse(sessionStorage.state).metadataFilterHosts,
+				checkbox = document.createElement("INPUT");
+
+		checkbox.setAttribute("type", "checkbox");
+		checkbox.setAttribute("id", "checkbox" + host);
+		checkbox.checked = _.contains(metadataFilterHosts, host);
+
+		checkbox.addEventListener('click', function () {
+			var checked = checkbox.checked,
+				stateJSON = JSON.parse(sessionStorage.state),
+				newList;
+			if (checked !== _.contains(stateJSON.metadataFilterHosts, host)) {
+				if (checked) { // add host
+					addHostToListInSession('metadataFilterHosts', host);
+				} else { // remove host
+					removeHostFromListInSession('metadataFilterHosts', host);
+				}
 				if (ifChangedAction) {
 					ifChangedAction.apply(null, arguments);
 				}
@@ -105,20 +174,50 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 
 	function updateHostDOM(host, status) {
 		var display = {
-				'live': {msg: '', el: 'result1'},
+				'live_selected': {msg: '', el: 'result'},
+				'live_unselected': {msg: ' (running, not in data hubs)', el: 'result2'},
 				'dead': {msg: ' (not running)', el: 'result2'},
 				'nodata': {msg: ' (no data)', el: 'result2'},
 				'slow': {msg: ' (there is a problem)', el: 'result2'},
 			},
-			node = document.getElementById("status" + host);
+			displayHubPage = {
+				'live_selected': {msg: '', el: 'result'},
+				'live_unselected': {msg: '', el: 'result'},
+				'dead': {msg: ' (not running)', el: 'result2'},
+				'nodata': {msg: ' (no data)', el: 'result2'},
+				'slow': {msg: ' (there is a problem)', el: 'result2'},
+			},
+			displayHubLabel = {
+				'live_selected': {msg: 'connected', color: 'blue'},
+				'live_unselected': {msg: '&nbsp', color: 'gray'},
+			},
+
+			node = document.getElementById("status" + host),
+			nodeHubPage = document.getElementById("statusHub" + host),
+			nodeHubLabel = document.getElementById("hubLabel" + host);
 
 		if (node) {
 			node.parentNode.replaceChild(
-				dom_helper.elt(display[status].el, dom_helper.hrefLink(host + display[status].msg, "../datapages/?host=" + host)), node);
+				dom_helper.elt(display[status].el, dom_helper.hrefLink(host + display[status].msg,
+					"../datapages/?host=" + host)), node);
+		}
+		if (nodeHubPage) {
+			nodeHubPage.parentNode.replaceChild(
+				dom_helper.elt(displayHubPage[status].el, dom_helper.hrefLink(host + displayHubPage[status].msg,
+					"../datapages/?host=" + host)), nodeHubPage);
+		}
+		if (nodeHubLabel && displayHubLabel[status]){
+			if (displayHubLabel[status].color){
+				nodeHubLabel.style.color= displayHubLabel[status].color;
+			}
+			if (displayHubLabel[status].msg) {
+				nodeHubLabel.innerHTML = displayHubLabel[status].msg;
+			}
 		}
 	}
 
 	function updateHostStatus(host) {
+		var userHosts = JSON.parse(sessionStorage.state).userHosts;
 		addHostToListInSession('allHosts', host);
 
 		xenaQuery.test_host(host).subscribe(function (s) {
@@ -129,7 +228,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 					var duration;
 					if (s.length > 0) {
 						addHostToListInSession('activeHosts', host);
-						updateHostDOM(host, 'live');
+						updateHostDOM(host, (userHosts.indexOf(host)!==-1)? 'live_selected' : 'live_unselected');
 					} else {
 						duration = Date.now() - start;
 						removeHostFromListInSession('activeHosts', host);
@@ -146,6 +245,8 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 	return {
 		sessionStorageInitialize: sessionStorageInitialize,
 		updateHostStatus: updateHostStatus,
-		hostCheckBox: hostCheckBox
+		hostCheckBox: hostCheckBox,
+		metaDataFilterCheckBox: metaDataFilterCheckBox,
+		xenaHeatmapSetCohort: xenaHeatmapSetCohort
 	};
 });

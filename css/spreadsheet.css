@@ -2,10 +2,10 @@
 	position: relative;
 	display: inline-block;
 	word-wrap: nowrap;
-	border-bottom: solid 3px transparent;
+	border-bottom: solid 4px transparent;
 }
 .spreadsheet:hover {
-	border-bottom: solid 3px #909090;
+	border-bottom: solid 4px rgb(200,200,200);
 }
 .spreadsheet .ui-resizable-s {
 	cursor: ns-resize;
@@ -13,12 +13,11 @@
 .spreadsheet-column {
 	vertical-align: top;
 	display: inline-block;
-}
-.spreadsheet-column {
-	border-right: solid 3px transparent;
+	border-right: solid 4px transparent;
+	padding-right: 3px;
 }
 .spreadsheet-column:hover {
-	border-right: solid 3px #909090;
+	border-right: solid 4px rgb(200,200,200);
 }
 .spreadsheet-column .ui-resizable-e {
 	cursor: ew-resize;
