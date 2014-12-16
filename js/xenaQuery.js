@@ -442,7 +442,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	function dataset_field(host, ds) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_field_string(ds))
-			);
+			).map(json_resp);
 	}
 
 	function sparse_data_examples(host, ds, count) {

@@ -620,7 +620,6 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 									firstCol = samples;
 									firstRow = probes;
 								}
-								///////firstCol = undefined;
 
 								column = firstRow.length;
 								row = firstCol.length;
@@ -643,7 +642,7 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 								//data cell
 								for(i = 1; i < s.length+1; i++){
 									var probe = probes[i-1];
-									for (j=1; j< samples.length+1; j++){ /// mutation
+									for (j=1; j< samples.length+1; j++){
 										if (type==="genomicMatrix"){
 											if ((i<dataRow+1) && (j<dataCol+1)) {
 												dom_helper.setTableCellValue (table, i, j, s[i-1][j-1]);
