@@ -293,6 +293,32 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '                         [:in #sql/call ["unpackValue" sampleID :field_gene.row] ' + arrayfmt(samples) + ']]})})';
 	}
 
+	function sparse_data_example_string(dataset, count) {
+		return '(let [getfield (fn [field]\n' +
+		       '                 (:id (car (query {:select [:field.id]\n' +
+		       '                                   :from [:dataset]\n' +
+		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
+		       '                                   :where [:and [:= :field.name field] [:= :dataset.name ' + quote(dataset) + ']]}))))\n' +
+		       '      unpack (fn [field] [#sql/call [:unpack (getfield field) :field_gene.row] field])\n' +
+		       '      unpackValue (fn [field] [#sql/call [:unpackValue (getfield field) :field_gene.row] field])\n' +
+		       '      genes (getfield "genes")\n' +
+		       '      sampleID (getfield "sampleID")\n' +
+		       '      position (getfield "position")]\n' +
+		       '  {:rows (query {:select [:chrom :chromStart :chromEnd :gene [#sql/call ["unpackValue" sampleID :field_gene.row] :sampleID]' +
+		       '                          (unpackValue "ref")\n' +
+		       '                          (unpackValue "alt")\n' +
+		       '                          (unpackValue "effect")\n' +
+		       '                          (unpack "dna-vaf")\n' +
+		       '                          (unpack "rna-vaf")\n' +
+		       '                          (unpackValue "amino-acid")]\n' +
+		       '                 :from [:field_gene]\n' +
+		       '                 :join [:field_position [:= :field_position.row :field_gene.row]]\n' +
+		       '                 :limit ' + count + '\n' +
+		       '                 :where [:and\n' +
+		       '                         [:= :field_gene.field_id genes]\n' +
+		       '                         [:= :field_position.field_id position]]})})';
+	}
+
 	function dataset_string(dataset) {
 		return '(:text (car (query {:select [:text]\n' +
 		       '                    :from [:dataset]\n' +
@@ -407,6 +433,12 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		).map(json_resp);
 	}
 
+	function sparse_data_examples(host, ds, count) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, sparse_data_example_string(ds, count))
+		).map(json_resp);
+	}
+
 	function dataset_probe_values(host, ds, samples, probes) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_probe_string(ds, samples, probes))
@@ -481,6 +513,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		feature_list: feature_list,
 		code_list: code_list,
 		dataset_field_examples: dataset_field_examples,
+		sparse_data_examples: sparse_data_examples,
 		dataset_probe_values: dataset_probe_values,
 		find_dataset: find_dataset,
 		dataset_samples: dataset_samples,
