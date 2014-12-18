@@ -14,56 +14,96 @@ define(["dom_helper", "session", "xenaQuery"], function (dom_helper, session, xe
 		return dom_helper.elt("h4", checkbox);
 	}
 
+	function addHost() {
+		var node = document.getElementById("textHub"),
+
+		host = node.value;
+		host = host.trim();
+		//if host is not start with http(s)
+		if (host === "") {
+			return;
+		}
+
+		// get ride of ending '/''
+		if (host[host.length-1]==='/') {
+			host = host.slice(0, host.length-1);
+		}
+
+		// if galaxy checkbox checked, force prot to 7220
+		if (galaxyCheckbox.checked) {
+			var tokens = host.match(/^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/(.*))?$/);
+			tokens[4] = '7220';  //port = tokens[4];
+			host =(tokens[1]? tokens[1]:'') +(tokens[2]? tokens[2]:'')+':'+tokens[4]+ (tokens[5]? tokens[5]:'');
+		}
+
+		host = xenaQuery.server_url(host);
+
+		if (hosts.indexOf(host) !== -1) {
+			node.value = "";
+			return;
+		}
+
+		node.parentNode.insertBefore(newHubNode(host), node.previousSibling);
+		node.parentNode.insertBefore(dom_helper.elt("br"), node.previousSibling);
+		hosts.push(host);
+		node.value = "";
+		galaxyCheckbox.checked = false;
+		session.updateHostStatus(host);
+	}
+
+
 	session.sessionStorageInitialize();
 	var hosts = JSON.parse(sessionStorage.state).allHosts,
 			node = dom_helper.sectionNode("hub"),
-			newText;
+			newText, addbutton,
+			galaxyCheckbox, labelText;
 
 	node.appendChild(dom_helper.elt("h2", "Data Hubs"));
 	node.appendChild(dom_helper.elt("br"));
+
+	//list of hosts
 	hosts.forEach(function (host) {
 		node.appendChild(newHubNode(host));
 		node.appendChild(dom_helper.elt("br"));
 		session.updateHostStatus(host);
 		});
 
-
+	// Add host text box
+	node.appendChild(dom_helper.sectionNode("hub"));
 	newText = document.createElement("INPUT");
 	newText.setAttribute("class", "tb5");
 	newText.setAttribute("id", "textHub");
-	node.appendChild(dom_helper.elt("italic", "Add  "));
 	node.appendChild(newText);
+
+	// Add button
+	addbutton = document.createElement("BUTTON");
+	addbutton.setAttribute("class","vizbutton");
+	addbutton.appendChild(document.createTextNode("Add"));
+	addbutton.addEventListener("click", function() {
+  	addHost();
+	});
+	addbutton.style.marginLeft="20px";
+	addbutton.style.height ="27px";
+	node.appendChild(addbutton);
+	node.appendChild(dom_helper.elt("br"));
+
+	//galaxy xena checkbox -- if checked port forced to be 7220
+	galaxyCheckbox = document.createElement("INPUT");
+	galaxyCheckbox.setAttribute("type", "checkbox");
+	galaxyCheckbox.setAttribute("id", "galaxyCheckbox");
+	galaxyCheckbox.style.marginLeft="2px";
+	labelText = dom_helper.elt('label');
+	labelText.setAttribute("for", "galaxyCheckbox");
+	labelText.innerHTML= " galaxy embedded xena (default port 7220)";
+	labelText.setAttribute("class","galaxyText");
+	node.appendChild(galaxyCheckbox);
+	node.appendChild(labelText);
+
 	document.getElementById('main').appendChild(node);
 
 	window.addEventListener("keydown", function (event) {
 		if (event.keyCode === 13) {
-			var node = document.getElementById("textHub"),
-					host = node.value;
-			host = host.trim();
-			//if host is not start with http(s)
-			if (host === "") {
-				return;
-			}
-
-			host = xenaQuery.server_url(host);
-
-			/*
-			   if (( host.search("http") !== 0) || ( host.search("://")===-1 ))
-			   {
-			   host="http://"+host;
-			   }
-			   */
-
-			if (hosts.indexOf(host) !== -1) {
-				node.value = "";
-				return;
-			}
-
-			node.parentNode.insertBefore(newHubNode(host), node.previousSibling);
-			node.parentNode.insertBefore(dom_helper.elt("br"), node.previousSibling);
-			hosts.push(host);
-			node.value = "";
-			session.updateHostStatus(host);
+			addHost();
 		}
 	});
 });

@@ -65,7 +65,9 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 			defport = (prod ? '443' : '7222'),
 			port = tokens[4] || defport,
 			path = tokens[5] || '',
-			url = proto + host + ':' + port + path;
+			url;
+
+		url = proto + host + ':' + port + path;
 
 		return {
 			title: (proto === defproto ? '' : proto) +
@@ -76,7 +78,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		};
 	}
 
-	function server_title(s) {
+	function server_title(s, galaxy) {
 		return parse_server(s).title;
 	}
 

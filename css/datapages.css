@@ -38,15 +38,13 @@ margin-right: 15px;
 width: 20%;
 }
 
-/* Rounded Corner */
 #main .tb5 {
 	border:1px solid #456879;
-	border-radius:20px;
 	height: 22px;
 	width: 300px;
 	padding: 2px 10px;
 	font-size: 16px;
-	margin: 5px;
+	margin-bottom: 10px;
 	color:gray;
 }
 #main .tb5:focus {
@@ -191,63 +189,36 @@ vertical-align: 5%;
 color:#ff6600;
 }
 
-input.switch
-{
-  display: none;
+.hubcheck {
+height: 20px;
+width: 20px;
+border-radius: 10px;
+border:1px solid gray;
+vertical-align: middle;
+-moz-appearance:none;
+-webkit-appearance:none;
+-o-appearance:none;
 }
 
-input.switch:empty ~ label
-{
-  position: relative;
-  float: left;
-  line-height: 1em;
-  text-indent: 4em;
-  cursor: pointer;
-  vertical-align: middle;
+.hubcheck:checked {
+background: linear-gradient(gray, white);
 }
 
-input.switch:empty ~ label:before,
-input.switch:empty ~ label:after
+.hubcheck:focus {
+outline: 0;
+}
+#main .hubcheck + label
 {
-  position: absolute;
-  display: block;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  content: ' ';
-  width: 3em;
-  background-color: gray;
-  border-radius: 0.2em;
-  -webkit-transition: all 50ms ease-in;
-  transition: all 50ms ease-in;
+display: inline-block;
+margin-left: 15px;
+width:100px;
+font-weight: normal;
 }
 
-input.switch:empty ~ label:after
-{
-  width: 1em;
-  top: 0em;
-  bottom: 0em;
-  margin-left: 1.7em;
-  background-color: rgb(200,200,200);
-  border-radius: 0.5em;;
-}
-
-input.switch:checked ~ label:before
-{
-  background-color: rgb(10, 10, 175);
-}
-
-input.switch:checked ~ label:after
-{
-  background-color: white;
-  margin-left: 0.25em;
-}
-
-#main .switch + label
-{
-  width:150px;
-  margin:0;
-  font-weight: normal;
+#main .galaxyText {
+color:gray;
+font-size: 90%;
+margin-left: 15px;
 }
 
 .dataSnippetTable

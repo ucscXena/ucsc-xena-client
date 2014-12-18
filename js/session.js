@@ -90,7 +90,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 
 	function hostCheckBox(host) {
 		var userHosts = JSON.parse(sessionStorage.state).userHosts,
-			node = dom_helper.elt("section"),
+			node = dom_helper.elt("div"),
 			checkbox = document.createElement("INPUT"),
 			labelText = dom_helper.elt('label');
 
@@ -107,7 +107,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 
 		checkbox.setAttribute("type", "checkbox");
 		checkbox.setAttribute("id", "checkbox" + host);
-		checkbox.setAttribute("class","switch");
+		checkbox.setAttribute("class","hubcheck");
 		checkbox.checked = _.contains(userHosts, host);
 		labelText.setAttribute("for", "checkbox" + host);
 		labelText.setAttribute("id", "hubLabel"+host);

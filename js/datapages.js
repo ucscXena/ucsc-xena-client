@@ -190,6 +190,7 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		hosts.forEach(function (host) {
 			xenaQuery.all_cohorts(host).subscribe(function (s) {
 				var mode, node;
+				console.log("here",host, s);
 				s.forEach(function (cohort) {
 					if (cohortC.indexOf(cohort) !== -1) {
 						return;
