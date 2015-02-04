@@ -1,6 +1,6 @@
-define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"],
-	function (xenaQuery, dom_helper, Highcharts, highchart_helper) {
-		'use strict';
+define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], function (xenaQuery, dom_helper, Highcharts, highchart_helper) {
+	'use strict';
+	return function (root, cursor, sessionStorage) {
 
 		var div, root,
 			leftContainer, rightContainer, controlContainer,
@@ -9,9 +9,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"],
 			samples,
 			updateArgs;
 
-		root = document.createElement("div");
 		root.setAttribute("id", "chartRoot");
-		document.body.appendChild(root);
 
 		// left panel
 		leftContainer = document.createElement("div");
@@ -56,6 +54,13 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"],
 
 
 		update.apply(this, updateArgs);
+
+		function setStorage(state) {
+			sessionStorage.xena = JSON.stringify(state);
+			cursor.update(function (s) {
+				return _.assoc(s, 'chartState', state.chartState);
+			});
+		}
 
 		function buildNormalizationDropdown() {
 			var dropDownDiv, option,
@@ -207,7 +212,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"],
 			} else {
 				xenaState.column_rendering[column].colnormalization = true;
 			}
-			sessionStorage.xena = JSON.stringify(xenaState);
+			setStorage(xenaState);
 		}
 
 		function normalizationUIVisibility(visible) {
@@ -253,7 +258,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"],
 					"ycolumn": ycolumn
 				};
 				column_rendering = xenaState.column_rendering;
-				sessionStorage.xena = JSON.stringify(xenaState);
+				setStorage(xenaState);
 			}
 
 			if (!((column_rendering[xcolumn] || xcolumn === "none") && column_rendering[ycolumn])) {
@@ -983,5 +988,5 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"],
 			});
 			div.appendChild(datalabelButton);
 		}
-
-	});
+	};
+});
