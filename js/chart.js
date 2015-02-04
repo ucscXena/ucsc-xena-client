@@ -1,8 +1,8 @@
-define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], function (xenaQuery, dom_helper, Highcharts, highchart_helper) {
+define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper'], function (xenaQuery, dom_helper, Highcharts, highcharts_helper) {
 	'use strict';
 	return function (root, cursor, sessionStorage) {
 
-		var div, root,
+		var div,
 			leftContainer, rightContainer, controlContainer,
 			xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
 			cohort,
@@ -392,7 +392,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 										datalist.push(allydata[i][k]);
 									}
 								}
-								offsets[yfield] = highchart_helper.average(datalist);
+								offsets[yfield] = highcharts_helper.average(datalist);
 							}
 							drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel);
 						});
@@ -410,7 +410,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 								datalist.push(ydata[i][k]);
 							}
 						}
-						offsets[yfield] = highchart_helper.average(datalist);
+						offsets[yfield] = highcharts_helper.average(datalist);
 					}
 					drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel);
 				} else {
@@ -500,7 +500,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 			var chart,
 				yIsCategorical = ycodemap[yfields[0]] ? true : false,
 				xIsCategorical = xcodemap[xfield] ? true : false,
-				chartOptions = _.clone(highchart_helper.chartOptions), // chart option
+				chartOptions = _.clone(highcharts_helper.chartOptions), // chart option
 				xAxisTitle, yAxisTitle,
 				i, k;
 
@@ -576,8 +576,8 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 						if (ybinnedSample[yfield][code].length) {
 							var data = ybinnedSample[yfield][code];
 
-							average = highchart_helper.average(data);
-							stdDev = highchart_helper.standardDeviation(data, average);
+							average = highcharts_helper.average(data);
+							stdDev = highcharts_helper.standardDeviation(data, average);
 
 							if (!isNaN(average)) {
 								dataMatrix[i][k] = parseFloat(average.toPrecision(3));
@@ -594,7 +594,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 				}
 
 				// column chart setup
-				chartOptions = highchart_helper.columnChartFloat(chartOptions, yfields, xlabel, ylabel, yIsCategorical);
+				chartOptions = highcharts_helper.columnChartFloat(chartOptions, yfields, xlabel, ylabel, yIsCategorical);
 				chart = new Highcharts.Chart(chartOptions);
 
 				//add data seriese
@@ -633,7 +633,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 						}
 					});
 
-					highchart_helper.addSeriesToColumn(
+					highcharts_helper.addSeriesToColumn(
 						chart, code, dataSeriese, errorSeries, yIsCategorical,
 						yfields.length * xCategories.length < 30, showLegend);
 				}
@@ -677,7 +677,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 				});
 
 				var showLegend = false;
-				chartOptions = highchart_helper.columnChartOptions(
+				chartOptions = highcharts_helper.columnChartOptions(
 					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend);
 
 				chart = new Highcharts.Chart(chartOptions);
@@ -688,8 +688,8 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 						var value = ybinnedSample[code].length * 100 / total;
 						dataSeriese.push(parseFloat(value.toPrecision(3)));
 					} else {
-						var average = highchart_helper.average(ybinnedSample[code]);
-						var stdDev = highchart_helper.standardDeviation(ybinnedSample[code], average);
+						var average = highcharts_helper.average(ybinnedSample[code]);
+						var stdDev = highcharts_helper.standardDeviation(ybinnedSample[code], average);
 						if (!isNaN(average)) {
 							dataSeriese.push(parseFloat((average - offsets[code]).toPrecision(3)));
 						} else {
@@ -712,7 +712,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 				} else {
 					seriesLabel = "average";
 				}
-				highchart_helper.addSeriesToColumn(chart, seriesLabel,
+				highcharts_helper.addSeriesToColumn(chart, seriesLabel,
 					dataSeriese, errorSeries, yIsCategorical, categories.length < 30, showLegend);
 				chart.redraw();
 
@@ -752,7 +752,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 				});
 
 				var showLegend = true;
-				chartOptions = highchart_helper.columnChartOptions(
+				chartOptions = highcharts_helper.columnChartOptions(
 					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend)
 
 				chart = new Highcharts.Chart(chartOptions);
@@ -782,7 +782,7 @@ define(["xenaQuery", "dom_helper", "highcharts-exporting", "highchart_helper"], 
 							}
 						});
 
-						highchart_helper.addSeriesToColumn(
+						highcharts_helper.addSeriesToColumn(
 							chart, ycode, ycodeSeries, errorSeries, yIsCategorical,
 							ycodemap[yfields[0]].length * categories.length < 30, showLegend);
 					}
