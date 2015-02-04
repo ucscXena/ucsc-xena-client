@@ -1,5 +1,5 @@
 /*jslint nomen:true, regexp: true */
-/*globals define: false, $: false, _: false */
+/*globals define: false */
 define(['haml!haml/sheetWrap',
 		'chart',
 		'cursor',
@@ -32,17 +32,15 @@ define(['haml!haml/sheetWrap',
 					xenaQuery,
 					Rx) {
 
-	"use strict";
+	'use strict';
 
 		// constants for all columns:
 	var horizontalMargin = 3,
 		sparseRadius = horizontalMargin * 2,
 		sparsePad = sparseRadius + 1,
 		headerPlotHeight = 12,
-		map = _.map,
 		widget,
-		aWidget,
-		defaultPort;
+		aWidget;
 
 	function deleteColumn(uuid, state) {
 		var cols = _.dissoc(state.column_rendering, uuid),
@@ -64,14 +62,6 @@ define(['haml!haml/sheetWrap',
 			sparsePad: sparsePad,
 			headerPlotHeight: headerPlotHeight
 		});
-	}
-
-	function serversFromString(s) {
-		return map(_.filter(s.split(/[, ]+/), _.identity), xenaQuery.server_url);
-	}
-
-	function serversToString(servers) {
-		return map(servers, xenaQuery.server_title).join(', ');
 	}
 
 	aWidget = {
@@ -145,7 +135,6 @@ define(['haml!haml/sheetWrap',
 		initialize: function (options) {
 			var self = this,
 				//columnEditOpen = false,
-				cohort,
 				state,
 				deleteColumnCb;
 			this.subs = new Rx.CompositeDisposable();
@@ -201,8 +190,7 @@ define(['haml!haml/sheetWrap',
 				state.refine(['samples', 'column_order', 'zoomCount', 'zoomIndex'])
 					.subscribe(function (state) {
 						var text = 'Samples (N=' + state.samples.length + ')' +
-							((state.zoomCount === state.samples.length)
-								? ''
+							((state.zoomCount === state.samples.length) ? ''
 								: (', showing ' + state.zoomIndex + '-' + (state.zoomIndex + state.zoomCount - 1))),
 							marginT = '7em',
 							marginB = '0';
