@@ -1,6 +1,7 @@
 /*jslint nomen:true, regexp: true */
 /*globals define: false, $: false, _: false */
 define(['haml!haml/sheetWrap',
+		'chart',
 		'cursor',
 		'spreadsheet',
 		'cohortSelect',
@@ -17,6 +18,7 @@ define(['haml!haml/sheetWrap',
 		'rx.jquery',
 		'rx.binding'
 		], function (template,
+					chart,
 					new_cursor,
 					spreadsheet,
 					cohortSelect,
@@ -91,9 +93,16 @@ define(['haml!haml/sheetWrap',
 		},
 
 		initCohortsAndSources: function (state, cursor) {
+			var selectState = state.map(function (s) {
+				return {
+					cohort: s.cohort,
+					servers: s.servers,
+					enabled: s.mode === 'heatmap'
+				};
+			});
 			this.cohortSelect = cohortSelect.create({
 				$anchor: this.$cohortAnchor,
-				state: state,
+				state: selectState,
 				cursor: cursor
 			});
 
@@ -118,8 +127,10 @@ define(['haml!haml/sheetWrap',
 		},
 
 		initSamplesFrom: function (state, cursor) {
-			var paths = ['samplesFrom', 'samples', 'cohort', 'servers', 'zoomCount', 'zoomIndex'],
-				dsstate = state.refine(paths),
+			var paths = ['samplesFrom', 'samples', 'cohort', 'servers', 'zoomCount', 'zoomIndex', 'mode'],
+				dsstate = state.refine(paths).map(function (s) {
+					return _.extend(s, {enabled: s.mode === 'heatmap'});
+				}),
 				dscursor = cursor.refine(paths);
 
 			this.samplesFrom = datasetSelect.create('samplesFrom', {
@@ -150,7 +161,7 @@ define(['haml!haml/sheetWrap',
 
 			// cache jquery objects for active DOM elements
 			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'yAxisLabel', 'addColumn',
-				'spreadsheet'];
+				'spreadsheet', 'chartSelect', 'chartRoot', 'heatmapRoot'];
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
 				return a;
@@ -201,6 +212,33 @@ define(['haml!haml/sheetWrap',
 						}
 						self.$yAxisLabel.text(text)
 							.css({ 'margin-top': marginT, 'margin-bottom': marginB });
+					})
+			);
+
+			// chart node support
+			this.$el.on('click', '.chartSelect', function () {
+				self.cursor.update(function (state) {
+					return _.assoc(state, 'mode', state.mode === 'chart' ? 'heatmap' : 'chart');
+				});
+			});
+
+			this.subs.add(
+				state.distinctUntilChanged(function (s) { return s.mode;})
+					.subscribe(function (state) {
+						if (state.mode === 'chart') {
+							self.$chartRoot.empty();
+							chart(self.$chartRoot[0], options.cursor,
+								  {xena: JSON.stringify(state)});
+							self.$chartRoot.show();
+							self.$heatmapRoot.hide();
+							self.$chartSelect.text('Spreadsheet');
+						} else {
+
+							self.$chartRoot.hide();
+							self.$chartRoot.empty();
+							self.$heatmapRoot.show();
+							self.$chartSelect.text('Chart');
+						}
 					})
 			);
 

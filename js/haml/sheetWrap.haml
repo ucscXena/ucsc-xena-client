@@ -1,8 +1,11 @@
 %div{class:'sheetWrap'}
-  %div.menu{class:'header'}
-    %label{class:'cohortAnchor'} Cohort
-    %label{class:'samplesFromAnchor'}#{'| '}Samples in
-  %table
+  %div{class:'header'}
+    %label{class:'cohortAnchor'} Select samples from cohort
+    %label{class:'samplesFromAnchor'} with values in
+    %button{class:'chartSelect'} Chart
+    %div{style:'clear:both'}
+  %div{class:'chartRoot', style:'display:none'}
+  %table{class:'heatmapRoot'}
     %tr
       %td
         %div{class:'yAxisLabel'}

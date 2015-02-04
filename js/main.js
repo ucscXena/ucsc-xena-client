@@ -81,6 +81,8 @@ define(['jquery',
 		_column: ['_column'],
 		column_order: ['column_order'],
 		//columnEditOpen: ['columnEditOpen'],
+		mode: ['mode'],
+		chartState: ['chartState'],
 		data: ['_column_data']
 	};
 	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths).share();
@@ -194,6 +196,8 @@ define(['jquery',
 			start["_sources"] = [];
 		} else {
 			start = {
+				"chartState": null,
+				"mode": "heatmap",
 				"samples": [],
 				"samplesFrom": "",
 				"servers": {'default': defaultServers, user: defaultServers},

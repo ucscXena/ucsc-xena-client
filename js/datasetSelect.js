@@ -100,6 +100,10 @@ define(['haml!haml/datasetSelect', 'util', 'xenaQuery', 'lib/underscore', 'jquer
 				options.cursor.update(_.partial(setSamples, samples));
 			}));
 
+			this.subs.add(state.pluck('enabled').subscribe(function (val) {
+				self.$el.select2('enable', val);
+			}));
+
 			// when DOM value changes, update state tree
 			this.subs.add(this.$anchor.onAsObservable('change', '.dataset')
 				.pluck('val').map(decodeURIComponent).subscribe(function (val) {

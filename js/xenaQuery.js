@@ -98,7 +98,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 
 	function indexFeatures(features) {
 		return _.object(_.map(features, function (f) {
-			return [f.name, f.shorttitle || f.name];
+			return [f.name, f.longtitle || f.name];
 		}));
 	}
 
@@ -177,7 +177,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	}
 
 	function dataset_query (dataset) {  ////jing modify add status
-		return '(query {:select [:name :shorttitle :type :datasubtype :probemap :text :status]\n' +
+		return '(query {:select [:name :longtitle :type :datasubtype :probemap :text :status]\n' +
 		       '        :from [:dataset]\n' +
 		       '        :where [:= :dataset.name ' + quote(dataset) + ']})';
 	}
@@ -334,7 +334,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	}
 
 	function feature_list_query(dataset) {
-		return '(query {:select [:field.name :feature.shorttitle]\n' +
+		return '(query {:select [:field.name :feature.longtitle]\n' +
 		       '        :from [:field]\n' +
 		       '        :where [:= :dataset_id {:select [:id]\n' +
 		       '                         :from [:dataset]\n' +
@@ -435,6 +435,12 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		.catch(Rx.Observable.return([]));  // XXX display message?
 	}
 
+	function dataset_text (host, ds) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, dataset_query (ds))
+		).map(json_resp);
+	}
+
 	function dataset_field_examples(host, ds) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_field_examples_string(ds))
@@ -456,6 +462,18 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	function dataset_probe_values(host, ds, samples, probes) {
 		return Rx.DOM.Request.ajax(
 			xena_post(host, dataset_probe_string(ds, samples, probes))
+		).map(json_resp);
+	}
+
+	function dataset_gene_probe_values(host, ds, samples, gene) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, dataset_gene_probes_string(ds, samples, gene))
+		).map(json_resp);
+	}
+
+	function dataset_genes_values(host, ds, samples, genes) {
+		return Rx.DOM.Request.ajax(
+			xena_post(host, dataset_gene_string(ds, samples, genes))
 		).map(json_resp);
 	}
 
@@ -530,11 +548,14 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		dataset_field: dataset_field,
 		sparse_data_examples: sparse_data_examples,
 		dataset_probe_values: dataset_probe_values,
+		dataset_gene_probe_values: dataset_gene_probe_values,
+		dataset_genes_values: dataset_genes_values,
 		find_dataset: find_dataset,
 		dataset_samples: dataset_samples,
 		all_samples: all_samples,
 		all_cohorts: all_cohorts,
 		dataset_by_name: dataset_by_name,
+		dataset_text: dataset_text,
 
 		test_host: test_host
 	};

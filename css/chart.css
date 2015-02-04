@@ -1,0 +1,95 @@
+#chartRoot {
+    height: 100%;
+}
+#left {
+    width: 9%;
+    float: left;
+    height: 100%;
+}
+#right {
+    width: 90%;
+    height: 100%;
+    vertical-align: middle;
+    margin-left: auto;
+    margin-right: auto;
+}
+.dropdown-style {
+    background: white;
+    font-size: 12px;
+    font-family: 'Lucida Grande';
+}
+.dropdown-style option {
+    padding: 0.3em;
+    text-align: right;
+    background: white;
+    overflow: hidden;
+}
+.dropdown-style:focus {
+    outline: 0;
+}
+#X {
+    text-align: center;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 12px;
+}
+#Y {
+    width: 35%;
+    position: absolute;
+    right: 90%;
+    -webkit-transform-origin: right top;
+    transform-origin: right top;
+    -webkit-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+    font-size: 12px;
+    text-align: center;
+}
+#Xaxis {
+    width: 50%;
+}
+#Yaxis {
+    width: 60%;
+}
+#chartContainer {
+    width: 80%;
+    height: 70%;
+    margin-left: auto;
+    margin-right: auto;
+}
+#controlContainer {
+    width: 80%;
+    height: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: right;
+}
+#normDropDown {
+    font-size: 10px;
+    text-align: right;
+    margin-top: 50px;
+}
+#myChart {
+    height: 100%;
+}
+.showHideButton {
+    float: right;
+    margin: 5px;
+}
+.showHideButton:hover {
+    color: #ff6600;
+}
+.noselect {
+    text-align: center;
+    font-family: 'Lucida Grande';
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.chartRoot .chart-container {
+	line-height: normal
+}

@@ -82,7 +82,7 @@ define(['haml!haml/cohortSelect', 'util', 'xenaQuery', 'lib/underscore', 'jquery
 
 			// create an observable on a cohort list, which is the union of cohorts from all servers,
 			// and mix in the current cohort in the UI.
-			cohortList = state.refine('servers', 'cohort')
+			cohortList = state.refine('servers')
 				.map(function (state) {
 					return Rx.Observable.zipArray(_.map(state.servers.user, function (s) {
 						return xenaQuery.all_cohorts(s);
@@ -95,6 +95,9 @@ define(['haml!haml/cohortSelect', 'util', 'xenaQuery', 'lib/underscore', 'jquery
 
 			this.subs.add(cohortList.subscribe(_.apply(self.render)));
 
+			this.subs.add(state.pluck('enabled').subscribe(function (val) {
+				self.$el.select2('enable', val);
+			}));
 			// when state changes, update the DOM value
 			this.subs.add(state.pluck('cohort')
 				.distinctUntilChanged().subscribe(function (val) {
