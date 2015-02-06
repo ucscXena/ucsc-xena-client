@@ -24,10 +24,7 @@ define([ "lib/d3",
 		map = _.map,
 		uniq = _.uniq,
 		filter = _.filter,
-		pluck = _.pluck,
-		once = _.once,
 		last = _.last,
-		isNull = _.isNull,
 		range = _.range,
 		keys = _.keys,
 		feature_list = xenaQuery.dsID_fn(xenaQuery.feature_list),
@@ -99,18 +96,16 @@ define([ "lib/d3",
 		},
 
 		findGeneAverage: function (values) {
-			var probeCount = values.length,
-				sampleCount = values[0].length,
+			var sampleCount = values[0].length,
 				sums = [],
 				counts = [],
 				averages,
-				averageValues,
 				i;
 			for (i = 0; i < sampleCount; i += 1) {
 				sums.push(0);
 				counts.push(0);
 			}
-			each(values, function (probeVals, i) {
+			each(values, function (probeVals) {
 				each(probeVals, function (val, j) {
 					if (isVal(val)) {
 						sums[j] += val;
@@ -129,8 +124,7 @@ define([ "lib/d3",
 		},
 
 		findChiefAttrs: function (samples, field) {
-			var vals,
-				ws = this.columnUi.ws,
+			var ws = this.columnUi.ws,
 				c = {
 					dataType: ws.column.dataType,
 					label: ws.column.fieldLabel.user,
@@ -159,7 +153,7 @@ define([ "lib/d3",
 				c.valuetype = ws.data.features[field].valuetype;
 				if (c.valuetype !== 'category' || !(ws.data.codes[field])) {
 					c.valuetype = 'float';
-					c.colorValues = this.columnUi.plotData.heatmapData[0];
+					c.colorValues = this.columnUi.plotData.heatmapData[0]; // XXX make this the default
 				}
 				c.isfloat = (c.valuetype === 'float');
 				if (!c.isfloat) {
@@ -191,13 +185,13 @@ define([ "lib/d3",
 				dupArray = map(dupCodes, function (pc) {
 					return codes[pc];
 				}),
-				dupSamples = filter(samplesToCodes, function (code, sample) {
+				dupSamples = filter(samplesToCodes, function (code) {
 					return dupCodes.indexOf(code) > -1;
 				}),
-				msg = 'There are '
-					+ dupSamples.length
-					+ ' samples in this plot mapped to the same _PATIENT IDs: '
-					+ dupArray.join(', ');
+				msg = 'There are ' +
+					dupSamples.length +
+					' samples in this plot mapped to the same _PATIENT IDs: ' +
+					dupArray.join(', ');
 			this.warningIcon.prop('title', msg);
 		},
 
@@ -214,7 +208,6 @@ define([ "lib/d3",
 				ev_fn      = bind(attr, null, this.cleanValues(_.object(samples, data[0]))), // fn sample -> ev,
 				samplesToCodes = _.object(samples, data[2]),
 				patient_fn = bind(attr, null, samplesToCodes), // fn sample -> patient,
-				min_t = d3.min(_.values(ttevValues)),
 				chief,
 				values,
 				groups,
@@ -256,18 +249,20 @@ define([ "lib/d3",
 			}
 
 			each(groups.slice(0, MAX), function (group, i) {
-				/*jslint eqeq: true */
 				var label,
 					r,
 					samples = all ? _.keys(ttevValues) : filter(keys(chief.values), function (s) {
 						if (regroup) {
-							return (i === 0 && chief.values[s] < groups[0])
-								|| (i === 2 && chief.values[s] > groups[1])
-								|| (i === 1 && chief.values[s] >= groups[0] && chief.values[s] <= groups[1]);
+							return (i === 0 && chief.values[s] < groups[0]) ||
+								(i === 2 && chief.values[s] > groups[1]) ||
+								(i === 1 && chief.values[s] >= groups[0] && chief.values[s] <= groups[1]);
 						} else {
 							return chief.values[s] === group;
 						}
 					}),
+
+					/*jslint eqeq: true */
+					/*jshint eqnull: true */
 					samplesNotNullTtevFn = filter(samples, function (s) { return ttev_fn(s) != null; }),
 					res = km.compute(map(samplesNotNullTtevFn, ttev_fn), map(samplesNotNullTtevFn, ev_fn));
 
@@ -289,10 +284,10 @@ define([ "lib/d3",
 				}
 			});
 
-			self.featureLabel.text('Grouped by: '
-				+ (all ? 'All samples' : chief.label)
-				+ (groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "")
-				+ (chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
+			self.featureLabel.text('Grouped by: ' +
+				(all ? 'All samples' : chief.label) +
+				(groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "") +
+				(chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
 			self.render(subgroups, chief);
 		},
 
@@ -625,8 +620,7 @@ define([ "lib/d3",
 	}
 
 	function show(id, options) {
-		var mapId = id,
-			w = widgets[id];
+		var w = widgets[id];
 		if (w) {
 			w.destroy();
 		}
