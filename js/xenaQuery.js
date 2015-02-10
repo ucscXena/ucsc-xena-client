@@ -170,13 +170,13 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 			   '     :from [:dataset]}))';
 	}
 
-	function dataset_list_query(cohort) { /// jing modify add status
+	function dataset_list_query(cohort) {
 		return '(query {:select [:name :type :datasubtype :probemap :text :status]\n' +
 		       '        :from [:dataset]\n' +
 		       '        :where [:= :cohort ' + quote_cohort(cohort) + ']})';
 	}
 
-	function dataset_query (dataset) {  ////jing modify add status
+	function dataset_query (dataset) {
 		return '(query {:select [:name :longtitle :type :datasubtype :probemap :text :status]\n' +
 		       '        :from [:dataset]\n' +
 		       '        :where [:= :dataset.name ' + quote(dataset) + ']})';
