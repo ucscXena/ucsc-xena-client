@@ -37,10 +37,8 @@ define(['underscore_ext',
 		zip = _.zip,
 		range = _.range,
 		bind = _.bind,
-		partial = _.partial,
 		pluckPathsArray = _.pluckPathsArray,
 		find = _.find,
-		keys = _.keys,
 		uniq = _.uniq,
 
 		default_colors_map,
@@ -90,7 +88,7 @@ define(['underscore_ext',
 	};
 
 	function meannan(values) {
-		var count = 0, sum = 0, i, v;
+		var count = 0, sum = 0;
 		if (!values) {
 			return NaN;
 		}
@@ -320,12 +318,12 @@ define(['underscore_ext',
 		return indexResponse(genes, samples, orderByQuery(genes, data));
 	}
 
-	function rowToObj(cols) {
-		return _.reduce(cols, function (acc, col) {
-			acc[col[0]] = col[1];
-			return acc;
-		}, {});
-	}
+//	function rowToObj(cols) {
+//		return _.reduce(cols, function (acc, col) {
+//			acc[col[0]] = col[1];
+//			return acc;
+//		}, {});
+//	}
 
 	function indexFeatures(xhr) {
 		var features = JSON.parse(xhr.response);
@@ -478,8 +476,6 @@ define(['underscore_ext',
 			field,
 			label,
 			val,
-			valWidth,
-			labelWidth,
 			tip = {
 				ev: ev,
 				el: '#nav',
@@ -509,9 +505,7 @@ define(['underscore_ext',
 			label = field;
 		}
 		val = heatmapData[fieldIndex][sampleIndex];
-		val = (column.dataType === 'clinicalMatrix' && codes)
-			? codes[val]
-			: prec(val);
+		val = (column.dataType === 'clinicalMatrix' && codes)? codes[val]: prec(val);
 		if (val === undefined || _.isNaN(val)) {
 			val = 'NA';
 		}
