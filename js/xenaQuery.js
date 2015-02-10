@@ -19,9 +19,9 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		return _.map(l, quote).join(' ');
 	}
 
-	function listfmt(l) {
-		return '(' + sep(l) + ')';
-	}
+//	function listfmt(l) {
+//		return '(' + sep(l) + ')';
+//	}
 
 	function arrayfmt(l) {
 		return '[' + sep(l) + ']';
@@ -122,12 +122,12 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		});
 	}
 
-	function xena_get(host, query) {
-		return {
-			url: host + '/data/' + encodeURIComponent(query),
-			method: 'GET'
-		};
-	}
+//	function xena_get(host, query) {
+//		return {
+//			url: host + '/data/' + encodeURIComponent(query),
+//			method: 'GET'
+//		};
+//	}
 
 	function xena_post(host, query) {
 		return {
@@ -401,7 +401,6 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	// XXX Should consider making sources indexed so we can do simple
 	// lookups. Would need to update haml/columnEditBasic.haml.
 	function find_dataset(sources, hdsID) {
-		var result;
 		return _.findValue(sources, function (source) {
 			return _.findWhere(source.datasets, {dsID: hdsID});
 		});

@@ -1,5 +1,5 @@
 /*jslint vars:true */
-/*globals define: false, $: false */
+/*globals define: false, console: false */
 define(['underscore_ext',
 		'jquery',
 		'rx',
@@ -48,14 +48,6 @@ define(['underscore_ext',
 			return -1;
 		}
 		return 0;
-	}
-
-	function findTargetColumn(ev) {
-		var $target = $(ev.target);
-		if (!$target.hasClass('spreadsheet-column')) {
-			$target = $target.parents('.spreadsheet-column');
-		}
-		return $target;
 	}
 
 	function spreadsheetWidget(state, cursor, parent, wrapper) {
