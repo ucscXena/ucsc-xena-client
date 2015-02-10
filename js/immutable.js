@@ -89,7 +89,7 @@ define([], function() {
 	function update_in_i(x, keys, fn, i) {
 		var ki = keys[i];
 		if (keys.length === i + 1) {
-			return assoc(x, ki, fn(x[ki]));
+			return assoc(x, ki, fn(x && x[ki]));
 		}
 		return assoc(x, ki, update_in_i(x && x[ki], keys, fn, i + 1));
 	}
