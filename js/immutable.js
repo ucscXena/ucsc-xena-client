@@ -1,5 +1,6 @@
 /*global define: false */
 define([], function() {
+	'use strict';
 	var hasOwnProperty = Object.prototype.hasOwnProperty,
 		slice = Array.prototype.slice;
 
