@@ -1,4 +1,5 @@
-define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper'], function (xenaQuery, dom_helper, Highcharts, highcharts_helper) {
+/*global define: false, document: false */
+define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper', 'underscore_ext', 'rx'], function (xenaQuery, dom_helper, Highcharts, highcharts_helper, _, Rx) {
 	'use strict';
 	return function (root, cursor, sessionStorage) {
 
@@ -124,8 +125,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper'],
 			var div = document.createElement("select"),
 				option, i, column, storedColumn,
 				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-				cohort, column_rendering, columns,
-				checkbox = document.getElementById("ynormalization");
+				column_rendering, columns;
 
 			if (xenaState) {
 				columns = xenaState.column_order;
@@ -185,35 +185,6 @@ define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper'],
 			return div;
 		}
 
-		function checkBoxDefault() {
-			var dropDownDiv = document.getElementById("ynormalization"),
-				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-				dropdown = document.getElementById("Yaxis"),
-				column = dropdown.options[dropdown.selectedIndex].value;
-
-			//using xena heatmap default to set chart normalization default
-			if (xenaState && xenaState.column_rendering[column].colnormalization) {
-				dropDownDiv.selectedIndex = 1;
-			} else {
-				dropDownDiv.selectedIndex = 0;
-			}
-		}
-
-		// obsolete function, for test setting colnormalization
-		function setXenaColNormalizationState() {
-			var dropDownDiv = document.getElementById("ynormalization"),
-				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-				dropdown = document.getElementById("Yaxis"),
-				column = dropdown.options[dropdown.selectedIndex].value,
-				colNormalization = dropDownDiv.options[dropDownDiv.selectedIndex].value;
-
-			if (colNormalization === "none") {
-				xenaState.column_rendering[column].colnormalization = false;
-			} else {
-				xenaState.column_rendering[column].colnormalization = true;
-			}
-			setStorage(xenaState);
-		}
 
 		function normalizationUIVisibility(visible) {
 			var dropDown = document.getElementById("normDropDown");
@@ -240,7 +211,6 @@ define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper'],
 				xhost, yhost,
 				xds, yds,
 				xcolumnType, ycolumnType,
-				yNormalization,
 				column_rendering;
 
 			dropdown = document.getElementById("Xaxis");
@@ -321,6 +291,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper'],
 					ydata,
 					yIsCategorical,
 					r,
+					offsets,
 					yNormalization;
 
 				if (xcolumn !== "none") {
@@ -399,8 +370,9 @@ define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper'],
 					});
 				} else if (yNormalization === "subset") {
 					var i, k, datalist,
-						offsets = {},
 						yfield;
+
+					offsets = {};
 
 					for (i = 0; i < yfields.length; i++) {
 						yfield = yfields[i];
@@ -414,10 +386,10 @@ define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper'],
 					}
 					drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel);
 				} else {
-					var offsets = {};
+					offsets = {};
 					yfields.forEach(function (yfield) {
 						offsets[yfield] = 0;
-					})
+					});
 					drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel);
 				}
 			});
@@ -708,7 +680,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper'],
 				var seriesLabel;
 
 				if (yIsCategorical) {
-					seriesLabel = " "
+					seriesLabel = " ";
 				} else {
 					seriesLabel = "average";
 				}
@@ -753,7 +725,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts_exporting', 'highcharts_helper'],
 
 				var showLegend = true;
 				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend)
+					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend);
 
 				chart = new Highcharts.Chart(chartOptions);
 
