@@ -8,10 +8,8 @@ define(["lib/d3",
 
 	'use strict';
 
-	var uniq = _.uniq,
-		isNumber = _.isNumber,
+	var isNumber = _.isNumber,
 		isUndefined = _.isUndefined,
-		filter = _.filter,
 		range = _.range,
 		color_range,
 		// d3_category20, without the #7f7f7f gray that aliases with our N/A gray of #808080
@@ -54,7 +52,39 @@ define(["lib/d3",
 		codedWhite = [
 			"#ffffff", // white
 			"#9467bd" // dark purple
-		];
+		],
+
+		defaultColors;
+
+
+	defaultColors = (function () {
+		var schemes = {
+				blueWhiteRed: ['#0000ff', '#ffffff', '#ff0000'],
+				greenBlackRed: ['#00ff00', '#000000', '#ff0000'],
+				greenWhiteRed: ['#00ff00', '#ffffff', '#ff0000'],
+				greenBlackYellow: ['#007f00', '#000000', '#ffff00']
+				/* with clinical category palette:
+				blueWhiteRed: ['#377eb8', '#ffffff', '#e41a1c'],
+				greenBlackRed: ['#4daf4a', '#000000', '#e41a1c'],
+				greenBlackYellow: ['#4daf4a', '#000000', '#ffff33']
+				*/
+			},
+
+			defaults = {
+				"gene expression": schemes.greenBlackRed,
+				"gene expression RNAseq": schemes.greenBlackRed,
+				"gene expression array": schemes.greenBlackRed,
+				"exon expression RNAseq": schemes.greenBlackRed,
+				"phenotype": schemes.greenBlackYellow,
+			};
+
+
+		return function (type, dataSubType) {
+			var t = (type === 'clinicalMatrix') ?  'phenotype' : dataSubType;
+			return defaults[t] || schemes.blueWhiteRed;
+		};
+	}());
+
 
 	function scale_categoryMore() {
 		return d3.scale.ordinal().range(categoryMore);
@@ -77,7 +107,7 @@ define(["lib/d3",
 		return _.extend(newfn, fn); // XXX This weirdness copies d3 fn methods
 	}
 
-	color_range = multi(function (column, features, codes) {
+	color_range = multi(function (column, settings, features, codes) {
 		if (features && codes) {
 			if (features.valuetype === 'category') {
 				if (codes.length > 9) {
@@ -89,8 +119,8 @@ define(["lib/d3",
 				return 'codedWhite';
 			}
 		}
-		if (column.dataType !== "clinicalMatrix" && column.min && column.max) {
-			return 'scaled';
+		if (column.type === "genomicMatrix"){
+			return 'float_genomicData';
 		}
 		return 'minMax';
 	});
@@ -115,13 +145,14 @@ define(["lib/d3",
 			.range([low, zero, high]);
 	}
 
-	function color_float(column, feature, codes, data) {
+	function color_float(column, settings, feature, codes, data) {
 		var colorfn,
 			values = _.values(data || [0]), // handle degenerate case
 			max = d3.max(values),
-			low = column.colors[0],
-			zero = column.colors[1],
-			high = column.colors[2],
+			colors = defaultColors(column.type, column.dataSubType),
+			low = colors[0],
+			zero = colors[1],
+			high = colors[2],
 			min;
 
 		if (!isNumber(max)) {
@@ -138,32 +169,97 @@ define(["lib/d3",
 		return saveUndefined(colorfn);
 	}
 
-	function color_categoryMore(column, feature, codes) {
+	function color_categoryMore(column, settings, feature, codes) {
 		return saveUndefined(scale_categoryMore().domain(range(codes.length)));
 	}
 
-	function color_categoryLess(column, feature, codes) {
+	function color_categoryLess(column, settings, feature, codes) {
 		return saveUndefined(scale_categoryLess().domain(range(codes.length)));
 	}
 
-	function color_codedWhite(column, feature, codes) {
+	function color_codedWhite(column, settings, feature, codes) {
 		return saveUndefined(scale_codedWhite().domain(range(codes.length)));
 	}
 
-	function color_scaled(column) {
-		var low = column.colors[0],
-			zero = column.colors[1],
-			high = column.colors[2];
+//	function color_scaled(column) {
+//		var low = column.colors[0],
+//			zero = column.colors[1],
+//			high = column.colors[2];
+//
+//		return saveUndefined(d3.scale.linear()
+//			.domain([column.min, (column.min + column.max) / 2, column.max])
+//			.range([low, zero, high]));
+//	}
 
-		return saveUndefined(d3.scale.linear()
-			.domain([column.min, (column.min + column.max) / 2, column.max])
-			.range([low, zero, high]));
+	function color_float_negative_zone(low, zero, min, max, zone) {
+		return d3.scale.linear()
+			.domain([min.toPrecision(2), (max-zone).toPrecision(2), max.toPrecision(2)])
+			.range([low, zero, zero]);
 	}
+
+	function color_float_positive_zone(zero, high, min, max, zone) {
+		return d3.scale.linear()
+			.domain([min.toPrecision(2), (min+zone).toPrecision(2), max.toPrecision(2)])
+			.range([zero, zero, high]);
+	}
+
+	function color_custom (low, zero, high, min, max, minStart, maxStart) {
+		return d3.scale.linear()
+			.domain([min.toPrecision(2),  minStart.toPrecision(2), maxStart.toPrecision(2), max.toPrecision(2)])
+			.range([low, zero, zero, high]);
+	}
+
+	function color_float_genomicData (column, settings, feature, codes, data) {
+		var colorfn,
+			values = _.values(data || [0]), // handle degenerate case
+			colors = defaultColors(column.type, column.dataSubType),
+			low = colors[0],
+			zero = colors[1],
+			high = colors[2],
+			min = settings.min || d3.min(values),
+			max = settings.max ||  d3.max(values),
+			minStart = settings.minStart,
+			maxStart = settings.maxStart,
+			mid,
+			absmax,
+			zone;
+
+		if (!isNumber(max) || !isNumber(min)) {
+			return null; // XXX should verify that we handle this downstream.
+		}
+
+		if (settings.min) {
+			if (!minStart || !maxStart) {
+				mid = (max + min) / 2.0;
+				zone = (max - min) / 4.0;
+				minStart = mid  -  zone / 2.0;
+				maxStart = mid  +  zone / 2.0;
+			}
+			colorfn = color_custom(low, zero, high, min, max, minStart, maxStart);
+		} else if (min <= 0 && max >= 0) {
+			absmax = Math.max(-min, max);
+			zone = absmax / 4.0;
+			colorfn = color_custom(low, zero, high, - absmax / 2.0, absmax / 2.0, - zone / 2.0, zone / 2.0);
+		} else	if (min >= 0 && max >= 0) {
+			zone = (max - min) / 4.0;
+			colorfn = color_float_positive_zone(zero, high, min, max - zone / 2.0, zone);
+		} else { // min <= 0 && max <= 0
+			zone = (max - min) / 4.0;
+			colorfn = color_float_negative_zone(low, zero, min + zone / 2.0, max, zone);
+		}
+		return saveUndefined(colorfn);
+	}
+
+	color_range.add('codedWhite', color_codedWhite);
+	color_range.add("minMax", color_float);
+	color_range.add("codedMore", color_categoryMore);
+	color_range.add("codedLess", color_categoryLess);
+	color_range.add("float_genomicData", color_float_genomicData);
 
 	return {
 		range: color_range,
-		float: color_float,
-		scaled: color_scaled,
+		'float': color_float,
+//		scaled: color_scaled,
 		codedWhite: color_codedWhite,
 		categoryMore: color_categoryMore,
 		categoryLess: color_categoryLess,

@@ -83,6 +83,8 @@ define(['jquery',
 		//columnEditOpen: ['columnEditOpen'],
 		mode: ['mode'],
 		chartState: ['chartState'],
+		vizSettings: ['vizSettings'],
+		_vizSettings: ['_vizSettings'],
 		data: ['_column_data']
 	};
 	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths).share();

@@ -71,16 +71,11 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				{r: 228, g: 26, b: 28, a: 1}
 			]
 		},
-		refGeneInfo = {},
 		clone = _.clone,
 		each = _.each,
 		filter = _.filter,
-		find = _.find,
-		map = _.map,
 		reduce = _.reduce,
 		sortBy = _.sortBy,
-		toNumber = _.toNumber,
-		uniqueId = _.uniqueId,
 		widgets = {},
 		aWidget = {
 
@@ -195,9 +190,9 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				if (node) {
 					// TODO this is slow mousing when a node is involved
 					this.highlight(node);
-					pos = node.data.chr + ':'
-						+ util.addCommas(node.data.start)
-						+ '-' + util.addCommas(node.data.end);
+					pos = node.data.chr + ':' +
+						util.addCommas(node.data.start) +
+						'-' + util.addCommas(node.data.end);
 					dnaAf = this.formatAf(node.data.dna_vaf);
 					rnaAf = this.formatAf(node.data.rna_vaf);
 					rows = [
@@ -221,9 +216,11 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 
 			mupitClick: function () {
 				var positions = _.unique(_.map(this.nodes, function (n, i) {
-						return n.data.chr + ' ' + (n.data.start).toString();
-					}));
-				linkTo.mupit(positions.join('\n'));
+						return n.data.chr + ':' + (n.data.start).toString();
+					})).join(','),
+					url ="http://mupit.icm.jhu.edu/?gm="+positions;
+
+				window.open(url);
 			},
 
 			findRgba: function (val) {
@@ -345,7 +342,6 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 			},
 
 			render: function () {
-				var self = this;
 				this.pixPerRow = (this.height - (this.sparsePad * 2))  / this.values.length;
 				this.canvasHeight = this.height; // TODO init elsewhere
 				this.d2 = this.vg.context();
@@ -412,9 +408,9 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				mut = _.max(row, function (mut) { return impact[mut.effect]; });
 				weight = impactMax - impact[mut.effect];
 				refGeneInfo = refGene[mut.gene];
-				rightness = (refGeneInfo.strand === '+')
-					? mut.start - refGeneInfo.txStart
-					: refGeneInfo.txStart - mut.start;
+				rightness = (refGeneInfo.strand === '+') ?
+					mut.start - refGeneInfo.txStart :
+					refGeneInfo.txStart - mut.start;
 				return (weight * chrEnd) + rightness;
 			} else {
 				return (impactMax * chrEnd) + chrEnd + 1; // force mutation-less rows to the end

@@ -160,7 +160,6 @@ define([ "lib/d3",
 					c.codes = ws.data.codes[field];
 				}
 			} else if (c.dataType === 'mutationVector') {
-				heatmapColors.range.add('codedWhite', heatmapColors.codedWhite);
 				c.valuetype = 'codedWhite';
 				c.colorValues = [0, 1];
 				c.isfloat = false;
@@ -364,7 +363,7 @@ define([ "lib/d3",
 		render: function (subgroups, chief) {
 			var x = this.x,
 				y = this.y,
-				color = heatmapColors.range(this.columnUi.ws.column, chief, chief.codes, chief.colorValues),
+				color = _.get_in(this, ['columnUi', 'ws', 'colors', 0]),
 				line = d3.svg.line().interpolate("step-after")
 					.x(function (d) { return x(d.t); })
 					.y(function (d) { return y(d.s); }),

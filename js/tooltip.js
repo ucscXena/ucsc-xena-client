@@ -8,13 +8,12 @@ define(["haml!haml/tooltip", "haml!haml/tooltipClose", "jquery", "defer", "lib/u
 	var freezeText = '(alt-click to freeze)',
 		thawText = '(alt-click on map to unfreeze)',
 		$tooltip = $('#tooltip'),
-		$prompt,
 		frozen,
-		first = true,
 		hiding = true,
 
 		position = function (el, my, at) {
-			$tooltip.position({my: my, at: at, of: el, collision: 'none none'});
+			$tooltip.position({my: my, at: at, of: window, collision: 'none none'});
+
 		},
 
 		hide = function () {

@@ -50,7 +50,7 @@ define([], function() {
 	}
 
 	function assoc1(x, k, v) {
-		if (x && x[k] === v) { // avoid new object if we can.
+		if (x && x[k] === v) { // avoid new object if we can. XXX Use isEquals so equal objects are ignored.
 			return x;
 		}
 		if (x instanceof Array) {

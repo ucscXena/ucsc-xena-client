@@ -219,7 +219,7 @@ define(['haml!haml/sheetWrap',
 								  {xena: JSON.stringify(state)});
 							self.$chartRoot.show();
 							self.$heatmapRoot.hide();
-							self.$chartSelect.text('Spreadsheet');
+							self.$chartSelect.text('Heatmap');
 						} else {
 
 							self.$chartRoot.hide();

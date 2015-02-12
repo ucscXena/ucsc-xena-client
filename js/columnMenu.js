@@ -1,13 +1,17 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
-/*global alert: false */
 
-define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVector', 'Menu', 'jquery', 'lib/underscore', 'xenaQuery'
+define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVector', 'Menu', 'jquery', 'lib/underscore', 'xenaQuery', 'heatmapVizSettings'
 	// non-object dependencies
-	], function (template, columnEdit, download, kmPlot, mutationVector, Menu, $, _, xenaQuery) {
+	], function (template, columnEdit, download, kmPlot, mutationVector, Menu, $, _, xenaQuery, vizSettings) {
 	'use strict';
 
+	function columnDsID(state, id) {
+		return state.column_rendering[id].dsID;
+	}
+
 	var APPLY_BUTTON,
+		vizSettingsWidgets = {},
 		ColumnMenu = function () {
 
 			this.docClick = function () {
@@ -33,17 +37,21 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 				var column = this.columnUi.ws.column,
 					dsID = JSON.parse(column.dsID),
 					host= dsID.host,
-					dataset = dsID.name;
+					dataset = dsID.name,
+					url ="datapages?dataset="+encodeURIComponent(dataset)+"&host="+encodeURIComponent(host);
 
-			  // genome-cancer :443 switch
-				var oldHost = "https://genome-cancer.ucsc.edu/proj/public/xena",
-					newHost = "https://genome-cancer.ucsc.edu:443/proj/public/xena";
-				if (host === newHost){
-					host = oldHost;
-				}
-				var url ="datapages?dataset="+dataset+"&host="+host;
 				location.href=url;
-			}
+			};
+
+			this.vizSettingsClick = function (ev) {
+				var self = this;
+				if (this.$vizSettings.hasClass('disabled')) {
+					return;
+				}
+				this.cursor.update(function (s) {
+					return _.assoc_in(s, ['_vizSettings', columnDsID(s, self.id), 'open'], true);
+				});
+			};
 
 			this.kmPlotClick = function (ev) {
 				var self = this,
@@ -89,8 +97,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 			this.updateColumn = function (key, val) {
 				var id = this.id;
 				this.cursor.update(function (state) {
-					var newState = _.assoc_in(state, ['column_rendering', id, key], val);
-					return newState;
+					return _.assoc_in(state, ['column_rendering', id, key], val);
 				});
 			};
 
@@ -122,15 +129,14 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 				if ($(event.target).hasClass('link')) {
 					event.stopPropagation();
 				} else {
-					options.topAdd = -3;
-					options.leftAdd = -25;
+					options.topAdd = -10;
+					options.leftAdd = -50;
 					this.menuAnchorClick(event, options);
 				}
 			};
 
 			this.render = function () {
-				var column = this.columnUi.ws.column,
-					$kmPlot;
+				var column = this.columnUi.ws.column;
 
 				this.menuRender($(template()));
 				if (column.dataType === 'mutationVector') {
@@ -143,10 +149,15 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					this.$el.find('.view, .detail, .geneAverage, hr').show();
 					this.$el.find('.geneAverage .ui-icon-check').css('opacity', 1);
 				}
+				this.$vizSettings = this.$el.find('.vizSettings');
+				this.$vizSettings.show();
+				if (column.type !== 'genomicMatrix') {
+					this.$vizSettings.addClass('disabled');
+				}
+
 				this.$kmPlot = this.$el.find('.kmPlot');
 				this.$kmPlot.show();
-				if (!this.columnUi.plotData
-						|| (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1)) {
+				if (!this.columnUi.plotData || (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1)) {
 					this.$kmPlot.addClass('disabled');
 				}
 			};
@@ -162,6 +173,29 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 				this.deleteColumn = options.deleteColumn;
 				this.moreItems = options.moreItems;
 				this.menuInitialize(options);
+
+				this.state.refine(['_vizSettings', 'vizSettings', 'cohort', 'column_rendering'])
+					.distinctUntilChanged(function (s) {
+						return _.get_in(s, ['_vizSettings', columnDsID(s, self.id), 'open']);
+					}).subscribe(function (s) {
+						var dsID = columnDsID(s, self.id),
+							open = _.get_in(s, ['_vizSettings', dsID, 'open']),
+							vizCursor = self.cursor.refine({
+								_vizSettings: ['_vizSettings', dsID],
+								vizSettings: ['vizSettings', dsID],
+								cohort: ['cohort']
+							});
+						if (!open && vizSettingsWidgets[dsID]) {
+							vizSettingsWidgets[dsID]();
+							delete vizSettingsWidgets[dsID];
+						} else if (open && !vizSettingsWidgets[dsID]) {
+							vizSettingsWidgets[dsID] = vizSettings(vizCursor, {
+								_vizSettings: _.get_in(s, ['_vizSettings', dsID]),
+								vizSettings: _.get_in(s, ['vizSettings', dsID]),
+								cohort: _.get_in(s, ['cohort'])
+							}, dsID);
+						}
+					});
 
 				// bindings
 				this.$el // TODO replace with Rx bindings ?
@@ -179,6 +213,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					.on('click', '.duplicate', this.duplicateClick)
 					.on('click', '.about', this.aboutClick)
 					.on('click', '.download', this.downloadClick)
+					.on('click', '.vizSettings', this.vizSettingsClick)
 					.on('click', '.remove', this.removeClick);
 			};
 		};

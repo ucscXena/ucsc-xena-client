@@ -40,9 +40,6 @@ define(['underscore_ext',
 		pluckPathsArray = _.pluckPathsArray,
 		find = _.find,
 		uniq = _.uniq,
-
-		default_colors_map,
-		color_schemes,
 		scratch = vgcanvas(1, 1), // scratch buffer
 		cmp,
 		fetch,
@@ -50,42 +47,6 @@ define(['underscore_ext',
 		fetch_gene_probes,
 		fetch_feature,
 		render;
-
-	color_schemes = {
-		blue_white_red: ['#0000ff', '#ffffff', '#ff0000'],
-		green_black_red: ['#007f00', '#000000', '#ff0000'],
-		green_black_yellow: ['#007f00', '#000000', '#ffff00']
-		/* with clinical category palette:
-		blue_white_red: ['#377eb8', '#ffffff', '#e41a1c'],
-		green_black_red: ['#4daf4a', '#000000', '#e41a1c'],
-		green_black_yellow: ['#4daf4a', '#000000', '#ffff33']
-		*/
-	};
-
-	default_colors_map = {
-		"gene expression": color_schemes.green_black_red,
-		"gene expression RNAseq": color_schemes.green_black_red,
-		"gene expression array": color_schemes.green_black_red,
-		"exon expression RNAseq": color_schemes.green_black_red,
-		"copy number": color_schemes.blue_white_red,
-		"DNA methylation": color_schemes.blue_white_red,
-		"PARADIGM pathway activity": color_schemes.blue_white_red,
-		"protein expression RPPA": color_schemes.blue_white_red,
-		"somaticMutation": color_schemes.blue_white_red,
-		"phenotype": color_schemes.green_black_yellow,
-
-		"common/dataSubType/geneRNAseq": color_schemes.green_black_red,
-		"common/dataSubType/geneArray": color_schemes.green_black_red,
-		"common/dataSubType/geneExp": color_schemes.green_black_red,
-		"common/dataSubType/cna": color_schemes.blue_white_red,
-		"common/dataSubType/cellViability": color_schemes.blue_white_red,
-		"common/dataSubType/DNAMethylation": color_schemes.blue_white_red,
-		"common/dataSubType/kinomeScreen": color_schemes.blue_white_red,
-		"common/dataSubType/PARADIGM": color_schemes.blue_white_red,
-		"common/dataSubType/phenotype": color_schemes.blue_white_red,
-		"common/dataSubType/protein": color_schemes.blue_white_red,
-		"common/dataSubType/somaticMutation": color_schemes.blue_white_red
-	};
 
 	function meannan(values) {
 		var count = 0, sum = 0;
@@ -103,11 +64,6 @@ define(['underscore_ext',
 			return sum / count;
 		}
 		return NaN;
-	}
-
-	function default_colors (dataSubType) {
-		return default_colors_map[dataSubType] ||
-			color_schemes.blue_white_red;
 	}
 
 	function secondNotUndefined(x) {
@@ -188,14 +144,14 @@ define(['underscore_ext',
 			zoomCount = opts.zoomCount,
 			layout   = opts.layout,
 			data     = opts.data,
-			colors   = opts.color_scale,
+			colors   = opts.colors,
 			buff = scratch;
 
 		vg.smoothing(false); // For some reason this works better if we do it every time.
 
 		// reset image
 		if (data.length === 0) { // no features to draw
-			vg.box(0, 0, width, height, "white");
+			vg.box(0, 0, width, height, "gray");
 			return;
 		}
 
@@ -439,11 +395,6 @@ define(['underscore_ext',
 		})
 	);
 
-	heatmapColors.range.add("minMax", heatmapColors.float);
-	heatmapColors.range.add("codedMore", heatmapColors.categoryMore);
-	heatmapColors.range.add("codedLess", heatmapColors.categoryLess);
-	heatmapColors.range.add("scaled", heatmapColors.scaled);
-
 	function plotCoords(ev) {
 		var offset,
 			x = ev.offsetX,
@@ -550,18 +501,39 @@ define(['underscore_ext',
 		}
 	}
 
-	function drawLegend(column, columnUi, data, fields, codes, color_scale, categoryBreak) {
-	//function drawLegend(column, columnUi, data, fields, codes, color_scale, categoryLength) {
+	function drawLegend(metadata, settings, columnUi, data, fields, codes, color_scale, categoryBreak) {
 		var c,
 			ellipsis = '',
 			align = 'center',
 			labels = color_scale[0] ? color_scale[0].domain() : [],
 			colors = color_scale[0] ? _.map(labels, color_scale[0]) : [],
 			categoryLength = categoryBreak;
+
 		if (data.length === 0) { // no features to draw
 			return;
 		}
-		if (column.dataType === 'clinicalMatrix') { // XXX can we use domain() for categorical?
+
+		if (metadata.type === 'genomicMatrix') {
+			if (color_scale.length > 1 && !_.get_in(settings, ['min'])) {
+				labels = color_scale[0].domain().map(function (value) {return "";});
+				labels[0] = "lower";
+				labels[labels.length - 1] = "higher";
+			}
+			else if (color_scale[0]) {
+				if (labels.length === 4) {
+					labels[0] = "<" + labels[0];
+					labels[labels.length - 1] = ">" + labels[labels.length - 1];
+				} else if (labels.length === 3) {
+					if (color_scale[0].domain()[0] >= 0) {
+						labels[labels.length-1] = ">" + labels[labels.length - 1];
+					} else {
+						labels[0] = "<" + labels[0];
+					}
+				}
+			}
+		}
+
+		if (metadata.dataType === 'clinicalMatrix') { // XXX can we use domain() for categorical?
 			if (codes[fields[0]]) { // category
 				if (codes[fields[0]].length > categoryBreak) {
 					categoryLength = 19;
@@ -581,6 +553,10 @@ define(['underscore_ext',
 		columnUi.drawLegend(colors, labels, align, ellipsis);
 	}
 
+	function definedOrDefault(v, def) {
+		return _.isUndefined(v) ? def : v;
+	}
+
 	// memoize doesn't help us here, because we haven't allocated a render routine
 	// for each widget. Maybe we should???
 	render = ifChanged(
@@ -598,23 +574,19 @@ define(['underscore_ext',
 				features = data.features || {},
 				codes = data.codes || {},
 				metadata = data.metadata || {},
-				bounds = data.bounds || {},
-				columnUi,
-				column = ws.column,
-				fields = data.req.probes || column.fields, // prefer field list from server
 				mean = _.get_in(data, ["req", "mean"]),
-				transform = (column.colnormalization && mean && _.partial(subbykey, mean())) || second,
+				norm = {'none': false, 'subset': true},
+
+				colnormalization = definedOrDefault(norm[_.get_in(ws, ['vizSettings', 'colNormalization'])], metadata.colnormalization),
+				settings = _.get_in(ws, ['vizSettings']) || {}, // XXX needs normalization, too?
+				column = ws.column,
+				newws =  _.assoc(ws, 'column', _.extend({}, ws.column, metadata)),
+				fields = data.req.probes || column.fields, // prefer field list from server
+				transform = (colnormalization && mean && _.partial(subbykey, mean())) || second,
+				columnUi,
 				vg,
 				heatmapData,
 				colors;
-
-			column.min = (_.has(bounds, fields[0]) && bounds[fields[0]].min) || metadata.min || -1;
-			column.max = (_.has(bounds, fields[0]) && bounds[fields[0]].max) || metadata.max || 1;
-			column.colors = default_colors(
-				column.dataType === "clinicalMatrix"
-				? "phenotype"
-				: metadata.dataSubType);
-			column.colnormalization = metadata.colnormalization;
 
 			if (!local || local.render !== render) { // Test if we own this state
 				local = new Rx.Disposable(function () {
@@ -622,10 +594,12 @@ define(['underscore_ext',
 				});
 				local.render = render;
 				local.vg = vgcanvas(column.width, ws.height);
-				local.columnUi = wrapper(el.id, ws);
+				local.columnUi = wrapper(el.id, newws);
 				local.columnUi.$samplePlot.append(local.vg.element());
 				disp.setDisposable(local);
 			}
+			// XXX The state flow for columnUi, and friends is completely wrong. Needs to be
+			// rewritten.
 			vg = local.vg;
 			columnUi = local.columnUi;
 
@@ -638,6 +612,9 @@ define(['underscore_ext',
 			}
 
 			heatmapData = dataToHeatmap(sort, data.req.values, fields, transform);
+			colors = map(fields, function (p, i) {
+				return heatmapColors.range(metadata, settings, features[p], codes[p], heatmapData[i]); // XXX might need defaults if metadata is null?
+			});
 			if (columnUi && heatmapData.length) {
 				columnUi.plotData = {
 					// TODO we don't need all these parms
@@ -648,7 +625,7 @@ define(['underscore_ext',
 					fields: fields,
 					codes: codes
 				};
-				columnUi.ws = ws;
+				columnUi.ws = _.assoc(newws, 'colors', colors); // XXX this is horrible
 				columnUi.setPlotted();
 				if (local.sub) {
 					local.sub.dispose();
@@ -657,16 +634,12 @@ define(['underscore_ext',
 					ev.data = {
 						plotData: columnUi.plotData,
 						column: column,
-						ws: ws
+						ws: newws   // XXX this is horrible
 					};
 					mousing(ev);
 				}); // TODO free this somewhere, maybe by moving it to columnUi.js
 			}
-			colors = map(fields, function (p, i) {
-				return heatmapColors.range(column, features[p], codes[p], heatmapData[i]);
-			});
-			column.colorFn = colors;
-			drawLegend(column, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryBreak);
+			drawLegend(metadata, settings, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryBreak);
 			renderHeatmap({
 				vg: vg,
 				height: ws.height,
@@ -675,7 +648,7 @@ define(['underscore_ext',
 				zoomCount: ws.zoomCount,
 				data : heatmapData,
 				layout: partition.offsets(column.width, 0, heatmapData.length),
-				color_scale: colors
+				colors: colors
 			});
 		}
 	);

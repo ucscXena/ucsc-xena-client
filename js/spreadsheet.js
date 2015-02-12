@@ -105,6 +105,7 @@ define(['underscore_ext',
 
 		var widgetStates = state.select(function (s) {
 			return _.fmap(s.column_rendering, function (col, uuid) {
+				var dsID = _.get_in(s, ['column_rendering', uuid, 'dsID']);
 				return _.pluckPaths({
 					cohort: ['cohort'],
 					height: ['height'], // XXX refactor vertical position info into an object
@@ -113,7 +114,8 @@ define(['underscore_ext',
 					samples: ['samples'],
 					_sources: ['_sources'],
 					_column: ['_column', uuid],
-					column: ['column_rendering', uuid]
+					column: ['column_rendering', uuid],
+					vizSettings: ['vizSettings', dsID]
 				}, s);
 			});
 		}).share();

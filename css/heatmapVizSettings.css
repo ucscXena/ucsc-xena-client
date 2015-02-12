@@ -1,0 +1,86 @@
+.settingsRoot {
+	width: 80%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.settingsRoot h2 {
+	color: #000099;
+}
+
+.settingsRoot .vizbutton {
+	padding: 4px 6px;
+	font-size: small;
+	margin: 5px 10px;
+	vertical-align: 5%;
+}
+.settingsRoot .vizbutton:hover {
+	color: #ff6600;
+}
+
+.settingsRoot .error {
+	color: red;
+}
+
+.settingsRoot a:hover {
+	color: #ff6600;
+}
+
+.settingsRoot a:link {
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: none;
+}
+
+.settingsRoot .key {
+	font-weight: bold;
+	padding-top: 20px;
+	padding-bottom: 10px;
+	display: inline-block;
+}
+
+.settingsRoot .text {
+	margin: 10px;
+	width: 100px;
+	display: inline-block;
+}
+
+.settingsRoot .annotation {
+	display: inline-block;
+	margin-bottom: 10px;
+	margin-left: 25px;
+}
+
+.settingsRoot .radiogroup {
+	display: inline-block;
+	vertical-align: top;
+}
+
+.settingsRoot .textBox {
+	width: 40px;
+	text-align: center;
+	margin-left: 5px;
+	border: 1px solid gray;
+}
+
+.settingsRoot .textBox:focus {
+	outline: 0;
+}
+
+.settingsRoot .dropDown {
+	margin-left: 5px;
+}
+
+.block {
+	display: inline-block;
+	vertical-align: top;
+	margin-top: 10px;
+}
+
+.settingsRoot .image {
+	display: inline-block;
+	vertical-align: top;
+	height: 110px;
+	margin-top: 10px;
+	margin-bottom: 30px;
+}

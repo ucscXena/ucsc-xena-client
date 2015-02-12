@@ -37,26 +37,36 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			xenaHeatmapStateReset();
 		}
 
-		// genome-cancer :443 switch XXX why?
-		var state = JSON.parse(sessionStorage.xena),
-			oldHost = "https://genome-cancer.ucsc.edu/proj/public/xena",
-			newHost = "https://genome-cancer.ucsc.edu:443/proj/public/xena";
+		var state = JSON.parse(sessionStorage.xena);
 
-		state.servers.user = _.map(_.intersection(JSON.parse(sessionStorage.state).activeHosts,
-			JSON.parse(sessionStorage.state).userHosts), function (host) {
-				return host === oldHost ? newHost : host;
-			});
+		state.servers.user = _.intersection(JSON.parse(sessionStorage.state).activeHosts,
+			JSON.parse(sessionStorage.state).userHosts);
 
 		sessionStorage.xena = JSON.stringify(state);
 	}
 
+	function datasetHasFloats (host, dsName, action, actionArgs) {
+		xenaQuery.dataset_field_examples(host, dsName).subscribe(function (s) {
+			var probes = s.map(function (probe) {
+				return probe.name;
+			});
+			xenaQuery.code_list(host, dsName, probes).subscribe(function(codemap){
+				for(var key in codemap) {
+		    	if (!codemap[key]){  // no code, float feature
+		    		action.apply(this,actionArgs);
+		    		return;
+		    	}
+		    }
+			});
+		});
+	}
+
 	function sessionStorageInitialize() {
 		var defaultHosts = [
-				"https://genome-cancer.ucsc.edu/proj/public/xena",
+				"https://genome-cancer.ucsc.edu:443/proj/public/xena",
 				"http://localhost:7222"
-				/*"http://tcga1:1236"*/
 			],
-			defaultActive =["https://genome-cancer.ucsc.edu/proj/public/xena"],
+			defaultActive =["https://genome-cancer.ucsc.edu:443/proj/public/xena"],
 			defaultLocal = "http://localhost:7222",
 			defaultState = {
 				activeHosts: defaultActive,
@@ -66,6 +76,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 				metadataFilterHosts: defaultHosts
 			},
 			state = getSessionStorageState(); //sessionStorage.state ? JSON.parse(sessionStorage.state) : {};
+
 		sessionStorage.state = JSON.stringify(_.extend(defaultState, state));
 		setXenaUserServer();
 	}
@@ -189,12 +200,13 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			},
 			displayHubLabel = {
 				'live_selected': {msg: 'connected', color: 'blue'},
-				'live_unselected': {msg: '&nbsp', color: 'gray'},
+				'live_unselected': {msg: '&nbsp', color: 'white'},
 			},
 
 			node = document.getElementById("status" + host),
 			nodeHubPage = document.getElementById("statusHub" + host),
-			nodeHubLabel = document.getElementById("hubLabel" + host);
+			nodeHubLabel = document.getElementById("hubLabel" + host),
+			nodeHubCheck = document.getElementById("checkbox" + host);
 
 		if (node) {
 			node.parentNode.replaceChild(
@@ -209,6 +221,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		if (nodeHubLabel && displayHubLabel[status]){
 			if (displayHubLabel[status].color){
 				nodeHubLabel.style.color= displayHubLabel[status].color;
+				nodeHubCheck.style.background = "linear-gradient("+displayHubLabel[status].color+", white)";
 			}
 			if (displayHubLabel[status].msg) {
 				nodeHubLabel.innerHTML = displayHubLabel[status].msg;
@@ -242,11 +255,17 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		});
 	}
 
+	var GOODSTATUS = "loaded";
+
 	return {
 		sessionStorageInitialize: sessionStorageInitialize,
 		updateHostStatus: updateHostStatus,
 		hostCheckBox: hostCheckBox,
 		metaDataFilterCheckBox: metaDataFilterCheckBox,
-		xenaHeatmapSetCohort: xenaHeatmapSetCohort
+		xenaHeatmapSetCohort: xenaHeatmapSetCohort,
+
+		datasetHasFloats:datasetHasFloats,
+
+		GOODSTATUS: GOODSTATUS
 	};
 });
