@@ -7,7 +7,7 @@ define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 	'use strict';
 
 	function columnDsID(state, id) {
-		return state.column_rendering[id].dsID;
+		return state.column_rendering[id].dsID; // XXX use _.get_in!
 	}
 
 	var APPLY_BUTTON,
