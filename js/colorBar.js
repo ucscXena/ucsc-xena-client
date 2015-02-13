@@ -25,10 +25,13 @@ define(['haml!haml/colorBar', 'lib/underscore', 'jquery'
 							});
 							return (c[4] === 1) ? 'white' : 'black';
 						} else {
+							// XXX There are proper formulas for luminance, which
+							// we might consider using.
+							// http://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color
 							if (color.indexOf('#') === 0) { // hexidecimal
 								c = [
 									parseInt(color.substring(1, 3), 16),
-									parseInt(color.substring(3, 5), 16),
+									parseInt(color.substring(3, 5), 16)*2,
 									parseInt(color.substring(5, 7), 16)
 								];
 							} else { // assume rgb
