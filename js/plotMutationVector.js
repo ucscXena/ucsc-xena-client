@@ -194,7 +194,8 @@ define(['underscore_ext',
 				dims = sheetWrap.columnDims(),
 				refGeneData,
 				refGene,
-				canvasHeight = ws.height + (dims.sparsePad * 2);
+				canvasHeight = ws.height + (dims.sparsePad * 2),
+				color = heatmapColors.range(column, {valueType: 'codedWhite'}, ['No Mutation', 'Has Mutation'], [0, 1]);
 
 			if (!local || local.render !== render) { // Test if we own this state
 				local = new Rx.Disposable(function () {
@@ -203,7 +204,7 @@ define(['underscore_ext',
 				local.render = render;
 				disp.setDisposable(local);
 				local.vg = vgcanvas(column.width, canvasHeight);
-				local.columnUi = wrapper(el.id, ws);
+				local.columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 				local.columnUi.$samplePlot.append(local.vg.element());
 			}
 
@@ -240,7 +241,7 @@ define(['underscore_ext',
 							ws: ws,
 							derivedVars: ['gene', 'effect', 'dna_vaf', 'rna_vaf', 'amino_acid']
 						};
-						columnUi = wrapper(el.id, ws);
+						columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 						columnUi.setPlotted();
 						mutationVector.show(el.id, {
 							vg: vg,
