@@ -1,4 +1,5 @@
-define(["highcharts_exporting"], function (Highcharts) {
+/*global define: true*/
+define(['highcharts', 'highcharts_exporting'], function (Highcharts) {
   'use strict';
 
   function hcLabelRender(){
@@ -7,9 +8,9 @@ define(["highcharts_exporting"], function (Highcharts) {
     var lastAppended = 0;
     var lastSpace = -1;
     for (var i = 0; i < s.length; i++) {
-      if (s.charAt(i) == ' ') lastSpace = i;
+      if (s.charAt(i) === ' ') { lastSpace = i; }
       if (i - lastAppended > 20) {
-        if (lastSpace == -1) lastSpace = i;
+        if (lastSpace === -1) { lastSpace = i; }
         r += s.substring(lastAppended, lastSpace);
         lastAppended = lastSpace;
         lastSpace = -1;
@@ -56,7 +57,7 @@ define(["highcharts_exporting"], function (Highcharts) {
     tooltip:{
       hideDelay:0
     }
-  }
+  };
 
   function columnChartOptions (chartOptions, categories, chartCategoryLabels, xAxisTitle, Y, yIsCategorical, showLegend){
      // Y data column chart setup
@@ -84,7 +85,7 @@ define(["highcharts_exporting"], function (Highcharts) {
     var Y_in_Title= Y.length >50? Y.slice(0,50)+"...":Y;
     chartOptions.title = {
       text: yAxisTitle+" of "+ Y_in_Title + ((xAxisTitle==="")? "" : " by "+xAxisTitle)
-    }
+    };
     chartOptions.xAxis={
       title:{
         text:xAxisTitle,
@@ -119,21 +120,21 @@ define(["highcharts_exporting"], function (Highcharts) {
       if (xAxisTitle === ""){
         chartOptions.tooltip= {
           formatter: function () {
-            return Y+ ' '+ categories[ this.point.x]+': <b>'+ this.point.y+'%</b>'
+            return Y+ ' '+ categories[ this.point.x]+': <b>'+ this.point.y+'%</b>';
           },
           hideDelay:0
-        }
+        };
       } else {
         chartOptions.tooltip= {
           headerFormat: xAxisTitle + ' = {point.key}<br>',
           pointFormat: Y+' {series.name}: <b>{point.y}%</b>',
           hideDelay:0
-        }
+        };
       }
     } else {
       chartOptions.tooltip = {
         hideDelay:0
-      }
+      };
     }
 
     if (categories.length>15){
@@ -144,7 +145,7 @@ define(["highcharts_exporting"], function (Highcharts) {
     if (yIsCategorical){
       chartOptions.yAxis.labels ={
         format: '{value} %'
-      }
+      };
     }
     return chartOptions;
   }
@@ -216,11 +217,11 @@ define(["highcharts_exporting"], function (Highcharts) {
         seriesOptions.dataLabels = {
           enabled: true,
           format: '{point.y} %'
-        }
+        };
       } else {
         seriesOptions.dataLabels = {
           enabled: true
-        }
+        };
       }
     }
 
