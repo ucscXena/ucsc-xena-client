@@ -639,7 +639,9 @@ define(['underscore_ext',
 					mousing(ev);
 				}); // TODO free this somewhere, maybe by moving it to columnUi.js
 			}
-			drawLegend(metadata, settings, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryBreak);
+			// XXX Merging column & metadata so we get both dataType and type. The
+			// type, dataSubType, dataType thing needs to be fixed.
+			drawLegend(_.extend({}, column, metadata), settings, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryBreak);
 			renderHeatmap({
 				vg: vg,
 				height: ws.height,
