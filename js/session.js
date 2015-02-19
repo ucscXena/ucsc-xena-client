@@ -64,10 +64,10 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 	function sessionStorageInitialize() {
 		var defaultHosts = [
 				"https://genome-cancer.ucsc.edu:443/proj/public/xena",
-				"http://localhost:7222"
+				"https://local.xena.ucsc.edu:7223"
 			],
 			defaultActive =["https://genome-cancer.ucsc.edu:443/proj/public/xena"],
-			defaultLocal = "http://localhost:7222",
+			defaultLocal = "https://local.xena.ucsc.edu:7223",
 			defaultState = {
 				activeHosts: defaultActive,
 				allHosts: defaultHosts,

@@ -62,7 +62,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 			prod = (host.indexOf('genome-cancer.ucsc.edu') === 0),
 			defproto = prod ? 'https://' : 'http://',
 			proto = tokens[1] || (prod ? 'https://' : 'http://'),
-			defport = (prod ? '443' : '7222'),
+			defport = (prod ? '443' : '7223'),
 			port = tokens[4] || defport,
 			path = tokens[5] || '',
 			url;
