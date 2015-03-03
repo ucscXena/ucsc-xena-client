@@ -4,7 +4,6 @@
 	"unused": "vars",
 	"strict": true,
 	"eqeqeq": true,
-	"es5": true,
 	"forin": true,
 	"immed": true,
 	"latedef": true,
