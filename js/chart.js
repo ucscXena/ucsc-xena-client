@@ -59,10 +59,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 		update.apply(this, updateArgs);
 
 		//zoom and pan instructions
-		rightContainer.appendChild(document.createElement("br"));
-		rightContainer.appendChild(document.createElement("br"));
-		rightContainer.appendChild(document.createTextNode("Click & drag to zoom; press SHIFT at the same time to pan."));
-
+		rightContainer.appendChild(dom_helper.elt("section", "Click & drag to zoom; add SHIFT to pan."));
 
 		function setStorage(state) {
 			sessionStorage.xena = JSON.stringify(state);
