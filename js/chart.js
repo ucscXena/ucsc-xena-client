@@ -1,7 +1,7 @@
 /*global define: false, document: false */
 define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscore_ext', 'rx', 'highcharts_exporting', 'highcharts_more'], function (xenaQuery, dom_helper, Highcharts, highcharts_helper, _, Rx) {
-		'use strict';
-		return function (root, cursor, sessionStorage) {
+	'use strict';
+	return function (root, cursor, sessionStorage) {
 		var div,
 			leftContainer, rightContainer, controlContainer,
 			xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
