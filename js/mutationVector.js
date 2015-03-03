@@ -1,69 +1,71 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery', 'lib/underscore'
+define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery', 'lib/underscore'
 	// non-object dependencies
-	], function (crosshairs, linkTo, tooltip, util, vgcanvas, d3, $, _) {
+	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _) {
 	'use strict';
 
 	var impactMax = 4,
-		unknownEffect = 3,
+		unknownEffect = 0,
 		highlightRgba = 'rgba(0, 0, 0, 1)',
 		impact = {
-			stop_gained: 2,
-			splice_acceptor_variant: 2,
-			splice_donor_variant: 2,
-			Splice_Site: 2,
-			frameshift_variant: 2,
-			Frame_Shift_Del: 2,
-			Frame_Shift_Ins: 2,
-			splice_region_variant: 2,
-			Nonsense_Mutation: 2,
+			Nonsense_Mutation: 3,
+			frameshift_variant: 3,
+			stop_gained: 3,
+			splice_acceptor_variant: 3,
+			splice_donor_variant: 3,
+			Splice_Site: 3,
+			splice_region_variant: 3,
+			Frame_Shift_Del: 3,
+			Frame_Shift_Ins: 3,
 
-			missense_variant: 1,
-			missense: 1,
-			Missense_Mutation: 1,
-			non_coding_exon_variant: 1,
-			exon_variant: 1,
-			RNA: 1,
-			Indel: 1,
-			start_lost: 1,
-			start_gained: 1,
-			De_novo_Start_OutOfFrame: 1,
-			Translation_Start_Site: 1,
-			De_novo_Start_InFrame: 1,
-			stop_lost: 1,
-			Nonstop_Mutation: 1,
-			initiator_codon_variant: 1,
-			"5_prime_UTR_premature_start_codon_gain_variant": 1,
-			disruptive_inframe_deletion: 1,
-			inframe_deletion: 1,
-			inframe_insertion: 1,
-			In_Frame_Del: 1,
-			In_Frame_Ins: 1,
+			missense: 2,
+			non_coding_exon_variant: 2,
+			missense_variant: 2,
+			Missense_Mutation: 2,
+			exon_variant: 2,
+			RNA: 2,
+			Indel: 2,//
+			start_lost: 2,
+			start_gained: 2,
+			De_novo_Start_OutOfFrame: 2,
+			Translation_Start_Site: 2,
+			De_novo_Start_InFrame: 2,
+			stop_lost: 2,
+			Nonstop_Mutation: 2,
+			initiator_codon_variant: 2,
+			"5_prime_UTR_premature_start_codon_gain_variant": 2,
+			disruptive_inframe_deletion: 2,
+			inframe_deletion: 2,
+			inframe_insertion: 2,
+			In_Frame_Del: 2,
+			In_Frame_Ins: 2,
 
-			"5_prime_UTR_variant": 0,
-			"3_prime_UTR_variant": 0,
-			"5'Flank": 0,
-			"3'Flank": 0,
-			"3'UTR": 0,
-			"5'UTR": 0,
-			synonymous_variant: 0,
-			Silent: 0,
-			stop_retained_variant: 0,
-			upstream_gene_variant: 0,
-			downstream_gene_variant: 0,
-			intron_variant: 0,
-			Intron: 0,
-			intergenic_region: 0,
-			IGR: 0
+			synonymous_variant: 1,
+			"5_prime_UTR_variant": 1,
+			"3_prime_UTR_variant": 1,
+			"5'Flank": 1,
+			"3'Flank": 1,
+			"3'UTR": 1,
+			"5'UTR": 1,
+			Silent: 1,
+			stop_retained_variant: 1,
+			upstream_gene_variant: 1,
+			downstream_gene_variant: 1,
+			intron_variant: 1,
+			Intron: 1,
+			intergenic_region: 1,
+			IGR: 1,
+
+			"others or unannotated":0
 		},
 		colors = {
 			category_25: [
+				{r: 255, g: 127, b: 14, a: 1},  // orange #ff7f0e
 				{r: 44, g: 160, b: 44, a: 1},  // green #2ca02c
 				{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
-				{r: 214, g: 39, b: 40, a: 1},  // red #d62728
-				{r: 255, g: 127, b: 14, a: 1}  // orange #ff7f0e
+				{r: 214, g: 39, b: 40, a: 1}  // red #d62728
 			],
 			af: [
 				{r: 228, g: 26, b: 28, a: 0},
@@ -71,11 +73,16 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				{r: 228, g: 26, b: 28, a: 1}
 			]
 		},
+		refGeneInfo = {},
 		clone = _.clone,
 		each = _.each,
 		filter = _.filter,
+		find = _.find,
+		map = _.map,
 		reduce = _.reduce,
 		sortBy = _.sortBy,
+		toNumber = _.toNumber,
+		uniqueId = _.uniqueId,
 		widgets = {},
 		aWidget = {
 
@@ -191,8 +198,8 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 					// TODO this is slow mousing when a node is involved
 					this.highlight(node);
 					pos = node.data.chr + ':' +
-						util.addCommas(node.data.start) +
-						'-' + util.addCommas(node.data.end);
+						util.addCommas(node.data.start) + '-' +
+						util.addCommas(node.data.end);
 					dnaAf = this.formatAf(node.data.dna_vaf);
 					rnaAf = this.formatAf(node.data.rna_vaf);
 					rows = [
@@ -229,8 +236,6 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				if (this.feature === 'impact') {
 					imp = impact[val.effect];
 					c = colors[this.color][imp];
-				//} else if (this.feature === 'dataset') {
-				//	c = colors.dataset[val.dataset];
 				} else if (_.isUndefined(val[this.feature])) { // _VAF with NA value
 					c = colors.af[0];
 				} else {  // _VAF, but not NA
@@ -302,7 +307,7 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				var myColors,
 					c,
 					rgba,
-					labels,
+					labels=[[],[],[],[]],
 					unknownEffects,
 					align,
 					topBorderIndex;
@@ -310,19 +315,10 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 					myColors = _.map(colors[this.color], function (c) {
 						return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
 					});
-					labels = [
-						'synonymous, UTR, ...',
-						'missense, non-coding, inframe indel, ...',
-						'nonsense, frameshift, ...',
-						'unknown effect'
-					];
-					unknownEffects = filter(impact, function (key, val) {
-						return impact[val] === unknownEffect;
-					});
-					if (unknownEffects.length === 0) {
-						myColors.pop();
-						labels.pop();
+					for (var key in impact){
+						labels[impact[key]].push(key);
 					}
+					labels = labels.map(function(list){return list.join(", ");});
 					align = 'left';
 				} else { // feature is one of allele frequencies
 					c = colors[this.color][2];
@@ -342,6 +338,7 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 			},
 
 			render: function () {
+				var self = this;
 				this.pixPerRow = (this.height - (this.sparsePad * 2))  / this.values.length;
 				this.canvasHeight = this.height; // TODO init elsewhere
 				this.d2 = this.vg.context();
@@ -384,6 +381,7 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 			}
 		};
 
+
 	function create(id, options) {
 		var w = Object.create(aWidget);
 		w.id = id;
@@ -408,9 +406,9 @@ define(['crosshairs', 'linkTo', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery
 				mut = _.max(row, function (mut) { return impact[mut.effect]; });
 				weight = impactMax - impact[mut.effect];
 				refGeneInfo = refGene[mut.gene];
-				rightness = (refGeneInfo.strand === '+') ?
-					mut.start - refGeneInfo.txStart :
-					refGeneInfo.txStart - mut.start;
+				rightness = (refGeneInfo.strand === '+')
+					? mut.start - refGeneInfo.txStart
+					: refGeneInfo.txStart - mut.start;
 				return (weight * chrEnd) + rightness;
 			} else {
 				return (impactMax * chrEnd) + chrEnd + 1; // force mutation-less rows to the end
