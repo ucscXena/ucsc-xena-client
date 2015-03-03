@@ -501,13 +501,13 @@ define(['underscore_ext',
 		}
 	}
 
-	function drawLegend(metadata, settings, columnUi, data, fields, codes, color_scale, categoryBreak) {
+	function drawLegend(metadata, settings, columnUi, data, fields, codes, color_scale) {
 		var c,
 			ellipsis = '',
 			align = 'center',
 			labels = color_scale[0] ? color_scale[0].domain() : [],
 			colors = color_scale[0] ? _.map(labels, color_scale[0]) : [],
-			categoryLength = categoryBreak;
+			categoryLength = 19;
 
 		if (data.length === 0) { // no features to draw
 			return;
@@ -535,9 +535,6 @@ define(['underscore_ext',
 
 		if (metadata.dataType === 'clinicalMatrix') { // XXX can we use domain() for categorical?
 			if (codes[fields[0]]) { // category
-				if (codes[fields[0]].length > categoryBreak) {
-					categoryLength = 19;
-				}
 				c = categoryLegend(data[0], color_scale[0], codes[fields[0]]);
 				if (c.colors.length > categoryLength) {
 					ellipsis = '...';
@@ -641,7 +638,7 @@ define(['underscore_ext',
 			}
 			// XXX Merging column & metadata so we get both dataType and type. The
 			// type, dataSubType, dataType thing needs to be fixed.
-			drawLegend(_.extend({}, column, metadata), settings, columnUi, heatmapData, fields, codes, colors, heatmapColors.categoryBreak);
+			drawLegend(_.extend({}, column, metadata), settings, columnUi, heatmapData, fields, codes, colors);
 			renderHeatmap({
 				vg: vg,
 				height: ws.height,

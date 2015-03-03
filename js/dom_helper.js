@@ -72,6 +72,13 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 		return JSON.parse(JSON.stringify(result));
 	}
 
+	function JSONToqueryString(obj){
+    var qString = Object.keys(obj).map(function(k) {
+    		return encodeURIComponent(k) + '=' + encodeURIComponent(obj[k]);
+  		}).join('&');
+		return qString;
+  }
+
 	function updataDOM_xenaDataSet_sampleN(DOM_id, host, dataset) {
 		xenaQuery.dataset_samples(host, dataset).subscribe(function (s) {
 			var tag = "result";
@@ -126,6 +133,7 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 		setTableCellValue: setTableCellValue,
 		updataDOM_xenaDataSet_sampleN: updataDOM_xenaDataSet_sampleN,
 		updateDOM_xenaCohort_sampleN: updateDOM_xenaCohort_sampleN,
-		queryStringToJSON: queryStringToJSON
+		queryStringToJSON: queryStringToJSON,
+		JSONToqueryString: JSONToqueryString
 	};
 });

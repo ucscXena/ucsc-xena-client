@@ -1,8 +1,7 @@
 /*global define: false, document: false */
 define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscore_ext', 'rx', 'highcharts_exporting', 'highcharts_more'], function (xenaQuery, dom_helper, Highcharts, highcharts_helper, _, Rx) {
-	'use strict';
-	return function (root, cursor, sessionStorage) {
-
+		'use strict';
+		return function (root, cursor, sessionStorage) {
 		var div,
 			leftContainer, rightContainer, controlContainer,
 			xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
@@ -11,6 +10,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 			updateArgs;
 
 		root.setAttribute("id", "chartRoot");
+		root.style.height =window.innerHeight+'px';  /// best to do with css, but don't how to set the chart to full window height in css
 
 		// left panel
 		leftContainer = document.createElement("div");
@@ -44,8 +44,11 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 		controlContainer = document.createElement("div");
 		controlContainer.setAttribute("id", "controlContainer");
 		rightContainer.appendChild(controlContainer);
+		// whisker is 1, 2, 3 SD
+		controlContainer.appendChild(buildSDDropdown());
 		// normalization selection
 		controlContainer.appendChild(buildNormalizationDropdown());
+
 
 		// x axis selector
 		div = dom_helper.elt("div", "Variable ",
@@ -53,14 +56,56 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 		div.setAttribute("id", "X");
 		rightContainer.appendChild(div);
 
-
 		update.apply(this, updateArgs);
+
+		//zoom and pan instructions
+		rightContainer.appendChild(document.createElement("br"));
+		rightContainer.appendChild(document.createElement("br"));
+		rightContainer.appendChild(document.createTextNode("Click & drag to zoom; press SHIFT at the same time to pan."));
+
 
 		function setStorage(state) {
 			sessionStorage.xena = JSON.stringify(state);
 			cursor.update(function (s) {
 				return _.assoc(s, 'chartState', state.chartState);
 			});
+		}
+
+		function buildSDDropdown() {
+			var dropDownDiv, option,
+				dropDown = [{
+					"value": 1,
+					"text": "1 standard deviation"
+				}, {
+					"value": 2,
+					"text": "2 standard deviation"
+				}, {
+					"value": 3,
+					"text": "3 standard deviation"
+				}],
+				node = document.createElement("span");
+
+			node.setAttribute("id", "sdDropDown");
+			dropDownDiv = document.createElement("select");
+			dropDownDiv.setAttribute("id", "sd");
+			dropDownDiv.setAttribute("class", "dropdown-style");
+
+			dropDown.forEach(function (obj) {
+				option = document.createElement('option');
+				option.value = obj.value;
+				option.textContent = obj.text;
+				dropDownDiv.appendChild(option);
+			});
+
+			dropDownDiv.selectedIndex = 0;
+
+			dropDownDiv.addEventListener('change', function () {
+				update.apply(this, updateArgs);
+			});
+
+			node.appendChild(document.createTextNode(" Whisker "));
+			node.appendChild(dropDownDiv);
+			return node;
 		}
 
 		function buildNormalizationDropdown() {
@@ -81,7 +126,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 						"index": 2
 					} //selected sample level
 				],
-				node = document.createElement("div");
+				node = document.createElement("span");
 
 			node.setAttribute("id", "normDropDown");
 			dropDownDiv = document.createElement("select");
@@ -104,7 +149,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 				update.apply(this, updateArgs);
 			});
 
-			node.appendChild(document.createTextNode("Normalization "));
+			node.appendChild(document.createTextNode(" Normalization "));
 			node.appendChild(dropDownDiv);
 			return node;
 		}
@@ -125,7 +170,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 			var div = document.createElement("select"),
 				option, i, column, storedColumn,
 				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-				column_rendering, columns;
+			        column_rendering, columns;
 
 			if (xenaState) {
 				columns = xenaState.column_order;
@@ -175,16 +220,40 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 			}
 
 			div.addEventListener('change', function () {
-				/*
-				if (selectorID ==="Yaxis"){
-				  checkBoxDefault.apply(this);
-				}
-				*/
 				update.apply(this, updateArgs);
 			});
 			return div;
 		}
 
+		function checkBoxDefault() {
+			var dropDownDiv = document.getElementById("ynormalization"),
+				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
+				dropdown = document.getElementById("Yaxis"),
+				column = dropdown.options[dropdown.selectedIndex].value;
+
+			//using xena heatmap default to set chart normalization default
+			if (xenaState && xenaState.column_rendering[column].colnormalization) {
+				dropDownDiv.selectedIndex = 1;
+			} else {
+				dropDownDiv.selectedIndex = 0;
+			}
+		}
+
+		// obsolete function, for test setting colnormalization
+		function setXenaColNormalizationState() {
+			var dropDownDiv = document.getElementById("ynormalization"),
+				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
+				dropdown = document.getElementById("Yaxis"),
+				column = dropdown.options[dropdown.selectedIndex].value,
+				colNormalization = dropDownDiv.options[dropDownDiv.selectedIndex].value;
+
+			if (colNormalization === "none") {
+				xenaState.column_rendering[column].colnormalization = false;
+			} else {
+				xenaState.column_rendering[column].colnormalization = true;
+			}
+			setStorage(xenaState);
+		}
 
 		function normalizationUIVisibility(visible) {
 			var dropDown = document.getElementById("normDropDown");
@@ -204,7 +273,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 			document.getElementById("myChart").innerHTML = "Querying Xena ...";
 			normalizationUIVisibility(false);
 
-			var dropdown, normUI, //checkbox,
+			var dropdown, normUI, sdDropDown,
 				xcolumn, ycolumn,
 				xfields, yfields,
 				xlabel, ylabel,
@@ -218,6 +287,9 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 			dropdown = document.getElementById("Yaxis");
 			ycolumn = dropdown.options[dropdown.selectedIndex].value;
 			normUI = document.getElementById("ynormalization");
+			sdDropDown = document.getElementById("sdDropDown");
+
+
 
 			// save state cohort, xcolumn, ycolumn
 			var xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined;
@@ -289,9 +361,9 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 					xdata,
 					ycodemap = x[2],
 					ydata,
-					yIsCategorical,
+					yIsCategorical, xIsCategorical, xfield,
 					r,
-					offsets,
+				  offsets,
 					yNormalization;
 
 				if (xcolumn !== "none") {
@@ -326,8 +398,19 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 					return;
 				}
 
-				// set y axis normalization UI
+
 				yIsCategorical = ycodemap[yfields[0]] ? true : false;
+				xfield = xfields ? xfields[0] : undefined;
+				xIsCategorical = xcodemap[xfield] ? true : false;
+
+				// set sd whisker UI
+				if (xIsCategorical && !yIsCategorical) {
+					sdDropDown.style.visibility = "visible";
+				} else {
+					sdDropDown.style.visibility = "hidden";
+				}
+
+				// set y axis normalization UI
 				normalizationUIVisibility(!yIsCategorical);
 				if (yIsCategorical) {
 					yNormalization = false;
@@ -336,8 +419,6 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 				} else {
 					yNormalization = normUI.value;
 				}
-
-				var xfield = xfields ? xfields[0] : undefined;
 
 				//need to get all the samples and all the data for y
 				if (yNormalization === "cohort") {
@@ -373,7 +454,6 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 						yfield;
 
 					offsets = {};
-
 					for (i = 0; i < yfields.length; i++) {
 						yfield = yfields[i];
 						datalist = [];
@@ -474,23 +554,13 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 				xIsCategorical = xcodemap[xfield] ? true : false,
 				chartOptions = _.clone(highcharts_helper.chartOptions), // chart option
 				xAxisTitle, yAxisTitle,
-				i, k;
+				i, k,
+				numSD = document.getElementById("sd").value;
 
 			document.getElementById("myChart").innerHTML = "Generating chart ...";
 
 			chartOptions.subtitle = {
 				text: "cohort: " + cohort + " (n=" + samples.length + ")"
-			};
-			chartOptions.credits = {
-				text: "explore " + cohort,
-				href: "../datapages/?cohort=" + encodeURIComponent(cohort),
-				enabled: true,
-				position: {
-					align: 'left',
-					verticalAlign: 'top',
-					x: 20,
-					y: 20
-				}
 			};
 
 			if (xIsCategorical && !yIsCategorical) { // x : categorical y float
@@ -549,7 +619,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 							var data = ybinnedSample[yfield][code];
 
 							average = highcharts_helper.average(data);
-							stdDev = highcharts_helper.standardDeviation(data, average);
+							stdDev = numSD * highcharts_helper.standardDeviation(data, average);
 
 							if (!isNaN(average)) {
 								dataMatrix[i][k] = parseFloat(average.toPrecision(3));
@@ -650,7 +720,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 
 				var showLegend = false;
 				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend);
+					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend)
 
 				chart = new Highcharts.Chart(chartOptions);
 
@@ -661,7 +731,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 						dataSeriese.push(parseFloat(value.toPrecision(3)));
 					} else {
 						var average = highcharts_helper.average(ybinnedSample[code]);
-						var stdDev = highcharts_helper.standardDeviation(ybinnedSample[code], average);
+						var stdDev = numSD * highcharts_helper.standardDeviation(ybinnedSample[code], average);
 						if (!isNaN(average)) {
 							dataSeriese.push(parseFloat((average - offsets[code]).toPrecision(3)));
 						} else {
@@ -680,7 +750,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 				var seriesLabel;
 
 				if (yIsCategorical) {
-					seriesLabel = " ";
+				  seriesLabel = " ";
 				} else {
 					seriesLabel = "average";
 				}
@@ -725,7 +795,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 
 				var showLegend = true;
 				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend);
+					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend)
 
 				chart = new Highcharts.Chart(chartOptions);
 
@@ -812,8 +882,8 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 								y = y - offsets[yfield];
 								series.push({
 									name: samples[i],
-									x: parseFloat(x.toPrecision(3)),
-									y: parseFloat(y.toPrecision(3))
+									x: x,
+									y: y
 								});
 							}
 						}
@@ -841,9 +911,11 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 				errorbarShowTooltip = "Show standard deviation whiskers",
 				errorbarHideTooltip = "Hide standard deviation whiskers",
 				datalabelShow = "Show Y data labels",
-				datalabelHide = "Hide Y data labels";
+				datalabelHide = "Hide Y data labels",
+				dropDown = document.getElementById("sdDropDown");
 
 			div.appendChild(document.createElement("br"));
+
 			//showHideAllbutton
 			seriesButton = document.createElement("button");
 			seriesButton.setAttribute("class", "showHideButton");
@@ -899,6 +971,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 						});
 						errorbarButton.innerHTML = errorbarShow;
 						errorbarButton.setAttribute("title", errorbarShowTooltip);
+						dropDown.style.visibility = "hidden";
 					} else { /// show
 						var i, series;
 						for (i = 0; i < chart.series.length; i++) {
@@ -909,6 +982,7 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 						}
 						errorbarButton.innerHTML = errorbarHide;
 						errorbarButton.setAttribute("title", errorbarHideTooltip);
+						dropDown.style.visibility = "visible";
 					}
 					chart.redraw();
 				});
@@ -916,49 +990,51 @@ define(['xenaQuery', 'dom_helper', 'highcharts', 'highcharts_helper', 'underscor
 			}
 
 			//showHideDataLabel button
-			datalabelButton = document.createElement("button");
-			datalabelButton.setAttribute("class", "showHideButton");
-			if (chart.series.some(function (series) {
-					if (series.type !== 'errorbar' && series.options.dataLabels.enabled) {
-						return true;
-					}
-				})) {
-				datalabelButton.innerHTML = datalabelHide;
-			} else {
-				datalabelButton.innerHTML = datalabelShow;
-			}
-			datalabelButton.addEventListener("click", function () {
-				if (datalabelButton.innerHTML === datalabelShow) {
-					chart.series.forEach(function (series) {
-						if (series.type !== 'errorbar') {
-							series.update({
-								dataLabels: {
-									enabled: true
-								}
-							}, false);
-							if (yIsCategorical) {
-								series.update({
-									dataLabels: {
-										format: '{point.y} %'
-									}
-								}, false);
-							}
+			if (xIsCategorical) {
+				datalabelButton = document.createElement("button");
+				datalabelButton.setAttribute("class", "showHideButton");
+				if (chart.series.some(function (series) {
+						if (series.type !== 'errorbar' && series.options.dataLabels.enabled) {
+							return true;
 						}
-					});
+					})) {
 					datalabelButton.innerHTML = datalabelHide;
 				} else {
-					chart.series.forEach(function (series) {
-						series.update({
-							dataLabels: {
-								enabled: false
-							}
-						}, false);
-					});
 					datalabelButton.innerHTML = datalabelShow;
 				}
-				chart.redraw();
-			});
-			div.appendChild(datalabelButton);
+				datalabelButton.addEventListener("click", function () {
+					if (datalabelButton.innerHTML === datalabelShow) {
+						chart.series.forEach(function (series) {
+							if (series.type !== 'errorbar') {
+								series.update({
+									dataLabels: {
+										enabled: true
+									}
+								}, false);
+								if (yIsCategorical) {
+									series.update({
+										dataLabels: {
+											format: '{point.y} %'
+										}
+									}, false);
+								}
+							}
+						});
+						datalabelButton.innerHTML = datalabelHide;
+					} else {
+						chart.series.forEach(function (series) {
+							series.update({
+								dataLabels: {
+									enabled: false
+								}
+							}, false);
+						});
+						datalabelButton.innerHTML = datalabelShow;
+					}
+					chart.redraw();
+				});
+				div.appendChild(datalabelButton);
+			}
 		}
 	};
 });

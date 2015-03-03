@@ -1,7 +1,8 @@
 /*jslint browser:true, nomen: true*/
 /*global define: false */
 
-define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaAdmin"], function ($, dom_helper, xenaQuery, session, _, Rx, xenaAdmin) {
+define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaAdmin"],
+	function (dom_helper, xenaQuery, session, _, Rx, xenaAdmin) {
 	'use strict';
 
 	var allHosts, /* hosts is the variable holds all hosts*/
@@ -34,7 +35,7 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 	function checkGenomicDataset(hosts, cohort, goodStatus) {
 		return xenaQuery.dataset_list(hosts, cohort).map(function (s) {
 			return s.some(function (r) {
-				if (r.hasOwnProperty("datasets")) {
+				if (r.datasets) {
 					return r.datasets.some(function (dataset) {
 						var format = dataset.type,
 								status = dataset.status;
@@ -57,16 +58,18 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 	}
 
 
-	function deleteDataButton (host, status, datasetname){
-		var goodStatus ="loaded";
-		if((host ===localHost) && ((status === goodStatus) || (status === "error"))) {
+	function deleteDataButton (dataset){
+		var name = JSON.parse(dataset.dsID).name,
+				host= JSON.parse(dataset.dsID).host;
+
+		if((host ===localHost) && ((dataset.status === session.GOODSTATUS ) || (dataset.status === "error"))) {
 			var deletebutton = document.createElement("BUTTON");
 			deletebutton.setAttribute("class","vizbutton");
 		  deletebutton.appendChild(document.createTextNode("Remove"));
 			deletebutton.addEventListener("click", function() {
-				var r = confirm("Delete \""+datasetname + "\" from your local xena.");
+				var r = confirm("Delete \""+name + "\" from your local xena.");
 				if (r === true) {
-					xenaAdmin.delete(localHost, datasetname).subscribe();
+					xenaAdmin.delete(localHost, name).subscribe();
 				  location.reload(); // reload current page
 				}
 		  });
@@ -74,8 +77,9 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		}
 	}
 
+
 	function reloadDataButton (host, status, datasetname){
-		var goodStatus ="loaded";
+		var goodStatus =session.GOODSTATUS;
 		if((host ===localHost) && ((status === goodStatus) || (status === "error"))) {
 			var reloadbutton = document.createElement("BUTTON");
 			reloadbutton.setAttribute("class","vizbutton");
@@ -93,9 +97,10 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		}
 	}
 
+
 	function cohortHeatmapButton(cohort, hosts, vizbuttonParent) {
 		var vizbutton,
-				goodStatus = "loaded";
+				goodStatus = session.GOODSTATUS;
 
   	ifCohortExistDo(cohort, _.intersection(_.intersection(activeHosts, hosts), userHosts), goodStatus, function(){
 			vizbutton = document.createElement("BUTTON");
@@ -109,6 +114,7 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		});
 	}
 
+
 	// the short COHORT section
 	function eachCohort(cohortName, hosts, mode, node) {
 		var nodeTitle, hostNode, vizbutton, vizbuttonParent;
@@ -117,6 +123,11 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 			//cohort title
 			nodeTitle = dom_helper.hrefLink(cohortName, "?cohort=" + encodeURIComponent(cohortName));
 			vizbuttonParent =dom_helper.elt("h4", dom_helper.elt("multiple",nodeTitle));
+
+			//for single active host but not selected by user senario
+			if ((hosts.length===1) &&  (userHosts.indexOf(hosts[0])===-1)){
+				nodeTitle.style.color="gray";
+			}
 			node.appendChild(vizbuttonParent);
 			cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), vizbuttonParent);
 		}
@@ -186,11 +197,27 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 			return;
 		}
 
+		var title = dom_helper.elt("h2", "Cohorts"),
+			node;
+
+		if (!hosts.some(function(host){
+			if (_.intersection(activeHosts, userHosts).indexOf(host) !==-1) {return true;}
+			else {return false;}
+		})){
+			title.style.color="gray";
+		}
+		node = dom_helper.sectionNode("cohort");
+		rootNode.appendChild(node);
+		node.appendChild(title);
+		node = document.createElement("div");
+		rootNode.appendChild(node);
+		rootNode.appendChild(document.createElement("div"));
+		rootNode.appendChild(document.createElement("br"));
+
 		var cohortC = [];
 		hosts.forEach(function (host) {
 			xenaQuery.all_cohorts(host).subscribe(function (s) {
-				var mode, node;
-				console.log("here",host, s);
+				var mode, sectionNode;
 				s.forEach(function (cohort) {
 					if (cohortC.indexOf(cohort) !== -1) {
 						return;
@@ -199,16 +226,9 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 					checkGenomicDataset(hosts, cohort).subscribe(function (s) {
 						if (s) {
 							mode = "multiple";
-							node = dom_helper.sectionNode("cohort");
-							eachCohort(cohort, hosts, mode, node);
-							rootNode.appendChild(node);
-							/*
-							$('#dataPagesMain section').detach().sort(function (a, b) {
-								var txta = $(a).find('multiple').text(),
-									txtb = $(b).find('multiple').text();
-								return cmpCohort(txta, txtb);
-							}).appendTo($('#dataPagesMain'));
-*/
+							sectionNode = dom_helper.sectionNode("cohort");
+							eachCohort(cohort, hosts, mode, sectionNode);
+							node.appendChild(sectionNode);
 						}
 					});
 				});
@@ -223,12 +243,21 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		var mode = "single",
 				tmpNode,
 		    node = dom_helper.sectionNode("cohort"),
-		    nodeTitle, vizbuttonParent,
-		    vizbutton;
+		    vizbuttonParent;
+
+		rootNode.appendChild(node);
+
+		//title
+		vizbuttonParent = dom_helper.elt("h2", "cohort: "+cohort);
+		node.appendChild(vizbuttonParent);
+		// viz button
+		cohortHeatmapButton(cohort,
+			_.intersection(_.intersection(activeHosts, userHosts), metadataFilterHosts),
+			vizbuttonParent);
+
 
 		ifCohortExistDo (cohortName, hosts, undefined, function() {
 			eachCohort(cohortName, hosts, mode, node);
-			rootNode.appendChild(node);
 
 			xenaQuery.dataset_list(hosts, cohortName).subscribe(
 				function (s) {
@@ -238,7 +267,8 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 						dataDescription = {},
 						dataHost = {},
 						dataName = {},
-						dataStatus ={};
+						dataStatus ={},
+						dataCollection={};
 
 					s.forEach(function (r) {
 						var host = r.server,
@@ -247,7 +277,7 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 
 							var type = dataset.dataSubType,
 								format = dataset.type,
-								label = dataset.label,
+								label = dataset.label? dataset.label: dataset.name,
 								description = dataset.description,
 								name = dataset.name,
 								status = dataset.status,
@@ -257,7 +287,7 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 								if (!label) {
 									label = name;
 								}
-								if (!(dataType.hasOwnProperty(type))) {
+								if (!(dataType[type])) {
 									dataType[type] = [];
 								}
 								dataType[type].push(fullname);
@@ -266,6 +296,7 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 								dataHost[fullname] = host;
 								dataName[fullname] = name;
 								dataStatus[fullname] = status;
+								dataCollection[fullname]= dataset;
 							}
 						});
 					});
@@ -283,12 +314,17 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 						}
 						nodeDataType.appendChild(dom_helper.elt("header", displayType));
 						listNode = dom_helper.elt("ul");
-						dataType[type].sort().forEach(function (fullname) {
+
+						dataType[type].map(function(fullname){
+							return [ dataLabel[fullname],fullname];
+						}).sort().forEach(function (item){
 							// name
-							var datasetNode = dom_helper.elt("li", dom_helper.hrefLink(dataLabel[fullname], "?dataset=" + dataName[fullname] + "&host=" + dataHost[fullname]));
+							var label = item[0],
+								fullname = item[1],
+								datasetNode = dom_helper.elt("li", dom_helper.hrefLink(dataLabel[fullname], "?dataset=" + dataName[fullname] + "&host=" + dataHost[fullname]));
 
 							// samples: N
-							if (dataStatus[fullname] === "loaded") {
+							if (dataStatus[fullname] === session.GOODSTATUS) {
 								datasetNode.appendChild(dom_helper.valueNode(fullname + "sampleN"));
 								xenaQuery.dataset_samples(dataHost[fullname], dataName[fullname]).subscribe(function (s) {
 									document.getElementById(fullname + "sampleN").
@@ -309,7 +345,7 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 
 
 							// delete and reload button
-							var deletebutton = deleteDataButton (dataHost[fullname], dataStatus[fullname], dataName[fullname]);
+							var deletebutton = deleteDataButton (dataCollection[fullname]);
 							if(deletebutton) {
 								datasetNode.appendChild(deletebutton);
 							}
@@ -353,7 +389,7 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 	}
 
 	// build single DATASET page
-	function datasetPage(dataset, host) {
+	function datasetPage(dataset, host, baseNode) {
 		// collection
 		var name = dataset.name,
 				label = dataset.label || name,
@@ -373,9 +409,8 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 				urls,
 				status = dataset.status,
 				probeMap = dataset.probeMap,
-				goodStatus = "loaded",
-				vizbutton = document.createElement("BUTTON"),
-				nodeTitle, vizbuttonParent, hostNode, tmpNode;
+				goodStatus = session.GOODSTATUS,
+				nodeTitle, vizbuttonParent, hostNode, button, tmpNode;
 
 		if (description) {
 			description = dom_helper.stripScripts(description);
@@ -403,13 +438,7 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		else {
 			sectionNode.appendChild(dom_helper.elt("h2", "dataset: "+label+ " ["+status+"] "));
 		}
-
-		// delete button
-		var deletebutton = deleteDataButton (host, status, name);
-		if (deletebutton) {
-			sectionNode.appendChild(deletebutton);
-			sectionNode.appendChild(dom_helper.elt("br"));
-		}
+		sectionNode.appendChild(dom_helper.elt("br"));
 
 		// long title
 		if (longTitle) {
@@ -448,7 +477,8 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		sectionNode.appendChild(dom_helper.elt("br"));
 
 		// Downlaod
-		if (host === "https://genome-cancer.ucsc.edu/proj/public/xena") {
+
+		if (host === "https://genome-cancer.ucsc.edu:443/proj/public/xena") {
 			sectionNode.appendChild(dom_helper.elt("labelsameLength","download"));
 			var array = name.split("/"),
 					link = "https://genome-cancer.ucsc.edu/download/public/xena/" + array.slice(1, array.length).join("/");
@@ -578,39 +608,139 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 
 		xenaQuery.dataset_samples(host, name).subscribe(function (s) {
 			node.innerHTML= s.length.toLocaleString()+" samples";
-			if (node2) {
-				xenaQuery.dataset_field(host, name).subscribe(function(s){
-					node2.innerHTML = s.length.toLocaleString() +" identifiers";
-					sectionNode.replaceChild(spaceHolderNode, oldNode);
-				});
-			}
-			else {
-				sectionNode.replaceChild(spaceHolderNode, oldNode);
-			}
-		});
 
+			xenaQuery.dataset_field(host, name).subscribe(function(probes){
+				if (node2) {
+					node2.innerHTML = probes.length.toLocaleString() +" identifiers";
+				}
+				sectionNode.replaceChild(spaceHolderNode, oldNode);
+
+				spaceHolderNode.appendChild(moreDataButton(dataset));
+
+				spaceHolderNode.appendChild(allIdButton(dataset, probes));
+			});
+		});
 
 		tmpNode = dom_helper.tableCreate(11,11);
 		sectionNode.appendChild(tmpNode);
 		sectionNode.appendChild(dom_helper.elt("br"));
 
+		dataSnippets(dataset, 10, 10, tmpNode);
+
+		baseNode.appendChild(sectionNode);
+	}
+
+	function allIdButton (dataset, probes){
+		var name = JSON.parse(dataset.dsID).name,
+			host= JSON.parse(dataset.dsID).host,
+			format = dataset.type,
+			label = dataset.label? dataset.label: name,
+			newWindow, rootNode, button,
+			windowName = host+name;
+
+		if(dataset.status === session.GOODSTATUS) {
+			button = document.createElement("BUTTON");
+			button.setAttribute("class","vizbutton");
+		  button.appendChild(document.createTextNode("Show All Identifiers"));
+
+			button.addEventListener("click", function() {
+				newWindow = window.open("",windowName);
+				newWindow.document.title = label;
+				newWindow.document.body.innerHTML="";
+				rootNode= dom_helper.sectionNode("bigDataSnippet");
+				newWindow.document.body.appendChild(rootNode);
+				rootNode.appendChild(dom_helper.elt("h3","dataset: "+label));
+				newWindow.focus();
+				setTimeout(writeAllIds,50); //minor delay so that some text is shown
+				function writeAllIds(){
+					var textNode, text;
+					textNode = document.createElement("pre");
+					rootNode.appendChild(textNode);
+					text="Identifiers\n";
+					probes.forEach(function(probe){
+						text = text +probe.name+"\n";
+					});
+					textNode.innerHTML=text;
+				}
+			});
+		  return button;
+		}
+	}
+
+	function moreDataButton (dataset){
+		var name = JSON.parse(dataset.dsID).name,
+			host= JSON.parse(dataset.dsID).host,
+			format = dataset.type,
+			label = dataset.label? dataset.label: name,
+			newWindow, newNode, button;
+
+		if(dataset.status === session.GOODSTATUS) {
+			button = document.createElement("BUTTON");
+			button.setAttribute("class","vizbutton");
+		  button.appendChild(document.createTextNode("More Data Snippets"));
+
+			button.addEventListener("click", function() {
+				button.style.visibility="hidden";
+
+				xenaQuery.dataset_field(host, name).subscribe(function(s){
+					var nProbes = _.max([s.length, 10]),
+						qString,
+						qStringObj = {
+							"host": host,
+							"dataset": name,
+							"nSamples": 10,
+							"nProbes": nProbes
+						};
+
+					if (format==="mutationVector" ){
+						qStringObj.nProbes = 1000;
+					}
+					if (format==="genomicMatrix" ){
+						qStringObj.nProbes = 1000;
+					}
+					if (format === "clinicalMatrix") {
+						qStringObj.nSamples= 500;
+					}
+					qString= dom_helper.JSONToqueryString(qStringObj);
+					window.open("../datapages/?"+qString);
+					button.style.visibility="visible";
+				});
+
+			});
+		  return button;
+		}
+	}
+
+
+	function dataSnippets (dataset, nSamples, nProbes, node){
+		var table,
+			host = JSON.parse(dataset.dsID).host,
+			name = dataset.name,
+			type = dataset.type,
+			allSamples, allProbes;
+
+
 		if ((type === "genomicMatrix")  || (type ==="clinicalMatrix")) {
-			//data snippet samples (n<=10), probes (n<=10)
+			//data snippet samples, probes
 			xenaQuery.dataset_samples(host, name).subscribe(
 				function (samples) {
-					samples= samples.slice(0, 10);
-					var probes=[];
-					xenaQuery.dataset_field_examples(host, name).subscribe(function (s) {
-						s.forEach(function (probe) {
-								probes.push(probe.name);
+					allSamples = samples.length;
+					samples= samples.slice(0, nSamples);
+
+					var query = xenaQuery.dataset_field(host, name);
+
+					query.subscribe(function (s) {
+						allProbes = s.map(function (probe) {
+							return probe.name;
 						});
+						var probes = allProbes.slice(0, nProbes);
+						allProbes = allProbes.length;
 
 						xenaQuery.code_list(host, name, probes).subscribe(function(codemap){
 							//return probes by all_samples
 							var row, column,
 									dataRow, dataCol,
-									table,
-									i,j,probe,
+									i,j,probe, text,
 									firstRow, firstCol;
 
 							xenaQuery.dataset_probe_values(host, name, samples, probes).subscribe( function (s) {
@@ -626,15 +756,23 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 								row = firstCol.length;
 
 								table = dom_helper.tableCreate(row+1, column+1);
-								tmpNode.parentNode.replaceChild(table,tmpNode);
 
-								dataCol = column<10? column:9;
-								dataRow = row<10? row:9;
+								node.parentNode.replaceChild(table,node);
+
+								if (type==="genomicMatrix"){
+									dataCol = (column>=allSamples) ? column: nSamples-1;    //sample
+									dataRow = (row >=allProbes)? row: nProbes-1; //probe
+								} else if (type==="clinicalMatrix"){
+									dataCol = (column >=allProbes)? column:nProbes-1; //probe
+									dataRow = (row>=allSamples) ? row: nSamples-1; //sample
+								}
 
 								//first row -- labels
+								text ="\t";
 								for (j=1; j< dataCol+1; j++){
 									dom_helper.setTableCellValue (table, 0, j, firstRow[j-1]);
 								}
+
 								//first col
 								for (i=1; i< dataRow+1; i++){
 									dom_helper.setTableCellValue (table, i, 0, firstCol[i-1]);
@@ -642,25 +780,28 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 
 								//data cell
 								for(i = 1; i < s.length+1; i++){
-									var probe = probes[i-1];
+									var probe = probes[i-1],
+										value, code;
+
+									text = firstCol[i-1];
 									for (j=1; j< samples.length+1; j++){
 										if (type==="genomicMatrix"){
-											if ((i<dataRow+1) && (j<dataCol+1)) {
-												dom_helper.setTableCellValue (table, i, j, s[i-1][j-1]);
-											}
+											value = s[i-1][j-1];
 										} else {
-											var value = s[i-1][j-1],
-													code = undefined;
-											if (codemap[probe]) {
-												if(!isNaN(value)){
-													code = codemap[probe][value];
-												}
-											}
-											if ((j<dataRow+1) && (i<dataCol+1)) {
-												dom_helper.setTableCellValue (table, j, i, code? code:value);
+											value = s[i-1][j-1];
+										}
+										code = undefined;
+										if (codemap[probe]) {
+											if(!isNaN(value)){
+												code = codemap[probe][value];
 											}
 										}
 
+										if ((type==="genomicMatrix") && (i<dataRow+1) && (j<dataCol+1)) {
+											dom_helper.setTableCellValue (table, i, j, code? code:value);
+										} else if ((type==="clinicalMatrix") && (j<dataRow+1) && (i<dataCol+1)) {
+											dom_helper.setTableCellValue (table, j, i, code? code:value);
+										}
 									}
 								}
 								dom_helper.setTableCellValue (table, 0, 0, " ");
@@ -669,50 +810,47 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 					});
 				});
 			}
-			else if(type ==="mutationVector"){
-				xenaQuery.sparse_data_examples(host, name, 10).subscribe( function(s){
-					if (s.rows && s.rows.length>0) {
-						var i, j, key, table,
-							keys = Object.keys(s.rows[0]),
-							column = keys.length,
-							row = s.rows.length,
-							dataRow = row<10? row:9;
+		else if(type ==="mutationVector"){
+			xenaQuery.sparse_data_examples(host, name, nProbes).subscribe( function(s){
+				if (s.rows && s.rows.length>0) {
+					var i, j, key,
+						keys = Object.keys(s.rows[0]),
+						column = keys.length,
+						row = s.rows.length,
+						dataRow = (row<nProbes) ? row:nProbes-1; //recored
 
-						// put chrom chromstart chromend together to be more readable
-						keys.sort();
-						var start = keys.indexOf("chromstart"),
-							end = keys.indexOf("chromend"),
-							keysP={};
-						keys[start]="chromend";
-						keys[end]="chromstart";
+					// put chrom chromstart chromend together to be more readable
+					keys.sort();
+					var start = keys.indexOf("chromstart"),
+						end = keys.indexOf("chromend"),
+						keysP={};
+					keys[start]="chromend";
+					keys[end]="chromstart";
 
-						table = dom_helper.tableCreate(row+1, column+1);
-						tmpNode.parentNode.replaceChild(table,tmpNode);
+					table = dom_helper.tableCreate(row+1, column+1);
+					node.parentNode.replaceChild(table,node);
 
-						//first row -- labels
-						for (j=1; j<keys.length+1; j++){
-							dom_helper.setTableCellValue (table, 0, j, keys[j-1]);
-							keysP[keys[j-1]]=j;
-						}
+					//first row -- labels
+					for (j=1; j<keys.length+1; j++){
+						dom_helper.setTableCellValue (table, 0, j, keys[j-1]);
+						keysP[keys[j-1]]=j;
+					}
 
-						//data cell
-						for(i = 1; i < dataRow+1; i++){
-							for (key in s.rows[i-1]) {
-								j = keysP[key];
-								dom_helper.setTableCellValue (table, i, j, s.rows[i-1][key]);
-								//first column
-								if (key ==="sampleid"){
-									dom_helper.setTableCellValue (table, i, 0, s.rows[i-1][key]);
-								}
+					//data cell
+					for(i = 1; i < dataRow+1; i++){
+						for (key in s.rows[i-1]) {
+							j = keysP[key];
+							dom_helper.setTableCellValue (table, i, j, s.rows[i-1][key]);
+							//first column
+							if (key ==="sampleid"){
+								dom_helper.setTableCellValue (table, i, 0, s.rows[i-1][key]);
 							}
 						}
-
-						dom_helper.setTableCellValue (table, 0, 0, " ");
 					}
-				});
-
-			}
-			baseNode.appendChild(sectionNode);
+					dom_helper.setTableCellValue (table, 0, 0, " ");
+				}
+			});
+		}
 	}
 
 	// build single SAMPLE page
@@ -765,50 +903,107 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		return sideNode;
 	}
 
+	// sidebar datasets action
+	function datasetSideBar(dataset, sideNode) {
+		var host = JSON.parse(dataset.dsID).host,
+			name = dataset.name;
+
+		// delete button
+		var button = deleteDataButton (dataset);
+		if (button) {
+			sideNode.appendChild(button);
+			sideNode.appendChild(document.createElement("br"));
+		}
+	}
+
+	function bigDataSnippetPage (query_string){
+		var host = query_string.host,
+			dataset = query_string.dataset,
+			nSamples = parseFloat(query_string.nSamples),
+			nProbes = parseFloat(query_string.nProbes),
+			blockNode = dom_helper.elt("span", "If you are reading this, you need release browser SHIELD to see the data requested"),
+			rootNode = dom_helper.sectionNode("bigDataSnippet"),
+			node = document.createElement("div");
+
+		document.title= dataset;
+		document.body.appendChild(rootNode);
+		rootNode.appendChild(node);
+		node.appendChild( dom_helper.elt("h3","dataset: "+dataset));
+		node.appendChild( blockNode );
+		blockNode.style.color="red";
+
+		xenaQuery.dataset_by_name(host, dataset).subscribe(
+			function (datasets) {
+				var format =  datasets[0].type,
+					label = datasets[0].label? datasets[0].label : datasets[0].name;
+
+				document.title=label;
+				blockNode.parentNode.replaceChild(dom_helper.elt("div","Querying xena on "+ host+" ... "),blockNode);
+				dataSnippets(datasets[0], nSamples, nProbes, node);
+			}
+		);
+	}
+
+
 	//parse current url to see if it is a query string
 	// if there is no url query string, query xena find the cohorts on main server
-	var host,
-		cohort;
+	var host,dataset, cohort;
 
 	// ?host=id
-	if ((query_string.hasOwnProperty("host")) && !(query_string.hasOwnProperty("dataset"))) {
-
-		host = decodeURIComponent(query_string.host);
+	if (Object.keys(query_string).length===1 && query_string.host) {
+		host = query_string.host;
 
 		if (JSON.parse(sessionStorage.state).allHosts.indexOf(host) === -1) {
 		    return;
 		}
 
-		session.updateHostStatus(host);
-
 		// host title
-		var node=dom_helper.sectionNode("dataPagesMain");
+		var node=dom_helper.sectionNode("cohort");
 
 		var tmpNode = dom_helper.hrefLink(host + " (connecting)", "../datapages/?host=" + host);
 		tmpNode.setAttribute("id", "status" + host);
 		node.appendChild(dom_helper.elt("h2", tmpNode));
+		session.updateHostStatus(host);
+		baseNode.appendChild(node);
 
 		// cohort list
-		cohortListPage([host], node);
-		baseNode.appendChild(node);
+		cohortListPage([host], baseNode);
+
 	}
 
 	// ?dataset=id & host=id
-	else if ((query_string.dataset) && (query_string.host)) {
-		var dataset = decodeURIComponent(query_string.dataset);
-		host = decodeURIComponent(query_string.host);
+	else if (Object.keys(query_string).length===2 && query_string.host && query_string.dataset) {
+		dataset = query_string.dataset;
+		host = query_string.host;
+
+		container = dom_helper.elt("div");
+		container.setAttribute("id", "content-container");
+
+		sideNode = dom_helper.elt("div");
+		sideNode.setAttribute("id", "sidebar");
+		container.appendChild(sideNode);
+
+		//main section dataset detail page
+		mainNode = dom_helper.elt("div");
+		mainNode.setAttribute("id", "dataPagesMain");
+		container.appendChild(mainNode);
+
+		baseNode.appendChild(container);
+
 		xenaQuery.dataset_by_name(host, dataset).subscribe(
 			function (s) {
 				if (s.length) {
-					datasetPage(s[0], host);
+					//dataset sidebar
+					datasetSideBar(s[0],sideNode);
+					datasetPage(s[0], host, mainNode);
 				}
 			}
 		);
 	}
 
 	// ?sample=id&cohort=id
-	else if ((query_string.hasOwnProperty("cohort")) && (query_string.hasOwnProperty("sample"))) {
-		var sample = decodeURIComponent(query_string.sample);
+	else if ( Object.keys(query_string).length===2 && query_string.cohort && query_string.sample) {
+		var sample = query_string.sample;
 		cohort = decodeURIComponent(query_string.cohort);
 		ifCohortExistDo(cohort, activeHosts, undefined, function() {
 			samplePage(sample, cohort);
@@ -816,8 +1011,8 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 	}
 
 	// ?cohort=id
-	else if ((query_string.hasOwnProperty("cohort")) && !(query_string.hasOwnProperty("sample"))) {
-		cohort = decodeURIComponent(query_string.cohort);
+	else if (Object.keys(query_string).length ===1 && query_string.cohort) {
+		cohort = query_string.cohort;
 
 		container = dom_helper.elt("div");
 		container.setAttribute("id", "content-container");
@@ -830,14 +1025,6 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		mainNode = dom_helper.elt("div");
 		mainNode.setAttribute("id", "dataPagesMain");
 
-		//title
-		var vizbuttonParent = dom_helper.elt("h2", "cohort: "+cohort);
-		mainNode.appendChild(vizbuttonParent);
-		// viz button
-		cohortHeatmapButton(cohort,
-			_.intersection(_.intersection(activeHosts, userHosts), metadataFilterHosts),
-			vizbuttonParent);
-
 		cohortPage(cohort, _.intersection(_.intersection(activeHosts, userHosts), metadataFilterHosts), mainNode);
 		container.appendChild(mainNode);
 
@@ -845,6 +1032,12 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		baseNode.appendChild(container);
 	}
 
+	// large data snippet
+	else if (Object.keys(query_string).length ===4 && query_string.host && query_string.dataset &&
+			query_string.nSamples && query_string.nProbes) {
+		bigDataSnippetPage (query_string);
+	}
+	// cohort list
 	else {
 		container = dom_helper.elt("div");
 		container.setAttribute("id", "content-container");
@@ -856,7 +1049,6 @@ define(["jquery", "dom_helper", "xenaQuery", "session", "underscore_ext", "rx.do
 		//main section cohort list page
 		mainNode = dom_helper.elt("div");
 		mainNode.setAttribute("id", "dataPagesMain");
-		mainNode.appendChild(dom_helper.elt("h2", "Cohorts"));
 		cohortListPage(_.intersection(_.intersection(activeHosts, userHosts), metadataFilterHosts), mainNode);
 		container.appendChild(mainNode);
 

@@ -20,24 +20,6 @@ list-style:none;
 color:#ff6600;
 }
 
-#main #content-container
-{
-float: left;
-width: 100%;
-}
-
-#dataPagesMain {
-margin-top: 40px;
-width:85%;
-}
-
-#sidebar {
-float:right;
-margin-top: 40px;
-margin-right: 15px;
-width: 20%;
-}
-
 #main .tb5 {
 	border:1px solid #456879;
 	height: 22px;
@@ -127,23 +109,38 @@ font-size: 0.8em;
   overflow: hidden;
 }
 
-#dataPagesMain h2
+#main #content-container
 {
-color:#000099;
-margin-left: auto;
-margin-right: auto;
-width: 65%;
+float: left;
+width: 100%;
 }
 
-#cohort,#dataType,#dataset,#others,#description,#samples,#host,#hub
+#sidebar {
+float:right;
+margin-top: 40px;
+margin-left: auto;
+margin-right: auto;
+width: 20%;
+}
+#dataPagesMain {
+width:80%;
+}
+
+#dataset, #cohort,#dataType,#others,#description,#samples,#host,#hub
 {
 padding:15px;
 margin-left: auto;
-margin-right: auto;
-width: 65%;
+margin-right: 25px;
+width: 80%;
+}
+#bigDataSnippet
+{
+  width:95%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-#dataset h2,#hub h2
+#dataset h2,#hub h2,#cohort h2
 {
 color:#000099;
 margin-top: 20px;

@@ -35,19 +35,6 @@ define(["lib/d3",
 			"#c7c7c7"  // light grey
 		],
 
-		// d3_category20, without grey or pastels
-		categoryLess = [
-			"#1f77b4", // dark blue
-			"#2ca02c", // dark green
-			"#d62728", // dark red
-			"#ff7f0e", // dark orange
-			"#9467bd", // dark purple
-			"#8c564b", // dark brown
-			"#e377c2", // dark pink
-			"#bcbd22", // dark mustard
-			"#17becf"  // dark blue-green
-		],
-
 		// special category of white and purple
 		codedWhite = [
 			"#ffffff", // white
@@ -90,10 +77,6 @@ define(["lib/d3",
 		return d3.scale.ordinal().range(categoryMore);
 	}
 
-	function scale_categoryLess() {
-		return d3.scale.ordinal().range(categoryLess);
-	}
-
 	function scale_codedWhite() {
 		return d3.scale.ordinal().range(codedWhite);
 	}
@@ -110,11 +93,7 @@ define(["lib/d3",
 	color_range = multi(function (column, settings, features, codes) {
 		if (features && codes) {
 			if (features.valuetype === 'category') {
-				if (codes.length > 9) {
-					return 'codedMore';
-				} else {
-					return 'codedLess';
-				}
+				return 'codedMore';
 			} else {
 				return 'codedWhite';
 			}
@@ -171,10 +150,6 @@ define(["lib/d3",
 
 	function color_categoryMore(column, settings, feature, codes) {
 		return saveUndefined(scale_categoryMore().domain(range(codes.length)));
-	}
-
-	function color_categoryLess(column, settings, feature, codes) {
-		return saveUndefined(scale_categoryLess().domain(range(codes.length)));
 	}
 
 	function color_codedWhite(column, settings, feature, codes) {
@@ -253,16 +228,12 @@ define(["lib/d3",
 	color_range.add('codedWhite', color_codedWhite);
 	color_range.add("minMax", color_float);
 	color_range.add("codedMore", color_categoryMore);
-	color_range.add("codedLess", color_categoryLess);
 	color_range.add("float_genomicData", color_float_genomicData);
 
 	return {
 		range: color_range,
 		'float': color_float,
 //		scaled: color_scaled,
-		codedWhite: color_codedWhite,
-		categoryMore: color_categoryMore,
-		categoryLess: color_categoryLess,
-		categoryBreak: 9 // more codes than this uses categoryMore, otherwise, categoryLess
+		codedMore: categoryMore
 	};
 });
