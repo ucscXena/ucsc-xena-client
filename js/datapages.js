@@ -77,27 +77,6 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 		}
 	}
 
-
-	function reloadDataButton (host, status, datasetname){
-		var goodStatus =session.GOODSTATUS;
-		if((host ===localHost) && ((status === goodStatus) || (status === "error"))) {
-			var reloadbutton = document.createElement("BUTTON");
-			reloadbutton.setAttribute("class","vizbutton");
-		  reloadbutton.appendChild(document.createTextNode("reload"));
-			reloadbutton.addEventListener("click", function() {
-				var r = confirm("Reload \""+datasetname + "\" into your local xena.");
-				if (r === true) {
-					//xenaAdmin.delete(localHost, datasetname).subscribe(function(){
-						xenaAdmin.load(localHost, datasetname, true).subscribe(); // if file not exists, old data exists, but it is not transparant to the users
-					//});
-				  location.reload(); // reload current page
-				}
-		  });
-		  return reloadbutton;
-		}
-	}
-
-
 	function cohortHeatmapButton(cohort, hosts, vizbuttonParent) {
 		var vizbutton,
 				goodStatus = session.GOODSTATUS;
@@ -117,7 +96,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 
 	// the short COHORT section
 	function eachCohort(cohortName, hosts, mode, node) {
-		var nodeTitle, hostNode, vizbutton, vizbuttonParent;
+		var nodeTitle, hostNode, vizbuttonParent;
 
 		if (mode === "multiple") {
 			//cohort title
@@ -180,16 +159,6 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 			});
 		});
 		node.appendChild(hostNode);
-	}
-
-	function cmpCohort(a, b) {
-		if (a === b) {
-			return 0;
-		}
-		if (a === COHORT_NULL || a.toLowerCase() < b.toLowerCase()) {
-			return -1;
-		}
-		return 1;
 	}
 
 	function cohortListPage(hosts, rootNode) {
@@ -305,7 +274,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 					var nodeDataType = dom_helper.sectionNode("dataType");
 
 					var keys = Object.keys(dataType).sort(),
-							i, type, displayType,
+							displayType,
 							listNode;
 					keys.forEach(function (type) {
 						displayType = type;
@@ -319,8 +288,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 							return [ dataLabel[fullname],fullname];
 						}).sort().forEach(function (item){
 							// name
-							var label = item[0],
-								fullname = item[1],
+							var fullname = item[1],
 								datasetNode = dom_helper.elt("li", dom_helper.hrefLink(dataLabel[fullname], "?dataset=" + dataName[fullname] + "&host=" + dataHost[fullname]));
 
 							// samples: N
@@ -410,7 +378,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 				status = dataset.status,
 				probeMap = dataset.probeMap,
 				goodStatus = session.GOODSTATUS,
-				nodeTitle, vizbuttonParent, hostNode, button, tmpNode;
+				nodeTitle, vizbuttonParent, hostNode, tmpNode;
 
 		if (description) {
 			description = dom_helper.stripScripts(description);
@@ -633,7 +601,6 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 	function allIdButton (dataset, probes){
 		var name = JSON.parse(dataset.dsID).name,
 			host= JSON.parse(dataset.dsID).host,
-			format = dataset.type,
 			label = dataset.label? dataset.label: name,
 			newWindow, rootNode, button,
 			windowName = host+name;
@@ -651,7 +618,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 				newWindow.document.body.appendChild(rootNode);
 				rootNode.appendChild(dom_helper.elt("h3","dataset: "+label));
 				newWindow.focus();
-				setTimeout(writeAllIds,50); //minor delay so that some text is shown
+
 				function writeAllIds(){
 					var textNode, text;
 					textNode = document.createElement("pre");
@@ -662,6 +629,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 					});
 					textNode.innerHTML=text;
 				}
+				writeAllIds();
 			});
 		  return button;
 		}
@@ -671,8 +639,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 		var name = JSON.parse(dataset.dsID).name,
 			host= JSON.parse(dataset.dsID).host,
 			format = dataset.type,
-			label = dataset.label? dataset.label: name,
-			newWindow, newNode, button;
+			button;
 
 		if(dataset.status === session.GOODSTATUS) {
 			button = document.createElement("BUTTON");
@@ -740,7 +707,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 							//return probes by all_samples
 							var row, column,
 									dataRow, dataCol,
-									i,j,probe, text,
+									i,j,text,
 									firstRow, firstCol;
 
 							xenaQuery.dataset_probe_values(host, name, samples, probes).subscribe( function (s) {
@@ -905,9 +872,6 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 
 	// sidebar datasets action
 	function datasetSideBar(dataset, sideNode) {
-		var host = JSON.parse(dataset.dsID).host,
-			name = dataset.name;
-
 		// delete button
 		var button = deleteDataButton (dataset);
 		if (button) {
@@ -934,8 +898,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 
 		xenaQuery.dataset_by_name(host, dataset).subscribe(
 			function (datasets) {
-				var format =  datasets[0].type,
-					label = datasets[0].label? datasets[0].label : datasets[0].name;
+				var label = datasets[0].label? datasets[0].label : datasets[0].name;
 
 				document.title=label;
 				blockNode.parentNode.replaceChild(dom_helper.elt("div","Querying xena on "+ host+" ... "),blockNode);
