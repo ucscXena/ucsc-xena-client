@@ -1,0 +1,17 @@
+{
+	"esnext": true,
+	"undef": true,
+	"unused": "vars",
+	"strict": true,
+	"eqeqeq": true,
+	"es5": true,
+	"forin": true,
+	"immed": true,
+	"latedef": true,
+	"newcap": true,
+	"noarg": true,
+	"nonbsp": true,
+	"nonew": true,
+	"shadow": "inner",
+	"curly": true
+}
