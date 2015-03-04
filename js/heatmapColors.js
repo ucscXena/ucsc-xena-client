@@ -234,6 +234,7 @@ define(["lib/d3",
 		range: color_range,
 		'float': color_float,
 //		scaled: color_scaled,
+		defaultColors: defaultColors,
 		codedMore: categoryMore
 	};
 });

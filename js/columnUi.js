@@ -65,11 +65,12 @@ define(['haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDispla
 			this.$colorBarLabel
 				.val(label)
 				.addClass(klass);
-			labels.reverse();
+			labels.reverse(); // XXX reverse calls mutate!!!
 			this.$colorBarEllipsis.text(ellipsis);
+
 			colorBar.create(this.id, {
 				$prevRow: this.$colorBarLabelRow,
-				colors: colors.reverse().concat('#808080'),
+				colors: colors.reverse().concat('#808080'), // XXX reverse calls mutate!!!
 				labels: labels.concat('NA'),
 				tooltips: labels.concat('No data'),
 				align: align,

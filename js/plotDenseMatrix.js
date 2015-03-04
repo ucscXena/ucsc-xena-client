@@ -501,6 +501,38 @@ define(['underscore_ext',
 		}
 	}
 
+	function reverse(arr) {
+		return arr.slice(0).reverse();
+	}
+
+	// Color scale cases
+	//  1 - clinical data: single probe, auto-scaled
+	//    a - float
+	//    b - categorical
+	//  2 - genomic data: multiple probe, fixed scale or auto-scale each probe
+	//    a - fixed scale
+	//    b - auto-scale
+	//      1 - single probe
+	//      2 - multiple probe
+	//
+	// In all cases except 2.b.2 there is a single color scale. In that case
+	// we get the legend colors by mapping the domain to the scale. For clinical
+	// we take labels from the domain. For genomic, we show ranges with < >,
+	// taken from the domain.
+	//
+	// When there are multiple scales, 2.b.2, there are no meaningful numbers
+	// we can display as labels, so we use "higher", "lower". Rather than
+	// taking the colors by some sort of union over the different color scales,
+	// we ignore the scales and use the color setting of the column.
+	//
+	// This function should be refactored so there's no "fall through" case,
+	// so all cases are explicit. Also, meaningful intermediate variables
+	// should be created so intent is clear, e.g.
+	//
+	// color_scale.length > 1 && !_.get_in(settings, ['min'])
+	//
+	// means there are mutiple probes and the user has not set a fixed scale,
+	// i.e. we have multiple color scales.
 	function drawLegend(metadata, settings, columnUi, data, fields, codes, color_scale) {
 		var c,
 			ellipsis = '',
@@ -515,9 +547,8 @@ define(['underscore_ext',
 
 		if (metadata.type === 'genomicMatrix') {
 			if (color_scale.length > 1 && !_.get_in(settings, ['min'])) {
-				labels = color_scale[0].domain().map(function (value) {return "";});
-				labels[0] = "lower";
-				labels[labels.length - 1] = "higher";
+				colors = heatmapColors.defaultColors(metadata.type, metadata.dataSubType).slice(0);
+				labels = ["lower", "", "higher"];
 			}
 			else if (color_scale[0]) {
 				if (labels.length === 4) {
