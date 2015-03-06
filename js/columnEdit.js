@@ -408,7 +408,7 @@ define(['haml/columnEdit.haml',
 			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
 				var opts;
 				self.sources = _.map(sources, function (s) {
-					return _.assoc(s, 'title', xenaQuery.server_title(s.server));
+					return _.assoc(s, 'title', xenaQuery.server_url(s.server));
 				});
 
 				opts = $(datasetsTemplate({sources: self.sources, placeholder: 'Select...'}));
