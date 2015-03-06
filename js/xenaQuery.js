@@ -59,10 +59,9 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		// XXX should throw or otherwise indicate parse error on no match
 		var tokens = s.match(/^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/(.*))?$/),
 			host = tokens[2],
-			prod = (host.indexOf('genome-cancer.ucsc.edu') === 0),
-			defproto = prod ? 'https://' : 'http://',
-			proto = tokens[1] || (prod ? 'https://' : 'http://'),
-			defport = (prod ? '443' : '7223'),
+			defproto = 'https://',
+			proto = tokens[1] || defproto,
+			defport = '7223',
 			port = tokens[4] || defport,
 			path = tokens[5] || '',
 			url;
@@ -70,16 +69,8 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		url = proto + host + ':' + port + path;
 
 		return {
-			title: (proto === defproto ? '' : proto) +
-				host +
-				(port === defport ? '' : (':' + port)) +
-				path,
 			url: url
 		};
-	}
-
-	function server_title(s, galaxy) {
-		return parse_server(s).title;
 	}
 
 	function server_url(s) {
@@ -521,7 +512,6 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		// helpers:
 		dsID_fn: dsID_fn,
 		parse_host: parse_host,
-		server_title: server_title,
 		server_url: server_url,
 		json_resp: json_resp,
 		nanstr: nanstr,
