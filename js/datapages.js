@@ -375,6 +375,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 				wrangling_procedure = dataset.wrangling_procedure,
 				type = dataset.type || TYPE_NULL,
 				urls,
+				link,
 				status = dataset.status,
 				probeMap = dataset.probeMap,
 				goodStatus = session.GOODSTATUS,
@@ -448,8 +449,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 		if (host === "https://genome-cancer.ucsc.edu:443/proj/public/xena") {
 			sectionNode.appendChild(dom_helper.elt("labelsameLength","download"));
-			var array = name.split("/"),
-					link = "https://genome-cancer.ucsc.edu/download/public/xena/" + array.slice(1, array.length).join("/");
+			var array = name.split("/");
+			link = "https://genome-cancer.ucsc.edu/download/public/xena/" + array.slice(1, array.length).join("/");
 			sectionNode.appendChild(dom_helper.elt("resultsameLength", dom_helper.hrefLink(link, link)));
 			sectionNode.appendChild(dom_helper.elt("br"));
 		}
@@ -496,7 +497,14 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		//probeMap
 		if (probeMap) {
 			sectionNode.appendChild(dom_helper.elt("labelsameLength","ID/Gene mapping"));
-			sectionNode.appendChild(dom_helper.elt("resultsameLength", probeMap));
+
+			if (host === "https://genome-cancer.ucsc.edu:443/proj/public/xena") {
+				link = "https://genome-cancer.ucsc.edu/download/public/xena/" + probeMap.replace(/^public\//,"");
+				sectionNode.appendChild(dom_helper.elt("resultsameLength", dom_helper.hrefLink(probeMap, link)));
+			}
+			else {
+				sectionNode.appendChild(dom_helper.elt("resultsameLength", probeMap));
+			}
 			sectionNode.appendChild(dom_helper.elt("br"));
 		}
 
