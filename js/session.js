@@ -7,12 +7,12 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		var xenaStateResets = {
 				samples: [],
 				samplesFrom: "",
-				height: window.innerHeight-200,
 				zoomIndex: 0,
-				zoomCount: 0,
+				zoomCount: 100,
 				column_rendering: {},
 				column_order: [],
-				cohort: ""
+				cohort: "",
+				mode: "heatmap"
 			},
 			state = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : {servers: {user: []}};
 		sessionStorage.xena = JSON.stringify(_.extend(state, xenaStateResets));

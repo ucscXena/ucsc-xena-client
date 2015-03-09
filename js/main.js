@@ -39,7 +39,7 @@ define(['jquery',
 	// Returns a caching observable factory. If multiple callers request the same
 	// observable, a single observable will be shared between them. When all
 	// subscriptions are disposed, the observable will be unreferrenced.
-	function cacheFactory(observableFactory) { 
+	function cacheFactory(observableFactory) {
 			var cache = {};
 			return function (key) {
 					return cache[key] || (cache[key] = observableFactory(key).finally(function (key) { delete cache[key]; }).share());
@@ -47,7 +47,7 @@ define(['jquery',
 	}
 
 	var model = columnModels(); // XXX global for testing
-	var HEIGHT = 717;
+	var HEIGHT = window.innerHeight-200;
 
 	var unload = Rx.Observable.fromEvent(window, 'beforeunload');
 	// XXX does this work if no state events occur?? Looks like not.
@@ -116,7 +116,7 @@ define(['jquery',
 						// The below does not work if a sparse mutation plot is first.
 						// If we do the above, we won't have a DOM lookup, so the below
 						// concern about DOM lookup is not an issue. The use of the jquery-ui
-						// resize has been greatly simplified by allowing the elements to 
+						// resize has been greatly simplified by allowing the elements to
 						// shrink-wrap around their content, rather than trying to calc their sizes.
 						// Only the canvas size is set, nothing else.
 						$column = $('.spreadsheet-column:first'),
@@ -194,11 +194,13 @@ define(['jquery',
 
 		debug_stream.connect();
 
+		/*
 		if (sessionStorage && sessionStorage.xena) {
 			// XXX error handling?
 			start = JSON.parse(sessionStorage.xena);
-			start["_column"] = {};
-			start["_sources"] = [];
+			start._column = {};
+			start._sources = [];
+			start.mode= "heatmap";
 		} else {
 			start = {
 				"chartState": null,
@@ -214,6 +216,24 @@ define(['jquery',
 				"_column": {},
 				"column_order": []
 			};
+		}
+		*/
+		start = {
+				"chartState": null,
+				"mode": "heatmap",
+				"samples": [],
+				"samplesFrom": "",
+				"servers": {'default': defaultServers, user: defaultServers},
+				"_sources": [],  // not sure what this is for
+				"height": HEIGHT,
+				"zoomIndex": 0,
+				"zoomCount": 100,
+				"column_rendering": {},
+				"_column": {}, // not sure what this is for
+				"column_order": []
+			};
+		if (sessionStorage && sessionStorage.xena) {
+			start = _.extend(start, JSON.parse(sessionStorage.xena));
 		}
 		model.addStream(Rx.Observable.returnValue(function (s) { return start; }));
 
