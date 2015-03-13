@@ -93,6 +93,21 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		});
 	}
 
+	function warningPopUp (node, loaderWarning){
+		var height = 200,
+			width =300;
+
+		node.onclick = function(event){
+			var popupW=window.open("","loader warning",'height='+height+",width="+width);
+
+			if (window.focus) {
+				popupW.focus();
+			}
+			popupW.document.title="loader warning";
+			popupW.document.body.appendChild(document.createTextNode(JSON.stringify(loaderWarning)));
+			return false;
+		};
+	}
 
 	// the short COHORT section
 	function eachCohort(cohortName, hosts, mode, node) {
@@ -237,19 +252,20 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 						dataHost = {},
 						dataName = {},
 						dataStatus ={},
+						dataWarning={},
 						dataCollection={};
 
 					s.forEach(function (r) {
 						var host = r.server,
 							datasets = r.datasets;
 						datasets.forEach(function (dataset) {
-
 							var type = dataset.dataSubType,
 								format = dataset.type,
 								label = dataset.label? dataset.label: dataset.name,
 								description = dataset.description,
 								name = dataset.name,
 								status = dataset.status,
+								loaderWarning = dataset.loader,
 								fullname = host + name;
 
 							if (NOT_GENOMICS.indexOf(format) === -1) {
@@ -265,6 +281,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 								dataHost[fullname] = host;
 								dataName[fullname] = name;
 								dataStatus[fullname] = status;
+								dataWarning[fullname] = loaderWarning;
 								dataCollection[fullname]= dataset;
 							}
 						});
@@ -291,15 +308,17 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 							var fullname = item[1],
 								datasetNode = dom_helper.elt("li", dom_helper.hrefLink(dataLabel[fullname], "?dataset=" + dataName[fullname] + "&host=" + dataHost[fullname]));
 
-							// samples: N
-							if (dataStatus[fullname] === session.GOODSTATUS) {
+							if (dataStatus[fullname] === session.GOODSTATUS && !dataWarning[fullname]) { // perfect data show sampleN
 								datasetNode.appendChild(dom_helper.valueNode(fullname + "sampleN"));
 								xenaQuery.dataset_samples(dataHost[fullname], dataName[fullname]).subscribe(function (s) {
 									document.getElementById(fullname + "sampleN").
 									appendChild(dom_helper.elt("label", document.createTextNode(" (n=" + s.length.toLocaleString() + ")")));
 								});
-							}
-							else if (dataStatus[fullname] === "error") {
+							} else if (dataStatus[fullname] === session.GOODSTATUS && dataWarning[fullname]){ // show loader warning
+								tmpNode = dom_helper.hrefLink(" ["+ dataStatus[fullname]+" with warning] ","#");
+								warningPopUp (tmpNode, dataWarning[fullname]);
+								datasetNode.appendChild(tmpNode);
+							} else if (dataStatus[fullname] === "error") {  // show error status
 								tmpNode = dom_helper.elt("span"," ["+dataStatus[fullname]+"] ");
 								tmpNode.style.color="red";
 								datasetNode.appendChild(tmpNode);
@@ -377,9 +396,11 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 				urls,
 				link,
 				status = dataset.status,
+				loaderWarning = dataset.loader,
 				probeMap = dataset.probeMap,
 				goodStatus = session.GOODSTATUS,
 				nodeTitle, vizbuttonParent, hostNode, tmpNode;
+
 
 		if (description) {
 			description = dom_helper.stripScripts(description);
@@ -397,16 +418,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		var sectionNode = dom_helper.sectionNode("dataset");
 
 		// dataset title
-		if (status===goodStatus){
-			sectionNode.appendChild(dom_helper.elt("h2", "dataset: "+label));
-		} else if (status === "error") {
-			tmpNode = dom_helper.elt("span"," ["+status+"] ");
-			tmpNode.style.color="red";
-			sectionNode.appendChild(dom_helper.elt("h2", "dataset: "+label, tmpNode));
-		}
-		else {
-			sectionNode.appendChild(dom_helper.elt("h2", "dataset: "+label+ " ["+status+"] "));
-		}
+		sectionNode.appendChild(dom_helper.elt("h2", "dataset: "+label));
 		sectionNode.appendChild(dom_helper.elt("br"));
 
 		// long title
@@ -445,8 +457,31 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		sectionNode.appendChild(dom_helper.elt("resultsameLength", name));
 		sectionNode.appendChild(dom_helper.elt("br"));
 
-		// Downlaod
 
+		// status and loader warning
+		if (status===goodStatus && !loaderWarning){ // perfect data
+		} else if (status===goodStatus && loaderWarning){ // loaded with warning
+			tmpNode = dom_helper.hrefLink(status+" with warning","#"),
+			warningPopUp (tmpNode, loaderWarning);
+			sectionNode.appendChild(dom_helper.elt("labelsameLength","status"));
+			sectionNode.appendChild(dom_helper.elt("resultsameLength", tmpNode));
+			sectionNode.appendChild(dom_helper.elt("br"));
+		} else if (status === "error") { // error
+			tmpNode = dom_helper.elt("span",status);
+			tmpNode.style.color="red";
+			sectionNode.appendChild(dom_helper.elt("labelsameLength","status"));
+			sectionNode.appendChild(dom_helper.elt("resultsameLength", tmpNode));
+			sectionNode.appendChild(dom_helper.elt("br"));
+		}
+		else {
+			tmpNode = dom_helper.elt("span", status);
+			tmpNode.style.color="blue";
+			sectionNode.appendChild(dom_helper.elt("labelsameLength","status"));
+			sectionNode.appendChild(dom_helper.elt("resultsameLength", tmpNode));
+			sectionNode.appendChild(dom_helper.elt("br"));
+		}
+
+		// Downlaod
 		if (host === "https://genome-cancer.ucsc.edu:443/proj/public/xena") {
 			sectionNode.appendChild(dom_helper.elt("labelsameLength","download"));
 			var array = name.split("/");
