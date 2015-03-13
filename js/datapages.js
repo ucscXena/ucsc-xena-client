@@ -15,7 +15,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		container, sideNode, mainNode,
 		COHORT_NULL = '(unassigned)',
 		TYPE_NULL = 'unknown',
-		NOT_GENOMICS = ["sampleMap", "probeMap", "genePred", "genePredExt"],
+		NOT_GENOMICS = ["sampleMap", "probeMap", "genePred", "genePredExt","genomicSegment"],
 		FORMAT_MAPPING = {
 			'clinicalMatrix':"ROWs (samples)  x  COLUMNs (identifiers)",
 			'genomicMatrix':"ROWs (identifiers)  x  COLUMNs (samples)",
