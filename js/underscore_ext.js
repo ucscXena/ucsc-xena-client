@@ -1,5 +1,5 @@
 /*globals define: false */
-define(['lib/underscore', 'immutable', 'defer'], function(_, immutable, defer) {
+define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	'use strict';
 
 	var slice = Array.prototype.slice;

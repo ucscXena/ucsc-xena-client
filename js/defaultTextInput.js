@@ -10,7 +10,7 @@
  * input state stream completes.
  */
 
-define(['lib/underscore', 'rx', 'rx.dom', 'rx.ext', 'rx.coincidence'
+define(['underscore', 'rx', 'rx-dom', 'rx.ext', 'rx.coincidence'
 	], function (_, Rx) {
 	'use strict';
 

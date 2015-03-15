@@ -1,20 +1,20 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['haml!haml/columnEdit',
-	   'haml!haml/columnEditBasic',
-	   'haml!haml/datasetSelect',
-	   'haml!haml/select',
-	   'haml!haml/columnEditAdvanced',
+define(['haml/columnEdit.haml',
+	   'haml/columnEditBasic.haml',
+	   'haml/datasetSelect.haml',
+	   'haml/select.haml',
+	   'haml/columnEditAdvanced.haml',
 	   'defer',
 	   'genomicPosition',
 	   'util',
-	   'lib/select2',
+	   'select2',
 	   'jquery',
 	   'underscore_ext',
 	   'xenaQuery',
 	   // non-object dependencies
-	   'lib/jquery-ui'
+	   'jquery-ui'
 	], function (template,
 				 basicTemplate,
 				 datasetsTemplate,

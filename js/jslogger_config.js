@@ -1,6 +1,6 @@
 /*jslint browser: true */
-/*global define: false, jslogging: false */
-define(['lib/tracekit', 'tracekit_config', 'lib/polyfills'], function (TraceKit) {
+/*global define: false */
+define(['lib/tracekit', 'config', 'tracekit_config', 'lib/polyfills'], function (TraceKit, config) {
 	'use strict';
 	function getCookie(name) {
 		var cookieValue = null,
@@ -20,7 +20,7 @@ define(['lib/tracekit', 'tracekit_config', 'lib/polyfills'], function (TraceKit)
 		return cookieValue;
 	}
 
-	if (jslogging) {
+	if (config.jslogging) {
 		TraceKit.report.subscribe((function () {
 			var memo = {}; // limit it to one report per error per session.
 			return function (stackInfo) {

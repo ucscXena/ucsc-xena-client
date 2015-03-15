@@ -1,7 +1,7 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(['haml!haml/colorBar', 'lib/underscore', 'jquery'
+define(['haml/colorBar.haml', 'underscore', 'jquery'
 	], function (template, _, $) {
 	'use strict';
 

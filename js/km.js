@@ -1,7 +1,7 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(['jquery', 'lib/underscore'], function ($, _) {
+define(['jquery', 'underscore'], function ($, _) {
 	'use strict';
 
 	var reduce = _.reduce,

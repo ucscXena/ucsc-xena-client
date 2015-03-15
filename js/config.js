@@ -1,6 +1,6 @@
-/*global define: false */
-define(['module'], function (module) {
+/*global define: false, config: false */
+define([], function () {
 	'use strict';
-	return module.config();
+	return config;
 });
 

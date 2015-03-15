@@ -121,6 +121,18 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 		tbl.rows[row].cells[column].innerHTML = value;
 	}
 
+	function stringToDOM(str) {
+		var d = document.createElement('div');
+		d.innerHTML = str;
+		return d.childNodes;
+	}
+
+	function append(el, list) {
+		while (list.length) {
+			el.appendChild(list[0]);
+		}
+	}
+
 	return {
 		elt: elt,
 		hrefLink: hrefLink,
@@ -134,6 +146,8 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 		updataDOM_xenaDataSet_sampleN: updataDOM_xenaDataSet_sampleN,
 		updateDOM_xenaCohort_sampleN: updateDOM_xenaCohort_sampleN,
 		queryStringToJSON: queryStringToJSON,
-		JSONToqueryString: JSONToqueryString
+		JSONToqueryString: JSONToqueryString,
+		stringToDOM: stringToDOM,
+		append: append
 	};
 });

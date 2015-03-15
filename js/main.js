@@ -11,10 +11,13 @@ define(['jquery',
 		'columnUi',
 		'uuid',
 		'cursor',
+		// non-object dependencies
 		'plotDenseMatrix',
 		'plotMutationVector',
-		'lib/jquery-ui',
-		'rx.async'], function (
+		'jquery-ui',
+		'rx.async',
+		'base',
+		'../css/heatmap.css'], function (
 			$,
 			_,
 			Rx,

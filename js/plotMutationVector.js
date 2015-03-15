@@ -11,7 +11,7 @@ define(['underscore_ext',
 		'sheetWrap',
 		'vgcanvas',
 		'xenaQuery',
-		'rx.jquery'
+		'rx-jquery'
 	], function (
 		_,
 		$,
@@ -148,10 +148,10 @@ define(['underscore_ext',
 			var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
+					return Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
 				}),
 				refGene: xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_exon_string(probes)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp));
+					return Rx.DOM.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp));
 				})
 			};
 		})

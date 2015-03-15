@@ -1,6 +1,6 @@
 /*global define: false */
 
-define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
+define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	'use strict';
 
 	// HELPERS
@@ -408,7 +408,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 
 	function dataset_list(servers, cohort) {
 		return Rx.Observable.zipArray(_.map(servers, function (s) {
-			return Rx.DOM.Request.ajax(
+			return Rx.DOM.ajax(
 				xena_post(s, dataset_list_query(cohort))
 			).map(
 				_.compose(_.partial(xena_dataset_list_transform, s), json_resp)
@@ -421,13 +421,13 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	}
 
 	function code_list(host, ds, probes) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, codes_string(ds, probes))
 		).select(indexCodes);
 	}
 
 	function dataset_by_name(host, name) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, dataset_query(name))
 		).map(_.compose(_.partial(xena_dataset_list_transform, host),
 						json_resp))
@@ -435,61 +435,61 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	}
 
 	function dataset_text (host, ds) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, dataset_query (ds))
 		).map(json_resp);
 	}
 
 	function dataset_field_examples(host, ds) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, dataset_field_examples_string(ds))
 		).map(json_resp);
 	}
 
 	function dataset_field(host, ds) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, dataset_field_string(ds))
 			).map(json_resp);
 	}
 
 	function sparse_data_examples(host, ds, count) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, sparse_data_example_string(ds, count))
 		).map(json_resp);
 	}
 
 	function dataset_probe_values(host, ds, samples, probes) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, dataset_probe_string(ds, samples, probes))
 		).map(json_resp);
 	}
 
 	function dataset_gene_probe_values(host, ds, samples, gene) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, dataset_gene_probes_string(ds, samples, gene))
 		).map(json_resp);
 	}
 
 	function dataset_genes_values(host, ds, samples, genes) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, dataset_gene_string(ds, samples, genes))
 		).map(json_resp);
 	}
 
 	function feature_list(host, ds) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, feature_list_query(ds))
 		).map(_.compose(indexFeatures, json_resp));
 	}
 
 	function dataset_samples(host, ds) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, dataset_samples_query(ds))
 		).map(json_resp);
 	}
 
 	function all_samples(host, cohort) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, all_samples_query(cohort))
 		).map(json_resp)
 		.catch(Rx.Observable.return([])); // XXX display message?
@@ -499,7 +499,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	// on odd characters, such as "/".
 	// http://stackoverflow.com/questions/3235219/urlencoded-forward-slash-is-breaking-url
 	function all_cohorts(host) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, all_cohorts_query())
 		).map(json_resp)
 		.catch(Rx.Observable.return([])); // XXX display message?
@@ -507,7 +507,7 @@ define(['rx.dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 
 	// test if host is up
 	function test_host (host) {
-		return Rx.DOM.Request.ajax(
+		return Rx.DOM.ajax(
 			xena_post(host, '(+ 1 2)')
 		).map(function(s) {
 			if (s.responseText) {

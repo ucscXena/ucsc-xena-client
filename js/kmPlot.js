@@ -1,25 +1,24 @@
 /*jslint browser: true, nomen: true, vars: true */
 /*global define: false */
 
-define([ "lib/d3",
+define([ 'd3',
 		"jquery",
-		"lib/underscore",
+		'underscore',
 		"config",
 		"defer",
 		"km",
-		"haml!haml/km",
+		'haml/km.haml',
 		"heatmapColors",
-		"rx.jquery",
+		'rx-jquery',
 		"xenaQuery",
+		'../images/warning.png',
 		// non-object dependencies
-		"lib/jquery-ui"
-	], function (d3, $, _, config, defer, km, template, heatmapColors, Rx, xenaQuery) {
+		'jquery-ui'
+	], function (d3, $, _, config, defer, km, template, heatmapColors, Rx, xenaQuery, warningImg) {
 
 	'use strict';
 
-	var STATIC_URL = config.STATIC_URL,
-		warningImg = STATIC_URL + 'heatmap-cavm/images/warning.png',
-		each = _.each,
+	var each = _.each,
 		bind = _.bind,
 		map = _.map,
 		uniq = _.uniq,

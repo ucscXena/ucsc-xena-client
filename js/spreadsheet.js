@@ -6,8 +6,8 @@ define(['underscore_ext',
 		'columnWidgets',
 		'rx.binding',
 		'rx.async', // needed?
-		'rx.jquery',
-		'rx.dom',
+		'rx-jquery',
+		'rx-dom',
 		'rx.ext'], function (_, $, Rx, widgets) {
 
 	"use strict";
@@ -59,7 +59,7 @@ define(['underscore_ext',
 			el = $('<div></div>'),
 			subs = new Rx.CompositeDisposable();
 
-		state = state.replayWhileObserved(1); // XXX move this to columnModels? So widgets can get latest state?
+		state = state.shareReplay(1); // XXX move this to columnModels? So widgets can get latest state?
 		el.sortable({
 			axis: 'x',
 			handle: '.moveHandle'

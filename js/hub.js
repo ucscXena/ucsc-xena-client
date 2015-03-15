@@ -1,7 +1,7 @@
 /*jslint browser: true,  nomen: true*/
 /*global define: false */
 
-define(["dom_helper", "session", "xenaQuery"], function (dom_helper, session, xenaQuery) {
+define(["dom_helper", "session", "xenaQuery", "base", "../css/datapages.css"], function (dom_helper, session, xenaQuery) {
 	'use strict';
 
 	function newHubNode(host) {

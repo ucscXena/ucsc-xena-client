@@ -1,10 +1,11 @@
 /*jslint browser: true, nomen: true */
 /*global define: false  */
 
-define(["haml!haml/tooltip", "haml!haml/tooltipClose", "jquery", "defer", "lib/underscore"
+define(['haml/tooltip.haml', 'haml/tooltipClose.haml', "jquery", "defer", 'underscore'
 	], function (template, closeTemplate, $, defer, _) {
 	'use strict';
 
+	$('body').append($("<div id='tooltip'></div>"));
 	var freezeText = '(alt-click to freeze)',
 		thawText = '(alt-click on map to unfreeze)',
 		$tooltip = $('#tooltip'),

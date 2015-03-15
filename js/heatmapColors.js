@@ -1,8 +1,8 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(["lib/d3",
-		"lib/underscore",
+define(['d3',
+		'underscore',
 		"multi"
 	], function (d3, _, multi) {
 

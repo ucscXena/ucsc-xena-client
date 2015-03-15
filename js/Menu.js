@@ -1,7 +1,7 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(["haml!haml/dropDownTemplate", "tooltip", "lib/underscore", "jquery"], function (template, tooltip, _, $) {
+define(['haml/dropDownTemplate.haml', "tooltip", 'underscore', "jquery"], function (template, tooltip, _, $) {
 	'use strict';
 	/* 
 	 *	This menu depends on the following classes in the DOM elements:

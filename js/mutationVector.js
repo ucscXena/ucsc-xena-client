@@ -1,7 +1,7 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'lib/d3', 'jquery', 'lib/underscore'
+define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore'
 	// non-object dependencies
 	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _) {
 	'use strict';

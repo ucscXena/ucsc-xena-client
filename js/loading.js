@@ -1,11 +1,8 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
-define(["jquery", "config", "haml!haml/loading",
-	"lib/jquery-ui" ], function ($, config, template) {
+define(["jquery", "config", 'haml/loading.haml',
+	'jquery-ui', '../images/snake.gif'], function ($, config, template, image) {
 	'use strict';
-
-	var STATIC_URL = config.STATIC_URL,
-		image = STATIC_URL + 'heatmap/images/snake.gif';
 
 	$.widget('cancerBrowser.loading', {
 		options: {

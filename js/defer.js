@@ -7,7 +7,7 @@
 
 // Only add setZeroTimeout to the window object, and hide everything
 // else in a closure.
-define(["jquery", "lib/underscore"], function ($, _) {
+define(["jquery", 'underscore'], function ($, _) {
 	'use strict';
 	var timeouts = [],
 		args = [],

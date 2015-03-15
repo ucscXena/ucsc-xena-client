@@ -1,7 +1,7 @@
 /*jslint browser:true, nomen: true*/
 /*global define: false */
 
-define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaAdmin"],
+define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaAdmin", "base", "../css/datapages.css"],
 	function (dom_helper, xenaQuery, session, _, Rx, xenaAdmin) {
 	'use strict';
 
@@ -841,7 +841,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx.dom", "xenaA
 
 		var checkNode = dom_helper.sectionNode("sidehub");
 
-		checkNode.appendChild(dom_helper.elt("h3", dom_helper.hrefLink("Current Data Hubs", "../hub")));
+		checkNode.appendChild(dom_helper.elt("h3", dom_helper.hrefLink("Current Data Hubs", "../hub/")));
 		checkNode.appendChild(dom_helper.elt("br"));
 
 

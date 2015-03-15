@@ -1,5 +1,5 @@
 /*global define: true*/
-define(['highcharts', 'highcharts_exporting'], function (Highcharts) {
+define(['./highcharts'], function (Highcharts) {
   'use strict';
 
   function hcLabelRender(){

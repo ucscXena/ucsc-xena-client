@@ -1,7 +1,7 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(['haml!haml/cohortSelect', 'util', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.jquery'
+define(['haml/cohortSelect.haml', 'util', 'xenaQuery', 'underscore', 'jquery', 'rx-jquery'
 	], function (template, util, xenaQuery, _, $, Rx) {
 	'use strict';
 

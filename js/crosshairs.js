@@ -1,7 +1,7 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['lib/d3', 'jquery', 'lib/underscore'
+define(['d3', 'jquery', 'underscore'
 	// non-object dependencies
 	], function (d3, $, _) {
 	'use strict';

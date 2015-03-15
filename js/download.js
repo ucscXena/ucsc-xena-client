@@ -1,7 +1,7 @@
 /*jslint nomen:true, browser: true */
 /*global define: false  */
 
-define(["haml!haml/download", "defer", "galaxy", "jquery", "util", "underscore_ext",
+define(['haml/download.haml', "defer", "galaxy", "jquery", "util", "underscore_ext",
 	"loading"], function (template, defer, galaxy, $, util, _) {
 	'use strict';
 

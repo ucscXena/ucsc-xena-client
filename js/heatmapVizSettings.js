@@ -32,7 +32,7 @@
 // Refactoring notes:
 // The default column normalization is fetched from the server. Instead it should come from
 // the state, or from a data cache, because we've fetched that already.
-define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', 'jquery', 'lib/jquery-ui'], function (xenaQuery, dom_helper, session, _, $) {
+define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', 'jquery', 'jquery-ui'], function (xenaQuery, dom_helper, session, _, $) {
 		'use strict';
 
 	return function (cursor, state, dsID) {

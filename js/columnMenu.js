@@ -1,7 +1,7 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['haml!haml/columnMenu', 'columnEdit', 'download', 'kmPlot', 'mutationVector', 'Menu', 'jquery', 'lib/underscore', 'xenaQuery', 'heatmapVizSettings'
+define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVector', 'Menu', 'jquery', 'underscore', 'xenaQuery', 'heatmapVizSettings'
 	// non-object dependencies
 	], function (template, columnEdit, download, kmPlot, mutationVector, Menu, $, _, xenaQuery, vizSettings) {
 	'use strict';

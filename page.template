@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>{%=o.htmlWebpackPlugin.options.title || 'Webpack App'%}</title>
+	<script type="text/javascript">
+	// Keep near the top of the page so it executes immediately.
+	(function (cssCode) {
+		var styleElement = document.createElement("style");
+		styleElement.type = "text/css";
+		if (styleElement.styleSheet) {
+			styleElement.styleSheet.cssText = cssCode;
+		} else {
+			styleElement.appendChild(document.createTextNode(cssCode));
+		}
+		document.getElementsByTagName("head")[0].appendChild(styleElement);
+	})("#noJScript { display: none }");
+	</script>
+
+	<script type="text/javascript">
+	// If a template engine sets 'settings' to 'enable', then
+	// take settings from template variables. Otherwise use defaults.
+	var config =  ('{{ settings }}' === 'enable') ? {
+		ga_id: '{{ ga_id }}',
+		jslogging: '{{ jslogging }}' === 'true',
+		baseurl: '{{ baseurl }}'
+	} : {
+		ga_id: null,
+		jslogging: false,
+		baseurl: '/'
+	};
+
+	(function () {
+	 	var ga_id = config.ga_id;
+		if (ga_id) {
+			var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', ga_id]);
+			_gaq.push(['_trackPageview']);
+
+			(function() {
+				 var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+				 ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				 var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			 })();
+		}
+	}());
+	</script>
+  </head>
+  <body id="body">
+	<div>
+		<div id="nav">
+			<div id='navPageBrowser'>
+				<table id="navShort" class="ui-widget" style='width:100%;'><tr>
+					<td id='navMenuMain' style='text-align:left;height:2em'>
+					</td>
+				</tr></table>
+			</div>
+		</div>
+		<div id="main">
+			<div id='noJScript' style="text-align:center; background: yellow; color: black; font-size: small; width: 500px; margin: auto;">
+				<em>Warning</em>: It appears as though you do not have javascript enabled.  The UCSC Cancer Genomics browser relies heavily on JavaScript and will not function without it enabled.  Thank you for your understanding.
+			</div>
+		</div>
+
+	</div>
+	{% for (var a in o.htmlWebpackPlugin.assets) { %}
+	<script src="../{%=o.htmlWebpackPlugin.assets[a]%}"></script>
+    {% } %}
+  </body>
+</html>

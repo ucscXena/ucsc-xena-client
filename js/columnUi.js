@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDisplay', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'kmPlot', 'tooltip', 'util', 'lib/d3', 'jquery', 'lib/select2', 'lib/underscore', 'xenaQuery', 'rx'
+define(['haml/columnUi.haml', 'haml/columnUiSelect.haml', 'haml/tupleDisplay.haml', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'kmPlot', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore', 'xenaQuery', 'rx', '../images/moveHorizontal.png', '../images/menu.png',
 	// non-object dependenciies
-	], function (template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, kmPlot, tooltip, util, d3, $, select2, _, xenaQuery, Rx) {
+	], function (template, selectTemplate, tupleTemplate, colorBar, columnMenu, config, crosshairs, defaultTextInput, defer, kmPlot, tooltip, util, d3, $, select2, _, xenaQuery, Rx, moveImg, menuImg) {
 	'use strict';
 
 	function columnExists(uuid, state) {
@@ -11,9 +11,6 @@ define(['haml!haml/columnUi', 'haml!haml/columnUiSelect', 'haml!haml/tupleDispla
 	}
 
 	var APPLY = true,
-		STATIC_URL = config.STATIC_URL,
-		moveImg = STATIC_URL + 'heatmap-cavm/images/moveHorizontal.png',
-		menuImg = STATIC_URL + 'heatmap-cavm/images/menu.png',
 		each = _.each,
 		filter = _.filter,
 		find = _.find,

@@ -1,7 +1,7 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
 
-define(['haml!haml/datasetSelect', 'util', 'xenaQuery', 'lib/underscore', 'jquery', 'rx.jquery'
+define(['haml/datasetSelect.haml', 'util', 'xenaQuery', 'underscore', 'jquery', 'rx-jquery'
 	], function (template, util, xenaQuery, _, $, Rx) {
 	'use strict';
 

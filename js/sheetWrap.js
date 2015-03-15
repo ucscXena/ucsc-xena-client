@@ -1,6 +1,6 @@
 /*jslint nomen:true, regexp: true */
 /*globals define: false */
-define(['haml!haml/sheetWrap',
+define(['haml/sheetWrap.haml',
 		'chart',
 		'cursor',
 		'spreadsheet',
@@ -15,7 +15,7 @@ define(['haml!haml/sheetWrap',
 		'jquery',
 		'xenaQuery',
 		'rx',
-		'rx.jquery',
+		'rx-jquery',
 		'rx.binding'
 		], function (template,
 					chart,

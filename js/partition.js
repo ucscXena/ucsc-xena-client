@@ -1,7 +1,7 @@
 /*jslint nomen:true, indent: 4 */
 /*global define: false  */
 
-define(["lib/underscore"], function (_) {
+define(['underscore'], function (_) {
 	'use strict';
 
 	// XXX These recursive methods are going to suck for performance & eating memory

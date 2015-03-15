@@ -1,6 +1,6 @@
 /*jslint nomen: true */
 /*global define: false */
-define(['lib/underscore'], function (_) {
+define(['underscore'], function (_) {
 	'use strict';
 
 	function lookup_widechar(i) {

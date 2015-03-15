@@ -1,7 +1,7 @@
 /*jslint nomen:true, regexp: true */
 /*global define: false */
 
-define(['jquery', 'lib/underscore', 'unicode_utils'], function ($, _, unicode) {
+define(['jquery', 'underscore', 'unicode_utils'], function ($, _, unicode) {
 	"use strict";
 
 	// Return a slice of genesets over the current position.

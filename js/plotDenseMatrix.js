@@ -12,7 +12,7 @@ define(['underscore_ext',
 		'tooltip',
 		'util',
 		'xenaQuery',
-		'rx.jquery'
+		'rx-jquery'
 	], function (
 		_,
 		$,
@@ -322,10 +322,10 @@ define(['underscore_ext',
 		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
+					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
 				}),
 				metadata: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(xenaQuery.json_resp);
+					return Rx.DOM.ajax(r).select(xenaQuery.json_resp);
 				})
 			};
 		})
@@ -341,10 +341,10 @@ define(['underscore_ext',
 		xenaQuery.dsID_fn(function (host, ds, probes, dataType, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_probes_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexProbeGeneResponse, samples), xenaQuery.json_resp));
+					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexProbeGeneResponse, samples), xenaQuery.json_resp));
 				}),
 				metadata: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(xenaQuery.json_resp);
+					return Rx.DOM.ajax(r).select(xenaQuery.json_resp);
 				})
 			};
 		})
@@ -361,16 +361,16 @@ define(['underscore_ext',
 		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
+					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
 				}),
 				features: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.features_string(ds, probes)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(indexFeatures);
+					return Rx.DOM.ajax(r).select(indexFeatures);
 				}),
 				codes: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.codes_string(ds, probes)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(indexCodes);
+					return Rx.DOM.ajax(r).select(indexCodes);
 				}),
 				bounds: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.field_bounds_string(ds, probes)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(_.compose(indexBounds, xenaQuery.json_resp));
+					return Rx.DOM.ajax(r).select(_.compose(indexBounds, xenaQuery.json_resp));
 				})
 			};
 		})
@@ -386,10 +386,10 @@ define(['underscore_ext',
 		xenaQuery.dsID_fn(function (host, ds, fields, dataType, samples) {
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_string(ds, samples, fields)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(_.compose(_.partial(indexGeneResponse, fields, samples), xenaQuery.json_resp));
+					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexGeneResponse, fields, samples), xenaQuery.json_resp));
 				}),
 				metadata: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)), function (r) {
-					return Rx.DOM.Request.ajax(r).select(xenaQuery.json_resp);
+					return Rx.DOM.ajax(r).select(xenaQuery.json_resp);
 				})
 			};
 		})

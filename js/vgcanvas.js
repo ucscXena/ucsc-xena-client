@@ -1,7 +1,7 @@
 /*jslint nomen: true */
 /*global define: false  */
 
-define(["jquery", "lib/underscore"], function ($, _) {
+define(["jquery", 'underscore'], function ($, _) {
 	"use strict";
 
 	var style = function (c) {
