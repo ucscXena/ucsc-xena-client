@@ -1,4 +1,5 @@
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var webpack = require('webpack');
 
 module.exports = {
 	historyApiFallback: true,
@@ -6,7 +7,8 @@ module.exports = {
 	output: {
 		path: "build",
 		publicPath: "/",
-		filename: "[name].js",
+		filename: "[name].[chunkhash].js",
+		chunkFilename: "[chunkhash].bundle.js"
 	},
 	module: {
 		loaders: [
@@ -22,7 +24,8 @@ module.exports = {
 			title: "UCSC Xena",
 			filename: "index.html",
 			template: "page.template"
-		})
+		}),
+		new webpack.optimize.OccurenceOrderPlugin(true)
 	],
 	resolve: {
 		alias: {
