@@ -12,5 +12,6 @@
 	"nonbsp": true,
 	"nonew": true,
 	"shadow": "inner",
-	"curly": true
+	"curly": true,
+	"globalstrict": true
 }
