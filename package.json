@@ -9,7 +9,7 @@
     "clean": "rimraf build/*",
     "start": "webpack-dev-server --devtool source-map --progress --colors --history-api-fallback",
     "build": "webpack",
-    "build:prod": "npm run build -- -p",
+    "build:prod": "npm run build -- --config webpack.prod.js",
     "prebuild": "npm run clean",
     "install": "napa"
   },

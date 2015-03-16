@@ -7,8 +7,7 @@ module.exports = {
 	output: {
 		path: "build",
 		publicPath: "/",
-		filename: "[name].[chunkhash].js",
-		chunkFilename: "[chunkhash].bundle.js"
+		filename: "[name].js"
 	},
 	module: {
 		loaders: [
@@ -24,8 +23,7 @@ module.exports = {
 			title: "UCSC Xena",
 			filename: "index.html",
 			template: "page.template"
-		}),
-		new webpack.optimize.OccurenceOrderPlugin(true)
+		})
 	],
 	resolve: {
 		alias: {
