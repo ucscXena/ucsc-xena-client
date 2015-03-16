@@ -71,7 +71,7 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 			}
 		});
 
-		return JSON.parse(JSON.stringify(result));
+		return result;
 	}
 
 	function JSONToqueryString(obj){

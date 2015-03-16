@@ -476,6 +476,7 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', 'jquery', 'jquer
 			modal: true,
 			width: 800,
 			title: 'Advanced Heatmap Settings',
+			position: ['center', 'top'],
 			close: function () {
 					cursor.update(function (s) {
 						return _.assoc_in(s, ['_vizSettings', 'open'], false);
@@ -483,16 +484,16 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', 'jquery', 'jquer
 				}
 		});
 
-		root.className = root.className = " settingsRoot";
+		root.className = " settingsRoot";
 
 		//dataset sections
 		node = document.createElement("div");
 		root.appendChild(node);
 
-		xenaQuery.dataset_by_name(host, datasetName).subscribe(function (datasets) {
-			cohort = datasets[0].cohort;
-			node.appendChild(dom_helper.hrefLink(cohort + " cohort", "datapages/?cohort=" + encodeURIComponent(cohort)));
 
+		xenaQuery.dataset_by_name(host, datasetName).subscribe(function (datasets) {
+			//cohort = datasets[0].cohort;
+			//node.appendChild(dom_helper.hrefLink(cohort + " cohort", "datapages/?cohort=" + encodeURIComponent(cohort)));
 			node.appendChild(datasetSetting(datasets[0]));
 
 		});

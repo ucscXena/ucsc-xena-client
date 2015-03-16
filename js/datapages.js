@@ -10,7 +10,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		userHosts,
 		localHost,
 		metadataFilterHosts,
-		query_string = dom_helper.queryStringToJSON(),
+		query_string = dom_helper.queryStringToJSON(),  	//parse current url to see if there is a query string
 		baseNode = document.getElementById('main'),
 		container, sideNode, mainNode,
 		COHORT_NULL = '(unassigned)',
@@ -93,18 +93,17 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		});
 	}
 
+
 	function warningPopUp (node, loaderWarning){
-		var height = 200,
-			width =300;
-
-		node.onclick = function(event){
-			var popupW=window.open("","loader warning",'height='+height+",width="+width);
-
-			if (window.focus) {
-				popupW.focus();
-			}
-			popupW.document.title="loader warning";
-			popupW.document.body.appendChild(document.createTextNode(JSON.stringify(loaderWarning)));
+		node.onclick = function(){
+			var root = $('<div>')[0];
+			$(root).dialog({
+				modal: true,
+				title: 'Loader Warning',
+				position: ['center', 100],
+				width:400
+			});
+			root.appendChild(document.createTextNode(JSON.stringify(loaderWarning)));
 			return false;
 		};
 	}
@@ -461,7 +460,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		// status and loader warning
 		if (status===goodStatus && !loaderWarning){ // perfect data
 		} else if (status===goodStatus && loaderWarning){ // loaded with warning
-			tmpNode = dom_helper.hrefLink(status+" with warning","#"),
+			tmpNode = dom_helper.hrefLink(status+" with warning","#");
 			warningPopUp (tmpNode, loaderWarning);
 			sectionNode.appendChild(dom_helper.elt("labelsameLength","status"));
 			sectionNode.appendChild(dom_helper.elt("resultsameLength", tmpNode));
@@ -951,7 +950,6 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 	}
 
 
-	//parse current url to see if it is a query string
 	// if there is no url query string, query xena find the cohorts on main server
 	var host,dataset, cohort;
 
