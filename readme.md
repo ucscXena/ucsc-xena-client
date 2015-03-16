@@ -13,7 +13,7 @@ The build is based on npm and webpack.
  * `cd ucsc-xena-client`
  * `npm install`
  * `npm start`
- * browse to http://localhost:8080/webpack-dev-server/heatmap/
+ * browse to [http://localhost:8080/webpack-dev-server/heatmap/](http://localhost:8080/webpack-dev-server/heatmap/)
 
 ### References
  * http://blog.keithcirkel.co.uk/how-to-use-npm-as-a-build-tool/
