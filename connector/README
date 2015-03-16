@@ -1,0 +1,2 @@
+This is a django shim to allow serving xena-client from
+the UCSC Cancer Browser.
