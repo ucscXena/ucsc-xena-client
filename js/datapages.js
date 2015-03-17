@@ -1,8 +1,8 @@
 /*jslint browser:true, nomen: true*/
 /*global define: false */
 
-define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaAdmin", "base", "../css/datapages.css"],
-	function (dom_helper, xenaQuery, session, _, Rx, xenaAdmin) {
+define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaAdmin", 'jquery', 'jquery-ui', "base", "../css/datapages.css"],
+	function (dom_helper, xenaQuery, session, _, Rx, xenaAdmin, $) {
 	'use strict';
 
 	var allHosts, /* hosts is the variable holds all hosts*/
