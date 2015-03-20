@@ -60,6 +60,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			"others or unannotated":0
 		},
+		getImpact = function (eff) { return impact[eff] || unknownEffect; },
 		colors = {
 			category_25: [
 				{r: 255, g: 127, b: 14, a: 1},  // orange #ff7f0e
@@ -234,7 +235,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				var imp,
 					c;
 				if (this.feature === 'impact') {
-					imp = impact[val.effect];
+					imp = getImpact(val.effect);
 					c = colors[this.color][imp];
 				} else if (_.isUndefined(val[this.feature])) { // _VAF with NA value
 					c = colors.af[0];
@@ -250,11 +251,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				this.values = _.map(drawValues, function (v, i) {
 					var row = $.extend(true, [], v);
 					row.index = i;
-					_.each(row.vals, function (val) {
-						if (impact[val.effect] === undefined) {
-							impact[val.effect] = unknownEffect;
-						}
-					});
 					return row;
 				});
 				this.render();
@@ -289,7 +285,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 								x: x,
 								y: y,
 								r: self.radius,
-								impact: impact[val.effect],
+								impact: getImpact(val.effect),
 								rgba: self.findRgba(val),
 								data: val
 							});
@@ -316,7 +312,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 						return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
 					});
 					for (var key in impact){
-						labels[impact[key]].push(key);
+						labels[getImpact(key)].push(key);
 					}
 					labels = labels.map(function(list){return list.join(", ");});
 					align = 'left';
@@ -403,8 +399,8 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				refGeneInfo,
 				rightness;
 			if (row.length) {
-				mut = _.max(row, function (mut) { return impact[mut.effect]; });
-				weight = impactMax - impact[mut.effect];
+				mut = _.max(row, function (mut) { return getImpact(mut.effect); });
+				weight = impactMax - getImpact(mut.effect);
 				refGeneInfo = refGene[mut.gene];
 				rightness = (refGeneInfo.strand === '+')
 					? mut.start - refGeneInfo.txStart
