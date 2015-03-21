@@ -83,6 +83,14 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		return x;
 	}
 
+	// Find max using a cmp function. Same as arr.slice[0].sort(cmp)[0],
+	// but O(n) instead of O(n log n).
+	function maxWith(arr, cmp) {
+		return _.reduce(arr, function (x,y) {
+			return cmp(x, y) < 0 ? x : y;
+		});
+	}
+
 	_.mixin({
 		fmap: fmap,
 		apply: apply,
@@ -95,7 +103,8 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		findValue: findValue,
 		negate: negate,
 		spy: spy,
-		flatmap: _.compose(_.partial(_.flatten, _, 1), _.map)
+		flatmap: _.compose(_.partial(_.flatten, _, 1), _.map),
+		maxWith: maxWith
 	});
 
 	return _;

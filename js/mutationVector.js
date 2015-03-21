@@ -1,7 +1,7 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore'
+define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext'
 	// non-object dependencies
 	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _) {
 	'use strict';
@@ -377,15 +377,21 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		return w;
 	}
 
-	function evalMutRow(row, refGene) {
-		var worst = _.max(row, function (mut) { return getImpact(mut.effect); }),
-			geneInfo = refGene[worst.gene];
-		return {
-			impact: getImpact(worst.effect),
-			right: (geneInfo.strand === '+') ?
-				worst.start - geneInfo.txStart :
-				geneInfo.txStart - worst.start
-		};
+	function evalMut(refGene, mut) {
+		var geneInfo = refGene[mut.gene];
+		return _.assoc(mut,
+		               'impact', getImpact(mut.effect),
+		               'right', (geneInfo.strand === '+') ?
+		                         mut.start - geneInfo.txStart :
+		                         geneInfo.txStart - mut.start);
+	}
+
+	function cmpMut(mut1, mut2) {
+		if (mut1.impact !== mut2.impact) {
+			return mut2.impact - mut1.impact; // high impact sorts first
+		}
+
+		return mut1.right - mut2.right;       // low coord sorts first
 	}
 
 	return {
@@ -396,7 +402,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		},
 
 		rowOrder: function (row1, row2, refGene) {
-			var mut1, mut2;
+			var row1a, row2a;
 			if (!row1.length && !row2.length) {
 				return 0;
 			}
@@ -406,14 +412,10 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			if (!row2.length) {
 				return -1;                        // has mutations sorts first
 			}
-			mut1 = evalMutRow(row1, refGene);
-			mut2 = evalMutRow(row2, refGene);
+			row1a = _.map(row1, _.partial(evalMut, refGene));
+			row2a = _.map(row2, _.partial(evalMut, refGene));
 
-			if (mut1.impact !== mut2.impact) {
-				return mut2.impact - mut1.impact; // high impact sorts first
-			}
-
-			return mut1.right - mut2.right;       // low coord sorts first
+			return cmpMut(_.maxWith(row1a, cmpMut), _.maxWith(row2a, cmpMut));
 		},
 
 		show: function (id, options) {
