@@ -379,11 +379,12 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 	function evalMut(refGene, mut) {
 		var geneInfo = refGene[mut.gene];
-		return _.assoc(mut,
-		               'impact', getImpact(mut.effect),
-		               'right', (geneInfo.strand === '+') ?
-		                         mut.start - geneInfo.txStart :
-		                         geneInfo.txStart - mut.start);
+		return {
+			impact: getImpact(mut.effect),
+			right: (geneInfo.strand === '+') ?
+		            mut.start - geneInfo.txStart :
+		            geneInfo.txStart - mut.start
+		};
 	}
 
 	function cmpMut(mut1, mut2) {
