@@ -127,13 +127,20 @@ width: 20%;
 width:80%;
 }
 
-#dataset, #cohort,#dataType,#others,#description,#samples,#host,#hub
+#dataset,#cohort,#dataType,#others,#description,#samples,#host,#hub,#cohortList
 {
-padding:15px;
+padding-top:15px;
 margin-left: auto;
 margin-right: 25px;
 width: 80%;
 }
+
+#dataPagesMain #cohortList li
+{
+margin:10px;
+display: inline;
+}
+
 #bigDataSnippet
 {
   width:95%;
@@ -152,13 +159,6 @@ margin-top: 20px;
 margin-top: 20px;
 font-size:1.3em;
 font-weight: bold;
-}
-
-#main #cohort h4 multiple
-{
-margin-top: 9px;
-margin-bottom: 9px;
-display:inline-block;
 }
 
 #main #dataType header,#samples header,#others header

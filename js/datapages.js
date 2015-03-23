@@ -84,7 +84,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
   	ifCohortExistDo(cohort, _.intersection(_.intersection(activeHosts, hosts), userHosts), goodStatus, function(){
 			vizbutton = document.createElement("BUTTON");
 			vizbutton.setAttribute("class","vizbutton");
-			vizbutton.appendChild(document.createTextNode("Cohort Heatmap"));
+			vizbutton.appendChild(document.createTextNode("Visualize"));
 			vizbutton.addEventListener("click", function() {
   			session.xenaHeatmapSetCohort(cohort);
   			location.href = "../";//goto heatmap page
@@ -108,22 +108,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		};
 	}
 
-	// the short COHORT section
-	function eachCohort(cohortName, hosts, mode, node) {
-		var nodeTitle, hostNode, vizbuttonParent;
-
-		if (mode === "multiple") {
-			//cohort title
-			nodeTitle = dom_helper.hrefLink(cohortName, "?cohort=" + encodeURIComponent(cohortName));
-			vizbuttonParent =dom_helper.elt("h4", dom_helper.elt("multiple",nodeTitle));
-
-			//for single active host but not selected by user senario
-			if ((hosts.length===1) &&  (userHosts.indexOf(hosts[0])===-1)){
-				nodeTitle.style.color="gray";
-			}
-			node.appendChild(vizbuttonParent);
-			cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), vizbuttonParent);
-		}
+	function eachCohort(cohortName, hosts, node) {
+		var hostNode;
 
 		// samples: N
 		node.appendChild(dom_helper.labelValueNode("samples:", cohortName + "sampleN"));
@@ -175,6 +161,21 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		node.appendChild(hostNode);
 	}
 
+	// the short COHORT section
+	function eachCohortMultiple(cohortName, hosts, node) {
+		var nodeTitle, vizbuttonParent;
+
+		nodeTitle = dom_helper.hrefLink(cohortName, "?cohort=" + encodeURIComponent(cohortName));
+		//for single active host but not selected by user senario
+		if ((hosts.length===1) &&  (userHosts.indexOf(hosts[0])===-1)){
+			nodeTitle.style.color="gray";
+		}
+		vizbuttonParent =dom_helper.elt("h4", nodeTitle);  //dom_helper.elt("multiple",nodeTitle));
+		node.appendChild(vizbuttonParent);
+
+		cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), vizbuttonParent);
+	}
+
 	function cohortListPage(hosts, rootNode) {
 		if (!hosts || hosts.length === 0) {
 			return;
@@ -193,6 +194,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		rootNode.appendChild(node);
 		node.appendChild(title);
 		node = document.createElement("div");
+		node.setAttribute("id","cohortList");
 		rootNode.appendChild(node);
 		rootNode.appendChild(document.createElement("div"));
 		rootNode.appendChild(document.createElement("br"));
@@ -200,7 +202,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		var cohortC = [];
 		hosts.forEach(function (host) {
 			xenaQuery.all_cohorts(host).subscribe(function (s) {
-				var mode, sectionNode;
+				var sectionNode;
 				s.forEach(function (cohort) {
 					if (cohortC.indexOf(cohort) !== -1) {
 						return;
@@ -208,10 +210,16 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 					cohortC.push(cohort);
 					checkGenomicDataset(hosts, cohort).subscribe(function (s) {
 						if (s) {
-							mode = "multiple";
-							sectionNode = dom_helper.sectionNode("cohort");
-							eachCohort(cohort, hosts, mode, sectionNode);
+							sectionNode = dom_helper.elt("li");
+							eachCohortMultiple(cohort, hosts, sectionNode);
 							node.appendChild(sectionNode);
+
+					    var cohortList = node.querySelectorAll("li");
+							var sortedlist = Array.prototype.slice.call(cohortList).sort(function(a, b) {
+								return a.innerHTML.toLowerCase().localeCompare(b.innerHTML.toLowerCase())});
+							sortedlist.forEach(function(item){
+								node.appendChild(item);
+							})
 						}
 					});
 				});
@@ -219,12 +227,10 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		});
 	}
 
-
 	//	build single COHORT page
 	function cohortPage(cohortName, hosts, rootNode) {
 		//cohort section
-		var mode = "single",
-				tmpNode,
+		var tmpNode,
 		    node = dom_helper.sectionNode("cohort"),
 		    vizbuttonParent;
 
@@ -240,7 +246,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 
 		ifCohortExistDo (cohortName, hosts, undefined, function() {
-			eachCohort(cohortName, hosts, mode, node);
+			eachCohort(cohortName, hosts, node);
 
 			xenaQuery.dataset_list(hosts, cohortName).subscribe(
 				function (s) {
