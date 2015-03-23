@@ -170,7 +170,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		if ((hosts.length===1) &&  (userHosts.indexOf(hosts[0])===-1)){
 			nodeTitle.style.color="gray";
 		}
-		vizbuttonParent =dom_helper.elt("h4", nodeTitle);  //dom_helper.elt("multiple",nodeTitle));
+		vizbuttonParent =dom_helper.elt("h4", nodeTitle);
 		node.appendChild(vizbuttonParent);
 
 		cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), vizbuttonParent);
