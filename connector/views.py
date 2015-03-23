@@ -18,7 +18,8 @@ def client_vars(request, base):
 types = {
     'js': 'application/javascript',
     'png': 'image/png',
-    'css': 'text/css'
+    'css': 'text/css',
+    'map': 'application/json'
 }
 
 
