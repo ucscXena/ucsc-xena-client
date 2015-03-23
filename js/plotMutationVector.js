@@ -64,7 +64,7 @@ define(['underscore_ext',
 		} else if (isUndefined(v2)) {
 			return -1;
 		}
-		return mutationVector.rowOrder(v1, refGene) - mutationVector.rowOrder(v2, refGene);
+		return mutationVector.rowOrder(v1, v2, refGene);
 	}
 
 	function cmpSamples(probes, data, refGene, s1, s2) {

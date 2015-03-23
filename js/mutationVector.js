@@ -1,13 +1,12 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore'
+define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext'
 	// non-object dependencies
 	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _) {
 	'use strict';
 
-	var impactMax = 4,
-		unknownEffect = 0,
+	var unknownEffect = 0,
 		highlightRgba = 'rgba(0, 0, 0, 1)',
 		impact = {
 			Nonsense_Mutation: 3,
@@ -74,16 +73,11 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				{r: 228, g: 26, b: 28, a: 1}
 			]
 		},
-		refGeneInfo = {},
 		clone = _.clone,
 		each = _.each,
 		filter = _.filter,
-		find = _.find,
-		map = _.map,
 		reduce = _.reduce,
 		sortBy = _.sortBy,
-		toNumber = _.toNumber,
-		uniqueId = _.uniqueId,
 		widgets = {},
 		aWidget = {
 
@@ -304,7 +298,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					c,
 					rgba,
 					labels=[[],[],[],[]],
-					unknownEffects,
 					align,
 					topBorderIndex;
 				if (this.feature === 'impact') {
@@ -334,7 +327,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			render: function () {
-				var self = this;
 				this.pixPerRow = (this.height - (this.sparsePad * 2))  / this.values.length;
 				this.canvasHeight = this.height; // TODO init elsewhere
 				this.d2 = this.vg.context();
@@ -385,6 +377,24 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		return w;
 	}
 
+	function evalMut(refGene, mut) {
+		var geneInfo = refGene[mut.gene];
+		return {
+			impact: getImpact(mut.effect),
+			right: (geneInfo.strand === '+') ?
+		            mut.start - geneInfo.txStart :
+		            geneInfo.txStart - mut.start
+		};
+	}
+
+	function cmpMut(mut1, mut2) {
+		if (mut1.impact !== mut2.impact) {
+			return mut2.impact - mut1.impact; // high impact sorts first
+		}
+
+		return mut1.right - mut2.right;       // low coord sorts first
+	}
+
 	return {
 		mupitClick: function (id) {
 			if (widgets[id]) {
@@ -392,23 +402,21 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			}
 		},
 
-		rowOrder: function (row, refGene) {
-			var chrEnd = 10000000000,  // TODO some number larger than use max number of base pairs of longest genes
-				mut,
-				weight,
-				refGeneInfo,
-				rightness;
-			if (row.length) {
-				mut = _.max(row, function (mut) { return getImpact(mut.effect); });
-				weight = impactMax - getImpact(mut.effect);
-				refGeneInfo = refGene[mut.gene];
-				rightness = (refGeneInfo.strand === '+')
-					? mut.start - refGeneInfo.txStart
-					: refGeneInfo.txStart - mut.start;
-				return (weight * chrEnd) + rightness;
-			} else {
-				return (impactMax * chrEnd) + chrEnd + 1; // force mutation-less rows to the end
+		rowOrder: function (row1, row2, refGene) {
+			var row1a, row2a;
+			if (!row1.length && !row2.length) {
+				return 0;
 			}
+			if (!row1.length) {                   // has mutations sorts first
+				return 1;
+			}
+			if (!row2.length) {
+				return -1;                        // has mutations sorts first
+			}
+			row1a = _.map(row1, _.partial(evalMut, refGene));
+			row2a = _.map(row2, _.partial(evalMut, refGene));
+
+			return cmpMut(_.maxWith(row1a, cmpMut), _.maxWith(row2a, cmpMut));
 		},
 
 		show: function (id, options) {
