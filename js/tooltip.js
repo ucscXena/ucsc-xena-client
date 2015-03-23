@@ -57,12 +57,6 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml', "jquery", "defer", 'under
 				sampleID: t.sampleID || null,
 				rows: t.rows,
 			}));
-			if (t.labelWidth) {
-				$tooltip.find('.labelCol').width(t.labelWidth);
-			}
-			if (t.valWidth) {
-				$tooltip.find('.valueCol').width(t.valWidth);
-			}
 			$('#tooltipPrompt').text(freezeText);
 		};
 

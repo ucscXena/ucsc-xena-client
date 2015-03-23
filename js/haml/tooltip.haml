@@ -1,22 +1,16 @@
 %table
     %colgroup
-      %col{class:'labelCol'}
       %col{class:'valueCol'}
       %col{class:'closeCol'}
+
+    - if (sampleID) {
+      %tr
+        %td{class: 'tupleValue', colspan:2} = sampleID
+        %td{id:'tooltipPrompt', class:'tupleValue'}
 
     - _.each(rows, function(r, i) {
       %tr
         - if (r.label) {
-          %td{class: 'tupleLabel'} = r.label + ':'
+          %td{class: 'tupleValue',colspan:3} = r.label + ' : ' + r.val
         - } else {
-          %td
-        %td{id: r.val + 'Val', class: 'tupleValue', colspan:2} = r.val
-
-    - if (sampleID) {
-      %tr
-        %td{class: 'tupleLabel'} Sample:
-        %td{class: 'tupleValue'} = sampleID
-	    %td
-    %tr
-      %td
-      %td{id:'tooltipPrompt', class:'tupleValue', colspan:2}
+          %td{class: 'tupleValue',colspan:2} = r.val

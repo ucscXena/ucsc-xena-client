@@ -13,23 +13,18 @@
 	font-size: .8em;
 }
 #tooltip .labelCol {
-	width: 5em;
+	width: 10px;
 }
 #tooltip .valueCol {
-	width: 16em;
+	width: 250px;
 }
 #tooltip .closeCol {
 	width: 16px;
 }
-#tooltip .tupleLabel {
-	vertical-align: top;
-	padding: 0 .4em 0 0;
-}
 #tooltip .tupleValue {
 	vertical-align: top;
-	padding: 0;
+	padding: 2px;
 }
 #tooltipClose {
 	float: right;
-	margin-top: -3px;
 }
