@@ -28,7 +28,11 @@ define(["dom_helper", "session", "xenaQuery", "base", "../css/datapages.css"], f
 		if (host[host.length-1]==='/') {
 			host = host.slice(0, host.length-1);
 		}
-
+		// specially code for galaxyxena.soe.ucsc.edu
+		if (host.match(/galaxyxena.*.ucsc.edu/gi))
+		{
+			host = "https://galaxyxena.soe.ucsc.edu:443/xena";
+		}
 		// if galaxy checkbox checked, force prot to 7220
 		if (galaxyCheckbox.checked) {
 			var tokens = host.match(/^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/(.*))?$/);
