@@ -134,9 +134,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			closestNode: function (x, y) {
-				var min = this.radius;
+				var min = this.radius * this.radius;
 				return reduce(this.nodes, function (closest, n) {
-					var distance = Math.sqrt(Math.pow((x - n.x), 2) + Math.pow((y - n.y), 2));
+					var distance = Math.pow((x - n.x), 2) + Math.pow((y - n.y), 2);
 					if (distance < min) {
 						min = distance;
 						return n;
@@ -191,7 +191,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				node = this.closestNode(coords.x, coords.y);
 				if (node) {
 					// TODO this is slow mousing when a node is involved
-					this.highlight(node);
+					//this.highlight(node);
 					pos = node.data.chr + ':' +
 						util.addCommas(node.data.start) + '-' +
 						util.addCommas(node.data.end);
@@ -199,19 +199,28 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					rnaAf = this.formatAf(node.data.rna_vaf);
 					rows = [
 						{ val: node.data.effect},
-						{ val: 'hg19 ' + pos + ' ' + node.data.reference + '>' + node.data.alt },
-						{ val: this.gene.name + ' (' + node.data.amino_acid + ')' },
-						{ val: 'DNA / RNA variant allele freq: ' + dnaAf + ' / ' + rnaAf }
+						{ val: 'hg19 ' + pos},  // hg19 is hard coded, we do not even check
+						{ val: 'from ' + node.data.reference + ' to ' + node.data.alt},
+						{ val: this.gene.name +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'') }
 					];
+					if (dnaAf !="NA"){
+						rows.push({ val: 'DNA variant allele freq: ' + dnaAf});
+					}
+					if (rnaAf !="NA"){
+						rows.push({ val: 'RNA variant allele freq: ' + rnaAf});
+					}
+
 					tip.sampleID = node.data.sample;
 					tip.rows = rows;
 				} else {
 					sampleIndex = Math.floor((coords.y * ws.zoomCount / ws.height) + ws.zoomIndex);
 					tip.sampleID = ev.data.plotData.samples[sampleIndex];
+					/*
 					if (this.highlightOn) {
 						this.draw();
 						this.highlightOn = false;
 					}
+					*/
 				}
 				tooltip.mousing(tip);
 			},

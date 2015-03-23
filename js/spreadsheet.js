@@ -147,7 +147,7 @@ define(['underscore_ext',
 		// Does fmap leak streams if the uuid stays the same but
 		// the query changes?
 		subs.add(reqs.select(function (r) {
-			return _.reduce(r, function (acc, col_reqs, uuid) { 
+			return _.reduce(r, function (acc, col_reqs, uuid) {
 				_.each(col_reqs, function (req) {
 					acc[req.id] = req.query;
 				});
