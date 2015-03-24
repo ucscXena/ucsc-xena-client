@@ -87,7 +87,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 			vizbutton.appendChild(document.createTextNode("Visualize"));
 			vizbutton.addEventListener("click", function() {
   			session.xenaHeatmapSetCohort(cohort);
-  			location.href = "../heatmap"; //goto heatmap page
+  			location.href = "../heatmap/"; //goto heatmap page
 			});
 			vizbuttonParent.appendChild(vizbutton);
 		});

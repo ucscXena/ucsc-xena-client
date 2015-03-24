@@ -319,7 +319,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					labels = labels.map(function(list){return list.join(", ");});
 					align = 'left';
 				} else { // feature is one of allele frequencies
-					c = colors[this.color][2];
+					c= colors.af[0];
 					rgba = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',';
 					myColors = [
 						rgba + '0)',
