@@ -65,6 +65,12 @@ margin-top: 5px;
 margin-bottom: 5px;
 }
 
+#main .textLink
+{
+margin: 10px;
+display: inline-block;
+}
+
 #main labelsameLength
 {
 margin-top: 5px;

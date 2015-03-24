@@ -5,12 +5,14 @@
 
     - if (sampleID) {
       %tr
-        %td{class: 'tupleValue', colspan:2} = sampleID
-        %td{id:'tooltipPrompt', class:'tupleValue'}
-
+        %td{class: 'sampleID'} = sampleID
     - _.each(rows, function(r, i) {
       %tr
         - if (r.label) {
-          %td{class: 'tupleValue',colspan:3} = r.label + ' : ' + r.val
+          %td
+           = r.label+" : "
+           %span{class: 'tupleValue'} = r.val
         - } else {
-          %td{class: 'tupleValue',colspan:2} = r.val
+          %td{class: 'tupleValue'} = r.val
+    %tr
+      %td{id:'tooltipPrompt', class:'tooltipPrompt'}
