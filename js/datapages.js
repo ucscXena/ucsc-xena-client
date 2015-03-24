@@ -225,9 +225,14 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 							eachCohortMultiple(cohort, hosts, sectionNode);
 							node.appendChild(sectionNode);
 
-					    var cohortList = node.querySelectorAll("li");
-							var sortedlist = Array.prototype.slice.call(cohortList).sort(function(a, b) {
-								return a.innerHTML.toLowerCase().localeCompare(b.innerHTML.toLowerCase())});
+					    var cohortList = node.querySelectorAll("li"),
+					    	aString,bString, sortedlist;
+
+							sortedlist = Array.prototype.slice.call(cohortList).sort(function(a, b) {
+								aString = (a.innerText || a.textContent);
+								bString = (b.innerText || b.textContent);
+								return aString.toLowerCase().localeCompare(bString.toLowerCase());
+							});
 							sortedlist.forEach(function(item){
 								node.appendChild(item);
 							})
