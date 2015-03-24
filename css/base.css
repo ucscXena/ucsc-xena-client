@@ -1,3 +1,5 @@
+@import url("menu.css");
+@import url("nav.css");
 /* green: hover, default, and other transients.
    tags req'd for hover on safari v5.0.1 on snow leopard */
 .menu li:hover:not(.disabled):not(.noSelect),
@@ -50,6 +52,3 @@ hr {
 	margin-top: 4px;
 	margin-bottom: 0;
 }
-
-@import url("menu.css");
-@import url("nav.css");
