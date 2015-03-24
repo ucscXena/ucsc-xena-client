@@ -1,8 +1,8 @@
 /*jslint browser:true, nomen: true*/
 /*global define: false */
 
-define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaAdmin", 'jquery', 'jquery-ui', "base", "../css/datapages.css"],
-	function (dom_helper, xenaQuery, session, _, Rx, xenaAdmin, $) {
+define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaAdmin",'../images/Treehouse.jpg','jquery', 'jquery-ui', "base", "../css/datapages.css"],
+	function (dom_helper, xenaQuery, session, _, Rx, xenaAdmin, treehouseImg, $) {
 	'use strict';
 
 	var allHosts, /* hosts is the variable holds all hosts*/
@@ -87,7 +87,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 			vizbutton.appendChild(document.createTextNode("Visualize"));
 			vizbutton.addEventListener("click", function() {
   			session.xenaHeatmapSetCohort(cohort);
-  			location.href = "/heatmap";//goto heatmap page
+  			location.href = "../heatmap"; //goto heatmap page
 			});
 			vizbuttonParent.appendChild(vizbutton);
 		});
@@ -163,7 +163,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 	// the short COHORT section
 	function eachCohortMultiple(cohortName, hosts, node) {
-		var nodeTitle, vizbuttonParent, img;
+		var nodeTitle, vizbuttonParent;
 
 		nodeTitle = dom_helper.hrefLink(cohortName, "?cohort=" + encodeURIComponent(cohortName));
 		//for single active host but not selected by user senario
@@ -179,8 +179,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		var img;
 		if (cohortName.search(/^Treehouse/gi)!=-1){
 			img = new Image();
-  	  img.src = "/images/Treehouse.jpg";
-    	img.height = "50";
+  	  img.src = treehouseImg;
+  	  img.height = "50";
     	vizbuttonParent.appendChild(img);
     }
     vizbuttonParent.appendChild(nodeTitle);
@@ -706,7 +706,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		qStringObj.allIds = true;
 
 		qString= dom_helper.JSONToqueryString(qStringObj);
-		link = "/datapages/?"+qString;
+		link = "../datapages/?"+qString;
 		linkNode.setAttribute("href", link);
 	}
 
@@ -733,7 +733,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 			qStringObj.nSamples= 500;
 		}
 		qString= dom_helper.JSONToqueryString(qStringObj);
-		link = "/datapages/?"+qString;
+		link = "../datapages/?"+qString;
 		linkNode.setAttribute("href", link);
 	}
 

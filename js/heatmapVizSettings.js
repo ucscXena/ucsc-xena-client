@@ -32,7 +32,8 @@
 // Refactoring notes:
 // The default column normalization is fetched from the server. Instead it should come from
 // the state, or from a data cache, because we've fetched that already.
-define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', 'jquery', 'jquery-ui'], function (xenaQuery, dom_helper, session, _, $) {
+define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genomicFloatLegend.jpg','../images/genomicCustomFloatLegend.jpg','jquery', 'jquery-ui'],
+	function (xenaQuery, dom_helper, session, _, floatImg, customFloatImg, $) {
 		'use strict';
 
 	return function (cursor, state, dsID) {
@@ -180,16 +181,16 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', 'jquery', 'jquer
 			}
 
 			function buildCustomColorImage(custom) {
-				var customColorImage = document.createElement("IMG");
-				customColorImage.setAttribute("src", "https://users.soe.ucsc.edu/~jzhu/genomicCustomFloatLegend.jpg");
+				var customColorImage = new Image();
+				customColorImage.src = customFloatImg;
 				customColorImage.setAttribute("class", "image");
 				customColorImage.style.opacity = custom ? "1.0" : "0.6";
 				return customColorImage;
 			}
 
 			function buildAutoColorImage(auto) {
-				var autoColorImage = document.createElement("IMG");
-				autoColorImage.setAttribute("src", "https://users.soe.ucsc.edu/~jzhu/genomicFloatLegend.jpg");
+				var autoColorImage = new Image();
+				autoColorImage.src = floatImg;
 				autoColorImage.setAttribute("class", "image");
 				autoColorImage.style.opacity = auto ? "1.0" : "0.6";
 				return autoColorImage;
