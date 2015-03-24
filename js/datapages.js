@@ -163,16 +163,27 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 	// the short COHORT section
 	function eachCohortMultiple(cohortName, hosts, node) {
-		var nodeTitle, vizbuttonParent;
+		var nodeTitle, vizbuttonParent, img;
 
 		nodeTitle = dom_helper.hrefLink(cohortName, "?cohort=" + encodeURIComponent(cohortName));
 		//for single active host but not selected by user senario
 		if ((hosts.length===1) &&  (userHosts.indexOf(hosts[0])===-1)){
 			nodeTitle.style.color="gray";
 		}
-		vizbuttonParent =dom_helper.elt("h4", nodeTitle);
+		vizbuttonParent= document.createElement("h4");
 		node.appendChild(vizbuttonParent);
+		cohortPlusVizButton (cohortName,vizbuttonParent,nodeTitle);
+	}
 
+	function cohortPlusVizButton (cohortName,vizbuttonParent,nodeTitle){
+		var img;
+		if (cohortName.search(/^Treehouse/gi)!=-1){
+			img = new Image();
+  	  img.src = '/images/Treehouse.jpg';
+    	img.height = "50";
+    	vizbuttonParent.appendChild(img);
+    }
+    vizbuttonParent.appendChild(nodeTitle);
 		cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), vizbuttonParent);
 	}
 
@@ -237,13 +248,10 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		rootNode.appendChild(node);
 
 		//title
-		vizbuttonParent = dom_helper.elt("h2", "cohort: "+cohort);
+		vizbuttonParent = dom_helper.elt("h2", "cohort: ");
 		node.appendChild(vizbuttonParent);
-		// viz button
-		cohortHeatmapButton(cohort,
-			_.intersection(_.intersection(activeHosts, userHosts), metadataFilterHosts),
-			vizbuttonParent);
 
+		cohortPlusVizButton (cohortName,vizbuttonParent,document.createTextNode(cohort));
 
 		ifCohortExistDo (cohortName, hosts, undefined, function() {
 			eachCohort(cohortName, hosts, node);
