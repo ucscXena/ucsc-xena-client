@@ -1,4 +1,4 @@
-/*global define: true */
+/*global define: false, console: false */
 // Extensions to rx for the cancer browser
 
 define(['rx', 'underscore_ext'], function (Rx, _) {
@@ -27,6 +27,11 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 		});
 	};
 
+	function log() {
+		if (console) {
+			console.log.apply(console, arguments);
+		}
+	}
 
 	function fmap(m, fn) {
 		var x = {};
@@ -218,7 +223,6 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 	 * value of the sampled observable.
 	 */
 	observableProto.sampleAll = function (sampler, selector) {
-		var observable = this;
 		selector = selector || _.identity;
 
 		return this.join(sampler,
@@ -230,24 +234,24 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 	observableProto.spy = function (msg) {
 		var observable = this;
 		return Rx.Observable.create(function (observer) {
-			console.log(msg, "subscribed");
+			log(msg, "subscribed");
 			var inner = observable.subscribe(
 				function (next) {
-					console.log(msg, "sending", next);
+					log(msg, "sending", next);
 					observer.onNext(next);
 				},
 				function () {
-					console.log(msg, "error");
+					log(msg, "error");
 					observer.onError();
 				},
 				function () {
-					console.log(msg, "complete");
+					log(msg, "complete");
 					observer.onCompleted();
 				}
 			);
 			return new Rx.Disposable(function () {
 				inner.dispose();
-				console.log(msg, "disposed");
+				log(msg, "disposed");
 			});
 		});
 	};

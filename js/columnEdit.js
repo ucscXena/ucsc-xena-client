@@ -83,8 +83,7 @@ define(['haml/columnEdit.haml',
 		},
 
 		renderInputModes: function () {
-			var self = this,
-				modes = getInputModesByMetadata(this.metadata);
+			var modes = getInputModesByMetadata(this.metadata);
 			if (modes.length === 1) {
 				this.stateTmp.inputMode = modes[0];
 			} else { // must be [iGenes, iProbes]
@@ -330,9 +329,8 @@ define(['haml/columnEdit.haml',
 		},
 
 		toggleAdvanced: function (e) {
-			var label = (this.$advancedLabel.text() === 'Advanced:')
-				? 'Advanced...'
-				: 'Advanced:';
+			var label = (this.$advancedLabel.text() === 'Advanced:') ?
+				'Advanced...' : 'Advanced:';
 			this.$advanced.toggle();
 			this.$advancedLabel.text(label);
 		},

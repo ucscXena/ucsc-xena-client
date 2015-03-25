@@ -8,6 +8,7 @@ __webpack_public_path__ = config.baseurl;
 // https://github.com/mishoo/UglifyJS2/commit/276b9a31cda2a2ef93e7af4e966baae91a434361
 
 if (document.location.pathname.match(/datapages\/$/)) {
+    /* jshint -W030 */ // XXX jshint doesn't like the workaround.
 	require.ensure(['datapages'], function () {
 		require(['datapages']).foo; // XXX see above
 	});

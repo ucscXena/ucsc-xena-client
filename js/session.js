@@ -45,6 +45,8 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		sessionStorage.xena = JSON.stringify(state);
 	}
 
+	// XXX should not have subscribe inside a subscribe. Instead,
+	// use a combinator on the two streams & subscribe to the result.
 	function datasetHasFloats (host, dsName, action, actionArgs) {
 		xenaQuery.dataset_field_examples(host, dsName).subscribe(function (s) {
 			var probes = s.map(function (probe) {
@@ -52,10 +54,10 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			});
 			xenaQuery.code_list(host, dsName, probes).subscribe(function(codemap){
 				for(var key in codemap) {
-		    	if (!codemap[key]){  // no code, float feature
-		    		action.apply(this,actionArgs);
-		    		return;
-		    	}
+					if (codemap.hasOwnProperty(key) && !codemap[key]){  // no code, float feature
+						action.apply(this,actionArgs);
+						return;
+					}
 		    }
 			});
 		});

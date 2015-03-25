@@ -1,5 +1,5 @@
 /*jslint browser: true, regexp: true, vars: true */
-/*global define: false, require: false */
+/*global define: false, console: false */
 
 define(['jquery',
 		'underscore_ext',
@@ -31,20 +31,8 @@ define(['jquery',
 
 	'use strict';
 
-	function identity(x) { return x; }
-
 	// set default column_order and column_rendering somewhere?
 	// pass column_order to spreadsheet.js
-
-	// Returns a caching observable factory. If multiple callers request the same
-	// observable, a single observable will be shared between them. When all
-	// subscriptions are disposed, the observable will be unreferrenced.
-	function cacheFactory(observableFactory) {
-			var cache = {};
-			return function (key) {
-					return cache[key] || (cache[key] = observableFactory(key).finally(function (key) { delete cache[key]; }).share());
-			};
-	}
 
 	var model = columnModels(); // XXX global for testing
 	var HEIGHT = window.innerHeight? window.innerHeight-200: 500;
@@ -93,12 +81,12 @@ define(['jquery',
 	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths).share();
 	var spreadsheetCursor = cursor(writeState, spreadsheetPaths);
 
-	var thisSheetWrap = sheetWrap.create({
+	sheetWrap.create({
 		$anchor: $('#main'),
 		state: spreadsheetState,
 		cursor: spreadsheetCursor,
 		servers: defaultServers
-	});
+	}); // XXX leaked
 	var $spreadsheet = $('.spreadsheet');
 	var $debug = $('.debug');
 
@@ -109,8 +97,8 @@ define(['jquery',
 	var resizes = $spreadsheet.onAsObservable("resizestop")
 		.select(function (ev) {
 				return function (s) {
-					var diff = ev.additionalArguments[0].size.height
-							- ev.additionalArguments[0].originalSize.height,
+					var //diff = ev.additionalArguments[0].size.height
+						//	- ev.additionalArguments[0].originalSize.height,
 						// TODO it would be best to retrieve the state.height here
 						// and replace it with: diff + state.height
 						// The below does not work if a sparse mutation plot is first.
@@ -148,7 +136,9 @@ define(['jquery',
 					'column_order', s.column_order.concat([id]));
 			});
 		} catch (e) {
-			console.log('error', e);
+			if (console) {
+				console.log('error', e);
+			}
 		}
 	}
 

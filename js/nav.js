@@ -1,4 +1,4 @@
-/*global config: false, require: false, document: false */
+/*global require: false, document: false */
 'use strict';
 var dh = require('dom_helper');
 //var baseurl = config.get('baseurl');
