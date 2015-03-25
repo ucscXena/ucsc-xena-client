@@ -8,11 +8,14 @@
         %td{class: 'sampleID'} = sampleID
     - _.each(rows, function(r, i) {
       %tr
-        - if (r.label) {
+        - if (r.label && r.val)  {
           %td
-           = r.label+" : "
-           %span{class: 'tupleValue'} = r.val
-        - } else {
+            = r.label+" : "
+            %span{class: 'tupleValue'} = r.val
+        - } else if (r.val) {
           %td{class: 'tupleValue'} = r.val
+        - } else if (r.label) {
+          %td = r.label
+        - }
     %tr
       %td{id:'tooltipPrompt', class:'tooltipPrompt'}

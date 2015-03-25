@@ -9,11 +9,11 @@
 	margin-top: .5em;
 }
 .sheetWrap>.header label.cohortAnchor {
-	margin: 0px 10px;
+	margin: 0 10px;
 }
 .sheetWrap>.header label.samplesFromAnchor {
-	display: none;
-	margin: 0px 10px;
+
+	margin: 0 10px;
 }
 .sheetWrap>.header .select2-container {
 	margin-left: 0.2em;
@@ -41,13 +41,13 @@
 .chartSelect  {
  padding: 3px 6px;
  font-size:small;
- margin: 0px 10px;
+ margin: 0 10px;
  vertical-align: 5%;
 }
 .bookmark {
  padding: 3px 6px;
  font-size:small;
- margin: 0px 10px;
+ margin: 0 10px;
  vertical-align: 5%;
 }
 .sheetWrap .debug button {

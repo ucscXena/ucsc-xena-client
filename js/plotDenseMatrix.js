@@ -468,7 +468,7 @@ define(['underscore_ext',
 			tip.valWidth = '15em';
 		}
 		if (val !== 'NA' && column.dataType !== 'clinicalMatrix') {
-			rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
+			rows.push({ label: 'Column mean : '+ prec(meannan(heatmapData[fieldIndex])) });
 		}
 		tip.rows = rows;
 		tooltip.mousing(tip);
@@ -499,10 +499,6 @@ define(['underscore_ext',
 		} else {
 			return { colors: [], labels: [] };
 		}
-	}
-
-	function reverse(arr) {
-		return arr.slice(0).reverse();
 	}
 
 	// Color scale cases

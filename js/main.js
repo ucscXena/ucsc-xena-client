@@ -47,7 +47,7 @@ define(['jquery',
 	}
 
 	var model = columnModels(); // XXX global for testing
-	var HEIGHT = window.innerHeight-200;
+	var HEIGHT = window.innerHeight? window.innerHeight-200: 500;
 
 	var unload = Rx.Observable.fromEvent(window, 'beforeunload');
 	// XXX does this work if no state events occur?? Looks like not.
@@ -194,30 +194,6 @@ define(['jquery',
 
 		debug_stream.connect();
 
-		/*
-		if (sessionStorage && sessionStorage.xena) {
-			// XXX error handling?
-			start = JSON.parse(sessionStorage.xena);
-			start._column = {};
-			start._sources = [];
-			start.mode= "heatmap";
-		} else {
-			start = {
-				"chartState": null,
-				"mode": "heatmap",
-				"samples": [],
-				"samplesFrom": "",
-				"servers": {'default': defaultServers, user: defaultServers},
-				 "_sources": [],
-				"height": HEIGHT,
-				"zoomIndex": 0,
-				"zoomCount": 100,
-				"column_rendering": {},
-				"_column": {},
-				"column_order": []
-			};
-		}
-		*/
 		start = {
 				"chartState": null,
 				"mode": "heatmap",

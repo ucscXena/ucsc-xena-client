@@ -203,11 +203,11 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 						{ val: 'from ' + node.data.reference + ' to ' + node.data.alt},
 						{ val: this.gene.name +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'') }
 					];
-					if (dnaAf !="NA"){
-						rows.push({ val: 'DNA variant allele freq: ' + dnaAf});
+					if (dnaAf !=="NA"){
+						rows.push({ label: 'DNA variant allele freq',  val: dnaAf});
 					}
-					if (rnaAf !="NA"){
-						rows.push({ val: 'RNA variant allele freq: ' + rnaAf});
+					if (rnaAf !=="NA"){
+						rows.push({ label: 'RNA variant allele freq', val: rnaAf});
 					}
 
 					tip.sampleID = node.data.sample;

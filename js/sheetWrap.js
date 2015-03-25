@@ -187,6 +187,18 @@ define(['haml/sheetWrap.haml',
 			);
 
 			this.subs.add(
+				state.refine(['column_order'])
+					.subscribe(function (state) {
+						if (state.column_order.length>0) {
+							self.$chartSelect.show();
+						}
+						else{
+							self.$chartSelect.hide();
+						}
+					})
+			);
+
+			this.subs.add(
 				state.refine(['samples', 'column_order', 'zoomCount', 'zoomIndex'])
 					.subscribe(function (state) {
 						var text = 'Samples (N=' + state.samples.length + ')' +
