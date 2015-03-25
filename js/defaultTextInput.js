@@ -10,8 +10,8 @@
  * input state stream completes.
  */
 
-define(['underscore', 'rx', 'rx-dom', 'rx.ext', 'rx.coincidence'
-	], function (_, Rx) {
+define(['underscore_ext', 'underscore.string/trim', 'rx', 'rx-dom', 'rx.ext', 'rx.coincidence'
+	], function (_, trim, Rx) {
 	'use strict';
 
 	function fromEvents(el, events) {
@@ -40,7 +40,7 @@ define(['underscore', 'rx', 'rx-dom', 'rx.ext', 'rx.coincidence'
 		},
 
 		getVal: function() {
-			return _.trim(this.$el.val());
+			return trim(this.$el.val());
 		},
 
 		setClass: function(set) {
