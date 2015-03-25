@@ -9,58 +9,6 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 			samples,
 			updateArgs;
 
-		root.setAttribute("id", "chartRoot");
-		root.style.height =window.innerHeight+'px';  /// best to do with css, but don't how to set the chart to full window height in css
-
-		// left panel
-		leftContainer = document.createElement("div");
-		leftContainer.setAttribute("id", "left");
-		root.appendChild(leftContainer);
-
-		// right panel
-		rightContainer = document.createElement("div");
-		rightContainer.setAttribute("id", "right");
-		root.appendChild(rightContainer);
-
-		// chart container
-		rightContainer.appendChild(buildEmptyChartContainer());
-
-		if (!(xenaState && xenaState.cohort && xenaState.samples && xenaState.column_order.length > 0)) {
-			document.getElementById("myChart").innerHTML = "There is no heatmap data, please add some.";
-			return;
-		}
-
-		cohort = xenaState.cohort;
-		samples = xenaState.samples;
-		updateArgs = [cohort, samples];
-
-		// y axis selector
-		div = dom_helper.elt("div",
-			axisSelector("Yaxis", update, updateArgs));
-		div.setAttribute("id", "Y");
-		leftContainer.appendChild(div);
-
-		//controls
-		controlContainer = document.createElement("div");
-		controlContainer.setAttribute("id", "controlContainer");
-		rightContainer.appendChild(controlContainer);
-		// whisker is 1, 2, 3 SD
-		controlContainer.appendChild(buildSDDropdown());
-		// normalization selection
-		controlContainer.appendChild(buildNormalizationDropdown());
-
-
-		// x axis selector
-		div = dom_helper.elt("div", "Variable ",
-			axisSelector("Xaxis", update, updateArgs));
-		div.setAttribute("id", "X");
-		rightContainer.appendChild(div);
-
-		update.apply(this, updateArgs);
-
-		//zoom and pan instructions
-		rightContainer.appendChild(dom_helper.elt("section", "Click & drag to zoom; add SHIFT to pan."));
-
 		function setStorage(state) {
 			sessionStorage.xena = JSON.stringify(state);
 			cursor.update(function (s) {
@@ -140,9 +88,6 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 			dropDownDiv.selectedIndex = 0;
 
 			dropDownDiv.addEventListener('change', function () {
-				// using chart normalization to set heatmap default
-				// setXenaColNormalizationState();
-
 				update.apply(this, updateArgs);
 			});
 
@@ -220,36 +165,6 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				update.apply(this, updateArgs);
 			});
 			return div;
-		}
-
-		function checkBoxDefault() {
-			var dropDownDiv = document.getElementById("ynormalization"),
-				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-				dropdown = document.getElementById("Yaxis"),
-				column = dropdown.options[dropdown.selectedIndex].value;
-
-			//using xena heatmap default to set chart normalization default
-			if (xenaState && xenaState.column_rendering[column].colnormalization) {
-				dropDownDiv.selectedIndex = 1;
-			} else {
-				dropDownDiv.selectedIndex = 0;
-			}
-		}
-
-		// obsolete function, for test setting colnormalization
-		function setXenaColNormalizationState() {
-			var dropDownDiv = document.getElementById("ynormalization"),
-				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-				dropdown = document.getElementById("Yaxis"),
-				column = dropdown.options[dropdown.selectedIndex].value,
-				colNormalization = dropDownDiv.options[dropDownDiv.selectedIndex].value;
-
-			if (colNormalization === "none") {
-				xenaState.column_rendering[column].colnormalization = false;
-			} else {
-				xenaState.column_rendering[column].colnormalization = true;
-			}
-			setStorage(xenaState);
 		}
 
 		function normalizationUIVisibility(visible) {
@@ -1033,5 +948,57 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				div.appendChild(datalabelButton);
 			}
 		}
+
+		root.setAttribute("id", "chartRoot");
+		root.style.height =window.innerHeight+'px';  /// best to do with css, but don't how to set the chart to full window height in css
+
+		// left panel
+		leftContainer = document.createElement("div");
+		leftContainer.setAttribute("id", "left");
+		root.appendChild(leftContainer);
+
+		// right panel
+		rightContainer = document.createElement("div");
+		rightContainer.setAttribute("id", "right");
+		root.appendChild(rightContainer);
+
+		// chart container
+		rightContainer.appendChild(buildEmptyChartContainer());
+
+		if (!(xenaState && xenaState.cohort && xenaState.samples && xenaState.column_order.length > 0)) {
+			document.getElementById("myChart").innerHTML = "There is no heatmap data, please add some.";
+			return;
+		}
+
+		cohort = xenaState.cohort;
+		samples = xenaState.samples;
+		updateArgs = [cohort, samples];
+
+		// y axis selector
+		div = dom_helper.elt("div",
+			axisSelector("Yaxis", update, updateArgs));
+		div.setAttribute("id", "Y");
+		leftContainer.appendChild(div);
+
+		//controls
+		controlContainer = document.createElement("div");
+		controlContainer.setAttribute("id", "controlContainer");
+		rightContainer.appendChild(controlContainer);
+		// whisker is 1, 2, 3 SD
+		controlContainer.appendChild(buildSDDropdown());
+		// normalization selection
+		controlContainer.appendChild(buildNormalizationDropdown());
+
+
+		// x axis selector
+		div = dom_helper.elt("div", "Variable ",
+			axisSelector("Xaxis", update, updateArgs));
+		div.setAttribute("id", "X");
+		rightContainer.appendChild(div);
+
+		update.apply(this, updateArgs);
+
+		//zoom and pan instructions
+		rightContainer.appendChild(dom_helper.elt("section", "Click & drag to zoom; add SHIFT to pan."));
 	};
 });

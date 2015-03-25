@@ -48,6 +48,22 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 	}
 
 
+	// check if there is some genomic data for the cohort, if goodsStatus is a parameter, also check if the genomic data meet the status
+	function checkGenomicDatasetAllBad(hosts, cohort, goodStatus) {
+		return xenaQuery.dataset_list(hosts, cohort).map(function (s) {
+			return s.every(function (r) {
+				if (r.datasets) {
+					return r.datasets.some(function (dataset) {
+						var format = dataset.type,
+								status = dataset.status;
+						return ((goodStatus? (status !== goodStatus): false) || (NOT_GENOMICS.indexOf(format) !== -1));
+					});
+				}
+				return true;
+			});
+		});
+	}
+
 	// test if a legit chort exits, (i.e. with real genomic data), carry out action
 	function ifCohortExistDo(cohort, hosts, goodStatus, action ) {
 		checkGenomicDataset(hosts, cohort, goodStatus).subscribe(function (s) {
@@ -57,6 +73,14 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		});
 	}
 
+	// test if a chort illegit, (i.e. no real genomic data), carry out action
+	function ifCohortDoesNotExistDo(cohort, hosts, goodStatus, action ) {
+		checkGenomicDatasetAllBad(hosts, cohort, goodStatus).subscribe(function (s) {
+			if (s) {
+				action.apply(null, arguments);
+			}
+		});
+	}
 
 	function deleteDataButton (dataset){
 		var name = JSON.parse(dataset.dsID).name,
@@ -80,7 +104,6 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 	function cohortHeatmapButton(cohort, hosts, vizbuttonParent) {
 		var vizbutton,
 				goodStatus = session.GOODSTATUS;
-
   	ifCohortExistDo(cohort, _.intersection(_.intersection(activeHosts, hosts), userHosts), goodStatus, function(){
 			vizbutton = document.createElement("BUTTON");
 			vizbutton.setAttribute("class","vizbutton");
@@ -163,28 +186,37 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 	// the short COHORT section
 	function eachCohortMultiple(cohortName, hosts, node) {
-		var nodeTitle, vizbuttonParent;
+		var liNode = document.createElement("li"), img,
+			nodeTitle = dom_helper.hrefLink(cohortName, "?cohort=" + encodeURIComponent(cohortName));
 
-		nodeTitle = dom_helper.hrefLink(cohortName, "?cohort=" + encodeURIComponent(cohortName));
+		img = getImage(cohortName);
+		if (img){
+			liNode.appendChild(img);
+		}
+
 		//for single active host but not selected by user senario
 		if ((hosts.length===1) &&  (userHosts.indexOf(hosts[0])===-1)){
 			nodeTitle.style.color="gray";
 		}
-		vizbuttonParent= document.createElement("h4");
-		node.appendChild(vizbuttonParent);
-		cohortPlusVizButton (cohortName,vizbuttonParent,nodeTitle);
+		liNode.appendChild(nodeTitle);
+		node.appendChild(liNode);
+		cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), liNode);
+
+		if (cohortName===COHORT_NULL){
+			ifCohortDoesNotExistDo(cohortName, hosts, session.GOODSTATUS, function (){
+				node.removeChild(liNode);
+			});
+		}
 	}
 
-	function cohortPlusVizButton (cohortName,vizbuttonParent,nodeTitle){
+	function getImage (cohortName){
 		var img;
-		if (cohortName.search(/^Treehouse/gi)!=-1){
+		if (cohortName.search(/^Treehouse/gi)!==-1){
 			img = new Image();
   	  img.src = treehouseImg;
   	  img.height = "50";
-    	vizbuttonParent.appendChild(img);
     }
-    vizbuttonParent.appendChild(nodeTitle);
-		cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), vizbuttonParent);
+    return img;
 	}
 
 	function cohortListPage(hosts, rootNode) {
@@ -204,41 +236,41 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		node = dom_helper.sectionNode("cohort");
 		rootNode.appendChild(node);
 		node.appendChild(title);
+
 		node = document.createElement("div");
 		node.setAttribute("id","cohortList");
 		rootNode.appendChild(node);
 		rootNode.appendChild(document.createElement("div"));
-		rootNode.appendChild(document.createElement("br"));
 
-		var cohortC = [];
-		hosts.forEach(function (host) {
-			xenaQuery.all_cohorts(host).subscribe(function (s) {
-				var sectionNode;
+		var source = Rx.Observable.zipArray(
+			hosts.map(function (host) {
+			 	return xenaQuery.all_cohorts(host);
+			})
+		);
+
+		source.subscribe(function (x) {
+			var cohortC = [];
+
+			x.forEach(function(s){
 				s.forEach(function (cohort) {
-					if (cohortC.indexOf(cohort) !== -1) {
-						return;
+					if (cohortC.indexOf(cohort) === -1) {
+						cohortC.push(cohort);
 					}
-					cohortC.push(cohort);
-					checkGenomicDataset(hosts, cohort).subscribe(function (s) {
-						if (s) {
-							sectionNode = dom_helper.elt("li");
-							eachCohortMultiple(cohort, hosts, sectionNode);
-							node.appendChild(sectionNode);
-
-					    var cohortList = node.querySelectorAll("li"),
-					    	aString,bString, sortedlist;
-
-							sortedlist = Array.prototype.slice.call(cohortList).sort(function(a, b) {
-								aString = (a.innerText || a.textContent);
-								bString = (b.innerText || b.textContent);
-								return aString.toLowerCase().localeCompare(bString.toLowerCase());
-							});
-							sortedlist.forEach(function(item){
-								node.appendChild(item);
-							})
-						}
-					});
 				});
+			});
+
+			cohortC.sort(function (a,b){
+				if (a===COHORT_NULL){
+					return 1;
+				}
+				else if (b===COHORT_NULL){
+					return -1;
+				}
+				return a.toLowerCase().localeCompare(b.toLowerCase());
+			});
+
+			cohortC.map(function(cohort){
+				eachCohortMultiple(cohort, hosts, node);
 			});
 		});
 	}
@@ -246,7 +278,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 	//	build single COHORT page
 	function cohortPage(cohortName, hosts, rootNode) {
 		//cohort section
-		var tmpNode,
+		var tmpNode,img,
 		    node = dom_helper.sectionNode("cohort"),
 		    vizbuttonParent;
 
@@ -256,7 +288,12 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		vizbuttonParent = dom_helper.elt("h2", "cohort: ");
 		node.appendChild(vizbuttonParent);
 
-		cohortPlusVizButton (cohortName,vizbuttonParent,document.createTextNode(cohort));
+		img = getImage(cohortName);
+			if (img){
+				vizbuttonParent.appendChild(img);
+		}
+		vizbuttonParent.appendChild(document.createTextNode(cohort));
+		cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), vizbuttonParent);
 
 		ifCohortExistDo (cohortName, hosts, undefined, function() {
 			eachCohort(cohortName, hosts, node);
