@@ -45,6 +45,8 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		sessionStorage.xena = JSON.stringify(state);
 	}
 
+	// XXX should not have subscribe inside a subscribe. Instead,
+	// use a combinator on the two streams & subscribe to the result.
 	function datasetHasFloats (host, dsName, action, actionArgs) {
 		xenaQuery.dataset_field_examples(host, dsName).subscribe(function (s) {
 			var probes = s.map(function (probe) {
@@ -52,10 +54,10 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			});
 			xenaQuery.code_list(host, dsName, probes).subscribe(function(codemap){
 				for(var key in codemap) {
-		    	if (!codemap[key]){  // no code, float feature
-		    		action.apply(this,actionArgs);
-		    		return;
-		    	}
+					if (codemap.hasOwnProperty(key) && !codemap[key]){  // no code, float feature
+						action.apply(this,actionArgs);
+						return;
+					}
 		    }
 			});
 		});
@@ -129,8 +131,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 
 		checkbox.addEventListener('click', function () {
 			var checked = checkbox.checked,
-				stateJSON = JSON.parse(sessionStorage.state),
-				newList;
+				stateJSON = JSON.parse(sessionStorage.state);
 			if (checked !== _.contains(stateJSON.userHosts, host)) {
 				if (checked) { // add host
 					addHostToListInSession('userHosts', host);
@@ -156,8 +157,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 	}
 
 	function metaDataFilterCheckBox(host, ifChangedAction) {
-		var userHosts = JSON.parse(sessionStorage.state).userHosts,
-				metadataFilterHosts= JSON.parse(sessionStorage.state).metadataFilterHosts,
+		var metadataFilterHosts= JSON.parse(sessionStorage.state).metadataFilterHosts,
 				checkbox = document.createElement("INPUT");
 
 		checkbox.setAttribute("type", "checkbox");
@@ -166,8 +166,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 
 		checkbox.addEventListener('click', function () {
 			var checked = checkbox.checked,
-				stateJSON = JSON.parse(sessionStorage.state),
-				newList;
+				stateJSON = JSON.parse(sessionStorage.state);
 			if (checked !== _.contains(stateJSON.metadataFilterHosts, host)) {
 				if (checked) { // add host
 					addHostToListInSession('metadataFilterHosts', host);

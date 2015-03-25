@@ -10,12 +10,12 @@ define(['underscore_ext',
 					 partition) {
 	'use strict';
 
-	function normalize_column(c) {
-		if (!_.has(c, 'uuid')) {
-			return _.assoc(c, 'uuid', uuid());
-		}
-		return c;
-	}
+//	function normalize_column(c) {
+//		if (!_.has(c, 'uuid')) {
+//			return _.assoc(c, 'uuid', uuid());
+//		}
+//		return c;
+//	}
 
 	// XXX No longer need this, but leaving it in case we need
 	// an example of normalizing an array.
@@ -24,14 +24,14 @@ define(['underscore_ext',
 	// new array when there are no changes.
 	function normalize_model(state) {
 		return state; // XXX short-circuited, as above
-		var cols = _.reduce(
-			_.range(state.column_rendering.length),
-			function (arr, i) {
-				return _.assoc(arr, i, normalize_column(arr[i]));
-			},
-			state.column_rendering
-		);
-		return _.assoc(state, 'column_rendering', cols);
+//		var cols = _.reduce(
+//			_.range(state.column_rendering.length),
+//			function (arr, i) {
+//				return _.assoc(arr, i, normalize_column(arr[i]));
+//			},
+//			state.column_rendering
+//		);
+//		return _.assoc(state, 'column_rendering', cols);
 	}
 
 	return function() {

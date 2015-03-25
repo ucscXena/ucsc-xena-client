@@ -501,10 +501,6 @@ define(['underscore_ext',
 		}
 	}
 
-	function reverse(arr) {
-		return arr.slice(0).reverse();
-	}
-
 	// Color scale cases
 	//  1 - clinical data: single probe, auto-scaled
 	//    a - float

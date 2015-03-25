@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "webpack-dev-server --config webpack.test.js --port 8081",
+    "lint": "jshint js/* test/* && csslint css/*",
     "clean": "rimraf build/*",
     "start": "webpack-dev-server --devtool eval --progress --colors --history-api-fallback",
     "build": "webpack",
@@ -17,10 +18,12 @@
   "devDependencies": {
     "assert": "^1.3.0",
     "css-loader": "^0.9.1",
+    "csslint": "^0.10.0",
     "exports-loader": "^0.6.2",
     "file-loader": "^0.8.1",
     "html-webpack-plugin": "^1.1.0",
     "imports-loader": "^0.6.3",
+    "jshint": "^2.6.3",
     "jsverify": "^0.6.0-alpha.3",
     "jsx-loader": "^0.12.2",
     "mocha": "^2.2.1",

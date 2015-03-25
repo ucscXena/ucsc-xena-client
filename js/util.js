@@ -78,8 +78,8 @@ define([ "jquery" ], function ($) {
 
 		// a hack for those safari-only bugs...
 		safari: function () {
-			if (navigator.userAgent.indexOf('Safari') !== -1
-					&& navigator.userAgent.indexOf('Chrome') === -1) {
+			if (navigator.userAgent.indexOf('Safari') !== -1 &&
+					navigator.userAgent.indexOf('Chrome') === -1) {
 				return true;
 			} else {
 				return false;

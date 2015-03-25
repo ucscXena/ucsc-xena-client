@@ -1,18 +1,13 @@
-/*jslint nomen:true, browser: true */
+/*jshint browser: true, devel: true */
 /*global define: false  */
 
 define(['haml/download.haml', "defer", "galaxy", "jquery", "util", "underscore_ext",
 	"loading"], function (template, defer, galaxy, $, util, _) {
 	'use strict';
 
-	var bind = _.bind,
-		each = _.each,
-		filter = _.filter,
+	var filter = _.filter,
 		flatten = _.flatten,
-		keys = _.keys,
 		map = _.map,
-		toArray = _.toArray,
-		uniq = _.uniq,
 		widget,
 		aWidget;
 
@@ -45,7 +40,6 @@ define(['haml/download.haml', "defer", "galaxy", "jquery", "util", "underscore_e
 		buildTsv: function (data, varNames, scope) {
 			var self = this,
 				tsv,
-				row,
 				rows;
 			rows = map(data, function (row, i) {
 				return row.join('\t');
@@ -76,18 +70,16 @@ define(['haml/download.haml', "defer", "galaxy", "jquery", "util", "underscore_e
 						} else { // no value for this sample & identifier
 							return [
 								varNames.map(function (varName) {
-									return (varName === 'sample')
-										? sample.sample
-										: 'no mutation';
+									return (varName === 'sample') ?
+										sample.sample : 'no mutation';
 								})
 							];
 						}
 					} else { // no data for this sample & identifier
 						return [
 							varNames.map(function (varName) {
-								return (varName === 'sample')
-									? sample.sample
-									: null;
+								return (varName === 'sample') ?
+									sample.sample : null;
 							})
 						];
 					}
@@ -96,17 +88,15 @@ define(['haml/download.haml', "defer", "galaxy", "jquery", "util", "underscore_e
 		},
 
 		xformProbeMatrix: function () {
-			var self = this,
-				heatmapData = this.columnUi.plotData.heatmapData,
+			var heatmapData = this.columnUi.plotData.heatmapData,
 				samples = this.columnUi.plotData.samples,
 				fields = this.columnUi.plotData.fields,
 				codes = this.columnUi.plotData.codes,
 				varNames = ['sample'].concat(fields),
 				tsvData = samples.map(function (sample, i) {
 					return [sample].concat(fields.map(function (field, j) {
-						var value = codes[field]
-							? codes[field][heatmapData[j][i]]
-							: heatmapData[j][i];
+						var value = codes[field] ?
+							codes[field][heatmapData[j][i]] : heatmapData[j][i];
 						return value;
 					}));
 				});

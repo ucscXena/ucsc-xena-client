@@ -1,5 +1,5 @@
-/*jslint browser:true, nomen: true*/
-/*global define: false */
+/*jslint browser:true, nomen: true */
+/*global define: false, confirm: true */
 
 define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaAdmin",'../images/Treehouse.jpg','jquery', 'jquery-ui', "base", "../css/datapages.css"],
 	function (dom_helper, xenaQuery, session, _, Rx, xenaAdmin, treehouseImg, $) {
@@ -177,7 +177,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 	function cohortPlusVizButton (cohortName,vizbuttonParent,nodeTitle){
 		var img;
-		if (cohortName.search(/^Treehouse/gi)!=-1){
+		if (cohortName.search(/^Treehouse/gi) !== -1){
 			img = new Image();
   	  img.src = treehouseImg;
   	  img.height = "50";
@@ -235,7 +235,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 							});
 							sortedlist.forEach(function(item){
 								node.appendChild(item);
-							})
+							});
 						}
 					});
 				});
@@ -869,11 +869,13 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 					//data cell
 					for(i = 1; i < dataRow+1; i++){
 						for (key in s.rows[i-1]) {
-							j = keysP[key];
-							dom_helper.setTableCellValue (table, i, j, s.rows[i-1][key]);
-							//first column
-							if (key ==="sampleid"){
-								dom_helper.setTableCellValue (table, i, 0, s.rows[i-1][key]);
+							if (s.rows[i - 1].hasOwnProperty(key)) {
+								j = keysP[key];
+								dom_helper.setTableCellValue (table, i, j, s.rows[i-1][key]);
+								//first column
+								if (key ==="sampleid"){
+									dom_helper.setTableCellValue (table, i, 0, s.rows[i-1][key]);
+								}
 							}
 						}
 					}

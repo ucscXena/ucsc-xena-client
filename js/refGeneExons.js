@@ -1,5 +1,5 @@
 /*jslint nomen:true, browser: true */
-/*global define: false */
+/*global define: false, console: false */
 
 define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 	// non-object dependencies
@@ -15,12 +15,8 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 		cdsHeight = 12,
 		clone = _.clone,
 		each = _.each,
-		filter = _.filter,
 		find = _.find,
 		map = _.map,
-		reduce = _.reduce,
-		toNumber = _.toNumber,
-		uniqueId = _.uniqueId,
 		widgets = {},
 		refGeneWidget = {
 
@@ -31,7 +27,9 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 			},
 
 			error: function (message) {
-				console.log(message);
+				if (console) {
+					console.log(message);
+				}
 			},
 
 			mapChromPosToX: function (chromPos) {
@@ -214,8 +212,7 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 			makeNodes: function () {
 				// Nodes are used to draw the refGene.
 				// Splice sites are not drawn and are represented as spaces between exons
-				var self = this,
-					nodes = [],
+				var nodes = [],
 					cdsStart = this.data.cdsStart,
 					cdsEnd = this.data.cdsEnd,
 					cdsStartHit,
@@ -317,8 +314,6 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 			},
 
 			initialize: function (options) {
-				var self = this,
-					name2SelectId = uniqueId();
 				_.bindAll.apply(_, [this].concat(_.functions(this)));
 
 				this.codingHeight = options.refHeight;
