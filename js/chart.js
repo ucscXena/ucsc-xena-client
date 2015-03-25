@@ -1,3 +1,4 @@
+/*jshint browser: true, onevar: true */
 /*global define: false, document: false */
 define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'underscore_ext', 'rx'], function (xenaQuery, dom_helper, Highcharts, highcharts_helper, _, Rx) {
 	'use strict';
@@ -466,6 +467,17 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				xIsCategorical = xcodemap[xfield] ? true : false,
 				chartOptions = _.clone(highcharts_helper.chartOptions), // chart option
 				xAxisTitle, yAxisTitle,
+				ybinnedSample,
+				dataSeriese,
+				errorSeries,
+				yfield,
+				ydataElement,
+				showLegend,
+				xbinnedSample,
+				xSampleCode,
+				code,
+				categories,
+				chartCategoryLabels,
 				i, k,
 				numSD = document.getElementById("sd").value;
 
@@ -476,13 +488,13 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 			};
 
 			if (xIsCategorical && !yIsCategorical) { // x : categorical y float
-				var xbinnedSample = {},
-					xSampleCode = {},
-					xCategories = [],
+				var xCategories = [],
 					dataMatrix = [], // row is x and column is y
 					stdMatrix = [], // row is x and column is y
-					code, row;
+					row;
 
+				xSampleCode = {};
+				xbinnedSample = {};
 				// x data
 				xcodemap[xfield].forEach(function (code) {
 					xbinnedSample[code] = [];
@@ -517,8 +529,7 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				}
 
 				// Y data and fill in the matrix
-				var ybinnedSample, yfield, ydataElement,
-					average, stdDev;
+				var average, stdDev;
 
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
@@ -552,40 +563,38 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				chart = new Highcharts.Chart(chartOptions);
 
 				//add data seriese
-				var showLegend = true,
-					dataSeriese,
-					errorSeries, offset,
-					offsetsSeries = [];
+				var offsetsSeries = [],
+					cutOffset,
+					getError;
 
+				showLegend = true;
 				// offsets
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
 					offsetsSeries.push(offsets[yfield]);
 				}
 
+				cutOffset = function([average, offset]) {
+					if (!isNaN(average)) {
+						return parseFloat((average - offset).toPrecision(3));
+					} else {
+						return "";
+					}
+				};
+
+				getError = function([average, stdDev, offset]) {
+					if (!isNaN(average) && !isNaN(stdDev)) {
+						return [parseFloat((average - stdDev - offset).toPrecision(3)),
+							parseFloat((average + stdDev - offset).toPrecision(3))
+						];
+					} else {
+						return ["", ""];
+					}
+				};
 				for (i = 0; i < xCategories.length; i++) {
-					code = xCategories[i],
-						dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(function (value) {
-							average = value[0];
-							offset = value[1];
-							if (!isNaN(average)) {
-								return parseFloat((average - offset).toPrecision(3));
-							} else {
-								return "";
-							}
-						});
-					errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(function (value) {
-						average = value[0];
-						stdDev = value[1];
-						offset = value[2];
-						if (!isNaN(average) && !isNaN(stdDev)) {
-							return [parseFloat((average - stdDev - offset).toPrecision(3)),
-								parseFloat((average + stdDev - offset).toPrecision(3))
-							];
-						} else {
-							return ["", ""];
-						}
-					});
+					code = xCategories[i];
+					dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(cutOffset);
+					errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(getError);
 
 					highcharts_helper.addSeriesToColumn(
 						chart, code, dataSeriese, errorSeries, yIsCategorical,
@@ -593,16 +602,15 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				}
 				chart.redraw();
 			} else if (!xfield) { //summary view --- messsy code
-				var ybinnedSample = {},
-					dataSeriese = [],
-					errorSeries = [],
-					total = 0;
-
+				var total = 0;
+				errorSeries = [];
+				dataSeriese = [];
+				ybinnedSample = {};
 				xIsCategorical = true;
 
 				for (k = 0; k < yfields.length; k++) {
-					var yfield = yfields[k],
-						ydataElement = ydata[k];
+					yfield = yfields[k];
+					ydataElement = ydata[k];
 
 					if (yIsCategorical) { //  fields.length ==1
 						ybinnedSample = parseYDataElement(
@@ -613,7 +621,7 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 					}
 				}
 
-				var categories = Object.keys(ybinnedSample);
+				categories = Object.keys(ybinnedSample);
 				if (yIsCategorical) {
 					categories.forEach(function (code) {
 						total = total + ybinnedSample[code].length;
@@ -621,8 +629,7 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				}
 
 				// column chart setup
-				var categories = Object.keys(ybinnedSample),
-					chartCategoryLabels = {};
+				chartCategoryLabels = {};
 
 				xAxisTitle = xlabel;
 
@@ -630,9 +637,9 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 					chartCategoryLabels[key] = key + "<br>(n=" + ybinnedSample[key].length + ")";
 				});
 
-				var showLegend = false;
+				showLegend = false;
 				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend)
+					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend);
 
 				chart = new Highcharts.Chart(chartOptions);
 
@@ -671,10 +678,8 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				chart.redraw();
 
 			} else if (xIsCategorical && yIsCategorical) { // x y : categorical --- messsy code
-				var xbinnedSample = {},
-					xSampleCode = {},
-					code;
-
+				xSampleCode = {};
+				xbinnedSample = {};
 				// x data
 				xcodemap[xfield].forEach(function (code) {
 					xbinnedSample[code] = [];
@@ -697,44 +702,42 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				});
 
 				// column chart setup
-				var categories = Object.keys(xbinnedSample),
-					chartCategoryLabels = {};
+				categories = Object.keys(xbinnedSample);
+				chartCategoryLabels = {};
 
 				xAxisTitle = xlabel;
 				categories.forEach(function (key) {
 					chartCategoryLabels[key] = key + "<br>(n=" + xbinnedSample[key].length + ")";
 				});
 
-				var showLegend = true;
+				showLegend = true;
 				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend)
+					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend);
 
 				chart = new Highcharts.Chart(chartOptions);
 
+				var yFromCategories = function (ycode, xcode) {
+					var value;
+					if (xcode.length) {
+						value = (_.intersection(xcode, ycode).length / xcode.length) * 100;
+					}
+					return value ? parseFloat(value.toPrecision(3)) : " ";
+				};
+
 				// Y data
 				for (k = 0; k < yfields.length; k++) {
-					var yfield = yfields[k],
-						ydataElement = ydata[k],
-						ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, samples, categories, xSampleCode),
-						ycategories = Object.keys(ybinnedSample),
-						ycode, ycodeSeries;
+					var ycode, ycodeSeries, ycategories;
+					yfield = yfields[k];
+					ydataElement = ydata[k];
+					ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, samples, categories, xSampleCode);
+
+					ycategories = Object.keys(ybinnedSample);
 
 					for (i = 0; i < ycategories.length; i++) {
 						ycode = ycategories[i];
-						ycodeSeries = [];
 
-						categories.forEach(function (xcode) {
-							var value;
-							if (xbinnedSample[xcode].length) {
-								value = (_.intersection(xbinnedSample[xcode], ybinnedSample[ycode]).length /
-									xbinnedSample[xcode].length) * 100;
-							}
-							if (value) {
-								ycodeSeries.push(parseFloat(value.toPrecision(3)));
-							} else {
-								ycodeSeries.push(" ");
-							}
-						});
+						ycodeSeries = _.map(_.map(categories, _.propertyOf(xbinnedSample)),
+								_.partial(yFromCategories, ybinnedSample[ycode]));
 
 						highcharts_helper.addSeriesToColumn(
 							chart, ycode, ycodeSeries, errorSeries, yIsCategorical,
@@ -782,7 +785,7 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 					var series = [],
 						x, y;
 
-					var yfield = yfields[k];
+					yfield = yfields[k];
 					for (i = 0; i < xdata[0].length; i++) {
 						if (ycodemap[yfield]) { // y: categorical in matrix data
 							document.getElementById("myChart").innerHTML = "x: " + xfield + "; y:" + ylabel + " not implemented";

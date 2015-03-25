@@ -203,10 +203,10 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 						{ val: 'from ' + node.data.reference + ' to ' + node.data.alt},
 						{ val: this.gene.name +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'') }
 					];
-					if (dnaAf !=="NA"){
+					if (dnaAf !== "NA"){
 						rows.push({ label: 'DNA variant allele freq',  val: dnaAf});
 					}
-					if (rnaAf !=="NA"){
+					if (rnaAf !== "NA"){
 						rows.push({ label: 'RNA variant allele freq', val: rnaAf});
 					}
 
@@ -306,17 +306,17 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				var myColors,
 					c,
 					rgba,
-					labels=[[],[],[],[]],
+					labels,
+					groups,
 					align,
 					topBorderIndex;
 				if (this.feature === 'impact') {
 					myColors = _.map(colors[this.color], function (c) {
 						return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
 					});
-					for (var key in impact){
-						labels[getImpact(key)].push(key);
-					}
-					labels = labels.map(function(list){return list.join(", ");});
+					groups = _.groupBy(_.pairs(impact), ([key, imp]) => imp);
+					labels = _.map(_.range(_.keys(groups).length), i => _.pluck(groups[i], 0).join(', '));
+
 					align = 'left';
 				} else { // feature is one of allele frequencies
 					c= colors.af[0];

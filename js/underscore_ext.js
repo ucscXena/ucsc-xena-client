@@ -1,4 +1,4 @@
-/*globals define: false */
+/*globals define: false, console: false */
 define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	'use strict';
 
@@ -79,7 +79,9 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	}
 
 	function spy(msg, x) {
-		console.log(msg, x);
+        if (console) {
+            console.log(msg, x);
+        }
 		return x;
 	}
 

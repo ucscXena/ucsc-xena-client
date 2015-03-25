@@ -1,3 +1,4 @@
+/*jshint browser: true */
 /*global define: false, document: false */
 
 // Config UI for custom viz settings for heatmaps.
@@ -99,10 +100,6 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 
 		function inputId(param) {
 			return 'custom-' + param;
-		}
-
-		function getFloat(value) {
-			return parseFloat(value) || null; // coerce NaN to null
 		}
 
 		function getInputSettings() {
@@ -458,14 +455,9 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 				return _.assoc(s, 'vizSettings', oldSettings);
 		}
 
-		function close(s) {
-				return _.assoc_in(s, ['_vizSettings', 'open'], false);
-		}
-
 		var GOODSTATUS = 'loaded',
 			root,
 			node,
-			cohort,
 			oldSettings = _.get_in(state, ['vizSettings']),
 			host_name = xenaQuery.parse_host(dsID),
 			datasetName = host_name[1],

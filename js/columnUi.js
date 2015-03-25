@@ -10,15 +10,7 @@ define(['haml/columnUi.haml', 'haml/columnUiSelect.haml', 'haml/tupleDisplay.ham
 		return !!_.get_in(state, ['column_rendering', uuid]);
 	}
 
-	var APPLY = true,
-		each = _.each,
-		filter = _.filter,
-		find = _.find,
-		map = _.map,
-		reduce = _.reduce,
-		toNumber = _.toNumber,
-		uniqueId = _.uniqueId,
-		widgets = {},
+	var widgets = {},
 		aWidget;
 	aWidget = {
 		// this is invoked from columnMenu.js: remove menu function

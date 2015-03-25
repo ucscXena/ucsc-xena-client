@@ -73,8 +73,7 @@ define(['haml/cohortSelect.haml', 'util', 'xenaQuery', 'underscore', 'jquery', '
 			var self = this,
 				state = options.state.share(),
 				cursor = options.cursor,
-				cohortList,
-				val;
+				cohortList;
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 
 			this.$anchor = options.$anchor;
