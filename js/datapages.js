@@ -135,7 +135,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 	// short COHORT section detail
 	function eachCohortDetail(cohortName, hosts, node) {
-		var hostNode;
+		var hostNode, tmpNode;
 
 		// samples: N
 		node.appendChild(dom_helper.labelValueNode("samples:", cohortName + "sampleN"));
@@ -174,13 +174,14 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		hosts.forEach(function (host) {
 			xenaQuery.all_cohorts(host).subscribe(function (s) {
 				if (s.indexOf(cohortName) !== -1) {
+					tmpNode= dom_helper.hrefLink(host, "?host=" + host);
+					tmpNode.setAttribute("id","status"+host);
 					if (hostNode.children.length === 0) {
 						hostNode.appendChild(dom_helper.elt("label", "hosts:"));
-						hostNode.appendChild(dom_helper.hrefLink(host, "?host=" + host));
 					} else {
 						hostNode.appendChild(document.createTextNode("; "));
-						hostNode.appendChild(dom_helper.hrefLink(host, "?host=" + host));
 					}
+					hostNode.appendChild(tmpNode);
 				}
 			});
 		});
@@ -388,8 +389,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 							// host
 							tmpNode = dom_helper.hrefLink(dataHost[fullname], "?host=" + dataHost[fullname]);
 							tmpNode.setAttribute("id", "status" + dataHost[fullname]);
-							datasetNode.appendChild(dom_helper.elt("result2", tmpNode));
-
+							datasetNode.appendChild(tmpNode);
+							session.updateHostStatus(dataHost[fullname]);
 
 							// delete and reload button
 							var deletebutton = deleteDataButton (dataCollection[fullname]);
