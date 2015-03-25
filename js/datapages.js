@@ -176,6 +176,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 				if (s.indexOf(cohortName) !== -1) {
 					tmpNode= dom_helper.hrefLink(host, "?host=" + host);
 					tmpNode.setAttribute("id","status"+host);
+					session.updateHostStatus(host);
 					if (hostNode.children.length === 0) {
 						hostNode.appendChild(dom_helper.elt("label", "hosts:"));
 					} else {

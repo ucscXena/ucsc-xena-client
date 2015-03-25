@@ -71,7 +71,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 				defaultLocal
 			],
 			defaultState = {
-				activeHosts: defaultHosts,
+				activeHosts: defaultHosts, // this could be inaccurate untill sessionStorage is updated
 				allHosts: defaultHosts,
 				userHosts: defaultHosts,
 				localHost: defaultLocal,
