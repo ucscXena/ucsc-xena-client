@@ -1,4 +1,5 @@
-
+/*csslint known-properties: false*/
+/* csslint doesn't know about svg */
 .kmDialog .axis path,
 .kmDialog .axis line {
 	fill: none;
@@ -81,10 +82,10 @@ path.outline {
 .kmScreen {
 	position: absolute;
 	background-color: #ffffff;
-	top: 0px;
-	bottom: 0px;
-	left: 0px;
-	right: 0px;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
 	z-index: 5;
 	display: none;
 }
