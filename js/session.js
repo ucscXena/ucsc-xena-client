@@ -71,7 +71,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 				defaultLocal
 			],
 			defaultState = {
-				activeHosts: defaultHosts, // this could be inaccurate untill sessionStorage is updated
+				activeHosts: defaultHosts,
 				allHosts: defaultHosts,
 				userHosts: defaultHosts,
 				localHost: defaultLocal,
@@ -211,6 +211,8 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			},
 
 			node = document.getElementById("status" + host),
+			sidebarNode = document.getElementById("sidebar" + host),
+			sidebarCheck = document.getElementById("sidebarCheck" + host),
 			nodeHubPage = document.getElementById("statusHub" + host),
 			nodeHubLabel = document.getElementById("hubLabel" + host),
 			nodeHubCheck = document.getElementById("checkbox" + host);
@@ -219,6 +221,15 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			node.parentNode.replaceChild(
 				dom_helper.elt(display[status].el, dom_helper.hrefLink(host + display[status].msg,
 					"../datapages/?host=" + host)), node);
+		}
+		if (sidebarNode && (status === "dead" || status === "slow")) {
+			sidebarNode.parentNode.removeChild(sidebarNode);
+			sidebarCheck.parentNode.removeChild(sidebarCheck);
+		}
+		if (sidebarNode && (status === "live_selected" || status === "live_unselected" || status ==="nodata")){
+				sidebarNode.parentNode.replaceChild(
+					dom_helper.elt(display[status].el, dom_helper.hrefLink(host + display[status].msg,
+						"../datapages/?host=" + host)), sidebarNode);
 		}
 		if (nodeHubPage) {
 			nodeHubPage.parentNode.replaceChild(

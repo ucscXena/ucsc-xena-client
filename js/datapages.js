@@ -950,17 +950,19 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 		var checkNode = dom_helper.sectionNode("sidehub");
 
-		checkNode.appendChild(dom_helper.elt("h3", dom_helper.hrefLink("Current Data Hubs", "../hub/")));
+		checkNode.appendChild(dom_helper.elt("h3", dom_helper.hrefLink("Active Data Hubs", "../hub/")));
 		checkNode.appendChild(dom_helper.elt("br"));
 
 
 		allHosts.forEach(function (host) {
 			if (hosts.indexOf(host)!==-1) {
 				session.updateHostStatus(host);
-				var checkbox = session.metaDataFilterCheckBox(host);
-				var tmpNode = dom_helper.elt("result2",
-					dom_helper.hrefLink(host + " (connecting)", "../datapages/?host=" + host));
-				tmpNode.setAttribute("id", "status" + host);
+				var checkbox = session.metaDataFilterCheckBox(host),
+					tmpNode = dom_helper.elt("result2",
+						dom_helper.hrefLink(host + " (connecting)", "../datapages/?host=" + host));
+
+				tmpNode.setAttribute("id", "sidebar" + host);
+				checkbox.setAttribute("id", "sidebarCheck" + host);
 				checkNode.appendChild(dom_helper.elt("h4", checkbox, " ", tmpNode));
 				checkNode.appendChild(dom_helper.elt("br"));
 			}
