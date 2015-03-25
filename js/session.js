@@ -62,27 +62,33 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 	}
 
 	function sessionStorageInitialize() {
-		var defaultHosts = [
-				"https://genome-cancer.ucsc.edu:443/proj/public/xena",
-				"https://local.xena.ucsc.edu:7223"
+		var defaultLocal = "https://local.xena.ucsc.edu:7223",
+			defaultUCSC ="https://genome-cancer.ucsc.edu:443/proj/public/xena",
+			defaultHosts = [
+				defaultUCSC,
+				defaultLocal
 			],
-			defaultActive =["https://genome-cancer.ucsc.edu:443/proj/public/xena"],
-			defaultLocal = "https://local.xena.ucsc.edu:7223",
 			defaultState = {
-				activeHosts: defaultActive,
+				activeHosts: defaultHosts,
 				allHosts: defaultHosts,
 				userHosts: defaultHosts,
 				localHost: defaultLocal,
 				metadataFilterHosts: defaultHosts
 			},
-			state = getSessionStorageState(); //sessionStorage.state ? JSON.parse(sessionStorage.state) : {};
+			state = getSessionStorageState();
 
-		sessionStorage.state = JSON.stringify(_.extend(defaultState, state));
+		state = _.extend(defaultState, state);
+		sessionStorage.state = JSON.stringify(state);
+
+		state.allHosts.forEach(function(host){
+			updateHostStatus(host); // only currently update sessinostorage, not state ( :( )
+		});
+
 		setXenaUserServer();
 	}
 
 	function getSessionStorageState () {
-			return sessionStorage.state ? JSON.parse(sessionStorage.state) : {};
+		return sessionStorage.state ? JSON.parse(sessionStorage.state) : {};
 	}
 
 	function removeHostFromListInSession(list, host) {
@@ -129,15 +135,15 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 
 		checkbox.addEventListener('click', function () {
 			var checked = checkbox.checked,
-				stateJSON = JSON.parse(sessionStorage.state),
-				newList;
+				stateJSON = JSON.parse(sessionStorage.state);
+
 			if (checked !== _.contains(stateJSON.userHosts, host)) {
 				if (checked) { // add host
 					addHostToListInSession('userHosts', host);
 					addHostToListInSession('metadataFilterHosts', host);
 				} else { // remove host
 					removeHostFromListInSession('userHosts', host);
-					removeHostFromListInSession('metadataFilterHosts', host);
+					//removeHostFromListInSession('metadataFilterHosts', host);
 
 					//check if host that will be removed has the "cohort" in the xena heatmap state setting ///////////TODO
 					xenaQuery.all_cohorts(host).subscribe(function (s) {
@@ -156,8 +162,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 	}
 
 	function metaDataFilterCheckBox(host, ifChangedAction) {
-		var userHosts = JSON.parse(sessionStorage.state).userHosts,
-				metadataFilterHosts= JSON.parse(sessionStorage.state).metadataFilterHosts,
+		var metadataFilterHosts= JSON.parse(sessionStorage.state).metadataFilterHosts,
 				checkbox = document.createElement("INPUT");
 
 		checkbox.setAttribute("type", "checkbox");
@@ -166,8 +171,8 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 
 		checkbox.addEventListener('click', function () {
 			var checked = checkbox.checked,
-				stateJSON = JSON.parse(sessionStorage.state),
-				newList;
+				stateJSON = JSON.parse(sessionStorage.state);
+
 			if (checked !== _.contains(stateJSON.metadataFilterHosts, host)) {
 				if (checked) { // add host
 					addHostToListInSession('metadataFilterHosts', host);

@@ -10,6 +10,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		userHosts,
 		localHost,
 		metadataFilterHosts,
+		state,
 		query_string = dom_helper.queryStringToJSON(),  	//parse current url to see if there is a query string
 		baseNode = document.getElementById('main'),
 		container, sideNode, mainNode,
@@ -25,11 +26,12 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		};
 
 	session.sessionStorageInitialize();
-	allHosts = JSON.parse(sessionStorage.state).allHosts; // all hosts
-	activeHosts = JSON.parse(sessionStorage.state).activeHosts; // activetHosts
-	userHosts = JSON.parse(sessionStorage.state).userHosts; // selectedtHosts
-	localHost = JSON.parse(sessionStorage.state).localHost; //localhost
-	metadataFilterHosts = JSON.parse(sessionStorage.state).metadataFilterHosts; // metadataFilter
+	state = JSON.parse(sessionStorage.state);
+	allHosts = state.allHosts; // all hosts
+	activeHosts = state.activeHosts; // activetHosts
+	userHosts = state.userHosts; // selectedtHosts
+	localHost = state.localHost; //localhost
+	metadataFilterHosts = state.metadataFilterHosts; // metadataFilter
 
 	// check if there is some genomic data for the cohort, if goodsStatus is a parameter, also check if the genomic data meet the status
 	function checkGenomicDataset(hosts, cohort, goodStatus) {
@@ -131,7 +133,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		};
 	}
 
-	function eachCohort(cohortName, hosts, node) {
+	// short COHORT section detail
+	function eachCohortDetail(cohortName, hosts, node) {
 		var hostNode;
 
 		// samples: N
@@ -184,7 +187,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		node.appendChild(hostNode);
 	}
 
-	// the short COHORT section
+	// the short COHORT section with no detail, just name, vizbutton (if valid), img (optional)
 	function eachCohortMultiple(cohortName, hosts, node) {
 		var liNode = document.createElement("li"), img,
 			nodeTitle = dom_helper.hrefLink(cohortName, "?cohort=" + encodeURIComponent(cohortName));
@@ -198,6 +201,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		if ((hosts.length===1) &&  (userHosts.indexOf(hosts[0])===-1)){
 			nodeTitle.style.color="gray";
 		}
+
 		liNode.appendChild(nodeTitle);
 		node.appendChild(liNode);
 		cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), liNode);
@@ -296,7 +300,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), vizbuttonParent);
 
 		ifCohortExistDo (cohortName, hosts, undefined, function() {
-			eachCohort(cohortName, hosts, node);
+			eachCohortDetail(cohortName, hosts, node);
 
 			xenaQuery.dataset_list(hosts, cohortName).subscribe(
 				function (s) {
@@ -381,9 +385,10 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 								datasetNode.appendChild(document.createTextNode(" ["+dataStatus[fullname]+"] "));
 							}
 
-							// host if there are multiple hosts
-							datasetNode.appendChild(dom_helper.elt(
-								"result2", dom_helper.hrefLink(dataHost[fullname], "?host=" + dataHost[fullname])));
+							// host
+							tmpNode = dom_helper.hrefLink(dataHost[fullname], "?host=" + dataHost[fullname]);
+							tmpNode.setAttribute("id", "status" + dataHost[fullname]);
+							datasetNode.appendChild(dom_helper.elt("result2", tmpNode));
 
 
 							// delete and reload button
@@ -1009,13 +1014,13 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 
 	// if there is no url query string, query xena find the cohorts on main server
-	var host,dataset, cohort;
+	var host, dataset, cohort;
 
 	// ?host=id
 	if (Object.keys(query_string).length===1 && query_string.host) {
 		host = query_string.host;
 
-		if (JSON.parse(sessionStorage.state).allHosts.indexOf(host) === -1) {
+		if (allHosts.indexOf(host) === -1) {
 		    return;
 		}
 
@@ -1079,14 +1084,15 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		container.setAttribute("id", "content-container");
 
 		//sidebar
-		sideNode = hubSideBar(userHosts);
+		//sideNode = hubSideBar(userHosts);
+		sideNode = hubSideBar(activeHosts);
 		container.appendChild(sideNode);
 
 		//main section cohort list page
 		mainNode = dom_helper.elt("div");
 		mainNode.setAttribute("id", "dataPagesMain");
 
-		cohortPage(cohort, _.intersection(_.intersection(activeHosts, userHosts), metadataFilterHosts), mainNode);
+		cohortPage(cohort, _.intersection(activeHosts, metadataFilterHosts), mainNode);
 		container.appendChild(mainNode);
 
 		container.appendChild(dom_helper.elt("br"));
@@ -1111,13 +1117,14 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		container.setAttribute("id", "content-container");
 
 		//sidebar
-		sideNode = hubSideBar(userHosts);
+		//sideNode = hubSideBar(userHosts);
+		sideNode = hubSideBar(activeHosts);
 		container.appendChild(sideNode);
 
 		//main section cohort list page
 		mainNode = dom_helper.elt("div");
 		mainNode.setAttribute("id", "dataPagesMain");
-		cohortListPage(_.intersection(_.intersection(activeHosts, userHosts), metadataFilterHosts), mainNode);
+		cohortListPage(_.intersection(_.intersection(activeHosts/*, userHosts*/), metadataFilterHosts), mainNode);
 		container.appendChild(mainNode);
 
 		container.appendChild(dom_helper.elt("br"));
