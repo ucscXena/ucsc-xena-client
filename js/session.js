@@ -193,7 +193,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 	function updateHostDOM(host, status) {
 		var display = {
 				'live_selected': {msg: '', el: 'result'},
-				'live_unselected': {msg: ' (running, not in data hubs)', el: 'result2'},
+				'live_unselected': {msg: ' (running, not in your data hubs)', el: 'result2'},
 				'dead': {msg: ' (not running)', el: 'result2'},
 				'nodata': {msg: ' (no data)', el: 'result2'},
 				'slow': {msg: ' (there is a problem)', el: 'result2'},
