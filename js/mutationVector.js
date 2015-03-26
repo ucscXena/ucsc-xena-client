@@ -67,11 +67,8 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
 				{r: 214, g: 39, b: 40, a: 1}  // red #d62728
 			],
-			af: [
-				{r: 228, g: 26, b: 28, a: 0},
-				{r: 228, g: 26, b: 28, a: 0.5},
-				{r: 228, g: 26, b: 28, a: 1}
-			]
+			af: {r: 228, g: 26, b: 28, a: 0},
+			grey: {r: 128, g:128, b:128, a:1}
 		},
 		clone = _.clone,
 		each = _.each,
@@ -167,7 +164,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			mousing: function (ev) {
-				var pos,
+				var pos,posText, posURL,
 					node,
 					coords,
 					rows = [],
@@ -190,18 +187,19 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				coords = this.plotCoords(ev);
 				node = this.closestNode(coords.x, coords.y);
 				if (node) {
-					// TODO this is slow mousing when a node is involved
 					//this.highlight(node);
 					pos = node.data.chr + ':' +
 						util.addCommas(node.data.start) + '-' +
 						util.addCommas(node.data.end);
 					dnaAf = this.formatAf(node.data.dna_vaf);
 					rnaAf = this.formatAf(node.data.rna_vaf);
+					posURL = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position="+encodeURIComponent(pos); // hg19 is hard coded, we do not check
+					posText = 'hg19 ' + pos;  // hg19 is hard coded, we do not check
 					rows = [
 						{ val: node.data.effect},
-						{ val: 'hg19 ' + pos},  // hg19 is hard coded, we do not even check
-						{ val: 'from ' + node.data.reference + ' to ' + node.data.alt},
-						{ val: this.gene.name +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'') }
+						{ val: this.gene.name +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'') },
+						{ val: posText, url: posURL},
+						{ val: 'from ' + node.data.reference + ' to ' + node.data.alt}
 					];
 					if (dnaAf !== "NA"){
 						rows.push({ label: 'DNA variant allele freq',  val: dnaAf});
@@ -209,7 +207,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					if (rnaAf !== "NA"){
 						rows.push({ label: 'RNA variant allele freq', val: rnaAf});
 					}
-
 					tip.sampleID = node.data.sample;
 					tip.rows = rows;
 				} else {
@@ -241,9 +238,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					imp = getImpact(val.effect);
 					c = colors[this.color][imp];
 				} else if (_.isUndefined(val[this.feature])) { // _VAF with NA value
-					c = colors.af[0];
+					c = colors.grey;
 				} else {  // _VAF, but not NA
-					c = clone(colors.af[1]);
+					c = clone(colors.af);
 					c.a = val[this.feature];
 				}
 				return 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
@@ -319,7 +316,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 					align = 'left';
 				} else { // feature is one of allele frequencies
-					c= colors.af[0];
+					c= colors.af;
 					rgba = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',';
 					myColors = [
 						rgba + '0)',

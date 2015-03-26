@@ -944,9 +944,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		baseNode.appendChild(sectionNode);
 	}
 
-	// sidebar current hub list with checkboxes
+	// sidebar active hub list with checkboxes
 	function hubSideBar(hosts) {
-			//checkbox sidebar
 		var sideNode = dom_helper.elt("div");
 		sideNode.setAttribute("id", "sidebar");
 
@@ -955,19 +954,16 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		checkNode.appendChild(dom_helper.elt("h3", dom_helper.hrefLink("Active Data Hubs", "../hub/")));
 		checkNode.appendChild(dom_helper.elt("br"));
 
+		hosts.forEach(function (host) {
+			session.updateHostStatus(host);
+			var checkbox = session.metaDataFilterCheckBox(host),
+				tmpNode = dom_helper.elt("result2",
+					dom_helper.hrefLink(host + " (connecting)", "../datapages/?host=" + host));
 
-		allHosts.forEach(function (host) {
-			if (hosts.indexOf(host)!==-1) {
-				session.updateHostStatus(host);
-				var checkbox = session.metaDataFilterCheckBox(host),
-					tmpNode = dom_helper.elt("result2",
-						dom_helper.hrefLink(host + " (connecting)", "../datapages/?host=" + host));
-
-				tmpNode.setAttribute("id", "sidebar" + host);
-				checkbox.setAttribute("id", "sidebarCheck" + host);
-				checkNode.appendChild(dom_helper.elt("h4", checkbox, " ", tmpNode));
-				checkNode.appendChild(dom_helper.elt("br"));
-			}
+			tmpNode.setAttribute("id", "sidebar" + host);
+			checkbox.setAttribute("id", "sidebarCheck" + host);
+			checkNode.appendChild(dom_helper.elt("h4", checkbox, " ", tmpNode));
+			checkNode.appendChild(dom_helper.elt("br"));
 		});
 		sideNode.appendChild(checkNode);
 

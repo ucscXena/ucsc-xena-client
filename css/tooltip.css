@@ -12,9 +12,6 @@
 #tooltip table {
 	font-size: .8em;
 }
-#tooltip .labelCol {
-	width: 10px;
-}
 #tooltip .valueCol {
 	width: 400px;
 }
@@ -22,10 +19,11 @@
 	width: 16px;
 }
 #tooltip .tupleValue {
-	vertical-align: top;
-	text-align: left;
 	padding: 2px;
 	font-weight: bold;
+}
+#tooltip .urlValue {
+	padding: 2px;
 }
 #tooltipClose {
 	float: right;
@@ -33,7 +31,6 @@
 #tooltip .sampleID {
 	font-style: italic;
 }
-#tooltip .tooltipPrompt
-{
+#tooltip .tooltipPrompt {
 	float:right;
 }

@@ -13,7 +13,12 @@
             = r.label+" : "
             %span{class: 'tupleValue'} = r.val
         - } else if (r.val) {
-          %td{class: 'tupleValue'} = r.val
+          - if (r.url) {
+              %td{class: 'urlValue'}
+                %a{href: r.url, target: '_BLANK'} =r.val
+          - } else {
+              %td{class: 'tupleValue'} = r.val
+          - }
         - } else if (r.label) {
           %td = r.label
         - }
