@@ -67,7 +67,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
 				{r: 214, g: 39, b: 40, a: 1}  // red #d62728
 			],
-			af: {r: 228, g: 26, b: 28, a: 0},
+			af: {r: 255, g: 0, b: 0, a: 0},
 			grey: {r: 128, g:128, b:128, a:1}
 		},
 		clone = _.clone,

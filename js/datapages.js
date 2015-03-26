@@ -938,6 +938,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 		// sample title
 		sectionNode.appendChild(dom_helper.elt("h2", "sample: "+sample));
+		sectionNode.appendChild(document.createElement("br"));
 		sectionNode.appendChild(dom_helper.elt("label", "cohort:"));
 		sectionNode.appendChild(dom_helper.elt("result", dom_helper.hrefLink(cohort, "?&cohort=" + cohort)));
 

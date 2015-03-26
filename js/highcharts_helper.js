@@ -57,7 +57,10 @@ define(['./highcharts'], function (Highcharts) {
     },
     tooltip:{
       hideDelay:0
-    }
+    },
+    credits: {
+      enabled: false
+    },
   };
 
   function columnChartOptions (chartOptions, categories, chartCategoryLabels, xAxisTitle, Y, yIsCategorical, showLegend){
