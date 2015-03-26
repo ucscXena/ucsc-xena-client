@@ -279,6 +279,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 				eachCohortMultiple(cohort, hosts, node);
 			});
 		});
+		rootNode.appendChild(document.createElement("br"));
 	}
 
 	//	build single COHORT page
@@ -300,6 +301,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		}
 		vizbuttonParent.appendChild(document.createTextNode(cohort));
 		cohortHeatmapButton(cohortName, _.intersection(activeHosts, userHosts), vizbuttonParent);
+		node.appendChild(document.createElement("br"));
 
 		ifCohortExistDo (cohortName, hosts, undefined, function() {
 			eachCohortDetail(cohortName, hosts, node);
