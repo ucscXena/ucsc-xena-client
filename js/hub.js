@@ -105,9 +105,9 @@ define(["dom_helper", "session", "xenaQuery", "base", "../css/datapages.css"], f
 
 	document.getElementById('main').appendChild(node);
 
-	window.addEventListener("keydown", function (event) {
+	newText.onkeydown= function (event) {
 		if (event.keyCode === 13) {
 			addHost();
 		}
-	});
+	};
 });
