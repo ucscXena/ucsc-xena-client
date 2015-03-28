@@ -94,7 +94,8 @@ define(['underscore_ext',
 			return [];
 		}
 		return map(probes, function (p) {
-			return map(sorted_samples, _.compose(saveUndefined(_.partial(transform, p)), _.partial(getProperty, data[p])));
+			var suTrans = saveUndefined(v => transform(p, v));
+			return map(sorted_samples, s => suTrans(getProperty(data[p], s)));
 		});
 	}
 
@@ -225,7 +226,7 @@ define(['underscore_ext',
 		],
 		function (col_fields, data, probes) {
 			var fields = probes || col_fields;
-			return _.partial(cmpSamples, fields, data);
+			return (s1, s2) => cmpSamples(fields, data, s1, s2);
 		}
 	);
 

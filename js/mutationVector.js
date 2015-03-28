@@ -422,8 +422,8 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			if (!row2.length) {
 				return -1;                        // has mutations sorts first
 			}
-			row1a = _.map(row1, _.partial(evalMut, refGene));
-			row2a = _.map(row2, _.partial(evalMut, refGene));
+			row1a = _.map(row1, mut => evalMut(refGene, mut));
+			row2a = _.map(row2, mut => evalMut(refGene, mut));
 
 			return cmpMut(_.maxWith(row1a, cmpMut), _.maxWith(row2a, cmpMut));
 		},

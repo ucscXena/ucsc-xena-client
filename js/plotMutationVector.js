@@ -126,7 +126,7 @@ define(['underscore_ext',
 			['data', 'refGene']
 		],
 		function (fields, data, refGene) {
-			return _.partial(cmpSamples, fields, data, refGene);
+			return (s1, s2) => cmpSamples(fields, data, refGene, s1, s2);
 		}
 	);
 
