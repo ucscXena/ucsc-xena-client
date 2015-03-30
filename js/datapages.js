@@ -326,12 +326,13 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 			return;
 		}
 
-		rootNode.appendChild(dom_helper.elt("h2", cohortList ? (cohortList.length+" Cohorts") : "Cohorts"));
-
-		var node;
-		node = document.createElement("div");
+		var node = document.createElement("div");
 		node.setAttribute("id","cohortList");
-		rootNode.appendChild(node);
+
+		if (cohortList){
+			rootNode.appendChild(dom_helper.elt("h2", cohortList.length+" Cohorts"));
+			rootNode.appendChild(node);
+		}
 
 		var source = Rx.Observable.zipArray(
 			hosts.map(function (host) {
@@ -349,6 +350,11 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 					}
 				});
 			});
+
+			if (!cohortList){
+				rootNode.appendChild(dom_helper.elt("h2", cohortC.length+" Cohorts"));
+				rootNode.appendChild(node);
+			}
 
 			cohortC.sort(function (a,b){
 				if (a===COHORT_NULL){
@@ -1248,14 +1254,13 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 	}
 
 	function hostPage (baseNode,host){
-			// host title
+		// host title
 		var node=dom_helper.sectionNode("cohort"),
 			tmpNode = dom_helper.hrefLink(host + " (connecting)", "../datapages/?host=" + host);
 
 		tmpNode.setAttribute("id", "status" + host);
 		node.appendChild(dom_helper.elt("h2", tmpNode));
 		session.updateHostStatus(host);
-		node.appendChild(dom_helper.elt("br"));
 
 		// cohort list
 		cohortListPage([host], node);
