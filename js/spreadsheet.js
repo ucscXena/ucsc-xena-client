@@ -50,15 +50,15 @@ define(['underscore_ext',
 		return 0;
 	}
 
-	function spreadsheetWidget(state, cursor, parent, wrapper) {
+	function spreadsheetWidget(state, cursor, parent, wrapperIn) {
 		// XXX why is replay necessary? Seems to be so we get the sessionStorage, but is this
 		// really the right way to get it??
 		var curr = [],    // current uuids in order
 			cels = {},    // current divs by uuid
 			children = {}, // child disposables
 			el = $('<div></div>'),
-			subs = new Rx.CompositeDisposable();
-
+			subs = new Rx.CompositeDisposable(),
+            wrapper = (id, ws) => wrapperIn(state, cursor, id, ws); // XXX drop this when refactoring the relationship between sheetWrap & spreadsheet
 		state = state.shareReplay(1); // XXX move this to columnModels? So widgets can get latest state?
 		el.sortable({
 			axis: 'x',
@@ -112,7 +112,7 @@ define(['underscore_ext',
 					zoomIndex: ['zoomIndex'],
 					zoomCount: ['zoomCount'],
 					samples: ['samples'],
-					_sources: ['_sources'],
+					_datasets: ['_datasets'],
 					_column: ['_column', uuid],
 					column: ['column_rendering', uuid],
 					vizSettings: ['vizSettings', dsID]

@@ -37,8 +37,8 @@ define(['haml/datasetSelect.haml', 'util', 'xenaQuery', 'underscore', 'jquery', 
 			delete widgets[this.id];
 		},
 
-		render: function (sources_in, state) {
-			sources_in.reverse(); // reverse the hub list
+        render: function ({_datasets: sources_in, samplesFrom: state}) {
+			sources_in.slice(0).reverse(); // reverse the hub list
 			var sources = _.map(sources_in, function (s) {
 					return _.assoc(s, 'title', xenaQuery.server_url(s.server));
 				}),
@@ -70,7 +70,6 @@ define(['haml/datasetSelect.haml', 'util', 'xenaQuery', 'underscore', 'jquery', 
 		initialize: function (options) {
 			var self = this,
 				samples,
-				sources = options.sources,
 				state = options.state.share();
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 
@@ -78,11 +77,9 @@ define(['haml/datasetSelect.haml', 'util', 'xenaQuery', 'underscore', 'jquery', 
 			this.placeholder = options.placeholder;
 			this.subs = new Rx.CompositeDisposable();
 
-			// render immediately, and re-render whenever sources or state changes
-			sources.startWith([]).combineLatest(state.refine('samplesFrom'),
-				function (sources, state) {
-					return [sources, state.samplesFrom];
-				}).subscribe(_.apply(self.render));
+			// render immediately, and re-render whenever datasets or state changes
+            this.subs.add(state.refine(['samplesFrom', '_datasets'])
+                    .subscribe(self.render));
 
 			// retrieve all samples in this cohort, from all servers
 			samples = state.refine({samplesFrom: ['samplesFrom'], servers: ['servers', 'user'], cohort: ['cohort']})

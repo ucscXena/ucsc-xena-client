@@ -50,11 +50,11 @@ define(['haml/sheetWrap.haml',
 					   'column_rendering', cols);
 	}
 
-	function columnShow(deleteColumn, id, ws) {
+	function columnShow(deleteColumn, state, cursor, id, ws) {
 		return columnUi.show(id, {
-			cursor: widget.cursor,
-			xenaCursor: widget.cursor,
-			state: widget.state,
+			cursor: cursor,
+			xenaCursor: cursor,
+			state: state,
 			ws: ws,
 			sheetWrap: widget,
 			deleteColumn: deleteColumn,
@@ -97,27 +97,22 @@ define(['haml/sheetWrap.haml',
 			});
 
 			// retrieve all datasets in this cohort, from all servers
-			this.sources = state.refine(['servers', 'cohort'])
-				.map(function (state) {
-					if (state.cohort) {
-						return xenaQuery.dataset_list(state.servers.user, state.cohort);
-					} else {
-						return Rx.Observable.return([]);
-					}
-				}).switchLatest().replay(null, 1); // replay for late subscribers
-			this.subs.add(this.sources.connect());
-
-			// store the sources in state, for easy access later
-			this.subs.add(this.sources.subscribe(function (sources) {
-				cursor.update(function (t) {
-					return _.assoc(t, '_sources', sources);
-					//return _.assoc(t, '_sources', Object.create(sources).__proto__);
-				});
-			}));
+            this.subs.add(state.refine(['servers', 'cohort'])
+                    .map(function (state) {
+                        if (state.cohort) {
+                            return xenaQuery.dataset_list(state.servers.user, state.cohort);
+                        } else {
+                            return Rx.Observable.return([]);
+                        }
+                    }).switchLatest().subscribe(function (datasets) {
+                        cursor.update(function (t) {
+                            return _.assoc(t, '_datasets', datasets);
+                        });
+                    }));
 		},
 
 		initSamplesFrom: function (state, cursor) {
-			var paths = ['samplesFrom', 'samples', 'cohort', 'servers', 'zoomCount', 'zoomIndex', 'mode'],
+			var paths = ['samplesFrom', 'samples', 'cohort', 'servers', 'zoomCount', 'zoomIndex', 'mode', '_datasets'],
 				dsstate = state.refine(paths).map(function (s) {
 					return _.extend(s, {enabled: s.mode === 'heatmap'});
 				}),
@@ -127,7 +122,6 @@ define(['haml/sheetWrap.haml',
 				$anchor: this.$samplesFromAnchor,
 				state: dsstate,
 				cursor: dscursor,
-				sources: this.sources,
 				placeholder: 'All Samples'
 			});
 		},
@@ -141,8 +135,7 @@ define(['haml/sheetWrap.haml',
 
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 
-			state = options.state.share();
-			this.state = state;
+			state = this.state = options.state.share().shareReplay(1);
 			this.cursor = options.cursor;
 
 			this.$el = $(template());

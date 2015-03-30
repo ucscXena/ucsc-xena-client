@@ -48,8 +48,8 @@ define(['haml/columnEdit.haml',
 		widgets = {},
 		aWidget;
 
-	function getMetadata(sources, hdsID) {
-		var info = xenaQuery.find_dataset(sources, hdsID),
+	function getMetadata(datasets, hdsID) {
+		var info = xenaQuery.find_dataset(datasets, hdsID),
 			metadata = info.type;
 		if (metadata === 'genomicMatrix' && info.probemap) {
 			metadata += 'Probemap';
@@ -245,7 +245,7 @@ define(['haml/columnEdit.haml',
 		},
 
 		reRender: function () {
-			this.metadata = getMetadata(this.sources, this.state.dsID);
+			this.metadata = getMetadata(this.datasets, this.state.dsID);
 
 			// reset the dynamic portion of column, excluding the plot
 			this.$el.find('tr:not(.static)').hide();
@@ -403,13 +403,13 @@ define(['haml/columnEdit.haml',
 
 			// TODO this should use datasetSelect.js instead of this block of code
 			// as soon as I know how to update one piece of state in the column: dsID
-			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
+			this.subs = options.state.refine(['_datasets']).subscribe(function ({_datasets: datasets}) {
 				var opts;
-				self.sources = _.map(sources, function (s) {
+				self.datasets = _.map(datasets, function (s) {
 					return _.assoc(s, 'title', xenaQuery.server_url(s.server));
 				});
 
-				opts = $(datasetsTemplate({sources: self.sources, placeholder: 'Select...'}));
+				opts = $(datasetsTemplate({sources: self.datasets, placeholder: 'Select...'}));
 
 				// there might or might not be a a select2 element.
 				// need to find it & do a destroy.

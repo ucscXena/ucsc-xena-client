@@ -152,47 +152,20 @@ define(['haml/columnUi.haml', 'haml/columnUiSelect.haml', 'haml/tupleDisplay.ham
 		kmPlotShow: function () {
 			kmPlot.show(this.id, {
 				cursor: this.cursor.refine({ 'kmPlot': ['column_rendering', this.id, 'kmPlot'] }),
-				columnUi: this
+				columnUi: this,
+                state: this.state
 			});
 		},
 
 		kmPlotVisibility: function () {
-			var myKmState,
-				myPlotted,
-				self = this;
-			this.subs.add(this.state.distinctUntilChanged(function (s) {
-				return s.column_rendering[self.id].kmPlot;
-			})
-				.subscribe(function (s) {
-					var kmState = s.column_rendering[self.id].kmPlot,
-						plotted = s._column[self.id].plotted;
-					if (myKmState && !kmState) {
-						myKmState = kmState;
-						kmPlot.destroy(self.id);
-					}
-					if (!myKmState && kmState) {
-						myKmState = kmState;
-						if (plotted) {
-							self.kmPlotShow();
-						}
-					}
-				}));
-			this.subs.add(this.state.distinctUntilChanged(function (s) {
-				return s._column[self.id].plotted;
-			})
-				.subscribe(function (s) {
-					var kmState = s.column_rendering[self.id].kmPlot,
-						plotted = s._column[self.id].plotted;
-					if (myPlotted && !plotted) {
-						myPlotted = plotted;
-					}
-					if (!myPlotted && plotted) {
-						myPlotted = plotted;
-						if (kmState) {
-							self.kmPlotShow();
-						}
-					}
-				}));
+			var self = this;
+            this.subs.add(this.state.subscribe(function (s) {
+                if (s.column_rendering[self.id].kmPlot) {
+                    self.kmPlotShow();
+                } else {
+                    kmPlot.destroy(self.id);
+                }
+            }));
 		},
 
 		initialize: function (options) {

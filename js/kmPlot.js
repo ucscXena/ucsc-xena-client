@@ -472,14 +472,14 @@ define([ 'd3',
 			censorLine('line');
 		},
 
-		setSurvivalVars: function () {
+		setSurvivalVars: function (state) {
 			// Update survival vars using:
 			// 1. stored eventDsID's survival vars
 			// 2. find all the clinicalMatrices in the cohort
 			// 3. find the first one with survival vars (refine later)
 			// 4. if not found, make them all undefined
 			var self = this,
-				clinicalMatrices = _.flatten(_.map(this.columnUi.ws._sources, function (server) {
+				clinicalMatrices = _.flatten(_.map(state._datasets, function (server) {
 					return _.filter(server.datasets, function (dataset) {
 						return dataset.type === 'clinicalMatrix';
 					});
@@ -602,7 +602,7 @@ define([ 'd3',
 			defer(this.geometryChange);
 
 			if (geometry === 'default') {
-				this.setSurvivalVars();
+                options.state.subscribe(s => this.setSurvivalVars(s));
 			} else if (myWs.eventDsID && myWs.survival) {
 				this.getSurvivalData(myWs.eventDsID, myWs.survival);
 				// TODO for now, assume survival vars are still in the saved eventDsID.
@@ -618,11 +618,9 @@ define([ 'd3',
 	}
 
 	function show(id, options) {
-		var w = widgets[id];
-		if (w) {
-			w.destroy();
-		}
-		w = widgets[id] = kmCreate(id, options);
+        if (!widgets[id]) {
+            widgets[id] = kmCreate(id, options);
+        }
 	}
 
 	return {
