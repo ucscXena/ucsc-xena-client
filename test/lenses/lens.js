@@ -33,15 +33,10 @@ describe('lenses/lens', function () {
             assert.deepEqual(lens.set(mutLens, {foo: 5, bar: 7}, {different: "state"}), {different: "state"});
             assert.deepEqual(state, {different: "state"});
         });
-        function spy(msg, x) {
-            /*global console: false */
-            console.log(msg, x);
-            return x;
-        }
         // 'should only call setter once'
         it('should compose with closed-over getter/setter', function() {
             var state = {foo: "state"},
-                mutLens = lens.lens(() => state, (x, s) => spy('setting', state = s)),
+                mutLens = lens.lens(() => state, (x, s) => state = s),
                 fooLens = lens.lens(x => x.foo, (x, foo) => _.assoc(x, 'foo', foo)),
                 mutFooLens = inj => mutLens(fooLens(inj));
 
@@ -52,7 +47,7 @@ describe('lenses/lens', function () {
         });
         it('should compose twice with closed-over getter/setter', function() {
             var state = [{foo: "one"}, {foo: "two"}, {foo: "three"}],
-                mutLens = lens.lens(() => state, (x, s) => spy('setting', state = s)),
+                mutLens = lens.lens(() => state, (x, s) => state = s),
                 fooLens = lens.lens(x => x.foo, (x, foo) => _.assoc(x, 'foo', foo)),
                 thirdLens = lens.lens(x => x[2], (x, third) => _.assoc(x, 2, third)),
                 mutThirdFooLens = inj => mutLens(thirdLens(fooLens(inj)));
