@@ -226,40 +226,50 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
     return img;
 	}
 
-	function buildIndex (idxObj, cohortC, hosts, rootNode){
-		var idx = idxObj.index,
-			store = idxObj.store,
-			ui = idxObj.ui,
-			i =0,
-			cohortCounter =0,
-			doc;
+	function xenaTextValuesToString (textObj){
+		var s ="";
+		for (var key in textObj) {
+    	if (textObj[key]){
+    		s= " "+s+textObj[key];
+    	}
+		}
+		return s;
+	}
 
+	function buildIndex (idxObj, cohortC, hosts){
+		var idx = lunr(function () {
+    		this.field('title', {boost: 10})
+    		this.field('body')
+			}),
+			store ={},
+			i =0,
+			doc,
+			source;
+
+		//about cohort
 		cohortC.map(function (cohort){
-			//about cohort
 			i=i+1;
-			cohortCounter = cohortCounter+1;
 			doc = {
   			"title": cohort,
 		    "body": "",
 		    "id": i
 			};
 			idx.add(doc);
-			store[i]={ "type":"cohort",
+			store[i]={
+				"type":"cohort",
 				"name":cohort
 			};
+		});
 
-			function xenaTextValuesToString (textObj){
-				var s ="";
-				for (var key in textObj) {
-        	if (textObj[key]){
-        		s= " "+s+textObj[key];
-        	}
-				}
-				return s;
-			}
-
-			//about dataset
-			xenaQuery.dataset_list(hosts, cohort).subscribe( function (hostsRet) {
+		//about dataset
+		source = Rx.Observable.zipArray(
+			cohortC.map(function (cohort) {
+		 		return xenaQuery.dataset_list(hosts, cohort);
+			})
+		);
+		source.subscribe(function (x){
+			var cohortCounter =0;
+			x.forEach(function (hostsRet) {
 				hostsRet.forEach(function (hostObj) {
 					hostObj.datasets.forEach(function (dataset) {
 						var label= dataset.label || dataset.name;
@@ -276,29 +286,48 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 					    "id": i
 						};
 						idx.add(doc);
-						store[i]={ "type":"dataset",
+						store[i]={
+							"type":"dataset",
 							"name":dataset.name,
 							"label":label,
-							"cohort":cohort,
+							"cohort":cohortC[cohortCounter],
 							"host":hostObj.server
 						};
 					});
 				});
-				if (cohortCounter===cohortC.length){  // all done add data to index, put in the ui
-					rootNode.parentNode.insertBefore(ui,rootNode);
+				cohortCounter = cohortCounter+1;
+				if (cohortCounter === cohortC.length){
+					idxObj.index = idx;
+					idxObj.store = store;
 				}
 			});
 		});
+					/*
+					//about samples
+					xenaQuery.all_samples(hostObj.server, cohort).subscribe(function (samples){
+						samples.forEach(function (sample){
+							i=i+1;
+							doc = {
+								"title":sample,
+								"id":i
+							};
+							idx.add(doc);
+							store[i]= {
+								"type":"sample",
+								"name":sample,
+								"cohort":cohort
+							};
+						});
+	*/
 	}
-
 
 	function cohortListPage(hosts, rootNode, idxObj, cohortList) {
 		if (!hosts || hosts.length === 0) {
 			return;
 		}
 
-		rootNode.appendChild(dom_helper.elt("h2", "Cohorts"));
-		rootNode.appendChild(document.createElement("br"));
+		rootNode.appendChild(dom_helper.elt("h2", cohortList ? (cohortList.length+" Cohorts") : "Cohorts"));
+
 		var node;
 		node = document.createElement("div");
 		node.setAttribute("id","cohortList");
@@ -339,7 +368,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 			});
 
 			if (idxObj) {
-				buildIndex (idxObj, cohortC, hosts, rootNode);
+				buildIndex (idxObj, cohortC, hosts);
 			}
 		});
 
@@ -1081,64 +1110,16 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		);
 	}
 
-
-
 	//the front page of dataPages
 	function frontPage (baseNode){
-		var idx = lunr(function () {
-    		this.field('title'/*, {boost: 10}*/)
-    		this.field('body')
-			}),
-			store ={};
+		var indxObj = {};
 
-		function frontPageSearch(){
+		function searchUI(){
 			var sectionNode = dom_helper.sectionNode("cohort"),
 				inputBox = document.createElement("INPUT"),
 		  	searchButton = document.createElement("BUTTON");
 
-			function doSearch() {
-				var term = document.getElementById("query").value.trim(),
-					type, name, cohort,url,
-					cohortList=[], datasetList=[];
-
-			  cohortNode.innerHTML=""; //clear cohortList
-
-				if (term === "") {  // all cohorts back
-					cohortListPage(_.intersection(activeHosts, metadataFilterHosts), cohortNode);
-				}
-				else {
-			  	idx.search(term).forEach(function (obj){
-			  		type = store[obj.ref].type;
-			  		name = store[obj.ref].name;
-			  		cohort = store[obj.ref].cohort;
-			  		if (type ==="cohort"){
-			  			if (cohortList.indexOf(name)===-1){
-			  				cohortList.push(name);
-			  			}
-			  		} else if (type ==="dataset"){
-			  			datasetList.push(store[obj.ref]);
-			  			if (cohortList.indexOf(cohort)===-1){
-			  				cohortList.push(cohort);
-			  			}
-			  		}
-			  	});
-			  	if (cohortList){
-				  	cohortListPage(_.intersection(activeHosts, metadataFilterHosts), cohortNode, undefined, cohortList);
-				  }
-				  if (datasetList){
-				  	cohortNode.appendChild(dom_helper.elt("h2","Datasets"));
-				  	cohortNode.appendChild(document.createElement("br"));
-				  	datasetList.forEach(function(obj){
-				  		url = "?dataset="+encodeURIComponent(obj.name)+"&host="+encodeURIComponent(obj.host);
-				  		cohortNode.appendChild(dom_helper.hrefLink(obj.cohort+" "+obj.label, url));
-				  		cohortNode.appendChild(document.createElement("br"));
-				  		cohortNode.appendChild(document.createElement("br"));
-			  		});
-				  }
-			  }
-			}
-
-			inputBox.setAttribute("class", "tb5");
+			inputBox.setAttribute("class", "searchBox");
 			inputBox.setAttribute("id", "query");
 			sectionNode.appendChild(inputBox);
 
@@ -1146,14 +1127,98 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 			searchButton.appendChild(document.createTextNode("Search"));
 			sectionNode.appendChild(searchButton);
 
-			searchButton.addEventListener("click", doSearch);
+			searchButton.addEventListener("click", function () {
+				var query = document.getElementById("query").value.trim();
+				doSearch (query);
+			});
 			inputBox.onkeydown = function (event) {
 				if (event.keyCode === 13) {
-					doSearch();
+					var query = document.getElementById("query").value.trim();
+					doSearch(query);
 				}
 			};
 			return sectionNode;
 		}
+
+		function doSearch(query) {
+			var type, name, cohort, url,
+				cohortList=[], datasetList=[], sampleList=[],
+				idx, store;
+
+			function displaySearchResult(){
+				idx.search(query).forEach(function (obj){
+		  		type = store[obj.ref].type;
+		  		name = store[obj.ref].name;
+		  		cohort = store[obj.ref].cohort;
+		  		if (type ==="cohort"){
+		  			if (cohortList.indexOf(name)===-1){
+		  				cohortList.push(name);
+		  			}
+		  		} else if (type ==="dataset"){
+		  			datasetList.push(store[obj.ref]);
+		  			if (cohortList.indexOf(cohort)===-1){
+		  				cohortList.push(cohort);
+		  			}
+		  		} else if (type === "sample"){
+						sampleList.push(store[obj.ref]);
+		  			if (cohortList.indexOf(cohort)===-1){
+		  				cohortList.push(cohort);
+		  			}
+		  		}
+		  	});
+		  	cohortNode.innerHTML="";
+		  	if (cohortList.length===0){
+		  		cohortNode.appendChild(document.createTextNode("No result"));
+		  	}
+		  	if (cohortList.length>0){
+			  	cohortListPage(_.intersection(activeHosts, metadataFilterHosts), cohortNode, undefined, cohortList);
+			  }
+			  if (datasetList.length>0){
+			  	cohortNode.appendChild(dom_helper.elt("h2",datasetList.length+" Datasets"));
+			  	datasetList.forEach(function(obj){
+			  		url = "?dataset="+encodeURIComponent(obj.name)+"&host="+encodeURIComponent(obj.host);
+			  		cohortNode.appendChild(document.createTextNode(obj.cohort+" : "));
+			  		cohortNode.appendChild(dom_helper.hrefLink(obj.label, url));
+			  		cohortNode.appendChild(document.createElement("br"));
+			  		cohortNode.appendChild(document.createElement("br"));
+		  		});
+			  }
+			  if (sampleList.length>0){
+			  	cohortNode.appendChild(dom_helper.elt("h2",sampleList.length+" Samples"));
+			  	sampleList.forEach(function(obj){
+			  		url = "?cohort="+encodeURIComponent(obj.cohort);
+			  		cohortNode.appendChild(dom_helper.hrefLink(obj.cohort, url));
+			  		cohortNode.appendChild(document.createTextNode(" : "+obj.name));
+			  		cohortNode.appendChild(document.createElement("br"));
+			  		cohortNode.appendChild(document.createElement("br"));
+		  		});
+			  }
+			}
+		  cohortNode.innerHTML=""; //clear cohortList
+
+			if (query === "") {  // all cohorts
+				cohortListPage(_.intersection(activeHosts, metadataFilterHosts), cohortNode);
+			}
+			else {
+				if (indxObj.index === undefined ) {
+					cohortNode.appendChild(document.createTextNode("Building index ..."));
+				}
+				var myInterval = setInterval(function(){
+					if (indxObj.index === undefined ){
+						cohortNode.appendChild(document.createTextNode("."));
+						return;
+					}
+
+					clearInterval(myInterval);
+					cohortNode.innerHTML="";
+					cohortNode.appendChild(document.createTextNode("Searching ..."));
+					store = indxObj.store;
+					idx = indxObj.index;
+					displaySearchResult();
+				}, 100);
+		  }
+		}
+
 
 		//overall container
 		var container = dom_helper.elt("div");
@@ -1167,19 +1232,13 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		var mainNode = dom_helper.elt("div");
 		mainNode.setAttribute("id", "dataPagesMain");
 
-		//search
-		container.appendChild(dom_helper.elt("br"));
-		var searchNode = frontPageSearch();
+		var searchNode = searchUI();
+		mainNode.appendChild(searchNode);
 
 		var cohortNode = dom_helper.sectionNode("cohort");
 		mainNode.appendChild(cohortNode);
 
 		//cohort list
-		var indxObj = {
-			ui:searchNode,
-			index: idx,
-			store: store
-		};
 		cohortListPage(_.intersection(activeHosts, metadataFilterHosts), cohortNode, indxObj);
 		container.appendChild(mainNode);
 

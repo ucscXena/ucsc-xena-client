@@ -31,7 +31,17 @@ color:#ff6600;
 	color:gray;
 }
 #main .tb5:focus {
-    outline: 0;
+  outline: 0;
+}
+
+#main .searchBox {
+  border-radius: 5px;
+  border:1px solid gray;
+  height: 30px;
+  width: 60%;
+  padding: 2px 10px;
+  font-size: 16px;
+  margin-top: 20px;
 }
 
 #main a:link
@@ -159,6 +169,7 @@ display: inline-block;
 {
 color:#404040;
 margin-top: 20px;
+margin-bottom: 20px;
 }
 
 #main #cohort h3 a,#dataset h3 a
