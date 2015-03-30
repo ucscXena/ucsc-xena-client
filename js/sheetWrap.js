@@ -229,32 +229,6 @@ define(['haml/sheetWrap.haml',
 						}
 					})
 			);
-
-			/*
-			this.subs.add(
-				state.refine(['columnEditOpen', 'cohort'])
-					.subscribe(function (state) {
-						var id;
-						if (columnEditOpen && !state.columnEditOpen) {
-							columnEdit.destroyAll();
-						}
-						if (!columnEditOpen && state.columnEditOpen) {
-							id = uuid();
-							columnEdit.show(id, {
-								sheetWrap: self,
-								columnUi: undefined,
-								cursor: options.cursor
-							});
-						}
-						columnEditOpen = state.columnEditOpen;
-						if (!state.columnEditOpen && state.cohort) {
-							self.$addColumn.show();
-						} else {
-							self.$addColumn.hide();
-						}
-					})
-			);
-			*/
 		}
 	};
 
