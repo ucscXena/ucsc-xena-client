@@ -1024,9 +1024,9 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
       store ={},
       i =0,
       doc,
-      source;
-
-    var cohortC =[];
+			source,
+      cohortC =[],
+      obj;
 
     source = Rx.Observable.zipArray(
       hosts.map(function (host) {
@@ -1135,6 +1135,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
       });
     }
   }
+
+
 	//the front page of dataPages
 	function frontPage (baseNode){
 		var indxObj={},
@@ -1142,13 +1144,15 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		  searchButton = document.createElement("BUTTON"),
 		  resetButton = document.createElement("BUTTON");
 
-		function searchUI(){
-			var sectionNode = dom_helper.sectionNode("cohort"),
-		  	query;
+		function searchUI(sectionNode){
+			var query;
 
 			inputBox.setAttribute("class", "searchBox");
 			inputBox.setAttribute("id", "dataPageQuery");
 			sectionNode.appendChild(inputBox);
+
+			sectionNode.appendChild(document.createElement("br"));
+			sectionNode.appendChild(document.createElement("br"));
 
 			searchButton.setAttribute("class","vizbutton");
 			searchButton.appendChild(document.createTextNode("Search"));
@@ -1168,8 +1172,6 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 				cohortNode.innerHTML="";
 				cohortListPage(_.intersection(activeHosts, metadataFilterHosts), cohortNode);
 			});
-
-			return sectionNode;
 		}
 
 		function doSearch(query) {
@@ -1213,7 +1215,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		  		cohortNode.appendChild(document.createTextNode(" - did not find any data."));
 		  	}
 		  	else {
-		  		var text = "Found about ",
+		  		var text = "Found ",
 		  			message,
 		  			clearnArray;
 
@@ -1337,12 +1339,19 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		var sideNode = hubSideBar(activeHosts);
 		container.appendChild(sideNode);
 
+		var searchNode = document.createElement("div");
+		searchUI(searchNode);
+		sideNode.appendChild(searchNode);
+
 		//main section cohort list page
 		var mainNode = dom_helper.elt("div");
 		mainNode.setAttribute("id", "dataPagesMain");
 
-		var searchNode = searchUI();
+		/*
+		var searchNode = dom_helper.sectionNode("cohort");
+		searchUI(searchNode);
 		mainNode.appendChild(searchNode);
+		*/
 
 		var cohortNode = dom_helper.sectionNode("cohort");
 		mainNode.appendChild(cohortNode);

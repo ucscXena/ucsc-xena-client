@@ -267,6 +267,7 @@ min-width: 30px;
   margin-left: auto;
   margin-right: auto;
   -webkit-animation: rotating 2s linear infinite reverse;
+  animation: rotating 2s linear infinite reverse;
 }
 
 @keyframes rotating {
