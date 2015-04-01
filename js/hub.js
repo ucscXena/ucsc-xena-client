@@ -34,7 +34,7 @@ define(["dom_helper", "session", "xenaQuery", "base", "../css/datapages.css"], f
 			host = "https://galaxyxena.soe.ucsc.edu:443/xena";
 		}
 		// if galaxy checkbox checked, force prot to 7220
-		if (galaxyCheckbox.checked) {
+		else if (galaxyCheckbox.checked) {
 			var tokens = host.match(/^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/(.*))?$/);
 			tokens[4] = '7220';  //port = tokens[4];
 			host =(tokens[1]? tokens[1]:'') +(tokens[2]? tokens[2]:'')+':'+tokens[4]+ (tokens[5]? tokens[5]:'');
@@ -104,10 +104,4 @@ define(["dom_helper", "session", "xenaQuery", "base", "../css/datapages.css"], f
 	node.appendChild(labelText);
 
 	document.getElementById('main').appendChild(node);
-
-	newText.onkeydown= function (event) {
-		if (event.keyCode === 13) {
-			addHost();
-		}
-	};
 });

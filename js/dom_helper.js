@@ -135,6 +135,19 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 		}
 	}
 
+	function loadingCircle(){
+		var div = sectionNode("cohort"),
+			node = document.createElement("div"),
+			i;
+
+		div.appendChild(node);
+		node.setAttribute("class","spinner circles");
+		for (i = 0; i < 8; i++) {
+    	node.appendChild(document.createElement("div"));
+		}
+		return div;
+	}
+
 	return {
 		elt: elt,
 		hrefLink: hrefLink,
@@ -150,6 +163,7 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 		queryStringToJSON: queryStringToJSON,
 		JSONToqueryString: JSONToqueryString,
 		stringToDOM: stringToDOM,
-		append: append
+		append: append,
+		loadingCircle: loadingCircle
 	};
 });

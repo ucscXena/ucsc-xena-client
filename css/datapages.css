@@ -22,16 +22,14 @@ color:#ff6600;
 }
 
 #main .tb5 {
+  border-radius: 5px;
 	border:1px solid #456879;
-	height: 22px;
-	width: 300px;
+	height: 30px;
+	width: 400px;
 	padding: 2px 10px;
 	font-size: 16px;
 	margin-bottom: 10px;
 	color:gray;
-}
-#main .tb5:focus {
-  outline: 0;
 }
 
 #main .searchBox {
@@ -42,6 +40,10 @@ color:#ff6600;
   padding: 2px 10px;
   font-size: 16px;
   margin-top: 20px;
+}
+#main .searchBox:disabled {
+  border:1px solid light-gray;
+  color :gray;
 }
 
 #main a:link
@@ -204,6 +206,10 @@ vertical-align: 5%;
 {
 color:#ff6600;
 }
+.vizbutton:disabled
+{
+color:gray;
+}
 
 .hubcheck {
 height: 20px;
@@ -254,5 +260,71 @@ max-width: 100px;
 min-width: 30px;
 }
 
+.spinner{
+  width:100px;
+  height:100px;
+  position:relative;
+  margin-left: auto;
+  margin-right: auto;
+  -webkit-animation: rotating 2s linear infinite reverse;
+}
 
+@keyframes rotating {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@-webkit-keyframes rotating {
+  from { -webkit-transform: rotate(360deg); }
+  to { -webkit-transform: rotate(0deg); }
+}
+
+.spinner.circles div{
+  width: 10px;
+  height: 10px;
+  border-radius:50%;
+  background: black;
+  position: absolute;
+  top: 45px;
+  left: 45px;
+}
+.spinner.circles div:nth-child(1){
+  -webkit-transform: rotate(0deg) translate(0, -35px);
+  transform: rotate(0deg) translate(0, -35px);
+}
+.spinner.circles div:nth-child(2){
+  -webkit-transform: rotate(45deg) translate(0, -35px);
+  transform: rotate(45deg) translate(0, -35px);
+  opacity:0.7;
+}
+.spinner.circles div:nth-child(3){
+  -webkit-transform: rotate(90deg) translate(0, -35px) ;
+  transform: rotate(90deg) translate(0, -35px) ;
+  opacity:0.6;
+}
+.spinner.circles div:nth-child(4){
+  -webkit-transform: rotate(135deg) translate(0, -35px) ;
+  transform: rotate(135deg) translate(0, -35px) ;
+  opacity:0.5;
+}
+.spinner.circles div:nth-child(5){
+  -webkit-transform: rotate(180deg) translate(0, -35px) ;
+  transform: rotate(180deg) translate(0, -35px) ;
+  opacity:0.4;
+}
+.spinner.circles div:nth-child(6){
+  -webkit-transform: rotate(225deg) translate(0, -35px) ;
+  transform: rotate(225deg) translate(0, -35px);
+  opacity:0.3;
+}
+.spinner.circles div:nth-child(7){
+  -webkit-transform: rotate(270deg) translate(0, -35px);
+  transform: rotate(270deg) translate(0, -35px);
+  opacity:0.2;
+}
+.spinner.circles div:nth-child(8){
+  -webkit-transform: rotate(315deg) translate(0, -35px);
+  transform: rotate(315deg) translate(0, -35px);
+  opacity:0.1;
+}
 
