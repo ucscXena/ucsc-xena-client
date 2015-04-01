@@ -1139,7 +1139,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 	function frontPage (baseNode){
 		var indxObj={},
 			inputBox = document.createElement("INPUT"),
-		  searchButton = document.createElement("BUTTON");
+		  searchButton = document.createElement("BUTTON"),
+		  resetButton = document.createElement("BUTTON");
 
 		function searchUI(){
 			var sectionNode = dom_helper.sectionNode("cohort"),
@@ -1157,6 +1158,17 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 				query = document.getElementById("dataPageQuery").value.trim();
 				doSearch (query);
 			});
+
+			resetButton.setAttribute("class","vizbutton");
+			resetButton.appendChild(document.createTextNode("Reset"));
+			sectionNode.appendChild(resetButton);
+
+			resetButton.addEventListener("click", function () {
+				document.getElementById("dataPageQuery").value ="";
+				cohortNode.innerHTML="";
+				cohortListPage(_.intersection(activeHosts, metadataFilterHosts), cohortNode);
+			});
+
 			return sectionNode;
 		}
 
@@ -1201,19 +1213,24 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		  		cohortNode.appendChild(document.createTextNode(" - did not find any data."));
 		  	}
 		  	else {
-		  		cohortNode.appendChild(document.createTextNode("Found about "));
+		  		var text = "Found about ",
+		  			message,
+		  			clearnArray;
 
 		  		array = [(cohortList.length ? (cohortList.length.toLocaleString()  +" cohort"+  (cohortList.length>1? "s":"")) : ""),
 		  			(datasetList.length ? (datasetList.length.toLocaleString()+" dataset"+ (datasetList.length>1? "s":"")) : ""),
 		  			(sampleList.length ? (sampleList.length.toLocaleString()  +" sample"+ (sampleList.length>1? "s":"")) : "")];
 
-		  		var clearnArray= array.filter(function (phrase) {
+		  		clearnArray= array.filter(function (phrase) {
 		  				return (phrase !== "");
 		  			});
 
 		  		var arrayText = clearnArray.slice(0, clearnArray.length-1).join(', ');
 		  		arrayText = (arrayText ? (arrayText +" and "):"")+ clearnArray[clearnArray.length-1]+".";
-		  		cohortNode.appendChild(document.createTextNode(arrayText));
+		  		text = text + arrayText;
+					message = dom_helper.elt("span",text);
+					message.style.color = "gray";
+		  		cohortNode.appendChild(message);
 	  		}
 		  	if (cohortList.length>0){
 					cohortNode.appendChild(dom_helper.elt("h2", array[0]));
@@ -1278,16 +1295,19 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 			  cohortNode.appendChild(document.createElement("br"));
 			 	inputBox.disabled = false;
 				searchButton.disabled = false;
+				resetButton.disabled = false;
 			}
 
 			inputBox.disabled = true;
 			searchButton.disabled = true;
+			resetButton.disabled = true;
 
 			cohortNode.innerHTML=""; //clear cohortList
 			if (query === "") {  // all cohorts
 				cohortListPage(_.intersection(activeHosts, metadataFilterHosts), cohortNode);
 				inputBox.disabled = false;
 				searchButton.disabled = false;
+				resetButton.disabled = false;
 				return;
 			}
 
