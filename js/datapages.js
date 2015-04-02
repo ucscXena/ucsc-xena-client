@@ -1028,11 +1028,13 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
       cohortC =[],
       obj;
 
+
     source = Rx.Observable.zipArray(
       hosts.map(function (host) {
         return xenaQuery.all_cohorts(host);
       })
     );
+
 
     source.subscribe(function (x) {
       x.forEach(function(s){
@@ -1047,6 +1049,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
     function addToIndex(){
       //about cohort
+
+
       cohortC.map(function (cohort){
         i=i+1;
         doc = {
@@ -1113,8 +1117,8 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
         cohortCounter =0;
         x.slice(cohortC.length,x.length).forEach(function (samples){
+        	var cohortName = cohortC[cohortCounter % cohortC.length];
           samples.forEach(function (sample){
-          	var cohortName = cohortC[cohortCounter % cohortC.length];
             i=i+1;
             doc = {
               "title":sample,
@@ -1130,6 +1134,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
           });
           cohortCounter = cohortCounter+1;
         });
+
         idxObj.index = idx;
         idxObj.store = store;
       });
@@ -1339,10 +1344,11 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		var sideNode = hubSideBar(activeHosts);
 		container.appendChild(sideNode);
 
+		/*
 		var searchNode = document.createElement("div");
 		searchUI(searchNode);
 		sideNode.appendChild(searchNode);
-
+		*/
 		//main section cohort list page
 		var mainNode = dom_helper.elt("div");
 		mainNode.setAttribute("id", "dataPagesMain");
