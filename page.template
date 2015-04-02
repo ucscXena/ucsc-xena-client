@@ -48,13 +48,7 @@
   </head>
   <body id="body">
 	<div>
-		<div id="nav">
-			<div id='navPageBrowser'>
-				<table id="navShort" class="ui-widget" style='width:100%;'><tr>
-					<td id='navMenuMain' style='text-align:left;height:2em'>
-					</td>
-				</tr></table>
-			</div>
+		<div id="navMenuMain">
 		</div>
 		<div id="main">
 			<div id='noJScript' style="text-align:center; background: yellow; color: black; font-size: small; width: 500px; margin: auto;">
