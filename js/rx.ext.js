@@ -256,5 +256,9 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 		});
 	};
 
+	observableProto.getIn = function (keys) {
+		return this.map(s => _.get_in(s, keys));
+	};
+
 	return Rx;
 });

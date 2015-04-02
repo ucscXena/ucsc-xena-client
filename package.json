@@ -36,9 +36,12 @@
     "webpack-dev-server": "^1.7.0"
   },
   "dependencies": {
+    "bootstrap": "^3.3.4",
     "d3": "^3.5.5",
     "jquery": "2.1.0",
     "jquery-ui": "^1.10.5",
+    "react": "^0.13.1",
+    "react-bootstrap": "^0.20.0",
     "rx": "^2.4.3",
     "rx-dom": "^4.0.4",
     "rx-jquery": "^1.1.7",

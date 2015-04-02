@@ -1,3 +1,2 @@
-/*global require: fales */
-require('../css/base.css');
+/*global require: false */
 require('nav');

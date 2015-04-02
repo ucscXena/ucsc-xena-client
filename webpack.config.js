@@ -1,3 +1,5 @@
+/*global require: false, module: false, __dirname: false */
+'use strict';
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var webpack = require('webpack');
 
@@ -15,7 +17,7 @@ module.exports = {
 			{ test: /\.css$/, loader: "style!css" },
 			{ test: /\.js$/, loader: 'jsx-loader?harmony' },
 			{ test: /\.haml$/, loader: 'haml-loader' },
-			{ test: /\.(jpe?g|png|gif|svg)$/i, loaders: ['url?limit=10000'] }
+			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]
 	},
 	plugins: [

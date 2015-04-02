@@ -1,218 +1,126 @@
-/*jslint browser: true, regexp: true, vars: true */
-/*global define: false, console: false */
+/*jslint browser: true */
+/*global require: false, console: false */
 
-define(['jquery',
-		'underscore_ext',
-		'rx',
-		'columnModels',
-		'spreadsheet',
-		'sheetWrap',
-		'multi',
-		'columnUi',
-		'uuid',
-		'cursor',
-		// non-object dependencies
-		'plotDenseMatrix',
-		'plotMutationVector',
-		'jquery-ui',
-		'rx.async',
-		'base',
-		'../css/heatmap.css'], function (
-			$,
-			_,
-			Rx,
-			columnModels,
-			spreadsheet,
-			sheetWrap,
-			multi,
-			columnUi,
-			uuid,
-			cursor) {
+'use strict';
 
-	'use strict';
-
-	// set default column_order and column_rendering somewhere?
-	// pass column_order to spreadsheet.js
-
-	var model = columnModels(); // XXX global for testing
-	var HEIGHT = window.innerHeight-200;
-
-	var unload = Rx.Observable.fromEvent(window, 'beforeunload');
-	// XXX does this work if no state events occur?? Looks like not.
-
-	function keysNot_(obj) {
-		return _.filter(_.keys(obj), function (x) { return x.indexOf('_') !== 0; });
-	}
-
-	function keys_(obj) {
-		return _.filter(_.keys(obj), function (x) { return x.indexOf('_') === 0; });
-	}
-
-	unload.combineLatest(model.state, function (_e, state) {
-		return _.pick(state, keysNot_(state));
-	}).subscribe(function (state) {
-		sessionStorage.xena = JSON.stringify(state);
-	});
-
-	var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena', 'https://local.xena.ucsc.edu:7223'];
-
-	var childrenStream = new Rx.Subject();
-	model.addStream(childrenStream);
-	var writeState = function (fn) { childrenStream.onNext(fn); };
-	var spreadsheetPaths = {
-		cohort: ['cohort'],
-		height: ['height'],
-		zoomIndex: ['zoomIndex'],
-		zoomCount: ['zoomCount'],
-		samplesFrom: ['samplesFrom'],
-		samples: ['samples'],
-		servers: ['servers'],
-		_datasets: ['_datasets'],
-		column_rendering: ['column_rendering'],
-		_column: ['_column'],
-		column_order: ['column_order'],
-		//columnEditOpen: ['columnEditOpen'],
-		mode: ['mode'],
-		chartState: ['chartState'],
-		vizSettings: ['vizSettings'],
-		_vizSettings: ['_vizSettings'],
-		data: ['_column_data']
+require('base');
+var React = require('react');
+var L = require('./lenses/lens');
+var Spreadsheet = require('./spreadsheet');
+var AppControls = require('./AppControls');
+var reactState = require('./reactState');
+var propsStream = require('./react-utils').propsStream;
+var xenaQuery = require('./xenaQuery');
+var Input = require('react-bootstrap/lib/Input');
+var Rx = require('./rx.ext');
+var _ = require('./underscore_ext');
+var d = window.document;
+var main = d.getElementById('main');
+var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena',
+		'https://local.xena.ucsc.edu:7223'];
+var initialState = {
+		servers: {'default': defaultServers, user: defaultServers}
 	};
-	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths).share();
-	var spreadsheetCursor = cursor(writeState, spreadsheetPaths);
 
-	sheetWrap.create({
-		$anchor: $('#main'),
-		state: spreadsheetState,
-		cursor: spreadsheetCursor,
-		servers: defaultServers
-	}); // XXX leaked
-	var $spreadsheet = $('.spreadsheet');
-	var $debug = $('.debug');
+require('bootstrap/dist/css/bootstrap.css');
+require('rx-dom');
 
-	$spreadsheet.resizable({ handles: 's' });
+function fetchDatasets(stream) {
+	return stream.refine(['servers', 'cohort'])
+		.map(state => state.cohort ?
+				xenaQuery.dataset_list(state.servers.user, state.cohort) :
+				Rx.Observable.return([], Rx.Scheduler.timeout)
+		).switchLatest().map(servers => ({ // index by dsID
+			servers: servers,
+			datasets: _.object(_.flatmap(servers,
+						s => _.map(s.datasets, d => [d.dsID, d])))
+		}));
+}
 
-	// XXX handler might leak
-	// changing either the canvas or the .samplePlot
-	var resizes = $spreadsheet.onAsObservable("resizestop")
-		.select(function (ev) {
-				return function (s) {
-					var //diff = ev.additionalArguments[0].size.height
-						//	- ev.additionalArguments[0].originalSize.height,
-						// TODO it would be best to retrieve the state.height here
-						// and replace it with: diff + state.height
-						// The below does not work if a sparse mutation plot is first.
-						// If we do the above, we won't have a DOM lookup, so the below
-						// concern about DOM lookup is not an issue. The use of the jquery-ui
-						// resize has been greatly simplified by allowing the elements to
-						// shrink-wrap around their content, rather than trying to calc their sizes.
-						// Only the canvas size is set, nothing else.
-						$column = $('.spreadsheet-column:first'),
-					// The state-mutating functions should really be pure functions, for the sake
-					// of our sanity. So, DOM lookups should be done elsewhere.
-					// headHeight is really a constant & could be looked up once. This handler should
-					// see it as a constant.
-					// The reason we have to do this at all is that the resize handles are on a different
-					// element than the one we resize. The real fix is to resolve that discrepancy such
-					// that we're getting the correct height values. Dunno if jquery-ui will let us
-					// resize with a proxy element, but if not we should write our own resize. We should
-					// really do that anyway, and ditch jquery-ui. :-p
-						headHeight = $column.height() - $column.find('.samplePlot canvas').height();
-					return _.assoc(s, 'height', ev.additionalArguments[0].size.height - headHeight);
-				};
-		});
+var datasetSamples = xenaQuery.dsID_fn(xenaQuery.dataset_samples);
 
-	model.addStream(resizes);
+function fetchSamples(stream) {
+	return stream.refine(['servers', 'cohort', 'samplesFrom'])
+		.map(state => state.samplesFrom ?
+				datasetSamples(state.samplesFrom) :
+				Rx.Observable.zipArray(
+					_.map(state.servers.user, s => xenaQuery.all_samples(s, state.cohort))
+				).map(_.apply(_.union)))
+		.switchLatest();
+}
+
+function formatState(lens) {
+	return JSON.stringify(L.view(lens), null, 4);
+}
 
 
-	// COLUMN STUB
-
-	function createColumn() {
-		try {
-			var newcol = JSON.parse($('#columnStub').val());
-			debugstream.onNext(function (s) {
-				var id = uuid();
-				return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
-					'column_order', s.column_order.concat([id]));
-			});
-		} catch (e) {
-			if (console) {
-				console.log('error', e);
-			}
+var Application = React.createClass(propsStream({
+	displayName: 'Application',
+	saveAppState: function () {
+		sessionStorage.xena = JSON.stringify(L.view(this.props.lens));
+	},
+	componentWillMount: function () {
+		fetchDatasets(this.propsStream).subscribe(
+				datasets => this.setState({'datasets': datasets}));
+		fetchSamples(this.propsStream).subscribe(
+				samples => this.setState({'samples': samples}));
+		Rx.DOM.fromEvent(window, 'beforeunload').subscribe(this.saveAppState);
+	},
+	getInitialState() {
+		return {
+			debug: false,
+			debugText: formatState(this.props.lens) // initial state of text area.
+		};
+	},
+	componentWillReceiveProps (nextProps) {
+		this.setState({debugText: formatState(this.props.lens)});
+	},
+	handleChange: function (ev) {
+		this.setState({debugText: ev.target.value});
+	},
+	onClick: function (ev) {
+		if (ev.ctrlKey === true) {
+			this.setState({'debug': !this.state.debug});
 		}
-	}
-
-	var debugstream = new Rx.Subject();
-	model.addStream(debugstream);
-	var debugtext = $('<textarea  id="columnStub" rows=20 cols=130></textarea>');
-	debugtext.hide();
-	$debug.append(debugtext);
-
-	debugtext.on('keydown', function (ev) {
-		if (ev.keyCode === 13 && ev.shiftKey === true) {
-			createColumn(ev);
-		}
-	});
-
-	// SAMPLES STUB
-
-	function applySamples(ev) {
-		try {
-			var json = JSON.parse($('#samplesStub').val());
-			debugstream.onNext(function (s) {
-				return _.extend(_.pick(s, keys_(s)),
-								_.pick(json, keysNot_(json)));
-			});
-		} catch (e) {
-			console.log('error', e);
-		}
-	}
-
-	var debugstate = $('<textarea id="samplesStub" rows=20 cols=50></textarea>');
-	$debug.append(debugstate);
-
-	debugstate.on('keydown', function (ev) {
-		if (ev.keyCode === 13 && ev.ctrlKey === true) {
-			applySamples(ev);
-		}
-	});
-
-	$(document).ready(function () {
-		var debug_stream = model.state.replay(null, 1),
-			start,
-			sub;
-
-		debug_stream.connect();
-
-		start = {
-				"chartState": null,
-				"mode": "heatmap",
-				"samples": [],
-				"samplesFrom": "",
-				"servers": {'default': defaultServers, user: defaultServers},
-				"_datasets": [],
-				"height": HEIGHT,
-				"zoomIndex": 0,
-				"zoomCount": 100,
-				"column_rendering": {},
-				"_column": {}, // not sure what this is for
-				"column_order": []
-			};
-		if (sessionStorage && sessionStorage.xena) {
-			start = _.extend(start, JSON.parse(sessionStorage.xena));
-		}
-		model.addStream(Rx.Observable.returnValue(function (s) { return start; }));
-
-		$('.samplesFromAnchor').onAsObservable('click')
-			.subscribe(function (ev) {
-				$('.debug').toggle();
-				if (sub) {
-					sub.dispose();
-				} else {
-					sub = debug_stream.subscribe(function (s) {
-						$('#samplesStub').val(JSON.stringify(_.pick(s, keysNot_(s)), undefined, 4));
-					});
+	},
+	onKeyDown: function (ev) {
+		if (ev.key === 'Enter' && ev.ctrlKey) {
+			try {
+				L.set(this.props.lens, null, JSON.parse(this.state.debugText));
+			} catch (e) {
+				if (console) {
+					console.log(e);
 				}
-			});
-	});
-});
+			}
+			ev.preventDefault();
+		}
+	},
+	render: function() {
+		var datasets = _.get_in(this.state, ['datasets']);
+		console.log('state', L.view(this.props.lens));
+		console.log('transient state', this.state);
+		return (
+			<div onClick={this.onClick}>
+				<AppControls lens={this.props.lens} datasets={datasets}/>
+				<div className='chartRoot' style={{display: 'none'}} />
+				<Spreadsheet />
+				<Input
+					type='textarea'
+					id='debug'
+					rows='20'
+					cols='130'
+					style={{display: _.get_in(this.state, ['debug']) ? 'block' : 'none'}}
+					onChange={this.handleChange}
+					onKeyDown={this.onKeyDown}
+					value={this.state.debugText}>
+				</Input>
+			</div>
+		);
+	}
+}));
+
+var lens = reactState(Application, main);
+if (sessionStorage && sessionStorage.xena) {
+	initialState = _.extend(initialState, JSON.parse(sessionStorage.xena));
+}
+L.set(lens, null, initialState);

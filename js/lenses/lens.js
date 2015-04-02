@@ -1,4 +1,5 @@
 /*global define: false */
+'use strict';
 define([], function () {
     // Core utilities for haskell-like lenses.
 	function lens(getter, setter) {
@@ -11,7 +12,7 @@ define([], function () {
 
 	function constant(c) {
 		return {
-			fmap: f => constant(c),
+			fmap: () => constant(c),
 			value: c
 		};
 	}
@@ -32,7 +33,7 @@ define([], function () {
     // Given a lens and current state x, return a new state
     // with lens updated to value v.
 	function set(lens, x, v) {
-		return lens(y => id(v))(x).value;
+		return lens(() => id(v))(x).value;
 	}
 
     // Given a lens and current state x, return a new state
@@ -45,6 +46,9 @@ define([], function () {
 		lens: lens,
 		view: view,
 		set: set,
-		over: over
+		over: over,
+		// The point of this is that functions returned by _.compose cannot be
+		// optimized by js engine due to use of arguments.
+		compose: (a, b) => inj => a(b(inj))
 	};
 });
