@@ -53,7 +53,6 @@ var Columns = React.createClass({
 var Spreadsheet = React.createClass({
 	render: function () {
 		var l = L.view(this.props.lens);
-		console.log(l);
 		return (
 			<Grid>
 				<Row className='show-grid'>
