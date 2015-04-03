@@ -90,7 +90,7 @@ define(['underscore_ext',
 	function index_mutations(gene, samples, resp) {
 		var rows_by_sample = _.groupBy(mutation_attrs(resp.rows), 'sample'),
 			no_rows = _.difference(resp.samples, _.keys(rows_by_sample)),
-			vals = _.extend(rows_by_sample, _.object_fn(no_rows, _.constant([]))), // merge in empty arrays for samples w/o matching rows.
+			vals = _.extend(rows_by_sample, _.objectFn(no_rows, _.constant([]))), // merge in empty arrays for samples w/o matching rows.
 			obj = {};
 
 		obj[gene] = vals;

@@ -43,7 +43,7 @@ define(['underscore_ext'], function (_) {
 
 	function pathsOrKeys(args) {
 		var paths = _.isString(args[0]) ? _.toArray(args) : args[0];
-		return _.isArray(paths) ? _.object_fn(paths, _.array) : paths;
+		return _.isArray(paths) ? _.objectFn(paths, _.array) : paths;
 	}
 
 	function splice_paths(oldpaths, newpaths) {

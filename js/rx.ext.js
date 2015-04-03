@@ -54,7 +54,7 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 			current;
 
 		paths = _.isString(paths) ? _.toArray(arguments) : paths;
-		paths = _.isArray(paths) ? _.object_fn(paths, _.array) : paths;
+		paths = _.isArray(paths) ? _.objectFn(paths, _.array) : paths;
 
 		current = fmap(paths, function () { return null; }); // mutable
 

@@ -11,7 +11,7 @@ define(['d3',
 	var isNumber = _.isNumber,
 		isUndefined = _.isUndefined,
 		range = _.range,
-		color_range,
+		colorRange,
 		// d3_category20, without the #7f7f7f gray that aliases with our N/A gray of #808080
 		categoryMore = [
 			"#1f77b4", // dark blue
@@ -73,11 +73,11 @@ define(['d3',
 	}());
 
 
-	function scale_categoryMore() {
+	function scaleCategoryMore() {
 		return d3.scale.ordinal().range(categoryMore);
 	}
 
-	function scale_codedWhite() {
+	function scaleCodedWhite() {
 		return d3.scale.ordinal().range(codedWhite);
 	}
 
@@ -90,7 +90,7 @@ define(['d3',
 		return _.extend(newfn, fn); // XXX This weirdness copies d3 fn methods
 	}
 
-	color_range = multi(function (column, settings, features, codes) {
+	colorRange = multi(function (column, settings, features, codes) {
 		if (features && codes) {
 			if (features.valuetype === 'category') {
 				return 'codedMore';
@@ -99,24 +99,24 @@ define(['d3',
 			}
 		}
 		if (column.type === "genomicMatrix"){
-			return 'float_genomicData';
+			return 'floatGenomicData';
 		}
 		return 'minMax';
 	});
 
-	function color_float_negative(low, zero, min, max) {
+	function colorFloatNegative(low, zero, min, max) {
 		return d3.scale.linear()
 			.domain([min, max])
 			.range([low, zero]);
 	}
 
-	function color_float_positive(zero, high, min, max) {
+	function colorFloatPositive(zero, high, min, max) {
 		return d3.scale.linear()
 			.domain([min, max])
 			.range([zero, high]);
 	}
 
-	function color_float_double(low, zero, high, min, max) {
+	function colorFloatDouble(low, zero, high, min, max) {
 		var absmax = Math.max(-min, max);
 
 		return d3.scale.linear()
@@ -124,7 +124,7 @@ define(['d3',
 			.range([low, zero, high]);
 	}
 
-	function color_float(column, settings, feature, codes, data) {
+	function colorFloat(column, settings, feature, codes, data) {
 		var colorfn,
 			values = _.values(data || [0]), // handle degenerate case
 			max = d3.max(values),
@@ -139,21 +139,21 @@ define(['d3',
 		}
 		min = d3.min(values);
 		if (min >= 0 && max >= 0) {
-			colorfn = color_float_positive(zero, high, min, max);
+			colorfn = colorFloatPositive(zero, high, min, max);
 		} else if (min <= 0 && max <= 0) {
-			colorfn = color_float_negative(low, zero, min, max);
+			colorfn = colorFloatNegative(low, zero, min, max);
 		} else {
-			colorfn = color_float_double(low, zero, high, min, max);
+			colorfn = colorFloatDouble(low, zero, high, min, max);
 		}
 		return saveUndefined(colorfn);
 	}
 
-	function color_categoryMore(column, settings, feature, codes) {
-		return saveUndefined(scale_categoryMore().domain(range(codes.length)));
+	function colorCategoryMore(column, settings, feature, codes) {
+		return saveUndefined(scaleCategoryMore().domain(range(codes.length)));
 	}
 
-	function color_codedWhite(column, settings, feature, codes) {
-		return saveUndefined(scale_codedWhite().domain(range(codes.length)));
+	function colorCodedWhite(column, settings, feature, codes) {
+		return saveUndefined(scaleCodedWhite().domain(range(codes.length)));
 	}
 
 //	function color_scaled(column) {
@@ -166,25 +166,25 @@ define(['d3',
 //			.range([low, zero, high]));
 //	}
 
-	function color_float_negative_zone(low, zero, min, max, zone) {
+	function colorFloatNegativeZone(low, zero, min, max, zone) {
 		return d3.scale.linear()
 			.domain([min.toPrecision(2), (max-zone).toPrecision(2), max.toPrecision(2)])
 			.range([low, zero, zero]);
 	}
 
-	function color_float_positive_zone(zero, high, min, max, zone) {
+	function colorFloatPositiveZone(zero, high, min, max, zone) {
 		return d3.scale.linear()
 			.domain([min.toPrecision(2), (min+zone).toPrecision(2), max.toPrecision(2)])
 			.range([zero, zero, high]);
 	}
 
-	function color_custom (low, zero, high, min, max, minStart, maxStart) {
+	function colorCustom (low, zero, high, min, max, minStart, maxStart) {
 		return d3.scale.linear()
 			.domain([min.toPrecision(2),  minStart.toPrecision(2), maxStart.toPrecision(2), max.toPrecision(2)])
 			.range([low, zero, zero, high]);
 	}
 
-	function color_float_genomicData (column, settings, feature, codes, data) {
+	function colorFloatGenomicData (column, settings, feature, codes, data) {
 		var colorfn,
 			values = _.values(data || [0]), // handle degenerate case
 			colors = defaultColors(column.type, column.dataSubType),
@@ -210,29 +210,29 @@ define(['d3',
 				minStart = mid  -  zone / 2.0;
 				maxStart = mid  +  zone / 2.0;
 			}
-			colorfn = color_custom(low, zero, high, min, max, minStart, maxStart);
+			colorfn = colorCustom(low, zero, high, min, max, minStart, maxStart);
 		} else if (min <= 0 && max >= 0) {
 			absmax = Math.max(-min, max);
 			zone = absmax / 4.0;
-			colorfn = color_custom(low, zero, high, - absmax / 2.0, absmax / 2.0, - zone / 2.0, zone / 2.0);
+			colorfn = colorCustom(low, zero, high, - absmax / 2.0, absmax / 2.0, - zone / 2.0, zone / 2.0);
 		} else	if (min >= 0 && max >= 0) {
 			zone = (max - min) / 4.0;
-			colorfn = color_float_positive_zone(zero, high, min, max - zone / 2.0, zone);
+			colorfn = colorFloatPositiveZone(zero, high, min, max - zone / 2.0, zone);
 		} else { // min <= 0 && max <= 0
 			zone = (max - min) / 4.0;
-			colorfn = color_float_negative_zone(low, zero, min + zone / 2.0, max, zone);
+			colorfn = colorFloatNegativeZone(low, zero, min + zone / 2.0, max, zone);
 		}
 		return saveUndefined(colorfn);
 	}
 
-	color_range.add('codedWhite', color_codedWhite);
-	color_range.add("minMax", color_float);
-	color_range.add("codedMore", color_categoryMore);
-	color_range.add("float_genomicData", color_float_genomicData);
+	colorRange.add('codedWhite', colorCodedWhite);
+	colorRange.add("minMax", colorFloat);
+	colorRange.add("codedMore", colorCategoryMore);
+	colorRange.add("floatGenomicData", colorFloatGenomicData);
 
 	return {
-		range: color_range,
-		'float': color_float,
+		range: colorRange,
+		'float': colorFloat,
 //		scaled: color_scaled,
 		defaultColors: defaultColors,
 		codedMore: categoryMore

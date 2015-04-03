@@ -36,7 +36,7 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		return _.map(paths, _.partial(_.getIn, obj));
 	}
 
-	function partition_n(arr, n, step, pad) {
+	function partitionN(arr, n, step, pad) {
 		var i, last, len, ret = [];
 
 		step = step || n;
@@ -54,7 +54,7 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		return ret;
 	}
 
-	function object_fn(keys, fn) {
+	function objectFn(keys, fn) {
 		return _.reduce(keys, function (acc, k) {
 			acc[k] = fn(k);
 			return acc;
@@ -100,8 +100,8 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		pluckPathsArray: pluckPathsArray,
 		array: array,
 		concat: concat,
-		partition_n: partition_n,
-		object_fn: object_fn,
+		partitionN: partitionN,
+		objectFn: objectFn,
 		findValue: findValue,
 		negate: negate,
 		spy: spy,
