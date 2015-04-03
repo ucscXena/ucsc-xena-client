@@ -6,6 +6,7 @@
 require('base');
 var React = require('react');
 var L = require('./lenses/lens');
+var Ls = require('./lenses/lenses');
 var Spreadsheet = require('./spreadsheet');
 var AppControls = require('./AppControls');
 var reactState = require('./reactState');
@@ -96,14 +97,15 @@ var Application = React.createClass(propsStream({
 		}
 	},
 	render: function() {
-		var datasets = _.get_in(this.state, ['datasets']);
+		var datasets = _.get_in(this.state, ['datasets']),
+			spreadsheetLens = L.compose(this.props.lens, Ls.keys('zoom'));
 		console.log('state', L.view(this.props.lens));
 		console.log('transient state', this.state);
 		return (
 			<div onClick={this.onClick}>
 				<AppControls lens={this.props.lens} datasets={datasets}/>
 				<div className='chartRoot' style={{display: 'none'}} />
-				<Spreadsheet />
+				<Spreadsheet lens={spreadsheetLens} samples={this.state.samples} />
 				<Input
 					type='textarea'
 					id='debug'

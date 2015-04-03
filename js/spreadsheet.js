@@ -3,23 +3,69 @@
 'use strict';
 
 var React = require('react');
+var Grid = require('react-bootstrap/lib/Grid');
+var Row = require('react-bootstrap/lib/Row');
+var Col = require('react-bootstrap/lib/Col');
+var Button = require('react-bootstrap/lib/Button');
+var _ = require('./underscore_ext');
+var L = require('./lenses/lens');
+require('./Columns.css');
+require('./YAxisLabel.css');
+
+var defaultHeight = 100;
+
+var YAxisLabel = React.createClass({
+    render: function () {
+		var height = _.get_in(this.props, ['zoom', 'height']) || defaultHeight,
+			index = _.get_in(this.props, ['zoom', 'index']) || 0,
+			count = _.get_in(this.props, ['zoom', 'count']) || 0,
+			length = _.get_in(this.props, ['samples', 'length']) || 0,
+			fraction = count === length ? '' :
+				`, showing ${ index } - ${ index + count - 1 }`,
+			 text = `Samples (N=${ length }) ${ fraction }`;
+
+        return (
+			<div style={{height: height}} className="YAxisWrapper">
+				<p style={{width: height}} className="YAxisLabel">{text}</p>
+			</div>
+		);
+    }
+});
+
+var Columns = React.createClass({
+    render: function () {
+		var height = _.get_in(this.props, ['zoom', 'height']) || defaultHeight;
+        return (
+			<div className="Columns">
+				<div
+					style={{height: height}}
+					className='addColumn Column'>
+
+					<Button className='Column-add-button' title='Add a column'>+</Button>
+				</div>
+				<div className='crosshairH crosshair' />
+			</div>
+		);
+    }
+});
+
 
 var Spreadsheet = React.createClass({
 	render: function () {
+		var l = L.view(this.props.lens);
+		console.log(l);
 		return (
-			<table className='heatmapRoot' >
-				<tr>
-					<td>
-						<div className='yAxisLabel' />
-					</td>
-					<td className='body' >
-						<div id='spreadsheet' className='spreadsheet'>
-							<div className='crosshairH crosshair' />
-						</div>
-						<span className='addColumn' style={{display: 'none'}}> + </span>
-					</td>
-				</tr>
-			</table>
+			<Grid>
+				<Row className='show-grid'>
+					<Col md={1}>
+						<YAxisLabel
+							samples={this.props.samples}
+							zoom={l.zoom}
+						/>
+					</Col>
+					<Col md={11}><Columns /></Col>
+				</Row>
+			</Grid>
 		);
 	}
 });
