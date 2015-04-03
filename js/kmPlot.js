@@ -362,7 +362,7 @@ define([ 'd3',
 		render: function (subgroups, chief) {
 			var x = this.x,
 				y = this.y,
-				color = _.get_in(this, ['columnUi', 'ws', 'colors', 0]),
+				color = _.getIn(this, ['columnUi', 'ws', 'colors', 0]),
 				line = d3.svg.line().interpolate("step-after")
 					.x(function (d) { return x(d.t); })
 					.y(function (d) { return y(d.s); }),
@@ -525,10 +525,10 @@ define([ 'd3',
 							}
 						});
 						self.cursor.update(function (s) {
-							return _.assoc_in(s, ['kmPlot', 'eventDsID'], eventDsID);
+							return _.assocIn(s, ['kmPlot', 'eventDsID'], eventDsID);
 						});
 						self.cursor.update(function (s) {
-							return _.assoc_in(s, ['kmPlot', 'survival'], survival);
+							return _.assocIn(s, ['kmPlot', 'survival'], survival);
 						});
 						self.getSurvivalData(eventDsID, survival);
 					}
@@ -541,7 +541,7 @@ define([ 'd3',
 			var self = this,
 				offset = this.$dialog.offset();
 			this.cursor.update(function (s) {
-				return _.assoc_in(s, ['kmPlot', 'geometry'], {
+				return _.assocIn(s, ['kmPlot', 'geometry'], {
 					left: offset.left,
 					top: offset.top,
 					width: self.$dialog.width(),

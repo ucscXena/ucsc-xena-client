@@ -29,11 +29,11 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	}
 
 	function pluckPaths(paths, obj) {
-		return _.fmap(paths, _.partial(_.get_in, obj));
+		return _.fmap(paths, _.partial(_.getIn, obj));
 	}
 
 	function pluckPathsArray(paths, obj) {
-		return _.map(paths, _.partial(_.get_in, obj));
+		return _.map(paths, _.partial(_.getIn, obj));
 	}
 
 	function partition_n(arr, n, step, pad) {

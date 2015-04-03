@@ -7,7 +7,7 @@ define(['haml/columnUi.haml', 'haml/columnUiSelect.haml', 'haml/tupleDisplay.ham
 	'use strict';
 
 	function columnExists(uuid, state) {
-		return !!_.get_in(state, ['column_rendering', uuid]);
+		return !!_.getIn(state, ['column_rendering', uuid]);
 	}
 
 	var widgets = {},
@@ -28,7 +28,7 @@ define(['haml/columnUi.haml', 'haml/columnUiSelect.haml', 'haml/tupleDisplay.ham
 			var self = this,
 				cursor = this.xenaCursor.refine({ '_column': ['_column', self.id] });
 			cursor.update(function (s) {
-				return _.assoc_in(s, ['_column', 'plotted'], true);
+				return _.assocIn(s, ['_column', 'plotted'], true);
 			});
 		},
 

@@ -16,7 +16,7 @@ function optsFromDatasets(servers) {
 
 var DatasetSelect = React.createClass({
 	render: function () {
-		var options = optsFromDatasets(_.get_in(this.props, ['datasets', 'servers'])),
+		var options = optsFromDatasets(_.getIn(this.props, ['datasets', 'servers'])),
 			selectLens = L.compose(this.props.lens, Ls.key('samplesFrom'));
 
 		return (

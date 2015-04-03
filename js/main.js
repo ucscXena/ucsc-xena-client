@@ -97,7 +97,7 @@ var Application = React.createClass(propsStream({
 		}
 	},
 	render: function() {
-		var datasets = _.get_in(this.state, ['datasets']),
+		var datasets = _.getIn(this.state, ['datasets']),
 			spreadsheetLens = L.compose(this.props.lens, Ls.keys('zoom'));
 		console.log('state', L.view(this.props.lens));
 		console.log('transient state', this.state);
@@ -111,7 +111,7 @@ var Application = React.createClass(propsStream({
 					id='debug'
 					rows='20'
 					cols='130'
-					style={{display: _.get_in(this.state, ['debug']) ? 'block' : 'none'}}
+					style={{display: _.getIn(this.state, ['debug']) ? 'block' : 'none'}}
 					onChange={this.handleChange}
 					onKeyDown={this.onKeyDown}
 					value={this.state.debugText}>

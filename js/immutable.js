@@ -68,16 +68,16 @@ define([], function() {
 		return x;
 	}
 
-	function assoc_in_i(x, keys, v, i) {
+	function assocInI(x, keys, v, i) {
 		var ki = keys[i];
 		if (keys.length === i + 1) {
 			return assoc(x, ki, v);
 		}
-		return assoc(x, ki, assoc_in_i(x && x[ki], keys, v, i + 1));
+		return assoc(x, ki, assocInI(x && x[ki], keys, v, i + 1));
 	}
 
-	function assoc_in(x, keys, v) {
-		return assoc_in_i(x, keys, v, 0);
+	function assocIn(x, keys, v) {
+		return assocInI(x, keys, v, 0);
 	}
 
 	function conj(x, v) {
@@ -87,19 +87,19 @@ define([], function() {
 		return assoc(x, v[0], v[1]);
 	}
 
-	function update_in_i(x, keys, fn, i) {
+	function updateInI(x, keys, fn, i) {
 		var ki = keys[i];
 		if (keys.length === i + 1) {
 			return assoc(x, ki, fn(x && x[ki]));
 		}
-		return assoc(x, ki, update_in_i(x && x[ki], keys, fn, i + 1));
+		return assoc(x, ki, updateInI(x && x[ki], keys, fn, i + 1));
 	}
 
-	function update_in(x, keys, fn) {
-		return update_in_i(x, keys, fn, 0);
+	function updateIn(x, keys, fn) {
+		return updateInI(x, keys, fn, 0);
 	}
 
-	function get_in_i(x, keys, i) {
+	function getInI(x, keys, i) {
 		var ki;
 
 		if (x === null || x === undefined) {
@@ -109,23 +109,23 @@ define([], function() {
 		if (keys.length === i + 1) {
 			return x[ki];
 		}
-		return get_in_i(x[ki], keys, i + 1);
+		return getInI(x[ki], keys, i + 1);
 	}
 
-	function get_in(x, keys) {
+	function getIn(x, keys) {
 		if (keys.length === 0) {
 			return x;
 		}
-		return get_in_i(x, keys, 0);
+		return getInI(x, keys, 0);
 	}
 
 
 	return {
 		assoc: assoc,
-		assoc_in: assoc_in,
+		assocIn: assocIn,
 		dissoc: dissoc,
-		update_in: update_in,
+		updateIn: updateIn,
 		conj: conj,
-		get_in: get_in
+		getIn: getIn
 	};
 });

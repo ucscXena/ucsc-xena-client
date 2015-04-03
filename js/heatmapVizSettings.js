@@ -159,7 +159,7 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 
 		function updateSettings(settings) {
 			return function(s) {
-				return _.update_in(s, ['vizSettings'], function (s) {
+				return _.updateIn(s, ['vizSettings'], function (s) {
 					return _.extend({}, s, settings); // overlay new values.
 				});
 			};
@@ -211,7 +211,7 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 						minStart: null,
 						min: -1
 					},
-					settings = _.get_in(oldSettings, ['max']) ? oldSettings : defaults;
+					settings = _.getIn(oldSettings, ['max']) ? oldSettings : defaults;
 
 				node.setAttribute("class", "block");
 				colorParams.forEach(function (param) {
@@ -319,7 +319,7 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 //					}
 //				});
 //				cursor.update(function (s) {
-//					return _.assoc_in(s, ['_vizSettings', 'open'], false);
+//					return _.assocIn(s, ['_vizSettings', 'open'], false);
 //				});
 //			});
 //			return button;
@@ -372,7 +372,7 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 		function removeVizSettings(key) {
 			// xenaState.vizSettings[host + name][key] = undefined;
 			cursor.update(function (s) {
-				return _.update_in(s, ['vizSettings'], function (s) {
+				return _.updateIn(s, ['vizSettings'], function (s) {
 					return _.dissoc(s, key);
 				});
 			});
@@ -381,12 +381,12 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 		function setVizSettings(key, value) {
 			// xenaState.vizSettings[host + name][key] = value;
 			cursor.update(function (s) {
-				return _.assoc_in(s, ['vizSettings', key], value);
+				return _.assocIn(s, ['vizSettings', key], value);
 			});
 		}
 
 		function getVizSettings(key) {
-			return _.get_in(state, ['vizSettings', key]);
+			return _.getIn(state, ['vizSettings', key]);
 		}
 
 		function buildNormalizationDropDown(host, name) {
@@ -458,7 +458,7 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 		var GOODSTATUS = 'loaded',
 			root,
 			node,
-			oldSettings = _.get_in(state, ['vizSettings']),
+			oldSettings = _.getIn(state, ['vizSettings']),
 			host_name = xenaQuery.parse_host(dsID),
 			datasetName = host_name[1],
 			host = host_name[0],
@@ -472,7 +472,7 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 			position: ['center', 'top'],
 			close: function () {
 					cursor.update(function (s) {
-						return _.assoc_in(s, ['_vizSettings', 'open'], false);
+						return _.assocIn(s, ['_vizSettings', 'open'], false);
 					});
 				}
 		});

@@ -63,7 +63,7 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 				function (next) {
 					var shouldPush = false;
 					_.each(paths, function (path, key) {
-						var ni = _.get_in(next, path);
+						var ni = _.getIn(next, path);
 						/*
 						if (ni !== current[key] && _.isEqual(ni, current[key])) {
 							console.log("isEqual not ===", ni);
@@ -111,7 +111,7 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 			return observable.subscribe(
 				function (next) {
 					_.each(paths, function (path, key) {
-						var ni = _.get_in(next, path);
+						var ni = _.getIn(next, path);
 						if (ni !== current[key]) {
 							current = _.assoc(current, key, ni);
 						}
@@ -257,7 +257,7 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 	};
 
 	observableProto.getIn = function (keys) {
-		return this.map(s => _.get_in(s, keys));
+		return this.map(s => _.getIn(s, keys));
 	};
 
 	return Rx;

@@ -16,10 +16,10 @@ var defaultHeight = 100;
 
 var YAxisLabel = React.createClass({
     render: function () {
-		var height = _.get_in(this.props, ['zoom', 'height']) || defaultHeight,
-			index = _.get_in(this.props, ['zoom', 'index']) || 0,
-			count = _.get_in(this.props, ['zoom', 'count']) || 0,
-			length = _.get_in(this.props, ['samples', 'length']) || 0,
+		var height = _.getIn(this.props, ['zoom', 'height']) || defaultHeight,
+			index = _.getIn(this.props, ['zoom', 'index']) || 0,
+			count = _.getIn(this.props, ['zoom', 'count']) || 0,
+			length = _.getIn(this.props, ['samples', 'length']) || 0,
 			fraction = count === length ? '' :
 				`, showing ${ index } - ${ index + count - 1 }`,
 			 text = `Samples (N=${ length }) ${ fraction }`;
@@ -34,7 +34,7 @@ var YAxisLabel = React.createClass({
 
 var Columns = React.createClass({
     render: function () {
-		var height = _.get_in(this.props, ['zoom', 'height']) || defaultHeight;
+		var height = _.getIn(this.props, ['zoom', 'height']) || defaultHeight;
         return (
 			<div className="Columns">
 				<div
@@ -94,7 +94,7 @@ module.exports = Spreadsheet;
 //	}
 //
 //	function setWidth(uuid, width, state) {
-//		return _.assoc_in(state, ['column_rendering', uuid, 'width'], width);
+//		return _.assocIn(state, ['column_rendering', uuid, 'width'], width);
 //	}
 //
 //	function zoomIn(pos, state) {
@@ -177,7 +177,7 @@ module.exports = Spreadsheet;
 //
 //		var widgetStates = state.select(function (s) {
 //			return _.fmap(s.column_rendering, function (col, uuid) {
-//				var dsID = _.get_in(s, ['column_rendering', uuid, 'dsID']);
+//				var dsID = _.getIn(s, ['column_rendering', uuid, 'dsID']);
 //				return _.pluckPaths({
 //					cohort: ['cohort'],
 //					height: ['height'], // XXX refactor vertical position info into an object

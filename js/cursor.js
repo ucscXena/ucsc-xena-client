@@ -58,12 +58,12 @@ define(['underscore_ext'], function (_) {
 			update: function (fn) {
 				updater(function (root) {
 					var val = _.fmap(paths, function (path) {
-							return _.get_in(root, path);
+							return _.getIn(root, path);
 						}),
 						newval = fn(val);
 					return _.reduce(_.pairs(newval), function (newroot, pv) {
 						var p = pv[0], v = pv[1];
-						return _.assoc_in(newroot, paths[p], v);
+						return _.assocIn(newroot, paths[p], v);
 					}, root);
 				});
 			},

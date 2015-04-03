@@ -526,7 +526,7 @@ define(['underscore_ext',
 	// so all cases are explicit. Also, meaningful intermediate variables
 	// should be created so intent is clear, e.g.
 	//
-	// color_scale.length > 1 && !_.get_in(settings, ['min'])
+	// color_scale.length > 1 && !_.getIn(settings, ['min'])
 	//
 	// means there are mutiple probes and the user has not set a fixed scale,
 	// i.e. we have multiple color scales.
@@ -543,7 +543,7 @@ define(['underscore_ext',
 		}
 
 		if (metadata.type === 'genomicMatrix') {
-			if (color_scale.length > 1 && !_.get_in(settings, ['min'])) {
+			if (color_scale.length > 1 && !_.getIn(settings, ['min'])) {
 				colors = heatmapColors.defaultColors(metadata.type, metadata.dataSubType).slice(0);
 				labels = ["lower", "", "higher"];
 			}
@@ -599,11 +599,11 @@ define(['underscore_ext',
 				features = data.features || {},
 				codes = data.codes || {},
 				metadata = data.metadata || {},
-				mean = _.get_in(data, ["req", "mean"]),
+				mean = _.getIn(data, ["req", "mean"]),
 				norm = {'none': false, 'subset': true},
 
-				colnormalization = definedOrDefault(norm[_.get_in(ws, ['vizSettings', 'colNormalization'])], metadata.colnormalization),
-				settings = _.get_in(ws, ['vizSettings']) || {}, // XXX needs normalization, too?
+				colnormalization = definedOrDefault(norm[_.getIn(ws, ['vizSettings', 'colNormalization'])], metadata.colnormalization),
+				settings = _.getIn(ws, ['vizSettings']) || {}, // XXX needs normalization, too?
 				column = ws.column,
 				newws =  _.assoc(ws, 'column', _.extend({}, ws.column, metadata)),
 				fields = data.req.probes || column.fields, // prefer field list from server

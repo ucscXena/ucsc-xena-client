@@ -7,7 +7,7 @@ define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 	'use strict';
 
 	function columnDsID(state, id) {
-		return state.column_rendering[id].dsID; // XXX use _.get_in!
+		return state.column_rendering[id].dsID; // XXX use _.getIn!
 	}
 
 	var APPLY_BUTTON,
@@ -49,7 +49,7 @@ define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					return;
 				}
 				this.cursor.update(function (s) {
-					return _.assoc_in(s, ['_vizSettings', columnDsID(s, self.id), 'open'], true);
+					return _.assocIn(s, ['_vizSettings', columnDsID(s, self.id), 'open'], true);
 				});
 			};
 
@@ -63,7 +63,7 @@ define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					kmPlot.moveToTop(this.id);
 				} else {
 					this.cursor.update(function (s) {
-						return _.assoc_in(s, ['column_rendering', self.id, 'kmPlot'], { geometry: 'default' });
+						return _.assocIn(s, ['column_rendering', self.id, 'kmPlot'], { geometry: 'default' });
 					});
 				}
 			};
@@ -97,7 +97,7 @@ define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 			this.updateColumn = function (key, val) {
 				var id = this.id;
 				this.cursor.update(function (state) {
-					return _.assoc_in(state, ['column_rendering', id, key], val);
+					return _.assocIn(state, ['column_rendering', id, key], val);
 				});
 			};
 
@@ -176,10 +176,10 @@ define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 
 				this.state.refine(['_vizSettings', 'vizSettings', 'cohort', 'column_rendering'])
 					.distinctUntilChanged(function (s) {
-						return _.get_in(s, ['_vizSettings', columnDsID(s, self.id), 'open']);
+						return _.getIn(s, ['_vizSettings', columnDsID(s, self.id), 'open']);
 					}).subscribe(function (s) {
 						var dsID = columnDsID(s, self.id),
-							open = _.get_in(s, ['_vizSettings', dsID, 'open']),
+							open = _.getIn(s, ['_vizSettings', dsID, 'open']),
 							vizCursor = self.cursor.refine({
 								_vizSettings: ['_vizSettings', dsID],
 								vizSettings: ['vizSettings', dsID],
@@ -190,9 +190,9 @@ define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 							delete vizSettingsWidgets[dsID];
 						} else if (open && !vizSettingsWidgets[dsID]) {
 							vizSettingsWidgets[dsID] = vizSettings(vizCursor, {
-								_vizSettings: _.get_in(s, ['_vizSettings', dsID]),
-								vizSettings: _.get_in(s, ['vizSettings', dsID]),
-								cohort: _.get_in(s, ['cohort'])
+								_vizSettings: _.getIn(s, ['_vizSettings', dsID]),
+								vizSettings: _.getIn(s, ['vizSettings', dsID]),
+								cohort: _.getIn(s, ['cohort'])
 							}, dsID);
 						}
 					});
