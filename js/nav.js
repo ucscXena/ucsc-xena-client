@@ -27,7 +27,7 @@ var XenaNav = React.createClass({
 		return (
 			<Navbar>
 				<Nav>
-					{_.map(links, l => <NavItem href={l.href}>{l.label}</NavItem>)}
+					{_.map(links, l => <NavItem key={l.href} href={l.href}>{l.label}</NavItem>)}
 				</Nav>
 			</Navbar>
 		);
