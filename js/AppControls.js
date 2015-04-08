@@ -16,22 +16,35 @@ var resetSamplesFrom = L.lens(
 		(x, v) => (x.cohort === v.cohort) ? v :
 			_.assoc(v, 'samplesFrom', null));
 
+var rename = L.lens(
+		({samplesFrom, ...others}) => _.assoc(others, 'dataset', samplesFrom),
+		(x, {dataset, ...others}) => _.assoc(others, 'samplesFrom', dataset));
+
 var AppControls = React.createClass({
 	render: function () {
-		var cohortLens = L.compose(
+		var cohortLens = _.compose(
 				this.props.lens, resetSamplesFrom, Ls.keys(['cohort', 'servers'])),
-			datasetLens = L.compose(
-				this.props.lens, Ls.keys(['samplesFrom', 'servers']));
+			datasetLens = _.compose(
+				this.props.lens, Ls.keys(['samplesFrom', 'servers']), rename),
+			hasCohort = !!L.view(this.props.lens).cohort;
+
 		return (
 			<form className='form-inline'>
 				<CohortSelect lens={cohortLens} />
 				{' '}
-				<DatasetSelect
-					style={{display: L.view(this.props.lens).cohort ?
-							'inline' : 'none'}}
-					className='samplesFromAnchor'
-					datasets={this.props.datasets}
-					lens={datasetLens} />
+				{hasCohort ?
+					<div className='form-group' style={this.props.style}>
+						<label className='samplesFromLabel'> Samples in </label>
+						{' '}
+						<DatasetSelect
+							nullOpt="All Datasets"
+							style={{display: L.view(this.props.lens).cohort ?
+									'inline' : 'none'}}
+							className='samplesFromAnchor'
+							datasets={this.props.datasets}
+							lens={datasetLens} />
+					</div> :
+				null}
 				{' | '}
 				<Button className='chartSelect' bsStyle='primary'>Chart</Button>
 			</form>

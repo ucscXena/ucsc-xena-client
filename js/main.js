@@ -13,6 +13,9 @@ var reactState = require('./reactState');
 var propsStream = require('./react-utils').propsStream;
 var xenaQuery = require('./xenaQuery');
 var Input = require('react-bootstrap/lib/Input');
+var Grid = require('react-bootstrap/lib/Grid');
+var Row = require('react-bootstrap/lib/Row');
+var Col = require('react-bootstrap/lib/Col');
 var Rx = require('./rx.ext');
 var _ = require('./underscore_ext');
 var d = window.document;
@@ -20,7 +23,9 @@ var main = d.getElementById('main');
 var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena',
 		'https://local.xena.ucsc.edu:7223'];
 var initialState = {
-		servers: {'default': defaultServers, user: defaultServers}
+		servers: {'default': defaultServers, user: defaultServers},
+		columnRendering: {},
+		columnOrder: []
 	};
 
 require('bootstrap/dist/css/bootstrap.css');
@@ -62,9 +67,9 @@ var Application = React.createClass(propsStream({
 	},
 	componentWillMount: function () {
 		fetchDatasets(this.propsStream).subscribe(
-				datasets => this.setState({'datasets': datasets}));
+				datasets => this.setState({datasets: datasets}));
 		fetchSamples(this.propsStream).subscribe(
-				samples => this.setState({'samples': samples}));
+				samples => this.setState({samples: samples}));
 		Rx.DOM.fromEvent(window, 'beforeunload').subscribe(this.saveAppState);
 	},
 	getInitialState() {
@@ -98,29 +103,38 @@ var Application = React.createClass(propsStream({
 	},
 	render: function() {
 		var datasets = _.getIn(this.state, ['datasets']),
-			spreadsheetLens = L.compose(this.props.lens, Ls.keys('zoom'));
+			spreadsheetLens = L.compose(this.props.lens, Ls.keys(['zoom', 'columnRendering', 'columnOrder']));
 		console.log('state', L.view(this.props.lens));
 		console.log('transient state', this.state);
 		return (
-			<div onClick={this.onClick}>
-				<AppControls lens={this.props.lens} datasets={datasets}/>
+			<Grid onClick={this.onClick}>
+				<Row>
+					<Col md={12}>
+						<AppControls lens={this.props.lens} datasets={datasets}/>
+					</Col>
+				</Row>
+				<Spreadsheet lens={spreadsheetLens} datasets={datasets} samples={this.state.samples} />
+				<Row>
+					<Col md={12}>
+						<Input
+							type='textarea'
+							id='debug'
+							rows='20'
+							cols='130'
+							style={{display: _.getIn(this.state, ['debug']) ? 'block' : 'none'}}
+							onChange={this.handleChange}
+							onKeyDown={this.onKeyDown}
+							value={this.state.debugText}>
+						</Input>
+					</Col>
+				</Row>
 				<div className='chartRoot' style={{display: 'none'}} />
-				<Spreadsheet lens={spreadsheetLens} samples={this.state.samples} />
-				<Input
-					type='textarea'
-					id='debug'
-					rows='20'
-					cols='130'
-					style={{display: _.getIn(this.state, ['debug']) ? 'block' : 'none'}}
-					onChange={this.handleChange}
-					onKeyDown={this.onKeyDown}
-					value={this.state.debugText}>
-				</Input>
-			</div>
+			</Grid>
 		);
 	}
 }));
 
+// XXX put session save down here, too?
 var lens = reactState(Application, main);
 if (sessionStorage && sessionStorage.xena) {
 	initialState = _.extend(initialState, JSON.parse(sessionStorage.xena));

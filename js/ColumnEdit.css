@@ -1,0 +1,3 @@
+.columnEdit .modal-content {
+	min-height: 30em; /* XXX relates to Select.css? */
+}

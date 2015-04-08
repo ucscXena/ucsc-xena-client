@@ -3,10 +3,10 @@
 'use strict';
 
 var React = require('react');
-var Grid = require('react-bootstrap/lib/Grid');
-var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
+var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
+var ColumnEdit = require('./columnEdit');
 var _ = require('./underscore_ext');
 var L = require('./lenses/lens');
 require('./Columns.css');
@@ -34,16 +34,28 @@ var YAxisLabel = React.createClass({
 
 var Columns = React.createClass({
     render: function () {
-		var height = _.getIn(this.props, ['zoom', 'height']) || defaultHeight;
+		var lprops = L.view(this.props.lens);
+		var height = lprops.height || defaultHeight;
+		var editor = _.getIn(this.state, ['columnEdit']) ?
+			<ColumnEdit
+				{...this.props}
+				onRequestHide={() => this.setState({columnEdit: false})}
+			/> : '';
         return (
 			<div className="Columns">
 				<div
 					style={{height: height}}
 					className='addColumn Column'>
 
-					<Button className='Column-add-button' title='Add a column'>+</Button>
+					<Button
+						onClick={() => this.setState({columnEdit: true})}
+						className='Column-add-button'
+						title='Add a column'>
+						+
+					</Button>
 				</div>
 				<div className='crosshairH crosshair' />
+				{editor}
 			</div>
 		);
     }
@@ -54,17 +66,15 @@ var Spreadsheet = React.createClass({
 	render: function () {
 		var l = L.view(this.props.lens);
 		return (
-			<Grid>
-				<Row className='show-grid'>
-					<Col md={1}>
-						<YAxisLabel
-							samples={this.props.samples}
-							zoom={l.zoom}
-						/>
-					</Col>
-					<Col md={11}><Columns /></Col>
-				</Row>
-			</Grid>
+			<Row>
+				<Col md={1}>
+					<YAxisLabel
+						samples={this.props.samples}
+						zoom={l.zoom}
+					/>
+				</Col>
+				<Col md={11}><Columns {...this.props}/></Col>
+			</Row>
 		);
 	}
 });

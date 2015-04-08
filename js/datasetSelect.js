@@ -6,8 +6,6 @@ var _ = require('underscore_ext');
 var L = require('lenses/lens');
 var Ls = require('lenses/lenses');
 
-// XXX Use lens to pass in 'samplesFrom' value, so this module is reusable.
-
 function optsFromDatasets(servers) {
 	return _.flatmap(servers,
 			s => _.map(s.datasets,
@@ -16,18 +14,17 @@ function optsFromDatasets(servers) {
 
 var DatasetSelect = React.createClass({
 	render: function () {
-		var options = optsFromDatasets(_.getIn(this.props, ['datasets', 'servers'])),
-			selectLens = L.compose(this.props.lens, Ls.key('samplesFrom'));
+		var {datasets, lens, nullOpt, ...other} = this.props,
+			options = (nullOpt ? [{value: null, label: nullOpt}] : [])
+				.concat(optsFromDatasets(_.getIn(datasets, ['servers']))),
+			selectLens = _.compose(lens, Ls.key('dataset'));
 
 		return (
-			<div className='form-group' style={this.props.style}>
-				<label className='datasetSelectLabel'> Samples in </label>
-				{' '}
-				<Select
-					lens={selectLens}
-					options={options}
-				/>
-			</div>
+			<Select
+				{...other}
+				lens={selectLens}
+				options={options}
+			/>
 		);
 	}
 });
