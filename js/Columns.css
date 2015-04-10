@@ -7,3 +7,7 @@
 	position: relative;
 	display: inline-block;
 }
+
+.Columns .Sortable {
+	display: inline-block;
+}
