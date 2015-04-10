@@ -67,7 +67,7 @@ var Column = React.createClass({
 					width={width}
 					height={height}>
 
-					<p>foo</p>
+					<p style={{position: 'relative', height: height, width: width}}>foo</p>
 				</Resizable>
 			</div>
 		);
@@ -79,7 +79,7 @@ var Columns = React.createClass({
 		L.over(this.props.lens, s => _.assoc(s, 'columnOrder', order));
     },
 	render: function () {
-		var {height, columnOrder} = L.view(this.props.lens);
+		var {zoom: {height}, columnOrder} = L.view(this.props.lens);
 		var editor = _.getIn(this.state, ['columnEdit']) ?
 			<ColumnEdit
 				{...this.props}
