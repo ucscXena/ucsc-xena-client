@@ -53,35 +53,36 @@ var Sortable = React.createClass({
 		var mousedrag = mousedown.selectMany(([id, md]) => {
             // find starting positions on mouse down
 
-			const order = _.map(this.props.children, c => c.key);
-			const startX = md.clientX;
-			const positions = _.map(order,
+			var order = _.map(this.props.children, c => c.key);
+			var startX = md.clientX;
+			var positions = _.map(order,
 								  id => leftWidth(this.refs[id].getDOMNode().getBoundingClientRect()));
-			const N = positions.length;
-			const index = _.indexOf(order, id);
-			const target = positions[index];
-			const max = positions[N - 1].left - target.left - target.width + positions[N - 1].width;
-			const min = positions[0].left - target.left;
+			var N = positions.length;
+			var index = _.indexOf(order, id);
+			var target = positions[index];
+			var max = positions[N - 1].left - target.left - target.width + positions[N - 1].width;
+			var min = positions[0].left - target.left;
 			var newPos;
 
 			// Calculate delta with mousemove until mouseup
 			return Rx.DOM.fromEvent(window, 'mousemove').map(function (mm) {
 				mm.preventDefault();
 
-				let dragLeft = mm.clientX - startX;
+				var shift, edge;
+				var dragLeft = mm.clientX - startX;
 
 				dragLeft = dragLeft < min ? min : (dragLeft > max ? max : dragLeft);
 
 				if (dragLeft < 0) {              // dragging left
-					let shift = target.left - positions[index - 1].left ;
-					let edge = target.left + dragLeft;
+					shift = target.left - positions[index - 1].left ;
+					edge = target.left + dragLeft;
 					newPos = _.map(_.first(positions, index),
 								   ({left, width}, i) => edge < left + width / 2 ? shift : 0)
 						.concat([dragLeft],
 							_.map(_.range(N - 1 - index), () => 0));
 				}  else if (dragLeft > 0) {      // dragging right
-					let shift = target.left - positions[index + 1].left;
-					let edge = target.left + dragLeft + target.width;
+					shift = target.left - positions[index + 1].left;
+					edge = target.left + dragLeft + target.width;
 					newPos = _.map(_.range(index), () => 0)
 						.concat([dragLeft],
 							_.map(_.last(positions, N - 1 - index),
