@@ -1,22 +1,24 @@
-/*globals require: false, module: false */
+/*globals require: false, module: false, window: false */
 
 'use strict';
 
 var React = require('react');
+var Rx = require('rx');
 var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
+var Label = require('react-bootstrap/lib/Label');
+var MenuItem = require('react-bootstrap/lib/MenuItem');
+var SplitButton = require('react-bootstrap/lib/SplitButton');
 var ColumnEdit = require('./columnEdit');
 var _ = require('./underscore_ext');
 var L = require('./lenses/lens');
 require('./Columns.css');
 require('./YAxisLabel.css');
 
-var defaultHeight = 100;
-
 var YAxisLabel = React.createClass({
     render: function () {
-		var height = _.getIn(this.props, ['zoom', 'height']) || defaultHeight,
+		var height = _.getIn(this.props, ['zoom', 'height']),
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
 			length = _.getIn(this.props, ['samples', 'length']) || 0,
@@ -32,17 +34,160 @@ var YAxisLabel = React.createClass({
     }
 });
 
+var Column = React.createClass({
+	render: function () {
+		var {id, left, onMouseDown} = this.props;
+		var {zoom: {height}, columnRendering} = L.view(this.props.lens),
+			{width, columnLabel, fieldLabel} = columnRendering[id],
+			moveIcon = <span
+				onMouseDown={onMouseDown}
+				className="glyphicon glyphicon-resize-horizontal"
+				aria-hidden="true">
+				</span>;
+		return (
+			<div className='Column' style={{width: width, left: left}}>
+				<SplitButton className='handle' title={moveIcon} bsSize='xsmall'>
+					<MenuItem eventKey='remove'>Remove</MenuItem>
+				</SplitButton>
+				<br/>
+				<Label>{columnLabel.user}</Label>
+				<br/>
+				<Label>{fieldLabel.user}</Label>
+				<br/>
+				<div style={{height: height}}> {/* data */}
+				</div>
+			</div>
+		);
+	}
+});
+
+function initialPositions(cols) {
+	return _.object(_.map(cols, id => ([id, 0])));
+}
+
+function leftWidth(rect) {
+	return {
+		left: rect.left,
+		width: rect.right - rect.left
+	};
+}
+
+// If right edge crosses middle of next element, move next element to left.
+// If left edge crosses middle of prev element, move prev element to right.
+//
+// Each element can only move as much as the width of the dragged element,
+// And only moves if the dragged edge has crossed the midpoint of the element.
+// So:
+// For all those before N, if left edge has crossed midpoint, add width to position, else 0.
+// For all thos after N, if right edge has crossed midpoint, subtract with to position, else 0.
+// left1             left2
+// |   width1   |    |   width2  |
+//
+// Dragging left1 to the right
+// We cross the left edge when left1 + offset1 + width1 >= left2.
+// We cross the midpoint when left1 + offset1 + width1 >= left2 + width2 / 2.
+// At that point, we set offset2 to left1 - left2. <-- this offset is the same for all shifts.
+//
+// Dragging left2 to the left
+// We cross the right edge when left2 + offset2 <= left1 + width1.
+// We cross the midpoint when left2 + offset2 <= left1 + width1 / 2.
+// At that point, we set offset1 to left2 - left1.   <-- this offset is the same for all shifts.
+
 var Columns = React.createClass({
-    render: function () {
-		var lprops = L.view(this.props.lens);
-		var height = lprops.height || defaultHeight;
+	componentWillMount: function () {
+		var mousedown = new Rx.Subject();
+		var mousedrag = mousedown.selectMany(([id, md]) => {
+			var {columnOrder} = L.view(this.props.lens);
+
+            // calculate offsets when mouse down
+			var startX = md.clientX;
+			var positions = _.map(columnOrder,
+								  id => leftWidth(this.refs[id].getDOMNode().getBoundingClientRect()));
+			var N = positions.length;
+			var index = _.indexOf(columnOrder, id);
+			var target = positions[index];
+			var max = positions[N - 1].left - target.left - target.width + positions[N - 1].width;
+			var min = positions[0].left - target.left;
+			var newPos;
+
+			// Calculate delta with mousemove until mouseup
+			return Rx.DOM.fromEvent(window, 'mousemove').map(function (mm) {
+				mm.preventDefault();
+
+				var shift, edge;
+				var dragLeft = mm.clientX - startX;
+				dragLeft = dragLeft < min ? min : (dragLeft > max ? max : dragLeft);
+
+				if (dragLeft < 0) {              // dragging left
+					shift = target.left - positions[index - 1].left ;
+					edge = target.left + dragLeft;
+					newPos = _.map(_.first(positions, index),
+								   ({left, width}, i) => edge < left + width / 2 ? shift : 0).concat(
+						[dragLeft],
+						_.map(_.last(positions, N - 1 - index), () => 0));
+				}  else if (dragLeft > 0) {      // dragging right
+					shift = target.left - positions[index + 1].left;
+					edge = target.left + dragLeft + target.width;
+					newPos = _.map(_.first(positions, index), () => 0).concat(
+						[dragLeft],
+						_.map(_.last(positions, N - 1 - index),
+							  ({left, width}, i) => edge >= left + width / 2 ? shift : 0));
+				} else {
+					newPos = _.map(positions, () => 0);
+				}
+
+				return _.object(columnOrder, newPos);
+			}).takeUntil(Rx.DOM.fromEvent(window, 'mouseup'))
+			.concat(Rx.Observable.defer(() => {
+				var indexOrder = _.range(columnOrder.length)
+					.sort((i, j) => positions[i].left + newPos[i] > positions[j].left + newPos[j]),
+					newOrder = _.map(indexOrder, i => columnOrder[i]);
+				return Rx.Observable.return({columnOrder: newOrder});
+			}));
+        });
+
+        // Update position
+		this.subscription = mousedrag.subscribe(pos => {
+			if (_.has(pos, 'columnOrder')) {
+				L.over(this.props.lens, s => _.assoc(s, 'columnOrder', pos.columnOrder));
+			} else {
+				this.setState({pos: pos});
+			}
+        });
+
+		this.sortStart =  ev => mousedown.onNext(ev);
+	},
+
+	getInitialState: function () {
+		return {pos: initialPositions(L.view(this.props.lens).columnOrder)};
+	},
+
+	componentWillReceiveProps: function () {
+		this.setState({pos: initialPositions(L.view(this.props.lens).columnOrder)});
+	},
+
+	componentWillUnmount: function () {
+		this.subscription.dispose();
+	},
+
+	render: function () {
+		var {height, columnOrder} = L.view(this.props.lens);
 		var editor = _.getIn(this.state, ['columnEdit']) ?
 			<ColumnEdit
 				{...this.props}
 				onRequestHide={() => this.setState({columnEdit: false})}
 			/> : '';
+		var columns = _.map(columnOrder, id =>
+							<Column
+								onMouseDown={ev => this.sortStart([id, ev])}
+								ref={id}
+								left={this.state.pos[id]}
+								key={id}
+								id={id}
+								lens={this.props.lens}/>);
         return (
 			<div className="Columns">
+				{columns}
 				<div
 					style={{height: height}}
 					className='addColumn Column'>

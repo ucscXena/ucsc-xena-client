@@ -24,6 +24,7 @@ var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena',
 		'https://local.xena.ucsc.edu:7223'];
 var initialState = {
 		servers: {'default': defaultServers, user: defaultServers},
+		zoom: {height: 300},
 		columnRendering: {},
 		columnOrder: []
 	};

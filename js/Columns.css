@@ -2,3 +2,8 @@
 	position: relative;
 	top: 20px;
 }
+
+.Column {
+	position: relative;
+	display: inline-block;
+}
