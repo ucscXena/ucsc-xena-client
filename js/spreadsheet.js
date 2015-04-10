@@ -43,6 +43,12 @@ var Column = React.createClass({
             s => _.assocIn(_.assocIn(s, ['zoom', 'height'], height),
                 ['columnRendering', this.props.id, 'width'], width));
     },
+	onRemove: function () {
+		L.over(this.props.lens,
+			s => _.assoc(
+				_.assoc(s, 'columnRendering', _.omit(s.columnRendering, this.props.id)),
+				'columnOrder', _.without(s.columnOrder, this.props.id)));
+	},
 	render: function () {
 		var {id, onMouseDown} = this.props;
 		var {zoom: {height}, columnRendering} = L.view(this.props.lens),
