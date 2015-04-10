@@ -54,8 +54,8 @@ var Column = React.createClass({
 				</span>;
 		return (
 			<div className='Column' style={{width: width}}>
-				<SplitButton className='Sortable-handle' title={moveIcon} bsSize='xsmall'>
-					<MenuItem eventKey='remove'>Remove</MenuItem>
+				<SplitButton title={moveIcon} bsSize='xsmall'>
+					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 				</SplitButton>
 				<br/>
 				<Label>{columnLabel.user}</Label>
