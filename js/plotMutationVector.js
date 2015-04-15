@@ -201,7 +201,7 @@ define(['underscore_ext',
 
 			vg = local.vg;
 			columnUi = local.columnUi;
-
+			/*
 			if (vg.width() !== column.width) {
 				vg.width(column.width);
 			}
@@ -209,7 +209,7 @@ define(['underscore_ext',
 			if (vg.height() !== canvasHeight) {
 				vg.height(canvasHeight);
 			}
-
+			*/
 			refGeneData = data.refGene[column.fields[0]];
 			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
 			//data.req.values = stub.getMutation(column.fields[0]); // for testing
@@ -253,6 +253,9 @@ define(['underscore_ext',
 						});
 					}
 				}
+			}
+			else{
+				vg.box(0, 0, column.width, ws.height, "gray");
 			}
 		}
 	);

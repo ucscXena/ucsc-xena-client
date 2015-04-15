@@ -1156,9 +1156,6 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 			inputBox.setAttribute("id", "dataPageQuery");
 			sectionNode.appendChild(inputBox);
 
-			sectionNode.appendChild(document.createElement("br"));
-			sectionNode.appendChild(document.createElement("br"));
-
 			searchButton.setAttribute("class","vizbutton");
 			searchButton.appendChild(document.createTextNode("Search"));
 			sectionNode.appendChild(searchButton);
@@ -1349,6 +1346,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		searchUI(searchNode);
 		sideNode.appendChild(searchNode);
 		*/
+
 		//main section cohort list page
 		var mainNode = dom_helper.elt("div");
 		mainNode.setAttribute("id", "dataPagesMain");
