@@ -16,6 +16,7 @@ var Resizable = require('react-resizable').Resizable;
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
 var L = require('./lenses/lens');
+var widgets = require('./columnWidgets');
 require('./Columns.css');
 require('./YAxisLabel.css');
 
@@ -50,14 +51,17 @@ var Column = React.createClass({
 				'columnOrder', _.without(s.columnOrder, this.props.id)));
 	},
 	render: function () {
-		var {id, onMouseDown} = this.props;
-		var {zoom: {height}, columnRendering} = L.view(this.props.lens),
-			{width, columnLabel, fieldLabel} = columnRendering[id],
+		var {rendering, zoom} = this.props;
+		var {width, columnLabel, fieldLabel} = rendering,
 			moveIcon = <span
-				onMouseDown={onMouseDown}
 				className="glyphicon glyphicon-resize-horizontal Sortable-handle"
 				aria-hidden="true">
-				</span>;
+				</span>,
+			// XXX rename this to widget.component
+			// XXX really need all the zoom info
+			colWidget = widgets.plot(rendering.dataType, this.props),
+			legend = widgets.legend(rendering.dataType, this.props);
+
 		return (
 			<div className='Column' style={{width: width}}>
 				<SplitButton title={moveIcon} bsSize='xsmall'>
@@ -71,10 +75,12 @@ var Column = React.createClass({
 				<Resizable handleSize={[20, 20]}
 					onResizeStop={this.onResizeStop}
 					width={width}
-					height={height}>
-
-					<p style={{position: 'relative', height: height, width: width}}>foo</p>
+					height={zoom.height}>
+					<div style={{position: 'relative'}}>
+						{colWidget}
+					</div>
 				</Resizable>
+				{legend}
 			</div>
 		);
 	}
@@ -85,18 +91,28 @@ var Columns = React.createClass({
 		L.over(this.props.lens, s => _.assoc(s, 'columnOrder', order));
     },
 	render: function () {
-		var {zoom: {height}, columnOrder} = L.view(this.props.lens);
+		var {data, lens, samples} = this.props;
+		var {zoom, columnOrder} = L.view(lens);
+		var height = zoom.height;
 		var editor = _.getIn(this.state, ['columnEdit']) ?
 			<ColumnEdit
 				{...this.props}
 				onRequestHide={() => this.setState({columnEdit: false})}
 			/> : '';
+		// XXX Create per-column lens for column menu?
+		//     Pass rending in the lens? Yes, we'll need to updated
+		//     rendering.
 		var columns = _.map(columnOrder, id =>
 							<Column
 								ref={id}
 								key={id}
 								id={id}
-								lens={this.props.lens}/>);
+								data={data[id]}
+								samples={samples}
+								zoom={zoom}
+								lens={lens}
+								rendering={_.getIn(L.view(lens),
+									['columnRendering', id])} />);
         return (
 			<div className="Columns">
                 <Sortable setOrder={this.setOrder}>
@@ -120,16 +136,34 @@ var Columns = React.createClass({
     }
 });
 
+// Data fetch steps
+// o Collate state for each widget
+// o Pass to widgets to get set of fetches (reqs)
+// o Take unique set of fetches, issue outstanding ones, and
+//   stash in state, asynchronously <---- async, based on global state
+// o Take reqs and merge with async results, then
+//   project to widgets
+// o Merge into widget state
+// o Get sample cmp functions from widgets, given
+//   widget state + data
+// o Sort samples
+// o Render widgets
 
+// fetch is based on widget type & settings.
+// The widget needs to decide when to re-fetch.
+// Widget also decides when to re-sort, based on widget type & settings.
+// When do we get a new widget? When a new fetch? When a new cmp?
+// What if it's one widget type? Then the fetch & cmp are polymorphic. How
+// to memoize that?
 var Spreadsheet = React.createClass({
 	render: function () {
-		var l = L.view(this.props.lens);
+		var {zoom} = L.view(this.props.lens);
 		return (
 			<Row>
 				<Col md={1}>
 					<YAxisLabel
 						samples={this.props.samples}
-						zoom={l.zoom}
+						zoom={zoom}
 					/>
 				</Col>
 				<Col md={11}><Columns {...this.props}/></Col>

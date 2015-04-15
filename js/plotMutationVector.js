@@ -119,35 +119,24 @@ define(['underscore_ext',
 		return _.object(_.pluck(resp, 'name2'), _.map(resp, refGene_attrs));
 	}
 
-	cmp = ifChanged(
-		[
-			['column', 'fields'],
-			['data', 'req', 'values'],
-			['data', 'refGene']
-		],
-		function (fields, data, refGene) {
-			return (s1, s2) => cmpSamples(fields, data, refGene, s1, s2);
-		}
-	);
+    cmp = () => {
+        var cmpm = _.memoize1((fields, data, refGene) =>
+                (s1, s2) => cmpSamples(fields, data, refGene, s1, s2));
+        return ({fields}, {req: {values}, refGene}) => cmpm(fields, values, refGene);
+    };
 
-	fetch = ifChanged(
-		[
-			['column', 'dsID'],
-			['column', 'fields'],
-			['samples']
-		],
-		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
-			var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
-			return {
-				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
-				}),
-				refGene: xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_exon_string(probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp));
-				})
-			};
-		})
-	);
+	fetch = () => {
+        var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
+		var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, probes, samples) => ({
+            req: xenaQuery.reqObj(
+                 xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)),
+                 r => Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp))),
+            refGene: xenaQuery.reqObj(
+                xenaQuery.xena_post(refgene_host, xenaQuery.refGene_exon_string(probes)),
+                r => Rx.DOM.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp)))
+        })));
+		return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
+	};
 
 	function dataToPlot(sorted_samples, dataIn, probes) {
 		var data = dataIn;

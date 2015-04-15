@@ -3,13 +3,14 @@ define(['multi'], function (multi) {
 	'use strict';
 
 	function columnDataType(s) {
-		return s.column.dataType;
+		return s;
 	}
 
 	var widget = {
 		cmp: multi(columnDataType),
 		fetch: multi(columnDataType),
-		render: multi(columnDataType)
+		plot: multi(columnDataType),
+		legend: multi(columnDataType)
 	};
 
 	return widget;

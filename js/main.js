@@ -10,7 +10,7 @@ var Ls = require('./lenses/lenses');
 var Spreadsheet = require('./spreadsheet');
 var AppControls = require('./AppControls');
 var reactState = require('./reactState');
-var propsStream = require('./react-utils').propsStream;
+var statePropsStream = require('./react-utils').statePropsStream;
 var xenaQuery = require('./xenaQuery');
 var Input = require('react-bootstrap/lib/Input');
 var Grid = require('react-bootstrap/lib/Grid');
@@ -18,6 +18,10 @@ var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
 var Rx = require('./rx.ext');
 var _ = require('./underscore_ext');
+var widgets = require('./columnWidgets');
+require('./plotDenseMatrix'); // XXX better place or name for this?
+
+
 var d = window.document;
 var main = d.getElementById('main');
 var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena',
@@ -33,7 +37,7 @@ require('bootstrap/dist/css/bootstrap.css');
 require('rx-dom');
 
 function fetchDatasets(stream) {
-	return stream.refine(['servers', 'cohort'])
+	return stream.map(([state, props]) => props).refine(['servers', 'cohort'])
 		.map(state => state.cohort ?
 				xenaQuery.dataset_list(state.servers.user, state.cohort) :
 				Rx.Observable.return([], Rx.Scheduler.timeout)
@@ -47,7 +51,8 @@ function fetchDatasets(stream) {
 var datasetSamples = xenaQuery.dsID_fn(xenaQuery.dataset_samples);
 
 function fetchSamples(stream) {
-	return stream.refine(['servers', 'cohort', 'samplesFrom'])
+	return stream.map(([state, props]) => props)
+		.refine(['servers', 'cohort', 'samplesFrom'])
 		.map(state => state.samplesFrom ?
 				datasetSamples(state.samplesFrom) :
 				Rx.Observable.zipArray(
@@ -60,21 +65,102 @@ function formatState(lens) {
 	return JSON.stringify(L.view(lens), null, 4);
 }
 
+// Given state and props, return data which needs to be fetched for the columns.
+// Memoized so we don't re-compute this on every state change. Each widgets.fetch
+// is also memoized, for the same reason.
+function dataRequestFn() {
+	var fetchFns = _.memoize1(dataTypes => _.fmap(dataTypes, dt => widgets.fetch(dt)));
+	return (state, props) => {
+		var dataTypes = _.fmap(props.columnRendering, col => col.dataType);
+		var ffns = fetchFns(dataTypes);
+		return _.fmap(ffns, (f, k) => f(props.columnRendering[k], state.samples));
+	};
+}
 
-var Application = React.createClass(propsStream({
+function fetchData(stream) {
+	return stream.select(r =>    // find each unique query.
+		// This is taking per-column requests of form
+		// {colId : {dataKey: {id: queryId, query: queryFn}, ...}, ...}
+		// and returning the unique queries, as
+		// {queryId: queryFn, ...}
+		_.reduce(r, (acc, col_reqs, uuid) => {
+			_.each(col_reqs, req => {acc[req.id] = req.query;});
+			return acc;
+		}, {})
+	).fmap();                    // invoke queries w/caching
+}
+
+function cmpString(s1, s2) {
+	if (s1 > s2) {
+		return 1;
+	} else if (s2 > s1) {
+		return -1;
+	}
+	return 0;
+}
+
+// Caching sort function. Might be a waste of effort. Need performance tests.
+// The concern is that quickly-changing state in a widget will cause endless
+// re-sorting. So, this only sorts when the previous sort is invalidated.
+// Maybe instead use a sort that is O(N) on pre-sorted data.
+//
+// Each widget may need to change the sort, e.g. when an 'averaging' or
+// 'normalization' setting is changed, when the widget type changes, or when
+// new data arrives for the widget.
+//
+// The sort is invalidated when 1) the set of samples changes, 2)
+// the order of widgets changes, 3) the type of widgets changes, 4)
+// the widget returns a new cmp function due to its internal settings,
+// 5) the data used by the widget changes. Note that we don't know which
+// internal settings or data affect the sort. That's up to the widget.
+// widget.cmp will return a memoize1 cmp function that accounts for
+// changes in internal settings and data that affect the sort.
+//
+// Steps:
+// 1) get cmp function generators for each widget, if widget type has changed.
+// 2) get cmp functions from each generator based on columnRendering, data.
+// 3) get a new sort fn if widget cmp functions or order have changed.
+// 4) compute a new sort if sort function or samples have changed.
+
+// XXX missing the step where we map data back to the widgets.
+var sampleSortFn = () => {
+	var mkCmpFns = _.memoize1(dataTypes => _.fmap(dataTypes, dt => widgets.cmp(dt)));
+	var cmpFns = (mcf, cR, data) => _.fmap(mcf, (fn, id) => fn(cR[id], data[id]));
+	var sortFn = _.memoize1((cmpFns, order) => (s1, s2) =>
+			_.findValue(order, id => cmpFns[id](s1, s2)) ||
+				cmpString(s1, s2)); // XXX add cohort as well
+	var sort = _.memoize1((fn, samples) => samples.slice(0).sort(fn));
+
+	return ({columnRendering, columnOrder}, samples, data) => {
+		var dataTypes = _.fmap(columnRendering, r => r.dataType),
+			cfs = cmpFns(mkCmpFns(dataTypes), columnRendering, data),
+			sf = sortFn(cfs, columnOrder);
+		return sort(sf, samples);
+	};
+};
+
+// XXX Switch back to propsStream, as we aren't using state.
+var Application = React.createClass(statePropsStream({
 	displayName: 'Application',
 	saveAppState: function () {
 		sessionStorage.xena = JSON.stringify(L.view(this.props.lens));
 	},
 	componentWillMount: function () {
-		fetchDatasets(this.propsStream).subscribe(
+		fetchDatasets(this.statePropsStream).subscribe(
 				datasets => this.setState({datasets: datasets}));
-		fetchSamples(this.propsStream).subscribe(
+		fetchSamples(this.statePropsStream).subscribe(
 				samples => this.setState({samples: samples}));
+		this.requestStream = new Rx.Subject();
+		fetchData(this.requestStream).subscribe(
+				data => this.setState({data: data}));
+
 		Rx.DOM.fromEvent(window, 'beforeunload').subscribe(this.saveAppState);
+		this.sortSamples = sampleSortFn();
+		this.dataRequests = dataRequestFn();
 	},
 	getInitialState() {
 		return {
+			samples: [],
 			debug: false,
 			debugText: formatState(this.props.lens) // initial state of text area.
 		};
@@ -103,10 +189,20 @@ var Application = React.createClass(propsStream({
 		}
 	},
 	render: function() {
-		var datasets = _.getIn(this.state, ['datasets']),
+		var {datasets, samples, data} = this.state,
 			spreadsheetLens = L.compose(this.props.lens, Ls.keys(['zoom', 'columnRendering', 'columnOrder']));
-		console.log('state', L.view(this.props.lens));
-		console.log('transient state', this.state);
+
+		var requests = this.dataRequests(this.state, L.view(this.props.lens));
+		this.requestStream.onNext(requests);
+		// XXX memoize this, as well?
+		var columnData = _.fmap(requests,
+				(colReqs) => _.fmap(colReqs, req => _.getIn(data, [req.id]) || {}));
+
+
+		var sort = this.sortSamples(L.view(this.props.lens), samples, columnData);
+//		console.log('state', L.view(this.props.lens));
+//		console.log('transient state', this.state);
+//		console.log('sort', sort);
 		return (
 			<Grid onClick={this.onClick}>
 				<Row>
@@ -114,7 +210,11 @@ var Application = React.createClass(propsStream({
 						<AppControls lens={this.props.lens} datasets={datasets}/>
 					</Col>
 				</Row>
-				<Spreadsheet lens={spreadsheetLens} datasets={datasets} samples={this.state.samples} />
+				<Spreadsheet
+					lens={spreadsheetLens}
+					datasets={datasets}
+					data={columnData}
+					samples={sort} />
 				<Row>
 					<Col md={12}>
 						<Input

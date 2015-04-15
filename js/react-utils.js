@@ -22,6 +22,25 @@ function propsStream(comp) {
 	return _.extend({}, comp, methods);
 }
 
+function statePropsStream(comp) {
+	var methods = {
+		render: function () {
+			this.statePropsStream.onNext([this.state, L.view(this.props.lens)]);
+			return comp.render.call(this);
+		},
+		componentWillMount: function () {
+			this.statePropsStream = new Rx.Subject();
+			comp.componentWillMount.call(this);
+		},
+		componentWillUnMount: function () {
+			this.statePropsStream.onCompleted();
+			comp.componentWillUnMount.call(this);
+		}
+	};
+	return _.extend({}, comp, methods);
+}
+
 module.exports = {
-    propsStream: propsStream
+    propsStream: propsStream,
+    statePropsStream: statePropsStream
 };

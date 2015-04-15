@@ -1,4 +1,4 @@
-/*global define: false */
+/*global define: false, document: false */
 define(['underscore_ext',
 		'jquery',
 		'rx',
@@ -12,6 +12,7 @@ define(['underscore_ext',
 		'tooltip',
 		'util',
 		'xenaQuery',
+		'react',
 		'rx-jquery'
 	], function (
 		_,
@@ -26,7 +27,8 @@ define(['underscore_ext',
 		partition,
 		tooltip,
 		util,
-		xenaQuery) {
+		xenaQuery,
+		React) {
 
 	"use strict";
 
@@ -37,16 +39,14 @@ define(['underscore_ext',
 		zip = _.zip,
 		range = _.range,
 		bind = _.bind,
-		pluckPathsArray = _.pluckPathsArray,
 		find = _.find,
-		uniq = _.uniq,
-		scratch = vgcanvas(1, 1), // scratch buffer
+//		uniq = _.uniq,
+		scratch = vgcanvas(document.createElement('canvas'), 1, 1), // scratch buffer
 		cmp,
 		fetch,
-		fetch_gene,
-		fetch_gene_probes,
-		fetch_feature,
-		render;
+		fetchGene,
+		fetchGeneProbes,
+		fetchFeature;
 
 	function meannan(values) {
 		var count = 0, sum = 0;
@@ -89,22 +89,22 @@ define(['underscore_ext',
 		return val - subtrahend[key];
 	}
 
-	function dataToHeatmap(sorted_samples, data, probes, transform) {
+	function dataToHeatmap(sortedSamples, data, probes, transform) {
 		if (!data) {
 			return [];
 		}
 		return map(probes, function (p) {
 			var suTrans = saveUndefined(v => transform(p, v));
-			return map(sorted_samples, s => suTrans(getProperty(data[p], s)));
+			return map(sortedSamples, s => suTrans(getProperty(data[p], s)));
 		});
 	}
 
-	function drawColumn(data, color_scale, boxfn) {
+	function drawColumn(data, colorScale, boxfn) {
 		var colors;
 
-		if (color_scale) { // then there exist some non-null values
+		if (colorScale) { // then there exist some non-null values
 			// zip colors and their indexes, then filter out the nulls
-			colors = filter(zip(range(data.length), map(data, color_scale)), secondNotUndefined);
+			colors = filter(zip(range(data.length), map(data, colorScale)), secondNotUndefined);
 			each(colors, bind(boxfn.apply, boxfn, null));
 		}
 	}
@@ -124,29 +124,21 @@ define(['underscore_ext',
 			last  = Math.ceil(index + count),
 			d = data.slice(first, last), // XXX use a typed array view?
 			scale = (height >= d.length) ? Math.ceil(height / d.length) : 1,
-			scaled_height = d.length * scale || 1, // need min 1 px to draw gray when no data
+			scaledHeight = d.length * scale || 1, // need min 1 px to draw gray when no data
 			sy =  (index - first) * scale,
 			sh = scale * count;
 
 		return {
 			data: d,                // subset of data to be drawn
 			scale: scale,           // chosen scale that avoids blurring
-			height: scaled_height,
+			height: scaledHeight,
 			sy: sy,                 // pixels off-screen at top of buffer
 			sh: sh                  // pixels on-screen in buffer
 		};
 	}
 
 	function renderHeatmap(opts) {
-		var vg       = opts.vg,
-			height   = opts.height,
-			width    = opts.width,
-			zoomIndex = opts.zoomIndex,
-			zoomCount = opts.zoomCount,
-			layout   = opts.layout,
-			data     = opts.data,
-			colors   = opts.colors,
-			buff = scratch;
+		var {vg, height, width, zoomIndex, zoomCount, layout, data, colors} = opts;
 
 		vg.smoothing(false); // For some reason this works better if we do it every time.
 
@@ -158,17 +150,17 @@ define(['underscore_ext',
 
 		each(layout, function (el, i) {
 			var s = pickScale(zoomIndex, zoomCount, height, data[i]),
-				color_scale = colors[i];
+				colorScale = colors[i];
 
-			buff.height(s.height);
-			buff.box(0, 0, 1, s.height, "gray");
-			buff.scale(1, s.scale, function () {
-				drawColumn(s.data, color_scale, function (i, color) {
-					buff.box(0, i, 1, 1, color);
+			scratch.height(s.height);
+			scratch.box(0, 0, 1, s.height, "gray");
+			scratch.scale(1, s.scale, function () {
+				drawColumn(s.data, colorScale, function (i, color) {
+					scratch.box(0, i, 1, 1, color);
 				});
 			});
 			vg.translate(el.start, 0, function () {
-				vg.drawImage(buff.element(), 0, s.sy, 1, s.sh, 0, 0, el.size, height);
+				vg.drawImage(scratch.element(), 0, s.sy, 1, s.sh, 0, 0, el.size, height);
 			});
 		});
 	}
@@ -184,22 +176,6 @@ define(['underscore_ext',
 		return v2 - v1;
 	}
 
-	function ifChanged(paths, fn) {
-		return function (state, previousState, lastResult) {
-			var pluckedState = pluckPathsArray(paths, state),
-				pluckedPreviousState;
-			if (previousState) {
-				pluckedPreviousState = pluckPathsArray(paths, previousState);
-				if (_.isEqual(pluckedState, pluckedPreviousState)) {
-					return lastResult;
-				}
-			}
-			return fn.apply(this, pluckedState);
-		};
-	}
-
-	// data might not match col! XXX if the response hasn't arrived yet.
-	// where does req fit in?
 	// If we request a new view & we deprecate the old data, then the
 	// sort changes. Then we rerender w/no usable sort order.
 
@@ -218,17 +194,14 @@ define(['underscore_ext',
 		}
 	}
 
-	cmp = ifChanged(
-		[
-			['column', 'fields'],
-			['data', 'req', 'values'],
-			['data', 'req', 'probes']
-		],
-		function (col_fields, data, probes) {
-			var fields = probes || col_fields;
+	cmp = () => {
+		var cmpm = _.memoize1((colFields, data, probes) => {
+			var fields = probes || colFields;
 			return (s1, s2) => cmpSamples(fields, data, s1, s2);
-		}
-	);
+		});
+
+		return ({fields}, {req: {values, probes}}) => cmpm(fields, values, probes);
+	};
 
 	// index data by field, then sample
 	// XXX maybe build indexes against arrays, instead of ditching the arrays,
@@ -314,193 +287,165 @@ define(['underscore_ext',
 	// Does the column need to decide which fields cause a
 	// new fetch? Or can the caller? The column must decide.
 
-	fetch = ifChanged(
-		[
-			['column', 'dsID'],
-			['column', 'fields'],
-			['samples']
-		],
-		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
-			return {
-				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
-				}),
-				metadata: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)), function (r) {
-					return Rx.DOM.ajax(r).select(xenaQuery.json_resp);
-				})
-			};
-		})
-	);
+	fetch = () => {
+		var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, probes, samples) => ({
+			req: xenaQuery.reqObj(
+				 xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)),
+				 r => Rx.DOM.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp))),
+			metadata: xenaQuery.reqObj(
+				xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)),
+				r => Rx.DOM.ajax(r).select(xenaQuery.json_resp))
+		})));
+		return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
+	};
 
-	fetch_gene_probes = ifChanged(
-		[
-			['column', 'dsID'],
-			['column', 'fields'],
-			['column', 'dataType'],
-			['samples']
-		],
-		xenaQuery.dsID_fn(function (host, ds, probes, dataType, samples) {
-			return {
-				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_probes_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexProbeGeneResponse, samples), xenaQuery.json_resp));
-				}),
-				metadata: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)), function (r) {
-					return Rx.DOM.ajax(r).select(xenaQuery.json_resp);
-				})
-			};
-		})
-	);
+	fetchGeneProbes = () => {
+		var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, probes, samples) => ({
+			req: xenaQuery.reqObj(
+				 xenaQuery.xena_post(host, xenaQuery.dataset_gene_probes_string(ds, samples, probes)),
+				 r => Rx.DOM.ajax(r).select(_.compose(_.partial(indexProbeGeneResponse, samples), xenaQuery.json_resp))),
+			metadata: xenaQuery.reqObj(
+				xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)),
+				r => Rx.DOM.ajax(r).select(xenaQuery.json_resp))
+		})));
+		return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
+	};
 
-	fetch_feature = ifChanged(
-		[
-			['column', 'dsID'],
-			['column', 'fields'],
-			['samples']
-		],
-		// XXX Note that we re-fetch metadata even if the probe set hasn't changed.
-		// Need a better way than ifChanged of checking for changes.
-		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
-			return {
-				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
-				}),
-				features: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.features_string(ds, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(indexFeatures);
-				}),
-				codes: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.codes_string(ds, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(indexCodes);
-				}),
-				bounds: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.field_bounds_string(ds, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(indexBounds, xenaQuery.json_resp));
-				})
-			};
-		})
-	);
+	fetchFeature = () => {
+		var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, probes, samples) => ({
+			req: xenaQuery.reqObj(
+				 xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)),
+				 r => Rx.DOM.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp))),
+			features: xenaQuery.reqObj(
+				xenaQuery.xena_post(host, xenaQuery.features_string(ds, probes)),
+				r => Rx.DOM.ajax(r).select(indexFeatures)),
+			codes: xenaQuery.reqObj(
+				xenaQuery.xena_post(host, xenaQuery.codes_string(ds, probes)),
+				r => Rx.DOM.ajax(r).select(indexCodes)),
+			bounds: xenaQuery.reqObj(
+				xenaQuery.xena_post(host, xenaQuery.field_bounds_string(ds, probes)),
+				r => Rx.DOM.ajax(r).select(_.compose(indexBounds, xenaQuery.json_resp)))
+		})));
+		return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
+	};
 
-	fetch_gene = ifChanged(
-		[
-			['column', 'dsID'],
-			['column', 'fields'],
-			['column', 'dataType'],
-			['samples']
-		],
-		xenaQuery.dsID_fn(function (host, ds, fields, dataType, samples) {
-			return {
-				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_string(ds, samples, fields)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexGeneResponse, fields, samples), xenaQuery.json_resp));
-				}),
-				metadata: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)), function (r) {
-					return Rx.DOM.ajax(r).select(xenaQuery.json_resp);
-				})
-			};
-		})
-	);
+	fetchGene = () => {
+		var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, fields, samples) => ({
+			req: xenaQuery.reqObj(
+				 xenaQuery.xena_post(host, xenaQuery.dataset_gene_string(ds, samples, fields)),
+				 r => Rx.DOM.ajax(r).select(_.compose(_.partial(indexGeneResponse, fields, samples), xenaQuery.json_resp))),
+			metadata: xenaQuery.reqObj(
+				 xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)),
+				 r => Rx.DOM.ajax(r).select(xenaQuery.json_resp))
+		})));
+		return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
+	};
 
-	function plotCoords(ev) {
-		var offset,
-			x = ev.offsetX,
-			y = ev.offsetY;
-		if (x === undefined) { // fix up for firefox
-			offset = util.eventOffset(ev);
-			x = offset.x;
-			y = offset.y;
-		}
-		return { x: x, y: y };
-	}
+//	function plotCoords(ev) {
+//		var offset,
+//			x = ev.offsetX,
+//			y = ev.offsetY;
+//		if (x === undefined) { // fix up for firefox
+//			offset = util.eventOffset(ev);
+//			x = offset.x;
+//			y = offset.y;
+//		}
+//		return { x: x, y: y };
+//	}
 
-	function prec(val) {
-		var precision = 6,
-			factor = Math.pow(10, precision);
-		return Math.round((val * factor)) / factor;
-	}
+//	function prec(val) {
+//		var precision = 6,
+//			factor = Math.pow(10, precision);
+//		return Math.round((val * factor)) / factor;
+//	}
 
-	function mousing(ev) {
-		var heatmapData = ev.data.plotData.heatmapData,
-			fields = ev.data.plotData.fields,
-			column = ev.data.column,
-			codes = ev.data.plotData.codes[column.fields[0]],
-			ws = ev.data.ws,
-			mode = 'genesets',
-			rows = [],
-			coord,
-			sampleIndex,
-			fieldIndex,
-			field,
-			label,
-			val,
-			tip = {
-				ev: ev,
-				el: '#nav',
-				my: 'top',
-				at: 'top',
-				mode: mode
-			};
+//	function mousing(ev) {
+//		var heatmapData = ev.data.plotData.heatmapData,
+//			fields = ev.data.plotData.fields,
+//			column = ev.data.column,
+//			codes = ev.data.plotData.codes[column.fields[0]],
+//			ws = ev.data.ws,
+//			mode = 'genesets',
+//			rows = [],
+//			coord,
+//			sampleIndex,
+//			fieldIndex,
+//			field,
+//			label,
+//			val,
+//			tip = {
+//				ev: ev,
+//				el: '#nav',
+//				my: 'top',
+//				at: 'top',
+//				mode: mode
+//			};
+//
+//		if (tooltip.frozen()) {
+//			return;
+//		}
+//		if (ev.type === 'mouseleave') {
+//			tooltip.hide();
+//			return;
+//		}
+//		coord = plotCoords(ev);
+//		sampleIndex = Math.floor((coord.y * ws.zoomCount / ws.height) + ws.zoomIndex);
+//		fieldIndex = Math.floor(coord.x * fields.length / ws.column.width);
+//		tip.sampleID = ev.data.plotData.samples[sampleIndex];
+//		field = fields[fieldIndex];
+//
+//		if (column.dataType === 'geneProbesMatrix') {
+//			label = column.fields[0] + ' (' + field + ')';
+//		} else if (column.dataType === 'clinicalMatrix') {
+//			label = column.fieldLabel.default;
+//		} else {
+//			label = field;
+//		}
+//		val = heatmapData[fieldIndex][sampleIndex];
+//		val = (column.dataType === 'clinicalMatrix' && codes)? codes[val]: prec(val);
+//		if (val === undefined || _.isNaN(val)) {
+//			val = 'NA';
+//		}
+//		rows.push({ label: label, val: val });
+//		if (column.dataType === 'clinicalMatrix') {
+//			tip.valWidth = '25em';
+//		} else {
+//			tip.labelWidth = '8em';
+//			tip.valWidth = '15em';
+//		}
+//		if (val !== 'NA' && column.dataType !== 'clinicalMatrix') {
+//			rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
+//		}
+//		tip.rows = rows;
+//		tooltip.mousing(tip);
+//	}
 
-		if (tooltip.frozen()) {
-			return;
-		}
-		if (ev.type === 'mouseleave') {
-			tooltip.hide();
-			return;
-		}
-		coord = plotCoords(ev);
-		sampleIndex = Math.floor((coord.y * ws.zoomCount / ws.height) + ws.zoomIndex);
-		fieldIndex = Math.floor(coord.x * fields.length / ws.column.width);
-		tip.sampleID = ev.data.plotData.samples[sampleIndex];
-		field = fields[fieldIndex];
-
-		if (column.dataType === 'geneProbesMatrix') {
-			label = column.fields[0] + ' (' + field + ')';
-		} else if (column.dataType === 'clinicalMatrix') {
-			label = column.fieldLabel.default;
-		} else {
-			label = field;
-		}
-		val = heatmapData[fieldIndex][sampleIndex];
-		val = (column.dataType === 'clinicalMatrix' && codes)? codes[val]: prec(val);
-		if (val === undefined || _.isNaN(val)) {
-			val = 'NA';
-		}
-		rows.push({ label: label, val: val });
-		if (column.dataType === 'clinicalMatrix') {
-			tip.valWidth = '25em';
-		} else {
-			tip.labelWidth = '8em';
-			tip.valWidth = '15em';
-		}
-		if (val !== 'NA' && column.dataType !== 'clinicalMatrix') {
-			rows.push({ label: 'Column mean', val: prec(meannan(heatmapData[fieldIndex])) });
-		}
-		tip.rows = rows;
-		tooltip.mousing(tip);
-	}
-
-	function categoryLegend(dataIn, color_scale, codes) {
-		// only finds categories for the current data in the column
-		var data = uniq(dataIn).sort(function (v1, v2) {
-				return v1 - v2;
-			}),
-			colors,
-			justColors,
-			labels;
-
-		if (color_scale) { // then there exist some non-null values
-			// zip colors and their indexes, then filter out the nulls
-			colors = filter(zip(range(data.length), map(data, color_scale)), secondNotUndefined);
-			justColors =  map(colors, function (color) {
-				return color[1];
-			});
-			if (data[data.length - 1] === undefined) {
-				data.pop();
-			}
-			labels = map(data, function(d) {
-				return(codes[d]);
-			});
-			return { colors: justColors, labels: labels };
-		} else {
-			return { colors: [], labels: [] };
-		}
-	}
+//	function categoryLegend(dataIn, colorScale, codes) {
+//		// only finds categories for the current data in the column
+//		var data = uniq(dataIn).sort(function (v1, v2) {
+//				return v1 - v2;
+//			}),
+//			colors,
+//			justColors,
+//			labels;
+//
+//		if (colorScale) { // then there exist some non-null values
+//			// zip colors and their indexes, then filter out the nulls
+//			colors = filter(zip(range(data.length), map(data, colorScale)), secondNotUndefined);
+//			justColors =  map(colors, function (color) {
+//				return color[1];
+//			});
+//			if (data[data.length - 1] === undefined) {
+//				data.pop();
+//			}
+//			labels = map(data, function(d) {
+//				return(codes[d]);
+//			});
+//			return { colors: justColors, labels: labels };
+//		} else {
+//			return { colors: [], labels: [] };
+//		}
+//	}
 
 	// Color scale cases
 	//  1 - clinical data: single probe, auto-scaled
@@ -526,173 +471,199 @@ define(['underscore_ext',
 	// so all cases are explicit. Also, meaningful intermediate variables
 	// should be created so intent is clear, e.g.
 	//
-	// color_scale.length > 1 && !_.getIn(settings, ['min'])
+	// colorScale.length > 1 && !_.getIn(settings, ['min'])
 	//
 	// means there are mutiple probes and the user has not set a fixed scale,
 	// i.e. we have multiple color scales.
-	function drawLegend(metadata, settings, columnUi, data, fields, codes, color_scale) {
-		var c,
-			ellipsis = '',
-			align = 'center',
-			labels = color_scale[0] ? color_scale[0].domain() : [],
-			colors = color_scale[0] ? _.map(labels, color_scale[0]) : [],
-			categoryLength = 19;
+
+	function drawGenomicLegend(metadata, settings, data, fields, codes, colorScale) {
+		var labels = colorScale[0] ? colorScale[0].domain() : [],
+			colors = colorScale[0] ? _.map(labels, colorScale[0]) : [];
 
 		if (data.length === 0) { // no features to draw
 			return;
 		}
 
-		if (metadata.type === 'genomicMatrix') {
-			if (color_scale.length > 1 && !_.getIn(settings, ['min'])) {
-				colors = heatmapColors.defaultColors(metadata.type, metadata.dataSubType).slice(0);
-				labels = ["lower", "", "higher"];
-			}
-			else if (color_scale[0]) {
-				if (labels.length === 4) {
-					labels[0] = "<" + labels[0];
-					labels[labels.length - 1] = ">" + labels[labels.length - 1];
-				} else if (labels.length === 3) {
-					if (color_scale[0].domain()[0] >= 0) {
-						labels[labels.length-1] = ">" + labels[labels.length - 1];
-					} else {
-						labels[0] = "<" + labels[0];
-					}
+		if (colorScale.length > 1 && !_.getIn(settings, ['min'])) {
+			colors = heatmapColors.defaultColors(metadata).slice(0);
+			labels = ["lower", "", "higher"];
+		} else if (colorScale[0]) {
+			if (labels.length === 4) {
+				labels = _.assoc(labels,
+						0, "<" + labels[0],
+						labels.length - 1, ">" + labels[labels.length - 1]);
+			} else if (labels.length === 3) {
+				if (colorScale[0].domain()[0] >= 0) {
+					labels = _.assoc(labels,
+						labels.length - 1, ">" + labels[labels.length - 1]);
+				} else {
+					labels = _.assoc(labels, 0, "<" + labels[0]);
 				}
 			}
 		}
 
-		if (metadata.dataType === 'clinicalMatrix') { // XXX can we use domain() for categorical?
-			if (codes[fields[0]]) { // category
-				c = categoryLegend(data[0], color_scale[0], codes[fields[0]]);
-				if (c.colors.length > categoryLength) {
-					ellipsis = '...';
-					colors = c.colors.slice(c.colors.length - categoryLength, c.colors.length);
-					labels = c.labels.slice(c.colors.length - categoryLength, c.colors.length);
-				} else {
-					colors = c.colors;
-					labels = c.labels;
-				}
-				align = 'left';
-			}
+		drawLegend(colors, labels, 'center', '');
+	}
+
+	// XXX make components for draw*Legend
+	// XXX update legend multimethod to match parameters
+	// XXX update invocation of widgets.legend to pass correct parameters
+	// XXX convert columnUi.drawLegend to react
+	// XXX memoize
+	function drawPhenotypeLegend(metadata, settings, data, fields, codes, colorScale) {
+		var c,
+			ellipsis = '',
+			align = 'center',
+			labels = colorScale[0] ? colorScale[0].domain() : [],
+			colors = colorScale[0] ? _.map(labels, colorScale[0]) : [],
+			categoryLength = 19;
+
+		if (data.length === 0) { // no features to draw
+			return;
 		}
+		 // XXX can we use domain() for categorical?
+		if (codes[fields[0]]) { // category
+			c = categoryLegend(data[0], colorScale[0], codes[fields[0]]);
+			if (c.colors.length > categoryLength) {
+				ellipsis = '...';
+				colors = c.colors.slice(c.colors.length - categoryLength, c.colors.length);
+				labels = c.labels.slice(c.colors.length - categoryLength, c.colors.length);
+			} else {
+				colors = c.colors;
+				labels = c.labels;
+			}
+			align = 'left';
+		}
+
 		columnUi.drawLegend(colors, labels, align, ellipsis);
 	}
+//
+//
+//
+//			if (columnUi && heatmapData.length) {
+//				columnUi.plotData = {
+//					// TODO we don't need all these parms
+//					serverData: data.req.values,
+//					heatmapData: heatmapData,
+//					column: column,
+//					samples: sort,
+//					fields: fields,
+//					codes: codes
+//				};
+//				columnUi.ws = _.assoc(newws, 'colors', colors); // XXX this is horrible
+//				columnUi.setPlotted();
+//				if (local.sub) {
+//					local.sub.dispose();
+//				}
+//				local.sub = columnUi.crosshairs.mousingStream.subscribe(function (ev) {
+//					ev.data = {
+//						plotData: columnUi.plotData,
+//						column: column,
+//						ws: newws   // XXX this is horrible
+//					};
+//					mousing(ev);
+//				}); // TODO free this somewhere, maybe by moving it to columnUi.js
+//			}
+			// XXX Merging column & metadata so we get both dataType and type. The
+			// type, dataSubType, dataType thing needs to be fixed.
+//			drawLegend(_.extend({}, column, metadata), settings, columnUi, heatmapData, fields, codes, colors);
 
 	function definedOrDefault(v, def) {
 		return _.isUndefined(v) ? def : v;
 	}
 
-	// memoize doesn't help us here, because we haven't allocated a render routine
-	// for each widget. Maybe we should???
-	render = ifChanged(
-		[
-			['disp'],
-			['el'],
-			['wrapper'],
-			[],
-			['sort'],
-			['data']
-		],
-		// samples are in sorted order
-		function (disp, el, wrapper, ws, sort, data) {
-			var local = disp.getDisposable(),
-				features = data.features || {},
-				codes = data.codes || {},
-				metadata = data.metadata || {},
+	var CanvasDrawing = React.createClass({
+		shouldComponentUpdate: () => false, // Disable react on canvas
+
+		render: () => <canvas ref='canvas' />,
+
+		componentDidMount: function () {
+			var {rendering: {width}, zoom: {height}} = this.props;
+			this.vg = vgcanvas(this.refs.canvas.getDOMNode(), width, height);
+			this.draw(this.props);
+		},
+
+		// XXX rename state as columnOrder and columns, instead of columnRendering
+		// XXX rename prop as column instead of rendering
+		draw: function (props) {
+			var {samples, data, zoom, rendering, settings} = props,
+				column = rendering, // XXX rename?
+				{features, codes, metadata} = data,
 				mean = _.getIn(data, ["req", "mean"]),
 				norm = {'none': false, 'subset': true},
 
-				colnormalization = definedOrDefault(norm[_.getIn(ws, ['vizSettings', 'colNormalization'])], metadata.colnormalization),
-				settings = _.getIn(ws, ['vizSettings']) || {}, // XXX needs normalization, too?
-				column = ws.column,
-				newws =  _.assoc(ws, 'column', _.extend({}, ws.column, metadata)),
+				colnormalization = definedOrDefault(norm[_.getIn(settings, ['colNormalization'])], metadata.colnormalization),
 				fields = data.req.probes || column.fields, // prefer field list from server
 				transform = (colnormalization && mean && _.partial(subbykey, mean())) || second,
-				columnUi,
-				vg,
+				vg = this.vg,
 				heatmapData,
 				colors;
-
-			if (!local || local.render !== render) { // Test if we own this state
-				local = new Rx.Disposable(function () {
-					$(vg.element).remove();
-				});
-				local.render = render;
-				local.vg = vgcanvas(column.width, ws.height);
-				local.columnUi = wrapper(el.id, newws);
-				local.columnUi.$samplePlot.append(local.vg.element());
-				disp.setDisposable(local);
-			}
-			// XXX The state flow for columnUi, and friends is completely wrong. Needs to be
-			// rewritten.
-			vg = local.vg;
-			columnUi = local.columnUi;
 
 			if (vg.width() !== column.width) {
 				vg.width(column.width);
 			}
 
-			if (vg.height() !== ws.height) {
-				vg.height(ws.height);
+			if (vg.height() !== zoom.height) {
+				vg.height(zoom.height);
 			}
 
-			heatmapData = dataToHeatmap(sort, data.req.values, fields, transform);
-			colors = map(fields, function (p, i) {
-				return heatmapColors.range(metadata, settings, features[p], codes[p], heatmapData[i]); // XXX might need defaults if metadata is null?
-			});
-			if (columnUi && heatmapData.length) {
-				columnUi.plotData = {
-					// TODO we don't need all these parms
-					serverData: data.req.values,
-					heatmapData: heatmapData,
-					column: column,
-					samples: sort,
-					fields: fields,
-					codes: codes
-				};
-				columnUi.ws = _.assoc(newws, 'colors', colors); // XXX this is horrible
-				columnUi.setPlotted();
-				if (local.sub) {
-					local.sub.dispose();
-				}
-				local.sub = columnUi.crosshairs.mousingStream.subscribe(function (ev) {
-					ev.data = {
-						plotData: columnUi.plotData,
-						column: column,
-						ws: newws   // XXX this is horrible
-					};
-					mousing(ev);
-				}); // TODO free this somewhere, maybe by moving it to columnUi.js
-			}
-			// XXX Merging column & metadata so we get both dataType and type. The
-			// type, dataSubType, dataType thing needs to be fixed.
-			drawLegend(_.extend({}, column, metadata), settings, columnUi, heatmapData, fields, codes, colors);
+			heatmapData = dataToHeatmap(samples, data.req.values, fields, transform);
+			colors = map(fields, (p, i) => heatmapColors.range(
+					metadata,
+					settings || {},
+					_.getIn(features, [p]),
+					_.getIn(codes, [p]),
+					heatmapData[i]));
+
 			renderHeatmap({
 				vg: vg,
-				height: ws.height,
+				height: zoom.height,
 				width: column.width,
-				zoomIndex: ws.zoomIndex,
-				zoomCount: ws.zoomCount,
+				zoomIndex: zoom.index,
+				zoomCount: zoom.count,
 				data : heatmapData,
 				layout: partition.offsets(column.width, 0, heatmapData.length),
 				colors: colors
 			});
 		}
-	);
+	});
+
+	var Plot = React.createClass({
+		render: function () {
+			if (this.refs.plot) {
+				this.refs.plot.draw(this.props); // XXX memoize
+			}
+			return (
+				<CanvasDrawing ref='plot' {...this.props} />
+			);
+		}
+	});
+	var getPlot = (dataType, props) => <Plot {...props} />;
+
+	var Legend = React.createClass({
+		render: function () {
+			return null;
+		}
+	});
+	var getLegend = (dataType, props) => <Legend {...props} />;
 
 	widgets.cmp.add("probeMatrix", cmp);
 	widgets.fetch.add("probeMatrix", fetch);
-	widgets.render.add("probeMatrix", render);
+	widgets.plot.add("probeMatrix", getPlot);
+	widgets.legend.add("probeMatrix", getLegend);
 
 	widgets.cmp.add("geneProbesMatrix", cmp);
-	widgets.fetch.add("geneProbesMatrix", fetch_gene_probes);
-	widgets.render.add("geneProbesMatrix", render);
+	widgets.fetch.add("geneProbesMatrix", fetchGeneProbes);
+	widgets.plot.add("geneProbesMatrix", getPlot);
+	widgets.legend.add("geneProbesMatrix", getLegend);
 
 	widgets.cmp.add("geneMatrix", cmp);
-	widgets.fetch.add("geneMatrix", fetch_gene);
-	widgets.render.add("geneMatrix", render);
+	widgets.fetch.add("geneMatrix", fetchGene);
+	widgets.plot.add("geneMatrix", getPlot);
+	widgets.legend.add("geneMatrix", getLegend);
 
 	widgets.cmp.add("clinicalMatrix", cmp);
-	widgets.fetch.add("clinicalMatrix", fetch_feature);
-	widgets.render.add("clinicalMatrix", render);
+	widgets.fetch.add("clinicalMatrix", fetchFeature);
+	widgets.plot.add("clinicalMatrix", getPlot);
+	widgets.legend.add("clinicalMatrix", getLegend);
 });

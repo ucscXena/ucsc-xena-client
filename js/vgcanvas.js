@@ -12,10 +12,8 @@ define(["jquery", 'underscore'], function ($, _) {
 	};
 
 	/* t is transparency. Currently ignored */
-	return function (vgw, vgh, t) {
+	return function (el, vgw, vgh, t) {
 		var fontFamily = 'Verdana,Arial,sans-serif',
-		    canvas = $('<canvas></canvas>'),
-		    el = canvas[0],
 		    ctx = el.getContext('2d'),
 
 			// setting font is expensive, so cache it.

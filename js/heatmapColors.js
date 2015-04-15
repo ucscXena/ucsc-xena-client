@@ -66,12 +66,12 @@ define(['d3',
 			};
 
 
-		return function (type, dataSubType) {
+		return function (column) {
+			var {type, dataSubType} = column || {};
 			var t = (type === 'clinicalMatrix') ?  'phenotype' : dataSubType;
 			return defaults[t] || schemes.blueWhiteRed;
 		};
 	}());
-
 
 	function scaleCategoryMore() {
 		return d3.scale.ordinal().range(categoryMore);
@@ -125,13 +125,10 @@ define(['d3',
 	}
 
 	function colorFloat(column, settings, feature, codes, data) {
-		var colorfn,
-			values = _.values(data || [0]), // handle degenerate case
+		var values = _.values(data || [0]), // handle degenerate case
 			max = d3.max(values),
-			colors = defaultColors(column.type, column.dataSubType),
-			low = colors[0],
-			zero = colors[1],
-			high = colors[2],
+			[low, zero, high] = defaultColors(column),
+			colorfn,
 			min;
 
 		if (!isNumber(max)) {
@@ -187,10 +184,7 @@ define(['d3',
 	function colorFloatGenomicData (column, settings, feature, codes, data) {
 		var colorfn,
 			values = _.values(data || [0]), // handle degenerate case
-			colors = defaultColors(column.type, column.dataSubType),
-			low = colors[0],
-			zero = colors[1],
-			high = colors[2],
+			[low, zero, high] = defaultColors(column),
 			min = settings.min || d3.min(values),
 			max = settings.max ||  d3.max(values),
 			minStart = settings.minStart,

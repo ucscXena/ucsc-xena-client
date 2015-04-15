@@ -93,7 +93,20 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		});
 	}
 
+	function memoize1(fn) {
+		var last = null,
+			lastParams = null;
+		return function () {
+			if (!_.isEqual(arguments, lastParams)) {
+				last = fn.apply(this, arguments);
+				lastParams = arguments;
+			}
+			return last;
+		};
+	}
+
 	_.mixin({
+		memoize1: memoize1,
 		fmap: fmap,
 		apply: apply,
 		pluckPaths: pluckPaths,
