@@ -74,7 +74,8 @@ var Sortable = React.createClass({
 				dragLeft = dragLeft < min ? min : (dragLeft > max ? max : dragLeft);
 
 				if (dragLeft < 0) {              // dragging left
-					shift = target.left - positions[index - 1].left ;
+					shift = target.left - positions[index - 1].left -
+						(positions[index - 1].width - target.width) ;
 					edge = target.left + dragLeft;
 					newPos = _.map(_.first(positions, index),
 								   ({left, width}, i) => edge < left + width / 2 ? shift : 0)
