@@ -785,6 +785,9 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 			type = dataset.type,
 			allSamples, allProbes;
 
+		if (!type ) {  // when type is not specified, xena loader treat the file as genomicMatrix
+			type = "genomicMatrix";
+		}
 
 		if ((type === "genomicMatrix")  || (type ==="clinicalMatrix")) {
 			//data snippet samples, probes
