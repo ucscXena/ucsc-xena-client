@@ -132,7 +132,7 @@ var GeneProbeEdit = React.createClass(propsStream({
 			fieldTxt = fields.join(', ');
 		this.props.update({
 			fields: fields,
-			dataType: genes ? (fields.length > 1 ? 'geneMatrix' : 'geneProbeMatrix') :
+			dataType: genes ? (fields.length > 1 ? 'geneMatrix' : 'geneProbesMatrix') :
 				'probeMatrix',
 			fieldLabel: {user: fieldTxt, 'default': fieldTxt}
 		});
