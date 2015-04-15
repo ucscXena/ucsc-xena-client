@@ -201,15 +201,9 @@ define(['underscore_ext',
 
 			vg = local.vg;
 			columnUi = local.columnUi;
-			/*
-			if (vg.width() !== column.width) {
-				vg.width(column.width);
-			}
+			vg.width(column.width);
+			vg.height(canvasHeight);
 
-			if (vg.height() !== canvasHeight) {
-				vg.height(canvasHeight);
-			}
-			*/
 			refGeneData = data.refGene[column.fields[0]];
 			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
 			//data.req.values = stub.getMutation(column.fields[0]); // for testing
