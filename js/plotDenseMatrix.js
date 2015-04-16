@@ -514,6 +514,7 @@ define(['underscore_ext',
 	// XXX need to rework handling of defaults, perhaps by
 	// using babel default syntax. Where should defaults be set?
 	// With each function? Or at an entry point?
+	// XXX ellipsis -- test with sampleName, etc.
 	var PhenotypeLegend = React.createClass({
 		render: function() {
 			var {data: [data], rendering: {fields}, codes, colorScale} = this.props;
