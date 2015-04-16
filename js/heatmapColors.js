@@ -98,7 +98,7 @@ define(['d3',
 				return 'codedWhite';
 			}
 		}
-		if (column.type === "genomicMatrix"){
+		if (column && column.type === "genomicMatrix"){
 			return 'floatGenomicData';
 		}
 		return 'minMax';

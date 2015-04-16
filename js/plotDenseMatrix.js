@@ -44,7 +44,7 @@ define(['underscore_ext',
 		range = _.range,
 		bind = _.bind,
 		find = _.find,
-//		uniq = _.uniq,
+		uniq = _.uniq,
 		scratch = vgcanvas(document.createElement('canvas'), 1, 1), // scratch buffer
 		cmp,
 		fetch,
@@ -424,32 +424,19 @@ define(['underscore_ext',
 //		tooltip.mousing(tip);
 //	}
 
-//	function categoryLegend(dataIn, colorScale, codes) {
-//		// only finds categories for the current data in the column
-//		var data = uniq(dataIn).sort(function (v1, v2) {
-//				return v1 - v2;
-//			}),
-//			colors,
-//			justColors,
-//			labels;
-//
-//		if (colorScale) { // then there exist some non-null values
-//			// zip colors and their indexes, then filter out the nulls
-//			colors = filter(zip(range(data.length), map(data, colorScale)), secondNotUndefined);
-//			justColors =  map(colors, function (color) {
-//				return color[1];
-//			});
-//			if (data[data.length - 1] === undefined) {
-//				data.pop();
-//			}
-//			labels = map(data, function(d) {
-//				return(codes[d]);
-//			});
-//			return { colors: justColors, labels: labels };
-//		} else {
-//			return { colors: [], labels: [] };
-//		}
-//	}
+	function categoryLegend(dataIn, colorScale, codes) {
+		if (!colorScale) {
+			return {colors: [], labels: [], align: 'left'};
+		}
+		// only finds categories for the current data in the column
+		var data = _.reject(uniq(dataIn), isUndefined).sort((v1, v2) =>  v1 - v2),
+			categoryLength = 19, // XXX where does this come from?
+			// zip colors and their indexes, then filter out the nulls
+			colors = _.map(filter(zip(range(data.length), map(data, colorScale)), secondNotUndefined),
+					c => c[1]),
+			labels = map(data, d => codes[d]);
+		return {colors: colors, labels: labels, align: 'left', ellipsis: data.length > categoryLength ? '...' : null};
+	}
 
 	// Color scale cases
 	//  1 - clinical data: single probe, auto-scaled
@@ -480,12 +467,18 @@ define(['underscore_ext',
 	// means there are mutiple probes and the user has not set a fixed scale,
 	// i.e. we have multiple color scales.
 
+	// Basic legend, given a color scale.
+	function legendFromScale(colorScale) {
+		var labels = colorScale ? colorScale.domain() : [],
+			colors = colorScale ? _.map(labels, colorScale) : [];
+		return {labels: labels, colors: colors};
+	}
+
 	// XXX memoize
 	var GenomicLegend = React.createClass({
 		render: function() {
 			var {metadata, settings, data, colorScale} = this.props;
-			var labels = colorScale[0] ? colorScale[0].domain() : [],
-				colors = colorScale[0] ? _.map(labels, colorScale[0]) : [];
+			var {labels, colors} = legendFromScale(colorScale[0]);
 
 			if (data.length === 0) { // no features to draw
 				return <span/>;
@@ -509,37 +502,38 @@ define(['underscore_ext',
 				}
 			}
 
-			return <Legend colors={_.spy('colors', colors)} labels={labels} align='center' />;
+			return <Legend colors={colors} labels={labels} align='center' />;
 		}
 	});
 
-//	function drawPhenotypeLegend(metadata, settings, data, fields, codes, colorScale) {
-//		var c,
-//			ellipsis = '',
-//			align = 'center',
-//			labels = colorScale[0] ? colorScale[0].domain() : [],
-//			colors = colorScale[0] ? _.map(labels, colorScale[0]) : [],
-//			categoryLength = 19;
-//
-//		if (data.length === 0) { // no features to draw
-//			return;
-//		}
-//		 // XXX can we use domain() for categorical?
-//		if (codes[fields[0]]) { // category
-//			c = categoryLegend(data[0], colorScale[0], codes[fields[0]]);
-//			if (c.colors.length > categoryLength) {
-//				ellipsis = '...';
-//				colors = c.colors.slice(c.colors.length - categoryLength, c.colors.length);
-//				labels = c.labels.slice(c.colors.length - categoryLength, c.colors.length);
-//			} else {
-//				colors = c.colors;
-//				labels = c.labels;
-//			}
-//			align = 'left';
-//		}
-//
-//		drawLegend(colors, labels, align, ellipsis);
-//	}
+	function floatLegend(colorScale) {
+		var {labels, colors} = legendFromScale(colorScale);
+		return {labels: labels, colors: colors, align: 'center'};
+	}
+
+	// XXX need to rework handling of defaults, perhaps by
+	// using babel default syntax. Where should defaults be set?
+	// With each function? Or at an entry point?
+	var PhenotypeLegend = React.createClass({
+		render: function() {
+			var {data: [data], rendering: {fields}, codes, colorScale} = this.props;
+			var props;
+
+
+			if (data && data.length === 0) { // no features to draw
+				return <span />;
+			}
+
+			// XXX can we use domain() for categorical?
+			if (data && codes && codes[fields[0]]) { // category
+				props = categoryLegend(data, colorScale[0], codes[fields[0]]);
+			} else {
+				props = floatLegend(colorScale[0]);
+			}
+
+			return <Legend {...props} />;
+		}
+	});
 //
 //
 //
@@ -623,7 +617,7 @@ define(['underscore_ext',
 				mean = _.getIn(data, ["req", "mean"]),
 				norm = {'none': false, 'subset': true},
 
-				colnormalization = definedOrDefault(norm[_.getIn(settings, ['colNormalization'])], metadata.colnormalization),
+				colnormalization = definedOrDefault(norm[_.getIn(settings, ['colNormalization'])], _.getIn(metadata, ['colnormalization'])),
 				fields = data.req.probes || column.fields, // prefer field list from server
 				transform = (colnormalization && mean && _.partial(subbykey, mean())) || second,
 				heatmapData,
@@ -638,11 +632,16 @@ define(['underscore_ext',
 					heatmapData[i]));
 
 			if (this.refs.plot) {
+				// XXX find a better way to write this
 				this.refs.plot.draw(_.assoc(this.props, 'colors', colors, 'heatmapData', heatmapData)); // XXX memoize
 			}
 			return this.renderColumn(
 					<CanvasDrawing ref='plot' {...this.props} colors={colors} heatmapData={heatmapData}/>,
-					<GenomicLegend {...this.props} colorScale={colors} data={heatmapData} metadata={metadata}/>
+					// XXX refactor into one HeatmapLegend + different calls to
+					// build the legend?
+					column.dataType === 'clinicalMatrix' ? // XXX use a multi here? Or map, or something?
+						<PhenotypeLegend {...this.props} colorScale={colors} data={heatmapData} metadata={metadata} codes={codes}/> :
+						<GenomicLegend {...this.props} colorScale={colors} data={heatmapData} metadata={metadata}/>
 			);
 		}
 	});

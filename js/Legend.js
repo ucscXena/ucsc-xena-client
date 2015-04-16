@@ -29,17 +29,22 @@ var luminance = ([R, G, B]) => 0.299*R + 0.587*G + 0.114*B;
 var contrastColor = color => luminance(rgb(color)) < 147 ? 'white' : 'black';
 
 
+var nodata = [["No Data", "#808080"]];
+
 // klass? upperBorderIndex?
 var Legend = React.createClass({
 	render: function () {
-		var {label, labels, colors} = this.props,
-			items = _.map(_.zip(labels, colors), ([l, c]) =>
+		var {label, labels, colors, align} = this.props,
+			items = _.map(nodata.concat(_.zip(labels, colors)), ([l, c]) =>
 						  <label className='Legend-label'
+							  key={l}
 							  title={l}
-							  style={{backgroundColor: c, color: contrastColor(c)}}>
+							  style={{backgroundColor: c,
+								  color: contrastColor(c),
+								  textAlign: align}}>
 
 							  {l}
-						  </label>);
+						  </label>).reverse();
 		return (
 			<div>
 				{label ?
@@ -49,7 +54,7 @@ var Legend = React.createClass({
 						</Col>
 					</Row> : null}
 				<Row>
-					<Col md={8} mdOffset={2}>
+					<Col md={10} mdOffset={1}>
 						{items}
 					</Col>
 				</Row>
