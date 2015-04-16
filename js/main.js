@@ -172,7 +172,7 @@ var Application = React.createClass(statePropsStream({
 		this.setState({debugText: ev.target.value});
 	},
 	onClick: function (ev) {
-		if (ev.ctrlKey === true) {
+		if (ev.metaKey === true) {
 			this.setState({'debug': !this.state.debug});
 		}
 	},
