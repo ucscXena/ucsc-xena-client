@@ -216,11 +216,11 @@ define(['haml/columnEdit.haml',
 				fields = this.getFields(),
 				label = this.getFieldLabel(),
 				columnLabel = this.$dataset.parent().find('select option:selected').text().trim(),
-				sFeature,
+				info = xenaQuery.find_dataset(this.sources, this.state.dsID),
+				[host, dataset] = xenaQuery.parse_host(this.state.dsID),
+				fieldQuery,
 				id = this.id;
-			if (this.metadata === 'mutationVector') {
-				sFeature = 'impact';
-			}
+
 			json = {
 				"width": 200,
 				"dsID": this.state.dsID,
@@ -231,17 +231,31 @@ define(['haml/columnEdit.haml',
 				"fieldLabel": {user: label, 'default': label},
 				"columnLabel": {user: columnLabel, 'default': columnLabel}
 			};
-			if (sFeature) {
-				json.sFeature = sFeature;
+
+			if (this.metadata === 'mutationVector') {
+				json.sFeature =  'impact';
 			}
-			this.cursor.update(function (state) {
-				var column_rendering = _.assoc(state.column_rendering, id, json),
-					column_order = _.conj(state.column_order, id);
-				return _.assoc(state,
-							  //'columnEditOpen', false,
-							  'column_rendering', column_rendering,
-							  'column_order', column_order);
-			});
+
+			if (json.dataType === 'geneProbesMatrix' || json.dataType === 'geneMatrix') {
+				fieldQuery = xenaQuery.sparse_data_match_genes(host, info.probemap, fields);
+			} else if (json.dataType === 'mutationVector') {
+				fieldQuery = xenaQuery.sparse_data_match_genes(host, dataset, fields);
+			} else { // probe matrix or clinical matrix
+				fieldQuery = xenaQuery.match_fields(host, dataset, fields);
+			}
+
+			fieldQuery.subscribe(genes =>
+				this.cursor.update(function (state) {
+					json = _.assoc(json, 'fields', genes);
+					var column_rendering = _.assoc(state.column_rendering, id, json),
+						column_order = _.conj(state.column_order, id);
+
+					return _.assoc(state,
+								  //'columnEditOpen', false,
+								  'column_rendering', column_rendering,
+								  'column_order', column_order);
+				})
+			);
 		},
 
 		reRender: function () {

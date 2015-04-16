@@ -260,6 +260,27 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '                                                         :columns (map :probe probes)}])))))';
 	}
 
+	function sparse_data_match_genes_string(dataset, genes) {
+		return '(let [getfield (fn [field]\n' +
+		       '                 (:id (car (query {:select [:field.id]\n' +
+		       '                                   :from [:dataset]\n' +
+		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
+		       '                                   :where [:and [:= :field.name field] [:= :dataset.name ' + quote(dataset) + ']]}))))\n' +
+		       '      genes (getfield "genes")]\n' +
+		       '  (map :gene (query {:select [:gene]\n' +
+		       '                     :from [:field_gene]\n' +
+		       '                     :where [:and\n' +
+		       '                             [:= :field_gene.field_id genes]\n' +
+		       '                             [:in :%lower.gene ' + arrayfmt(_.map(genes, g => g.toLowerCase())) + ']]})))';
+	}
+
+	function match_fields_string(dataset, fields) {
+		return '(map :name (query {:select [:field.name]\n' +
+		       '                   :from [:dataset]\n' +
+		       '                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
+		       '                   :where [:and [:in :%lower.field.name ' + arrayfmt(_.map(fields, f => f.toLowerCase())) + '] [:= :dataset.name ' + quote(dataset) + ']]}))';
+	}
+
 	// It might be possible to better optimize this join. The scan counts seem high.
 	function sparse_data_string(dataset, samples, genes) {
 		return '(let [getfield (fn [field]\n' +
@@ -479,6 +500,23 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		).map(json_resp);
 	}
 
+	function align_matches(input, matches) {
+		var index = _.object(_.map(matches, g => g.toLowerCase()), matches);
+		return _.map(input, g => index[g.toLowerCase()] || g);
+	}
+
+	function sparse_data_match_genes(host, ds, genes) {
+		return Rx.DOM.ajax(
+			xena_post(host, sparse_data_match_genes_string(ds, genes))
+		).map(json_resp).map(list => align_matches(genes, list));
+	}
+
+	function match_fields(host, ds, fields) {
+		return Rx.DOM.ajax(
+			xena_post(host, match_fields_string(ds, fields))
+		).map(json_resp).map(list => align_matches(fields, list));
+	}
+
 	function all_samples(host, cohort) {
 		return Rx.DOM.ajax(
 			xena_post(host, all_samples_query(cohort))
@@ -546,6 +584,8 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		dataset_by_name: dataset_by_name,
 		dataset_text: dataset_text,
 
+		sparse_data_match_genes: sparse_data_match_genes,
+		match_fields: match_fields,
 		test_host: test_host
 	};
 });
