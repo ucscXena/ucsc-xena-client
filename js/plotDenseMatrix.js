@@ -12,6 +12,8 @@ define(['underscore_ext',
 		'tooltip',
 		'util',
 		'xenaQuery',
+		'Legend',
+		'Column',
 		'react',
 		'rx-jquery'
 	], function (
@@ -28,6 +30,8 @@ define(['underscore_ext',
 		tooltip,
 		util,
 		xenaQuery,
+		Legend,
+		ColumnMixin,
 		React) {
 
 	"use strict";
@@ -476,67 +480,66 @@ define(['underscore_ext',
 	// means there are mutiple probes and the user has not set a fixed scale,
 	// i.e. we have multiple color scales.
 
-	function drawGenomicLegend(metadata, settings, data, fields, codes, colorScale) {
-		var labels = colorScale[0] ? colorScale[0].domain() : [],
-			colors = colorScale[0] ? _.map(labels, colorScale[0]) : [];
+	// XXX memoize
+	var GenomicLegend = React.createClass({
+		render: function() {
+			var {metadata, settings, data, colorScale} = this.props;
+			var labels = colorScale[0] ? colorScale[0].domain() : [],
+				colors = colorScale[0] ? _.map(labels, colorScale[0]) : [];
 
-		if (data.length === 0) { // no features to draw
-			return;
-		}
+			if (data.length === 0) { // no features to draw
+				return <span/>;
+			}
 
-		if (colorScale.length > 1 && !_.getIn(settings, ['min'])) {
-			colors = heatmapColors.defaultColors(metadata).slice(0);
-			labels = ["lower", "", "higher"];
-		} else if (colorScale[0]) {
-			if (labels.length === 4) {
-				labels = _.assoc(labels,
-						0, "<" + labels[0],
-						labels.length - 1, ">" + labels[labels.length - 1]);
-			} else if (labels.length === 3) {
-				if (colorScale[0].domain()[0] >= 0) {
+			if (colorScale.length > 1 && !_.getIn(settings, ['min'])) {
+				colors = heatmapColors.defaultColors(metadata);
+				labels = ["lower", "", "higher"];
+			} else if (colorScale[0]) {
+				if (labels.length === 4) {                // positive and negative scale
 					labels = _.assoc(labels,
-						labels.length - 1, ">" + labels[labels.length - 1]);
-				} else {
-					labels = _.assoc(labels, 0, "<" + labels[0]);
+							0, "<" + labels[0],
+							labels.length - 1, ">" + labels[labels.length - 1]);
+				} else if (labels.length === 3) {
+					if (colorScale[0].domain()[0] >= 0) { // positive scale
+						labels = _.assoc(labels,
+							labels.length - 1, ">" + labels[labels.length - 1]);
+					} else {                              // negative scale
+						labels = _.assoc(labels, 0, "<" + labels[0]);
+					}
 				}
 			}
+
+			return <Legend colors={_.spy('colors', colors)} labels={labels} align='center' />;
 		}
+	});
 
-		drawLegend(colors, labels, 'center', '');
-	}
-
-	// XXX make components for draw*Legend
-	// XXX update legend multimethod to match parameters
-	// XXX update invocation of widgets.legend to pass correct parameters
-	// XXX convert columnUi.drawLegend to react
-	// XXX memoize
-	function drawPhenotypeLegend(metadata, settings, data, fields, codes, colorScale) {
-		var c,
-			ellipsis = '',
-			align = 'center',
-			labels = colorScale[0] ? colorScale[0].domain() : [],
-			colors = colorScale[0] ? _.map(labels, colorScale[0]) : [],
-			categoryLength = 19;
-
-		if (data.length === 0) { // no features to draw
-			return;
-		}
-		 // XXX can we use domain() for categorical?
-		if (codes[fields[0]]) { // category
-			c = categoryLegend(data[0], colorScale[0], codes[fields[0]]);
-			if (c.colors.length > categoryLength) {
-				ellipsis = '...';
-				colors = c.colors.slice(c.colors.length - categoryLength, c.colors.length);
-				labels = c.labels.slice(c.colors.length - categoryLength, c.colors.length);
-			} else {
-				colors = c.colors;
-				labels = c.labels;
-			}
-			align = 'left';
-		}
-
-		columnUi.drawLegend(colors, labels, align, ellipsis);
-	}
+//	function drawPhenotypeLegend(metadata, settings, data, fields, codes, colorScale) {
+//		var c,
+//			ellipsis = '',
+//			align = 'center',
+//			labels = colorScale[0] ? colorScale[0].domain() : [],
+//			colors = colorScale[0] ? _.map(labels, colorScale[0]) : [],
+//			categoryLength = 19;
+//
+//		if (data.length === 0) { // no features to draw
+//			return;
+//		}
+//		 // XXX can we use domain() for categorical?
+//		if (codes[fields[0]]) { // category
+//			c = categoryLegend(data[0], colorScale[0], codes[fields[0]]);
+//			if (c.colors.length > categoryLength) {
+//				ellipsis = '...';
+//				colors = c.colors.slice(c.colors.length - categoryLength, c.colors.length);
+//				labels = c.labels.slice(c.colors.length - categoryLength, c.colors.length);
+//			} else {
+//				colors = c.colors;
+//				labels = c.labels;
+//			}
+//			align = 'left';
+//		}
+//
+//		drawLegend(colors, labels, align, ellipsis);
+//	}
 //
 //
 //
@@ -586,18 +589,9 @@ define(['underscore_ext',
 		// XXX rename state as columnOrder and columns, instead of columnRendering
 		// XXX rename prop as column instead of rendering
 		draw: function (props) {
-			var {samples, data, zoom, rendering, settings} = props,
+			var {zoom, rendering, heatmapData, colors} = props,
 				column = rendering, // XXX rename?
-				{features, codes, metadata} = data,
-				mean = _.getIn(data, ["req", "mean"]),
-				norm = {'none': false, 'subset': true},
-
-				colnormalization = definedOrDefault(norm[_.getIn(settings, ['colNormalization'])], metadata.colnormalization),
-				fields = data.req.probes || column.fields, // prefer field list from server
-				transform = (colnormalization && mean && _.partial(subbykey, mean())) || second,
-				vg = this.vg,
-				heatmapData,
-				colors;
+				vg = this.vg;
 
 			if (vg.width() !== column.width) {
 				vg.width(column.width);
@@ -606,14 +600,6 @@ define(['underscore_ext',
 			if (vg.height() !== zoom.height) {
 				vg.height(zoom.height);
 			}
-
-			heatmapData = dataToHeatmap(samples, data.req.values, fields, transform);
-			colors = map(fields, (p, i) => heatmapColors.range(
-					metadata,
-					settings || {},
-					_.getIn(features, [p]),
-					_.getIn(codes, [p]),
-					heatmapData[i]));
 
 			renderHeatmap({
 				vg: vg,
@@ -628,42 +614,53 @@ define(['underscore_ext',
 		}
 	});
 
-	var Plot = React.createClass({
+	var HeatmapColumn = React.createClass({
+		mixins: [ColumnMixin],
 		render: function () {
+			var {samples, data, rendering, settings} = this.props,
+				column = rendering, // XXX rename?
+				{features, codes, metadata} = data,
+				mean = _.getIn(data, ["req", "mean"]),
+				norm = {'none': false, 'subset': true},
+
+				colnormalization = definedOrDefault(norm[_.getIn(settings, ['colNormalization'])], metadata.colnormalization),
+				fields = data.req.probes || column.fields, // prefer field list from server
+				transform = (colnormalization && mean && _.partial(subbykey, mean())) || second,
+				heatmapData,
+				colors;
+
+			heatmapData = dataToHeatmap(samples, data.req.values, fields, transform);
+			colors = map(fields, (p, i) => heatmapColors.range(
+					metadata,
+					settings || {},
+					_.getIn(features, [p]),
+					_.getIn(codes, [p]),
+					heatmapData[i]));
+
 			if (this.refs.plot) {
-				this.refs.plot.draw(this.props); // XXX memoize
+				this.refs.plot.draw(_.assoc(this.props, 'colors', colors, 'heatmapData', heatmapData)); // XXX memoize
 			}
-			return (
-				<CanvasDrawing ref='plot' {...this.props} />
+			return this.renderColumn(
+					<CanvasDrawing ref='plot' {...this.props} colors={colors} heatmapData={heatmapData}/>,
+					<GenomicLegend {...this.props} colorScale={colors} data={heatmapData} metadata={metadata}/>
 			);
 		}
 	});
-	var getPlot = (dataType, props) => <Plot {...props} />;
-
-	var Legend = React.createClass({
-		render: function () {
-			return null;
-		}
-	});
-	var getLegend = (dataType, props) => <Legend {...props} />;
+	var getColumn = (props) => <HeatmapColumn {...props} />;
 
 	widgets.cmp.add("probeMatrix", cmp);
 	widgets.fetch.add("probeMatrix", fetch);
-	widgets.plot.add("probeMatrix", getPlot);
-	widgets.legend.add("probeMatrix", getLegend);
+	widgets.column.add("probeMatrix", getColumn);
 
 	widgets.cmp.add("geneProbesMatrix", cmp);
 	widgets.fetch.add("geneProbesMatrix", fetchGeneProbes);
-	widgets.plot.add("geneProbesMatrix", getPlot);
-	widgets.legend.add("geneProbesMatrix", getLegend);
+	widgets.column.add("geneProbesMatrix", getColumn);
 
 	widgets.cmp.add("geneMatrix", cmp);
 	widgets.fetch.add("geneMatrix", fetchGene);
-	widgets.plot.add("geneMatrix", getPlot);
-	widgets.legend.add("geneMatrix", getLegend);
+	widgets.column.add("geneMatrix", getColumn);
 
 	widgets.cmp.add("clinicalMatrix", cmp);
 	widgets.fetch.add("clinicalMatrix", fetchFeature);
-	widgets.plot.add("clinicalMatrix", getPlot);
-	widgets.legend.add("clinicalMatrix", getLegend);
+	widgets.column.add("clinicalMatrix", getColumn);
 });

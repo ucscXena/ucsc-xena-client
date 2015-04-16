@@ -1,4 +1,9 @@
 .Sortable-container {
     position: relative;
     display: inline-block;
+	vertical-align: top;
+}
+
+.Sortable {
+	vertical-align: top;
 }

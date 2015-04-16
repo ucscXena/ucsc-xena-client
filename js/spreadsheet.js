@@ -7,12 +7,8 @@ var React = require('react');
 var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
-var Label = require('react-bootstrap/lib/Label');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
-var SplitButton = require('react-bootstrap/lib/SplitButton');
 var ColumnEdit = require('./columnEdit');
 var Sortable = require('./Sortable');
-var Resizable = require('react-resizable').Resizable;
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
 var L = require('./lenses/lens');
@@ -38,54 +34,6 @@ var YAxisLabel = React.createClass({
     }
 });
 
-var Column = React.createClass({
-    onResizeStop: function (ev, {size: {width, height}}) {
-        L.over(this.props.lens,
-            s => _.assocIn(_.assocIn(s, ['zoom', 'height'], height),
-                ['columnRendering', this.props.id, 'width'], width));
-    },
-	onRemove: function () {
-		L.over(this.props.lens,
-			s => _.assoc(
-				_.assoc(s, 'columnRendering', _.omit(s.columnRendering, this.props.id)),
-				'columnOrder', _.without(s.columnOrder, this.props.id)));
-	},
-	render: function () {
-		var {rendering, zoom} = this.props;
-		var {width, columnLabel, fieldLabel} = rendering,
-			moveIcon = <span
-				className="glyphicon glyphicon-resize-horizontal Sortable-handle"
-				aria-hidden="true">
-				</span>,
-			// XXX rename this to widget.component
-			// XXX really need all the zoom info
-			colWidget = widgets.plot(rendering.dataType, this.props),
-			legend = widgets.legend(rendering.dataType, this.props);
-
-		return (
-			<div className='Column' style={{width: width}}>
-				<SplitButton title={moveIcon} bsSize='xsmall'>
-					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
-				</SplitButton>
-				<br/>
-				<Label>{columnLabel.user}</Label>
-				<br/>
-				<Label>{fieldLabel.user}</Label>
-				<br/>
-				<Resizable handleSize={[20, 20]}
-					onResizeStop={this.onResizeStop}
-					width={width}
-					height={zoom.height}>
-					<div style={{position: 'relative'}}>
-						{colWidget}
-					</div>
-				</Resizable>
-				{legend}
-			</div>
-		);
-	}
-});
-
 var Columns = React.createClass({
     setOrder: function (order) {
 		L.over(this.props.lens, s => _.assoc(s, 'columnOrder', order));
@@ -99,20 +47,21 @@ var Columns = React.createClass({
 				{...this.props}
 				onRequestHide={() => this.setState({columnEdit: false})}
 			/> : '';
+
 		// XXX Create per-column lens for column menu?
 		//     Pass rending in the lens? Yes, we'll need to updated
 		//     rendering.
-		var columns = _.map(columnOrder, id =>
-							<Column
-								ref={id}
-								key={id}
-								id={id}
-								data={data[id]}
-								samples={samples}
-								zoom={zoom}
-								lens={lens}
-								rendering={_.getIn(L.view(lens),
-									['columnRendering', id])} />);
+		var columns = _.map(columnOrder, id => widgets.column({
+			ref: id,
+			key: id,
+			id: id,
+			data: data[id],
+			samples: samples,
+			zoom: zoom,
+			lens: lens,
+			rendering: _.getIn(L.view(lens), ['columnRendering', id])
+		}));
+
         return (
 			<div className="Columns">
                 <Sortable setOrder={this.setOrder}>
