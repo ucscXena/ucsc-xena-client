@@ -149,7 +149,13 @@ var Application = React.createClass(statePropsStream({
 		fetchDatasets(this.statePropsStream).subscribe(
 				datasets => this.setState({datasets: datasets}));
 		fetchSamples(this.statePropsStream).subscribe(
-				samples => this.setState({samples: samples}));
+				samples => {
+					this.setState({samples: samples});
+					L.over(this.props.lens, s => _.assoc(s, 'zoom',
+							_.assoc(s.zoom,
+								'count', samples.length,
+								'index', 0)));
+				});
 		this.requestStream = new Rx.Subject();
 		fetchData(this.requestStream).subscribe(
 				data => this.setState({data: data}));
