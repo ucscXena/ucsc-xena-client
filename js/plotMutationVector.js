@@ -138,6 +138,10 @@ define(['underscore_ext',
 		],
 		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
 			var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
+			function json_resp(xhr) {
+				return JSON.parse(xhr.response);
+			}
+
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
@@ -201,8 +205,13 @@ define(['underscore_ext',
 
 			vg = local.vg;
 			columnUi = local.columnUi;
-			vg.width(column.width);
-			vg.height(canvasHeight);
+
+ 			if (vg.width() !== column.width) {
+ 				vg.width(column.width);
+ 			}
+ 			if (vg.height() !== canvasHeight) {
+ 				vg.height(canvasHeight);
+ 			}
 
 			refGeneData = data.refGene[column.fields[0]];
 			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
@@ -248,7 +257,10 @@ define(['underscore_ext',
 					}
 				}
 			}
-			else{
+			else if (refGene){
+				vg.box(0, 0, column.width, ws.height, "white");
+			}
+			else {
 				vg.box(0, 0, column.width, ws.height, "gray");
 			}
 		}
