@@ -2,6 +2,6 @@
   %option{value:''} =placeholder
   - _.each(sources, function (source) {
     %optgroup{label:source.title}
-      - _.each(source.datasets, function (d) {
+      - _.each(source.datasets.sort(function (a,b){return a.label.localeCompare(b.label);}), function (d) {
         - if (d.type !== 'probeMap' && d.type !== 'genePredExt' && d.type !=="probemap" && d.type !== "sampleMap" && d.type !== "genomicSegment" && d.status==="loaded") {
           %option{value:encodeURIComponent(d.dsID)} =d.label
