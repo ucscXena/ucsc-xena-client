@@ -678,14 +678,14 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 			//identifiers count
 			spaceHolderNode.appendChild(node2);
 		} else if (type === "mutationVector") {
-			// samples: n
-			spaceHolderNode.appendChild(node);
+			node = undefined;
 			node2= undefined;
 		}
 
 		xenaQuery.dataset_samples(host, name).subscribe(function (s) {
-			node.innerHTML= s.length.toLocaleString()+" samples";
-
+			if (node){
+				node.innerHTML= s.length.toLocaleString()+" samples";
+			}
 			xenaQuery.dataset_field(host, name).subscribe(function(probes){
 				if (node2) {
 					node2.innerHTML = probes.length.toLocaleString() +" identifiers";
