@@ -8,7 +8,7 @@
         %td{class: 'sampleID'} = sampleID
     - _.each(rows, function(r, i) {
       %tr
-        - if (r.label && r.val)  {
+        - if (r.label && (r.val || (r.val==0)))  {
           %td
             = r.label+" : "
             %span{class: 'tupleValue'} = r.val

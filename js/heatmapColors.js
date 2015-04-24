@@ -203,7 +203,7 @@ define(['d3',
 			return null; // XXX should verify that we handle this downstream.
 		}
 
-		if ( (settings.min!== undefined) || (settings.min === null) || isNaN(settings.min)) {
+		if ( (settings.min!== undefined) && (settings.min !== null) && !isNaN(settings.min)) { //custom setting
 			if (isNaN(minStart)  || isNaN(maxStart) || (minStart === null) || (maxStart===null)) {
 				mid = (max + min) / 2.0;
 				zone = (max - min) / 4.0;
@@ -211,14 +211,14 @@ define(['d3',
 				maxStart = mid  +  zone / 2.0;
 			}
 			colorfn = color_custom(low, zero, high, min, max, minStart, maxStart);
-		} else if (min <= 0 && max >= 0) {
+		} else if (min < 0 && max > 0) { //auto setting
 			absmax = Math.max(-min, max);
 			zone = absmax / 4.0;
 			colorfn = color_custom(low, zero, high, - absmax / 2.0, absmax / 2.0, - zone / 2.0, zone / 2.0);
-		} else	if (min >= 0 && max >= 0) {
+		} else	if (min >= 0 && max >= 0) { //auto setting
 			zone = (max - min) / 4.0;
 			colorfn = color_float_positive_zone(zero, high, min, max - zone / 2.0, zone);
-		} else { // min <= 0 && max <= 0
+		} else { // min <= 0 && max <= 0  //auto setting
 			zone = (max - min) / 4.0;
 			colorfn = color_float_negative_zone(low, zero, min + zone / 2.0, max, zone);
 		}

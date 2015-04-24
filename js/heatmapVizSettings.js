@@ -87,7 +87,7 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 			div.appendChild(node);
 		}
 
-		// discard user changes & close.
+		// just close
 		function buildVizButton() {
 			var button = document.createElement("BUTTON");
 			button.setAttribute("class", "vizbutton");
@@ -200,7 +200,7 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 			}
 
 			function valToStr(v) {
-				return v ? "" + v : "";
+				return (!isNaN(v) && (v!==null) && (v!== undefined)) ? "" + v : "";
 			}
 
 			function buildCustomColorScale(custom) {
