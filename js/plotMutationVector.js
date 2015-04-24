@@ -138,10 +138,6 @@ define(['underscore_ext',
 		],
 		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
 			var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
-			function json_resp(xhr) {
-				return JSON.parse(xhr.response);
-			}
-
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
