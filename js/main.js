@@ -35,7 +35,7 @@ define(['jquery',
 	// pass column_order to spreadsheet.js
 
 	var model = columnModels(); // XXX global for testing
-	var HEIGHT = window.innerHeight? window.innerHeight-200: 500;
+	var HEIGHT = window.innerHeight? window.innerHeight-250: 500;
 
 	var unload = Rx.Observable.fromEvent(window, 'beforeunload');
 	// XXX does this work if no state events occur?? Looks like not.

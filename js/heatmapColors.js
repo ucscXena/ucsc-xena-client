@@ -191,8 +191,8 @@ define(['d3',
 			low = colors[0],
 			zero = colors[1],
 			high = colors[2],
-			min = settings.min || d3.min(values),
-			max = settings.max ||  d3.max(values),
+			min = (settings.min !== undefined)? settings.min : d3.min(values),
+			max = (settings.max !== undefined)? settings.max : d3.max(values),
 			minStart = settings.minStart,
 			maxStart = settings.maxStart,
 			mid,
@@ -203,8 +203,8 @@ define(['d3',
 			return null; // XXX should verify that we handle this downstream.
 		}
 
-		if (settings.min) {
-			if (!minStart || !maxStart) {
+		if ( (settings.min!== undefined) || (settings.min === null) || isNaN(settings.min)) {
+			if (isNaN(minStart)  || isNaN(maxStart) || (minStart === null) || (maxStart===null)) {
 				mid = (max + min) / 2.0;
 				zone = (max - min) / 4.0;
 				minStart = mid  -  zone / 2.0;

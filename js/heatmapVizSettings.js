@@ -116,7 +116,7 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 			var s = getInputSettings(),
 				vals = _.fmap(s, parseFloat),
 				fmtErrors = _.fmap(vals, function (v, k) {
-					return (!v && s[k]) ? "Invalid number." : "";
+					return (isNaN(v) && s[k]) ? "Invalid number." : "";
 				}),
 				missing = _.fmap(s, _.constant(null)),
 				rangeErrors;

@@ -535,14 +535,14 @@ define(['underscore_ext',
 			align = 'center',
 			labels = color_scale[0] ? color_scale[0].domain() : [],
 			colors = color_scale[0] ? _.map(labels, color_scale[0]) : [],
-			categoryLength = 19;
+			categoryLength = 100;
 
 		if (data.length === 0) { // no features to draw
 			return;
 		}
 
 		if (metadata.type === 'genomicMatrix') {
-			if (color_scale.length > 1 && !_.get_in(settings, ['min'])) {
+			if (color_scale.length > 1 && isNaN(_.get_in(settings, ['min']))) {
 				colors = heatmapColors.defaultColors(metadata.type, metadata.dataSubType).slice(0);
 				labels = ["lower", "", "higher"];
 			}
@@ -639,6 +639,7 @@ define(['underscore_ext',
 			colors = map(fields, function (p, i) {
 				return heatmapColors.range(metadata, settings, features[p], codes[p], heatmapData[i]); // XXX might need defaults if metadata is null?
 			});
+
 			if (columnUi && heatmapData.length) {
 				columnUi.plotData = {
 					// TODO we don't need all these parms
