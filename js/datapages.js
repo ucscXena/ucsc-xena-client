@@ -140,7 +140,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 		// samples: N
 		node.appendChild(dom_helper.labelValueNode("samples:", cohortName + "sampleN"));
-		dom_helper.updateDOM_xenaCohort_sampleN(cohortName + "sampleN", hosts, cohortName);
+		updateDOM_xenaCohort_sampleN(cohortName + "sampleN", hosts, cohortName);
 
 		// update
 		node.appendChild(dom_helper.valueNode(cohortName + "Update"));
@@ -551,7 +551,7 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		// samples: n
 		sectionNode.appendChild(dom_helper.elt("labelsameLength", "samples"));
 		sectionNode.appendChild(dom_helper.valueNode(dataset+"SampleN"));
-		dom_helper.updataDOM_xenaDataSet_sampleN(dataset + "SampleN", host, name);
+		updataDOM_xenaDataSet_sampleN(dataset + "SampleN", host, name);
 		sectionNode.appendChild(dom_helper.elt("br"));
 
 		// update on: xxx
@@ -1385,6 +1385,32 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		cohortListPage([host], node);
 
 		baseNode.appendChild(node);
+	}
+
+	function updataDOM_xenaDataSet_sampleN(DOM_id, host, dataset) {
+		xenaQuery.dataset_samples(host, dataset).subscribe(function (s) {
+			var tag = "result";
+			var node = document.getElementById(DOM_id);
+			node.parentNode.replaceChild(dom_helper.elt(tag, (s.length.toLocaleString())), node);
+		});
+	}
+
+
+	function updateDOM_xenaCohort_sampleN(DOM_id, hosts, cohort) {
+		hosts.forEach(function (host) {
+			xenaQuery.all_samples(host, cohort).subscribe(function (s) {
+				if (s.length !== 0) {
+					var node = document.getElementById(DOM_id),
+						text;
+					if (node.children.length > 0) {
+						text = node.lastChild.textContent;
+						node.lastChild.textContent = text + "; " + s.length.toLocaleString();
+					} else {
+						node.appendChild(dom_helper.elt("result", " " + s.length.toLocaleString()));
+					}
+				}
+			});
+		});
 	}
 
 	// if there is no url query string, query xena find the cohorts on main server

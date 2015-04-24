@@ -81,30 +81,6 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 		return qString;
   }
 
-	function updataDOM_xenaDataSet_sampleN(DOM_id, host, dataset) {
-		xenaQuery.dataset_samples(host, dataset).subscribe(function (s) {
-			var tag = "result";
-			var node = document.getElementById(DOM_id);
-			node.parentNode.replaceChild(elt(tag, (s.length.toLocaleString())), node);
-		});
-	}
-
-	function updateDOM_xenaCohort_sampleN(DOM_id, hosts, cohort) {
-		hosts.forEach(function (host) {
-			xenaQuery.all_samples(host, cohort).subscribe(function (s) {
-				if (s.length !== 0) {
-					var node = document.getElementById(DOM_id),
-						text;
-					if (node.children.length > 0) {
-						text = node.lastChild.textContent;
-						node.lastChild.textContent = text + "; " + s.length.toLocaleString();
-					} else {
-						node.appendChild(elt("result", " " + s.length.toLocaleString()));
-					}
-				}
-			});
-		});
-	}
 
 	function tableCreate(row, column){
 	  var tbl  = document.createElement('table'), tr, td, i,j;
@@ -158,8 +134,6 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 		stripScripts: stripScripts,
 		tableCreate: tableCreate,
 		setTableCellValue: setTableCellValue,
-		updataDOM_xenaDataSet_sampleN: updataDOM_xenaDataSet_sampleN,
-		updateDOM_xenaCohort_sampleN: updateDOM_xenaCohort_sampleN,
 		queryStringToJSON: queryStringToJSON,
 		JSONToqueryString: JSONToqueryString,
 		stringToDOM: stringToDOM,
