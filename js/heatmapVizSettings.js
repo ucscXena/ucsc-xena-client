@@ -91,9 +91,15 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 		function buildVizButton() {
 			var button = document.createElement("BUTTON");
 			button.setAttribute("class", "vizbutton");
+			/*
 			button.appendChild(document.createTextNode("Cancel"));
 			button.addEventListener("click", function () {
 				cursor.update(_.compose(close, revert));
+			});
+			*/
+			button.appendChild(document.createTextNode("Close"));
+			button.addEventListener("click", function () {
+				$(root).dialog("close");
 			});
 			return button;
 		}
