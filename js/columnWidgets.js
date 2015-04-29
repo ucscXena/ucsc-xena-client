@@ -5,7 +5,7 @@ define(['multi'], function (multi) {
 	var widget = {
 		cmp: multi(x => x),
 		fetch: multi(x => x),
-		column: multi(x => x.rendering.dataType)
+		column: multi(x => x.column.dataType)
 	};
 
 	return widget;

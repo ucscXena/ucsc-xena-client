@@ -21,9 +21,9 @@ var ColumnMixin = {
 				   _.assoc(s, 'columnRendering', _.omit(s.columnRendering, this.props.id)),
 				   'columnOrder', _.without(s.columnOrder, this.props.id)));
 	},
-	renderColumn: function (plot, legend) {
-		var {rendering, zoom} = this.props;
-		var {width, columnLabel, fieldLabel} = rendering,
+	renderColumn: function (plot, legend, tooltip) {
+		var {column, zoom} = this.props;
+		var {width, columnLabel, fieldLabel} = column,
 		moveIcon = <span
 		className="glyphicon glyphicon-resize-horizontal Sortable-handle"
 		aria-hidden="true">

@@ -59,7 +59,7 @@ var Columns = React.createClass({
 			samples: samples,
 			zoom: zoom,
 			lens: lens,
-			rendering: _.getIn(L.view(lens), ['columnRendering', id])
+			column: _.getIn(L.view(lens), ['columnRendering', id])
 		}));
 
         return (
