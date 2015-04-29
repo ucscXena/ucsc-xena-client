@@ -49,6 +49,7 @@ var ColumnMixin = {
 					</div>
 				</Resizable>
 				{legend}
+				{tooltip}
 			</div>
 		);
 	}
