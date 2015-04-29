@@ -35,9 +35,9 @@ var nodata = [["No Data", "#808080"]];
 var Legend = React.createClass({
 	render: function () {
 		var {label, labels, colors, align} = this.props,
-			items = _.map(nodata.concat(_.zip(labels, colors)), ([l, c]) =>
+			items = _.map(nodata.concat(_.zip(labels, colors)), ([l, c], i) =>
 						  <label className='Legend-label'
-							  key={l}
+							  key={i}
 							  title={l}
 							  style={{backgroundColor: c,
 								  color: contrastColor(c),
