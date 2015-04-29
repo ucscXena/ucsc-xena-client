@@ -3,7 +3,6 @@
 'use strict';
 
 var React = require('react');
-//var Rx = require('rx');
 var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
@@ -18,6 +17,7 @@ require('./YAxisLabel.css');
 
 var YAxisLabel = React.createClass({
     render: function () {
+		// XXX would prefer to enforce that these keys are present & destructure
 		var height = _.getIn(this.props, ['zoom', 'height']),
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
@@ -49,7 +49,7 @@ var Columns = React.createClass({
 			/> : '';
 
 		// XXX Create per-column lens for column menu?
-		//     Pass rending in the lens? Yes, we'll need to updated
+		//     Pass rending in the lens? Yes, we'll need it to update
 		//     rendering.
 		var columns = _.map(columnOrder, id => widgets.column({
 			ref: id,
@@ -64,9 +64,9 @@ var Columns = React.createClass({
 
         return (
 			<div className="Columns">
-                <Sortable setOrder={this.setOrder}>
-                    {columns}
-                </Sortable>
+				<Sortable setOrder={this.setOrder}>
+					{columns}
+				</Sortable>
 				<div
 					style={{height: height}}
 					className='addColumn Column'>
