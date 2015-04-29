@@ -1,5 +1,6 @@
 /*jslint browser: true, nomen: true */
 /*global define: false */
+// XXX see https://github.com/esbullington/react-d3
 
 define(['jquery', 'underscore'], function ($, _) {
 	'use strict';

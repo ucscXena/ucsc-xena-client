@@ -29,6 +29,7 @@ var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena',
 var initialState = {
 		servers: {'default': defaultServers, user: defaultServers},
 		zoom: {height: 300},
+		// XXX rename state as columnOrder and columns, instead of columnRendering
 		columnRendering: {},
 		columnOrder: []
 	};
@@ -122,7 +123,6 @@ function cmpString(s1, s2) {
 // 3) get a new sort fn if widget cmp functions or order have changed.
 // 4) compute a new sort if sort function or samples have changed.
 
-// XXX missing the step where we map data back to the widgets.
 var sampleSortFn = () => {
 	var mkCmpFns = _.memoize1(dataTypes => _.fmap(dataTypes, dt => widgets.cmp(dt)));
 	var cmpFns = (mcf, cR, data) => _.fmap(mcf, (fn, id) => fn(cR[id], data[id]));

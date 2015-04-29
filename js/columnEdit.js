@@ -43,6 +43,7 @@ var PhenotypeEdit = React.createClass(propsStream({
 			fieldLabel: {user: fieldTxt, 'default': fieldTxt}
 		});
 	},
+	// XXX change col-md-offset-10, etc. to react-boostrap style
 	render: function () {
 		var {features, feature} = this.state || {};
 		var selectLens = L.lens(() => feature, (x, v) => this.setState({feature: v}));
