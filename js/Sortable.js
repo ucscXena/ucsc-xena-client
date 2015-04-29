@@ -134,6 +134,7 @@ var Sortable = React.createClass({
 	render: function () {
 		var columns = React.Children.map(this.props.children, child =>
 							<div
+								{...this.props}
 								onMouseDown={ev => this.sortStart([child.key, ev])}
 								className='Sortable-container'
 								style={{left: this.state.pos[child.key]}}
