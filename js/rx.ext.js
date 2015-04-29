@@ -240,9 +240,9 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 					log(msg, "sending", next);
 					observer.onNext(next);
 				},
-				function () {
+				function (err) {
 					log(msg, "error");
-					observer.onError();
+					observer.onError(err);
 				},
 				function () {
 					log(msg, "complete");
