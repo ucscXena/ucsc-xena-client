@@ -46,6 +46,7 @@
     "rx": "^2.4.3",
     "rx-dom": "^4.0.4",
     "rx-jquery": "^1.1.7",
+    "rx-react": "^0.2.0",
     "select2": "3.4.5",
     "underscore": "^1.7.0",
     "underscore.string": "^3.0.3"
