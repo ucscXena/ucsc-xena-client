@@ -2,6 +2,7 @@
 define([], function () {
 	'use strict';
 
+    // XXX perhaps add fix for bad rng in browsers. See link below.
 	// http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
 	function uuid() {
 		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
