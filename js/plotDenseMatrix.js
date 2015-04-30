@@ -10,7 +10,7 @@ var partition = require('partition');
 var util = require('util');
 var xenaQuery = require('xenaQuery');
 var Legend = require('Legend');
-var ColumnMixin = require('Column');
+var Column = require('Column');
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var React = require('react');
 var FuncSubject = require('rx-react/browser').FuncSubject;
@@ -515,7 +515,7 @@ var CanvasDrawing = React.createClass({
 });
 
 var HeatmapColumn = React.createClass({
-	mixins: [ColumnMixin, PureRenderMixin],
+	mixins: [PureRenderMixin],
 	componentWillMount: function () {
 		this.mouseout = FuncSubject.create();
 		this.mousemove = FuncSubject.create();
@@ -558,21 +558,30 @@ var HeatmapColumn = React.createClass({
 
 		// save [heatmapData, fields, column, codes, zoom, samples] for tooltip
 		this.tooltip = _.partial(tooltip, heatmapData, fields, column, codes, zoom, samples);
-		return this.renderColumn(
-			<CanvasDrawing
-				onMouseMove={this.mousemove}
-				onMouseOut={this.mouseout}
-				onMouseOver={this.mouseover}
-				ref='plot'
-				{...this.props}
-				colors={colors}
-				heatmapData={heatmapData}/>,
-			// XXX refactor into one HeatmapLegend + different calls to
-			// build the legend?
-			column.dataType === 'clinicalMatrix' ? // XXX use a multi here? Or map, or something?
-				<PhenotypeLegend {...this.props} colorScale={colors} data={heatmapData} metadata={metadata} codes={codes}/> :
-				<GenomicLegend {...this.props} colorScale={colors} data={heatmapData} metadata={metadata}/>, 
-				<Tooltip {...this.props} ttevents={this.ttevents}/>
+		return (
+			<Column
+				column={column}
+				zoom={zoom}
+				plot={<CanvasDrawing
+						onMouseMove={this.mousemove}
+						onMouseOut={this.mouseout}
+						onMouseOver={this.mouseover}
+						ref='plot'
+						{...this.props}
+						colors={colors}
+						heatmapData={heatmapData}/>}
+				legend={column.dataType === 'clinicalMatrix' ? // XXX use a multi here? Or map, or something?
+					<PhenotypeLegend {...this.props}
+						colorScale={colors}
+						data={heatmapData}
+						metadata={metadata}
+						codes={codes}/> :
+					<GenomicLegend {...this.props}
+						colorScale={colors}
+						data={heatmapData}
+						metadata={metadata}/>}
+				tooltip={<Tooltip {...this.props} ttevents={this.ttevents}/>}
+			/>
 		);
 	}
 });

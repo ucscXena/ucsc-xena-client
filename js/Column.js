@@ -9,7 +9,7 @@ var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Label = require('react-bootstrap/lib/Label');
 var Resizable = require('react-resizable').Resizable;
 
-var ColumnMixin = {
+var Column = React.createClass({
 	onResizeStop: function (ev, {size: {width, height}}) {
 		L.over(this.props.lens,
 			   s => _.assocIn(_.assocIn(s, ['zoom', 'height'], height),
@@ -21,8 +21,8 @@ var ColumnMixin = {
 				   _.assoc(s, 'columnRendering', _.omit(s.columnRendering, this.props.id)),
 				   'columnOrder', _.without(s.columnOrder, this.props.id)));
 	},
-	renderColumn: function (plot, legend, tooltip) {
-		var {column, zoom} = this.props;
+	render: function () {
+		var {plot, legend, tooltip, column, zoom} = this.props;
 		var {width, columnLabel, fieldLabel} = column,
 		moveIcon = <span
 		className="glyphicon glyphicon-resize-horizontal Sortable-handle"
@@ -53,6 +53,6 @@ var ColumnMixin = {
 			</div>
 		);
 	}
-};
+});
 
-module.exports = ColumnMixin;
+module.exports = Column;
