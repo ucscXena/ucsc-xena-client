@@ -2,6 +2,7 @@
 
 'use strict';
 
+var L = require('./lenses/lens');
 var React = require('react');
 var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
@@ -40,22 +41,8 @@ var sampleLayout = (row) => (
 
 
 var Tooltip = React.createClass({
-	componentWillMount: function ()  {
-		var {ttevents} = this.props;
-		this.sub = ttevents.subscribe(this.setState.bind(this));
-	},
-	componentWillReceiveProps: function ({ttevents}) {
-		this.sub.dispose();
-		this.sub = ttevents.subscribe(this.setState.bind(this));
-	},
-	componentWillUnmount: function () {
-		this.sub.dispose();
-	},
-	getInitialState: function () {
-		return {open: false};
-	},
 	render: function () {
-		var {data, open} = this.state,
+		var {data, open} = L.view(this.props.lens),
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 

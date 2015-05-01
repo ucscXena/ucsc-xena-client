@@ -22,7 +22,7 @@ var Column = React.createClass({
 				   'columnOrder', _.without(s.columnOrder, this.props.id)));
 	},
 	render: function () {
-		var {plot, legend, tooltip, column, zoom} = this.props;
+		var {plot, legend, column, zoom} = this.props;
 		var {width, columnLabel, fieldLabel} = column,
 		moveIcon = <span
 		className="glyphicon glyphicon-resize-horizontal Sortable-handle"
@@ -49,7 +49,6 @@ var Column = React.createClass({
 					</div>
 				</Resizable>
 				{legend}
-				{tooltip}
 			</div>
 		);
 	}

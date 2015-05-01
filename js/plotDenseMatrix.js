@@ -14,7 +14,7 @@ var Column = require('Column');
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var React = require('react');
 var FuncSubject = require('rx-react/browser').FuncSubject;
-var Tooltip = require('tooltip');
+var L = require('./lenses/lens');
 
 require('rx-jquery');
 
@@ -548,7 +548,10 @@ var HeatmapColumn = React.createClass({
 				return this.mousemove.takeUntil(this.mouseout)
 					.map(ev => ({data: this.tooltip(ev), open: true})) // look up current data
 					.concat(Rx.Observable.return({open: false}));
-			});
+			}).subscribe(ev => L.set(this.props.tooltip, null, ev));
+	},
+	componentWillUnmount: function () {
+		this.ttevents.dispose();
 	},
 	render: function () {
 		var {samples, data, column, vizSettings, zoom} = this.props,
@@ -597,7 +600,6 @@ var HeatmapColumn = React.createClass({
 						data={heatmapData}
 						metadata={metadata}
 						codes={codes}/>}
-				tooltip={<Tooltip {...this.props} ttevents={this.ttevents}/>}
 			/>
 		);
 	}

@@ -12,6 +12,7 @@ require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
 var L = require('./lenses/lens');
 var widgets = require('./columnWidgets');
+var Tooltip = require('tooltip');
 require('./Columns.css');
 require('./YAxisLabel.css');
 
@@ -35,6 +36,14 @@ var YAxisLabel = React.createClass({
 });
 
 var Columns = React.createClass({
+	componentWillMount: function () {
+		this.tooltipLens = L.lens(
+			() => this.state.tooltip,
+			(x, v) => this.setState({tooltip: v}));
+	},
+	getInitialState: function () {
+		return {tooltip: {open: false}};
+	},
     setOrder: function (order) {
 		L.over(this.props.lens, s => _.assoc(s, 'columnOrder', order));
     },
@@ -59,6 +68,7 @@ var Columns = React.createClass({
 			samples: samples,
 			zoom: zoom,
 			lens: lens,
+			tooltip: this.tooltipLens,
 			column: _.getIn(L.view(lens), ['columnRendering', id])
 		}));
 
@@ -80,6 +90,7 @@ var Columns = React.createClass({
 				</div>
 				<div className='crosshairH crosshair' />
 				{editor}
+				<Tooltip lens={this.tooltipLens}/>
 			</div>
 		);
     }
