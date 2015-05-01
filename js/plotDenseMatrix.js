@@ -76,7 +76,6 @@ function dataToHeatmap(sortedSamples, data, probes, transform) {
 	}
 	return map(probes, function (p) {
 		var suTrans = saveUndefined(v => transform(p, v));
-		//return map(sortedSamples, s => suTrans(getProperty(data[p], s)));
 		return map(sortedSamples, s => suTrans(_.getIn(data[p], [s])));
 	});
 }
@@ -147,6 +146,10 @@ function renderHeatmap(opts) {
 	});
 }
 
+//
+// sort
+//
+
 function cmpNumberOrNull(v1, v2) {
 	if (isUndefined(v1) && isUndefined(v2)) {
 		return 0;
@@ -177,6 +180,10 @@ var cmp = () => {
 
 	return ({fields}, {req: {values, probes}}) => cmpm(fields, values, probes);
 };
+
+//
+// data fetches
+//
 
 // index data by field, then sample
 // XXX maybe build indexes against arrays, instead of ditching the arrays,
@@ -301,7 +308,7 @@ var fetchGene = () => {
 };
 
 //
-//
+// Tooltip
 //
 
 function plotCoords(ev) {
@@ -359,6 +366,10 @@ function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
 		(val !== 'NA' && !code) ?
 			{label: 'Column mean', val: prec(meannan(heatmap[fieldIndex]))} : [])};
 }
+
+//
+// Legends
+//
 
 function categoryLegend(dataIn, colorScale, codes) {
 	if (!colorScale) {
@@ -477,6 +488,10 @@ var HeatmapLegend = React.createClass({
 		return legendMethod(dataType)(this.props);
 	}
 });
+
+//
+// plot rendering
+//
 
 function definedOrDefault(v, def) {
 	return _.isUndefined(v) ? def : v;
