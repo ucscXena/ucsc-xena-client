@@ -410,65 +410,71 @@ function legendFromScale(colorScale) {
 	return {labels: labels, colors: colors};
 }
 
-// XXX memoize
-var GenomicLegend = React.createClass({
-	mixins: [PureRenderMixin],
-	render: function() {
-		var {metadata, settings, data, colorScale} = this.props;
-		var {labels, colors} = legendFromScale(colorScale[0]);
+function renderGenomicLegend(props) {
+	var {metadata, settings, data, colorScale} = props;
+	var {labels, colors} = legendFromScale(colorScale[0]);
 
-		if (data.length === 0) { // no features to draw
-			return <span/>;
-		}
+	if (data.length === 0) { // no features to draw
+		return <span/>;
+	}
 
-		if (colorScale.length > 1 && !_.getIn(settings, ['min'])) {
-			colors = heatmapColors.defaultColors(metadata);
-			labels = ["lower", "", "higher"];
-		} else if (colorScale[0]) {
-			if (labels.length === 4) {                // positive and negative scale
+	if (colorScale.length > 1 && !_.getIn(settings, ['min'])) {
+		colors = heatmapColors.defaultColors(metadata);
+		labels = ["lower", "", "higher"];
+	} else if (colorScale[0]) {
+		if (labels.length === 4) {                // positive and negative scale
+			labels = _.assoc(labels,
+					0, "<" + labels[0],
+					labels.length - 1, ">" + labels[labels.length - 1]);
+		} else if (labels.length === 3) {
+			if (colorScale[0].domain()[0] >= 0) { // positive scale
 				labels = _.assoc(labels,
-						0, "<" + labels[0],
-						labels.length - 1, ">" + labels[labels.length - 1]);
-			} else if (labels.length === 3) {
-				if (colorScale[0].domain()[0] >= 0) { // positive scale
-					labels = _.assoc(labels,
-						labels.length - 1, ">" + labels[labels.length - 1]);
-				} else {                              // negative scale
-					labels = _.assoc(labels, 0, "<" + labels[0]);
-				}
+					labels.length - 1, ">" + labels[labels.length - 1]);
+			} else {                              // negative scale
+				labels = _.assoc(labels, 0, "<" + labels[0]);
 			}
 		}
-
-		return <Legend colors={colors} labels={labels} align='center' />;
 	}
-});
+
+	return <Legend colors={colors} labels={labels} align='center' />;
+}
 
 function floatLegend(colorScale) {
 	var {labels, colors} = legendFromScale(colorScale);
 	return {labels: labels, colors: colors, align: 'center'};
 }
 
-var PhenotypeLegend = React.createClass({
+function renderPhenotypeLegend(props) {
+	var {data: [data], column: {fields}, codes, colorScale} = props;
+	var legendProps;
+
+
+	if (data && data.length === 0) { // no features to draw
+		return <span />;
+	}
+
+	// We can use domain() for categorical, but we want to filter out
+	// values not in the plot. Also, we build the categorical from all
+	// values in the db (even those not in the plot) so that colors will
+	// match in other datasets.
+	if (data && codes && codes[fields[0]]) { // category
+		legendProps = categoryLegend(data, colorScale[0], codes[fields[0]]);
+	} else {
+		legendProps = floatLegend(colorScale[0]);
+	}
+
+	return <Legend {...legendProps} />;
+}
+
+function legendMethod(dataType) {
+	return dataType === 'clinicalMatrix' ? renderPhenotypeLegend : renderGenomicLegend;
+}
+
+var HeatmapLegend = React.createClass({
+	mixins: [PureRenderMixin],
 	render: function() {
-		var {data: [data], column: {fields}, codes, colorScale} = this.props;
-		var props;
-
-
-		if (data && data.length === 0) { // no features to draw
-			return <span />;
-		}
-
-		// We can use domain() for categorical, but we want to filter out
-		// values not in the plot. Also, we build the categorical from all
-		// values in the db (even those not in the plot) so that colors will
-		// match in other datasets.
-		if (data && codes && codes[fields[0]]) { // category
-			props = categoryLegend(data, colorScale[0], codes[fields[0]]);
-		} else {
-			props = floatLegend(colorScale[0]);
-		}
-
-		return <Legend {...props} />;
+		var {dataType} = this.props;
+		return legendMethod(dataType)(this.props);
 	}
 });
 
@@ -570,16 +576,12 @@ var HeatmapColumn = React.createClass({
 						{...this.props}
 						colors={colors}
 						heatmapData={heatmapData}/>}
-				legend={column.dataType === 'clinicalMatrix' ? // XXX use a multi here? Or map, or something?
-					<PhenotypeLegend {...this.props}
+				legend={<HeatmapLegend {...this.props}
+						dataType={column.dataType}
 						colorScale={colors}
 						data={heatmapData}
 						metadata={metadata}
-						codes={codes}/> :
-					<GenomicLegend {...this.props}
-						colorScale={colors}
-						data={heatmapData}
-						metadata={metadata}/>}
+						codes={codes}/>}
 				tooltip={<Tooltip {...this.props} ttevents={this.ttevents}/>}
 			/>
 		);
