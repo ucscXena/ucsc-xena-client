@@ -48,11 +48,13 @@ var Columns = React.createClass({
 			.map(() => 'toggle');
 
 		this.tooltip = this.ev.tooltip.merge(toggle)
+			// If open + user clicks, toggle freeze of display.
 			.scan([null, false],
 				([tt, frozen], ev) =>
 					ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen])
-			.filter(([ev, frozen]) => !frozen)
-			.map(_.first)
+			// Filter frozen events until frozen state changes.
+			.distinctUntilChanged(([ev, frozen]) => frozen ? frozen : [ev, frozen])
+			.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))
 			.subscribe(ev => this.setState({tooltip: ev}));
 	},
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?

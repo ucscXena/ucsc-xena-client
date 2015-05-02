@@ -43,7 +43,7 @@ var sampleLayout = (row) => (
 var Tooltip = React.createClass({
 	mixins: [PureRenderMixin],
 	render: function () {
-		var {data, open} = this.props,
+		var {data, open, frozen} = this.props,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 
@@ -54,6 +54,13 @@ var Tooltip = React.createClass({
 			<div className='Tooltip' style={m(styles.tooltip, {display: display})}>
 				{sample}
 				{rowsOut}
+				<Row>
+					<Col mdOffset={2} md={10}>
+						<span>
+							{`Shift-click to ${frozen ? "unfreeze" : "freeze"}`}
+						</span>
+					</Col>
+				</Row>
 			</div>
 		);
 	}
