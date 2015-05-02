@@ -44,16 +44,16 @@ var Columns = React.createClass({
 	componentWillMount: function () {
 		this.events('tooltip', 'click');
 
-		// XXX Note that you can 'freeze' when the tooltip is down, which
-		// is odd. Need to drop these if the tooltip is open.
-		var frozen = this.ev.click.filter(ev => ev.shiftKey)
-			.scan(false, running => !running)
-			.startWith(false);
+		var toggle = this.ev.click.filter(ev => ev.shiftKey)
+			.map(() => 'toggle');
 
-		this.tooltip = this.ev.tooltip.combineLatest(frozen, (a, b) => [a, b])
+		this.tooltip = this.ev.tooltip.merge(toggle)
+			.scan([null, false],
+				([tt, frozen], ev) =>
+					ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen])
 			.filter(([ev, frozen]) => !frozen)
 			.map(_.first)
-			.subscribe(ev => this.setState({tooltip: ev})); // XXX dispose
+			.subscribe(ev => this.setState({tooltip: ev}));
 	},
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
 		this.tooltip.dispose();
