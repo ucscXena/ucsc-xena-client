@@ -18,7 +18,7 @@ require('./Columns.css');
 require('./YAxisLabel.css');
 
 var YAxisLabel = React.createClass({
-    render: function () {
+	render: function () {
 		// XXX would prefer to enforce that these keys are present & destructure
 		var height = _.getIn(this.props, ['zoom', 'height']),
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
@@ -28,12 +28,12 @@ var YAxisLabel = React.createClass({
 				`, showing ${ index } - ${ index + count - 1 }`,
 			 text = `Samples (N=${ length }) ${ fraction }`;
 
-        return (
+	return (
 			<div style={{height: height}} className="YAxisWrapper">
 				<p style={{width: height}} className="YAxisLabel">{text}</p>
 			</div>
 		);
-    }
+	}
 });
 
 var Columns = React.createClass({
@@ -61,9 +61,9 @@ var Columns = React.createClass({
 	getInitialState: function () {
 		return {tooltip: {open: false}};
 	},
-    setOrder: function (order) {
+	setOrder: function (order) {
 		L.over(this.props.lens, s => _.assoc(s, 'columnOrder', order));
-    },
+	},
 	render: function () {
 		var {data, lens, samples} = this.props;
 		var {zoom, columnOrder} = L.view(lens);
@@ -89,7 +89,7 @@ var Columns = React.createClass({
 			column: _.getIn(L.view(lens), ['columnRendering', id])
 		}));
 
-        return (
+		return (
 			<div className="Columns">
 				<Sortable onClick={this.ev.click} setOrder={this.setOrder}>
 					{columns}
@@ -110,7 +110,7 @@ var Columns = React.createClass({
 				<Tooltip {...this.state.tooltip}/>
 			</div>
 		);
-    }
+	}
 });
 
 // Data fetch steps

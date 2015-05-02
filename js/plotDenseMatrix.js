@@ -18,7 +18,7 @@ var FuncSubject = require('rx-react/browser').FuncSubject;
 require('rx-jquery');
 
 function hasClass(el, c) {
-    return el.className.split(/ +/).indexOf(c) !== -1;
+	return el.className.split(/ +/).indexOf(c) !== -1;
 }
 
 var each = _.each,
@@ -314,8 +314,8 @@ function plotCoords(ev) {
 	var offset,
 		x = ev.offsetX,
 		y = ev.offsetY;
-    // XXX test this on FF & move all this to util if we
-    // still need it.
+	// XXX test this on FF & move all this to util if we
+	// still need it.
 	if (x === undefined) { // fix up for firefox
 		offset = util.eventOffset(ev);
 		x = offset.x;
