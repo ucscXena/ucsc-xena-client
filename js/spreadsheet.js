@@ -13,6 +13,7 @@ var _ = require('./underscore_ext');
 var L = require('./lenses/lens');
 var widgets = require('./columnWidgets');
 var Tooltip = require('tooltip');
+var FuncSubject = require('rx-react/browser').FuncSubject;
 require('./Columns.css');
 require('./YAxisLabel.css');
 
@@ -36,10 +37,26 @@ var YAxisLabel = React.createClass({
 });
 
 var Columns = React.createClass({
+	events: function (...args) { // XXX move this to mixin or wrapper
+		this.ev = this.ev || {};
+		_.each(args, ev => this.ev[ev] = FuncSubject.create());
+	},
 	componentWillMount: function () {
-		this.tooltipLens = L.lens(
-			() => this.state.tooltip,
-			(x, v) => this.setState({tooltip: v}));
+		this.events('tooltip', 'click');
+
+		// XXX Note that you can 'freeze' when the tooltip is down, which
+		// is odd. Need to drop these if the tooltip is open.
+		var frozen = this.ev.click.filter(ev => ev.shiftKey)
+			.scan(false, running => !running)
+			.startWith(false);
+
+		this.tooltip = this.ev.tooltip.combineLatest(frozen, (a, b) => [a, b])
+			.filter(([ev, frozen]) => !frozen)
+			.map(_.first)
+			.subscribe(ev => this.setState({tooltip: ev})); // XXX dispose
+	},
+	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
+		this.tooltip.dispose();
 	},
 	getInitialState: function () {
 		return {tooltip: {open: false}};
@@ -68,13 +85,13 @@ var Columns = React.createClass({
 			samples: samples,
 			zoom: zoom,
 			lens: lens,
-			tooltip: this.tooltipLens,
+			tooltip: this.ev.tooltip,
 			column: _.getIn(L.view(lens), ['columnRendering', id])
 		}));
 
         return (
 			<div className="Columns">
-				<Sortable setOrder={this.setOrder}>
+				<Sortable onClick={this.ev.click} setOrder={this.setOrder}>
 					{columns}
 				</Sortable>
 				<div
@@ -90,7 +107,7 @@ var Columns = React.createClass({
 				</div>
 				<div className='crosshairH crosshair' />
 				{editor}
-				<Tooltip lens={this.tooltipLens}/>
+				<Tooltip {...this.state.tooltip}/>
 			</div>
 		);
     }

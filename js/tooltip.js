@@ -2,11 +2,11 @@
 
 'use strict';
 
-var L = require('./lenses/lens');
 var React = require('react');
 var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var _ = require('./underscore_ext');
+var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 
 function m() {
 	return _.extend.apply(null, [{}].concat(_.filter(arguments, _.isObject)));
@@ -41,8 +41,9 @@ var sampleLayout = (row) => (
 
 
 var Tooltip = React.createClass({
+	mixins: [PureRenderMixin],
 	render: function () {
-		var {data, open} = L.view(this.props.lens),
+		var {data, open} = this.props,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 

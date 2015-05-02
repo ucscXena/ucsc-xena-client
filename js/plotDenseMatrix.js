@@ -14,7 +14,6 @@ var Column = require('Column');
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var React = require('react');
 var FuncSubject = require('rx-react/browser').FuncSubject;
-var L = require('./lenses/lens');
 
 require('rx-jquery');
 
@@ -537,18 +536,20 @@ var CanvasDrawing = React.createClass({
 
 var HeatmapColumn = React.createClass({
 	mixins: [PureRenderMixin],
+	events: function (...args) { // XXX move this to mixin or wrapper
+		this.ev = this.ev || {};
+		_.each(args, ev => this.ev[ev] = FuncSubject.create());
+	},
 	componentWillMount: function () {
-		this.mouseout = FuncSubject.create();
-		this.mousemove = FuncSubject.create();
-		this.mouseover = FuncSubject.create();
+		this.events('mouseout', 'mousemove', 'mouseover', 'click');
 
 		// Compute tooltip events from mouse events.
-		this.ttevents = this.mouseover.filter(ev => hasClass(ev.target, 'Tooltip-target'))
+		this.ttevents = this.ev.mouseover.filter(ev => hasClass(ev.target, 'Tooltip-target'))
 			.selectMany(() => {
-				return this.mousemove.takeUntil(this.mouseout)
+				return this.ev.mousemove.takeUntil(this.ev.mouseout)
 					.map(ev => ({data: this.tooltip(ev), open: true})) // look up current data
 					.concat(Rx.Observable.return({open: false}));
-			}).subscribe(ev => L.set(this.props.tooltip, null, ev));
+			}).subscribe(this.props.tooltip);
 	},
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
@@ -587,9 +588,10 @@ var HeatmapColumn = React.createClass({
 				column={column}
 				zoom={zoom}
 				plot={<CanvasDrawing
-						onMouseMove={this.mousemove}
-						onMouseOut={this.mouseout}
-						onMouseOver={this.mouseover}
+						onMouseMove={this.ev.mousemove}
+						onMouseOut={this.ev.mouseout}
+						onMouseOver={this.ev.mouseover}
+						onClick={this.ev.click}
 						ref='plot'
 						{...this.props}
 						colors={colors}
