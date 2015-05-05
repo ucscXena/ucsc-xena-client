@@ -30,6 +30,7 @@ module.exports = {
 			rx$: 'rx/dist/rx',
 			'rx.binding$': 'rx/dist/rx.binding',
 			'rx.async$': 'rx/dist/rx.async',
+			'rx.experimental$': 'rx/dist/rx.experimental',
 			'rx.coincidence$': 'rx/dist/rx.coincidence'
 		},
 		extensions: ['', '.js', '.json', '.coffee'],
