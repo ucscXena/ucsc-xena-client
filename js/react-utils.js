@@ -3,6 +3,7 @@
 var _ = require('underscore_ext');
 var L = require('./lenses/lens');
 var Rx = require('rx.ext');
+var FuncSubject = require('rx-react/browser').FuncSubject;
 
 function propsStream(comp) {
 	var methods = {
@@ -40,7 +41,17 @@ function statePropsStream(comp) {
 	return _.extend({}, comp, methods);
 }
 
+// XXX Should also do a takeUntil componentWillUnmount, perhaps
+// via rx-react.
+var rxEventsMixin = {
+	events: function (...args) {
+		this.ev = this.ev || {};
+		_.each(args, ev => this.ev[ev] = FuncSubject.create());
+	},
+};
+
 module.exports = {
-    propsStream: propsStream,
-    statePropsStream: statePropsStream
+	propsStream: propsStream,
+	statePropsStream: statePropsStream,
+	rxEventsMixin: rxEventsMixin
 };

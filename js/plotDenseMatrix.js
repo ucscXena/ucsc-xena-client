@@ -13,7 +13,7 @@ var Legend = require('Legend');
 var Column = require('Column');
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var React = require('react');
-var FuncSubject = require('rx-react/browser').FuncSubject;
+var rxEventsMixin = require('./react-utils').rxEventsMixin;
 
 require('rx-jquery');
 
@@ -535,13 +535,9 @@ var CanvasDrawing = React.createClass({
 });
 
 var HeatmapColumn = React.createClass({
-	mixins: [PureRenderMixin],
-	events: function (...args) { // XXX move this to mixin or wrapper
-		this.ev = this.ev || {};
-		_.each(args, ev => this.ev[ev] = FuncSubject.create());
-	},
+	mixins: [rxEventsMixin, PureRenderMixin],
 	componentWillMount: function () {
-		this.events('mouseout', 'mousemove', 'mouseover', 'click');
+		this.events('mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
 		this.ttevents = this.ev.mouseover.filter(ev => hasClass(ev.target, 'Tooltip-target'))
@@ -591,7 +587,8 @@ var HeatmapColumn = React.createClass({
 						onMouseMove={this.ev.mousemove}
 						onMouseOut={this.ev.mouseout}
 						onMouseOver={this.ev.mouseover}
-						onClick={this.ev.click}
+						onClick={this.props.onClick}
+						onDblClick={this.props.onDblClick}
 						ref='plot'
 						{...this.props}
 						colors={colors}

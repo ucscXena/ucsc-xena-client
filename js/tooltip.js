@@ -7,6 +7,7 @@ var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var _ = require('./underscore_ext');
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
+var meta = require('./meta');
 
 function m() {
 	return _.extend.apply(null, [{}].concat(_.filter(arguments, _.isObject)));
@@ -57,7 +58,7 @@ var Tooltip = React.createClass({
 				<Row>
 					<Col mdOffset={2} md={10}>
 						<span>
-							{`Shift-click to ${frozen ? "unfreeze" : "freeze"}`}
+							{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}
 						</span>
 					</Col>
 				</Row>

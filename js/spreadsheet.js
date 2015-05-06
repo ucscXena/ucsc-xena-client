@@ -13,9 +13,10 @@ var _ = require('./underscore_ext');
 var L = require('./lenses/lens');
 var widgets = require('./columnWidgets');
 var Tooltip = require('tooltip');
-var FuncSubject = require('rx-react/browser').FuncSubject;
-require('./Columns.css');
-require('./YAxisLabel.css');
+var rxEventsMixin = require('./react-utils').rxEventsMixin;
+var meta = require('./meta');
+require('./Columns.css'); // XXX switch to js styles
+require('./YAxisLabel.css'); // XXX switch to js styles
 
 var YAxisLabel = React.createClass({
 	render: function () {
@@ -36,15 +37,42 @@ var YAxisLabel = React.createClass({
 	}
 });
 
-var Columns = React.createClass({
-	events: function (...args) { // XXX move this to mixin or wrapper
-		this.ev = this.ev || {};
-		_.each(args, ev => this.ev[ev] = FuncSubject.create());
-	},
-	componentWillMount: function () {
-		this.events('tooltip', 'click');
+function zoomIn(pos, samples, state) {
+	var {zoom: {count, index}} = state;
+	var nCount = Math.max(1, Math.floor(count / 3)),
+		maxIndex = samples - nCount,
+		nIndex = Math.max(0, Math.min(Math.round(index + pos * count - nCount / 2), maxIndex));
 
-		var toggle = this.ev.click.filter(ev => ev.shiftKey)
+	return _.assoc(state, 'zoom', _.assoc(state.zoom, 'count', nCount, 'index', nIndex));
+}
+
+function zoomOut(samples, state) {
+	var {zoom: {count, index}} = state;
+	var nCount = Math.min(samples, Math.round(count * 3)),
+		maxIndex = samples - nCount,
+		nIndex = Math.max(0, Math.min(Math.round(index + (count - nCount) / 2), maxIndex));
+
+	return _.assoc(state, 'zoom', _.assoc(state.zoom, 'count', nCount, 'index', nIndex));
+}
+
+function targetPos(ev) {
+	var bb = ev.target.getBoundingClientRect();
+	return (ev.clientY - bb.top) / ev.target.clientHeight;
+}
+
+var Columns = React.createClass({
+	mixins: [rxEventsMixin],
+	componentWillMount: function () {
+		this.events('tooltip', 'click', 'plotClick', 'plotDoubleClick');
+
+
+		this.ev.plotClick.filter(ev => ev.shiftKey).subscribe(() =>
+			L.over(this.props.lens, s => zoomOut(this.props.samples.length, s)));
+
+		this.ev.plotDoubleClick.subscribe(ev =>
+			L.over(this.props.lens, s => zoomIn(targetPos(ev), this.props.samples.length, s)));
+
+		var toggle = this.ev.click.filter(ev => ev[meta.key])
 			.map(() => 'toggle');
 
 		this.tooltip = this.ev.tooltip.merge(toggle)
@@ -88,6 +116,8 @@ var Columns = React.createClass({
 			zoom: zoom,
 			lens: lens,
 			tooltip: this.ev.tooltip,
+			onClick: this.ev.plotClick,
+			onDoubleClick: this.ev.plotDoubleClick,
 			column: _.getIn(L.view(lens), ['columnRendering', id])
 		}));
 

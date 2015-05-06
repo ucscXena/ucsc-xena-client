@@ -19,6 +19,7 @@ var Col = require('react-bootstrap/lib/Col');
 var Rx = require('./rx.ext');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');
+var meta = require('./meta');
 require('./plotDenseMatrix'); // XXX better place or name for this?
 
 
@@ -179,7 +180,7 @@ var Application = React.createClass(statePropsStream({
 		this.setState({debugText: ev.target.value});
 	},
 	onClick: function (ev) {
-		if (ev.metaKey === true) {
+		if (ev[meta.key]) {
 			this.setState({'debug': !this.state.debug});
 		}
 	},
