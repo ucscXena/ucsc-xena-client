@@ -151,6 +151,7 @@ var Application = React.createClass(statePropsStream({
 		fetchSamples(this.statePropsStream).subscribe(
 				samples => {
 					this.setState({samples: samples});
+					// XXX This is wrong. Should only do this when user-driven.
 					L.over(this.props.lens, s => _.assoc(s, 'zoom',
 							_.assoc(s.zoom,
 								'count', samples.length,
@@ -206,9 +207,6 @@ var Application = React.createClass(statePropsStream({
 
 
 		var sort = this.sortSamples(L.view(this.props.lens), samples, columnData);
-//		console.log('state', L.view(this.props.lens));
-//		console.log('transient state', this.state);
-//		console.log('sort', sort);
 		return (
 			<Grid onClick={this.onClick}>
 				<Row>
