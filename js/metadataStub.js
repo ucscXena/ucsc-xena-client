@@ -871,3 +871,8 @@ var variantSets = {
         }
     ]
 };
+
+module.exports = {
+    selectedKeys: selectedKeys,
+    variantSets: variantSets
+};
