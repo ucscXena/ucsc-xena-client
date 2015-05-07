@@ -567,18 +567,19 @@ var HeatmapColumn = React.createClass({
 	},
 	render: function () {
 		var {samples, data, column, vizSettings, zoom} = this.props,
+			dsVizSettings = vizSettings[column.dsID],
 			{features, codes, metadata} = data,
 			mean = _.getIn(data, ["req", "mean"]), // a memo for computing the mean of the data
 			norm = {'none': false, 'subset': true},
 
-			colnormalization = definedOrDefault(norm[_.getIn(vizSettings, ['colNormalization'])],
+			colnormalization = definedOrDefault(norm[_.getIn(dsVizSettings, ['colNormalization'])],
 												_.getIn(metadata, ['colnormalization'])),
 			fields = data.req.probes || column.fields, // prefer field list from server
 			transform = (colnormalization && mean && _.partial(subbykey, mean())) || second,
 			heatmapData = dataToHeatmap(samples, data.req.values, fields, transform),
 			colors = map(fields, (p, i) => heatmapColors.range(
 					metadata,
-					vizSettings || {},
+					dsVizSettings || {},
 					_.getIn(features, [p]),
 					_.getIn(codes, [p]),
 					heatmapData[i])),
@@ -596,6 +597,7 @@ var HeatmapColumn = React.createClass({
 			<Column
 				lens={this.props.lens}
 				id={this.props.id}
+				onViz={this.props.onViz}
 				download={download}
 				column={column}
 				zoom={zoom}

@@ -43,6 +43,9 @@ var Column = React.createClass({
 		var url =`../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
 		window.open(url);
 	},
+	onViz: function () {
+		this.props.onViz(this.props.id);
+	},
 	render: function () {
 		var {plot, legend, column, zoom} = this.props;
 		var {width, columnLabel, fieldLabel} = column,
@@ -56,6 +59,7 @@ var Column = React.createClass({
 				<SplitButton title={moveIcon} bsSize='xsmall'>
 					<MenuItem onSelect={this.onDownload}>Download</MenuItem>
 					<MenuItem onSelect={this.onAbout}>About the Dataset</MenuItem>
+					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>
 					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 				</SplitButton>
 				<br/>

@@ -15,6 +15,7 @@ var widgets = require('./columnWidgets');
 var Tooltip = require('tooltip');
 var rxEventsMixin = require('./react-utils').rxEventsMixin;
 var meta = require('./meta');
+var VizSettings = require('./heatmapVizSettings');
 require('./Columns.css'); // XXX switch to js styles
 require('./YAxisLabel.css'); // XXX switch to js styles
 
@@ -89,20 +90,31 @@ var Columns = React.createClass({
 		this.tooltip.dispose();
 	},
 	getInitialState: function () {
-		return {tooltip: {open: false}};
+		return {tooltip: {open: false}, vizSettings: null};
 	},
 	setOrder: function (order) {
 		L.over(this.props.lens, s => _.assoc(s, 'columnOrder', order));
 	},
+	onViz: function (id) {
+		var dsID = _.getIn(L.view(this.props.lens), ['columnRendering', id, 'dsID']);
+		this.setState({vizSettings: dsID});
+	},
 	render: function () {
 		var {data, lens, samples} = this.props;
 		var {zoom, columnOrder} = L.view(lens);
+		var {columnEdit, vizSettings} = this.state;
 		var height = zoom.height;
-		var editor = _.getIn(this.state, ['columnEdit']) ?
+		var editor = columnEdit ?
 			<ColumnEdit
 				{...this.props}
 				onRequestHide={() => this.setState({columnEdit: false})}
 			/> : '';
+		// XXX parameterize settings on column type
+		var settings = vizSettings ?
+			<VizSettings
+				dsID={vizSettings}
+				onRequestHide={() => this.setState({vizSettings: null})}
+				lens={lens} /> : '';
 
 		// XXX Create per-column lens for column menu?
 		//     Pass rending in the lens? Yes, we'll need it to update
@@ -112,10 +124,12 @@ var Columns = React.createClass({
 			key: id,
 			id: id,
 			data: data[id],
+			vizSettings: L.view(lens).vizSettings,
 			samples: samples,
 			zoom: zoom,
 			lens: lens,
 			tooltip: this.ev.tooltip,
+			onViz: this.onViz,
 			onClick: this.ev.plotClick,
 			onDoubleClick: this.ev.plotDoubleClick,
 			column: _.getIn(L.view(lens), ['columnRendering', id])
@@ -139,6 +153,7 @@ var Columns = React.createClass({
 				</div>
 				<div className='crosshairH crosshair' />
 				{editor}
+				{settings}
 				<Tooltip {...this.state.tooltip}/>
 			</div>
 		);

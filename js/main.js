@@ -198,7 +198,7 @@ var Application = React.createClass(statePropsStream({
 	},
 	render: function() {
 		var {datasets, samples, data} = this.state,
-			spreadsheetLens = L.compose(this.props.lens, Ls.keys(['zoom', 'columnRendering', 'columnOrder']));
+			spreadsheetLens = L.compose(this.props.lens, Ls.keys(['zoom', 'columnRendering', 'columnOrder', 'vizSettings']));
 
 		var requests = this.dataRequests(this.state, L.view(this.props.lens));
 		this.requestStream.onNext(requests);

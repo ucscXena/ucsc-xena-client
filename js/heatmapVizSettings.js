@@ -1,5 +1,5 @@
 /*jshint browser: true */
-/*global define: false, document: false */
+/*global document: false, require: false, module: false */
 
 // Config UI for custom viz settings for heatmaps.
 //
@@ -33,274 +33,279 @@
 // Refactoring notes:
 // The default column normalization is fetched from the server. Instead it should come from
 // the state, or from a data cache, because we've fetched that already.
-define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genomicFloatLegend.jpg','../images/genomicCustomFloatLegend.jpg','jquery', 'jquery-ui'],
-	function (xenaQuery, dom_helper, session, _, floatImg, customFloatImg, $) {
-		'use strict';
 
-	return function (cursor, state, dsID) {
-		function datasetSetting(dataset) {
-			var host_name = xenaQuery.parse_host(dataset.dsID),
-				host = host_name[0],
-				datasetName = host_name[1],
-				label = dataset.label ? dataset.label : dataset,
-				format = dataset.type,
-				status = dataset.status,
-				node, div = document.createElement("div");
+'use strict';
+var xenaQuery = require('./xenaQuery');
+var dom_helper = require('./dom_helper');
+var session = require('./session');
+var _ = require('./underscore_ext');
+var floatImg = require('../images/genomicFloatLegend.jpg');
+var customFloatImg = require('../images/genomicCustomFloatLegend.jpg');
+var React = require('react');
+var L = require('./lenses/lens');
+var Ls = require('./lenses/lenses');
+var Modal = require('react-bootstrap/lib/Modal');
 
-			node = dom_helper.hrefLink(label,
-				"datapages/?dataset=" + encodeURIComponent(datasetName) + "&host=" + encodeURIComponent(host));
+function vizSettingsWidget(node, lens, dsID, hide) {
+	var state = L.view(lens);
+	function datasetSetting(dataset) {
+		var host_name = xenaQuery.parse_host(dataset.dsID),
+			host = host_name[0],
+			datasetName = host_name[1],
+			label = dataset.label ? dataset.label : dataset,
+			format = dataset.type,
+			status = dataset.status,
+			node, div = document.createElement("div");
 
-			if (status !== GOODSTATUS) {
-				node.appendChild(document.createTextNode(" [" + status + "]"));
-			}
-			node.setAttribute("class", "key");
+		node = dom_helper.hrefLink(label,
+			"datapages/?dataset=" + encodeURIComponent(datasetName) + "&host=" + encodeURIComponent(host));
+
+		if (status !== GOODSTATUS) {
+			node.appendChild(document.createTextNode(" [" + status + "]"));
+		}
+		node.setAttribute("class", "key");
+		div.appendChild(node);
+
+		if ((format === "genomicMatrix") && (status === GOODSTATUS)) {
+			var action = genomicMatrixFloat,
+				actionArgs;
+
+			node = document.createElement("div");
+			actionArgs = [node, host, datasetName];
+			session.datasetHasFloats(host, datasetName, action, actionArgs);
 			div.appendChild(node);
 
-			if ((format === "genomicMatrix") && (status === GOODSTATUS)) {
-				var action = genomicMatrixFloat,
-					actionArgs;
-
-				node = document.createElement("div");
-				actionArgs = [node, host, datasetName];
-				session.datasetHasFloats(host, datasetName, action, actionArgs);
-				div.appendChild(node);
-
-				//apply button
+			//apply button
 //				div.appendChild(buildApplyButton(host, datasetName, cohort));
-				div.appendChild(buildVizButton());
-			}
-			return div;
+			div.appendChild(buildVizButton());
 		}
+		return div;
+	}
 
 
-		function genomicMatrixFloat(div, host, datasetName) {
-			var node;
+	function genomicMatrixFloat(div, host, datasetName) {
+		var node;
 
-			// normalization
-			node = buildNormalizationDropDown(host, datasetName);
-			div.appendChild(node);
+		// normalization
+		node = buildNormalizationDropDown(host, datasetName);
+		div.appendChild(node);
 
-			div.appendChild(document.createElement("br"));
+		div.appendChild(document.createElement("br"));
 
-			// color scale
-			node = colorScaleChoices(host, datasetName);
-			div.appendChild(node);
+		// color scale
+		node = colorScaleChoices(host, datasetName);
+		div.appendChild(node);
+	}
+
+	// discard user changes & close.
+	function buildVizButton() {
+		var button = document.createElement("BUTTON");
+		button.setAttribute("class", "vizbutton");
+		button.appendChild(document.createTextNode("Cancel"));
+		button.addEventListener("click", function () {
+			hide();
+			L.over(lens, () => oldSettings);
+		});
+		return button;
+	}
+
+	function inputId(param) {
+		return 'custom-' + param;
+	}
+
+	function getInputSettings() {
+		return _.object(colorParams, _.map(colorParams, function (param) {
+			return document.getElementById(inputId(param)).value.replace(/[ \t]/g, '');
+		}));
+	}
+
+	function getInputSettingsFloat() {
+		return _.fmap(getInputSettings(), parseFloat);
+	}
+
+	function validateSettings() {
+		var s = getInputSettings(),
+			vals = _.fmap(s, parseFloat),
+			fmtErrors = _.fmap(vals, function (v, k) {
+				return (!v && s[k]) ? "Invalid number." : "";
+			}),
+			missing = _.fmap(s, _.constant(null)),
+			rangeErrors;
+
+		/*jshint -W018 */ /* allow xor idiom */
+		if (!s.minStart !== !s.maxStart) { // xor
+			missing.minStart = 'Both 0% values must be given to take effect.';
 		}
+		// XXX check for missin min & max
 
-		// discard user changes & close.
-		function buildVizButton() {
-			var button = document.createElement("BUTTON");
-			button.setAttribute("class", "vizbutton");
-			button.appendChild(document.createTextNode("Cancel"));
-			button.addEventListener("click", function () {
-				cursor.update(_.compose(close, revert));
-			});
-			return button;
-		}
-
-		function inputId(param) {
-			return 'custom-' + param;
-		}
-
-		function getInputSettings() {
-			return _.object(colorParams, _.map(colorParams, function (param) {
-				return document.getElementById(inputId(param)).value.replace(/[ \t]/g, '');
-			}));
-		}
-
-		function getInputSettingsFloat() {
-			return _.fmap(getInputSettings(), parseFloat);
-		}
-
-		function validateSettings() {
-			var s = getInputSettings(),
-				vals = _.fmap(s, parseFloat),
-				fmtErrors = _.fmap(vals, function (v, k) {
-					return (!v && s[k]) ? "Invalid number." : "";
-				}),
-				missing = _.fmap(s, _.constant(null)),
-				rangeErrors;
-
-			/*jshint -W018 */ /* allow xor idiom */
-			if (!s.minStart !== !s.maxStart) { // xor
-				missing.minStart = 'Both 0% values must be given to take effect.';
-			}
-			// XXX check for missin min & max
-
-			if (s.minStart && s.maxStart && !fmtErrors.minStart && !fmtErrors.maxStart) {
-				// wrong if missing maxStart: we compare against the wrong thing.
-				rangeErrors = {
-					max: null,
-					maxStart: vals.maxStart <= vals.max ? null :  'Should be lower than max',
-					minStart: vals.minStart <= vals.maxStart ? null : 'Should be lower than maxStart',
-					min: vals.min <= vals.minStart ? null : 'Should be lower than minStart'
-				};
-			} else {
-				rangeErrors = {
-					max: null,
-					min: vals.min <= vals.max ? null : 'Should be lower than max'
-				};
-			}
-
-			return _.fmap(fmtErrors, function (err, k) {
-				return _.filter([err, rangeErrors[k], missing[k]], _.identity).join(' ');
-			});
-		}
-
-		function settingsValid(errors) {
-			return _.every(errors, function (s) { return !s; });
-		}
-
-		function displayErrors(errors) {
-			_.each(errors, function (err, k) {
-				document.getElementById('error-custom-' + k).innerHTML = err;
-			});
-		}
-
-		function updateSettings(settings) {
-			return function(s) {
-				return _.updateIn(s, ['vizSettings'], function (s) {
-					return _.extend({}, s, settings); // overlay new values.
-				});
+		if (s.minStart && s.maxStart && !fmtErrors.minStart && !fmtErrors.maxStart) {
+			// wrong if missing maxStart: we compare against the wrong thing.
+			rangeErrors = {
+				max: null,
+				maxStart: vals.maxStart <= vals.max ? null :  'Should be lower than max',
+				minStart: vals.minStart <= vals.maxStart ? null : 'Should be lower than maxStart',
+				min: vals.min <= vals.minStart ? null : 'Should be lower than minStart'
+			};
+		} else {
+			rangeErrors = {
+				max: null,
+				min: vals.min <= vals.max ? null : 'Should be lower than max'
 			};
 		}
 
-		function colorScaleChoices(host, name) {
-			function disableTextInputs(trueORfalse) {
-				var id,
-					color = trueORfalse ? "gray" : "black";
+		return _.fmap(fmtErrors, function (err, k) {
+			return _.filter([err, rangeErrors[k], missing[k]], _.identity).join(' ');
+		});
+	}
 
-				colorParams.forEach(function (param) {
-					id = inputId(param);
-					document.getElementById(id).disabled = trueORfalse;
-					document.getElementById(id).style.color = color;
-				});
-			}
+	function settingsValid(errors) {
+		return _.every(errors, function (s) { return !s; });
+	}
 
-			function buildCustomColorImage(custom) {
-				var customColorImage = new Image();
-				customColorImage.src = customFloatImg;
-				customColorImage.setAttribute("class", "image");
-				customColorImage.style.opacity = custom ? "1.0" : "0.6";
-				return customColorImage;
-			}
+	function displayErrors(errors) {
+		_.each(errors, function (err, k) {
+			document.getElementById('error-custom-' + k).innerHTML = err;
+		});
+	}
 
-			function buildAutoColorImage(auto) {
-				var autoColorImage = new Image();
-				autoColorImage.src = floatImg;
-				autoColorImage.setAttribute("class", "image");
-				autoColorImage.style.opacity = auto ? "1.0" : "0.6";
-				return autoColorImage;
-			}
+	var updateSettings = settings => s => _.merge(s, settings);
 
-			function valToStr(v) {
-				return v ? "" + v : "";
-			}
+	function colorScaleChoices(host, name) {
+		function disableTextInputs(trueORfalse) {
+			var id,
+				color = trueORfalse ? "gray" : "black";
 
-			function buildCustomColorScale(custom) {
-				var node = document.createElement("div"),
-					annotations = {
-						"max": "high color 100% saturation",
-						"maxStart": "high color 0% saturation (black or white)",
-						"minStart": "low color 0% saturation (black or white)",
-						"min": "low color 100% saturation"
-					},
-					defaults = {
-						max: 1,
-						maxStart: null,
-						minStart: null,
-						min: -1
-					},
-					settings = _.getIn(oldSettings, ['max']) ? oldSettings : defaults;
+			colorParams.forEach(function (param) {
+				id = inputId(param);
+				document.getElementById(id).disabled = trueORfalse;
+				document.getElementById(id).style.color = color;
+			});
+		}
 
-				node.setAttribute("class", "block");
-				colorParams.forEach(function (param) {
-					node.appendChild(buildTextInput(annotations[param], param, inputId(param), custom,
-													valToStr(settings[param])));
-				});
-				node.style.color = custom ? "black" : "gray";
-				return node;
-			}
+		function buildCustomColorImage(custom) {
+			var customColorImage = new Image();
+			customColorImage.src = customFloatImg;
+			customColorImage.setAttribute("class", "image");
+			customColorImage.style.opacity = custom ? "1.0" : "0.6";
+			return customColorImage;
+		}
 
-			function removeAllVizSettings() {
-				colorParams.forEach(function (param) {
-					removeVizSettings(param);
-				});
-			}
+		function buildAutoColorImage(auto) {
+			var autoColorImage = new Image();
+			autoColorImage.src = floatImg;
+			autoColorImage.setAttribute("class", "image");
+			autoColorImage.style.opacity = auto ? "1.0" : "0.6";
+			return autoColorImage;
+		}
 
+		function valToStr(v) {
+			return v ? "" + v : "";
+		}
+
+		function buildCustomColorScale(custom) {
 			var node = document.createElement("div"),
-				text = dom_helper.elt("span", "Color Scale "),
-				label, x, custom,
-				radioGroup = document.createElement("div"),
-				customColorGroup,
-				autoColorImage, customColorImage;
+				annotations = {
+					"max": "high color 100% saturation",
+					"maxStart": "high color 0% saturation (black or white)",
+					"minStart": "low color 0% saturation (black or white)",
+					"min": "low color 100% saturation"
+				},
+				defaults = {
+					max: 1,
+					maxStart: null,
+					minStart: null,
+					min: -1
+				},
+				settings = _.getIn(oldSettings, ['max']) ? oldSettings : defaults;
 
-			text.setAttribute("class", "text");
-			node.appendChild(text);
-
-			radioGroup.setAttribute("class", "radiogroup");
-			node.appendChild(radioGroup);
-
-			//check if there is custom value
-			custom = colorParams.some(function (param) {
-				if (getVizSettings(param)) {
-					return true;
-				}
+			node.setAttribute("class", "block");
+			colorParams.forEach(function (param) {
+				node.appendChild(buildTextInput(annotations[param], param, inputId(param), custom,
+												valToStr(settings[param])));
 			});
-
-			x = document.createElement("INPUT");
-			x.setAttribute("type", "radio");
-			x.setAttribute("name", "group");
-			x.setAttribute("id", "colorauto");
-			x.value = "auto";
-			x.checked = custom ? false : true;
-			x.addEventListener("click", function () {
-				removeAllVizSettings();
-				customColorGroup.style.color = "gray";
-				autoColorImage.style.opacity = "1.0";
-				customColorImage.style.opacity = "0.6";
-				disableTextInputs(true);
-			});
-			label = dom_helper.elt("LABEL", " Auto");
-			label.setAttribute("for", "colorauto");
-			label.setAttribute("class", "text");
-			radioGroup.appendChild(x);
-			radioGroup.appendChild(label);
-
-			//image
-			autoColorImage = buildAutoColorImage(!custom);
-			radioGroup.appendChild(autoColorImage);
-
-			radioGroup.appendChild(document.createElement("br"));
-
-			x = document.createElement("INPUT");
-			x.setAttribute("type", "radio");
-			x.setAttribute("name", "group");
-			x.setAttribute("id", "colorcustom");
-			x.value = "custom";
-			x.checked = custom ? true : false;
-			x.addEventListener("click", function () {
-				changeTextAction();
-				customColorGroup.style.color = "black";
-				autoColorImage.style.opacity = "0.6";
-				customColorImage.style.opacity = "1.0";
-				disableTextInputs(false);
-			});
-			label = dom_helper.elt("LABEL", " Custom");
-			label.setAttribute("for", "colorcustom");
-			label.setAttribute("class", "text");
-			radioGroup.appendChild(x);
-			radioGroup.appendChild(label);
-
-			//image
-			customColorImage = buildCustomColorImage(custom);
-			radioGroup.appendChild(customColorImage);
-
-			customColorGroup = buildCustomColorScale(custom);
-			radioGroup.appendChild(customColorGroup);
-
+			node.style.color = custom ? "black" : "gray";
 			return node;
 		}
+
+		function removeAllVizSettings() {
+			colorParams.forEach(function (param) {
+				removeVizSettings(param);
+			});
+		}
+
+		var node = document.createElement("div"),
+			text = dom_helper.elt("span", "Color Scale "),
+			label, x, custom,
+			radioGroup = document.createElement("div"),
+			customColorGroup,
+			autoColorImage, customColorImage;
+
+		text.setAttribute("class", "text");
+		node.appendChild(text);
+
+		radioGroup.setAttribute("class", "radiogroup");
+		node.appendChild(radioGroup);
+
+		//check if there is custom value
+		custom = colorParams.some(function (param) {
+			if (getVizSettings(param)) {
+				return true;
+			}
+		});
+
+		x = document.createElement("INPUT");
+		x.setAttribute("type", "radio");
+		x.setAttribute("name", "group");
+		x.setAttribute("id", "colorauto");
+		x.value = "auto";
+		x.checked = custom ? false : true;
+		x.addEventListener("click", function () {
+			removeAllVizSettings();
+			customColorGroup.style.color = "gray";
+			autoColorImage.style.opacity = "1.0";
+			customColorImage.style.opacity = "0.6";
+			disableTextInputs(true);
+		});
+		label = dom_helper.elt("LABEL", " Auto");
+		label.setAttribute("for", "colorauto");
+		label.setAttribute("class", "text");
+		radioGroup.appendChild(x);
+		radioGroup.appendChild(label);
+
+		//image
+		autoColorImage = buildAutoColorImage(!custom);
+		radioGroup.appendChild(autoColorImage);
+
+		radioGroup.appendChild(document.createElement("br"));
+
+		x = document.createElement("INPUT");
+		x.setAttribute("type", "radio");
+		x.setAttribute("name", "group");
+		x.setAttribute("id", "colorcustom");
+		x.value = "custom";
+		x.checked = custom ? true : false;
+		x.addEventListener("click", function () {
+			changeTextAction();
+			customColorGroup.style.color = "black";
+			autoColorImage.style.opacity = "0.6";
+			customColorImage.style.opacity = "1.0";
+			disableTextInputs(false);
+		});
+		label = dom_helper.elt("LABEL", " Custom");
+		label.setAttribute("for", "colorcustom");
+		label.setAttribute("class", "text");
+		radioGroup.appendChild(x);
+		radioGroup.appendChild(label);
+
+		//image
+		customColorImage = buildCustomColorImage(custom);
+		radioGroup.appendChild(customColorImage);
+
+		customColorGroup = buildCustomColorScale(custom);
+		radioGroup.appendChild(customColorGroup);
+
+		return node;
+	}
 
 //		function buildApplyButton(host, name, cohort) {
 //			var button = document.createElement("BUTTON"),
@@ -325,176 +330,160 @@ define(['xenaQuery', 'dom_helper', 'session', 'underscore_ext', '../images/genom
 //			return button;
 //		}
 
-		function changeTextAction() {
-			var err = validateSettings();
-			displayErrors(err);
+	function changeTextAction() {
+		var err = validateSettings();
+		displayErrors(err);
 
-			if (settingsValid(err)) {
-				cursor.update(updateSettings(getInputSettingsFloat()));
-			}
+		if (settingsValid(err)) {
+			L.over(lens, updateSettings(getInputSettingsFloat()));
 		}
+	}
 
-		function buildTextInput(annotation, label, id, custom, defaultDisplay) {
-			var node = document.createElement("div"),
-				text,
-				input = document.createElement("INPUT"),
-				errors = document.createElement("span");
+	function buildTextInput(annotation, label, id, custom, defaultDisplay) {
+		var node = document.createElement("div"),
+			text,
+			input = document.createElement("INPUT"),
+			errors = document.createElement("span");
 
-			text = dom_helper.elt("span", annotation);
-			text.setAttribute("class", "annotation");
-			node.appendChild(text);
+		text = dom_helper.elt("span", annotation);
+		text.setAttribute("class", "annotation");
+		node.appendChild(text);
 
-			input.setAttribute("type", "text");
-			input.setAttribute("class", "textBox");
-			input.setAttribute("id", id);
-			input.disabled = custom ? false : true;
-			input.value = getVizSettings(label) || defaultDisplay;
+		input.setAttribute("type", "text");
+		input.setAttribute("class", "textBox");
+		input.setAttribute("id", id);
+		input.disabled = custom ? false : true;
+		input.value = getVizSettings(label) || defaultDisplay;
 
 
-			input.addEventListener("keydown", function (event) {
-				if (event.keyCode === 13) {
-					changeTextAction();
-				}
-			});
-
-			input.addEventListener("blur", function () {
+		input.addEventListener("keydown", function (event) {
+			if (event.keyCode === 13) {
 				changeTextAction();
-			});
-
-			node.appendChild(input);
-
-			errors.setAttribute("class", "error");
-			errors.setAttribute("id", "error-" + id);
-			node.appendChild(errors);
-			return node;
-		}
-
-		function removeVizSettings(key) {
-			// xenaState.vizSettings[host + name][key] = undefined;
-			cursor.update(function (s) {
-				return _.updateIn(s, ['vizSettings'], function (s) {
-					return _.dissoc(s, key);
-				});
-			});
-		}
-
-		function setVizSettings(key, value) {
-			// xenaState.vizSettings[host + name][key] = value;
-			cursor.update(function (s) {
-				return _.assocIn(s, ['vizSettings', key], value);
-			});
-		}
-
-		function getVizSettings(key) {
-			return _.getIn(state, ['vizSettings', key]);
-		}
-
-		function buildNormalizationDropDown(host, name) {
-			var dropDownDiv, option,
-				dropDown = [{
-						"value": "none",
-						"text": "none",
-						"index": 0
-					}, //no normalization
-					{
-						"value": "subset",
-						"text": "normalize",
-						"index": 1
-					} //selected sample level
-
-					//{"value": "cohort", "text":"across cohort", "index":1},     //cohort-level
-					//{"value": "subset", "text":"across selected samples", "index":2} //selected sample level
-				],
-				node;
-
-			node = document.createElement("div");
-			dropDownDiv = document.createElement("select");
-			dropDownDiv.setAttribute("class", "dropDown");
-
-			dropDown.forEach(function (obj) {
-				option = document.createElement('option');
-				option.value = obj.value;
-				option.textContent = obj.text;
-				dropDownDiv.appendChild(option);
-			});
-
-			var value = getVizSettings('colNormalization');
-			if (value) {
-				if (value === "none") {
-					dropDownDiv.selectedIndex = 0;
-				} else if (value === "subset") {
-					dropDownDiv.selectedIndex = 1;
-				} else {
-					dropDownDiv.selectedIndex = 0;
-				}
-			} else {
-				xenaQuery.dataset_text(host, name).subscribe(function (obj) {
-					var metaData = JSON.parse(obj[0].text);
-					if (metaData.colnormalization || metaData.colNormalization) {
-						dropDownDiv.selectedIndex = 1; // get default from metadata in json
-					} else {
-						dropDownDiv.selectedIndex = 0; // get default from metadata in json
-					}
-				});
 			}
-
-			dropDownDiv.addEventListener('change', function () {
-				var key = "colNormalization",
-					value = dropDownDiv.options[dropDownDiv.selectedIndex].value;
-				setVizSettings(key, value);
-			});
-
-			var text = dom_helper.elt("span", "Normalization ");
-			text.setAttribute("class", "text");
-			node.appendChild(text);
-			node.appendChild(dropDownDiv);
-			return node;
-		}
-
-		function revert(s) {
-				return _.assoc(s, 'vizSettings', oldSettings);
-		}
-
-		var GOODSTATUS = 'loaded',
-			root,
-			node,
-			oldSettings = _.getIn(state, ['vizSettings']),
-			host_name = xenaQuery.parse_host(dsID),
-			datasetName = host_name[1],
-			host = host_name[0],
-			colorParams = ["max", "maxStart", "minStart", "min"];
-
-		root = $('<div>')[0];
-		$(root).dialog({
-			modal: true,
-			width: 800,
-			title: 'Advanced Heatmap Settings',
-			position: ['center', 'top'],
-			close: function () {
-					cursor.update(function (s) {
-						return _.assocIn(s, ['_vizSettings', 'open'], false);
-					});
-				}
 		});
 
-		root.className = " settingsRoot";
+		input.addEventListener("blur", function () {
+			changeTextAction();
+		});
 
-		//dataset sections
+		node.appendChild(input);
+
+		errors.setAttribute("class", "error");
+		errors.setAttribute("id", "error-" + id);
+		node.appendChild(errors);
+		return node;
+	}
+
+	function removeVizSettings(key) {
+		L.over(lens, s => _.dissoc(s, key));
+	}
+
+	function setVizSettings(key, value) {
+		L.over(lens, s => _.assoc(s, key, value));
+	}
+
+	function getVizSettings(key) {
+		return _.getIn(state, [key]);
+	}
+
+	function buildNormalizationDropDown(host, name) {
+		var dropDownDiv, option,
+			dropDown = [{
+					"value": "none",
+					"text": "none",
+					"index": 0
+				}, //no normalization
+				{
+					"value": "subset",
+					"text": "normalize",
+					"index": 1
+				} //selected sample level
+
+				//{"value": "cohort", "text":"across cohort", "index":1},     //cohort-level
+				//{"value": "subset", "text":"across selected samples", "index":2} //selected sample level
+			],
+			node;
+
 		node = document.createElement("div");
-		root.appendChild(node);
+		dropDownDiv = document.createElement("select");
+		dropDownDiv.setAttribute("class", "dropDown");
 
-
-		xenaQuery.dataset_by_name(host, datasetName).subscribe(function (datasets) {
-			//cohort = datasets[0].cohort;
-			//node.appendChild(dom_helper.hrefLink(cohort + " cohort", "datapages/?cohort=" + encodeURIComponent(cohort)));
-			node.appendChild(datasetSetting(datasets[0]));
-
+		dropDown.forEach(function (obj) {
+			option = document.createElement('option');
+			option.value = obj.value;
+			option.textContent = obj.text;
+			dropDownDiv.appendChild(option);
 		});
 
-		root.appendChild(document.createElement("br"));
+		var value = getVizSettings('colNormalization');
+		if (value) {
+			if (value === "none") {
+				dropDownDiv.selectedIndex = 0;
+			} else if (value === "subset") {
+				dropDownDiv.selectedIndex = 1;
+			} else {
+				dropDownDiv.selectedIndex = 0;
+			}
+		} else {
+			xenaQuery.dataset_text(host, name).subscribe(function (obj) {
+				var metaData = JSON.parse(obj[0].text);
+				if (metaData.colnormalization || metaData.colNormalization) {
+					dropDownDiv.selectedIndex = 1; // get default from metadata in json
+				} else {
+					dropDownDiv.selectedIndex = 0; // get default from metadata in json
+				}
+			});
+		}
 
-		return function () {
-			$(root).dialog('destroy').remove();
-		};
-	};
+		dropDownDiv.addEventListener('change', function () {
+			var key = "colNormalization",
+				value = dropDownDiv.options[dropDownDiv.selectedIndex].value;
+			setVizSettings(key, value);
+		});
+
+		var text = dom_helper.elt("span", "Normalization ");
+		text.setAttribute("class", "text");
+		node.appendChild(text);
+		node.appendChild(dropDownDiv);
+		return node;
+	}
+
+	var GOODSTATUS = 'loaded',
+		oldSettings = state,
+		host_name = xenaQuery.parse_host(dsID),
+		datasetName = host_name[1],
+		host = host_name[0],
+		colorParams = ["max", "maxStart", "minStart", "min"];
+
+	xenaQuery.dataset_by_name(host, datasetName).subscribe(function (datasets) {
+		//cohort = datasets[0].cohort;
+		//node.appendChild(dom_helper.hrefLink(cohort + " cohort", "datapages/?cohort=" + encodeURIComponent(cohort)));
+		node.appendChild(datasetSetting(datasets[0]));
+
+	});
+}
+
+var SettingsWrapper = React.createClass({
+	shouldComponentUpdate: () => false,
+	componentDidMount: function () {
+		var {refs: {content}, props: {lens, dsID, onRequestHide}} = this;
+		vizSettingsWidget(content.getDOMNode(), lens, dsID, onRequestHide);
+	},
+	render: function () {
+		return <div ref='content' />;
+	}
 });
+
+var VizSettings = React.createClass({
+	render: function() {
+		var {onRequestHide, lens, dsID} = this.props;
+		var vizLens = L.compose(lens, Ls.path(['vizSettings', dsID]));
+		return (
+			<Modal onRequestHide={onRequestHide} title='Datset Visualization Settings'>
+				<SettingsWrapper {...this.props} lens={vizLens} />
+			</Modal>
+		);
+	}
+});
+
+module.exports = VizSettings;
