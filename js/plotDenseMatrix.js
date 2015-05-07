@@ -534,6 +534,21 @@ var CanvasDrawing = React.createClass({
 	}
 });
 
+function tsvProbeMatrix(heatmap, samples, fields, codes) {
+	var fieldNames = ['sample'].concat(fields);
+	var coded = _.map(fields, (f, i) => codes && codes[f] ?
+			_.map(heatmap[i], _.propertyOf(codes[f])) :
+			heatmap[i]);
+	var transposed = _.zip.apply(null, coded);
+	var tsvData = _.map(samples, (sample, i) => [sample].concat(transposed[i]));
+
+// XXX
+//	if (this.ws.column.dataType === 'clinicalMatrix') {
+//		fieldNames = ['sample'].concat([this.ws.column.fieldLabel.default]);
+//	}
+	return [fieldNames, tsvData];
+}
+
 var HeatmapColumn = React.createClass({
 	mixins: [rxEventsMixin, PureRenderMixin],
 	componentWillMount: function () {
@@ -560,16 +575,14 @@ var HeatmapColumn = React.createClass({
 												_.getIn(metadata, ['colnormalization'])),
 			fields = data.req.probes || column.fields, // prefer field list from server
 			transform = (colnormalization && mean && _.partial(subbykey, mean())) || second,
-			heatmapData,
-			colors;
-
-		heatmapData = dataToHeatmap(samples, data.req.values, fields, transform);
-		colors = map(fields, (p, i) => heatmapColors.range(
-				metadata,
-				vizSettings || {},
-				_.getIn(features, [p]),
-				_.getIn(codes, [p]),
-				heatmapData[i]));
+			heatmapData = dataToHeatmap(samples, data.req.values, fields, transform),
+			colors = map(fields, (p, i) => heatmapColors.range(
+					metadata,
+					vizSettings || {},
+					_.getIn(features, [p]),
+					_.getIn(codes, [p]),
+					heatmapData[i])),
+			download = _.partial(tsvProbeMatrix, heatmapData, samples, fields, codes);
 
 		// XXX draw only if we have to
 		if (this.refs.plot) { // Update elements not managed by react (canvas)
@@ -583,6 +596,7 @@ var HeatmapColumn = React.createClass({
 			<Column
 				lens={this.props.lens}
 				id={this.props.id}
+				download={download}
 				column={column}
 				zoom={zoom}
 				plot={<CanvasDrawing
