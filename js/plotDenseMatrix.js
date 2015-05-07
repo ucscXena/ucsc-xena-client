@@ -581,6 +581,8 @@ var HeatmapColumn = React.createClass({
 		this.tooltip = _.partial(tooltip, heatmapData, fields, column, codes, zoom, samples);
 		return (
 			<Column
+				lens={this.props.lens}
+				id={this.props.id}
 				column={column}
 				zoom={zoom}
 				plot={<CanvasDrawing
