@@ -1,4 +1,4 @@
-/*globals require: false, module: false, Blob: false, URL: false, document: false */
+/*globals require: false, module: false, Blob: false, URL: false, document: false, window: false */
 'use strict';
 
 var React = require('react');
@@ -8,7 +8,7 @@ var MenuItem = require('react-bootstrap/lib/MenuItem');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Label = require('react-bootstrap/lib/Label');
 var Resizable = require('react-resizable').Resizable;
-
+var xenaQuery = require('./xenaQuery');
 
 function download([fields, rows]) {
 	var txt = _.map([fields].concat(rows), row => row.join('\t')).join('\n');
@@ -36,6 +36,13 @@ var Column = React.createClass({
 	onDownload: function () {
 		download(this.props.download());
 	},
+	onAbout: function () {
+		var {lens, id} = this.props;
+		var dsID = L.view(lens).columnRendering[id].dsID;
+		var [host, dataset] = xenaQuery.parse_host(dsID);
+		var url =`../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
+		window.open(url);
+	},
 	render: function () {
 		var {plot, legend, column, zoom} = this.props;
 		var {width, columnLabel, fieldLabel} = column,
@@ -48,6 +55,7 @@ var Column = React.createClass({
 			<div className='Column' style={{width: width}}>
 				<SplitButton title={moveIcon} bsSize='xsmall'>
 					<MenuItem onSelect={this.onDownload}>Download</MenuItem>
+					<MenuItem onSelect={this.onAbout}>About the Dataset</MenuItem>
 					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 				</SplitButton>
 				<br/>
