@@ -119,6 +119,7 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		negate: negate,
 		spy: spy,
 		flatmap: _.compose(_.partial(_.flatten, _, 1), _.map),
+		merge: (...args) => _.extend.apply(null, [{}].concat(args)),
 		maxWith: maxWith
 	});
 
