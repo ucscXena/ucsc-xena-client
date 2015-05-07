@@ -25,8 +25,8 @@ var Column = React.createClass({
 		var {plot, legend, column, zoom} = this.props;
 		var {width, columnLabel, fieldLabel} = column,
 		moveIcon = <span
-		className="glyphicon glyphicon-resize-horizontal Sortable-handle"
-		aria-hidden="true">
+			className="glyphicon glyphicon-resize-horizontal Sortable-handle"
+			aria-hidden="true">
 		</span>;
 
 		return (
