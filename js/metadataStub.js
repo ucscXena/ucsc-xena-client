@@ -2,10 +2,10 @@
 'use strict';
 
 // selected field for annotation display
-var selectedKeys ={
+var selectedKeys = {
     "Clinvar": ["INFO.CLNSIG","INFO.SAO","INFO.CLNDBN","INFO.G5A","INFO.G5"],
-    "1000_genomes":[],
-    "lovd":[]
+    "1000_genomes": [],
+    "lovd": []
 };
 
 // information comes from https://drive.google.com/uc?id=0Bzoozx2KZAPmb1NWQ1laZElzOXc&export=download
