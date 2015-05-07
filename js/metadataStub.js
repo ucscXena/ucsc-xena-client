@@ -1,4 +1,4 @@
-/*global require: false, module: false */
+/*global module: false */
 'use strict';
 
 // selected field for annotation display
