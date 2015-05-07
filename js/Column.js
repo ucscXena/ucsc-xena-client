@@ -28,9 +28,10 @@ var Column = React.createClass({
 	},
 	onRemove: function () {
 		L.over(this.props.lens,
-			   s => _.assoc(
-				   _.assoc(s, 'columnRendering', _.omit(s.columnRendering, this.props.id)),
-				   'columnOrder', _.without(s.columnOrder, this.props.id)));
+			s => _.merge(s, {
+				columnRendering: _.omit(s.columnRendering, this.props.id),
+				columnOrder: _.without(s.columnOrder, this.props.id)
+			}));
 	},
 	onDownload: function () {
 		download(this.props.download());
