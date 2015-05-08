@@ -11,9 +11,11 @@ var util = require('util');
 var xenaQuery = require('xenaQuery');
 var Legend = require('Legend');
 var Column = require('Column');
+var MenuItem = require('react-bootstrap/lib/MenuItem');
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var React = require('react');
 var rxEventsMixin = require('./react-utils').rxEventsMixin;
+var L = require('./lenses/lens');
 
 require('rx-jquery');
 
@@ -549,6 +551,20 @@ function tsvProbeMatrix(heatmap, samples, fields, codes) {
 	return [fieldNames, tsvData];
 }
 
+function supportsGeneAverage({dataType, fields: {length}}) {
+	return ['geneProbesMatrix', 'geneMatrix'].indexOf(dataType) >= 0 && length === 1;
+}
+
+function modeMenu({dataType}, cb) {
+	return dataType === 'geneMatrix' ?
+		<MenuItem eventKey="geneProbesMatrix" onSelect={cb}>Gene detail</MenuItem> :
+		<MenuItem eventKey="geneMatrix" onSelect={cb}>Probe average</MenuItem>;
+}
+
+function setDataType(id, dataType, state) {
+	return _.assocIn(state, ['columnRendering', id, 'dataType'], dataType);
+}
+
 var HeatmapColumn = React.createClass({
 	mixins: [rxEventsMixin, PureRenderMixin],
 	componentWillMount: function () {
@@ -564,6 +580,9 @@ var HeatmapColumn = React.createClass({
 	},
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
+	},
+	onMode: function (newMode) {
+		L.over(this.props.lens, s => setDataType(this.props.id, newMode, s));
 	},
 	render: function () {
 		var {samples, data, column, vizSettings = {}, zoom} = this.props,
@@ -583,7 +602,8 @@ var HeatmapColumn = React.createClass({
 					_.getIn(features, [p]),
 					_.getIn(codes, [p]),
 					heatmapData[i])),
-			download = _.partial(tsvProbeMatrix, heatmapData, samples, fields, codes);
+			download = _.partial(tsvProbeMatrix, heatmapData, samples, fields, codes),
+			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
 
 		// XXX draw only if we have to
 		if (this.refs.plot) { // Update elements not managed by react (canvas)
@@ -601,6 +621,7 @@ var HeatmapColumn = React.createClass({
 				download={download}
 				column={column}
 				zoom={zoom}
+				menu={menu}
 				plot={<CanvasDrawing
 						onMouseMove={this.ev.mousemove}
 						onMouseOut={this.ev.mouseout}

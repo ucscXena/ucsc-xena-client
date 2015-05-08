@@ -47,7 +47,7 @@ var Column = React.createClass({
 		this.props.onViz(this.props.id);
 	},
 	render: function () {
-		var {plot, legend, column, zoom} = this.props;
+		var {plot, legend, column, zoom, menu} = this.props;
 		var {width, columnLabel, fieldLabel} = column,
 		moveIcon = (<span
 			className="glyphicon glyphicon-resize-horizontal Sortable-handle"
@@ -57,6 +57,8 @@ var Column = React.createClass({
 		return (
 			<div className='Column' style={{width: width}}>
 				<SplitButton title={moveIcon} bsSize='xsmall'>
+					{menu}
+					{menu && <MenuItem divider />}
 					<MenuItem onSelect={this.onDownload}>Download</MenuItem>
 					<MenuItem onSelect={this.onAbout}>About the Dataset</MenuItem>
 					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>
