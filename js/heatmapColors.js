@@ -1,4 +1,4 @@
-/*jslint browser: true, nomen: true */
+/*eslint strict: [2, "function"] */
 /*global define: false */
 
 define(['d3',
@@ -62,7 +62,7 @@ define(['d3',
 				"gene expression RNAseq": schemes.greenBlackRed,
 				"gene expression array": schemes.greenBlackRed,
 				"exon expression RNAseq": schemes.greenBlackRed,
-				"phenotype": schemes.greenBlackYellow,
+				"phenotype": schemes.greenBlackYellow
 			};
 
 
@@ -208,7 +208,7 @@ define(['d3',
 		} else if (min <= 0 && max >= 0) {
 			absmax = Math.max(-min, max);
 			zone = absmax / 4.0;
-			colorfn = colorCustom(low, zero, high, - absmax / 2.0, absmax / 2.0, - zone / 2.0, zone / 2.0);
+			colorfn = colorCustom(low, zero, high, -absmax / 2.0, absmax / 2.0, -zone / 2.0, zone / 2.0);
 		} else	if (min >= 0 && max >= 0) {
 			zone = (max - min) / 4.0;
 			colorfn = colorFloatPositiveZone(zero, high, min, max - zone / 2.0, zone);

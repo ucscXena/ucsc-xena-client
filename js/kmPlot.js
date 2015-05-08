@@ -1,4 +1,5 @@
-/*jslint browser: true, nomen: true, vars: true */
+/*eslint strict: [2, "function"], camelcase: 0 */
+/*eslint-env browser */
 /*global define: false */
 
 define([ 'd3',
@@ -134,10 +135,10 @@ define([ 'd3',
 				uncleanVals;
 
 			// find values
-			c.values={};
+			c.values = {};
 			if (c.dataType === 'mutationVector') {
-				_.map(ws.data.req.values[field], function (mutations,sample) {
-					c.values[sample]= mutations.length > 0 ? 1 : 0;
+				_.map(ws.data.req.values[field], function (mutations, sample) {
+					c.values[sample] = mutations.length > 0 ? 1 : 0;
 				});
 			} else if (c.dataType === 'geneProbesMatrix') {
 				uncleanVals = this.findGeneAverage(this.columnUi.plotData.heatmapData);
@@ -259,8 +260,6 @@ define([ 'd3',
 						}
 					}),
 
-					/*jslint eqeq: true */
-					/*jshint eqnull: true */
 					samplesNotNullTtevFn = filter(samples, function (s) { return ttev_fn(s) != null; }),
 					res = km.compute(map(samplesNotNullTtevFn, ttev_fn), map(samplesNotNullTtevFn, ev_fn));
 
@@ -359,7 +358,7 @@ define([ 'd3',
 			this.xAxis = xAxis;
 		},
 
-		render: function (subgroups, chief) {
+		render: function (subgroups) {
 			var x = this.x,
 				y = this.y,
 				color = _.getIn(this, ['columnUi', 'ws', 'colors', 0]),
@@ -372,8 +371,8 @@ define([ 'd3',
 
 			// there is probably a faster algorithm, since we're drawing single-valued
 			// functions. Sampling splines is a bit of an overkill.
-			function pathTween(d0) {
-				return function (data, j, a) {
+			function pathTween() {
+				return function (data) {
 					var precision = 4,
 						d1 = line([{t: x.domain()[0] - (x.domain()[1] - x.domain()[0]) / 1000, s: 1}].concat(data.values)), // include point at 100%
 						path0 = this,
@@ -404,7 +403,7 @@ define([ 'd3',
 				};
 			}
 
-			update = function (s) {
+			update = function () {
 				var d = this.getAttribute('d');
 				// TODO d is always null
 				d3.select(this).transition()
@@ -567,7 +566,7 @@ define([ 'd3',
 				position = {
 					my: 'left top',
 					at: 'left+100, top+100',
-					of:  $(window)
+					of: $(window)
 				};
 				width = height = 'auto';
 			} else {
@@ -633,7 +632,7 @@ define([ 'd3',
 			}
 		},
 
-		destroy: function (id, options) {
+		destroy: function (id) {
 			if (widgets[id]) {
 				widgets[id].destroy();
 			}

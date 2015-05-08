@@ -47,7 +47,7 @@ var rxEventsMixin = {
 	events: function (...args) {
 		this.ev = this.ev || {};
 		_.each(args, ev => this.ev[ev] = FuncSubject.create());
-	},
+	}
 };
 
 module.exports = {

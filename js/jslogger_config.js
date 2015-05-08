@@ -1,4 +1,5 @@
-/*jslint browser: true */
+/*eslint strict: [2, "function"] */
+/*eslint-env browser */
 /*global define: false */
 define(['lib/tracekit', 'config', 'tracekit_config', 'lib/polyfills'], function (TraceKit, config) {
 	'use strict';

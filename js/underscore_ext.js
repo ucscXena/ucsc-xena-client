@@ -1,3 +1,4 @@
+/*eslint strict: [2, "function"] */
 /*globals define: false, console: false */
 define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	'use strict';
@@ -88,7 +89,7 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	// Find max using a cmp function. Same as arr.slice[0].sort(cmp)[0],
 	// but O(n) instead of O(n log n).
 	function maxWith(arr, cmp) {
-		return _.reduce(arr, function (x,y) {
+		return _.reduce(arr, function (x, y) {
 			return cmp(x, y) < 0 ? x : y;
 		});
 	}

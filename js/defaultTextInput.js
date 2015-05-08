@@ -1,4 +1,4 @@
-/*jslint browser: true, nomen: true */
+/*eslint strict: [2, "function"] */
 /*global define: false */
 
 /*

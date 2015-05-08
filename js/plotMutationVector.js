@@ -1,4 +1,4 @@
-/*jslint nomen:true, browser: true */
+/*eslint strict: [2, "function"], camelcase: 0 */
 /*global define: false */
 define(['underscore_ext',
 		'jquery',

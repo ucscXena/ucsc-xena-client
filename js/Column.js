@@ -40,7 +40,7 @@ var Column = React.createClass({
 		var {lens, id} = this.props;
 		var dsID = L.view(lens).columnRendering[id].dsID;
 		var [host, dataset] = xenaQuery.parse_host(dsID);
-		var url =`../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
+		var url = `../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
 		window.open(url);
 	},
 	onViz: function () {
@@ -49,10 +49,10 @@ var Column = React.createClass({
 	render: function () {
 		var {plot, legend, column, zoom} = this.props;
 		var {width, columnLabel, fieldLabel} = column,
-		moveIcon = <span
+		moveIcon = (<span
 			className="glyphicon glyphicon-resize-horizontal Sortable-handle"
 			aria-hidden="true">
-		</span>;
+		</span>);
 
 		return (
 			<div className='Column' style={{width: width}}>

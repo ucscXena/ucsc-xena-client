@@ -12,7 +12,7 @@ function rgb(color) {
 		return color;
 	}
 	if (color.indexOf('rgb') === 0) {      // rgb[a]
-		return _.map(color.replace(/^rgba?\(([^)]*)\)/, "$1").split(/ *, */).slice(0,3),
+		return _.map(color.replace(/^rgba?\(([^)]*)\)/, "$1").split(/ *, */).slice(0, 3),
 					 n => parseInt(n, 10));
 	} else if (color.indexOf('#') === 0) { // hex
 		return [
@@ -25,7 +25,7 @@ function rgb(color) {
 }
 
 // http://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color
-var luminance = ([R, G, B]) => 0.299*R + 0.587*G + 0.114*B;
+var luminance = ([R, G, B]) => 0.299 * R + 0.587 * G + 0.114 * B;
 var contrastColor = color => luminance(rgb(color)) < 147 ? 'white' : 'black';
 
 

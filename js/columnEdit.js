@@ -149,11 +149,12 @@ var GeneProbeEdit = React.createClass(propsStream({
 	render: function () {
 		var {genes, list, examples} = this.state || {};
 		var help = genes ? 'e.g. TP53 or TP53, PTEN' :
-			examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : '';
+			// babel-eslint/issues/31
+			examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : ''; //eslint-disable-line comma-spacing
 		return (
 			<div>
 				<div className='form-group'>
-					<label className='col-md-2 control-label'>Input:</label>,
+					<label className='col-md-2 control-label'>Input:</label>
 					{this.props.genes ?
 						<div className='col-md-4'>
 							<Input onChange={() => this.setState({genes: true})}

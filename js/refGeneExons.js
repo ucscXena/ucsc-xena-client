@@ -1,4 +1,4 @@
-/*jslint nomen:true, browser: true */
+/*eslint strict: [2, "function"] */
 /*global define: false, console: false */
 
 define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
@@ -34,7 +34,7 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 
 			mapChromPosToX: function (chromPos) {
 				var posChromPos = (this.data.strand === '-') ? this.flip(chromPos) : chromPos,
-					splexon = find(this.splexons, function (s, i) {
+					splexon = find(this.splexons, function (s) {
 						return (posChromPos >= s.start && posChromPos <= s.end);
 					});
 				if (splexon) {
@@ -116,11 +116,11 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 					};
 				data.cdsStart = this.flip(neg.cdsEnd);
 				data.cdsEnd = this.flip(neg.cdsStart);
-				data.exonStarts = map(neg.exonEnds, function (e, i) {
+				data.exonStarts = map(neg.exonEnds, function (e) {
 					return self.flip(e);
 				});
 				data.exonStarts.reverse();
-				data.exonEnds = map(neg.exonStarts, function (e, i) {
+				data.exonEnds = map(neg.exonStarts, function (e) {
 					return self.flip(e);
 				});
 				data.exonEnds.reverse();
@@ -142,8 +142,7 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 			draw: function () {
 				var self = this,
 					x,
-					y,
-					lastNodeEndX;
+					y;
 				this.d2.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 				this.d2.beginPath();
 				this.d2.scale(this.scaleX, 1);
@@ -153,7 +152,6 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 					self.d2.moveTo(x, y);
 					self.d2.fillStyle = n.shade ? shade1 : shade2;
 					self.d2.fillRect(x, y, n.width, n.height);
-					lastNodeEndX = n.x + n.width - 1;
 				});
 				this.d2.scale(1 / this.scaleX, 1);
 				this.d2.font = "12px Verdana";
@@ -161,7 +159,7 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 				this.d2.strokeText("3'", this.canvasWidth - 15, this.canvasHeight - 2);
 			},
 
-			findScale: function (nodes) {
+			findScale: function () {
 				var lastNode = this.nodes[this.nodes.length - 1],
 					preScaleWidth = lastNode.x + lastNode.width;
 				return this.drawWidth / preScaleWidth;

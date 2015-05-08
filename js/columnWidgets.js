@@ -1,3 +1,4 @@
+/*eslint strict: [2, "function"] */
 /*global define: false */
 define(['multi'], function (multi) {
 	'use strict';

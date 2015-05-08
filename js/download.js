@@ -1,3 +1,4 @@
+/*eslint-disable */
 /*jshint browser: true, devel: true */
 /*global define: false  */
 

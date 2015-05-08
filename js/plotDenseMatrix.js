@@ -192,7 +192,7 @@ function indexResponse(probes, samples, data) {
 			return _.object(samples, _.map(data[i], xenaQuery.nanstr));
 		})),
 		mean = function () {
-			return _.object(probes, _.map(data, function (v, i) {
+			return _.object(probes, _.map(data, function (v) {
 				return meannan(v);
 			}));
 		};
@@ -527,7 +527,7 @@ var CanvasDrawing = React.createClass({
 			width: width,
 			zoomIndex: index,
 			zoomCount: count,
-			data : heatmapData,
+			data: heatmapData,
 			layout: partition.offsets(width, 0, heatmapData.length),
 			colors: colors
 		});
@@ -566,7 +566,7 @@ var HeatmapColumn = React.createClass({
 		this.ttevents.dispose();
 	},
 	render: function () {
-		var {samples, data, column, vizSettings, zoom} = this.props,
+		var {samples, data, column, vizSettings = {}, zoom} = this.props,
 			dsVizSettings = vizSettings[column.dsID],
 			{features, codes, metadata} = data,
 			mean = _.getIn(data, ["req", "mean"]), // a memo for computing the mean of the data

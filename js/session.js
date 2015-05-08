@@ -1,4 +1,5 @@
-/*jslint browser:true */
+/*eslint strict: [2, "function"], camelcase: 0, no-use-before-define: 0 */
+/*eslint-env browser */
 /*global define: false */
 define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery, Rx, dom_helper, _) {
 	'use strict';
@@ -55,7 +56,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			xenaQuery.code_list(host, dsName, probes).subscribe(function(codemap){
 				for(var key in codemap) {
 					if (codemap.hasOwnProperty(key) && !codemap[key]){  // no code, float feature
-						action.apply(this,actionArgs);
+						action.apply(this, actionArgs);
 						return;
 					}
 		    }
@@ -68,7 +69,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 				"https://genome-cancer.ucsc.edu:443/proj/public/xena",
 				"https://local.xena.ucsc.edu:7223"
 			],
-			defaultActive =["https://genome-cancer.ucsc.edu:443/proj/public/xena"],
+			defaultActive = ["https://genome-cancer.ucsc.edu:443/proj/public/xena"],
 			defaultLocal = "https://local.xena.ucsc.edu:7223",
 			defaultState = {
 				activeHosts: defaultActive,
@@ -109,21 +110,21 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 
 		function checkBoxLabel() {
 			if (checkbox.checked){
-				labelText.style.color="gray";
-				labelText.innerHTML= "selected";
+				labelText.style.color = "gray";
+				labelText.innerHTML = "selected";
 			}
 			else {
-				labelText.innerHTML= "&nbsp";
+				labelText.innerHTML = "&nbsp";
 			}
 			updateHostStatus(host);
 		}
 
 		checkbox.setAttribute("type", "checkbox");
 		checkbox.setAttribute("id", "checkbox" + host);
-		checkbox.setAttribute("class","hubcheck");
+		checkbox.setAttribute("class", "hubcheck");
 		checkbox.checked = _.contains(userHosts, host);
 		labelText.setAttribute("for", "checkbox" + host);
-		labelText.setAttribute("id", "hubLabel"+host);
+		labelText.setAttribute("id", "hubLabel" + host);
 		checkBoxLabel();
 
 		node.appendChild(checkbox);
@@ -157,7 +158,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 	}
 
 	function metaDataFilterCheckBox(host, ifChangedAction) {
-		var metadataFilterHosts= JSON.parse(sessionStorage.state).metadataFilterHosts,
+		var metadataFilterHosts = JSON.parse(sessionStorage.state).metadataFilterHosts,
 				checkbox = document.createElement("INPUT");
 
 		checkbox.setAttribute("type", "checkbox");
@@ -188,18 +189,18 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 				'live_unselected': {msg: ' (running, not in data hubs)', el: 'result2'},
 				'dead': {msg: ' (not running)', el: 'result2'},
 				'nodata': {msg: ' (no data)', el: 'result2'},
-				'slow': {msg: ' (there is a problem)', el: 'result2'},
+				'slow': {msg: ' (there is a problem)', el: 'result2'}
 			},
 			displayHubPage = {
 				'live_selected': {msg: '', el: 'result'},
 				'live_unselected': {msg: '', el: 'result'},
 				'dead': {msg: ' (not running)', el: 'result2'},
 				'nodata': {msg: ' (no data)', el: 'result2'},
-				'slow': {msg: ' (there is a problem)', el: 'result2'},
+				'slow': {msg: ' (there is a problem)', el: 'result2'}
 			},
 			displayHubLabel = {
 				'live_selected': {msg: 'connected', color: 'blue'},
-				'live_unselected': {msg: '&nbsp', color: 'white'},
+				'live_unselected': {msg: '&nbsp', color: 'white'}
 			},
 
 			node = document.getElementById("status" + host),
@@ -219,7 +220,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		}
 		if (nodeHubLabel && displayHubLabel[status]){
 			if (displayHubLabel[status].color){
-				nodeHubLabel.style.color= displayHubLabel[status].color;
+				nodeHubLabel.style.color = displayHubLabel[status].color;
 				nodeHubCheck.style.background = "linear-gradient("+displayHubLabel[status].color+", white)";
 			}
 			if (displayHubLabel[status].msg) {
@@ -263,7 +264,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		metaDataFilterCheckBox: metaDataFilterCheckBox,
 		xenaHeatmapSetCohort: xenaHeatmapSetCohort,
 
-		datasetHasFloats:datasetHasFloats,
+		datasetHasFloats: datasetHasFloats,
 
 		GOODSTATUS: GOODSTATUS
 	};

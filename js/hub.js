@@ -1,4 +1,5 @@
-/*jslint browser: true,  nomen: true*/
+/*eslint strict: [2, "function"], camelcase: 0, no-use-before-define: 0 */
+/*eslint-env browser */
 /*global define: false */
 
 define(["dom_helper", "session", "xenaQuery", "base", "../css/datapages.css"], function (dom_helper, session, xenaQuery) {
@@ -37,7 +38,7 @@ define(["dom_helper", "session", "xenaQuery", "base", "../css/datapages.css"], f
 		if (galaxyCheckbox.checked) {
 			var tokens = host.match(/^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/(.*))?$/);
 			tokens[4] = '7220';  //port = tokens[4];
-			host =(tokens[1]? tokens[1]:'') +(tokens[2]? tokens[2]:'')+':'+tokens[4]+ (tokens[5]? tokens[5]:'');
+			host = (tokens[1]? tokens[1]:'') +(tokens[2]? tokens[2]:'')+':'+tokens[4]+ (tokens[5]? tokens[5]:'');
 		}
 
 		host = xenaQuery.server_url(host);
@@ -81,13 +82,13 @@ define(["dom_helper", "session", "xenaQuery", "base", "../css/datapages.css"], f
 
 	// Add button
 	addbutton = document.createElement("BUTTON");
-	addbutton.setAttribute("class","vizbutton");
+	addbutton.setAttribute("class", "vizbutton");
 	addbutton.appendChild(document.createTextNode("Add"));
 	addbutton.addEventListener("click", function() {
   	addHost();
 	});
-	addbutton.style.marginLeft="20px";
-	addbutton.style.height ="27px";
+	addbutton.style.marginLeft = "20px";
+	addbutton.style.height = "27px";
 	node.appendChild(addbutton);
 	node.appendChild(dom_helper.elt("br"));
 
@@ -95,11 +96,11 @@ define(["dom_helper", "session", "xenaQuery", "base", "../css/datapages.css"], f
 	galaxyCheckbox = document.createElement("INPUT");
 	galaxyCheckbox.setAttribute("type", "checkbox");
 	galaxyCheckbox.setAttribute("id", "galaxyCheckbox");
-	galaxyCheckbox.style.marginLeft="2px";
+	galaxyCheckbox.style.marginLeft = "2px";
 	labelText = dom_helper.elt('label');
 	labelText.setAttribute("for", "galaxyCheckbox");
-	labelText.innerHTML= " galaxy embedded xena (default port 7220)";
-	labelText.setAttribute("class","galaxyText");
+	labelText.innerHTML = " galaxy embedded xena (default port 7220)";
+	labelText.setAttribute("class", "galaxyText");
 	node.appendChild(galaxyCheckbox);
 	node.appendChild(labelText);
 

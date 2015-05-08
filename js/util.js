@@ -1,4 +1,5 @@
-/*jslint browser: true, nomen: true */
+/*eslint-env browser */
+/*eslint strict: [2, "function"] */
 /*global define: false, navigator: false */
 define([ "jquery" ], function ($) {
 	'use strict';

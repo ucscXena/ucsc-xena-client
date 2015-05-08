@@ -1,3 +1,4 @@
+/*eslint-disable */
 /*global define: false */
 define(['underscore_ext',
 		'uuid',

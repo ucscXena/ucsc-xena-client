@@ -1,4 +1,4 @@
-/*jslint browser:true, nomen: true */
+/*eslint-disable */
 /*global define: false, confirm: true */
 
 define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaAdmin",'../images/Treehouse.jpg','jquery', 'jquery-ui', "base", "../css/datapages.css"],

@@ -1,4 +1,4 @@
-/*jslint nomen:true, browser: true */
+/*eslint-disable */
 /*global define: false */
 
 define(['haml/columnUi.haml', 'haml/columnUiSelect.haml', 'haml/tupleDisplay.haml', 'colorBar', 'columnMenu', 'config', 'crosshairs', 'defaultTextInput', 'defer', 'kmPlot', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore', 'xenaQuery', 'rx', '../images/moveHorizontal.png', '../images/menu.png',

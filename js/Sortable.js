@@ -49,7 +49,7 @@ function hasClass(el, c) {
 var Sortable = React.createClass({
 	componentWillMount: function () {
 		var mousedownSub = new Rx.Subject();
-		var mousedown = mousedownSub.filter(([_, md]) => hasClass(md.target, 'Sortable-handle'));
+		var mousedown = mousedownSub.filter(([, md]) => hasClass(md.target, 'Sortable-handle'));
 		var mousedrag = mousedown.selectMany(([id, md]) => {
             // find starting positions on mouse down
 
@@ -75,10 +75,10 @@ var Sortable = React.createClass({
 
 				if (dragLeft < 0) {              // dragging left
 					shift = target.left - positions[index - 1].left -
-						(positions[index - 1].width - target.width) ;
+						(positions[index - 1].width - target.width);
 					edge = target.left + dragLeft;
 					newPos = _.map(_.first(positions, index),
-								   ({left, width}, i) => edge < left + width / 2 ? shift : 0)
+								   ({left, width}) => edge < left + width / 2 ? shift : 0)
 						.concat([dragLeft],
 							_.map(_.range(N - 1 - index), () => 0));
 				}  else if (dragLeft > 0) {      // dragging right
@@ -87,7 +87,7 @@ var Sortable = React.createClass({
 					newPos = _.map(_.range(index), () => 0)
 						.concat([dragLeft],
 							_.map(_.last(positions, N - 1 - index),
-								  ({left, width}, i) => edge >= left + width / 2 ? shift : 0));
+								  ({left, width}) => edge >= left + width / 2 ? shift : 0));
 				} else {
 					newPos = _.map(positions, () => 0);
 				}

@@ -1,3 +1,4 @@
+/*eslint strict: [2, "function"] */
 /*global define: false */
 define([], function() {
 	'use strict';
@@ -7,7 +8,7 @@ define([], function() {
 	function has(obj, prop) {
 		return hasOwnProperty.call(obj, prop);
 	}
-		
+
 	// Immutable collection operations, based on doing a naive
 	// path copy. Should be performant for objects that are not
 	// too large, and nesting not too deep.
@@ -23,7 +24,6 @@ define([], function() {
 	}
 
 	function objAssoc(x, k, v) {
-		/*jslint forin: true */
 		var y = {}, i;
 		x = x || {};
 		for (i in x) {
@@ -36,7 +36,6 @@ define([], function() {
 	}
 
 	function dissoc(x, k) {
-		/*jslint forin: true */
 		if (!has(x, k)) { // avoid new object if we can.
 			return x;
 		}
@@ -55,7 +54,7 @@ define([], function() {
 		}
 		if (x instanceof Array) {
 			return arrAssoc(x, k, v);
-		} 
+		}
 		return objAssoc(x, k, v);
 	}
 

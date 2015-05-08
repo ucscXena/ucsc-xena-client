@@ -1,4 +1,4 @@
-/*jslint browser: true, nomen: true */
+/*eslint strict: [2, "function"] */
 /*global define: false */
 
 define(['haml/colorBar.haml', 'underscore', 'jquery'
@@ -31,7 +31,7 @@ define(['haml/colorBar.haml', 'underscore', 'jquery'
 							if (color.indexOf('#') === 0) { // hexidecimal
 								c = [
 									parseInt(color.substring(1, 3), 16),
-									parseInt(color.substring(3, 5), 16)*2,
+									parseInt(color.substring(3, 5), 16) * 2,
 									parseInt(color.substring(5, 7), 16)
 								];
 							} else { // assume rgb

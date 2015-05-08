@@ -1,4 +1,4 @@
-/*jslint nomen:true, regexp: true */
+/*eslint strict: [2, "function"] */
 /*global define: false */
 
 define(['jquery', 'underscore', 'unicode_utils'], function ($, _, unicode) {
@@ -12,7 +12,7 @@ define(['jquery', 'underscore', 'unicode_utils'], function ($, _, unicode) {
 		};
 
 	return {
-		genesetParse : genesetParse
+		genesetParse: genesetParse
 	};
 
 });

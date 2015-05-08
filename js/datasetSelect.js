@@ -3,7 +3,6 @@
 var React = require('react');
 var Select = require('./Select');
 var _ = require('underscore_ext');
-var L = require('lenses/lens');
 var Ls = require('lenses/lenses');
 
 function optsFromDatasets(servers) {

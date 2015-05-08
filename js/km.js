@@ -1,4 +1,4 @@
-/*jslint browser: true, nomen: true */
+/*eslint strict: [2, "function"] */
 /*global define: false */
 // XXX see https://github.com/esbullington/react-d3
 
@@ -14,7 +14,7 @@ define(['jquery', 'underscore'], function ($, _) {
 		pluck = _.pluck,
 		filter = _.filter;
 
-	function pluck_tte(x) {
+	function pluckTte(x) {
 		return pluck(x, 'tte');
 	}
 
@@ -25,7 +25,7 @@ define(['jquery', 'underscore'], function ($, _) {
 	// ev   is truthy if there is an event.
 	function compute(tte, ev) {
 		var exits = sortBy(map(tte, function (x, i) { return { tte: x, ev: ev[i] }; }), 'tte'), // sort and collate
-			uexits = uniq(pluck_tte(exits), true),                    // unique tte
+			uexits = uniq(pluckTte(exits), true),                    // unique tte
 			gexits = groupBy(exits, function (x) { return x.tte; }),  // group by common time of exit
 			dini = reduce(uexits, function (a, tte) {                 // compute d_i, n_i for times t_i (including censor times)
 				var group = gexits[tte],

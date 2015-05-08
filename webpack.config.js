@@ -14,8 +14,8 @@ module.exports = {
 	module: {
 		loaders: [
 			{ test: /rx-dom/, loader: "imports?define=>false" },
+			{ test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader?optional=es7.objectRestSpread&cacheDirectory=true'},
 			{ test: /\.css$/, loader: "style!css" },
-			{ test: /\.js$/, loader: 'jsx-loader?harmony' },
 			{ test: /\.haml$/, loader: 'haml-loader' },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]

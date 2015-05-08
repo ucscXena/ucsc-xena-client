@@ -1,4 +1,4 @@
-/*jslint nomen:true, browser: true */
+/*eslint strict: [2, "function"] */
 /*global define: false */
 
 define(['d3', 'jquery', 'underscore'

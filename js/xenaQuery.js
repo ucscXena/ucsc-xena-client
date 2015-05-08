@@ -1,3 +1,5 @@
+/*eslint strict: [2, "function"] */
+/*eslint camelcase: 0, no-multi-spaces: 0, no-mixed-spaces-and-tabs: 0 */
 /*global define: false */
 
 define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
@@ -83,7 +85,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	function reqObj(req, fn) { // TODO may not belong in this file
 		return {
 			id: JSON.stringify(req),
-			query:  Rx.Observable.defer(_.partial(fn, req))
+			query: Rx.Observable.defer(_.partial(fn, req))
 		};
 	}
 
@@ -427,7 +429,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 
 	function dataset_text (host, ds) {
 		return Rx.DOM.ajax(
-			xena_post(host, dataset_query (ds))
+			xena_post(host, dataset_query(ds))
 		).map(json_resp);
 	}
 

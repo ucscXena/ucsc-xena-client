@@ -1,4 +1,5 @@
-/*jslint nomen: true, browser: true */
+/*eslint strict: [2, "function"] */
+/*eslint-env browser */
 /*global define: false  */
 
 // A 0 ms defer, to replace underscore's.

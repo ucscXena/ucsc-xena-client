@@ -24,7 +24,7 @@ var Select = React.createClass({
 	onChange: function(ev) {
 		this.setState({filter: ev.target.value});
 	},
-    setFocus: function (ev) {
+    setFocus: function () {
         _.defer(() => this.refs.search.getDOMNode().focus());
     },
 	// This is a work-around for

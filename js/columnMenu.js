@@ -1,4 +1,4 @@
-/*jslint nomen:true, browser: true */
+/*eslint-disable */
 /*global define: false */
 
 define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVector', 'Menu', 'jquery', 'underscore', 'xenaQuery', 'heatmapVizSettings'

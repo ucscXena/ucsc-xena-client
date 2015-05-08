@@ -1,4 +1,4 @@
-/*jslint nomen:true, regexp: true */
+/*eslint-disable */
 /*globals define: false */
 define(['haml/sheetWrap.haml',
 		'chart',

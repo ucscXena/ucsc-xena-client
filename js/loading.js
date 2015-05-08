@@ -1,4 +1,5 @@
-/*jslint browser: true, nomen: true */
+/*eslint strict: [2, "function"] */
+/*eslint-env browser */
 /*global define: false */
 define(["jquery", "config", 'haml/loading.haml',
 	'jquery-ui', '../images/snake.gif'], function ($, config, template, image) {

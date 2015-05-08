@@ -1,4 +1,4 @@
-/*jslint nomen: true */
+/*eslint strict: [2, "function"] */
 /*global define: false  */
 
 define(["jquery", 'underscore'], function ($, _) {
@@ -11,8 +11,7 @@ define(["jquery", 'underscore'], function ($, _) {
 		return c;
 	};
 
-	/* t is transparency. Currently ignored */
-	return function (el, vgw, vgh, t) {
+	return function (el, vgw, vgh) {
 		var fontFamily = 'Verdana,Arial,sans-serif',
 		    ctx = el.getContext('2d'),
 
@@ -187,7 +186,7 @@ define(["jquery", 'underscore'], function ($, _) {
 				return _.zip(r, g, b);
 			},
 
-			drawImage = function (c, sx, sy, sw, sh, dx, dy, dw, dh) {
+			drawImage = function (/* c, sx, sy, sw, sh, dx, dy, dw, dh */) {
 				ctx.drawImage.apply(ctx, arguments);
 			},
 

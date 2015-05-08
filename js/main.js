@@ -1,4 +1,4 @@
-/*jslint browser: true */
+/*eslint-env browser */
 /*global require: false, console: false */
 
 'use strict';
@@ -39,7 +39,7 @@ require('bootstrap/dist/css/bootstrap.css');
 require('rx-dom');
 
 function fetchDatasets(stream) {
-	return stream.map(([state, props]) => props).refine(['servers', 'cohort'])
+	return stream.map(([, props]) => props).refine(['servers', 'cohort'])
 		.map(state => state.cohort ?
 				xenaQuery.dataset_list(state.servers.user, state.cohort) :
 				Rx.Observable.return([], Rx.Scheduler.timeout)
@@ -53,7 +53,7 @@ function fetchDatasets(stream) {
 var datasetSamples = xenaQuery.dsID_fn(xenaQuery.dataset_samples);
 
 function fetchSamples(stream) {
-	return stream.map(([state, props]) => props)
+	return stream.map(([, props]) => props)
 		.refine(['servers', 'cohort', 'samplesFrom'])
 		.map(state => state.samplesFrom ?
 				datasetSamples(state.samplesFrom) :
@@ -85,8 +85,8 @@ function fetchData(stream) {
 		// {colId : {dataKey: {id: queryId, query: queryFn}, ...}, ...}
 		// and returning the unique queries, as
 		// {queryId: queryFn, ...}
-		_.reduce(r, (acc, col_reqs, uuid) => {
-			_.each(col_reqs, req => {acc[req.id] = req.query;});
+		_.reduce(r, (acc, colReqs) => {
+			_.each(colReqs, req => { acc[req.id] = req.query; });
 			return acc;
 		}, {})
 	).fmap();                    // invoke queries w/caching
@@ -173,7 +173,7 @@ var Application = React.createClass(statePropsStream({
 			debugText: formatState(this.props.lens) // initial state of text area.
 		};
 	},
-	componentWillReceiveProps (nextProps) {
+	componentWillReceiveProps () {
 		this.setState({debugText: formatState(this.props.lens)});
 	},
 	handleChange: function (ev) {
@@ -230,8 +230,7 @@ var Application = React.createClass(statePropsStream({
 							style={{display: _.getIn(this.state, ['debug']) ? 'block' : 'none'}}
 							onChange={this.handleChange}
 							onKeyDown={this.onKeyDown}
-							value={this.state.debugText}>
-						</Input>
+							value={this.state.debugText} />
 					</Col>
 				</Row>
 				<div className='chartRoot' style={{display: 'none'}} />

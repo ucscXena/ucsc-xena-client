@@ -1,9 +1,10 @@
-/*jslint browser: true, nomen: true */
+/*eslint strict: [2, "function"] */
+/*eslint-env browser */
 /*global define: false */
 
 define(['haml/dropDownTemplate.haml', "tooltip", 'underscore', "jquery"], function (template, tooltip, _, $) {
 	'use strict';
-	/* 
+	/*
 	 *	This menu depends on the following classes in the DOM elements:
 	 *		.menu for the menu anchor
 	 *		.list typically for the ul element, but may be another tag type
@@ -30,7 +31,7 @@ define(['haml/dropDownTemplate.haml', "tooltip", 'underscore', "jquery"], functi
 				this.menuDestroyList();
 			};
 
-			this.clickOutsideThis = function (event, data) {
+			this.clickOutsideThis = function (event) {
 				var menu,
 					target = $(event.target);
 				if (target.hasClass('menu')) {

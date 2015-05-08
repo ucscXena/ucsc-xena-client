@@ -27,7 +27,8 @@ var YAxisLabel = React.createClass({
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
 			length = _.getIn(this.props, ['samples', 'length']) || 0,
 			fraction = count === length ? '' :
-				`, showing ${ index } - ${ index + count - 1 }`,
+				// babel-eslint/issues/31
+				`, showing ${ index } - ${ index + count - 1 }`, // eslint-disable-line comma-spacing
 			 text = `Samples (N=${ length }) ${ fraction }`;
 
 	return (

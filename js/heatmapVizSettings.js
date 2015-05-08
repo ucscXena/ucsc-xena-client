@@ -1,3 +1,5 @@
+/*eslint camelcase: 0, no-use-before-define: 0 */
+/*eslint-env browser */
 /*jshint browser: true */
 /*global document: false, require: false, module: false */
 
@@ -170,7 +172,7 @@ function vizSettingsWidget(node, lens, dsID, hide) {
 
 	var updateSettings = settings => s => _.merge(s, settings);
 
-	function colorScaleChoices(host, name) {
+	function colorScaleChoices() {
 		function disableTextInputs(trueORfalse) {
 			var id,
 				color = trueORfalse ? "gray" : "black";

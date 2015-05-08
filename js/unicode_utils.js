@@ -1,26 +1,25 @@
-/*jslint nomen: true */
+/*eslint strict: [2, "function"] */
 /*global define: false */
 define(['underscore'], function (_) {
 	'use strict';
 
-	function lookup_widechar(i) {
+	function lookupWidechar(i) {
 		if (i >= 0xFF01 && i <= 0xFF53) {
 			return i - 0xFF00 + 32;
 		}
 		return i;
 	}
 
-	function strip_unicode(c) {
-		/*jslint bitwise: true */
-		return String.fromCharCode(lookup_widechar(c.charCodeAt(0)) & 0xFF);
+	function stripUnicode(c) {
+		return String.fromCharCode(lookupWidechar(c.charCodeAt(0)) & 0xFF);
 	}
 
-	function map_string(s, f) {
+	function mapString(s, f) {
 		return _.map(s.split(''), f).join('');
 	}
 
 	function normalize(s) {
-		return map_string(s, strip_unicode);
+		return mapString(s, stripUnicode);
 	}
 
 	return {
