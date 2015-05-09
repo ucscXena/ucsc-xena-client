@@ -772,15 +772,15 @@ var variantSets = {
                 },
                 {
                     "info": {
-                        "0": "Uncertain significance",
+                        "0": "uncertain significance",
                         "1": "not provided",
                         "2": "Benign",
                         "3": "Likely benign",
                         "4": "Likely pathogenic",
                         "5": "Pathogenic",
-                        "6": "drug response",
-                        "7": "histocompatibility",
-                        "255": "other"
+                        "6": "Drug response",
+                        "7": "Histocompatibility",
+                        "255": "Other"
                     },
                     "description": "Variant Clinical Significance",
                     "number": ".",

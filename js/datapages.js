@@ -1,9 +1,9 @@
 /*jslint browser:true, nomen: true */
 /*global define: false, confirm: true */
 
-define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaAdmin",
+define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaAdmin", "dataPagesGPosition",
 	'../images/Treehouse.jpg', 'lunr', 'jquery', 'jquery-ui', "base", "../css/datapages.css"],
-	function (dom_helper, xenaQuery, session, _, Rx, xenaAdmin, treehouseImg, lunr, $) {
+	function (dom_helper, xenaQuery, session, _, Rx, xenaAdmin, dataPagesGPosition, treehouseImg, lunr, $) {
 	'use strict';
 
 	var allHosts, /* hosts is the variable holds all hosts*/
@@ -1354,11 +1354,11 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		var mainNode = dom_helper.elt("div");
 		mainNode.setAttribute("id", "dataPagesMain");
 
-		/*
+
 		var searchNode = dom_helper.sectionNode("cohort");
 		searchUI(searchNode);
 		mainNode.appendChild(searchNode);
-		*/
+
 
 		var cohortNode = dom_helper.sectionNode("cohort");
 		mainNode.appendChild(cohortNode);
@@ -1497,6 +1497,10 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 	else if (Object.keys(query_string).length ===4 && query_string.host && query_string.dataset &&
 			query_string.label && query_string.allIds) {
 		allIdentifiersPage (query_string);
+	}
+
+	else if (query_string.ga4gh){
+		dataPagesGPosition.start(query_string,baseNode);
 	}
 
 	// front page: cohort list
