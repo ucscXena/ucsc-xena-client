@@ -33,16 +33,44 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 			},
 
 			mapChromPosToX: function (chromPos) {
-				var posChromPos = (this.data.strand === '-') ? this.flip(chromPos) : chromPos,
-					splexon = find(this.splexons, function (s, i) {
-						return (posChromPos >= s.start && posChromPos <= s.end);
-					});
-				if (splexon) {
-					return splexon.x + (posChromPos - splexon.start) + 0.5;
-				} else {
-					console.log('mutation at ' + chromPos + ' not on an exon or splice site');
-					return -1;
+				var posChromPosStart,posChromPosEnd,
+					splexonStart, splexonEnd,
+					convertedStart, convertedEnd;
+
+				posChromPosStart = (this.data.strand === '-') ? this.flip(chromPos.start) : chromPos.start;
+				splexonStart = find(this.splexons, function (s, i) {
+					return (posChromPosStart >= s.start && posChromPosStart <= s.end);
+				});
+
+				if (chromPos.start=== chromPos.end){
+					splexonEnd = splexonStart;
+					posChromPosEnd = posChromPosStart;
 				}
+				else {
+					posChromPosEnd = (this.data.strand === '-') ? this.flip(chromPos.end) : chromPos.end;
+					splexonEnd = find(this.splexons, function (s, i) {
+						return (posChromPosEnd >= s.start && posChromPosEnd <= s.end);
+					});
+				}
+
+				if (!splexonStart && !splexonEnd){  // this does not handle large deletions the across multiple exons case properly
+					convertedStart =-1;
+					convertedEnd =-1;
+				} else if (!splexonEnd){
+					convertedStart = splexonStart.x + (posChromPosStart - splexonStart.start) + 0.5;
+					convertedEnd = splexonStart.x + (splexonStart.end - splexonStart.start) + 0.5;
+				}
+				else if (!splexonStart){
+					convertedStart = splexonEnd.x;
+					convertedEnd = splexonEnd.x + (posChromPosEnd - splexonEnd.start) + 0.5;
+				}
+				else {
+					convertedStart = splexonStart.x + (posChromPosStart - splexonStart.start) + 0.5;
+					convertedEnd = splexonEnd.x + (posChromPosEnd - splexonEnd.start) + 0.5;
+					//return splexon.x + (posChromPos - splexon.start) + 0.5;
+				}
+
+				return { start: convertedStart, end: convertedEnd};
 			},
 
 /* tooltip is inactive here:
