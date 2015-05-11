@@ -12,6 +12,7 @@ define(['underscore_ext',
 		'vgcanvas',
 		'xenaQuery',
 		'clinvar',
+		'ga4ghQuery',
 		'rx-jquery'
 	], function (
 		_,
@@ -25,7 +26,8 @@ define(['underscore_ext',
 		sheetWrap,
 		vgcanvas,
 		xenaQuery,
-		clinvar) {
+		clinvar,
+		ga4ghQuery) {
 
 	"use strict";
 
@@ -140,12 +142,24 @@ define(['underscore_ext',
 		],
 		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
 			var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
+			var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074"; // XXX hard-coded for now
 			return {
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
 				}),
 				refGene: xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_exon_string(probes)), function (r) {
 					return Rx.DOM.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp));
+				}),
+				clinvar: xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_gene_pos(probes[0])), function (r) {
+					return Rx.DOM.ajax(r).map(xenaQuery.json_resp).selectMany(gene => {
+							return ga4ghQuery.variants({
+								url: clinvar_host,
+								dataset: 'Clinvar',
+								start: gene.txstart,
+								end: gene.txend,
+								chrom: gene.chrom
+							});
+						});
 				})
 			};
 		})
