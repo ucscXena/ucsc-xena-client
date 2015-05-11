@@ -213,6 +213,8 @@ define(['underscore_ext',
 				local.vg = vgcanvas(column.width, canvasHeight);
 				local.columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 				local.columnUi.$samplePlot.append(local.vg.element());
+				local.clinvar = vgcanvas(column.width, clinvar.height);
+				$(local.clinvar.element()).addClass('clinvar');
 			}
 
 			vg = local.vg;
@@ -225,9 +227,12 @@ define(['underscore_ext',
  				vg.height(canvasHeight);
  			}
 
-			if (!local.clinvar && $('#' + el.id + ' .headerPlot')) {
-				local.clinvar = vgcanvas(column.width, clinvar.height);
+			if ($('#' + el.id + ' .headerPlot') && !$('#' + el.id + ' .clinvar').length) {
 				$('#' + el.id + ' .headerPlot').append(local.clinvar.element());
+			}
+
+			if (local.clinvar.width() !== column.width) {
+				local.clinvar.width(column.width);
 			}
 
 			refGeneData = data.refGene[column.fields[0]];
