@@ -11,6 +11,7 @@ define(['underscore_ext',
 		'sheetWrap',
 		'vgcanvas',
 		'xenaQuery',
+		'clinvar',
 		'rx-jquery'
 	], function (
 		_,
@@ -23,7 +24,8 @@ define(['underscore_ext',
 		mutationVector,
 		sheetWrap,
 		vgcanvas,
-		xenaQuery) {
+		xenaQuery,
+		clinvar) {
 
 	"use strict";
 
@@ -209,6 +211,11 @@ define(['underscore_ext',
  				vg.height(canvasHeight);
  			}
 
+			if (!local.clinvar && $('#' + el.id + ' .headerPlot')) {
+				local.clinvar = vgcanvas(column.width, clinvar.height);
+				$('#' + el.id + ' .headerPlot').append(local.clinvar.element());
+			}
+
 			refGeneData = data.refGene[column.fields[0]];
 			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
 			//data.req.values = stub.getMutation(column.fields[0]); // for testing
@@ -219,7 +226,7 @@ define(['underscore_ext',
 					$sidebarAnchor: columnUi.$headerSidebar,
 					width: column.width,
 					radius: sheetWrap.columnDims().sparseRadius,
-					refHeight: sheetWrap.columnDims().headerPlotHeight
+					refHeight: sheetWrap.columnDims().refHeight
 				});
 				if (data.req.values) { // TODO sometimes data.req is empty
 					refGene = refGeneExons.get(el.id);

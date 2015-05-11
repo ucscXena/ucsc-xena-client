@@ -333,14 +333,12 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 				this.y = d3.scale.linear()
 					.domain([0, this.canvasHeight])
 					.range([this.canvasHeight, 0]);
-				this.d3select = d3.select(options.plotAnchor).append('canvas');
+				this.d3select = d3.select(options.plotAnchor).append('canvas')
+					.attr('class', 'refGeneCanvas');
 				this.d2 = this.d3select
 					.attr('width', this.canvasWidth)
 					.attr('height', this.canvasHeight)
 					.node().getContext('2d');
-
-				$(options.plotAnchor + ' canvas')
-					.addClass('refGeneCanvas');
 
 				this.receiveData(options.data);
 			}
