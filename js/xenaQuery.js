@@ -408,6 +408,25 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '                       [:= :cds.field_id cds]]}))';
 	}
 
+	function refGene_gene_pos(gene) {
+		return '(let [getfield (fn [field]\n' +
+		       '                 (:id (car (query {:select [:field.id]\n' +
+		       '                                   :from [:dataset]\n' +
+		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
+		       '                                   :where [:and [:= :field.name field] [:= :dataset.name "common/GB/refgene_good"]]}))))\n' +
+		       '      tx (getfield "position")\n' +
+		       '      name2 (getfield "name2")]\n' +
+		       '  (car (query {:select [[:gene :name2]\n' +
+		       '                        [:tx.strand :strand]\n' +
+		       '                        [:tx.chrom :chrom]\n' +
+		       '                        [:tx.chromStart :txStart]\n' +
+		       '                        [:tx.chromEnd :txEnd]]\n' +
+		       '               :from [:field_gene]\n' +
+		       '               :join [[:field_position :tx] [:= :tx.row :field_gene.row]]\n' +
+		       '               :where [:and [:= :field_gene.field_id name2]\n' +
+		       '                            [:= :field_gene.gene ' + quote(gene) + ']\n' +
+		       '                            [:= :tx.field_id tx]]})))';
+	}
 	// QUERY PREP
 
 	// XXX Should consider making sources indexed so we can do simple
@@ -586,6 +605,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 
 		sparse_data_match_genes: sparse_data_match_genes,
 		match_fields: match_fields,
-		test_host: test_host
+		test_host: test_host,
+		refGene_gene_pos: refGene_gene_pos
 	};
 });
