@@ -231,9 +231,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 						rows.push({ label: 'RNA variant allele freq', val: rnaAf});
 					}
 					if (clinVarURL){
-						rows.push({ val: 'clinVar', url: clinVarURL});
+						rows.push({ val: 'ClinVar Annotation', url: clinVarURL});
 					}
-										tip.sampleID = node.data.sample;
+					tip.sampleID = node.data.sample;
 					tip.rows = rows;
 				} else {
 					sampleIndex = Math.floor((coords.y * ws.zoomCount / ws.height) + ws.zoomIndex);

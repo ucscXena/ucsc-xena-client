@@ -221,12 +221,12 @@ define(['haml/columnUi.haml', 'haml/columnUiSelect.haml', 'haml/tupleDisplay.ham
 			}
 			this.crosshairs = crosshairs.create(this.id, { $anchor: this.$samplePlot });
 
-			this.subs.add(this.$samplePlot.onAsObservable('click')
+			var action = this.$samplePlot.onAsObservable('click')
 				.filter(function (ev) {
 					return ev.altKey === true;
-				})
-				.subscribe(tooltip.toggleFreeze));
-
+				});
+			this.subs.add(action.subscribe(tooltip.toggleFreeze));
+			this.subs.add(action.subscribe(crosshairs.toggleFreeze));
 			this.kmPlotVisibility();
 		}
 	};

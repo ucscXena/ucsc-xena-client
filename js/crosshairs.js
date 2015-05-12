@@ -7,7 +7,8 @@ define(['d3', 'jquery', 'underscore'
 	'use strict';
 
 	var widgets = [],
-		aWidget;
+		aWidget,
+		frozen;
 
 	function mousing(e) {
 		var plot = $(e.target),
@@ -19,6 +20,11 @@ define(['d3', 'jquery', 'underscore'
 			samplePlot = column.find('.samplePlot'),
 			vHeight = samplePlot.height(),
 			vTop = samplePlot.offset().top;
+
+		if (frozen){
+			return;
+		}
+
 		if (!plot.hasClass('plot')) {
 			plot = plot.parents('.plot');
 		}
@@ -48,6 +54,13 @@ define(['d3', 'jquery', 'underscore'
 			crosshairV.hide();
 			crosshairH.hide();
 		}
+	}
+
+	function hide(){
+		var crosshairH = $('body').find('.crosshairH'),
+			crosshairV = $('body').find('.crosshairV');
+		crosshairH.hide();
+		crosshairV.hide();
 	}
 
 	aWidget = {
@@ -82,6 +95,14 @@ define(['d3', 'jquery', 'underscore'
 				widgets[id] = create(id, options);
 			}
 			return widgets[id];
+		},
+
+		toggleFreeze: function () {
+			frozen = !frozen;
+		},
+
+		hide: function(){
+			hide();
 		}
 	};
 });

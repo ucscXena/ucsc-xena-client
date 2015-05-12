@@ -1,8 +1,8 @@
 /*jslint browser: true, nomen: true */
 /*global define: false  */
 
-define(['haml/tooltip.haml', 'haml/tooltipClose.haml', "jquery", "defer", 'underscore'
-	], function (template, closeTemplate, $, defer, _) {
+define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "defer", 'underscore'
+	], function (template, closeTemplate, crosshairs, $, defer, _) {
 	'use strict';
 
 	$('body').append($("<div id='tooltip'></div>"));
@@ -62,6 +62,8 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml', "jquery", "defer", 'under
 
 	$tooltip.on('click', '#tooltipClose', function () {
 		freeze(false, true);
+		crosshairs.toggleFreeze();
+		crosshairs.hide();
 	});
 
 	return {
