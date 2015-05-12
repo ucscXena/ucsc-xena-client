@@ -72,7 +72,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		},
 		clone = _.clone,
 		each = _.each,
-		filter = _.filter,
+		//filter = _.filter,
 		reduce = _.reduce,
 		sortBy = _.sortBy,
 		widgets = {},
@@ -85,11 +85,21 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			drawCenter: function (d, highlight) {
 				var r = highlight ? this.point * 2 : this.point;
-				this.vg.circle(d.x, d.y, r, 'black');
+				//this.vg.circle(d.x, d.y, r, 'black');
+				this.vg.box (d.xStart -r,
+					d.y -r,
+					d.xStart- d.xEnd + r*2,
+					r*2,
+					'black');
 			},
 
 			drawHalo: function (d) {
-				this.vg.circle(d.x, d.y, d.r, d.rgba);
+				//this.vg.circle(d.x, d.y, d.r, d.rgba);
+				this.vg.box(d.xStart-d.r,
+					d.y - d.r,
+					d.xStart - d.xEnd + d.r*2,
+					d.r *2,
+					d.rgba );
 			},
 
 			draw: function () {
@@ -125,7 +135,13 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			highlight: function (d) {
 				this.highlightOn = true;
 				this.draw(); // remove any previous highlights
-				this.vg.circle(d.x, d.y, d.r, highlightRgba, true);
+				//this.vg.circle(d.x, d.y, d.r, highlightRgba, true);
+				this.vg.box(d.xStart-d.r,
+					d.y -d.r,
+					d.xStart - d.xEnd + d.r*2,
+					d.r*2,
+					highlightRgba);
+
 				this.drawHalo(d); // to bring this node's color to the top
 				this.drawCenter(d, true);
 			},
@@ -133,7 +149,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			closestNode: function (x, y) {
 				var min = this.radius * this.radius;
 				return reduce(this.nodes, function (closest, n) {
-					var distance = Math.pow((x - n.x), 2) + Math.pow((y - n.y), 2);
+					var distance = Math.pow((x - n.xStart), 2) + Math.pow((y - n.y), 2);
 					if (distance < min) {
 						min = distance;
 						return n;
@@ -165,6 +181,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			mousing: function (ev) {
 				var pos,posText, posURL,
+					clinVarURL,
 					node,
 					coords,
 					rows = [],
@@ -195,6 +212,12 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					rnaAf = this.formatAf(node.data.rna_vaf);
 					posURL = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position="+encodeURIComponent(pos); // hg19 is hard coded, we do not check
 					posText = 'hg19 ' + pos;  // hg19 is hard coded, we do not check
+
+					// clinVar BRCA1 and BRCA2 hard-coded section here
+					if (this.gene.name ==="BRCA1" || this.gene.name === "BRCA2"){
+						clinVarURL = "../datapages/?ga4gh=1&variantSetId=Clinvar&referenceName="+node.data.chr.substring(3, node.data.chr.length)+
+						"&start="+node.data.start+"&end="+ node.data.end;
+					}
 					rows = [
 						{ val: node.data.effect},
 						{ val: this.gene.name +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'') },
@@ -207,7 +230,10 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					if (rnaAf !== "NA"){
 						rows.push({ label: 'RNA variant allele freq', val: rnaAf});
 					}
-					tip.sampleID = node.data.sample;
+					if (clinVarURL){
+						rows.push({ val: 'clinVar', url: clinVarURL});
+					}
+										tip.sampleID = node.data.sample;
 					tip.rows = rows;
 				} else {
 					sampleIndex = Math.floor((coords.y * ws.zoomCount / ws.height) + ws.zoomIndex);
@@ -247,6 +273,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			receiveData: function (data) {
+				var self = this;
 				var drawValues = data.slice(this.zoomIndex, this.zoomIndex + this.zoomCount);
 				this.values = _.map(drawValues, function (v, i) {
 					var row = $.extend(true, [], v);
@@ -258,7 +285,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			findNonNaRows: function () {
 				var self = this,
-					nonNaRows = _.map(filter(self.values, function (r) {
+					nonNaRows = _.map(_.filter(self.values, function (r) {
 						return r.vals;
 					}), function (r) {
 						return {
@@ -276,13 +303,19 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 						return value.vals && value.vals.length;
 					});
 				_.each(nodeValues, function (value) {
+
 					var y = (value.index * self.pixPerRow) + (self.pixPerRow / 2) + self.sparsePad;
 					_.each(value.vals, function (val) {
-						var x = self.refGene.mapChromPosToX(val.start);
-						if (x >= 0) {
-							x = x * self.gene.scaleX + self.sparsePad;
+						var x = self.refGene.mapChromPosToX(val),
+							xStart = x.start,
+							xEnd = x.end;
+
+						if (xStart !==-1 && xEnd !==-1) {
+							xStart = xStart * self.gene.scaleX + self.sparsePad;
+							xEnd = xEnd * self.gene.scaleX + self.sparsePad;
 							nodes.push({
-								x: x,
+								xStart: xStart,
+								xEnd: xEnd,
 								y: y,
 								r: self.radius,
 								impact: getImpact(val.effect),
