@@ -236,11 +236,6 @@ define(['underscore_ext',
 				local.clinvar.width(column.width);
 			}
 
-			if (data.clinvar.length && data.refGene) {
-				clinvar.draw(local.clinvar, data.clinvar,
-						refGeneExons.get(el.id).mapChromPosToX);
-			}
-
 			refGeneData = data.refGene[column.fields[0]];
 			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
 			//data.req.values = stub.getMutation(column.fields[0]); // for testing
@@ -290,6 +285,13 @@ define(['underscore_ext',
 			}
 			else {
 				vg.box(0, 0, column.width, ws.height, "gray");
+			}
+
+			// Have to draw this after refGene, because it depends on
+			// scaling that is mixed up with refGene state.
+			if (data.clinvar.length && data.refGene) {
+				clinvar.draw(local.clinvar, data.clinvar,
+						refGeneExons.get(el.id).mapChromPosToX);
 			}
 		}
 	);
