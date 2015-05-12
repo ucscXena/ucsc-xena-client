@@ -5,24 +5,35 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "d
 	], function (template, closeTemplate, crosshairs, $, defer, _) {
 	'use strict';
 
-	$('body').append($("<div id='tooltip'></div>"));
 	var freezeText = '(alt-click to freeze)',
 		thawText = '(alt-click on map to unfreeze)',
-		$tooltip = $('#tooltip'),
+		$tooltip,
 		frozen,
 		hiding = true,
 
-		position = function (el, my, at) {
-			$tooltip.position({my: my, at: at, of: window, collision: 'none none'});
+		create = function () {
+			$('body').append($("<div id='tooltip'></div>"));
+			$tooltip = $('#tooltip');
+			$tooltip.on('click', '#tooltipClose', function () {
+				freeze(false, true);
+				crosshairs.toggleFreeze();
+				crosshairs.hide();
+			});
+		},
 
+		position = function (el, my, at) {
+			$tooltip = $('#tooltip');
+			$tooltip.position({my: "right top", at: "right-10 top", of: window, collision: 'none none'});
 		},
 
 		hide = function () {
+			$tooltip = $('#tooltip');
 			$tooltip.stop().fadeOut('fast');
 			hiding = true;
 		},
 
 		show = function () {
+			$tooltip = $('#tooltip');
 			if ($tooltip.css('opacity') !== 1) {
 				$tooltip.css({'opacity': 1}).stop().fadeIn('fast');
 			}
@@ -30,6 +41,7 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "d
 		},
 
 		freeze = function (freeze, hideTip) {
+			$tooltip = $('#tooltip');
 			frozen = freeze;
 			if (frozen) {
 				$tooltip.find('tr:first').append($(closeTemplate()));
@@ -44,6 +56,7 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "d
 		},
 
 		mousing = function (t) {
+			$tooltip = $('#tooltip');
 			if (frozen) {
 				show();
 				return;
@@ -52,7 +65,7 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "d
 				return;
 			}
 			show();
-			position(t.el, t.my, t.at);
+			position();
 			$tooltip.html(template({
 				sampleID: t.sampleID || null,
 				rows: t.rows,
@@ -60,13 +73,11 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "d
 			$('#tooltipPrompt').text(freezeText);
 		};
 
-	$tooltip.on('click', '#tooltipClose', function () {
-		freeze(false, true);
-		crosshairs.toggleFreeze();
-		crosshairs.hide();
-	});
-
 	return {
+		create: function (){
+			create();
+		},
+
 		'mousing': mousing,
 
 		hide: function () {

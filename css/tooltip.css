@@ -3,10 +3,8 @@
 }
 #tooltip {
 	padding: 4px 6px;
-	display: none;
 	position: absolute;
-	overflow: hidden;
-	text-align: left;
+	white-space: nowrap;
 	z-index: 1;
 }
 #tooltip table {
