@@ -70,7 +70,7 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 					//return splexon.x + (posChromPos - splexon.start) + 0.5;
 				}
 
-				return { start: convertedStart, end: convertedEnd};
+				return { start: convertedStart * this.scaleX, end: convertedEnd * this.scaleX};
 			},
 
 /* tooltip is inactive here:

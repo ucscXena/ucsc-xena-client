@@ -39,8 +39,7 @@ function draw(vg, clinvar, chromPosToX) {
 	var variantsVals = mergeMax(pickField(clinvar, field), field);
 	_.each(order, val => {
 		_.each(_.filter(variantsVals, vf => vf.max === val), v => {
-			var start = chromPosToX(v.start);
-			var end = chromPosToX(v.end);
+			var {start, end} = chromPosToX(v);
 			if (start >= 0 && end >= 0) {
 				vg.translate(start, 0,
 					() => vg.box(0, 0, end - start, height, color(val)));

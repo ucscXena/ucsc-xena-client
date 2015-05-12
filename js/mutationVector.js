@@ -273,7 +273,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			receiveData: function (data) {
-				var self = this;
 				var drawValues = data.slice(this.zoomIndex, this.zoomIndex + this.zoomCount);
 				this.values = _.map(drawValues, function (v, i) {
 					var row = $.extend(true, [], v);
@@ -306,16 +305,14 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 					var y = (value.index * self.pixPerRow) + (self.pixPerRow / 2) + self.sparsePad;
 					_.each(value.vals, function (val) {
-						var x = self.refGene.mapChromPosToX(val),
-							xStart = x.start,
-							xEnd = x.end;
+						var {start, end} = self.refGene.mapChromPosToX(val);
 
-						if (xStart !==-1 && xEnd !==-1) {
-							xStart = xStart * self.gene.scaleX + self.sparsePad;
-							xEnd = xEnd * self.gene.scaleX + self.sparsePad;
+						if (start >= 0 && end >= 0) {
+							start = start + self.sparsePad;
+							end = end + self.sparsePad;
 							nodes.push({
-								xStart: xStart,
-								xEnd: xEnd,
+								xStart: start,
+								xEnd: end,
 								y: y,
 								r: self.radius,
 								impact: getImpact(val.effect),
