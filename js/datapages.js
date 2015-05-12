@@ -1354,11 +1354,11 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		var mainNode = dom_helper.elt("div");
 		mainNode.setAttribute("id", "dataPagesMain");
 
-
+		/*
 		var searchNode = dom_helper.sectionNode("cohort");
 		searchUI(searchNode);
 		mainNode.appendChild(searchNode);
-
+		*/
 
 		var cohortNode = dom_helper.sectionNode("cohort");
 		mainNode.appendChild(cohortNode);

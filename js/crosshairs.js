@@ -29,6 +29,8 @@ define(['d3', 'jquery', 'underscore'
 			plot = plot.parents('.plot');
 		}
 		if (e.type === 'mousemove') {
+			crosshairV.show();
+			crosshairH.show();
 			if (headerPlot.children().length > 0) {
 				vHeight += headerPlot.height();
 				vTop = headerPlot.offset().top;
@@ -39,17 +41,6 @@ define(['d3', 'jquery', 'underscore'
 				'top': vTop - scrollTop,
 				'height': vHeight
 			});
-		} else if (e.type === 'mouseenter') {
-			crosshairV.show();
-			crosshairH.show();
-			/* TODO when we have a decent cursor, we could skip the horizontal crosshair on headerPlots
-			if (!plot.hasClass('plot')) {
-				plot = plot.parents('.plot');
-			}
-			if (plot.hasClass('samplePlot')) {
-				crosshairH.show();
-			}
-			*/
 		} else {
 			crosshairV.hide();
 			crosshairH.hide();
@@ -59,6 +50,7 @@ define(['d3', 'jquery', 'underscore'
 	function hide(){
 		var crosshairH = $('body').find('.crosshairH'),
 			crosshairV = $('body').find('.crosshairV');
+
 		crosshairH.hide();
 		crosshairV.hide();
 	}
@@ -98,6 +90,9 @@ define(['d3', 'jquery', 'underscore'
 		},
 
 		toggleFreeze: function () {
+			if (frozen){
+				hide();
+			}
 			frozen = !frozen;
 		},
 
