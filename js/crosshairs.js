@@ -28,7 +28,7 @@ define(['d3', 'jquery', 'underscore'
 		if (!plot.hasClass('plot')) {
 			plot = plot.parents('.plot');
 		}
-		if (e.type === 'mousemove') {
+		if (e.type === 'mousemove' || e.type ==="mouseenter") {
 			crosshairV.show();
 			crosshairH.show();
 			if (headerPlot.children().length > 0) {
@@ -90,9 +90,6 @@ define(['d3', 'jquery', 'underscore'
 		},
 
 		toggleFreeze: function () {
-			if (frozen){
-				hide();
-			}
 			frozen = !frozen;
 		},
 
