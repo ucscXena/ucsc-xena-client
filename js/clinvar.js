@@ -13,7 +13,7 @@ var fields = {
 	CLNSIG: {
 		color: d3.scale.category10(),
 		order: ['255', '0', '1', '2', '3', '4', '5', '6', '7'],
-		parse: i => i[0].split(/|,/)
+		parse: i => i[0].split(/[|,]/)
 	}
 };
 
