@@ -6,7 +6,6 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "d
 	'use strict';
 
 	var freezeText = '(alt-click to freeze)',
-		thawText = '(alt-click on map to unfreeze)',
 		$tooltip,
 		frozen,
 		hiding = true,
@@ -16,9 +15,13 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "d
 			$tooltip = $('#tooltip');
 			$tooltip.on('click', '#tooltipClose', function () {
 				freeze(false, true);
-				crosshairs.toggleFreeze();
 				crosshairs.hide();
 			});
+		},
+
+		destroy = function () {
+			$tooltip = $('#tooltip');
+			$tooltip.remove();
 		},
 
 		position = function (el, my, at) {
@@ -46,7 +49,7 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "d
 			if (frozen) {
 				$tooltip.find('tr:first').append($(closeTemplate()));
 				$tooltip.addClass('frozen');
-				$('#tooltipPrompt').text(thawText);
+				$('#tooltipPrompt').remove();
 			} else {
 				$tooltip.find('tr:first').empty();
 				if (hideTip) { hide(); }
@@ -76,6 +79,10 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "d
 	return {
 		create: function (){
 			create();
+		},
+
+		destroy: function(){
+			destroy();
 		},
 
 		'mousing': mousing,

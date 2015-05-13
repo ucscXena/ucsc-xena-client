@@ -7,7 +7,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 	'use strict';
 
 	var unknownEffect = 0,
-		highlightRgba = 'rgba(0, 0, 0, 1)',
 		impact = {
 			Nonsense_Mutation: 3,
 			frameshift_variant: 3,
@@ -83,22 +82,20 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				delete widgets[this.id];
 			},
 
-			drawCenter: function (d, highlight) {
-				var r = highlight ? this.point * 2 : this.point;
-				//this.vg.circle(d.x, d.y, r, 'black');
+			drawCenter: function (d) {
+				var r = this.point;
 				this.vg.box (d.xStart -r,
-					d.y -r,
-					d.xStart- d.xEnd + r*2,
+					d.y-r,
+					d.xEnd- d.xStart+r*2,
 					r*2,
 					'black');
 			},
 
 			drawHalo: function (d) {
-				//this.vg.circle(d.x, d.y, d.r, d.rgba);
 				this.vg.box(d.xStart-d.r,
 					d.y - d.r,
-					d.xStart - d.xEnd + d.r*2,
-					d.r *2,
+					d.xEnd - d.xStart + d.r*2,
+					d.r*2,
 					d.rgba );
 			},
 
@@ -126,34 +123,26 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				// draw the mutations
 				each(this.nodes, function (d) {
 					self.drawHalo(d);
-				});
-				each(this.nodes, function (d) { // draw black dots on top
 					self.drawCenter(d);
 				});
 			},
 
-			highlight: function (d) {
-				this.highlightOn = true;
-				this.draw(); // remove any previous highlights
-				//this.vg.circle(d.x, d.y, d.r, highlightRgba, true);
-				this.vg.box(d.xStart-d.r,
-					d.y -d.r,
-					d.xStart - d.xEnd + d.r*2,
-					d.r*2,
-					highlightRgba);
-
-				this.drawHalo(d); // to bring this node's color to the top
-				this.drawCenter(d, true);
-			},
-
 			closestNode: function (x, y) {
-				var min = this.radius * this.radius;
+				var cutoff = this.radius,
+					min = Number.POSITIVE_INFINITY,
+					distance;
+
 				return reduce(this.nodes, function (closest, n) {
-					var distance = Math.pow((x - n.xStart), 2) + Math.pow((y - n.y), 2);
-					if (distance < min) {
-						min = distance;
-						return n;
-					} else {
+					if ( (Math.abs(y-n.y) < cutoff) && (x > n.xStart -cutoff) && (x<n.xEnd +cutoff)) {
+						distance = Math.pow( (y-n.y), 2) + Math.pow( (x - (n.xStart+n.xEnd)/2.0), 2);
+						if (distance < min) {
+							min = distance;
+							return n;
+						} else {
+							return closest;
+						}
+					}
+					else {
 						return closest;
 					}
 				}, undefined);
@@ -204,7 +193,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				coords = this.plotCoords(ev);
 				node = this.closestNode(coords.x, coords.y);
 				if (node) {
-					//this.highlight(node);
 					pos = node.data.chr + ':' +
 						util.addCommas(node.data.start) + '-' +
 						util.addCommas(node.data.end);
@@ -238,12 +226,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				} else {
 					sampleIndex = Math.floor((coords.y * ws.zoomCount / ws.height) + ws.zoomIndex);
 					tip.sampleID = ev.data.plotData.samples[sampleIndex];
-					/*
-					if (this.highlightOn) {
-						this.draw();
-						this.highlightOn = false;
-					}
-					*/
 				}
 				tooltip.mousing(tip);
 			},

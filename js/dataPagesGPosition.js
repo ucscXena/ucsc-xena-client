@@ -33,7 +33,7 @@ define(["ga4gh-rxjs", "dom_helper", "metadataStub", "rx-dom", "../css/datapages.
 
   function queryStringPage(query_string, basenode){
     var startPos =  parseInt(query_string.start)-1,//41215898
-      endPos = parseInt(query_string.end),//41215899
+      endPos = parseInt(query_string.end),//4121589
       referenceName = query_string.referenceName, //17
       variantSetId = query_string.variantSetId,
       query= queryVariants(startPos, endPos, referenceName, variantSetId),
@@ -154,7 +154,8 @@ define(["ga4gh-rxjs", "dom_helper", "metadataStub", "rx-dom", "../css/datapages.
 
     //info
     if (metaData){
-      var value, intepretation;
+      var value, intepretation,
+        text;
 
       selectedKeys.map(function(key){
         value = eval("variant."+key);
@@ -174,8 +175,9 @@ define(["ga4gh-rxjs", "dom_helper", "metadataStub", "rx-dom", "../css/datapages.
           }
           else if ( metaData[key].type ==="String") {
             node.appendChild(document.createTextNode(metaData[key].description+" : "));
+
             if (Object.keys(metaData[key].info).length){
-              var text = value[0].split(",").map(function(oneValue){
+              text = value[0].split(",").map(function(oneValue){
                 intepretation = oneValue.split("|").map(function(v){
                   return metaData[key].info[v];
                 }).join(" | ");
@@ -183,7 +185,10 @@ define(["ga4gh-rxjs", "dom_helper", "metadataStub", "rx-dom", "../css/datapages.
               }).join(", ");
               node.appendChild(document.createTextNode(text));
             } else {
-              node.appendChild(document.createTextNode( value[0].replace("\\x2c", "") ));
+              text = value[0].split(",").map(function(oneValue){
+                return oneValue.replace(/\\x2c/g, "");  // clean up messy data with \x2c characters
+              }).join(", ");
+              node.appendChild(document.createTextNode(text));
             }
             node.appendChild(document.createElement("br"));
           }

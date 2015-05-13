@@ -220,7 +220,6 @@ define(['haml/columnUi.haml', 'haml/columnUiSelect.haml', 'haml/tupleDisplay.ham
 				this.render(options);
 			}
 			this.crosshairs = crosshairs.create(this.id, { $anchor: this.$samplePlot });
-			tooltip.create();
 
 			var action = this.$samplePlot.onAsObservable('click')
 				.filter(function (ev) {

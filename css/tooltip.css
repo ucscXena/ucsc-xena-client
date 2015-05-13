@@ -10,12 +10,6 @@
 #tooltip table {
 	font-size: .8em;
 }
-#tooltip .valueCol {
-	width: 400px;
-}
-#tooltip .closeCol {
-	width: 16px;
-}
 #tooltip .tupleValue {
 	padding: 2px;
 	font-weight: bold;

@@ -8,6 +8,7 @@ define(['haml/sheetWrap.haml',
 		'columnEdit',
 		//'columnEditRx',
 		'columnUi',
+		'tooltip',
 		'datasetSelect',
 		'defaultTextInput',
 		'uuid',
@@ -24,6 +25,7 @@ define(['haml/sheetWrap.haml',
 					cohortSelect,
 					columnEdit,
 					columnUi,
+					tooltip,
 					datasetSelect,
 					defaultTextInput,
 					uuid,
@@ -36,7 +38,7 @@ define(['haml/sheetWrap.haml',
 
 		// constants for all columns:
 	var horizontalMargin = 3,
-		sparseRadius = horizontalMargin * 2,
+		sparseRadius = 4,
 		sparsePad = sparseRadius + 1,
 		headerPlotHeight = 24,
 		refHeight = 12,
@@ -243,6 +245,7 @@ define(['haml/sheetWrap.haml',
 					})
 			);
 
+			tooltip.create();
 			/*
 			this.subs.add(
 				state.refine(['columnEditOpen', 'cohort'])

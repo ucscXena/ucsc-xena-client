@@ -57,17 +57,32 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 					convertedStart =-1;
 					convertedEnd =-1;
 				} else if (!splexonEnd){
-					convertedStart = splexonStart.x + (posChromPosStart - splexonStart.start) + 0.5;
-					convertedEnd = splexonStart.x + (splexonStart.end - splexonStart.start) + 0.5;
+					if (this.data.strand === '+'){
+						convertedStart = splexonStart.x + (posChromPosStart - splexonStart.start);
+						convertedEnd = splexonStart.x + (splexonStart.end - splexonStart.start);
+					}
+					else {
+						convertedStart = splexonStart.x;
+						convertedEnd = splexonStart.x + (posChromPosStart - splexonStart.start);
+					}
 				}
 				else if (!splexonStart){
-					convertedStart = splexonEnd.x;
-					convertedEnd = splexonEnd.x + (posChromPosEnd - splexonEnd.start) + 0.5;
+					if (this.data.strand === '+'){
+						convertedStart = splexonEnd.x;
+						convertedEnd = splexonEnd.x + (posChromPosEnd - splexonEnd.start);
+					} else {
+						convertedStart = splexonEnd.x + (posChromPosEnd - splexonEnd.start);
+						convertedEnd = splexonEnd.x + (splexonEnd.end - splexonEnd.start);
+					}
 				}
 				else {
-					convertedStart = splexonStart.x + (posChromPosStart - splexonStart.start) + 0.5;
-					convertedEnd = splexonEnd.x + (posChromPosEnd - splexonEnd.start) + 0.5;
-					//return splexon.x + (posChromPos - splexon.start) + 0.5;
+					if (this.data.strand === '+'){
+						convertedStart = splexonStart.x + (posChromPosStart - splexonStart.start);
+						convertedEnd = splexonEnd.x + (posChromPosEnd - splexonEnd.start);
+					} else {
+						convertedEnd = splexonStart.x + (posChromPosStart - splexonStart.start);
+						convertedStart = splexonEnd.x + (posChromPosEnd - splexonEnd.start);
+					}
 				}
 
 				return { start: convertedStart * this.scaleX, end: convertedEnd * this.scaleX};
