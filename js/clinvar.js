@@ -11,11 +11,15 @@ var _ = require('underscore');
 
 var fields = {
 	CLNSIG: {
-		color: d3.scale.category10(),
+		scalefn: d3.scale.category10,
 		order: ['255', '0', '1', '2', '3', '4', '5', '6', '7'],
 		parse: i => i[0].split(/[|,]/)
 	}
 };
+
+// update fields with scale, setting domain so we have consistent colors
+// across datasets.
+_.each(fields, f => _.extend(f, {color: f.scalefn().domain(f.order)}));
 
 // max field value, by field.order
 function fieldMax(field, {info}) {
