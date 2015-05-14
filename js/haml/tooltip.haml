@@ -3,24 +3,25 @@
       %col{class:'valueCol'}
       %col{class:'closeCol'}
 
-    - if (sampleID) {
-      %tr
-        %td{class: 'sampleID'} = sampleID
-    - _.each(rows, function(r, i) {
-      %tr
-        - if (r.label && (r.val || (r.val==0)))  {
-          %td
-            = r.label+" : "
-            %span{class: 'tupleValue'} = r.val
-        - } else if (r.val) {
-          - if (r.url) {
-              %td{class: 'urlValue'}
-                %a{href: r.url, target: '_BLANK'} =r.val
-          - } else {
-              %td{class: 'tupleValue'} = r.val
-          - }
-        - } else if (r.label) {
-          %td = r.label
-        - }
     %tr
+      - if (sampleID) {
+        %td{class: 'sampleID'} = sampleID
       %td{id:'tooltipPrompt', class:'tooltipPrompt'}
+    - _.each(rows, function(row) {
+      %tr
+        - _.each(row, function(r) {
+          - if (r.label && (r.val || (r.val==0)))  {
+            %td
+              = r.label+" : "
+              %span{class: 'tupleValue'} = r.val
+          - } else if (r.val) {
+            - if (r.url) {
+                %td{class: 'urlValue'}
+                  %a{href: r.url, target: '_BLANK'} =r.val
+            - } else {
+                %td{class: 'tupleValue'} = r.val
+            - }
+          - } else if (r.label) {
+            %td = r.label
+          - }
+

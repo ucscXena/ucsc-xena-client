@@ -460,15 +460,9 @@ define(['underscore_ext',
 		if (val === undefined || _.isNaN(val)) {
 			val = 'NA';
 		}
-		rows.push({ label: label, val: val });
-		if (column.dataType === 'clinicalMatrix') {
-			tip.valWidth = '25em';
-		} else {
-			tip.labelWidth = '8em';
-			tip.valWidth = '15em';
-		}
+		rows.push([{ label: label, val: val }]);
 		if (val !== 'NA' && column.dataType !== 'clinicalMatrix') {
-			rows.push({ label: 'Column mean : '+ prec(meannan(heatmapData[fieldIndex])) });
+			rows.push([{ label: 'Column mean : '+ prec(meannan(heatmapData[fieldIndex]))}]);
 		}
 		tip.rows = rows;
 		tooltip.mousing(tip);

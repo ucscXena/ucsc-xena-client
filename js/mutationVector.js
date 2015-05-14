@@ -207,19 +207,19 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 						"&start="+node.data.start+"&end="+ node.data.end;
 					}
 					rows = [
-						{ val: node.data.effect},
-						{ val: this.gene.name +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'') },
-						{ val: posText, url: posURL},
-						{ val: 'from ' + node.data.reference + ' to ' + node.data.alt}
+						[ { val: node.data.effect +", " +
+							this.gene.name +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'')}],
+						[ { val: posText, url: posURL},
+							{ val: node.data.reference + ' to ' + node.data.alt}]
 					];
 					if (dnaAf !== "NA"){
-						rows.push({ label: 'DNA variant allele freq',  val: dnaAf});
+						rows.push([{ label: 'DNA variant allele freq',  val: dnaAf}]);
 					}
 					if (rnaAf !== "NA"){
-						rows.push({ label: 'RNA variant allele freq', val: rnaAf});
+						rows.push([{ label: 'RNA variant allele freq', val: rnaAf}]);
 					}
 					if (clinVarURL){
-						rows.push({ val: 'ClinVar Annotation', url: clinVarURL});
+						rows.push([{ val: 'ClinVar Annotation', url: clinVarURL}]);
 					}
 					tip.sampleID = node.data.sample;
 					tip.rows = rows;

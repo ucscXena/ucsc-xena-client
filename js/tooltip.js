@@ -26,7 +26,7 @@ define(['haml/tooltip.haml', 'haml/tooltipClose.haml','crosshairs', "jquery", "d
 
 		position = function (el, my, at) {
 			$tooltip = $('#tooltip');
-			$tooltip.position({my: "right top", at: "right-10 top", of: window, collision: 'none none'});
+			$tooltip.position({my: "left top", at: "left top", of: window, collision: 'none none'});
 		},
 
 		hide = function () {
