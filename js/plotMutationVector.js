@@ -152,15 +152,15 @@ define(['underscore_ext',
 					return Rx.DOM.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp));
 				}),
 				clinvar: xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_gene_pos(probes[0])), function (r) {
-					return Rx.DOM.ajax(r).map(xenaQuery.json_resp).selectMany(gene => {
-							return ga4ghQuery.variants({
-								url: clinvar_host,
-								dataset: 'Clinvar',
-								start: gene.txstart,
-								end: gene.txend,
-								chrom: gene.chrom
-							});
-						});
+					return Rx.DOM.ajax(r).map(xenaQuery.json_resp).selectMany(([gene]) =>
+						gene ? ga4ghQuery.variants({
+									url: clinvar_host,
+									dataset: 'Clinvar',
+									start: gene.txstart,
+									end: gene.txend,
+									chrom: gene.chrom
+								}) :
+								Rx.Observable.return([]));
 				})
 			};
 		})

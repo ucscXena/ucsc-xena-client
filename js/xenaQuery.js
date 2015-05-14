@@ -416,16 +416,16 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '                                   :where [:and [:= :field.name field] [:= :dataset.name "common/GB/refgene_good"]]}))))\n' +
 		       '      tx (getfield "position")\n' +
 		       '      name2 (getfield "name2")]\n' +
-		       '  (car (query {:select [[:gene :name2]\n' +
-		       '                        [:tx.strand :strand]\n' +
-		       '                        [:tx.chrom :chrom]\n' +
-		       '                        [:tx.chromStart :txStart]\n' +
-		       '                        [:tx.chromEnd :txEnd]]\n' +
-		       '               :from [:field_gene]\n' +
-		       '               :join [[:field_position :tx] [:= :tx.row :field_gene.row]]\n' +
-		       '               :where [:and [:= :field_gene.field_id name2]\n' +
-		       '                            [:= :field_gene.gene ' + quote(gene) + ']\n' +
-		       '                            [:= :tx.field_id tx]]})))';
+		       '  (query {:select [[:gene :name2]\n' +
+		       '                   [:tx.strand :strand]\n' +
+		       '                   [:tx.chrom :chrom]\n' +
+		       '                   [:tx.chromStart :txStart]\n' +
+		       '                   [:tx.chromEnd :txEnd]]\n' +
+		       '          :from [:field_gene]\n' +
+		       '          :join [[:field_position :tx] [:= :tx.row :field_gene.row]]\n' +
+		       '          :where [:and [:= :field_gene.field_id name2]\n' +
+		       '                       [:= :field_gene.gene ' + quote(gene) + ']\n' +
+		       '                       [:= :tx.field_id tx]]}))';
 	}
 	// QUERY PREP
 
