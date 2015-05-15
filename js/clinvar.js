@@ -46,8 +46,13 @@ function draw(vg, clinvar, chromPosToX) {
 		_.each(_.filter(variantsVals, vf => vf.max === val), v => {
 			var {start, end} = chromPosToX(v);
 			if (start >= 0 && end >= 0) {
-				vg.translate(start, 0,
-					() => vg.box(0, 0, end - start, height, color(val)));
+				if (val === "2" || val === "3") {
+					vg.translate(start, 0,
+						() => vg.box(0, 0, end - start, height / 2, color(val)));
+				} else {
+					vg.translate(start, 0,
+						() => vg.box(0, height / 2, end - start, height / 2, color(val)));
+				}
 			}
 		});
 	});
