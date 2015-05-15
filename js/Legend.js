@@ -31,11 +31,13 @@ var contrastColor = color => luminance(rgb(color)) < 147 ? 'white' : 'black';
 
 var nodata = [["No Data", "#808080"]];
 
-// klass? upperBorderIndex?
+// XXX klass? upperBorderIndex?
 var Legend = React.createClass({
+	getDefaultProps: () => ({ max: 20 }),
 	render: function () {
-		var {label, labels, colors, align} = this.props,
-			items = _.map(nodata.concat(_.zip(labels, colors)), ([l, c], i) =>
+		var {label, labels, colors, align, max} = this.props,
+			ellipsis = labels.length > max,
+			items = _.map(nodata.concat(_.first(_.zip(labels, colors), max)), ([l, c], i) =>
 						  <label className='Legend-label'
 							  key={i}
 							  title={l}
@@ -58,6 +60,12 @@ var Legend = React.createClass({
 						{items}
 					</Col>
 				</Row>
+				{ellipsis ?
+					<Row>
+						<Col md={10} mdOffset={1}>
+							...
+						</Col>
+					</Row> : null}
 			</div>
 		);
 	}
