@@ -16,6 +16,7 @@ define(['d3', 'jquery', 'underscore'
 			crosshairH = plot.parents('.spreadsheet').find('.crosshairH'),
 			crosshairV = column.find('.crosshairV'),
 			scrollTop = $('body').scrollTop(),
+			scrollLeft = $('body').scrollLeft(),
 			headerPlot = column.find('.headerPlot'),
 			samplePlot = column.find('.samplePlot'),
 			vHeight = samplePlot.height(),
@@ -36,9 +37,11 @@ define(['d3', 'jquery', 'underscore'
 				vHeight += headerPlot.height();
 				vTop = headerPlot.offset().top;
 			}
-			crosshairH.css('top', e.pageY - scrollTop);
+			crosshairH.css({
+				'top': e.pageY - scrollTop
+			});
 			crosshairV.css({
-				'left': e.pageX,
+				'left': e.pageX -scrollLeft,
 				'top': vTop - scrollTop,
 				'height': vHeight
 			});

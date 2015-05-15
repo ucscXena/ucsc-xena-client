@@ -14,6 +14,7 @@ var variantSets = {
     "nextPageToken": null,
     "variantSets": [
         {
+            "referenceSetId": "",
             "id": "1000_genomes",
             "datasetId": "NotImplemented",
             "metadata": [
@@ -28,7 +29,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Confidence interval around END for imprecise variants",
                     "number": "2",
                     "value": "",
                     "key": "INFO.CIEND",
@@ -37,7 +38,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Confidence interval around POS for imprecise variants",
                     "number": "2",
                     "value": "",
                     "key": "INFO.CIPOS",
@@ -46,7 +47,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Source call set.",
                     "number": "1",
                     "value": "",
                     "key": "INFO.CS",
@@ -55,7 +56,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "End coordinate of this variant",
                     "number": "1",
                     "value": "",
                     "key": "INFO.END",
@@ -64,7 +65,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Imprecise structural variation",
                     "number": "0",
                     "value": "",
                     "key": "INFO.IMPRECISE",
@@ -73,7 +74,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Merged calls.",
                     "number": ".",
                     "value": "",
                     "key": "INFO.MC",
@@ -82,7 +83,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Mobile element info of the form NAME,START,END<POLARITY; If there is only 5' OR 3' support for this call, will be NULL NULL for START and END",
                     "number": "4",
                     "value": "",
                     "key": "INFO.MEINFO",
@@ -91,7 +92,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Mitochondrial end coordinate of inserted sequence",
                     "number": "1",
                     "value": "",
                     "key": "INFO.MEND",
@@ -100,7 +101,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Estimated length of mitochondrial insert",
                     "number": "1",
                     "value": "",
                     "key": "INFO.MLEN",
@@ -109,7 +110,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Mitochondrial start coordinate of inserted sequence",
                     "number": "1",
                     "value": "",
                     "key": "INFO.MSTART",
@@ -118,7 +119,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "SV length. It is only calculated for structural variation MEIs. For other types of SVs; one may calculate the SV length by INFO:END-START+1, or by finding the difference between lengthes of REF and ALT alleles",
                     "number": ".",
                     "value": "",
                     "key": "INFO.SVLEN",
@@ -127,7 +128,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Type of structural variant",
                     "number": "1",
                     "value": "",
                     "key": "INFO.SVTYPE",
@@ -136,7 +137,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Precise Target Site Duplication for bases, if unknown, value will be NULL",
                     "number": "1",
                     "value": "",
                     "key": "INFO.TSD",
@@ -145,7 +146,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Total number of alternate alleles in called genotypes",
                     "number": "A",
                     "value": "",
                     "key": "INFO.AC",
@@ -154,7 +155,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Estimated allele frequency in the range (0,1)",
                     "number": "A",
                     "value": "",
                     "key": "INFO.AF",
@@ -163,7 +164,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Number of samples with data",
                     "number": "1",
                     "value": "",
                     "key": "INFO.NS",
@@ -172,7 +173,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Total number of alleles in called genotypes",
                     "number": "1",
                     "value": "",
                     "key": "INFO.AN",
@@ -181,7 +182,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Allele frequency in the EAS populations calculated from AC and AN, in the range (0,1)",
                     "number": "A",
                     "value": "",
                     "key": "INFO.EAS_AF",
@@ -190,7 +191,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Allele frequency in the EUR populations calculated from AC and AN, in the range (0,1)",
                     "number": "A",
                     "value": "",
                     "key": "INFO.EUR_AF",
@@ -199,7 +200,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Allele frequency in the AFR populations calculated from AC and AN, in the range (0,1)",
                     "number": "A",
                     "value": "",
                     "key": "INFO.AFR_AF",
@@ -208,7 +209,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Allele frequency in the AMR populations calculated from AC and AN, in the range (0,1)",
                     "number": "A",
                     "value": "",
                     "key": "INFO.AMR_AF",
@@ -217,7 +218,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Allele frequency in the SAS populations calculated from AC and AN, in the range (0,1)",
                     "number": "A",
                     "value": "",
                     "key": "INFO.SAS_AF",
@@ -226,7 +227,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Total read depth; only low coverage data were counted towards the DP, exome data were not used",
                     "number": "1",
                     "value": "",
                     "key": "INFO.DP",
@@ -235,7 +236,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Ancestral Allele. Format: AA|REF|ALT|IndelType. AA: Ancestral allele, REF:Reference Allele, ALT:Alternate Allele, IndelType:Type of Indel (REF, ALT and IndelType are only defined for indels)",
                     "number": "1",
                     "value": "",
                     "key": "INFO.AA",
@@ -244,7 +245,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "indicates what type of variant the line represents",
                     "number": ".",
                     "value": "",
                     "key": "INFO.VT",
@@ -253,7 +254,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "indicates whether a variant is within the exon pull down target boundaries",
                     "number": "0",
                     "value": "",
                     "key": "INFO.EX_TARGET",
@@ -262,7 +263,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "indicates whether a site is multi-allelic",
                     "number": "0",
                     "value": "",
                     "key": "INFO.MULTI_ALLELIC",
@@ -272,6 +273,7 @@ var variantSets = {
             ]
         },
         {
+            "referenceSetId": "",
             "id": "Clinvar",
             "datasetId": "NotImplemented",
             "metadata": [
@@ -286,7 +288,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "dbSNP ID (i.e. rs number)",
                     "number": "1",
                     "value": "",
                     "key": "INFO.RS",
@@ -295,7 +297,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Chr position reported in dbSNP",
                     "number": "1",
                     "value": "",
                     "key": "INFO.RSPOS",
@@ -304,7 +306,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "RS orientation is reversed",
                     "number": "0",
                     "value": "",
                     "key": "INFO.RV",
@@ -313,7 +315,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variation Property.  Documentation is at ftp://ftp.ncbi.nlm.nih.gov/snp/specs/dbSNP_BitField_latest.pdf",
                     "number": "1",
                     "value": "",
                     "key": "INFO.VP",
@@ -322,7 +324,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Pairs each of gene symbol:gene id.  The gene symbol and id are delimited by a colon (:) and each pair is delimited by a vertical bar (|)",
                     "number": "1",
                     "value": "",
                     "key": "INFO.GENEINFO",
@@ -331,7 +333,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "First dbSNP Build for RS",
                     "number": "1",
                     "value": "",
                     "key": "INFO.dbSNPBuildID",
@@ -354,7 +356,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variant Suspect Reason Codes (may be more than one value added together) 0 - unspecified, 1 - Paralog, 2 - byEST, 4 - oldAlign, 8 - Para_EST, 16 - 1kg_failed, 1024 - other",
                     "number": "1",
                     "value": "",
                     "key": "INFO.SSR",
@@ -363,7 +365,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Weight, 00 - unmapped, 1 - weight 1, 2 - weight 2, 3 - weight 3 or more",
                     "number": "1",
                     "value": "",
                     "key": "INFO.WGT",
@@ -372,7 +374,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variation Class",
                     "number": "1",
                     "value": "",
                     "key": "INFO.VC",
@@ -381,7 +383,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variant is Precious(Clinical,Pubmed Cited)",
                     "number": "0",
                     "value": "",
                     "key": "INFO.PM",
@@ -390,7 +392,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Provisional Third Party Annotation(TPA) (currently rs from PHARMGKB who will give phenotype data)",
                     "number": "0",
                     "value": "",
                     "key": "INFO.TPA",
@@ -399,7 +401,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Links exist to PubMed Central article",
                     "number": "0",
                     "value": "",
                     "key": "INFO.PMC",
@@ -408,7 +410,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Has 3D structure - SNP3D table",
                     "number": "0",
                     "value": "",
                     "key": "INFO.S3D",
@@ -417,7 +419,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Has SubmitterLinkOut - From SNP->SubSNP->Batch.link_out",
                     "number": "0",
                     "value": "",
                     "key": "INFO.SLO",
@@ -426,7 +428,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Has non-synonymous frameshift A coding region variation where one allele in the set changes all downstream amino acids. FxnClass = 44",
                     "number": "0",
                     "value": "",
                     "key": "INFO.NSF",
@@ -435,7 +437,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Has non-synonymous missense A coding region variation where one allele in the set changes protein peptide. FxnClass = 42",
                     "number": "0",
                     "value": "",
                     "key": "INFO.NSM",
@@ -444,7 +446,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Has non-synonymous nonsense A coding region variation where one allele in the set changes to STOP codon (TER). FxnClass = 41",
                     "number": "0",
                     "value": "",
                     "key": "INFO.NSN",
@@ -453,7 +455,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Has reference A coding region variation where one allele in the set is identical to the reference sequence. FxnCode = 8",
                     "number": "0",
                     "value": "",
                     "key": "INFO.REF",
@@ -462,7 +464,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Has synonymous A coding region variation where one allele in the set does not change the encoded amino acid. FxnCode = 3",
                     "number": "0",
                     "value": "",
                     "key": "INFO.SYN",
@@ -471,7 +473,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "In 3' UTR Location is in an untranslated region (UTR). FxnCode = 53",
                     "number": "0",
                     "value": "",
                     "key": "INFO.U3",
@@ -480,7 +482,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "In 5' UTR Location is in an untranslated region (UTR). FxnCode = 55",
                     "number": "0",
                     "value": "",
                     "key": "INFO.U5",
@@ -489,7 +491,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "In acceptor splice site FxnCode = 73",
                     "number": "0",
                     "value": "",
                     "key": "INFO.ASS",
@@ -498,7 +500,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "In donor splice-site FxnCode = 75",
                     "number": "0",
                     "value": "",
                     "key": "INFO.DSS",
@@ -507,7 +509,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "In Intron FxnCode = 6",
                     "number": "0",
                     "value": "",
                     "key": "INFO.INT",
@@ -516,7 +518,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "In 3' gene region FxnCode = 13",
                     "number": "0",
                     "value": "",
                     "key": "INFO.R3",
@@ -525,7 +527,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "In 5' gene region FxnCode = 15",
                     "number": "0",
                     "value": "",
                     "key": "INFO.R5",
@@ -534,7 +536,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Has other variant with exactly the same set of mapped positions on NCBI refernce assembly.",
                     "number": "0",
                     "value": "",
                     "key": "INFO.OTH",
@@ -543,7 +545,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Has Assembly conflict. This is for weight 1 and 2 variant that maps to different chromosomes on different assemblies.",
                     "number": "0",
                     "value": "",
                     "key": "INFO.CFL",
@@ -552,7 +554,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Is Assembly specific. This is set if the variant only maps to one assembly",
                     "number": "0",
                     "value": "",
                     "key": "INFO.ASP",
@@ -561,7 +563,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Is mutation (journal citation, explicit fact): a low frequency variation that is cited in journal and other reputable sources",
                     "number": "0",
                     "value": "",
                     "key": "INFO.MUT",
@@ -570,7 +572,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Is Validated.  This bit is set if the variant has 2+ minor allele count based on frequency or genotype data.",
                     "number": "0",
                     "value": "",
                     "key": "INFO.VLD",
@@ -597,7 +599,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Marker is on high density genotyping kit (50K density or greater).  The variant may have phenotype associations present in dbGaP.",
                     "number": "0",
                     "value": "",
                     "key": "INFO.HD",
@@ -606,7 +608,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Genotypes available. The variant has individual genotype (in SubInd table).",
                     "number": "0",
                     "value": "",
                     "key": "INFO.GNO",
@@ -615,7 +617,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "1000 Genome phase 1 (incl. June Interim phase 1)",
                     "number": "0",
                     "value": "",
                     "key": "INFO.KGPhase1",
@@ -624,7 +626,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "1000 Genome phase 3",
                     "number": "0",
                     "value": "",
                     "key": "INFO.KGPhase3",
@@ -633,7 +635,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variation is interrogated in a clinical diagnostic assay",
                     "number": "0",
                     "value": "",
                     "key": "INFO.CDA",
@@ -642,7 +644,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Submitted from a locus-specific database",
                     "number": "0",
                     "value": "",
                     "key": "INFO.LSD",
@@ -651,7 +653,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Microattribution/third-party annotation(TPA:GWAS,PAGE)",
                     "number": "0",
                     "value": "",
                     "key": "INFO.MTP",
@@ -660,7 +662,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Has OMIM/OMIA",
                     "number": "0",
                     "value": "",
                     "key": "INFO.OM",
@@ -669,7 +671,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Contig allele not present in variant allele list. The reference sequence allele at the mapped position is not present in the variant allele list, adjusted for orientation.",
                     "number": "0",
                     "value": "",
                     "key": "INFO.NOC",
@@ -678,7 +680,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Is Withdrawn by submitter If one member ss is withdrawn by submitter, then this bit is set.  If all member ss' are withdrawn, then the rs is deleted to SNPHistory",
                     "number": "0",
                     "value": "",
                     "key": "INFO.WTD",
@@ -687,7 +689,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Rs cluster has non-overlapping allele sets. True when rs set has more than 2 alleles from different submissions and these sets share no alleles in common.",
                     "number": "0",
                     "value": "",
                     "key": "INFO.NOV",
@@ -696,7 +698,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "An ordered, comma delimited list of allele frequencies based on 1000Genomes, starting with the reference allele followed by alternate alleles as ordered in the ALT column. Where a 1000Genomes alternate allele is not in the dbSNPs alternate allele set, the allele is added to the ALT column.  The minor allele is the second largest value in the list, and was previuosly reported in VCF as the GMAF.  This is the GMAF reported on the RefSNP and EntrezSNP pages and VariationReporter",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CAF",
@@ -705,7 +707,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "RS is a common SNP.  A common SNP is one that has at least one 1000Genomes population with a minor allele of frequency >= 1% and for which 2 or more founders contribute to that minor allele frequency.",
                     "number": "1",
                     "value": "",
                     "key": "INFO.COMMON",
@@ -714,7 +716,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variant names from HGVS.    The order of these variants corresponds to the order of the info in the other clinical  INFO tags.",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CLNHGVS",
@@ -723,7 +725,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variant alleles from REF or ALT columns.  0 is REF, 1 is the first ALT allele, etc.  This is used to match alleles with other corresponding clinical (CLN) INFO tags.  A value of -1 indicates that no allele was found to match a corresponding HGVS allele name.",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CLNALLE",
@@ -732,7 +734,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variant Clinical Chanels",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CLNSRC",
@@ -740,21 +742,8 @@ var variantSets = {
                     "id": ""
                 },
                 {
-                    "info": {
-                        "0": "unknown",
-                        "1": "germline",
-                        "2": "somatic",
-                        "4": "inherited",
-                        "8": "paternal",
-                        "16": "maternal",
-                        "32": "de-novo",
-                        "64": "biparental",
-                        "128": "uniparental",
-                        "256": "not-tested",
-                        "512": "tested-inconclusive",
-                        "1073741824": "other"
-                    },
-                    "description": "Allele Origin",
+                    "info": {},
+                    "description": "Allele Origin. One or more of the following values may be added: 0 - unknown; 1 - germline; 2 - somatic; 4 - inherited; 8 - paternal; 16 - maternal; 32 - de-novo; 64 - biparental; 128 - uniparental; 256 - not-tested; 512 - tested-inconclusive; 1073741824 - other",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CLNORIGIN",
@@ -763,7 +752,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variant Clinical Channel IDs",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CLNSRCID",
@@ -791,7 +780,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variant disease database name",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CLNDSDB",
@@ -800,7 +789,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variant disease database ID",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CLNDSDBID",
@@ -818,7 +807,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "ClinVar Review Status, mult - Classified by multiple submitters, single - Classified by single submitter, not - Not classified by submitter, exp - Reviewed by expert panel, prof - Reviewed by professional society",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CLNREVSTAT",
@@ -827,7 +816,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Variant Accession and Versions",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CLNACC",
@@ -837,6 +826,7 @@ var variantSets = {
             ]
         },
         {
+            "referenceSetId": "",
             "id": "lovd",
             "datasetId": "NotImplemented",
             "metadata": [
@@ -851,7 +841,7 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Data from LOVD Format: EFFECT|DNA_CHANGE|DNA_CHANGE_GENOMIC|PROTEIN_CHANGE|PUBLISHED_AS|DB_ID|VIP|VARIANT_REMARKS|REFERENCE|DBSNP_ID|GENETIC_ORIGIN|SEGREGATION|FREQUENCY|RE_SITE|METHYLATION|OWNER",
                     "number": ".",
                     "value": "",
                     "key": "INFO.LOVD",
@@ -860,10 +850,314 @@ var variantSets = {
                 },
                 {
                     "info": {},
-                    "description": "",
+                    "description": "Consequence annotations from Ensembl VEP. Format: Allele|Consequence|IMPACT|SYMBOL|Gene|Feature_type|Feature|BIOTYPE|EXON|INTRON|HGVSc|HGVSp|cDNA_position|CDS_position|Protein_position|Amino_acids|Codons|Existing_variation|DISTANCE|STRAND|SYMBOL_SOURCE|HGNC_ID|CANONICAL|TSL|CCDS|ENSP|SWISSPROT|TREMBL|UNIPARC|SIFT|PolyPhen|DOMAINS|GMAF|AFR_MAF|AMR_MAF|ASN_MAF|EAS_MAF|EUR_MAF|SAS_MAF|AA_MAF|EA_MAF|CLIN_SIG|SOMATIC|PUBMED|MOTIF_NAME|MOTIF_POS|HIGH_INF_POS|MOTIF_SCORE_CHANGE",
                     "number": ".",
                     "value": "",
                     "key": "INFO.CSQ",
+                    "type": "String",
+                    "id": ""
+                }
+            ]
+        },
+        {
+            "referenceSetId": "",
+            "id": "umd",
+            "datasetId": "NotImplemented",
+            "metadata": [
+                {
+                    "info": {},
+                    "description": "",
+                    "number": "1",
+                    "value": "VCFv4.0",
+                    "key": "version",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Sample specific UMD id. (-1 means null data)",
+                    "number": "1",
+                    "value": "",
+                    "key": "INFO.UMDID",
+                    "type": "Integer",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "cDNA level name of variant in HGVS format.",
+                    "number": "1",
+                    "value": "",
+                    "key": "INFO.cDNAVAR",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "protein level name of variant in HGVS format.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.pVAR",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Mutation type: transition mutation (Ts) in which the base change does not change the pyrimidine-purine orientation. Transversion mutation (Tv) in which the purine-pyrimidine orientation is changed to pyrimidine-purine or vice versa.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.MTYPE",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Variation class: MS (missense), FS (frameshift), IFD (in frame deletion), IFI (in frame insertion, RGT (large rearrangement), NS (non-sens), ins/del (insertion-deletion), PTC (premature termination codon).",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.VARCLASS",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "The wild-type codon for this variant.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.wtCODON",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "The wild-type amino acid for this variant.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.wtAA",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "The mutant codon for this variant.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.mtCODON",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "The mutant amino acid for this variant.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.mtAA",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Sequence variation.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.mtEVENT",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Mutation type: transition mutation (Ts) in which the base change does not change the pyrimidine-purine orientation. Transversion mutation (Tv) in which the purine-pyrimidine orientation is changed to pyrimidine-purine or vice versa.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.mTYPE",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Location of the variant on the known tridimensional structure.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.STRUCT",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Highly conserved amino acid or interacting directly with a known partner.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.HCD",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Pyrimidine double.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.pyDOUBLE",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "CpG sites are regions of DNA where a cytosine nucleotide occurs next to a guanine nucleotide in the linear sequence of bases along its length. CpG stands for cytosine and guanine separated by a phosphate (-C-phosphate-G-), which links the two nucleosides together in DNA. The CpG notation is used to distinguish a cytosine followed by guanine from a cytosine base paired to a guanine.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.CpG",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Mutation impact at the mRNA level.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.mRNALVL",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Mutation on restriction map.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.RSTCTMAP",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Anonymous number of family.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.sampID",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Patient status.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.PATSTATUS",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Gender of the sample.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.GENDER",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Transmission of the variant for the sample.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.TRANSMIT",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Age of onset.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.ONSET",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Family type.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.famTYPE",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Reference ID. (-1 means null data)",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.refID",
+                    "type": "Integer",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Documentation of whether the data has already been published.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.REFERENCE",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "A list of databases the mutation is already described in.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.mutDB",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Method of analysis.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.methANALYSIS",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Splice site type.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.spliceTYPE",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Wild-type sequence.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.wtSEQ",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "CV.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.CV",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Mutant type sequence.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.mutTYPESEQ",
+                    "type": "String",
+                    "id": ""
+                },
+                {
+                    "info": {},
+                    "description": "Variation percent.",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.varPERCENT",
                     "type": "String",
                     "id": ""
                 }
