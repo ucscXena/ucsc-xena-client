@@ -102,7 +102,7 @@ var Columns = React.createClass({
 	},
 	render: function () {
 		var {data, lens, samples} = this.props;
-		var {zoom, columnOrder} = L.view(lens);
+		var {zoom, columnOrder, cohort} = L.view(lens);
 		var {columnEdit, vizSettings} = this.state;
 		var height = zoom.height;
 		var editor = columnEdit ?
@@ -145,12 +145,13 @@ var Columns = React.createClass({
 					style={{height: height}}
 					className='addColumn Column'>
 
-					<Button
-						onClick={() => this.setState({columnEdit: true})}
-						className='Column-add-button'
-						title='Add a column'>
-						+
-					</Button>
+					{cohort &&
+						<Button
+							onClick={() => this.setState({columnEdit: true})}
+							className='Column-add-button'
+							title='Add a column'>
+							+
+						</Button>}
 				</div>
 				<div className='crosshairH crosshair' />
 				{editor}

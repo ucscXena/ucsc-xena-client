@@ -198,7 +198,9 @@ var Application = React.createClass(statePropsStream({
 	},
 	render: function() {
 		var {datasets, samples, data} = this.state,
-			spreadsheetLens = L.compose(this.props.lens, Ls.keys(['zoom', 'columnRendering', 'columnOrder', 'vizSettings']));
+			// XXX is anything *not* in the spreadsheet lens? Should
+			// we pass the whole state, or put spreadsheet stuff under a key?
+			spreadsheetLens = L.compose(this.props.lens, Ls.keys(['zoom', 'columnRendering', 'columnOrder', 'vizSettings', 'cohort']));
 
 		var requests = this.dataRequests(this.state, L.view(this.props.lens));
 		this.requestStream.onNext(requests);
