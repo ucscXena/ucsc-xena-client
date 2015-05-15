@@ -460,7 +460,9 @@ define(['underscore_ext',
 		if (val === undefined || _.isNaN(val)) {
 			val = 'NA';
 		}
-		rows.push([{ label: label, val: val }]);
+		if (val !== 'NA'){
+			rows.push([{ label: label, val: val }]);
+		}
 		if (val !== 'NA' && column.dataType !== 'clinicalMatrix') {
 			rows.push([{ label: 'Column mean : '+ prec(meannan(heatmapData[fieldIndex]))}]);
 		}

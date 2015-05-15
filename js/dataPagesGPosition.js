@@ -20,7 +20,8 @@ define(["ga4gh-rxjs", "dom_helper", "metadataStub", "rx-dom", "../css/datapages.
   }
 
   function queryVariants(startPos, endPos, referenceName, variantSetId){
-    var url = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
+    var url = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074";
+    //var url = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
     if (!isNaN(startPos) && !isNaN(endPos) && referenceName && variantSetId){
       return ga4gh.variants(url, {
         start: startPos,
