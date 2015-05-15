@@ -13,6 +13,8 @@ function filterOpts(filter, opts) {
 	return _.filter(opts, opt => opt.label.toLowerCase().indexOf(f) !== -1);
 }
 
+var notUndefined = x => !_.isUndefined(x);
+
 var Select = React.createClass({
 	getInitialState: function () {
 		return {filter: ''};
@@ -41,7 +43,8 @@ var Select = React.createClass({
 	},
 	render: function () {
 		var value = L.view(this.props.lens),
-			title = _.find(this.props.options, opt => opt.value === value),
+			title = notUndefined(value) &&
+				_.find(this.props.options, opt => opt.value === value),
 			opts = filterOpts(this.state.filter, this.props.options);
 		return (
 			<DropdownButton ref='dropdown'
@@ -56,9 +59,9 @@ var Select = React.createClass({
 					value={this.state.filter}
 					onChange={this.onChange}
 					type='text'/>
-				].concat(_.map(opts, opt =>
-						  <MenuItem onSelect={this.onSelect}
-							eventKey={opt.value} key={opt.value}>
+				].concat(_.map(opts, (opt, i) =>
+						  <MenuItem onSelect={this.onSelect} header={!!opt.header}
+							eventKey={opt.value} key={i}>
 
 							{opt.label}
 						 </MenuItem>))}
