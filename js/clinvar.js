@@ -5,21 +5,22 @@ var height = 12;
 var d3 = require('d3');
 var _ = require('underscore');
 
+// 2,3 -> benign, likely benign
+// 4,5 -> likely pathogenic, pathogenic
+// 6,7 -> drug response, histocompatibility
+// 0, 255 -> uncertain, other
+
 // Make multiple passes over the categorical data, drawing
-// lowest to highest, so higher values? The values don't go in
-// order. Need per-data type ordering.
+// lest to most significant, so the latter is emphasized.
 
 var fields = {
 	CLNSIG: {
-		scalefn: d3.scale.category10,
-		order: ['255', '0', '1', '2', '3', '4', '5', '6', '7'],
+		color: d3.scale.ordinal().domain(['2', '3', '4', '5', '6', '7'])
+			.range(['blue', 'lightblue', 'lightred', 'red', 'orange', 'orange']),
+		order: ['6', '7', '3', '2', '4', '5'],
 		parse: i => i[0].split(/[|,]/)
 	}
 };
-
-// update fields with scale, setting domain so we have consistent colors
-// across datasets.
-_.each(fields, f => _.extend(f, {color: f.scalefn().domain(f.order)}));
 
 // max field value, by field.order
 function fieldMax(field, {info}) {
