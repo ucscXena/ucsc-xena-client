@@ -170,7 +170,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			mousing: function (ev) {
 				var pos,posText, posURL,
-					clinVarURL,
+					ga4ghVarURL,
 					node,
 					coords,
 					rows = [],
@@ -201,9 +201,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					posURL = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position="+encodeURIComponent(pos); // hg19 is hard coded, we do not check
 					posText = 'hg19 ' + pos;  // hg19 is hard coded, we do not check
 
-					// clinVar BRCA1 and BRCA2 hard-coded section here
+					// ga4gh BRCA1 and BRCA2 hard-coded section here
 					if (this.gene.name ==="BRCA1" || this.gene.name === "BRCA2"){
-						clinVarURL = "../datapages/?ga4gh=1&variantSetId=Clinvar&referenceName="+node.data.chr.substring(3, node.data.chr.length)+
+						ga4ghVarURL = "../datapages/?ga4gh=1&referenceName="+node.data.chr.substring(3, node.data.chr.length)+
 						"&start="+node.data.start+"&end="+ node.data.end;
 					}
 					rows = [
@@ -218,8 +218,8 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					if (rnaAf !== "NA"){
 						rows.push([{ label: 'RNA variant allele freq', val: rnaAf}]);
 					}
-					if (clinVarURL){
-						rows.push([{ val: 'ClinVar Annotation', url: clinVarURL}]);
+					if (ga4ghVarURL){
+						rows.push([{ val: 'GA4GH Annotations', url: ga4ghVarURL}]);
 					}
 					tip.sampleID = node.data.sample;
 					tip.rows = rows;
