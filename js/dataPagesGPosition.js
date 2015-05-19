@@ -235,6 +235,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
         var value, intepretation, text;
 
         value = eval("variant."+key);
+        console.log(metaData[key].description,key, value);
         if (metaData[key]){
           label = metaData[key].description;
           label = label.charAt(0).toUpperCase()+ label.slice(1);
@@ -300,13 +301,17 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     //source dbs
     if (metadataStub.externalUrls[variantSetId]){
       node.appendChild(document.createTextNode("Source: " ));
-
+      var key, value;
       if (metadataStub.externalUrls[variantSetId].type === "position"){
-        div= dom_helper.hrefLink(variantSetId, metadataStub.externalUrls[variantSetId].url+chr+":"+startPos+"-"+endPos);
+        value = metadataStub.externalUrls[variantSetId].url;
+        [ "chr","startPos","endPos","reference","alt" ].map(key=>{
+          value = value.replace("$"+key,eval(key));
+        });
+        div= dom_helper.hrefLink(metadataStub.externalUrls[variantSetId].name, value);
         node.appendChild(div);
       } else if (metadataStub.externalUrls[variantSetId].type === "key"){
-        var key = metadataStub.externalUrls[variantSetId].value,
-          value = eval("variant."+key);
+        key = metadataStub.externalUrls[variantSetId].value;
+        value = eval("variant."+key);
 
         value[0].split("|").map(acc=>{
           div = dom_helper.hrefLink(variantSetId+":"+acc,
