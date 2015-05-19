@@ -147,7 +147,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       searchButton = document.createElement("BUTTON"),
       div,
       leftBaseNode = document.createElement("div"),
-      rightBaseNode = document.createElement("div"),
+      rightBaseNode,
       startPos, endPos, referenceName, variantSetId,
       variantSetIds,
       query;
@@ -162,8 +162,8 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     frameset.appendChild(fLeft);
     frameset.appendChild(fRight);
 
+    fRight.setAttribute("id","fRight");
     fLeft.contentDocument.body.appendChild(leftBaseNode);
-    fRight.contentDocument.body.appendChild(rightBaseNode);
 
     leftBaseNode.setAttribute("id","leftFrame");
     leftBaseNode.appendChild(dom_helper.elt("labelsameLength","Chr"));
@@ -196,19 +196,26 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       endPos = parseInt(endInput.value.trim());
       referenceName = chromInput.value.trim();
 
-      rightBaseNode.innerHTML="";
+      var oldFrame = document.getElementById("fRight"),
+        newFrame = document.createElement('frame');
+
+      oldFrame.parentNode.replaceChild(newFrame, oldFrame);
+      newFrame.contentDocument.body.innerHTML="";
+      newFrame.setAttribute("id","fRight");
+      rightBaseNode = document.createElement("div");
+      newFrame.contentDocument.body.appendChild(rightBaseNode);
+
       variantSetIds.map(function(id){
-        if (fLeft.contentDocument.getElementById("variantSetId_"+ id).checked){
-          query = queryVariants(startPos, endPos, referenceName, id);
-          query.subscribe(function (results) {
-            results.map(function (variant){
-              var div = document.createElement("div");
-              buildVariantDisplay(variant, div, metadata[id]);
-              rightBaseNode.appendChild(div);
+      if (fLeft.contentDocument.getElementById("variantSetId_"+ id).checked){
+        query = queryVariants(startPos, endPos, referenceName, id);
+        query.subscribe(function (results) {
+          results.map(function (variant){
+            var div = document.createElement("div");
+            buildVariantDisplay(variant, div, metadata[id]);
+            rightBaseNode.appendChild(div);
             });
           });
         }
-
       });
     });
   }
@@ -302,9 +309,10 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
           value = eval("variant."+key);
 
         value[0].split("|").map(acc=>{
-          div = dom_helper.hrefLink(variantSetId+":"+acc+" ",
+          div = dom_helper.hrefLink(variantSetId+":"+acc,
             metadataStub.externalUrls[variantSetId].url.replace("$key",acc));
           node.appendChild(div);
+          node.appendChild(document.createTextNode(" "));
         });
       }
 

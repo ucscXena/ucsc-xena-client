@@ -2,6 +2,7 @@
 'use strict';
 
 // clinVar vcf: https://drive.google.com/uc?id=0Bzoozx2KZAPmb1NWQ1laZElzOXc&export=download
+// 1000_genomes vcf: ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/
 
 // selected field for annotation display
 var selectedKeys = {
@@ -10,9 +11,9 @@ var selectedKeys = {
 };
 
 var externalUrls = {
-    //1000_genome http://browser.1000genomes.org/Homo_sapiens/Location/View?db=core;r=17:41246481-41246481
+    //1000_genome http://browser.1000genomes.org/Homo_sapiens/Location/View/main?r=17:41234470-41234470
     "1000_genomes": {
-        "url":"http://browser.1000genomes.org/Homo_sapiens/Location/View??db=core;r=",
+        "url": "http://browser.1000genomes.org/Homo_sapiens/Location/View/main?r=",
         "type":"position"
     },
     // http://www.ncbi.nlm.nih.gov/clinvar/RCV000132455/
