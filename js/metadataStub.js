@@ -40,6 +40,7 @@ var variantSets = [
                         "0": "unknown",
                         "1": "germline",
                         "2": "somatic",
+                        "3": "both germline and somatic",
                         "4": "inherited",
                         "8": "paternal",
                         "16": "maternal",
