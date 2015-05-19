@@ -203,8 +203,11 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 					// ga4gh BRCA1 and BRCA2 hard-coded section here
 					if (this.gene.name ==="BRCA1" || this.gene.name === "BRCA2"){
-						ga4ghVarURL = "../datapages/?ga4gh=1&referenceName="+node.data.chr.substring(3, node.data.chr.length)+
-						"&start="+node.data.start+"&end="+ node.data.end;
+						ga4ghVarURL = "../datapages/?ga4gh=1&referenceName="+
+							node.data.chr.substring(3, node.data.chr.length)+
+							"&start="+node.data.start+"&end="+ node.data.end +
+							"&ref="+node.data.reference +
+							"&alt="+node.data.alt;
 					}
 					rows = [
 						[ { val: node.data.effect +", " +

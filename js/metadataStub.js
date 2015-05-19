@@ -1,12 +1,33 @@
 /*global module: false */
 'use strict';
 
+// clinVar vcf: https://drive.google.com/uc?id=0Bzoozx2KZAPmb1NWQ1laZElzOXc&export=download
+
 // selected field for annotation display
 var selectedKeys = {
-    "Clinvar": ["INFO.CLNSIG","INFO.CLNDBN","INFO.G5A","INFO.G5"]
+    "Clinvar": ["INFO.CLNSIG","INFO.CLNORIGIN","INFO.CLNDBN","INFO.G5A","INFO.G5"],
+    "1000_genomes":["INFO.AFR_AF","INFO.AMR_AF","INFO.EAS_AF","INFO.EUR_AF","INFO.SAS_AF"]
 };
 
-// clinVar vcf: https://drive.google.com/uc?id=0Bzoozx2KZAPmb1NWQ1laZElzOXc&export=download
+var externalUrls = {
+    //1000_genome http://browser.1000genomes.org/Homo_sapiens/Location/View?db=core;r=17:41246481-41246481
+    "1000_genomes": {
+        "url":"http://browser.1000genomes.org/Homo_sapiens/Location/View??db=core;r=",
+        "type":"position"
+    },
+    // http://www.ncbi.nlm.nih.gov/clinvar/RCV000132455/
+    "Clinvar":{
+        "url":"http://www.ncbi.nlm.nih.gov/clinvar/$key/",
+        "type":"key",
+        "value":"INFO.CLNACC"
+    },
+    // http://databases.lovd.nl/shared/view/BRCA1?search_VariantOnGenome%2FDBID=%3D%22BRCA1_000010%22
+    "lovd":{
+        "url":"http://databases.lovd.nl/shared/view/BRCA1?search_VariantOnGenome%2FDBID=%3D%22$key%22",
+        "type":"key",
+        "value":"INFO.db_id"
+    }
+};
 
 var variantSets = [
     {
@@ -15,19 +36,27 @@ var variantSets = [
         "datasetId": "NotImplemented",
         "metadata": [
             {
-                "info": {
-                    0: "unspecified",
-                    1: "Germline",
-                    2: "Somatic",
-                    3: "Both"
+                    "info": {
+                        "0": "unknown",
+                        "1": "germline",
+                        "2": "somatic",
+                        "4": "inherited",
+                        "8": "paternal",
+                        "16": "maternal",
+                        "32": "de-novo",
+                        "64": "biparental",
+                        "128": "uniparental",
+                        "256": "not-tested",
+                        "512": "tested-inconclusive",
+                        "1073741824": "other"
+                    },
+                    "description": "Allele Origin",
+                    "number": ".",
+                    "value": "",
+                    "key": "INFO.CLNORIGIN",
+                    "type": "String",
+                    "id": ""
                 },
-                "description": "Variant Allele Origin",
-                "number": "1",
-                "value": "",
-                "key": "INFO.SAO",
-                "type": "Integer",
-                "id": ""
-            },
             {
                 "info": {
                     "0": "uncertain significance",
@@ -54,5 +83,6 @@ var variantSets = [
 
 module.exports = {
     selectedKeys: selectedKeys,
-    variantSets: variantSets
+    variantSets: variantSets,
+    externalUrls: externalUrls
 };

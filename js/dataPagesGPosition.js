@@ -83,28 +83,58 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       endPos = parseInt(query_string.end),
       referenceName = query_string.referenceName,
       variantSetIds = query_string.variantSetId ?
-        [query_string.variantSetId] : ["Clinvar","lovd","1000_genomes","umd"],
-      allVariants=[],
+        [query_string.variantSetId] : Object.keys(metadata),
+      ref =  query_string.ref,
+      alt = query_string.alt,
+      allVariants={},
       queryArray = variantSetIds.map(
         variantSetId=>queryVariants(startPos, endPos, referenceName, variantSetId)),
       query = Rx.Observable.zipArray(queryArray),
-      node= dom_helper.sectionNode("dataset");
+      container, sideNode, mainNode;
 
-      query.subscribe(function (ret) {
-        ret.map(function(results){
-          var index = ret.indexOf(results),
-            variantSetId = variantSetIds[index];
-          results.map(function (variant){
+    container = dom_helper.elt("div");
+    container.setAttribute("id", "content-container");
+    basenode.appendChild(container);
+
+    //sidebar
+    sideNode= dom_helper.sectionNode("leftsidebar");
+    container.appendChild(sideNode);
+
+    //mainnode
+    mainNode= dom_helper.sectionNode("dataset");
+    container.appendChild(mainNode);
+
+    query.subscribe(function (ret) {
+      ret.map(function(results){
+        var index = ret.indexOf(results),
+          variantSetId = variantSetIds[index];
+
+        allVariants[variantSetId]=[];
+        results.map(function (variant){
+
+          if ((ref && ref !== variant.referenceBases) || (alt && variant.alternateBases.indexOf(alt)===-1)){
+            return;
+          }
+
+          if ( allVariants[variantSetId].indexOf(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases)===-1){
             var div = document.createElement("div");
-            if ( allVariants.indexOf(variant.id)===-1){
-              buildVariantDisplay(variant, div, metadata[variantSetId]);
-              node.appendChild(div);
-              allVariants.push(variant.id);
-            }
-          });
+            buildVariantDisplay(variant, div, metadata[variantSetId]);
+            mainNode.appendChild(div);
+            allVariants[variantSetId].push(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases);
+          }
         });
+        //sidebar info
+        if (allVariants[variantSetId].length){
+          sideNode.appendChild(dom_helper.elt("b",variantSetId));
+          sideNode.appendChild(document.createElement("br"));
+          allVariants[variantSetId].map(id=>{
+            sideNode.appendChild(dom_helper.hrefLink(id.split("__")[0],"#"+id));
+            sideNode.appendChild(document.createElement("br"));
+          });
+          sideNode.appendChild(document.createElement("br"));
+        }
       });
-      basenode.appendChild(node);
+    });
   }
 
   function searchPage (baseNode, metadata){
@@ -147,7 +177,6 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     leftBaseNode.appendChild(dom_helper.elt("labelsameLength","End"));
     leftBaseNode.appendChild(dom_helper.elt("resultsameLength", endInput));
     leftBaseNode.appendChild(document.createElement("br"));
-
     variantSetIds.map(function(id){
       div = document.createElement("input");
       div.setAttribute("type","checkbox");
@@ -228,7 +257,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
               }).join(", ");
             } else {
               text = value[0].split(",").map(function(oneValue){
-                return oneValue.replace(/\\x2c/g, "");  // clean up messy data with \x2c characters
+                return oneValue.replace(/\\x[a-fA-F0-9]{2}/g," "); //messy input
               }).join(", ");
             }
           }
@@ -257,13 +286,39 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     }
     variant.INFO = variant.info;
 
-    node.appendChild (dom_helper.elt("h2",id));
+    div = dom_helper.elt("a", id);
+    div.setAttribute("name",id+"__"+reference+"__"+alt);
+    node.appendChild (dom_helper.elt("h2", div));
+
+    //source dbs
+    if (metadataStub.externalUrls[variantSetId]){
+      node.appendChild(document.createTextNode("Source: " ));
+
+      if (metadataStub.externalUrls[variantSetId].type === "position"){
+        div= dom_helper.hrefLink(variantSetId, metadataStub.externalUrls[variantSetId].url+chr+":"+startPos+"-"+endPos);
+        node.appendChild(div);
+      } else if (metadataStub.externalUrls[variantSetId].type === "key"){
+        var key = metadataStub.externalUrls[variantSetId].value,
+          value = eval("variant."+key);
+
+        value[0].split("|").map(acc=>{
+          div = dom_helper.hrefLink(variantSetId+":"+acc+" ",
+            metadataStub.externalUrls[variantSetId].url.replace("$key",acc));
+          node.appendChild(div);
+        });
+      }
+
+
+      node.appendChild(document.createElement("br"));
+    }
+
     //chr start (- end)
     node.appendChild(document.createTextNode("chr"+ chr+":"));
     node.appendChild(document.createTextNode(" "+ startPos.toLocaleString()));
     if (startPos !== endPos) {
       node.appendChild(document.createTextNode(" - "+ endPos.toLocaleString()));
     }
+    node.appendChild(document.createTextNode(" (hg19/GRCh37)"));
     node.appendChild(document.createElement("br"));
     //ref, alt
     node.appendChild(document.createTextNode("Reference sequence : "));

@@ -141,6 +141,14 @@ margin-left: auto;
 margin-right: auto;
 width: 20%;
 }
+
+#leftsidebar {
+float:left;
+position:fixed;
+margin-top: 40px;
+margin-left: 10px;
+width: 10%;
+}
 #dataPagesMain {
 width:80%;
 }
