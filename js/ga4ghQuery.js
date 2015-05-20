@@ -4,7 +4,7 @@ var ga4gh = require('ga4gh-rxjs');
 var clinvarMeta = require('./metadataStub');
 var Rx = require('rx');
 require('rx.experimental');
-var _ = require('./underscore_ext');
+//var _ = require('./underscore_ext');
 
 // {url, dataset, chrom, start, end, fields}
 function variants({url, dataset, chrom, start, end}) {
