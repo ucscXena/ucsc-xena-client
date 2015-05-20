@@ -4,6 +4,7 @@
 var height = 12;
 var d3 = require('d3');
 var _ = require('underscore');
+var annotation = require('./annotation');
 
 // 2,3 -> benign, likely benign
 // 4,5 -> likely pathogenic, pathogenic
@@ -38,7 +39,7 @@ function variantPickField(field, {info, ...v}) {
 
 var pickField = (vs, field) => _.map(vs, v => variantPickField(field, v));
 
-function draw(vg, clinvar, chromPosToX) {
+function draw(ann, vg, clinvar, chromPosToX) {
 	var field = 'CLNSIG';
 	var {order, color} = fields[field];
 	var variantsVals = mergeMax(pickField(clinvar, field), field);
@@ -57,6 +58,8 @@ function draw(vg, clinvar, chromPosToX) {
 		});
 	});
 }
+
+annotation.draw.add('clinvar', draw);
 
 // height has to match sheetWrap. Maybe move this to sheetWrap? Then it's not
 // portable to dev branch.

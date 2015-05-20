@@ -76,6 +76,7 @@ define(['jquery',
 		chartState: ['chartState'],
 		vizSettings: ['vizSettings'],
 		_vizSettings: ['_vizSettings'],
+		annotations: ['annotations'],
 		data: ['_column_data']
 	};
 	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths).share();
@@ -177,6 +178,7 @@ define(['jquery',
 		}
 	});
 
+	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074"; // XXX hard-coded for now
 	$(document).ready(function () {
 		var debug_stream = model.state.replay(null, 1),
 			start,
@@ -196,7 +198,12 @@ define(['jquery',
 				"zoomCount": 100,
 				"column_rendering": {},
 				"_column": {}, // not sure what this is for
-				"column_order": []
+				"column_order": [],
+				"annotations": [['clinvar', {
+					url: clinvar_host,
+					dsID: 'Clinvar',
+					field: 'CLNSIG'
+				}]]
 			};
 		if (sessionStorage && sessionStorage.xena) {
 			start = _.extend(start, JSON.parse(sessionStorage.xena));

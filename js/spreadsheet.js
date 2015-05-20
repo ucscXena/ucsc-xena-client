@@ -115,6 +115,7 @@ define(['underscore_ext',
 					_sources: ['_sources'],
 					_column: ['_column', uuid],
 					column: ['column_rendering', uuid],
+					annotations: ['annotations'],
 					vizSettings: ['vizSettings', dsID]
 				}, s);
 			});

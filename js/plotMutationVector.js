@@ -12,6 +12,7 @@ define(['underscore_ext',
 		'vgcanvas',
 		'xenaQuery',
 		'clinvar',
+		'annotation',
 		'ga4ghQuery',
 		'rx-jquery'
 	], function (
@@ -27,6 +28,7 @@ define(['underscore_ext',
 		vgcanvas,
 		xenaQuery,
 		clinvar,
+		annotation,
 		ga4ghQuery) {
 
 	"use strict";
@@ -134,35 +136,39 @@ define(['underscore_ext',
 		}
 	);
 
+	var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
+	function ga4ghAnnotations({url, dsID}, [probe]) {
+		return xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_gene_pos(probe)), function (r) {
+			return Rx.DOM.ajax(r).map(xenaQuery.json_resp).selectMany(([gene]) =>
+				gene ? ga4ghQuery.variants({
+					url: url,
+					 dataset: dsID,
+					 start: gene.txstart,
+					 end: gene.txend,
+					 chrom: gene.chrom
+				}) :
+				Rx.Observable.return([]));
+		});
+    }
+
 	fetch = ifChanged(
 		[
 			['column', 'dsID'],
 			['column', 'fields'],
-			['samples']
+			['samples'],
+            ['annotations']
 		],
-		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
-			var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
-			var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074"; // XXX hard-coded for now
-//			var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
-			return {
+		xenaQuery.dsID_fn(function (host, ds, probes, samples, annotations) {
+			var annQueries = _.object(_.map(annotations,
+				([, a], i) => [`annotation${i}`, ga4ghAnnotations(a, probes)]));
+			return _.merge({
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
 				}),
 				refGene: xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_exon_string(probes)), function (r) {
 					return Rx.DOM.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp));
-				}),
-				clinvar: xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_gene_pos(probes[0])), function (r) {
-					return Rx.DOM.ajax(r).map(xenaQuery.json_resp).selectMany(([gene]) =>
-						gene ? ga4ghQuery.variants({
-									url: clinvar_host,
-									dataset: 'Clinvar',
-									start: gene.txstart,
-									end: gene.txend,
-									chrom: gene.chrom
-								}) :
-								Rx.Observable.return([]));
 				})
-			};
+			}, annQueries);
 		})
 	);
 
@@ -190,10 +196,11 @@ define(['underscore_ext',
 			[],
 			['sort'],
 			['sFeature'], // TODO ref sFeature rather than column.sFeature
-			['data']
+			['data'],
+			['annotations']
 		],
 		// samples are in sorted order
-		function (disp, el, wrapper, ws, sort, sFeature, data) {
+		function (disp, el, wrapper, ws, sort, sFeature, data, annotations) {
 			var local = disp.getDisposable(),
 				column = ws.column,
 				vg,
@@ -289,8 +296,8 @@ define(['underscore_ext',
 
 			// Have to draw this after refGene, because it depends on
 			// scaling that is mixed up with refGene state.
-			if (data.clinvar.length && data.refGene) {
-				clinvar.draw(local.clinvar, data.clinvar,
+			if (data.annotation0.length && data.refGene) {
+				annotation.draw(annotations[0], local.clinvar, data.annotation0,
 						refGeneExons.get(el.id).mapChromPosToX);
 			}
 		}
