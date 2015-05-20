@@ -10,12 +10,11 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
   function (ga4ghQuery, dom_helper, metadataStub, Rx, _) {
   'use strict';
 
-  var url = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074";
-    //var url = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
+  var url = metadataStub.ga4ghURL;
 
   function start(query_string, baseNode){
     var source = Rx.Observable.zipArray(ga4ghQuery.variantSetsQuery(url), //from server
-      ga4ghQuery.metadata(url, "Clinvar")),  //stub
+      ga4ghQuery.metadata(url)),  //stub
       serverMeta ={}, stubMeta={},
       metadata={};
 
@@ -90,7 +89,8 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       queryArray = variantSetIds.map(
         variantSetId=>queryVariants(startPos, endPos, referenceName, variantSetId)),
       query = Rx.Observable.zipArray(queryArray),
-      container, sideNode, mainNode;
+      container, sideNode, mainNode,
+      found=0;
 
     container = dom_helper.elt("div");
     container.setAttribute("id", "content-container");
@@ -104,6 +104,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     mainNode= dom_helper.sectionNode("dataset");
     container.appendChild(mainNode);
 
+
     query.subscribe(function (ret) {
       ret.map(function(results){
         var index = ret.indexOf(results),
@@ -111,7 +112,6 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
 
         allVariants[variantSetId]=[];
         results.map(function (variant){
-
           if ((ref && ref !== variant.referenceBases) || (alt && variant.alternateBases.indexOf(alt)===-1)){
             return;
           }
@@ -121,19 +121,21 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
             buildVariantDisplay(variant, div, metadata[variantSetId]);
             mainNode.appendChild(div);
             allVariants[variantSetId].push(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases);
+            found =1;
           }
         });
         //sidebar info
-        if (allVariants[variantSetId].length){
-          sideNode.appendChild(dom_helper.elt("b",variantSetId));
+        sideNode.appendChild(dom_helper.elt("b",variantSetId));
+        sideNode.appendChild(document.createElement("br"));
+        allVariants[variantSetId].map(id=>{
+          sideNode.appendChild(dom_helper.hrefLink(id.split("__")[0],"#"+id));
           sideNode.appendChild(document.createElement("br"));
-          allVariants[variantSetId].map(id=>{
-            sideNode.appendChild(dom_helper.hrefLink(id.split("__")[0],"#"+id));
-            sideNode.appendChild(document.createElement("br"));
-          });
-          sideNode.appendChild(document.createElement("br"));
-        }
+        });
+        sideNode.appendChild(document.createElement("br"));
       });
+      if (!found){
+        mainNode.appendChild(document.createTextNode("No variants found."));
+      }
     });
   }
 
