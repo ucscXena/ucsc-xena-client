@@ -40,7 +40,6 @@ define(['haml/sheetWrap.haml',
 	var horizontalMargin = 3,
 		sparseRadius = 4,
 		sparsePad = sparseRadius + 1,
-		headerPlotHeight = 24,
 		refHeight = 12,
 		widget,
 		aWidget;
@@ -63,7 +62,7 @@ define(['haml/sheetWrap.haml',
 			deleteColumn: deleteColumn,
 			horizontalMargin: horizontalMargin,
 			sparsePad: sparsePad,
-			headerPlotHeight: headerPlotHeight,
+			headerPlotHeight: refHeight,
 		});
 	}
 
@@ -291,7 +290,6 @@ define(['haml/sheetWrap.haml',
 				horizontalMargin: horizontalMargin,
 				sparseRadius: sparseRadius,
 				sparsePad: sparsePad,
-				headerPlotHeight: headerPlotHeight,
 				refHeight: refHeight
 			};
 		},

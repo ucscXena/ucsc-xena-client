@@ -586,10 +586,11 @@ define(['underscore_ext',
 			['wrapper'],
 			[],
 			['sort'],
-			['data']
+			['data'],
+			['annotations']
 		],
 		// samples are in sorted order
-		function (disp, el, wrapper, ws, sort, data) {
+		function (disp, el, wrapper, ws, sort, data, annotations) {
 			var local = disp.getDisposable(),
 				features = data.features || {},
 				codes = data.codes || {},
@@ -630,6 +631,8 @@ define(['underscore_ext',
 			if (vg.height() !== ws.height) {
 				vg.height(ws.height);
 			}
+
+			columnUi.setHeight(annotations);
 
 			heatmapData = dataToHeatmap(sort, data.req.values, fields, transform);
 			colors = map(fields, function (p, i) {

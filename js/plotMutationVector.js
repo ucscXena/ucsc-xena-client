@@ -221,7 +221,7 @@ define(['underscore_ext',
 				local.vg = vgcanvas(column.width, canvasHeight);
 				local.columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 				local.columnUi.$samplePlot.append(local.vg.element());
-				local.clinvar = vgcanvas(column.width, clinvar.height);
+				local.clinvar = vgcanvas(column.width, annotations[0][1].height);
 				$(local.clinvar.element()).addClass('clinvar');
 			}
 
@@ -235,8 +235,12 @@ define(['underscore_ext',
  				vg.height(canvasHeight);
  			}
 
-			if ($('#' + el.id + ' .headerPlot') && !$('#' + el.id + ' .clinvar').length) {
-				$('#' + el.id + ' .headerPlot').append(local.clinvar.element());
+			columnUi.setHeight(annotations);
+
+			var headerPlot = $('#' + el.id + ' .headerPlot');
+
+			if (headerPlot && !headerPlot.find(local.clinvar.element()).length) {
+				headerPlot.append(local.clinvar.element());
 			}
 
 			if (local.clinvar.width() !== column.width) {

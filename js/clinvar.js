@@ -1,7 +1,6 @@
 /*global module: false, require: false */
 'use strict';
 
-var height = 12;
 var d3 = require('d3');
 var _ = require('underscore');
 var annotation = require('./annotation');
@@ -39,8 +38,7 @@ function variantPickField(field, {info, ...v}) {
 
 var pickField = (vs, field) => _.map(vs, v => variantPickField(field, v));
 
-function draw(ann, vg, clinvar, chromPosToX) {
-	var field = 'CLNSIG';
+function draw([__, {height, field}], vg, clinvar, chromPosToX) {
 	var {order, color} = fields[field];
 	var variantsVals = mergeMax(pickField(clinvar, field), field);
 	_.each(order, val => {
@@ -61,9 +59,6 @@ function draw(ann, vg, clinvar, chromPosToX) {
 
 annotation.draw.add('clinvar', draw);
 
-// height has to match sheetWrap. Maybe move this to sheetWrap? Then it's not
-// portable to dev branch.
 module.exports = {
-    height: height,
 	draw: draw
 };

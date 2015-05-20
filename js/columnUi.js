@@ -96,7 +96,11 @@ define(['haml/columnUi.haml', 'haml/columnUiSelect.haml', 'haml/tupleDisplay.ham
 				id: 'field'
 			});
 		},
-
+		setHeight: function (annotations) {
+			var height = _.reduce(annotations, (sum, [, {height}]) => sum + height, 0) +
+				annotations.length + this.headerPlotHeight;
+			this.$el.find('.headerPlot').height(height);
+		},
 		firstRender: function (options) {
 			var self = this,
 				$anchor = $(options.ws.el);
@@ -113,7 +117,6 @@ define(['haml/columnUi.haml', 'haml/columnUiSelect.haml', 'haml/tupleDisplay.ham
 			this.$el.parent().css('margin-left', this.horizontalMargin);
 			this.$el.parent().css('margin-right', this.horizontalMargin);
 			this.$el.find('.sparsePad').height(this.sparsePad);
-			this.$el.find('.headerPlot').height(this.headerPlotHeight);
 
 			// cache jquery objects for active DOM elements
 			this.cache = ['moveHandle', 'more', 'titleRow', 'columnTitle', 'fieldRow', 'field', 'headerPlot', 'sparsePad', 'samplePlot', 'colorBarLabelRow', 'colorBarLabel', 'colorBarEllipsis'];

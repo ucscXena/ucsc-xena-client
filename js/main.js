@@ -200,6 +200,7 @@ define(['jquery',
 				"_column": {}, // not sure what this is for
 				"column_order": [],
 				"annotations": [['clinvar', {
+					height: 20,
 					url: clinvar_host,
 					dsID: 'Clinvar',
 					field: 'CLNSIG'
