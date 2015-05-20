@@ -19,8 +19,10 @@ function drawBands(vg, bands, color, chromPosToX, data) {
 	_.each(bands, (band, i) =>
 			_.each(band, curval =>
 				_.each(dbg[curval], v => {
-		var {start, end} = chromPosToX(v);
-		vg.box(start, height * i, end - start, height, color(v.val));
+		var {start, end} = chromPosToX(v),
+			istart = Math.round(start),
+			iend = Math.round(end);
+		vg.box(istart, height * i, iend - istart || 1, height, color(v.val));
 	})));
 }
 
