@@ -4,6 +4,9 @@
 // clinVar vcf: https://drive.google.com/uc?id=0Bzoozx2KZAPmb1NWQ1laZElzOXc&export=download
 // 1000_genomes vcf: ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/
 
+var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074";
+//var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
+
 // selected field for annotation display
 var selectedKeys = {
     "Clinvar": ["INFO.CLNSIG","INFO.CLNORIGIN","INFO.CLNDBN","INFO.G5A","INFO.G5"],
@@ -97,5 +100,6 @@ var variantSets = [
 module.exports = {
     selectedKeys: selectedKeys,
     variantSets: variantSets,
-    externalUrls: externalUrls
+    externalUrls: externalUrls,
+    ga4ghURL: ga4ghURL
 };
