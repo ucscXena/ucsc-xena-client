@@ -93,8 +93,13 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		});
 	}
 
+	function merge(...objs) {
+		return _.extend.apply(null, [{}].concat(objs));
+	}
+
 	_.mixin({
 		fmap: fmap,
+		merge: merge,
 		apply: apply,
 		pluckPaths: pluckPaths,
 		pluckPathsArray: pluckPathsArray,
