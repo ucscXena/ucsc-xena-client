@@ -32,26 +32,21 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 				}
 			},
 
-			mapChromPosToX: function (chromPos) {
-				var posChromPosStart,posChromPosEnd,
+			flipIfNeg: function (coord) {
+				return (this.data.strand === '-') ? this.flip(coord) : coord;
+			},
+
+			exonByPos: function (pos) {
+				return find(this.splexons, (s, i) => pos >= s.start && pos <= s.end); // XXX bounds look wrong for half-open coords
+			},
+
+			mapChromPosToX: function ({start, end}) {
+				var posChromPosStart = this.flipIfNeg(start), posChromPosEnd = this.flipIfNeg(end),
 					splexonStart, splexonEnd,
 					convertedStart, convertedEnd;
 
-				posChromPosStart = (this.data.strand === '-') ? this.flip(chromPos.start) : chromPos.start;
-				splexonStart = find(this.splexons, function (s, i) {
-					return (posChromPosStart >= s.start && posChromPosStart <= s.end);
-				});
-
-				if (chromPos.start=== chromPos.end){
-					splexonEnd = splexonStart;
-					posChromPosEnd = posChromPosStart;
-				}
-				else {
-					posChromPosEnd = (this.data.strand === '-') ? this.flip(chromPos.end) : chromPos.end;
-					splexonEnd = find(this.splexons, function (s, i) {
-						return (posChromPosEnd >= s.start && posChromPosEnd <= s.end);
-					});
-				}
+				splexonStart = this.exonByPos(posChromPosStart);
+				splexonEnd = this.exonByPos(posChromPosEnd);
 
 				if (!splexonStart && !splexonEnd){  // this does not handle large deletions the across multiple exons case properly
 					convertedStart =-1;
