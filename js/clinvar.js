@@ -18,7 +18,7 @@ var fields = {
     // 0, 255 -> uncertain, other
 	CLNSIG: {
 		color: d3.scale.ordinal().domain(['2', '3', '4', '5', '6', '7'])
-			.range(['blue', 'lightblue', 'lightred', 'red', 'orange', 'orange']),
+			.range(['blue', 'lightblue', '#FC9B9B', 'red', 'orange', 'orange']),
 		order: index(['6', '7', '3', '2', '4', '5']),
 		groups: [['3', '2'], ['6', '7', '4', '5']],
 		parse: i => i[0].split(/[|,]/)
