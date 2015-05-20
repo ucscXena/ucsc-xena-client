@@ -11,7 +11,6 @@ define(['underscore_ext',
 		'sheetWrap',
 		'vgcanvas',
 		'xenaQuery',
-		'clinvar',
 		'annotation',
 		'ga4ghQuery',
 		'rx-jquery'
@@ -27,7 +26,6 @@ define(['underscore_ext',
 		sheetWrap,
 		vgcanvas,
 		xenaQuery,
-		clinvar,
 		annotation,
 		ga4ghQuery) {
 
@@ -222,7 +220,7 @@ define(['underscore_ext',
 				local.columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 				local.columnUi.$samplePlot.append(local.vg.element());
 				local.clinvar = vgcanvas(column.width, annotations[0][1].height);
-				$(local.clinvar.element()).addClass('clinvar');
+				$(local.clinvar.element()).addClass('annotation');
 			}
 
 			vg = local.vg;

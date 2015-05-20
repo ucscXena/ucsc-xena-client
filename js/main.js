@@ -17,6 +17,7 @@ define(['jquery',
 		'jquery-ui',
 		'rx.async',
 		'base',
+		'clinvar',
 		'../css/heatmap.css'], function (
 			$,
 			_,
