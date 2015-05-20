@@ -193,7 +193,7 @@ define(['underscore_ext',
 		_.each(_.difference(keys, current), (key, i) => {
 			var vg = cache[key] = vgcanvas(width, ants[i][1].height);
 			$(vg.element()).addClass('annotation');
-			headerPlot.append(vg.element());
+			headerPlot.prepend(vg.element());
 		});
 		_.each(_.difference(current, keys), key => {
 			$(cache[key].element()).remove();

@@ -179,7 +179,8 @@ define(['jquery',
 		}
 	});
 
-	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074"; // XXX hard-coded for now
+//	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074"; // XXX hard-coded for now
+//	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
 	$(document).ready(function () {
 		var debug_stream = model.state.replay(null, 1),
 			start,
@@ -200,17 +201,7 @@ define(['jquery',
 				"column_rendering": {},
 				"_column": {}, // not sure what this is for
 				"column_order": [],
-				"annotations": [['clinvar', {
-					height: 20,
-					url: clinvar_host,
-					dsID: 'Clinvar',
-					field: 'CLNSIG'
-				}], ['clinvar', {
-					height: 20,
-					url: clinvar_host,
-					dsID: 'Clinvar',
-					field: 'CLNORIGIN'
-				}]]
+				"annotations": []
 			};
 		if (sessionStorage && sessionStorage.xena) {
 			start = _.extend(start, JSON.parse(sessionStorage.xena));

@@ -44,6 +44,15 @@ define(['haml/sheetWrap.haml',
 		widget,
 		aWidget;
 
+	// wow, this is painful.
+	function annotationEq(a1, a2) {
+		var [widget0, {dsID: dsID0, field: field0}] = a1;
+		var [widget1, {dsID: dsID1, field: field1}] = a2;
+		return widget0 === widget1 &&
+			dsID0 === dsID1 &&
+			field0 === field1;
+	}
+
 	function deleteColumn(uuid, state) {
 		var cols = _.dissoc(state.column_rendering, uuid),
 			order = _.without(state.column_order, uuid);
@@ -134,6 +143,20 @@ define(['haml/sheetWrap.haml',
 			});
 		},
 
+		annotation: function (a) {
+			this.cursor.update(state => {
+				var {annotations} = state;
+				var ca = _.find(state.annotations, _.partial(annotationEq, a));
+				if (ca) {
+					return _.assoc(state, 'annotations',
+						_.without(annotations, ca));
+				} else {
+					return _.assoc(state, 'annotations',
+						_.conj(annotations, a));
+				}
+			});
+		},
+
 		initialize: function (options) {
 			var self = this,
 				//columnEditOpen = false,
@@ -147,16 +170,40 @@ define(['haml/sheetWrap.haml',
 			this.state = state;
 			this.cursor = options.cursor;
 
-			this.$el = $(template());
+			var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
+			var annotations = [
+				['clinvar', {
+					height: 20,
+					url: clinvar_host,
+					dsID: 'Clinvar',
+					field: 'CLNSIG'
+				}], ['clinvar', {
+					height: 20,
+					url: clinvar_host,
+					dsID: 'Clinvar',
+					field: 'CLNORIGIN'
+				}]];
+
+			var annIds = _.map(annotations, ([widget, {dsID, field}]) => ({
+				id: [widget, dsID, field].join('__'),
+				label: [dsID, field].join('.'),
+			}));
+
+			this.$el = $(template({annotations: annIds}));
 			options.$anchor.append(this.$el);
 
 			// cache jquery objects for active DOM elements
 			this.cache = ['cohortAnchor', 'samplesFromAnchor', 'yAxisLabel', 'addColumn',
-				'spreadsheet', 'chartSelect', 'chartRoot', 'heatmapRoot'];
+				'spreadsheet', 'chartSelect', 'chartRoot', 'heatmapRoot'].concat(_.pluck(annIds, 'id'));
 			_(self).extend(_(self.cache).reduce(function (a, e) {
 				a['$' + e] = self.$el.find('.' + e);
 				return a;
 			}, {}));
+
+			_.each(annIds, ({id}, i) => {
+				this.subs.add(this['$' + id].onAsObservable('click').subscribe(
+					_.bind(this.annotation, this, annotations[i])));
+			});
 
 			this.initCohortsAndSources(state, options.cursor);
 			this.initSamplesFrom(state, options.cursor);
