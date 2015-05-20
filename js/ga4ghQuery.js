@@ -13,6 +13,7 @@ function variants({url, dataset, chrom, start, end}) {
 	}
 	return ga4gh.all.variants(url, {
 		variantSetIds: [dataset],
+		pageSize: 1000,
 		start: start,
 		end: end,
 		referenceName: chrom
