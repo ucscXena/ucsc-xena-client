@@ -186,6 +186,33 @@ define(['underscore_ext',
 		});
 	}
 
+	function syncAnnotations(cache, ants, id, width, data) {
+		var keys = _.map(ants, ([type, {url, field}]) => [type, url, field].join('::')),
+			current = _.keys(cache),
+			headerPlot = $('#' + id + ' .headerPlot');
+		_.each(_.difference(keys, current), (key, i) => {
+			var vg = cache[key] = vgcanvas(width, ants[i][1].height);
+			$(vg.element()).addClass('annotation');
+			headerPlot.append(vg.element());
+		});
+		_.each(_.difference(current, keys), key => {
+			$(cache[key].element()).remove();
+			delete cache[key];
+		});
+		_.each(keys, (key, i) => {
+			if (cache[key].height() !== ants[i][1].height) {
+				cache[key].height(ants[i][1].height);
+			}
+			if (cache[key].width() !== width) {
+				cache[key].width(width);
+			}
+			if (data.refGene && _.get_in(data, ['annotation' + i, length])) {
+				annotation.draw(ants[i], cache[key], data['annotation' + i],
+						refGeneExons.get(id).mapChromPosToX);
+			}
+		});
+	}
+
 	render = ifChanged(
 		[
 			['disp'],
@@ -219,8 +246,7 @@ define(['underscore_ext',
 				local.vg = vgcanvas(column.width, canvasHeight);
 				local.columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 				local.columnUi.$samplePlot.append(local.vg.element());
-				local.clinvar = vgcanvas(column.width, annotations[0][1].height);
-				$(local.clinvar.element()).addClass('annotation');
+				local.annotations = {};
 			}
 
 			vg = local.vg;
@@ -234,16 +260,6 @@ define(['underscore_ext',
  			}
 
 			columnUi.setHeight(annotations);
-
-			var headerPlot = $('#' + el.id + ' .headerPlot');
-
-			if (headerPlot && !headerPlot.find(local.clinvar.element()).length) {
-				headerPlot.append(local.clinvar.element());
-			}
-
-			if (local.clinvar.width() !== column.width) {
-				local.clinvar.width(column.width);
-			}
 
 			refGeneData = data.refGene[column.fields[0]];
 			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
@@ -298,10 +314,8 @@ define(['underscore_ext',
 
 			// Have to draw this after refGene, because it depends on
 			// scaling that is mixed up with refGene state.
-			if (data.annotation0.length && data.refGene) {
-				annotation.draw(annotations[0], local.clinvar, data.annotation0,
-						refGeneExons.get(el.id).mapChromPosToX);
-			}
+			syncAnnotations(local.annotations, annotations, el.id, column.width,
+					data);
 		}
 	);
 

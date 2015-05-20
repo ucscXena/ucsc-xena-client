@@ -205,6 +205,11 @@ define(['jquery',
 					url: clinvar_host,
 					dsID: 'Clinvar',
 					field: 'CLNSIG'
+				}], ['clinvar', {
+					height: 20,
+					url: clinvar_host,
+					dsID: 'Clinvar',
+					field: 'CLNORIGIN'
 				}]]
 			};
 		if (sessionStorage && sessionStorage.xena) {
