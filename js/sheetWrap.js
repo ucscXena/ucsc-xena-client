@@ -182,7 +182,12 @@ define(['haml/sheetWrap.haml',
 					url: clinvar_host,
 					dsID: 'Clinvar',
 					field: 'CLNORIGIN'
-				}]];
+				}]/*, ['1000_genomes', {
+					height: 20,
+					url: clinvar_host,
+					dsID: '1000_genomes',
+					field: 'AFR_AF'
+				}]*/];
 
 			var annIds = _.map(annotations, ([widget, {dsID, field}]) => ({
 				id: [widget, dsID, field].join('__'),

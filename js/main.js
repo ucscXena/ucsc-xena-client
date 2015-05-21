@@ -18,6 +18,7 @@ define(['jquery',
 		'rx.async',
 		'base',
 		'clinvar',
+//		'1kg',
 		'../css/heatmap.css'], function (
 			$,
 			_,

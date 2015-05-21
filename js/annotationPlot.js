@@ -26,6 +26,25 @@ function drawBands(vg, bands, color, chromPosToX, data) {
 	})));
 }
 
+var vcmp = ({val: v1}, {val: v2}) => v1 === v2 ? 0 : (v1 > v2 ? 1 : -1);
+
+// Draw annotations on one or more evenly sized horizontal bands,
+// each bad representing a different sequence of floating point values.
+function drawFloatBands(vg, bands, color, chromPosToX, data) {
+	var count = bands.length,
+		height = vg.height() / count;
+
+	_.each(bands, (band, i) =>
+		_.each(band.slice(0).sort(vcmp), v => { // XXX note the sort
+			var {start, end} = chromPosToX(v),
+				istart = Math.round(start),
+				iend = Math.round(end);
+			vg.box(istart, height * i, iend - istart || 1, height, color(v.val));
+		}));
+}
+
+
 module.exports = {
-	drawBands: drawBands
+	drawBands: drawBands,
+	drawFloatBands: drawFloatBands
 };

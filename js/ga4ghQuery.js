@@ -13,6 +13,7 @@ function variants({url, dataset, chrom, start, end}) {
 	}
 	return ga4gh.all.variants(url, {
 		variantSetIds: [dataset],
+//		callSetIds:["1000_genomes.NA21127"], XXX 1kg workaround
 		pageSize: 1000,
 		start: start,
 		end: end,
