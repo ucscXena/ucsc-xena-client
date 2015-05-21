@@ -206,7 +206,7 @@ define(['underscore_ext',
 			if (cache[key].width() !== width) {
 				cache[key].width(width);
 			}
-			if (data.refGene && _.get_in(data, ['annotation' + i, length])) {
+			if (data.refGene && _.get_in(data, ['annotation' + i, 'length'])) {
 				annotation.draw(ants[i], cache[key], data['annotation' + i],
 						refGeneExons.get(id).mapChromPosToX);
 			}
