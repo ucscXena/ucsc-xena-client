@@ -90,7 +90,53 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
         variantSetId=>queryVariants(startPos, endPos, referenceName, variantSetId)),
       query = Rx.Observable.zipArray(queryArray),
       container, sideNode, mainNode,
-      found=0;
+      resultsNode,
+      allVariantsButton, buttonText, showAllStatus,
+      data;
+
+    function displayData(){
+      if (!data){
+        return;
+      }
+
+      var found =0;
+
+      sideNode.innerHTML="";
+      resultsNode.innerHTML="";
+
+      data.map(function(results){
+        var index = data.indexOf(results),
+          variantSetId = variantSetIds[index];
+
+        allVariants[variantSetId]=[];
+        results.map(function (variant){
+          if (!showAllStatus &&
+            ((ref && ref !== variant.referenceBases) || (alt && variant.alternateBases.indexOf(alt)===-1))){
+            return;
+          }
+
+          if ( allVariants[variantSetId].indexOf(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases)===-1){
+            var div = document.createElement("div");
+            buildVariantDisplay(variant, div, metadata[variantSetId]);
+            resultsNode.appendChild(div);
+            allVariants[variantSetId].push(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases);
+            found =1;
+          }
+        });
+
+        //sidebar info
+        sideNode.appendChild(dom_helper.elt("b",variantSetId));
+        sideNode.appendChild(document.createElement("br"));
+        allVariants[variantSetId].map(id=>{
+          sideNode.appendChild(dom_helper.hrefLink(id.split("__")[0],"#"+id));
+          sideNode.appendChild(document.createElement("br"));
+        });
+        sideNode.appendChild(document.createElement("br"));
+      });
+      if (!found){
+        resultsNode.appendChild(document.createTextNode("No variants found."));
+      }
+    }
 
     container = dom_helper.elt("div");
     container.setAttribute("id", "content-container");
@@ -104,39 +150,40 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     mainNode= dom_helper.sectionNode("dataset");
     container.appendChild(mainNode);
 
+    //all variants button -  all variants (not jsut the specific variants) at start-end interval
+    if (ref && alt){
+      allVariantsButton = document.createElement("button");
+      allVariantsButton.setAttribute("class","vizbutton");
+      showAllStatus = false;
+      buttonText= dom_helper.elt("span",
+        showAllStatus? "Show only variants with the specific alternation from" + ref +" to "+alt:
+          "Show all variants at this interval");
+      buttonText.setAttribute("id","buttonText");
+      allVariantsButton.onclick=function(){
+        showAllStatus = !showAllStatus;
+        buttonText.innerHTML= showAllStatus? "Show only variants with the specific alternation from " + ref +" to "+alt:
+          "Show all variants at this interval";
+        if (!data){
+          query.subscribe(function (ret) {
+            data = ret;
+            displayData(data);
+          });
+        }
+        displayData(data);
+      };
+      allVariantsButton.appendChild(buttonText);
+      mainNode.appendChild(allVariantsButton);
+    }
 
-    query.subscribe(function (ret) {
-      ret.map(function(results){
-        var index = ret.indexOf(results),
-          variantSetId = variantSetIds[index];
+    resultsNode = document.createElement("div");
+    mainNode.appendChild(resultsNode);
 
-        allVariants[variantSetId]=[];
-        results.map(function (variant){
-          if ((ref && ref !== variant.referenceBases) || (alt && variant.alternateBases.indexOf(alt)===-1)){
-            return;
-          }
-
-          if ( allVariants[variantSetId].indexOf(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases)===-1){
-            var div = document.createElement("div");
-            buildVariantDisplay(variant, div, metadata[variantSetId]);
-            mainNode.appendChild(div);
-            allVariants[variantSetId].push(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases);
-            found =1;
-          }
-        });
-        //sidebar info
-        sideNode.appendChild(dom_helper.elt("b",variantSetId));
-        sideNode.appendChild(document.createElement("br"));
-        allVariants[variantSetId].map(id=>{
-          sideNode.appendChild(dom_helper.hrefLink(id.split("__")[0],"#"+id));
-          sideNode.appendChild(document.createElement("br"));
-        });
-        sideNode.appendChild(document.createElement("br"));
+    if (!data){
+      query.subscribe(function (ret) {
+        data = ret;
+        displayData(data);
       });
-      if (!found){
-        mainNode.appendChild(document.createTextNode("No variants found."));
-      }
-    });
+    }
   }
 
   function searchPage (baseNode, metadata){
@@ -150,7 +197,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       div,
       leftBaseNode = document.createElement("div"),
       rightBaseNode,
-      startPos, endPos, referenceName, variantSetId,
+      startPos, endPos, referenceName,
       variantSetIds,
       query;
 
@@ -208,14 +255,21 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       newFrame.contentDocument.body.appendChild(rightBaseNode);
 
       variantSetIds.map(function(id){
-      if (fLeft.contentDocument.getElementById("variantSetId_"+ id).checked){
-        query = queryVariants(startPos, endPos, referenceName, id);
-        query.subscribe(function (results) {
-          results.map(function (variant){
-            var div = document.createElement("div");
-            buildVariantDisplay(variant, div, metadata[id]);
-            rightBaseNode.appendChild(div);
-            });
+        var found=0;
+
+        if (fLeft.contentDocument.getElementById("variantSetId_"+ id).checked){
+          query = queryVariants(startPos, endPos, referenceName, id);
+          query.subscribe(function (results) {
+            results.map(function (variant){
+              var div = document.createElement("div");
+              buildVariantDisplay(variant, div, metadata[id]);
+              rightBaseNode.appendChild(div);
+              found =1;
+              });
+            if (!found){
+              rightBaseNode.appendChild(document.createTextNode("No variant found in "+ id+"."));
+              rightBaseNode.appendChild(document.createElement("br"));
+            }
           });
         }
       });
@@ -230,6 +284,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       reference = variant.referenceBases,
       alt = variant.alternateBases,
       variantSetId = variant.variantSetId,
+      pos, posURL,
       label,div,
       selectedKeys, allKeys, otherKeys;
 
@@ -237,7 +292,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
         var value, intepretation, text;
 
         value = eval("variant."+key);
-        console.log(metaData[key].description,key, value);
+        //console.log(metaData[key].description,key, value);
         if (metaData[key]){
           label = metaData[key].description;
           label = label.charAt(0).toUpperCase()+ label.slice(1);
@@ -322,19 +377,19 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
           node.appendChild(document.createTextNode(" "));
         });
       }
-
-
       node.appendChild(document.createElement("br"));
     }
 
-    //chr start (- end)
-    node.appendChild(document.createTextNode("chr"+ chr+":"));
-    node.appendChild(document.createTextNode(" "+ startPos.toLocaleString()));
+    //chr start (- end) GB link
+    pos = "chr"+ chr+": " + startPos.toLocaleString();
+    node.appendChild(document.createTextNode("UCSC Genome Browser (hg19/GRCh37): "));
     if (startPos !== endPos) {
-      node.appendChild(document.createTextNode(" - "+ endPos.toLocaleString()));
+      pos = pos + " - "+ endPos.toLocaleString();
     }
-    node.appendChild(document.createTextNode(" (hg19/GRCh37)"));
+    posURL = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position="+encodeURIComponent("chr"+chr + ':' + startPos + '-' + endPos);
+    node.appendChild(dom_helper.hrefLink(pos, posURL));
     node.appendChild(document.createElement("br"));
+
     //ref, alt
     node.appendChild(document.createTextNode("Reference sequence : "));
     node.appendChild(dom_helper.elt("b", reference));

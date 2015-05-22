@@ -21,17 +21,31 @@ var fields = {
 			.range(['blue', 'lightblue', '#FC9B9B', 'red', 'orange', 'orange']),
 		order: index(['6', '7', '3', '2', '4', '5']),
 		groups: [['3', '2'], ['6', '7', '4', '5']],
-		parse: i => i[0].split(/[|,]/)
+		parse: i => i[0].split(/[|,-]/)
 	},
-    // 1, 3 => germ line
-    // 2, 3 => somatic
-    CLNORIGIN: {
-		color: d3.scale.ordinal().domain(['1', '2', '3'])
-			.range(['blue', 'red', 'purple']),
-        order: index(['1', '2', '3']),
-        groups: [['1', '3'], ['2', '3']],
-		parse: i => i[0].split(/[|,]/)
-    }
+
+  // 1, 3 => germ line
+  // 2, 3 => somatic
+  CLNORIGIN: {
+  	color: d3.scale.ordinal().domain(['1', '2', '3'])
+  		.range(['blue', 'red', 'purple']),
+    order: index(['1', '2', '3']),
+    groups: [['1', '3'], ['2', '3']],
+  	parse: i => i[0].split(/[|,-]/)
+  },
+
+  //"1-Notpathogenicorofnoclinicalsignificance",
+  //"2-Likelynotpathogenicoroflittleclinicalsignificance",
+  //"3-Uncertain",
+  //"4-Likelypathogenic",
+  //"5-Definitelypathogenic",
+  iarc_class: {
+    color: d3.scale.ordinal().domain(['1', '2','3','4','5'])
+      .range(['blue', 'lightblue', 'black', 'lightred', 'red']),
+    order: index(['3','2','1','4','5']),
+    groups: [['1', '2','3'], ['3','4','5']],
+    parse: i => i[0].split(/[|,-]/)
+  }
 };
 
 // max field value, by field.order

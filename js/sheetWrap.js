@@ -36,10 +36,10 @@ define(['haml/sheetWrap.haml',
 
 	'use strict';
 
-		// constants for all columns:
+	// constants for all columns:
 	var horizontalMargin = 3,
 		sparseRadius = 4,
-		sparsePad = sparseRadius + 1,
+		sparsePad = 0,//sparseRadius + 1,
 		refHeight = 12,
 		widget,
 		aWidget;
@@ -170,24 +170,51 @@ define(['haml/sheetWrap.haml',
 			this.state = state;
 			this.cursor = options.cursor;
 
-			var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
+			//var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
+			var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074";
 			var annotations = [
 				['clinvar', {
-					height: 20,
+					height: 50,
 					url: clinvar_host,
 					dsID: 'Clinvar',
 					field: 'CLNSIG'
 				}], ['clinvar', {
-					height: 20,
+					height: 50,
 					url: clinvar_host,
 					dsID: 'Clinvar',
 					field: 'CLNORIGIN'
-				}]/*, ['1000_genomes', {
-					height: 20,
+				}], ['1000_genomes', {
+					height: 25,
 					url: clinvar_host,
 					dsID: '1000_genomes',
 					field: 'AFR_AF'
-				}]*/];
+				}], ['1000_genomes', {
+					height: 25,
+					url: clinvar_host,
+					dsID: '1000_genomes',
+					field: 'AMR_AF'
+				}], ['1000_genomes', {
+					height: 25,
+					url: clinvar_host,
+					dsID: '1000_genomes',
+					field: 'EAS_AF'
+				}], ['1000_genomes', {
+					height: 25,
+					url: clinvar_host,
+					dsID: '1000_genomes',
+					field: 'EUR_AF'
+				}], ['1000_genomes', {
+					height: 25,
+					url: clinvar_host,
+					dsID: '1000_genomes',
+					field: 'SAS_AF'
+				}],['clinvar', {
+					height: 50,
+					url: clinvar_host,
+					dsID: 'ex_lovd',
+					field: 'iarc_class'
+				}]
+				];
 
 			var annIds = _.map(annotations, ([widget, {dsID, field}]) => ({
 				id: [widget, dsID, field].join('__'),

@@ -80,9 +80,10 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	// Returns a object with key equal to the serialization of
 	// the request, and value equal to a thunk that returns
 	// an Observable of the data.
-	function reqObj(req, fn) { // TODO may not belong in this file
+	// new optional id parameter is for differentiate the same req with some sort of user-supplied identification
+	function reqObj(req, fn, id) { // TODO may not belong in this file
 		return {
-			id: JSON.stringify(req),
+			id: JSON.stringify(req)+id,
 			query:  Rx.Observable.defer(_.partial(fn, req))
 		};
 	}

@@ -3,13 +3,14 @@
 
 // clinVar vcf: https://drive.google.com/uc?id=0Bzoozx2KZAPmb1NWQ1laZElzOXc&export=download
 // 1000_genomes vcf: ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/
-
+// BRCA1 chr17:41,196,312-41,277,500
 var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074";
 //var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
 
 // selected field for annotation display
 var selectedKeys = {
-    "Clinvar": ["INFO.CLNSIG","INFO.CLNORIGIN","INFO.CLNDBN","INFO.G5A","INFO.G5"],
+    "Clinvar": ["INFO.CLNSIG","INFO.CLNORIGIN","INFO.CLNDBN","INFO.G5A","INFO.G5","INFO.ASS","INFO.DSS"],
+    "ex_lovd":["INFO.iarc_class"],
     "1000_genomes":["INFO.AFR_AF","INFO.AMR_AF","INFO.EAS_AF","INFO.EUR_AF","INFO.SAS_AF"],
     "exac":["INFO.AC_AFR","INFO.AN_AFR","INFO.AC_AMR","INFO.AN_AMR",
         "INFO.AC_EAS","INFO.AN_EAS","INFO.AC_SAS","INFO.AN_SAS",
@@ -29,6 +30,12 @@ var externalUrls = {
         "url":"http://www.ncbi.nlm.nih.gov/clinvar/$key/",
         "type":"key",
         "value":"INFO.CLNACC"
+    },
+    // http://hci-exlovd.hci.utah.edu/variants.php?action=search_unique&search_Variant%2FDBID=BRCA1_00014
+    "ex_lovd":{
+        "url":"http://hci-exlovd.hci.utah.edu/variants.php?action=search_unique&search_Variant%2FDBID=$key",
+        "type":"key",
+        "value":"INFO.brca1_db_id"
     },
     // http://databases.lovd.nl/shared/view/BRCA1?search_VariantOnGenome%2FDBID=%3D%22BRCA1_000010%22
     "lovd":{
@@ -51,28 +58,28 @@ var variantSets = [
         "datasetId": "NotImplemented",
         "metadata": [
             {
-                    "info": {
-                        "0": "unknown",
-                        "1": "germline",
-                        "2": "somatic",
-                        "3": "both germline and somatic",
-                        "4": "inherited",
-                        "8": "paternal",
-                        "16": "maternal",
-                        "32": "de-novo",
-                        "64": "biparental",
-                        "128": "uniparental",
-                        "256": "not-tested",
-                        "512": "tested-inconclusive",
-                        "1073741824": "other"
-                    },
-                    "description": "Allele Origin",
-                    "number": ".",
-                    "value": "",
-                    "key": "INFO.CLNORIGIN",
-                    "type": "String",
-                    "id": ""
+                "info": {
+                    "0": "unknown",
+                    "1": "germline",
+                    "2": "somatic",
+                    "3": "both germline and somatic",
+                    "4": "inherited",
+                    "8": "paternal",
+                    "16": "maternal",
+                    "32": "de-novo",
+                    "64": "biparental",
+                    "128": "uniparental",
+                    "256": "not-tested",
+                    "512": "tested-inconclusive",
+                    "1073741824": "other"
                 },
+                "description": "Allele Origin",
+                "number": ".",
+                "value": "",
+                "key": "INFO.CLNORIGIN",
+                "type": "String",
+                "id": ""
+            },
             {
                 "info": {
                     "0": "uncertain significance",
@@ -89,6 +96,28 @@ var variantSets = [
                 "number": ".",
                 "value": "",
                 "key": "INFO.CLNSIG",
+                "type": "String",
+                "id": ""
+            }
+        ]
+    },
+    {
+        "referenceSetId": "",
+        "id": "ex_lovd",
+        "datasetId": "NotImplemented",
+        "metadata": [
+            {
+                "info": {
+                    "1-Notpathogenicorofnoclinicalsignificance": "1- Not pathogenic or of no clinical significance",
+                    "2-Likelynotpathogenicoroflittleclinicalsignificance": "2 - Likely not pathogenic or of little clinical significance",
+                    "3-Uncertain": "3 - Uncertain",
+                    "4-Likelypathogenic": "4 - Likely pathogenic",
+                    "5-Definitelypathogenic": "5 - Definitely pathogenic",
+                },
+                "description": "Qualitative classification in the 5-grade IARC classification scheme (http://brca.iarc.fr/images/popclass.php)",
+                "number": ".",
+                "value": "",
+                "key": "INFO.iarc_class",
                 "type": "String",
                 "id": ""
             }

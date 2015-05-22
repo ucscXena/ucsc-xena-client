@@ -135,18 +135,18 @@ define(['underscore_ext',
 	);
 
 	var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
-	function ga4ghAnnotations({url, dsID}, [probe]) {
+	function ga4ghAnnotations({url, dsID}, [probe],id) {
 		return xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_gene_pos(probe)), function (r) {
 			return Rx.DOM.ajax(r).map(xenaQuery.json_resp).selectMany(([gene]) =>
 				gene ? ga4ghQuery.variants({
 					url: url,
-					 dataset: dsID,
-					 start: gene.txstart,
-					 end: gene.txend,
-					 chrom: gene.chrom
+				 	dataset: dsID,
+				 	start: gene.txstart,
+				 	end: gene.txend,
+				 	chrom: gene.chrom
 				}) :
 				Rx.Observable.return([]));
-		});
+		},id);
     }
 
 	fetch = ifChanged(
@@ -154,11 +154,12 @@ define(['underscore_ext',
 			['column', 'dsID'],
 			['column', 'fields'],
 			['samples'],
-            ['annotations']
+      ['annotations']
 		],
 		xenaQuery.dsID_fn(function (host, ds, probes, samples, annotations) {
 			var annQueries = _.object(_.map(annotations,
-				([, a], i) => [`annotation${i}`, ga4ghAnnotations(a, probes)]));
+				([, a], i) => [`annotation${i}`, ga4ghAnnotations(a, probes, a.url+a.dsID)]));
+
 			return _.merge({
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
@@ -270,7 +271,7 @@ define(['underscore_ext',
 					plotAnchor: '#' + el.id + ' .headerPlot',
 					$sidebarAnchor: columnUi.$headerSidebar,
 					width: column.width,
-					radius: sheetWrap.columnDims().sparseRadius,
+					radius: 0,//sheetWrap.columnDims().sparseRadius,
 					refHeight: sheetWrap.columnDims().refHeight
 				});
 				if (data.req.values) { // TODO sometimes data.req is empty
@@ -314,6 +315,7 @@ define(['underscore_ext',
 
 			// Have to draw this after refGene, because it depends on
 			// scaling that is mixed up with refGene state.
+
 			syncAnnotations(local.annotations, annotations, el.id, column.width,
 					data);
 		}

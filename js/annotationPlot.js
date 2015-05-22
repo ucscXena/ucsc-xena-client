@@ -19,10 +19,12 @@ function drawBands(vg, bands, color, chromPosToX, data) {
 	_.each(bands, (band, i) =>
 			_.each(band, curval =>
 				_.each(dbg[curval], v => {
-		var {start, end} = chromPosToX(v),
+		var {start, end} = chromPosToX({start:v.start+1, end:v.end, val:v.val}), // handle ga4gh : 0 based with start+1
 			istart = Math.round(start),
 			iend = Math.round(end);
-		vg.box(istart, height * i, iend - istart || 1, height, color(v.val));
+		if ((start>0) || (end>0)) {
+			vg.box(istart, height * i, iend - istart || 1, height, color(v.val));
+		}
 	})));
 }
 
@@ -36,10 +38,13 @@ function drawFloatBands(vg, bands, color, chromPosToX, data) {
 
 	_.each(bands, (band, i) =>
 		_.each(band.slice(0).sort(vcmp), v => { // XXX note the sort
-			var {start, end} = chromPosToX(v),
+			v.start=v.start+1;  // adjusting start from ga4gh, +1
+			var {start, end} = chromPosToX({start:v.start+1, end:v.end, val:v.val}),
 				istart = Math.round(start),
 				iend = Math.round(end);
-			vg.box(istart, height * i, iend - istart || 1, height, color(v.val));
+			if ((start>0) || (end>0)){
+				vg.box(istart, height * i, iend - istart || 1, height, color(v.val));
+			}
 		}));
 }
 

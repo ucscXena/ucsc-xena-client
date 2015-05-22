@@ -85,17 +85,17 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			drawCenter: function (d) {
 				var r = this.point;
 				this.vg.box (d.xStart -r,
-					d.y-r,
+					d.y - d.pixPerRow/4, //-r,
 					d.xEnd- d.xStart+r*2,
-					r*2,
+					d.pixPerRow/2, //r*2,
 					'black');
 			},
 
 			drawHalo: function (d) {
 				this.vg.box(d.xStart-d.r,
-					d.y - d.r,
+					d.y- d.pixPerRow/2, //d.y - d.r,
 					d.xEnd - d.xStart + d.r*2,
-					d.r*2,
+					d.pixPerRow, //d.r*2,
 					d.rgba );
 			},
 
@@ -300,6 +300,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 								xEnd: end,
 								y: y,
 								r: self.radius,
+								pixPerRow: Math.max(self.pixPerRow,2),
 								impact: getImpact(val.effect),
 								rgba: self.findRgba(val),
 								data: val
