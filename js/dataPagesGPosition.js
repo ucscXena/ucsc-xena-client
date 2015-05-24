@@ -89,12 +89,15 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       queryArray = variantSetIds.map(
         variantSetId=>queryVariants(startPos, endPos, referenceName, variantSetId)),
       query = Rx.Observable.zipArray(queryArray),
+      queryPlusArray = variantSetIds.map(
+        variantSetId=>queryVariants(startPos-2, endPos+2, referenceName, variantSetId)),
+      queryPlus = Rx.Observable.zipArray(queryPlusArray),
       container, sideNode, mainNode,
       resultsNode,
-      allVariantsButton, buttonText, showAllStatus,
-      data;
+      variantsDropDown, dropDownValue,showAllStatus=false,
+      data, dataPlus;
 
-    function displayData(){
+    function displayData(data){
       if (!data){
         return;
       }
@@ -134,6 +137,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
         sideNode.appendChild(document.createElement("br"));
       });
       if (!found){
+        resultsNode.appendChild(document.createElement("br"));
         resultsNode.appendChild(document.createTextNode("No variants found."));
       }
     }
@@ -152,27 +156,65 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
 
     //all variants button -  all variants (not jsut the specific variants) at start-end interval
     if (ref && alt){
-      allVariantsButton = document.createElement("button");
-      allVariantsButton.setAttribute("class","vizbutton");
-      showAllStatus = false;
-      buttonText= dom_helper.elt("span",
-        showAllStatus? "Show only variants with the specific alternation from" + ref +" to "+alt:
-          "Show all variants at this interval");
-      buttonText.setAttribute("id","buttonText");
-      allVariantsButton.onclick=function(){
-        showAllStatus = !showAllStatus;
-        buttonText.innerHTML= showAllStatus? "Show only variants with the specific alternation from " + ref +" to "+alt:
-          "Show all variants at this interval";
-        if (!data){
-          query.subscribe(function (ret) {
-            data = ret;
-            displayData(data);
-          });
+      var option,
+        dropDown = [{
+            "value": "specific",
+            "text": "Show only variants with the specific alternation from " + ref +" to "+alt,
+            "index": 0
+          }, // specific
+          {
+            "value": "all",
+            "text": "Show all variants at this interval chr"+referenceName+": "+query_string.start+" - "+query_string.end,
+            "index": 1
+          }, // all variants
+          {
+            "value": "allPlus",
+            "text": "Show all variants at slightly bigger interval chr"+referenceName+": "+
+              (startPos-1)+" - "+(startPos+2),
+            "index": 2
+          } // all variants plus some wiggle room
+        ];
+
+      variantsDropDown = document.createElement("select");
+      variantsDropDown.setAttribute("class", "dropDown");
+
+      dropDown.forEach(function (obj) {
+        option = document.createElement('option');
+        option.value = obj.value;
+        option.textContent = obj.text;
+        variantsDropDown.appendChild(option);
+      });
+
+      variantsDropDown.addEventListener('change', function () {
+        dropDownValue = variantsDropDown.options[variantsDropDown.selectedIndex].value;
+        if (dropDownValue==="all" || dropDownValue ==="allPlus"){
+          showAllStatus= true;
+        } else {
+          showAllStatus =false;
         }
-        displayData(data);
-      };
-      allVariantsButton.appendChild(buttonText);
-      mainNode.appendChild(allVariantsButton);
+
+        if (dropDownValue ==="all" || dropDownValue==="specific") {
+          if (!data){
+            query.subscribe(function (ret) {
+              data = ret;
+              displayData(data);
+            });
+          }
+          displayData(data);
+        }
+        else if (dropDownValue ==="allPlus"){
+          if (!dataPlus){
+            queryPlus.subscribe(function (ret) {
+              dataPlus = ret;
+              displayData(dataPlus);
+            });
+          }
+          displayData(dataPlus);
+        }
+      });
+
+      mainNode.appendChild(variantsDropDown);
+
     }
 
     resultsNode = document.createElement("div");
@@ -382,7 +424,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
 
     //chr start (- end) GB link
     pos = "chr"+ chr+": " + startPos.toLocaleString();
-    node.appendChild(document.createTextNode("UCSC Genome Browser (hg19/GRCh37): "));
+    node.appendChild(document.createTextNode("UCSC Genome Browser (hg19): "));
     if (startPos !== endPos) {
       pos = pos + " - "+ endPos.toLocaleString();
     }

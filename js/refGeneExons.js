@@ -8,7 +8,7 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 
 	var shade1 = '#cccccc',
 		shade2 = '#999999',
-		spLen = 2, // splice site base pairs
+		spLen = 15, // splice site base pairs
 		utrY = 10,
 		utrHeight = 8,
 		cdsY = 12,
