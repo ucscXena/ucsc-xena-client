@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext'
+define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext','annotationColor'
 	// non-object dependencies
-	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _) {
+	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _, annotationColor) {
 	'use strict';
 
 	var unknownEffect = 0,
@@ -71,7 +71,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		},
 		clone = _.clone,
 		each = _.each,
-		//filter = _.filter,
 		reduce = _.reduce,
 		sortBy = _.sortBy,
 		widgets = {},
@@ -109,7 +108,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				// draw each of the rows either grey for NA or white for sample examined for mutations
 				// more crisp lines if both white and grey are drawn, rather than a background of one
 				each(this.values, function (r, i) {
-					var color = (r.vals) ? 'white' : 'grey';
+					var color = (r.vals) ? 'white' : 'lightgrey';
 					buff.box(0, 0, buffWidth, 1, color);
 					self.vg.drawImage(
 						buff.element(),
@@ -245,14 +244,28 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			findRgba: function (val) {
 				var imp,
 					c;
+
 				if (this.feature === 'impact') {
 					imp = getImpact(val.effect);
 					c = colors[this.color][imp];
-				} else if (_.isUndefined(val[this.feature])) { // _VAF with NA value
-					c = colors.grey;
-				} else {  // _VAF, but not NA
+				} else if (this.annValues[this.feature]){ //the feature is ga4gh annotation data, i.e. not part of the xena data
+					var widget = this.feature.split("__")[0],
+						feature = this.feature.split("__").pop(),
+						id = [val.chr, val.start, val.end, val.reference, val.alt].join("__"),
+						value= this.annValues[this.feature][id];
+					if (value && annotationColor.colorSettings[widget][feature].filter.indexOf(value)!==-1){
+						var color = annotationColor.colorSettings[widget][feature].color;
+						return color(value);
+					} else {
+						return 'grey';
+					}
+				} else if (_.isUndefined(val[this.feature])) { // NA value _VAF
+					return 'grey';
+				} else if (this.feature ==="dna_vaf" || this.feature ==="rna_vaf") {  // _VAF, but not NA
 					c = clone(colors.af);
 					c.a = val[this.feature];
+				} else {
+					return 'grey';
 				}
 				return 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
 			},
@@ -264,7 +277,35 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					row.index = i;
 					return row;
 				});
-				this.render();
+			},
+
+			receiveAnnData: function (annData){
+				var annValues={};
+				Object.keys(annData).map(function (key){
+					var field = key.split("__").pop(),
+						feature = key.split("__").slice(1).join("__");
+
+					annValues[feature]={};
+					if (annData[key].length){
+						annData[key].map(function (val){
+							if (val.info[field] && val.info[field].length>0){
+								var values = val.info[field][0].split(/[,]/);
+								val.alternateBases.map(function (alt,i){
+									var chrom = val.referenceName.substring(0,3)==="chr"? val.referenceName: "chr"+ val.referenceName,
+										id = [chrom, val.start+1, val.end, val.referenceBases, alt].join("__"),
+										value;
+									if (val.alternateBases.length === values.length){
+										value = values[i].split(/[|-]/)[0]; //todo
+									}else{
+										value = values[0]; //todo
+									}
+									annValues[feature][id]= value;
+								});
+							}
+						});
+					}
+				});
+				this.annValues = annValues;
 			},
 
 			findNonNaRows: function () {
@@ -286,6 +327,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					nodeValues = _.filter(this.values, function (value) {
 						return value.vals && value.vals.length;
 					});
+
 				_.each(nodeValues, function (value) {
 
 					var y = (value.index * self.pixPerRow) + (self.pixPerRow / 2) + self.sparsePad;
@@ -352,7 +394,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				this.pixPerRow = (this.height - (this.sparsePad * 2))  / this.values.length;
 				this.canvasHeight = this.height; // TODO init elsewhere
 				this.d2 = this.vg.context();
-
 				this.nodes = this.findNodes();
 				this.nonNaRows = this.findNonNaRows();
 				this.drawLegend();
@@ -388,6 +429,8 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				});
 
 				this.receiveData(options.data);
+				this.receiveAnnData(options.annData);
+				this.render();
 			}
 		};
 
