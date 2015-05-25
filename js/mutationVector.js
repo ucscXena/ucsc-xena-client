@@ -1,9 +1,9 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext','annotationColor'
+define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext','annotationColor','metadataStub'
 	// non-object dependencies
-	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _, annotationColor) {
+	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _, annotationColor, metadataStub) {
 	'use strict';
 
 	var unknownEffect = 0,
@@ -373,7 +373,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					labels = _.map(_.range(_.keys(groups).length), i => _.pluck(groups[i], 0).join(', '));
 
 					align = 'left';
-				} else { // feature is one of allele frequencies
+				} else if (this.feature ==="dna_vaf" || this.feature ==="rna_vaf") { // feature is one of allele frequencies
 					c= colors.af;
 					rgba = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',';
 					myColors = [
@@ -384,6 +384,14 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					labels = ['0%', '50%', '100%'];
 					align = 'center';
 					topBorderIndex = 3;
+				} else {
+					var [widget, dataset, feature] = this.feature.split("__"),
+						md = _.find(metadataStub.variantSets, ds => ds.id === dataset).metadata,
+						info = _.find(md, ds => ds.key === ('INFO.'+feature)).info,
+						colorFn = annotationColor.colorSettings[widget][feature].color;
+
+					labels = annotationColor.colorSettings[widget][feature].filter.map(value => info[value]);
+					myColors = annotationColor.colorSettings[widget][feature].filter.map(value=>colorFn(value));
 				}
 				myColors.unshift('rgb(255,255,255)');
 				labels.unshift('no mutation');
