@@ -5,15 +5,20 @@ var index = o => _.object(o, _.range(o.length));
 
 var colorSettings ={
   clinvar: {
-    // 2,3 -> benign, likely benign
-    // 4,5 -> likely pathogenic, pathogenic
-    // 6,7 -> drug response, histocompatibility
-    // 0, 255 -> uncertain, other
+      //"0": "uncertain significance",
+      //"1": "not provided",
+      //"2": "Benign",
+      //"3": "Likely benign",
+      //"4": "Likely pathogenic",
+      //"5": "Pathogenic",
+      //"6": "Drug response",
+      //"7": "Histocompatibility",
+      //"255": "Other"
     CLNSIG: {
-      color: d3.scale.ordinal().domain(['2', '3', '4', '5', '6', '7'])
-        .range(['blue', 'lightblue', 'pink', 'red', 'orange', 'orange']),
-      filter: ['6', '7', '3', '2', '4', '5'],
-      order: index(['6', '7', '3', '2', '4', '5']),
+      color: d3.scale.ordinal().domain(['255','0',"1",'2', '3', '4', '5', '6', '7'])
+        .range(['green','black','lightgrey','blue', 'lightblue', 'pink', 'red', 'orange', 'orange']),
+      filter: ['1','255','6', '7', '0', '3', '2', '4', '5'],
+      order: index(['1','255','0', '6', '7', '3', '2', '4', '5']),
     },
 
     // 1, 3 => germ line

@@ -108,7 +108,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				// draw each of the rows either grey for NA or white for sample examined for mutations
 				// more crisp lines if both white and grey are drawn, rather than a background of one
 				each(this.values, function (r, i) {
-					var color = (r.vals) ? 'white' : 'lightgrey';
+					var color = (r.vals) ? 'white' : 'grey';
 					buff.box(0, 0, buffWidth, 1, color);
 					self.vg.drawImage(
 						buff.element(),
@@ -283,7 +283,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				var annValues={};
 				Object.keys(annData).map(function (key){
 					var field = key.split("__").pop(),
-						feature = key.split("__").slice(1).join("__");
+						feature = key.split("__").slice(1).join("__"),
+						[,widget, dataset, keyValue]= key.split("__"),
+						order = annotationColor.colorSettings[widget][keyValue].order;
 
 					annValues[feature]={};
 					if (annData[key].length){
@@ -295,9 +297,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 										id = [chrom, val.start+1, val.end, val.referenceBases, alt].join("__"),
 										value;
 									if (val.alternateBases.length === values.length){
-										value = values[i].split(/[|-]/)[0]; //todo
-									}else{
-										value = values[0]; //todo
+										value = _.max(values[i].split(/[|-]/), f=> order[f]);
+									} else {
+										value = _.max(_.flatten(values.map(v=> v.split(/[|-]/))), f => order[f]);
 									}
 									annValues[feature][id]= value;
 								});
