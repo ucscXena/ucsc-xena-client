@@ -154,7 +154,7 @@ define(['underscore_ext',
 			['column', 'dsID'],
 			['column', 'fields'],
 			['samples'],
-      ['annotations']
+			['annotations']
 		],
 		xenaQuery.dsID_fn(function (host, ds, probes, samples, annotations) {
 			var annQueries = _.object(_.map(annotations,
