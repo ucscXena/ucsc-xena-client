@@ -259,11 +259,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			receiveData: function (data) {
 				var drawValues = data.slice(this.zoomIndex, this.zoomIndex + this.zoomCount);
-				this.values = _.map(drawValues, function (v, i) {
-					var row = $.extend(true, [], v);
-					row.index = i;
-					return row;
-				});
+				this.values = _.map(drawValues, (obj, i) => _.assoc(obj, 'index', i));
 				this.render();
 			},
 
