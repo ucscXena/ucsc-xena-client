@@ -279,26 +279,29 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			findNodes: function () {
 				var self = this,
 					nodes = [],
+					{pixPerRow, sparsePad, refGene, findRgba, radius} = this,
+					{mapChromPosToX} = refGene,
+					max = Math.max,
 					nodeValues = _.filter(this.values, function (value) {
 						return value.vals && value.vals.length;
 					});
 				_.each(nodeValues, function (value) {
 
-					var y = (value.index * self.pixPerRow) + (self.pixPerRow / 2) + self.sparsePad;
+					var y = (value.index * pixPerRow) + (pixPerRow / 2) + sparsePad;
 					_.each(value.vals, function (val) {
-						var {start, end} = self.refGene.mapChromPosToX(val);
+						var {start, end} = mapChromPosToX(val);
 
 						if (start >= 0 && end >= 0) {
-							start = start + self.sparsePad;
-							end = end + self.sparsePad;
+							start = start + sparsePad;
+							end = end + sparsePad;
 							nodes.push({
 								xStart: start,
 								xEnd: end,
 								y: y,
-								r: self.radius,
-								pixPerRow: Math.max(self.pixPerRow,2),
+								r: radius,
+								pixPerRow: max(pixPerRow,2),
 								impact: getImpact(val.effect),
-								rgba: self.findRgba(val),
+								rgba: findRgba(val),
 								data: val
 							});
 						}
