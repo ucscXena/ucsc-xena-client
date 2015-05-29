@@ -37,7 +37,7 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 			},
 
 			exonByPos: function (pos) {
-				return find(this.splexons, (s, i) => pos >= s.start && pos <= s.end); // XXX bounds look wrong for half-open coords
+				return find(this.splexons, (s, i) => pos >= s.start && pos <= s.end);
 			},
 
 			mapChromPosToX: function ({start, end}) {
