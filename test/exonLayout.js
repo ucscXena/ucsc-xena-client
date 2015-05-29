@@ -2,13 +2,12 @@
 "use strict";
 var el = require('../js/exonLayout');
 var assert = require('assert');
-var _ = require('underscore');
 
 describe('exonLayout', function () {
 	describe('#pad', function () {
 		it('should pad between intervals', function() {
-			assert(_.isEqual(el.pad(2, [[20, 30], [40, 50], [60, 70]]),
-					[[20, 32], [38, 52], [58, 70]]));
+			assert.deepEqual(el.pad(2, [[20, 30], [40, 50], [60, 70]]),
+					[[20, 32], [38, 52], [58, 70]]);
 		});
 	});
 	describe('#layout', function () {
