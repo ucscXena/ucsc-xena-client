@@ -5,7 +5,7 @@
   "homepage": "https://xena.ucsc.edu",
   "main": "index.js",
   "scripts": {
-    "test": "webpack-dev-server --config webpack.test.js --port 8081",
+    "test": "webpack-dev-server --config webpack.test.js --devtool eval --port 8081",
     "lint": "jshint js/* test/* && csslint css/*",
     "clean": "rimraf build/*",
     "start": "webpack-dev-server --devtool eval --progress --colors --history-api-fallback",
