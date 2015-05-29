@@ -19,7 +19,7 @@ function drawBands(vg, bands, color, chromPosToX, data) {
 	_.each(bands, (band, i) =>
 			_.each(band, curval =>
 				_.each(dbg[curval], v => {
-		var {start, end} = chromPosToX({start:v.start+1, end:v.end, val:v.val}), // handle ga4gh : 0 based with start+1
+		var {start, end} = chromPosToX({start:v.start, end:v.end, val:v.val}), // handle ga4gh : 0 based with start+1
 			istart = Math.round(start),
 			iend = Math.round(end);
 		if ((start>0) || (end>0)) {

@@ -37,7 +37,7 @@ function variants({url, dataset, chrom, start, end}) {
 		start: start,
 		end: end,
 		referenceName: chrom
-	});
+	}).map(arr => { _.each(arr, v => v.start++); return arr; });
 }
 
 function variantSetsQuery (url) {

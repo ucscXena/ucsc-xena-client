@@ -84,9 +84,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			drawCenter: function (d) {
 				var r = this.point;
 				this.vg.box (d.xStart -r,
-					d.y - d.pixPerRow/4, //-r,
+					d.y - d.pixPerRow/4,
 					d.xEnd- d.xStart+r*2,
-					d.pixPerRow/2, //r*2,
+					d.pixPerRow/2,
 					'black');
 			},
 
@@ -245,10 +245,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				var imp,
 					c;
 
-				if (this.feature === 'impact') {
-					imp = getImpact(val.effect);
-					c = colors[this.color][imp];
-				} else if (this.annValues[this.feature]){ //the feature is ga4gh annotation data, i.e. not part of the xena data
+				if (this.annValues && this.annValues[this.feature]){ //the feature is ga4gh annotation data, i.e. not part of the xena data
 					var widget = this.feature.split("__")[0],
 						feature = this.feature.split("__").pop(),
 						id = [val.chr, val.start, val.end, val.reference, val.alt].join("__"),
@@ -259,6 +256,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					} else {
 						return 'grey';
 					}
+				} else if (this.feature === 'impact') {
+					imp = getImpact(val.effect);
+					c = colors[this.color][imp];
 				} else if (_.isUndefined(val[this.feature])) { // NA value _VAF
 					return 'grey';
 				} else if (this.feature ==="dna_vaf" || this.feature ==="rna_vaf") {  // _VAF, but not NA
@@ -294,7 +294,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 								var values = val.info[field][0].split(/[,]/);
 								val.alternateBases.map(function (alt,i){
 									var chrom = val.referenceName.substring(0,3)==="chr"? val.referenceName: "chr"+ val.referenceName,
-										id = [chrom, val.start+1, val.end, val.referenceBases, alt].join("__"),
+										id = [chrom, val.start, val.end, val.referenceBases, alt].join("__"),
 										value;
 									if (val.alternateBases.length === values.length){
 										value = _.max(values[i].split(/[|-]/), f=> order[f]);
