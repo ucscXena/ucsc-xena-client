@@ -19,8 +19,15 @@ function pad1(p, intervals, acc) {
 	return pad1(p, [[rs - p, re]].concat(rest), acc.concat([[ls, le + p]]));
 }
 
-// can drop this with babel, with param default acc=[], above.
+// Extend exon intervals, to show splice sites.
+// can drop this wrapper with babel, using param default acc=[], above.
 var	pad = (p, intervals) => pad1(p, intervals, []);
+
+// XXX This generates exon boundaries on pixel fractions. Might want to
+// change it to integer pixels. Note that we can't round + continue the
+// calculation because the rounding errors can sum to over a pixel length by
+// the end. Instead, project all the lengths from zero & round to avoid
+// rounding error accumulating at the end.
 
 // Tail call version. Will be optimized when we switch to babel.
 // Also, use defaults offset=0, acc=[]
@@ -43,7 +50,15 @@ function layout({exonStarts, exonEnds, strand}, bpp) {
 	return {chrom: chrIntvls, screen: pixIntvls, reversed: strand === '-'};
 }
 
+function baseLen(chrlo) {
+	return _.reduce(chrlo, (acc, [s, e]) => acc + e - s + 1, 0);
+}
+
 module.exports = {
+	chromLayout: ({exonStarts, exonEnds, strand}) =>
+		reverseIf(strand, pad(spLen, _.zip(exonStarts, exonEnds))),
+	screenLayout: (bpp, chrlo) => toScreen(bpp, chrlo, 0, []),
+	baseLen: baseLen,
 	layout: layout,
 	pad: pad
 };
