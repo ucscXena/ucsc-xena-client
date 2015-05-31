@@ -29,7 +29,7 @@ function toScreen(bpp, [next, ...rest], offset, acc) {
 		return acc;
 	}
 	var [start, end] = next,
-		len = bpp * (end - start + 1);
+		len = (end - start + 1) / bpp;
 	return toScreen(bpp, rest, len + offset, acc.concat([[offset, len + offset - 1]]));
 }
 
