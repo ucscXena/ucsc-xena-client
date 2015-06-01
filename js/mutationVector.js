@@ -282,10 +282,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			receiveAnnData: function (annData){
 				var annValues={};
 				Object.keys(annData).map(function (key){
-					var field = key.split("__").pop(),
-						feature = key.split("__").slice(1).join("__"),
-						[,widget, dataset, keyValue]= key.split("__"),
-						order = annotationColor.colorSettings[widget][keyValue].order;
+					var [,widget, dataset, field]= key.split("__"),
+						feature = [widget, dataset, field].join("__"),
+						order = annotationColor.colorSettings[widget][field].order;
 
 					annValues[feature]={};
 					if (annData[key].length){
@@ -301,7 +300,11 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 									} else {
 										value = _.max(_.flatten(values.map(v=> v.split(/[|-]/))), f => order[f]);
 									}
-									annValues[feature][id]= value;
+									if (annValues[feature][id]){
+										annValues[feature][id] = _.max([value, annValues[feature][id]], f=>order[f]);
+									} else {
+										annValues[feature][id] = value;
+									}
 								});
 							}
 						});

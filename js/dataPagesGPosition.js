@@ -97,6 +97,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       variantsDropDown, dropDownValue,showAllStatus=false,
       data, dataPlus;
 
+
     function displayData(data){
       if (!data){
         return;
@@ -117,7 +118,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
             ((ref && ref !== variant.referenceBases) || (alt && variant.alternateBases.indexOf(alt)===-1))){
             return;
           }
-
+          //TODOS
           if ( allVariants[variantSetId].indexOf(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases)===-1){
             var div = document.createElement("div");
             buildVariantDisplay(variant, div, metadata[variantSetId]);
@@ -212,9 +213,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
           displayData(dataPlus);
         }
       });
-
       mainNode.appendChild(variantsDropDown);
-
     }
 
     resultsNode = document.createElement("div");
@@ -321,7 +320,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
   function buildVariantDisplay(variant, node, metaData) {
     var id = variant.id,
       chr = variant.referenceName,
-      startPos = variant.start +1,
+      startPos = variant.start,
       endPos = variant.end,
       reference = variant.referenceBases,
       alt = variant.alternateBases,
@@ -330,11 +329,19 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       label,div,
       selectedKeys, allKeys, otherKeys;
 
+    function getValue(key){
+      var keys = key.split("."),
+        obj = variant;
+
+      keys.map(k=> obj=obj[k]);
+      return obj;
+    }
+
     function displayKeyValuePair (key, bold){
         var value, intepretation, text;
 
-        value = eval("variant."+key);
-        //console.log(metaData[key].description,key, value);
+        value = getValue(key);
+        //console.log(metaData[key].description, key, value);
         if (metaData[key]){
           label = metaData[key].description;
           label = label.charAt(0).toUpperCase()+ label.slice(1);
@@ -404,13 +411,13 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       if (metadataStub.externalUrls[variantSetId].type === "position"){
         value = metadataStub.externalUrls[variantSetId].url;
         [ "chr","startPos","endPos","reference","alt" ].map(key=>{
-          value = value.replace("$"+key,eval(key));
+          value = value.replace("$"+key, eval(key));
         });
         div= dom_helper.hrefLink(metadataStub.externalUrls[variantSetId].name, value);
         node.appendChild(div);
       } else if (metadataStub.externalUrls[variantSetId].type === "key"){
         key = metadataStub.externalUrls[variantSetId].value;
-        value = eval("variant."+key);
+        value = getValue(key);
 
         value[0].split("|").map(acc=>{
           div = dom_helper.hrefLink(variantSetId+":"+acc,
