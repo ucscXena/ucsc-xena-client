@@ -1,10 +1,89 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext'
+define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext', 'static-interval-tree'
 	// non-object dependencies
-	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _) {
+	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _, intervalTree) {
 	'use strict';
+
+	function reverseIf(reversed, a) {
+		return reversed ? a.slice(0).reverse() : a;
+	}
+
+	function impactColor(val) {
+		var c = colors.category_25[val];
+		return 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
+	}
+
+	// Group by consecutive matches, perserving order.
+	function arrGroupBy(sortedArray, prop, ctx) {
+		var cb = _.iteratee(prop, ctx);
+		var last, current;
+		return _.reduce(sortedArray, (acc, el) => {
+			var key = cb(el);
+			if (key !== last) {
+				current = [];
+				last = key;
+				acc.push(current);
+			}
+			current.push(el);
+			return acc;
+		}, []);
+	}
+
+	function drawImpactPx(vg, width, pixPerRow, radius, variants) {
+		var ctx = vg.context(),
+			varByImp = arrGroupBy(variants, 'impact');
+
+		_.each(varByImp, vars => {
+            ctx.beginPath(); // halos
+			_.each(vars, v => {
+                ctx.moveTo(v.xStart - radius, v.y);
+                ctx.lineTo(v.xEnd + radius, v.y);
+			});
+            ctx.lineWidth = pixPerRow;
+            ctx.strokeStyle = impactColor(vars[0].impact);
+            ctx.stroke();
+
+            ctx.beginPath(); // centers
+			_.each(vars, v => {
+                ctx.moveTo(v.xStart - 0.5, v.y);
+                ctx.lineTo(v.xEnd + 0.5, v.y);
+			});
+            ctx.lineWidth = pixPerRow / 2;
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+		});
+	}
+
+	function push(arr, v) {
+		arr.push(v);
+		return arr;
+	}
+
+    function drawBackground(vg, width, height, sparsePad, pixPerRow, values){
+		var ctx = vg.context(),
+			drawWidth = width - sparsePad * 2,
+			[stripes] = _.reduce(
+				arrGroupBy(values, v => !!v.vals),
+				([acc, sum], g) =>
+					[g[0].vals ? acc : push(acc, [sum, g.length]), sum + g.length],
+				[[], 0]);
+
+		vg.smoothing(false);
+		vg.box(0, 0, width, height, 'white'); // white background
+
+		ctx.beginPath();                      // grey for missing data
+		each(stripes, ([offset, len]) =>
+			ctx.rect(
+				sparsePad,
+				(offset * pixPerRow) + sparsePad,
+				drawWidth,
+				pixPerRow * len
+		));
+		ctx.fillStyle = 'grey';
+		ctx.fill();
+    }
 
 	var unknownEffect = 0,
 		impact = {
@@ -71,7 +150,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		},
 		clone = _.clone,
 		each = _.each,
-		//filter = _.filter,
 		reduce = _.reduce,
 		sortBy = _.sortBy,
 		widgets = {},
@@ -82,49 +160,43 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				delete widgets[this.id];
 			},
 
-			drawCenter: function (d) {
+			drawCenter: function (pixPerRow, d) {
 				var r = this.point;
-				this.vg.box (d.xStart -r,
-					d.y - d.pixPerRow/4, //-r,
-					d.xEnd- d.xStart+r*2,
-					d.pixPerRow/2, //r*2,
+				this.vg.box (d.xStart - r,
+					d.y - pixPerRow / 4,
+					d.xEnd - d.xStart + r * 2,
+					pixPerRow / 2,
 					'black');
 			},
 
-			drawHalo: function (d) {
-				this.vg.box(d.xStart-d.r,
-					d.y- d.pixPerRow/2, //d.y - d.r,
-					d.xEnd - d.xStart + d.r*2,
-					d.pixPerRow, //d.r*2,
-					d.rgba );
+			drawHalo: function (pixPerRow, radius, color, d) {
+				this.vg.box(d.xStart - radius,
+					d.y - pixPerRow / 2,
+					d.xEnd - d.xStart + radius * 2,
+					pixPerRow,
+                    color);
 			},
 
-			draw: function () {
-				var self = this,
-					buffWidth = this.canvasWidth - (this.sparsePad * 2),
-					buff = vgcanvas(buffWidth, 1);
-				this.vg.smoothing(false);
-				this.vg.clear(0, 0, this.canvasWidth, this.canvasHeight);
+			draw: function (vg) {
+				var {radius, drawHalo, drawCenter, pixPerRow, findRgba,
+						canvasWidth, canvasHeight, values, sparsePad} = this,
+                    minppr = Math.max(pixPerRow, 2);
 
-				// draw each of the rows either grey for NA or white for sample examined for mutations
-				// more crisp lines if both white and grey are drawn, rather than a background of one
-				each(this.values, function (r, i) {
-					var color = (r.vals) ? 'white' : 'grey';
-					buff.box(0, 0, buffWidth, 1, color);
-					self.vg.drawImage(
-						buff.element(),
-						self.sparsePad,
-						(i * self.pixPerRow) + self.sparsePad,
-						buffWidth,
-						self.pixPerRow
-					);
-				});
+				drawBackground(vg, canvasWidth, canvasHeight, sparsePad, pixPerRow, values);
 
-				// draw the mutations
-				each(this.nodes, function (d) {
-					self.drawHalo(d);
-					self.drawCenter(d);
-				});
+				if (this.feature === 'impact') {
+					drawImpactPx(vg, canvasWidth, minppr, radius, this.nodes);
+				} else {
+					// draw the mutations
+					// XXX Deprecate this and use a method like drawImpactPx,
+					// splitting the data into, say, 100 shades. The user won't
+					// be able to see much more than that, and it will be much
+					// faster to fill 100 paths vs. 16k.
+					each(this.nodes, d => {
+						drawHalo(minppr, radius, findRgba(d.data), d);
+						drawCenter(minppr, d);
+					});
+				}
 			},
 
 			closestNode: function (x, y) {
@@ -258,60 +330,42 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			receiveData: function (data) {
+				// XXX It's not clear if this.values is useful. We no longer draw by iterating over
+				// the variants indexed by sample. It's currently used to draw background, do tooltip,
+				// and maybe more. Should deprecated it if we don't need it.
 				var drawValues = data.slice(this.zoomIndex, this.zoomIndex + this.zoomCount);
 				this.values = _.map(drawValues, (obj, i) => _.assoc(obj, 'index', i));
 				this.render();
 			},
 
-			findNonNaRows: function () {
-				var self = this,
-					nonNaRows = _.map(_.filter(self.values, function (r) {
-						return r.vals;
-					}), function (r) {
-						return {
-							x: self.sparsePad,
-							y: r.index * self.pixPerRow + self.sparsePad
-						};
-					});
-				return nonNaRows;
-			},
-
 			findNodes: function () {
-				var self = this,
-					nodes = [],
-					{pixPerRow, sparsePad, refGene, findRgba, radius} = this,
-					{mapChromPosToX} = refGene,
-					max = Math.max,
-					nodeValues = _.filter(this.values, function (value) {
-						return value.vals && value.vals.length;
-					});
-				_.each(nodeValues, function (value) {
-
-					var y = (value.index * pixPerRow) + (pixPerRow / 2) + sparsePad;
-					_.each(value.vals, function (val) {
-						var {start, end} = mapChromPosToX(val);
-
-						if (start >= 0 && end >= 0) {
-							start = start + sparsePad;
-							end = end + sparsePad;
-							nodes.push({
-								xStart: start,
-								xEnd: end,
-								y: y,
-								r: radius,
-								pixPerRow: max(pixPerRow,2),
-								impact: getImpact(val.effect),
-								rgba: findRgba(val),
-								data: val
-							});
-						}
-					});
-				});
-
-				// sort so most severe draw on top
-				return sortBy(nodes, function (n) {
-					return n.impact;
-				});
+				var {layout: {chrom, screen, reversed}, index, samples} = this.options,
+					{pixPerRow, sparsePad, zoomIndex, zoomCount} = this,
+					sindex = _.object(samples.slice(zoomIndex, zoomIndex + zoomCount),
+								_.range(samples.length)),
+					min = Math.min,
+					max = Math.max;
+				// XXX groupby for categorical? Would be faster. Sort for floats.
+				return sortBy(_.flatmap(chrom, ([start, end], i) => {
+					var [sstart, send] = reverseIf(reversed, screen[i]);
+					var toPx = x => sstart + (x - start + 1) * (send - sstart + 1) / (end - start + 1);
+					var variants = _.filter(
+						intervalTree.matches(index, {start: start, end: end}),
+						v => _.has(sindex, v.sample));
+					// We clip to exon boundary here with min/max.
+					// Alternatively we could use canvas clip for this, which would
+					// probably be faster. We would need output variants per-exon,
+					// so we could clip to the exon screen region. Might also need to
+					// switch to integer pixel offsets for exons, to avoid sub-pixel
+					// artifact.
+					return _.map(variants, v => ({
+						xStart: toPx(max(v.start, start)),
+						xEnd: toPx(min(v.end, end)),
+						y: sindex[v.sample] * pixPerRow + (pixPerRow / 2) + sparsePad,
+						impact: getImpact(v.effect),                                   // needed for sort, before drawing.
+						data: v
+					}));
+				}), v => v.impact);
 			},
 
 			drawLegend: function () {
@@ -348,14 +402,17 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			render: function () {
+//				var start = performance.now();
 				this.pixPerRow = (this.height - (this.sparsePad * 2))  / this.values.length;
 				this.canvasHeight = this.height; // TODO init elsewhere
 				this.d2 = this.vg.context();
 
 				this.nodes = this.findNodes();
-				this.nonNaRows = this.findNonNaRows();
 				this.drawLegend();
-				this.draw();
+
+				this.draw(this.vg);
+//				var end = performance.now();
+//				console.log('full run', end - start);
 			},
 
 			initialize: function (options) {
@@ -379,6 +436,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				this.point = options.point;
 				this.refHeight = options.refHeight;
 				this.columnUi.$sparsePad.height(0);
+				this.options = options;
 
 				// bindings
 				this.sub = this.columnUi.crosshairs.mousingStream.subscribe(function (ev) {

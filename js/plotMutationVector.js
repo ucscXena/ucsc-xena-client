@@ -12,6 +12,8 @@ define(['underscore_ext',
 		'vgcanvas',
 		'xenaQuery',
 		'annotation',
+		'exonLayout',
+		'static-interval-tree',
 		'ga4ghQuery',
 		'rx-jquery'
 	], function (
@@ -27,6 +29,8 @@ define(['underscore_ext',
 		vgcanvas,
 		xenaQuery,
 		annotation,
+		exonLayout,
+		intervalTree,
 		ga4ghQuery) {
 
 	"use strict";
@@ -187,6 +191,13 @@ define(['underscore_ext',
 		});
 	}
 
+	function layout(chromLayout, pxWidth, baseCount) {
+		var count = baseCount || exonLayout.baseLen(chromLayout),
+			bpp = count / pxWidth;
+
+		return exonLayout.screenLayout(bpp, chromLayout);
+	}
+
 	function syncAnnotations(cache, ants, id, width, data) {
 		var keys = _.map(ants, ([type, {url, field}]) => [type, url, field].join('::')),
 			current = _.keys(cache),
@@ -235,6 +246,9 @@ define(['underscore_ext',
 				dims = sheetWrap.columnDims(),
 				refGeneData,
 				refGene,
+				chromLayout,
+				screenLayout,
+				xzoom = _.get_in(column, ['zoom']) || {},
 				canvasHeight = ws.height + (dims.sparsePad * 2),
 				color = heatmapColors.range(column, {valueType: 'codedWhite'}, ['No Mutation', 'Has Mutation'], [0, 1]);
 
@@ -248,6 +262,14 @@ define(['underscore_ext',
 				local.columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 				local.columnUi.$samplePlot.append(local.vg.element());
 				local.annotations = {};
+				local.chromLayout = _.memoize1(exonLayout.chromLayout);
+				local.screenLayout = _.memoize1(layout);
+				local.dataToPlot = _.memoize(dataToPlot);
+				local.index = _.memoize(plotData =>
+						intervalTree.index(_.filter(_.flatten(
+									_.pluck(plotData[0].values,
+									'vals')),
+								_.identity)));
 			}
 
 			vg = local.vg;
@@ -266,6 +288,8 @@ define(['underscore_ext',
 			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
 			//data.req.values = stub.getMutation(column.fields[0]); // for testing
 			if (refGeneData) {
+				chromLayout = local.chromLayout(refGeneData);
+				screenLayout = local.screenLayout(chromLayout, column.width, xzoom.len);
 				refGeneExons.show(el.id, {
 					data: { gene: refGeneData }, // data.refGene,
 					plotAnchor: '#' + el.id + ' .headerPlot',
@@ -277,7 +301,7 @@ define(['underscore_ext',
 				if (data.req.values) { // TODO sometimes data.req is empty
 					refGene = refGeneExons.get(el.id);
 					if (refGene) {
-						plotData = dataToPlot(sort, data.req.values, ws.column.fields);
+						plotData = local.dataToPlot(sort, data.req.values, ws.column.fields);
 						columnUi.plotData = {
 							values: plotData[0].values,
 							samples: sort,
@@ -301,7 +325,14 @@ define(['underscore_ext',
 							horizontalMargin: dims.horizontalMargin,
 							point: 0.5, // TODO make dynamic
 							columnUi: columnUi,
-							refGene: refGene
+							refGene: refGene,
+							index: local.index(plotData),
+							layout: {
+								chrom: chromLayout,
+								screen: screenLayout,
+								reversed: refGeneData.strand === '-'
+							},
+							samples: sort
 						});
 					}
 				}
