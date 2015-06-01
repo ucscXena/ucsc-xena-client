@@ -26,6 +26,15 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		}, []);
 	}
 
+	// Group by, returning groups in sorted order. Scales O(n) vs.
+	// sort's O(n log n), if the number of values is much smaller than
+	// the number of elements.
+	function sortByGroup(arr, keyfn) {
+		var grouped = _.groupBy(arr, keyfn);
+		return _.map(_.sortBy(_.keys(grouped), _.identity),
+				k => grouped[k]);
+	}
+
 	function drawImpactPx(vg, width, pixPerRow, radius, color, variants) {
 		var ctx = vg.context(),
 			varByImp = groupByConsec(variants, v => v.group);
@@ -166,7 +175,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		},
 		each = _.each,
 		reduce = _.reduce,
-		sortBy = _.sortBy,
 		widgets = {},
 		aWidget = {
 
@@ -308,16 +316,17 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				this.values = _.map(drawValues, (obj, i) => _.assoc(obj, 'index', i));
 				this.render();
 			},
-
 			findNodes: function () {
 				var {layout: {chrom, screen, reversed}, index, samples} = this.options,
 					{pixPerRow, sparsePad, zoomIndex, zoomCount, feature} = this,
 					sindex = _.object(samples.slice(zoomIndex, zoomIndex + zoomCount),
 								_.range(samples.length)),
 					min = Math.min,
-					max = Math.max;
-				// XXX groupby for categorical? Would be faster. Sort for floats.
-				return sortBy(_.flatmap(chrom, ([start, end], i) => {
+					max = Math.max,
+					// sortfn is about 2x faster than sortBy, for large sets of variants
+					sortfn = (coll, keyfn) => _.flatten(sortByGroup(coll, keyfn), true);
+
+				return sortfn(_.flatmap(chrom, ([start, end], i) => {
 					var [sstart, send] = reverseIf(reversed, screen[i]);
 					var toPx = x => sstart + (x - start + 1) * (send - sstart + 1) / (end - start + 1);
 					var group = features[feature].get;
