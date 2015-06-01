@@ -10,15 +10,10 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		return reversed ? a.slice(0).reverse() : a;
 	}
 
-	function impactColor(val) {
-		var c = colors.category_25[val];
-		return 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
-	}
-
 	// Group by consecutive matches, perserving order.
-	function arrGroupBy(sortedArray, prop, ctx) {
+	function groupByConsec(sortedArray, prop, ctx) {
 		var cb = _.iteratee(prop, ctx);
-		var last, current;
+		var last = {}, current; // init 'last' with a sentinel, !== to everything
 		return _.reduce(sortedArray, (acc, el) => {
 			var key = cb(el);
 			if (key !== last) {
@@ -31,9 +26,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		}, []);
 	}
 
-	function drawImpactPx(vg, width, pixPerRow, radius, variants) {
+	function drawImpactPx(vg, width, pixPerRow, radius, color, variants) {
 		var ctx = vg.context(),
-			varByImp = arrGroupBy(variants, 'impact');
+			varByImp = groupByConsec(variants, v => v.group);
 
 		_.each(varByImp, vars => {
             ctx.beginPath(); // halos
@@ -42,7 +37,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
                 ctx.lineTo(v.xEnd + radius, v.y);
 			});
             ctx.lineWidth = pixPerRow;
-            ctx.strokeStyle = impactColor(vars[0].impact);
+            ctx.strokeStyle = color(vars[0].group);
             ctx.stroke();
 
             ctx.beginPath(); // centers
@@ -65,7 +60,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		var ctx = vg.context(),
 			drawWidth = width - sparsePad * 2,
 			[stripes] = _.reduce(
-				arrGroupBy(values, v => !!v.vals),
+				groupByConsec(values, v => !!v.vals),
 				([acc, sum], g) =>
 					[g[0].vals ? acc : push(acc, [sum, g.length]), sum + g.length],
 				[[], 0]);
@@ -84,6 +79,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		ctx.fillStyle = 'grey';
 		ctx.fill();
     }
+
+	var colorStr = c =>
+		'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
 
 	var unknownEffect = 0,
 		impact = {
@@ -137,7 +135,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			"others or unannotated":0
 		},
-		getImpact = function (eff) { return impact[eff] || unknownEffect; },
+		round = Math.round,
+		saveUndef = f => v => v === undefined ? v : f(v),
+		decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals
 		colors = {
 			category_25: [
 				{r: 255, g: 127, b: 14, a: 1},  // orange #ff7f0e
@@ -145,10 +145,25 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
 				{r: 214, g: 39, b: 40, a: 1}  // red #d62728
 			],
-			af: {r: 255, g: 0, b: 0, a: 0},
+			af: {r: 255, g: 0, b: 0},
 			grey: {r: 128, g:128, b:128, a:1}
 		},
-		clone = _.clone,
+		features = {
+			impact: {
+				get: v => impact[v.effect] || unknownEffect,
+				color: v => colorStr(colors.category_25[v])
+			},
+			dna_vaf: {
+				get: v => decimateFreq(v.dna_vaf),
+				color: v => colorStr(_.isUndefined(v) ? colors.grey :
+					_.assoc(colors.af, 'a', v))
+			},
+			rna_vaf: {
+				get: v => decimateFreq(v.rna_vaf),
+				color: v => colorStr(_.isUndefined(v) ? colors.grey :
+					_.assoc(colors.af, 'a', v))
+			}
+		},
 		each = _.each,
 		reduce = _.reduce,
 		sortBy = _.sortBy,
@@ -160,43 +175,14 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				delete widgets[this.id];
 			},
 
-			drawCenter: function (pixPerRow, d) {
-				var r = this.point;
-				this.vg.box (d.xStart - r,
-					d.y - pixPerRow / 4,
-					d.xEnd - d.xStart + r * 2,
-					pixPerRow / 2,
-					'black');
-			},
-
-			drawHalo: function (pixPerRow, radius, color, d) {
-				this.vg.box(d.xStart - radius,
-					d.y - pixPerRow / 2,
-					d.xEnd - d.xStart + radius * 2,
-					pixPerRow,
-                    color);
-			},
-
 			draw: function (vg) {
-				var {radius, drawHalo, drawCenter, pixPerRow, findRgba,
-						canvasWidth, canvasHeight, values, sparsePad} = this,
+				var {radius, pixPerRow, canvasWidth, canvasHeight,
+						values, sparsePad, feature} = this,
                     minppr = Math.max(pixPerRow, 2);
 
 				drawBackground(vg, canvasWidth, canvasHeight, sparsePad, pixPerRow, values);
-
-				if (this.feature === 'impact') {
-					drawImpactPx(vg, canvasWidth, minppr, radius, this.nodes);
-				} else {
-					// draw the mutations
-					// XXX Deprecate this and use a method like drawImpactPx,
-					// splitting the data into, say, 100 shades. The user won't
-					// be able to see much more than that, and it will be much
-					// faster to fill 100 paths vs. 16k.
-					each(this.nodes, d => {
-						drawHalo(minppr, radius, findRgba(d.data), d);
-						drawCenter(minppr, d);
-					});
-				}
+				drawImpactPx(vg, canvasWidth, minppr,
+						radius, features[feature].color, this.nodes);
 			},
 
 			closestNode: function (x, y) {
@@ -314,21 +300,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				window.open(url);
 			},
 
-			findRgba: function (val) {
-				var imp,
-					c;
-				if (this.feature === 'impact') {
-					imp = getImpact(val.effect);
-					c = colors[this.color][imp];
-				} else if (_.isUndefined(val[this.feature])) { // _VAF with NA value
-					c = colors.grey;
-				} else {  // _VAF, but not NA
-					c = clone(colors.af);
-					c.a = val[this.feature];
-				}
-				return 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
-			},
-
 			receiveData: function (data) {
 				// XXX It's not clear if this.values is useful. We no longer draw by iterating over
 				// the variants indexed by sample. It's currently used to draw background, do tooltip,
@@ -340,7 +311,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			findNodes: function () {
 				var {layout: {chrom, screen, reversed}, index, samples} = this.options,
-					{pixPerRow, sparsePad, zoomIndex, zoomCount} = this,
+					{pixPerRow, sparsePad, zoomIndex, zoomCount, feature} = this,
 					sindex = _.object(samples.slice(zoomIndex, zoomIndex + zoomCount),
 								_.range(samples.length)),
 					min = Math.min,
@@ -349,6 +320,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				return sortBy(_.flatmap(chrom, ([start, end], i) => {
 					var [sstart, send] = reverseIf(reversed, screen[i]);
 					var toPx = x => sstart + (x - start + 1) * (send - sstart + 1) / (end - start + 1);
+					var group = features[feature].get;
 					var variants = _.filter(
 						intervalTree.matches(index, {start: start, end: end}),
 						v => _.has(sindex, v.sample));
@@ -362,10 +334,10 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 						xStart: toPx(max(v.start, start)),
 						xEnd: toPx(min(v.end, end)),
 						y: sindex[v.sample] * pixPerRow + (pixPerRow / 2) + sparsePad,
-						impact: getImpact(v.effect),                                   // needed for sort, before drawing.
+						group: group(v),                                   // needed for sort, before drawing.
 						data: v
 					}));
-				}), v => v.impact);
+				}), v => v.group);
 			},
 
 			drawLegend: function () {
@@ -459,7 +431,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 	function evalMut(refGene, mut) {
 		var geneInfo = refGene[mut.gene];
 		return {
-			impact: getImpact(mut.effect),
+			impact: features.impact.get(mut.effect),
 			right: (geneInfo.strand === '+') ?
 		            mut.start - geneInfo.txStart :
 		            geneInfo.txStart - mut.start
