@@ -118,28 +118,32 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
         var index = data.indexOf(results),
           variantSetId = variantSetIds[index];
 
-        allVariants[variantSetId]=[];
+        allVariants[variantSetId]={};
         results.map(function (variant){
           if (!showAllStatus &&
             ((ref && ref !== variant.referenceBases) || (alt && variant.alternateBases.indexOf(alt)===-1))){
             return;
           }
 
-          //TODOS
-          if ( allVariants[variantSetId].indexOf(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases)===-1){
+          var variantId =variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases;
+          //record how many times the exact same variants are stored in the database
+          if ( allVariants[variantSetId][variantId] === undefined){
             var div = document.createElement("div");
             buildVariantDisplay(variant, div, metadata[variantSetId],gene);
             resultsNode.appendChild(div);
-            allVariants[variantSetId].push(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases);
+            allVariants[variantSetId][variantId]=0;
             found =1;
           }
+          allVariants[variantSetId][variantId]++;
         });
 
         //sidebar info
         sideNode.appendChild(dom_helper.elt("b",variantSetId));
         sideNode.appendChild(document.createElement("br"));
-        allVariants[variantSetId].map(id=>{
-          sideNode.appendChild(dom_helper.hrefLink(id.split("__")[0],"#"+id));
+        Object.keys(allVariants[variantSetId]).map(id=>{
+          var displayId= id.replace(variantSetId+":","").split("__")[0];
+          sideNode.appendChild(dom_helper.hrefLink(displayId+" ("+allVariants[variantSetId][id]+")",
+            "#"+id));
           sideNode.appendChild(document.createElement("br"));
         });
         sideNode.appendChild(document.createElement("br"));
