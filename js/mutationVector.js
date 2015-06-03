@@ -40,23 +40,23 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			varByImp = groupByConsec(variants, v => v.group);
 
 		_.each(varByImp, vars => {
-            ctx.beginPath(); // halos
+			ctx.beginPath(); // halos
 			_.each(vars, v => {
-                ctx.moveTo(v.xStart - radius, v.y);
-                ctx.lineTo(v.xEnd + radius, v.y);
+				ctx.moveTo(v.xStart - radius, v.y);
+				ctx.lineTo(v.xEnd + radius, v.y);
 			});
-            ctx.lineWidth = pixPerRow;
-            ctx.strokeStyle = color(vars[0].group);
-            ctx.stroke();
+			ctx.lineWidth = pixPerRow;
+			ctx.strokeStyle = color(vars[0].group);
+			ctx.stroke();
 
-            ctx.beginPath(); // centers
+			ctx.beginPath(); // centers
 			_.each(vars, v => {
-                ctx.moveTo(v.xStart - 0.5, v.y);
-                ctx.lineTo(v.xEnd + 0.5, v.y);
+				ctx.moveTo(v.xStart - 0.5, v.y);
+				ctx.lineTo(v.xEnd + 0.5, v.y);
 			});
-            ctx.lineWidth = pixPerRow / 2;
-            ctx.strokeStyle = 'black';
-            ctx.stroke();
+			ctx.lineWidth = pixPerRow / 2;
+			ctx.strokeStyle = 'black';
+			ctx.stroke();
 		});
 	}
 
@@ -65,7 +65,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		return arr;
 	}
 
-    function drawBackground(vg, width, height, sparsePad, pixPerRow, values){
+	function drawBackground(vg, width, height, sparsePad, pixPerRow, values) {
 		var ctx = vg.context(),
 			drawWidth = width - sparsePad * 2,
 			[stripes] = _.reduce(
@@ -87,7 +87,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		));
 		ctx.fillStyle = 'grey';
 		ctx.fill();
-    }
+	}
 
 	var colorStr = c =>
 		'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
@@ -186,7 +186,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			draw: function (vg) {
 				var {radius, pixPerRow, canvasWidth, canvasHeight,
 						values, sparsePad, feature} = this,
-                    minppr = Math.max(pixPerRow, 2);
+					minppr = Math.max(pixPerRow, 2);
 
 				drawBackground(vg, canvasWidth, canvasHeight, sparsePad, pixPerRow, values);
 				drawImpactPx(vg, canvasWidth, minppr,
