@@ -160,7 +160,8 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       var option,
         dropDown = [{
             "value": "specific",
-            "text": "Show only variants with the specific alternation from " + ref +" to "+alt,
+            "text": "Show only variants with the specific alternation from " + ref +" to "+alt +
+              " at this interval chr"+referenceName+": "+query_string.start+" - "+query_string.end,
             "index": 0
           }, // specific
           {
@@ -371,7 +372,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
               }).join(", ");
             } else {
               text = value[0].split(",").map(function(oneValue){
-                return oneValue.replace(/\\x[a-fA-F0-9]{2}/g," "); //messy input
+                return oneValue.replace(/\\x[a-fA-F0-9]{2}/g," ").replace(/\|/g," | "); //messy input
               }).join(", ");
             }
           }
@@ -379,11 +380,12 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
           if (text){
             if (bold){
               div = document.createElement("b");
-              node.appendChild(div);
-              div.appendChild(document.createTextNode(text));
+              node.appendChild(dom_helper.elt("i",div));
             } else {
-              node.appendChild(document.createTextNode(text));
+              div = document.createElement("i");
+              node.appendChild(div);
             }
+            div.appendChild(document.createTextNode(text));
             node.appendChild(document.createElement("br"));
             node.appendChild(document.createElement("br"));
           }
@@ -410,8 +412,8 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       var key, value;
       if (metadataStub.externalUrls[variantSetId].type === "position"){
         value = metadataStub.externalUrls[variantSetId].url;
-        [ "chr","startPos","endPos","reference","alt" ].map(key=>{
-          value = value.replace("$"+key, eval(key));
+        [ "chr","startPos","endPos","reference","alt" ].map(variable=>{
+          value = value.replace("$"+variable, eval(variable));
         });
         div= dom_helper.hrefLink(metadataStub.externalUrls[variantSetId].name, value);
         node.appendChild(div);
@@ -419,12 +421,17 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
         key = metadataStub.externalUrls[variantSetId].value;
         value = getValue(key);
 
+        node.appendChild(document.createTextNode(metadataStub.externalUrls[variantSetId].name));
         value[0].split("|").map(acc=>{
+          node.appendChild(document.createTextNode(" "));
           div = dom_helper.hrefLink(variantSetId+":"+acc,
             metadataStub.externalUrls[variantSetId].url.replace("$key",acc));
           node.appendChild(div);
-          node.appendChild(document.createTextNode(" "));
         });
+      } else {
+        value = metadataStub.externalUrls[variantSetId].url;
+        div= dom_helper.hrefLink(metadataStub.externalUrls[variantSetId].name, value);
+        node.appendChild(div);
       }
       node.appendChild(document.createElement("br"));
     }

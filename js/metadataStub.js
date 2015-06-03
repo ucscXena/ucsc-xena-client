@@ -15,7 +15,10 @@ var selectedKeys = {
     "exac":["INFO.AC_AFR","INFO.AN_AFR","INFO.AC_AMR","INFO.AN_AMR",
         "INFO.AC_EAS","INFO.AN_EAS","INFO.AC_SAS","INFO.AN_SAS",
         "INFO.AC_FIN","INFO.AN_FIN","INFO.AC_NFE","INFO.AN_NFE",
-        "INFO.AC_OTH","INFO.AN_OTH"]
+        "INFO.AC_OTH","INFO.AN_OTH"],
+    "lovd":["INFO.genetic_origin"],
+    "bic":["INFO.Clinically_Importance","INFO.AA_Change"],
+    "umd":["INFO.BioSignificance","INFO.TRANSMIT","INFO.ONSET","INFO.mtAA","INFO.wtAA","INFO.pVAR"]
 };
 
 var externalUrls = {
@@ -28,18 +31,21 @@ var externalUrls = {
     // http://www.ncbi.nlm.nih.gov/clinvar/RCV000132455/
     "Clinvar":{
         "url":"http://www.ncbi.nlm.nih.gov/clinvar/$key/",
+        "name":"National Center for Biotechnology Information ClinVar Database",
         "type":"key",
         "value":"INFO.CLNACC"
     },
     // http://hci-exlovd.hci.utah.edu/variants.php?action=search_unique&search_Variant%2FDBID=BRCA1_00014
     "ex_lovd":{
         "url":"http://hci-exlovd.hci.utah.edu/variants.php?action=search_unique&search_Variant%2FDBID=$key",
+        "name":"Leiden Open Variant Database - Database of BRCA1 and BRCA2 sequence variants that have been clinically reclassified using a quantitative integrated evaluation",
         "type":"key",
         "value":"INFO.brca1_db_id"
     },
     // http://databases.lovd.nl/shared/view/BRCA1?search_VariantOnGenome%2FDBID=%3D%22BRCA1_000010%22
     "lovd":{
         "url":"http://databases.lovd.nl/shared/view/BRCA1?search_VariantOnGenome%2FDBID=%3D%22$key%22",
+        "name":"Leiden Open Variant Database - LOVD 3.0 shared installation",
         "type":"key",
         "value":"INFO.db_id"
     },
@@ -48,7 +54,17 @@ var externalUrls = {
         "url":"http://exac.broadinstitute.org/variant/$chr-$startPos-$reference-$alt",
         "name": "ExAC Browser",
         "type":"position"
-    }
+    },
+    //https://research.nhgri.nih.gov/projects/bic/index.shtml
+    "bic":{
+        "url":"https://research.nhgri.nih.gov/projects/bic/index.shtml",
+        "name": "NHGRI Breast Cancer Information Core"
+    },
+    //http://www.umd.be
+    "umd":{
+        "url":"http://www.umd.be",
+        "name": "The Universal Mutation Database"
+    },
 };
 
 var variantSets = [
