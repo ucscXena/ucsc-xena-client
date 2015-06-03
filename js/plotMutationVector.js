@@ -264,8 +264,8 @@ define(['underscore_ext',
 				local.annotations = {};
 				local.chromLayout = _.memoize1(exonLayout.chromLayout);
 				local.screenLayout = _.memoize1(layout);
-				local.dataToPlot = _.memoize(dataToPlot);
-				local.index = _.memoize(plotData =>
+				local.dataToPlot = _.memoize1(dataToPlot);
+				local.index = _.memoize1(plotData =>
 						intervalTree.index(_.filter(_.flatten(
 									_.pluck(plotData[0].values,
 									'vals')),
