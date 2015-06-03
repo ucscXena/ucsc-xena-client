@@ -18,7 +18,7 @@ var selectedKeys = {
         "INFO.AC_OTH","INFO.AN_OTH"],
     "lovd":["INFO.genetic_origin"],
     "bic":["INFO.Clinically_Importance","INFO.AA_Change"],
-    "umd":["INFO.BioSignificance","INFO.TRANSMIT","INFO.ONSET","INFO.mtAA","INFO.wtAA","INFO.pVAR"]
+    "umd":["INFO.BioSignificance","INFO.TRANSMIT","INFO.ONSET","INFO.pVAR"]
 };
 
 var externalUrls = {
@@ -36,11 +36,11 @@ var externalUrls = {
         "value":"INFO.CLNACC"
     },
     // http://hci-exlovd.hci.utah.edu/variants.php?action=search_unique&search_Variant%2FDBID=BRCA1_00014
+    // http://hci-exlovd.hci.utah.edu/home.php?select_db=BRCA2
     "ex_lovd":{
-        "url":"http://hci-exlovd.hci.utah.edu/variants.php?action=search_unique&search_Variant%2FDBID=$key",
+        "url":"http://hci-exlovd.hci.utah.edu/home.php?select_db=$gene",
         "name":"Leiden Open Variant Database - Database of BRCA1 and BRCA2 sequence variants that have been clinically reclassified using a quantitative integrated evaluation",
-        "type":"key",
-        "value":"INFO.brca1_db_id"
+        "type":"gene"
     },
     // http://databases.lovd.nl/shared/view/BRCA1?search_VariantOnGenome%2FDBID=%3D%22BRCA1_000010%22
     "lovd":{

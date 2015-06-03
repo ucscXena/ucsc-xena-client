@@ -85,6 +85,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
         [query_string.variantSetId] : Object.keys(metadata),
       ref =  query_string.ref,
       alt = query_string.alt,
+      gene = query_string.gene,
       allVariants={},
       queryArray = variantSetIds.map(
         variantSetId=>queryVariants(startPos, endPos, referenceName, variantSetId)),
@@ -108,6 +109,11 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       sideNode.innerHTML="";
       resultsNode.innerHTML="";
 
+      if (gene){
+        sideNode.appendChild(dom_helper.elt("H3",gene));
+        sideNode.appendChild(document.createElement("br"));
+      }
+
       data.map(function(results){
         var index = data.indexOf(results),
           variantSetId = variantSetIds[index];
@@ -118,10 +124,11 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
             ((ref && ref !== variant.referenceBases) || (alt && variant.alternateBases.indexOf(alt)===-1))){
             return;
           }
+
           //TODOS
           if ( allVariants[variantSetId].indexOf(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases)===-1){
             var div = document.createElement("div");
-            buildVariantDisplay(variant, div, metadata[variantSetId]);
+            buildVariantDisplay(variant, div, metadata[variantSetId],gene);
             resultsNode.appendChild(div);
             allVariants[variantSetId].push(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases);
             found =1;
@@ -318,7 +325,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     });
   }
 
-  function buildVariantDisplay(variant, node, metaData) {
+  function buildVariantDisplay(variant, node, metaData, gene) {
     var id = variant.id,
       chr = variant.referenceName,
       startPos = variant.start,
@@ -409,6 +416,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     //source dbs
     if (metadataStub.externalUrls[variantSetId]){
       node.appendChild(document.createTextNode("Source: " ));
+
       var key, value;
       if (metadataStub.externalUrls[variantSetId].type === "position"){
         value = metadataStub.externalUrls[variantSetId].url;
@@ -422,12 +430,20 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
         value = getValue(key);
 
         node.appendChild(document.createTextNode(metadataStub.externalUrls[variantSetId].name));
-        value[0].split("|").map(acc=>{
-          node.appendChild(document.createTextNode(" "));
-          div = dom_helper.hrefLink(variantSetId+":"+acc,
-            metadataStub.externalUrls[variantSetId].url.replace("$key",acc));
-          node.appendChild(div);
-        });
+        if (value && value[0]) {
+          value[0].split("|").map(acc=>{
+            node.appendChild(document.createTextNode(" "));
+            div = dom_helper.hrefLink(variantSetId+":"+acc,
+              metadataStub.externalUrls[variantSetId].url.replace("$key",acc));
+            node.appendChild(div);
+          });
+        }
+      } else if (gene && metadataStub.externalUrls[variantSetId].type === "gene"){
+        value = gene;
+        node.appendChild(document.createTextNode(metadataStub.externalUrls[variantSetId].name+" "));
+        div = dom_helper.hrefLink(variantSetId+":"+gene,
+          metadataStub.externalUrls[variantSetId].url.replace("$gene",gene));
+        node.appendChild(div);
       } else {
         value = metadataStub.externalUrls[variantSetId].url;
         div= dom_helper.hrefLink(metadataStub.externalUrls[variantSetId].name, value);
