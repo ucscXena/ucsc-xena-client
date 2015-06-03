@@ -338,14 +338,20 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					// probably be faster. We would need output variants per-exon,
 					// so we could clip to the exon screen region. Might also need to
 					// switch to integer pixel offsets for exons, to avoid sub-pixel
-					// artifact.
-					return _.map(variants, v => ({
-						xStart: toPx(max(v.start, start)),
-						xEnd: toPx(min(v.end, end)),
-						y: sindex[v.sample] * pixPerRow + (pixPerRow / 2) + sparsePad,
-						group: group(v),                                   // needed for sort, before drawing.
-						data: v
-					}));
+					// artifact. Could also then flop coords with a transform,
+					// instead of reverseIf.
+					return _.map(variants, v => {
+						var [pstart, pend] = reverseIf(reversed,
+							[toPx(max(v.start, start)),
+								toPx(min(v.end + 1, end + 1))]);
+						return {
+							xStart: pstart,
+							xEnd: pend,
+							y: sindex[v.sample] * pixPerRow + (pixPerRow / 2) + sparsePad,
+						   group: group(v),                                   // needed for sort, before drawing.
+						   data: v
+						};
+					});
 				}), v => v.group);
 			},
 
