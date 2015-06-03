@@ -296,7 +296,15 @@ define(['underscore_ext',
 					$sidebarAnchor: columnUi.$headerSidebar,
 					width: column.width,
 					radius: 0,//sheetWrap.columnDims().sparseRadius,
-					refHeight: sheetWrap.columnDims().refHeight
+					refHeight: sheetWrap.columnDims().refHeight,
+					layout: { // XXX use same value as for mutationVector.show, below
+						pxLen: exonLayout.pxLen(screenLayout),
+						baseLen: exonLayout.baseLen(chromLayout),
+						chrom: chromLayout,
+						screen: screenLayout,
+						reversed: refGeneData.strand === '-'
+					},
+					cursor: local.columnUi.xenaCursor.refine({column: ['column_rendering', el.id]})
 				});
 				if (data.req.values) { // TODO sometimes data.req is empty
 					refGene = refGeneExons.get(el.id);
@@ -328,10 +336,13 @@ define(['underscore_ext',
 							refGene: refGene,
 							index: local.index(plotData),
 							layout: {
+								pxLen: exonLayout.pxLen(screenLayout),
+								baseLen: exonLayout.baseLen(chromLayout),
 								chrom: chromLayout,
 								screen: screenLayout,
 								reversed: refGeneData.strand === '-'
 							},
+							xzoom: xzoom,
 							samples: sort
 						});
 					}

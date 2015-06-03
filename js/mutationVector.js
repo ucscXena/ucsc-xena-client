@@ -318,17 +318,16 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 			findNodes: function () {
 				var {layout: {chrom, screen, reversed}, index, samples} = this.options,
-					{pixPerRow, sparsePad, zoomIndex, zoomCount, feature} = this,
+					{offset, pixPerRow, sparsePad, zoomIndex, zoomCount, feature} = this,
 					sindex = _.object(samples.slice(zoomIndex, zoomIndex + zoomCount),
 								_.range(samples.length)),
 					min = Math.min,
 					max = Math.max,
 					// sortfn is about 2x faster than sortBy, for large sets of variants
 					sortfn = (coll, keyfn) => _.flatten(sortByGroup(coll, keyfn), true);
-
 				return sortfn(_.flatmap(chrom, ([start, end], i) => {
 					var [sstart, send] = reverseIf(reversed, screen[i]);
-					var toPx = x => sstart + (x - start + 1) * (send - sstart + 1) / (end - start + 1);
+					var toPx = x => sstart + (x - start + 1) * (send - sstart + 1) / (end - start + 1) - offset;
 					var group = features[feature].get;
 					var variants = _.filter(
 						intervalTree.matches(index, {start: start, end: end}),
@@ -424,6 +423,12 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				this.refHeight = options.refHeight;
 				this.columnUi.$sparsePad.height(0);
 				this.options = options;
+
+				var {baseLen, pxLen} = options.layout;
+				// XXX There's something wrong here. E.g. if the exons have
+				// 1px spacing, this would be off. pxLen is the wrong metric.
+				this.offset = (_.get_in(this, ['options', 'xzoom', 'index']) || 0) *
+					pxLen / baseLen;
 
 				// bindings
 				this.sub = this.columnUi.crosshairs.mousingStream.subscribe(function (ev) {

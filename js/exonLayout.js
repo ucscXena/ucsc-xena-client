@@ -54,11 +54,16 @@ function baseLen(chrlo) {
 	return _.reduce(chrlo, (acc, [s, e]) => acc + e - s + 1, 0);
 }
 
+function pxLen(chrlo) {
+	return _.reduce(chrlo, (acc, [s, e]) => acc + e - s, 0);
+}
+
 module.exports = {
 	chromLayout: ({exonStarts, exonEnds, strand}) =>
 		reverseIf(strand, pad(spLen, _.zip(exonStarts, exonEnds))),
 	screenLayout: (bpp, chrlo) => toScreen(bpp, chrlo, 0, []),
 	baseLen: baseLen,
+	pxLen: pxLen,
 	layout: layout,
 	pad: pad
 };

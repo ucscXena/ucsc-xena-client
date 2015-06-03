@@ -1,10 +1,12 @@
 /*jslint nomen:true, browser: true */
 /*global define: false, console: false */
 
-define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
+define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore', 'exonLayout', 'zoom', 'rx'
 	// non-object dependencies
-	], function (crosshairs, tooltip, util, d3, $, select2, _) {
+	], function (crosshairs, tooltip, util, d3, $, select2, _, exonLayout, zoom, Rx) {
 	'use strict';
+
+	var {zoomIn, zoomOut} = zoom;
 
 	var shade1 = '#cccccc',
 		shade2 = '#999999',
@@ -23,6 +25,7 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 			destroy: function () {
 				this.crosshairs.destroy();
 				this.d3select.remove();
+				this.subs.dispose();
 				delete widgets[this.id];
 			},
 
@@ -377,6 +380,32 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 					.attr('width', this.canvasWidth)
 					.attr('height', this.canvasHeight)
 					.node().getContext('2d');
+
+				var {baseLen} = options.layout;
+				this.subs = new Rx.CompositeDisposable();
+				this.subs.add($(this.d3select[0][0]).onAsObservable('dblclick')
+					.subscribe(ev => {
+						var total = baseLen;
+						var pos = (ev.pageX - $(ev.currentTarget).offset().left) /
+							$(ev.currentTarget).width();
+						ev.stopPropagation();
+						options.cursor.update(s =>
+							_.update_in(s, ['column', 'zoom'], ({index, len}) => {
+								var [nindex, nlen] = zoomIn(index, len, total, pos);
+								return {index: nindex, len: nlen};
+							}));
+					}));
+
+				this.subs.add($(this.d3select[0][0]).onAsObservable('click').filter(ev => ev.shiftKey)
+					.subscribe(ev => {
+						var total = baseLen;
+						ev.stopPropagation();
+						options.cursor.update(s =>
+							_.update_in(s, ['column', 'zoom'], ({index, len}) => {
+								var [nindex, nlen] = zoomOut(index, len, total);
+								return {index: nindex, len: nlen};
+							}));
+					}));
 
 				this.receiveData(options.data);
 			}
