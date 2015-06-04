@@ -268,7 +268,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					posText = 'hg19 ' + pos;  // hg19 is hard coded, we do not check
 
 					// ga4gh BRCA1 and BRCA2 hard-coded section here
-					if (this.gene.name ==="BRCA1" || this.gene.name === "BRCA2"){
+					if (this.gene ==="BRCA1" || this.gene === "BRCA2"){
 						ga4ghVarURL = "../datapages/?ga4gh=1&referenceName="+
 							node.data.chr.substring(3, node.data.chr.length)+
 							"&start="+node.data.start+"&end="+ node.data.end +
@@ -277,7 +277,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					}
 					rows = [
 						[ { val: node.data.effect +", " +
-							this.gene.name +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'')}],
+							this.gene +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'')}],
 						[ { val: posText, url: posURL},
 							{ val: node.data.reference + ' to ' + node.data.alt}]
 					];
@@ -408,9 +408,8 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				//_(this).bindAll();
 				this.vg = options.vg;
 				this.columnUi = options.columnUi;
-				this.refGene = options.refGene;
 				this.dataset = options.dataset;
-				this.gene = options.refGene.getGeneInfo();
+				this.gene = options.gene;
 				this.feature = options.feature;
 				this.color = options.color;
 				this.canvasWidth = options.width;
@@ -451,7 +450,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 	function evalMut(refGene, mut) {
 		var geneInfo = refGene[mut.gene];
 		return {
-			impact: features.impact.get(mut.effect),
+			impact: features.impact.get(mut),
 			right: (geneInfo.strand === '+') ?
 		            mut.start - geneInfo.txStart :
 		            geneInfo.txStart - mut.start

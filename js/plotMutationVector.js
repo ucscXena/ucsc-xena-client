@@ -297,6 +297,7 @@ define(['underscore_ext',
 					width: column.width,
 					radius: 0,//sheetWrap.columnDims().sparseRadius,
 					refHeight: sheetWrap.columnDims().refHeight,
+					zoom: xzoom,
 					layout: { // XXX use same value as for mutationVector.show, below
 						pxLen: exonLayout.pxLen(screenLayout),
 						baseLen: exonLayout.baseLen(chromLayout),
@@ -333,7 +334,7 @@ define(['underscore_ext',
 							horizontalMargin: dims.horizontalMargin,
 							point: 0.5, // TODO make dynamic
 							columnUi: columnUi,
-							refGene: refGene,
+							gene: column.fields[0],
 							index: local.index(plotData),
 							layout: {
 								pxLen: exonLayout.pxLen(screenLayout),

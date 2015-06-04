@@ -3,3 +3,4 @@
 require('./underscore_ext');
 require('./mutationVector');
 require('./exonLayout');
+require('./refGeneExons');
