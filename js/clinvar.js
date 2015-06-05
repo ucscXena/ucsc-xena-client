@@ -5,6 +5,7 @@ var d3 = require('d3');
 var _ = require('underscore');
 var annotation = require('./annotation');
 var {drawBands} = require('./annotationPlot');
+var intervalTree = require('static-interval-tree');
 
 
 // Make multiple passes over the categorical data, drawing
@@ -57,10 +58,12 @@ function fieldMax(field, {info}) {
 var getVal = (field, v) =>
     ({start: v.start, end: v.end, val: fieldMax(field, v)});
 
-function draw([__, {height, field}], vg, data, chromPosToX) {
+function draw([__, {height, field}], vg, data, layout) {
 	var {groups, color} = fields[field];
 	var variantsVals = _.map(data, v => getVal(field, v));
-    drawBands(vg, groups, color, chromPosToX, variantsVals);
+	var indx = intervalTree.index(variantsVals);
+	vg.box(0, 0, vg.width(), vg.height(), 'white');
+    drawBands(vg, groups, color, layout, indx);
 }
 
 annotation.draw.add('clinvar', draw);

@@ -198,7 +198,7 @@ define(['underscore_ext',
 		return exonLayout.screenLayout(bpp, chromLayout);
 	}
 
-	function syncAnnotations(cache, ants, id, width, data) {
+	function syncAnnotations(cache, ants, id, width, data, layout) {
 		var keys = _.map(ants, ([type, {url, field}]) => [type, url, field].join('::')),
 			current = _.keys(cache),
 			headerPlot = $('#' + id + ' .headerPlot');
@@ -220,7 +220,7 @@ define(['underscore_ext',
 			}
 			if (data.refGene && _.get_in(data, ['annotation' + i, 'length'])) {
 				annotation.draw(ants[i], cache[key], data['annotation' + i],
-						refGeneExons.get(id).mapChromPosToX);
+						layout);
 			}
 		});
 	}
@@ -248,7 +248,8 @@ define(['underscore_ext',
 				refGene,
 				chromLayout,
 				screenLayout,
-				xzoom = _.get_in(column, ['zoom']) || {},
+				fullLayout,
+				xzoom = _.get_in(column, ['zoom']) || {index: 0},
 				canvasHeight = ws.height + (dims.sparsePad * 2),
 				color = heatmapColors.range(column, {valueType: 'codedWhite'}, ['No Mutation', 'Has Mutation'], [0, 1]);
 
@@ -290,6 +291,14 @@ define(['underscore_ext',
 			if (refGeneData) {
 				chromLayout = local.chromLayout(refGeneData);
 				screenLayout = local.screenLayout(chromLayout, column.width, xzoom.len);
+				fullLayout = {
+					pxLen: exonLayout.pxLen(screenLayout),
+					baseLen: exonLayout.baseLen(chromLayout),
+					chrom: chromLayout,
+					screen: screenLayout,
+					reversed: refGeneData.strand === '-',
+					zoom: xzoom
+				};
 				refGeneExons.show(el.id, {
 					data: { gene: refGeneData }, // data.refGene,
 					plotAnchor: '#' + el.id + ' .headerPlot',
@@ -298,13 +307,7 @@ define(['underscore_ext',
 					radius: 0,//sheetWrap.columnDims().sparseRadius,
 					refHeight: sheetWrap.columnDims().refHeight,
 					zoom: xzoom,
-					layout: { // XXX use same value as for mutationVector.show, below
-						pxLen: exonLayout.pxLen(screenLayout),
-						baseLen: exonLayout.baseLen(chromLayout),
-						chrom: chromLayout,
-						screen: screenLayout,
-						reversed: refGeneData.strand === '-'
-					},
+					layout: fullLayout,
 					cursor: local.columnUi.xenaCursor.refine({column: ['column_rendering', el.id]})
 				});
 				if (data.req.values) { // TODO sometimes data.req is empty
@@ -336,13 +339,7 @@ define(['underscore_ext',
 							columnUi: columnUi,
 							gene: column.fields[0],
 							index: local.index(plotData),
-							layout: {
-								pxLen: exonLayout.pxLen(screenLayout),
-								baseLen: exonLayout.baseLen(chromLayout),
-								chrom: chromLayout,
-								screen: screenLayout,
-								reversed: refGeneData.strand === '-'
-							},
+							layout: fullLayout,
 							xzoom: xzoom,
 							samples: sort
 						});
@@ -360,7 +357,7 @@ define(['underscore_ext',
 			// scaling that is mixed up with refGene state.
 
 			syncAnnotations(local.annotations, annotations, el.id, column.width,
-					data);
+					data, fullLayout);
 		}
 	);
 

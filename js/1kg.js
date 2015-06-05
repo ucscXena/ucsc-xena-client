@@ -5,6 +5,7 @@ var d3 = require('d3');
 var _ = require('underscore');
 var annotation = require('./annotation');
 var {drawFloatBands} = require('./annotationPlot');
+var intervalTree = require('static-interval-tree');
 
 //var color = d3.scale.log().domain([1e-50,1]).range(['#FFFFFF', '#FF0000']);
 
@@ -29,9 +30,11 @@ var fields ={
 var getVal = (field, v) =>
     ({start: v.start, end: v.end, val: v.info[field][0]});
 
-function draw([__, {height, field}], vg, data, chromPosToX) {
-	var variantsVals = _.map(data, v => getVal(field, v));
-    drawFloatBands(vg, [variantsVals], fields[field].color, chromPosToX, variantsVals);
+function draw([__, {height, field}], vg, data, layout) {
+	var variantVals = _.map(data, v => getVal(field, v));
+	var indxs = _.map([variantVals], intervalTree.index);
+	vg.box(0, 0, vg.width(), vg.height(), 'white');
+    drawFloatBands(vg, indxs, fields[field].color, layout);
 }
 
 annotation.draw.add('1000_genomes', draw);

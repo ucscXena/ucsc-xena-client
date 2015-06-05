@@ -2,13 +2,14 @@
 /*global define: false */
 
 define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore', 'exonLayout', 'zoom', 'rx',
-	   'static-interval-tree', 'vgcanvas',
+	   'static-interval-tree', 'vgcanvas', 'layoutPlot'
 	// non-object dependencies
-	], function (crosshairs, tooltip, util, d3, $, select2, _, exonLayout, zoom, Rx, intervalTree, vgcanvas) {
+	], function (crosshairs, tooltip, util, d3, $, select2, _, exonLayout, zoom, Rx, intervalTree, vgcanvas, layoutPlot) {
 	'use strict';
 
 	var {zoomIn, zoomOut} = zoom;
 	var {matches, index} = intervalTree;
+	var {pxTransformEach} = layoutPlot;
 
 	// annotate an interval with cds status
 	var inCds = ({cdsStart, cdsEnd}, intvl) =>
@@ -68,26 +69,19 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 				};
 			},
 
-			render: function (vg, intervals, indx, layout, offset) {
+			render: function (vg, indx, layout) {
 				var ctx = vg.context();
-				var {screen, chrom, reversed} = layout;
-				_.each(chrom, ([start, end], i) => {
-					var [sstart, send] = screen[i];
-					var flop = reversed ? -1 : 1;
 
-					// XXX set clip here to support views with fractional exons
-					ctx.save();
-					ctx.translate(reversed ? send : sstart, 0);
-					ctx.scale(flop * (send - sstart) / (end - start + 1), 1);
-					ctx.translate(- start - flop * offset, 0);
+				pxTransformEach(layout, (toPx, [start, end]) => {
 					var nodes = matches(indx, {start: start, end: end});
 					_.each(nodes, ({i, start, end, inCds}) => {
 						var {y, h} = annotation[inCds ? 'cds' : 'utr'];
+						var [pstart, pend] = toPx([start, end]);
 						ctx.fillStyle = i % 2 === 0 ? shade2 : shade1;
-						ctx.fillRect(start, y, end - start, h);
+						ctx.fillRect(pstart, y, (pend - pstart) || 1, h);
 					});
-					ctx.restore();
 				});
+
 				ctx.font = "12px Verdana";
 				ctx.strokeText("5'", 5, this.canvasHeight - 2);
 				ctx.strokeText("3'", this.canvasWidth - 15, this.canvasHeight - 2);
@@ -106,18 +100,18 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 					$anchor: $(options.plotAnchor)
 				});
 
-				var {layout, data, zoom: {index: offset}} = options;
+				var {layout, data} = options;
 				var {baseLen} = layout;
 
 				var intervals = findIntervals(data.gene);
 				var indx = index(intervals);
 				var vg = vgcanvas(this.canvasWidth, this.canvasHeight);
 				$(options.plotAnchor).append(vg.element());
-				this.render(vg, intervals, indx, layout, offset || 0);
+				this.render(vg, indx, layout);
 				this.vg = vg;
 
 				this.subs = new Rx.CompositeDisposable();
-				this.subs.add($(vg.element()).onAsObservable('dblclick')
+				this.subs.add($(vg.element()).onAsObservable('dblclick').filter(ev => !ev.shiftKey)
 					.subscribe(ev => {
 						var total = baseLen;
 						var pos = (ev.pageX - $(ev.currentTarget).offset().left) /
