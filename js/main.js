@@ -180,8 +180,6 @@ define(['jquery',
 		}
 	});
 
-//	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074"; // XXX hard-coded for now
-//	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
 	$(document).ready(function () {
 		var debug_stream = model.state.replay(null, 1),
 			start,
