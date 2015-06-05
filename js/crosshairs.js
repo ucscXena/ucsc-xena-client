@@ -64,15 +64,17 @@ define(['d3', 'jquery', 'underscore'
 
 		destroy: function () {
 			this.sub.dispose();
+			this.el.remove();
 			delete widgets[this.id];
 		},
 
 		initialize: function (options) {
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
+			this.el = $("<div class='crosshairV crosshair'></div>");
 			//_(this).bindAll();
 			options.$anchor
 				.addClass('crosshairPlot')
-				.append($("<div class='crosshairV crosshair'></div>"));
+				.append(this.el);
 			this.mousingStream = options.$anchor.onAsObservable('mousemove mouseenter mouseleave');
 			this.mousemoveStream = options.$anchor.onAsObservable('mousemove');
 			this.sub = this.mousingStream.subscribe(mousing);
