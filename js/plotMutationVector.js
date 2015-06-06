@@ -153,21 +153,21 @@ define(['underscore_ext',
 		},id);
    }
 
-	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074";
+	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/0.5.1";
 	var annotationsForMap = [
-		['clinvar', {
+		{
 			url: clinvar_host,
 			dsID: 'Clinvar',
 			field: 'CLNSIG'
-		}], ['clinvar', {
+		}, {
 			url: clinvar_host,
 			dsID: 'Clinvar',
 			field: 'CLNORIGIN'
-		}],['clinvar', {
+		}, {
 			url: clinvar_host,
 			dsID: 'ex_lovd',
 			field: 'iarc_class'
-		}]
+		}
 	];
 
 	fetch = ifChanged(
@@ -179,10 +179,10 @@ define(['underscore_ext',
 		],
 		xenaQuery.dsID_fn(function (host, ds, probes, samples, annotations) {
 			var annQueries = _.object(_.map(annotations,
-				([, a], i) => [`annotation${i}`, ga4ghAnnotations(a, probes, a.url+a.dsID)]));
+				([, a], i) => [`annotation${i}`, ga4ghAnnotations(a, probes, a.url + a.dsID)]));
 
 			var annForMapQueries = _.object(_.map(annotationsForMap,
-				([widget, a]) => [`annotationForMap${"__"+widget+"__"+a.dsID+"__"+a.field}`, ga4ghAnnotations(a, probes, a.url+a.dsID)]));
+				a => [`annotationForMap__${a.dsID}__${a.field}`, ga4ghAnnotations(a, probes, a.url + a.dsID)]));
 
 			return _.merge({
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
@@ -343,9 +343,7 @@ define(['underscore_ext',
 						columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 						columnUi.setPlotted();
 
-						var annDataForMap = _.object(_.map(annotationsForMap,
-							([widget, a]) => [`annotationForMap${"__"+widget+"__"+a.dsID+"__"+a.field}`, data[`annotationForMap${"__"+widget+"__"+a.dsID+"__"+a.field}`]]));
-
+						var annDataForMap = _.pick(data, _.keys(annotationsForMap));
 						mutationVector.show(el.id, {
 							vg: vg,
 							width: column.width,
