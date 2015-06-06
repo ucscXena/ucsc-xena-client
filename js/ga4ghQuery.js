@@ -4,7 +4,7 @@ var ga4gh = require('ga4gh-rxjs');
 var clinvarMeta = require('./metadataStub');
 var Rx = require('rx');
 require('rx.experimental');
-//var _ = require('./underscore_ext');
+var _ = require('./underscore_ext');
 
 // {url, dataset, count}  --- ask callSetIds
 function callSets(url, dataset, count){
@@ -20,25 +20,19 @@ function variants({url, dataset, chrom, start, end}) {
 		chrom=chrom.slice(3);
 	}
 
-	var callSetIds=[];
-	/* -- not sure how to incorporate callSets results, but definitely something can be done
-	callSets(url, dataset, 1).subscribe(function(r) {
-		callSetIds = r.callSets;
-		console.log(callSetIds);
-	});
-	*/
-	if (dataset ==="1000_genomes"){
-		callSetIds =["1000_genomes.NA21127"]  //XXX 1kg workaround
-	}
-	return ga4gh.all.variants(url, {
-		variantSetIds: [dataset],
-		callSetIds: callSetIds,
-		pageSize: 1000,
-		start: start,
-		end: end,
-		referenceName: chrom
+	return callSets(url, dataset, 1).flatMap(s => {
+		var callSetIds = s.callSets.map(obj=> obj.id);
+		return ga4gh.all.variants(url, {
+			variantSetIds: [dataset],
+			callSetIds: callSetIds,
+			pageSize: 1000,
+			start: start,
+			end: end,
+			referenceName: chrom
+		}).map(arr => { _.each(arr, v => v.start++); return arr; }).catch(Rx.Observable.return([]));
 	});
 }
+
 
 function variantSetsQuery (url) {
 	return ga4gh.all.variantSets(url);

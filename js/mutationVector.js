@@ -1,10 +1,16 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext', 'static-interval-tree'
-	// non-object dependencies
-	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _, intervalTree) {
+define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext', 'static-interval-tree', 'annotationColor', 'metadataStub'
+	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _, intervalTree, annotationColor, metadataStub) {
 	'use strict';
+
+	var annotationFeatures = _.object(_.flatmap(annotationColor.colorSettings, (feats, dsID) =>
+		_.map(feats, ({color}, feature) => [`${dsID}__${feature}`, {
+			color: color,
+			get: (a, v) => _.get_in(a, [`${dsID}__${feature}`, [v.chr, v.start, v.end, v.reference, v.alt].join('__')])
+		}])
+	 ));
 
 	function reverseIf(reversed, a) {
 		return reversed ? a.slice(0).reverse() : a;
@@ -157,22 +163,22 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			af: {r: 255, g: 0, b: 0},
 			grey: {r: 128, g:128, b:128, a:1}
 		},
-		features = {
+		features = _.merge(annotationFeatures, {
 			impact: {
-				get: v => impact[v.effect] || unknownEffect,
+				get: (a, v) => impact[v.effect] || unknownEffect,
 				color: v => colorStr(colors.category_25[v])
 			},
 			dna_vaf: {
-				get: v => decimateFreq(v.dna_vaf),
+				get: (a, v) => decimateFreq(v.dna_vaf),
 				color: v => colorStr(_.isUndefined(v) ? colors.grey :
 					_.assoc(colors.af, 'a', v))
 			},
 			rna_vaf: {
-				get: v => decimateFreq(v.rna_vaf),
+				get: (a, v) => decimateFreq(v.rna_vaf),
 				color: v => colorStr(_.isUndefined(v) ? colors.grey :
 					_.assoc(colors.af, 'a', v))
 			}
-		},
+		}),
 		each = _.each,
 		reduce = _.reduce,
 		widgets = {},
@@ -316,9 +322,44 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				this.values = _.map(drawValues, (obj, i) => _.assoc(obj, 'index', i));
 				this.render();
 			},
+
+			receiveAnnData: function (annData){
+				var annValues={};
+				Object.keys(annData).map(function (key){
+					var [,dataset, field]= key.split("__"),
+						feature = [dataset, field].join("__"),
+						order = annotationColor.colorSettings[field].order;
+
+					annValues[feature]={};
+					if (annData[key].length){
+						annData[key].map(function (val){
+							if (val.info[field] && val.info[field].length>0){
+								var values = val.info[field][0].split(/[,]/);
+								val.alternateBases.map(function (alt,i){
+									var chrom = val.referenceName.substring(0,3)==="chr"? val.referenceName: "chr"+ val.referenceName,
+										id = [chrom, val.start, val.end, val.referenceBases, alt].join("__"),
+										value;
+									if (val.alternateBases.length === values.length){
+										value = _.max(values[i].split(/[|-]/), f=> order[f]);
+									} else {
+										value = _.max(_.flatten(values.map(v=> v.split(/[|-]/))), f => order[f]);
+									}
+									if (annValues[feature][id]){
+										annValues[feature][id] = _.max([value, annValues[feature][id]], f=>order[f]);
+									} else {
+										annValues[feature][id] = value;
+									}
+								});
+							}
+						});
+					}
+				});
+				this.annValues = annValues;
+			},
+
 			findNodes: function () {
 				var {layout: {chrom, screen, reversed}, index, samples} = this.options,
-					{offset, pixPerRow, sparsePad, zoomIndex, zoomCount, feature} = this,
+					{offset, pixPerRow, sparsePad, zoomIndex, zoomCount, feature, annValues} = this,
 					sindex = _.object(samples.slice(zoomIndex, zoomIndex + zoomCount),
 								_.range(samples.length)),
 					min = Math.min,
@@ -347,7 +388,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 							xStart: pstart,
 							xEnd: pend,
 							y: sindex[v.sample] * pixPerRow + (pixPerRow / 2) + sparsePad,
-						   group: group(v),                                   // needed for sort, before drawing.
+						   group: group(annValues, v),                                   // needed for sort, before drawing.
 						   data: v
 						};
 					});
@@ -370,7 +411,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					labels = _.map(_.range(_.keys(groups).length), i => _.pluck(groups[i], 0).join(', '));
 
 					align = 'left';
-				} else { // feature is one of allele frequencies
+				} else if (this.feature ==="dna_vaf" || this.feature ==="rna_vaf") { // feature is one of allele frequencies
 					c= colors.af;
 					rgba = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',';
 					myColors = [
@@ -381,6 +422,14 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					labels = ['0%', '50%', '100%'];
 					align = 'center';
 					topBorderIndex = 3;
+				} else {
+					var [dataset, feature] = this.feature.split("__"),
+						md = _.find(metadataStub.variantSets, ds => ds.id === dataset).metadata,
+						info = _.find(md, ds => ds.key === ('INFO.'+feature)).info,
+						colorFn = annotationColor.colorSettings[dataset][feature].color;
+
+					labels = annotationColor.colorSettings[dataset][feature].filter.map(value => info[value]);
+					myColors = annotationColor.colorSettings[dataset][feature].filter.map(value=>colorFn(value));
 				}
 				myColors.unshift('rgb(255,255,255)');
 				labels.unshift('no mutation');
@@ -392,7 +441,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				this.pixPerRow = (this.height - (this.sparsePad * 2))  / this.values.length;
 				this.canvasHeight = this.height; // TODO init elsewhere
 				this.d2 = this.vg.context();
-
 				this.nodes = this.findNodes();
 				this.drawLegend();
 
@@ -435,7 +483,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					self.mousing(ev);
 				});
 
+				this.receiveAnnData(options.annData);
 				this.receiveData(options.data);
+				this.render();
 			}
 		};
 
@@ -450,7 +500,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 	function evalMut(refGene, mut) {
 		var geneInfo = refGene[mut.gene];
 		return {
-			impact: features.impact.get(mut),
+			impact: features.impact.get(null, mut),
 			right: (geneInfo.strand === '+') ?
 		            mut.start - geneInfo.txStart :
 		            geneInfo.txStart - mut.start

@@ -139,7 +139,7 @@ define(['underscore_ext',
 	);
 
 	var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
-	function ga4ghAnnotations({url, dsID}, [probe],id) {
+	function ga4ghAnnotations({url, dsID}, [probe], id) {
 		return xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_gene_pos(probe)), function (r) {
 			return Rx.DOM.ajax(r).map(xenaQuery.json_resp).selectMany(([gene]) =>
 				gene ? ga4ghQuery.variants({
@@ -151,7 +151,24 @@ define(['underscore_ext',
 				}) :
 				Rx.Observable.return([]));
 		},id);
-    }
+   }
+
+	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074";
+	var annotationsForMap = [
+		['clinvar', {
+			url: clinvar_host,
+			dsID: 'Clinvar',
+			field: 'CLNSIG'
+		}], ['clinvar', {
+			url: clinvar_host,
+			dsID: 'Clinvar',
+			field: 'CLNORIGIN'
+		}],['clinvar', {
+			url: clinvar_host,
+			dsID: 'ex_lovd',
+			field: 'iarc_class'
+		}]
+	];
 
 	fetch = ifChanged(
 		[
@@ -164,6 +181,9 @@ define(['underscore_ext',
 			var annQueries = _.object(_.map(annotations,
 				([, a], i) => [`annotation${i}`, ga4ghAnnotations(a, probes, a.url+a.dsID)]));
 
+			var annForMapQueries = _.object(_.map(annotationsForMap,
+				([widget, a]) => [`annotationForMap${"__"+widget+"__"+a.dsID+"__"+a.field}`, ga4ghAnnotations(a, probes, a.url+a.dsID)]));
+
 			return _.merge({
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
 					return Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
@@ -171,7 +191,7 @@ define(['underscore_ext',
 				refGene: xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_exon_string(probes)), function (r) {
 					return Rx.DOM.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp));
 				})
-			}, annQueries);
+			}, annQueries, annForMapQueries);
 		})
 	);
 
@@ -322,6 +342,10 @@ define(['underscore_ext',
 						};
 						columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 						columnUi.setPlotted();
+
+						var annDataForMap = _.object(_.map(annotationsForMap,
+							([widget, a]) => [`annotationForMap${"__"+widget+"__"+a.dsID+"__"+a.field}`, data[`annotationForMap${"__"+widget+"__"+a.dsID+"__"+a.field}`]]));
+
 						mutationVector.show(el.id, {
 							vg: vg,
 							width: column.width,
@@ -329,6 +353,7 @@ define(['underscore_ext',
 							zoomIndex: ws.zoomIndex,
 							zoomCount: ws.zoomCount,
 							data: plotData[0].values,
+							annData: annDataForMap,
 							color: 'category_25', // TODO make dynamic
 							dataset: column.dsID,
 							feature: column.sFeature,
@@ -350,7 +375,7 @@ define(['underscore_ext',
 				vg.box(0, 0, column.width, ws.height, "white");
 			}
 			else {
-				vg.box(0, 0, column.width, ws.height, "gray");
+				vg.box(0, 0, column.width, ws.height, "lightgray");
 			}
 
 			// Have to draw this after refGene, because it depends on

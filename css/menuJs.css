@@ -27,9 +27,6 @@
 	vertical-align: bottom;
 	opacity: 0;
 }
-.menu .itemAlt:nth-child(odd) {
-	background: #f4f4f4;
-}
 .menu .hoverIcon {
 	display: inline-block;
 	vertical-align: bottom;

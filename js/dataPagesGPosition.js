@@ -85,6 +85,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
         [query_string.variantSetId] : Object.keys(metadata),
       ref =  query_string.ref,
       alt = query_string.alt,
+      gene = query_string.gene,
       allVariants={},
       queryArray = variantSetIds.map(
         variantSetId=>queryVariants(startPos, endPos, referenceName, variantSetId)),
@@ -97,6 +98,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       variantsDropDown, dropDownValue,showAllStatus=false,
       data, dataPlus;
 
+
     function displayData(data){
       if (!data){
         return;
@@ -107,31 +109,41 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       sideNode.innerHTML="";
       resultsNode.innerHTML="";
 
+      if (gene){
+        sideNode.appendChild(dom_helper.elt("H3",gene));
+        sideNode.appendChild(document.createElement("br"));
+      }
+
       data.map(function(results){
         var index = data.indexOf(results),
           variantSetId = variantSetIds[index];
 
-        allVariants[variantSetId]=[];
+        allVariants[variantSetId]={};
         results.map(function (variant){
           if (!showAllStatus &&
             ((ref && ref !== variant.referenceBases) || (alt && variant.alternateBases.indexOf(alt)===-1))){
             return;
           }
 
-          if ( allVariants[variantSetId].indexOf(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases)===-1){
+          var variantId =variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases;
+          //record how many times the exact same variants are stored in the database
+          if ( allVariants[variantSetId][variantId] === undefined){
             var div = document.createElement("div");
-            buildVariantDisplay(variant, div, metadata[variantSetId]);
+            buildVariantDisplay(variant, div, metadata[variantSetId],gene);
             resultsNode.appendChild(div);
-            allVariants[variantSetId].push(variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases);
+            allVariants[variantSetId][variantId]=0;
             found =1;
           }
+          allVariants[variantSetId][variantId]++;
         });
 
         //sidebar info
         sideNode.appendChild(dom_helper.elt("b",variantSetId));
         sideNode.appendChild(document.createElement("br"));
-        allVariants[variantSetId].map(id=>{
-          sideNode.appendChild(dom_helper.hrefLink(id.split("__")[0],"#"+id));
+        Object.keys(allVariants[variantSetId]).map(id=>{
+          var displayId= id.replace(variantSetId+":","").split("__")[0];
+          sideNode.appendChild(dom_helper.hrefLink(displayId+" ("+allVariants[variantSetId][id]+")",
+            "#"+id));
           sideNode.appendChild(document.createElement("br"));
         });
         sideNode.appendChild(document.createElement("br"));
@@ -159,7 +171,8 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       var option,
         dropDown = [{
             "value": "specific",
-            "text": "Show only variants with the specific alternation from " + ref +" to "+alt,
+            "text": "Show only variants with the specific alternation from " + ref +" to "+alt +
+              " at this interval chr"+referenceName+": "+query_string.start+" - "+query_string.end,
             "index": 0
           }, // specific
           {
@@ -212,9 +225,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
           displayData(dataPlus);
         }
       });
-
       mainNode.appendChild(variantsDropDown);
-
     }
 
     resultsNode = document.createElement("div");
@@ -318,10 +329,10 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     });
   }
 
-  function buildVariantDisplay(variant, node, metaData) {
+  function buildVariantDisplay(variant, node, metaData, gene) {
     var id = variant.id,
       chr = variant.referenceName,
-      startPos = variant.start +1,
+      startPos = variant.start,
       endPos = variant.end,
       reference = variant.referenceBases,
       alt = variant.alternateBases,
@@ -330,11 +341,19 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       label,div,
       selectedKeys, allKeys, otherKeys;
 
+    function getValue(key){
+      var keys = key.split("."),
+        obj = variant;
+
+      keys.map(k=> obj=obj[k]);
+      return obj;
+    }
+
     function displayKeyValuePair (key, bold){
         var value, intepretation, text;
 
-        value = eval("variant."+key);
-        //console.log(metaData[key].description,key, value);
+        value = getValue(key);
+        //console.log(metaData[key].description, key, value);
         if (metaData[key]){
           label = metaData[key].description;
           label = label.charAt(0).toUpperCase()+ label.slice(1);
@@ -364,7 +383,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
               }).join(", ");
             } else {
               text = value[0].split(",").map(function(oneValue){
-                return oneValue.replace(/\\x[a-fA-F0-9]{2}/g," "); //messy input
+                return oneValue.replace(/\\x[a-fA-F0-9]{2}/g," ").replace(/\|/g," | "); //messy input
               }).join(", ");
             }
           }
@@ -372,11 +391,12 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
           if (text){
             if (bold){
               div = document.createElement("b");
-              node.appendChild(div);
-              div.appendChild(document.createTextNode(text));
+              node.appendChild(dom_helper.elt("i",div));
             } else {
-              node.appendChild(document.createTextNode(text));
+              div = document.createElement("i");
+              node.appendChild(div);
             }
+            div.appendChild(document.createTextNode(text));
             node.appendChild(document.createElement("br"));
             node.appendChild(document.createElement("br"));
           }
@@ -400,24 +420,38 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     //source dbs
     if (metadataStub.externalUrls[variantSetId]){
       node.appendChild(document.createTextNode("Source: " ));
+
       var key, value;
       if (metadataStub.externalUrls[variantSetId].type === "position"){
         value = metadataStub.externalUrls[variantSetId].url;
-        [ "chr","startPos","endPos","reference","alt" ].map(key=>{
-          value = value.replace("$"+key,eval(key));
+        [ "chr","startPos","endPos","reference","alt" ].map(variable=>{
+          value = value.replace("$"+variable, eval(variable));
         });
         div= dom_helper.hrefLink(metadataStub.externalUrls[variantSetId].name, value);
         node.appendChild(div);
       } else if (metadataStub.externalUrls[variantSetId].type === "key"){
         key = metadataStub.externalUrls[variantSetId].value;
-        value = eval("variant."+key);
+        value = getValue(key);
 
-        value[0].split("|").map(acc=>{
-          div = dom_helper.hrefLink(variantSetId+":"+acc,
-            metadataStub.externalUrls[variantSetId].url.replace("$key",acc));
-          node.appendChild(div);
-          node.appendChild(document.createTextNode(" "));
-        });
+        node.appendChild(document.createTextNode(metadataStub.externalUrls[variantSetId].name));
+        if (value && value[0]) {
+          value[0].split("|").map(acc=>{
+            node.appendChild(document.createTextNode(" "));
+            div = dom_helper.hrefLink(variantSetId+":"+acc,
+              metadataStub.externalUrls[variantSetId].url.replace("$key",acc));
+            node.appendChild(div);
+          });
+        }
+      } else if (gene && metadataStub.externalUrls[variantSetId].type === "gene"){
+        value = gene;
+        node.appendChild(document.createTextNode(metadataStub.externalUrls[variantSetId].name+" "));
+        div = dom_helper.hrefLink(variantSetId+":"+gene,
+          metadataStub.externalUrls[variantSetId].url.replace("$gene",gene));
+        node.appendChild(div);
+      } else {
+        value = metadataStub.externalUrls[variantSetId].url;
+        div= dom_helper.hrefLink(metadataStub.externalUrls[variantSetId].name, value);
+        node.appendChild(div);
       }
       node.appendChild(document.createElement("br"));
     }

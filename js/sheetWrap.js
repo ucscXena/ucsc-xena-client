@@ -213,7 +213,8 @@ define(['haml/sheetWrap.haml',
 					dsID: 'ex_lovd',
 					field: 'iarc_class'
 				}]
-				];
+			];
+
 
 			var annIds = _.map(annotations, ([widget, {dsID, field}]) => ({
 				id: [widget, dsID, field].join('__'),
