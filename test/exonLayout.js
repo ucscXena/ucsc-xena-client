@@ -18,7 +18,7 @@ describe('exonLayout', function () {
 				strand: null
 			}, 0.10), {
 				chrom: [[100, 125], [185, 225], [285, 310]],
-				screen: [[0, 259], [260, 669], [670, 929]],
+				screen: [[0, 260], [260, 670], [670, 930]],
 				reversed: false
 			});
 		});
@@ -29,7 +29,7 @@ describe('exonLayout', function () {
 				strand: '-'
 			}, 0.10), {
 				chrom: [[285, 310], [185, 225], [100, 125]],
-				screen: [[0, 259], [260, 669], [670, 929]],
+				screen: [[0, 260], [260, 670], [670, 930]],
 				reversed: true
 			});
 		});
@@ -41,7 +41,7 @@ describe('exonLayout', function () {
 				strand: '-'
 			}, 0.10), {
 				chrom: [[185, 220], [100, 125]],
-				screen: [[0, 359], [360, 619]],
+				screen: [[0, 360], [360, 620]],
 				reversed: true
 			});
 		});

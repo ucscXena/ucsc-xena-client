@@ -1,20 +1,17 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext', 'static-interval-tree', 'annotationColor', 'metadataStub'
-	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _, intervalTree, annotationColor, metadataStub) {
+define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext', 'static-interval-tree', 'annotationColor', 'metadataStub', 'layoutPlot'
+	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _, intervalTree, annotationColor, metadataStub, layoutPlot) {
 	'use strict';
 
+	var {pxTransformFlatmap} = layoutPlot;
 	var annotationFeatures = _.object(_.flatmap(annotationColor.colorSettings, (feats, dsID) =>
 		_.map(feats, ({color}, feature) => [`${dsID}__${feature}`, {
 			color: color,
 			get: (a, v) => _.get_in(a, [`${dsID}__${feature}`, [v.chr, v.start, v.end, v.reference, v.alt].join('__')])
 		}])
 	 ));
-
-	function reverseIf(reversed, a) {
-		return reversed ? a.slice(0).reverse() : a;
-	}
 
 	// Group by consecutive matches, perserving order.
 	function groupByConsec(sortedArray, prop, ctx) {
@@ -57,8 +54,8 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			ctx.beginPath(); // centers
 			_.each(vars, v => {
-				ctx.moveTo(v.xStart - 0.5, v.y);
-				ctx.lineTo(v.xEnd + 0.5, v.y);
+				ctx.moveTo(v.xStart, v.y);
+				ctx.lineTo(v.xEnd, v.y);
 			});
 			ctx.lineWidth = pixPerRow / 2;
 			ctx.strokeStyle = 'black';
@@ -358,32 +355,20 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			findNodes: function () {
-				var {layout: {chrom, screen, reversed}, index, samples} = this.options,
-					{offset, pixPerRow, sparsePad, zoomIndex, zoomCount, feature, annValues} = this,
+				var {layout, index, samples} = this.options,
+					{pixPerRow, sparsePad, zoomIndex, zoomCount, feature, annValues} = this,
 					sindex = _.object(samples.slice(zoomIndex, zoomIndex + zoomCount),
 								_.range(samples.length)),
-					min = Math.min,
-					max = Math.max,
+					group = features[feature].get,
+					minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e],
 					// sortfn is about 2x faster than sortBy, for large sets of variants
 					sortfn = (coll, keyfn) => _.flatten(sortByGroup(coll, keyfn), true);
-				return sortfn(_.flatmap(chrom, ([start, end], i) => {
-					var [sstart, send] = reverseIf(reversed, screen[i]);
-					var toPx = x => sstart + (x - start + 1) * (send - sstart + 1) / (end - start + 1) - offset;
-					var group = features[feature].get;
+				return sortfn(pxTransformFlatmap(layout, (toPx, [start, end]) => {
 					var variants = _.filter(
 						intervalTree.matches(index, {start: start, end: end}),
 						v => _.has(sindex, v.sample));
-					// We clip to exon boundary here with min/max.
-					// Alternatively we could use canvas clip for this, which would
-					// probably be faster. We would need output variants per-exon,
-					// so we could clip to the exon screen region. Might also need to
-					// switch to integer pixel offsets for exons, to avoid sub-pixel
-					// artifact. Could also then flop coords with a transform,
-					// instead of reverseIf.
 					return _.map(variants, v => {
-						var [pstart, pend] = reverseIf(reversed,
-							[toPx(max(v.start, start)),
-								toPx(min(v.end + 1, end + 1))]);
+						var [pstart, pend] = minSize(toPx([v.start, v.end]));
 						return {
 							xStart: pstart,
 							xEnd: pend,

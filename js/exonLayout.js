@@ -37,7 +37,7 @@ function toScreen(bpp, [next, ...rest], offset, acc) {
 	}
 	var [start, end] = next,
 		len = (end - start + 1) / bpp;
-	return toScreen(bpp, rest, len + offset, acc.concat([[offset, len + offset - 1]]));
+	return toScreen(bpp, rest, len + offset, acc.concat([[offset, len + offset]]));
 }
 
 // Layout exons on screen pixels.
