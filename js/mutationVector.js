@@ -206,7 +206,8 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 							node.data.chr.substring(3, node.data.chr.length)+
 							"&start="+node.data.start+"&end="+ node.data.end +
 							"&ref="+node.data.reference +
-							"&alt="+node.data.alt;
+							"&alt="+node.data.alt +
+							"&gene="+ this.gene.name;
 					}
 					rows = [
 						[ { val: node.data.effect +", " +

@@ -170,8 +170,8 @@ define(['haml/sheetWrap.haml',
 			this.state = state;
 			this.cursor = options.cursor;
 
-			//var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
-			var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074";
+			//var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.5.1";
+			var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:7000/v0.6.e6d6074";
 			var annotations = [
 				['clinvar', {
 					height: 50,

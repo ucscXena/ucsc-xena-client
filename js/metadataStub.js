@@ -4,19 +4,19 @@
 // clinVar vcf: https://drive.google.com/uc?id=0Bzoozx2KZAPmb1NWQ1laZElzOXc&export=download
 // 1000_genomes vcf: ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/
 // BRCA1 chr17:41,196,312-41,277,500
-var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.6.e6d6074";
-//var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com/ga4gh/v0.5.1";
+var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:7000/v0.6.e6d6074";
+//var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.5.1";
 
 // selected field for annotation display
 var selectedKeys = {
     "Clinvar": ["INFO.CLNSIG","INFO.CLNORIGIN","INFO.CLNDBN","INFO.G5A","INFO.G5","INFO.ASS","INFO.DSS"],
-    "ex_lovd":["INFO.iarc_class"],
+    "ex_lovd":["INFO.iarc_class","INFO.protein_change"],
     "1000_genomes":["INFO.AFR_AF","INFO.AMR_AF","INFO.EAS_AF","INFO.EUR_AF","INFO.SAS_AF"],
     "exac":["INFO.AC_AFR","INFO.AN_AFR","INFO.AC_AMR","INFO.AN_AMR",
         "INFO.AC_EAS","INFO.AN_EAS","INFO.AC_SAS","INFO.AN_SAS",
         "INFO.AC_FIN","INFO.AN_FIN","INFO.AC_NFE","INFO.AN_NFE",
         "INFO.AC_OTH","INFO.AN_OTH"],
-    "lovd":["INFO.genetic_origin"],
+    "lovd":["INFO.genetic_origin","INFO.protein_change"],
     "bic":["INFO.Clinically_Importance","INFO.AA_Change"],
     "umd":["INFO.BioSignificance","INFO.TRANSMIT","INFO.ONSET","INFO.pVAR"]
 };
