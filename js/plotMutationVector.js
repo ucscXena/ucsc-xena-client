@@ -345,7 +345,7 @@ define(['underscore_ext',
 						columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 						columnUi.setPlotted();
 
-						var annDataForMap = _.pick(data, _.keys(annotationsForMap));
+						var annDataForMap = _.pick(data, _.map(annotationsForMap, a => `annotationForMap__${a.dsID}__${a.field}`));
 						mutationVector.show(el.id, {
 							vg: vg,
 							width: column.width,

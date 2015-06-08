@@ -326,7 +326,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				Object.keys(annData).map(function (key){
 					var [,dataset, field]= key.split("__"),
 						feature = [dataset, field].join("__"),
-						order = annotationColor.colorSettings[field].order;
+						order = annotationColor.colorSettings[dataset][field].order;
 
 					annValues[feature]={};
 					if (annData[key].length){
