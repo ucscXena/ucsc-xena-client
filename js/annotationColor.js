@@ -1,10 +1,13 @@
 /*global module: false, require: false */
 'use strict';
 
+var _ = require('underscore_ext');
+var d3 = require('d3');
+
 var index = o => _.object(o, _.range(o.length));
 
 var colorSettings ={
-  clinvar: {
+  Clinvar: {
       //"0": "uncertain significance",
       //"1": "not provided",
       //"2": "Benign",
@@ -28,7 +31,9 @@ var colorSettings ={
         .range(['blue', 'red', 'purple']),
       filter: ['1', '2', '3'],
       order: index(['1', '2', '3']),
-    },
+    }
+  },
+  ex_lovd: {
 
     //"1-Notpathogenicorofnoclinicalsignificance",
     //"2-Likelynotpathogenicoroflittleclinicalsignificance",

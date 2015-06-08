@@ -122,15 +122,15 @@ define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 			};
 
 			this.iarc_classClick = function (ev) {
-				this.updateColumn('sFeature', 'clinvar__ex_lovd__iarc_class');
+				this.updateColumn('sFeature', 'ex_lovd__iarc_class');
 			};
 
 			this.CLNSIGClick = function (ev) {
-				this.updateColumn('sFeature', 'clinvar__Clinvar__CLNSIG');
+				this.updateColumn('sFeature', 'Clinvar__CLNSIG');
 			};
 
 			this.CLNORIGINClick = function (ev) {
-				this.updateColumn('sFeature', 'clinvar__Clinvar__CLNORIGIN');
+				this.updateColumn('sFeature', 'Clinvar__CLNORIGIN');
 			};
 
 			this.removeClick = function (ev) {
@@ -151,12 +151,11 @@ define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 				var column = this.columnUi.ws.column;
 				this.menuRender($(template()));
 				if (column.dataType === 'mutationVector') {
-					this.$el.find('.mupit, .view, .impact, .dna_vaf, .rna_vaf, \
-						.clinvar__ex_lovd__iarc_class, .clinvar__Clinvar__CLNSIG, .clinvar__Clinvar__CLNORIGIN, hr').show();
+					this.$el.find('.mupit, .view, .impact, .dna_vaf, .rna_vaf, .ex_lovd__iarc_class, .Clinvar__CLNSIG, .Clinvar__CLNORIGIN, hr').show();
 					if (column.fields[0]!=="BRCA1" && column.fields[0]!=="BRCA2"){
-						this.$el.find('.clinvar__ex_lovd__iarc_class').hide();
-						this.$el.find('.clinvar__Clinvar__CLNSIG').hide();
-						this.$el.find('.clinvar__Clinvar__CLNORIGIN').hide();
+						this.$el.find('.ex_lovd__iarc_class').hide();
+						this.$el.find('.Clinvar__CLNSIG').hide();
+						this.$el.find('.Clinvar__CLNORIGIN').hide();
 					}
 					this.$el.find('.' + column.sFeature + ' .ui-icon-check').css('opacity', 1);
 				} else if (column.dataType === 'geneProbesMatrix') {
@@ -225,9 +224,9 @@ define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					.on('click', '.impact', this.impactClick)
 					.on('click', '.dna_vaf', this.dna_vafClick)
 					.on('click', '.rna_vaf', this.rna_vafClick)
-					.on('click', '.clinvar__ex_lovd__iarc_class', this.iarc_classClick)
-					.on('click', '.clinvar__Clinvar__CLNSIG', this.CLNSIGClick)
-					.on('click', '.clinvar__Clinvar__CLNORIGIN', this.CLNORIGINClick)
+					.on('click', '.ex_lovd__iarc_class', this.iarc_classClick)
+					.on('click', '.Clinvar__CLNSIG', this.CLNSIGClick)
+					.on('click', '.Clinvar__CLNORIGIN', this.CLNORIGINClick)
 					.on('click', '.kmPlot', this.kmPlotClick)
 					.on('click', '.edit', this.editClick)
 					.on('click', '.duplicate', this.duplicateClick)

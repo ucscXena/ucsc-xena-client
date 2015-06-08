@@ -5,7 +5,7 @@
   "homepage": "https://xena.ucsc.edu",
   "main": "index.js",
   "scripts": {
-    "test": "webpack-dev-server --config webpack.test.js --port 8081",
+    "test": "webpack-dev-server --config webpack.test.js --devtool eval --port 8081",
     "lint": "jshint js/* test/* && csslint css/*",
     "clean": "rimraf build/*",
     "start": "webpack-dev-server --devtool eval --progress --colors --history-api-fallback",
@@ -40,13 +40,14 @@
     "ga4gh-rxjs": "^1.0.1",
     "jquery": "2.1.0",
     "jquery-ui": "^1.10.5",
+    "lunr": "0.5.7",
     "rx": "^2.4.3",
     "rx-dom": "^4.0.4",
     "rx-jquery": "^1.1.7",
     "select2": "3.4.5",
+    "static-interval-tree": "^1.0.3",
     "underscore": "^1.7.0",
-    "underscore.string": "^3.0.3",
-    "lunr":"0.5.7"
+    "underscore.string": "^3.0.3"
   },
   "napa": {
     "haml": "https://github.com/uglyog/clientside-haml-js.git#release_5_4",

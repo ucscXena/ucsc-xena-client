@@ -12,6 +12,8 @@ define(['underscore_ext',
 		'vgcanvas',
 		'xenaQuery',
 		'annotation',
+		'exonLayout',
+		'static-interval-tree',
 		'ga4ghQuery',
 		'rx-jquery'
 	], function (
@@ -27,6 +29,8 @@ define(['underscore_ext',
 		vgcanvas,
 		xenaQuery,
 		annotation,
+		exonLayout,
+		intervalTree,
 		ga4ghQuery) {
 
 	"use strict";
@@ -153,19 +157,19 @@ define(['underscore_ext',
 	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:7000/v0.6.e6d6074";
 
 	var annotationsForMap = [
-		['clinvar', {
+		{
 			url: clinvar_host,
 			dsID: 'Clinvar',
 			field: 'CLNSIG'
-		}], ['clinvar', {
+		}, {
 			url: clinvar_host,
 			dsID: 'Clinvar',
 			field: 'CLNORIGIN'
-		}],['clinvar', {
+		}, {
 			url: clinvar_host,
 			dsID: 'ex_lovd',
 			field: 'iarc_class'
-		}]
+		}
 	];
 
 	fetch = ifChanged(
@@ -173,14 +177,14 @@ define(['underscore_ext',
 			['column', 'dsID'],
 			['column', 'fields'],
 			['samples'],
-      ['annotations']
+			['annotations']
 		],
 		xenaQuery.dsID_fn(function (host, ds, probes, samples, annotations) {
 			var annQueries = _.object(_.map(annotations,
-				([, a], i) => [`annotation${i}`, ga4ghAnnotations(a, probes, a.url+a.dsID)]));
+				([, a], i) => [`annotation${i}`, ga4ghAnnotations(a, probes, a.url + a.dsID)]));
 
 			var annForMapQueries = _.object(_.map(annotationsForMap,
-				([widget, a]) => [`annotationForMap${"__"+widget+"__"+a.dsID+"__"+a.field}`, ga4ghAnnotations(a, probes, a.url+a.dsID)]));
+				a => [`annotationForMap__${a.dsID}__${a.field}`, ga4ghAnnotations(a, probes, a.url + a.dsID)]));
 
 			return _.merge({
 				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
@@ -209,7 +213,14 @@ define(['underscore_ext',
 		});
 	}
 
-	function syncAnnotations(cache, ants, id, width, data) {
+	function layout(chromLayout, pxWidth, baseCount) {
+		var count = baseCount || exonLayout.baseLen(chromLayout),
+			bpp = count / pxWidth;
+
+		return exonLayout.screenLayout(bpp, chromLayout);
+	}
+
+	function syncAnnotations(cache, ants, id, width, data, layout) {
 		var keys = _.map(ants, ([type, {url, field}]) => [type, url, field].join('::')),
 			current = _.keys(cache),
 			headerPlot = $('#' + id + ' .headerPlot');
@@ -231,7 +242,7 @@ define(['underscore_ext',
 			}
 			if (data.refGene && _.get_in(data, ['annotation' + i, 'length'])) {
 				annotation.draw(ants[i], cache[key], data['annotation' + i],
-						refGeneExons.get(id).mapChromPosToX);
+						layout);
 			}
 		});
 	}
@@ -257,6 +268,10 @@ define(['underscore_ext',
 				dims = sheetWrap.columnDims(),
 				refGeneData,
 				refGene,
+				chromLayout,
+				screenLayout,
+				fullLayout,
+				xzoom = _.get_in(column, ['zoom']) || {index: 0},
 				canvasHeight = ws.height + (dims.sparsePad * 2),
 				color = heatmapColors.range(column, {valueType: 'codedWhite'}, ['No Mutation', 'Has Mutation'], [0, 1]);
 
@@ -270,6 +285,14 @@ define(['underscore_ext',
 				local.columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 				local.columnUi.$samplePlot.append(local.vg.element());
 				local.annotations = {};
+				local.chromLayout = _.memoize1(exonLayout.chromLayout);
+				local.screenLayout = _.memoize1(layout);
+				local.dataToPlot = _.memoize1(dataToPlot);
+				local.index = _.memoize1(plotData =>
+						intervalTree.index(_.filter(_.flatten(
+									_.pluck(plotData[0].values,
+									'vals')),
+								_.identity)));
 			}
 
 			vg = local.vg;
@@ -288,18 +311,31 @@ define(['underscore_ext',
 			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
 			//data.req.values = stub.getMutation(column.fields[0]); // for testing
 			if (refGeneData) {
+				chromLayout = local.chromLayout(refGeneData);
+				screenLayout = local.screenLayout(chromLayout, column.width, xzoom.len);
+				fullLayout = {
+					pxLen: exonLayout.pxLen(screenLayout),
+					baseLen: exonLayout.baseLen(chromLayout),
+					chrom: chromLayout,
+					screen: screenLayout,
+					reversed: refGeneData.strand === '-',
+					zoom: xzoom
+				};
 				refGeneExons.show(el.id, {
 					data: { gene: refGeneData }, // data.refGene,
 					plotAnchor: '#' + el.id + ' .headerPlot',
 					$sidebarAnchor: columnUi.$headerSidebar,
 					width: column.width,
 					radius: 0,//sheetWrap.columnDims().sparseRadius,
-					refHeight: sheetWrap.columnDims().refHeight
+					refHeight: sheetWrap.columnDims().refHeight,
+					zoom: xzoom,
+					layout: fullLayout,
+					cursor: local.columnUi.xenaCursor.refine({column: ['column_rendering', el.id]})
 				});
 				if (data.req.values) { // TODO sometimes data.req is empty
 					refGene = refGeneExons.get(el.id);
 					if (refGene) {
-						plotData = dataToPlot(sort, data.req.values, ws.column.fields);
+						plotData = local.dataToPlot(sort, data.req.values, ws.column.fields);
 						columnUi.plotData = {
 							values: plotData[0].values,
 							samples: sort,
@@ -309,9 +345,7 @@ define(['underscore_ext',
 						columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
 						columnUi.setPlotted();
 
-						var annDataForMap = _.object(_.map(annotationsForMap,
-							([widget, a]) => [`annotationForMap${"__"+widget+"__"+a.dsID+"__"+a.field}`, data[`annotationForMap${"__"+widget+"__"+a.dsID+"__"+a.field}`]]));
-
+						var annDataForMap = _.pick(data, _.keys(annotationsForMap));
 						mutationVector.show(el.id, {
 							vg: vg,
 							width: column.width,
@@ -328,7 +362,11 @@ define(['underscore_ext',
 							horizontalMargin: dims.horizontalMargin,
 							point: 0.5, // TODO make dynamic
 							columnUi: columnUi,
-							refGene: refGene
+							gene: column.fields[0],
+							index: local.index(plotData),
+							layout: fullLayout,
+							xzoom: xzoom,
+							samples: sort
 						});
 					}
 				}
@@ -344,7 +382,7 @@ define(['underscore_ext',
 			// scaling that is mixed up with refGene state.
 
 			syncAnnotations(local.annotations, annotations, el.id, column.width,
-					data);
+					data, fullLayout);
 		}
 	);
 

@@ -1,10 +1,99 @@
 /*jslint nomen:true, browser: true */
 /*global define: false */
 
-define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext','annotationColor','metadataStub'
-	// non-object dependencies
-	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _, annotationColor, metadataStub) {
+define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext', 'static-interval-tree', 'annotationColor', 'metadataStub', 'layoutPlot'
+	], function (crosshairs, tooltip, util, vgcanvas, d3, $, _, intervalTree, annotationColor, metadataStub, layoutPlot) {
 	'use strict';
+
+	var {pxTransformFlatmap} = layoutPlot;
+	var annotationFeatures = _.object(_.flatmap(annotationColor.colorSettings, (feats, dsID) =>
+		_.map(feats, ({color}, feature) => [`${dsID}__${feature}`, {
+			color: color,
+			get: (a, v) => _.get_in(a, [`${dsID}__${feature}`, [v.chr, v.start, v.end, v.reference, v.alt].join('__')])
+		}])
+	 ));
+
+	// Group by consecutive matches, perserving order.
+	function groupByConsec(sortedArray, prop, ctx) {
+		var cb = _.iteratee(prop, ctx);
+		var last = {}, current; // init 'last' with a sentinel, !== to everything
+		return _.reduce(sortedArray, (acc, el) => {
+			var key = cb(el);
+			if (key !== last) {
+				current = [];
+				last = key;
+				acc.push(current);
+			}
+			current.push(el);
+			return acc;
+		}, []);
+	}
+
+	// Group by, returning groups in sorted order. Scales O(n) vs.
+	// sort's O(n log n), if the number of values is much smaller than
+	// the number of elements.
+	function sortByGroup(arr, keyfn) {
+		var grouped = _.groupBy(arr, keyfn);
+		return _.map(_.sortBy(_.keys(grouped), _.identity),
+				k => grouped[k]);
+	}
+
+	function drawImpactPx(vg, width, pixPerRow, radius, color, variants) {
+		var ctx = vg.context(),
+			varByImp = groupByConsec(variants, v => v.group);
+
+		_.each(varByImp, vars => {
+			ctx.beginPath(); // halos
+			_.each(vars, v => {
+				ctx.moveTo(v.xStart - radius, v.y);
+				ctx.lineTo(v.xEnd + radius, v.y);
+			});
+			ctx.lineWidth = pixPerRow;
+			ctx.strokeStyle = color(vars[0].group);
+			ctx.stroke();
+
+			ctx.beginPath(); // centers
+			_.each(vars, v => {
+				ctx.moveTo(v.xStart, v.y);
+				ctx.lineTo(v.xEnd, v.y);
+			});
+			ctx.lineWidth = pixPerRow / 2;
+			ctx.strokeStyle = 'black';
+			ctx.stroke();
+		});
+	}
+
+	function push(arr, v) {
+		arr.push(v);
+		return arr;
+	}
+
+	function drawBackground(vg, width, height, sparsePad, pixPerRow, values) {
+		var ctx = vg.context(),
+			drawWidth = width - sparsePad * 2,
+			[stripes] = _.reduce(
+				groupByConsec(values, v => !!v.vals),
+				([acc, sum], g) =>
+					[g[0].vals ? acc : push(acc, [sum, g.length]), sum + g.length],
+				[[], 0]);
+
+		vg.smoothing(false);
+		vg.box(0, 0, width, height, 'white'); // white background
+
+		ctx.beginPath();                      // grey for missing data
+		each(stripes, ([offset, len]) =>
+			ctx.rect(
+				sparsePad,
+				(offset * pixPerRow) + sparsePad,
+				drawWidth,
+				pixPerRow * len
+		));
+		ctx.fillStyle = 'grey';
+		ctx.fill();
+	}
+
+	var colorStr = c =>
+		'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
 
 	var unknownEffect = 0,
 		impact = {
@@ -58,7 +147,9 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			"others or unannotated":0
 		},
-		getImpact = function (eff) { return impact[eff] || unknownEffect; },
+		round = Math.round,
+		saveUndef = f => v => v === undefined ? v : f(v),
+		decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals
 		colors = {
 			category_25: [
 				{r: 255, g: 127, b: 14, a: 1},  // orange #ff7f0e
@@ -66,13 +157,27 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
 				{r: 214, g: 39, b: 40, a: 1}  // red #d62728
 			],
-			af: {r: 255, g: 0, b: 0, a: 0},
+			af: {r: 255, g: 0, b: 0},
 			grey: {r: 128, g:128, b:128, a:1}
 		},
-		clone = _.clone,
+		features = _.merge(annotationFeatures, {
+			impact: {
+				get: (a, v) => impact[v.effect] || unknownEffect,
+				color: v => colorStr(colors.category_25[v])
+			},
+			dna_vaf: {
+				get: (a, v) => decimateFreq(v.dna_vaf),
+				color: v => colorStr(_.isUndefined(v) ? colors.grey :
+					_.assoc(colors.af, 'a', v))
+			},
+			rna_vaf: {
+				get: (a, v) => decimateFreq(v.rna_vaf),
+				color: v => colorStr(_.isUndefined(v) ? colors.grey :
+					_.assoc(colors.af, 'a', v))
+			}
+		}),
 		each = _.each,
 		reduce = _.reduce,
-		sortBy = _.sortBy,
 		widgets = {},
 		aWidget = {
 
@@ -81,49 +186,14 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				delete widgets[this.id];
 			},
 
-			drawCenter: function (d) {
-				var r = this.point;
-				this.vg.box (d.xStart -r,
-					d.y - d.pixPerRow/4,
-					d.xEnd- d.xStart+r*2,
-					d.pixPerRow/2,
-					'black');
-			},
+			draw: function (vg) {
+				var {radius, pixPerRow, canvasWidth, canvasHeight,
+						values, sparsePad, feature} = this,
+					minppr = Math.max(pixPerRow, 2);
 
-			drawHalo: function (d) {
-				this.vg.box(d.xStart-d.r,
-					d.y- d.pixPerRow/2, //d.y - d.r,
-					d.xEnd - d.xStart + d.r*2,
-					d.pixPerRow, //d.r*2,
-					d.rgba );
-			},
-
-			draw: function () {
-				var self = this,
-					buffWidth = this.canvasWidth - (this.sparsePad * 2),
-					buff = vgcanvas(buffWidth, 1);
-				this.vg.smoothing(false);
-				this.vg.clear(0, 0, this.canvasWidth, this.canvasHeight);
-
-				// draw each of the rows either grey for NA or white for sample examined for mutations
-				// more crisp lines if both white and grey are drawn, rather than a background of one
-				each(this.values, function (r, i) {
-					var color = (r.vals) ? 'white' : 'grey';
-					buff.box(0, 0, buffWidth, 1, color);
-					self.vg.drawImage(
-						buff.element(),
-						self.sparsePad,
-						(i * self.pixPerRow) + self.sparsePad,
-						buffWidth,
-						self.pixPerRow
-					);
-				});
-
-				// draw the mutations
-				each(this.nodes, function (d) {
-					self.drawHalo(d);
-					self.drawCenter(d);
-				});
+				drawBackground(vg, canvasWidth, canvasHeight, sparsePad, pixPerRow, values);
+				drawImpactPx(vg, canvasWidth, minppr,
+						radius, features[feature].color, this.nodes);
 			},
 
 			closestNode: function (x, y) {
@@ -201,7 +271,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					posText = 'hg19 ' + pos;  // hg19 is hard coded, we do not check
 
 					// ga4gh BRCA1 and BRCA2 hard-coded section here
-					if (this.gene.name ==="BRCA1" || this.gene.name === "BRCA2"){
+					if (this.gene ==="BRCA1" || this.gene === "BRCA2"){
 						ga4ghVarURL = "../datapages/?ga4gh=1&referenceName="+
 							node.data.chr.substring(3, node.data.chr.length)+
 							"&start="+node.data.start+"&end="+ node.data.end +
@@ -211,7 +281,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					}
 					rows = [
 						[ { val: node.data.effect +", " +
-							this.gene.name +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'')}],
+							this.gene +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'')}],
 						[ { val: posText, url: posURL},
 							{ val: node.data.reference + ' to ' + node.data.alt}]
 					];
@@ -242,50 +312,21 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				window.open(url);
 			},
 
-			findRgba: function (val) {
-				var imp,
-					c;
-
-				if (this.annValues && this.annValues[this.feature]){ //the feature is ga4gh annotation data, i.e. not part of the xena data
-					var widget = this.feature.split("__")[0],
-						feature = this.feature.split("__").pop(),
-						id = [val.chr, val.start, val.end, val.reference, val.alt].join("__"),
-						value= this.annValues[this.feature][id];
-					if (value && annotationColor.colorSettings[widget][feature].filter.indexOf(value)!==-1){
-						var color = annotationColor.colorSettings[widget][feature].color;
-						return color(value);
-					} else {
-						return 'grey';
-					}
-				} else if (this.feature === 'impact') {
-					imp = getImpact(val.effect);
-					c = colors[this.color][imp];
-				} else if (_.isUndefined(val[this.feature])) { // NA value _VAF
-					return 'grey';
-				} else if (this.feature ==="dna_vaf" || this.feature ==="rna_vaf") {  // _VAF, but not NA
-					c = clone(colors.af);
-					c.a = val[this.feature];
-				} else {
-					return 'grey';
-				}
-				return 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
-			},
-
 			receiveData: function (data) {
+				// XXX It's not clear if this.values is useful. We no longer draw by iterating over
+				// the variants indexed by sample. It's currently used to draw background, do tooltip,
+				// and maybe more. Should deprecated it if we don't need it.
 				var drawValues = data.slice(this.zoomIndex, this.zoomIndex + this.zoomCount);
-				this.values = _.map(drawValues, function (v, i) {
-					var row = $.extend(true, [], v);
-					row.index = i;
-					return row;
-				});
+				this.values = _.map(drawValues, (obj, i) => _.assoc(obj, 'index', i));
+				this.render();
 			},
 
 			receiveAnnData: function (annData){
 				var annValues={};
 				Object.keys(annData).map(function (key){
-					var [,widget, dataset, field]= key.split("__"),
-						feature = [widget, dataset, field].join("__"),
-						order = annotationColor.colorSettings[widget][field].order;
+					var [,dataset, field]= key.split("__"),
+						feature = [dataset, field].join("__"),
+						order = annotationColor.colorSettings[field].order;
 
 					annValues[feature]={};
 					if (annData[key].length){
@@ -314,53 +355,30 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				this.annValues = annValues;
 			},
 
-			findNonNaRows: function () {
-				var self = this,
-					nonNaRows = _.map(_.filter(self.values, function (r) {
-						return r.vals;
-					}), function (r) {
+			findNodes: function () {
+				var {layout, index, samples} = this.options,
+					{pixPerRow, sparsePad, zoomIndex, zoomCount, feature, annValues} = this,
+					sindex = _.object(samples.slice(zoomIndex, zoomIndex + zoomCount),
+								_.range(samples.length)),
+					group = features[feature].get,
+					minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e],
+					// sortfn is about 2x faster than sortBy, for large sets of variants
+					sortfn = (coll, keyfn) => _.flatten(sortByGroup(coll, keyfn), true);
+				return sortfn(pxTransformFlatmap(layout, (toPx, [start, end]) => {
+					var variants = _.filter(
+						intervalTree.matches(index, {start: start, end: end}),
+						v => _.has(sindex, v.sample));
+					return _.map(variants, v => {
+						var [pstart, pend] = minSize(toPx([v.start, v.end]));
 						return {
-							x: self.sparsePad,
-							y: r.index * self.pixPerRow + self.sparsePad
+							xStart: pstart,
+							xEnd: pend,
+							y: sindex[v.sample] * pixPerRow + (pixPerRow / 2) + sparsePad,
+						   group: group(annValues, v),                                   // needed for sort, before drawing.
+						   data: v
 						};
 					});
-				return nonNaRows;
-			},
-
-			findNodes: function () {
-				var self = this,
-					nodes = [],
-					nodeValues = _.filter(this.values, function (value) {
-						return value.vals && value.vals.length;
-					});
-
-				_.each(nodeValues, function (value) {
-
-					var y = (value.index * self.pixPerRow) + (self.pixPerRow / 2) + self.sparsePad;
-					_.each(value.vals, function (val) {
-						var {start, end} = self.refGene.mapChromPosToX(val);
-
-						if (start >= 0 && end >= 0) {
-							start = start + self.sparsePad;
-							end = end + self.sparsePad;
-							nodes.push({
-								xStart: start,
-								xEnd: end,
-								y: y,
-								r: self.radius,
-								pixPerRow: Math.max(self.pixPerRow,2),
-								impact: getImpact(val.effect),
-								rgba: self.findRgba(val),
-								data: val
-							});
-						}
-					});
-				});
-
-				// sort so most severe draw on top
-				return sortBy(nodes, function (n) {
-					return n.impact;
-				});
+				}), v => v.group);
 			},
 
 			drawLegend: function () {
@@ -391,13 +409,13 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					align = 'center';
 					topBorderIndex = 3;
 				} else {
-					var [widget, dataset, feature] = this.feature.split("__"),
+					var [dataset, feature] = this.feature.split("__"),
 						md = _.find(metadataStub.variantSets, ds => ds.id === dataset).metadata,
 						info = _.find(md, ds => ds.key === ('INFO.'+feature)).info,
-						colorFn = annotationColor.colorSettings[widget][feature].color;
+						colorFn = annotationColor.colorSettings[dataset][feature].color;
 
-					labels = annotationColor.colorSettings[widget][feature].filter.map(value => info[value]);
-					myColors = annotationColor.colorSettings[widget][feature].filter.map(value=>colorFn(value));
+					labels = annotationColor.colorSettings[dataset][feature].filter.map(value => info[value]);
+					myColors = annotationColor.colorSettings[dataset][feature].filter.map(value=>colorFn(value));
 				}
 				myColors.unshift('rgb(255,255,255)');
 				labels.unshift('no mutation');
@@ -405,13 +423,16 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			render: function () {
+//				var start = performance.now();
 				this.pixPerRow = (this.height - (this.sparsePad * 2))  / this.values.length;
 				this.canvasHeight = this.height; // TODO init elsewhere
 				this.d2 = this.vg.context();
 				this.nodes = this.findNodes();
-				this.nonNaRows = this.findNonNaRows();
 				this.drawLegend();
-				this.draw();
+
+				this.draw(this.vg);
+//				var end = performance.now();
+//				console.log('full run', end - start);
 			},
 
 			initialize: function (options) {
@@ -421,9 +442,8 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				//_(this).bindAll();
 				this.vg = options.vg;
 				this.columnUi = options.columnUi;
-				this.refGene = options.refGene;
 				this.dataset = options.dataset;
-				this.gene = options.refGene.getGeneInfo();
+				this.gene = options.gene;
 				this.feature = options.feature;
 				this.color = options.color;
 				this.canvasWidth = options.width;
@@ -435,6 +455,13 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				this.point = options.point;
 				this.refHeight = options.refHeight;
 				this.columnUi.$sparsePad.height(0);
+				this.options = options;
+
+				var {baseLen, pxLen} = options.layout;
+				// XXX There's something wrong here. E.g. if the exons have
+				// 1px spacing, this would be off. pxLen is the wrong metric.
+				this.offset = (_.get_in(this, ['options', 'xzoom', 'index']) || 0) *
+					pxLen / baseLen;
 
 				// bindings
 				this.sub = this.columnUi.crosshairs.mousingStream.subscribe(function (ev) {
@@ -442,8 +469,8 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					self.mousing(ev);
 				});
 
-				this.receiveData(options.data);
 				this.receiveAnnData(options.annData);
+				this.receiveData(options.data);
 				this.render();
 			}
 		};
@@ -459,7 +486,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 	function evalMut(refGene, mut) {
 		var geneInfo = refGene[mut.gene];
 		return {
-			impact: getImpact(mut.effect),
+			impact: features.impact.get(null, mut),
 			right: (geneInfo.strand === '+') ?
 		            mut.start - geneInfo.txStart :
 		            geneInfo.txStart - mut.start

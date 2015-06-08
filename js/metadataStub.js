@@ -4,8 +4,9 @@
 // clinVar vcf: https://drive.google.com/uc?id=0Bzoozx2KZAPmb1NWQ1laZElzOXc&export=download
 // 1000_genomes vcf: ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/
 // BRCA1 chr17:41,196,312-41,277,500
+
 var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:7000/v0.6.e6d6074";
-//var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.5.1";
+//var ga4ghURL = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/0.5.1";
 
 // selected field for annotation display
 var selectedKeys = {
