@@ -18,8 +18,8 @@ var colorSettings ={
       //"7": "Histocompatibility",
       //"255": "Other"
     CLNSIG: {
-      color: d3.scale.ordinal().domain(['255','0',"1",'2', '3', '4', '5', '6', '7'])
-        .range(['green','black','lightgrey','blue', 'lightblue', 'pink', 'red', 'orange', 'orange']),
+      color: d3.scale.ordinal().domain([undefined, '255','0',"1",'2', '3', '4', '5', '6', '7'])
+        .range(['grey', 'green','black','lightgrey','blue', 'lightblue', 'pink', 'red', 'orange', 'orange']),
       filter: ['1','255','6', '7', '0', '3', '2', '4', '5'],
       order: index(['1','255','0', '6', '7', '3', '2', '4', '5']),
     },
@@ -27,8 +27,8 @@ var colorSettings ={
     // 1, 3 => germ line
     // 2, 3 => somatic
     CLNORIGIN: {
-      color: d3.scale.ordinal().domain(['1', '2', '3'])
-        .range(['blue', 'red', 'purple']),
+      color: d3.scale.ordinal().domain([undefined, '1', '2', '3'])
+        .range(['grey', 'blue', 'red', 'purple']),
       filter: ['1', '2', '3'],
       order: index(['1', '2', '3']),
     }
@@ -41,8 +41,8 @@ var colorSettings ={
     //"4-Likelypathogenic",
     //"5-Definitelypathogenic",
     iarc_class: {
-      color: d3.scale.ordinal().domain(['1', '2','3','4','5'])
-        .range(['blue', 'lightblue', 'black', 'pink', 'red']),
+      color: d3.scale.ordinal().domain([undefined, '1', '2','3','4','5'])
+        .range(['grey', 'blue', 'lightblue', 'black', 'pink', 'red']),
       filter: ['3','2','1','4','5'],
       order: index(['3','2','1','4','5']),
     }
