@@ -197,12 +197,13 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			closestNode: function (x, y) {
-				var cutoff = this.radius,
+				var cutoffX = this.radius,
+					cutoffY = this.pixPerRow/2.0,
 					min = Number.POSITIVE_INFINITY,
 					distance;
 
 				return reduce(this.nodes, function (closest, n) {
-					if ( (Math.abs(y-n.y) < cutoff) && (x > n.xStart -cutoff) && (x<n.xEnd +cutoff)) {
+					if ( (Math.abs(y-n.y) < cutoffY) && (x > n.xStart -cutoffX) && (x<n.xEnd +cutoffX)) {
 						distance = Math.pow( (y-n.y), 2) + Math.pow( (x - (n.xStart+n.xEnd)/2.0), 2);
 						if (distance < min) {
 							min = distance;
