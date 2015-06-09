@@ -2,8 +2,6 @@
 /*global define: false, confirm: true */
 
 // http://localhost:8080/datapages/?ga4gh=1&start=41215898&end=51215899&referenceName=17&variantSetId=Clinvar
-// http://localhost:8080/datapages/?ga4gh=1&start=41215898&end=41215899&referenceName=17&variantSetId=Clinvar
-
 // http://http://localhost:8080/datapages/?ga4gh=1
 
 define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","../css/datapages.css"],
@@ -126,7 +124,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
           }
 
           var variantId =variant.id+"__"+variant.referenceBases+"__"+variant.alternateBases;
-          //record how many times the exact same variants are stored in the database
+          //record how many times the exact same variant are stored in each dataset
           if ( allVariants[variantSetId][variantId] === undefined){
             var div = document.createElement("div");
             buildVariantDisplay(variant, div, metadata[variantSetId],gene);
@@ -338,7 +336,7 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
       alt = variant.alternateBases,
       variantSetId = variant.variantSetId,
       pos, posURL,
-      label,div,
+      div,
       selectedKeys, allKeys, otherKeys;
 
     function getValue(key){
@@ -350,13 +348,13 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
     }
 
     function displayKeyValuePair (key, bold){
-        var value, intepretation, text;
+        var label, description, value, intepretation, text;
 
         value = getValue(key);
         //console.log(metaData[key].description, key, value);
         if (metaData[key]){
-          label = metaData[key].description;
-          label = label.charAt(0).toUpperCase()+ label.slice(1);
+          label = key.replace("INFO\.","");
+          description = metaData[key].description;
           if ( metaData[key].type ==="Flag") {
             if (value) {
               node.appendChild(document.createTextNode(label+ " : "));
@@ -389,14 +387,11 @@ define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","
           }
 
           if (text){
-            if (bold){
-              div = document.createElement("b");
-              node.appendChild(dom_helper.elt("i",div));
-            } else {
-              div = document.createElement("i");
-              node.appendChild(div);
-            }
+            div = document.createElement("b");
             div.appendChild(document.createTextNode(text));
+            node.appendChild(dom_helper.elt("i",div));
+            node.appendChild(document.createTextNode("\u00A0\u00A0\u00A0\u00A0\u00A0"));
+            node.appendChild(document.createTextNode(" "+description));
             node.appendChild(document.createElement("br"));
             node.appendChild(document.createElement("br"));
           }

@@ -360,7 +360,7 @@ define(['underscore_ext',
 							radius: dims.sparseRadius,
 							sparsePad: dims.sparsePad,
 							horizontalMargin: dims.horizontalMargin,
-							point: 0.5, // TODO make dynamic
+							point: 0.5, // not sure if this is used by the code.
 							columnUi: columnUi,
 							gene: column.fields[0],
 							index: local.index(plotData),

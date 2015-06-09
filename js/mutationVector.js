@@ -45,21 +45,24 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		_.each(varByImp, vars => {
 			ctx.beginPath(); // halos
 			_.each(vars, v => {
-				ctx.moveTo(v.xStart - radius, v.y);
-				ctx.lineTo(v.xEnd + radius, v.y);
+				var padding = Math.max(0,radius - (v.xEnd-v.xStart + 1)/2.0);
+				ctx.moveTo(v.xStart - padding, v.y);
+				ctx.lineTo(v.xEnd + padding, v.y);
 			});
 			ctx.lineWidth = pixPerRow;
 			ctx.strokeStyle = color(vars[0].group);
 			ctx.stroke();
 
-			ctx.beginPath(); // centers
-			_.each(vars, v => {
-				ctx.moveTo(v.xStart, v.y);
-				ctx.lineTo(v.xEnd, v.y);
-			});
-			ctx.lineWidth = pixPerRow / 2;
-			ctx.strokeStyle = 'black';
-			ctx.stroke();
+			if (pixPerRow>2){ // centers when there is enough vertical room for each sample
+				ctx.beginPath();
+				_.each(vars, v => {
+					ctx.moveTo(v.xStart, v.y);
+					ctx.lineTo(v.xEnd, v.y);
+				});
+				ctx.lineWidth = pixPerRow / 8;
+				ctx.strokeStyle = 'black';
+				ctx.stroke();
+			}
 		});
 	}
 
@@ -103,10 +106,10 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			splice_acceptor_variant: 3,
 			splice_donor_variant: 3,
 			Splice_Site: 3,
-			splice_region_variant: 3,
 			Frame_Shift_Del: 3,
 			Frame_Shift_Ins: 3,
 
+			splice_region_variant: 2,
 			missense: 2,
 			non_coding_exon_variant: 2,
 			missense_variant: 2,
@@ -278,7 +281,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 							"&start="+node.data.start+"&end="+ node.data.end +
 							"&ref="+node.data.reference +
 							"&alt="+node.data.alt +
-							"&gene="+ this.gene.name;
+							"&gene="+ this.gene;
 					}
 					rows = [
 						[ { val: node.data.effect +", " +

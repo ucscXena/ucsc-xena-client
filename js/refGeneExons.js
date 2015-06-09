@@ -2,9 +2,9 @@
 /*global define: false */
 
 define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore', 'exonLayout', 'zoom', 'rx',
-	   'static-interval-tree', 'vgcanvas', 'layoutPlot'
+	   'static-interval-tree', 'vgcanvas', 'layoutPlot', 'sheetWrap'
 	// non-object dependencies
-	], function (crosshairs, tooltip, util, d3, $, select2, _, exonLayout, zoom, Rx, intervalTree, vgcanvas, layoutPlot) {
+	], function (crosshairs, tooltip, util, d3, $, select2, _, exonLayout, zoom, Rx, intervalTree, vgcanvas, layoutPlot, sheetWrap) {
 	'use strict';
 
 	var {zoomIn, zoomOut} = zoom;
@@ -39,14 +39,15 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 
 	var shade1 = '#cccccc',
 		shade2 = '#999999',
+		refHeight= sheetWrap.columnDims().refHeight,
 		annotation = {
 			utr: {
-				y: 2,
-				h: 8
+				y: refHeight/4,
+				h: refHeight/2
 			},
 			cds: {
 				y: 0,
-				h: 12
+				h: refHeight
 			}
 		},
 		widgets = {},
@@ -71,7 +72,7 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 
 			render: function (vg, indx, layout) {
 				var ctx = vg.context();
-
+				var prevEnd;
 				pxTransformEach(layout, (toPx, [start, end]) => {
 					var nodes = matches(indx, {start: start, end: end});
 					_.each(nodes, ({i, start, end, inCds}) => {
@@ -79,6 +80,9 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 						var [pstart, pend] = toPx([start, end]);
 						ctx.fillStyle = i % 2 === 0 ? shade2 : shade1;
 						ctx.fillRect(pstart, y, (pend - pstart) || 1, h);
+						ctx.fillStyle = 'black';
+						ctx.fillRect(prevEnd, refHeight/2, pstart- prevEnd, 1);
+						prevEnd = pend;
 					});
 				});
 

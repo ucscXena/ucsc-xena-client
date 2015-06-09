@@ -3,7 +3,7 @@
 /*global require: false, module: false */
 'use strict';
 
-var spLen = 15; // size of intronic region to draw between exons
+var spLen = 3; // size of intronic region to draw between exons
 
 var _ = require('underscore');
 
