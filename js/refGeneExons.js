@@ -75,11 +75,12 @@ define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore'
 				var prevEnd;
 				pxTransformEach(layout, (toPx, [start, end]) => {
 					var nodes = matches(indx, {start: start, end: end});
-					_.each(nodes, ({i, start, end, inCds}) => {
+					_.each(nodes.sort((a,b)=> (b.start -a.start)), ({i, start, end, inCds}) => {
 						var {y, h} = annotation[inCds ? 'cds' : 'utr'];
 						var [pstart, pend] = toPx([start, end]);
 						ctx.fillStyle = i % 2 === 0 ? shade2 : shade1;
 						ctx.fillRect(pstart, y, (pend - pstart) || 1, h);
+						// draw a line across gap to connect exons
 						ctx.fillStyle = 'black';
 						ctx.fillRect(prevEnd, refHeight/2, pstart- prevEnd, 1);
 						prevEnd = pend;
