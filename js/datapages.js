@@ -778,6 +778,31 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 		linkNode.setAttribute("href", link);
 	}
 
+	// almost dup of fn in plotMutationVector.js. Should factor this out.
+	function mutation_attrs(list) {
+		return _.map(list, function (row) {
+			return {
+				"sampleid": row.sampleID,
+				"chrom": row.position.chrom,
+				"chromstart": row.position.chromstart,
+				"chromend": row.position.chromend,
+				"gene": row.genes,
+				"ref": row.ref,
+				"alt": row.alt,
+				"effect": row.effect,
+				"amino_acid": row['amino-acid'],
+				"rna_vaf": row['rna-vaf'],
+				"dna_vaf": row['dna-vaf']
+			};
+		});
+	}
+
+	// dup of fn in plotMutationVector.js. Should factor this out.
+	function collateRows(rows) {
+		var keys = _.keys(rows);
+		return _.map(_.range(rows[keys[0]].length), i => _.object(keys, _.map(keys, k => rows[k][i])));
+	}
+
 	function dataSnippets (dataset, nSamples, nProbes, node){
 		var table,
 			host = JSON.parse(dataset.dsID).host,
@@ -880,12 +905,12 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 				});
 			}
 		else if(type ==="mutationVector"){
-			xenaQuery.sparse_data_examples(host, name, nProbes).subscribe( function(s){
-				if (s.rows && s.rows.length>0) {
+			xenaQuery.sparse_data_examples(host, name, nProbes).map(r => mutation_attrs(collateRows(r.rows))).subscribe(function(rows){
+				if (rows && rows.length>0) {
 					var i, j, key,
-						keys = Object.keys(s.rows[0]),
+						keys = Object.keys(rows[0]),
 						column = keys.length,
-						row = s.rows.length,
+						row = rows.length,
 						dataRow = (row<nProbes) ? row:nProbes-1; //recored
 
 					// put chrom chromstart chromend together to be more readable
@@ -907,13 +932,13 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
 					//data cell
 					for(i = 1; i < dataRow+1; i++){
-						for (key in s.rows[i-1]) {
-							if (s.rows[i - 1].hasOwnProperty(key)) {
+						for (key in rows[i-1]) {
+							if (rows[i - 1].hasOwnProperty(key)) {
 								j = keysP[key];
-								dom_helper.setTableCellValue (table, i, j, s.rows[i-1][key]);
+								dom_helper.setTableCellValue (table, i, j, rows[i-1][key]);
 								//first column
 								if (key ==="sampleid"){
-									dom_helper.setTableCellValue (table, i, 0, s.rows[i-1][key]);
+									dom_helper.setTableCellValue (table, i, 0, rows[i-1][key]);
 								}
 							}
 						}
@@ -1021,15 +1046,14 @@ define(["dom_helper", "xenaQuery", "session", "underscore_ext", "rx-dom", "xenaA
 
   function buildIndex (idxObj, hosts){
     var idx = lunr(function () {
-        this.field('title')//, {boost: 10})
-        this.field('body')
+        this.field('title');//, {boost: 10})
+        this.field('body');
       }),
       store ={},
       i =0,
       doc,
 			source,
-      cohortC =[],
-      obj;
+      cohortC =[];
 
 
     source = Rx.Observable.zipArray(

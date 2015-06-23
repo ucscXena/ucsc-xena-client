@@ -296,12 +296,6 @@ define(['underscore_ext',
 		}));
 	}
 
-	function indexBounds(bounds) {
-		return _.object(_.map(bounds, function (row) {
-			return [row.field, row];
-		}));
-	}
-
 	// Where do we get the URL? XXX
 	//    URL is associated with the dataset, per-sample.
 	//    Have to parse the URL to get the server??
@@ -368,9 +362,6 @@ define(['underscore_ext',
 				}),
 				codes: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.codes_string(ds, probes)), function (r) {
 					return Rx.DOM.ajax(r).select(indexCodes);
-				}),
-				bounds: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.field_bounds_string(ds, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(indexBounds, xenaQuery.json_resp));
 				})
 			};
 		})

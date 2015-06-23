@@ -523,8 +523,11 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			if (!row2.length) {
 				return -1;                        // has mutations sorts first
 			}
-			row1a = _.map(row1, _.partial(evalMut, refGene));
-			row2a = _.map(row2, _.partial(evalMut, refGene));
+
+			// Native map is a lot faster than _.map. Need an es5 polyfill, or
+			// perhaps lodash, or ramda.
+			row1a = row1.map(m => evalMut(refGene, m));
+			row2a = row2.map(m => evalMut(refGene, m));
 
 			return cmpMut(_.maxWith(row1a, cmpMut), _.maxWith(row2a, cmpMut));
 		},

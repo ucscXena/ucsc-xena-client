@@ -195,72 +195,36 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '        :where [:= :dataset.name ' + quote(dataset) + ']})';
 	}
 
-	function field_bounds_string(dataset, fields) {
-		return '(let [dataset ' + quote(dataset) + '\n' +
-		       '      fields ' + arrayfmt(fields) + '\n' +
-		       '      rows (- (:rows (car (query {:select [:rows] :from [:dataset]\n' +
-		       '                                  :where [:= :dataset.name dataset]}))) 1)\n' +
-		       '      field_ids (map\n' +
-		       '                  :id\n' +
-		       '                  (query {:select [:field.id] :from [:field]\n' +
-		       '                          :join [:dataset [:= :dataset.id :dataset_id]]\n' +
-		       '                          :where [:and\n' +
-		       '                                  [:= :dataset.name dataset]\n' +
-		       '                                  [:in :field.name fields]]}))\n' +
-		       '      bounds (fn [id]\n' +
-		       '                 (let [c #sql/call [:unpack id :x]]\n' +
-		       '                   (car (query {:select [[#sql/call [:max c] :max] [#sql/call [:min c] :min]]\n' +
-		       '                                :from [#sql/call [:system_range 0 rows]]\n' +
-		       '                                :where [:not [:=  c "NaN"]]}))))]\n' +
-		       '      (map (fn [x y] (assoc y :field x)) fields (map bounds field_ids)))';
-	}
-
 	function dataset_gene_probes_string(dataset, samples, gene) {
-		return '(let [getfield (fn [dsID field]\n' +
-		       '                 (:id (car (query {:select [:id]\n' +
-		       '                                   :from [:field]\n' +
-		       '                                   :where [:and [:= :name field] [:= :dataset_id dsID]]}))))\n' +
-		       '      pmid (:id (car (query {:select [:d2.id]\n' +
-		       '                             :from [:dataset]\n' +
-		       '                             :join [[:dataset :d2] [:= :dataset.probemap :d2.name]]\n' +
-		       '                             :where [:= :dataset.name ' + quote(dataset) + ']})))\n' +
-		       '      genes (getfield pmid "genes")\n' +
-		       '      name (getfield pmid "name")\n' +
-		       '      probes (map :probe (query {:select [[#sql/call [:unpackValue name :row] :probe]]\n' +
-		       '                                 :from [:field_gene]\n' +
-		       '                                 :where [:and [:= :field_id genes] [:= :gene ' + quote(gene) + ']]}))]\n' +
-		       '  [probes\n' +
-		       '    (fetch [{:table ' + quote(dataset) + '\n' +
-		       '             :samples ' + arrayfmt(samples) + '\n' +
-		       '             :columns probes}])])';
+		return `(let [probemap (:probemap (car (query {:select [:probemap]\n` +
+		       `                                       :from [:dataset]\n` +
+		       `                                       :where [:= :name ${quote(dataset)}]})))\n` +
+		       `      probes ((xena-query {:select ["name"] :from [probemap] :where [:in "genes" ${arrayfmt([gene])}]}) "name")]\n` +
+		       `  [probes\n` +
+		       `    (fetch [{:table ${quote(dataset)}\n` +
+		       `             :samples ${arrayfmt(samples)}\n` +
+		       `             :columns probes}])])`;
 	}
 
-
+	// Might want to check the performance of the map for probes, since it's
+	// being evaled for every element of the probes-map result set.
 	function dataset_gene_string(dataset, samples, genes) {
-		return '(let [average (fn [genes] (map (fn [gp] {:gene (car gp)\n' +
-		       '                                         :scores (mean (map :scores (car (cdr gp))) 0)})\n' +
-		       '                               genes))\n' +
-		       '      merge-scores (fn [probes scores]\n' +
-		       '                     (map (fn [p s] (assoc p :scores s)) probes scores))\n' +
-		       '      getfield (fn [dsID field]\n' +
-		       '                 (:id (car (query {:select [:id]\n' +
-		       '                                   :from [:field]\n' +
-		       '                                   :where [:and [:= :name field] [:= :dataset_id dsID]]}))))\n' +
-		       '      pmid (:id (car (query {:select [:d2.id]\n' +
-		       '                             :from [:dataset]\n' +
-		       '                             :join [[:dataset :d2] [:= :dataset.probemap :d2.name]]\n' +
-		       '                             :where [:= :dataset.name ' + quote(dataset) + ']})))\n' +
-		       '      genes (getfield pmid "genes")\n' +
-		       '      name (getfield pmid "name")\n' +
-		       '      probes (query {:select [:gene [#sql/call [:unpackValue name :row] :probe]]\n' +
-		       '                     :from [:field_gene]\n' +
-		       '                     :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :field_gene.gene]]\n' +
-		       '                     :where [:= :field_id genes]})]\n' +
-		       '  (average (group-by :gene (merge-scores probes (fetch [{:table ' + quote(dataset) + '\n' +
-		       '                                                         :samples ' + arrayfmt(samples) + '\n' +
-		       '                                                         :columns (map :probe probes)}])))))';
+		return `(let [average (fn [genes] (map (fn [gp] {:gene (car gp)\n` +
+		       `                                         :scores (mean (map :scores (car (cdr gp))) 0)})\n` +
+		       `                               genes))\n` +
+		       `      merge-scores (fn [probes scores]\n` +
+		       `                     (map (fn [p s] (assoc p :scores s)) probes scores))\n` +
+		       `      probemap (:probemap (car (query {:select [:probemap]\n` +
+		       `                                       :from [:dataset]\n` +
+		       `                                       :where [:= :name ${quote(dataset)}]})))\n` +
+		       `      probes-map (xena-query {:select ["name" "genes"] :from [probemap] :where [:in "genes" ${arrayfmt(genes)}]})\n` +
+		       `      probes (map (fn [n g] {:probe n :gene g}) (probes-map "name") (probes-map "genes"))]\n` +
+		       `  (average (group-by :gene (merge-scores probes (fetch [{:table ${quote(dataset)}\n` +
+		       `                                                         :samples ${arrayfmt(samples)}\n` +
+		       `                                                         :columns (map :probe probes)}])))))`;
 	}
 
+	// XXX need server support for functions in :where clauses in order to rewrite this.
 	function sparse_data_match_genes_string(dataset, genes) {
 		return '(let [getfield (fn [field]\n' +
 		       '                 (:id (car (query {:select [:field.id]\n' +
@@ -282,62 +246,17 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '                   :where [:and [:in :%lower.field.name ' + arrayfmt(_.map(fields, f => f.toLowerCase())) + '] [:= :dataset.name ' + quote(dataset) + ']]}))';
 	}
 
-	// It might be possible to better optimize this join. The scan counts seem high.
 	function sparse_data_string(dataset, samples, genes) {
-		return '(let [getfield (fn [field]\n' +
-		       '                 (:id (car (query {:select [:field.id]\n' +
-		       '                                   :from [:dataset]\n' +
-		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
-		       '                                   :where [:and [:= :field.name field] [:= :dataset.name ' + quote(dataset) + ']]}))))\n' +
-		       '      unpack (fn [field] [#sql/call [:unpack (getfield field) :field_gene.row] field])\n' +
-		       '      unpackValue (fn [field] [#sql/call [:unpackValue (getfield field) :field_gene.row] field])\n' +
-		       '      genes (getfield "genes")\n' +
-		       '      sampleID (getfield "sampleID")\n' +
-		       '      position (getfield "position")]\n' +
-		       '  {:samples (map :value (query {:select [:value]\n' +
-		       '                                :from [:field]\n' +
-		       '                                :join [:code [:= :field.id :field_id]]\n' +
-		       '                                :where [:and [:in :value ' + arrayfmt(samples) + '][:= :field_id sampleID]]}))\n' +
-		       '   :rows (query {:select [:chrom :chromStart :chromEnd :gene [#sql/call ["unpackValue" sampleID :field_gene.row] :sampleID]' +
-		       '                          (unpackValue "ref")\n' +
-		       '                          (unpackValue "alt")\n' +
-		       '                          (unpackValue "effect")\n' +
-		       '                          (unpack "dna-vaf")\n' +
-		       '                          (unpack "rna-vaf")\n' +
-		       '                          (unpackValue "amino-acid")]\n' +
-		       '                 :from [:field_gene]\n' +
-		       '                 :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ']] :T]} [:= :T.name :field_gene.gene]\n' +
-		       '                        :field_position [:= :field_position.row :field_gene.row]]\n' +
-		       '                 :where [:and\n' +
-		       '                         [:= :field_gene.field_id genes]\n' +
-		       '                         [:= :field_position.field_id position]\n' +
-		       '                         [:in #sql/call ["unpackValue" sampleID :field_gene.row] ' + arrayfmt(samples) + ']]})})';
+		return `{:samples ((xena-query {:select ["sampleID"] :from [${quote(dataset)}]}) "sampleID")\n` +
+		       ` :rows (xena-query {:select ["ref" "alt" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n` +
+		       `                    :from [${quote(dataset)}]\n` +
+		       `                    :where [:and [:in "genes" ${arrayfmt(genes)}] [:in "sampleID" ${arrayfmt(samples)}]]})}`;
 	}
 
 	function sparse_data_example_string(dataset, count) {
-		return '(let [getfield (fn [field]\n' +
-		       '                 (:id (car (query {:select [:field.id]\n' +
-		       '                                   :from [:dataset]\n' +
-		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
-		       '                                   :where [:and [:= :field.name field] [:= :dataset.name ' + quote(dataset) + ']]}))))\n' +
-		       '      unpack (fn [field] [#sql/call [:unpack (getfield field) :field_gene.row] field])\n' +
-		       '      unpackValue (fn [field] [#sql/call [:unpackValue (getfield field) :field_gene.row] field])\n' +
-		       '      genes (getfield "genes")\n' +
-		       '      sampleID (getfield "sampleID")\n' +
-		       '      position (getfield "position")]\n' +
-		       '  {:rows (query {:select [:chrom :chromStart :chromEnd :gene [#sql/call ["unpackValue" sampleID :field_gene.row] :sampleID]' +
-		       '                          (unpackValue "ref")\n' +
-		       '                          (unpackValue "alt")\n' +
-		       '                          (unpackValue "effect")\n' +
-		       '                          (unpack "dna-vaf")\n' +
-		       '                          (unpack "rna-vaf")\n' +
-		       '                          (unpackValue "amino-acid")]\n' +
-		       '                 :from [:field_gene]\n' +
-		       '                 :join [:field_position [:= :field_position.row :field_gene.row]]\n' +
-		       '                 :limit ' + count + '\n' +
-		       '                 :where [:and\n' +
-		       '                         [:= :field_gene.field_id genes]\n' +
-		       '                         [:= :field_position.field_id position]]})})';
+		return `{:rows (xena-query {:select ["ref" "alt" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n` +
+		       `                    :from [${quote(dataset)}]\n` +
+		       `                    :limit ${count}})}`;
 	}
 
 	function dataset_string(dataset) {
@@ -380,54 +299,22 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '   :group-by [:P.id]})';
 	}
 
+// XXX "position", "position (2)" is really horrible, here. Need better naming for position fields.
+// Might want to allow renaming fields, with [:old-name :new-name]
+// Also, cds doesn't really need to be indexed.
+// XXX Should we write a compact collection type, where columns are in typed arrays? Maybe with codes? Or run-length encoding?
 	function refGene_exon_string(genes) {
-		return '(let [getfield (fn [field]\n' +
-		       '                 (:id (car (query {:select [:field.id]\n' +
-		       '                                   :from [:dataset]\n' +
-		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
-		       '                                   :where [:and [:= :field.name field] [:= :dataset.name "common/GB/refgene_good"]]}))))\n' +
-		       '      unpack (fn [field] [#sql/call [:unpack (getfield field) :field_gene.row] field])\n' +
-		       '      unpackValue (fn [field] [#sql/call [:unpackValue (getfield field) :field_gene.row] field])\n' +
-		       '      tx (getfield "position")\n' +
-		       '      cds (getfield "position (2)")\n' +
-		       '      name2 (getfield "name2")]\n' +
-		       '  (query {:select [[:gene :name2]\n' +
-		       '                   [:tx.strand :strand]\n' +
-		       '                   [:tx.chromStart :txStart]\n' +
-		       '                   [:cds.chromStart :cdsStart]\n' +
-		       '                   (unpack "exonCount")\n' +
-		       '                   (unpackValue "exonStarts")\n' +
-		       '                   (unpackValue "exonEnds")\n' +
-		       '                   [:cds.chromEnd :cdsEnd]\n' +
-		       '                   [:tx.chromEnd :txEnd]]\n' +
-		       '          :from [:field_gene]\n' +
-		       '          :join [{:table [[[:name :varchar ' + arrayfmt(genes) + ' ]] :T]} [:= :T.name :field_gene.gene]\n' +
-		       '                 [:field_position :tx] [:= :tx.row :field_gene.row]\n' +
-		       '                 [:field_position :cds] [:= :cds.row :field_gene.row]]\n' +
-		       '          :where [:and [:= :field_gene.field_id name2]\n' +
-		       '                       [:= :tx.field_id tx]\n' +
-		       '                       [:= :cds.field_id cds]]}))';
+		return `(xena-query {:select ["position (2)" "position" "exonCount" "exonStarts" "exonEnds" "name2"]\n` +
+			   `             :from ["common/GB/refgene_good"]\n` +
+			   `             :where [:in "name2" ${arrayfmt(genes)}]})`;
 	}
 
 	function refGene_gene_pos(gene) {
-		return '(let [getfield (fn [field]\n' +
-		       '                 (:id (car (query {:select [:field.id]\n' +
-		       '                                   :from [:dataset]\n' +
-		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
-		       '                                   :where [:and [:= :field.name field] [:= :dataset.name "common/GB/refgene_good"]]}))))\n' +
-		       '      tx (getfield "position")\n' +
-		       '      name2 (getfield "name2")]\n' +
-		       '  (query {:select [[:gene :name2]\n' +
-		       '                   [:tx.strand :strand]\n' +
-		       '                   [:tx.chrom :chrom]\n' +
-		       '                   [:tx.chromStart :txStart]\n' +
-		       '                   [:tx.chromEnd :txEnd]]\n' +
-		       '          :from [:field_gene]\n' +
-		       '          :join [[:field_position :tx] [:= :tx.row :field_gene.row]]\n' +
-		       '          :where [:and [:= :field_gene.field_id name2]\n' +
-		       '                       [:= :field_gene.gene ' + quote(gene) + ']\n' +
-		       '                       [:= :tx.field_id tx]]}))';
+		return `(xena-query {:select ["position" "name2"]\n` +
+			   `             :from ["common/GB/refgene_good"]\n` +
+			   `             :where [:in "name2" ${arrayfmt([gene])}]})`;
 	}
+
 	// QUERY PREP
 
 	// XXX Should consider making sources indexed so we can do simple
@@ -585,7 +472,6 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		dataset_probe_string: dataset_probe_string,
 		sparse_data_string: sparse_data_string,
 		refGene_exon_string: refGene_exon_string,
-		field_bounds_string: field_bounds_string,
 
 		// query prep:
 		dataset_list: dataset_list,

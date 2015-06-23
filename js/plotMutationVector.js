@@ -76,27 +76,35 @@ define(['underscore_ext',
 	function mutation_attrs(list) {
 		return _.map(list, function (row) {
 			return {
-				"sample": row.sampleid,
-				"chr": row.chrom,
-				"start": row.chromstart,
-				"end": row.chromend,
-				"gene": row.gene,
+				"sample": row.sampleID,
+				"chr": row.position.chrom,
+				"start": row.position.chromstart,
+				"end": row.position.chromend,
+				"gene": row.genes,
 				"reference": row.ref,
 				"alt": row.alt,
 				"effect": row.effect,
-				"amino_acid": row.amino_acid,
-				"rna_vaf": xenaQuery.nanstr(row.rna_vaf),
-				"dna_vaf": xenaQuery.nanstr(row.dna_vaf)
+				"amino_acid": row['amino-acid'],
+				"rna_vaf": xenaQuery.nanstr(row['rna-vaf']),
+				"dna_vaf": xenaQuery.nanstr(row['dna-vaf'])
 			};
 		});
+	}
+
+
+	function collateRows(rows) {
+		var keys = _.keys(rows);
+		return _.map(_.range(rows[keys[0]].length), i => _.object(keys, _.map(keys, k => rows[k][i])));
 	}
 
 	// Build index of genes -> samples -> matching rows.
 	// If the sample appears in the dataset but has no matching rows, matching rows should be set to [].
 	// If the sample does not appear in the dataset, matching rows should be undefined.
 	// Requested samples that appear in the dataset are in resp.sample.
+	//
+	// {:sampleid ["id0", "id1", ...], chromstart: [123, 345...], ...}
 	function index_mutations(gene, samples, resp) {
-		var rows_by_sample = _.groupBy(mutation_attrs(resp.rows), 'sample'),
+		var rows_by_sample = _.groupBy(mutation_attrs(collateRows(resp.rows)), 'sample'),
 			no_rows = _.difference(resp.samples, _.keys(rows_by_sample)),
 			vals = _.extend(rows_by_sample, _.object_fn(no_rows, _.constant([]))), // merge in empty arrays for samples w/o matching rows.
 			obj = {};
@@ -112,19 +120,19 @@ define(['underscore_ext',
 	function refGene_attrs(row) {
 		return {
 			name2: row.name2,
-			strand: row.strand,
-			txStart: row.txstart,
-			txEnd: row.txend,
-			cdsStart: row.cdsstart,
-			cdsEnd: row.cdsend,
-			exonCount: row.exoncount,
-			exonStarts: splitExon(row.exonstarts),
-			exonEnds: splitExon(row.exonends)
+			strand: row.position.strand,
+			txStart: row.position.chromstart,
+			txEnd: row.position.chromend,
+			cdsStart: row['position (2)'].chromstart,
+			cdsEnd: row['position (2)'].chromend,
+			exonCount: row.exonCount,
+			exonStarts: splitExon(row.exonStarts),
+			exonEnds: splitExon(row.exonEnds)
 		};
 	}
 
 	function index_refGene(resp) {
-		return _.object(_.pluck(resp, 'name2'), _.map(resp, refGene_attrs));
+		return _.object(resp.name2, _.map(collateRows(resp), refGene_attrs));
 	}
 
 	cmp = ifChanged(
@@ -141,13 +149,13 @@ define(['underscore_ext',
 	var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
 	function ga4ghAnnotations({url, dsID}, [probe], id) {
 		return xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_gene_pos(probe)), function (r) {
-			return Rx.DOM.ajax(r).map(xenaQuery.json_resp).selectMany(([gene]) =>
+			return Rx.DOM.ajax(r).map(r => collateRows(xenaQuery.json_resp(r))).selectMany(([gene]) =>
 				gene ? ga4ghQuery.variants({
 					url: url,
-				 	dataset: dsID,
-				 	start: gene.txstart,
-				 	end: gene.txend,
-				 	chrom: gene.chrom
+					dataset: dsID,
+					start: gene.position.chromstart,
+					end: gene.position.chromend,
+					chrom: gene.position.chrom
 				}) :
 				Rx.Observable.return([]));
 		},id);
