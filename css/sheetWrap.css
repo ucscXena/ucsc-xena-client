@@ -44,6 +44,9 @@
 	margin: 20px;
 	background-color: #d3d3d3;
 }
+.sheetWrap .addColumn:hover {
+	background-color: white;
+}
 .chartSelect  {
  padding: 3px 6px;
  font-size:small;
