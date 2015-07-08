@@ -260,11 +260,14 @@ define(['haml/sheetWrap.haml',
 			this.subs.add(
 				state.refine(['cohort'])
 					.subscribe(function (state) {
-						//columnEdit.destroyAll();
 						if (state.cohort) {
 							self.$yAxisLabel.show();
 							self.$addColumn.show();
 							self.$samplesFromAnchor.show();
+						} else {
+							self.$yAxisLabel.hide();
+							self.$addColumn.hide();
+							self.$samplesFromAnchor.hide();
 						}
 					})
 			);
