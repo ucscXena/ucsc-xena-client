@@ -38,7 +38,7 @@ define(['haml/columnMenu.haml', 'columnEdit', 'download', 'kmPlot', 'mutationVec
 					dsID = JSON.parse(column.dsID),
 					host= dsID.host,
 					dataset = dsID.name,
-					url ="/datapages/?dataset="+encodeURIComponent(dataset)+"&host="+encodeURIComponent(host);
+					url ="../datapages/?dataset="+encodeURIComponent(dataset)+"&host="+encodeURIComponent(host);
 
 				window.open(url);
 			};

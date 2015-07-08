@@ -37,9 +37,12 @@
 }
 .sheetWrap .addColumn {
 	font-size: 2em;
-	line-height: 3;
+	font-weight: bold;
 	cursor: pointer;
 	vertical-align: top;
+	position:relative;
+	margin: 20px;
+	background-color: #d3d3d3;
 }
 .chartSelect  {
  padding: 3px 6px;
