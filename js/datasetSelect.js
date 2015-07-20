@@ -3,7 +3,6 @@
 var React = require('react');
 var Select = require('./Select');
 var _ = require('underscore_ext');
-var Ls = require('lenses/lenses');
 var xenaQuery = require('./xenaQuery');
 
 // group header for a server
@@ -18,15 +17,13 @@ function optsFromDatasets(servers) {
 
 var DatasetSelect = React.createClass({
 	render: function () {
-		var {datasets, lens, nullOpt, ...other} = this.props,
+		var {datasets, nullOpt, ...other} = this.props,
 			options = (nullOpt ? [{value: null, label: nullOpt}] : [])
-				.concat(optsFromDatasets(_.getIn(datasets, ['servers']))),
-			selectLens = _.compose(lens, Ls.key('dataset'));
+				.concat(optsFromDatasets(_.getIn(datasets, ['servers'])));
 
 		return (
 			<Select
 				{...other}
-				lens={selectLens}
 				options={options}
 			/>
 		);

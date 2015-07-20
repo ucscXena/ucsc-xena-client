@@ -79,6 +79,15 @@ define([], function() {
 		return assocInI(x, keys, v, 0);
 	}
 
+	function assocInAll(x) {
+		var kvs;
+
+		for (kvs = slice.call(arguments, 1); kvs.length; kvs = kvs.slice(2)) {
+			x = assocIn(x, kvs[0], kvs[1]);
+		}
+		return x;
+	}
+
 	function conj(x, v) {
 		if (x instanceof Array) {
 			return assoc(x, x.length, v);
@@ -122,6 +131,7 @@ define([], function() {
 	return {
 		assoc: assoc,
 		assocIn: assocIn,
+		assocInAll: assocInAll,
 		dissoc: dissoc,
 		updateIn: updateIn,
 		conj: conj,

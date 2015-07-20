@@ -44,12 +44,10 @@ var _ = require('./underscore_ext');
 var floatImg = require('../images/genomicFloatLegend.jpg');
 var customFloatImg = require('../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
-var L = require('./lenses/lens');
-var Ls = require('./lenses/lenses');
 var Modal = require('react-bootstrap/lib/Modal');
 
-function vizSettingsWidget(node, lens, dsID, hide) {
-	var state = L.view(lens);
+function vizSettingsWidget(node, callback, vizState, dsID, hide) {
+	var state = _.getIn(vizState, [dsID]);
 	function datasetSetting(dataset) {
 		var host_name = xenaQuery.parse_host(dataset.dsID),
 			host = host_name[0],
@@ -106,7 +104,7 @@ function vizSettingsWidget(node, lens, dsID, hide) {
 		button.appendChild(document.createTextNode("Cancel"));
 		button.addEventListener("click", function () {
 			hide();
-			L.over(lens, () => oldSettings);
+			callback(['vizSettings', dsID, state]);
 		});
 		return button;
 	}
@@ -170,7 +168,6 @@ function vizSettingsWidget(node, lens, dsID, hide) {
 		});
 	}
 
-	var updateSettings = settings => s => _.merge(s, settings);
 
 	function colorScaleChoices() {
 		function disableTextInputs(trueORfalse) {
@@ -230,9 +227,7 @@ function vizSettingsWidget(node, lens, dsID, hide) {
 		}
 
 		function removeAllVizSettings() {
-			colorParams.forEach(function (param) {
-				removeVizSettings(param);
-			});
+			callback(['vizSettings', dsID, _.omit(state, colorParams)]);
 		}
 
 		var node = document.createElement("div"),
@@ -337,7 +332,7 @@ function vizSettingsWidget(node, lens, dsID, hide) {
 		displayErrors(err);
 
 		if (settingsValid(err)) {
-			L.over(lens, updateSettings(getInputSettingsFloat()));
+			callback(['vizSettings', dsID, _.merge(state, getInputSettingsFloat())]);
 		}
 	}
 
@@ -376,12 +371,8 @@ function vizSettingsWidget(node, lens, dsID, hide) {
 		return node;
 	}
 
-	function removeVizSettings(key) {
-		L.over(lens, s => _.dissoc(s, key));
-	}
-
 	function setVizSettings(key, value) {
-		L.over(lens, s => _.assoc(s, key, value));
+		callback(['vizSettings', dsID, _.assoc(state, key, value)]);
 	}
 
 	function getVizSettings(key) {
@@ -465,11 +456,12 @@ function vizSettingsWidget(node, lens, dsID, hide) {
 	});
 }
 
+// react wrapper for the legacy DOM code, above.
 var SettingsWrapper = React.createClass({
 	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
-		var {refs: {content}, props: {lens, dsID, onRequestHide}} = this;
-		vizSettingsWidget(content.getDOMNode(), lens, dsID, onRequestHide);
+		var {refs: {content}, props: {callback, state, dsID, onRequestHide}} = this;
+		vizSettingsWidget(content.getDOMNode(), callback, state, dsID, onRequestHide);
 	},
 	render: function () {
 		return <div ref='content' />;
@@ -478,11 +470,10 @@ var SettingsWrapper = React.createClass({
 
 var VizSettings = React.createClass({
 	render: function() {
-		var {onRequestHide, lens, dsID} = this.props;
-		var vizLens = L.compose(lens, Ls.path(['vizSettings', dsID]));
+		var {onRequestHide} = this.props;
 		return (
 			<Modal onRequestHide={onRequestHide} title='Datset Visualization Settings'>
-				<SettingsWrapper {...this.props} lens={vizLens} />
+				<SettingsWrapper {...this.props} />
 			</Modal>
 		);
 	}

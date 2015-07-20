@@ -21,17 +21,11 @@ function download([fields, rows]) {
 }
 
 var Column = React.createClass({
-	onResizeStop: function (ev, {size: {width, height}}) {
-		L.over(this.props.lens,
-			   s => _.assocIn(_.assocIn(s, ['zoom', 'height'], height),
-							  ['columnRendering', this.props.id, 'width'], width));
+	onResizeStop: function (ev, {size}) {
+		this.props.callback(['resize', this.props.id, size]);
 	},
 	onRemove: function () {
-		L.over(this.props.lens,
-			s => _.merge(s, {
-				columnRendering: _.omit(s.columnRendering, this.props.id),
-				columnOrder: _.without(s.columnOrder, this.props.id)
-			}));
+		this.props.callback(['remove', this.props.id]);
 	},
 	onDownload: function () {
 		download(this.props.download());

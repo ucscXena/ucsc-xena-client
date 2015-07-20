@@ -106,7 +106,27 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		};
 	}
 
+	function meannan(values) {
+		var count = 0, sum = 0;
+		if (!values) {
+			return NaN;
+		}
+		sum = _.reduce(values, function (sum, v) {
+			if (!isNaN(v)) {
+				count += 1;
+				return sum + v;
+			}
+			return sum;
+		}, 0);
+		if (count > 0) {
+			return sum / count;
+		}
+		return NaN;
+	}
+
+
 	_.mixin({
+		meannan: meannan,
 		memoize1: memoize1,
 		fmap: fmap,
 		apply: apply,

@@ -15,9 +15,17 @@ var MenuItem = require('react-bootstrap/lib/MenuItem');
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var React = require('react');
 var rxEventsMixin = require('./react-utils').rxEventsMixin;
-var L = require('./lenses/lens');
 
 require('rx-jquery');
+
+// XXX might want to automatically wrap all of these in xenaQuery.
+var datasetMetadata = xenaQuery.dsID_fn(xenaQuery.dataset_metadata);
+var datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
+var datasetGenesValues = xenaQuery.dsID_fn(xenaQuery.dataset_genes_values);
+var datasetGeneProbesValues = xenaQuery.dsID_fn(xenaQuery.dataset_gene_probe_values);
+var datasetFeatureDetail = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
+var datasetCodes = xenaQuery.dsID_fn(xenaQuery.code_list);
+var fieldBounds = xenaQuery.dsID_fn(xenaQuery.field_bounds);
 
 function hasClass(el, c) {
 	return el.className.split(/ +/).indexOf(c) !== -1;
@@ -33,24 +41,6 @@ var each = _.each,
 	find = _.find,
 	uniq = _.uniq,
 	scratch = vgcanvas(document.createElement('canvas'), 1, 1); // scratch buffer
-
-function meannan(values) {
-	var count = 0, sum = 0;
-	if (!values) {
-		return NaN;
-	}
-	sum = _.reduce(values, function (sum, v) {
-		if (!isNaN(v)) {
-			count += 1;
-			return sum + v;
-		}
-		return sum;
-	}, 0);
-	if (count > 0) {
-		return sum / count;
-	}
-	return NaN;
-}
 
 function secondNotUndefined(x) {
 	return !isUndefined(x[1]);
@@ -173,14 +163,9 @@ function cmpSamples(probes, data, s1, s2) {
 	}
 }
 
-var cmp = () => {
-	var cmpm = _.memoize1((colFields, data, probes) => {
-		var fields = probes || colFields;
-		return (s1, s2) => cmpSamples(fields, data, s1, s2);
-	});
-
-	return ({fields}, {req: {values, probes}}) => cmpm(fields, values, probes);
-};
+// XXX fix up mutation cmp, perhaps after merging from main
+var cmp = ({fields}, {req: {values, probes}}) =>
+	(s1, s2) => cmpSamples(probes || fields, values, s1, s2);
 
 //
 // data fetches
@@ -193,13 +178,9 @@ function indexResponse(probes, samples, data) {
 	var values = _.object(probes, _.map(probes, function (v, i) {
 			return _.object(samples, _.map(data[i], xenaQuery.nanstr));
 		})),
-		mean = function () {
-			return _.object(probes, _.map(data, function (v) {
-				return meannan(v);
-			}));
-		};
+		mean = _.object(probes, _.map(data, _.meannan));
 
-	return {values: values, mean: _.memoize(mean)};
+	return {values: values, mean: mean};
 }
 
 // XXX A better approach might be to update the other index* functions
@@ -231,82 +212,34 @@ function indexGeneResponse(genes, samples, data) {
 	return indexResponse(genes, samples, orderByQuery(genes, data));
 }
 
-function indexFeatures(xhr) {
-	var features = JSON.parse(xhr.response);
-	return _.reduce(features, function (acc, row) {
-		acc[row.name] = row;
-		return acc;
-	}, {});
-}
-
-function indexCodes(xhr) {
-	var codes = JSON.parse(xhr.response);
-	return _.object(_.map(codes, function (row) {
-		return [row.name, row.code && row.code.split('\t')];
-	}));
-}
-
-function indexBounds(bounds) {
-	return _.object(_.map(bounds, function (row) {
-		return [row.field, row];
-	}));
-}
-
 // fetch routines return a memoized query.
 
-var fetch = () => {
-	var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, probes, samples) => ({
-		req: xenaQuery.reqObj(
-			 xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)),
-			 r => Rx.DOM.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp))),
-		metadata: xenaQuery.reqObj(
-			xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)),
-			r => Rx.DOM.ajax(r).select(xenaQuery.json_resp))
-	})));
-	return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
-};
+var fetch = ({dsID, fields}, samples) => Rx.Observable.zipArray(
+		datasetProbeValues(dsID, samples, fields)
+			.map(resp => indexResponse(fields, samples, resp)),
+		datasetMetadata(dsID)
+	).map(resp => _.object(['req', 'metadata'], resp));
 
-var fetchGeneProbes = () => {
-	var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, probes, samples) => ({
-		req: xenaQuery.reqObj(
-			 xenaQuery.xena_post(host, xenaQuery.dataset_gene_probes_string(ds, samples, probes)),
-			 r => Rx.DOM.ajax(r).select(_.compose(_.partial(indexProbeGeneResponse, samples), xenaQuery.json_resp))),
-		metadata: xenaQuery.reqObj(
-			xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)),
-			r => Rx.DOM.ajax(r).select(xenaQuery.json_resp))
-	})));
-	return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
-};
+var fetchGeneProbes = ({dsID, fields}, samples) => Rx.Observable.zipArray(
+		datasetGeneProbesValues(dsID, samples, fields)
+			.map(resp => indexProbeGeneResponse(samples, resp)),
+		datasetMetadata(dsID)
+	).map(resp => _.object(['req', 'metadata'], resp));
 
-var fetchFeature = () => {
-	var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, probes, samples) => ({
-		req: xenaQuery.reqObj(
-			 xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)),
-			 r => Rx.DOM.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp))),
-		features: xenaQuery.reqObj(
-			xenaQuery.xena_post(host, xenaQuery.features_string(ds, probes)),
-			r => Rx.DOM.ajax(r).select(indexFeatures)),
-		codes: xenaQuery.reqObj(
-			xenaQuery.xena_post(host, xenaQuery.codes_string(ds, probes)),
-			r => Rx.DOM.ajax(r).select(indexCodes)),
-		bounds: xenaQuery.reqObj(
-			xenaQuery.xena_post(host, xenaQuery.field_bounds_string(ds, probes)),
-			r => Rx.DOM.ajax(r).select(_.compose(indexBounds, xenaQuery.json_resp)))
-	})));
-	return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
-};
+var fetchFeature = ({dsID, fields}, samples) => Rx.Observable.zipArray(
+		datasetProbeValues(dsID, samples, fields)
+			.map(resp => indexResponse(fields, samples, resp)),
+		datasetFeatureDetail(dsID, fields),
+		datasetCodes(dsID, fields),
+		fieldBounds(dsID, fields)
+	).map(resp => _.object(['req', 'features', 'codes', 'bounds'], resp));
 
-var fetchGene = () => {
-	var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, fields, samples) => ({
-		req: xenaQuery.reqObj(
-			 xenaQuery.xena_post(host, xenaQuery.dataset_gene_string(ds, samples, fields)),
-			 r => Rx.DOM.ajax(r).select(_.compose(_.partial(indexGeneResponse, fields, samples), xenaQuery.json_resp))),
-		metadata: xenaQuery.reqObj(
-			 xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)),
-			 r => Rx.DOM.ajax(r).select(xenaQuery.json_resp))
-	})));
-	return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
-};
+
+var fetchGene = ({dsID, fields}, samples) => Rx.Observable.zipArray(
+		datasetGenesValues(dsID, samples, fields)
+			.map(resp => indexGeneResponse(fields, samples, resp)),
+		datasetMetadata(dsID)
+	).map(resp => _.object(['req', 'metadata'], resp));
 
 //
 // Tooltip
@@ -365,7 +298,7 @@ function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
 	return {sampleID: sampleID,
 		rows: [{label: label, val: val}].concat(
 		(val !== 'NA' && !code) ?
-			{label: 'Column mean', val: prec(meannan(heatmap[fieldIndex]))} : [])};
+			{label: 'Column mean', val: prec(_.meannan(heatmap[fieldIndex]))} : [])};
 }
 
 //
@@ -561,10 +494,6 @@ function modeMenu({dataType}, cb) {
 		<MenuItem eventKey="geneMatrix" onSelect={cb}>Probe average</MenuItem>;
 }
 
-function setDataType(id, dataType, state) {
-	return _.assocIn(state, ['columnRendering', id, 'dataType'], dataType);
-}
-
 var HeatmapColumn = React.createClass({
 	mixins: [rxEventsMixin, PureRenderMixin],
 	componentWillMount: function () {
@@ -582,19 +511,21 @@ var HeatmapColumn = React.createClass({
 		this.ttevents.dispose();
 	},
 	onMode: function (newMode) {
-		L.over(this.props.lens, s => setDataType(this.props.id, newMode, s));
+		this.props.callback(['dataType', this.props.id, newMode]);
 	},
 	render: function () {
 		var {samples, data, column, vizSettings = {}, zoom} = this.props,
 			dsVizSettings = vizSettings[column.dsID],
 			{features, codes, metadata} = data,
-			mean = _.getIn(data, ["req", "mean"]), // a memo for computing the mean of the data
+			mean = _.getIn(data, ["req", "mean"]),
 			norm = {'none': false, 'subset': true},
 
 			colnormalization = definedOrDefault(norm[_.getIn(dsVizSettings, ['colNormalization'])],
 												_.getIn(metadata, ['colnormalization'])),
 			fields = data.req.probes || column.fields, // prefer field list from server
-			transform = (colnormalization && mean && _.partial(subbykey, mean())) || second,
+			// XXX should we be pre-computing this,
+			// instead of running subbykey each time??
+			transform = (colnormalization && mean && _.partial(subbykey, mean)) || second,
 			heatmapData = dataToHeatmap(samples, data.req.values, fields, transform),
 			colors = map(fields, (p, i) => heatmapColors.range(
 					metadata,
@@ -615,7 +546,7 @@ var HeatmapColumn = React.createClass({
 		this.tooltip = _.partial(tooltip, heatmapData, fields, column, codes, zoom, samples);
 		return (
 			<Column
-				lens={this.props.lens}
+				callback={this.props.callback}
 				id={this.props.id}
 				onViz={this.props.onViz}
 				download={download}

@@ -5,7 +5,6 @@ var React = require('react');
 var DropdownButton = require('react-bootstrap/lib/DropdownButton');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var _ = require('underscore_ext');
-var L = require('lenses/lens');
 require('./Select.css');
 
 function filterOpts(filter, opts) {
@@ -19,9 +18,14 @@ var Select = React.createClass({
 	getInitialState: function () {
 		return {filter: ''};
 	},
+	getDefaultProps: function () {
+		return {
+			event: 'change'
+		};
+	},
 	onSelect: function (value) {
         this.setState({filter: ''});
-		L.set(this.props.lens, null, value);
+		this.props.callback([this.props.event, value]);
 	},
 	onChange: function(ev) {
 		this.setState({filter: ev.target.value});
@@ -42,7 +46,7 @@ var Select = React.createClass({
 		}
 	},
 	render: function () {
-		var value = L.view(this.props.lens),
+		var {value} = this.props,
 			title = notUndefined(value) &&
 				_.find(this.props.options, opt => opt.value === value),
 			opts = filterOpts(this.state.filter, this.props.options);

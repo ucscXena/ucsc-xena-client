@@ -3,46 +3,35 @@
 'use strict';
 
 var React = require('react');
-var L = require('./lenses/lens');
-var Ls = require('./lenses/lenses');
 var CohortSelect = require('./cohortSelect');
 var DatasetSelect = require('./datasetSelect');
-var _ = require('./underscore_ext');
+//var _ = require('./underscore_ext');
 var Button = require('react-bootstrap/lib/Button');
 
-// Lens to reset samplesFrom if cohort changes.
-var resetSamplesFrom = L.lens(
-		x => x,
-		(x, v) => (x.cohort === v.cohort) ? v :
-			_.assoc(v, 'samplesFrom', null));
-
-var rename = L.lens(
-		({samplesFrom, ...others}) => _.assoc(others, 'dataset', samplesFrom),
-		(x, {dataset, ...others}) => _.assoc(others, 'samplesFrom', dataset));
-
+// XXX drop this.props.style? Not sure it's used.
 var AppControls = React.createClass({
 	render: function () {
-		var cohortLens = _.compose(
-				this.props.lens, resetSamplesFrom, Ls.keys(['cohort', 'servers'])),
-			datasetLens = _.compose(
-				this.props.lens, Ls.keys(['samplesFrom', 'servers']), rename),
-			hasCohort = !!L.view(this.props.lens).cohort;
+		var {callback, appState: {cohort, cohorts, samplesFrom, datasets}} = this.props;
+		var hasCohort = !!cohort;
 
 		return (
 			<form className='form-inline'>
-				<CohortSelect lens={cohortLens} />
+				<CohortSelect callback={callback} cohort={cohort} cohorts={cohorts} />
 				{' '}
 				{hasCohort ?
 					<div className='form-group' style={this.props.style}>
 						<label className='samplesFromLabel'> Samples in </label>
 						{' '}
 						<DatasetSelect
+							event='samplesFrom'
+							callback={callback}
 							nullOpt="All Datasets"
-							style={{display: L.view(this.props.lens).cohort ?
+							style={{display: hasCohort ?
 									'inline' : 'none'}}
 							className='samplesFromAnchor'
-							datasets={this.props.datasets}
-							lens={datasetLens} />
+							datasets={datasets}
+							cohort={cohort}
+							value={samplesFrom} />
 					</div> :
 				null}
 				{' | '}

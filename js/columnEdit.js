@@ -7,36 +7,16 @@ var Button = require('react-bootstrap/lib/Button');
 var Modal = require('react-bootstrap/lib/Modal');
 var Select = require('./Select');
 var DatasetSelect = require('./datasetSelect');
-var xenaQuery = require('./xenaQuery');
-var L = require('./lenses/lens');
 var _ = require('./underscore_ext');
-var propsStream = require('./react-utils').propsStream;
 var trim = require('underscore.string').trim;
 var uuid = require('uuid');
-var util = require('./util');
 require('./ColumnEdit.css');
 
-function sortFeatures(features) {
-	return _.map(features, (label, name) => ({value: name, label: label}))
-		.sort((a, b) => util.caseInsensitiveSort(a.label, b.label));
-}
-
-function fetchFeatures(stream) {
-	return stream.distinctUntilChanged()
-		.map(props => xenaQuery.dsID_fn(xenaQuery.feature_list)(props.dataset))
-		.switchLatest()
-		.map(sortFeatures);
-}
-
 // Select a phenotype feature from those on the server.
-var PhenotypeEdit = React.createClass(propsStream({
-	componentWillMount: function () {
-		fetchFeatures(this.propsStream).subscribe(
-			features => this.setState({features: features}));
-	},
+var PhenotypeEdit = React.createClass({
 	apply: function () {
 		var {feature} = this.state,
-			fieldTxt = _.find(this.state.features, f => f.value === feature).label;
+			fieldTxt = _.find(this.props.features, f => f.value === feature).label;
 		this.props.update({
 			fields: [feature],
 			dataType: 'clinicalMatrix',
@@ -45,13 +25,15 @@ var PhenotypeEdit = React.createClass(propsStream({
 	},
 	// XXX change col-md-offset-10, etc. to react-boostrap style
 	render: function () {
-		var {features, feature} = this.state || {};
-		var selectLens = L.lens(() => feature, (x, v) => this.setState({feature: v}));
+		var {feature} = this.state || {};
+		var {features} = this.props;
 		return (
 			<div>
 				<div className='form-group'>
 					<label className='col-md-2 control-label'>View:</label>
-					<Select lens={selectLens} options={features} />
+					<Select value={feature}
+						callback={([, f]) => this.setState({feature: _.spy('select', f)})}
+						options={features} />
 				</div>
 				<div className='form-group'>
 					<Button disabled={!feature} onClick={this.apply} className='col-md-offset-10'>Apply</Button>
@@ -59,7 +41,7 @@ var PhenotypeEdit = React.createClass(propsStream({
 			</div>
 		);
 	}
-}));
+});
 
 // Select a gene.
 var GeneEdit = React.createClass({
@@ -95,13 +77,6 @@ var GeneEdit = React.createClass({
 	}
 });
 
-function fetchExamples(stream) {
-	return stream.distinctUntilChanged()
-		.map(props => xenaQuery.dsID_fn(xenaQuery.dataset_field_examples)(props.dataset))
-		.switchLatest()
-		.map(list => _.pluck(list, 'name'));
-}
-
 function toGeneList(str) {
 	// Have to wrap trim because it takes a 2nd param.
 	return _.filter(_.map(str.split(/,/), s => trim(s), _.identity));
@@ -109,12 +84,7 @@ function toGeneList(str) {
 
 // Select a list of genes, or list of identifiers. genes/identifier mode
 // is selectable if the dataset supports gene views.
-var GeneProbeEdit = React.createClass(propsStream({
-	componentWillMount: function () {
-		fetchExamples(this.propsStream).subscribe(
-			examples => this.setState({examples: examples}));
-	},
-
+var GeneProbeEdit = React.createClass({
 	getInitialState () {
 		// Default to genes, unless we have no genes display.
 		return {
@@ -147,7 +117,8 @@ var GeneProbeEdit = React.createClass(propsStream({
 	//     genes: boolean Whether the dataset has a gene mapping.
 	//
 	render: function () {
-		var {genes, list, examples} = this.state || {};
+		var {genes, list} = this.state || {};
+		var {examples} = this.props;
 		var help = genes ? 'e.g. TP53 or TP53, PTEN' :
 			// babel-eslint/issues/31
 			examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : ''; //eslint-disable-line comma-spacing
@@ -183,47 +154,44 @@ var GeneProbeEdit = React.createClass(propsStream({
 			</div>
 	   );
 	}
-}));
+});
 
-function pickEditor(meta, lens, update) {
+function pickEditor(meta, update, columnEdit) {
 	if (meta.type === 'clinicalMatrix') {
-		return <PhenotypeEdit lens={lens} update={update}/>;
+		return <PhenotypeEdit update={update} features={_.getIn(columnEdit, ['features'])}/>;
 	}
 
 	if (meta.type === 'mutationVector') {
 		return <GeneEdit update={update}/>;
 	}
 
-	return <GeneProbeEdit genes={!!meta.probeMap} lens={lens} update={update}/>;
-}
-
-function addColumn (settings, label, state) {
-	var {columnRendering, columnOrder} = state;
-	var id = 'c-' + uuid();
-
-	settings = _.assoc(settings, "width", 200); // add default
-
-	return _.assoc(state,
-				  'columnRendering', _.assoc(columnRendering, id, settings),
-				  'columnOrder', _.conj(columnOrder, id)); // change this if editing in-place
+	return <GeneProbeEdit genes={!!meta.probeMap} update={update} examples={_.getIn(columnEdit, ['examples'])}/>;
 }
 
 var ColumnEdit = React.createClass({
 	getInitialState: () => ({}),
 	addColumn: function (settings) {
-		var label = this.props.datasets.datasets[this.state.dataset].label;
-		settings = _.assoc(settings,
-			'columnLabel', {user: label, 'default': label},
-			'dsID', this.state.dataset);
+		let {callback, appState: {datasets: {datasets}}} = this.props,
+			label = datasets[this.state.dataset].label;
+			settings = _.assoc(settings,
+				'width', 200, // XXX move this default setting?
+				'columnLabel', {user: label, 'default': label},
+				'dsID', this.state.dataset);
 		this.props.onRequestHide();
-		L.over(this.props.lens, s => addColumn(settings, label, s));
+		callback(['add-column', uuid(), settings]);
+	},
+	selectDataset: function ([, dsID]) {
+		var {callback, appState: {datasets}} = this.props,
+			meta = _.getIn(datasets, ['datasets', dsID]);
+
+		this.setState({dataset: dsID});
+		callback(['edit-dataset', dsID, meta]);
 	},
 	render: function () {
 		var {dataset} = this.state,
-			{datasets} = this.props,
+			{appState: {datasets, columnEdit}} = this.props,
 			meta = dataset && _.getIn(datasets, ['datasets', dataset]);
-		var selectLens = L.lens(() => ({dataset: dataset}), (x, v) => this.setState(v));
-		var editor = meta ? pickEditor(meta, selectLens, this.addColumn) : '';
+		var editor = meta ? pickEditor(meta, this.addColumn, columnEdit) : '';
 
 		return (
 			<Modal {...this.props} className='columnEdit container' title="Column Fields">
@@ -231,7 +199,11 @@ var ColumnEdit = React.createClass({
 					<div className='form-group'>
 						<label className='col-md-2 control-label'>Dataset</label>
 						<div className='col-md-10'>
-							<DatasetSelect lens={selectLens} datasets={this.props.datasets} />
+							<DatasetSelect
+								value={dataset}
+								event='edit-dataset'
+								callback={this.selectDataset}
+								datasets={datasets} />
 						</div>
 					</div>
 					{editor}
