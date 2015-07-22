@@ -50,8 +50,16 @@ var rxEventsMixin = {
 	}
 };
 
+var deepPureRenderMixin = {
+	shouldComponentUpdate: function (nextProps, nextState) {
+		return !_.isEqual(nextProps, this.props) ||
+			!_.isEqual(nextState, this.state);
+	}
+};
+
 module.exports = {
 	propsStream: propsStream,
 	statePropsStream: statePropsStream,
-	rxEventsMixin: rxEventsMixin
+	rxEventsMixin: rxEventsMixin,
+	deepPureRenderMixin: deepPureRenderMixin
 };

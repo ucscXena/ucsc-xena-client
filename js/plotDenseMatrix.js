@@ -12,9 +12,8 @@ var xenaQuery = require('xenaQuery');
 var Legend = require('Legend');
 var Column = require('Column');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
-var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var React = require('react');
-var rxEventsMixin = require('./react-utils').rxEventsMixin;
+var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 
 require('rx-jquery');
 
@@ -49,6 +48,8 @@ function secondNotUndefined(x) {
 function second(x, y) {
 	return y;
 }
+
+var colorFns = vs => _.map(vs, ([, ...args]) => heatmapColors.range(...args));
 
 // need a Maybe
 function saveUndefined(fn) {
@@ -356,23 +357,24 @@ function legendFromScale(colorScale) {
 }
 
 function renderGenomicLegend(props) {
-	var {metadata, settings, data, colorScale} = props;
-	var {labels, colors} = legendFromScale(colorScale[0]);
+	var {metadata, data, colorScale, hasViz} = props;
+	var colorfn = colorFns([colorScale[0]])[0];
+	var {labels, colors} = legendFromScale(colorfn);
 
 	if (data.length === 0) { // no features to draw
 		return <span/>;
 	}
 
-	if (colorScale.length > 1 && !_.getIn(settings, ['min'])) {
+	if (colorScale.length > 1 && !hasViz) {
 		colors = heatmapColors.defaultColors(metadata);
 		labels = ["lower", "", "higher"];
-	} else if (colorScale[0]) {
+	} else if (colorfn) {
 		if (labels.length === 4) {                // positive and negative scale
 			labels = _.assoc(labels,
 					0, "<" + labels[0],
 					labels.length - 1, ">" + labels[labels.length - 1]);
 		} else if (labels.length === 3) {
-			if (colorScale[0].domain()[0] >= 0) { // positive scale
+			if (colorfn.domain()[0] >= 0) { // positive scale
 				labels = _.assoc(labels,
 					labels.length - 1, ">" + labels[labels.length - 1]);
 			} else {                              // negative scale
@@ -385,13 +387,14 @@ function renderGenomicLegend(props) {
 }
 
 function floatLegend(colorScale) {
-	var {labels, colors} = legendFromScale(colorScale);
+	var {labels, colors} = legendFromScale(colorFns(colorScale));
 	return {labels: labels, colors: colors, align: 'center'};
 }
 
 function renderPhenotypeLegend(props) {
-	var {data: [data], column: {fields}, codes, colorScale} = props;
+	var {data: [data], fields, codes, colorScale} = props;
 	var legendProps;
+	var colorfn = colorFns([colorScale[0]])[0];
 
 
 	if (data && data.length === 0) { // no features to draw
@@ -403,9 +406,9 @@ function renderPhenotypeLegend(props) {
 	// values in the db (even those not in the plot) so that colors will
 	// match in other datasets.
 	if (data && codes && codes[fields[0]]) { // category
-		legendProps = categoryLegend(data, colorScale[0], codes[fields[0]]);
+		legendProps = categoryLegend(data, colorfn, codes[fields[0]]);
 	} else {
-		legendProps = floatLegend(colorScale[0]);
+		legendProps = floatLegend(colorfn);
 	}
 
 	return <Legend {...legendProps} />;
@@ -416,7 +419,7 @@ function legendMethod(dataType) {
 }
 
 var HeatmapLegend = React.createClass({
-	mixins: [PureRenderMixin],
+	mixins: [deepPureRenderMixin],
 	render: function() {
 		var {dataType} = this.props;
 		return legendMethod(dataType)(this.props);
@@ -432,20 +435,31 @@ function definedOrDefault(v, def) {
 }
 
 var CanvasDrawing = React.createClass({
-	shouldComponentUpdate: () => false, // Disable react on canvas
+	mixins: [deepPureRenderMixin],
 
 	render: function () {
-		return <canvas {...this.props} className='Tooltip-target' ref='canvas' />;
+		if (this.vg) {
+			this.draw(this.props);
+		}
+		return (
+			<canvas
+				className='Tooltip-target'
+				onMouseMove={this.props.onMouseMove}
+				onMouseOut={this.props.onMouseOut}
+				onMouseOver={this.props.onMouseOver}
+				onClick={this.props.onClick}
+				onDblClick={this.props.onDblClick}
+				ref='canvas' />
+		);
 	},
-
 	componentDidMount: function () {
-		var {column: {width}, zoom: {height}} = this.props;
+		var {width, zoom: {height}} = this.props;
 		this.vg = vgcanvas(this.refs.canvas.getDOMNode(), width, height);
 		this.draw(this.props);
 	},
 
 	draw: function (props) {
-		var {zoom: {index, count, height}, column: {width}, heatmapData, colors} = props,
+		var {zoom: {index, count, height}, width, heatmapData, colors} = props,
 			vg = this.vg;
 
 		if (vg.width() !== width) {
@@ -464,7 +478,7 @@ var CanvasDrawing = React.createClass({
 			zoomCount: count,
 			data: heatmapData,
 			layout: partition.offsets(width, 0, heatmapData.length),
-			colors: colors
+			colors: colorFns(colors)
 		});
 	}
 });
@@ -495,7 +509,7 @@ function modeMenu({dataType}, cb) {
 }
 
 var HeatmapColumn = React.createClass({
-	mixins: [rxEventsMixin, PureRenderMixin],
+	mixins: [rxEventsMixin, deepPureRenderMixin],
 	componentWillMount: function () {
 		this.events('mouseout', 'mousemove', 'mouseover');
 
@@ -527,7 +541,11 @@ var HeatmapColumn = React.createClass({
 			// instead of running subbykey each time??
 			transform = (colnormalization && mean && _.partial(subbykey, mean)) || second,
 			heatmapData = dataToHeatmap(samples, data.req.values, fields, transform),
-			colors = map(fields, (p, i) => heatmapColors.range(
+			// We use variants here instead of looking up the color fns so
+			// that when rendering a sub-component a data cmp tells us if
+			// props have changed & we need to re-render. With functions it's
+			// hard to do the cmp.
+			colors = map(fields, (p, i) => heatmapColors.colorRangeVariant(
 					metadata,
 					dsVizSettings || {},
 					_.getIn(features, [p]),
@@ -535,12 +553,6 @@ var HeatmapColumn = React.createClass({
 					heatmapData[i])),
 			download = _.partial(tsvProbeMatrix, heatmapData, samples, fields, codes),
 			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
-
-		// XXX draw only if we have to
-		if (this.refs.plot) { // Update elements not managed by react (canvas)
-			// XXX find a better way to write this
-			this.refs.plot.draw(_.assoc(this.props, 'colors', colors, 'heatmapData', heatmapData)); // XXX memoize
-		}
 
 		// save [heatmapData, fields, column, codes, zoom, samples] for tooltip
 		this.tooltip = _.partial(tooltip, heatmapData, fields, column, codes, zoom, samples);
@@ -560,10 +572,13 @@ var HeatmapColumn = React.createClass({
 						onClick={this.props.onClick}
 						onDblClick={this.props.onDblClick}
 						ref='plot'
-						{...this.props}
+						width={_.getIn(column, ['width'])}
+						zoom={zoom}
 						colors={colors}
 						heatmapData={heatmapData}/>}
-				legend={<HeatmapLegend {...this.props}
+				legend={<HeatmapLegend
+						fields={_.getIn(column, ['fields'])}
+						hasViz={!!_.getIn(dsVizSettings, ['min'])}
 						dataType={column.dataType}
 						colorScale={colors}
 						data={heatmapData}

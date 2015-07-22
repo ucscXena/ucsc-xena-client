@@ -5,6 +5,7 @@ var React = require('react');
 var DropdownButton = require('react-bootstrap/lib/DropdownButton');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var _ = require('underscore_ext');
+var {deepPureRenderMixin} = require('./react-utils');
 require('./Select.css');
 
 function filterOpts(filter, opts) {
@@ -15,6 +16,7 @@ function filterOpts(filter, opts) {
 var notUndefined = x => !_.isUndefined(x);
 
 var Select = React.createClass({
+	mixins: [deepPureRenderMixin],
 	getInitialState: function () {
 		return {filter: ''};
 	},

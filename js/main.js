@@ -12,16 +12,18 @@ var Grid = require('react-bootstrap/lib/Grid');
 var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
 var Rx = require('./rx.ext');
+//var Button = require('react-bootstrap/lib/Button');
 require('rx.coincidence');
 require('rx/dist/rx.aggregates');
 require('rx/dist/rx.time');
 require('rx-dom');
 var _ = require('./underscore_ext');
-var meta = require('./meta');
+//var meta = require('./meta');
 require('./plotDenseMatrix'); // XXX better place or name for this?
 var controllersControls = require('controllers/controls'); // XXX use npm package to simplify this import?
 var controllersServer = require('controllers/server'); // XXX use npm package to simplify this import?
 require('bootstrap/dist/css/bootstrap.css');
+//var Perf = require('react/addons').addons.Perf;
 
 
 var d = window.document;
@@ -77,17 +79,20 @@ var Application = React.createClass({
 			debugText: formatState(this.props.appState) // initial state of text area.
 		};
 	},
-	componentWillReceiveProps ({appState}) {
-		this.setState({debugText: formatState(appState)});
-	},
-	handleChange: function (ev) {
-		this.setState({debugText: ev.target.value});
-	},
-	onClick: function (ev) {
-		if (ev[meta.key]) {
-			this.setState({debug: !this.state.debug});
-		}
-	},
+	//	XXX debug widget is currently too slow due to large appState.
+	// Enable with <Grid onClick={this.onClick}>.
+//	componentWillReceiveProps ({appState}) {
+//		this.setState({debugText: formatState(appState)});
+//	},
+//	handleChange: function (ev) {
+//		this.setState({debugText: ev.target.value});
+//	},
+//	onClick: function (ev) {
+//		return;
+//		if (ev[meta.key]) {
+//			this.setState({debug: !this.state.debug});
+//		}
+//	},
 	onKeyDown: function (ev) {
 		if (ev.key === 'Enter' && ev.ctrlKey) {
 			try {
@@ -100,9 +105,27 @@ var Application = React.createClass({
 			ev.preventDefault();
 		}
 	},
+//	onPerf: function () {
+//		this.perf = !this.perf;
+//		if (this.perf) {
+//			console.log("Starting perf");
+//			Perf.start();
+//		} else {
+//			console.log("Stopping perf");
+//			Perf.stop();
+//			Perf.printInclusive();
+//			Perf.printExclusive();
+//			Perf.printWasted();
+//		}
+//	},
 	render: function() {
 		return (
-			<Grid onClick={this.onClick}>
+			<Grid>
+			{/*
+				<Row>
+					<Button onClick={this.onPerf}>Perf</Button>
+				</Row>
+			*/}
 				<Row>
 					<Col md={12}>
 						<AppControls {...this.props} />
@@ -147,8 +170,15 @@ var stateObs = Rx.Observable.merge(
 			   ).scan(initialState, (state, [reduceFn, ev]) => reduceFn(state, ev))
 			   .share();
 
+var updater = ev => controlsBus.onNext(ev);
+//stateObs.subscribe(state => {
+//	React.render(<Application callback={updater} appState={state} />, main);
+//});
+
 stateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
-	.subscribe(state => React.render(<Application callback={ev => controlsBus.onNext(ev)} appState={state} />, main));
+	.subscribe(state => React.render(<Application callback={updater} appState={state} />, main));
+
+
 
 // Save state in sessionStorage on page unload.
 stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))

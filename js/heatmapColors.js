@@ -11,7 +11,6 @@ define(['d3',
 	var isNumber = _.isNumber,
 		isUndefined = _.isUndefined,
 		range = _.range,
-		colorRange,
 		// d3_category20, without the #7f7f7f gray that aliases with our N/A gray of #808080
 		categoryMore = [
 			"#1f77b4", // dark blue
@@ -90,7 +89,7 @@ define(['d3',
 		return _.extend(newfn, fn); // XXX This weirdness copies d3 fn methods
 	}
 
-	colorRange = multi(function (column, settings, features, codes) {
+	function colorRangeType(column, settings, features, codes) {
 		if (features && codes) {
 			if (features.valuetype === 'category') {
 				return 'codedMore';
@@ -102,7 +101,11 @@ define(['d3',
 			return 'floatGenomicData';
 		}
 		return 'minMax';
-	});
+	}
+
+	var colorRange = multi(colorRangeType);
+
+	var colorRangeVariant = (...args) => [colorRangeType(...args), ...args];
 
 	function colorFloatNegative(low, zero, min, max) {
 		return d3.scale.linear()
@@ -226,6 +229,7 @@ define(['d3',
 
 	return {
 		range: colorRange,
+		colorRangeVariant: colorRangeVariant,
 		'float': colorFloat,
 //		scaled: color_scaled,
 		defaultColors: defaultColors,
