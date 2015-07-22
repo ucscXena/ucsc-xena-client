@@ -7,7 +7,7 @@ require('base');
 var React = require('react');
 var Spreadsheet = require('./spreadsheet');
 var AppControls = require('./AppControls');
-var Input = require('react-bootstrap/lib/Input');
+//var Input = require('react-bootstrap/lib/Input');
 var Grid = require('react-bootstrap/lib/Grid');
 var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
@@ -132,6 +132,7 @@ var Application = React.createClass({
 					</Col>
 				</Row>
 				<Spreadsheet {...this.props} />
+			{/*
 				<Row>
 					<Col md={12}>
 						<Input
@@ -145,6 +146,7 @@ var Application = React.createClass({
 							value={this.state.debugText} />
 					</Col>
 				</Row>
+			*/}
 				<div className='chartRoot' style={{display: 'none'}} />
 			</Grid>
 		);
