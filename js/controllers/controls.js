@@ -147,8 +147,11 @@ var controls = {
 		} else if (meta.type !== 'mutationVector') {
 			fetchExamples(current, dsID);
 		}
-	}
-
+	},
+	'columnLabel': (state, dsID, value) =>
+		_.assocIn(state, [...paths.columns, dsID, 'columnLabel', 'user'], value),
+	'fieldLabel': (state, dsID, value) =>
+		_.assocIn(state, [...paths.columns, dsID, 'fieldLabel', 'user'], value)
 };
 
 module.exports = {

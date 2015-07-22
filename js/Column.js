@@ -6,10 +6,11 @@ var _ = require('./underscore_ext');
 var L = require('./lenses/lens');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
-var Label = require('react-bootstrap/lib/Label');
 var Resizable = require('react-resizable').Resizable;
 var xenaQuery = require('./xenaQuery');
+var DefaultTextInput = require('./defaultTextInput');
 
+// XXX move this?
 function download([fields, rows]) {
 	var txt = _.map([fields].concat(rows), row => row.join('\t')).join('\n');
 	// use blob for bug in chrome: https://code.google.com/p/chromium/issues/detail?id=373182
@@ -41,7 +42,7 @@ var Column = React.createClass({
 		this.props.onViz(this.props.id);
 	},
 	render: function () {
-		var {plot, legend, column, zoom, menu} = this.props;
+		var {id, callback, plot, legend, column, zoom, menu} = this.props;
 		var {width, columnLabel, fieldLabel} = column,
 		moveIcon = (<span
 			className="glyphicon glyphicon-resize-horizontal Sortable-handle"
@@ -59,10 +60,16 @@ var Column = React.createClass({
 					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 				</SplitButton>
 				<br/>
-				<Label>{columnLabel.user}</Label>
-				<br/>
-				<Label>{fieldLabel.user}</Label>
-				<br/>
+				<DefaultTextInput
+					dsID={id}
+					callback={callback}
+					eventName='columnLabel'
+					value={columnLabel} />
+				<DefaultTextInput
+					dsID={id}
+					callback={callback}
+					eventName='fieldLabel'
+					value={fieldLabel} />
 				<Resizable handleSize={[20, 20]}
 					onResizeStop={this.onResizeStop}
 					width={width}
