@@ -10,7 +10,6 @@ define(['d3',
 
 	var isNumber = _.isNumber,
 		isUndefined = _.isUndefined,
-		range = _.range,
 		// d3_category20, without the #7f7f7f gray that aliases with our N/A gray of #808080
 		categoryMore = [
 			"#1f77b4", // dark blue
@@ -32,12 +31,6 @@ define(['d3',
 			"#17becf", // dark blue-green
 			"#9edae5", // light blue-green
 			"#c7c7c7"  // light grey
-		],
-
-		// special category of white and purple
-		codedWhite = [
-			"#ffffff", // white
-			"#9467bd" // dark purple
 		],
 
 		defaultColors;
@@ -65,6 +58,8 @@ define(['d3',
 			};
 
 
+		// XXX it's rather broken that these conditionals appear here, in
+		// addition to in the colorRange multi
 		return function (column) {
 			var {type, dataSubType} = column || {};
 			var t = (type === 'clinicalMatrix') ?  'phenotype' : dataSubType;
@@ -72,54 +67,43 @@ define(['d3',
 		};
 	}());
 
-	function scaleCategoryMore() {
-		return d3.scale.ordinal().range(categoryMore);
-	}
-
-	function scaleCodedWhite() {
-		return d3.scale.ordinal().range(codedWhite);
-	}
-
 	// Return a new function that preserves undefined arguments, otherwise calls the original function.
 	// This is to work-around d3 scales.
 	function saveUndefined(fn) {
 		var newfn = function (v) {
 			return isUndefined(v) ? v : fn(v);
 		};
-		return _.extend(newfn, fn); // XXX This weirdness copies d3 fn methods
+		return _.extend(newfn, fn); // This weirdness copies d3 fn methods
 	}
 
-	function colorRangeType(column, settings, features, codes) {
-		if (features && codes) {
-			if (features.valuetype === 'category') {
-				return 'codedMore';
-			} else {
-				return 'codedWhite';
-			}
+	var ordinal = count => d3.scale.ordinal().range(categoryMore).domain(_.range(count));
+
+	// 'column' is the column type set by the UI. It's not the dataset metadata.
+	// It is *based on* the dataset metadata. We use it to decide whether to
+	// use clinical vs. genomic scaling for floats.
+	// 'settings' is the vizSettings: user override of min/max, etc.
+	// 'codes' is also used to pick categorical.
+	// 'data' is used to find min/max.
+	//
+	//  Of these, we can't drop 'data' or 'codes'.
+	//  Perhaps we should just pass in column.type and dataSubType, since we don't
+	//  need all the other params.
+	function colorRangeType(column, settings, codes) {
+		if (codes) {
+			return 'coded';
 		}
-		if (column && column.type === "genomicMatrix"){
+		if (column && column.type === "genomicMatrix") {
 			return 'floatGenomicData';
 		}
-		return 'minMax';
+		return 'float';
 	}
 
 	var colorRange = multi(colorRangeType);
 
-	var colorRangeVariant = (...args) => [colorRangeType(...args), ...args];
+	var scaleFloatSingle = (low, high, min, max) =>
+		d3.scale.linear().domain([min, max]).range([low, high]);
 
-	function colorFloatNegative(low, zero, min, max) {
-		return d3.scale.linear()
-			.domain([min, max])
-			.range([low, zero]);
-	}
-
-	function colorFloatPositive(zero, high, min, max) {
-		return d3.scale.linear()
-			.domain([min, max])
-			.range([zero, high]);
-	}
-
-	function colorFloatDouble(low, zero, high, min, max) {
+	function scaleFloatDouble(low, zero, high, min, max) {
 		var absmax = Math.max(-min, max);
 
 		return d3.scale.linear()
@@ -127,11 +111,11 @@ define(['d3',
 			.range([low, zero, high]);
 	}
 
-	function colorFloat(column, settings, feature, codes, data) {
+	function colorFloat(column, settings, codes, data) {
 		var values = _.values(data || [0]), // handle degenerate case
 			max = d3.max(values),
 			[low, zero, high] = defaultColors(column),
-			colorfn,
+			spec,
 			min;
 
 		if (!isNumber(max)) {
@@ -139,59 +123,42 @@ define(['d3',
 		}
 		min = d3.min(values);
 		if (min >= 0 && max >= 0) {
-			colorfn = colorFloatPositive(zero, high, min, max);
+			spec = ['float-pos', zero, high, min, max];
 		} else if (min <= 0 && max <= 0) {
-			colorfn = colorFloatNegative(low, zero, min, max);
+			spec = ['float-neg', low, zero, min, max];
 		} else {
-			colorfn = colorFloatDouble(low, zero, high, min, max);
+			spec = ['float', low, zero, high, min, max];
 		}
-		return saveUndefined(colorfn);
+		return spec;
 	}
 
-	function colorCategoryMore(column, settings, feature, codes) {
-		return saveUndefined(scaleCategoryMore().domain(range(codes.length)));
+	function colorCoded(column, settings, codes) {
+		return ['ordinal', codes.length];
 	}
 
-	function colorCodedWhite(column, settings, feature, codes) {
-		return saveUndefined(scaleCodedWhite().domain(range(codes.length)));
-	}
-
-//	function color_scaled(column) {
-//		var low = column.colors[0],
-//			zero = column.colors[1],
-//			high = column.colors[2];
-//
-//		return saveUndefined(d3.scale.linear()
-//			.domain([column.min, (column.min + column.max) / 2, column.max])
-//			.range([low, zero, high]));
-//	}
-
-	function colorFloatNegativeZone(low, zero, min, max, zone) {
-		return d3.scale.linear()
-			.domain([min.toPrecision(2), (max-zone).toPrecision(2), max.toPrecision(2)])
+	var scaleFloatThresholdNegative = (low, zero, min, thresh, max) =>
+		d3.scale.linear()
+			.domain(_.map([min, thresh, max], x => x.toPrecision(2)))
 			.range([low, zero, zero]);
-	}
 
-	function colorFloatPositiveZone(zero, high, min, max, zone) {
-		return d3.scale.linear()
-			.domain([min.toPrecision(2), (min+zone).toPrecision(2), max.toPrecision(2)])
+	var scaleFloatThresholdPositive = (zero, high, min, thresh, max) =>
+		d3.scale.linear()
+			.domain(_.map([min, thresh, max], x => x.toPrecision(2)))
 			.range([zero, zero, high]);
-	}
 
-	function colorCustom (low, zero, high, min, max, minStart, maxStart) {
-		return d3.scale.linear()
-			.domain([min.toPrecision(2),  minStart.toPrecision(2), maxStart.toPrecision(2), max.toPrecision(2)])
+	var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
+		d3.scale.linear()
+			.domain(_.map([min, minThresh, maxThresh, max], x => x.toPrecision(2)))
 			.range([low, zero, zero, high]);
-	}
 
-	function colorFloatGenomicData (column, settings, feature, codes, data) {
-		var colorfn,
-			values = _.values(data || [0]), // handle degenerate case
+	function colorFloatGenomicData(column, settings = {}, codes, data) {
+		var values = _.values(data), // handle degenerate case
 			[low, zero, high] = defaultColors(column),
 			min = settings.min || d3.min(values),
 			max = settings.max ||  d3.max(values),
 			minStart = settings.minStart,
 			maxStart = settings.maxStart,
+			spec,
 			mid,
 			absmax,
 			zone;
@@ -207,32 +174,39 @@ define(['d3',
 				minStart = mid  -  zone / 2.0;
 				maxStart = mid  +  zone / 2.0;
 			}
-			colorfn = colorCustom(low, zero, high, min, max, minStart, maxStart);
-		} else if (min <= 0 && max >= 0) {
+			spec = ['float-thresh', low, zero, high, min, minStart, maxStart, max];
+		} else if (min < 0 && max > 0) {
 			absmax = Math.max(-min, max);
 			zone = absmax / 4.0;
-			colorfn = colorCustom(low, zero, high, -absmax / 2.0, absmax / 2.0, -zone / 2.0, zone / 2.0);
+			spec = ['float-thresh', low, zero, high, -absmax / 2.0, -zone / 2.0,
+				 zone / 2.0, absmax / 2.0];
 		} else	if (min >= 0 && max >= 0) {
 			zone = (max - min) / 4.0;
-			colorfn = colorFloatPositiveZone(zero, high, min, max - zone / 2.0, zone);
+			spec = ['float-thresh-pos', zero, high, min, min + zone, max - zone / 2.0];
 		} else { // min <= 0 && max <= 0
 			zone = (max - min) / 4.0;
-			colorfn = colorFloatNegativeZone(low, zero, min + zone / 2.0, max, zone);
+			spec = ['float-thresh-neg', low, zero, min + zone / 2.0, max - zone, max];
 		}
-		return saveUndefined(colorfn);
+		return spec;
 	}
 
-	colorRange.add('codedWhite', colorCodedWhite);
-	colorRange.add("minMax", colorFloat);
-	colorRange.add("codedMore", colorCategoryMore);
-	colorRange.add("floatGenomicData", colorFloatGenomicData);
+	colorRange.add('float', colorFloat);
+	colorRange.add('coded', colorCoded);
+	colorRange.add('floatGenomicData', colorFloatGenomicData);
+
+	var colorScale = {
+		'float-pos': (__, ...args) => scaleFloatSingle(...args),
+		'float-neg': (__, ...args) => scaleFloatSingle(...args),
+		'float': (__, ...args) => scaleFloatDouble(...args),
+		'float-thresh-pos': (__, ...args) => scaleFloatThresholdPositive(...args),
+		'float-thresh-neg': (__, ...args) => scaleFloatThresholdNegative(...args),
+		'float-thresh': (__, ...args) => scaleFloatThreshold(...args),
+		'ordinal': (__, count) => ordinal(count)
+	};
 
 	return {
-		range: colorRange,
-		colorRangeVariant: colorRangeVariant,
-		'float': colorFloat,
-//		scaled: color_scaled,
-		defaultColors: defaultColors,
-		codedMore: categoryMore
+		colorScale: ([type, ...args]) => saveUndefined(colorScale[type](type, ...args)),
+		colorSpec: colorRange,
+		defaultColors: defaultColors
 	};
 });
