@@ -59,31 +59,27 @@ define(['haml/download.haml', "defer", "galaxy", "jquery", "util", "underscore_e
 				varNames = stableVars.concat(filter(derivedVars, function (dv) {
 					return (stableVars.indexOf(dv) < 0);
 				})),
-				tsvData = flatten(this.columnUi.plotData.values.map(function (sample) {
+				tsvData = this.columnUi.plotData.values.map(function (sample) {
 					if (sample.vals) {
 						if (sample.vals.length) { // value(s) for this sample & identifier
-							return sample.vals.map(function (vals) {
+							return flatten (sample.vals.map(function (vals) {
 								return varNames.map(function (varName) {
 									return vals[varName];
 								});
-							});
+							}));
 						} else { // no value for this sample & identifier
-							return [
-								varNames.map(function (varName) {
+							return varNames.map(function (varName) {
 									return (varName === 'sample') ?
 										sample.sample : 'no mutation';
-								})
-							];
+								});
 						}
 					} else { // no data for this sample & identifier
-						return [
-							varNames.map(function (varName) {
+						return varNames.map(function (varName) {
 								return (varName === 'sample') ?
 									sample.sample : null;
-							})
-						];
+							});
 					}
-				}), true);
+				});
 			this.buildTsv(tsvData, varNames);
 		},
 

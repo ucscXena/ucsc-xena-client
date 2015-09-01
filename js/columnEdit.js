@@ -420,9 +420,9 @@ define(['haml/columnEdit.haml',
 			this.subs = this.sheetWrap.sources.subscribe(function (sources) {
 				var opts;
 				self.sources = _.map(sources, function (s) {
+					s.datasets.sort(function (a,b){return a.label.localeCompare(b.label);}); // sort datasets alphebetically
 					return _.assoc(s, 'title', xenaQuery.server_url(s.server));
 				});
-
 				opts = $(datasetsTemplate({sources: self.sources, placeholder: 'Select...'}));
 
 				// there might or might not be a a select2 element.
