@@ -6,9 +6,13 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 		var div,
 			leftContainer, rightContainer, controlContainer,
 			xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-			cohort,
-			samples,
-			updateArgs;
+			cohort, samples, updateArgs, normalizationState={};
+
+			if (xenaState)	{
+				cohort = xenaState.cohort;
+				samples = xenaState.samples;
+			}
+			updateArgs = [cohort, samples, normalizationState];
 
 		function setStorage(state) {
 			sessionStorage.xena = JSON.stringify(state);
@@ -70,7 +74,7 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 						"value": "subset",
 						"text": "across selected samples",
 						"index": 2
-					} //selected sample level
+					} //selected sample level current heatmap normalization
 				],
 				node = document.createElement("span");
 
@@ -89,6 +93,7 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 			dropDownDiv.selectedIndex = 0;
 
 			dropDownDiv.addEventListener('change', function () {
+				normalizationState[xenaState.chartState.ycolumn]=dropDownDiv.selectedIndex;
 				update.apply(this, updateArgs);
 			});
 
@@ -112,8 +117,7 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 		function axisSelector(selectorID, action, args) {
 			var div = document.createElement("select"),
 				option, i, column, storedColumn,
-				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-			        column_rendering, columns;
+			  column_rendering, columns;
 
 			if (xenaState) {
 				columns = xenaState.column_order;
@@ -168,23 +172,37 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 			return div;
 		}
 
-		function normalizationUIVisibility(visible) {
-			var dropDown = document.getElementById("normDropDown");
+		function normalizationUISetting(visible, ycolumn, yNormalizationMeta) {
+			var dropDown = document.getElementById("normDropDown"),
+				dropDownDiv = document.getElementById("ynormalization");
 
 			if (visible) {
 				dropDown.style.visibility = "visible";
+
+				//check current normalizationState variable
+				if (normalizationState[ycolumn]!== undefined ){
+					dropDownDiv.selectedIndex = normalizationState[ycolumn];
+				}
+				//intentionally not checking vizSettings, need to understand cursor first.
+				//check meta data
+				// The default column normalization is fetched from the server. Instead it should come from
+        // the state, or from a data cache, because we've fetched that already.
+				else {
+					dropDownDiv.selectedIndex = yNormalizationMeta;
+					normalizationState[ycolumn]=yNormalizationMeta;
+				}
 			} else {
 				dropDown.style.visibility = "hidden";
 			}
 		}
 
-		function update(cohort, samples) {
+		function update(cohort, samples, normalizationState) {
 			var oldDiv = document.getElementById("chartContainer");
 			rightContainer.replaceChild(buildEmptyChartContainer(), oldDiv);
 
 			//initialization
 			document.getElementById("myChart").innerHTML = "Querying Xena ...";
-			normalizationUIVisibility(false);
+			normalizationUISetting(false);
 
 			var dropdown, normUI, sdDropDown,
 				xcolumn, ycolumn,
@@ -205,7 +223,6 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 
 
 			// save state cohort, xcolumn, ycolumn
-			var xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined;
 			if (xenaState) {
 				xenaState.chartState = {
 					"cohort": cohort,
@@ -266,7 +283,9 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				xenaQuery.dataset_gene_probe_values(yhost, yds, samples, yfields[0]) :
 				((ycolumnType === "geneMatrix") ?
 					xenaQuery.dataset_genes_values(yhost, yds, samples, yfields) :
-					xenaQuery.dataset_probe_values(yhost, yds, samples, yfields))
+					xenaQuery.dataset_probe_values(yhost, yds, samples, yfields)),
+
+				xenaQuery.dataset_text(yhost, yds)
 			);
 
 			source.subscribe(function (x) {
@@ -277,7 +296,9 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 					yIsCategorical, xIsCategorical, xfield,
 					r,
 				  offsets,
-					yNormalization;
+					yNormalization,
+					metaData,
+					yNormalizationMeta;
 
 				if (xcolumn !== "none") {
 					r = adjustData(xcolumnType, xfields, x[1]);
@@ -290,6 +311,13 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				ycolumnType = r[0];
 				yfields = r[1];
 				ydata = r[2];
+
+				metaData = JSON.parse(x[4][0].text);
+				if (metaData.colnormalization ) {
+					yNormalizationMeta = 2;
+				} else {
+					yNormalizationMeta = 0;
+				}
 
 				// save state cohort, xcolumn, ycolumn, yfields,ycolumnType
 				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined;
@@ -324,7 +352,8 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 				}
 
 				// set y axis normalization UI
-				normalizationUIVisibility(!yIsCategorical);
+				normalizationUISetting(!yIsCategorical, ycolumn, yNormalizationMeta);
+
 				if (yIsCategorical) {
 					yNormalization = false;
 				} else if (normUI.value === "none") {
@@ -972,10 +1001,6 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 			document.getElementById("myChart").innerHTML = "There is no heatmap data, please add some.";
 			return;
 		}
-
-		cohort = xenaState.cohort;
-		samples = xenaState.samples;
-		updateArgs = [cohort, samples];
 
 		// y axis selector
 		div = dom_helper.elt("div",
