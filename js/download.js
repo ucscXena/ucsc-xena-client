@@ -11,6 +11,29 @@ define(['haml/download.haml', "defer", "galaxy", "jquery", "util", "underscore_e
 		widget,
 		aWidget;
 
+	function uniqVals (vals){
+		var rVals=[];
+
+		vals.map(function(val){
+			if ( ! rVals.some(function(rVal){
+				if ( val.length=== rVal.length &&
+					(val.every(function(element, index) {
+  					return element === rVal[index];
+					}))) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			})){
+				rVals.push(val);
+			}
+		});
+
+		return rVals;
+	}
+
+
 	aWidget = {
 
 		destroy: function () {
@@ -62,11 +85,11 @@ define(['haml/download.haml', "defer", "galaxy", "jquery", "util", "underscore_e
 				tsvData = this.columnUi.plotData.values.map(function (sample) {
 					if (sample.vals) {
 						if (sample.vals.length) { // value(s) for this sample & identifier
-							return flatten(sample.vals.map(function (vals) {
+							return flatten(uniqVals(sample.vals.map(function (vals) {
 								return varNames.map(function (varName) {
 									return vals[varName];
 								});
-							}));
+							})));
 						} else { // no value for this sample & identifier
 								return varNames.map(function (varName) {
 									return (varName === 'sample') ?
