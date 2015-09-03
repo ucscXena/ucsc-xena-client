@@ -1,6 +1,6 @@
 {
   "name": "ucsc-xena-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "UCSC Xena Client. Functional genomics visualizations.",
   "homepage": "https://xena.ucsc.edu",
   "main": "index.js",
@@ -45,7 +45,7 @@
     "select2": "3.4.5",
     "underscore": "^1.7.0",
     "underscore.string": "^3.0.3",
-    "lunr":"0.5.7"
+    "lunr": "0.5.7"
   },
   "napa": {
     "haml": "https://github.com/uglyog/clientside-haml-js.git#release_5_4",
