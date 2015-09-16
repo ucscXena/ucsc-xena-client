@@ -1,6 +1,7 @@
 /*jshint browser: true, onevar: true */
 /*global define: false, document: false */
-define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'underscore_ext', 'rx'], function (xenaQuery, dom_helper, Highcharts, highcharts_helper, _, Rx) {
+define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_helper', 'underscore_ext', 'rx'],
+	function (xenaQuery, dom_helper, heatmapColors, Highcharts, highcharts_helper, _, Rx) {
 	'use strict';
 	return function (root, cursor, sessionStorage) {
 		var div,
@@ -625,9 +626,11 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 					dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(cutOffset);
 					errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(getError);
 
+					var color = heatmapColors.codedMore[i % heatmapColors.codedMore.length];
+
 					highcharts_helper.addSeriesToColumn(
 						chart, code, dataSeriese, errorSeries, yIsCategorical,
-						yfields.length * xCategories.length < 30, showLegend);
+						yfields.length * xCategories.length < 30, showLegend,color);
 				}
 				chart.redraw();
 			} else if (!xfield) { //summary view --- messsy code
@@ -768,9 +771,11 @@ define(['xenaQuery', 'dom_helper', './highcharts', 'highcharts_helper', 'undersc
 						ycodeSeries = _.map(_.map(categories, _.propertyOf(xbinnedSample)),
 								_.partial(yFromCategories, ybinnedSample[ycode]));
 
+						var color = heatmapColors.codedMore[i % heatmapColors.codedMore.length];
+
 						highcharts_helper.addSeriesToColumn(
 							chart, ycode, ycodeSeries, errorSeries, yIsCategorical,
-							ycodemap[yfields[0]].length * categories.length < 30, showLegend);
+							ycodemap[yfields[0]].length * categories.length < 30, showLegend, color);
 					}
 				}
 				chart.redraw();

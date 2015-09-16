@@ -12,8 +12,10 @@ define(['d3',
 		isUndefined = _.isUndefined,
 		range = _.range,
 		color_range,
-		// d3_category20, without the #7f7f7f gray that aliases with our N/A gray of #808080
-		categoryMore = [
+
+		categoryMore =
+		// d3_category20, replace #7f7f7f gray (that aliases with our N/A gray of #808080) with dark grey #434348
+		[
 			"#1f77b4", // dark blue
 			"#aec7e8", // light blue
 			"#2ca02c", // dark green
@@ -32,6 +34,7 @@ define(['d3',
 			"#dbdb8d", // light mustard
 			"#17becf", // dark blue-green
 			"#9edae5", // light blue-green
+			"#434348", // very dark grey
 			"#c7c7c7"  // light grey
 		],
 

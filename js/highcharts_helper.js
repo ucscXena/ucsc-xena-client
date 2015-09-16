@@ -204,12 +204,13 @@ define(['./highcharts'], function (Highcharts) {
     return chartOptions;
   }
 
-  function addSeriesToColumn (chart, sName, ycodeSeries, errorSeries, yIsCategorical, showDataLabel, showLegend){
+  function addSeriesToColumn (chart, sName, ycodeSeries, errorSeries, yIsCategorical, showDataLabel, showLegend, color){
     var seriesOptions = {
       name: sName,
       type: 'column',
       data: ycodeSeries,
-      maxPointWidth: 50
+      maxPointWidth: 50,
+      color:color
     };
 
     if (!showLegend) {
