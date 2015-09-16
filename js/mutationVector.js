@@ -116,7 +116,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			Missense_Mutation: 2,
 			exon_variant: 2,
 			RNA: 2,
-			Indel: 2,//
+			Indel: 2,
 			start_lost: 2,
 			start_gained: 2,
 			De_novo_Start_OutOfFrame: 2,
@@ -148,7 +148,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			intergenic_region: 1,
 			IGR: 1,
 
-			"others or unannotated":0
+			"others": 0,
 		},
 		round = Math.round,
 		saveUndef = f => v => v === undefined ? v : f(v),
@@ -165,16 +165,16 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		},
 		features = _.merge(annotationFeatures, {
 			impact: {
-				get: (a, v) => impact[v.effect] || unknownEffect,
-				color: v => colorStr(colors.category_25[v])
+				get: (a, v) => impact[v.effect] || (v.effect ? unknownEffect: undefined),
+				color: v => colorStr(_.isUndefined(v) ? colors.grey: colors.category_25[v])
 			},
 			dna_vaf: {
-				get: (a, v) => decimateFreq(v.dna_vaf),
+				get: (a, v) => _.isUndefined(v.dna_vaf) || _.isNull(v.dna_vaf) ? undefined : decimateFreq(v.dna_vaf),
 				color: v => colorStr(_.isUndefined(v) ? colors.grey :
 					_.assoc(colors.af, 'a', v))
 			},
 			rna_vaf: {
-				get: (a, v) => decimateFreq(v.rna_vaf),
+				get: (a, v) => _.isUndefined(v.dna_vaf) || _.isNull(v.rna_vaf) ? undefined : decimateFreq(v.rna_vaf),
 				color: v => colorStr(_.isUndefined(v) ? colors.grey :
 					_.assoc(colors.af, 'a', v))
 			}
@@ -222,7 +222,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			formatAf: function (af) {
-				if (af === 'NA' || af === '' || af === undefined) {
+				if (af === 'NA' || af === '' || af === undefined || af === null) {
 					return 'NA';
 				} else {
 					return Math.round(af * 100) + '%';
@@ -246,6 +246,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					ga4ghVarURL,
 					node,
 					coords,
+					row,
 					rows = [],
 					mode = 'genesets',
 					dnaAf,
@@ -283,12 +284,19 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 							"&alt="+node.data.alt +
 							"&gene="+ this.gene;
 					}
-					rows = [
-						[ { val: node.data.effect +", " +
-							this.gene +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'')}],
-						[ { val: posText, url: posURL},
-							{ val: node.data.reference + ' to ' + node.data.alt}]
-					];
+
+					//effect, gene
+					row =[ { val: (node.data.effect? node.data.effect+", ":'')  +
+							this.gene +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'')}];
+					rows.push (row);
+
+					// chromosomal coordinate, ref-> alt
+					row = [ { val: posText, url: posURL}];
+					if (node.data.reference && node.data.alt){
+						row.push({ val: node.data.reference + ' to ' + node.data.alt});
+					}
+					rows.push (row);
+
 					if (dnaAf !== "NA"){
 						rows.push([{ label: 'DNA variant allele freq',  val: dnaAf}]);
 					}
@@ -499,7 +507,13 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 	function cmpMut(mut1, mut2) {
 		if (mut1.impact !== mut2.impact) {
-			return mut2.impact - mut1.impact; // high impact sorts first
+			if (mut1.impact === undefined){
+				return 1;
+			} else if (mut2.impact === undefined) {
+				return -1;
+			} else {
+				return mut2.impact - mut1.impact; // high impact sorts first
+			}
 		}
 
 		return mut1.right - mut2.right;       // low coord sorts first
