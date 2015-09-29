@@ -69,7 +69,7 @@ define(['underscore_ext',
 
 	function cmpSamples(probes, data, refGene, s1, s2) {
 		return _.findValue(probes, function (f) {
-			return (data && data[f] && refGene) ? cmpRowOrNull(data[f][s1], data[f][s2], refGene) : 0;
+			return (data && data[f] && refGene) && Object.keys(refGene).length!==0 ? cmpRowOrNull(data[f][s1], data[f][s2], refGene) : 0;
 		});
 	}
 
@@ -161,8 +161,8 @@ define(['underscore_ext',
 		},id);
    }
 
-//  var clinvar_host ="http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.5.1";
-	var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:7000/v0.6.e6d6074";
+	var clinvar_host ="http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.5.1";
+	//var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:7000/v0.6.e6d6074";
 
 	var annotationsForMap = [
 		{
