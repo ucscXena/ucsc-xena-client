@@ -45,7 +45,8 @@
     "select2": "3.4.5",
     "underscore": "^1.7.0",
     "underscore.string": "^3.0.3",
-    "lunr": "0.5.7"
+    "lunr": "0.5.7",
+    "jStat":"1.4.3"
   },
   "napa": {
     "haml": "https://github.com/uglyog/clientside-haml-js.git#release_5_4",
