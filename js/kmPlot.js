@@ -18,6 +18,8 @@ define([ 'd3',
 
 	'use strict';
 
+	var jStat = require('jStat').jStat;
+
 	var each = _.each,
 		bind = _.bind,
 		map = _.map,
@@ -211,8 +213,10 @@ define([ 'd3',
 				groups,
 				regroup,
 				patientUniqueSamples,
-				dupPatientSamples;
-
+				dupPatientSamples,
+				allGroups_tte=[],
+				allGroups_ev=[],
+				KM_stats, pValue;
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
@@ -258,11 +262,12 @@ define([ 'd3',
 							return chief.values[s] === group;
 						}
 					}),
-
 					/*jslint eqeq: true */
 					/*jshint eqnull: true */
 					samplesNotNullTtevFn = filter(samples, function (s) { return ttev_fn(s) != null; }),
-					res = km.compute(map(samplesNotNullTtevFn, ttev_fn), map(samplesNotNullTtevFn, ev_fn));
+					tte =map(samplesNotNullTtevFn, ttev_fn),
+					ev= map(samplesNotNullTtevFn, ev_fn),
+					res = km.compute(tte, ev);
 
 				if (res.length > 0) {
 					if (dupPatientSamples.length) {
@@ -277,16 +282,35 @@ define([ 'd3',
 					subgroups.push({
 						name: label + " (n=" + samplesNotNullTtevFn.length + ")",
 						group: (regroup ? r.colorGroup : group),
-						values: res
+						values: res,
+						tte: tte,
+						ev:ev
 					});
+					allGroups_tte = allGroups_tte.concat(tte);
+					allGroups_ev = allGroups_ev.concat(ev);
 				}
 			});
+
+			// KM stats computation
+			if (subgroups.length>1){
+				var allGroupsRes;
+
+				allGroupsRes = km.compute(allGroups_tte, allGroups_ev);
+				KM_stats = _.reduce(subgroups, function(memo, group){
+					var r = km.expectedObservedEventNumber(allGroupsRes, group.tte, group.ev),
+						pearson_chi_squared_component = r.pearson_chi_squared_component;
+						//console.log(r.observed, r.expected, r.pearson_chi_squared_component);
+					return memo + pearson_chi_squared_component;
+					},0);
+				//console.log(KM_stats);
+				pValue = 1- jStat.chisquare.cdf( KM_stats, subgroups.length-1);
+			}
 
 			self.featureLabel.text('Grouped by: ' +
 				(all ? 'All samples' : chief.label) +
 				(groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "") +
 				(chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
-			self.render(subgroups, chief);
+			self.render(subgroups, chief, KM_stats, pValue);
 		},
 
 		getSurvivalData: function (eventDsID, survival) {
@@ -319,9 +343,10 @@ define([ 'd3',
 		},
 
 		setupSvg: function () {
-			var margin = {top: 20, right: 200, bottom: 30, left: 50},
-				width = 845 - margin.left - margin.right,
-				height = 500 - margin.top - margin.bottom,
+			var margin = {top: 20, right: 20, bottom: 50, left: 50},
+				width = 400,     //845 - margin.left - margin.right,
+				height = 400,    //500 - margin.top - margin.bottom,
+				textArea = 400,
 
 				x = d3.scale.linear().range([0, width]),
 				y = d3.scale.linear().range([height, 0]),
@@ -329,7 +354,7 @@ define([ 'd3',
 				yAxis = d3.svg.axis().scale(y).orient("left"),
 
 				svg = d3.select(this.kmplot[0])
-					.attr("width", width + margin.left + margin.right)
+					.attr("width", width +textArea + margin.left + margin.right)
 					.attr("height", height + margin.top + margin.bottom)
 					.append("g")
 					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -356,10 +381,9 @@ define([ 'd3',
 			this.svg = svg;
 			this.x = x;
 			this.y = y;
-			this.xAxis = xAxis;
 		},
 
-		render: function (subgroups, chief) {
+		render: function (subgroups, chief, KM_stats, pValue) {
 			var x = this.x,
 				y = this.y,
 				color = _.get_in(this, ['columnUi', 'ws', 'colors', 0]),
@@ -417,7 +441,6 @@ define([ 'd3',
 				d3.min(subgroups, function (sg) { return d3.min(sg.values, function (v) { return v.t; }); }),
 				d3.max(subgroups, function (sg) { return d3.max(sg.values, function (v) { return v.t; }); })
 			]);
-			this.svg.select(".x.axis").transition().call(this.xAxis);
 
 			subgroup = this.svg.selectAll(".subgroup").data(subgroups);
 
@@ -435,8 +458,8 @@ define([ 'd3',
 			subgroup.select('path.line')
 				.each(update);
 				// Without transition, remove the each(), and add these.
-//				.attr("d", function (d) { return line([{t: x.domain()[0] - 1, s: 1}].concat(d.values)); }) // add the point at 100%
-//				.style("stroke", function (d) { return color(d.group); });
+				//	.attr("d", function (d) { return line([{t: x.domain()[0] - 1, s: 1}].concat(d.values)); }) // add the point at 100%
+				//	.style("stroke", function (d) { return color(d.group); });
 
 			subgroup.select('path.outline')
 				.each(update);
@@ -470,6 +493,15 @@ define([ 'd3',
 
 			censorLine('outline'); // render the outline first, so the color will overlay it
 			censorLine('line');
+
+			if (pValue < 1e-4){
+				this.svg.append("text").attr("x","66%").text("p value = "+d3.format(".2e")(pValue));
+			}
+			else{
+				this.svg.append("text").attr("x","66%").text("p value = "+d3.format(".2g")(pValue));
+			}
+			this.svg.append("text").attr("x","66%").attr("y","5%").text("Log-rank test statistics = "+KM_stats.toPrecision(3));
+			this.svg.append("text").attr("x","66%").attr("y","10%").text("(pearson's chi-squared test)");
 		},
 
 		setSurvivalVars: function () {
