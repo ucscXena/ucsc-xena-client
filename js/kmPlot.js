@@ -250,7 +250,7 @@ define([ 'd3',
 				groups = self.regroup(values);
 			}
 
-			each(groups.slice(0, MAX), function (group, i) {
+			each(groups, function (group, i) {
 				var label,
 					r,
 					samples = all ? _.keys(ttevValues) : filter(keys(chief.values), function (s) {
@@ -299,7 +299,7 @@ define([ 'd3',
 				KM_stats = _.reduce(subgroups, function(memo, group){
 					var r = km.expectedObservedEventNumber(allGroupsRes, group.tte, group.ev),
 						pearson_chi_squared_component = r.pearson_chi_squared_component;
-						//console.log(r.observed, r.expected, r.pearson_chi_squared_component);
+						//console.log(group.name, group.tte.length, r.observed, r.expected, r.pearson_chi_squared_component);
 					return memo + pearson_chi_squared_component;
 					},0);
 				//console.log(KM_stats);
@@ -310,7 +310,11 @@ define([ 'd3',
 				(all ? 'All samples' : chief.label) +
 				(groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "") +
 				(chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
-			self.render(subgroups, chief, KM_stats, pValue);
+
+			this.subgroups = subgroups.slice(0, MAX);
+			this.KM_stats = KM_stats;
+			this.pValue = pValue;
+			self.render();
 		},
 
 		getSurvivalData: function (eventDsID, survival) {
@@ -342,32 +346,39 @@ define([ 'd3',
 				.subscribe(self.receiveSurvivalData));
 		},
 
-		setupSvg: function () {
-			var margin = {top: 20, right: 20, bottom: 50, left: 50},
-				width = 400,     //845 - margin.left - margin.right,
-				height = 400,    //500 - margin.top - margin.bottom,
-				textArea = 400,
+		setupSvg: function (dwidth,dheight) {
+			if(this.svg) {
+				this.svg.selectAll("*").remove();
+			}
+
+			var margin = {top: 20, right: 20, bottom: 40, left: 50},
+				buffer = 100,
+				textArea = dwidth /2,
+				width = dwidth - margin.left - margin.right - textArea,
+				height = dheight - margin.top - margin.bottom - buffer,
 
 				x = d3.scale.linear().range([0, width]),
 				y = d3.scale.linear().range([height, 0]),
 				xAxis = d3.svg.axis().scale(x).orient("bottom"),
-				yAxis = d3.svg.axis().scale(y).orient("left"),
+				yAxis = d3.svg.axis().scale(y).orient("left");
 
-				svg = d3.select(this.kmplot[0])
-					.attr("width", width +textArea + margin.left + margin.right)
-					.attr("height", height + margin.top + margin.bottom)
-					.append("g")
-					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			this.svgWidth= dwidth - buffer /2;
+			this.svgHeight = dheight - buffer;
+			this.svg = d3.select(this.kmplot[0])
+				.attr("width", this.svgWidth )
+				.attr("height", this.svgHeight)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 			x.domain([0, 100]); // random default
 			y.domain([0, 1]);
 
-			svg.append("g")
+			this.svg.append("g")
 				.attr("class", "x axis")
 				.attr("transform", "translate(0," + height + ")")
 				.call(xAxis);
 
-			svg.append("g")
+			this.svg.append("g")
 				.attr("class", "y axis")
 				.call(yAxis)
 				.append("text")
@@ -378,13 +389,18 @@ define([ 'd3',
 				.style("text-anchor", "start")
 				.text("Survival percentage");
 
-			this.svg = svg;
 			this.x = x;
 			this.y = y;
 		},
 
-		render: function (subgroups, chief, KM_stats, pValue) {
-			var x = this.x,
+		render: function (){
+			var subgroups = this.subgroups,
+				KM_stats = this.KM_stats,
+				pValue = this.pValue,
+				svg= this.svg,
+				svgHeight = this.svgHeight,
+				svgWidth = this.svgWidth,
+				x = this.x,
 				y = this.y,
 				color = _.get_in(this, ['columnUi', 'ws', 'colors', 0]),
 				line = d3.svg.line().interpolate("step-after")
@@ -494,14 +510,49 @@ define([ 'd3',
 			censorLine('outline'); // render the outline first, so the color will overlay it
 			censorLine('line');
 
+			//p value and statistics
+			var xStart =svgWidth * 0.6,
+				lineSpacing = 30,
+				yStart = lineSpacing*3;
+
 			if (pValue < 1e-4){
-				this.svg.append("text").attr("x","66%").text("p value = "+d3.format(".2e")(pValue));
+				this.svg.append("text").attr("x",xStart).text("p value = "+d3.format(".2e")(pValue));
 			}
 			else{
-				this.svg.append("text").attr("x","66%").text("p value = "+d3.format(".2g")(pValue));
+				this.svg.append("text").attr("x",xStart).text("p value = "+d3.format(".2g")(pValue));
 			}
-			this.svg.append("text").attr("x","66%").attr("y","5%").text("Log-rank test statistics = "+KM_stats.toPrecision(3));
-			this.svg.append("text").attr("x","66%").attr("y","10%").text("(pearson's chi-squared test)");
+			this.svg.append("text").attr("x",xStart).attr("y",lineSpacing).text("Log-rank test statistics = "+KM_stats.toPrecision(3));
+			this.svg.append("text").attr("x",xStart).attr("y",lineSpacing*2).text("(pearson's chi-squared test)");
+
+			// legend: lines and text labels
+			var nCols= parseInt( lineSpacing * subgroups.length / (svgHeight - yStart )) +1,
+				wColumn = parseInt(svgWidth *0.4 / nCols),
+				nItem = parseInt((svgHeight -yStart) / lineSpacing),
+				xEnd,
+				labelStart, labelSize,
+				textY;
+
+			subgroup.each(function (group,i) {
+				xStart = svgWidth * 0.6 + parseInt(i/nItem) * wColumn;
+				textY =  yStart + lineSpacing* (i%nItem) ; //30 line spacing
+
+				xEnd = xStart +30;
+				labelStart = xStart +35;
+				labelSize = wColumn - 35;
+
+				//line
+				svg.append("line").attr({ "x1": xStart, "y1": textY, "x2": xEnd, "y2": textY})
+					.style("stroke", color(group.group)).style("stroke-width", 3);
+
+				//outline
+				if (color(group.group)==="#ffffff"){
+					svg.append("rect").attr({ "x": xStart-1, "y": textY-1, "width": 32, "height": 3, "fill":"none"})
+						.style("stroke", "gray"/*color(group.group)*/).style("stroke-width", 1);
+					}
+
+				//label
+				svg.append("foreignObject").attr({"x":labelStart,"y":textY-8,"width":labelSize,"height":lineSpacing}).text(group.name);
+			});
 		},
 
 		setSurvivalVars: function () {
@@ -570,47 +621,22 @@ define([ 'd3',
 		cache: [ 'kmScreen', 'kmplot', 'featureLabel', 'warningIcon' ],
 
 		geometryChange: function () {
-			var self = this,
-				offset = this.$dialog.offset();
-			this.cursor.update(function (s) {
-				return _.assoc_in(s, ['kmPlot', 'geometry'], {
-					left: offset.left,
-					top: offset.top,
-					width: self.$dialog.width(),
-					height: self.$dialog.height()
-				});
-			});
+			this.setupSvg(this.$dialog.width(),this.$dialog.height());
+			this.render();
 		},
 
 		initialize: function (options) {
 			var self = this,
 				position,
-				width,
-				height,
+				width = '800',
+				height ='500',
 				myWs = options.columnUi.ws.column.kmPlot,
-				geometry = myWs.geometry,
 				dialogClass = 'kmPlotDialog-' + this.id;
+
 			this.columnUi = options.columnUi;
 			this.cursor = options.cursor;
 			this.subs = new Rx.CompositeDisposable();
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
-
-			if (geometry === 'default') {
-				position = {
-					my: 'left top',
-					at: 'left+100, top+100',
-					of:  $(window)
-				};
-				width = height = 'auto';
-			} else {
-				position = {
-					my: 'left top',
-					at: 'left+' + geometry.left + ' top+' + geometry.top,
-					of: $(window)
-				};
-				width = geometry.width;
-				height = geometry.height;
-			}
 
 			this.$el = $(template({
 				warningImg: warningImg
@@ -623,21 +649,20 @@ define([ 'd3',
 					height: height,
 					position: position,
 					resizeStop: this.geometryChange,
-					dragStop: this.geometryChange
 				});
 			this.$dialog = $('.' + dialogClass);
 
 			// cache jquery objects for active DOM elements
 			_(self).extend(_(self.cache).reduce(function (a, e) { a[e] = self.$el.find('.' + e); return a; }, {}));
 
-			this.setupSvg();
-			defer(this.geometryChange);
+			this.setupSvg(this.$dialog.width(),this.$dialog.height());
 
-			if (geometry === 'default') {
-				this.setSurvivalVars();
-			} else if (myWs.eventDsID && myWs.survival) {
+			if (myWs.eventDsID && myWs.survival) {
 				this.getSurvivalData(myWs.eventDsID, myWs.survival);
 				// TODO for now, assume survival vars are still in the saved eventDsID.
+			}
+			else {
+				this.setSurvivalVars();
 			}
 		}
 	};
