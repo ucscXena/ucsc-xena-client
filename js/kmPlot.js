@@ -293,17 +293,23 @@ define([ 'd3',
 
 			// KM stats computation
 			if (subgroups.length>1){
-				var allGroupsRes;
+				var allGroupsRes,
+					dof =-1;
 
 				allGroupsRes = km.compute(allGroups_tte, allGroups_ev);
 				KM_stats = _.reduce(subgroups, function(memo, group){
-					var r = km.expectedObservedEventNumber(allGroupsRes, group.tte, group.ev),
-						pearson_chi_squared_component = r.pearson_chi_squared_component;
+					var r = km.expectedObservedEventNumber(allGroupsRes, group.tte, group.ev);
+						if (!isNaN(r.pearson_chi_squared_component)){
+							dof = dof +1;
+							return memo + r.pearson_chi_squared_component;
+						}
+						else {
+							return memo;
+						}
 						//console.log(group.name, group.tte.length, r.observed, r.expected, r.pearson_chi_squared_component);
-					return memo + pearson_chi_squared_component;
 					},0);
 				//console.log(KM_stats);
-				pValue = 1- jStat.chisquare.cdf( KM_stats, subgroups.length-1);
+				pValue = 1- jStat.chisquare.cdf( KM_stats, dof);
 			}
 
 			self.featureLabel.text('Grouped by: ' +
@@ -394,6 +400,9 @@ define([ 'd3',
 		},
 
 		render: function (){
+			//window.innerHeight? window.innerHeight-250: 500;
+			this.setupSvg(this.$dialog.width(),this.$dialog.height());
+
 			var subgroups = this.subgroups,
 				KM_stats = this.KM_stats,
 				pValue = this.pValue,
@@ -409,6 +418,7 @@ define([ 'd3',
 				subgroup,
 				sgg,
 				update;
+
 
 			// there is probably a faster algorithm, since we're drawing single-valued
 			// functions. Sampling splines is a bit of an overkill.
@@ -525,7 +535,7 @@ define([ 'd3',
 			this.svg.append("text").attr("x",xStart).attr("y",lineSpacing*2).text("(pearson's chi-squared test)");
 
 			// legend: lines and text labels
-			var nCols= parseInt( lineSpacing * subgroups.length / (svgHeight - yStart )) +1,
+			var nCols= parseInt( lineSpacing * subgroups.length / (svgHeight - yStart )) +1,  // number of column
 				wColumn = parseInt(svgWidth *0.4 / nCols),
 				nItem = parseInt((svgHeight -yStart) / lineSpacing),
 				xEnd,
@@ -621,15 +631,14 @@ define([ 'd3',
 		cache: [ 'kmScreen', 'kmplot', 'featureLabel', 'warningIcon' ],
 
 		geometryChange: function () {
-			this.setupSvg(this.$dialog.width(),this.$dialog.height());
 			this.render();
 		},
 
 		initialize: function (options) {
 			var self = this,
 				position,
-				width = '800',
-				height ='500',
+				width = window.innerWidth? window.innerWidth-250: 800,
+				height =window.innerHeight? window.innerHeight-50: 500,
 				myWs = options.columnUi.ws.column.kmPlot,
 				dialogClass = 'kmPlotDialog-' + this.id;
 
@@ -654,8 +663,6 @@ define([ 'd3',
 
 			// cache jquery objects for active DOM elements
 			_(self).extend(_(self.cache).reduce(function (a, e) { a[e] = self.$el.find('.' + e); return a; }, {}));
-
-			this.setupSvg(this.$dialog.width(),this.$dialog.height());
 
 			if (myWs.eventDsID && myWs.survival) {
 				this.getSurvivalData(myWs.eventDsID, myWs.survival);

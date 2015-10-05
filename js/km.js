@@ -61,18 +61,23 @@ define(['jquery', 'underscore'], function ($, _) {
 
 	// http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3059453/
 	// a good article to understand KM and comparing KM plots using log-rank test,
-	// they used the pearson chisquare test to compute test statistics
+	// they used the pearson chisquared test to compute test statistics
+	// sum of (O-E)^2/E
 
 	// http://oto.sagepub.com/content/143/3/331.long
 	// a good article to understand KM and comparing KM plots using log-rank test and hazardous ratio test
-	// they also used the pearson chisquare test to compute test statistics
+	// they also used the pearson chisquared test to compute test statistics
 
 	// http://www.ncbi.nlm.nih.gov/pmc/articles/PMC403858/
 	// introduce pearson chi-square to compute logrank statistics, however mentioned there is another way
 
+	// http://ssp.unl.edu/Log%20Rank%20Test%20For%20More%20Than%202%20Groups.pdf
+  // gives basic idea of the "other" way R seems to use the "other" way
+  // (O-E)^2/V V is variance for two groups and covariance for multiple groups
+
 	// https://cran.r-project.org/web/packages/survival/survival.pdf
-	// this implementation should have  "identical" result to R survdiff with rho=0 (i.e. log rank test)
-	// not pearson chi-square
+	// R use (O-E)^2/V V is variance for two groups and covariance for multiple groups
+	// not pearson chi-squared
 
 	//https://github.com/CamDavidsonPilon/lifelines/blob/master/lifelines/statistics.py
 	//python implementation, identical results to R
@@ -87,7 +92,9 @@ define(['jquery', 'underscore'], function ($, _) {
 	// p value = 1- jStat.chisquare.cdf(x, dof );  -- x is chisquare statistics, dof is degree of freedom
 	// for comparing two plots, the dof is n-1 = 1, comparing three plots dof = n-1 = 2
 
-	// given a theoretical survival curve (si), and tte + ev ( tte and ev is the data ), compute the expected total number of events
+	// given a theoretical survival curve (si), and tte + ev ( tte and ev is the data ),
+	// compute the expected total number of events
+	// report observed n events, expected n events. pearson's chi-square component (O-E)^2/E
 
 	function expectedObservedEventNumber(si, tte, ev){
 		var exits = sortBy(map(tte, function (x, i) { return { tte: x, ev: ev[i] }; }), 'tte'), // sort and collate
