@@ -18,7 +18,10 @@ define([ 'd3',
 
 	'use strict';
 
-	var jStat = require('jStat').jStat;
+	var jStat = require('jStat').jStat,
+		linearAlgebra = require('linear-algebra')(),
+		Vector = linearAlgebra.Vector,
+    Matrix = linearAlgebra.Matrix;
 
 	var each = _.each,
 		bind = _.bind,
@@ -215,8 +218,7 @@ define([ 'd3',
 				patientUniqueSamples,
 				dupPatientSamples,
 				allGroups_tte=[],
-				allGroups_ev=[],
-				KM_stats, pValue;
+				allGroups_ev=[];
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
@@ -249,6 +251,11 @@ define([ 'd3',
 			if (regroup) {
 				groups = self.regroup(values);
 			}
+
+			self.featureLabel.text('Grouped by: ' +
+				(all ? 'All samples' : chief.label) +
+				(groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "") +
+				(chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
 
 			each(groups, function (group, i) {
 				var label,
@@ -291,35 +298,93 @@ define([ 'd3',
 				}
 			});
 
-			// KM stats computation
-			if (subgroups.length>1){
-				var allGroupsRes,
-					dof =-1;
+			this.subgroups = subgroups;
 
-				allGroupsRes = km.compute(allGroups_tte, allGroups_ev);
-				KM_stats = _.reduce(subgroups, function(memo, group){
-					var r = km.expectedObservedEventNumber(allGroupsRes, group.tte, group.ev);
-						if (!isNaN(r.pearson_chi_squared_component)){
-							dof = dof +1;
-							return memo + r.pearson_chi_squared_component;
-						}
-						else {
-							return memo;
-						}
-						//console.log(group.name, group.tte.length, r.observed, r.expected, r.pearson_chi_squared_component);
-					},0);
-				//console.log(KM_stats);
-				pValue = 1- jStat.chisquare.cdf( KM_stats, dof);
+			// KM stats computation
+			var KM_stats, pValue,
+				i,j, //groups
+				t, //timeIndex
+				allGroupsRes,
+				dof, // degree of freedom
+				O_E_table=[],
+				O_minus_E_vector=[], O_minus_E_vector_minus1,// O-E and O-E drop the last element
+				vv=[], vv_minus1, //covariant matrix and covraiance matrix drops the last row and column
+				N=0, //total number of samples
+				Ki, Kj, // at risk number from each group
+				n=0; //total observed
+
+			allGroupsRes = km.compute(allGroups_tte, allGroups_ev);
+			allGroupsRes = allGroupsRes.filter(function(item){  //only keep the curve where there is an event
+				if (item.e) {return true;}
+				else {return false;}
+			});
+
+			each(subgroups, function(group){
+				var r = km.expectedObservedEventNumber(allGroupsRes, group.tte, group.ev);
+					//console.log(group.name, group.tte.length, r.observed, r.expected,
+					//	(r.observed-r.expected)*(r.observed-r.expected)/r.expected, r.timeNumber);
+					if (r.expected){
+						O_E_table.push(r);
+						O_minus_E_vector.push(r.observed - r.expected);
+					}
+				});
+
+			dof = O_E_table.length-1;
+
+			// logrank stats covariance matrix vv
+			for (i=0;i<O_E_table.length; i++){
+				vv.push([]);
+				for (j=0;j<O_E_table.length; j++){
+					vv[i].push(0);
+				}
 			}
 
-			self.featureLabel.text('Grouped by: ' +
-				(all ? 'All samples' : chief.label) +
-				(groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "") +
-				(chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
+			for (i=0;i<O_E_table.length; i++){
+				for (j=i;j<O_E_table.length; j++){
+					for (t=0;t< allGroupsRes.length; t++){
+						N = allGroupsRes[t].n;
+						n= allGroupsRes[t].d;
+						if (t < O_E_table[i].timeNumber && t <O_E_table[j].timeNumber){
+							Ki= O_E_table[i].dataByTimeTable[t].n;
+							Kj= O_E_table[j].dataByTimeTable[t].n;
+							if (i!==j){ // https://books.google.com/books?id=nPkjIEVY-CsC&pg=PA451&lpg=PA451&dq=multivariate+hypergeometric+distribution+covariance&source=bl&ots=yoieGfA4bu&sig=dhRcSYKcYiqLXBPZWOaqzciViMs&hl=en&sa=X&ved=0CEQQ6AEwBmoVChMIkqbU09SuyAIVgimICh0J3w1x#v=onepage&q=multivariate%20hypergeometric%20distribution%20covariance&f=false
+								vv[i][j] -= n*Ki*Kj*(N-n)/(N*N*(N-1));
+								vv[j][i] -= n*Ki*Kj*(N-n)/(N*N*(N-1));
+							}
+							else {//i==j
+								vv[i][i] += n*Ki*(N-Ki)*(N-n)/(N*N*(N-1));
+							}
+						}
+					}
+				}
+			}
 
-			this.subgroups = subgroups.slice(0, MAX);
-			this.KM_stats = KM_stats;
-			this.pValue = pValue;
+			O_minus_E_vector_minus1 = O_minus_E_vector.slice(0,O_minus_E_vector.length-1);
+			vv_minus1 = vv.slice(0,vv.length-1);
+			for (i=0;i<vv_minus1.length;i++){
+				vv_minus1[i]=vv_minus1[i].slice(0,vv_minus1[i].length-1);
+			}
+
+			var vv_minus1_copy = vv_minus1.slice(0,vv_minus1.length);
+			for(i=0;i<vv_minus1.length;i++){
+				vv_minus1_copy[i]=vv_minus1[i].slice(0,vv_minus1[i].length);
+			}
+
+			var m = new Matrix([ O_minus_E_vector_minus1]),
+				m_T = new Matrix([ O_minus_E_vector_minus1]).trans(),
+				vv_minus1_inv = new Matrix(jStat.inv(vv_minus1_copy)),
+				mfinal = m.dot(vv_minus1_inv).dot(m_T);
+
+			KM_stats = mfinal.data[0][0];
+			//console.log(KM_stats);
+
+			pValue = 1- jStat.chisquare.cdf( KM_stats, dof);
+
+			if (dof>0){
+				this.KM_stats = KM_stats;
+				this.pValue = pValue;
+			}
+
 			self.render();
 		},
 
@@ -352,27 +417,23 @@ define([ 'd3',
 				.subscribe(self.receiveSurvivalData));
 		},
 
-		setupSvg: function (dwidth,dheight) {
+		setupSvg: function (svgWidth, svgHeight, textArea) {
 			if(this.svg) {
 				this.svg.selectAll("*").remove();
 			}
 
 			var margin = {top: 20, right: 20, bottom: 40, left: 50},
-				buffer = 100,
-				textArea = dwidth /2,
-				width = dwidth - margin.left - margin.right - textArea,
-				height = dheight - margin.top - margin.bottom - buffer,
+				width = svgWidth - margin.left - margin.right - textArea, // plot width
+				height = svgHeight - margin.top - margin.bottom, // plot height
 
 				x = d3.scale.linear().range([0, width]),
 				y = d3.scale.linear().range([height, 0]),
 				xAxis = d3.svg.axis().scale(x).orient("bottom"),
 				yAxis = d3.svg.axis().scale(y).orient("left");
 
-			this.svgWidth= dwidth - buffer /2;
-			this.svgHeight = dheight - buffer;
 			this.svg = d3.select(this.kmplot[0])
-				.attr("width", this.svgWidth )
-				.attr("height", this.svgHeight)
+				.attr("width", svgWidth )
+				.attr("height", svgHeight)
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -400,15 +461,23 @@ define([ 'd3',
 		},
 
 		render: function (){
-			//window.innerHeight? window.innerHeight-250: 500;
-			this.setupSvg(this.$dialog.width(),this.$dialog.height());
-
-			var subgroups = this.subgroups,
+			var subgroups = this.subgroups.slice(0,MAX),
 				KM_stats = this.KM_stats,
 				pValue = this.pValue,
-				svg= this.svg,
-				svgHeight = this.svgHeight,
-				svgWidth = this.svgWidth,
+
+				buffer = 100,
+				svgHeight = this.$dialog.height() - buffer,
+				svgWidth = this.$dialog.width() - buffer/2,
+				lineSpacing = 35,
+				yStart = lineSpacing*2,
+				nCols= parseInt( lineSpacing * subgroups.length / (svgHeight - yStart )) +1,  // number of text columns
+				nItem = parseInt((svgHeight -yStart) / lineSpacing), // number of item per text column
+				textArea = _.min([nCols*0.2, 0.4]) *svgWidth + buffer/2, //max text area is 40%
+				wColumn = parseInt((textArea - buffer/2)/ nCols);  //width of each text column
+
+			this.setupSvg(svgWidth,svgHeight, textArea);
+
+			var svg= this.svg,
 				x = this.x,
 				y = this.y,
 				color = _.get_in(this, ['columnUi', 'ws', 'colors', 0]),
@@ -468,6 +537,7 @@ define([ 'd3',
 				d3.max(subgroups, function (sg) { return d3.max(sg.values, function (v) { return v.t; }); })
 			]);
 
+
 			subgroup = this.svg.selectAll(".subgroup").data(subgroups);
 
 			sgg = subgroup.enter().append("g").attr("class", "subgroup");
@@ -520,30 +590,27 @@ define([ 'd3',
 			censorLine('outline'); // render the outline first, so the color will overlay it
 			censorLine('line');
 
-			//p value and statistics
-			var xStart =svgWidth * 0.6,
-				lineSpacing = 30,
-				yStart = lineSpacing*3;
 
-			if (pValue < 1e-4){
-				this.svg.append("text").attr("x",xStart).text("p value = "+d3.format(".2e")(pValue));
+			//p value and statistics
+			var xStart =svgWidth - textArea ;
+
+			if (this.KM_stats){
+				if (pValue < 1e-4){
+					this.svg.append("text").attr("x",xStart).text("p value = "+d3.format(".2e")(pValue));
+				}
+				else{
+					this.svg.append("text").attr("x",xStart).text("p value = "+d3.format(".2g")(pValue));
+				}
+				this.svg.append("text").attr("x",xStart).attr("y",lineSpacing).text("Log-rank test statistics = "+KM_stats.toPrecision(3));
 			}
-			else{
-				this.svg.append("text").attr("x",xStart).text("p value = "+d3.format(".2g")(pValue));
-			}
-			this.svg.append("text").attr("x",xStart).attr("y",lineSpacing).text("Log-rank test statistics = "+KM_stats.toPrecision(3));
-			this.svg.append("text").attr("x",xStart).attr("y",lineSpacing*2).text("(pearson's chi-squared test)");
 
 			// legend: lines and text labels
-			var nCols= parseInt( lineSpacing * subgroups.length / (svgHeight - yStart )) +1,  // number of column
-				wColumn = parseInt(svgWidth *0.4 / nCols),
-				nItem = parseInt((svgHeight -yStart) / lineSpacing),
-				xEnd,
+			var	xEnd,
 				labelStart, labelSize,
 				textY;
 
 			subgroup.each(function (group,i) {
-				xStart = svgWidth * 0.6 + parseInt(i/nItem) * wColumn;
+				xStart = svgWidth - textArea + parseInt(i/nItem) * wColumn;
 				textY =  yStart + lineSpacing* (i%nItem) ; //30 line spacing
 
 				xEnd = xStart +30;
@@ -551,6 +618,7 @@ define([ 'd3',
 				labelSize = wColumn - 35;
 
 				//line
+				//sgg.append("path").attr("class", "line")
 				svg.append("line").attr({ "x1": xStart, "y1": textY, "x2": xEnd, "y2": textY})
 					.style("stroke", color(group.group)).style("stroke-width", 3);
 
@@ -561,7 +629,8 @@ define([ 'd3',
 					}
 
 				//label
-				svg.append("foreignObject").attr({"x":labelStart,"y":textY-8,"width":labelSize,"height":lineSpacing}).text(group.name);
+				svg.append("foreignObject").attr({"x":labelStart,"y":textY-8,"width":labelSize,'height':lineSpacing})
+				.text(group.name);
 			});
 		},
 

@@ -18,6 +18,17 @@ define(['jquery', 'underscore'], function ($, _) {
 		return pluck(x, 'tte');
 	}
 
+	function average(xArray){
+		return sum(xArray)/xArray.length;
+	}
+
+	function sum(xArray){
+		return reduce(xArray, function (memo, item) {
+			return memo+item;
+		},0);
+	}
+
+
 	// kaplan-meier
 	// See http://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
 	//
@@ -46,9 +57,9 @@ define(['jquery', 'underscore'], function ($, _) {
 			si = reduce(dini, function (a, dn) { // survival at each t_i (including censor times)
 				var l = last(a) || { s: 1 };
 				if (dn.d) {                      // there were events at this t_i
-					a.push({t: dn.t, e: true, s: l.s * (1 - dn.d / dn.n), rate : dn.d/dn.n});
+					a.push({t: dn.t, e: true, s: l.s * (1 - dn.d / dn.n), n:dn.n, d:dn.d, rate : dn.d/dn.n});
 				} else {                          // only censors
-					a.push({t: dn.t, e: false, s: l.s, rate: null});
+					a.push({t: dn.t, e: false, s: l.s, n:dn.n, d:dn.d, rate: null});
 				}
 				return a;
 			}, []);
@@ -77,10 +88,12 @@ define(['jquery', 'underscore'], function ($, _) {
 
 	// https://cran.r-project.org/web/packages/survival/survival.pdf
 	// R use (O-E)^2/V V is variance for two groups and covariance for multiple groups
-	// not pearson chi-squared
 
 	//https://github.com/CamDavidsonPilon/lifelines/blob/master/lifelines/statistics.py
 	//python implementation, identical results to R
+
+	// covariance calculation
+	// https://books.google.com/books?id=nPkjIEVY-CsC&pg=PA451&lpg=PA451&dq=multivariate+hypergeometric+distribution+covariance&source=bl&ots=yoieGfA4bu&sig=dhRcSYKcYiqLXBPZWOaqzciViMs&hl=en&sa=X&ved=0CEQQ6AEwBmoVChMIkqbU09SuyAIVgimICh0J3w1x#v=onepage&q=multivariate%20hypergeometric%20distribution%20covariance&f=false
 
 	//https://plot.ly/ipython-notebooks/survival-analysis-r-vs-python/#Using-R
 	// R online tutorial
@@ -115,9 +128,9 @@ define(['jquery', 'underscore'], function ($, _) {
 			}, []),
 			expectedNumber,
 			observedNumber,
-			pearson_chi_squared_component;
+			dataByTimeTable=[];
 
-		si.filter(function(item){  //only keep the curve where there is an event
+		si=si.filter(function(item){  //only keep the curve where there is an event
 			if (item.e) {return true;}
 			else {return false;}
 		});
@@ -135,7 +148,9 @@ define(['jquery', 'underscore'], function ($, _) {
 
 
 			if(pointerInData){
-				return memo + pointerInData.n * item.rate;
+				var expected = pointerInData.n * item.rate;
+				dataByTimeTable.push(pointerInData);
+				return memo + expected;
 			}
 			else {
 				return memo;
@@ -144,9 +159,12 @@ define(['jquery', 'underscore'], function ($, _) {
 		},0);
 
 		observedNumber = filter(ev, function(x) {return (x===1);}).length; //1 is the internal xena converted code for EVENT
-		pearson_chi_squared_component = (observedNumber - expectedNumber)* (observedNumber - expectedNumber) / expectedNumber;
 
-		return { expected: expectedNumber, observed: observedNumber, pearson_chi_squared_component: pearson_chi_squared_component};
+		return { expected: expectedNumber,
+			observed: observedNumber,
+			dataByTimeTable: dataByTimeTable,
+			timeNumber: dataByTimeTable.length
+		};
 	}
 
 	return {
