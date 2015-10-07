@@ -220,7 +220,7 @@ define(['jquery', 'underscore'], function ($, _) {
 							Kj= O_E_table[j].dataByTimeTable[t].n;
 							if (i!==j){ // https://books.google.com/books?id=nPkjIEVY-CsC&pg=PA451&lpg=PA451&dq=multivariate+hypergeometric+distribution+covariance&source=bl&ots=yoieGfA4bu&sig=dhRcSYKcYiqLXBPZWOaqzciViMs&hl=en&sa=X&ved=0CEQQ6AEwBmoVChMIkqbU09SuyAIVgimICh0J3w1x#v=onepage&q=multivariate%20hypergeometric%20distribution%20covariance&f=false
 								vv[i][j] -= n*Ki*Kj*(N-n)/(N*N*(N-1));
-								vv[j][i] -= vv[i][j] ;
+								vv[j][i] = vv[i][j] ;
 							}
 							else {//i==j
 								vv[i][i] += n*Ki*(N-Ki)*(N-n)/(N*N*(N-1));
