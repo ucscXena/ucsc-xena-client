@@ -211,8 +211,10 @@ define([ 'd3',
 				groups,
 				regroup,
 				patientUniqueSamples,
-				dupPatientSamples;
-
+				dupPatientSamples,
+				allGroups_tte=[],
+				allGroups_ev=[],
+				r;
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
@@ -246,9 +248,13 @@ define([ 'd3',
 				groups = self.regroup(values);
 			}
 
-			each(groups.slice(0, MAX), function (group, i) {
+			self.featureLabel.text('Grouped by: ' +
+				(all ? 'All samples' : chief.label) +
+				(groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "") +
+				(chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
+
+			each(groups, function (group, i) {
 				var label,
-					r,
 					samples = all ? _.keys(ttevValues) : filter(keys(chief.values), function (s) {
 						if (regroup) {
 							return (i === 0 && chief.values[s] < groups[0]) ||
@@ -258,11 +264,12 @@ define([ 'd3',
 							return chief.values[s] === group;
 						}
 					}),
-
 					/*jslint eqeq: true */
 					/*jshint eqnull: true */
 					samplesNotNullTtevFn = filter(samples, function (s) { return ttev_fn(s) != null; }),
-					res = km.compute(map(samplesNotNullTtevFn, ttev_fn), map(samplesNotNullTtevFn, ev_fn));
+					tte =map(samplesNotNullTtevFn, ttev_fn),
+					ev= map(samplesNotNullTtevFn, ev_fn),
+					res = km.compute(tte, ev);
 
 				if (res.length > 0) {
 					if (dupPatientSamples.length) {
@@ -277,16 +284,35 @@ define([ 'd3',
 					subgroups.push({
 						name: label + " (n=" + samplesNotNullTtevFn.length + ")",
 						group: (regroup ? r.colorGroup : group),
-						values: res
+						values: res,
+						tte: tte,
+						ev:ev
 					});
+					allGroups_tte = allGroups_tte.concat(tte);
+					allGroups_ev = allGroups_ev.concat(ev);
 				}
 			});
 
-			self.featureLabel.text('Grouped by: ' +
-				(all ? 'All samples' : chief.label) +
-				(groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "") +
-				(chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
-			self.render(subgroups, chief);
+			this.subgroups = subgroups;
+
+			// KM stats computation
+			var groupedDataTable=[], // grouped raw data table
+				allGroupsRes = km.compute(allGroups_tte, allGroups_ev);
+
+			allGroupsRes = allGroupsRes.filter(function(item){  //only keep the curve where there is an event
+				if (item.e) {return true;}
+				else {return false;}
+			});
+
+			groupedDataTable = map(subgroups, function(group){
+				return {tte: group.tte, ev:group.ev};
+			});
+
+			r = km.logranktest (allGroupsRes, groupedDataTable);
+			this.KM_stats = r.KM_stats;
+			this.pValue = r.pValue;
+
+			self.render();
 		},
 
 		getSurvivalData: function (eventDsID, survival) {
@@ -318,31 +344,35 @@ define([ 'd3',
 				.subscribe(self.receiveSurvivalData));
 		},
 
-		setupSvg: function () {
-			var margin = {top: 20, right: 200, bottom: 30, left: 50},
-				width = 845 - margin.left - margin.right,
-				height = 500 - margin.top - margin.bottom,
+		setupSvg: function (svgWidth, svgHeight, textArea) {
+			if(this.svg) {
+				this.svg.selectAll("*").remove();
+			}
+
+			var margin = {top: 20, right: 20, bottom: 40, left: 50},
+				width = svgWidth - margin.left - margin.right - textArea, // plot width
+				height = svgHeight - margin.top - margin.bottom, // plot height
 
 				x = d3.scale.linear().range([0, width]),
 				y = d3.scale.linear().range([height, 0]),
 				xAxis = d3.svg.axis().scale(x).orient("bottom"),
-				yAxis = d3.svg.axis().scale(y).orient("left"),
+				yAxis = d3.svg.axis().scale(y).orient("left");
 
-				svg = d3.select(this.kmplot[0])
-					.attr("width", width + margin.left + margin.right)
-					.attr("height", height + margin.top + margin.bottom)
-					.append("g")
-					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			this.svg = d3.select(this.kmplot[0])
+				.attr("width", svgWidth )
+				.attr("height", svgHeight)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 			x.domain([0, 100]); // random default
 			y.domain([0, 1]);
 
-			svg.append("g")
+			this.svg.append("g")
 				.attr("class", "x axis")
 				.attr("transform", "translate(0," + height + ")")
 				.call(xAxis);
 
-			svg.append("g")
+			this.svg.append("g")
 				.attr("class", "y axis")
 				.call(yAxis)
 				.append("text")
@@ -353,14 +383,29 @@ define([ 'd3',
 				.style("text-anchor", "start")
 				.text("Survival percentage");
 
-			this.svg = svg;
 			this.x = x;
 			this.y = y;
-			this.xAxis = xAxis;
 		},
 
-		render: function (subgroups, chief) {
-			var x = this.x,
+		render: function (){
+			var subgroups = this.subgroups.slice(0,MAX),
+				KM_stats = this.KM_stats,
+				pValue = this.pValue,
+
+				buffer = 100,
+				svgHeight = this.$dialog.height() - buffer,
+				svgWidth = this.$dialog.width() - buffer/2,
+				lineSpacing = 35,
+				yStart = lineSpacing*2,
+				nCols= parseInt( lineSpacing * subgroups.length / (svgHeight - yStart )) +1,  // number of text columns
+				nItem = parseInt((svgHeight -yStart) / lineSpacing), // number of item per text column
+				textArea = _.min([nCols*0.2, 0.4]) *svgWidth + buffer/2, //max text area is 40%
+				wColumn = parseInt((textArea - buffer/2)/ nCols);  //width of each text column
+
+			this.setupSvg(svgWidth,svgHeight, textArea);
+
+			var svg= this.svg,
+				x = this.x,
 				y = this.y,
 				color = _.get_in(this, ['columnUi', 'ws', 'colors', 0]),
 				line = d3.svg.line().interpolate("step-after")
@@ -369,6 +414,7 @@ define([ 'd3',
 				subgroup,
 				sgg,
 				update;
+
 
 			// there is probably a faster algorithm, since we're drawing single-valued
 			// functions. Sampling splines is a bit of an overkill.
@@ -417,7 +463,7 @@ define([ 'd3',
 				d3.min(subgroups, function (sg) { return d3.min(sg.values, function (v) { return v.t; }); }),
 				d3.max(subgroups, function (sg) { return d3.max(sg.values, function (v) { return v.t; }); })
 			]);
-			this.svg.select(".x.axis").transition().call(this.xAxis);
+
 
 			subgroup = this.svg.selectAll(".subgroup").data(subgroups);
 
@@ -435,8 +481,8 @@ define([ 'd3',
 			subgroup.select('path.line')
 				.each(update);
 				// Without transition, remove the each(), and add these.
-//				.attr("d", function (d) { return line([{t: x.domain()[0] - 1, s: 1}].concat(d.values)); }) // add the point at 100%
-//				.style("stroke", function (d) { return color(d.group); });
+				//	.attr("d", function (d) { return line([{t: x.domain()[0] - 1, s: 1}].concat(d.values)); }) // add the point at 100%
+				//	.style("stroke", function (d) { return color(d.group); });
 
 			subgroup.select('path.outline')
 				.each(update);
@@ -470,6 +516,49 @@ define([ 'd3',
 
 			censorLine('outline'); // render the outline first, so the color will overlay it
 			censorLine('line');
+
+
+			//p value and statistics
+			var xStart =svgWidth - textArea ;
+
+			if (this.KM_stats){
+				if (pValue < 1e-4){
+					this.svg.append("text").attr("x",xStart).text("p value = "+d3.format(".2e")(pValue));
+				}
+				else{
+					this.svg.append("text").attr("x",xStart).text("p value = "+d3.format(".2g")(pValue));
+				}
+				this.svg.append("text").attr("x",xStart).attr("y",lineSpacing).text("Log-rank test statistics = "+KM_stats.toPrecision(3));
+			}
+
+			// legend: lines and text labels
+			var	xEnd,
+				labelStart, labelSize,
+				textY;
+
+			subgroup.each(function (group,i) {
+				xStart = svgWidth - textArea + parseInt(i/nItem) * wColumn;
+				textY =  yStart + lineSpacing* (i%nItem) ; //30 line spacing
+
+				xEnd = xStart +30;
+				labelStart = xStart +35;
+				labelSize = wColumn - 35;
+
+				//line
+				//sgg.append("path").attr("class", "line")
+				svg.append("line").attr({ "x1": xStart, "y1": textY, "x2": xEnd, "y2": textY})
+					.style("stroke", color(group.group)).style("stroke-width", 3);
+
+				//outline
+				if (color(group.group)==="#ffffff"){
+					svg.append("rect").attr({ "x": xStart-1, "y": textY-1, "width": 32, "height": 3, "fill":"none"})
+						.style("stroke", "gray"/*color(group.group)*/).style("stroke-width", 1);
+					}
+
+				//label
+				svg.append("foreignObject").attr({"x":labelStart,"y":textY-8,"width":labelSize,'height':lineSpacing})
+				.text(group.name);
+			});
 		},
 
 		setSurvivalVars: function () {
@@ -538,47 +627,21 @@ define([ 'd3',
 		cache: [ 'kmScreen', 'kmplot', 'featureLabel', 'warningIcon' ],
 
 		geometryChange: function () {
-			var self = this,
-				offset = this.$dialog.offset();
-			this.cursor.update(function (s) {
-				return _.assoc_in(s, ['kmPlot', 'geometry'], {
-					left: offset.left,
-					top: offset.top,
-					width: self.$dialog.width(),
-					height: self.$dialog.height()
-				});
-			});
+			this.render();
 		},
 
 		initialize: function (options) {
 			var self = this,
 				position,
-				width,
-				height,
+				width = window.innerWidth? window.innerWidth-250: 800,
+				height =window.innerHeight? window.innerHeight-50: 500,
 				myWs = options.columnUi.ws.column.kmPlot,
-				geometry = myWs.geometry,
 				dialogClass = 'kmPlotDialog-' + this.id;
+
 			this.columnUi = options.columnUi;
 			this.cursor = options.cursor;
 			this.subs = new Rx.CompositeDisposable();
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
-
-			if (geometry === 'default') {
-				position = {
-					my: 'left top',
-					at: 'left+100, top+100',
-					of:  $(window)
-				};
-				width = height = 'auto';
-			} else {
-				position = {
-					my: 'left top',
-					at: 'left+' + geometry.left + ' top+' + geometry.top,
-					of: $(window)
-				};
-				width = geometry.width;
-				height = geometry.height;
-			}
 
 			this.$el = $(template({
 				warningImg: warningImg
@@ -591,21 +654,18 @@ define([ 'd3',
 					height: height,
 					position: position,
 					resizeStop: this.geometryChange,
-					dragStop: this.geometryChange
 				});
 			this.$dialog = $('.' + dialogClass);
 
 			// cache jquery objects for active DOM elements
 			_(self).extend(_(self.cache).reduce(function (a, e) { a[e] = self.$el.find('.' + e); return a; }, {}));
 
-			this.setupSvg();
-			defer(this.geometryChange);
-
-			if (geometry === 'default') {
-				this.setSurvivalVars();
-			} else if (myWs.eventDsID && myWs.survival) {
+			if (myWs.eventDsID && myWs.survival) {
 				this.getSurvivalData(myWs.eventDsID, myWs.survival);
 				// TODO for now, assume survival vars are still in the saved eventDsID.
+			}
+			else {
+				this.setSurvivalVars();
 			}
 		}
 	};

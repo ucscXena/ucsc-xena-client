@@ -47,7 +47,9 @@
     "select2": "3.4.5",
     "static-interval-tree": "^1.0.3",
     "underscore": "^1.7.0",
-    "underscore.string": "^3.0.3"
+    "underscore.string": "^3.0.3",
+    "jStat":"1.4.3",
+    "linear-algebra":"3.1.1"
   },
   "napa": {
     "haml": "https://github.com/uglyog/clientside-haml-js.git#release_5_4",
