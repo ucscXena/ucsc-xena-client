@@ -4,6 +4,11 @@
 define(['jquery', 'underscore'], function ($, _) {
 	'use strict';
 
+	var jStat = require('jStat').jStat,
+		linearAlgebra = require('linear-algebra')(),
+		Vector = linearAlgebra.Vector,
+    Matrix = linearAlgebra.Matrix;
+
 	var reduce = _.reduce,
 		map = _.map,
 		groupBy = _.groupBy,
@@ -167,8 +172,91 @@ define(['jquery', 'underscore'], function ($, _) {
 		};
 	}
 
+
+	function logranktest (allGroupsRes, groupedDataTable){
+		var KM_stats,
+			pValue,
+			dof, // degree of freedom
+			i,j, //groups
+			t, //timeIndex
+			O_E_table=[],
+			O_minus_E_vector=[], O_minus_E_vector_minus1,// O-E and O-E drop the last element
+			vv=[], vv_minus1, //covariant matrix and covraiance matrix drops the last row and column
+			N, //total number of samples
+			Ki, Kj, // at risk number from each group
+			n; //total observed
+
+		_.each(groupedDataTable, function(group){
+			var r = expectedObservedEventNumber(allGroupsRes, group.tte, group.ev);
+				//console.log(group.name, group.tte.length, r.observed, r.expected,
+				//	(r.observed-r.expected)*(r.observed-r.expected)/r.expected, r.timeNumber);
+				if (r.expected){
+					O_E_table.push(r);
+					O_minus_E_vector.push(r.observed - r.expected);
+				}
+			});
+
+			dof = O_E_table.length-1;
+
+			// logrank stats covariance matrix vv
+			for (i=0;i<O_E_table.length; i++){
+				vv.push([]);
+				for (j=0;j<O_E_table.length; j++){
+					vv[i].push(0);
+				}
+			}
+
+			for (i=0;i<O_E_table.length; i++){
+				for (j=i;j<O_E_table.length; j++){
+					for (t=0;t< allGroupsRes.length; t++){
+						N = allGroupsRes[t].n;
+						n= allGroupsRes[t].d;
+						if (t < O_E_table[i].timeNumber && t <O_E_table[j].timeNumber){
+							Ki= O_E_table[i].dataByTimeTable[t].n;
+							Kj= O_E_table[j].dataByTimeTable[t].n;
+							if (i!==j){ // https://books.google.com/books?id=nPkjIEVY-CsC&pg=PA451&lpg=PA451&dq=multivariate+hypergeometric+distribution+covariance&source=bl&ots=yoieGfA4bu&sig=dhRcSYKcYiqLXBPZWOaqzciViMs&hl=en&sa=X&ved=0CEQQ6AEwBmoVChMIkqbU09SuyAIVgimICh0J3w1x#v=onepage&q=multivariate%20hypergeometric%20distribution%20covariance&f=false
+								vv[i][j] -= n*Ki*Kj*(N-n)/(N*N*(N-1));
+								vv[j][i] -= n*Ki*Kj*(N-n)/(N*N*(N-1));
+							}
+							else {//i==j
+								vv[i][i] += n*Ki*(N-Ki)*(N-n)/(N*N*(N-1));
+							}
+						}
+					}
+				}
+			}
+
+			O_minus_E_vector_minus1 = O_minus_E_vector.slice(0,O_minus_E_vector.length-1);
+			vv_minus1 = vv.slice(0,vv.length-1);
+			for (i=0;i<vv_minus1.length;i++){
+				vv_minus1[i]=vv_minus1[i].slice(0,vv_minus1[i].length-1);
+			}
+			var vv_minus1_copy = vv_minus1.slice(0,vv_minus1.length);
+			for(i=0;i<vv_minus1.length;i++){
+				vv_minus1_copy[i]=vv_minus1[i].slice(0,vv_minus1[i].length);
+			}
+
+			if (dof>0){
+				var m = new Matrix([ O_minus_E_vector_minus1]),
+					m_T = new Matrix([ O_minus_E_vector_minus1]).trans(),
+					vv_minus1_inv = new Matrix(jStat.inv(vv_minus1_copy)),
+					mfinal = m.dot(vv_minus1_inv).dot(m_T);
+
+				KM_stats = mfinal.data[0][0];
+
+				pValue = 1- jStat.chisquare.cdf( KM_stats, dof);
+			}
+
+			return {dof:dof,
+				KM_stats:KM_stats,
+				pValue:pValue
+			};
+	}
+
+
 	return {
 		compute: compute,
-		expectedObservedEventNumber: expectedObservedEventNumber
+		expectedObservedEventNumber: expectedObservedEventNumber,
+		logranktest: logranktest
 	};
 });

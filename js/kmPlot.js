@@ -18,11 +18,6 @@ define([ 'd3',
 
 	'use strict';
 
-	var jStat = require('jStat').jStat,
-		linearAlgebra = require('linear-algebra')(),
-		Vector = linearAlgebra.Vector,
-    Matrix = linearAlgebra.Matrix;
-
 	var each = _.each,
 		bind = _.bind,
 		map = _.map,
@@ -218,7 +213,8 @@ define([ 'd3',
 				patientUniqueSamples,
 				dupPatientSamples,
 				allGroups_tte=[],
-				allGroups_ev=[];
+				allGroups_ev=[],
+				r;
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
@@ -259,7 +255,6 @@ define([ 'd3',
 
 			each(groups, function (group, i) {
 				var label,
-					r,
 					samples = all ? _.keys(ttevValues) : filter(keys(chief.values), function (s) {
 						if (regroup) {
 							return (i === 0 && chief.values[s] < groups[0]) ||
@@ -301,89 +296,21 @@ define([ 'd3',
 			this.subgroups = subgroups;
 
 			// KM stats computation
-			var KM_stats, pValue,
-				i,j, //groups
-				t, //timeIndex
-				allGroupsRes,
-				dof, // degree of freedom
-				O_E_table=[],
-				O_minus_E_vector=[], O_minus_E_vector_minus1,// O-E and O-E drop the last element
-				vv=[], vv_minus1, //covariant matrix and covraiance matrix drops the last row and column
-				N=0, //total number of samples
-				Ki, Kj, // at risk number from each group
-				n=0; //total observed
+			var groupedDataTable=[], // grouped raw data table
+				allGroupsRes = km.compute(allGroups_tte, allGroups_ev);
 
-			allGroupsRes = km.compute(allGroups_tte, allGroups_ev);
 			allGroupsRes = allGroupsRes.filter(function(item){  //only keep the curve where there is an event
 				if (item.e) {return true;}
 				else {return false;}
 			});
 
-			each(subgroups, function(group){
-				var r = km.expectedObservedEventNumber(allGroupsRes, group.tte, group.ev);
-					//console.log(group.name, group.tte.length, r.observed, r.expected,
-					//	(r.observed-r.expected)*(r.observed-r.expected)/r.expected, r.timeNumber);
-					if (r.expected){
-						O_E_table.push(r);
-						O_minus_E_vector.push(r.observed - r.expected);
-					}
-				});
+			groupedDataTable = map(subgroups, function(group){
+				return {tte: group.tte, ev:group.ev};
+			});
 
-			dof = O_E_table.length-1;
-
-			// logrank stats covariance matrix vv
-			for (i=0;i<O_E_table.length; i++){
-				vv.push([]);
-				for (j=0;j<O_E_table.length; j++){
-					vv[i].push(0);
-				}
-			}
-
-			for (i=0;i<O_E_table.length; i++){
-				for (j=i;j<O_E_table.length; j++){
-					for (t=0;t< allGroupsRes.length; t++){
-						N = allGroupsRes[t].n;
-						n= allGroupsRes[t].d;
-						if (t < O_E_table[i].timeNumber && t <O_E_table[j].timeNumber){
-							Ki= O_E_table[i].dataByTimeTable[t].n;
-							Kj= O_E_table[j].dataByTimeTable[t].n;
-							if (i!==j){ // https://books.google.com/books?id=nPkjIEVY-CsC&pg=PA451&lpg=PA451&dq=multivariate+hypergeometric+distribution+covariance&source=bl&ots=yoieGfA4bu&sig=dhRcSYKcYiqLXBPZWOaqzciViMs&hl=en&sa=X&ved=0CEQQ6AEwBmoVChMIkqbU09SuyAIVgimICh0J3w1x#v=onepage&q=multivariate%20hypergeometric%20distribution%20covariance&f=false
-								vv[i][j] -= n*Ki*Kj*(N-n)/(N*N*(N-1));
-								vv[j][i] -= n*Ki*Kj*(N-n)/(N*N*(N-1));
-							}
-							else {//i==j
-								vv[i][i] += n*Ki*(N-Ki)*(N-n)/(N*N*(N-1));
-							}
-						}
-					}
-				}
-			}
-
-			O_minus_E_vector_minus1 = O_minus_E_vector.slice(0,O_minus_E_vector.length-1);
-			vv_minus1 = vv.slice(0,vv.length-1);
-			for (i=0;i<vv_minus1.length;i++){
-				vv_minus1[i]=vv_minus1[i].slice(0,vv_minus1[i].length-1);
-			}
-
-			var vv_minus1_copy = vv_minus1.slice(0,vv_minus1.length);
-			for(i=0;i<vv_minus1.length;i++){
-				vv_minus1_copy[i]=vv_minus1[i].slice(0,vv_minus1[i].length);
-			}
-
-			var m = new Matrix([ O_minus_E_vector_minus1]),
-				m_T = new Matrix([ O_minus_E_vector_minus1]).trans(),
-				vv_minus1_inv = new Matrix(jStat.inv(vv_minus1_copy)),
-				mfinal = m.dot(vv_minus1_inv).dot(m_T);
-
-			KM_stats = mfinal.data[0][0];
-			//console.log(KM_stats);
-
-			pValue = 1- jStat.chisquare.cdf( KM_stats, dof);
-
-			if (dof>0){
-				this.KM_stats = KM_stats;
-				this.pValue = pValue;
-			}
+			r = km.logranktest (allGroupsRes, groupedDataTable);
+			this.KM_stats = r.KM_stats;
+			this.pValue = r.pValue;
 
 			self.render();
 		},
