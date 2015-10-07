@@ -231,9 +231,15 @@ define([ 'd3',
 				}
 			);
 
+			var filterOutNoPatientSamples = function(sample){
+				if (isNaN(samplesToCodes[sample])){ return false;}
+				else {return true;}
+			};
+
 			// check for duplicate patients ending up on the plot, to give a warning.
 			patientUniqueSamples = uniq(samples, false, patient_fn);
-			dupPatientSamples = _.difference(samples, patientUniqueSamples);
+			patientUniqueSamples = patientUniqueSamples.filter(filterOutNoPatientSamples);
+			dupPatientSamples = _.difference(samples.filter(filterOutNoPatientSamples), patientUniqueSamples);
 			if (dupPatientSamples.length) {
 				this.subs.add(code_list(this.survivalDsID, [this.survivalPatient])
 					.subscribe(function (codes) {
@@ -266,7 +272,7 @@ define([ 'd3',
 					}),
 					/*jslint eqeq: true */
 					/*jshint eqnull: true */
-					samplesNotNullTtevFn = filter(samples, function (s) { return ttev_fn(s) != null; }),
+					samplesNotNullTtevFn = filter(samples, function (s) { return (ttev_fn(s) != null) && (ev_fn(s)!=null); }),
 					tte =map(samplesNotNullTtevFn, ttev_fn),
 					ev= map(samplesNotNullTtevFn, ev_fn),
 					res = km.compute(tte, ev);
@@ -344,7 +350,7 @@ define([ 'd3',
 				.subscribe(self.receiveSurvivalData));
 		},
 
-		setupSvg: function (svgWidth, svgHeight, textArea) {
+		setupSvg: function (svgWidth, svgHeight, xMax, textArea) {
 			if(this.svg) {
 				this.svg.selectAll("*").remove();
 			}
@@ -364,7 +370,7 @@ define([ 'd3',
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-			x.domain([0, 100]); // random default
+			x.domain([0, xMax]);
 			y.domain([0, 1]);
 
 			this.svg.append("g")
@@ -391,7 +397,7 @@ define([ 'd3',
 			var subgroups = this.subgroups.slice(0,MAX),
 				KM_stats = this.KM_stats,
 				pValue = this.pValue,
-
+				xMax = d3.max(subgroups, function (sg) { return d3.max(sg.values, function (v) { return v.t; }); }),
 				buffer = 100,
 				svgHeight = this.$dialog.height() - buffer,
 				svgWidth = this.$dialog.width() - buffer/2,
@@ -403,7 +409,7 @@ define([ 'd3',
 				wColumn = parseInt((textArea - buffer/2)/ nCols);  //width of each text column
 
 
-			this.setupSvg(svgWidth,svgHeight, textArea);
+			this.setupSvg(svgWidth,svgHeight, xMax, textArea);
 
 			var svg= this.svg,
 				x = this.x,
@@ -415,7 +421,6 @@ define([ 'd3',
 				subgroup,
 				sgg,
 				update;
-
 
 			// there is probably a faster algorithm, since we're drawing single-valued
 			// functions. Sampling splines is a bit of an overkill.
@@ -459,12 +464,6 @@ define([ 'd3',
 					.attrTween("d", pathTween(d))
 					.style("stroke", function (d) { return color(d.group); });
 			};
-
-			x.domain([
-				d3.min(subgroups, function (sg) { return d3.min(sg.values, function (v) { return v.t; }); }),
-				d3.max(subgroups, function (sg) { return d3.max(sg.values, function (v) { return v.t; }); })
-			]);
-
 
 			subgroup = this.svg.selectAll(".subgroup").data(subgroups);
 
