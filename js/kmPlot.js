@@ -402,6 +402,7 @@ define([ 'd3',
 				textArea = _.min([nCols*0.2, 0.4]) *svgWidth + buffer/2, //max text area is 40%
 				wColumn = parseInt((textArea - buffer/2)/ nCols);  //width of each text column
 
+
 			this.setupSvg(svgWidth,svgHeight, textArea);
 
 			var svg= this.svg,
@@ -487,7 +488,6 @@ define([ 'd3',
 			subgroup.select('path.outline')
 				.each(update);
 
-
 			subgroup.select('text')
 				.attr("transform", function (d) {
 					d = last(d.values);
@@ -517,6 +517,26 @@ define([ 'd3',
 			censorLine('outline'); // render the outline first, so the color will overlay it
 			censorLine('line');
 
+			//show/hide labels button
+			var buttonHandler =function(){
+ 			 	if ($(this).val() ==="hide labels"){
+ 			 		$(this).val("show labels");
+ 			 		subgroup.select('text').style("visibility","hidden");
+ 			 	} else {
+ 			 		$(this).val("hide labels");
+ 			 		subgroup.select('text').style("visibility","visible");
+ 			 	}
+			};
+
+ 			if (this.showLabelbutton.val() ==="show labels"){
+ 			 	subgroup.select('text').style("visibility","hidden");
+ 			} else {
+ 			 	subgroup.select('text').style("visibility","visible");
+ 			}
+
+			this.showLabelbutton.show();
+			this.showLabelbutton.off();
+			this.showLabelbutton.bind("click",buttonHandler);
 
 			//p value and statistics
 			var xStart =svgWidth - textArea ;
@@ -624,7 +644,7 @@ define([ 'd3',
 				}));
 		},
 
-		cache: [ 'kmScreen', 'kmplot', 'featureLabel', 'warningIcon' ],
+		cache: [ 'kmScreen', 'kmplot', 'featureLabel', 'warningIcon'],
 
 		geometryChange: function () {
 			this.render();
@@ -659,6 +679,10 @@ define([ 'd3',
 
 			// cache jquery objects for active DOM elements
 			_(self).extend(_(self.cache).reduce(function (a, e) { a[e] = self.$el.find('.' + e); return a; }, {}));
+
+			this.showLabelbutton = $('<input type="button" value="hide labels" class="labelbutton" />');
+			this.showLabelbutton.insertAfter(this.warningIcon);
+			this.showLabelbutton.hide();
 
 			if (myWs.eventDsID && myWs.survival) {
 				this.getSurvivalData(myWs.eventDsID, myWs.survival);

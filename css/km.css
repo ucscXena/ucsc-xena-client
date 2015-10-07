@@ -93,12 +93,19 @@ path.outline {
 .kmScreen.notify {
 	display: block;
 }
+
 .kmDialog .featureLabel {
 	float: left;
 	padding-top: 5px;
 	padding-right: 20px;
 	font-weight: bold;
 }
+
 .kmDialog .warningIcon {
 	display: none;
+}
+
+.labelbutton {
+	margin: 5px 10px;
+	vertical-align: 50%;
 }

@@ -87,8 +87,11 @@ define(['jquery', 'underscore'], function ($, _) {
 	// http://www.ncbi.nlm.nih.gov/pmc/articles/PMC403858/
 	// introduce pearson chi-square to compute logrank statistics, however mentioned there is another way
 
+	// https://stat.ethz.ch/education/semesters/ss2011/seminar/contents/presentation_2.pdf
+	// introduce the other way
+
 	// http://ssp.unl.edu/Log%20Rank%20Test%20For%20More%20Than%202%20Groups.pdf
-  // gives basic idea of the "other" way R seems to use the "other" way
+  // gives basic idea of the "other" way
   // (O-E)^2/V V is variance for two groups and covariance for multiple groups
 
 	// https://cran.r-project.org/web/packages/survival/survival.pdf
@@ -165,7 +168,8 @@ define(['jquery', 'underscore'], function ($, _) {
 
 		observedNumber = filter(ev, function(x) {return (x===1);}).length; //1 is the internal xena converted code for EVENT
 
-		return { expected: expectedNumber,
+		return {
+			expected: expectedNumber,
 			observed: observedNumber,
 			dataByTimeTable: dataByTimeTable,
 			timeNumber: dataByTimeTable.length
@@ -216,7 +220,7 @@ define(['jquery', 'underscore'], function ($, _) {
 							Kj= O_E_table[j].dataByTimeTable[t].n;
 							if (i!==j){ // https://books.google.com/books?id=nPkjIEVY-CsC&pg=PA451&lpg=PA451&dq=multivariate+hypergeometric+distribution+covariance&source=bl&ots=yoieGfA4bu&sig=dhRcSYKcYiqLXBPZWOaqzciViMs&hl=en&sa=X&ved=0CEQQ6AEwBmoVChMIkqbU09SuyAIVgimICh0J3w1x#v=onepage&q=multivariate%20hypergeometric%20distribution%20covariance&f=false
 								vv[i][j] -= n*Ki*Kj*(N-n)/(N*N*(N-1));
-								vv[j][i] -= n*Ki*Kj*(N-n)/(N*N*(N-1));
+								vv[j][i] -= vv[i][j] ;
 							}
 							else {//i==j
 								vv[i][i] += n*Ki*(N-Ki)*(N-n)/(N*N*(N-1));
@@ -247,7 +251,8 @@ define(['jquery', 'underscore'], function ($, _) {
 				pValue = 1- jStat.chisquare.cdf( KM_stats, dof);
 			}
 
-			return {dof:dof,
+			return {
+				dof:dof,
 				KM_stats:KM_stats,
 				pValue:pValue
 			};
