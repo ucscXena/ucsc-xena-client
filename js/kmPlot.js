@@ -315,6 +315,8 @@ define([ 'd3',
 			});
 
 			r = km.logranktest (allGroupsRes, groupedDataTable);
+
+			this.dof = r.dof;
 			this.KM_stats = r.KM_stats;
 			this.pValue = r.pValue;
 
@@ -350,7 +352,7 @@ define([ 'd3',
 				.subscribe(self.receiveSurvivalData));
 		},
 
-		setupSvg: function (svgWidth, svgHeight, xMax, textArea) {
+		setupSvg: function (svgWidth, svgHeight, xMin, xMax, textArea) {
 			if(this.svg) {
 				this.svg.selectAll("*").remove();
 			}
@@ -370,7 +372,7 @@ define([ 'd3',
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-			x.domain([0, xMax]);
+			x.domain([xMin, xMax]);
 			y.domain([0, 1]);
 
 			this.svg.append("g")
@@ -397,6 +399,7 @@ define([ 'd3',
 			var subgroups = this.subgroups.slice(0,MAX),
 				KM_stats = this.KM_stats,
 				pValue = this.pValue,
+				xMin = _.min([0,d3.min(subgroups, function (sg) { return d3.min(sg.values, function (v) { return v.t; }); })]),
 				xMax = d3.max(subgroups, function (sg) { return d3.max(sg.values, function (v) { return v.t; }); }),
 				buffer = 100,
 				svgHeight = this.$dialog.height() - buffer,
@@ -408,19 +411,20 @@ define([ 'd3',
 				textArea = _.min([nCols*0.2, 0.4]) *svgWidth + buffer/2, //max text area is 40%
 				wColumn = parseInt((textArea - buffer/2)/ nCols);  //width of each text column
 
-
-			this.setupSvg(svgWidth,svgHeight, xMax, textArea);
+			this.setupSvg(svgWidth,svgHeight, xMin, xMax, textArea);
 
 			var svg= this.svg,
 				x = this.x,
 				y = this.y,
 				color = _.get_in(this, ['columnUi', 'ws', 'colors', 0]),
-				line = d3.svg.line().interpolate("step-after")
-					.x(function (d) { return x(d.t); })
-					.y(function (d) { return y(d.s); }),
+				line,
 				subgroup,
 				sgg,
 				update;
+
+			line = d3.svg.line().interpolate("step-after")
+					.x(function (d) { return x(d.t); })
+					.y(function (d) { return y(d.s); });
 
 			// there is probably a faster algorithm, since we're drawing single-valued
 			// functions. Sampling splines is a bit of an overkill.
@@ -540,14 +544,20 @@ define([ 'd3',
 			//p value and statistics
 			var xStart =svgWidth - textArea ;
 
-			if (this.KM_stats){
+			if (this.KM_stats && this.dof>0){
 				if (pValue < 1e-4){
-					this.svg.append("text").attr("x",xStart).text("p value = "+d3.format(".2e")(pValue));
+					this.svg.append("foreignObject")
+						.attr({"x":xStart,"width":textArea-buffer/2,'height':lineSpacing})
+						.text("p value = "+d3.format(".2e")(pValue));
 				}
 				else{
-					this.svg.append("text").attr("x",xStart).text("p value = "+d3.format(".2g")(pValue));
+					this.svg.append("foreignObject")
+						.attr({"x":xStart,"width":textArea-buffer/2,'height':lineSpacing})
+						.text("p value = "+d3.format(".2g")(pValue));
 				}
-				this.svg.append("text").attr("x",xStart).attr("y",lineSpacing).text("Log-rank test statistics = "+KM_stats.toPrecision(3));
+				this.svg.append("foreignObject")
+					.attr({"x":xStart,"y":lineSpacing/2,"width":textArea-buffer/2,'height':lineSpacing})
+					.text("Log-rank test statistics = "+KM_stats.toPrecision(3));
 			}
 
 			// legend: lines and text labels
@@ -557,14 +567,13 @@ define([ 'd3',
 
 			subgroup.each(function (group,i) {
 				xStart = svgWidth - textArea + parseInt(i/nItem) * wColumn;
-				textY =  yStart + lineSpacing* (i%nItem) ; //30 line spacing
+				textY =  yStart + lineSpacing* (i%nItem) ;
 
 				xEnd = xStart +30;
 				labelStart = xStart +35;
 				labelSize = wColumn - 35;
 
 				//line
-				//sgg.append("path").attr("class", "line")
 				svg.append("line").attr({ "x1": xStart, "y1": textY, "x2": xEnd, "y2": textY})
 					.style("stroke", color(group.group)).style("stroke-width", 3);
 
