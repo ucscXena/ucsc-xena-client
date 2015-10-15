@@ -437,7 +437,7 @@ define([ 'd3',
 				d3.select(this).transition()
 					.duration(300)
 					.attrTween("d", pathTween(d))
-					.style("stroke", function (d) { return color(d.group); });
+					.style("stroke", function () { return color(d.group); });
 			};
 
 			subgroup = this.svg.selectAll(".subgroup").data(subgroups);
@@ -514,16 +514,15 @@ define([ 'd3',
 			this.labelbutton.bind("click",buttonHandler);
 
 			var xStart =svgWidth - textArea,
-				warningWidth=30;
-
-			//show warning icon
-			var message="Some individuals survival data are used more than once in the KM plot. Affected patients are: "+
-						this.dupPatientSamples.join(', ')+
-						".   For more information and how to remove such duplications: https://goo.gl/TSQt6z. ";
+				warningWidth=this.dupPatientSamples.length ? 30: 0;
 
 			//warning icon
 			if (this.dupPatientSamples.length){
-				var box = this.svg.append("rect")
+				var message="Some individuals survival data are used more than once in the KM plot. Affected patients are: "+
+						this.dupPatientSamples.join(', ')+
+						".   For more information and how to remove such duplications: https://goo.gl/TSQt6z. ",
+
+				box = this.svg.append("rect")
 					.attr("x",xStart)
 					.attr("y",lineSpacing/4)
 					.attr("width", warningWidth-10)
@@ -586,7 +585,14 @@ define([ 'd3',
 					.style("stroke", color(group.group)).style("stroke-width", 3);
 
 				//outline
-				if (color(group.group)==="#ffffff"){
+				var C = color(group.group),
+					R = hexToR(C),
+					G = hexToG(C),
+					B = hexToB(C),
+					grayScale= 0.21*R + 0.72*G + 0.07*B; //http://www.johndcook.com/blog/2009/08/24/algorithms-convert-color-grayscale/
+
+
+				if (grayScale > 225){ // close to white color
 					svg.append("rect").attr({ "x": xStart-1, "y": textY-1, "width": 32, "height": 3, "fill":"none"})
 						.style("stroke", "gray"/*color(group.group)*/).style("stroke-width", 1);
 					}
@@ -722,6 +728,12 @@ define([ 'd3',
 		}
 		w = widgets[id] = kmCreate(id, options);
 	}
+
+	//http://www.javascripter.net/faq/hextorgb.htm
+	function hexToR(h) {return parseInt((cutHex(h)).substring(0,2),16);}
+	function hexToG(h) {return parseInt((cutHex(h)).substring(2,4),16);}
+	function hexToB(h) {return parseInt((cutHex(h)).substring(4,6),16);}
+	function cutHex(h) {return (h.charAt(0)==="#") ? h.substring(1,7):h;}
 
 	return {
 
