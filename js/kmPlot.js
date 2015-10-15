@@ -28,7 +28,7 @@ define([ 'd3',
 		keys = _.keys,
 		feature_list = xenaQuery.dsID_fn(xenaQuery.feature_list),
 		dataset_probe_values = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values),
-		code_list = xenaQuery.dsID_fn(xenaQuery.code_list),
+		//code_list = xenaQuery.dsID_fn(xenaQuery.code_list),
 		MAX = 30, // max number of categories
 		kmWidget,
 		widgets = {};
@@ -170,29 +170,6 @@ define([ 'd3',
 			return c;
 		},
 
-		///////// problematic code, that if there is no _PATIANT variable, it generates error,
-		///////// if the _PATIENT is not in the same dataset as _EVENT etc , it fails. I suspect that if not all
-		/////////  _EVENT _TTE _PATIANT are in the same datafile, it will fail.
-		/////////  very sloppy code.
-		receiveCodes: function (codes, dupPatientSamples, samplesToCodes) {
-			var dupCodes = filter(samplesToCodes, function (code, sample) {
-					return _.find(dupPatientSamples, function (dup) {
-						return dup === sample;
-					});
-				}),
-				dupArray = map(dupCodes, function (pc) {
-					return codes[pc];
-				}),
-				dupSamples = filter(samplesToCodes, function (code) {
-					return dupCodes.indexOf(code) > -1;
-				}),
-				msg = 'There are ' +
-					dupSamples.length +
-					' samples in this plot mapped to the same _PATIENT IDs: ' +
-					dupArray.join(', ');
-			this.warningIcon.prop('title', msg);
-		},
-
 		receiveSurvivalData: function (data) {
 			var self = this,
 				subgroups = [],
@@ -240,12 +217,8 @@ define([ 'd3',
 			patientUniqueSamples = uniq(samples, false, patient_fn);
 			patientUniqueSamples = patientUniqueSamples.filter(filterOutNoPatientSamples);
 			dupPatientSamples = _.difference(samples.filter(filterOutNoPatientSamples), patientUniqueSamples);
-			if (dupPatientSamples.length) {
-				this.subs.add(code_list(this.survivalDsID, [this.survivalPatient])
-					.subscribe(function (codes) {
-						self.receiveCodes(codes[self.survivalPatient], dupPatientSamples, samplesToCodes);
-					}));
-			}
+
+			this.dupPatientSamples = dupPatientSamples;
 
 			// Group by unique values, throwing out non-values. Coded feature values are always indexes 0..N-1.
 			groups = all ? ['All samples'] : (chief.isfloat ? filter(uniq(values), isVal) : range(chief.codes.length));
@@ -258,6 +231,7 @@ define([ 'd3',
 				(all ? 'All samples' : chief.label) +
 				(groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "") +
 				(chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
+
 
 			each(groups, function (group, i) {
 				var label,
@@ -278,9 +252,6 @@ define([ 'd3',
 					res = km.compute(tte, ev);
 
 				if (res.length > 0) {
-					if (dupPatientSamples.length) {
-						self.warningIcon.show();
-					}
 					if (regroup) {
 						r = self.findColorGroup(groups, values, i);
 						label = r.label;
@@ -524,39 +495,76 @@ define([ 'd3',
 			var buttonHandler =function(){
  			 	if ($(this).val() ==="hide labels"){
  			 		$(this).val("show labels");
+ 			 		$(this).text("show labels");
  			 		subgroup.select('text').style("visibility","hidden");
  			 	} else {
  			 		$(this).val("hide labels");
+ 			 		$(this).text("hide labels");
  			 		subgroup.select('text').style("visibility","visible");
  			 	}
 			};
 
- 			if (this.showLabelbutton.val() ==="show labels"){
+			this.labelbutton.show();
+			this.labelbutton.off();
+ 			if (this.labelbutton.val() ==="show labels"){
  			 	subgroup.select('text').style("visibility","hidden");
  			} else {
  			 	subgroup.select('text').style("visibility","visible");
  			}
+			this.labelbutton.bind("click",buttonHandler);
 
-			this.showLabelbutton.show();
-			this.showLabelbutton.off();
-			this.showLabelbutton.bind("click",buttonHandler);
+			var xStart =svgWidth - textArea,
+				warningWidth=30;
+
+			//show warning icon
+			var message="Some individuals survival data are used more than once in the KM plot. Affected patients are: "+
+						this.dupPatientSamples.join(', ')+
+						".   For more information and how to remove such duplications: https://goo.gl/TSQt6z. ";
+
+			//warning icon
+			if (this.dupPatientSamples.length){
+				var box = this.svg.append("rect")
+					.attr("x",xStart)
+					.attr("y",lineSpacing/4)
+					.attr("width", warningWidth-10)
+					.attr("height", warningWidth-10)
+					.attr("fill","white");
+
+				this.svg.append("a")
+					.append("image")
+					.attr("xlink:href", warningImg)
+					.attr("x",xStart)
+					.attr("y",lineSpacing/4)
+					.attr("width", warningWidth-10)
+					.attr("height", warningWidth-10)
+					.on('click', function(){
+						alert(message);
+					})
+					.on("mouseenter", function(){
+						box.style({"fill":"yellow","stroke":"black"});
+					})
+					.on("mouseout", function(){
+						box.style({"fill":"white","stroke":"white"});
+					});
+			}
 
 			//p value and statistics
-			var xStart =svgWidth - textArea ;
-
 			if (this.KM_stats && this.dof>0){
+				// p value
 				if (pValue < 1e-4){
 					this.svg.append("foreignObject")
-						.attr({"x":xStart,"width":textArea-buffer/2,'height':lineSpacing})
+						.attr({"x":xStart+warningWidth,"width":textArea-buffer/2-warningWidth,'height':lineSpacing})
 						.text("p value = "+d3.format(".2e")(pValue));
 				}
 				else{
 					this.svg.append("foreignObject")
-						.attr({"x":xStart,"width":textArea-buffer/2,'height':lineSpacing})
+						.attr({"x":xStart+warningWidth,"width":textArea-buffer/2-warningWidth,'height':lineSpacing})
 						.text("p value = "+d3.format(".2g")(pValue));
 				}
+
+				//stats
 				this.svg.append("foreignObject")
-					.attr({"x":xStart,"y":lineSpacing/2,"width":textArea-buffer/2,'height':lineSpacing})
+					.attr({"x":xStart+warningWidth,"y":lineSpacing/2,"width":textArea-buffer/2-warningWidth,'height':lineSpacing})
 					.text("Log-rank test statistics = "+KM_stats.toPrecision(3));
 			}
 
@@ -652,8 +660,6 @@ define([ 'd3',
 				}));
 		},
 
-		cache: [ 'kmScreen', 'kmplot', 'featureLabel', 'warningIcon'],
-
 		geometryChange: function () {
 			this.render();
 		},
@@ -672,7 +678,6 @@ define([ 'd3',
 			_.bindAll.apply(_, [this].concat(_.functions(this)));
 
 			this.$el = $(template({
-				warningImg: warningImg
 			}))
 				.dialog({
 					dialogClass: dialogClass,
@@ -688,9 +693,8 @@ define([ 'd3',
 			// cache jquery objects for active DOM elements
 			_(self).extend(_(self.cache).reduce(function (a, e) { a[e] = self.$el.find('.' + e); return a; }, {}));
 
-			this.showLabelbutton = $('<input type="button" value="hide labels" class="labelbutton" />');
-			this.showLabelbutton.insertAfter(this.warningIcon);
-			this.showLabelbutton.hide();
+			this.labelbutton.hide();
+			this.labelbutton.val("hide labels");
 
 			if (myWs.eventDsID && myWs.survival) {
 				this.getSurvivalData(myWs.eventDsID, myWs.survival);
@@ -699,7 +703,9 @@ define([ 'd3',
 			else {
 				this.setSurvivalVars();
 			}
-		}
+		},
+
+		cache: [ 'kmScreen', 'kmplot', 'featureLabel', 'labelbutton']
 	};
 
 	function kmCreate(id, options) {

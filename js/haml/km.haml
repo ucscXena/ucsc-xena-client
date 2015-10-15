@@ -16,8 +16,11 @@
               %select{class: 'timefeature'}
   %div
     %span{class:'featureLabel'}
-    %span{class: 'warningIcon'}
-      %img{src:warningImg, alt:''}
+    %span switch to
+    %button{class:'labelbutton'} hide labels
+    %button
+      %a{href: "https://goo.gl/TSQt6z", target: '_BLANK'} ="help"
+
     -#%button{class:'help right'} Help
     -#%button{class: 'kmoptsbutton right', style:'margin-right:10px'} Advanced Options
     -#%a{class:'wish right', style:'padding-top:5px;padding-right:20px', href:"mailto:genome-cancer@soe.ucsc.edu?subject=I wish the Kaplan-Meier plot would..."} I wish this would ...
