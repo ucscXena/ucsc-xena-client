@@ -96,16 +96,14 @@ path.outline {
 
 .kmDialog .featureLabel {
 	float: left;
-	padding-top: 5px;
-	padding-right: 20px;
+	margin-top:5px;
+	margin-right: 40px;
 	font-weight: bold;
-}
-
-.kmDialog .warningIcon {
-	display: none;
+	padding: 3px;
 }
 
 .labelbutton {
-	margin: 5px 10px;
-	vertical-align: 50%;
+	margin-top:5px;
+	margin-right: 40px;
+	padding: 3px;
 }
