@@ -16,6 +16,21 @@ function cmpString(s1, s2) {
 	return 0;
 }
 
+function updateColumnDisplay(state, colID) {
+	var col = _.getIn(state, [...paths.columns, colID]),
+		{dsID} = col,
+		viz = _.getIn(state, [...paths.vizSettings, 'dsID']),
+		samples = _.getIn(state, paths.samples),
+		dataset = _.getIn(state, [...paths.datasets, 'datasets', dsID]),
+		data = _.getIn(state, [...paths.data, colID]);
+	return _.assocIn(state, [...paths.data, colID, 'display'],
+			widgets.transform(col, viz, data, samples, dataset));
+}
+
+function updateAllColumns(state) {
+	return _.keys(_.getIn(state, paths.columns)).reduce(updateColumnDisplay, state);
+}
+
 function sortSamples(state) {
 	const order = _.getIn(state, paths.columnOrder),
 		columns = _.getIn(state, paths.columns),
@@ -27,7 +42,7 @@ function sortSamples(state) {
 			_.findValue(order, id => cmpFns[id](s1, s2)) ||
 			cmpString(s1, s2); // XXX add cohort as well
 
-	return _.assocIn(state, paths.samples, samples.slice(0).sort(cmpFn));
+	return updateAllColumns(_.assocIn(state, paths.samples, samples.slice(0).sort(cmpFn)));
 }
 
 module.exports = {

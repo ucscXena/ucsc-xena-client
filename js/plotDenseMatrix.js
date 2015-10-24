@@ -49,7 +49,7 @@ function second(x, y) {
 	return y;
 }
 
-var colorFns = vs => _.map(vs, ([, ...args]) => heatmapColors.range(...args));
+var colorFns = vs => _.map(vs, heatmapColors.colorScale);
 
 // need a Maybe
 function saveUndefined(fn) {
@@ -62,14 +62,38 @@ function subbykey(subtrahend, key, val) {
 	return val - subtrahend[key];
 }
 
-function dataToHeatmap(sortedSamples, data, probes, transform) {
+// Decide whether to normalize, perfering the user setting to the
+// dataset default setting.
+function shouldNormalize(vizSettings, metadata) {
+	var user = _.getIn(vizSettings, ['colNormalization']),
+		dataDefault = _.getIn(metadata, ['colnormalization']);
+	return user === 'subset' || _.isUndefined(user) && dataDefault;
+}
+
+// Returns 2d array of numbers, probes X samples.
+// [[number, ...], [number, ...]]
+// Performs sorting and normalization.
+function computeHeatmap(vizSettings, data, fields, samples, dataset) {
 	if (!data) {
 		return [];
 	}
-	return map(probes, function (p) {
+	var {mean, probes, values} = data,
+		colnormalization = shouldNormalize(vizSettings, dataset),
+		transform = (colnormalization && mean && _.partial(subbykey, mean)) || second;
+
+	return map(probes || fields, function (p) {
 		var suTrans = saveUndefined(v => transform(p, v));
-		return map(sortedSamples, s => suTrans(_.getIn(data[p], [s])));
+		return map(samples, s => suTrans(_.getIn(values[p], [s])));
 	});
+}
+
+function dataToHeatmap(column, vizSettings, {req, codes = {}}, samples, dataset) {
+	var fields = req.probes || column.fields;
+	var heatmap = computeHeatmap(vizSettings, req, fields, samples, dataset),
+		colors = map(fields, (p, i) =>
+					 heatmapColors.colorSpec(column, vizSettings,
+											 codes[p], heatmap[i], dataset));
+	return {heatmap: heatmap, colors: colors};
 }
 
 function drawColumn(data, colorScale, boxfn) {
@@ -213,8 +237,6 @@ function indexGeneResponse(genes, samples, data) {
 	return indexResponse(genes, samples, orderByQuery(genes, data));
 }
 
-// fetch routines return a memoized query.
-
 var fetch = ({dsID, fields}, samples) => Rx.Observable.zipArray(
 		datasetProbeValues(dsID, samples, fields)
 			.map(resp => indexResponse(fields, samples, resp)),
@@ -351,64 +373,69 @@ function categoryLegend(dataIn, colorScale, codes) {
 
 // Basic legend, given a color scale.
 function legendFromScale(colorScale) {
-	var labels = colorScale ? colorScale.domain() : [],
-		colors = colorScale ? _.map(labels, colorScale) : [];
+	var labels = colorScale.domain(),
+		colors = _.map(labels, colorScale);
 	return {labels: labels, colors: colors};
 }
 
+// We never want to draw multiple legends. If there are multiple scales,
+// we do lower/higher. There are multiple scales if we have multiple probes
+// *and* there's no viz settings. We need at most one color fn, from which we
+// extract the domain & range.
 function renderGenomicLegend(props) {
-	var {metadata, data, colorScale, hasViz} = props;
-	var colorfn = colorFns([colorScale[0]])[0];
-	var {labels, colors} = legendFromScale(colorfn);
+	var {metadata, colorScale = [], hasViz} = props,
+		multiScaled = colorScale.length > 1 && !hasViz,
+		hasData = colorScale.length > 0,
+		labels, colors;
 
-	if (data.length === 0) { // no features to draw
-		return <span/>;
-	}
-
-	if (colorScale.length > 1 && !hasViz) {
+	if (multiScaled) {
 		colors = heatmapColors.defaultColors(metadata);
 		labels = ["lower", "", "higher"];
-	} else if (colorfn) {
-		if (labels.length === 4) {                // positive and negative scale
-			labels = _.assoc(labels,
-					0, "<" + labels[0],
-					labels.length - 1, ">" + labels[labels.length - 1]);
-		} else if (labels.length === 3) {
-			if (colorfn.domain()[0] >= 0) { // positive scale
-				labels = _.assoc(labels,
-					labels.length - 1, ">" + labels[labels.length - 1]);
-			} else {                              // negative scale
-				labels = _.assoc(labels, 0, "<" + labels[0]);
+	} else if (hasData) { // one probe, or all colors are same (hasViz)
+		var colorfn = colorFns(colorScale)[0];
+		var {labels: l, colors: c} = legendFromScale(colorfn);
+		colors = c;
+		if (l.length === 4) {                // positive and negative scale
+			var [nl, nh, pl, ph] = l;
+			labels = ['<' + nl, nh, pl, '>' + ph];
+		} else if (l.length === 3) {
+			var [low, high] = l;
+			if (colorfn.domain()[0] >= 0) {  // positive scale
+				labels = [low, '>' + high];
+			} else {                         // negative scale
+				labels = ['<' + low, high];
 			}
 		}
+	} else { // no data
+		colors = [];
+		labels = [];
 	}
 
 	return <Legend colors={colors} labels={labels} align='center' />;
 }
 
 function floatLegend(colorScale) {
-	var {labels, colors} = legendFromScale(colorFns(colorScale));
+	var {labels, colors} = legendFromScale(colorScale);
 	return {labels: labels, colors: colors, align: 'center'};
 }
 
+// Might have colorScale but no data (phenotype), no data & no colorScale,
+// or data & colorScale, no colorScale &  data?
 function renderPhenotypeLegend(props) {
-	var {data: [data], fields, codes, colorScale} = props;
+	var {data: [data] = [], fields, codes, colorScale = []} = props;
 	var legendProps;
-	var colorfn = colorFns([colorScale[0]])[0];
-
-
-	if (data && data.length === 0) { // no features to draw
-		return <span />;
-	}
+	var colorfn = _.first(colorFns(colorScale.slice(0, 1)));
 
 	// We can use domain() for categorical, but we want to filter out
 	// values not in the plot. Also, we build the categorical from all
 	// values in the db (even those not in the plot) so that colors will
 	// match in other datasets.
-	if (data && codes && codes[fields[0]]) { // category
+	if (data && codes && codes[fields[0]] && colorfn) { // category
 		legendProps = categoryLegend(data, colorfn, codes[fields[0]]);
-	} else {
+	} else if (colorfn) {
 		legendProps = floatLegend(colorfn);
+	} else {
+		return <span />;
 	}
 
 	return <Legend {...legendProps} />;
@@ -429,10 +456,6 @@ var HeatmapLegend = React.createClass({
 //
 // plot rendering
 //
-
-function definedOrDefault(v, def) {
-	return _.isUndefined(v) ? def : v;
-}
 
 var CanvasDrawing = React.createClass({
 	mixins: [deepPureRenderMixin],
@@ -459,7 +482,7 @@ var CanvasDrawing = React.createClass({
 	},
 
 	draw: function (props) {
-		var {zoom: {index, count, height}, width, heatmapData, colors} = props,
+		var {zoom: {index, count, height}, width, heatmapData = [], colors} = props,
 			vg = this.vg;
 
 		if (vg.width() !== width) {
@@ -529,33 +552,16 @@ var HeatmapColumn = React.createClass({
 	},
 	render: function () {
 		var {samples, data, column, vizSettings = {}, zoom} = this.props,
-			dsVizSettings = vizSettings[column.dsID],
-			{features, codes, metadata} = data,
-			mean = _.getIn(data, ["req", "mean"]),
-			norm = {'none': false, 'subset': true},
-
-			colnormalization = definedOrDefault(norm[_.getIn(dsVizSettings, ['colNormalization'])],
-												_.getIn(metadata, ['colnormalization'])),
-			fields = data.req.probes || column.fields, // prefer field list from server
-			// XXX should we be pre-computing this,
-			// instead of running subbykey each time??
-			transform = (colnormalization && mean && _.partial(subbykey, mean)) || second,
-			heatmapData = dataToHeatmap(samples, data.req.values, fields, transform),
-			// We use variants here instead of looking up the color fns so
-			// that when rendering a sub-component a data cmp tells us if
-			// props have changed & we need to re-render. With functions it's
-			// hard to do the cmp.
-			colors = map(fields, (p, i) => heatmapColors.colorRangeVariant(
-					metadata,
-					dsVizSettings || {},
-					_.getIn(features, [p]),
-					_.getIn(codes, [p]),
-					heatmapData[i])),
-			download = _.partial(tsvProbeMatrix, heatmapData, samples, fields, codes),
+			dsVizSettings = vizSettings[column.dsID], // XXX move this up. We don't need them all.
+			// XXX get 'metadata' from datasets[dsID], and drop it from
+			// the data queries.
+			{codes, metadata, display: {heatmap, colors} = {}} = data,
+			fields = data.req.probes || column.fields,
+			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
 			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
 
 		// save [heatmapData, fields, column, codes, zoom, samples] for tooltip
-		this.tooltip = _.partial(tooltip, heatmapData, fields, column, codes, zoom, samples);
+		this.tooltip = _.partial(tooltip, heatmap, fields, column, codes, zoom, samples);
 		return (
 			<Column
 				callback={this.props.callback}
@@ -575,33 +581,38 @@ var HeatmapColumn = React.createClass({
 						width={_.getIn(column, ['width'])}
 						zoom={zoom}
 						colors={colors}
-						heatmapData={heatmapData}/>}
+						heatmapData={heatmap}/>}
 				legend={<HeatmapLegend
 						fields={_.getIn(column, ['fields'])}
 						hasViz={!!_.getIn(dsVizSettings, ['min'])}
 						dataType={column.dataType}
 						colorScale={colors}
-						data={heatmapData}
+						data={heatmap}
 						metadata={metadata}
 						codes={codes}/>}
 			/>
 		);
 	}
 });
+
 var getColumn = (props) => <HeatmapColumn {...props} />;
 
 widgets.cmp.add("probeMatrix", cmp);
 widgets.fetch.add("probeMatrix", fetch);
 widgets.column.add("probeMatrix", getColumn);
+widgets.transform.add("probeMatrix", dataToHeatmap);
 
 widgets.cmp.add("geneProbesMatrix", cmp);
 widgets.fetch.add("geneProbesMatrix", fetchGeneProbes);
 widgets.column.add("geneProbesMatrix", getColumn);
+widgets.transform.add("geneProbesMatrix", dataToHeatmap);
 
 widgets.cmp.add("geneMatrix", cmp);
 widgets.fetch.add("geneMatrix", fetchGene);
 widgets.column.add("geneMatrix", getColumn);
+widgets.transform.add("geneMatrix", dataToHeatmap);
 
 widgets.cmp.add("clinicalMatrix", cmp);
 widgets.fetch.add("clinicalMatrix", fetchFeature);
 widgets.column.add("clinicalMatrix", getColumn);
+widgets.transform.add("clinicalMatrix", dataToHeatmap);

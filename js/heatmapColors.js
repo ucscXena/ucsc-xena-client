@@ -83,13 +83,8 @@ var ordinal = count => d3.scale.ordinal().range(categoryMore).domain(_.range(cou
 //  Perhaps we should just pass in column.type and dataSubType, since we don't
 //  need all the other params.
 function colorRangeType(column, settings, codes) {
-	if (codes) {
-		return 'coded';
-	}
-	if (column && column.type === "genomicMatrix") {
-		return 'floatGenomicData';
-	}
-	return 'float';
+	return codes ? 'coded' :
+		(column.dataType === 'clinicalMatrix' ? 'float' : 'floatGenomicData');
 }
 
 var colorRange = multi(colorRangeType);
@@ -105,10 +100,10 @@ function scaleFloatDouble(low, zero, high, min, max) {
 		.range([low, zero, high]);
 }
 
-function colorFloat(column, settings, codes, data) {
-	var values = _.values(data || [0]), // handle degenerate case
+function colorFloat(column, settings, codes, data, dataset) {
+	var values = _.values(data || [0]), // handle degenerate case XXX needed?
 		max = d3.max(values),
-		[low, zero, high] = defaultColors(column),
+		[low, zero, high] = defaultColors(dataset),
 		spec,
 		min;
 
@@ -145,9 +140,9 @@ var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
 		.domain(_.map([min, minThresh, maxThresh, max], x => x.toPrecision(2)))
 		.range([low, zero, zero, high]);
 
-function colorFloatGenomicData(column, settings = {}, codes, data) {
+function colorFloatGenomicData(column, settings = {}, codes, data, dataset) {
 	var values = _.values(data), // handle degenerate case
-		[low, zero, high] = defaultColors(column),
+		[low, zero, high] = defaultColors(dataset),
 		min = settings.min || d3.min(values),
 		max = settings.max ||  d3.max(values),
 		minStart = settings.minStart,
