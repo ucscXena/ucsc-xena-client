@@ -376,8 +376,8 @@ var cases = ([tag], arg, c) => c[tag](arg);
 // extract the domain & range.
 function renderGenomicLegend(props) {
 	var {dataset, colors, hasViz} = props,
-		multiScaled = colors.length > 1 && !hasViz,
-		hasData = colors.length > 0,
+		multiScaled = _.getIn(colors, [1]) && !hasViz,
+		hasData = _.getIn(colors, [0]),
 		labels, legendColors;
 
 	if (multiScaled) {
