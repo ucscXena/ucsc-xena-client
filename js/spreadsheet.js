@@ -107,7 +107,7 @@ var Columns = React.createClass({
 	},
 	render: function () {
 		var {callback, appState} = this.props;
-		var {data, zoom, columns, columnOrder, cohort, vizSettings, samples} = appState;
+		var {data, zoom, columns, columnOrder, cohort, samples} = appState;
 		var {openColumnEdit, openVizSettings} = this.state;
 		var height = zoom.height;
 		var editor = openColumnEdit ?
@@ -129,8 +129,9 @@ var Columns = React.createClass({
 			ref: id,
 			key: id,
 			id: id,
-			data: _.getIn(data, [id]) || {req: {}},
-			vizSettings: vizSettings,
+			data: _.getIn(data, [id]) || {req: {}}, // XXX better default handling?
+			vizSettings: _.getIn(appState, ['vizSettings',
+				_.getIn(columns, [id, 'dsID'])]),
 			samples: samples,
 			zoom: zoom,
 			callback: callback,
@@ -138,7 +139,9 @@ var Columns = React.createClass({
 			onViz: this.onViz,
 			onClick: this.ev.plotClick,
 			onDoubleClick: this.ev.plotDoubleClick,
-			column: _.getIn(columns, [id])
+			column: _.getIn(columns, [id]),
+			dataset: _.getIn(appState, ['datasets', 'datasets',
+				_.getIn(columns, [id, 'dsID'])])
 		}));
 
 		return (

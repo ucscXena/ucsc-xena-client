@@ -18,7 +18,6 @@ var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 require('rx-jquery');
 
 // XXX might want to automatically wrap all of these in xenaQuery.
-var datasetMetadata = xenaQuery.dsID_fn(xenaQuery.dataset_metadata);
 var datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
 var datasetGenesValues = xenaQuery.dsID_fn(xenaQuery.dataset_genes_values);
 var datasetGeneProbesValues = xenaQuery.dsID_fn(xenaQuery.dataset_gene_probe_values);
@@ -237,17 +236,11 @@ function indexGeneResponse(genes, samples, data) {
 	return indexResponse(genes, samples, orderByQuery(genes, data));
 }
 
-var fetch = ({dsID, fields}, samples) => Rx.Observable.zipArray(
-		datasetProbeValues(dsID, samples, fields)
-			.map(resp => indexResponse(fields, samples, resp)),
-		datasetMetadata(dsID)
-	).map(resp => _.object(['req', 'metadata'], resp));
+var fetch = ({dsID, fields}, samples) => datasetProbeValues(dsID, samples, fields)
+	.map(resp => ({req: indexResponse(fields, samples, resp)}));
 
-var fetchGeneProbes = ({dsID, fields}, samples) => Rx.Observable.zipArray(
-		datasetGeneProbesValues(dsID, samples, fields)
-			.map(resp => indexProbeGeneResponse(samples, resp)),
-		datasetMetadata(dsID)
-	).map(resp => _.object(['req', 'metadata'], resp));
+var fetchGeneProbes = ({dsID, fields}, samples) => datasetGeneProbesValues(dsID, samples, fields)
+	.map(resp => ({req: indexProbeGeneResponse(samples, resp)}));
 
 var fetchFeature = ({dsID, fields}, samples) => Rx.Observable.zipArray(
 		datasetProbeValues(dsID, samples, fields)
@@ -258,11 +251,8 @@ var fetchFeature = ({dsID, fields}, samples) => Rx.Observable.zipArray(
 	).map(resp => _.object(['req', 'features', 'codes', 'bounds'], resp));
 
 
-var fetchGene = ({dsID, fields}, samples) => Rx.Observable.zipArray(
-		datasetGenesValues(dsID, samples, fields)
-			.map(resp => indexGeneResponse(fields, samples, resp)),
-		datasetMetadata(dsID)
-	).map(resp => _.object(['req', 'metadata'], resp));
+var fetchGene = ({dsID, fields}, samples) => datasetGenesValues(dsID, samples, fields)
+			.map(resp => ({req: indexGeneResponse(fields, samples, resp)}));
 
 //
 // Tooltip
@@ -551,11 +541,8 @@ var HeatmapColumn = React.createClass({
 		this.props.callback(['dataType', this.props.id, newMode]);
 	},
 	render: function () {
-		var {samples, data, column, vizSettings = {}, zoom} = this.props,
-			dsVizSettings = vizSettings[column.dsID], // XXX move this up. We don't need them all.
-			// XXX get 'metadata' from datasets[dsID], and drop it from
-			// the data queries.
-			{codes, metadata, display: {heatmap, colors} = {}} = data,
+		var {samples, data, column, dataset, vizSettings = {}, zoom} = this.props,
+			{codes, display: {heatmap, colors} = {}} = data,
 			fields = data.req.probes || column.fields,
 			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
 			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
@@ -584,11 +571,11 @@ var HeatmapColumn = React.createClass({
 						heatmapData={heatmap}/>}
 				legend={<HeatmapLegend
 						fields={_.getIn(column, ['fields'])}
-						hasViz={!!_.getIn(dsVizSettings, ['min'])}
+						hasViz={!!_.getIn(vizSettings, ['min'])}
 						dataType={column.dataType}
 						colorScale={colors}
 						data={heatmap}
-						metadata={metadata}
+						metadata={dataset}
 						codes={codes}/>}
 			/>
 		);
