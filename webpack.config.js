@@ -1,7 +1,7 @@
 /*global require: false, module: false, __dirname: false */
 'use strict';
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var webpack = require('webpack');
+//var webpack = require('webpack');
 
 module.exports = {
 	historyApiFallback: true,
@@ -14,7 +14,7 @@ module.exports = {
 	module: {
 		loaders: [
 			{ test: /rx-dom/, loader: "imports?define=>false" },
-			{ test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader?optional=es7.objectRestSpread&cacheDirectory=true'},
+			{ test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader?optional[]=es7.objectRestSpread&optional[]=utility.inlineEnvironmentVariables&cacheDirectory=true'},
 			{ test: /\.css$/, loader: "style!css" },
 			{ test: /\.haml$/, loader: 'haml-loader' },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
