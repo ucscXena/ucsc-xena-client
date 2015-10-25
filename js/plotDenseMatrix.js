@@ -63,9 +63,9 @@ function subbykey(subtrahend, key, val) {
 
 // Decide whether to normalize, perfering the user setting to the
 // dataset default setting.
-function shouldNormalize(vizSettings, metadata) {
+function shouldNormalize(vizSettings, dataset) {
 	var user = _.getIn(vizSettings, ['colNormalization']),
-		dataDefault = _.getIn(metadata, ['colnormalization']);
+		dataDefault = _.getIn(dataset, ['colnormalization']);
 	return user === 'subset' || _.isUndefined(user) && dataDefault;
 }
 
@@ -373,13 +373,13 @@ function legendFromScale(colorScale) {
 // *and* there's no viz settings. We need at most one color fn, from which we
 // extract the domain & range.
 function renderGenomicLegend(props) {
-	var {metadata, colorScale = [], hasViz} = props,
+	var {dataset, colorScale = [], hasViz} = props,
 		multiScaled = colorScale.length > 1 && !hasViz,
 		hasData = colorScale.length > 0,
 		labels, colors;
 
 	if (multiScaled) {
-		colors = heatmapColors.defaultColors(metadata);
+		colors = heatmapColors.defaultColors(dataset);
 		labels = ["lower", "", "higher"];
 	} else if (hasData) { // one probe, or all colors are same (hasViz)
 		var colorfn = colorFns(colorScale)[0];
@@ -575,7 +575,7 @@ var HeatmapColumn = React.createClass({
 						dataType={column.dataType}
 						colorScale={colors}
 						data={heatmap}
-						metadata={dataset}
+						dataset={dataset}
 						codes={codes}/>}
 			/>
 		);
