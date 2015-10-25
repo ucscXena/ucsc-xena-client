@@ -368,40 +368,36 @@ function legendFromScale(colorScale) {
 	return {labels: labels, colors: colors};
 }
 
+var cases = ([tag], arg, c) => c[tag](arg);
+
 // We never want to draw multiple legends. If there are multiple scales,
 // we do lower/higher. There are multiple scales if we have multiple probes
 // *and* there's no viz settings. We need at most one color fn, from which we
 // extract the domain & range.
 function renderGenomicLegend(props) {
-	var {dataset, colorScale = [], hasViz} = props,
-		multiScaled = colorScale.length > 1 && !hasViz,
-		hasData = colorScale.length > 0,
-		labels, colors;
+	var {dataset, colors, hasViz} = props,
+		multiScaled = colors.length > 1 && !hasViz,
+		hasData = colors.length > 0,
+		labels, legendColors;
 
 	if (multiScaled) {
-		colors = heatmapColors.defaultColors(dataset);
+		legendColors = heatmapColors.defaultColors(dataset);
 		labels = ["lower", "", "higher"];
 	} else if (hasData) { // one probe, or all colors are same (hasViz)
-		var colorfn = colorFns(colorScale)[0];
+		var colorfn = heatmapColors.colorScale(colors[0]);
 		var {labels: l, colors: c} = legendFromScale(colorfn);
-		colors = c;
-		if (l.length === 4) {                // positive and negative scale
-			var [nl, nh, pl, ph] = l;
-			labels = ['<' + nl, nh, pl, '>' + ph];
-		} else if (l.length === 3) {
-			var [low, high] = l;
-			if (colorfn.domain()[0] >= 0) {  // positive scale
-				labels = [low, '>' + high];
-			} else {                         // negative scale
-				labels = ['<' + low, high];
-			}
-		}
+		legendColors = c;
+		labels = cases(colors[0], l, {
+			'float-thresh': ([nl, nh, pl, ph]) => ['<' + nl, nh, pl, '>' + ph],
+			'float-thresh-pos': ([low, high]) => [low, '>' + high],
+			'float-thresh-neg': ([low, high]) => ['<' + low, high]
+		});
 	} else { // no data
-		colors = [];
+		legendColors = [];
 		labels = [];
 	}
 
-	return <Legend colors={colors} labels={labels} align='center' />;
+	return <Legend colors={legendColors} labels={labels} align='center' />;
 }
 
 function floatLegend(colorScale) {
@@ -412,9 +408,9 @@ function floatLegend(colorScale) {
 // Might have colorScale but no data (phenotype), no data & no colorScale,
 // or data & colorScale, no colorScale &  data?
 function renderPhenotypeLegend(props) {
-	var {data: [data] = [], fields, codes, colorScale = []} = props;
+	var {data: [data] = [], fields, codes, colors = []} = props;
 	var legendProps;
-	var colorfn = _.first(colorFns(colorScale.slice(0, 1)));
+	var colorfn = _.first(colorFns(colors.slice(0, 1)));
 
 	// We can use domain() for categorical, but we want to filter out
 	// values not in the plot. Also, we build the categorical from all
@@ -573,7 +569,7 @@ var HeatmapColumn = React.createClass({
 						fields={_.getIn(column, ['fields'])}
 						hasViz={!!_.getIn(vizSettings, ['min'])}
 						dataType={column.dataType}
-						colorScale={colors}
+						colors={colors}
 						data={heatmap}
 						dataset={dataset}
 						codes={codes}/>}
