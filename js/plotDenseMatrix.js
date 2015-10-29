@@ -32,7 +32,6 @@ function hasClass(el, c) {
 var each = _.each,
 	map = _.map,
 	filter = _.filter,
-	isUndefined = _.isUndefined,
 	zip = _.zip,
 	range = _.range,
 	bind = _.bind,
@@ -40,8 +39,8 @@ var each = _.each,
 	uniq = _.uniq,
 	scratch = vgcanvas(document.createElement('canvas'), 1, 1); // scratch buffer
 
-function secondNotUndefined(x) {
-	return !isUndefined(x[1]);
+function secondExists(x) {
+	return x[1] != null;
 }
 
 function second(x, y) {
@@ -50,10 +49,9 @@ function second(x, y) {
 
 var colorFns = vs => _.map(vs, heatmapColors.colorScale);
 
-// need a Maybe
-function saveUndefined(fn) {
+function saveMissing(fn) {
 	return function (v) {
-		return isUndefined(v) ? v : fn(v);
+		return v == null ? v : fn(v);
 	};
 }
 
@@ -66,7 +64,7 @@ function subbykey(subtrahend, key, val) {
 function shouldNormalize(vizSettings, dataset) {
 	var user = _.getIn(vizSettings, ['colNormalization']),
 		dataDefault = _.getIn(dataset, ['colnormalization']);
-	return user === 'subset' || _.isUndefined(user) && dataDefault;
+	return user === 'subset' || user == null && dataDefault;
 }
 
 // Returns 2d array of numbers, probes X samples.
@@ -81,7 +79,7 @@ function computeHeatmap(vizSettings, data, fields, samples, dataset) {
 		transform = (colnormalization && mean && _.partial(subbykey, mean)) || second;
 
 	return map(probes || fields, function (p) {
-		var suTrans = saveUndefined(v => transform(p, v));
+		var suTrans = saveMissing(v => transform(p, v));
 		return map(samples, s => suTrans(_.getIn(values[p], [s])));
 	});
 }
@@ -100,7 +98,7 @@ function drawColumn(data, colorScale, boxfn) {
 
 	if (colorScale) { // then there exist some non-null values
 		// zip colors and their indexes, then filter out the nulls
-		colors = filter(zip(range(data.length), map(data, colorScale)), secondNotUndefined);
+		colors = filter(zip(range(data.length), map(data, colorScale)), secondExists);
 		each(colors, bind(boxfn.apply, boxfn, null));
 	}
 }
@@ -166,11 +164,11 @@ function renderHeatmap(opts) {
 //
 
 function cmpNumberOrNull(v1, v2) {
-	if (isUndefined(v1) && isUndefined(v2)) {
+	if (v1 == null && v2 == null) {
 		return 0;
-	} else if (isUndefined(v1)) {
+	} else if (v1 == null) {
 		return 1;
-	} else if (isUndefined(v2)) {
+	} else if (v2 == null) {
 		return -1;
 	}
 	return v2 - v1;
@@ -264,7 +262,7 @@ function plotCoords(ev) {
 		y = ev.offsetY;
 	// XXX test this on FF & move all this to util if we
 	// still need it.
-	if (x === undefined) { // fix up for firefox
+	if (x == null) { // fix up for firefox
 		offset = util.eventOffset(ev);
 		x = offset.x;
 		y = offset.y;
@@ -306,7 +304,7 @@ function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
 	}
 
 	val = code ? code : prec(val);
-	val = (val === undefined || _.isNaN(val)) ? 'NA' : val;
+	val = (val == null) ? 'NA' : val;
 
 	return {sampleID: sampleID,
 		rows: [{label: label, val: val}].concat(
@@ -318,15 +316,16 @@ function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
 // Legends
 //
 
+// XXX missing data handled incorrectly on reload? Is this because NaN is miscoded in json?
 function categoryLegend(dataIn, colorScale, codes) {
 	if (!colorScale) {
 		return {colors: [], labels: [], align: 'left'};
 	}
 	// only finds categories for the current data in the column
-	var data = _.reject(uniq(dataIn), isUndefined).sort((v1, v2) =>  v1 - v2),
+	var data = _.reject(uniq(dataIn), x => x == null).sort((v1, v2) =>  v1 - v2),
 		categoryLength = 19, // XXX where does this come from?
 		// zip colors and their indexes, then filter out the nulls
-		colors = _.map(filter(zip(range(data.length), map(data, colorScale)), secondNotUndefined),
+		colors = _.map(filter(zip(range(data.length), map(data, colorScale)), secondExists),
 				c => c[1]),
 		labels = map(data, d => codes[d]);
 	return {colors: colors, labels: labels, align: 'left', ellipsis: data.length > categoryLength ? '...' : null};

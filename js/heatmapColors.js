@@ -6,7 +6,6 @@ var _ = require('underscore');
 var multi = require('multi');
 
 var isNumber = _.isNumber,
-	isUndefined = _.isUndefined,
 	// d3_category20, without the #7f7f7f gray that aliases with our N/A gray of #808080
 	categoryMore = [
 		"#1f77b4", // dark blue
@@ -63,9 +62,9 @@ var defaultColors = (function () {
 
 // Return a new function that preserves undefined arguments, otherwise calls the original function.
 // This is to work-around d3 scales.
-function saveUndefined(fn) {
+function saveMissing(fn) {
 	var newfn = function (v) {
-		return isUndefined(v) ? v : fn(v);
+		return v == null ? v : fn(v);
 	};
 	return _.extend(newfn, fn); // This weirdness copies d3 fn methods
 }
@@ -194,7 +193,7 @@ var colorScale = {
 };
 
 module.exports =  {
-	colorScale: ([type, ...args]) => saveUndefined(colorScale[type](type, ...args)),
+	colorScale: ([type, ...args]) => saveMissing(colorScale[type](type, ...args)),
 	colorSpec: colorRange,
 	defaultColors: defaultColors
 };
