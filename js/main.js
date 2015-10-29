@@ -157,19 +157,51 @@ var Application = React.createClass({
 
 function controlRunner(controller) {
 	return function (state, ev) {
-		var s = controller.event(state, ev);
-		controller.postEvent(state, s, ev);
-		return s;
+		try {
+			var s = controller.event(state, ev);
+			controller.postEvent(state, s, ev);
+			return s;
+		} catch (e) {
+			console.log('Error', e); // comment this out to have hard errors.
+			return state;
+		}
 	};
 }
 
 var serverReducer = controlRunner(controllersServer);
 var controlsReducer = controlRunner(controllersControls);
 
+
+// From page load, push indexes for state. Store in cache slots.
+// Our state is too big to push directly. This mechanism is a bit
+// confusing across page loads.
+//
+//  0 1 2 3 4 5 6 7
+//        ^
+//  back: move indx to 2.
+//  forward: move indx to 4
+//  new state: append state & invalidate  5 - 7? The browser will
+//     invalidate them.
+
+var [pushState, setState] = (function () {
+	var i = 0, cache = [];
+	return [function (s) {
+		cache[i] = s;
+		history.pushState(i, '');
+		i = (i + 1) % 100;
+	},
+	Rx.DOM.fromEvent(window, 'popstate').map(s => {
+		i = s.state;
+		return cache[i];
+	})];
+})();
+
 var stateObs = Rx.Observable.merge(
 					serverCh.map(ev => [serverReducer, ev]),
 					controlsCh.map(ev => [controlsReducer, ev])
 			   ).scan(initialState, (state, [reduceFn, ev]) => reduceFn(state, ev))
+			   .do(pushState)
+			   .merge(setState)
 			   .share();
 
 var updater = ev => controlsBus.onNext(ev);
