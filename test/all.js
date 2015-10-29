@@ -3,3 +3,4 @@
 require('./underscore_ext');
 require('./mutationVector');
 require('./lenses/lens');
+require('./heatmapColors');
