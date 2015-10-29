@@ -60,7 +60,7 @@ var initialState = {
 	}
 };
 
-if (sessionStorage && sessionStorage.xena) {
+if (sessionStorage && sessionStorage.xena && location.search.indexOf('?nostate') !== 0) {
 	initialState = _.extend(initialState, JSON.parse(sessionStorage.xena));
 }
 
