@@ -2,7 +2,7 @@
 /*eslint new-cap: [0] */
 'use strict';
 var S = require('schema-shorthand').schema;
-var {d, string, array, number, or, nullval, boolean} = S;
+var {d, string, array, number, or, nullval, boolean, r} = S;
 
 var dsID = d('dsID', 'JSON encoded host and dataset id',
 			string(/{"host":".*","name":".*"}/));
@@ -36,7 +36,7 @@ var Column = d(
 
 var Columns = d(
 	'Columns', 'A set of columns', S({
-		'<ColumnID>': Column
+		[ColumnID]: Column
 	}));
 
 //var Cohorts = d(
@@ -101,7 +101,7 @@ var FeatureName = d(
 var Feature = d(
 	'Feature', 'Phenotype metdata',
 	S({
-		'<FeatureName>': {
+		[FeatureName]: {
 			// XXX why field_id?
 			field_id: number(), // eslint-disable-line camelcase
 			id: number(), // XXX why?
@@ -129,24 +129,46 @@ var SampleID = d(
 
 var HeatmapData = d(
 	'HeatmapData', 'Matrix of values for heatmap display, ordered by field and sample.',
-	array.of(array.of(number()))
+	array.of(r('field', array.of(r('sample', number()))))
 );
+
+var ColorSpec = d(
+	'ColorSpec', 'A color scale variant.',
+	or(
+		array('float-pos', r('low', number()), r('high', number()), r('min', number()), r('max', number())),
+		array('float-neg', r('low', number()), r('high', number()), r('min', number()), r('max', number())),
+		array('float', r('low', number()), r('zero', number()), r('high', number()), r('min', number()), r('max', number())),
+		array('float-thresh-pos', r('zero', number()), r('high', number()), r('min', number()), r('threshold', number()), r('max', number())),
+		array('float-thresh-neg', r('low', number()), r('zero', number()), r('min', number()), r('threshold', number()), r('max', number())),
+		array('float-thresh', r('low', number()), r('zero', number()), r('high', number()), r('min', number()), r('minThreshold', number()), r('maxThreshold', number()), r('max', number())),
+		array('ordinal', r('count', number([0])))
+	)
+);
+
+var Gene = d('Gene', 'A gene name', string());
+var Probe = d('Probe', 'A probe name', string());
+var Field = d('Field', 'A gene or probe name', or(Gene, Probe));
 
 var ProbeData = d(
 	'ProbeData', 'Data for a probe column',
 	S({
-		metadata: Dataset, // XXX why is this here?
 		req: {
 			mean: {
-				'<GeneOrProbe>': number()
+				[Field]: number()
 			},
 			probes: array.of(string()),
 			values: {
-				'<GeneOrProbe>': {
-					'<SampleID>': number() // or null? or NaN?
+				[Field]: {
+					[SampleID]: number() // or null? or NaN?
 				}
-			},
-			display: HeatmapData
+			}
+		},
+		features: Feature,
+		codes: array.of('FIXME'), // XXX wrong
+		bounds: array.of('FIXME'), // XXX wrong
+		display: {
+			colors: array.of(ColorSpec),
+			heatmap: HeatmapData
 		}
 	}));
 
@@ -174,11 +196,11 @@ var Application = d(
 		columnOrder: array.of(ColumnID),
 		columns: Columns,
 		data: {
-			'<ColumnID>': or(ProbeData, MutationData)
+			[ColumnID]: or(ProbeData, MutationData)
 		},
 		datasets: {
 			datasets: {
-				'<dsID>': Dataset
+				[dsID]: Dataset
 			},
 			servers: array.of({
 				server: string(),
@@ -186,9 +208,12 @@ var Application = d(
 			})
 		},
 		features: {
-			'<dsID>': Feature
+			[dsID]: Feature
 		},
 		km: {
+			id: dsID,
+			column: or(ProbeData, MutationData),
+			label: string(),
 			vars: {
 				event: FeatureID,
 				patient: FeatureID,
@@ -211,9 +236,6 @@ var Application = d(
 );
 //
 //
-var Gene = d('Gene', 'A gene name', string());
-var Probe = d('Probe', 'A probe name', string());
-var GeneOrProbe = d('GeneOrProbe', 'A gene or probe name', or(Gene, Probe));
 //var BasePos = d('base position', number([0]));
 var Chrom = d('Chrom', 'chrom', string(/chr[0-9]+/));
 
@@ -289,23 +311,23 @@ var Chrom = d('Chrom', 'chrom', string(/chr[0-9]+/));
 //    intervals: ChromIntervals,
 //    partition: Partition});
 
-module.exports = {
-	dsID: dsID,
-	Column: Column,
-//	GenomicPosition: GenomicPosition,
-	Gene: Gene,
-	Probe: Probe,
-	GeneOrProbe: GeneOrProbe,
-	Chrom: Chrom,
-	Dataset: Dataset,
-	Feature: Feature,
-	FeatureID: FeatureID,
-	FeatureName: FeatureName,
-	SampleID: SampleID,
-	ColumnID: ColumnID,
-	HeatmapData: HeatmapData,
-	ProbeData: ProbeData,
-	MutationData: MutationData,
-	VizSettings: VizSettings,
-	Application: Application
-};
+module.exports = [
+	dsID,
+	Column,
+	Gene,
+	Probe,
+	Field,
+	Chrom,
+	Dataset,
+	Feature,
+	FeatureID,
+	FeatureName,
+	SampleID,
+	ColumnID,
+	ColorSpec,
+	HeatmapData,
+	ProbeData,
+	MutationData,
+	VizSettings,
+	Application
+];

@@ -33,7 +33,7 @@
     "mocha-loader": "^0.7.1",
     "napa": "^1.2.0",
     "rimraf": "^2.3.2",
-    "schema-shorthand": "^1.0.1",
+    "schema-shorthand": "^2.0.0",
     "style-loader": "^0.8.3",
     "url-loader": "^0.5.5",
     "webpack": "^1.5.3",

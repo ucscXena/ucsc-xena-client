@@ -6,9 +6,7 @@ var {toHTML, css} = require('schema-shorthand').html;
 var main = document.getElementById('main');
 var _ = require('underscore');
 
-var top = _.values(demo);
-
-var docs = _.map(top, s => toHTML(s, top)).join('<br>');
+var docs = _.map(demo, s => toHTML(s, demo)).join('<br>');
 var page =
 `<html>
     <body>
