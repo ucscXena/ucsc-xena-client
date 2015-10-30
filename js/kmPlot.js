@@ -28,7 +28,7 @@ define([ 'd3',
 		keys = _.keys,
 		feature_list = xenaQuery.dsID_fn(xenaQuery.feature_list),
 		dataset_probe_values = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values),
-		//code_list = xenaQuery.dsID_fn(xenaQuery.code_list),
+		code_list = xenaQuery.dsID_fn(xenaQuery.code_list),
 		MAX = 30, // max number of categories
 		kmWidget,
 		widgets = {};
@@ -177,11 +177,12 @@ define([ 'd3',
 				field = ws.column.fields[0],
 				all = false, // XXX make this a checkbox, for whole-cohort display grouping, not implemented for regrouping
 				samples = this.columnUi.plotData.samples,
-				//data is  [event_fid, ttevent_fid, patient_fid])
-				ttevValues = this.cleanValues(_.object(samples, data[1])),
+				//data is  [[event_fid, ttevent_fid, patient_fid],_TIME_TO_EVENT_UNIT])
+				ttevValues = this.cleanValues(_.object(samples, data[0][1])),
 				ttev_fn    = bind(attr, null, ttevValues), // fn sample -> ttev,
-				ev_fn      = bind(attr, null, this.cleanValues(_.object(samples, data[0]))), // fn sample -> ev,
-				samplesToCodes = _.object(samples, data[2]),
+				ev_fn      = bind(attr, null, this.cleanValues(_.object(samples, data[0][0]))), // fn sample -> ev,
+				samplesToCodes = _.object(samples, data[0][2]),
+				ttev_unit,
 				patient_fn = bind(attr, null, samplesToCodes), // fn sample -> patient,
 				chief,
 				values,
@@ -192,6 +193,12 @@ define([ 'd3',
 				allGroups_tte=[],
 				allGroups_ev=[],
 				r;
+
+			//_TIME_TO_EVENT_UNIT
+			if (Object.keys(data[1]).length >0){
+				ttev_unit = data[1][Object.keys(data[1])[0]][0];
+			}
+			this.ttev_unit = ttev_unit;
 
 			chief = self.findChiefAttrs(samples, field);
 			values = all ? null : _.values(chief.values);
@@ -229,7 +236,7 @@ define([ 'd3',
 
 			self.featureLabel.text('Grouped by: ' +
 				(all ? 'All samples' : chief.label) +
-				(groups.length > MAX && !regroup ? " (Limited to " + MAX + " categories)" : "") +
+				(groups.length > MAX && !regroup ? " (Limited drawing to " + MAX + " categories)" : "") +
 				(chief.dataType === 'geneProbesMatrix' ? ' (gene-level average)' : ''));
 
 
@@ -298,6 +305,7 @@ define([ 'd3',
 			var self = this,
 				event_fid = survival.event,
 				ttevent_fid = survival.tte,
+				tte_unit = survival.tte_unit,
 				patient_fid = survival.patient,
 				ws = this.columnUi.ws,
 				field = ws.column.fields[0],
@@ -317,20 +325,19 @@ define([ 'd3',
 				return;
 			}
 			this.kmScreen.removeClass('notify');
-
 			// retrieve the values for each of the event features
-			this.subs.add(dataset_probe_values(eventDsID, samples, [event_fid, ttevent_fid, patient_fid])
-				.subscribe(self.receiveSurvivalData));
+			this.subs.add(Rx.Observable.zipArray([dataset_probe_values(eventDsID, samples, [event_fid, ttevent_fid, patient_fid]),
+				code_list(eventDsID,[tte_unit])]).subscribe(self.receiveSurvivalData));
 		},
 
-		setupSvg: function (svgWidth, svgHeight, xMin, xMax, textArea) {
+		setupSvg: function (svgWidth, svgHeight, xMin, xMax, textArea, xLabel) {
 			if(this.svg) {
 				this.svg.selectAll("*").remove();
 			}
 
 			var margin = {top: 20, right: 20, bottom: 40, left: 50},
 				width = svgWidth - margin.left - margin.right - textArea, // plot width
-				height = svgHeight - margin.top - margin.bottom, // plot height
+				height = svgHeight - margin.top - margin.bottom-20, // plot height
 
 				x = d3.scale.linear().range([0, width]),
 				y = d3.scale.linear().range([height, 0]),
@@ -349,7 +356,12 @@ define([ 'd3',
 			this.svg.append("g")
 				.attr("class", "x axis")
 				.attr("transform", "translate(0," + height + ")")
-				.call(xAxis);
+				.call(xAxis)
+				.append("text")
+				.attr("x", width/2)
+				.attr("y",40)
+				.style("font-size","12px")
+				.text(xLabel? "time ("+xLabel+")":xLabel);
 
 			this.svg.append("g")
 				.attr("class", "y axis")
@@ -368,6 +380,7 @@ define([ 'd3',
 
 		render: function (){
 			var subgroups = this.subgroups.slice(0,MAX),
+				totalCategory= this.subgroups.length,
 				KM_stats = this.KM_stats,
 				pValue = this.pValue,
 				xMin = _.min([0,d3.min(subgroups, function (sg) { return d3.min(sg.values, function (v) { return v.t; }); })]),
@@ -382,7 +395,7 @@ define([ 'd3',
 				textArea = _.min([nCols*0.2, 0.4]) *svgWidth + buffer/2, //max text area is 40%
 				wColumn = parseInt((textArea - buffer/2)/ nCols);  //width of each text column
 
-			this.setupSvg(svgWidth,svgHeight, xMin, xMax, textArea);
+			this.setupSvg(svgWidth,svgHeight, xMin, xMax, textArea, this.ttev_unit);
 
 			var svg= this.svg,
 				x = this.x,
@@ -600,6 +613,15 @@ define([ 'd3',
 				//label
 				svg.append("foreignObject").attr({"x":labelStart,"y":textY-8,"width":labelSize,'height':lineSpacing})
 				.text(group.name);
+
+				// for category > MAX
+				if ((i=== MAX-1) && totalCategory > MAX){
+					xStart = svgWidth - textArea + parseInt((i+1)/nItem) * wColumn;
+					labelStart = xStart +35;
+					textY =  yStart + lineSpacing* ((i+1)%nItem) ;
+					svg.append("foreignObject").attr({"x":labelStart,"y":textY-8,"width":labelSize,'height':lineSpacing})
+				.text("remaining "+ (totalCategory-MAX).toString() +" categories not shown");
+				}
 			});
 		},
 
@@ -643,6 +665,9 @@ define([ 'd3',
 								});
 								survival.tte = _.find(featureKeys, function (key) {
 									return key === '_TIME_TO_EVENT';
+								});
+								survival.tte_unit = _.find(featureKeys, function (key) {
+									return key === '_TIME_TO_EVENT_UNIT';
 								});
 								survival.patient = _.find(featureKeys, function (key) {
 									return key === '_PATIENT';
