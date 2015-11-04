@@ -4,7 +4,7 @@
 // http://localhost:8080/datapages/?ga4gh=1&start=41215898&end=51215899&referenceName=17&variantSetId=Clinvar
 // http://http://localhost:8080/datapages/?ga4gh=1
 
-define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext","../css/datapages.css"],
+define(["ga4ghQuery", "dom_helper", "metadataStub", "rx-dom", "underscore_ext"],
   function (ga4ghQuery, dom_helper, metadataStub, Rx, _) {
   'use strict';
 

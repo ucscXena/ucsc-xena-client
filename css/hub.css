@@ -1,0 +1,88 @@
+/* default elements */
+
+#main *{
+  margin:0;
+  padding:0
+}
+
+body #main {
+  margin: 0;
+  padding:0;
+  font-family: arial, Verdana,'Lucida Grande', Verdana, Helvetica, sans-serif;
+  background-color:#ffffff;
+  list-style:none;
+}
+
+#main .tb5 {
+  border-radius: 5px;
+  border:1px solid #456879;
+  height: 30px;
+  width: 400px;
+  padding: 2px 10px;
+  font-size: 16px;
+  margin-bottom: 10px;
+  color:gray;
+}
+
+#main a:hover {
+  color:#ff6600;
+}
+
+#main a:link {
+  font-weight:normal;
+  font-style:normal;
+  text-decoration:none;
+}
+
+#main label {
+  margin-right: 3px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+#hub {
+  padding-top:15px;
+  margin-left: auto;
+  margin-right: 25px;
+  width: 80%;
+}
+
+#hub h2 {
+  color:#404040;
+  margin: 20px 0;
+}
+
+.hubcheck {
+  height: 20px;
+  width: 20px;
+  border-radius: 10px;
+  border:1px solid gray;
+  vertical-align: middle;
+  -moz-appearance:none;
+  -webkit-appearance:none;
+  -o-appearance:none;
+}
+
+.hubcheck:checked {
+  background: linear-gradient(gray, white);
+}
+
+.hubcheck:focus {
+  outline: 0;
+}
+
+#main .hubcheck + label {
+  display: inline-block;
+  margin-left: 15px;
+  width:100px;
+  font-weight: normal;
+}
+
+#main .vizbutton
+{
+  padding: 3px 6px;
+  font-size:small;
+  margin: 5px 10px;
+  vertical-align: 5%;
+}
+
