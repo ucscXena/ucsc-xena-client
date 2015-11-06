@@ -215,6 +215,8 @@ var updater = ev => controlsBus.onNext(ev);
 //	React.render(<Application callback={updater} appState={state} />, main);
 //});
 
+// XXX double check that this expression is doing what we want: don't draw faster
+// than rAF.
 stateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
 	.subscribe(state => React.render(<Application callback={updater} appState={state} />, main));
 
@@ -223,8 +225,6 @@ stateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
 // Save state in sessionStorage on page unload.
 stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
 	.subscribe(state => sessionStorage.xena = JSON.stringify(_.omit(state, 'comms')));
-
-//stateObs.subscribe(s => console.log('state', s));
 
 // Kick things off.
 controlsBus.onNext(['init']);
