@@ -1,3 +1,4 @@
+/*eslint strict: [2, "function"] */
 /*global define: false, console: false */
 // Extensions to rx for the cancer browser
 
@@ -54,7 +55,7 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 			current;
 
 		paths = _.isString(paths) ? _.toArray(arguments) : paths;
-		paths = _.isArray(paths) ? _.object_fn(paths, _.array) : paths;
+		paths = _.isArray(paths) ? _.objectFn(paths, _.array) : paths;
 
 		current = fmap(paths, function () { return null; }); // mutable
 
@@ -63,7 +64,7 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 				function (next) {
 					var shouldPush = false;
 					_.each(paths, function (path, key) {
-						var ni = _.get_in(next, path);
+						var ni = _.getIn(next, path);
 						/*
 						if (ni !== current[key] && _.isEqual(ni, current[key])) {
 							console.log("isEqual not ===", ni);
@@ -111,7 +112,7 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 			return observable.subscribe(
 				function (next) {
 					_.each(paths, function (path, key) {
-						var ni = _.get_in(next, path);
+						var ni = _.getIn(next, path);
 						if (ni !== current[key]) {
 							current = _.assoc(current, key, ni);
 						}
@@ -240,9 +241,9 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 					log(msg, "sending", next);
 					observer.onNext(next);
 				},
-				function () {
+				function (err) {
 					log(msg, "error");
-					observer.onError();
+					observer.onError(err);
 				},
 				function () {
 					log(msg, "complete");
@@ -254,6 +255,10 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 				log(msg, "disposed");
 			});
 		});
+	};
+
+	observableProto.getIn = function (keys) {
+		return this.map(s => _.getIn(s, keys));
 	};
 
 	return Rx;

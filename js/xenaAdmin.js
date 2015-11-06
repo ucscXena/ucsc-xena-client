@@ -1,3 +1,4 @@
+/*eslint strict: [2, "function"] */
 /*global define: false */
 
 define(['rx-dom', 'underscore_ext'], function (Rx, _) {

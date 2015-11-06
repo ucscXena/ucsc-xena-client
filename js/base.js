@@ -1,3 +1,4 @@
-/*global require: fales */
-require('../css/base.css');
+/*global require: false */
+'use strict';
 require('nav');
+require('babel/polyfill');

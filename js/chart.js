@@ -1,3 +1,5 @@
+/*eslint strict: [2, "function"], camelcase: 0, no-use-before-define: 0 */
+/*eslint-env browser */
 /*jshint browser: true, onevar: true */
 /*global define: false, document: false */
 define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_helper', 'underscore_ext', 'rx'],
@@ -115,7 +117,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_h
 			return chartContainer;
 		}
 
-		function axisSelector(selectorID, action, args) {
+		function axisSelector(selectorID) {
 			var div = document.createElement("select"),
 				option, i, column, storedColumn,
 			  column_rendering, columns;
@@ -987,7 +989,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_h
 		}
 
 		root.setAttribute("id", "chartRoot");
-		root.style.height =window.innerHeight+'px';  /// best to do with css, but don't how to set the chart to full window height in css
+		root.style.height = window.innerHeight+'px';  /// best to do with css, but don't how to set the chart to full window height in css
 
 		// left panel
 		leftContainer = document.createElement("div");

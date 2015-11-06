@@ -1,5 +1,5 @@
-/*jslint nomen:true, browser: true */
-/*global define: false */
+/*eslint strict: [2, "function"] */
+/*global define: false, console: false */
 
 define(['crosshairs', 'tooltip', 'util', 'd3', 'jquery', 'select2', 'underscore', 'exonLayout', 'zoom', 'rx',
 	   'static-interval-tree', 'vgcanvas', 'layoutPlot', 'sheetWrap'

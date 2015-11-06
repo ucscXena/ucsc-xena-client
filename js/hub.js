@@ -1,4 +1,5 @@
-/*jslint browser: true,  nomen: true*/
+/*eslint strict: [2, "function"], camelcase: 0, no-use-before-define: 0 */
+/*eslint-env browser */
 /*global define: false */
 
 define(["dom_helper", "session", "xenaQuery", "base" , "../css/hub.css"], function (dom_helper, session, xenaQuery) {
@@ -73,16 +74,30 @@ define(["dom_helper", "session", "xenaQuery", "base" , "../css/hub.css"], functi
 
 	// Add button
 	addbutton = document.createElement("BUTTON");
-	addbutton.setAttribute("class","vizbutton");
+	addbutton.setAttribute("class", "vizbutton");
 	addbutton.appendChild(document.createTextNode("Add"));
 	addbutton.addEventListener("click", function() {
   	addHost();
 	});
-	addbutton.style.marginLeft="20px";
-	addbutton.style.height ="27px";
+	addbutton.style.marginLeft = "20px";
+	addbutton.style.height = "27px";
 	node.appendChild(addbutton);
 	node.appendChild(dom_helper.elt("br"));
 
+<<<<<<< HEAD
+=======
+	//galaxy xena checkbox -- if checked port forced to be 7220
+	galaxyCheckbox = document.createElement("INPUT");
+	galaxyCheckbox.setAttribute("type", "checkbox");
+	galaxyCheckbox.setAttribute("id", "galaxyCheckbox");
+	galaxyCheckbox.style.marginLeft = "2px";
+	labelText = dom_helper.elt('label');
+	labelText.setAttribute("for", "galaxyCheckbox");
+	labelText.innerHTML = " galaxy embedded xena (default port 7220)";
+	labelText.setAttribute("class", "galaxyText");
+	node.appendChild(galaxyCheckbox);
+	node.appendChild(labelText);
+>>>>>>> f756ebde8e30e694ce61c90dd621aba677e28754
 
 	document.getElementById('main').appendChild(node);
 });

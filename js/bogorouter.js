@@ -1,7 +1,8 @@
-/*global document: false, require: false, __webpack_public_path__: true */
+/*eslint no-unused-expressions: 0 */
+/*global document: false, require: false, __webpack_public_path__: true, process: false */
 'use strict';
 var config = require('config');
-__webpack_public_path__ = config.baseurl;
+__webpack_public_path__ = config.baseurl; //eslint-disable-line camelcase
 
 // XXX There is an uglify2 bug which will drop the require() calls if we don't access a
 // property on the return value.
@@ -19,6 +20,10 @@ if (document.location.pathname.match(/datapages\/$/)) {
 } else if (document.location.pathname.match(/heatmap\/$/)) {
 	require.ensure(['main'], function () {
 		require(['main']).foo;      // XXX see above
+	});
+} else if (process.env.NODE_ENV !== 'production' && document.location.pathname.match(/docs\/$/)) {
+	require.ensure(['docs'], function () {
+		require(['docs']).foo;      // XXX see above
 	});
 } else {
 	// XXX should 404 here

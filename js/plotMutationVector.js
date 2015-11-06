@@ -1,4 +1,4 @@
-/*jslint nomen:true, browser: true */
+/*eslint strict: [2, "function"], camelcase: 0 */
 /*global define: false */
 define(['underscore_ext',
 		'jquery',
@@ -106,7 +106,7 @@ define(['underscore_ext',
 	function index_mutations(gene, samples, resp) {
 		var rows_by_sample = _.groupBy(mutation_attrs(collateRows(resp.rows)), 'sample'),
 			no_rows = _.difference(resp.samples, _.keys(rows_by_sample)),
-			vals = _.extend(rows_by_sample, _.object_fn(no_rows, _.constant([]))), // merge in empty arrays for samples w/o matching rows.
+			vals = _.extend(rows_by_sample, _.objectFn(no_rows, _.constant([]))), // merge in empty arrays for samples w/o matching rows.
 			obj = {};
 
 		obj[gene] = vals;
@@ -135,75 +135,24 @@ define(['underscore_ext',
 		return _.object(resp.name2, _.map(collateRows(resp), refGene_attrs));
 	}
 
-	cmp = ifChanged(
-		[
-			['column', 'fields'],
-			['data', 'req', 'values'],
-			['data', 'refGene']
-		],
-		function (fields, data, refGene) {
-			return _.partial(cmpSamples, fields, data, refGene);
-		}
-	);
+    cmp = () => {
+        var cmpm = _.memoize1((fields, data, refGene) =>
+                (s1, s2) => cmpSamples(fields, data, refGene, s1, s2));
+        return ({fields}, {req: {values}, refGene}) => cmpm(fields, values, refGene);
+    };
 
-	var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
-	function ga4ghAnnotations({url, dsID}, [probe], id) {
-		return xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_gene_pos(probe)), function (r) {
-			return Rx.DOM.ajax(r).map(r => collateRows(xenaQuery.json_resp(r))).selectMany(([gene]) =>
-				gene ? ga4ghQuery.variants({
-					url: url,
-					dataset: dsID,
-					start: gene.position.chromstart,
-					end: gene.position.chromend,
-					chrom: gene.position.chrom
-				}) :
-				Rx.Observable.return([]));
-		},id);
-   }
-
-	var clinvar_host ="http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:8000/v0.5.1";
-	//var clinvar_host = "http://ec2-54-148-207-224.us-west-2.compute.amazonaws.com:7000/v0.6.e6d6074";
-
-	var annotationsForMap = [
-		{
-			url: clinvar_host,
-			dsID: 'Clinvar',
-			field: 'CLNSIG'
-		}, {
-			url: clinvar_host,
-			dsID: 'Clinvar',
-			field: 'CLNORIGIN'
-		}, {
-			url: clinvar_host,
-			dsID: 'ex_lovd',
-			field: 'iarc_class'
-		}
-	];
-
-	fetch = ifChanged(
-		[
-			['column', 'dsID'],
-			['column', 'fields'],
-			['samples'],
-			['annotations']
-		],
-		xenaQuery.dsID_fn(function (host, ds, probes, samples, annotations) {
-			var annQueries = _.object(_.map(annotations,
-				([, a], i) => [`annotation${i}`, ga4ghAnnotations(a, probes, a.url + a.dsID)]));
-
-			var annForMapQueries = _.object(_.map(annotationsForMap,
-				a => [`annotationForMap__${a.dsID}__${a.field}`, ga4ghAnnotations(a, probes, a.url + a.dsID)]));
-
-			return _.merge({
-				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp));
-				}),
-				refGene: xenaQuery.reqObj(xenaQuery.xena_post(refgene_host, xenaQuery.refGene_exon_string(probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp));
-				})
-			}, annQueries, annForMapQueries);
-		})
-	);
+	fetch = () => {
+        var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
+		var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, probes, samples) => ({
+            req: xenaQuery.reqObj(
+                 xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)),
+                 r => Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp))),
+            refGene: xenaQuery.reqObj(
+                xenaQuery.xena_post(refgene_host, xenaQuery.refGene_exon_string(probes)),
+                r => Rx.DOM.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp)))
+        })));
+		return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
+	};
 
 	function dataToPlot(sorted_samples, dataIn, probes) {
 		var data = dataIn;
@@ -305,13 +254,8 @@ define(['underscore_ext',
 
 			vg = local.vg;
 			columnUi = local.columnUi;
-
- 			if (vg.width() !== column.width) {
- 				vg.width(column.width);
- 			}
- 			if (vg.height() !== canvasHeight) {
- 				vg.height(canvasHeight);
- 			}
+			vg.width(column.width);
+			vg.height(canvasHeight);
 
 			columnUi.setHeight(annotations);
 

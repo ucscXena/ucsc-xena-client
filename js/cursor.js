@@ -1,3 +1,4 @@
+/*eslint strict: [2, "function"] */
 /*global define: false */
 
 // I won't claim these are actually proper cursors. They
@@ -43,10 +44,10 @@ define(['underscore_ext'], function (_) {
 
 	function pathsOrKeys(args) {
 		var paths = _.isString(args[0]) ? _.toArray(args) : args[0];
-		return _.isArray(paths) ? _.object_fn(paths, _.array) : paths;
+		return _.isArray(paths) ? _.objectFn(paths, _.array) : paths;
 	}
 
-	function splice_paths(oldpaths, newpaths) {
+	function splicePaths(oldpaths, newpaths) {
 		return _.fmap(newpaths, function (path) {
 			return oldpaths[path[0]].concat(path.slice(1));
 		});
@@ -58,18 +59,18 @@ define(['underscore_ext'], function (_) {
 			update: function (fn) {
 				updater(function (root) {
 					var val = _.fmap(paths, function (path) {
-							return _.get_in(root, path);
+							return _.getIn(root, path);
 						}),
 						newval = fn(val);
 					return _.reduce(_.pairs(newval), function (newroot, pv) {
 						var p = pv[0], v = pv[1];
-						return _.assoc_in(newroot, paths[p], v);
+						return _.assocIn(newroot, paths[p], v);
 					}, root);
 				});
 			},
 			refine: function () {
 				var newpaths = pathsOrKeys(arguments);
-				return cursor(updater, splice_paths(paths, newpaths));
+				return cursor(updater, splicePaths(paths, newpaths));
 			}
 		};
 	}

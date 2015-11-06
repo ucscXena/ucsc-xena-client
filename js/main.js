@@ -1,327 +1,230 @@
-/*jslint browser: true, regexp: true, vars: true */
-/*global define: false, console: false */
+/*eslint-env browser */
+/*global require: false, console: false */
 
-define(['jquery',
-		'underscore_ext',
-		'rx',
-		'columnModels',
-		'spreadsheet',
-		'sheetWrap',
-		'multi',
-		'columnUi',
-		'uuid',
-		'cursor',
-		// non-object dependencies
-		'plotDenseMatrix',
-		'plotMutationVector',
-		'jquery-ui',
-		'rx.async',
-		'base',
-		'clinvar',
-		'1kg',
-		'../css/heatmap.css'], function (
-			$,
-			_,
-			Rx,
-			columnModels,
-			spreadsheet,
-			sheetWrap,
-			multi,
-			columnUi,
-			uuid,
-			cursor) {
+'use strict';
 
-	'use strict';
+require('base');
+var React = require('react');
+var Spreadsheet = require('./spreadsheet');
+var AppControls = require('./AppControls');
+//var Input = require('react-bootstrap/lib/Input');
+var Grid = require('react-bootstrap/lib/Grid');
+var Row = require('react-bootstrap/lib/Row');
+var Col = require('react-bootstrap/lib/Col');
+var Rx = require('./rx.ext');
+var KmPlot = require('./kmPlot');
+//var Button = require('react-bootstrap/lib/Button');
+require('rx.coincidence');
+require('rx/dist/rx.aggregates');
+require('rx/dist/rx.time');
+require('rx-dom');
+var _ = require('./underscore_ext');
+//var meta = require('./meta');
+require('./plotDenseMatrix'); // XXX better place or name for this?
+var controllersControls = require('controllers/controls'); // XXX use npm package to simplify this import?
+var controllersServer = require('controllers/server'); // XXX use npm package to simplify this import?
+require('bootstrap/dist/css/bootstrap.css');
+//var Perf = require('react/addons').addons.Perf;
 
-	// set default column_order and column_rendering somewhere?
-	// pass column_order to spreadsheet.js
 
-	var model = columnModels(); // XXX global for testing
-	var HEIGHT = window.innerHeight? window.innerHeight-250: 500;
+var d = window.document;
+var main = d.getElementById('main');
+var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena',
+		'https://local.xena.ucsc.edu:7223'];
 
-	var unload = Rx.Observable.fromEvent(window, 'beforeunload');
-	// XXX does this work if no state events occur?? Looks like not.
+// Create a channel for messages from the server. We
+// want to avoid out-of-order responses for certain messages.
+// To do that, we have to allocate somewhere. We can manage it
+// by doing using a unique tag for the request, and using groupBy.
+//
+// Note that we can still bounce on column data requests, because they are not
+// handled with switchLatest. We can't put them on their own channel, because
+// that will leak memory: groupBy is leaky in keys. Maybe this leak is too small
+// to worry about? Maybe we need a custom operator that won't leak? Maybe
+// a takeUntil() should be applied to the groups?
+var serverBus = new Rx.Subject();
 
-	function keysNot_(obj) {
-		return _.filter(_.keys(obj), function (x) { return x.indexOf('_') !== 0; });
+var second = ([, b]) => b;
+
+// Subject of [slot, obs]. We group by slot and apply switchLatest. If slot is '$none' we just
+// merge.
+var serverCh = serverBus.groupBy(([slot]) => slot)
+	.map(g => g.key === '$none' ? g.map(second).mergeAll() : g.map(second).switchLatest()).mergeAll();
+
+var initialState = {
+	servers: {'default': defaultServers, user: defaultServers},
+	zoom: {height: 300},
+	columns: {},
+	columnOrder: [],
+	comms: {
+		server: serverBus
 	}
+};
 
-	function keys_(obj) {
-		return _.filter(_.keys(obj), function (x) { return x.indexOf('_') === 0; });
-	}
+if (sessionStorage && sessionStorage.xena && location.search.indexOf('?nostate') !== 0) {
+	initialState = _.extend(initialState, JSON.parse(sessionStorage.xena));
+}
 
-	unload.combineLatest(model.state, function (_e, state) {
-		return _.pick(state, keysNot_(state));
-	}).subscribe(function (state) {
-		sessionStorage.xena = JSON.stringify(state);
-	});
+var controlsBus = new Rx.Subject();
+var controlsCh = controlsBus;
 
-	var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena', 'https://local.xena.ucsc.edu:7223'];
+function formatState(state) {
+	return JSON.stringify(_.omit(state, ['comms']), null, 4);
+}
 
-	var childrenStream = new Rx.Subject();
-	model.addStream(childrenStream);
-	var writeState = function (fn) { childrenStream.onNext(fn); };
-	var spreadsheetPaths = {
-		cohort: ['cohort'],
-		height: ['height'],
-		zoomIndex: ['zoomIndex'],
-		zoomCount: ['zoomCount'],
-		samplesFrom: ['samplesFrom'],
-		samples: ['samples'],
-		servers: ['servers'],
-		_sources: ['_sources'],
-		column_rendering: ['column_rendering'],
-		_column: ['_column'],
-		column_order: ['column_order'],
-		//columnEditOpen: ['columnEditOpen'],
-		mode: ['mode'],
-		chartState: ['chartState'],
-		vizSettings: ['vizSettings'],
-		_vizSettings: ['_vizSettings'],
-		annotations: ['annotations'],
-		data: ['_column_data']
-	};
-	var spreadsheetState = model.state.pluckPathsDistinctUntilChanged(spreadsheetPaths).share();
-	var spreadsheetCursor = cursor(writeState, spreadsheetPaths);
-
-	sheetWrap.create({
-		$anchor: $('#main'),
-		state: spreadsheetState,
-		cursor: spreadsheetCursor,
-		servers: defaultServers
-	}); // XXX leaked
-	var $spreadsheet = $('.spreadsheet');
-	var $debug = $('.debug');
-
-	$spreadsheet.resizable({ handles: 's' });
-
-	// XXX handler might leak
-	// changing either the canvas or the .samplePlot
-	var resizes = $spreadsheet.onAsObservable("resizestop")
-		.select(function (ev) {
-				return function (s) {
-					var //diff = ev.additionalArguments[0].size.height
-						//	- ev.additionalArguments[0].originalSize.height,
-						// TODO it would be best to retrieve the state.height here
-						// and replace it with: diff + state.height
-						// The below does not work if a sparse mutation plot is first.
-						// If we do the above, we won't have a DOM lookup, so the below
-						// concern about DOM lookup is not an issue. The use of the jquery-ui
-						// resize has been greatly simplified by allowing the elements to
-						// shrink-wrap around their content, rather than trying to calc their sizes.
-						// Only the canvas size is set, nothing else.
-						$column = $('.spreadsheet-column:first'),
-					// The state-mutating functions should really be pure functions, for the sake
-					// of our sanity. So, DOM lookups should be done elsewhere.
-					// headHeight is really a constant & could be looked up once. This handler should
-					// see it as a constant.
-					// The reason we have to do this at all is that the resize handles are on a different
-					// element than the one we resize. The real fix is to resolve that discrepancy such
-					// that we're getting the correct height values. Dunno if jquery-ui will let us
-					// resize with a proxy element, but if not we should write our own resize. We should
-					// really do that anyway, and ditch jquery-ui. :-p
-						headHeight = $column.height() - $column.find('.samplePlot canvas').height();
-					return _.assoc(s, 'height', ev.additionalArguments[0].size.height - headHeight);
-				};
-		});
-
-	model.addStream(resizes);
-
-
-	// COLUMN STUB
-
-	function createColumn() {
-		try {
-			var newcol = JSON.parse($('#columnStub').val());
-			debugstream.onNext(function (s) {
-				var id = uuid();
-				return _.assoc(_.assoc_in(s, ['column_rendering', id], newcol),
-					'column_order', s.column_order.concat([id]));
-			});
-		} catch (e) {
-			if (console) {
-				console.log('error', e);
-			}
-		}
-	}
-
-	var debugstream = new Rx.Subject();
-	model.addStream(debugstream);
-	var debugtext = $('<textarea  id="columnStub" rows=20 cols=130></textarea>');
-	debugtext.hide();
-	$debug.append(debugtext);
-
-	debugtext.on('keydown', function (ev) {
-		if (ev.keyCode === 13 && ev.shiftKey === true) {
-			createColumn(ev);
-		}
-	});
-
-	// SAMPLES STUB
-
-	function applySamples(ev) {
-		try {
-			var json = JSON.parse($('#samplesStub').val());
-			debugstream.onNext(function (s) {
-				return _.extend(_.pick(s, keys_(s)),
-								_.pick(json, keysNot_(json)));
-			});
-		} catch (e) {
-			console.log('error', e);
-		}
-	}
-
-	var debugstate = $('<textarea id="samplesStub" rows=20 cols=50></textarea>');
-	$debug.append(debugstate);
-
-	debugstate.on('keydown', function (ev) {
-		if (ev.keyCode === 13 && ev.ctrlKey === true) {
-			applySamples(ev);
-		}
-	});
-
-	$(document).ready(function () {
-		var debug_stream = model.state.replay(null, 1),
-			start,
-			sub;
-
-		debug_stream.connect();
-
-		start = {
-				"chartState": null,
-				"mode": "heatmap",
-				"samples": [],
-				"samplesFrom": "",
-				"servers": {'default': defaultServers, user: defaultServers},
-				"_sources": [],  // not sure what this is for
-				"height": HEIGHT,
-				"zoomIndex": 0,
-				"zoomCount": 100,
-				"column_rendering": {},
-				"_column": {}, // not sure what this is for
-				"column_order": [],
-				"annotations": []
-			};
-		if (sessionStorage && sessionStorage.xena) {
-			start = _.extend(start, JSON.parse(sessionStorage.xena));
-		}
-		model.addStream(Rx.Observable.returnValue(function (s) { return start; }));
-
-		$('.samplesFromAnchor').onAsObservable('click')
-			.subscribe(function (ev) {
-				$('.debug').toggle();
-				if (sub) {
-					sub.dispose();
-				} else {
-					sub = debug_stream.subscribe(function (s) {
-						$('#samplesStub').val(JSON.stringify(_.pick(s, keysNot_(s)), undefined, 4));
-					});
+var Application = React.createClass({
+	displayName: 'Application',
+	getInitialState() {
+		return {
+			debug: false,
+			debugText: formatState(this.props.appState) // initial state of text area.
+		};
+	},
+	//	XXX debug widget is currently too slow due to large appState.
+	// Enable with <Grid onClick={this.onClick}>.
+//	componentWillReceiveProps ({appState}) {
+//		this.setState({debugText: formatState(appState)});
+//	},
+//	handleChange: function (ev) {
+//		this.setState({debugText: ev.target.value});
+//	},
+//	onClick: function (ev) {
+//		return;
+//		if (ev[meta.key]) {
+//			this.setState({debug: !this.state.debug});
+//		}
+//	},
+	onKeyDown: function (ev) {
+		if (ev.key === 'Enter' && ev.ctrlKey) {
+			try {
+				this.props.callback(['set-debug-state', JSON.parse(this.state.debugText)]);
+			} catch (e) {
+				if (console) {
+					console.log(e);
 				}
-			});
-	});
-
-
-//	var cols = $('<div></div>');
-//	$spreadsheet.append(cols);
-//	cols.append($('<div style="display:inline-block">one</div><div style="display:inline-block">two</div><div style="display:inline-block">three</div>'));
-//	$(cols).children().resizable({handles: "e"});
+			}
+			ev.preventDefault();
+		}
+	},
+//	onPerf: function () {
+//		this.perf = !this.perf;
+//		if (this.perf) {
+//			console.log("Starting perf");
+//			Perf.start();
+//		} else {
+//			console.log("Stopping perf");
+//			Perf.stop();
+//			Perf.printInclusive();
+//			Perf.printExclusive();
+//			Perf.printWasted();
+//		}
+//	},
+	render: function() {
+		let {appState: {km, ...otherState}, ...otherProps} = this.props;
+		return (
+			<Grid>
+			{/*
+				<Row>
+					<Button onClick={this.onPerf}>Perf</Button>
+				</Row>
+			*/}
+				<Row>
+					<Col md={12}>
+						<AppControls {...otherProps} appState={otherState} />
+					</Col>
+				</Row>
+				<Spreadsheet {...otherProps} appState={otherState} />
+				{_.getIn(km, ['id']) ? <KmPlot
+						callback={this.props.callback}
+						appState={km}
+						features={this.props.appState.features} /> : ''}
+			{/*
+				<Row>
+					<Col md={12}>
+						<Input
+							type='textarea'
+							id='debug'
+							rows='20'
+							cols='130'
+							style={{display: this.state.debug ? 'block' : 'none'}}
+							onChange={this.handleChange}
+							onKeyDown={this.onKeyDown}
+							value={this.state.debugText} />
+					</Col>
+				</Row>
+			*/}
+				<div className='chartRoot' style={{display: 'none'}} />
+			</Grid>
+		);
+	}
 });
 
-//define(['jquery', 'config', 'compat', 'assembly', 'genomicPosition', 'browser', 'error',
-//		'lib/backbone',
-//		// non-object dependencies
-//		'lib/preloadCssImages.jQuery',
-//		'lib/wrapJquery'
-//	], function ($, config, compat, assembly, genomicPosition, browser, error, Backbone) {
-//	'use strict';
+// XXX rename controls ui, so we have ui + server.
+
+function controlRunner(controller) {
+	return function (state, ev) {
+		try {
+			var s = controller.event(state, ev);
+			controller.postEvent(state, s, ev);
+			return s;
+		} catch (e) {
+			console.log('Error', e); // comment this out to have hard errors.
+			return state;
+		}
+	};
+}
+
+var serverReducer = controlRunner(controllersServer);
+var controlsReducer = controlRunner(controllersControls);
+
+
+// From page load, push indexes for state. Store in cache slots.
+// Our state is too big to push directly. This mechanism is a bit
+// confusing across page loads.
 //
-//	var ajaxErrorRetry = function (xhr, textStatus, errorThrown) {
-//		var err;
-//		if (xhr.status === 400) {
-//			try {
-//				err = JSON.parse(xhr.responseText);
-//			} catch (e) {
-//				if (!e instanceof SyntaxError) {
-//					throw e;
-//				}
-//			}
-//			if (err && err.reload) {
-//				error.warning.call(this, err.error, true);
-//				return;
-//			}
-//		}
-//		if ((textStatus === 'timeout' || xhr.status === 500) && this.retryLimit > 0) {
-//			this.retryLimit -= 1;
-//			$.ajax(this);
-//			return;
-//		}
-//		if (this.fail) {
-//			this.fail(xhr, textStatus, errorThrown);
-//		} else {
-//			error.ajax.apply(this, arguments);
-//		}
-//	};
-//
-//	// replaces Backbone's wrapError
-//	function wrapError(onError, model, options) {
-//		options.fail = function (xhr, textStatus, errorThrown) {
-//			if (onError) {
-//				onError(xhr, textStatus, errorThrown);
-//			} else {
-//				model.trigger('error', model, xhr, options);
-//				error.ajax.apply(this, arguments);
-//			}
-//		};
-//		return ajaxErrorRetry;
-//	}
-//
-//	$(document).ready(function () {
-//		var gp;
-//		compat.check();
-//		if (config.DEBUG) {
-//			require(['debug']);
-//		}
-//
-//		Backbone.wrapError = wrapError;
-//
-//		$.ajaxSetup({
-//			beforeSend: function (xhr, settings) {
-//				function getCookie(name) {
-//					var cookieValue = null,
-//						cookies = document.cookie.split(';'),
-//						cookie,
-//						i;
-//					if (document.cookie && document.cookie !== '') {
-//						for (i = 0; i < cookies.length; i += 1) {
-//							cookie = $.trim(cookies[i]);
-//							// Does this cookie string begin with the name we want?
-//							if (cookie.substring(0, name.length + 1) === (name + '=')) {
-//								cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-//								break;
-//							}
-//						}
-//					}
-//					return cookieValue;
-//				}
-//				if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
-//					// Only send the token to relative URLs i.e. locally.
-//					xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-//				}
-//			},
-//			headers: {
-//				'Cancer-Browser-Api': config.API_VERSION
-//			},
-//			retryLimit: 3,
-//			error: ajaxErrorRetry
-//		});
-//
-//		$.preloadCssImages();
-//		gp = genomicPosition.factory({storageId: 'genomicPosition'});
-//		$.when(assembly('hg18')).done(function (assembly) {
-//			gp.assembly(assembly); // set default position XXX move this?
-//			gp.set('mode', 'chrom');
-//			gp.set('chromPos', null);
-//			browser.init(gp);
-//		});
-//	});
+//  0 1 2 3 4 5 6 7
+//        ^
+//  back: move indx to 2.
+//  forward: move indx to 4
+//  new state: append state & invalidate  5 - 7? The browser will
+//     invalidate them.
+
+var [pushState, setState] = (function () {
+	var i = 0, cache = [];
+	return [function (s) {
+		cache[i] = s;
+		history.pushState(i, '');
+		i = (i + 1) % 100;
+	},
+	Rx.DOM.fromEvent(window, 'popstate').map(s => {
+		i = s.state;
+		return cache[i];
+	})];
+})();
+
+var stateObs = Rx.Observable.merge(
+					serverCh.map(ev => [serverReducer, ev]),
+					controlsCh.map(ev => [controlsReducer, ev])
+			   ).scan(initialState, (state, [reduceFn, ev]) => reduceFn(state, ev))
+			   .do(pushState)
+			   .merge(setState)
+			   .share();
+
+var updater = ev => controlsBus.onNext(ev);
+//stateObs.subscribe(state => {
+//	React.render(<Application callback={updater} appState={state} />, main);
 //});
+
+// XXX double check that this expression is doing what we want: don't draw faster
+// than rAF.
+stateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
+	.subscribe(state => React.render(<Application callback={updater} appState={state} />, main));
+
+
+
+// Save state in sessionStorage on page unload.
+stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
+	.subscribe(state => sessionStorage.xena = JSON.stringify(_.omit(state, 'comms')));
+
+// Kick things off.
+controlsBus.onNext(['init']);

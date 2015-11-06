@@ -1,4 +1,5 @@
-/*jslint browser: true, nomen: true */
+/*eslint-env browser */
+/*eslint strict: [2, "function"] */
 /*global define: false, navigator: false */
 define([ "jquery" ], function ($) {
 	'use strict';
@@ -46,15 +47,18 @@ define([ "jquery" ], function ($) {
 		},
 
 		caseInsensitiveSort: function (a, b) {
-			if (a.toUpperCase() < b.toUpperCase()) {
+			var uca = a.toUpperCase(),
+				ucb = b.toUpperCase();
+			if (uca < ucb) {
 				return -1;
-			} else if (a.toUpperCase() > b.toUpperCase()) {
+			} else if (uca > ucb) {
 				return 1;
 			} else {
 				return 0;
 			}
 		},
 
+		// XXX delete this.
 		caseInsensitiveSortByLabel: function (a, b) {
 			if (a.label.toUpperCase() < b.label.toUpperCase()) {
 				return -1;

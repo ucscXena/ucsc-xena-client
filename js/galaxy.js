@@ -1,12 +1,13 @@
-/*jslint browser: true */
+/*eslint strict: [2, "function"] */
+/*eslint-env browser */
 /*global define: false */
-define([ "jquery" ], function ($) {
+define([], function () {
 	'use strict';
 
-	var url, tool_id;
+	var url, toolId;
 
 	function send(file) {
-		var parameters = "?URL=" + encodeURIComponent(window.location.origin + file) + "&tool_id=" + encodeURIComponent(tool_id);
+		var parameters = "?URL=" + encodeURIComponent(window.location.origin + file) + "&tool_id=" + encodeURIComponent(toolId);
 		window.location = url + parameters;
 	}
 
@@ -17,7 +18,7 @@ define([ "jquery" ], function ($) {
 	}
 
 	url = getParameterByName("GALAXY_URL");
-	tool_id = getParameterByName("tool_id");
+	toolId = getParameterByName("tool_id");
 
 	return {
 		fromGalaxy: function () {

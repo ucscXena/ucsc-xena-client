@@ -1,15 +1,13 @@
+/*eslint strict: [2, "function"] */
 /*global define: false */
 define(['multi'], function (multi) {
 	'use strict';
 
-	function columnDataType(s) {
-		return s.column.dataType;
-	}
-
 	var widget = {
-		cmp: multi(columnDataType),
-		fetch: multi(columnDataType),
-		render: multi(columnDataType)
+		cmp: multi(x => x.dataType),
+		fetch: multi(x => x.dataType),
+		column: multi(x => x.column.dataType),
+		transform: multi(x => x.dataType)
 	};
 
 	return widget;

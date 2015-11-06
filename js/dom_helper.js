@@ -1,4 +1,5 @@
-/*jslint browser:true, nomen: true*/
+/*eslint strict: [2, "function"], camelcase: 0 */
+/*eslint-env browser */
 /*global define: false */
 
 define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
@@ -83,13 +84,13 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 
 
 	function tableCreate(row, column){
-	  var tbl  = document.createElement('table'), tr, td, i,j;
-	  tbl.setAttribute("class","dataSnippetTable");
+	  var tbl  = document.createElement('table'), tr, td, i, j;
+	  tbl.setAttribute("class", "dataSnippetTable");
 	  for(i = 0; i < row; i++){
       tr = tbl.insertRow(i);
       for(j = 0; j < column; j++){
         td = tr.insertCell(j);
-        td.innerHTML="...";
+        td.innerHTML = "...";
       }
 	  }
 	  return tbl;

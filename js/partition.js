@@ -1,4 +1,4 @@
-/*jslint nomen:true, indent: 4 */
+/*eslint strict: [2, "function"] */
 /*global define: false  */
 
 define(['underscore'], function (_) {
@@ -62,7 +62,7 @@ define(['underscore'], function (_) {
 		offset = 0;
 		return _(parts).map(function (size) {
 			var ret = {
-				start : offset,
+				start: offset,
 				size: size
 			};
 			offset = offset + size + sep; // XXX assumes map() iterates in order

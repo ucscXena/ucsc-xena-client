@@ -1,4 +1,4 @@
-/*jslint nomen: true */
+/*eslint strict: [2, "function"] */
 /*global define: false  */
 
 define(["jquery", 'underscore'], function ($, _) {
@@ -11,11 +11,8 @@ define(["jquery", 'underscore'], function ($, _) {
 		return c;
 	};
 
-	/* t is transparency. Currently ignored */
-	return function (vgw, vgh, t) {
+	return function (el, vgw, vgh) {
 		var fontFamily = 'Verdana,Arial,sans-serif',
-		    canvas = $('<canvas></canvas>'),
-		    el = canvas[0],
 		    ctx = el.getContext('2d'),
 
 			// setting font is expensive, so cache it.
@@ -189,7 +186,7 @@ define(["jquery", 'underscore'], function ($, _) {
 				return _.zip(r, g, b);
 			},
 
-			drawImage = function (c, sx, sy, sw, sh, dx, dy, dw, dh) {
+			drawImage = function (/* c, sx, sy, sw, sh, dx, dy, dw, dh */) {
 				ctx.drawImage.apply(ctx, arguments);
 			},
 

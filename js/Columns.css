@@ -1,0 +1,16 @@
+.Column-add-button {
+	position: relative;
+	top: 20px;
+}
+
+.Column {
+	position: relative;
+	display: inline-block;
+	overflow: hidden;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.Columns .Sortable {
+	display: inline-block;
+}

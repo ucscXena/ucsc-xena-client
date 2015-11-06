@@ -1,688 +1,598 @@
-/*global define: false */
-define(['underscore_ext',
-		'jquery',
-		'rx',
-		'multi',
-		'vgcanvas',
-		'colorBar',
-		'columnWidgets',
-		'crosshairs',
-		'heatmapColors',
-		'partition',
-		'tooltip',
-		'util',
-		'xenaQuery',
-		'rx-jquery'
-	], function (
-		_,
-		$,
-		Rx,
-		multi,
-		vgcanvas,
-		colorBar,
-		widgets,
-		crosshairs,
-		heatmapColors,
-		partition,
-		tooltip,
-		util,
-		xenaQuery) {
+/*global require: false, document: false */
+'use strict';
 
-	"use strict";
+var _ = require('underscore_ext');
+var Rx = require('rx');
+var vgcanvas = require('vgcanvas');
+var widgets = require('columnWidgets');
+var heatmapColors = require('heatmapColors');
+var partition = require('partition');
+var util = require('util');
+var xenaQuery = require('xenaQuery');
+var Legend = require('Legend');
+var Column = require('Column');
+var MenuItem = require('react-bootstrap/lib/MenuItem');
+var React = require('react');
+var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 
-	var each = _.each,
-		map = _.map,
-		filter = _.filter,
-		isUndefined = _.isUndefined,
-		zip = _.zip,
-		range = _.range,
-		bind = _.bind,
-		pluckPathsArray = _.pluckPathsArray,
-		find = _.find,
-		uniq = _.uniq,
-		scratch = vgcanvas(1, 1), // scratch buffer
-		cmp,
-		fetch,
-		fetch_gene,
-		fetch_gene_probes,
-		fetch_feature,
-		render;
+require('rx-jquery');
 
-	function meannan(values) {
-		var count = 0, sum = 0;
-		if (!values) {
-			return NaN;
-		}
-		sum = _.reduce(values, function (sum, v) {
-			if (!isNaN(v)) {
-				count += 1;
-				return sum + v;
-			}
-			return sum;
-		}, 0);
-		if (count > 0) {
-			return sum / count;
-		}
-		return NaN;
+// XXX might want to automatically wrap all of these in xenaQuery.
+var datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
+var datasetGenesValues = xenaQuery.dsID_fn(xenaQuery.dataset_genes_values);
+var datasetGeneProbesValues = xenaQuery.dsID_fn(xenaQuery.dataset_gene_probe_values);
+var datasetFeatureDetail = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
+var datasetCodes = xenaQuery.dsID_fn(xenaQuery.code_list);
+
+function hasClass(el, c) {
+	return el.className.split(/ +/).indexOf(c) !== -1;
+}
+
+var each = _.each,
+	map = _.map,
+	filter = _.filter,
+	zip = _.zip,
+	range = _.range,
+	bind = _.bind,
+	find = _.find,
+	uniq = _.uniq,
+	scratch = vgcanvas(document.createElement('canvas'), 1, 1); // scratch buffer
+
+function secondExists(x) {
+	return x[1] != null;
+}
+
+function second(x, y) {
+	return y;
+}
+
+var colorFns = vs => _.map(vs, heatmapColors.colorScale);
+
+function saveMissing(fn) {
+	return function (v) {
+		return v == null ? v : fn(v);
+	};
+}
+
+function subbykey(subtrahend, key, val) {
+	return val - subtrahend[key];
+}
+
+// Decide whether to normalize, perfering the user setting to the
+// dataset default setting.
+function shouldNormalize(vizSettings, dataset) {
+	var user = _.getIn(vizSettings, ['colNormalization']),
+		dataDefault = _.getIn(dataset, ['colnormalization']);
+	return user === 'subset' || user == null && dataDefault;
+}
+
+// Returns 2d array of numbers, probes X samples.
+// [[number, ...], [number, ...]]
+// Performs sorting and normalization.
+function computeHeatmap(vizSettings, data, fields, samples, dataset) {
+	if (!data) {
+		return [];
+	}
+	var {mean, probes, values} = data,
+		colnormalization = shouldNormalize(vizSettings, dataset),
+		transform = (colnormalization && mean && _.partial(subbykey, mean)) || second;
+
+	return map(probes || fields, function (p) {
+		var suTrans = saveMissing(v => transform(p, v));
+		return map(samples, s => suTrans(_.getIn(values[p], [s])));
+	});
+}
+
+function dataToHeatmap(column, vizSettings, {req, codes = {}}, samples, dataset) {
+	var fields = req.probes || column.fields;
+	var heatmap = computeHeatmap(vizSettings, req, fields, samples, dataset),
+		colors = map(fields, (p, i) =>
+					 heatmapColors.colorSpec(column, vizSettings,
+											 codes[p], heatmap[i], dataset));
+	return {heatmap: heatmap, colors: colors};
+}
+
+function drawColumn(data, colorScale, boxfn) {
+	var colors;
+
+	if (colorScale) { // then there exist some non-null values
+		// zip colors and their indexes, then filter out the nulls
+		colors = filter(zip(range(data.length), map(data, colorScale)), secondExists);
+		each(colors, bind(boxfn.apply, boxfn, null));
+	}
+}
+
+// The browsers want to smooth our images, which messes them up. We avoid
+// certain scaling operations to prevent this.
+// If there are more values than pixels, draw at one-pixel-per-value
+// to avoid sub-pixel aliasing, then scale down to the final size with
+// drawImage(). If there are more pixels than values, draw at an integer
+// scale per-value, giving us an image larger than the final size, then scale
+// down to avoid blurring.
+// We can ditch this complexity when all the browsers allow us to disable
+// smoothing.
+// index & count are floating point.
+function pickScale(index, count, height, data) {
+	var first = Math.floor(index),
+		last  = Math.ceil(index + count),
+		d = data.slice(first, last), // XXX use a typed array view?
+		scale = (height >= d.length) ? Math.ceil(height / d.length) : 1,
+		scaledHeight = d.length * scale || 1, // need min 1 px to draw gray when no data
+		sy =  (index - first) * scale,
+		sh = scale * count;
+
+	return {
+		data: d,                // subset of data to be drawn
+		scale: scale,           // chosen scale that avoids blurring
+		height: scaledHeight,
+		sy: sy,                 // pixels off-screen at top of buffer
+		sh: sh                  // pixels on-screen in buffer
+	};
+}
+
+function renderHeatmap(opts) {
+	var {vg, height, width, zoomIndex, zoomCount, layout, data, colors} = opts;
+
+	vg.smoothing(false); // For some reason this works better if we do it every time.
+
+	// reset image
+	if (data.length === 0) { // no features to draw
+		vg.box(0, 0, width, height, "gray");
+		return;
 	}
 
-	function secondNotUndefined(x) {
-		return !isUndefined(x[1]);
-	}
+	each(layout, function (el, i) {
+		var s = pickScale(zoomIndex, zoomCount, height, data[i]),
+			colorScale = colors[i];
 
-	function second(x, y) {
-		return y;
-	}
-
-	function getProperty(obj, key) {
-			return obj && obj[key];
-	}
-
-	// need a Maybe
-	function saveUndefined(fn) {
-		return function (v) {
-			return isUndefined(v) ? v : fn(v);
-		};
-	}
-
-	function subbykey(subtrahend, key, val) {
-		return val - subtrahend[key];
-	}
-
-	function dataToHeatmap(sorted_samples, data, probes, transform) {
-		if (!data) {
-			return [];
-		}
-		return map(probes, function (p) {
-			return map(sorted_samples, _.compose(saveUndefined(_.partial(transform, p)), _.partial(getProperty, data[p])));
-		});
-	}
-
-	function drawColumn(data, color_scale, boxfn) {
-		var colors;
-
-		if (color_scale) { // then there exist some non-null values
-			// zip colors and their indexes, then filter out the nulls
-			colors = filter(zip(range(data.length), map(data, color_scale)), secondNotUndefined);
-			each(colors, bind(boxfn.apply, boxfn, null));
-		}
-	}
-
-	// The browsers want to smooth our images, which messes them up. We avoid
-	// certain scaling operations to prevent this.
-	// If there are more values than pixels, draw at one-pixel-per-value
-	// to avoid sub-pixel aliasing, then scale down to the final size with
-	// drawImage(). If there are more pixels than values, draw at an integer
-	// scale per-value, giving us an image larger than the final size, then scale
-	// down to avoid blurring.
-	// We can ditch this complexity when all the browsers allow us to disable
-	// smoothing.
-	// index & count are floating point.
-	function pickScale(index, count, height, data) {
-		var first = Math.floor(index),
-			last  = Math.ceil(index + count),
-			d = data.slice(first, last), // XXX use a typed array view?
-			scale = (height >= d.length) ? Math.ceil(height / d.length) : 1,
-			scaled_height = d.length * scale || 1, // need min 1 px to draw gray when no data
-			sy =  (index - first) * scale,
-			sh = scale * count;
-
-		return {
-			data: d,                // subset of data to be drawn
-			scale: scale,           // chosen scale that avoids blurring
-			height: scaled_height,
-			sy: sy,                 // pixels off-screen at top of buffer
-			sh: sh                  // pixels on-screen in buffer
-		};
-	}
-
-	function renderHeatmap(opts) {
-		var vg       = opts.vg,
-			height   = opts.height,
-			width    = opts.width,
-			zoomIndex = opts.zoomIndex,
-			zoomCount = opts.zoomCount,
-			layout   = opts.layout,
-			data     = opts.data,
-			colors   = opts.colors,
-			buff = scratch;
-
-		vg.smoothing(false); // For some reason this works better if we do it every time.
-
-		// reset image
-		if (data.length === 0) { // no features to draw
-			vg.box(0, 0, width, height, "gray");
-			return;
-		}
-
-		each(layout, function (el, i) {
-			var s = pickScale(zoomIndex, zoomCount, height, data[i]),
-				color_scale = colors[i];
-
-			buff.height(s.height);
-			buff.box(0, 0, 1, s.height, "gray");
-			buff.scale(1, s.scale, function () {
-				drawColumn(s.data, color_scale, function (i, color) {
-					buff.box(0, i, 1, 1, color);
-				});
-			});
-			vg.translate(el.start, 0, function () {
-				vg.drawImage(buff.element(), 0, s.sy, 1, s.sh, 0, 0, el.size, height);
+		scratch.height(s.height);
+		scratch.box(0, 0, 1, s.height, "gray");
+		scratch.scale(1, s.scale, function () {
+			drawColumn(s.data, colorScale, function (i, color) {
+				scratch.box(0, i, 1, 1, color);
 			});
 		});
-	}
-
-	function cmpNumberOrNull(v1, v2) {
-		if (isUndefined(v1) && isUndefined(v2)) {
-			return 0;
-		} else if (isUndefined(v1)) {
-			return 1;
-		} else if (isUndefined(v2)) {
-			return -1;
-		}
-		return v2 - v1;
-	}
-
-	function ifChanged(paths, fn) {
-		return function (state, previousState, lastResult) {
-			var pluckedState = pluckPathsArray(paths, state),
-				pluckedPreviousState;
-			if (previousState) {
-				pluckedPreviousState = pluckPathsArray(paths, previousState);
-				if (_.isEqual(pluckedState, pluckedPreviousState)) {
-					return lastResult;
-				}
-			}
-			return fn.apply(this, pluckedState);
-		};
-	}
-
-	// data might not match col! XXX if the response hasn't arrived yet.
-	// where does req fit in?
-	// If we request a new view & we deprecate the old data, then the
-	// sort changes. Then we rerender w/no usable sort order.
-
-	// need original sample list & field list. Should index when we
-	// get the data.
-	// XXX Should have this return a closure with the data lookup, so we
-	// don't repeat it every time.
-	function cmpSamples(probes, data, s1, s2) {
-		var diff = data && find(probes, function (f) {
-				return data[f] && cmpNumberOrNull(data[f][s1], data[f][s2]);
-			});
-		if (diff) {
-			return cmpNumberOrNull(data[diff][s1], data[diff][s2]);
-		} else {
-			return 0;
-		}
-	}
-
-	cmp = ifChanged(
-		[
-			['column', 'fields'],
-			['data', 'req', 'values'],
-			['data', 'req', 'probes']
-		],
-		function (col_fields, data, probes) {
-			var fields = probes || col_fields;
-			return _.partial(cmpSamples, fields, data);
-		}
-	);
-
-	// index data by field, then sample
-	// XXX maybe build indexes against arrays, instead of ditching the arrays,
-	// so we can do on-the-fly stuff, like average, km, against an array.
-	function indexResponse(probes, samples, data) {
-		var values = _.object(probes, _.map(probes, function (v, i) {
-				return _.object(samples, _.map(data[i], xenaQuery.nanstr));
-			})),
-			mean = function () {
-				return _.object(probes, _.map(data, function (v, i) {
-					return meannan(v);
-				}));
-			};
-
-		return {values: values, mean: _.memoize(mean)};
-	}
-
-	// XXX A better approach might be to update the other index* functions
-	// such that they always create the "probes" in the request.
-	//
-	// Currently for every other request there's a 1-1 correspondence between
-	// requested "fields" and the fields returned by the server, so we just
-	// use column.fields to drive the layout and sort. This query is different
-	// in that we request one thing (gene) and get back a list of things (probes
-	// in the gene). So we can't base layout and sort on column.fields. We instead
-	// put the field list into data.req.probes, in this function, and add complexity
-	// to render() and cmp() such that they prefer data.req.probes to column.fields.
-	// The alternative is to always create data.req.probes.
-	function indexProbeGeneResponse(samples, data) {
-		var probes = data[0],
-			vals = data[1];
-		return _.extend({probes: probes}, indexResponse(probes, samples, vals));
-	}
-
-	function orderByQuery(genes, data) {
-		var indx = _.invert(_.pluck(data, 'gene'));
-		return _.map(genes, function (g) {
-			var i = indx[g];
-			return i && data[i].scores[0]; // XXX extra level of array in g.SCORES??
+		vg.translate(el.start, 0, function () {
+			vg.drawImage(scratch.element(), 0, s.sy, 1, s.sh, 0, 0, el.size, height);
 		});
+	});
+}
+
+//
+// sort
+//
+
+function cmpNumberOrNull(v1, v2) {
+	if (v1 == null && v2 == null) {
+		return 0;
+	} else if (v1 == null) {
+		return 1;
+	} else if (v2 == null) {
+		return -1;
+	}
+	return v2 - v1;
+}
+
+function cmpSamples(probes, data, s1, s2) {
+	var diff = data && find(probes, function (f) {
+			return data[f] && cmpNumberOrNull(data[f][s1], data[f][s2]);
+		});
+	if (diff) {
+		return cmpNumberOrNull(data[diff][s1], data[diff][s2]);
+	} else {
+		return 0;
+	}
+}
+
+// XXX fix up mutation cmp, perhaps after merging from main
+var cmp = ({fields}, {req: {values, probes}}) =>
+	(s1, s2) => cmpSamples(probes || fields, values, s1, s2);
+
+//
+// data fetches
+//
+
+// index data by field, then sample
+// XXX maybe build indexes against arrays, instead of ditching the arrays,
+// so we can do on-the-fly stuff, like average, km, against an array.
+function indexResponse(probes, samples, data) {
+	var values = _.object(probes, _.map(probes, function (v, i) {
+			return _.object(samples, _.map(data[i], xenaQuery.nanstr));
+		})),
+		mean = _.object(probes, _.map(data, _.meannan));
+
+	return {values: values, mean: mean};
+}
+
+// XXX A better approach might be to update the other index* functions
+// such that they always create the "probes" in the request.
+//
+// Currently for every other request there's a 1-1 correspondence between
+// requested "fields" and the fields returned by the server, so we just
+// use column.fields to drive the layout and sort. This query is different
+// in that we request one thing (gene) and get back a list of things (probes
+// in the gene). So we can't base layout and sort on column.fields. We instead
+// put the field list into data.req.probes, in this function, and add complexity
+// to render() and cmp() such that they prefer data.req.probes to column.fields.
+// The alternative is to always create data.req.probes.
+function indexProbeGeneResponse(samples, data) {
+	var probes = data[0],
+		vals = data[1];
+	return _.extend({probes: probes}, indexResponse(probes, samples, vals));
+}
+
+function orderByQuery(genes, data) {
+	var indx = _.invert(_.pluck(data, 'gene'));
+	return _.map(genes, function (g) {
+		var i = indx[g];
+		return i && data[i].scores[0]; // XXX extra level of array in g.SCORES??
+	});
+}
+
+function indexGeneResponse(genes, samples, data) {
+	return indexResponse(genes, samples, orderByQuery(genes, data));
+}
+
+var fetch = ({dsID, fields}, samples) => datasetProbeValues(dsID, samples, fields)
+	.map(resp => ({req: indexResponse(fields, samples, resp)}));
+
+var fetchGeneProbes = ({dsID, fields}, samples) => datasetGeneProbesValues(dsID, samples, fields)
+	.map(resp => ({req: indexProbeGeneResponse(samples, resp)}));
+
+var fetchFeature = ({dsID, fields}, samples) => Rx.Observable.zipArray(
+		datasetProbeValues(dsID, samples, fields)
+			.map(resp => indexResponse(fields, samples, resp)),
+		datasetFeatureDetail(dsID, fields),
+		datasetCodes(dsID, fields)
+	).map(resp => _.object(['req', 'features', 'codes'], resp));
+
+
+var fetchGene = ({dsID, fields}, samples) => datasetGenesValues(dsID, samples, fields)
+			.map(resp => ({req: indexGeneResponse(fields, samples, resp)}));
+
+//
+// Tooltip
+//
+
+function plotCoords(ev) {
+	var offset,
+		x = ev.offsetX,
+		y = ev.offsetY;
+	// XXX test this on FF & move all this to util if we
+	// still need it.
+	if (x == null) { // fix up for firefox
+		offset = util.eventOffset(ev);
+		x = offset.x;
+		y = offset.y;
+	}
+	return { x: x, y: y };
+}
+
+function prec(val) {
+	var precision = 6,
+		factor = Math.pow(10, precision);
+	return Math.round((val * factor)) / factor;
+}
+
+// We're getting events with coords < 0. Not sure if this
+// is a side-effect of the react event system. This will
+// restrict values to the given range.
+function bounded(min, max, x) {
+	return x < min ? min : (x > max ? max : x);
+}
+
+function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
+	var coord = plotCoords(ev),
+		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
+		sampleID = samples[sampleIndex],
+		fieldIndex = bounded(0, fields.length, Math.floor(coord.x * fields.length / column.width)),
+		field = fields[fieldIndex],
+		fieldCodes = _.getIn(codes, [field]);
+
+	var val = heatmap[fieldIndex][sampleIndex],
+		code = _.getIn(fieldCodes, [val]),
+		label;
+
+	if (fields.length === 1) {
+		label = column.fieldLabel.default;
+	} else if (fields.length === column.fields.length) {
+		label = field;
+	} else {
+		label = column.fieldLabel.default + ' (' + field + ')';
 	}
 
-	function indexGeneResponse(genes, samples, data) {
-		return indexResponse(genes, samples, orderByQuery(genes, data));
+	val = code ? code : prec(val);
+	val = (val == null) ? 'NA' : val;
+
+	return {sampleID: sampleID,
+		rows: [{label: label, val: val}].concat(
+		(val !== 'NA' && !code) ?
+			{label: 'Column mean', val: prec(_.meannan(heatmap[fieldIndex]))} : [])};
+}
+
+//
+// Legends
+//
+
+// XXX missing data handled incorrectly on reload? Is this because NaN is miscoded in json?
+function categoryLegend(dataIn, colorScale, codes) {
+	if (!colorScale) {
+		return {colors: [], labels: [], align: 'left'};
+	}
+	// only finds categories for the current data in the column
+	var data = _.reject(uniq(dataIn), x => x == null).sort((v1, v2) =>  v1 - v2),
+		categoryLength = 19, // XXX where does this come from?
+		// zip colors and their indexes, then filter out the nulls
+		colors = _.map(filter(zip(range(data.length), map(data, colorScale)), secondExists),
+				c => c[1]),
+		labels = map(data, d => codes[d]);
+	return {colors: colors, labels: labels, align: 'left', ellipsis: data.length > categoryLength ? '...' : null};
+}
+
+// Color scale cases
+//  1 - clinical data: single probe, auto-scaled
+//    a - float
+//    b - categorical
+//  2 - genomic data: multiple probe, fixed scale or auto-scale each probe
+//    a - fixed scale
+//    b - auto-scale
+//      1 - single probe
+//      2 - multiple probe
+//
+// In all cases except 2.b.2 there is a single color scale. In that case
+// we get the legend colors by mapping the domain to the scale. For clinical
+// we take labels from the domain. For genomic, we show ranges with < >,
+// taken from the domain.
+//
+// When there are multiple scales, 2.b.2, there are no meaningful numbers
+// we can display as labels, so we use "higher", "lower". Rather than
+// taking the colors by some sort of union over the different color scales,
+// we ignore the scales and use the color setting of the column.
+//
+// This function should be refactored so there's no "fall through" case,
+// so all cases are explicit. Also, meaningful intermediate variables
+// should be created so intent is clear, e.g.
+//
+// colorScale.length > 1 && !_.getIn(settings, ['min'])
+//
+// means there are mutiple probes and the user has not set a fixed scale,
+// i.e. we have multiple color scales.
+
+// Basic legend, given a color scale.
+function legendFromScale(colorScale) {
+	var labels = colorScale.domain(),
+		colors = _.map(labels, colorScale);
+	return {labels: labels, colors: colors};
+}
+
+var cases = ([tag], arg, c) => c[tag](arg);
+
+// We never want to draw multiple legends. If there are multiple scales,
+// we do lower/higher. There are multiple scales if we have multiple probes
+// *and* there's no viz settings. We need at most one color fn, from which we
+// extract the domain & range.
+function renderGenomicLegend(props) {
+	var {dataset, colors, hasViz} = props,
+		multiScaled = _.getIn(colors, [1]) && !hasViz,
+		hasData = _.getIn(colors, [0]),
+		labels, legendColors;
+
+	if (multiScaled) {
+		legendColors = heatmapColors.defaultColors(dataset);
+		labels = ["lower", "", "higher"];
+	} else if (hasData) { // one probe, or all colors are same (hasViz)
+		var colorfn = heatmapColors.colorScale(colors[0]);
+		var {labels: l, colors: c} = legendFromScale(colorfn);
+		legendColors = c;
+		labels = cases(colors[0], l, {
+			'float-thresh': ([nl, nh, pl, ph]) => ['<' + nl, nh, pl, '>' + ph],
+			'float-thresh-pos': ([low, high]) => [low, '>' + high],
+			'float-thresh-neg': ([low, high]) => ['<' + low, high]
+		});
+	} else { // no data
+		legendColors = [];
+		labels = [];
 	}
 
-//	function rowToObj(cols) {
-//		return _.reduce(cols, function (acc, col) {
-//			acc[col[0]] = col[1];
-//			return acc;
-//		}, {});
-//	}
+	return <Legend colors={legendColors} labels={labels} align='center' />;
+}
 
-	function indexFeatures(xhr) {
-		var features = JSON.parse(xhr.response);
-		return _.reduce(features, function (acc, row) {
-			acc[row.name] = row;
-			return acc;
-		}, {});
+function floatLegend(colorScale) {
+	var {labels, colors} = legendFromScale(colorScale);
+	return {labels: labels, colors: colors, align: 'center'};
+}
+
+// Might have colorScale but no data (phenotype), no data & no colorScale,
+// or data & colorScale, no colorScale &  data?
+function renderPhenotypeLegend(props) {
+	var {data: [data] = [], fields, codes, colors = []} = props;
+	var legendProps;
+	var colorfn = _.first(colorFns(colors.slice(0, 1)));
+
+	// We can use domain() for categorical, but we want to filter out
+	// values not in the plot. Also, we build the categorical from all
+	// values in the db (even those not in the plot) so that colors will
+	// match in other datasets.
+	if (data && codes && codes[fields[0]] && colorfn) { // category
+		legendProps = categoryLegend(data, colorfn, codes[fields[0]]);
+	} else if (colorfn) {
+		legendProps = floatLegend(colorfn);
+	} else {
+		return <span />;
 	}
 
-	function indexCodes(xhr) {
-		var codes = JSON.parse(xhr.response);
-		return _.object(_.map(codes, function (row) {
-			return [row.name, row.code && row.code.split('\t')];
-		}));
+	return <Legend {...legendProps} />;
+}
+
+function legendMethod(dataType) {
+	return dataType === 'clinicalMatrix' ? renderPhenotypeLegend : renderGenomicLegend;
+}
+
+var HeatmapLegend = React.createClass({
+	mixins: [deepPureRenderMixin],
+	render: function() {
+		var {dataType} = this.props;
+		return legendMethod(dataType)(this.props);
 	}
-
-	// Where do we get the URL? XXX
-	//    URL is associated with the dataset, per-sample.
-	//    Have to parse the URL to get the server??
-	//    A polymorphic fn to know the server type (xena, tabix, etc...)
-	// xena data is a 2d matrix, fields X samples, fields first.
-	// two fields, three samples.
-	// [[1.1, 2.1, 3.1], [4.2, 5.2, 6.2]]
-
-	// Does the column need to decide which fields cause a
-	// new fetch? Or can the caller? The column must decide.
-
-	fetch = ifChanged(
-		[
-			['column', 'dsID'],
-			['column', 'fields'],
-			['samples']
-		],
-		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
-			return {
-				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
-				}),
-				metadata: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)), function (r) {
-					return Rx.DOM.ajax(r).select(xenaQuery.json_resp);
-				})
-			};
-		})
-	);
-
-	fetch_gene_probes = ifChanged(
-		[
-			['column', 'dsID'],
-			['column', 'fields'],
-			['column', 'dataType'],
-			['samples']
-		],
-		xenaQuery.dsID_fn(function (host, ds, probes, dataType, samples) {
-			return {
-				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_probes_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexProbeGeneResponse, samples), xenaQuery.json_resp));
-				}),
-				metadata: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)), function (r) {
-					return Rx.DOM.ajax(r).select(xenaQuery.json_resp);
-				})
-			};
-		})
-	);
-
-	fetch_feature = ifChanged(
-		[
-			['column', 'dsID'],
-			['column', 'fields'],
-			['samples']
-		],
-		// XXX Note that we re-fetch metadata even if the probe set hasn't changed.
-		// Need a better way than ifChanged of checking for changes.
-		xenaQuery.dsID_fn(function (host, ds, probes, samples) {
-			return {
-				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_probe_string(ds, samples, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexResponse, probes, samples), xenaQuery.json_resp));
-				}),
-				features: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.features_string(ds, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(indexFeatures);
-				}),
-				codes: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.codes_string(ds, probes)), function (r) {
-					return Rx.DOM.ajax(r).select(indexCodes);
-				})
-			};
-		})
-	);
-
-	fetch_gene = ifChanged(
-		[
-			['column', 'dsID'],
-			['column', 'fields'],
-			['column', 'dataType'],
-			['samples']
-		],
-		xenaQuery.dsID_fn(function (host, ds, fields, dataType, samples) {
-			return {
-				req: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_gene_string(ds, samples, fields)), function (r) {
-					return Rx.DOM.ajax(r).select(_.compose(_.partial(indexGeneResponse, fields, samples), xenaQuery.json_resp));
-				}),
-				metadata: xenaQuery.reqObj(xenaQuery.xena_post(host, xenaQuery.dataset_string(ds)), function (r) {
-					return Rx.DOM.ajax(r).select(xenaQuery.json_resp);
-				})
-			};
-		})
-	);
-
-	function plotCoords(ev) {
-		var offset,
-			x = ev.offsetX,
-			y = ev.offsetY;
-		if (x === undefined) { // fix up for firefox
-			offset = util.eventOffset(ev);
-			x = offset.x;
-			y = offset.y;
-		}
-		return { x: x, y: y };
-	}
-
-	function prec(val) {
-		var precision = 6,
-			factor = Math.pow(10, precision);
-		return Math.round((val * factor)) / factor;
-	}
-
-	function mousing(ev) {
-		var heatmapData = ev.data.plotData.heatmapData,
-			fields = ev.data.plotData.fields,
-			column = ev.data.column,
-			codes = ev.data.plotData.codes[column.fields[0]],
-			ws = ev.data.ws,
-			mode = 'genesets',
-			rows = [],
-			coord,
-			sampleIndex,
-			fieldIndex,
-			field,
-			label,
-			val,
-			tip = {
-				ev: ev,
-				el: '#nav',
-				my: 'top',
-				at: 'top',
-				mode: mode
-			};
-
-		if (tooltip.frozen()) {
-			return;
-		}
-		if (ev.type === 'mouseleave') {
-			tooltip.hide();
-			return;
-		}
-		coord = plotCoords(ev);
-		sampleIndex = Math.floor((coord.y * ws.zoomCount / ws.height) + ws.zoomIndex);
-		fieldIndex = Math.floor(coord.x * fields.length / ws.column.width);
-		tip.sampleID = ev.data.plotData.samples[sampleIndex];
-		field = fields[fieldIndex];
-
-		if (column.dataType === 'geneProbesMatrix') {
-			label = column.fields[0] + ' (' + field + ')';
-		} else if (column.dataType === 'clinicalMatrix') {
-			label = column.fieldLabel.default;
-		} else {
-			label = field;
-		}
-		val = heatmapData[fieldIndex][sampleIndex];
-		val = (column.dataType === 'clinicalMatrix' && codes)? codes[val]: prec(val);
-		if (val === undefined || _.isNaN(val)) {
-			val = 'NA';
-		}
-		if (val !== 'NA'){
-			rows.push([{ label: label, val: val }]);
-		}
-		if (val !== 'NA' && column.dataType !== 'clinicalMatrix') {
-			rows.push([{ label: 'Column mean : '+ prec(meannan(heatmapData[fieldIndex]))}]);
-		}
-		tip.rows = rows;
-		tooltip.mousing(tip);
-	}
-
-	function categoryLegend(dataIn, color_scale, codes) {
-		// only finds categories for the current data in the column
-		var data = uniq(dataIn).sort(function (v1, v2) {
-				return v1 - v2;
-			}),
-			colors,
-			justColors,
-			labels;
-
-		if (color_scale) { // then there exist some non-null values
-			// zip colors and their indexes, then filter out the nulls
-			colors = filter(zip(range(data.length), map(data, color_scale)), secondNotUndefined);
-			justColors =  map(colors, function (color) {
-				return color[1];
-			});
-			if (data[data.length - 1] === undefined) {
-				data.pop();
-			}
-			labels = map(data, function(d) {
-				return(codes[d]);
-			});
-			return { colors: justColors, labels: labels };
-		} else {
-			return { colors: [], labels: [] };
-		}
-	}
-
-	// Color scale cases
-	//  1 - clinical data: single probe, auto-scaled
-	//    a - float
-	//    b - categorical
-	//  2 - genomic data: multiple probe, fixed scale or auto-scale each probe
-	//    a - fixed scale
-	//    b - auto-scale
-	//      1 - single probe
-	//      2 - multiple probe
-	//
-	// In all cases except 2.b.2 there is a single color scale. In that case
-	// we get the legend colors by mapping the domain to the scale. For clinical
-	// we take labels from the domain. For genomic, we show ranges with < >,
-	// taken from the domain.
-	//
-	// When there are multiple scales, 2.b.2, there are no meaningful numbers
-	// we can display as labels, so we use "higher", "lower". Rather than
-	// taking the colors by some sort of union over the different color scales,
-	// we ignore the scales and use the color setting of the column.
-	//
-	// This function should be refactored so there's no "fall through" case,
-	// so all cases are explicit. Also, meaningful intermediate variables
-	// should be created so intent is clear, e.g.
-	//
-	// color_scale.length > 1 && !_.get_in(settings, ['min'])
-	//
-	// means there are mutiple probes and the user has not set a fixed scale,
-	// i.e. we have multiple color scales.
-	function drawLegend(metadata, settings, columnUi, data, fields, codes, color_scale) {
-		var c,
-			ellipsis = '',
-			align = 'center',
-			labels = color_scale[0] ? color_scale[0].domain() : [],
-			colors = color_scale[0] ? _.map(labels, color_scale[0]) : [],
-			categoryLength = 100;
-
-		if (data.length === 0) { // no features to draw
-			return;
-		}
-
-		if (metadata.type === 'genomicMatrix') {
-			if (color_scale.length > 1 && isNaN(_.get_in(settings, ['min']))) {
-				colors = heatmapColors.defaultColors(metadata.type, metadata.dataSubType).slice(0);
-				labels = ["lower", "", "higher"];
-			}
-			else if (color_scale[0]) {
-				if (labels.length === 4) {
-					labels[0] = "<" + labels[0];
-					labels[labels.length - 1] = ">" + labels[labels.length - 1];
-				} else if (labels.length === 3) {
-					if (color_scale[0].domain()[0] >= 0) {
-						labels[labels.length-1] = ">" + labels[labels.length - 1];
-					} else {
-						labels[0] = "<" + labels[0];
-					}
-				}
-			}
-		}
-
-		if (metadata.dataType === 'clinicalMatrix') { // XXX can we use domain() for categorical?
-			if (codes[fields[0]]) { // category
-				c = categoryLegend(data[0], color_scale[0], codes[fields[0]]);
-				if (c.colors.length > categoryLength) {
-					ellipsis = '...';
-					colors = c.colors.slice(c.colors.length - categoryLength, c.colors.length);
-					labels = c.labels.slice(c.colors.length - categoryLength, c.colors.length);
-				} else {
-					colors = c.colors;
-					labels = c.labels;
-				}
-				align = 'left';
-			}
-		}
-		columnUi.drawLegend(colors, labels, align, ellipsis);
-	}
-
-	function definedOrDefault(v, def) {
-		return _.isUndefined(v) ? def : v;
-	}
-
-	// memoize doesn't help us here, because we haven't allocated a render routine
-	// for each widget. Maybe we should???
-	render = ifChanged(
-		[
-			['disp'],
-			['el'],
-			['wrapper'],
-			[],
-			['sort'],
-			['data'],
-			['annotations']
-		],
-		// samples are in sorted order
-		function (disp, el, wrapper, ws, sort, data, annotations) {
-			var local = disp.getDisposable(),
-				features = data.features || {},
-				codes = data.codes || {},
-				metadata = data.metadata || {},
-				mean = _.get_in(data, ["req", "mean"]),
-				norm = {'none': false, 'subset': true},
-
-				colnormalization = definedOrDefault(norm[_.get_in(ws, ['vizSettings', 'colNormalization'])], metadata.colnormalization),
-				settings = _.get_in(ws, ['vizSettings']) || {}, // XXX needs normalization, too?
-				column = ws.column,
-				newws =  _.assoc(ws, 'column', _.extend({}, ws.column, metadata)),
-				fields = data.req.probes || column.fields, // prefer field list from server
-				transform = (colnormalization && mean && _.partial(subbykey, mean())) || second,
-				columnUi,
-				vg,
-				heatmapData,
-				colors;
-
-			if (!local || local.render !== render) { // Test if we own this state
-				local = new Rx.Disposable(function () {
-					$(vg.element).remove();
-				});
-				local.render = render;
-				local.vg = vgcanvas(column.width, ws.height);
-				local.columnUi = wrapper(el.id, newws);
-				local.columnUi.$samplePlot.append(local.vg.element());
-				disp.setDisposable(local);
-			}
-			// XXX The state flow for columnUi, and friends is completely wrong. Needs to be
-			// rewritten.
-			vg = local.vg;
-			columnUi = local.columnUi;
-
-			if (vg.width() !== column.width) {
-				vg.width(column.width);
-			}
-
-			if (vg.height() !== ws.height) {
-				vg.height(ws.height);
-			}
-
-			columnUi.setHeight(annotations);
-
-			heatmapData = dataToHeatmap(sort, data.req.values, fields, transform);
-			colors = map(fields, function (p, i) {
-				return heatmapColors.range(metadata, settings, features[p], codes[p], heatmapData[i]); // XXX might need defaults if metadata is null?
-			});
-
-			if (columnUi && heatmapData.length) {
-				columnUi.plotData = {
-					// TODO we don't need all these parms
-					serverData: data.req.values,
-					heatmapData: heatmapData,
-					column: column,
-					samples: sort,
-					fields: fields,
-					codes: codes
-				};
-				columnUi.ws = _.assoc(newws, 'colors', colors); // XXX this is horrible
-				columnUi.setPlotted();
-				if (local.sub) {
-					local.sub.dispose();
-				}
-				local.sub = columnUi.crosshairs.mousingStream.subscribe(function (ev) {
-					ev.data = {
-						plotData: columnUi.plotData,
-						column: column,
-						ws: newws   // XXX this is horrible
-					};
-					mousing(ev);
-				}); // TODO free this somewhere, maybe by moving it to columnUi.js
-			}
-			// XXX Merging column & metadata so we get both dataType and type. The
-			// type, dataSubType, dataType thing needs to be fixed.
-			drawLegend(_.extend({}, column, metadata), settings, columnUi, heatmapData, fields, codes, colors);
-			renderHeatmap({
-				vg: vg,
-				height: ws.height,
-				width: column.width,
-				zoomIndex: ws.zoomIndex,
-				zoomCount: ws.zoomCount,
-				data : heatmapData,
-				layout: partition.offsets(column.width, 0, heatmapData.length),
-				colors: colors
-			});
-		}
-	);
-
-	widgets.cmp.add("probeMatrix", cmp);
-	widgets.fetch.add("probeMatrix", fetch);
-	widgets.render.add("probeMatrix", render);
-
-	widgets.cmp.add("geneProbesMatrix", cmp);
-	widgets.fetch.add("geneProbesMatrix", fetch_gene_probes);
-	widgets.render.add("geneProbesMatrix", render);
-
-	widgets.cmp.add("geneMatrix", cmp);
-	widgets.fetch.add("geneMatrix", fetch_gene);
-	widgets.render.add("geneMatrix", render);
-
-	widgets.cmp.add("clinicalMatrix", cmp);
-	widgets.fetch.add("clinicalMatrix", fetch_feature);
-	widgets.render.add("clinicalMatrix", render);
 });
+
+//
+// plot rendering
+//
+
+var CanvasDrawing = React.createClass({
+	mixins: [deepPureRenderMixin],
+
+	render: function () {
+		if (this.vg) {
+			this.draw(this.props);
+		}
+		return (
+			<canvas
+				className='Tooltip-target'
+				onMouseMove={this.props.onMouseMove}
+				onMouseOut={this.props.onMouseOut}
+				onMouseOver={this.props.onMouseOver}
+				onClick={this.props.onClick}
+				onDblClick={this.props.onDblClick}
+				ref='canvas' />
+		);
+	},
+	componentDidMount: function () {
+		var {width, zoom: {height}} = this.props;
+		this.vg = vgcanvas(this.refs.canvas.getDOMNode(), width, height);
+		this.draw(this.props);
+	},
+
+	draw: function (props) {
+		var {zoom: {index, count, height}, width, heatmapData = [], colors} = props,
+			vg = this.vg;
+
+		if (vg.width() !== width) {
+			vg.width(width);
+		}
+
+		if (vg.height() !== height) {
+			vg.height(height);
+		}
+
+		renderHeatmap({
+			vg: vg,
+			height: height,
+			width: width,
+			zoomIndex: index,
+			zoomCount: count,
+			data: heatmapData,
+			layout: partition.offsets(width, 0, heatmapData.length),
+			colors: colorFns(colors)
+		});
+	}
+});
+
+function tsvProbeMatrix(heatmap, samples, fields, codes) {
+	var fieldNames = ['sample'].concat(fields);
+	var coded = _.map(fields, (f, i) => codes && codes[f] ?
+			_.map(heatmap[i], _.propertyOf(codes[f])) :
+			heatmap[i]);
+	var transposed = _.zip.apply(null, coded);
+	var tsvData = _.map(samples, (sample, i) => [sample].concat(transposed[i]));
+
+// XXX
+//	if (this.ws.column.dataType === 'clinicalMatrix') {
+//		fieldNames = ['sample'].concat([this.ws.column.fieldLabel.default]);
+//	}
+	return [fieldNames, tsvData];
+}
+
+function supportsGeneAverage({dataType, fields: {length}}) {
+	return ['geneProbesMatrix', 'geneMatrix'].indexOf(dataType) >= 0 && length === 1;
+}
+
+function modeMenu({dataType}, cb) {
+	return dataType === 'geneMatrix' ?
+		<MenuItem eventKey="geneProbesMatrix" onSelect={cb}>Gene detail</MenuItem> :
+		<MenuItem eventKey="geneMatrix" onSelect={cb}>Probe average</MenuItem>;
+}
+
+var HeatmapColumn = React.createClass({
+	mixins: [rxEventsMixin, deepPureRenderMixin],
+	componentWillMount: function () {
+		this.events('mouseout', 'mousemove', 'mouseover');
+
+		// Compute tooltip events from mouse events.
+		this.ttevents = this.ev.mouseover.filter(ev => hasClass(ev.target, 'Tooltip-target'))
+			.selectMany(() => {
+				return this.ev.mousemove.takeUntil(this.ev.mouseout)
+					.map(ev => ({data: this.tooltip(ev), open: true})) // look up current data
+					.concat(Rx.Observable.return({open: false}));
+			}).subscribe(this.props.tooltip);
+	},
+	componentWillUnmount: function () {
+		this.ttevents.dispose();
+	},
+	onMode: function (newMode) {
+		this.props.callback(['dataType', this.props.id, newMode]);
+	},
+	render: function () {
+		var {samples, data, column, dataset, vizSettings = {}, zoom} = this.props,
+			{codes, display: {heatmap, colors} = {}} = data,
+			fields = data.req.probes || column.fields,
+			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
+			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
+
+		// save [heatmapData, fields, column, codes, zoom, samples] for tooltip
+		this.tooltip = _.partial(tooltip, heatmap, fields, column, codes, zoom, samples);
+		return (
+			<Column
+				callback={this.props.callback}
+				id={this.props.id}
+				onViz={this.props.onViz}
+				download={download}
+				column={column}
+				zoom={zoom}
+				menu={menu}
+				plot={<CanvasDrawing
+						onMouseMove={this.ev.mousemove}
+						onMouseOut={this.ev.mouseout}
+						onMouseOver={this.ev.mouseover}
+						onClick={this.props.onClick}
+						onDblClick={this.props.onDblClick}
+						ref='plot'
+						width={_.getIn(column, ['width'])}
+						zoom={zoom}
+						colors={colors}
+						heatmapData={heatmap}/>}
+				legend={<HeatmapLegend
+						fields={_.getIn(column, ['fields'])}
+						hasViz={!isNaN(_.getIn(vizSettings, ['min']))}
+						dataType={column.dataType}
+						colors={colors}
+						data={heatmap}
+						dataset={dataset}
+						codes={codes}/>}
+			/>
+		);
+	}
+});
+
+var getColumn = (props) => <HeatmapColumn {...props} />;
+
+widgets.cmp.add("probeMatrix", cmp);
+widgets.fetch.add("probeMatrix", fetch);
+widgets.column.add("probeMatrix", getColumn);
+widgets.transform.add("probeMatrix", dataToHeatmap);
+
+widgets.cmp.add("geneProbesMatrix", cmp);
+widgets.fetch.add("geneProbesMatrix", fetchGeneProbes);
+widgets.column.add("geneProbesMatrix", getColumn);
+widgets.transform.add("geneProbesMatrix", dataToHeatmap);
+
+widgets.cmp.add("geneMatrix", cmp);
+widgets.fetch.add("geneMatrix", fetchGene);
+widgets.column.add("geneMatrix", getColumn);
+widgets.transform.add("geneMatrix", dataToHeatmap);
+
+widgets.cmp.add("clinicalMatrix", cmp);
+widgets.fetch.add("clinicalMatrix", fetchFeature);
+widgets.column.add("clinicalMatrix", getColumn);
+widgets.transform.add("clinicalMatrix", dataToHeatmap);

@@ -1,3 +1,4 @@
+/*eslint strict: [2, "function"] */
 /*globals define: false, console: false */
 define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	'use strict';
@@ -29,14 +30,14 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	}
 
 	function pluckPaths(paths, obj) {
-		return _.fmap(paths, _.partial(_.get_in, obj));
+		return _.fmap(paths, _.partial(_.getIn, obj));
 	}
 
 	function pluckPathsArray(paths, obj) {
-		return _.map(paths, _.partial(_.get_in, obj));
+		return _.map(paths, _.partial(_.getIn, obj));
 	}
 
-	function partition_n(arr, n, step, pad) {
+	function partitionN(arr, n, step, pad) {
 		var i, last, len, ret = [];
 
 		step = step || n;
@@ -54,7 +55,7 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		return ret;
 	}
 
-	function object_fn(keys, fn) {
+	function objectFn(keys, fn) {
 		return _.reduce(keys, function (acc, k) {
 			acc[k] = fn(k);
 			return acc;
@@ -88,7 +89,7 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	// Find max using a cmp function. Same as arr.slice[0].sort(cmp)[0],
 	// but O(n) instead of O(n log n).
 	function maxWith(arr, cmp) {
-		return _.reduce(arr, function (x,y) {
+		return _.reduce(arr, function (x, y) {
 			return cmp(x, y) < 0 ? x : y;
 		});
 	}
@@ -109,7 +110,45 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		};
 	}
 
+	function meannan(values) {
+		var count = 0, sum = 0;
+		if (!values) {
+			return NaN;
+		}
+		sum = _.reduce(values, function (sum, v) {
+			if (!isNaN(v)) {
+				count += 1;
+				return sum + v;
+			}
+			return sum;
+		}, 0);
+		if (count > 0) {
+			return sum / count;
+		}
+		return NaN;
+	}
+
+	function meannull(values) {
+		var count = 0, sum = 0;
+		if (!values) {
+			return null;
+		}
+		sum = _.reduce(values, function (sum, v) {
+			if (v != null) {
+				count += 1;
+				return sum + v;
+			}
+			return sum;
+		}, 0);
+		if (count > 0) {
+			return sum / count;
+		}
+		return null;
+	}
+
 	_.mixin({
+		meannull: meannull,
+		meannan: meannan,
 		memoize1: memoize1,
 		fmap: fmap,
 		merge: merge,
@@ -118,12 +157,13 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		pluckPathsArray: pluckPathsArray,
 		array: array,
 		concat: concat,
-		partition_n: partition_n,
-		object_fn: object_fn,
+		partitionN: partitionN,
+		objectFn: objectFn,
 		findValue: findValue,
 		negate: negate,
 		spy: spy,
 		flatmap: _.compose(_.partial(_.flatten, _, 1), _.map),
+		merge: (...args) => _.extend.apply(null, [{}].concat(args)),
 		maxWith: maxWith
 	});
 

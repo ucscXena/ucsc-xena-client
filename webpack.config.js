@@ -1,3 +1,5 @@
+/*global require: false, module: false, __dirname: false */
+'use strict';
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var webpack = require('webpack');
 
@@ -12,10 +14,10 @@ module.exports = {
 	module: {
 		loaders: [
 			{ test: /rx-dom/, loader: "imports?define=>false" },
+			{ test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader?optional[]=es7.objectRestSpread&optional[]=utility.inlineEnvironmentVariables&cacheDirectory=true'},
 			{ test: /\.css$/, loader: "style!css" },
-			{ test: /\.js$/, loader: 'jsx-loader?harmony' },
 			{ test: /\.haml$/, loader: 'haml-loader' },
-			{ test: /\.(jpe?g|png|gif|svg)$/i, loaders: ['url?limit=10000'] }
+			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]
 	},
 	plugins: [
@@ -23,7 +25,8 @@ module.exports = {
 			title: "UCSC Xena",
 			filename: "index.html",
 			template: "page.template"
-		})
+		}),
+		new webpack.OldWatchingPlugin()
 	],
 	resolve: {
 		alias: {

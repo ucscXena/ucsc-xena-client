@@ -1,5 +1,6 @@
+/*eslint strict: [2, "function"], camelcase: 0 */
 /*global define: true*/
-define(['./highcharts'], function (Highcharts) {
+define(['./highcharts'], function () {
   'use strict';
 
   function hcLabelRender(){
@@ -25,18 +26,18 @@ define(['./highcharts'], function (Highcharts) {
   var chartOptions = {
     chart: {
       renderTo: 'myChart',
-      zoomType:  'xy',
+      zoomType: 'xy',
       panning: true,
       panKey: 'shift'
     },
-    subtitle:{
+    subtitle: {
       useHTML: true
     },
     legend: {
       title: {
         style: {
           fontStyle: 'italic',
-          width:'100px'
+          width: '100px'
         }
       },
       labelFormatter: hcLabelRender,
@@ -56,7 +57,7 @@ define(['./highcharts'], function (Highcharts) {
       }
     },
     tooltip:{
-      hideDelay:0
+      hideDelay: 0
     },
     credits: {
       enabled: false
@@ -73,30 +74,30 @@ define(['./highcharts'], function (Highcharts) {
     }
 
     chartOptions.legend.align = 'right';
-    chartOptions.legend.verticalAlign= 'middle';
-    chartOptions.legend.layout= 'vertical';
+    chartOptions.legend.verticalAlign = 'middle';
+    chartOptions.legend.layout = 'vertical';
     chartOptions.legend.title.style = {
-      width:"100px",
+      width: "100px",
       fontStyle: 'italic'
     };
     if (showLegend) {
-      chartOptions.legend.title.text =Y+ '<br/><span style="font-size: 9px; color: #666; font-weight: normal">(Click to hide)</span>';
+      chartOptions.legend.title.text = Y+ '<br/><span style="font-size: 9px; color: #666; font-weight: normal">(Click to hide)</span>';
     }
     else {
-      chartOptions.legend.title={};
+      chartOptions.legend.title = {};
     }
 
-    var Y_in_Title= Y.length >50? Y.slice(0,50)+"...":Y;
+    var Y_in_Title = Y.length >50? Y.slice(0, 50)+"...":Y;
     chartOptions.title = {
-      text: yAxisTitle+" of "+ Y_in_Title + ((xAxisTitle==="")? "" : " by "+xAxisTitle)
+      text: yAxisTitle+" of "+ Y_in_Title + ((xAxisTitle === "")? "" : " by " + xAxisTitle)
     };
-    chartOptions.xAxis={
-      title:{
-        text:xAxisTitle,
-        margin:10,
+    chartOptions.xAxis = {
+      title: {
+        text: xAxisTitle,
+        margin: 10,
         style: {
           color: 'black',
-          fontSize:'20px'
+          fontSize: '20px'
         }
       },
       type: 'category',
@@ -108,46 +109,46 @@ define(['./highcharts'], function (Highcharts) {
       },
       minRange: 1
     };
-    chartOptions.yAxis={
-      title:{
-        text:yAxisTitle
+    chartOptions.yAxis = {
+      title: {
+        text: yAxisTitle
       }
     };
-    chartOptions.plotOptions ={
+    chartOptions.plotOptions = {
       errorbar: {
-        color:'gray'
+        color: 'gray'
       }
     };
 
     //tooltip
     if (yIsCategorical) {
       if (xAxisTitle === ""){
-        chartOptions.tooltip= {
+        chartOptions.tooltip = {
           formatter: function () {
-            return Y+ ' '+ categories[ this.point.x]+': <b>'+ this.point.y+'%</b>';
+            return Y + ' ' + categories[this.point.x]+': <b>' + this.point.y + '%</b>';
           },
-          hideDelay:0
+          hideDelay: 0
         };
       } else {
-        chartOptions.tooltip= {
+        chartOptions.tooltip = {
           headerFormat: xAxisTitle + ' = {point.key}<br>',
-          pointFormat: Y+' {series.name}: <b>{point.y}%</b>',
-          hideDelay:0
+          pointFormat: Y + ' {series.name}: <b>{point.y}%</b>',
+          hideDelay: 0
         };
       }
     } else {
       chartOptions.tooltip = {
-        hideDelay:0
+        hideDelay: 0
       };
     }
 
     if (categories.length>15){
-      chartOptions.xAxis.labels={
-        rotation:-90
+      chartOptions.xAxis.labels = {
+        rotation: -90
       };
     }
     if (yIsCategorical){
-      chartOptions.yAxis.labels ={
+      chartOptions.yAxis.labels = {
         format: '{value} %'
       };
     }
@@ -155,49 +156,49 @@ define(['./highcharts'], function (Highcharts) {
   }
 
   // x categorical y float
- function columnChartFloat (chartOptions, categories, xAxisTitle, Y, yIsCategorical){
+ function columnChartFloat (chartOptions, categories, xAxisTitle, Y){
      // Y data column chart setup
     var yAxisTitle = "Average value";
 
 
     chartOptions.legend.align = 'center';
-    chartOptions.legend.verticalAlign= 'bottom';
-    chartOptions.legend.layout= 'horizontal';
-    chartOptions.legend.margin=5;
-    chartOptions.legend.title= {};
+    chartOptions.legend.verticalAlign = 'bottom';
+    chartOptions.legend.layout = 'horizontal';
+    chartOptions.legend.margin = 5;
+    chartOptions.legend.title = {};
 
-    var Y_in_Title= Y.length >50? Y.slice(0,50)+"...":Y;
+    var Y_in_Title = Y.length > 50 ? Y.slice(0, 50) + "..." : Y;
     chartOptions.title = {
-      text: yAxisTitle+" of "+ Y_in_Title + ((xAxisTitle==="")? "" : " by "+xAxisTitle)
+      text: yAxisTitle + " of " + Y_in_Title + ((xAxisTitle === "") ? "" : " by " + xAxisTitle)
     };
 
-    chartOptions.xAxis={
-      title:{
-        text:xAxisTitle,
-        margin:10,
+    chartOptions.xAxis = {
+      title: {
+        text: xAxisTitle,
+        margin: 10,
         style: {
           color: 'black',
-          fontSize:'20px'
+          fontSize: '20px'
         }
       },
       type: 'category',
       categories: categories,
       minRange: -1
     };
-    chartOptions.yAxis={
-      title:{
-        text:yAxisTitle
+    chartOptions.yAxis = {
+      title: {
+        text: yAxisTitle
       }
     };
-    chartOptions.plotOptions ={
+    chartOptions.plotOptions = {
       errorbar: {
-        color:'gray'
+        color: 'gray'
       }
     };
 
-    if (categories.length>15){
-      chartOptions.xAxis.labels={
-        rotation:-90
+    if (categories.length > 15){
+      chartOptions.xAxis.labels = {
+        rotation: -90
       };
     }
 
@@ -241,6 +242,15 @@ define(['./highcharts'], function (Highcharts) {
     }
   }
 
+  function average(data){
+    var sum = data.reduce(function(a, b){
+      return a + b;
+    }, 0);
+
+    var avg = sum / data.length;
+    return avg;
+  }
+
   function standardDeviation(values, avg){
     var squareDiffs = values.map(function(value){
       var diff = value - avg;
@@ -252,15 +262,6 @@ define(['./highcharts'], function (Highcharts) {
 
     var stdDev = Math.sqrt(avgSquareDiff);
     return stdDev;
-  }
-
-  function average(data){
-    var sum = data.reduce(function(a, b){
-      return a + b;
-    }, 0);
-
-    var avg = sum / data.length;
-    return avg;
   }
 
   return {

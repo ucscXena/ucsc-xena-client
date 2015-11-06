@@ -1,0 +1,16 @@
+.YAxisLabel {
+	-webkit-transform: translate(-100%, 0) rotate(270deg);
+	-moz-transform: translate(-100%, 0) rotate(270deg);
+	-ms-transform: translate(-100%, 0) rotate(270deg);
+	-o-transform: translate(-100%, 0) rotate(270deg);
+	transform: translate(-100%, 0) rotate(270deg);
+	-webkit-transform-origin: 0 100%;
+	-moz-transform-origin: 0 100%;
+	-ms-transform-origin: 0 100%;
+	-o-transform-origin: 0 100%;
+	transform-origin: 100% 0;
+}
+
+.YAxisWrapper {
+	overflow: hidden;
+}

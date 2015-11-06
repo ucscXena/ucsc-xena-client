@@ -1,4 +1,5 @@
-/*jslint nomen:true, browser: true */
+/*eslint strict: [2, "function"], camelcase: 0 */
+/*eslint-env browser */
 /*global define: false */
 
 define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore_ext', 'static-interval-tree', 'annotationColor', 'metadataStub', 'layoutPlot'
@@ -148,7 +149,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			intergenic_region: 1,
 			IGR: 1,
 
-			"others": 0,
+			"others": 0
 		},
 		round = Math.round,
 		saveUndef = f => v => v === undefined ? v : f(v),
@@ -316,10 +317,10 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			mupitClick: function () {
-				var positions = _.unique(_.map(this.nodes, function (n, i) {
+				var positions = _.unique(_.map(this.nodes, function (n) {
 						return n.data.chr + ':' + (n.data.start).toString();
 					})).join(','),
-					url ="http://mupit.icm.jhu.edu/?gm="+positions;
+					url = "http://mupit.icm.jhu.edu/?gm="+positions;
 
 				window.open(url);
 			},
@@ -405,12 +406,12 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					myColors = _.map(colors[this.color], function (c) {
 						return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
 					});
-					groups = _.groupBy(_.pairs(impact), ([key, imp]) => imp);
+					groups = _.groupBy(_.pairs(impact), ([, imp]) => imp);
 					labels = _.map(_.range(_.keys(groups).length), i => _.pluck(groups[i], 0).join(', '));
 
 					align = 'left';
 				} else if (this.feature ==="dna_vaf" || this.feature ==="rna_vaf") { // feature is one of allele frequencies
-					c= colors.af;
+					c = colors.af;
 					rgba = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',';
 					myColors = [
 						rgba + '0)',
