@@ -14,5 +14,7 @@ module.exports = {
 	data: ['data'],
 	zoom: ['zoom'],
 	vizSettings: ['vizSettings'],
-	columnEdit: ['columnEdit']
+	columnEdit: ['columnEdit'],
+	km: ['km'],
+	features: ['features']
 };

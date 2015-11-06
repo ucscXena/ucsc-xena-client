@@ -41,6 +41,10 @@ var Column = React.createClass({
 	onViz: function () {
 		this.props.onViz(this.props.id);
 	},
+	onKm: function () {
+		let {callback, id} = this.props;
+		callback(['km-open', id]);
+	},
 	render: function () {
 		var {id, callback, plot, legend, column, zoom, menu} = this.props;
 		var {width, columnLabel, fieldLabel} = column,
@@ -49,11 +53,15 @@ var Column = React.createClass({
 			aria-hidden="true">
 		</span>);
 
+// Disable km for certain column types?
+//				if (!this.columnUi.plotData || (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1)) {
+
 		return (
 			<div className='Column' style={{width: width}}>
 				<SplitButton title={moveIcon} bsSize='xsmall'>
 					{menu}
 					{menu && <MenuItem divider />}
+					<MenuItem onSelect={this.onKm}>Kaplan Meier Plot</MenuItem>
 					<MenuItem onSelect={this.onDownload}>Download</MenuItem>
 					<MenuItem onSelect={this.onAbout}>About the Dataset</MenuItem>
 					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>

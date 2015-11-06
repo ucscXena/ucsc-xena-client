@@ -12,6 +12,7 @@ var Grid = require('react-bootstrap/lib/Grid');
 var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
 var Rx = require('./rx.ext');
+var KmPlot = require('./kmPlot');
 //var Button = require('react-bootstrap/lib/Button');
 require('rx.coincidence');
 require('rx/dist/rx.aggregates');
@@ -119,6 +120,7 @@ var Application = React.createClass({
 //		}
 //	},
 	render: function() {
+		let {appState: {km, ...otherState}, ...otherProps} = this.props;
 		return (
 			<Grid>
 			{/*
@@ -128,10 +130,14 @@ var Application = React.createClass({
 			*/}
 				<Row>
 					<Col md={12}>
-						<AppControls {...this.props} />
+						<AppControls {...otherProps} appState={otherState} />
 					</Col>
 				</Row>
-				<Spreadsheet {...this.props} />
+				<Spreadsheet {...otherProps} appState={otherState} />
+				{_.getIn(km, ['id']) ? <KmPlot
+						callback={this.props.callback}
+						appState={km}
+						features={this.props.appState.features} /> : ''}
 			{/*
 				<Row>
 					<Col md={12}>

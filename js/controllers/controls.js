@@ -11,6 +11,7 @@ var widgets = require('../columnWidgets');
 var {sortSamples} = require('./utils');
 var util = require('../util');
 
+var	datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
 var identity = x => x;
 
 //function cases([tag, ...data], c) {
@@ -92,6 +93,34 @@ function fetchExamples(state, dsID) {
 	server.onNext(['columnEdit-examples', exampleQuery(dsID)]);
 }
 
+var datasetVar = (samples, {dsID, name}) =>
+	datasetProbeValues(dsID, samples, [name]).map(_.first);
+
+// data: [[val, ...], [val, ...], [val, ...]]
+// data must be in order (event, tte, patient)
+// returns { event: { sampleId: val, ... }, tte: ... }
+var indexSurvivalData = (samples, data) =>
+	_.object(['ev', 'tte', 'patient'],
+			// XXX nanstr call & one in plotDenseMatrix: move to xenaQuery?
+			_.map(data, v => _.object(samples, _.map(v, xenaQuery.nanstr))));
+
+function fetchSurvival(state) {
+	let {comms: {server}, samples, km: {vars: {ev, tte, patient}, data}} = state;
+	if (data) { // data already cached for this cohort.
+		return;
+	}
+	// This could be optimized by grouping by server. This would be easier
+	// if we used proper hash-trie immutable data, where we could hash on dsID
+	// instead of building a json encoding of dsID to allow hashing.
+	server.onNext(['survival', Rx.Observable.zipArray(
+				datasetVar(samples, ev),
+				datasetVar(samples, tte),
+				datasetVar(samples, patient)
+			).map(data =>
+					['km-survival-data', indexSurvivalData(samples, data)])
+			]);
+}
+
 var controls = {
 	'init-post!': (previous, current) => {
 		let {comms: {server}, servers: {user}} = current;
@@ -104,7 +133,8 @@ var controls = {
 										   paths.samples, [],
 										   paths.columns, {},
 										   paths.columnOrder, [],
-										   paths.data, {}),
+										   paths.data, {},
+										   paths.km, null),
 	'cohort-post!': (previous, current) => {
 		let {comms: {server}, servers: {user}} = current,
 			cohort = _.getIn(current, paths.cohort),
@@ -151,7 +181,16 @@ var controls = {
 	'columnLabel': (state, dsID, value) =>
 		_.assocIn(state, [...paths.columns, dsID, 'columnLabel', 'user'], value),
 	'fieldLabel': (state, dsID, value) =>
-		_.assocIn(state, [...paths.columns, dsID, 'fieldLabel', 'user'], value)
+		_.assocIn(state, [...paths.columns, dsID, 'fieldLabel', 'user'], value),
+	'km-open': (state, id) =>
+		_.updateIn(state, paths.km, km => _.merge(km, {
+			id: id,
+			// XXX should pull this from state instead of copying?
+			label: _.getIn(state, [...paths.columns, id, 'fieldLabel', 'user'])
+		})),
+	'km-open-post!': (previous, current) => fetchSurvival(current),
+	'km-close': (state) =>
+		_.assocIn(state, [...paths.km, 'id'], null)
 };
 
 module.exports = {
