@@ -1,7 +1,7 @@
 /*global require: false, module: false, __dirname: false */
 'use strict';
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-//var webpack = require('webpack');
+var webpack = require('webpack');
 
 module.exports = {
 	historyApiFallback: true,
@@ -25,7 +25,8 @@ module.exports = {
 			title: "UCSC Xena",
 			filename: "index.html",
 			template: "page.template"
-		})
+		}),
+		new webpack.OldWatchingPlugin()
 	],
 	resolve: {
 		alias: {
