@@ -8,19 +8,20 @@ var _ = require('underscore');
 // and there are performance issues with d3 color scales when
 // the data is largish.
 
+// If domain is inverted, invert domain and range.
+function swapInvs([dstart, dend], [rstart, rend]) {
+	return dstart > dend ? [[dend, dstart], [rend, rstart]] :
+		[[dstart, dend], [rstart, rend]];
+}
 
 // linear scale
 
-function linear([dstart,  dend], [rstart, rend]) { // (domain, range)
-	return dend > dstart ?
-		(x =>
-			x < dstart ? rstart :
-				(x > dend ? rend :
-					(x - dstart) * (rend - rstart) / (dend - dstart) + rstart)) :
-		(x =>
-			x > dstart ? rstart :
-				(x < dend ? rend :
-					(x - dstart) * (rend - rstart) / (dend - dstart) + rstart));
+function linear(domain, range) {
+	var [[dlow, dhigh], [rlow, rhigh]] = swapInvs(domain, range);
+	return x =>
+				x < dlow ? rlow :
+					(x > dhigh ? rhigh :
+						(x - dlow) * (rhigh - rlow) / (dhigh - dlow) + rlow);
 }
 
 function swapInv(start, end) {
