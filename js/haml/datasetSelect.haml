@@ -1,7 +1,0 @@
-%select{class:'dataset'}
-  %option{value:''} =placeholder
-  - _.each(sources, function (source) {
-    %optgroup{label:source.title}
-      - _.each(source.datasets, function (d) {
-        - if (d.type !== 'probeMap' && d.type !== 'genePredExt' && d.type !=="probemap" && d.type !== "sampleMap" && d.type !== "genomicSegment" && d.status==="loaded") {
-          %option{value:encodeURIComponent(d.dsID)} =d.label

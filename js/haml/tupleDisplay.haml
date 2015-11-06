@@ -1,9 +1,0 @@
-%table{class:'tupleDisplay'}
-  %tbody
-    - if (header) {
-      %tr
-        %td =header
-    - _.each(labels, function (label, i) {
-      %tr
-        %td{class:'tupleLabel'} =label
-        %td{class:'tupleValue'} =values[i]
