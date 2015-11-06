@@ -347,6 +347,15 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '   :left-join [:feature [:= :feature.field_id :P.id]]})';
 	}
 
+	function all_features_string(dataset) {
+		return '(query {:select [:field.name :feature.*]\n' +
+		       '        :from [:field]\n' +
+		       '        :where [:= :dataset_id {:select [:id]\n' +
+		       '                         :from [:dataset]\n' +
+		       '                         :where [:= :name ' + quote(dataset) + ']}]\n' +
+		       '        :left-join [:feature [:= :feature.field_id :field.id]]})';
+	}
+
 	function codes_string(dataset, probes) {
 		return '(query\n' +
 		       '  {:select [:P.name [#sql/call [:group_concat :value :order :ordering :separator #sql/call [:chr 9]] :code]]\n' +
@@ -503,7 +512,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 
 	function dataset_feature_detail(host, ds, probes) {
 		return Rx.DOM.ajax(
-			xena_post(host, features_string(ds, probes))
+			xena_post(host, probes ? features_string(ds, probes) : all_features_string(ds))
 		).map(_.compose(indexFeatureDetail, json_resp));
 	}
 
