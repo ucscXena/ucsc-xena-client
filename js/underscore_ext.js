@@ -124,8 +124,26 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		return NaN;
 	}
 
+	function meannull(values) {
+		var count = 0, sum = 0;
+		if (!values) {
+			return null;
+		}
+		sum = _.reduce(values, function (sum, v) {
+			if (v != null) {
+				count += 1;
+				return sum + v;
+			}
+			return sum;
+		}, 0);
+		if (count > 0) {
+			return sum / count;
+		}
+		return null;
+	}
 
 	_.mixin({
+		meannull: meannull,
 		meannan: meannan,
 		memoize1: memoize1,
 		fmap: fmap,
