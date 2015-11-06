@@ -84,20 +84,5 @@ define(["dom_helper", "session", "xenaQuery", "base" , "../css/hub.css"], functi
 	node.appendChild(addbutton);
 	node.appendChild(dom_helper.elt("br"));
 
-<<<<<<< HEAD
-=======
-	//galaxy xena checkbox -- if checked port forced to be 7220
-	galaxyCheckbox = document.createElement("INPUT");
-	galaxyCheckbox.setAttribute("type", "checkbox");
-	galaxyCheckbox.setAttribute("id", "galaxyCheckbox");
-	galaxyCheckbox.style.marginLeft = "2px";
-	labelText = dom_helper.elt('label');
-	labelText.setAttribute("for", "galaxyCheckbox");
-	labelText.innerHTML = " galaxy embedded xena (default port 7220)";
-	labelText.setAttribute("class", "galaxyText");
-	node.appendChild(galaxyCheckbox);
-	node.appendChild(labelText);
->>>>>>> f756ebde8e30e694ce61c90dd621aba677e28754
-
 	document.getElementById('main').appendChild(node);
 });
