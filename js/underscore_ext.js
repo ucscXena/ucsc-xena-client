@@ -94,10 +94,6 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		});
 	}
 
-	function merge(...objs) {
-		return _.extend.apply(null, [{}].concat(objs));
-	}
-
 	function memoize1(fn) {
 		var last = null,
 			lastParams = null;
@@ -151,7 +147,6 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		meannan: meannan,
 		memoize1: memoize1,
 		fmap: fmap,
-		merge: merge,
 		apply: apply,
 		pluckPaths: pluckPaths,
 		pluckPathsArray: pluckPathsArray,
