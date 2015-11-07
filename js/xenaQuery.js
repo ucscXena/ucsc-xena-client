@@ -314,9 +314,9 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 // Might want to allow renaming fields, with [:old-name :new-name]
 // Also, cds doesn't really need to be indexed.
 // XXX Should we write a compact collection type, where columns are in typed arrays? Maybe with codes? Or run-length encoding?
-	function refGene_exon_string(genes) {
+	function refGene_exon_string(dsID, genes) {
 		return `(xena-query {:select ["position (2)" "position" "exonCount" "exonStarts" "exonEnds" "name2"]\n` +
-			   `             :from ["common/GB/refgene_good"]\n` +
+			   `             :from [${quote(dsID)}]\n` +
 			   `             :where [:in "name2" ${arrayfmt(genes)}]})`;
 	}
 
@@ -355,19 +355,6 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 			xena_post(host, codes_string(ds, probes))
 		).select(indexCodes);
 	}
-
-	function indexBounds(bounds) {
-		return _.object(_.map(bounds, function (row) {
-			return [row.field, row];
-		}));
-	}
-
-	function field_bounds(host, ds, probes) {
-		return Rx.DOM.ajax(
-			xena_post(host, field_bounds_string(ds, probes))
-		).map(_.compose(indexBounds, json_resp));
-	}
-
 
 	function dataset_by_name(host, name) {
 		return Rx.DOM.ajax(
@@ -448,6 +435,80 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		return Rx.DOM.ajax(
 			xena_post(host, dataset_samples_query(ds))
 		).map(json_resp);
+	}
+
+	function mutation_attrs(list) {
+		return _.map(list, function (row) {
+			return {
+				"sample": row.sampleID,
+				"chr": row.position.chrom,
+				"start": row.position.chromstart,
+				"end": row.position.chromend,
+				"gene": row.genes,
+				"reference": row.ref,
+				"alt": row.alt,
+				"effect": row.effect,
+				"amino_acid": row['amino-acid'],
+				"rna_vaf": nanstr(row['rna-vaf']),
+				"dna_vaf": nanstr(row['dna-vaf'])
+			};
+		});
+	}
+
+	function collateRows(rows) {
+		var keys = _.keys(rows);
+		return _.map(_.range(rows[keys[0]].length), i => _.object(keys, _.map(keys, k => rows[k][i])));
+	}
+
+	// Build index of genes -> samples -> matching rows.
+	// If the sample appears in the dataset but has no matching rows, matching rows should be set to [].
+	// If the sample does not appear in the dataset, matching rows should be undefined.
+	// Requested samples that appear in the dataset are in resp.sample.
+	//
+	// {:sampleid ["id0", "id1", ...], chromstart: [123, 345...], ...}
+	function indexMutations(gene, samples, resp) {
+		var rows_by_sample = _.groupBy(mutation_attrs(collateRows(resp.rows)), 'sample'),
+			no_rows = _.difference(resp.samples, _.keys(rows_by_sample)),
+			vals = _.extend(rows_by_sample, _.objectFn(no_rows, _.constant([]))), // merge in empty arrays for samples w/o matching rows.
+			obj = {};
+
+		obj[gene] = vals;
+		return {values: obj};
+	}
+
+	function sparse_data_values(host, ds, genes, samples) {
+		return Rx.DOM.ajax(
+			xena_post(host, sparse_data_string(ds, samples, genes))
+			// XXX change indexMutations so it can handle an array?
+		).map(json_resp).map(resp => indexMutations(genes[0], samples, resp));
+	}
+
+	function splitExon(s) {
+		return _.map(s.replace(/,$/, '').split(','), _.partial(parseInt, _, 10));
+	}
+
+	function refGene_attrs(row) {
+		return {
+			name2: row.name2,
+			strand: row.position.strand,
+			txStart: row.position.chromstart,
+			txEnd: row.position.chromend,
+			cdsStart: row['position (2)'].chromstart,
+			cdsEnd: row['position (2)'].chromend,
+			exonCount: row.exonCount,
+			exonStarts: splitExon(row.exonStarts),
+			exonEnds: splitExon(row.exonEnds)
+		};
+	}
+
+	function indexRefGene(resp) {
+		return _.object(resp.name2, _.map(collateRows(resp), refGene_attrs));
+	}
+
+	function refGene_exon_values(host, ds, genes) {
+		return Rx.DOM.ajax(
+			xena_post(host, refGene_exon_string(ds, genes))
+		).map(json_resp).map(resp => indexRefGene(resp));
 	}
 
 	function align_matches(input, matches) {
@@ -534,9 +595,10 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		all_cohorts: all_cohorts,
 		dataset_by_name: dataset_by_name,
 		dataset_text: dataset_text,
-		field_bounds: field_bounds,
 
 		sparse_data_match_genes: sparse_data_match_genes,
+		sparse_data_values: sparse_data_values,
+		refGene_exon_values: refGene_exon_values,
 		match_fields: match_fields,
 		test_host: test_host,
 		refGene_gene_pos: refGene_gene_pos
