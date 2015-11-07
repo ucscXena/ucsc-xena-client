@@ -3,6 +3,10 @@
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var webpack = require('webpack');
 
+function babelTarget(path) {
+	return path.indexOf('node_modules') === -1 || path.indexOf('ucsc-xena-datapages') !== -1;
+}
+
 module.exports = {
 	historyApiFallback: true,
 	entry: "./js/bogorouter",
@@ -14,7 +18,8 @@ module.exports = {
 	module: {
 		loaders: [
 			{ test: /rx-dom/, loader: "imports?define=>false" },
-			{ test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader?optional[]=es7.objectRestSpread&optional[]=utility.inlineEnvironmentVariables&cacheDirectory=true'},
+			{ test: /\.js$/, include: babelTarget,
+				loader: 'babel-loader?optional[]=es7.objectRestSpread&optional[]=utility.inlineEnvironmentVariables&cacheDirectory=true'},
 			{ test: /\.css$/, loader: "style!css" },
 			{ test: /\.haml$/, loader: 'haml-loader' },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
