@@ -48,7 +48,7 @@
     "rx-jquery": "^1.1.7",
     "select2": "3.4.5",
     "static-interval-tree": "^1.0.3",
-    "ucsc-xena-datapages": "^1.1.0",
+    "ucsc-xena-datapages": "^1.3.0",
     "underscore": "^1.7.0",
     "underscore.string": "^3.0.3"
   },
