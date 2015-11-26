@@ -132,7 +132,8 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 			headers: {'Content-Type': 'text/plain' },
 			url: host + '/data/',
 			body: query,
-			method: 'POST'
+			method: 'POST',
+                        crossDomain: true
 		};
 	}
 
@@ -447,16 +448,36 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		.catch(Rx.Observable.return([])); // XXX display message?
 	}
 
+        function logout (host) {
+            return Rx.DOM.ajax({
+	        url: host + '/code?logout=true',
+	        method: 'POST',
+                crossDomain: true
+	    }).catch(function (s) {
+                return Rx.Observable.return(false);
+            });
+        }
+
 	// test if host is up
 	function test_host (host) {
-		return Rx.DOM.ajax(
-			xena_post(host, '(+ 1 2)')
-		).map(function(s) {
-			if (s.responseText) {
-				return (3 === JSON.parse(s.responseText));
-			}
-			return false;
-		});//.catch(Rx.Observable.return([]));  // XXX display message?
+		return Rx.DOM.ajax({
+		    headers: {'Content-Type': 'text/plain',
+		    'X-Redirect-To': window.parent.location.href},
+		    url: host + '/data/',
+		    body: '(+ 1 2)',
+		    method: 'POST',
+		    crossDomain: true
+		}).map(function(s) {
+                  var location = s.xhr.getResponseHeader("Location");
+                  if ((403 === s.status || 401 === s.status) && location)
+                    return {'up': true, 'authenticated': false, 'redirect_to': location};
+		  return {'up': true, 'authenticated': true, 'working': (s.responseText || false) && (3 === JSON.parse(s.responseText))};
+		}).catch(function (s) {
+                  var location = s.xhr.getResponseHeader("Location");
+                  if ((403 === s.status || 401 === s.status) && location)
+                    return Rx.Observable.return ({'up': true, 'authenticated': false, 'redirect_to': location});
+                  return Rx.Observable.return ({'up': false});
+                }); // XXX display message?
 	}
 
 	return {
@@ -498,6 +519,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 
 		sparse_data_match_genes: sparse_data_match_genes,
 		match_fields: match_fields,
+                logout: logout,
 		test_host: test_host,
 		refGene_gene_pos: refGene_gene_pos
 	};
