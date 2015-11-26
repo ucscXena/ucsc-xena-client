@@ -268,10 +268,12 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_h
 				return;
 			}
 
+                        var none = xcolumn === "none";
+                        var test = xenaQuery.test_host(xhost);
 			var source = Rx.Observable.zipArray(
-				(xcolumn === "none") ? xenaQuery.test_host(xhost) : xenaQuery.code_list(xhost, xds, xfields),
+				none ? test : xenaQuery.code_list(xhost, xds, xfields),
 
-				(xcolumn === "none") ? xenaQuery.test_host(xhost) : ((xcolumnType === "geneProbesMatrix") ?
+				none ? test : ((xcolumnType === "geneProbesMatrix") ?
 					xenaQuery.dataset_gene_probe_values(xhost, xds, samples, xfields[0]) :
 					((xcolumnType === "geneMatrix") ?
 						xenaQuery.dataset_genes_values(xhost, xds, samples, xfields) :

@@ -44,7 +44,7 @@
     "linear-algebra": "3.1.1",
     "lunr": "0.5.7",
     "rx": "^2.4.3",
-    "rx-dom": "^4.0.4",
+    "rx-dom": "~7.0.3",
     "rx-jquery": "^1.1.7",
     "select2": "3.4.5",
     "static-interval-tree": "^1.0.3",

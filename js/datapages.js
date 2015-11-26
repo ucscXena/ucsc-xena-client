@@ -3,4 +3,4 @@
 
 require('./base');
 var el = document.getElementById('main');
-require('ucsc-xena-datapages').start(el);
+require('datapages').start(el);

@@ -111,7 +111,8 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		var userHosts = JSON.parse(sessionStorage.state).userHosts,
 			node = dom_helper.elt("div"),
 			checkbox = document.createElement("INPUT"),
-			labelText = dom_helper.elt('label');
+			labelText = dom_helper.elt('label'),
+                        button = document.createElement("button");
 
 		function checkBoxLabel() {
 			if (checkbox.checked){
@@ -132,8 +133,27 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		labelText.setAttribute("id", "hubLabel"+host);
 		checkBoxLabel();
 
+                button.setAttribute("id", "button" + host);
+                button.innerHTML = "Authenticate";
+                button.style.display = "none";
+
 		node.appendChild(checkbox);
 		node.appendChild(labelText);
+                node.appendChild(button);
+
+                button.addEventListener('click', function () {
+                  var status = button["data-status"];
+
+                  if (status) {
+                    if (status.authenticated) {
+                        xenaQuery.logout(host).subscribe(function (s) {
+                            updateHostStatus(host);
+                        });
+                    } else if (status.redirect_to) {
+                      window.parent.location.href = status.redirect_to;
+                    }
+                  }
+                });
 
 		checkbox.addEventListener('click', function () {
 			var checked = checkbox.checked,
@@ -197,6 +217,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 				'dead': {msg: ' (not running)', el: 'result2'},
 				'nodata': {msg: ' (no data)', el: 'result2'},
 				'slow': {msg: ' (there is a problem)', el: 'result2'},
+                                'noauthentication': {msg: ' (not authenticated)', el: 'result2'}
 			},
 			displayHubPage = {
 				'live_selected': {msg: '', el: 'result'},
@@ -204,6 +225,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 				'dead': {msg: ' (not running)', el: 'result2'},
 				'nodata': {msg: ' (no data)', el: 'result2'},
 				'slow': {msg: ' (there is a problem)', el: 'result2'},
+                                'noauthentication': {msg: ' (not authenticated)', el: 'result2'}
 			},
 			displayHubLabel = {
 				'live_selected': {msg: 'connected', color: 'blue'},
@@ -215,7 +237,8 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			sidebarCheck = document.getElementById("sidebarCheck" + host),
 			nodeHubPage = document.getElementById("statusHub" + host),
 			nodeHubLabel = document.getElementById("hubLabel" + host),
-			nodeHubCheck = document.getElementById("checkbox" + host);
+			nodeHubCheck = document.getElementById("checkbox" + host),
+			nodeHubButton = document.getElementById("button" + host);
 
 		if (node) {
 			node.parentNode.replaceChild(
@@ -245,6 +268,12 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 				nodeHubLabel.innerHTML = displayHubLabel[status].msg;
 			}
 		}
+
+                if (nodeHubButton) {
+                        var hostStatus = nodeHubButton["data-status"];
+                        nodeHubButton.style.display = hostStatus.up ? '' : 'none';
+                        nodeHubButton.innerHTML = hostStatus.authenticated ? 'Logout' : 'Authenticate';
+                }
 	}
 
 	function updateHostStatus(host) {
@@ -252,7 +281,11 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		addHostToListInSession('allHosts', host);
 
 		xenaQuery.test_host(host).subscribe(function (s) {
-			if (s) {
+		        var nodeHubButton = document.getElementById("button" + host);
+                        nodeHubButton["data-status"] = s;
+
+			if (s.up) {
+                          if (s.authenticated) {
 				// test if host can return useful data
 				var start = Date.now();
 				xenaQuery.all_cohorts(host).subscribe(function (s) {
@@ -266,6 +299,9 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 						updateHostDOM(host, (duration > 3000) ? 'slow' : 'nodata');
 					}
 				});
+                          } else {
+                            updateHostDOM(host, 'noauthentication');
+                          }
 			} else {
 				removeHostFromListInSession('activeHosts', host);
 				updateHostDOM(host, 'dead');
