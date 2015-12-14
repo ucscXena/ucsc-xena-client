@@ -1,344 +1,374 @@
-/*eslint strict: [2, "function"], camelcase: 0 */
-/*global define: false */
-define(['underscore_ext',
-		'jquery',
-		'rx',
-		'refGeneExons',
-		'columnWidgets',
-		'crosshairs',
-		'heatmapColors',
-		'mutationVector',
-		'sheetWrap',
-		'vgcanvas',
-		'xenaQuery',
-		'annotation',
-		'exonLayout',
-		'static-interval-tree',
-		'ga4ghQuery',
-		'rx-jquery'
-	], function (
-		_,
-		$,
-		Rx,
-		refGeneExons,
-		widgets,
-		crosshairs,
-		heatmapColors,
-		mutationVector,
-		sheetWrap,
-		vgcanvas,
-		xenaQuery,
-		annotation,
-		exonLayout,
-		intervalTree,
-		ga4ghQuery) {
+/*global require: false, document: false, console: false */
+'use strict';
 
-	"use strict";
+var _ = require('./underscore_ext');
+var Rx = require('rx');
+var mutationVector = require('./mutationVector');
+var xenaQuery = require('./xenaQuery');
+var React = require('react');
+var Column = require('./Column');
+var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
+var vgcanvas = require('vgcanvas');
+var widgets = require('columnWidgets');
+var intervalTree = require('static-interval-tree');
 
-	var map = _.map,
-		isUndefined = _.isUndefined,
-		pluckPathsArray = _.pluckPathsArray,
-		cmp,
-		fetch,
-		render;
+var {pxTransformFlatmap} = require('layoutPlot');
+var exonLayout = require('./exonLayout');
 
-	function ifChanged(paths, fn) { // TODO duplicated in each plot*.js
-		return function (state, previousState, lastResult) {
-			var pluckedState = pluckPathsArray(paths, state),
-				pluckedPreviousState;
-			if (previousState) {
-				pluckedPreviousState = pluckPathsArray(paths, previousState);
-				if (_.isEqual(pluckedState, pluckedPreviousState)) {
-					return lastResult;
-				}
-			}
-			return fn.apply(this, pluckedState);
-		};
+////////////////////////////////////////////////////////////
+// XXX Move to model
+
+function cmpRowOrNoVariants(v1, v2, refGene) {
+	if (v1.length === 0) {
+		return (v2.length === 0) ? 0 : 1;
 	}
+	return (v2.length === 0) ? -1 : mutationVector.rowOrder(v1, v2, refGene);
+}
 
-	function cmpRowOrNull(v1, v2, refGene) {
-		if (isUndefined(v1) && isUndefined(v2)) {
-			return 0;
-		} else if (isUndefined(v1)) {
-			return 1;
-		} else if (isUndefined(v2)) {
-			return -1;
+function cmpRowOrNull(v1, v2, refGene) {
+	if (v1 == null) {
+		return (v2 == null) ? 0 : 1;
+	}
+	return (v2 == null) ? -1 : cmpRowOrNoVariants(v1, v2, refGene);
+}
+
+function cmpSamples(probes, data, refGene, s1, s2) {
+	return _.findValue(probes, function (f) {
+		// XXX check this null condition.
+		return data && refGene && refGene[f] ?
+			cmpRowOrNull(data[s1], data[s2], refGene) : 0;
+	});
+}
+
+function cmp({fields}, {req: {samples}, refGene}) {
+	return (s1, s2) => cmpSamples(fields, samples, refGene, s1, s2);
+}
+
+var sparseDataValues = xenaQuery.dsID_fn(xenaQuery.sparse_data_values);
+var refGeneExonValues = xenaQuery.dsID_fn(xenaQuery.refGene_exon_values);
+
+// XXX hard-coded for now
+var refGene = JSON.stringify({
+	host: "https://genome-cancer.ucsc.edu/proj/public/xena",
+	name: "common/GB/refgene_good"
+});
+
+function fetch({dsID, fields}, samples) {
+		return Rx.Observable.zipArray(
+			sparseDataValues(dsID, fields, samples),
+			refGeneExonValues(refGene, fields)
+		).map(resp => _.object(['req', 'refGene'], resp));
+}
+
+function dataToDisplay({fields}, vizSettings, {req: {rows}}) {
+	return {
+		index: intervalTree.index(rows)
+		// should compute index by sample here, when we have selectors.
+	};
+}
+
+
+////////////////////////////////////////////////////////////////
+// view
+
+var radius = 4;
+
+// Group by consecutive matches, perserving order.
+function groupByConsec(sortedArray, prop, ctx) {
+	var cb = _.iteratee(prop, ctx);
+	var last = {}, current; // init 'last' with a sentinel, !== to everything
+	return _.reduce(sortedArray, (acc, el) => {
+		var key = cb(el);
+		if (key !== last) {
+			current = [];
+			last = key;
+			acc.push(current);
 		}
-		return mutationVector.rowOrder(v1, v2, refGene);
-	}
+		current.push(el);
+		return acc;
+	}, []);
+}
 
-	function cmpSamples(probes, data, refGene, s1, s2) {
-		return _.findValue(probes, function (f) {
-			return (data && data[f] && refGene) && Object.keys(refGene).length!==0 ? cmpRowOrNull(data[f][s1], data[f][s2], refGene) : 0;
+function push(arr, v) {
+	arr.push(v);
+	return arr;
+}
+
+function drawBackground(vg, width, height, pixPerRow, hasValue) {
+	var ctx = vg.context(),
+		[stripes] = _.reduce(
+			groupByConsec(hasValue, _.identity),
+			([acc, sum], g) =>
+				[g[0] ? acc : push(acc, [sum, g.length]), sum + g.length],
+			[[], 0]);
+
+	vg.smoothing(false);
+	vg.box(0, 0, width, height, 'white'); // white background
+
+	ctx.beginPath();                      // grey for missing data
+	stripes.forEach(([offset, len]) =>
+		ctx.rect(
+			0,
+			(offset * pixPerRow),
+			width,
+			pixPerRow * len
+	));
+	ctx.fillStyle = 'grey';
+	ctx.fill();
+}
+
+function drawImpactPx(vg, width, pixPerRow, color, variants) {
+	var ctx = vg.context(),
+		varByImp = groupByConsec(variants, v => v.group);
+
+	_.each(varByImp, vars => {
+		ctx.beginPath(); // halos
+		_.each(vars, v => {
+			var padding = Math.max(0, radius - (v.xEnd - v.xStart + 1) / 2.0);
+			ctx.moveTo(v.xStart - padding, v.y);
+			ctx.lineTo(v.xEnd + padding, v.y);
 		});
-	}
+		ctx.lineWidth = pixPerRow;
+		ctx.strokeStyle = color(vars[0].group);
+		ctx.stroke();
 
-	function mutation_attrs(list) {
-		return _.map(list, function (row) {
-			return {
-				"sample": row.sampleID,
-				"chr": row.position.chrom,
-				"start": row.position.chromstart,
-				"end": row.position.chromend,
-				"gene": row.genes,
-				"reference": row.ref,
-				"alt": row.alt,
-				"effect": row.effect,
-				"amino_acid": row['amino-acid'],
-				"rna_vaf": xenaQuery.nanstr(row['rna-vaf']),
-				"dna_vaf": xenaQuery.nanstr(row['dna-vaf'])
-			};
-		});
-	}
+		console.log('ppr', pixPerRow);
+		if (pixPerRow > 2){ // centers when there is enough vertical room for each sample
+			console.log('center');
+			ctx.beginPath();
+			_.each(vars, v => {
+				ctx.moveTo(v.xStart, v.y);
+				ctx.lineTo(v.xEnd, v.y);
+			});
+			ctx.lineWidth = pixPerRow / 8;
+			ctx.strokeStyle = 'black';
+			ctx.stroke();
+		}
+	});
+}
 
+var unknownEffect = 0,
+	impact = {
+		'Nonsense_Mutation': 3,
+		'frameshift_variant': 3,
+		'stop_gained': 3,
+		'splice_acceptor_variant': 3,
+		'splice_donor_variant': 3,
+		'Splice_Site': 3,
+		'Frame_Shift_Del': 3,
+		'Frame_Shift_Ins': 3,
 
-	function collateRows(rows) {
-		var keys = _.keys(rows);
-		return _.map(_.range(rows[keys[0]].length), i => _.object(keys, _.map(keys, k => rows[k][i])));
-	}
+		'splice_region_variant': 2,
+		'missense': 2,
+		'non_coding_exon_variant': 2,
+		'missense_variant': 2,
+		'Missense_Mutation': 2,
+		'exon_variant': 2,
+		'RNA': 2,
+		'Indel': 2,
+		'start_lost': 2,
+		'start_gained': 2,
+		'De_novo_Start_OutOfFrame': 2,
+		'Translation_Start_Site': 2,
+		'De_novo_Start_InFrame': 2,
+		'stop_lost': 2,
+		'Nonstop_Mutation': 2,
+		'initiator_codon_variant': 2,
+		'5_prime_UTR_premature_start_codon_gain_variant': 2,
+		'disruptive_inframe_deletion': 2,
+		'inframe_deletion': 2,
+		'inframe_insertion': 2,
+		'In_Frame_Del': 2,
+		'In_Frame_Ins': 2,
 
-	// Build index of genes -> samples -> matching rows.
-	// If the sample appears in the dataset but has no matching rows, matching rows should be set to [].
-	// If the sample does not appear in the dataset, matching rows should be undefined.
-	// Requested samples that appear in the dataset are in resp.sample.
-	//
-	// {:sampleid ["id0", "id1", ...], chromstart: [123, 345...], ...}
-	function index_mutations(gene, samples, resp) {
-		var rows_by_sample = _.groupBy(mutation_attrs(collateRows(resp.rows)), 'sample'),
-			no_rows = _.difference(resp.samples, _.keys(rows_by_sample)),
-			vals = _.extend(rows_by_sample, _.objectFn(no_rows, _.constant([]))), // merge in empty arrays for samples w/o matching rows.
-			obj = {};
+		'synonymous_variant': 1,
+		'5_prime_UTR_variant': 1,
+		'3_prime_UTR_variant': 1,
+		"5'Flank": 1,
+		"3'Flank": 1,
+		"3'UTR": 1,
+		"5'UTR": 1,
+		'Silent': 1,
+		'stop_retained_variant': 1,
+		'upstream_gene_variant': 1,
+		'downstream_gene_variant': 1,
+		'intron_variant': 1,
+		'Intron': 1,
+		'intergenic_region': 1,
+		'IGR': 1,
 
-		obj[gene] = vals;
-		return {values: obj};
-	}
-
-	function splitExon(s) {
-		return _.map(s.replace(/,$/, '').split(','), _.partial(parseInt, _, 10));
-	}
-
-	function refGene_attrs(row) {
-		return {
-			name2: row.name2,
-			strand: row.position.strand,
-			txStart: row.position.chromstart,
-			txEnd: row.position.chromend,
-			cdsStart: row['position (2)'].chromstart,
-			cdsEnd: row['position (2)'].chromend,
-			exonCount: row.exonCount,
-			exonStarts: splitExon(row.exonStarts),
-			exonEnds: splitExon(row.exonEnds)
-		};
-	}
-
-	function index_refGene(resp) {
-		return _.object(resp.name2, _.map(collateRows(resp), refGene_attrs));
-	}
-
-    cmp = () => {
-        var cmpm = _.memoize1((fields, data, refGene) =>
-                (s1, s2) => cmpSamples(fields, data, refGene, s1, s2));
-        return ({fields}, {req: {values}, refGene}) => cmpm(fields, values, refGene);
-    };
-
-	fetch = () => {
-        var refgene_host = "https://genome-cancer.ucsc.edu/proj/public/xena"; // XXX hard-coded for now
-		var fetches = _.memoize1(xenaQuery.dsID_fn((host, ds, probes, samples) => ({
-            req: xenaQuery.reqObj(
-                 xenaQuery.xena_post(host, xenaQuery.sparse_data_string(ds, samples, probes)),
-                 r => Rx.DOM.ajax(r).select(_.compose(_.partial(index_mutations, probes[0], samples), xenaQuery.json_resp))),
-            refGene: xenaQuery.reqObj(
-                xenaQuery.xena_post(refgene_host, xenaQuery.refGene_exon_string(probes)),
-                r => Rx.DOM.ajax(r).select(_.compose(index_refGene, xenaQuery.json_resp)))
-        })));
-		return ({dsID, fields}, samples) => fetches(dsID, fields, samples);
+		"others": 0
+	},
+	colorStr = c =>
+		'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')',
+	saveUndef = f => v => v === undefined ? v : f(v),
+	round = Math.round,
+	decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals
+	colors = {
+		category25: [
+			{r: 255, g: 127, b: 14, a: 1},  // orange #ff7f0e
+			{r: 44, g: 160, b: 44, a: 1},  // green #2ca02c
+			{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
+			{r: 214, g: 39, b: 40, a: 1}  // red #d62728
+		],
+		af: {r: 255, g: 0, b: 0},
+		grey: {r: 128, g: 128, b: 128, a: 1}
+	},
+	features = {
+		impact: {
+			get: (a, v) => impact[v.effect] || (v.effect ? unknownEffect : undefined),
+			color: v => colorStr(_.isUndefined(v) ? colors.grey : colors.category25[v])
+		},
+		'dna_vaf': {
+			get: (a, v) => _.isUndefined(v.dna_vaf) || _.isNull(v.dna_vaf) ? undefined : decimateFreq(v.dna_vaf),
+			color: v => colorStr(_.isUndefined(v) ? colors.grey : _.assoc(colors.af, 'a', v))
+		},
+		'rna_vaf': {
+			get: (a, v) => _.isUndefined(v.rna_vaf) || _.isNull(v.rna_vaf) ? undefined : decimateFreq(v.rna_vaf),
+			color: v => colorStr(_.isUndefined(v) ? colors.grey : _.assoc(colors.af, 'a', v))
+		}
 	};
 
-	function dataToPlot(sorted_samples, dataIn, probes) {
-		var data = dataIn;
-		return map(probes, function (p) {
-			var probeVals = map(sorted_samples, function (s) {
-				return {
-					sample: s,
-					vals: data[p][s]
-				};
-			});
+// Group by, returning groups in sorted order. Scales O(n) vs.
+// sort's O(n log n), if the number of values is much smaller than
+// the number of elements.
+function sortByGroup(arr, keyfn) {
+	var grouped = _.groupBy(arr, keyfn);
+	return _.map(_.sortBy(_.keys(grouped), _.identity),
+			k => grouped[k]);
+}
+
+// In the old code 'nodes' is used for mousing. Should we instead use the index? Find variants
+// within one radius of the mouse, then filter by y position.
+function findNodes(index, layout, samples, zoomIndex, zoomCount, pixPerRow, feature) {
+	var sindex = _.object(samples.slice(zoomIndex, zoomIndex + zoomCount),
+					_.range(samples.length)),
+		group = features[feature].get,
+		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e],
+		// sortfn is about 2x faster than sortBy, for large sets of variants
+		sortfn = (coll, keyfn) => _.flatten(sortByGroup(coll, keyfn), true);
+	return sortfn(pxTransformFlatmap(layout, (toPx, [start, end]) => {
+		var variants = _.filter(
+			intervalTree.matches(index, {start: start, end: end}),
+			v => _.has(sindex, v.sample));
+		return _.map(variants, v => {
+			var [pstart, pend] = minSize(toPx([v.start, v.end]));
 			return {
-				probe: p,
-				values: probeVals
+				xStart: pstart,
+				xEnd: pend,
+				y: sindex[v.sample] * pixPerRow + (pixPerRow / 2),
+			   // XXX 1st param to group was used for extending our coloring to other annotations. See
+			   // ga4gh branch.
+			   group: group(null, v),                                   // needed for sort, before drawing.
+			   data: v
 			};
 		});
-	}
+	}), v => v.group);
+}
 
-	function layout(chromLayout, pxWidth, baseCount) {
-		var count = baseCount || exonLayout.baseLen(chromLayout),
-			bpp = count / pxWidth;
+// XXX see comment in mutationVector:receiveData
+function draw(vg, props) {
+	var {index, layout, width, height, feature, samples, zoomIndex,
+			zoomCount, samplesInDS} = props,
+		pixPerRow = height / zoomCount,
+		minppr = Math.max(pixPerRow, 2),
+		nodes = findNodes(index, layout, samples, zoomIndex, zoomCount, pixPerRow, feature),
+		hasValue = samples.map(s => samplesInDS[s]);
 
-		return exonLayout.screenLayout(bpp, chromLayout);
-	}
 
-	function syncAnnotations(cache, ants, id, width, data, layout) {
-		var keys = _.map(ants, ([type, {url, field}]) => [type, url, field].join('::')),
-			current = _.keys(cache),
-			headerPlot = $('#' + id + ' .headerPlot');
-		_.each(_.difference(keys, current), (key, i) => {
-			var vg = cache[key] = vgcanvas(width, ants[i][1].height);
-			$(vg.element()).addClass('annotation');
-			headerPlot.prepend(vg.element());
-		});
-		_.each(_.difference(current, keys), key => {
-			$(cache[key].element()).remove();
-			delete cache[key];
-		});
-		_.each(keys, (key, i) => {
-			if (cache[key].height() !== ants[i][1].height) {
-				cache[key].height(ants[i][1].height);
-			}
-			if (cache[key].width() !== width) {
-				cache[key].width(width);
-			}
-			if (data.refGene && _.get_in(data, ['annotation' + i, 'length'])) {
-				annotation.draw(ants[i], cache[key], data['annotation' + i],
-						layout);
-			}
-		});
-	}
+	drawBackground(vg, width, height, pixPerRow, hasValue);
+	drawImpactPx(vg, width, minppr, features[feature].color, nodes);
+}
 
-	render = ifChanged(
-		[
-			['disp'],
-			['el'],
-			['wrapper'],
-			[],
-			['sort'],
-			['sFeature'], // TODO ref sFeature rather than column.sFeature
-			['data'],
-			['annotations']
-		],
-		// samples are in sorted order
-		function (disp, el, wrapper, ws, sort, sFeature, data, annotations) {
-			var local = disp.getDisposable(),
-				column = ws.column,
-				vg,
-				plotData,
-				columnUi,
-				dims = sheetWrap.columnDims(),
-				refGeneData,
-				refGene,
-				chromLayout,
-				screenLayout,
-				fullLayout,
-				xzoom = _.get_in(column, ['zoom']) || {index: 0},
-				canvasHeight = ws.height + (dims.sparsePad * 2),
-				color = heatmapColors.range(column, {valueType: 'codedWhite'}, ['No Mutation', 'Has Mutation'], [0, 1]);
+var CanvasDrawing = React.createClass({
+	mixins: [deepPureRenderMixin],
 
-			if (!local || local.render !== render) { // Test if we own this state
-				local = new Rx.Disposable(function () {
-					$(vg.element).remove();
-				});
-				local.render = render;
-				disp.setDisposable(local);
-				local.vg = vgcanvas(column.width, canvasHeight);
-				local.columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
-				local.columnUi.$samplePlot.append(local.vg.element());
-				local.annotations = {};
-				local.chromLayout = _.memoize1(exonLayout.chromLayout);
-				local.screenLayout = _.memoize1(layout);
-				local.dataToPlot = _.memoize1(dataToPlot);
-				local.index = _.memoize1(plotData =>
-						intervalTree.index(_.filter(_.flatten(
-									_.pluck(plotData[0].values,
-									'vals')),
-								_.identity)));
-			}
-
-			vg = local.vg;
-			columnUi = local.columnUi;
-			vg.width(column.width);
-			vg.height(canvasHeight);
-
-			columnUi.setHeight(annotations);
-
-			refGeneData = data.refGene[column.fields[0]];
-			//refGeneData = stub.getRefGene(column.fields[0]); // for testing
-			//data.req.values = stub.getMutation(column.fields[0]); // for testing
-			if (refGeneData) {
-				chromLayout = local.chromLayout(refGeneData);
-				screenLayout = local.screenLayout(chromLayout, column.width, xzoom.len);
-				fullLayout = {
-					pxLen: exonLayout.pxLen(screenLayout),
-					baseLen: exonLayout.baseLen(chromLayout),
-					chrom: chromLayout,
-					screen: screenLayout,
-					reversed: refGeneData.strand === '-',
-					zoom: xzoom
-				};
-				refGeneExons.show(el.id, {
-					data: { gene: refGeneData }, // data.refGene,
-					plotAnchor: '#' + el.id + ' .headerPlot',
-					$sidebarAnchor: columnUi.$headerSidebar,
-					width: column.width,
-					radius: 0,//sheetWrap.columnDims().sparseRadius,
-					refHeight: sheetWrap.columnDims().refHeight,
-					zoom: xzoom,
-					layout: fullLayout,
-					cursor: local.columnUi.xenaCursor.refine({column: ['column_rendering', el.id]})
-				});
-				if (data.req.values) { // TODO sometimes data.req is empty
-					refGene = refGeneExons.get(el.id);
-					if (refGene) {
-						plotData = local.dataToPlot(sort, data.req.values, ws.column.fields);
-						columnUi.plotData = {
-							values: plotData[0].values,
-							samples: sort,
-							ws: ws,
-							derivedVars: ['gene', 'effect', 'dna_vaf', 'rna_vaf', 'amino_acid']
-						};
-						columnUi = wrapper(el.id, _.assoc(ws, 'colors', [color]));
-						columnUi.setPlotted();
-
-						var annDataForMap = _.pick(data, _.map(annotationsForMap, a => `annotationForMap__${a.dsID}__${a.field}`));
-						mutationVector.show(el.id, {
-							vg: vg,
-							width: column.width,
-							height: canvasHeight,
-							zoomIndex: ws.zoomIndex,
-							zoomCount: ws.zoomCount,
-							data: plotData[0].values,
-							annData: annDataForMap,
-							color: 'category_25', // TODO make dynamic
-							dataset: column.dsID,
-							feature: column.sFeature,
-							radius: dims.sparseRadius,
-							sparsePad: dims.sparsePad,
-							horizontalMargin: dims.horizontalMargin,
-							point: 0.5, // not sure if this is used by the code.
-							columnUi: columnUi,
-							gene: column.fields[0],
-							index: local.index(plotData),
-							layout: fullLayout,
-							xzoom: xzoom,
-							samples: sort
-						});
-					}
-				}
-			}
-			else if (refGene){
-				vg.box(0, 0, column.width, ws.height, "white");
-			}
-			else {
-				vg.box(0, 0, column.width, ws.height, "lightgray");
-			}
-
-			// Have to draw this after refGene, because it depends on
-			// scaling that is mixed up with refGene state.
-
-			syncAnnotations(local.annotations, annotations, el.id, column.width,
-					data, fullLayout);
+	render: function () {
+		if (this.vg) {
+			this.draw();
 		}
-	);
+		return (
+			<canvas
+				className='Tooltip-target'
+				onMouseMove={this.props.onMouseMove}
+				onMouseOut={this.props.onMouseOut}
+				onMouseOver={this.props.onMouseOver}
+				onClick={this.props.onClick}
+				onDblClick={this.props.onDblClick}
+				ref='canvas' />
+		);
+	},
+	componentDidMount: function () {
+		var {width, zoom: {height}} = this.props;
+		this.vg = vgcanvas(this.refs.canvas.getDOMNode(), width, height);
+		this.draw();
+	},
 
-	widgets.cmp.add("mutationVector", cmp);
-	widgets.fetch.add("mutationVector", fetch);
-	widgets.render.add("mutationVector", render);
+	draw: function () {
+		var {zoom: {index, count, height}, samples,
+				xzoom = {index: 0}, data: {refGene, display, req},
+				width, feature} = this.props,
+			vg = this.vg,
+			layout;
+
+		if (!refGene) {
+			return;
+		}
+
+		layout = exonLayout.layout(_.values(refGene)[0], width, xzoom);
+
+		if (vg.width() !== width) {
+			vg.width(width);
+		}
+
+		if (vg.height() !== height) {
+			vg.height(height);
+		}
+
+		draw(vg, {
+			index: display.index,
+			layout: layout,
+			samples: samples,
+			samplesInDS: req.samples,
+			width: width,
+			height: height,
+			feature: feature,
+			zoomIndex: index,
+			zoomCount: count
+		});
+	}
 });
+
+var MutationColumn = React.createClass({
+	mixins: [rxEventsMixin, deepPureRenderMixin],
+	render: function () {
+		var {column, samples, zoom, data} = this.props;
+		// XXX Make plot a child instead of a prop?
+		return (
+			<Column
+				callback={this.props.callback}
+				id={this.props.id}
+				download={() => console.log('fixme')}
+				column={column}
+				zoom={zoom}
+				plot={<CanvasDrawing
+						ref='plot'
+						feature={_.getIn(column, ['sFeature'])}
+						width={_.getIn(column, ['width'])}
+						data={data}
+						samples={samples}
+						xzoom={_.getIn(column, ['zoom'])}
+						zoom={zoom}/>}
+				legend={'legend'}
+			/>
+		);
+	}
+});
+
+var getColumn = (props) => <MutationColumn {...props} />;
+
+// XXX Move some of these to model
+widgets.cmp.add('mutationVector', cmp);
+widgets.fetch.add('mutationVector', fetch);
+widgets.column.add('mutationVector', getColumn);
+widgets.transform.add('mutationVector', dataToDisplay);
