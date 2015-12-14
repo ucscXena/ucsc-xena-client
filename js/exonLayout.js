@@ -40,22 +40,31 @@ function toScreen(bpp, [next, ...rest], offset, acc) {
 	return toScreen(bpp, rest, len + offset, acc.concat([[offset, len + offset]]));
 }
 
-// Layout exons on screen pixels.
-// layout(genepred :: {exonStarts : [<int>, ...], exonEnds: [<int>, ...], strand: <string>)
-//  :: {chrom: [[<int>, <int>], ...], screen: [[<int>, <int>], ...], reversed: <boolean>}
-// XXX promoter region?
-function layout({exonStarts, exonEnds, strand}, bpp) {
-    var chrIntvls = reverseIf(strand, pad(spLen, _.zip(exonStarts, exonEnds)));
-	var pixIntvls = toScreen(bpp, chrIntvls, 0, []);
-	return {chrom: chrIntvls, screen: pixIntvls, reversed: strand === '-'};
-}
-
 function baseLen(chrlo) {
 	return _.reduce(chrlo, (acc, [s, e]) => acc + e - s + 1, 0);
 }
 
 function pxLen(chrlo) {
 	return _.reduce(chrlo, (acc, [s, e]) => acc + e - s, 0);
+}
+
+// Layout exons on screen pixels.
+// layout(genepred :: {exonStarts : [<int>, ...], exonEnds: [<int>, ...], strand: <string>)
+//  :: {chrom: [[<int>, <int>], ...], screen: [[<int>, <int>], ...], reversed: <boolean>}
+// XXX promoter region?
+function layout({exonStarts, exonEnds, strand}, pxWidth, zoom) {
+    var chrIntvls = reverseIf(strand, pad(spLen, _.zip(exonStarts, exonEnds))),
+		count = _.getIn(zoom, ['len'], baseLen(chrIntvls)),
+		bpp = count / pxWidth,
+		pixIntvls = toScreen(bpp, chrIntvls, 0, []);
+	return {
+		chrom: chrIntvls,
+		screen: pixIntvls,
+		reversed: strand === '-',
+		baseLen: count,
+		pxLen: pxWidth,
+		zoom: zoom
+	};
 }
 
 module.exports = {
