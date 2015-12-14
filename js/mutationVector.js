@@ -46,7 +46,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		_.each(varByImp, vars => {
 			ctx.beginPath(); // halos
 			_.each(vars, v => {
-				var padding = Math.max(0,radius - (v.xEnd-v.xStart + 1)/2.0);
+				var padding = Math.max(0, radius - (v.xEnd-v.xStart + 1) / 2.0);
 				ctx.moveTo(v.xStart - padding, v.y);
 				ctx.lineTo(v.xEnd + padding, v.y);
 			});
@@ -85,7 +85,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 		vg.box(0, 0, width, height, 'white'); // white background
 
 		ctx.beginPath();                      // grey for missing data
-		each(stripes, ([offset, len]) =>
+		_.each(stripes, ([offset, len]) =>
 			ctx.rect(
 				sparsePad,
 				(offset * pixPerRow) + sparsePad,
@@ -162,7 +162,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 				{r: 214, g: 39, b: 40, a: 1}  // red #d62728
 			],
 			af: {r: 255, g: 0, b: 0},
-			grey: {r: 128, g:128, b:128, a:1}
+			grey: {r: 128, g: 128, b: 128, a: 1}
 		},
 		features = _.merge(annotationFeatures, {
 			impact: {
@@ -180,7 +180,6 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					_.assoc(colors.af, 'a', v))
 			}
 		}),
-		each = _.each,
 		reduce = _.reduce,
 		widgets = {},
 		aWidget = {
@@ -202,13 +201,13 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 
 			closestNode: function (x, y) {
 				var cutoffX = this.radius,
-					cutoffY = this.pixPerRow/2.0,
+					cutoffY = this.pixPerRow / 2.0,
 					min = Number.POSITIVE_INFINITY,
 					distance;
 
 				return reduce(this.nodes, function (closest, n) {
 					if ( (Math.abs(y-n.y) < cutoffY) && (x > n.xStart -cutoffX) && (x<n.xEnd +cutoffX)) {
-						distance = Math.pow( (y-n.y), 2) + Math.pow( (x - (n.xStart+n.xEnd)/2.0), 2);
+						distance = Math.pow( (y-n.y), 2) + Math.pow( (x - (n.xStart+n.xEnd) / 2.0), 2);
 						if (distance < min) {
 							min = distance;
 							return n;
@@ -243,7 +242,7 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			mousing: function (ev) {
-				var pos,posText, posURL,
+				var pos, posText, posURL,
 					ga4ghVarURL,
 					node,
 					coords,
@@ -287,16 +286,16 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 					}
 
 					//effect, gene
-					row =[ { val: (node.data.effect? node.data.effect+", ":'')  +
-							this.gene +  (node.data.amino_acid? ' (' + node.data.amino_acid + ')':'')}];
-					rows.push (row);
+					row = [ { val: (node.data.effect ? node.data.effect+", ":'')  +
+							this.gene +  (node.data.amino_acid ? ' (' + node.data.amino_acid + ')':'')}];
+					rows.push(row);
 
 					// chromosomal coordinate, ref-> alt
 					row = [ { val: posText, url: posURL}];
 					if (node.data.reference && node.data.alt){
 						row.push({ val: node.data.reference + ' to ' + node.data.alt});
 					}
-					rows.push (row);
+					rows.push(row);
 
 					if (dnaAf !== "NA"){
 						rows.push([{ label: 'DNA variant allele freq',  val: dnaAf}]);
@@ -335,19 +334,19 @@ define(['crosshairs', 'tooltip', 'util', 'vgcanvas', 'd3', 'jquery', 'underscore
 			},
 
 			receiveAnnData: function (annData){
-				var annValues={};
+				var annValues = {};
 				Object.keys(annData).map(function (key){
-					var [,dataset, field]= key.split("__"),
+					var [, dataset, field] = key.split("__"),
 						feature = [dataset, field].join("__"),
 						order = annotationColor.colorSettings[dataset][field].order;
 
-					annValues[feature]={};
+					annValues[feature] = {};
 					if (annData[key].length){
 						annData[key].map(function (val){
 							if (val.info[field] && val.info[field].length>0){
 								var values = val.info[field][0].split(/[,]/);
-								val.alternateBases.map(function (alt,i){
-									var chrom = val.referenceName.substring(0,3)==="chr"? val.referenceName: "chr"+ val.referenceName,
+								val.alternateBases.map(function (alt, i){
+									var chrom = val.referenceName.substring(0, 3)==="chr"? val.referenceName: "chr"+ val.referenceName,
 										id = [chrom, val.start, val.end, val.referenceBases, alt].join("__"),
 										value;
 									if (val.alternateBases.length === values.length){
