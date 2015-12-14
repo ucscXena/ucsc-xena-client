@@ -14,7 +14,7 @@ var halfOpen = ([a, b]) => [a - 1, b];
 
 function pxTransformEach(layout, fn) {
 	var {screen, chrom, reversed, pxLen, baseLen} = layout;
-	var index = _.get_in(layout, ['zoom', 'index']);
+	var index = _.getIn(layout, ['zoom', 'index']);
 	// XXX This is wrong if there are spaces between layout elements.
 	var offset =  pxLen / baseLen * index;
 
