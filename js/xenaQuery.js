@@ -455,6 +455,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		});
 	}
 
+	// {field: [value, ...], ...} -> [{field: value, ...}, ...]
 	function collateRows(rows) {
 		var keys = _.keys(rows);
 		return _.map(_.range(rows[keys[0]].length), i => _.object(keys, _.map(keys, k => rows[k][i])));
@@ -466,21 +467,23 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	// Requested samples that appear in the dataset are in resp.sample.
 	//
 	// {:sampleid ["id0", "id1", ...], chromstart: [123, 345...], ...}
-	function indexMutations(gene, samples, resp) {
-		var rows_by_sample = _.groupBy(mutation_attrs(collateRows(resp.rows)), 'sample'),
-			no_rows = _.difference(resp.samples, _.keys(rows_by_sample)),
-			vals = _.extend(rows_by_sample, _.objectFn(no_rows, _.constant([]))), // merge in empty arrays for samples w/o matching rows.
-			obj = {};
-
-		obj[gene] = vals;
-		return {values: obj};
+	function indexMutations(gene, resp) {
+		var rows = mutation_attrs(collateRows(resp.rows)),
+			rowsBySample = _.groupBy(rows, 'sample'),
+			empty = []; // use a single empty object.
+		return {
+			rows,
+			// move this to model, and uncomment the line below.
+			samples: _.object(resp.samples, resp.samples.map(s => rowsBySample[s] || empty))
+//			samples: resp.samples
+		};
 	}
 
 	function sparse_data_values(host, ds, genes, samples) {
 		return Rx.DOM.ajax(
 			xena_post(host, sparse_data_string(ds, samples, genes))
 			// XXX change indexMutations so it can handle an array?
-		).map(json_resp).map(resp => indexMutations(genes[0], samples, resp));
+		).map(json_resp).map(resp => indexMutations(genes[0], resp));
 	}
 
 	function splitExon(s) {
