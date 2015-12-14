@@ -54,8 +54,8 @@ var defaultColors = (function () {
 
 	// XXX it's rather broken that these conditionals appear here, in
 	// addition to in the colorRange multi
-	return function (column) {
-		var {type, dataSubType} = column || {};
+	return function (dataset) {
+		var {type, dataSubType} = dataset || {};
 		var t = (type === 'clinicalMatrix') ?  'phenotype' : dataSubType;
 		return defaults[t] || schemes.blueWhiteRed;
 	};
