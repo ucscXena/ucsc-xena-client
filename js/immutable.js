@@ -107,7 +107,7 @@ define([], function() {
 		return updateInI(x, keys, fn, 0);
 	}
 
-	function getInI(x, keys, i) {
+	function getInI(x, keys, i, def) {
 		var ki;
 
 		if (x === null || x === undefined) {
@@ -115,16 +115,16 @@ define([], function() {
 		}
 		ki = keys[i];
 		if (keys.length === i + 1) {
-			return x[ki];
+			return x.hasOwnProperty(ki) ? x[ki] : def;
 		}
-		return getInI(x[ki], keys, i + 1);
+		return getInI(x[ki], keys, i + 1, def);
 	}
 
-	function getIn(x, keys) {
+	function getIn(x, keys, def) {
 		if (keys.length === 0) {
 			return x;
 		}
-		return getInI(x, keys, 0);
+		return getInI(x, keys, 0, def);
 	}
 
 
