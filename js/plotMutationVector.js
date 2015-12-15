@@ -10,11 +10,7 @@ var widgets = require('columnWidgets');
 var intervalTree = require('static-interval-tree');
 
 var {pxTransformFlatmap} = require('layoutPlot');
-var exonLayout = require('./exonLayout');
 var features = require('./models/mutationVector');
-
-////////////////////////////////////////////////////////////////
-// view
 
 var radius = 4;
 
@@ -127,7 +123,6 @@ function findNodes(index, layout, samples, zoomIndex, zoomCount, pixPerRow, feat
 	}), v => v.group);
 }
 
-// XXX see comment in mutationVector:receiveData
 function draw(vg, props) {
 	var {index, layout, width, height, feature, samples, zoomIndex,
 			zoomCount, samplesInDS} = props,
@@ -167,16 +162,13 @@ var CanvasDrawing = React.createClass({
 
 	draw: function () {
 		var {zoom: {index, count, height}, samples,
-				xzoom = {index: 0}, data: {refGene, display, req},
+				data: {refGene, display, req},
 				width, feature} = this.props,
-			vg = this.vg,
-			layout;
+			vg = this.vg;
 
 		if (!refGene) {
 			return;
 		}
-
-		layout = exonLayout.layout(_.values(refGene)[0], width, xzoom);
 
 		if (vg.width() !== width) {
 			vg.width(width);
@@ -188,7 +180,7 @@ var CanvasDrawing = React.createClass({
 
 		draw(vg, {
 			index: display.index,
-			layout: layout,
+			layout: display.layout,
 			samples: samples,
 			samplesInDS: req.samples,
 			width: width,
@@ -212,6 +204,7 @@ var MutationColumn = React.createClass({
 				download={() => console.log('fixme')} //eslint-disable-line no-undef
 				column={column}
 				zoom={zoom}
+				data={data}
 				plot={<CanvasDrawing
 						ref='plot'
 						feature={_.getIn(column, ['sFeature'])}

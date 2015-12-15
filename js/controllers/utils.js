@@ -19,7 +19,7 @@ function cmpString(s1, s2) {
 function updateColumnDisplay(state, colID) {
 	var col = _.getIn(state, [...paths.columns, colID]),
 		{dsID} = col,
-		viz = _.getIn(state, [...paths.vizSettings, 'dsID']),
+		viz = _.getIn(state, [...paths.vizSettings, dsID]),
 		samples = _.getIn(state, paths.samples),
 		dataset = _.getIn(state, [...paths.datasets, 'datasets', dsID]),
 		data = _.getIn(state, [...paths.data, colID]);
@@ -46,5 +46,6 @@ function sortSamples(state) {
 }
 
 module.exports = {
-	sortSamples: sortSamples
+	sortSamples,
+	updateAllColumns
 };

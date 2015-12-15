@@ -7,6 +7,7 @@ var _ = require('underscore'),
 	widgets = require('../columnWidgets'),
 	xenaQuery = require('../xenaQuery'),
 	Rx = require('rx'),
+	exonLayout = require('../exonLayout'),
 	intervalTree = require('static-interval-tree');
 
 var unknownEffect = 0,
@@ -169,10 +170,14 @@ function fetch({dsID, fields}, samples) {
 		).map(resp => _.object(['req', 'refGene'], resp));
 }
 
-function dataToDisplay({fields}, vizSettings, {req: {rows}}) {
+// XXX memoizing this is going to be entertaining, since the
+// different props have different dependencies.
+function dataToDisplay({width, fields, xzoom = {index: 0}},
+		vizSettings, {req: {rows}, refGene}) {
 	return {
-		index: intervalTree.index(rows)
+		index: intervalTree.index(rows),
 		// should compute index by sample here, when we have selectors.
+		layout: exonLayout.layout(_.values(refGene)[0], width, xzoom)
 	};
 }
 

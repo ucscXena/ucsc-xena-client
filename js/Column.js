@@ -9,6 +9,7 @@ var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Resizable = require('react-resizable').Resizable;
 var xenaQuery = require('./xenaQuery');
 var DefaultTextInput = require('./defaultTextInput');
+var {RefGeneAnnotation} = require('./refGeneExons');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -46,12 +47,14 @@ var Column = React.createClass({
 		callback(['km-open', id]);
 	},
 	render: function () {
-		var {id, callback, plot, legend, column, zoom, menu} = this.props;
-		var {width, columnLabel, fieldLabel} = column,
-		moveIcon = (<span
-			className="glyphicon glyphicon-resize-horizontal Sortable-handle"
-			aria-hidden="true">
-		</span>);
+		var {id, callback, plot, legend, column, zoom, menu, data} = this.props,
+			{width, columnLabel, fieldLabel} = column,
+			// move this to state to generalize to other annotations.
+			doRefGene = column.dataType === 'mutationVector',
+			moveIcon = (<span
+				className="glyphicon glyphicon-resize-horizontal Sortable-handle"
+				aria-hidden="true">
+			</span>);
 
 // Disable km for certain column types?
 //				if (!this.columnUi.plotData || (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1)) {
@@ -78,6 +81,15 @@ var Column = React.createClass({
 					callback={callback}
 					eventName='fieldLabel'
 					value={fieldLabel} />
+				<div style={{height: 20}}>
+					{doRefGene && data.refGene ?
+						<RefGeneAnnotation
+							width={width}
+							refGene={data.refGene[column.fields[0]]}
+							layout={data.display.layout}
+							position={{gene: column.fields[0]}}/> : null}
+				</div>
+
 				<Resizable handleSize={[20, 20]}
 					onResizeStop={this.onResizeStop}
 					width={width}
