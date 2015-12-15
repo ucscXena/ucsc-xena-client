@@ -73,8 +73,20 @@ function featureType({dataType}, data) {
 	return (dataType === 'mutationVector') ? 'mutation' : (coded ? 'coded' : 'float');
 }
 
-function mutationVals() {
-	console.warn('fixme');
+function mutationVals(column, {req: {samples}}, sortedSamples) {
+	var mutCode = _.mapObject(samples, vs => vs.length > 0 ? 1 : 0);
+	return {
+		values: _.map(sortedSamples, s => mutCode[s]),
+		groups: [0, 1],
+		colors: [
+			"#ffffff", // white
+			"#9467bd"  // dark purple
+		],
+		labels: [
+			'No Mutation',
+			'Has Mutation'
+		]
+	};
 }
 
 var toCoded = multi(featureType);
@@ -89,7 +101,7 @@ var filterIndices = (arr, fn) => _.range(arr.length).filter(i => fn(arr[i], i));
 
 function makeGroups(column, data, {ev, tte, patient}, samples) {
 	// Convert field to coded.
-	let {labels, colors, groups, values} = toCoded(column, data),
+	let {labels, colors, groups, values} = toCoded(column, data, samples),
 		usableSamples = filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
