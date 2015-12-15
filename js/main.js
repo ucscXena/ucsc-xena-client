@@ -21,6 +21,9 @@ require('rx-dom');
 var _ = require('./underscore_ext');
 //var meta = require('./meta');
 require('./plotDenseMatrix'); // XXX better place or name for this?
+require('./plotMutationVector'); // XXX better place or name for this?
+require('./models/denseMatrix'); // XXX better place or name for this?
+require('./models/mutationVector'); // XXX better place or name for this?
 var controllersControls = require('controllers/controls'); // XXX use npm package to simplify this import?
 var controllersServer = require('controllers/server'); // XXX use npm package to simplify this import?
 require('bootstrap/dist/css/bootstrap.css');
