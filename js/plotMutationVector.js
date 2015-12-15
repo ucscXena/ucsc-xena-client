@@ -4,6 +4,7 @@
 var _ = require('./underscore_ext');
 var React = require('react');
 var Column = require('./Column');
+var Legend = require('./Legend');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var vgcanvas = require('vgcanvas');
 var widgets = require('columnWidgets');
@@ -192,10 +193,22 @@ var CanvasDrawing = React.createClass({
 	}
 });
 
+function drawLegend(feature) {
+	var {colors, labels, align} = features[feature].legend;
+	return (
+		<Legend
+			colors={['rgb(255,255,255)', ...colors]}
+			labels={['no mutation', ...labels]}
+			align={align}
+			ellipsis='' />
+	);
+}
+
 var MutationColumn = React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	render: function () {
-		var {column, samples, zoom, data} = this.props;
+		var {column, samples, zoom, data} = this.props,
+			feature = _.getIn(column, ['sFeature']);
 		// XXX Make plot a child instead of a prop?
 		return (
 			<Column
@@ -207,13 +220,13 @@ var MutationColumn = React.createClass({
 				data={data}
 				plot={<CanvasDrawing
 						ref='plot'
-						feature={_.getIn(column, ['sFeature'])}
+						feature={feature}
 						width={_.getIn(column, ['width'])}
 						data={data}
 						samples={samples}
 						xzoom={_.getIn(column, ['zoom'])}
 						zoom={zoom}/>}
-				legend={'legend'}
+				legend={drawLegend(feature)}
 			/>
 		);
 	}

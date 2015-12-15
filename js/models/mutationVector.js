@@ -63,36 +63,52 @@ var unknownEffect = 0,
 		"others": 0
 	},
 	colors = {
-		category25: [
-			{r: 255, g: 127, b: 14, a: 1},  // orange #ff7f0e
+		category4: [
+			{r: 255, g: 127, b: 14, a: 1}, // orange #ff7f0e
 			{r: 44, g: 160, b: 44, a: 1},  // green #2ca02c
 			{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
-			{r: 214, g: 39, b: 40, a: 1}  // red #d62728
+			{r: 214, g: 39, b: 40, a: 1}   // red #d62728
 		],
 		af: {r: 255, g: 0, b: 0},
 		grey: {r: 128, g: 128, b: 128, a: 1}
 	},
 	colorStr = c =>
 		'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')',
-	saveUndef = f => v => v === undefined ? v : f(v),
+	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
 	decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals
 
+	impactGroups = _.groupBy(_.pairs(impact), ([, imp]) => imp),
+	vafLegend = {
+		colors: [0, 0.5, 1].map(a => colorStr({...colors.af, a})),
+		labels: ['0%', '50%', '100%'],
+		align: 'center'
+	},
 	features = {
 		impact: {
 			get: (a, v) => impact[v.effect] || (v.effect ? unknownEffect : undefined),
-			color: v => colorStr(_.isUndefined(v) ? colors.grey : colors.category25[v])
+			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
+			legend: {
+				colors: colors.category4.map(colorStr),
+				labels: _.range(_.keys(impactGroups).length).map(
+					i => _.pluck(impactGroups[i], 0).join(', ')),
+				align: 'left'
+			}
 		},
 		'dna_vaf': {
-			get: (a, v) => _.isUndefined(v.dna_vaf) || _.isNull(v.dna_vaf) ? undefined : decimateFreq(v.dna_vaf),
-			color: v => colorStr(_.isUndefined(v) ? colors.grey : _.assoc(colors.af, 'a', v))
+			get: (a, v) => v.dna_vaf == null ? undefined : decimateFreq(v.dna_vaf),
+			color: v => colorStr(v == null ? colors.grey : _.assoc(colors.af, 'a', v)),
+			legend: vafLegend
 		},
 		'rna_vaf': {
-			get: (a, v) => _.isUndefined(v.rna_vaf) || _.isNull(v.rna_vaf) ? undefined : decimateFreq(v.rna_vaf),
-			color: v => colorStr(_.isUndefined(v) ? colors.grey : _.assoc(colors.af, 'a', v))
+			get: (a, v) => v.rna_vaf == null ? undefined : decimateFreq(v.rna_vaf),
+			color: v => colorStr(v == null ? colors.grey : _.assoc(colors.af, 'a', v)),
+			legend: vafLegend
 		}
 	};
 
+// XXX why is txStart needed? If we start doing more positions (fusion),
+// this will be invalid. Shouldn't we just use position & invert on neg strand?
 function evalMut(refGene, mut) {
 	var geneInfo = refGene[mut.gene];
 	return {
