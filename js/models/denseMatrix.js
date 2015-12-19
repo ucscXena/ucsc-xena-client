@@ -54,7 +54,11 @@ function computeHeatmap(vizSettings, data, fields, samples, dataset) {
 	});
 }
 
-function dataToHeatmap(column, vizSettings, {req, codes = {}}, samples, dataset) {
+function dataToHeatmap(column, vizSettings, data, samples, dataset) {
+	if (!data) {
+		return null;
+	}
+	var {req, codes = {}} = data;
 	var fields = req.probes || column.fields;
 	var heatmap = computeHeatmap(vizSettings, req, fields, samples, dataset),
 		colors = map(fields, (p, i) =>
@@ -89,7 +93,7 @@ function cmpSamples(probes, data, s1, s2) {
 	}
 }
 
-var cmp = ({fields}, {req: {values, probes}}) =>
+var cmp = ({fields}, {req: {values, probes}} = {req: {}}) =>
 	(s1, s2) => cmpSamples(probes || fields, values, s1, s2);
 
 //

@@ -3,12 +3,13 @@
 
 // Domain logic for mutation datasets.
 
-var _ = require('underscore'),
-	widgets = require('../columnWidgets'),
-	xenaQuery = require('../xenaQuery'),
-	Rx = require('rx'),
-	exonLayout = require('../exonLayout'),
-	intervalTree = require('static-interval-tree');
+var _ = require('underscore');
+var widgets = require('../columnWidgets');
+var xenaQuery = require('../xenaQuery');
+var Rx = require('rx');
+var exonLayout = require('../exonLayout');
+var intervalTree = require('static-interval-tree');
+var {pxTransformFlatmap} = require('layoutPlot');
 
 var unknownEffect = 0,
 	impact = {
@@ -186,20 +187,73 @@ function fetch({dsID, fields}, samples) {
 		).map(resp => _.object(['req', 'refGene'], resp));
 }
 
-// XXX memoizing this is going to be entertaining, since the
-// different props have different dependencies.
-function dataToDisplay({width, fields, xzoom = {index: 0}},
-		vizSettings, {req: {rows}, refGene}) {
+// Group by, returning groups in sorted order. Scales O(n) vs.
+// sort's O(n log n), if the number of values is much smaller than
+// the number of elements.
+function sortByGroup(arr, keyfn) {
+	var grouped = _.groupBy(arr, keyfn);
+	return _.map(_.sortBy(_.keys(grouped), _.identity),
+			k => grouped[k]);
+}
+
+function findNodes(byPosition, layout, feature, samples, zoom) {
+	var {index, count, height} = zoom,
+		pixPerRow = height / count,
+		sindex = _.object(samples.slice(index, index + count),
+					_.range(samples.length)),
+		group = features[feature].get,
+		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e],
+		// sortfn is about 2x faster than sortBy, for large sets of variants
+		sortfn = (coll, keyfn) => _.flatten(sortByGroup(coll, keyfn), true);
+	return sortfn(pxTransformFlatmap(layout, (toPx, [start, end]) => {
+		var variants = _.filter(
+			intervalTree.matches(byPosition, {start: start, end: end}),
+			v => _.has(sindex, v.sample));
+		return _.map(variants, v => {
+			var [pstart, pend] = minSize(toPx([v.start, v.end]));
+			return {
+				xStart: pstart,
+				xEnd: pend,
+				y: sindex[v.sample] * pixPerRow + (pixPerRow / 2),
+			   // XXX 1st param to group was used for extending our coloring to other annotations. See
+			   // ga4gh branch.
+			   group: group(null, v), // needed for sort, before drawing.
+			   data: v
+			};
+		});
+	}), v => v.group);
+}
+
+function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
+		vizSettings, {req: {rows}, refGene}, sortedSamples, dataset, index, zoom) {
+
+	var layout = exonLayout.layout(_.values(refGene)[0], width, xzoom),
+		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples,
+				zoom);
 	return {
-		index: intervalTree.index(rows),
-		// should compute index by sample here, when we have selectors.
-		layout: exonLayout.layout(_.values(refGene)[0], width, xzoom)
+		layout,
+		nodes
 	};
 }
 
+function index(dataType, data) {
+	if (!data) {
+		return null;
+	}
+	var {req: {rows, samplesInResp}} = data,
+		bySample = _.groupBy(rows, 'sample'),
+		empty = []; // use a single empty object.
+	return {
+		byPosition: intervalTree.index(rows),
+		bySample: _.object(
+				samplesInResp,
+				samplesInResp.map(s => bySample[s] || empty))
+	};
+}
 
 widgets.cmp.add('mutationVector', cmp);
 widgets.fetch.add('mutationVector', fetch);
+widgets.index.add('mutationVector', index);
 widgets.transform.add('mutationVector', dataToDisplay);
 
 module.exports = features;

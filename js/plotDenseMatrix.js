@@ -387,7 +387,8 @@ var HeatmapColumn = React.createClass({
 	},
 	render: function () {
 		var {samples, data, column, dataset, vizSettings = {}, zoom} = this.props,
-			{codes, display: {heatmap, colors} = {}} = data,
+			{codes} = data,
+			{heatmap, colors} = column,
 			fields = data.req.probes || column.fields,
 			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
 			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
@@ -405,12 +406,12 @@ var HeatmapColumn = React.createClass({
 				zoom={zoom}
 				menu={menu}
 				plot={<CanvasDrawing
+						ref='plot'
 						onMouseMove={this.ev.mousemove}
 						onMouseOut={this.ev.mouseout}
 						onMouseOver={this.ev.mouseover}
 						onClick={this.props.onClick}
 						onDblClick={this.props.onDblClick}
-						ref='plot'
 						width={_.getIn(column, ['width'])}
 						zoom={zoom}
 						colors={colors}

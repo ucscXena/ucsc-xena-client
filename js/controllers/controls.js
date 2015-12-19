@@ -8,7 +8,6 @@ var Rx = require('rx');
 var xenaQuery = require('../xenaQuery');
 var paths = require('./paths');
 var widgets = require('../columnWidgets');
-var {sortSamples, updateAllColumns} = require('./utils');
 var util = require('../util');
 
 var	datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
@@ -156,15 +155,15 @@ var controls = {
 	'add-column-post!': (previous, current, id) =>
 		fetchColumnData(current, id),
 	resize: (state, id, {width, height}) =>
-		updateAllColumns(_.assocInAll(state,
-					[...paths.zoom, 'height'], height,
-					[...paths.columns, id, 'width'], width)),
+		_.assocInAll(state,
+				[...paths.zoom, 'height'], height,
+				[...paths.columns, id, 'width'], width),
 	remove: (state, id) => {
 		let ns = _.updateIn(state, paths.columns, c => _.dissoc(c, id));
 		ns = _.updateIn(ns, paths.columnOrder, co => _.without(co, id));
 		return _.updateIn(ns, paths.data, d => _.dissoc(d, id));
 	},
-	order: (state, order) => sortSamples(_.assocIn(state, paths.columnOrder, order)),
+	order: (state, order) => _.assocIn(state, paths.columnOrder, order),
 	zoom: (state, zoom) => _.assocIn(state, paths.zoom, zoom),
 	dataType: (state, id, dataType) =>
 		_.assocIn(state, [...paths.columns, id, 'dataType'], dataType),

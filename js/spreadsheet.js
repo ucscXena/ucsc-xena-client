@@ -107,7 +107,8 @@ var Columns = React.createClass({
 	},
 	render: function () {
 		var {callback, appState} = this.props;
-		var {data, zoom, columns, columnOrder, cohort, samples} = appState;
+		// XXX maybe rename index -> indexes?
+		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
 		var {openColumnEdit, openVizSettings} = this.state;
 		var height = zoom.height;
 		var editor = openColumnEdit ?
@@ -130,6 +131,7 @@ var Columns = React.createClass({
 			key: id,
 			id: id,
 			data: _.getIn(data, [id]) || {req: {}}, // XXX better default handling?
+			index: _.getIn(index, [id]),
 			vizSettings: _.getIn(appState, ['vizSettings',
 				_.getIn(columns, [id, 'dsID'])]),
 			samples: samples,

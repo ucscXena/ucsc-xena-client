@@ -468,14 +468,10 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	//
 	// {:sampleid ["id0", "id1", ...], chromstart: [123, 345...], ...}
 	function indexMutations(gene, resp) {
-		var rows = mutation_attrs(collateRows(resp.rows)),
-			rowsBySample = _.groupBy(rows, 'sample'),
-			empty = []; // use a single empty object.
+		var rows = mutation_attrs(collateRows(resp.rows));
 		return {
 			rows,
-			// move this to model, and uncomment the line below.
-			samples: _.object(resp.samples, resp.samples.map(s => rowsBySample[s] || empty))
-//			samples: resp.samples
+			samplesInResp: resp.samples // XXX rename this after deprecating samples
 		};
 	}
 

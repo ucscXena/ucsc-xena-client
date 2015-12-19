@@ -28,6 +28,7 @@ var controllersControls = require('controllers/controls'); // XXX use npm packag
 var controllersServer = require('controllers/server'); // XXX use npm package to simplify this import?
 require('bootstrap/dist/css/bootstrap.css');
 //var Perf = require('react/addons').addons.Perf;
+var selector = require('appSelector');
 
 
 var d = window.document;
@@ -221,7 +222,7 @@ var updater = ev => controlsBus.onNext(ev);
 // XXX double check that this expression is doing what we want: don't draw faster
 // than rAF.
 stateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
-	.subscribe(state => React.render(<Application callback={updater} appState={state} />, main));
+	.subscribe(state => React.render(<Application callback={updater} appState={selector(state)} />, main));
 
 
 

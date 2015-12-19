@@ -8,9 +8,7 @@ var Legend = require('./Legend');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var vgcanvas = require('vgcanvas');
 var widgets = require('columnWidgets');
-var intervalTree = require('static-interval-tree');
 
-var {pxTransformFlatmap} = require('layoutPlot');
 var features = require('./models/mutationVector');
 
 var radius = 4;
@@ -87,51 +85,12 @@ function drawImpactPx(vg, width, pixPerRow, color, variants) {
 	});
 }
 
-// Group by, returning groups in sorted order. Scales O(n) vs.
-// sort's O(n log n), if the number of values is much smaller than
-// the number of elements.
-function sortByGroup(arr, keyfn) {
-	var grouped = _.groupBy(arr, keyfn);
-	return _.map(_.sortBy(_.keys(grouped), _.identity),
-			k => grouped[k]);
-}
-
-// In the old code 'nodes' is used for mousing. Should we instead use the index? Find variants
-// within one radius of the mouse, then filter by y position.
-function findNodes(index, layout, samples, zoomIndex, zoomCount, pixPerRow, feature) {
-	var sindex = _.object(samples.slice(zoomIndex, zoomIndex + zoomCount),
-					_.range(samples.length)),
-		group = features[feature].get,
-		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e],
-		// sortfn is about 2x faster than sortBy, for large sets of variants
-		sortfn = (coll, keyfn) => _.flatten(sortByGroup(coll, keyfn), true);
-	return sortfn(pxTransformFlatmap(layout, (toPx, [start, end]) => {
-		var variants = _.filter(
-			intervalTree.matches(index, {start: start, end: end}),
-			v => _.has(sindex, v.sample));
-		return _.map(variants, v => {
-			var [pstart, pend] = minSize(toPx([v.start, v.end]));
-			return {
-				xStart: pstart,
-				xEnd: pend,
-				y: sindex[v.sample] * pixPerRow + (pixPerRow / 2),
-			   // XXX 1st param to group was used for extending our coloring to other annotations. See
-			   // ga4gh branch.
-			   group: group(null, v),                                   // needed for sort, before drawing.
-			   data: v
-			};
-		});
-	}), v => v.group);
-}
-
 function draw(vg, props) {
-	var {index, layout, width, height, feature, samples, zoomIndex,
-			zoomCount, samplesInDS} = props,
-		pixPerRow = height / zoomCount,
+	var {width, height, feature, samples,
+			nodes, zoomCount, samplesInDS} = props,
+		pixPerRow = height / zoomCount, // XXX also appears in mutationVector
 		minppr = Math.max(pixPerRow, 2),
-		nodes = findNodes(index, layout, samples, zoomIndex, zoomCount, pixPerRow, feature),
 		hasValue = samples.map(s => samplesInDS[s]);
-
 
 	drawBackground(vg, width, height, pixPerRow, hasValue);
 	drawImpactPx(vg, width, minppr, features[feature].color, nodes);
@@ -162,9 +121,11 @@ var CanvasDrawing = React.createClass({
 	},
 
 	draw: function () {
-		var {zoom: {index, count, height}, samples,
-				data: {refGene, display, req},
-				width, feature} = this.props,
+		var {zoom: {count, height},
+			samples,
+			data: {refGene},
+			nodes,
+			width, feature, index: {bySample}} = this.props,
 			vg = this.vg;
 
 		if (!refGene) {
@@ -180,14 +141,12 @@ var CanvasDrawing = React.createClass({
 		}
 
 		draw(vg, {
-			index: display.index,
-			layout: display.layout,
+			nodes: nodes,
 			samples: samples,
-			samplesInDS: req.samples,
+			samplesInDS: bySample,
 			width: width,
 			height: height,
 			feature: feature,
-			zoomIndex: index,
 			zoomCount: count
 		});
 	}
@@ -207,7 +166,7 @@ function drawLegend(feature) {
 var MutationColumn = React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	render: function () {
-		var {column, samples, zoom, data} = this.props,
+		var {column, samples, zoom, data, index} = this.props,
 			feature = _.getIn(column, ['sFeature']);
 		// XXX Make plot a child instead of a prop?
 		return (
@@ -221,10 +180,12 @@ var MutationColumn = React.createClass({
 				plot={<CanvasDrawing
 						ref='plot'
 						feature={feature}
-						width={_.getIn(column, ['width'])}
+						nodes={column.nodes}
+						width={column.width}
 						data={data}
+						index={index}
 						samples={samples}
-						xzoom={_.getIn(column, ['zoom'])}
+						xzoom={column.zoom}
 						zoom={zoom}/>}
 				legend={drawLegend(feature)}
 			/>

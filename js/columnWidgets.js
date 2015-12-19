@@ -1,14 +1,18 @@
-/*eslint strict: [2, "function"] */
-/*global define: false */
-define(['multi'], function (multi) {
-	'use strict';
+/*global require: false module: false */
+'use strict';
 
-	var widget = {
-		cmp: multi(x => x.dataType),
-		fetch: multi(x => x.dataType),
-		column: multi(x => x.column.dataType),
-		transform: multi(x => x.dataType)
-	};
+var multi = require('multi');
 
-	return widget;
-});
+var dataTypeSelector = x => x.dataType;
+
+var widget = {
+	cmp: multi(dataTypeSelector),
+	fetch: multi(dataTypeSelector),
+	index: multi(x => x),
+	transform: multi(dataTypeSelector),
+	column: multi(x => x.column.dataType)
+};
+
+widget.index.dflt = () => null;
+
+module.exports = widget;

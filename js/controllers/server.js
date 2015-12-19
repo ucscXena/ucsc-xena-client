@@ -5,7 +5,6 @@
 
 var _ = require('../underscore_ext');
 var paths = require('./paths');
-var {sortSamples} = require('./utils');
 var Rx = require('rx');
 var makeGroups = require('../models/km');
 
@@ -62,9 +61,9 @@ var serverController = {
 	'datasets-post!': (previoius, current, datasets) => fetchFeatures(current, datasets),
 	features: (state, features) => pickSurvivalVars(_.assocIn(state, paths.features, features)),
 	samples: (state, samples) =>
-		sortSamples(resetZoom(_.assocIn(state, paths.samples, samples))),
+		resetZoom(_.assocIn(state, paths.samples, samples)),
 	'widget-data': (state, data, id) =>
-		sortSamples(_.assocIn(state, [...paths.data, id], data)),
+		_.assocIn(state, [...paths.data, id], data),
 	'columnEdit-features': (state, list) => _.assocIn(state, [...paths.columnEdit, 'features'], list),
 	'columnEdit-examples': (state, list) => _.assocIn(state, [...paths.columnEdit, 'examples'], list),
 	'km-survival-data': (state, survival) => {

@@ -142,6 +142,24 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		return null;
 	}
 
+	function fmapMemoize1(fn) {
+		var prevObj = {}, cache = {};
+		return function memoized(obj) {
+			// Preserve reference equality when input is the same.
+			if (_.isEqual(obj, prevObj)) {
+				return cache;
+			}
+			var next = _.mapObject(obj, (val, key) =>
+					_.isEqual(prevObj[key], val) ? cache[key] : fn(val, key));
+
+			// If all values are the same, preserve reference equality.
+			// XXX this is weird.
+			cache = _.isEqual(next, cache) ? cache : next;
+			prevObj = obj;
+			return cache;
+		};
+	}
+
 	_.mixin({
 		meannull: meannull,
 		meannan: meannan,
@@ -159,7 +177,8 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 		spy: spy,
 		flatmap: _.compose(_.partial(_.flatten, _, 1), _.map),
 		merge: (...args) => _.extend.apply(null, [{}].concat(args)),
-		maxWith: maxWith
+		maxWith: maxWith,
+		fmapMemoize1
 	});
 
 	return _;
