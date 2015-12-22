@@ -80,7 +80,7 @@ var ordinal = count => d3.scale.ordinal().range(categoryMore).domain(_.range(cou
 // 'data' is used to find min/max.
 //
 //  Of these, we can't drop 'data' or 'codes'.
-//  Perhaps we should just pass in column.type and dataSubType, since we don't
+//  Perhaps we should just pass in column.dataType and dataSubType, since we don't
 //  need all the other params.
 function colorRangeType(column, settings, codes) {
 	return codes ? 'coded' :
