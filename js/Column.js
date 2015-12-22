@@ -8,7 +8,7 @@ var MenuItem = require('react-bootstrap/lib/MenuItem');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Resizable = require('react-resizable').Resizable;
 var xenaQuery = require('./xenaQuery');
-var DefaultTextInput = require('./defaultTextInput');
+var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('./refGeneExons');
 
 // XXX move this?
