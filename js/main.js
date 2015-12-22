@@ -60,6 +60,7 @@ var initialState = {
 	zoom: {height: 300},
 	columns: {},
 	columnOrder: [],
+	samples: [],
 	comms: {
 		server: serverBus
 	}

@@ -5,6 +5,12 @@ define([], function() {
 	var hasOwnProperty = Object.prototype.hasOwnProperty,
 		slice = Array.prototype.slice;
 
+	function assert(test, msg) {
+		if (!test) {
+			throw new Error(msg);
+		}
+	}
+
 	function has(obj, prop) {
 		return hasOwnProperty.call(obj, prop);
 	}
@@ -121,6 +127,7 @@ define([], function() {
 	}
 
 	function getIn(x, keys, def) {
+		assert(keys instanceof Array, 'keys should be an array');
 		if (keys.length === 0) {
 			return x;
 		}
