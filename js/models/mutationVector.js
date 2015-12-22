@@ -159,16 +159,18 @@ function cmpRowOrNull(v1, v2, refGene) {
 	return (v2 == null) ? -1 : cmpRowOrNoVariants(v1, v2, refGene);
 }
 
-function cmpSamples(probes, data, refGene, s1, s2) {
+function cmpSamples(probes, sample, refGene, s1, s2) {
 	return _.findValue(probes, function (f) {
-		// XXX check this null condition.
-		return data && refGene && refGene[f] ?
-			cmpRowOrNull(data[s1], data[s2], refGene) : 0;
+		return refGene[f] ? cmpRowOrNull(sample[s1], sample[s2], refGene) : 0;
 	});
 }
 
-function cmp({fields}, {req: {samples}, refGene}) {
-	return (s1, s2) => cmpSamples(fields, samples, refGene, s1, s2);
+function cmp({fields}, data, index) {
+	var refGene = _.getIn(data, ['refGene']),
+		samples = _.getIn(index, ['bySample']);
+	return (refGene && samples) ?
+		(s1, s2) => cmpSamples(fields, samples, refGene, s1, s2) :
+		() => 0;
 }
 
 var sparseDataValues = xenaQuery.dsID_fn(xenaQuery.sparse_data_values);
@@ -225,8 +227,11 @@ function findNodes(byPosition, layout, feature, samples, zoom) {
 }
 
 function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
-		vizSettings, {req: {rows}, refGene}, sortedSamples, dataset, index, zoom) {
-
+		vizSettings, data, sortedSamples, dataset, index, zoom) {
+	if (!data) {
+		return {};
+	}
+	var {refGene} = data;
 	var layout = exonLayout.layout(_.values(refGene)[0], width, xzoom),
 		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples,
 				zoom);

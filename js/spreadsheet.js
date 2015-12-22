@@ -130,7 +130,7 @@ var Columns = React.createClass({
 			ref: id,
 			key: id,
 			id: id,
-			data: _.getIn(data, [id]) || {req: {}}, // XXX better default handling?
+			data: _.getIn(data, [id]),
 			index: _.getIn(index, [id]),
 			vizSettings: _.getIn(appState, ['vizSettings',
 				_.getIn(columns, [id, 'dsID'])]),

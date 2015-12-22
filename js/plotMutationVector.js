@@ -122,13 +122,10 @@ var CanvasDrawing = React.createClass({
 
 	draw: function () {
 		var {zoom: {count, height},
-			samples,
-			data: {refGene},
-			nodes,
-			width, feature, index: {bySample}} = this.props,
+				samples, data, nodes, width, feature, index} = this.props,
 			vg = this.vg;
 
-		if (!refGene) {
+		if (!data) {
 			return;
 		}
 
@@ -143,7 +140,7 @@ var CanvasDrawing = React.createClass({
 		draw(vg, {
 			nodes: nodes,
 			samples: samples,
-			samplesInDS: bySample,
+			samplesInDS: index.bySample,
 			width: width,
 			height: height,
 			feature: feature,
