@@ -16,10 +16,6 @@ var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 
 require('rx-jquery');
 
-function hasClass(el, c) {
-	return el.className.split(/ +/).indexOf(c) !== -1;
-}
-
 var each = _.each,
 	map = _.map,
 	filter = _.filter,
@@ -106,20 +102,6 @@ function renderHeatmap(opts) {
 // Tooltip
 //
 
-function plotCoords(ev) {
-	var offset,
-		x = ev.offsetX,
-		y = ev.offsetY;
-	// XXX test this on FF & move all this to util if we
-	// still need it.
-	if (x == null) { // fix up for firefox
-		offset = util.eventOffset(ev);
-		x = offset.x;
-		y = offset.y;
-	}
-	return { x: x, y: y };
-}
-
 function prec(val) {
 	var precision = 6,
 		factor = Math.pow(10, precision);
@@ -133,8 +115,10 @@ function bounded(min, max, x) {
 	return x < min ? min : (x > max ? max : x);
 }
 
+var nn = (...args) => args.filter(x => x != null); // not null
+
 function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
-	var coord = plotCoords(ev),
+	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
 		fieldIndex = bounded(0, fields.length, Math.floor(coord.x * fields.length / column.width)),
@@ -156,10 +140,13 @@ function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
 	val = code ? code : prec(val);
 	val = (val == null) ? 'NA' : val;
 
-	return {sampleID: sampleID,
-		rows: [{label: label, val: val}].concat(
-		(val !== 'NA' && !code) ?
-			{label: 'Column mean', val: prec(_.meannan(heatmap[fieldIndex]))} : [])};
+	return {
+		sampleID: sampleID,
+		rows: nn(
+			[['labelValue', label, val]],
+			(val !== 'NA' && !code) &&
+				[['labelValue', 'Column mean', prec(_.meannan(heatmap[fieldIndex]))]])
+	};
 }
 
 //
@@ -372,7 +359,7 @@ var HeatmapColumn = React.createClass({
 		this.events('mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
-		this.ttevents = this.ev.mouseover.filter(ev => hasClass(ev.target, 'Tooltip-target'))
+		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.target, 'Tooltip-target'))
 			.selectMany(() => {
 				return this.ev.mousemove.takeUntil(this.ev.mouseout)
 					.map(ev => ({data: this.tooltip(ev), open: true})) // look up current data
@@ -385,17 +372,25 @@ var HeatmapColumn = React.createClass({
 	onMode: function (newMode) {
 		this.props.callback(['dataType', this.props.id, newMode]);
 	},
+	tooltip: function (ev) {
+		var {samples, data, column, zoom} = this.props,
+			{codes} = data,
+			{heatmap} = column,
+			fields = data.req.probes || column.fields;
+		return tooltip(heatmap, fields, column, codes, zoom, samples, ev);
+	},
+	// To reduce this set of properties, we could
+	//    - Drop data & move codes into the 'display' obj, outside of data
+	//    - Drop dataset, and add default colors to the 'display' obj.
+	// Might also want to copy fields into 'display', so we can drop the || here.
 	render: function () {
 		var {samples, data, column, dataset, vizSettings = {}, zoom} = this.props,
-			{codes} = data,
 			{heatmap, colors} = column,
-			fields = data.req.probes || column.fields,
+			codes = _.getIn(data, ['codes']),
+			fields = _.getIn(data, ['req', 'probes'], column.fields),
 			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
 			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
 
-		// XXX move this out of here & use data in app state.
-		// save [heatmapData, fields, column, codes, zoom, samples] for tooltip
-		this.tooltip = _.partial(tooltip, heatmap, fields, column, codes, zoom, samples);
 		return (
 			<Column
 				callback={this.props.callback}

@@ -3,43 +3,26 @@
 'use strict';
 
 var React = require('react');
-var Col = require('react-bootstrap/lib/Col');
-var Row = require('react-bootstrap/lib/Row');
 var _ = require('./underscore_ext');
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var meta = require('./meta');
+require('../css/tooltip.css');
 
-function m() {
-	return _.extend.apply(null, [{}].concat(_.filter(arguments, _.isObject)));
-}
+var sampleLayout = id => (
+		<tr>
+			<td className='sampleID'>{id}</td>
+		</tr>);
 
-var styles = {
-	tooltip: {
-		padding: '4px 6px',
-		position: 'fixed',
-		overflow: 'hidden',
-		textAlign: 'left',
-		zIndex: 1,
-		'top': 0,
-		left: '50%',
-		width: '25%',
-		backgroundColor: 'white',
-		fontSize: '0.8em'
-
-	}
+var element = {
+	value: (i, v) => <td key={i}><span className='tupleValue'>{v}</span></td>,
+	label: (i, l) => <td key={i}>{l}</td>,
+	labelValue: (i, l, v) => (
+		<td key={i}>{l}: <span className='tupleValue'>{v}</span></td>
+	),
+	url: (i, text, url) =>  (
+		<td key={i} className='urlValue'><a href={url} target='_BLANK'>{text}</a></td>
+	)
 };
-
-var rowLayout = (row, i) => (
-		<Row key={i}>
-			<Col md={9}>{row.label}</Col>
-			<Col md={3}>{row.val}</Col>
-		</Row>);
-
-var sampleLayout = (row) => (
-		<Row>
-			<Col mdOffset={1} md={11}>{row.val}</Col>
-		</Row>);
-
 
 var Tooltip = React.createClass({
 	mixins: [PureRenderMixin],
@@ -48,111 +31,32 @@ var Tooltip = React.createClass({
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 
-		var rowsOut = _.map(rows, rowLayout);
-		var sample = sampleID ? sampleLayout({val: sampleID}) : null;
+		var rowsOut = _.map(rows, (row, i) => (
+			<tr key={i}>
+				{row.map(([type, ...args], i) => element[type](i, ...args))}
+			</tr>
+		));
+		var sample = sampleID ? sampleLayout(sampleID) : null;
 		var display = open ? 'block' : 'none';
+		// className 'tooltip' aliases with bootstrap css.
 		return (
-			<div className='Tooltip' style={m(styles.tooltip, {display: display})}>
-				{sample}
-				{rowsOut}
-				<Row>
-					<Col mdOffset={2} md={10}>
-						<span>
-							{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}
-						</span>
-					</Col>
-				</Row>
+			<div className='Tooltip' style={{display: display}}>
+				<table>
+					<colgroup>
+						<col className='valueCol'/>
+						<col className='closeCol'/>
+					</colgroup>
+					<tbody>
+						{sample}
+						{rowsOut}
+						<tr>
+							<td className='tooltipPrompt'>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
 		);
 	}
 });
 
 module.exports = Tooltip;
-
-//define(['haml/tooltip.haml', 'haml/tooltipClose.haml', "jquery", "defer", 'underscore'
-//	], function (template, closeTemplate, $, defer, _) {
-//	'use strict';
-//
-//	$('body').append($("<div id='tooltip'></div>"));
-//	var freezeText = '(alt-click to freeze)',
-//		thawText = '(alt-click on map to unfreeze)',
-//		$tooltip = $('#tooltip'),
-//		frozen,
-//		hiding = true,
-//
-//		position = function (el, my, at) {
-//			$tooltip.position({my: my, at: at, of: window, collision: 'none none'});
-//
-//		},
-//
-//		hide = function () {
-//			$tooltip.stop().fadeOut('fast');
-//			hiding = true;
-//		},
-//
-//		show = function () {
-//			if ($tooltip.css('opacity') !== 1) {
-//				$tooltip.css({'opacity': 1}).stop().fadeIn('fast');
-//			}
-//			hiding = false;
-//		},
-//
-//		freeze = function (freeze, hideTip) {
-//			frozen = freeze;
-//			if (frozen) {
-//				$tooltip.find('tr:first').append($(closeTemplate()));
-//				$tooltip.addClass('frozen');
-//				$('#tooltipPrompt').text(thawText);
-//			} else {
-//				$tooltip.find('tr:first').empty();
-//				if (hideTip) { hide(); }
-//				$tooltip.removeClass('frozen');
-//				$('#tooltipPrompt').text(freezeText);
-//			}
-//		},
-//
-//		mousing = function (t) {
-//			if (frozen) {
-//				show();
-//				return;
-//			} else if (t.ev.type === 'mouseleave') {
-//				hide();
-//				return;
-//			}
-//			show();
-//			position(t.el, t.my, t.at);
-//			$tooltip.html(template({
-//				sampleID: t.sampleID || null,
-//				rows: t.rows,
-//			}));
-//			$('#tooltipPrompt').text(freezeText);
-//		};
-//
-//	$tooltip.on('click', '#tooltipClose', function () {
-//		freeze(false, true);
-//	});
-//
-//	return {
-//		'mousing': mousing,
-//
-//		hide: function () {
-//			if (!frozen) {
-//				hide();
-//			}
-//		},
-//
-//		frozen: function () {
-//			return frozen;
-//		},
-//
-//		toggleFreeze: function (ev) {
-//			ev.stopPropagation();
-//			if (!hiding) {
-//				freeze(!frozen);
-//				if (!frozen) {
-//					hide();
-//				}
-//			}
-//		}
-//	};
-//});

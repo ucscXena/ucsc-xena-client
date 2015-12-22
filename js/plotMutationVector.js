@@ -2,12 +2,14 @@
 'use strict';
 
 var _ = require('./underscore_ext');
+var Rx = require('rx');
 var React = require('react');
 var Column = require('./Column');
 var Legend = require('./Legend');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var vgcanvas = require('vgcanvas');
 var widgets = require('columnWidgets');
+var util = require('./util');
 
 var features = require('./models/mutationVector');
 
@@ -160,12 +162,94 @@ function drawLegend(feature) {
 	);
 }
 
+function closestNode(nodes, pixPerRow, x, y) {
+	var cutoffX = radius,
+		cutoffY = pixPerRow / 2.0,
+		min = Number.POSITIVE_INFINITY,
+		distance;
+
+	return _.reduce(nodes, function (closest, n) {
+		if ((Math.abs(y - n.y) < cutoffY) && (x > n.xStart - cutoffX) && (x < n.xEnd + cutoffX)) {
+			distance = Math.pow((y - n.y), 2) + Math.pow((x - (n.xStart + n.xEnd) / 2.0), 2);
+			if (distance < min) {
+				min = distance;
+				return n;
+			} else {
+				return closest;
+			}
+		}
+		else {
+			return closest;
+		}
+	}, undefined);
+}
+
+function formatAf(af) {
+	return (af === 'NA' || af === '' || af == null) ? null :
+		Math.round(af * 100) + '%';
+}
+
+var fmtIf = (x, fmt) => x ? fmt(x) : '';
+var gbURL = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=';
+var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
+	.filter(row => row.length > 0); // drop empty rows
+
+function sampleTooltip(data, gene) {
+	var dnaVaf = data.dna_vaf && ['labelValue',  'DNA variant allele freq', formatAf(data.dna_vaf)],
+		rnaVaf = data.rna_vaf && ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
+		refAlt = data.reference && data.alt && ['value', `${data.reference} to ${data.alt}`],
+		pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
+		posURL = ['url', `hg19 ${pos}`, gbURL + encodeURIComponent(pos)],
+		effect = ['value', fmtIf(data.effect, x => `${x}, `) +  gene + //eslint-disable-line comma-spacing
+					fmtIf(data.amino_acid, x => ` (${x})`)];
+
+	return {
+		rows: dropNulls([
+			[effect],
+			[posURL, refAlt],
+			[dnaVaf],
+			[rnaVaf]
+		]),
+		sampleID: data.sample
+	};
+}
+
+function tooltip(nodes, samples, {height, count, index}, gene,  ev) {
+	var {x, y} = util.eventOffset(ev),
+		pixPerRow = height / count, // XXX also appears in mutationVector
+		minppr = Math.max(pixPerRow, 2), // XXX appears multiple places
+		node = closestNode(nodes, minppr, x, y);
+
+	return node ?
+		sampleTooltip(node.data, gene) :
+		{sampleID: samples[Math.floor((y * count / height) + index)]};
+}
+
 var MutationColumn = React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
+	componentWillMount: function () {
+		this.events('mouseout', 'mousemove', 'mouseover');
+
+		// Compute tooltip events from mouse events.
+		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.target, 'Tooltip-target'))
+			.selectMany(() => {
+				return this.ev.mousemove.takeUntil(this.ev.mouseout)
+					.map(ev => ({data: this.tooltip(ev), open: true})) // look up current data
+					.concat(Rx.Observable.return({open: false}));
+			}).subscribe(this.props.tooltip);
+	},
+	componentWillUnmount: function () {
+		this.ttevents.dispose();
+	},
+	tooltip: function (ev) {
+		var {column: {nodes, fields}, samples, zoom} = this.props;
+		return tooltip(nodes, samples, zoom, fields[0], ev);
+	},
 	render: function () {
 		var {column, samples, zoom, data, index} = this.props,
 			feature = _.getIn(column, ['sFeature']);
-		// XXX Make plot a child instead of a prop?
+
+		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
 			<Column
 				callback={this.props.callback}
@@ -176,6 +260,9 @@ var MutationColumn = React.createClass({
 				data={data}
 				plot={<CanvasDrawing
 						ref='plot'
+						onMouseMove={this.ev.mousemove}
+						onMouseOut={this.ev.mouseout}
+						onMouseOver={this.ev.mouseover}
 						feature={feature}
 						nodes={column.nodes}
 						width={column.width}

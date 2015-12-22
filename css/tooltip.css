@@ -1,31 +1,36 @@
-#tooltip:not(.frozen) {
+.Tooltip:not(.frozen) {
 	background: white;
 }
-#tooltip {
+.Tooltip {
 	padding: 4px 6px;
-	position: absolute;
 	white-space: nowrap;
 	z-index: 1;
-	display:none;
+	position: fixed;
+	overflow: hidden;
+	text-align: left;
+	top: 0;
+	left: 50%;
+	width: 25%;
+	background-color: white;
+	box-shadow: 2px 5px 10px rgba(0,0,0,.5);
 }
-#tooltip table {
-	font-size: .8em;
+.Tooltip table {
+	font-size: 1.2em;
 }
-#tooltip .tupleValue {
+.Tooltip .tupleValue {
 	padding: 2px;
 	font-weight: bold;
 }
-#tooltip .urlValue {
+.Tooltip .urlValue {
 	padding: 2px;
 }
-#tooltipClose {
+.TooltipClose {
 	float: right;
 }
-#tooltip .sampleID {
+.Tooltip .sampleID {
 	font-style: italic;
 }
-#tooltip .tooltipPrompt {
+.Tooltip .tooltipPrompt {
 	float:right;
-	font-size: 70%;
 	padding-left: 4px;
 }
