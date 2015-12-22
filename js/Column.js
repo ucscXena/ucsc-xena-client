@@ -82,11 +82,11 @@ var Column = React.createClass({
 					eventName='fieldLabel'
 					value={fieldLabel} />
 				<div style={{height: 20}}>
-					{doRefGene && data.refGene ?
+					{doRefGene && data ?
 						<RefGeneAnnotation
 							width={width}
 							refGene={data.refGene[column.fields[0]]}
-							layout={data.display.layout}
+							layout={column.layout}
 							position={{gene: column.fields[0]}}/> : null}
 				</div>
 
