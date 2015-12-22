@@ -56,6 +56,7 @@ var DefaultTextInput = React.createClass({
 				onBlur={this.resetIfNull}
 				style={style}
 				type='text'
+				title={user}
 				value={user} />
 		);
 	}
