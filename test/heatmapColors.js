@@ -78,20 +78,21 @@ describe('heatmapColors', function () {
 	});
 	describe('#colorSpec', function () {
 		it('should return linear scales for clinical float', function() {
-			var column = {type: 'clinicalMatrix'},
+			var column = {dataType: 'clinicalMatrix'},
+				dataset = {type: 'clinicalMatrix'},
 				settings = null, codes = null;
 
 			// positive data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{a: 1, b: 2, c: 3}),
+					{a: 1, b: 2, c: 3}, dataset),
 				['float-pos', '#000000', '#ffff00', 1, 3]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{a: -1, b: -2, c: -3}),
+					{a: -1, b: -2, c: -3}, dataset),
 				['float-neg', '#007f00',  '#000000', -3, -1]);
 			// neg-pos data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{a: -1, b: -2, c: 3}),
+					{a: -1, b: -2, c: 3}, dataset),
 				['float', '#007f00', '#000000', '#ffff00', -2, 3]);
 		});
 		it('should return ordinal scale for clinical category', function() {
@@ -104,25 +105,27 @@ describe('heatmapColors', function () {
 				['ordinal', 4]);
 		});
 		it('should return linear thresholded scales for genomic data', function() {
-			var column = {type: 'genomicMatrix', dataSubType: 'gene expression'},
+			var column = {dataType: 'genomicMatrix'},
+				dataset = {type: 'genomicMatrix', dataSubType: 'gene expression'},
 				settings, codes;
 
 			// positive data
 			// Threshold is 1/4 from bottom -> zero, 1/8 from top -> high
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{a: 0, b: 2, c: 24}),
+					{a: 0, b: 2, c: 24}, dataset),
 				['float-thresh-pos', '#000000', '#ff0000', 0, 6, 21]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{a: 0, b: -2, c: -24}),
+					{a: 0, b: -2, c: -24}, dataset),
 				['float-thresh-neg', '#00ff00',  '#000000', -21, -6, 0]);
 			// neg-pos data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{a: -8, b: -2, c: 24}),
+					{a: -8, b: -2, c: 24}, dataset),
 				['float-thresh', '#00ff00', '#000000',  '#ff0000', -12, -3, 3, 12]);
 		});
 		it('should return linear thresholded scales for custom setting', function() {
-			var column = {type: 'genomicMatrix', dataSubType: 'gene expression'},
+			var dataset = {type: 'genomicMatrix', dataSubType: 'gene expression'},
+				column = {dataType: 'genomicMatrix'},
 				settings1 = {
 					min: -12,
 					minStart: -11,
@@ -136,11 +139,11 @@ describe('heatmapColors', function () {
 				codes;
 
 			assert.deepEqual(colorSpec(column, settings1, codes,
-					{a: NaN, b: NaN, c: NaN}),
+					{a: NaN, b: NaN, c: NaN}, dataset),
 				['float-thresh', '#00ff00', '#000000', '#ff0000', -12, -11, 6, 7]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings2, codes,
-					{a: NaN, b: NaN, c: NaN}),
+					{a: NaN, b: NaN, c: NaN}, dataset),
 				['float-thresh', '#00ff00',  '#000000', '#ff0000', -8, 1, 7, 16]);
 		});
 	});
