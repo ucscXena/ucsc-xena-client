@@ -16,10 +16,13 @@ describe('exonLayout', function () {
 				exonStarts: [100, 200, 300],
 				exonEnds: [110, 210, 310],
 				strand: null
-			}, 0.10), {
-				chrom: [[100, 125], [185, 225], [285, 310]],
-				screen: [[0, 260], [260, 670], [670, 930]],
-				reversed: false
+			}, 330, {len: 33}), {
+				chrom: [[100, 113], [197, 213], [297, 310]],
+				screen: [[0, 140], [140, 310], [310, 450]],
+				reversed: false,
+				baseLen: 33,
+				pxLen: 330,
+				zoom: {len: 33}
 			});
 		});
 		it('should layout reversed intervals', function() {
@@ -27,10 +30,13 @@ describe('exonLayout', function () {
 				exonStarts: [100, 200, 300],
 				exonEnds: [110, 210, 310],
 				strand: '-'
-			}, 0.10), {
-				chrom: [[285, 310], [185, 225], [100, 125]],
-				screen: [[0, 260], [260, 670], [670, 930]],
-				reversed: true
+			}, 330, {len: 33}), {
+				chrom: [[297, 310], [197, 213], [100, 113]],
+				screen: [[0, 140], [140, 310], [310, 450]],
+				reversed: true,
+				baseLen: 33,
+				pxLen: 330,
+				zoom: {len: 33}
 			});
 		});
 		// an asymmetric case
@@ -39,10 +45,13 @@ describe('exonLayout', function () {
 				exonStarts: [100, 200],
 				exonEnds: [110, 220],
 				strand: '-'
-			}, 0.10), {
-				chrom: [[185, 220], [100, 125]],
-				screen: [[0, 360], [360, 620]],
-				reversed: true
+			}, 2120, {len: 212}), {
+				chrom: [[197, 220], [100, 113]],
+				screen: [[0, 240], [240, 380]],
+				reversed: true,
+				baseLen: 212,
+				pxLen: 2120,
+				zoom: {len: 212}
 			});
 		});
 	});
