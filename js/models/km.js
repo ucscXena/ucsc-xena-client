@@ -14,7 +14,7 @@ function average(data) {
 	return data[0].map((v, s) => _.meannull(data.map(p => p[s])));
 }
 
-function codedVals(column, {req: {codes}, display: {heatmap, colors}}) {
+function codedVals({heatmap, colors}, {req: {codes}}) {
 	var groups = _.range(Math.min(codes.length, MAX)),
 		colorfn = _.first(colors.map(colorScale));
 	return {
@@ -57,7 +57,7 @@ function floatVals(avg, uniq, codes, colorfn) {
 // We use data.display so the values reflect normalization settings.
 // We average 1st, then see how many unique values there are, then decide
 // whether to partition or not.
-function floatOrPartitionVals(column, {req: {codes}, display: {heatmap, colors}}) {
+function floatOrPartitionVals({heatmap, colors}, {req: {codes}}) {
 	var avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = _.first(colors.map(colorScale));
@@ -73,8 +73,8 @@ function featureType({dataType}, data) {
 	return (dataType === 'mutationVector') ? 'mutation' : (coded ? 'coded' : 'float');
 }
 
-function mutationVals(column, {req: {samples}}, sortedSamples) {
-	var mutCode = _.mapObject(samples, vs => vs.length > 0 ? 1 : 0);
+function mutationVals(column, data, {bySample}, sortedSamples) {
+	var mutCode = _.mapObject(bySample, vs => vs.length > 0 ? 1 : 0);
 	return {
 		values: _.map(sortedSamples, s => mutCode[s]),
 		groups: [0, 1],
@@ -99,9 +99,10 @@ var has = (obj, v) => obj[v] != null;
 // Return indices of arr for which fn is true. fn is passed the value and index.
 var filterIndices = (arr, fn) => _.range(arr.length).filter(i => fn(arr[i], i));
 
-function makeGroups(column, data, {ev, tte, patient}, samples) {
+function makeGroups(column, data, index, survival, samples) {
 	// Convert field to coded.
-	let {labels, colors, groups, values} = toCoded(column, data, samples),
+	let {tte: {data: tte}, ev: {data: ev}} = survival,
+		{labels, colors, groups, values} = toCoded(column, data, index, samples),
 		usableSamples = filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
@@ -116,4 +117,23 @@ function makeGroups(column, data, {ev, tte, patient}, samples) {
 	};
 }
 
-module.exports = makeGroups;
+var featureID = (dsID, feature) => ({
+	dsID: dsID,
+	name: _.getIn(feature, ['name'])
+});
+
+function pickSurvivalVars(featuresByDataset, user) {
+	var allFeatures = _.flatmap(featuresByDataset,
+			(features, dsID) => _.map(features, f => featureID(dsID, f))),
+		ev = _.find(allFeatures, ({name}) => name === '_EVENT'),
+		tte = _.find(allFeatures, ({name}) => name === '_TIME_TO_EVENT'),
+		patient = _.find(allFeatures, ({name}) => name === '_PATIENT');
+
+	return {
+		ev: _.getIn(user, ['ev'], ev),
+		tte: _.getIn(user, ['tte'], tte),
+		patient: _.getIn(user, ['patient'], patient)
+	};
+}
+
+module.exports = {makeGroups, pickSurvivalVars};

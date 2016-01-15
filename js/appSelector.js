@@ -5,6 +5,7 @@ var _ = require('underscore_ext');
 var {createSelector} = require('reselect');
 var {createFmapSelector} = require('./selectors');
 var widgets = require('./columnWidgets');
+var km = require('./models/km');
 
 var indexSelector = createFmapSelector(
 		state => _.fmap(state.columns,
@@ -20,7 +21,7 @@ function cmpString(s1, s2) {
 	return 0;
 }
 
-var sortSelector =  createSelector(
+var sortSelector = createSelector(
 	state => state.samples,
 	state => _.fmap(state.columns, c => _.pick(c, 'dataType', 'fields')),
 	state => state.columnOrder,
@@ -49,10 +50,40 @@ var transformSelector = createFmapSelector(
 				state.zoom]),
 		([column, ...args]) => ({...column, ...widgets.transform(column, ...args)}));
 
+var survivalVarsSelector = createSelector(
+		state => state.features,
+		state => state.km,
+		km.pickSurvivalVars);
+
+var kmSelector = createSelector(
+		state => state.samples,
+		state => _.getIn(state, ['columns', _.getIn(state, ['km', 'id'])]),
+		state => _.getIn(state, ['data', _.getIn(state, ['km', 'id'])]),
+		state => _.getIn(state, ['index', _.getIn(state, ['km', 'id'])]),
+		state => state.survival,
+		(samples, column, data, index, survival) =>
+			column && survival && km.makeGroups(column, data, index, survival, samples));
+
 var index = state => ({...state, index: indexSelector(state)});
 var sort = state => ({...state, samples: sortSelector(state)});
 var transform = state => ({...state, columns: transformSelector(state)});
 
-var selector = state => transform(sort(index(state)));
+// kmGroups transform calculates the km data, and merges it into the state.km object.
+//
+// XXX note eslint bug
+var kmGroups = state => ({...state, km: { //eslint-disable-line no-dupe-keys
+	...survivalVarsSelector(state),
+	...state.km,
+	groups: kmSelector(state)}});
+
+///////
+// This is the main transform ('selector') of the application state, before passing to the view.
+// We build indexes of the column data, sort samples by the column data, transform
+// the data for display (e.g. map to colors), and calculate km if a km plot is requested.
+//
+// The result of the transforms is a state object with the calculated values merged.
+// The transforms are memoized for performance.
+
+var selector = state => kmGroups(transform(sort(index(state))));
 
 module.exports = selector;

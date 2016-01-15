@@ -9,6 +9,7 @@ var xenaQuery = require('../xenaQuery');
 var paths = require('./paths');
 var widgets = require('../columnWidgets');
 var util = require('../util');
+var kmModel = require('../models/km');
 
 var	datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
 var identity = x => x;
@@ -98,25 +99,28 @@ var datasetVar = (samples, {dsID, name}) =>
 // data: [[val, ...], [val, ...], [val, ...]]
 // data must be in order (event, tte, patient)
 // returns { event: { sampleId: val, ... }, tte: ... }
-var indexSurvivalData = (samples, data) =>
-	_.object(['ev', 'tte', 'patient'],
-			// XXX nanstr call & one in plotDenseMatrix: move to xenaQuery?
+var indexSurvivalData = (samples, missing, data) =>
+	_.object(missing,
 			_.map(data, v => _.object(samples, _.map(v, xenaQuery.nanstr))));
 
+
+// XXX carry dsID/name through to km-survival-data, so we can verify we're holding
+// the correct data before drawing.
 function fetchSurvival(state) {
-	let {comms: {server}, samples, km: {vars: {ev, tte, patient}, data}} = state;
-	if (data) { // data already cached for this cohort.
-		return;
-	}
+	let {comms: {server}, features, samples, km, survival} = state,
+		vars = kmModel.pickSurvivalVars(features, km.user),
+		missing = ['ev', 'tte', 'patient'].filter(
+				key => !_.isEqual(vars[key], _.getIn(survival, [key, 'field']))),
+		queries = missing.map(key => datasetVar(samples, vars[key])),
+		addField = fields => _.mapObject(fields, (data, key) => ({field: vars[key], data}));
+
 	// This could be optimized by grouping by server. This would be easier
 	// if we used proper hash-trie immutable data, where we could hash on dsID
 	// instead of building a json encoding of dsID to allow hashing.
-	server.onNext(['survival', Rx.Observable.zipArray(
-				datasetVar(samples, ev),
-				datasetVar(samples, tte),
-				datasetVar(samples, patient)
-			).map(data =>
-					['km-survival-data', indexSurvivalData(samples, data)])
+	server.onNext(['survival', Rx.Observable.zipArray(...queries)
+			.map(data =>
+					['km-survival-data',
+						addField(indexSurvivalData(samples, missing, data))])
 			]);
 }
 
@@ -181,15 +185,11 @@ var controls = {
 		_.assocIn(state, [...paths.columns, dsID, 'columnLabel', 'user'], value),
 	'fieldLabel': (state, dsID, value) =>
 		_.assocIn(state, [...paths.columns, dsID, 'fieldLabel', 'user'], value),
-	'km-open': (state, id) =>
-		_.updateIn(state, paths.km, km => _.merge(km, {
-			id: id,
-			// XXX should pull this from state instead of copying?
-			label: _.getIn(state, [...paths.columns, id, 'fieldLabel', 'user'])
-		})),
+	'km-open': (state, id) => _.assocInAll(state,
+			['km', 'id'], id,
+			['km', 'label'], _.getIn(state, ['columns', id, 'fieldLabel', 'user'])),
 	'km-open-post!': (previous, current) => fetchSurvival(current),
-	'km-close': (state) =>
-		_.assocIn(state, [...paths.km, 'id'], null)
+	'km-close': (state) => _.assocIn(state, [...paths.km, 'id'], null)
 };
 
 module.exports = {
