@@ -117,7 +117,7 @@ define([], function() {
 		var ki;
 
 		if (x === null || x === undefined) {
-			return x;
+			return def;
 		}
 		ki = keys[i];
 		if (keys.length === i + 1) {
