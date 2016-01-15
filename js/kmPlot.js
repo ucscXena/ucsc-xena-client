@@ -107,7 +107,7 @@ var KmPlot = React.createClass({
 		callback([eventClose]);
 	},
 	render: function () {
-		let {appState: {label, groups}} = this.props;
+		let {km: {label, groups}} = this.props;
 		// XXX Use bootstrap to lay this out, instead of tables + divs
 		return (
 			<Modal bsSize='large' className='kmDialog' onRequestHide={this.hide} title={`Kaplan-Meier: ${label}`}>

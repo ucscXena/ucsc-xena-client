@@ -141,7 +141,7 @@ var Application = React.createClass({
 				<Spreadsheet {...otherProps} appState={otherState} />
 				{_.getIn(km, ['id']) ? <KmPlot
 						callback={this.props.callback}
-						appState={km}
+						km={km}
 						features={this.props.appState.features} /> : ''}
 			{/*
 				<Row>
