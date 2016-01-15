@@ -15,4 +15,20 @@ describe('underscore_ext', function () {
             return arr.slice(0).sort(cmp)[0] === _.maxWith(arr, cmp);
         });
     });
+    describe('#fmapMemoize1', function () {
+		jsc.property('returns from cache on same input', 'json', function (a) {
+			var fn = _.fmapMemoize1(() => ({})),
+				r1 = fn(a),
+				r2 = fn(a);
+			return r1 === r2;
+		});
+		jsc.property('returns new value on different input', jsc.tuple([jsc.json, jsc.json]), function (a, b) {
+			var fn = _.fmapMemoize1(() => ({})),
+				r1 = fn(a),
+				r2 = fn(b);
+			return r1 !== r2;
+		});
+		// XXX create two objects slightly different & test that cache is used?
+		// create pairs of key/value, then select from set of pairs.
+    });
 });
