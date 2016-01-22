@@ -153,7 +153,7 @@ function colorFloatGenomicData(column, settings = {}, codes, data, dataset) {
 		zone;
 
 	if (!isNumber(max) || !isNumber(min)) {
-		return null; // XXX should verify that we handle this downstream.
+		return ['no-data'];
 	}
 
 	if ( (settings.min!== undefined) && (settings.min !== null) && !isNaN(settings.min)) { //custom setting
@@ -184,6 +184,7 @@ colorRange.add('coded', colorCoded);
 colorRange.add('floatGenomicData', colorFloatGenomicData);
 
 var colorScale = {
+	'no-data': () => () => "gray",
 	'float-pos': (__, ...args) => scaleFloatSingle(...args),
 	'float-neg': (__, ...args) => scaleFloatSingle(...args),
 	'float': (__, ...args) => scaleFloatDouble(...args),
