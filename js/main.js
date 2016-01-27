@@ -13,13 +13,14 @@ var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
 var Rx = require('./rx.ext');
 var KmPlot = require('./kmPlot');
+import JSONTree from 'react-json-tree';
 //var Button = require('react-bootstrap/lib/Button');
 require('rx.coincidence');
 require('rx/dist/rx.aggregates');
 require('rx/dist/rx.time');
 require('rx-dom');
 var _ = require('./underscore_ext');
-//var meta = require('./meta');
+var meta = require('./meta');
 require('./plotDenseMatrix'); // XXX better place or name for this?
 require('./plotMutationVector'); // XXX better place or name for this?
 require('./models/denseMatrix'); // XXX better place or name for this?
@@ -73,42 +74,16 @@ if (sessionStorage && sessionStorage.xena && location.search.indexOf('?nostate')
 var controlsBus = new Rx.Subject();
 var controlsCh = controlsBus;
 
-function formatState(state) {
-	return JSON.stringify(_.omit(state, ['comms']), null, 4);
-}
-
 var Application = React.createClass({
 	displayName: 'Application',
 	getInitialState() {
 		return {
-			debug: false,
-			debugText: formatState(this.props.appState) // initial state of text area.
+			debug: false
 		};
 	},
-	//	XXX debug widget is currently too slow due to large appState.
-	// Enable with <Grid onClick={this.onClick}>.
-//	componentWillReceiveProps ({appState}) {
-//		this.setState({debugText: formatState(appState)});
-//	},
-//	handleChange: function (ev) {
-//		this.setState({debugText: ev.target.value});
-//	},
-//	onClick: function (ev) {
-//		return;
-//		if (ev[meta.key]) {
-//			this.setState({debug: !this.state.debug});
-//		}
-//	},
-	onKeyDown: function (ev) {
-		if (ev.key === 'Enter' && ev.ctrlKey) {
-			try {
-				this.props.callback(['set-debug-state', JSON.parse(this.state.debugText)]);
-			} catch (e) {
-				if (console) {
-					console.log(e);
-				}
-			}
-			ev.preventDefault();
+	onClick: function (ev) {
+		if (ev[meta.key]) {
+			this.setState({debug: !this.state.debug});
 		}
 	},
 //	onPerf: function () {
@@ -127,7 +102,7 @@ var Application = React.createClass({
 	render: function() {
 		let {appState: {km, ...otherState}, ...otherProps} = this.props;
 		return (
-			<Grid>
+			<Grid onClick={this.onClick}>
 			{/*
 				<Row>
 					<Button onClick={this.onPerf}>Perf</Button>
@@ -143,21 +118,14 @@ var Application = React.createClass({
 						callback={this.props.callback}
 						km={km}
 						features={this.props.appState.features} /> : ''}
-			{/*
 				<Row>
 					<Col md={12}>
-						<Input
-							type='textarea'
+						<JSONTree
 							id='debug'
-							rows='20'
-							cols='130'
 							style={{display: this.state.debug ? 'block' : 'none'}}
-							onChange={this.handleChange}
-							onKeyDown={this.onKeyDown}
-							value={this.state.debugText} />
+							data={this.props.appState} />
 					</Col>
 				</Row>
-			*/}
 				<div className='chartRoot' style={{display: 'none'}} />
 			</Grid>
 		);

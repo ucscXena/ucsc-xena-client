@@ -129,7 +129,6 @@ var controls = {
 		let {comms: {server}, servers: {user}} = current;
 		fetchCohorts(server, user);
 	},
-	'set-debug-state': (state, newState) => _.merge(state, newState),
 	cohort: (state, cohort) => _.assocInAll(state,
 										   paths.cohort, cohort,
 										   paths.samplesFrom, null,

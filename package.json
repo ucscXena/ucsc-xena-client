@@ -32,6 +32,7 @@
     "mocha": "^2.2.1",
     "mocha-loader": "^0.7.1",
     "napa": "^1.2.0",
+    "react-json-tree": "^0.3.0",
     "rimraf": "^2.3.2",
     "schema-shorthand": "^3.0.0",
     "style-loader": "^0.8.3",
