@@ -134,6 +134,9 @@ define([], function() {
 		return getInI(x, keys, 0, def);
 	}
 
+	function get(x, key, def) {
+		return (x != null && x.hasOwnProperty(key)) ? x[key] : def;
+	}
 
 	return {
 		assoc: assoc,
@@ -142,6 +145,7 @@ define([], function() {
 		dissoc: dissoc,
 		updateIn: updateIn,
 		conj: conj,
+		get: get,
 		getIn: getIn
 	};
 });
