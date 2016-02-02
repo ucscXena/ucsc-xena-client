@@ -74,7 +74,7 @@ var RefGeneAnnotation = React.createClass({
 			vg.width(width);
 		}
 
-		pxTransformEach(_.spy('layout', layout), (toPx, [start, end]) => {
+		pxTransformEach(layout, (toPx, [start, end]) => {
 			var nodes = matches(indx, {start: start, end: end});
 			_.each(nodes.sort((a, b)=> (b.start - a.start)), ({i, start, end, inCds}) => {
 				var {y, h} = annotation[inCds ? 'cds' : 'utr'];
