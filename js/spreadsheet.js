@@ -115,14 +115,14 @@ var Columns = React.createClass({
 			<ColumnEdit
 				{...this.props}
 				onRequestHide={() => this.setState({openColumnEdit: false})}
-			/> : '';
+			/> : null;
 		// XXX parameterize settings on column type
 		var settings = openVizSettings ?
 			<VizSettings
 				dsID={openVizSettings}
 				onRequestHide={() => this.setState({openVizSettings: null})}
 				callback={callback}
-				state={_.getIn(appState, ['vizSettings'])} /> : '';
+				state={_.getIn(appState, ['vizSettings'])} /> : null;
 
 		// XXX Should we use controllers/paths for accessing state data in
 		// the view?

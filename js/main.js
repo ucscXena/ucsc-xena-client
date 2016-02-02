@@ -117,7 +117,7 @@ var Application = React.createClass({
 				{_.getIn(km, ['id']) ? <KmPlot
 						callback={this.props.callback}
 						km={km}
-						features={this.props.appState.features} /> : ''}
+						features={this.props.appState.features} /> : null}
 				<Row>
 					<Col md={12}>
 						<JSONTree
