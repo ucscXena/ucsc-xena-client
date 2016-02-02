@@ -6,7 +6,6 @@
 var _ = require('../underscore_ext');
 var Rx = require('rx');
 var xenaQuery = require('../xenaQuery');
-var paths = require('./paths');
 var widgets = require('../columnWidgets');
 var util = require('../util');
 var kmModel = require('../models/km');
@@ -47,7 +46,7 @@ function datasetQuery(servers, cohort) {
 			xenaQuery.dataset_list(servers, cohort) :
 			Rx.Observable.return([], Rx.Scheduler.timeout))
 		.map(servers =>
-				["datasets", {
+				['datasets', {
 					servers: servers,
 					datasets:
 						_.object(_.flatmap(servers, s => _.map(s.datasets, d => [d.dsID, d])))
@@ -60,8 +59,8 @@ function fetchDatasets(ch, servers, cohort) {
 
 function fetchColumnData(state, id) {
 	let {comms: {server}} = state,
-		settings = _.getIn(state, [...paths.columns, id]),
-		samples = _.getIn(state, paths.samples);
+		settings = _.getIn(state, ['columns', id]),
+		samples = _.get(state, "samples");
 	// XXX make serverCh group by _.isArray && v[0], so we don't have to
 	// pass null? Or wrap this in a call? We can get out-of-order responses
 	// with this mechanism. Need something different.
@@ -129,50 +128,50 @@ var controls = {
 		let {comms: {server}, servers: {user}} = current;
 		fetchCohorts(server, user);
 	},
-	cohort: (state, cohort) => _.assocInAll(state,
-										   paths.cohort, cohort,
-										   paths.samplesFrom, null,
-										   paths.samples, [],
-										   paths.columns, {},
-										   paths.columnOrder, [],
-										   paths.data, {},
-										   paths.km, null),
+	cohort: (state, cohort) => _.assoc(state,
+									   "cohort", cohort,
+									   "samplesFrom", null,
+									   "samples", [],
+									   "columns", {},
+									   "columnOrder", [],
+									   "data", {},
+									   "km", null),
 	'cohort-post!': (previous, current) => {
 		let {comms: {server}, servers: {user}} = current,
-			cohort = _.getIn(current, paths.cohort),
-			samplesFrom = _.getIn(current, paths.samplesFrom);
+			cohort = _.get(current, "cohort"),
+			samplesFrom = _.get(current, "samplesFrom");
 		fetchDatasets(server, user, cohort);
 		fetchSamples(server, user, cohort, samplesFrom);
 	},
-	samplesFrom: (state, dataset) => _.assocIn(state, paths.samplesFrom, dataset),
+	samplesFrom: (state, dataset) => _.assoc(state, "samplesFrom", dataset),
 	'samplesFrom-post!': (previous, current) => {
 		let {comms: {server}, servers: {user}} = current,
-			cohort = _.getIn(current, paths.cohort),
-			samplesFrom = _.getIn(current, paths.samplesFrom);
+			cohort = _.get(current, "cohort"),
+			samplesFrom = _.get(current, "samplesFrom");
 		fetchSamples(server, user, cohort, samplesFrom);
 	},
 	'add-column': (state, id, settings) => {
-		var ns = _.updateIn(state, paths.columns, s => _.assoc(s, id, settings));
-		return _.updateIn(ns, paths.columnOrder, co => _.conj(co, id));
+		var ns = _.updateIn(state, ["columns"], s => _.assoc(s, id, settings));
+		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
 	},
 	'add-column-post!': (previous, current, id) =>
 		fetchColumnData(current, id),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
-				[...paths.zoom, 'height'], height,
-				[...paths.columns, id, 'width'], width),
+				['zoom', 'height'], height,
+				['columns', id, 'width'], width),
 	remove: (state, id) => {
-		let ns = _.updateIn(state, paths.columns, c => _.dissoc(c, id));
-		ns = _.updateIn(ns, paths.columnOrder, co => _.without(co, id));
-		return _.updateIn(ns, paths.data, d => _.dissoc(d, id));
+		let ns = _.updateIn(state, ["columns"], c => _.dissoc(c, id));
+		ns = _.updateIn(ns, ["columnOrder"], co => _.without(co, id));
+		return _.updateIn(ns, ["data"], d => _.dissoc(d, id));
 	},
-	order: (state, order) => _.assocIn(state, paths.columnOrder, order),
-	zoom: (state, zoom) => _.assocIn(state, paths.zoom, zoom),
+	order: (state, order) => _.assoc(state, "columnOrder", order),
+	zoom: (state, zoom) => _.assoc(state, "zoom", zoom),
 	dataType: (state, id, dataType) =>
-		_.assocIn(state, [...paths.columns, id, 'dataType'], dataType),
+		_.assocIn(state, ['columns', id, 'dataType'], dataType),
 	'dataType-post!': (previous, current, id) => fetchColumnData(current, id),
 	vizSettings: (state, dsID, settings) =>
-		_.assocIn(state, [...paths.vizSettings, dsID], settings),
+		_.assocIn(state, ['vizSettings', dsID], settings),
 	'edit-dataset-post!': (previous, current, dsID, meta) => {
 		if (meta.type === 'clinicalMatrix') {
 			fetchFeatures(current, dsID);
@@ -181,14 +180,14 @@ var controls = {
 		}
 	},
 	'columnLabel': (state, dsID, value) =>
-		_.assocIn(state, [...paths.columns, dsID, 'columnLabel', 'user'], value),
+		_.assocIn(state, ['columns', dsID, 'columnLabel', 'user'], value),
 	'fieldLabel': (state, dsID, value) =>
-		_.assocIn(state, [...paths.columns, dsID, 'fieldLabel', 'user'], value),
+		_.assocIn(state, ['columns', dsID, 'fieldLabel', 'user'], value),
 	'km-open': (state, id) => _.assocInAll(state,
 			['km', 'id'], id,
 			['km', 'label'], _.getIn(state, ['columns', id, 'fieldLabel', 'user'])),
 	'km-open-post!': (previous, current) => fetchSurvival(current),
-	'km-close': (state) => _.assocIn(state, [...paths.km, 'id'], null)
+	'km-close': (state) => _.assocIn(state, ['km', 'id'], null)
 };
 
 module.exports = {

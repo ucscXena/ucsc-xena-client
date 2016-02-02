@@ -2,7 +2,6 @@
 'use strict';
 
 var _ = require('../underscore_ext');
-var paths = require('./paths');
 var Rx = require('rx');
 
 var xenaQuery = require('../xenaQuery');
@@ -10,8 +9,8 @@ var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
 var identity = x => x;
 
 function resetZoom(state) {
-	let count = _.getIn(state, paths.samples).length;
-	return _.updateIn(state, paths.zoom,
+	let count = _.get(state, "samples").length;
+	return _.updateIn(state, ["zoom"],
 					 z => _.merge(z, {count: count, index: 0}));
 }
 
@@ -31,16 +30,16 @@ function fetchFeatures(state, datasets) {
 }
 
 var serverController = {
-	cohorts: (state, cohorts) => _.assocIn(state, paths.cohorts, cohorts),
-	datasets: (state, datasets) => _.assocIn(state, paths.datasets, datasets),
+	cohorts: (state, cohorts) => _.assoc(state, "cohorts", cohorts),
+	datasets: (state, datasets) => _.assoc(state, "datasets", datasets),
 	'datasets-post!': (previoius, current, datasets) => fetchFeatures(current, datasets),
-	features: (state, features) => _.assocIn(state, paths.features, features),
+	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
-		resetZoom(_.assocIn(state, paths.samples, samples)),
+		resetZoom(_.assoc(state, "samples", samples)),
 	'widget-data': (state, data, id) =>
-		_.assocIn(state, [...paths.data, id], data),
-	'columnEdit-features': (state, list) => _.assocIn(state, [...paths.columnEdit, 'features'], list),
-	'columnEdit-examples': (state, list) => _.assocIn(state, [...paths.columnEdit, 'examples'], list),
+		_.assocIn(state, ["data", id], data),
+	'columnEdit-features': (state, list) => _.assocIn(state, ["columnEdit", 'features'], list),
+	'columnEdit-examples': (state, list) => _.assocIn(state, ["columnEdit", 'examples'], list),
 	'km-survival-data': (state, survival) => ({...state, survival})
 };
 
