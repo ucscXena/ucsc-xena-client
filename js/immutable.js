@@ -1,6 +1,6 @@
 /*eslint strict: [2, "function"] */
 /*global define: false */
-define([], function() {
+define(['underscore'], function(_) {
 	'use strict';
 	var hasOwnProperty = Object.prototype.hasOwnProperty,
 		slice = Array.prototype.slice;
@@ -55,7 +55,7 @@ define([], function() {
 	}
 
 	function assoc1(x, k, v) {
-		if (x && x[k] === v) { // avoid new object if we can. XXX Use isEquals so equal objects are ignored.
+		if (x && _.isEqual(x[k], v)) { // avoid new object if we can.
 			return x;
 		}
 		if (x instanceof Array) {
