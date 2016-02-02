@@ -461,7 +461,7 @@ var SettingsWrapper = React.createClass({
 	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
 		var {refs: {content}, props: {callback, state, dsID, onRequestHide}} = this;
-		vizSettingsWidget(content.getDOMNode(), callback, state, dsID, onRequestHide);
+		vizSettingsWidget(content, callback, state, dsID, onRequestHide);
 	},
 	render: function () {
 		return <div ref='content' />;
@@ -472,8 +472,13 @@ var VizSettings = React.createClass({
 	render: function() {
 		var {onRequestHide} = this.props;
 		return (
-			<Modal onRequestHide={onRequestHide} title='Datset Visualization Settings'>
-				<SettingsWrapper {...this.props} />
+			<Modal show={true} onHide={onRequestHide}>
+				<Modal.Header closeButton>
+					<Modal.Title>Datset Visualization Settings</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<SettingsWrapper {...this.props} />
+				</Modal.Body>
 			</Modal>
 		);
 	}

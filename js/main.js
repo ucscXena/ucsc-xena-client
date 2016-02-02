@@ -5,6 +5,7 @@
 
 require('base');
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Spreadsheet = require('./spreadsheet');
 var AppControls = require('./AppControls');
 //var Input = require('react-bootstrap/lib/Input');
@@ -191,8 +192,7 @@ var updater = ev => controlsBus.onNext(ev);
 // XXX double check that this expression is doing what we want: don't draw faster
 // than rAF.
 stateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
-	.subscribe(state => React.render(<Application callback={updater} appState={selector(state)} />, main));
-
+	.subscribe(state => ReactDOM.render(<Application callback={updater} appState={selector(state)} />, main));
 
 
 // Save state in sessionStorage on page unload.

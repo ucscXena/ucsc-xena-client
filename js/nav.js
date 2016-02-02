@@ -4,6 +4,7 @@
 require('bootstrap/dist/css/bootstrap.css');
 
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Nav = require('react-bootstrap/lib/Nav');
 var Navbar = require('react-bootstrap/lib/Navbar');
 var NavItem = require('react-bootstrap/lib/NavItem');
@@ -37,4 +38,4 @@ var XenaNav = React.createClass({
 
 var nav = document.getElementById('navMenuMain');
 
-React.render(<XenaNav />, nav);
+ReactDOM.render(<XenaNav />, nav);

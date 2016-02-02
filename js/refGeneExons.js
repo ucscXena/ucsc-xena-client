@@ -5,6 +5,7 @@
 //var tooltip = require('./tooltip');
 var _ = require('./underscore_ext');
 var React = require('react');
+var ReactDOM = require('react-dom');
 //var zoom = require('./zoom');
 var intervalTree = require('static-interval-tree');
 var vgcanvas = require('./vgcanvas');
@@ -95,7 +96,7 @@ var RefGeneAnnotation = React.createClass({
 
 	componentDidMount: function () {
 		var {width, layout} = this.props;
-		this.vg = vgcanvas(this.refs.canvas.getDOMNode(), width, refHeight);
+		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, refHeight);
 		this.draw(width, layout, this.index);
 	},
 

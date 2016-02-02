@@ -2,6 +2,7 @@
 'use strict';
 
 var React = require('react');
+var ReactDOM = require('react-dom');
 var DropdownButton = require('react-bootstrap/lib/DropdownButton');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var _ = require('underscore_ext');
@@ -15,6 +16,11 @@ function filterOpts(filter, opts) {
 
 var notUndefined = x => !_.isUndefined(x);
 
+var stopPropagation = ev => {
+	ev.stopPropagation();
+	ev.nativeEvent.stopImmediatePropagation();
+};
+
 var Select = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState: function () {
@@ -25,7 +31,7 @@ var Select = React.createClass({
 			event: 'change'
 		};
 	},
-	onSelect: function (value) {
+	onSelect: function (ev, value) {
         this.setState({filter: ''});
 		this.props.callback([this.props.event, value]);
 	},
@@ -33,13 +39,16 @@ var Select = React.createClass({
 		this.setState({filter: ev.target.value});
 	},
     setFocus: function () {
-        _.defer(() => this.refs.search.getDOMNode().focus());
+        _.defer(() => ReactDOM.findDOMNode(this.refs.search).focus());
     },
 	// This is a work-around for
 	// https://github.com/react-bootstrap/react-bootstrap/issues/486
 	// We intercept the onKeyUp that would propagate to parent nodes,
-	// close the menu ourselves, and stop the propagation. I'm not sure
-	// why ev.stopPropagation doesn't work here.
+	// close the menu ourselves, and stop the propagation.
+	// ev.stopPropagation doesn't work here because the esc key listener
+	// is on document, outside the React bubbling implementation (which also
+	// binds document). So, we have to use stopImmediatePropagation to cancel
+	// pending callbacks.
 	onKeyUp: function (ev) {
 		if (ev.key === 'Escape') {
 //			ev.stopPropagation();
@@ -52,19 +61,24 @@ var Select = React.createClass({
 			title = notUndefined(value) &&
 				_.find(this.props.options, opt => opt.value === value),
 			opts = filterOpts(this.state.filter, this.props.options);
+		// We wrap the input in a div so DropdownButton decorates the div
+		// with event handlers, and we can disable them by using stopPropagation
+		// on the input. There's no direct way to override the event handlers
+		// installed by DropdownButton.
 		return (
 			<DropdownButton ref='dropdown'
 				className='Select'
 				onMouseUp={this.setFocus}
 				title={title && title.label || 'Select...'}>
 
-				{[<input className='Select-input'
+				{[<div key='__search'><input className='Select-input'
 					onKeyUp={this.onKeyUp}
 					ref='search'
-					key='__search'
 					value={this.state.filter}
 					onChange={this.onChange}
-					type='text'/>
+					onSelect={stopPropagation}
+					onClick={stopPropagation}
+					type='text'/></div>
 				].concat(_.map(opts, (opt, i) =>
 						  <MenuItem onSelect={this.onSelect} header={!!opt.header}
 							eventKey={opt.value} key={i}>

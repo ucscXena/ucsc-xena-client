@@ -110,7 +110,11 @@ var KmPlot = React.createClass({
 		let {km: {label, groups}} = this.props;
 		// XXX Use bootstrap to lay this out, instead of tables + divs
 		return (
-			<Modal bsSize='large' className='kmDialog' onRequestHide={this.hide} title={`Kaplan-Meier: ${label}`}>
+			<Modal show={true} bsSize='large' className='kmDialog' onHide={this.hide}>
+				<Modal.Header closeButton>
+					<Modal.Title>{`Kaplan-Meier: ${label}`}</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
 					<div className='kmdiv'>
 						<div>
 							{groups ? svg(groups) : "Loading..."}
@@ -119,18 +123,20 @@ var KmPlot = React.createClass({
 						<div className='kmopts'>
 							<div>
 								<table className='kmOpts'>
-									<tr>
-										<td className='tupleLabel'> Event Column: </td>
-										<td className='tupleValue'>
-											<select className='eventfeature'/>
-										</td>
-									</tr>
-									<tr>
-										<td className='tupleLabel'> Time Column: </td>
-										<td className='tupleValue'>
-											<select className='timefeature'/>
-										</td>
-									</tr>
+									<tbody>
+										<tr>
+											<td className='tupleLabel'> Event Column: </td>
+											<td className='tupleValue'>
+												<select className='eventfeature'/>
+											</td>
+										</tr>
+										<tr>
+											<td className='tupleLabel'> Time Column: </td>
+											<td className='tupleValue'>
+												<select className='timefeature'/>
+											</td>
+										</tr>
+									</tbody>
 								</table>
 							</div>
 						</div>
@@ -141,6 +147,7 @@ var KmPlot = React.createClass({
 							<img src={warningImg} alt=''/>
 						</span>
 					</div>
+				</Modal.Body>
 			</Modal>
 		);
 	}

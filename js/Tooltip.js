@@ -4,7 +4,7 @@
 
 var React = require('react');
 var _ = require('./underscore_ext');
-var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
+var {deepPureRenderMixin} = require('./react-utils');
 var meta = require('./meta');
 require('../css/tooltip.css');
 
@@ -25,7 +25,7 @@ var element = {
 };
 
 var Tooltip = React.createClass({
-	mixins: [PureRenderMixin],
+	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?
 	render: function () {
 		var {data, open, frozen} = this.props,
 			rows = _.getIn(data, ['rows']),

@@ -12,6 +12,7 @@ var Legend = require('Legend');
 var Column = require('Column');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var React = require('react');
+var ReactDOM = require('react-dom');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 
 require('rx-jquery');
@@ -299,7 +300,7 @@ var CanvasDrawing = React.createClass({
 	},
 	componentDidMount: function () {
 		var {width, zoom: {height}} = this.props;
-		this.vg = vgcanvas(this.refs.canvas.getDOMNode(), width, height);
+		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height);
 		this.draw(this.props);
 	},
 

@@ -14,6 +14,7 @@
 // should re-render the component with the childen in the new order.
 
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Rx = require('rx');
 var _ = require('./underscore_ext');
 require('./Sortable.css');
@@ -56,7 +57,7 @@ var Sortable = React.createClass({
 			var order = _.map(this.props.children, c => c.key);
 			var startX = md.clientX;
 			var positions = _.map(order,
-								  id => leftWidth(this.refs[id].getDOMNode().getBoundingClientRect()));
+								  id => leftWidth(ReactDOM.findDOMNode(this.refs[id]).getBoundingClientRect()));
 			var N = positions.length;
 			var index = _.indexOf(order, id);
 			var target = positions[index];

@@ -4,6 +4,7 @@
 var _ = require('./underscore_ext');
 var Rx = require('rx');
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Column = require('./Column');
 var Legend = require('./Legend');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
@@ -118,7 +119,7 @@ var CanvasDrawing = React.createClass({
 	},
 	componentDidMount: function () {
 		var {width, zoom: {height}} = this.props;
-		this.vg = vgcanvas(this.refs.canvas.getDOMNode(), width, height);
+		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height);
 		this.draw();
 	},
 
