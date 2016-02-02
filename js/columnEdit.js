@@ -194,20 +194,25 @@ var ColumnEdit = React.createClass({
 		var editor = meta ? pickEditor(meta, this.addColumn, columnEdit) : '';
 
 		return (
-			<Modal {...this.props} className='columnEdit container' title="Column Fields">
-				<form className='form-horizontal'>
-					<div className='form-group'>
-						<label className='col-md-2 control-label'>Dataset</label>
-						<div className='col-md-10'>
-							<DatasetSelect
-								value={dataset}
-								event='edit-dataset'
-								callback={this.selectDataset}
-								datasets={datasets} />
+			<Modal {...this.props} show={true} className='columnEdit container'>
+				<Modal.Header closeButton>
+					<Modal.Title>Column Fields</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<form className='form-horizontal'>
+						<div className='form-group'>
+							<label className='col-md-2 control-label'>Dataset</label>
+							<div className='col-md-10'>
+								<DatasetSelect
+									value={dataset}
+									event='edit-dataset'
+									callback={this.selectDataset}
+									datasets={datasets} />
+							</div>
 						</div>
-					</div>
-					{editor}
-				</form>
+						{editor}
+					</form>
+				</Modal.Body>
 			</Modal>
 		);
 	}
