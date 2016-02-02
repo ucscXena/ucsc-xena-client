@@ -18,8 +18,7 @@ module.exports = {
 	module: {
 		loaders: [
 			{ test: /rx-dom/, loader: "imports?define=>false" },
-			{ test: /\.js$/, include: babelTarget,
-				loader: 'babel-loader?optional[]=es7.objectRestSpread&optional[]=utility.inlineEnvironmentVariables&cacheDirectory=true'},
+			{ test: /\.js$/, include: babelTarget, loader: 'babel-loader'},
 			{ test: /\.css$/, loader: "style!css" },
 			{ test: /\.haml$/, loader: 'haml-loader' },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
