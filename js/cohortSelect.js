@@ -4,7 +4,6 @@ var React = require('react');
 var Select = require('./Select');
 var _ = require('underscore_ext');
 var {deepPureRenderMixin} = require('./react-utils');
-require('react-select/dist/default.css');
 
 var CohortSelect = React.createClass({
 	mixins: [deepPureRenderMixin],
