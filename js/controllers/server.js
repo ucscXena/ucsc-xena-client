@@ -40,7 +40,7 @@ var serverController = {
 		_.assocIn(state, ["data", id], data),
 	'columnEdit-features': (state, list) => _.assocIn(state, ["columnEdit", 'features'], list),
 	'columnEdit-examples': (state, list) => _.assocIn(state, ["columnEdit", 'examples'], list),
-	'km-survival-data': (state, survival) => ({...state, survival})
+	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival)
 };
 
 module.exports = {
