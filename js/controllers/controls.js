@@ -191,6 +191,6 @@ var controls = {
 };
 
 module.exports = {
-	event: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
-	postEvent: (previous, current, [tag, ...args]) => (controls[tag + '-post!'] || identity)(previous, current, ...args)
+	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
+	postAction: (previous, current, [tag, ...args]) => (controls[tag + '-post!'] || identity)(previous, current, ...args)
 };

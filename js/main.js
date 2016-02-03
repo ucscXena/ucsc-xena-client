@@ -136,10 +136,10 @@ var Application = React.createClass({
 // XXX rename controls ui, so we have ui + server.
 
 function controlRunner(controller) {
-	return function (state, ev) {
+	return function (state, ac) {
 		try {
-			var s = controller.event(state, ev);
-			controller.postEvent(state, s, ev);
+			var s = controller.action(state, ac);
+			controller.postAction(state, s, ac);
 			return s;
 		} catch (e) {
 			console.log('Error', e); // comment this out to have hard errors.
@@ -151,6 +151,8 @@ function controlRunner(controller) {
 var serverReducer = controlRunner(controllersServer);
 var controlsReducer = controlRunner(controllersControls);
 
+// compose reducers
+var reducer = (state, ac) => serverReducer(controlsReducer(state, ac), ac);
 
 // From page load, push indexes for state. Store in cache slots.
 // Our state is too big to push directly. This mechanism is a bit
@@ -176,15 +178,13 @@ var [pushState, setState] = (function () {
 	})];
 })();
 
-var stateObs = Rx.Observable.merge(
-					serverCh.map(ev => [serverReducer, ev]),
-					controlsCh.map(ev => [controlsReducer, ev])
-			   ).scan(initialState, (state, [reduceFn, ev]) => reduceFn(state, ev))
+var stateObs = Rx.Observable.merge(serverCh, controlsCh)
+			   .scan(initialState, (state, ac) => reducer(state, ac))
 			   .do(pushState)
 			   .merge(setState)
 			   .share();
 
-var updater = ev => controlsBus.onNext(ev);
+var updater = ac => controlsBus.onNext(ac);
 //stateObs.subscribe(state => {
 //	React.render(<Application callback={updater} appState={state} />, main);
 //});

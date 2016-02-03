@@ -44,6 +44,6 @@ var serverController = {
 };
 
 module.exports = {
-	event: (state, [tag, ...args]) => (serverController[tag] || identity)(state, ...args),
-	postEvent: (previous, current, [tag, ...args]) => (serverController[tag + '-post!'] || identity)(previous, current, ...args)
+	action: (state, [tag, ...args]) => (serverController[tag] || identity)(state, ...args),
+	postAction: (previous, current, [tag, ...args]) => (serverController[tag + '-post!'] || identity)(previous, current, ...args)
 };
