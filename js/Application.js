@@ -7,22 +7,10 @@ var Col = require('react-bootstrap/lib/Col');
 var Spreadsheet = require('./spreadsheet');
 var AppControls = require('./AppControls');
 var KmPlot = require('./kmPlot');
-import JSONTree from 'react-json-tree';
-var meta = require('./meta');
 var _ = require('./underscore_ext');
 //var Perf = require('react/addons').addons.Perf;
 
 module.exports = React.createClass({
-	getInitialState() {
-		return {
-			debug: false
-		};
-	},
-	onClick: function (ev) {
-		if (ev[meta.key]) {
-			this.setState({debug: !this.state.debug});
-		}
-	},
 //	onPerf: function () {
 //		this.perf = !this.perf;
 //		if (this.perf) {
@@ -57,14 +45,6 @@ module.exports = React.createClass({
 						callback={this.props.callback}
 						km={km}
 						features={this.props.appState.features} /> : null}
-				<Row>
-					<Col md={12}>
-						<JSONTree
-							id='debug'
-							style={{display: this.state.debug ? 'block' : 'none'}}
-							data={this.props.appState} />
-					</Col>
-				</Row>
 				<div className='chartRoot' style={{display: 'none'}} />
 			</Grid>
 		);
