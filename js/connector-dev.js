@@ -21,8 +21,21 @@ module.exports = function({
 	selector}) {
 
 	var updater = ac => controlsCh.onNext(ac);
+	let devBus = new Rx.Subject();
 
-	let devCh = new Rx.Subject();
+	// We have an implicit async action on page load ('init'). redux-devtools
+	// 'RESET' command will return us to the initial state, but never
+	// re-issues async actions (which would break the devtools functionality).
+	// This leaves our app in an unusable state after RESET: initial state w/o any
+	// way of issuing the 'init' action. The effect is the cohort list never
+	// loads. Here we intercept the devtools actions & re-issue 'init' on
+	// RESET.
+	let init = () => setTimeout(() => controlsCh.onNext(['init']), 0);
+	let devCh = devBus.do(ac => {
+		if (ac.type === 'RESET') {
+			init();
+		}
+	});
 
 	let DevTools = createDevTools(
 		<DockMonitor toggleVisibilityKey='ctrl-h' changePositionKey='ctrl-q'>
@@ -46,7 +59,7 @@ module.exports = function({
 		.subscribe(devState => ReactDOM.render(
 					<div>
 						<Application callback={updater} selector={selector} state={_.last(devState.computedStates).state} />
-						<DevTools dispatch={devCh.onNext.bind(devCh)} {...devState} />
+						<DevTools dispatch={devBus.onNext.bind(devBus)} {...devState} />
 					</div>,
 			main));
 };
