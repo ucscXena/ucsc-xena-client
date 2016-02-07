@@ -18,9 +18,8 @@ module.exports = {
 	module: {
 		loaders: [
 			{ test: /rx-dom/, loader: "imports?define=>false" },
-			{ test: /\.js$/, include: babelTarget, loader: 'babel-loader'},
+			{ test: /\.js$/, include: babelTarget, loaders: ['babel-loader'], type: 'js'},
 			{ test: /\.css$/, loader: "style!css" },
-			{ test: /\.haml$/, loader: 'haml-loader' },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]
 	},
