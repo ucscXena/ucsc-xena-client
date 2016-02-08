@@ -129,6 +129,7 @@ var controls = {
 									   "columns", {},
 									   "columnOrder", [],
 									   "data", {},
+									   "survival", null,
 									   "km", null),
 	'cohort-post!': (serverBus, state, cohort) => {
 		let {servers: {user}} = state,
