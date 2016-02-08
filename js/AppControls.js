@@ -3,8 +3,8 @@
 'use strict';
 
 var React = require('react');
-var CohortSelect = require('./cohortSelect');
-var DatasetSelect = require('./datasetSelect');
+var CohortSelect = require('./CohortSelect');
+var DatasetSelect = require('./DatasetSelect');
 //var _ = require('./underscore_ext');
 var Button = require('react-bootstrap/lib/Button');
 

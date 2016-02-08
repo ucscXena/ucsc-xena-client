@@ -6,7 +6,7 @@ var React = require('react');
 var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
-var ColumnEdit = require('./columnEdit');
+var ColumnEdit = require('./ColumnEdit');
 var Sortable = require('./Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
@@ -14,7 +14,7 @@ var widgets = require('./columnWidgets');
 var Tooltip = require('Tooltip');
 var rxEventsMixin = require('./react-utils').rxEventsMixin;
 var meta = require('./meta');
-var VizSettings = require('./heatmapVizSettings');
+var VizSettings = require('./VizSettings');
 require('./Columns.css'); // XXX switch to js styles
 require('./YAxisLabel.css'); // XXX switch to js styles
 

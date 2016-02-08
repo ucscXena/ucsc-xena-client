@@ -4,9 +4,9 @@ var React = require('react');
 var Grid = require('react-bootstrap/lib/Grid');
 var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
-var Spreadsheet = require('./spreadsheet');
+var Spreadsheet = require('./Spreadsheet');
 var AppControls = require('./AppControls');
-var KmPlot = require('./kmPlot');
+var KmPlot = require('./KmPlot');
 var _ = require('./underscore_ext');
 //var Perf = require('react/addons').addons.Perf;
 
