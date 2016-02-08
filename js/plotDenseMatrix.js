@@ -381,7 +381,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
 	},
-	onMode: function (newMode) {
+	onMode: function (ev, newMode) {
 		this.props.callback(['dataType', this.props.id, newMode]);
 	},
 	tooltip: function (ev) {
