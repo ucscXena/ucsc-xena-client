@@ -1,4 +1,4 @@
-/*global require: false, document: false */
+/*global require: false, document: false, module: false */
 'use strict';
 
 var _ = require('underscore_ext');
@@ -15,7 +15,18 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 
-require('rx-jquery');
+// Since we don't set module.exports, but instead register ourselves
+// with columWidgets, react-hot-loader can't handle the updates automatically.
+// Accept hot loading here.
+if (module.hot) {
+	module.hot.accept();
+}
+
+// Since there are multiple components in the file we have to use makeHot
+// explicitly.
+function hotOrNot(component) {
+	return module.makeHot ? module.makeHot(component) : component;
+}
 
 var each = _.each,
 	map = _.map,
@@ -268,19 +279,19 @@ function legendMethod(dataType) {
 	return dataType === 'clinicalMatrix' ? renderPhenotypeLegend : renderGenomicLegend;
 }
 
-var HeatmapLegend = React.createClass({
+var HeatmapLegend = hotOrNot(React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function() {
 		var {dataType} = this.props;
 		return legendMethod(dataType)(this.props);
 	}
-});
+}));
 
 //
 // plot rendering
 //
 
-var CanvasDrawing = React.createClass({
+var CanvasDrawing = hotOrNot(React.createClass({
 	mixins: [deepPureRenderMixin],
 
 	render: function () {
@@ -327,7 +338,7 @@ var CanvasDrawing = React.createClass({
 			colors: colorFns(colors)
 		});
 	}
-});
+}));
 
 function tsvProbeMatrix(heatmap, samples, fields, codes) {
 	var fieldNames = ['sample'].concat(fields);
@@ -354,7 +365,7 @@ function modeMenu({dataType}, cb) {
 		<MenuItem eventKey="geneMatrix" onSelect={cb}>Probe average</MenuItem>;
 }
 
-var HeatmapColumn = React.createClass({
+var HeatmapColumn = hotOrNot(React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	componentWillMount: function () {
 		this.events('mouseout', 'mousemove', 'mouseover');
@@ -423,7 +434,7 @@ var HeatmapColumn = React.createClass({
 			/>
 		);
 	}
-});
+}));
 
 var getColumn = (props) => <HeatmapColumn {...props} />;
 

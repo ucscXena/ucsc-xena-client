@@ -1,4 +1,4 @@
-/*global require: false, document: false */
+/*global require: false, module: false, document: false */
 'use strict';
 
 var _ = require('./underscore_ext');
@@ -13,6 +13,20 @@ var widgets = require('columnWidgets');
 var util = require('./util');
 
 var features = require('./models/mutationVector');
+
+// Since we don't set module.exports, but instead register ourselves
+// with columWidgets, react-hot-loader can't handle the updates automatically.
+// Accept hot loading here.
+if (module.hot) {
+	module.hot.accept();
+}
+
+// Since there are multiple components in the file we have to use makeHot
+// explicitly.
+function hotOrNot(component) {
+	return module.makeHot ? module.makeHot(component) : component;
+}
+
 
 var radius = 4;
 
@@ -99,7 +113,7 @@ function draw(vg, props) {
 	drawImpactPx(vg, width, minppr, features[feature].color, nodes);
 }
 
-var CanvasDrawing = React.createClass({
+var CanvasDrawing = hotOrNot(React.createClass({
 	mixins: [deepPureRenderMixin],
 
 	render: function () {
@@ -150,7 +164,7 @@ var CanvasDrawing = React.createClass({
 			zoomCount: count
 		});
 	}
-});
+}));
 
 function drawLegend(feature) {
 	var {colors, labels, align} = features[feature].legend;
@@ -226,7 +240,7 @@ function tooltip(nodes, samples, {height, count, index}, gene,  ev) {
 		{sampleID: samples[Math.floor((y * count / height) + index)]};
 }
 
-var MutationColumn = React.createClass({
+var MutationColumn = hotOrNot(React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	componentWillMount: function () {
 		this.events('mouseout', 'mousemove', 'mouseover');
@@ -276,7 +290,7 @@ var MutationColumn = React.createClass({
 			/>
 		);
 	}
-});
+}));
 
 var getColumn = (props) => <MutationColumn {...props} />;
 
