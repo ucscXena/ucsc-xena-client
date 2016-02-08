@@ -177,7 +177,7 @@ var ColumnEdit = React.createClass({
 				'width', 200, // XXX move this default setting?
 				'columnLabel', {user: label, 'default': label},
 				'dsID', this.state.dataset);
-		this.props.onRequestHide();
+		this.props.onHide();
 		callback(['add-column', uuid(), settings]);
 	},
 	selectDataset: function ([, dsID]) {

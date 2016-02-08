@@ -114,7 +114,7 @@ var Columns = React.createClass({
 		var editor = openColumnEdit ?
 			<ColumnEdit
 				{...this.props}
-				onRequestHide={() => this.setState({openColumnEdit: false})}
+				onHide={() => this.setState({openColumnEdit: false})}
 			/> : null;
 		// XXX parameterize settings on column type
 		var settings = openVizSettings ?
