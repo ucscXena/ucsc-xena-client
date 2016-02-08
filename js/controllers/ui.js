@@ -57,9 +57,8 @@ function fetchDatasets(ch, servers, cohort) {
 	ch.onNext(['datasets-slot', datasetQuery(servers, cohort)]);
 }
 
-function fetchColumnData(state, id) {
+function fetchColumnData(state, id, settings) {
 	let {comms: {server}} = state,
-		settings = _.getIn(state, ['columns', id]),
 		samples = _.get(state, "samples");
 	// XXX make serverCh group by _.isArray && v[0], so we don't have to
 	// pass null? Or wrap this in a call? We can get out-of-order responses
@@ -105,8 +104,10 @@ var indexSurvivalData = (samples, missing, data) =>
 
 // XXX carry dsID/name through to km-survival-data, so we can verify we're holding
 // the correct data before drawing.
-function fetchSurvival(state) {
-	let {comms: {server}, features, samples, km, survival} = state,
+function fetchSurvival(state, km) {
+	let {comms: {server}, features, samples, survival} = state,
+		// XXX 'user' is a placeholder for user override of survival vars, to be added
+		// to the km ui.
 		vars = kmModel.pickSurvivalVars(features, km.user),
 		missing = ['ev', 'tte', 'patient'].filter(
 				key => !_.isEqual(vars[key], _.getIn(survival, [key, 'field']))),
@@ -124,8 +125,8 @@ function fetchSurvival(state) {
 }
 
 var controls = {
-	'init-post!': (previous, current) => {
-		let {comms: {server}, servers: {user}} = current;
+	'init-post!': state => {
+		let {comms: {server}, servers: {user}} = state;
 		fetchCohorts(server, user);
 	},
 	cohort: (state, cohort) => _.assoc(state,
@@ -136,26 +137,24 @@ var controls = {
 									   "columnOrder", [],
 									   "data", {},
 									   "km", null),
-	'cohort-post!': (previous, current) => {
-		let {comms: {server}, servers: {user}} = current,
-			cohort = _.get(current, "cohort"),
-			samplesFrom = _.get(current, "samplesFrom");
+	'cohort-post!': (state, next, cohort) => {
+		let {comms: {server}, servers: {user}} = state,
+			samplesFrom = _.get(state, "samplesFrom");
 		fetchDatasets(server, user, cohort);
 		fetchSamples(server, user, cohort, samplesFrom);
 	},
-	samplesFrom: (state, dataset) => _.assoc(state, "samplesFrom", dataset),
-	'samplesFrom-post!': (previous, current) => {
-		let {comms: {server}, servers: {user}} = current,
-			cohort = _.get(current, "cohort"),
-			samplesFrom = _.get(current, "samplesFrom");
+	samplesFrom: (state, samplesFrom) => _.assoc(state, "samplesFrom", samplesFrom),
+	'samplesFrom-post!': (state, next, samplesFrom) => {
+		let {comms: {server}, servers: {user}} = state,
+			cohort = _.get(state, "cohort");
 		fetchSamples(server, user, cohort, samplesFrom);
 	},
 	'add-column': (state, id, settings) => {
 		var ns = _.updateIn(state, ["columns"], s => _.assoc(s, id, settings));
 		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
 	},
-	'add-column-post!': (previous, current, id) =>
-		fetchColumnData(current, id),
+	'add-column-post!': (state, next, id, settings) =>
+		fetchColumnData(state, id, settings),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
 				['zoom', 'height'], height,
@@ -169,14 +168,17 @@ var controls = {
 	zoom: (state, zoom) => _.assoc(state, "zoom", zoom),
 	dataType: (state, id, dataType) =>
 		_.assocIn(state, ['columns', id, 'dataType'], dataType),
-	'dataType-post!': (previous, current, id) => fetchColumnData(current, id),
+	// XXX note we recalculate columns[id] due to running side-effects independent of
+	// the reducer.
+	'dataType-post!': (state, next, id, dataType) =>
+		fetchColumnData(state, id, _.assoc(_.getIn(state, ['columns', id]), 'dataType', dataType)),
 	vizSettings: (state, dsID, settings) =>
 		_.assocIn(state, ['vizSettings', dsID], settings),
-	'edit-dataset-post!': (previous, current, dsID, meta) => {
+	'edit-dataset-post!': (state, next, dsID, meta) => {
 		if (meta.type === 'clinicalMatrix') {
-			fetchFeatures(current, dsID);
+			fetchFeatures(state, dsID);
 		} else if (meta.type !== 'mutationVector') {
-			fetchExamples(current, dsID);
+			fetchExamples(state, dsID);
 		}
 	},
 	'columnLabel': (state, dsID, value) =>
@@ -186,11 +188,11 @@ var controls = {
 	'km-open': (state, id) => _.assocInAll(state,
 			['km', 'id'], id,
 			['km', 'label'], _.getIn(state, ['columns', id, 'fieldLabel', 'user'])),
-	'km-open-post!': (previous, current) => fetchSurvival(current),
+	'km-open-post!': state => fetchSurvival(state, {}), // 2nd param placeholder for km.user
 	'km-close': (state) => _.assocIn(state, ['km', 'id'], null)
 };
 
 module.exports = {
 	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
-	postAction: (previous, current, [tag, ...args]) => (controls[tag + '-post!'] || identity)(previous, current, ...args)
+	postAction: (state, next, [tag, ...args]) => (controls[tag + '-post!'] || identity)(state, next, ...args)
 };
