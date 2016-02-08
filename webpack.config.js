@@ -11,7 +11,7 @@ module.exports = {
 	historyApiFallback: true,
 	entry: "./js/bogorouter",
 	output: {
-		path: "build",
+		path: __dirname + "/build",
 		publicPath: "/",
 		filename: "[name].js"
 	},
