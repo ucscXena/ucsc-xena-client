@@ -16,9 +16,17 @@ config.entry = [
 
 ].concat(wrapEntry(config.entry));
 
+function find(arr, fn) {
+	for (var i = 0; i < arr.length; ++i) {
+		if (fn(arr[i])) {
+			return arr[i];
+		}
+	}
+	return undefined;
+}
 
-var jsLoader = config.module.loaders
-	.find(function (l) { return l.type === 'js'; });
+var jsLoader = find(config.module.loaders,
+	function (l) { return l.type === 'js'; });
 jsLoader.loaders = ['react-hot'].concat(jsLoader.loaders);
 
 config.plugins = config.plugins.concat([
