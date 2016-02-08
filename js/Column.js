@@ -1,13 +1,12 @@
-/*globals require: false, module: false, Blob: false, URL: false, document: false, window: false */
+/*eslint-env browser */
+/*globals require: false, module: false */
 'use strict';
 
 var React = require('react');
 var _ = require('./underscore_ext');
-var L = require('./lenses/lens');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Resizable = require('react-resizable').Resizable;
-var xenaQuery = require('./xenaQuery');
 var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('./refGeneExons');
 
@@ -33,11 +32,12 @@ var Column = React.createClass({
 		download(this.props.download());
 	},
 	onAbout: function () {
-		var {lens, id} = this.props;
-		var dsID = L.view(lens).columnRendering[id].dsID;
-		var [host, dataset] = xenaQuery.parse_host(dsID);
-		var url = `../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
-		window.open(url);
+		console.log('FIXME');
+//		var {lens, id} = this.props;
+//		var dsID = L.view(lens).columnRendering[id].dsID;
+//		var [host, dataset] = xenaQuery.parse_host(dsID);
+//		var url = `../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
+//		window.open(url);
 	},
 	onViz: function () {
 		this.props.onViz(this.props.id);
