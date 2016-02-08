@@ -62,7 +62,7 @@ function controls(liftedReducer, postAction, initialCommittedState) {
 				next = liftedReducer(curr, liftedAction);
 
 			try {
-				postAction(curr.state, next.state, action);
+				postAction(curr.state, action);
 			} catch (err) {
 				logError(err);
 			}

@@ -7,7 +7,7 @@ module.exports = (...controllers) => {
 	return {
 		action: (state, ac) => rcontrollers.reduce(
 						(state, c) => c.action(state, ac), state),
-		postAction: (previous, current, action) => rcontrollers.forEach(
-				c => c.postAction(previous, current, action))
+		postAction: (state, action) => rcontrollers.forEach(
+				c => c.postAction(state, action))
 	};
 };

@@ -137,14 +137,14 @@ var controls = {
 									   "columnOrder", [],
 									   "data", {},
 									   "km", null),
-	'cohort-post!': (state, next, cohort) => {
+	'cohort-post!': (state, cohort) => {
 		let {comms: {server}, servers: {user}} = state,
 			samplesFrom = _.get(state, "samplesFrom");
 		fetchDatasets(server, user, cohort);
 		fetchSamples(server, user, cohort, samplesFrom);
 	},
 	samplesFrom: (state, samplesFrom) => _.assoc(state, "samplesFrom", samplesFrom),
-	'samplesFrom-post!': (state, next, samplesFrom) => {
+	'samplesFrom-post!': (state, samplesFrom) => {
 		let {comms: {server}, servers: {user}} = state,
 			cohort = _.get(state, "cohort");
 		fetchSamples(server, user, cohort, samplesFrom);
@@ -153,7 +153,7 @@ var controls = {
 		var ns = _.updateIn(state, ["columns"], s => _.assoc(s, id, settings));
 		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
 	},
-	'add-column-post!': (state, next, id, settings) =>
+	'add-column-post!': (state, id, settings) =>
 		fetchColumnData(state, id, settings),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
@@ -170,11 +170,11 @@ var controls = {
 		_.assocIn(state, ['columns', id, 'dataType'], dataType),
 	// XXX note we recalculate columns[id] due to running side-effects independent of
 	// the reducer.
-	'dataType-post!': (state, next, id, dataType) =>
+	'dataType-post!': (state, id, dataType) =>
 		fetchColumnData(state, id, _.assoc(_.getIn(state, ['columns', id]), 'dataType', dataType)),
 	vizSettings: (state, dsID, settings) =>
 		_.assocIn(state, ['vizSettings', dsID], settings),
-	'edit-dataset-post!': (state, next, dsID, meta) => {
+	'edit-dataset-post!': (state, dsID, meta) => {
 		if (meta.type === 'clinicalMatrix') {
 			fetchFeatures(state, dsID);
 		} else if (meta.type !== 'mutationVector') {
@@ -194,5 +194,5 @@ var controls = {
 
 module.exports = {
 	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
-	postAction: (state, next, [tag, ...args]) => (controls[tag + '-post!'] || identity)(state, next, ...args)
+	postAction: (state, [tag, ...args]) => (controls[tag + '-post!'] || identity)(state, ...args)
 };

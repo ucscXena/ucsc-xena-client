@@ -32,7 +32,7 @@ function fetchFeatures(state, datasets) {
 var serverController = {
 	cohorts: (state, cohorts) => _.assoc(state, "cohorts", cohorts),
 	datasets: (state, datasets) => _.assoc(state, "datasets", datasets),
-	'datasets-post!': (state, next, datasets) => fetchFeatures(state, datasets),
+	'datasets-post!': (state, datasets) => fetchFeatures(state, datasets),
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
 		resetZoom(_.assoc(state, "samples", samples)),
@@ -45,5 +45,5 @@ var serverController = {
 
 module.exports = {
 	action: (state, [tag, ...args]) => (serverController[tag] || identity)(state, ...args),
-	postAction: (state, next, [tag, ...args]) => (serverController[tag + '-post!'] || identity)(state, next, ...args)
+	postAction: (state, [tag, ...args]) => (serverController[tag + '-post!'] || identity)(state, ...args)
 };

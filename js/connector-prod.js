@@ -12,7 +12,7 @@ function controlRunner(controller) {
 	return function (state, ac) {
 		try {
 			var s = controller.action(state, ac);
-			controller.postAction(state, s, ac);
+			controller.postAction(state, ac);
 			return s;
 		} catch (e) {
 			console.log('Error', e);
