@@ -19,6 +19,9 @@ var features = require('./models/mutationVector');
 // Accept hot loading here.
 if (module.hot) {
 	module.hot.accept();
+	module.hot.accept('./models/mutationVector', () => {
+		features = require('./models/mutationVector');
+	});
 }
 
 // Since there are multiple components in the file we have to use makeHot
@@ -143,6 +146,7 @@ var CanvasDrawing = hotOrNot(React.createClass({
 			vg = this.vg;
 
 		if (!data) {
+			vg.box(0, 0, width, height, "gray");
 			return;
 		}
 

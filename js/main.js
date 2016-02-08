@@ -40,6 +40,9 @@ if (module.hot) {
 		var newModule = require('./controllers/server');
 		_.extend(controllersServer, newModule);
 	});
+	// XXX Note that hot-loading these won't cause a re-render.
+	module.hot.accept('./models/mutationVector', () => {});
+	module.hot.accept('./models/denseMatrix', () => {});
 }
 
 var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena',
