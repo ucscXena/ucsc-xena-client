@@ -4,9 +4,7 @@
 'use strict';
 
 require('base');
-//var Input = require('react-bootstrap/lib/Input');
 var Rx = require('./rx.ext');
-//var Button = require('react-bootstrap/lib/Button');
 require('rx.coincidence');
 require('rx/dist/rx.aggregates');
 require('rx/dist/rx.time');
