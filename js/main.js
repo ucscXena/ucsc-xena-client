@@ -1,5 +1,5 @@
 /*eslint-env browser */
-/*global require: false, console: false */
+/*global require: false, console: false, module: false */
 
 'use strict';
 
@@ -22,6 +22,27 @@ require('bootstrap/dist/css/bootstrap.css');
 var selector = require('./appSelector');
 var compose = require('./controllers/compose');
 const connector = require('./connector');
+
+// Hot load controllers. Note that hot loading won't work if one of the methods
+// is captured in a closure or variable which we can't access.  References to
+// the controller methods should only happen by dereferencing the module. That's
+// currently true of the controllers/compose method, so we are able to hot
+// load by overwritting the methods, here. However it's not true of devtools.
+// If we had a single controller (i.e. no call to compose), passing a single
+// controller to devtools would defeat the hot loading. Sol'n would be to
+// update devtools to always dereference the controller, rather than keeping
+// methods in closures.
+
+if (module.hot) {
+	module.hot.accept('./controllers/controls', () => {
+		var newModule = require('./controllers/controls');
+		_.extend(controllersControls, newModule);
+	});
+	module.hot.accept('./controllers/server', () => {
+		var newModule = require('./controllers/server');
+		_.extend(controllersServer, newModule);
+	});
+}
 
 var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena',
 		'https://local.xena.ucsc.edu:7223'];
