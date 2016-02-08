@@ -16,11 +16,11 @@ module.exports = function({
 	controller,
 	initialState,
 	serverCh,
-	controlsCh,
+	uiCh,
 	main,
 	selector}) {
 
-	var updater = ac => controlsCh.onNext(ac);
+	var updater = ac => uiCh.onNext(ac);
 	let devBus = new Rx.Subject();
 
 	// We have an implicit async action on page load ('init'). redux-devtools
@@ -30,7 +30,7 @@ module.exports = function({
 	// way of issuing the 'init' action. The effect is the cohort list never
 	// loads. Here we intercept the devtools actions & re-issue 'init' on
 	// RESET.
-	let init = () => setTimeout(() => controlsCh.onNext(['init']), 0);
+	let init = () => setTimeout(() => uiCh.onNext(['init']), 0);
 	let devCh = devBus.do(ac => {
 		if (ac.type === 'RESET') {
 			init();
@@ -45,7 +45,7 @@ module.exports = function({
 
 	let devReducer = DevTools.instrument(controller, initialState);
 
-	let devStateObs = Rx.Observable.merge(serverCh, controlsCh).map(ac => ({type: 'PERFORM_ACTION', action: ac}))
+	let devStateObs = Rx.Observable.merge(serverCh, uiCh).map(ac => ({type: 'PERFORM_ACTION', action: ac}))
 					.merge(devCh)
 					.scan(null, devReducer)
 					.share();

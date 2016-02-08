@@ -49,14 +49,14 @@ module.exports = function({
 	controller,
 	initialState,
 	serverCh,
-	controlsCh,
+	uiCh,
 	main,
 	selector}) {
 
-	var updater = ac => controlsCh.onNext(ac);
+	var updater = ac => uiCh.onNext(ac);
 	var runner = controlRunner(controller);
 
-	let stateObs = Rx.Observable.merge(serverCh, controlsCh)
+	let stateObs = Rx.Observable.merge(serverCh, uiCh)
 				   .scan(initialState, runner)
 				   .do(pushState)
 				   .merge(setState)

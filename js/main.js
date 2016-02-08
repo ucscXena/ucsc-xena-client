@@ -14,8 +14,8 @@ require('./plotDenseMatrix'); // XXX better place or name for this?
 require('./plotMutationVector'); // XXX better place or name for this?
 require('./models/denseMatrix'); // XXX better place or name for this?
 require('./models/mutationVector'); // XXX better place or name for this?
-var controllersControls = require('./controllers/controls');
-var controllersServer = require('./controllers/server');
+var uiController = require('./controllers/ui');
+var serverController = require('./controllers/server');
 require('bootstrap/dist/css/bootstrap.css');
 var selector = require('./appSelector');
 var compose = require('./controllers/compose');
@@ -32,13 +32,13 @@ const connector = require('./connector');
 // methods in closures.
 
 if (module.hot) {
-	module.hot.accept('./controllers/controls', () => {
-		var newModule = require('./controllers/controls');
-		_.extend(controllersControls, newModule);
+	module.hot.accept('./controllers/ui', () => {
+		var newModule = require('./controllers/ui');
+		_.extend(uiController, newModule);
 	});
 	module.hot.accept('./controllers/server', () => {
 		var newModule = require('./controllers/server');
-		_.extend(controllersServer, newModule);
+		_.extend(serverController, newModule);
 	});
 	// XXX Note that hot-loading these won't cause a re-render.
 	module.hot.accept('./models/mutationVector', () => {});
@@ -68,8 +68,8 @@ var second = ([, b]) => b;
 var serverCh = serverBus.groupBy(([slot]) => slot)
 	.map(g => g.key === '$none' ? g.map(second).mergeAll() : g.map(second).switchLatest()).mergeAll();
 
-var controlsBus = new Rx.Subject();
-var controlsCh = controlsBus;
+var uiBus = new Rx.Subject();
+var uiCh = uiBus;
 
 var initialState = {
 	servers: {'default': defaultServers, user: defaultServers},
@@ -86,11 +86,9 @@ if (sessionStorage && sessionStorage.xena && location.search.indexOf('?nostate')
 	_.extend(initialState, JSON.parse(sessionStorage.xena));
 }
 
-var controller = compose(controllersServer, controllersControls);
+var controller = compose(serverController, uiController);
 
-// XXX rename controls ui, so we have ui + server.
-
-connector({controller, initialState, serverCh, controlsCh, main, selector});
+connector({controller, initialState, serverCh, uiCh, main, selector});
 
 // Kick things off.
-controlsBus.onNext(['init']);
+uiBus.onNext(['init']);
