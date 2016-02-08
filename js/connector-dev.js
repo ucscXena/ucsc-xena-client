@@ -23,6 +23,7 @@ function logError(err) {
 module.exports = function({
 	controller,
 	initialState,
+	serverBus,
 	serverCh,
 	uiCh,
 	main,
@@ -59,7 +60,7 @@ module.exports = function({
 	let effectsReducer = (state, ac) => {
 		if (ac.type === 'PERFORM_ACTION') {
 			try {
-				controller.postAction(_.last(state.computedStates).state, ac.action);
+				controller.postAction(serverBus, _.last(state.computedStates).state, ac.action);
 			} catch(err) {
 				logError(err);
 			}

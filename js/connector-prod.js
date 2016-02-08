@@ -2,16 +2,15 @@
 /*eslint-env browser */
 'use strict';
 
-var _ = require('./underscore_ext');
 var Rx = require('rx');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var Application = require('./Application');
 
-function controlRunner(controller) {
+function controlRunner(serverBus, controller) {
 	return function (state, ac) {
 		try {
-			controller.postAction(state, ac);
+			controller.postAction(serverBus, state, ac);
 			return controller.action(state, ac);
 		} catch (e) {
 			console.log('Error', e);
@@ -47,13 +46,14 @@ var [pushState, setState] = (function () {
 module.exports = function({
 	controller,
 	initialState,
+	serverBus,
 	serverCh,
 	uiCh,
 	main,
 	selector}) {
 
 	var updater = ac => uiCh.onNext(ac);
-	var runner = controlRunner(controller);
+	var runner = controlRunner(serverBus, controller);
 
 	let stateObs = Rx.Observable.merge(serverCh, uiCh)
 				   .scan(initialState, runner)
@@ -66,5 +66,5 @@ module.exports = function({
 
 	// Save state in sessionStorage on page unload.
 	stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
-		.subscribe(state => sessionStorage.xena = JSON.stringify(_.omit(state, 'comms')));
+		.subscribe(state => sessionStorage.xena = JSON.stringify(state));
 };

@@ -13,17 +13,13 @@ var kmModel = require('../models/km');
 var	datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
 var identity = x => x;
 
-//function cases([tag, ...data], c) {
-//	return c[tag](...data);
-//}
-
 function cohortQuery(servers) {
 	return Rx.Observable.zipArray(_.map(servers, xenaQuery.all_cohorts))
 			.map(servers => ['cohorts', _.union.apply(null, servers)]);
 }
 
-function fetchCohorts(ch, servers) {
-	ch.onNext(['cohorts-slot', cohortQuery(servers)]);
+function fetchCohorts(serverBus, servers) {
+	serverBus.onNext(['cohorts-slot', cohortQuery(servers)]);
 }
 
 var datasetSamples = xenaQuery.dsID_fn(xenaQuery.dataset_samples);
@@ -37,8 +33,8 @@ function samplesQuery(servers, cohort, samplesFrom) {
 			).map(samps => ['samples', samps]);
 }
 
-function fetchSamples(ch, servers, cohort, samplesFrom) {
-	ch.onNext(['samples-slot', samplesQuery(servers, cohort, samplesFrom)]);
+function fetchSamples(serverBus, servers, cohort, samplesFrom) {
+	serverBus.onNext(['samples-slot', samplesQuery(servers, cohort, samplesFrom)]);
 }
 
 function datasetQuery(servers, cohort) {
@@ -53,17 +49,16 @@ function datasetQuery(servers, cohort) {
 				}]);
 }
 
-function fetchDatasets(ch, servers, cohort) {
-	ch.onNext(['datasets-slot', datasetQuery(servers, cohort)]);
+function fetchDatasets(serverBus, servers, cohort) {
+	serverBus.onNext(['datasets-slot', datasetQuery(servers, cohort)]);
 }
 
-function fetchColumnData(state, id, settings) {
-	let {comms: {server}} = state,
-		samples = _.get(state, "samples");
+function fetchColumnData(serverBus, state, id, settings) {
+	let samples = _.get(state, "samples");
 	// XXX make serverCh group by _.isArray && v[0], so we don't have to
 	// pass null? Or wrap this in a call? We can get out-of-order responses
 	// with this mechanism. Need something different.
-	server.onNext(['$none', widgets.fetch(settings, samples)
+	serverBus.onNext(['$none', widgets.fetch(settings, samples)
 			.map(data => ['widget-data', data, id])]);
 }
 
@@ -76,9 +71,8 @@ function featureQuery(dsID) {
 	return xenaQuery.dsID_fn(xenaQuery.feature_list)(dsID)
 		.map(list => ['columnEdit-features', sortFeatures(list)]);
 }
-function fetchFeatures(state, dsID) {
-	let {comms: {server}} = state;
-	server.onNext(['columnEdit-features', featureQuery(dsID)]);
+function fetchFeatures(serverBus, state, dsID) {
+	serverBus.onNext(['columnEdit-features', featureQuery(dsID)]);
 }
 
 function exampleQuery(dsID) {
@@ -86,9 +80,8 @@ function exampleQuery(dsID) {
 		.map(list => ['columnEdit-examples', _.pluck(list, 'name')]);
 }
 
-function fetchExamples(state, dsID) {
-	let {comms: {server}} = state;
-	server.onNext(['columnEdit-examples', exampleQuery(dsID)]);
+function fetchExamples(serverBus, state, dsID) {
+	serverBus.onNext(['columnEdit-examples', exampleQuery(dsID)]);
 }
 
 var datasetVar = (samples, {dsID, name}) =>
@@ -104,8 +97,8 @@ var indexSurvivalData = (samples, missing, data) =>
 
 // XXX carry dsID/name through to km-survival-data, so we can verify we're holding
 // the correct data before drawing.
-function fetchSurvival(state, km) {
-	let {comms: {server}, features, samples, survival} = state,
+function fetchSurvival(serverBus, state, km) {
+	let {features, samples, survival} = state,
 		// XXX 'user' is a placeholder for user override of survival vars, to be added
 		// to the km ui.
 		vars = kmModel.pickSurvivalVars(features, km.user),
@@ -117,7 +110,7 @@ function fetchSurvival(state, km) {
 	// This could be optimized by grouping by server. This would be easier
 	// if we used proper hash-trie immutable data, where we could hash on dsID
 	// instead of building a json encoding of dsID to allow hashing.
-	server.onNext(['survival', Rx.Observable.zipArray(...queries)
+	serverBus.onNext(['survival', Rx.Observable.zipArray(...queries)
 			.map(data =>
 					['km-survival-data',
 						addField(indexSurvivalData(samples, missing, data))])
@@ -125,9 +118,9 @@ function fetchSurvival(state, km) {
 }
 
 var controls = {
-	'init-post!': state => {
-		let {comms: {server}, servers: {user}} = state;
-		fetchCohorts(server, user);
+	'init-post!': (serverBus, state) => {
+		let {servers: {user}} = state;
+		fetchCohorts(serverBus, user);
 	},
 	cohort: (state, cohort) => _.assoc(state,
 									   "cohort", cohort,
@@ -137,24 +130,24 @@ var controls = {
 									   "columnOrder", [],
 									   "data", {},
 									   "km", null),
-	'cohort-post!': (state, cohort) => {
-		let {comms: {server}, servers: {user}} = state,
+	'cohort-post!': (serverBus, state, cohort) => {
+		let {servers: {user}} = state,
 			samplesFrom = _.get(state, "samplesFrom");
-		fetchDatasets(server, user, cohort);
-		fetchSamples(server, user, cohort, samplesFrom);
+		fetchDatasets(serverBus, user, cohort);
+		fetchSamples(serverBus, user, cohort, samplesFrom);
 	},
 	samplesFrom: (state, samplesFrom) => _.assoc(state, "samplesFrom", samplesFrom),
-	'samplesFrom-post!': (state, samplesFrom) => {
-		let {comms: {server}, servers: {user}} = state,
+	'samplesFrom-post!': (serverBus, state, samplesFrom) => {
+		let {servers: {user}} = state,
 			cohort = _.get(state, "cohort");
-		fetchSamples(server, user, cohort, samplesFrom);
+		fetchSamples(serverBus, user, cohort, samplesFrom);
 	},
 	'add-column': (state, id, settings) => {
 		var ns = _.updateIn(state, ["columns"], s => _.assoc(s, id, settings));
 		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
 	},
-	'add-column-post!': (state, id, settings) =>
-		fetchColumnData(state, id, settings),
+	'add-column-post!': (serverBus, state, id, settings) =>
+		fetchColumnData(serverBus, state, id, settings),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
 				['zoom', 'height'], height,
@@ -170,15 +163,15 @@ var controls = {
 		_.assocIn(state, ['columns', id, 'dataType'], dataType),
 	// XXX note we recalculate columns[id] due to running side-effects independent of
 	// the reducer.
-	'dataType-post!': (state, id, dataType) =>
-		fetchColumnData(state, id, _.assoc(_.getIn(state, ['columns', id]), 'dataType', dataType)),
+	'dataType-post!': (serverBus, state, id, dataType) =>
+		fetchColumnData(serverBus, state, id, _.assoc(_.getIn(state, ['columns', id]), 'dataType', dataType)),
 	vizSettings: (state, dsID, settings) =>
 		_.assocIn(state, ['vizSettings', dsID], settings),
-	'edit-dataset-post!': (state, dsID, meta) => {
+	'edit-dataset-post!': (serverBus, state, dsID, meta) => {
 		if (meta.type === 'clinicalMatrix') {
-			fetchFeatures(state, dsID);
+			fetchFeatures(serverBus, state, dsID);
 		} else if (meta.type !== 'mutationVector') {
-			fetchExamples(state, dsID);
+			fetchExamples(serverBus, state, dsID);
 		}
 	},
 	'columnLabel': (state, dsID, value) =>
@@ -188,11 +181,11 @@ var controls = {
 	'km-open': (state, id) => _.assocInAll(state,
 			['km', 'id'], id,
 			['km', 'label'], _.getIn(state, ['columns', id, 'fieldLabel', 'user'])),
-	'km-open-post!': state => fetchSurvival(state, {}), // 2nd param placeholder for km.user
+	'km-open-post!': (serverBus, state) => fetchSurvival(serverBus, state, {}), // 2nd param placeholder for km.user
 	'km-close': (state) => _.assocIn(state, ['km', 'id'], null)
 };
 
 module.exports = {
 	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
-	postAction: (state, [tag, ...args]) => (controls[tag + '-post!'] || identity)(state, ...args)
+	postAction: (serverBus, state, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, ...args)
 };

@@ -76,10 +76,7 @@ var initialState = {
 	zoom: {height: 300},
 	columns: {},
 	columnOrder: [],
-	samples: [],
-	comms: {
-		server: serverBus
-	}
+	samples: []
 };
 
 if (sessionStorage && sessionStorage.xena && location.search.indexOf('?nostate') !== 0) {
@@ -88,7 +85,7 @@ if (sessionStorage && sessionStorage.xena && location.search.indexOf('?nostate')
 
 var controller = compose(serverController, uiController);
 
-connector({controller, initialState, serverCh, uiCh, main, selector});
+connector({controller, initialState, serverCh, serverBus, uiCh, main, selector});
 
 // Kick things off.
 uiBus.onNext(['init']);

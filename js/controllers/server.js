@@ -14,25 +14,23 @@ function resetZoom(state) {
 					 z => _.merge(z, {count: count, index: 0}));
 }
 
-function fetchFeatures(state, datasets) {
-	let {comms: {server}} = state;
-
+function fetchFeatures(serverBus, state, datasets) {
 	var clinicalMatrices = _.flatmap(datasets.servers,
 									 server => _.filter(server.datasets, ds => ds.type === 'clinicalMatrix')),
 		dsIDs = _.pluck(clinicalMatrices, 'dsID');
 
 	// XXX note that datasetFeatures takes optional args, so don't pass it directly
 	// to map.
-	server.onNext(['features-slot',
+	serverBus.onNext(['features-slot',
 				  Rx.Observable.zipArray(_.map(dsIDs, dsID => datasetFeatures(dsID)))
 					  .map(features => ['features', _.object(dsIDs, features)])
 	]);
 }
 
-var serverController = {
+var controls = {
 	cohorts: (state, cohorts) => _.assoc(state, "cohorts", cohorts),
 	datasets: (state, datasets) => _.assoc(state, "datasets", datasets),
-	'datasets-post!': (state, datasets) => fetchFeatures(state, datasets),
+	'datasets-post!': (serverBus, state, datasets) => fetchFeatures(serverBus, state, datasets),
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
 		resetZoom(_.assoc(state, "samples", samples)),
@@ -44,6 +42,6 @@ var serverController = {
 };
 
 module.exports = {
-	action: (state, [tag, ...args]) => (serverController[tag] || identity)(state, ...args),
-	postAction: (state, [tag, ...args]) => (serverController[tag + '-post!'] || identity)(state, ...args)
+	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
+	postAction: (serverBus, state, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, ...args)
 };
