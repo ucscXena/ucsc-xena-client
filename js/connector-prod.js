@@ -11,9 +11,8 @@ var Application = require('./Application');
 function controlRunner(controller) {
 	return function (state, ac) {
 		try {
-			var s = controller.action(state, ac);
 			controller.postAction(state, ac);
-			return s;
+			return controller.action(state, ac);
 		} catch (e) {
 			console.log('Error', e);
 			return state;

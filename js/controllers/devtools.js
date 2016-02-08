@@ -52,7 +52,7 @@ function recomputeStates(liftedReducer, devState) {
 
 var liftAction = action => ({action: {type: action[0], payload: action}});
 
-function controls(liftedReducer, postAction, initialCommittedState) {
+function controls(liftedReducer, initialCommittedState) {
 	return {
 		'PERFORM_ACTION': (devState, {action}) => {
 			var {nextActionId, actionsById, stagedActionIds, computedStates} = devState,
@@ -61,11 +61,6 @@ function controls(liftedReducer, postAction, initialCommittedState) {
 				liftedAction = liftAction(action),
 				next = liftedReducer(curr, liftedAction);
 
-			try {
-				postAction(curr.state, action);
-			} catch (err) {
-				logError(err);
-			}
 			return _.assoc(devState,
 						'stagedActionIds', _.conj(stagedActionIds, id),
 						'actionsById', _.assoc(actionsById, id, liftedAction),
@@ -129,7 +124,7 @@ function instrument(controller, monitorReducer, initialState) {
 			monitorState: monitorReducer(undefined, {})
 		},
 		liftedReducer = liftReducer(controller.action),
-		ctrls = controls(liftedReducer, controller.postAction, initialState);
+		ctrls = controls(liftedReducer, initialState);
 
 	return (state, action) => {
 		var s = (ctrls[action.type] || identity)(state || initialDevState, action);

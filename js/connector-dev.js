@@ -11,6 +11,14 @@ let {createDevTools} = require('./controllers/devtools');
 import LogMonitor from 'redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
 
+function logError(err) {
+	if (typeof window === 'object' && typeof window.chrome !== 'undefined') {
+		// In Chrome, rethrowing provides better source map support
+		setTimeout(() => { throw err; });
+	} else {
+		console.error(err.stack || err);
+	}
+}
 
 module.exports = function({
 	controller,
@@ -44,10 +52,24 @@ module.exports = function({
 	);
 
 	let devReducer = DevTools.instrument(controller, initialState);
+	let devInitialState = devReducer(null, {});
+
+	// Side-effects (e.g. async) happen here. Ideally we wouldn't call this from 'scan', since 'scan' should
+	// be side-effect free. However we've lost the action by the time scan is complete, so we do it in the scan.
+	let effectsReducer = (state, ac) => {
+		if (ac.type === 'PERFORM_ACTION') {
+			try {
+				controller.postAction(_.last(state.computedStates).state, ac.action);
+			} catch(err) {
+				logError(err);
+			}
+		}
+		return devReducer(state, ac);
+	};
 
 	let devStateObs = Rx.Observable.merge(serverCh, uiCh).map(ac => ({type: 'PERFORM_ACTION', action: ac}))
 					.merge(devCh)
-					.scan(null, devReducer)
+					.scan(devInitialState, effectsReducer) // XXX side effects!
 					.share();
 
 
