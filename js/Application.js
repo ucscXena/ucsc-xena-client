@@ -44,7 +44,7 @@ module.exports = React.createClass({
 				{_.getIn(km, ['id']) ? <KmPlot
 						callback={this.props.callback}
 						km={km}
-						features={this.props.appState.features} /> : null}
+						features={otherState.features} /> : null}
 				<div className='chartRoot' style={{display: 'none'}} />
 			</Grid>
 		);
