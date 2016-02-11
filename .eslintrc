@@ -8,10 +8,12 @@
 	"parser": "babel-eslint",
 	"rules": {
 		"yoda": 0,
+		"comma-spacing": 2,
+		"space-infix-ops": 2,
+		"no-redeclare": [2, {"builtinGlobals": true}],
 		"no-underscore-dangle": 0,
 		"no-mixed-spaces-and-tabs": 0,
 		"no-multi-spaces": 0,
-		"global-strict": false,
 		"no-extra-strict": 0,
 		"strict": [2, "global"],
 		"no-console": 0,

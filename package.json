@@ -7,6 +7,7 @@
   "scripts": {
     "test": "webpack-dev-server --config webpack.test.js --devtool eval --port 8081",
     "lint": "eslint --no-color js/*.js test/*.js",
+    "eslint": "eslint",
     "clean": "rimraf build/*",
     "start": "webpack-dev-server --devtool eval --progress --colors --history-api-fallback",
     "start:hot": "node ./server-hot.js",
@@ -31,7 +32,7 @@
     "babel-preset-react": "^6.3.13",
     "css-loader": "^0.9.1",
     "csslint": "^0.10.0",
-    "eslint": "^0.20.0",
+    "eslint": "^1.10.3",
     "eslint-plugin-react": "^3.16.1",
     "exports-loader": "^0.6.2",
     "file-loader": "^0.8.1",
