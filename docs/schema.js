@@ -1,8 +1,8 @@
 /*global require: false, module: false */
-/*eslint new-cap: [0] */
+/*eslint new-cap: [0], camelcase: [0] */
 'use strict';
 var S = require('schema-shorthand').schema;
-var {d, string, array, number, or, nullval, boolean, r} = S;
+var {d, string, array, number, or, nullval, boolean, r, object} = S;
 
 var dsID = d('dsID', 'JSON encoded host and dataset id',
 			string(/{"host":".*","name":".*"}/));
@@ -115,6 +115,13 @@ var Feature = d(
 	})
 );
 
+var FeaturesByDataset = d(
+	'FeaturesByDataset', 'Phenotype metadata, indexed by dataset',
+	S({
+		[dsID]: Feature
+	})
+);
+
 var FeatureID = d(
 	'FeatureID', 'Primary key for a feature',
 	S({
@@ -145,6 +152,11 @@ var ColorSpec = d(
 	)
 );
 
+var colorString = d(
+	'colorString', 'A css color string',
+	or(string(/#[0-9A-Fa-f]{6}/), string())
+);
+
 var Gene = d('Gene', 'A gene name', string());
 var Probe = d('Probe', 'A probe name', string());
 var Field = d('Field', 'A gene or probe name', or(Gene, Probe));
@@ -172,11 +184,77 @@ var ProbeData = d(
 		}
 	}));
 
+// XXX why is this not rendered as <em>string /[ACTG]*/</em>?
+var Sequence = d(
+	'Sequence', 'String representation of a sequence',
+	string(/[ACTG]*/)
+);
+
+var BasePosition = d(
+	'BasePosition', 'Base position',
+	number([0])
+);
+
+var Mutation = d(
+	'Mutation', 'Mutation record',
+	S({
+		alt: Sequence,
+		amino_acid: string(),
+		chr: string(),
+		dna_vaf: or(nullval, number()),
+		effect: string(), // should be enum
+		end: BasePosition,
+		gene: Gene,
+		reference: Sequence,
+		rna_vaf: or(nullval, number()),
+		sample: SampleID,
+		start: BasePosition
+	})
+);
+
+var RefGene = d(
+	'RefGene', 'A refGene annotation',
+	S({
+		cdsEnd: BasePosition,
+		cdsStart: BasePosition,
+		exonCount: number([0]),
+		exonEnds: [BasePosition],
+		exonStarts: [BasePosition],
+		name2: Gene,
+		strand: or(nullval, '-', '+'),
+		txEnd: BasePosition,
+		txStart: BasePosition
+	})
+);
+
 var MutationData = d(
 	'MutationData', 'Data for a mutation column',
 	S({
+		req: object({
+			samples: {[SampleID]: boolean}, // XXX should be true, not boolean
+			rows: [Mutation]
+		}),
+		refGene: {
+			[Field]: RefGene
+		}
 	})
 );
+
+
+// for sort, index by sample
+// 	  also compute sort?
+//
+// XXX oh, fudge. If we move this outside app data, then the sort is
+// also outside app data. Which is correct, but what does it break?
+var MutationViewData = d(
+	'MutationViewData', 'Data for the mutation view',
+	S({
+		index: {},
+		order: {[SampleID]: number(0)},
+		refGene: RefGene
+	})
+);
+
 var VizSettings = d(
 	'VizSettings', 'User settings for visualization',
 	S({
@@ -207,9 +285,7 @@ var Application = d(
 				datasets: array.of(Dataset)
 			})
 		},
-		features: {
-			[dsID]: Feature
-		},
+		features: FeaturesByDataset,
 		km: {
 			id: dsID,
 			column: or(ProbeData, MutationData),
@@ -234,7 +310,33 @@ var Application = d(
 		vizSettings: VizSettings
 	})
 );
-//
+
+var KmPoint = d(
+	'KmPoint', 'A time point in a KM result', S({
+		d: number(),
+		e: boolean,
+		n: number(),
+		rate: or(nullval, number()),
+		s: number(),
+		t: number()
+	})
+)
+
+var KmPlotData = d(
+	'KmPlotData', 'Data for drawing KM', 
+	S({
+		ev: FeatureID,
+		tte: FeatureID,
+		patient: FeatureID,
+		id: ColumnID,
+		label: string(),
+		groups: {
+			colors: [colorString],
+			labels: [string()],
+			curves: [[KmPoint]]
+		}
+	})
+);
 //
 //var BasePos = d('base position', number([0]));
 var Chrom = d('Chrom', 'chrom', string(/chr[0-9]+/));
@@ -294,6 +396,7 @@ var Chrom = d('Chrom', 'chrom', string(/chr[0-9]+/));
 // Note that a multimethod could dispatch on an array.
 
 // ChromPosition is internally converted to an array of (start, end)
+
 //var ChromIntervals = d(
 //	'chrom intervals', {
 //		chrom: string(),
@@ -302,14 +405,32 @@ var Chrom = d('Chrom', 'chrom', string(/chr[0-9]+/));
 //		)
 //	}
 //);
+
 //
 //var PixelPos = d('pixel offset', number([0]));
 
 //var Partition = array.of(array(PixelPos, PixelPos));
 
-//var ChromLayout = S({
-//    intervals: ChromIntervals,
-//    partition: Partition});
+// XXX note that r() and d() defeat the reference equality check when inlining schema. Ouch.
+var ChromLayout = d('ChromLayout', 'A chromosome layout. Currently limited to a single chrom.',
+					S([[r('start', BasePosition), r('end', BasePosition)]])
+				   );
+
+var ScreenLayout = d('ScreenLayout', 'A screen layout',
+					S([[r('start px', number([0])), r('end px', number([0]))]])
+					);
+
+var Layout = d('Layout', 'Screen and chrom layout',
+			  S({chrom: ChromLayout, screen: ScreenLayout, reversed: boolean}));
+
+var KmPlotProps = d('KmPlotProps', 'KmPlot Component properties',
+	S({
+		callback: "Function for emitting events",
+		eventClose: d('event name', 'Action type to issue when "close" is requested by user', string()),
+		features: FeaturesByDataset,
+		km: KmPlotData
+	})
+);
 
 module.exports = [
 	dsID,
@@ -322,12 +443,25 @@ module.exports = [
 	Feature,
 	FeatureID,
 	FeatureName,
+	FeaturesByDataset,
 	SampleID,
 	ColumnID,
 	ColorSpec,
 	HeatmapData,
 	ProbeData,
+	BasePosition,
+	Sequence,
+	RefGene,
+	Mutation,
 	MutationData,
+	MutationViewData,
 	VizSettings,
-	Application
+	Application,
+	ChromLayout,
+	ScreenLayout,
+	Layout,
+	colorString,
+	KmPoint,
+	KmPlotData,
+	KmPlotProps
 ];
