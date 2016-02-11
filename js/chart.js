@@ -2,14 +2,14 @@
 /*eslint-env browser */
 /*jshint browser: true, onevar: true */
 /*global define: false, document: false */
-define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_helper', 'underscore_ext', 'rx'],
+define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_helper', 'underscore_ext', 'rx'],
 	function (xenaQuery, dom_helper, heatmapColors, Highcharts, highcharts_helper, _, Rx) {
 	'use strict';
 	return function (root, cursor, sessionStorage) {
 		var div,
 			leftContainer, rightContainer, controlContainer,
 			xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-			cohort, samples, updateArgs, normalizationState={};
+			cohort, samples, updateArgs, normalizationState = {};
 
 			if (xenaState)	{
 				cohort = xenaState.cohort;
@@ -96,7 +96,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_h
 			dropDownDiv.selectedIndex = 0;
 
 			dropDownDiv.addEventListener('change', function () {
-				normalizationState[xenaState.chartState.ycolumn]=dropDownDiv.selectedIndex;
+				normalizationState[xenaState.chartState.ycolumn] = dropDownDiv.selectedIndex;
 				update.apply(this, updateArgs);
 			});
 
@@ -183,7 +183,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_h
 				dropDown.style.visibility = "visible";
 
 				//check current normalizationState variable
-				if (normalizationState[ycolumn]!== undefined ){
+				if (normalizationState[ycolumn] !== undefined){
 					dropDownDiv.selectedIndex = normalizationState[ycolumn];
 				}
 				//intentionally not checking vizSettings, need to understand cursor first.
@@ -192,14 +192,14 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_h
         // the state, or from a data cache, because we've fetched that already.
 				else {
 					dropDownDiv.selectedIndex = yNormalizationMeta;
-					normalizationState[ycolumn]=yNormalizationMeta;
+					normalizationState[ycolumn] = yNormalizationMeta;
 				}
 			} else {
 				dropDown.style.visibility = "hidden";
 			}
 		}
 
-		function update(cohort, samples, normalizationState) {
+		function update(cohort, samples) {
 			var oldDiv = document.getElementById("chartContainer");
 			rightContainer.replaceChild(buildEmptyChartContainer(), oldDiv);
 
@@ -632,7 +632,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_h
 
 					highcharts_helper.addSeriesToColumn(
 						chart, code, dataSeriese, errorSeries, yIsCategorical,
-						yfields.length * xCategories.length < 30, showLegend,color);
+						yfields.length * xCategories.length < 30, showLegend, color);
 				}
 				chart.redraw();
 			} else if (!xfield) { //summary view --- messsy code
@@ -989,7 +989,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors','./highcharts', 'highcharts_h
 		}
 
 		root.setAttribute("id", "chartRoot");
-		root.style.height = window.innerHeight+'px';  /// best to do with css, but don't how to set the chart to full window height in css
+		root.style.height = window.innerHeight + 'px';  /// best to do with css, but don't how to set the chart to full window height in css
 
 		// left panel
 		leftContainer = document.createElement("div");

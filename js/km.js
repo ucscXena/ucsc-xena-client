@@ -1,3 +1,4 @@
+/*eslint-disable */
 /*eslint strict: [2, "function"] */
 /*global define: false */
 // XXX see https://github.com/esbullington/react-d3

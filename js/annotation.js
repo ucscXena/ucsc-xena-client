@@ -2,7 +2,7 @@
 'use strict';
 var multi = require('multi');
 
-function getType([type, ...data]) {
+function getType([type]) {
 	return type;
 }
 
