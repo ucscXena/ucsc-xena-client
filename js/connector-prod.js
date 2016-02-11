@@ -48,6 +48,7 @@ module.exports = function({
 	initialState,
 	serverBus,
 	serverCh,
+	uiBus,
 	uiCh,
 	main,
 	selector}) {
@@ -67,4 +68,7 @@ module.exports = function({
 	// Save state in sessionStorage on page unload.
 	stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
 		.subscribe(state => sessionStorage.xena = JSON.stringify(state));
+
+	// Kick things off.
+	uiBus.onNext(['init']);
 };

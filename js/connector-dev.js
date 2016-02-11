@@ -25,6 +25,7 @@ module.exports = function({
 	initialState,
 	serverBus,
 	serverCh,
+	uiBus,
 	uiCh,
 	main,
 	selector}) {
@@ -52,8 +53,22 @@ module.exports = function({
 		</DockMonitor>
 	);
 
+	var sessionLoaded = false; // XXX Ugh. Sorry about this.
+	function getSavedState() {
+		if (sessionStorage.debugSession) {
+			try {
+				let devState = JSON.parse(sessionStorage.debugSession);
+				sessionLoaded = true;
+				return devState;
+			} catch(err) {
+				console.log("Unable to load saved debug session", err);
+			}
+		}
+		return null;
+	}
+
 	let devReducer = DevTools.instrument(controller, initialState);
-	let devInitialState = devReducer(null, {});
+	let devInitialState = getSavedState() || devReducer(null, {});
 
 	// Side-effects (e.g. async) happen here. Ideally we wouldn't call this from 'scan', since 'scan' should
 	// be side-effect free. However we've lost the action by the time scan is complete, so we do it in the scan.
@@ -68,6 +83,9 @@ module.exports = function({
 		return devReducer(state, ac);
 	};
 
+	function prependState(stateObs) {
+		return sessionLoaded ? stateObs.startWith(devInitialState) : stateObs;
+	}
 	let devStateObs = Rx.Observable.merge(serverCh, uiCh).map(ac => ({type: 'PERFORM_ACTION', action: ac}))
 					.merge(devCh)
 					.scan(devInitialState, effectsReducer) // XXX side effects!
@@ -78,11 +96,20 @@ module.exports = function({
 	// than rAF.
 
 	// pass the selector into Application, so we catch errors while rendering & can display an error message.
-	devStateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
+	prependState(devStateObs).throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
 		.subscribe(devState => ReactDOM.render(
 					<div>
 						<Application callback={updater} selector={selector} state={_.last(devState.computedStates).state} />
 						<DevTools dispatch={devBus.onNext.bind(devBus)} {...devState} />
 					</div>,
 			main));
+
+	// Save state in sessionStorage on page unload.
+	devStateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
+		.subscribe(state => sessionStorage.debugSession = JSON.stringify(state));
+
+	// Kick things off, except when recovering.
+	if (!sessionLoaded) {
+		uiBus.onNext(['init']);
+	}
 };

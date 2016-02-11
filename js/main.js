@@ -85,7 +85,4 @@ if (sessionStorage && sessionStorage.xena && location.search.indexOf('?nostate')
 
 var controller = compose(serverController, uiController);
 
-connector({controller, initialState, serverCh, serverBus, uiCh, main, selector});
-
-// Kick things off.
-uiBus.onNext(['init']);
+connector({controller, initialState, serverCh, serverBus, uiCh, uiBus, main, selector});
