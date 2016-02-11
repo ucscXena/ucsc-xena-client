@@ -10,6 +10,7 @@
 		"yoda": 0,
 		"comma-spacing": 2,
 		"space-infix-ops": 2,
+		"no-undef": 2,
 		"no-redeclare": [2, {"builtinGlobals": true}],
 		"no-underscore-dangle": 0,
 		"no-mixed-spaces-and-tabs": 0,
