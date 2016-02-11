@@ -12,7 +12,7 @@ describe('refGeneExons', function () {
 				cdsEnd: 90,
 				exonStarts: [1, 20, 30, 60, 80],
 				exonEnds: [15, 28, 58, 73, 100]
-			}),[
+			}), [
 				{ start: 1,  end: 9,   i: 0, inCds: false},
 				{ start: 10, end: 15,  i: 0, inCds: true},
 				{ start: 20, end: 28,  i: 1, inCds: true},

@@ -2,7 +2,7 @@
 /*eslint-env browser */
 /*global define: false */
 
-define(["dom_helper", "session", "xenaQuery", "base" , "../css/hub.css"], function (dom_helper, session, xenaQuery) {
+define(["dom_helper", "session", "xenaQuery", "base", "../css/hub.css"], function (dom_helper, session, xenaQuery) {
 	'use strict';
 
 	function newHubNode(host) {
@@ -26,8 +26,8 @@ define(["dom_helper", "session", "xenaQuery", "base" , "../css/hub.css"], functi
 		}
 
 		// get ride of ending '/''
-		if (host[host.length-1]==='/') {
-			host = host.slice(0, host.length-1);
+		if (host[host.length - 1] === '/') {
+			host = host.slice(0, host.length - 1);
 		}
 		// specially code for galaxyxena.soe.ucsc.edu
 		if (host.match(/galaxyxena.*.ucsc.edu/gi))

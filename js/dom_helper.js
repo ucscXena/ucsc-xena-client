@@ -118,7 +118,7 @@ define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
 			i;
 
 		div.appendChild(node);
-		node.setAttribute("class","spinner circles");
+		node.setAttribute("class", "spinner circles");
 		for (i = 0; i < 8; i++) {
     	node.appendChild(document.createElement("div"));
 		}

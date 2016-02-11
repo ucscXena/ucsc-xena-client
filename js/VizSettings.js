@@ -198,7 +198,7 @@ function vizSettingsWidget(node, callback, vizState, dsID, hide) {
 		}
 
 		function valToStr(v) {
-			return (!isNaN(v) && (v!==null) && (v!== undefined)) ? "" + v : "";
+			return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
 		}
 
 		function buildCustomColorScale(custom) {

@@ -81,15 +81,15 @@ define(['./highcharts'], function () {
       fontStyle: 'italic'
     };
     if (showLegend) {
-      chartOptions.legend.title.text = Y+ '<br/><span style="font-size: 9px; color: #666; font-weight: normal">(Click to hide)</span>';
+      chartOptions.legend.title.text = Y + '<br/><span style="font-size: 9px; color: #666; font-weight: normal">(Click to hide)</span>';
     }
     else {
       chartOptions.legend.title = {};
     }
 
-    var Y_in_Title = Y.length >50? Y.slice(0, 50)+"...":Y;
+    var Y_in_Title = Y.length > 50 ? Y.slice(0, 50) + "..." : Y;
     chartOptions.title = {
-      text: yAxisTitle+" of "+ Y_in_Title + ((xAxisTitle === "")? "" : " by " + xAxisTitle)
+      text: yAxisTitle + " of " + Y_in_Title + ((xAxisTitle === "") ? "" : " by " + xAxisTitle)
     };
     chartOptions.xAxis = {
       title: {
@@ -125,7 +125,7 @@ define(['./highcharts'], function () {
       if (xAxisTitle === ""){
         chartOptions.tooltip = {
           formatter: function () {
-            return Y + ' ' + categories[this.point.x]+': <b>' + this.point.y + '%</b>';
+            return Y + ' ' + categories[this.point.x] + ': <b>' + this.point.y + '%</b>';
           },
           hideDelay: 0
         };
@@ -142,7 +142,7 @@ define(['./highcharts'], function () {
       };
     }
 
-    if (categories.length>15){
+    if (categories.length > 15){
       chartOptions.xAxis.labels = {
         rotation: -90
       };
@@ -235,7 +235,7 @@ define(['./highcharts'], function () {
 
     if (errorSeries){
       chart.addSeries({
-        name: sName +" +/-standard deviation",
+        name: sName + " +/-standard deviation",
         type: 'errorbar',
         data: errorSeries
       }, false);

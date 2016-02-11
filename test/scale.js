@@ -45,7 +45,7 @@ describe('scale', function () {
 				return true; // report these positive until getting suchthat working.
 			}
 			var ticks = scale.linearTicks(dstart, dend);
-			assert(ticks.length >=4 && ticks.length <= 9,
+			assert(ticks.length >= 4 && ticks.length <= 9,
 				`Tick count outside of range. ${ticks}`);
 			return true;
         });

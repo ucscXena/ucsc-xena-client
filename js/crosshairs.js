@@ -30,7 +30,7 @@ define(['d3', 'jquery', 'underscore'
 			plot = plot.parents('.plot');
 		}
 
-		if (e.type === 'mousemove' || e.type ==="mouseenter") {
+		if (e.type === 'mousemove' || e.type === "mouseenter") {
 			crosshairV.show();
 			crosshairH.show();
 			if (headerPlot.children().length > 0) {
@@ -41,7 +41,7 @@ define(['d3', 'jquery', 'underscore'
 				'top': e.pageY - scrollTop
 			});
 			crosshairV.css({
-				'left': e.pageX -scrollLeft,
+				'left': e.pageX - scrollLeft,
 				'top': vTop - scrollTop,
 				'height': vHeight
 			});
@@ -57,7 +57,7 @@ define(['d3', 'jquery', 'underscore'
 
 		crosshairH.hide();
 		crosshairV.hide();
-		frozen= false;
+		frozen = false;
 	}
 
 	aWidget = {

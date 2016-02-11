@@ -25,7 +25,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			},
 			state = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : {servers: {user: []}};
 
-		if ( state.cohort && state.cohort!==cohortname) {
+		if ( state.cohort && state.cohort !== cohortname) {
 			xenaHeatmapStateReset();
 			state = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : {servers: {user: []}};
 		}
@@ -66,7 +66,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 
 	function sessionStorageInitialize() {
 		var defaultLocal = "https://local.xena.ucsc.edu:7223",
-			defaultUCSC ="https://genome-cancer.ucsc.edu:443/proj/public/xena",
+			defaultUCSC = "https://genome-cancer.ucsc.edu:443/proj/public/xena",
 			defaultHosts = [
 				defaultUCSC,
 				defaultLocal
@@ -227,7 +227,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 			sidebarNode.parentNode.removeChild(sidebarNode);
 			sidebarCheck.parentNode.removeChild(sidebarCheck);
 		}
-		if (sidebarNode && (status === "live_selected" || status === "live_unselected" || status ==="nodata")){
+		if (sidebarNode && (status === "live_selected" || status === "live_unselected" || status === "nodata")){
 				sidebarNode.parentNode.replaceChild(
 					dom_helper.elt(display[status].el, dom_helper.hrefLink(host + display[status].msg,
 						"../datapages/?host=" + host)), sidebarNode);
@@ -240,7 +240,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 		if (nodeHubLabel && displayHubLabel[status]){
 			if (displayHubLabel[status].color){
 				nodeHubLabel.style.color = displayHubLabel[status].color;
-				nodeHubCheck.style.background = "linear-gradient("+displayHubLabel[status].color+", white)";
+				nodeHubCheck.style.background = "linear-gradient(" + displayHubLabel[status].color + ", white)";
 			}
 			if (displayHubLabel[status].msg) {
 				nodeHubLabel.innerHTML = displayHubLabel[status].msg;
@@ -260,7 +260,7 @@ define(["xenaQuery", "rx", "dom_helper", "underscore_ext"], function (xenaQuery,
 					var duration;
 					if (s.length > 0) {
 						addHostToListInSession('activeHosts', host);
-						updateHostDOM(host, (userHosts.indexOf(host)!==-1)? 'live_selected' : 'live_unselected');
+						updateHostDOM(host, (userHosts.indexOf(host) !== -1) ? 'live_selected' : 'live_unselected');
 					} else {
 						duration = Date.now() - start;
 						removeHostFromListInSession('activeHosts', host);

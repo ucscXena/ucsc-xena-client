@@ -85,7 +85,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	// new optional id parameter is for differentiate the same req with some sort of user-supplied identification
 	function reqObj(req, fn, id) { // TODO may not belong in this file
 		return {
-			id: JSON.stringify(req)+id,
+			id: JSON.stringify(req) + id,
 			query: Rx.Observable.defer(_.partial(fn, req))
 		};
 	}

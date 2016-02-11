@@ -156,8 +156,8 @@ function colorFloatGenomicData(column, settings = {}, codes, data, dataset) {
 		return ['no-data'];
 	}
 
-	if ( (settings.min!== undefined) && (settings.min !== null) && !isNaN(settings.min)) { //custom setting
-		if (isNaN(minStart)  || isNaN(maxStart) || (minStart === null) || (maxStart===null)) {
+	if ((settings.min !== undefined) && (settings.min !== null) && !isNaN(settings.min)) { //custom setting
+		if (isNaN(minStart)  || isNaN(maxStart) || (minStart === null) || (maxStart === null)) {
 			mid = (max + min) / 2.0;
 			zone = (max - min) / 4.0;
 			minStart = mid  -  zone / 2.0;
