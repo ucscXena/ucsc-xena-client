@@ -34,8 +34,8 @@ function partitionedVals(avg, uniq, codes, colorfn) {
 	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
 		min = _.min(vals),
 		max = _.max(vals),
-		low = vals[Math.round(vals.length / 3)],
-		high = vals[Math.round(2 * vals.length / 3)];
+		low = vals[Math.round(vals.length / 3)].toPrecision(4),
+		high = vals[Math.round(2 * vals.length / 3)].toPrecision(4);
 	return {
 		values: _.map(avg, saveNull(v => v <= low ? 'low' :
 							(v <= high ? 'middle' : 'high'))),
