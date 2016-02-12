@@ -54,6 +54,14 @@ path.outline {
 	stroke-width: 3.0px;
 }
 
+.kmDialog .legendKey {
+  font-size: small;
+  font-weight: bold;
+}
+
+.kmDialog .legendValue {
+  font-size: 5.0px;
+}
 
 .kmdiv {
 	position: relative;
@@ -100,6 +108,10 @@ path.outline {
 	margin-right: 40px;
 	font-weight: bold;
 	padding: 3px;
+}
+
+.kmDialog .legendValue {
+  font-size: small;
 }
 
 .labelbutton {
