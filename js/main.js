@@ -32,21 +32,21 @@ const connector = require('./connector');
 // methods in closures.
 
 if (module.hot) {
-	module.hot.accept('./controllers/ui', () => {
-		var newModule = require('./controllers/ui');
-		_.extend(uiController, newModule);
-	});
-	module.hot.accept('./controllers/server', () => {
-		var newModule = require('./controllers/server');
-		_.extend(serverController, newModule);
-	});
-	// XXX Note that hot-loading these won't cause a re-render.
-	module.hot.accept('./models/mutationVector', () => {});
-	module.hot.accept('./models/denseMatrix', () => {});
+  module.hot.accept('./controllers/ui', () => {
+    var newModule = require('./controllers/ui');
+    _.extend(uiController, newModule);
+  });
+  module.hot.accept('./controllers/server', () => {
+    var newModule = require('./controllers/server');
+    _.extend(serverController, newModule);
+  });
+  // XXX Note that hot-loading these won't cause a re-render.
+  module.hot.accept('./models/mutationVector', () => {});
+  module.hot.accept('./models/denseMatrix', () => {});
 }
 
 var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena',
-		'https://local.xena.ucsc.edu:7223'];
+    'https://local.xena.ucsc.edu:7223'];
 var main = window.document.getElementById('main');
 
 // Create a channel for messages from the server. We
@@ -66,21 +66,21 @@ var second = ([, b]) => b;
 // Subject of [slot, obs]. We group by slot and apply switchLatest. If slot is '$none' we just
 // merge.
 var serverCh = serverBus.groupBy(([slot]) => slot)
-	.map(g => g.key === '$none' ? g.map(second).mergeAll() : g.map(second).switchLatest()).mergeAll();
+  .map(g => g.key === '$none' ? g.map(second).mergeAll() : g.map(second).switchLatest()).mergeAll();
 
 var uiBus = new Rx.Subject();
 var uiCh = uiBus;
 
 var initialState = {
-	servers: {'default': defaultServers, user: defaultServers},
-	zoom: {height: 300},
-	columns: {},
-	columnOrder: [],
-	samples: []
+  servers: {'default': defaultServers, user: defaultServers},
+  zoom: {height: 300},
+  columns: {},
+  columnOrder: [],
+  samples: []
 };
 
 if (sessionStorage && sessionStorage.xena && location.search.indexOf('?nostate') !== 0) {
-	_.extend(initialState, JSON.parse(sessionStorage.xena));
+  _.extend(initialState, JSON.parse(sessionStorage.xena));
 }
 
 var controller = compose(serverController, uiController);
