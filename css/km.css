@@ -33,36 +33,58 @@ path.outline {
   stroke-width: 2.0px;
 }
 
-
 .kmDialog .subgroup:hover text {
   font-weight: bold;
 }
 
-.kmDialog .subgroup:hover path.line {
+/*.kmDialog .subgroup:hover path.line {*/
+  /*stroke-width: 3.0px;*/
+/*}*/
+
+/*.kmDialog .subgroup:hover path.outline {*/
+  /*stroke-width: 5.0px;*/
+/*}*/
+
+/*.kmDialog .subgroup:hover line.line {*/
+  /*stroke-width: 2.0px;*/
+/*}*/
+
+/*.kmDialog .subgroup:hover line.outline {*/
+  /*stroke-width: 3.0px;*/
+/*}*/
+
+.kmDialog .subgroup path.line.lineGlow{
   stroke-width: 3.0px;
 }
 
-.kmDialog .subgroup:hover path.outline {
+.kmDialog .subgroup path.outline.lineGlow{
   stroke-width: 5.0px;
 }
 
-.kmDialog .subgroup:hover line.line {
+.kmDialog .subgroup line.line.lineGlow{
   stroke-width: 2.0px;
 }
 
-.kmDialog .subgroup:hover line.outline {
+.kmDialog .subgroup line.outline.lineGlow{
   stroke-width: 3.0px;
 }
 
 .kmDialog .legendKey {
-  font-size: small;
   font-weight: bold;
+  font-style: italic;
 }
 
 .kmDialog .legendValue {
-  font-size: 5.0px;
+
 }
 
+.kmDialog .legendGlow {
+  font-weight: bold;
+}
+
+.kmDialog .metaData {
+  font-size: x-small;
+}
 .kmdiv {
   position: relative;
 }

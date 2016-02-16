@@ -25,28 +25,41 @@ function line(xScale, yScale, values) {
   return ['M0,0', ...coords.map(([t, s]) => `H${t}V${s}`)].join(' ');
 }
 
+function isActiveLabel(activeLabel, currentLabel) {
+  if (activeLabel)
+    return (activeLabel === currentLabel);
+  else
+    return false;
+}
+
 function censorLines(xScale, yScale, censors, className) {
   /*eslint-disable comma-spacing */
   return censors.map(({t, s}, i) =>
-      <line key={i} className={className} x1={0} x2={0} y1={-5} y2={5}
-        transform={`translate(${xScale(t)},${yScale(s)})`}/>);
+    <line
+      key={i}
+      className={className}
+      x1={0} x2={0} y1={-5} y2={5}
+      transform={`translate(${xScale(t)},${yScale(s)})`}/>
+  );
   /*eslint-enable comma-spacing */
 }
 
-function drawGroup(xScale, yScale, [color, label, curve]) {
+var drawGroup = function(xScale, yScale, [color, label, curve], setActiveLabel, activeLabel ) {
   var censors = curve.filter(pt => !pt.e);
+  let activeLabelClassName = isActiveLabel(activeLabel, label) ? ' lineGlow' : '';
+
   return (
-    <g key={label} className='subgroup' stroke={color}>
-      <path className='outline' d={line(xScale, yScale, curve)}/>
+    <g key={label} className='subgroup' stroke={color} onMouseOver={(e) => setActiveLabel(e, label)} >
+      <path className={'outline' +activeLabelClassName} d={line(xScale, yScale, curve)}/>
       <path className='line' d={line(xScale, yScale, curve)}/>
-      {censorLines(xScale, yScale, censors, 'outline')}
-      {censorLines(xScale, yScale, censors, 'line')}
+      {censorLines(xScale, yScale, censors, 'outline'+activeLabelClassName)}
+      {censorLines(xScale, yScale, censors, 'line'+activeLabelClassName)}
     </g>);
 }
 
 var bounds = x => [_.min(x), _.max(x)];
 
-function svg({colors, labels, curves}) {
+function svg({colors, labels, curves}, setActiveLabel, activeLabel) {
   var height = size.height - margin.top - margin.bottom,
     width = size.width - margin.left - margin.right,
     xdomain = bounds(_.pluck(_.flatten(curves), 't')),
@@ -56,7 +69,7 @@ function svg({colors, labels, curves}) {
     xScale = linear(xdomain, xrange),
     yScale = linear(ydomain, yrange);
 
-  var groupSvg = _.zip(colors, labels, curves).map(g => drawGroup(xScale, yScale, g));
+  var groupSvg = _.zip(colors, labels, curves).map(g => drawGroup(xScale, yScale, g, setActiveLabel, activeLabel));
 
   /*eslint-disable comma-spacing */
   return (
@@ -99,25 +112,25 @@ function svg({colors, labels, curves}) {
   /*eslint-enable comma-spacing */
 }
 
-function makeLegendKey([color, curves, label]) {
+function makeLegendKey([color, curves, label], setActiveLabel, activeLabel ) {
   // show colored line and category of curve
+  let activeLabelClassName = isActiveLabel(activeLabel, label) ? 'legendGlow' : '';
+
   return (
-    <li className="list-group-item" key={label}>
-      <span className="legendKey" style={{color: color}}>__ </span>
-      <span className="legendValue">{label}</span>
+    <li
+      key={label}
+      className={"list-group-item kmDialog" +" " +activeLabelClassName}
+      onMouseOver={(e) => setActiveLabel(e, label)}
+      onMouseOut={(e) => setActiveLabel(e, '')}>
+      <span style={{color: color}} className="legendKey">-- </span>
+      <span>{label}</span>
     </li>
   );
 }
 
-var Legend = React.createClass({
-  propTypes: {
-    groups: PropTypes.object,
-    columns: PropTypes.number
-  },
+
+var PValue = React.createClass({
   render: function() {
-    let { groups, columns } = this.props;
-    let { colors, curves, labels } = groups;
-    let sets = _.zip(colors, curves, labels).map(set => makeLegendKey(set));
     const tooltip = (
       <Tooltip placement='top'>
         Some individuals survival data are used more than once in the KM plot. Affected patients are: TCGA-G4-6317-02, TCGA-A6-2671-01, TCGA-A6-2680-01, TCGA-A6-2684-01, TCGA-A6-2685-01, TCGA-A6-2683-01, TCGA-AA-3520-01, TCGA-AA-3525-01.   For more information and how to remove such duplications: https://goo.gl/TSQt6z.
@@ -125,23 +138,36 @@ var Legend = React.createClass({
     );
 
     return (
-      <Col md={columns}>
-        <ListGroup>
-          <ListGroupItem>
-            <span>
-              <OverlayTrigger placement='left' overlay={tooltip} trigger={['hover', 'click']}>
-                <span className="glyphicon glyphicon-question-sign"></span>
-              </OverlayTrigger>
-            </span>
-            <span>
-              <div className="legendValue">P-Value =</div>
-              <div className="legendValue">Log-rank Test Stats =</div>
-            </span>
-          </ListGroupItem>
-          {sets}
-        </ListGroup>
-      </Col>
-    );
+      <ListGroup>
+        <ListGroupItem>
+          <OverlayTrigger placement='left' overlay={tooltip} trigger={['hover', 'click']}>
+            <span className="glyphicon glyphicon-question-sign"></span>
+          </OverlayTrigger>
+          <span>P-Value =</span>
+        </ListGroupItem>
+        <ListGroupItem>
+          <span>Log-rank Test Stats =</span>
+          <span>0.0000</span>
+        </ListGroupItem>
+      </ListGroup>
+    )
+  }
+})
+
+var Legend = React.createClass({
+  propTypes: {
+    activeLabel: PropTypes.string,
+    columns: PropTypes.number,
+    groups: PropTypes.object,
+    setActiveLabel: PropTypes.func
+  },
+
+  render: function() {
+    let { groups, setActiveLabel, activeLabel } = this.props;
+    let { colors, curves, labels } = groups;
+    let sets = _.zip(colors, curves, labels).map((set, index) => makeLegendKey(set, setActiveLabel, activeLabel));
+
+    return ( <ListGroup>{sets}</ListGroup> );
   }
 });
 
@@ -151,9 +177,17 @@ var KmPlot = React.createClass({
     eventClose: 'km-close'
   }),
 
+  getInitialState: () => ({
+    activeLabel: ''
+  }),
+
   hide: function () {
     let {callback, eventClose} = this.props;
     callback([eventClose]);
+  },
+
+  setActiveLabel: function(e, label) {
+    this.setState({ activeLabel: label });
   },
 
   render: function () {
@@ -167,12 +201,16 @@ var KmPlot = React.createClass({
         </Modal.Header>
         <Modal.Body>
           <div className='kmdiv'>
-            <Row>
+            <Row className="kmDialog">
               <Col md={9}>
-                {groups ? svg(groups) : "Loading..."}
-                <div className='kmScreen'/>
+                {groups ? svg(groups, this.setActiveLabel, this.state.activeLabel) : "Loading..."}
+                <div className='kmScreen' />
               </Col>
-              <Legend groups={groups} columns={3}/>
+              <Col md={3} className="metaData">
+                <PValue />
+                <Legend groups={groups} setActiveLabel={this.setActiveLabel} activeLabel={this.state.activeLabel} />
+              </Col>
+
             </Row>
             <div className='kmopts'>
               <div>
