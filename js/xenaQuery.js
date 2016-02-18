@@ -1,6 +1,6 @@
 /*eslint strict: [2, "function"] */
 /*eslint camelcase: 0, no-multi-spaces: 0, no-mixed-spaces-and-tabs: 0 */
-/*global define: false */
+/*global define: false, console: false */
 
 define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	'use strict';
@@ -336,7 +336,11 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		});
 	}
 
-	function dataset_list(servers, cohort) {
+
+	// Look up all datasets for the given cohort, searching
+	// all servers. Then, index the results by server and by dataset.
+	function dataset_list_deprecate(servers, cohort) {
+		console.warn('deprecated call to dataset_list');
 		return Rx.Observable.zipArray(_.map(servers, function (s) {
 			return Rx.DOM.ajax(
 				xena_post(s, dataset_list_query(cohort))
@@ -344,10 +348,22 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 				_.compose(_.partial(xena_dataset_list_transform, s), json_resp)
 			).catch(Rx.Observable.return([])); // XXX display message?
 		})).map(function (datasets_by_server) {
+			// Associate server with dataset list
 			return _.map(servers, function (server, i) {
 				return {server: server, datasets: datasets_by_server[i]};
 			});
 		});
+	}
+
+	function dataset_list_new(server, cohort) {
+		return Rx.DOM.ajax(
+			xena_post(server, dataset_list_query(cohort))
+		).map(resp => xena_dataset_list_transform(server, json_resp(resp)));
+	}
+
+	function dataset_list(server, cohort) {
+		return (_.isArray(server) ? dataset_list_deprecate :
+			dataset_list_new)(server, cohort);
 	}
 
 	function code_list(host, ds, probes) {
@@ -530,8 +546,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	function all_samples(host, cohort) {
 		return Rx.DOM.ajax(
 			xena_post(host, all_samples_query(cohort))
-		).map(json_resp)
-		.catch(Rx.Observable.return([])); // XXX display message?
+		).map(json_resp);
 	}
 
 	// XXX Have to use POST here because the genome-cancer reverse proxy fails
@@ -540,8 +555,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	function all_cohorts(host) {
 		return Rx.DOM.ajax(
 			xena_post(host, all_cohorts_query())
-		).map(json_resp)
-		.catch(Rx.Observable.return([])); // XXX display message?
+		).map(json_resp);
 	}
 
 	// test if host is up

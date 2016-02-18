@@ -3,6 +3,7 @@
 
 var _ = require('../underscore_ext');
 var Rx = require('rx');
+var {reifyErrors, collectResults} = require('./errors');
 
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
@@ -14,18 +15,25 @@ function resetZoom(state) {
 					 z => _.merge(z, {count: count, index: 0}));
 }
 
-function fetchFeatures(serverBus, state, datasets) {
+function featuresQuery(datasets) {
 	var clinicalMatrices = _.flatmap(datasets.servers,
-									 server => _.filter(server.datasets, ds => ds.type === 'clinicalMatrix')),
+			server => _.filter(server.datasets, ds => ds.type === 'clinicalMatrix')),
 		dsIDs = _.pluck(clinicalMatrices, 'dsID');
 
 	// XXX note that datasetFeatures takes optional args, so don't pass it directly
 	// to map.
-	serverBus.onNext(['features-slot',
-				  Rx.Observable.zipArray(_.map(dsIDs, dsID => datasetFeatures(dsID)))
-					  .map(features => ['features', _.object(dsIDs, features)])
-	]);
+	return Rx.Observable.zipArray(
+				_.map(dsIDs, dsID => reifyErrors(datasetFeatures(dsID), {dsID}))
+			).flatMap(resps =>
+				collectResults(resps, features => _.object(dsIDs, features)));
 }
+
+function fetchFeatures(serverBus, state, datasets) {
+	serverBus.onNext(['features', featuresQuery(datasets)]);
+}
+
+var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
+
 
 var controls = {
 	cohorts: (state, cohorts) => _.assoc(state, "cohorts", cohorts),
@@ -34,8 +42,9 @@ var controls = {
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
 		resetZoom(_.assoc(state, "samples", samples)),
-	'widget-data': (state, data, id) =>
-		_.assocIn(state, ["data", id], data),
+	// XXX Here we drop the update if the column is no longer open.
+	'widget-data': (state, id, data) =>
+		columnOpen(state, id) ?  _.assocIn(state, ["data", id], data) : state,
 	'columnEdit-features': (state, list) => _.assocIn(state, ["columnEdit", 'features'], list),
 	'columnEdit-examples': (state, list) => _.assocIn(state, ["columnEdit", 'examples'], list),
 	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival)

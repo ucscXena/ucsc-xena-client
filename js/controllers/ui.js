@@ -9,57 +9,59 @@ var xenaQuery = require('../xenaQuery');
 var widgets = require('../columnWidgets');
 var util = require('../util');
 var kmModel = require('../models/km');
+var {reifyErrors, collectResults} = require('./errors');
 
 var	datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
 var identity = x => x;
 
+var unionOfResults = resps => collectResults(resps, results => _.union(...results));
+
 function cohortQuery(servers) {
-	return Rx.Observable.zipArray(_.map(servers, xenaQuery.all_cohorts))
-			.map(servers => ['cohorts', _.union.apply(null, servers)]);
+	return Rx.Observable.zipArray(_.map(servers, s => reifyErrors(xenaQuery.all_cohorts(s), {host: s})))
+			.flatMap(unionOfResults);
 }
 
 function fetchCohorts(serverBus, servers) {
-	serverBus.onNext(['cohorts-slot', cohortQuery(servers)]);
+	serverBus.onNext(['cohorts', cohortQuery(servers)]);
 }
 
 var datasetSamples = xenaQuery.dsID_fn(xenaQuery.dataset_samples);
 
 function samplesQuery(servers, cohort, samplesFrom) {
-	return (samplesFrom ?
+	return samplesFrom ?
 				datasetSamples(samplesFrom) :
 				Rx.Observable.zipArray(
-					_.map(servers, s => xenaQuery.all_samples(s, cohort))
-				).map(_.apply(_.union))
-			).map(samps => ['samples', samps]);
+					_.map(servers, s => reifyErrors(xenaQuery.all_samples(s, cohort), {host: s}))
+				).flatMap(unionOfResults);
 }
 
 function fetchSamples(serverBus, servers, cohort, samplesFrom) {
-	serverBus.onNext(['samples-slot', samplesQuery(servers, cohort, samplesFrom)]);
+	serverBus.onNext(['samples', samplesQuery(servers, cohort, samplesFrom)]);
 }
 
+var datasetResults = resps => collectResults(resps, servers => ({
+	servers: servers,
+	datasets: _.object(_.flatmap(servers, s => _.map(s.datasets, d => [d.dsID, d])))
+}));
+
 function datasetQuery(servers, cohort) {
-	return (cohort ?
-			xenaQuery.dataset_list(servers, cohort) :
-			Rx.Observable.return([], Rx.Scheduler.timeout))
-		.map(servers =>
-				['datasets', {
-					servers: servers,
-					datasets:
-						_.object(_.flatmap(servers, s => _.map(s.datasets, d => [d.dsID, d])))
-				}]);
+	return Rx.Observable.zipArray(
+		_.map(servers, server => reifyErrors(
+				xenaQuery.dataset_list(server, cohort).map(datasets => ({server, datasets})),
+				{host: server}))
+	).flatMap(datasetResults)
 }
 
 function fetchDatasets(serverBus, servers, cohort) {
-	serverBus.onNext(['datasets-slot', datasetQuery(servers, cohort)]);
+	serverBus.onNext(['datasets', datasetQuery(servers, cohort)]);
 }
 
 function fetchColumnData(serverBus, state, id, settings) {
 	let samples = _.get(state, "samples");
-	// XXX make serverCh group by _.isArray && v[0], so we don't have to
-	// pass null? Or wrap this in a call? We can get out-of-order responses
-	// with this mechanism. Need something different.
-	serverBus.onNext(['$none', widgets.fetch(settings, samples)
-			.map(data => ['widget-data', data, id])]);
+
+	// XXX  Note that the widget-data-xxx slots are leaked in the groupBy
+	// in main.js. We need a better mechanism.
+	serverBus.onNext([['widget-data', id], widgets.fetch(settings, samples)]);
 }
 
 function sortFeatures(features) {
@@ -69,7 +71,7 @@ function sortFeatures(features) {
 
 function featureQuery(dsID) {
 	return xenaQuery.dsID_fn(xenaQuery.feature_list)(dsID)
-		.map(list => ['columnEdit-features', sortFeatures(list)]);
+		.map(list => sortFeatures(list));
 }
 function fetchFeatures(serverBus, state, dsID) {
 	serverBus.onNext(['columnEdit-features', featureQuery(dsID)]);
@@ -77,7 +79,7 @@ function fetchFeatures(serverBus, state, dsID) {
 
 function exampleQuery(dsID) {
 	return xenaQuery.dsID_fn(xenaQuery.dataset_field_examples)(dsID)
-		.map(list => ['columnEdit-examples', _.pluck(list, 'name')]);
+		.map(list => _.pluck(list, 'name'));
 }
 
 function fetchExamples(serverBus, state, dsID) {
@@ -110,11 +112,10 @@ function fetchSurvival(serverBus, state, km) {
 	// This could be optimized by grouping by server. This would be easier
 	// if we used proper hash-trie immutable data, where we could hash on dsID
 	// instead of building a json encoding of dsID to allow hashing.
-	serverBus.onNext(['survival', Rx.Observable.zipArray(...queries)
-			.map(data =>
-					['km-survival-data',
-						addField(indexSurvivalData(samples, missing, data))])
-			]);
+	serverBus.onNext([
+			'km-survival-data',
+			Rx.Observable.zipArray(...queries)
+				.map(data => addField(indexSurvivalData(samples, missing, data)))]);
 }
 
 var controls = {

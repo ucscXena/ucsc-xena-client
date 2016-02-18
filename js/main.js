@@ -20,6 +20,7 @@ require('bootstrap/dist/css/bootstrap.css');
 var selector = require('./appSelector');
 var compose = require('./controllers/compose');
 const connector = require('./connector');
+var {getErrorProps, logError} = require('./errors');
 
 // Hot load controllers. Note that hot loading won't work if one of the methods
 // is captured in a closure or variable which we can't access.  References to
@@ -49,24 +50,38 @@ var defaultServers = ['https://genome-cancer.ucsc.edu:443/proj/public/xena',
 		'https://local.xena.ucsc.edu:7223'];
 var main = window.document.getElementById('main');
 
-// Create a channel for messages from the server. We
-// want to avoid out-of-order responses for certain messages.
-// To do that, we have to allocate somewhere. We can manage it
-// by doing using a unique tag for the request, and using groupBy.
-//
-// Note that we can still bounce on column data requests, because they are not
-// handled with switchLatest. We can't put them on their own channel, because
-// that will leak memory: groupBy is leaky in keys. Maybe this leak is too small
-// to worry about? Maybe we need a custom operator that won't leak? Maybe
-// a takeUntil() should be applied to the groups?
+// Create a channel for messages from the server. We want to avoid out-of-order
+// responses.  To do that, we have to allocate somewhere. We can manage it by
+// doing using a unique tag for the type of request, and using groupBy, then
+// switchLatest. groupBy is leaky, groups last forever.
 var serverBus = new Rx.Subject();
 
-var second = ([, b]) => b;
+// Allow a slot to be an array, in which case the groupBy key is
+// the joined strings of the array, and the issued action is the
+// 1st value of the array. maps ['widget-data', id] to slot
+// widget-data-{id}, and issues action 'widge-data'.
+var slotId = slot => _.isArray(slot) ? slot.join('-') : slot;
+var actionId = slot => _.isArray(slot) ? slot : [slot];
+
+
+var retries = 3; // Retry for all ajax reqs
+
+function wrapSlotRequest([slot, req, ...args]) {
+	return req.retry(retries).map(result => [...actionId(slot), result, ...args])
+		.catch(err => Rx.Observable.return([`${slot}-error`, getErrorProps(logError(err)), ...args]))
+}
+
+// XXX Note that serverCh.onNext can push stuff that causes us to throw in
+// wrapSlotRequest, etc. There's no handler. Where should we catch such
+// errors & how to handle them?
+
+
 
 // Subject of [slot, obs]. We group by slot and apply switchLatest. If slot is '$none' we just
 // merge.
-var serverCh = serverBus.groupBy(([slot]) => slot)
-	.map(g => g.key === '$none' ? g.map(second).mergeAll() : g.map(second).switchLatest()).mergeAll();
+var serverCh = serverBus.groupBy(([slot]) => slotId(slot))
+	.map(g => g.map(wrapSlotRequest).switchLatest())
+	.mergeAll();
 
 var uiBus = new Rx.Subject();
 var uiCh = uiBus;
