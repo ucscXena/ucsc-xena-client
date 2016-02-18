@@ -69,9 +69,8 @@ var sort = state => ({...state, samples: sortSelector(state)});
 var transform = state => ({...state, columns: transformSelector(state)});
 
 // kmGroups transform calculates the km data, and merges it into the state.km object.
-//
-// XXX note eslint bug
-var kmGroups = state => ({...state, km: { //eslint-disable-line no-dupe-keys
+
+var kmGroups = state => ({...state, km: {
 	...survivalVarsSelector(state),
 	...state.km,
 	groups: kmSelector(state)}});
