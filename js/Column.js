@@ -21,6 +21,22 @@ function download([fields, rows]) {
 	a.click();
 }
 
+// For geneProbesMatrix we will average across probes to compute KM. For
+// other types, we can't support multiple fields. This should really be
+// in a prop set by the column, or in a multimethod. Having this here is bad.
+
+function disableKM(column, hasSurvival) {
+	if (!hasSurvival) {
+		return [true, 'No survival data for cohort'];
+	}
+	if (column.fields.length > 1 && column.dataType !== 'geneProbesMatrix') {
+		return [true, 'Unsupported for multiple genes/ids'];
+	}
+	return [false, ''];
+}
+
+
+
 var Column = React.createClass({
 	onResizeStop: function (ev, {size}) {
 		this.props.callback(['resize', this.props.id, size]);
@@ -47,8 +63,9 @@ var Column = React.createClass({
 		callback(['km-open', id]);
 	},
 	render: function () {
-		var {id, callback, plot, legend, column, zoom, menu, data} = this.props,
+		var {id, callback, plot, legend, column, zoom, menu, data, hasSurvival} = this.props,
 			{width, columnLabel, fieldLabel} = column,
+			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			// move this to state to generalize to other annotations.
 			doRefGene = column.dataType === 'mutationVector',
 			moveIcon = (<span
@@ -56,15 +73,12 @@ var Column = React.createClass({
 				aria-hidden="true">
 			</span>);
 
-// Disable km for certain column types?
-//				if (!this.columnUi.plotData || (column.dataType !== 'geneProbesMatrix' && column.fields.length > 1)) {
-
 		return (
 			<div className='Column' style={{width: width}}>
 				<SplitButton title={moveIcon} bsSize='xsmall'>
 					{menu}
 					{menu && <MenuItem divider />}
-					<MenuItem onSelect={this.onKm}>Kaplan Meier Plot</MenuItem>
+					<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
 					<MenuItem onSelect={this.onDownload}>Download</MenuItem>
 					<MenuItem onSelect={this.onAbout}>About the Dataset</MenuItem>
 					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>

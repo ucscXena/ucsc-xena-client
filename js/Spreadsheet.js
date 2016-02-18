@@ -62,6 +62,12 @@ function targetPos(ev) {
 	return (ev.clientY - bb.top) / ev.target.clientHeight;
 }
 
+function hasSurvival(state) {
+	return !! (_.getIn(state, ['km', 'ev']) &&
+			   _.getIn(state, ['km', 'tte']) &&
+			   _.getIn(state, ['km', 'patient']));
+}
+
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
 	mixins: [rxEventsMixin],
@@ -135,6 +141,7 @@ var Columns = React.createClass({
 			samples: samples,
 			zoom: zoom,
 			callback: callback,
+			hasSurvival: hasSurvival(appState),
 			tooltip: this.ev.tooltip,
 			onViz: this.onViz,
 			onClick: this.ev.plotClick,

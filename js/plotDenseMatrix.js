@@ -396,7 +396,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	//    - Drop dataset, and add default colors to the 'display' obj.
 	// Might also want to copy fields into 'display', so we can drop the || here.
 	render: function () {
-		var {samples, data, column, dataset, vizSettings = {}, zoom} = this.props,
+		var {samples, data, column, dataset, vizSettings = {}, zoom, hasSurvival} = this.props,
 			{heatmap, colors} = column,
 			codes = _.getIn(data, ['codes']),
 			fields = _.getIn(data, ['req', 'probes'], column.fields),
@@ -408,6 +408,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 				callback={this.props.callback}
 				id={this.props.id}
 				onViz={this.props.onViz}
+				hasSurvival={hasSurvival}
 				download={download}
 				column={column}
 				zoom={zoom}

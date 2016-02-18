@@ -26,7 +26,7 @@ module.exports = React.createClass({
 //	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
-			{km, ...otherState} = selector(state);
+			computedState = selector(state);
 
 		return (
 			<Grid onClick={this.onClick}>
@@ -37,14 +37,14 @@ module.exports = React.createClass({
 			*/}
 				<Row>
 					<Col md={12}>
-						<AppControls {...otherProps} appState={otherState} />
+						<AppControls {...otherProps} appState={computedState} />
 					</Col>
 				</Row>
-				<Spreadsheet {...otherProps} appState={otherState} />
-				{_.getIn(km, ['id']) ? <KmPlot
+				<Spreadsheet {...otherProps} appState={computedState} />
+				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
 						callback={this.props.callback}
-						km={km}
-						features={otherState.features} /> : null}
+						km={computedState.km}
+						features={computedState.features} /> : null}
 				<div className='chartRoot' style={{display: 'none'}} />
 			</Grid>
 		);
