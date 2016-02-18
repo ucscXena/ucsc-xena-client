@@ -35,6 +35,15 @@ module.exports = {
 
 	hasClass: function(el, c) {
 		return el.className.split(/ +/).indexOf(c) !== -1;
-	}
+	},
 
+	caseInsensitiveSort: function (a, b) {
+		if (a.toUpperCase() < b.toUpperCase()) {
+				return -1;
+		} else if (a.toUpperCase() > b.toUpperCase()) {
+				return 1;
+		} else {
+				return 0;
+		}
+	}
 };
