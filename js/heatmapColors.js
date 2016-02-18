@@ -101,7 +101,7 @@ function scaleFloatDouble(low, zero, high, min, max) {
 }
 
 function colorFloat(column, settings, codes, data, dataset) {
-	var values = _.values(data || [0]), // handle degenerate case XXX needed?
+	var values = data,
 		max = d3.max(values),
 		[low, zero, high] = defaultColors(dataset),
 		spec,
@@ -141,7 +141,7 @@ var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
 		.range([low, zero, zero, high]);
 
 function colorFloatGenomicData(column, settings = {}, codes, data, dataset) {
-	var values = _.values(data), // handle degenerate case
+	var values = data,
 		[low, zero, high] = defaultColors(dataset),
 		min = settings.min || d3.min(values),
 		max = settings.max ||  d3.max(values),
