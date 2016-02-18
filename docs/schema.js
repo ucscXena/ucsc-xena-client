@@ -312,7 +312,7 @@ var Application = d(
 );
 
 var KmPoint = d(
-	'KmPoint', 'A time point in a KM result', S({
+	'KmPoint', 'A time point in a KM result. t: time; s: % surviving at t; e: event at t', S({
 		d: number(),
 		e: boolean,
 		n: number(),
