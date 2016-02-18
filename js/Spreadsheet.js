@@ -124,8 +124,6 @@ var Columns = React.createClass({
 				callback={callback}
 				state={_.getIn(appState, ['vizSettings'])} /> : null;
 
-		// XXX Should we use controllers/paths for accessing state data in
-		// the view?
 		var columnViews = _.map(columnOrder, id => widgets.column({
 			ref: id,
 			key: id,
