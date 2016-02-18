@@ -108,7 +108,7 @@ function colorFloat(column, settings, codes, data, dataset) {
 		min;
 
 	if (!isNumber(max)) {
-		return null;
+		return ['no-data'];
 	}
 	min = d3.min(values);
 	if (min >= 0 && max >= 0) {
@@ -183,8 +183,13 @@ colorRange.add('float', colorFloat);
 colorRange.add('coded', colorCoded);
 colorRange.add('floatGenomicData', colorFloatGenomicData);
 
+// A scale for when we have no data. Implements the scale API
+// so we don't have to put a bunch of special cases in the drawing code.
+var noDataScale = () => "gray";
+noDataScale.domain = () => [];
+
 var colorScale = {
-	'no-data': () => () => "gray",
+	'no-data': () => noDataScale,
 	'float-pos': (__, ...args) => scaleFloatSingle(...args),
 	'float-neg': (__, ...args) => scaleFloatSingle(...args),
 	'float': (__, ...args) => scaleFloatDouble(...args),
