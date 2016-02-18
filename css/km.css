@@ -11,53 +11,71 @@
 	display: none;
 }
 
-.kmDialog path.line {
+.kmDialog .outline {
 	fill: none;
+	stroke: gray !important;
+}
+
+.kmDialog .line {
+	fill: none;
+}
+
+.kmDialog path.line {
 	stroke-width: 2.0px;
 }
 
 path.outline {
-	fill: none;
-	stroke: gray !important;
 	stroke-width: 3.0px;
 }
 
 .kmDialog line.line {
-	fill: none;
 	stroke-width: 1.0px;
 }
 
 .kmDialog line.outline {
-	fill: none;
-	stroke: gray !important;
 	stroke-width: 2.0px;
 }
-
 
 .kmDialog .subgroup:hover text {
 	font-weight: bold;
 }
 
-.kmDialog .subgroup:hover path.line {
+.kmDialog .subgroup path.line.hover {
 	stroke-width: 3.0px;
 }
 
-.kmDialog .subgroup:hover path.outline {
+.kmDialog .subgroup path.outline.hover {
 	stroke-width: 5.0px;
 }
 
-.kmDialog .subgroup:hover line.line {
+.kmDialog .subgroup line.line.hover {
 	stroke-width: 2.0px;
 }
 
-.kmDialog .subgroup:hover line.outline {
+.kmDialog .subgroup line.outline.hover {
 	stroke-width: 3.0px;
 }
 
-
-.kmdiv {
-	position: relative;
+.kmDialog .legend .hover {
+	font-weight: bold;
 }
+
+.kmDialog .legend li {
+	vertical-align: middle;
+}
+
+.kmDialog .graph {
+	float: left;
+}
+
+.kmDialog .definitions {
+	float: right;
+	font-size: small;
+}
+
+/*.kmdiv {*/
+/*position: relative;*/
+/*}*/
 
 .kmopts {
 	position: absolute;
@@ -96,14 +114,14 @@ path.outline {
 
 .kmDialog .featureLabel {
 	float: left;
-	margin-top:5px;
+	margin-top: 5px;
 	margin-right: 40px;
 	font-weight: bold;
 	padding: 3px;
 }
 
 .labelbutton {
-	margin-top:5px;
+	margin-top: 5px;
 	margin-right: 40px;
 	padding: 3px;
 }
