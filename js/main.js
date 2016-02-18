@@ -63,11 +63,8 @@ var serverBus = new Rx.Subject();
 var slotId = slot => _.isArray(slot) ? slot.join('-') : slot;
 var actionId = slot => _.isArray(slot) ? slot : [slot];
 
-
-var retries = 3; // Retry for all ajax reqs
-
 function wrapSlotRequest([slot, req, ...args]) {
-	return req.retry(retries).map(result => [...actionId(slot), result, ...args])
+	return req.map(result => [...actionId(slot), result, ...args])
 		.catch(err => Rx.Observable.return([`${slot}-error`, getErrorProps(logError(err)), ...args]))
 }
 
