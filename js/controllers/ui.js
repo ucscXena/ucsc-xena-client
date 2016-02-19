@@ -182,7 +182,8 @@ var controls = {
 		_.assocIn(state, ['columns', dsID, 'fieldLabel', 'user'], value),
 	'km-open': (state, id) => _.assocInAll(state,
 			['km', 'id'], id,
-			['km', 'label'], _.getIn(state, ['columns', id, 'fieldLabel', 'user'])),
+			['km', 'title'], _.getIn(state, ['columns', id, 'columnLabel', 'user']),
+			['km', 'label'], `Grouped by ${_.getIn(state, ['columns', id, 'fieldLabel', 'user'])}`),
 	'km-open-post!': (serverBus, state) => fetchSurvival(serverBus, state, {}), // 2nd param placeholder for km.user
 	'km-close': (state) => _.assocIn(state, ['km', 'id'], null)
 };
