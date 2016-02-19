@@ -9,7 +9,9 @@ var CohortSelect = React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function () {
 		var {cohort, cohorts, callback} = this.props,
-			options = _.map(cohorts, c => ({value: c, label: c}));
+			sortedCohorts = _.sortBy(cohorts, (cohort) => cohort.toLowerCase()),
+			options = _.map(sortedCohorts, c => ({value: c, label: c}));
+
 		return (
 			<div className='form-group'>
 				<label className='cohortAnchor'>Cohort</label>
