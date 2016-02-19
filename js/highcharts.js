@@ -10,4 +10,4 @@ require('highcharts/highcharts-more');
 delete window.jQuery;
 delete window.Highcharts;
 
-module.exports = charts.Highcharts;
+module.exports = charts;

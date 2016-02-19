@@ -185,7 +185,10 @@ var controls = {
 			['km', 'title'], _.getIn(state, ['columns', id, 'columnLabel', 'user']),
 			['km', 'label'], `Grouped by ${_.getIn(state, ['columns', id, 'fieldLabel', 'user'])}`),
 	'km-open-post!': (serverBus, state) => fetchSurvival(serverBus, state, {}), // 2nd param placeholder for km.user
-	'km-close': (state) => _.assocIn(state, ['km', 'id'], null)
+	'km-close': state => _.assocIn(state, ['km', 'id'], null),
+	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),
+	'chart': state => _.assoc(state, 'mode', 'chart'),
+	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState)
 };
 
 module.exports = {

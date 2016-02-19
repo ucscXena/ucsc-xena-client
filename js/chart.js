@@ -3,9 +3,10 @@
 /*jshint browser: true, onevar: true */
 /*global define: false, document: false */
 define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_helper', 'underscore_ext', 'rx'],
-	function (xenaQuery, dom_helper, heatmapColors, Highcharts, highcharts_helper, _, Rx) {
+	function (xenaQuery, dom_helper, heatmapColors, highcharts, highcharts_helper, _, Rx) {
 	'use strict';
-	return function (root, cursor, sessionStorage) {
+	var Highcharts = highcharts.Highcharts;
+	return function (root, callback, sessionStorage) {
 		var div,
 			leftContainer, rightContainer, controlContainer,
 			xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
@@ -19,9 +20,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 
 		function setStorage(state) {
 			sessionStorage.xena = JSON.stringify(state);
-			cursor.update(function (s) {
-				return _.assoc(s, 'chartState', state.chartState);
-			});
+			callback(['chart-set-state', state.chartState]);
 		}
 
 		function buildSDDropdown() {
@@ -120,11 +119,11 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 		function axisSelector(selectorID) {
 			var div = document.createElement("select"),
 				option, i, column, storedColumn,
-			  column_rendering, columns;
+			  columns, columnOrder;
 
 			if (xenaState) {
-				columns = xenaState.column_order;
-				column_rendering = xenaState.column_rendering;
+				columnOrder = xenaState.columnOrder;
+				columns = xenaState.columns;
 			}
 
 			if (xenaState && xenaState.chartState) {
@@ -139,13 +138,13 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 
 			div.setAttribute("id", selectorID);
 			div.setAttribute("class", "dropdown-style");
-			for (i = 0; i < columns.length; i++) {
-				column = columns[i];
+			for (i = 0; i < columnOrder.length; i++) {
+				column = columnOrder[i];
 				option = document.createElement('option');
 				option.value = column;
-				option.textContent = column_rendering[column].columnLabel.user + " / " + column_rendering[column].fieldLabel.user;
+				option.textContent = columns[column].columnLabel.user + " / " + columns[column].fieldLabel.user;
 
-				if (column_rendering[column].dataType === "geneMatrix") {
+				if (columns[column].dataType === "geneMatrix") {
 					option.textContent = option.textContent + " (gene average)";
 				}
 				div.appendChild(option);
@@ -156,7 +155,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 
 			// x axis add an extra optioin: none -- summary view
 			if (selectorID === "Xaxis") {
-				i = columns.length;
+				i = columnOrder.length;
 				option = document.createElement('option');
 				option.value = "none";
 				option.textContent = "None (i.e. statistics of selected samples)";
@@ -214,7 +213,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 				xhost, yhost,
 				xds, yds,
 				xcolumnType, ycolumnType,
-				column_rendering;
+				columns;
 
 			dropdown = document.getElementById("Xaxis");
 			xcolumn = dropdown.options[dropdown.selectedIndex].value;
@@ -232,38 +231,38 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 					"xcolumn": xcolumn,
 					"ycolumn": ycolumn
 				};
-				column_rendering = xenaState.column_rendering;
+				columns = xenaState.columns;
 				setStorage(xenaState);
 			}
 
-			if (!((column_rendering[xcolumn] || xcolumn === "none") && column_rendering[ycolumn])) {
+			if (!((columns[xcolumn] || xcolumn === "none") && columns[ycolumn])) {
 				document.getElementById("myChart").innerHTML = "Problem";
 				return;
 			}
 
 			if (xcolumn !== "none") {
-				xfields = column_rendering[xcolumn].fields;
-				xlabel = column_rendering[xcolumn].fieldLabel.user;
-				if (column_rendering[xcolumn].dataType === "geneMatrix") {
+				xfields = columns[xcolumn].fields;
+				xlabel = columns[xcolumn].fieldLabel.user;
+				if (columns[xcolumn].dataType === "geneMatrix") {
 					xlabel = xlabel + " (gene average)";
 				}
-				xhost = JSON.parse(column_rendering[xcolumn].dsID).host;
-				xds = JSON.parse(column_rendering[xcolumn].dsID).name;
-				xcolumnType = column_rendering[xcolumn].dataType;
+				xhost = JSON.parse(columns[xcolumn].dsID).host;
+				xds = JSON.parse(columns[xcolumn].dsID).name;
+				xcolumnType = columns[xcolumn].dataType;
 			} else {
 				xlabel = "";
-				xhost = JSON.parse(column_rendering[ycolumn].dsID).host;
+				xhost = JSON.parse(columns[ycolumn].dsID).host;
 			}
 
-			yfields = column_rendering[ycolumn].fields;
-			ylabel = column_rendering[ycolumn].fieldLabel.user;
-			if (column_rendering[ycolumn].dataType === "geneMatrix") {
+			yfields = columns[ycolumn].fields;
+			ylabel = columns[ycolumn].fieldLabel.user;
+			if (columns[ycolumn].dataType === "geneMatrix") {
 				ylabel = ylabel + " (gene average)";
 			}
 
-			yhost = JSON.parse(column_rendering[ycolumn].dsID).host;
-			yds = JSON.parse(column_rendering[ycolumn].dsID).name;
-			ycolumnType = column_rendering[ycolumn].dataType;
+			yhost = JSON.parse(columns[ycolumn].dsID).host;
+			yds = JSON.parse(columns[ycolumn].dsID).name;
+			ycolumnType = columns[ycolumn].dataType;
 
 			if (xcolumnType === "mutationVector" || ycolumnType === "mutationVector") {
 				document.getElementById("myChart").innerHTML = "x: " + xlabel + "; y:" + ylabel + " not implemented yet";
@@ -1004,7 +1003,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 		// chart container
 		rightContainer.appendChild(buildEmptyChartContainer());
 
-		if (!(xenaState && xenaState.cohort && xenaState.samples && xenaState.column_order.length > 0)) {
+		if (!(xenaState && xenaState.cohort && xenaState.samples && xenaState.columnOrder.length > 0)) {
 			document.getElementById("myChart").innerHTML = "There is no heatmap data, please add some.";
 			return;
 		}

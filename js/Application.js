@@ -7,8 +7,14 @@ var Col = require('react-bootstrap/lib/Col');
 var Spreadsheet = require('./Spreadsheet');
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
+var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
 //var Perf = require('react/addons').addons.Perf;
+
+var views = {
+	heatmap: Spreadsheet,
+	chart: ChartView
+};
 
 module.exports = React.createClass({
 //	onPerf: function () {
@@ -26,7 +32,9 @@ module.exports = React.createClass({
 //	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
-			computedState = selector(state);
+			computedState = selector(state),
+			{mode} = computedState,
+			View = views[mode];
 
 		return (
 			<Grid onClick={this.onClick}>
@@ -40,7 +48,7 @@ module.exports = React.createClass({
 						<AppControls {...otherProps} appState={computedState} />
 					</Col>
 				</Row>
-				<Spreadsheet {...otherProps} appState={computedState} />
+				<View {...otherProps} appState={computedState} />
 				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
 						callback={this.props.callback}
 						km={computedState.km}

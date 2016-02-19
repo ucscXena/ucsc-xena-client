@@ -85,6 +85,7 @@ var uiCh = uiBus;
 
 var initialState = {
 	servers: {'default': defaultServers, user: defaultServers},
+	mode: 'heatmap',
 	zoom: {height: 300},
 	columns: {},
 	columnOrder: [],
