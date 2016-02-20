@@ -21,12 +21,13 @@ var DatasetSelect = React.createClass({
 	render: function () {
 		var {datasets, nullOpt, ...other} = this.props,
 			options = (nullOpt ? [{value: null, label: nullOpt}] : [])
-				.concat(optsFromDatasets(_.getIn(datasets, ['servers'])));
+				.concat(optsFromDatasets(_.getIn(datasets, ['servers']))),
+			sortedOptions = _.sortBy(options, (option) => option.label.toLowerCase());
 
 		return (
 			<Select
 				{...other}
-				options={options}
+				options={sortedOptions}
 			/>
 		);
 	}

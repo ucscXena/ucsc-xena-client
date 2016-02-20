@@ -250,6 +250,10 @@ var KmPlot = React.createClass({
 		this.size.dims = this.calcDims(this.props.dims);
 	},
 
+	componentWillUpdate: function(newProps, newState) {
+		this.size.dims = this.calcDims(newProps.dims);
+	},
+
 	calcDims: function (viewDims) {
 		let dims = {};
 
@@ -273,7 +277,7 @@ var KmPlot = React.createClass({
 
 	render: function () {
 		//debugger;
-		let { km: {label, groups} } = this.props,
+		let { km: {title, label, groups} } = this.props,
 			{ activeLabel } = this.state,
 			{ dims } = this.size;
 		// XXX Use bootstrap to lay this out, instead of tables + divs
@@ -290,14 +294,17 @@ var KmPlot = React.createClass({
 
 		return (
 			<Modal show={true} bsSize='large' className='kmDialog' onHide={this.hide} ref="kmPlot">
-				<Modal.Header closeButton>
-					<Modal.Title>{`Kaplan-Meier: ${label}`}</Modal.Title>
+				<Modal.Header closeButton className="container-fluid">
+					<span className="col-md-2">
+						<Modal.Title>Kaplar Meier</Modal.Title>
+					</span>
+					<span className="col-md-9 label label-default featureLabel">{title}</span>
 				</Modal.Header>
 				<Modal.Body className="container-fluid">
 					{Content}
 				</Modal.Body>
 				<Modal.Footer>
-					<span className='featureLabel'/>
+					<div className='featureLabel'>{label}</div>
 				</Modal.Footer>
 			</Modal>
 		);
