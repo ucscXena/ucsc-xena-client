@@ -99,6 +99,19 @@ var has = (obj, v) => obj[v] != null;
 // Return indices of arr for which fn is true. fn is passed the value and index.
 var filterIndices = (arr, fn) => _.range(arr.length).filter(i => fn(arr[i], i));
 
+// Give tte and ev for each subgroup, compute p-value.
+// Not sure why we recombine the data after splitting by group.
+function pValue(groupsTte, groupsEv) {
+	var allTte = _.flatten(groupsTte),
+		allEv = _.flatten(groupsEv);
+
+	return km.logranktest(
+			// Only use points with an event
+			km.compute(allTte, allEv).filter(point => point.e),
+			groupsTte,
+			groupsEv);
+}
+
 function makeGroups(column, data, index, survival, samples) {
 	// Convert field to coded.
 	let {tte: {data: tte}, ev: {data: ev}} = survival,
@@ -108,12 +121,14 @@ function makeGroups(column, data, index, survival, samples) {
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
 		gtte = groups.map(g => groupedIndices[g].map(i => tte[samples[i]])),
 		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
-		curves = groups.map((g, i)=> km.compute(gtte[i], gev[i]));
+		curves = groups.map((g, i)=> km.compute(gtte[i], gev[i])),
+		pV = pValue(gtte, gev);
 
 	return {
 		colors: colors,
 		labels: labels,
-		curves: curves
+		curves: curves,
+		...pV
 	};
 }
 

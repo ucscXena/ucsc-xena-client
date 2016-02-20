@@ -120,7 +120,7 @@ define(['jquery', 'underscore'], function ($, _) {
 
 	function expectedObservedEventNumber(si, tte, ev){
 		var exits = sortBy(map(tte, function (x, i) { return { tte: x, ev: ev[i] }; }), 'tte'), // sort and collate
-			uexits = uniq(pluck_tte(exits), true),                    // unique tte
+			uexits = _.uniq(_.pluck(exits, 'tte'), true),             // unique tte
 			gexits = groupBy(exits, function (x) { return x.tte; }),  // group by common time of exit
 			data = reduce(uexits, function (a, tte) {                 // sorted by time stats from the input data as in tte,ev
 				var group = gexits[tte],
@@ -178,7 +178,7 @@ define(['jquery', 'underscore'], function ($, _) {
 	}
 
 
-	function logranktest (allGroupsRes, groupedDataTable){
+	function logranktest (allGroupsRes, groupsTte, groupsEv){
 		var KM_stats,
 			pValue,
 			dof, // degree of freedom
@@ -191,8 +191,9 @@ define(['jquery', 'underscore'], function ($, _) {
 			Ki, Kj, // at risk number from each group
 			n; //total observed
 
-		_.each(groupedDataTable, function(group){
-			var r = expectedObservedEventNumber(allGroupsRes, group.tte, group.ev);
+		_.each(groupsTte, function (groupTte, i){
+			var group = {tte: groupTte, ev: groupsEv[i]},
+				r = expectedObservedEventNumber(allGroupsRes, group.tte, group.ev);
 				//console.log(group.name, group.tte.length, r.observed, r.expected,
 				//	(r.observed-r.expected)*(r.observed-r.expected)/r.expected, r.timeNumber);
 				if (r.expected){
