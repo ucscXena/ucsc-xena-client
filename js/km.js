@@ -1,15 +1,12 @@
-/*eslint-disable */
 /*eslint strict: [2, "function"] */
-/*global define: false */
-// XXX see https://github.com/esbullington/react-d3
+/*global define: false, require: false */
 
 define(['jquery', 'underscore'], function ($, _) {
 	'use strict';
 
 	var jStat = require('jStat').jStat,
 		linearAlgebra = require('linear-algebra')(),
-		Vector = linearAlgebra.Vector,
-    Matrix = linearAlgebra.Matrix;
+		Matrix = linearAlgebra.Matrix;
 
 	var reduce = _.reduce,
 		map = _.map,
@@ -22,16 +19,6 @@ define(['jquery', 'underscore'], function ($, _) {
 
 	function pluckTte(x) {
 		return pluck(x, 'tte');
-	}
-
-	function average(xArray){
-		return sum(xArray)/xArray.length;
-	}
-
-	function sum(xArray){
-		return reduce(xArray, function (memo, item) {
-			return memo+item;
-		},0);
 	}
 
 
@@ -63,7 +50,7 @@ define(['jquery', 'underscore'], function ($, _) {
 			si = reduce(dini, function (a, dn) { // survival at each t_i (including censor times)
 				var l = last(a) || { s: 1 };
 				if (dn.d) {                      // there were events at this t_i
-					a.push({t: dn.t, e: true, s: l.s * (1 - dn.d / dn.n), n:dn.n, d:dn.d, rate : dn.d/dn.n});
+					a.push({t: dn.t, e: true, s: l.s * (1 - dn.d / dn.n), n:dn.n, d:dn.d, rate : dn.d / dn.n});
 				} else {                          // only censors
 					a.push({t: dn.t, e: false, s: l.s, n:dn.n, d:dn.d, rate: null});
 				}
@@ -137,9 +124,9 @@ define(['jquery', 'underscore'], function ($, _) {
 			}, []),
 			expectedNumber,
 			observedNumber,
-			dataByTimeTable=[];
+			dataByTimeTable = [];
 
-		si=si.filter(function(item){  //only keep the curve where there is an event
+		si = si.filter(function(item){  //only keep the curve where there is an event
 			if (item.e) {return true;}
 			else {return false;}
 		});
@@ -165,9 +152,9 @@ define(['jquery', 'underscore'], function ($, _) {
 				return memo;
 			}
 
-		},0);
+		}, 0);
 
-		observedNumber = filter(ev, function(x) {return (x===1);}).length; //1 is the internal xena converted code for EVENT
+		observedNumber = filter(ev, function(x) {return (x === 1);}).length; //1 is the internal xena converted code for EVENT
 
 		return {
 			expected: expectedNumber,
@@ -182,11 +169,11 @@ define(['jquery', 'underscore'], function ($, _) {
 		var KM_stats,
 			pValue,
 			dof, // degree of freedom
-			i,j, //groups
+			i, j, //groups
 			t, //timeIndex
-			O_E_table=[],
-			O_minus_E_vector=[], O_minus_E_vector_minus1,// O-E and O-E drop the last element
-			vv=[], vv_minus1, //covariant matrix and covraiance matrix drops the last row and column
+			O_E_table = [],
+			O_minus_E_vector = [], O_minus_E_vector_minus1, // O-E and O-E drop the last element
+			vv = [], vv_minus1, //covariant matrix and covraiance matrix drops the last row and column
 			N, //total number of samples
 			Ki, Kj, // at risk number from each group
 			n; //total observed
@@ -202,33 +189,33 @@ define(['jquery', 'underscore'], function ($, _) {
 				}
 			});
 
-			dof = O_E_table.length-1;
+			dof = O_E_table.length - 1;
 
 			// logrank stats covariance matrix vv
-			for (i=0;i<O_E_table.length; i++){
+			for (i = 0; i < O_E_table.length; i++){
 				vv.push([]);
-				for (j=0;j<O_E_table.length; j++){
+				for (j = 0;j < O_E_table.length; j++){
 					vv[i].push(0);
 				}
 			}
 
-			for (i=0;i<O_E_table.length; i++){
-				for (j=i;j<O_E_table.length; j++){
-					for (t=0;t< allGroupsRes.length; t++){
+			for (i = 0; i < O_E_table.length; i++){
+				for (j = i; j < O_E_table.length; j++){
+					for (t = 0; t < allGroupsRes.length; t++){
 						N = allGroupsRes[t].n;
-						n= allGroupsRes[t].d;
-						if (t < O_E_table[i].timeNumber && t <O_E_table[j].timeNumber){
-							Ki= O_E_table[i].dataByTimeTable[t].n;
-							Kj= O_E_table[j].dataByTimeTable[t].n;
+						n = allGroupsRes[t].d;
+						if (t < O_E_table[i].timeNumber && t < O_E_table[j].timeNumber){
+							Ki = O_E_table[i].dataByTimeTable[t].n;
+							Kj = O_E_table[j].dataByTimeTable[t].n;
 							// https://books.google.com/books?id=nPkjIEVY-CsC&pg=PA451&lpg=PA451&dq=multivariate+hypergeometric+distribution+covariance&source=bl&ots=yoieGfA4bu&sig=dhRcSYKcYiqLXBPZWOaqzciViMs&hl=en&sa=X&ved=0CEQQ6AEwBmoVChMIkqbU09SuyAIVgimICh0J3w1x#v=onepage&q=multivariate%20hypergeometric%20distribution%20covariance&f=false
 							// when N==1: only 1 subject, no variance
-							if (i!==j && N!==1){
-								vv[i][j] -= n*Ki*Kj*(N-n)/(N*N*(N-1));
+							if (i !== j && N !== 1){
+								vv[i][j] -= n * Ki * Kj * (N - n) / (N * N * (N - 1));
 								vv[j][i] = vv[i][j] ;
 							}
 							else {//i==j
-								if(N!==1){
-									vv[i][i] += n*Ki*(N-Ki)*(N-n)/(N*N*(N-1));
+								if(N !== 1){
+									vv[i][i] += n * Ki * (N - Ki) * (N - n) / (N * N * (N - 1));
 								}
 							}
 						}
@@ -236,25 +223,25 @@ define(['jquery', 'underscore'], function ($, _) {
 				}
 			}
 
-			O_minus_E_vector_minus1 = O_minus_E_vector.slice(0,O_minus_E_vector.length-1);
-			vv_minus1 = vv.slice(0,vv.length-1);
-			for (i=0;i<vv_minus1.length;i++){
-				vv_minus1[i]=vv_minus1[i].slice(0,vv_minus1[i].length-1);
+			O_minus_E_vector_minus1 = O_minus_E_vector.slice(0, O_minus_E_vector.length - 1);
+			vv_minus1 = vv.slice(0, vv.length - 1);
+			for (i = 0; i < vv_minus1.length; i++){
+				vv_minus1[i] = vv_minus1[i].slice(0, vv_minus1[i].length - 1);
 			}
-			var vv_minus1_copy = vv_minus1.slice(0,vv_minus1.length);
-			for(i=0;i<vv_minus1.length;i++){
-				vv_minus1_copy[i]=vv_minus1[i].slice(0,vv_minus1[i].length);
+			var vv_minus1_copy = vv_minus1.slice(0, vv_minus1.length);
+			for (i = 0;i < vv_minus1.length; i++){
+				vv_minus1_copy[i] = vv_minus1[i].slice(0, vv_minus1[i].length);
 			}
 
-			if (dof>0){
-				var m = new Matrix([ O_minus_E_vector_minus1]),
-					m_T = new Matrix([ O_minus_E_vector_minus1]).trans(),
+			if (dof > 0){
+				var m = new Matrix([O_minus_E_vector_minus1]),
+					m_T = new Matrix([O_minus_E_vector_minus1]).trans(),
 					vv_minus1_inv = new Matrix(jStat.inv(vv_minus1_copy)),
 					mfinal = m.dot(vv_minus1_inv).dot(m_T);
 
 				KM_stats = mfinal.data[0][0];
 
-				pValue = 1- jStat.chisquare.cdf( KM_stats, dof);
+				pValue = 1 - jStat.chisquare.cdf(KM_stats, dof);
 			}
 
 			return {
