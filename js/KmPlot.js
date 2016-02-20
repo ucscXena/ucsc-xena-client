@@ -9,8 +9,7 @@ var _ = require('./underscore_ext');
 var React = require('react');
 var { PropTypes } = React;
 var Modal = require('react-bootstrap/lib/Modal');
-var { ListGroup, ListGroupItem, Row, Col, OverlayTrigger, Tooltip } = require('react-bootstrap/lib/');
-var Col = require('react-bootstrap/lib/Col');
+var { ListGroup, ListGroupItem, OverlayTrigger, Tooltip } = require('react-bootstrap/lib/');
 var Axis = require('./Axis');
 var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
@@ -119,6 +118,7 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 
 var PValue = React.createClass({
 	render: function () {
+		var {logRank, pValue} = this.props;
 		const tooltip = (
 			<Tooltip id='p-value' placement='top'>
 				Some individuals survival data are used more than once in the KM plot. Affected patients are:
@@ -137,10 +137,10 @@ var PValue = React.createClass({
 						trigger={['hover', 'click']}>
 						<div className="badge" style={{verticalAlign:"middle"}}>!</div>
 					</OverlayTrigger>
-					<span>P-Value = 0.00023</span>
+					<span>P-Value = {pValue.toPrecision(4)}</span>
 				</ListGroupItem>
 				<ListGroupItem>
-					<span>Log-rank Test Stats = 0.0000</span>
+					<span>Log-rank Test Stats = {logRank.toPrecision(4)}</span>
 				</ListGroupItem>
 			</ListGroup>
 		)
@@ -182,7 +182,7 @@ var Legend = React.createClass({
 	render: function () {
 		let { groups, setActiveLabel, activeLabel } = this.props;
 		let { colors, curves, labels } = groups;
-		let sets = _.zip(colors, curves, labels).map((set, index) => makeLegendKey(set, setActiveLabel, activeLabel));
+		let sets = _.zip(colors, curves, labels).map(set => makeLegendKey(set, setActiveLabel, activeLabel));
 
 		return (
 			<ListGroup className="legend">{sets}</ListGroup>
@@ -204,7 +204,7 @@ function Definitions(groups, setActiveLabel, activeLabel, size) {
 
 	return (
 		<div className="definitions" style={{width: size.width}}>
-			<PValue />
+			<PValue pValue={groups.pValue} logRank={groups.KM_stats}/>
 			<Legend groups={groups}
 					setActiveLabel={setActiveLabel}
 					activeLabel={activeLabel}/>
