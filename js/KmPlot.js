@@ -294,15 +294,17 @@ var KmPlot = React.createClass({
 
 		return (
 			<Modal show={true} bsSize='large' className='kmDialog' onHide={this.hide} ref="kmPlot">
-				<Modal.Header closeButton>
-					<Modal.Title>testing</Modal.Title>
-					<span className="col-md-8">Dataset: {title}</span>
+				<Modal.Header closeButton className="container-fluid">
+					<span className="col-md-2">
+						<Modal.Title>Kaplar Meier</Modal.Title>
+					</span>
+					<span className="col-md-9 label label-default featureLabel">{title}</span>
 				</Modal.Header>
 				<Modal.Body className="container-fluid">
 					{Content}
 				</Modal.Body>
 				<Modal.Footer>
-					<span className='featureLabel'>{label}</span>
+					<div className='featureLabel'>{label}</div>
 				</Modal.Footer>
 			</Modal>
 		);
