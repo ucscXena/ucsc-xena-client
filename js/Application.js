@@ -16,7 +16,7 @@ var views = {
 	chart: ChartView
 };
 
-module.exports = React.createClass({
+var Application = React.createClass({
 //	onPerf: function () {
 //		this.perf = !this.perf;
 //		if (this.perf) {
@@ -58,3 +58,5 @@ module.exports = React.createClass({
 		);
 	}
 });
+
+module.exports = Application;
