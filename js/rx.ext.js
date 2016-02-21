@@ -261,5 +261,11 @@ define(['rx', 'underscore_ext'], function (Rx, _) {
 		return this.map(s => _.getIn(s, keys));
 	};
 
+	// A zipArray for when we upgrade rx
+//	Rx.Observable.zipArray = (...obs) => {
+//		return obs.length ? Rx.Observable.zip(...obs, (...arr) => arr) :
+//			Rx.Observable.return([]);
+//	};
+
 	return Rx;
 });
