@@ -7,6 +7,7 @@ var Rx = require('rx');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var Application = require('./Application');
+var compactJSON = require('./compactJSON');
 let {createDevTools} = require('./controllers/devtools');
 import LogMonitor from 'redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
@@ -29,6 +30,9 @@ module.exports = function({
 	uiCh,
 	main,
 	selector}) {
+
+	// Change this assignment to JSON to use the browser JSON methods.
+	let {stringify, parse} = compactJSON;
 
 	var updater = ac => uiCh.onNext(ac);
 	let devBus = new Rx.Subject();
@@ -57,7 +61,7 @@ module.exports = function({
 	function getSavedState() {
 		if (sessionStorage.debugSession) {
 			try {
-				let devState = JSON.parse(sessionStorage.debugSession);
+				let devState = parse(sessionStorage.debugSession);
 				sessionLoaded = true;
 				return devState;
 			} catch(err) {
@@ -106,7 +110,7 @@ module.exports = function({
 
 	// Save state in sessionStorage on page unload.
 	devStateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
-		.subscribe(state => sessionStorage.debugSession = JSON.stringify(state));
+		.subscribe(state => sessionStorage.debugSession = stringify(state));
 
 	// Kick things off, except when recovering.
 	if (!sessionLoaded) {
