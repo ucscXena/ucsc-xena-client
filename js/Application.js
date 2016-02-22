@@ -25,27 +25,6 @@ module.exports = React.createClass({
 //			Perf.printWasted();
 //		}
 //	},
-	getInitialState: function() {
-		return {
-			dims: {
-				width: 860,
-				height: 450
-			}
-		}
-	},
-
-	componentWillMount: function() {
-		//this.timer = setInterval(() => {
-		//	let dims = _.clone(this.state.dims);
-		//	dims.width++;
-		//	dims.height++;
-		//	this.setState({dims: dims});
-		//}, 1500);
-	},
-
-	componentWillUnmount: function() {
-		//clearInterval(this.timer);
-	},
 
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
@@ -65,7 +44,6 @@ module.exports = React.createClass({
 				</Row>
 				<Spreadsheet {...otherProps} appState={computedState} />
 				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
-						dims={this.state.dims}
 						callback={this.props.callback}
 						km={computedState.km}
 						features={computedState.features} /> : null}

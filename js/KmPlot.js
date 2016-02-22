@@ -39,34 +39,19 @@ function censorLines(xScale, yScale, censors, className) {
 	/*eslint-enable comma-spacing */
 }
 
-//var drawGroup = function (xScale, yScale, [color, label, curve], setActiveLabel, activeLabel) {
-//	var censors = curve.filter(pt => !pt.e);
-//	let activeLabelClassName = isActiveLabel(activeLabel, label) ? HOVER : '';
-//
-//	return (
-//		<g key={label} className='subgroup' stroke={color}
-//		   onMouseOver={(e) => setActiveLabel(e, label)}
-//		   onMouseOut={(e) => setActiveLabel(e, '')}>
-//			<path className={`outline ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
-//			<path className={`line ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
-//			{censorLines(xScale, yScale, censors, `outline ${activeLabelClassName}`)}
-//			{censorLines(xScale, yScale, censors, `line' ${activeLabelClassName}`)}
-//		</g>);
-//}
-
 function calcDims (viewDims, sizeRatios) {
 	let dims = {};
 
 	_.each(sizeRatios, (sectionRatios, sectionName) => {
 		dims[sectionName] = _.mapObject(sectionRatios, (ratio, param) => {
-			return ratio * viewDims[param];
+			return ratio * parseInt(viewDims[param]);
 		});
 	});
 
 	return dims;
 }
 
-function isActiveLabel(currentLabel, activeLabel) {
+function shouldBeActive(currentLabel, activeLabel) {
 	// check whether this line group should be set to Active
 	if (activeLabel)
 		return (activeLabel === currentLabel);
@@ -75,35 +60,35 @@ function isActiveLabel(currentLabel, activeLabel) {
 }
 
 var LineGroup = React.createClass({
-	mixins: [deepPureRenderMixin],
-	group: null,
 	getInitialState: function() {
-		return {
-			isActive: false,
-
-		}
+		return { isActive: false }
 	},
 
-	//componentWillMount: function() {
-	//	this.group = this.makeGroup(this.props);
-	//},
+	componentWillReceiveProps: function(newProps) {
+		let { g, activeLabel } = newProps,
+			[ color, label, curve ] = g,
+			oldIsActive = this.state.isActive,
+			activeStatus = shouldBeActive(label, activeLabel);
 
-	componentWillUpdate: function(newProps) {
-		// determine whether this line group should be glowing...
-		let [ color, label, curve ] = newProps.g;
-		let shouldBeActive = isActiveLabel(label, newProps.activeLabel);
-		if (shouldBeActive && !this.state.isActive)
-			this.setState({ isActive: true });
-		//this.group = this.makeGroup(newProps);
+		if (oldIsActive != activeStatus)
+			this.setState({ isActive: activeStatus });
+	},
+
+	shouldComponentUpdate: function(newProps, newState) {
+		//testing for any changes to g should be sufficient
+		let gChanged = !_.isEqual(newProps.g, this.props.g),
+			isActiveChanged = !_.isEqual(newState.isActive, this.state.isActive);
+
+		return (gChanged || isActiveChanged);
 	},
 
 	render: function() {
-		let { xScale, yScale, g, setActiveLabel } = this.props;
+		let { xScale, yScale, g, setActiveLabel, activeLabel } = this.props;
 		let [ color, label, curve ] = g;
 		var censors = curve.filter(pt => !pt.e);
 		let activeLabelClassName = this.state.isActive ? HOVER : '';
 
-		//console.log("re-rendering LineGroup: ", label);
+		console.log("re-rendering LineGroup: ", label);
 
 		return (
 			<g key={label} className='subgroup' stroke={color}
@@ -115,11 +100,7 @@ var LineGroup = React.createClass({
 				{censorLines(xScale, yScale, censors, `line' ${activeLabelClassName}`)}
 			</g>
 		);
-	},
-
-	//render: function() {
-	//	return this.group;
-	//}
+	}
 });
 
 var bounds = x => [_.min(x), _.max(x)];
@@ -216,12 +197,14 @@ function makePValue() {
 
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
-	let activeLabelClassName = isActiveLabel(label, activeLabel) ? HOVER : '';
+	let isActive = shouldBeActive(label, activeLabel);
+	let activeLabelClassName = isActive ? HOVER : '';
+	const pixShim = (isActive ? 2 : 0);
 	let legendLineStyle = {
 		backgroundColor: color,
 		border: '1px solid',
 		display: 'inline-block',
-		height: 5,
+		height: 5 + pixShim,
 		width: 25,
 		verticalAlign: 'middle'
 	};
@@ -232,7 +215,7 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 			className={`list-group-item outline ${activeLabelClassName}`}
 			onMouseOver={(e) => setActiveLabel(e, label)}
 			onMouseOut={(e) => setActiveLabel(e, '')}>
-			<span style={legendLineStyle}/> {label} (n={curves.length})
+			<span style={legendLineStyle} /> {label} (n={curves.length})
 		</li>
 
 	);
@@ -299,7 +282,11 @@ var KmPlot = React.createClass({
 	},
 
 	getDefaultProps: () => ({
-		eventClose: 'km-close'
+		eventClose: 'km-close',
+		dims: {
+			height: 450,
+			width: 860
+		}
 	}),
 
 	getInitialState: function() {
