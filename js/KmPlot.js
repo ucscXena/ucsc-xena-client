@@ -27,13 +27,6 @@ function line(xScale, yScale, values) {
 	return ['M0,0', ...coords.map(([t, s]) => `H${t}V${s}`)].join(' ');
 }
 
-function isActiveLabel(activeLabel, currentLabel) {
-	if (activeLabel)
-		return (activeLabel === currentLabel);
-	else
-		return false;
-}
-
 function censorLines(xScale, yScale, censors, className) {
 	/*eslint-disable comma-spacing */
 	return censors.map(({t, s}, i) =>
@@ -46,20 +39,69 @@ function censorLines(xScale, yScale, censors, className) {
 	/*eslint-enable comma-spacing */
 }
 
-var drawGroup = function (xScale, yScale, [color, label, curve], setActiveLabel, activeLabel) {
-	var censors = curve.filter(pt => !pt.e);
-	let activeLabelClassName = isActiveLabel(activeLabel, label) ? HOVER : '';
+function calcDims (viewDims, sizeRatios) {
+	let dims = {};
 
-	return (
-		<g key={label} className='subgroup' stroke={color}
-		   onMouseOver={(e) => setActiveLabel(e, label)}
-		   onMouseOut={(e) => setActiveLabel(e, '')}>
-			<path className={`outline ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
-			<path className={`line ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
-			{censorLines(xScale, yScale, censors, `outline ${activeLabelClassName}`)}
-			{censorLines(xScale, yScale, censors, `line' ${activeLabelClassName}`)}
-		</g>);
+	_.each(sizeRatios, (sectionRatios, sectionName) => {
+		dims[sectionName] = _.mapObject(sectionRatios, (ratio, param) => {
+			return ratio * parseInt(viewDims[param]);
+		});
+	});
+
+	return dims;
 }
+
+function shouldBeActive(currentLabel, activeLabel) {
+	// check whether this line group should be set to Active
+	if (activeLabel)
+		return (activeLabel === currentLabel);
+	else
+		return false;
+}
+
+var LineGroup = React.createClass({
+	getInitialState: function() {
+		return { isActive: false }
+	},
+
+	componentWillReceiveProps: function(newProps) {
+		let { g, activeLabel } = newProps,
+			[ color, label, curve ] = g,
+			oldIsActive = this.state.isActive,
+			activeStatus = shouldBeActive(label, activeLabel);
+
+		if (oldIsActive != activeStatus)
+			this.setState({ isActive: activeStatus });
+	},
+
+	shouldComponentUpdate: function(newProps, newState) {
+		//testing for any changes to g should be sufficient
+		let gChanged = !_.isEqual(newProps.g, this.props.g),
+			isActiveChanged = !_.isEqual(newState.isActive, this.state.isActive);
+
+		return (gChanged || isActiveChanged);
+	},
+
+	render: function() {
+		let { xScale, yScale, g, setActiveLabel, activeLabel } = this.props;
+		let [ color, label, curve ] = g;
+		var censors = curve.filter(pt => !pt.e);
+		let activeLabelClassName = this.state.isActive ? HOVER : '';
+
+		console.log("re-rendering LineGroup: ", label);
+
+		return (
+			<g key={label} className='subgroup' stroke={color}
+				onMouseOver={(e) => setActiveLabel(e, label)}
+				onMouseOut={(e) => setActiveLabel(e, '')}>
+				<path className={`outline ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
+				<path className={`line ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
+				{censorLines(xScale, yScale, censors, `outline ${activeLabelClassName}`)}
+				{censorLines(xScale, yScale, censors, `line' ${activeLabelClassName}`)}
+			</g>
+		);
+	}
+});
 
 var bounds = x => [_.min(x), _.max(x)];
 
@@ -74,7 +116,15 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 		xScale = linear(xdomain, xrange),
 		yScale = linear(ydomain, yrange);
 
-	var groupSvg = _.zip(colors, labels, curves).map(g => drawGroup(xScale, yScale, g, setActiveLabel, activeLabel));
+	var groupSvg = _.zip(colors, labels, curves).map((g, index) => {
+		return <LineGroup
+				key={index}
+				xScale={xScale}
+				yScale={yScale}
+				g={g}
+				activeLabel={activeLabel}
+				setActiveLabel={setActiveLabel} />;
+	});
 
 	/*eslint-disable comma-spacing */
 	return (
@@ -117,44 +167,44 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 	/*eslint-enable comma-spacing */
 }
 
-var PValue = React.createClass({
-	render: function () {
-		const tooltip = (
-			<Tooltip id='p-value' placement='top'>
-				Some individuals survival data are used more than once in the KM plot. Affected patients are:
-				TCGA-G4-6317-02,
-				TCGA-A6-2671-01, TCGA-A6-2680-01, TCGA-A6-2684-01, TCGA-A6-2685-01, TCGA-A6-2683-01, TCGA-AA-3520-01,
-				TCGA-AA-3525-01. For more information and how to remove such duplications: https://goo.gl/TSQt6z.
-			</Tooltip>
-		);
+function makePValue() {
+	const tooltip = (
+		<Tooltip id='p-value' placement='top'>
+			Some individuals survival data are used more than once in the KM plot. Affected patients are:
+			TCGA-G4-6317-02,
+			TCGA-A6-2671-01, TCGA-A6-2680-01, TCGA-A6-2684-01, TCGA-A6-2685-01, TCGA-A6-2683-01, TCGA-AA-3520-01,
+			TCGA-AA-3525-01. For more information and how to remove such duplications: https://goo.gl/TSQt6z.
+		</Tooltip>
+	);
 
-		return (
-			<ListGroup fill>
-				<ListGroupItem>
-					<OverlayTrigger
-						placement='right'
-						overlay={tooltip}
-						trigger={['hover', 'click']}>
-						<div className="badge" style={{verticalAlign:"middle"}}>!</div>
-					</OverlayTrigger>
-					<span>P-Value = 0.00023</span>
-				</ListGroupItem>
-				<ListGroupItem>
-					<span>Log-rank Test Stats = 0.0000</span>
-				</ListGroupItem>
-			</ListGroup>
-		)
-	}
-});
+	return (
+		<ListGroup fill>
+			<ListGroupItem>
+				<OverlayTrigger
+					placement='right'
+					overlay={tooltip}
+					trigger={['hover', 'click']}>
+					<div className="badge" style={{verticalAlign:"middle"}}>!</div>
+				</OverlayTrigger>
+				<span>P-Value = 0.00023</span>
+			</ListGroupItem>
+			<ListGroupItem>
+				<span>Log-rank Test Stats = 0.0000</span>
+			</ListGroupItem>
+		</ListGroup>
+	);
+}
 
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
-	let activeLabelClassName = isActiveLabel(activeLabel, label) ? HOVER : '';
+	let isActive = shouldBeActive(label, activeLabel);
+	let activeLabelClassName = isActive ? HOVER : '';
+	const pixShim = (isActive ? 2 : 0);
 	let legendLineStyle = {
 		backgroundColor: color,
 		border: '1px solid',
 		display: 'inline-block',
-		height: 5,
+		height: 5 + pixShim,
 		width: 25,
 		verticalAlign: 'middle'
 	};
@@ -165,7 +215,7 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 			className={`list-group-item outline ${activeLabelClassName}`}
 			onMouseOver={(e) => setActiveLabel(e, label)}
 			onMouseOut={(e) => setActiveLabel(e, '')}>
-			<span style={legendLineStyle}/> {label} (n={curves.length})
+			<span style={legendLineStyle} /> {label} (n={curves.length})
 		</li>
 
 	);
@@ -190,7 +240,7 @@ var Legend = React.createClass({
 	}
 });
 
-function Graph(groups, setActiveLabel, activeLabel, size) {
+function makeGraph(groups, setActiveLabel, activeLabel, size) {
 	return (
 		<div className="graph" style={{width: size.width}}>
 			{svg(groups, setActiveLabel, activeLabel, size)}
@@ -199,12 +249,12 @@ function Graph(groups, setActiveLabel, activeLabel, size) {
 	);
 }
 
-function Definitions(groups, setActiveLabel, activeLabel, size) {
+function makeDefinitions(groups, setActiveLabel, activeLabel, size) {
 	// get new size based on size ratio for definitions column
 
 	return (
 		<div className="definitions" style={{width: size.width}}>
-			<PValue />
+			{makePValue()}
 			<Legend groups={groups}
 					setActiveLabel={setActiveLabel}
 					activeLabel={activeLabel}/>
@@ -215,7 +265,6 @@ function Definitions(groups, setActiveLabel, activeLabel, size) {
 var KmPlot = React.createClass({
 	mixins: [deepPureRenderMixin],
 	size: {
-		dims: null,
 		ratios: {
 			graph: {
 				width: 0.75,
@@ -240,30 +289,12 @@ var KmPlot = React.createClass({
 		}
 	}),
 
-	getInitialState: () => ({
-		activeLabel: ''
-	}),
+	getInitialState: function() {
+		return { activeLabel: '' }
+	},
 
-	componentWillMount: function () {
-		// calculate width ratio of definitions section && calculate dimensions for each section based on ratios
+	componentWillMount: function() {
 		this.size.ratios.definitions.width = 1 - this.size.ratios.graph.width;
-		this.size.dims = this.calcDims(this.props.dims);
-	},
-
-	componentWillUpdate: function(newProps, newState) {
-		this.size.dims = this.calcDims(newProps.dims);
-	},
-
-	calcDims: function (viewDims) {
-		let dims = {};
-
-		_.each(this.size.ratios, (sectionRatios, sectionName) => {
-			dims[sectionName] = _.mapObject(sectionRatios, (ratio, param) => {
-				return ratio * viewDims[param];
-			});
-		});
-
-		return dims;
 	},
 
 	hide: function () {
@@ -276,21 +307,25 @@ var KmPlot = React.createClass({
 	},
 
 	render: function () {
-		//debugger;
-		let { km: {title, label, groups} } = this.props,
+		console.log("re-rendering...");
+		let { km: {title, label, groups}, dims } = this.props,
 			{ activeLabel } = this.state,
-			{ dims } = this.size;
+			sectionDims = calcDims(dims, this.size.ratios);
 		// XXX Use bootstrap to lay this out, instead of tables + divs
 		let Content = _.isEmpty(groups)
-			?
-			<div className="jumbotron"
-				 style={{height: this.props.dims.height, textAlign: 'center', verticalAlign: 'center'}}>
+			? <div
+				className="jumbotron"
+				style={{
+					height: dims.height,
+					textAlign: 'center',
+					verticalAlign: 'center'
+				}}>
 				<h1>Loading...</h1>
 			</div>
 			: <div>
-			{Graph(groups, this.setActiveLabel, activeLabel, dims.graph)}
-			{Definitions(groups, this.setActiveLabel, activeLabel, dims.definitions)}
-		</div>;
+				{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
+				{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions)}
+			</div>;
 
 		return (
 			<Modal show={true} bsSize='large' className='kmDialog' onHide={this.hide} ref="kmPlot">

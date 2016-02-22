@@ -11,6 +11,7 @@ var _ = require('./underscore_ext');
 //var Perf = require('react/addons').addons.Perf;
 
 module.exports = React.createClass({
+	timer: null,
 //	onPerf: function () {
 //		this.perf = !this.perf;
 //		if (this.perf) {
@@ -24,6 +25,7 @@ module.exports = React.createClass({
 //			Perf.printWasted();
 //		}
 //	},
+
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state);
