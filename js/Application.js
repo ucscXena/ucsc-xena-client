@@ -11,12 +11,17 @@ var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
 //var Perf = require('react/addons').addons.Perf;
 
+<<<<<<< 1a36e0ff61affa5f8a7b7b484ee9336417ceacb7
 var views = {
 	heatmap: Spreadsheet,
 	chart: ChartView
 };
 
 var Application = React.createClass({
+=======
+module.exports = React.createClass({
+	timer: null,
+>>>>>>> refactored structure for handling and calculating section dimensions
 //	onPerf: function () {
 //		this.perf = !this.perf;
 //		if (this.perf) {
@@ -30,6 +35,28 @@ var Application = React.createClass({
 //			Perf.printWasted();
 //		}
 //	},
+	getInitialState: function() {
+		return {
+			dims: {
+				width: 860,
+				height: 450
+			}
+		}
+	},
+
+	componentWillMount: function() {
+		//this.timer = setInterval(() => {
+		//	let dims = _.clone(this.state.dims);
+		//	dims.width++;
+		//	dims.height++;
+		//	this.setState({dims: dims});
+		//}, 1500);
+	},
+
+	componentWillUnmount: function() {
+		//clearInterval(this.timer);
+	},
+
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
@@ -50,6 +77,7 @@ var Application = React.createClass({
 				</Row>
 				<View {...otherProps} appState={computedState} />
 				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
+						dims={this.state.dims}
 						callback={this.props.callback}
 						km={computedState.km}
 						features={computedState.features} /> : null}
