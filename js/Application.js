@@ -11,17 +11,12 @@ var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
 //var Perf = require('react/addons').addons.Perf;
 
-<<<<<<< 1a36e0ff61affa5f8a7b7b484ee9336417ceacb7
 var views = {
 	heatmap: Spreadsheet,
 	chart: ChartView
 };
 
 var Application = React.createClass({
-=======
-module.exports = React.createClass({
-	timer: null,
->>>>>>> refactored structure for handling and calculating section dimensions
 //	onPerf: function () {
 //		this.perf = !this.perf;
 //		if (this.perf) {
