@@ -10,10 +10,10 @@ var {deepPureRenderMixin} = require('./react-utils');
 var header = s => xenaQuery.server_url(s.server);
 
 function optsFromDatasets(servers) {
-	return _.flatmap(servers,
-			s => [{label: header(s), header: true}].concat(
-				_.map(s.datasets,
-					d => ({value: d.dsID, label: d.label}))));
+	return _.flatmap(servers, (s) => {
+		let opts = _.sortBy(_.map(s.datasets, d => ({value: d.dsID, label: d.label})), option => option.label.toLowerCase());
+		return [{label: header(s), header: true}].concat(opts);
+	});
 }
 
 var DatasetSelect = React.createClass({
@@ -21,14 +21,10 @@ var DatasetSelect = React.createClass({
 	render: function () {
 		var {datasets, nullOpt, ...other} = this.props,
 			options = (nullOpt ? [{value: null, label: nullOpt}] : [])
-				.concat(optsFromDatasets(_.getIn(datasets, ['servers']))),
-			sortedOptions = _.sortBy(options, (option) => option.label.toLowerCase());
+				.concat(optsFromDatasets(_.getIn(datasets, ['servers'])));
 
 		return (
-			<Select
-				{...other}
-				options={sortedOptions}
-			/>
+			<Select {...other}  options={options} />
 		);
 	}
 });
