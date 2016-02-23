@@ -5,7 +5,6 @@
 
 require('../css/km.css');
 var _ = require('./underscore_ext');
-//var warningImg = require('../images/warning.png');
 var React = require('react');
 var { PropTypes } = React;
 var Modal = require('react-bootstrap/lib/Modal');
@@ -16,7 +15,6 @@ var {linear, linearTicks} = require('./scale');
 // XXX Warn on duplicate patients, and list patient ids?
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
-//var size = {width: 800, height: 450};
 var margin = {top: 20, right: 50, bottom: 30, left: 50};
 const HOVER = 'hover';
 
@@ -26,13 +24,6 @@ function line(xScale, yScale, values) {
 	return ['M0,0', ...coords.map(([t, s]) => `H${t}V${s}`)].join(' ');
 }
 
-function isActiveLabel(activeLabel, currentLabel) {
-	if (activeLabel)
-		return (activeLabel === currentLabel);
-	else
-		return false;
-}
-
 function censorLines(xScale, yScale, censors, className) {
 	/*eslint-disable comma-spacing */
 	return censors.map(({t, s}, i) =>
@@ -40,31 +31,71 @@ function censorLines(xScale, yScale, censors, className) {
 			key={i}
 			className={className}
 			x1={0} x2={0} y1={-5} y2={5}
-			transform={`translate(${xScale(t)},${yScale(s)})`}/>
+			transform={`translate(${xScale(t)},${yScale(s)})`} />
 	);
 	/*eslint-enable comma-spacing */
 }
 
-var drawGroup = function (xScale, yScale, [color, label, curve], setActiveLabel, activeLabel) {
-	var censors = curve.filter(pt => !pt.e);
-	let activeLabelClassName = isActiveLabel(activeLabel, label) ? HOVER : '';
-
-	return (
-		<g key={label} className='subgroup' stroke={color}
-		   onMouseOver={(e) => setActiveLabel(e, label)}
-		   onMouseOut={(e) => setActiveLabel(e, '')}>
-			<path className={`outline ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
-			<path className={`line ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
-			{censorLines(xScale, yScale, censors, `outline ${activeLabelClassName}`)}
-			{censorLines(xScale, yScale, censors, `line' ${activeLabelClassName}`)}
-		</g>);
+function calcDims (viewDims, sizeRatios) {
+	return _.mapObject(sizeRatios, (section) => {
+		return _.mapObject(section, (ratio, side) => viewDims[side] * ratio);
+	});
 }
+
+function checkIfActive(currentLabel, activeLabel) {
+	// check whether this line group should be set to Active
+	if (activeLabel)
+		return (activeLabel === currentLabel);
+	else
+		return false;
+}
+
+var LineGroup = React.createClass({
+	getInitialState: function() {
+		return { isActive: false }
+	},
+
+	componentWillReceiveProps: function(newProps) {
+		let { g, activeLabel } = newProps,
+			[ color, label, curve ] = g,
+			oldIsActive = this.state.isActive,
+			activeStatus = checkIfActive(label, activeLabel);
+
+		if (oldIsActive != activeStatus)
+			this.setState({ isActive: activeStatus });
+	},
+
+	shouldComponentUpdate: function(newProps, newState) {
+		//testing for any changes to g, and state's isActive parameter should be sufficient
+		let gChanged = !_.isEqual(newProps.g, this.props.g),
+			isActiveChanged = !_.isEqual(newState.isActive, this.state.isActive);
+
+		return (gChanged || isActiveChanged);
+	},
+
+	render: function() {
+		let { xScale, yScale, g, setActiveLabel } = this.props;
+		let [ color, label, curve ] = g;
+		var censors = curve.filter(pt => !pt.e);
+		let activeLabelClassName = this.state.isActive ? HOVER : '';
+
+		return (
+			<g key={label} className='subgroup' stroke={color}
+				onMouseOver={(e) => setActiveLabel(e, label)}
+				onMouseOut={(e) => setActiveLabel(e, '')}>
+				<path className={`outline ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
+				<path className={`line ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
+				{censorLines(xScale, yScale, censors, `outline ${activeLabelClassName}`)}
+				{censorLines(xScale, yScale, censors, `line' ${activeLabelClassName}`)}
+			</g>
+		);
+	}
+});
 
 var bounds = x => [_.min(x), _.max(x)];
 
 function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 	var height = size.height - margin.top - margin.bottom,
-	//width = size.width - margin.left - margin.right,
 		width = size.width,
 		xdomain = bounds(_.pluck(_.flatten(curves), 't')),
 		xrange = [0, width],
@@ -73,7 +104,15 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 		xScale = linear(xdomain, xrange),
 		yScale = linear(ydomain, yrange);
 
-	var groupSvg = _.zip(colors, labels, curves).map(g => drawGroup(xScale, yScale, g, setActiveLabel, activeLabel));
+	var groupSvg = _.zip(colors, labels, curves).map((g, index) => {
+		return <LineGroup
+				key={index}
+				xScale={xScale}
+				yScale={yScale}
+				g={g}
+				activeLabel={activeLabel}
+				setActiveLabel={setActiveLabel} />;
+	});
 
 	/*eslint-disable comma-spacing */
 	return (
@@ -149,12 +188,13 @@ var PValue = React.createClass({
 
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
-	let activeLabelClassName = isActiveLabel(activeLabel, label) ? HOVER : '';
+	let isActive = checkIfActive(label, activeLabel);
+	let activeLabelClassName = isActive ? HOVER : '';
 	let legendLineStyle = {
 		backgroundColor: color,
-		border: '1px solid',
+		border: (isActive ? 2 : 1).toString() +'px solid',
 		display: 'inline-block',
-		height: 5,
+		height: 6,
 		width: 25,
 		verticalAlign: 'middle'
 	};
@@ -165,7 +205,7 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 			className={`list-group-item outline ${activeLabelClassName}`}
 			onMouseOver={(e) => setActiveLabel(e, label)}
 			onMouseOut={(e) => setActiveLabel(e, '')}>
-			<span style={legendLineStyle}/> {label} (n={curves.length})
+			<span style={legendLineStyle} /> {label} (n={curves.length})
 		</li>
 
 	);
@@ -182,7 +222,8 @@ var Legend = React.createClass({
 	render: function () {
 		let { groups, setActiveLabel, activeLabel } = this.props;
 		let { colors, curves, labels } = groups;
-		let sets = _.zip(colors, curves, labels).map(set => makeLegendKey(set, setActiveLabel, activeLabel));
+		let sets = _.zip(colors, curves, labels)
+					.map((set, index) => makeLegendKey(set, setActiveLabel, activeLabel));
 
 		return (
 			<ListGroup className="legend">{sets}</ListGroup>
@@ -190,7 +231,7 @@ var Legend = React.createClass({
 	}
 });
 
-function Graph(groups, setActiveLabel, activeLabel, size) {
+function makeGraph(groups, setActiveLabel, activeLabel, size) {
 	return (
 		<div className="graph" style={{width: size.width}}>
 			{svg(groups, setActiveLabel, activeLabel, size)}
@@ -199,7 +240,7 @@ function Graph(groups, setActiveLabel, activeLabel, size) {
 	);
 }
 
-function Definitions(groups, setActiveLabel, activeLabel, size) {
+function makeDefinitions(groups, setActiveLabel, activeLabel, size) {
 	// get new size based on size ratio for definitions column
 
 	return (
@@ -207,29 +248,28 @@ function Definitions(groups, setActiveLabel, activeLabel, size) {
 			<PValue pValue={groups.pValue} logRank={groups.KM_stats}/>
 			<Legend groups={groups}
 					setActiveLabel={setActiveLabel}
-					activeLabel={activeLabel}/>
+					activeLabel={activeLabel} />
 		</div>
 	);
 }
 
 var KmPlot = React.createClass({
 	mixins: [deepPureRenderMixin],
+	propTypes: {
+		eventClose: PropTypes.string,
+		dims: PropTypes.object
+	},
 	size: {
-		dims: null,
 		ratios: {
 			graph: {
 				width: 0.75,
 				height: 1.0
 			},
 			definitions: {
-				width: 0.0,
+				width: 0.25,
 				height: 1.0
 			}
 		}
-	},
-	propTypes: {
-		eventClose: PropTypes.string,
-		dims: PropTypes.object
 	},
 
 	getDefaultProps: () => ({
@@ -240,30 +280,8 @@ var KmPlot = React.createClass({
 		}
 	}),
 
-	getInitialState: () => ({
-		activeLabel: ''
-	}),
-
-	componentWillMount: function () {
-		// calculate width ratio of definitions section && calculate dimensions for each section based on ratios
-		this.size.ratios.definitions.width = 1 - this.size.ratios.graph.width;
-		this.size.dims = this.calcDims(this.props.dims);
-	},
-
-	componentWillUpdate: function(newProps, newState) {
-		this.size.dims = this.calcDims(newProps.dims);
-	},
-
-	calcDims: function (viewDims) {
-		let dims = {};
-
-		_.each(this.size.ratios, (sectionRatios, sectionName) => {
-			dims[sectionName] = _.mapObject(sectionRatios, (ratio, param) => {
-				return ratio * viewDims[param];
-			});
-		});
-
-		return dims;
+	getInitialState: function() {
+		return { activeLabel: '' }
 	},
 
 	hide: function () {
@@ -272,39 +290,42 @@ var KmPlot = React.createClass({
 	},
 
 	setActiveLabel: function (e, label) {
-		this.setState({activeLabel: label});
+		this.setState({ activeLabel: label });
 	},
 
 	render: function () {
-		//debugger;
-		let { km: {title, label, groups} } = this.props,
+		let { km: {title, label, groups}, dims } = this.props,
 			{ activeLabel } = this.state,
-			{ dims } = this.size;
+			sectionDims = calcDims(dims, this.size.ratios);
 		// XXX Use bootstrap to lay this out, instead of tables + divs
 		let Content = _.isEmpty(groups)
-			?
-			<div className="jumbotron"
-				 style={{height: this.props.dims.height, textAlign: 'center', verticalAlign: 'center'}}>
+			? <div
+				className="jumbotron"
+				style={{
+					height: dims.height,
+					textAlign: 'center',
+					verticalAlign: 'center'
+				}}>
 				<h1>Loading...</h1>
 			</div>
 			: <div>
-			{Graph(groups, this.setActiveLabel, activeLabel, dims.graph)}
-			{Definitions(groups, this.setActiveLabel, activeLabel, dims.definitions)}
-		</div>;
+				{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
+				{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions)}
+			</div>;
 
 		return (
 			<Modal show={true} bsSize='large' className='kmDialog' onHide={this.hide} ref="kmPlot">
 				<Modal.Header closeButton className="container-fluid">
 					<span className="col-md-2">
-						<Modal.Title>Kaplar Meier</Modal.Title>
+						<Modal.Title>Kaplan Meier</Modal.Title>
 					</span>
 					<span className="col-md-9 label label-default featureLabel">{title}</span>
 				</Modal.Header>
 				<Modal.Body className="container-fluid">
 					{Content}
 				</Modal.Body>
-				<Modal.Footer>
-					<div className='featureLabel'>{label}</div>
+				<Modal.Footer className="container-fluid">
+					<samp className='featureLabel'>{label} (limited to xyz categories)</samp>
 				</Modal.Footer>
 			</Modal>
 		);
