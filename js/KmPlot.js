@@ -5,7 +5,6 @@
 
 require('../css/km.css');
 var _ = require('./underscore_ext');
-//var warningImg = require('../images/warning.png');
 var React = require('react');
 var { PropTypes } = React;
 var Modal = require('react-bootstrap/lib/Modal');
@@ -17,7 +16,6 @@ var {linear, linearTicks} = require('./scale');
 // XXX Warn on duplicate patients, and list patient ids?
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
-//var size = {width: 800, height: 450};
 var margin = {top: 20, right: 50, bottom: 30, left: 50};
 const HOVER = 'hover';
 
@@ -34,24 +32,18 @@ function censorLines(xScale, yScale, censors, className) {
 			key={i}
 			className={className}
 			x1={0} x2={0} y1={-5} y2={5}
-			transform={`translate(${xScale(t)},${yScale(s)})`}/>
+			transform={`translate(${xScale(t)},${yScale(s)})`} />
 	);
 	/*eslint-enable comma-spacing */
 }
 
 function calcDims (viewDims, sizeRatios) {
-	let dims = {};
-
-	_.each(sizeRatios, (sectionRatios, sectionName) => {
-		dims[sectionName] = _.mapObject(sectionRatios, (ratio, param) => {
-			return ratio * parseInt(viewDims[param]);
-		});
+	return _.mapObject(sizeRatios, (section) => {
+		return _.mapObject(section, (ratio, side) => viewDims[side] * ratio);
 	});
-
-	return dims;
 }
 
-function shouldBeActive(currentLabel, activeLabel) {
+function checkIfActive(currentLabel, activeLabel) {
 	// check whether this line group should be set to Active
 	if (activeLabel)
 		return (activeLabel === currentLabel);
@@ -68,14 +60,14 @@ var LineGroup = React.createClass({
 		let { g, activeLabel } = newProps,
 			[ color, label, curve ] = g,
 			oldIsActive = this.state.isActive,
-			activeStatus = shouldBeActive(label, activeLabel);
+			activeStatus = checkIfActive(label, activeLabel);
 
 		if (oldIsActive != activeStatus)
 			this.setState({ isActive: activeStatus });
 	},
 
 	shouldComponentUpdate: function(newProps, newState) {
-		//testing for any changes to g should be sufficient
+		//testing for any changes to g, and state's isActive parameter should be sufficient
 		let gChanged = !_.isEqual(newProps.g, this.props.g),
 			isActiveChanged = !_.isEqual(newState.isActive, this.state.isActive);
 
@@ -83,12 +75,10 @@ var LineGroup = React.createClass({
 	},
 
 	render: function() {
-		let { xScale, yScale, g, setActiveLabel, activeLabel } = this.props;
+		let { xScale, yScale, g, setActiveLabel } = this.props;
 		let [ color, label, curve ] = g;
 		var censors = curve.filter(pt => !pt.e);
 		let activeLabelClassName = this.state.isActive ? HOVER : '';
-
-		console.log("re-rendering LineGroup: ", label);
 
 		return (
 			<g key={label} className='subgroup' stroke={color}
@@ -107,7 +97,6 @@ var bounds = x => [_.min(x), _.max(x)];
 
 function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 	var height = size.height - margin.top - margin.bottom,
-	//width = size.width - margin.left - margin.right,
 		width = size.width,
 		xdomain = bounds(_.pluck(_.flatten(curves), 't')),
 		xrange = [0, width],
@@ -197,14 +186,13 @@ function makePValue() {
 
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
-	let isActive = shouldBeActive(label, activeLabel);
+	let isActive = checkIfActive(label, activeLabel);
 	let activeLabelClassName = isActive ? HOVER : '';
-	const pixShim = (isActive ? 2 : 0);
 	let legendLineStyle = {
 		backgroundColor: color,
-		border: '1px solid',
+		border: (isActive ? 2 : 1).toString() +'px solid',
 		display: 'inline-block',
-		height: 5 + pixShim,
+		height: 6,
 		width: 25,
 		verticalAlign: 'middle'
 	};
@@ -232,7 +220,8 @@ var Legend = React.createClass({
 	render: function () {
 		let { groups, setActiveLabel, activeLabel } = this.props;
 		let { colors, curves, labels } = groups;
-		let sets = _.zip(colors, curves, labels).map((set, index) => makeLegendKey(set, setActiveLabel, activeLabel));
+		let sets = _.zip(colors, curves, labels)
+					.map((set, index) => makeLegendKey(set, setActiveLabel, activeLabel));
 
 		return (
 			<ListGroup className="legend">{sets}</ListGroup>
@@ -257,13 +246,17 @@ function makeDefinitions(groups, setActiveLabel, activeLabel, size) {
 			{makePValue()}
 			<Legend groups={groups}
 					setActiveLabel={setActiveLabel}
-					activeLabel={activeLabel}/>
+					activeLabel={activeLabel} />
 		</div>
 	);
 }
 
 var KmPlot = React.createClass({
 	mixins: [deepPureRenderMixin],
+	propTypes: {
+		eventClose: PropTypes.string,
+		dims: PropTypes.object
+	},
 	size: {
 		ratios: {
 			graph: {
@@ -275,10 +268,6 @@ var KmPlot = React.createClass({
 				height: 1.0
 			}
 		}
-	},
-	propTypes: {
-		eventClose: PropTypes.string,
-		dims: PropTypes.object
 	},
 
 	getDefaultProps: () => ({
@@ -303,11 +292,10 @@ var KmPlot = React.createClass({
 	},
 
 	setActiveLabel: function (e, label) {
-		this.setState({activeLabel: label});
+		this.setState({ activeLabel: label });
 	},
 
 	render: function () {
-		console.log("re-rendering...");
 		let { km: {title, label, groups}, dims } = this.props,
 			{ activeLabel } = this.state,
 			sectionDims = calcDims(dims, this.size.ratios);
@@ -331,15 +319,15 @@ var KmPlot = React.createClass({
 			<Modal show={true} bsSize='large' className='kmDialog' onHide={this.hide} ref="kmPlot">
 				<Modal.Header closeButton className="container-fluid">
 					<span className="col-md-2">
-						<Modal.Title>Kaplar Meier</Modal.Title>
+						<Modal.Title>Kaplan Meier</Modal.Title>
 					</span>
 					<span className="col-md-9 label label-default featureLabel">{title}</span>
 				</Modal.Header>
 				<Modal.Body className="container-fluid">
 					{Content}
 				</Modal.Body>
-				<Modal.Footer>
-					<div className='featureLabel'>{label}</div>
+				<Modal.Footer className="container-fluid">
+					<samp className='featureLabel'>{label} (limited to xyz categories)</samp>
 				</Modal.Footer>
 			</Modal>
 		);
