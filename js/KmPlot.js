@@ -5,7 +5,7 @@
 
 require('../css/km.css');
 var _ = require('./underscore_ext');
-//var warningImg = require('../images/warning.png');
+//var Moment = require('moment');
 var React = require('react');
 var { PropTypes } = React;
 var Modal = require('react-bootstrap/lib/Modal');
@@ -72,7 +72,12 @@ var LineGroup = React.createClass({
 
 		if (oldIsActive != activeStatus)
 			this.setState({ isActive: activeStatus });
+
 	},
+
+	//componentDidUpdate: function() {
+	//	console.log("Time when glowing: ", Moment().format("h:mm:ss - SSS"));
+	//},
 
 	shouldComponentUpdate: function(newProps, newState) {
 		//testing for any changes to g should be sufficient
@@ -303,6 +308,7 @@ var KmPlot = React.createClass({
 	},
 
 	setActiveLabel: function (e, label) {
+		//console.log("Time entered: ", Moment().format("h:mm:ss - SSS"));
 		this.setState({activeLabel: label});
 	},
 
