@@ -30,7 +30,6 @@ var Application = React.createClass({
 //			Perf.printWasted();
 //		}
 //	},
-
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),

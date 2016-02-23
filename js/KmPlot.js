@@ -266,7 +266,7 @@ var KmPlot = React.createClass({
 				height: 1.0
 			},
 			definitions: {
-				width: 0.0,
+				width: 0.25,
 				height: 1.0
 			}
 		}
@@ -282,10 +282,6 @@ var KmPlot = React.createClass({
 
 	getInitialState: function() {
 		return { activeLabel: '' }
-	},
-
-	componentWillMount: function() {
-		this.size.ratios.definitions.width = 1 - this.size.ratios.graph.width;
 	},
 
 	hide: function () {
