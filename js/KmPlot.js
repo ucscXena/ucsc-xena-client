@@ -186,34 +186,6 @@ var PValue = React.createClass({
 	}
 });
 
-function makePValue() {
-	const tooltip = (
-		<Tooltip id='p-value' placement='top'>
-			Some individuals survival data are used more than once in the KM plot. Affected patients are:
-			TCGA-G4-6317-02,
-			TCGA-A6-2671-01, TCGA-A6-2680-01, TCGA-A6-2684-01, TCGA-A6-2685-01, TCGA-A6-2683-01, TCGA-AA-3520-01,
-			TCGA-AA-3525-01. For more information and how to remove such duplications: https://goo.gl/TSQt6z.
-		</Tooltip>
-	);
-
-	return (
-		<ListGroup fill>
-			<ListGroupItem>
-				<OverlayTrigger
-					placement='right'
-					overlay={tooltip}
-					trigger={['hover', 'click']}>
-					<div className="badge" style={{verticalAlign:"middle"}}>!</div>
-				</OverlayTrigger>
-				<span>P-Value = 0.00023</span>
-			</ListGroupItem>
-			<ListGroupItem>
-				<span>Log-rank Test Stats = 0.0000</span>
-			</ListGroupItem>
-		</ListGroup>
-	);
-}
-
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
 	let isActive = checkIfActive(label, activeLabel);
