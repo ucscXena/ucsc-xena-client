@@ -5,7 +5,6 @@
 
 require('../css/km.css');
 var _ = require('./underscore_ext');
-//var Moment = require('moment');
 var React = require('react');
 var { PropTypes } = React;
 var Modal = require('react-bootstrap/lib/Modal');
@@ -44,7 +43,7 @@ function calcDims (viewDims, sizeRatios) {
 	});
 }
 
-function shouldBeActive(currentLabel, activeLabel) {
+function checkIfActive(currentLabel, activeLabel) {
 	// check whether this line group should be set to Active
 	if (activeLabel)
 		return (activeLabel === currentLabel);
@@ -61,7 +60,7 @@ var LineGroup = React.createClass({
 		let { g, activeLabel } = newProps,
 			[ color, label, curve ] = g,
 			oldIsActive = this.state.isActive,
-			activeStatus = shouldBeActive(label, activeLabel);
+			activeStatus = checkIfActive(label, activeLabel);
 
 		if (oldIsActive != activeStatus)
 			this.setState({ isActive: activeStatus });
@@ -187,7 +186,7 @@ function makePValue() {
 
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
-	let isActive = shouldBeActive(label, activeLabel);
+	let isActive = checkIfActive(label, activeLabel);
 	let activeLabelClassName = isActive ? HOVER : '';
 	let legendLineStyle = {
 		backgroundColor: color,
@@ -320,7 +319,7 @@ var KmPlot = React.createClass({
 			<Modal show={true} bsSize='large' className='kmDialog' onHide={this.hide} ref="kmPlot">
 				<Modal.Header closeButton className="container-fluid">
 					<span className="col-md-2">
-						<Modal.Title>Kaplar Meier</Modal.Title>
+						<Modal.Title>Kaplan Meier</Modal.Title>
 					</span>
 					<span className="col-md-9 label label-default featureLabel">{title}</span>
 				</Modal.Header>
