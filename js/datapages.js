@@ -13,7 +13,6 @@ const createStore = require('./store');
 var Datapages = React.createClass({
 	shouldComponentUpdated: () => false,
 	componentDidMount: function () {
-		console.log(datapages);
 		datapages.start(this.refs.datapages);
 	},
 	render: () => <div ref='datapages'/>
