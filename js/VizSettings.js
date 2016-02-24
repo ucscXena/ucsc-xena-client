@@ -39,12 +39,29 @@
 'use strict';
 var xenaQuery = require('./xenaQuery');
 var dom_helper = require('./dom_helper');
-var session = require('./session');
 var _ = require('./underscore_ext');
 var floatImg = require('../images/genomicFloatLegend.jpg');
 var customFloatImg = require('../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var Modal = require('react-bootstrap/lib/Modal');
+
+// XXX should not have subscribe inside a subscribe. Instead,
+// use a combinator on the two streams & subscribe to the result.
+function datasetHasFloats (host, dsName, action, actionArgs) {
+	xenaQuery.dataset_field_examples(host, dsName).subscribe(function (s) {
+		var probes = s.map(function (probe) {
+			return probe.name;
+		});
+		xenaQuery.code_list(host, dsName, probes).subscribe(function(codemap){
+			for(var key in codemap) {
+				if (codemap.hasOwnProperty(key) && !codemap[key]){  // no code, float feature
+					action.apply(this, actionArgs);
+					return;
+				}
+		}
+		});
+	});
+}
 
 function vizSettingsWidget(node, callback, vizState, dsID, hide) {
 	var state = _.getIn(vizState, [dsID]);
@@ -72,7 +89,7 @@ function vizSettingsWidget(node, callback, vizState, dsID, hide) {
 
 			node = document.createElement("div");
 			actionArgs = [node, host, datasetName];
-			session.datasetHasFloats(host, datasetName, action, actionArgs);
+			datasetHasFloats(host, datasetName, action, actionArgs);
 			div.appendChild(node);
 
 			//apply button

@@ -74,7 +74,7 @@
     "rx": "^2.4.3",
     "rx-dom": "^4.0.4",
     "static-interval-tree": "^1.0.3",
-    "ucsc-xena-datapages": "^1.12.0",
+    "ucsc-xena-datapages": "^1.16.0",
     "underscore": "^1.7.0",
     "underscore.string": "^3.0.3"
   },

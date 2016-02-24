@@ -14,8 +14,8 @@ if (document.location.pathname.match(/datapages\/$/)) {
 		require(['datapages']).foo; // XXX see above
 	});
 } else if (document.location.pathname.match(/hub\/$/)) {
-	require.ensure(['hub'], function () {
-		require(['hub']).foo;       // XXX see above
+	require.ensure(['hubPage'], function () {
+		require(['hubPage']).foo;       // XXX see above
 	});
 } else if (document.location.pathname.match(/heatmap\/$/)) {
 	require.ensure(['main'], function () {

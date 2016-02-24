@@ -5,21 +5,19 @@
 
 require('base');
 const React = require('react');
-const datapages = require('ucsc-xena-datapages/datapages');
+const hub = require('ucsc-xena-datapages/hub');
 const session = require('ucsc-xena-datapages/session');
 const connector = require('./connector');
 const createStore = require('./store');
 const getSessionProxy = require('./sessionProxy');
 
-var Datapages = React.createClass({
+var Hub = React.createClass({
 	shouldComponentUpdated: () => false,
 	componentDidMount: function () {
-		console.log(datapages);
-		datapages.start(this.refs.datapages);
+		hub(this.refs.hubPage);
 	},
-	render: () => <div ref='datapages'/>
+	render: () => <div ref='hubPage'/>
 });
-
 
 var store = createStore();
 var main = window.document.getElementById('main');
@@ -40,4 +38,4 @@ var selector = state => state;
 session.setSessionStorage(getSessionProxy(store.uiBus.onNext.bind(store.uiBus)));
 
 
-connector({...store, controller, main, selector, Page: Datapages});
+connector({...store, controller, main, selector, Page: Hub});

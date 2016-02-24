@@ -3,10 +3,10 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var Rx = require('rx');
+var Rx = require('./rx.ext');
+require('rx/dist/rx.time');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Application = require('./Application');
 var compactJSON = require('./compactJSON');
 let {createDevTools} = require('./controllers/devtools');
 import LogMonitor from 'redux-devtools-log-monitor';
@@ -22,6 +22,7 @@ function logError(err) {
 }
 
 module.exports = function({
+	Page,
 	controller,
 	initialState,
 	serverBus,
@@ -99,11 +100,11 @@ module.exports = function({
 	// XXX double check that this expression is doing what we want: don't draw faster
 	// than rAF.
 
-	// pass the selector into Application, so we catch errors while rendering & can display an error message.
+	// pass the selector into Page, so we catch errors while rendering & can display an error message.
 	prependState(devStateObs).throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
 		.subscribe(devState => ReactDOM.render(
 					<div>
-						<Application callback={updater} selector={selector} state={_.last(devState.computedStates).state} />
+						<Page callback={updater} selector={selector} state={_.last(devState.computedStates).state} />
 						<DevTools dispatch={devBus.onNext.bind(devBus)} {...devState} />
 					</div>,
 			main));
@@ -112,8 +113,7 @@ module.exports = function({
 	devStateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
 		.subscribe(state => sessionStorage.debugSession = stringify(state));
 
-	// Kick things off, except when recovering.
-	if (!sessionLoaded) {
-		uiBus.onNext(['init']);
-	}
+	// This causes us to always load cohorts on page load. This is important after
+	// setting hubs, for example.
+	uiBus.onNext(['init']);
 };

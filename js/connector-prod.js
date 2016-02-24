@@ -5,7 +5,6 @@
 var Rx = require('rx');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Application = require('./Application');
 
 function controlRunner(serverBus, controller) {
 	return function (state, ac) {
@@ -44,6 +43,7 @@ var [pushState, setState] = (function () {
 })();
 
 module.exports = function({
+	Page,
 	controller,
 	initialState,
 	serverBus,
@@ -63,7 +63,7 @@ module.exports = function({
 				   .share();
 
 	stateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
-		.subscribe(state => ReactDOM.render(<Application callback={updater} selector={selector} state={state} />, main));
+		.subscribe(state => ReactDOM.render(<Page callback={updater} selector={selector} state={state} />, main));
 
 	// Save state in sessionStorage on page unload.
 	stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
