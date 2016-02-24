@@ -63,7 +63,7 @@ var Sortable = React.createClass({
 			var target = positions[index];
 			var max = positions[N - 1].left - target.left - target.width + positions[N - 1].width;
 			var min = positions[0].left - target.left;
-			var newPos;
+			var newPos = _.map(positions, () => 0);
 
 			// Calculate delta with mousemove until mouseup
 			return Rx.DOM.fromEvent(window, 'mousemove').map(function (mm) {
@@ -89,8 +89,6 @@ var Sortable = React.createClass({
 						.concat([dragLeft],
 							_.map(_.last(positions, N - 1 - index),
 								  ({left, width}) => edge >= left + width / 2 ? shift : 0));
-				} else {
-					newPos = _.map(positions, () => 0);
 				}
 
 				return _.object(order, newPos);
