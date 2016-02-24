@@ -34,7 +34,7 @@ var sortSelector = createSelector(
 				_.findValue(columnOrder, id => cmpFns[id](s1, s2)) ||
 					cmpString(s1, s2); // XXX add cohort as well
 
-		return samples.slice(0).sort(cmpFn);
+		return (samples || []).slice(0).sort(cmpFn);
 	}
 );
 
