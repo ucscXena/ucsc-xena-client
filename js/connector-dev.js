@@ -11,6 +11,7 @@ var compactJSON = require('./compactJSON');
 let {createDevTools} = require('./controllers/devtools');
 import LogMonitor from 'redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
+const session = require('ucsc-xena-datapages/session');
 
 function logError(err) {
 	if (typeof window === 'object' && typeof window.chrome !== 'undefined') {
@@ -74,6 +75,9 @@ module.exports = function({
 
 	let devReducer = DevTools.instrument(controller, initialState);
 	let devInitialState = getSavedState() || devReducer(null, {});
+
+	// Shim sessionStorage for code using session.js.
+	session.setCallback(ev => uiCh.onNext(ev));
 
 	// Side-effects (e.g. async) happen here. Ideally we wouldn't call this from 'scan', since 'scan' should
 	// be side-effect free. However we've lost the action by the time scan is complete, so we do it in the scan.

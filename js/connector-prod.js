@@ -5,6 +5,7 @@
 var Rx = require('rx');
 var React = require('react');
 var ReactDOM = require('react-dom');
+const session = require('ucsc-xena-datapages/session');
 
 function controlRunner(serverBus, controller) {
 	return function (state, ac) {
@@ -55,6 +56,9 @@ module.exports = function({
 
 	var updater = ac => uiCh.onNext(ac);
 	var runner = controlRunner(serverBus, controller);
+
+	// Shim sessionStorage for code using session.js.
+	session.setCallback(ev => uiCh.onNext(ev));
 
 	let stateObs = Rx.Observable.merge(serverCh, uiCh)
 				   .scan(initialState, runner)

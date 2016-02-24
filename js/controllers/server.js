@@ -4,6 +4,7 @@
 var _ = require('../underscore_ext');
 var Rx = require('rx');
 var {reifyErrors, collectResults} = require('./errors');
+var {fetchDatasets, fetchSamples} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
@@ -37,6 +38,15 @@ var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 
 var controls = {
 	cohorts: (state, cohorts) => _.assoc(state, "cohorts", cohorts),
+	'cohorts-post!': (serverBus, state) => {
+		let {servers: {user}, cohort, samplesFrom, samples, datasets} = state;
+		if (cohort && !samples) {
+			fetchSamples(serverBus, user, cohort, samplesFrom);
+		}
+		if (cohort && !datasets) {
+			fetchDatasets(serverBus, user, cohort);
+		}
+	},
 	datasets: (state, datasets) => _.assoc(state, "datasets", datasets),
 	'datasets-post!': (serverBus, state, datasets) => fetchFeatures(serverBus, state, datasets),
 	features: (state, features) => _.assoc(state, "features", features),
