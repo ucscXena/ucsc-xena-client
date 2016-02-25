@@ -155,6 +155,8 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 	/*eslint-enable comma-spacing */
 }
 
+var formatPValue = v => v == null ? String.fromCharCode(8709) : v.toPrecision(4);
+
 var PValue = React.createClass({
 	render: function () {
 		var {logRank, pValue} = this.props;
@@ -176,10 +178,10 @@ var PValue = React.createClass({
 						trigger={['hover', 'click']}>
 						<div className="badge" style={{verticalAlign:"middle"}}>!</div>
 					</OverlayTrigger>
-					<span>P-Value = {pValue.toPrecision(4)}</span>
+					<span>P-Value = {formatPValue(pValue)}</span>
 				</ListGroupItem>
 				<ListGroupItem>
-					<span>Log-rank Test Stats = {logRank.toPrecision(4)}</span>
+					<span>Log-rank Test Stats = {formatPValue(logRank)}</span>
 				</ListGroupItem>
 			</ListGroup>
 		)
