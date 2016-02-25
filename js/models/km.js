@@ -30,7 +30,7 @@ var saveNull = fn => v => v == null ? v : fn(v);
 // XXX Here we include samples that might not have tte and ev, when
 // picking the range. Ideal would be to partition not including
 // samples w/o survival data.
-function partitionedVals(avg, uniq, codes, colorfn) {
+function partitionedVals(avg, uniq, colorfn) {
 	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
 		min = _.min(vals),
 		max = _.max(vals),
@@ -45,7 +45,7 @@ function partitionedVals(avg, uniq, codes, colorfn) {
 	};
 }
 
-function floatVals(avg, uniq, codes, colorfn) {
+function floatVals(avg, uniq, colorfn) {
 	return {
 		values: avg,
 		groups: uniq,
@@ -57,11 +57,11 @@ function floatVals(avg, uniq, codes, colorfn) {
 // We use data.display so the values reflect normalization settings.
 // We average 1st, then see how many unique values there are, then decide
 // whether to partition or not.
-function floatOrPartitionVals({heatmap, colors}, {req: {codes}}) {
+function floatOrPartitionVals({heatmap, colors}) {
 	var avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = _.first(colors.map(colorScale));
-	return (uniq.length > MAX ? partitionedVals : floatVals)(avg, uniq, codes, colorfn);
+	return (uniq.length > MAX ? partitionedVals : floatVals)(avg, uniq, colorfn);
 }
 
 function featureType({dataType}, data) {
