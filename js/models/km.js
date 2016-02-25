@@ -115,12 +115,21 @@ function pValue(groupsTte, groupsEv) {
 			groupsEv);
 }
 
+function warnDupPatients(usableSamples, samples, patient) {
+	const getPatient = i => patient[samples[i]],
+		havePatient = usableSamples.filter(getPatient),
+		dups = _.difference(havePatient, _.uniq(havePatient, false, getPatient));
+
+	return dups.length ? `Some individuals' survival data are used more than once in the KM plot. Affected samples are: ${dups.map(i => samples[i]).join(', ')}. For more information and how to remove such duplications: https://goo.gl/TSQt6z.` : null;
+}
+
 function makeGroups(column, data, index, survival, samples) {
-	// Convert field to coded.
-	let {tte: {data: tte}, ev: {data: ev}} = survival,
+	let {tte: {data: tte}, ev: {data: ev}, patient: {data: patient}} = survival,
+		// Convert field to coded.
 		{labels, colors, groups, values, warning} = toCoded(column, data, index, samples),
 		usableSamples = filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
+		patientWarning = warnDupPatients(usableSamples, samples, patient),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
 		gtte = groups.map(g => groupedIndices[g].map(i => tte[samples[i]])),
 		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
@@ -132,6 +141,7 @@ function makeGroups(column, data, index, survival, samples) {
 		labels,
 		curves,
 		warning,
+		patientWarning,
 		...pV
 	};
 }
