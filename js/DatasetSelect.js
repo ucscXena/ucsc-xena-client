@@ -9,9 +9,14 @@ var {deepPureRenderMixin} = require('./react-utils');
 // group header for a server
 var header = s => xenaQuery.server_url(s.server);
 
+var filterStatusLoaded = list => list.filter(el => el.status === 'loaded');
+var sortByLabel = list => _.sortBy(list, el => el.label.toLowerCase());
+
+
+
 function optsFromDatasets(servers) {
 	return _.flatmap(servers, (s) => {
-		let sortedOpts = _.sortBy(_.map(s.datasets, d => ({value: d.dsID, label: d.label})), option => option.label.toLowerCase());
+		let sortedOpts = sortByLabel(filterStatusLoaded(s.datasets)).map(d => ({value: d.dsID, label: d.label}));
 		return [{label: header(s), header: true}].concat(sortedOpts);
 	});
 }
