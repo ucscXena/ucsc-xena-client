@@ -57,7 +57,7 @@ var LineGroup = React.createClass({
 
 	componentWillReceiveProps: function(newProps) {
 		let { g, activeLabel } = newProps,
-			[ color, label, curve ] = g,
+			[ , label, ] = g,
 			oldIsActive = this.state.isActive,
 			activeStatus = checkIfActive(label, activeLabel);
 
@@ -105,13 +105,13 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 		yScale = linear(ydomain, yrange);
 
 	var groupSvg = _.zip(colors, labels, curves).map((g, index) => {
-		return <LineGroup
+		return (<LineGroup
 				key={index}
 				xScale={xScale}
 				yScale={yScale}
 				g={g}
 				activeLabel={activeLabel}
-				setActiveLabel={setActiveLabel} />;
+				setActiveLabel={setActiveLabel} />);
 	});
 
 	/*eslint-disable comma-spacing */
@@ -194,7 +194,7 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	let activeLabelClassName = isActive ? HOVER : '';
 	let legendLineStyle = {
 		backgroundColor: color,
-		border: (isActive ? 2 : 1).toString() +'px solid',
+		border: (isActive ? 2 : 1).toString() + 'px solid',
 		display: 'inline-block',
 		height: 6,
 		width: 25,
@@ -225,7 +225,7 @@ var Legend = React.createClass({
 		let { groups, setActiveLabel, activeLabel } = this.props;
 		let { colors, curves, labels } = groups;
 		let sets = _.zip(colors, curves, labels)
-					.map((set, index) => makeLegendKey(set, setActiveLabel, activeLabel));
+					.map(set => makeLegendKey(set, setActiveLabel, activeLabel));
 
 		return (
 			<ListGroup className="legend">{sets}</ListGroup>
