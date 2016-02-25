@@ -517,13 +517,13 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	}
 
 	function indexRefGene(resp) {
-		return _.object(resp.name2, _.map(collateRows(resp), refGene_attrs));
+		return _.isEmpty(resp) ? {} : _.object(resp.name2, _.map(collateRows(resp), refGene_attrs));
 	}
 
 	function refGene_exon_values(host, ds, genes) {
 		return Rx.DOM.ajax(
 			xena_post(host, refGene_exon_string(ds, genes))
-		).map(json_resp).map(resp => indexRefGene(resp));
+		).map(json_resp).map(indexRefGene);
 	}
 
 	function align_matches(input, matches) {
