@@ -297,7 +297,7 @@ var KmPlot = React.createClass({
 
 	render: function () {
 		let { km: {title, label, groups}, dims } = this.props,
-			{warning} = groups,
+			warning = _.get(groups, 'warning'),
 			fullLabel = warning ? `${label} (${warning})` : label,
 			{ activeLabel } = this.state,
 			sectionDims = calcDims(dims, this.size.ratios);
