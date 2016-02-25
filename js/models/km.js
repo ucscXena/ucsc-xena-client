@@ -14,13 +14,14 @@ function average(data) {
 	return data[0].map((v, s) => _.meannull(data.map(p => p[s])));
 }
 
-function codedVals({heatmap, colors}, {req: {codes}}) {
-	var groups = _.range(Math.min(codes.length, MAX)),
+function codedVals({heatmap, colors, fields}, {codes}) {
+	var field = fields[0],
+		groups = _.range(Math.min(codes[field].length, MAX)),
 		colorfn = _.first(colors.map(colorScale));
 	return {
 		groups: groups,
 		colors: groups.map(colorfn),
-		labels: codes,
+		labels: codes[field],
 		values: heatmap[0]
 	};
 }
@@ -64,12 +65,12 @@ function floatOrPartitionVals({heatmap, colors}) {
 	return (uniq.length > MAX ? partitionedVals : floatVals)(avg, uniq, colorfn);
 }
 
-function featureType({dataType}, data) {
+function featureType({dataType, fields}, data) {
 	// XXX We have a too many ad hoc checks in the code trying to decide if
 	// something is coded or not, phenotype or not, etc. We need to fix this
 	// across the code.
-	var feature = _.getIn(data, ['req', 'probes', 0]);
-	var coded = _.getIn(data, ['req', 'codes', feature]);
+	var feature = _.getIn(data, ['req', 'probes', 0], _.get(fields, 0));
+	var coded = _.getIn(data, ['codes', feature]);
 	return (dataType === 'mutationVector') ? 'mutation' : (coded ? 'coded' : 'float');
 }
 
