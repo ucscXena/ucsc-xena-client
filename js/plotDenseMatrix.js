@@ -236,6 +236,7 @@ function renderGenomicLegend(props) {
 		var {labels: l, colors: c} = legendFromScale(colorfn);
 		legendColors = c;
 		labels = cases(colors[0], l, {
+			'no-data': () => [],
 			'float-thresh': ([nl, nh, pl, ph]) => ['<' + nl, nh, pl, '>' + ph],
 			'float-thresh-pos': ([low, high]) => [low, '>' + high],
 			'float-thresh-neg': ([low, high]) => ['<' + low, high]
