@@ -191,7 +191,7 @@ var ColumnEdit = React.createClass({
 		var {dataset} = this.state,
 			{appState: {datasets, columnEdit}} = this.props,
 			meta = dataset && _.getIn(datasets, ['datasets', dataset]);
-		var editor = meta ? pickEditor(meta, this.addColumn, columnEdit) : '';
+		var editor = meta ? pickEditor(meta, this.addColumn, columnEdit) : null;
 
 		return (
 			<Modal {...this.props} show={true} className='columnEdit container'>
