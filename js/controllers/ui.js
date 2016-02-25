@@ -6,11 +6,10 @@
 var _ = require('../underscore_ext');
 var Rx = require('rx');
 var xenaQuery = require('../xenaQuery');
-var widgets = require('../columnWidgets');
 var util = require('../util');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
-var {fetchDatasets, fetchSamples} = require('./common');
+var {fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
 
 var	datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
 var identity = x => x;
@@ -24,14 +23,6 @@ function cohortQuery(servers) {
 
 function fetchCohorts(serverBus, servers) {
 	serverBus.onNext(['cohorts', cohortQuery(servers)]);
-}
-
-function fetchColumnData(serverBus, state, id, settings) {
-	let samples = _.get(state, "samples");
-
-	// XXX  Note that the widget-data-xxx slots are leaked in the groupBy
-	// in main.js. We need a better mechanism.
-	serverBus.onNext([['widget-data', id], widgets.fetch(settings, samples)]);
 }
 
 function sortFeatures(features) {
@@ -54,6 +45,35 @@ function exampleQuery(dsID) {
 
 function fetchExamples(serverBus, state, dsID) {
 	serverBus.onNext(['columnEdit-examples', exampleQuery(dsID)]);
+}
+
+// Normalization of fields from user input
+function geneProbeMapLookup(settings, state) {
+	const {host} = JSON.parse(settings.dsID),
+		probemap = state.datasets.datasets[settings.dsID].probemap;
+	return  xenaQuery.sparse_data_match_genes(host, probemap, settings.fields);
+}
+
+function probeLookup(settings) {
+	const {host, name} = JSON.parse(settings.dsID);
+	return xenaQuery.match_fields(host, name, settings.fields);
+}
+
+function mutationGeneLookup(settings) {
+	const {host, name} = JSON.parse(settings.dsID);
+	return xenaQuery.sparse_data_match_genes(host, name, settings.fields);
+}
+
+const fieldLookup = {
+	'geneProbesMatrix': geneProbeMapLookup,
+	'geneMatrix': geneProbeMapLookup,
+	'mutationVector': mutationGeneLookup,
+	'probeMatrix': probeLookup
+};
+
+function normalizeFields(serverBus, state, id, settings) {
+	var lookup = (fieldLookup[settings.dataType] || probeLookup)(settings, state);
+	serverBus.onNext(['normalize-fields', lookup, id, settings]);
 }
 
 var datasetVar = (samples, {dsID, name}) =>
@@ -114,12 +134,8 @@ var controls = {
 			cohort = _.get(state, "cohort");
 		fetchSamples(serverBus, user, cohort, samplesFrom);
 	},
-	'add-column': (state, id, settings) => {
-		var ns = _.updateIn(state, ["columns"], s => _.assoc(s, id, settings));
-		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
-	},
 	'add-column-post!': (serverBus, state, id, settings) =>
-		fetchColumnData(serverBus, state, id, settings),
+		normalizeFields(serverBus, state, id, settings),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
 				['zoom', 'height'], height,

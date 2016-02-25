@@ -4,7 +4,7 @@
 var _ = require('../underscore_ext');
 var Rx = require('rx');
 var {reifyErrors, collectResults} = require('./errors');
-var {fetchDatasets, fetchSamples} = require('./common');
+var {fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
@@ -35,7 +35,6 @@ function fetchFeatures(serverBus, state, datasets) {
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 
-
 var controls = {
 	cohorts: (state, cohorts) => _.assoc(state, "cohorts", cohorts),
 	'cohorts-post!': (serverBus, state) => {
@@ -52,6 +51,13 @@ var controls = {
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
 		resetZoom(_.assoc(state, "samples", samples)),
+	'normalize-fields': (state, fields, id, settings) => {
+		var ns = _.updateIn(state, ["columns"], s => _.assoc(s, id, _.assoc(settings, 'fields', fields)));
+		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
+	},
+	// XXX note we recalc settings due to not having the new state.
+	'normalize-fields-post!': (serverBus, state, fields, id, settings) =>
+		fetchColumnData(serverBus, state, id, _.assoc(settings, 'fields', fields)),
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
 		columnOpen(state, id) ?  _.assocIn(state, ["data", id], data) : state,
