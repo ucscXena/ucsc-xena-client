@@ -19,9 +19,10 @@ function codedVals({heatmap, colors, fields}, {codes}) {
 		groups = _.range(Math.min(codes[field].length, MAX)),
 		colorfn = _.first(colors.map(colorScale));
 	return {
+		warning: codes[field].length > MAX ? `Limited drawing to ${MAX} categories` : undefined,
 		groups: groups,
 		colors: groups.map(colorfn),
-		labels: codes[field],
+		labels: codes[field].slice(0, groups.length),
 		values: heatmap[0]
 	};
 }
@@ -59,10 +60,11 @@ function floatVals(avg, uniq, colorfn) {
 // We average 1st, then see how many unique values there are, then decide
 // whether to partition or not.
 function floatOrPartitionVals({heatmap, colors}) {
-	var avg = average(heatmap),
+	var warning = heatmap.length > 1 ? 'gene-level average' : undefined,
+		avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = _.first(colors.map(colorScale));
-	return (uniq.length > MAX ? partitionedVals : floatVals)(avg, uniq, colorfn);
+	return {warning, ...(uniq.length > MAX ? partitionedVals : floatVals)(avg, uniq, colorfn)};
 }
 
 function featureType({dataType, fields}, data) {
@@ -116,7 +118,7 @@ function pValue(groupsTte, groupsEv) {
 function makeGroups(column, data, index, survival, samples) {
 	// Convert field to coded.
 	let {tte: {data: tte}, ev: {data: ev}} = survival,
-		{labels, colors, groups, values} = toCoded(column, data, index, samples),
+		{labels, colors, groups, values, warning} = toCoded(column, data, index, samples),
 		usableSamples = filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
@@ -126,9 +128,10 @@ function makeGroups(column, data, index, survival, samples) {
 		pV = pValue(gtte, gev);
 
 	return {
-		colors: colors,
-		labels: labels,
-		curves: curves,
+		colors,
+		labels,
+		curves,
+		warning,
 		...pV
 	};
 }

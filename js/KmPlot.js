@@ -297,6 +297,8 @@ var KmPlot = React.createClass({
 
 	render: function () {
 		let { km: {title, label, groups}, dims } = this.props,
+			{warning} = groups,
+			fullLabel = warning ? `${label} (${warning})` : label,
 			{ activeLabel } = this.state,
 			sectionDims = calcDims(dims, this.size.ratios);
 		// XXX Use bootstrap to lay this out, instead of tables + divs
@@ -327,7 +329,7 @@ var KmPlot = React.createClass({
 					{Content}
 				</Modal.Body>
 				<Modal.Footer className="container-fluid">
-					<samp className='featureLabel'>{label} (limited to xyz categories)</samp>
+					<samp className='featureLabel'>{fullLabel}</samp>
 				</Modal.Footer>
 			</Modal>
 		);
