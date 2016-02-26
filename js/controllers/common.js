@@ -50,8 +50,21 @@ function fetchColumnData(serverBus, samples, id, settings) {
 	serverBus.onNext([['widget-data', id], widgets.fetch(settings, samples)]);
 }
 
+var setCohort = (state, cohort) =>
+	_.assoc(state,
+		   "cohort", cohort,
+		   "samplesFrom", null,
+		   "samples", [],
+		   "columns", {},
+		   "columnOrder", [],
+		   "data", {},
+		   "datasets", null,
+		   "survival", null,
+		   "km", null);
+
 module.exports = {
 	fetchDatasets,
 	fetchSamples,
-	fetchColumnData
+	fetchColumnData,
+	setCohort
 };

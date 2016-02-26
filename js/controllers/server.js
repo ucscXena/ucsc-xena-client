@@ -4,7 +4,7 @@
 var _ = require('../underscore_ext');
 var Rx = require('rx');
 var {reifyErrors, collectResults} = require('./errors');
-var {fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
+var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
@@ -35,18 +35,28 @@ function fetchFeatures(serverBus, state, datasets) {
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 
+var resetCohort = state => _.contains(state.cohorts, state.cohort) ? state :
+	setCohort(state, null);
+
+var closeUnknownColumns = state => {
+	const datasets = state.datasets.datasets,
+		columns = state.columns,
+		columnOrder = _.filter(state.columnOrder, id => !!datasets[columns[id].dsID]);
+	return _.assoc(state,
+				   'columnOrder', columnOrder,
+				   'columns', _.pick(columns, columnOrder));
+}
+
 var controls = {
-	cohorts: (state, cohorts) => _.assoc(state, "cohorts", cohorts),
+	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),
 	'cohorts-post!': (serverBus, state) => {
-		let {servers: {user}, cohort, samplesFrom, samples, datasets} = state;
-		if (cohort && !samples) {
+		let {servers: {user}, cohort, samplesFrom} = state;
+		if (cohort) {
 			fetchSamples(serverBus, user, cohort, samplesFrom);
-		}
-		if (cohort && !datasets) {
 			fetchDatasets(serverBus, user, cohort);
 		}
 	},
-	datasets: (state, datasets) => _.assoc(state, "datasets", datasets),
+	datasets: (state, datasets) => closeUnknownColumns(_.assoc(state, "datasets", datasets)),
 	'datasets-post!': (serverBus, state, datasets) => fetchFeatures(serverBus, state, datasets),
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>

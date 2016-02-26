@@ -9,7 +9,7 @@ var xenaQuery = require('../xenaQuery');
 var util = require('../util');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
-var {fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
+var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
 
 var	datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
 var identity = x => x;
@@ -30,6 +30,7 @@ function sortFeatures(features) {
 		.sort((a, b) => util.caseInsensitiveSort(a.label, b.label));
 }
 
+// XXX shouldn't this just use the state.features data??
 function featureQuery(dsID) {
 	return xenaQuery.dsID_fn(xenaQuery.feature_list)(dsID)
 		.map(list => sortFeatures(list));
@@ -108,26 +109,42 @@ function fetchSurvival(serverBus, state, km) {
 				.map(data => addField(indexSurvivalData(samples, missing, data)))]);
 }
 
+var shouldSetCohort = state => (state.cohortPending && state.cohort !== state.cohortPending);
+
+var setCohortPending = state =>
+	shouldSetCohort(state) ?
+		_.dissoc(setCohort(state, state.cohortPending), 'cohortPending') : state;
+
+var setServerPending = state =>
+	state.servers.pending ?
+	_.updateIn(state, ['servers'], s => _.dissoc(_.assoc(s, 'user', s.pending), 'pending')) :
+	state;
+
+var fetchCohortData = (serverBus, state, cohort) => {
+	let {servers: {user}} = state,
+		samplesFrom = _.get(state, "samplesFrom");
+	fetchDatasets(serverBus, user, cohort);
+	fetchSamples(serverBus, user, cohort, samplesFrom);
+};
+
 var controls = {
+	init: state => setCohortPending(setServerPending(state)),
 	'init-post!': (serverBus, state) => {
-		let {servers: {user}} = state;
-		fetchCohorts(serverBus, user);
+		// XXX If we have servers.pending *and* cohortPending, there may be a race here.
+		// We fetch the cohorts list, and the cohort data. If cohorts completes & the
+		// cohort is not in new list, we reset cohort. Then the cohort data arrives (and
+		// note there are several cascading queries).
+		// Currently datapages + hub won't set cohortPending to a cohort not in the active hubs, so
+		// we shouldn't hit this case.
+		if (!state.cohorts || state.servers.pending) {
+			fetchCohorts(serverBus, state.servers.pending || state.servers.user);
+		}
+		if (shouldSetCohort(state)) {
+			fetchCohortData(serverBus, state, state.cohortPending);
+		}
 	},
-	cohort: (state, cohort) => _.assoc(state,
-									   "cohort", cohort,
-									   "samplesFrom", null,
-									   "samples", [],
-									   "columns", {},
-									   "columnOrder", [],
-									   "data", {},
-									   "survival", null,
-									   "km", null),
-	'cohort-post!': (serverBus, state, cohort) => {
-		let {servers: {user}} = state,
-			samplesFrom = _.get(state, "samplesFrom");
-		fetchDatasets(serverBus, user, cohort);
-		fetchSamples(serverBus, user, cohort, samplesFrom);
-	},
+	cohort: setCohort,
+	'cohort-post!': fetchCohortData,
 	samplesFrom: (state, samplesFrom) => _.assoc(state, "samplesFrom", samplesFrom),
 	'samplesFrom-post!': (serverBus, state, samplesFrom) => {
 		let {servers: {user}} = state,

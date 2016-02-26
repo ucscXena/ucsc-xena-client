@@ -4,11 +4,21 @@
 'use strict';
 
 require('base');
+var _ = require('./underscore_ext');
 const React = require('react');
 const datapages = require('ucsc-xena-datapages/datapages');
-const controller = require('ucsc-xena-datapages/controller');
 const connector = require('./connector');
 const createStore = require('./store');
+
+var controls = {
+	cohort: (state, cohort) => _.assoc(state, 'cohortPending', cohort),
+};
+
+var identity = x => x;
+var controller = {
+	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
+	postAction: (serverBus, state, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, ...args)
+};
 
 var Datapages = React.createClass({
 	shouldComponentUpdated: () => false,
