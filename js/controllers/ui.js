@@ -152,7 +152,7 @@ var controls = {
 	// XXX note we recalculate columns[id] due to running side-effects independent of
 	// the reducer.
 	'dataType-post!': (serverBus, state, id, dataType) =>
-		fetchColumnData(serverBus, state, id, _.assoc(_.getIn(state, ['columns', id]), 'dataType', dataType)),
+		fetchColumnData(serverBus, state.samples, id, _.assoc(_.getIn(state, ['columns', id]), 'dataType', dataType)),
 	vizSettings: (state, dsID, settings) =>
 		_.assocIn(state, ['vizSettings', dsID], settings),
 	'edit-dataset-post!': (serverBus, state, dsID, meta) => {

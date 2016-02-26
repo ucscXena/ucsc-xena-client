@@ -43,8 +43,7 @@ function fetchSamples(serverBus, servers, cohort, samplesFrom) {
 	serverBus.onNext(['samples', samplesQuery(servers, cohort, samplesFrom)]);
 }
 
-function fetchColumnData(serverBus, state, id, settings) {
-	let samples = _.get(state, "samples");
+function fetchColumnData(serverBus, samples, id, settings) {
 
 	// XXX  Note that the widget-data-xxx slots are leaked in the groupBy
 	// in main.js. We need a better mechanism.

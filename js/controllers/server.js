@@ -51,13 +51,16 @@ var controls = {
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
 		resetZoom(_.assoc(state, "samples", samples)),
+	'samples-post!': (serverBus, state, samples) =>
+		_.mapObject(_.getIn(state, ['columns'], []), (settings, id) =>
+				fetchColumnData(serverBus, samples, id, settings)),
 	'normalize-fields': (state, fields, id, settings) => {
 		var ns = _.updateIn(state, ["columns"], s => _.assoc(s, id, _.assoc(settings, 'fields', fields)));
 		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
 	},
 	// XXX note we recalc settings due to not having the new state.
 	'normalize-fields-post!': (serverBus, state, fields, id, settings) =>
-		fetchColumnData(serverBus, state, id, _.assoc(settings, 'fields', fields)),
+		fetchColumnData(serverBus, state.samples, id, _.assoc(settings, 'fields', fields)),
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
 		columnOpen(state, id) ?  _.assocIn(state, ["data", id], data) : state,
