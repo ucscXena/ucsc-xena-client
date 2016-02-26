@@ -627,7 +627,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 					dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(cutOffset);
 					errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(getError);
 
-					var color = heatmapColors.codedMore[i % heatmapColors.codedMore.length];
+					var color = heatmapColors.categoryMore[i % heatmapColors.categoryMore.length];
 
 					highcharts_helper.addSeriesToColumn(
 						chart, code, dataSeriese, errorSeries, yIsCategorical,
@@ -788,7 +788,6 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 				chartOptions.legend.align = 'right';
 				chartOptions.legend.verticalAlign = 'middle';
 				chartOptions.legend.layout = 'vertical';
-
 				chartOptions.chart.type = 'scatter';
 				chartOptions.title = {
 					text: ylabel + " vs " + xAxisTitle
@@ -1014,7 +1013,13 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 		div.setAttribute("id", "Y");
 		leftContainer.appendChild(div);
 
-		//controls
+		// x axis selector
+		div = dom_helper.elt("div", "Variable ",
+			axisSelector("Xaxis", update, updateArgs));
+		div.setAttribute("id", "X");
+		rightContainer.appendChild(div);
+
+    //controls
 		controlContainer = document.createElement("div");
 		controlContainer.setAttribute("id", "controlContainer");
 		rightContainer.appendChild(controlContainer);
@@ -1022,17 +1027,6 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 		controlContainer.appendChild(buildSDDropdown());
 		// normalization selection
 		controlContainer.appendChild(buildNormalizationDropdown());
-
-
-		// x axis selector
-		div = dom_helper.elt("div", "Variable ",
-			axisSelector("Xaxis", update, updateArgs));
-		div.setAttribute("id", "X");
-		rightContainer.appendChild(div);
-
 		update.apply(this, updateArgs);
-
-		//zoom and pan instructions
-		rightContainer.appendChild(dom_helper.elt("section", "Click & drag to zoom; add SHIFT to pan."));
 	};
 });
