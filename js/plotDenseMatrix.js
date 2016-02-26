@@ -127,7 +127,7 @@ function bounded(min, max, x) {
 	return x < min ? min : (x > max ? max : x);
 }
 
-var nn = (...args) => args.filter(x => x); // not "falsey"
+var nn = (...args) => args.filter(x => x != null); // not null
 
 function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
 	var coord = util.eventOffset(ev),
