@@ -2,16 +2,12 @@
     height: 100%;
 }
 #left {
-    width: 9%;
     float: left;
     height: 100%;
 }
 #right {
-    width: 90%;
     height: 100%;
     vertical-align: middle;
-    margin-left: auto;
-    margin-right: auto;
 }
 .dropdown-style {
     background: white;
@@ -29,7 +25,6 @@
 }
 #X {
     text-align: center;
-    width: 80%;
     margin-left: auto;
     margin-right: auto;
     font-size: 12px;
@@ -52,7 +47,7 @@
     width: 60%;
 }
 #chartContainer {
-    width: 80%;
+    width: 95%;
     height: 70%;
     margin-left: auto;
     margin-right: auto;
@@ -60,7 +55,7 @@
 #controlContainer {
     width: 90%;
     height: 50px;
-    margin-top: 50px;
+    margin-top: 30px;
     text-align: right;
     font-size: 10px;
 }
@@ -69,7 +64,6 @@
 }
 .showHideButton {
     float: right;
-    margin: 5px;
 }
 .showHideButton:hover {
     color: #ff6600;

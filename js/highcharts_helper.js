@@ -26,7 +26,6 @@ define(['./highcharts'], function () {
   var chartOptions = {
     chart: {
       renderTo: 'myChart',
-      zoomType: 'xy',
       panning: true,
       panKey: 'shift'
     },
@@ -54,7 +53,7 @@ define(['./highcharts'], function () {
           color: '#333',
           fontSize: '12px'
         }
-      }
+      },
     },
     tooltip:{
       hideDelay: 0

@@ -202,5 +202,6 @@ var colorScale = {
 module.exports =  {
 	colorScale: ([type, ...args]) => saveMissing(colorScale[type](type, ...args)),
 	colorSpec: colorRange,
-	defaultColors: defaultColors
+	defaultColors: defaultColors,
+	categoryMore: categoryMore
 };
