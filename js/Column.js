@@ -68,6 +68,11 @@ var Column = React.createClass({
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			// move this to state to generalize to other annotations.
 			doRefGene = column.dataType === 'mutationVector',
+			// In FF spans don't appear as event targets. In Chrome, they do.
+			// If we omit Sortable-handle here, Chrome will only catch events
+			// in the button but not in the span. If we omit Sortable-handle
+			// in SplitButton, FF will catch no events, since span doesn't
+			// emit any.
 			moveIcon = (<span
 				className="glyphicon glyphicon-resize-horizontal Sortable-handle"
 				aria-hidden="true">
@@ -75,7 +80,7 @@ var Column = React.createClass({
 
 		return (
 			<div className='Column' style={{width: width}}>
-				<SplitButton title={moveIcon} bsSize='xsmall'>
+				<SplitButton className='Sortable-handle' title={moveIcon} bsSize='xsmall'>
 					{menu}
 					{menu && <MenuItem divider />}
 					<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
