@@ -3,6 +3,8 @@
 'use strict';
 
 var Rx = require('rx');
+var Rx = require('./rx.ext');
+require('rx/dist/rx.time');
 var React = require('react');
 var ReactDOM = require('react-dom');
 const session = require('ucsc-xena-datapages/session');
