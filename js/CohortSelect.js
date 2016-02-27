@@ -8,7 +8,7 @@ var {deepPureRenderMixin} = require('./react-utils');
 var CohortSelect = React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function () {
-		var {cohort, cohorts, callback} = this.props,
+		var {cohort, cohorts, callback, ...other} = this.props,
 			sortedCohorts = _.sortBy(cohorts, (cohort) => cohort.toLowerCase()),
 			options = _.map(sortedCohorts, c => ({value: c, label: c}));
 
@@ -21,6 +21,7 @@ var CohortSelect = React.createClass({
 					callback={callback}
 					value={cohort}
 					options={options}
+					{...other}
 				/>
 			</div>
 		);
