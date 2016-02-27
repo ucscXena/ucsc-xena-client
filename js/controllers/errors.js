@@ -16,7 +16,7 @@ function reifyErrors(obs, context) {
 // single event, combine the errors and re-throw. This is a flatmap function.
 function collectResults(arr, selector) {
 	var groups = _.groupBy(arr, r => r instanceof Error),
-		response = selector(groups.false),
+		response = selector(groups.false || []),
 		errors = groups.true;
 
 	return errors ?
