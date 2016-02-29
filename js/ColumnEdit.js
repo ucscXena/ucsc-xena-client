@@ -79,7 +79,7 @@ var GeneEdit = React.createClass({
 
 function toGeneList(str) {
 	// Have to wrap trim because it takes a 2nd param.
-	return _.filter(_.map(str.split(/,/), s => trim(s), _.identity));
+	return _.filter(_.map(str.split(/,| |\n|\t/), s => trim(s), _.identity));
 }
 
 // Select a list of genes, or list of identifiers. genes/identifier mode
