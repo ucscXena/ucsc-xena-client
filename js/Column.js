@@ -9,6 +9,7 @@ var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Resizable = require('react-resizable').Resizable;
 var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('./refGeneExons');
+var xenaQuery = require('./xenaQuery');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -48,12 +49,11 @@ var Column = React.createClass({
 		download(this.props.download());
 	},
 	onAbout: function () {
-		console.log('FIXME');
-//		var {lens, id} = this.props;
-//		var dsID = L.view(lens).columnRendering[id].dsID;
-//		var [host, dataset] = xenaQuery.parse_host(dsID);
-//		var url = `../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
-//		window.open(url);
+    var {column} = this.props;
+    var dsID = column.dsID;
+		var [host, dataset] = xenaQuery.parse_host(dsID);
+		var url = `../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
+		window.open(url);
 	},
 	onViz: function () {
 		this.props.onViz(this.props.id);

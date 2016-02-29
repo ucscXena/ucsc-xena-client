@@ -772,7 +772,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 						ycodeSeries = _.map(_.map(categories, _.propertyOf(xbinnedSample)),
 								_.partial(yFromCategories, ybinnedSample[ycode]));
 
-						let color = heatmapColors.codedMore[i % heatmapColors.codedMore.length];
+						let color = heatmapColors.categoryMore[i % heatmapColors.categoryMore.length];
 
 						highcharts_helper.addSeriesToColumn(
 							chart, ycode, ycodeSeries, errorSeries, yIsCategorical,
