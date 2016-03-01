@@ -79,7 +79,7 @@ var GeneEdit = React.createClass({
 
 function toGeneList(str) {
 	// Have to wrap trim because it takes a 2nd param.
-	return _.filter(_.map(str.split(/,/), s => trim(s), _.identity));
+	return _.filter(_.map(str.split(/,| |\n|\t/), s => trim(s), _.identity));
 }
 
 // Select a list of genes, or list of identifiers. genes/identifier mode
@@ -124,19 +124,19 @@ var GeneProbeEdit = React.createClass({
 			examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : ''; //eslint-disable-line comma-spacing
 		return (
 			<div>
-				<div className='form-group'>
-					<label className='col-md-2 control-label'>Input:</label>
-					{this.props.genes ?
-						<div className='col-md-4'>
-							<Input onChange={() => this.setState({genes: true})}
-								 checked={genes}
-								 type='radio' name='mode' value='genes' label='genes'/>
-							<Input onChange={() => this.setState({genes: false})}
-								checked={!genes}
-								type='radio' name='mode' value='identifiers' label='identifiers'/>
-						</div> :
-					null}
-				</div>
+        {this.props.genes ?
+  				<div className='form-group'>
+  					<label className='col-md-2 control-label'>Input:</label>			
+  						<div className='col-md-4'>
+  							<Input onChange={() => this.setState({genes: true})}
+  								 checked={genes}
+  								 type='radio' name='mode' value='genes' label='genes'/>
+  							<Input onChange={() => this.setState({genes: false})}
+  								checked={!genes}
+  								type='radio' name='mode' value='identifiers' label='identifiers'/>
+  						</div>
+  				</div> :
+        null}
 				<div className='form-group'>
 					<label className='col-md-2 control-label'>{genes ? 'Genes:' : 'Identifiers:'}</label>
 					<div className='col-md-9'>

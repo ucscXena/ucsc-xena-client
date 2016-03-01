@@ -32,7 +32,8 @@ var AppControls = React.createClass({
 	},
 	render: function () {
 		var {callback, appState: {cohort, cohorts, samplesFrom, datasets, mode}} = this.props,
-			hasCohort = !!cohort;
+			hasCohort = !!cohort,
+			disableMenus = (mode === modeEvent.heatmap);
 
 		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>
 		return (
@@ -42,7 +43,7 @@ var AppControls = React.createClass({
 						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
 					</Button>
 				</OverlayTrigger>
-				<CohortSelect callback={callback} cohort={cohort} cohorts={cohorts} />
+				<CohortSelect callback={callback} cohort={cohort} cohorts={cohorts} disable={disableMenus}/>
 				{' '}
 				{hasCohort ?
 					<div className='form-group' style={this.props.style}>
@@ -57,6 +58,7 @@ var AppControls = React.createClass({
 							className='samplesFromAnchor'
 							datasets={datasets}
 							cohort={cohort}
+							disable={disableMenus}
 							value={samplesFrom} />
 					</div> :
 				null}
