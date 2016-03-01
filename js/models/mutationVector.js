@@ -184,7 +184,7 @@ var refGene = JSON.stringify({
 
 function fetch({dsID, fields}, samples) {
 		return Rx.Observable.zipArray(
-			sparseDataValues(dsID, fields, samples),
+			sparseDataValues(dsID, fields[0], samples),
 			refGeneExonValues(refGene, fields)
 		).map(resp => _.object(['req', 'refGene'], resp));
 }

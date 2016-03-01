@@ -207,7 +207,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		return `(let [probemap (:probemap (car (query {:select [:probemap]\n` +
 		       `                                       :from [:dataset]\n` +
 		       `                                       :where [:= :name ${quote(dataset)}]})))\n` +
-		       `      probes ((xena-query {:select ["name"] :from [probemap] :where [:in "genes" ${arrayfmt([gene])}]}) "name")]\n` +
+		       `      probes ((xena-query {:select ["name"] :from [probemap] :where [:in :any "genes" ${arrayfmt([gene])}]}) "name")]\n` +
 		       `  [probes\n` +
 		       `    (fetch [{:table ${quote(dataset)}\n` +
 		       `             :samples ${arrayfmt(samples)}\n` +
@@ -217,19 +217,16 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	// Might want to check the performance of the map for probes, since it's
 	// being evaled for every element of the probes-map result set.
 	function dataset_gene_string(dataset, samples, genes) {
-		return `(let [average (fn [genes] (map (fn [gp] {:gene (car gp)\n` +
-		       `                                         :scores (mean (map :scores (car (cdr gp))) 0)})\n` +
-		       `                               genes))\n` +
-		       `      merge-scores (fn [probes scores]\n` +
-		       `                     (map (fn [p s] (assoc p :scores s)) probes scores))\n` +
-		       `      probemap (:probemap (car (query {:select [:probemap]\n` +
+		return `(let [probemap (:probemap (car (query {:select [:probemap]\n` +
 		       `                                       :from [:dataset]\n` +
 		       `                                       :where [:= :name ${quote(dataset)}]})))\n` +
-		       `      probes-map (xena-query {:select ["name" "genes"] :from [probemap] :where [:in "genes" ${arrayfmt(genes)}]})\n` +
-		       `      probes (map (fn [n g] {:probe n :gene g}) (probes-map "name") (probes-map "genes"))]\n` +
-		       `  (average (group-by :gene (merge-scores probes (fetch [{:table ${quote(dataset)}\n` +
-		       `                                                         :samples ${arrayfmt(samples)}\n` +
-		       `                                                         :columns (map :probe probes)}])))))`;
+		       `      probes-for-gene (fn [gene] ((xena-query {:select ["name"] :from [probemap] :where [:in :any "genes" [gene]]}) "name"))\n` +
+		       `      avg (fn [scores] (mean scores 0))\n`  +
+			   `      scores-for-gene (fn [gene] {:gene gene\n` +
+		       `                                  :scores (avg (fetch [{:table ${quote(dataset)}\n` +
+		       `                                                        :samples ${arrayfmt(samples)}\n` +
+		       `                                                        :columns (probes-for-gene gene)}]))})]\n` +
+		       `  (map scores-for-gene ${arrayfmt(genes)}))`;
 	}
 
 	// XXX need server support for functions in :where clauses in order to rewrite this.
@@ -254,11 +251,11 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '                   :where [:and [:in :%lower.field.name ' + arrayfmt(_.map(fields, f => f.toLowerCase())) + '] [:= :dataset.name ' + quote(dataset) + ']]}))';
 	}
 
-	function sparse_data_string(dataset, samples, genes) {
+	function sparse_data_string(dataset, samples, gene) {
 		return `{:samples ((xena-query {:select ["sampleID"] :from [${quote(dataset)}]}) "sampleID")\n` +
 		       ` :rows (xena-query {:select ["ref" "alt" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n` +
 		       `                    :from [${quote(dataset)}]\n` +
-		       `                    :where [:and [:in "genes" ${arrayfmt(genes)}] [:in "sampleID" ${arrayfmt(samples)}]]})}`;
+		       `                    :where [:and [:in :any "genes" [${quote(gene)}]] [:in "sampleID" ${arrayfmt(samples)}]]})}`;
 	}
 
 	function sparse_data_example_string(dataset, count) {
@@ -323,14 +320,14 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	function refGene_exon_string(dsID, genes) {
 		return `(xena-query {:select ["position (2)" "position" "exonCount" "exonStarts" "exonEnds" "name2"]\n` +
 			   `             :from [${quote(dsID)}]\n` +
-			   `             :where [:in "name2" ${arrayfmt(genes)}]})`;
+			   `             :where [:in :any "name2" ${arrayfmt(genes)}]})`;
 	}
 
-	function refGene_gene_pos(gene) {
-		return `(xena-query {:select ["position" "name2"]\n` +
-			   `             :from ["common/GB/refgene_good"]\n` +
-			   `             :where [:in "name2" ${arrayfmt([gene])}]})`;
-	}
+//	function refGene_gene_pos(gene) {
+//		return `(xena-query {:select ["position" "name2"]\n` +
+//			   `             :from ["common/GB/refgene_good"]\n` +
+//			   `             :where [:in :any "name2" ${arrayfmt([gene])}]})`;
+//	}
 
 	// QUERY PREP
 
@@ -466,7 +463,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 				"chr": row.position.chrom,
 				"start": row.position.chromstart,
 				"end": row.position.chromend,
-				"gene": row.genes,
+				"gene": row.genes[0],
 				"reference": row.ref,
 				"alt": row.alt,
 				"effect": row.effect,
@@ -497,11 +494,11 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		};
 	}
 
-	function sparse_data_values(host, ds, genes, samples) {
+	function sparse_data_values(host, ds, gene, samples) {
 		return Rx.DOM.ajax(
-			xena_post(host, sparse_data_string(ds, samples, genes))
+			xena_post(host, sparse_data_string(ds, samples, gene))
 			// XXX change indexMutations so it can handle an array?
-		).map(json_resp).map(resp => indexMutations(genes[0], resp));
+		).map(json_resp).map(resp => indexMutations(gene, resp));
 	}
 
 	function splitExon(s) {
@@ -510,7 +507,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 
 	function refGene_attrs(row) {
 		return {
-			name2: row.name2,
+			name2: row.name2[0],
 			strand: row.position.strand,
 			txStart: row.position.chromstart,
 			txEnd: row.position.chromend,
@@ -523,7 +520,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 	}
 
 	function indexRefGene(resp) {
-		return _.isEmpty(resp) ? {} : _.object(resp.name2, _.map(collateRows(resp), refGene_attrs));
+		return _.object(resp.name2, _.map(collateRows(resp), refGene_attrs));
 	}
 
 	function refGene_exon_values(host, ds, genes) {
@@ -620,6 +617,6 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		refGene_exon_values: refGene_exon_values,
 		match_fields: match_fields,
 		test_host: test_host,
-		refGene_gene_pos: refGene_gene_pos
+//		refGene_gene_pos: refGene_gene_pos
 	};
 });

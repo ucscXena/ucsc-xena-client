@@ -8,6 +8,21 @@ __webpack_public_path__ = config.baseurl; //eslint-disable-line camelcase
 // property on the return value.
 // https://github.com/mishoo/UglifyJS2/commit/276b9a31cda2a2ef93e7af4e966baae91a434361
 
+// Forcing common dependencies into this module, to avoid duplicating loading.
+// Webpack analyse tool will suggest common modules. Use on the production
+// build.
+// https://webpack.github.io/analyse
+require('react');
+require('react-dom');
+require('rx');
+require('babel-polyfill');
+require('bootstrap/dist/css/bootstrap.css');
+require('underscore')
+require('rx/dist/rx.time');
+require('rx.coincidence');
+require('rx-dom');
+require('rx/dist/rx.binding');
+
 if (document.location.pathname.match(/datapages\/$/)) {
     /* jshint -W030 */ // XXX jshint doesn't like the workaround.
 	require.ensure(['datapages'], function () {

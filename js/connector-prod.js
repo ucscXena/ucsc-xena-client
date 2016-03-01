@@ -7,6 +7,7 @@ var Rx = require('./rx.ext');
 require('rx/dist/rx.time');
 var React = require('react');
 var ReactDOM = require('react-dom');
+// XXX this introduces a datapages dependency in the heatmap page.
 const session = require('ucsc-xena-datapages/session');
 
 function controlRunner(serverBus, controller) {
