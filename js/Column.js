@@ -17,9 +17,11 @@ function download([fields, rows]) {
 	// use blob for bug in chrome: https://code.google.com/p/chromium/issues/detail?id=373182
 	var url = URL.createObjectURL(new Blob([txt], { type: 'text/tsv' }));
 	var a = document.createElement('a');
-	a.href = url;
-	a.setAttribute('download', 'xenaDownload.tsv');
+	var filename = 'xenaDownload.tsv';
+	_.extend(a, { id: filename, download: filename, href: url });
+	document.body.appendChild(a);
 	a.click();
+	document.body.removeChild(a);
 }
 
 // For geneProbesMatrix we will average across probes to compute KM. For
