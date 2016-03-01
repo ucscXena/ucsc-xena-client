@@ -28,6 +28,7 @@ var Select = React.createClass({
 	},
 	getDefaultProps: function () {
 		return {
+			disable: false,
 			event: 'change'
 		};
 	},
@@ -57,7 +58,7 @@ var Select = React.createClass({
 		}
 	},
 	render: function () {
-		var {value} = this.props,
+		var {disable, value} = this.props,
 			title = notUndefined(value) &&
 				_.find(this.props.options, opt => opt.value === value),
 			opts = filterOpts(this.state.filter, this.props.options);
@@ -68,6 +69,7 @@ var Select = React.createClass({
 		return (
 			<DropdownButton ref='dropdown'
 				className='Select'
+				disabled={disable}
 				onMouseUp={this.setFocus}
 				title={title && title.label || 'Select...'}>
 
