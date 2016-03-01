@@ -8,8 +8,8 @@ process.env.NODE_ENV = '"production"';         // * Not sure why needed both her
 config.output.filename = "[name].[chunkhash].js";
 config.output.chunkFilename = "[chunkhash].bundle.js";
 config.plugins = config.plugins.concat([
-    new webpack.optimize.UglifyJsPlugin(),
-    new webpack.optimize.OccurenceOrderPlugin(true),
+	new webpack.optimize.UglifyJsPlugin(),
+	new webpack.optimize.OccurenceOrderPlugin(true),
 	new webpack.DefinePlugin({
 		"process.env.NODE_ENV": '"production"' // * see above.
 	})
