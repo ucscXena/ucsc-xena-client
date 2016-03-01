@@ -362,8 +362,8 @@ function supportsGeneAverage({dataType, fields: {length}}) {
 
 function modeMenu({dataType}, cb) {
 	return dataType === 'geneMatrix' ?
-		<MenuItem eventKey="geneProbesMatrix" onSelect={cb}>Gene detail</MenuItem> :
-		<MenuItem eventKey="geneMatrix" onSelect={cb}>Probe average</MenuItem>;
+		<MenuItem eventKey="geneProbesMatrix" onSelect={cb}>Detailed view</MenuItem> :
+		<MenuItem eventKey="geneMatrix" onSelect={cb}>Gene average</MenuItem>;
 }
 
 var HeatmapColumn = hotOrNot(React.createClass({
