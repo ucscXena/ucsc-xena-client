@@ -1,7 +1,7 @@
 /*global require: false, module: false */
 'use strict';
 
-var d3 = require('d3');
+var d3 = require('d3-scale');
 var _ = require('underscore');
 var multi = require('multi');
 
@@ -70,7 +70,7 @@ function saveMissing(fn) {
 	return _.extend(newfn, fn); // This weirdness copies d3 fn methods
 }
 
-var ordinal = count => d3.scale.ordinal().range(categoryMore).domain(_.range(count));
+var ordinal = count => d3.scaleOrdinal().range(categoryMore).domain(_.range(count));
 
 // 'column' is the column type set by the UI. It's not the dataset metadata.
 // It is *based on* the dataset metadata. We use it to decide whether to
@@ -90,19 +90,19 @@ function colorRangeType(column, settings, codes) {
 var colorRange = multi(colorRangeType);
 
 var scaleFloatSingle = (low, high, min, max) =>
-	d3.scale.linear().domain([min, max]).range([low, high]);
+	d3.scaleLinear().domain([min, max]).range([low, high]);
 
 function scaleFloatDouble(low, zero, high, min, max) {
 	var absmax = Math.max(-min, max);
 
-	return d3.scale.linear()
+	return d3.scaleLinear()
 		.domain([-absmax, 0, absmax])
 		.range([low, zero, high]);
 }
 
 function colorFloat(column, settings, codes, data, dataset) {
 	var values = data,
-		max = d3.max(values),
+		max = _.max(values),
 		[low, zero, high] = defaultColors(dataset),
 		spec,
 		min;
@@ -110,7 +110,7 @@ function colorFloat(column, settings, codes, data, dataset) {
 	if (!isNumber(max)) {
 		return ['no-data'];
 	}
-	min = d3.min(values);
+	min = _.min(values);
 	if (min >= 0 && max >= 0) {
 		spec = ['float-pos', zero, high, min, max];
 	} else if (min <= 0 && max <= 0) {
@@ -126,25 +126,25 @@ function colorCoded(column, settings, codes) {
 }
 
 var scaleFloatThresholdNegative = (low, zero, min, thresh, max) =>
-	d3.scale.linear()
+	d3.scaleLinear()
 		.domain(_.map([min, thresh, max], x => x.toPrecision(2)))
 		.range([low, zero, zero]);
 
 var scaleFloatThresholdPositive = (zero, high, min, thresh, max) =>
-	d3.scale.linear()
+	d3.scaleLinear()
 		.domain(_.map([min, thresh, max], x => x.toPrecision(2)))
 		.range([zero, zero, high]);
 
 var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
-	d3.scale.linear()
+	d3.scaleLinear()
 		.domain(_.map([min, minThresh, maxThresh, max], x => x.toPrecision(2)))
 		.range([low, zero, zero, high]);
 
 function colorFloatGenomicData(column, settings = {}, codes, data, dataset) {
 	var values = data,
 		[low, zero, high] = defaultColors(dataset),
-		min = settings.min || d3.min(values),
-		max = settings.max ||  d3.max(values),
+		min = settings.min || _.min(values),
+		max = settings.max ||  _.max(values),
 		minStart = settings.minStart,
 		maxStart = settings.maxStart,
 		spec,
