@@ -114,11 +114,11 @@ function renderHeatmap(opts) {
 // Tooltip
 //
 
-function prec(val) {
+var prec = (function () {
 	var precision = 6,
 		factor = Math.pow(10, precision);
-	return Math.round((val * factor)) / factor;
-}
+	return val => (val == null) ? 'NA' : Math.round((val * factor)) / factor;
+}());
 
 // We're getting events with coords < 0. Not sure if this
 // is a side-effect of the react event system. This will
@@ -137,7 +137,7 @@ function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
 		field = fields[fieldIndex],
 		fieldCodes = _.getIn(codes, [field]);
 
-	var val = heatmap[fieldIndex][sampleIndex],
+	var val = _.getIn(heatmap, [fieldIndex, sampleIndex]),
 		code = _.getIn(fieldCodes, [val]),
 		label;
 
@@ -150,7 +150,6 @@ function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
 	}
 
 	val = code ? code : prec(val);
-	val = (val == null) ? 'NA' : val;
 
 	return {
 		sampleID: sampleID,
@@ -387,9 +386,9 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	},
 	tooltip: function (ev) {
 		var {samples, data, column, zoom} = this.props,
-			{codes} = data,
+			codes = _.get(data, 'codes'),
 			{heatmap} = column,
-			fields = data.req.probes || column.fields;
+			fields = _.getIn(data, ['req', 'probes'], column.fields);
 		return tooltip(heatmap, fields, column, codes, zoom, samples, ev);
 	},
 	// To reduce this set of properties, we could
