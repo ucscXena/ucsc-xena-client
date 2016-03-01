@@ -130,7 +130,6 @@ var CanvasDrawing = hotOrNot(React.createClass({
 				onMouseOut={this.props.onMouseOut}
 				onMouseOver={this.props.onMouseOver}
 				onClick={this.props.onClick}
-				onDblClick={this.props.onDblClick}
 				ref='canvas' />
 		);
 	},
@@ -283,6 +282,7 @@ var MutationColumn = hotOrNot(React.createClass({
 						onMouseMove={this.ev.mousemove}
 						onMouseOut={this.ev.mouseout}
 						onMouseOver={this.ev.mouseover}
+						onClick={this.props.onClick}
 						feature={feature}
 						nodes={column.nodes}
 						width={column.width}

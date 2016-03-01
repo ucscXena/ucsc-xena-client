@@ -72,16 +72,15 @@ var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
 	mixins: [rxEventsMixin],
 	componentWillMount: function () {
-		this.events('tooltip', 'click', 'plotClick', 'plotDoubleClick');
+		this.events('tooltip', 'click', 'plotClick');
 
-		this.ev.plotClick.filter(ev => ev.shiftKey).subscribe(() => {
+		this.ev.plotClick.subscribe(ev => {
 			let {callback, appState: {zoom, samples}} = this.props;
-			callback(['zoom', zoomOut(samples.length, zoom)]);
-		});
-
-		this.ev.plotDoubleClick.subscribe(ev => {
-			let {callback, appState: {samples, zoom}} = this.props;
-			callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
+			if (ev.shiftKey) {
+				callback(['zoom', zoomOut(samples.length, zoom)]);
+			} else {
+				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
+			}
 		});
 
 		var toggle = this.ev.click.filter(ev => ev[meta.key])
@@ -145,7 +144,6 @@ var Columns = React.createClass({
 			tooltip: this.ev.tooltip,
 			onViz: this.onViz,
 			onClick: this.ev.plotClick,
-			onDoubleClick: this.ev.plotDoubleClick,
 			column: _.getIn(columns, [id]),
 			dataset: _.getIn(appState, ['datasets', 'datasets',
 				_.getIn(columns, [id, 'dsID'])])
