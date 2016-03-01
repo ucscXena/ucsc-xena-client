@@ -63,11 +63,17 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 			host = tokens[2],
 			defproto = 'https://',
 			proto = tokens[1] || defproto,
-			defport = '7223',
-			port = tokens[4] || defport,
-			path = tokens[5] || '',
-			url;
+			port, defport,
+			path, url;
 
+		if (proto === defproto){
+			defport = '443';
+		} else {
+			defport = '7222';
+		}
+
+		port = tokens[4] || defport;
+		path = tokens[5] || '';
 		url = proto + host + ':' + port + path;
 
 		return {
