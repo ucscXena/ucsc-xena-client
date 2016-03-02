@@ -133,8 +133,8 @@ function makeGroups(column, data, index, survival, samples) {
 			has(tte, s) && has(ev, s) && has(values, i)),
 		patientWarning = warnDupPatients(usableSamples, samples, patient),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
-		gtte = groups.map(g => groupedIndices[g].map(i => tte[samples[i]])),
-		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
+		gtte = groups.map(g => (groupedIndices[g] || []).map(i => tte[samples[i]])),
+		gev = groups.map(g => (groupedIndices[g] || []).map(i => ev[samples[i]])),
 		curves = groups.map((g, i)=> km.compute(gtte[i], gev[i])),
 		pV = pValue(gtte, gev);
 
