@@ -38,7 +38,50 @@ function disableKM(column, hasSurvival) {
 	return [false, ''];
 }
 
+var ResizeOverlay = React.createClass({
+	getInitialState: () => ({zooming: false}),
+	onResizeStart: function () {
+		var {width, height} = this.props;
+		this.setState({zooming: true, zoomSize: {width, height}});
+	},
+	onResize: function (ev, {size}) {
+		this.setState({zoomSize: size});
+	},
+	onResizeStop: function (...args) {
+		var {onResizeStop} = this.props;
+		this.setState({zooming: false});
+		if (onResizeStop) {
+			onResizeStop(...args);
+		}
+	},
+	render: function () {
+		var {zooming, zoomSize} = this.state;
+		return (
+			<div style={{position: 'relative'}}>
+				{zooming ? <div style={{
+					width: zoomSize.width,
+					height: zoomSize.height,
+					position: 'absolute',
+					top: 0,
+					left: 0,
+					zIndex: 999,
+					backgroundColor: 'rgba(0,0,0,0.4)'
+				}} /> : null}
+				<Resizable handleSize={[20, 20]}
+					onResizeStop={this.onResizeStop}
+					onResize={this.onResize}
+					onResizeStart={this.onResizeStart}
+					width={this.props.width}
+					height={this.props.height}>
 
+					<div style={{position: 'relative'}}>
+						{this.props.children}
+					</div>
+				</Resizable>
+			</div>
+		);
+	}
+});
 
 var Column = React.createClass({
 	onResizeStop: function (ev, {size}) {
@@ -81,7 +124,7 @@ var Column = React.createClass({
 			</span>);
 
 		return (
-			<div className='Column' style={{width: width}}>
+			<div className='Column' style={{width: width, position: 'relative'}}>
 				<SplitButton className='Sortable-handle' title={moveIcon} bsSize='xsmall'>
 					{menu}
 					{menu && <MenuItem divider />}
@@ -111,15 +154,13 @@ var Column = React.createClass({
 							position={{gene: column.fields[0]}}/> : null}
 				</div>
 
-				<Resizable handleSize={[20, 20]}
+				<ResizeOverlay
 					onResizeStop={this.onResizeStop}
 					width={width}
 					height={zoom.height}>
 
-					<div style={{position: 'relative'}}>
 						{plot}
-					</div>
-				</Resizable>
+				</ResizeOverlay>
 				{legend}
 			</div>
 		);
