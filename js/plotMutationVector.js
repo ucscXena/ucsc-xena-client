@@ -7,6 +7,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var Column = require('./Column');
 var Legend = require('./Legend');
+var MenuItem = require('react-bootstrap/lib/MenuItem');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var vgcanvas = require('vgcanvas');
 var widgets = require('columnWidgets');
@@ -259,13 +260,23 @@ var MutationColumn = hotOrNot(React.createClass({
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
 	},
+	onMuPit: function (ev, newMode) {
+		// Construct the url, which will be opened in new window
+		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
+			uriList = _.uniq(_.map(rows, n => `${n.chr}:${n.start.toString()}`)).join(','),
+			url = `http://mupit.icm.jhu.edu/?gm=${uriList}`;
+
+		window.open(url);
+	},
 	tooltip: function (ev) {
 		var {column: {nodes, fields}, samples, zoom} = this.props;
 		return tooltip(nodes, samples, zoom, fields[0], ev);
 	},
 	render: function () {
 		var {column, samples, zoom, data, index, hasSurvival} = this.props,
-			feature = _.getIn(column, ['sFeature']);
+			feature = _.getIn(column, ['sFeature']),
+			disableMenu = data ? false : true,
+			menuItemName = 'MuPIT View' +(disableMenu ? ' (loading..)' : '');
 
 		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
@@ -276,6 +287,7 @@ var MutationColumn = hotOrNot(React.createClass({
 				download={() => console.log('fixme')} //eslint-disable-line no-undef
 				column={column}
 				zoom={zoom}
+				menu={<MenuItem disabled={disableMenu} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
 				data={data}
 				plot={<CanvasDrawing
 						ref='plot'
