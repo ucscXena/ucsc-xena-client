@@ -1,3 +1,4 @@
+/*eslint-env browser */
 /*global require: false, module: false, document: false */
 'use strict';
 
@@ -260,7 +261,7 @@ var MutationColumn = hotOrNot(React.createClass({
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
 	},
-	onMuPit: function (ev, newMode) {
+	onMuPit: function () {
 		// Construct the url, which will be opened in new window
 		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
 			uriList = _.uniq(_.map(rows, n => `${n.chr}:${n.start.toString()}`)).join(','),
@@ -276,7 +277,7 @@ var MutationColumn = hotOrNot(React.createClass({
 		var {column, samples, zoom, data, index, hasSurvival} = this.props,
 			feature = _.getIn(column, ['sFeature']),
 			disableMenu = data ? false : true,
-			menuItemName = 'MuPIT View' +(disableMenu ? ' (loading..)' : '');
+			menuItemName = 'MuPIT View' + (disableMenu ? ' (loading..)' : '');
 
 		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
