@@ -15,7 +15,7 @@ var {linear, linearTicks} = require('./scale');
 // XXX Warn on duplicate patients, and list patient ids?
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
-var margin = {top: 20, right: 50, bottom: 30, left: 50};
+var margin = {top: 20, right: 10, bottom: 30, left: 50};
 const HOVER = 'hover';
 
 // XXX point at 100%? [xdomain[0] - 1, 1]
@@ -96,7 +96,7 @@ var bounds = x => [_.min(x), _.max(x)];
 
 function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 	var height = size.height - margin.top - margin.bottom,
-		width = size.width,
+		width = size.width - margin.left - margin.right,
 		xdomain = bounds(_.pluck(_.flatten(curves), 't')),
 		xrange = [0, width],
 		ydomain = [0, 1],
@@ -116,7 +116,7 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 
 	/*eslint-disable comma-spacing */
 	return (
-		<svg width={width} height={size.height}>
+		<svg width={size.width} height={size.height}>
 			<g transform={`translate(${margin.left}, ${margin.top})`}>
 				<Axis
 					groupProps={{
