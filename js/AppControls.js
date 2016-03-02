@@ -52,7 +52,7 @@ var AppControls = React.createClass({
 						<DatasetSelect
 							event='samplesFrom'
 							callback={callback}
-							nullOpt="All Datasets"
+							nullOpt="Any Datasets (i.e. show all samples)"
 							style={{display: hasCohort ?
 									'inline' : 'none'}}
 							className='samplesFromAnchor'

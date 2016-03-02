@@ -158,7 +158,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 				i = columnOrder.length;
 				option = document.createElement('option');
 				option.value = "none";
-				option.textContent = "None (i.e. statistics of selected samples)";
+				option.textContent = "None (i.e. summary view of the Y variable)";
 				div.appendChild(option);
 				if (storedColumn && ("none" === storedColumn)) {
 					div.selectedIndex = i;
