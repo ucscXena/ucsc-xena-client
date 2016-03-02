@@ -15,7 +15,7 @@ var {linear, linearTicks} = require('./scale');
 // XXX Warn on duplicate patients, and list patient ids?
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
-var margin = {top: 20, right: 50, bottom: 30, left: 50};
+var margin = {top: 20, right: 10, bottom: 30, left: 50};
 const HOVER = 'hover';
 
 // XXX point at 100%? [xdomain[0] - 1, 1]
@@ -44,10 +44,7 @@ function calcDims (viewDims, sizeRatios) {
 
 function checkIfActive(currentLabel, activeLabel) {
 	// check whether this line group should be set to Active
-	if (activeLabel)
-		return (activeLabel === currentLabel);
-	else
-		return false;
+	return !!activeLabel && (activeLabel === currentLabel);
 }
 
 var LineGroup = React.createClass({
@@ -61,8 +58,9 @@ var LineGroup = React.createClass({
 			oldIsActive = this.state.isActive,
 			activeStatus = checkIfActive(label, activeLabel);
 
-		if (oldIsActive != activeStatus)
+		if (oldIsActive !== activeStatus) {
 			this.setState({ isActive: activeStatus });
+		}
 	},
 
 	shouldComponentUpdate: function(newProps, newState) {
@@ -96,7 +94,7 @@ var bounds = x => [_.min(x), _.max(x)];
 
 function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 	var height = size.height - margin.top - margin.bottom,
-		width = size.width,
+		width = size.width - margin.left - margin.right,
 		xdomain = bounds(_.pluck(_.flatten(curves), 't')),
 		xrange = [0, width],
 		ydomain = [0, 1],
@@ -116,7 +114,7 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 
 	/*eslint-disable comma-spacing */
 	return (
-		<svg width={width} height={size.height}>
+		<svg width={size.width} height={size.height}>
 			<g transform={`translate(${margin.left}, ${margin.top})`}>
 				<Axis
 					groupProps={{
@@ -187,6 +185,11 @@ var PValue = React.createClass({
 	}
 });
 
+// Sample count is 'n' at 1st time point.
+function sampleCount(curve) {
+	return _.getIn(curve, [0, 'n'], String.fromCharCode(8709));
+}
+
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
 	let isActive = checkIfActive(label, activeLabel);
@@ -206,7 +209,7 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 			className={`list-group-item outline ${activeLabelClassName}`}
 			onMouseOver={(e) => setActiveLabel(e, label)}
 			onMouseOut={(e) => setActiveLabel(e, '')}>
-			<span style={legendLineStyle} /> {label} (n={curves.length})
+			<span style={legendLineStyle} /> {label} (n={sampleCount(curves)})
 		</li>
 
 	);

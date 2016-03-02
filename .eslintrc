@@ -8,6 +8,7 @@
 	"parser": "babel-eslint",
 	"rules": {
 		"eqeqeq": [2, "allow-null"],
+		"curly": 2,
 		"yoda": 0,
 		"comma-spacing": 2,
 		"space-infix-ops": 2,
