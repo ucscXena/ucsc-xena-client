@@ -6,11 +6,40 @@
 .Column {
 	position: relative;
 	display: inline-block;
-	overflow: hidden;
 	margin-left: 5px;
 	margin-right: 5px;
+	cursor: crosshair;
+	z-index: 2; /* z-index needed to make overlap of resize handle correct */
 }
 
 .Columns .Sortable {
 	display: inline-block;
+}
+
+.Columns canvas {
+	display: block;
+	/* margin for resizable handle */
+	margin-bottom: 5px;
+}
+
+.Column .react-resizable-handle {
+	bottom: -6px;
+	right: -6px;
+	visibility: hidden;
+	width: 12px;
+	height: 12px;
+	background: url('./resizer.gif');
+	/* Not sure if -1 is a good idea, but nothing else seems to work.
+	 * giving canvas index 2 and this index 1, for example, results in
+	 * the handle getting events in the corner of the canvas, where we
+	 * want the canvas to get events. */
+	z-index: -1;
+}
+
+.Column:hover .react-resizable-handle {
+	visibility: visible;
+}
+
+.Column .react-resizable-handle:hover {
+	visibility: visible;
 }
