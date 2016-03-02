@@ -187,6 +187,11 @@ var PValue = React.createClass({
 	}
 });
 
+// Sample count is 'n' at 1st time point.
+function sampleCount(curve) {
+	return _.getIn(curve, [0, 'n'], String.fromCharCode(8709));
+}
+
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
 	let isActive = checkIfActive(label, activeLabel);
@@ -206,7 +211,7 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 			className={`list-group-item outline ${activeLabelClassName}`}
 			onMouseOver={(e) => setActiveLabel(e, label)}
 			onMouseOut={(e) => setActiveLabel(e, '')}>
-			<span style={legendLineStyle} /> {label} (n={curves.length})
+			<span style={legendLineStyle} /> {label} (n={sampleCount(curves)})
 		</li>
 
 	);
