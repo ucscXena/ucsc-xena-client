@@ -44,10 +44,7 @@ function calcDims (viewDims, sizeRatios) {
 
 function checkIfActive(currentLabel, activeLabel) {
 	// check whether this line group should be set to Active
-	if (activeLabel)
-		return (activeLabel === currentLabel);
-	else
-		return false;
+	return !!activeLabel && (activeLabel === currentLabel);
 }
 
 var LineGroup = React.createClass({
