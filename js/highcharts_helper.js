@@ -39,6 +39,8 @@ define(['./highcharts'], function () {
           width: '100px'
         }
       },
+      enabled: true,
+      align: 'right',
       labelFormatter: hcLabelRender,
       itemHoverStyle: {
         color: '#ff6600'
@@ -159,12 +161,9 @@ define(['./highcharts'], function () {
      // Y data column chart setup
     var yAxisTitle = "Average value";
 
-
-    chartOptions.legend.align = 'center';
-    chartOptions.legend.verticalAlign = 'bottom';
-    chartOptions.legend.layout = 'horizontal';
+    chartOptions.legend.align = 'right';
     chartOptions.legend.margin = 5;
-    chartOptions.legend.title = {};
+    chartOptions.legend.title.text = Y + '<br/><span style="font-size: 9px; color: #666; font-weight: normal">(Click to hide)</span>';
 
     var Y_in_Title = Y.length > 50 ? Y.slice(0, 50) + "..." : Y;
     chartOptions.title = {

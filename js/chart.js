@@ -996,7 +996,7 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 
 		// right panel
 		rightContainer = document.createElement("div");
-		rightContainer.setAttribute("id", "right");
+		rightContainer.setAttribute("class", "rightContainer");
 		root.appendChild(rightContainer);
 
 		// chart container
@@ -1007,26 +1007,26 @@ define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_
 			return;
 		}
 
-		// y axis selector
-		div = dom_helper.elt("div",
+    // x axis selector
+    div = dom_helper.elt("div", "X: ",
+      axisSelector("Xaxis", update, updateArgs));
+    div.setAttribute("id", "X");
+    leftContainer.appendChild(div);
+
+    // y axis selector
+		div = dom_helper.elt("div", "Y: ",
 			axisSelector("Yaxis", update, updateArgs));
 		div.setAttribute("id", "Y");
 		leftContainer.appendChild(div);
-
-		// x axis selector
-		div = dom_helper.elt("div", "Variable ",
-			axisSelector("Xaxis", update, updateArgs));
-		div.setAttribute("id", "X");
-		rightContainer.appendChild(div);
 
     //controls
 		controlContainer = document.createElement("div");
 		controlContainer.setAttribute("id", "controlContainer");
 		rightContainer.appendChild(controlContainer);
-		// whisker is 1, 2, 3 SD
-		controlContainer.appendChild(buildSDDropdown());
 		// normalization selection
 		controlContainer.appendChild(buildNormalizationDropdown());
+    // whisker is 1, 2, 3 SD
+    controlContainer.appendChild(buildSDDropdown());
 		update.apply(this, updateArgs);
 	};
 });

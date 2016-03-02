@@ -1,13 +1,5 @@
 #chartRoot {
-    height: 100%;
-}
-#left {
-    float: left;
-    height: 100%;
-}
-#right {
-    height: 100%;
-    vertical-align: middle;
+    height: 150%;
 }
 .dropdown-style {
     background: white;
@@ -23,42 +15,13 @@
 .dropdown-style:focus {
     outline: 0;
 }
-#X {
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
-    font-size: 12px;
-}
-#Y {
-    width: 35%;
-    position: absolute;
-    right: 90%;
-    -webkit-transform-origin: right top;
-    transform-origin: right top;
-    -webkit-transform: rotate(-90deg);
-    transform: rotate(-90deg);
-    font-size: 12px;
-    text-align: center;
-}
-#Xaxis {
-    width: 50%;
-}
-#Yaxis {
-    width: 60%;
-}
+
 #chartContainer {
-    width: 95%;
-    height: 70%;
+    
     margin-left: auto;
     margin-right: auto;
 }
-#controlContainer {
-    width: 90%;
-    height: 50px;
-    margin-top: 30px;
-    text-align: right;
-    font-size: 10px;
-}
+
 #myChart {
     height: 100%;
 }
