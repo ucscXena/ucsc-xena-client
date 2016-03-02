@@ -61,8 +61,9 @@ var LineGroup = React.createClass({
 			oldIsActive = this.state.isActive,
 			activeStatus = checkIfActive(label, activeLabel);
 
-		if (oldIsActive != activeStatus)
+		if (oldIsActive !== activeStatus) {
 			this.setState({ isActive: activeStatus });
+		}
 	},
 
 	shouldComponentUpdate: function(newProps, newState) {
