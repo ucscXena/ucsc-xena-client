@@ -214,8 +214,8 @@ var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop 
 	.filter(row => row.length > 0); // drop empty rows
 
 function sampleTooltip(data, gene) {
-	var dnaVaf = data.dna_vaf && ['labelValue',  'DNA variant allele freq', formatAf(data.dna_vaf)],
-		rnaVaf = data.rna_vaf && ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
+	var dnaVaf = _.has(data, 'dna_vaf') && ['labelValue',  'DNA variant allele freq', formatAf(data.dna_vaf)],
+		rnaVaf = _.has(data, 'rna_vaf') && ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
 		refAlt = data.reference && data.alt && ['value', `${data.reference} to ${data.alt}`],
 		pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
 		posURL = ['url', `hg19 ${pos}`, gbURL + encodeURIComponent(pos)],
