@@ -40,7 +40,7 @@ var YAxisLabel = React.createClass({
 
 function zoomIn(pos, samples, zoom) {
 	var {count, index} = zoom;
-	var nCount = Math.max(1, Math.floor(count / 3)),
+	var nCount = Math.max(1, Math.round(count / 3)),
 		maxIndex = samples - nCount,
 		nIndex = Math.max(0, Math.min(Math.round(index + pos * count - nCount / 2), maxIndex));
 
@@ -58,8 +58,8 @@ function zoomOut(samples, zoom) {
 }
 
 function targetPos(ev) {
-	var bb = ev.target.getBoundingClientRect();
-	return (ev.clientY - bb.top) / ev.target.clientHeight;
+	var bb = ev.currentTarget.getBoundingClientRect();
+	return (ev.clientY - bb.top) / ev.currentTarget.clientHeight;
 }
 
 function hasSurvival(state) {

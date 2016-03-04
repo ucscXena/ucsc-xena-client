@@ -40,7 +40,7 @@ var Tooltip = React.createClass({
 		var display = open ? 'block' : 'none';
 		// className 'tooltip' aliases with bootstrap css.
 		return (
-			<div className='Tooltip' style={{display: display}}>
+			<div className='Tooltip' style={{display: display, zIndex: 999}}>
 				<table>
 					<colgroup>
 						<col className='valueCol'/>

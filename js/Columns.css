@@ -4,6 +4,7 @@
 }
 
 .Column {
+	user-select: none;
 	position: relative;
 	display: inline-block;
 	margin-left: 5px;
@@ -18,8 +19,6 @@
 
 .Columns canvas {
 	display: block;
-	/* margin for resizable handle */
-	margin-bottom: 5px;
 }
 
 .Column .react-resizable-handle {
