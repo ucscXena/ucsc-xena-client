@@ -31,7 +31,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 
 	function nanstr(v) {
 		if (isNaN(v)) {
-			return undefined;
+			return null;
 		}
 		return v;
 	}
