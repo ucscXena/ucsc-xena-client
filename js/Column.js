@@ -56,8 +56,9 @@ var ResizeOverlay = React.createClass({
 	},
 	render: function () {
 		var {zooming, zoomSize} = this.state;
+		// XXX This margin setting really belongs elsewhere.
 		return (
-			<div style={{position: 'relative'}}>
+			<div className='resizeOverlay' style={{position: 'relative', marginBottom: '5px'}}>
 				{zooming ? <div style={{
 					width: zoomSize.width,
 					height: zoomSize.height,

@@ -12,7 +12,7 @@ var Legend = require('Legend');
 var Column = require('Column');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var React = require('react');
-var ReactDOM = require('react-dom');
+var CanvasDrawing = require('./CanvasDrawing');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 
 // Since we don't set module.exports, but instead register ourselves
@@ -81,8 +81,8 @@ function pickScale(index, count, height, data) {
 	};
 }
 
-function renderHeatmap(opts) {
-	var {vg, height, width, zoomIndex, zoomCount, layout, data, colors} = opts;
+function drawLayout(vg, opts) {
+	var {height, width, index, count, layout, data, colors} = opts;
 
 	vg.smoothing(false); // For some reason this works better if we do it every time.
 
@@ -93,7 +93,7 @@ function renderHeatmap(opts) {
 	}
 
 	each(layout, function (el, i) {
-		var s = pickScale(zoomIndex, zoomCount, height, data[i]),
+		var s = pickScale(index, count, height, data[i]),
 			colorScale = colors[i];
 
 		scratch.height(s.height);
@@ -106,6 +106,20 @@ function renderHeatmap(opts) {
 		vg.translate(el.start, 0, function () {
 			vg.drawImage(scratch.element(), 0, s.sy, 1, s.sh, 0, 0, el.size, height);
 		});
+	});
+}
+
+function drawHeatmap(vg, props) {
+	var {heatmapData = [], colors, width, zoom: {index, count, height}} = props;
+
+	drawLayout(vg, {
+		height,
+		width,
+		index,
+		count,
+		data: heatmapData,
+		layout: partition.offsets(width, 0, heatmapData.length),
+		colors: colorFns(colors)
 	});
 }
 
@@ -291,54 +305,6 @@ var HeatmapLegend = hotOrNot(React.createClass({
 // plot rendering
 //
 
-var CanvasDrawing = hotOrNot(React.createClass({
-	mixins: [deepPureRenderMixin],
-
-	render: function () {
-		if (this.vg) {
-			this.draw(this.props);
-		}
-		return (
-			<canvas
-				className='Tooltip-target'
-				onMouseMove={this.props.onMouseMove}
-				onMouseOut={this.props.onMouseOut}
-				onMouseOver={this.props.onMouseOver}
-				onClick={this.props.onClick}
-				ref='canvas' />
-		);
-	},
-	componentDidMount: function () {
-		var {width, zoom: {height}} = this.props;
-		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height);
-		this.draw(this.props);
-	},
-
-	draw: function (props) {
-		var {zoom: {index, count, height}, width, heatmapData = [], colors} = props,
-			vg = this.vg;
-
-		if (vg.width() !== width) {
-			vg.width(width);
-		}
-
-		if (vg.height() !== height) {
-			vg.height(height);
-		}
-
-		renderHeatmap({
-			vg: vg,
-			height: height,
-			width: width,
-			zoomIndex: index,
-			zoomCount: count,
-			data: heatmapData,
-			layout: partition.offsets(width, 0, heatmapData.length),
-			colors: colorFns(colors)
-		});
-	}
-}));
-
 function tsvProbeMatrix(heatmap, samples, fields, codes) {
 	var fieldNames = ['sample'].concat(fields);
 	var coded = _.map(fields, (f, i) => codes && codes[f] ?
@@ -370,7 +336,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 		this.events('mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
-		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.target, 'Tooltip-target'))
+		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
 			.selectMany(() => {
 				return this.ev.mousemove.takeUntil(this.ev.mouseout)
 					.map(ev => ({data: this.tooltip(ev), open: true})) // look up current data
@@ -414,10 +380,14 @@ var HeatmapColumn = hotOrNot(React.createClass({
 				menu={menu}
 				plot={<CanvasDrawing
 						ref='plot'
-						onMouseMove={this.ev.mousemove}
-						onMouseOut={this.ev.mouseout}
-						onMouseOver={this.ev.mouseover}
-						onClick={this.props.onClick}
+						draw={drawHeatmap}
+						wrapperProps={{
+							className: 'Tooltip-target',
+							onMouseMove: this.ev.mousemove,
+							onMouseOut: this.ev.mouseout,
+							onMouseOver: this.ev.mouseover,
+							onClick: this.props.onClick
+						}}
 						width={_.getIn(column, ['width'])}
 						zoom={zoom}
 						colors={colors}

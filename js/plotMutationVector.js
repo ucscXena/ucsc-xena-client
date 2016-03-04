@@ -5,14 +5,13 @@
 var _ = require('./underscore_ext');
 var Rx = require('rx');
 var React = require('react');
-var ReactDOM = require('react-dom');
 var Column = require('./Column');
 var Legend = require('./Legend');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
-var vgcanvas = require('vgcanvas');
 var widgets = require('columnWidgets');
 var util = require('./util');
+var CanvasDrawing = require('./CanvasDrawing');
 
 var features = require('./models/mutationVector');
 
@@ -108,68 +107,19 @@ function drawImpactPx(vg, width, pixPerRow, color, variants) {
 }
 
 function draw(vg, props) {
-	var {width, height, feature, samples,
-			nodes, zoomCount, samplesInDS} = props,
-		pixPerRow = height / zoomCount, // XXX also appears in mutationVector
+	let {width, zoom: {count, height}, nodes} = props;
+	if (!nodes) {
+		vg.box(0, 0, width, height, "gray");
+		return;
+	}
+	let {feature, samples, index: {bySample: samplesInDS}} = props,
+		pixPerRow = height / count, // XXX also appears in mutationVector
 		minppr = Math.max(pixPerRow, 2),
 		hasValue = samples.map(s => samplesInDS[s]);
 
 	drawBackground(vg, width, height, pixPerRow, hasValue);
 	drawImpactPx(vg, width, minppr, features[feature].color, nodes);
 }
-
-var CanvasDrawing = hotOrNot(React.createClass({
-	mixins: [deepPureRenderMixin],
-
-	render: function () {
-		if (this.vg) {
-			this.draw();
-		}
-		return (
-			<canvas
-				className='Tooltip-target'
-				onMouseMove={this.props.onMouseMove}
-				onMouseOut={this.props.onMouseOut}
-				onMouseOver={this.props.onMouseOver}
-				onClick={this.props.onClick}
-				ref='canvas' />
-		);
-	},
-	componentDidMount: function () {
-		var {width, zoom: {height}} = this.props;
-		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height);
-		this.draw();
-	},
-
-	draw: function () {
-		var {zoom: {count, height},
-				samples, data, nodes, width, feature, index} = this.props,
-			vg = this.vg;
-
-		if (!data) {
-			vg.box(0, 0, width, height, "gray");
-			return;
-		}
-
-		if (vg.width() !== width) {
-			vg.width(width);
-		}
-
-		if (vg.height() !== height) {
-			vg.height(height);
-		}
-
-		draw(vg, {
-			nodes: nodes,
-			samples: samples,
-			samplesInDS: index.bySample,
-			width: width,
-			height: height,
-			feature: feature,
-			zoomCount: count
-		});
-	}
-}));
 
 function drawLegend(feature) {
 	var {colors, labels, align} = features[feature].legend;
@@ -251,7 +201,7 @@ var MutationColumn = hotOrNot(React.createClass({
 		this.events('mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
-		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.target, 'Tooltip-target'))
+		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
 			.selectMany(() => {
 				return this.ev.mousemove.takeUntil(this.ev.mouseout)
 					.map(ev => ({data: this.tooltip(ev), open: true})) // look up current data
@@ -292,10 +242,14 @@ var MutationColumn = hotOrNot(React.createClass({
 				data={data}
 				plot={<CanvasDrawing
 						ref='plot'
-						onMouseMove={this.ev.mousemove}
-						onMouseOut={this.ev.mouseout}
-						onMouseOver={this.ev.mouseover}
-						onClick={this.props.onClick}
+						draw={draw}
+						wrapperProps={{
+							className: 'Tooltip-target',
+							onMouseMove: this.ev.mousemove,
+							onMouseOut: this.ev.mouseout,
+							onMouseOver: this.ev.mouseover,
+							onClick: this.props.onClick
+						}}
 						feature={feature}
 						nodes={column.nodes}
 						width={column.width}
