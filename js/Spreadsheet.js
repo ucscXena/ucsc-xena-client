@@ -68,6 +68,12 @@ function hasSurvival(state) {
 			   _.getIn(state, ['km', 'patient']));
 }
 
+var zoomInClick = ev =>
+	!ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
+
+var zoomOutClick = ev =>
+	!ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
+
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
 	mixins: [rxEventsMixin],
@@ -76,9 +82,9 @@ var Columns = React.createClass({
 
 		this.ev.plotClick.subscribe(ev => {
 			let {callback, appState: {zoom, samples}} = this.props;
-			if (ev.shiftKey) {
+			if (zoomOutClick(ev)) {
 				callback(['zoom', zoomOut(samples.length, zoom)]);
-			} else {
+			} else if (zoomInClick(ev)) {
 				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
 			}
 		});
