@@ -107,7 +107,7 @@ function drawImpactPx(vg, width, pixPerRow, color, variants) {
 }
 
 function draw(vg, props) {
-	let {width, zoom: {count, height}, nodes} = props;
+	let {width, zoom: {count, height, index}, nodes} = props;
 	if (!nodes) {
 		vg.box(0, 0, width, height, "gray");
 		return;
@@ -115,7 +115,7 @@ function draw(vg, props) {
 	let {feature, samples, index: {bySample: samplesInDS}} = props,
 		pixPerRow = height / count, // XXX also appears in mutationVector
 		minppr = Math.max(pixPerRow, 2),
-		hasValue = samples.map(s => samplesInDS[s]);
+		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]);
 
 	drawBackground(vg, width, height, pixPerRow, hasValue);
 	drawImpactPx(vg, width, minppr, features[feature].color, nodes);
