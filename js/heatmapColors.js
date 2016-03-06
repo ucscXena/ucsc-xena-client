@@ -110,7 +110,7 @@ function colorFloat(column, settings, codes, data, dataset) {
 	if (!isNumber(max)) {
 		return ['no-data'];
 	}
-	min = _.min(values);
+	min = _.minnull(values);
 	if (min >= 0 && max >= 0) {
 		spec = ['float-pos', zero, high, min, max];
 	} else if (min <= 0 && max <= 0) {
@@ -143,8 +143,8 @@ var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
 function colorFloatGenomicData(column, settings = {}, codes, data, dataset) {
 	var values = data,
 		[low, zero, high] = defaultColors(dataset),
-		min = settings.min || _.min(values),
-		max = settings.max ||  _.max(values),
+		min = settings.min || _.minnull(values),
+		max = settings.max ||  _.maxnull(values),
 		minStart = settings.minStart,
 		maxStart = settings.maxStart,
 		spec,

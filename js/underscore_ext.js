@@ -163,6 +163,8 @@ define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
 	_.mixin({
 		meannull: meannull,
 		meannan: meannan,
+		minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
+		maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
 		memoize1: memoize1,
 		fmap: fmap,
 		apply: apply,
