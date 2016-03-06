@@ -245,6 +245,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '                   :where [:and [:in :%lower.field.name ' + arrayfmt(_.map(fields, f => f.toLowerCase())) + '] [:= :dataset.name ' + quote(dataset) + ']]}))';
 	}
 
+	// XXX :samples is wrong: it's returning every row, rather than distinct rows.
 	function sparse_data_string(dataset, samples, gene) {
 		return `{:samples ((xena-query {:select ["sampleID"] :from [${quote(dataset)}]}) "sampleID")\n` +
 		       ` :rows (xena-query {:select ["ref" "alt" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n` +
@@ -474,17 +475,15 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		return _.map(_.range(rows[keys[0]].length), i => _.object(keys, _.map(keys, k => rows[k][i])));
 	}
 
-	// Build index of genes -> samples -> matching rows.
-	// If the sample appears in the dataset but has no matching rows, matching rows should be set to [].
-	// If the sample does not appear in the dataset, matching rows should be undefined.
-	// Requested samples that appear in the dataset are in resp.sample.
-	//
 	// {:sampleid ["id0", "id1", ...], chromstart: [123, 345...], ...}
 	function indexMutations(gene, resp) {
+		// XXX The query for samples is returning every row in the dataset,
+		// rather than distinct sampleIDs from the dataset. We need a
+		// 'distinct' function for xena-query.
 		var rows = mutation_attrs(collateRows(resp.rows));
 		return {
 			rows,
-			samplesInResp: resp.samples // XXX rename this after deprecating samples
+			samplesInResp: _.uniq(resp.samples) // XXX rename this after deprecating samples
 		};
 	}
 
