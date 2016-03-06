@@ -7,6 +7,7 @@ var Rx = require('./rx.ext');
 require('rx.coincidence');
 var _ = require('./underscore_ext');
 var {getErrorProps, logError} = require('./errors');
+var {getNotifications} = require('./notifications');
 
 var defaultServers = [
 	'https://genome-cancer.ucsc.edu:443/proj/public/xena',
@@ -53,7 +54,8 @@ module.exports = function () {
 		zoom: {height: 300},
 		columns: {},
 		columnOrder: [],
-		samples: []
+		samples: [],
+		notifications: getNotifications()
 	};
 
 	if (sessionStorage && sessionStorage.xena && location.search.indexOf('?nostate') !== 0) {

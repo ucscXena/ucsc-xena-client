@@ -6,6 +6,7 @@ var React = require('react');
 var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
+var Popover = require('react-bootstrap/lib/Popover');
 var ColumnEdit = require('./ColumnEdit');
 var Sortable = require('./Sortable');
 require('react-resizable/css/styles.css');
@@ -181,9 +182,32 @@ var Columns = React.createClass({
 	}
 });
 
+function zoomPopover(zoom, samples, props) {
+	return (
+		<Popover {...props} placement="right" positionLeft={-20} positionTop={40} title="Zooming">
+			<p>As shown at left, you are now viewing {zoom.count} of the {samples.length} samples.</p>
+			<p>Zoom on samples (vertically) by clicking on the graph.</p>
+			<p>Zoom out with shift-click.</p>
+			<Button onClick={props.onDisableClick}>Don't show this again</Button>
+		</Popover>
+	);
+}
+
 var Spreadsheet = React.createClass({
+	zoomHelpClose: function () {
+		this.props.callback(['zoom-help-close']);
+	},
+	zoomHelpDisable: function () {
+		this.props.callback(['zoom-help-disable']);
+	},
 	render: function () {
-		var {appState: {zoom, samples}} = this.props;
+		var {appState: {zoom, samples, zoomHelp}} = this.props,
+			zoomHelper = zoomHelp ?
+				zoomPopover(zoom, samples, {
+					onClick: this.zoomHelpClose,
+					onDisableClick: this.zoomHelpDisable
+				}) : null;
+
 		return (
 			<Row>
 				<Col md={1}>
@@ -192,7 +216,10 @@ var Spreadsheet = React.createClass({
 						zoom={zoom}
 					/>
 				</Col>
-				<Col md={11}><Columns {...this.props}/></Col>
+				<Col md={11}>
+					<Columns {...this.props}/>
+					{zoomHelper}
+				</Col>
 			</Row>
 		);
 	}

@@ -10,6 +10,7 @@ var util = require('../util');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
 var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
+var {setNotifications} = require('../notifications');
 
 var	datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
 var identity = x => x;
@@ -127,6 +128,13 @@ var fetchCohortData = (serverBus, state, cohort) => {
 	fetchSamples(serverBus, user, cohort, samplesFrom);
 };
 
+var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
+	_.assoc(state, 'zoomHelp', true) : state;
+
+var zoomHelpClose = state =>
+	_.assocIn(_.dissoc(state, 'zoomHelp'),
+			['notifications', 'zoomHelp'], true);
+
 var controls = {
 	init: state => setCohortPending(setServerPending(state)),
 	'init-post!': (serverBus, state) => {
@@ -164,7 +172,11 @@ var controls = {
 		return _.updateIn(ns, ["data"], d => _.dissoc(d, id));
 	},
 	order: (state, order) => _.assoc(state, "columnOrder", order),
-	zoom: (state, zoom) => _.assoc(state, "zoom", zoom),
+	zoom: (state, zoom) => warnZoom(_.assoc(state, "zoom", zoom)),
+	'zoom-help-close': zoomHelpClose,
+	'zoom-help-disable': zoomHelpClose,
+	'zoom-help-disable-post!': (serverBus, state) =>
+		setNotifications(zoomHelpClose(state).notifications),
 	dataType: (state, id, dataType) =>
 		_.assocIn(state, ['columns', id, 'dataType'], dataType),
 	// XXX note we recalculate columns[id] due to running side-effects independent of
