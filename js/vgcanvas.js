@@ -2,7 +2,7 @@
 
 "use strict";
 
-var _ = require('underscore');
+var _ = require('./underscore_ext');
 
 var style = function (c) {
 	if (_.isArray(c)) {
@@ -14,17 +14,15 @@ var style = function (c) {
 module.exports = function (el, vgw, vgh) {
 	var fontFamily = 'Verdana,Arial,sans-serif',
 		ctx = el.getContext('2d'),
+		currentFont,
 
 		// setting font is expensive, so cache it.
-		setfont = (function () {
-			var current;
-			return function (font) {
-				if (font !== current) {
-					current = font;
-					ctx.font = font;
-				}
-			};
-		}()),
+		setfont = function (font) {
+			if (font !== currentFont) {
+				currentFont = font;
+				ctx.font = font;
+			}
+		},
 
 		scale = function (x, y, cb) {
 			ctx.save();
@@ -82,13 +80,17 @@ module.exports = function (el, vgw, vgh) {
 		width = function (w) {
 			if (_.isNumber(w)) {
 				el.width = w;
+				// Resizing loses the font setting
+				ctx.font = currentFont;
 			}
 			return el.width;
 		},
 
 		height = function (h) {
 			if (_.isNumber(h)) {
-				el.height = vgh = h;
+				el.height = h;
+				// Resizing loses the font setting
+				ctx.font = currentFont;
 			}
 			return el.height;
 		},
