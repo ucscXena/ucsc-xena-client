@@ -20,15 +20,12 @@ var Crosshair = React.createClass({
 	},
 	render: function () {
 		let { point: {x, y}, open, dims } = this.props,
-			baseStyle = open
-				? {cursor: 'none', display: 'inline'}
-				: {cursor: 'default', display: 'none'},
-			containerStyle = _.extend(baseStyle, dims);
+			containerStyle = _.extend({display: open ? 'inline' : 'none'}, dims);
 
 		return (
-			<div className='Crosshair' style={containerStyle}>
-				<span className='CrosshairH' style={{top: y}}/>
-				<span className='CrosshairV' style={{left: x}}/>
+			<div className='crosshairs' style={containerStyle}>
+				<span className='crosshair crosshairH' style={{top: y}}/>
+				<span className='crosshair crosshairV' style={{left: x}}/>
 			</div>
 		);
 	}
