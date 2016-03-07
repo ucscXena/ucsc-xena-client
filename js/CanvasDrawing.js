@@ -1,7 +1,7 @@
 // React component to manages redrawing a canvas element. Additionally
 // provides a vertical zoom animation based on zoom & sample list props.
 
-/*global require: false, document: false, module: false, console: false */
+/*global require: false, document: false, module: false */
 'use strict';
 
 var _ = require('underscore_ext');
@@ -61,14 +61,14 @@ var CanvasDrawing = React.createClass({
 		return transitionEnd && !this.transitioning;
 	},
 	setHeight: function (height) {
-		this.refs.canvas1.height = height;
-		this.refs.canvas2.height = height;
+		this.vg[0].height(height);
+		this.vg[1].height(height);
 		this.refs.canvas2.style.top = `${-height}px`;
 		this.refs.div.style.height = `${height}px`;
 	},
 	setWidth: function (width) {
-		this.refs.canvas1.width = width;
-		this.refs.canvas2.width = width;
+		this.vg[0].width(width);
+		this.vg[1].width(width);
 		this.refs.div.style.width = `${width}px`;
 	},
 	draw: function (props) {
