@@ -10,8 +10,8 @@ var {getErrorProps, logError} = require('./errors');
 var {getNotifications} = require('./notifications');
 
 var defaultServers = [
-	'https://genome-cancer.ucsc.edu:443/proj/public/xena',
-	'https://local.xena.ucsc.edu:7223'
+	'https://local.xena.ucsc.edu:7223',
+  'https://genome-cancer.ucsc.edu:443/proj/public/xena'
 ];
 
 module.exports = function () {
