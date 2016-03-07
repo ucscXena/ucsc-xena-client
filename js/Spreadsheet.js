@@ -205,7 +205,6 @@ var Columns = React.createClass({
 							+
 						</Button>}
 				</div>
-				<div className='crosshairH crosshair' />
 				{editor}
 				{settings}
 				<Crosshair {...this.state.crosshair} dims={this.state.dims}/>

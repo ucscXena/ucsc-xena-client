@@ -75,7 +75,7 @@ var ResizeOverlay = React.createClass({
 					width={this.props.width}
 					height={this.props.height}>
 
-					<div style={{position: 'relative'}}>
+					<div style={{position: 'relative', cursor: 'none'}}>
 						{this.props.children}
 					</div>
 				</Resizable>
