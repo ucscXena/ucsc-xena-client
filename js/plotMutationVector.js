@@ -208,6 +208,7 @@ var MutationColumn = hotOrNot(React.createClass({
 						data: this.tooltip(ev),
 						open: true,
 						point: {x: ev.clientX, y: ev.clientY}
+						//point: {x: ev.nativeEvent.layerX, y: ev.nativeEvent.layerY}
 					})) // look up current data
 					.concat(Rx.Observable.return({open: false}));
 			}).subscribe(this.props.tooltip);
