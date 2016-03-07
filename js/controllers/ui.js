@@ -154,7 +154,9 @@ var controls = {
 	cohort: setCohort,
 	'cohort-post!': fetchCohortData,
 	'refresh-cohorts-post!': (serverBus, state) => fetchCohorts(serverBus, state.servers.user),
-	samplesFrom: (state, samplesFrom) => _.assoc(state, "samplesFrom", samplesFrom),
+	samplesFrom: (state, samplesFrom) => _.assoc(state,
+			'samplesFrom', samplesFrom,
+			'survival', null),
 	'samplesFrom-post!': (serverBus, state, samplesFrom) => {
 		let {servers: {user}} = state,
 			cohort = _.get(state, "cohort");
