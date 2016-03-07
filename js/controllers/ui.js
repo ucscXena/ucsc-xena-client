@@ -122,8 +122,8 @@ var setServerPending = state =>
 	state;
 
 var fetchCohortData = (serverBus, state, cohort) => {
-	let {servers: {user}} = state,
-		samplesFrom = _.get(state, "samplesFrom");
+	// XXX dup call to setCohort, due to not having the computed state.
+	let {servers: {user}, samplesFrom} = setCohort(state, cohort);
 	fetchDatasets(serverBus, user, cohort);
 	fetchSamples(serverBus, user, cohort, samplesFrom);
 };
