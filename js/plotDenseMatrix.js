@@ -81,8 +81,12 @@ function pickScale(index, count, height, data) {
 	};
 }
 
+var labelFont = 12;
+var labelMargin = 1; // left & right margin
+
 function drawLayout(vg, opts) {
-	var {height, width, index, count, layout, data, colors} = opts;
+	var {height, width, index, count, layout, data, codes, colors} = opts,
+		minTxtWidth = vg.textWidth(labelFont, 'WWWW');
 
 	vg.smoothing(false); // For some reason this works better if we do it every time.
 
@@ -106,11 +110,21 @@ function drawLayout(vg, opts) {
 		vg.translate(el.start, 0, function () {
 			vg.drawImage(scratch.element(), 0, s.sy, 1, s.sh, 0, 0, el.size, height);
 		});
+
+		// Add labels
+		if (el.size - 2 * labelMargin >= minTxtWidth && height / count > labelFont) {
+			let h = height / count;
+			vg.clip(el.start + labelMargin, 0, el.size - labelMargin, height, () =>
+					s.data.forEach((v, i) =>
+						vg.textCenteredPushRight(el.start + labelMargin, h * i - 1, el.size - labelMargin,
+												 h, 'black', labelFont, codes ? codes[v] : v)));
+		}
 	});
 }
 
 function drawHeatmap(vg, props) {
-	var {heatmapData = [], colors, width, zoom: {index, count, height}} = props;
+	var {heatmapData = [], codes, colors, width,
+		zoom: {index, count, height}} = props;
 
 	drawLayout(vg, {
 		height,
@@ -118,6 +132,7 @@ function drawHeatmap(vg, props) {
 		index,
 		count,
 		data: heatmapData,
+		codes,
 		layout: partition.offsets(width, 0, heatmapData.length),
 		colors: colorFns(colors)
 	});
@@ -388,6 +403,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 							onMouseOver: this.ev.mouseover,
 							onClick: this.props.onClick
 						}}
+						codes={_.get(codes, column.fields[0])}
 						width={_.getIn(column, ['width'])}
 						zoom={zoom}
 						colors={colors}

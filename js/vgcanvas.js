@@ -77,6 +77,12 @@ module.exports = function (el, vgw, vgh) {
 			ctx.restore();
 		},
 
+		clip = function (x, y, w, h, fn) {
+			clipRect(x, y, w, h);
+			fn.apply(this);
+			clipReset();
+		},
+
 		width = function (w) {
 			if (_.isNumber(w)) {
 				el.width = w;
@@ -118,6 +124,18 @@ module.exports = function (el, vgw, vgh) {
 			var th = fontHeight,
 				tw = textWidth(fontHeight, txt),
 				tx = x + w / 2 - tw / 2,
+				ty = y + h / 2 + th / 2;
+			setfont(fontHeight + "px " + fontFamily);
+			ctx.fillStyle = style(c);
+			ctx.fillText(txt, tx, ty);
+		},
+
+		// Center text if there's room. If the box is too narrow, push
+		// right so the left-most (first) characters are visible.
+		textCenteredPushRight = function (x, y, w, h, c, fontHeight, txt) {
+			var th = fontHeight,
+				tw = textWidth(fontHeight, txt),
+				tx = Math.max(x, x + w / 2 - tw / 2),
 				ty = y + h / 2 + th / 2;
 			setfont(fontHeight + "px " + fontFamily);
 			ctx.fillStyle = style(c);
@@ -223,8 +241,10 @@ module.exports = function (el, vgw, vgh) {
 		height: height,
 		clipRect: clipRect,
 		clipReset: clipReset,
+		clip: clip,
 		text: text,
 		textCentered: textCentered,
+		textCenteredPushRight: textCenteredPushRight,
 		textWidth: textWidth,
 		textRight: textRight,
 		verticalTextRight: verticalTextRight,
