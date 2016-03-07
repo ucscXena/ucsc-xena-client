@@ -14,15 +14,17 @@ function average(data) {
 	return data[0].map((v, s) => _.meannull(data.map(p => p[s])));
 }
 
-function codedVals({heatmap, colors, fields}, {codes}) {
+// Currently assumes we have only one field. Right now we only
+// handle coded phenotype data, and limit it to one-per-column.
+function codedVals({heatmap, colors, fields}, {codes, req: {values}}) {
 	var field = fields[0],
-		groups = _.range(Math.min(codes[field].length, MAX)),
+		groups = _.range(codes[field].length),
 		colorfn = _.first(colors.map(colorScale));
+
 	return {
-		warning: codes[field].length > MAX ? `Limited drawing to ${MAX} categories` : undefined,
 		groups: groups,
 		colors: groups.map(colorfn),
-		labels: codes[field].slice(0, groups.length),
+		labels: codes[field],
 		values: heatmap[0]
 	};
 }
@@ -125,16 +127,45 @@ function warnDupPatients(usableSamples, samples, patient) {
 	return dups.length ? `Some individuals' survival data are used more than once in the KM plot. Affected samples are: ${dups.map(i => samples[i]).join(', ')}. For more information and how to remove such duplications: https://goo.gl/TSQt6z.` : null;
 }
 
+function filterByGroups(feature, groupedIndices) {
+	var {labels, colors, groups} = feature,
+		notEmpty = _.range(groups.length).filter(i => _.has(groupedIndices, groups[i])),
+		useIndices = notEmpty.slice(0, MAX),
+		nlabels = useIndices.map(i => labels[i]),
+		ncolors = useIndices.map(i => colors[i]),
+		ngroups = useIndices.map(i => groups[i]);
+
+	return {
+		labels: nlabels,
+		colors: ncolors,
+		groups: ngroups,
+		warning: notEmpty.length > MAX ? `Limited drawing to ${MAX} categories` : undefined,
+	};
+}
+
+// After toCoded, we can still end up with empty groups if
+// we don't have survival data for the samples in question.
+// So, picking MAX groups after filtering for survival data.
+// Order should be
+// 1) convert to coded feature
+// 2) filter usable samples
+// 3) drop empty groups
+// 4) pick at-most MAX groups
+// 5) compute km
+
 function makeGroups(column, data, index, survival, samples) {
 	let {tte: {data: tte}, ev: {data: ev}, patient: {data: patient}} = survival,
 		// Convert field to coded.
-		{labels, colors, groups, values, warning} = toCoded(column, data, index, samples),
+		codedFeat = toCoded(column, data, index, samples),
+		{values} = codedFeat,
 		usableSamples = filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
 		patientWarning = warnDupPatients(usableSamples, samples, patient),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
-		gtte = groups.map(g => (groupedIndices[g] || []).map(i => tte[samples[i]])),
-		gev = groups.map(g => (groupedIndices[g] || []).map(i => ev[samples[i]])),
+		usableData = filterByGroups(codedFeat, groupedIndices),
+		{groups, colors, labels, warning} = usableData,
+		gtte = groups.map(g => groupedIndices[g].map(i => tte[samples[i]])),
+		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
 		curves = groups.map((g, i)=> km.compute(gtte[i], gev[i])),
 		pV = pValue(gtte, gev);
 
