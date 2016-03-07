@@ -1,4 +1,4 @@
-.crosshair {
+.Crosshair {
 	display: none;
 	position: fixed;
 	background-image:url('../images/dots.gif');
@@ -12,11 +12,15 @@
 	-o-user-select: none;
 	user-select: none;
 }
-.crosshairH {
-	width: 100%;
+.CrosshairH {
 	height: 1px;
+	left: 0px;
+	position: fixed;
+	width: 100%;
 }
-.crosshairV {
+.CrosshairV {
 	height: 100%;
+	position: fixed;
+	top: 0px;
 	width: 1px;
 }
