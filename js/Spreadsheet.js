@@ -107,7 +107,7 @@ var Columns = React.createClass({
 				// Keep 'frozen' and 'open' params for both crosshair && tooltip
 				let plotVisuals = {
 					crosshair: _.omit(ev, 'data'), // remove tooltip-related param
-					tooltip: _.omit(ev, 'point' )// remove crosshair-related param
+					tooltip: _.omit(ev, 'point' ) // remove crosshair-related param
 				};
 
 				if (ev.point) {
@@ -128,7 +128,7 @@ var Columns = React.createClass({
 	getInitialState: function () {
 		return {
 			dims: {
-			offsetLeft: 0,
+				offsetLeft: 0,
 				offsetTop: 0,
 				clientHeight: 0,
 				clientWidth: 0

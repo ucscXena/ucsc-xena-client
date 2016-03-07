@@ -1,7 +1,6 @@
-.Crosshair {
-	display: none;
-	position: fixed;
-	background-image:url('../images/dots.gif');
+.Crosshairs {
+	/*display: none;*/
+	position: relative;
 	pointer-events: none;
 	z-index: 999999;
 	-webkit-touch-callout: none;
@@ -13,14 +12,18 @@
 	user-select: none;
 }
 .CrosshairH {
+	background-image:url('../images/dots.gif');
 	height: 1px;
 	left: 0px;
 	position: fixed;
 	width: 100%;
+	/*z-index: 99999;*/
 }
 .CrosshairV {
+	background-image:url('../images/dots.gif');
 	height: 100%;
 	position: fixed;
 	top: 0px;
 	width: 1px;
+	/*z-index: 999999;*/
 }
