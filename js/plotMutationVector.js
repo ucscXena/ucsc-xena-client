@@ -182,6 +182,18 @@ function sampleTooltip(data, gene) {
 	};
 }
 
+function makeRow(fields, sampleGroup, row) {
+	let fieldValue;
+	if (_.isArray(sampleGroup) && sampleGroup.length === 0) {
+		fieldValue = 'No mutation';
+	}
+	if (_.isEmpty(sampleGroup)) {
+		sampleGroup = [row];
+	}
+	return _.flatmap(sampleGroup, row =>
+		_.map(fields, f => (row && row[f]) || fieldValue));
+}
+
 function tooltip(nodes, samples, {height, count, index}, gene,  ev) {
 	var {x, y} = util.eventOffset(ev),
 		pixPerRow = height / count, // XXX also appears in mutationVector
@@ -191,6 +203,16 @@ function tooltip(nodes, samples, {height, count, index}, gene,  ev) {
 	return node ?
 		sampleTooltip(node.data, gene) :
 		{sampleID: samples[Math.floor((y * count / height) + index)]};
+}
+
+function getRowFields(rows, sampleGroups, idFieldName) {
+	if (_.isEmpty(sampleGroups)) {
+		return []; // When no samples exist
+	} else if (!_.isEmpty(rows)) {
+		return _.keys(rows[0]); // When samples have mutation(s)
+	} else {
+		return [idFieldName, 'result']; // default fields for mutation-less samples
+	}
 }
 
 var MutationColumn = hotOrNot(React.createClass({
@@ -215,6 +237,19 @@ var MutationColumn = hotOrNot(React.createClass({
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
 	},
+	onDownload: function() {
+		const SAMPLE_ID_FIELD = 'sample';
+		let {data: {req: {rows}}, samples, index} = this.props,
+			groupedSamples = _.getIn(index, ['bySample']) || [],
+			rowFields = getRowFields(rows, groupedSamples, SAMPLE_ID_FIELD),
+			allRows = _.map(samples, (sId) => {
+				let alternateRow = {}; // only used for mutation-less samples
+				alternateRow[SAMPLE_ID_FIELD] = sId;
+				return makeRow(rowFields, groupedSamples[sId], alternateRow);
+			});
+		return [rowFields, allRows];
+	},
+
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
 		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
@@ -239,7 +274,7 @@ var MutationColumn = hotOrNot(React.createClass({
 				callback={this.props.callback}
 				id={this.props.id}
 				hasSurvival={hasSurvival}
-				download={() => console.log('fixme')} //eslint-disable-line no-undef
+				download={this.onDownload} //eslint-disable-line no-undef
 				column={column}
 				zoom={zoom}
 				menu={<MenuItem disabled={disableMenu} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
