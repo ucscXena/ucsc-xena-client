@@ -22,7 +22,10 @@ types = {
     'jpeg': 'image/jpeg',
     'gif': 'image/gif',
     'css': 'text/css',
-    'map': 'application/json'
+    'map': 'application/json',
+    'woff': 'application/font-woff',
+    'woff2': 'application/font-woff2',
+    'ttf': 'application/font-sfnt'
 }
 
 
