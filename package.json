@@ -57,6 +57,7 @@
     "redux-devtools-log-monitor": "^1.0.4",
     "rimraf": "^2.3.2",
     "schema-shorthand": "^3.0.0",
+    "semver": "^5.1.0",
     "style-loader": "^0.8.3",
     "url-loader": "^0.5.5",
     "webpack": "^1.5.3",

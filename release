@@ -1,0 +1,88 @@
+#!/bin/bash
+
+ECHO=echo
+DEBUG=false
+VERSION="$(node -e "console.log(require('./package.json').version)")"
+SEMVER=./node_modules/.bin/semver
+PREID=alpha
+
+DIR=$(dirname "${BASH_SOURCE[0]}")
+cd ${DIR}
+FAILED=false
+
+run() {
+	msg="$1"
+	shift
+	cmd="$@"
+	${ECHO} ${msg}
+	if ${DEBUG}; then
+		echo "> $cmd"
+	elif ${FAILED}; then
+		echo "'${cmd}' skipped due to earlier error."
+    else
+		eval "$cmd" || { echo "Error $? running '${cmd}'"; FAILED=true; }
+	fi
+}
+
+new() {
+	BRANCH=$(${SEMVER} -i minor ${VERSION})
+	run "Creating release branch ${BRANCH}" git checkout -b ${BRANCH}
+	run "Tagging release" npm version minor
+	run "Incrementing master version" git checkout master
+	run "" npm verison $(${SEMVER} --preid ${PREID} -i preminor ${VERSION})
+	run "Pushing to origin" git push origin --tags master ${BRANCH}
+	run "Publishing" git checkout ${BRANCH}
+	run "" npm publish
+	run "" git checkout master
+}
+
+patch() {
+	local release="$2"
+	run "Checking out release branch ${release}" git checkout ${release}
+	run "Tagging release" npm version patch
+	run "Pushing to origin" git push origin --tags ${release}
+	run "Publishing" npm publish
+}
+
+major() {
+	run "Incrementing master version" git checkout master
+	run "" npm version $(${SEMVER} --preid ${PREID} -i premajor ${VERSION})
+	run "Pushing to origin" git push origin --tags ${master}
+}
+
+usage() {
+	cat <<EOF
+Usage
+$0 [-n] [-q] new | patch <release-branch> | major
+
+new: Run when ready to release a new version. Creates a new release branch,
+	tags, pushes to origin, and publishes.  Increments minor verion on master.
+patch: Run when ready to release a patch on release-branch. Creates a new patch
+	release tag on release-branch, pushes to origin, and publishes.
+major: Run when commits have made the lib incompatible with previous releases.
+	Increments major version on master, pushes to origin.
+
+-n: Echo commands that would be run. Don't execute them.
+-q: Silent operation.
+EOF
+}
+
+if [ "$1" == "-n" ]; then
+    DEBUG=true;
+    shift;
+fi
+
+if [ "$1" == "-q" ]; then
+    ECHO=false;
+    shift;
+fi
+
+cmd="$1"
+
+case "$cmd" in
+    new) new;;
+    patch) patch "$@";;
+    major) major;;
+    "") usage;;
+    *) usage;;
+esac
