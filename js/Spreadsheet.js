@@ -128,8 +128,6 @@ var Columns = React.createClass({
 	getInitialState: function () {
 		return {
 			dims: {
-				offsetLeft: 0,
-				offsetTop: 0,
 				clientHeight: 0,
 				clientWidth: 0
 			},
