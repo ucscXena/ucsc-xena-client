@@ -216,10 +216,13 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       `                                       :where [:= :name ${quote(dataset)}]})))\n` +
 		       `      probes-for-gene (fn [gene] ((xena-query {:select ["name"] :from [probemap] :where [:in :any "genes" [gene]]}) "name"))\n` +
 		       `      avg (fn [scores] (mean scores 0))\n`  +
-			   `      scores-for-gene (fn [gene] {:gene gene\n` +
-		       `                                  :scores (avg (fetch [{:table ${quote(dataset)}\n` +
-		       `                                                        :samples ${arrayfmt(samples)}\n` +
-		       `                                                        :columns (probes-for-gene gene)}]))})]\n` +
+		       `      scores-for-gene (fn [gene]\n` +
+		       `          (let [probes (probes-for-gene gene)\n` +
+		       `                scores (fetch [{:table ${quote(dataset)}\n` +
+		       `                                :samples ${arrayfmt(samples)}\n` +
+		       `                                :columns (probes-for-gene gene)}])]\n` +
+		       `            {:gene gene\n` +
+		       `             :scores (if (car probes) (avg scores) [[]])}))]\n` +
 		       `  (map scores-for-gene ${arrayfmt(genes)}))`;
 	}
 
