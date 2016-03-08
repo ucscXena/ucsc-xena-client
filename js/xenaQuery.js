@@ -231,7 +231,7 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
 		       '                                   :where [:and [:= :field.name field] [:= :dataset.name ' + quote(dataset) + ']]}))))\n' +
 		       '      genes (getfield "genes")]\n' +
-		       '  (map :gene (query {:select [:gene]\n' +
+		       '  (map :gene (query {:select [:%distinct.gene]\n' +
 		       '                     :from [:field_gene]\n' +
 		       '                     :where [:and\n' +
 		       '                             [:= :field_gene.field_id genes]\n' +
