@@ -21,7 +21,6 @@ var Crosshair = React.createClass({
 	render: function () {
 		let { point: {x, y}, open, dims } = this.props,
 			containerStyle = _.extend({display: open ? 'inline' : 'none'}, dims);
-
 		return (
 			<div className='crosshairs' style={containerStyle}>
 				<span className='crosshair crosshairH' style={{top: y}}/>
