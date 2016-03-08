@@ -182,6 +182,32 @@ function sampleTooltip(data, gene) {
 	};
 }
 
+function rearrangeRows(rowGroup, fields) {
+	//merge all rows into a single collection for the rowGroup
+	return _.reduce(rowGroup, (main, row) => {
+		/*
+		 - Rows with only 'sample' field represent blank samples, that is: samples without
+		 mutations, nor with mutations. Mapping over the standard fields list, these blank
+		 rows will be populated with 'undefined' for the fields they never had!
+		 - If disregarding this problem, and relying on '_.compact()', may unintentially
+		 remove legitimate falsey values with rows that have data for all fields
+		 - The fields within the current row (that overlap with de-facto field list)
+		 simply does away with the main problem
+		*/
+		let rowKeys = _.keys(row),
+			sharedFields = _.intersection(fields, rowKeys),
+			rearrangedRow = _.map(sharedFields, field => row[field]);
+		return main.concat(rearrangedRow);
+	}, []);
+}
+
+function makeSampleRow(fields, sample, sampleName) {
+	let row = {};
+	fields.forEach(field => row[field] = 'No mutation');
+	row[sampleName] = sample;
+	return row;
+}
+
 function tooltip(nodes, samples, {height, count, index}, gene,  ev) {
 	var {x, y} = util.eventOffset(ev),
 		pixPerRow = height / count, // XXX also appears in mutationVector
@@ -191,6 +217,14 @@ function tooltip(nodes, samples, {height, count, index}, gene,  ev) {
 	return node ?
 		sampleTooltip(node.data, gene) :
 		{sampleID: samples[Math.floor((y * count / height) + index)]};
+}
+
+function makeSampleList(allSamples, activeSamples, samplesWithMutations) {
+	return {
+		withMutations: samplesWithMutations,
+		noMutations: _.difference(activeSamples, samplesWithMutations),
+		blankMutations: _.difference(allSamples, activeSamples)
+	};
 }
 
 var MutationColumn = hotOrNot(React.createClass({
@@ -215,6 +249,24 @@ var MutationColumn = hotOrNot(React.createClass({
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
 	},
+	onDownload: function() {
+		const SAMPLE = 'sample';
+		let {samples, data: {req}} = this.props,
+			// Differentiate between empty samples and samples with mutations
+			rowsWithMutations = _.getIn(req, ['rows']) || new Array(0),
+			rowFields = _.isEmpty(rowsWithMutations) ? new Array(SAMPLE) : _.keys(rowsWithMutations[0]),
+			activeSamples = _.getIn(req, ['samplesInResp']),
+			sampleList = makeSampleList(samples, activeSamples, _.pluck(rowsWithMutations, SAMPLE)),
+			rowsNoMutations = _.map(sampleList['noMutations'], sample =>
+				makeSampleRow(rowFields, sample, SAMPLE)),
+			rowsBlankMutations = _.map(sampleList['blankMutations'], sample =>
+				makeSampleRow([], sample, SAMPLE)),
+			allRows = rowsWithMutations.concat(rowsNoMutations).concat(rowsBlankMutations),
+			allGroupedRows = _.groupBy(allRows, SAMPLE);
+
+		return [rowFields, _.map(allGroupedRows, (rowGroup) => rearrangeRows(rowGroup, rowFields))];
+	},
+
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
 		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
@@ -239,7 +291,7 @@ var MutationColumn = hotOrNot(React.createClass({
 				callback={this.props.callback}
 				id={this.props.id}
 				hasSurvival={hasSurvival}
-				download={() => console.log('fixme')} //eslint-disable-line no-undef
+				download={this.onDownload} //eslint-disable-line no-undef
 				column={column}
 				zoom={zoom}
 				menu={<MenuItem disabled={disableMenu} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
