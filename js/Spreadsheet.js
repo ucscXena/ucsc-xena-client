@@ -3,6 +3,7 @@
 'use strict';
 
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
@@ -12,6 +13,7 @@ var Sortable = require('./Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');
+var Crosshair = require('./Crosshair');
 var Tooltip = require('Tooltip');
 var rxEventsMixin = require('./react-utils').rxEventsMixin;
 var meta = require('./meta');
@@ -101,14 +103,42 @@ var Columns = React.createClass({
 			// Filter frozen events until frozen state changes.
 			.distinctUntilChanged(([ev, frozen]) => frozen ? frozen : [ev, frozen])
 			.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))
-			.subscribe(ev => this.setState({tooltip: ev}));
+			.subscribe(ev => {
+				// Keep 'frozen' and 'open' params for both crosshair && tooltip
+				let plotVisuals = {
+					crosshair: _.omit(ev, 'data'), // remove tooltip-related param
+					tooltip: _.omit(ev, 'point' ) // remove crosshair-related param
+				};
+
+				if (ev.point) {
+					let { x, y } = ev.point;
+					console.log(`x: ${x},y: ${y}`);
+				}
+
+				return this.setState(plotVisuals);
+			});
+	},
+	componentDidMount: function() {
+		this.setDOMDims(ReactDOM.findDOMNode(this));
 	},
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
 		// XXX are there other streams we're leaking? What listens on this.ev.click, etc?
 		this.tooltip.dispose();
 	},
 	getInitialState: function () {
-		return {tooltip: {open: false}, openVizSettings: null};
+		return {
+			dims: {
+				clientHeight: 0,
+				clientWidth: 0
+			},
+			crosshair: {open: false},
+			tooltip: {open: false},
+			openVizSettings: null
+		};
+	},
+	setDOMDims: function(domNode) {
+		let nodeKeys = _.keys(this.state.dims);
+		this.setState({ dims: _.pick(domNode, nodeKeys) });
 	},
 	setOrder: function (order) {
 		this.props.callback(['order', order]);
@@ -173,9 +203,9 @@ var Columns = React.createClass({
 							+
 						</Button>}
 				</div>
-				<div className='crosshairH crosshair' />
 				{editor}
 				{settings}
+				<Crosshair {...this.state.crosshair} dims={this.state.dims}/>
 				<Tooltip {...this.state.tooltip}/>
 			</div>
 		);
