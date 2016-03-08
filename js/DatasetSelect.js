@@ -9,14 +9,18 @@ var {deepPureRenderMixin} = require('./react-utils');
 // group header for a server
 var header = s => xenaQuery.server_url(s.server);
 
-var filterStatusLoaded = list => list.filter(el => el.status === 'loaded');
+var ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap', 'genomicSegment'];
+var notIgnored = ds => !_.contains(ignored, ds.type);
+var loaded = ds => ds.status === 'loaded';
+
+var filterDatasets = list => list.filter(ds => notIgnored(ds) && loaded(ds));
 var sortByLabel = list => _.sortBy(list, el => el.label.toLowerCase());
 
 
 
 function optsFromDatasets(servers) {
 	return _.flatmap(servers, (s) => {
-		let sortedOpts = sortByLabel(filterStatusLoaded(s.datasets)).map(d => ({value: d.dsID, label: d.label}));
+		let sortedOpts = sortByLabel(filterDatasets(s.datasets)).map(d => ({value: d.dsID, label: d.label}));
 		return [{label: header(s), header: true}].concat(sortedOpts);
 	});
 }
