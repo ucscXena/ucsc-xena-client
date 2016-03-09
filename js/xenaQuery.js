@@ -248,12 +248,21 @@ define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '                   :where [:and [:in :%lower.field.name ' + arrayfmt(_.map(fields, f => f.toLowerCase())) + '] [:= :dataset.name ' + quote(dataset) + ']]}))';
 	}
 
-	// XXX :samples is wrong: it's returning every row, rather than distinct rows.
+	// XXX Can't rewrite :samples until we can do 'distinct', or 'keys' for category fields, on the server.
 	function sparse_data_string(dataset, samples, gene) {
-		return `{:samples ((xena-query {:select ["sampleID"] :from [${quote(dataset)}]}) "sampleID")\n` +
-		       ` :rows (xena-query {:select ["ref" "alt" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n` +
-		       `                    :from [${quote(dataset)}]\n` +
-		       `                    :where [:and [:in :any "genes" [${quote(gene)}]] [:in "sampleID" ${arrayfmt(samples)}]]})}`;
+		return `(let [getfield (fn [field]\n` +
+		       `                 (:id (car (query {:select [:field.id]\n` +
+		       `                                   :from [:dataset]\n` +
+		       `                                   :join [:field [:= :dataset.id :field.dataset_id]]\n` +
+		       `                                   :where [:and [:= :field.name field] [:= :dataset.name ` + quote(dataset) + `]]}))))\n` +
+		       `      sampleID (getfield "sampleID")]\n` +
+		       `  {:samples (map :value (query {:select [:value]\n` +
+		       `                                :from [:field]\n` +
+		       `                                :join [:code [:= :field.id :field_id]]\n` +
+		       `                                :where [:and [:in :value ${arrayfmt(samples)}][:= :field_id sampleID]]}))\n` +
+		       `   :rows (xena-query {:select ["ref" "alt" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n` +
+		       `                      :from [${quote(dataset)}]\n` +
+		       `                      :where [:and [:in :any "genes" [${quote(gene)}]] [:in "sampleID" ${arrayfmt(samples)}]]})})`;
 	}
 
 	function sparse_data_example_string(dataset, count) {
