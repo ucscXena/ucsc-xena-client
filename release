@@ -31,8 +31,8 @@ new() {
 	run "Incrementing master version" git checkout master
 	run "" npm verison $(${SEMVER} --preid ${PREID} -i preminor ${VERSION})
 	run "Pushing to origin" git push origin --tags master ${BRANCH}
-	run "Publishing" git checkout ${BRANCH}
-	run "" npm publish
+#	run "Publishing" git checkout ${BRANCH}
+#	run "" npm publish
 	run "" git checkout master
 }
 
@@ -41,7 +41,7 @@ patch() {
 	run "Checking out release branch ${release}" git checkout ${release}
 	run "Tagging release" npm version patch
 	run "Pushing to origin" git push origin --tags ${release}
-	run "Publishing" npm publish
+#	run "Publishing" npm publish
 }
 
 major() {
@@ -56,9 +56,9 @@ Usage
 $0 [-n] [-q] new | patch <release-branch> | major
 
 new: Run when ready to release a new version. Creates a new release branch,
-	tags, pushes to origin, and publishes.  Increments minor verion on master.
+	tags, pushes to origin.  Increments minor verion on master.
 patch: Run when ready to release a patch on release-branch. Creates a new patch
-	release tag on release-branch, pushes to origin, and publishes.
+	release tag on release-branch, pushes to origin.
 major: Run when commits have made the lib incompatible with previous releases.
 	Increments major version on master, pushes to origin.
 
