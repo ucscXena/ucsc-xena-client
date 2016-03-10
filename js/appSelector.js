@@ -42,7 +42,7 @@ var transformSelector = createFmapSelector(
 		state => _.fmap(state.columns,
 			(column, key) => [
 				column,
-				_.getIn(state, ['vizSettings', state.dsID]),
+				_.getIn(state, ['vizSettings', column.dsID]),
 				state.data[key],
 				state.samples,
 				state.datasets.datasets[column.dsID],
