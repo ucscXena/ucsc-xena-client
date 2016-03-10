@@ -405,7 +405,7 @@ function vizSettingsWidget(node, callback, vizState, dsID, hide) {
 				}, //no normalization
 				{
 					"value": "subset",
-					"text": "normalize",
+					"text": "across selected samples",
 					"index": 1
 				} //selected sample level
 
