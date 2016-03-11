@@ -5,10 +5,10 @@
 var React = require('react');
 var CohortSelect = require('./CohortSelect');
 var DatasetSelect = require('./DatasetSelect');
-//var _ = require('./underscore_ext');
 var Button = require('react-bootstrap/lib/Button');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
+var pdf = require('./pdfSpreadsheet');
 
 var modeButton = {
 	chart: 'Heatmap',
@@ -29,6 +29,9 @@ var AppControls = React.createClass({
 	onRefresh: function () {
 		var {callback} = this.props;
 		callback(['refresh-cohorts']);
+	},
+	onPdf: function () {
+		pdf(this.props.appState);
 	},
 	render: function () {
 		var {callback, appState: {cohort, cohorts, samplesFrom, datasets, mode}} = this.props,
@@ -64,6 +67,8 @@ var AppControls = React.createClass({
 				null}
 				{' | '}
 				<Button onClick={this.onMode} className='chartSelect' bsStyle='primary'>{modeButton[mode]}</Button>
+				{' | '}
+				<Button onClick={this.onPdf}>PDF</Button>
 			</form>
 		);
 	}

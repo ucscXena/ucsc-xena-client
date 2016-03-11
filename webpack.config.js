@@ -14,6 +14,7 @@ module.exports = {
 	},
 	module: {
 		loaders: [
+			{ test: /pdfkit|png-js/, loader: "transform?brfs" },
 			{ test: /rx-dom/, loader: "imports?define=>false" },
 			{
 				test: /\.js$/,
@@ -24,6 +25,7 @@ module.exports = {
 				loaders: ['babel-loader'],
 				type: 'js'},
 			{ test: /\.css$/, loader: "style!css" },
+			{ test: /\.json$/, loader: "json" },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]
 	},
@@ -43,7 +45,6 @@ module.exports = {
 			'rx.experimental$': 'rx/dist/rx.experimental',
 			'rx.coincidence$': 'rx/dist/rx.coincidence'
 		},
-		extensions: ['', '.js', '.json', '.coffee'],
-		root: __dirname + "/js"
+		extensions: ['', '.js', '.json', '.coffee']
 	}
 };

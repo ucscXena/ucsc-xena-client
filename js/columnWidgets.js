@@ -10,7 +10,8 @@ var widget = {
 	fetch: multi(dataTypeSelector),
 	index: multi(x => x),
 	transform: multi(dataTypeSelector),
-	column: multi(x => x.column.dataType)
+	column: multi(x => x.column.dataType),
+	pdf: multi(dataTypeSelector)
 };
 
 widget.index.dflt = () => null;
