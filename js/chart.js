@@ -2,7 +2,7 @@
 /*eslint-env browser */
 /*jshint browser: true, onevar: true */
 /*global define: false, document: false */
-define(['xenaQuery', 'dom_helper', 'heatmapColors', './highcharts', 'highcharts_helper', 'underscore_ext', 'rx'],
+define(['./xenaQuery', './dom_helper', './heatmapColors', './highcharts', './highcharts_helper', './underscore_ext', 'rx'],
 	function (xenaQuery, dom_helper, heatmapColors, highcharts, highcharts_helper, _, Rx) {
 	'use strict';
 	var Highcharts = highcharts.Highcharts;

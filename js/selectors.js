@@ -1,6 +1,6 @@
 /*global require: false, module: false */
 'use strict';
-var {fmapMemoize1} = require('underscore_ext');
+var {fmapMemoize1} = require('./underscore_ext');
 
 // should be just one dependency, which returns an object.
 function createFmapSelector(selector, resultFn) {

@@ -1,15 +1,15 @@
 /*global require: false, document: false, module: false */
 'use strict';
 
-var _ = require('underscore_ext');
+var _ = require('./underscore_ext');
 var Rx = require('rx');
-var vgcanvas = require('vgcanvas');
-var widgets = require('columnWidgets');
-var heatmapColors = require('heatmapColors');
-var partition = require('partition');
-var util = require('util');
-var Legend = require('Legend');
-var Column = require('Column');
+var vgcanvas = require('./vgcanvas');
+var widgets = require('./columnWidgets');
+var heatmapColors = require('./heatmapColors');
+var partition = require('./partition');
+var util = require('./util');
+var Legend = require('./Legend');
+var Column = require('./Column');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');

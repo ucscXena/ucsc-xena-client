@@ -8,7 +8,7 @@ var ReactDOM = require('react-dom');
 var Nav = require('react-bootstrap/lib/Nav');
 var Navbar = require('react-bootstrap/lib/Navbar');
 var NavItem = require('react-bootstrap/lib/NavItem');
-var _ = require('underscore_ext');
+var _ = require('./underscore_ext');
 
 // XXX use baseurl
 //var baseurl = require('config').baseurl;

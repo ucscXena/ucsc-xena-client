@@ -7,7 +7,7 @@
 
 'use strict';
 
-var _ = require('underscore_ext');
+var _ = require('../underscore_ext');
 var INIT_ACTION = {type: '@@INIT'};
 var identity = state => state;
 var notImplemented = (state, ac) => {

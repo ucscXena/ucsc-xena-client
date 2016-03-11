@@ -2,7 +2,7 @@
 /*eslint camelcase: 0, no-multi-spaces: 0, no-mixed-spaces-and-tabs: 0 */
 /*global define: false, console: false */
 
-define(['rx-dom', 'underscore_ext', 'rx.binding'], function (Rx, _) {
+define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 	'use strict';
 
 	// HELPERS

@@ -1,6 +1,6 @@
 /*eslint strict: [2, "function"] */
 /*globals define: false, console: false */
-define(['underscore', 'immutable', 'defer'], function(_, immutable, defer) {
+define(['underscore', './immutable', './defer'], function(_, immutable, defer) {
 	'use strict';
 
 	var slice = Array.prototype.slice;

@@ -2,7 +2,7 @@
 /*global define: false, console: false */
 // Extensions to rx for the cancer browser
 
-define(['rx', 'underscore_ext'], function (Rx, _) {
+define(['rx', './underscore_ext'], function (Rx, _) {
 	'use strict';
 
 	var observableProto = Rx.Observable.prototype;

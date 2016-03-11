@@ -2,7 +2,7 @@
 'use strict';
 var React = require('react');
 var Select = require('./Select');
-var _ = require('underscore_ext');
+var _ = require('./underscore_ext');
 var xenaQuery = require('./xenaQuery');
 var {deepPureRenderMixin} = require('./react-utils');
 

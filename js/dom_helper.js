@@ -2,7 +2,7 @@
 /*eslint-env browser */
 /*global define: false */
 
-define(["xenaQuery", "underscore_ext"], function (xenaQuery, _) {
+define(["./xenaQuery", "./underscore_ext"], function (xenaQuery, _) {
 	'use strict';
 
 	//create a ELEMENT_NODE with a tag, and all following argument as a child to this node

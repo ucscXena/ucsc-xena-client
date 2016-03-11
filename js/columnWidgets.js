@@ -1,7 +1,7 @@
 /*global require: false module: false */
 'use strict';
 
-var multi = require('multi');
+var multi = require('./multi');
 
 var dataTypeSelector = x => x.dataType;
 

@@ -3,7 +3,7 @@
 
 var d3 = require('d3-scale');
 var _ = require('underscore');
-var multi = require('multi');
+var multi = require('./multi');
 
 var isNumber = _.isNumber,
 	// d3_category20, replace #7f7f7f gray (that aliases with our N/A gray of #808080) with dark grey #434348

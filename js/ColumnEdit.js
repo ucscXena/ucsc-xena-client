@@ -9,7 +9,7 @@ var Select = require('./Select');
 var DatasetSelect = require('./DatasetSelect');
 var _ = require('./underscore_ext');
 var trim = require('underscore.string').trim;
-var uuid = require('uuid');
+var uuid = require('./uuid');
 require('./ColumnEdit.css');
 
 // Select a phenotype feature from those on the server.

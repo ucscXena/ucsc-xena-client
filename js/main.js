@@ -3,7 +3,7 @@
 
 'use strict';
 
-require('base');
+require('./base');
 //var Rx = require('./rx.ext');
 //require('rx.coincidence');
 //require('rx/dist/rx.aggregates');

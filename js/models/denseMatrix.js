@@ -1,11 +1,11 @@
 /*global require: false, document: false */
 'use strict';
-var _ = require('underscore_ext');
+var _ = require('../underscore_ext');
 var Rx = require('rx');
 var {map, find} = _;
-var xenaQuery = require('xenaQuery');
-var heatmapColors = require('heatmapColors');
-var widgets = require('columnWidgets');
+var xenaQuery = require('../xenaQuery');
+var heatmapColors = require('../heatmapColors');
+var widgets = require('../columnWidgets');
 
 // XXX might want to automatically wrap all of these in xenaQuery.
 var datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);

@@ -4,8 +4,8 @@
 /*global require: false, document: false, module: false */
 'use strict';
 
-var _ = require('underscore_ext');
-var vgcanvas = require('vgcanvas');
+var _ = require('./underscore_ext');
+var vgcanvas = require('./vgcanvas');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var transitionEnd = require('./transitionEnd');

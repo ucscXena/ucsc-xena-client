@@ -9,7 +9,7 @@ var xenaQuery = require('../xenaQuery');
 var Rx = require('rx');
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
-var {pxTransformFlatmap} = require('layoutPlot');
+var {pxTransformFlatmap} = require('../layoutPlot');
 
 var unknownEffect = 0,
 	impact = {

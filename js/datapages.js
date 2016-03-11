@@ -3,7 +3,7 @@
 
 'use strict';
 
-require('base');
+require('./base');
 var _ = require('./underscore_ext');
 const React = require('react');
 const datapages = require('ucsc-xena-datapages/datapages');

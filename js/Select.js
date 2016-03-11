@@ -5,7 +5,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var DropdownButton = require('react-bootstrap/lib/DropdownButton');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
-var _ = require('underscore_ext');
+var _ = require('./underscore_ext');
 var {deepPureRenderMixin} = require('./react-utils');
 require('./Select.css');
 
