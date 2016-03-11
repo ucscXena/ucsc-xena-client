@@ -110,11 +110,6 @@ var Columns = React.createClass({
 					tooltip: _.omit(ev, 'point' ) // remove crosshair-related param
 				};
 
-				if (ev.point) {
-					let { x, y } = ev.point;
-					console.log(`x: ${x},y: ${y}`);
-				}
-
 				return this.setState(plotVisuals);
 			});
 	},
