@@ -70,6 +70,8 @@ var zoomInClick = ev =>
 var zoomOutClick = ev =>
 	!ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
+var domNode;
+
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
 	mixins: [rxEventsMixin],
@@ -85,22 +87,30 @@ var Columns = React.createClass({
 			}
 		});
 
-		var toggle = this.ev.click.filter(ev => ev[meta.key])
-			.map(() => 'toggle');
+		var toggle = this.ev.click.filter(ev => {
+			ev.stopPropagation();
+			return ev[meta.key];
+		}).map(() => 'toggle');
 
 		this.tooltip = this.ev.tooltip.merge(toggle)
 			// If open + user clicks, toggle freeze of display.
-			.scan([null, false],
-				([tt, frozen], ev) =>
-					ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen])
+			.scan([null, false], ([tt], ev) => {
+				let {frozen} = this.state;
+				return (ev === 'toggle') ? [tt, tt.open && !frozen] : [ev, frozen];
+			})
 			// Filter frozen events until frozen state changes.
 			.distinctUntilChanged(([ev, frozen]) => frozen ? frozen : [ev, frozen])
-			.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))
-			.subscribe(ev => {
+			.subscribe(([ev, frozen]) => {
+				/* `this.state.frozen` is the CURRENT frozen status
+				 	`ev.frozen` is the TO-BE frozen status
+				*/
+				if (!this.state.frozen && frozen) {
+					this.setDisplayLock(frozen);
+				}
 				// Keep 'frozen' and 'open' params for both crosshair && tooltip
 				let plotVisuals = {
 					crosshair: _.omit(ev, 'data'), // remove tooltip-related param
-					tooltip: _.omit(ev, 'point' ) // remove crosshair-related param
+					tooltip: _.omit(ev, 'point') // remove crosshair-related param
 				};
 
 				return this.setState(plotVisuals);
@@ -108,10 +118,23 @@ var Columns = React.createClass({
 	},
 	componentDidMount: function() {
 		this.setDOMDims(ReactDOM.findDOMNode(this));
+		domNode = document.querySelector('body');
+		domNode.addEventListener('click', (e) => {
+			let {frozen} = this.state;
+			if (e[meta.key] && frozen) {
+				this.setDisplayLock(false); // unlock tooltip && crosshairs
+			}
+		}, true);
 	},
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
 		// XXX are there other streams we're leaking? What listens on this.ev.click, etc?
 		this.tooltip.dispose();
+		domNode.removeEventListener('click', (e) => {
+			let {frozen} = this.state;
+			if (e[meta.key] && frozen) {
+				this.setDisplayLock(false); // unlock tooltip && crosshairs
+			}
+		}, true);
 	},
 	getInitialState: function () {
 		return {
@@ -120,6 +143,7 @@ var Columns = React.createClass({
 				clientWidth: 0
 			},
 			crosshair: {open: false},
+			frozen: false,
 			tooltip: {open: false},
 			openVizSettings: null
 		};
@@ -134,11 +158,27 @@ var Columns = React.createClass({
 	onViz: function (id) {
 		this.setState({openVizSettings: id});
 	},
+	setDisplayLock: function(willBeFrozen) {
+		// 1. Set frozen status to opposite of current state.frozen value
+		let newState = {frozen: willBeFrozen};
+
+		if (!willBeFrozen) {
+			newState = _.extend(_.mapObject(this.state, param => {
+				let action = 'open';
+				if (_.has(param, action)) {
+					param[action] = willBeFrozen;
+				}
+				return param;
+			}), newState);
+		}
+
+		this.setState(newState);
+	},
 	render: function () {
 		var {callback, fieldFormat, disableKM, supportsGeneAverage, appState} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
-		var {openColumnEdit, openVizSettings} = this.state;
+		var {openColumnEdit, openVizSettings, frozen, dims} = this.state;
 		var height = zoom.height;
 		var editor = openColumnEdit ?
 			<ColumnEdit
@@ -174,7 +214,7 @@ var Columns = React.createClass({
 		}));
 
 		return (
-			<div className="Columns">
+			<div className="Columns" ref="columns">
 				<Sortable onClick={this.ev.click} setOrder={this.setOrder}>
 					{columnViews}
 				</Sortable>
@@ -192,8 +232,8 @@ var Columns = React.createClass({
 				</div>
 				{editor}
 				{settings}
-				<Crosshair {...this.state.crosshair} dims={this.state.dims}/>
-				<Tooltip {...this.state.tooltip}/>
+				<Crosshair {...this.state.crosshair} dims={dims}/>
+				<Tooltip {...this.state.tooltip} frozen={frozen}/>
 			</div>
 		);
 	}
