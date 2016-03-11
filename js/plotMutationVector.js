@@ -1,5 +1,5 @@
 /*eslint-env browser */
-/*global require: false, module: false, document: false */
+/*global require: false, module: false */
 'use strict';
 
 var _ = require('./underscore_ext');
@@ -13,6 +13,7 @@ var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
 var features = require('./models/mutationVector');
+var {drawMutations, radius} = require('./drawMutations');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -28,95 +29,6 @@ if (module.hot) {
 // explicitly.
 function hotOrNot(component) {
 	return module.makeHot ? module.makeHot(component) : component;
-}
-
-var radius = 4;
-
-// Group by consecutive matches, perserving order.
-function groupByConsec(sortedArray, prop, ctx) {
-	var cb = _.iteratee(prop, ctx);
-	var last = {}, current; // init 'last' with a sentinel, !== to everything
-	return _.reduce(sortedArray, (acc, el) => {
-		var key = cb(el);
-		if (key !== last) {
-			current = [];
-			last = key;
-			acc.push(current);
-		}
-		current.push(el);
-		return acc;
-	}, []);
-}
-
-function push(arr, v) {
-	arr.push(v);
-	return arr;
-}
-
-function drawBackground(vg, width, height, pixPerRow, hasValue) {
-	var ctx = vg.context(),
-		[stripes] = _.reduce(
-			groupByConsec(hasValue, _.identity),
-			([acc, sum], g) =>
-				[g[0] ? acc : push(acc, [sum, g.length]), sum + g.length],
-			[[], 0]);
-
-	vg.smoothing(false);
-	vg.box(0, 0, width, height, 'white'); // white background
-
-	ctx.beginPath();                      // grey for missing data
-	stripes.forEach(([offset, len]) =>
-		ctx.rect(
-			0,
-			(offset * pixPerRow),
-			width,
-			pixPerRow * len
-	));
-	ctx.fillStyle = 'grey';
-	ctx.fill();
-}
-
-function drawImpactPx(vg, width, pixPerRow, color, variants) {
-	var ctx = vg.context(),
-		varByImp = groupByConsec(variants, v => v.group);
-
-	_.each(varByImp, vars => {
-		ctx.beginPath(); // halos
-		_.each(vars, v => {
-			var padding = Math.max(0, radius - (v.xEnd - v.xStart + 1) / 2.0);
-			ctx.moveTo(v.xStart - padding, v.y);
-			ctx.lineTo(v.xEnd + padding, v.y);
-		});
-		ctx.lineWidth = pixPerRow;
-		ctx.strokeStyle = color(vars[0].group);
-		ctx.stroke();
-
-		if (pixPerRow > 2){ // centers when there is enough vertical room for each sample
-			ctx.beginPath();
-			_.each(vars, v => {
-				ctx.moveTo(v.xStart, v.y);
-				ctx.lineTo(v.xEnd, v.y);
-			});
-			ctx.lineWidth = pixPerRow / 8;
-			ctx.strokeStyle = 'black';
-			ctx.stroke();
-		}
-	});
-}
-
-function draw(vg, props) {
-	let {width, zoom: {count, height, index}, nodes} = props;
-	if (!nodes) {
-		vg.box(0, 0, width, height, "gray");
-		return;
-	}
-	let {feature, samples, index: {bySample: samplesInDS}} = props,
-		pixPerRow = height / count, // XXX also appears in mutationVector
-		minppr = Math.max(pixPerRow, 2),
-		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]);
-
-	drawBackground(vg, width, height, pixPerRow, hasValue);
-	drawImpactPx(vg, width, minppr, features[feature].color, nodes);
 }
 
 function drawLegend(feature) {
@@ -281,7 +193,7 @@ var MutationColumn = hotOrNot(React.createClass({
 				data={data}
 				plot={<CanvasDrawing
 						ref='plot'
-						draw={draw}
+						draw={drawMutations}
 						wrapperProps={{
 							className: 'Tooltip-target',
 							onMouseMove: this.ev.mousemove,

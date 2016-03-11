@@ -246,15 +246,37 @@ function vgcanvas(el, vgw, vgh) {
 			ctx.webkitImageSmoothingEnabled = s;
 		},
 
-		drawPoly = function (pts, color, fill) {
+		// This needs to be performant on large arrays.
+		drawPoly = function (pts, {fillStyle, strokeStyle, lineWidth}) {
 			ctx.beginPath();
-			ctx.fillStyle = style(color);
-			ctx.moveTo(pts[0][0], pts[0][1]);
-			_(pts.slice(1)).each(function (p) { ctx.lineTo(p[0], p[1]); });
-			ctx.closePath();
-			if (fill) {
+
+			pts.forEach(([mtx, mty, ltx, lty]) => {
+				ctx.moveTo(mtx, mty);
+				ctx.lineTo(ltx, lty);
+			});
+
+			if (fillStyle) {
+				ctx.fillStyle = style(fillStyle);
 				ctx.fill();
-			} else {
+			}
+			if (strokeStyle) {
+				ctx.lineWidth = lineWidth;
+				ctx.strokeStyle = style(strokeStyle);
+				ctx.stroke();
+			}
+		},
+
+		drawRectangles = function (rects, {fillStyle, strokeStyle, lineWidth}) {
+			ctx.beginPath();
+			rects.forEach(([x, y, w, h]) => ctx.rect(x, y, w, h));
+
+			if (fillStyle) {
+				ctx.fillStyle = style(fillStyle);
+				ctx.fill();
+			}
+			if (strokeStyle) {
+				ctx.lineWidth = lineWidth;
+				ctx.strokeStyle = style(strokeStyle);
 				ctx.stroke();
 			}
 		},
@@ -306,7 +328,8 @@ function vgcanvas(el, vgw, vgh) {
 		alpha,
 		scale,
 		translate,
-		drawSharpRows
+		drawSharpRows,
+		drawRectangles
 	};
 };
 
