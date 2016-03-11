@@ -3,7 +3,6 @@
 
 var _ = require('./underscore_ext');
 var Rx = require('rx');
-var vgcanvas = require('./vgcanvas');
 var widgets = require('./columnWidgets');
 var heatmapColors = require('./heatmapColors');
 var partition = require('./partition');
@@ -34,8 +33,7 @@ var each = _.each,
 	zip = _.zip,
 	range = _.range,
 	bind = _.bind,
-	uniq = _.uniq,
-	scratch = vgcanvas(document.createElement('canvas'), 1, 1); // scratch buffer
+	uniq = _.uniq;
 
 function secondExists(x) {
 	return x[1] != null;
@@ -53,40 +51,16 @@ function drawColumn(data, colorScale, boxfn) {
 	}
 }
 
-// The browsers want to smooth our images, which messes them up. We avoid
-// certain scaling operations to prevent this.
-// If there are more values than pixels, draw at one-pixel-per-value
-// to avoid sub-pixel aliasing, then scale down to the final size with
-// drawImage(). If there are more pixels than values, draw at an integer
-// scale per-value, giving us an image larger than the final size, then scale
-// down to avoid blurring.
-// We can ditch this complexity when all the browsers allow us to disable
-// smoothing.
-// index & count are floating point.
-function pickScale(index, count, height, data) {
-	var first = Math.floor(index),
-		last  = Math.ceil(index + count),
-		d = data.slice(first, last), // XXX use a typed array view?
-		scale = (height >= d.length) ? Math.ceil(height / d.length) : 1,
-		scaledHeight = d.length * scale || 1, // need min 1 px to draw gray when no data
-		sy =  (index - first) * scale,
-		sh = scale * count;
-
-	return {
-		data: d,                // subset of data to be drawn
-		scale: scale,           // chosen scale that avoids blurring
-		height: scaledHeight,
-		sy: sy,                 // pixels off-screen at top of buffer
-		sh: sh                  // pixels on-screen in buffer
-	};
-}
-
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
 
+var drawBackground = (vg, width, height) => vg.box(0, 0, width, height, "gray");
+
 function drawLayout(vg, opts) {
 	var {height, width, index, count, layout, data, codes, colors} = opts,
-		minTxtWidth = vg.textWidth(labelFont, 'WWWW');
+		minTxtWidth = vg.textWidth(labelFont, 'WWWW'),
+		first = Math.floor(index),
+		last  = Math.ceil(index + count);
 
 	vg.smoothing(false); // For some reason this works better if we do it every time.
 
@@ -97,25 +71,23 @@ function drawLayout(vg, opts) {
 	}
 
 	each(layout, function (el, i) {
-		var s = pickScale(index, count, height, data[i]),
-			colorScale = colors[i];
+		var rowData = data[i].slice(first, last),
+			colorScale = colors[i],
+			drawRow = (vg, rwidth, rheight) =>
+				drawColumn(rowData, colorScale, (i, color) =>
+					vg.box(0, i * rheight, rwidth, rheight, color));
 
-		scratch.height(s.height);
-		scratch.box(0, 0, 1, s.height, "gray");
-		scratch.scale(1, s.scale, function () {
-			drawColumn(s.data, colorScale, function (i, color) {
-				scratch.box(0, i, 1, 1, color);
-			});
-		});
-		vg.translate(el.start, 0, function () {
-			vg.drawImage(scratch.element(), 0, s.sy, 1, s.sh, 0, 0, el.size, height);
-		});
+
+		vg.translate(el.start, 0, () =>
+			vg.drawSharpRows(vg, index, count, height, el.size,
+				drawBackground,
+				drawRow));
 
 		// Add labels
 		if (el.size - 2 * labelMargin >= minTxtWidth && height / count > labelFont) {
 			let h = height / count;
 			vg.clip(el.start + labelMargin, 0, el.size - labelMargin, height, () =>
-					s.data.forEach((v, i) =>
+					rowData.forEach((v, i) =>
 						vg.textCenteredPushRight(el.start + labelMargin, h * i - 1, el.size - labelMargin,
 												 h, 'black', labelFont, codes ? codes[v] : v)));
 		}
