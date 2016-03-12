@@ -39,6 +39,7 @@
     "file-loader": "^0.8.1",
     "html-webpack-plugin": "^1.1.0",
     "imports-loader": "^0.6.3",
+    "json-loader": "^0.5.4",
     "jsverify": "^0.7.1",
     "mocha": "^2.2.1",
     "mocha-loader": "^0.7.1",
@@ -78,7 +79,7 @@
     "rx-dom": "^4.0.4",
     "static-interval-tree": "^1.0.3",
     "transform-loader": "^0.2.3",
-    "ucsc-xena-datapages": "^1.27.0",
+    "ucsc-xena-datapages": "^1.28.0",
     "underscore": "^1.7.0",
     "underscore.string": "^3.0.3"
   },
