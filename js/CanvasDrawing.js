@@ -17,6 +17,7 @@ var styles = {
 	},
 	wrapper: {
 		position: 'relative',
+		zIndex: 1,
 		overflow: 'hidden',
 		backgroundColor: 'gray'
 	}

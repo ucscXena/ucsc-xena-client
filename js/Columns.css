@@ -10,7 +10,6 @@
 	margin-left: 5px;
 	margin-right: 5px;
 	cursor: crosshair;
-	z-index: 2; /* z-index needed to make overlap of resize handle correct */
 }
 
 .Columns .Sortable {
