@@ -22,6 +22,8 @@ function logError(err) {
 	}
 }
 
+var unwrapDevState = state => _.last(state.computedStates).state;
+
 module.exports = function({
 	Page,
 	controller,
@@ -82,14 +84,15 @@ module.exports = function({
 	// Side-effects (e.g. async) happen here. Ideally we wouldn't call this from 'scan', since 'scan' should
 	// be side-effect free. However we've lost the action by the time scan is complete, so we do it in the scan.
 	let effectsReducer = (state, ac) => {
+		var nextState = devReducer(state, ac);
 		if (ac.type === 'PERFORM_ACTION') {
 			try {
-				controller.postAction(serverBus, _.last(state.computedStates).state, ac.action);
+				controller.postAction(serverBus, unwrapDevState(state), unwrapDevState(nextState), ac.action);
 			} catch(err) {
 				logError(err);
 			}
 		}
-		return devReducer(state, ac);
+		return nextState;
 	};
 
 	function prependState(stateObs) {
@@ -108,7 +111,7 @@ module.exports = function({
 	prependState(devStateObs).throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
 		.subscribe(devState => ReactDOM.render(
 					<div>
-						<Page callback={updater} selector={selector} state={_.last(devState.computedStates).state} />
+						<Page callback={updater} selector={selector} state={unwrapDevState(devState)} />
 						<DevTools dispatch={devBus.onNext.bind(devBus)} {...devState} />
 					</div>,
 			main));

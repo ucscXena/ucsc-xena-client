@@ -13,8 +13,9 @@ const session = require('ucsc-xena-datapages/session');
 function controlRunner(serverBus, controller) {
 	return function (state, ac) {
 		try {
-			controller.postAction(serverBus, state, ac);
-			return controller.action(state, ac);
+			var nextState = controller.action(state, ac);
+			controller.postAction(serverBus, state, nextState, ac);
+			return nextState;
 		} catch (e) {
 			console.log('Error', e);
 			return state;

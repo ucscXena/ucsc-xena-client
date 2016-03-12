@@ -57,11 +57,11 @@ var controls = {
 		}
 	},
 	datasets: (state, datasets) => closeUnknownColumns(_.assoc(state, "datasets", datasets)),
-	'datasets-post!': (serverBus, state, datasets) => fetchFeatures(serverBus, state, datasets),
+	'datasets-post!': (serverBus, state, newState, datasets) => fetchFeatures(serverBus, state, datasets),
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
 		resetZoom(_.assoc(state, "samples", samples)),
-	'samples-post!': (serverBus, state, samples) =>
+	'samples-post!': (serverBus, state, newState, samples) =>
 		_.mapObject(_.getIn(state, ['columns'], []), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
 	'normalize-fields': (state, fields, id, settings) => {
@@ -69,7 +69,7 @@ var controls = {
 		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
 	},
 	// XXX note we recalc settings due to not having the new state.
-	'normalize-fields-post!': (serverBus, state, fields, id, settings) =>
+	'normalize-fields-post!': (serverBus, state, newState, fields, id, settings) =>
 		fetchColumnData(serverBus, state.samples, id, _.assoc(settings, 'fields', fields)),
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
@@ -81,5 +81,5 @@ var controls = {
 
 module.exports = {
 	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
-	postAction: (serverBus, state, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, ...args)
+	postAction: (serverBus, state, newState, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, newState, ...args)
 };
