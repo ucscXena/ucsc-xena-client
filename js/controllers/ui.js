@@ -121,9 +121,8 @@ var setServerPending = state =>
 	_.updateIn(state, ['servers'], s => _.dissoc(_.assoc(s, 'user', s.pending), 'pending')) :
 	state;
 
-var fetchCohortData = (serverBus, state, newState, cohort) => {
-	// XXX dup call to setCohort, due to not having the computed state.
-	let {servers: {user}, samplesFrom} = setCohort(state, cohort);
+var fetchCohortData = (serverBus, state) => {
+	let {servers: {user}, samplesFrom, cohort} = state;
 	fetchDatasets(serverBus, user, cohort);
 	fetchSamples(serverBus, user, cohort, samplesFrom);
 };
@@ -145,25 +144,24 @@ var controls = {
 		// Currently datapages + hub won't set cohortPending to a cohort not in the active hubs, so
 		// we shouldn't hit this case.
 		if (!state.cohorts || state.servers.pending) {
-			fetchCohorts(serverBus, state.servers.pending || state.servers.user);
+			fetchCohorts(serverBus, newState.servers.user);
 		}
 		if (shouldSetCohort(state)) {
-			fetchCohortData(serverBus, state, newState, state.cohortPending);
+			fetchCohortData(serverBus, newState);
 		}
 	},
 	cohort: setCohort,
-	'cohort-post!': fetchCohortData,
+	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
 	'refresh-cohorts-post!': (serverBus, state) => fetchCohorts(serverBus, state.servers.user),
 	samplesFrom: (state, samplesFrom) => _.assoc(state,
 			'samplesFrom', samplesFrom,
 			'survival', null),
 	'samplesFrom-post!': (serverBus, state, newState, samplesFrom) => {
-		let {servers: {user}} = state,
-			cohort = _.get(state, "cohort");
+		let {servers: {user}, cohort} = newState;
 		fetchSamples(serverBus, user, cohort, samplesFrom);
 	},
 	'add-column-post!': (serverBus, state, newState, id, settings) =>
-		normalizeFields(serverBus, state, id, settings),
+		normalizeFields(serverBus, newState, id, settings),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
 				['zoom', 'height'], height,
@@ -177,21 +175,19 @@ var controls = {
 	zoom: (state, zoom) => warnZoom(_.assoc(state, "zoom", zoom)),
 	'zoom-help-close': zoomHelpClose,
 	'zoom-help-disable': zoomHelpClose,
-	'zoom-help-disable-post!': (serverBus, newState, state) =>
-		setNotifications(zoomHelpClose(state).notifications),
+	'zoom-help-disable-post!': (serverBus, state, newState) =>
+		setNotifications(newState.notifications),
 	dataType: (state, id, dataType) =>
 		_.assocIn(state, ['columns', id, 'dataType'], dataType),
-	// XXX note we recalculate columns[id] due to running side-effects independent of
-	// the reducer.
-	'dataType-post!': (serverBus, state, newState, id, dataType) =>
-		fetchColumnData(serverBus, state.samples, id, _.assoc(_.getIn(state, ['columns', id]), 'dataType', dataType)),
+	'dataType-post!': (serverBus, state, newState, id) =>
+		fetchColumnData(serverBus, newState.samples, id, _.getIn(newState, ['columns', id])),
 	vizSettings: (state, dsID, settings) =>
 		_.assocIn(state, ['vizSettings', dsID], settings),
 	'edit-dataset-post!': (serverBus, state, newState, dsID, meta) => {
 		if (meta.type === 'clinicalMatrix') {
-			fetchFeatures(serverBus, state, dsID);
+			fetchFeatures(serverBus, newState, dsID);
 		} else if (meta.type !== 'mutationVector') {
-			fetchExamples(serverBus, state, dsID);
+			fetchExamples(serverBus, newState, dsID);
 		}
 	},
 	'columnLabel': (state, dsID, value) =>
@@ -202,7 +198,7 @@ var controls = {
 			['km', 'id'], id,
 			['km', 'title'], _.getIn(state, ['columns', id, 'columnLabel', 'user']),
 			['km', 'label'], `Grouped by ${_.getIn(state, ['columns', id, 'fieldLabel', 'user'])}`),
-	'km-open-post!': (serverBus, newState, state) => fetchSurvival(serverBus, state, {}), // 2nd param placeholder for km.user
+	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
 	'km-close': state => _.assocIn(state, ['km', 'id'], null),
 	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),
 	'chart': state => _.assoc(state, 'mode', 'chart'),

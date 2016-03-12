@@ -4,17 +4,11 @@
 var _ = require('../underscore_ext');
 var Rx = require('rx');
 var {reifyErrors, collectResults} = require('./errors');
-var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
+var {resetZoom, setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
 var identity = x => x;
-
-function resetZoom(state) {
-	let count = _.get(state, "samples").length;
-	return _.updateIn(state, ["zoom"],
-					 z => _.merge(z, {count: count, index: 0}));
-}
 
 function featuresQuery(datasets) {
 	var clinicalMatrices = _.flatmap(datasets.servers,
@@ -29,7 +23,7 @@ function featuresQuery(datasets) {
 				collectResults(resps, features => _.object(dsIDs, features)));
 }
 
-function fetchFeatures(serverBus, state, datasets) {
+function fetchFeatures(serverBus, datasets) {
 	serverBus.onNext(['features', featuresQuery(datasets)]);
 }
 
@@ -49,28 +43,27 @@ var closeUnknownColumns = state => {
 
 var controls = {
 	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),
-	'cohorts-post!': (serverBus, state) => {
-		let {servers: {user}, cohort, samplesFrom} = state;
+	'cohorts-post!': (serverBus, state, newState) => {
+		let {servers: {user}, cohort, samplesFrom} = newState;
 		if (cohort) {
 			fetchSamples(serverBus, user, cohort, samplesFrom);
 			fetchDatasets(serverBus, user, cohort);
 		}
 	},
 	datasets: (state, datasets) => closeUnknownColumns(_.assoc(state, "datasets", datasets)),
-	'datasets-post!': (serverBus, state, newState, datasets) => fetchFeatures(serverBus, state, datasets),
+	'datasets-post!': (serverBus, state, newState, datasets) => fetchFeatures(serverBus, datasets),
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
 		resetZoom(_.assoc(state, "samples", samples)),
 	'samples-post!': (serverBus, state, newState, samples) =>
-		_.mapObject(_.getIn(state, ['columns'], []), (settings, id) =>
+		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
 	'normalize-fields': (state, fields, id, settings) => {
-		var ns = _.updateIn(state, ["columns"], s => _.assoc(s, id, _.assoc(settings, 'fields', fields)));
+		var ns = _.assocIn(state, ['columns', id], _.assoc(settings, 'fields', fields));
 		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
 	},
-	// XXX note we recalc settings due to not having the new state.
-	'normalize-fields-post!': (serverBus, state, newState, fields, id, settings) =>
-		fetchColumnData(serverBus, state.samples, id, _.assoc(settings, 'fields', fields)),
+	'normalize-fields-post!': (serverBus, state, newState, fields, id) =>
+		fetchColumnData(serverBus, state.samples, id, _.getIn(newState, ['columns', id])),
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
 		columnOpen(state, id) ?  _.assocIn(state, ["data", id], data) : state,

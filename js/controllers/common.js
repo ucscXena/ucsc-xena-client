@@ -50,21 +50,28 @@ function fetchColumnData(serverBus, samples, id, settings) {
 	serverBus.onNext([['widget-data', id], widgets.fetch(settings, samples)]);
 }
 
+function resetZoom(state) {
+	let count = _.get(state, "samples").length;
+	return _.updateIn(state, ["zoom"],
+					 z => _.merge(z, {count: count, index: 0}));
+}
+
 var setCohort = (state, cohort) =>
-	_.assoc(state,
-		   "cohort", cohort,
-		   "samplesFrom", null,
-		   "samples", [],
-		   "columns", {},
-		   "columnOrder", [],
-		   "data", {},
-		   "datasets", null,
-		   "survival", null,
-		   "km", null);
+	resetZoom(_.assoc(state,
+				"cohort", cohort,
+				"samplesFrom", null,
+				"samples", [],
+				"columns", {},
+				"columnOrder", [],
+				"data", {},
+				"datasets", null,
+				"survival", null,
+				"km", null));
 
 module.exports = {
 	fetchDatasets,
 	fetchSamples,
 	fetchColumnData,
-	setCohort
+	setCohort,
+	resetZoom
 };
