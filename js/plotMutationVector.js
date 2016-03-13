@@ -151,7 +151,7 @@ var MutationColumn = hotOrNot(React.createClass({
 	},
 	onDownload: function() {
 		const SAMPLE_ID_FIELD = 'sample';
-		let {data: {req: {rows}}, samples, index} = this.props,
+		var {data: {req: {rows}}, samples, index} = this.props,
 			groupedSamples = _.getIn(index, ['bySample']) || [],
 			rowFields = getRowFields(rows, groupedSamples, SAMPLE_ID_FIELD),
 			allRows = _.map(samples, (sId) => {
@@ -164,7 +164,7 @@ var MutationColumn = hotOrNot(React.createClass({
 
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
-		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
+		var rows = _.getIn(this.props, ['data', 'req', 'rows']),
 			uriList = _.uniq(_.map(rows, n => `${n.chr}:${n.start.toString()}`)).join(','),
 			url = `http://mupit.icm.jhu.edu/?gm=${uriList}`;
 

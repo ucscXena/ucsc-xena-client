@@ -13,12 +13,19 @@ require('../css/crosshairs.css');
 var Crosshair = React.createClass({
 	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?
 	getDefaultProps: function() {
-		return {
-			point: { x: 0, y: 0 }
+		return {point: { x: 0, y: 0 }}
+	},
+	getInitialState: function() {
+		return {point: this.props.point};
+	},
+	componentWillReceiveProps: function(newProps) {
+		if (!newProps.frozen){
+			this.setState({point: newProps.point})
 		}
 	},
 	render: function () {
-		let { point: {x, y}, open, dims } = this.props,
+		var {open, dims } = this.props,
+			{point: {x, y}} = this.state,
 			containerStyle = _.extend({display: open ? 'inline' : 'none'}, dims);
 		return (
 			<div className='crosshairs' style={containerStyle}>

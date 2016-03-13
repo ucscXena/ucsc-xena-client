@@ -93,48 +93,34 @@ var Columns = React.createClass({
 		}).map(() => 'toggle');
 
 		this.tooltip = this.ev.tooltip.merge(toggle)
-			// If open + user clicks, toggle freeze of display.
-			.scan([null, false], ([tt], ev) => {
-				let {frozen} = this.state;
-				return (ev === 'toggle') ? [tt, tt.open && !frozen] : [ev, frozen];
-			})
+			.scan([null, false], ([tt], ev) =>
+				(ev === 'toggle') ? [tt, tt.open && !this.state.frozen] : [ev, this.state.frozen])
 			// Filter frozen events until frozen state changes.
 			.distinctUntilChanged(([ev, frozen]) => frozen ? frozen : [ev, frozen])
 			.subscribe(([ev, frozen]) => {
 				/* `this.state.frozen` is the CURRENT frozen status
-				 	`ev.frozen` is the TO-BE frozen status
+				 	`ev.frozen` represents the TO-BE frozen status
 				*/
 				if (!this.state.frozen && frozen) {
-					this.setDisplayLock(frozen);
+					this.adjustFrozen({frozen: frozen});
 				}
-				// Keep 'frozen' and 'open' params for both crosshair && tooltip
 				let plotVisuals = {
 					crosshair: _.omit(ev, 'data'), // remove tooltip-related param
 					tooltip: _.omit(ev, 'point') // remove crosshair-related param
 				};
 
-				return this.setState(plotVisuals);
+				this.setState(plotVisuals);
 			});
 	},
 	componentDidMount: function() {
 		this.setDOMDims(ReactDOM.findDOMNode(this));
 		domNode = document.querySelector('body');
-		domNode.addEventListener('click', (e) => {
-			let {frozen} = this.state;
-			if (e[meta.key] && frozen) {
-				this.setDisplayLock(false); // unlock tooltip && crosshairs
-			}
-		}, true);
+		domNode.addEventListener('click', this.dispatchUnFreeze, true);
 	},
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
 		// XXX are there other streams we're leaking? What listens on this.ev.click, etc?
 		this.tooltip.dispose();
-		domNode.removeEventListener('click', (e) => {
-			let {frozen} = this.state;
-			if (e[meta.key] && frozen) {
-				this.setDisplayLock(false); // unlock tooltip && crosshairs
-			}
-		}, true);
+		domNode.removeEventListener('click', this.dispatchUnFreeze, true);
 	},
 	getInitialState: function () {
 		return {
@@ -158,20 +144,22 @@ var Columns = React.createClass({
 	onViz: function (id) {
 		this.setState({openVizSettings: id});
 	},
-	setDisplayLock: function(willBeFrozen) {
+	dispatchUnFreeze: function(e) {
+		if (e[meta.key] && this.state.frozen) {
+			this.adjustFrozen({frozen: false});
+		}
+	},
+	adjustFrozen: function(newState) {
 		// 1. Set frozen status to opposite of current state.frozen value
-		let newState = {frozen: willBeFrozen};
-
-		if (!willBeFrozen) {
+		if (!newState.frozen) {
 			newState = _.extend(_.mapObject(this.state, param => {
 				let action = 'open';
 				if (_.has(param, action)) {
-					param[action] = willBeFrozen;
+					param[action] = newState.frozen;
 				}
 				return param;
 			}), newState);
 		}
-
 		this.setState(newState);
 	},
 	render: function () {
@@ -232,7 +220,7 @@ var Columns = React.createClass({
 				</div>
 				{editor}
 				{settings}
-				<Crosshair {...this.state.crosshair} dims={dims}/>
+				<Crosshair {...this.state.crosshair} frozen={frozen} dims={dims}/>
 				<Tooltip {...this.state.tooltip} frozen={frozen}/>
 			</div>
 		);
