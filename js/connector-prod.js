@@ -23,6 +23,9 @@ function controlRunner(serverBus, controller) {
 	};
 }
 
+// XXX The history mechanism is unusable. Should be operating ui channel, I
+// suspect.
+//
 // From page load, push indexes for state. Store in cache slots.
 // Our state is too big to push directly. This mechanism is a bit
 // confusing across page loads.
@@ -41,7 +44,9 @@ var [pushState, setState] = (function () {
 		history.pushState(i, '');
 		i = (i + 1) % 100;
 	},
-	Rx.DOM.fromEvent(window, 'popstate').map(s => {
+	// XXX safari issues a 'popstate' on page load, when we have no cache. The filter here
+	// drops those events.
+	Rx.DOM.fromEvent(window, 'popstate').filter(s => !!cache[s.state]).map(s => {
 		i = s.state;
 		return cache[i];
 	})];
