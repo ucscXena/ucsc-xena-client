@@ -109,12 +109,14 @@ module.exports = function({
 
 	// pass the selector into Page, so we catch errors while rendering & can display an error message.
 	prependState(devStateObs).throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
-		.subscribe(devState => ReactDOM.render(
-					<div>
-						<Page callback={updater} selector={selector} state={unwrapDevState(devState)} />
-						<DevTools dispatch={devBus.onNext.bind(devBus)} {...devState} />
-					</div>,
-			main));
+		.subscribe(devState => {
+			return ReactDOM.render(
+				<div>
+					<Page callback={updater} selector={selector} state={unwrapDevState(devState)} />
+					<DevTools dispatch={devBus.onNext.bind(devBus)} {...devState} />
+				</div>,
+				main)
+		});
 
 	// Save state in sessionStorage on page unload.
 	devStateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))

@@ -77,11 +77,11 @@ var Columns = React.createClass({
 		this.events('tooltip', 'click', 'plotClick');
 
 		this.ev.plotClick.subscribe(ev => {
-			let {callback, appState: {zoom, samples}} = this.props;
+			let {setChoice, appState: {zoom, samples}} = this.props;
 			if (zoomOutClick(ev)) {
-				callback(['zoom', zoomOut(samples.length, zoom)]);
+				setChoice(['zoom', zoomOut(samples.length, zoom)]);
 			} else if (zoomInClick(ev)) {
-				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
+				setChoice(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
 			}
 		});
 
@@ -129,7 +129,7 @@ var Columns = React.createClass({
 		this.setState({ dims: _.pick(domNode, nodeKeys) });
 	},
 	setOrder: function (order) {
-		this.props.callback(['order', order]);
+		this.props.setChoice(['order', order]);
 	},
 	onViz: function (id) {
 		this.setState({openVizSettings: id});
@@ -138,7 +138,7 @@ var Columns = React.createClass({
 		var {callback, fieldFormat, disableKM, supportsGeneAverage, appState} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
-		var {openColumnEdit, openVizSettings} = this.state;
+		var {dsId, openColumnEdit, openVizSettings} = this.state;
 		var height = zoom.height;
 		var editor = openColumnEdit ?
 			<ColumnEdit
@@ -212,10 +212,10 @@ function zoomPopover(zoom, samples, props) {
 
 var Spreadsheet = React.createClass({
 	zoomHelpClose: function () {
-		this.props.callback(['zoom-help-close']);
+		this.props.setChoice(['zoom-help-close']);
 	},
 	zoomHelpDisable: function () {
-		this.props.callback(['zoom-help-disable']);
+		this.props.setChoice(['zoom-help-disable']);
 	},
 	render: function () {
 		var {appState: {zoom, samples, zoomHelp}} = this.props,
@@ -224,7 +224,6 @@ var Spreadsheet = React.createClass({
 					onClick: this.zoomHelpClose,
 					onDisableClick: this.zoomHelpDisable
 				}) : null;
-
 		return (
 			<Row>
 				<Col md={1}>

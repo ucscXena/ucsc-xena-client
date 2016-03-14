@@ -6,3 +6,21 @@
     font-size: medium;
     font-style: italic;
 }
+.columnEdit .footer {
+	text-align: right;
+	vertical-align: bottom;
+}
+
+.control-label-pending {
+	font-size: 24px;
+}
+
+.control-label-done {
+	text-align: right;
+	font-size: 18px;
+}
+
+.nav-buttons {
+	background-color: 'yellow';
+	text-align: center;
+}
