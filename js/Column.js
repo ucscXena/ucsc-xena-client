@@ -95,8 +95,8 @@ var Column = React.createClass({
 		download(this.props.download());
 	},
 	onAbout: function () {
-    var {column} = this.props;
-    var dsID = column.dsID;
+		var {column} = this.props;
+		var dsID = column.dsID;
 		var [host, dataset] = xenaQuery.parse_host(dsID);
 		var url = `../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
 		window.open(url);
