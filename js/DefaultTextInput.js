@@ -24,18 +24,18 @@ var styles = {
 
 var DefaultTextInput = React.createClass({
 	resetIfNull: function () {
-		var {callback, dsID, eventName, value: {'default': defaultValue}} = this.props,
+		var {callback, columnID, eventName, value: {'default': defaultValue}} = this.props,
 			val = this.refs.input.getValue();
 
 		if (val === "") {
-			callback([eventName, dsID, defaultValue]);
+			callback([eventName, columnID, defaultValue]);
 		}
 	},
 	update: function () {
-		var {callback, dsID, eventName} = this.props,
+		var {callback, columnID, eventName} = this.props,
 			val = this.refs.input.getValue();
 
-		callback([eventName, dsID, val]);
+		callback([eventName, columnID, val]);
 	},
 	onKeyUp: function (ev) {
 		if (ev.key === 'Enter' && this) {

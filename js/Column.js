@@ -137,12 +137,12 @@ var Column = React.createClass({
 				</SplitButton>
 				<br/>
 				<DefaultTextInput
-					dsID={id}
+					columnID={id}
 					callback={callback}
 					eventName='columnLabel'
 					value={columnLabel} />
 				<DefaultTextInput
-					dsID={id}
+					columnID={id}
 					callback={callback}
 					eventName='fieldLabel'
 					value={fieldLabel} />
