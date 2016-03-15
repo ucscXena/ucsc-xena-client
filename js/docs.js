@@ -9,9 +9,16 @@ var _ = require('underscore');
 var docs = _.map(demo, s => toHTML(s, demo)).join('<br>');
 var page =
 `<html>
+	<style>
+		.docs {
+			margin: 20px;
+		}
+	</style>
     <body>
     ${css}
-	${docs}
+		<div class='docs'>
+			${docs}
+		</div>
     </body>
 </html>`;
 
