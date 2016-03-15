@@ -25,7 +25,8 @@ function getOffsets(cols) {
 var download = state => {
 	let columns = state.columnOrder.map(id => state.columns[id]),
 		width = totalWidth(columns),
-		doc = new PDFDocument({size: [width, state.zoom.height]}),
+		// pdfkit zlib is pathologically slow.
+		doc = new PDFDocument({compress: false, size: [width, state.zoom.height]}),
 		stream = doc.pipe(blobStream()),
 		vg = vgpdf(doc),
 		offsets = getOffsets(columns);
