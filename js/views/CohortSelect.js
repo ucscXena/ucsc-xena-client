@@ -1,9 +1,9 @@
 /*global require: false, module: false */
 'use strict';
 var React = require('react');
-var Select = require('./views/Select');
-var _ = require('./underscore_ext');
-var {deepPureRenderMixin} = require('./react-utils');
+var Select = require('./Select');
+var _ = require('../underscore_ext');
+var {deepPureRenderMixin} = require('../react-utils');
 
 var CohortSelect = React.createClass({
 	mixins: [deepPureRenderMixin],

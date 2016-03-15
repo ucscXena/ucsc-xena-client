@@ -3,7 +3,7 @@
 'use strict';
 
 var React = require('react');
-var CohortSelect = require('./CohortSelect');
+var CohortSelect = require('./views/CohortSelect');
 var DatasetSelect = require('./views/DatasetSelect');
 var Button = require('react-bootstrap/lib/Button');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
