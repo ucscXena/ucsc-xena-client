@@ -7,9 +7,6 @@ var {deepPureRenderMixin} = require('./react-utils');
 
 var CohortSelect = React.createClass({
 	mixins: [deepPureRenderMixin],
-	onSelect: function (value) {
-		this.props.callback(['cohort', value]);
-	},
 	render: function () {
 		var {cohort, cohorts, callback, ...other} = this.props,
 			sortedCohorts = _.sortBy(cohorts, (cohort) => cohort.toLowerCase()),
@@ -20,7 +17,6 @@ var CohortSelect = React.createClass({
 				<label className='cohortAnchor'>Cohort</label>
 				{' '}
 				<Select
-					onSelect={this.onSelect}
 					value={cohort}
 					options={options}
 					{...other}
