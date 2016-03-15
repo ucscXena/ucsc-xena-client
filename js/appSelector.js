@@ -45,7 +45,7 @@ var transformSelector = createFmapSelector(
 				_.getIn(state, ['vizSettings', column.dsID]),
 				state.data[key],
 				state.samples,
-				state.datasets.datasets[column.dsID],
+				state.datasets[column.dsID],
 				state.index[key],
 				state.zoom]),
 		([column, ...args]) => ({...column, ...widgets.transform(column, ...args)}));

@@ -52,7 +52,7 @@ function fetchExamples(serverBus, state, dsID) {
 // Normalization of fields from user input
 function geneProbeMapLookup(settings, state) {
 	const {host} = JSON.parse(settings.dsID),
-		probemap = state.datasets.datasets[settings.dsID].probemap;
+		probemap = state.datasets[settings.dsID].probemap;
 	return  xenaQuery.sparse_data_match_genes(host, probemap, settings.fields);
 }
 

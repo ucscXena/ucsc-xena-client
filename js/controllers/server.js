@@ -11,8 +11,7 @@ var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
 var identity = x => x;
 
 function featuresQuery(datasets) {
-	var clinicalMatrices = _.flatmap(datasets.servers,
-			server => _.filter(server.datasets, ds => ds.type === 'clinicalMatrix')),
+	var clinicalMatrices = _.filter(datasets, ds => ds.type === 'clinicalMatrix'),
 		dsIDs = _.pluck(clinicalMatrices, 'dsID');
 
 	// XXX note that datasetFeatures takes optional args, so don't pass it directly
@@ -33,8 +32,7 @@ var resetCohort = state => _.contains(state.cohorts, state.cohort) ? state :
 	setCohort(state, null);
 
 var closeUnknownColumns = state => {
-	const datasets = state.datasets.datasets,
-		columns = state.columns,
+	const {datasets, columns} = state,
 		columnOrder = _.filter(state.columnOrder, id => !!datasets[columns[id].dsID]);
 	return _.assoc(state,
 				   'columnOrder', columnOrder,

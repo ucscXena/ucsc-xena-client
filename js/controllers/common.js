@@ -11,10 +11,8 @@ var widgets = require('../columnWidgets');
 
 var unionOfResults = resps => collectResults(resps, results => _.union(...results));
 
-var datasetResults = resps => collectResults(resps, servers => ({
-	servers: servers,
-	datasets: _.object(_.flatmap(servers, s => _.map(s.datasets, d => [d.dsID, d])))
-}));
+var datasetResults = resps => collectResults(resps, servers =>
+		_.object(_.flatmap(servers, s => _.map(s.datasets, d => [d.dsID, d]))));
 
 function datasetQuery(servers, cohort) {
 	return Rx.Observable.zipArray(

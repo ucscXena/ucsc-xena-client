@@ -177,8 +177,7 @@ var Columns = React.createClass({
 			onViz: this.onViz,
 			onClick: this.ev.plotClick,
 			column: _.getIn(columns, [id]),
-			dataset: _.getIn(appState, ['datasets', 'datasets',
-				_.getIn(columns, [id, 'dsID'])])
+			dataset: _.getIn(appState, ['datasets', _.getIn(columns, [id, 'dsID'])])
 		}));
 
 		return (

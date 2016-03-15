@@ -81,6 +81,7 @@ var Dataset = d(
 		dsID: dsID,
 		label: string(),
 		name: string(),
+		server: string(),
 		probemap: or(string(), nullval),
 		status: or('loading', 'loaded', 'error'),
 		type: or('genomicMatrix',
@@ -277,13 +278,7 @@ var Application = d(
 			[ColumnID]: or(ProbeData, MutationData)
 		},
 		datasets: {
-			datasets: {
-				[dsID]: Dataset
-			},
-			servers: array.of({
-				server: string(),
-				datasets: array.of(Dataset)
-			})
+			[dsID]: Dataset
 		},
 		features: FeaturesByDataset,
 		km: {

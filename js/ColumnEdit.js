@@ -171,7 +171,7 @@ function pickEditor(meta, update, columnEdit) {
 var ColumnEdit = React.createClass({
 	getInitialState: () => ({}),
 	addColumn: function (settings) {
-		let {callback, appState: {datasets: {datasets}}} = this.props,
+		let {callback, appState: {datasets}} = this.props,
 			label = datasets[this.state.dataset].label;
 			settings = _.assoc(settings,
 				'width', 200, // XXX move this default setting?
@@ -182,7 +182,7 @@ var ColumnEdit = React.createClass({
 	},
 	selectDataset: function ([, dsID]) {
 		var {callback, appState: {datasets}} = this.props,
-			meta = _.getIn(datasets, ['datasets', dsID]);
+			meta = _.get(datasets, dsID);
 
 		this.setState({dataset: dsID});
 		callback(['edit-dataset', dsID, meta]);
@@ -190,7 +190,7 @@ var ColumnEdit = React.createClass({
 	render: function () {
 		var {dataset} = this.state,
 			{appState: {datasets, columnEdit}} = this.props,
-			meta = dataset && _.getIn(datasets, ['datasets', dataset]);
+			meta = dataset && _.get(datasets, dataset);
 		var editor = meta ? pickEditor(meta, this.addColumn, columnEdit) : null;
 
 		return (
