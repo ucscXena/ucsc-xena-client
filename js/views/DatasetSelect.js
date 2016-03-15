@@ -2,9 +2,9 @@
 'use strict';
 var React = require('react');
 var Select = require('./Select');
-var _ = require('./underscore_ext');
-var xenaQuery = require('./xenaQuery');
-var {deepPureRenderMixin} = require('./react-utils');
+var _ = require('../underscore_ext');
+var xenaQuery = require('../xenaQuery');
+var {deepPureRenderMixin} = require('../react-utils');
 
 // group header for a server
 var header = s => xenaQuery.server_url(s);

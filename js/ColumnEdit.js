@@ -5,8 +5,8 @@ var React = require('react');
 var Input = require('react-bootstrap/lib/Input');
 var Button = require('react-bootstrap/lib/Button');
 var Modal = require('react-bootstrap/lib/Modal');
-var Select = require('./Select');
-var DatasetSelect = require('./DatasetSelect');
+var Select = require('./views/Select');
+var DatasetSelect = require('./views/DatasetSelect');
 var _ = require('./underscore_ext');
 var trim = require('underscore.string').trim;
 var uuid = require('./uuid');
@@ -180,7 +180,7 @@ var ColumnEdit = React.createClass({
 		this.props.onHide();
 		callback(['add-column', uuid(), settings]);
 	},
-	selectDataset: function ([, dsID]) {
+	onSelect: function (dsID) {
 		var {callback, appState: {datasets}} = this.props,
 			meta = _.get(datasets, dsID);
 
@@ -205,8 +205,7 @@ var ColumnEdit = React.createClass({
 							<div className='col-md-10'>
 								<DatasetSelect
 									value={dataset}
-									event='edit-dataset'
-									callback={this.selectDataset}
+									onSelect={this.onSelect}
 									datasets={datasets} />
 							</div>
 						</div>

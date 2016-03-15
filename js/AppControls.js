@@ -4,7 +4,7 @@
 
 var React = require('react');
 var CohortSelect = require('./CohortSelect');
-var DatasetSelect = require('./DatasetSelect');
+var DatasetSelect = require('./views/DatasetSelect');
 var Button = require('react-bootstrap/lib/Button');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
@@ -33,6 +33,9 @@ var AppControls = React.createClass({
 	onPdf: function () {
 		pdf(this.props.appState);
 	},
+	onSelect: function (value) {
+			this.props.callback(['samplesFrom', value]);
+	},
 	render: function () {
 		var {callback, appState: {cohort, cohorts, samplesFrom, datasets, mode}} = this.props,
 			hasCohort = !!cohort,
@@ -53,8 +56,7 @@ var AppControls = React.createClass({
 						<label className='samplesFromLabel'> Samples in </label>
 						{' '}
 						<DatasetSelect
-							event='samplesFrom'
-							callback={callback}
+							onSelect={this.onSelect}
 							nullOpt="Any Datasets (i.e. show all samples)"
 							style={{display: hasCohort ?
 									'inline' : 'none'}}

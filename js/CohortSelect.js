@@ -1,12 +1,15 @@
 /*global require: false, module: false */
 'use strict';
 var React = require('react');
-var Select = require('./Select');
+var Select = require('./views/Select');
 var _ = require('./underscore_ext');
 var {deepPureRenderMixin} = require('./react-utils');
 
 var CohortSelect = React.createClass({
 	mixins: [deepPureRenderMixin],
+	onSelect: function (value) {
+		this.props.callback(['cohort', value]);
+	},
 	render: function () {
 		var {cohort, cohorts, callback, ...other} = this.props,
 			sortedCohorts = _.sortBy(cohorts, (cohort) => cohort.toLowerCase()),
@@ -17,8 +20,7 @@ var CohortSelect = React.createClass({
 				<label className='cohortAnchor'>Cohort</label>
 				{' '}
 				<Select
-					event='cohort'
-					callback={callback}
+					onSelect={this.onSelect}
 					value={cohort}
 					options={options}
 					{...other}
