@@ -287,7 +287,7 @@ var Application = d(
 		},
 		features: FeaturesByDataset,
 		km: {
-			id: dsID,
+			id: ColumnID,
 			column: or(ProbeData, MutationData),
 			label: string(),
 			vars: {
