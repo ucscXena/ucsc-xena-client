@@ -32,7 +32,7 @@ var PhenotypeEdit = React.createClass({
 				<div className='form-group'>
 					<label className='col-md-2 control-label'>View:</label>
 					<Select value={feature}
-						callback={([, f]) => this.setState({feature: f})}
+						onSelect={f => this.setState({feature: f})}
 						options={features} />
 				</div>
 				<div className='form-group'>
