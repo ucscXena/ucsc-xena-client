@@ -8,16 +8,16 @@ var xenaQuery = require('../xenaQuery');
 var _ = require('../underscore_ext');
 var {reifyErrors, collectResults} = require('./errors');
 var widgets = require('../columnWidgets');
-
-var unionOfResults = resps => collectResults(resps, results => _.union(...results));
+var {makeSample} = require('../models/sample');
 
 var datasetResults = resps => collectResults(resps, servers =>
 		_.object(_.flatmap(servers, s => _.map(s.datasets, d => [d.dsID, d]))));
 
 function datasetQuery(servers, cohort) {
+	var cohorts = _.pluck(cohort, 'name');
 	return Rx.Observable.zipArray(
 		_.map(servers, server => reifyErrors(
-				xenaQuery.dataset_list(server, cohort).map(datasets => ({server, datasets})),
+				xenaQuery.dataset_list(server, cohorts).map(datasets => ({server, datasets})),
 				{host: server}))
 	).flatMap(datasetResults)
 }
@@ -26,15 +26,28 @@ function fetchDatasets(serverBus, servers, cohort) {
 	serverBus.onNext(['datasets', datasetQuery(servers, cohort)]);
 }
 
-
 var datasetSamples = xenaQuery.dsID_fn(xenaQuery.dataset_samples);
+var allSamples = _.curry((cohort, server) => xenaQuery.all_samples(server, cohort));
 
-function samplesQuery(servers, cohort, samplesFrom) {
-	return samplesFrom ?
-				datasetSamples(samplesFrom) :
-				Rx.Observable.zipArray(
-					_.map(servers, s => reifyErrors(xenaQuery.all_samples(s, cohort), {host: s}))
-				).flatMap(unionOfResults);
+// For the cohort, either fetch samplesFrom, or query all servers,
+// Return a stream per-cohort, each of which returns an event
+// [cohort, [sample, ...]].
+// By not combining them here, we can uniformly handle errors, below.
+var cohortSamplesQuery = _.curry(
+	(servers, {name, samplesFrom}) =>
+		(samplesFrom ?
+			[datasetSamples(samplesFrom)] :
+			_.map(servers, allSamples(name))).map(obs => obs.map(resp => [name, resp])));
+
+function collateSamplesByCohort(resps) {
+	return _.flatmap(_.groupBy(resps, _.first),
+			(samplesList, cohort) => _.flatten(_.pluck(samplesList, 1)).map(makeSample(cohort)));
+}
+
+// reifyErrors should be pass the server name, but in this expression we don't have it.
+function samplesQuery(servers, cohort) {
+	return Rx.Observable.zipArray(_.flatmap(cohort, cohortSamplesQuery(servers)).map(reifyErrors))
+		.flatMap(resps => collectResults(resps, collateSamplesByCohort));
 }
 
 function fetchSamples(serverBus, servers, cohort, samplesFrom) {
@@ -54,15 +67,23 @@ function resetZoom(state) {
 					 z => _.merge(z, {count: count, index: 0}));
 }
 
-var setCohort = (state, cohort) =>
+// With multiple cohorts, we now want to
+// o- Set cohort in slot.
+// o- Drop datasets not in any cohort
+// o- Drop samples not in any cohort
+// o- Drop features not in any cohort (not in dataset list)
+// o- Drop survival not in any cohort (not in feature list)
+// o- Drop data not in any cohort (not in dataset list)
+// For now, just drop & refetch everything.
+var setCohort = (state, i, cohort) =>
 	resetZoom(_.assoc(state,
-				"cohort", cohort,
+				"cohort", _.assoc(state.cohort, i, {name: cohort}),
 				"samplesFrom", null,
 				"samples", [],
 				"columns", {},
 				"columnOrder", [],
 				"data", {},
-				"datasets", null,
+				"datasets", [],
 				"survival", null,
 				"km", null));
 

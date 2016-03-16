@@ -122,9 +122,9 @@ var setServerPending = state =>
 	state;
 
 var fetchCohortData = (serverBus, state) => {
-	let {servers: {user}, samplesFrom, cohort} = state;
+	let {servers: {user}, cohort} = state;
 	fetchDatasets(serverBus, user, cohort);
-	fetchSamples(serverBus, user, cohort, samplesFrom);
+	fetchSamples(serverBus, user, cohort);
 };
 
 var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
@@ -153,10 +153,10 @@ var controls = {
 	cohort: setCohort,
 	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
 	'refresh-cohorts-post!': (serverBus, state) => fetchCohorts(serverBus, state.servers.user),
-	samplesFrom: (state, samplesFrom) => _.assoc(state,
-			'samplesFrom', samplesFrom,
+	samplesFrom: (state, i, samplesFrom) => _.assoc(state,
+			'cohort', _.assocIn(state.cohort, [i, 'samplesFrom'], samplesFrom),
 			'survival', null),
-	'samplesFrom-post!': (serverBus, state, newState, samplesFrom) => {
+	'samplesFrom-post!': (serverBus, state, newState, i, samplesFrom) => {
 		let {servers: {user}, cohort} = newState;
 		fetchSamples(serverBus, user, cohort, samplesFrom);
 	},

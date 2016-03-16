@@ -52,9 +52,11 @@ module.exports = function () {
 		servers: {'default': defaultServers, user: defaultServers},
 		mode: 'heatmap',
 		zoom: {height: 300},
+		cohort: [],
 		columns: {},
 		columnOrder: [],
 		samples: [],
+		datasets: [],
 		notifications: getNotifications()
 	};
 

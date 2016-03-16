@@ -28,7 +28,8 @@ function fetchFeatures(serverBus, datasets) {
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 
-var resetCohort = state => _.contains(state.cohorts, state.cohort) ? state :
+// XXX
+var resetCohort = state => /*_.contains(state.cohorts, state.cohort)*/ true ? state :
 	setCohort(state, null);
 
 var closeUnknownColumns = state => {
@@ -42,9 +43,9 @@ var closeUnknownColumns = state => {
 var controls = {
 	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),
 	'cohorts-post!': (serverBus, state, newState) => {
-		let {servers: {user}, cohort, samplesFrom} = newState;
+		let {servers: {user}, cohort} = newState;
 		if (cohort) {
-			fetchSamples(serverBus, user, cohort, samplesFrom);
+			fetchSamples(serverBus, user, cohort);
 			fetchDatasets(serverBus, user, cohort);
 		}
 	},
