@@ -70,16 +70,17 @@ function formatAf(af) {
 }
 
 var fmtIf = (x, fmt) => x ? fmt(x) : '';
-var gbURL = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=';
+var gbURL = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=$assembly&position=';
+var assemblyVar = '$assembly';
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
 
-function sampleTooltip(data, gene) {
+function sampleTooltip(data, gene, assembly) {
 	var dnaVaf = data.dna_vaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dna_vaf)],
 		rnaVaf = data.rna_vaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
 		refAlt = data.reference && data.alt && ['value', `${data.reference} to ${data.alt}`],
 		pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
-		posURL = ['url', `hg19 ${pos}`, gbURL + encodeURIComponent(pos)],
+		posURL = ['url',  assembly+ ` ${pos}`, gbURL.replace(assemblyVar, assembly) + encodeURIComponent(pos)],
 		effect = ['value', fmtIf(data.effect, x => `${x}, `) +  gene + //eslint-disable-line comma-spacing
 					fmtIf(data.amino_acid, x => ` (${x})`)];
 
@@ -106,14 +107,14 @@ function makeRow(fields, sampleGroup, row) {
 		_.map(fields, f => (row && row[f]) || fieldValue));
 }
 
-function tooltip(nodes, samples, {height, count, index}, gene,  ev) {
+function tooltip(nodes, samples, {height, count, index}, gene, assembly, ev) {
 	var {x, y} = util.eventOffset(ev),
 		pixPerRow = height / count, // XXX also appears in mutationVector
 		minppr = Math.max(pixPerRow, 2), // XXX appears multiple places
 		node = closestNode(nodes, minppr, x, y);
 
 	return node ?
-		sampleTooltip(node.data, gene) :
+		sampleTooltip(node.data, gene, assembly) :
 		{sampleID: samples[Math.floor((y * count / height) + index)]};
 }
 
@@ -171,14 +172,17 @@ var MutationColumn = hotOrNot(React.createClass({
 		window.open(url);
 	},
 	tooltip: function (ev) {
-		var {column: {nodes, fields}, samples, zoom} = this.props;
-		return tooltip(nodes, samples, zoom, fields[0], ev);
+		var {column: {nodes, fields, assembly}, samples, zoom} = this.props;
+		return tooltip(nodes, samples, zoom, fields[0], assembly, ev);
 	},
 	render: function () {
 		var {column, samples, zoom, data, index, hasSurvival} = this.props,
 			feature = _.getIn(column, ['sFeature']),
-			disableMenu = data ? false : true,
-			menuItemName = 'MuPIT View' + (disableMenu ? ' (loading..)' : '');
+      assembly = _.getIn(column, ['assembly']),
+      rightAssembly = (assembly ==="hg19" || assembly ==="GRCh37") ? true : false,  //MuPIT currently only support hg19
+      gotData = ( data &&  data.req && data.req.rows.length>0 ) ? true : false,
+      noMenu = !rightAssembly || !gotData,  //loadingMenu = data ? false : true,
+			menuItemName = 'MuPIT View (hg19)';
 
 		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
@@ -189,7 +193,7 @@ var MutationColumn = hotOrNot(React.createClass({
 				download={this.onDownload} //eslint-disable-line no-undef
 				column={column}
 				zoom={zoom}
-				menu={<MenuItem disabled={disableMenu} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
+				menu={noMenu? null: <MenuItem disabled={noMenu} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
 				data={data}
 				plot={<CanvasDrawing
 						ref='plot'

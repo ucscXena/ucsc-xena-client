@@ -370,7 +370,7 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 	function dataset_list_new(server, cohort) {
 		return Rx.DOM.ajax(
 			xena_post(server, dataset_list_query(cohort))
-		).map(resp => xena_dataset_list_transform(server, json_resp(resp)));
+		).map(resp => xena_dataset_list_transform(server, json_resp(resp))).catch(Rx.Observable.return([]));
 	}
 
 	function dataset_list(server, cohort) {
@@ -556,7 +556,7 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 	function all_samples(host, cohort) {
 		return Rx.DOM.ajax(
 			xena_post(host, all_samples_query(cohort))
-		).map(json_resp);
+		).map(json_resp).catch(Rx.Observable.return([]));
 	}
 
 	// XXX Have to use POST here because the genome-cancer reverse proxy fails
@@ -565,7 +565,7 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 	function all_cohorts(host) {
 		return Rx.DOM.ajax(
 			xena_post(host, all_cohorts_query())
-		).map(json_resp);
+		).map(json_resp).catch(Rx.Observable.return([]));
 	}
 
 	// test if host is up
