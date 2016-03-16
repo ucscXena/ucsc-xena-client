@@ -70,8 +70,6 @@ function formatAf(af) {
 }
 
 var fmtIf = (x, fmt) => x ? fmt(x) : '';
-var gbURL = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=$assembly&position=';
-var assemblyVar = '$assembly';
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
 
@@ -80,7 +78,8 @@ function sampleTooltip(data, gene, assembly) {
 		rnaVaf = data.rna_vaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
 		refAlt = data.reference && data.alt && ['value', `${data.reference} to ${data.alt}`],
 		pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
-		posURL = ['url',  assembly+ ` ${pos}`, gbURL.replace(assemblyVar, assembly) + encodeURIComponent(pos)],
+		gbURL =  (assembly, pos) => `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${encodeURIComponent(assembly)}&position=${encodeURIComponent(pos)}`,
+		posURL = ['url',  `${assembly} ${pos}`, gbURL],
 		effect = ['value', fmtIf(data.effect, x => `${x}, `) +  gene + //eslint-disable-line comma-spacing
 					fmtIf(data.amino_acid, x => ` (${x})`)];
 
@@ -178,10 +177,10 @@ var MutationColumn = hotOrNot(React.createClass({
 	render: function () {
 		var {column, samples, zoom, data, index, hasSurvival} = this.props,
 			feature = _.getIn(column, ['sFeature']),
-      assembly = _.getIn(column, ['assembly']),
-      rightAssembly = (assembly ==="hg19" || assembly ==="GRCh37") ? true : false,  //MuPIT currently only support hg19
-      gotData = ( data &&  data.req && data.req.rows.length>0 ) ? true : false,
-      noMenu = !rightAssembly || !gotData,  //loadingMenu = data ? false : true,
+			assembly = _.getIn(column, ['assembly']),
+			rightAssembly = (assembly ==="hg19" || assembly ==="GRCh37") ? true : false,  //MuPIT currently only support hg19
+			gotData = ( data &&  data.req && data.req.rows.length>0 ) ? true : false,
+			noMenu = !rightAssembly || !gotData,  //loadingMenu = data ? false : true,
 			menuItemName = 'MuPIT View (hg19)';
 
 		// XXX Make plot a child instead of a prop? There's also legend.

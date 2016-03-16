@@ -176,12 +176,12 @@ function cmp({fields}, data, index) {
 var sparseDataValues = xenaQuery.dsID_fn(xenaQuery.sparse_data_values);
 var refGeneExonValues = xenaQuery.dsID_fn(xenaQuery.refGene_exon_values);
 
-// support for hg18/CRCh36, hg19/CRCh37 
+// support for hg18/CRCh36, hg19/CRCh37
 var refGene = {
-  hg18: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
-  GRCh36: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
-  hg19: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'}),
-  GRCh37: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'})
+	hg18: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
+	GRCh36: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
+	hg19: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'}),
+	GRCh37: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'})
 }
 
 function fetch({dsID, fields, assembly}, samples) {
@@ -235,10 +235,10 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 	}
 	var {refGene} = data;
 
-  if (_.isEmpty(refGene)){
-    return {};
-  }
-  
+	if (_.isEmpty(refGene)){
+		return {};
+	}
+
 	var layout = exonLayout.layout(_.values(refGene)[0], width, xzoom),
 		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples,
 				zoom);
