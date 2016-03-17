@@ -33,6 +33,9 @@ var toIntvl = (start, end, i) => ({start: start, end: end, i: i});
 // findIntervals(gene :: {cdsStart :: int, cdsEnd :: int, exonStarts :: [int, ...], exonEnds :: [int, ...]})
 //     :: [{start :: int, end :: int, i :: int, inCds :: boolean}, ...]
 function findIntervals(gene) {
+	if (_.isEmpty(gene)){
+		return [];
+	}
 	var {cdsStart, cdsEnd, exonStarts, exonEnds} = gene;
 
 	return _.map(_.flatmap(_.flatmap(_.zip(exonStarts, exonEnds),
@@ -67,6 +70,9 @@ var RefGeneAnnotation = React.createClass({
 	},
 
 	draw: function (width, layout, indx) {
+		if (!width || !layout ||!indx){
+			return;
+		}
 		var vg = this.vg,
 			ctx = vg.context(),
 			prevEnd;
@@ -106,7 +112,6 @@ var RefGeneAnnotation = React.createClass({
 			intervals = findIntervals(refGene);
 
 		this.index = index(intervals);
-
 		if (this.vg) {
 			this.draw(width, layout, this.index);
 		}

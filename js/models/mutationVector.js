@@ -176,16 +176,18 @@ function cmp({fields}, data, index) {
 var sparseDataValues = xenaQuery.dsID_fn(xenaQuery.sparse_data_values);
 var refGeneExonValues = xenaQuery.dsID_fn(xenaQuery.refGene_exon_values);
 
-// XXX hard-coded for now
-var refGene = JSON.stringify({
-	host: "https://genome-cancer.ucsc.edu/proj/public/xena",
-	name: "common/GB/refgene_good"
-});
+// support for hg18/CRCh36, hg19/CRCh37
+var refGene = {
+	hg18: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
+	GRCh36: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
+	hg19: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'}),
+	GRCh37: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'})
+}
 
-function fetch({dsID, fields}, samples) {
+function fetch({dsID, fields, assembly}, samples) {
 		return Rx.Observable.zipArray(
 			sparseDataValues(dsID, fields[0], samples),
-			refGeneExonValues(refGene, fields)
+			refGene[assembly] ? refGeneExonValues(refGene[assembly], fields): Rx.Observable.return({})
 		).map(resp => _.object(['req', 'refGene'], resp));
 }
 
@@ -232,6 +234,11 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 		return {};
 	}
 	var {refGene} = data;
+
+	if (_.isEmpty(refGene)){
+		return {};
+	}
+
 	var layout = exonLayout.layout(_.values(refGene)[0], width, xzoom),
 		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples,
 				zoom);
