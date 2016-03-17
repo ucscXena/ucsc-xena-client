@@ -2,8 +2,8 @@
 /*eslint-env browser */
 /*jshint browser: true, onevar: true */
 /*global define: false, document: false */
-define(['./xenaQuery', './dom_helper', './heatmapColors', './highcharts', './highcharts_helper', './underscore_ext', 'rx'],
-	function (xenaQuery, dom_helper, heatmapColors, highcharts, highcharts_helper, _, Rx) {
+define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highcharts_helper', './underscore_ext', 'rx'],
+	function (xenaQuery, dom_helper, colorScales, highcharts, highcharts_helper, _, Rx) {
 	'use strict';
 	var Highcharts = highcharts.Highcharts;
 	return function (root, callback, sessionStorage) {
@@ -627,7 +627,7 @@ define(['./xenaQuery', './dom_helper', './heatmapColors', './highcharts', './hig
 					dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(cutOffset);
 					errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(getError);
 
-					var color = heatmapColors.categoryMore[i % heatmapColors.categoryMore.length];
+					var color = colorScales.categoryMore[i % colorScales.categoryMore.length];
 
 					highcharts_helper.addSeriesToColumn(
 						chart, code, dataSeriese, errorSeries, yIsCategorical,
@@ -772,7 +772,7 @@ define(['./xenaQuery', './dom_helper', './heatmapColors', './highcharts', './hig
 						ycodeSeries = _.map(_.map(categories, _.propertyOf(xbinnedSample)),
 								_.partial(yFromCategories, ybinnedSample[ycode]));
 
-						let color = heatmapColors.categoryMore[i % heatmapColors.categoryMore.length];
+						let color = colorScales.categoryMore[i % colorScales.categoryMore.length];
 
 						highcharts_helper.addSeriesToColumn(
 							chart, ycode, ycodeSeries, errorSeries, yIsCategorical,

@@ -3,9 +3,9 @@
 
 var _ = require('./underscore_ext');
 var partition = require('./partition');
-var heatmapColors = require('./heatmapColors');
+var colorScales = require('./colorScales');
 
-var colorFns = vs => _.map(vs, heatmapColors.colorScale);
+var colorFns = vs => _.map(vs, colorScales.colorScale);
 
 var drawBackground = (vg, width, height) => vg.box(0, 0, width, height, "gray");
 

@@ -4,7 +4,8 @@
 var _ = require('./underscore_ext');
 var Rx = require('rx');
 var widgets = require('./columnWidgets');
-var heatmapColors = require('./heatmapColors');
+var colorScales = require('./colorScales');
+var heatmapColors = require('./heatmapColors'); // XXX doesn't belong here.
 var util = require('./util');
 var Legend = require('./Legend');
 var Column = require('./Column');
@@ -35,7 +36,7 @@ var map = _.map,
 
 var secondExists = x => x[1] != null;
 
-var colorFns = vs => _.map(vs, heatmapColors.colorScale);
+var colorFns = vs => _.map(vs, colorScales.colorScale);
 
 //
 // Tooltip
@@ -158,7 +159,7 @@ function renderGenomicLegend(props) {
 		legendColors = heatmapColors.defaultColors(dataset);
 		labels = ["lower", "", "higher"];
 	} else if (hasData) { // one probe, or all colors are same (hasViz)
-		var colorfn = heatmapColors.colorScale(colors[0]);
+		var colorfn = colorScales.colorScale(colors[0]);
 		var {labels: l, colors: c} = legendFromScale(colorfn);
 		legendColors = c;
 		labels = cases(colors[0], l, {

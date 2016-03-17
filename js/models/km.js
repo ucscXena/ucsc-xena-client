@@ -5,7 +5,7 @@
 
 var _ = require('../underscore_ext');
 var multi = require('../multi');
-var {colorScale} = require('../heatmapColors');
+var {colorScale} = require('../colorScales');
 var km = require('../km'); // move km down?
 
 var MAX = 10; // max number of groups to display.
