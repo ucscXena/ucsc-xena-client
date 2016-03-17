@@ -18,10 +18,10 @@ var sortByLabel = list => _.sortBy(list, el => el.label.toLowerCase());
 
 
 
-function optsFromDatasets(servers) {
-	return _.flatmap(servers, (datasets, server) => {
+function optsFromDatasets(dataSubTypes) {
+	return _.flatmap(dataSubTypes, (datasets, dataSubType) => {
 		let sortedOpts = sortByLabel(filterDatasets(datasets)).map(d => ({value: d.dsID, label: d.label}));
-		return [{label: header(server), header: true}].concat(sortedOpts);
+		return [{label: dataSubType, header: true}].concat(sortedOpts);
 	});
 }
 
@@ -30,7 +30,7 @@ var DatasetSelect = React.createClass({
 	render: function () {
 		var {datasets, nullOpt, ...other} = this.props,
 			options = (nullOpt ? [{value: null, label: nullOpt}] : [])
-				.concat(optsFromDatasets(_.groupBy(datasets, 'server')))
+				.concat(optsFromDatasets(_.groupBy(datasets, 'dataSubType')))
 
 		return (
 			<Select {...other}  options={options} />

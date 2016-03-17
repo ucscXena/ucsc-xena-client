@@ -72,14 +72,14 @@ function formatAf(af) {
 var fmtIf = (x, fmt) => x ? fmt(x) : '';
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
+var gbURL =  (assembly, pos) => `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${encodeURIComponent(assembly)}&position=${encodeURIComponent(pos)}`;
 
 function sampleTooltip(data, gene, assembly) {
 	var dnaVaf = data.dna_vaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dna_vaf)],
 		rnaVaf = data.rna_vaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
 		refAlt = data.reference && data.alt && ['value', `${data.reference} to ${data.alt}`],
 		pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
-		gbURL =  (assembly, pos) => `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${encodeURIComponent(assembly)}&position=${encodeURIComponent(pos)}`,
-		posURL = ['url',  `${assembly} ${pos}`, gbURL],
+		posURL = ['url',  `${assembly} ${pos}`, gbURL(assembly,pos)],
 		effect = ['value', fmtIf(data.effect, x => `${x}, `) +  gene + //eslint-disable-line comma-spacing
 					fmtIf(data.amino_acid, x => ` (${x})`)];
 
@@ -179,9 +179,9 @@ var MutationColumn = hotOrNot(React.createClass({
 			feature = _.getIn(column, ['sFeature']),
 			assembly = _.getIn(column, ['assembly']),
 			rightAssembly = (assembly ==="hg19" || assembly ==="GRCh37") ? true : false,  //MuPIT currently only support hg19
-			gotData = ( data &&  data.req && data.req.rows.length>0 ) ? true : false,
-			noMenu = !rightAssembly || !gotData,  //loadingMenu = data ? false : true,
-			menuItemName = 'MuPIT View (hg19)';
+			noMenu = !rightAssembly || (data && _.isEmpty(data.refGene)),
+			noData = ( !data ) ? true : false,
+			menuItemName = noData? 'MuPIT View (hg19) Loading': 'MuPIT View (hg19)';
 
 		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
@@ -192,7 +192,7 @@ var MutationColumn = hotOrNot(React.createClass({
 				download={this.onDownload} //eslint-disable-line no-undef
 				column={column}
 				zoom={zoom}
-				menu={noMenu? null: <MenuItem disabled={noMenu} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
+				menu={noMenu? null: <MenuItem disabled={noData} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
 				data={data}
 				plot={<CanvasDrawing
 						ref='plot'

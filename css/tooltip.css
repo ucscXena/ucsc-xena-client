@@ -33,3 +33,6 @@
 	float:right;
 	padding-left: 4px;
 }
+.Tooltip a {
+	text-decoration: underline;
+}
