@@ -5,7 +5,6 @@ var _ = require('./underscore_ext');
 var Rx = require('rx');
 var widgets = require('./columnWidgets');
 var colorScales = require('./colorScales');
-var heatmapColors = require('./heatmapColors'); // XXX doesn't belong here.
 var util = require('./util');
 var Legend = require('./Legend');
 var Column = require('./Column');
@@ -130,20 +129,15 @@ function legendForColorscale(colorSpec) {
 	return {colors, labels};
 }
 
-// We never want to draw multiple legends. If there are multiple scales,
-// we do lower/higher. There are multiple scales if we have multiple probes
-// *and* there's no viz settings. We need at most one color fn, from which we
-// extract the domain & range.
+// We never want to draw multiple legends. We only draw the 1st scale
+// passed in. The caller should provide labels/colors in the 'legend' prop
+// if there are multiple scales.
 function renderFloatLegend(props) {
-	var {dataset, colors, hasViz} = props,
-		multiScaled = _.getIn(colors, [1]) && !hasViz,
+	var {colors, legend} = props,
 		hasData = _.getIn(colors, [0]);
 
-	// XXX move defaultColors to selector.
-	var {labels, colors: legendColors} = multiScaled ?
-		{colors: heatmapColors.defaultColors(dataset), labels: ["lower", "", "higher"]} :
-		(hasData ? legendForColorscale(colors[0]) :
-			 {colors: [], labels: []});
+	var {labels, colors: legendColors} = legend ||
+		(hasData ? legendForColorscale(colors[0]) : {colors: [], labels: []});
 
 	return <Legend colors={legendColors} labels={labels} align='center' />;
 }
@@ -242,8 +236,8 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	//    - Drop dataset, and add default colors to the 'display' obj.
 	// Might also want to copy fields into 'display', so we can drop the || here.
 	render: function () {
-		var {samples, data, column, dataset, vizSettings = {}, zoom, hasSurvival} = this.props,
-			{heatmap, colors} = column,
+		var {samples, data, column, dataset, zoom, hasSurvival} = this.props,
+			{heatmap, colors, legend} = column,
 			codes = _.getIn(data, ['codes']),
 			fields = _.getIn(data, ['req', 'probes'], column.fields),
 			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
@@ -276,8 +270,8 @@ var HeatmapColumn = hotOrNot(React.createClass({
 						heatmapData={heatmap}/>}
 				legend={<HeatmapLegend
 						fields={_.getIn(column, ['fields'])}
-						hasViz={!isNaN(_.getIn(vizSettings, ['min']))}
 						colors={colors}
+						legend={legend}
 						data={heatmap}
 						dataset={dataset}
 						codes={codes}/>}

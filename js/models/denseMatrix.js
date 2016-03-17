@@ -54,6 +54,8 @@ function computeHeatmap(vizSettings, data, fields, samples, dataset) {
 	});
 }
 
+var hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min']));
+
 function dataToHeatmap(column, vizSettings, data, samples, dataset) {
 	if (!data) {
 		return null;
@@ -63,8 +65,14 @@ function dataToHeatmap(column, vizSettings, data, samples, dataset) {
 	var heatmap = computeHeatmap(vizSettings, req, fields, samples, dataset),
 		colors = map(fields, (p, i) =>
 					 heatmapColors.colorSpec(column, vizSettings,
-											 codes[p], heatmap[i], dataset));
-	return {heatmap: heatmap, colors: colors};
+											 codes[p], heatmap[i], dataset)),
+		// Provide a legend scheme if more than one field.
+		multiScaled = (column.fields.length > 1 && !hasViz(vizSettings)),
+		legend = multiScaled ?
+			{legend: {colors: heatmapColors.defaultColors(dataset), labels: ['lower', '', 'higher']}} :
+			null;
+
+	return {heatmap: heatmap, colors: colors, ...legend};
 }
 
 //
