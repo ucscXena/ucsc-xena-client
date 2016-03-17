@@ -2,10 +2,12 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var {createSelector} = require('reselect');
+var {createSelectorCreator, defaultMemoize} = require('reselect');
 var {createFmapSelector} = require('./selectors');
 var widgets = require('./columnWidgets');
 var km = require('./models/km');
+
+var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
 var indexSelector = createFmapSelector(
 		state => _.fmap(state.columns,
@@ -38,17 +40,23 @@ var sortSelector = createSelector(
 	}
 );
 
+// This could be further optimized to eliminate the mergeKeys calls, below, which will
+// re-create every column object on every state update, regardless of whether the column
+// has changed. We never have more than about ten columns, so it's probably pointless to do
+// so.
 var transformSelector = createFmapSelector(
 		state => _.fmap(state.columns,
 			(column, key) => [
-				column,
+				_.omit(column, ['fieldLabel', 'columnLabel']), // ugh. Review column schema + widget.transform.
 				_.getIn(state, ['vizSettings', column.dsID]),
 				state.data[key],
 				state.samples,
 				state.datasets[column.dsID],
 				state.index[key],
 				state.zoom]),
-		([column, ...args]) => ({...column, ...widgets.transform(column, ...args)}));
+		_.apply(widgets.transform));
+
+var mergeKeys = (a, b) => _.mapObject(a, (v, k) => _.merge(v, b[k]));
 
 var survivalVarsSelector = createSelector(
 		state => state.features,
@@ -66,7 +74,7 @@ var kmSelector = createSelector(
 
 var index = state => ({...state, index: indexSelector(state)});
 var sort = state => ({...state, samples: sortSelector(state)});
-var transform = state => ({...state, columns: transformSelector(state)});
+var transform = state => ({...state, columns: mergeKeys(state.columns, transformSelector(state))});
 
 // kmGroups transform calculates the km data, and merges it into the state.km object.
 

@@ -5,9 +5,9 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var DropdownButton = require('react-bootstrap/lib/DropdownButton');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
-var _ = require('./underscore_ext');
-var {deepPureRenderMixin} = require('./react-utils');
-require('./Select.css');
+var _ = require('../underscore_ext');
+var {deepPureRenderMixin} = require('../react-utils');
+//require('./Select.css');
 
 function filterOpts(filter, opts) {
 	var f = filter.toLowerCase();
@@ -34,7 +34,7 @@ var Select = React.createClass({
 	},
 	onSelect: function (ev, value) {
         this.setState({filter: ''});
-		this.props.callback([this.props.event, value]);
+		this.props.onSelect(value);
 	},
 	onChange: function(ev) {
 		this.setState({filter: ev.target.value});

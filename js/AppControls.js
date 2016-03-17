@@ -3,8 +3,8 @@
 'use strict';
 
 var React = require('react');
-var CohortSelect = require('./CohortSelect');
-var DatasetSelect = require('./DatasetSelect');
+var CohortSelect = require('./views/CohortSelect');
+var DatasetSelect = require('./views/DatasetSelect');
 var Button = require('react-bootstrap/lib/Button');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
@@ -33,8 +33,14 @@ var AppControls = React.createClass({
 	onPdf: function () {
 		pdf(this.props.appState);
 	},
+	onSamplesSelect: function (value) {
+			this.props.callback(['samplesFrom', value]);
+	},
+	onCohortSelect: function (value) {
+			this.props.callback(['cohort', value]);
+	},
 	render: function () {
-		var {callback, appState: {cohort, cohorts, samplesFrom, datasets, mode}} = this.props,
+		var {appState: {cohort, cohorts, samplesFrom, datasets, mode}} = this.props,
 			hasCohort = !!cohort,
 			disableMenus = (mode === modeEvent.heatmap);
 
@@ -46,15 +52,14 @@ var AppControls = React.createClass({
 						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
 					</Button>
 				</OverlayTrigger>
-				<CohortSelect callback={callback} cohort={cohort} cohorts={cohorts} disable={disableMenus}/>
+				<CohortSelect onSelect={this.onCohortSelect} cohort={cohort} cohorts={cohorts} disable={disableMenus}/>
 				{' '}
 				{hasCohort ?
 					<div className='form-group' style={this.props.style}>
 						<label className='samplesFromLabel'> Samples in </label>
 						{' '}
 						<DatasetSelect
-							event='samplesFrom'
-							callback={callback}
+							onSelect={this.onSamplesSelect}
 							nullOpt="Any Datasets (i.e. show all samples)"
 							style={{display: hasCohort ?
 									'inline' : 'none'}}

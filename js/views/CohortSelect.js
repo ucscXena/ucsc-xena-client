@@ -2,8 +2,8 @@
 'use strict';
 var React = require('react');
 var Select = require('./Select');
-var _ = require('./underscore_ext');
-var {deepPureRenderMixin} = require('./react-utils');
+var _ = require('../underscore_ext');
+var {deepPureRenderMixin} = require('../react-utils');
 
 var CohortSelect = React.createClass({
 	mixins: [deepPureRenderMixin],
@@ -17,8 +17,6 @@ var CohortSelect = React.createClass({
 				<label className='cohortAnchor'>Cohort</label>
 				{' '}
 				<Select
-					event='cohort'
-					callback={callback}
 					value={cohort}
 					options={options}
 					{...other}

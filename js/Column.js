@@ -32,7 +32,7 @@ function disableKM(column, hasSurvival) {
 	if (!hasSurvival) {
 		return [true, 'No survival data for cohort'];
 	}
-	if (column.fields.length > 1 && column.dataType !== 'geneProbesMatrix') {
+	if (column.fields.length > 1) {
 		return [true, 'Unsupported for multiple genes/ids'];
 	}
 	return [false, ''];
@@ -113,7 +113,7 @@ var Column = React.createClass({
 			{width, columnLabel, fieldLabel} = column,
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			// move this to state to generalize to other annotations.
-			doRefGene = column.dataType === 'mutationVector',
+			doRefGene = _.get(data, 'refGene'),
 			// In FF spans don't appear as event targets. In Chrome, they do.
 			// If we omit Sortable-handle here, Chrome will only catch events
 			// in the button but not in the span. If we omit Sortable-handle
@@ -147,7 +147,7 @@ var Column = React.createClass({
 					eventName='fieldLabel'
 					value={fieldLabel} />
 				<div style={{height: 20}}>
-					{doRefGene && data ?
+					{doRefGene ?
 						<RefGeneAnnotation
 							width={width}
 							refGene={data.refGene[column.fields[0]]}
