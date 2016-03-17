@@ -20,7 +20,7 @@ var valid = state => !!trim(state.gene);
 // Select a gene.
 var GeneEdit = React.createClass({
 	render: function () {
-		var {gene = {}, setEditorState} = this.props;
+		var {gene, setEditorState} = this.props;
 		return (
 			<div>
 				<div className='form-group'>
