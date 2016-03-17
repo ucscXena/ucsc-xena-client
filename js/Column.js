@@ -32,7 +32,7 @@ function disableKM(column, hasSurvival) {
 	if (!hasSurvival) {
 		return [true, 'No survival data for cohort'];
 	}
-	if (column.fields.length > 1 && column.dataType !== 'geneProbesMatrix') {
+	if (column.fields.length > 1) {
 		return [true, 'Unsupported for multiple genes/ids'];
 	}
 	return [false, ''];
