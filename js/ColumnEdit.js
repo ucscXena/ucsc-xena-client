@@ -36,17 +36,18 @@ var ColumnEdit = React.createClass({
 	},
 	onSelect: function (dsID) {
 		var {callback, appState: {datasets}} = this.props,
-			meta = _.get(datasets, dsID);
+			meta = _.get(datasets, dsID),
+			hasGenes = _.get(meta, 'probeMap');
 
-		this.setState({dataset: dsID});
+		this.setState({dataset: dsID, editor: {hasGenes, genes: hasGenes}});
 		callback(['edit-dataset', dsID, meta]);
 	},
 	setEditorState: function (state) {
-		var {editor = {}} = this.state;
-		this.setState({editor: _.merge( editor, state)});
+		var {editor} = this.state;
+		this.setState({editor: _.merge(editor, state)});
 	},
 	render: function () {
-		var {dataset, editor = {}} = this.state,
+		var {dataset, editor} = this.state,
 			{appState: {datasets, columnEdit}} = this.props,
 			features = _.getIn(columnEdit, ['features']),
 			meta = dataset && _.get(datasets, dataset);
@@ -68,7 +69,7 @@ var ColumnEdit = React.createClass({
 									datasets={datasets} />
 							</div>
 						</div>
-						<Editor {...columnEdit} {...editor} setEditorState={this.setEditorState} hasGenes={meta && !!meta.probeMap} />
+						<Editor {...columnEdit} {...editor} setEditorState={this.setEditorState}/>
 						<div className='form-group'>
 							<Button disabled={!valid(editor)}
 									onClick={() => this.addColumn(apply(features, editor))} className='col-md-offset-10'>Apply</Button>

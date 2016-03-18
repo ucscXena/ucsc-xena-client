@@ -7,7 +7,7 @@ var _ = require('../underscore_ext');
 var trim = require('underscore.string').trim;
 
 function apply(features, state) {
-	var {list, genes = true} = state,
+	var {list, genes} = state,
 		fields = toGeneList(list),
 		fieldTxt = fields.join(', ');
 	return {
@@ -35,7 +35,7 @@ var GeneProbeEdit = React.createClass({
 	//     list: string List of genes/identifiers entered by user.
 	//
 	render: function () {
-		var {genes = true, hasGenes, list, examples, setEditorState} = this.props,
+		var {genes, hasGenes, list, examples, setEditorState} = this.props,
 			doGenes = hasGenes && genes;
 		var help = doGenes ? 'e.g. TP53 or TP53, PTEN' :
 			// babel-eslint/issues/31
