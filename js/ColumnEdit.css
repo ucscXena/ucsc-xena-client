@@ -1,3 +1,7 @@
 .columnEdit .modal-content {
 	min-height: 30em; /* XXX relates to Select.css? */
 }
+.dropdown-header {
+    color: #0088CC;
+    font-size: medium;
+}
