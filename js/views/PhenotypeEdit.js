@@ -24,12 +24,12 @@ var PhenotypeEdit = React.createClass({
 	// XXX change col-md-offset-10, etc. to react-boostrap style
 	render: function () {
 		var {feature = {}, features, setEditorState} = this.props;
+		let chosenFeature = _.find(features, f => f.value === feature);
 		return (
 			<div className='form-group'>
 				<label className='col-md-2 control-label'>View:</label>
-				<Select value={feature}
-					onSelect={f => setEditorState({feature: f})}
-					options={features} />
+				<Select choice={chosenFeature} options={features}
+					onSelect={f => setEditorState({feature: f})}/>
 			</div>
 		);
 	}

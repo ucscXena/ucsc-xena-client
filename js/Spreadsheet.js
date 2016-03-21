@@ -8,7 +8,7 @@ var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
 var Popover = require('react-bootstrap/lib/Popover');
-var ColumnEdit = require('./ColumnEdit');
+var ColumnEdit = require('./ColumnEdit2');
 var Sortable = require('./Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
@@ -77,11 +77,11 @@ var Columns = React.createClass({
 		this.events('tooltip', 'click', 'plotClick');
 
 		this.ev.plotClick.subscribe(ev => {
-			let {setChoice, appState: {zoom, samples}} = this.props;
+			let {callback, appState: {zoom, samples}} = this.props;
 			if (zoomOutClick(ev)) {
-				setChoice(['zoom', zoomOut(samples.length, zoom)]);
+				callback(['zoom', zoomOut(samples.length, zoom)]);
 			} else if (zoomInClick(ev)) {
-				setChoice(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
+				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
 			}
 		});
 
@@ -130,7 +130,7 @@ var Columns = React.createClass({
 		this.setState({ dims: _.pick(domNode, nodeKeys) });
 	},
 	setOrder: function (order) {
-		this.props.setChoice(['order', order]);
+		this.props.callback(['order', order]);
 	},
 	onViz: function (id) {
 		this.setState({openVizSettings: id});
@@ -213,10 +213,10 @@ function zoomPopover(zoom, samples, props) {
 
 var Spreadsheet = React.createClass({
 	zoomHelpClose: function () {
-		this.props.setChoice(['zoom-help-close']);
+		this.props.callback(['zoom-help-close']);
 	},
 	zoomHelpDisable: function () {
-		this.props.setChoice(['zoom-help-disable']);
+		this.props.callback(['zoom-help-disable']);
 	},
 	render: function () {
 		var {appState: {zoom, samples, zoomHelp}} = this.props,

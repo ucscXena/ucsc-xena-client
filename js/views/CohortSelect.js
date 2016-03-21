@@ -13,11 +13,12 @@ var CohortSelect = React.createClass({
 			options = _.map(sortedCohorts, c => ({value: c, label: c}));
 		let label = (children && !_.isArray(this.props.children)) ? children
 			: <label className='cohortAnchor'>Cohort: </label>;
+		let chosenValue = _.find(options, c => c.value === cohort);
 
 		return (
 			<div className='form-group'>
 				{label}
-				<Select value={cohort} options={options} {...other}/>
+				<Select choice={chosenValue} allowSearch={true} options={options} {...other}/>
 			</div>
 		);
 	}

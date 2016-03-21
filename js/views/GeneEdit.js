@@ -26,9 +26,8 @@ var GeneEdit = React.createClass({
 				<div className='form-group'>
 					<label className='col-md-2 control-label'>Gene:</label>
 					<div className='col-md-4'>
-						<Input value={gene}
-							onChange={ev => setEditorState({gene: ev.target.value})}
-							type='text'/>
+						<Input value={gene} type='text'
+							onChange={ev => setEditorState({gene: ev.target.value})}/>
 					</div>
 				</div>
 				<div className='form-group'>

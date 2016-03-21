@@ -2,6 +2,7 @@
 'use strict';
 
 var React = require('react');
+var {Button, Glyphicon} = require('react-bootstrap/lib');
 var ReactDOM = require('react-dom');
 var DropdownButton = require('react-bootstrap/lib/DropdownButton');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
@@ -14,26 +15,38 @@ function filterOpts(filter, opts) {
 	return _.filter(opts, opt => opt.label.toLowerCase().indexOf(f) !== -1);
 }
 
-var notUndefined = x => !_.isUndefined(x);
-
 var stopPropagation = ev => {
 	ev.stopPropagation();
 	ev.nativeEvent.stopImmediatePropagation();
 };
 
+function makeMenuItem(choice, opt, key, onSelect) {
+	return (
+		<MenuItem onSelect={onSelect} header={!!opt.header}
+				  key={key} eventKey={opt.value}>
+			{(choice && choice.value === opt.value) && !_.has(choice, 'header')
+				? <Glyphicon glyph='ok'/> : null}
+			{opt.label}
+		</MenuItem>
+	);
+}
+
 var Select = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState: function () {
-		return {filter: ''};
+		return {
+			menuStyle: 'default',
+			filter: ''
+		};
 	},
 	getDefaultProps: function () {
 		return {
+			allowSearch: false,
 			disable: false,
 			event: 'change'
 		};
 	},
 	onSelect: function (ev, value) {
-        this.setState({filter: ''});
 		this.props.onSelect(value);
 	},
 	onChange: function(ev) {
@@ -52,43 +65,59 @@ var Select = React.createClass({
 	// pending callbacks.
 	onKeyUp: function (ev) {
 		if (ev.key === 'Escape') {
-//			ev.stopPropagation();
+			//ev.stopPropagation();
 			this.refs.dropdown.setDropdownState(false);
 			ev.nativeEvent.stopImmediatePropagation();
 		}
 	},
+	onToggle: function(isOpen) {
+		this.setState({menuStyle: isOpen ? 'info' : 'default'})
+	},
 	render: function () {
-		var {disable, value} = this.props,
-			title = notUndefined(value) &&
-				_.find(this.props.options, opt => opt.value === value),
-			opts = filterOpts(this.state.filter, this.props.options);
+		var {allowSearch, choice, disable, options} = this.props,
+			opts = filterOpts(this.state.filter, options);
 		// We wrap the input in a div so DropdownButton decorates the div
 		// with event handlers, and we can disable them by using stopPropagation
 		// on the input. There's no direct way to override the event handlers
 		// installed by DropdownButton.
-		return (
-			<DropdownButton ref='dropdown'
-				className='Select'
-				disabled={disable}
-				onMouseUp={this.setFocus}
-				title={title && title.label || 'Select...'}>
-
-				{[<div key='__search'><input className='Select-input'
+		let searchSection = allowSearch ?
+			<div key='__search'>
+				<input className='Select-input'
+					key='__search'
 					onKeyUp={this.onKeyUp}
 					ref='search'
 					value={this.state.filter}
 					onChange={this.onChange}
 					onSelect={stopPropagation}
 					onClick={stopPropagation}
-					type='text'/></div>
-				].concat(_.map(opts, (opt, i) =>
-						  <MenuItem onSelect={this.onSelect} header={!!opt.header}
-							eventKey={opt.value} key={i}>
-
-							{opt.label}
-						 </MenuItem>))}
-			</DropdownButton>
-		);
+					type='text'/>
+			</div> : null;
+		if (opts.length === 1) {
+			let option = _.first(opts);
+			return (
+				<Button
+					onClick={(e) => this.onSelect(e, option.value)}
+					bsStyle={_.has(choice, 'value') ? 'success' : this.state.menuStyle}>
+					{option.label}
+				</Button>
+			);
+		} else if (opts.length > 1) {
+			return (
+				<DropdownButton ref='dropdown'
+								menuitem='menuitem'
+								bsStyle={_.has(choice, 'value') ? 'success' : this.state.menuStyle}
+								className='Select'
+								disabled={disable}
+								onMouseUp={allowSearch ? this.setFocus : null}
+								onToggle={this.onToggle}
+								title={choice && choice.label || 'Please select...'}>
+					{searchSection}
+					{_.map(opts, (opt, i) => makeMenuItem(choice, opt, i, this.onSelect))}
+				</DropdownButton>
+			);
+		} else {
+			return null;
+		}
 	}
 });
 
