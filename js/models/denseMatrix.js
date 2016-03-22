@@ -72,7 +72,7 @@ function dataToHeatmap(column, vizSettings, data, samples, dataset) {
 			{legend: {colors: heatmapColors.defaultColors(dataset), labels: ['lower', '', 'higher']}} :
 			null;
 
-	return {heatmap: heatmap, colors: colors, ...legend};
+	return {heatmap, colors, ...legend};
 }
 
 //
@@ -166,18 +166,12 @@ var fetchFeature = ({dsID, fields}, samples) => Rx.Observable.zipArray(
 var fetchGene = ({dsID, fields}, samples) => datasetGenesValues(dsID, samples, fields)
 			.map(resp => ({req: indexGeneResponse(fields, samples, resp)}));
 
-widgets.cmp.add("probeMatrix", cmp);
+['probeMatrix', 'geneProbesMatrix', 'geneMatrix', 'clinicalMatrix'].forEach(dataType => {
+	widgets.transform.add(dataType, dataToHeatmap);
+	widgets.cmp.add(dataType, cmp);
+});
+
 widgets.fetch.add("probeMatrix", fetch);
-widgets.transform.add("probeMatrix", dataToHeatmap);
-
-widgets.cmp.add("geneProbesMatrix", cmp);
 widgets.fetch.add("geneProbesMatrix", fetchGeneProbes);
-widgets.transform.add("geneProbesMatrix", dataToHeatmap);
-
-widgets.cmp.add("geneMatrix", cmp);
 widgets.fetch.add("geneMatrix", fetchGene);
-widgets.transform.add("geneMatrix", dataToHeatmap);
-
-widgets.cmp.add("clinicalMatrix", cmp);
 widgets.fetch.add("clinicalMatrix", fetchFeature);
-widgets.transform.add("clinicalMatrix", dataToHeatmap);
