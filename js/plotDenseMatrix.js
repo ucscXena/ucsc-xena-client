@@ -56,25 +56,17 @@ function bounded(min, max, x) {
 
 var nn = (...args) => args.filter(x => x); // not "falsey" (null, undefined, false, etc.)
 
-function tooltip(heatmap, fields, column, codes, zoom, samples, ev) {
+function tooltip(heatmap, fields, fieldFormat, codes, width, zoom, samples, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
-		fieldIndex = bounded(0, fields.length, Math.floor(coord.x * fields.length / column.width)),
+		fieldIndex = bounded(0, fields.length, Math.floor(coord.x * fields.length / width)),
 		field = fields[fieldIndex],
 		fieldCodes = _.getIn(codes, [field]);
 
 	var val = _.getIn(heatmap, [fieldIndex, sampleIndex]),
 		code = _.getIn(fieldCodes, [val]),
-		label;
-
-	if (fields.length === 1) {
-		label = column.fieldLabel.default;
-	} else if (fields.length === column.fields.length) {
-		label = field;
-	} else {
-		label = column.fieldLabel.default + ' (' + field + ')';
-	}
+		label = fieldFormat(field);
 
 	val = code ? code : prec(val);
 
@@ -225,11 +217,11 @@ var HeatmapColumn = hotOrNot(React.createClass({
 		this.props.callback(['dataType', this.props.id, newMode]);
 	},
 	tooltip: function (ev) {
-		var {samples, data, column, zoom} = this.props,
+		var {samples, data, column, zoom, fieldFormat, id} = this.props,
 			codes = _.get(data, 'codes'),
-			{heatmap} = column,
-			fields = _.getIn(data, ['req', 'probes'], column.fields);
-		return tooltip(heatmap, fields, column, codes, zoom, samples, ev);
+			{heatmap, width} = column,
+			fields = _.getIn(data, ['req', 'probes'], column.fields); // XXX
+		return tooltip(heatmap, fields, fieldFormat(id), codes, width, zoom, samples, ev);
 	},
 	// To reduce this set of properties, we could
 	//    - Drop data & move codes into the 'display' obj, outside of data

@@ -16,6 +16,19 @@ var views = {
 	chart: ChartView
 };
 
+function getFieldFormat(uuid, columns, data) {
+	var columnFields = _.getIn(columns, [uuid, 'fields']),
+		label = _.getIn(columns, [uuid, 'fieldLabel', 'default']),
+		fields = _.getIn(data, [uuid, 'req', 'probes'], columnFields);
+	if (fields.length === 1) {                           // 1 gene/probe, or 1 probe in gene: use default field label
+		return () => label;
+	} else if (fields.length === columnFields.length) {  // n > 1 genes/probes
+		return _.identity;
+	} else {                                             // n > 1 probes in gene
+		return field => `${label} (${field})`
+	}
+}
+
 var Application = React.createClass({
 //	onPerf: function () {
 //		this.perf = !this.perf;
@@ -30,6 +43,10 @@ var Application = React.createClass({
 //			Perf.printWasted();
 //		}
 //	},
+	fieldFormat: function(uuid) {
+		var {columns, data} = this.props.state;
+		return getFieldFormat(uuid, columns, data);
+	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
@@ -48,7 +65,7 @@ var Application = React.createClass({
 						<AppControls {...otherProps} appState={computedState} />
 					</Col>
 				</Row>
-				<View {...otherProps} appState={computedState} />
+				<View {...otherProps} fieldFormat={this.fieldFormat} appState={computedState} />
 				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
 						callback={this.props.callback}
 						km={computedState.km}

@@ -143,7 +143,7 @@ var Columns = React.createClass({
 		this.setState({openVizSettings: dsID});
 	},
 	render: function () {
-		var {callback, appState} = this.props;
+		var {callback, fieldFormat, appState} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
 		var {openColumnEdit, openVizSettings} = this.state;
@@ -173,6 +173,7 @@ var Columns = React.createClass({
 			zoom: zoom,
 			callback: callback,
 			hasSurvival: hasSurvival(appState),
+			fieldFormat,
 			tooltip: this.ev.tooltip,
 			onViz: this.onViz,
 			onClick: this.ev.plotClick,
