@@ -2,7 +2,7 @@
 'use strict';
 
 var React = require('react');
-var Input = require('react-bootstrap/lib/Input');
+var {Input, Panel, Well} = require('react-bootstrap/lib');
 var _ = require('../underscore_ext');
 var trim = require('underscore.string').trim;
 
@@ -43,27 +43,28 @@ var GeneProbeEdit = React.createClass({
 		return (
 			<div>
 				{hasGenes ?
-				<div className='form-group'>
-					<label className='col-md-2 control-label'>Input:</label>
-						<div className='col-md-4'>
+				<Well bsSize="small">
+					<div className='row'>
+						<div className='col-md-4 text-right'>
+							<h4>Choose an Input: </h4>
+						</div>
+						<div className='col-md-2'>
 							<Input onChange={() => setEditorState({genes: true})}
-								 checked={genes}
-								 type='radio' name='mode' value='genes' label='genes'/>
+								checked={genes}
+								type='radio' name='mode' value='genes' label='genes'/>
+						</div>
+						<div className='col-md-2'>
 							<Input onChange={() => setEditorState({genes: false})}
 								checked={!genes}
 								type='radio' name='mode' value='identifiers' label='identifiers'/>
 						</div>
-				</div> : null}
-				<div className='form-group'>
-					<label className='col-md-2 control-label'>{doGenes ? 'Genes:' : 'Identifiers:'}</label>
-					<div className='col-md-9'>
-						<Input onChange={ev => setEditorState({list: ev.target.value})}
-							type='textarea' value={list} />
 					</div>
-				</div>
-				<div className='form-group'>
-					<p className='col-md-offset-2'>{help}</p>
-				</div>
+				</Well>: null}
+				<Panel className='form-group' header={<b>{doGenes ? 'Genes' : 'Identifiers'}</b>}>
+					<Input onChange={ev => setEditorState({list: ev.target.value})}
+						type='textarea' bsSize='large' value={list} />
+					<p><small>{help}</small></p>
+				</Panel>
 			</div>
 	   );
 	}

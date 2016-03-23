@@ -21,16 +21,16 @@ var valid = state => !!state.feature;
 
 // Select a phenotype feature from those on the server.
 var PhenotypeEdit = React.createClass({
+	name: 'View',
 	// XXX change col-md-offset-10, etc. to react-boostrap style
 	render: function () {
-		var {feature = {}, features, setEditorState} = this.props;
-		let chosenFeature = _.find(features, f => f.value === feature);
+		var {feature = {}, features, makeLabel, setEditorState} = this.props,
+			labelValue = _.isEmpty(feature) ? `Choose a ${this.name}:` : `${this.name} chosen:`,
+			content = <Select onSelect={f => setEditorState({feature: f})}
+						allowSearch={true} value={feature} options={features}/>,
+			label = makeLabel(content, labelValue);
 		return (
-			<div className='form-group'>
-				<label className='col-md-2 control-label'>View:</label>
-				<Select choice={chosenFeature} options={features}
-					onSelect={f => setEditorState({feature: f})}/>
-			</div>
+			<div className='row'>{label}</div>
 		);
 	}
 });
