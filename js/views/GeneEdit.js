@@ -2,7 +2,7 @@
 'use strict';
 
 var React = require('react');
-var Input = require('react-bootstrap/lib/Input');
+var {Input} = require('react-bootstrap/lib/');
 var trim = require('underscore.string').trim;
 
 function apply(features, state) {
@@ -19,21 +19,20 @@ var valid = state => !!trim(state.gene);
 
 // Select a gene.
 var GeneEdit = React.createClass({
+	name: 'Gene',
 	render: function () {
-		var {gene, setEditorState} = this.props;
+		var {gene, makeLabel, setEditorState} = this.props;
+		//let header = gene ? makeHeader(`Entered ${this.name}: ${gene}`, true)
+		//	: makeHeader(`Input a ${this.name}`, false);
+		let content =
+			<div className="form-group">
+				<Input type='text' value={gene} bsSize="large"
+					   onChange={ev => setEditorState({list: ev.target.value})}/>
+				<small>e.g. TP53</small>
+			</div>;
+		let label = makeLabel(content, `Enter a ${this.name}`);
 		return (
-			<div>
-				<div className='form-group'>
-					<label className='col-md-2 control-label'>Gene:</label>
-					<div className='col-md-4'>
-						<Input value={gene} type='text'
-							onChange={ev => setEditorState({gene: ev.target.value})}/>
-					</div>
-				</div>
-				<div className='form-group'>
-					<p className='col-md-offset-2'>e.g. TP53</p>
-				</div>
-			</div>
+			<div className="row">{label}</div>
 		);
 	}
 });

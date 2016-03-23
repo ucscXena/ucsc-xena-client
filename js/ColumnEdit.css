@@ -11,16 +11,32 @@
 	vertical-align: bottom;
 }
 
-.control-label-pending {
-	font-size: 24px;
+.selection-header {
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 21px;
 }
 
-.control-label-done {
-	text-align: right;
-	font-size: 18px;
+.selection-footer {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	width: 100%;
 }
 
-.nav-buttons {
-	background-color: 'yellow';
-	text-align: center;
+.breadcrumb-active {
+	color: #FF8000;
+	text-decoration: underline;
+}
+
+.breadcrumb-inActive {
+	color: #A4A4A4;
+	text-decoration: no-underline;
+}
+
+.active {
+	color: #FF8000;
+}
+.inActive {
+	color: #A4A4A4;
 }

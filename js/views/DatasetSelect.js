@@ -1,7 +1,7 @@
 /*global require: false, module: false */
 'use strict';
 var React = require('react');
-var ButtonGroup = require('react-bootstrap/lib/ButtonGroup');
+var {Accordion, Glyphicon, ListGroup, ListGroupItem, Panel, Well} = require('react-bootstrap/lib');
 var Select = require('./Select');
 var _ = require('../underscore_ext');
 var xenaQuery = require('../xenaQuery');
@@ -12,18 +12,18 @@ var header = s => xenaQuery.server_url(s);
 
 const ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap', 'genomicSegment'];
 const exceptions = {
-	clinicalMatrix: 'phenotype',
+	clinicalMatrix: 'Phenotypes',
 	mutationVector: null,
 	genomicMatrix: null
 };
 
 var loaded = ds => ds.status === 'loaded';
 //var filterDatasets = list => list.filter(ds => notIgnored(ds) && loaded(ds));
-//var sortByLabel = list => _.sortBy(list, el => el.label.toLowerCase());
+var sortByGroupName = list => _.sortBy(list, (group, name) => name.toLowerCase());
 
 function groupsFromDatasets(datasets, localHubUrl) {
 	let dsGroups = {local: {}, remote: {}},
-		localGroupKey = 'Your local hub';
+		localGroupKey = 'Your computer hub';
 	_.each(datasets, (ds, key) => {
 		let server = 'remote';
 		if (loaded(ds)) {
@@ -33,6 +33,8 @@ function groupsFromDatasets(datasets, localHubUrl) {
 				server = 'local';
 			} else {
 				group = exceptions[ds.type] || ds.dataSubType;
+				if (ds.type.includes('pheno'))
+					console.log(ds.type);
 			}
 
 			// one-time creation of a list
@@ -45,36 +47,83 @@ function groupsFromDatasets(datasets, localHubUrl) {
 		}
 	});
 	let localGroup = dsGroups.local[localGroupKey];
-	return (localGroup ? [localGroup] : []).concat(
-		_.sortBy(dsGroups.remote, (group, name) => name.toLowerCase())
+	return (localGroup ? [localGroup] : []).concat(sortByGroupName(dsGroups.remote));
+}
+
+function getStyleSuffix(isMatch) {
+	return isMatch ? 'info' : 'default'
+}
+
+function makeGroup(group, activeGroupName, onSelect, setValue) {
+	let {name, options} = group,
+		groupIsException = _.contains(exceptions, name),
+		header =
+			<div className='row'>
+				<span className='col-md-11'>
+					<b>{name}</b>
+				</span>
+				<span className='col-md-1'>
+					<Glyphicon glyph={activeGroupName === name ? 'menu-up' : 'triangle-bottom'} />
+				</span>
+			</div>;
+	return groupIsException ? (
+		<div key={name} className={`panel panel-${getStyleSuffix(options[0].value === setValue)}`}>
+			<div className='panel-heading' onClick={() => onSelect(options[0].value)}>{name}</div>
+		</div>)
+		:
+		(<Panel collapsible key={name} eventKey={name} header={header}>
+			<ListGroup fill>
+				{options.map((opt, i) =>
+					<ListGroupItem key={i} onClick={() => onSelect(opt.value)} eventKey={opt.value}
+						href='#' bsStyle={getStyleSuffix(opt.value === setValue)}>{opt.label}
+					</ListGroupItem>
+				)}
+			</ListGroup>
+		</Panel>
 	);
 }
 
 var DatasetSelect = React.createClass({
+	name: 'Dataset',
 	getInitialState: function() {
-		return {}
+		let {datasets, localHubUrl} = this.props;
+		return {
+			activeGroup: '',
+			groups: groupsFromDatasets(datasets, localHubUrl)
+		}
+	},
+	componentWillReceiveProps: function(newProps) {
+		if (!_.isEqual(this.props.groups !== newProps.groups)) {
+			let {datasets, localHubUrl} = this.props;
+			this.setState({groups: groupsFromDatasets(datasets, localHubUrl)});
+		}
+	},
+	//onSelect: function(dsID, groupName) {
+	//	this.props.onSelect(dsID);
+	//	//this.onSetGroup(groupName);
+	//},
+	onSetGroup: function(newGroupName) {
+		// Set 'activeGroup' to empty string as a way to toggle the group to be on/off
+		let groupName = (newGroupName !== this.state.activeGroup) ? newGroupName : '';
+		this.setState({activeGroup: groupName});
 	},
 	mixins: [deepPureRenderMixin],
 	render: function () {
-		var {children, datasets, localHubUrl, value, ...other} = this.props,
-			groups = groupsFromDatasets(datasets, localHubUrl);
-		var label = (children && !_.isArray(this.props.children)) ? children
-			: <label className='datasetAnchor'>Dataset: </label>;
+		var {disable, datasets, makeLabel, onSelect, value, ...other} = this.props,
+			{activeGroup, groups} = this.state,
+			chosenValue = datasets && datasets[value],
+			label = makeLabel(chosenValue && chosenValue.label,
+				chosenValue ? 'Chosen dataset:' : `Choose a ${this.name}`),
+			content = disable ? null :
+				<Accordion className='form-group' onSelect={this.onSetGroup}>
+					{_.map(groups, group => makeGroup(group, activeGroup, onSelect, value))}
+				</Accordion>;
 		return (
-			<ButtonGroup stacked className='form-group'>
+			<div>
 				{label}
-				{_.map(groups, (group) => {
-					let header = {header: true, label: group.name},
-						groupIsException = _.contains(exceptions, group.name),
-						groupWithHeader = groupIsException ? [_.first(group.options)] : [header].concat(group.options),
-						choice = _.find(groupWithHeader, ds => ds.value === value) || header;
-					return (children || (!children && choice && choice.value)) ? (
-						<div key={group.name}>
-							<Select {...other} options={groupWithHeader} choice={choice}/>
-						</div>
-					) : null;
-				})}
-			</ButtonGroup>
+				{disable ? <hr /> : null}
+				{content}
+			</div>
 		);
 	}
 });
