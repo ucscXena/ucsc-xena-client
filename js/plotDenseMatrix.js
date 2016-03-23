@@ -226,7 +226,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
 	render: function () {
-		var {samples, data, column, zoom, hasSurvival} = this.props,
+		var {samples, data, column, zoom, disableKM} = this.props,
 			{fields, heatmap, colors, legend} = column,
 			codes = _.get(data, 'codes'),
 			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
@@ -237,7 +237,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 				callback={this.props.callback}
 				id={this.props.id}
 				onViz={this.props.onViz}
-				hasSurvival={hasSurvival}
+				disableKM={disableKM}
 				download={download}
 				column={column}
 				zoom={zoom}

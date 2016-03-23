@@ -24,20 +24,6 @@ function download([fields, rows]) {
 	document.body.removeChild(a);
 }
 
-// For geneProbesMatrix we will average across probes to compute KM. For
-// other types, we can't support multiple fields. This should really be
-// in a prop set by the column, or in a multimethod. Having this here is bad.
-
-function disableKM(column, hasSurvival) {
-	if (!hasSurvival) {
-		return [true, 'No survival data for cohort'];
-	}
-	if (column.fields.length > 1) {
-		return [true, 'Unsupported for multiple genes/ids'];
-	}
-	return [false, ''];
-}
-
 var ResizeOverlay = React.createClass({
 	getInitialState: () => ({zooming: false}),
 	onResizeStart: function () {
@@ -109,9 +95,9 @@ var Column = React.createClass({
 		callback(['km-open', id]);
 	},
 	render: function () {
-		var {id, callback, plot, legend, column, zoom, menu, data, hasSurvival} = this.props,
+		var {id, callback, plot, legend, column, zoom, menu, data, disableKM} = this.props,
 			{width, columnLabel, fieldLabel} = column,
-			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
+			[kmDisabled, kmTitle] = disableKM(id),
 			// move this to state to generalize to other annotations.
 			doRefGene = _.get(data, 'refGene'),
 			// In FF spans don't appear as event targets. In Chrome, they do.

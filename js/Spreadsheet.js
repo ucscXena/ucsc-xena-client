@@ -50,7 +50,6 @@ function zoomIn(pos, samples, zoom) {
 	return _.merge(zoom, {count: nCount, index: nIndex});
 }
 
-
 function zoomOut(samples, zoom) {
 	var {count, index} = zoom;
 	var nCount = Math.min(samples, Math.round(count * 3)),
@@ -63,12 +62,6 @@ function zoomOut(samples, zoom) {
 function targetPos(ev) {
 	var bb = ev.currentTarget.getBoundingClientRect();
 	return (ev.clientY - bb.top) / ev.currentTarget.clientHeight;
-}
-
-function hasSurvival(state) {
-	return !! (_.getIn(state, ['km', 'ev']) &&
-			   _.getIn(state, ['km', 'tte']) &&
-			   _.getIn(state, ['km', 'patient']));
 }
 
 var zoomInClick = ev =>
@@ -143,7 +136,7 @@ var Columns = React.createClass({
 		this.setState({openVizSettings: dsID});
 	},
 	render: function () {
-		var {callback, fieldFormat, appState} = this.props;
+		var {callback, fieldFormat, disableKM, appState} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
 		var {openColumnEdit, openVizSettings} = this.state;
@@ -169,16 +162,15 @@ var Columns = React.createClass({
 			index: _.getIn(index, [id]),
 			vizSettings: _.getIn(appState, ['vizSettings',
 				_.getIn(columns, [id, 'dsID'])]),
-			samples: samples,
-			zoom: zoom,
-			callback: callback,
-			hasSurvival: hasSurvival(appState),
+			samples,
+			zoom,
+			callback,
 			fieldFormat,
+			disableKM,
 			tooltip: this.ev.tooltip,
 			onViz: this.onViz,
 			onClick: this.ev.plotClick,
-			column: _.getIn(columns, [id]),
-			dataset: _.getIn(appState, ['datasets', _.getIn(columns, [id, 'dsID'])])
+			column: _.getIn(columns, [id])
 		}));
 
 		return (
