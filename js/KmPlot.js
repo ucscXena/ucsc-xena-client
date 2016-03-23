@@ -271,7 +271,7 @@ var KmPlot = React.createClass({
 				height: 1.0
 			},
 			definitions: {
-				width: 0.25,
+				width: 0.4,
 				height: 1.0
 			}
 		}
@@ -281,7 +281,7 @@ var KmPlot = React.createClass({
 		eventClose: 'km-close',
 		dims: {
 			height: 450,
-			width: 860
+			width: 700
 		}
 	}),
 

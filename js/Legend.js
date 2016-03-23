@@ -33,11 +33,11 @@ var nodata = [["No Data", "#808080"]];
 
 // XXX klass? upperBorderIndex?
 var Legend = React.createClass({
-	getDefaultProps: () => ({ max: 20 }),
+	getDefaultProps: () => ({ max: 40 }),
 	render: function () {
 		var {label, labels, colors, align, max} = this.props,
 			ellipsis = labels.length > max,
-			items = _.map(nodata.concat(_.first(_.zip(labels, colors), max)), ([l, c], i) =>
+			items = _.map(nodata.concat(_.last(_.zip(labels, colors), max)), ([l, c], i) =>
 						  <label className='Legend-label'
 							  key={i}
 							  title={l}

@@ -590,7 +590,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				}
 
 				// column chart setup
-				chartOptions = highcharts_helper.columnChartFloat(chartOptions, yfields, xlabel, ylabel, yIsCategorical);
+				chartOptions = highcharts_helper.columnChartFloat(chartOptions, yfields, xlabel, ylabel);
 				chart = new Highcharts.Chart(chartOptions);
 
 				//add data seriese
@@ -628,6 +628,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 					errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(getError);
 
 					var color = colorScales.categoryMore[i % colorScales.categoryMore.length];
+
 
 					highcharts_helper.addSeriesToColumn(
 						chart, code, dataSeriese, errorSeries, yIsCategorical,

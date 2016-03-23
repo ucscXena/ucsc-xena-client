@@ -11,6 +11,14 @@ var _ = require('underscore');
 var reverseIf = (strand, arr) =>
 	(strand === '-') ? arr.slice(0).reverse() : arr;
 
+//pad each end of the transcript with N
+var padBothEnds = function(arr, padding){
+	var totalExon = arr.length,
+		firstExon = [[arr[0][0]-padding, arr[0][1]]],
+		lastExon= [[arr[totalExon-1][0], arr[totalExon-1][1]+padding]];
+	return firstExon.concat(arr.slice(1,arr.length-1)).concat(lastExon);
+};
+
 function pad1(p, intervals, acc) {
 	if (intervals.length === 1) {
 		return acc.concat(intervals);
@@ -53,7 +61,8 @@ function pxLen(chrlo) {
 //  :: {chrom: [[<int>, <int>], ...], screen: [[<int>, <int>], ...], reversed: <boolean>}
 // XXX promoter region?
 function layout({exonStarts, exonEnds, strand}, pxWidth, zoom) {
-    var chrIntvls = reverseIf(strand, pad(spLen, _.zip(exonStarts, exonEnds))),
+	var padding =200, // extra bp on the ends of transcripts
+		chrIntvls = reverseIf(strand, padBothEnds(pad(spLen, _.zip(exonStarts, exonEnds)), padding)),
 		count = _.getIn(zoom, ['len'], baseLen(chrIntvls)),
 		bpp = count / pxWidth,
 		pixIntvls = toScreen(bpp, chrIntvls, 0, []);

@@ -98,12 +98,11 @@ function categoryLegend(dataIn, colorScale, codes) {
 	}
 	// only finds categories for the current data in the column
 	var data = _.reject(uniq(dataIn), x => x == null).sort((v1, v2) =>  v1 - v2),
-		categoryLength = 19, // XXX where does this come from?
 		// zip colors and their indexes, then filter out the nulls
 		colors = _.map(filter(zip(range(data.length), map(data, colorScale)), secondExists),
 				c => c[1]),
 		labels = map(data, d => codes[d]);
-	return {colors: colors, labels: labels, align: 'left', ellipsis: data.length > categoryLength ? '...' : null};
+	return {colors: colors, labels: labels, align: 'left'};
 }
 
 // Color scale cases
