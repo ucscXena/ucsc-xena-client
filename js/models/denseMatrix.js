@@ -67,7 +67,7 @@ function dataToHeatmap(column, vizSettings, data, samples, dataset) {
 					 heatmapColors.colorSpec(column, vizSettings,
 											 codes[p], heatmap[i], dataset)),
 		// Provide a legend scheme if more than one field.
-		multiScaled = (column.fields.length > 1 && !hasViz(vizSettings)),
+		multiScaled = fields.length > 1 && !hasViz(vizSettings),
 		legend = multiScaled ?
 			{legend: {colors: heatmapColors.defaultColors(dataset), labels: ['lower', '', 'higher']}} :
 			null;
