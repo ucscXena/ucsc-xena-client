@@ -230,7 +230,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	render: function () {
 		var {samples, data, column, zoom, hasSurvival} = this.props,
 			{heatmap, colors, legend} = column,
-			codes = _.getIn(data, ['codes']),
+			codes = _.get(data, 'codes'),
 			fields = _.getIn(data, ['req', 'probes'], column.fields),
 			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
 			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
@@ -256,12 +256,12 @@ var HeatmapColumn = hotOrNot(React.createClass({
 							onClick: this.props.onClick
 						}}
 						codes={_.get(codes, column.fields[0])}
-						width={_.getIn(column, ['width'])}
+						width={_.get(column, 'width')}
 						zoom={zoom}
 						colors={colors}
 						heatmapData={heatmap}/>}
 				legend={<HeatmapLegend
-						fields={_.getIn(column, ['fields'])}
+						fields={_.get(column, 'fields')}
 						colors={colors}
 						legend={legend}
 						data={heatmap}
