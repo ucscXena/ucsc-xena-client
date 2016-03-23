@@ -61,7 +61,7 @@ function dataToHeatmap(column, vizSettings, data, samples, dataset) {
 		return null;
 	}
 	var {req, codes = {}} = data;
-	var fields = req.probes || column.fields;
+	var fields = _.get(req, 'probes', column.fields);
 	var heatmap = computeHeatmap(vizSettings, req, fields, samples, dataset),
 		colors = map(fields, (p, i) =>
 					 heatmapColors.colorSpec(column, vizSettings,
@@ -72,7 +72,7 @@ function dataToHeatmap(column, vizSettings, data, samples, dataset) {
 			{legend: {colors: heatmapColors.defaultColors(dataset), labels: ['lower', '', 'higher']}} :
 			null;
 
-	return {heatmap, colors, ...legend};
+	return {fields, heatmap, colors, ...legend};
 }
 
 //
@@ -102,7 +102,7 @@ function cmpSamples(probes, data, s1, s2) {
 }
 
 var cmp = ({fields}, {req: {values, probes}} = {req: {}}) =>
-	(s1, s2) => cmpSamples(probes || fields, values, s1, s2);
+	(s1, s2) => cmpSamples(probes || fields, values, s1, s2); // XXX having probes here is unfortunate.
 
 //
 // data fetches
@@ -120,17 +120,6 @@ function indexResponse(probes, samples, data) {
 	return {values: values, mean: mean};
 }
 
-// XXX A better approach might be to update the other index* functions
-// such that they always create the "probes" in the request.
-//
-// Currently for every other request there's a 1-1 correspondence between
-// requested "fields" and the fields returned by the server, so we just
-// use column.fields to drive the layout and sort. This query is different
-// in that we request one thing (gene) and get back a list of things (probes
-// in the gene). So we can't base layout and sort on column.fields. We instead
-// put the field list into data.req.probes, in this function, and add complexity
-// to render() and cmp() such that they prefer data.req.probes to column.fields.
-// The alternative is to always create data.req.probes.
 function indexProbeGeneResponse(samples, data) {
 	var probes = data[0],
 		vals = data[1];

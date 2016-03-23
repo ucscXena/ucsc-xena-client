@@ -219,19 +219,16 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	tooltip: function (ev) {
 		var {samples, data, column, zoom, fieldFormat, id} = this.props,
 			codes = _.get(data, 'codes'),
-			{heatmap, width} = column,
-			fields = _.getIn(data, ['req', 'probes'], column.fields); // XXX
+			{fields, heatmap, width} = column;
 		return tooltip(heatmap, fields, fieldFormat(id), codes, width, zoom, samples, ev);
 	},
 	// To reduce this set of properties, we could
 	//    - Drop data & move codes into the 'display' obj, outside of data
-	//    - Drop dataset, and add default colors to the 'display' obj.
-	// Might also want to copy fields into 'display', so we can drop the || here.
+	// Might also want to copy fields into 'display', so we can drop req probes
 	render: function () {
 		var {samples, data, column, zoom, hasSurvival} = this.props,
-			{heatmap, colors, legend} = column,
+			{fields, heatmap, colors, legend} = column,
 			codes = _.get(data, 'codes'),
-			fields = _.getIn(data, ['req', 'probes'], column.fields),
 			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
 			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
 

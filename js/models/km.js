@@ -16,7 +16,7 @@ function average(data) {
 
 // Currently assumes we have only one field. Right now we only
 // handle coded phenotype data, and limit it to one-per-column.
-function codedVals({heatmap, colors, fields}, {codes, req: {values}}) {
+function codedVals({heatmap, colors, fields}, {codes}) {
 	var field = fields[0],
 		groups = _.range(codes[field].length),
 		colorfn = _.first(colors.map(colorScale));
@@ -75,7 +75,7 @@ function featureType({dataType, fields}, data) {
 	// XXX We have a too many ad hoc checks in the code trying to decide if
 	// something is coded or not, phenotype or not, etc. We need to fix this
 	// across the code.
-	var feature = _.getIn(data, ['req', 'probes', 0], _.get(fields, 0));
+	var feature = _.get(fields, 0);
 	var coded = _.getIn(data, ['codes', feature]);
 	return (dataType === 'mutationVector') ? 'mutation' : (coded ? 'coded' : 'float');
 }
