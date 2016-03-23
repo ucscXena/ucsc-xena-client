@@ -80,7 +80,7 @@
     "rx-dom": "^4.0.4",
     "static-interval-tree": "^1.0.3",
     "transform-loader": "^0.2.3",
-    "ucsc-xena-datapages": "^1.29.0",
+    "ucsc-xena-datapages": "^1.30.0",
     "underscore": "^1.7.0",
     "underscore.string": "^3.0.3"
   },
