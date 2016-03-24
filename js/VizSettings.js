@@ -491,7 +491,7 @@ var VizSettings = React.createClass({
 		return (
 			<Modal show={true} onHide={onRequestHide}>
 				<Modal.Header closeButton>
-					<Modal.Title>Datset Visualization Settings</Modal.Title>
+					<Modal.Title>Dataset Visualization Settings</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
 					<SettingsWrapper {...this.props} />
