@@ -63,8 +63,8 @@ function datasetHasFloats (host, dsName, action, actionArgs) {
 	});
 }
 
-function vizSettingsWidget(node, callback, vizState, dsID, hide) {
-	var state = _.getIn(vizState, [dsID]);
+function vizSettingsWidget(node, callback, vizState, id, dsID, hide) {
+	var state = vizState;
 	function datasetSetting(dataset) {
 		var host_name = xenaQuery.parse_host(dataset.dsID),
 			host = host_name[0],
@@ -121,7 +121,7 @@ function vizSettingsWidget(node, callback, vizState, dsID, hide) {
 		button.appendChild(document.createTextNode("Cancel"));
 		button.addEventListener("click", function () {
 			hide();
-			callback(['vizSettings', dsID, state]);
+			callback(['vizSettings', id, state]);
 		});
 		return button;
 	}
@@ -244,7 +244,7 @@ function vizSettingsWidget(node, callback, vizState, dsID, hide) {
 		}
 
 		function removeAllVizSettings() {
-			callback(['vizSettings', dsID, _.omit(state, colorParams)]);
+			callback(['vizSettings', id, _.omit(state, colorParams)]);
 		}
 
 		var node = document.createElement("div"),
@@ -349,7 +349,7 @@ function vizSettingsWidget(node, callback, vizState, dsID, hide) {
 		displayErrors(err);
 
 		if (settingsValid(err)) {
-			callback(['vizSettings', dsID, _.merge(state, getInputSettingsFloat())]);
+			callback(['vizSettings', id, _.merge(state, getInputSettingsFloat())]);
 		}
 	}
 
@@ -389,7 +389,7 @@ function vizSettingsWidget(node, callback, vizState, dsID, hide) {
 	}
 
 	function setVizSettings(key, value) {
-		callback(['vizSettings', dsID, _.assoc(state, key, value)]);
+		callback(['vizSettings', id, _.assoc(state, key, value)]);
 	}
 
 	function getVizSettings(key) {
@@ -477,8 +477,8 @@ function vizSettingsWidget(node, callback, vizState, dsID, hide) {
 var SettingsWrapper = React.createClass({
 	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
-		var {refs: {content}, props: {callback, state, dsID, onRequestHide}} = this;
-		vizSettingsWidget(content, callback, state, dsID, onRequestHide);
+		var {refs: {content}, props: {callback, state, id, dsID, onRequestHide}} = this;
+		vizSettingsWidget(content, callback, state, id, dsID, onRequestHide);
 	},
 	render: function () {
 		return <div ref='content' />;

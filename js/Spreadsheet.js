@@ -132,8 +132,7 @@ var Columns = React.createClass({
 		this.props.callback(['order', order]);
 	},
 	onViz: function (id) {
-		var dsID = _.getIn(this.props.appState, ['columns', id, 'dsID']);
-		this.setState({openVizSettings: dsID});
+		this.setState({openVizSettings: id});
 	},
 	render: function () {
 		var {callback, fieldFormat, disableKM, appState} = this.props;
@@ -149,10 +148,11 @@ var Columns = React.createClass({
 		// XXX parameterize settings on column type
 		var settings = openVizSettings ?
 			<VizSettings
-				dsID={openVizSettings}
+				id={openVizSettings}
+				dsID={_.getIn(appState, ['columns', openVizSettings, 'dsID'])}
 				onRequestHide={() => this.setState({openVizSettings: null})}
 				callback={callback}
-				state={_.getIn(appState, ['vizSettings'])} /> : null;
+				state={_.getIn(appState, ['columns', openVizSettings, 'vizSettings'])} /> : null;
 
 		var columnViews = _.map(columnOrder, id => widgets.column({
 			ref: id,
@@ -160,8 +160,7 @@ var Columns = React.createClass({
 			id: id,
 			data: _.getIn(data, [id]),
 			index: _.getIn(index, [id]),
-			vizSettings: _.getIn(appState, ['vizSettings',
-				_.getIn(columns, [id, 'dsID'])]),
+			vizSettings: _.getIn(appState, [columns, id, 'vizSettings']),
 			samples,
 			zoom,
 			callback,

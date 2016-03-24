@@ -48,7 +48,7 @@ var transformSelector = createFmapSelector(
 		state => _.fmap(state.columns,
 			(column, key) => [
 				_.omit(column, ['fieldLabel', 'columnLabel']), // ugh. Review column schema + widget.transform.
-				_.getIn(state, ['vizSettings', column.dsID]),
+				_.getIn(column, ['vizSettings']),
 				state.data[key],
 				state.samples,
 				state.datasets[column.dsID],

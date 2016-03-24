@@ -181,8 +181,8 @@ var controls = {
 		_.assocIn(state, ['columns', id, 'dataType'], dataType),
 	'dataType-post!': (serverBus, state, newState, id) =>
 		fetchColumnData(serverBus, newState.samples, id, _.getIn(newState, ['columns', id])),
-	vizSettings: (state, dsID, settings) =>
-		_.assocIn(state, ['vizSettings', dsID], settings),
+	vizSettings: (state, column, settings) =>
+		_.assocIn(state, ['columns', column, 'vizSettings'], settings),
 	'edit-dataset-post!': (serverBus, state, newState, dsID, meta) => {
 		if (meta.type === 'clinicalMatrix') {
 			fetchFeatures(serverBus, newState, dsID);
