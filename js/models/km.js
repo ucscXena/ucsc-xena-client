@@ -189,7 +189,7 @@ function pickSurvivalVars(featuresByDataset, user) {
 			(features, dsID) => _.map(features, f => featureID(dsID, f))),
 		ev = _.find(allFeatures, ({name}) => name === '_EVENT'),
 		tte = _.find(allFeatures, ({name}) => name === '_TIME_TO_EVENT'),
-		patient = _.find(allFeatures, ({name}) => name === '_PATIENT');
+		patient = _.find(allFeatures, ({name}) => name === '_PATIENT') || _.find(allFeatures, ({name}) => name === 'sampleID');
 
 	return {
 		ev: _.getIn(user, ['ev'], ev),

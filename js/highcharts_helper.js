@@ -159,7 +159,7 @@ define(['./highcharts'], function () {
   // x categorical y float
  function columnChartFloat (chartOptions, categories, xAxisTitle, Y){
      // Y data column chart setup
-    var yAxisTitle = "Average value";
+    var yAxisTitle = Y;// "Average value";
 
     chartOptions.legend.align = 'right';
     chartOptions.legend.margin = 5;
@@ -167,7 +167,7 @@ define(['./highcharts'], function () {
 
     var Y_in_Title = Y.length > 50 ? Y.slice(0, 50) + "..." : Y;
     chartOptions.title = {
-      text: yAxisTitle + " of " + Y_in_Title + ((xAxisTitle === "") ? "" : " by " + xAxisTitle)
+      text: Y_in_Title + ((xAxisTitle === "") ? "" : " by " + xAxisTitle)
     };
 
     chartOptions.xAxis = {
