@@ -58,11 +58,6 @@ var transformSelector = createFmapSelector(
 
 var mergeKeys = (a, b) => _.mapObject(a, (v, k) => _.merge(v, b[k]));
 
-var survivalVarsSelector = createSelector(
-		state => state.features,
-		state => state.km,
-		km.pickSurvivalVars);
-
 var kmSelector = createSelector(
 		state => state.samples,
 		state => _.getIn(state, ['columns', _.getIn(state, ['km', 'id'])]),
@@ -79,7 +74,6 @@ var transform = state => ({...state, columns: mergeKeys(state.columns, transform
 // kmGroups transform calculates the km data, and merges it into the state.km object.
 
 var kmGroups = state => ({...state, km: {
-	...survivalVarsSelector(state),
 	...state.km,
 	groups: kmSelector(state)}});
 

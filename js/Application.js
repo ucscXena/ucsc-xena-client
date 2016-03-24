@@ -7,6 +7,7 @@ var Col = require('react-bootstrap/lib/Col');
 var Spreadsheet = require('./Spreadsheet');
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
+var kmModel = require('./models/km');
 var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
 //var Perf = require('react/addons').addons.Perf;
@@ -25,7 +26,8 @@ function hasSurvival(survival) {
 
 // For geneProbesMatrix we will average across probes to compute KM. For
 // other types, we can't support multiple fields.
-function disableKM(column, survival) {
+function disableKM(column, features, km) {
+	var survival = kmModel.pickSurvivalVars(features, km);
 	if (!hasSurvival(survival)) {
 		return [true, 'No survival data for cohort'];
 	}
@@ -67,8 +69,8 @@ var Application = React.createClass({
 		return getFieldFormat(uuid, columns, data);
 	},
 	disableKM: function (uuid) {
-		var {columns, survival} = this.props.state;
-		return disableKM(_.get(columns, uuid), survival);
+		var {columns, features, km} = this.props.state;
+		return disableKM(_.get(columns, uuid), features, km);
 	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
