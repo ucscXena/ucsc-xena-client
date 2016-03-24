@@ -8,7 +8,6 @@
 var React = require('react');
 var _ = require('./underscore_ext');
 var {deepPureRenderMixin} = require('./react-utils');
-var meta = require('./meta');
 require('../css/crosshairs.css');
 
 var Crosshair = React.createClass({

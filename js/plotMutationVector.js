@@ -79,7 +79,7 @@ function sampleTooltip(data, gene, assembly) {
 		rnaVaf = data.rna_vaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
 		refAlt = data.reference && data.alt && ['value', `${data.reference} to ${data.alt}`],
 		pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
-		posURL = ['url',  `${assembly} ${pos}`, gbURL(assembly,pos)],
+		posURL = ['url',  `${assembly} ${pos}`, gbURL(assembly, pos)],
 		effect = ['value', fmtIf(data.effect, x => `${x}, `) +  gene + //eslint-disable-line comma-spacing
 					fmtIf(data.amino_acid, x => ` (${x})`)];
 
@@ -178,10 +178,10 @@ var MutationColumn = hotOrNot(React.createClass({
 		var {column, samples, zoom, data, index, disableKM} = this.props,
 			feature = _.getIn(column, ['sFeature']),
 			assembly = _.getIn(column, ['assembly']),
-			rightAssembly = (assembly ==="hg19" || assembly ==="GRCh37") ? true : false,  //MuPIT currently only support hg19
+			rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
 			noMenu = !rightAssembly || (data && _.isEmpty(data.refGene)),
 			noData = ( !data ) ? true : false,
-			menuItemName = noData? 'MuPIT View (hg19) Loading': 'MuPIT View (hg19)';
+			menuItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)';
 
 		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
@@ -192,7 +192,7 @@ var MutationColumn = hotOrNot(React.createClass({
 				download={this.onDownload} //eslint-disable-line no-undef
 				column={column}
 				zoom={zoom}
-				menu={noMenu? null: <MenuItem disabled={noData} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
+				menu={noMenu ? null : <MenuItem disabled={noData} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
 				data={data}
 				plot={<CanvasDrawing
 						ref='plot'

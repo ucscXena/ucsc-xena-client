@@ -70,7 +70,7 @@ var RefGeneAnnotation = React.createClass({
 	},
 
 	draw: function (width, layout, indx) {
-		if (!width || !layout ||!indx){
+		if (!width || !layout || !indx){
 			return;
 		}
 		var vg = this.vg,
