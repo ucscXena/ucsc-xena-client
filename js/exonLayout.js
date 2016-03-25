@@ -12,12 +12,9 @@ var reverseIf = (strand, arr) =>
 	(strand === '-') ? arr.slice(0).reverse() : arr;
 
 //pad each end of the transcript with N
-var padBothEnds = function(arr, padding){
-	var totalExon = arr.length,
-		firstExon = [[arr[0][0] - padding, arr[0][1]]],
-		lastExon = [[arr[totalExon - 1][0], arr[totalExon - 1][1] + padding]];
-	return firstExon.concat(arr.slice(1, arr.length - 1)).concat(lastExon);
-};
+var padBothEnds = (arr, padding) =>
+	_.updateIn(_.updateIn(arr, [0, 0], x => x - padding),
+				  [arr.length - 1, 1], x => x + padding);
 
 function pad1(p, intervals, acc) {
 	if (intervals.length === 1) {
