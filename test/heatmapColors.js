@@ -2,7 +2,8 @@
 "use strict";
 
 var assert = require('assert');
-var {colorScale, colorSpec} = require('../js/heatmapColors');
+var {colorSpec} = require('../js/heatmapColors');
+var {colorScale} = require('../js/colorScales');
 
 // Types of color scales
 //
@@ -13,6 +14,10 @@ var {colorScale, colorSpec} = require('../js/heatmapColors');
 // ['float-neg-threshold', low, zero, min, thresh, max]
 // ['float-threshold', low, zero, high, min, min-thresh, max-thresh, max]
 // ['ordinal', count]
+//
+var red = 'rgb(255, 0, 0)';
+var white = 'rgb(255, 255, 255)';
+var blue = 'rgb(0, 0, 255)';
 
 describe('heatmapColors', function () {
 	describe('#colorScale', function () {
@@ -20,43 +25,43 @@ describe('heatmapColors', function () {
 			var scale = colorScale(['float-pos', 'red', 'white', 1, 3]);
 			assert.deepEqual([1, 3], scale.domain());
 			assert.deepEqual(['red', 'white'], scale.range());
-			assert.deepEqual('#ff0000', scale(1));
-			assert.deepEqual('#ffffff', scale(3));
+			assert.deepEqual(red, scale(1));
+			assert.deepEqual(white, scale(3));
 			assert.equal(scale(undefined), undefined);
 		});
 		it('should return negative linear scale', function() {
 			var scale = colorScale(['float-neg', 'red', 'white', -3, -1]);
 			assert.deepEqual([-3, -1], scale.domain());
 			assert.deepEqual(['red', 'white'], scale.range());
-			assert.deepEqual('#ff0000', scale(-3));
-			assert.deepEqual('#ffffff', scale(-1));
+			assert.deepEqual(red, scale(-3));
+			assert.deepEqual(white, scale(-1));
 			assert.equal(scale(undefined), undefined);
 		});
 		it('should return linear scale', function() {
 			var scale = colorScale(['float', 'red', 'white', 'blue', -3, 1]);
 			assert.deepEqual([-3, 0, 3], scale.domain());
 			assert.deepEqual(['red', 'white', 'blue'], scale.range());
-			assert.deepEqual('#ff0000', scale(-3));
-			assert.deepEqual('#ffffff', scale(0));
-			assert.deepEqual('#0000ff', scale(3));
+			assert.deepEqual(red, scale(-3));
+			assert.deepEqual(white, scale(0));
+			assert.deepEqual(blue, scale(3));
 			assert.equal(scale(undefined), undefined);
 		});
 		it('should return positive linear thresholded scale', function() {
 			var scale = colorScale(['float-thresh-pos', 'white', 'red', 1, 1.5, 3]);
 			assert.deepEqual([1, 1.5, 3], scale.domain());
 			assert.deepEqual(['white', 'white', 'red'], scale.range());
-			assert.deepEqual('#ffffff', scale(1));
-			assert.deepEqual('#ffffff', scale(1.5));
-			assert.deepEqual('#ff0000', scale(3));
+			assert.deepEqual(white, scale(1));
+			assert.deepEqual(white, scale(1.5));
+			assert.deepEqual(red, scale(3));
 			assert.equal(scale(undefined), undefined);
 		});
 		it('should return negative linear thresholded scale', function() {
 			var scale = colorScale(['float-thresh-neg', 'red', 'white', -3, -1.5, -1]);
 			assert.deepEqual([-3, -1.5, -1], scale.domain());
 			assert.deepEqual(['red', 'white', 'white'], scale.range());
-			assert.deepEqual('#ff0000', scale(-3));
-			assert.deepEqual('#ffffff', scale(-1.5));
-			assert.deepEqual('#ffffff', scale(-1));
+			assert.deepEqual(red, scale(-3));
+			assert.deepEqual(white, scale(-1.5));
+			assert.deepEqual(white, scale(-1));
 			assert.equal(scale(undefined), undefined);
 		});
 		it('should return linear thresholded scale', function() {
@@ -64,10 +69,10 @@ describe('heatmapColors', function () {
 				-3, -0.5, 0.5,  1]);
 			assert.deepEqual([-3, -0.5, 0.5, 1], scale.domain());
 			assert.deepEqual(['red', 'white', 'white', 'blue'], scale.range());
-			assert.deepEqual('#ff0000', scale(-3));
-			assert.deepEqual('#ffffff', scale(-0.5));
-			assert.deepEqual('#ffffff', scale(0.5));
-			assert.deepEqual('#0000ff', scale(1));
+			assert.deepEqual(red, scale(-3));
+			assert.deepEqual(white, scale(-0.5));
+			assert.deepEqual(white, scale(0.5));
+			assert.deepEqual(blue, scale(1));
 			assert.equal(scale(undefined), undefined);
 		});
 		it('should return category19', function() {
@@ -121,7 +126,7 @@ describe('heatmapColors', function () {
 			// neg-pos data
 			assert.deepEqual(colorSpec(column, settings, codes,
 					{a: -8, b: -2, c: 24}, dataset),
-				['float-thresh', '#00ff00', '#000000',  '#ff0000', -12, -3, 3, 12]);
+				['float-thresh', '#00ff00', '#000000', '#ff0000', -12, -3, 3, 12]);
 		});
 		it('should return linear thresholded scales for custom setting', function() {
 			var dataset = {type: 'genomicMatrix', dataSubType: 'gene expression'},

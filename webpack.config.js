@@ -20,6 +20,7 @@ module.exports = {
 				test: /\.js$/,
 				include: [
 					path.join(__dirname, 'js'),
+					path.join(__dirname, 'test'),
 					path.join(__dirname, 'doc')
 				],
 				loaders: ['babel-loader'],

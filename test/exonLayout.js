@@ -3,6 +3,7 @@
 var el = require('../js/exonLayout');
 var assert = require('assert');
 
+var padding = 200; // must match js/exonLayout.
 describe('exonLayout', function () {
 	describe('#pad', function () {
 		it('should pad between intervals', function() {
@@ -17,8 +18,8 @@ describe('exonLayout', function () {
 				exonEnds: [110, 210, 310],
 				strand: null
 			}, 330, {len: 33}), {
-				chrom: [[100, 113], [197, 213], [297, 310]],
-				screen: [[0, 140], [140, 310], [310, 450]],
+				chrom: [[100 - padding, 113], [197, 213], [297, 310 + padding]],
+				screen: [[0, 2140], [2140, 2310], [2310, 4450]],
 				reversed: false,
 				baseLen: 33,
 				pxLen: 330,
@@ -31,23 +32,23 @@ describe('exonLayout', function () {
 				exonEnds: [110, 210, 310],
 				strand: '-'
 			}, 330, {len: 33}), {
-				chrom: [[297, 310], [197, 213], [100, 113]],
-				screen: [[0, 140], [140, 310], [310, 450]],
+				chrom: [[297, 310 + padding], [197, 213], [100 - padding, 113]],
+				screen: [[0, 2140], [2140, 2310], [2310, 4450]],
 				reversed: true,
 				baseLen: 33,
 				pxLen: 330,
 				zoom: {len: 33}
 			});
 		});
-		// an asymmetric case
+//		// an asymmetric case
 		it('should layout reversed intervals (2)', function() {
 			assert.deepEqual(el.layout({
 				exonStarts: [100, 200],
 				exonEnds: [110, 220],
 				strand: '-'
 			}, 2120, {len: 212}), {
-				chrom: [[197, 220], [100, 113]],
-				screen: [[0, 240], [240, 380]],
+				chrom: [[197, 220 + padding], [100 - padding, 113]],
+				screen: [[0, 2240], [2240, 4380]],
 				reversed: true,
 				baseLen: 212,
 				pxLen: 2120,
