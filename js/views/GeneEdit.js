@@ -25,14 +25,13 @@ var GeneEdit = React.createClass({
 		//let header = gene ? makeHeader(`Entered ${this.name}: ${gene}`, true)
 		//	: makeHeader(`Input a ${this.name}`, false);
 		let content =
-			<div className="form-group">
-				<Input type='text' value={gene} bsSize="large"
-					   onChange={ev => setEditorState({list: ev.target.value})}/>
-				<small>e.g. TP53</small>
+			<div>
+				<Input type='textarea' bsSize="large" value={gene}
+				   onChange={ev => setEditorState({gene: ev.target.value})}/>
+				<div className="help">e.g. TP53</div>
 			</div>;
-		let label = makeLabel(content, `Enter a ${this.name}`);
 		return (
-			<div className="row">{label}</div>
+			<div className="form-group">{makeLabel(content, `Enter ${this.name}(s):`)}</div>
 		);
 	}
 });

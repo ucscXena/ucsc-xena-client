@@ -11,9 +11,20 @@
 	vertical-align: bottom;
 }
 
-.selection-header {
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-size: 21px;
+.chosen-values {
+	font-size: 20px;
+	color: #298A08;
+}
+
+.help {
+	color: #000000;
+	font-weight: 100;
+	font-size: 14px;
+	vertical-align: top;
+}
+
+.selection-label {
+
 }
 
 .selection-footer {

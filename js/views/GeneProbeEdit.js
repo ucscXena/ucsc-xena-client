@@ -2,7 +2,7 @@
 'use strict';
 
 var React = require('react');
-var {Input, Panel, Well} = require('react-bootstrap/lib');
+var {ButtonGroup, Button, Input, Panel} = require('react-bootstrap/lib');
 var _ = require('../underscore_ext');
 var trim = require('underscore.string').trim;
 
@@ -35,36 +35,40 @@ var GeneProbeEdit = React.createClass({
 	//     list: string List of genes/identifiers entered by user.
 	//
 	render: function () {
-		var {genes, hasGenes, list, examples, setEditorState} = this.props,
+		var {genes = true, hasGenes, list, examples, makeLabel, setEditorState} = this.props,
 			doGenes = hasGenes && genes;
 		var help = doGenes ? 'e.g. TP53 or TP53, PTEN' :
 			// babel-eslint/issues/31
 			examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : ''; //eslint-disable-line comma-spacing
-		return (
+		let optionSection = null;
+
+		if (hasGenes) {
+			let content =
+				<ButtonGroup justified>
+					<Button onClick={() => setEditorState({genes: true})}
+						href='#' bsStyle={genes ? 'success' : 'default'}>
+						<strong className="control-label">Genes</strong>
+					</Button>
+					<Button href='#' onClick={() => setEditorState({genes: false})}
+						bsStyle={genes ? 'default' : 'success'}>
+						<strong className="control-label">Identifiers</strong>
+					</Button>
+				</ButtonGroup>;
+			optionSection = makeLabel(content, 'Select Input:');
+		}
+
+		let content =
 			<div>
-				{hasGenes ?
-				<Well bsSize="small">
-					<div className='row'>
-						<div className='col-md-4 text-right'>
-							<h4>Choose an Input: </h4>
-						</div>
-						<div className='col-md-2'>
-							<Input onChange={() => setEditorState({genes: true})}
-								checked={genes}
-								type='radio' name='mode' value='genes' label='genes'/>
-						</div>
-						<div className='col-md-2'>
-							<Input onChange={() => setEditorState({genes: false})}
-								checked={!genes}
-								type='radio' name='mode' value='identifiers' label='identifiers'/>
-						</div>
-					</div>
-				</Well>: null}
-				<Panel className='form-group' header={<b>{doGenes ? 'Genes' : 'Identifiers'}</b>}>
-					<Input onChange={ev => setEditorState({list: ev.target.value})}
-						type='textarea' bsSize='large' value={list} />
-					<p><small>{help}</small></p>
-				</Panel>
+				<Input onChange={ev => setEditorState({list: ev.target.value})}
+					type='textarea' bsSize='large' value={list} />
+				<div className="help">{help}</div>
+			</div>;
+		let inputSection = makeLabel(content, 'Enter ' +(doGenes ? 'Gene' : 'Identifier') +'(s):');
+
+		return (
+			<div className="form-group">
+				{optionSection}
+				{inputSection}
 			</div>
 	   );
 	}

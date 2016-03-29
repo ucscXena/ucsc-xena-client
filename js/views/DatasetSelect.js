@@ -18,44 +18,59 @@ const exceptions = {
 };
 
 var loaded = ds => ds.status === 'loaded';
-//var filterDatasets = list => list.filter(ds => notIgnored(ds) && loaded(ds));
-var sortByGroupName = list => _.sortBy(list, (group, name) => name.toLowerCase());
+var allowed = ds => _.contains(_.keys(exceptions), ds.type);
+var filterDatasets = (list, server) => _.filter(list, (ds, dsID) =>
+		allowed(ds) && loaded(ds) && server.includes(JSON.parse(dsID).host));
+var groupDatasets = (list, server) => _.groupBy(list, ds =>
+		server.includes('local.xena.ucsc.edu') ? 'My Computer Hub'
+		: (exceptions[ds.type] && exceptions[ds.type]) || ds.dataSubType);
+var metaGroups = groups => _.map(groups, (group, name) => ({name: name, options: shrinkDatasets(group)}));
+var shrinkDatasets = list => _.map(list, ds => ({label: ds.label, value: ds.dsID}));
+var sortGroups = groups => _.sortBy(groups, (group, name) => name.toLowerCase());
+var sortDatasets = keys => _.sortBy(keys, key => key.toLowerCase());
+//var sortGroups = groups => _.sortBy(groups, (group) => group.name.toLowerCase());
 
-function groupsFromDatasets(datasets, localHubUrl) {
-	let dsGroups = {local: {}, remote: {}},
-		localGroupKey = 'Your computer hub';
-	_.each(datasets, (ds, key) => {
-		let server = 'remote';
-		if (loaded(ds)) {
-			let group = '';
-			if (JSON.parse(key).host === localHubUrl) {
-				group = localGroupKey;
-				server = 'local';
-			} else {
-				group = exceptions[ds.type] || ds.dataSubType;
-				if (ds.type.includes('pheno'))
-					console.log(ds.type);
+function groupsFromDatasets(datasets, servers) {
+	let groups = _.reduce(servers, (allGroups, hub) => {
+		let filteredSets = filterDatasets(datasets, hub),
+			groupedSets = groupDatasets(filteredSets, hub),
+			sortedNames = sortDatasets(_.keys(groupedSets));
+		sortedNames.forEach(groupName => {
+			let recordedDs = _.findWhere(allGroups, {name: groupName});
+			if (_.isEmpty(recordedDs)) {
+				let groupMeta = {
+					name: groupName,
+					options: shrinkDatasets(groupedSets[groupName])
+				};
+				allGroups = allGroups.concat([groupMeta]);
 			}
+		});
+		return allGroups;
+	}, []);
 
-			// one-time creation of a list
-			if (!_.has(dsGroups[server], group)) {
-				dsGroups[server][group] = {name: group, options: []};
-			}
-			dsGroups[server][group].options.push({value: ds.dsID, label: ds.label});
-		} else {
-			return;
-		}
+	return groups;
+
+	/*let groups = _.flatmap(servers, (hub) => {
+		let filteredSets = filterDatasets(datasets, hub);
+		return sortGroups(metaGroups(groupDatasets(filteredSets, hub)));
 	});
-	let localGroup = dsGroups.local[localGroupKey];
-	return (localGroup ? [localGroup] : []).concat(sortByGroupName(dsGroups.remote));
+
+	return groups;*/
+
+	//let groups = _.flatmap(servers, (hub) => {
+	//	let filteredSets = filterDatasets(datasets, hub);
+	//	let groupedSets = groupDatasets(filteredSets, hub);
+	//	return _.mapObject(groupedSets, (group, gName) => shrinkDatasets(group));
+	//});
+	//return groups;
 }
 
 function getStyleSuffix(isMatch) {
 	return isMatch ? 'info' : 'default'
 }
 
-function makeGroup(group, activeGroupName, onSelect, setValue) {
-	let {name, options} = group,
+function makeGroup(groupMeta, activeGroupName, onSelect, setValue) {
+	let {name, options} = groupMeta,
 		groupIsException = _.contains(exceptions, name),
 		header =
 			<div className='row'>
@@ -68,7 +83,9 @@ function makeGroup(group, activeGroupName, onSelect, setValue) {
 			</div>;
 	return groupIsException ? (
 		<div key={name} className={`panel panel-${getStyleSuffix(options[0].value === setValue)}`}>
-			<div className='panel-heading' onClick={() => onSelect(options[0].value)}>{name}</div>
+			<div className='panel-heading' onClick={() => onSelect(options[0].value)}>
+				<h3 className="panel-title"><strong>{name}</strong></h3>
+			</div>
 		</div>)
 		:
 		(<Panel collapsible key={name} eventKey={name} header={header}>
@@ -86,22 +103,18 @@ function makeGroup(group, activeGroupName, onSelect, setValue) {
 var DatasetSelect = React.createClass({
 	name: 'Dataset',
 	getInitialState: function() {
-		let {datasets, localHubUrl} = this.props;
+		let {datasets, servers} = this.props;
 		return {
 			activeGroup: '',
-			groups: groupsFromDatasets(datasets, localHubUrl)
+			groups: groupsFromDatasets(datasets, servers)
 		}
 	},
 	componentWillReceiveProps: function(newProps) {
 		if (!_.isEqual(this.props.groups !== newProps.groups)) {
-			let {datasets, localHubUrl} = this.props;
-			this.setState({groups: groupsFromDatasets(datasets, localHubUrl)});
+			let {datasets, servers} = this.props;
+			this.setState({groups: groupsFromDatasets(datasets, servers)});
 		}
 	},
-	//onSelect: function(dsID, groupName) {
-	//	this.props.onSelect(dsID);
-	//	//this.onSetGroup(groupName);
-	//},
 	onSetGroup: function(newGroupName) {
 		// Set 'activeGroup' to empty string as a way to toggle the group to be on/off
 		let groupName = (newGroupName !== this.state.activeGroup) ? newGroupName : '';
@@ -116,7 +129,9 @@ var DatasetSelect = React.createClass({
 				chosenValue ? 'Chosen dataset:' : `Choose a ${this.name}`),
 			content = disable ? null :
 				<Accordion className='form-group' onSelect={this.onSetGroup}>
-					{_.map(groups, group => makeGroup(group, activeGroup, onSelect, value))}
+					{_.map(groups, (groupMeta) =>
+						makeGroup(groupMeta, activeGroup, onSelect, value))
+					}
 				</Accordion>;
 		return (
 			<div>

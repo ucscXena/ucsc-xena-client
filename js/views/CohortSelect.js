@@ -12,10 +12,8 @@ var CohortSelect = React.createClass({
 		var {cohort, cohorts, makeLabel, ...other} = this.props,
 			sortedCohorts = _.sortBy(cohorts, (cohort) => cohort.toLowerCase()),
 			options = _.map(sortedCohorts, c => ({value: c, label: c})),
-		//let label = (children && !_.isArray(this.props.children)) ? children
-		//	: <label className='cohortAnchor'>Cohort: </label>;
-			label = !makeLabel ? <label className="control-label">{this.name}:</label>
-				: makeLabel(cohort ? `${this.name} chosen` : `Select a ${this.name}`);
+			label = !makeLabel ? <label className="control-label">{this.name}</label>
+				: makeLabel(null, (cohort ? 'Chosen' : 'Select a') +` ${this.name}`);
 
 		return (
 			<div className='form-group'>
