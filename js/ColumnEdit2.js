@@ -53,23 +53,23 @@ function workflowIndicators(positions, defs, onHide) {
 	);
 }
 
-function updateChoice(prevPosition, defs, oldChoices, newValue) {
+function updateChoice(currentPosition, defs, oldChoices) {
 	/*
 	 1. Find specific section within defs collection.
 	 2. Sections that do not represent 'prevPosition' keep their values -- are not changed
 	 3. Once found, reset all 'choice' params (e.g. 'staged' and 'committed') to null.
 	 */
-	let currentSpot = prevPosition;
-	let newChoices = _.mapObject(oldChoices, (s, key) => {
-		if (key === currentSpot) {
-			currentSpot = defs[currentSpot].next;
-			return _.mapObject(s, param => null);
+	let comparePosition = _.getIn(defs, [currentPosition, 'next']);
+	let updatedChoices = _.mapObject(oldChoices, (s, key) => {
+		if (key === comparePosition) {
+			comparePosition = _.getIn(defs, [comparePosition, 'next']);
+			return null;
 		} else {
 			return s;
 		}
 	});
 
-	return _.assocIn(newChoices, [prevPosition, 'committed'], newValue);
+	return updatedChoices;
 }
 
 function updatePositions(newSection, oldPositions) {
@@ -81,9 +81,9 @@ function updatePositions(newSection, oldPositions) {
 
 function makeLabel(content, label) {
 	return (
-		<div className='row selection-header lead'>
-			<span className="col-md-4 text-right">{label}</span>
-			<span className="col-md-8 text-left">{content}</span>
+		<div className='row lead'>
+			<div className="col-md-4 text-right">{label}</div>
+			<div className="col-md-8 text-left chosen-values">{content}</div>
 		</div>
 	);
 }
@@ -105,7 +105,7 @@ var NavButtons = React.createClass({
 		let btnLabel,
 			icon = '',
 			{btnSize, choices, onForward, defs} = this.props,
-			disabled = _.every(choices[currentSection], (value) => _.isEmpty(value));
+			disabled = !choices[currentSection];
 
 		if (!defs[currentSection].prev) {
 			btnLabel = 'Select';
@@ -150,16 +150,15 @@ var ColumnEdit = React.createClass({
 	defs: {
 		cohort: {omit: true, name: 'Cohort', next: 'dataset', prev: null},
 		dataset: {omit: false, name: 'Dataset', next: 'editor', prev: 'cohort'},
-		editor: {omit: false, name: 'Data Editor', next: null, prev: 'dataset'}
+		editor: {omit: false, name: 'data slice', next: null, prev: 'dataset'}
 	},
-	localHubDNS: 'local.xena',
 	getInitialState: function () {
 		let {appState: {cohort}} = this.props;
 		return {
 			choices: {
-				cohort: {committed: cohort, staged: null},
-				dataset: {commited: null, staged: null},
-				editor: {commited: null, staged: null}
+				cohort: cohort,
+				dataset: null,
+				editor: null
 			},
 			positions: {
 				cohort: cohort ? false : true,
@@ -170,7 +169,7 @@ var ColumnEdit = React.createClass({
 	},
 	addColumn: function (settings) {
 		let {callback, appState: {datasets}} = this.props,
-			dsID = this.state.choices.dataset.committed,
+			dsID = this.state.choices.dataset,
 			label = datasets[dsID].label,
 			assembly = datasets[dsID].assembly;
 
@@ -183,13 +182,13 @@ var ColumnEdit = React.createClass({
 		callback(['add-column', uuid(), settings]);
 	},
 	onCohortSelect: function(value) {
-		this.stageChoice('cohort', value);
+		this.setChoice('cohort', value);
 	},
 	onDatasetSelect: function (dsID) {
 		var {callback, appState: {datasets}} = this.props,
 			meta = _.get(datasets, dsID);
 
-		this.stageChoice('dataset', dsID);
+		this.setChoice('dataset', dsID);
 		callback(['edit-dataset', dsID, meta]);
 	},
 	onBack: function() {
@@ -212,72 +211,62 @@ var ColumnEdit = React.createClass({
 			{choices, positions} = this.state,
 			currentSpot = _.findKey(positions, (position) => position),
 			currentSpotDef = this.defs[currentSpot],
-			stagedChoice = choices[currentSpot].staged,
 			nextSpot = currentSpotDef.next;
 
-		// Transfer staged value to 'committed' parameter
-		if (stagedChoice) {
-			_.extendOwn(newState, {
-				choices: updateChoice(currentSpot, this.defs, choices, stagedChoice)
-			});
-			if (this.defs[currentSpot].omit)
-				this.props.callback([currentSpot, stagedChoice]);
-		}
+		if (this.defs[currentSpot].omit)
+			this.props.callback([currentSpot, choices[currentSpot]]);
 
-		// Set new position in workflow if necessary
+		// Set new position in workflow if necessary and reset choices
 		if (nextSpot) {
 			_.extendOwn(newState, {
+				choices: updateChoice(currentSpot, this.defs, choices),
 				positions: updatePositions(nextSpot, positions)
 			});
 
 			this.setState(newState);
 		}
 	},
-	stageChoice: function(section, newValue) {
-		let newState = _.assocIn(this.state, ['choices', section, 'staged'], newValue);
+	setChoice: function(section, newValue) {
+		let newState = _.assocIn(this.state, ['choices', section], newValue);
 		this.setState(newState);
 	},
 	onSetEditor: function (newEditor) {
-		var oldEditor = this.state.choices.editor.staged || {};
-		this.stageChoice('editor', _.merge(oldEditor, newEditor));
+		var oldEditor = this.state.choices.editor || {};
+		this.setChoice('editor', _.merge(oldEditor, newEditor));
 	},
 	render: function () {
 		var {choices, positions} = this.state,
 			{appState: {cohorts, columnEdit, datasets, servers}, onHide} = this.props,
 			features = _.getIn(columnEdit, ['features']),
-			meta = choices.dataset.committed && _.get(datasets, choices.dataset.committed);
+			meta = choices.dataset && _.get(datasets, choices.dataset);
 		var {Editor, valid, apply} = positions['editor'] && pickEditor(meta),
 			currentPosition = _.findKey(positions, p => p);
 		return (
-			<Modal {...this.props} show={true} className='columnEdit container' autoFocus>
+			<Modal show={true} className='columnEdit container' enforceFocus>
 				{this.defs[currentPosition].omit ? null : workflowIndicators(positions, this.defs, onHide)}
 				<Modal.Body>
-					{!choices.cohort.committed || positions['cohort'] ?
-						<CohortSelect onSelect={this.onCohortSelect}
-							cohorts={cohorts}
-							cohort={choices.cohort.staged || choices.cohort.committed}
-							makeLabel={makeLabel}>
+					{positions['cohort'] ?
+						<CohortSelect onSelect={this.onCohortSelect} cohorts={cohorts}
+							cohort={choices.cohort} makeLabel={makeLabel}>
 						</CohortSelect> : null
 					}
-					{choices.cohort.committed || positions['dataset'] ?
-						<DatasetSelect datasets={datasets} event='dataset'
-							makeLabel={makeLabel}
-							onSelect={this.onDatasetSelect}
-							localHubUrl={_.find(servers.user, server => server.includes(this.localHubDNS))}
-							value={choices.dataset.staged || choices.dataset.committed}
-							disable={!_.isEmpty(choices.dataset.committed) && !positions['dataset']}>
+					{positions['dataset'] || choices['dataset'] ?
+						<DatasetSelect datasets={datasets} makeLabel={makeLabel}
+					   		event='dataset' value={choices.dataset}
+					   		disable={choices.dataset && !positions['dataset']}
+							onSelect={this.onDatasetSelect} servers={servers.user}>
 						</DatasetSelect> : null
 					}
 					{Editor ? <Editor {...columnEdit} setEditorState={this.onSetEditor}
-								{...(choices['editor'].staged || {})} makeLabel={makeLabel}
+								{...(choices['editor'] || {})} makeLabel={makeLabel}
 								hasGenes={meta && !!meta.probeMap}/> : null}
 					<br />
 				</Modal.Body>
 				<div className="form-group selection-footer">
 					<span className="col-md-6 col-md-offset-3 text-center">
 						<NavButtons {...this.state} btnSize='small' onBack={this.onBack}
-													onCancel={onHide} defs={this.defs} onForward={!Editor ? this.onForward
-						: () => this.addColumn(apply(features, choices['editor'].staged))}/>
+							onCancel={onHide} defs={this.defs} onForward={!Editor ? this.onForward
+						: () => this.addColumn(apply(features, choices['editor']))}/>
 					</span>
 					<span className="col-md-3 text-right">
 						<a href="#">I wish I could...</a>
