@@ -95,7 +95,7 @@ var Sortable = React.createClass({
 			}).takeUntil(Rx.DOM.fromEvent(window, 'mouseup'))
 			.concat(Rx.Observable.defer(() => { // Send a re-order event on mouse-up.
 				var indexOrder = _.range(order.length)
-						.sort((i, j) => positions[i].left + newPos[i] > positions[j].left + newPos[j]),
+						.sort((i, j) => positions[i].left + newPos[i] > positions[j].left + newPos[j] ? 1 : -1),
 					newOrder = _.map(indexOrder, i => order[i]);
 				return Rx.Observable.return({order: newOrder});
 			}));
