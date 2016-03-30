@@ -58,7 +58,7 @@ var colorRange = multi(colorRangeType);
 
 function colorFloat(column, settings, codes, data, dataset) {
 	var values = data,
-		max = _.max(values),
+		max = _.maxnull(values),
 		[low, zero, high] = defaultColors(dataset),
 		spec,
 		min;
