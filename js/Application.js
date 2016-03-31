@@ -1,9 +1,7 @@
 /*global require: false, module: false */
 'use strict';
 var React = require('react');
-var Grid = require('react-bootstrap/lib/Grid');
-var Row = require('react-bootstrap/lib/Row');
-var Col = require('react-bootstrap/lib/Col');
+var {Col, Grid, Row} = require('react-bootstrap/lib');
 var Spreadsheet = require('./Spreadsheet');
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
@@ -14,7 +12,8 @@ var _ = require('./underscore_ext');
 
 var views = {
 	heatmap: Spreadsheet,
-	chart: ChartView
+	chart: ChartView,
+	kmPlot: ChartView
 };
 
 // This seems odd. Surely there's a better test?
@@ -68,6 +67,12 @@ var Application = React.createClass({
 //			Perf.printWasted();
 //		}
 //	},
+	getInitialState: function() {
+		return ({openColumnEdit: false});
+	},
+	onColumnEdit: function(status) {
+		this.setState({openColumnEdit: status});
+	},
 	fieldFormat: function (uuid) {
 		var {columns, data} = this.props.state;
 		return getFieldFormat(uuid, columns, data);
@@ -83,6 +88,7 @@ var Application = React.createClass({
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
+			{openColumnEdit} = this.state,
 			{mode} = computedState,
 			View = views[mode];
 
@@ -95,10 +101,14 @@ var Application = React.createClass({
 			*/}
 				<Row>
 					<Col md={12}>
-						<AppControls {...otherProps} appState={computedState} />
+						<AppControls {...otherProps} onColumnEdit={this.onColumnEdit}
+							 openColumnEdit={openColumnEdit} appState={computedState}/>
 					</Col>
 				</Row>
-				<View {...otherProps} fieldFormat={this.fieldFormat} supportsGeneAverage={this.supportsGeneAverage} disableKM={this.disableKM} appState={computedState} />
+				<View {...otherProps} disableKM={this.disableKM}
+				  	supportsGeneAverage={this.supportsGeneAverage}
+					fieldFormat={this.fieldFormat} appState={computedState}
+					openColumnEdit={openColumnEdit} onColumnEdit={this.onColumnEdit}/>
 				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
 						callback={this.props.callback}
 						km={computedState.km}

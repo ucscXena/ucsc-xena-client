@@ -14,7 +14,9 @@ var CohortSelect = React.createClass({
 
 		return (
 			<div className='form-group'>
-				<label className='cohortAnchor'>Cohort</label>
+				<label className='cohortAnchor'>
+					<b>Cohort</b>
+				</label>
 				{' '}
 				<Select
 					value={cohort}

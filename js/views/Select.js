@@ -21,6 +21,15 @@ var stopPropagation = ev => {
 	ev.nativeEvent.stopImmediatePropagation();
 };
 
+var trimTitle = (title, preferredLength) => {
+	if (typeof title === 'string') {
+		return (title.length < preferredLength) ? title
+			: `${title.substr(0, preferredLength - 1)} ...`;
+	} else {
+		return "No Value";
+	}
+};
+
 var Select = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState: function () {
@@ -71,7 +80,7 @@ var Select = React.createClass({
 				className='Select'
 				disabled={disable}
 				onMouseUp={this.setFocus}
-				title={title && title.label || 'Select...'}>
+				title={trimTitle(title && title.label || 'Select...', 35)}>
 
 				{[<div key='__search'><input className='Select-input'
 					onKeyUp={this.onKeyUp}
