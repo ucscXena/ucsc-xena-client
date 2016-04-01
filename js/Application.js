@@ -50,6 +50,10 @@ function getFieldFormat(uuid, columns, data) {
 	}
 }
 
+function supportsGeneAverage({dataType, fields: {length}}) {
+	return ['geneProbesMatrix', 'geneMatrix'].indexOf(dataType) >= 0 && length === 1;
+}
+
 var Application = React.createClass({
 //	onPerf: function () {
 //		this.perf = !this.perf;
@@ -67,6 +71,10 @@ var Application = React.createClass({
 	fieldFormat: function (uuid) {
 		var {columns, data} = this.props.state;
 		return getFieldFormat(uuid, columns, data);
+	},
+	supportsGeneAverage(uuid) {
+		var {columns} = this.props.state;
+		return supportsGeneAverage(_.get(columns, uuid));
 	},
 	disableKM: function (uuid) {
 		var {columns, features, km} = this.props.state;
@@ -90,7 +98,7 @@ var Application = React.createClass({
 						<AppControls {...otherProps} appState={computedState} />
 					</Col>
 				</Row>
-				<View {...otherProps} fieldFormat={this.fieldFormat} disableKM={this.disableKM} appState={computedState} />
+				<View {...otherProps} fieldFormat={this.fieldFormat} supportsGeneAverage={this.supportsGeneAverage} disableKM={this.disableKM} appState={computedState} />
 				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
 						callback={this.props.callback}
 						km={computedState.km}

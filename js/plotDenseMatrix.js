@@ -181,10 +181,6 @@ function tsvProbeMatrix(heatmap, samples, fields, codes) {
 	return [fieldNames, tsvData];
 }
 
-function supportsGeneAverage({dataType, fields: {length}}) {
-	return ['geneProbesMatrix', 'geneMatrix'].indexOf(dataType) >= 0 && length === 1;
-}
-
 function modeMenu({dataType}, cb) {
 	return dataType === 'geneMatrix' ?
 		<MenuItem eventKey="geneProbesMatrix" onSelect={cb}>Detailed view</MenuItem> :
@@ -225,11 +221,11 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
 	render: function () {
-		var {samples, data, column, zoom, disableKM} = this.props,
+		var {samples, data, column, zoom, disableKM, supportsGeneAverage, id} = this.props,
 			{fields, heatmap, colors, legend} = column,
 			codes = _.get(data, 'codes'),
 			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
-			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
+			menu = supportsGeneAverage(id) ? modeMenu(column, this.onMode) : null;
 
 		return (
 			<Column
