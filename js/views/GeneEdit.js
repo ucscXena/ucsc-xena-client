@@ -2,7 +2,7 @@
 'use strict';
 
 var React = require('react');
-var {Input} = require('react-bootstrap/lib/');
+var Input = require('react-bootstrap/lib/Input');
 var trim = require('underscore.string').trim;
 
 function apply(features, state) {
@@ -24,10 +24,10 @@ var GeneEdit = React.createClass({
 		var {gene, makeLabel, setEditorState} = this.props;
 		//let header = gene ? makeHeader(`Entered ${this.name}: ${gene}`, true)
 		//	: makeHeader(`Input a ${this.name}`, false);
-		let content =
+		var content =
 			<div>
 				<Input type='textarea' bsSize="large" value={gene}
-				   onChange={ev => setEditorState({gene: ev.target.value})}/>
+					   onChange={ev => setEditorState({gene: ev.target.value})}/>
 				<div className="help">e.g. TP53</div>
 			</div>;
 		return (

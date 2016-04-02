@@ -31,9 +31,8 @@ var YAxisLabel = React.createClass({
 			fraction = count === length ? '' :
 				// babel-eslint/issues/31
 				`, showing ${ index } - ${ index + count - 1 }`, // eslint-disable-line comma-spacing
-			 text = `Samples (N=${ length }) ${ fraction }`;
-
-	return (
+			text = `Samples (N=${ length }) ${ fraction }`;
+		return (
 			<div style={{height: height}} className="YAxisWrapper">
 				<p style={{width: height}} className="YAxisLabel">{text}</p>
 			</div>
@@ -65,10 +64,10 @@ function targetPos(ev) {
 }
 
 var zoomInClick = ev =>
-	!ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
+!ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
 
 var zoomOutClick = ev =>
-	!ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
+!ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
@@ -131,7 +130,7 @@ var Columns = React.createClass({
 			this.setState({openColumnEdit: true});
 	},
 	setDOMDims: function(domNode) {
-		let nodeKeys = _.keys(this.state.dims);
+		var nodeKeys = _.keys(this.state.dims);
 		this.setState({ dims: _.pick(domNode, nodeKeys) });
 	},
 	setOrder: function (order) {
@@ -144,7 +143,7 @@ var Columns = React.createClass({
 		var {callback, fieldFormat, disableKM, supportsGeneAverage, appState} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
-		var {dsId, openColumnEdit, openVizSettings} = this.state;
+		var {openColumnEdit, openVizSettings} = this.state;
 		var height = zoom.height;
 		var editor = openColumnEdit ?
 			<ColumnEdit
@@ -189,12 +188,12 @@ var Columns = React.createClass({
 					className='addColumn Column'>
 
 					{cohort &&
-						<Button
-							onClick={() => this.setState({openColumnEdit: true})}
-							className='Column-add-button'
-							title='Add a column'>
-							+
-						</Button>}
+					<Button
+						onClick={() => this.setState({openColumnEdit: true})}
+						className='Column-add-button'
+						title='Add a column'>
+						+
+					</Button>}
 				</div>
 				{editor}
 				{settings}
@@ -215,7 +214,6 @@ function zoomPopover(zoom, samples, props) {
 		</Popover>
 	);
 }
-
 var Spreadsheet = React.createClass({
 	zoomHelpClose: function () {
 		this.props.callback(['zoom-help-close']);
@@ -246,5 +244,4 @@ var Spreadsheet = React.createClass({
 		);
 	}
 });
-
 module.exports = Spreadsheet;

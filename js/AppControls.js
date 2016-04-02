@@ -34,10 +34,10 @@ var AppControls = React.createClass({
 		pdf(this.props.appState);
 	},
 	onSamplesSelect: function (value) {
-			this.props.callback(['samplesFrom', value]);
+		this.props.callback(['samplesFrom', value]);
 	},
 	onCohortSelect: function (value) {
-			this.props.callback(['cohort', value]);
+		this.props.callback(['cohort', value]);
 	},
 	render: function () {
 		var {appState: {cohort, cohorts, mode}} = this.props,

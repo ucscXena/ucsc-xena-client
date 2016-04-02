@@ -2,7 +2,7 @@
 'use strict';
 
 var React = require('react');
-var {Breadcrumb, BreadcrumbItem, Button, ButtonToolbar, Modal, Glyphicon} = require('react-bootstrap/lib');
+var {Button, ButtonToolbar, Modal, Glyphicon, Nav, NavItem} = require('react-bootstrap/lib');
 var CohortSelect = require('./views/CohortSelect');
 var DatasetSelect = require('./views/DatasetSelect');
 var _ = require('./underscore_ext');
@@ -25,31 +25,22 @@ var pickEditor = (m) => {
 
 function workflowIndicators(positions, defs, onHide) {
 	// Show all breadcrumbs regardless of where in the workflow the user is in.
-	let tabs = [],
-		count = 1,
-		section = _.findKey(positions, s => !s.prev);
-
-	do {
-		if (!defs[section].omit) {
-			let navTitle = `${count}. Select ${defs[section].name}`,
-				isActive = positions[section],
-				className = isActive ? 'breadcrumb-active' : 'breadcrumb-inActive';
-			tabs.push(
-				<BreadcrumbItem active={true} key={count}>
-					<strong className={className}>{navTitle}</strong>
-				</BreadcrumbItem>
-			);
-			count++;
-		}
-	} while(section = defs[section].next);
-
+	let count = 0,
+		activeSection = _.findKey(positions, s => s);
+	let tabs = _.map(_.omit(defs, def => def.omit), (def, key) => {
+		count++;
+		let navTitle = `${count}. Select ${def.name}`;
+		//className = (activeSection === key) ? 'breadcrumb-active' : 'breadcrumb-inActive';
+		return (
+			<NavItem eventKey={key} key={key} disabled>
+				<span className='lead'>{navTitle}</span>
+			</NavItem>
+		)
+	});
 	return (
-		<Breadcrumb activeKey={true}>
-			{tabs}
-			<a href="#" className="pull-right" onClick={onHide}>
-				<Glyphicon glyph="remove"/>
-			</a>
-		</Breadcrumb>
+		<Modal.Header onHide={onHide} closeButton>
+			<Nav bsStyle='pills' activeKey={activeSection}>{tabs}</Nav>
+		</Modal.Header>
 	);
 }
 
@@ -73,9 +64,7 @@ function updateChoice(currentPosition, defs, oldChoices) {
 }
 
 function updatePositions(newSection, oldPositions) {
-	/*
-	 Set new sectopm to true, and all other defs to false
-	 */
+	//Set new sectopm to true, and all other defs to false
 	return _.mapObject(oldPositions, (value, section) => (section === newSection));
 }
 
@@ -133,11 +122,11 @@ var NavButtons = React.createClass({
 			if (!defs[prevSection].omit) {
 				buttons.push(
 					<Button key='BACK' onClick={onBack} bsStyle='info'
-						bsSize={btnSize}><Glyphicon glyph='menu-left' /> Prev
+							bsSize={btnSize}><Glyphicon glyph='menu-left' /> Prev
 					</Button>);
 			}
 			buttons.push(<Button key="CANCEL" onClick={onCancel}
-							 bsStyle='default' bsSize={btnSize}>Cancel</Button>);
+								 bsStyle='default' bsSize={btnSize}>Cancel</Button>);
 		}
 		buttons.push(this.makeForwardBtn(currentSection));
 		return (
@@ -148,9 +137,24 @@ var NavButtons = React.createClass({
 
 var ColumnEdit = React.createClass({
 	defs: {
-		cohort: {omit: true, name: 'Cohort', next: 'dataset', prev: null},
-		dataset: {omit: false, name: 'Dataset', next: 'editor', prev: 'cohort'},
-		editor: {omit: false, name: 'data slice', next: null, prev: 'dataset'}
+		cohort: {
+			omit: true,
+			name: 'Cohort',
+			next: 'dataset',
+			prev: null
+		},
+		dataset: {
+			omit: false,
+			name: 'Dataset',
+			next: 'editor',
+			prev: 'cohort'
+		},
+		editor: {
+			omit: false,
+			name: 'data slice',
+			next: null,
+			prev: 'dataset'
+		}
 	},
 	getInitialState: function () {
 		let {appState: {cohort}} = this.props;
@@ -247,25 +251,25 @@ var ColumnEdit = React.createClass({
 				<Modal.Body>
 					{positions['cohort'] ?
 						<CohortSelect onSelect={this.onCohortSelect} cohorts={cohorts}
-							cohort={choices.cohort} makeLabel={makeLabel}>
+									  cohort={choices.cohort} makeLabel={makeLabel}>
 						</CohortSelect> : null
 					}
 					{positions['dataset'] || choices['dataset'] ?
 						<DatasetSelect datasets={datasets} makeLabel={makeLabel}
-					   		event='dataset' value={choices.dataset}
-					   		disable={choices.dataset && !positions['dataset']}
+							event='dataset' value={choices.dataset}
+							disable={choices.dataset && !positions['dataset']}
 							onSelect={this.onDatasetSelect} servers={servers.user}>
 						</DatasetSelect> : null
 					}
 					{Editor ? <Editor {...columnEdit} setEditorState={this.onSetEditor}
-								{...(choices['editor'] || {})} makeLabel={makeLabel}
-								hasGenes={meta && !!meta.probeMap}/> : null}
+						{...(choices['editor'] || {})} makeLabel={makeLabel}
+													  hasGenes={meta && !!meta.probeMap}/> : null}
 					<br />
 				</Modal.Body>
 				<div className="form-group selection-footer">
 					<span className="col-md-6 col-md-offset-3 text-center">
 						<NavButtons {...this.state} btnSize='small' onBack={this.onBack}
-							onCancel={onHide} defs={this.defs} onForward={!Editor ? this.onForward
+													onCancel={onHide} defs={this.defs} onForward={!Editor ? this.onForward
 						: () => this.addColumn(apply(features, choices['editor']))}/>
 					</span>
 					<span className="col-md-3 text-right">

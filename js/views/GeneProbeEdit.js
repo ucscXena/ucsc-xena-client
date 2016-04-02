@@ -2,7 +2,7 @@
 'use strict';
 
 var React = require('react');
-var {ButtonGroup, Button, Input, Panel} = require('react-bootstrap/lib');
+var {ButtonGroup, Button, Input} = require('react-bootstrap/lib');
 var _ = require('../underscore_ext');
 var trim = require('underscore.string').trim;
 
@@ -40,30 +40,30 @@ var GeneProbeEdit = React.createClass({
 		var help = doGenes ? 'e.g. TP53 or TP53, PTEN' :
 			// babel-eslint/issues/31
 			examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : ''; //eslint-disable-line comma-spacing
-		let optionSection = null;
+		var optionSection = null;
 
 		if (hasGenes) {
 			let content =
 				<ButtonGroup justified>
-					<Button onClick={() => setEditorState({genes: true})}
-						href='#' bsStyle={genes ? 'success' : 'default'}>
+					<Button href='#' active={genes}
+						onClick={() => setEditorState({genes: true})}>
 						<strong className="control-label">Genes</strong>
 					</Button>
-					<Button href='#' onClick={() => setEditorState({genes: false})}
-						bsStyle={genes ? 'default' : 'success'}>
+					<Button href='#' active={!genes}
+						onClick={() => setEditorState({genes: false})}>
 						<strong className="control-label">Identifiers</strong>
 					</Button>
 				</ButtonGroup>;
 			optionSection = makeLabel(content, 'Select Input:');
 		}
 
-		let content =
+		var content =
 			<div>
 				<Input onChange={ev => setEditorState({list: ev.target.value})}
 					type='textarea' bsSize='large' value={list} />
 				<div className="help">{help}</div>
 			</div>;
-		let inputSection = makeLabel(content, 'Enter ' +(doGenes ? 'Gene' : 'Identifier') +'(s):');
+		var inputSection = makeLabel(content, 'Enter ' +(doGenes ? 'Gene' : 'Identifier') +'(s):');
 
 		return (
 			<div className="form-group">

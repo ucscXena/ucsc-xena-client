@@ -2,9 +2,8 @@
 'use strict';
 
 var React = require('react');
-var {DropdownButton, Glyphicon, ListGroup, ListGroupItem, MenuItem, Panel} = require('react-bootstrap/lib');
+var {DropdownButton, MenuItem} = require('react-bootstrap/lib');
 var ReactDOM = require('react-dom');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 //require('./Select.css');
@@ -42,9 +41,9 @@ var Select = React.createClass({
 	onChange: function(ev) {
 		this.setState({filter: ev.target.value});
 	},
-    setFocus: function () {
-        _.defer(() => ReactDOM.findDOMNode(this.refs.search).focus());
-    },
+	setFocus: function () {
+		_.defer(() => ReactDOM.findDOMNode(this.refs.search).focus());
+	},
 	// This is a work-around for
 	// https://github.com/react-bootstrap/react-bootstrap/issues/486
 	// We intercept the onKeyUp that would propagate to parent nodes,
@@ -67,22 +66,22 @@ var Select = React.createClass({
 		var {allowSearch, options, value} = this.props,
 			{filter} = this.state,
 			opts = filterOpts(filter, options),
-			title = notUndefined(value) && _.find(options, c => c.value === value);
+			title = notUndefined(value) && _.findWhere(options, {value: value});
 		// We wrap the input in a div so DropdownButton decorates the div
 		// with event handlers, and we can disable them by using stopPropagation
 		// on the input. There's no direct way to override the event handlers
 		// installed by DropdownButton.
-		let searchSection = allowSearch ?
+		var searchSection = allowSearch ?
 			<div key='__search'>
 				<input className='Select-input'
-					key='__search'
-					onKeyUp={this.onKeyUp}
-					ref='search'
-					value={filter}
-					onChange={this.onChange}
-					onSelect={stopPropagation}
-					onClick={stopPropagation}
-					type='text'/>
+					   key='__search'
+					   onKeyUp={this.onKeyUp}
+					   ref='search'
+					   value={filter}
+					   onChange={this.onChange}
+					   onSelect={stopPropagation}
+					   onClick={stopPropagation}
+					   type='text'/>
 			</div> : null;
 
 		return (
@@ -95,7 +94,7 @@ var Select = React.createClass({
 				{searchSection}
 				{_.map(opts, (opt, i) =>
 					<MenuItem onSelect={this.onSelect} key={i}
-							  header={!!opt.header} eventKey={opt.value}>{opt.label}
+						  header={!!opt.header} eventKey={opt.value}>{opt.label}
 					</MenuItem>
 				)}
 			</DropdownButton>

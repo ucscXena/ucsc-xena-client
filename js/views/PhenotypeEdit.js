@@ -27,7 +27,7 @@ var PhenotypeEdit = React.createClass({
 		var {feature = {}, features, makeLabel, setEditorState} = this.props,
 			labelValue = _.isEmpty(feature) ? `Choose a ${this.name}:` : `${this.name} chosen:`,
 			content = <Select onSelect={f => setEditorState({feature: f})}
-						allowSearch={true} value={feature} options={features}/>,
+							  allowSearch={true} value={feature} options={features}/>,
 			label = makeLabel(content, labelValue);
 		return (
 			<div className='row'>{label}</div>
