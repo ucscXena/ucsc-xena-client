@@ -6,6 +6,29 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 	function (xenaQuery, dom_helper, colorScales, highcharts, highcharts_helper, _, Rx) {
 	'use strict';
 	var Highcharts = highcharts.Highcharts;
+
+	//project custom color code
+	//CKCC
+	/*
+	var custom_colors = {
+		"IDHmut-codel":	"#00FFFF",
+		"IDHmut-non-codel":	"#D47D4E",
+		"IDHwt":	"#F5A9F2",
+		"Proneural":	"#FFA500",
+		"Neural":	"#0000FF",
+		"Mesenchymal":	"#00FF00",
+		"Classical":	"#FF0000",
+		"G-CIMP":	"#9A2EFE"
+	 };
+	*/
+	// PCAWG TERT custom color for
+	/*
+	var custom_colors ={
+		"promoter mutation": "#1f77b4",
+		"no mutation" : "#aec7e8"
+	};
+	*/
+
 	return function (root, callback, sessionStorage) {
 		var div,
 			leftContainer, rightContainer, controlContainer,
@@ -69,13 +92,23 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 					}, //no normalization
 					{
 						"value": "cohort",
-						"text": "across cohort",
+						"text": "across cohort (substract mean)",
 						"index": 1
 					}, //cohort-level
 					{
-						"value": "subset",
-						"text": "across selected samples",
+						"value": "cohort_stdev",
+						"text": "across cohort (substract mean, divide stdev)",
 						"index": 2
+					},
+					{
+						"value": "subset",
+						"text": "across selected samples (substract mean)",
+						"index": 3
+					}, //selected sample level current heatmap normalization
+					{
+						"value": "subset_stdev",
+						"text": "across selected samples (substract mean, divide stdev)",
+						"index": 4
 					} //selected sample level current heatmap normalization
 				],
 				node = document.createElement("span");
@@ -142,7 +175,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				column = columnOrder[i];
 				option = document.createElement('option');
 				option.value = column;
-				option.textContent = columns[column].columnLabel.user + " / " + columns[column].fieldLabel.user;
+				option.textContent = columns[column].fieldLabel.user;
 
 				if (columns[column].dataType === "geneMatrix") {
 					option.textContent = option.textContent + " (gene average)";
@@ -188,7 +221,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				//intentionally not checking vizSettings, need to understand cursor first.
 				//check meta data
 				// The default column normalization is fetched from the server. Instead it should come from
-        // the state, or from a data cache, because we've fetched that already.
+				// the state, or from a data cache, because we've fetched that already.
 				else {
 					dropDownDiv.selectedIndex = yNormalizationMeta;
 					normalizationState[ycolumn] = yNormalizationMeta;
@@ -255,6 +288,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 			}
 
 			yfields = columns[ycolumn].fields;
+
 			ylabel = columns[ycolumn].fieldLabel.user;
 			if (columns[ycolumn].dataType === "geneMatrix") {
 				ylabel = ylabel + " (gene average)";
@@ -273,7 +307,8 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				(xcolumn === "none") ? xenaQuery.test_host(xhost) : xenaQuery.code_list(xhost, xds, xfields),
 
 				(xcolumn === "none") ? xenaQuery.test_host(xhost) : ((xcolumnType === "geneProbesMatrix") ?
-					xenaQuery.dataset_gene_probe_values(xhost, xds, samples, xfields[0]) :
+					//xenaQuery.dataset_gene_probe_values(xhost, xds, samples, xfields[0]) :
+					xenaQuery.dataset_probe_values(xhost, xds, samples, xfields) :
 					((xcolumnType === "geneMatrix") ?
 						xenaQuery.dataset_genes_values(xhost, xds, samples, xfields) :
 						xenaQuery.dataset_probe_values(xhost, xds, samples, xfields))),
@@ -282,10 +317,10 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				xenaQuery.code_list(yhost, yds, yfields),
 
 				(ycolumnType === "geneProbesMatrix") ?
-				xenaQuery.dataset_gene_probe_values(yhost, yds, samples, yfields[0]) :
-				((ycolumnType === "geneMatrix") ?
-					xenaQuery.dataset_genes_values(yhost, yds, samples, yfields) :
-					xenaQuery.dataset_probe_values(yhost, yds, samples, yfields)),
+					xenaQuery.dataset_probe_values(yhost, yds, samples, yfields) :
+					((ycolumnType === "geneMatrix") ?
+						xenaQuery.dataset_genes_values(yhost, yds, samples, yfields) :
+						xenaQuery.dataset_probe_values(yhost, yds, samples, yfields)),
 
 				xenaQuery.dataset_text(yhost, yds)
 			);
@@ -297,7 +332,8 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 					ydata,
 					yIsCategorical, xIsCategorical, xfield,
 					r,
-				  offsets,
+					offsets={},  // per y variable
+					STDEV={},  // per y variable
 					yNormalization,
 					metaData,
 					yNormalizationMeta;
@@ -364,8 +400,24 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 					yNormalization = normUI.value;
 				}
 
-				//need to get all the samples and all the data for y
-				if (yNormalization === "cohort") {
+				//per y variable stdev
+				var k, yfield;
+				for (k = 0; k < yfields.length; k++) {
+					yfield = yfields[k];
+					if (yNormalization === "cohort_stdev" || yNormalization === "subset_stdev"){
+						var ydataElement = ydata[k].map(parseFloat).filter(x=>!isNaN(x));
+
+						var allAve = highcharts_helper.average(ydataElement);
+						var allSTDEV = highcharts_helper.standardDeviation(ydataElement, allAve);
+						STDEV[yfield]= allSTDEV;
+					} else {
+						STDEV[yfield]= 1;
+					}
+				}
+
+				//offset
+				if (yNormalization === "cohort" || yNormalization === "cohort_stdev" ) {
+					//need to get all the samples and all the data for y
 					xenaQuery.dataset_samples(yhost, yds).subscribe(function (s) {
 						var Observable = (ycolumnType === "geneProbesMatrix") ?
 							xenaQuery.dataset_probe_values(yhost, yds, s, yfields) :
@@ -390,12 +442,11 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 								}
 								offsets[yfield] = highcharts_helper.average(datalist);
 							}
-							drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel);
+							drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV);
 						});
 					});
-				} else if (yNormalization === "subset") {
-					var i, k, datalist,
-						yfield;
+				} else if (yNormalization === "subset" || yNormalization === "subset_stdev") {
+					var i, datalist;
 
 					offsets = {};
 					for (i = 0; i < yfields.length; i++) {
@@ -408,31 +459,26 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 						}
 						offsets[yfield] = highcharts_helper.average(datalist);
 					}
-					drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel);
+					drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV);
 				} else {
 					offsets = {};
 					yfields.forEach(function (yfield) {
 						offsets[yfield] = 0;
 					});
-					drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel);
+					drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV);
 				}
 			});
 		}
 
 
 		function adjustData(columnType, fields, qReturn) {
-			var data;
-			if (columnType === "geneProbesMatrix") {
-				data = qReturn[1];
-				fields = qReturn[0];
-				columnType = 'probeMatrix';
-			} else if (columnType === "geneMatrix") {
-				data = [];
-				fields = [];
+			var data=[];
+			if (columnType === "geneMatrix") {
 				qReturn.forEach(function (obj) {
-					fields.push(obj.gene);
 					data.push(obj.scores[0]);
 				});
+			} else if (fields.length === qReturn[0]) {
+				data = qReturn[1];
 			} else {
 				data = qReturn;
 			}
@@ -492,11 +538,11 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 		}
 
 
-		function drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel) {
+		function drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV) {
 			var chart,
 				yIsCategorical = ycodemap[yfields[0]] ? true : false,
 				xIsCategorical = xcodemap[xfield] ? true : false,
-				chartOptions = _.clone(highcharts_helper.chartOptions), // chart option
+				chartOptions = _.clone(highcharts_helper.chartOptions),
 				xAxisTitle, yAxisTitle,
 				ybinnedSample,
 				dataSeriese,
@@ -510,7 +556,8 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				categories,
 				chartCategoryLabels,
 				i, k,
-				numSD = document.getElementById("sd").value;
+				numSD = document.getElementById("sd").value,
+				colors={};
 
 			document.getElementById("myChart").innerHTML = "Generating chart ...";
 
@@ -553,11 +600,12 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				for (i = 0; i < xCategories.length; i++) {
 					row = [];
 					for (k = 0; k < yfields.length; k++) {
-						row.push("");
+						row.push(NaN);
 					}
 					dataMatrix.push(row);
 					stdMatrix.push(_.clone(row));
 				}
+
 
 				// Y data and fill in the matrix
 				var average, stdDev;
@@ -576,12 +624,12 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 							stdDev = numSD * highcharts_helper.standardDeviation(data, average);
 
 							if (!isNaN(average)) {
-								dataMatrix[i][k] = parseFloat(average.toPrecision(3));
+								dataMatrix[i][k] = parseFloat((average/STDEV[yfield]).toPrecision(3));
 							} else {
 								dataMatrix[i][k] = NaN;
 							}
 							if (!isNaN(stdDev)) {
-								stdMatrix[i][k] = parseFloat(stdDev.toPrecision(3));
+								stdMatrix[i][k] = parseFloat((stdDev/STDEV[yfield]).toPrecision(3));
 							} else {
 								stdMatrix[i][k] = NaN;
 							}
@@ -602,7 +650,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				// offsets
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
-					offsetsSeries.push(offsets[yfield]);
+					offsetsSeries.push(offsets[yfield]/STDEV[yfield]);
 				}
 
 				cutOffset = function([average, offset]) {
@@ -622,17 +670,29 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 						return ["", ""];
 					}
 				};
+
+				xcodemap[xfield].forEach(function (code,i) {
+					colors[code]=colorScales.categoryMore[i % colorScales.categoryMore.length];
+				});
+
 				for (i = 0; i < xCategories.length; i++) {
 					code = xCategories[i];
 					dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(cutOffset);
 					errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(getError);
 
-					var color = colorScales.categoryMore[i % colorScales.categoryMore.length];
-
+					//CKCC grey
+					/*
+					if (i===0){
+						colors[code] = null;
+					} else {
+						colors[code] ="#A9A9A9";
+					}
+					*/
 
 					highcharts_helper.addSeriesToColumn(
 						chart, code, dataSeriese, errorSeries, yIsCategorical,
-						yfields.length * xCategories.length < 30, showLegend, color);
+						yfields.length * xCategories.length < 30, showLegend,
+						custom_colors[code] ? custom_colors[code] : colors[code]);
 				}
 				chart.redraw();
 			} else if (!xfield) { //summary view --- messsy code
@@ -667,14 +727,14 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 
 				xAxisTitle = xlabel;
 
-				categories.forEach(function (key) {
-					chartCategoryLabels[key] = key + "<br>(n=" + ybinnedSample[key].length + ")";
-				});
-
 				showLegend = false;
+				if (yIsCategorical) {
 				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend);
-
+					chartOptions, categories.map(code=> code + " (" + ybinnedSample[code].length+")"), xAxisTitle, ylabel, showLegend);
+				}
+				else {
+					chartOptions = highcharts_helper.columnChartFloat (chartOptions, categories, xAxisTitle, ylabel);
+				}
 				chart = new Highcharts.Chart(chartOptions);
 
 				//add data to seriese
@@ -686,13 +746,13 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 						var average = highcharts_helper.average(ybinnedSample[code]);
 						var stdDev = numSD * highcharts_helper.standardDeviation(ybinnedSample[code], average);
 						if (!isNaN(average)) {
-							dataSeriese.push(parseFloat((average - offsets[code]).toPrecision(3)));
+							dataSeriese.push(parseFloat(((average - offsets[code])/STDEV[code]).toPrecision(3)));
 						} else {
 							dataSeriese.push("");
 						}
 						if (!isNaN(stdDev)) {
-							errorSeries.push([parseFloat((average - offsets[code] - stdDev).toPrecision(3)),
-								parseFloat((average - offsets[code] + stdDev).toPrecision(3))
+							errorSeries.push([parseFloat(((average - offsets[code] - stdDev)/STDEV[code]).toPrecision(3)),
+								parseFloat(((average - offsets[code] + stdDev)/STDEV[code]).toPrecision(3))
 							]);
 						} else {
 							errorSeries.push(["", ""]);
@@ -712,41 +772,51 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				chart.redraw();
 
 			} else if (xIsCategorical && yIsCategorical) { // x y : categorical --- messsy code
+				//both x and Y is a single variable, i.e. yfields has array size of 1
 				xSampleCode = {};
 				xbinnedSample = {};
+
 				// x data
-				xcodemap[xfield].forEach(function (code) {
-					xbinnedSample[code] = [];
-				});
+				xcodemap[xfield].map(code=> xbinnedSample[code] = []);
 
 				//probes by samples
 				for (i = 0; i < xdata[0].length; i++) {
 					code = xcodemap[xfield][xdata[0][i]];
 					if (code) {
-						xbinnedSample[code].push(samples[i]);
+						if (xbinnedSample[code]){
+							xbinnedSample[code].push(samples[i]);
+						} else {
+							xbinnedSample[code] = [samples[i]];
+						}
 						xSampleCode[samples[i]] = code;
 					}
 				}
 
-				// remove empty xcode categories
+				// Y data: yfields can only have array size of 1
+				yfield = yfields[0];
+				ydataElement = ydata[0];
+				ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, samples, categories, xSampleCode);
+
+				var ySamples = _.flatten(_.values(ybinnedSample));
+
+				// remove empty xcode categories and recal xbinnedSample[code] with samples actually has values in Y
 				xcodemap[xfield].forEach(function (code) {
+					xbinnedSample[code] =  _.intersection(xbinnedSample[code], ySamples);
 					if (xbinnedSample[code].length === 0) {
 						delete xbinnedSample[code];
 					}
 				});
 
 				// column chart setup
-				categories = Object.keys(xbinnedSample);
+				categories = _.keys(xbinnedSample);
 				chartCategoryLabels = {};
 
 				xAxisTitle = xlabel;
-				categories.forEach(function (key) {
-					chartCategoryLabels[key] = key + "<br>(n=" + xbinnedSample[key].length + ")";
-				});
 
 				showLegend = true;
+
 				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories, chartCategoryLabels, xAxisTitle, ylabel, yIsCategorical, showLegend);
+					chartOptions, categories.map(code=> code + " (" + xbinnedSample[code].length+")"), xAxisTitle, ylabel, showLegend);
 
 				chart = new Highcharts.Chart(chartOptions);
 
@@ -758,27 +828,23 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 					return value ? parseFloat(value.toPrecision(3)) : " ";
 				};
 
-				// Y data
-				for (k = 0; k < yfields.length; k++) {
-					var ycode, ycodeSeries, ycategories;
-					yfield = yfields[k];
-					ydataElement = ydata[k];
-					ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, samples, categories, xSampleCode);
+				var ycategories = Object.keys(ybinnedSample);
 
-					ycategories = Object.keys(ybinnedSample);
+				//code
+				ycodemap[yfield].map((code,i) =>
+					colors[code]=colorScales.categoryMore[i % colorScales.categoryMore.length]);
 
-					for (i = 0; i < ycategories.length; i++) {
-						ycode = ycategories[i];
+				var ycodeSeries;
+				for (i = 0; i < ycategories.length; i++) {
+					code = ycategories[i];
 
-						ycodeSeries = _.map(_.map(categories, _.propertyOf(xbinnedSample)),
-								_.partial(yFromCategories, ybinnedSample[ycode]));
+					ycodeSeries = _.map(_.map(categories, _.propertyOf(xbinnedSample)),
+							_.partial(yFromCategories, ybinnedSample[code]));
 
-						let color = colorScales.categoryMore[i % colorScales.categoryMore.length];
-
-						highcharts_helper.addSeriesToColumn(
-							chart, ycode, ycodeSeries, errorSeries, yIsCategorical,
-							ycodemap[yfields[0]].length * categories.length < 30, showLegend, color);
-					}
+					highcharts_helper.addSeriesToColumn(
+						chart, code, ycodeSeries, errorSeries, yIsCategorical,
+						ycodemap[yfields[0]].length * categories.length < 30, showLegend,
+						custom_colors[code] ? custom_colors[code] : colors[code]);
 				}
 				chart.redraw();
 			} else { // x y float
@@ -816,6 +882,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				};
 
 				chart = new Highcharts.Chart(chartOptions);
+
 				for (k = 0; k < yfields.length; k++) {
 					var series = [],
 						x, y;
@@ -829,7 +896,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 							x = xdata[0][i];
 							y = ydata[k][i];
 							if ('NaN' !== x && 'NaN' !== y) {
-								y = y - offsets[yfield];
+								y = (y - offsets[yfield])/STDEV[yfield];
 								series.push({
 									name: samples[i],
 									x: x,
