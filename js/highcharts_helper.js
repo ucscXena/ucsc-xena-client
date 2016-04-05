@@ -40,7 +40,6 @@ define(['./highcharts'], function () {
         }
       },
       enabled: true,
-      align: 'right',
       labelFormatter: hcLabelRender,
       itemHoverStyle: {
         color: '#ff6600'
@@ -65,18 +64,17 @@ define(['./highcharts'], function () {
     },
   };
 
-  function columnChartOptions (chartOptions, categories, chartCategoryLabels, xAxisTitle, Y, yIsCategorical, showLegend){
-     // Y data column chart setup
+  // x categorical, Y categorical
+  function columnChartOptions (chartOptions, categories, xAxisTitle, Y, showLegend){
     var yAxisTitle;
-    if (yIsCategorical){
-      yAxisTitle = "Percentage distribution";
-    } else{
-      yAxisTitle = "Average value";
-    }
+    yAxisTitle = "Percentage distribution";
 
     chartOptions.legend.align = 'right';
     chartOptions.legend.verticalAlign = 'middle';
     chartOptions.legend.layout = 'vertical';
+
+    //showLegend = false;
+
     chartOptions.legend.title.style = {
       width: "100px",
       fontStyle: 'italic'
@@ -88,9 +86,8 @@ define(['./highcharts'], function () {
       chartOptions.legend.title = {};
     }
 
-    var Y_in_Title = Y.length > 50 ? Y.slice(0, 50) + "..." : Y;
     chartOptions.title = {
-      text: yAxisTitle + " of " + Y_in_Title + ((xAxisTitle === "") ? "" : " by " + xAxisTitle)
+      text: yAxisTitle + " of " + Y + ((xAxisTitle === "") ? "" : " by " + xAxisTitle)
     };
     chartOptions.xAxis = {
       title: {
@@ -103,11 +100,6 @@ define(['./highcharts'], function () {
       },
       type: 'category',
       categories: categories,
-      labels: {
-        formatter: function(){
-          return chartCategoryLabels[this.value];
-        }
-      },
       minRange: 1
     };
     chartOptions.yAxis = {
@@ -122,23 +114,17 @@ define(['./highcharts'], function () {
     };
 
     //tooltip
-    if (yIsCategorical) {
-      if (xAxisTitle === ""){
-        chartOptions.tooltip = {
-          formatter: function () {
-            return Y + ' ' + categories[this.point.x] + ': <b>' + this.point.y + '%</b>';
-          },
-          hideDelay: 0
-        };
-      } else {
-        chartOptions.tooltip = {
-          headerFormat: xAxisTitle + ' = {point.key}<br>',
-          pointFormat: Y + ' {series.name}: <b>{point.y}%</b>',
-          hideDelay: 0
-        };
-      }
+    if (xAxisTitle === ""){
+      chartOptions.tooltip = {
+        formatter: function () {
+          return Y + ' ' + categories[this.point.x] + ': <b>' + this.point.y + '%</b>';
+        },
+        hideDelay: 0
+      };
     } else {
       chartOptions.tooltip = {
+        headerFormat: xAxisTitle + ' = {point.key}<br>',
+        pointFormat: Y + ' {series.name}: <b>{point.y}%</b>',
         hideDelay: 0
       };
     }
@@ -148,26 +134,24 @@ define(['./highcharts'], function () {
         rotation: -90
       };
     }
-    if (yIsCategorical){
-      chartOptions.yAxis.labels = {
-        format: '{value} %'
-      };
-    }
+
+    chartOptions.yAxis.labels = {
+      format: '{value} %'
+    };
+
     return chartOptions;
   }
 
   // x categorical y float
- function columnChartFloat (chartOptions, categories, xAxisTitle, Y){
-     // Y data column chart setup
-    var yAxisTitle = Y;// "Average value";
-
+ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle){
     chartOptions.legend.align = 'right';
     chartOptions.legend.margin = 5;
-    chartOptions.legend.title.text = Y + '<br/><span style="font-size: 9px; color: #666; font-weight: normal">(Click to hide)</span>';
+    chartOptions.legend.title.text = xAxisTitle + '<br/><span style="font-size: 9px; color: #666; font-weight: normal">(Click to hide)</span>';
+    chartOptions.legend.verticalAlign = 'middle';
+    chartOptions.legend.layout = 'vertical';
 
-    var Y_in_Title = Y.length > 50 ? Y.slice(0, 50) + "..." : Y;
     chartOptions.title = {
-      text: Y_in_Title + ((xAxisTitle === "") ? "" : " by " + xAxisTitle)
+      text: yAxisTitle + ((xAxisTitle === "") ? "" : " by " + xAxisTitle)
     };
 
     chartOptions.xAxis = {
@@ -246,6 +230,7 @@ define(['./highcharts'], function () {
     }, 0);
 
     var avg = sum / data.length;
+
     return avg;
   }
 
