@@ -1,10 +1,9 @@
 /*eslint strict: [2, "function"], camelcase: 0, no-use-before-define: 0 */
 /*eslint-env browser */
-/*jshint browser: true, onevar: true */
 /*global define: false, document: false */
+'use strict';
 define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highcharts_helper', './underscore_ext', 'rx'],
 	function (xenaQuery, dom_helper, colorScales, highcharts, highcharts_helper, _, Rx) {
-	'use strict';
 	var Highcharts = highcharts.Highcharts;
 
 	var custom_colors ={};
