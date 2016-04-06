@@ -78,7 +78,7 @@ var unknownEffect = 0,
 	},
 	colorStr = c =>
 		'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')',
-	saveUndef = f => v => v === null ? v : f(v),
+	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
 	decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals
 
@@ -88,10 +88,11 @@ var unknownEffect = 0,
 		labels: ['0%', '50%', '100%'],
 		align: 'center'
 	},
+
 	features = {
 		impact: {
 			get: (a, v) => impact[v.effect] || (v.effect ? unknownEffect : undefined),
-			color: v => colorStr(v === null ? colors.grey : colors.category4[v]),
+			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
 			legend: {
 				colors: colors.category4.map(colorStr),
 				labels: _.range(_.keys(impactGroups).length).map(
@@ -100,13 +101,13 @@ var unknownEffect = 0,
 			}
 		},
 		'dna_vaf': {
-			get: (a, v) => v.dna_vaf === null ? undefined : decimateFreq(v.dna_vaf),
-			color: v => colorStr(v === null ? colors.grey : _.assoc(colors.af, 'a', v)),
+			get: (a, v) => v.dna_vaf == null ? undefined : decimateFreq(v.dna_vaf),
+			color: v => colorStr(v == null ? colors.grey : _.assoc(colors.af, 'a', v)),
 			legend: vafLegend
 		},
 		'rna_vaf': {
-			get: (a, v) => v.rna_vaf === null ? undefined : decimateFreq(v.rna_vaf),
-			color: v => colorStr(v === null ? colors.grey : _.assoc(colors.af, 'a', v)),
+			get: (a, v) => v.rna_vaf == null ? undefined : decimateFreq(v.rna_vaf),
+			color: v => colorStr(v == null ? colors.grey : _.assoc(colors.af, 'a', v)),
 			legend: vafLegend
 		}
 	};
@@ -156,10 +157,10 @@ function cmpRowOrNoVariants(v1, v2, refGene) {
 }
 
 function cmpRowOrNull(v1, v2, refGene) {
-	if (v1 === null) {
-		return (v2 === null) ? 0 : 1;
+	if (v1 == null) {
+		return (v2 == null) ? 0 : 1;
 	}
-	return (v2 === null) ? -1 : cmpRowOrNoVariants(v1, v2, refGene);
+	return (v2 == null) ? -1 : cmpRowOrNoVariants(v1, v2, refGene);
 }
 
 function cmpSamples(probes, sample, refGene, s1, s2) {
