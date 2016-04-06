@@ -80,7 +80,7 @@ var Select = React.createClass({
 				className='Select'
 				disabled={disable}
 				onMouseUp={this.setFocus}
-				title={trimTitle(title && title.label || 'Select...', 35)}>
+				title={trimTitle(title && title.label || 'Select...', 22)}>
 
 				{[<div key='__search'><input className='Select-input'
 					onKeyUp={this.onKeyUp}

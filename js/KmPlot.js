@@ -8,7 +8,7 @@ var _ = require('./underscore_ext');
 var React = require('react');
 var { PropTypes } = React;
 var Modal = require('react-bootstrap/lib/Modal');
-var { ListGroup, ListGroupItem, OverlayTrigger, Tooltip } = require('react-bootstrap/lib/');
+var {ListGroup, ListGroupItem, OverlayTrigger, PageHeader, Tooltip} = require('react-bootstrap/lib/');
 var Axis = require('./Axis');
 var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
@@ -276,7 +276,6 @@ var KmPlot = React.createClass({
 			}
 		}
 	},
-
 	getDefaultProps: () => ({
 		eventClose: 'km-close',
 		dims: {
@@ -284,22 +283,20 @@ var KmPlot = React.createClass({
 			width: 700
 		}
 	}),
-
 	getInitialState: function() {
 		return { activeLabel: '' }
 	},
-
-	hide: function () {
-		let {callback, eventClose} = this.props;
-		callback([eventClose]);
-	},
-
+	//hide: function () {
+	//	let {callback, eventClose} = this.props;
+	//	callback([eventClose]);
+	//},
 	setActiveLabel: function (e, label) {
 		this.setState({ activeLabel: label });
 	},
-
 	render: function () {
-		let { km: {title, label, groups}, dims } = this.props,
+		//let { km: {title, label, groups}, dims } = this.props,
+		let {activeKm, dims, kmColumns} = this.props,
+			{groups, title, label} = activeKm,
 			warning = _.get(groups, 'warning'),
 			fullLabel = warning ? `${label} (${warning})` : label,
 			{ activeLabel } = this.state,
@@ -321,20 +318,16 @@ var KmPlot = React.createClass({
 			</div>;
 
 		return (
-			<Modal show={true} bsSize='large' className='kmDialog' onHide={this.hide} ref="kmPlot">
-				<Modal.Header closeButton className="container-fluid">
-					<span className="col-md-2">
-						<Modal.Title>Kaplan Meier</Modal.Title>
-					</span>
-					<span className="col-md-9 label label-default featureLabel">{title}</span>
-				</Modal.Header>
-				<Modal.Body className="container-fluid">
-					{Content}
-				</Modal.Body>
-				<Modal.Footer className="container-fluid">
-					<samp className='featureLabel'>{fullLabel}</samp>
-				</Modal.Footer>
-			</Modal>
+			<div className='kmDialog container-fluid' ref="kmPlot">
+				<div className="lead">
+					<div className="row">
+						<div className="col-md-4">Kaplan Meier</div>
+						<div className="col-md-8">{title}</div>
+					</div>
+					<hr />
+				</div>
+				{Content}
+			</div>
 		);
 	}
 });

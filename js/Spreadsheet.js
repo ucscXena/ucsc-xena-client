@@ -4,11 +4,7 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Col = require('react-bootstrap/lib/Col');
-var Row = require('react-bootstrap/lib/Row');
-var Button = require('react-bootstrap/lib/Button');
-var Popover = require('react-bootstrap/lib/Popover');
-var ColumnEdit = require('./ColumnEdit');
+var {Button, Col, Popover, Row} = require('react-bootstrap/lib');
 var Sortable = require('./Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
@@ -140,11 +136,6 @@ var Columns = React.createClass({
 		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
 		var {openVizSettings} = this.state;
 		//var height = zoom.height;
-		var editor = openColumnEdit ?
-			<ColumnEdit
-				{...this.props}
-				onHide={() => onColumnEdit(false)}
-			/> : null;
 		// XXX parameterize settings on column type
 		var settings = openVizSettings ?
 			<VizSettings
@@ -177,7 +168,6 @@ var Columns = React.createClass({
 				<Sortable onClick={this.ev.click} setOrder={this.setOrder}>
 					{columnViews}
 				</Sortable>
-				{editor}
 				{settings}
 				<Crosshair {...this.state.crosshair} dims={this.state.dims}/>
 				<Tooltip {...this.state.tooltip}/>

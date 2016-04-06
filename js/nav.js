@@ -34,7 +34,7 @@ var XenaNav = React.createClass({
 	render: function() {
 		let {activeTab} = this.state;
 		return (
-			<Navbar inverse>
+			<Navbar>
 				<Nav activeKey={activeTab} bsStyle="pills">{_.map(links, l =>
 					<NavItem key={l.href} eventKey={l.label} href={l.href}>{l.label}</NavItem>
 				)}

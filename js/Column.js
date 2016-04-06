@@ -4,8 +4,7 @@
 
 var React = require('react');
 var _ = require('./underscore_ext');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
-var SplitButton = require('react-bootstrap/lib/SplitButton');
+var {MenuItem, SplitButton} = require('react-bootstrap/lib');
 var Resizable = require('react-resizable').Resizable;
 var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('./refGeneExons');
@@ -90,14 +89,15 @@ var Column = React.createClass({
 	onViz: function () {
 		this.props.onViz(this.props.id);
 	},
-	onKm: function () {
-		let {callback, id} = this.props;
-		callback(['km-open', id]);
-	},
+	//onKm: function () {
+	//	let {callback, id} = this.props;
+	//	callback(['km-open', id]);
+	//},
 	render: function () {
-		var {id, callback, plot, legend, column, zoom, menu, data, disableKM} = this.props,
+		//var {id, callback, disableKm, plot, legend, column, zoom, menu, data} = this.props,
+		var {id, callback, plot, legend, column, zoom, menu, data} = this.props,
 			{width, columnLabel, fieldLabel} = column,
-			[kmDisabled, kmTitle] = disableKM(id),
+			//[kmDisabled, kmTitle] = disableKM(id),
 			// move this to state to generalize to other annotations.
 			doRefGene = _.get(data, 'refGene'),
 			// In FF spans don't appear as event targets. In Chrome, they do.
@@ -109,13 +109,12 @@ var Column = React.createClass({
 				className="glyphicon glyphicon-resize-horizontal Sortable-handle"
 				aria-hidden="true">
 			</span>);
-
+		//<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
 		return (
 			<div className='Column' style={{width: width, position: 'relative'}}>
 				<SplitButton className='Sortable-handle' title={moveIcon} bsSize='xsmall'>
 					{menu}
 					{menu && <MenuItem divider />}
-					<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
 					<MenuItem onSelect={this.onDownload}>Download</MenuItem>
 					<MenuItem onSelect={this.onAbout}>About the Dataset</MenuItem>
 					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>

@@ -202,7 +202,6 @@ var controls = {
 	'km-close': state => _.assocIn(state, ['km', 'id'], null),
 	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),
 	'chart': state => _.assoc(state, 'mode', 'chart'),
-	'kmPlot': state => _.assoc(state, 'mode', 'kmPlot'),
 	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState)
 };
 
