@@ -7,6 +7,8 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 	'use strict';
 	var Highcharts = highcharts.Highcharts;
 
+	var custom_colors ={};
+
 	//project custom color code
 	//CKCC
 	/*
