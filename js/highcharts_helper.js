@@ -1,10 +1,9 @@
 /*eslint strict: [2, "function"], camelcase: 0 */
 /*global define: true*/
+'use strict';
 define(['./highcharts'], function () {
-  'use strict';
-
   function hcLabelRender(){
-	/*jshint -W040 */ // Due to the way highcharts is configured.
+	///*jshint -W040 */ // Due to the way highcharts is configured.
     var s = this.name;
     var r = "";
     var lastAppended = 0;

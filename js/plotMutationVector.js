@@ -206,6 +206,7 @@ var MutationColumn = hotOrNot(React.createClass({
 						}}
 						feature={feature}
 						nodes={column.nodes}
+						strand={column.strand}
 						width={column.width}
 						data={data}
 						index={index}

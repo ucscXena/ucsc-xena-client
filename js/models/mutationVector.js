@@ -59,12 +59,12 @@ var unknownEffect = 0,
 		'stop_retained_variant': 1,
 
 		//mutations outside the exon region and splice region get organge color, code =0
+		'others': 0,
+		'SV':0,
 		'upstream_gene_variant': 0,
 		'downstream_gene_variant': 0,
 		'intron_variant': 0,
 		'intergenic_region': 0,
-
-		"others": 0
 	},
 	colors = {
 		category4: [
@@ -88,6 +88,7 @@ var unknownEffect = 0,
 		labels: ['0%', '50%', '100%'],
 		align: 'center'
 	},
+
 	features = {
 		impact: {
 			get: (a, v) => impact[v.effect] || (v.effect ? unknownEffect : undefined),
@@ -185,7 +186,7 @@ var refGene = {
 	GRCh36: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
 	hg19: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'}),
 	GRCh37: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'})
-}
+};
 
 function fetch({dsID, fields, assembly}, samples) {
 		return Rx.Observable.zipArray(
@@ -241,13 +242,18 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 	if (_.isEmpty(refGene)){
 		return {};
 	}
+	var refGeneObj = _.values(refGene)[0],
+		padding = 200, // extra bp on both ends of transcripts
+		startExon = 0,
+		endExon = refGeneObj.exonCount,
+		strand = refGeneObj.strand,
+		layout = exonLayout.layout(refGeneObj, width, xzoom, padding, startExon, endExon),
+		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples, zoom);
 
-	var layout = exonLayout.layout(_.values(refGene)[0], width, xzoom),
-		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples,
-				zoom);
 	return {
 		layout,
-		nodes
+		nodes,
+		strand
 	};
 }
 

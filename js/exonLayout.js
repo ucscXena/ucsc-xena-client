@@ -56,10 +56,10 @@ function pxLen(chrlo) {
 // Layout exons on screen pixels.
 // layout(genepred :: {exonStarts : [<int>, ...], exonEnds: [<int>, ...], strand: <string>)
 //  :: {chrom: [[<int>, <int>], ...], screen: [[<int>, <int>], ...], reversed: <boolean>}
-// XXX promoter region?
-function layout({exonStarts, exonEnds, strand}, pxWidth, zoom) {
-	var padding = 200, // extra bp on the ends of transcripts
-		chrIntvls = reverseIf(strand, padBothEnds(pad(spLen, _.zip(exonStarts, exonEnds)), padding)),
+// padding: promoter region, and region after end of gene padding=0 is just showing the gene
+// startExonIndex, endExonIndex : used to specify which exon range to show 0,1 for first exon, 0, 2 for 1st and 2nd exon
+function layout({exonStarts, exonEnds, strand}, pxWidth, zoom, padding, startExon, endExon) {
+	var chrIntvls = reverseIf(strand, padBothEnds(pad(spLen, _.zip(exonStarts, exonEnds)), padding)).slice(startExon, endExon),
 		count = _.getIn(zoom, ['len'], baseLen(chrIntvls)),
 		bpp = count / pxWidth,
 		pixIntvls = toScreen(bpp, chrIntvls, 0, []);
