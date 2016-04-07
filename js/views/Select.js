@@ -36,6 +36,7 @@ var Select = React.createClass({
 		};
 	},
 	onSelect: function (ev, value) {
+		this.setState({filter: ''});
 		this.props.onSelect(value, this.props.title);
 	},
 	onChange: function(ev) {
@@ -86,8 +87,8 @@ var Select = React.createClass({
 
 		return (
 			<DropdownButton ref='dropdown'
-							menuitem='menuitem'
 							className='Select'
+							menuitem='menuitem'
 							onMouseUp={allowSearch ? this.setFocus : null}
 							onToggle={this.onToggle}
 							title={title && title.label || 'Please select...'}>

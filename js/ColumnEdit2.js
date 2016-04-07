@@ -4,7 +4,7 @@
 var React = require('react');
 var {Button, ButtonToolbar, Modal, Glyphicon, Nav, NavItem} = require('react-bootstrap/lib');
 var CohortSelect = require('./views/CohortSelect');
-var DatasetSelect = require('./views/DatasetSelect');
+var DatasetSelect = require('./views/DatasetSelect2');
 var _ = require('./underscore_ext');
 var uuid = require('./uuid');
 require('./ColumnEdit.css');
@@ -33,7 +33,7 @@ function workflowIndicators(positions, defs, onHide) {
 		//className = (activeSection === key) ? 'breadcrumb-active' : 'breadcrumb-inActive';
 		return (
 			<NavItem eventKey={key} key={key} disabled>
-				<span className='lead'>{navTitle}</span>
+				<span><strong>{navTitle}</strong></span>
 			</NavItem>
 		)
 	});
@@ -91,22 +91,20 @@ var NavButtons = React.createClass({
 		 - Make visible ALL the time
 		 - Enable when either of the choices are made for the current section
 		 */
-		let btnLabel,
+		let btnLabel = 'Select',
 			icon = '',
 			{btnSize, choices, onForward, defs} = this.props,
 			disabled = !choices[currentSection];
 
-		if (!defs[currentSection].prev) {
-			btnLabel = 'Select';
+		if (!defs[currentSection].next) {
+			btnLabel = 'Done';
 		} else if (defs[currentSection].next && defs[currentSection].prev) {
 			icon = "menu-right";
 			btnLabel = 'Next';
-		} else {
-			btnLabel = 'Done';
 		}
 
-		return (<Button key="FORWARD" bsStyle='primary' disabled={disabled}
-						onClick={onForward} bsSize={btnSize}>
+		return (<Button key="FORWARD" bsStyle='primary'
+					disabled={disabled} onClick={onForward} bsSize={btnSize}>
 			{btnLabel} {disabled ? null : <Glyphicon glyph={icon}/>}</Button>);
 	},
 	render: function() {
@@ -243,7 +241,7 @@ var ColumnEdit = React.createClass({
 			{appState: {cohorts, columnEdit, datasets, servers}, onHide} = this.props,
 			features = _.getIn(columnEdit, ['features']),
 			meta = choices.dataset && _.get(datasets, choices.dataset);
-		var {Editor, valid, apply} = positions['editor'] && pickEditor(meta),
+		var {Editor, apply} = positions['editor'] && pickEditor(meta),
 			currentPosition = _.findKey(positions, p => p);
 		return (
 			<Modal show={true} className='columnEdit container' enforceFocus>
@@ -257,7 +255,7 @@ var ColumnEdit = React.createClass({
 					{positions['dataset'] || choices['dataset'] ?
 						<DatasetSelect datasets={datasets} makeLabel={makeLabel}
 							event='dataset' value={choices.dataset}
-							disable={choices.dataset && !positions['dataset']}
+							disable={!_.isEmpty(choices.dataset) && !positions['dataset']}
 							onSelect={this.onDatasetSelect} servers={servers.user}>
 						</DatasetSelect> : null
 					}
