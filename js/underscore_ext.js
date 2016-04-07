@@ -188,6 +188,7 @@ define(['underscore', './immutable', './defer'], function(_, immutable, defer) {
 		flatmap: _.compose(_.partial(_.flatten, _, 1), _.map),
 		merge: (...args) => _.extend.apply(null, [{}].concat(args)),
 		maxWith: maxWith,
+		sum: arr => _.reduce(arr, (x, y) => x + y, 0),
 		fmapMemoize1,
 		curry,
 		curryN // useful if the fn as multiple arities.
