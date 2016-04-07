@@ -1,9 +1,10 @@
-/*global require: false, it: false, console: false, describe: false */
+/*global require: false, it: false, console: false, describe: false, mocha: false */
 'use strict';
 
 var Rx = require('rx');
-var {isObject, isNumber, isArray, getIn, every, values, keys, contains} =
+var {isObject, isNumber, isArray, getIn, every, values, keys, contains, pluck} =
 	require('../js/underscore_ext');
+//var mocha = require('mocha');
 var widget = require('../js/columnWidgets');
 require('../js/models/denseMatrix');
 
@@ -17,6 +18,11 @@ var genomicDsID = JSON.stringify({
 var clinicalDsID = JSON.stringify({
 	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
 	'name': 'TCGA/TCGA.BRCA.sampleMap/BRCA_clinicalMatrix'
+});
+
+var mutationDsID = JSON.stringify({
+	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
+	'name': 'TCGA/TCGA.BRCA.sampleMap/mutation_unc'
 });
 
 
@@ -37,6 +43,8 @@ function isNumOrNull(x) {
 
 Rx.config.longStackSupport = true;
 
+//mocha.allowUncaught();
+
 function logError(err) {
 	console.log(err.stack);
 	return err;
@@ -51,13 +59,12 @@ describe('xena fetch', function () {
 			dataType: 'probeMatrix',
 			fields: [probe]
 		}, samples).do(data => {
-			console.log(data);
-			var probeValues = getIn(data, ['req', 'values', probe]) 
+			var probeValues = getIn(data, ['req', 'values', probe]);
 			assert(isObject(probeValues));
 			assert(every(values(probeValues), isNumOrNull));
 			assert(every(keys(probeValues), k => contains(samples, k)));
 			assert(isNumber(getIn(data, ['req', 'mean', probe])));
-		}).catch(e => done(logError(e))).subscribe(() => done());
+		}).subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch gene average', function (done) {
 		var field = 'TP53';
@@ -67,13 +74,12 @@ describe('xena fetch', function () {
 			dataType: 'geneMatrix',
 			fields: [field]
 		}, samples).do(data => {
-			console.log(data);
-			var fieldValues = getIn(data, ['req', 'values', field]) 
+			var fieldValues = getIn(data, ['req', 'values', field]);
 			assert(isObject(fieldValues));
 			assert(every(values(fieldValues), isNumOrNull));
 			assert(every(keys(fieldValues), k => contains(samples, k)));
 			assert(isNumber(getIn(data, ['req', 'mean', field])));
-		}).catch(e => done(logError(e))).subscribe(() => done());
+		}).subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch gene probes', function (done) {
 		var field = 'TP53';
@@ -83,17 +89,16 @@ describe('xena fetch', function () {
 			dataType: 'geneProbesMatrix',
 			fields: [field]
 		}, samples).do(data => {
-			console.log(data);
 			var probes = getIn(data, ['req', 'probes']);
 			assert(isArray(probes));
 			probes.forEach(probe => {
-				var fieldValues = getIn(data, ['req', 'values', probe]) 
+				var fieldValues = getIn(data, ['req', 'values', probe]);
 				assert(isObject(fieldValues));
 				assert(every(values(fieldValues), isNumOrNull));
 				assert(every(keys(fieldValues), k => contains(samples, k)));
 				assert(isNumber(getIn(data, ['req', 'mean', probe])));
 			});
-		}).catch(e => done(logError(e))).subscribe(() => done());
+		}).subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch clinical coded', function (done) {
 		var field = 'additional_pharmaceutical_therapy';
@@ -103,14 +108,13 @@ describe('xena fetch', function () {
 			dataType: 'clinicalMatrix',
 			fields: [field]
 		}, samples).do(data => {
-			console.log(data);
-			var fieldValues = getIn(data, ['req', 'values', field]) 
+			var fieldValues = getIn(data, ['req', 'values', field]);
 			assert(isObject(fieldValues));
 			assert(every(values(fieldValues), isNumOrNull));
 			assert(every(keys(fieldValues), k => contains(samples, k)));
 			assert(isNumber(getIn(data, ['req', 'mean', field])));
 			assert(isArray(getIn(data, ['codes', field])));
-		}).catch(e => done(logError(e))).subscribe(() => done());
+		}).subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch clinical float', function (done) {
 		var field = 'age_at_initial_pathologic_diagnosis';
@@ -120,13 +124,31 @@ describe('xena fetch', function () {
 			dataType: 'clinicalMatrix',
 			fields: [field]
 		}, samples).do(data => {
-			console.log(data);
-			var fieldValues = getIn(data, ['req', 'values', field]) 
+			var fieldValues = getIn(data, ['req', 'values', field]);
 			assert(isObject(fieldValues));
 			assert(every(values(fieldValues), isNumOrNull));
 			assert(every(keys(fieldValues), k => contains(samples, k)));
 			assert(isNumber(getIn(data, ['req', 'mean', field])));
 			assert(getIn(data, ['codes', field]) == null);
-		}).catch(e => done(logError(e))).subscribe(() => done());
+		}).subscribe(() => done(), e => done(logError(e)));
+	});
+	it('should fetch mutation', function (done) {
+		var field = 'TP53';
+		widget.fetch(
+		{
+			dsID: mutationDsID,
+			dataType: 'mutationVector',
+			fields: [field],
+			assembly: 'hg19'
+		}, samples).do(data => {
+			var rows = getIn(data, ['req', 'rows']),
+				samplesInResp = getIn(data, ['req', 'samplesInResp']),
+				refGene = getIn(data, ['refGene', field]);
+
+			assert(isArray(rows));
+			assert(isArray(samplesInResp));
+			assert(every(pluck(rows, 'sample'), s => contains(samples, s)));
+			assert(isObject(refGene));
+		}).subscribe(() => done(), e => done(logError(e)));
 	});
 });
