@@ -9,3 +9,5 @@ require('./plotDenseMatrix');
 require('./plotMutationVector');
 require('./heatmapColors');
 require('./scale');
+require('./fieldFetch');
+//require('./matrix-test');
