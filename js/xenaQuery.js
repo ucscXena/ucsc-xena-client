@@ -340,15 +340,6 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 
 	// QUERY PREP
 
-	// XXX Should consider making sources indexed so we can do simple
-	// lookups. Would need to update haml/columnEditBasic.haml.
-	function find_dataset(sources, hdsID) {
-		return _.findValue(sources, function (source) {
-			return _.findWhere(source.datasets, {dsID: hdsID});
-		});
-	}
-
-
 	// Look up all datasets for the given cohort, searching
 	// all servers. Then, index the results by server and by dataset.
 	function dataset_list_deprecate(servers, cohort) {
@@ -611,7 +602,6 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		dataset_gene_probe_values: dataset_gene_probe_values, // XXX mk plural genes?
 		dataset_genes_values: dataset_genes_values,
 		dataset_metadata: dataset_metadata,
-		find_dataset: find_dataset,
 		dataset_samples: dataset_samples,
 		dataset_feature_detail: dataset_feature_detail,
 		all_samples: all_samples,
