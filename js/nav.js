@@ -7,6 +7,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var {Nav, Navbar, NavItem} = require('react-bootstrap/lib');
 var _ = require('./underscore_ext');
+require('../css/nav.css');
 
 // XXX use baseurl
 //var baseurl = require('config').baseurl;
@@ -35,7 +36,7 @@ var XenaNav = React.createClass({
 		let {activeTab} = this.state;
 		return (
 			<Navbar>
-				<Nav activeKey={activeTab} bsStyle="pills">{_.map(links, l =>
+				<Nav activeKey={activeTab}>{_.map(links, l =>
 					<NavItem key={l.href} eventKey={l.label} href={l.href}>{l.label}</NavItem>
 				)}
 				</Nav>

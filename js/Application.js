@@ -9,29 +9,30 @@ var KmPlot = require('./KmPlot');
 var kmModel = require('./models/km');
 var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
-//var Perf = require('react/addons').addons.Perf;
 
 var views = {
 	heatmap: {
 		module: Spreadsheet,
-		name: 'Spreadsheet',
-		icon: 'th',
+		name: 'Visual Spreadsheet',
 		events: null
 	},
 	chart: {
 		module: ChartView,
 		name: 'Chart Analysis',
-		icon: 'stats',
 		events: null
 	},
 	kmPlot: {
 		module: KmPlot,
 		name: 'KM Plot',
-		icon: 'random',
 		events: {
 			open: 'km-open',
 			close: 'km-close'
 		}
+	},
+	table: {
+		module: KmPlot,
+		name: 'Table',
+		events: null
 	}
 };
 
@@ -55,6 +56,11 @@ function disableKM(column, features, km) {
 	return [false, ''];
 }
 
+function getKmColumns(state) {
+	var {columns, features, km} = state;
+	return _.omit(columns, col => disableKM(col, features, km)[0]);
+}
+
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
 		label = _.getIn(columns, [uuid, 'fieldLabel', 'default']),
@@ -73,28 +79,16 @@ function supportsGeneAverage({dataType, fields: {length}}) {
 }
 
 var Application = React.createClass({
-//	onPerf: function () {
-//		this.perf = !this.perf;
-//		if (this.perf) {
-//			console.log("Starting perf");
-//			Perf.start();
-//		} else {
-//			console.log("Stopping perf");
-//			Perf.stop();
-//			Perf.printInclusive();
-//			Perf.printExclusive();
-//			Perf.printWasted();
-//		}
-//	},
 	getInitialState: function() {
 		return ({
 			openColumnEdit: false,
-			kmColumns: this.getKmColumns()
+			kmColumns: getKmColumns(this.props.state)
 		});
 	},
-	getKmColumns: function() {
-		let {columns, features, km} = this.props.state;
-		return _.omit(columns, col => disableKM(col, features, km)[0]);
+	componentWillReceiveProps: function(newProps) {
+		if (!_.isEqual(newProps.state.columns, this.props.state.columns)){
+			this.setState({kmColumns: getKmColumns(newProps.state)});
+		}
 	},
 	fieldFormat: function (uuid) {
 		var {columns, data} = this.props.state;
@@ -122,12 +116,11 @@ var Application = React.createClass({
 
 		return (
 			<Grid onClick={this.onClick}>
-				<div className="row">
-					<AppControls appState={computedState} activeMode={activeMode}
-						kmColumns={kmColumns} onColumnEdit={this.onColumnEdit}
-						callback={callback} modes={_.mapObject(views, v => _.omit(v, 'module'))}
-						disabledModes={_.toArray(kmColumns).length < 1 ? ['kmPlot'] : []}/>
-				</div>
+				<AppControls appState={computedState} activeMode={activeMode}
+					kmColumns={kmColumns} onColumnEdit={this.onColumnEdit}
+					callback={callback} modes={_.mapObject(views, v => _.omit(v, 'module'))}
+					disabledModes={_.toArray(kmColumns).length < 1 ? ['kmPlot'] : []}/>
+				<hr />
 				{openColumnEdit ?
 					<ColumnEdit onHide={() => this.onColumnEdit(false)}
 						appState={computedState} callback={callback}/>

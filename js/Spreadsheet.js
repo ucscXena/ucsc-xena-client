@@ -133,9 +133,8 @@ var Columns = React.createClass({
 	render: function () {
 		var {callback, fieldFormat, supportsGeneAverage, appState} = this.props;
 		// XXX maybe rename index -> indexes?
-		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
+		var {data, index, zoom, columns, columnOrder, samples} = appState;
 		var {openVizSettings} = this.state;
-		//var height = zoom.height;
 		// XXX parameterize settings on column type
 		var settings = openVizSettings ?
 			<VizSettings

@@ -2,9 +2,10 @@
 'use strict';
 
 var React = require('react');
+var _ = require('./underscore_ext');
 
 var ChartView = React.createClass({
-	shouldComponentUpdate: function () {
+	shouldComponentUpdate: function (newProps) {
 		return false;
 	},
 	componentDidMount: function () {

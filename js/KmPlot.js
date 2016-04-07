@@ -6,9 +6,8 @@
 require('../css/km.css');
 var _ = require('./underscore_ext');
 var React = require('react');
-var { PropTypes } = React;
-var Modal = require('react-bootstrap/lib/Modal');
-var {ListGroup, ListGroupItem, OverlayTrigger, PageHeader, Tooltip} = require('react-bootstrap/lib/');
+var {PropTypes} = React;
+var {ListGroup, ListGroupItem, OverlayTrigger, Tooltip} = require('react-bootstrap/lib/');
 var Axis = require('./Axis');
 var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
@@ -53,7 +52,7 @@ var LineGroup = React.createClass({
 	},
 
 	componentWillReceiveProps: function(newProps) {
-		let { g, activeLabel } = newProps,
+		var { g, activeLabel } = newProps,
 			[ , label, ] = g,
 			oldIsActive = this.state.isActive,
 			activeStatus = checkIfActive(label, activeLabel);
@@ -65,17 +64,17 @@ var LineGroup = React.createClass({
 
 	shouldComponentUpdate: function(newProps, newState) {
 		//testing for any changes to g, and state's isActive parameter should be sufficient
-		let gChanged = !_.isEqual(newProps.g, this.props.g),
+		var gChanged = !_.isEqual(newProps.g, this.props.g),
 			isActiveChanged = !_.isEqual(newState.isActive, this.state.isActive);
 
 		return (gChanged || isActiveChanged);
 	},
 
 	render: function() {
-		let { xScale, yScale, g, setActiveLabel } = this.props;
-		let [ color, label, curve ] = g;
-		var censors = curve.filter(pt => !pt.e);
-		let activeLabelClassName = this.state.isActive ? HOVER : '';
+		var { xScale, yScale, g, setActiveLabel } = this.props,
+			[ color, label, curve ] = g,
+			censors = curve.filter(pt => !pt.e),
+			activeLabelClassName = this.state.isActive ? HOVER : '';
 
 		return (
 			<g key={label} className='subgroup' stroke={color}
@@ -192,8 +191,8 @@ function sampleCount(curve) {
 
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
-	let isActive = checkIfActive(label, activeLabel);
-	let activeLabelClassName = isActive ? HOVER : '';
+	let isActive = checkIfActive(label, activeLabel),
+		activeLabelClassName = isActive ? HOVER : '';
 	let legendLineStyle = {
 		backgroundColor: color,
 		border: (isActive ? 2 : 1).toString() + 'px solid',
@@ -224,11 +223,10 @@ var Legend = React.createClass({
 	},
 
 	render: function () {
-		let { groups, setActiveLabel, activeLabel } = this.props;
-		let { colors, curves, labels } = groups;
-		let sets = _.zip(colors, curves, labels)
+		let { groups, setActiveLabel, activeLabel } = this.props,
+			{ colors, curves, labels } = groups,
+			sets = _.zip(colors, curves, labels)
 					.map(set => makeLegendKey(set, setActiveLabel, activeLabel));
-
 		return (
 			<ListGroup className="legend">{sets}</ListGroup>
 		);
@@ -237,28 +235,28 @@ var Legend = React.createClass({
 
 function makeGraph(groups, setActiveLabel, activeLabel, size) {
 	return (
-		<div className="graph" style={{width: size.width}}>
+		<span className="graph" style={{width: size.width}}>
 			{svg(groups, setActiveLabel, activeLabel, size)}
 			<div className='kmScreen'/>
-		</div>
+		</span>
 	);
 }
 
 function makeDefinitions(groups, setActiveLabel, activeLabel, size) {
 	// get new size based on size ratio for definitions column
-
 	return (
-		<div className="definitions" style={{width: size.width}}>
+		<span className="definitions" style={{width: size.width}}>
 			<PValue pValue={groups.pValue} logRank={groups.KM_stats}
 				patientWarning={groups.patientWarning}/>
 			<Legend groups={groups}
 					setActiveLabel={setActiveLabel}
 					activeLabel={activeLabel} />
-		</div>
+		</span>
 	);
 }
 
 var KmPlot = React.createClass({
+	name: 'kmPlot',
 	mixins: [deepPureRenderMixin],
 	propTypes: {
 		eventClose: PropTypes.string,
@@ -266,12 +264,16 @@ var KmPlot = React.createClass({
 	},
 	size: {
 		ratios: {
-			graph: {
-				width: 0.75,
+			controls: {
+				width: 0.2,
 				height: 1.0
 			},
 			definitions: {
-				width: 0.4,
+				width: 0.2,
+				height: 1.0
+			},
+			graph: {
+				width: 0.6,
 				height: 1.0
 			}
 		}
@@ -280,29 +282,32 @@ var KmPlot = React.createClass({
 		eventClose: 'km-close',
 		dims: {
 			height: 450,
-			width: 700
+			width: 960
 		}
 	}),
 	getInitialState: function() {
-		return { activeLabel: '' }
+		return {activeLabel: '', dims: null}
 	},
-	//hide: function () {
-	//	let {callback, eventClose} = this.props;
-	//	callback([eventClose]);
-	//},
+	componentDidMount: function() {
+		this.setState({
+			dims: {
+				height: this.refs[this.name].clientHeight,
+				width: this.refs[this.name].clientWidth
+			}
+		});
+	},
 	setActiveLabel: function (e, label) {
 		this.setState({ activeLabel: label });
 	},
 	render: function () {
-		//let { km: {title, label, groups}, dims } = this.props,
-		let {activeKm, dims, kmColumns} = this.props,
-			{groups, title, label} = activeKm,
+		var {activeKm: {groups, title, label}, kmColumns} = this.props,
 			warning = _.get(groups, 'warning'),
 			fullLabel = warning ? `${label} (${warning})` : label,
-			{ activeLabel } = this.state,
+			{activeLabel}  = this.state,
+			dims = this.state.dims || this.props.dims,
 			sectionDims = calcDims(dims, this.size.ratios);
 		// XXX Use bootstrap to lay this out, instead of tables + divs
-		let Content = _.isEmpty(groups)
+		var Content = _.isEmpty(groups)
 			? <div
 				className="jumbotron"
 				style={{
@@ -312,22 +317,18 @@ var KmPlot = React.createClass({
 				}}>
 				<h1>Loading...</h1>
 			</div>
-			: <div>
+			: <div className="container row">
+				<span className="controls" style={{width: sectionDims.controls.width}}>
+					<div className="row">
+						<label className="lead">Stratification</label>
+						<div>Column Drop-down Menu</div>
+					</div>
+				</span>
 				{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
 				{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions)}
 			</div>;
-
 		return (
-			<div className='kmDialog container-fluid' ref="kmPlot">
-				<div className="lead">
-					<div className="row">
-						<div className="col-md-4">Kaplan Meier</div>
-						<div className="col-md-8">{title}</div>
-					</div>
-					<hr />
-				</div>
-				{Content}
-			</div>
+			<div className='kmDialog container-fluid' ref="kmPlot">{Content}</div>
 		);
 	}
 });

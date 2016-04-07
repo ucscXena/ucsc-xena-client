@@ -13,16 +13,12 @@ var CohortSelect = React.createClass({
 			options = _.map(sortedCohorts, c => ({value: c, label: c}));
 
 		return (
-			<div className='form-group'>
+			<div>
 				<label className='cohortAnchor'>
 					<b>Cohort</b>
 				</label>
 				{' '}
-				<Select
-					value={cohort}
-					options={options}
-					{...other}
-				/>
+				<Select {...other} value={cohort} options={options} charLimit={22}/>
 			</div>
 		);
 	}
