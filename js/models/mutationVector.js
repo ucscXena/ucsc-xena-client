@@ -191,7 +191,7 @@ var refGene = {
 function fetch({dsID, fields, assembly}, samples) {
 		return Rx.Observable.zipArray(
 			sparseDataValues(dsID, fields[0], samples),
-			refGene[assembly] ? refGeneExonValues(refGene[assembly], fields): Rx.Observable.return({})
+			refGene[assembly] ? refGeneExonValues(refGene[assembly], fields) : Rx.Observable.return({})
 		).map(resp => _.object(['req', 'refGene'], resp));
 }
 
