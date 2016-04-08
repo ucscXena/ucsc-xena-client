@@ -5,7 +5,8 @@ var Rx = require('rx');
 var {isObject, isNumber, isArray, getIn, every, values, keys, contains, pluck} =
 	require('../js/underscore_ext');
 //var mocha = require('mocha');
-var widget = require('../js/columnWidgets');
+//var {fetch} = require('../js/columnWidgets');
+var fetch = require('../js/fieldFetch');
 require('../js/models/denseMatrix');
 
 var assert = require('assert');
@@ -53,10 +54,12 @@ function logError(err) {
 describe('xena fetch', function () {
 	it('should fetch probe', function (done) {
 		var probe = 'chr10_100010855_100011423';
-		widget.fetch(
+		fetch(
 		{
+			fetchType: 'xena',
 			dsID: genomicDsID,
-			dataType: 'probeMatrix',
+			fieldType: 'probes',
+			valueType: 'float',
 			fields: [probe]
 		}, samples).do(data => {
 			var probeValues = getIn(data, ['req', 'values', probe]);
@@ -68,10 +71,12 @@ describe('xena fetch', function () {
 	});
 	it('should fetch gene average', function (done) {
 		var field = 'TP53';
-		widget.fetch(
+		fetch(
 		{
+			fetchType: 'xena',
 			dsID: genomicDsID,
-			dataType: 'geneMatrix',
+			fieldType: 'genes',
+			valueType: 'float',
 			fields: [field]
 		}, samples).do(data => {
 			var fieldValues = getIn(data, ['req', 'values', field]);
@@ -83,10 +88,12 @@ describe('xena fetch', function () {
 	});
 	it('should fetch gene probes', function (done) {
 		var field = 'TP53';
-		widget.fetch(
+		fetch(
 		{
+			fetchType: 'xena',
 			dsID: genomicDsID,
-			dataType: 'geneProbesMatrix',
+			fieldType: 'geneProbes',
+			valueType: 'float',
 			fields: [field]
 		}, samples).do(data => {
 			var probes = getIn(data, ['req', 'probes']);
@@ -102,10 +109,12 @@ describe('xena fetch', function () {
 	});
 	it('should fetch clinical coded', function (done) {
 		var field = 'additional_pharmaceutical_therapy';
-		widget.fetch(
+		fetch(
 		{
+			fetchType: 'xena',
 			dsID: clinicalDsID,
-			dataType: 'clinicalMatrix',
+			fieldType: 'clinical',
+			valueType: 'coded',
 			fields: [field]
 		}, samples).do(data => {
 			var fieldValues = getIn(data, ['req', 'values', field]);
@@ -118,10 +127,12 @@ describe('xena fetch', function () {
 	});
 	it('should fetch clinical float', function (done) {
 		var field = 'age_at_initial_pathologic_diagnosis';
-		widget.fetch(
+		fetch(
 		{
+			fetchType: 'xena',
 			dsID: clinicalDsID,
-			dataType: 'clinicalMatrix',
+			fieldType: 'clinical',
+			valueType: 'float',
 			fields: [field]
 		}, samples).do(data => {
 			var fieldValues = getIn(data, ['req', 'values', field]);
@@ -134,10 +145,12 @@ describe('xena fetch', function () {
 	});
 	it('should fetch mutation', function (done) {
 		var field = 'TP53';
-		widget.fetch(
+		fetch(
 		{
+			fetchType: 'xena',
 			dsID: mutationDsID,
-			dataType: 'mutationVector',
+			fieldType: 'mutation',
+			valueType: 'mutation',
 			fields: [field],
 			assembly: 'hg19'
 		}, samples).do(data => {

@@ -277,4 +277,7 @@ widgets.fetch.add('mutationVector', fetch);
 widgets.index.add('mutationVector', index);
 widgets.transform.add('mutationVector', dataToDisplay);
 
-module.exports = features;
+module.exports = {
+	features,
+	fetch
+};

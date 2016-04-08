@@ -1,4 +1,4 @@
-/*global require: false, document: false */
+/*global require: false, module: false */
 'use strict';
 var _ = require('../underscore_ext');
 var Rx = require('rx');
@@ -164,3 +164,10 @@ widgets.fetch.add("probeMatrix", fetch);
 widgets.fetch.add("geneProbesMatrix", fetchGeneProbes);
 widgets.fetch.add("geneMatrix", fetchGene);
 widgets.fetch.add("clinicalMatrix", fetchFeature);
+
+module.exports = {
+	fetch,
+	fetchGeneProbes,
+	fetchGene,
+	fetchFeature
+};
