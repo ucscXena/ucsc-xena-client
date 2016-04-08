@@ -65,6 +65,7 @@
     "bootstrap": "3.3.4",
     "brfs": "^1.4.3",
     "d3-scale": "^0.6.4",
+    "ehmutable": "^1.1.0",
     "jStat": "1.4.3",
     "jquery": "2.1.0",
     "jquery-ui": "^1.10.5",

@@ -1,12 +1,12 @@
 /*eslint strict: [2, "function"] */
 /*globals define: false, console: false */
-define(['underscore', './immutable', './defer'], function(_, immutable, defer) {
+define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 	'use strict';
 
 	var slice = Array.prototype.slice;
 
-	_.mixin({defer: defer}); // override underscore defer
-	_.mixin(immutable);       // add immutable methods
+	_.mixin({defer: defer});    // override underscore defer
+	_.mixin(ehmutable.init(_)); // add immutable methods
 
 	function fmap(m, fn) {
 		var x = {};
