@@ -166,6 +166,18 @@ define(['underscore', './immutable', './defer'], function(_, immutable, defer) {
 			fn(...args);
 	}
 
+	function mmap(...args) {
+		var cols = args.slice(0, args.length - 1),
+			fn = args[args.length - 1];
+		return _.map(cols[0], (v0, i) => {
+			var vals = [v0], n = cols.length;
+			for (var j = 1; j < n; ++j) {
+				vals.push(cols[j][i]);
+			}
+			return fn(...vals, i);
+		});
+	}
+
 	var curry = fn => curryN(fn.length, fn);
 
 	_.mixin({
@@ -190,6 +202,7 @@ define(['underscore', './immutable', './defer'], function(_, immutable, defer) {
 		maxWith: maxWith,
 		sum: arr => _.reduce(arr, (x, y) => x + y, 0),
 		fmapMemoize1,
+		mmap,
 		curry,
 		curryN // useful if the fn as multiple arities.
 	});

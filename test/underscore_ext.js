@@ -31,4 +31,12 @@ describe('underscore_ext', function () {
 		// XXX create two objects slightly different & test that cache is used?
 		// create pairs of key/value, then select from set of pairs.
     });
+    describe('#mmap', function () {
+        it('should iterate multiple collections', function() {
+            assert.deepEqual(_.mmap([5, 4, 3], ['a', 'b', 'c'], [-1, -2, -3], (p, c, n, i) => [p, c, n, i]),
+						 [[5, 'a', -1, 0],
+						 [4, 'b', -2, 1],
+						 [3, 'c', -3, 2]]);
+        });
+    });
 });
