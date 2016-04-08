@@ -67,7 +67,7 @@ var Select = React.createClass({
 		}
 	},
 	render: function () {
-		var {charLimit, disable, options, value} = this.props,
+		var {charLimit, options, value} = this.props,
 			title = notUndefined(value) && _.findWhere(options, {value: value}),
 			opts = filterOpts(this.state.filter, options);
 		// We wrap the input in a div so DropdownButton decorates the div
@@ -76,8 +76,8 @@ var Select = React.createClass({
 		// installed by DropdownButton.
 		return (
 			<DropdownButton ref='dropdown'
+				bsSize="small"
 				className='Select'
-				disabled={disable}
 				onMouseUp={this.setFocus}
 				title={trimTitle(title && title.label || 'Select...', charLimit)}>
 

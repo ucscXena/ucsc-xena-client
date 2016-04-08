@@ -194,16 +194,15 @@ var HeatmapColumn = hotOrNot(React.createClass({
 
 		// Compute tooltip events from mouse events.
 		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
-			.selectMany(() => {
-				return this.ev.mousemove
-					.takeUntil(this.ev.mouseout)
-					.map(ev => ({
-						data: this.tooltip(ev),
-						open: true,
-						point: {x: ev.clientX, y: ev.clientY}
-					})) // look up current data
-					.concat(Rx.Observable.return({open: false}));
-			}).subscribe(this.props.tooltip);
+			.selectMany(() => this.ev.mousemove
+				.takeUntil(this.ev.mouseout)
+				.map(ev => ({
+					data: this.tooltip(ev),
+					open: true,
+					point: {x: ev.clientX, y: ev.clientY}
+				})) // look up current data
+				.concat(Rx.Observable.return({open: false}))
+			).subscribe(this.props.tooltip);
 	},
 	componentWillUnmount: function () {
 		this.ttevents.dispose();

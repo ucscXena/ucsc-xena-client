@@ -2,7 +2,8 @@
 'use strict';
 var React = require('react');
 var Grid = require('react-bootstrap/lib/Grid');
-var ColumnEdit = require('./ColumnEdit');
+var ColumnAdd = require('./ColumnEdit');
+var ColumnFilter = require('./ColumnFilter');
 var Spreadsheet = require('./Spreadsheet');
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
@@ -81,7 +82,10 @@ function supportsGeneAverage({dataType, fields: {length}}) {
 var Application = React.createClass({
 	getInitialState: function() {
 		return ({
-			openColumnEdit: false,
+			column: {
+				add: false,
+				filter: false
+			},
 			kmColumns: getKmColumns(this.props.state)
 		});
 	},
@@ -98,32 +102,36 @@ var Application = React.createClass({
 		var {columns} = this.props.state;
 		return supportsGeneAverage(_.get(columns, uuid));
 	},
-	onColumnEdit: function(status) {
-		this.setState({openColumnEdit: status});
+	onColumnAction: function(context, status) {
+		this.setState(_.assocIn(this.state, ['column', context], status));
 	},
 	render: function() {
 		/*
 			1. Find list of columns that are qualified to allow Km Plot
 			2. Send filtered list down to both KmPlot and AppControls
 		 */
-		let {callback, state, selector, ...otherProps} = this.props,
+		var {callback, state, selector} = this.props,
 			computedState = selector(state),
 			{features, km, mode} = computedState,
 			activeMode = _.get(km, 'id') ? 'kmPlot' : mode,
-			{kmColumns, openColumnEdit} = this.state,
+			{kmColumns, column: {add, filter}} = this.state,
 			viewMeta = views[activeMode],
 			View = viewMeta.module;
 
 		return (
 			<Grid onClick={this.onClick}>
 				<AppControls appState={computedState} activeMode={activeMode}
-					kmColumns={kmColumns} onColumnEdit={this.onColumnEdit}
-					callback={callback} modes={_.mapObject(views, v => _.omit(v, 'module'))}
-					disabledModes={_.toArray(kmColumns).length < 1 ? ['kmPlot'] : []}/>
+					kmColumns={kmColumns} onAction={(context) => this.onColumnAction(context, true)}
+					callback={callback} modes={_.mapObject(views, v => _.omit(v, 'module'))}/>
 				<hr />
-				{openColumnEdit ?
-					<ColumnEdit onHide={() => this.onColumnEdit(false)}
-						appState={computedState} callback={callback}/>
+				{add ?
+					<ColumnAdd appState={computedState} callback={callback}
+						onHide={() => this.onColumnAction('add', false)}/>
+					: null
+				}
+				{filter ?
+					<ColumnFilter appState={computedState} callback={callback}
+						   onHide={() => this.onColumnAction('filter', false)}/>
 					: null
 				}
 				{(viewMeta.name === 'KM Plot')
