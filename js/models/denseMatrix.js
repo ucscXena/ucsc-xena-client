@@ -111,19 +111,19 @@ var cmp = ({fields}, {req: {values, probes}} = {req: {}}) =>
 // index data by field, then sample
 // XXX maybe build indexes against arrays, instead of ditching the arrays,
 // so we can do on-the-fly stuff, like average, km, against an array.
-function indexResponse(probes, samples, data) {
+function indexResponse(probes, data) {
 	var values = _.object(probes, _.map(probes, function (v, i) {
-			return _.object(samples, _.map(data[i], xenaQuery.nanstr));
+			return _.map(data[i], xenaQuery.nanstr);
 		})),
 		mean = _.object(probes, _.map(data, _.meannan));
 
 	return {values: values, mean: mean};
 }
 
-function indexProbeGeneResponse(samples, data) {
+function indexProbeGeneResponse(data) {
 	var probes = data[0],
 		vals = data[1];
-	return _.extend({probes: probes}, indexResponse(probes, samples, vals));
+	return _.extend({probes: probes}, indexResponse(probes, vals));
 }
 
 function orderByQuery(genes, data) {
@@ -134,26 +134,26 @@ function orderByQuery(genes, data) {
 	});
 }
 
-function indexGeneResponse(genes, samples, data) {
-	return indexResponse(genes, samples, orderByQuery(genes, data));
+function indexGeneResponse(genes, data) {
+	return indexResponse(genes, orderByQuery(genes, data));
 }
 
-var fetch = ({dsID, fields}, samples) => datasetProbeValues(dsID, samples, fields)
-	.map(resp => ({req: indexResponse(fields, samples, resp)}));
+var fetch = ({dsID, fields}, [samples]) => datasetProbeValues(dsID, samples, fields)
+	.map(resp => ({req: indexResponse(fields, resp)}));
 
-var fetchGeneProbes = ({dsID, fields}, samples) => datasetGeneProbesValues(dsID, samples, fields)
-	.map(resp => ({req: indexProbeGeneResponse(samples, resp)}));
+var fetchGeneProbes = ({dsID, fields}, [samples]) => datasetGeneProbesValues(dsID, samples, fields)
+	.map(resp => ({req: indexProbeGeneResponse(resp)}));
 
-var fetchFeature = ({dsID, fields}, samples) => Rx.Observable.zipArray(
+var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
 		datasetProbeValues(dsID, samples, fields)
-			.map(resp => indexResponse(fields, samples, resp)),
+			.map(resp => indexResponse(fields, resp)),
 		datasetFeatureDetail(dsID, fields),
 		datasetCodes(dsID, fields)
 	).map(resp => _.object(['req', 'features', 'codes'], resp));
 
 
-var fetchGene = ({dsID, fields}, samples) => datasetGenesValues(dsID, samples, fields)
-			.map(resp => ({req: indexGeneResponse(fields, samples, resp)}));
+var fetchGene = ({dsID, fields}, [samples]) => datasetGenesValues(dsID, samples, fields)
+			.map(resp => ({req: indexGeneResponse(fields, resp)}));
 
 ['probeMatrix', 'geneProbesMatrix', 'geneMatrix', 'clinicalMatrix'].forEach(dataType => {
 	widgets.transform.add(dataType, dataToHeatmap);

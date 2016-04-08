@@ -188,7 +188,7 @@ var refGene = {
 	GRCh37: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'})
 };
 
-function fetch({dsID, fields, assembly}, samples) {
+function fetch({dsID, fields, assembly}, [samples]) {
 		return Rx.Observable.zipArray(
 			sparseDataValues(dsID, fields[0], samples),
 			refGene[assembly] ? refGeneExonValues(refGene[assembly], fields) : Rx.Observable.return({})
