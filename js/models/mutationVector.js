@@ -188,11 +188,24 @@ var refGene = {
 	GRCh37: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'})
 };
 
+// XXX Might want to optimize this before committing. We could mutate in-place
+// without affecting anyone. This may be slow for large mutation datasets.
+//
+// Map sampleIDs to index into 'samples' array.
+function mapSamples(samples, data) {
+	var sampleMap = _.object(samples, _.range(samples.length));
+
+	return _.updateIn(data,
+		   ['req', 'rows'], rows => _.map(rows,
+			   row => _.assoc(row, 'sample', sampleMap[row.sample])),
+		   ['req', 'samplesInResp'], sIR => _.map(sIR, s => sampleMap[s]));
+}
+
 function fetch({dsID, fields, assembly}, [samples]) {
 		return Rx.Observable.zipArray(
 			sparseDataValues(dsID, fields[0], samples),
 			refGene[assembly] ? refGeneExonValues(refGene[assembly], fields) : Rx.Observable.return({})
-		).map(resp => _.object(['req', 'refGene'], resp));
+		).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
 }
 
 // Group by, returning groups in sorted order. Scales O(n) vs.
