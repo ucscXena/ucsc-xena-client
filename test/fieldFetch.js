@@ -124,9 +124,9 @@ describe('xena fetch', function () {
 			fields: [probe]
 		}, [samples]).do(data => {
 			var probeValues = getIn(data, ['req', 'values', probe]);
-			assert(isArray(probeValues));
-			assert(every(probeValues, isNumOrNull));
-			assert(isNumber(getIn(data, ['req', 'mean', probe])));
+			assert(isArray(probeValues), 'probe is array');
+			assert(every(probeValues, isNumOrNull), 'values are numbers');
+			assert(isNumber(getIn(data, ['req', 'mean', probe])), 'mean is a number');
 		}).subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch gene average', function (done) {
@@ -140,9 +140,9 @@ describe('xena fetch', function () {
 			fields: [field]
 		}, [samples]).do(data => {
 			var fieldValues = getIn(data, ['req', 'values', field]);
-			assert(isArray(fieldValues));
-			assert(every(fieldValues, isNumOrNull));
-			assert(isNumber(getIn(data, ['req', 'mean', field])));
+			assert(isArray(fieldValues), 'field is array');
+			assert(every(fieldValues, isNumOrNull), 'values are numbers');
+			assert(isNumber(getIn(data, ['req', 'mean', field])), 'mean is number');
 		}).subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch gene probes', function (done) {
@@ -159,9 +159,9 @@ describe('xena fetch', function () {
 			assert(isArray(probes));
 			probes.forEach(probe => {
 				var fieldValues = getIn(data, ['req', 'values', probe]);
-				assert(isArray(fieldValues));
-				assert(every(fieldValues, isNumOrNull));
-				assert(isNumber(getIn(data, ['req', 'mean', probe])));
+				assert(isArray(fieldValues), 'field is array');
+				assert(every(fieldValues, isNumOrNull), 'values are numbers');
+				assert(isNumber(getIn(data, ['req', 'mean', probe])), 'mean is number');
 			});
 		}).subscribe(() => done(), e => done(logError(e)));
 	});
@@ -176,10 +176,11 @@ describe('xena fetch', function () {
 			fields: [field]
 		}, [samples]).do(data => {
 			var fieldValues = getIn(data, ['req', 'values', field]);
-			assert(isArray(fieldValues));
-			assert(every(fieldValues, isNumOrNull));
-			assert(isNumber(getIn(data, ['req', 'mean', field])));
-			assert(isArray(getIn(data, ['codes', field])));
+			assert(isArray(fieldValues), 'field is array');
+			assert(every(fieldValues, isNumOrNull), 'values are numbers');
+			// XXX why check for mean on a coded field?
+			assert(isNumber(getIn(data, ['req', 'mean', field])), 'mean is number');
+			assert(isArray(getIn(data, ['codes', field])), 'codes is array');
 		}).subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch clinical float', function (done) {
@@ -193,10 +194,10 @@ describe('xena fetch', function () {
 			fields: [field]
 		}, [samples]).do(data => {
 			var fieldValues = getIn(data, ['req', 'values', field]);
-			assert(isArray(fieldValues));
-			assert(every(fieldValues, isNumOrNull));
-			assert(isNumber(getIn(data, ['req', 'mean', field])));
-			assert(getIn(data, ['codes', field]) == null);
+			assert(isArray(fieldValues), 'field is array');
+			assert(every(fieldValues, isNumOrNull), 'values are numbers');
+			assert(isNumber(getIn(data, ['req', 'mean', field])), 'mean is number');
+			assert(getIn(data, ['codes', field]) == null, 'codes is null');
 		}).subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch mutation', function (done) {
