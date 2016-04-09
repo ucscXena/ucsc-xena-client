@@ -178,6 +178,22 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		});
 	}
 
+	function scan(arr, fn, init) {
+		var out = [],
+			pushFn = (acc, v) => {
+				var result = fn(acc, v);
+				out.push(result);
+				return result;
+			};
+
+		if (arguments.length < 3) {
+			_.reduce(arr, pushFn);
+		} else {
+			_.reduce(arr, pushFn, init);
+		}
+		return out;
+	}
+
 	var curry = fn => curryN(fn.length, fn);
 
 	_.mixin({
@@ -201,6 +217,7 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		merge: (...args) => _.extend.apply(null, [{}].concat(args)),
 		maxWith: maxWith,
 		sum: arr => _.reduce(arr, (x, y) => x + y, 0),
+		scan,
 		fmapMemoize1,
 		mmap,
 		curry,
