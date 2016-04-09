@@ -226,6 +226,25 @@ getField.add('coded', (column, samples, wdata) => {
 	return _.assocIn(joinFieldData(column, samples, remappedWdata), ['codes', column.fields[0]], allCodes);
 });
 
+// Combining mutation fields.
+// Require same refGene.
+// Map sampleIDs to their order in cohort samples.
+getField.add('mutation', (column, samples, wdata) => {
+	var sampleOffsets = _.scan(samples, (acc, list) => acc + list.length, 0),
+		sampleMaps = _.map(sampleOffsets, offset => s => s + offset),
+		remappedWdata = _.mmap(sampleMaps, wdata, (sampleMap, data) =>
+			_.updateIn(data,
+					   ['req', 'rows'], rows => _.map(rows, row => _.assoc(row, 'sample', sampleMap(row.sample))),
+					   ['req', 'samplesInResp'], sIR => _.map(sIR, sampleMap)));
+	return {
+		req: {
+			rows: _.concat(...remappedWdata.map(wd => _.getIn(wd, ['req', 'rows']))),
+			samplesInResp: _.concat(...remappedWdata.map(wd => _.getIn(wd, ['req', 'samplesInResp'])))
+		},
+		refGene: _.getIn(wdata, [0, 'refGene'])
+	};
+});
+
 function fetchComposite(column, samples) {
 	var {fieldSpecs} = column;
 	return Rx.Observable.zipArray(fieldSpecs.map((f, i) => fieldFetch(f, [samples[i]])))

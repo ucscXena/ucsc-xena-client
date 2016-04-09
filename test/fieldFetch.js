@@ -2,7 +2,7 @@
 'use strict';
 
 var Rx = require('rx');
-var {isObject, isNumber, isArray, getIn, every, contains, pluck} =
+var {isObject, isNumber, isArray, getIn, every, pluck} =
 	require('../js/underscore_ext');
 //var mocha = require('mocha');
 //var {fetch} = require('../js/columnWidgets');
@@ -45,6 +45,11 @@ var thirdGenomicDsID = JSON.stringify({
 var forthGenomicDsID = JSON.stringify({
 	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
 	'name': 'TCGA/TCGA.BRCA.sampleMap/HiSeqV2_exon'
+});
+
+var secondMutationDsID = JSON.stringify({
+	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
+	'name': 'TCGA/TCGA.KIRC.sampleMap/mutation'
 });
 
 var samples = [
@@ -207,12 +212,13 @@ describe('xena fetch', function () {
 		}, [samples]).do(data => {
 			var rows = getIn(data, ['req', 'rows']),
 				samplesInResp = getIn(data, ['req', 'samplesInResp']),
-				refGene = getIn(data, ['refGene', field]);
+				refGene = getIn(data, ['refGene', field]),
+				inSamples = s => s >= 0 && s < samples.length;
 
-			assert(isArray(rows));
-			assert(isArray(samplesInResp));
-			assert(every(pluck(rows, 'sample'), s => contains(samples, s)));
-			assert(isObject(refGene));
+			assert(isArray(rows), 'rows is array');
+			assert(isArray(samplesInResp), 'samplesInResp is array');
+			assert(every(pluck(rows, 'sample'), s => inSamples(s)), 'samples are in list');
+			assert(isObject(refGene), 'refGene is object');
 		}).subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should compose probe floats', function (done) {
@@ -336,6 +342,44 @@ describe('xena fetch', function () {
 			assert(every(fieldValues, isNumOrNull), 'values are numbers');
 			assert.equal(fieldValues.length, samples.length + secondSamples.length, 'length matches samples');
 			assert(isArray(getIn(data, ['codes', field0])), 'codes is array');
+		}).subscribe(() => done(), e => done(logError(e)));
+	});
+	it('should compose mutation', function (done) {
+		var field = 'TP53';
+		fetch(
+		{
+			fetchType: 'composite',
+			fieldType: 'mutation',
+			valueType: 'mutation',
+			fields: [field],
+			assembly: 'hg19',
+			fieldSpecs: [{
+				fetchType: 'xena',
+				dsID: mutationDsID,
+				fieldType: 'mutation',
+				valueType: 'mutation',
+				fields: [field],
+				assembly: 'hg19',
+			}, {
+				fetchType: 'xena',
+				dsID: secondMutationDsID,
+				fieldType: 'mutation',
+				valueType: 'mutation',
+				fields: [field],
+				assembly: 'hg19',
+			}]
+		}, [samples, thirdSamples]).do(data => {
+			console.log(data);
+			var rows = getIn(data, ['req', 'rows']),
+				samplesInResp = getIn(data, ['req', 'samplesInResp']),
+				refGene = getIn(data, ['refGene', field]),
+				count = samples.length + thirdSamples.length,
+				inSamples = s => s >= 0 && s < count;
+
+			assert(isArray(rows), 'rows is an array');
+			assert(isArray(samplesInResp), 'samplesInResp is an array');
+			assert(every(pluck(rows, 'sample'), s => inSamples(s)), 'all samples are in sample list');
+			assert(isObject(refGene), 'refGene is an object');
 		}).subscribe(() => done(), e => done(logError(e)));
 	});
 });
