@@ -24,9 +24,9 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		return _.toArray(arguments);
 	}
 
-	// Concat array with following arguments
-	function concat(arr) {
-		return arr.concat(slice.call(arguments, 1));
+	// Concat array with following arrays
+	function concat(arr, ...arrs) {
+		return arr.concat(...arrs);
 	}
 
 	function pluckPaths(paths, obj) {
