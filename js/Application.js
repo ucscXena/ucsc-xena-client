@@ -137,7 +137,7 @@ var Application = React.createClass({
 						callback={callback} fieldFormat={this.fieldFormat}/>}
 				<div className='chartRoot' style={{display: 'none'}} />
 				<div className="form-group text-right">
-					<a href="#">I wish I could...</a>
+					<a href="#">I wish this would...</a>
 				</div>
 			</Grid>
 		);

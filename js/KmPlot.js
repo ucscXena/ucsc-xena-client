@@ -306,7 +306,9 @@ var KmPlot = React.createClass({
 		});
 	},
 	onSelectKm: function(kmId) {
-		this.props.callback(['km-open', kmId]);
+		if (kmId !== this.props.activeKm.id) {
+			this.props.callback(['km-open', kmId]);
+		}
 	},
 	setActiveLabel: function (e, label) {
 		this.setState({ activeLabel: label });
@@ -332,9 +334,12 @@ var KmPlot = React.createClass({
 			: <div className="container row">
 				<span className="controls" style={{width: sectionDims.controls.width}}>
 					<div className="row">
-						<div className="lead">Stratification</div>
+						<h2><small>Stratification</small></h2>
 						<Select options={selectableKmColumns(kmColumns)}
 								onSelect={this.onSelectKm} value={id} charLimit={32}/>
+						<div>
+							<hr />
+						</div>
 					</div>
 				</span>
 				{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
