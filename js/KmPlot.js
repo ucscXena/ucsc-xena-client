@@ -9,6 +9,7 @@ var React = require('react');
 var {PropTypes} = React;
 var {ListGroup, ListGroupItem, OverlayTrigger, Tooltip} = require('react-bootstrap/lib/');
 var Axis = require('./Axis');
+var Select = require('./views/Select');
 var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
 // XXX Warn on duplicate patients, and list patient ids?
@@ -90,6 +91,14 @@ var LineGroup = React.createClass({
 });
 
 var bounds = x => [_.min(x), _.max(x)];
+var selectableKmColumns = options =>
+		_.map(options, (opt, key) => {
+			let labelType = 'user';
+			return {
+				label: `${opt.columnLabel[labelType]} ${opt.fieldLabel[labelType]}`,
+				value: key
+			};
+		})
 
 function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 	var height = size.height - margin.top - margin.bottom,
@@ -296,11 +305,14 @@ var KmPlot = React.createClass({
 			}
 		});
 	},
+	onSelectKm: function(kmId) {
+		this.props.callback(['km-open', kmId]);
+	},
 	setActiveLabel: function (e, label) {
 		this.setState({ activeLabel: label });
 	},
 	render: function () {
-		var {activeKm: {groups, title, label}, kmColumns} = this.props,
+		var {activeKm: {groups, id, label, title}, callback, kmColumns} = this.props,
 			warning = _.get(groups, 'warning'),
 			fullLabel = warning ? `${label} (${warning})` : label,
 			{activeLabel}  = this.state,
@@ -320,8 +332,9 @@ var KmPlot = React.createClass({
 			: <div className="container row">
 				<span className="controls" style={{width: sectionDims.controls.width}}>
 					<div className="row">
-						<label className="lead">Stratification</label>
-						<div>Column Drop-down Menu</div>
+						<div className="lead">Stratification</div>
+						<Select options={selectableKmColumns(kmColumns)}
+								onSelect={this.onSelectKm} value={id} charLimit={32}/>
 					</div>
 				</span>
 				{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
