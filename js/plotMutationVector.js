@@ -12,7 +12,7 @@ var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
-var features = require('./models/mutationVector');
+var {features} = require('./models/mutationVector');
 var {drawMutations, radius} = require('./drawMutations');
 
 // Since we don't set module.exports, but instead register ourselves
