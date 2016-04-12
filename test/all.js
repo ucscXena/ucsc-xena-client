@@ -11,4 +11,5 @@ require('./heatmapColors');
 require('./scale');
 require('./underscore_ext');
 require('./fieldFetch');
+require('./fields');
 //require('./matrix-test');
