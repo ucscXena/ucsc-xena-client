@@ -7,7 +7,7 @@ require('../css/km.css');
 var _ = require('./underscore_ext');
 var React = require('react');
 var {PropTypes} = React;
-var {ListGroup, ListGroupItem, OverlayTrigger, Tooltip} = require('react-bootstrap/lib/');
+var {Glyphicon, ListGroup, ListGroupItem, OverlayTrigger, Tooltip} = require('react-bootstrap/lib/');
 var Axis = require('./Axis');
 var Select = require('./views/Select');
 var {deepPureRenderMixin} = require('./react-utils');
@@ -176,13 +176,15 @@ var PValue = React.createClass({
 			<ListGroup fill>
 				<ListGroupItem>
 					{patientWarning ?
-						<OverlayTrigger
-							placement='right'
-							overlay={tooltip}
-							trigger={['hover', 'click']}>
-							<div className="badge" style={{verticalAlign:"middle"}}>!</div>
-						</OverlayTrigger> :
-						null}
+					<OverlayTrigger
+						placement='right'
+						overlay={tooltip}
+						trigger={['hover', 'click']}>
+						<span className='pull-right p-value-warning'>
+							<Glyphicon glyph='warning-sign'/>
+						</span>
+					</OverlayTrigger> :
+					null}
 					<span>P-Value = {formatPValue(pValue)}</span>
 				</ListGroupItem>
 				<ListGroupItem>

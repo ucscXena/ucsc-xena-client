@@ -73,6 +73,11 @@ path.outline {
 	font-size: small;
 }
 
+.kmDialog .definitions .p-value-warning {
+	color: #FE9A2E;
+	font-size: medium;
+}
+
 .kmDialog .graph {
 	text-align: center;
 }
