@@ -270,6 +270,39 @@ describe('xena fetch', function () {
 		}, [A_samples, B_samples]).do(validateSingleValueData([A_samples, B_samples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
+	it('should compose multiple gene floats', function (done) {
+		var field0 = 'TP53',
+			field1 = 'PTEN';
+		fetch(
+		{
+			fetchType: 'composite',
+			fieldType: 'genes',
+			valueType: 'float',
+			fields: [field0, field1],
+			fieldSpecs: [{
+				fetchType: 'xena',
+				dsID: A_genomicDsID,
+				fieldType: 'genes',
+				valueType: 'float',
+				fields: [field0, field1]
+			}, {
+				fetchType: 'xena',
+				dsID: B_genomicDsID,
+				fieldType: 'genes',
+				valueType: 'float',
+				fields: [field0]
+			}]
+		}, [A_samples, B_samples]).do(data => {
+			var fields = [field0, field1];
+			fields.forEach((field, i) => {
+				var fieldValues = getIn(data, ['req', 'values', i]);
+				assert(isArray(fieldValues), 'field is array');
+				assert(every(fieldValues, isNumOrNull), 'values are numbers');
+				assert.equal(fieldValues.length, _.sum(_.pluck([A_samples, B_samples], 'length')), 'length matches samples');
+				assert(isNumber(getIn(data, ['req', 'mean', i])), 'mean is number');
+			});
+		}).subscribe(() => done(), e => done(logError(e)));
+	});
 	it('should compose gene probe floats', function (done) {
 		var field = 'TP53';
 		fetch(
