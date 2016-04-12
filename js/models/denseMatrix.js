@@ -11,7 +11,6 @@ var widgets = require('../columnWidgets');
 var datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
 var datasetGenesValues = xenaQuery.dsID_fn(xenaQuery.dataset_genes_values);
 var datasetGeneProbesValues = xenaQuery.dsID_fn(xenaQuery.dataset_gene_probe_values);
-var datasetFeatureDetail = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
 var datasetCodes = xenaQuery.dsID_fn(xenaQuery.code_list);
 
 
@@ -108,22 +107,18 @@ var cmp = ({fields}, {req: {values, probes}} = {req: {}}) =>
 // data fetches
 //
 
-// index data by field, then sample
-// XXX maybe build indexes against arrays, instead of ditching the arrays,
-// so we can do on-the-fly stuff, like average, km, against an array.
-function indexResponse(probes, data) {
-	var values = _.object(probes, _.map(probes, function (v, i) {
-			return _.map(data[i], xenaQuery.nanstr);
-		})),
-		mean = _.object(probes, _.map(data, _.meannan));
+// Convert nanstr and compute mean.
+function meanNanResponse(probes, data) {
+	var values = _.map(data, field => _.map(field, xenaQuery.nanstr)),
+		mean = _.map(data, _.meannan);
 
-	return {values: values, mean: mean};
+	return {values, mean};
 }
 
 function indexProbeGeneResponse(data) {
 	var probes = data[0],
 		vals = data[1];
-	return _.extend({probes: probes}, indexResponse(probes, vals));
+	return _.extend({probes: probes}, meanNanResponse(probes, vals));
 }
 
 function orderByQuery(genes, data) {
@@ -135,22 +130,23 @@ function orderByQuery(genes, data) {
 }
 
 function indexGeneResponse(genes, data) {
-	return indexResponse(genes, orderByQuery(genes, data));
+	return meanNanResponse(genes, orderByQuery(genes, data));
 }
 
 var fetch = ({dsID, fields}, [samples]) => datasetProbeValues(dsID, samples, fields)
-	.map(resp => ({req: indexResponse(fields, resp)}));
+	.map(resp => ({req: meanNanResponse(fields, resp)}));
 
 var fetchGeneProbes = ({dsID, fields}, [samples]) => datasetGeneProbesValues(dsID, samples, fields)
 	.map(resp => ({req: indexProbeGeneResponse(resp)}));
 
+// This should really be fetchCoded. Further, it should only return a single
+// code list, i.e. either a single clinical coded field, or a list of genomic 
+// fields all with the same code values.
 var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
 		datasetProbeValues(dsID, samples, fields)
-			.map(resp => indexResponse(fields, resp)),
-		datasetFeatureDetail(dsID, fields),
+			.map(resp => meanNanResponse(fields, resp)),
 		datasetCodes(dsID, fields)
-	).map(resp => _.object(['req', 'features', 'codes'], resp));
-
+	).map(([req, codes]) => ({req, codes: _.values(codes)[0]}));
 
 var fetchGene = ({dsID, fields}, [samples]) => datasetGenesValues(dsID, samples, fields)
 			.map(resp => ({req: indexGeneResponse(fields, resp)}));

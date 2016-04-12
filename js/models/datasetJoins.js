@@ -5,7 +5,7 @@ var heatmapColors = require('../heatmapColors');
 var multi = require('../multi');
 var fieldFetch = require('../fieldFetch');
 var Rx = require('rx');
-
+var {concatValuesByFieldPosition} = require('./fields');
 
 // Strategies for joining field metadata with composite cohorts.
 
@@ -133,45 +133,39 @@ function getColSpec(fieldSpecs, datasets, features) {
 	};
 }
 
-// Merge field data in fromData into toData, joining by field position,
-// i.e. field0 in fromFields is to be merged with fieldA in toFields.
-// fromFields: [<field0>, ...]
-// toFields: [<fieldA>, ...]
-// fromData: {req: {values: {<field>: {[sampleID]: <number>, ...}, ...}}}
-// toData: {req: {values: {<field>: {[sampleID]: <number>, ...}, ...}}}
-function mergeValuesByFieldPosition(fromFields, toFields, fromData, toData) {
-	return _.reduce(_.zip(fromFields, toFields),
-					(acc, [fromField, toField]) =>
-						_.updateIn(acc, 
-							['req', 'values', toField],
-							vals => (vals || []).concat(fromData.req.values[fromField])),
-				   toData);
-}
-
 function computeMean(data) {
 	return _.assocIn(data, ['req', 'mean'], _.fmap(_.getIn(data, ['req', 'values']), _.meannan));
 }
 
-// This falls apart because we don't have good dataType. Instead, we have to do
-// a bunch of lookups & calcs to find the real dataType.
-// float, coded, mutation
-//
-// This also fails because we can't remap coded fields by only considering one at a time.
-// We do pass in the whole column, so we could scan.
-
-var cvtField = multi((column, field) => `${column.fieldType}->${field.fieldType}`);
+// Convert field valueType.
+// (column, fieldSpec, samples, data) => newData
+var cvtField = multi((column, field) => `${field.valueType}->${column.valueType}`, 4);
 
 // For probeMatrix, geneMatrix, data is
 // req: {values: {[probe]: {sample: value, ...}, ...}}
+cvtField.dflt = (column, fieldSpec, samples, data) => data;
 
+var saveNull = fn => v => v == null ? v : fn(v);
 
-cvtField.dflt = (column, fieldSpec, samples, acc, data) => {
-	var toFields = _.getIn(data, ['req', 'probes'], column.fields),
-		fromFields = _.getIn(data, ['req', 'probes'], fieldSpec.fields);
-	return mergeValuesByFieldPosition(fromFields, toFields, data, acc);
-};
+// XXX This is repeated in km.js
+function toCoded(floatVals) {
+	let sorted = _.without(floatVals, null, undefined).sort((a, b) => a - b),
+		low = sorted[Math.round(sorted.length / 3)],
+		high = sorted[Math.round(2 * sorted.length / 3)],
+		values = _.map(floatVals, saveNull(v => v < low ? 0 :
+							(v < high ? 1 : 2)));
+	return {
+		values,
+		codes: ['low', 'middle', 'high']
+	};
+}
 
-//cvtField.add('coded->float'); // We should enforce this when editing the column?
+// Column must be single-valued prior to trying to convert to coded.
+cvtField.add('float->coded', (column, fieldSpec, samples, data) => {
+	var {values, codes} = toCoded(_.getIn(data, ['req', 'values', 0]));
+	return _.assocIn(data, ['req', 'values'], [values], ['codes'], codes);
+});
+
 //cvtField.add('coded->coded', (column, field, samples, acc, data) => {
 //	return data;
 //});
@@ -203,27 +197,38 @@ function setProbes(data, wdata)  {
 	return probes ? _.assocIn(data, ['req', 'probes'], probes) : data;
 }
 
+// We don't want a reducing function for getField 'mutation'.
 function joinFieldData(column, samples, wdata) {
 	return _.reduce(_.zip(column.fieldSpecs, wdata), (acc, [fs, data]) => cvtField(column, fs, samples, acc, data), {});
 }
 
 var getField = multi(column => column.valueType);
-//getField.dflt = _.identity;
-getField.add('float', (column, samples, wdata) => computeMean(setProbes(joinFieldData(column, samples, wdata), wdata)));
+
+// Combining float fields:
+// concat all fields by position,
+// copy probe list,
+// compute mean.
+getField.add('float', (column, samplesList, wdata) => {
+	var cvtdData = _.mmap(column.fieldSpecs, samplesList, wdata, cvtField(column)),
+		field = concatValuesByFieldPosition(samplesList, cvtdData);
+
+	return computeMean(setProbes(field, wdata));
+});
 
 // Combining coded fields:
 // find union of codes,
 // assign new values to codes,
 // for each dataset
 //     map val -> code -> new val.
-getField.add('coded', (column, samples, wdata) => {
-	var allCodes = _.union(..._.mmap(column.fieldSpecs, wdata, (fs, wd) => _.getIn(wd, ['codes', fs.fields[0]]))),
+getField.add('coded', (column, samplesList, wdata) => {
+	var cvtdData = _.mmap(column.fieldSpecs, samplesList, wdata, cvtField(column)),
+		allCodes = _.union(..._.pluck(cvtdData, 'codes')),
 		mapping = _.object(allCodes, _.range(allCodes.length)),
-		remappedWdata = _.mmap(column.fieldSpecs, wdata, (fs, wd) => {
-			var codes = _.getIn(wd, ['codes', fs.fields[0]]);
-			return _.updateIn(wd, ['req', 'values', fs.fields[0]], vals => _.map(vals, v => mapping[codes[v]]));
+		remappedWdata = _.mmap(column.fieldSpecs, cvtdData, (fs, wd) => {
+			var codes = _.get(wd, 'codes');
+			return _.updateIn(wd, ['req', 'values', 0], vals => _.map(vals, v => mapping[codes[v]]));
 		});
-	return _.assocIn(joinFieldData(column, samples, remappedWdata), ['codes', column.fields[0]], allCodes);
+	return _.assoc(concatValuesByFieldPosition(samplesList, remappedWdata), 'codes', allCodes);
 });
 
 // Combining mutation fields.

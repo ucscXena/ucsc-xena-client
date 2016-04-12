@@ -1,8 +1,9 @@
 /*global require: false, it: false, console: false, describe: false, mocha: false */
 'use strict';
 
+var _ = require('../js/underscore_ext');
 var Rx = require('rx');
-var {isObject, isNumber, isArray, getIn, every, pluck} =
+var {isObject, isNumber, isArray, getIn, get, every, pluck} =
 	require('../js/underscore_ext');
 var fetch = require('../js/fieldFetch');
 require('../js/models/denseMatrix');
@@ -108,6 +109,34 @@ function logError(err) {
 	return err;
 }
 
+var validateSingleValueData = _.curry((samples, data) => {
+	var fieldValues = getIn(data, ['req', 'values', 0]);
+	assert(isArray(fieldValues), 'field data is array');
+	assert(every(fieldValues, isNumOrNull), 'values are numbers');
+	assert.equal(fieldValues.length, _.sum(_.pluck(samples, 'length')), 'length matches samples');
+	assert(isNumber(getIn(data, ['req', 'mean', 0])), 'mean is a number');
+});
+
+var validateProbesData = _.curry((samples, data) => {
+	var probes = getIn(data, ['req', 'probes']);
+	assert(isArray(probes));
+	probes.forEach((probe, i) => {
+		var fieldValues = getIn(data, ['req', 'values', i]);
+		assert(isArray(fieldValues), 'field is array');
+		assert(every(fieldValues, isNumOrNull), 'values are numbers');
+		assert.equal(fieldValues.length, _.sum(_.pluck(samples, 'length')), 'length matches samples');
+		assert(isNumber(getIn(data, ['req', 'mean', i])), 'mean is number');
+	});
+});
+
+var validateCodedData = _.curry((samples, data) => {
+	var fieldValues = getIn(data, ['req', 'values', 0]);
+	assert(isArray(fieldValues), 'field is array');
+	assert(every(fieldValues, isNumOrNull), 'values are numbers');
+	assert.equal(fieldValues.length, _.sum(_.pluck(samples, 'length')), 'length matches samples');
+	assert(isArray(get(data, 'codes')), 'codes is array');
+});
+
 describe('xena fetch', function () {
 	this.timeout(5000);
 	it('should fetch probe', function (done) {
@@ -119,12 +148,8 @@ describe('xena fetch', function () {
 			fieldType: 'probes',
 			valueType: 'float',
 			fields: [probe]
-		}, [A_samples]).do(data => {
-			var probeValues = getIn(data, ['req', 'values', probe]);
-			assert(isArray(probeValues), 'probe is array');
-			assert(every(probeValues, isNumOrNull), 'values are numbers');
-			assert(isNumber(getIn(data, ['req', 'mean', probe])), 'mean is a number');
-		}).subscribe(() => done(), e => done(logError(e)));
+		}, [A_samples]).do(validateSingleValueData([A_samples]))
+		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch gene average', function (done) {
 		var field = 'TP53';
@@ -135,12 +160,8 @@ describe('xena fetch', function () {
 			fieldType: 'genes',
 			valueType: 'float',
 			fields: [field]
-		}, [A_samples]).do(data => {
-			var fieldValues = getIn(data, ['req', 'values', field]);
-			assert(isArray(fieldValues), 'field is array');
-			assert(every(fieldValues, isNumOrNull), 'values are numbers');
-			assert(isNumber(getIn(data, ['req', 'mean', field])), 'mean is number');
-		}).subscribe(() => done(), e => done(logError(e)));
+		}, [A_samples]).do(validateSingleValueData([A_samples]))
+		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch gene probes', function (done) {
 		var field = 'TP53';
@@ -151,16 +172,8 @@ describe('xena fetch', function () {
 			fieldType: 'geneProbes',
 			valueType: 'float',
 			fields: [field]
-		}, [A_samples]).do(data => {
-			var probes = getIn(data, ['req', 'probes']);
-			assert(isArray(probes));
-			probes.forEach(probe => {
-				var fieldValues = getIn(data, ['req', 'values', probe]);
-				assert(isArray(fieldValues), 'field is array');
-				assert(every(fieldValues, isNumOrNull), 'values are numbers');
-				assert(isNumber(getIn(data, ['req', 'mean', probe])), 'mean is number');
-			});
-		}).subscribe(() => done(), e => done(logError(e)));
+		}, [A_samples]).do(validateProbesData([A_samples]))
+		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch clinical coded', function (done) {
 		var field = 'additional_pharmaceutical_therapy';
@@ -171,14 +184,8 @@ describe('xena fetch', function () {
 			fieldType: 'clinical',
 			valueType: 'coded',
 			fields: [field]
-		}, [A_samples]).do(data => {
-			var fieldValues = getIn(data, ['req', 'values', field]);
-			assert(isArray(fieldValues), 'field is array');
-			assert(every(fieldValues, isNumOrNull), 'values are numbers');
-			// XXX why check for mean on a coded field?
-			assert(isNumber(getIn(data, ['req', 'mean', field])), 'mean is number');
-			assert(isArray(getIn(data, ['codes', field])), 'codes is array');
-		}).subscribe(() => done(), e => done(logError(e)));
+		}, [A_samples]).do(validateCodedData([A_samples]))
+		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch clinical float', function (done) {
 		var field = 'age_at_initial_pathologic_diagnosis';
@@ -189,13 +196,8 @@ describe('xena fetch', function () {
 			fieldType: 'clinical',
 			valueType: 'float',
 			fields: [field]
-		}, [A_samples]).do(data => {
-			var fieldValues = getIn(data, ['req', 'values', field]);
-			assert(isArray(fieldValues), 'field is array');
-			assert(every(fieldValues, isNumOrNull), 'values are numbers');
-			assert(isNumber(getIn(data, ['req', 'mean', field])), 'mean is number');
-			assert(getIn(data, ['codes', field]) == null, 'codes is null');
-		}).subscribe(() => done(), e => done(logError(e)));
+		}, [A_samples]).do(validateSingleValueData([A_samples]))
+		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch mutation', function (done) {
 		var field = 'TP53';
@@ -241,13 +243,8 @@ describe('xena fetch', function () {
 				valueType: 'float',
 				fields: [probe1]
 			}]
-		}, [A_samples, B_samples]).do(data => {
-			var probeValues = getIn(data, ['req', 'values', probe0]);
-			assert(isArray(probeValues), 'probe is array');
-			assert(every(probeValues, isNumOrNull), 'values are numbers');
-			assert.equal(probeValues.length, A_samples.length + B_samples.length);
-			assert(isNumber(getIn(data, ['req', 'mean', probe0])), 'mean is number');
-		}).subscribe(() => done(), e => done(logError(e)));
+		}, [A_samples, B_samples]).do(validateSingleValueData([A_samples, B_samples]))
+		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should compose gene floats', function (done) {
 		var field = 'TP53';
@@ -270,13 +267,8 @@ describe('xena fetch', function () {
 				valueType: 'float',
 				fields: [field]
 			}]
-		}, [A_samples, B_samples]).do(data => {
-			var geneValues = getIn(data, ['req', 'values', field]);
-			assert(isArray(geneValues), 'gene is array');
-			assert(every(geneValues, isNumOrNull), 'values are numbers');
-			assert.equal(geneValues.length, A_samples.length + B_samples.length);
-			assert(isNumber(getIn(data, ['req', 'mean', field])), 'mean is number');
-		}).subscribe(() => done(), e => done(logError(e)));
+		}, [A_samples, B_samples]).do(validateSingleValueData([A_samples, B_samples]))
+		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should compose gene probe floats', function (done) {
 		var field = 'TP53';
@@ -299,17 +291,8 @@ describe('xena fetch', function () {
 				valueType: 'float',
 				fields: [field]
 			}]
-		}, [A_samples, C_samples]).do(data => {
-			var probes = getIn(data, ['req', 'probes']);
-			assert(isArray(probes));
-			probes.forEach(probe => {
-				var fieldValues = getIn(data, ['req', 'values', probe]);
-				assert(isArray(fieldValues), 'probe is array');
-				assert(every(fieldValues, isNumOrNull), 'values are numbers');
-				assert.equal(fieldValues.length, A_samples.length + C_samples.length, 'length matches samples');
-				assert(isNumber(getIn(data, ['req', 'mean', probe])), 'mean is number');
-			});
-		}).subscribe(() => done(), e => done(logError(e)));
+		}, [A_samples, C_samples]).do(validateProbesData([A_samples, C_samples]))
+		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should compose clinical coded', function (done) {
 		var field0 = 'AJCC_Stage_nature2012',
@@ -334,13 +317,8 @@ describe('xena fetch', function () {
 				valueType: 'coded',
 				fields: [field1]
 			}]
-		}, [A_samples, B_samples]).do(data => {
-			var fieldValues = getIn(data, ['req', 'values', field0]);
-			assert(isArray(fieldValues), 'field is array');
-			assert(every(fieldValues, isNumOrNull), 'values are numbers');
-			assert.equal(fieldValues.length, A_samples.length + B_samples.length, 'length matches A_samples');
-			assert(isArray(getIn(data, ['codes', field0])), 'codes is array');
-		}).subscribe(() => done(), e => done(logError(e)));
+		}, [A_samples, B_samples]).do(validateCodedData([A_samples, B_samples]))
+		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should compose mutation', function (done) {
 		var field = 'TP53';
@@ -378,5 +356,31 @@ describe('xena fetch', function () {
 			assert(every(pluck(rows, 'sample'), s => inSamples(s)), 'all samples are in sample list');
 			assert(isObject(refGene), 'refGene is an object');
 		}).subscribe(() => done(), e => done(logError(e)));
+	});
+	it('should compose float with coded', function (done) {
+		var field0 = 'AJCC_Stage_nature2012',
+			field1 = 'TP53';
+		fetch(
+		{
+			fetchType: 'composite',
+			dsID: A_clinicalDsID,
+			fieldType: 'clinical',
+			valueType: 'coded',
+			fields: [field0],
+			fieldSpecs: [{
+				fetchType: 'xena',
+				dsID: A_clinicalDsID,
+				fieldType: 'clinical',
+				valueType: 'coded',
+				fields: [field0]
+			}, {
+				fetchType: 'xena',
+				dsID: B_genomicDsID,
+				fieldType: 'genes',
+				valueType: 'float',
+				fields: [field1]
+			}]
+		}, [A_samples, B_samples]).do(validateCodedData([A_samples, B_samples]))
+		.subscribe(() => done(), e => done(logError(e)));
 	});
 });
