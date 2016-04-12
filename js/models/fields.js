@@ -33,17 +33,6 @@ function extendFields(fieldsPerCohort, lengthList) {
 	return _.mmap(fieldsPerCohort, lengthList, (field, len) => field || nulls(len));
 }
 
-// Currently this is complicated by the fact that we've indexed the data on
-// field or probe, and we are not holding the field. So we would need the fieldSpec
-// in order to do the join by position. Ways we could address this:
-// 1 - Keep data as [[...samplValues], ...probeValues]
-//     Then it's already by position & we're done, here. For probe lookups we'd
-//     build an index. When do we lookup by probe? Only when walking the probe
-//     list. This indexing is a waste of time.
-// 2 - Put field list in fieldData. This makes the field list more stand-alone,
-//     which could be good.
-// 3 - Both 1 & 2
-//
 // Concat two fieldsets, potentially having multiple fields. Join by
 // position, filling with nulls for any missing fields.
 // [
