@@ -57,24 +57,21 @@ function samplesControl(activeMode, cohort, datasets, onSampleSelect, samplesFro
 //	);
 //}
 
-//function downloadControls(columnOrder, activeMode, onDownloads) {
-//	var allowedModes = ['heatmap'];
-//	return (columnOrder.length < 1) ? null :
-//		(<ButtonGroup bsSize='small'>
-//			{_.contains(allowedModes, activeMode) ?
-//			<Button href='#' onClick={onDownloads.pdf}>PDF</Button> : null}
-//		</ButtonGroup>);
-//}
+function downloadControls(activeMode, onDownloads) {
+	var allowedModes = ['heatmap'];
+	return _.contains(allowedModes, activeMode) ? (
+		<Button href='#' bsSize='small' onClick={onDownloads.pdf}>PDF</Button>
+	) : null;
+}
 
 function modeControls(activeMode, state, disabledModes, modes, onMode, onDownloads) {
-	var allowedModes = ['heatmap'];
 	var buttons = _.map(modes, (mode, key) => {
 		let isActive = (key === activeMode),
 			disabled = _.contains(disabledModes, key);
-		return (
+		return disabled ? null : (
 			<Button key={key} bsStyle='default' href='#' active={isActive}
-				disabled={disabled} onClick={() => onMode(key)}>
-				{disabled ? null : mode.name}
+					disabled={disabled} onClick={() => onMode(key)}>
+				{mode.name}
 			</Button>
 		);
 	});
@@ -82,10 +79,9 @@ function modeControls(activeMode, state, disabledModes, modes, onMode, onDownloa
 	return (state.columnOrder.length > 0) ? (
 		<div>
 			<ButtonGroup bsSize='small'>{buttons}</ButtonGroup>
-			{_.contains(allowedModes, activeMode) ?
 			<div className="pull-right">
-				<Button bsSize='small' href='#' onClick={onDownloads.pdf}>PDF</Button>
-			</div> : null}
+				{downloadControls(activeMode, onDownloads)}
+			</div>
 		</div>
 	) : null;
 }
@@ -133,9 +129,9 @@ var AppControls = React.createClass({
 			{cohort, cohorts, columnOrder, datasets, samplesFrom} = appState,
 			disabledModes = (_.toArray(kmColumns).length < 1) ? ['kmPlot'] : [];
 		/*
-			1. Column list with minimum 1 column will enable Km Plot button
-				a) Column list assume to have ONLY Km Plot-allowed columns!
-			2. Pressing Km Plot button will invoke callback, supplying both 'km-open' and its Id
+		 1. Column list with minimum 1 column will enable Km Plot button
+		 	a) Column list assume to have ONLY Km Plot-allowed columns!
+		 2. Pressing Km Plot button will invoke callback, supplying both 'km-open' and its Id
 		 */
 		return (
 			<div className="row container text-center">
