@@ -256,7 +256,8 @@ var ColumnEdit = React.createClass({
 						<DatasetSelect datasets={datasets} makeLabel={makeLabel}
 							event='dataset' value={choices.dataset}
 							disable={!_.isEmpty(choices.dataset) && !positions['dataset']}
-							onSelect={this.onDatasetSelect} servers={servers.user}>
+							onSelect={this.onDatasetSelect} servers={_.uniq(_.reduce(servers, (all, list) =>
+								all.concat(list), []))}>
 						</DatasetSelect> : null
 					}
 					{Editor ? <Editor {...columnEdit} setEditorState={this.onSetEditor}
