@@ -109,6 +109,7 @@ var Column = React.createClass({
 					{menu}
 					{menu && <MenuItem divider />}
 					<MenuItem onSelect={this.onAbout}>About the Dataset</MenuItem>
+					<MenuItem onSelect={this.onDownload}>Download</MenuItem>
 					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>
 					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 				</SplitButton>

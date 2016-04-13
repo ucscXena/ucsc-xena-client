@@ -29,11 +29,6 @@ var views = {
 			open: 'km-open',
 			close: 'km-close'
 		}
-	},
-	table: {
-		module: KmPlot,
-		name: 'Table',
-		events: null
 	}
 };
 

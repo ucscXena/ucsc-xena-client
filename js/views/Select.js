@@ -23,8 +23,12 @@ var stopPropagation = ev => {
 
 var trimTitle = (title, preferredLength) => {
 	if (typeof title === 'string') {
-		return (title.length < preferredLength) ? title
-			: `${title.substr(0, preferredLength - 1)}..`;
+		if (preferredLength) {
+			return (title.length < preferredLength) ? title
+				: `${title.substr(0, preferredLength - 1)}..`;
+		} else {
+			return title;
+		}
 	} else {
 		return "No Value";
 	}
@@ -67,7 +71,7 @@ var Select = React.createClass({
 		}
 	},
 	render: function () {
-		var {charLimit, options, value} = this.props,
+		var {charLimit, disable = false, options, value} = this.props,
 			title = notUndefined(value) && _.findWhere(options, {value: value}),
 			opts = filterOpts(this.state.filter, options);
 		// We wrap the input in a div so DropdownButton decorates the div
@@ -78,6 +82,7 @@ var Select = React.createClass({
 			<DropdownButton ref='dropdown'
 				bsSize="small"
 				className='Select'
+				disabled={disable}
 				onMouseUp={this.setFocus}
 				title={trimTitle(title && title.label || 'Select...', charLimit)}>
 

@@ -4,6 +4,7 @@
 
 var React = require('react');
 var CohortSelect = require('./views/CohortSelect');
+var DatasetSelect = require('./views/DatasetSelect');
 var {ButtonGroup, Button, Glyphicon} = require('react-bootstrap/lib');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
 var pdf = require('./pdfSpreadsheet');
@@ -21,46 +22,72 @@ function datasetControl(cohort, onAction) {
 		</ButtonGroup>) : null;
 }
 
-function filterControl(columnOrder, onAction) {
-	var disabled = (columnOrder.length < 1);
-	return disabled ? null : (
-		<ButtonGroup bsSize='small'>
-			<button className='btn btn-default' onClick={() => onAction('filter')}
-					style={{float: 'left'}} disabled={disabled}>
-				<Glyphicon glyph="filter" />Filter
-			</button>
-			<button className='btn btn-info' style={{float: 'right'}} disabled>
-				<em>55.3% Results</em>
-			</button>
-		</ButtonGroup>
-	);
+function samplesControl(activeMode, cohort, datasets, onSampleSelect, samplesFrom) {
+	var hasCohort = !!cohort;
+	return hasCohort ? (
+		<div>
+			<label>Samples in</label>
+			{' '}
+			<DatasetSelect
+				onSelect={onSampleSelect}
+				nullOpt="Any Datasets (i.e. show all samples)"
+				style={{display: hasCohort ? 'inline' : 'none'}}
+				className='samplesFromAnchor'
+				datasets={datasets}
+				disable={activeMode !== 'heatmap'}
+				cohort={cohort}
+				label="Samples in"
+				value={samplesFrom} />
+		</div>
+	) : null;
 }
 
-function downloadControls(columnOrder, disabledButtons, onDownloads) {
-	return (columnOrder.length < 1) ? null :
-		(<ButtonGroup bsSize='small'>
-			<Button href='#' onClick={onDownloads.default}>
-				<Glyphicon glyph="cloud-download" /> Download
-			</Button>
-			{_.contains(disabledButtons, 'pdf') ? null :
-			<Button href='#' onClick={onDownloads.pdf}>PDF</Button>}
-		</ButtonGroup>);
-}
+//function filterControl(columnOrder, onAction) {
+//	var disabled = (columnOrder.length < 1);
+//	return disabled ? null : (
+//		<ButtonGroup bsSize='small'>
+//			<button className='btn btn-default' onClick={() => onAction('filter')}
+//					style={{float: 'left'}} disabled={disabled}>
+//				<Glyphicon glyph="filter" />Filter
+//			</button>
+//			<button className='btn btn-info' style={{float: 'right'}} disabled>
+//				<em>55.3% Results</em>
+//			</button>
+//		</ButtonGroup>
+//	);
+//}
 
-function modeControls(state, activeMode, disabledModes, modes, onMode) {
+//function downloadControls(columnOrder, activeMode, onDownloads) {
+//	var allowedModes = ['heatmap'];
+//	return (columnOrder.length < 1) ? null :
+//		(<ButtonGroup bsSize='small'>
+//			{_.contains(allowedModes, activeMode) ?
+//			<Button href='#' onClick={onDownloads.pdf}>PDF</Button> : null}
+//		</ButtonGroup>);
+//}
+
+function modeControls(activeMode, state, disabledModes, modes, onMode, onDownloads) {
+	var allowedModes = ['heatmap'];
 	var buttons = _.map(modes, (mode, key) => {
 		let isActive = (key === activeMode),
 			disabled = _.contains(disabledModes, key);
 		return (
 			<Button key={key} bsStyle='default' href='#' active={isActive}
-					disabled={disabled} onClick={() => onMode(key)}>
-				{disabled ? <s>{mode.name}</s> : mode.name}
+				disabled={disabled} onClick={() => onMode(key)}>
+				{disabled ? null : mode.name}
 			</Button>
 		);
 	});
 
-	return (state.columnOrder.length < 1) ? null
-		: (<ButtonGroup bsSize='small'>{buttons}</ButtonGroup>);
+	return (state.columnOrder.length > 0) ? (
+		<div>
+			<ButtonGroup bsSize='small'>{buttons}</ButtonGroup>
+			{_.contains(allowedModes, activeMode) ?
+			<div className="pull-right">
+				<Button bsSize='small' href='#' onClick={onDownloads.pdf}>PDF</Button>
+			</div> : null}
+		</div>
+	) : null;
 }
 
 // XXX drop this.props.style? Not sure it's used.
@@ -103,7 +130,7 @@ var AppControls = React.createClass({
 	render: function () {
 		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>;
 		var {activeMode, appState, kmColumns, modes, onAction} = this.props,
-			{cohort, cohorts, columnOrder} = appState,
+			{cohort, cohorts, columnOrder, datasets, samplesFrom} = appState,
 			disabledModes = (_.toArray(kmColumns).length < 1) ? ['kmPlot'] : [];
 		/*
 			1. Column list with minimum 1 column will enable Km Plot button
@@ -118,14 +145,11 @@ var AppControls = React.createClass({
 				<div className='col-md-1 text-center'>
 					{datasetControl(cohort, onAction)}
 				</div>
-				<div className='col-md-2 text-center'>
-					{filterControl(columnOrder, onAction)}
+				<div className='col-md-4 text-left'>
+					{samplesControl(activeMode, cohort, datasets, this.onSamplesSelect, samplesFrom)}
 				</div>
-				<div className='col-md-4 text-center'>
-					{modeControls(appState, activeMode, disabledModes, modes, this.onMode)}
-				</div>
-				<div className="col-md-2 text-left">
-					{downloadControls(columnOrder, (activeMode === 'chart' ? ['pdf'] : []), this.onDownloads())}
+				<div className='col-md-4 text-left'>
+					{modeControls(activeMode, appState, disabledModes, modes, this.onMode, this.onDownloads())}
 				</div>
 			</div>
 		);

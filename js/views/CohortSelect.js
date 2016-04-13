@@ -13,12 +13,12 @@ var CohortSelect = React.createClass({
 			options = _.map(sortedCohorts, c => ({value: c, label: c}));
 
 		return (
-			<div>
+			<div className="text-left">
 				<label className='cohortAnchor'>
 					<b>Cohort</b>
 				</label>
 				{' '}
-				<Select onSelect={onSelect} value={cohort} options={options} charLimit={22}/>
+				<Select onSelect={onSelect} value={cohort} options={options} charLimit={25}/>
 			</div>
 		);
 	}
