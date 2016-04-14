@@ -276,7 +276,7 @@ var KmPlot = React.createClass({
 	size: {
 		ratios: {
 			controls: {
-				width: 0.2,
+				width: 0.15,
 				height: 1.0
 			},
 			definitions: {
@@ -284,7 +284,7 @@ var KmPlot = React.createClass({
 				height: 1.0
 			},
 			graph: {
-				width: 0.6,
+				width: 0.65,
 				height: 1.0
 			}
 		}
@@ -308,9 +308,9 @@ var KmPlot = React.createClass({
 		});
 	},
 	onSelectKm: function(kmId) {
-		if (kmId !== this.props.activeKm.id) {
+		//if (kmId !== this.props.activeKm.id) {
 			this.props.callback(['km-open', kmId]);
-		}
+		//}
 	},
 	setActiveLabel: function (e, label) {
 		this.setState({ activeLabel: label });
@@ -338,7 +338,7 @@ var KmPlot = React.createClass({
 					<div className="row">
 						<h2><small>Stratification</small></h2>
 						<Select options={selectableKmColumns(kmColumns)}
-								onSelect={this.onSelectKm} value={id} charLimit={32}/>
+								onSelect={this.onSelectKm} value={id} charLimit={30}/>
 						<div>
 							<hr />
 						</div>
