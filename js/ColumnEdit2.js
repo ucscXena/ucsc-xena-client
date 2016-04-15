@@ -231,13 +231,13 @@ var ColumnEdit = React.createClass({
 			this.setState(newState);
 		}
 	},
-	pickEditor: function(metas) {
+	pickEditor: function(metas, chosenDs) {
 		/*	1. Get 1st element of metas array
 		 2. Check 'type' parameter of individual meta
 		 3. Find matching type within 'editors' object above
 		 4. Use found editor
 		 */
-		let dsMeta = _.first(metas); // only 1 entry when dataset sub type is NOT 'phenotype'
+		let dsMeta = metas && metas[chosenDs]; // only 1 entry when dataset sub type is NOT 'phenotype'
 		return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
 	},
 	setChoice: function(section, newValue) {
@@ -250,12 +250,12 @@ var ColumnEdit = React.createClass({
 	},
 	render: function () {
 		var {choices, positions} = this.state,
-			{appState: {cohorts, columnEdit, datasets, servers}, features, onHide} = this.props,
+			{appState: {cohorts, columnEdit, datasets, features, servers}, callback, onHide} = this.props,
 			dsFeatures = _.getIn(columnEdit, ['features']),
 			chosenDs = choices.dataset[0],
 			currentPosition = _.findKey(positions, p => p),
 			metas = !_.isEmpty(choices.dataset) && _.pick(datasets, choices.dataset),
-			{Editor, apply} = this.pickEditor(metas);
+			{Editor, apply} = this.pickEditor(metas, chosenDs);
 		return (
 			<Modal show={true} className='columnEdit container' enforceFocus>
 				{this.defs[currentPosition].omit ? null : workflowIndicators(positions, this.defs, onHide)}
@@ -266,14 +266,14 @@ var ColumnEdit = React.createClass({
 
 					{positions['dataset'] || choices['dataset'] ?
 					<DatasetSelect datasets={datasets} makeLabel={makeLabel}
-						disable={!chosenDs && !positions['dataset']}
+						disable={chosenDs && !positions['dataset']}
 						event='dataset' value={chosenDs || null} onSelect={this.onDatasetSelect}
 						servers={_.uniq(_.reduce(servers, (all, list) => all.concat(list), []))}/> : null}
 
 					{positions['editor'] && Editor ?
-					<Editor {...columnEdit} features={features}
-						{...(this.state.choices['editor'] || {})}
-						hasGenes={metas.length === 1 && !!dsMeta.probeMap}
+					<Editor {...columnEdit} allFeatures={features} callback={callback}
+						{...(this.state.choices['editor'] || {})} metas={metas}
+						hasGenes={chosenDs && !!metas[chosenDs].probeMap}
 						makeLabel={makeLabel} setEditorState={this.onSetEditor}/> : null}
 
 					<br />
