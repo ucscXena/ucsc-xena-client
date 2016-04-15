@@ -170,16 +170,14 @@ var ColumnEdit = React.createClass({
 		};
 	},
 	addColumn: function (settings) {
-		let {callback, appState: {datasets}} = this.props,
-			dsID = this.state.choices.dataset,
-			label = datasets[dsID].label,
-			assembly = datasets[dsID].assembly;
-
+		let {callback, appState} = this.props,
+			dsIDs = this.state.choices.dataset,
+			ds = appState.datasets[dsIDs[0]];
 		settings = _.assoc(settings,
 			'width', 200, // XXX move this default setting?
-			'columnLabel', {user: label, 'default': label},
-			'assembly', assembly,
-			'dsID', dsID);
+			'columnLabel', {user: ds.label, default: ds.label},
+			'assembly', ds.assembly,
+			'dsID', ds.dsID);
 		this.props.onHide();
 		callback(['add-column', uuid(), settings]);
 	},
@@ -189,11 +187,9 @@ var ColumnEdit = React.createClass({
 	onDatasetSelect: function (dsIDs) {
 		var {callback, appState: {datasets}} = this.props,
 			metas = _.pick(datasets, dsIDs);
-
 		this.setChoice('dataset', dsIDs);
 		if (metas.length === 1) {
-			let dsID = _.first(dsIDs);
-			callback(['edit-dataset', dsID, metas[0]]);
+			callback(['edit-dataset', _.first(dsIDs), metas[0]]);
 		}
 	},
 	onBack: function() {
