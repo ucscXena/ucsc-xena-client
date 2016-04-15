@@ -41,13 +41,19 @@ var PhenotypeEdit = React.createClass({
 	},
 	render: function () {
 		var {feature = {}, makeLabel} = this.props,
-			labelValue = _.isEmpty(feature) ? `Choose a ${this.name}:` : `${this.name} chosen:`,
+			consolidatedFeatures = this.state.features,
+			labelValue = _.isEmpty(feature) ? `Choose a ${this.name} :` :
+				`${this.name} chosen: `,
 			//XXX Account for 'charLimit' prop after 'NewNavigation' branch is merged into master
 			content = <Select value={feature} allowSearch={true}
-				onSelect={this.onSelect} options={this.state.features}/>,
+				onSelect={this.onSelect} options={consolidatedFeatures}/>,
 			label = makeLabel(content, labelValue);
 		return (
-			<div className='row'>{label}</div>
+			<div className='row'>
+				<div className="col-md-12">Total Features: {_.toArray(consolidatedFeatures).length}</div>
+				<div className="col-md-12">Features for Specific Phenotype: {_.toArray(this.props.features).length}</div>
+				{label}
+			</div>
 		);
 	}
 });

@@ -138,9 +138,9 @@ var DatasetSelect = React.createClass({
 		var {disable, datasets, makeLabel, value} = this.props,
 			{activeGroup, groups} = this.state,
 			chosenValue = datasets && datasets[value],
-			label = makeLabel(chosenValue && chosenValue.label,
-				chosenValue ? 'Chosen dataset:' : `Choose a ${this.name}`),
-			content = disable ? null :
+			label = chosenValue && (aliases[chosenValue.dataSubType] || chosenValue.label),
+			labelEl = makeLabel(label, chosenValue ? 'Chosen dataset:' : `Choose a ${this.name}`),
+			contentEl = disable ? null :
 				<Accordion activeKey={activeGroup} className='form-group' onSelect={this.onSetGroup}>
 					{_.map(groups, (groupMeta) =>
 						makeGroup(groupMeta, activeGroup, this.onSelectDs, value))
@@ -148,9 +148,9 @@ var DatasetSelect = React.createClass({
 				</Accordion>;
 		return (
 			<div>
-				{label}
+				{labelEl}
 				{disable ? <hr /> : null}
-				{content}
+				{contentEl}
 			</div>
 		);
 	}
