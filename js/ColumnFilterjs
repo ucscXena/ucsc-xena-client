@@ -61,7 +61,7 @@ var ColumnEdit = React.createClass({
 				<Modal.Body>
 					<form className='form-horizontal'>
 						<div className='form-group'>
-							<label className='col-md-2 control-label'>Dataset:</label>
+							<label className='col-md-2 control-label'>Dataset</label>
 							<div className='col-md-10'>
 								<DatasetSelect
 									value={dataset}

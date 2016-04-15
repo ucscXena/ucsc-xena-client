@@ -64,13 +64,22 @@ path.outline {
 	vertical-align: middle;
 }
 
-.kmDialog .graph {
+.kmDialog .controls {
 	float: left;
 }
 
 .kmDialog .definitions {
 	float: right;
 	font-size: small;
+}
+
+.kmDialog .definitions .p-value-warning {
+	color: #FE9A2E;
+	font-size: medium;
+}
+
+.kmDialog .graph {
+	text-align: center;
 }
 
 /*.kmdiv {*/

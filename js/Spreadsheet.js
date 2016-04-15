@@ -4,11 +4,7 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Col = require('react-bootstrap/lib/Col');
-var Row = require('react-bootstrap/lib/Row');
-var Button = require('react-bootstrap/lib/Button');
-var Popover = require('react-bootstrap/lib/Popover');
-var ColumnEdit = require('./ColumnEdit');
+var {Button, Col, Popover, Row} = require('react-bootstrap/lib');
 var Sortable = require('./Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
@@ -135,16 +131,10 @@ var Columns = React.createClass({
 		this.setState({openVizSettings: id});
 	},
 	render: function () {
-		var {callback, fieldFormat, disableKM, supportsGeneAverage, appState} = this.props;
+		var {callback, fieldFormat, supportsGeneAverage, appState} = this.props;
 		// XXX maybe rename index -> indexes?
-		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
-		var {openColumnEdit, openVizSettings} = this.state;
-		var height = zoom.height;
-		var editor = openColumnEdit ?
-			<ColumnEdit
-				{...this.props}
-				onHide={() => this.setState({openColumnEdit: false})}
-			/> : null;
+		var {data, index, zoom, columns, columnOrder, samples} = appState;
+		var {openVizSettings} = this.state;
 		// XXX parameterize settings on column type
 		var settings = openVizSettings ?
 			<VizSettings
@@ -165,7 +155,6 @@ var Columns = React.createClass({
 			zoom,
 			callback,
 			fieldFormat,
-			disableKM,
 			supportsGeneAverage,
 			tooltip: this.ev.tooltip,
 			onViz: this.onViz,
@@ -178,19 +167,6 @@ var Columns = React.createClass({
 				<Sortable onClick={this.ev.click} setOrder={this.setOrder}>
 					{columnViews}
 				</Sortable>
-				<div
-					style={{height: height}}
-					className='addColumn Column'>
-
-					{cohort &&
-						<Button
-							onClick={() => this.setState({openColumnEdit: true})}
-							className='Column-add-button'
-							title='Add a column'>
-							+
-						</Button>}
-				</div>
-				{editor}
 				{settings}
 				<Crosshair {...this.state.crosshair} dims={this.state.dims}/>
 				<Tooltip {...this.state.tooltip}/>

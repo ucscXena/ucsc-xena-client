@@ -29,10 +29,9 @@ var DatasetSelect = React.createClass({
 	render: function () {
 		var {datasets, nullOpt, ...other} = this.props,
 			options = (nullOpt ? [{value: null, label: nullOpt}] : [])
-				.concat(optsFromDatasets(_.groupBy(datasets, 'dataSubType')))
-
+				.concat(optsFromDatasets(_.groupBy(datasets, 'dataSubType')));
 		return (
-			<Select {...other}  options={options} />
+			<Select {...other} options={options} charLimit={33}/>
 		);
 	}
 });

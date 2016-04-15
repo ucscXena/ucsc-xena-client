@@ -21,6 +21,19 @@ var stopPropagation = ev => {
 	ev.nativeEvent.stopImmediatePropagation();
 };
 
+var trimTitle = (title, preferredLength) => {
+	if (typeof title === 'string') {
+		if (preferredLength) {
+			return (title.length < preferredLength) ? title
+				: `${title.substr(0, preferredLength - 1)}..`;
+		} else {
+			return title;
+		}
+	} else {
+		return "No Value";
+	}
+};
+
 var Select = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState: function () {
@@ -58,20 +71,20 @@ var Select = React.createClass({
 		}
 	},
 	render: function () {
-		var {disable, value} = this.props,
-			title = notUndefined(value) &&
-				_.find(this.props.options, opt => opt.value === value),
-			opts = filterOpts(this.state.filter, this.props.options);
+		var {charLimit, disable = false, options, value} = this.props,
+			title = notUndefined(value) && _.findWhere(options, {value: value}),
+			opts = filterOpts(this.state.filter, options);
 		// We wrap the input in a div so DropdownButton decorates the div
 		// with event handlers, and we can disable them by using stopPropagation
 		// on the input. There's no direct way to override the event handlers
 		// installed by DropdownButton.
 		return (
 			<DropdownButton ref='dropdown'
+				bsSize="small"
 				className='Select'
 				disabled={disable}
 				onMouseUp={this.setFocus}
-				title={title && title.label || 'Select...'}>
+				title={trimTitle(title && title.label || 'Select...', charLimit)}>
 
 				{[<div key='__search'><input className='Select-input'
 					onKeyUp={this.onKeyUp}
