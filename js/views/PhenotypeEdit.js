@@ -32,12 +32,10 @@ var sortFeatures = features => _.sortBy(features, f => f.label.toLowerCase());
 var PhenotypeEdit = React.createClass({
 	name: 'View', // XXX change col-md-offset-10, etc. to react-boostrap style
 	getInitialState: function() {
-		let {allFeatures, metas} = this.props,
-			chosenDs = _.first(_.toArray(metas)).dsID,
-			chosenDsHub = JSON.parse(chosenDs).host,
+		let {allFeatures, chosenDs, datasets} = this.props,
+			dsHub = JSON.parse(chosenDs).host,
 			filteredFeatures;
-
-		if (chosenDsHub.includes(LOCAL_DOMAIN)) {
+		if (dsHub.includes(LOCAL_DOMAIN)) {
 			filteredFeatures = _.pick(allFeatures, chosenDs);
 		} else {
 			filteredFeatures = _.omit(allFeatures, (f, dsID) => {
@@ -45,28 +43,32 @@ var PhenotypeEdit = React.createClass({
 				return dsHub.includes(LOCAL_DOMAIN);
 			});
 		}
+
+		let keys = _.keys(filteredFeatures);
 		return {
+			datasets: _.pick(datasets, keys),
 			features: sortFeatures(consolidateFeatures(filteredFeatures))
 		}
 	},
 	onSelect: function(f) {
-		var {callback, metas, setEditorState} = this.props;
-		var feature = _.findWhere(this.state.features, {value: f});
-		callback(['edit-dataset', feature.dsID, metas[feature.dsID]]);
+		var {callback, setEditorState} = this.props,
+			{features, datasets} = this.state,
+			feature = _.findWhere(features, {value: f});
+		callback(['edit-dataset', feature.dsID, datasets[feature.dsID]]);
 		setEditorState({feature: feature.value, dsID: feature.dsID});
 	},
 	render: function () {
 		var {feature = {}, makeLabel} = this.props,
-			consolidatedFeatures = this.state.features,
+			{features} = this.state,
 			labelValue = _.isEmpty(feature) ? `Choose a ${this.name} :` :
 				`${this.name} chosen: `,
 			//XXX Account for 'charLimit' prop after 'NewNavigation' branch is merged into master
 			content = <Select value={feature} allowSearch={true}
-				onSelect={this.onSelect} options={consolidatedFeatures}/>,
+				onSelect={this.onSelect} options={features}/>,
 			label = makeLabel(content, labelValue);
 		return (
 			<div className='row'>
-				<div className="col-md-12">Total Features: {_.toArray(consolidatedFeatures).length}</div>
+				<div className="col-md-12">Total Features: {_.toArray(features).length}</div>
 				<div className="col-md-12">Features for Specific Phenotype: {_.toArray(this.props.features).length}</div>
 				{label}
 			</div>
