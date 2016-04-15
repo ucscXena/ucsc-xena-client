@@ -199,8 +199,9 @@ var ColumnEdit = React.createClass({
 		var {callback, appState: {datasets}} = this.props,
 			metas = _.pick(datasets, dsIDs);
 		this.setChoice('dataset', dsIDs);
-		if (metas.length === 1) {
-			callback(['edit-dataset', _.first(dsIDs), metas[0]]);
+		if (_.toArray(metas).length === 1) {
+			let dsID = _.first(dsIDs);
+			callback(['edit-dataset', dsID, metas[dsID]]);
 		}
 	},
 	onBack: function() {
@@ -238,15 +239,6 @@ var ColumnEdit = React.createClass({
 			this.setState(newState);
 		}
 	},
-	//pickEditor: function(metas, chosenDs) {
-	//	/*	1. Get 1st element of metas array
-	//	 2. Check 'type' parameter of individual meta
-	//	 3. Find matching type within 'editors' object above
-	//	 4. Use found editor
-	//	 */
-	//	let dsMeta = metas && metas[chosenDs]; // only 1 entry when dataset sub type is NOT 'phenotype'
-	//	return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
-	//},
 	setChoice: function(section, newValue) {
 		let newState = _.assocIn(this.state, ['choices', section], newValue);
 		this.setState(newState);

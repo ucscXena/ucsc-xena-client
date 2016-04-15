@@ -40,7 +40,7 @@ var GeneProbeEdit = React.createClass({
 		var help = doGenes ? 'e.g. TP53 or TP53, PTEN' :
 			// babel-eslint/issues/31
 			examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : ''; //eslint-disable-line comma-spacing
-		var optionSection = null;
+		var optionEl = null;
 
 		if (hasGenes) {
 			let content =
@@ -54,7 +54,7 @@ var GeneProbeEdit = React.createClass({
 						<strong className="control-label">Identifiers</strong>
 					</Button>
 				</ButtonGroup>;
-			optionSection = makeLabel(content, 'Select Input:');
+			optionEl = makeLabel(content, 'Select Input:');
 		}
 
 		var content =
@@ -63,12 +63,12 @@ var GeneProbeEdit = React.createClass({
 					type='textarea' bsSize='large' value={list} />
 				<div className="help">{help}</div>
 			</div>;
-		var inputSection = makeLabel(content, 'Enter ' +(doGenes ? 'Gene' : 'Identifier') +'(s):');
+		var inputEl = makeLabel(content, 'Enter ' +(doGenes ? 'Gene' : 'Identifier') +'(s):');
 
 		return (
 			<div className="form-group">
-				{optionSection}
-				{inputSection}
+				{optionEl}
+				{inputEl}
 			</div>
 	   );
 	}
