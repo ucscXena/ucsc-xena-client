@@ -19,8 +19,18 @@ var editors = {
 	'none': {Editor: () => <span></span>, valid: () => false}
 };
 
-var pickEditor = (m) => {
-	return _.get(editors, _.get(m, 'type', 'none'), geneProbeEdit);
+//var pickEditor = (m) => {
+//	return _.get(editors, _.get(m, 'type', 'none'), geneProbeEdit);
+//}
+
+var pickEditor = function(metas, chosenDs) {
+	/*	1. Get 1st element of metas array
+	 2. Check 'type' parameter of individual meta
+	 3. Find matching type within 'editors' object above
+	 4. Use found editor
+	 */
+	let dsMeta = metas && metas[chosenDs]; // only 1 entry when dataset sub type is NOT 'phenotype'
+	return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
 }
 
 function workflowIndicators(positions, defs, onHide) {
@@ -228,15 +238,15 @@ var ColumnEdit = React.createClass({
 			this.setState(newState);
 		}
 	},
-	pickEditor: function(metas, chosenDs) {
-		/*	1. Get 1st element of metas array
-		 2. Check 'type' parameter of individual meta
-		 3. Find matching type within 'editors' object above
-		 4. Use found editor
-		 */
-		let dsMeta = metas && metas[chosenDs]; // only 1 entry when dataset sub type is NOT 'phenotype'
-		return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
-	},
+	//pickEditor: function(metas, chosenDs) {
+	//	/*	1. Get 1st element of metas array
+	//	 2. Check 'type' parameter of individual meta
+	//	 3. Find matching type within 'editors' object above
+	//	 4. Use found editor
+	//	 */
+	//	let dsMeta = metas && metas[chosenDs]; // only 1 entry when dataset sub type is NOT 'phenotype'
+	//	return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
+	//},
 	setChoice: function(section, newValue) {
 		let newState = _.assocIn(this.state, ['choices', section], newValue);
 		this.setState(newState);
@@ -252,7 +262,8 @@ var ColumnEdit = React.createClass({
 			chosenDs = choices.dataset[0],
 			currentPosition = _.findKey(positions, p => p),
 			metas = !_.isEmpty(choices.dataset) && _.pick(datasets, choices.dataset),
-			{Editor, apply} = this.pickEditor(metas, chosenDs);
+			{Editor, apply} = pickEditor(metas, chosenDs);
+
 		return (
 			<Modal show={true} className='columnEdit container' enforceFocus>
 				{this.defs[currentPosition].omit ? null : workflowIndicators(positions, this.defs, onHide)}
