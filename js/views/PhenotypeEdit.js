@@ -27,7 +27,7 @@ var consolidateFeatures = featureSet => {
 	}, []);
 };
 const LOCAL_DOMAIN = 'local.xena.ucsc.edu';
-var sortFeatures = features => _.sortBy(features, f => f.label.toLowerCase());
+var sortFeatures = features => _.sortBy(features, f => f.label.toUpperCase());
 // Select a phenotype feature from those on the server.
 var PhenotypeEdit = React.createClass({
 	name: 'View', // XXX change col-md-offset-10, etc. to react-boostrap style
