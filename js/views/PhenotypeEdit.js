@@ -32,29 +32,18 @@ var sortFeatures = features => _.sortBy(features, f => f.label.toLowerCase());
 var PhenotypeEdit = React.createClass({
 	name: 'View', // XXX change col-md-offset-10, etc. to react-boostrap style
 	getInitialState: function() {
-		let {allFeatures, chosenDs, datasets} = this.props,
+		var {allFeatures, chosenDs, metas} = this.props,
 			dsHub = JSON.parse(chosenDs).host,
-			filteredFeatures;
-		if (dsHub.includes(LOCAL_DOMAIN)) {
-			filteredFeatures = _.pick(allFeatures, chosenDs);
-		} else {
-			filteredFeatures = _.omit(allFeatures, (f, dsID) => {
-				let dsHub = JSON.parse(dsID).host;
-				return dsHub.includes(LOCAL_DOMAIN);
-			});
-		}
-
-		let keys = _.keys(filteredFeatures);
+			filteredFeatures = _.pick(allFeatures, dsHub.includes(LOCAL_DOMAIN) ? chosenDs : _.keys(metas));
 		return {
-			datasets: _.pick(datasets, keys),
 			features: sortFeatures(consolidateFeatures(filteredFeatures))
 		}
 	},
 	onSelect: function(f) {
-		var {callback, setEditorState} = this.props,
-			{features, datasets} = this.state,
+		var {callback, metas, setEditorState} = this.props,
+			{features} = this.state,
 			feature = _.findWhere(features, {value: f});
-		callback(['edit-dataset', feature.dsID, datasets[feature.dsID]]);
+		callback(['edit-dataset', feature.dsID, metas[feature.dsID]]);
 		setEditorState({feature: feature.value, dsID: feature.dsID});
 	},
 	render: function () {
