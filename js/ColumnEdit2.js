@@ -172,12 +172,13 @@ var ColumnEdit = React.createClass({
 	addColumn: function (settings) {
 		let {callback, appState} = this.props,
 			dsIDs = this.state.choices.dataset,
-			ds = appState.datasets[dsIDs[0]];
+			dsID = _.has(settings, 'dsID') ? settings.dsID : dsIDs[0],
+			ds = appState.datasets[dsID];
 		settings = _.assoc(settings,
 			'width', 200, // XXX move this default setting?
 			'columnLabel', {user: ds.label, default: ds.label},
 			'assembly', ds.assembly,
-			'dsID', ds.dsID);
+			'dsID', dsID);
 		this.props.onHide();
 		callback(['add-column', uuid(), settings]);
 	},
