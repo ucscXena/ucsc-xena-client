@@ -2,19 +2,34 @@
 'use strict';
 var React = require('react');
 var Grid = require('react-bootstrap/lib/Grid');
-var Row = require('react-bootstrap/lib/Row');
-var Col = require('react-bootstrap/lib/Col');
+var ColumnAdd = require('./ColumnEdit');
+var ColumnFilter = require('./ColumnFilter');
 var Spreadsheet = require('./Spreadsheet');
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
 var kmModel = require('./models/km');
 var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
-//var Perf = require('react/addons').addons.Perf;
 
 var views = {
-	heatmap: Spreadsheet,
-	chart: ChartView
+	heatmap: {
+		module: Spreadsheet,
+		name: 'Visual Spreadsheet',
+		events: null
+	},
+	chart: {
+		module: ChartView,
+		name: 'Chart Analysis',
+		events: null
+	},
+	kmPlot: {
+		module: KmPlot,
+		name: 'KM Plot',
+		events: {
+			open: 'km-open',
+			close: 'km-close'
+		}
+	}
 };
 
 // This seems odd. Surely there's a better test?
@@ -37,6 +52,11 @@ function disableKM(column, features, km) {
 	return [false, ''];
 }
 
+function getKmColumns(state) {
+	var {columns, features, km} = state;
+	return _.omit(columns, col => disableKM(col, features, km)[0]);
+}
+
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
 		label = _.getIn(columns, [uuid, 'fieldLabel', 'default']),
@@ -55,19 +75,20 @@ function supportsGeneAverage({dataType, fields: {length}}) {
 }
 
 var Application = React.createClass({
-//	onPerf: function () {
-//		this.perf = !this.perf;
-//		if (this.perf) {
-//			console.log("Starting perf");
-//			Perf.start();
-//		} else {
-//			console.log("Stopping perf");
-//			Perf.stop();
-//			Perf.printInclusive();
-//			Perf.printExclusive();
-//			Perf.printWasted();
-//		}
-//	},
+	getInitialState: function() {
+		return ({
+			column: {
+				add: false,
+				filter: false
+			},
+			kmColumns: getKmColumns(this.props.state)
+		});
+	},
+	componentWillReceiveProps: function(newProps) {
+		if (!_.isEqual(newProps.state.columns, this.props.state.columns)){
+			this.setState({kmColumns: getKmColumns(newProps.state)});
+		}
+	},
 	fieldFormat: function (uuid) {
 		var {columns, data} = this.props.state;
 		return getFieldFormat(uuid, columns, data);
@@ -76,34 +97,48 @@ var Application = React.createClass({
 		var {columns} = this.props.state;
 		return supportsGeneAverage(_.get(columns, uuid));
 	},
-	disableKM: function (uuid) {
-		var {columns, features, km} = this.props.state;
-		return disableKM(_.get(columns, uuid), features, km);
+	onColumnAction: function(context, status) {
+		this.setState(_.assocIn(this.state, ['column', context], status));
 	},
 	render: function() {
-		let {state, selector, ...otherProps} = this.props,
+		/*
+			1. Find list of columns that are qualified to allow Km Plot
+			2. Send filtered list down to both KmPlot and AppControls
+		 */
+		var {callback, state, selector} = this.props,
 			computedState = selector(state),
-			{mode} = computedState,
-			View = views[mode];
+			{features, km, mode} = computedState,
+			activeMode = _.get(km, 'id') ? 'kmPlot' : mode,
+			{kmColumns, column: {add, filter}} = this.state,
+			viewMeta = views[activeMode],
+			View = viewMeta.module;
 
 		return (
 			<Grid onClick={this.onClick}>
-			{/*
-				<Row>
-					<Button onClick={this.onPerf}>Perf</Button>
-				</Row>
-			*/}
-				<Row>
-					<Col md={12}>
-						<AppControls {...otherProps} appState={computedState} />
-					</Col>
-				</Row>
-				<View {...otherProps} fieldFormat={this.fieldFormat} supportsGeneAverage={this.supportsGeneAverage} disableKM={this.disableKM} appState={computedState} />
-				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
-						callback={this.props.callback}
-						km={computedState.km}
-						features={computedState.features} /> : null}
+				<AppControls appState={computedState} activeMode={activeMode}
+					kmColumns={kmColumns} onAction={(context) => this.onColumnAction(context, true)}
+					callback={callback} modes={_.mapObject(views, v => _.omit(v, 'module'))}/>
+				<hr />
+				{add ?
+					<ColumnAdd appState={computedState} callback={callback}
+						onHide={() => this.onColumnAction('add', false)}/>
+					: null
+				}
+				{filter ?
+					<ColumnFilter appState={computedState} callback={callback}
+						   onHide={() => this.onColumnAction('filter', false)}/>
+					: null
+				}
+				{(viewMeta.name === 'KM Plot')
+					? <View activeKm={km} kmColumns={kmColumns}
+						callback={callback} features={features}/>
+					: <View appState={computedState}
+						supportsGeneAverage={this.supportsGeneAverage}
+						callback={callback} fieldFormat={this.fieldFormat}/>}
 				<div className='chartRoot' style={{display: 'none'}} />
+				<div className="form-group text-right">
+					<a href="#">I wish I could...</a>
+				</div>
 			</Grid>
 		);
 	}

@@ -63,6 +63,7 @@ var setCohort = (state, cohort) =>
 				"columnOrder", [],
 				"data", {},
 				"datasets", null,
+				"mode", 'heatmap',
 				"survival", null,
 				"km", null));
 

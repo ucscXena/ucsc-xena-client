@@ -194,16 +194,15 @@ var HeatmapColumn = hotOrNot(React.createClass({
 
 		// Compute tooltip events from mouse events.
 		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
-			.selectMany(() => {
-				return this.ev.mousemove
-					.takeUntil(this.ev.mouseout)
-					.map(ev => ({
-						data: this.tooltip(ev),
-						open: true,
-						point: {x: ev.clientX, y: ev.clientY}
-					})) // look up current data
-					.concat(Rx.Observable.return({open: false}));
-			}).subscribe(this.props.tooltip);
+			.selectMany(() => this.ev.mousemove
+				.takeUntil(this.ev.mouseout)
+				.map(ev => ({
+					data: this.tooltip(ev),
+					open: true,
+					point: {x: ev.clientX, y: ev.clientY}
+				})) // look up current data
+				.concat(Rx.Observable.return({open: false}))
+			).subscribe(this.props.tooltip);
 	},
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
@@ -221,7 +220,8 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
 	render: function () {
-		var {samples, data, column, zoom, disableKM, supportsGeneAverage, id} = this.props,
+		var {callback, data, column, id, onClick, onViz, samples, supportsGeneAverage, zoom} = this.props,
+			{mousemove, mouseout, mouseover} = this.ev,
 			{fields, heatmap, colors, legend} = column,
 			codes = _.get(data, 'codes'),
 			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
@@ -229,10 +229,9 @@ var HeatmapColumn = hotOrNot(React.createClass({
 
 		return (
 			<Column
-				callback={this.props.callback}
-				id={this.props.id}
-				onViz={this.props.onViz}
-				disableKM={disableKM}
+				callback={callback}
+				id={id}
+				onViz={onViz}
 				download={download}
 				column={column}
 				zoom={zoom}
@@ -242,10 +241,10 @@ var HeatmapColumn = hotOrNot(React.createClass({
 						draw={drawHeatmap}
 						wrapperProps={{
 							className: 'Tooltip-target',
-							onMouseMove: this.ev.mousemove,
-							onMouseOut: this.ev.mouseout,
-							onMouseOver: this.ev.mouseover,
-							onClick: this.props.onClick
+							onMouseMove: mousemove,
+							onMouseOut: mouseout,
+							onMouseOver: mouseover,
+							onClick: onClick
 						}}
 						codes={_.get(codes, column.fields[0])}
 						width={_.get(column, 'width')}
