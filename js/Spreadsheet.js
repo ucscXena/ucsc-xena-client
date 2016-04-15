@@ -70,6 +70,8 @@ var zoomInClick = ev =>
 var zoomOutClick = ev =>
 	!ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
+var domNode;
+
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
 	mixins: [rxEventsMixin],
@@ -85,33 +87,40 @@ var Columns = React.createClass({
 			}
 		});
 
-		var toggle = this.ev.click.filter(ev => ev[meta.key])
-			.map(() => 'toggle');
+		var toggle = this.ev.click.filter(ev => {
+			ev.stopPropagation();
+			return ev[meta.key];
+		}).map(() => 'toggle');
 
 		this.tooltip = this.ev.tooltip.merge(toggle)
-			// If open + user clicks, toggle freeze of display.
-			.scan([null, false],
-				([tt, frozen], ev) =>
-					ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen])
+			.scan([null, false], ([tt], ev) =>
+				(ev === 'toggle') ? [tt, tt.open && !this.state.frozen] : [ev, this.state.frozen])
 			// Filter frozen events until frozen state changes.
 			.distinctUntilChanged(([ev, frozen]) => frozen ? frozen : [ev, frozen])
-			.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))
-			.subscribe(ev => {
-				// Keep 'frozen' and 'open' params for both crosshair && tooltip
+			.subscribe(([ev, frozen]) => {
+				/* `this.state.frozen` is the CURRENT frozen status
+				 	`ev.frozen` represents the TO-BE frozen status
+				*/
+				if (!this.state.frozen && frozen) {
+					this.adjustFrozen({frozen: frozen});
+				}
 				let plotVisuals = {
 					crosshair: _.omit(ev, 'data'), // remove tooltip-related param
-					tooltip: _.omit(ev, 'point' ) // remove crosshair-related param
+					tooltip: _.omit(ev, 'point') // remove crosshair-related param
 				};
 
-				return this.setState(plotVisuals);
+				this.setState(plotVisuals);
 			});
 	},
 	componentDidMount: function() {
 		this.setDOMDims(ReactDOM.findDOMNode(this));
+		domNode = document.querySelector('body');
+		domNode.addEventListener('click', this.dispatchUnFreeze, true);
 	},
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
 		// XXX are there other streams we're leaking? What listens on this.ev.click, etc?
 		this.tooltip.dispose();
+		domNode.removeEventListener('click', this.dispatchUnFreeze, true);
 	},
 	getInitialState: function () {
 		return {
@@ -120,6 +129,7 @@ var Columns = React.createClass({
 				clientWidth: 0
 			},
 			crosshair: {open: false},
+			frozen: false,
 			tooltip: {open: false},
 			openVizSettings: null
 		};
@@ -134,11 +144,29 @@ var Columns = React.createClass({
 	onViz: function (id) {
 		this.setState({openVizSettings: id});
 	},
+	dispatchUnFreeze: function(e) {
+		if (e[meta.key] && this.state.frozen) {
+			this.adjustFrozen({frozen: false});
+		}
+	},
+	adjustFrozen: function(newState) {
+		// 1. Set frozen status to opposite of current state.frozen value
+		if (!newState.frozen) {
+			newState = _.extend(_.mapObject(this.state, param => {
+				let action = 'open';
+				if (_.has(param, action)) {
+					param[action] = newState.frozen;
+				}
+				return param;
+			}), newState);
+		}
+		this.setState(newState);
+	},
 	render: function () {
 		var {callback, fieldFormat, disableKM, supportsGeneAverage, appState} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
-		var {openColumnEdit, openVizSettings} = this.state;
+		var {openColumnEdit, openVizSettings, frozen, dims} = this.state;
 		var height = zoom.height;
 		var editor = openColumnEdit ?
 			<ColumnEdit
@@ -174,7 +202,7 @@ var Columns = React.createClass({
 		}));
 
 		return (
-			<div className="Columns">
+			<div className="Columns" ref="columns">
 				<Sortable onClick={this.ev.click} setOrder={this.setOrder}>
 					{columnViews}
 				</Sortable>
@@ -192,8 +220,8 @@ var Columns = React.createClass({
 				</div>
 				{editor}
 				{settings}
-				<Crosshair {...this.state.crosshair} dims={this.state.dims}/>
-				<Tooltip {...this.state.tooltip}/>
+				<Crosshair {...this.state.crosshair} frozen={frozen} dims={dims}/>
+				<Tooltip {...this.state.tooltip} frozen={frozen}/>
 			</div>
 		);
 	}
