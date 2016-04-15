@@ -26,14 +26,27 @@ var consolidateFeatures = featureSet => {
 		return all.concat(strippedFeatures);
 	}, []);
 };
+const LOCAL_DOMAIN = 'local.xena.ucsc.edu';
 var sortFeatures = features => _.sortBy(features, f => f.label.toLowerCase());
-
 // Select a phenotype feature from those on the server.
 var PhenotypeEdit = React.createClass({
 	name: 'View', // XXX change col-md-offset-10, etc. to react-boostrap style
 	getInitialState: function() {
+		let {allFeatures, metas} = this.props,
+			chosenDs = _.first(_.toArray(metas)).dsID,
+			chosenDsHub = JSON.parse(chosenDs).host,
+			filteredFeatures;
+
+		if (chosenDsHub.includes(LOCAL_DOMAIN)) {
+			filteredFeatures = _.pick(allFeatures, chosenDs);
+		} else {
+			filteredFeatures = _.omit(allFeatures, (f, dsID) => {
+				let dsHub = JSON.parse(dsID).host;
+				return dsHub.includes(LOCAL_DOMAIN);
+			});
+		}
 		return {
-			features: sortFeatures(consolidateFeatures(this.props.allFeatures))
+			features: sortFeatures(consolidateFeatures(filteredFeatures))
 		}
 	},
 	onSelect: function(f) {
