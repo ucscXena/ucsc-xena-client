@@ -7,11 +7,12 @@ var _ = require('../underscore_ext');
 
 
 function apply(features, state) {
-	var {feature} = state,
+	var {feature, dsID} = state,
 		fieldTxt = _.find(features, f => f.value === feature).label;
 	return {
 		fields: [feature],
 		dataType: 'clinicalMatrix',
+		dsID: dsID,
 		fieldLabel: {user: fieldTxt, 'default': fieldTxt}
 	};
 }
@@ -20,24 +21,26 @@ var valid = state => !!state.feature;
 var stripFields = f => ({dsID: f.dsID, label: (f.longtitle || f.name), value: f.name});
 var consolidateFeatures = featureSet => {
 	return _.reduce(featureSet, (all, features, dsID) => {
-		return _.merge(all, _.mapObject(features, f =>
-			stripFields(_.extend(f, {dsID: dsID}))));
-	}, {});
+		let strippedFeatures = _.toArray(_.mapObject(features, f =>
+			_.extend(stripFields(f), {dsID: dsID})));
+		return all.concat(strippedFeatures);
+	}, []);
 };
+var sortFeatures = features => _.sortBy(features, f => f.label.toLowerCase());
 
 // Select a phenotype feature from those on the server.
 var PhenotypeEdit = React.createClass({
 	name: 'View', // XXX change col-md-offset-10, etc. to react-boostrap style
 	getInitialState: function() {
 		return {
-			features: consolidateFeatures(this.props.allFeatures)
+			features: sortFeatures(consolidateFeatures(this.props.allFeatures))
 		}
 	},
 	onSelect: function(f) {
 		var {callback, metas, setEditorState} = this.props;
-		var feature = this.state.features[f];
+		var feature = _.findWhere(this.state.features, {value: f});
 		callback(['edit-dataset', feature.dsID, metas[feature.dsID]]);
-		setEditorState({feature: feature.value});
+		setEditorState({feature: feature.value, dsID: feature.dsID});
 	},
 	render: function () {
 		var {feature = {}, makeLabel} = this.props,
