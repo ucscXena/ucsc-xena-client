@@ -134,7 +134,7 @@ var DatasetSelect = React.createClass({
 	},
 	mixins: [deepPureRenderMixin],
 	render: function () {
-		var {disable, datasets, makeLabel, onSelect, value} = this.props,
+		var {disable, datasets, makeLabel, value} = this.props,
 			{activeGroup, groups} = this.state,
 			chosenValue = datasets && datasets[value],
 			label = makeLabel(chosenValue && chosenValue.label,
