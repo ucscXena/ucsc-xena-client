@@ -122,8 +122,9 @@ var DatasetSelect = React.createClass({
 		}
 	},
 	onSelectDs: function(dsIDs, groupName) {
-		if (aliases[groupName])
+		if (aliases[groupName]) {
 			this.onSetGroup(groupName);
+		}
 		this.props.onSelect(dsIDs);
 	},
 	onSetGroup: function(newGroupName) {

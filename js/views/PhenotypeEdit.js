@@ -42,6 +42,7 @@ var PhenotypeEdit = React.createClass({
 	render: function () {
 		var {feature = {}, makeLabel} = this.props,
 			labelValue = _.isEmpty(feature) ? `Choose a ${this.name}:` : `${this.name} chosen:`,
+			//XXX Account for 'charLimit' prop after 'NewNavigation' branch is merged into master
 			content = <Select value={feature} allowSearch={true}
 				onSelect={this.onSelect} options={this.state.features}/>,
 			label = makeLabel(content, labelValue);
