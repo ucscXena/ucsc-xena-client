@@ -259,7 +259,7 @@ var ColumnEdit = React.createClass({
 		var {choices, positions} = this.state,
 			{appState: {cohorts, columnEdit, datasets, features, servers}, callback, onHide} = this.props,
 			dsFeatures = _.getIn(columnEdit, ['features']),
-			chosenDs = choices.dataset[0],
+			chosenDs = choices && choices.dataset[0],
 			currentPosition = _.findKey(positions, p => p),
 			metas = !_.isEmpty(choices.dataset) && _.pick(datasets, choices.dataset),
 			{Editor, apply} = pickEditor(metas, chosenDs);
@@ -272,7 +272,7 @@ var ColumnEdit = React.createClass({
 					<CohortSelect onSelect={this.onCohortSelect} cohorts={cohorts}
 						cohort={choices.cohort} makeLabel={makeLabel}/> : null}
 
-					{positions['dataset'] || choices['dataset'] ?
+					{positions['dataset'] || !_.isEmpty(choices['dataset']) ?
 					<DatasetSelect datasets={datasets} makeLabel={makeLabel}
 						disable={chosenDs && !positions['dataset']}
 						event='dataset' value={chosenDs || null} onSelect={this.onDatasetSelect}
@@ -280,8 +280,8 @@ var ColumnEdit = React.createClass({
 
 					{positions['editor'] && Editor ?
 					<Editor {...columnEdit} allFeatures={features} callback={callback}
-						{...(this.state.choices['editor'] || {})} metas={metas}
-						hasGenes={chosenDs && !!metas[chosenDs].probeMap}
+						{...(this.state.choices['editor'] || {})} chosenDs={chosenDs}
+						datasets={datasets} hasGenes={chosenDs && !!metas[chosenDs].probeMap}
 						makeLabel={makeLabel} setEditorState={this.onSetEditor}/> : null}
 
 					<br />
