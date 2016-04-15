@@ -52,7 +52,7 @@ function makeDs(ds, showPosition, countdown, onSelect, setValue) {
 	var {label, value} = ds,
 		position = showPosition ? countdown[label] : 0;
 	return (
-		<ListGroupItem key={label +position} onClick={() => onSelect(value)}
+		<ListGroupItem key={label +position} onClick={() => onSelect([value])}
 			eventKey={value} href='#' bsStyle={getStyleSuffix(value === setValue)}>
 			{label +(position > 0 ? ` (#${position})` : '')}
 		</ListGroupItem>
@@ -72,9 +72,11 @@ function makeGroup(groupMeta, activeGroupName, onSelect, setValue) {
 				</span>
 			</div>;
 	if (groupAlias) {
+		let defaultValue = options[0] && options[0].value;
 		return (
-			<div key={name} className={`panel panel-${getStyleSuffix(options[0].value === setValue)}`}>
-				<div className='panel-heading' onClick={() => onSelect(options[0].value)}>
+			<div key={name} className={`panel panel-${getStyleSuffix(setValue === defaultValue)}`}>
+				<div className='panel-heading'
+					onClick={() => onSelect(_.pluck(options, 'value'), name)}>
 					<h3 className="panel-title"><strong>{groupAlias}</strong></h3>
 				</div>
 			</div>
@@ -119,6 +121,11 @@ var DatasetSelect = React.createClass({
 			});
 		}
 	},
+	onSelectDs: function(dsIDs, groupName) {
+		if (aliases[groupName])
+			this.onSetGroup(groupName);
+		this.props.onSelect(dsIDs);
+	},
 	onSetGroup: function(newGroupName) {
 		// 'activeGroup' is referenced by React Bootrap's Accordion panels as a way
 		// to determine whether a group should be expanded.
@@ -135,7 +142,7 @@ var DatasetSelect = React.createClass({
 			content = disable ? null :
 				<Accordion activeKey={activeGroup} className='form-group' onSelect={this.onSetGroup}>
 					{_.map(groups, (groupMeta) =>
-						makeGroup(groupMeta, activeGroup, onSelect, value))
+						makeGroup(groupMeta, activeGroup, this.onSelectDs, value))
 					}
 				</Accordion>;
 		return (

@@ -159,7 +159,7 @@ var ColumnEdit = React.createClass({
 		return {
 			choices: {
 				cohort: cohort,
-				dataset: null,
+				dataset: [],
 				editor: null
 			},
 			positions: {
@@ -186,12 +186,15 @@ var ColumnEdit = React.createClass({
 	onCohortSelect: function(value) {
 		this.setChoice('cohort', value);
 	},
-	onDatasetSelect: function (dsID) {
+	onDatasetSelect: function (dsIDs) {
 		var {callback, appState: {datasets}} = this.props,
-			meta = _.get(datasets, dsID);
+			metas = _.pick(datasets, dsIDs);
 
-		this.setChoice('dataset', dsID);
-		callback(['edit-dataset', dsID, meta]);
+		this.setChoice('dataset', dsIDs);
+		if (metas.length === 1) {
+			let dsID = _.first(dsIDs);
+			callback(['edit-dataset', dsID, metas[0]]);
+		}
 	},
 	onBack: function() {
 		let {positions} = this.state,
@@ -228,6 +231,15 @@ var ColumnEdit = React.createClass({
 			this.setState(newState);
 		}
 	},
+	pickEditor: function(metas) {
+		/*	1. Get 1st element of metas array
+		 2. Check 'type' parameter of individual meta
+		 3. Find matching type within 'editors' object above
+		 4. Use found editor
+		 */
+		let dsMeta = _.first(metas); // only 1 entry when dataset sub type is NOT 'phenotype'
+		return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
+	},
 	setChoice: function(section, newValue) {
 		let newState = _.assocIn(this.state, ['choices', section], newValue);
 		this.setState(newState);
@@ -238,38 +250,41 @@ var ColumnEdit = React.createClass({
 	},
 	render: function () {
 		var {choices, positions} = this.state,
-			{appState: {cohorts, columnEdit, datasets, servers}, onHide} = this.props,
-			features = _.getIn(columnEdit, ['features']),
-			meta = choices.dataset && _.get(datasets, choices.dataset);
-		var {Editor, apply} = positions['editor'] && pickEditor(meta),
-			currentPosition = _.findKey(positions, p => p);
+			{appState: {cohorts, columnEdit, datasets, servers}, features, onHide} = this.props,
+			dsFeatures = _.getIn(columnEdit, ['features']),
+			chosenDs = choices.dataset[0],
+			currentPosition = _.findKey(positions, p => p),
+			metas = !_.isEmpty(choices.dataset) && _.pick(datasets, choices.dataset),
+			{Editor, apply} = this.pickEditor(metas);
 		return (
 			<Modal show={true} className='columnEdit container' enforceFocus>
 				{this.defs[currentPosition].omit ? null : workflowIndicators(positions, this.defs, onHide)}
 				<Modal.Body>
 					{positions['cohort'] ?
-						<CohortSelect onSelect={this.onCohortSelect} cohorts={cohorts}
-									  cohort={choices.cohort} makeLabel={makeLabel}>
-						</CohortSelect> : null
-					}
+					<CohortSelect onSelect={this.onCohortSelect} cohorts={cohorts}
+						cohort={choices.cohort} makeLabel={makeLabel}/> : null}
+
 					{positions['dataset'] || choices['dataset'] ?
-						<DatasetSelect datasets={datasets} makeLabel={makeLabel}
-							event='dataset' value={choices.dataset}
-							disable={!_.isEmpty(choices.dataset) && !positions['dataset']}
-							onSelect={this.onDatasetSelect} servers={_.uniq(_.reduce(servers, (all, list) =>
-								all.concat(list), []))}>
-						</DatasetSelect> : null
-					}
-					{Editor ? <Editor {...columnEdit} setEditorState={this.onSetEditor}
-						{...(choices['editor'] || {})} makeLabel={makeLabel}
-													  hasGenes={meta && !!meta.probeMap}/> : null}
+					<DatasetSelect datasets={datasets} makeLabel={makeLabel}
+						disable={!chosenDs && !positions['dataset']}
+						event='dataset' value={chosenDs || null} onSelect={this.onDatasetSelect}
+						servers={_.uniq(_.reduce(servers, (all, list) => all.concat(list), []))}/> : null}
+
+					{positions['editor'] && Editor ?
+					<Editor {...columnEdit} features={features}
+						{...(this.state.choices['editor'] || {})}
+						hasGenes={metas.length === 1 && !!dsMeta.probeMap}
+						makeLabel={makeLabel} setEditorState={this.onSetEditor}/> : null}
+
 					<br />
 				</Modal.Body>
 				<div className="form-group selection-footer">
 					<span className="col-md-6 col-md-offset-3 text-center">
-						<NavButtons {...this.state} btnSize='small' onBack={this.onBack}
-													onCancel={onHide} defs={this.defs} onForward={!Editor ? this.onForward
-						: () => this.addColumn(apply(features, choices['editor']))}/>
+						<NavButtons {...this.state} btnSize='small'
+							onBack={this.onBack} onCancel={onHide} defs={this.defs}
+							onForward={positions['editor']
+								? () => this.addColumn(apply(dsFeatures, choices['editor']))
+								: this.onForward}/>
 					</span>
 					<span className="col-md-3 text-right">
 						<a href="#">I wish I could...</a>
