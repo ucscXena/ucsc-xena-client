@@ -34,16 +34,15 @@ var AppControls = React.createClass({
 		pdf(this.props.appState);
 	},
 	onSamplesSelect: function (value) {
-			this.props.callback(['samplesFrom', value]);
+		this.props.callback(['samplesFrom', value]);
 	},
 	onCohortSelect: function (value) {
-			this.props.callback(['cohort', value]);
+		this.props.callback(['cohort', value]);
 	},
 	render: function () {
-		var {appState: {cohort, cohorts, samplesFrom, datasets, mode}} = this.props,
+		var {appState: {cohort, cohorts, datasets, mode, samplesFrom}} = this.props,
 			hasCohort = !!cohort,
 			disableMenus = (mode === modeEvent.heatmap);
-
 		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>
 		return (
 			<form className='form-inline'>
@@ -52,7 +51,8 @@ var AppControls = React.createClass({
 						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
 					</Button>
 				</OverlayTrigger>
-				<CohortSelect onSelect={this.onCohortSelect} cohort={cohort} cohorts={cohorts} disable={disableMenus}/>
+				<CohortSelect cohort={cohort} cohorts={cohorts}
+					  disable={disableMenus} onSelect={this.onCohortSelect}/>
 				{' '}
 				{hasCohort ?
 					<div className='form-group' style={this.props.style}>
@@ -69,7 +69,7 @@ var AppControls = React.createClass({
 							disable={disableMenus}
 							value={samplesFrom} />
 					</div> :
-				null}
+					null}
 				{' | '}
 				<Button onClick={this.onMode} className='chartSelect' bsStyle='primary'>{modeButton[mode]}</Button>
 				{' | '}

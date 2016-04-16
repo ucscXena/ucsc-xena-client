@@ -19,22 +19,19 @@ var valid = state => !!trim(state.gene);
 
 // Select a gene.
 var GeneEdit = React.createClass({
+	name: 'Gene',
 	render: function () {
-		var {gene, setEditorState} = this.props;
-		return (
+		var {gene, makeLabel, setEditorState} = this.props;
+		//let header = gene ? makeHeader(`Entered ${this.name}: ${gene}`, true)
+		//	: makeHeader(`Input a ${this.name}`, false);
+		var content =
 			<div>
-				<div className='form-group'>
-					<label className='col-md-2 control-label'>Gene:</label>
-					<div className='col-md-4'>
-						<Input value={gene}
-							onChange={ev => setEditorState({gene: ev.target.value})}
-							type='text'/>
-					</div>
-				</div>
-				<div className='form-group'>
-					<p className='col-md-offset-2'>e.g. TP53</p>
-				</div>
-			</div>
+				<Input type='textarea' bsSize="large" value={gene}
+					   onChange={ev => setEditorState({gene: ev.target.value})}/>
+				<div className="help">e.g. TP53</div>
+			</div>;
+		return (
+			<div className="form-group">{makeLabel(content, `Enter ${this.name}(s):`)}</div>
 		);
 	}
 });

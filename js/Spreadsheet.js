@@ -8,7 +8,7 @@ var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
 var Popover = require('react-bootstrap/lib/Popover');
-var ColumnEdit = require('./ColumnEdit');
+var ColumnEdit = require('./ColumnEdit2');
 var Sortable = require('./Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
@@ -31,9 +31,8 @@ var YAxisLabel = React.createClass({
 			fraction = count === length ? '' :
 				// babel-eslint/issues/31
 				`, showing ${ index } - ${ index + count - 1 }`, // eslint-disable-line comma-spacing
-			 text = `Samples (N=${ length }) ${ fraction }`;
-
-	return (
+			text = `Samples (N=${ length }) ${ fraction }`;
+		return (
 			<div style={{height: height}} className="YAxisWrapper">
 				<p style={{width: height}} className="YAxisLabel">{text}</p>
 			</div>
@@ -65,10 +64,10 @@ function targetPos(ev) {
 }
 
 var zoomInClick = ev =>
-	!ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
+!ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
 
 var zoomOutClick = ev =>
-	!ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
+!ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
@@ -111,6 +110,7 @@ var Columns = React.createClass({
 	},
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
 		// XXX are there other streams we're leaking? What listens on this.ev.click, etc?
+		console.log("Unmounting...");
 		this.tooltip.dispose();
 	},
 	getInitialState: function () {
@@ -120,12 +120,17 @@ var Columns = React.createClass({
 				clientWidth: 0
 			},
 			crosshair: {open: false},
+			openColumnEdit: this.props.appState.cohort ? false : true,
 			tooltip: {open: false},
 			openVizSettings: null
 		};
 	},
+	componentWillReceiveProps: function(newProps) {
+		if (!this.state.openColumnEdit && !newProps.appState.cohort)
+			this.setState({openColumnEdit: true});
+	},
 	setDOMDims: function(domNode) {
-		let nodeKeys = _.keys(this.state.dims);
+		var nodeKeys = _.keys(this.state.dims);
 		this.setState({ dims: _.pick(domNode, nodeKeys) });
 	},
 	setOrder: function (order) {
@@ -183,12 +188,12 @@ var Columns = React.createClass({
 					className='addColumn Column'>
 
 					{cohort &&
-						<Button
-							onClick={() => this.setState({openColumnEdit: true})}
-							className='Column-add-button'
-							title='Add a column'>
-							+
-						</Button>}
+					<Button
+						onClick={() => this.setState({openColumnEdit: true})}
+						className='Column-add-button'
+						title='Add a column'>
+						+
+					</Button>}
 				</div>
 				{editor}
 				{settings}
@@ -209,7 +214,6 @@ function zoomPopover(zoom, samples, props) {
 		</Popover>
 	);
 }
-
 var Spreadsheet = React.createClass({
 	zoomHelpClose: function () {
 		this.props.callback(['zoom-help-close']);
@@ -224,7 +228,6 @@ var Spreadsheet = React.createClass({
 					onClick: this.zoomHelpClose,
 					onDisableClick: this.zoomHelpDisable
 				}) : null;
-
 		return (
 			<Row>
 				<Col md={1}>
@@ -241,5 +244,4 @@ var Spreadsheet = React.createClass({
 		);
 	}
 });
-
 module.exports = Spreadsheet;
