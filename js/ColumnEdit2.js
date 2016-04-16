@@ -29,7 +29,7 @@ var pickEditor = function(metas, chosenDs) {
 	 3. Find matching type within 'editors' object above
 	 4. Use found editor
 	 */
-	let dsMeta = metas && metas[chosenDs]; // only 1 entry when dataset sub type is NOT 'phenotype'
+	let dsMeta = metas && _.get(metas, chosenDs); // only 1 entry when dataset sub type is NOT 'phenotype'
 	return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
 }
 
@@ -104,7 +104,7 @@ var NavButtons = React.createClass({
 		let btnLabel = 'Select',
 			icon = '',
 			{btnSize, choices, onForward, defs} = this.props,
-			disabled = !choices[currentSection];
+			disabled = _.isEmpty(choices[currentSection]);
 
 		if (!defs[currentSection].next) {
 			btnLabel = 'Done';
@@ -243,18 +243,22 @@ var ColumnEdit = React.createClass({
 		let newState = _.assocIn(this.state, ['choices', section], newValue);
 		this.setState(newState);
 	},
-	onSetEditor: function (newEditor) {
-		var oldEditor = this.state.choices.editor || {};
-		this.setChoice('editor', _.merge(oldEditor, newEditor));
+	onSetEditor: function (newState) {
+		var {dataset, editor} = this.state.choices,
+			{datasets} = this.props.appState,
+			dsID = _.has(newState, 'dsID') ? newState[dsID] : dataset[0],
+			hasGenes = _.get(datasets[dsID], 'probeMap'),
+			oldEditor = _.merge(editor, {hasGenes});
+		this.setChoice('editor', _.merge(oldEditor, newState));
 	},
 	render: function () {
 		var {choices, positions} = this.state,
 			{appState: {cohorts, columnEdit, datasets, features, servers}, callback, onHide} = this.props,
 			dsFeatures = _.getIn(columnEdit, ['features']),
-			chosenDs = choices.dataset && choices.dataset[0],
+			chosenDsID = choices.dataset && choices.dataset[0],
 			currentPosition = _.findKey(positions, p => p),
 			metas = !_.isEmpty(choices.dataset) && _.pick(datasets, choices.dataset),
-			{Editor, apply} = pickEditor(metas, chosenDs);
+			{Editor, apply} = pickEditor(metas, chosenDsID);
 
 		return (
 			<Modal show={true} className='columnEdit container' enforceFocus>
@@ -266,14 +270,14 @@ var ColumnEdit = React.createClass({
 
 					{positions['dataset'] || !_.isEmpty(choices['dataset']) ?
 					<DatasetSelect datasets={datasets} makeLabel={makeLabel}
-						disable={chosenDs && !positions['dataset']}
-						event='dataset' value={chosenDs || null} onSelect={this.onDatasetSelect}
+						disable={chosenDsID && !positions['dataset']}
+						event='dataset' value={chosenDsID || null} onSelect={this.onDatasetSelect}
 						servers={_.uniq(_.reduce(servers, (all, list) => all.concat(list), []))}/> : null}
 
 					{positions['editor'] && Editor ?
 					<Editor {...columnEdit} allFeatures={features} callback={callback}
-						{...(this.state.choices['editor'] || {})} chosenDs={chosenDs}
-						metas={metas} hasGenes={chosenDs && !!metas[chosenDs].probeMap}
+						{...(this.state.choices['editor'] || {})} chosenDs={chosenDsID}
+						metas={metas} hasGenes={chosenDsID && !!metas[chosenDsID].probeMap}
 						makeLabel={makeLabel} setEditorState={this.onSetEditor}/> : null}
 
 					<br />

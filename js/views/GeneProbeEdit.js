@@ -45,7 +45,7 @@ var GeneProbeEdit = React.createClass({
 		if (hasGenes) {
 			let content =
 				<ButtonGroup justified>
-					<Button href='#' active={genes}
+					<Button href='#' active={!!genes}
 						onClick={() => setEditorState({genes: true})}>
 						<strong className="control-label">Genes</strong>
 					</Button>
