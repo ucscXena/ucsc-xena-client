@@ -13,7 +13,7 @@ function pdf(column, vg, state, i) {
 		{heatmap, colors} = column;
 
 	drawHeatmap(vg, {
-		codes: _.get(codes, column.fields[0]),
+		codes,
 		width: _.getIn(column, ['width']),
 		zoom,
 		colors,
