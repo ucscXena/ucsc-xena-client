@@ -6,6 +6,7 @@ var {createSelectorCreator, defaultMemoize} = require('reselect');
 var {createFmapSelector} = require('./selectors');
 var widgets = require('./columnWidgets');
 var km = require('./models/km');
+var {lookupSample} = require('./models/sample');
 
 var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
@@ -25,16 +26,18 @@ function cmpString(s1, s2) {
 
 var sortSelector = createSelector(
 	state => state.samples,
+	state => state.cohortSamples,
 	state => _.fmap(state.columns, c => _.pick(c, 'fieldType', 'fields')),
 	state => state.columnOrder,
 	state => state.data,
 	state => state.index,
-	(samples, columns, columnOrder, data, index) => {
-		var cmpFns = _.fmap(columns,
+	(samples, cohortSamples, columns, columnOrder, data, index) => {
+		var getSampleID = lookupSample(cohortSamples),
+			cmpFns = _.fmap(columns,
 				(c, id) => widgets.cmp(columns[id], data[id], index[id])),
 			cmpFn = (s1, s2) =>
 				_.findValue(columnOrder, id => cmpFns[id](s1, s2)) ||
-					cmpString(s1, s2); // XXX add cohort as well
+					cmpString(getSampleID(s1), getSampleID(s2));
 
 		return (samples || []).slice(0).sort(cmpFn);
 	}

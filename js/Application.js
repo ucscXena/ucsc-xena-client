@@ -10,6 +10,7 @@ var KmPlot = require('./KmPlot');
 var kmModel = require('./models/km');
 var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
+var {lookupSample} = require('./models/sample');
 //var Perf = require('react/addons').addons.Perf;
 
 var views = {
@@ -52,13 +53,6 @@ function getFieldFormat(uuid, columns, data) {
 
 function supportsGeneAverage({dataType, fields: {length}}) {
 	return ['geneProbesMatrix', 'geneMatrix'].indexOf(dataType) >= 0 && length === 1;
-}
-
-function lookupSample(cohortSamples, index, cohortIndex = 0) {
-	var len = cohortSamples[cohortIndex].length;
-	return cohortIndex >= cohortSamples.length ? null :
-		(index < len ?  cohortSamples[cohortIndex][index] :
-			lookupSample(cohortSamples, index - len, cohortIndex + 1));
 }
 
 var Application = React.createClass({
