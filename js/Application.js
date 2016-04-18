@@ -24,7 +24,7 @@ function hasSurvival(survival) {
 			   _.get(survival, 'patient'));
 }
 
-// For geneProbesMatrix we will average across probes to compute KM. For
+// For geneProbes we will average across probes to compute KM. For
 // other types, we can't support multiple fields.
 function disableKM(column, features, km) {
 	var survival = kmModel.pickSurvivalVars(features, km);
