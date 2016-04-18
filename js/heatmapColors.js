@@ -39,19 +39,9 @@ var defaultColors = (function () {
 	};
 }());
 
-// 'column' is the column type set by the UI. It's not the dataset metadata.
-// It is *based on* the dataset metadata. We use it to decide whether to
-// use clinical vs. genomic scaling for floats.
-// 'settings' is the vizSettings: user override of min/max, etc.
-// 'codes' is also used to pick categorical.
-// 'data' is used to find min/max.
-//
-//  Of these, we can't drop 'data' or 'codes'.
-//  Perhaps we should just pass in column.dataType and dataSubType, since we don't
-//  need all the other params.
-function colorRangeType(column, settings, codes) {
-	return codes ? 'coded' :
-		(column.dataType === 'clinicalMatrix' ? 'float' : 'floatGenomicData');
+function colorRangeType(column) {
+	return column.valueType === 'coded' ? 'coded' :
+		(column.fieldType === 'clinical' ? 'float' : 'floatGenomicData');
 }
 
 var colorRange = multi(colorRangeType);

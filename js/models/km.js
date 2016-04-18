@@ -70,15 +70,6 @@ function floatOrPartitionVals({heatmap, colors}) {
 	return {warning, ...(uniq.length > MAX ? partitionedVals : floatVals)(avg, uniq, colorfn)};
 }
 
-function featureType({dataType, fields}, data) {
-	// XXX We have a too many ad hoc checks in the code trying to decide if
-	// something is coded or not, phenotype or not, etc. We need to fix this
-	// across the code.
-	var feature = _.get(fields, 0);
-	var coded = _.getIn(data, ['codes', feature]);
-	return (dataType === 'mutationVector') ? 'mutation' : (coded ? 'coded' : 'float');
-}
-
 function mutationVals(column, data, {bySample}, sortedSamples) {
 	var mutCode = _.mapObject(bySample, vs => vs.length > 0 ? 1 : 0);
 	return {
@@ -95,7 +86,7 @@ function mutationVals(column, data, {bySample}, sortedSamples) {
 	};
 }
 
-var toCoded = multi(featureType);
+var toCoded = multi(fs => fs.valueType);
 toCoded.add('float', floatOrPartitionVals);
 toCoded.add('coded', codedVals);
 toCoded.add('mutation', mutationVals);

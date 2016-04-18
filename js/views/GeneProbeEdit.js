@@ -12,9 +12,10 @@ function apply(features, state) {
 		fieldTxt = fields.join(', ');
 	return {
 		fields: fields,
-		dataType: genes ? (fields.length > 1 ? 'geneMatrix' : 'geneProbesMatrix') :
-			'probeMatrix',
-		fieldLabel: {user: fieldTxt, 'default': fieldTxt}
+		fetchType: 'xena',
+		valueType: 'float',
+		fieldType: genes ? (fields.length > 1 ? 'genes' : 'geneProbes') : 'probes',
+		fieldLabel: fieldTxt
 	};
 }
 

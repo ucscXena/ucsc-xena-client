@@ -83,7 +83,7 @@ describe('heatmapColors', function () {
 	});
 	describe('#colorSpec', function () {
 		it('should return linear scales for clinical float', function() {
-			var column = {dataType: 'clinicalMatrix'},
+			var column = {fieldType: 'clinical'},
 				dataset = {type: 'clinicalMatrix'},
 				settings = null, codes = null;
 
@@ -101,7 +101,7 @@ describe('heatmapColors', function () {
 				['float', '#007f00', '#000000', '#ffff00', -2, 3]);
 		});
 		it('should return ordinal scale for clinical category', function() {
-			var column = {type: 'clinicalMatrix'},
+			var column = {fieldType: 'clinical', valueType: 'coded'},
 				settings = null,
 				codes = ['A', 'B', 'C', 'D'];
 
@@ -110,7 +110,7 @@ describe('heatmapColors', function () {
 				['ordinal', 4]);
 		});
 		it('should return linear thresholded scales for genomic data', function() {
-			var column = {dataType: 'genomicMatrix'},
+			var column = {fieldType: 'probes'},
 				dataset = {type: 'genomicMatrix', dataSubType: 'gene expression'},
 				settings, codes;
 
@@ -130,7 +130,7 @@ describe('heatmapColors', function () {
 		});
 		it('should return linear thresholded scales for custom setting', function() {
 			var dataset = {type: 'genomicMatrix', dataSubType: 'gene expression'},
-				column = {dataType: 'genomicMatrix'},
+				column = {fieldType: 'probes'},
 				settings1 = {
 					min: -12,
 					minStart: -11,

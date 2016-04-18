@@ -151,15 +151,10 @@ var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
 var fetchGene = ({dsID, fields}, [samples]) => datasetGenesValues(dsID, samples, fields)
 			.map(resp => ({req: indexGeneResponse(fields, resp)}));
 
-['probeMatrix', 'geneProbesMatrix', 'geneMatrix', 'clinicalMatrix'].forEach(dataType => {
-	widgets.transform.add(dataType, dataToHeatmap);
-	widgets.cmp.add(dataType, cmp);
+['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType => {
+	widgets.transform.add(fieldType, dataToHeatmap);
+	widgets.cmp.add(fieldType, cmp);
 });
-
-widgets.fetch.add("probeMatrix", fetch);
-widgets.fetch.add("geneProbesMatrix", fetchGeneProbes);
-widgets.fetch.add("geneMatrix", fetchGene);
-widgets.fetch.add("clinicalMatrix", fetchFeature);
 
 module.exports = {
 	fetch,

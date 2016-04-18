@@ -14,7 +14,9 @@ var basicDenseColumn = {
 		columnLabel: {user: 'foo', default: 'foo'},
 		fieldLabel: {user: 'foo', default: 'foo'},
 		width: 20,
-		dataType: 'probeMatrix',
+		fieldType: 'probes',
+		valueType: 'float',
+		fetchType: 'xena',
 		fields: ['TP53'],
 		heatmap: [[1, 2]],
 		colors: [['float-thresh', 'red', 'white', 'blue', -10, -1, 1, 10]]
@@ -34,16 +36,16 @@ var basicDenseColumn = {
 
 describe('plotDenseMatrix', function () {
     describe('#column', function () {
-        it('should render probeMatrix', function() {
+        it('should render probes', function() {
 			renderIntoDocument(column(basicDenseColumn));
         });
-        it('should render geneMatrix', function() {
+        it('should render genes', function() {
 			renderIntoDocument(
-				column(_.assocIn(basicDenseColumn, ['column', 'dataType', 'geneMatrix'])));
+				column(_.assocIn(basicDenseColumn, ['column', 'fieldType', 'genes'])));
         });
-        it('should render geneProbesMatrix', function() {
+        it('should render geneProbes', function() {
 			renderIntoDocument(
-				column(_.assocIn(basicDenseColumn, ['column', 'dataType', 'geneProbesMatrix'])));
+				column(_.assocIn(basicDenseColumn, ['column', 'fieldType', 'geneProbes'])));
         });
 	});
 });

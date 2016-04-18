@@ -3,15 +3,14 @@
 
 var multi = require('./multi');
 
-var dataTypeSelector = x => x.dataType;
+var fieldTypeSelector = x => x.fieldType;
 
 var widget = {
-	cmp: multi(dataTypeSelector),
-	fetch: multi(dataTypeSelector),
+	cmp: multi(fieldTypeSelector),
 	index: multi(x => x),
-	transform: multi(dataTypeSelector),
-	column: multi(x => x.column.dataType),
-	pdf: multi(dataTypeSelector)
+	transform: multi(fieldTypeSelector),
+	column: multi(x => x.column.fieldType),
+	pdf: multi(fieldTypeSelector)
 };
 
 widget.index.dflt = () => null;

@@ -5,17 +5,20 @@ var React = require('react');
 var Input = require('react-bootstrap/lib/Input');
 var trim = require('underscore.string').trim;
 
-function apply(features, state) {
+function apply(features, state, meta) {
 	var gene = trim(state.gene);
 	return {
 		fields: [gene],
-		dataType: 'mutationVector',
-		fieldLabel: {user: gene, 'default': gene},
+		fetchType: 'xena',
+		valueType: 'mutation',
+		fieldType: 'mutation',
+		fieldLabel: gene,
+		assembly: meta.assembly,
 		sFeature: 'impact'
 	};
 }
 
-var valid = state => !!trim(state.gene);
+var valid = state => trim(state.gene);
 
 // Select a gene.
 var GeneEdit = React.createClass({

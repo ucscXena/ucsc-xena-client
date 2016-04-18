@@ -23,4 +23,4 @@ function pdf(column, vg, state, i) {
 	});
 }
 
-widgets.pdf.add('mutationVector', pdf);
+widgets.pdf.add('mutation', pdf);

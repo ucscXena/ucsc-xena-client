@@ -3,7 +3,7 @@
 
 // Domain logic for mutation datasets.
 
-var _ = require('underscore');
+var _ = require('../underscore_ext');
 var widgets = require('../columnWidgets');
 var xenaQuery = require('../xenaQuery');
 var Rx = require('rx');
@@ -270,7 +270,7 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 	};
 }
 
-function index(dataType, data) {
+function index(fieldType, data) {
 	if (!data) {
 		return null;
 	}
@@ -285,10 +285,9 @@ function index(dataType, data) {
 	};
 }
 
-widgets.cmp.add('mutationVector', cmp);
-widgets.fetch.add('mutationVector', fetch);
-widgets.index.add('mutationVector', index);
-widgets.transform.add('mutationVector', dataToDisplay);
+widgets.cmp.add('mutation', cmp);
+widgets.index.add('mutation', index);
+widgets.transform.add('mutation', dataToDisplay);
 
 module.exports = {
 	features,

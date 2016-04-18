@@ -16,7 +16,9 @@ var basicMutationColumn = {
 		fieldLabel: {user: 'foo', default: 'foo'},
 		sFeature: 'impact',
 		width: 20,
-		dataType: 'mutationVector',
+		fieldType: 'mutation',
+		valueType: 'mutation',
+		fetchType: 'xena',
 		fields: ['TP53'],
 		layout: {
 			chrom: [[1000, 1200], [1300, 1500]],

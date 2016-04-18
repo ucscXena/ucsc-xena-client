@@ -180,9 +180,9 @@ function tsvProbeMatrix(heatmap, samples, fields, codes) {
 }
 
 function modeMenu({dataType}, cb) {
-	return dataType === 'geneMatrix' ?
-		<MenuItem eventKey="geneProbesMatrix" onSelect={cb}>Detailed view</MenuItem> :
-		<MenuItem eventKey="geneMatrix" onSelect={cb}>Gene average</MenuItem>;
+	return dataType === 'genes' ?
+		<MenuItem eventKey="geneProbes" onSelect={cb}>Detailed view</MenuItem> :
+		<MenuItem eventKey="genes" onSelect={cb}>Gene average</MenuItem>;
 }
 
 var HeatmapColumn = hotOrNot(React.createClass({
@@ -207,7 +207,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 		this.ttevents.dispose();
 	},
 	onMode: function (ev, newMode) {
-		this.props.callback(['dataType', this.props.id, newMode]);
+		this.props.callback(['fieldType', this.props.id, newMode]);
 	},
 	tooltip: function (ev) {
 		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
@@ -260,15 +260,16 @@ var HeatmapColumn = hotOrNot(React.createClass({
 						colors={colors}
 						legend={legend}
 						data={heatmap}
+						coded={column.valueType === 'coded'}
 						codes={codes}/>}
 			/>
 		);
 	}
 }));
 
-var getColumn = (props) => <HeatmapColumn {...props} />;
+var getColumn = props => <HeatmapColumn {...props} />;
 
-widgets.column.add("probeMatrix", getColumn);
-widgets.column.add("geneProbesMatrix", getColumn);
-widgets.column.add("geneMatrix", getColumn);
-widgets.column.add("clinicalMatrix", getColumn);
+widgets.column.add("probes", getColumn);
+widgets.column.add("geneProbes", getColumn);
+widgets.column.add("genes", getColumn);
+widgets.column.add("clinical", getColumn);

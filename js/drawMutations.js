@@ -2,7 +2,7 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var features = require('./models/mutationVector');
+var {features} = require('./models/mutationVector');
 
 var radius = 4;
 

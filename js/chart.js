@@ -178,7 +178,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				option.value = column;
 				option.textContent = columns[column].fieldLabel.user;
 
-				if (columns[column].dataType === "geneMatrix") {
+				if (columns[column].fieldType === "genes") {
 					option.textContent = option.textContent + " (gene average)";
 				}
 				div.appendChild(option);
@@ -277,12 +277,12 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 			if (xcolumn !== "none") {
 				xfields = columns[xcolumn].fields;
 				xlabel = columns[xcolumn].fieldLabel.user;
-				if (columns[xcolumn].dataType === "geneMatrix") {
+				if (columns[xcolumn].fieldType === "genes") {
 					xlabel = xlabel + " (gene average)";
 				}
 				xhost = JSON.parse(columns[xcolumn].dsID).host;
 				xds = JSON.parse(columns[xcolumn].dsID).name;
-				xcolumnType = columns[xcolumn].dataType;
+				xcolumnType = columns[xcolumn].fieldType;
 			} else {
 				xlabel = "";
 				xhost = JSON.parse(columns[ycolumn].dsID).host;
@@ -291,15 +291,15 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 			yfields = columns[ycolumn].fields;
 
 			ylabel = columns[ycolumn].fieldLabel.user;
-			if (columns[ycolumn].dataType === "geneMatrix") {
+			if (columns[ycolumn].fieldType === "genes") {
 				ylabel = ylabel + " (gene average)";
 			}
 
 			yhost = JSON.parse(columns[ycolumn].dsID).host;
 			yds = JSON.parse(columns[ycolumn].dsID).name;
-			ycolumnType = columns[ycolumn].dataType;
+			ycolumnType = columns[ycolumn].fieldType;
 
-			if (xcolumnType === "mutationVector" || ycolumnType === "mutationVector") {
+			if (xcolumnType === "mutation" || ycolumnType === "mutation") {
 				document.getElementById("myChart").innerHTML = "x: " + xlabel + "; y:" + ylabel + " not implemented yet";
 				return;
 			}
@@ -307,19 +307,19 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 			var source = Rx.Observable.zipArray(
 				(xcolumn === "none") ? xenaQuery.test_host(xhost) : xenaQuery.code_list(xhost, xds, xfields),
 
-				(xcolumn === "none") ? xenaQuery.test_host(xhost) : ((xcolumnType === "geneProbesMatrix") ?
+				(xcolumn === "none") ? xenaQuery.test_host(xhost) : ((xcolumnType === "geneProbes") ?
 					//xenaQuery.dataset_gene_probe_values(xhost, xds, samples, xfields[0]) :
 					xenaQuery.dataset_probe_values(xhost, xds, samples, xfields) :
-					((xcolumnType === "geneMatrix") ?
+					((xcolumnType === "genes") ?
 						xenaQuery.dataset_genes_values(xhost, xds, samples, xfields) :
 						xenaQuery.dataset_probe_values(xhost, xds, samples, xfields))),
 
 
 				xenaQuery.code_list(yhost, yds, yfields),
 
-				(ycolumnType === "geneProbesMatrix") ?
+				(ycolumnType === "geneProbes") ?
 					xenaQuery.dataset_probe_values(yhost, yds, samples, yfields) :
-					((ycolumnType === "geneMatrix") ?
+					((ycolumnType === "genes") ?
 						xenaQuery.dataset_genes_values(yhost, yds, samples, yfields) :
 						xenaQuery.dataset_probe_values(yhost, yds, samples, yfields)),
 
@@ -420,9 +420,9 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				if (yNormalization === "cohort" || yNormalization === "cohort_stdev" ) {
 					//need to get all the samples and all the data for y
 					xenaQuery.dataset_samples(yhost, yds).subscribe(function (s) {
-						var Observable = (ycolumnType === "geneProbesMatrix") ?
+						var Observable = (ycolumnType === "geneProbes") ?
 							xenaQuery.dataset_probe_values(yhost, yds, s, yfields) :
-							((ycolumnType === "geneMatrix") ?
+							((ycolumnType === "genes") ?
 								xenaQuery.dataset_genes_values(yhost, yds, s, yfields) :
 								xenaQuery.dataset_probe_values(yhost, yds, s, yfields));
 
@@ -474,7 +474,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 
 		function adjustData(columnType, fields, qReturn) {
 			var data=[];
-			if (columnType === "geneMatrix") {
+			if (columnType === "genes") {
 				qReturn.forEach(function (obj) {
 					data.push(obj.scores[0]);
 				});

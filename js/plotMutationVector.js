@@ -222,6 +222,6 @@ var MutationColumn = hotOrNot(React.createClass({
 	}
 }));
 
-var getColumn = (props) => <MutationColumn {...props} />;
+var getColumn = props => <MutationColumn {...props} />;
 
-widgets.column.add('mutationVector', getColumn);
+widgets.column.add('mutation', getColumn);

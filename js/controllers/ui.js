@@ -10,6 +10,7 @@ var util = require('../util');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
 var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
+var {xenaFieldPaths} = require('../models/fieldSpec');
 var {setNotifications} = require('../notifications');
 
 var	datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
@@ -67,15 +68,23 @@ function mutationGeneLookup(settings) {
 }
 
 const fieldLookup = {
-	'geneProbesMatrix': geneProbeMapLookup,
-	'geneMatrix': geneProbeMapLookup,
-	'mutationVector': mutationGeneLookup,
-	'probeMatrix': probeLookup
+	'geneProbes': geneProbeMapLookup,
+	'genes': geneProbeMapLookup,
+	'mutation': mutationGeneLookup,
+	'probes': probeLookup
 };
 
+function allFieldsLookup(settings, xenaFields, state) {
+	var fieldSpecs = _.map(xenaFields, path => _.getIn(settings, path));
+	return Rx.Observable.zipArray(
+		_.map(fieldSpecs, fs => reifyErrors(
+			(fieldLookup[fs.fieldType] || probeLookup)(fs, state)), {/*host info?*/}));
+}
+
 function normalizeFields(serverBus, state, id, settings) {
-	var lookup = (fieldLookup[settings.dataType] || probeLookup)(settings, state);
-	serverBus.onNext(['normalize-fields', lookup, id, settings]);
+	var xenaFields = xenaFieldPaths(settings),
+		lookup = allFieldsLookup(settings, xenaFields, state);
+	serverBus.onNext(['normalize-fields', lookup, id, settings, xenaFields]);
 }
 
 var datasetVar = (samples, {dsID, name}) =>
@@ -177,10 +186,10 @@ var controls = {
 	'zoom-help-disable': zoomHelpClose,
 	'zoom-help-disable-post!': (serverBus, state, newState) =>
 		setNotifications(newState.notifications),
-	dataType: (state, id, dataType) =>
-		_.assocIn(state, ['columns', id, 'dataType'], dataType),
-	'dataType-post!': (serverBus, state, newState, id) =>
-		fetchColumnData(serverBus, newState.samples, id, _.getIn(newState, ['columns', id])),
+	fieldType: (state, id, fieldType) =>
+		_.assocIn(state, ['columns', id, 'fieldType'], fieldType),
+	'fieldType-post!': (serverBus, state, newState, id) =>
+		fetchColumnData(serverBus, newState.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	vizSettings: (state, column, settings) =>
 		_.assocIn(state, ['columns', column, 'vizSettings'], settings),
 	'edit-dataset-post!': (serverBus, state, newState, dsID, meta) => {

@@ -11,7 +11,7 @@ var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
 var indexSelector = createFmapSelector(
 		state => _.fmap(state.columns,
-			({dataType}, key) => [dataType, state.data[key]]),
+			({fieldType}, key) => [fieldType, state.data[key]]),
 		args => widgets.index(...args));
 
 function cmpString(s1, s2) {
@@ -25,7 +25,7 @@ function cmpString(s1, s2) {
 
 var sortSelector = createSelector(
 	state => state.samples,
-	state => _.fmap(state.columns, c => _.pick(c, 'dataType', 'fields')),
+	state => _.fmap(state.columns, c => _.pick(c, 'fieldType', 'fields')),
 	state => state.columnOrder,
 	state => state.data,
 	state => state.index,

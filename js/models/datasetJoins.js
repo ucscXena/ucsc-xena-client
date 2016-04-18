@@ -15,11 +15,6 @@ function getNormalization(datasets) {
 	return _.every(datasets, d => d.colnormalization);
 }
 
-// Use field label from first dataset.
-function getFieldLabel(fieldSpecs) {
-	return _.first(fieldSpecs).fieldLabel;
-}
-
 // Join column labels.
 function getColumnLabel(fieldSpecs) {
 	return _.uniq(_.pluck(fieldSpecs, 'columnLabel')).join(' / ');
@@ -30,107 +25,108 @@ function getDefaultColors(datasets) {
 	return _.find(datasets, d => heatmapColors.defaultColors(d));
 }
 
-// Demote to float. Really should have a type for coded.
-// clinicalMatrix
-// geneMatrix
-// geneProbesMatrix
-// probeMatrix
-// mutationVector
-// demotion
+var noNullType = ts => ts.filter(t => t !== 'null');
 
-// Any clinical float -> cast everything to clinical float.
-// categorical, mutation -> categorical
-// categorical + genomic float -> clinical float
-//
-//
-// mutation goes to categorical if all others are categorical.
-// mutation or categorical + genomic float -> clinical float.
-// 
-// any clinical float -> all clinical float.
-//
-// combine by position.
-// genomic or not
-// float or not
-//
-// float, coded, or mutation
-//     float if any float. coded if coded or coded + mutation.
-// if float, genomic or phenotype
-// if genomic, what dataSubType
-
-function getFieldSpecDisplayType(colSpec, features) {
-	var [first] = colSpec.fields;
-	if (colSpec.dataType === 'clinicalMatrix') {
-		if (_.getIn(features, [first, 'valueType']) === 'categorical') {
-			return 'coded';
-		}
-		return 'clinicalFloat';
-	}
-	if (colSpec.dataType === 'mutationVector') {
-		return 'mutation';
-	}
-	return 'genomicFloat';
-}
-
-// XXX Need a better name for the data that specifies what we are reqesting from the
-// server: a dataset id (with associated data type), and a list of fields.
 // XXX Need to handle incompatible assemblies in mutation.
-// XXX need to coerce geneProbe to gene if other fields are not the same gene on the same probemap.
-function getDisplayType(fieldSpecs, features) {
-	var types = _.uniq(fieldSpecs.map(fs => getFieldSpecDisplayType(fs, features)));
+function getValueType(fieldSpecs) {
+	var types = _.uniq(noNullType(_.pluck(fieldSpecs, 'valueType')));
 
 	// If all types are the same, we can preserve the type.
 	if (types.length === 1) {
 		return types[0];
 	}
 	
-	// We can cast mutation to coded (boolean).
-	if (_.every(types, t => _.contains(['mutation', 'coded'], t))) {
+	// If coded, cast to coded.
+	if (_.contains(types, 'coded')) {
 		return 'coded';
 	}
 
-	// Any other combination, the best we can do is clinicalFloat.
-	return 'clinicalFloat';
+	// Any other combination, float
+	return 'float';
 }
 
-// geneMatrix, geneProbeMatrix, probeMatrix, clinicalMatrix, mutationVector
-// clinicalFloat -> clinicalMatrix
-// coded -> clinicalMatrix
-// Why does plotDenseMatrix have this distinction? So it can switch modes?
-// genomicFloat -> probemap ? (len > 1 ? geneMatrix : geneProbesMatrix) : probeMatrix
-// mutation -> mutationVector
+// probes, genes, geneProbes, clinical, mutation.
+// We shouldn't see geneProbes unless they're all the same.
+function getFieldType(fieldSpecs) {
+	var types = _.uniq(noNullType(_.pluck(fieldSpecs, 'fieldType')));
 
-function fudgeDataType(displayType) {
-	return {
-		mutation: 'mutationVector',
-		coded: 'clincalMatrix',
-		clinicalFloat: 'clinicalMatrix',
-		genomicFloat: 'probeMatrix'
-	}[displayType];
+	// If all types are the same, we can preserve the type.
+	if (types.length === 1) {
+		return types[0];
+	}
+
+	// drop genomic info if mixing with clinincal
+	if (_.contains(types, 'clinical')) {
+		return 'clinical';
+	}
+
+	// treat disparate field types as probes.
+	return 'probes';
 }
 
 function longest(arrs) {
 	return _.max(arrs, arr => arr.length);
 }
 
-function resetProbesMatrix(len, fieldSpecs) {
-	return (len > 1 || !_.every(fieldSpecs, fs => fs.dataType === 'geneProbesMatrix')) ?
+// Preserve geneProbes matrix only if there's a single field and all datasets
+// are geneProbes, and all have the same probemap.
+function resetProbesMatrix(len, fieldSpecs, datasets) {
+	return (len > 1 || !_.every(fieldSpecs, fs => fs.fieldType === 'geneProbes')
+			|| _.uniq(_.map(fieldSpecs, fs => datasets[fs.dsID].probemap)).length > 1) ?
 		_.map(fieldSpecs, fs => 
-			  _.assoc(fs, 'dataType', fs.dataType === 'geneProbesMatrix' ? 'geneMatrix' : fs.dataType)) :
+			  _.assoc(fs, 'fieldType', fs.fieldType === 'geneProbes' ? 'genes' : fs.fieldType)) :
 		fieldSpecs;
 }
 
-function getColSpec(fieldSpecs, datasets, features) {
-	var dsList = fieldSpecs.map(fs => datasets[fs.dsID]),
-		fields = longest(_.pluck(fieldSpecs, 'fields'));
-	return {
+// merge, dropping nulls.
+var m = (...objs) => _.pick(_.merge(...objs), v => v != null);
+
+var findFirstProp = (fieldSpecs, prop)  =>
+	_.get(_.find(fieldSpecs, fs => _.has(fs, prop)), prop);
+
+var getAssembly = (fieldType, fieldSpecs) =>
+	fieldType === 'mutation' ? findFirstProp(fieldSpecs, 'assembly') : null;
+
+var getFeature = (fieldType, fieldSpecs) =>
+	fieldType === 'mutation' ? findFirstProp(fieldSpecs, 'sFeature') : null;
+
+var getFieldLabel = fieldSpecs => findFirstProp(fieldSpecs, 'fieldLabel');
+
+var nullField = {
+	fetchType: 'null',
+	valueType: 'null',
+	fieldType: 'null',
+	fields: []
+};
+
+var fillNullFields = fieldSpecs => _.map(fieldSpecs, fs => fs || nullField); 
+
+function combineColSpecs(fieldSpecs, datasets) {
+	var dsList = _.filter(fieldSpecs, fs => fs.dsID).map(fs => datasets[fs.dsID]),
+		fields = longest(_.pluck(fieldSpecs, 'fields')),
+		resetFieldSpecs = resetProbesMatrix(fields.len, fieldSpecs, datasets),
+		fieldType = getFieldType(resetFieldSpecs);
+
+	return m({
 		fields,
-		fieldSpecs: resetProbesMatrix(fields.len, fieldSpecs),
-		dataType: fudgeDataType(getDisplayType(fieldSpecs, features)),
+		fieldSpecs: resetFieldSpecs,
+		fetchType: 'composite',
+		valueType: getValueType(resetFieldSpecs),
+		fieldType,
 		defaultNormalization: getNormalization(dsList),
-		fieldLabel: getFieldLabel(fieldSpecs),
-		columnLabel: getColumnLabel(fieldSpecs),
-		defaultColors: getDefaultColors(dsList)
-	};
+		fieldLabel: getFieldLabel(resetFieldSpecs),
+		columnLabel: getColumnLabel(resetFieldSpecs),
+		defaultColors: getDefaultColors(dsList),
+		assembly: getAssembly(fieldType, resetFieldSpecs),
+		sFeature: getFeature(fieldType, resetFieldSpecs)
+	});
+}
+
+// XXX This should be recursive, instead of having a
+// length check, etc.
+function getColSpec(fieldSpecs, datasets) {
+	return fieldSpecs.length === 1 ? fieldSpecs[0] :
+		combineColSpecs(fillNullFields(fieldSpecs), datasets);
 }
 
 function computeMean(data) {
@@ -141,7 +137,7 @@ function computeMean(data) {
 // (column, fieldSpec, samples, data) => newData
 var cvtField = multi((column, field) => `${field.valueType}->${column.valueType}`, 4);
 
-// For probeMatrix, geneMatrix, data is
+// For probes, genes, data is
 // req: {values: {[probe]: {sample: value, ...}, ...}}
 cvtField.dflt = (column, fieldSpec, samples, data) => data;
 
@@ -166,9 +162,33 @@ cvtField.add('float->coded', (column, fieldSpec, samples, data) => {
 	return _.assocIn(data, ['req', 'values'], [values], ['codes'], codes);
 });
 
-//cvtField.add('coded->coded', (column, field, samples, acc, data) => {
-//	return data;
-//});
+cvtField.add('null->coded', () => {
+	return {
+		codes: [],
+		req: {
+			values: [],
+			mean: []
+		}
+	};
+});
+
+cvtField.add('null->float', () => {
+	return {
+		req: {
+			values: [],
+			mean: []
+		}
+	};
+});
+
+cvtField.add('null->mutation', () => {
+	return {
+		req: {
+			rows: [],
+			samplesInResp: []
+		}
+	};
+});
 
 cvtField.add('mutation->float', (column, field, samples, acc, data) => {
 	var bySampleID = _.groupBy(data.rows, 'sampleID');
@@ -198,10 +218,6 @@ function setProbes(data, wdata)  {
 }
 
 // We don't want a reducing function for getField 'mutation'.
-function joinFieldData(column, samples, wdata) {
-	return _.reduce(_.zip(column.fieldSpecs, wdata), (acc, [fs, data]) => cvtField(column, fs, samples, acc, data), {});
-}
-
 var getField = multi(column => column.valueType);
 
 // Combining float fields:
@@ -224,9 +240,10 @@ getField.add('coded', (column, samplesList, wdata) => {
 	var cvtdData = _.mmap(column.fieldSpecs, samplesList, wdata, cvtField(column)),
 		allCodes = _.union(..._.pluck(cvtdData, 'codes')),
 		mapping = _.object(allCodes, _.range(allCodes.length)),
+		// XXX move this to fields.js, which should be fieldData.js.
 		remappedWdata = _.mmap(column.fieldSpecs, cvtdData, (fs, wd) => {
 			var codes = _.get(wd, 'codes');
-			return _.updateIn(wd, ['req', 'values', 0], vals => _.map(vals, v => mapping[codes[v]]));
+			return _.updateIn(wd, ['req', 'values', 0], vals => vals && _.map(vals, v => mapping[codes[v]]));
 		});
 	return _.assoc(concatValuesByFieldPosition(samplesList, remappedWdata), 'codes', allCodes);
 });
@@ -246,7 +263,7 @@ getField.add('mutation', (column, samples, wdata) => {
 			rows: _.concat(...remappedWdata.map(wd => _.getIn(wd, ['req', 'rows']))),
 			samplesInResp: _.concat(...remappedWdata.map(wd => _.getIn(wd, ['req', 'samplesInResp'])))
 		},
-		refGene: _.getIn(wdata, [0, 'refGene'])
+		refGene: findFirstProp(wdata, 'refGene')
 	};
 });
 
@@ -256,9 +273,13 @@ function fetchComposite(column, samples) {
 		.map(wdata => getField(column, samples, wdata));
 }
 
+function fetchNull() {
+	return Rx.Observable.return(null);
+}
+
 fieldFetch.add('composite', fetchComposite);
+fieldFetch.add('null', fetchNull);
 
 module.exports = {
-	getColSpec,
-	joinFieldData
+	getColSpec
 };

@@ -3,16 +3,16 @@
 
 var React = require('react');
 var Select = require('../views/Select');
-var _ = require('../underscore_ext');
-
 
 function apply(features, state) {
 	var {feature} = state,
-		fieldTxt = _.find(features, f => f.value === feature).label;
+		meta = features[feature];
 	return {
 		fields: [feature],
-		dataType: 'clinicalMatrix',
-		fieldLabel: {user: fieldTxt, 'default': fieldTxt}
+		fetchType: 'xena',
+		valueType: meta.valuetype === 'float' ? 'float' : 'coded',
+		fieldType: 'clinical',
+		fieldLabel: meta.longtitle
 	};
 }
 

@@ -21,7 +21,7 @@ function pdf(column, vg, state, i) {
 	});
 }
 
-widgets.pdf.add('probeMatrix', pdf);
-widgets.pdf.add('geneProbesMatrix', pdf);
-widgets.pdf.add('geneMatrix', pdf);
-widgets.pdf.add('clinicalMatrix', pdf);
+widgets.pdf.add('probes', pdf);
+widgets.pdf.add('geneProbes', pdf);
+widgets.pdf.add('genes', pdf);
+widgets.pdf.add('clinical', pdf);
