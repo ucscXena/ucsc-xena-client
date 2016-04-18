@@ -47,9 +47,9 @@ function computeHeatmap(vizSettings, data, fields, samples, dataset) {
 		colnormalization = shouldNormalize(vizSettings, dataset),
 		transform = (colnormalization && mean && _.partial(subbykey, mean)) || second;
 
-	return map(probes || fields, function (p) {
-		var suTrans = saveMissing(v => transform(p, v));
-		return map(samples, s => suTrans(_.getIn(values[p], [s])));
+	return map(probes || fields, function (p, i) {
+		var suTrans = saveMissing(v => transform(i, v));
+		return map(samples, s => suTrans(_.getIn(values, [i, s])));
 	});
 }
 
@@ -90,11 +90,11 @@ function cmpNumberOrNull(v1, v2) {
 }
 
 function cmpSamples(probes, data, s1, s2) {
-	var diff = data && find(probes, function (f) {
-			return data[f] && cmpNumberOrNull(data[f][s1], data[f][s2]);
+	var diff = data && find(data, function (f) {
+			return cmpNumberOrNull(f[s1], f[s2]);
 		});
 	if (diff) {
-		return cmpNumberOrNull(data[diff][s1], data[diff][s2]);
+		return cmpNumberOrNull(diff[s1], diff[s2]);
 	} else {
 		return 0;
 	}
