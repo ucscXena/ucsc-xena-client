@@ -136,7 +136,7 @@ var Column = React.createClass({
 					{doRefGene ?
 						<RefGeneAnnotation
 							width={width}
-							refGene={data.refGene[column.fields[0]]}
+							refGene={_.values(data.refGene)[0]}
 							layout={column.layout}
 							position={{gene: column.fields[0]}}/> : null}
 				</div>
