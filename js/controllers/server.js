@@ -8,6 +8,7 @@ var {resetZoom, setCohort, fetchDatasets, fetchSamples, fetchColumnData} = requi
 
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
+var {updateFields} = require('../models/fieldSpec');
 var identity = x => x;
 
 function featuresQuery(datasets) {
@@ -59,8 +60,9 @@ var controls = {
 	'samples-post!': (serverBus, state, newState, samples) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
-	'normalize-fields': (state, fields, id, settings) => {
-		var ns = _.assocIn(state, ['columns', id], _.assoc(settings, 'fields', fields));
+	'normalize-fields': (state, fields, id, settings, xenaFields) => {
+		var ns = _.assocIn(state, ['columns', id],
+						   updateFields(settings, xenaFields, fields));
 		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
 	},
 	'normalize-fields-post!': (serverBus, state, newState, fields, id) =>
