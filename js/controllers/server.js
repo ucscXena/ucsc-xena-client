@@ -38,7 +38,7 @@ var closeUnknownColumns = state => {
 	return _.assoc(state,
 				   'columnOrder', columnOrder,
 				   'columns', _.pick(columns, columnOrder));
-}
+};
 
 var controls = {
 	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),

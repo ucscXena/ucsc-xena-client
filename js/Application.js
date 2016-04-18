@@ -46,7 +46,7 @@ function getFieldFormat(uuid, columns, data) {
 	} else if (fields.length === columnFields.length) {  // n > 1 genes/probes
 		return _.identity;
 	} else {                                             // n > 1 probes in gene
-		return field => `${label} (${field})`
+		return field => `${label} (${field})`;
 	}
 }
 

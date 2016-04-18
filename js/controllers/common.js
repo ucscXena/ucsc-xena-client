@@ -19,7 +19,7 @@ function datasetQuery(servers, cohort) {
 		_.map(servers, server => reifyErrors(
 				xenaQuery.dataset_list(server, cohorts).map(datasets => ({server, datasets})),
 				{host: server}))
-	).flatMap(datasetResults)
+	).flatMap(datasetResults);
 }
 
 function fetchDatasets(serverBus, servers, cohort) {
