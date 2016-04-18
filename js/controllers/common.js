@@ -7,8 +7,7 @@ var Rx = require('rx');
 var xenaQuery = require('../xenaQuery');
 var _ = require('../underscore_ext');
 var {reifyErrors, collectResults} = require('./errors');
-var widgets = require('../columnWidgets');
-var {makeSample} = require('../models/sample');
+var fetch = require('../fieldFetch');
 
 var datasetResults = resps => collectResults(resps, servers =>
 		_.object(_.flatmap(servers, s => _.map(s.datasets, d => [d.dsID, d]))));
@@ -62,7 +61,7 @@ function fetchColumnData(serverBus, samples, id, settings) {
 
 	// XXX  Note that the widget-data-xxx slots are leaked in the groupBy
 	// in main.js. We need a better mechanism.
-	serverBus.onNext([['widget-data', id], widgets.fetch(settings, samples)]);
+	serverBus.onNext([['widget-data', id], fetch(settings, samples)]);
 }
 
 function resetZoom(state) {
