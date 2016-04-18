@@ -61,11 +61,10 @@ function tooltip(heatmap, fields, sampleFormat, fieldFormat, codes, width, zoom,
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
 		fieldIndex = bounded(0, fields.length, Math.floor(coord.x * fields.length / width)),
-		field = fields[fieldIndex],
-		fieldCodes = _.getIn(codes, [field]);
+		field = fields[fieldIndex];
 
 	var val = _.getIn(heatmap, [fieldIndex, sampleIndex]),
-		code = _.getIn(fieldCodes, [val]),
+		code = _.get(codes, val),
 		label = fieldFormat(field);
 
 	val = code ? code : prec(val);
@@ -136,7 +135,7 @@ function renderFloatLegend(props) {
 // Might have colorScale but no data (phenotype), no data & no colorScale,
 // or data & colorScale, no colorScale &  data?
 function renderCodedLegend(props) {
-	var {data: [data] = [], fields, codes, colors = []} = props;
+	var {data: [data] = [], codes, colors = []} = props;
 	var legendProps;
 	var colorfn = _.first(colorFns(colors.slice(0, 1)));
 
@@ -145,7 +144,7 @@ function renderCodedLegend(props) {
 	// values in the db (even those not in the plot) so that colors will
 	// match in other datasets.
 	if (data && colorfn) { // category
-		legendProps = categoryLegend(data, colorfn, codes[fields[0]]);
+		legendProps = categoryLegend(data, colorfn, codes);
 	} else {
 		return <span />;
 	}
@@ -156,9 +155,8 @@ function renderCodedLegend(props) {
 var HeatmapLegend = hotOrNot(React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function() {
-		var {codes, fields} = this.props,
-			hasCodes = _.get(codes, fields[0]);
-		return (hasCodes ? renderCodedLegend : renderFloatLegend)(this.props);
+		var {coded} = this.props;
+		return (coded ? renderCodedLegend : renderFloatLegend)(this.props);
 	}
 }));
 
@@ -168,8 +166,8 @@ var HeatmapLegend = hotOrNot(React.createClass({
 
 function tsvProbeMatrix(heatmap, samples, fields, codes) {
 	var fieldNames = ['sample'].concat(fields);
-	var coded = _.map(fields, (f, i) => codes && codes[f] ?
-			_.map(heatmap[i], _.propertyOf(codes[f])) :
+	var coded = _.map(fields, (f, i) => codes ?
+			_.map(heatmap[i], _.propertyOf(codes)) :
 			heatmap[i]);
 	var transposed = _.zip.apply(null, coded);
 	var tsvData = _.map(samples, (sample, i) => [sample].concat(transposed[i]));
@@ -227,10 +225,10 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
 	render: function () {
-		var {samples, data, column, zoom, disableKM, supportsGeneAverage, id} = this.props,
-			{fields, heatmap, colors, legend} = column,
+		var {data, column, zoom, disableKM, supportsGeneAverage, id} = this.props,
+			{heatmap, colors, legend} = column,
 			codes = _.get(data, 'codes'),
-			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
+			menu = supportsGeneAverage(id) ? modeMenu(column, this.onMode) : null;
 
 		return (
 			<Column
@@ -252,7 +250,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 							onMouseOver: this.ev.mouseover,
 							onClick: this.props.onClick
 						}}
-						codes={_.get(codes, column.fields[0])}
+						codes={codes}
 						width={_.get(column, 'width')}
 						zoom={zoom}
 						colors={colors}
