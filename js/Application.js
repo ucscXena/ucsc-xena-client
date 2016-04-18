@@ -54,6 +54,13 @@ function supportsGeneAverage({dataType, fields: {length}}) {
 	return ['geneProbesMatrix', 'geneMatrix'].indexOf(dataType) >= 0 && length === 1;
 }
 
+function lookupSample(cohortSamples, index, cohortIndex = 0) {
+	var len = cohortSamples[cohortIndex].length;
+	return cohortIndex >= cohortSamples.length ? null :
+		(index < len ?  cohortSamples[cohortIndex][index] :
+			lookupSample(cohortSamples, index - len, cohortIndex + 1));
+}
+
 var Application = React.createClass({
 //	onPerf: function () {
 //		this.perf = !this.perf;
@@ -75,6 +82,10 @@ var Application = React.createClass({
 	supportsGeneAverage(uuid) {
 		var {columns} = this.props.state;
 		return supportsGeneAverage(_.get(columns, uuid));
+	},
+	sampleFormat: function (index) {
+		var {cohortSamples} = this.props.state;
+		return lookupSample(cohortSamples, index);
 	},
 	disableKM: function (uuid) {
 		var {columns, features, km} = this.props.state;
@@ -98,7 +109,7 @@ var Application = React.createClass({
 						<AppControls {...otherProps} appState={computedState} />
 					</Col>
 				</Row>
-				<View {...otherProps} fieldFormat={this.fieldFormat} supportsGeneAverage={this.supportsGeneAverage} disableKM={this.disableKM} appState={computedState} />
+				<View {...otherProps} sampleFormat={this.sampleFormat} fieldFormat={this.fieldFormat} supportsGeneAverage={this.supportsGeneAverage} disableKM={this.disableKM} appState={computedState} />
 				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
 						callback={this.props.callback}
 						km={computedState.km}

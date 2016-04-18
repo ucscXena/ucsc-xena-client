@@ -29,25 +29,29 @@ function fetchDatasets(serverBus, servers, cohort) {
 var datasetSamples = xenaQuery.dsID_fn(xenaQuery.dataset_samples);
 var allSamples = _.curry((cohort, server) => xenaQuery.all_samples(server, cohort));
 
+function unionOfGroup(gb) {
+	return _.union(..._.map(gb, ([, v]) => v));
+}
+
 // For the cohort, either fetch samplesFrom, or query all servers,
 // Return a stream per-cohort, each of which returns an event
 // [cohort, [sample, ...]].
 // By not combining them here, we can uniformly handle errors, below.
 var cohortSamplesQuery = _.curry(
-	(servers, {name, samplesFrom}) =>
+	(servers, {name, samplesFrom}, i) =>
 		(samplesFrom ?
 			[datasetSamples(samplesFrom)] :
-			_.map(servers, allSamples(name))).map(obs => obs.map(resp => [name, resp])));
+			_.map(servers, allSamples(name))).map(resp => resp.map(samples => [i, samples])));
 
-function collateSamplesByCohort(resps) {
-	return _.flatmap(_.groupBy(resps, _.first),
-			(samplesList, cohort) => _.flatten(_.pluck(samplesList, 1)).map(makeSample(cohort)));
-}
+var collateSamplesByCohort = _.curry((cohorts, resps) => {
+	var byCohort = _.groupBy(resps, _.first);
+	return _.map(cohorts, (c, i) => unionOfGroup(byCohort[i] || []));
+});
 
 // reifyErrors should be pass the server name, but in this expression we don't have it.
 function samplesQuery(servers, cohort) {
 	return Rx.Observable.zipArray(_.flatmap(cohort, cohortSamplesQuery(servers)).map(reifyErrors))
-		.flatMap(resps => collectResults(resps, collateSamplesByCohort));
+		.flatMap(resps => collectResults(resps, collateSamplesByCohort(cohort)));
 }
 
 function fetchSamples(serverBus, servers, cohort, samplesFrom) {

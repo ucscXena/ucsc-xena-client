@@ -56,7 +56,7 @@ function bounded(min, max, x) {
 
 var nn = (...args) => args.filter(x => x); // not "falsey" (null, undefined, false, etc.)
 
-function tooltip(heatmap, fields, fieldFormat, codes, width, zoom, samples, ev) {
+function tooltip(heatmap, fields, sampleFormat, fieldFormat, codes, width, zoom, samples, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
@@ -71,7 +71,7 @@ function tooltip(heatmap, fields, fieldFormat, codes, width, zoom, samples, ev) 
 	val = code ? code : prec(val);
 
 	return {
-		sampleID: sampleID,
+		sampleID: sampleFormat(sampleID),
 		rows: nn(
 			[['labelValue', label, val]],
 			(val !== 'NA' && !code) &&
@@ -212,10 +212,16 @@ var HeatmapColumn = hotOrNot(React.createClass({
 		this.props.callback(['dataType', this.props.id, newMode]);
 	},
 	tooltip: function (ev) {
-		var {samples, data, column, zoom, fieldFormat, id} = this.props,
+		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
 			codes = _.get(data, 'codes'),
 			{fields, heatmap, width} = column;
-		return tooltip(heatmap, fields, fieldFormat(id), codes, width, zoom, samples, ev);
+		return tooltip(heatmap, fields, sampleFormat, fieldFormat(id), codes, width, zoom, samples, ev);
+	},
+	download: function () {
+		var {samples, data, sampleFormat, column } = this.props,
+			{fields, heatmap} = column,
+			tsvSamples = _.map(samples, sampleFormat);
+		return tsvProbeMatrix(heatmap, tsvSamples, fields, data.codes);
 	},
 	// To reduce this set of properties, we could
 	//    - Drop data & move codes into the 'display' obj, outside of data
@@ -224,8 +230,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 		var {samples, data, column, zoom, disableKM, supportsGeneAverage, id} = this.props,
 			{fields, heatmap, colors, legend} = column,
 			codes = _.get(data, 'codes'),
-			download = _.partial(tsvProbeMatrix, heatmap, samples, fields, codes),
-			menu = supportsGeneAverage(id) ? modeMenu(column, this.onMode) : null;
+			menu = supportsGeneAverage(column) ? modeMenu(column, this.onMode) : null;
 
 		return (
 			<Column
@@ -233,7 +238,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 				id={this.props.id}
 				onViz={this.props.onViz}
 				disableKM={disableKM}
-				download={download}
+				download={this.download}
 				column={column}
 				zoom={zoom}
 				menu={menu}

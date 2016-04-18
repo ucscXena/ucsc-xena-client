@@ -53,7 +53,9 @@ var controls = {
 	'datasets-post!': (serverBus, state, newState, datasets) => fetchFeatures(serverBus, datasets),
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
-		resetZoom(_.assoc(state, "samples", samples)),
+		resetZoom(_.assoc(state,
+						  'cohortSamples', samples,
+						  'samples', _.range(_.sum(_.map(samples, c => c.length))))),
 	'samples-post!': (serverBus, state, newState, samples) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
@@ -62,7 +64,7 @@ var controls = {
 		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
 	},
 	'normalize-fields-post!': (serverBus, state, newState, fields, id) =>
-		fetchColumnData(serverBus, state.samples, id, _.getIn(newState, ['columns', id])),
+		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
 		columnOpen(state, id) ?  _.assocIn(state, ["data", id], data) : state,

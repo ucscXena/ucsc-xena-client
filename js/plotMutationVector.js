@@ -74,7 +74,7 @@ var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop 
 	.filter(row => row.length > 0); // drop empty rows
 var gbURL =  (assembly, pos) => `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${encodeURIComponent(assembly)}&position=${encodeURIComponent(pos)}`;
 
-function sampleTooltip(data, gene, assembly) {
+function sampleTooltip(sampleFormat, data, gene, assembly) {
 	var dnaVaf = data.dna_vaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dna_vaf)],
 		rnaVaf = data.rna_vaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
 		refAlt = data.reference && data.alt && ['value', `${data.reference} to ${data.alt}`],
@@ -90,7 +90,7 @@ function sampleTooltip(data, gene, assembly) {
 			[dnaVaf],
 			[rnaVaf]
 		]),
-		sampleID: data.sample
+		sampleID: sampleFormat(data.sample)
 	};
 }
 
@@ -106,25 +106,29 @@ function makeRow(fields, sampleGroup, row) {
 		_.map(fields, f => (row && row[f]) || fieldValue));
 }
 
-function tooltip(nodes, samples, {height, count, index}, gene, assembly, ev) {
+function tooltip(nodes, samples, sampleFormat, {height, count, index}, gene, assembly, ev) {
 	var {x, y} = util.eventOffset(ev),
 		pixPerRow = height / count, // XXX also appears in mutationVector
 		minppr = Math.max(pixPerRow, 2), // XXX appears multiple places
 		node = closestNode(nodes, minppr, x, y);
 
 	return node ?
-		sampleTooltip(node.data, gene, assembly) :
-		{sampleID: samples[Math.floor((y * count / height) + index)]};
+		sampleTooltip(sampleFormat, node.data, gene, assembly) :
+		{sampleID: sampleFormat(samples[Math.floor((y * count / height) + index)])};
 }
 
-function getRowFields(rows, sampleGroups, idFieldName) {
+function getRowFields(rows, sampleGroups) {
 	if (_.isEmpty(sampleGroups)) {
 		return []; // When no samples exist
 	} else if (!_.isEmpty(rows)) {
 		return _.keys(rows[0]); // When samples have mutation(s)
 	} else {
-		return [idFieldName, 'result']; // default fields for mutation-less samples
+		return ['sample', 'result']; // default fields for mutation-less columns
 	}
+}
+
+function formatSamples(sampleFormat, rows) {
+	return _.map(rows, r => _.updateIn(r, ['sample'], sampleFormat));
 }
 
 var MutationColumn = hotOrNot(React.createClass({
@@ -150,14 +154,13 @@ var MutationColumn = hotOrNot(React.createClass({
 		this.ttevents.dispose();
 	},
 	onDownload: function() {
-		const SAMPLE_ID_FIELD = 'sample';
-		let {data: {req: {rows}}, samples, index} = this.props,
+		let {data: {req: {rows}}, samples, index, sampleFormat} = this.props,
 			groupedSamples = _.getIn(index, ['bySample']) || [],
-			rowFields = getRowFields(rows, groupedSamples, SAMPLE_ID_FIELD),
+			rowFields = getRowFields(rows, groupedSamples),
 			allRows = _.map(samples, (sId) => {
-				let alternateRow = {}; // only used for mutation-less samples
-				alternateRow[SAMPLE_ID_FIELD] = sId;
-				return makeRow(rowFields, groupedSamples[sId], alternateRow);
+				let alternateRow = {sample: sampleFormat(sId)}; // only used for mutation-less samples
+				return makeRow(rowFields, formatSamples(sampleFormat, groupedSamples[sId]),
+					alternateRow);
 			});
 		return [rowFields, allRows];
 	},
@@ -171,8 +174,8 @@ var MutationColumn = hotOrNot(React.createClass({
 		window.open(url);
 	},
 	tooltip: function (ev) {
-		var {column: {nodes, fields, assembly}, samples, zoom} = this.props;
-		return tooltip(nodes, samples, zoom, fields[0], assembly, ev);
+		var {column: {nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props;
+		return tooltip(nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
 	},
 	render: function () {
 		var {column, samples, zoom, data, index, disableKM} = this.props,
