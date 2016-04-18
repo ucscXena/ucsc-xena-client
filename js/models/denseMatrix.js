@@ -64,7 +64,7 @@ function dataToHeatmap(column, vizSettings, data, samples, dataset) {
 	var heatmap = computeHeatmap(vizSettings, req, fields, samples, dataset),
 		colors = map(fields, (p, i) =>
 					 heatmapColors.colorSpec(column, vizSettings,
-											 codes[p], heatmap[i], dataset)),
+											 codes, heatmap[i], dataset)),
 		// Provide a legend scheme if more than one field.
 		multiScaled = fields.length > 1 && !hasViz(vizSettings),
 		legend = multiScaled ?
