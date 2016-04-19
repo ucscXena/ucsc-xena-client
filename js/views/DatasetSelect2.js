@@ -7,8 +7,6 @@ var _ = require('../underscore_ext');
 var xenaQuery = require('../xenaQuery');
 var {deepPureRenderMixin} = require('../react-utils');
 
-require('./DatasetSelect2.css');
-
 // group header for a server
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_label  = 'My Computer Hub' ;

@@ -260,7 +260,10 @@ var ColumnEdit = React.createClass({
 			{appState: {cohorts, columnEdit, datasets, features, servers}, callback, onHide} = this.props,
 			chosenDs = choices.dataset,  // choices.dataset is an array of datasets
 			currentPosition = _.findKey(positions, p => p),
-			{Editor, apply} = pickEditor(datasets, chosenDs);
+			{Editor, apply} = pickEditor(datasets, chosenDs),
+			chosenDsSingle = (chosenDs && chosenDs.length===1) ? datasets[chosenDs[0]]:null,
+			chosenDsSingleLink = chosenDsSingle ? "../datapages/?dataset="+ chosenDsSingle.name +
+				"&host="+JSON.parse(chosenDsSingle.dsID).host : null;
 
 		return (
 			<Modal show={true} className='columnEdit container' enforceFocus>
@@ -282,7 +285,9 @@ var ColumnEdit = React.createClass({
 						servers={_.uniq(_.reduce(servers, (all, list) => all.concat(list), []))}/> : null}
 
 					{positions['editor'] ?
-						<div>{makeLabel( chosenDs.length===1? datasets[chosenDs[0]].label: "Combined phenotypes", "Dataset:")}</div>
+						<div>{makeLabel( chosenDs.length===1?
+							<a href={chosenDsSingleLink} target="_BLANK">{datasets[chosenDs[0]].label}</a>: "Combined phenotypes",
+							"Dataset:")}</div>
 						:null}
 					<br/>
 

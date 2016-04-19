@@ -20,9 +20,6 @@
 	font-size: 13px;
 	vertical-align: top;
 }
-.selection-label {
-
-}
 .selection-footer {
 	position: absolute;
 	left: 0;
@@ -43,4 +40,10 @@
 }
 .inActive {
 	color: #A4A4A4;
+}
+a:hover {
+	text-decoration: underline;
+}
+.customPanel, .customPanel:hover, .customPanel:link{
+	text-decoration:none;
 }
