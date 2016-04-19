@@ -7,9 +7,10 @@ var _ = require('../underscore_ext');
 var trim = require('underscore.string').trim;
 
 function apply(features, state) {
-	var {list, genes} = state,
+	var {list, genes=true} = state,
 		fields = toGeneList(list),
 		fieldTxt = fields.join(', ');
+
 	return {
 		fields: fields,
 		dataType: genes ? (fields.length > 1 ? 'geneMatrix' : 'geneProbesMatrix') :
@@ -38,8 +39,7 @@ var GeneProbeEdit = React.createClass({
 		var {genes = true, hasGenes, list, examples, makeLabel, setEditorState} = this.props,
 			doGenes = hasGenes && genes;
 		var help = doGenes ? 'e.g. TP53 or TP53, PTEN' :
-			// babel-eslint/issues/31
-			examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : ''; //eslint-disable-line comma-spacing
+			examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : '';
 		var optionEl = null;
 
 		if (hasGenes) {
@@ -54,20 +54,21 @@ var GeneProbeEdit = React.createClass({
 						<strong className="control-label">Identifiers</strong>
 					</Button>
 				</ButtonGroup>;
-			optionEl = makeLabel(content, 'Select Input:');
+			optionEl = makeLabel(content, 'Input:');
 		}
 
 		var content =
 			<div>
 				<Input onChange={ev => setEditorState({list: ev.target.value})}
 					type='textarea' bsSize='large' value={list} />
-				<div className="help">{help}</div>
+				<div className="text-muted">{help}</div>
 			</div>;
-		var inputEl = makeLabel(content, 'Enter ' +(doGenes ? 'Gene' : 'Identifier') +'(s):');
+		var inputEl = makeLabel(content, doGenes ? 'Genes:' : 'Identifiers:');
 
 		return (
 			<div className="form-group">
 				{optionEl}
+				<br/>
 				{inputEl}
 			</div>
 	   );

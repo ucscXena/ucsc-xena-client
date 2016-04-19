@@ -28,10 +28,10 @@ var GeneEdit = React.createClass({
 			<div>
 				<Input type='textarea' bsSize="large" value={gene}
 					   onChange={ev => setEditorState({gene: ev.target.value})}/>
-				<div className="help">e.g. TP53</div>
+				<div className="text-muted">e.g. TP53</div>
 			</div>;
 		return (
-			<div className="form-group">{makeLabel(content, `Enter ${this.name}(s):`)}</div>
+			<div className="form-group">{makeLabel(content, `Gene:`)}</div>
 		);
 	}
 });

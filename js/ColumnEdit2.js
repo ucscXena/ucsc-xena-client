@@ -23,30 +23,29 @@ var editors = {
 //	return _.get(editors, _.get(m, 'type', 'none'), geneProbeEdit);
 //}
 
-var pickEditor = function(metas, chosenDs) {
-	/*	1. Get 1st element of metas array
-	 2. Check 'type' parameter of individual meta
-	 3. Find matching type within 'editors' object above
-	 4. Use found editor
-	 */
-	let dsMeta = metas && _.get(metas, chosenDs); // only 1 entry when dataset sub type is NOT 'phenotype'
-	return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
+var pickEditor = function(datasets, chosenDs) {
+	if (datasets && chosenDs){
+		let dsMeta = datasets[chosenDs[0]]; // only 1 entry when dataset sub type is NOT 'phenotype'
+		return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
+	} else {
+		return {null, null};
+	}
 }
 
 function workflowIndicators(positions, defs, onHide) {
 	// Show all breadcrumbs regardless of where in the workflow the user is in.
 	let count = 0,
-		activeSection = _.findKey(positions, s => s);
-	let tabs = _.map(_.omit(defs, def => def.omit), (def, key) => {
-		count++;
-		let navTitle = `${count}. Select ${def.name}`;
-		//className = (activeSection === key) ? 'breadcrumb-active' : 'breadcrumb-inActive';
-		return (
-			<NavItem eventKey={key} key={key} disabled>
-				<span><strong>{navTitle}</strong></span>
-			</NavItem>
-		)
-	});
+		activeSection = _.findKey(positions, s => s),
+		tabs = _.map(_.omit(defs, def => def.omit), (def, key) => {
+			count++;
+			let navTitle = `${count}. Select ${def.name}`;
+			return (
+				<NavItem classname ='row' eventKey={key} key={key} disabled>
+					<span>{navTitle}</span>
+				</NavItem>
+			)
+		});
+
 	return (
 		<Modal.Header onHide={onHide} closeButton>
 			<Nav bsStyle='pills' activeKey={activeSection}>{tabs}</Nav>
@@ -80,16 +79,15 @@ function updatePositions(newSection, oldPositions) {
 
 function makeLabel(content, label) {
 	return (
-		<div className='row lead'>
-			<div className="col-md-4 text-right">{label}</div>
-			<div className="col-md-8 text-left chosen-values">{content}</div>
+		<div className='row'>
+			<label className="col-md-3 text-right control-label">{label}</label>
+			<div className="col-md-8 text-left text-info">{content}</div>
 		</div>
 	);
 }
 
 var NavButtons = React.createClass({
 	propTypes: {
-		btnSize: PropTypes.string,
 		choices: PropTypes.object,
 		onCancel: PropTypes.func,
 		onForward: PropTypes.func,
@@ -97,44 +95,44 @@ var NavButtons = React.createClass({
 		positions: PropTypes.object
 	},
 	makeForwardBtn: function(currentSection) {
-		/* FORWARD BTN: Select | Next | Done
-		 - Make visible ALL the time
-		 - Enable when either of the choices are made for the current section
-		 */
-		let btnLabel = 'Select',
-			icon = '',
-			{btnSize, choices, onForward, defs} = this.props,
-			disabled = _.isEmpty(choices[currentSection]);
+		/* FORWARD BTN: Select | Next | Done */
+		let btnLabel,
+			icon,
+			{choices, onForward, defs} = this.props,
+			disabled = !choices[currentSection] || choices[currentSection].length===0;
 
-		if (!defs[currentSection].next) {
-			btnLabel = 'Done';
-		} else if (defs[currentSection].next && defs[currentSection].prev) {
-			icon = "menu-right";
+		if (currentSection === "cohort"){
+			btnLabel = 'Select';
+			icon = '';
+		} else if (currentSection === "dataset"){
 			btnLabel = 'Next';
+			icon = "menu-right";
+		} else if (currentSection ==="editor"){
+			btnLabel = 'Done';
+			icon = '';
 		}
 
-		return (<Button key="FORWARD" bsStyle='primary'
-					disabled={disabled} onClick={onForward} bsSize={btnSize}>
-			{btnLabel} {disabled ? null : <Glyphicon glyph={icon}/>}</Button>);
+		return (
+			<Button key="FORWARD" bsStyle='primary' disabled={disabled} onClick={onForward}>
+				{btnLabel} <Glyphicon glyph={icon}/>
+			</Button>
+		);
 	},
 	render: function() {
 		let buttons = [],
-			{btnSize, defs, onBack, onCancel, positions} = this.props,
+			{defs, onBack, onCancel, positions} = this.props,
 			currentSection = _.findKey(positions, (status) => status),
 			prevSection = defs[currentSection].prev;
-		/* PREV && CANCEL
-		 - Make visible when not on beg section
-		 - Always enabled
-		 */
+
+		/* PREV && CANCEL */
 		if (prevSection) {
 			if (!defs[prevSection].omit) {
 				buttons.push(
-					<Button key='BACK' onClick={onBack} bsStyle='info'
-							bsSize={btnSize}><Glyphicon glyph='menu-left' /> Prev
+					<Button key='BACK' onClick={onBack} bsStyle='primary'>
+						<Glyphicon glyph='menu-left' /> Prev
 					</Button>);
 			}
-			buttons.push(<Button key="CANCEL" onClick={onCancel}
-								 bsStyle='default' bsSize={btnSize}>Cancel</Button>);
+			buttons.push(<Button key="CANCEL" onClick={onCancel}>Cancel</Button>);
 		}
 		buttons.push(this.makeForwardBtn(currentSection));
 		return (
@@ -153,7 +151,7 @@ var ColumnEdit = React.createClass({
 		},
 		dataset: {
 			omit: false,
-			name: 'Dataset',
+			name: 'dataset',
 			next: 'editor',
 			prev: 'cohort'
 		},
@@ -198,7 +196,9 @@ var ColumnEdit = React.createClass({
 	onDatasetSelect: function (dsIDs) {
 		var {callback, appState: {datasets}} = this.props,
 			metas = _.pick(datasets, dsIDs);
+
 		this.setChoice('dataset', dsIDs);
+
 		if (_.toArray(metas).length === 1) {
 			let dsID = _.first(dsIDs);
 			callback(['edit-dataset', dsID, metas[dsID]]);
@@ -235,63 +235,71 @@ var ColumnEdit = React.createClass({
 				choices: updateChoice(currentSpot, this.defs, choices),
 				positions: updatePositions(nextSpot, positions)
 			});
-
 			this.setState(newState);
+		}
+
+		if (currentSpot ==='editor'){
+			let {appState: {columnEdit, datasets}} = this.props,
+				chosenDs = choices.dataset,
+				dsFeatures = _.getIn(columnEdit, ['features']),
+				{Editor, apply} = pickEditor(datasets, chosenDs);
+
+			this.addColumn(apply(dsFeatures, choices['editor']));
 		}
 	},
 	setChoice: function(section, newValue) {
 		let newState = _.assocIn(this.state, ['choices', section], newValue);
 		this.setState(newState);
 	},
-	onSetEditor: function (newState) {
-		var {dataset, editor} = this.state.choices,
-			{datasets} = this.props.appState,
-			dsID = _.has(newState, 'dsID') ? newState[dsID] : dataset[0],
-			hasGenes = _.get(datasets[dsID], 'probeMap'),
-			oldEditor = _.merge(editor, {hasGenes, genes: hasGenes});
-		this.setChoice('editor', _.merge(oldEditor, newState));
+	onSetEditor: function (newEditor) {
+		var oldEditor = this.state.choices.editor || {};
+		this.setChoice('editor', _.merge(oldEditor, newEditor));
 	},
 	render: function () {
 		var {choices, positions} = this.state,
 			{appState: {cohorts, columnEdit, datasets, features, servers}, callback, onHide} = this.props,
-			dsFeatures = _.getIn(columnEdit, ['features']),
-			chosenDsID = choices.dataset && choices.dataset[0],
+			chosenDs = choices.dataset,  // choices.dataset is an array of datasets
 			currentPosition = _.findKey(positions, p => p),
-			metas = !_.isEmpty(choices.dataset) && _.pick(datasets, choices.dataset),
-			{Editor, apply} = pickEditor(metas, chosenDsID);
+			{Editor, apply} = pickEditor(datasets, chosenDs);
 
 		return (
 			<Modal show={true} className='columnEdit container' enforceFocus>
-				{this.defs[currentPosition].omit ? null : workflowIndicators(positions, this.defs, onHide)}
+				{positions['cohort'] ?
+					<Modal.Header onHide={onHide} closeButton>
+        				<Modal.Title>Select a cohort</Modal.Title>
+      				</Modal.Header>: null}
+				{positions['dataset'] || positions['editor'] ?
+					this.defs[currentPosition].omit ? null : workflowIndicators(positions, this.defs, onHide) : null }
+
 				<Modal.Body>
 					{positions['cohort'] ?
 					<CohortSelect onSelect={this.onCohortSelect} cohorts={cohorts}
 						cohort={choices.cohort} makeLabel={makeLabel}/> : null}
 
-					{positions['dataset'] || !_.isEmpty(choices['dataset']) ?
+					{positions['dataset'] ?
 					<DatasetSelect datasets={datasets} makeLabel={makeLabel}
-						disable={chosenDsID && !positions['dataset']}
-						event='dataset' value={chosenDsID || null} onSelect={this.onDatasetSelect}
+						event='dataset' value={chosenDs || null} onSelect={this.onDatasetSelect}
 						servers={_.uniq(_.reduce(servers, (all, list) => all.concat(list), []))}/> : null}
 
-					{positions['editor'] && Editor ?
-					<Editor {...columnEdit} allFeatures={features} callback={callback}
-						{...(this.state.choices['editor'] || {})} chosenDs={chosenDsID}
-						metas={metas} hasGenes={chosenDsID && !!metas[chosenDsID].probeMap}
-						makeLabel={makeLabel} setEditorState={this.onSetEditor}/> : null}
+					{positions['editor'] ?
+						<div>{makeLabel( chosenDs.length===1? datasets[chosenDs[0]].label: "Combined phenotypes", "Dataset:")}</div>
+						:null}
+					<br/>
 
-					<br />
+					{positions['editor'] ?
+					<Editor {...columnEdit} allFeatures={features} callback={callback}
+						{...(this.state.choices['editor'] || {})} chosenDs={chosenDs}
+						hasGenes={chosenDs && !!datasets[chosenDs[0]].probeMap}
+						makeLabel={makeLabel} setEditorState={this.onSetEditor}/> : null}
+					<br/>
+
 				</Modal.Body>
 				<div className="form-group selection-footer">
 					<span className="col-md-6 col-md-offset-3 text-center">
-						<NavButtons {...this.state} btnSize='small'
+						<NavButtons {...this.state}
 							onBack={this.onBack} onCancel={onHide} defs={this.defs}
-							onForward={positions['editor']
-								? () => this.addColumn(apply(dsFeatures, choices['editor']))
-								: this.onForward}/>
-					</span>
-					<span className="col-md-3 text-right">
-						<a href="#">I wish I could...</a>
+							onForward= {this.onForward}
+						/>
 					</span>
 				</div>
 			</Modal>
