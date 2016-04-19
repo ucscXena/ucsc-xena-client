@@ -7,17 +7,21 @@ var _ = require('../underscore_ext');
 var xenaQuery = require('../xenaQuery');
 var {deepPureRenderMixin} = require('../react-utils');
 
+require('./DatasetSelect2.css');
+
 // group header for a server
-const LOCAL_DOMAIN = 'local.xena.ucsc.edu';
-//var header = s => xenaQuery.server_url(s);
-const aliases = { phenotype: 'Phenotypes' };
+const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
+const LOCAL_DOMAIN_label  = 'My Computer Hub' ;
+const phenotype_dataSubTypeList = ["phenotype","phenotypes", "Phenotype", "Phenotypes"];
+const phenotypeGroup_label ="phenotype";
+
 var isLoaded = ds => ds.status === 'loaded';
 var filterDatasets = (list, server) =>
 	_.filter(list, (ds, dsID) =>
 		isLoaded(ds) && server.includes(JSON.parse(dsID).host));
 var groupDatasets = (list, server) => _.groupBy(list, ds =>
-	server.includes(LOCAL_DOMAIN) ? 'My Computer Hub' : ds.dataSubType);
-//var sortDatasets = list => _.sortBy(list, ds => ds.label.toLowerCase());
+	server.includes(LOCAL_DOMAIN) ?  LOCAL_DOMAIN_label : ds.dataSubType);
+
 var sortDatasets = (groups) => groups.map(dsGroup => {
 	let sortedOptions = _.sortBy(dsGroup.options, ds => ds.label.toLowerCase());
 	return _.assoc(dsGroup, 'options', sortedOptions);
@@ -27,7 +31,6 @@ var stripDatasets = list => _.map(list, ds => ({label: ds.label, value: ds.dsID}
 var addIterations = groups =>
 	_.map(groups, group =>
 		_.extend(group, {iterations: _.countBy(group.options, ds => ds.label)}));
-var getStyleSuffix = isMatch => isMatch ? 'info' : 'default';
 
 function groupsFromDatasets(datasets, servers) {
 	return _.reduce(servers, (allGroups, hub) => {
@@ -51,9 +54,11 @@ function groupsFromDatasets(datasets, servers) {
 function makeDs(ds, showPosition, countdown, onSelect, setValue) {
 	var {label, value} = ds,
 		position = showPosition ? countdown[label] : 0;
+
 	return (
 		<ListGroupItem key={label +position} onClick={() => onSelect([value])}
-			eventKey={value} href='#' bsStyle={getStyleSuffix(value === setValue)}>
+			eventKey={value} href='#'
+			className = {`list-group-item-${ (setValue && value === setValue[0])? 'info':'default'}`}>
 			{label +(position > 0 ? ` (#${position})` : '')}
 		</ListGroupItem>
 	);
@@ -61,25 +66,26 @@ function makeDs(ds, showPosition, countdown, onSelect, setValue) {
 
 function makeGroup(groupMeta, activeGroupName, onSelect, setValue) {
 	var {iterations, name, options} = groupMeta,
-		groupAlias = aliases[name],
+		phenoGroup = phenotype_dataSubTypeList.indexOf(name) !==-1,
 		header =
 			<div className='row'>
 				<span className='col-md-11'>
-					<b>{name}</b>
+					{name}
 				</span>
-				<span className='col-md-1'>
-					<Glyphicon glyph={activeGroupName === name ? 'menu-up' : 'triangle-bottom'}/>
+				<span className='col-md-1 text-muted small'>
+					<Glyphicon glyph={activeGroupName === name ? 'triangle-top' : 'triangle-bottom'}/>
 				</span>
 			</div>;
-	if (groupAlias) {
-		let defaultValue = options[0] && options[0].value;
+	if (phenoGroup) {
 		return (
-			<div key={name} className={`panel panel-${getStyleSuffix(setValue === defaultValue)}`}>
+			<a href="#" className='customPanel'>
+			<div key={name} className={`panel panel-${activeGroupName === 'phenotype'? 'info':'default'}`}>
 				<div className='panel-heading'
 					onClick={() => onSelect(_.pluck(options, 'value'), name)}>
-					<h3 className="panel-title"><strong>{groupAlias}</strong></h3>
+					<span className="panel-title">phenotype</span>
 				</div>
 			</div>
+			</a>
 		)
 	} else {
 		// - Duplicate elements will have a count number appended to their label
@@ -103,9 +109,20 @@ function makeGroup(groupMeta, activeGroupName, onSelect, setValue) {
 var DatasetSelect = React.createClass({
 	name: 'Dataset',
 	getInitialState: function() {
-		var {datasets, servers} = this.props;
+		var {datasets, servers, value} = this.props,
+			activeGroup;
+
+		if (value && value.length===1){
+			let ds = datasets[value[0]];
+			activeGroup = JSON.parse(ds.dsID).host=== LOCAL_DOMAIN ?  LOCAL_DOMAIN_label : ds.dataSubType;
+		} else if (value && value.length>1){
+			activeGroup = phenotypeGroup_label;
+		} else {
+			activeGroup='';
+		}
+
 		return {
-			activeGroup: '',
+			activeGroup: activeGroup,
 			groups: addIterations(sortDatasets(groupsFromDatasets(datasets, servers)))
 		};
 	},
@@ -122,34 +139,29 @@ var DatasetSelect = React.createClass({
 		}
 	},
 	onSelectDs: function(dsIDs, groupName) {
-		if (aliases[groupName]) {
-			this.onSetGroup(groupName);
+		if (phenotype_dataSubTypeList.indexOf(groupName)!==-1){
+			this.onSetGroup(phenotypeGroup_label);
 		}
 		this.props.onSelect(dsIDs);
 	},
 	onSetGroup: function(newGroupName) {
-		// 'activeGroup' is referenced by React Bootrap's Accordion panels as a way
-		// to determine whether a group should be expanded.
-		var groupName = (newGroupName !== this.state.activeGroup) ? newGroupName : '';
+		//change activeGroup when click on a expandable header only
+		var groupName = (newGroupName !== this.state.activeGroup || newGroupName ===phenotypeGroup_label) ? newGroupName : '';
 		this.setState({activeGroup: groupName});
 	},
 	mixins: [deepPureRenderMixin],
 	render: function () {
-		var {disable, datasets, makeLabel, value} = this.props,
-			{activeGroup, groups} = this.state,
-			chosenValue = datasets && datasets[value],
-			label = chosenValue && (aliases[chosenValue.dataSubType] || chosenValue.label),
-			labelEl = makeLabel(label, chosenValue ? 'Chosen dataset:' : `Choose a ${this.name}`),
-			contentEl = disable ? null :
+		var {datasets, makeLabel, value} = this.props,
+			{activeGroup, groups} = this.state;
+
+		var	contentEl =
 				<Accordion activeKey={activeGroup} className='form-group' onSelect={this.onSetGroup}>
 					{_.map(groups, (groupMeta) =>
 						makeGroup(groupMeta, activeGroup, this.onSelectDs, value))
 					}
-				</Accordion>;
+				</Accordion> ;
 		return (
 			<div>
-				{labelEl}
-				{disable ? <hr /> : null}
 				{contentEl}
 			</div>
 		);

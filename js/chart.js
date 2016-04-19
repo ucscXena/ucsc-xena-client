@@ -1072,7 +1072,8 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 		rightContainer.appendChild(buildEmptyChartContainer());
 
 		if (!(xenaState && xenaState.cohort && xenaState.samples && xenaState.columnOrder.length > 0)) {
-			document.getElementById("myChart").innerHTML = "There is no heatmap data, please add some.";
+			document.getElementById("myChart").innerHTML =
+				"There is no data, please add some by first clicking the Visual Spreadsheet button, then the + (add) button.";
 			return;
 		}
 

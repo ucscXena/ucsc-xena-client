@@ -26,39 +26,37 @@ var consolidateFeatures = featureSet => {
 		return all.concat(strippedFeatures);
 	}, []);
 };
-const LOCAL_DOMAIN = 'local.xena.ucsc.edu';
+
 var sortFeatures = features => _.sortBy(features, f => f.label.toUpperCase());
-// Select a phenotype feature from those on the server.
 var PhenotypeEdit = React.createClass({
-	name: 'View', // XXX change col-md-offset-10, etc. to react-boostrap style
+	name: 'View',
 	getInitialState: function() {
-		var {allFeatures, chosenDs, metas} = this.props,
-			dsHub = JSON.parse(chosenDs).host,
-			filteredFeatures = _.pick(allFeatures, dsHub.includes(LOCAL_DOMAIN) ? chosenDs : _.keys(metas));
+		var {allFeatures, chosenDs} = this.props,
+			filteredFeatures = _.pick(allFeatures,
+				function(object, dsID) {
+  					return ( chosenDs.indexOf(dsID)!==-1);
+				});
 		return {
 			features: sortFeatures(consolidateFeatures(filteredFeatures))
 		}
 	},
 	onSelect: function(f) {
-		var {callback, metas, setEditorState} = this.props,
+		var {callback, setEditorState} = this.props,
 			{features} = this.state,
 			feature = _.findWhere(features, {value: f});
-		callback(['edit-dataset', feature.dsID, metas[feature.dsID]]);
+
+		callback(['edit-dataset', feature.dsID, {type:"clinicalMatrix"}]);
 		setEditorState({feature: feature.value, dsID: feature.dsID});
 	},
 	render: function () {
 		var {feature = {}, makeLabel} = this.props,
 			{features} = this.state,
-			labelValue = _.isEmpty(feature) ? `Choose a ${this.name} :` :
-				`${this.name} chosen: `,
-			//XXX Account for 'charLimit' prop after 'NewNavigation' branch is merged into master
+			labelValue = "View:",
 			content = <Select value={feature} allowSearch={true}
 				onSelect={this.onSelect} options={features}/>,
 			label = makeLabel(content, labelValue);
 		return (
-			<div className='row'>
-				<div className="col-md-12">Total Features: {_.toArray(features).length}</div>
-				<div className="col-md-12">Features for Specific Phenotype: {_.toArray(this.props.features).length}</div>
+			<div className='form-group'>
 				{label}
 			</div>
 		);
