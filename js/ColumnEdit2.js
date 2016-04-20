@@ -236,16 +236,18 @@ var ColumnEdit = React.createClass({
 				positions: updatePositions(nextSpot, positions)
 			});
 			this.setState(newState);
-		}
-
-		if (currentSpot ==='editor'){
+		} else if (currentSpot ==='editor'){
 			let {appState: {columnEdit, datasets}} = this.props,
 				chosenDs = choices.dataset,
 				dsFeatures = _.getIn(columnEdit, ['features']),
-				{Editor, apply} = pickEditor(datasets, chosenDs);
+				{Editor, apply} = pickEditor(datasets, chosenDs),
+				hasGenes= chosenDs && !!datasets[chosenDs[0]].probeMap;
 
-			this.addColumn(apply(dsFeatures, choices['editor']));
+			this.addColumn(apply(dsFeatures, choices.editor, hasGenes));
 		}
+	},
+	onHub: function(){
+		location.href="../hub/";
 	},
 	setChoice: function(section, newValue) {
 		let newState = _.assocIn(this.state, ['choices', section], newValue);
@@ -271,13 +273,22 @@ var ColumnEdit = React.createClass({
 					<Modal.Header onHide={onHide} closeButton>
         				<Modal.Title>Select a cohort</Modal.Title>
       				</Modal.Header>: null}
+
 				{positions['dataset'] || positions['editor'] ?
-					this.defs[currentPosition].omit ? null : workflowIndicators(positions, this.defs, onHide) : null }
+					workflowIndicators(positions, this.defs, onHide) : null }
 
 				<Modal.Body>
 					{positions['cohort'] ?
 					<CohortSelect onSelect={this.onCohortSelect} cohorts={cohorts}
 						cohort={choices.cohort} makeLabel={makeLabel}/> : null}
+
+					{positions['cohort'] ?
+						<div>
+							<br/>
+							<span>If not found, perhaps the cohort is on a different data hub?</span>
+							{' '}
+							<Button onClick={this.onHub}>Configure My Data Hubs</Button>
+						</div>:null}
 
 					{positions['dataset'] ?
 					<DatasetSelect datasets={datasets} makeLabel={makeLabel}

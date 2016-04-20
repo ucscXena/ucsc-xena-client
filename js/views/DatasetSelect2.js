@@ -35,6 +35,7 @@ function groupsFromDatasets(datasets, servers) {
 		let filteredSets = filterDatasets(datasets, hub),
 			groupedSets = groupDatasets(filteredSets, hub),
 			sortedGroupNames = sortKeys(_.keys(groupedSets));
+
 		sortedGroupNames.forEach(groupName => {
 			let dsIndex = _.findKey(allGroups, dsGroup => dsGroup.name === groupName),
 				groupMeta = {

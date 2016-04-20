@@ -6,10 +6,14 @@ var {ButtonGroup, Button, Input} = require('react-bootstrap/lib');
 var _ = require('../underscore_ext');
 var trim = require('underscore.string').trim;
 
-function apply(features, state) {
+function apply(features, state, hasGenes) {
 	var {list, genes} = state,
 		fields = toGeneList(list),
 		fieldTxt = fields.join(', ');
+
+	if (hasGenes && genes ===undefined){
+		genes = true;
+	}
 
 	return {
 		fields: fields,
@@ -29,13 +33,6 @@ function toGeneList(str) {
 // Select a list of genes, or list of identifiers. genes/identifier mode
 // is selectable if the dataset supports gene views.
 var GeneProbeEdit = React.createClass({
-	getInitialState: function() {
-		var {genes, hasGenes, setEditorState} = this.props;
-		if (hasGenes && genes ===undefined){
-			setEditorState({genes: true});
-		};
-		return null;
-	},
 	// this.props
 	//     hasGenes: boolean Whether the dataset has a gene mapping.
 	//     genes: boolean User has selected 'genes' display.
