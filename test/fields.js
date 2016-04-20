@@ -1,7 +1,7 @@
 /*global require: false, it: false, console: false, describe: false, mocha: false */
 'use strict';
 
-var fieldsModel = require('../js/models/fields');
+var fieldsModel = require('../js/models/fieldData');
 
 var assert = require('assert');
 
