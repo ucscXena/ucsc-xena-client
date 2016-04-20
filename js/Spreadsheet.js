@@ -189,10 +189,11 @@ var Columns = React.createClass({
 
 					{cohort &&
 					<Button
+						bsStyle= "primary"
 						onClick={() => this.setState({openColumnEdit: true})}
 						className='Column-add-button'
 						title='Add a column'>
-						+
+						+ Data
 					</Button>}
 				</div>
 				{editor}

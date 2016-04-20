@@ -1073,7 +1073,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 
 		if (!(xenaState && xenaState.cohort && xenaState.samples && xenaState.columnOrder.length > 0)) {
 			document.getElementById("myChart").innerHTML =
-				"There is no data, please add some by first clicking the Visual Spreadsheet button, then the + (add) button.";
+				"There is no data, please add some by first clicking the \"Visual Spreadsheet\" button, then the \"+ Data\" button.";
 			return;
 		}
 
