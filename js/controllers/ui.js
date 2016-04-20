@@ -6,7 +6,6 @@
 var _ = require('../underscore_ext');
 var Rx = require('rx');
 var xenaQuery = require('../xenaQuery');
-var util = require('../util');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
 var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
@@ -25,20 +24,6 @@ function cohortQuery(servers) {
 
 function fetchCohorts(serverBus, servers) {
 	serverBus.onNext(['cohorts', cohortQuery(servers)]);
-}
-
-function sortFeatures(features) {
-	return _.map(features, (label, name) => ({value: name, label: label}))
-		.sort((a, b) => util.caseInsensitiveSort(a.label, b.label));
-}
-
-// XXX shouldn't this just use the state.features data??
-function featureQuery(dsID) {
-	return xenaQuery.dsID_fn(xenaQuery.feature_list)(dsID)
-		.map(list => sortFeatures(list));
-}
-function fetchFeatures(serverBus, state, dsID) {
-	serverBus.onNext(['columnEdit-features', featureQuery(dsID)]);
 }
 
 function exampleQuery(dsID) {
@@ -193,9 +178,7 @@ var controls = {
 	vizSettings: (state, column, settings) =>
 		_.assocIn(state, ['columns', column, 'vizSettings'], settings),
 	'edit-dataset-post!': (serverBus, state, newState, dsID, meta) => {
-		if (meta.type === 'clinicalMatrix') {
-			fetchFeatures(serverBus, newState, dsID);
-		} else if (meta.type !== 'mutationVector') {
+		if (['mutationVector', 'clinicalMatrix'].indexOf(meta.type) === -1) {
 			fetchExamples(serverBus, newState, dsID);
 		}
 	},
