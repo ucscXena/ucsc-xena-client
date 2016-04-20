@@ -7,7 +7,7 @@ var _ = require('../underscore_ext');
 var trim = require('underscore.string').trim;
 
 function apply(features, state) {
-	var {list, genes=true} = state,
+	var {list, genes} = state,
 		fields = toGeneList(list),
 		fieldTxt = fields.join(', ');
 
@@ -29,6 +29,13 @@ function toGeneList(str) {
 // Select a list of genes, or list of identifiers. genes/identifier mode
 // is selectable if the dataset supports gene views.
 var GeneProbeEdit = React.createClass({
+	getInitialState: function() {
+		var {genes, hasGenes, setEditorState} = this.props;
+		if (hasGenes && genes ===undefined){
+			setEditorState({genes: true});
+		};
+		return null;
+	},
 	// this.props
 	//     hasGenes: boolean Whether the dataset has a gene mapping.
 	//     genes: boolean User has selected 'genes' display.
@@ -37,10 +44,10 @@ var GeneProbeEdit = React.createClass({
 	//
 	render: function () {
 		var {genes = true, hasGenes, list, examples, makeLabel, setEditorState} = this.props,
-			doGenes = hasGenes && genes;
-		var help = doGenes ? 'e.g. TP53 or TP53, PTEN' :
-			examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : '';
-		var optionEl = null;
+			doGenes = hasGenes && genes,
+			help = doGenes ? 'e.g. TP53 or TP53, PTEN' :
+				examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : '',
+			optionEl;
 
 		if (hasGenes) {
 			let content =
@@ -68,7 +75,7 @@ var GeneProbeEdit = React.createClass({
 		return (
 			<div className="form-group">
 				{optionEl}
-				<br/>
+				{optionEl ? <br/>:null}
 				{inputEl}
 			</div>
 	   );

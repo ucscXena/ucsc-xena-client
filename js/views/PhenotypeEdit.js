@@ -29,7 +29,6 @@ var consolidateFeatures = featureSet => {
 
 var sortFeatures = features => _.sortBy(features, f => f.label.toUpperCase());
 var PhenotypeEdit = React.createClass({
-	name: 'View',
 	getInitialState: function() {
 		var {allFeatures, chosenDs} = this.props,
 			filteredFeatures = _.pick(allFeatures,

@@ -12,7 +12,7 @@ var CohortSelect = React.createClass({
 		var {cohort, cohorts, makeLabel, ...other} = this.props,
 			sortedCohorts = _.sortBy(cohorts, (cohort) => cohort.toLowerCase()),
 			options = _.map(sortedCohorts, c => ({value: c, label: c})),
-			label = <label className="control-label">Cohort</label> ;
+			label = <label>Cohort</label> ;
 
 		return (
 			<div className='form-group'>
