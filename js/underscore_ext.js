@@ -178,20 +178,23 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		});
 	}
 
-	function scan(arr, fn, init) {
-		var out = [],
-			pushFn = (acc, v) => {
-				var result = fn(acc, v);
-				out.push(result);
-				return result;
-			};
-
-		if (arguments.length < 3) {
-			_.reduce(arr, pushFn);
-		} else {
-			_.reduce(arr, pushFn, init);
+	function scanI(arr, fn, acc, i, out) {
+		if (i >= arr.length) {
+			return out;
 		}
-		return out;
+		var next = fn(acc, arr[i]);
+		out.push(next);
+		return scanI(arr, fn, next, i + 1, out);
+	}
+
+	function scan(arr, fn, acc) {
+		if (arguments.length < 3) {
+			if (arr.length === 0) {
+				throw new Error("scan of empty array with no initial value");
+			}
+			return scanI(arr, fn, arr[0], 1, [arr[0]]);
+		}
+		return scanI(arr, fn, acc, 0, [acc]);
 	}
 
 	var curry = fn => curryN(fn.length, fn);

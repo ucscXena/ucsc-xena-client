@@ -37,6 +37,26 @@ describe('underscore_ext', function () {
 						 [[5, 'a', -1, 0],
 						 [4, 'b', -2, 1],
 						 [3, 'c', -3, 2]]);
-        });
+		});
     });
+	describe('#scan', function () {
+		it('should scan array with initial value', function() {
+			assert.deepEqual([0, 1, 3, 6], _.scan([1, 2, 3], (acc, x) => acc + x, 0));
+		});
+		it('should scan singleton array with initial value', function() {
+			assert.deepEqual([0, 1], _.scan([1], (acc, x) => acc + x, 0));
+		});
+		it('should scan emtpy array with initial value', function() {
+			assert.deepEqual([0], _.scan([], (acc, x) => acc + x, 0));
+		});
+		it('should scan array without initial value', function() {
+			assert.deepEqual([1, 3, 6], _.scan([1, 2, 3], (acc, x) => acc + x));
+		});
+		it('should scan singleton array without initial value', function() {
+			assert.deepEqual([1], _.scan([1], (acc, x) => acc + x));
+		});
+		it('should throw on scan empty array without initial value', function() {
+			assert.throws(() => _.scan([], (acc, x) => acc + x), 'did not throw on empty array');
+		});
+	});
 });
