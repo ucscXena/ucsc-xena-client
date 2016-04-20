@@ -16,12 +16,22 @@ function floatThirds(floatVals) {
 						(v < high ? 1 : 2)));
 }
 
+// Convert float data to coded data, by splitting into ranges.
 function floatToCoded(data) {
-	var values = floatThirds(_.getIn(data, ['req', 'values']));
+	var values = floatThirds(_.getIn(data, ['req', 'values', 0]));
 	return _.assocIn(data,
-			['req', 'values'], values,
-			['req', 'codes'], ['low', 'middle', 'high']);
+			['req', 'values'], [values],
+			['codes'], ['low', 'middle', 'high']);
 }
+
+// Rewrite coded data to new codes, via 'mapping',
+// dict of string -> int.
+var remapCodes = _.curry((mapping, data) => {
+	var codes = _.get(data, 'codes');
+	return _.updateIn(data,
+			['req', 'values', 0],
+			vals => vals && _.map(vals, v => mapping[codes[v]]));
+});
 
 function nulls(len) {
 	return _.times(len, _.constant(null));
@@ -55,8 +65,36 @@ function concatValuesByFieldPosition(samplesList, dataList) {
 	};
 }
 
+var remapRowSample = _.curry(
+		(sampleMap, row) => _.assoc(row, 'sample', sampleMap(row.sample)));
+
+// Rewrite sample indexes in mutation data, via (sampleMap :: int => int)
+var remapSamples = (sampleMap, data) =>
+	_.updateIn(data,
+		   ['req', 'rows'], rows => _.map(rows, remapRowSample(sampleMap)),
+		   ['req', 'samplesInResp'], sIR => _.map(sIR, sampleMap));
+
+
+function computeMean(data) {
+	return _.assocIn(data, ['req', 'mean'],
+			_.fmap(_.getIn(data, ['req', 'values']), _.meannan));
+}
+
+function concatMutation(fieldData) {
+	return {
+		req: {
+			rows: _.concat(...fieldData.map(wd => _.getIn(wd, ['req', 'rows']))),
+				samplesInResp: _.concat(...fieldData.map(wd => _.getIn(wd, ['req', 'samplesInResp'])))
+		}
+	};
+}
+
 module.exports = {
+	concatMutation,
+	remapSamples,
+	remapCodes,
 	floatToCoded,
 	concatByFieldPosition,
-	concatValuesByFieldPosition
+	concatValuesByFieldPosition,
+	computeMean
 };

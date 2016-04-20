@@ -5,7 +5,8 @@ var heatmapColors = require('../heatmapColors');
 var multi = require('../multi');
 var fieldFetch = require('../fieldFetch');
 var Rx = require('rx');
-var {concatValuesByFieldPosition} = require('./fields');
+var {remapSamples, remapCodes, floatToCoded, concatValuesByFieldPosition,
+		concatMutation, computeMean} = require('./fieldData');
 
 // Strategies for joining field metadata with composite cohorts.
 
@@ -129,10 +130,6 @@ function getColSpec(fieldSpecs, datasets) {
 		combineColSpecs(fillNullFields(fieldSpecs), datasets);
 }
 
-function computeMean(data) {
-	return _.assocIn(data, ['req', 'mean'], _.fmap(_.getIn(data, ['req', 'values']), _.meannan));
-}
-
 // Convert field valueType.
 // (column, fieldSpec, samples, data) => newData
 var cvtField = multi((column, field) => `${field.valueType}->${column.valueType}`, 4);
@@ -141,26 +138,9 @@ var cvtField = multi((column, field) => `${field.valueType}->${column.valueType}
 // req: {values: {[probe]: {sample: value, ...}, ...}}
 cvtField.dflt = (column, fieldSpec, samples, data) => data;
 
-var saveNull = fn => v => v == null ? v : fn(v);
-
-// XXX This is repeated in km.js
-function toCoded(floatVals) {
-	let sorted = _.without(floatVals, null, undefined).sort((a, b) => a - b),
-		low = sorted[Math.round(sorted.length / 3)],
-		high = sorted[Math.round(2 * sorted.length / 3)],
-		values = _.map(floatVals, saveNull(v => v < low ? 0 :
-							(v < high ? 1 : 2)));
-	return {
-		values,
-		codes: ['low', 'middle', 'high']
-	};
-}
-
 // Column must be single-valued prior to trying to convert to coded.
-cvtField.add('float->coded', (column, fieldSpec, samples, data) => {
-	var {values, codes} = toCoded(_.getIn(data, ['req', 'values', 0]));
-	return _.assocIn(data, ['req', 'values'], [values], ['codes'], codes);
-});
+cvtField.add('float->coded',
+		(column, fieldSpec, samples, data) => floatToCoded(data));
 
 cvtField.add('null->coded', () => {
 	return {
@@ -212,8 +192,8 @@ cvtField.add('mutation->coded', (column, field, samples, acc, data) => {
 
 // We should only join when the probemap is identical, so the probes for the composite field
 // is the same as any of the constituent fields.
-function setProbes(data, wdata)  {
-	var probes = _.getIn(wdata, [0, 'req', 'probes']);
+function setProbes(data, fdata)  {
+	var probes = _.getIn(fdata, [0, 'req', 'probes']);
 	return probes ? _.assocIn(data, ['req', 'probes'], probes) : data;
 }
 
@@ -224,11 +204,11 @@ var getField = multi(column => column.valueType);
 // concat all fields by position,
 // copy probe list,
 // compute mean.
-getField.add('float', (column, samplesList, wdata) => {
-	var cvtdData = _.mmap(column.fieldSpecs, samplesList, wdata, cvtField(column)),
+getField.add('float', (column, samplesList, fdata) => {
+	var cvtdData = _.mmap(column.fieldSpecs, samplesList, fdata, cvtField(column)),
 		field = concatValuesByFieldPosition(samplesList, cvtdData);
 
-	return computeMean(setProbes(field, wdata));
+	return computeMean(setProbes(field, fdata));
 });
 
 // Combining coded fields:
@@ -236,41 +216,31 @@ getField.add('float', (column, samplesList, wdata) => {
 // assign new values to codes,
 // for each dataset
 //     map val -> code -> new val.
-getField.add('coded', (column, samplesList, wdata) => {
-	var cvtdData = _.mmap(column.fieldSpecs, samplesList, wdata, cvtField(column)),
+getField.add('coded', (column, samplesList, fdata) => {
+	var cvtdData = _.mmap(column.fieldSpecs, samplesList, fdata, cvtField(column)),
 		allCodes = _.union(..._.pluck(cvtdData, 'codes')),
 		mapping = _.object(allCodes, _.range(allCodes.length)),
-		// XXX move this to fields.js, which should be fieldData.js.
-		remappedWdata = _.mmap(column.fieldSpecs, cvtdData, (fs, wd) => {
-			var codes = _.get(wd, 'codes');
-			return _.updateIn(wd, ['req', 'values', 0], vals => vals && _.map(vals, v => mapping[codes[v]]));
-		});
-	return _.assoc(concatValuesByFieldPosition(samplesList, remappedWdata), 'codes', allCodes);
+		remappedWdata = _.map(cvtdData, remapCodes(mapping));
+	return _.assoc(concatValuesByFieldPosition(samplesList, remappedWdata),
+		'codes', allCodes);
 });
 
 // Combining mutation fields.
 // Require same refGene.
 // Map sampleIDs to their order in cohort samples.
-getField.add('mutation', (column, samples, wdata) => {
-	var sampleOffsets = _.scan(samples, (acc, list) => acc + list.length, 0),
+getField.add('mutation', (column, samples, fdata) => {
+	var sampleOffsets = _.initial(_.scan(samples, (acc, list) => acc + list.length, 0)),
 		sampleMaps = _.map(sampleOffsets, offset => s => s + offset),
-		remappedWdata = _.mmap(sampleMaps, wdata, (sampleMap, data) =>
-			_.updateIn(data,
-					   ['req', 'rows'], rows => _.map(rows, row => _.assoc(row, 'sample', sampleMap(row.sample))),
-					   ['req', 'samplesInResp'], sIR => _.map(sIR, sampleMap)));
-	return {
-		req: {
-			rows: _.concat(...remappedWdata.map(wd => _.getIn(wd, ['req', 'rows']))),
-			samplesInResp: _.concat(...remappedWdata.map(wd => _.getIn(wd, ['req', 'samplesInResp'])))
-		},
-		refGene: findFirstProp(wdata, 'refGene')
-	};
+		remappedFdata = _.mmap(sampleMaps, fdata, remapSamples);
+
+	return _.assoc(concatMutation(remappedFdata),
+		'refGene', findFirstProp(fdata, 'refGene'));
 });
 
 function fetchComposite(column, samples) {
 	var {fieldSpecs} = column;
 	return Rx.Observable.zipArray(fieldSpecs.map((f, i) => fieldFetch(f, [samples[i]])))
-		.map(wdata => getField(column, samples, wdata));
+		.map(fdata => getField(column, samples, fdata));
 }
 
 function fetchNull() {
