@@ -85,8 +85,8 @@ var controls = {
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
 		columnOpen(state, id) ?  _.assocIn(state, ["data", id], data) : state,
-	'columnEdit-features': (state, list) => _.assocIn(state, ["columnEdit", 'features'], list),
-	'columnEdit-examples': (state, list) => _.assocIn(state, ["columnEdit", 'examples'], list),
+	'columnEdit-features': (state, list, tab) => _.assocIn(state, ["columnEdit", tab, 'features'], list),
+	'columnEdit-examples': (state, list, tab) => _.assocIn(state, ["columnEdit", tab, 'examples'], list),
 	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival),
 	// XXX Here we should be updating application state. Instead we invoke a callback, because
 	// chart.js can't handle passed-in state updates.

@@ -1,4 +1,4 @@
-.columnEdit .modal-content {
+.columnEdit .modal-content { /* XXX wtf is this? */
 	min-height: 30em; /* XXX relates to Select.css? */
 }
 .dropdown-header {

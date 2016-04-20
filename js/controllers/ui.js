@@ -33,8 +33,8 @@ function exampleQuery(dsID) {
 		.map(list => _.pluck(list, 'name'));
 }
 
-function fetchExamples(serverBus, state, dsID) {
-	serverBus.onNext(['columnEdit-examples', exampleQuery(dsID)]);
+function fetchExamples(serverBus, state, tab, dsID) {
+	serverBus.onNext(['columnEdit-examples', exampleQuery(dsID), tab]);
 }
 
 // Normalization of fields from user input
@@ -218,9 +218,9 @@ var controls = {
 		fetchColumnData(serverBus, newState.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	vizSettings: (state, column, settings) =>
 		_.assocIn(state, ['columns', column, 'vizSettings'], settings),
-	'edit-dataset-post!': (serverBus, state, newState, dsID, meta) => {
+	'edit-dataset-post!': (serverBus, state, newState, tab, dsID, meta) => {
 		if (['mutationVector', 'clinicalMatrix'].indexOf(meta.type) === -1) {
-			fetchExamples(serverBus, newState, dsID);
+			fetchExamples(serverBus, newState, tab, dsID);
 		}
 	},
 	'columnLabel': (state, dsID, value) =>

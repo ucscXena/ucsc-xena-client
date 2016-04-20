@@ -3,28 +3,13 @@
 'use strict';
 
 var React = require('react');
-var CohortSelect = require('./views/CohortSelect');
-var DatasetSelect = require('./views/DatasetSelect');
-var Button = require('react-bootstrap/lib/Button');
-var Tooltip = require('react-bootstrap/lib/Tooltip');
-var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
+var CohortControls = require('./views/CohortControls');
 var pdf = require('./pdfSpreadsheet');
+var _ = require('./underscore_ext');
 
-var modeButton = {
-	chart: 'Heatmap',
-	heatmap: 'Chart'
-};
-
-var modeEvent = {
-	chart: 'heatmap',
-	heatmap: 'chart'
-};
-
-// XXX drop this.props.style? Not sure it's used.
 var AppControls = React.createClass({
-	onMode: function () {
-		var {callback, appState: {mode}} = this.props;
-		callback([modeEvent[mode]]);
+	onMode: function (mode) {
+		this.props.callback([mode]);
 	},
 	onRefresh: function () {
 		var {callback} = this.props;
@@ -33,48 +18,39 @@ var AppControls = React.createClass({
 	onPdf: function () {
 		pdf(this.props.appState);
 	},
-	onSamplesSelect: function (value) {
-			this.props.callback(['samplesFrom', value]);
+	onSamplesSelect: function (index, value) {
+			this.props.callback(['samplesFrom', index, value]);
 	},
-	onCohortSelect: function (value) {
-			this.props.callback(['cohort', value]);
+	onCohortSelect: function (index, value) {
+			this.props.callback(['cohort', index, value]);
 	},
 	render: function () {
-		var {appState: {cohort, cohorts, samplesFrom, datasets, mode}} = this.props,
-			hasCohort = !!cohort,
-			disableMenus = (mode === modeEvent.heatmap);
+		var {cohort, cohorts, datasets, mode} = this.props.appState,
+			controls = cohort.map(({name, samplesFrom}, i) => (
+				<CohortControls
+					key={i}
+					cohortOnly={i > 0}
+					cohort={name}
+					cohorts={cohorts}
+					samplesFrom={samplesFrom}
+					datasets={_.where(datasets, {cohort: name})}
+					mode={mode}
+					onMode={this.onMode}
+					onRefresh={this.onRefresh}
+					onPdf={this.onPdf}
+					onSamplesSelect={_.partial(this.onSamplesSelect, i)}
+					onCohortSelect={_.partial(this.onCohortSelect, i)}/>
+			));
 
-		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>;
 		return (
-			<form className='form-inline'>
-				<OverlayTrigger placement="top" overlay={tooltip}>
-					<Button onClick={this.onRefresh} bsSize='sm' style={{marginRight: 5}}>
-						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
-					</Button>
-				</OverlayTrigger>
-				<CohortSelect onSelect={this.onCohortSelect} cohort={cohort} cohorts={cohorts} disable={disableMenus}/>
-				{' '}
-				{hasCohort ?
-					<div className='form-group' style={this.props.style}>
-						<label className='samplesFromLabel'> Samples in </label>
-						{' '}
-						<DatasetSelect
-							onSelect={this.onSamplesSelect}
-							nullOpt="Any Datasets (i.e. show all samples)"
-							style={{display: hasCohort ?
-									'inline' : 'none'}}
-							className='samplesFromAnchor'
-							datasets={datasets}
-							cohort={cohort}
-							disable={disableMenus}
-							value={samplesFrom} />
-					</div> :
-				null}
-				{' | '}
-				<Button onClick={this.onMode} className='chartSelect' bsStyle='primary'>{modeButton[mode]}</Button>
-				{' | '}
-				<Button onClick={this.onPdf}>PDF</Button>
-			</form>
+			<div>
+				{controls}
+				<CohortControls
+					key={cohort.length}
+					cohortOnly={true}
+					cohorts={cohorts}
+					onCohortSelect={_.partial(this.onCohortSelect, cohort.length)}/>
+			</div>
 		);
 	}
 });
