@@ -77,7 +77,7 @@ function makeGroup(groupMeta, activeGroupName, onSelect, setValue) {
 	if (phenoGroup) {
 		return (
 			<a href="#" className='customPanel'>
-			<div key={name} className={`panel panel-${activeGroupName === 'phenotype'? 'info':'default'}`}>
+			<div key={name} className={`panel panel-${activeGroupName === 'phenotype'? 'info':'customPanel'}`}>
 				<div className='panel-heading'
 					onClick={() => onSelect(_.pluck(options, 'value'), name)}>
 					<span className="panel-title">phenotype</span>

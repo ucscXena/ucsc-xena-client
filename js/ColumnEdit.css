@@ -46,4 +46,16 @@ a:hover {
 }
 .customPanel, .customPanel:hover, .customPanel:link{
 	text-decoration:none;
+	color: #333333;
+}
+
+.panel-customPanel {
+	border: 1px solid transparent;
+	background-color: #fff;
+	border-radius: 4px;
+	border-color: #ddd;
+}
+
+.panel-customPanel:hover{
+	background-color: #eee;
 }
