@@ -112,15 +112,10 @@ var unknownEffect = 0,
 		}
 	};
 
-// XXX why is txStart needed? If we start doing more positions (fusion),
-// this will be invalid. Shouldn't we just use position & invert on neg strand?
-function evalMut(refGene, mut) {
-	var geneInfo = refGene[mut.gene];
+function evalMut(flip, mut) {
 	return {
 		impact: features.impact.get(null, mut),
-		right: (geneInfo.strand === '+') ?
-				mut.start - geneInfo.txStart :
-				geneInfo.txStart - mut.start
+		right: flip ? -mut.start : mut.start
 	};
 }
 
@@ -138,42 +133,44 @@ function cmpMut(mut1, mut2) {
 	return mut1.right - mut2.right;       // low coord sorts first
 }
 
-function rowOrder(row1, row2, refGene) {
+function rowOrder(row1, row2, flip) {
 	var row1a, row2a;
 
 	// Native map is a lot faster than _.map. Need an es5 polyfill, or
 	// perhaps lodash, or ramda.
-	row1a = row1.map(m => evalMut(refGene, m));
-	row2a = row2.map(m => evalMut(refGene, m));
+	row1a = row1.map(m => evalMut(flip, m));
+	row2a = row2.map(m => evalMut(flip, m));
 
 	return cmpMut(_.maxWith(row1a, cmpMut), _.maxWith(row2a, cmpMut));
 }
 
-function cmpRowOrNoVariants(v1, v2, refGene) {
+function cmpRowOrNoVariants(v1, v2, flip) {
 	if (v1.length === 0) {
 		return (v2.length === 0) ? 0 : 1;
 	}
-	return (v2.length === 0) ? -1 : rowOrder(v1, v2, refGene);
+	return (v2.length === 0) ? -1 : rowOrder(v1, v2, flip);
 }
 
-function cmpRowOrNull(v1, v2, refGene) {
+function cmpRowOrNull(v1, v2, flip) {
 	if (v1 == null) {
 		return (v2 == null) ? 0 : 1;
 	}
-	return (v2 == null) ? -1 : cmpRowOrNoVariants(v1, v2, refGene);
+	return (v2 == null) ? -1 : cmpRowOrNoVariants(v1, v2, flip);
 }
 
-function cmpSamples(probes, sample, refGene, s1, s2) {
-	return _.findValue(probes, function (f) {
-		return refGene[f] ? cmpRowOrNull(sample[s1], sample[s2], refGene) : 0;
-	});
+function cmpSamples(probes, sample, flip, s1, s2) {
+	return cmpRowOrNull(sample[s1], sample[s2], flip);
 }
 
+// XXX Instead of checking strand here, it should be set as a column
+// property as part of the user input: flip if user enters a gene on
+// negative strand. Don't flip for genomic range view, or positive strand.
 function cmp({fields}, data, index) {
 	var refGene = _.getIn(data, ['refGene']),
 		samples = _.getIn(index, ['bySample']);
-	return (refGene && samples) ?
-		(s1, s2) => cmpSamples(fields, samples, refGene, s1, s2) :
+
+	return (!_.isEmpty(refGene) && samples) ?
+		(s1, s2) => cmpSamples(fields, samples, _.values(refGene)[0].strand !== '+', s1, s2) :
 		() => 0;
 }
 
