@@ -81,7 +81,6 @@ function resetZoom(state) {
 var setCohort = (state, i, cohort) =>
 	resetZoom(_.assoc(state,
 				"cohort", _.assoc(state.cohort, i, {name: cohort}),
-				"samplesFrom", null,
 				"samples", [],
 				"columns", {},
 				"columnOrder", [],
