@@ -10,9 +10,10 @@ var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
 var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
 var {xenaFieldPaths} = require('../models/fieldSpec');
+var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
+var fetch = require('../fieldFetch');
 
-var	datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
 var identity = x => x;
 
 var unionOfResults = resps => collectResults(resps, results => _.union(...results));
@@ -72,36 +73,64 @@ function normalizeFields(serverBus, state, id, settings) {
 	serverBus.onNext(['normalize-fields', lookup, id, settings, xenaFields]);
 }
 
-var datasetVar = (samples, {dsID, name}) =>
-	datasetProbeValues(dsID, samples, [name]).map(_.first);
+var featuresInCohort = (datasets, features, cohort) =>
+		_.pick(features, (f, dsID) => datasets[dsID].cohort === cohort);
 
-// data: [[val, ...], [val, ...], [val, ...]]
-// data must be in order (event, tte, patient)
-// returns { event: { sampleId: val, ... }, tte: ... }
-var indexSurvivalData = (samples, missing, data) =>
-	_.object(missing,
-			_.map(data, v => _.object(samples, _.map(v, xenaQuery.nanstr))));
+var survivalVarsForCohorts = (cohort, datasets, features) =>
+	_.map(cohort, ({name}) =>
+			kmModel.pickSurvivalVars(featuresInCohort(datasets, features, name)));
 
+var hasSurvFields  = vars => !!(vars.ev && vars.tte && vars.patient);
 
-// XXX carry dsID/name through to km-survival-data, so we can verify we're holding
-// the correct data before drawing.
-function fetchSurvival(serverBus, state, km) {
-	let {features, samples, survival} = state,
-		// XXX 'user' is a placeholder for user override of survival vars, to be added
-		// to the km ui.
-		vars = kmModel.pickSurvivalVars(features, km.user),
-		missing = ['ev', 'tte', 'patient'].filter(
-				key => !_.isEqual(vars[key], _.getIn(survival, [key, 'field']))),
-		queries = missing.map(key => datasetVar(samples, vars[key])),
-		addField = fields => _.mapObject(fields, (data, key) => ({field: vars[key], data}));
+var probeFieldSpec = ({dsID, name}) => ({
+	dsID,
+	fetchType: 'xena', // maybe take from dataset meta instead of hard-coded
+	valueType: 'float',
+	fieldType: 'probes',
+	fields: [name]
+});
 
-	// This could be optimized by grouping by server. This would be easier
-	// if we used proper hash-trie immutable data, where we could hash on dsID
-	// instead of building a json encoding of dsID to allow hashing.
-	serverBus.onNext([
-			'km-survival-data',
-			Rx.Observable.zipArray(...queries)
-				.map(data => addField(indexSurvivalData(samples, missing, data)))]);
+var codedFieldSpec = ({dsID, name}) => ({
+	dsID,
+	fetchType: 'xena', // maybe take from dataset meta instead of hard-coded
+	valueType: 'coded',
+	fieldType: 'clinical',
+	fields: [name]
+});
+
+function mapToObj(keys, fn) {
+	return _.object(keys, _.map(keys, fn));
+}
+
+var survFields = ['ev', 'tte', 'patient'];
+var getFieldSpec = _.object(survFields,
+		[probeFieldSpec, probeFieldSpec, codedFieldSpec]);
+
+// XXX Note that we merge the 'patient' field across cohorts. This will
+// be wrong in some cases, where 'patient' aliases, and right in other cases,
+// such as TCGA patients in multiple cohorts.
+function survivalFields(cohorts, datasets, features) {
+	var vars = survivalVarsForCohorts(cohorts, datasets, features);
+	return _.find(vars, hasSurvFields) ?  // at least one cohort w/surv data
+		mapToObj(survFields, fname =>
+				getColSpec(_.map(_.pluck(vars, fname), getFieldSpec[fname]), datasets))
+		: null;
+}
+
+// If field set has changed, re-fetch.
+function fetchSurvival(serverBus, state) {
+	let {cohort, datasets, features, survival, cohortSamples} = state,
+		fields = survivalFields(cohort, datasets, features),
+		refetch = _.some(survFields,
+				f => !_.isEqual(fields[f], _.getIn(survival, [f, 'field']))),
+
+		queries = _.map(survFields, key => fetch(fields[key], cohortSamples)),
+		collate = data => mapToObj(survFields,
+				(k, i) => ({field: fields[k], data: data[i]}));
+
+	// This could be optimized by grouping by server.
+	refetch && serverBus.onNext([
+			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
 }
 
 var shouldSetCohort = state => (state.cohortPending && state.cohort !== state.cohortPending);

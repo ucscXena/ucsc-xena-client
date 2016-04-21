@@ -133,6 +133,9 @@ function filterByGroups(feature, groupedIndices) {
 	};
 }
 
+var getFieldData = survival =>
+	_.mapObject(survival, f => _.getIn(f, ['data', 'req', 'values', 0]));
+
 // After toCoded, we can still end up with empty groups if
 // we don't have survival data for the samples in question.
 // So, picking MAX groups after filtering for survival data.
@@ -144,12 +147,12 @@ function filterByGroups(feature, groupedIndices) {
 // 5) compute km
 
 function makeGroups(column, data, index, survival, samples) {
-	let {tte: {data: tte}, ev: {data: ev}, patient: {data: patient}} = survival,
+	let {tte, ev, patient} = getFieldData(survival),
 		// Convert field to coded.
 		codedFeat = toCoded(column, data, index, samples),
 		{values} = codedFeat,
 		usableSamples = filterIndices(samples, (s, i) =>
-			has(tte, s) && has(ev, s) && has(values, i)),
+			has(tte, i) && has(ev, i) && has(values, i)),
 		patientWarning = warnDupPatients(usableSamples, samples, patient),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
 		usableData = filterByGroups(codedFeat, groupedIndices),
