@@ -379,9 +379,9 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				}
 
 
-				yIsCategorical = ycodemap[yfields[0]] ? true : false;
+				yIsCategorical = ycodemap ? true : false;
 				xfield = xfields ? xfields[0] : undefined;
-				xIsCategorical = xcodemap[xfield] ? true : false;
+				xIsCategorical = xcodemap ? true : false;
 
 				// set sd whisker UI
 				if (xIsCategorical && !yIsCategorical) {
@@ -493,21 +493,21 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 			var i, code,
 				ybinnedSample = {};
 
-			if (ycodemap[yfield]) { // y: categorical in matrix data
-				ycodemap[yfield].forEach(function (code) {
+			if (ycodemap) { // y: categorical in matrix data
+				ycodemap.forEach(function (code) {
 					ybinnedSample[code] = [];
 				});
 
 				// probes by samples
 				for (i = 0; i < ydataElement.length; i++) {
-					code = ycodemap[yfield][ydataElement[i]];
+					code = ycodemap[ydataElement[i]];
 					if (code) {
 						ybinnedSample[code].push(samples[i]);
 					}
 				}
 
 				// remove empty ycode categories
-				ycodemap[yfield].forEach(function (code) {
+				ycodemap.forEach(function (code) {
 					if (ybinnedSample[code].length === 0) {
 						delete ybinnedSample[code];
 					}
@@ -541,8 +541,8 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 
 		function drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV) {
 			var chart,
-				yIsCategorical = ycodemap[yfields[0]] ? true : false,
-				xIsCategorical = xcodemap[xfield] ? true : false,
+				yIsCategorical = ycodemap ? true : false,
+				xIsCategorical = xcodemap ? true : false,
 				chartOptions = _.clone(highcharts_helper.chartOptions),
 				xAxisTitle, yAxisTitle,
 				ybinnedSample,
@@ -575,13 +575,13 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				xSampleCode = {};
 				xbinnedSample = {};
 				// x data
-				xcodemap[xfield].forEach(function (code) {
+				xcodemap.forEach(function (code) {
 					xbinnedSample[code] = [];
 				});
 
 				//probes by samples
 				for (i = 0; i < xdata[0].length; i++) {
-					code = xcodemap[xfield][xdata[0][i]];
+					code = xcodemap[xdata[0][i]];
 					if (code) {
 						xbinnedSample[code].push(samples[i]);
 						xSampleCode[samples[i]] = code;
@@ -589,7 +589,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				}
 
 				// remove empty xcode categories
-				xcodemap[xfield].forEach(function (code) {
+				xcodemap.forEach(function (code) {
 					if (xbinnedSample[code].length === 0) {
 						delete xbinnedSample[code];
 					} else {
@@ -672,7 +672,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 					}
 				};
 
-				xcodemap[xfield].forEach(function (code,i) {
+				xcodemap.forEach(function (code,i) {
 					colors[code]=colorScales.categoryMore[i % colorScales.categoryMore.length];
 				});
 
@@ -778,11 +778,11 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				xbinnedSample = {};
 
 				// x data
-				xcodemap[xfield].map(code=> xbinnedSample[code] = []);
+				xcodemap.map(code=> xbinnedSample[code] = []);
 
 				//probes by samples
 				for (i = 0; i < xdata[0].length; i++) {
-					code = xcodemap[xfield][xdata[0][i]];
+					code = xcodemap[xdata[0][i]];
 					if (code) {
 						if (xbinnedSample[code]){
 							xbinnedSample[code].push(samples[i]);
@@ -801,7 +801,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				var ySamples = _.flatten(_.values(ybinnedSample));
 
 				// remove empty xcode categories and recal xbinnedSample[code] with samples actually has values in Y
-				xcodemap[xfield].forEach(function (code) {
+				xcodemap.forEach(function (code) {
 					xbinnedSample[code] =  _.intersection(xbinnedSample[code], ySamples);
 					if (xbinnedSample[code].length === 0) {
 						delete xbinnedSample[code];
@@ -832,7 +832,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				var ycategories = Object.keys(ybinnedSample);
 
 				//code
-				ycodemap[yfield].map((code,i) =>
+				ycodemap.map((code,i) =>
 					colors[code]=colorScales.categoryMore[i % colorScales.categoryMore.length]);
 
 				var ycodeSeries;
@@ -844,7 +844,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 
 					highcharts_helper.addSeriesToColumn(
 						chart, code, ycodeSeries, errorSeries, yIsCategorical,
-						ycodemap[yfields[0]].length * categories.length < 30, showLegend,
+						ycodemap.length * categories.length < 30, showLegend,
 						custom_colors[code] ? custom_colors[code] : colors[code]);
 				}
 				chart.redraw();
@@ -890,7 +890,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 
 					yfield = yfields[k];
 					for (i = 0; i < xdata[0].length; i++) {
-						if (ycodemap[yfield]) { // y: categorical in matrix data
+						if (ycodemap) { // y: categorical in matrix data
 							document.getElementById("myChart").innerHTML = "x: " + xfield + "; y:" + ylabel + " not implemented";
 							return;
 						} else {
