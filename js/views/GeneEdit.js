@@ -21,17 +21,15 @@ var valid = state => !!trim(state.gene);
 var GeneEdit = React.createClass({
 	name: 'Gene',
 	render: function () {
-		var {gene, makeLabel, setEditorState} = this.props;
-		//let header = gene ? makeHeader(`Entered ${this.name}: ${gene}`, true)
-		//	: makeHeader(`Input a ${this.name}`, false);
-		var content =
-			<div>
-				<Input type='textarea' bsSize="large" value={gene}
-					   onChange={ev => setEditorState({gene: ev.target.value})}/>
-				<div className="text-muted">e.g. TP53</div>
-			</div>;
+		var {gene, makeLabel, setEditorState} = this.props,
+			content =
+				<div>
+					<Input type='textinput' value={gene}
+						   onChange={ev => setEditorState({gene: ev.target.value})}/>
+					<div>e.g. TP53</div>
+				</div>;
 		return (
-			<div className="form-group">{makeLabel(content, `Gene:`)}</div>
+			<div className="form-group">{makeLabel(content, `Gene`)}</div>
 		);
 	}
 });

@@ -81,7 +81,7 @@ function makeLabel(content, label) {
 	return (
 		<div className='row'>
 			<label className="col-md-3 text-right control-label">{label}</label>
-			<div className="col-md-8 text-left text-info">{content}</div>
+			<div className="col-md-8 text-left">{content}</div>
 		</div>
 	);
 }
@@ -298,7 +298,7 @@ var ColumnEdit = React.createClass({
 					{positions['editor'] ?
 						<div>{makeLabel( chosenDs.length===1?
 							<a href={chosenDsSingleLink} target="_BLANK">{datasets[chosenDs[0]].label}</a>: "Combined phenotypes",
-							"Dataset:")}</div>
+							"Dataset")}</div>
 						:null}
 					<br/>
 

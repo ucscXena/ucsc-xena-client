@@ -43,11 +43,12 @@ var GeneProbeEdit = React.createClass({
 		var {genes = true, hasGenes, list, examples, makeLabel, setEditorState} = this.props,
 			doGenes = hasGenes && genes,
 			help = doGenes ? 'e.g. TP53 or TP53, PTEN' :
-				examples ? `e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}` : '',
+				`e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}`,
+			content,
 			optionEl;
 
 		if (hasGenes) {
-			let content =
+			content =
 				<ButtonGroup justified>
 					<Button href='#' active={!!genes}
 						onClick={() => setEditorState({genes: true})}>
@@ -58,16 +59,16 @@ var GeneProbeEdit = React.createClass({
 						<strong className="control-label">Identifiers</strong>
 					</Button>
 				</ButtonGroup>;
-			optionEl = makeLabel(content, 'Input:');
+			optionEl = makeLabel(content, 'Input');
 		}
 
-		var content =
+		content =
 			<div>
 				<Input onChange={ev => setEditorState({list: ev.target.value})}
-					type='textarea' bsSize='large' value={list} />
-				<div className="text-muted">{help}</div>
+					type='textarea' value={list} />
+				<div>{help}</div>
 			</div>;
-		var inputEl = makeLabel(content, doGenes ? 'Genes:' : 'Identifiers:');
+		var inputEl = makeLabel(content, doGenes ? 'Genes' : 'Identifiers');
 
 		return (
 			<div className="form-group">
