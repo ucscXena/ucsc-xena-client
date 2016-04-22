@@ -72,7 +72,10 @@ var controls = {
 		columnOpen(state, id) ?  _.assocIn(state, ["data", id], data) : state,
 	'columnEdit-features': (state, list) => _.assocIn(state, ["columnEdit", 'features'], list),
 	'columnEdit-examples': (state, list) => _.assocIn(state, ["columnEdit", 'examples'], list),
-	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival)
+	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival),
+	// XXX Here we should be updating application state. Instead we invoke a callback, because
+	// chart.js can't handle passed-in state updates.
+	'chart-average-data-post!': (serverBus, state, newState, offsets, thunk) => thunk(offsets)
 };
 
 module.exports = {

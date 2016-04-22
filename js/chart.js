@@ -2,8 +2,8 @@
 /*eslint-env browser */
 /*global define: false, document: false */
 'use strict';
-define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highcharts', './highcharts_helper', './underscore_ext', 'rx'],
-	function (fieldFetch, xenaQuery, dom_helper, colorScales, highcharts, highcharts_helper, _, Rx) {
+define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highcharts', './highcharts_helper', './underscore_ext'],
+	function (fieldFetch, xenaQuery, dom_helper, colorScales, highcharts, highcharts_helper, _) {
 	var Highcharts = highcharts.Highcharts;
 
 	var custom_colors = {};
@@ -232,12 +232,6 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 			}
 		}
 
-		var drawQueue = new Rx.Subject();
-		// XXX Note there's a race condition here. Should be using
-		// switchLatest, but it's difficult to arrange through the
-		// action reducer.
-		drawQueue.subscribe(params => drawChart(...params));
-
 		function update(cohort, samples) {
 			var oldDiv = document.getElementById("chartContainer");
 			rightContainer.replaceChild(buildEmptyChartContainer(), oldDiv);
@@ -379,18 +373,18 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 					}
 				}
 
+				var thunk = offsets => drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV);
 				//offset
 				if (yNormalization === "cohort" || yNormalization === "cohort_stdev" ) {
-					callback(['chart-get-average', ycolumn,
-							offsets => drawQueue.onNext([cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV])]);
+					callback(['chart-set-average-cohort', ycolumn, thunk]);
 				} else if (yNormalization === "subset" || yNormalization === "subset_stdev") {
 					offsets = _.object(yfields,
 							_.map(ydata, d => highcharts_helper.average(_.filter(d, x => x != null))));
 
-					drawQueue.onNext([cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV]);
+					callback(['chart-set-average', offsets, thunk]);
 				} else {
 					offsets = _.object(yfields, _.times(yfields.length, () => 0));
-					drawQueue.onNext([cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV]);
+					callback(['chart-set-average', offsets, thunk]);
 				}
 			})();
 		}
