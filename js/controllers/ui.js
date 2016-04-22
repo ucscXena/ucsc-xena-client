@@ -12,6 +12,7 @@ var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./commo
 var {xenaFieldPaths} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
+var fetchSamplesFrom = require('../samplesFrom');
 var fetch = require('../fieldFetch');
 
 var identity = x => x;
@@ -157,6 +158,17 @@ var zoomHelpClose = state =>
 	_.assocIn(_.dissoc(state, 'zoomHelp'),
 			['notifications', 'zoomHelp'], true);
 
+// XXX This is wrong. Should be updating app state. This is a workaround
+// for the chart code.
+function getChartOffsets(column, thunk) {
+	fetchSamplesFrom(column).flatMap(samples => fetch(column, samples)).subscribe(data => {
+		var fields = _.getIn(data, ['req', 'probes'], column.fields),
+			values = _.getIn(data, ['req', 'values']),
+			offsets = _.object(fields, _.map(values, _.meannull));
+		thunk(offsets);
+	});
+}
+
 var controls = {
 	init: state => setCohortPending(setServerPending(state)),
 	'init-post!': (serverBus, state, newState) => {
@@ -223,7 +235,8 @@ var controls = {
 	'km-close': state => _.assocIn(state, ['km', 'id'], null),
 	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),
 	'chart': state => _.assoc(state, 'mode', 'chart'),
-	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState)
+	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState),
+	'chart-get-average-post!': (serverBus, state, newState, id, thunk) => getChartOffsets(newState.columns[id], thunk)
 };
 
 module.exports = {

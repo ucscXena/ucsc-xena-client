@@ -7,6 +7,7 @@ var fieldFetch = require('../fieldFetch');
 var Rx = require('rx');
 var {remapSamples, remapCodes, floatToCoded, concatValuesByFieldPosition,
 		concatMutation, computeMean} = require('./fieldData');
+var samplesFrom = require('../samplesFrom');
 
 // Strategies for joining field metadata with composite cohorts.
 
@@ -249,6 +250,14 @@ function fetchNull() {
 
 fieldFetch.add('composite', fetchComposite);
 fieldFetch.add('null', fetchNull);
+
+function samplesFromComposite(fieldSpec) {
+	return Rx.Observable.zipArray(fieldSpec.fieldSpecs.map(fs => samplesFrom(fs)))
+		.map(sfs => _.map(sfs, sf => sf[0]));
+}
+
+samplesFrom.add('composite', samplesFromComposite);
+samplesFrom.add('null', () => []);
 
 module.exports = {
 	getColSpec

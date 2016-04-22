@@ -1,12 +1,12 @@
-/*eslint strict: [2, "function"], camelcase: 0, no-use-before-define: 0 */
+/*eslint camelcase: 0, no-use-before-define: 0 */
 /*eslint-env browser */
 /*global define: false, document: false */
 'use strict';
-define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highcharts_helper', './underscore_ext', 'rx'],
-	function (xenaQuery, dom_helper, colorScales, highcharts, highcharts_helper, _, Rx) {
+define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highcharts', './highcharts_helper', './underscore_ext', 'rx'],
+	function (fieldFetch, xenaQuery, dom_helper, colorScales, highcharts, highcharts_helper, _, Rx) {
 	var Highcharts = highcharts.Highcharts;
 
-	var custom_colors ={};
+	var custom_colors = {};
 
 	//project custom color code
 	//CKCC
@@ -232,6 +232,12 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 			}
 		}
 
+		var drawQueue = new Rx.Subject();
+		// XXX Note there's a race condition here. Should be using
+		// switchLatest, but it's difficult to arrange through the
+		// action reducer.
+		drawQueue.subscribe(params => drawChart(...params));
+
 		function update(cohort, samples) {
 			var oldDiv = document.getElementById("chartContainer");
 			rightContainer.replaceChild(buildEmptyChartContainer(), oldDiv);
@@ -244,8 +250,6 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				xcolumn, ycolumn,
 				xfields, yfields,
 				xlabel, ylabel,
-				xhost, yhost,
-				xds, yds,
 				xcolumnType, ycolumnType,
 				columns;
 
@@ -280,12 +284,9 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				if (columns[xcolumn].fieldType === "genes") {
 					xlabel = xlabel + " (gene average)";
 				}
-				xhost = JSON.parse(columns[xcolumn].dsID).host;
-				xds = JSON.parse(columns[xcolumn].dsID).name;
 				xcolumnType = columns[xcolumn].fieldType;
 			} else {
 				xlabel = "";
-				xhost = JSON.parse(columns[ycolumn].dsID).host;
 			}
 
 			yfields = columns[ycolumn].fields;
@@ -295,8 +296,6 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				ylabel = ylabel + " (gene average)";
 			}
 
-			yhost = JSON.parse(columns[ycolumn].dsID).host;
-			yds = JSON.parse(columns[ycolumn].dsID).name;
 			ycolumnType = columns[ycolumn].fieldType;
 
 			if (xcolumnType === "mutation" || ycolumnType === "mutation") {
@@ -304,55 +303,19 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				return;
 			}
 
-			var source = Rx.Observable.zipArray(
-				(xcolumn === "none") ? xenaQuery.test_host(xhost) : xenaQuery.code_list(xhost, xds, xfields),
-
-				(xcolumn === "none") ? xenaQuery.test_host(xhost) : ((xcolumnType === "geneProbes") ?
-					//xenaQuery.dataset_gene_probe_values(xhost, xds, samples, xfields[0]) :
-					xenaQuery.dataset_probe_values(xhost, xds, samples, xfields) :
-					((xcolumnType === "genes") ?
-						xenaQuery.dataset_genes_values(xhost, xds, samples, xfields) :
-						xenaQuery.dataset_probe_values(xhost, xds, samples, xfields))),
-
-
-				xenaQuery.code_list(yhost, yds, yfields),
-
-				(ycolumnType === "geneProbes") ?
-					xenaQuery.dataset_probe_values(yhost, yds, samples, yfields) :
-					((ycolumnType === "genes") ?
-						xenaQuery.dataset_genes_values(yhost, yds, samples, yfields) :
-						xenaQuery.dataset_probe_values(yhost, yds, samples, yfields)),
-
-				xenaQuery.dataset_text(yhost, yds)
-			);
-
-			source.subscribe(function (x) {
-				var xcodemap = x[0],
-					xdata,
-					ycodemap = x[2],
-					ydata,
+			(function() {
+				var xcodemap = _.getIn(xenaState, ['data', xcolumn, 'codes']),
+					xdata = _.getIn(xenaState, ['data', xcolumn, 'req', 'values']),
+					ycodemap = _.getIn(xenaState, ['data', ycolumn, 'codes']),
+					ydata = _.getIn(xenaState, ['data', ycolumn, 'req', 'values']),
 					yIsCategorical, xIsCategorical, xfield,
-					r,
-					offsets={},  // per y variable
-					STDEV={},  // per y variable
+					offsets = {},  // per y variable
+					STDEV = {},  // per y variable
 					yNormalization,
-					metaData,
 					yNormalizationMeta;
 
-				if (xcolumn !== "none") {
-					r = adjustData(xcolumnType, xfields, x[1]);
-					xcolumnType = r[0];
-					xfields = r[1];
-					xdata = r[2];
-				}
-
-				r = adjustData(ycolumnType, yfields, x[3]);
-				ycolumnType = r[0];
-				yfields = r[1];
-				ydata = r[2];
-
-				metaData = JSON.parse(x[4][0].text);
-				if (metaData.colnormalization ) {
+				// XXX normalization is broken in composite branch
+				if (columns[ycolumn].defaultNormalization) {
 					yNormalizationMeta = 2;
 				} else {
 					yNormalizationMeta = 0;
@@ -406,84 +369,30 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
 					if (yNormalization === "cohort_stdev" || yNormalization === "subset_stdev"){
-						var ydataElement = ydata[k].map(parseFloat).filter(x=>!isNaN(x));
+						var ydataElement = ydata[k].filter(x => x != null);
 
 						var allAve = highcharts_helper.average(ydataElement);
 						var allSTDEV = highcharts_helper.standardDeviation(ydataElement, allAve);
-						STDEV[yfield]= allSTDEV;
+						STDEV[yfield] = allSTDEV;
 					} else {
-						STDEV[yfield]= 1;
+						STDEV[yfield] = 1;
 					}
 				}
 
 				//offset
 				if (yNormalization === "cohort" || yNormalization === "cohort_stdev" ) {
-					//need to get all the samples and all the data for y
-					xenaQuery.dataset_samples(yhost, yds).subscribe(function (s) {
-						var Observable = (ycolumnType === "geneProbes") ?
-							xenaQuery.dataset_probe_values(yhost, yds, s, yfields) :
-							((ycolumnType === "genes") ?
-								xenaQuery.dataset_genes_values(yhost, yds, s, yfields) :
-								xenaQuery.dataset_probe_values(yhost, yds, s, yfields));
-
-						Observable.subscribe(function (results) {
-							r = adjustData(ycolumnType, yfields, results);
-							var allydata = r[2],
-								i, k, datalist,
-								offsets = {},
-								yfield;
-
-							for (i = 0; i < yfields.length; i++) {
-								yfield = yfields[i];
-								datalist = [];
-								for (k = 0; k < allydata[i].length; k++) {
-									if ('NaN' !== allydata[i][k]) {
-										datalist.push(allydata[i][k]);
-									}
-								}
-								offsets[yfield] = highcharts_helper.average(datalist);
-							}
-							drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV);
-						});
-					});
+					callback(['chart-get-average', ycolumn,
+							offsets => drawQueue.onNext([cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV])]);
 				} else if (yNormalization === "subset" || yNormalization === "subset_stdev") {
-					var i, datalist;
+					offsets = _.object(yfields,
+							_.map(ydata, d => highcharts_helper.average(_.filter(d, x => x != null))));
 
-					offsets = {};
-					for (i = 0; i < yfields.length; i++) {
-						yfield = yfields[i];
-						datalist = [];
-						for (k = 0; k < ydata[i].length; k++) {
-							if ('NaN' !== ydata[i][k]) {
-								datalist.push(ydata[i][k]);
-							}
-						}
-						offsets[yfield] = highcharts_helper.average(datalist);
-					}
-					drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV);
+					drawQueue.onNext([cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV]);
 				} else {
-					offsets = {};
-					yfields.forEach(function (yfield) {
-						offsets[yfield] = 0;
-					});
-					drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV);
+					offsets = _.object(yfields, _.times(yfields.length, () => 0));
+					drawQueue.onNext([cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV]);
 				}
-			});
-		}
-
-
-		function adjustData(columnType, fields, qReturn) {
-			var data=[];
-			if (columnType === "genes") {
-				qReturn.forEach(function (obj) {
-					data.push(obj.scores[0]);
-				});
-			} else if (fields.length === qReturn[0]) {
-				data = qReturn[1];
-			} else {
-				data = qReturn;
-			}
-			return [columnType, fields, data];
+			})();
 		}
 
 		// returns key:array
@@ -523,14 +432,14 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				}
 
 				for (i = 0; i < ydataElement.length; i++) {
-					if ('NaN' !== ydataElement[i]) {
+					if (null != ydataElement[i]) {
 						if (xSampleCode) {
 							code = xSampleCode[samples[i]];
 							if (code) {
-								ybinnedSample[yfield][code].push(parseFloat(ydataElement[i]));
+								ybinnedSample[yfield][code].push(ydataElement[i]);
 							}
 						} else {
-							ybinnedSample[yfield].push(parseFloat(ydataElement[i]));
+							ybinnedSample[yfield].push(ydataElement[i]);
 						}
 					}
 				}
@@ -555,15 +464,14 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				xSampleCode,
 				code,
 				categories,
-				chartCategoryLabels,
 				i, k,
 				numSD = document.getElementById("sd").value,
-				colors={};
+				colors = {};
 
 			document.getElementById("myChart").innerHTML = "Generating chart ...";
 
 			chartOptions.subtitle = {
-				text: "cohort: " + cohort + " (n=" + samples.length + ")"
+				text: "cohort: " + _.pluck(cohort, 'name').join(' / ') + " (n=" + samples.length + ")"
 			};
 
 			if (xIsCategorical && !yIsCategorical) { // x : categorical y float
@@ -625,12 +533,12 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 							stdDev = numSD * highcharts_helper.standardDeviation(data, average);
 
 							if (!isNaN(average)) {
-								dataMatrix[i][k] = parseFloat((average/STDEV[yfield]).toPrecision(3));
+								dataMatrix[i][k] = parseFloat((average / STDEV[yfield]).toPrecision(3));
 							} else {
 								dataMatrix[i][k] = NaN;
 							}
 							if (!isNaN(stdDev)) {
-								stdMatrix[i][k] = parseFloat((stdDev/STDEV[yfield]).toPrecision(3));
+								stdMatrix[i][k] = parseFloat((stdDev / STDEV[yfield]).toPrecision(3));
 							} else {
 								stdMatrix[i][k] = NaN;
 							}
@@ -651,7 +559,7 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				// offsets
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
-					offsetsSeries.push(offsets[yfield]/STDEV[yfield]);
+					offsetsSeries.push(offsets[yfield] / STDEV[yfield]);
 				}
 
 				cutOffset = function([average, offset]) {
@@ -672,8 +580,8 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 					}
 				};
 
-				xcodemap.forEach(function (code,i) {
-					colors[code]=colorScales.categoryMore[i % colorScales.categoryMore.length];
+				xcodemap.forEach(function (code, i) {
+					colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length];
 				});
 
 				for (i = 0; i < xCategories.length; i++) {
@@ -723,15 +631,12 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 					});
 				}
 
-				// column chart setup
-				chartCategoryLabels = {};
-
 				xAxisTitle = xlabel;
 
 				showLegend = false;
 				if (yIsCategorical) {
 				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories.map(code=> code + " (" + ybinnedSample[code].length+")"), xAxisTitle, ylabel, showLegend);
+					chartOptions, categories.map(code=> code + " (" + ybinnedSample[code].length + ")"), xAxisTitle, ylabel, showLegend);
 				}
 				else {
 					chartOptions = highcharts_helper.columnChartFloat (chartOptions, categories, xAxisTitle, ylabel);
@@ -747,13 +652,13 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 						var average = highcharts_helper.average(ybinnedSample[code]);
 						var stdDev = numSD * highcharts_helper.standardDeviation(ybinnedSample[code], average);
 						if (!isNaN(average)) {
-							dataSeriese.push(parseFloat(((average - offsets[code])/STDEV[code]).toPrecision(3)));
+							dataSeriese.push(parseFloat(((average - offsets[code]) / STDEV[code]).toPrecision(3)));
 						} else {
 							dataSeriese.push("");
 						}
 						if (!isNaN(stdDev)) {
-							errorSeries.push([parseFloat(((average - offsets[code] - stdDev)/STDEV[code]).toPrecision(3)),
-								parseFloat(((average - offsets[code] + stdDev)/STDEV[code]).toPrecision(3))
+							errorSeries.push([parseFloat(((average - offsets[code] - stdDev) / STDEV[code]).toPrecision(3)),
+								parseFloat(((average - offsets[code] + stdDev) / STDEV[code]).toPrecision(3))
 							]);
 						} else {
 							errorSeries.push(["", ""]);
@@ -810,14 +715,13 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 
 				// column chart setup
 				categories = _.keys(xbinnedSample);
-				chartCategoryLabels = {};
 
 				xAxisTitle = xlabel;
 
 				showLegend = true;
 
 				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories.map(code=> code + " (" + xbinnedSample[code].length+")"), xAxisTitle, ylabel, showLegend);
+					chartOptions, categories.map(code=> code + " (" + xbinnedSample[code].length + ")"), xAxisTitle, ylabel, showLegend);
 
 				chart = new Highcharts.Chart(chartOptions);
 
@@ -832,8 +736,8 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 				var ycategories = Object.keys(ybinnedSample);
 
 				//code
-				ycodemap.map((code,i) =>
-					colors[code]=colorScales.categoryMore[i % colorScales.categoryMore.length]);
+				ycodemap.map((code, i) =>
+					colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length]);
 
 				var ycodeSeries;
 				for (i = 0; i < ycategories.length; i++) {
@@ -896,8 +800,8 @@ define(['./xenaQuery', './dom_helper', './colorScales', './highcharts', './highc
 						} else {
 							x = xdata[0][i];
 							y = ydata[k][i];
-							if ('NaN' !== x && 'NaN' !== y) {
-								y = (y - offsets[yfield])/STDEV[yfield];
+							if (null != x && null != y) {
+								y = (y - offsets[yfield]) / STDEV[yfield];
 								series.push({
 									name: samples[i],
 									x: x,
