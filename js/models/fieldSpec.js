@@ -27,9 +27,21 @@ function mergeDsIDs(dsIDs, fieldSpecs) {
 	return _.mmap(fieldSpecs, dsIDs, (fs, dsID) => fs && _.assoc(fs, 'dsID', dsID));
 }
 
+var sVTCases = {
+	'null': (type, fs) => fs,
+	'xena': (type, fs) => _.assoc(fs, 'fieldType', type),
+	'composite': (type, fs) => _.assoc(fs, 'fieldType', type,
+									   'fieldSpecs', _.map(fs.fieldSpecs, setFieldType(type)))
+};
+
+// It's a bit unclear how this should behave. For now the use case
+// is setting genes or geneProbes, walking over composite fields as
+// necessary.
+var setFieldType = _.curry((type, fs) => sVTCases[fs.fetchType](type, fs));
 
 module.exports = {
 	xenaFieldPaths,
 	updateFields,
-	mergeDsIDs
+	mergeDsIDs,
+	setFieldType
 };

@@ -179,9 +179,9 @@ function tsvProbeMatrix(heatmap, samples, fields, codes) {
 	return [fieldNames, tsvData];
 }
 
-function modeMenu({dataType}, cb) {
-	return dataType === 'genes' ?
-		<MenuItem eventKey="geneProbes" onSelect={cb}>Detailed view</MenuItem> :
+function modeMenu({fieldType, noGeneDetail}, cb) {
+	return fieldType === 'genes' ?
+		<MenuItem eventKey="geneProbes" title={noGeneDetail ? 'no common probemap' : ''} disabled={noGeneDetail} onSelect={cb}>Detailed view</MenuItem> :
 		<MenuItem eventKey="genes" onSelect={cb}>Gene average</MenuItem>;
 }
 

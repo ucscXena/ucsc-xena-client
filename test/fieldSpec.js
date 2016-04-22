@@ -2,7 +2,7 @@
 'use strict';
 
 //var _ = require('../js/underscore_ext');
-var {xenaFieldPaths, updateFields} = require('../js/models/fieldSpec');
+var {xenaFieldPaths, updateFields, setFieldType} = require('../js/models/fieldSpec');
 
 var assert = require('assert');
 
@@ -67,6 +67,61 @@ describe('fieldSpec', function () {
 				}],
 				fields: ['bar']
 			}, [['fieldSpecs', 0]], [['FOO']]));
+		});
+	});
+	describe('setFieldType', function () {
+		it('should set xena fieldType', function () {
+			assert.deepEqual({
+				fetchType: 'xena',
+				fieldType: 'geneProbes',
+				fields: ['foo']
+			}, setFieldType('geneProbes', {
+				fetchType: 'xena',
+				fieldType: 'genes',
+				fields: ['foo']
+			}));
+		});
+		it('should ignore null fieldType', function () {
+			assert.deepEqual({
+				fetchType: 'null',
+				fieldType: 'null'
+			}, setFieldType('geneProbes', {
+				fetchType: 'null',
+				fieldType: 'null'
+			}));
+		});
+		it('should set composite fieldType', function () {
+			assert.deepEqual({
+				fetchType: 'composite',
+				fieldType: 'geneProbes',
+				fieldSpecs: [{
+					fetchType: 'xena',
+					fieldType: 'geneProbes',
+					fields: ['tp53']
+				}, {
+					fetchType: 'null',
+					fieldType: 'null'
+				}, {
+					fetchType: 'xena',
+					fieldType: 'geneProbes',
+					fields: ['foxm1']
+				}]
+			}, setFieldType('geneProbes', {
+				fetchType: 'composite',
+				fieldType: 'genes',
+				fieldSpecs: [{
+					fetchType: 'xena',
+					fieldType: 'genes',
+					fields: ['tp53']
+				}, {
+					fetchType: 'null',
+					fieldType: 'null'
+				}, {
+					fetchType: 'xena',
+					fieldType: 'genes',
+					fields: ['foxm1']
+				}]
+			}));
 		});
 	});
 });

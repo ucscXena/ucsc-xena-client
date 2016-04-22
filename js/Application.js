@@ -51,8 +51,8 @@ function getFieldFormat(uuid, columns, data) {
 	}
 }
 
-function supportsGeneAverage({dataType, fields: {length}}) {
-	return ['geneProbesMatrix', 'geneMatrix'].indexOf(dataType) >= 0 && length === 1;
+function supportsGeneAverage({fieldType, fields: {length}}) {
+	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && length === 1;
 }
 
 var Application = React.createClass({

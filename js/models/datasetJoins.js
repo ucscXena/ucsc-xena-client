@@ -7,6 +7,7 @@ var fieldFetch = require('../fieldFetch');
 var Rx = require('rx');
 var {remapSamples, remapCodes, floatToCoded, concatValuesByFieldPosition,
 		concatMutation, computeMean} = require('./fieldData');
+var {setFieldType} = require('./fieldSpec');
 var samplesFrom = require('../samplesFrom');
 
 // Strategies for joining field metadata with composite cohorts.
@@ -28,6 +29,8 @@ function getDefaultColors(datasets) {
 }
 
 var noNullType = ts => ts.filter(t => t !== 'null');
+
+var nonNullFS = fss => fss.filter(fs => fs.fetchType !== 'null');
 
 // XXX Need to handle incompatible assemblies in mutation.
 function getValueType(fieldSpecs) {
@@ -70,13 +73,17 @@ function longest(arrs) {
 	return _.max(arrs, arr => arr.length);
 }
 
+function hasUniqProbemap(fieldSpecs, datasets) {
+	var nnFS = nonNullFS(fieldSpecs);
+	return _.uniq(_.map(nnFS, fs => datasets[fs.dsID].probemap)).length  === 1;
+}
+
 // Preserve geneProbes matrix only if there's a single field and all datasets
 // are geneProbes, and all have the same probemap.
-function resetProbesMatrix(len, fieldSpecs, datasets) {
-	return (len > 1 || !_.every(fieldSpecs, fs => fs.fieldType === 'geneProbes')
-			|| _.uniq(_.map(fieldSpecs, fs => datasets[fs.dsID].probemap)).length > 1) ?
-		_.map(fieldSpecs, fs => 
-			  _.assoc(fs, 'fieldType', fs.fieldType === 'geneProbes' ? 'genes' : fs.fieldType)) :
+function resetProbesMatrix(len, fieldSpecs, uniqProbemap) {
+	var nnFS = nonNullFS(fieldSpecs);
+	return (len > 1 || !_.every(nnFS, fs => fs.fieldType === 'geneProbes') || !uniqProbemap) ?
+		_.map(fieldSpecs, setFieldType('genes')) :
 		fieldSpecs;
 }
 
@@ -103,10 +110,18 @@ var nullField = {
 
 var fillNullFields = fieldSpecs => _.map(fieldSpecs, fs => fs || nullField); 
 
+// Create a composite fieldSpec from a list of fieldSpecs.
+//
+// For genes/geneProbes, we might have geneProbes fields on different
+// probemaps, in which case we want to coerce to 'genes', and prevent the
+// user from picking 'geneProbes'. We reset the fieldType here, and set the
+// 'noGeneDetail' flag to inform the UI that we can't support a 'geneProbes' view.
+
 function combineColSpecs(fieldSpecs, datasets) {
 	var dsList = _.filter(fieldSpecs, fs => fs.dsID).map(fs => datasets[fs.dsID]),
 		fields = longest(_.pluck(fieldSpecs, 'fields')),
-		resetFieldSpecs = resetProbesMatrix(fields.len, fieldSpecs, datasets),
+		uniqProbemap = hasUniqProbemap(fieldSpecs, datasets),
+		resetFieldSpecs = resetProbesMatrix(fields.len, fieldSpecs, uniqProbemap),
 		fieldType = getFieldType(resetFieldSpecs);
 
 	return m({
@@ -119,6 +134,7 @@ function combineColSpecs(fieldSpecs, datasets) {
 		fieldLabel: getFieldLabel(resetFieldSpecs),
 		columnLabel: getColumnLabel(resetFieldSpecs),
 		defaultColors: getDefaultColors(dsList),
+		noGeneDetail: !uniqProbemap,
 		assembly: getAssembly(fieldType, resetFieldSpecs),
 		sFeature: getFeature(fieldType, resetFieldSpecs)
 	});

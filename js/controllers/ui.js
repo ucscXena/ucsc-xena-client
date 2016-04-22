@@ -9,7 +9,7 @@ var xenaQuery = require('../xenaQuery');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
 var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
-var {xenaFieldPaths} = require('../models/fieldSpec');
+var {xenaFieldPaths, setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
@@ -210,7 +210,7 @@ var controls = {
 	'zoom-help-disable-post!': (serverBus, state, newState) =>
 		setNotifications(newState.notifications),
 	fieldType: (state, id, fieldType) =>
-		_.assocIn(state, ['columns', id, 'fieldType'], fieldType),
+		_.updateIn(state, ['columns', id], setFieldType(fieldType)),
 	'fieldType-post!': (serverBus, state, newState, id) =>
 		fetchColumnData(serverBus, newState.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	vizSettings: (state, column, settings) =>
