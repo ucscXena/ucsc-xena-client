@@ -93,22 +93,22 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 					}, //no normalization
 					{
 						"value": "cohort",
-						"text": "across cohort (substract mean)",
+						"text": "across cohort (subtract mean)",
 						"index": 1
 					}, //cohort-level
 					{
 						"value": "cohort_stdev",
-						"text": "across cohort (substract mean, divide stdev)",
+						"text": "across cohort (subtract mean, divide stdev)",
 						"index": 2
 					},
 					{
 						"value": "subset",
-						"text": "across selected samples (substract mean)",
+						"text": "across selected samples (subtract mean)",
 						"index": 3
 					}, //selected sample level current heatmap normalization
 					{
 						"value": "subset_stdev",
-						"text": "across selected samples (substract mean, divide stdev)",
+						"text": "across selected samples (subtract mean, divide stdev)",
 						"index": 4
 					} //selected sample level current heatmap normalization
 				],
