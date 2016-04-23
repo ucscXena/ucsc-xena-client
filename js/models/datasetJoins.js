@@ -83,7 +83,8 @@ function hasUniqProbemap(fieldSpecs, datasets) {
 function resetProbesMatrix(len, fieldSpecs, uniqProbemap) {
 	var nnFS = nonNullFS(fieldSpecs);
 	return (len > 1 || !_.every(nnFS, fs => fs.fieldType === 'geneProbes') || !uniqProbemap) ?
-		_.map(fieldSpecs, setFieldType('genes')) :
+		 _.map(fieldSpecs, fs =>
+				_.assoc(fs, 'fieldType', fs.fieldType === 'geneProbes' ? 'genes' : fs.fieldType)) :
 		fieldSpecs;
 }
 
