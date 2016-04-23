@@ -1,7 +1,6 @@
 /*global require: false, module: false */
 'use strict';
 var _ = require('underscore');
-var heatmapColors = require('../heatmapColors');
 var multi = require('../multi');
 var fieldFetch = require('../fieldFetch');
 var Rx = require('rx');
@@ -24,8 +23,21 @@ function getColumnLabel(fieldSpecs) {
 }
 
 // Use default color from first dataset.
-function getDefaultColors(datasets) {
-	return _.find(datasets, d => heatmapColors.defaultColors(d));
+function getColorClass(fieldSpecs) {
+	var types = _.uniq(noNullType(_.pluck(fieldSpecs, 'colorClass')));
+
+	// If all types are the same, preserve the type.
+	if (types.length === 1) {
+		return types[0];
+	}
+
+	// If any are clinical, color as clinical
+	if (_.contains(types, 'clinical')) {
+		return 'clinical';
+	}
+
+	// color as default genomic
+	return 'default';
 }
 
 var noNullType = ts => ts.filter(t => t !== 'null');
@@ -104,6 +116,7 @@ var nullField = {
 	fetchType: 'null',
 	valueType: 'null',
 	fieldType: 'null',
+	colorClass: 'null',
 	fields: []
 };
 
@@ -117,8 +130,7 @@ var fillNullFields = fieldSpecs => _.map(fieldSpecs, fs => fs || nullField);
 // 'noGeneDetail' flag to inform the UI that we can't support a 'geneProbes' view.
 
 function combineColSpecs(fieldSpecs, datasets) {
-	var dsList = _.filter(fieldSpecs, fs => fs.dsID).map(fs => datasets[fs.dsID]),
-		fields = longest(_.pluck(fieldSpecs, 'fields')),
+	var fields = longest(_.pluck(fieldSpecs, 'fields')),
 		uniqProbemap = hasUniqProbemap(fieldSpecs, datasets),
 		resetFieldSpecs = resetProbesMatrix(fields.len, fieldSpecs, uniqProbemap),
 		fieldType = getFieldType(resetFieldSpecs);
@@ -132,7 +144,7 @@ function combineColSpecs(fieldSpecs, datasets) {
 		defaultNormalization: getNormalization(resetFieldSpecs),
 		fieldLabel: getFieldLabel(resetFieldSpecs),
 		columnLabel: getColumnLabel(resetFieldSpecs),
-		defaultColors: getDefaultColors(dsList),
+		colorClass: getColorClass(resetFieldSpecs),
 		noGeneDetail: !uniqProbemap,
 		assembly: getAssembly(fieldType, resetFieldSpecs),
 		sFeature: getFeature(fieldType, resetFieldSpecs)

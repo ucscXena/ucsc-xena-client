@@ -54,20 +54,20 @@ function computeHeatmap(vizSettings, data, fields, samples, defaultNormalization
 
 var hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min']));
 
-function dataToHeatmap(column, vizSettings, data, samples, dataset) {
+function dataToHeatmap(column, vizSettings, data, samples) {
 	if (!data) {
 		return null;
 	}
-	var {req, codes = {}} = data;
-	var fields = _.get(req, 'probes', column.fields);
-	var heatmap = computeHeatmap(vizSettings, req, fields, samples, column.defaultNormalization),
+	var {req, codes = {}} = data,
+		fields = _.get(req, 'probes', column.fields),
+		heatmap = computeHeatmap(vizSettings, req, fields, samples, column.defaultNormalization),
 		colors = map(fields, (p, i) =>
 					 heatmapColors.colorSpec(column, vizSettings,
-											 codes, heatmap[i], dataset)),
+											 codes, heatmap[i])),
 		// Provide a legend scheme if more than one field.
 		multiScaled = fields.length > 1 && !hasViz(vizSettings),
 		legend = multiScaled ?
-			{legend: {colors: heatmapColors.defaultColors(dataset), labels: ['lower', '', 'higher']}} :
+			{legend: {colors: heatmapColors.defaultColors[column.colorClass], labels: ['lower', '', 'higher']}} :
 			null;
 
 	return {fields, heatmap, colors, ...legend};

@@ -8,36 +8,25 @@ var multi = require('./multi');
 
 var isNumber = _.isNumber;
 
-var defaultColors = (function () {
-	var schemes = {
-			blueWhiteRed: ['#0000ff', '#ffffff', '#ff0000'],
-			greenBlackRed: ['#00ff00', '#000000', '#ff0000'],
-			greenWhiteRed: ['#00ff00', '#ffffff', '#ff0000'],
-			greenBlackYellow: ['#007f00', '#000000', '#ffff00']
-			/* with clinical category palette:
-			blueWhiteRed: ['#377eb8', '#ffffff', '#e41a1c'],
-			greenBlackRed: ['#4daf4a', '#000000', '#e41a1c'],
-			greenBlackYellow: ['#4daf4a', '#000000', '#ffff33']
-			*/
-		},
+var blueWhiteRed = ['#0000ff', '#ffffff', '#ff0000'],
+	greenBlackRed = ['#00ff00', '#000000', '#ff0000'],
+	greenBlackYellow = ['#007f00', '#000000', '#ffff00'];
 
-		defaults = {
-			"gene expression": schemes.greenBlackRed,
-			"gene expression RNAseq": schemes.greenBlackRed,
-			"gene expression array": schemes.greenBlackRed,
-			"exon expression RNAseq": schemes.greenBlackRed,
-			"phenotype": schemes.greenBlackYellow
-		};
+var defaultColors = {
+	'expression': greenBlackRed,
+	'clinical': greenBlackYellow,
+	'default': blueWhiteRed
+};
 
+var subTypeClass = ({dataSubType}) =>
+	dataSubType.indexOf('expression') !== -1 ? 'expression' : 'default';
 
-	// XXX it's rather broken that these conditionals appear here, in
-	// addition to in the colorRange multi
-	return function (dataset) {
-		var {type, dataSubType} = dataset || {};
-		var t = (type === 'clinicalMatrix') ?  'phenotype' : dataSubType;
-		return defaults[t] || schemes.blueWhiteRed;
-	};
-}());
+var typeClass = {
+	clinicalMatrix: () => 'clinical',
+	mutationVector: () => 'mutation'
+};
+
+var defaultColorClass = dataset => (typeClass[dataset.type] || subTypeClass)(dataset);
 
 function colorRangeType(column) {
 	return column.valueType === 'coded' ? 'coded' :
@@ -46,10 +35,10 @@ function colorRangeType(column) {
 
 var colorRange = multi(colorRangeType);
 
-function colorFloat(column, settings, codes, data, dataset) {
+function colorFloat({colorClass}, settings, codes, data) {
 	var values = data,
 		max = _.maxnull(values),
-		[low, zero, high] = defaultColors(dataset),
+		[low, zero, high] = defaultColors[colorClass],
 		spec,
 		min;
 
@@ -71,9 +60,9 @@ function colorCoded(column, settings, codes) {
 	return ['ordinal', codes.length];
 }
 
-function colorFloatGenomicData(column, settings = {}, codes, data, dataset) {
+function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
 	var values = data,
-		[low, zero, high] = defaultColors(dataset),
+		[low, zero, high] = defaultColors[colorClass],
 		min = settings.min || _.minnull(values),
 		max = settings.max ||  _.maxnull(values),
 		minStart = settings.minStart,
@@ -116,5 +105,6 @@ colorRange.add('floatGenomicData', colorFloatGenomicData);
 
 module.exports =  {
 	colorSpec: colorRange,
-	defaultColors: defaultColors,
+	defaultColors,
+	defaultColorClass
 };

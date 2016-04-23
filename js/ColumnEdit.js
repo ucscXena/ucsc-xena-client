@@ -11,6 +11,7 @@ require('./ColumnEdit.css');
 var phenotypeEdit = require('./views/PhenotypeEdit');
 var geneEdit = require('./views/GeneEdit');
 var geneProbeEdit = require('./views/GeneProbeEdit');
+var {defaultColorClass} = require('./heatmapColors');
 
 var editors = {
 	'clinicalMatrix': phenotypeEdit,
@@ -25,11 +26,13 @@ var ColumnEdit = React.createClass({
 	addColumn: function (settings) {
 		let {callback, appState: {datasets}} = this.props,
 			label = datasets[this.state.dataset].label,
+			colorClass = defaultColorClass(datasets[this.state.dataset]),
 			assembly = datasets[this.state.dataset].assembly;
 			settings = _.assoc(settings,
 				'width', 200, // XXX move this default setting?
 				'columnLabel', {user: label, 'default': label},
 				'assembly', assembly,
+				'colorClass', colorClass,
 				'dsID', this.state.dataset);
 		this.props.onHide();
 		callback(['add-column', uuid(), settings]);
