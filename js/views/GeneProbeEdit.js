@@ -6,7 +6,7 @@ var Input = require('react-bootstrap/lib/Input');
 var _ = require('../underscore_ext');
 var trim = require('underscore.string').trim;
 
-function apply(features, state) {
+function apply(features, state, dataset) {
 	var {list, genes} = state,
 		fields = toGeneList(list),
 		fieldTxt = fields.join(', ');
@@ -14,6 +14,7 @@ function apply(features, state) {
 		fields: fields,
 		fetchType: 'xena',
 		valueType: 'float',
+		defaultNormalization: _.get(dataset, 'colnormalization'),
 		fieldType: genes ? (fields.length > 1 ? 'genes' : 'geneProbes') : 'probes',
 		fieldLabel: fieldTxt
 	};

@@ -149,7 +149,8 @@ var Columns = React.createClass({
 		var settings = openVizSettings ?
 			<VizSettings
 				id={openVizSettings}
-				dsID={_.getIn(appState, ['columns', openVizSettings, 'dsID'])}
+				defaultNormalization={_.getIn(appState, ['columns', openVizSettings, 'defaultNormalization'])}
+				fieldType={_.getIn(appState, ['columns', openVizSettings, 'fieldType'])}
 				onRequestHide={() => this.setState({openVizSettings: null})}
 				callback={callback}
 				state={_.getIn(appState, ['columns', openVizSettings, 'vizSettings'])} /> : null;

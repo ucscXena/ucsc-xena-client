@@ -7,20 +7,20 @@ var fieldFetch = require('../fieldFetch');
 var Rx = require('rx');
 var {remapSamples, remapCodes, floatToCoded, concatValuesByFieldPosition,
 		concatMutation, computeMean} = require('./fieldData');
-var {setFieldType} = require('./fieldSpec');
 var samplesFrom = require('../samplesFrom');
 
 // Strategies for joining field metadata with composite cohorts.
 
+var nonNullFS = fss => fss.filter(fs => fs.fetchType !== 'null');
 
 // normalize by default if all datasets normalize by default.
-function getNormalization(datasets) {
-	return _.every(datasets, d => d.colnormalization);
+function getNormalization(fieldSpecs) {
+	return _.every(nonNullFS(fieldSpecs), d => d.defaultNormalization);
 }
 
 // Join column labels.
 function getColumnLabel(fieldSpecs) {
-	return _.uniq(_.pluck(fieldSpecs, 'columnLabel')).join(' / ');
+	return _.uniq(_.pluck(nonNullFS(fieldSpecs), 'columnLabel')).join(' / ');
 }
 
 // Use default color from first dataset.
@@ -29,8 +29,6 @@ function getDefaultColors(datasets) {
 }
 
 var noNullType = ts => ts.filter(t => t !== 'null');
-
-var nonNullFS = fss => fss.filter(fs => fs.fetchType !== 'null');
 
 // XXX Need to handle incompatible assemblies in mutation.
 function getValueType(fieldSpecs) {
@@ -131,7 +129,7 @@ function combineColSpecs(fieldSpecs, datasets) {
 		fetchType: 'composite',
 		valueType: getValueType(resetFieldSpecs),
 		fieldType,
-		defaultNormalization: getNormalization(dsList),
+		defaultNormalization: getNormalization(resetFieldSpecs),
 		fieldLabel: getFieldLabel(resetFieldSpecs),
 		columnLabel: getColumnLabel(resetFieldSpecs),
 		defaultColors: getDefaultColors(dsList),

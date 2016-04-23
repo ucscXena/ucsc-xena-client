@@ -30,21 +30,20 @@ function subbykey(subtrahend, key, val) {
 
 // Decide whether to normalize, perfering the user setting to the
 // dataset default setting.
-function shouldNormalize(vizSettings, dataset) {
-	var user = _.getIn(vizSettings, ['colNormalization']),
-		dataDefault = _.getIn(dataset, ['colnormalization']);
-	return user === 'subset' || user == null && dataDefault;
+function shouldNormalize(vizSettings, defaultNormalization) {
+	var user = _.getIn(vizSettings, ['colNormalization']);
+	return user === 'subset' || user == null && defaultNormalization;
 }
 
 // Returns 2d array of numbers, probes X samples.
 // [[number, ...], [number, ...]]
 // Performs sorting and normalization.
-function computeHeatmap(vizSettings, data, fields, samples, dataset) {
+function computeHeatmap(vizSettings, data, fields, samples, defaultNormalization) {
 	if (!data) {
 		return [];
 	}
 	var {mean, probes, values} = data,
-		colnormalization = shouldNormalize(vizSettings, dataset),
+		colnormalization = shouldNormalize(vizSettings, defaultNormalization),
 		transform = (colnormalization && mean && _.partial(subbykey, mean)) || second;
 
 	return map(probes || fields, function (p, i) {
@@ -61,7 +60,7 @@ function dataToHeatmap(column, vizSettings, data, samples, dataset) {
 	}
 	var {req, codes = {}} = data;
 	var fields = _.get(req, 'probes', column.fields);
-	var heatmap = computeHeatmap(vizSettings, req, fields, samples, dataset),
+	var heatmap = computeHeatmap(vizSettings, req, fields, samples, column.defaultNormalization),
 		colors = map(fields, (p, i) =>
 					 heatmapColors.colorSpec(column, vizSettings,
 											 codes, heatmap[i], dataset)),

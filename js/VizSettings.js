@@ -37,7 +37,6 @@
 // the state, or from a data cache, because we've fetched that already.
 
 'use strict';
-var xenaQuery = require('./xenaQuery');
 var dom_helper = require('./dom_helper');
 var _ = require('./underscore_ext');
 var floatImg = require('../images/genomicFloatLegend.jpg');
@@ -45,72 +44,32 @@ var customFloatImg = require('../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var Modal = require('react-bootstrap/lib/Modal');
 
-// XXX should not have subscribe inside a subscribe. Instead,
-// use a combinator on the two streams & subscribe to the result.
-function datasetHasFloats (host, dsName, action, actionArgs) {
-	xenaQuery.dataset_field_examples(host, dsName).subscribe(function (s) {
-		var probes = s.map(function (probe) {
-			return probe.name;
-		});
-		xenaQuery.code_list(host, dsName, probes).subscribe(function(codemap){
-			for(var key in codemap) {
-				if (codemap.hasOwnProperty(key) && !codemap[key]){  // no code, float feature
-					action.apply(this, actionArgs);
-					return;
-				}
-		}
-		});
-	});
-}
-
-function vizSettingsWidget(node, callback, vizState, id, dsID, hide) {
+function vizSettingsWidget(node, callback, vizState, id, hide, defaultNormalization, fieldType) {
 	var state = vizState;
-	function datasetSetting(dataset) {
-		var host_name = xenaQuery.parse_host(dataset.dsID),
-			host = host_name[0],
-			datasetName = host_name[1],
-			label = dataset.label ? dataset.label : dataset,
-			format = dataset.type,
-			status = dataset.status,
-			node, div = document.createElement("div");
+	function datasetSetting() {
+		var node, div = document.createElement("div");
 
-		node = dom_helper.hrefLink(label,
-			"datapages/?dataset=" + encodeURIComponent(datasetName) + "&host=" + encodeURIComponent(host));
-
-		if (status !== GOODSTATUS) {
-			node.appendChild(document.createTextNode(" [" + status + "]"));
-		}
-		node.setAttribute("class", "key");
-		div.appendChild(node);
-
-		if ((format === "genomicMatrix") && (status === GOODSTATUS)) {
-			var action = genomicMatrixFloat,
-				actionArgs;
-
+		if (_.contains(['probes', 'genes', 'geneProbes'], fieldType)) {
 			node = document.createElement("div");
-			actionArgs = [node, host, datasetName];
-			datasetHasFloats(host, datasetName, action, actionArgs);
+			genomicMatrixFloat(node);
 			div.appendChild(node);
-
-			//apply button
-//				div.appendChild(buildApplyButton(host, datasetName, cohort));
 			div.appendChild(buildVizButton());
 		}
 		return div;
 	}
 
 
-	function genomicMatrixFloat(div, host, datasetName) {
+	function genomicMatrixFloat(div) {
 		var node;
 
 		// normalization
-		node = buildNormalizationDropDown(host, datasetName);
+		node = buildNormalizationDropDown();
 		div.appendChild(node);
 
 		div.appendChild(document.createElement("br"));
 
 		// color scale
-		node = colorScaleChoices(host, datasetName);
+		node = colorScaleChoices();
 		div.appendChild(node);
 	}
 
@@ -321,29 +280,6 @@ function vizSettingsWidget(node, callback, vizState, id, dsID, hide) {
 		return node;
 	}
 
-//		function buildApplyButton(host, name, cohort) {
-//			var button = document.createElement("BUTTON"),
-//				value;
-//
-//			button.setAttribute("class", "vizbutton");
-//			button.appendChild(document.createTextNode("Done"));
-//			button.addEventListener("click", function () {
-//				// XXX call validator
-//				colorParams.forEach(function (param) {
-//					value = document.getElementById(inputId(param)).value;
-//					if (isNaN(parseFloat(value))) {
-//						removeVizSettings(param);
-//					} else {
-//						setVizSettings(param, String(parseFloat(value)));
-//					}
-//				});
-//				cursor.update(function (s) {
-//					return _.assocIn(s, ['_vizSettings', 'open'], false);
-//				});
-//			});
-//			return button;
-//		}
-
 	function changeTextAction() {
 		var err = validateSettings();
 		displayErrors(err);
@@ -396,7 +332,7 @@ function vizSettingsWidget(node, callback, vizState, id, dsID, hide) {
 		return _.getIn(state, [key]);
 	}
 
-	function buildNormalizationDropDown(host, name) {
+	function buildNormalizationDropDown() {
 		var dropDownDiv, option,
 			dropDown = [{
 					"value": "none",
@@ -435,14 +371,11 @@ function vizSettingsWidget(node, callback, vizState, id, dsID, hide) {
 				dropDownDiv.selectedIndex = 0;
 			}
 		} else {
-			xenaQuery.dataset_text(host, name).subscribe(function (obj) {
-				var metaData = JSON.parse(obj[0].text);
-				if (metaData.colnormalization || metaData.colNormalization) {
-					dropDownDiv.selectedIndex = 1; // get default from metadata in json
-				} else {
-					dropDownDiv.selectedIndex = 0; // get default from metadata in json
-				}
-			});
+			if (defaultNormalization) {
+				dropDownDiv.selectedIndex = 1;
+			} else {
+				dropDownDiv.selectedIndex = 0;
+			}
 		}
 
 		dropDownDiv.addEventListener('change', function () {
@@ -458,27 +391,18 @@ function vizSettingsWidget(node, callback, vizState, id, dsID, hide) {
 		return node;
 	}
 
-	var GOODSTATUS = 'loaded',
-		oldSettings = state,
-		host_name = xenaQuery.parse_host(dsID),
-		datasetName = host_name[1],
-		host = host_name[0],
+	var oldSettings = state,
 		colorParams = ["max", "maxStart", "minStart", "min"];
 
-	xenaQuery.dataset_by_name(host, datasetName).subscribe(function (datasets) {
-		//cohort = datasets[0].cohort;
-		//node.appendChild(dom_helper.hrefLink(cohort + " cohort", "datapages/?cohort=" + encodeURIComponent(cohort)));
-		node.appendChild(datasetSetting(datasets[0]));
-
-	});
+	node.appendChild(datasetSetting());
 }
 
 // react wrapper for the legacy DOM code, above.
 var SettingsWrapper = React.createClass({
 	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
-		var {refs: {content}, props: {callback, state, id, dsID, onRequestHide}} = this;
-		vizSettingsWidget(content, callback, state, id, dsID, onRequestHide);
+		var {refs: {content}, props: {callback, state, id, defaultNormalization, fieldType, onRequestHide}} = this;
+		vizSettingsWidget(content, callback, state, id, onRequestHide, defaultNormalization, fieldType);
 	},
 	render: function () {
 		return <div ref='content' />;
