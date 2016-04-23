@@ -178,7 +178,7 @@ var MutationColumn = hotOrNot(React.createClass({
 		return tooltip(nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
 	},
 	render: function () {
-		var {column, samples, zoom, data, index, disableKM} = this.props,
+		var {column, samples, zoom, data, index, disableKM, aboutDataset} = this.props,
 			feature = _.getIn(column, ['sFeature']),
 			assembly = _.getIn(column, ['assembly']),
 			rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
@@ -191,6 +191,7 @@ var MutationColumn = hotOrNot(React.createClass({
 			<Column
 				callback={this.props.callback}
 				id={this.props.id}
+				aboutDataset={aboutDataset}
 				disableKM={disableKM}
 				download={this.onDownload} //eslint-disable-line no-undef
 				column={column}

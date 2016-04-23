@@ -1,4 +1,4 @@
-/*global require: false, module: false */
+/*global require: false, module: false, window: false */
 'use strict';
 var React = require('react');
 var Grid = require('react-bootstrap/lib/Grid');
@@ -11,6 +11,9 @@ var kmModel = require('./models/km');
 var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
 var {lookupSample} = require('./models/sample');
+var xenaQuery = require('./xenaQuery');
+var {xenaFieldPaths} = require('./models/fieldSpec');
+var MenuItem = require('react-bootstrap/lib/MenuItem');
 //var Perf = require('react/addons').addons.Perf;
 
 var views = {
@@ -55,6 +58,35 @@ function supportsGeneAverage({fieldType, fields: {length}}) {
 	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && length === 1;
 }
 
+function onAbout(dsID) {
+	var [host, dataset] = xenaQuery.parse_host(dsID);
+	var url = `../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
+	window.open(url);
+}
+
+var getLabel = _.curry((datasets, dsID) => {
+	var ds = datasets[dsID];
+	return ds.label || ds.name;
+});
+
+var getAbout = (dsID, text) => (
+	<MenuItem key={dsID} onSelect={() => onAbout(dsID)}>{text} </MenuItem>);
+
+
+function aboutDataset(column, datasets) {
+	var dsIDs = _.map(xenaFieldPaths(column), p => _.getIn(column, [...p, 'dsID'])),
+		label = getLabel(datasets);
+	if (dsIDs.length === 1) {
+		return getAbout(dsIDs[0], 'About the Dataset');
+	}
+	return [
+		<MenuItem key='d0' divider/>,
+		<MenuItem key='header' header>About the Datasets</MenuItem>,
+		..._.map(dsIDs, dsID => getAbout(dsID, label(dsID))),
+		<MenuItem key='d1' divider/>
+	];
+}
+
 var Application = React.createClass({
 //	onPerf: function () {
 //		this.perf = !this.perf;
@@ -85,6 +117,10 @@ var Application = React.createClass({
 		var {columns, features, km} = this.props.state;
 		return disableKM(_.get(columns, uuid), features, km);
 	},
+	aboutDataset: function (uuid) {
+		var {columns, datasets} = this.props.state;
+		return aboutDataset(_.get(columns, uuid), datasets);
+	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
@@ -103,7 +139,13 @@ var Application = React.createClass({
 						<AppControls {...otherProps} appState={computedState} />
 					</Col>
 				</Row>
-				<View {...otherProps} sampleFormat={this.sampleFormat} fieldFormat={this.fieldFormat} supportsGeneAverage={this.supportsGeneAverage} disableKM={this.disableKM} appState={computedState} />
+				<View {...otherProps}
+					aboutDataset={this.aboutDataset}
+					sampleFormat={this.sampleFormat}
+					fieldFormat={this.fieldFormat}
+					supportsGeneAverage={this.supportsGeneAverage}
+					disableKM={this.disableKM}
+					appState={computedState} />
 				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
 						callback={this.props.callback}
 						km={computedState.km}

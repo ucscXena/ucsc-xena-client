@@ -9,7 +9,6 @@ var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Resizable = require('react-resizable').Resizable;
 var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('./refGeneExons');
-var xenaQuery = require('./xenaQuery');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -80,13 +79,6 @@ var Column = React.createClass({
 	onDownload: function () {
 		download(this.props.download());
 	},
-	onAbout: function () {
-		var {column} = this.props;
-		var dsID = column.dsID;
-		var [host, dataset] = xenaQuery.parse_host(dsID);
-		var url = `../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
-		window.open(url);
-	},
 	onViz: function () {
 		this.props.onViz(this.props.id);
 	},
@@ -95,7 +87,7 @@ var Column = React.createClass({
 		callback(['km-open', id]);
 	},
 	render: function () {
-		var {id, callback, plot, legend, column, zoom, menu, data, disableKM} = this.props,
+		var {id, callback, plot, legend, column, zoom, menu, data, aboutDataset, disableKM} = this.props,
 			{width, columnLabel, fieldLabel} = column,
 			[kmDisabled, kmTitle] = disableKM(id),
 			// move this to state to generalize to other annotations.
@@ -117,7 +109,7 @@ var Column = React.createClass({
 					{menu && <MenuItem divider />}
 					<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
 					<MenuItem onSelect={this.onDownload}>Download</MenuItem>
-					<MenuItem onSelect={this.onAbout}>About the Dataset</MenuItem>
+					{aboutDataset(id)}
 					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>
 					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 				</SplitButton>

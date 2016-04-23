@@ -135,7 +135,7 @@ var Columns = React.createClass({
 		this.setState({openVizSettings: id});
 	},
 	render: function () {
-		var {callback, fieldFormat, sampleFormat, disableKM, supportsGeneAverage, appState} = this.props;
+		var {callback, fieldFormat, sampleFormat, disableKM, supportsGeneAverage, aboutDataset, appState} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
 		var {openColumnEdit, openVizSettings} = this.state;
@@ -168,6 +168,7 @@ var Columns = React.createClass({
 			fieldFormat,
 			sampleFormat,
 			disableKM,
+			aboutDataset,
 			supportsGeneAverage,
 			tooltip: this.ev.tooltip,
 			onViz: this.onViz,
