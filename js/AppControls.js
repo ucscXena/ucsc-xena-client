@@ -44,7 +44,7 @@ var AppControls = React.createClass({
 			hasCohort = !!cohort,
 			disableMenus = (mode === modeEvent.heatmap);
 
-		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>
+		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>;
 		return (
 			<form className='form-inline'>
 				<OverlayTrigger placement="top" overlay={tooltip}>
