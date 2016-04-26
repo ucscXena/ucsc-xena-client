@@ -11,7 +11,7 @@ const connector = require('./connector');
 const createStore = require('./store');
 
 var controls = {
-	cohort: (state, cohort) => _.assoc(state, 'cohortPending', cohort),
+	cohort: (state, cohort) => _.assoc(state, 'cohortPending', [{name: cohort}]),
 };
 
 var identity = x => x;

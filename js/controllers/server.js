@@ -8,8 +8,9 @@ var {resetZoom, setCohort, fetchDatasets, fetchSamples, fetchColumnData} = requi
 
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
-var {updateFields} = require('../models/fieldSpec');
+var {updateFields, filterByDsID} = require('../models/fieldSpec');
 var identity = x => x;
+var {getColSpec} = require('../models/datasetJoins');
 
 function featuresQuery(datasets) {
 	var clinicalMatrices = _.filter(datasets, ds => ds.type === 'clinicalMatrix'),
@@ -29,26 +30,32 @@ function fetchFeatures(serverBus, datasets) {
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 
-// XXX
-var resetCohort = state => /*_.contains(state.cohorts, state.cohort)*/ true ? state :
-	setCohort(state, null);
+var resetCohort = state => {
+	let activeCohorts = _.filter(state.cohort, c => _.contains(state.cohorts, c));
+	return _.isEqual(activeCohorts, state.cohort) ? state :
+		setCohort(state, activeCohorts);
+};
+
+var fieldSpecs = column => _.get(column, 'fieldSpecs', [column]);
+
+var filterColumnDs = _.curry((datasets, column) =>
+							 _.merge(column, getColSpec(fieldSpecs(filterByDsID(datasets, column)), datasets)));
 
 var closeUnknownColumns = state => {
 	const {datasets, columns} = state,
-		columnOrder = _.filter(state.columnOrder, id => !!datasets[columns[id].dsID]);
+		filteredColumns = _.mapObject(columns, filterColumnDs(datasets)),
+		columnOrder = _.filter(state.columnOrder, id => filteredColumns[id].fieldType !== 'null');
 	return _.assoc(state,
 				   'columnOrder', columnOrder,
-				   'columns', _.pick(columns, columnOrder));
+				   'columns', _.pick(filteredColumns, columnOrder));
 };
 
 var controls = {
 	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),
 	'cohorts-post!': (serverBus, state, newState) => {
 		let {servers: {user}, cohort} = newState;
-		if (cohort) {
-			fetchSamples(serverBus, user, cohort);
-			fetchDatasets(serverBus, user, cohort);
-		}
+		fetchSamples(serverBus, user, cohort);
+		fetchDatasets(serverBus, user, cohort);
 	},
 	datasets: (state, datasets) => closeUnknownColumns(_.assoc(state, "datasets", datasets)),
 	'datasets-post!': (serverBus, state, newState, datasets) => fetchFeatures(serverBus, datasets),

@@ -7,6 +7,7 @@ var Rx = require('rx');
 var {remapSamples, remapCodes, floatToCoded, concatValuesByFieldPosition,
 		concatMutation, computeMean} = require('./fieldData');
 var samplesFrom = require('../samplesFrom');
+var {nullField} = require('./fieldSpec');
 
 // Strategies for joining field metadata with composite cohorts.
 
@@ -112,24 +113,18 @@ var getFeature = (fieldType, fieldSpecs) =>
 
 var getFieldLabel = fieldSpecs => findFirstProp(fieldSpecs, 'fieldLabel');
 
-var nullField = {
-	fetchType: 'null',
-	valueType: 'null',
-	fieldType: 'null',
-	colorClass: 'null',
-	fields: []
-};
+var fillNullFields = fieldSpecs => _.map(fieldSpecs, fs => fs || nullField);
 
-var fillNullFields = fieldSpecs => _.map(fieldSpecs, fs => fs || nullField); 
-
-// Create a composite fieldSpec from a list of fieldSpecs.
+// Create a composite fieldSpec from a list of fieldSpecs. This uses
+// a number of heuristics to determine the 'best' combined view over
+// the fieldSpecs, for some definition of 'best'.
 //
 // For genes/geneProbes, we might have geneProbes fields on different
 // probemaps, in which case we want to coerce to 'genes', and prevent the
 // user from picking 'geneProbes'. We reset the fieldType here, and set the
 // 'noGeneDetail' flag to inform the UI that we can't support a 'geneProbes' view.
 
-function combineColSpecs(fieldSpecs, datasets) {
+function combineNotEmptyColSpecs(fieldSpecs, datasets) {
 	var fields = longest(_.pluck(fieldSpecs, 'fields')),
 		uniqProbemap = hasUniqProbemap(fieldSpecs, datasets),
 		resetFieldSpecs = resetProbesMatrix(fields.len, fieldSpecs, uniqProbemap),
@@ -145,10 +140,15 @@ function combineColSpecs(fieldSpecs, datasets) {
 		fieldLabel: getFieldLabel(resetFieldSpecs),
 		columnLabel: getColumnLabel(resetFieldSpecs),
 		colorClass: getColorClass(resetFieldSpecs),
-		noGeneDetail: !uniqProbemap,
+		noGeneDetail: !uniqProbemap, // XXX is this wrong? also have to check field len.
 		assembly: getAssembly(fieldType, resetFieldSpecs),
 		sFeature: getFeature(fieldType, resetFieldSpecs)
 	});
+}
+
+function combineColSpecs(fieldSpecs, datasets) {
+	return _.every(fieldSpecs, fs => fs.fetchType === 'null') ? nullField :
+		combineNotEmptyColSpecs(fieldSpecs, datasets);
 }
 
 // XXX This should be recursive, instead of having a

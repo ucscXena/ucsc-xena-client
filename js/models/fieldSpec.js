@@ -39,9 +39,30 @@ var sVTCases = {
 // necessary.
 var setFieldType = _.curry((type, fs) => sVTCases[fs.fetchType](type, fs));
 
+var nullField = {
+	fetchType: 'null',
+	valueType: 'null',
+	fieldType: 'null',
+	colorClass: 'null',
+	fields: []
+};
+
+var assocInOrReplace = (obj, keys, val) =>
+	keys.length === 0 ? val : _.assocIn(obj, keys, val);
+
+// Replace all fields not in datasets with nullField.
+var filterByDsID = _.curry((datasets, fieldSpec) => {
+	var xfp = _.filter(xenaFieldPaths(fieldSpec),
+			p => !_.has(datasets, _.getIn(fieldSpec, [...p, 'dsID'])));
+
+	return _.reduce(xfp, (acc, p) => assocInOrReplace(acc, p, nullField), fieldSpec);
+});
+
 module.exports = {
 	xenaFieldPaths,
 	updateFields,
 	mergeDsIDs,
-	setFieldType
+	setFieldType,
+	nullField,
+	filterByDsID
 };

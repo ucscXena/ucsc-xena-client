@@ -13,4 +13,5 @@ require('./underscore_ext');
 require('./fieldFetch');
 require('./fieldSpec');
 require('./fields');
+require('./datasetJoins');
 //require('./matrix-test');

@@ -182,7 +182,8 @@ var controls = {
 			fetchCohortData(serverBus, newState);
 		}
 	},
-	cohort: setCohort,
+	cohort: (state, i, cohort) =>
+		setCohort(state, _.assoc(state.cohort, i, {name: cohort})),
 	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
 	'refresh-cohorts-post!': (serverBus, state) => fetchCohorts(serverBus, state.servers.user),
 	samplesFrom: (state, i, samplesFrom) => _.assoc(state,

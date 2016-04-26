@@ -54,6 +54,9 @@ function getFieldFormat(uuid, columns, data) {
 	}
 }
 
+// This was moved out of plotDenseMatrix so that plotDenseMatrix doesn't know
+// about fields vs. probes. We check the field length here, before overlaying
+// a probe list from the server, and sending to the spreadsheet view.
 function supportsGeneAverage({fieldType, fields: {length}}) {
 	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && length === 1;
 }

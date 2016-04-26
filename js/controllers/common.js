@@ -53,8 +53,12 @@ function samplesQuery(servers, cohort) {
 		.flatMap(resps => collectResults(resps, collateSamplesByCohort(cohort)));
 }
 
-function fetchSamples(serverBus, servers, cohort, samplesFrom) {
-	serverBus.onNext(['samples', samplesQuery(servers, cohort, samplesFrom)]);
+// query samples if non-empty cohorts
+var neSamplesQuery = (servers, cohort) =>
+	cohort.length > 0 ? samplesQuery(servers, cohort) : Rx.Observable.return([], Rx.Scheduler.currentThread);
+
+function fetchSamples(serverBus, servers, cohort) {
+	serverBus.onNext(['samples', neSamplesQuery(servers, cohort)]);
 }
 
 function fetchColumnData(serverBus, samples, id, settings) {
@@ -70,22 +74,10 @@ function resetZoom(state) {
 					 z => _.merge(z, {count: count, index: 0}));
 }
 
-// With multiple cohorts, we now want to
-// o- Set cohort in slot.
-// o- Drop datasets not in any cohort
-// o- Drop samples not in any cohort
-// o- Drop features not in any cohort (not in dataset list)
-// o- Drop survival not in any cohort (not in feature list)
-// o- Drop data not in any cohort (not in dataset list)
-// For now, just drop & refetch everything.
-var setCohort = (state, i, cohort) =>
+var setCohort = (state, cohorts) =>
 	resetZoom(_.assoc(state,
-				"cohort", _.assoc(state.cohort, i, {name: cohort}),
-				"samples", [],
-				"columns", {},
-				"columnOrder", [],
+				"cohort", cohorts,
 				"data", {},
-				"datasets", [],
 				"survival", null,
 				"km", null));
 
