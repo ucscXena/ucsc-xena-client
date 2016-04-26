@@ -55,7 +55,7 @@ function samplesQuery(servers, cohort) {
 
 // query samples if non-empty cohorts
 var neSamplesQuery = (servers, cohort) =>
-	cohort.length > 0 ? samplesQuery(servers, cohort) : Rx.Observable.return([], Rx.Scheduler.currentThread);
+	cohort.length > 0 ? samplesQuery(servers, cohort) : Rx.Observable.return([], Rx.Scheduler.timeout);
 
 function fetchSamples(serverBus, servers, cohort) {
 	serverBus.onNext(['samples', neSamplesQuery(servers, cohort)]);

@@ -185,6 +185,8 @@ var controls = {
 	cohort: (state, i, cohort) =>
 		setCohort(state, _.assoc(state.cohort, i, {name: cohort})),
 	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
+	'cohort-remove': (state, i) => setCohort(state, _.withoutIndex(state.cohort, i)),
+	'cohort-remove-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
 	'refresh-cohorts-post!': (serverBus, state) => fetchCohorts(serverBus, state.servers.user),
 	samplesFrom: (state, i, samplesFrom) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, [i, 'samplesFrom'], samplesFrom),

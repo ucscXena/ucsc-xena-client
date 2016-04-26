@@ -83,7 +83,12 @@ module.exports = function({
 
 	// Side-effects (e.g. async) happen here. Ideally we wouldn't call this from 'scan', since 'scan' should
 	// be side-effect free. However we've lost the action by the time scan is complete, so we do it in the scan.
+	var inEffectsReducer = false;
 	let effectsReducer = (state, ac) => {
+		if (inEffectsReducer) {
+			throw new Error("Reentry in reducer. Reducers must not invoke actions.");
+		}
+		inEffectsReducer = true;
 		var nextState = devReducer(state, ac);
 		if (ac.type === 'PERFORM_ACTION') {
 			try {
@@ -92,6 +97,7 @@ module.exports = function({
 				logError(err);
 			}
 		}
+		inEffectsReducer = false;
 		return nextState;
 	};
 

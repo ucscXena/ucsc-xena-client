@@ -199,6 +199,8 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 
 	var curry = fn => curryN(fn.length, fn);
 
+	var withoutIndex = (arr, i) => arr.slice(0, i).concat(arr.slice(i + 1));
+
 	_.mixin({
 		meannull: meannull,
 		meannan: meannan,
@@ -223,6 +225,7 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		scan,
 		fmapMemoize1,
 		mmap,
+		withoutIndex,
 		curry,
 		curryN // useful if the fn as multiple arities.
 	});
