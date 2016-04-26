@@ -27,20 +27,27 @@ var CohortControls = React.createClass({
 	},
 	render: function () {
 		var {onRefresh, onPdf, onSamplesSelect, onCohortSelect, cohortOnly,
-				cohort, cohorts, samplesFrom, datasets, mode} = this.props,
+				onRemove, cohort, cohorts, samplesFrom, datasets, mode} = this.props,
 			hasCohort = !!cohort,
 			visibility = cohortOnly ? 'hidden' : 'visible',
+			removeVisibility = hasCohort ? 'visible' : 'hidden',
+			refreshVisibility = onRefresh ? 'visible' : 'hidden',
 			disableMenus = (mode === modeEvent.heatmap);
 
-		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>
+		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>;
 		return (
 			<form className='form-inline'>
-				<span style={{visibility: visibility}}>
+				<span style={{visibility: refreshVisibility}}>
 					<OverlayTrigger placement="top" overlay={tooltip}>
 						<Button onClick={onRefresh} bsSize='sm' style={{marginRight: 5}}>
 							<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
 						</Button>
 					</OverlayTrigger>
+				</span>
+				<span style={{visibility: removeVisibility}}>
+					<Button onClick={onRemove} bsSize='sm' style={{marginRight: 5}}>
+						<span className="glyphicon glyphicon-remove" aria-hidden="true"/>
+					</Button>
 				</span>
 				<CohortSelect onSelect={onCohortSelect} cohort={cohort} cohorts={cohorts} disable={disableMenus}/>
 				{' '}

@@ -15,6 +15,10 @@ var AppControls = React.createClass({
 		var {callback} = this.props;
 		callback(['refresh-cohorts']);
 	},
+	onRemove: function (index) {
+		var {callback} = this.props;
+		callback(['cohort-remove', index]);
+	},
 	onPdf: function () {
 		pdf(this.props.appState);
 	},
@@ -36,7 +40,8 @@ var AppControls = React.createClass({
 					datasets={_.where(datasets, {cohort: name})}
 					mode={mode}
 					onMode={this.onMode}
-					onRefresh={this.onRefresh}
+					onRefresh={i === 0 ? this.onRefresh : null}
+					onRemove={_.partial(this.onRemove, i)}
 					onPdf={this.onPdf}
 					onSamplesSelect={_.partial(this.onSamplesSelect, i)}
 					onCohortSelect={_.partial(this.onCohortSelect, i)}/>
@@ -47,6 +52,7 @@ var AppControls = React.createClass({
 				{controls}
 				<CohortControls
 					key={cohort.length}
+					onRefresh={cohort.length === 0 ? this.onRefresh : null}
 					cohortOnly={true}
 					cohorts={cohorts}
 					onCohortSelect={_.partial(this.onCohortSelect, cohort.length)}/>
