@@ -80,7 +80,7 @@ var CanvasDrawing = React.createClass({
 		// This is a bit fiddly, but we want to animate zoom on samples.
 		// That means 1) the sample list hasn't changed, 2 the height hasn't
 		// changed, 3) the count or index has changed.
-		if (this.canTransition() && _.isEqual(samples, this.props.samples) &&
+		if (this.canTransition() && count > 0 && _.isEqual(samples, this.props.samples) &&
 				height === _.getIn(this.props, ['zoom', 'height']) &&
 				(count !== _.getIn(this.props, ['zoom', 'count']) ||
 				 index !== _.getIn(this.props, ['zoom', 'index']))) {
