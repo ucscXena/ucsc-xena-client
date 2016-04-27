@@ -40,7 +40,7 @@ function workflowIndicators(positions, defs, onHide) {
 			count++;
 			let navTitle = `${count}. Select ${def.name}`;
 			return (
-				<NavItem classname ='row' eventKey={key} key={key} disabled>
+				<NavItem className ='row' eventKey={key} key={key} disabled>
 					<span>{navTitle}</span>
 				</NavItem>
 			);
