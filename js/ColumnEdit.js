@@ -28,12 +28,12 @@ var ColumnEdit = React.createClass({
 			label = datasets[this.state.dataset].label,
 			colorClass = defaultColorClass(datasets[this.state.dataset]),
 			assembly = datasets[this.state.dataset].assembly;
-			settings = _.assoc(settings,
-				'width', 200, // XXX move this default setting?
-				'columnLabel', {user: label, 'default': label},
-				'assembly', assembly,
-				'colorClass', colorClass,
-				'dsID', this.state.dataset);
+		settings = _.assoc(settings,
+			'width', 200, // XXX move this default setting?
+			'columnLabel', {user: label, 'default': label},
+			'assembly', assembly,
+			'colorClass', colorClass,
+			'dsID', this.state.dataset);
 		this.props.onHide();
 		callback(['add-column', uuid(), settings]);
 	},
@@ -50,7 +50,7 @@ var ColumnEdit = React.createClass({
 		this.setState({editor: _.merge(editor, state)});
 	},
 	render: function () {
-		var {dataset, editor} = this.state,
+		var {dataset, hasGenes, editor} = this.state,
 			{appState: {datasets, columnEdit}} = this.props,
 			features = _.getIn(columnEdit, ['features']),
 			meta = dataset && _.get(datasets, dataset);
@@ -75,7 +75,7 @@ var ColumnEdit = React.createClass({
 						<Editor {...columnEdit} {...editor} setEditorState={this.setEditorState}/>
 						<div className='form-group'>
 							<Button disabled={!valid(editor)}
-									onClick={() => this.addColumn(apply(features, editor))} className='col-md-offset-10'>Apply</Button>
+									onClick={() => this.addColumn(apply(features, editor, hasGenes, dataset))} className='col-md-offset-10'>Apply</Button>
 						</div>
 					</form>
 				</Modal.Body>

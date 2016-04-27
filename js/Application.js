@@ -129,7 +129,6 @@ var Application = React.createClass({
 			computedState = selector(state),
 			{mode} = computedState,
 			View = views[mode];
-
 		return (
 			<Grid onClick={this.onClick}>
 			{/*

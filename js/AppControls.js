@@ -11,7 +11,7 @@ var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var pdf = require('./pdfSpreadsheet');
 
 var modeButton = {
-	chart: 'Heatmap',
+	chart: 'Visual Spreadsheet',
 	heatmap: 'Chart'
 };
 
@@ -34,15 +34,15 @@ var AppControls = React.createClass({
 		pdf(this.props.appState);
 	},
 	onSamplesSelect: function (value) {
-			this.props.callback(['samplesFrom', value]);
+		this.props.callback(['samplesFrom', value]);
 	},
 	onCohortSelect: function (value) {
-			this.props.callback(['cohort', value]);
+		this.props.callback(['cohort', value]);
 	},
 	render: function () {
-		var {appState: {cohort, cohorts, samplesFrom, datasets, mode}} = this.props,
+		var {appState: {cohort, cohorts, datasets, mode, samplesFrom}} = this.props,
 			hasCohort = !!cohort,
-			disableMenus = (mode === modeEvent.heatmap);
+			noshow = (mode !== "heatmap");
 
 		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>;
 		return (
@@ -52,28 +52,25 @@ var AppControls = React.createClass({
 						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
 					</Button>
 				</OverlayTrigger>
-				<CohortSelect onSelect={this.onCohortSelect} cohort={cohort} cohorts={cohorts} disable={disableMenus}/>
+				{noshow? null : <CohortSelect cohort={cohort} cohorts={cohorts}
+					  onSelect={this.onCohortSelect}/>}
 				{' '}
-				{hasCohort ?
+				{hasCohort && !noshow ?
 					<div className='form-group' style={this.props.style}>
-						<label className='samplesFromLabel'> Samples in </label>
+						<label> Samples in </label>
 						{' '}
 						<DatasetSelect
 							onSelect={this.onSamplesSelect}
 							nullOpt="Any Datasets (i.e. show all samples)"
-							style={{display: hasCohort ?
-									'inline' : 'none'}}
-							className='samplesFromAnchor'
+							style={{display: hasCohort ?'inline' : 'none'}}
 							datasets={datasets}
 							cohort={cohort}
-							disable={disableMenus}
 							value={samplesFrom} />
-					</div> :
-				null}
-				{' | '}
-				<Button onClick={this.onMode} className='chartSelect' bsStyle='primary'>{modeButton[mode]}</Button>
-				{' | '}
-				<Button onClick={this.onPdf}>PDF</Button>
+					</div> :null}
+				{' '}
+				<Button onClick={this.onMode} bsStyle='primary'>{modeButton[mode]}</Button>
+				{' '}
+				{noshow ? null : <Button onClick={this.onPdf}>PDF</Button>}
 			</form>
 		);
 	}

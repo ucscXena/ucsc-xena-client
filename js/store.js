@@ -11,7 +11,8 @@ var {getNotifications} = require('./notifications');
 
 var defaultServers = [
 	'https://local.xena.ucsc.edu:7223',
-  'https://genome-cancer.ucsc.edu:443/proj/public/xena'
+	'https://genome-cancer.ucsc.edu:443/proj/public/xena',
+	"https://toil.xenahubs.net"
 ];
 
 module.exports = function () {

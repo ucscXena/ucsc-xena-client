@@ -6,21 +6,19 @@ var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 
 var CohortSelect = React.createClass({
+	name: 'Cohort',
 	mixins: [deepPureRenderMixin],
 	render: function () {
-		var {cohort, cohorts, callback, ...other} = this.props,
-			sortedCohorts = _.sortBy(cohorts, (cohort) => cohort.toLowerCase()),
-			options = _.map(sortedCohorts, c => ({value: c, label: c}));
+		var {cohort, cohorts, makeLabel, ...other} = this.props,
+			sortedCohorts = _.sortBy(cohorts, (cohort) => cohort.toLowerCase()).filter(name=>name!=="(unassigned)"),
+			options = _.map(sortedCohorts, c => ({value: c, label: c})),
+			label = <label>Cohort</label> ;
 
 		return (
 			<div className='form-group'>
-				<label className='cohortAnchor'>Cohort</label>
+				{label}
 				{' '}
-				<Select
-					value={cohort}
-					options={options}
-					{...other}
-				/>
+				<Select allowSearch={true} options={options} {...other} value={cohort}/>
 			</div>
 		);
 	}
