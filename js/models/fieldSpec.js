@@ -58,11 +58,14 @@ var filterByDsID = _.curry((datasets, fieldSpec) => {
 	return _.reduce(xfp, (acc, p) => assocInOrReplace(acc, p, nullField), fieldSpec);
 });
 
+var allNullFields = fieldSpecs => _.every(fieldSpecs, fs => fs.fetchType === 'null');
+
 module.exports = {
 	xenaFieldPaths,
 	updateFields,
 	mergeDsIDs,
 	setFieldType,
 	nullField,
+	allNullFields,
 	filterByDsID
 };

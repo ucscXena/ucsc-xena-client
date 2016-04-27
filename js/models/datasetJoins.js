@@ -124,7 +124,7 @@ var fillNullFields = fieldSpecs => _.map(fieldSpecs, fs => fs || nullField);
 // user from picking 'geneProbes'. We reset the fieldType here, and set the
 // 'noGeneDetail' flag to inform the UI that we can't support a 'geneProbes' view.
 
-function combineNotEmptyColSpecs(fieldSpecs, datasets) {
+function combineColSpecs(fieldSpecs, datasets) {
 	var fields = longest(_.pluck(fieldSpecs, 'fields')),
 		uniqProbemap = hasUniqProbemap(fieldSpecs, datasets),
 		resetFieldSpecs = resetProbesMatrix(fields.len, fieldSpecs, uniqProbemap),
@@ -146,16 +146,13 @@ function combineNotEmptyColSpecs(fieldSpecs, datasets) {
 	});
 }
 
-function combineColSpecs(fieldSpecs, datasets) {
-	return _.every(fieldSpecs, fs => fs.fetchType === 'null') ? nullField :
-		combineNotEmptyColSpecs(fieldSpecs, datasets);
-}
-
-// XXX This should be recursive, instead of having a
-// length check, etc.
+// The original idea of fieldSpec was for it to be recursive, so
+// we could write nested expression (e.g. signatures). However, there's
+// some problem in the data modeling wrt cohorts: how does the list of
+// samples connect to a particular fieldSpec? So, here we always return
+// a 'composite', even for single datasets.
 function getColSpec(fieldSpecs, datasets) {
-	return fieldSpecs.length === 1 ? fieldSpecs[0] :
-		combineColSpecs(fillNullFields(fieldSpecs), datasets);
+	return combineColSpecs(fillNullFields(fieldSpecs), datasets);
 }
 
 // Convert field valueType.
