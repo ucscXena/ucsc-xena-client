@@ -26,11 +26,11 @@ var GeneEdit = React.createClass({
 	render: function () {
 		var {gene, makeLabel, setEditorState} = this.props,
 			content =
-				<div>
+				(<div>
 					<Input type='textinput' value={gene}
 						   onChange={ev => setEditorState({gene: ev.target.value})}/>
 					<div>e.g. TP53</div>
-				</div>;
+				</div>);
 		return (
 			<div className="form-group">{makeLabel(content, `Gene`)}</div>
 		);

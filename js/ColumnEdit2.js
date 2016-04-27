@@ -1,4 +1,4 @@
-/*global require: false, module: false */
+/*global location: false, require: false, module: false */
 'use strict';
 
 var React = require('react');
@@ -28,9 +28,9 @@ var pickEditor = function(datasets, chosenDs) {
 		let dsMeta = datasets[chosenDs[0]]; // only 1 entry when dataset sub type is NOT 'phenotype'
 		return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
 	} else {
-		return {null, null};
+		return {Editor: null, apply: null};
 	}
-}
+};
 
 function workflowIndicators(positions, defs, onHide) {
 	// Show all breadcrumbs regardless of where in the workflow the user is in.
@@ -43,7 +43,7 @@ function workflowIndicators(positions, defs, onHide) {
 				<NavItem classname ='row' eventKey={key} key={key} disabled>
 					<span>{navTitle}</span>
 				</NavItem>
-			)
+			);
 		});
 
 	return (
@@ -98,8 +98,8 @@ var NavButtons = React.createClass({
 		/* FORWARD BTN: Select | Next | Done */
 		let btnLabel,
 			icon,
-			{choices, onForward, defs} = this.props,
-			disabled = !choices[currentSection] || choices[currentSection].length===0;
+			{choices, onForward} = this.props,
+			disabled = !choices[currentSection] || choices[currentSection].length === 0;
 
 		if (currentSection === "cohort"){
 			btnLabel = 'Select';
@@ -107,7 +107,7 @@ var NavButtons = React.createClass({
 		} else if (currentSection === "dataset"){
 			btnLabel = 'Next';
 			icon = "menu-right";
-		} else if (currentSection ==="editor"){
+		} else if (currentSection === "editor"){
 			btnLabel = 'Done';
 			icon = '';
 		}
@@ -226,8 +226,9 @@ var ColumnEdit = React.createClass({
 			currentSpotDef = this.defs[currentSpot],
 			nextSpot = currentSpotDef.next;
 
-		if (this.defs[currentSpot].omit)
+		if (this.defs[currentSpot].omit) {
 			this.props.callback([currentSpot, choices[currentSpot]]);
+		}
 
 		// Set new position in workflow if necessary and reset choices
 		if (nextSpot) {
@@ -236,18 +237,18 @@ var ColumnEdit = React.createClass({
 				positions: updatePositions(nextSpot, positions)
 			});
 			this.setState(newState);
-		} else if (currentSpot ==='editor'){
+		} else if (currentSpot === 'editor'){
 			let {appState: {columnEdit, datasets}} = this.props,
 				chosenDs = choices.dataset,
 				dsFeatures = _.getIn(columnEdit, ['features']),
-				{Editor, apply} = pickEditor(datasets, chosenDs),
-				hasGenes= chosenDs && !!datasets[chosenDs[0]].probeMap;
+				{apply} = pickEditor(datasets, chosenDs),
+				hasGenes = chosenDs && !!datasets[chosenDs[0]].probeMap;
 
 			this.addColumn(apply(dsFeatures, choices.editor, hasGenes));
 		}
 	},
 	onHub: function(){
-		location.href="../hub/";
+		location.href = "../hub/";
 	},
 	setChoice: function(section, newValue) {
 		let newState = _.assocIn(this.state, ['choices', section], newValue);
@@ -261,18 +262,17 @@ var ColumnEdit = React.createClass({
 		var {choices, positions} = this.state,
 			{appState: {cohorts, columnEdit, datasets, features, servers}, callback, onHide} = this.props,
 			chosenDs = choices.dataset,  // choices.dataset is an array of datasets
-			currentPosition = _.findKey(positions, p => p),
-			{Editor, apply} = pickEditor(datasets, chosenDs),
-			chosenDsSingle = (chosenDs && chosenDs.length===1) ? datasets[chosenDs[0]]:null,
-			chosenDsSingleLink = chosenDsSingle ? "../datapages/?dataset="+ chosenDsSingle.name +
-				"&host="+JSON.parse(chosenDsSingle.dsID).host : null;
+			{Editor} = pickEditor(datasets, chosenDs),
+			chosenDsSingle = (chosenDs && chosenDs.length === 1) ? datasets[chosenDs[0]] : null,
+			chosenDsSingleLink = chosenDsSingle ? "../datapages/?dataset=" + chosenDsSingle.name +
+				"&host=" + JSON.parse(chosenDsSingle.dsID).host : null;
 
 		return (
 			<Modal show={true} className='columnEdit container' enforceFocus>
 				{positions['cohort'] ?
 					<Modal.Header onHide={onHide} closeButton>
         				<Modal.Title>Select a cohort</Modal.Title>
-      				</Modal.Header>: null}
+      				</Modal.Header> : null}
 
 				{positions['dataset'] || positions['editor'] ?
 					workflowIndicators(positions, this.defs, onHide) : null }
@@ -288,7 +288,7 @@ var ColumnEdit = React.createClass({
 							<span>If not found, perhaps the cohort is on a different data hub?</span>
 							{' '}
 							<Button onClick={this.onHub}>Configure My Data Hubs</Button>
-						</div>:null}
+						</div> : null}
 
 					{positions['dataset'] ?
 					<DatasetSelect datasets={datasets} makeLabel={makeLabel}
@@ -296,10 +296,10 @@ var ColumnEdit = React.createClass({
 						servers={_.uniq(_.reduce(servers, (all, list) => all.concat(list), []))}/> : null}
 
 					{positions['editor'] ?
-						<div>{makeLabel( chosenDs.length===1?
-							<a href={chosenDsSingleLink} target="_BLANK">{datasets[chosenDs[0]].label}</a>: "Combined phenotypes",
+						<div>{makeLabel( chosenDs.length === 1 ?
+							<a href={chosenDsSingleLink} target="_BLANK">{datasets[chosenDs[0]].label}</a> : "Combined phenotypes",
 							"Dataset")}</div>
-						:null}
+						: null}
 					<br/>
 
 					{positions['editor'] ?
