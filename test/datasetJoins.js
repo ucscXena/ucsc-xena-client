@@ -1,10 +1,22 @@
-/*global require: false, module: false, console: false, describe: false */
+/*global it: false, require: false, module: false, console: false, describe: false */
 'use strict';
 
 var assert = require('assert');
 var jv = require('jsverify');
 var _ = require('../js/underscore_ext');
 var {getColSpec} = require('../js/models/datasetJoins');
+
+var opts = {
+	tests: 1000
+};
+
+// like jv.property, but set global options
+function property(name, ...args) {
+    var prop = jv.forall(...args);
+    it(name, function () {
+      return jv.assert(prop, opts);
+    });
+}
 
 describe('datasetJoins', function () {
 	describe('getColSpec', function () {
@@ -15,7 +27,7 @@ describe('datasetJoins', function () {
 				typeDsID = tuple([oneof(fieldTypes), asciinestring]),
 				typesPmap = tuple([suchthat(nearray(typeDsID), someGenes), asciinestring]);
 
-			jv.property("defaults to genes with some 'genes' fields", typesPmap, function ([typesDsIDs, pmap]) {
+			property("defaults to genes with some 'genes' fields", typesPmap, function ([typesDsIDs, pmap]) {
 
 				var fieldSpecs = typesDsIDs.map(([type, dsID]) => ({
 						fields: ['foo'],
@@ -37,7 +49,7 @@ describe('datasetJoins', function () {
 				typeDsID = tuple([oneof(fieldTypes), asciinestring]),
 				typesPmap = tuple([suchthat(nearray(typeDsID), someGeneProbes), asciinestring]);
 
-			jv.property('defaults to geneProbes with same probemap', typesPmap, function ([typesDsIDs, pmap]) {
+			property('defaults to geneProbes with same probemap', typesPmap, function ([typesDsIDs, pmap]) {
 				var fieldSpecs = typesDsIDs.map(([type, dsID]) => ({
 						fields: ['foo'],
 						fieldType: type,
@@ -54,17 +66,18 @@ describe('datasetJoins', function () {
 		}
 		{
 			let twoGeneProbes = fields => _.filter(fields, ([type]) => type === 'geneProbes').length >= 2;
-			let diffProbemaps = fields => _.uniq(_.pluck(fields, 1)).length === fields.length;
+			let diffDsIDs = fields => _.uniq(_.pluck(fields, 1)).length === fields.length;
+			let diffProbemaps = fields => _.uniq(_.pluck(fields, 2)).length === fields.length;
 			let fieldTypes = ['geneProbes', 'null'].map(constant),
 				typeDsID = tuple([oneof(fieldTypes), asciinestring, asciinestring]),
-				fields = suchthat(nearray(typeDsID), fds => twoGeneProbes(fds) && diffProbemaps(fds));
+				fields = suchthat(nearray(typeDsID), fds => twoGeneProbes(fds) && diffProbemaps(fds) && diffDsIDs(fds));
 
 			// test: genes/geneProbes, probemap = or !=, fields > 1 or = 1
 			// For any combination of genes, geneProbes, null, getColSpec should
 			// set to geneProbes if probemaps match, and to genes if they don't.
 			//
 			// To test, we want a set of fieldSpec, at least one of type 'genes'.
-			jv.property('defaults to genes with same different probemap', fields, function (typesDsIDsPmaps) {
+			property('defaults to genes with same different probemap', fields, function (typesDsIDsPmaps) {
 				var fieldSpecs = typesDsIDsPmaps.map(([type, dsID]) => ({
 						fields: ['foo'],
 						fieldType: type,
