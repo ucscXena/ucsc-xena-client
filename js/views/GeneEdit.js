@@ -5,7 +5,7 @@ var React = require('react');
 var Input = require('react-bootstrap/lib/Input');
 var trim = require('underscore.string').trim;
 
-function apply(features, state, meta) {
+function apply(features, state, __, meta) {
 	var gene = trim(state.gene);
 	return {
 		fields: [gene],
@@ -13,6 +13,7 @@ function apply(features, state, meta) {
 		valueType: 'mutation',
 		fieldType: 'mutation',
 		fieldLabel: gene,
+		dsID: meta.dsID,
 		assembly: meta.assembly,
 		sFeature: 'impact'
 	};

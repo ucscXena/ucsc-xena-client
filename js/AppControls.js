@@ -34,13 +34,13 @@ var AppControls = React.createClass({
 		pdf(this.props.appState);
 	},
 	onSamplesSelect: function (value) {
-		this.props.callback(['samplesFrom', value]);
+		this.props.callback(['samplesFrom', 0 /* index into composite cohorts */, value]);
 	},
 	onCohortSelect: function (value) {
-		this.props.callback(['cohort', value]);
+		this.props.callback(['cohort', 0 /* index into composite cohorts */, value]);
 	},
 	render: function () {
-		var {appState: {cohort, cohorts, datasets, mode, samplesFrom}} = this.props,
+		var {appState: {cohort: [{name: cohort, samplesFrom}], cohorts, datasets, mode}} = this.props,
 			hasCohort = !!cohort,
 			noshow = (mode !== "heatmap");
 

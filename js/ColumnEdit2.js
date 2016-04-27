@@ -12,6 +12,8 @@ var phenotypeEdit = require('./views/PhenotypeEdit');
 var geneEdit = require('./views/GeneEdit');
 var geneProbeEdit = require('./views/GeneProbeEdit');
 var {PropTypes} = React;
+var {getColSpec} = require('./models/datasetJoins');
+var {defaultColorClass} = require('./heatmapColors');
 
 var editors = {
 	'clinicalMatrix': phenotypeEdit,
@@ -182,9 +184,10 @@ var ColumnEdit = React.createClass({
 			dsIDs = this.state.choices.dataset,
 			dsID = _.has(settings, 'dsID') ? settings.dsID : dsIDs[0],
 			ds = appState.datasets[dsID];
-		settings = _.assoc(settings,
+		settings = _.assoc(getColSpec([settings], appState.datasets),
 			'width', 200, // XXX move this default setting?
 			'columnLabel', {user: ds.label, default: ds.label},
+			'colorClass', defaultColorClass(ds),
 			'assembly', ds.assembly,
 			'dsID', dsID);
 		this.props.onHide();
@@ -238,13 +241,12 @@ var ColumnEdit = React.createClass({
 			});
 			this.setState(newState);
 		} else if (currentSpot === 'editor'){
-			let {appState: {columnEdit, datasets}} = this.props,
+			let {appState: {features, datasets}} = this.props,
 				chosenDs = choices.dataset,
-				dsFeatures = _.getIn(columnEdit, ['features']),
 				{apply} = pickEditor(datasets, chosenDs),
 				hasGenes = chosenDs && !!datasets[chosenDs[0]].probeMap;
 
-			this.addColumn(apply(dsFeatures, choices.editor, hasGenes));
+			this.addColumn(apply(features[chosenDs[0]], choices.editor, hasGenes, datasets[chosenDs[0]]));
 		}
 	},
 	onHub: function(){

@@ -19,6 +19,7 @@ function apply(features, state, hasGenes, dataset) {
 		fields: fields,
 		fetchType: 'xena',
 		valueType: 'float',
+		dsID: dataset.dsID,
 		defaultNormalization: _.get(dataset, 'colnormalization'),
 		fieldType: genes ? (fields.length > 1 ? 'genes' : 'geneProbes') : 'probes',
 		fieldLabel: fieldTxt
