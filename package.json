@@ -19,6 +19,11 @@
     "install": "napa"
   },
   "author": "Brian Craft",
+  "config": {
+	  "ghooks": {
+		  "pre-commit": "npm run lint"
+	  }
+  },
   "devDependencies": {
     "assert": "^1.3.0",
     "babel-cli": "^6.4.5",
@@ -37,6 +42,7 @@
     "eslint-plugin-react": "^3.16.1",
     "exports-loader": "^0.6.2",
     "file-loader": "^0.8.1",
+    "ghooks": "^1.2.1",
     "html-webpack-plugin": "^1.1.0",
     "imports-loader": "^0.6.3",
     "json-loader": "^0.5.4",
