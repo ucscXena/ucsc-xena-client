@@ -9,6 +9,7 @@ var Button = require('react-bootstrap/lib/Button');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var pdf = require('./pdfSpreadsheet');
+var _ = require('./underscore_ext');
 
 var modeButton = {
 	chart: 'Visual Spreadsheet',
@@ -40,7 +41,9 @@ var AppControls = React.createClass({
 		this.props.callback(['cohort', 0 /* index into composite cohorts */, value]);
 	},
 	render: function () {
-		var {appState: {cohort: [{name: cohort, samplesFrom}], cohorts, datasets, mode}} = this.props,
+		var {appState: {cohort: activeCohorts, cohorts, datasets, mode}} = this.props,
+			cohort = _.getIn(activeCohorts, [0, 'name']),
+			samplesFrom = _.getIn(activeCohorts, [0, 'samplesFrom']),
 			hasCohort = !!cohort,
 			noshow = (mode !== "heatmap");
 
