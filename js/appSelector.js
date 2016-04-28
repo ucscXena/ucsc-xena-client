@@ -50,7 +50,7 @@ var sortSelector = createSelector(
 var transformSelector = createFmapSelector(
 		state => _.fmap(state.columns,
 			(column, key) => [
-				_.omit(column, ['fieldLabel', 'columnLabel']), // ugh. Review column schema + widget.transform.
+				_.omit(column, 'user'), // ugh. Review column schema + widget.transform.
 				_.getIn(column, ['vizSettings']),
 				state.data[key],
 				state.samples,

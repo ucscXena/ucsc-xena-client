@@ -224,13 +224,13 @@ var controls = {
 		}
 	},
 	'columnLabel': (state, dsID, value) =>
-		_.assocIn(state, ['columns', dsID, 'columnLabel', 'user'], value),
+		_.assocIn(state, ['columns', dsID, 'user', 'columnLabel'], value),
 	'fieldLabel': (state, dsID, value) =>
-		_.assocIn(state, ['columns', dsID, 'fieldLabel', 'user'], value),
+		_.assocIn(state, ['columns', dsID, 'user', 'fieldLabel'], value),
 	'km-open': (state, id) => _.assocInAll(state,
 			['km', 'id'], id,
-			['km', 'title'], _.getIn(state, ['columns', id, 'columnLabel', 'user']),
-			['km', 'label'], `Grouped by ${_.getIn(state, ['columns', id, 'fieldLabel', 'user'])}`),
+			['km', 'title'], _.getIn(state, ['columns', id, 'user', 'columnLabel']),
+			['km', 'label'], `Grouped by ${_.getIn(state, ['columns', id, 'user', 'fieldLabel'])}`),
 	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
 	'km-close': state => _.assocIn(state, ['km', 'id'], null),
 	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),

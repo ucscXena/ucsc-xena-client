@@ -98,9 +98,7 @@ var ColumnEdit = React.createClass({
 			colSpec = getColSpec(mergeDsIDs(this.state.dataset, fieldSpecs), datasets/*, _.get(columnEdit, 'features')*/),
 			settings = _.assoc(colSpec,
 				'width', 200, // XXX move this default setting?
-				'columnLabel', {user: colSpec.columnLabel, 'default': colSpec.columnLabel},
-				'fieldLabel', {user: colSpec.fieldLabel, 'default': colSpec.fieldLabel}
-				);
+				'user', _.pick(colSpec, 'columnLabel', 'fieldLabel'));
 		this.props.onHide();
 		callback(['add-column', uuid(), settings]);
 	},
