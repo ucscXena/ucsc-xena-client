@@ -239,7 +239,7 @@ var controls = {
 	'chart-set-average-cohort-post!': (serverBus, state, newState, id, thunk) =>
 		serverBus.onNext(['chart-average-data', getChartOffsets(newState.columns[id]), thunk]),
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
-		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets), thunk])
+		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets, Rx.Scheduler.timeout), thunk])
 };
 
 module.exports = {
