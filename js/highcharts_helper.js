@@ -1,9 +1,8 @@
-/*eslint strict: [2, "function"], camelcase: 0 */
+/*eslint camelcase: 0 */
 /*global define: true*/
 'use strict';
 define(['./highcharts'], function () {
   function hcLabelRender(){
-	///*jshint -W040 */ // Due to the way highcharts is configured.
     var s = this.name;
     var r = "";
     var lastAppended = 0;

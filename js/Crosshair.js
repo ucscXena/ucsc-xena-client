@@ -15,7 +15,7 @@ var Crosshair = React.createClass({
 	getDefaultProps: function() {
 		return {
 			point: { x: 0, y: 0 }
-		}
+		};
 	},
 	render: function () {
 		let { point: {x, y}, open, dims } = this.props,

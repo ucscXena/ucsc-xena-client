@@ -9,7 +9,7 @@ var errorProps = ['name', 'message', 'context'];
 var getErrorProps = (err) => {
 	var props = _.pick(err, errorProps);
 	return err.errors ? _.assoc(props, 'errors', err.errors.map(getErrorProps)) : props;
-}
+};
 
 function CompositeError(message, ...errors) {
 	Error.call(this, message);
@@ -44,4 +44,4 @@ module.exports = {
 	compositeError,
 	getErrorProps,
 	logError
-}
+};

@@ -1,4 +1,4 @@
-/*global require: false, document: false */
+/*global window: false, require: false, document: false */
 'use strict';
 
 require('bootstrap/dist/css/bootstrap.css');
@@ -24,7 +24,7 @@ var XenaNav = React.createClass({
 	getInitialState: function() {
 		let path = window.location.pathname,
 			defaultLink = links[2],
-			activeLink = path ==="/" ? defaultLink : (_.find(links, l => l.href.includes(path)) || defaultLink);
+			activeLink = path === "/" ? defaultLink : (_.find(links, l => l.href.includes(path)) || defaultLink);
 		return {activeTab: activeLink.label};
 	},
 

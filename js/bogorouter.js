@@ -17,7 +17,7 @@ require('react-dom');
 require('rx');
 require('babel-polyfill');
 require('bootstrap/dist/css/bootstrap.css');
-require('underscore')
+require('underscore');
 require('rx/dist/rx.time');
 require('rx.coincidence');
 require('rx-dom');

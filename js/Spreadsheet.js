@@ -110,7 +110,6 @@ var Columns = React.createClass({
 	},
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
 		// XXX are there other streams we're leaking? What listens on this.ev.click, etc?
-		console.log("Unmounting...");
 		this.tooltip.dispose();
 	},
 	getInitialState: function () {
@@ -126,8 +125,9 @@ var Columns = React.createClass({
 		};
 	},
 	componentWillReceiveProps: function(newProps) {
-		if (!this.state.openColumnEdit && !newProps.appState.cohort)
+		if (!this.state.openColumnEdit && !newProps.appState.cohort) {
 			this.setState({openColumnEdit: true});
+		}
 	},
 	setDOMDims: function(domNode) {
 		var nodeKeys = _.keys(this.state.dims);

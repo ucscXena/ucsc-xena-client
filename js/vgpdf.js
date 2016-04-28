@@ -214,8 +214,8 @@ module.exports = function (doc/*, vgw, vgh*/) {
 
 			if (fillStyle && strokeStyle) {
 				// This oddity is required by pdf.
-				doc.lineWidth(lineWidth)
-				doc.fillAndStroke(fillStyle, strokeStyle)
+				doc.lineWidth(lineWidth);
+				doc.fillAndStroke(fillStyle, strokeStyle);
 			} else {
 				if (fillStyle) {
 					doc.fill(style(fillStyle));
@@ -232,8 +232,8 @@ module.exports = function (doc/*, vgw, vgh*/) {
 
 			if (fillStyle && strokeStyle) {
 				// This oddity is required by pdf.
-				doc.lineWidth(lineWidth)
-				doc.fillAndStroke(fillStyle, strokeStyle)
+				doc.lineWidth(lineWidth);
+				doc.fillAndStroke(fillStyle, strokeStyle);
 			} else {
 				if (fillStyle) {
 					doc.fill(style(fillStyle));

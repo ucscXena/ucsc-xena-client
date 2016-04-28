@@ -121,7 +121,7 @@ module.exports = function({
 					<Page callback={updater} selector={selector} state={unwrapDevState(devState)} />
 					<DevTools dispatch={devBus.onNext.bind(devBus)} {...devState} />
 				</div>,
-				main)
+				main);
 		});
 
 	// Save state in sessionStorage on page unload.

@@ -51,7 +51,7 @@ function stringify(x) {
 		cache.has(y) ?
 		cache.get(y) :
 		m(y, {
-			ref: () => {throw new Error('Can\'t stringify JSON pointers')},
+			ref: () => {throw new Error('Can\'t stringify JSON pointers');},
 			array: addToCache(path, x => `[${x.map((v, i) => stringifyCached(v, [...path, i])).join(',')}]`),
 			object: addToCache(path, x => `{${mapPairs(validKeys(x), ([k, v]) => kvStr(k, stringifyCached(v, [...path, k]))).join(',')}}`),
 			primitive: x => JSON.stringify(x),
@@ -74,7 +74,7 @@ var preserveId = fn => coll => {
 		}
 	}
 	return coll;
-}
+};
 
 function parse(x) {
 	var refd = JSON.parse(x),
