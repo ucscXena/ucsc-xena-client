@@ -165,7 +165,8 @@ var ColumnEdit = React.createClass({
 		}
 	},
 	getInitialState: function () {
-		let {appState: {cohort}} = this.props;
+		let {appState: {cohort: activeCohorts}} = this.props,
+			cohort = _.getIn(activeCohorts, [0 /* index into composite cohorts */, 'name']);
 		return {
 			choices: {
 				cohort: cohort,
@@ -232,7 +233,11 @@ var ColumnEdit = React.createClass({
 			nextSpot = currentSpotDef.next;
 
 		if (this.defs[currentSpot].omit) {
-			this.props.callback([currentSpot, choices[currentSpot]]);
+			if (currentSpot === 'cohort') {
+				this.props.callback([currentSpot, 0 /* index into composite cohorts */, choices[currentSpot]]);
+			} else {
+				this.props.callback([currentSpot, choices[currentSpot]]);
+			}
 		}
 
 		// Set new position in workflow if necessary and reset choices
