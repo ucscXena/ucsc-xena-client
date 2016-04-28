@@ -183,10 +183,12 @@ var ColumnEdit = React.createClass({
 		let {callback, appState} = this.props,
 			dsIDs = this.state.choices.dataset,
 			dsID = _.has(settings, 'dsID') ? settings.dsID : dsIDs[0],
-			ds = appState.datasets[dsID];
-		settings = _.assoc(getColSpec([settings], appState.datasets),
+			ds = appState.datasets[dsID],
+			colSpec = getColSpec([settings], appState.datasets);
+		settings = _.assoc(colSpec,
 			'width', 200, // XXX move this default setting?
-			'columnLabel', {user: ds.label, default: ds.label},
+			'columnLabel', ds.label,
+			'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel},
 			'colorClass', defaultColorClass(ds),
 			'assembly', ds.assembly,
 			'dsID', dsID);

@@ -12,8 +12,9 @@ var {index} = require('static-interval-tree');
 
 var basicMutationColumn = {
 	column: {
-		columnLabel: {user: 'foo', default: 'foo'},
-		fieldLabel: {user: 'foo', default: 'foo'},
+		columnLabel: 'foo',
+		fieldLabel: 'foo',
+		user: {columnLabel: 'foo', fieldLabel: 'foo'},
 		sFeature: 'impact',
 		width: 20,
 		fieldType: 'mutation',

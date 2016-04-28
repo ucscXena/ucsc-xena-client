@@ -11,8 +11,9 @@ const {renderIntoDocument} = TestUtils;
 
 var basicDenseColumn = {
 	column: {
-		columnLabel: {user: 'foo', default: 'foo'},
-		fieldLabel: {user: 'foo', default: 'foo'},
+		columnLabel: 'foo',
+		fieldLabel: 'foo',
+		user: {columnLabel: 'foo', fieldLabel: 'foo'},
 		width: 20,
 		fieldType: 'probes',
 		valueType: 'float',

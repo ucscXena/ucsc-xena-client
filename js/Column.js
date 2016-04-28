@@ -88,7 +88,7 @@ var Column = React.createClass({
 	},
 	render: function () {
 		var {id, callback, plot, legend, column, zoom, menu, data, aboutDataset, disableKM} = this.props,
-			{width, columnLabel, fieldLabel} = column,
+			{width, columnLabel, fieldLabel, user} = column,
 			[kmDisabled, kmTitle] = disableKM(id),
 			// move this to state to generalize to other annotations.
 			doRefGene = _.get(data, 'refGene'),
@@ -118,12 +118,12 @@ var Column = React.createClass({
 					columnID={id}
 					callback={callback}
 					eventName='columnLabel'
-					value={columnLabel} />
+					value={{default: columnLabel, user: user.columnLabel}} />
 				<DefaultTextInput
 					columnID={id}
 					callback={callback}
 					eventName='fieldLabel'
-					value={fieldLabel} />
+					value={{default: fieldLabel, user: user.fieldLabel}} />
 				<div style={{height: 20}}>
 					{doRefGene ?
 						<RefGeneAnnotation

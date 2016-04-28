@@ -176,7 +176,7 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 				column = columnOrder[i];
 				option = document.createElement('option');
 				option.value = column;
-				option.textContent = columns[column].fieldLabel.user;
+				option.textContent = columns[column].user.fieldLabel;
 
 				if (columns[column].fieldType === "genes") {
 					option.textContent = option.textContent + " (gene average)";
@@ -274,7 +274,7 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 
 			if (xcolumn !== "none") {
 				xfields = columns[xcolumn].fields;
-				xlabel = columns[xcolumn].fieldLabel.user;
+				xlabel = columns[xcolumn].user.fieldLabel;
 				if (columns[xcolumn].fieldType === "genes") {
 					xlabel = xlabel + " (gene average)";
 				}
@@ -285,7 +285,7 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 
 			yfields = columns[ycolumn].fields;
 
-			ylabel = columns[ycolumn].fieldLabel.user;
+			ylabel = columns[ycolumn].user.fieldLabel;
 			if (columns[ycolumn].fieldType === "genes") {
 				ylabel = ylabel + " (gene average)";
 			}
