@@ -152,7 +152,7 @@ function makeGroups(column, data, index, survival, samples) {
 		codedFeat = toCoded(column, data, index, samples),
 		{values} = codedFeat,
 		usableSamples = filterIndices(samples, (s, i) =>
-			has(tte, i) && has(ev, i) && has(values, i)),
+			has(tte, s) && has(ev, s) && has(values, i)),
 		patientWarning = warnDupPatients(usableSamples, samples, patient),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
 		usableData = filterByGroups(codedFeat, groupedIndices),
