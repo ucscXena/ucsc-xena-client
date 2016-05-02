@@ -109,7 +109,7 @@ var cmp = ({fields}, {req: {values, probes}} = {req: {}}) =>
 // Convert nanstr and compute mean.
 function meanNanResponse(probes, data) {
 	var values = _.map(data, field => _.map(field, xenaQuery.nanstr)),
-		mean = _.map(data, _.meannan);
+		mean = _.map(data, _.meannull);
 
 	return {values, mean};
 }

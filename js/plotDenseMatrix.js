@@ -74,7 +74,7 @@ function tooltip(heatmap, fields, sampleFormat, fieldFormat, codes, width, zoom,
 		rows: nn(
 			[['labelValue', label, val]],
 			(val !== 'NA' && !code) &&
-				[['labelValue', 'Column mean', prec(_.meannan(heatmap[fieldIndex]))]])
+				[['labelValue', 'Column mean', prec(_.meannull(heatmap[fieldIndex]))]])
 	};
 }
 

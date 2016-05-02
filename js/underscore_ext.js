@@ -106,24 +106,6 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		};
 	}
 
-	function meannan(values) {
-		var count = 0, sum = 0;
-		if (!values) {
-			return NaN;
-		}
-		sum = _.reduce(values, function (sum, v) {
-			if (!isNaN(v)) {
-				count += 1;
-				return sum + v;
-			}
-			return sum;
-		}, 0);
-		if (count > 0) {
-			return sum / count;
-		}
-		return NaN;
-	}
-
 	function meannull(values) {
 		var count = 0, sum = 0;
 		if (!values) {
@@ -203,7 +185,6 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 
 	_.mixin({
 		meannull: meannull,
-		meannan: meannan,
 		minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
 		maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
 		memoize1: memoize1,
