@@ -77,7 +77,7 @@ var remapSamples = (sampleMap, data) =>
 
 function computeMean(data) {
 	return _.assocIn(data, ['req', 'mean'],
-			_.fmap(_.getIn(data, ['req', 'values']), _.meannan));
+			_.fmap(_.getIn(data, ['req', 'values']), _.meannull));
 }
 
 function concatMutation(fieldData) {
