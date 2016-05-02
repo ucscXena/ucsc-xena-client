@@ -12,7 +12,7 @@ function apply(features, state) {
 		fetchType: 'xena',
 		valueType: meta.valuetype === 'float' ? 'float' : 'coded',
 		fieldType: 'clinical',
-		fieldLabel: meta.longtitle
+		fieldLabel: meta.longtitle || feature
 	};
 }
 
