@@ -49,7 +49,7 @@ function checkIfActive(currentLabel, activeLabel) {
 
 var LineGroup = React.createClass({
 	getInitialState: function() {
-		return { isActive: false }
+		return { isActive: false };
 	},
 
 	componentWillReceiveProps: function(newProps) {
@@ -181,7 +181,7 @@ var PValue = React.createClass({
 					<span>Log-rank Test Stats = {formatPValue(logRank)}</span>
 				</ListGroupItem>
 			</ListGroup>
-		)
+		);
 	}
 });
 
@@ -286,7 +286,7 @@ var KmPlot = React.createClass({
 	}),
 
 	getInitialState: function() {
-		return { activeLabel: '' }
+		return { activeLabel: '' };
 	},
 
 	hide: function () {

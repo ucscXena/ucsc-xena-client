@@ -35,7 +35,7 @@ var download = state => {
 		vg.translate(offsets[i], 0, () => {
 			widgets.pdf(column, vg, state, i);
 		}));
-	doc.end()
+	doc.end();
 
 	stream.on('finish', () => {
 		var url = stream.toBlobURL('application/pdf');

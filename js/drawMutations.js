@@ -54,18 +54,18 @@ function drawImpactPx(vg, width, pixPerRow, color, variants, strand) {
 			// structrual variants (SV) have follow vcf https://samtools.github.io/hts-specs/VCFv4.2.pdf
 			// "[" and "]" in alt means these are SV variants
 			var firstBase = v.data.alt[0],
-				lastBase = v.data.alt[v.data.alt.length-1];
+				lastBase = v.data.alt[v.data.alt.length - 1];
 
-			if ((firstBase ==='[' || firstBase===']') && strand === '+') {
+			if ((firstBase === '[' || firstBase === ']') && strand === '+') {
 				//SV: new segment to the left
 				return [0, v.y, v.xEnd + padding, v.y];
-			} else if ((firstBase ==='[' || firstBase===']') && strand === '-') {
+			} else if ((firstBase === '[' || firstBase === ']') && strand === '-') {
 				//SV: new segment to the left, right in transcript space
 				return [v.xStart - padding, v.y, width + padding, v.y];
-			} else if ((lastBase ==='[' || lastBase===']') && strand === '+') {
+			} else if ((lastBase === '[' || lastBase === ']') && strand === '+') {
 				//SV: new segment on the right
 				return [v.xStart - padding, v.y, width + padding, v.y];
-			} else if ((lastBase ==='[' || lastBase===']') && strand === '-') {
+			} else if ((lastBase === '[' || lastBase === ']') && strand === '-') {
 				//SV: new segment on the right, left in transcript space
 				return [0, v.y, v.xEnd + padding, v.y];
 			} else {
