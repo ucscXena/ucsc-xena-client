@@ -7,14 +7,14 @@ var _ = require('../underscore_ext');
 
 function apply(features, state) {
 	var {feature, dsID} = state,
-		meta = features[feature];
+		meta = features[dsID][feature];
 	return {
 		fields: [feature],
 		fetchType: 'xena',
-		valueType: meta.valuetype === 'float' ? 'float' : 'coded',
+		valueType: _.get(meta, 'valuetype') === 'category' ? 'coded' : 'float',
 		fieldType: 'clinical',
 		dsID: dsID,
-		fieldLabel: meta.longtitle
+		fieldLabel: _.get(meta, 'longtitle') || feature
 	};
 }
 

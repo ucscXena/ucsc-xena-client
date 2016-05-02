@@ -253,7 +253,7 @@ var ColumnEdit = React.createClass({
 				{apply} = pickEditor(datasets, chosenDs),
 				hasGenes = chosenDs && !!datasets[chosenDs[0]].probeMap;
 
-			this.addColumn(apply(features[chosenDs[0]], choices.editor, hasGenes, datasets[chosenDs[0]]));
+			this.addColumn(apply(features, choices.editor, hasGenes, datasets[chosenDs[0]]));
 		}
 	},
 	onHub: function(){
