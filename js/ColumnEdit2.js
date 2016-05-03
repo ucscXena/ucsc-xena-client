@@ -2,7 +2,7 @@
 'use strict';
 
 var React = require('react');
-var {Button, ButtonToolbar, Modal, Glyphicon, Nav, NavItem} = require('react-bootstrap/lib');
+var {Grid, Button, ButtonToolbar, Modal, Glyphicon, Nav, NavItem} = require('react-bootstrap/lib');
 var CohortSelect = require('./views/CohortSelect');
 var DatasetSelect = require('./views/DatasetSelect2');
 var _ = require('./underscore_ext');
@@ -50,7 +50,9 @@ function workflowIndicators(positions, defs, onHide) {
 
 	return (
 		<Modal.Header onHide={onHide} closeButton>
-			<Nav bsStyle='pills' activeKey={activeSection}>{tabs}</Nav>
+			<Grid>
+				<Nav bsStyle='pills' activeKey={activeSection}>{tabs}</Nav>
+			</Grid>
 		</Modal.Header>
 	);
 }
