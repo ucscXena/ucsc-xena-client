@@ -10,11 +10,14 @@ const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_label  = 'My Computer Hub' ;
 const phenotype_dataSubTypeList = ["phenotype", "phenotypes", "Phenotype", "Phenotypes"];
 const phenotypeGroup_label = "phenotype";
+const ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap', 'genomicSegment'];
+
+var notIgnored = ds => !_.contains(ignored, ds.type);
 
 var isLoaded = ds => ds.status === 'loaded';
 var filterDatasets = (list, server) =>
 	_.filter(list, (ds, dsID) =>
-		isLoaded(ds) && server.includes(JSON.parse(dsID).host));
+		isLoaded(ds) && server.includes(JSON.parse(dsID).host) && notIgnored(ds));
 var groupDatasets = (list, server) => _.groupBy(list, ds =>
 	server.includes(LOCAL_DOMAIN) ?  LOCAL_DOMAIN_label : ds.dataSubType);
 
