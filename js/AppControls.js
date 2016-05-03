@@ -41,10 +41,11 @@ var AppControls = React.createClass({
 		this.props.callback(['cohort', 0 /* index into composite cohorts */, value]);
 	},
 	render: function () {
-		var {appState: {cohort: activeCohorts, cohorts, datasets, mode}} = this.props,
+		var {appState: {cohort: activeCohorts, cohorts, datasets, mode, columnOrder}} = this.props,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			samplesFrom = _.getIn(activeCohorts, [0, 'samplesFrom']),
 			hasCohort = !!cohort,
+			hasColumn = !!columnOrder.length,
 			noshow = (mode !== "heatmap");
 
 		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>;
@@ -71,9 +72,9 @@ var AppControls = React.createClass({
 							value={samplesFrom} />
 					</div> : null}
 				{' '}
-				<Button onClick={this.onMode} bsStyle='primary'>{modeButton[mode]}</Button>
+				{hasColumn ? <Button disabled={!hasColumn} onClick={this.onMode} bsStyle='primary'>{modeButton[mode]}</Button> : null}
 				{' '}
-				{noshow ? null : <Button onClick={this.onPdf}>PDF</Button>}
+				{(noshow || !hasColumn) ? null : <Button onClick={this.onPdf}>PDF</Button>}
 			</form>
 		);
 	}
