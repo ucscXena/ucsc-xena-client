@@ -119,7 +119,7 @@ var Columns = React.createClass({
 				clientWidth: 0
 			},
 			crosshair: {open: false},
-			openColumnEdit: this.props.appState.cohort ? false : true,
+			openColumnEdit: !this.props.appState.cohort[0],
 			tooltip: {open: false},
 			openVizSettings: null
 		};
