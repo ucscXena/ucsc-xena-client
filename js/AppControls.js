@@ -29,11 +29,13 @@ var AppControls = React.createClass({
 			this.props.callback(['cohort', index, value]);
 	},
 	render: function () {
-		var {cohort, cohorts, datasets, mode} = this.props.appState,
+		var {cohort, cohorts, datasets, mode, columnOrder} = this.props.appState,
+			hasColumn = !!columnOrder.length,
 			controls = cohort.map(({name, samplesFrom}, i) => (
 				<CohortControls
 					key={i}
 					cohortOnly={i > 0}
+					hasColumn={hasColumn}
 					cohort={name}
 					cohorts={cohorts}
 					samplesFrom={samplesFrom}

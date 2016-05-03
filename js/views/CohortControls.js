@@ -26,10 +26,10 @@ var CohortControls = React.createClass({
 		this.props.onMode(modeEvent[mode]);
 	},
 	render: function () {
-		var {onRefresh, onPdf, onSamplesSelect, onCohortSelect, cohortOnly,
+		var {onRefresh, onPdf, onSamplesSelect, onCohortSelect, cohortOnly, hasColumn,
 				onRemove, cohort, cohorts, samplesFrom, datasets, mode} = this.props,
 			hasCohort = !!cohort,
-			visibility = cohortOnly ? 'hidden' : 'visible',
+			visibility = (cohortOnly || !hasColumn) ? 'hidden' : 'visible',
 			removeVisibility = hasCohort ? 'visible' : 'hidden',
 			refreshVisibility = onRefresh ? 'visible' : 'hidden',
 			disableMenus = (mode === modeEvent.heatmap);
