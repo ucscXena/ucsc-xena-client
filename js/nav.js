@@ -9,6 +9,7 @@ var Nav = require('react-bootstrap/lib/Nav');
 var Navbar = require('react-bootstrap/lib/Navbar');
 var NavItem = require('react-bootstrap/lib/NavItem');
 var _ = require('./underscore_ext');
+var config = require('./config');
 
 var links = [
 	{href: "http://xena.ucsc.edu", label: "Home"},
@@ -22,7 +23,7 @@ var links = [
 
 var XenaNav = React.createClass({
 	getInitialState: function() {
-		let path = window.location.pathname,
+		let path = window.location.pathname.slice(config.baseurl.length - 1),
 			defaultLink = links[2],
 			activeLink = path === "/" ? defaultLink : (_.find(links, l => l.href.includes(path)) || defaultLink);
 		return {activeTab: activeLink.label};
