@@ -175,7 +175,7 @@ var controls = {
 		// note there are several cascading queries).
 		// Currently datapages + hub won't set cohortPending to a cohort not in the active hubs, so
 		// we shouldn't hit this case.
-		if (!state.cohorts || state.servers.pending) {
+		if (!state.cohorts || state.servers.pending && !_.isEqual(state.servers, state.servers.pending)) {
 			fetchCohorts(serverBus, newState.servers.user);
 		}
 		if (shouldSetCohort(state)) {
