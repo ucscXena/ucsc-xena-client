@@ -161,7 +161,7 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 			}
 
 			if (xenaState && xenaState.chartState) {
-				if (xenaState.cohort && (xenaState.cohort === xenaState.chartState.cohort)) {
+				if (xenaState.cohort && (_.isEqual(xenaState.cohort, xenaState.chartState.cohort))) {
 					if (selectorID === "Xaxis") {
 						storedColumn = xenaState.chartState.xcolumn;
 					} else if (selectorID === "Yaxis") {
