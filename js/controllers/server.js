@@ -31,7 +31,7 @@ function fetchFeatures(serverBus, datasets) {
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 
 var resetCohort = state => {
-	let activeCohorts = _.filter(state.cohort, c => _.contains(state.cohorts, c));
+	let activeCohorts = _.filter(state.cohort, c => _.contains(state.cohorts, c.name));
 	return _.isEqual(activeCohorts, state.cohort) ? state :
 		setCohort(state, activeCohorts);
 };
