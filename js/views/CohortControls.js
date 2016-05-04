@@ -10,7 +10,7 @@ var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 
 var modeButton = {
-	chart: 'Heatmap',
+	chart: 'Visual Spreadsheet',
 	heatmap: 'Chart'
 };
 
