@@ -22,7 +22,7 @@ var links = [
 	{href: "../hub/", label: "Data Hubs"},
 	{href: "https://galaxyxena.soe.ucsc.edu", label: "Galaxy Xena"},
 	{href: "https://genome-cancer.ucsc.edu/download/public/get-xena/index.html", label: "Local Xena"},
-	{href: "../../xena/heatmap/", label: "Main Site", target: '_blank'},
+	{href: "../../xena/heatmap/#nostate", label: "Main Site"},
 	{href: "https://docs.google.com/a/soe.ucsc.edu/document/d/1CIWj6L8LAaHFmLek3yrbrjFKRm_l3Sy73lJ4wY-WM8Y", label: "Help"}
 ];
 
