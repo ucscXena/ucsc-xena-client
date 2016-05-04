@@ -12,6 +12,8 @@ module.exports = storageKey => {
 	// 'xena' check to connector-prod to make this less confusing.
 	if (hasStorage && reset) {
 		location.hash = '#';
+		// XXX Workaround for datapages/hubs out-of-band state management.
+		delete sessionStorage.state;
 	}
 	return hasStorage && !reset;
 };
