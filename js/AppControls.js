@@ -55,6 +55,7 @@ var AppControls = React.createClass({
 				<CohortControls
 					key={cohort.length}
 					onRefresh={cohort.length === 0 ? this.onRefresh : null}
+					mode={mode}
 					cohortOnly={true}
 					cohorts={cohorts}
 					onCohortSelect={_.partial(this.onCohortSelect, cohort.length)}/>

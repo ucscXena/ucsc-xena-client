@@ -71,7 +71,7 @@ var CohortControls = React.createClass({
 					{' | '}
 					<Button onClick={this.onMode} className='chartSelect' bsStyle='primary'>{modeButton[mode]}</Button>
 					{' | '}
-					<Button onClick={onPdf}>PDF</Button>
+					<Button onClick={onPdf} disabled={disableMenus}>PDF</Button>
 				</span>
 			</form>
 		);
