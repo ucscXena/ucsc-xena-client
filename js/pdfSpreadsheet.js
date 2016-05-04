@@ -19,7 +19,7 @@ var totalWidth = cols =>
 function getOffsets(cols) {
 	var widths = _.pluck(cols, 'width'),
 		m = styles.column.margin;
-	return _.reduce(widths.slice(1), ([last, ...rest], w) => [w + m + last, last, ...rest], [0]).reverse();
+	return _.scan(widths, (acc, n) => acc + n + m, 0);
 }
 
 var download = state => {
