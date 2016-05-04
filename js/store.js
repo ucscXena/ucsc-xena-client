@@ -8,6 +8,7 @@ require('rx.coincidence');
 var _ = require('./underscore_ext');
 var {getErrorProps, logError} = require('./errors');
 var {getNotifications} = require('./notifications');
+var nostate = require('./nostate');
 
 var defaultServers = [
 	'https://local.xena.ucsc.edu:7223',
@@ -61,7 +62,7 @@ module.exports = function () {
 		notifications: getNotifications()
 	};
 
-	if (sessionStorage && sessionStorage.xena && location.search.indexOf('?nostate') !== 0) {
+	if (nostate('xena')) {
 		_.extend(initialState, JSON.parse(sessionStorage.xena));
 	}
 

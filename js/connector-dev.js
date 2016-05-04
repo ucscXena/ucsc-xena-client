@@ -12,6 +12,7 @@ let {createDevTools} = require('./controllers/devtools');
 import LogMonitor from 'redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
 const session = require('ucsc-xena-datapages/session');
+var nostate = require('./nostate');
 
 function logError(err) {
 	if (typeof window === 'object' && typeof window.chrome !== 'undefined') {
@@ -63,7 +64,7 @@ module.exports = function({
 
 	var sessionLoaded = false; // XXX Ugh. Sorry about this.
 	function getSavedState() {
-		if (sessionStorage.debugSession) {
+		if (nostate('debugSession')) {
 			try {
 				let devState = parse(sessionStorage.debugSession);
 				sessionLoaded = true;
