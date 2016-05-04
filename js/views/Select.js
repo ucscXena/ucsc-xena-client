@@ -61,10 +61,10 @@ var Select = React.createClass({
 		}
 	},
 	onToggle: function(isOpen) {
-		this.setState({menuStyle: isOpen ? 'info' : 'default'})
+		this.setState({menuStyle: isOpen ? 'info' : 'default'});
 	},
 	render: function () {
-		var {allowSearch, options, value} = this.props,
+		var {allowSearch, options, disable, value} = this.props,
 			{filter} = this.state,
 			opts = filterOpts(filter, options),
 			title = notUndefined(value) && _.findWhere(options, {value: value});
@@ -88,6 +88,7 @@ var Select = React.createClass({
 		return (
 			<DropdownButton ref='dropdown'
 							className='Select'
+							disabled={disable}
 							menuitem='menuitem'
 							onMouseUp={allowSearch ? this.setFocus : null}
 							onToggle={this.onToggle}
