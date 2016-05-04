@@ -13,6 +13,7 @@
     "start:cold": "webpack-dev-server --devtool eval --progress --colors --history-api-fallback",
     "start:hot": "node ./server-hot.js",
     "start:prod": "webpack-dev-server --config webpack.prod.js --devtool source-map --process --colors --history-api-fallback",
+    "start:selenium": "webpack-dev-server --config webpack.selenium.js --devtool source-map --process --colors --history-api-fallback",
     "build": "webpack",
     "build:prod": "npm run build -- --config webpack.prod.js --devtool source-map",
     "prebuild": "npm run clean",
