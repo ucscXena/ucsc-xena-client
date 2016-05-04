@@ -14,6 +14,8 @@ var {lookupSample} = require('./models/sample');
 var xenaQuery = require('./xenaQuery');
 var {xenaFieldPaths} = require('./models/fieldSpec');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
+var Button = require('react-bootstrap/lib/Button');
+var Popover = require('react-bootstrap/lib/Popover');
 //var Perf = require('react/addons').addons.Perf;
 
 var views = {
@@ -90,6 +92,16 @@ function aboutDataset(column, datasets) {
 	];
 }
 
+function betaPopover(props) {
+	return (
+		<Popover {...props} placement="bottom" title="Beta Features">
+			<p>Welcome to the testing site of  UCSC Xena Browser <strong>composite cohort</strong> application.</p>
+			<p>It allows viewing data from multiple cohorts (on the same or across <u>data hubs</u>) in a single spreadsheet or chart. For example, you can use it to combine your cohort with TCGA data.</p>
+			<Button onClick={props.onDisableClick}>Don't show this again</Button>
+		</Popover>
+	);
+}
+
 var Application = React.createClass({
 //	onPerf: function () {
 //		this.perf = !this.perf;
@@ -124,11 +136,23 @@ var Application = React.createClass({
 		var {columns, datasets} = this.props.state;
 		return aboutDataset(_.get(columns, uuid), datasets);
 	},
+	betaHelpClose: function () {
+		this.props.callback(['beta-help-close']);
+	},
+	betaHelpDisable: function () {
+		this.props.callback(['beta-help-disable']);
+	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
-			{mode} = computedState,
-			View = views[mode];
+			{mode, betaHelp} = computedState,
+			View = views[mode],
+			betaHelper = betaHelp ?
+				betaPopover({
+					positionLeft: '30%',
+					onClick: this.betaHelpClose,
+					onDisableClick: this.betaHelpDisable
+				}) : null;
 
 		return (
 			<Grid onClick={this.onClick}>
@@ -139,7 +163,8 @@ var Application = React.createClass({
 			*/}
 				<Row>
 					<Col md={12}>
-						<AppControls {...otherProps} appState={computedState} />
+						<AppControls {...otherProps} appState={computedState}/>
+						{betaHelper}
 					</Col>
 				</Row>
 				<View {...otherProps}

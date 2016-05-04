@@ -151,12 +151,25 @@ var fetchCohortData = (serverBus, state) => {
 	fetchSamples(serverBus, user, cohort);
 };
 
+// Notifications
+
 var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
 	_.assoc(state, 'zoomHelp', true) : state;
 
 var zoomHelpClose = state =>
 	_.assocIn(_.dissoc(state, 'zoomHelp'),
 			['notifications', 'zoomHelp'], true);
+
+var warnBeta = state => !_.getIn(state, ['notifications', 'betaHelp']) ?
+	_.assoc(state, 'betaHelp', true) : state;
+
+var betaHelpClose = state =>
+	_.assocIn(_.dissoc(state, 'betaHelp'),
+			['notifications', 'betaHelp'], true);
+
+
+//
+
 
 function getChartOffsets(column) {
 	return fetchSamplesFrom(column).flatMap(samples => fetch(column, samples)).map(data => {
@@ -167,7 +180,7 @@ function getChartOffsets(column) {
 }
 
 var controls = {
-	init: state => setCohortPending(setServerPending(state)),
+	init: state => warnBeta(setCohortPending(setServerPending(state))),
 	'init-post!': (serverBus, state, newState) => {
 		// XXX If we have servers.pending *and* cohortPending, there may be a race here.
 		// We fetch the cohorts list, and the cohort data. If cohorts completes & the
@@ -182,6 +195,10 @@ var controls = {
 			fetchCohortData(serverBus, newState);
 		}
 	},
+	'beta-help-close': betaHelpClose,
+	'beta-help-disable': betaHelpClose,
+	'beta-help-disable-post!': (serverBus, state, newState) =>
+		setNotifications(newState.notifications),
 	cohort: (state, i, cohort) =>
 		setCohort(state, _.assoc(state.cohort, i, {name: cohort})),
 	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
