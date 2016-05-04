@@ -56,14 +56,14 @@ var AppControls = React.createClass({
 						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
 					</Button>
 				</OverlayTrigger>
-				{noshow ? null : <CohortSelect cohort={cohort} cohorts={cohorts}
-					  onSelect={this.onCohortSelect}/>}
+				<CohortSelect cohort={cohort} cohorts={cohorts} disable={noshow} onSelect={this.onCohortSelect}/>
 				{' '}
-				{hasCohort && !noshow ?
+				{hasCohort ?
 					<div className='form-group' style={this.props.style}>
 						<label> Samples in </label>
 						{' '}
 						<DatasetSelect
+							disable={noshow}
 							onSelect={this.onSamplesSelect}
 							nullOpt="Any Datasets (i.e. show all samples)"
 							style={{display: hasCohort ? 'inline' : 'none'}}
