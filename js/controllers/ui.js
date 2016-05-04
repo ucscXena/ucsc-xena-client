@@ -9,7 +9,7 @@ var xenaQuery = require('../xenaQuery');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
 var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
-var {xenaFieldPaths, setFieldType} = require('../models/fieldSpec');
+var {nullField, xenaFieldPaths, setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
@@ -99,13 +99,15 @@ var codedFieldSpec = ({dsID, name}) => ({
 	fields: [name]
 });
 
+var checkNullField = fn => field => field ? fn(field) : nullField;
+
 function mapToObj(keys, fn) {
 	return _.object(keys, _.map(keys, fn));
 }
 
 var survFields = ['ev', 'tte', 'patient'];
 var getFieldSpec = _.object(survFields,
-		[probeFieldSpec, probeFieldSpec, codedFieldSpec]);
+		[probeFieldSpec, probeFieldSpec, codedFieldSpec].map(checkNullField));
 
 // XXX Note that we merge the 'patient' field across cohorts. This will
 // be wrong in some cases, where 'patient' aliases, and right in other cases,
