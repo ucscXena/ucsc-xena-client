@@ -281,7 +281,7 @@ function samplesFromComposite(fieldSpec) {
 }
 
 samplesFrom.add('composite', samplesFromComposite);
-samplesFrom.add('null', () => []);
+samplesFrom.add('null', () => Rx.Observable.return([[]], Rx.Scheduler.timeout));
 
 module.exports = {
 	getColSpec
