@@ -31,7 +31,7 @@ module.exports = function () {
 
 	function wrapSlotRequest([slot, req, ...args]) {
 		return req.map(result => [...actionId(slot), result, ...args])
-			.catch(err => Rx.Observable.return([`${slot}-error`, getErrorProps(logError(err)), ...args]));
+			.catch(err => Rx.Observable.return([`${slot}-error`, getErrorProps(logError(err)), ...args], Rx.Scheduler.timeout));
 	}
 
 	// XXX Note that serverCh.onNext can push stuff that causes us to throw in

@@ -61,6 +61,7 @@ const fieldLookup = {
 	'probes': probeLookup
 };
 
+// XXX need collectResults?
 function allFieldsLookup(settings, xenaFields, state) {
 	var fieldSpecs = _.map(xenaFields, path => _.getIn(settings, path));
 	return Rx.Observable.zipArray(
