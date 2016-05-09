@@ -48,34 +48,15 @@ function checkIfActive(currentLabel, activeLabel) {
 }
 
 var LineGroup = React.createClass({
-	getInitialState: function() {
-		return { isActive: false };
-	},
-
-	componentWillReceiveProps: function(newProps) {
-		let { g, activeLabel } = newProps,
-			[ , label, ] = g,
-			oldIsActive = this.state.isActive,
-			activeStatus = checkIfActive(label, activeLabel);
-
-		if (oldIsActive !== activeStatus) {
-			this.setState({ isActive: activeStatus });
-		}
-	},
-
-	shouldComponentUpdate: function(newProps, newState) {
-		//testing for any changes to g, and state's isActive parameter should be sufficient
-		let gChanged = !_.isEqual(newProps.g, this.props.g),
-			isActiveChanged = !_.isEqual(newState.isActive, this.state.isActive);
-
-		return (gChanged || isActiveChanged);
+	shouldComponentUpdate: function(newProps) {
+		return !_.isEqual(_.omit(newProps, 'xScale', 'yScale'), _.omit(this.props, 'xScale', 'yScale'));
 	},
 
 	render: function() {
-		let { xScale, yScale, g, setActiveLabel } = this.props;
-		let [ color, label, curve ] = g;
+		let {xScale, yScale, g, setActiveLabel, isActive} = this.props;
+		let [color, label, curve] = g;
 		var censors = curve.filter(pt => !pt.e);
-		let activeLabelClassName = this.state.isActive ? HOVER : '';
+		let activeLabelClassName = isActive ? HOVER : '';
 
 		return (
 			<g key={label} className='subgroup' stroke={color}
@@ -103,12 +84,13 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 		yScale = linear(ydomain, yrange);
 
 	var groupSvg = _.zip(colors, labels, curves).map((g, index) => {
+		let [, label] = g;
 		return (<LineGroup
 				key={index}
 				xScale={xScale}
 				yScale={yScale}
 				g={g}
-				activeLabel={activeLabel}
+				isActive={label === activeLabel}
 				setActiveLabel={setActiveLabel} />);
 	});
 
@@ -156,6 +138,7 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 var formatPValue = v => v == null ? String.fromCharCode(8709) : v.toPrecision(4);
 
 var PValue = React.createClass({
+	mixins: [deepPureRenderMixin],
 	render: function () {
 		var {logRank, pValue, patientWarning} = this.props;
 		const tooltip = (
@@ -216,6 +199,7 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 }
 
 var Legend = React.createClass({
+	mixins: [deepPureRenderMixin],
 	propTypes: {
 		activeLabel: PropTypes.string,
 		columns: PropTypes.number,

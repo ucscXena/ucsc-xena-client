@@ -37,6 +37,9 @@ var DefaultTextInput = React.createClass({
 	getInitialState: function () {
 		return {value: this.props.value.user};
 	},
+	componentWillReceiveProps: function (newProps) {
+		this.setState({value: newProps.value.user});
+	},
 	resetIfNull: function () {
 		var {callback, columnID, eventName, value: {'default': defaultValue}} = this.props,
 			val = this.refs.input.getValue();

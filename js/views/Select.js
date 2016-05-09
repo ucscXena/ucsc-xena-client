@@ -24,7 +24,6 @@ var Select = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState: function () {
 		return {
-			menuStyle: 'default',
 			filter: ''
 		};
 	},
@@ -60,9 +59,6 @@ var Select = React.createClass({
 			ev.nativeEvent.stopImmediatePropagation();
 		}
 	},
-	onToggle: function(isOpen) {
-		this.setState({menuStyle: isOpen ? 'info' : 'default'});
-	},
 	render: function () {
 		var {allowSearch, options, disable, value} = this.props,
 			{filter} = this.state,
@@ -91,7 +87,6 @@ var Select = React.createClass({
 							disabled={disable}
 							menuitem='menuitem'
 							onMouseUp={allowSearch ? this.setFocus : null}
-							onToggle={this.onToggle}
 							title={title && title.label || 'Please select...'}>
 				{searchSection}
 				{_.map(opts, (opt, i) =>

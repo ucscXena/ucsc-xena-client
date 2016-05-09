@@ -6,7 +6,6 @@
 'use strict';
 
 var React = require('react');
-var _ = require('./underscore_ext');
 var {deepPureRenderMixin} = require('./react-utils');
 require('../css/crosshairs.css');
 
@@ -18,8 +17,8 @@ var Crosshair = React.createClass({
 		};
 	},
 	render: function () {
-		let { point: {x, y}, open, dims } = this.props,
-			containerStyle = _.extend({display: open ? 'inline' : 'none'}, dims);
+		let { point: {x, y}, open } = this.props,
+			containerStyle = {display: open ? 'inline' : 'none'};
 		return (
 			<div className='crosshairs' style={containerStyle}>
 				<span className='crosshair crosshairH' style={{top: y}}/>
