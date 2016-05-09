@@ -1,9 +1,9 @@
 /*globals require: false, module: false */
 
+/*globals console: false */
 'use strict';
 
 var React = require('react');
-var ReactDOM = require('react-dom');
 var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
@@ -105,19 +105,12 @@ var Columns = React.createClass({
 				return this.setState(plotVisuals);
 			});
 	},
-	componentDidMount: function() {
-		this.setDOMDims(ReactDOM.findDOMNode(this));
-	},
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
 		// XXX are there other streams we're leaking? What listens on this.ev.click, etc?
 		this.tooltip.dispose();
 	},
 	getInitialState: function () {
 		return {
-			dims: {
-				clientHeight: 0,
-				clientWidth: 0
-			},
 			crosshair: {open: false},
 			openColumnEdit: !this.props.appState.cohort[0],
 			tooltip: {open: false},
@@ -125,13 +118,9 @@ var Columns = React.createClass({
 		};
 	},
 	componentWillReceiveProps: function(newProps) {
-		if (!this.state.openColumnEdit && !newProps.appState.cohort) {
+		if (!this.state.openColumnEdit && !newProps.appState.cohort[0]) {
 			this.setState({openColumnEdit: true});
 		}
-	},
-	setDOMDims: function(domNode) {
-		var nodeKeys = _.keys(this.state.dims);
-		this.setState({ dims: _.pick(domNode, nodeKeys) });
 	},
 	setOrder: function (order) {
 		this.props.callback(['order', order]);
@@ -140,9 +129,10 @@ var Columns = React.createClass({
 		this.setState({openVizSettings: id});
 	},
 	render: function () {
+		console.log('columns');
 		var {callback, fieldFormat, sampleFormat, disableKM, supportsGeneAverage, aboutDataset, appState} = this.props;
 		// XXX maybe rename index -> indexes?
-		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
+		var {data, index, zoom, columns, columnOrder, cohort, samples, samplesMatched} = appState;
 		var {openColumnEdit, openVizSettings} = this.state;
 		var height = zoom.height;
 		var editor = openColumnEdit ?
@@ -168,6 +158,7 @@ var Columns = React.createClass({
 			index: _.getIn(index, [id]),
 			vizSettings: _.getIn(appState, [columns, id, 'vizSettings']),
 			samples,
+			samplesMatched,
 			zoom,
 			callback,
 			fieldFormat,
@@ -201,7 +192,7 @@ var Columns = React.createClass({
 				</div>
 				{editor}
 				{settings}
-				<Crosshair {...this.state.crosshair} dims={this.state.dims}/>
+				<Crosshair {...this.state.crosshair} />
 				<Tooltip {...this.state.tooltip}/>
 			</div>
 		);

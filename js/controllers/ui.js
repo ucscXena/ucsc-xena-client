@@ -14,6 +14,7 @@ var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
 var fetch = require('../fieldFetch');
+var searchSamples = require('../models/searchSamples');
 
 var identity = x => x;
 
@@ -242,7 +243,9 @@ var controls = {
 	'chart-set-average-cohort-post!': (serverBus, state, newState, id, thunk) =>
 		serverBus.onNext(['chart-average-data', getChartOffsets(newState.columns[id]), thunk]),
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
-		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets, Rx.Scheduler.timeout), thunk])
+		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets, Rx.Scheduler.timeout), thunk]),
+	'sample-search': (state, text) => _.assoc(state, 'sampleSearch', text,
+			'samplesMatched', searchSamples(text, state.columns, state.data, state.samples))
 };
 
 module.exports = {

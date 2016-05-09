@@ -9,6 +9,7 @@ var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Resizable = require('react-resizable').Resizable;
 var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('./refGeneExons');
+var SpreadSheetHighlight = require('./SpreadSheetHighlight');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -87,7 +88,7 @@ var Column = React.createClass({
 		callback(['km-open', id]);
 	},
 	render: function () {
-		var {id, callback, plot, legend, column, zoom, menu, data, aboutDataset, disableKM} = this.props,
+		var {id, samples, samplesMatched, callback, plot, legend, column, zoom, menu, data, aboutDataset, disableKM} = this.props,
 			{width, columnLabel, fieldLabel, user} = column,
 			[kmDisabled, kmTitle] = disableKM(id),
 			// move this to state to generalize to other annotations.
@@ -138,7 +139,8 @@ var Column = React.createClass({
 					width={width}
 					height={zoom.height}>
 
-						{plot}
+					<SpreadSheetHighlight width={width} height={zoom.height} samples={samples.slice(zoom.index, zoom.index + zoom.count)} samplesMatched={samplesMatched}/>
+					{plot}
 				</ResizeOverlay>
 				{legend}
 			</div>

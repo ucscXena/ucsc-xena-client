@@ -14,6 +14,7 @@ var {lookupSample} = require('./models/sample');
 var xenaQuery = require('./xenaQuery');
 var {xenaFieldPaths} = require('./models/fieldSpec');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
+var SampleSearch = require('./views/SampleSearch');
 //var Perf = require('react/addons').addons.Perf;
 
 var views = {
@@ -124,10 +125,15 @@ var Application = React.createClass({
 		var {columns, datasets} = this.props.state;
 		return aboutDataset(_.get(columns, uuid), datasets);
 	},
+	onSearch: function (ev) {
+		var {callback} = this.props;
+		callback(['sample-search', ev.target.value]);
+	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
-			{mode} = computedState,
+			{mode, samplesMatched, samples} = computedState,
+			matches = _.get(samplesMatched, 'length', samples.length),
 			View = views[mode];
 		return (
 			<Grid onClick={this.onClick}>
@@ -139,6 +145,11 @@ var Application = React.createClass({
 				<Row>
 					<Col md={12}>
 						<AppControls {...otherProps} appState={computedState} />
+					</Col>
+				</Row>
+				<Row>
+					<Col md={6}>
+						<SampleSearch matches={matches} onChange={this.onSearch}/>
 					</Col>
 				</Row>
 				<View {...otherProps}
