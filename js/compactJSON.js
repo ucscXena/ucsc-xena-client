@@ -55,7 +55,7 @@ function stringify(x) {
 			array: addToCache(path, x => `[${x.map((v, i) => stringifyCached(v, [...path, i])).join(',')}]`),
 			object: addToCache(path, x => `{${mapPairs(validKeys(x), ([k, v]) => kvStr(k, stringifyCached(v, [...path, k]))).join(',')}}`),
 			primitive: x => JSON.stringify(x),
-			'undefined': 'null'
+			'undefined': () => 'null'
 		});
 
 	return stringifyCached(x, []);
