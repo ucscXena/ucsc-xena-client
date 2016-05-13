@@ -206,9 +206,12 @@ var controls = {
 				['zoom', 'height'], height,
 				['columns', id, 'width'], width),
 	remove: (state, id) => {
-		let ns = _.updateIn(state, ["columns"], c => _.dissoc(c, id));
-		ns = _.updateIn(ns, ["columnOrder"], co => _.without(co, id));
-		return _.updateIn(ns, ["data"], d => _.dissoc(d, id));
+		let ns = _.updateIn(state,
+							["columns"], c => _.dissoc(c, id),
+							["columnOrder"], co => _.without(co, id),
+							["data"], d => _.dissoc(d, id)),
+			nsSearch = _.assoc(ns, 'sampleSearch', remapFields(state.columnOrder, ns.columnOrder, state.sampleSearch));
+		return matchSamples(nsSearch, nsSearch.sampleSearch);
 	},
 	order: (state, order) => _.assoc(state, 'columnOrder', order,
 									 'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch)),

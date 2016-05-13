@@ -156,7 +156,7 @@ function remapTreeFields(tree, mapping) {
 	return m({
 		and: (...factors) => ['and', ..._.map(factors, t => remapTreeFields(t, mapping))],
 		or: (...terms) => ['or', ..._.map(terms, t => remapTreeFields(t, mapping))],
-		field: (field, value) => ['field', mapping[field], value]
+		field: (field, value) => ['field', _.get(mapping, field, 'XXX'), value]
 	}, tree, _.identity);
 }
 
