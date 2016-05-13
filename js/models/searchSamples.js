@@ -80,9 +80,9 @@ var searchGe = {
 	float: searchFloat(_.curry((x, y) => y >= x))
 };
 
-var m = (methods, exp) => {
+var m = (methods, exp, defaultMethod) => {
 	let [type, ...args] = exp;
-	return methods[type](...args);
+	return (methods[type] || defaultMethod)(...args);
 };
 
 function searchAll(columns, methods, data, search, cohortSamples) {
@@ -91,6 +91,9 @@ function searchAll(columns, methods, data, search, cohortSamples) {
 }
 
 function evalFieldExp(expression, column, data) {
+	if (!column) {
+		return [];
+	}
 	return m({
 		value: search => searchMethod[column.valueType](search, data),
 		'quoted-value': search => searchExactMethod[column.valueType](search, data),
@@ -112,16 +115,20 @@ function evalexp(expression, columns, data, fieldMap, cohortSamples) {
 	}, expression);
 }
 
-// need column metadata, data, and current expression.
+function createFieldIds(len) {
+	const A = 'A'.charCodeAt(0);
+	return _.range(len).map(i => String.fromCharCode(i + A));
+}
 
-const A = 'A'.charCodeAt(0);
+function createFieldMap(columnOrder) {
+	return _.object(createFieldIds(columnOrder.length), columnOrder);
+}
 
 function searchSamples(search, columns, columnOrder, data, cohortSamples) { //eslint-disable-line no-unused-vars
 	if (!_.get(search, 'length')) {
 		return null;
 	}
-	let fieldIds = _.range(columnOrder.length).map(i => String.fromCharCode(i + A)),
-		fieldMap = _.object(fieldIds, columnOrder);
+	let fieldMap = createFieldMap(columnOrder);
 	try {
 		var exp = parse(_s.trim(search));
 		return evalexp(exp, columns, data, fieldMap, cohortSamples);
@@ -131,7 +138,49 @@ function searchSamples(search, columns, columnOrder, data, cohortSamples) { //es
 	}
 }
 
+function treeToString(tree) {
+	return m({
+		value: value => value,
+		'quoted-value': value => `"${value}"`,
+		and: (...factors) => _.map(factors, treeToString).join(' '),
+		or: (...terms) => _.map(terms, treeToString).join(' OR '),
+		field: (field, value) => `${field}:${treeToString(value)}`,
+		lt: value => `<${value}`,
+		gt: value => `>${value}`,
+		le: value => `<=${value}`,
+		ge: value => `>=${value}`
+	}, tree);
+}
+
+function remapTreeFields(tree, mapping) {
+	return m({
+		and: (...factors) => ['and', ..._.map(factors, t => remapTreeFields(t, mapping))],
+		or: (...terms) => ['or', ..._.map(terms, t => remapTreeFields(t, mapping))],
+		field: (field, value) => ['field', mapping[field], value]
+	}, tree, _.identity);
+}
+
+// Remap field ids in search expressions. For example,
+//
+// oldOrder: [uuid0, uuid1, ...]
+// newOrder: [uuid1, uuid0, ...]
+// exp: "A:foo B:bar"
+// out: "A:bar B:foo"
+function remapFields(oldOrder, order, exp) {
+	if (!_.get(exp, 'length')) {
+		return null;
+	}
+	var fieldIds = createFieldIds(order.length),
+		oldFieldMap = _.invert(createFieldMap(oldOrder)),
+		newOrder = _.map(order, uuid => oldFieldMap[uuid]),
+		mapping = _.object(fieldIds, newOrder),
+		tree = parse(_s.trim(exp));
+	return treeToString(remapTreeFields(tree, mapping));
+}
+
 module.exports = {
 	searchSamples,
+	treeToString,
+	remapFields,
 	parse
 };

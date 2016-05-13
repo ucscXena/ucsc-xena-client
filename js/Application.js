@@ -125,9 +125,9 @@ var Application = React.createClass({
 		var {columns, datasets} = this.props.state;
 		return aboutDataset(_.get(columns, uuid), datasets);
 	},
-	onSearch: function (ev) {
+	onSearch: function (value) {
 		var {callback} = this.props;
-		callback(['sample-search', ev.target.value]);
+		callback(['sample-search', value]);
 	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,

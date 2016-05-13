@@ -14,6 +14,7 @@ var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
 var fetch = require('../fieldFetch');
+var {remapFields} = require('../models/searchSamples');
 
 var identity = x => x;
 
@@ -209,7 +210,8 @@ var controls = {
 		ns = _.updateIn(ns, ["columnOrder"], co => _.without(co, id));
 		return _.updateIn(ns, ["data"], d => _.dissoc(d, id));
 	},
-	order: (state, order) => _.assoc(state, "columnOrder", order),
+	order: (state, order) => _.assoc(state, 'columnOrder', order,
+									 'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch)),
 	zoom: (state, zoom) => warnZoom(_.assoc(state, "zoom", zoom)),
 	'zoom-help-close': zoomHelpClose,
 	'zoom-help-disable': zoomHelpClose,
