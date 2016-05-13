@@ -142,7 +142,7 @@ var setCohort = (state, cohorts) =>
 						cohorts))));
 
 var matchSamples = (state, text) => _.assoc(state,
-		'sampleSearch', _.spy('setting search', text),
+		'sampleSearch',  text,
 		'samplesMatched', searchSamples(text, state.columns, state.columnOrder, state.data, state.cohortSamples));
 
 module.exports = {

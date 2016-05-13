@@ -72,7 +72,7 @@ var controls = {
 		matchSamples(resetZoom(_.assoc(state,
 						  'cohortSamples', samples,
 						  'samples', _.range(_.sum(_.map(samples, c => c.length))))),
-					_.spy('search term', state.sampleSearch)),
+					state.sampleSearch),
 	'samples-post!': (serverBus, state, newState, samples) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
