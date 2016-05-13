@@ -33,17 +33,14 @@ var style = {
 	zIndex: 2
 };
 
-/*global console: false */
 var SpreadSheetHighlight = React.createClass({
 	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
 		var {width, height} = this.props;
-		console.log('cdm', width, height);
 		this.vg = vgcanvas(this.refs.canvas, width + 2 * border, height + 2 * border);
 		this.draw(this.props);
 	},
 	componentWillReceiveProps: function (newProps) {
-		console.log('wrp');
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}
@@ -73,23 +70,15 @@ var SpreadSheetHighlight = React.createClass({
 
 		vg.box(0, 0, width + 2 * border, height + 2 * border, 'rgba(0, 0, 0, 0)'); // transparent black
 
-//		var rects = _.flatmap(_.initial(stripes).map((offset, i) => (hasMatch[i] ? [] : [[
-//			0, (offset * pixPerRow) + border,
-//			width + 2 * border, pixPerRow * (stripes[i + 1] - offset)
-//		]])));
 		var rects = _.flatmap(_.initial(stripes).map((offset, i) => (!hasMatch[i] ? [] : [[
 			0, (offset * pixPerRow) + border,
 			border, Math.max(pixPerRow * (stripes[i + 1] - offset), 1)
 		]])));
-		console.log(`drawing ${rects.length} stripes`, rects);
 		if (rects.length > 0) {
-//			var top = [0, 0, width + 2 * border, border],
-//				bottom = [0, height + border, width + 2 * border, border];
-			vg.drawRectangles(rects /*[top, ...rects, bottom]*/, {fillStyle:  'rgba(0, 0, 0, 1)'});
+			vg.drawRectangles(rects, {fillStyle:  'rgba(0, 0, 0, 1)'});
 
 			let vge = vg.element(), self = this;
 			if (!this.transitioning) {
-				console.log('starting');
 				this.transitioning = true;
 				vge.style.transition = 'transform 0.1s linear';
 				vge.style.transformOrigin = 'top left';
@@ -99,7 +88,6 @@ var SpreadSheetHighlight = React.createClass({
 					vge.style.transform = `scaleX(1)`;
 					vge.removeEventListener(transitionEnd, expand);
 					vge.addEventListener(transitionEnd, function contract() {
-						console.log('ending');
 						vge.removeEventListener(transitionEnd, contract);
 						self.transitioning = false;
 					});

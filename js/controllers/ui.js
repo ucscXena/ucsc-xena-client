@@ -8,13 +8,12 @@ var Rx = require('rx');
 var xenaQuery = require('../xenaQuery');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
-var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
+var {matchSamples, setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
 var {nullField, xenaFieldPaths, setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
 var fetch = require('../fieldFetch');
-var searchSamples = require('../models/searchSamples');
 
 var identity = x => x;
 
@@ -244,8 +243,7 @@ var controls = {
 		serverBus.onNext(['chart-average-data', getChartOffsets(newState.columns[id]), thunk]),
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
 		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets, Rx.Scheduler.timeout), thunk]),
-	'sample-search': (state, text) => _.assoc(state, 'sampleSearch', text,
-			'samplesMatched', searchSamples(text, state.columns, state.data, state.samples))
+	'sample-search': matchSamples
 };
 
 module.exports = {

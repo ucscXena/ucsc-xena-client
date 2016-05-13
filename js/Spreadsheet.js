@@ -1,6 +1,4 @@
 /*globals require: false, module: false */
-
-/*globals console: false */
 'use strict';
 
 var React = require('react');
@@ -129,7 +127,6 @@ var Columns = React.createClass({
 		this.setState({openVizSettings: id});
 	},
 	render: function () {
-		console.log('columns');
 		var {callback, fieldFormat, sampleFormat, disableKM, supportsGeneAverage, aboutDataset, appState} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, cohort, samples, samplesMatched} = appState;

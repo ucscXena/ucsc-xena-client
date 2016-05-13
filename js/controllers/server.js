@@ -5,7 +5,7 @@ var _ = require('../underscore_ext');
 var Rx = require('rx');
 var {reifyErrors, collectResults} = require('./errors');
 var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
-	fetchSamples, fetchColumnData} = require('./common');
+	fetchSamples, fetchColumnData, matchSamples} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
@@ -69,9 +69,10 @@ var controls = {
 	},
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
-		resetZoom(_.assoc(state,
+		matchSamples(resetZoom(_.assoc(state,
 						  'cohortSamples', samples,
 						  'samples', _.range(_.sum(_.map(samples, c => c.length))))),
+					_.spy('search term', state.sampleSearch)),
 	'samples-post!': (serverBus, state, newState, samples) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),

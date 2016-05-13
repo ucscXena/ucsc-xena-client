@@ -1,0 +1,50 @@
+{
+	function last(arr) {
+    	return arr[arr.length - 1];
+    }
+    function concat(arr, arrs) {
+        return arr.concat(arrs);
+    }
+}
+
+start =  Expression
+
+Expression
+  = left:Term tail:(_ 'OR' _ Term)* {
+      return tail.length ? concat(['or', left], tail.map(last)) : left;
+   }
+
+Term
+  = left:Factor tail:(_ ('AND' _)? Factor)* {
+      return tail.length ? concat(['and', left], tail.map(last)) : left;
+   }
+
+Factor
+ = Grouping / Field / Value
+ 
+Grouping
+  = '(' exp:Expression ')' { return ['group', exp]; }
+ 
+ 
+Field
+ = left:FieldName ":" _ right: Value {
+      return ['field', left, right];
+      }
+
+Value = LeValue / GeValue / LtValue / GtValue / EqValue / QuotedValue / PlainValue
+PlainValue = ! 'OR' [^ \t()]+ { return ['value', text()]; }
+QuotedValue = '"' [^"]* '"' {
+   var val = text();
+   return ['quoted-value', val.slice(1, val.length - 1)];
+   }
+EqValue = '=' value:PlainValue { return value; }
+GtValue = '>' value:PlainValue { return ['gt', value[1]]; }
+LtValue = '<' value:PlainValue { return ['lt', value[1]]; }
+GeValue = '>=' value:PlainValue { return ['ge', value[1]]; }
+LeValue = '<=' value:PlainValue { return ['le', value[1]]; }
+
+FieldName
+  = ! 'OR' [a-zA-Z][^ \t:=]* { return text(); }
+
+_ "whitespace"
+  = [ \t\n\r]* {return text(); }

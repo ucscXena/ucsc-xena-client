@@ -132,7 +132,7 @@ var Application = React.createClass({
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
-			{mode, samplesMatched, samples} = computedState,
+			{mode, samplesMatched, sampleSearch, samples} = computedState,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			View = views[mode];
 		return (
@@ -148,8 +148,8 @@ var Application = React.createClass({
 					</Col>
 				</Row>
 				<Row>
-					<Col md={6}>
-						<SampleSearch matches={matches} onChange={this.onSearch}/>
+					<Col md={12}>
+						<SampleSearch value={sampleSearch} matches={matches} onChange={this.onSearch}/>
 					</Col>
 				</Row>
 				<View {...otherProps}
