@@ -85,7 +85,7 @@ var controls = {
 		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
-		columnOpen(state, id) ?  _.assocIn(state, ["data", id], data) : state,
+		columnOpen(state, id) ?  matchSamples(_.assocIn(state, ["data", id], data), state.sampleSearch) : state,
 	'columnEdit-features': (state, list) => _.assocIn(state, ["columnEdit", 'features'], list),
 	'columnEdit-examples': (state, list) => _.assocIn(state, ["columnEdit", 'examples'], list),
 	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival),
