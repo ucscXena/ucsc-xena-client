@@ -4,7 +4,6 @@
 var React = require('react');
 var _ = require('./underscore_ext');
 var vgcanvas = require('./vgcanvas');
-var transitionEnd = require('./transitionEnd');
 
 // XXX Also in drawMutations. Move to underscore_ext?
 // Group by consecutive matches, perserving order.
@@ -23,22 +22,36 @@ function groupByConsec(sortedArray, prop, ctx) {
 	}, []);
 }
 
-var border = 5;
+var tickWidth = 5,
+	borderWidth = 5;
+
 var style = {
 	position: 'absolute',
 	background: 'transparent',
-	top: -5,
-	left: -5,
+	left: - (tickWidth + borderWidth),
+	top: - borderWidth,
 	pointerEvents: 'none',
-	zIndex: 2
+	zIndex: 2,
+	borderWidth,
+	borderColor: 'transparent',
+	borderStyle: 'solid',
+	transition: 'border-color 0.3s linear'
 };
 
 var SpreadSheetHighlight = React.createClass({
-	shouldComponentUpdate: () => false,
+	shouldComponentUpdate: function (nextProps, nextState) {
+		// ignore props.
+		return !_.isEqual(this.state, nextState);
+	},
+	getInitialState: () => ({animate: false}),
 	componentDidMount: function () {
-		var {width, height} = this.props;
-		this.vg = vgcanvas(this.refs.canvas, width + 2 * border, height + 2 * border);
+		var {height} = this.props;
+		this.vg = vgcanvas(this.refs.canvas, tickWidth, height);
 		this.draw(this.props);
+		this.animate = this.props.animate.subscribe(ev => this.setState({animate: ev})); //eslint-disable-line react/no-did-mount-set-state
+	},
+	componentWillUnmount: function () {
+		this.animate.dispose();
 	},
 	componentWillReceiveProps: function (newProps) {
 		if (this.vg && !_.isEqual(newProps, this.props)) {
@@ -46,18 +59,14 @@ var SpreadSheetHighlight = React.createClass({
 		}
 	},
 	draw: function (props) {
-		var {samples, samplesMatched, height, width} = props,
+		var {samples, samplesMatched, height} = props,
 			{vg} = this;
 
-		if (vg.width() !== width + 2 * border) {
-			vg.width(width + 2 * border);
+		if (vg.height() !== height) {
+			vg.height(height);
 		}
 
-		if (vg.height() !== height + 2 * border) {
-			vg.height(height + 2 * border);
-		}
-
-		vg.clear(0, 0, width + 2 * border, height + 2 * border);
+		vg.clear(0, 0, tickWidth, height);
 		if (!samplesMatched) {
 			return;
 		}
@@ -68,35 +77,22 @@ var SpreadSheetHighlight = React.createClass({
 			pixPerRow = height / samples.length;
 
 
-		vg.box(0, 0, width + 2 * border, height + 2 * border, 'rgba(0, 0, 0, 0)'); // transparent black
+		vg.box(0, 0, tickWidth, height, 'rgba(0, 0, 0, 0)'); // transparent black
 
 		var rects = _.flatmap(_.initial(stripes).map((offset, i) => (!hasMatch[i] ? [] : [[
-			0, (offset * pixPerRow) + border,
-			border, Math.max(pixPerRow * (stripes[i + 1] - offset), 1)
+			0, offset * pixPerRow,
+			tickWidth, Math.max(pixPerRow * (stripes[i + 1] - offset), 1)
 		]])));
 		if (rects.length > 0) {
 			vg.drawRectangles(rects, {fillStyle:  'rgba(0, 0, 0, 1)'});
-
-			let vge = vg.element(), self = this;
-			if (!this.transitioning) {
-				this.transitioning = true;
-				vge.style.transition = 'transform 0.1s linear';
-				vge.style.transformOrigin = 'top left';
-				vge.style.transform = `scaleX(2)`;
-				vge.addEventListener(transitionEnd, function expand() {
-					vge.style.transition = 'transform 0.1s linear';
-					vge.style.transform = `scaleX(1)`;
-					vge.removeEventListener(transitionEnd, expand);
-					vge.addEventListener(transitionEnd, function contract() {
-						vge.removeEventListener(transitionEnd, contract);
-						self.transitioning = false;
-					});
-				});
-			}
 		}
 	},
 	render: function() {
-		return <canvas style={{...style}} ref='canvas' />;
+		var {animate} = this.state,
+			border = animate ? {
+				borderColor: 'red',
+			} : {};
+		return <canvas style={{...style, ...border}} ref='canvas' />;
 	}
 });
 

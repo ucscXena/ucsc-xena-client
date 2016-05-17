@@ -28,29 +28,37 @@ var near = _.curry((x, y) => Math.abs(x - y) < tol);
 
 var searchFloat = _.curry((cmp, search, data) => {
 	var {req: {values}} = data,
-		searchVal = parseFloat(search);
-	return filterIndices(_.mmap(...values, (...sampleValsI) => {
-			let sampleVals = _.initial(sampleValsI);
-			return _.any(sampleVals, cmp(searchVal));
-		}), _.identity);
+		searchVal = search === 'null' ? null : parseFloat(search);
+	if (isNaN(searchVal) || values.length > 1) {
+		// don't try to search strings against floats, and don't try to
+		// search sub-columns.
+		return [];
+	}
+	return filterIndices(_.map(values[0], cmp(searchVal)), _.identity);
 });
 
-var searchMutation = _.curry((cmp, search, data) => { //eslint-disable-line no-unused-vars
-	console.warn('mutation search not implemented');
-	return [];
+var searchMutation = _.curry((cmp, search, data) => {
+	var {req: {rows}} = data,
+		matchingRows = _.filter(rows, row => _.any(row, v => cmp(search, String(v))));
+
+	return _.uniq(_.pluck(matchingRows, 'sample'));
 });
+
+// Similar to es6 String.includes, but params reversed & the browser
+// can optimize it.
+var includes = (target, str) => str.indexOf(target) !== -1;
 
 var searchMethod = {
-	coded: searchCoded((search, value) => value.includes(search)),
+	coded: searchCoded(includes),
 	float: searchFloat(near),
-	mutation: searchMutation,
+	mutation: searchMutation(includes),
 	samples: searchSampleIds
 };
 
 var searchExactMethod = {
 	coded: searchCoded((target, value) => value === target),
 	float: searchFloat(_.curry((x, y) => x === y)), // XXX does this make sense?
-	mutation: searchMutation,
+	mutation: searchMutation((target, value) => value === target),
 	samples: searchSampleIdsExact
 };
 
@@ -59,30 +67,31 @@ var empty = () => [];
 var searchLt = {
 	coded: empty,
 	mutation: empty,
-	float: searchFloat(_.curry((x, y) => y < x))
+	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y < x))
 };
 
 var searchLe = {
 	coded: empty,
 	mutation: empty,
-	float: searchFloat(_.curry((x, y) => y <= x))
+	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y <= x))
 };
 
 var searchGt = {
 	coded: empty,
 	mutation: empty,
-	float: searchFloat(_.curry((x, y) => y > x))
+	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y > x))
 };
 
 var searchGe = {
 	coded: empty,
 	mutation: empty,
-	float: searchFloat(_.curry((x, y) => y >= x))
+	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y >= x))
 };
 
 var m = (methods, exp, defaultMethod) => {
-	let [type, ...args] = exp;
-	return (methods[type] || defaultMethod)(...args);
+	let [type, ...args] = exp,
+		method = methods[type];
+	return method ? method(...args) : defaultMethod(exp);
 };
 
 function searchAll(columns, methods, data, search, cohortSamples) {
@@ -108,8 +117,8 @@ function evalexp(expression, columns, data, fieldMap, cohortSamples) {
 	return m({
 		value: search => searchAll(columns, searchMethod, data, search, cohortSamples),
 		'quoted-value': search => searchAll(columns, searchExactMethod, data, search, cohortSamples),
-		and: (...exprs) => _.intersection(...exprs.map(e => evalexp(e, columns, data, fieldMap))),
-		or: (...exprs) => _.union(...exprs.map(e => evalexp(e, columns, data, fieldMap))),
+		and: (...exprs) => _.intersection(...exprs.map(e => evalexp(e, columns, data, fieldMap, cohortSamples))),
+		or: (...exprs) => _.union(...exprs.map(e => evalexp(e, columns, data, fieldMap, cohortSamples))),
 		group: exp => evalexp(exp, columns, data, fieldMap),
 		field: (field, exp) => evalFieldExp(exp, columns[fieldMap[field]], data[fieldMap[field]])
 	}, expression);
@@ -173,7 +182,7 @@ function remapFields(oldOrder, order, exp) {
 	var fieldIds = createFieldIds(order.length),
 		oldFieldMap = _.invert(createFieldMap(oldOrder)),
 		newOrder = _.map(order, uuid => oldFieldMap[uuid]),
-		mapping = _.object(fieldIds, newOrder),
+		mapping = _.object(newOrder, fieldIds),
 		tree = parse(_s.trim(exp));
 	return treeToString(remapTreeFields(tree, mapping));
 }
