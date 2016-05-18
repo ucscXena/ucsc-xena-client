@@ -63,7 +63,7 @@ function drawLayout(vg, opts) {
 			vg.clip(el.start + labelMargin, 0, el.size - labelMargin, height, () =>
 					rowData.forEach((v, i) =>
 						vg.textCenteredPushRight(el.start + labelMargin, h * i - 1, el.size - labelMargin,
-												 h, 'black', labelFont, codes ? codes[v] : v)));
+												 h, 'black', labelFont, codes ? (codes[v] ? codes[v] : null ) : v )));
 		}
 	});
 }

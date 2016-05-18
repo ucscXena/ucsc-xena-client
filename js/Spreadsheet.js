@@ -28,11 +28,12 @@ var YAxisLabel = React.createClass({
 			length = _.getIn(this.props, ['samples', 'length']) || 0,
 			fraction = count === length ? '' :
 				// babel-eslint/issues/31
-				`, showing ${ index } - ${ index + count - 1 }`, // eslint-disable-line comma-spacing
-			text = `Samples (N=${ length }) ${ fraction }`;
+				`Showing ${index} - ${index + count - 1} (N=${count})`, // eslint-disable-line comma-spacing
+			text = 'Samples (N=' + length.toLocaleString() + ')';
+
 		return (
 			<div style={{height: height}} className="YAxisWrapper">
-				<p style={{width: height}} className="YAxisLabel">{text}</p>
+				<p style={{width: height}} className="YAxisLabel">{text}<br/>{fraction}</p>
 			</div>
 		);
 	}
