@@ -24,6 +24,9 @@ var views = {
 	chart: ChartView
 };
 
+// should really be in a config file.
+var searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
+
 // This seems odd. Surely there's a better test?
 function hasSurvival(survival) {
 	return !! (_.get(survival, 'ev') &&
@@ -167,7 +170,7 @@ var Application = React.createClass({
 				</Row>
 				<Row>
 					<Col md={8}>
-						<SampleSearch value={sampleSearch} matches={matches} onChange={this.ev.change}/>
+						<SampleSearch help={searchHelp} value={sampleSearch} matches={matches} onChange={this.ev.change}/>
 					</Col>
 				</Row>
 				<View {...otherProps}

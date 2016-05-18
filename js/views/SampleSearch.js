@@ -3,6 +3,7 @@
 
 var React = require('react');
 var Input = require('react-bootstrap/lib/Input');
+var Button = require('react-bootstrap/lib/Button');
 var {deepPureRenderMixin} = require('../react-utils');
 
 var SampleSearch = React.createClass({
@@ -20,7 +21,7 @@ var SampleSearch = React.createClass({
 		onChange(value);
 	},
 	render: function () {
-		var {matches} = this.props,
+		var {matches, help} = this.props,
 			{value} = this.state;
 		return (
 			<form className='form-inline'>
@@ -31,6 +32,7 @@ var SampleSearch = React.createClass({
 					placeholder='Enter search terms, e.g. missense'
 					onChange={this.onChange}/>
 				{` Matching samples: ${matches}`}
+				{help ? <Button bsStyle='link' target='_blank' href={help}>Help with search</Button> : null}
 			</form>
 		);
 	}
