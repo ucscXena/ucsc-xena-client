@@ -3,9 +3,11 @@
 'use strict';
 
 var React = require('react');
+var ReactDOM = require('react-dom');
 var _ = require('./underscore_ext');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
+var Badge = require('react-bootstrap/lib/Badge');
 var Resizable = require('react-resizable').Resizable;
 var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('./refGeneExons');
@@ -24,20 +26,28 @@ function download([fields, rows]) {
 	document.body.removeChild(a);
 }
 
+var max = (x, y) => x > y ? x : y;
+var minWidthSize = (minWidth, {width, height}) => ({width: max(minWidth, width), height});
+
 var ResizeOverlay = React.createClass({
 	getInitialState: () => ({zooming: false}),
 	onResizeStart: function () {
-		var {width, height} = this.props;
-		this.setState({zooming: true, zoomSize: {width, height}});
+		var {width, height} = this.props,
+			minWidth = this.props.minWidth();
+		this.setState({zooming: true, zoomSize: {width, height}, minWidth});
 	},
 	onResize: function (ev, {size}) {
-		this.setState({zoomSize: size});
+		var {width, height} = size,
+			{minWidth} = this.state;
+		this.setState({zoomSize: {width: max(width, minWidth), height}});
 	},
-	onResizeStop: function (...args) {
-		var {onResizeStop} = this.props;
+	onResizeStop: function (ev, {size}) {
+		console.log('args', arguments);
+		var {onResizeStop} = this.props,
+			{minWidth} = this.state;
 		this.setState({zooming: false});
 		if (onResizeStop) {
-			onResizeStop(...args);
+			onResizeStop(minWidthSize(minWidth, size));
 		}
 	},
 	render: function () {
@@ -71,7 +81,7 @@ var ResizeOverlay = React.createClass({
 });
 
 var Column = React.createClass({
-	onResizeStop: function (ev, {size}) {
+	onResizeStop: function (size) {
 		this.props.callback(['resize', this.props.id, size]);
 	},
 	onRemove: function () {
@@ -86,6 +96,11 @@ var Column = React.createClass({
 	onKm: function () {
 		let {callback, id} = this.props;
 		callback(['km-open', id]);
+	},
+	getControlWidth: function () {
+		var controlWidth = ReactDOM.findDOMNode(this.refs.controls).getBoundingClientRect().width,
+			labelWidth = ReactDOM.findDOMNode(this.refs.label).getBoundingClientRect().width;
+		return controlWidth + labelWidth;
 	},
 	render: function () {
 		var {id, label, samples, samplesMatched, callback, plot, legend, column, zoom, menu, data, aboutDataset, disableKM, searching} = this.props,
@@ -105,8 +120,8 @@ var Column = React.createClass({
 
 		return (
 			<div className='Column' style={{width: width, position: 'relative'}}>
-				<h4>{label}</h4>
-				<SplitButton className='Sortable-handle' title={moveIcon} bsSize='xsmall'>
+				<br/>
+				<SplitButton ref='controls' className='Sortable-handle' title={moveIcon} bsSize='xsmall'>
 					{menu}
 					{menu && <MenuItem divider />}
 					<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
@@ -115,6 +130,7 @@ var Column = React.createClass({
 					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>
 					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 				</SplitButton>
+				<Badge ref='label' style={{fontSize: '100%'}} className='pull-right'>{label}</Badge>
 				<br/>
 				<DefaultTextInput
 					columnID={id}
@@ -138,6 +154,7 @@ var Column = React.createClass({
 				<ResizeOverlay
 					onResizeStop={this.onResizeStop}
 					width={width}
+					minWidth={this.getControlWidth}
 					height={zoom.height}>
 
 					<SpreadSheetHighlight
