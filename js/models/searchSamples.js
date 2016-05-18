@@ -9,6 +9,10 @@ var includes = (target, str) => {
 	return str.toLowerCase().indexOf(target.toLowerCase()) !== -1;
 };
 
+function invert(matches, allSamples) {
+	return _.difference(allSamples, matches);
+}
+
 // Return indices of arr for which fn is true. fn is passed the value and index.
 // XXX also appears in models/km. Could move to underscore_ext.
 var filterIndices = (arr, fn) => _.range(arr.length).filter(i => fn(arr[i], i));
@@ -35,7 +39,7 @@ function searchSampleIdsExact(cohortSamples, str) {
 	return filterSampleIds(cohortSamples, (x, y) => x === y, str);
 }
 
-var searchCoded = _.curry((cmp, search, data) => {
+var searchCoded = _.curry((cmp, ctx, search, data) => {
 	var {req: {values: [field]}, codes} = data,
 		filter = search === 'null' ?
 			v => v === null :
@@ -43,10 +47,10 @@ var searchCoded = _.curry((cmp, search, data) => {
 	return filterIndices(field, filter);
 });
 
-var tol = 0.001;
-var near = _.curry((x, y) => Math.abs(x - y) < tol);
+var tol = 0.01;
+var near = _.curry((x, y) => (x === null || y === null) ? y === x : Math.abs(x - y) < tol);
 
-var searchFloat = _.curry((cmp, search, data) => {
+var searchFloat = _.curry((cmp, ctx, search, data) => {
 	var {req: {values}} = data,
 		searchVal = search === 'null' ? null : parseFloat(search);
 	if (isNaN(searchVal) || values.length > 1) {
@@ -57,10 +61,14 @@ var searchFloat = _.curry((cmp, search, data) => {
 	return filterIndices(_.map(values[0], cmp(searchVal)), _.identity);
 });
 
-var searchMutation = _.curry((cmp, search, data) => {
-	var {req: {rows}} = data,
-		matchingRows = _.filter(rows, row => _.any(row, v => cmp(search, _.isString(v) ? v : String(v))));
+var searchMutation = _.curry((cmp, {allSamples}, search, data) => {
+	var {req: {rows, samplesInResp}} = data;
 
+	if (search === 'null') {
+		return invert(samplesInResp, allSamples);
+	}
+
+	let matchingRows = _.filter(rows, row => _.any(row, v => cmp(search, _.isString(v) ? v : String(v))));
 	return _.uniq(_.pluck(matchingRows, 'sample'));
 });
 
@@ -73,7 +81,7 @@ var searchMethod = {
 
 var searchExactMethod = {
 	coded: searchCoded((target, value) => value === target),
-	float: searchFloat(_.curry((x, y) => x === y)), // XXX does this make sense?
+	float: searchFloat(_.curry((x, y) => x === y)),
 	mutation: searchMutation((target, value) => value === target),
 	samples: searchSampleIdsExact
 };
@@ -110,42 +118,38 @@ var m = (methods, exp, defaultMethod) => {
 	return method ? method(...args) : defaultMethod(exp);
 };
 
-function searchAll(columns, methods, data, search, cohortSamples) {
-	return _.union(..._.map(columns, (c, key) => methods[c.valueType](search, data[key])),
+function searchAll(ctx, methods, search) {
+	let {cohortSamples, columns, data} = ctx;
+	return _.union(..._.map(columns, (c, key) => methods[c.valueType](ctx, search, data[key])),
 				   methods['samples'](cohortSamples, search));
 }
 
-function invert(matches, cohortSamples) {
-	var total = _.sum(_.pluck(cohortSamples, 'length'));
-	return _.difference(_.range(total), matches);
-}
-
-function evalFieldExp(expression, column, data, cohortSamples) {
+function evalFieldExp(ctx, expression, column, data) {
 	if (!column) {
 		return [];
 	}
 	return m({
-		value: search => searchMethod[column.valueType](search, data),
-		'quoted-value': search => searchExactMethod[column.valueType](search, data),
-		ne: exp => invert(evalFieldExp(exp, column, data, cohortSamples), cohortSamples),
-		lt: search => searchLt[column.valueType](search, data),
-		gt: search => searchGt[column.valueType](search, data),
-		le: search => searchLe[column.valueType](search, data),
-		ge: search => searchGe[column.valueType](search, data)
+		value: search => searchMethod[column.valueType](ctx, search, data),
+		'quoted-value': search => searchExactMethod[column.valueType](ctx, search, data),
+		ne: exp => invert(evalFieldExp(ctx, exp, column, data), ctx.allSamples),
+		lt: search => searchLt[column.valueType](ctx, search, data),
+		gt: search => searchGt[column.valueType](ctx, search, data),
+		le: search => searchLe[column.valueType](ctx, search, data),
+		ge: search => searchGe[column.valueType](ctx, search, data)
 	}, expression);
 }
 
 // XXX should rename ne to not, since we've implemented it that way.
 // Unary ! or NOT can be implemented using the same operation.
-function evalexp(expression, columns, data, fieldMap, cohortSamples) {
+function evalexp(ctx, expression) {
 	return m({
-		value: search => searchAll(columns, searchMethod, data, search, cohortSamples),
-		'quoted-value': search => searchAll(columns, searchExactMethod, data, search, cohortSamples),
-		ne: exp => invert(evalexp(exp, columns, data, fieldMap, cohortSamples), cohortSamples),
-		and: (...exprs) => _.intersection(...exprs.map(e => evalexp(e, columns, data, fieldMap, cohortSamples))),
-		or: (...exprs) => _.union(...exprs.map(e => evalexp(e, columns, data, fieldMap, cohortSamples))),
-		group: exp => evalexp(exp, columns, data, fieldMap),
-		field: (field, exp) => evalFieldExp(exp, columns[fieldMap[field]], data[fieldMap[field]], cohortSamples)
+		value: search => searchAll(ctx, searchMethod, search),
+		'quoted-value': search => searchAll(ctx, searchExactMethod, search),
+		ne: exp => invert(evalexp(ctx, exp), ctx.allSamples),
+		and: (...exprs) => _.intersection(...exprs.map(e => evalexp(ctx, e))),
+		or: (...exprs) => _.union(...exprs.map(e => evalexp(ctx, e))),
+		group: exp => evalexp(ctx, exp),
+		field: (field, exp) => evalFieldExp(ctx, exp, ctx.columns[ctx.fieldMap[field]], ctx.data[ctx.fieldMap[field]])
 	}, expression);
 }
 
@@ -162,10 +166,11 @@ function searchSamples(search, columns, columnOrder, data, cohortSamples) { //es
 	if (!_.get(search, 'length')) {
 		return null;
 	}
-	let fieldMap = createFieldMap(columnOrder);
+	let fieldMap = createFieldMap(columnOrder),
+		allSamples = _.range(_.sum(_.pluck(cohortSamples, 'length')));
 	try {
 		var exp = parse(_s.trim(search));
-		return evalexp(exp, columns, data, fieldMap, cohortSamples);
+		return evalexp({columns, data, fieldMap, cohortSamples, allSamples}, exp);
 	} catch(e) {
 		console.log('parsing error', e);
 		return [];
