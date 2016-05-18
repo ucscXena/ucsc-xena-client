@@ -142,22 +142,88 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		};
 	}
 
+	function curry2(fn) {
+		return function(a, b) {
+			switch (arguments.length) {
+				case 1:
+					return b => fn(a, b);
+				// use 'default', not 2, to catch & discard extra params.
+				default:
+					return fn(a, b);
+			}
+		};
+	}
+
+	function curry3(fn) {
+		return function(a, b, c) {
+			switch (arguments.length) {
+				case 1:
+					return function(b, c) {
+						switch (arguments.length) {
+							case 1:
+								return c => fn(a, b, c);
+							// use 'default', not 2, to catch & discard extra params.
+							default:
+								return fn(a, b, c);
+						}
+					};
+				case 2:
+					return c => fn(a, b, c);
+				// use 'default', not 3, to catch & discard extra params.
+				default:
+					return fn(a, b, c);
+			}
+		};
+	}
+
+	function curryArgs(args, accN, fn) {
+		var n = args.length;
+		return function() {
+			var m = arguments.length,
+				sum = accN + m;
+			for (var i = 0; i < m; ++i) {
+				args[accN + i] = arguments[i];
+			}
+			return sum >= n ? fn(...args) :
+				// every new curry must have its own copy of the args array.
+				curryArgs(args.slice(0), sum, fn);
+		};
+	}
+
+	// this no longer handles extra args passed to the fn. Should we care?
 	function curryN(n, fn) {
-		return (...args) => args.length < n ?
-			curryN(n - args.length, (...nextArgs) => fn(...args, ...nextArgs)) :
-			fn(...args);
+		// Unroll the most common cases.
+		switch (n) {
+			case 1: return fn;
+			case 2: return curry2(fn);
+			case 3: return curry3(fn);
+		}
+		return curryArgs(new Array(n), 0, fn);
+	}
+
+	function mmapper(cols, fn) {
+		var n = cols.length;
+		// Unroll the most common cases.
+		switch (n) {
+			case 1: return fn;
+			case 2: return (v0, i) => fn(v0, cols[1][i], i);
+			case 3: return (v0, i) => fn(v0, cols[1][i], cols[2][i], i);
+			case 4: return (v0, i) => fn(v0, cols[1][i], cols[2][i], cols[3][i], i);
+		}
+		var buff = new Array(n + 1); // reuse buffer to avoid allocation
+		return (v0, i) => {
+			for (var j = 0; j < n; ++j) {
+				buff[j] = cols[j][i];
+			}
+			buff[j] = i;
+			return fn(...buff);
+		};
 	}
 
 	function mmap(...args) {
 		var cols = args.slice(0, args.length - 1),
 			fn = args[args.length - 1];
-		return _.map(cols[0], (v0, i) => {
-			var vals = [v0], n = cols.length;
-			for (var j = 1; j < n; ++j) {
-				vals.push(cols[j][i]);
-			}
-			return fn(...vals, i);
-		});
+		return _.map(cols[0], mmapper(cols, fn));
 	}
 
 	function scanI(arr, fn, acc, i, out) {

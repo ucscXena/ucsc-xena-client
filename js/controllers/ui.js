@@ -8,12 +8,13 @@ var Rx = require('rx');
 var xenaQuery = require('../xenaQuery');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
-var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
+var {matchSamples, setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
 var {nullField, xenaFieldPaths, setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
 var fetch = require('../fieldFetch');
+var {remapFields} = require('../models/searchSamples');
 
 var identity = x => x;
 
@@ -205,11 +206,15 @@ var controls = {
 				['zoom', 'height'], height,
 				['columns', id, 'width'], width),
 	remove: (state, id) => {
-		let ns = _.updateIn(state, ["columns"], c => _.dissoc(c, id));
-		ns = _.updateIn(ns, ["columnOrder"], co => _.without(co, id));
-		return _.updateIn(ns, ["data"], d => _.dissoc(d, id));
+		let ns = _.updateIn(state,
+							["columns"], c => _.dissoc(c, id),
+							["columnOrder"], co => _.without(co, id),
+							["data"], d => _.dissoc(d, id)),
+			nsSearch = _.assoc(ns, 'sampleSearch', remapFields(state.columnOrder, ns.columnOrder, state.sampleSearch));
+		return matchSamples(nsSearch, nsSearch.sampleSearch);
 	},
-	order: (state, order) => _.assoc(state, "columnOrder", order),
+	order: (state, order) => _.assoc(state, 'columnOrder', order,
+									 'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch)),
 	zoom: (state, zoom) => warnZoom(_.assoc(state, "zoom", zoom)),
 	'zoom-help-close': zoomHelpClose,
 	'zoom-help-disable': zoomHelpClose,
@@ -242,7 +247,8 @@ var controls = {
 	'chart-set-average-cohort-post!': (serverBus, state, newState, id, thunk) =>
 		serverBus.onNext(['chart-average-data', getChartOffsets(newState.columns[id]), thunk]),
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
-		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets, Rx.Scheduler.timeout), thunk])
+		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets, Rx.Scheduler.timeout), thunk]),
+	'sample-search': matchSamples
 };
 
 module.exports = {

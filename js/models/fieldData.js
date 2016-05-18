@@ -30,7 +30,7 @@ var remapCodes = _.curry((mapping, data) => {
 	var codes = _.get(data, 'codes');
 	return _.updateIn(data,
 			['req', 'values', 0],
-			vals => vals && _.map(vals, v => mapping[codes[v]]));
+			vals => vals && _.map(vals, v => _.isNull(v) ? null : mapping[codes[v]]));
 });
 
 function nulls(len) {

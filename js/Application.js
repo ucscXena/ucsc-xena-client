@@ -14,12 +14,18 @@ var {lookupSample} = require('./models/sample');
 var xenaQuery = require('./xenaQuery');
 var {xenaFieldPaths} = require('./models/fieldSpec');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
+var SampleSearch = require('./views/SampleSearch');
+var {rxEventsMixin} = require('./react-utils');
+var Rx = require('rx');
 //var Perf = require('react/addons').addons.Perf;
 
 var views = {
 	heatmap: Spreadsheet,
 	chart: ChartView
 };
+
+// should really be in a config file.
+var searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
 
 // This seems odd. Surely there's a better test?
 function hasSurvival(survival) {
@@ -91,6 +97,7 @@ function aboutDataset(column, datasets) {
 }
 
 var Application = React.createClass({
+	mixins: [rxEventsMixin],
 //	onPerf: function () {
 //		this.perf = !this.perf;
 //		if (this.perf) {
@@ -104,6 +111,21 @@ var Application = React.createClass({
 //			Perf.printWasted();
 //		}
 //	},
+	componentWillMount: function () {
+		this.events('change');
+		this.change = this.ev.change
+			.debounce(200)
+			.subscribe(this.onSearch);
+		// high on 1st change, low after some delay
+		this.highlight = this.ev.change
+			.map(() => Rx.Observable.return(true).concat(Rx.Observable.return(false).delay(300)))
+			.switchLatest()
+			.distinctUntilChanged();
+	},
+	componentWillUnmount: function () {
+		this.change.dispose();
+		this.highlight.dispose();
+	},
 	fieldFormat: function (uuid) {
 		var {columns, data} = this.props.state;
 		return getFieldFormat(uuid, columns, data);
@@ -124,10 +146,15 @@ var Application = React.createClass({
 		var {columns, datasets} = this.props.state;
 		return aboutDataset(_.get(columns, uuid), datasets);
 	},
+	onSearch: function (value) {
+		var {callback} = this.props;
+		callback(['sample-search', value]);
+	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
-			{mode} = computedState,
+			{mode, samplesMatched, sampleSearch, samples} = computedState,
+			matches = _.get(samplesMatched, 'length', samples.length),
 			View = views[mode];
 		return (
 			<Grid onClick={this.onClick}>
@@ -141,10 +168,16 @@ var Application = React.createClass({
 						<AppControls {...otherProps} appState={computedState} />
 					</Col>
 				</Row>
+				<Row>
+					<Col md={8}>
+						<SampleSearch help={searchHelp} value={sampleSearch} matches={matches} onChange={this.ev.change}/>
+					</Col>
+				</Row>
 				<View {...otherProps}
 					aboutDataset={this.aboutDataset}
 					sampleFormat={this.sampleFormat}
 					fieldFormat={this.fieldFormat}
+					searching={this.highlight}
 					supportsGeneAverage={this.supportsGeneAverage}
 					disableKM={this.disableKM}
 					appState={computedState} />

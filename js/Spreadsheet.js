@@ -1,5 +1,4 @@
 /*globals require: false, module: false */
-
 'use strict';
 
 var React = require('react');
@@ -68,6 +67,8 @@ var zoomInClick = ev =>
 var zoomOutClick = ev =>
 !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
+var getLabel = i => String.fromCharCode('A'.charCodeAt(0) + i);
+
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
 	mixins: [rxEventsMixin],
@@ -128,9 +129,9 @@ var Columns = React.createClass({
 		this.setState({openVizSettings: id});
 	},
 	render: function () {
-		var {callback, fieldFormat, sampleFormat, disableKM, supportsGeneAverage, aboutDataset, appState} = this.props;
+		var {callback, fieldFormat, sampleFormat, disableKM, supportsGeneAverage, aboutDataset, appState, searching} = this.props;
 		// XXX maybe rename index -> indexes?
-		var {data, index, zoom, columns, columnOrder, cohort, samples} = appState;
+		var {data, index, zoom, columns, columnOrder, cohort, samples, samplesMatched} = appState;
 		var {openColumnEdit, openVizSettings} = this.state;
 		var height = zoom.height;
 		var editor = openColumnEdit ?
@@ -148,19 +149,22 @@ var Columns = React.createClass({
 				callback={callback}
 				state={_.getIn(appState, ['columns', openVizSettings, 'vizSettings'])} /> : null;
 
-		var columnViews = _.map(columnOrder, id => widgets.column({
+		var columnViews = _.map(columnOrder, (id, i) => widgets.column({
 			ref: id,
 			key: id,
 			id: id,
+			label: getLabel(i),
 			data: _.getIn(data, [id]),
 			index: _.getIn(index, [id]),
 			vizSettings: _.getIn(appState, [columns, id, 'vizSettings']),
 			samples,
+			samplesMatched,
 			zoom,
 			callback,
 			fieldFormat,
 			sampleFormat,
 			disableKM,
+			searching,
 			aboutDataset,
 			supportsGeneAverage,
 			tooltip: this.ev.tooltip,

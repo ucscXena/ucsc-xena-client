@@ -5,7 +5,7 @@ var _ = require('../underscore_ext');
 var Rx = require('rx');
 var {reifyErrors, collectResults} = require('./errors');
 var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
-	fetchSamples, fetchColumnData} = require('./common');
+	fetchSamples, fetchColumnData, matchSamples} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
@@ -69,9 +69,10 @@ var controls = {
 	},
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) =>
-		resetZoom(_.assoc(state,
+		matchSamples(resetZoom(_.assoc(state,
 						  'cohortSamples', samples,
 						  'samples', _.range(_.sum(_.map(samples, c => c.length))))),
+					state.sampleSearch),
 	'samples-post!': (serverBus, state, newState, samples) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
@@ -84,7 +85,7 @@ var controls = {
 		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
-		columnOpen(state, id) ?  _.assocIn(state, ["data", id], data) : state,
+		columnOpen(state, id) ?  matchSamples(_.assocIn(state, ["data", id], data), state.sampleSearch) : state,
 	'columnEdit-features': (state, list) => _.assocIn(state, ["columnEdit", 'features'], list),
 	'columnEdit-examples': (state, list) => _.assocIn(state, ["columnEdit", 'examples'], list),
 	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival),

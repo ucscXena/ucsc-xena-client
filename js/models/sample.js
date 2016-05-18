@@ -11,5 +11,9 @@ function lookupSample(cohortSamples, index, cohortIndex = 0) {
 }
 
 module.exports = {
+	// currying a varargs fn, which is a bit wonky, but note that we should
+	// never have cohortIndex passed in through the external API. It's
+	// purely an implementation detail. We recursively call the non-curried
+	// fn.
 	lookupSample: _.curryN(2, lookupSample)
 };
