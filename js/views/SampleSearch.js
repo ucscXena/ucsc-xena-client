@@ -24,7 +24,12 @@ var SampleSearch = React.createClass({
 			{value} = this.state;
 		return (
 			<form className='form-inline'>
-				<Input style={{width: '40em'}} type='text' value={value} title={value} onChange={this.onChange}/>
+				<Input style={{width: '20em'}}
+					type='text'
+					value={value}
+					title={value}
+					placeholder='Enter search terms, e.g. missense'
+					onChange={this.onChange}/>
 				{` Matching samples: ${matches}`}
 			</form>
 		);
