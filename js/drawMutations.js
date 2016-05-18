@@ -32,8 +32,11 @@ var radius = 4,
 		"21": "#CC99FF",
 		"22": "#666666",
 		"X": "#999999",
+		"x": "#999999",
 		"Y": "#CCCCCC",
-		"M": "#CCCC99"
+		"y": "#CCCCCC",
+		"M": "#CCCC99",
+		"m": "#CCCC99"
 	};
 
 // Group by consecutive matches, perserving order.

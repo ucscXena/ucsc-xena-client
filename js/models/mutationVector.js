@@ -110,12 +110,8 @@ var unknownEffect = 0,
 		"21": "#CC99FF",
 		"22": "#666666",
 		"X": "#999999",
-		"x": "#999999",
 		"Y": "#CCCCCC",
-		"y": "#CCCCCC",
-		"M": "#CCCC99",
-		"m": "#CCCC99",
-		//"Un: 79CC3D"
+		"M": "#CCCC99"
 	},
 	colors = {
 		category4: [
