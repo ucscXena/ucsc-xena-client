@@ -88,7 +88,7 @@ var Column = React.createClass({
 		callback(['km-open', id]);
 	},
 	render: function () {
-		var {id, samples, samplesMatched, callback, plot, legend, column, zoom, menu, data, aboutDataset, disableKM, searching} = this.props,
+		var {id, label, samples, samplesMatched, callback, plot, legend, column, zoom, menu, data, aboutDataset, disableKM, searching} = this.props,
 			{width, columnLabel, fieldLabel, user} = column,
 			[kmDisabled, kmTitle] = disableKM(id),
 			// move this to state to generalize to other annotations.
@@ -105,6 +105,7 @@ var Column = React.createClass({
 
 		return (
 			<div className='Column' style={{width: width, position: 'relative'}}>
+				<h4>{label}</h4>
 				<SplitButton className='Sortable-handle' title={moveIcon} bsSize='xsmall'>
 					{menu}
 					{menu && <MenuItem divider />}

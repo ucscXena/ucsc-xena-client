@@ -67,6 +67,8 @@ var zoomInClick = ev =>
 var zoomOutClick = ev =>
 !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
+var getLabel = i => String.fromCharCode('A'.charCodeAt(0) + i);
+
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
 	mixins: [rxEventsMixin],
@@ -147,10 +149,11 @@ var Columns = React.createClass({
 				callback={callback}
 				state={_.getIn(appState, ['columns', openVizSettings, 'vizSettings'])} /> : null;
 
-		var columnViews = _.map(columnOrder, id => widgets.column({
+		var columnViews = _.map(columnOrder, (id, i) => widgets.column({
 			ref: id,
 			key: id,
 			id: id,
+			label: getLabel(i),
 			data: _.getIn(data, [id]),
 			index: _.getIn(index, [id]),
 			vizSettings: _.getIn(appState, [columns, id, 'vizSettings']),
