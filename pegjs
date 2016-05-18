@@ -31,13 +31,14 @@ Field
       return ['field', left, right];
       }
 
-Value = LeValue / GeValue / LtValue / GtValue / EqValue / QuotedValue / PlainValue
+Value = NeValue / LeValue / GeValue / LtValue / GtValue / EqValue / QuotedValue / PlainValue
 PlainValue = ! 'OR' [^ \t()]+ { return ['value', text()]; }
 QuotedValue = '"' [^"]* '"' {
    var val = text();
    return ['quoted-value', val.slice(1, val.length - 1)];
    }
-EqValue = '=' value:PlainValue { return value; }
+EqValue = '=' value:(QuotedValue / PlainValue) { return value; }
+NeValue = '!=' value:(QuotedValue / PlainValue) { return ['ne', value]; }
 GtValue = '>' value:PlainValue { return ['gt', value[1]]; }
 LtValue = '<' value:PlainValue { return ['lt', value[1]]; }
 GeValue = '>=' value:PlainValue { return ['ge', value[1]]; }

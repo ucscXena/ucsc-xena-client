@@ -5,22 +5,42 @@ var _ = require('../underscore_ext');
 var _s = require('underscore.string');
 var {parse} = require('./searchParser');
 
+var includes = (target, str) => {
+	return str.toLowerCase().indexOf(target.toLowerCase()) !== -1;
+};
 
 // Return indices of arr for which fn is true. fn is passed the value and index.
 // XXX also appears in models/km. Could move to underscore_ext.
 var filterIndices = (arr, fn) => _.range(arr.length).filter(i => fn(arr[i], i));
 
+// XXX ugh. Need a tail call.
+function filterSampleIds(cohortSamples, cmp, str) {
+	var i = 0, res = [];
+	cohortSamples.forEach(samples => {
+		samples.forEach(s => {
+			if (cmp(str, s)) {
+				res.push(i);
+			}
+			++i;
+		});
+	});
+	return res;
+}
+
 function searchSampleIds(cohortSamples, str) {
-	return filterIndices(_.flatten(cohortSamples), s => s.includes(str));
+	return filterSampleIds(cohortSamples, includes, str);
 }
 
 function searchSampleIdsExact(cohortSamples, str) {
-	return filterIndices(_.flatten(cohortSamples), s => s === str);
+	return filterSampleIds(cohortSamples, (x, y) => x === y, str);
 }
 
 var searchCoded = _.curry((cmp, search, data) => {
-	var {req: {values: [field]}, codes} = data;
-	return filterIndices(field, v => _.has(codes, v) && cmp(search, codes[v]));
+	var {req: {values: [field]}, codes} = data,
+		filter = search === 'null' ?
+			v => v === null :
+			v => _.has(codes, v) && cmp(search, codes[v]);
+	return filterIndices(field, filter);
 });
 
 var tol = 0.001;
@@ -39,14 +59,10 @@ var searchFloat = _.curry((cmp, search, data) => {
 
 var searchMutation = _.curry((cmp, search, data) => {
 	var {req: {rows}} = data,
-		matchingRows = _.filter(rows, row => _.any(row, v => cmp(search, String(v))));
+		matchingRows = _.filter(rows, row => _.any(row, v => cmp(search, _.isString(v) ? v : String(v))));
 
 	return _.uniq(_.pluck(matchingRows, 'sample'));
 });
-
-// Similar to es6 String.includes, but params reversed & the browser
-// can optimize it.
-var includes = (target, str) => str.indexOf(target) !== -1;
 
 var searchMethod = {
 	coded: searchCoded(includes),
@@ -99,13 +115,19 @@ function searchAll(columns, methods, data, search, cohortSamples) {
 				   methods['samples'](cohortSamples, search));
 }
 
-function evalFieldExp(expression, column, data) {
+function invert(matches, cohortSamples) {
+	var total = _.sum(_.pluck(cohortSamples, 'length'));
+	return _.difference(_.range(total), matches);
+}
+
+function evalFieldExp(expression, column, data, cohortSamples) {
 	if (!column) {
 		return [];
 	}
 	return m({
 		value: search => searchMethod[column.valueType](search, data),
 		'quoted-value': search => searchExactMethod[column.valueType](search, data),
+		ne: exp => invert(evalFieldExp(exp, column, data, cohortSamples), cohortSamples),
 		lt: search => searchLt[column.valueType](search, data),
 		gt: search => searchGt[column.valueType](search, data),
 		le: search => searchLe[column.valueType](search, data),
@@ -113,14 +135,17 @@ function evalFieldExp(expression, column, data) {
 	}, expression);
 }
 
+// XXX should rename ne to not, since we've implemented it that way.
+// Unary ! or NOT can be implemented using the same operation.
 function evalexp(expression, columns, data, fieldMap, cohortSamples) {
 	return m({
 		value: search => searchAll(columns, searchMethod, data, search, cohortSamples),
 		'quoted-value': search => searchAll(columns, searchExactMethod, data, search, cohortSamples),
+		ne: exp => invert(evalexp(exp, columns, data, fieldMap, cohortSamples), cohortSamples),
 		and: (...exprs) => _.intersection(...exprs.map(e => evalexp(e, columns, data, fieldMap, cohortSamples))),
 		or: (...exprs) => _.union(...exprs.map(e => evalexp(e, columns, data, fieldMap, cohortSamples))),
 		group: exp => evalexp(exp, columns, data, fieldMap),
-		field: (field, exp) => evalFieldExp(exp, columns[fieldMap[field]], data[fieldMap[field]])
+		field: (field, exp) => evalFieldExp(exp, columns[fieldMap[field]], data[fieldMap[field]], cohortSamples)
 	}, expression);
 }
 
@@ -154,6 +179,7 @@ function treeToString(tree) {
 		and: (...factors) => _.map(factors, treeToString).join(' '),
 		or: (...terms) => _.map(terms, treeToString).join(' OR '),
 		field: (field, value) => `${field}:${treeToString(value)}`,
+		ne: term => `!=${treeToString(term)}`,
 		lt: value => `<${value}`,
 		gt: value => `>${value}`,
 		le: value => `<=${value}`,
