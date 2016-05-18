@@ -42,7 +42,6 @@ var ResizeOverlay = React.createClass({
 		this.setState({zoomSize: {width: max(width, minWidth), height}});
 	},
 	onResizeStop: function (ev, {size}) {
-		console.log('args', arguments);
 		var {onResizeStop} = this.props,
 			{minWidth} = this.state;
 		this.setState({zooming: false});
