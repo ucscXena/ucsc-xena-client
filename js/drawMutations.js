@@ -60,7 +60,9 @@ function push(arr, v) {
 	return arr;
 }
 
-function drawBackground(vg, width, height, count, pixPerRow, hasValue) {
+// XXX note this draws outside the zoom area. It could be optimized
+// by considering zoom count and index.
+function drawBackground(vg, width, height, pixPerRow, hasValue) {
 	var [stripes] = _.reduce(
 			groupByConsec(hasValue, _.identity),
 			([acc, sum], g) =>
@@ -77,14 +79,10 @@ function drawBackground(vg, width, height, count, pixPerRow, hasValue) {
 	vg.drawRectangles(rects, {fillStyle: 'grey'});
 
 	// draw null lable in zoomed-in view
-	if (height / count > labelFont) {
-		let h = height / count;
-
-		rects.map( ([, y, , h2] )=>{  // null label on gray
-			var n = Math.round(h2 / h);
-			for  (var i = 0; i < n; i++) {
-				vg.textCenteredPushRight(0, y + h * i, width, h, 'black', labelFont, "null");
-			}
+	if (pixPerRow > labelFont) {
+		let labelIndices = _.filterIndices(hasValue, hv => !hv);
+		labelIndices.forEach(i => {
+			vg.textCenteredPushRight(0, pixPerRow * i, width, pixPerRow, 'black', labelFont, "null");
 		});
 	}
 }
@@ -235,7 +233,7 @@ function drawMutations(vg, props) {
 		minppr = Math.max(pixPerRow, 2),
 		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]);
 
-	drawBackground(vg, width, height, count, pixPerRow, hasValue);
+	drawBackground(vg, width, height, pixPerRow, hasValue);
 	drawImpactPx(vg, width, height, count, minppr, features[feature].color, nodes);
 }
 
