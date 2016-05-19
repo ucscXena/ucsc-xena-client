@@ -2,7 +2,7 @@
 'use strict';
 
 var React = require('react');
-var {Grid, Button, ButtonToolbar, Modal, Glyphicon, Nav, NavItem} = require('react-bootstrap/lib');
+var {Button, ButtonToolbar, Modal, Glyphicon} = require('react-bootstrap/lib');
 var CohortSelect = require('./views/CohortSelect');
 var DatasetSelect = require('./views/DatasetSelect2');
 var _ = require('./underscore_ext');
@@ -34,6 +34,7 @@ var pickEditor = function(datasets, chosenDs) {
 	}
 };
 
+/*
 function workflowIndicators(positions, defs, onHide) {
 	// Show all breadcrumbs regardless of where in the workflow the user is in.
 	let count = 0,
@@ -56,6 +57,7 @@ function workflowIndicators(positions, defs, onHide) {
 		</Modal.Header>
 	);
 }
+*/
 
 function updateChoice(currentPosition, defs, oldChoices) {
 	/*
@@ -279,14 +281,11 @@ var ColumnEdit = React.createClass({
 				"&host=" + JSON.parse(chosenDsSingle.dsID).host : null;
 
 		return (
-			<Modal show={true} className='columnEdit container' enforceFocus>
-				{positions['cohort'] ?
-					<Modal.Header onHide={onHide} closeButton>
-        				<Modal.Title>Select a cohort</Modal.Title>
-      				</Modal.Header> : null}
-
-				{positions['dataset'] || positions['editor'] ?
-					workflowIndicators(positions, this.defs, onHide) : null }
+			<Modal show={true} className = 'columnEdit container' enforceFocus>
+				<Modal.Header onHide={onHide} closeButton>
+        			<Modal.Title> {positions['cohort'] ? 'Select a cohort' : 'Select data'}
+        			</Modal.Title>
+      			</Modal.Header>
 
 				<Modal.Body>
 					{positions['cohort'] ?
