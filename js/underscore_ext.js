@@ -249,6 +249,9 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 
 	var withoutIndex = (arr, i) => arr.slice(0, i).concat(arr.slice(i + 1));
 
+	// Return indices of arr for which fn is true. fn is passed the value and index.
+	var filterIndices = (arr, fn) => _.range(arr.length).filter(i => fn(arr[i], i));
+
 	_.mixin({
 		meannull: meannull,
 		minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
@@ -273,6 +276,7 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		fmapMemoize1,
 		mmap,
 		withoutIndex,
+		filterIndices,
 		curry,
 		curryN // useful if the fn as multiple arities.
 	});
