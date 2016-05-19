@@ -9,7 +9,12 @@ var {deepPureRenderMixin} = require('../react-utils');
 var SampleSearch = React.createClass({
 	mixins: [deepPureRenderMixin],
 	componentWillReceiveProps: function (newProps) {
-		this.setState({value: newProps.value});
+		if (this.state.value === this.props.value) {
+			this.setState({value: newProps.value});
+		}
+		// otherwise we have buffered changes to state, and
+		// updating from props would revert the user input
+		// and move the carat to the end.
 	},
 	getInitialState: function () {
 		return {value: this.props.value};
