@@ -25,11 +25,11 @@ var SampleSearch = React.createClass({
 			{value} = this.state;
 		return (
 			<form className='form-inline'>
-				<Input style={{width: '20em'}}
+				<Input style={{width: '26em'}}
 					type='text'
 					value={value}
 					title={value}
-					placeholder='Enter search terms, e.g. missense'
+					placeholder='Samples to highlight. e.g. TCGA-DB-A4XH, missense'
 					onChange={this.onChange}/>
 				{` Matching samples: ${matches}`}
 				{help ? <Button bsStyle='link' target='_blank' href={help}>Help with search</Button> : null}
