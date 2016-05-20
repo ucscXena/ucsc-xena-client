@@ -218,6 +218,15 @@ var Spreadsheet = React.createClass({
 	zoomHelpDisable: function () {
 		this.props.callback(['zoom-help-disable']);
 	},
+	onMouseDown: function (ev) {
+		// XXX XXX This is deeply evil, but not sure of a better way
+		// to prevent the browser from selecting text every time
+		// the user does shift-click. This will probably break other
+		// form elements that are added.
+		if (ev.target.tagName !== 'INPUT') {
+			ev.preventDefault();
+		}
+	},
 	render: function () {
 		var {appState: {zoom, samples, zoomHelp}} = this.props,
 			zoomHelper = zoomHelp ?
@@ -226,7 +235,7 @@ var Spreadsheet = React.createClass({
 					onDisableClick: this.zoomHelpDisable
 				}) : null;
 		return (
-			<Row>
+			<Row onMouseDown={this.onMouseDown}>
 				<Col md={1}>
 					<YAxisLabel
 						samples={samples}
