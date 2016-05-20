@@ -3,7 +3,7 @@
 
 var _ = require('./underscore_ext');
 var {features, chromFromAlt,
-	isStructuralVariant, chromeColorGB} = require('./models/mutationVector');
+	isStructuralVariant, chromColorGB} = require('./models/mutationVector');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -100,7 +100,7 @@ function drawImpactPx(vg, width, height, count, pixPerRow, color, variants) {
 			var {xStart, y, data: {alt}} = _.min(varList, v => v.xStart),
 				{xEnd} = _.max(varList, v => v.xStart);
 
-			return {xStart, xEnd, y, color: chromeColorGB[chromFromAlt(alt)], alt};
+			return {xStart, xEnd, y, color: chromColorGB[chromFromAlt(alt)], alt};
 		});
 
 	//feet variants draw color background according to joining chromosome

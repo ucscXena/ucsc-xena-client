@@ -51,6 +51,7 @@ var isStructuralVariant = ({data: {alt}}) => {
 
 var unknownEffect = 0,
 	impact = {
+		//destroy protein
 		'Nonsense_Mutation': 3,
 		'frameshift_variant': 3,
 		'stop_gained': 3,
@@ -62,6 +63,7 @@ var unknownEffect = 0,
 		'Frame_Shift_Del': 3,
 		'Frame_Shift_Ins': 3,
 
+		//modify protein
 		'splice_region_variant': 2,
 		'splice_region_variant&intron_variant': 2,
 		'missense': 2,
@@ -80,11 +82,13 @@ var unknownEffect = 0,
 		'initiator_codon_variant': 2,
 		'5_prime_UTR_premature_start_codon_gain_variant': 2,
 		'disruptive_inframe_deletion': 2,
+		'disruptive_inframe_insertion': 2,
 		'inframe_deletion': 2,
 		'inframe_insertion': 2,
 		'In_Frame_Del': 2,
 		'In_Frame_Ins': 2,
 
+		//do not modify protein
 		'exon_variant': 1,
 		'synonymous_variant': 1,
 		'5_prime_UTR_variant': 1,
@@ -104,7 +108,7 @@ var unknownEffect = 0,
 		'intron_variant': 0,
 		'intergenic_region': 0,
 	},
-	chromeColorGB = { //genome browser chrom coloring
+	chromColorGB = { //genome browser chrom coloring
 		"1": "#996600",
 		"2": "#666600",
 		"3": "#99991E",
@@ -159,9 +163,9 @@ var unknownEffect = 0,
 			get: (a, v) => impact[v.effect] || (v.effect ? unknownEffect : undefined),
 			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
 			legend: {
-				colors: _.values(chromeColorGB).map(hexToRGB).map(colorStr).reverse().
+				colors: _.values(chromColorGB).map(hexToRGB).map(colorStr).reverse().
 					concat(colors.category4.map(colorStr)),
-				labels: _.keys(chromeColorGB).map(key => "chr" + key).reverse().
+				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse().
 					concat(_.range(_.keys(impactGroups).length).map(
 						i => _.pluck(impactGroups[i], 0).join(', '))),
 
@@ -187,6 +191,7 @@ function evalMut(flip, mut) {
 }
 
 function cmpMut(mut1, mut2) {
+	/*
 	if (mut1.impact !== mut2.impact) {
 		if (mut1.impact === undefined){
 			return 1;
@@ -196,7 +201,7 @@ function cmpMut(mut1, mut2) {
 			return mut2.impact - mut1.impact; // high impact sorts first
 		}
 	}
-
+	*/
 	return mut1.right - mut2.right;       // low coord sorts first
 }
 
@@ -386,6 +391,6 @@ module.exports = {
 	features,
 	chromFromAlt,
 	isStructuralVariant,
-	chromeColorGB,
+	chromColorGB,
 	fetch
 };
