@@ -11,8 +11,47 @@ var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformFlatmap} = require('../layoutPlot');
 
+//http://www.javascripter.net/faq/hextorgb.htm
+var cutHex = function (h) {return (h.charAt(0) === "#") ? h.substring(1, 7) : h;};
+var hexToR = function (h) {return parseInt((cutHex(h)).substring(0, 2), 16);};
+var hexToG = function (h) {return parseInt((cutHex(h)).substring(2, 4), 16);};
+var hexToB = function (h) {return parseInt((cutHex(h)).substring(4, 6), 16);};
+
+var hexToRGB = function(hex){
+	var c = {},
+		r = hexToR(hex),
+		g = hexToG(hex),
+		b = hexToB(hex);
+
+    c.r = r;
+    c.g = g;
+    c.b = b;
+    c.a = 1;
+    return c;
+};
+
+function chromFromAlt(alt) {
+	var start = alt.search(/[\[\]]/),
+		end = alt.search(":");
+	return alt.slice(start + 1, end).replace(/chr/i, "");
+}
+
+function structuralVariantClass(alt) {
+	var firstBase = _.first(alt),
+		lastBase = _.last(alt);
+	return firstBase === '[' || firstBase === ']' ? 'left' :
+		(lastBase === '[' || lastBase === ']' ? 'right' : null);
+}
+
+// structrual variants (SV) have follow vcf https://samtools.github.io/hts-specs/VCFv4.2.pdf
+// "[" and "]" in alt means these are SV variants
+var isStructuralVariant = ({data: {alt}}) => {
+	return structuralVariantClass(alt) !== null;
+};
+
 var unknownEffect = 0,
 	impact = {
+		//destroy protein
 		'Nonsense_Mutation': 3,
 		'frameshift_variant': 3,
 		'stop_gained': 3,
@@ -24,13 +63,13 @@ var unknownEffect = 0,
 		'Frame_Shift_Del': 3,
 		'Frame_Shift_Ins': 3,
 
+		//modify protein
 		'splice_region_variant': 2,
 		'splice_region_variant&intron_variant': 2,
 		'missense': 2,
 		'non_coding_exon_variant': 2,
 		'missense_variant': 2,
 		'Missense_Mutation': 2,
-		'exon_variant': 2,
 		'RNA': 2,
 		'Indel': 2,
 		'start_lost': 2,
@@ -43,11 +82,14 @@ var unknownEffect = 0,
 		'initiator_codon_variant': 2,
 		'5_prime_UTR_premature_start_codon_gain_variant': 2,
 		'disruptive_inframe_deletion': 2,
+		'disruptive_inframe_insertion': 2,
 		'inframe_deletion': 2,
 		'inframe_insertion': 2,
 		'In_Frame_Del': 2,
 		'In_Frame_Ins': 2,
 
+		//do not modify protein
+		'exon_variant': 1,
 		'synonymous_variant': 1,
 		'5_prime_UTR_variant': 1,
 		'3_prime_UTR_variant': 1,
@@ -65,6 +107,33 @@ var unknownEffect = 0,
 		'downstream_gene_variant': 0,
 		'intron_variant': 0,
 		'intergenic_region': 0,
+	},
+	chromColorGB = { //genome browser chrom coloring
+		"1": "#996600",
+		"2": "#666600",
+		"3": "#99991E",
+		"4": "#CC0000",
+		"5": "#FF0000",
+		"6": "#FF00CC",
+		"7": "#FFCCCC",
+		"8": "#3FF9900",
+		"9": "#FFCC00",
+		"10": "#FFFF00",
+		"11": "#CCFF00",
+		"12": "#00FF00",
+		"13": "#358000",
+		"14": "#0000CC",
+		"15": "#6699FF",
+		"16": "#99CCFF",
+		"17": "#00FFFF",
+		"18": "#CCFFFF",
+		"19": "#9900CC",
+		"20": "#CC33FF",
+		"21": "#CC99FF",
+		"22": "#666666",
+		"X": "#999999",
+		"Y": "#CCCCCC",
+		"M": "#CCCC99"
 	},
 	colors = {
 		category4: [
@@ -94,9 +163,12 @@ var unknownEffect = 0,
 			get: (a, v) => impact[v.effect] || (v.effect ? unknownEffect : undefined),
 			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
 			legend: {
-				colors: colors.category4.map(colorStr),
-				labels: _.range(_.keys(impactGroups).length).map(
-					i => _.pluck(impactGroups[i], 0).join(', ')),
+				colors: _.values(chromColorGB).map(hexToRGB).map(colorStr).reverse().
+					concat(colors.category4.map(colorStr)),
+				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse().
+					concat(_.range(_.keys(impactGroups).length).map(
+						i => _.pluck(impactGroups[i], 0).join(', '))),
+
 				align: 'left'
 			}
 		},
@@ -111,7 +183,6 @@ var unknownEffect = 0,
 			legend: vafLegend
 		}
 	};
-
 function evalMut(flip, mut) {
 	return {
 		impact: features.impact.get(null, mut),
@@ -120,6 +191,7 @@ function evalMut(flip, mut) {
 }
 
 function cmpMut(mut1, mut2) {
+	/*
 	if (mut1.impact !== mut2.impact) {
 		if (mut1.impact === undefined){
 			return 1;
@@ -129,7 +201,7 @@ function cmpMut(mut1, mut2) {
 			return mut2.impact - mut1.impact; // high impact sorts first
 		}
 	}
-
+	*/
 	return mut1.right - mut2.right;       // low coord sorts first
 }
 
@@ -181,8 +253,8 @@ var refGeneExonValues = xenaQuery.dsID_fn(xenaQuery.refGene_exon_values);
 var refGene = {
 	hg18: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
 	GRCh36: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
-	hg19: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'}),
-	GRCh37: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg19'})
+	hg19: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'}),
+	GRCh37: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'})
 };
 
 // XXX Might want to optimize this before committing. We could mutate in-place
@@ -226,17 +298,17 @@ function findNodes(byPosition, layout, feature, samples, zoom) {
 	return sortfn(pxTransformFlatmap(layout, (toPx, [start, end]) => {
 		var variants = _.filter(
 			intervalTree.matches(byPosition, {start: start, end: end}),
-			v => _.has(sindex, v.sample));
+			v => _.has(sindex, v.variant.sample));
 		return _.map(variants, v => {
 			var [pstart, pend] = minSize(toPx([v.start, v.end]));
 			return {
 				xStart: pstart,
 				xEnd: pend,
-				y: sindex[v.sample] * pixPerRow + (pixPerRow / 2),
-			   // XXX 1st param to group was used for extending our coloring to other annotations. See
-			   // ga4gh branch.
-			   group: group(null, v), // needed for sort, before drawing.
-			   data: v
+				y: sindex[v.variant.sample] * pixPerRow + (pixPerRow / 2),
+				// XXX 1st param to group was used for extending our coloring to other annotations. See
+				// ga4gh branch.
+				group: group(null, v.variant), // needed for sort, before drawing.
+				data: v.variant
 			};
 		});
 	}), v => v.group);
@@ -253,17 +325,15 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 		return {};
 	}
 	var refGeneObj = _.values(refGene)[0],
-		padding = 200, // extra bp on both ends of transcripts
+		padding = 1000, // extra bp on both ends of transcripts
 		startExon = 0,
 		endExon = refGeneObj.exonCount,
-		strand = refGeneObj.strand,
 		layout = exonLayout.layout(refGeneObj, width, xzoom, padding, startExon, endExon),
 		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples, zoom);
 
 	return {
 		layout,
-		nodes,
-		strand
+		nodes
 	};
 }
 
@@ -271,9 +341,40 @@ function index(fieldType, data) {
 	if (!data) {
 		return null;
 	}
-	var {req: {rows, samplesInResp}} = data,
+
+	var {req: {rows, samplesInResp}, refGene} = data,
+		padding = 1000, // extra bp on both ends of transcripts  ---- redefined here!
+		refGeneObj = _.values(refGene)[0],
+		newStart = refGeneObj.txStart - padding,
+		newEnd = refGeneObj.txEnd + padding,
 		bySample = _.groupBy(rows, 'sample'),
 		empty = []; // use a single empty object.
+
+	rows = rows.map((row, i) => {
+		var alt = row.alt,
+			id = 'variant_' + i,
+			virtualStart = row.start,
+			virtualEnd = row.end;
+
+		if (row.start === row.end) {  // SV vcf starndard: start is equal to end position
+			let vclass = structuralVariantClass(alt);
+			if (vclass === 'left') {
+				//SV: new segment to the left
+				virtualStart = newStart;
+				row.id = id;
+			} else if (vclass === 'right') {
+				//SV: new segment on the right
+				virtualEnd = newEnd;
+				row.id = id;
+			}
+		}
+		return {
+			start: virtualStart,
+			end: virtualEnd,
+			variant: row
+		};
+	});
+
 	return {
 		byPosition: intervalTree.index(rows),
 		bySample: _.object(
@@ -288,5 +389,8 @@ widgets.transform.add('mutation', dataToDisplay);
 
 module.exports = {
 	features,
+	chromFromAlt,
+	isStructuralVariant,
+	chromColorGB,
 	fetch
 };

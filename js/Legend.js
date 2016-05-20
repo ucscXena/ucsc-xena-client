@@ -29,7 +29,7 @@ var luminance = ([R, G, B]) => 0.299 * R + 0.587 * G + 0.114 * B;
 var contrastColor = color => luminance(rgb(color)) < 147 ? 'white' : 'black';
 
 
-var nodata = [["No Data", "#808080"]];
+var nodata = [["null (no data)", "#808080"]];
 
 // XXX klass? upperBorderIndex?
 var Legend = React.createClass({

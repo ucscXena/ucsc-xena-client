@@ -10,7 +10,7 @@ var CohortSelect = React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function () {
 		var {cohort, cohorts, makeLabel, ...other} = this.props,
-			sortedCohorts = _.sortBy(cohorts, (cohort) => cohort.toLowerCase()).filter(name=>name!=="(unassigned)"),
+			sortedCohorts = _.sortBy(cohorts, (cohort) => cohort.toLowerCase()).filter(name=>name !== "(unassigned)"),
 			options = _.map(sortedCohorts, c => ({value: c, label: c})),
 			label = <label>Cohort</label> ;
 

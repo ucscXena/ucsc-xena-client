@@ -13,10 +13,6 @@ function invert(matches, allSamples) {
 	return _.difference(allSamples, matches);
 }
 
-// Return indices of arr for which fn is true. fn is passed the value and index.
-// XXX also appears in models/km. Could move to underscore_ext.
-var filterIndices = (arr, fn) => _.range(arr.length).filter(i => fn(arr[i], i));
-
 // XXX ugh. Need a tail call.
 function filterSampleIds(cohortSamples, cmp, str) {
 	var i = 0, res = [];
@@ -44,7 +40,7 @@ var searchCoded = _.curry((cmp, ctx, search, data) => {
 		filter = search === 'null' ?
 			v => v === null :
 			v => _.has(codes, v) && cmp(search, codes[v]);
-	return filterIndices(field, filter);
+	return _.filterIndices(field, filter);
 });
 
 var tol = 0.01;
@@ -58,7 +54,7 @@ var searchFloat = _.curry((cmp, ctx, search, data) => {
 		// search sub-columns.
 		return [];
 	}
-	return filterIndices(_.map(values[0], cmp(searchVal)), _.identity);
+	return _.filterIndices(_.map(values[0], cmp(searchVal)), _.identity);
 });
 
 var searchMutation = _.curry((cmp, {allSamples}, search, data) => {

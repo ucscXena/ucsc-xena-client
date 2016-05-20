@@ -93,9 +93,6 @@ toCoded.add('mutation', mutationVals);
 
 var has = (obj, v) => obj[v] != null;
 
-// Return indices of arr for which fn is true. fn is passed the value and index.
-var filterIndices = (arr, fn) => _.range(arr.length).filter(i => fn(arr[i], i));
-
 // Give tte and ev for each subgroup, compute p-value.
 // Not sure why we recombine the data after splitting by group.
 function pValue(groupsTte, groupsEv) {
@@ -151,7 +148,7 @@ function makeGroups(column, data, index, survival, samples) {
 		// Convert field to coded.
 		codedFeat = toCoded(column, data, index, samples),
 		{values} = codedFeat,
-		usableSamples = filterIndices(samples, (s, i) =>
+		usableSamples = _.filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
 		patientWarning = warnDupPatients(usableSamples, samples, patient),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
