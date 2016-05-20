@@ -30,6 +30,24 @@ var hexToRGB = function(hex){
     return c;
 };
 
+function chromFromAlt(alt) {
+	var start = alt.search(/[\[\]]/),
+		end = alt.search(":");
+	return alt.slice(start + 1, end).replace(/chr/i, "");
+}
+
+function structuralVariantClass(alt) {
+	var firstBase = _.first(alt),
+		lastBase = _.last(alt);
+	return firstBase === '[' || firstBase === ']' ? 'left' :
+		(lastBase === '[' || lastBase === ']' ? 'right' : null);
+}
+
+// structrual variants (SV) have follow vcf https://samtools.github.io/hts-specs/VCFv4.2.pdf
+// "[" and "]" in alt means these are SV variants
+var isStructuralVariant = ({data: {alt}}) => {
+	return structuralVariantClass(alt) !== null;
+};
 
 var unknownEffect = 0,
 	impact = {
@@ -86,7 +104,7 @@ var unknownEffect = 0,
 		'intron_variant': 0,
 		'intergenic_region': 0,
 	},
-	chromeColor_GB = { //genome browser chrom coloring
+	chromeColorGB = { //genome browser chrom coloring
 		"1": "#996600",
 		"2": "#666600",
 		"3": "#99991E",
@@ -141,9 +159,9 @@ var unknownEffect = 0,
 			get: (a, v) => impact[v.effect] || (v.effect ? unknownEffect : undefined),
 			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
 			legend: {
-				colors: _.values(chromeColor_GB).map(hexToRGB).map(colorStr).reverse().
+				colors: _.values(chromeColorGB).map(hexToRGB).map(colorStr).reverse().
 					concat(colors.category4.map(colorStr)),
-				labels: _.keys(chromeColor_GB).map(key=>"chr"+key).reverse().
+				labels: _.keys(chromeColorGB).map(key => "chr" + key).reverse().
 					concat(_.range(_.keys(impactGroups).length).map(
 						i => _.pluck(impactGroups[i], 0).join(', '))),
 
@@ -322,35 +340,34 @@ function index(fieldType, data) {
 	var {req: {rows, samplesInResp}, refGene} = data,
 		padding = 1000, // extra bp on both ends of transcripts  ---- redefined here!
 		refGeneObj = _.values(refGene)[0],
-		newStart = refGeneObj.txStart -padding,
-		newEnd = refGeneObj.txEnd +padding,
+		newStart = refGeneObj.txStart - padding,
+		newEnd = refGeneObj.txEnd + padding,
 		bySample = _.groupBy(rows, 'sample'),
 		empty = []; // use a single empty object.
 
-	rows = rows.map((row,i)=>{
-		var alt= row.alt,
-			firstBase = alt[0],
-			lastBase = alt[alt.length - 1],
-			id = "variant_"+i,
-			virtual_start= row.start,
-			virtual_end= row.end;
+	rows = rows.map((row, i) => {
+		var alt = row.alt,
+			id = 'variant_' + i,
+			virtualStart = row.start,
+			virtualEnd = row.end;
 
-		if (row.start === row.end){  // SV vcf starndard: start is equal to end position
-			if (firstBase === '[' || firstBase === ']') {
+		if (row.start === row.end) {  // SV vcf starndard: start is equal to end position
+			let vclass = structuralVariantClass(alt);
+			if (vclass === 'left') {
 				//SV: new segment to the left
-				virtual_start = newStart;
+				virtualStart = newStart;
 				row.id = id;
-			} else if (lastBase === '[' || lastBase === ']') {
+			} else if (vclass === 'right') {
 				//SV: new segment on the right
-				virtual_end = newEnd;
+				virtualEnd = newEnd;
 				row.id = id;
 			}
 		}
 		return {
-			start: virtual_start,
-			end: virtual_end,
+			start: virtualStart,
+			end: virtualEnd,
 			variant: row
-		}
+		};
 	});
 
 	return {
@@ -367,5 +384,8 @@ widgets.transform.add('mutation', dataToDisplay);
 
 module.exports = {
 	features,
+	chromFromAlt,
+	isStructuralVariant,
+	chromeColorGB,
 	fetch
 };

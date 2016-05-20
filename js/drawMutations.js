@@ -2,42 +2,13 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var {features} = require('./models/mutationVector');
+var {features, chromFromAlt,
+	isStructuralVariant, chromeColorGB} = require('./models/mutationVector');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
 
-var radius = 4,
-	chromeColor_GB = { //genome browser chrom coloring
-		"1": "#996600",
-		"2": "#666600",
-		"3": "#99991E",
-		"4": "#CC0000",
-		"5": "#FF0000",
-		"6": "#FF00CC",
-		"7": "#FFCCCC",
-		"8": "#3FF9900",
-		"9": "#FFCC00",
-		"10": "#FFFF00",
-		"11": "#CCFF00",
-		"12": "#00FF00",
-		"13": "#358000",
-		"14": "#0000CC",
-		"15": "#6699FF",
-		"16": "#99CCFF",
-		"17": "#00FFFF",
-		"18": "#CCFFFF",
-		"19": "#9900CC",
-		"20": "#CC33FF",
-		"21": "#CC99FF",
-		"22": "#666666",
-		"X": "#999999",
-		"x": "#999999",
-		"Y": "#CCCCCC",
-		"y": "#CCCCCC",
-		"M": "#CCCC99",
-		"m": "#CCCC99"
-	};
+var radius = 4;
 
 // Group by consecutive matches, perserving order.
 function groupByConsec(sortedArray, prop, ctx) {
@@ -89,21 +60,7 @@ function drawBackground(vg, width, height, pixPerRow, hasValue) {
 
 function drawImpactPx(vg, width, height, count, pixPerRow, color, variants) {
 	// --------- separate variants to SV(with feet "[" , "]" ) vs others (no feet) ---------
-	// structrual variants (SV) have follow vcf https://samtools.github.io/hts-specs/VCFv4.2.pdf
-	// "[" and "]" in alt means these are SV variants
-	var feetVariants = [],
-		nofeetVariants = [];
-	variants.map(v => {
-		var alt = v.data.alt,
-			firstBase = alt[0],
-			lastBase = alt[alt.length - 1];
-
-		if (firstBase === '[' || firstBase === ']' || lastBase === '[' || lastBase === ']'){
-			feetVariants.push(v);
-		} else {
-			nofeetVariants.push(v);
-		}
-	});
+	var {true: feetVariants = [], false: nofeetVariants = []} = _.groupBy(variants, isStructuralVariant);
 
 	// --------- no feet variants drawing start here ---------
 	var varByImp = groupByConsec(nofeetVariants, v => v.group);
@@ -111,12 +68,12 @@ function drawImpactPx(vg, width, height, count, pixPerRow, color, variants) {
 	_.each(varByImp, vars => {
 		var points = vars.map(v => {
 			var padding = Math.max(0, radius - (v.xEnd - v.xStart + 1) / 2.0);
- 			return [v.xStart - padding, v.y, v.xEnd + padding, v.y];
+			return [v.xStart - padding, v.y, v.xEnd + padding, v.y];
 		});
 		vg.drawPoly(points,
 			{strokeStyle: color(vars[0].group), lineWidth: pixPerRow});
 
-		// no feet variants black ba
+		// no feet variants black center
 		if (pixPerRow > 2) { // centers when there is enough vertical room for each sample
 			points = vars.map(v => [v.xStart, v.y, v.xEnd, v.y]);
 			vg.drawPoly(points,
@@ -125,13 +82,11 @@ function drawImpactPx(vg, width, height, count, pixPerRow, color, variants) {
 
 		// no feet variants label
 		if (height / count > labelFont) {
-			let h = height / count,
-				label = "",
-				textWidth = 0;
+			let h = height / count;
 
-			points.map( ([x, y, , , ], i) => {
-				label = vars[i].data.amino_acid || vars[i].data.alt;
-				textWidth = vg.textWidth(labelFont, label );
+			points.forEach(([x, y], i) => {
+				var label = vars[i].data.amino_acid || vars[i].data.alt,
+					textWidth = vg.textWidth(labelFont, label);
 				vg.textCenteredPushRight( x + 2 * labelMargin, y - h / 2, textWidth, h, 'black', labelFont, label);
 			});
 		}
@@ -140,36 +95,17 @@ function drawImpactPx(vg, width, height, count, pixPerRow, color, variants) {
 
 	// --------- feet variants drawing start here ---------
 	//feet variants group by variant
-	var varById = _.values(_.groupBy(feetVariants, v => v.data.id)).map(varList => _.sortBy(varList, v => v.xStart)),
-		varByIdMap = {};
+	var varById = _.groupBy(feetVariants, v => v.data.id),
+		varByIdMap = _.mapObject(varById, varList => {
+			var {xStart, y, data: {alt}} = _.min(varList, v => v.xStart),
+				{xEnd} = _.max(varList, v => v.xStart);
 
-	varById.map(varList=>{
-		var xStart = varList[0].xStart,
-			xEnd = varList[varList.length - 1].xEnd,
-			y = varList[0].y,
-			alt = varList[0].data.alt,
-			id = varList[0].data.id,
-			patt = /[\[\]]/,
-			start = alt.search(patt),
-			end = alt.search(":"),
-			chrom = alt.slice(start + 1, end).replace(/chr/i, ""),
-			color = chromeColor_GB[chrom];
-
-		varByIdMap[id] = {
-			xStart:xStart,
-			xEnd: xEnd,
-			y: y,
-			color : color,
-			alt : alt
-		};
-	});
+			return {xStart, xEnd, y, color: chromeColorGB[chromFromAlt(alt)], alt};
+		});
 
 	//feet variants draw color background according to joining chromosome
-	_.values(varByIdMap).map(variant =>{
-		var xStart = variant.xStart,
-			xEnd = variant.xEnd,
-			color = variant.color,
-			y = variant.y,
+	_.each(varByIdMap, variant => {
+		var {xStart, xEnd, color, y} = variant,
 			padding = Math.max(0, radius - (xEnd - xStart + 1) / 2.0),
 			points = [[xStart - padding, y, xEnd + padding, y]];
 
@@ -180,10 +116,8 @@ function drawImpactPx(vg, width, height, count, pixPerRow, color, variants) {
 
 	//feet variants draw breakpoint as black vertical bar
 	if (pixPerRow > 2) {
-		_.values(varByIdMap).map(variant =>{
-			var xStart = variant.xStart,
-				xEnd = variant.xEnd,
-				y = variant.y,
+		_.each(varByIdMap, variant => {
+			var {xStart, xEnd, y} = variant,
 				points = [[]];
 
 			if (xStart === 0 && xEnd <= width){
@@ -196,19 +130,15 @@ function drawImpactPx(vg, width, height, count, pixPerRow, color, variants) {
 		});
 	}
 
-
 	//feet variants show text label when there is only one variant for this sample, otherwise, text might overlap
 	if (height / count > labelFont) {
 		var margin = 2 * labelMargin, //more labelMargin due to drawing of breakpoint
 			minTxtWidth = vg.textWidth(labelFont, 'WWWW');
 
-		var oneVariantOfSampleList = _.values(_.groupBy(varById, varList => varList[0].y)).filter(list => list.length === 1);
-		oneVariantOfSampleList.map( variant => {
+		var oneVariantOfSampleList = _.filter(_.groupBy(varById, varList => varList[0].y), list => list.length === 1);
+		oneVariantOfSampleList.forEach(variant => {
 			var id = variant[0][0].data.id,
-				xStart = varByIdMap[id].xStart,
-				xEnd = varByIdMap[id].xEnd,
-				alt = varByIdMap[id].alt,
-				y = varByIdMap[id].y;
+				{xStart, xEnd, alt, y} = varByIdMap[id];
 
 			if ((xEnd - xStart) - margin >= minTxtWidth) {
 				let h = height / count;
