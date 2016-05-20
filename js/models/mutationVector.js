@@ -12,13 +12,13 @@ var intervalTree = require('static-interval-tree');
 var {pxTransformFlatmap} = require('../layoutPlot');
 
 //http://www.javascripter.net/faq/hextorgb.htm
-var cutHex = function (h) {return (h.charAt(0)=="#") ? h.substring(1,7):h};
-var hexToR = function (h) {return parseInt((cutHex(h)).substring(0,2),16)};
-var hexToG = function (h) {return parseInt((cutHex(h)).substring(2,4),16)};
-var hexToB = function (h) {return parseInt((cutHex(h)).substring(4,6),16)};
+var cutHex = function (h) {return (h.charAt(0) === "#") ? h.substring(1, 7) : h;};
+var hexToR = function (h) {return parseInt((cutHex(h)).substring(0, 2), 16);};
+var hexToG = function (h) {return parseInt((cutHex(h)).substring(2, 4), 16);};
+var hexToB = function (h) {return parseInt((cutHex(h)).substring(4, 6), 16);};
 
 var hexToRGB = function(hex){
-	var c={},
+	var c = {},
 		r = hexToR(hex),
 		g = hexToG(hex),
 		b = hexToB(hex);
@@ -26,7 +26,7 @@ var hexToRGB = function(hex){
     c.r = r;
     c.g = g;
     c.b = b;
-    c.a=1
+    c.a = 1;
     return c;
 };
 
@@ -300,10 +300,10 @@ function findNodes(byPosition, layout, feature, samples, zoom) {
 				xStart: pstart,
 				xEnd: pend,
 				y: sindex[v.variant.sample] * pixPerRow + (pixPerRow / 2),
-			   	// XXX 1st param to group was used for extending our coloring to other annotations. See
-			   	// ga4gh branch.
-			   	group: group(null, v.variant), // needed for sort, before drawing.
-			   	data: v.variant
+				// XXX 1st param to group was used for extending our coloring to other annotations. See
+				// ga4gh branch.
+				group: group(null, v.variant), // needed for sort, before drawing.
+				data: v.variant
 			};
 		});
 	}), v => v.group);

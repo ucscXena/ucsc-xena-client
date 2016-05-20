@@ -4,11 +4,7 @@
 var React = require('react');
 var Select = require('./Select');
 var _ = require('../underscore_ext');
-var xenaQuery = require('../xenaQuery');
 var {deepPureRenderMixin} = require('../react-utils');
-
-// group header for a server
-var header = s => xenaQuery.server_url(s);
 
 var ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap', 'genomicSegment'];
 var notIgnored = ds => !_.contains(ignored, ds.type);
@@ -30,7 +26,7 @@ var DatasetSelect = React.createClass({
 	render: function () {
 		var {datasets, nullOpt, ...other} = this.props,
 			options = (nullOpt ? [{value: null, label: nullOpt}] : [])
-				.concat(optsFromDatasets(_.groupBy(datasets, 'dataSubType')))
+				.concat(optsFromDatasets(_.groupBy(datasets, 'dataSubType')));
 
 		return (
 			<Select {...other}  options={options} />

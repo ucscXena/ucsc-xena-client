@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "webpack-dev-server --config webpack.test.js --devtool eval --port 8081",
-    "lint": "eslint --no-color js/*.js test/*.js",
+    "lint": "eslint --no-color js/*.js js/*/*.js test/*.js",
     "eslint": "eslint",
     "clean": "rimraf build/*",
     "start": "npm run start:hot",

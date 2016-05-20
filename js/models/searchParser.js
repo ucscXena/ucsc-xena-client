@@ -1,4 +1,5 @@
 // XXX Do not edit. See file pegjs at root of project.
+/*eslint-disable */
 module.exports = (function() {
   "use strict";
 
