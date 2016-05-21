@@ -261,11 +261,13 @@ define(['rx', './underscore_ext'], function (Rx, _) {
 		return this.map(s => _.getIn(s, keys));
 	};
 
-	// A zipArray for when we upgrade rx
-//	Rx.Observable.zipArray = (...obs) => {
-//		return obs.length ? Rx.Observable.zip(...obs, (...arr) => arr) :
-//			Rx.Observable.return([]);
-//	};
+	function zipArray(obs) {
+		return obs.length ? Rx.Observable.zip(...obs, (...arr) => arr) :
+			Rx.Observable.return([], Rx.Scheduler.timeout);
+	}
+
+	Rx.Observable.zipArray = (...obs) =>
+		_.isArray(obs[0]) ? zipArray(obs[0]) : zipArray(obs);
 
 	return Rx;
 });

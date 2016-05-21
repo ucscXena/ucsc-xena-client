@@ -28,7 +28,7 @@ var SampleSearch = React.createClass({
 		onChange(value);
 	},
 	render: function () {
-		var {matches, help, onFilter, onZoom} = this.props,
+		var {matches, help, onFilter, onZoom, onCreateColumn} = this.props,
 			{value} = this.state,
 			filterButton = onFilter ?
 					(<span
@@ -47,6 +47,7 @@ var SampleSearch = React.createClass({
 				{filterButton ?
 					(<SplitButton onClick={onFilter} bsSize='sm' title={filterButton}>
 						<MenuItem title='Apply to zoom' onClick={onZoom}>Zoom</MenuItem>
+						<MenuItem title='Create column from' onClick={onCreateColumn}>As column</MenuItem>
 					</SplitButton>) : null}
 				{help ? <Button bsStyle='link' target='_blank' href={help}>Help with search</Button> : null}
 			</form>

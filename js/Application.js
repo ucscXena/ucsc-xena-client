@@ -12,11 +12,13 @@ var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
 var {lookupSample} = require('./models/sample');
 var xenaQuery = require('./xenaQuery');
-var {xenaFieldPaths} = require('./models/fieldSpec');
+var {xenaFieldPaths, signatureField} = require('./models/fieldSpec');
+var {getColSpec} = require('./models/datasetJoins');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var SampleSearch = require('./views/SampleSearch');
 var {rxEventsMixin} = require('./react-utils');
 var Rx = require('rx');
+var uuid = require('./uuid');
 //var Perf = require('react/addons').addons.Perf;
 
 var views = {
@@ -85,7 +87,9 @@ var getAbout = (dsID, text) => (
 function aboutDataset(column, datasets) {
 	var dsIDs = _.map(xenaFieldPaths(column), p => _.getIn(column, [...p, 'dsID'])),
 		label = getLabel(datasets);
-	if (dsIDs.length === 1) {
+	if (dsIDs.length === 0) {
+		return null;
+	} else if (dsIDs.length === 1) {
 		return getAbout(dsIDs[0], 'About the Dataset');
 	}
 	return [
@@ -163,6 +167,22 @@ var Application = React.createClass({
 			last = toOrder[_.max(matches, s => toOrder[s])];
 		callback(['zoom', {index, height, count: last - index}]);
 	},
+	onFilterColumn: function (matches) {
+		var {state: {datasets, cohortSamples, sampleSearch}, callback} = this.props,
+			allSamples = _.flatten(cohortSamples),
+			matching = _.map(matches, i => allSamples[i]),
+			field = signatureField(`${sampleSearch}`, {
+				columnLabel: 'filter',
+				valueType: 'coded',
+				filter: sampleSearch,
+				signature: ['in', matching]
+			}),
+			colSpec = getColSpec([field], datasets),
+			settings = _.assoc(colSpec,
+					'width', 100,
+					'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
+		callback(['add-column', uuid(), settings, true]);
+	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
@@ -170,6 +190,8 @@ var Application = React.createClass({
 			matches = _.get(samplesMatched, 'length', samples.length),
 			onFilter = (matches < samples.length && matches > 0) ?
 				() => this.onFilter(samplesMatched) : null,
+			onFilterColumn = (matches < samples.length && matches > 0) ?
+				() => this.onFilterColumn(samplesMatched) : null,
 			onFilterZoom = (matches < samples.length && matches > 0) ?
 				() => this.onFilterZoom(samples, samplesMatched) : null,
 			View = views[mode];
@@ -193,6 +215,7 @@ var Application = React.createClass({
 							matches={matches}
 							onFilter={onFilter}
 							onZoom={onFilterZoom}
+							onCreateColumn={onFilterColumn}
 							onChange={this.ev.change}/>
 					</Col>
 				</Row>

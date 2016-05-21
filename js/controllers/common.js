@@ -11,6 +11,8 @@ var fetch = require('../fieldFetch');
 var {allNullFields, nullField} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {searchSamples} = require('../models/searchSamples');
+// pick up signature fetch
+require('../models/signatures');
 
 var datasetResults = resps => collectResults(resps, servers =>
 		_.object(_.flatmap(servers, s => _.map(s.datasets, d => [d.dsID, d]))));

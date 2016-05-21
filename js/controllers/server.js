@@ -76,10 +76,11 @@ var controls = {
 	'samples-post!': (serverBus, state, newState, samples) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
-	'normalize-fields': (state, fields, id, settings, xenaFields) => {
+	'normalize-fields': (state, fields, id, settings, isFirst, xenaFields) => {
 		var ns = _.assocIn(state, ['columns', id],
 						   updateFields(settings, xenaFields, fields));
-		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
+		return _.updateIn(ns, ["columnOrder"],
+				co => isFirst ? [id, ...co] : [...co, id]);
 	},
 	'normalize-fields-post!': (serverBus, state, newState, fields, id) =>
 		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id])),

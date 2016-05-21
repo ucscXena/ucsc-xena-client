@@ -60,6 +60,17 @@ var filterByDsID = _.curry((datasets, fieldSpec) => {
 
 var allNullFields = fieldSpecs => _.every(fieldSpecs, fs => fs.fetchType === 'null');
 
+var signatureField = (fieldName, opts) => ({
+	fetchType: 'signature',
+	valueType: 'float',
+	fieldType: 'clinical',
+	colorClass: 'clinical',
+	fields: [fieldName],
+	columnLabel: 'signature',
+	fieldLabel: fieldName,
+	...opts
+});
+
 module.exports = {
 	xenaFieldPaths,
 	updateFields,
@@ -67,5 +78,6 @@ module.exports = {
 	setFieldType,
 	nullField,
 	allNullFields,
-	filterByDsID
+	filterByDsID,
+	signatureField
 };
