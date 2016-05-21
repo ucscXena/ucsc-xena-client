@@ -26,7 +26,7 @@ var SampleSearch = React.createClass({
 		onChange(value);
 	},
 	render: function () {
-		var {matches, help} = this.props,
+		var {matches, help, onFilter} = this.props,
 			{value} = this.state;
 		return (
 			<form className='form-inline'>
@@ -37,6 +37,10 @@ var SampleSearch = React.createClass({
 					placeholder='Samples to highlight. e.g. TCGA-DB-A4XH, missense'
 					onChange={this.onChange}/>
 				{` Matching samples: ${matches}`}
+				{onFilter ?
+					<Button onClick={onFilter} bsSize='sm' title='Apply as filter'>
+						<span className='glyphicon glyphicon-filter' aria-hidden='true'/>
+					</Button> : null}
 				{help ? <Button bsStyle='link' target='_blank' href={help}>Help with search</Button> : null}
 			</form>
 		);

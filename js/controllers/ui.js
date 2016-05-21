@@ -195,9 +195,16 @@ var controls = {
 	samplesFrom: (state, i, samplesFrom) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, [i, 'samplesFrom'], samplesFrom),
 			'survival', null),
-	'samplesFrom-post!': (serverBus, state, newState, i, samplesFrom) => {
+	'samplesFrom-post!': (serverBus, state, newState) => {
 		let {servers: {user}, cohort} = newState;
-		fetchSamples(serverBus, user, cohort, samplesFrom);
+		fetchSamples(serverBus, user, cohort);
+	},
+	sampleFilter: (state, i, sampleFilter) => _.assoc(state,
+			'cohort', _.assocIn(state.cohort, [i, 'sampleFilter'], sampleFilter),
+			'survival', null),
+	'sampleFilter-post!': (serverBus, state, newState) => {
+		let {servers: {user}, cohort} = newState;
+		fetchSamples(serverBus, user, cohort);
 	},
 	'add-column-post!': (serverBus, state, newState, id, settings) =>
 		normalizeFields(serverBus, newState, id, settings),

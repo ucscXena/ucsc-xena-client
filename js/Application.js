@@ -150,11 +150,19 @@ var Application = React.createClass({
 		var {callback} = this.props;
 		callback(['sample-search', value]);
 	},
+	onFilter: function (matches) {
+		var {callback, state: {cohortSamples}} = this.props,
+			allSamples = _.flatten(cohortSamples),
+			matching = _.map(matches, i => allSamples[i]);
+		callback(['sampleFilter', 0 /* cohort */, matching]);
+	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
 			{mode, samplesMatched, sampleSearch, samples} = computedState,
 			matches = _.get(samplesMatched, 'length', samples.length),
+			onFilter = (matches < samples.length && matches > 0) ?
+				() => this.onFilter(samplesMatched) : null,
 			View = views[mode];
 		return (
 			<Grid onClick={this.onClick}>
@@ -170,7 +178,12 @@ var Application = React.createClass({
 				</Row>
 				<Row>
 					<Col md={8}>
-						<SampleSearch help={searchHelp} value={sampleSearch} matches={matches} onChange={this.ev.change}/>
+						<SampleSearch
+							help={searchHelp}
+							value={sampleSearch}
+							matches={matches}
+							onFilter={onFilter}
+							onChange={this.ev.change}/>
 					</Col>
 				</Row>
 				<View {...otherProps}

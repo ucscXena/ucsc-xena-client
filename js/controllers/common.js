@@ -35,15 +35,20 @@ function unionOfGroup(gb) {
 	return _.union(..._.map(gb, ([, v]) => v));
 }
 
+function filterSamples(sampleFilter, samples) {
+	return sampleFilter ? _.intersection(sampleFilter, samples) : samples;
+}
+
 // For the cohort, either fetch samplesFrom, or query all servers,
 // Return a stream per-cohort, each of which returns an event
 // [cohort, [sample, ...]].
 // By not combining them here, we can uniformly handle errors, below.
 var cohortSamplesQuery = _.curry(
-	(servers, {name, samplesFrom}, i) =>
+	(servers, {name, samplesFrom, sampleFilter}, i) =>
 		(samplesFrom ?
 			[datasetSamples(samplesFrom)] :
-			_.map(servers, allSamples(name))).map(resp => resp.map(samples => [i, samples])));
+			_.map(servers, allSamples(name)))
+		.map(resp => resp.map(samples => [i, filterSamples(sampleFilter, samples)])));
 
 var collateSamplesByCohort = _.curry((cohorts, resps) => {
 	var byCohort = _.groupBy(resps, _.first);
