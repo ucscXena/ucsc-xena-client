@@ -129,6 +129,15 @@ var Columns = React.createClass({
 	onViz: function (id) {
 		this.setState({openVizSettings: id});
 	},
+	onMouseDown: function (ev) {
+		// XXX XXX This is deeply evil, but not sure of a better way
+		// to prevent the browser from selecting text every time
+		// the user does shift-click. This will probably break other
+		// form elements that are added.
+		if (ev.target.tagName !== 'INPUT') {
+			ev.preventDefault();
+		}
+	},
 	render: function () {
 		var {callback, fieldFormat, sampleFormat, disableKM, supportsGeneAverage, aboutDataset, appState, searching} = this.props;
 		// XXX maybe rename index -> indexes?
@@ -175,27 +184,29 @@ var Columns = React.createClass({
 		}));
 
 		return (
-			<div className="Columns">
-				<Sortable onClick={this.ev.click} setOrder={this.setOrder}>
-					{columnViews}
-				</Sortable>
-				<div
-					style={{height: height}}
-					className='addColumn Column'>
+			<div>
+				<div onMouseDown={this.onMouseDown} className="Columns">
+					<Sortable onClick={this.ev.click} setOrder={this.setOrder}>
+						{columnViews}
+					</Sortable>
+					<div
+						style={{height: height}}
+						className='addColumn Column'>
 
-					{cohort &&
-					<Button
-						bsStyle= "primary"
-						onClick={() => this.setState({openColumnEdit: true})}
-						className='Column-add-button'
-						title='Add a column'>
-						+ Data
-					</Button>}
+						{cohort &&
+						<Button
+							bsStyle= "primary"
+							onClick={() => this.setState({openColumnEdit: true})}
+							className='Column-add-button'
+							title='Add a column'>
+							+ Data
+						</Button>}
+					</div>
+					{editor}
+					{settings}
+					<Crosshair {...this.state.crosshair} />
 				</div>
-				{editor}
-				{settings}
-				<Crosshair {...this.state.crosshair} />
-				<Tooltip {...this.state.tooltip}/>
+				<Tooltip onClick={this.ev.click} {...this.state.tooltip}/>
 			</div>
 		);
 	}
@@ -218,15 +229,6 @@ var Spreadsheet = React.createClass({
 	zoomHelpDisable: function () {
 		this.props.callback(['zoom-help-disable']);
 	},
-	onMouseDown: function (ev) {
-		// XXX XXX This is deeply evil, but not sure of a better way
-		// to prevent the browser from selecting text every time
-		// the user does shift-click. This will probably break other
-		// form elements that are added.
-		if (ev.target.tagName !== 'INPUT') {
-			ev.preventDefault();
-		}
-	},
 	render: function () {
 		var {appState: {zoom, samples, zoomHelp}} = this.props,
 			zoomHelper = zoomHelp ?
@@ -235,7 +237,7 @@ var Spreadsheet = React.createClass({
 					onDisableClick: this.zoomHelpDisable
 				}) : null;
 		return (
-			<Row onMouseDown={this.onMouseDown}>
+			<Row>
 				<Col md={1}>
 					<YAxisLabel
 						samples={samples}
