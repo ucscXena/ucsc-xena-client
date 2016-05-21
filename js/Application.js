@@ -156,6 +156,13 @@ var Application = React.createClass({
 			matching = _.map(matches, i => allSamples[i]);
 		callback(['sampleFilter', 0 /* cohort */, matching]);
 	},
+	onFilterZoom: function (samples, matches) {
+		var {state: {zoom: {height}}, callback} = this.props,
+			toOrder = _.object(samples, _.range(samples.length)),
+			index = toOrder[_.min(matches, s => toOrder[s])],
+			last = toOrder[_.max(matches, s => toOrder[s])];
+		callback(['zoom', {index, height, count: last - index}]);
+	},
 	render: function() {
 		let {state, selector, ...otherProps} = this.props,
 			computedState = selector(state),
@@ -163,6 +170,8 @@ var Application = React.createClass({
 			matches = _.get(samplesMatched, 'length', samples.length),
 			onFilter = (matches < samples.length && matches > 0) ?
 				() => this.onFilter(samplesMatched) : null,
+			onFilterZoom = (matches < samples.length && matches > 0) ?
+				() => this.onFilterZoom(samples, samplesMatched) : null,
 			View = views[mode];
 		return (
 			<Grid onClick={this.onClick}>
@@ -183,6 +192,7 @@ var Application = React.createClass({
 							value={sampleSearch}
 							matches={matches}
 							onFilter={onFilter}
+							onZoom={onFilterZoom}
 							onChange={this.ev.change}/>
 					</Col>
 				</Row>
