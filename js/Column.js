@@ -79,6 +79,18 @@ var ResizeOverlay = React.createClass({
 	}
 });
 
+var styles = {
+	badge: {
+		fontSize: '100%',
+		// Fix the width so it doesn't change if the label changes. This is important
+		// when resizing, because we (unfortunately) inspect the DOM to discover
+		// the minimum width we need to draw the column controls. If the label changes
+		// to a different character, the width will be different, and our minimum width
+		// becomes invalid.
+		width: 24
+	}
+};
+
 var Column = React.createClass({
 	onResizeStop: function (size) {
 		this.props.callback(['resize', this.props.id, size]);
@@ -129,7 +141,7 @@ var Column = React.createClass({
 					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>
 					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 				</SplitButton>
-				<Badge ref='label' style={{fontSize: '100%'}} className='pull-right'>{label}</Badge>
+				<Badge ref='label' style={styles.badge} className='pull-right'>{label}</Badge>
 				<br/>
 				<DefaultTextInput
 					columnID={id}
