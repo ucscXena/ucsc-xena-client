@@ -12,7 +12,10 @@ var nostate = require('./nostate');
 
 var defaultServers = [
 	'https://local.xena.ucsc.edu:7223',
-	'https://genome-cancer.ucsc.edu:443/proj/public/xena',
+	//'https://genome-cancer.ucsc.edu:443/proj/public/xena',
+	"https://ucscpublic.xenahubs.net",
+	"https://tcga.xenahubs.net",
+	"https://icgc.xenahubs.net",
 	"https://toil.xenahubs.net"
 ];
 
