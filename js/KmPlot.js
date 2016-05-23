@@ -310,7 +310,7 @@ var KmPlot = React.createClass({
 					<span className="col-md-2">
 						<Modal.Title>Kaplan Meier</Modal.Title>
 					</span>
-					<span className="col-md-9 label label-default featureLabel">{title}</span>
+					<span style={{overflow: 'hidden'}} className="col-md-9 label label-default featureLabel">{title}</span>
 				</Modal.Header>
 				<Modal.Body className="container-fluid">
 					{Content}
