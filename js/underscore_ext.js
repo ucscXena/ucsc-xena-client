@@ -252,6 +252,9 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 	// Return indices of arr for which fn is true. fn is passed the value and index.
 	var filterIndices = (arr, fn) => _.range(arr.length).filter(i => fn(arr[i], i));
 
+	// non-destructive reverse
+	var reverse = arr => arr.slice(0).reverse();
+
 	_.mixin({
 		meannull: meannull,
 		minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
@@ -277,6 +280,7 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		mmap,
 		withoutIndex,
 		filterIndices,
+		reverse,
 		curry,
 		curryN // useful if the fn as multiple arities.
 	});

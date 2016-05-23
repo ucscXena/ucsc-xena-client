@@ -243,7 +243,9 @@ getField.add('float', (column, samplesList, fdata) => {
 //     map val -> code -> new val.
 getField.add('coded', (column, samplesList, fdata) => {
 	var cvtdData = _.mmap(column.fieldSpecs, samplesList, fdata, cvtField(column)),
-		allCodes = _.union(..._.pluck(cvtdData, 'codes')),
+		// We reverse prior to taking the union so that codes from the top cohort
+		// will tend to appear on the top of the heatmap (higher values).
+		allCodes = _.union(..._.pluck(_.reverse(cvtdData), 'codes')),
 		mapping = _.object(allCodes, _.range(allCodes.length)),
 		remappedWdata = _.map(cvtdData, remapCodes(mapping));
 	return _.assoc(concatValuesByFieldPosition(samplesList, remappedWdata),
