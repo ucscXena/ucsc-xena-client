@@ -81,6 +81,8 @@ var RefGeneAnnotation = React.createClass({
 			vg.width(width);
 		}
 
+		vg.box(0, 0, width, refHeight, 'white'); // white background
+
 		pxTransformEach(layout, (toPx, [start, end]) => {
 			var nodes = matches(indx, {start: start, end: end});
 			_.each(nodes.sort((a, b)=> (b.start - a.start)), ({i, start, end, inCds}) => {
