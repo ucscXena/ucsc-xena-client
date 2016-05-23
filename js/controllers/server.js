@@ -10,6 +10,7 @@ var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
 var {updateFields, filterByDsID} = require('../models/fieldSpec');
+var {remapFields} = require('../models/searchSamples');
 var identity = x => x;
 
 function featuresQuery(datasets) {
@@ -76,10 +77,13 @@ var controls = {
 	'samples-post!': (serverBus, state, newState, samples) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
-	'normalize-fields': (state, fields, id, settings, xenaFields) => {
-		var ns = _.assocIn(state, ['columns', id],
-						   updateFields(settings, xenaFields, fields));
-		return _.updateIn(ns, ["columnOrder"], co => _.conj(co, id));
+	'normalize-fields': (state, fields, id, settings, isFirst, xenaFields) => {
+		var {columnOrder, sampleSearch} = state, // old settings
+			newOrder = isFirst ? [id, ...columnOrder] : [...columnOrder, id];
+		return _.assocIn(state,
+				['columns', id], updateFields(settings, xenaFields, fields),
+				['columnOrder'], newOrder,
+				['sampleSearch'], remapFields(columnOrder, newOrder, sampleSearch));
 	},
 	'normalize-fields-post!': (serverBus, state, newState, fields, id) =>
 		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id])),

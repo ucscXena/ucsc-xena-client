@@ -85,8 +85,8 @@ function longest(arrs) {
 }
 
 function hasUniqProbemap(fieldSpecs, datasets) {
-	var nnFS = nonNullFS(fieldSpecs);
-	return _.uniq(_.map(nnFS, fs => datasets[fs.dsID].probemap)).length  === 1;
+	var probemaps = _.map(fieldSpecs, fs => _.getIn(datasets, [fs.dsID, 'probemap']));
+	return _.uniq(_.filter(probemaps, _.identity)).length  === 1;
 }
 
 // Preserve geneProbes matrix only if there's a single field and all datasets

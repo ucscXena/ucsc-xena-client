@@ -49,6 +49,12 @@ var near = _.curry((x, y) => (x === null || y === null) ? y === x : Math.abs(x -
 var searchFloat = _.curry((cmp, ctx, search, data) => {
 	var {req: {values}} = data,
 		searchVal = search === 'null' ? null : parseFloat(search);
+
+	if (searchVal === null) { // special case for null: handle sub-columns.
+		let cols = _.range(values.length),
+			rows = _.range(values[0].length);
+		return _.filterIndices(rows, i => _.every(cols, j => values[j][i] === null));
+	}
 	if (isNaN(searchVal) || values.length > 1) {
 		// don't try to search strings against floats, and don't try to
 		// search sub-columns.

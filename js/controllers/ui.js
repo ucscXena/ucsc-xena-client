@@ -70,10 +70,10 @@ function allFieldsLookup(settings, xenaFields, state) {
 			(fieldLookup[fs.fieldType] || probeLookup)(fs, state)), {/*host info?*/}));
 }
 
-function normalizeFields(serverBus, state, id, settings) {
+function normalizeFields(serverBus, state, id, settings, isFirst) {
 	var xenaFields = xenaFieldPaths(settings),
 		lookup = allFieldsLookup(settings, xenaFields, state);
-	serverBus.onNext(['normalize-fields', lookup, id, settings, xenaFields]);
+	serverBus.onNext(['normalize-fields', lookup, id, settings, isFirst, xenaFields]);
 }
 
 var featuresInCohort = (datasets, features, cohort) =>
@@ -195,12 +195,19 @@ var controls = {
 	samplesFrom: (state, i, samplesFrom) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, [i, 'samplesFrom'], samplesFrom),
 			'survival', null),
-	'samplesFrom-post!': (serverBus, state, newState, i, samplesFrom) => {
+	'samplesFrom-post!': (serverBus, state, newState) => {
 		let {servers: {user}, cohort} = newState;
-		fetchSamples(serverBus, user, cohort, samplesFrom);
+		fetchSamples(serverBus, user, cohort);
 	},
-	'add-column-post!': (serverBus, state, newState, id, settings) =>
-		normalizeFields(serverBus, newState, id, settings),
+	sampleFilter: (state, i, sampleFilter) => _.assoc(state,
+			'cohort', _.assocIn(state.cohort, [i, 'sampleFilter'], sampleFilter),
+			'survival', null),
+	'sampleFilter-post!': (serverBus, state, newState) => {
+		let {servers: {user}, cohort} = newState;
+		fetchSamples(serverBus, user, cohort);
+	},
+	'add-column-post!': (serverBus, state, newState, id, settings, isFirst) =>
+		normalizeFields(serverBus, newState, id, settings, isFirst),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
 				['zoom', 'height'], height,

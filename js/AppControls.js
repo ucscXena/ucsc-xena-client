@@ -10,6 +10,7 @@ var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var pdf = require('./pdfSpreadsheet');
 var _ = require('./underscore_ext');
+require('./AppControls.css');
 
 var modeButton = {
 	chart: 'Visual Spreadsheet',
@@ -40,10 +41,14 @@ var AppControls = React.createClass({
 	onCohortSelect: function (value) {
 		this.props.callback(['cohort', 0 /* index into composite cohorts */, value]);
 	},
+	onResetSampleFilter: function () {
+		this.props.callback(['sampleFilter', 0 /* index into composite cohorts */, null]);
+	},
 	render: function () {
 		var {appState: {cohort: activeCohorts, cohorts, datasets, mode, columnOrder}} = this.props,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			samplesFrom = _.getIn(activeCohorts, [0, 'samplesFrom']),
+			sampleFilter = _.getIn(activeCohorts, [0, 'sampleFilter']),
 			hasCohort = !!cohort,
 			hasColumn = !!columnOrder.length,
 			noshow = (mode !== "heatmap");
@@ -70,6 +75,15 @@ var AppControls = React.createClass({
 							datasets={datasets}
 							cohort={cohort}
 							value={samplesFrom} />
+						{sampleFilter ?
+							(<span>
+								&#8745;
+								<Button className='hoverStrike'
+									onClick={this.onResetSampleFilter}>
+
+									{sampleFilter.length} samples
+								</Button>
+							</span>) : null}
 					</div> : null}
 				{' '}
 				{hasColumn ? <Button disabled={!hasColumn} onClick={this.onMode} bsStyle='primary'>{modeButton[mode]}</Button> : null}
