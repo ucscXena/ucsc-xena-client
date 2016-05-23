@@ -24,10 +24,26 @@ var element = {
 	)
 };
 
+var styles = {
+	overlay: () => ({
+		zIndex: 998,
+		position: 'fixed',
+		top: 0,
+		left: 0,
+		width: document.body.clientWidth,
+		height: document.body.clientHeight,
+		backgroundColor: 'transparent'
+	})
+};
+
+function overlay() {
+	return <div style={styles.overlay()}/>;
+}
+
 var Tooltip = React.createClass({
 	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?
 	render: function () {
-		var {data, open, frozen} = this.props,
+		var {data, open, onClick, frozen} = this.props,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 
@@ -39,21 +55,25 @@ var Tooltip = React.createClass({
 		var sample = sampleID ? sampleLayout(sampleID) : null;
 		var display = open ? 'block' : 'none';
 		// className 'tooltip' aliases with bootstrap css.
+		/*global document: false */
 		return (
-			<div className='Tooltip' style={{display: display, zIndex: 999}}>
-				<table>
-					<colgroup>
-						<col className='valueCol'/>
-						<col className='closeCol'/>
-					</colgroup>
-					<tbody>
-						{sample}
-						{rowsOut}
-						<tr>
-							<td className='tooltipPrompt'>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</td>
-						</tr>
-					</tbody>
-				</table>
+			<div onClick={onClick} style={{position: 'relative'}}>
+				{frozen ?  overlay(onClick) : null}
+				<div className='Tooltip' style={{zIndex: 999, display: display}}>
+					<table>
+						<colgroup>
+							<col className='valueCol'/>
+							<col className='closeCol'/>
+						</colgroup>
+						<tbody>
+							{sample}
+							{rowsOut}
+							<tr>
+								<td className='tooltipPrompt'>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</div>
 		);
 	}

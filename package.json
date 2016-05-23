@@ -1,12 +1,12 @@
 {
   "name": "ucsc-xena-client",
-  "version": "2.10.0-alpha.0",
+  "version": "2.11.0-alpha.0",
   "description": "UCSC Xena Client. Functional genomics visualizations.",
   "homepage": "https://xena.ucsc.edu",
   "main": "index.js",
   "scripts": {
     "test": "webpack-dev-server --config webpack.test.js --devtool eval --port 8081",
-    "lint": "eslint --no-color js/*.js test/*.js",
+    "lint": "eslint --no-color js/*.js js/*/*.js test/*.js",
     "eslint": "eslint",
     "clean": "rimraf build/*",
     "start": "npm run start:hot",

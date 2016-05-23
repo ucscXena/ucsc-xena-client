@@ -36,7 +36,7 @@ function drawLegend(feature) {
 	return (
 		<Legend
 			colors={['rgb(255,255,255)', ...colors]}
-			labels={['no mutation', ...labels]}
+			labels={['no variant', ...labels]}
 			align={align}
 			ellipsis='' />
 	);
@@ -97,7 +97,7 @@ function sampleTooltip(sampleFormat, data, gene, assembly) {
 function makeRow(fields, sampleGroup, row) {
 	let fieldValue;
 	if (_.isArray(sampleGroup) && sampleGroup.length === 0) {
-		fieldValue = 'No mutation';
+		fieldValue = 'no variant';
 	}
 	if (_.isEmpty(sampleGroup)) {
 		sampleGroup = [row];
