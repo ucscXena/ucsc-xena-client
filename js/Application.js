@@ -165,7 +165,7 @@ var Application = React.createClass({
 			toOrder = _.object(samples, _.range(samples.length)),
 			index = toOrder[_.min(matches, s => toOrder[s])],
 			last = toOrder[_.max(matches, s => toOrder[s])];
-		callback(['zoom', {index, height, count: last - index}]);
+		callback(['zoom', {index, height, count: last - index + 1}]);
 	},
 	onFilterColumn: function (matches) {
 		var {state: {datasets, cohortSamples, sampleSearch}, callback} = this.props,
