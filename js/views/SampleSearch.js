@@ -47,7 +47,7 @@ var SampleSearch = React.createClass({
 				{filterButton ?
 					(<SplitButton onClick={onFilter} bsSize='sm' title={filterButton}>
 						<MenuItem title='Apply to zoom' onClick={onZoom}>Zoom</MenuItem>
-						<MenuItem title='Create column from' onClick={onCreateColumn}>As column</MenuItem>
+						<MenuItem title='Create column from' onClick={onCreateColumn}>Sort</MenuItem>
 					</SplitButton>) : null}
 				{help ? <Button bsStyle='link' target='_blank' href={help}>Help with search</Button> : null}
 			</form>
