@@ -183,6 +183,9 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 
 	var withoutIndex = (arr, i) => arr.slice(0, i).concat(arr.slice(i + 1));
 
+	// non-destructive reverse
+	var reverse = arr => arr.slice(0).reverse();
+
 	_.mixin({
 		meannull: meannull,
 		minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
@@ -207,6 +210,7 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		fmapMemoize1,
 		mmap,
 		withoutIndex,
+		reverse,
 		curry,
 		curryN // useful if the fn as multiple arities.
 	});
