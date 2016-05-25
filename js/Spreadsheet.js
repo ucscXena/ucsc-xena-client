@@ -11,7 +11,7 @@ var Sortable = require('./Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');
-var Crosshair = require('./Crosshair');
+var Crosshair = require('./views/Crosshair');
 var Tooltip = require('./views/Tooltip');
 var rxEventsMixin = require('./react-utils').rxEventsMixin;
 var meta = require('./meta');

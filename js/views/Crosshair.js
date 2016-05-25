@@ -6,8 +6,8 @@
 'use strict';
 
 var React = require('react');
-var {deepPureRenderMixin} = require('./react-utils');
-require('../css/crosshairs.css');
+var {deepPureRenderMixin} = require('../react-utils');
+require('./Crosshair.css');
 
 var Crosshair = React.createClass({
 	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?

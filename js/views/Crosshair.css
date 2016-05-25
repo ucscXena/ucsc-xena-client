@@ -11,7 +11,7 @@
 	user-select: none;
 }
 .crosshair {
-	background-image:url('../images/dots.gif');
+	background-image:url('./dots.gif');
 	position: fixed;
 }
 .crosshairH {
