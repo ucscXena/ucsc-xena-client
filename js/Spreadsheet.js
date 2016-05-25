@@ -17,27 +17,8 @@ var rxEventsMixin = require('./react-utils').rxEventsMixin;
 var meta = require('./meta');
 var VizSettings = require('./VizSettings');
 require('./Columns.css'); // XXX switch to js styles
-require('./YAxisLabel.css'); // XXX switch to js styles
 
-var YAxisLabel = React.createClass({
-	render: function () {
-		// XXX would prefer to enforce that these keys are present & destructure
-		var height = _.getIn(this.props, ['zoom', 'height']),
-			index = _.getIn(this.props, ['zoom', 'index']) || 0,
-			count = _.getIn(this.props, ['zoom', 'count']) || 0,
-			length = _.getIn(this.props, ['samples', 'length']) || 0,
-			fraction = count === length ? '' :
-				// babel-eslint/issues/31
-				`Zoomed to ${index} - ${index + count - 1} (N=${count})`, // eslint-disable-line comma-spacing
-			text = 'Samples (N=' + length.toLocaleString() + ')';
-
-		return (
-			<div style={{height: height}} className="YAxisWrapper">
-				<p style={{width: height}} className="YAxisLabel">{text}<br/>{fraction}</p>
-			</div>
-		);
-	}
-});
+var YAxisLabel = require('./views/YAxisLabel');
 
 function zoomIn(pos, samples, zoom) {
 	var {count, index} = zoom;
@@ -222,6 +203,7 @@ function zoomPopover(zoom, samples, props) {
 		</Popover>
 	);
 }
+
 var Spreadsheet = React.createClass({
 	zoomHelpClose: function () {
 		this.props.callback(['zoom-help-close']);
