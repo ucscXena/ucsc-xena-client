@@ -104,7 +104,7 @@ var Columns = React.createClass({
 			this.setState({openColumnEdit: true});
 		}
 	},
-	setOrder: function (order) {
+	onReorder: function (order) {
 		this.props.callback(['order', order]);
 	},
 	onViz: function (id) {
@@ -167,7 +167,7 @@ var Columns = React.createClass({
 		return (
 			<div>
 				<div onMouseDown={this.onMouseDown} className="Columns">
-					<Sortable onClick={this.ev.click} setOrder={this.setOrder}>
+					<Sortable onClick={this.ev.click} onReorder={this.onReorder}>
 						{columnViews}
 					</Sortable>
 					<div

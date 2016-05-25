@@ -104,7 +104,7 @@ var Sortable = React.createClass({
         // Update position
 		this.subscription = mousedrag.subscribe(pos => {
 			if (_.has(pos, 'order')) {
-                this.props.setOrder(pos.order);
+				this.props.onReorder(pos.order);
 			} else {
 				this.setState({pos: pos});
 			}
