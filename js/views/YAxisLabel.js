@@ -29,8 +29,7 @@ var YAxisLabel = React.createClass({
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
 			length = _.getIn(this.props, ['samples', 'length']) || 0,
 			fraction = count === length ? '' :
-				// babel-eslint/issues/31
-				`Zoomed to ${index} - ${index + count - 1} (N=${count})`, // eslint-disable-line comma-spacing
+				`Zoomed to ${index} - ${index + count - 1} (N=${count})`,
 			text = 'Samples (N=' + length.toLocaleString() + ')';
 
 		return (
