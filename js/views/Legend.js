@@ -2,7 +2,7 @@
 'use strict';
 
 var React = require('react');
-var _ = require('./underscore_ext');
+var _ = require('../underscore_ext');
 var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
 require('./Legend.css');
