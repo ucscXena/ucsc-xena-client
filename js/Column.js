@@ -8,10 +8,10 @@ var _ = require('./underscore_ext');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Badge = require('react-bootstrap/lib/Badge');
-var Resizable = require('react-resizable').Resizable;
 var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('./refGeneExons');
 var SpreadSheetHighlight = require('./SpreadSheetHighlight');
+var ResizeOverlay = require('./views/ResizeOverlay');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -25,59 +25,6 @@ function download([fields, rows]) {
 	a.click();
 	document.body.removeChild(a);
 }
-
-var max = (x, y) => x > y ? x : y;
-var minWidthSize = (minWidth, {width, height}) => ({width: max(minWidth, width), height});
-
-var ResizeOverlay = React.createClass({
-	getInitialState: () => ({zooming: false}),
-	onResizeStart: function () {
-		var {width, height} = this.props,
-			minWidth = this.props.minWidth();
-		this.setState({zooming: true, zoomSize: {width, height}, minWidth});
-	},
-	onResize: function (ev, {size}) {
-		var {width, height} = size,
-			{minWidth} = this.state;
-		this.setState({zoomSize: {width: max(width, minWidth), height}});
-	},
-	onResizeStop: function (ev, {size}) {
-		var {onResizeStop} = this.props,
-			{minWidth} = this.state;
-		this.setState({zooming: false});
-		if (onResizeStop) {
-			onResizeStop(minWidthSize(minWidth, size));
-		}
-	},
-	render: function () {
-		var {zooming, zoomSize} = this.state;
-		// XXX This margin setting really belongs elsewhere.
-		return (
-			<div className='resizeOverlay' style={{position: 'relative', marginBottom: '5px'}}>
-				{zooming ? <div style={{
-					width: zoomSize.width,
-					height: zoomSize.height,
-					position: 'absolute',
-					top: 0,
-					left: 0,
-					zIndex: 999,
-					backgroundColor: 'rgba(0,0,0,0.4)'
-				}} /> : null}
-				<Resizable handleSize={[20, 20]}
-					onResizeStop={this.onResizeStop}
-					onResize={this.onResize}
-					onResizeStart={this.onResizeStart}
-					width={this.props.width}
-					height={this.props.height}>
-
-					<div style={{position: 'relative', cursor: 'none', zIndex: 0}}>
-						{this.props.children}
-					</div>
-				</Resizable>
-			</div>
-		);
-	}
-});
 
 var styles = {
 	badge: {
