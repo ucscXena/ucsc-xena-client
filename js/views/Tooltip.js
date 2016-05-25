@@ -3,10 +3,10 @@
 'use strict';
 
 var React = require('react');
-var _ = require('./underscore_ext');
-var {deepPureRenderMixin} = require('./react-utils');
-var meta = require('./meta');
-require('../css/tooltip.css');
+var _ = require('../underscore_ext');
+var {deepPureRenderMixin} = require('../react-utils');
+var meta = require('../meta');
+require('./Tooltip.css');
 
 var sampleLayout = id => (
 		<tr>
