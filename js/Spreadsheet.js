@@ -7,7 +7,7 @@ var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
 var Popover = require('react-bootstrap/lib/Popover');
 var ColumnEdit = require('./ColumnEdit2');
-var Sortable = require('./Sortable');
+var Sortable = require('./views/Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');

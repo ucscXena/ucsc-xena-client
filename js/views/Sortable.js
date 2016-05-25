@@ -16,7 +16,7 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 var Rx = require('rx');
-var _ = require('./underscore_ext');
+var _ = require('../underscore_ext');
 require('./Sortable.css');
 
 function leftWidth(rect) {
