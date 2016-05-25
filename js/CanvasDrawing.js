@@ -47,7 +47,11 @@ var CanvasDrawing = React.createClass({
 		this.draw(this.props);
 	},
 
-	transitioning: false,
+	// XXX We've drop the transition feature. Should drop all this code, too, but don't have
+	// time to do it now. See bc7f1297 for the original commit of transition. The detailed
+	// bit will be ensure that the css is still correct wrt resize overlay, etc.
+	// For now, just setting this flag to 'true' so we can never transition.
+	transitioning: true,
 	onTransitionEnd: function () {
 		let vg0 = this.vg[0].element(),
 			vg1 = this.vg[1].element();

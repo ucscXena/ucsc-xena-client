@@ -55,8 +55,7 @@ var transformSelector = createFmapSelector(
 				state.data[key],
 				state.samples,
 				state.datasets[column.dsID],
-				state.index[key],
-				state.zoom]),
+				state.index[key]]),
 		_.apply(widgets.transform));
 
 var mergeKeys = (a, b) => _.mapObject(a, (v, k) => _.merge(v, b[k]));

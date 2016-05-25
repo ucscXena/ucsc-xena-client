@@ -286,11 +286,8 @@ function sortByGroup(arr, keyfn) {
 			k => grouped[k]);
 }
 
-function findNodes(byPosition, layout, feature, samples, zoom) {
-	var {index, count, height} = zoom,
-		pixPerRow = height / count,
-		sindex = _.object(samples.slice(index, index + count),
-					_.range(samples.length)),
+function findNodes(byPosition, layout, feature, samples) {
+	var sindex = _.object(samples, _.range(samples.length)),
 		group = features[feature].get,
 		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e],
 		// sortfn is about 2x faster than sortBy, for large sets of variants
@@ -304,7 +301,7 @@ function findNodes(byPosition, layout, feature, samples, zoom) {
 			return {
 				xStart: pstart,
 				xEnd: pend,
-				y: sindex[v.variant.sample] * pixPerRow + (pixPerRow / 2),
+				y: sindex[v.variant.sample],
 				// XXX 1st param to group was used for extending our coloring to other annotations. See
 				// ga4gh branch.
 				group: group(null, v.variant), // needed for sort, before drawing.

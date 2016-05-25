@@ -13,7 +13,7 @@ var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
 var {features} = require('./models/mutationVector');
-var {drawMutations, radius} = require('./drawMutations');
+var {drawMutations, radius, minVariantHeight, toYPx} = require('./drawMutations');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -42,26 +42,19 @@ function drawLegend(feature) {
 	);
 }
 
-function closestNode(nodes, pixPerRow, x, y) {
+function closestNode(nodes, pixPerRow, index, count, x, y) {
 	var cutoffX = radius,
-		cutoffY = pixPerRow / 2.0,
-		min = Number.POSITIVE_INFINITY,
-		distance;
+		cutoffY = minVariantHeight(pixPerRow) / 2,
+		end = index + count,
+		yPx = toYPx(pixPerRow, index),
+		nearBy = _.filter(nodes, n => n.y >= index && n.y < end &&
+			Math.abs(y - yPx(n.y)) < cutoffY &&
+			(x > n.xStart - cutoffX) && (x < n.xEnd + cutoffX));
 
-	return _.reduce(nodes, function (closest, n) {
-		if ((Math.abs(y - n.y) < cutoffY) && (x > n.xStart - cutoffX) && (x < n.xEnd + cutoffX)) {
-			distance = Math.pow((y - n.y), 2) + Math.pow((x - (n.xStart + n.xEnd) / 2.0), 2);
-			if (distance < min) {
-				min = distance;
-				return n;
-			} else {
-				return closest;
-			}
-		}
-		else {
-			return closest;
-		}
-	}, undefined);
+	return nearBy.length > 0 ?
+		_.min(nearBy, n =>
+				Math.pow((y - yPx(n.y)), 2) + Math.pow((x - (n.xStart + n.xEnd) / 2.0), 2)) :
+		undefined;
 }
 
 function formatAf(af) {
@@ -108,13 +101,13 @@ function makeRow(fields, sampleGroup, row) {
 
 function tooltip(nodes, samples, sampleFormat, {height, count, index}, gene, assembly, ev) {
 	var {x, y} = util.eventOffset(ev),
-		pixPerRow = height / count, // XXX also appears in mutationVector
-		minppr = Math.max(pixPerRow, 2), // XXX appears multiple places
-		node = closestNode(nodes, minppr, x, y);
+		pixPerRow = height / count,
+		yIndex = Math.round((y - pixPerRow / 2) / pixPerRow + index),
+		node = closestNode(nodes, pixPerRow, index, count, x, y);
 
 	return node ?
 		sampleTooltip(sampleFormat, node.data, gene, assembly) :
-		{sampleID: sampleFormat(samples[Math.floor((y * count / height) + index)])};
+		{sampleID: sampleFormat(samples[yIndex])};
 }
 
 function getRowFields(rows, sampleGroups) {
