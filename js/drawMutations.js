@@ -52,13 +52,10 @@ function drawBackground(vg, width, height, pixPerRow, hasValue) {
 	]);
 	vg.drawRectangles(rects, {fillStyle: 'grey'});
 
-	// draw null lable in zoomed-in view
-	if (pixPerRow > labelFont) {
-		let labelIndices = _.filterIndices(hasValue, hv => !hv);
-		labelIndices.forEach(i => {
-			vg.textCenteredPushRight(0, pixPerRow * i, width, pixPerRow, 'black', labelFont, "null");
-		});
-	}
+	var nullLabels = stripes.filter(([, len]) => len * pixPerRow > labelFont);
+	nullLabels.forEach(([offset, len]) => {
+		vg.textCenteredPushRight(0, pixPerRow * offset, width, pixPerRow * len, 'black', labelFont, "null");
+	});
 }
 
 function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variants) {

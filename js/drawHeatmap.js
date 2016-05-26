@@ -30,6 +30,37 @@ function drawColumn(data, colorScale, boxfn) {
 	}
 }
 
+// Writing this optimized because it's expensive when
+// zoomed out on a large cohort.
+function findContiguous(arr, min) {
+	var start, end = 0, length = arr.length, res = [], clen;
+	while (end < length) {
+		start = end;
+		while (end < length && arr[start] === arr[end]) {
+			++end;
+		}
+		clen = end - start;
+		if (clen > min) {
+			res.push([start, clen]);
+		}
+	}
+	return res;
+}
+
+function codeLabels(codes, rowData, minSpan) {
+	 var groups = findContiguous(rowData, minSpan);
+	 return _.map(groups, ([start, len]) =>
+			 [_.get(codes, rowData[start], null), start, len]);
+}
+
+function floatLabels(rowData, minSpan) {
+	var nnLabels = minSpan <= 1 ?
+			_.filter(_.map(rowData, (v, i) => [v, i, 1]), ([v]) => v !== null) : [],
+		nullLabels = _.filter(_.map(findContiguous(rowData, minSpan), ([start, len]) => [rowData[start], start, len]),
+				([v]) => v === null);
+	return [...nnLabels, ...nullLabels];
+}
+
 function drawLayout(vg, opts) {
 	var {height, width, index, count, layout, data, codes, colors} = opts,
 		minTxtWidth = vg.textWidth(labelFont, 'WWWW'),
@@ -58,12 +89,14 @@ function drawLayout(vg, opts) {
 				drawRow));
 
 		// Add labels
-		if (el.size - 2 * labelMargin >= minTxtWidth && height / count > labelFont) {
-			let h = height / count;
+		var minSpan = labelFont / (height / count);
+		if (el.size - 2 * labelMargin >= minTxtWidth) {
+			let labels = codes ? codeLabels(codes, rowData, minSpan) : floatLabels(rowData, minSpan),
+				h = height / count;
 			vg.clip(el.start + labelMargin, 0, el.size - labelMargin, height, () =>
-					rowData.forEach((v, i) =>
+					labels.forEach(([l, i, ih]) => // label, index, count
 						vg.textCenteredPushRight(el.start + labelMargin, h * i - 1, el.size - labelMargin,
-												 h, 'black', labelFont, codes ? (codes[v] ? codes[v] : null ) : v )));
+												 h * ih, 'black', labelFont, l)));
 		}
 	});
 }
