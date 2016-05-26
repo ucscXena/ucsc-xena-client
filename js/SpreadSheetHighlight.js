@@ -5,23 +5,6 @@ var React = require('react');
 var _ = require('./underscore_ext');
 var vgcanvas = require('./vgcanvas');
 
-// XXX Also in drawMutations. Move to underscore_ext?
-// Group by consecutive matches, perserving order.
-function groupByConsec(sortedArray, prop, ctx) {
-	var cb = _.iteratee(prop, ctx);
-	var last = {}, current; // init 'last' with a sentinel, !== to everything
-	return _.reduce(sortedArray, (acc, el) => {
-		var key = cb(el);
-		if (key !== last) {
-			current = [];
-			last = key;
-			acc.push(current);
-		}
-		current.push(el);
-		return acc;
-	}, []);
-}
-
 var tickWidth = 5,
 	borderWidth = 5;
 
@@ -71,7 +54,7 @@ var SpreadSheetHighlight = React.createClass({
 			return;
 		}
 		var matchMap = _.object(samplesMatched, _.range(samplesMatched.length)),
-			stripeGroups = groupByConsec(samples, s => _.has(matchMap, s)),
+			stripeGroups = _.groupByConsec(samples, s => _.has(matchMap, s)),
 			stripes = _.scan(stripeGroups, (acc, g) => acc + g.length, 0),
 			hasMatch = _.map(stripeGroups, (s, i) => _.has(matchMap, stripeGroups[i][0])),
 			pixPerRow = height / samples.length;

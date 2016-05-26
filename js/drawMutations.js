@@ -12,23 +12,6 @@ var radius = 4;
 var minVariantHeight = pixPerRow => Math.max(pixPerRow, 2); // minimum draw height of 2
 var toYPx = _.curry((pixPerRow, index, y) => (y - index) * pixPerRow + (pixPerRow / 2));
 
-
-// Group by consecutive matches, perserving order.
-function groupByConsec(sortedArray, prop, ctx) {
-	var cb = _.iteratee(prop, ctx);
-	var last = {}, current; // init 'last' with a sentinel, !== to everything
-	return _.reduce(sortedArray, (acc, el) => {
-		var key = cb(el);
-		if (key !== last) {
-			current = [];
-			last = key;
-			acc.push(current);
-		}
-		current.push(el);
-		return acc;
-	}, []);
-}
-
 function push(arr, v) {
 	arr.push(v);
 	return arr;
@@ -38,7 +21,7 @@ function push(arr, v) {
 // by considering zoom count and index.
 function drawBackground(vg, width, height, pixPerRow, hasValue) {
 	var [stripes] = _.reduce(
-			groupByConsec(hasValue, _.identity),
+			_.groupByConsec(hasValue, _.identity),
 			([acc, sum], g) =>
 				[g[0] ? acc : push(acc, [sum, g.length]), sum + g.length],
 			[[], 0]);
@@ -63,7 +46,7 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 	var {true: feetVariants = [], false: nofeetVariants = []} = _.groupBy(variants, isStructuralVariant);
 
 	// --------- no feet variants drawing start here ---------
-	var varByImp = groupByConsec(nofeetVariants, v => v.group),
+	var varByImp = _.groupByConsec(nofeetVariants, v => v.group),
 		vHeight = minVariantHeight(pixPerRow),
 		yPx = toYPx(pixPerRow, index);
 

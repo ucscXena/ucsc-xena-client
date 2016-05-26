@@ -255,6 +255,22 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 	// non-destructive reverse
 	var reverse = arr => arr.slice(0).reverse();
 
+	// Group by consecutive matches, perserving order.
+	function groupByConsec(sortedArray, prop, ctx) {
+		var cb = _.iteratee(prop, ctx);
+		var last = {}, current; // init 'last' with a sentinel, !== to everything
+		return _.reduce(sortedArray, (acc, el) => {
+			var key = cb(el);
+			if (key !== last) {
+				current = [];
+				last = key;
+				acc.push(current);
+			}
+			current.push(el);
+			return acc;
+		}, []);
+	}
+
 	_.mixin({
 		meannull: meannull,
 		minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
@@ -281,6 +297,7 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		withoutIndex,
 		filterIndices,
 		reverse,
+		groupByConsec,
 		curry,
 		curryN // useful if the fn as multiple arities.
 	});
