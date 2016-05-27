@@ -220,12 +220,16 @@ var Application = React.createClass({
 					</Col>
 				</Row>
 				<View {...otherProps}
-					aboutDataset={this.aboutDataset}
-					sampleFormat={this.sampleFormat}
-					fieldFormat={this.fieldFormat}
-					searching={this.highlight}
-					supportsGeneAverage={this.supportsGeneAverage}
-					disableKM={this.disableKM}
+					columnProps={{
+						aboutDataset: this.aboutDataset,
+						disableKM: this.disableKM,
+						searching: this.highlight,
+					}}
+					widgetProps={{
+						supportsGeneAverage: this.supportsGeneAverage,
+						sampleFormat: this.sampleFormat,
+						fieldFormat: this.fieldFormat
+					}}
 					appState={computedState} />
 				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
 						callback={this.props.callback}

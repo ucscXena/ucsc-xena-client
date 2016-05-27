@@ -171,7 +171,7 @@ var MutationColumn = hotOrNot(React.createClass({
 		return tooltip(nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
 	},
 	render: function () {
-		var {column, label, samples, samplesMatched, zoom, data, index, disableKM, aboutDataset, searching} = this.props,
+		var {column, samples, zoom, data, index, columnProps} = this.props,
 			feature = _.getIn(column, ['sFeature']),
 			assembly = _.getIn(column, ['assembly']),
 			rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
@@ -182,19 +182,9 @@ var MutationColumn = hotOrNot(React.createClass({
 		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
 			<Column
-				callback={this.props.callback}
-				id={this.props.id}
-				aboutDataset={aboutDataset}
-				disableKM={disableKM}
+				{...columnProps}
 				download={this.onDownload} //eslint-disable-line no-undef
-				label={label}
-				samples={samples}
-				samplesMatched={samplesMatched}
-				searching={searching}
-				column={column}
-				zoom={zoom}
 				menu={noMenu ? null : <MenuItem disabled={noData} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
-				data={data}
 				plot={<CanvasDrawing
 						ref='plot'
 						draw={drawMutations}

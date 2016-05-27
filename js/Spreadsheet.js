@@ -119,7 +119,7 @@ var Columns = React.createClass({
 		}
 	},
 	render: function () {
-		var {callback, fieldFormat, sampleFormat, disableKM, supportsGeneAverage, aboutDataset, appState, searching} = this.props;
+		var {callback, appState, widgetProps, columnProps} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, cohort, samples, samplesMatched} = appState;
 		var {openColumnEdit, openVizSettings} = this.state;
@@ -140,25 +140,28 @@ var Columns = React.createClass({
 				state={_.getIn(appState, ['columns', openVizSettings, 'vizSettings'])} /> : null;
 
 		var columnViews = _.map(columnOrder, (id, i) => widgets.column({
+			...widgetProps,
 			ref: id,
 			key: id,
 			id: id,
-			label: getLabel(i),
 			data: _.getIn(data, [id]),
 			index: _.getIn(index, [id]),
 			vizSettings: _.getIn(appState, [columns, id, 'vizSettings']),
 			samples,
-			samplesMatched,
 			zoom,
 			callback,
-			fieldFormat,
-			sampleFormat,
-			disableKM,
-			searching,
-			aboutDataset,
-			supportsGeneAverage,
+			columnProps: {
+				...columnProps,
+				id,
+				callback,
+				samples,
+				samplesMatched,
+				zoom,
+				data: _.getIn(data, [id]), // for refGene. Need a better mechanism
+				onViz: this.onViz,
+				column: _.getIn(columns, [id]),
+				label: getLabel(i)},
 			tooltip: this.ev.tooltip,
-			onViz: this.onViz,
 			onClick: this.ev.plotClick,
 			column: _.getIn(columns, [id])
 		}));

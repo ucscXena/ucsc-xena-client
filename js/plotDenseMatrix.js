@@ -225,25 +225,15 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
 	render: function () {
-		var {data, samples, label, samplesMatched, column, zoom, disableKM, supportsGeneAverage, aboutDataset, id, searching} = this.props,
+		var {data, column, zoom, columnProps, supportsGeneAverage, id} = this.props,
 			{heatmap, colors, legend} = column,
 			codes = _.get(data, 'codes'),
 			menu = supportsGeneAverage(id) ? modeMenu(column, this.onMode) : null;
 
 		return (
 			<Column
-				callback={this.props.callback}
-				id={this.props.id}
-				onViz={this.props.onViz}
-				searching={searching}
-				label={label}
-				disableKM={disableKM}
-				aboutDataset={aboutDataset}
 				download={this.download}
-				samples={samples}
-				samplesMatched={samplesMatched}
-				column={column}
-				zoom={zoom}
+				{...columnProps}
 				menu={menu}
 				plot={<CanvasDrawing
 						ref='plot'
