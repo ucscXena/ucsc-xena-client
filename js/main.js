@@ -17,7 +17,7 @@ require('./models/mutationVector');
 var uiController = require('./controllers/ui');
 var serverController = require('./controllers/server');
 require('bootstrap/dist/css/bootstrap.css');
-var Application = require('./Application');
+var Application = require('./containers/ApplicationContainer');
 var selector = require('./appSelector');
 var compose = require('./controllers/compose');
 const connector = require('./connector');

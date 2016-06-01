@@ -7,8 +7,6 @@ var widgets = require('./columnWidgets');
 var colorScales = require('./colorScales');
 var util = require('./util');
 var Legend = require('./views/Legend');
-var Column = require('./Column');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
@@ -155,8 +153,18 @@ function renderCodedLegend(props) {
 var HeatmapLegend = hotOrNot(React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function() {
-		var {coded} = this.props;
-		return (coded ? renderCodedLegend : renderFloatLegend)(this.props);
+		var {column, data} = this.props,
+			{heatmap, colors, legend, valueType, fields} = column,
+			props = {
+				fields,
+				colors,
+				legend,
+				data: heatmap,
+				coded: valueType === 'coded',
+				codes: _.get(data, 'codes'),
+			};
+
+		return (props.coded ? renderCodedLegend : renderFloatLegend)(props);
 	}
 }));
 
@@ -177,12 +185,6 @@ function tsvProbeMatrix(heatmap, samples, fields, codes) {
 //		fieldNames = ['sample'].concat([this.ws.column.fieldLabel.default]);
 //	}
 	return [fieldNames, tsvData];
-}
-
-function modeMenu({fieldType, noGeneDetail}, cb) {
-	return fieldType === 'genes' ?
-		<MenuItem eventKey="geneProbes" title={noGeneDetail ? 'no common probemap' : ''} disabled={noGeneDetail} onSelect={cb}>Detailed view</MenuItem> :
-		<MenuItem eventKey="genes" onSelect={cb}>Gene average</MenuItem>;
 }
 
 var HeatmapColumn = hotOrNot(React.createClass({
@@ -206,9 +208,6 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
 	},
-	onMode: function (ev, newMode) {
-		this.props.callback(['fieldType', this.props.id, newMode]);
-	},
 	tooltip: function (ev) {
 		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
 			codes = _.get(data, 'codes'),
@@ -225,40 +224,26 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
 	render: function () {
-		var {data, column, zoom, columnProps, supportsGeneAverage, id} = this.props,
-			{heatmap, colors, legend} = column,
-			codes = _.get(data, 'codes'),
-			menu = supportsGeneAverage(id) ? modeMenu(column, this.onMode) : null;
+		var {data, column, zoom} = this.props,
+			{heatmap, colors} = column,
+			codes = _.get(data, 'codes');
 
 		return (
-			<Column
-				download={this.download}
-				{...columnProps}
-				menu={menu}
-				plot={<CanvasDrawing
-						ref='plot'
-						draw={drawHeatmap}
-						wrapperProps={{
-							className: 'Tooltip-target',
-							onMouseMove: this.ev.mousemove,
-							onMouseOut: this.ev.mouseout,
-							onMouseOver: this.ev.mouseover,
-							onClick: this.props.onClick
-						}}
-						codes={codes}
-						width={_.get(column, 'width')}
-						zoom={zoom}
-						colors={colors}
-						heatmapData={heatmap}/>}
-				legend={<HeatmapLegend
-						fields={_.get(column, 'fields')}
-						colors={colors}
-						legend={legend}
-						data={heatmap}
-						coded={column.valueType === 'coded'}
-						codes={codes}/>}
-			/>
-		);
+			<CanvasDrawing
+					ref='plot'
+					draw={drawHeatmap}
+					wrapperProps={{
+						className: 'Tooltip-target',
+						onMouseMove: this.ev.mousemove,
+						onMouseOut: this.ev.mouseout,
+						onMouseOver: this.ev.mouseover,
+						onClick: this.props.onClick
+					}}
+					codes={codes}
+					width={_.get(column, 'width')}
+					zoom={zoom}
+					colors={colors}
+					heatmapData={heatmap}/>);
 	}
 }));
 
@@ -268,3 +253,10 @@ widgets.column.add("probes", getColumn);
 widgets.column.add("geneProbes", getColumn);
 widgets.column.add("genes", getColumn);
 widgets.column.add("clinical", getColumn);
+
+var getLegend = props => <HeatmapLegend {...props} />;
+
+widgets.legend.add('probes', getLegend);
+widgets.legend.add('geneProbes', getLegend);
+widgets.legend.add('genes', getLegend);
+widgets.legend.add('clinical', getLegend);

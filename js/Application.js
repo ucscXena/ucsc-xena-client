@@ -4,7 +4,6 @@ var React = require('react');
 var Grid = require('react-bootstrap/lib/Grid');
 var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
-var Spreadsheet = require('./Spreadsheet');
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
 var kmModel = require('./models/km');
@@ -20,11 +19,6 @@ var {rxEventsMixin} = require('./react-utils');
 var Rx = require('rx');
 var uuid = require('./uuid');
 //var Perf = require('react/addons').addons.Perf;
-
-var views = {
-	heatmap: Spreadsheet,
-	chart: ChartView
-};
 
 // should really be in a config file.
 var searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
@@ -60,13 +54,6 @@ function getFieldFormat(uuid, columns, data) {
 	} else {                                             // n > 1 probes in gene
 		return field => `${label} (${field})`;
 	}
-}
-
-// This was moved out of plotDenseMatrix so that plotDenseMatrix doesn't know
-// about fields vs. probes. We check the field length here, before overlaying
-// a probe list from the server, and sending to the spreadsheet view.
-function supportsGeneAverage({fieldType, fields: {length}}) {
-	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && length === 1;
 }
 
 function onAbout(dsID) {
@@ -134,10 +121,6 @@ var Application = React.createClass({
 		var {columns, data} = this.props.state;
 		return getFieldFormat(uuid, columns, data);
 	},
-	supportsGeneAverage(uuid) {
-		var {columns} = this.props.state;
-		return supportsGeneAverage(_.get(columns, uuid));
-	},
 	sampleFormat: function (index) {
 		var {cohortSamples} = this.props.state;
 		return lookupSample(cohortSamples, index);
@@ -184,9 +167,8 @@ var Application = React.createClass({
 		callback(['add-column', uuid(), settings, true]);
 	},
 	render: function() {
-		let {state, selector, ...otherProps} = this.props,
-			computedState = selector(state),
-			{mode, samplesMatched, sampleSearch, samples} = computedState,
+		let {state, Spreadsheet, supportsGeneAverage, ...otherProps} = this.props,
+			{mode, samplesMatched, sampleSearch, samples} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			onFilter = (matches < samples.length && matches > 0) ?
 				() => this.onFilter(samplesMatched) : null,
@@ -194,7 +176,11 @@ var Application = React.createClass({
 				() => this.onFilterColumn(samplesMatched) : null,
 			onFilterZoom = (matches < samples.length && matches > 0) ?
 				() => this.onFilterZoom(samples, samplesMatched) : null,
-			View = views[mode];
+			View = {
+				heatmap: Spreadsheet,
+				chart: ChartView
+			}[mode];
+
 		return (
 			<Grid onClick={this.onClick}>
 			{/*
@@ -204,7 +190,7 @@ var Application = React.createClass({
 			*/}
 				<Row>
 					<Col md={12}>
-						<AppControls {...otherProps} appState={computedState} />
+						<AppControls {...otherProps} appState={state} />
 					</Col>
 				</Row>
 				<Row>
@@ -221,20 +207,20 @@ var Application = React.createClass({
 				</Row>
 				<View {...otherProps}
 					columnProps={{
+						supportsGeneAverage: supportsGeneAverage,
 						aboutDataset: this.aboutDataset,
 						disableKM: this.disableKM,
 						searching: this.highlight,
 					}}
 					widgetProps={{
-						supportsGeneAverage: this.supportsGeneAverage,
 						sampleFormat: this.sampleFormat,
 						fieldFormat: this.fieldFormat
 					}}
-					appState={computedState} />
-				{_.getIn(computedState, ['km', 'id']) ? <KmPlot
+					appState={state} />
+				{_.getIn(state, ['km', 'id']) ? <KmPlot
 						callback={this.props.callback}
-						km={computedState.km}
-						features={computedState.features} /> : null}
+						km={state.km}
+						features={state.features} /> : null}
 				<div className='chartRoot' style={{display: 'none'}} />
 			</Grid>
 		);

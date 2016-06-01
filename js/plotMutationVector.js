@@ -5,9 +5,7 @@
 var _ = require('./underscore_ext');
 var Rx = require('rx');
 var React = require('react');
-var Column = require('./Column');
 var Legend = require('./views/Legend');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
@@ -31,8 +29,9 @@ function hotOrNot(component) {
 	return module.makeHot ? module.makeHot(component) : component;
 }
 
-function drawLegend(feature) {
-	var {colors, labels, align} = features[feature].legend;
+function drawLegend({column}) {
+	var feature = _.getIn(column, ['sFeature']),
+		{colors, labels, align} = features[feature].legend;
 	return (
 		<Legend
 			colors={['rgb(255,255,255)', ...colors]}
@@ -146,7 +145,7 @@ var MutationColumn = hotOrNot(React.createClass({
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
 	},
-	onDownload: function() {
+	download: function() {
 		let {data: {req: {rows}}, samples, index, sampleFormat} = this.props,
 			groupedSamples = _.getIn(index, ['bySample']) || [],
 			rowFields = getRowFields(rows, groupedSamples),
@@ -157,59 +156,39 @@ var MutationColumn = hotOrNot(React.createClass({
 			});
 		return [rowFields, allRows];
 	},
-
-	onMuPit: function () {
-		// Construct the url, which will be opened in new window
-		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
-			uriList = _.uniq(_.map(rows, n => `${n.chr}:${n.start.toString()}`)).join(','),
-			url = `http://mupit.icm.jhu.edu/?gm=${uriList}`;
-
-		window.open(url);
-	},
 	tooltip: function (ev) {
 		var {column: {nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props;
 		return tooltip(nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
 	},
 	render: function () {
-		var {column, samples, zoom, data, index, columnProps} = this.props,
-			feature = _.getIn(column, ['sFeature']),
-			assembly = _.getIn(column, ['assembly']),
-			rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
-			noMenu = !rightAssembly || (data && _.isEmpty(data.refGene)),
-			noData = ( !data ) ? true : false,
-			menuItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)';
+		var {column, samples, zoom, data, index} = this.props,
+			feature = _.getIn(column, ['sFeature']);
 
 		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
-			<Column
-				{...columnProps}
-				download={this.onDownload} //eslint-disable-line no-undef
-				menu={noMenu ? null : <MenuItem disabled={noData} onSelect={this.onMuPit}>{menuItemName}</MenuItem>}
-				plot={<CanvasDrawing
-						ref='plot'
-						draw={drawMutations}
-						wrapperProps={{
-							className: 'Tooltip-target',
-							onMouseMove: this.ev.mousemove,
-							onMouseOut: this.ev.mouseout,
-							onMouseOver: this.ev.mouseover,
-							onClick: this.props.onClick
-						}}
-						feature={feature}
-						nodes={column.nodes}
-						strand={column.strand}
-						width={column.width}
-						data={data}
-						index={index}
-						samples={samples}
-						xzoom={column.zoom}
-						zoom={zoom}/>}
-				legend={drawLegend(feature)}
-			/>
-		);
+			<CanvasDrawing
+					ref='plot'
+					draw={drawMutations}
+					wrapperProps={{
+						className: 'Tooltip-target',
+						onMouseMove: this.ev.mousemove,
+						onMouseOut: this.ev.mouseout,
+						onMouseOver: this.ev.mouseover,
+						onClick: this.props.onClick
+					}}
+					feature={feature}
+					nodes={column.nodes}
+					strand={column.strand}
+					width={column.width}
+					data={data}
+					index={index}
+					samples={samples}
+					xzoom={column.zoom}
+					zoom={zoom}/>);
 	}
 }));
 
 var getColumn = props => <MutationColumn {...props} />;
-
 widgets.column.add('mutation', getColumn);
+
+widgets.legend.add('mutation', drawLegend);

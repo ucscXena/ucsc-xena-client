@@ -12,6 +12,7 @@ var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('./refGeneExons');
 var SpreadSheetHighlight = require('./SpreadSheetHighlight');
 var ResizeOverlay = require('./views/ResizeOverlay');
+var widgets = require('./columnWidgets');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -38,6 +39,33 @@ var styles = {
 	}
 };
 
+function mutationMenu(props, {onMuPit}) {
+	var {column, data} = props,
+		assembly = _.getIn(column, ['assembly']),
+		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
+		noMenu = !rightAssembly || (data && _.isEmpty(data.refGene)),
+		noData = ( !data ) ? true : false,
+		menuItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)';
+	return noMenu ? null : <MenuItem disabled={noData} onSelect={onMuPit}>{menuItemName}</MenuItem>;
+}
+
+function matrixMenu(props, {supportsGeneAverage, onMode}) {
+	var {id, column: {fieldType, noGeneDetail}} = props;
+	return supportsGeneAverage(id) ?
+		(fieldType === 'genes' ?
+			<MenuItem eventKey="geneProbes" title={noGeneDetail ? 'no common probemap' : ''}
+				disabled={noGeneDetail} onSelect={onMode}>Detailed view</MenuItem> :
+			<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>) :
+		null;
+}
+
+// We could try to drive this from the column widgets, but it gets rather complex making
+// the widgets care about a menu in their container.
+function optionMenu(props, opts) {
+	var {column: {valueType}} = props;
+	return (valueType === 'mutation' ?  mutationMenu : matrixMenu)(props, opts);
+}
+
 var Column = React.createClass({
 	onResizeStop: function (size) {
 		this.props.callback(['resize', this.props.id, size]);
@@ -46,7 +74,7 @@ var Column = React.createClass({
 		this.props.callback(['remove', this.props.id]);
 	},
 	onDownload: function () {
-		download(this.props.download());
+		download(this.refs.plot.download());
 	},
 	onViz: function () {
 		this.props.onViz(this.props.id);
@@ -55,14 +83,27 @@ var Column = React.createClass({
 		let {callback, id} = this.props;
 		callback(['km-open', id]);
 	},
+	onMode: function (ev, newMode) {
+		this.props.callback(['fieldType', this.props.id, newMode]);
+	},
+	onMuPit: function () {
+		// Construct the url, which will be opened in new window
+		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
+			uriList = _.uniq(_.map(rows, n => `${n.chr}:${n.start.toString()}`)).join(','),
+			url = `http://mupit.icm.jhu.edu/?gm=${uriList}`;
+
+		window.open(url);
+	},
 	getControlWidth: function () {
 		var controlWidth = ReactDOM.findDOMNode(this.refs.controls).getBoundingClientRect().width,
 			labelWidth = ReactDOM.findDOMNode(this.refs.label).getBoundingClientRect().width;
 		return controlWidth + labelWidth;
 	},
 	render: function () {
-		var {id, label, samples, samplesMatched, callback, plot, legend, column, zoom, menu, data, aboutDataset, disableKM, searching} = this.props,
+		var {id, label, samples, samplesMatched, callback, column,
+				zoom, data, aboutDataset, disableKM, searching, supportsGeneAverage} = this.props,
 			{width, columnLabel, fieldLabel, user} = column,
+			menu = optionMenu(this.props, {onMode: this.onMode, onMuPit: this.onMuPit, supportsGeneAverage}),
 			[kmDisabled, kmTitle] = disableKM(id),
 			// move this to state to generalize to other annotations.
 			doRefGene = _.get(data, 'refGene'),
@@ -76,6 +117,7 @@ var Column = React.createClass({
 				aria-hidden="true">
 			</span>);
 
+		// Pass to widgets column, data, zoom, callback, samples
 		return (
 			<div className='Column' style={{width: width, position: 'relative'}}>
 				<br/>
@@ -121,9 +163,9 @@ var Column = React.createClass({
 						height={zoom.height}
 						samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 						samplesMatched={samplesMatched}/>
-					{plot}
+					{widgets.column({ref: 'plot', column, data, zoom, callback, samples, ...this.props.widgetProps})}
 				</ResizeOverlay>
-				{legend}
+				{widgets.legend({column, data})}
 			</div>
 		);
 	}

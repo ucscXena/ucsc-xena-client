@@ -10,6 +10,7 @@ var widget = {
 	index: multi(x => x),
 	transform: multi(fieldTypeSelector),
 	column: multi(x => x.column.fieldType),
+	legend: multi(x => x.column.fieldType),
 	pdf: multi(fieldTypeSelector)
 };
 
