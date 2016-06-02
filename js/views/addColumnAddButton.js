@@ -12,6 +12,11 @@ function addColumnAddButton(Component) {
 				openColumnEdit: !this.props.appState.cohort[0],
 			};
 		},
+		componentWillReceiveProps: function(newProps) {
+			if (!this.state.openColumnEdit && !newProps.appState.cohort[0]) {
+				this.setState({openColumnEdit: true});
+			}
+		},
 		onShow() {
 			this.setState({openColumnEdit: true});
 		},

@@ -69,11 +69,6 @@ var Columns = React.createClass({
 			openVizSettings: null
 		};
 	},
-	componentWillReceiveProps: function(newProps) {
-		if (!this.state.openColumnEdit && !newProps.appState.cohort[0]) {
-			this.setState({openColumnEdit: true});
-		}
-	},
 	onReorder: function (order) {
 		this.props.callback(['order', order]);
 	},
