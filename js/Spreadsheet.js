@@ -11,13 +11,11 @@ var Sortable = require('./views/Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
 var Column = require('./Column');
-var Crosshair = require('./views/Crosshair');
-var Tooltip = require('./views/Tooltip');
-var rxEventsMixin = require('./react-utils').rxEventsMixin;
-var meta = require('./meta');
+var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var VizSettings = require('./VizSettings');
 var getLabel = require('./getLabel');
 require('./Columns.css'); // XXX switch to js styles
+var addTooltip = require('./views/addTooltip');
 
 var YAxisLabel = require('./views/YAxisLabel');
 
@@ -44,19 +42,16 @@ function targetPos(ev) {
 	return (ev.clientY - bb.top) / ev.currentTarget.clientHeight;
 }
 
-var zoomInClick = ev =>
-!ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
-
-var zoomOutClick = ev =>
-!ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
+var zoomInClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
+var zoomOutClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
-	mixins: [rxEventsMixin],
+	mixins: [rxEventsMixin, deepPureRenderMixin],
 	componentWillMount: function () {
-		this.events('tooltip', 'click', 'plotClick');
+		this.events('plotClick');
 
-		this.ev.plotClick.subscribe(ev => {
+		this.plotClick = this.ev.plotClick.subscribe(ev => {
 			let {callback, appState: {zoom, samples}} = this.props;
 			if (zoomOutClick(ev)) {
 				callback(['zoom', zoomOut(samples.length, zoom)]);
@@ -64,37 +59,13 @@ var Columns = React.createClass({
 				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
 			}
 		});
-
-		var toggle = this.ev.click.filter(ev => ev[meta.key])
-			.map(() => 'toggle');
-
-		this.tooltip = this.ev.tooltip.merge(toggle)
-			// If open + user clicks, toggle freeze of display.
-			.scan([null, false],
-				([tt, frozen], ev) =>
-					ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen])
-			// Filter frozen events until frozen state changes.
-			.distinctUntilChanged(([ev, frozen]) => frozen ? frozen : [ev, frozen])
-			.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))
-			.subscribe(ev => {
-				// Keep 'frozen' and 'open' params for both crosshair && tooltip
-				let plotVisuals = {
-					crosshair: _.omit(ev, 'data'), // remove tooltip-related param
-					tooltip: _.omit(ev, 'point' ) // remove crosshair-related param
-				};
-
-				return this.setState(plotVisuals);
-			});
 	},
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
-		// XXX are there other streams we're leaking? What listens on this.ev.click, etc?
-		this.tooltip.dispose();
+		this.plotClick.dispose();
 	},
 	getInitialState: function () {
 		return {
-			crosshair: {open: false},
 			openColumnEdit: !this.props.appState.cohort[0],
-			tooltip: {open: false},
 			openVizSettings: null
 		};
 	},
@@ -158,15 +129,14 @@ var Columns = React.createClass({
 					id: id,
 					index: _.getIn(index, [id]),
 					vizSettings: _.getIn(appState, [columns, id, 'vizSettings']),
-					tooltip: this.ev.tooltip,
+					tooltip: this.props.tooltip, // XXX instead use map children?
 					onClick: this.ev.plotClick,
 					column: _.getIn(columns, [id])
 				}}/>));
 
 		return (
-			<div>
 				<div onMouseDown={this.onMouseDown} className="Columns">
-					<Sortable onClick={this.ev.click} onReorder={this.onReorder}>
+					<Sortable onClick={this.props.onClick} onReorder={this.onReorder}>
 						{columnViews}
 					</Sortable>
 					<div
@@ -184,13 +154,12 @@ var Columns = React.createClass({
 					</div>
 					{editor}
 					{settings}
-					<Crosshair {...this.state.crosshair} />
 				</div>
-				<Tooltip onClick={this.ev.click} {...this.state.tooltip}/>
-			</div>
 		);
 	}
 });
+
+var TooltipColumns = addTooltip(Columns);
 
 function zoomPopover(zoom, samples, props) {
 	return (
@@ -226,7 +195,7 @@ var Spreadsheet = React.createClass({
 					/>
 				</Col>
 				<Col md={11}>
-					<Columns {...this.props}/>
+					<TooltipColumns {...this.props}/>
 					{zoomHelper}
 				</Col>
 			</Row>
