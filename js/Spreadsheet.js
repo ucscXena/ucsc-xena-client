@@ -11,12 +11,12 @@ require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
 var Column = require('./Column');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
-var VizSettings = require('./VizSettings');
 var getLabel = require('./getLabel');
 require('./Columns.css'); // XXX switch to js styles
 var addTooltip = require('./views/addTooltip');
 var disableSelect = require('./views/disableSelect');
 var addColumnAddButton = require('./views/addColumnAddButton');
+var addVizEditor = require('./views/addVizEditor');
 
 var YAxisLabel = require('./views/YAxisLabel');
 
@@ -64,32 +64,13 @@ var Columns = React.createClass({
 	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
 		this.plotClick.dispose();
 	},
-	getInitialState: function () {
-		return {
-			openVizSettings: null
-		};
-	},
 	onReorder: function (order) {
 		this.props.callback(['order', order]);
-	},
-	onViz: function (id) {
-		this.setState({openVizSettings: id});
 	},
 	render: function () {
 		var {callback, appState, widgetProps, Column, columnProps, ...optProps} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, samples, samplesMatched} = appState;
-		var {openVizSettings} = this.state;
-		// XXX parameterize settings on column type
-		var settings = openVizSettings ?
-			<VizSettings
-				id={openVizSettings}
-				defaultNormalization={_.getIn(appState, ['columns', openVizSettings, 'defaultNormalization'])}
-				fieldType={_.getIn(appState, ['columns', openVizSettings, 'fieldType'])}
-				onRequestHide={() => this.setState({openVizSettings: null})}
-				callback={callback}
-				state={_.getIn(appState, ['columns', openVizSettings, 'vizSettings'])} /> : null;
-
 		var columnViews = _.map(columnOrder, (id, i) => (
 			<Column
 				{...columnProps}
@@ -100,7 +81,6 @@ var Columns = React.createClass({
 				samplesMatched={samplesMatched}
 				zoom={zoom}
 				data={_.getIn(data, [id]) /* refGene */}
-				onViz={this.onViz}
 				column={_.getIn(columns, [id])}
 				label={getLabel(i)}
 				widgetProps={{
@@ -120,13 +100,12 @@ var Columns = React.createClass({
 						{columnViews}
 					</Sortable>
 					{this.props.children}
-					{settings}
 				</div>
 		);
 	}
 });
 
-var TooltipColumns = addTooltip(disableSelect(addColumnAddButton(Columns)));
+var TooltipColumns = addTooltip(disableSelect(addColumnAddButton(addVizEditor(Columns))));
 
 function zoomPopover(zoom, samples, props) {
 	return (

@@ -401,8 +401,8 @@ function vizSettingsWidget(node, callback, vizState, id, hide, defaultNormalizat
 var SettingsWrapper = React.createClass({
 	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
-		var {refs: {content}, props: {callback, state, id, defaultNormalization, fieldType, onRequestHide}} = this;
-		vizSettingsWidget(content, callback, state, id, onRequestHide, defaultNormalization, fieldType);
+		var {refs: {content}, props: {callback, vizSettings, id, defaultNormalization, fieldType, onRequestHide}} = this;
+		vizSettingsWidget(content, callback, vizSettings, id, onRequestHide, defaultNormalization, fieldType);
 	},
 	render: function () {
 		return <div ref='content' />;
