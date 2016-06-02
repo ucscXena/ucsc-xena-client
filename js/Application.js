@@ -6,7 +6,6 @@ var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
-var kmModel = require('./models/km');
 var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
 var {lookupSample} = require('./models/sample');
@@ -23,26 +22,8 @@ var uuid = require('./uuid');
 // should really be in a config file.
 var searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
 
-// This seems odd. Surely there's a better test?
-function hasSurvival(survival) {
-	return !! (_.get(survival, 'ev') &&
-			   _.get(survival, 'tte') &&
-			   _.get(survival, 'patient'));
-}
-
-// For geneProbes we will average across probes to compute KM. For
-// other types, we can't support multiple fields.
-function disableKM(column, features, km) {
-	var survival = kmModel.pickSurvivalVars(features, km);
-	if (!hasSurvival(survival)) {
-		return [true, 'No survival data for cohort'];
-	}
-	if (column.fields.length > 1) {
-		return [true, 'Unsupported for multiple genes/ids'];
-	}
-	return [false, ''];
-}
-
+// XXX This is probably operating on the wrong state.
+// Should be in ApplicationContainer.
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
 		label = _.getIn(columns, [uuid, 'fieldLabel']),
@@ -125,10 +106,6 @@ var Application = React.createClass({
 		var {cohortSamples} = this.props.state;
 		return lookupSample(cohortSamples, index);
 	},
-	disableKM: function (uuid) {
-		var {columns, features, km} = this.props.state;
-		return disableKM(_.get(columns, uuid), features, km);
-	},
 	aboutDataset: function (uuid) {
 		var {columns, datasets} = this.props.state;
 		return aboutDataset(_.get(columns, uuid), datasets);
@@ -167,7 +144,7 @@ var Application = React.createClass({
 		callback(['add-column', uuid(), settings, true]);
 	},
 	render: function() {
-		let {state, Spreadsheet, supportsGeneAverage, ...otherProps} = this.props,
+		let {state, Spreadsheet, disableKM, supportsGeneAverage, ...otherProps} = this.props,
 			{mode, samplesMatched, sampleSearch, samples} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			onFilter = (matches < samples.length && matches > 0) ?
@@ -209,7 +186,7 @@ var Application = React.createClass({
 					columnProps={{
 						supportsGeneAverage: supportsGeneAverage,
 						aboutDataset: this.aboutDataset,
-						disableKM: this.disableKM,
+						disableKM: disableKM,
 						searching: this.highlight,
 					}}
 					widgetProps={{

@@ -9,7 +9,7 @@ var React = require('react');
 var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
 var Column = require('../Column');
 var _ = require('../underscore_ext');
-//var kmModel = require('../models/km');
+var kmModel = require('../models/km');
 
 // At the top-level, we want to pick an Application widget,
 // a Spreadsheet widget, and a Column widget. Are those views
@@ -49,8 +49,30 @@ var _ = require('../underscore_ext');
 // react class.
 //
 
+// This seems odd. Surely there's a better test?
+function hasSurvival(survival) {
+	return !! (_.get(survival, 'ev') &&
+			   _.get(survival, 'tte') &&
+			   _.get(survival, 'patient'));
+}
+
+// For geneProbes we will average across probes to compute KM. For
+// other types, we can't support multiple fields.
+// XXX maybe put in a selector.
+function disableKM(column, features, km) {
+	var survival = kmModel.pickSurvivalVars(features, km);
+	if (!hasSurvival(survival)) {
+		return [true, 'No survival data for cohort'];
+	}
+	if (column.fields.length > 1) {
+		return [true, 'Unsupported for multiple genes/ids'];
+	}
+	return [false, ''];
+}
+
 // We check the field length here, before overlaying a probe list from the
-// server, and sending to the Application view.
+// server, and sending to the Application view. XXX Maybe put the result in a selector,
+// to avoid passing it far down the component stack.
 function supportsGeneAverage({fieldType, fields: {length}}) {
 	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && length === 1;
 }
@@ -63,12 +85,17 @@ var ApplicationContainer = React.createClass({
 		var {columns} = this.props.state;
 		return supportsGeneAverage(_.get(columns, uuid));
 	},
+	disableKM: function (uuid) {
+		var {columns, features, km} = this.props.state;
+		return disableKM(_.get(columns, uuid), features, km);
+	},
 	render() {
 		let {state, selector, callback} = this.props,
 			computedState = selector(state);
 		return (
 			<Application
 				supportsGeneAverage={this.supportsGeneAverage}
+				disableKM={this.disableKM}
 				Spreadsheet={SpreadsheetContainer}
 				state={computedState}
 				callback={callback}/>);
