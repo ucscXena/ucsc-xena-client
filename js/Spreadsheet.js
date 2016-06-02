@@ -6,7 +6,6 @@ var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
 var Popover = require('react-bootstrap/lib/Popover');
-var ColumnEdit = require('./ColumnEdit2');
 var Sortable = require('./views/Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
@@ -16,6 +15,8 @@ var VizSettings = require('./VizSettings');
 var getLabel = require('./getLabel');
 require('./Columns.css'); // XXX switch to js styles
 var addTooltip = require('./views/addTooltip');
+var disableSelect = require('./views/disableSelect');
+var addColumnAddButton = require('./views/addColumnAddButton');
 
 var YAxisLabel = require('./views/YAxisLabel');
 
@@ -65,7 +66,6 @@ var Columns = React.createClass({
 	},
 	getInitialState: function () {
 		return {
-			openColumnEdit: !this.props.appState.cohort[0],
 			openVizSettings: null
 		};
 	},
@@ -80,26 +80,11 @@ var Columns = React.createClass({
 	onViz: function (id) {
 		this.setState({openVizSettings: id});
 	},
-	onMouseDown: function (ev) {
-		// XXX XXX This is deeply evil, but not sure of a better way
-		// to prevent the browser from selecting text every time
-		// the user does shift-click. This will probably break other
-		// form elements that are added.
-		if (ev.target.tagName !== 'INPUT') {
-			ev.preventDefault();
-		}
-	},
 	render: function () {
-		var {callback, appState, widgetProps, Column, columnProps} = this.props;
+		var {callback, appState, widgetProps, Column, columnProps, ...optProps} = this.props;
 		// XXX maybe rename index -> indexes?
-		var {data, index, zoom, columns, columnOrder, cohort, samples, samplesMatched} = appState;
-		var {openColumnEdit, openVizSettings} = this.state;
-		var height = zoom.height;
-		var editor = openColumnEdit ?
-			<ColumnEdit
-				{...this.props}
-				onHide={() => this.setState({openColumnEdit: false})}
-			/> : null;
+		var {data, index, zoom, columns, columnOrder, samples, samplesMatched} = appState;
+		var {openVizSettings} = this.state;
 		// XXX parameterize settings on column type
 		var settings = openVizSettings ?
 			<VizSettings
@@ -135,31 +120,18 @@ var Columns = React.createClass({
 				}}/>));
 
 		return (
-				<div onMouseDown={this.onMouseDown} className="Columns">
+				<div {...optProps} className="Columns">
 					<Sortable onClick={this.props.onClick} onReorder={this.onReorder}>
 						{columnViews}
 					</Sortable>
-					<div
-						style={{height: height}}
-						className='addColumn Column'>
-
-						{cohort &&
-						<Button
-							bsStyle= "primary"
-							onClick={() => this.setState({openColumnEdit: true})}
-							className='Column-add-button'
-							title='Add a column'>
-							+ Data
-						</Button>}
-					</div>
-					{editor}
+					{this.props.children}
 					{settings}
 				</div>
 		);
 	}
 });
 
-var TooltipColumns = addTooltip(Columns);
+var TooltipColumns = addTooltip(disableSelect(addColumnAddButton(Columns)));
 
 function zoomPopover(zoom, samples, props) {
 	return (
