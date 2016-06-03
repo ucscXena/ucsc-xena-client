@@ -1,10 +1,38 @@
 /*eslint camelcase: 0, no-use-before-define: 0 */
 /*eslint-env browser */
-/*global define: false, document: false */
+/*global define: false, document: false, require: false */
 'use strict';
-define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highcharts', './highcharts_helper', './underscore_ext'],
-	function (fieldFetch, xenaQuery, dom_helper, colorScales, highcharts, highcharts_helper, _) {
+
+define([ ], function () {
+	require('../css/chart.css');
+
+	var {hexToRGB, colorStr} = require ('./color_helper');
+	var d3 = require('d3-scale');
+	var dom_helper = require('./dom_helper');
+	var highcharts = require('./highcharts');
 	var Highcharts = highcharts.Highcharts;
+	var highcharts_helper =  require ('./highcharts_helper');
+	var _ = require('./underscore_ext');
+	var colorScales = require ('./colorScales');
+
+	var columnMapping = {
+		0:"A",
+		1:"B",
+		2:"C",
+		3:"D",
+		4:"E",
+		5:'F',
+		6:"G",
+		7:"H",
+		8:"I",
+		9:"J",
+		10:"K",
+		11:"L",
+		12:"M",
+		13:"N",
+		14:"O",
+		15:"P"
+	};
 
 	var custom_colors = {};
 
@@ -32,15 +60,17 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 
 	return function (root, callback, sessionStorage) {
 		var div,
-			leftContainer, rightContainer, controlContainer,
+			leftContainer, rightContainer,
 			xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-			cohort, samples, updateArgs, normalizationState = {};
+			cohort, samples, cohortSamples, updateArgs,
+			normalizationState = {}, expState = {};
 
 			if (xenaState)	{
 				cohort = xenaState.cohort;
 				samples = xenaState.samples;
+				cohortSamples = xenaState.cohortSamples;
 			}
-			updateArgs = [cohort, samples, normalizationState];
+			updateArgs = [cohort, samples, cohortSamples];
 
 		function setStorage(state) {
 			sessionStorage.xena = JSON.stringify(state);
@@ -59,9 +89,8 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 					"value": 3,
 					"text": "3 standard deviation"
 				}],
-				node = document.createElement("span");
+				node = document.createElement("div");
 
-			node.setAttribute("id", "sdDropDown");
 			dropDownDiv = document.createElement("select");
 			dropDownDiv.setAttribute("id", "sd");
 			dropDownDiv.setAttribute("class", "dropdown-style");
@@ -79,6 +108,7 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 				update.apply(this, updateArgs);
 			});
 
+			node.setAttribute("id", "sdDropDown");
 			node.appendChild(document.createTextNode(" Whisker "));
 			node.appendChild(dropDownDiv);
 			return node;
@@ -92,34 +122,23 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 						"index": 0
 					}, //no normalization
 					{
-						"value": "cohort",
-						"text": "across cohort (subtract mean)",
-						"index": 1
-					}, //cohort-level
-					{
-						"value": "cohort_stdev",
-						"text": "across cohort (subtract mean, divide stdev)",
-						"index": 2
-					},
-					{
 						"value": "subset",
-						"text": "across selected samples (subtract mean)",
-						"index": 3
+						"text": "subtract mean",
+						"index": 1
 					}, //selected sample level current heatmap normalization
 					{
 						"value": "subset_stdev",
-						"text": "across selected samples (subtract mean, divide stdev)",
-						"index": 4
+						"text": "subtract mean, divide stdev",
+						"index": 2
 					} //selected sample level current heatmap normalization
 				],
-				node = document.createElement("span");
+				node = document.createElement("div");
 
-			node.setAttribute("id", "normDropDown");
 			dropDownDiv = document.createElement("select");
 			dropDownDiv.setAttribute("id", "ynormalization");
 			dropDownDiv.setAttribute("class", "dropdown-style");
 
-			dropDown.forEach(function (obj) {
+			dropDown.map(function (obj) {
 				option = document.createElement('option');
 				option.value = obj.value;
 				option.textContent = obj.text;
@@ -133,7 +152,104 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 				update.apply(this, updateArgs);
 			});
 
-			node.appendChild(document.createTextNode(" Normalization "));
+			node.setAttribute("id", "normDropDown");
+			node.appendChild(document.createTextNode("Y Normalization "));
+			node.appendChild(dropDownDiv);
+			return node;
+		}
+
+		function buildExpDropdown() {
+			var dropDownDiv, option,
+				dropDown = [{
+						"value": "none",
+						"text": "none",
+						"index": 0
+					},
+					{
+						//convert x -> base-2 exponential value of x, for when viewing raw RNAseq data, xena typically converts RNAseq values into log2 space.
+						"value": "exp2",
+						"text": "exp2(k): k -> k powers of two i.e. 2 X ... X 2 (k times) -- use case: observing original RNAseq values when unit of RNAseq data is in log space",
+						"index": 1
+					},
+				],
+				node = document.createElement("div");
+
+			dropDownDiv = document.createElement("select");
+			dropDownDiv.setAttribute("id", "yExponentiation");
+			dropDownDiv.setAttribute("class", "dropdown-style");
+
+			dropDown.map(function (obj) {
+				option = document.createElement('option');
+				option.value = obj.value;
+				option.textContent = obj.text;
+				dropDownDiv.appendChild(option);
+			});
+
+			dropDownDiv.selectedIndex = 0;
+
+			dropDownDiv.addEventListener('change', function () {
+				expState[xenaState.chartState.ycolumn] = dropDownDiv.selectedIndex;
+				update.apply(this, updateArgs);
+			});
+
+			node.setAttribute("id", "expDropDown");
+			node.appendChild(document.createTextNode("Y Exponentiation "));
+			node.appendChild(dropDownDiv);
+			return node;
+		}
+
+		function buildColoringDropdown() {
+			var dropDownDiv = document.createElement("select"),
+				option, i,
+				column, columns, columnOrder,
+				storedColumn;
+
+			dropDownDiv.setAttribute("id", "scatterColor");
+			dropDownDiv.setAttribute("class", "dropdown-style");
+
+			if (xenaState) {
+				columnOrder = xenaState.columnOrder;
+				columns = xenaState.columns;
+			}
+
+			if (xenaState && xenaState.chartState) {
+				storedColumn = xenaState.chartState.colorColumn;
+			}
+
+			for (i = 0; i < columnOrder.length; i++) {
+				column = columnOrder[i];
+				if (columns[column].fields.length === 1 &&
+					(columns[column].valueType === "coded" ||
+					columns[column].valueType === "float")) {  //currently only support non mutation data coloring
+					option = document.createElement('option');
+					option.value = column;
+					option.textContent = columnMapping[i] + ": " + columns[column].user.fieldLabel;
+
+					if (columns[column].fieldType === "genes") {
+						option.textContent = option.textContent + " (gene average)";
+					}
+					dropDownDiv.appendChild(option);
+					if (column === storedColumn) {
+						dropDownDiv.selectedIndex = dropDownDiv.length - 1;
+					}
+				}
+			}
+			// none -- no color at the end
+			option = document.createElement('option');
+			option.value = "none";
+			option.textContent = "None";
+			dropDownDiv.appendChild(option);
+			if ("none" === storedColumn) {
+				dropDownDiv.selectedIndex = dropDownDiv.length - 1;
+			}
+
+			dropDownDiv.addEventListener('change', function () {
+				update.apply(this, updateArgs);
+			});
+
+			var node = document.createElement("div");
+			node.setAttribute("id", "colorDropDown");
+			node.appendChild(document.createTextNode("Color: "));
 			node.appendChild(dropDownDiv);
 			return node;
 		}
@@ -153,7 +269,7 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 		function axisSelector(selectorID) {
 			var div = document.createElement("select"),
 				option, i, column, storedColumn,
-			  columns, columnOrder;
+				columns, columnOrder;
 
 			if (xenaState) {
 				columnOrder = xenaState.columnOrder;
@@ -174,31 +290,37 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 			div.setAttribute("class", "dropdown-style");
 			for (i = 0; i < columnOrder.length; i++) {
 				column = columnOrder[i];
+				if (selectorID === "Xaxis" && columns[column].fields.length !== 1) {
+					continue;
+				}
+				if (columns[column].fieldType === "mutation"){  // to be implemented
+					continue;
+				}
+
 				option = document.createElement('option');
 				option.value = column;
-				option.textContent = columns[column].user.fieldLabel;
+				option.textContent = columnMapping[i] + ": " + columns[column].user.fieldLabel;
 
 				if (columns[column].fieldType === "genes") {
 					option.textContent = option.textContent + " (gene average)";
 				}
 				div.appendChild(option);
-				if (storedColumn && (column === storedColumn)) {
-					div.selectedIndex = i;
+				if (column === storedColumn) {
+					div.selectedIndex = div.length - 1;
 				}
 			}
 
 			// x axis add an extra optioin: none -- summary view
 			if (selectorID === "Xaxis") {
-				i = columnOrder.length;
 				option = document.createElement('option');
 				option.value = "none";
 				option.textContent = "None (i.e. summary view of the Y variable)";
 				div.appendChild(option);
-				if (storedColumn && ("none" === storedColumn)) {
-					div.selectedIndex = i;
+				if ("none" === storedColumn) {
+					div.selectedIndex = div.length - 1;
 				}
 				if (!storedColumn) { /// default to summary view
-					div.selectedIndex = i;
+					div.selectedIndex = div.length - 1;
 				}
 			}
 
@@ -232,36 +354,79 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 			}
 		}
 
-		function update(cohort, samples) {
+		function expUISetting(visible, ycolumn) {
+			var dropDown = document.getElementById("expDropDown"),
+				dropDownDiv = document.getElementById("yExponentiation");
+
+			if (visible) {
+				dropDown.style.visibility = "visible";
+
+				//check current expState variable
+				if (expState[ycolumn] !== undefined){
+					dropDownDiv.selectedIndex = expState[ycolumn];
+				}
+				else {
+					dropDownDiv.selectedIndex = 0;
+					expState[ycolumn] = 0;
+				}
+			} else {
+				dropDown.style.visibility = "hidden";
+			}
+		}
+
+		function scatterColorUISetting(visible) {
+			var dropDown = document.getElementById("colorDropDown");
+			if (visible) {
+				dropDown.style.visibility = "visible";
+			} else {
+				dropDown.style.visibility = "hidden";
+			}
+		}
+
+		function sdDropdownUIsetting (visible) {
+			var dropDown = document.getElementById("sdDropDown");
+			if (visible) {
+				dropDown.style.visibility = "visible";
+			} else {
+				dropDown.style.visibility = "hidden";
+			}
+		}
+
+
+		function update() {
 			var oldDiv = document.getElementById("chartContainer");
 			rightContainer.replaceChild(buildEmptyChartContainer(), oldDiv);
 
 			//initialization
 			document.getElementById("myChart").innerHTML = "Querying Xena ...";
 			normalizationUISetting(false);
+			expUISetting(false);
+			scatterColorUISetting(false);
+			sdDropdownUIsetting(false);
 
-			var dropdown, normUI, sdDropDown,
-				xcolumn, ycolumn,
+			var dropdown,
+				xcolumn, ycolumn, colorColumn,
 				xfields, yfields,
 				xlabel, ylabel,
 				xcolumnType, ycolumnType,
-				columns;
+				columns,
+				normUI = document.getElementById("ynormalization"),
+				expUI = document.getElementById("yExponentiation"),
+				colorUI = document.getElementById("scatterColor");
 
 			dropdown = document.getElementById("Xaxis");
 			xcolumn = dropdown.options[dropdown.selectedIndex].value;
 			dropdown = document.getElementById("Yaxis");
 			ycolumn = dropdown.options[dropdown.selectedIndex].value;
-			normUI = document.getElementById("ynormalization");
-			sdDropDown = document.getElementById("sdDropDown");
+			colorColumn = colorUI.value;
 
-
-
-			// save state cohort, xcolumn, ycolumn
+			// save state cohort, xcolumn, ycolumn, colorcolumn
 			if (xenaState) {
 				xenaState.chartState = {
 					"cohort": cohort,
 					"xcolumn": xcolumn,
-					"ycolumn": ycolumn
+					"ycolumn": ycolumn,
+					"colorColumn": colorColumn
 				};
 				columns = xenaState.columns;
 				setStorage(xenaState);
@@ -305,17 +470,21 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 					yIsCategorical, xIsCategorical, xfield,
 					offsets = {},  // per y variable
 					STDEV = {},  // per y variable
+					doScatter, scatterColorData, scatterColorDataCodemap, scatterLabel,
 					yNormalization,
-					yNormalizationMeta;
+					yNormalizationMeta,
+					yExponentiation;
 
 				// XXX normalization is broken in composite branch
 				if (columns[ycolumn].defaultNormalization) {
-					yNormalizationMeta = 2;
+					yNormalizationMeta = 1
+					;
 				} else {
 					yNormalizationMeta = 0;
 				}
 
-				// save state cohort, xcolumn, ycolumn, yfields,ycolumnType
+				// save state cohort, xcolumn, ycolumn, yfields, ycolumnType, colorColumn
+				/* not sure if we need these, commenting it out
 				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined;
 				if (xenaState) {
 					xenaState.chartState = {
@@ -323,10 +492,11 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 						"xcolumn": xcolumn,
 						"ycolumn": ycolumn,
 						"yfields": yfields,
-						"ycolumnType": ycolumnType
+						"ycolumnType": ycolumnType,
+						"colorColumn": colorColumn
 					};
 					sessionStorage.xena = JSON.stringify(xenaState);
-				}
+				}*/
 
 				// single xfield only
 				if (xfields && xfields.length > 1) {
@@ -341,11 +511,7 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 				xIsCategorical = xcodemap ? true : false;
 
 				// set sd whisker UI
-				if (xIsCategorical && !yIsCategorical) {
-					sdDropDown.style.visibility = "visible";
-				} else {
-					sdDropDown.style.visibility = "hidden";
-				}
+				sdDropdownUIsetting (xIsCategorical && !yIsCategorical);
 
 				// set y axis normalization UI
 				normalizationUISetting(!yIsCategorical, ycolumn, yNormalizationMeta);
@@ -358,13 +524,37 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 					yNormalization = normUI.value;
 				}
 
+				// set y axis exponentiation UI
+				expUISetting(!yIsCategorical, ycolumn);
+
+				if (yIsCategorical) {
+					yExponentiation = false;
+				} else if (expUI.value === "none") {
+					yExponentiation = false;
+				} else {
+					yExponentiation = expUI.value;
+				}
+
+				// y exponentiation
+				if (yExponentiation === "exp2"){
+					ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
+				}
+
+				// set scatterPlot coloring UI
+				doScatter = !xIsCategorical && xfield && yfields.length === 1 ;
+				scatterColorUISetting(doScatter);
+				if (doScatter && colorColumn !== "none"){
+					scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values'])[0];
+					scatterColorDataCodemap = _.getIn(xenaState, ['data', colorColumn, 'codes']);
+					scatterLabel = columns[colorColumn].user.fieldLabel;
+				}
+
 				//per y variable stdev
 				var k, yfield;
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
-					if (yNormalization === "cohort_stdev" || yNormalization === "subset_stdev"){
+					if (yNormalization === "subset_stdev"){
 						var ydataElement = ydata[k].filter(x => x != null);
-
 						var allAve = highcharts_helper.average(ydataElement);
 						var allSTDEV = highcharts_helper.standardDeviation(ydataElement, allAve);
 						STDEV[yfield] = allSTDEV;
@@ -373,14 +563,13 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 					}
 				}
 
-				var thunk = offsets => drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV);
+				var thunk = offsets => drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata,
+						offsets, xlabel, ylabel, STDEV,
+						scatterLabel, scatterColorData, scatterColorDataCodemap);
 				//offset
-				if (yNormalization === "cohort" || yNormalization === "cohort_stdev" ) {
-					callback(['chart-set-average-cohort', ycolumn, thunk]);
-				} else if (yNormalization === "subset" || yNormalization === "subset_stdev") {
+				if (yNormalization === "subset" || yNormalization === "subset_stdev") {
 					offsets = _.object(yfields,
-							_.map(ydata, d => highcharts_helper.average(_.filter(d, x => x != null))));
-
+						_.map(ydata, d => highcharts_helper.average(_.filter(d, x => x != null))));
 					callback(['chart-set-average', offsets, thunk]);
 				} else {
 					offsets = _.object(yfields, _.times(yfields.length, () => 0));
@@ -441,13 +630,14 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 			return ybinnedSample;
 		}
 
-
-		function drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata, offsets, xlabel, ylabel, STDEV) {
+		function drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata,
+			offsets, xlabel, ylabel, STDEV,
+			scatterLabel, scatterColorData, scatterColorDataCodemap) {
 			var chart,
 				yIsCategorical = ycodemap ? true : false,
 				xIsCategorical = xcodemap ? true : false,
 				chartOptions = _.clone(highcharts_helper.chartOptions),
-				xAxisTitle, yAxisTitle,
+				xAxisTitle,
 				ybinnedSample,
 				dataSeriese,
 				errorSeries,
@@ -460,7 +650,8 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 				categories,
 				i, k,
 				numSD = document.getElementById("sd").value,
-				colors = {};
+				colors = {},
+				average, stdDev;
 
 			document.getElementById("myChart").innerHTML = "Generating chart ...";
 
@@ -511,8 +702,6 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 
 
 				// Y data and fill in the matrix
-				var average, stdDev;
-
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
 					ydataElement = ydata[k];
@@ -600,10 +789,10 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 				chart.redraw();
 			} else if (!xfield) { //summary view --- messsy code
 				var total = 0;
-				errorSeries = [];
-				dataSeriese = [];
-				ybinnedSample = {};
-				xIsCategorical = true;
+					errorSeries = [];
+					dataSeriese = [];
+					ybinnedSample = {};
+					xIsCategorical = true;
 
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
@@ -670,7 +859,6 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 				highcharts_helper.addSeriesToColumn(chart, seriesLabel,
 					dataSeriese, errorSeries, yIsCategorical, categories.length < 30, showLegend);
 				chart.redraw();
-
 			} else if (xIsCategorical && yIsCategorical) { // x y : categorical --- messsy code
 				//both x and Y is a single variable, i.e. yfields has array size of 1
 				xSampleCode = {};
@@ -715,7 +903,8 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 				showLegend = true;
 
 				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories.map(code=> code + " (" + xbinnedSample[code].length + ")"), xAxisTitle, ylabel, showLegend);
+					chartOptions, categories.map(code=> code + " (" + xbinnedSample[code].length + ")"),
+					xAxisTitle, ylabel, showLegend);
 
 				chart = new Highcharts.Chart(chartOptions);
 
@@ -746,69 +935,131 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 						custom_colors[code] ? custom_colors[code] : colors[code]);
 				}
 				chart.redraw();
-			} else { // x y float
-				// scatter chart setup
-				xAxisTitle = xlabel;
-				yAxisTitle = ylabel;
+			} else { // x y float scatter plot
+				var sampleLabels = _.flatten(cohortSamples),
+					x, y;
 
-				chartOptions.legend.align = 'right';
-				chartOptions.legend.verticalAlign = 'middle';
-				chartOptions.legend.layout = 'vertical';
-				chartOptions.chart.type = 'scatter';
-				chartOptions.title = {
-					text: ylabel + " vs " + xAxisTitle
-				};
-				chartOptions.xAxis = {
-					title: {
-						text: xAxisTitle
-					},
-					gridLineWidth: 1,
-					minRange: 1
-				};
-				chartOptions.yAxis = {
-					title: {
-						text: yAxisTitle
-					}
-				};
-				chartOptions.tooltip = {
-					hideDelay: 0,
-					pointFormat: '{point.name}<br>x: {point.x}<br>y:{point.y}'
-				};
-				chartOptions.plotOptions = {
-					series: {
-						turboThreshold: 0
-					}
-				};
+				chartOptions = highcharts_helper.scatterChart(chartOptions, xlabel, ylabel);
 
-				chart = new Highcharts.Chart(chartOptions);
+				if (yfields.length > 1){ // y multi-subcolumns -- only happen with genomic y data
+					chartOptions.legend.title.text = ylabel;
+					chart = new Highcharts.Chart(chartOptions);
 
-				for (k = 0; k < yfields.length; k++) {
-					var series = [],
-						x, y;
+					for (k = 0; k < yfields.length; k++) {
+						var series = [];
 
-					yfield = yfields[k];
-					for (i = 0; i < xdata[0].length; i++) {
-						if (ycodemap) { // y: categorical in matrix data
-							document.getElementById("myChart").innerHTML = "x: " + xfield + "; y:" + ylabel + " not implemented";
-							return;
-						} else {
+						yfield = yfields[k];
+						for (i = 0; i < xdata[0].length; i++) {
 							x = xdata[0][i];
 							y = ydata[k][i];
 							if (null != x && null != y) {
 								y = (y - offsets[yfield]) / STDEV[yfield];
 								series.push({
-									name: samples[i],
+									name: sampleLabels[i],
 									x: x,
 									y: y
 								});
 							}
+
+						}
+						chart.addSeries({
+							name: yfield,
+							data: series
+						}, false);
+					}
+				} else { // y single subcolumn  --- coloring with a 3rd column
+					function getCodedColor (code) {
+						if ("null" === code) {
+						 	var gray = {};
+						 	gray.r = 150;
+						 	gray.g = 150;
+						 	gray.b = 150;
+						 	gray.a = opacity;
+							return colorStr(gray);
+						}
+						return colorStr(hexToRGB(colorScales.categoryMore[code % colorScales.categoryMore.length], opacity));
+					}
+
+					var multi_series = {},
+						single_series = [], colorScale,
+						opacity = 0.6,
+						colorCode, color, colorLabel,
+						useMultiSeries = scatterColorDataCodemap || !scatterColorData ;
+
+					if (!useMultiSeries){
+						average = highcharts_helper.average(scatterColorData);
+						stdDev = highcharts_helper.standardDeviation(scatterColorData, average);
+						colorScale = d3.scaleLinear()
+							.domain([average - 2 * stdDev, average, average + 2 * stdDev])
+							.range(['blue', 'white', 'red']);
+					}
+
+					chartOptions.legend.title.text = "";
+					chart = new Highcharts.Chart(chartOptions);
+
+					yfield = yfields[0];
+					for (i = 0; i < xdata[0].length; i++) {
+						x = xdata[0][i];
+						y = ydata[0][i];
+						if (scatterColorData) {
+							colorCode = scatterColorData[i];
+						} else {
+							colorCode = 0;
+						}
+
+						if (null != x && null != y && null != colorCode) {
+							y = (y - offsets[yfield]) / STDEV[yfield];
+							if (useMultiSeries ) { // use multi-seriese
+								if (!multi_series[colorCode]){
+									multi_series[colorCode] = {
+										"data": []
+									};
+								}
+								multi_series[colorCode].data.push({
+									name: sampleLabels[i],
+									x: x,
+									y: y
+								});
+							} else {
+								single_series.push({
+									name: sampleLabels[i],
+									x: x,
+									y: y,
+									color: colorScale (colorCode)
+								});
+							}
 						}
 					}
-					chart.addSeries({
-						name: yfield,
-						data: series
-					}, false);
+
+					//add multi-series data
+					_.keys(multi_series).map(colorCode=>{
+						if (scatterColorData) {
+							color = custom_colors[colorCode] ? custom_colors[colorCode] : getCodedColor(colorCode);
+							colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
+						} else {
+							color = null;
+							colorLabel = "sample";
+						}
+
+						chart.addSeries({
+							name: colorLabel,
+							data: multi_series[colorCode].data,
+							color: color
+						}, false);
+					});
+
+					//add single-series data
+					if (single_series.length){
+						chart.addSeries({
+							name: "sample",
+							data: single_series,
+							marker:{
+								opacity:0.1
+							}
+						}, false);
+					}
 				}
+
 				chart.redraw();
 			}
 
@@ -831,79 +1082,6 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 				dropDown = document.getElementById("sdDropDown");
 
 			div.appendChild(document.createElement("br"));
-
-			//showHideAllbutton
-			seriesButton = document.createElement("button");
-			seriesButton.setAttribute("class", "showHideButton");
-			seriesButton.innerHTML = hideAll;
-			seriesButton.addEventListener("click", function () {
-				if (seriesButton.innerHTML === hideAll) { //hide all
-					chart.series.forEach(function (series) {
-						if (series.visible) {
-							series.setVisible(false, false);
-						}
-					});
-					seriesButton.innerHTML = showAll;
-					chart.redraw();
-
-				} else { /// show all
-					if (chart.series.length < 20) {
-						chart.series.forEach(function (series) {
-							if (!series.visible) {
-								series.setVisible(true, false);
-							}
-						});
-						seriesButton.innerHTML = hideAll;
-						chart.redraw();
-					} else { //redraw from scratch
-						update.apply(this, updateArgs);
-					}
-				}
-			});
-			div.appendChild(seriesButton);
-
-			//showHideErrorBar
-			if (xIsCategorical && !yIsCategorical) {
-				errorbarButton = document.createElement("button");
-				errorbarButton.setAttribute("class", "showHideButton");
-				if (chart.series.some(function (series) {
-						if (series.type === 'errorbar' && series.visible) {
-							return true;
-						}
-					})) {
-					errorbarButton.innerHTML = errorbarHide;
-					errorbarButton.setAttribute("title", errorbarHideTooltip);
-				} else {
-					errorbarButton.innerHTML = errorbarShow;
-					errorbarButton.setAttribute("title", errorbarShowTooltip);
-				}
-
-				errorbarButton.addEventListener("click", function () {
-					if (errorbarButton.innerHTML === errorbarHide) { //hide
-						chart.series.forEach(function (series) {
-							if (series.type === 'errorbar') {
-								series.setVisible(false, false);
-							}
-						});
-						errorbarButton.innerHTML = errorbarShow;
-						errorbarButton.setAttribute("title", errorbarShowTooltip);
-						dropDown.style.visibility = "hidden";
-					} else { /// show
-						var i, series;
-						for (i = 0; i < chart.series.length; i++) {
-							series = chart.series[i];
-							if (series.type === 'errorbar' && chart.series[i - 1].visible) {
-								series.setVisible(true, false);
-							}
-						}
-						errorbarButton.innerHTML = errorbarHide;
-						errorbarButton.setAttribute("title", errorbarHideTooltip);
-						dropDown.style.visibility = "visible";
-					}
-					chart.redraw();
-				});
-				div.appendChild(errorbarButton);
-			}
 
 			//showHideDataLabel button
 			if (xIsCategorical) {
@@ -951,6 +1129,79 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 				});
 				div.appendChild(datalabelButton);
 			}
+
+			//showHideErrorBar
+			if (xIsCategorical && !yIsCategorical) {
+				errorbarButton = document.createElement("button");
+				errorbarButton.setAttribute("class", "showHideButton");
+				if (chart.series.some(function (series) {
+						if (series.type === 'errorbar' && series.visible) {
+							return true;
+						}
+					})) {
+					errorbarButton.innerHTML = errorbarHide;
+					errorbarButton.setAttribute("title", errorbarHideTooltip);
+				} else {
+					errorbarButton.innerHTML = errorbarShow;
+					errorbarButton.setAttribute("title", errorbarShowTooltip);
+				}
+
+				errorbarButton.addEventListener("click", function () {
+					if (errorbarButton.innerHTML === errorbarHide) { //hide
+						chart.series.forEach(function (series) {
+							if (series.type === 'errorbar') {
+								series.setVisible(false, false);
+							}
+						});
+						errorbarButton.innerHTML = errorbarShow;
+						errorbarButton.setAttribute("title", errorbarShowTooltip);
+						dropDown.style.visibility = "hidden";
+					} else { /// show
+						var i, series;
+						for (i = 0; i < chart.series.length; i++) {
+							series = chart.series[i];
+							if (series.type === 'errorbar' && chart.series[i - 1].visible) {
+								series.setVisible(true, false);
+							}
+						}
+						errorbarButton.innerHTML = errorbarHide;
+						errorbarButton.setAttribute("title", errorbarHideTooltip);
+						dropDown.style.visibility = "visible";
+					}
+					chart.redraw();
+				});
+				div.appendChild(errorbarButton);
+			}
+
+			//showHideAllbutton
+			seriesButton = document.createElement("button");
+			seriesButton.setAttribute("class", "showHideButton");
+			seriesButton.innerHTML = hideAll;
+			seriesButton.addEventListener("click", function () {
+				if (seriesButton.innerHTML === hideAll) { //hide all
+					chart.series.forEach(function (series) {
+						if (series.visible) {
+							series.setVisible(false, false);
+						}
+					});
+					seriesButton.innerHTML = showAll;
+					chart.redraw();
+
+				} else { /// show all
+					if (chart.series.length < 20) {
+						chart.series.forEach(function (series) {
+							if (!series.visible) {
+								series.setVisible(true, false);
+							}
+						});
+						seriesButton.innerHTML = hideAll;
+						chart.redraw();
+					} else { //redraw from scratch
+						update.apply(this, updateArgs);
+					}
+				}
+			});
+			div.appendChild(seriesButton);
 		}
 
 		root.setAttribute("id", "chartRoot");
@@ -975,26 +1226,29 @@ define(['./fieldFetch', './xenaQuery', './dom_helper', './colorScales', './highc
 			return;
 		}
 
-    // x axis selector
-    div = dom_helper.elt("div", "X: ",
-      axisSelector("Xaxis", update, updateArgs));
-    div.setAttribute("id", "X");
-    leftContainer.appendChild(div);
+	    // x axis selector
+	    div = dom_helper.elt("div", "X: ", axisSelector("Xaxis", update, updateArgs));
+	    div.setAttribute("id", "X");
+	    leftContainer.appendChild(div);
 
-    // y axis selector
-		div = dom_helper.elt("div", "Y: ",
-			axisSelector("Yaxis", update, updateArgs));
+	    // y axis selector
+		div = dom_helper.elt("div", "Y: ", axisSelector("Yaxis", update, updateArgs));
 		div.setAttribute("id", "Y");
 		leftContainer.appendChild(div);
 
-    //controls
-		controlContainer = document.createElement("div");
-		controlContainer.setAttribute("id", "controlContainer");
-		rightContainer.appendChild(controlContainer);
-		// normalization selection
-		controlContainer.appendChild(buildNormalizationDropdown());
-    // whisker is 1, 2, 3 SD
-    controlContainer.appendChild(buildSDDropdown());
+		// coloring on scatterplot
+		leftContainer.appendChild(buildColoringDropdown());
+
+	    // controls
+		// Y normalization
+		rightContainer.appendChild(buildNormalizationDropdown());
+
+		// Y exponentiation
+		rightContainer.appendChild(buildExpDropdown());
+
+		// whisker is 1, 2, 3 SD
+		rightContainer.appendChild(buildSDDropdown());
+
 		update.apply(this, updateArgs);
 	};
 });

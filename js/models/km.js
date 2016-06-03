@@ -111,7 +111,11 @@ function warnDupPatients(usableSamples, samples, patient) {
 		havePatient = usableSamples.filter(getPatient),
 		dups = _.difference(havePatient, _.uniq(havePatient, false, getPatient));
 
-	return dups.length ? `Some individuals' survival data are used more than once in the KM plot. Affected samples are: ${dups.map(i => samples[i]).join(', ')}. For more information and how to remove such duplications: https://goo.gl/TSQt6z.` : null;
+	return dups.length ?
+		`Some individuals' survival data are used more than once in the KM plot.
+		Affected samples are: ${dups.map(i => samples[i]).join(', ')}.
+		For more information and how to remove such duplications: http://xena.ucsc.edu/km-filtering-out/ .`
+		: null;
 }
 
 function filterByGroups(feature, groupedIndices) {

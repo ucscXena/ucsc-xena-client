@@ -78,7 +78,7 @@ var AppControls = React.createClass({
 						{sampleFilter ?
 							(<span>
 								&#8745;
-								<Button className='hoverStrike'
+								<Button disabled={noshow} className='hoverStrike'
 									onClick={this.onResetSampleFilter}>
 
 									{sampleFilter.length} samples

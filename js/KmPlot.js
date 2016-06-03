@@ -8,7 +8,7 @@ var _ = require('./underscore_ext');
 var React = require('react');
 var { PropTypes } = React;
 var Modal = require('react-bootstrap/lib/Modal');
-var { ListGroup, ListGroupItem, OverlayTrigger, Tooltip } = require('react-bootstrap/lib/');
+var { Button } = require('react-bootstrap/lib/');
 var Axis = require('./Axis');
 var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
@@ -137,33 +137,64 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 
 var formatPValue = v => v == null ? String.fromCharCode(8709) : v.toPrecision(4);
 
+var WarningTrigger = React.createClass({
+	getInitialState() {
+		return { show: false };
+	},
+
+	render() {
+		let close = () => this.setState({ show: false});
+		let {header, body} = this.props;
+		return (
+			<span className = "modal-container" style={{height: 200}}>
+				<Button
+					bsSize = "small"
+					onClick = {() => this.setState({ show: true})}
+				 >
+					<div className = "glyphicon glyphicon-warning-sign text-danger"/>
+				</Button>
+
+				<Modal
+					show={this.state.show}
+					onHide={close}
+					container={this}
+					aria-labelledby="contained-modal-title"
+				>
+					<Modal.Header closeButton>
+						<Modal.Title id="contained-modal-title">{header}</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						{body}
+					</Modal.Body>
+					<Modal.Footer>
+						<Button onClick={close}>Close</Button>
+					</Modal.Footer>
+				</Modal>
+			</span>
+		);
+	}
+});
+
+
 var PValue = React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function () {
 		var {logRank, pValue, patientWarning} = this.props;
-		const tooltip = (
-			<Tooltip id='p-value' placement='top'>
-				{patientWarning}
-			</Tooltip>
-		);
-
 		return (
-			<ListGroup fill>
-				<ListGroupItem>
-					{patientWarning ?
-						<OverlayTrigger
-							placement='right'
-							overlay={tooltip}
-							trigger={['hover', 'click']}>
-							<div className="badge" style={{verticalAlign:"middle"}}>!</div>
-						</OverlayTrigger> :
-						null}
+			<div>
+				<div>
 					<span>P-Value = {formatPValue(pValue)}</span>
-				</ListGroupItem>
-				<ListGroupItem>
+					{' '}
+					{patientWarning ?
+						<WarningTrigger
+							header="P value warning"
+							body={patientWarning}
+						/> : null}
+				</div>
+				<div>
 					<span>Log-rank Test Stats = {formatPValue(logRank)}</span>
-				</ListGroupItem>
-			</ListGroup>
+				</div>
+			</div>
 		);
 	}
 });
@@ -176,7 +207,7 @@ function sampleCount(curve) {
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
 	let isActive = checkIfActive(label, activeLabel);
-	let activeLabelClassName = isActive ? HOVER : '';
+	let activeLabelClassName = isActive ? 'grey' : '';
 	let legendLineStyle = {
 		backgroundColor: color,
 		border: (isActive ? 2 : 1).toString() + 'px solid',
@@ -189,7 +220,7 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	return (
 		<li
 			key={label}
-			className={`list-group-item outline ${activeLabelClassName}`}
+			className={`list-group-item ${activeLabelClassName}`}
 			onMouseOver={(e) => setActiveLabel(e, label)}
 			onMouseOut={(e) => setActiveLabel(e, '')}>
 			<span style={legendLineStyle} /> {label} (n={sampleCount(curves)})
@@ -214,7 +245,7 @@ var Legend = React.createClass({
 					.map(set => makeLegendKey(set, setActiveLabel, activeLabel));
 
 		return (
-			<ListGroup className="legend">{sets}</ListGroup>
+			<div className="legend">{sets}</div>
 		);
 	}
 });
@@ -235,6 +266,7 @@ function makeDefinitions(groups, setActiveLabel, activeLabel, size) {
 		<div className="definitions" style={{width: size.width}}>
 			<PValue pValue={groups.pValue} logRank={groups.KM_stats}
 				patientWarning={groups.patientWarning}/>
+			<br/>
 			<Legend groups={groups}
 					setActiveLabel={setActiveLabel}
 					activeLabel={activeLabel} />

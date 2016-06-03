@@ -10,25 +10,7 @@ var Rx = require('rx');
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformFlatmap} = require('../layoutPlot');
-
-//http://www.javascripter.net/faq/hextorgb.htm
-var cutHex = function (h) {return (h.charAt(0) === "#") ? h.substring(1, 7) : h;};
-var hexToR = function (h) {return parseInt((cutHex(h)).substring(0, 2), 16);};
-var hexToG = function (h) {return parseInt((cutHex(h)).substring(2, 4), 16);};
-var hexToB = function (h) {return parseInt((cutHex(h)).substring(4, 6), 16);};
-
-var hexToRGB = function(hex){
-	var c = {},
-		r = hexToR(hex),
-		g = hexToG(hex),
-		b = hexToB(hex);
-
-    c.r = r;
-    c.g = g;
-    c.b = b;
-    c.a = 1;
-    return c;
-};
+var {hexToRGB, colorStr} = require('../color_helper');
 
 function chromFromAlt(alt) {
 	var start = alt.search(/[\[\]]/),
@@ -145,8 +127,6 @@ var unknownEffect = 0,
 		af: {r: 255, g: 0, b: 0},
 		grey: {r: 128, g: 128, b: 128, a: 1}
 	},
-	colorStr = c =>
-		'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')',
 	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
 	decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals

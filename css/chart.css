@@ -2,22 +2,21 @@
     height: 150%;
 }
 .dropdown-style {
+    width: 300px;
     background: white;
     font-size: 12px;
     font-family: 'Lucida Grande';
 }
 .dropdown-style option {
     padding: 0.3em;
-    text-align: right;
     background: white;
-    overflow: hidden;
 }
+
 .dropdown-style:focus {
     outline: 0;
 }
 
 #chartContainer {
-    
     margin-left: auto;
     margin-right: auto;
 }
@@ -25,23 +24,8 @@
 #myChart {
     height: 100%;
 }
-.showHideButton {
-    float: right;
-}
+
 .showHideButton:hover {
     color: #ff6600;
 }
-.noselect {
-    text-align: center;
-    font-family: 'Lucida Grande';
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-    -ms-user-select: none;
-}
 
-.chartRoot .chart-container {
-	line-height: normal
-}
