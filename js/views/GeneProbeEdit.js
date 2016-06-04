@@ -43,11 +43,13 @@ var GeneProbeEdit = React.createClass({
 	//     list: string List of genes/identifiers entered by user.
 	//
 	render: function () {
-		var {genes = true, hasGenes, list, examples, makeLabel, setEditorState} = this.props,
+
+		var {genes = true, hasGenes, list, examples, makeLabel, setEditorState, chosenDs} = this.props,
 			doGenes = hasGenes && genes,
 			help = doGenes ? 'e.g. TP53 or TP53, PTEN' :
 				`e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}`,
 			content,
+			url, host, dataset,
 			optionEl;
 
 		if (hasGenes) {
@@ -65,11 +67,23 @@ var GeneProbeEdit = React.createClass({
 			optionEl = makeLabel(content, 'Input');
 		}
 
+		host = JSON.parse(chosenDs[0]).host;
+		dataset = JSON.parse(chosenDs[0]).name;
+		url = '../datapages/?host=' + encodeURIComponent(host) +
+			"&dataset=" + encodeURIComponent(dataset) +
+			"&label=" + encodeURIComponent(dataset) +
+			"&allIdentifiers=true";
+
 		content =
 			(<div>
 				<Input onChange={ev => setEditorState({list: ev.target.value})}
 					type='textarea' value={list} />
-				<div>{help}</div>
+				<div>
+					{help}
+				</div>
+				{doGenes ? null :
+					<a href={url} target="_BLANK">All identifiers</a>
+				}
 			</div>);
 		var inputEl = makeLabel(content, doGenes ? 'Genes' : 'Identifiers');
 
