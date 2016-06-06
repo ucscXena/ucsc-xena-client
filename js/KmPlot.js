@@ -183,7 +183,7 @@ var PValue = React.createClass({
 		return (
 			<div>
 				<div>
-					<span>P-Value = {formatPValue(pValue)}</span>
+					<span><i>P</i>-value = {formatPValue(pValue)}</span>
 					{' '}
 					{patientWarning ?
 						<WarningTrigger
@@ -192,7 +192,7 @@ var PValue = React.createClass({
 						/> : null}
 				</div>
 				<div>
-					<span>Log-rank Test Stats = {formatPValue(logRank)}</span>
+					<span>Log-rank test statistics = {formatPValue(logRank)}</span>
 				</div>
 			</div>
 		);
