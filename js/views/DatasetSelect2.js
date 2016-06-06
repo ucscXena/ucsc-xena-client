@@ -19,7 +19,7 @@ var filterDatasets = (list, server) =>
 	_.filter(list, (ds, dsID) =>
 		isLoaded(ds) && server.includes(JSON.parse(dsID).host) && notIgnored(ds));
 var groupDatasets = (list, server) => _.groupBy(list, ds =>
-	server.includes(LOCAL_DOMAIN) ?  LOCAL_DOMAIN_label : ds.dataSubType);
+	server.includes(LOCAL_DOMAIN) ?  LOCAL_DOMAIN_label : (ds.dataSubType ? ds.dataSubType : "others"));
 
 var sortDatasets = (groups) => groups.map(dsGroup => {
 	let sortedOptions = _.sortBy(dsGroup.options, ds => ds.label.toLowerCase());

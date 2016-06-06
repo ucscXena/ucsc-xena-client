@@ -82,7 +82,7 @@ var GeneProbeEdit = React.createClass({
 					{help}
 				</div>
 				{doGenes ? null :
-					<a href={url} target="_BLANK">All identifiers</a>
+					<a href={url} target="_BLANK">Link to all identifiers in the dataset</a>
 				}
 			</div>);
 		var inputEl = makeLabel(content, doGenes ? 'Genes' : 'Identifiers');

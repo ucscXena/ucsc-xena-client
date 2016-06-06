@@ -34,30 +34,6 @@ var pickEditor = function(datasets, chosenDs) {
 	}
 };
 
-/*
-function workflowIndicators(positions, defs, onHide) {
-	// Show all breadcrumbs regardless of where in the workflow the user is in.
-	let count = 0,
-		activeSection = _.findKey(positions, s => s),
-		tabs = _.map(_.omit(defs, def => def.omit), (def, key) => {
-			count++;
-			let navTitle = `${count}. Select ${def.name}`;
-			return (
-				<NavItem className ='row' eventKey={key} key={key} disabled>
-					<span>{navTitle}</span>
-				</NavItem>
-			);
-		});
-
-	return (
-		<Modal.Header onHide={onHide} closeButton>
-			<Grid>
-				<Nav bsStyle='pills' activeKey={activeSection}>{tabs}</Nav>
-			</Grid>
-		</Modal.Header>
-	);
-}
-*/
 
 function updateChoice(currentPosition, defs, oldChoices) {
 	/*
