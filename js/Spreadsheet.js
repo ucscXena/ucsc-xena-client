@@ -16,6 +16,7 @@ var Tooltip = require('./views/Tooltip');
 var rxEventsMixin = require('./react-utils').rxEventsMixin;
 var meta = require('./meta');
 var VizSettings = require('./VizSettings');
+var getLabel = require('./getLabel');
 require('./Columns.css'); // XXX switch to js styles
 
 var YAxisLabel = require('./views/YAxisLabel');
@@ -48,8 +49,6 @@ var zoomInClick = ev =>
 
 var zoomOutClick = ev =>
 !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
-
-var getLabel = i => String.fromCharCode('A'.charCodeAt(0) + i);
 
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
