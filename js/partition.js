@@ -20,28 +20,9 @@ define(['underscore'], function (_) {
 		return [ p ].concat(bysize(n - p, _(sizes).rest(1), total - sizes[0])); // XXX performance
 	}
 
-	// Tail recursive version.
-	/*
-	var equally = function (n, m, c) {
-		c = c || [];
-		if (m === 0)
-			return c;
-		var p = Math.round(n/m);
-		c.push(p);
-		return equally(n - p, m - 1, c);
-	};
-	*/
-
 	function equally(n, m) {
-		var c = [],
-			p;
-		while (m) {
-			p = Math.round(n / m);
-			c.push(p);
-			n = n - p;
-			m = m - 1;
-		}
-		return c;
+		var starts = _.map(_.range(m), i => Math.round(i * n / m));
+		return _.map(starts, (s, i) => (starts[i + 1] || n) - s);
 	}
 
 	// Same as bysize, but return array of objects with start & size.
