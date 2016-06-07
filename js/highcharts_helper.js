@@ -54,9 +54,6 @@ define(['./highcharts'], function () {
 				}
 			},
 		},
-		tooltip:{
-			hideDelay: 0
-		},
 		credits: {
 			enabled: false
 		}
@@ -119,7 +116,7 @@ define(['./highcharts'], function () {
 			};
 		} else {
 			chartOptions.tooltip = {
-				headerFormat: xAxisTitle + ' = {point.key}<br>',
+				headerFormat: xAxisTitle + ' : {point.key}<br>',
 				pointFormat: Y + ' {series.name}: <b>{point.y}%</b>',
 				hideDelay: 0
 			};
@@ -164,6 +161,16 @@ define(['./highcharts'], function () {
 			minRange: -1
 		};
 
+		chartOptions.tooltip = {
+			headerFormat: xAxisTitle + ' : {series.name}<br>',
+			formatter: function () {
+				return xAxisTitle + ' : ' + this.series.name + '<br>'
+					+ (categories.length > 1 ?  yAxisTitle + ' ' : '' )
+					+ categories[this.point.x] + ': <b>' + this.point.y + '%</b>';
+			},
+			hideDelay: 0
+		};
+
 		if (categories.length > 5) {
 			chartOptions.xAxis.labels = {
 			rotation: -90
@@ -200,12 +207,14 @@ define(['./highcharts'], function () {
 				text: xAxisTitle
 			},
 			gridLineWidth: 1,
-			minRange: 1
+			minRange: 1,
+			crosshair: true
 		};
 		chartOptions.yAxis = {
 			title: {
 				text: yAxisTitle
-			}
+			},
+			crosshair: true
 		};
 		chartOptions.tooltip = {
 			hideDelay: 0,
