@@ -22,7 +22,7 @@ define(['underscore'], function (_) {
 
 	function equally(n, m) {
 		var starts = _.map(_.range(m), i => Math.round(i * n / m));
-		return _.map(starts, (s, i) => (starts[i + 1] || n) - s);
+		return _.map(starts, (s, i) => (i === m - 1 ? n : starts[i + 1]) - s);
 	}
 
 	// Same as bysize, but return array of objects with start & size.
