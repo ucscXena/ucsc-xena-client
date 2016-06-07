@@ -125,7 +125,7 @@ module.exports = function (doc/*, vgw, vgh*/) {
 		textCenteredPushRight = function (x, cy, w, h, c, fontHeight, val) {
 			// See https://github.com/devongovett/pdfkit/issues/351 for y correction.
 			var y = cy - doc._font.ascender / 1000 * fontHeight,
-				txt = val.toString(),
+				txt = String(val),
 				th = fontHeight,
 				tw = textWidth(fontHeight, txt),
 				tx = Math.max(x, x + w / 2 - tw / 2),
