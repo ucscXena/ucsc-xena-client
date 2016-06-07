@@ -120,6 +120,12 @@ function indexProbeGeneResponse(data) {
 	return _.extend({probes: probes}, meanNanResponse(probes, vals));
 }
 
+function fillNulls(samples, data) {
+	return _.map(data, geneData =>
+		geneData.length === 0 ?
+			_.times(samples.length, _.constant(null)) : geneData);
+}
+
 function orderByQuery(genes, data) {
 	var indx = _.invert(_.pluck(data, 'gene'));
 	return _.map(genes, function (g) {
@@ -128,8 +134,8 @@ function orderByQuery(genes, data) {
 	});
 }
 
-function indexGeneResponse(genes, data) {
-	return meanNanResponse(genes, orderByQuery(genes, data));
+function indexGeneResponse(samples, genes, data) {
+	return meanNanResponse(genes, fillNulls(samples, orderByQuery(genes, data)));
 }
 
 var fetch = ({dsID, fields}, [samples]) => datasetProbeValues(dsID, samples, fields)
@@ -148,7 +154,7 @@ var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
 	).map(([req, codes]) => ({req, codes: _.values(codes)[0]}));
 
 var fetchGene = ({dsID, fields}, [samples]) => datasetGenesValues(dsID, samples, fields)
-			.map(resp => ({req: indexGeneResponse(fields, resp)}));
+			.map(resp => ({req: indexGeneResponse(samples, fields, resp)}));
 
 ['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType => {
 	widgets.transform.add(fieldType, dataToHeatmap);
