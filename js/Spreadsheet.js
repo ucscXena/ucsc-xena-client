@@ -10,7 +10,7 @@ var Sortable = require('./views/Sortable');
 require('react-resizable/css/styles.css');
 var _ = require('./underscore_ext');
 var Column = require('./Column');
-var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
+var {deepPureRenderMixin} = require('./react-utils');
 var getLabel = require('./getLabel');
 require('./Columns.css'); // XXX switch to js styles
 var addTooltip = require('./views/addTooltip');
@@ -20,55 +20,14 @@ var addVizEditor = require('./views/addVizEditor');
 
 var YAxisLabel = require('./views/YAxisLabel');
 
-function zoomIn(pos, samples, zoom) {
-	var {count, index} = zoom;
-	var nCount = Math.max(1, Math.round(count / 3)),
-		maxIndex = samples - nCount,
-		nIndex = Math.max(0, Math.min(Math.round(index + pos * count - nCount / 2), maxIndex));
-
-	return _.merge(zoom, {count: nCount, index: nIndex});
-}
-
-function zoomOut(samples, zoom) {
-	var {count, index} = zoom;
-	var nCount = Math.min(samples, Math.round(count * 3)),
-		maxIndex = samples - nCount,
-		nIndex = Math.max(0, Math.min(Math.round(index + (count - nCount) / 2), maxIndex));
-
-	return _.merge(zoom, {count: nCount, index: nIndex});
-}
-
-function targetPos(ev) {
-	var bb = ev.currentTarget.getBoundingClientRect();
-	return (ev.clientY - bb.top) / ev.currentTarget.clientHeight;
-}
-
-var zoomInClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
-var zoomOutClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
-
 var Columns = React.createClass({
 	// XXX pure render mixin? Check other widgets, too, esp. columns.
-	mixins: [rxEventsMixin, deepPureRenderMixin],
-	componentWillMount: function () {
-		this.events('plotClick');
-
-		this.plotClick = this.ev.plotClick.subscribe(ev => {
-			let {callback, appState: {zoom, samples}} = this.props;
-			if (zoomOutClick(ev)) {
-				callback(['zoom', zoomOut(samples.length, zoom)]);
-			} else if (zoomInClick(ev)) {
-				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
-			}
-		});
-	},
-	componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
-		this.plotClick.dispose();
-	},
+	mixins: [deepPureRenderMixin],
 	onReorder: function (order) {
 		this.props.callback(['order', order]);
 	},
 	render: function () {
-		var {callback, appState, widgetProps, Column, columnProps, ...optProps} = this.props;
+		var {callback, appState, widgetProps, onPlotClick, Column, columnProps, onClick, ...optProps} = this.props;
 		// XXX maybe rename index -> indexes?
 		var {data, index, zoom, columns, columnOrder, samples, samplesMatched} = appState;
 		var columnViews = _.map(columnOrder, (id, i) => (
@@ -85,23 +44,21 @@ var Columns = React.createClass({
 				label={getLabel(i)}
 				widgetProps={{
 					...widgetProps,
-					key: id,
 					id: id,
 					index: _.getIn(index, [id]),
 					vizSettings: _.getIn(appState, [columns, id, 'vizSettings']),
 					tooltip: this.props.tooltip, // XXX instead use map children?
-					onClick: this.ev.plotClick,
+					onClick: onPlotClick,
 					column: _.getIn(columns, [id])
 				}}/>));
 
 		return (
 				<div {...optProps} className="Columns">
-					<Sortable onClick={this.props.onClick} onReorder={this.onReorder}>
+					<Sortable onClick={onClick} onReorder={this.onReorder}>
 						{columnViews}
 					</Sortable>
 					{this.props.children}
-				</div>
-		);
+				</div>);
 	}
 });
 
