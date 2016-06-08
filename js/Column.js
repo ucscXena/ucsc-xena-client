@@ -13,6 +13,7 @@ var {RefGeneAnnotation} = require('./refGeneExons');
 var SpreadSheetHighlight = require('./SpreadSheetHighlight');
 var ResizeOverlay = require('./views/ResizeOverlay');
 var widgets = require('./columnWidgets');
+var aboutDatasetMenu = require('./views/aboutDatasetMenu');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -101,7 +102,7 @@ var Column = React.createClass({
 	},
 	render: function () {
 		var {id, label, samples, samplesMatched, callback, column,
-				zoom, data, aboutDataset, disableKM, searching, supportsGeneAverage} = this.props,
+				zoom, data, datasetMeta, disableKM, searching, supportsGeneAverage} = this.props,
 			{width, columnLabel, fieldLabel, user} = column,
 			menu = optionMenu(this.props, {onMode: this.onMode, onMuPit: this.onMuPit, supportsGeneAverage}),
 			[kmDisabled, kmTitle] = disableKM(id),
@@ -126,7 +127,7 @@ var Column = React.createClass({
 					{menu && <MenuItem divider />}
 					<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
 					<MenuItem onSelect={this.onDownload}>Download</MenuItem>
-					{aboutDataset(id)}
+					{aboutDatasetMenu(datasetMeta(id))}
 					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>
 					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 				</SplitButton>

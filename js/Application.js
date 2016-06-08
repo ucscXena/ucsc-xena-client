@@ -8,10 +8,8 @@ var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
 var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
-var xenaQuery = require('./xenaQuery');
-var {xenaFieldPaths, signatureField} = require('./models/fieldSpec');
+var {signatureField} = require('./models/fieldSpec');
 var {getColSpec} = require('./models/datasetJoins');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
 var SampleSearch = require('./views/SampleSearch');
 var {rxEventsMixin} = require('./react-utils');
 var Rx = require('rx');
@@ -20,37 +18,6 @@ var uuid = require('./uuid');
 
 // should really be in a config file.
 var searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
-
-function onAbout(dsID) {
-	var [host, dataset] = xenaQuery.parse_host(dsID);
-	var url = `../datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
-	window.open(url);
-}
-
-var getLabel = _.curry((datasets, dsID) => {
-	var ds = datasets[dsID];
-	return ds.label || ds.name;
-});
-
-var getAbout = (dsID, text) => (
-	<MenuItem key={dsID} onSelect={() => onAbout(dsID)}>{text} </MenuItem>);
-
-
-function aboutDataset(column, datasets) {
-	var dsIDs = _.map(xenaFieldPaths(column), p => _.getIn(column, [...p, 'dsID'])),
-		label = getLabel(datasets);
-	if (dsIDs.length === 0) {
-		return null;
-	} else if (dsIDs.length === 1) {
-		return getAbout(dsIDs[0], 'About the Dataset');
-	}
-	return [
-		<MenuItem key='d0' divider/>,
-		<MenuItem key='header' header>About the Datasets</MenuItem>,
-		..._.map(dsIDs, dsID => getAbout(dsID, label(dsID))),
-		<MenuItem key='d1' divider/>
-	];
-}
 
 var Application = React.createClass({
 	mixins: [rxEventsMixin],
@@ -81,10 +48,6 @@ var Application = React.createClass({
 	componentWillUnmount: function () {
 		this.change.dispose();
 		this.highlight.dispose();
-	},
-	aboutDataset: function (uuid) {
-		var {columns, datasets} = this.props.state;
-		return aboutDataset(_.get(columns, uuid), datasets);
 	},
 	onSearch: function (value) {
 		var {callback} = this.props;
@@ -161,7 +124,7 @@ var Application = React.createClass({
 				<View {...otherProps}
 					columnProps={{
 						supportsGeneAverage: supportsGeneAverage,
-						aboutDataset: this.aboutDataset,
+						datasetMeta: this.props.datasetMeta,
 						disableKM: disableKM,
 						searching: this.highlight,
 					}}

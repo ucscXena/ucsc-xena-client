@@ -11,6 +11,7 @@ var Column = require('../Column');
 var _ = require('../underscore_ext');
 var kmModel = require('../models/km');
 var {lookupSample} = require('../models/sample');
+var {xenaFieldPaths} = require('../models/fieldSpec');
 
 // At the top-level, we want to pick an Application widget,
 // a Spreadsheet widget, and a Column widget. Are those views
@@ -91,6 +92,18 @@ function getFieldFormat(uuid, columns, data) {
 	}
 }
 
+var getLabel = _.curry((datasets, dsID) => {
+	var ds = datasets[dsID];
+	return ds.label || ds.name;
+});
+
+function datasetMeta(column, datasets) {
+	return {
+		dsIDs: _.map(xenaFieldPaths(column), p => _.getIn(column, [...p, 'dsID'])),
+		label: getLabel(datasets)
+	};
+}
+
 var SpreadsheetContainer = getSpreadsheetContainer(Column);
 
 
@@ -111,6 +124,10 @@ var ApplicationContainer = React.createClass({
 		var {cohortSamples} = this.props.state;
 		return lookupSample(cohortSamples, index);
 	},
+	datasetMeta: function (uuid) {
+		var {columns, datasets} = this.props.state;
+		return datasetMeta(_.get(columns, uuid), datasets);
+	},
 	render() {
 		let {state, selector, callback} = this.props,
 			computedState = selector(state);
@@ -120,6 +137,7 @@ var ApplicationContainer = React.createClass({
 				disableKM={this.disableKM}
 				fieldFormat={this.fieldFormat}
 				sampleFormat={this.sampleFormat}
+				datasetMeta={this.datasetMeta}
 				Spreadsheet={SpreadsheetContainer}
 				state={computedState}
 				callback={callback}/>);
