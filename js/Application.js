@@ -8,7 +8,6 @@ var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
 var ChartView = require('./ChartView');
 var _ = require('./underscore_ext');
-var {lookupSample} = require('./models/sample');
 var xenaQuery = require('./xenaQuery');
 var {xenaFieldPaths, signatureField} = require('./models/fieldSpec');
 var {getColSpec} = require('./models/datasetJoins');
@@ -21,21 +20,6 @@ var uuid = require('./uuid');
 
 // should really be in a config file.
 var searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
-
-// XXX This is probably operating on the wrong state.
-// Should be in ApplicationContainer.
-function getFieldFormat(uuid, columns, data) {
-	var columnFields = _.getIn(columns, [uuid, 'fields']),
-		label = _.getIn(columns, [uuid, 'fieldLabel']),
-		fields = _.getIn(data, [uuid, 'req', 'probes'], columnFields);
-	if (fields.length === 1) {                           // 1 gene/probe, or 1 probe in gene: use default field label
-		return () => label;
-	} else if (fields.length === columnFields.length) {  // n > 1 genes/probes
-		return _.identity;
-	} else {                                             // n > 1 probes in gene
-		return field => `${label} (${field})`;
-	}
-}
 
 function onAbout(dsID) {
 	var [host, dataset] = xenaQuery.parse_host(dsID);
@@ -97,14 +81,6 @@ var Application = React.createClass({
 	componentWillUnmount: function () {
 		this.change.dispose();
 		this.highlight.dispose();
-	},
-	fieldFormat: function (uuid) {
-		var {columns, data} = this.props.state;
-		return getFieldFormat(uuid, columns, data);
-	},
-	sampleFormat: function (index) {
-		var {cohortSamples} = this.props.state;
-		return lookupSample(cohortSamples, index);
 	},
 	aboutDataset: function (uuid) {
 		var {columns, datasets} = this.props.state;
@@ -190,8 +166,8 @@ var Application = React.createClass({
 						searching: this.highlight,
 					}}
 					widgetProps={{
-						sampleFormat: this.sampleFormat,
-						fieldFormat: this.fieldFormat
+						sampleFormat: this.props.sampleFormat,
+						fieldFormat: this.props.fieldFormat
 					}}
 					appState={state} />
 				{_.getIn(state, ['km', 'id']) ? <KmPlot

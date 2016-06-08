@@ -10,6 +10,7 @@ var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
 var Column = require('../Column');
 var _ = require('../underscore_ext');
 var kmModel = require('../models/km');
+var {lookupSample} = require('../models/sample');
 
 // At the top-level, we want to pick an Application widget,
 // a Spreadsheet widget, and a Column widget. Are those views
@@ -77,17 +78,38 @@ function supportsGeneAverage({fieldType, fields: {length}}) {
 	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && length === 1;
 }
 
+function getFieldFormat(uuid, columns, data) {
+	var columnFields = _.getIn(columns, [uuid, 'fields']),
+		label = _.getIn(columns, [uuid, 'fieldLabel']),
+		fields = _.getIn(data, [uuid, 'req', 'probes'], columnFields);
+	if (fields.length === 1) {                           // 1 gene/probe, or 1 probe in gene: use default field label
+		return () => label;
+	} else if (fields.length === columnFields.length) {  // n > 1 genes/probes
+		return _.identity;
+	} else {                                             // n > 1 probes in gene
+		return field => `${label} (${field})`;
+	}
+}
+
 var SpreadsheetContainer = getSpreadsheetContainer(Column);
 
 
 var ApplicationContainer = React.createClass({
-	supportsGeneAverage(uuid) {
+	supportsGeneAverage(uuid) { // XXX could be precomputed in a selector
 		var {columns} = this.props.state;
 		return supportsGeneAverage(_.get(columns, uuid));
 	},
-	disableKM: function (uuid) {
+	disableKM(uuid) { // XXX could be precomputed in a selector
 		var {columns, features, km} = this.props.state;
 		return disableKM(_.get(columns, uuid), features, km);
+	},
+	fieldFormat: function (uuid) {
+		var {columns, data} = this.props.state;
+		return getFieldFormat(uuid, columns, data);
+	},
+	sampleFormat: function (index) {
+		var {cohortSamples} = this.props.state;
+		return lookupSample(cohortSamples, index);
 	},
 	render() {
 		let {state, selector, callback} = this.props,
@@ -96,6 +118,8 @@ var ApplicationContainer = React.createClass({
 			<Application
 				supportsGeneAverage={this.supportsGeneAverage}
 				disableKM={this.disableKM}
+				fieldFormat={this.fieldFormat}
+				sampleFormat={this.sampleFormat}
 				Spreadsheet={SpreadsheetContainer}
 				state={computedState}
 				callback={callback}/>);
