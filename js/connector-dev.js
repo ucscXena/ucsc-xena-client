@@ -58,7 +58,7 @@ module.exports = function({
 
 	let DevTools = createDevTools(
 		<DockMonitor toggleVisibilityKey='ctrl-h' changePositionKey='ctrl-q'>
-			<LogMonitor preserveScrollTop={false}/>
+			<LogMonitor preserveScrollTop={false} expandStateRoot={false}/>
 		</DockMonitor>
 	);
 
