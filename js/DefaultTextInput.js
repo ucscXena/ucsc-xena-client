@@ -41,19 +41,19 @@ var DefaultTextInput = React.createClass({
 		this.setState({value: newProps.value.user});
 	},
 	resetIfNull: function () {
-		var {callback, columnID, eventName, value: {'default': defaultValue}} = this.props,
+		var {onChange, value: {'default': defaultValue}} = this.props,
 			val = this.refs.input.getValue();
 
 		if (val === "") {
 			this.setState({value: defaultValue});
-			callback([eventName, columnID, defaultValue]);
+			onChange(defaultValue);
 		}
 	},
 	update: function () {
-		var {callback, columnID, eventName} = this.props,
+		var {onChange} = this.props,
 			{value} = this.state;
 
-		callback([eventName, columnID, value]);
+		onChange(value);
 	},
 	onKeyUp: function (ev) {
 		if (ev.key === 'Enter' && this) {

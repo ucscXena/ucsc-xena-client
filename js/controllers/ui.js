@@ -255,7 +255,8 @@ var controls = {
 		serverBus.onNext(['chart-average-data', getChartOffsets(newState.columns[id]), thunk]),
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
 		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets, Rx.Scheduler.timeout), thunk]),
-	'sample-search': matchSamples
+	'sample-search': matchSamples,
+	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id)
 };
 
 module.exports = {

@@ -10,6 +10,7 @@ var _ = require('../underscore_ext');
 
 function addTooltip(Component) {
 	return React.createClass({
+		displayName: 'SpreadsheetTooltip',
 		mixins: [rxEventsMixin],
 		getInitialState: function () {
 			return {
@@ -41,13 +42,19 @@ function addTooltip(Component) {
 					return this.setState(plotVisuals);
 				});
 		},
-		componentWillUnmount: function () { // XXX refactor into a takeUntil mixin?
+		componentWillUnmount: function () {
 			this.tooltip.dispose();
 		},
 		render() {
+			var {children, ...props} = this.props;
 			return (
 				<div>
-					<Component {...this.props} tooltip={this.ev.tooltip} onClick={this.ev.click} />
+					<Component {...props} onClick={this.ev.click}>
+						{React.Children.map(children, el =>
+							React.cloneElement(el, {
+								tooltip: this.ev.tooltip
+							}))}
+					</Component>
 					<Crosshair {...this.state.crosshair} />
 					<Tooltip onClick={this.ev.click} {...this.state.tooltip}/>
 				</div>);

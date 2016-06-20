@@ -12,32 +12,23 @@ function vizSettingsSelector(appState, columnId) {
 
 function addVizEditor(Component) {
 	return React.createClass({
-		getInitialState() {
-			return {
-				openVizSettings: null
-			};
-		},
-		onShowViz: function (id) {
-			this.setState({openVizSettings: id});
-		},
+		displayName: 'SpreadsheetVizSettings',
 		onHideViz: function () {
-			this.setState({openVizSettings: null});
+			this.props.onOpenVizSettings(null);
 		},
 		render() {
-			// XXX callback doesn't belong here. Fix VizSettings.
 			// XXX appState?
-			var {appState, callback, columnProps, ...otherProps} = this.props,
-				compProps = _.assocIn(this.props,
-					['columnProps', 'onViz'], this.onShowViz),
-				{openVizSettings} = this.state;
+			var {onVizSettings, ...componentProps} = this.props,
+				{appState} = componentProps,
+				{openVizSettings} = appState;
 			return (
-				<Component {...compProps}>
+				<Component {...componentProps}>
 					{this.props.children}
 					{openVizSettings ?
 						<VizSettings
 							id={openVizSettings}
 							onRequestHide={this.onHideViz}
-							callback={callback}
+							onVizSettings={onVizSettings}
 							{...vizSettingsSelector(appState, openVizSettings)}/> :
 						null}
 				</Component>);

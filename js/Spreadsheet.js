@@ -6,63 +6,44 @@ var Col = require('react-bootstrap/lib/Col');
 var Row = require('react-bootstrap/lib/Row');
 var Button = require('react-bootstrap/lib/Button');
 var Popover = require('react-bootstrap/lib/Popover');
-var Sortable = require('./views/Sortable');
 require('react-resizable/css/styles.css');
-var _ = require('./underscore_ext');
-var Column = require('./Column');
 var {deepPureRenderMixin} = require('./react-utils');
-var getLabel = require('./getLabel');
 require('./Columns.css'); // XXX switch to js styles
 var addTooltip = require('./views/addTooltip');
 var disableSelect = require('./views/disableSelect');
 var addColumnAddButton = require('./views/addColumnAddButton');
 var addVizEditor = require('./views/addVizEditor');
-
+var makeSortable = require('./views/makeSortable');
 var YAxisLabel = require('./views/YAxisLabel');
 
-var Columns = React.createClass({
-	// XXX pure render mixin? Check other widgets, too, esp. columns.
+var getColumns = Wrapper => React.createClass({
+	displayName: 'SpreadsheetColumns',
 	mixins: [deepPureRenderMixin],
-	onReorder: function (order) {
-		this.props.callback(['order', order]);
-	},
-	render: function () {
-		var {callback, appState, widgetProps, onPlotClick, Column, columnProps, onClick, ...optProps} = this.props;
-		// XXX maybe rename index -> indexes?
-		var {data, index, zoom, columns, columnOrder, samples, samplesMatched} = appState;
-		var columnViews = _.map(columnOrder, (id, i) => (
-			<Column
-				{...columnProps}
-				id={id}
-				key={id}
-				callback={callback}
-				samples={samples}
-				samplesMatched={samplesMatched}
-				zoom={zoom}
-				data={_.getIn(data, [id]) /* refGene */}
-				column={_.getIn(columns, [id])}
-				label={getLabel(i)}
-				widgetProps={{
-					...widgetProps,
-					id: id,
-					index: _.getIn(index, [id]),
-					vizSettings: _.getIn(appState, [columns, id, 'vizSettings']),
-					tooltip: this.props.tooltip, // XXX instead use map children?
-					onClick: onPlotClick,
-					column: _.getIn(columns, [id])
-				}}/>));
-
+	render() {
+		var {onClick, children, ...wrapperProps} = this.props;
 		return (
-				<div {...optProps} className="Columns">
-					<Sortable onClick={onClick} onReorder={this.onReorder}>
-						{columnViews}
-					</Sortable>
-					{this.props.children}
-				</div>);
+			<Wrapper {...wrapperProps}>
+				{children}
+			</Wrapper>);
 	}
 });
 
-var TooltipColumns = addTooltip(disableSelect(addColumnAddButton(addVizEditor(Columns))));
+var ColumnsWrapper = React.createClass({
+	render() {
+		var {children, widgetProps, ...optProps} = this.props;
+		return (
+			<div {...optProps} className="Columns">
+				{children}
+			</div>);
+	}
+});
+
+var FullWrapper = addTooltip(makeSortable(disableSelect(addColumnAddButton(addVizEditor(ColumnsWrapper)))));
+// XXX without tooltip, we have no mouse pointer. Should make the wrapper add the css
+// that hides the mouse. Currently this is in Column.
+//var FullWrapper = makeSortable(disableSelect(ColumnsWrapper));
+
+var Columns = getColumns(FullWrapper);
 
 function zoomPopover(zoom, samples, props) {
 	return (
@@ -83,7 +64,7 @@ var Spreadsheet = React.createClass({
 		this.props.callback(['zoom-help-disable']);
 	},
 	render: function () {
-		var {appState: {zoom, samples, zoomHelp}} = this.props,
+		var {appState: {zoom, samples, zoomHelp}, children, ...otherProps} = this.props,
 			zoomHelper = zoomHelp ?
 				zoomPopover(zoom, samples, {
 					onClick: this.zoomHelpClose,
@@ -98,7 +79,9 @@ var Spreadsheet = React.createClass({
 					/>
 				</Col>
 				<Col md={11}>
-					<TooltipColumns {...this.props}/>
+					<Columns appState={this.props.appState} {...otherProps}>
+						{children}
+					</Columns>
 					{zoomHelper}
 				</Col>
 			</Row>

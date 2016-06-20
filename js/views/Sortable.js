@@ -54,7 +54,7 @@ var Sortable = React.createClass({
 		var mousedrag = mousedown.selectMany(([id, md]) => {
             // find starting positions on mouse down
 
-			var order = _.map(this.props.children, c => c.key);
+			var order = _.map(this.props.children, c => c.props.actionKey);
 			var startX = md.clientX;
 			var positions = _.map(order,
 								  id => leftWidth(ReactDOM.findDOMNode(this.refs[id]).getBoundingClientRect()));
@@ -114,7 +114,7 @@ var Sortable = React.createClass({
 	},
 
 	initialPositions () {
-		return _.object(_.map(this.props.children, c => [c.key, 0]));
+		return _.object(_.map(this.props.children, c => [c.props.actionKey, 0]));
 
 	},
 
@@ -134,10 +134,10 @@ var Sortable = React.createClass({
 		var columns = React.Children.map(this.props.children, child =>
 							<div
 								{...this.props}
-								onMouseDown={ev => this.sortStart([child.key, ev])}
+								onMouseDown={ev => this.sortStart([child.props.actionKey, ev])}
 								className='Sortable-container'
-								style={{left: this.state.pos[child.key]}}
-								ref={child.key}>
+								style={{left: this.state.pos[child.props.actionKey]}}
+								ref={child.props.actionKey}>
 
 								{child}
 							</div>);

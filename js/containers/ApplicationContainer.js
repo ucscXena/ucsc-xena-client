@@ -3,53 +3,17 @@
 
 // XXX move Application to views
 var Application = require('../Application');
-//var Spreadsheet = require('../Spreadsheet');
 var React = require('react');
 //var _ = require('../underscore_ext');
 var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
+var ChartView = require('../ChartView');
 var Column = require('../Column');
 var _ = require('../underscore_ext');
 var kmModel = require('../models/km');
 var {lookupSample} = require('../models/sample');
 var {xenaFieldPaths} = require('../models/fieldSpec');
-
-// At the top-level, we want to pick an Application widget,
-// a Spreadsheet widget, and a Column widget. Are those views
-// or containers?
-//
-// For icgc, then, we would pick different ones, e.g. Application
-// widget with column hide/show checkboxes.
-//
-// We need to parameterize Application by Spreadsheet. We could
-// make Application take a prop for Spreadsheet. That might
-// be a container or a view. Or, we could make Application a 
-// high-order component. It would be better to make ApplicationContainer
-// a high-order component, passing in Spreadsheet as a prop.
-//
-
-// We don't want to create a class in a render method. Rather, we want
-// to instantiate a class during render.
-// Could pass down a fn that renders a column.
-// Could instantiate the columns here.
-//
-// When using jsx, render looks like
-// createElement(Column, {...props}, ...children)
-//
-
-// Passing props => jsx functions seems to mess up React tree
-// resolution. We could pass a fn (not component) that returns
-// jsx. If the fn depends on things *not* in the props of
-// the component that calls the function, the component may
-// not render at the right time? Or perhaps it will: the fn
-// will be re-bound on each call. Unfortunately, this means it
-// will *always* re-render. To avoid this we could memoize the
-// call to get the bound fn. Ugh.
-//
-// OR... we could pass the props down. OR, we could render the
-// Columns here. To render the columns here, Column needs polymorphic
-// methods for menu, at least. Either put in widgets, or hang off the
-// react class.
-//
+var {rxEventsMixin} = require('../react-utils');
+var Rx = require('rx');
 
 // This seems odd. Surely there's a better test?
 function hasSurvival(survival) {
@@ -108,6 +72,26 @@ var SpreadsheetContainer = getSpreadsheetContainer(Column);
 
 
 var ApplicationContainer = React.createClass({
+	mixins: [rxEventsMixin],
+	onSearch: function (value) {
+		var {callback} = this.props;
+		callback(['sample-search', value]);
+	},
+	componentWillMount: function () {
+		this.events('highlightChange');
+		this.change = this.ev.highlightChange
+			.debounce(200)
+			.subscribe(this.onSearch);
+		// high on 1st change, low after some delay
+		this.highlight = this.ev.highlightChange
+			.map(() => Rx.Observable.return(true).concat(Rx.Observable.return(false).delay(300)))
+			.switchLatest()
+			.distinctUntilChanged();
+	},
+	componentWillUnmount: function () {
+		this.change.dispose();
+		this.highlight.dispose();
+	},
 	supportsGeneAverage(uuid) { // XXX could be precomputed in a selector
 		var {columns} = this.props.state;
 		return supportsGeneAverage(_.get(columns, uuid));
@@ -128,19 +112,31 @@ var ApplicationContainer = React.createClass({
 		var {columns, datasets} = this.props.state;
 		return datasetMeta(_.get(columns, uuid), datasets);
 	},
+	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback} = this.props,
-			computedState = selector(state);
+			computedState = selector(state),
+			{mode} = computedState,
+			View = {
+				heatmap: SpreadsheetContainer,
+				chart: ChartView
+			}[mode];
 		return (
 			<Application
-				supportsGeneAverage={this.supportsGeneAverage}
-				disableKM={this.disableKM}
-				fieldFormat={this.fieldFormat}
-				sampleFormat={this.sampleFormat}
-				datasetMeta={this.datasetMeta}
-				Spreadsheet={SpreadsheetContainer}
-				state={computedState}
-				callback={callback}/>);
+					Spreadsheet={SpreadsheetContainer}
+					onHighlightChange={this.ev.highlightChange}
+					state={computedState}
+					callback={callback}>
+				<View
+					searching={this.highlight}
+					supportsGeneAverage={this.supportsGeneAverage}
+					disableKM={this.disableKM}
+					fieldFormat={this.fieldFormat}
+					sampleFormat={this.sampleFormat}
+					datasetMeta={this.datasetMeta}
+					appState={computedState}
+					callback={callback}/>
+			</Application>);
 	}
 });
 

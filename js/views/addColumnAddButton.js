@@ -7,6 +7,7 @@ var Button = require('react-bootstrap/lib/Button');
 
 function addColumnAddButton(Component) {
 	return React.createClass({
+		displayName: 'SpreadsheetColumnAdd',
 		getInitialState() {
 			return {
 				openColumnEdit: !this.props.appState.cohort[0],

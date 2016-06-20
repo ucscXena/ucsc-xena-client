@@ -5,6 +5,7 @@ var React = require('react');
 
 function disableSelect(Component) {
 	return React.createClass({
+		displayName: 'SpreadsheetDisabledSelect',
 		onMouseDown(ev) {
 			// XXX XXX This is deeply evil, but not sure of a better way
 			// to prevent the browser from selecting text every time

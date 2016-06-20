@@ -5,6 +5,7 @@ var React = require('react');
 var _ = require('../underscore_ext');
 var Spreadsheet = require('../Spreadsheet');
 var {rxEventsMixin} = require('../react-utils');
+var getLabel = require('../getLabel');
 
 function zoomIn(pos, samples, zoom) {
 	var {count, index} = zoom;
@@ -32,9 +33,24 @@ function targetPos(ev) {
 var zoomInClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
 var zoomOutClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
-// XXX Does this break hot-loading? Yes. Can we manually shim
-// it, as when exporting multiple components?
+function columnSelector(id, i, appState) {
+	var {data, zoom, columns, samples, samplesMatched} = appState;
+	return {
+		id: id,
+		key: id,
+		samples: samples,
+		samplesMatched: samplesMatched,
+		zoom: zoom,
+		index: _.getIn(appState, ['index', id]),
+		vizSettings: _.getIn(appState, ['columns', id, 'vizSettings']),
+		data: _.getIn(data, [id]) /* refGene */,
+		column: _.getIn(columns, [id]),
+		label: getLabel(i) // <<- put in Spreadsheet? We don't really need it here.
+	};
+}
+
 var getSpreadsheetContainer = Column => React.createClass({
+	displayName: 'SpreadsheetContainer',
 	mixins: [rxEventsMixin],
 	componentWillMount() {
 		this.events('plotClick');
@@ -48,11 +64,59 @@ var getSpreadsheetContainer = Column => React.createClass({
 			}
 		});
 	},
-	componentWillUnmount() { // XXX refactor into a takeUntil mixin?
+	componentWillUnmount() {
 		this.plotClick.dispose();
 	},
+	onReorder: function (order) {
+		this.props.callback(['order', order]);
+	},
+	onResize: function (id, size) {
+		this.props.callback(['resize', id, size]);
+	},
+	onRemove: function (id) {
+		this.props.callback(['remove', id]);
+	},
+	onKm: function (id) {
+		this.props.callback(['km-open', id]);
+	},
+	onMode: function (id, newMode) {
+		this.props.callback(['fieldType', id, newMode]);
+	},
+	onColumnLabel: function (id, value) {
+		this.props.callback(['columnLabel', id, value]);
+	},
+	onFieldLabel: function (id, value) {
+		this.props.callback(['fieldLabel', id, value]);
+	},
+	onOpenVizSettings: function (id) {
+		this.props.callback(['vizSettings-open', id]);
+	},
+	onVizSettings: function (id, state) {
+		this.props.callback(['vizSettings', id, state]);
+	},
 	render() {
-		return <Spreadsheet {...this.props} onPlotClick={this.ev.plotClick} Column={Column}/>;
+		var columnProps = _.pick(this.props,
+				['searching', 'supportsGeneAverage', 'disableKM', 'datasetMeta', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
+			{appState} = this.props,
+			{columnOrder} = appState;
+		// XXX prune callback from this.props
+		// Currently it's required for ColumnEdit2 and zoom helper.
+		return (
+			<Spreadsheet onReorder={this.onReorder} onOpenVizSettings={this.onOpenVizSettings} onVizSettings={this.onVizSettings} {...this.props}>
+				{_.map(columnOrder, (id, i) => (
+					<Column
+						onViz={this.onOpenVizSettings}
+						onFieldLabel={this.onFieldLabel}
+						onColumnLabel={this.onColumnLabel}
+						onMode={this.onMode}
+						onKm={this.onKm}
+						onRemove={this.onRemove}
+						onResize={this.onResize}
+						actionKey={id}
+						{...columnProps}
+						onClick={this.ev.plotClick}
+						{...columnSelector(id, i, appState)}/>))}
+			</Spreadsheet>);
 	}
 });
 

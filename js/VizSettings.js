@@ -44,7 +44,7 @@ var customFloatImg = require('../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var Modal = require('react-bootstrap/lib/Modal');
 
-function vizSettingsWidget(node, callback, vizState, id, hide, defaultNormalization, fieldType) {
+function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization, fieldType) {
 	var state = vizState;
 	function datasetSetting() {
 		var node, div = document.createElement("div");
@@ -80,7 +80,7 @@ function vizSettingsWidget(node, callback, vizState, id, hide, defaultNormalizat
 		button.appendChild(document.createTextNode("Cancel"));
 		button.addEventListener("click", function () {
 			hide();
-			callback(['vizSettings', id, state]);
+			onVizSettings(id, state);
 		});
 		return button;
 	}
@@ -203,7 +203,7 @@ function vizSettingsWidget(node, callback, vizState, id, hide, defaultNormalizat
 		}
 
 		function removeAllVizSettings() {
-			callback(['vizSettings', id, _.omit(state, colorParams)]);
+			onVizSettings(id, _.omit(state, colorParams));
 		}
 
 		var node = document.createElement("div"),
@@ -285,7 +285,7 @@ function vizSettingsWidget(node, callback, vizState, id, hide, defaultNormalizat
 		displayErrors(err);
 
 		if (settingsValid(err)) {
-			callback(['vizSettings', id, _.merge(state, getInputSettingsFloat())]);
+			onVizSettings(id, _.merge(state, getInputSettingsFloat()));
 		}
 	}
 
@@ -325,7 +325,7 @@ function vizSettingsWidget(node, callback, vizState, id, hide, defaultNormalizat
 	}
 
 	function setVizSettings(key, value) {
-		callback(['vizSettings', id, _.assoc(state, key, value)]);
+		onVizSettings(id, _.assoc(state, key, value));
 	}
 
 	function getVizSettings(key) {
@@ -401,8 +401,8 @@ function vizSettingsWidget(node, callback, vizState, id, hide, defaultNormalizat
 var SettingsWrapper = React.createClass({
 	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
-		var {refs: {content}, props: {callback, vizSettings, id, defaultNormalization, fieldType, onRequestHide}} = this;
-		vizSettingsWidget(content, callback, vizSettings, id, onRequestHide, defaultNormalization, fieldType);
+		var {refs: {content}, props: {onVizSettings, vizSettings, id, defaultNormalization, fieldType, onRequestHide}} = this;
+		vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, fieldType);
 	},
 	render: function () {
 		return <div ref='content' />;

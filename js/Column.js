@@ -69,10 +69,10 @@ function optionMenu(props, opts) {
 
 var Column = React.createClass({
 	onResizeStop: function (size) {
-		this.props.callback(['resize', this.props.id, size]);
+		this.props.onResize(this.props.id, size);
 	},
 	onRemove: function () {
-		this.props.callback(['remove', this.props.id]);
+		this.props.onRemove(this.props.id);
 	},
 	onDownload: function () {
 		download(this.refs.plot.download());
@@ -81,11 +81,16 @@ var Column = React.createClass({
 		this.props.onViz(this.props.id);
 	},
 	onKm: function () {
-		let {callback, id} = this.props;
-		callback(['km-open', id]);
+		this.props.onKm(this.props.id);
 	},
 	onMode: function (ev, newMode) {
-		this.props.callback(['fieldType', this.props.id, newMode]);
+		this.props.onMode(this.props.id, newMode);
+	},
+	onColumnLabel: function (value) {
+		this.props.onColumnLabel(this.props.id, value);
+	},
+	onFieldLabel: function (value) {
+		this.props.onFieldLabel(this.props.id, value);
 	},
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
@@ -101,8 +106,8 @@ var Column = React.createClass({
 		return controlWidth + labelWidth;
 	},
 	render: function () {
-		var {id, label, samples, samplesMatched, callback, column,
-				zoom, data, datasetMeta, disableKM, searching, supportsGeneAverage} = this.props,
+		var {id, label, samples, samplesMatched, column,
+				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
 			{width, columnLabel, fieldLabel, user} = column,
 			menu = optionMenu(this.props, {onMode: this.onMode, onMuPit: this.onMuPit, supportsGeneAverage}),
 			[kmDisabled, kmTitle] = disableKM(id),
@@ -118,7 +123,6 @@ var Column = React.createClass({
 				aria-hidden="true">
 			</span>);
 
-		// Pass to widgets column, data, zoom, callback, samples
 		return (
 			<div className='Column' style={{width: width, position: 'relative'}}>
 				<br/>
@@ -134,14 +138,10 @@ var Column = React.createClass({
 				<Badge ref='label' style={styles.badge} className='pull-right'>{label}</Badge>
 				<br/>
 				<DefaultTextInput
-					columnID={id}
-					callback={callback}
-					eventName='columnLabel'
+					onChange={this.onColumnLabel}
 					value={{default: columnLabel, user: user.columnLabel}} />
 				<DefaultTextInput
-					columnID={id}
-					callback={callback}
-					eventName='fieldLabel'
+					onChange={this.onFieldLabel}
 					value={{default: fieldLabel, user: user.fieldLabel}} />
 				<div style={{height: 20}}>
 					{doRefGene ?
@@ -164,7 +164,7 @@ var Column = React.createClass({
 						height={zoom.height}
 						samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 						samplesMatched={samplesMatched}/>
-					{widgets.column({ref: 'plot', column, data, zoom, callback, samples, ...this.props.widgetProps})}
+					{widgets.column({ref: 'plot', id, column, data, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 				</ResizeOverlay>
 				{widgets.legend({column, data})}
 			</div>
