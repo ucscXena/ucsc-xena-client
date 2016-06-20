@@ -4,16 +4,16 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var _ = require('./underscore_ext');
+var _ = require('../underscore_ext');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Badge = require('react-bootstrap/lib/Badge');
 var DefaultTextInput = require('./DefaultTextInput');
-var {RefGeneAnnotation} = require('./refGeneExons');
-var SpreadSheetHighlight = require('./SpreadSheetHighlight');
-var ResizeOverlay = require('./views/ResizeOverlay');
-var widgets = require('./columnWidgets');
-var aboutDatasetMenu = require('./views/aboutDatasetMenu');
+var {RefGeneAnnotation} = require('../refGeneExons');
+var SpreadSheetHighlight = require('../SpreadSheetHighlight');
+var ResizeOverlay = require('./ResizeOverlay');
+var widgets = require('../columnWidgets');
+var aboutDatasetMenu = require('./aboutDatasetMenu');
 
 // XXX move this?
 function download([fields, rows]) {

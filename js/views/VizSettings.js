@@ -37,10 +37,10 @@
 // the state, or from a data cache, because we've fetched that already.
 
 'use strict';
-var dom_helper = require('./dom_helper');
-var _ = require('./underscore_ext');
-var floatImg = require('../images/genomicFloatLegend.jpg');
-var customFloatImg = require('../images/genomicCustomFloatLegend.jpg');
+var dom_helper = require('../dom_helper');
+var _ = require('../underscore_ext');
+var floatImg = require('../../images/genomicFloatLegend.jpg');
+var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var Modal = require('react-bootstrap/lib/Modal');
 

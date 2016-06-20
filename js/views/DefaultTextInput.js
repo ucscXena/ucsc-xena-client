@@ -9,7 +9,7 @@
 
 const React = require('react');
 var Input = require('react-bootstrap/lib/Input');
-var rxEventsMixin = require('./react-utils').rxEventsMixin;
+var rxEventsMixin = require('../react-utils').rxEventsMixin;
 
 var styles = {
 	input: {
