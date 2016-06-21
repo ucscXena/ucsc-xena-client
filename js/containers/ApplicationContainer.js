@@ -14,6 +14,13 @@ var {lookupSample} = require('../models/sample');
 var {xenaFieldPaths} = require('../models/fieldSpec');
 var {rxEventsMixin} = require('../react-utils');
 var Rx = require('rx');
+// Spreadsheet options
+var addTooltip = require('../views/addTooltip');
+var disableSelect = require('../views/disableSelect');
+var addColumnAddButton = require('../views/addColumnAddButton');
+var addVizEditor = require('../views/addVizEditor');
+var makeSortable = require('../views/makeSortable');
+var getSpreadsheet = require('../Spreadsheet');
 
 // This seems odd. Surely there's a better test?
 function hasSurvival(survival) {
@@ -68,7 +75,12 @@ function datasetMeta(column, datasets) {
 	};
 }
 
-var SpreadsheetContainer = getSpreadsheetContainer(Column);
+var columnsWrapper = c => addTooltip(makeSortable(disableSelect(addColumnAddButton(addVizEditor(c)))));
+var Spreadsheet = getSpreadsheet(columnsWrapper);
+// XXX without tooltip, we have no mouse pointer. Should make the wrapper add the css
+// that hides the mouse. Currently this is in Column.
+//var columnsWrapper = c => makeSortable(disableSelect(c));
+var SpreadsheetContainer = getSpreadsheetContainer(Column, Spreadsheet);
 
 
 var ApplicationContainer = React.createClass({

@@ -3,7 +3,6 @@
 
 var React = require('react');
 var _ = require('../underscore_ext');
-var Spreadsheet = require('../Spreadsheet');
 var {rxEventsMixin} = require('../react-utils');
 var getLabel = require('../getLabel');
 
@@ -49,7 +48,7 @@ function columnSelector(id, i, appState) {
 	};
 }
 
-var getSpreadsheetContainer = Column => React.createClass({
+var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	displayName: 'SpreadsheetContainer',
 	mixins: [rxEventsMixin],
 	componentWillMount() {

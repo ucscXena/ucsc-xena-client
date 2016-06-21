@@ -9,41 +9,8 @@ var Popover = require('react-bootstrap/lib/Popover');
 require('react-resizable/css/styles.css');
 var {deepPureRenderMixin} = require('./react-utils');
 require('./Columns.css'); // XXX switch to js styles
-var addTooltip = require('./views/addTooltip');
-var disableSelect = require('./views/disableSelect');
-var addColumnAddButton = require('./views/addColumnAddButton');
-var addVizEditor = require('./views/addVizEditor');
-var makeSortable = require('./views/makeSortable');
 var YAxisLabel = require('./views/YAxisLabel');
-
-var getColumns = Wrapper => React.createClass({
-	displayName: 'SpreadsheetColumns',
-	mixins: [deepPureRenderMixin],
-	render() {
-		var {onClick, children, ...wrapperProps} = this.props;
-		return (
-			<Wrapper {...wrapperProps}>
-				{children}
-			</Wrapper>);
-	}
-});
-
-var ColumnsWrapper = React.createClass({
-	render() {
-		var {children, widgetProps, ...optProps} = this.props;
-		return (
-			<div {...optProps} className="Columns">
-				{children}
-			</div>);
-	}
-});
-
-var FullWrapper = addTooltip(makeSortable(disableSelect(addColumnAddButton(addVizEditor(ColumnsWrapper)))));
-// XXX without tooltip, we have no mouse pointer. Should make the wrapper add the css
-// that hides the mouse. Currently this is in Column.
-//var FullWrapper = makeSortable(disableSelect(ColumnsWrapper));
-
-var Columns = getColumns(FullWrapper);
+var getColumns = require('./views/Columns');
 
 function zoomPopover(zoom, samples, props) {
 	return (
@@ -56,36 +23,41 @@ function zoomPopover(zoom, samples, props) {
 	);
 }
 
-var Spreadsheet = React.createClass({
-	zoomHelpClose: function () {
-		this.props.callback(['zoom-help-close']);
-	},
-	zoomHelpDisable: function () {
-		this.props.callback(['zoom-help-disable']);
-	},
-	render: function () {
-		var {appState: {zoom, samples, zoomHelp}, children, ...otherProps} = this.props,
-			zoomHelper = zoomHelp ?
-				zoomPopover(zoom, samples, {
-					onClick: this.zoomHelpClose,
-					onDisableClick: this.zoomHelpDisable
-				}) : null;
-		return (
-			<Row>
-				<Col md={1}>
-					<YAxisLabel
-						samples={samples}
-						zoom={zoom}
-					/>
-				</Col>
-				<Col md={11}>
-					<Columns appState={this.props.appState} {...otherProps}>
-						{children}
-					</Columns>
-					{zoomHelper}
-				</Col>
-			</Row>
-		);
-	}
-});
-module.exports = Spreadsheet;
+var getSpreadsheet = columnsWrapper => {
+	var Columns = getColumns(columnsWrapper);
+	return React.createClass({
+		mixins: [deepPureRenderMixin],
+		zoomHelpClose: function () {
+			this.props.callback(['zoom-help-close']);
+		},
+		zoomHelpDisable: function () {
+			this.props.callback(['zoom-help-disable']);
+		},
+		render: function () {
+			var {appState: {zoom, samples, zoomHelp}, children, ...otherProps} = this.props,
+				zoomHelper = zoomHelp ?
+					zoomPopover(zoom, samples, {
+						onClick: this.zoomHelpClose,
+						onDisableClick: this.zoomHelpDisable
+					}) : null;
+			return (
+				<Row>
+					<Col md={1}>
+						<YAxisLabel
+							samples={samples}
+							zoom={zoom}
+						/>
+					</Col>
+					<Col md={11}>
+						<Columns appState={this.props.appState} {...otherProps}>
+							{children}
+						</Columns>
+						{zoomHelper}
+					</Col>
+				</Row>
+			);
+		}
+	});
+};
+
+module.exports = getSpreadsheet;
