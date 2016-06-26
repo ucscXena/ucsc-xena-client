@@ -9,6 +9,7 @@
     "lint": "eslint --no-color js/*.js js/*/*.js test/*.js",
     "eslint": "eslint",
     "clean": "rimraf build/*",
+    "clean:dist": "rimraf dist/*",
     "start": "npm run start:hot",
     "start:cold": "webpack-dev-server --devtool eval --progress --colors --history-api-fallback",
     "start:hot": "node ./server-hot.js",
@@ -17,7 +18,7 @@
     "build": "webpack",
     "build:prod": "npm run build -- --config webpack.prod.js --devtool source-map",
     "prebuild": "npm run clean",
-    "dist": "npm run clean && babel -d dist js && cp js/*.css dist",
+    "dist": "npm run clean:dist && cp -r js/* dist && babel -d dist js",
     "install": "napa"
   },
   "author": "Brian Craft",
