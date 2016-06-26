@@ -63,6 +63,7 @@ module.exports = function({
 	main,
 	selector}) {
 
+	var dom = {main};
 	var updater = ac => uiCh.onNext(ac);
 	var runner = controlRunner(serverBus, controller);
 
@@ -76,7 +77,7 @@ module.exports = function({
 				   .share();
 
 	stateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
-		.subscribe(state => ReactDOM.render(<Page callback={updater} selector={selector} state={state} />, main));
+		.subscribe(state => ReactDOM.render(<Page callback={updater} selector={selector} state={state} />, dom.main));
 
 	// Save state in sessionStorage on page unload.
 	stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
@@ -84,4 +85,5 @@ module.exports = function({
 
 	// Kick things off.
 	uiBus.onNext(['init']);
+	return dom;
 };

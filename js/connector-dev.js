@@ -39,6 +39,7 @@ module.exports = function({
 	// Change this assignment to JSON to use the browser JSON methods.
 	let {stringify, parse} = compactJSON;
 
+	var dom = {main};
 	var updater = ac => uiCh.onNext(ac);
 	let devBus = new Rx.Subject();
 
@@ -122,7 +123,7 @@ module.exports = function({
 					<Page callback={updater} selector={selector} state={unwrapDevState(devState)} />
 					<DevTools dispatch={devBus.onNext.bind(devBus)} {...devState} />
 				</div>,
-				main);
+				dom.main);
 		});
 
 	// Save state in sessionStorage on page unload.
@@ -132,4 +133,5 @@ module.exports = function({
 	// This causes us to always load cohorts on page load. This is important after
 	// setting hubs, for example.
 	uiBus.onNext(['init']);
+	return dom;
 };
