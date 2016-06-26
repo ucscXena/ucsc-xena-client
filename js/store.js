@@ -19,7 +19,7 @@ var defaultServers = [
 	"https://toil.xenahubs.net"
 ];
 
-module.exports = function () {
+module.exports = function (persist) {
 	// Create a channel for messages from the server. We want to avoid out-of-order
 	// responses.  To do that, we have to allocate somewhere. We can manage it by
 	// doing using a unique tag for the type of request, and using groupBy, then
@@ -65,7 +65,7 @@ module.exports = function () {
 		notifications: getNotifications()
 	};
 
-	if (nostate('xena')) {
+	if (persist && nostate('xena')) {
 		_.extend(initialState, JSON.parse(sessionStorage.xena));
 	}
 

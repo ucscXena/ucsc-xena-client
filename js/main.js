@@ -48,10 +48,10 @@ if (module.hot) {
 	module.hot.accept('./models/denseMatrix', () => {});
 }
 
-var store = createStore();
+var store = createStore(true);
 var main = window.document.getElementById('main');
 
 // XXX reducer
 var controller = compose(serverController, uiController);
 
-connector({...store, controller, main, selector, Page: Application});
+connector({...store, controller, main, selector, Page: Application, persist: true, history: true});

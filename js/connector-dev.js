@@ -28,6 +28,7 @@ var unwrapDevState = state => _.last(state.computedStates).state;
 module.exports = function({
 	Page,
 	controller,
+	persist,
 	initialState,
 	serverBus,
 	serverCh,
@@ -65,7 +66,7 @@ module.exports = function({
 
 	var sessionLoaded = false; // XXX Ugh. Sorry about this.
 	function getSavedState() {
-		if (nostate('debugSession')) {
+		if (persist && nostate('debugSession')) {
 			try {
 				let devState = parse(sessionStorage.debugSession);
 				sessionLoaded = true;
@@ -126,9 +127,11 @@ module.exports = function({
 				dom.main);
 		});
 
-	// Save state in sessionStorage on page unload.
-	devStateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
-		.subscribe(state => sessionStorage.debugSession = stringify(state));
+	if (persist) {
+		// Save state in sessionStorage on page unload.
+		devStateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
+			.subscribe(state => sessionStorage.debugSession = stringify(state));
+	}
 
 	// This causes us to always load cohorts on page load. This is important after
 	// setting hubs, for example.

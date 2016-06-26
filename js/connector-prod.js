@@ -52,9 +52,14 @@ var [pushState, setState] = (function () {
 	})];
 })();
 
+var enableHistory = (enable, obs) => enable ?
+	obs.do(pushState).merge(setState) : obs;
+
 module.exports = function({
 	Page,
 	controller,
+	persist,
+	history,
 	initialState,
 	serverBus,
 	serverCh,
@@ -70,18 +75,18 @@ module.exports = function({
 	// Shim sessionStorage for code using session.js.
 	session.setCallback(ev => uiCh.onNext(ev));
 
-	let stateObs = Rx.Observable.merge(serverCh, uiCh)
-				   .scan(initialState, runner)
-				   .do(pushState)
-				   .merge(setState)
-				   .share();
+	let stateObs = enableHistory(
+			history,
+			Rx.Observable.merge(serverCh, uiCh).scan(initialState, runner)).share();
 
 	stateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
 		.subscribe(state => ReactDOM.render(<Page callback={updater} selector={selector} state={state} />, dom.main));
 
-	// Save state in sessionStorage on page unload.
-	stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
-		.subscribe(state => sessionStorage.xena = JSON.stringify(state));
+	if (persist) {
+		// Save state in sessionStorage on page unload.
+		stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
+			.subscribe(state => sessionStorage.xena = JSON.stringify(state));
+	}
 
 	// Kick things off.
 	uiBus.onNext(['init']);
