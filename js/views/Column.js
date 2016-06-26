@@ -106,7 +106,7 @@ var Column = React.createClass({
 		return controlWidth + labelWidth;
 	},
 	render: function () {
-		var {id, label, samples, samplesMatched, column,
+		var {id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
 			{width, columnLabel, fieldLabel, user} = column,
 			menu = optionMenu(this.props, {onMode: this.onMode, onMuPit: this.onMuPit, supportsGeneAverage}),
@@ -164,7 +164,7 @@ var Column = React.createClass({
 						height={zoom.height}
 						samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 						samplesMatched={samplesMatched}/>
-					{widgets.column({ref: 'plot', id, column, data, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
+					{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 				</ResizeOverlay>
 				{widgets.legend({column, data})}
 			</div>
