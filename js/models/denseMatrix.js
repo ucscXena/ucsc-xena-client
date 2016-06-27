@@ -55,7 +55,7 @@ function computeHeatmap(vizSettings, data, fields, samples, defaultNormalization
 var hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min']));
 
 function dataToHeatmap(column, vizSettings, data, samples) {
-	if (!data) {
+	if (!_.get(data, 'req')) {
 		return null;
 	}
 	var {req, codes = {}} = data,
@@ -99,7 +99,7 @@ function cmpSamples(probes, data, s1, s2) {
 	}
 }
 
-var cmp = ({fields}, {req: {values, probes}} = {req: {}}) =>
+var cmp = ({fields}, {req: {values, probes} = {values, probes}}) =>
 	(s1, s2) => cmpSamples(probes || fields, values, s1, s2); // XXX having probes here is unfortunate.
 
 //

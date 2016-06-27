@@ -227,8 +227,13 @@ var controls = {
 	'zoom-help-disable': zoomHelpClose,
 	'zoom-help-disable-post!': (serverBus, state, newState) =>
 		setNotifications(newState.notifications),
+	reload: (state, id) => _.assocIn(state, ['data', id, 'status'], 'loading'),
+	'reload-post!': (serverBus, state, newState, id) =>
+		fetchColumnData(serverBus, newState.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	fieldType: (state, id, fieldType) =>
-		_.updateIn(state, ['columns', id], setFieldType(fieldType)),
+		_.updateIn(state,
+				['columns', id], setFieldType(fieldType),
+				['data', id, 'status'], () => 'loading'),
 	'fieldType-post!': (serverBus, state, newState, id) =>
 		fetchColumnData(serverBus, newState.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	vizSettings: (state, column, settings) =>

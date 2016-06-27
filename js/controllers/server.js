@@ -59,7 +59,17 @@ var controls = {
 		fetchSamples(serverBus, user, cohort);
 		fetchDatasets(serverBus, user, cohort);
 	},
-	datasets: (state, datasets) => resetColumnFields(_.assoc(state, "datasets", datasets)),
+	datasets: (state, datasets) => {
+		var newState = resetColumnFields(_.assoc(state, "datasets", datasets)),
+			{cohortSamples, columnOrder} = newState;
+		if (cohortSamples) {
+			return _.reduce(
+					columnOrder,
+					(id, acc) => _.assocIn(acc, ['data', id, 'status'], 'loading'),
+					newState);
+		}
+		return newState;
+	},
 	'datasets-post!': (serverBus, state, newState, datasets) => {
 		var {cohortSamples, columns} = newState;
 		if (cohortSamples) {
@@ -69,27 +79,41 @@ var controls = {
 		fetchFeatures(serverBus, datasets);
 	},
 	features: (state, features) => _.assoc(state, "features", features),
-	samples: (state, samples) =>
-		matchSamples(resetZoom(_.assoc(state,
+	samples: (state, samples) => {
+		var newState = matchSamples(resetZoom(_.assoc(state,
 						  'cohortSamples', samples,
 						  'samples', _.range(_.sum(_.map(samples, c => c.length))))),
 					state.sampleSearch),
+			{columnOrder} = newState;
+		return _.reduce(
+				columnOrder,
+				(acc, id) => _.assocIn(acc, ['data', id, 'status'], 'loading'),
+				newState);
+	},
 	'samples-post!': (serverBus, state, newState, samples) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
 	'normalize-fields': (state, fields, id, settings, isFirst, xenaFields) => {
 		var {columnOrder, sampleSearch} = state, // old settings
-			newOrder = isFirst ? [id, ...columnOrder] : [...columnOrder, id];
-		return _.assocIn(state,
+			newOrder = isFirst ? [id, ...columnOrder] : [...columnOrder, id],
+			newState = _.assocIn(state,
 				['columns', id], updateFields(settings, xenaFields, fields),
 				['columnOrder'], newOrder,
 				['sampleSearch'], remapFields(columnOrder, newOrder, sampleSearch));
+		return _.assocIn( newState, ['data', id, 'status'], 'loading');
 	},
 	'normalize-fields-post!': (serverBus, state, newState, fields, id) =>
 		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
-		columnOpen(state, id) ?  matchSamples(_.assocIn(state, ["data", id], data), state.sampleSearch) : state,
+		columnOpen(state, id) ?
+			matchSamples(
+					_.assocIn(state, ["data", id], _.assoc(data, 'status', 'loaded')),
+					state.sampleSearch) :
+			state,
+	'widget-data-error': (state, id) =>
+		columnOpen(state, id) ?
+			_.assocIn(state, ["data", id, 'status'], 'error') : state,
 	'columnEdit-features': (state, list) => _.assocIn(state, ["columnEdit", 'features'], list),
 	'columnEdit-examples': (state, list) => _.assocIn(state, ["columnEdit", 'examples'], list),
 	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival),

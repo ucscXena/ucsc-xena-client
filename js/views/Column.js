@@ -14,6 +14,7 @@ var SpreadSheetHighlight = require('../SpreadSheetHighlight');
 var ResizeOverlay = require('./ResizeOverlay');
 var widgets = require('../columnWidgets');
 var aboutDatasetMenu = require('./aboutDatasetMenu');
+var spinner = require('../ajax-loader.gif');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -37,6 +38,22 @@ var styles = {
 		// to a different character, the width will be different, and our minimum width
 		// becomes invalid.
 		width: 24
+	},
+	status: {
+		pointerEvents: 'none',
+		textAlign: 'center',
+		zIndex: 1,
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		width: '100%',
+		height: '100%',
+		backgroundColor: 'rgba(255, 255, 255, 0.6)'
+	},
+	error: {
+		textAlign: 'center',
+		pointerEvents: 'all',
+		cursor: 'pointer'
 	}
 };
 
@@ -45,7 +62,7 @@ function mutationMenu(props, {onMuPit}) {
 		assembly = _.getIn(column, ['assembly']),
 		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
 		noMenu = !rightAssembly || (data && _.isEmpty(data.refGene)),
-		noData = ( !data ) ? true : false,
+		noData = !_.get(data, 'req'), // XXX
 		menuItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)';
 	return noMenu ? null : <MenuItem disabled={noData} onSelect={onMuPit}>{menuItemName}</MenuItem>;
 }
@@ -65,6 +82,27 @@ function matrixMenu(props, {supportsGeneAverage, onMode}) {
 function optionMenu(props, opts) {
 	var {column: {valueType}} = props;
 	return (valueType === 'mutation' ?  mutationMenu : matrixMenu)(props, opts);
+}
+
+function getStatusView(status, onReload) {
+	if (status === 'loading') {
+		return (
+			<div style={styles.status}>
+				<img style={{textAlign: 'center'}} src={spinner}/>
+			</div>);
+	}
+	if (status === 'error') {
+		return (
+			<div style={styles.status}>
+				<span
+					onClick={onReload}
+					title='Error loading data. Click to reload.'
+					style={styles.error}
+					className='glyphicon glyphicon-warning-sign Sortable-handle'
+					aria-hidden='true'/>
+			</div>);
+	}
+	return null;
 }
 
 var Column = React.createClass({
@@ -100,6 +138,9 @@ var Column = React.createClass({
 
 		window.open(url);
 	},
+	onReload: function () {
+		this.props.onReload(this.props.id);
+	},
 	getControlWidth: function () {
 		var controlWidth = ReactDOM.findDOMNode(this.refs.controls).getBoundingClientRect().width,
 			labelWidth = ReactDOM.findDOMNode(this.refs.label).getBoundingClientRect().width;
@@ -111,6 +152,7 @@ var Column = React.createClass({
 			{width, columnLabel, fieldLabel, user} = column,
 			menu = optionMenu(this.props, {onMode: this.onMode, onMuPit: this.onMuPit, supportsGeneAverage}),
 			[kmDisabled, kmTitle] = disableKM(id),
+			status = _.get(data, 'status'),
 			// move this to state to generalize to other annotations.
 			doRefGene = _.get(data, 'refGene'),
 			// In FF spans don't appear as event targets. In Chrome, they do.
@@ -164,7 +206,10 @@ var Column = React.createClass({
 						height={zoom.height}
 						samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 						samplesMatched={samplesMatched}/>
-					{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
+					<div style={{position: 'relative'}}>
+						{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
+						{getStatusView(status, this.onReload)}
+					</div>
 				</ResizeOverlay>
 				{widgets.legend({column, data})}
 			</div>

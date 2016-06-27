@@ -293,7 +293,7 @@ function findNodes(byPosition, layout, feature, samples) {
 
 function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 		vizSettings, data, sortedSamples, dataset, index, zoom) {
-	if (!data) {
+	if (!_.get(data, 'req')) {
 		return {};
 	}
 	var {refGene} = data;
@@ -315,7 +315,7 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 }
 
 function index(fieldType, data) {
-	if (!data) {
+	if (!_.get(data, 'req')) {
 		return null;
 	}
 

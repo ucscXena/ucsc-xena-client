@@ -93,6 +93,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	onVizSettings: function (id, state) {
 		this.props.callback(['vizSettings', id, state]);
 	},
+	onReload: function (id) {
+		this.props.callback(['reload', id]);
+	},
 	render() {
 		var columnProps = _.pick(this.props,
 				['searching', 'supportsGeneAverage', 'disableKM', 'datasetMeta', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
@@ -111,6 +114,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						onKm={this.onKm}
 						onRemove={this.onRemove}
 						onResize={this.onResize}
+						onReload={this.onReload}
 						actionKey={id}
 						{...columnProps}
 						onClick={this.ev.plotClick}

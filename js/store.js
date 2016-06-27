@@ -32,10 +32,17 @@ module.exports = function (persist) {
 	// widget-data-{id}, and issues action 'widge-data'.
 	var slotId = slot => _.isArray(slot) ? slot.join('-') : slot;
 	var actionId = slot => _.isArray(slot) ? slot : [slot];
+	var errorId = slot => {
+		var [action, ...args] = actionId(slot);
+		return [`${action}-error`, ...args];
+	};
 
 	function wrapSlotRequest([slot, req, ...args]) {
+		console.log('slot', slot);
+		console.log('slot id', slotId(slot));
+		console.log('action id', actionId(slot));
 		return req.map(result => [...actionId(slot), result, ...args])
-			.catch(err => Rx.Observable.return([`${slot}-error`, getErrorProps(logError(err)), ...args], Rx.Scheduler.timeout));
+			.catch(err => Rx.Observable.return([...errorId(slot), getErrorProps(logError(err)), ...args], Rx.Scheduler.timeout));
 	}
 
 	// XXX Note that serverCh.onNext can push stuff that causes us to throw in

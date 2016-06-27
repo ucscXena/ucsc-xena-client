@@ -75,7 +75,11 @@ function fetchColumnData(serverBus, samples, id, settings) {
 
 	// XXX  Note that the widget-data-xxx slots are leaked in the groupBy
 	// in main.js. We need a better mechanism.
-	serverBus.onNext([['widget-data', id], fetch(settings, samples)]);
+//	if (Math.random() > 0.5) { // testing error handling
+		serverBus.onNext([['widget-data', id], fetch(settings, samples)]);
+//	} else {
+//		serverBus.onNext([['widget-data', id], Rx.Observable.throw(new Error('Injected error'))]);
+//	}
 }
 
 function resetZoom(state) {
