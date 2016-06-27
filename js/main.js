@@ -54,4 +54,4 @@ var main = window.document.getElementById('main');
 // XXX reducer
 var controller = compose(serverController, uiController);
 
-connector({...store, controller, main, selector, Page: Application, persist: true, history: true});
+connector({...store, controller, main, selector, Page: Application, persist: true, history: false});
