@@ -18,7 +18,7 @@
     "build": "webpack",
     "build:prod": "npm run build -- --config webpack.prod.js --devtool source-map",
     "prebuild": "npm run clean",
-    "dist": "npm run clean:dist && cp -r js/* dist && babel -d dist js",
+    "dist": "npm run clean:dist && cp -r js/* dist && NODE_ENV=production babel -d dist js",
     "install": "napa"
   },
   "author": "Brian Craft",
