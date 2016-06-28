@@ -63,7 +63,7 @@ var AppControls = React.createClass({
 	},
 	onSetBookmark(resp) {
 		var {id} = JSON.parse(resp.response);
-		this.setState({bookmark: `https://genome-cancer.ucsc.edu/proj/site/xena/?bookmark=${id}`});
+		this.setState({bookmark: `https://genome-cancer.ucsc.edu/proj/site/xena/heatmap/?bookmark=${id}`});
 	},
 	onResetBookmark() {
 		this.setState({bookmark: null});
