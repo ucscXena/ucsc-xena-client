@@ -33,4 +33,4 @@ var main = window.document.getElementById('main');
 
 var selector = state => state;
 
-connector({...store, controller, main, selector, Page: Hub});
+connector({...store, controller, main, selector, Page: Hub, persist:true, history: false});
