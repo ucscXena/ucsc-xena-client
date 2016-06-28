@@ -10,7 +10,7 @@ function addColumnAddButton(Component) {
 		displayName: 'SpreadsheetColumnAdd',
 		getInitialState() {
 			return {
-				openColumnEdit: !this.props.appState.cohort[0],
+				openColumnEdit: !this.props.appState.cohort[0] && !this.props.appState.loadPending,
 			};
 		},
 		componentWillReceiveProps: function(newProps) {

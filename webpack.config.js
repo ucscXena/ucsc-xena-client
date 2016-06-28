@@ -44,6 +44,7 @@ module.exports = {
 			'rx.binding$': 'rx/dist/rx.binding',
 			'rx.async$': 'rx/dist/rx.async',
 			'rx.experimental$': 'rx/dist/rx.experimental',
+			'rx.aggregates$': 'rx/dist/rx.aggregates',
 			'rx.coincidence$': 'rx/dist/rx.coincidence'
 		},
 		extensions: ['', '.js', '.json', '.coffee']

@@ -15,6 +15,7 @@ var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
 var fetch = require('../fieldFetch');
 var {remapFields} = require('../models/searchSamples');
+var {fetchInlineState} = require('../inlineState');
 
 var identity = x => x;
 
@@ -27,6 +28,13 @@ function cohortQuery(servers) {
 
 function fetchCohorts(serverBus, servers) {
 	serverBus.onNext(['cohorts', cohortQuery(servers)]);
+}
+
+function fetchBookmark(serverBus, bookmark) {
+	serverBus.onNext(['bookmark', Rx.DOM.ajax({
+		method: 'GET',
+		url: `/proj/site/bookmarks?id=${bookmark}`,
+	}).map(r => r.response)]);
 }
 
 function exampleQuery(dsID) {
@@ -170,20 +178,36 @@ function getChartOffsets(column) {
 	});
 }
 
+function setLoadingState(state) {
+	var pending =  (state.bookmark || state.inlineState) ?
+		_.assoc(state, 'loadPending', true) : state;
+	return _.omit(pending, ['bookmark', 'inlineState']);
+}
+
+function fetchState(serverBus) {
+	serverBus.onNext(['inlineState', fetchInlineState()]);
+}
+
 var controls = {
-	init: state => setCohortPending(setServerPending(state)),
+	init: state => setCohortPending(setServerPending(setLoadingState(state))),
 	'init-post!': (serverBus, state, newState) => {
-		// XXX If we have servers.pending *and* cohortPending, there may be a race here.
-		// We fetch the cohorts list, and the cohort data. If cohorts completes & the
-		// cohort is not in new list, we reset cohort. Then the cohort data arrives (and
-		// note there are several cascading queries).
-		// Currently datapages + hub won't set cohortPending to a cohort not in the active hubs, so
-		// we shouldn't hit this case.
-		if (!state.cohorts || state.servers.pending && !_.isEqual(state.servers, state.servers.pending)) {
-			fetchCohorts(serverBus, newState.servers.user);
-		}
-		if (shouldSetCohort(state)) {
-			fetchCohortData(serverBus, newState);
+		if (state.inlineState) {
+			fetchState(serverBus);
+		} else if (state.bookmark) {
+			fetchBookmark(serverBus, state.bookmark);
+		} else {
+			// XXX If we have servers.pending *and* cohortPending, there may be a race here.
+			// We fetch the cohorts list, and the cohort data. If cohorts completes & the
+			// cohort is not in new list, we reset cohort. Then the cohort data arrives (and
+			// note there are several cascading queries).
+			// Currently datapages + hub won't set cohortPending to a cohort not in the active hubs, so
+			// we shouldn't hit this case.
+			if (!state.cohorts || state.servers.pending && !_.isEqual(state.servers, state.servers.pending)) {
+				fetchCohorts(serverBus, newState.servers.user);
+			}
+			if (shouldSetCohort(state)) {
+				fetchCohortData(serverBus, newState);
+			}
 		}
 	},
 	cohort: (state, i, cohort) =>

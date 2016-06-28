@@ -1,4 +1,4 @@
-/*global require: false, module: false */
+/*global require: false, module: false, document: false */
 
 'use strict';
 
@@ -11,6 +11,11 @@ var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var pdf = require('./pdfSpreadsheet');
 var _ = require('./underscore_ext');
 require('./AppControls.css');
+var Rx = require('rx-dom');
+var {createBookmark} = require('./bookmark');
+var konami = require('./konami');
+var Popover = require('react-bootstrap/lib/Popover');
+var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 
 var modeButton = {
 	chart: 'Visual Spreadsheet',
@@ -24,6 +29,18 @@ var modeEvent = {
 
 // XXX drop this.props.style? Not sure it's used.
 var AppControls = React.createClass({
+	getInitialState() {
+		return {bookmarks: false};
+	},
+	enableBookmarks() {
+		this.setState({bookmarks: true});
+	},
+	componentWillMount() {
+		this.ksub = konami.subscribe(this.enableBookmarks);
+	},
+	componentWillUnmount() {
+		this.ksub.dispose();
+	},
 	onMode: function () {
 		var {callback, appState: {mode}} = this.props;
 		callback([modeEvent[mode]]);
@@ -44,8 +61,28 @@ var AppControls = React.createClass({
 	onResetSampleFilter: function () {
 		this.props.callback(['sampleFilter', 0 /* index into composite cohorts */, null]);
 	},
+	onSetBookmark(resp) {
+		var {id} = JSON.parse(resp.response);
+		this.setState({bookmark: `https://genome-cancer.ucsc.edu/proj/site/xena/?bookmark=${id}`});
+	},
+	onResetBookmark() {
+		this.setState({bookmark: null});
+	},
+	onBookmark: function () {
+		var {appState} = this.props;
+		Rx.DOM.ajax({
+			method: 'POST',
+			url: '/proj/site/bookmarks',
+			headers: {
+				'X-CSRFToken': document.cookie.replace(/.*csrftoken=([0-9a-z]+)/, '$1'),
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: `content=${encodeURIComponent(createBookmark(appState))}`
+		}).subscribe(this.onSetBookmark);
+	},
 	render: function () {
 		var {appState: {cohort: activeCohorts, cohorts, datasets, mode, columnOrder}} = this.props,
+			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			samplesFrom = _.getIn(activeCohorts, [0, 'samplesFrom']),
 			sampleFilter = _.getIn(activeCohorts, [0, 'sampleFilter']),
@@ -89,6 +126,11 @@ var AppControls = React.createClass({
 				{hasColumn ? <Button disabled={!hasColumn} onClick={this.onMode} bsStyle='primary'>{modeButton[mode]}</Button> : null}
 				{' '}
 				{(noshow || !hasColumn) ? null : <Button onClick={this.onPdf}>PDF</Button>}
+				{bookmarks ?
+					<OverlayTrigger onEnter={this.onBookmark} trigger='click' placement='bottom'
+						overlay={<Popover placement='bottom'><p>Your bookmark is {bookmark || 'loading'}</p></Popover>}>
+						<Button>Bookmark</Button>
+					</OverlayTrigger> : null}
 			</form>
 		);
 	}

@@ -9,6 +9,8 @@ var _ = require('./underscore_ext');
 var {getErrorProps, logError} = require('./errors');
 var {getNotifications} = require('./notifications');
 var nostate = require('./nostate');
+var {hasBookmark, getBookmark, resetBookmarkLocation} = require('./bookmark');
+var {hasInlineState, resetInlineStateLocation} = require('./inlineState');
 
 var defaultServers = [
 	'https://local.xena.ucsc.edu:7223',
@@ -38,9 +40,6 @@ module.exports = function (persist) {
 	};
 
 	function wrapSlotRequest([slot, req, ...args]) {
-		console.log('slot', slot);
-		console.log('slot id', slotId(slot));
-		console.log('action id', actionId(slot));
 		return req.map(result => [...actionId(slot), result, ...args])
 			.catch(err => Rx.Observable.return([...errorId(slot), getErrorProps(logError(err)), ...args], Rx.Scheduler.timeout));
 	}
@@ -74,6 +73,16 @@ module.exports = function (persist) {
 
 	if (persist && nostate('xena')) {
 		_.extend(initialState, JSON.parse(sessionStorage.xena));
+	}
+
+	if (hasBookmark()) {
+		_.extend(initialState, {'bookmark': getBookmark()});
+		resetBookmarkLocation();
+	}
+
+	if (hasInlineState()) {
+		_.extend(initialState, {'inlineState': true});
+		resetInlineStateLocation();
 	}
 
 	return {

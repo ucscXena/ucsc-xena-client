@@ -12,6 +12,7 @@ var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
 var {updateFields, filterByDsID} = require('../models/fieldSpec');
 var {remapFields} = require('../models/searchSamples');
 var identity = x => x;
+var {parseBookmark} = require('../bookmark');
 
 function featuresQuery(datasets) {
 	var clinicalMatrices = _.filter(datasets, ds => ds.type === 'clinicalMatrix'),
@@ -52,7 +53,12 @@ var resetColumnFields = state =>
 		closeEmptyColumns(
 			dropUnknownFields(state)));
 
+var resetLoadPending = state => _.dissoc(state, 'loadPending');
+
 var controls = {
+	// XXX reset loadPending flag
+	bookmark: (state, bookmark) => resetLoadPending(parseBookmark(bookmark)),
+	inlineState: (state, newState) => resetLoadPending(newState),
 	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),
 	'cohorts-post!': (serverBus, state, newState) => {
 		let {servers: {user}, cohort} = newState;
@@ -65,7 +71,7 @@ var controls = {
 		if (cohortSamples) {
 			return _.reduce(
 					columnOrder,
-					(id, acc) => _.assocIn(acc, ['data', id, 'status'], 'loading'),
+					(acc, id) => _.assocIn(acc, ['data', id, 'status'], 'loading'),
 					newState);
 		}
 		return newState;
