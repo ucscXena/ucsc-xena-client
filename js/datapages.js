@@ -34,4 +34,4 @@ var main = window.document.getElementById('main');
 
 var selector = state => state;
 
-connector({...store, controller, main, selector, Page: Datapages});
+connector({...store, controller, main, selector, Page: Datapages, persist:true, history: false});
