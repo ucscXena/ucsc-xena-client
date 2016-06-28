@@ -143,7 +143,8 @@ var unknownEffect = 0,
 			get: (a, v) => impact[v.effect] || (v.effect ? unknownEffect : undefined),
 			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
 			legend: {
-				colors: _.values(chromColorGB).map(hexToRGB).map(colorStr).reverse().
+				// have to explicitly call hexToRGB to avoid map passing in index.
+				colors: _.values(chromColorGB).map(h => hexToRGB(h)).map(colorStr).reverse().
 					concat(colors.category4.map(colorStr)),
 				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse().
 					concat(_.range(_.keys(impactGroups).length).map(
