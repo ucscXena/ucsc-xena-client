@@ -14,11 +14,9 @@ var getColumns = require('./views/Columns');
 
 function zoomPopover(zoom, samples, props) {
 	return (
-		<Popover {...props} placement="right" positionLeft={-20} positionTop={40} title="Zooming">
-			<p>Click on the graph to zoom on samples (vertically).</p>
+		<Popover {...props} placement="right" positionLeft={-20} positionTop={40}>
 			<p>Shift-click to zoom out.</p>
-			<p>As shown at left, you are now viewing {zoom.count} of the {samples.length} samples.</p>
-			<Button onClick={props.onDisableClick}>Don't show this again</Button>
+			<Button onClick={props.onDisableClick}>Ok</Button>
 		</Popover>
 	);
 }
