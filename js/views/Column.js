@@ -8,6 +8,8 @@ var _ = require('../underscore_ext');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
 var Badge = require('react-bootstrap/lib/Badge');
+var Tooltip = require('react-bootstrap/lib/Tooltip');
+var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('../refGeneExons');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
@@ -155,15 +157,19 @@ var Column = React.createClass({
 			status = _.get(data, 'status'),
 			// move this to state to generalize to other annotations.
 			doRefGene = _.get(data, 'refGene'),
+			sortHelp = <Tooltip>Drag to change column order</Tooltip>,
 			// In FF spans don't appear as event targets. In Chrome, they do.
 			// If we omit Sortable-handle here, Chrome will only catch events
 			// in the button but not in the span. If we omit Sortable-handle
 			// in SplitButton, FF will catch no events, since span doesn't
 			// emit any.
-			moveIcon = (<span
-				className="glyphicon glyphicon-resize-horizontal Sortable-handle"
-				aria-hidden="true">
-			</span>);
+			moveIcon = (
+				<OverlayTrigger placement='top' overlay={sortHelp}>
+					<span
+						className="glyphicon glyphicon-resize-horizontal Sortable-handle"
+						aria-hidden="true">
+					</span>
+				</OverlayTrigger>);
 
 		return (
 			<div className='Column' style={{width: width, position: 'relative'}}>
