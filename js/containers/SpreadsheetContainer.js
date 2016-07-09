@@ -116,6 +116,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						onResize={this.onResize}
 						onReload={this.onReload}
 						actionKey={id}
+						first={i === 0}
 						{...columnProps}
 						onClick={this.ev.plotClick}
 						{...columnSelector(id, i, appState)}/>))}

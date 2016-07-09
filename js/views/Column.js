@@ -149,7 +149,7 @@ var Column = React.createClass({
 		return controlWidth + labelWidth;
 	},
 	render: function () {
-		var {id, label, samples, samplesMatched, column, index,
+		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
 			{width, columnLabel, fieldLabel, user} = column,
 			menu = optionMenu(this.props, {onMode: this.onMode, onMuPit: this.onMuPit, supportsGeneAverage}),
@@ -217,6 +217,7 @@ var Column = React.createClass({
 						{getStatusView(status, this.onReload)}
 					</div>
 				</ResizeOverlay>
+				<h5 style={{visibility: first ? 'visible' : 'hidden'}}>Legends</h5>
 				{widgets.legend({column, data})}
 			</div>
 		);
