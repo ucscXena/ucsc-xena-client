@@ -132,7 +132,7 @@ var Sortable = React.createClass({
 
 	render: function () {
 		var columns = React.Children.map(this.props.children, child =>
-							<div
+							<td
 								{...this.props}
 								onMouseDown={ev => this.sortStart([child.props.actionKey, ev])}
 								className='Sortable-container'
@@ -140,12 +140,14 @@ var Sortable = React.createClass({
 								ref={child.props.actionKey}>
 
 								{child}
-							</div>);
+							</td>);
 
 		return (
-			<div className="Sortable">
-				{columns}
-			</div>
+			<table className="Sortable">
+				<tr>
+					{columns}
+				</tr>
+			</table>
 		);
     }
 });

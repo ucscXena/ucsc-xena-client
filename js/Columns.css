@@ -12,8 +12,8 @@
 	cursor: crosshair;
 }
 
-.Columns .Sortable {
-	display: inline-block;
+.Columns {
+	white-space: nowrap;
 }
 
 .Columns canvas {
