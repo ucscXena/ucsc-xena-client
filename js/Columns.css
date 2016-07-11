@@ -16,6 +16,10 @@
 	white-space: nowrap;
 }
 
+.Columns .Sortable {
+	white-space: normal;
+}
+
 .Columns canvas {
 	display: block;
 }
