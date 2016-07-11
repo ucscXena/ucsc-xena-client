@@ -6,7 +6,8 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var _ = require('../underscore_ext');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
-var SplitButton = require('react-bootstrap/lib/SplitButton');
+var Dropdown = require('react-bootstrap/lib/Dropdown');
+var Button = require('react-bootstrap/lib/Button');
 var Badge = require('react-bootstrap/lib/Badge');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
@@ -56,6 +57,13 @@ var styles = {
 		textAlign: 'center',
 		pointerEvents: 'all',
 		cursor: 'pointer'
+	},
+	columnMenuToggle: {
+		position: 'absolute',
+		left: 0,
+		top: 0,
+		width: '100%',
+		height: '100%'
 	}
 };
 
@@ -158,6 +166,7 @@ var Column = React.createClass({
 			// move this to state to generalize to other annotations.
 			doRefGene = _.get(data, 'refGene'),
 			sortHelp = <Tooltip>Drag to change column order</Tooltip>,
+			menuHelp = <Tooltip>Column menu</Tooltip>,
 			// In FF spans don't appear as event targets. In Chrome, they do.
 			// If we omit Sortable-handle here, Chrome will only catch events
 			// in the button but not in the span. If we omit Sortable-handle
@@ -171,18 +180,35 @@ var Column = React.createClass({
 					</span>
 				</OverlayTrigger>);
 
+		// FF 'button' tag will not emit 'mouseenter' events (needed for
+		// tooltips) for children. We must use a different tag, e.g. 'label'.
+		// Button and Dropdown.Toggle will allow overriding the tag.  However
+		// Splitbutton will not pass props down to the underlying Button, so we
+		// can't use Splitbutton.
 		return (
 			<div className='Column' style={{width: width, position: 'relative'}}>
 				<br/>
-				<SplitButton ref='controls' className='Sortable-handle' title={moveIcon} bsSize='xsmall'>
-					{menu}
-					{menu && <MenuItem divider />}
-					<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
-					<MenuItem onSelect={this.onDownload}>Download</MenuItem>
-					{aboutDatasetMenu(datasetMeta(id))}
-					<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>
-					<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
-				</SplitButton>
+				{/* Using Dropdown instead of SplitButton so we can put a Tooltip on the caret. :-p */}
+				<Dropdown ref='controls' bsSize='xsmall'>
+					<Button componentClass='label'>
+						{moveIcon}
+					</Button>
+					{/* If OverlayTrigger contains Dropdown.Toggle, the toggle doesn't work. So we invert the nesting and use a span to cover the trigger area. */}
+					<Dropdown.Toggle componentClass='label'>
+						<OverlayTrigger placement='top' overlay={menuHelp}>
+							<span style={styles.columnMenuToggle}></span>
+						</OverlayTrigger>
+					</Dropdown.Toggle>
+					<Dropdown.Menu>
+						{menu}
+						{menu && <MenuItem divider />}
+						<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
+						<MenuItem onSelect={this.onDownload}>Download</MenuItem>
+						{aboutDatasetMenu(datasetMeta(id))}
+						<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>
+						<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
+					</Dropdown.Menu>
+				</Dropdown>
 				<Badge ref='label' style={styles.badge} className='pull-right'>{label}</Badge>
 				<br/>
 				<DefaultTextInput
