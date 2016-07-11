@@ -144,9 +144,11 @@ var Sortable = React.createClass({
 
 		return (
 			<table className="Sortable">
-				<tr>
-					{columns}
-				</tr>
+				<tbody>
+					<tr>
+						{columns}
+					</tr>
+				</tbody>
 			</table>
 		);
     }
