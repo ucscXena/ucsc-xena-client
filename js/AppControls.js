@@ -40,7 +40,7 @@ function addHelp(id, target) {
 	var [placement, text] = uiHelp[id],
 		tooltip = <Tooltip>{text}</Tooltip>;
 	return (
-		<OverlayTrigger key={id} placement={placement} overlay={tooltip}>
+		<OverlayTrigger trigger='hover' key={id} placement={placement} overlay={tooltip}>
 			{target}
 		</OverlayTrigger>);
 }
