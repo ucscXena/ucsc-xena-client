@@ -60,7 +60,8 @@ var Select = React.createClass({
 		}
 	},
 	render: function () {
-		var {allowSearch, options, disable, value} = this.props,
+		var {allowSearch, options, disable, value, ...other} = this.props,
+			containerProps = _.omit(other, 'onSelect'),
 			{filter} = this.state,
 			opts = filterOpts(filter, options),
 			title = notUndefined(value) && _.findWhere(options, {value: value});
@@ -82,7 +83,8 @@ var Select = React.createClass({
 			</div> : null;
 
 		return (
-			<DropdownButton ref='dropdown'
+			<DropdownButton {...containerProps}
+							ref='dropdown'
 							className='Select'
 							disabled={disable}
 							menuitem='menuitem'
