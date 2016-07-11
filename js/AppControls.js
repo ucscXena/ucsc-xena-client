@@ -27,6 +27,24 @@ var modeEvent = {
 	heatmap: 'chart'
 };
 
+var uiHelp = {
+	'pdf' : ['top', 'Save PDF of this view'],
+	'reload':['top', 'Reload cohorts from all hubs'],
+	'chart': ['top', 'Switch to spreadsheet view of this data'],
+	'heatmap': ['top', 'Switch to chart view of this data'],
+	'samples': ['top', 'Limit samples by dataset'],
+	'cohort': ['top', 'Change cohort']
+};
+
+function addHelp(id, target) {
+	var [placement, text] = uiHelp[id],
+		tooltip = <Tooltip>{text}</Tooltip>;
+	return (
+		<OverlayTrigger key={id} placement={placement} overlay={tooltip}>
+			{target}
+		</OverlayTrigger>);
+}
+
 // XXX drop this.props.style? Not sure it's used.
 var AppControls = React.createClass({
 	getInitialState() {
@@ -90,28 +108,27 @@ var AppControls = React.createClass({
 			hasColumn = !!columnOrder.length,
 			noshow = (mode !== "heatmap");
 
-		const tooltip = <Tooltip id='reload-cohorts'>Reload cohorts from all hubs.</Tooltip>;
 		return (
 			<form className='form-inline'>
-				<OverlayTrigger placement="top" overlay={tooltip}>
+				{addHelp('reload',
 					<Button onClick={this.onRefresh} bsSize='sm' style={{marginRight: 5}}>
 						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
-					</Button>
-				</OverlayTrigger>
-				<CohortSelect cohort={cohort} cohorts={cohorts} disable={noshow} onSelect={this.onCohortSelect}/>
+					</Button>)}
+				{addHelp('cohort', <CohortSelect cohort={cohort} cohorts={cohorts} disable={noshow} onSelect={this.onCohortSelect}/>)}
 				{' '}
 				{hasCohort ?
 					<div className='form-group' style={this.props.style}>
 						<label> Samples in </label>
 						{' '}
-						<DatasetSelect
-							disable={noshow}
-							onSelect={this.onSamplesSelect}
-							nullOpt="Any Datasets (i.e. show all samples)"
-							style={{display: hasCohort ? 'inline' : 'none'}}
-							datasets={datasets}
-							cohort={cohort}
-							value={samplesFrom} />
+						{addHelp('samples',
+							<DatasetSelect
+								disable={noshow}
+								onSelect={this.onSamplesSelect}
+								nullOpt="Any Datasets (i.e. show all samples)"
+								style={{display: hasCohort ? 'inline' : 'none'}}
+								datasets={datasets}
+								cohort={cohort}
+								value={samplesFrom} />)}
 						{sampleFilter ?
 							(<span>
 								&#8745;
@@ -123,9 +140,13 @@ var AppControls = React.createClass({
 							</span>) : null}
 					</div> : null}
 				{' '}
-				{hasColumn ? <Button disabled={!hasColumn} onClick={this.onMode} bsStyle='primary'>{modeButton[mode]}</Button> : null}
+				{hasColumn ?
+					addHelp(mode, <Button disabled={!hasColumn} onClick={this.onMode} bsStyle='primary'>
+						{modeButton[mode]}
+					</Button>) : null}
 				{' '}
-				{(noshow || !hasColumn) ? null : <Button onClick={this.onPdf}>PDF</Button>}
+				{(noshow || !hasColumn) ? null :
+					addHelp('pdf', <Button onClick={this.onPdf}>PDF</Button>)}
 				{bookmarks ?
 					<OverlayTrigger onEnter={this.onBookmark} trigger='click' placement='bottom'
 						overlay={<Popover placement='bottom'><p>Your bookmark is {bookmark || 'loading'}</p></Popover>}>
