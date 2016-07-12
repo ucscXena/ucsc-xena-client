@@ -1,7 +1,9 @@
-/*global location: false, require: false, module: false */
+/*eslint-env browser */
+/*global require: false, module: false */
 'use strict';
 
 var React = require('react');
+var ReactDOM = require('react-dom');
 var {Button, ButtonToolbar, Modal, Glyphicon} = require('react-bootstrap/lib');
 var CohortSelect = require('./views/CohortSelect');
 var DatasetSelect = require('./views/DatasetSelect2');
@@ -14,6 +16,9 @@ var geneProbeEdit = require('./views/GeneProbeEdit');
 var {PropTypes} = React;
 var {getColSpec} = require('./models/datasetJoins');
 var {defaultColorClass} = require('./heatmapColors');
+var {easeInOutQuad} = require('./easing');
+var Rx = require('rx');
+require('rx.time');
 
 var editors = {
 	'clinicalMatrix': phenotypeEdit,
@@ -160,6 +165,27 @@ var ColumnEdit = React.createClass({
 			}
 		};
 	},
+	componentWillMount: function () {
+		this.onSelectBus = new Rx.Subject();
+		this.sub = this.onSelectBus.map(scrollTop => {
+			// Using a ref to the Modal isn't working, for reasons I don't
+			// understand.
+			var ce = document.getElementsByClassName('columnEdit')[0],
+				current = ce.scrollTop,
+				duration = 500,
+				steps = 30;
+
+			return Rx.Observable.interval(duration / steps)
+				.map(i => easeInOutQuad(i, current, scrollTop, steps))
+				.take(steps);
+		}).switchLatest().subscribe(scrollTop => {
+			var ce = document.getElementsByClassName('columnEdit')[0];
+			ce.scrollTop = scrollTop;
+		});
+	},
+	componentWillUnmount: function () {
+		this.sub.dispose();
+	},
 	addColumn: function (settings) {
 		let {callback, appState} = this.props,
 			dsIDs = this.state.choices.dataset,
@@ -179,6 +205,13 @@ var ColumnEdit = React.createClass({
 	onCohortSelect: function(value) {
 		this.setChoice('cohort', value);
 	},
+	scrollPositionToNextButton: function () {
+		var dialogBottom = ReactDOM.findDOMNode(this.refs.columnEditBody)
+				.getBoundingClientRect().bottom,
+			columnEdit = document.getElementsByClassName('columnEdit')[0],
+			columnEditBottom = columnEdit.getBoundingClientRect().bottom;
+		return columnEdit.scrollTop + (dialogBottom - columnEditBottom);
+	},
 	onDatasetSelect: function (dsIDs) {
 		var {callback, appState: {datasets}} = this.props,
 			metas = _.pick(datasets, dsIDs);
@@ -189,6 +222,8 @@ var ColumnEdit = React.createClass({
 			let dsID = _.first(dsIDs);
 			callback(['edit-dataset', dsID, metas[dsID]]);
 		}
+
+		this.onSelectBus.onNext(this.scrollPositionToNextButton());
 	},
 	onBack: function() {
 		let {positions} = this.state,
@@ -263,7 +298,7 @@ var ColumnEdit = React.createClass({
         			</Modal.Title>
       			</Modal.Header>
 
-				<Modal.Body>
+				<Modal.Body ref='columnEditBody' className='columnEditBody'>
 					{positions['cohort'] ?
 					<CohortSelect onSelect={this.onCohortSelect} cohorts={cohorts}
 						cohort={choices.cohort} makeLabel={makeLabel}/> : null}

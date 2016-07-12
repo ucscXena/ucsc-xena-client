@@ -43,6 +43,7 @@ module.exports = {
 			rx$: 'rx/dist/rx',
 			'rx.binding$': 'rx/dist/rx.binding',
 			'rx.async$': 'rx/dist/rx.async',
+			'rx.time$': 'rx/dist/rx.time',
 			'rx.experimental$': 'rx/dist/rx.experimental',
 			'rx.aggregates$': 'rx/dist/rx.aggregates',
 			'rx.coincidence$': 'rx/dist/rx.coincidence'
