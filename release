@@ -31,8 +31,8 @@ new() {
 	run "Incrementing master version" git checkout master
 	run "" npm verison $(${SEMVER} --preid ${PREID} -i preminor ${VERSION})
 	run "Pushing to origin" git push origin --tags master ${BRANCH}
-#	run "Publishing" git checkout ${BRANCH}
-#	run "" npm publish
+	run "Publishing" git checkout ${BRANCH}
+	run "" npm publish
 	run "" git checkout master
 }
 
