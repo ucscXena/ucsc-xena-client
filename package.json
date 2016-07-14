@@ -22,6 +22,11 @@
     "prepublish": "npm run dist",
     "install": "napa"
   },
+  "files": [
+    "NOTICE",
+    "LICENSE",
+    "dist"
+  ],
   "author": "Brian Craft",
   "config": {
     "ghooks": {
