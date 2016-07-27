@@ -3,7 +3,7 @@
 
 'use strict';
 
-require('../css/km.css');
+require('./km.css');
 var _ = require('./underscore_ext');
 var React = require('react');
 var { PropTypes } = React;
