@@ -167,11 +167,6 @@ var Column = React.createClass({
 			doRefGene = _.get(data, 'refGene'),
 			sortHelp = <Tooltip>Drag to change column order</Tooltip>,
 			menuHelp = <Tooltip>Column menu</Tooltip>,
-			// In FF spans don't appear as event targets. In Chrome, they do.
-			// If we omit Sortable-handle here, Chrome will only catch events
-			// in the button but not in the span. If we omit Sortable-handle
-			// in SplitButton, FF will catch no events, since span doesn't
-			// emit any.
 			moveIcon = (
 				<OverlayTrigger placement='top' overlay={sortHelp}>
 					<span
