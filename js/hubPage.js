@@ -28,7 +28,7 @@ var Hub = React.createClass({
 	render: () => <div ref='hubPage'/>
 });
 
-var store = createStore();
+var store = createStore(true);
 var main = window.document.getElementById('main');
 
 var selector = state => state;

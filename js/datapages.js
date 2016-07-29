@@ -29,7 +29,7 @@ var Datapages = React.createClass({
 });
 
 
-var store = createStore();
+var store = createStore(true);
 var main = window.document.getElementById('main');
 
 var selector = state => state;
