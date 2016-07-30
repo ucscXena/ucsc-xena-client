@@ -28,8 +28,9 @@ var SampleSearch = React.createClass({
 		onChange(value);
 	},
 	render: function () {
-		var {matches, help, onFilter, onZoom, onCreateColumn} = this.props,
+		var {matches, help, onFilter, onZoom, onCreateColumn, mode} = this.props,
 			{value} = this.state,
+			noshow = (mode !== "heatmap"),
 			filterButton = onFilter ?
 					(<span
 						 title='Apply as filter'
@@ -42,10 +43,11 @@ var SampleSearch = React.createClass({
 					value={value}
 					title={value}
 					placeholder='Samples to highlight. e.g. TCGA-DB-A4XH, missense'
-					onChange={this.onChange}/>
+					onChange={this.onChange}
+					disabled={noshow}/>
 				{` Matching samples: ${matches}`}
 				{filterButton ?
-					(<SplitButton onClick={onFilter} bsSize='sm' title={filterButton}>
+					(<SplitButton onClick={onFilter} bsSize='sm' title={filterButton} disabled={noshow}>
 						<MenuItem title='Apply to filter' onClick={onFilter}>Filter</MenuItem>
 						<MenuItem title='Apply to zoom' onClick={onZoom}>Zoom</MenuItem>
 						<MenuItem title='Create column from' onClick={onCreateColumn}>Sort</MenuItem>

@@ -33,10 +33,15 @@ var isStructuralVariant = ({data: {alt}}) => {
 
 var unknownEffect = 0,
 	impact = {
+		//large deletion
+		'intra-gene-deletion':4,
+		'intra-gene-inversion':4,
+
 		//destroy protein
 		'Nonsense_Mutation': 3,
 		'frameshift_variant': 3,
 		'stop_gained': 3,
+		'Stop Gained':3,
 		'splice_acceptor_variant': 3,
 		'splice_acceptor_variant&intron_variant':3,
 		'splice_donor_variant': 3,
@@ -44,6 +49,8 @@ var unknownEffect = 0,
 		'Splice_Site': 3,
 		'Frame_Shift_Del': 3,
 		'Frame_Shift_Ins': 3,
+		'Frameshift Deletion':3,
+		'Frameshift Insertion':3,
 
 		//modify protein
 		'splice_region_variant': 2,
@@ -51,6 +58,7 @@ var unknownEffect = 0,
 		'missense': 2,
 		'non_coding_exon_variant': 2,
 		'missense_variant': 2,
+		'Missense Variant':2,
 		'Missense_Mutation': 2,
 		'RNA': 2,
 		'Indel': 2,
@@ -60,19 +68,23 @@ var unknownEffect = 0,
 		'Translation_Start_Site': 2,
 		'De_novo_Start_InFrame': 2,
 		'stop_lost': 2,
+		'Stop Lost':2,
 		'Nonstop_Mutation': 2,
 		'initiator_codon_variant': 2,
 		'5_prime_UTR_premature_start_codon_gain_variant': 2,
 		'disruptive_inframe_deletion': 2,
 		'disruptive_inframe_insertion': 2,
 		'inframe_deletion': 2,
+		'Inframe Deletion':2,
 		'inframe_insertion': 2,
+		'Inframe Insertion':2,
 		'In_Frame_Del': 2,
 		'In_Frame_Ins': 2,
 
 		//do not modify protein
 		'exon_variant': 1,
 		'synonymous_variant': 1,
+		'Synonymous Variant':1,
 		'5_prime_UTR_variant': 1,
 		'3_prime_UTR_variant': 1,
 		"5'Flank": 1,
@@ -84,11 +96,11 @@ var unknownEffect = 0,
 
 		//mutations outside the exon region and splice region get organge color, code =0
 		'others': 0,
-		'SV':0,
 		'upstream_gene_variant': 0,
 		'downstream_gene_variant': 0,
 		'intron_variant': 0,
 		'intergenic_region': 0,
+		'Complex Substitution':0
 	},
 	chromColorGB = { //genome browser chrom coloring
 		"1": "#996600",
@@ -122,7 +134,8 @@ var unknownEffect = 0,
 			{r: 255, g: 127, b: 14, a: 1}, // orange #ff7f0e
 			{r: 44, g: 160, b: 44, a: 1},  // green #2ca02c
 			{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
-			{r: 214, g: 39, b: 40, a: 1}   // red #d62728
+			{r: 214, g: 39, b: 40, a: 1},   // red #d62728
+			{r: 0, g: 0, b: 0, a: 1} // black
 		],
 		af: {r: 255, g: 0, b: 0},
 		grey: {r: 128, g: 128, b: 128, a: 1}
@@ -140,7 +153,7 @@ var unknownEffect = 0,
 
 	features = {
 		impact: {
-			get: (a, v) => impact[v.effect] || (v.effect ? unknownEffect : undefined),
+			get: (a, v) => impact[v.effect] || unknownEffect,
 			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
 			legend: {
 				// have to explicitly call hexToRGB to avoid map passing in index.
@@ -164,6 +177,8 @@ var unknownEffect = 0,
 			legend: vafLegend
 		}
 	};
+
+
 function evalMut(flip, mut) {
 	return {
 		impact: features.impact.get(null, mut),
@@ -339,13 +354,14 @@ function index(fieldType, data) {
 			if (vclass === 'left') {
 				//SV: new segment to the left
 				virtualStart = newStart;
-				row.id = id;
+				//row.id = id;
 			} else if (vclass === 'right') {
 				//SV: new segment on the right
 				virtualEnd = newEnd;
-				row.id = id;
+				//row.id = id;
 			}
 		}
+		row.id = id;
 		return {
 			start: virtualStart,
 			end: virtualEnd,

@@ -105,15 +105,17 @@ function legendForColorscale(colorSpec) {
 		values = scale.domain(),
 		colors = _.map(values, scale);
 
+
 	var labels = cases(colorSpec, values, {
 		'no-data': () => [],
 		'float': _.identity,
 		'float-pos': _.identity,
 		'float-neg': _.identity,
 		'float-thresh': ([nl, nh, pl, ph]) => ['<' + nl, nh, pl, '>' + ph],
-		'float-thresh-pos': ([low, high]) => [low, '>' + high],
-		'float-thresh-neg': ([low, high]) => ['<' + low, high]
+		'float-thresh-pos': ([min, low, high]) => [min, low, '>' + high],
+		'float-thresh-neg': ([low, high, max]) => ['<' + low, high, max]
 	});
+
 	return {colors, labels};
 }
 
@@ -121,13 +123,25 @@ function legendForColorscale(colorSpec) {
 // passed in. The caller should provide labels/colors in the 'legend' prop
 // if there are multiple scales.
 function renderFloatLegend(props) {
-	var {colors, legend} = props,
+	var {colors, legend, vizSettings, defaultNormalization} = props,
 		hasData = _.getIn(colors, [0]);
 
 	var {labels, colors: legendColors} = legend ||
-		(hasData ? legendForColorscale(colors[0]) : {colors: [], labels: []});
+		(hasData ? legendForColorscale(colors[0]) : {colors: [], labels: []}),
+		footnotes = '';
 
-	return <Legend colors={legendColors} labels={labels} align='center' />;
+	if (vizSettings &&  vizSettings.colNormalization){
+		if (vizSettings.colNormalization === "subset") {
+			footnotes = 'Normalization: across samples';
+		} else if (vizSettings.colNormalization === "none") {
+			footnotes = 'Normalization: off';
+		}
+	} else if (defaultNormalization != null) {
+		if (defaultNormalization) { footnotes = 'Normalization: across samples';}
+		else {footnotes = 'Normalization: off';}
+	}
+
+	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 
 // Might have colorScale but no data (phenotype), no data & no colorScale,
@@ -154,11 +168,13 @@ var HeatmapLegend = hotOrNot(React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function() {
 		var {column, data} = this.props,
-			{heatmap, colors, legend, valueType, fields} = column,
+			{heatmap, colors, legend, valueType, fields, vizSettings, defaultNormalization} = column,
 			props = {
 				fields,
 				colors,
 				legend,
+				vizSettings,
+				defaultNormalization,
 				data: heatmap,
 				coded: valueType === 'coded',
 				codes: _.get(data, 'codes'),

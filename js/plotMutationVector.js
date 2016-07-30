@@ -61,7 +61,7 @@ function formatAf(af) {
 		Math.round(af * 100) + '%';
 }
 
-var fmtIf = (x, fmt) => x ? fmt(x) : '';
+var fmtIf = (x, fmt, d = '' ) => x ? fmt(x) : d;
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
 var gbURL =  (assembly, pos) => `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${encodeURIComponent(assembly)}&position=${encodeURIComponent(pos)}`;
@@ -72,8 +72,10 @@ function sampleTooltip(sampleFormat, data, gene, assembly) {
 		refAlt = data.reference && data.alt && ['value', `${data.reference} to ${data.alt}`],
 		pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
 		posURL = ['url',  `${assembly} ${pos}`, gbURL(assembly, pos)],
-		effect = ['value', fmtIf(data.effect, x => `${x}, `) +  gene + //eslint-disable-line comma-spacing
-					fmtIf(data.amino_acid, x => ` (${x})`)];
+		effect = ['value', fmtIf(data.effect, x => `${x}, `) + //eslint-disable-line comma-spacing
+					gene +
+					fmtIf(data.amino_acid, x => ` (${x})`) +
+					fmtIf(data.altGene, x => ` connect to ${x} `, ' connect to internegic region')];
 
 	return {
 		rows: dropNulls([

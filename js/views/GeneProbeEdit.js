@@ -64,7 +64,7 @@ var GeneProbeEdit = React.createClass({
 						<strong className="control-label">Identifiers</strong>
 					</Button>
 				</ButtonGroup>);
-			optionEl = makeLabel(content, 'Input');
+			optionEl = makeLabel(content, 'View mode');
 		}
 
 		host = JSON.parse(chosenDs[0]).host;
@@ -82,7 +82,7 @@ var GeneProbeEdit = React.createClass({
 					{help}
 				</div>
 				{doGenes ? null :
-					<a href={url} target="_BLANK">Link to all identifiers in the dataset</a>
+					<a href={url} target="_BLANK">View all identifiers in the dataset</a>
 				}
 			</div>);
 		var inputEl = makeLabel(content, doGenes ? 'Genes' : 'Identifiers');

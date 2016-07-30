@@ -68,13 +68,44 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 
 		// no feet variants label
 		if (height / count > labelFont) {
-			let h = height / count;
+			let h = height / count,
+				minTxtWidth = vg.textWidth(labelFont, 'WWWW'),
+				varById = _.groupBy(nofeetVariants, v => v.data.id),
+				ids = _.keys(varById);
 
-			points.forEach(([x, y], i) => {
-				var label = vars[i].data.amino_acid || vars[i].data.alt,
+			ids.map(function(id){
+				var startList = [], endList = [];
+				varById[id].map(function (item){
+					startList.push(item.xStart);
+					endList.push(item.xEnd);
+				});
+
+				var xStart = _.min(startList),
+					xEnd = _.max(endList),
+					y = yPx(varById[id][0].y),
+					label = varById[id][0].data.amino_acid || varById[id][0].data.alt,
 					textWidth = vg.textWidth(labelFont, label);
-				vg.textCenteredPushRight( x + 2 * labelMargin, y - h / 2, textWidth, h, 'black', labelFont, label);
+
+				if ((xEnd - xStart) >= minTxtWidth) {
+					vg.textCenteredPushRight( xStart + labelMargin, y - h / 2, xEnd - xStart - labelMargin,
+							h, 'white', labelFont, label);
+				} else {
+					vg.textCenteredPushRight( xEnd + 2 * labelMargin, y - h / 2, textWidth, h, 'black', labelFont, label);
+				}
 			});
+
+			/*points.forEach(([x, y, xEnd, yEnd], i) => {
+				var label = vars[i].data.amino_acid || vars[i].data.alt,
+					textWidth = vg.textWidth(labelFont, label),
+					margin=0;
+
+				if ((xEnd - x) >= minTxtWidth) {
+						vg.textCenteredPushRight( x + margin, y - h / 2, xEnd - x - margin,
+							h, 'white', labelFont, label);
+				} else {
+					vg.textCenteredPushRight( x + 2 * labelMargin, y - h / 2, textWidth, h, 'black', labelFont, label);
+				}
+			});*/
 		}
 	});
 
@@ -82,18 +113,19 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 	// XXX most of the following code should be in the 'transform' operation. We shouldn't
 	// be reconstructing variant records from draw regions so we can draw breakpoints, for example.
 	// We should instead output structures parallel to 'nodes' which hold the info for drawing SVs.
+
 	// --------- feet variants drawing start here ---------
 	//feet variants group by variant
 	var varById = _.groupBy(feetVariants, v => v.data.id),
 		varByIdMap = _.mapObject(varById, varList => {
-			var {xStart, y: yIndex, data: {alt}} = _.min(varList, v => v.xStart),
+			var {xStart, y: yIndex, data: {alt, altGene}} = _.min(varList, v => v.xStart),
 				y = yPx(yIndex),
 				{xEnd} = _.max(varList, v => v.xStart);
 
-			return {xStart, xEnd, y, color: chromColorGB[chromFromAlt(alt)], alt};
+			return {xStart, xEnd, y, color: chromColorGB[chromFromAlt(alt)], alt, altGene};
 		});
 
-	//feet variants draw color background according to joining chromosome
+	//feet variants draw color background according to joining chromosome -- can I make it transparent
 	_.each(varByIdMap, variant => {
 		var {xStart, xEnd, color, y} = variant,
 			padding = Math.max(0, radius - (xEnd - xStart + 1) / 2.0),
@@ -128,13 +160,13 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 		var oneVariantOfSampleList = _.filter(_.groupBy(varById, varList => varList[0].y), list => list.length === 1);
 		oneVariantOfSampleList.forEach(variant => {
 			var id = variant[0][0].data.id,
-				{xStart, xEnd, alt, y} = varByIdMap[id];
+				{xStart, xEnd, alt, altGene, y} = varByIdMap[id];
 
 			if ((xEnd - xStart) - margin >= minTxtWidth) {
 				let h = height / count;
 				vg.clip(xStart + margin, y - h / 2, xEnd - xStart - 2 * margin, h, () =>
 					vg.textCenteredPushRight( xStart + margin, y - h / 2, xEnd - xStart - margin,
-						h, 'black', labelFont, alt)
+						h, 'black', labelFont, altGene ? altGene + " " + alt : alt)
 				);
 			}
 		});

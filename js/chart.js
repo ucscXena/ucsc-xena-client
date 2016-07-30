@@ -31,27 +31,20 @@ define(['./getLabel'], function (getLabel) {
 		"G-CIMP":	"#9A2EFE"
 	 };
 	*/
-	// PCAWG TERT custom color for
-	/*
-	var custom_colors ={
-		"promoter mutation": "#1f77b4",
-		"no mutation" : "#aec7e8"
-	};
-	*/
 
 	return function (root, callback, sessionStorage) {
 		var div,
 			leftContainer, rightContainer,
 			xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
-			cohort, samples, cohortSamples, updateArgs,
+			cohort, samplesLength, cohortSamples, updateArgs,
 			normalizationState = {}, expState = {};
 
 			if (xenaState)	{
 				cohort = xenaState.cohort;
-				samples = xenaState.samples;
+				samplesLength = xenaState.samples.length;
 				cohortSamples = xenaState.cohortSamples;
 			}
-			updateArgs = [cohort, samples, cohortSamples];
+			updateArgs = [cohort, samplesLength, cohortSamples];
 
 		function setStorage(state) {
 			sessionStorage.xena = JSON.stringify(state);
@@ -99,7 +92,7 @@ define(['./getLabel'], function (getLabel) {
 			var dropDownDiv, option,
 				dropDown = [{
 						"value": "none",
-						"text": "none",
+						"text": "off",
 						"index": 0
 					}, //no normalization
 					{
@@ -143,13 +136,13 @@ define(['./getLabel'], function (getLabel) {
 			var dropDownDiv, option,
 				dropDown = [{
 						"value": "none",
-						"text": "none",
+						"text": "off",
 						"index": 0
 					},
 					{
 						//convert x -> base-2 exponential value of x, for when viewing raw RNAseq data, xena typically converts RNAseq values into log2 space.
 						"value": "exp2",
-						"text": "exp2(k): k -> k powers of two i.e. 2 X ... X 2 (k times) -- use case: observing original RNAseq values when unit of RNAseq data is in log space",
+						"text": "exp2(k) -- use case: observing original RNAseq values when unit of RNAseq data is in log space",
 						"index": 1
 					},
 				],
@@ -297,12 +290,17 @@ define(['./getLabel'], function (getLabel) {
 				option.value = "none";
 				option.textContent = "None (i.e. summary view of the Y variable)";
 				div.appendChild(option);
-				if ("none" === storedColumn) {
-					div.selectedIndex = div.length - 1;
-				}
-				if (!storedColumn) { /// default to summary view
-					div.selectedIndex = div.length - 1;
-				}
+			}
+
+			if (div.length === 0 ){
+				return;
+			}
+
+			if ("none" === storedColumn) {
+				div.selectedIndex = div.length - 1;
+			}
+			if (!storedColumn) { /// default to summary view
+				div.selectedIndex = div.length - 1;
 			}
 
 			div.addEventListener('change', function () {
@@ -448,6 +446,7 @@ define(['./getLabel'], function (getLabel) {
 					xdata = _.getIn(xenaState, ['data', xcolumn, 'req', 'values']),
 					ycodemap = _.getIn(xenaState, ['data', ycolumn, 'codes']),
 					ydata = _.getIn(xenaState, ['data', ycolumn, 'req', 'values']),
+					samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 					yIsCategorical, xIsCategorical, xfield,
 					offsets = {},  // per y variable
 					STDEV = {},  // per y variable
@@ -463,21 +462,6 @@ define(['./getLabel'], function (getLabel) {
 				} else {
 					yNormalizationMeta = 0;
 				}
-
-				// save state cohort, xcolumn, ycolumn, yfields, ycolumnType, colorColumn
-				/* not sure if we need these, commenting it out
-				xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined;
-				if (xenaState) {
-					xenaState.chartState = {
-						"cohort": cohort,
-						"xcolumn": xcolumn,
-						"ycolumn": ycolumn,
-						"yfields": yfields,
-						"ycolumnType": ycolumnType,
-						"colorColumn": colorColumn
-					};
-					sessionStorage.xena = JSON.stringify(xenaState);
-				}*/
 
 				// single xfield only
 				if (xfields && xfields.length > 1) {
@@ -544,9 +528,10 @@ define(['./getLabel'], function (getLabel) {
 					}
 				}
 
-				var thunk = offsets => drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata,
+				var thunk = offsets => drawChart(cohort, samplesLength, xfield, xcodemap, xdata, yfields, ycodemap, ydata,
 						offsets, xlabel, ylabel, STDEV,
-						scatterLabel, scatterColorData, scatterColorDataCodemap);
+						scatterLabel, scatterColorData, scatterColorDataCodemap,
+						samplesMatched);
 				//offset
 				if (yNormalization === "subset" || yNormalization === "subset_stdev") {
 					offsets = _.object(yfields,
@@ -562,7 +547,7 @@ define(['./getLabel'], function (getLabel) {
 		// returns key:array
 		// categorical: key:array  ------  key is the category
 		// float:  key: {xcode:array} key is the identifier, xcode is the xcode
-		function parseYDataElement(yfield, ycodemap, ydataElement, samples, xcategories, xSampleCode) {
+		function parseYDataElement(yfield, ycodemap, ydataElement, xcategories, xSampleCode) {
 			var i, code,
 				ybinnedSample = {};
 
@@ -575,7 +560,7 @@ define(['./getLabel'], function (getLabel) {
 				for (i = 0; i < ydataElement.length; i++) {
 					code = ycodemap[ydataElement[i]];
 					if (code) {
-						ybinnedSample[code].push(samples[i]);
+						ybinnedSample[code].push(i);
 					}
 				}
 
@@ -598,7 +583,7 @@ define(['./getLabel'], function (getLabel) {
 				for (i = 0; i < ydataElement.length; i++) {
 					if (null != ydataElement[i]) {
 						if (xSampleCode) {
-							code = xSampleCode[samples[i]];
+							code = xSampleCode[i];
 							if (code) {
 								ybinnedSample[yfield][code].push(ydataElement[i]);
 							}
@@ -611,9 +596,10 @@ define(['./getLabel'], function (getLabel) {
 			return ybinnedSample;
 		}
 
-		function drawChart(cohort, samples, xfield, xcodemap, xdata, yfields, ycodemap, ydata,
+		function drawChart(cohort, samplesLength, xfield, xcodemap, xdata, yfields, ycodemap, ydata,
 			offsets, xlabel, ylabel, STDEV,
-			scatterLabel, scatterColorData, scatterColorDataCodemap) {
+			scatterLabel, scatterColorData, scatterColorDataCodemap,
+			samplesMatched) {
 			var chart,
 				yIsCategorical = ycodemap ? true : false,
 				xIsCategorical = xcodemap ? true : false,
@@ -637,14 +623,15 @@ define(['./getLabel'], function (getLabel) {
 			document.getElementById("myChart").innerHTML = "Generating chart ...";
 
 			chartOptions.subtitle = {
-				text: "cohort: " + _.pluck(cohort, 'name').join(' / ') + " (n=" + samples.length + ")"
+				text: "cohort: " + _.pluck(cohort, 'name').join(' / ') + " (n=" + samplesLength + ")"
 			};
 
 			if (xIsCategorical && !yIsCategorical) { // x : categorical y float
 				var xCategories = [],
 					dataMatrix = [], // row is x and column is y
 					stdMatrix = [], // row is x and column is y
-					row;
+					row,
+					highlightcode = [];
 
 				xSampleCode = {};
 				xbinnedSample = {};
@@ -654,22 +641,32 @@ define(['./getLabel'], function (getLabel) {
 				});
 
 				//probes by samples
+
 				for (i = 0; i < xdata[0].length; i++) {
 					code = xcodemap[xdata[0][i]];
 					if (code) {
-						xbinnedSample[code].push(samples[i]);
-						xSampleCode[samples[i]] = code;
+						xbinnedSample[code].push(i);
+						xSampleCode[i] = code;
 					}
 				}
 
 				// remove empty xcode categories
-				xcodemap.forEach(function (code) {
+				xcodemap.map(function (code) {
 					if (xbinnedSample[code].length === 0) {
 						delete xbinnedSample[code];
 					} else {
 						xCategories.push(code);
 					}
 				});
+
+				// highlight categories identification : if all the samples in the category are part of the highlighted samples, the caterory will be highlighted
+				if (samplesMatched){
+					xCategories.map(function (code) {
+						if (xbinnedSample[code].every(sample => samplesMatched.indexOf(sample) !== -1)){
+							highlightcode.push(code);
+						}
+					});
+				}
 
 				// init average matrix std matrix // row is x by column y
 				for (i = 0; i < xCategories.length; i++) {
@@ -686,7 +683,7 @@ define(['./getLabel'], function (getLabel) {
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
 					ydataElement = ydata[k];
-					ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, samples, xCategories, xSampleCode);
+					ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, xCategories, xSampleCode);
 
 					for (i = 0; i < xCategories.length; i++) {
 						code = xCategories[i];
@@ -753,14 +750,14 @@ define(['./getLabel'], function (getLabel) {
 					dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(cutOffset);
 					errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(getError);
 
-					//CKCC grey
-					/*
-					if (i===0){
-						colors[code] = null;
-					} else {
-						colors[code] ="#A9A9A9";
+					// highlight coloring
+					if ( highlightcode.length !== 0 ) {
+						if ( highlightcode.indexOf(code) !== -1) {
+							colors[code] = 'gold';
+						} else {
+							colors[code] = "#A9A9A9";
+						}
 					}
-					*/
 
 					highcharts_helper.addSeriesToColumn(
 						chart, code, dataSeriese, errorSeries, yIsCategorical,
@@ -781,10 +778,10 @@ define(['./getLabel'], function (getLabel) {
 
 					if (yIsCategorical) { //  fields.length ==1
 						ybinnedSample = parseYDataElement(
-							yfield, ycodemap, ydataElement, samples, undefined, undefined);
+							yfield, ycodemap, ydataElement, undefined, undefined);
 					} else { // floats
 						ybinnedSample[yfield] = parseYDataElement(
-							yfield, ycodemap, ydataElement, samples, undefined, undefined)[yfield];
+							yfield, ycodemap, ydataElement, undefined, undefined)[yfield];
 					}
 				}
 
@@ -853,18 +850,18 @@ define(['./getLabel'], function (getLabel) {
 					code = xcodemap[xdata[0][i]];
 					if (code) {
 						if (xbinnedSample[code]){
-							xbinnedSample[code].push(samples[i]);
+							xbinnedSample[code].push(i);
 						} else {
-							xbinnedSample[code] = [samples[i]];
+							xbinnedSample[code] = [i];
 						}
-						xSampleCode[samples[i]] = code;
+						xSampleCode[i] = code;
 					}
 				}
 
 				// Y data: yfields can only have array size of 1
 				yfield = yfields[0];
 				ydataElement = ydata[0];
-				ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, samples, categories, xSampleCode);
+				ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, categories, xSampleCode);
 
 				var ySamples = _.flatten(_.values(ybinnedSample));
 
@@ -963,6 +960,7 @@ define(['./getLabel'], function (getLabel) {
 
 					var multi_series = {},
 						single_series = [], colorScale,
+						highlight_series = [],
 						opacity = 0.6,
 						colorCode, color, colorLabel,
 						useMultiSeries = scatterColorDataCodemap || !scatterColorData ;
@@ -1009,6 +1007,14 @@ define(['./getLabel'], function (getLabel) {
 									color: colorScale (colorCode)
 								});
 							}
+
+							if (samplesMatched && samplesMatched.indexOf(i) !== -1) {
+								highlight_series.push({
+									name: sampleLabels[i],
+									x: x,
+									y: y
+								});
+							}
 						}
 					}
 
@@ -1039,8 +1045,30 @@ define(['./getLabel'], function (getLabel) {
 							}
 						}, false);
 					}
-				}
 
+					// add highlight_series color in gold with black border
+					if (highlight_series.length > 0 ) {
+						chart.addSeries({
+							name: "highlighted samples",
+							data: highlight_series,
+							allowPointSelect: true,
+							marker:{
+                				symbol: 'circle',
+                				radius: 4,
+                				lineColor: 'black',
+                				fillColor: 'gold',
+                				lineWidth: 1,
+                				states:{
+                					select: {
+                         			   lineWidth: 2,
+                         			   radius: 6,
+                         			   fillColor: 'gold'
+                        			}
+                				}
+                    		}
+						}, false);
+					}
+				}
 				chart.redraw();
 			}
 
@@ -1208,12 +1236,19 @@ define(['./getLabel'], function (getLabel) {
 		}
 
 	    // x axis selector
+	    leftContainer.appendChild(document.createElement("br"));
 	    div = dom_helper.elt("div", "X: ", axisSelector("Xaxis", update, updateArgs));
 	    div.setAttribute("id", "X");
 	    leftContainer.appendChild(div);
 
 	    // y axis selector
-		div = dom_helper.elt("div", "Y: ", axisSelector("Yaxis", update, updateArgs));
+	    div = axisSelector("Yaxis", update, updateArgs);
+		if (!div){
+			document.getElementById("myChart").innerHTML =
+				"There is no plottable data, please add some by first clicking the \"Visual Spreadsheet\" button, then the \"+ Data\" button.";
+			return;
+		}
+		div = dom_helper.elt("div", "Y: ", div);
 		div.setAttribute("id", "Y");
 		leftContainer.appendChild(div);
 

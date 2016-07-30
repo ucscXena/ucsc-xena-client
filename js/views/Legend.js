@@ -35,7 +35,7 @@ var nodata = [["null (no data)", "#808080"]];
 var Legend = React.createClass({
 	getDefaultProps: () => ({ max: 40 }),
 	render: function () {
-		var {label, labels, colors, align, max} = this.props,
+		var {label, labels, colors, max, footnotes} = this.props,
 			ellipsis = labels.length > max,
 			items = _.map(nodata.concat(_.last(_.zip(labels, colors), max)), ([l, c], i) =>
 						  <label className='Legend-label'
@@ -43,7 +43,7 @@ var Legend = React.createClass({
 							  title={l}
 							  style={{backgroundColor: c,
 								  color: contrastColor(c),
-								  textAlign: align}}>
+								  textAlign: 'center'}}>
 
 							  {l}
 						  </label>).reverse();
@@ -64,6 +64,12 @@ var Legend = React.createClass({
 					<Row>
 						<Col md={10} mdOffset={1}>
 							...
+						</Col>
+					</Row> : null}
+				{footnotes ?
+					<Row>
+						<Col md={10} mdOffset={1}>
+							{footnotes}
 						</Col>
 					</Row> : null}
 			</div>

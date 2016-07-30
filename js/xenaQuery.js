@@ -262,13 +262,13 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '  {:samples (map :value (query {:select [:value]\n' +
 		       '                                :from [:code]\n' +
 		       '                                :where [:and [:in :value samples][:= :field_id sampleID]]}))\n' +
-		       '   :rows (xena-query {:select ["ref" "alt" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n' +
+		       '   :rows (xena-query {:select ["ref" "alt" "altGene" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n' +
 		       '                      :from [dataset]\n' +
 		       '                      :where [:and [:in :any "genes" [gene]] [:in "sampleID" samples]]})})';
 	}
 
 	function sparse_data_example_string(dataset, count) {
-		return `{:rows (xena-query {:select ["ref" "alt" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n` +
+		return `{:rows (xena-query {:select ["ref" "alt" "altGene" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n` +
 		       `                    :from [${quote(dataset)}]\n` +
 		       `                    :limit ${count}})}`;
 	}
@@ -466,6 +466,7 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 				"gene": row.genes[0],
 				"reference": row.ref,
 				"alt": row.alt,
+				"altGene": row.altGene,
 				"effect": row.effect,
 				"amino_acid": row['amino-acid'],
 				"rna_vaf": nanstr(row['rna-vaf']),
