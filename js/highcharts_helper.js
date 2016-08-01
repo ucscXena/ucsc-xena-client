@@ -55,7 +55,8 @@ define(['./highcharts'], function () {
 			},
 		},
 		credits: {
-			enabled: false
+			text: 'xena.ucsc.edu',
+			href: 'http://xena.ucsc.edu'
 		}
 	};
 
@@ -74,8 +75,7 @@ define(['./highcharts'], function () {
 			};
 
 		if (showLegend) {
-			chartOptions.legend.title.text = Y +
-				'<br/><span style="font-size: 9px; color: #666; font-weight: normal">(Click to hide)</span>';
+			chartOptions.legend.title.text = Y;
 		} else {
 			chartOptions.legend.title = {};
 		}
@@ -139,8 +139,7 @@ define(['./highcharts'], function () {
 	function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle){
 		chartOptions.legend.align = 'right';
 		chartOptions.legend.margin = 5;
-		chartOptions.legend.title.text = xAxisTitle +
-			'<br/><span style="font-size: 9px; color: #666; font-weight: normal">(Click to hide)</span>';
+		chartOptions.legend.title.text = xAxisTitle;
 		chartOptions.legend.verticalAlign = 'middle';
 		chartOptions.legend.layout = 'vertical';
 
@@ -166,7 +165,10 @@ define(['./highcharts'], function () {
 			formatter: function () {
 				return xAxisTitle + ' : ' + this.series.name + '<br>'
 					+ (categories.length > 1 ?  yAxisTitle + ' ' : '' )
-					+ categories[this.point.x] + ': <b>' + this.point.y + '%</b>';
+					+ categories[this.point.x]
+					+ ': <b>'
+					+ (this.point.high ? (this.point.low + ' to ' + this.point.high ) : this.point.y)
+					+ '</b>';
 			},
 			hideDelay: 0
 		};

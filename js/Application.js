@@ -48,7 +48,7 @@ var Application = React.createClass({
 	},
 	render: function() {
 		let {state, children, onHighlightChange, ...otherProps} = this.props,
-			{samplesMatched, sampleSearch, samples} = state,
+			{samplesMatched, sampleSearch, samples, mode} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			// Can these closures be eliminated, now that the selector is above this
 			// component?
@@ -80,7 +80,8 @@ var Application = React.createClass({
 							onFilter={onFilter}
 							onZoom={onFilterZoom}
 							onCreateColumn={onFilterColumn}
-							onChange={onHighlightChange}/>
+							onChange={onHighlightChange}
+							mode={mode}/>
 					</Col>
 				</Row>
 				{children}

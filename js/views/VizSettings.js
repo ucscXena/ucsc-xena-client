@@ -336,7 +336,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		var dropDownDiv, option,
 			dropDown = [{
 					"value": "none",
-					"text": "none",
+					"text": "off",
 					"index": 0
 				}, //no normalization
 				{
@@ -344,9 +344,6 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					"text": "across selected samples",
 					"index": 1
 				} //selected sample level
-
-				//{"value": "cohort", "text":"across cohort", "index":1},     //cohort-level
-				//{"value": "subset", "text":"across selected samples", "index":2} //selected sample level
 			],
 			node;
 
