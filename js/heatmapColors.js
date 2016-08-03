@@ -63,8 +63,8 @@ function colorCoded(column, settings, codes) {
 function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
 	var values = data,
 		[low, zero, high] = defaultColors[colorClass],
-		min = settings.min || _.minnull(values),
-		max = settings.max ||  _.maxnull(values),
+		min = ( settings.min != null ) ? settings.min : _.minnull(values),
+		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
 		minStart = settings.minStart,
 		maxStart = settings.maxStart,
 		spec,
@@ -76,7 +76,7 @@ function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
 		return ['no-data'];
 	}
 
-	if ((settings.min !== undefined) && (settings.min !== null) && !isNaN(settings.min)) { //custom setting
+	if ((settings.min != null) && (settings.max != null))  { //custom setting
 		if (isNaN(minStart)  || isNaN(maxStart) || (minStart === null) || (maxStart === null)) {
 			mid = (max + min) / 2.0;
 			zone = (max - min) / 4.0;

@@ -42,15 +42,15 @@ function saveMissing(fn) {
 var scaleFloatSingle = (low, high, min, max) =>
 	d3.scaleLinear().domain([min, max]).range([low, high]);
 
-var scaleFloatThresholdNegative = (low, zero, min, thresh, max) =>
+var scaleFloatThresholdNegative = (low, zero, min, thresh) =>
 	d3.scaleLinear()
-		.domain(_.map([min, thresh, max], x => x.toPrecision(2)))
-		.range([low, zero, zero]);
+		.domain(_.map([min, thresh], x => x.toPrecision(2)))
+		.range([low, zero]);
 
 var scaleFloatThresholdPositive = (zero, high, min, thresh, max) =>
 	d3.scaleLinear()
-		.domain(_.map([min, thresh, max], x => x.toPrecision(2)))
-		.range([zero, zero, high]);
+		.domain(_.map([thresh, max], x => x.toPrecision(2)))
+		.range([zero, high]);
 
 var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
 	d3.scaleLinear()

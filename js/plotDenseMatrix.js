@@ -105,15 +105,14 @@ function legendForColorscale(colorSpec) {
 		values = scale.domain(),
 		colors = _.map(values, scale);
 
-
 	var labels = cases(colorSpec, values, {
 		'no-data': () => [],
 		'float': _.identity,
 		'float-pos': _.identity,
 		'float-neg': _.identity,
-		'float-thresh': ([nl, nh, pl, ph]) => ['<' + nl, nh, pl, '>' + ph],
-		'float-thresh-pos': ([min, low, high]) => [min, low, '>' + high],
-		'float-thresh-neg': ([low, high, max]) => ['<' + low, high, max]
+		'float-thresh': ([nl, nh, pl, ph]) => [nl, nh, pl, ph],
+		'float-thresh-pos': ([low, high]) => [low, high],
+		'float-thresh-neg': ([low, high]) => [low, high]
 	});
 
 	return {colors, labels};
@@ -145,7 +144,6 @@ function renderFloatLegend(props) {
 	} else if (defaultNormalization) {
 		footnotes.push(normalization_text);
 	}
-
 
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
