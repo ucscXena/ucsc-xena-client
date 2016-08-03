@@ -191,14 +191,17 @@ var ColumnEdit = React.createClass({
 			dsIDs = this.state.choices.dataset,
 			dsID = _.has(settings, 'dsID') ? settings.dsID : dsIDs[0],
 			ds = appState.datasets[dsID],
-			colSpec = getColSpec([settings], appState.datasets);
+			colSpec = getColSpec([settings], appState.datasets),
+			meta = appState.datasets[dsID];
+
 		settings = _.assoc(colSpec,
 			'width', 200, // XXX move this default setting?
 			'columnLabel', ds.label,
 			'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel},
 			'colorClass', defaultColorClass(ds),
 			'assembly', ds.assembly,
-			'dsID', dsID);
+			'dsID', dsID,
+			'datasetMetadata', meta);
 		this.props.onHide();
 		callback(['add-column', uuid(), settings]);
 	},

@@ -123,23 +123,29 @@ function legendForColorscale(colorSpec) {
 // passed in. The caller should provide labels/colors in the 'legend' prop
 // if there are multiple scales.
 function renderFloatLegend(props) {
-	var {colors, legend, vizSettings, defaultNormalization} = props,
+	var {colors, legend, vizSettings, defaultNormalization, datasetMetadata, data} = props,
 		hasData = _.getIn(colors, [0]);
 
 	var {labels, colors: legendColors} = legend ||
 		(hasData ? legendForColorscale(colors[0]) : {colors: [], labels: []}),
-		footnotes = '';
+		footnotes = [],
+		subCol = data ? data.length : 0,
+		nSamples = data ? data[0].filter(v => v != null).length : 0,
+		normalization_text = subCol > 1 ? "subtracted each column mean across " + nSamples + " samples" :
+			"subtracted column mean across " + nSamples + " samples";
+
+	if (datasetMetadata && datasetMetadata.unit) {
+		footnotes.push(datasetMetadata.unit);
+	}
 
 	if (vizSettings &&  vizSettings.colNormalization){
-		if (vizSettings.colNormalization === "subset") {
-			footnotes = 'Normalization: across samples';
-		} else if (vizSettings.colNormalization === "none") {
-			footnotes = 'Normalization: off';
+		if (vizSettings.colNormalization === "subset") { // substract mean per subcolumn
+			footnotes.push(normalization_text);
 		}
-	} else if (defaultNormalization != null) {
-		if (defaultNormalization) { footnotes = 'Normalization: across samples';}
-		else {footnotes = 'Normalization: off';}
+	} else if (defaultNormalization) {
+		footnotes.push(normalization_text);
 	}
+
 
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
@@ -168,18 +174,17 @@ var HeatmapLegend = hotOrNot(React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function() {
 		var {column, data} = this.props,
-			{heatmap, colors, legend, valueType, fields, vizSettings, defaultNormalization} = column,
+			{heatmap, colors, legend, valueType, vizSettings, defaultNormalization, datasetMetadata} = column,
 			props = {
-				fields,
 				colors,
 				legend,
 				vizSettings,
 				defaultNormalization,
+				datasetMetadata,
 				data: heatmap,
 				coded: valueType === 'coded',
 				codes: _.get(data, 'codes'),
 			};
-
 		return (props.coded ? renderCodedLegend : renderFloatLegend)(props);
 	}
 }));
