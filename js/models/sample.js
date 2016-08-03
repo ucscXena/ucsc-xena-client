@@ -4,10 +4,10 @@
 var _ = require('../underscore_ext');
 
 function lookupSample(cohortSamples, index, cohortIndex = 0) {
-	var len = cohortSamples[cohortIndex].length;
-	return cohortIndex >= cohortSamples.length ? null :
-		(index < len ?  cohortSamples[cohortIndex][index] :
-			lookupSample(cohortSamples, index - len, cohortIndex + 1));
+	var samples = cohortSamples[cohortIndex];
+	return samples == null ? null :
+		(index < samples.length ? cohortSamples[cohortIndex][index] :
+			lookupSample(cohortSamples, index - samples.length, cohortIndex + 1));
 }
 
 module.exports = {

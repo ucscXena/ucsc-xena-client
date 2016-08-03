@@ -4,8 +4,12 @@
 var multi = require('./multi');
 var denseMatrix = require('./models/denseMatrix');
 var mutationVector = require('./models/mutationVector');
+var _ = require('./underscore_ext');
+var Rx = require('rx');
 
-var fetch = multi(x => x.fetchType);
+var totalSamples = samples => _.sum(_.pluck(samples, 'length'));
+
+var fetch = multi((settings, samples) => totalSamples(samples) > 0 ? settings.fetchType : 'empty');
 
 var xenaFetch = multi(x => `${x.fieldType}-${x.valueType}`); // make this fieldType?
 
@@ -17,4 +21,6 @@ xenaFetch.add("clinical-coded", denseMatrix.fetchFeature);
 xenaFetch.add('mutation-mutation', mutationVector.fetch);
 
 fetch.add('xena', xenaFetch);
+fetch.add('empty', () => Rx.Observable.return(null, Rx.Scheduler.timeout));
+
 module.exports = fetch;

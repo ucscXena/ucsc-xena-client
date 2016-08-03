@@ -127,7 +127,7 @@ function searchAll(ctx, methods, search) {
 }
 
 function evalFieldExp(ctx, expression, column, data) {
-	if (!column) {
+	if (!column || !_.get(data, 'req')) {
 		return [];
 	}
 	return m({
