@@ -341,7 +341,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				}, //no normalization
 				{
 					"value": "subset",
-					"text": "subtract column mean across samples",
+					"text": "mean is subtracted per column across samples",
 					"index": 1
 				} //selected sample level
 			],

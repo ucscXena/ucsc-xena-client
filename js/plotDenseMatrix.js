@@ -128,10 +128,8 @@ function renderFloatLegend(props) {
 	var {labels, colors: legendColors} = legend ||
 		(hasData ? legendForColorscale(colors[0]) : {colors: [], labels: []}),
 		footnotes = [],
-		subCol = data ? data.length : 0,
 		nSamples = data ? data[0].filter(v => v != null).length : 0,
-		normalization_text = subCol > 1 ? "subtracted each column mean across " + nSamples + " samples" :
-			"subtracted column mean across " + nSamples + " samples";
+		normalization_text = "mean is subtracted per column across " + nSamples + " samples";
 
 	if (datasetMetadata && datasetMetadata.unit) {
 		footnotes.push(datasetMetadata.unit);
