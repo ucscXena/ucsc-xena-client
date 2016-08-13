@@ -8,3 +8,8 @@ deployment:
         commands:
             - npm run build:prod
             - rsync -a --delete --rsync-path='sudo rsync' build/ ubuntu@ec2-52-91-68-9.compute-1.amazonaws.com:/var/www/html
+    beta:
+        tag: /v[0-9]+(\.[0-9]+)*/
+        commands:
+            - npm run build:prod
+            - rsync -a --delete --rsync-path='sudo rsync' build/ ubuntu@ec2-52-23-185-93.compute-1.amazonaws.com:/var/www/html
