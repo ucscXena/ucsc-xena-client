@@ -47,7 +47,7 @@ var scaleFloatThresholdNegative = (low, zero, min, thresh) =>
 		.domain(_.map([min, thresh], x => x.toPrecision(2)))
 		.range([low, zero]);
 
-var scaleFloatThresholdPositive = (zero, high, min, thresh, max) =>
+var scaleFloatThresholdPositive = (zero, high, thresh, max) =>
 	d3.scaleLinear()
 		.domain(_.map([thresh, max], x => x.toPrecision(2)))
 		.range([zero, high]);

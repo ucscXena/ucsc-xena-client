@@ -91,10 +91,10 @@ function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
 			 zone / 2.0, absmax / 2.0];
 	} else	if (min >= 0 && max >= 0) {
 		zone = (max - min) / 4.0;
-		spec = ['float-thresh-pos', zero, high, min, min + zone, max - zone / 2.0];
+		spec = ['float-thresh-pos', zero, high, min + zone, max - zone / 2.0];
 	} else { // min <= 0 && max <= 0
 		zone = (max - min) / 4.0;
-		spec = ['float-thresh-neg', low, zero, min + zone / 2.0, max - zone, max];
+		spec = ['float-thresh-neg', low, zero, min + zone / 2.0, max - zone];
 	}
 	return spec;
 }

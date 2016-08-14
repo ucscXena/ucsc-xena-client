@@ -47,18 +47,18 @@ describe('heatmapColors', function () {
 			assert.equal(scale(undefined), undefined);
 		});
 		it('should return positive linear thresholded scale', function() {
-			var scale = colorScale(['float-thresh-pos', 'white', 'red', 1, 1.5, 3]);
-			assert.deepEqual([1, 1.5, 3], scale.domain());
-			assert.deepEqual(['white', 'white', 'red'], scale.range());
+			var scale = colorScale(['float-thresh-pos', 'white', 'red', 1.5, 3]);
+			assert.deepEqual([1.5, 3], scale.domain());
+			assert.deepEqual(['white', 'red'], scale.range());
 			assert.deepEqual(white, scale(1));
 			assert.deepEqual(white, scale(1.5));
 			assert.deepEqual(red, scale(3));
 			assert.equal(scale(undefined), undefined);
 		});
 		it('should return negative linear thresholded scale', function() {
-			var scale = colorScale(['float-thresh-neg', 'red', 'white', -3, -1.5, -1]);
-			assert.deepEqual([-3, -1.5, -1], scale.domain());
-			assert.deepEqual(['red', 'white', 'white'], scale.range());
+			var scale = colorScale(['float-thresh-neg', 'red', 'white', -3, -1.5]);
+			assert.deepEqual([-3, -1.5], scale.domain());
+			assert.deepEqual(['red', 'white'], scale.range());
 			assert.deepEqual(red, scale(-3));
 			assert.deepEqual(white, scale(-1.5));
 			assert.deepEqual(white, scale(-1));
@@ -118,11 +118,11 @@ describe('heatmapColors', function () {
 			// Threshold is 1/4 from bottom -> zero, 1/8 from top -> high
 			assert.deepEqual(colorSpec(column, settings, codes,
 					{a: 0, b: 2, c: 24}, dataset),
-				['float-thresh-pos', '#000000', '#ff0000', 0, 6, 21]);
+				['float-thresh-pos', '#000000', '#ff0000', 6, 21]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings, codes,
 					{a: 0, b: -2, c: -24}, dataset),
-				['float-thresh-neg', '#00ff00',  '#000000', -21, -6, 0]);
+				['float-thresh-neg', '#00ff00',  '#000000', -21, -6]);
 			// neg-pos data
 			assert.deepEqual(colorSpec(column, settings, codes,
 					{a: -8, b: -2, c: 24}, dataset),
