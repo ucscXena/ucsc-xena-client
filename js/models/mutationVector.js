@@ -18,6 +18,12 @@ function chromFromAlt(alt) {
 	return alt.slice(start + 1, end).replace(/chr/i, "");
 }
 
+function posFromAlt(alt) {
+	var end = alt.search(/[\[\]\A\T\G\C]{1,2}$/),
+		start = alt.search(":");
+	return alt.slice(start + 1, end);
+}
+
 function structuralVariantClass(alt) {
 	var firstBase = _.first(alt),
 		lastBase = _.last(alt);
@@ -27,16 +33,12 @@ function structuralVariantClass(alt) {
 
 // structrual variants (SV) have follow vcf https://samtools.github.io/hts-specs/VCFv4.2.pdf
 // "[" and "]" in alt means these are SV variants
-var isStructuralVariant = ({data: {alt}}) => {
-	return structuralVariantClass(alt) !== null;
+var isStructuralVariant = ({data: {start, end, alt}}) => {
+	return structuralVariantClass(alt) !== null || (end - start) > 50;
 };
 
 var unknownEffect = 0,
 	impact = {
-		//large deletion
-		'intra-gene-deletion':4,
-		'intra-gene-inversion':4,
-
 		//destroy protein
 		'Nonsense_Mutation': 3,
 		'frameshift_variant': 3,
@@ -110,7 +112,7 @@ var unknownEffect = 0,
 		"5": "#FF0000",
 		"6": "#FF00CC",
 		"7": "#FFCCCC",
-		"8": "#3FF9900",
+		"8": "#3FF990",
 		"9": "#FFCC00",
 		"10": "#FFFF00",
 		"11": "#CCFF00",
@@ -135,7 +137,6 @@ var unknownEffect = 0,
 			{r: 44, g: 160, b: 44, a: 1},  // green #2ca02c
 			{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
 			{r: 214, g: 39, b: 40, a: 1},   // red #d62728
-			{r: 0, g: 0, b: 0, a: 1} // black
 		],
 		af: {r: 255, g: 0, b: 0},
 		grey: {r: 128, g: 128, b: 128, a: 1}
@@ -384,6 +385,8 @@ widgets.transform.add('mutation', dataToDisplay);
 module.exports = {
 	features,
 	chromFromAlt,
+	posFromAlt,
+	structuralVariantClass,
 	isStructuralVariant,
 	chromColorGB,
 	fetch
