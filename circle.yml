@@ -1,7 +1,8 @@
 # disable test, until we can run headless, or with phantom, or something.
 test:
     override:
-        - "true"
+        - npm run lint -- -f junit -o lint-results.xml
+        - npm run test:headless
 deployment:
     dev:
         branch: master
