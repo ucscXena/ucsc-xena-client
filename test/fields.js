@@ -5,7 +5,8 @@ var fieldsModel = require('../js/models/fieldData');
 
 var assert = require('assert');
 
-mocha.allowUncaught();
+// Better stack trace, which halts the runner. Don't commit this!
+//mocha.allowUncaught();
 
 describe('fields', function () {
 	describe('#concatValuesbyFieldPosition', function () {

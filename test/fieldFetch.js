@@ -102,7 +102,8 @@ function isNumOrNull(x) {
 
 Rx.config.longStackSupport = true;
 
-mocha.allowUncaught();
+// Better stack trace, which halts the runner. Don't commit this!
+//mocha.allowUncaught();
 
 function logError(err) {
 	console.log(err.stack);
