@@ -57,7 +57,7 @@
 		</div>
 	</div>
 	{% for (var a in o.htmlWebpackPlugin.assets) { %}
-	<script src="../{%=o.htmlWebpackPlugin.assets[a]%}"></script>
+	<script src="{%=o.htmlWebpackPlugin.assets[a]%}"></script>
     {% } %}
   </body>
 </html>
