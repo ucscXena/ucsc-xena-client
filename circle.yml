@@ -2,7 +2,7 @@
 test:
     override:
         - npm run lint -- -f junit -o $CIRCLE_TEST_REPORTS/lint-results.xml
-        - npm run test:headless -f $CIRCLE_TEST_REPORTS/test-results.xml
+        - npm run test:headless -- -f $CIRCLE_TEST_REPORTS/test-results.xml
 deployment:
     dev:
         branch: master
