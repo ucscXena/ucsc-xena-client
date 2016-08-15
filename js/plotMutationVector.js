@@ -10,8 +10,8 @@ var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
-var {features} = require('./models/mutationVector');
-var {drawMutations, radius, minVariantHeight, toYPx} = require('./drawMutations');
+var {features, chromFromAlt, posFromAlt, structuralVariantClass} = require('./models/mutationVector');
+var {drawMutations, radius, labelFont, toYPx} = require('./drawMutations');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -43,17 +43,18 @@ function drawLegend({column}) {
 
 function closestNode(nodes, pixPerRow, index, count, x, y) {
 	var cutoffX = radius,
-		cutoffY = minVariantHeight(pixPerRow) / 2,
 		end = index + count,
 		yPx = toYPx(pixPerRow, index),
-		nearBy = _.filter(nodes, n => n.y >= index && n.y < end &&
-			Math.abs(y - yPx(n.y)) < cutoffY &&
-			(x > n.xStart - cutoffX) && (x < n.xEnd + cutoffX));
-
-	return nearBy.length > 0 ?
-		_.min(nearBy, n =>
-				Math.pow((y - yPx(n.y)), 2) + Math.pow((x - (n.xStart + n.xEnd) / 2.0), 2)) :
-		undefined;
+		nearBy = _.filter(nodes, n => {
+			if (!( n.y >= index && n.y < end &&
+				(x > n.xStart - cutoffX) && (x < n.xEnd + cutoffX))) {
+				return false;
+			}
+			var transformed = (pixPerRow > labelFont) && n.yTransformed,
+				cutoffY = transformed ? n.svHeight / 2 :  pixPerRow / 2 ;
+			return Math.abs(y - ( transformed ? n.yTransformed : yPx(n.y))) < cutoffY;
+		});
+	return nearBy.length > 0 ? _.min(nearBy, n => Math.abs(x - (n.xStart + n.xEnd) / 2.0)) : undefined;
 }
 
 function formatAf(af) {
@@ -69,18 +70,24 @@ var gbURL =  (assembly, pos) => `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${en
 function sampleTooltip(sampleFormat, data, gene, assembly) {
 	var dnaVaf = data.dna_vaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dna_vaf)],
 		rnaVaf = data.rna_vaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
-		refAlt = data.reference && data.alt && ['value', `${data.reference} to ${data.alt}`],
+		ref = data.reference && ['value', `${data.reference} to `],
+		altPos = data.alt && structuralVariantClass(data.alt) &&
+			`chr${chromFromAlt(data.alt)}:${posFromAlt(data.alt)}-${posFromAlt(data.alt)}`,
+		alt = data.alt && (structuralVariantClass(data.alt) ?
+							['url', `${data.alt}`, gbURL(assembly, altPos)] :
+							['value', `${data.alt}`]),
 		pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
-		posURL = ['url',  `${assembly} ${pos}`, gbURL(assembly, pos)],
+		posDisplay = data && (data.start === data.end) ? `${data.chr}:${util.addCommas(data.start)}` : pos,
+		posURL = ['url',  `${assembly} ${posDisplay}`, gbURL(assembly, pos)],
 		effect = ['value', fmtIf(data.effect, x => `${x}, `) + //eslint-disable-line comma-spacing
 					gene +
 					fmtIf(data.amino_acid, x => ` (${x})`) +
-					fmtIf(data.altGene, x => ` connect to ${x} `, ' connect to internegic region')];
-
+					fmtIf(data.altGene, x => ` connect to ${x} `)
+					];
 	return {
 		rows: dropNulls([
 			[effect],
-			[posURL, refAlt],
+			[posURL, ref, alt],
 			[dnaVaf],
 			[rnaVaf]
 		]),
