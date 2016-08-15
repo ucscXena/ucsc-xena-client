@@ -42,35 +42,36 @@ function drawBackground(vg, width, height, pixPerRow, hasValue) {
 }
 
 function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variants) {
-	// --------- separate variants to SV(with feet "[" , "]" ) vs others (no feet) ---------
-	var {true: feetVariants = [], false: nofeetVariants = []} = _.groupBy(variants, isStructuralVariant);
-
-	// --------- no feet variants drawing start here ---------
-	var varByImp = _.groupByConsec(nofeetVariants, v => v.group),
+	// --------- separate variants to SV(with feet "[" , "]" or size >50bp) vs others (small) ---------
+	var {true: svVariants = [], false: smallVariants = []} = _.groupBy(variants, isStructuralVariant),
+		yPx = toYPx(pixPerRow, index),
 		vHeight = minVariantHeight(pixPerRow),
-		yPx = toYPx(pixPerRow, index);
+		padding = 3;
+
+	// --------- small variants drawing start here ---------
+	var varByImp = _.groupByConsec(smallVariants, v => v.group);
 
 	_.each(varByImp, vars => {
 		var points = vars.map(v => {
-			var padding = Math.max(0, radius - (v.xEnd - v.xStart + 1) / 2.0),
-				y = yPx(v.y);
-			return [v.xStart - padding, y, v.xEnd + padding, y];
-		});
+				var y = yPx(v.y);
+				return [v.xStart - padding, y, v.xEnd + padding, y];
+			});
+
 		vg.drawPoly(points,
 			{strokeStyle: color(vars[0].group), lineWidth: vHeight});
 
 		// no feet variants black center
-		if (vHeight > 2) { // centers when there is enough vertical room for each sample
+		if (vHeight > 4) { // centers when there is enough vertical room for each sample
 			points = vars.map(v => [v.xStart, yPx(v.y), v.xEnd, yPx(v.y)]);
 			vg.drawPoly(points,
 				{strokeStyle: 'black', lineWidth: vHeight});
 		}
 
-		// no feet variants label
+		// small variants label
 		if (height / count > labelFont) {
 			let h = height / count,
 				minTxtWidth = vg.textWidth(labelFont, 'WWWW'),
-				varById = _.groupBy(nofeetVariants, v => v.data.id),
+				varById = _.groupBy(smallVariants, v => v.data.id),
 				ids = _.keys(varById);
 
 			ids.map(function(id){
@@ -93,19 +94,6 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 					vg.textCenteredPushRight( xEnd + 2 * labelMargin, y - h / 2, textWidth, h, 'black', labelFont, label);
 				}
 			});
-
-			/*points.forEach(([x, y, xEnd, yEnd], i) => {
-				var label = vars[i].data.amino_acid || vars[i].data.alt,
-					textWidth = vg.textWidth(labelFont, label),
-					margin=0;
-
-				if ((xEnd - x) >= minTxtWidth) {
-						vg.textCenteredPushRight( x + margin, y - h / 2, xEnd - x - margin,
-							h, 'white', labelFont, label);
-				} else {
-					vg.textCenteredPushRight( x + 2 * labelMargin, y - h / 2, textWidth, h, 'black', labelFont, label);
-				}
-			});*/
 		}
 	});
 
@@ -114,41 +102,97 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 	// be reconstructing variant records from draw regions so we can draw breakpoints, for example.
 	// We should instead output structures parallel to 'nodes' which hold the info for drawing SVs.
 
-	// --------- feet variants drawing start here ---------
-	//feet variants group by variant
-	var varById = _.groupBy(feetVariants, v => v.data.id),
-		varByIdMap = _.mapObject(varById, varList => {
-			var {xStart, y: yIndex, data: {alt, altGene}} = _.min(varList, v => v.xStart),
-				y = yPx(yIndex),
-				{xEnd} = _.max(varList, v => v.xStart);
+	// --------- SV variants drawing start here ---------
+	//SV variants group by variant
+	var varById = _.groupBy(svVariants, v => v.data.id), //  "svVariant" all belong to the same biological variant
+		varByIdMap;
 
-			return {xStart, xEnd, y, color: chromColorGB[chromFromAlt(alt)], alt, altGene};
+	if (height / count > labelFont) {
+		// when there is enough vertical space, each SV of a sample is in a sub-row
+		var svBySample = {};  // biological variants grouped by sample
+
+		_.mapObject(varById, function(varList, id) {
+			var sample = varList[0].data.sample;
+			if (! _.has(svBySample, sample)) {
+				svBySample[sample] = {};
+			}
+			svBySample[sample][id] = varList;
 		});
 
-	//feet variants draw color background according to joining chromosome -- can I make it transparent
+		varByIdMap = _.values(_.mapObject(svBySample, svObj => {
+			var svSize = _.size(svObj),
+				svHeight = height / (count * svSize),
+				i = - (svSize - 1) / 2.0;
+
+			return _.mapObject(svObj, varList => {
+				var {xStart, y: yIndex, data: {chr, alt, altGene}} = _.min(varList, v => v.xStart),
+					y = yPx(yIndex) + svHeight * i,
+					{xEnd} = _.max(varList, v => v.xEnd);
+
+				_.map(varList, v=> {
+						v.yTransformed = y;
+						v.svHeight = svHeight;
+					});
+
+				i ++;
+
+				return {
+					xStart: xStart,
+					xEnd: xEnd,
+					y: y,
+					h: svHeight,
+					color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
+					alt: alt,
+					altGene: altGene
+				};
+			});
+		}));
+		varByIdMap = _.reduce(varByIdMap, function(memo, v){ return _.extend(memo, v); }, {});
+	}
+	else {
+		varByIdMap = _.mapObject(varById, varList => {
+			var {xStart, y: yIndex, data: {chr, alt, altGene}} = _.min(varList, v => v.xStart),
+				y = yPx(yIndex),
+				{xEnd} = _.max(varList, v => v.xEnd);
+
+			return {
+				xStart: xStart,
+				xEnd: xEnd,
+				y: y,
+				h:vHeight,
+				color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
+				alt: alt,
+				altGene: altGene
+			};
+		});
+
+	}
+
+	//SV variants draw color background according to joining chromosome
 	_.each(varByIdMap, variant => {
-		var {xStart, xEnd, color, y} = variant,
-			padding = Math.max(0, radius - (xEnd - xStart + 1) / 2.0),
+		var {xStart, xEnd, y, color, h} = variant,
 			points = [[xStart - padding, y, xEnd + padding, y]];
 
 		vg.drawPoly(points,
-			{strokeStyle: color, lineWidth: vHeight});
+			{strokeStyle: color, lineWidth: h});
 	});
 
 
 	//feet variants draw breakpoint as black vertical bar
-	if (vHeight > 2) {
+	if (vHeight > 4 && height / count <= labelFont) {
 		_.each(varByIdMap, variant => {
-			var {xStart, xEnd, y} = variant,
+			var {xStart, xEnd, y, h} = variant,
 				points = [[]];
 
 			if (xStart === 0 && xEnd <= width){
 				points = [[xEnd, y, xEnd + 1, y]];
 			} else if (xStart > 0 && xEnd > width){
 				points = [[xStart, y, xStart + 1, y]];
+			} else {
+				points = [[xStart, y, xStart + 1, y], [xEnd, y, xEnd + 1, y]];
 			}
 			vg.drawPoly(points,
-				{strokeStyle: 'black', lineWidth: vHeight});
+				{strokeStyle: 'black', lineWidth: h});
 		});
 	}
 
@@ -157,12 +201,10 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 		var margin = 2 * labelMargin, //more labelMargin due to drawing of breakpoint
 			minTxtWidth = vg.textWidth(labelFont, 'WWWW');
 
-		var oneVariantOfSampleList = _.filter(_.groupBy(varById, varList => varList[0].y), list => list.length === 1);
-		oneVariantOfSampleList.forEach(variant => {
-			var id = variant[0][0].data.id,
-				{xStart, xEnd, alt, altGene, y} = varByIdMap[id];
+		_.each(varByIdMap, variant => {
+			var {xStart, xEnd, y, alt, altGene, h} = variant;
 
-			if ((xEnd - xStart) - margin >= minTxtWidth) {
+			if ( (h  > labelFont) && ((xEnd - xStart) - margin >= minTxtWidth)) {
 				let h = height / count;
 				vg.clip(xStart + margin, y - h / 2, xEnd - xStart - 2 * margin, h, () =>
 					vg.textCenteredPushRight( xStart + margin, y - h / 2, xEnd - xStart - margin,
@@ -190,4 +232,4 @@ function drawMutations(vg, props) {
 	drawImpactPx(vg, width, index, height, count, pixPerRow, features[feature].color, toDraw);
 }
 
-module.exports = {drawMutations, radius, minVariantHeight, toYPx};
+module.exports = {drawMutations, radius, minVariantHeight, toYPx, labelFont};
