@@ -47,7 +47,7 @@ var Legend = React.createClass({
 
 							  {l}
 						  </label>).reverse(),
-			footnotes_items = footnotes ? footnotes.map(text =>
+			footnotesItems = footnotes ? footnotes.map(text =>
 				<span>
 					{text}
 					<br/>
@@ -76,7 +76,7 @@ var Legend = React.createClass({
 				{footnotes ?
 					<Row>
 						<Col md={10} mdOffset={1}>
-						{footnotes_items}
+						{footnotesItems}
 						</Col>
 					</Row> : null}
 			</div>

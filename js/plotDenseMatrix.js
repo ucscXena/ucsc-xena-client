@@ -129,7 +129,7 @@ function renderFloatLegend(props) {
 		(hasData ? legendForColorscale(colors[0]) : {colors: [], labels: []}),
 		footnotes = [],
 		nSamples = data ? data[0].filter(v => v != null).length : 0,
-		normalization_text = "mean is subtracted per column across " + nSamples + " samples";
+		normalizationText = "mean is subtracted per column across " + nSamples + " samples";
 
 	if (datasetMetadata && datasetMetadata.unit) {
 		footnotes.push(datasetMetadata.unit);
@@ -137,10 +137,10 @@ function renderFloatLegend(props) {
 
 	if (vizSettings &&  vizSettings.colNormalization){
 		if (vizSettings.colNormalization === "subset") { // substract mean per subcolumn
-			footnotes.push(normalization_text);
+			footnotes.push(normalizationText);
 		}
 	} else if (defaultNormalization) {
-		footnotes.push(normalization_text);
+		footnotes.push(normalizationText);
 	}
 
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;

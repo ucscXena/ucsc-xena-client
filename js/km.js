@@ -1,5 +1,4 @@
-/*global module: false, require: false */
-
+/*eslint-disable camelcase */
 'use strict';
 
 var jStat = require('jStat').jStat,

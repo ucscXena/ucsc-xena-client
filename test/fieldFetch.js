@@ -11,47 +11,47 @@ require('../js/models/datasetJoins');
 
 var assert = require('assert');
 
-var A_genomicDsID = JSON.stringify({
+var AGenomicDsID = JSON.stringify({
 	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
 	'name': 'TCGA/TCGA.BRCA.sampleMap/SNP6.matrix'
 });
 
-var A_clinicalDsID = JSON.stringify({
+var AClinicalDsID = JSON.stringify({
 	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
 	'name': 'TCGA/TCGA.BRCA.sampleMap/BRCA_clinicalMatrix'
 });
 
-var B_clinicalDsID = JSON.stringify({
+var BClinicalDsID = JSON.stringify({
 	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
 	'name': 'other/balagurunathan2008_public/balagurunathan2008_public_clinicalMatrix'
 });
 
-var A_mutationDsID = JSON.stringify({
+var AMutationDsID = JSON.stringify({
 	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
 	'name': 'TCGA/TCGA.BRCA.sampleMap/mutation_unc'
 });
 
-var B_genomicDsID = JSON.stringify({
+var BGenomicDsID = JSON.stringify({
 	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
 	'name': 'other/balagurunathan2008_public/balagurunathan2008_genomicMatrix'
 });
 
-var C_genomicDsID = JSON.stringify({
+var CGenomicDsID = JSON.stringify({
 	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
 	'name': 'TCGA/TCGA.KIRC.sampleMap/HiSeqV2_exon'
 });
 
-var A_secondGenomicDsID = JSON.stringify({
+var ASecondGenomicDsID = JSON.stringify({
 	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
 	'name': 'TCGA/TCGA.BRCA.sampleMap/HiSeqV2_exon'
 });
 
-var C_mutationDsID = JSON.stringify({
+var CMutationDsID = JSON.stringify({
 	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
 	'name': 'TCGA/TCGA.KIRC.sampleMap/mutation'
 });
 
-var A_samples = [
+var ASamples = [
 	"TCGA-GI-A2C8-01",
 	'TCGA-EW-A424-01',
 	'TCGA-AC-A23E-01',
@@ -62,7 +62,7 @@ var A_samples = [
 	'TCGA-E9-A245-01',
 	'TCGA-C8-A1HJ-01'];
 
-var B_samples = [
+var BSamples = [
 	'TumPancM11',
 	'NormStomach1',
 	'NormMonocyte12',
@@ -78,7 +78,7 @@ var B_samples = [
 	'NormBrain',
 	'NormOsteoblast'];
 
-var C_samples = [
+var CSamples = [
 	'TCGA-B4-5844-01',
 	'TCGA-CZ-5459-01',
 	'TCGA-B0-4694-01',
@@ -145,11 +145,11 @@ describe('xena fetch', function () {
 		fetch(
 		{
 			fetchType: 'xena',
-			dsID: A_genomicDsID,
+			dsID: AGenomicDsID,
 			fieldType: 'probes',
 			valueType: 'float',
 			fields: [probe]
-		}, [A_samples]).do(validateSingleValueData([A_samples]))
+		}, [ASamples]).do(validateSingleValueData([ASamples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch gene average', function (done) {
@@ -157,11 +157,11 @@ describe('xena fetch', function () {
 		fetch(
 		{
 			fetchType: 'xena',
-			dsID: A_genomicDsID,
+			dsID: AGenomicDsID,
 			fieldType: 'genes',
 			valueType: 'float',
 			fields: [field]
-		}, [A_samples]).do(validateSingleValueData([A_samples]))
+		}, [ASamples]).do(validateSingleValueData([ASamples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch gene probes', function (done) {
@@ -169,11 +169,11 @@ describe('xena fetch', function () {
 		fetch(
 		{
 			fetchType: 'xena',
-			dsID: A_genomicDsID,
+			dsID: AGenomicDsID,
 			fieldType: 'geneProbes',
 			valueType: 'float',
 			fields: [field]
-		}, [A_samples]).do(validateProbesData([A_samples]))
+		}, [ASamples]).do(validateProbesData([ASamples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch clinical coded', function (done) {
@@ -181,11 +181,11 @@ describe('xena fetch', function () {
 		fetch(
 		{
 			fetchType: 'xena',
-			dsID: A_clinicalDsID,
+			dsID: AClinicalDsID,
 			fieldType: 'clinical',
 			valueType: 'coded',
 			fields: [field]
-		}, [A_samples]).do(validateCodedData([A_samples]))
+		}, [ASamples]).do(validateCodedData([ASamples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch clinical float', function (done) {
@@ -193,11 +193,11 @@ describe('xena fetch', function () {
 		fetch(
 		{
 			fetchType: 'xena',
-			dsID: A_clinicalDsID,
+			dsID: AClinicalDsID,
 			fieldType: 'clinical',
 			valueType: 'float',
 			fields: [field]
-		}, [A_samples]).do(validateSingleValueData([A_samples]))
+		}, [ASamples]).do(validateSingleValueData([ASamples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should fetch mutation', function (done) {
@@ -205,16 +205,16 @@ describe('xena fetch', function () {
 		fetch(
 		{
 			fetchType: 'xena',
-			dsID: A_mutationDsID,
+			dsID: AMutationDsID,
 			fieldType: 'mutation',
 			valueType: 'mutation',
 			fields: [field],
 			assembly: 'hg19'
-		}, [A_samples]).do(data => {
+		}, [ASamples]).do(data => {
 			var rows = getIn(data, ['req', 'rows']),
 				samplesInResp = getIn(data, ['req', 'samplesInResp']),
 				refGene = getIn(data, ['refGene', field]),
-				inSamples = s => s >= 0 && s < A_samples.length;
+				inSamples = s => s >= 0 && s < ASamples.length;
 
 			assert(isArray(rows), 'rows is array');
 			assert(isArray(samplesInResp), 'samplesInResp is array');
@@ -233,18 +233,18 @@ describe('xena fetch', function () {
 			fields: [probe0],
 			fieldSpecs: [{
 				fetchType: 'xena',
-				dsID: A_genomicDsID,
+				dsID: AGenomicDsID,
 				fieldType: 'probes',
 				valueType: 'float',
 				fields: [probe0]
 			}, {
 				fetchType: 'xena',
-				dsID: B_genomicDsID,
+				dsID: BGenomicDsID,
 				fieldType: 'probes',
 				valueType: 'float',
 				fields: [probe1]
 			}]
-		}, [A_samples, B_samples]).do(validateSingleValueData([A_samples, B_samples]))
+		}, [ASamples, BSamples]).do(validateSingleValueData([ASamples, BSamples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should compose gene floats', function (done) {
@@ -257,18 +257,18 @@ describe('xena fetch', function () {
 			fields: [field],
 			fieldSpecs: [{
 				fetchType: 'xena',
-				dsID: A_genomicDsID,
+				dsID: AGenomicDsID,
 				fieldType: 'genes',
 				valueType: 'float',
 				fields: [field]
 			}, {
 				fetchType: 'xena',
-				dsID: B_genomicDsID,
+				dsID: BGenomicDsID,
 				fieldType: 'genes',
 				valueType: 'float',
 				fields: [field]
 			}]
-		}, [A_samples, B_samples]).do(validateSingleValueData([A_samples, B_samples]))
+		}, [ASamples, BSamples]).do(validateSingleValueData([ASamples, BSamples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should compose multiple gene floats', function (done) {
@@ -282,24 +282,24 @@ describe('xena fetch', function () {
 			fields: [field0, field1],
 			fieldSpecs: [{
 				fetchType: 'xena',
-				dsID: A_genomicDsID,
+				dsID: AGenomicDsID,
 				fieldType: 'genes',
 				valueType: 'float',
 				fields: [field0, field1]
 			}, {
 				fetchType: 'xena',
-				dsID: B_genomicDsID,
+				dsID: BGenomicDsID,
 				fieldType: 'genes',
 				valueType: 'float',
 				fields: [field0]
 			}]
-		}, [A_samples, B_samples]).do(data => {
+		}, [ASamples, BSamples]).do(data => {
 			var fields = [field0, field1];
 			fields.forEach((field, i) => {
 				var fieldValues = getIn(data, ['req', 'values', i]);
 				assert(isArray(fieldValues), 'field is array');
 				assert(every(fieldValues, isNumOrNull), 'values are numbers');
-				assert.equal(fieldValues.length, _.sum(_.pluck([A_samples, B_samples], 'length')), 'length matches samples');
+				assert.equal(fieldValues.length, _.sum(_.pluck([ASamples, BSamples], 'length')), 'length matches samples');
 				assert(isNumber(getIn(data, ['req', 'mean', i])), 'mean is number');
 			});
 		}).subscribe(() => done(), e => done(logError(e)));
@@ -314,18 +314,18 @@ describe('xena fetch', function () {
 			fields: [field],
 			fieldSpecs: [{
 				fetchType: 'xena',
-				dsID: A_secondGenomicDsID,
+				dsID: ASecondGenomicDsID,
 				fieldType: 'geneProbes',
 				valueType: 'float',
 				fields: [field]
 			}, {
 				fetchType: 'xena',
-				dsID: C_genomicDsID,
+				dsID: CGenomicDsID,
 				fieldType: 'geneProbes',
 				valueType: 'float',
 				fields: [field]
 			}]
-		}, [A_samples, C_samples]).do(validateProbesData([A_samples, C_samples]))
+		}, [ASamples, CSamples]).do(validateProbesData([ASamples, CSamples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should compose clinical coded', function (done) {
@@ -334,24 +334,24 @@ describe('xena fetch', function () {
 		fetch(
 		{
 			fetchType: 'composite',
-			dsID: A_clinicalDsID,
+			dsID: AClinicalDsID,
 			fieldType: 'clinical',
 			valueType: 'coded',
 			fields: [field0],
 			fieldSpecs: [{
 				fetchType: 'xena',
-				dsID: A_clinicalDsID,
+				dsID: AClinicalDsID,
 				fieldType: 'clinical',
 				valueType: 'coded',
 				fields: [field0]
 			}, {
 				fetchType: 'xena',
-				dsID: B_clinicalDsID,
+				dsID: BClinicalDsID,
 				fieldType: 'clinical',
 				valueType: 'coded',
 				fields: [field1]
 			}]
-		}, [A_samples, B_samples]).do(validateCodedData([A_samples, B_samples]))
+		}, [ASamples, BSamples]).do(validateCodedData([ASamples, BSamples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
 	it('should compose mutation', function (done) {
@@ -365,24 +365,24 @@ describe('xena fetch', function () {
 			assembly: 'hg19',
 			fieldSpecs: [{
 				fetchType: 'xena',
-				dsID: A_mutationDsID,
+				dsID: AMutationDsID,
 				fieldType: 'mutation',
 				valueType: 'mutation',
 				fields: [field],
 				assembly: 'hg19',
 			}, {
 				fetchType: 'xena',
-				dsID: C_mutationDsID,
+				dsID: CMutationDsID,
 				fieldType: 'mutation',
 				valueType: 'mutation',
 				fields: [field],
 				assembly: 'hg19',
 			}]
-		}, [A_samples, C_samples]).do(data => {
+		}, [ASamples, CSamples]).do(data => {
 			var rows = getIn(data, ['req', 'rows']),
 				samplesInResp = getIn(data, ['req', 'samplesInResp']),
 				refGene = getIn(data, ['refGene', field]),
-				count = A_samples.length + C_samples.length,
+				count = ASamples.length + CSamples.length,
 				inSamples = s => s >= 0 && s < count;
 
 			assert(isArray(rows), 'rows is an array');
@@ -397,24 +397,24 @@ describe('xena fetch', function () {
 		fetch(
 		{
 			fetchType: 'composite',
-			dsID: A_clinicalDsID,
+			dsID: AClinicalDsID,
 			fieldType: 'clinical',
 			valueType: 'coded',
 			fields: [field0],
 			fieldSpecs: [{
 				fetchType: 'xena',
-				dsID: A_clinicalDsID,
+				dsID: AClinicalDsID,
 				fieldType: 'clinical',
 				valueType: 'coded',
 				fields: [field0]
 			}, {
 				fetchType: 'xena',
-				dsID: B_genomicDsID,
+				dsID: BGenomicDsID,
 				fieldType: 'genes',
 				valueType: 'float',
 				fields: [field1]
 			}]
-		}, [A_samples, B_samples]).do(validateCodedData([A_samples, B_samples]))
+		}, [ASamples, BSamples]).do(validateCodedData([ASamples, BSamples]))
 		.subscribe(() => done(), e => done(logError(e)));
 	});
 });

@@ -7,9 +7,9 @@ var {deepPureRenderMixin} = require('../react-utils');
 
 // group header for a server
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
-const LOCAL_DOMAIN_label  = 'My Computer Hub' ;
-const phenotype_dataSubTypeList = ["phenotype", "phenotypes", "Phenotype", "Phenotypes"];
-const phenotypeGroup_label = "phenotype";
+const LOCAL_DOMAIN_LABEL  = 'My Computer Hub' ;
+const phenotypeDataSubTypeList = ["phenotype", "phenotypes", "Phenotype", "Phenotypes"];
+const phenotypeGroupLabel = "phenotype";
 const ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap', 'genomicSegment'];
 
 var notIgnored = ds => !_.contains(ignored, ds.type);
@@ -19,7 +19,7 @@ var filterDatasets = (list, server) =>
 	_.filter(list, (ds, dsID) =>
 		isLoaded(ds) && server.includes(JSON.parse(dsID).host) && notIgnored(ds));
 var groupDatasets = (list, server) => _.groupBy(list, ds =>
-	server.includes(LOCAL_DOMAIN) ?  LOCAL_DOMAIN_label : (ds.dataSubType ? ds.dataSubType : "others"));
+	server.includes(LOCAL_DOMAIN) ?  LOCAL_DOMAIN_LABEL : (ds.dataSubType ? ds.dataSubType : "others"));
 
 var sortDatasets = (groups) => groups.map(dsGroup => {
 	let sortedOptions = _.sortBy(dsGroup.options, ds => ds.label.toLowerCase());
@@ -66,7 +66,7 @@ function makeDs(ds, showPosition, countdown, onSelect, setValue) {
 
 function makeGroup(groupMeta, activeGroupName, onSelect, setValue) {
 	var {iterations, name, options} = groupMeta,
-		phenoGroup = phenotype_dataSubTypeList.indexOf(name) !== -1,
+		phenoGroup = phenotypeDataSubTypeList.indexOf(name) !== -1,
 		header =
 			(<div className='row'>
 				<span className='col-md-11'>
@@ -114,9 +114,9 @@ var DatasetSelect = React.createClass({
 
 		if (value && value.length === 1){
 			let ds = datasets[value[0]];
-			activeGroup = JSON.parse(ds.dsID).host === LOCAL_DOMAIN ?  LOCAL_DOMAIN_label : ds.dataSubType;
+			activeGroup = JSON.parse(ds.dsID).host === LOCAL_DOMAIN ?  LOCAL_DOMAIN_LABEL : ds.dataSubType;
 		} else if (value && value.length > 1){
-			activeGroup = phenotypeGroup_label;
+			activeGroup = phenotypeGroupLabel;
 		} else {
 			activeGroup = '';
 		}
@@ -139,14 +139,14 @@ var DatasetSelect = React.createClass({
 		}
 	},
 	onSelectDs: function(dsIDs, groupName) {
-		if (phenotype_dataSubTypeList.indexOf(groupName) !== -1){
-			this.onSetGroup(phenotypeGroup_label);
+		if (phenotypeDataSubTypeList.indexOf(groupName) !== -1){
+			this.onSetGroup(phenotypeGroupLabel);
 		}
 		this.props.onSelect(dsIDs);
 	},
 	onSetGroup: function(newGroupName) {
 		//change activeGroup when click on a expandable header only
-		var groupName = (newGroupName !== this.state.activeGroup || newGroupName === phenotypeGroup_label) ? newGroupName : '';
+		var groupName = (newGroupName !== this.state.activeGroup || newGroupName === phenotypeGroupLabel) ? newGroupName : '';
 		this.setState({activeGroup: groupName});
 	},
 	mixins: [deepPureRenderMixin],

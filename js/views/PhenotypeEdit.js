@@ -30,7 +30,7 @@ var consolidateFeatures = featureSet => {
 
 var sortFeatures = features => _.sortBy(features, f => f.label.toUpperCase());
 
-var remove_sampleID = features => _.filter(features, f => f.value !== "sampleID");
+var removeSampleID = features => _.filter(features, f => f.value !== "sampleID");
 
 var PhenotypeEdit = React.createClass({
 	getInitialState: function() {
@@ -40,7 +40,7 @@ var PhenotypeEdit = React.createClass({
   					return ( chosenDs.indexOf(dsID) !== -1);
 				});
 		return {
-			features: sortFeatures(remove_sampleID(consolidateFeatures(filteredFeatures)))
+			features: sortFeatures(removeSampleID(consolidateFeatures(filteredFeatures)))
 		};
 	},
 	onSelect: function(f) {
