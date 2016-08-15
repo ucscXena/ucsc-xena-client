@@ -2,7 +2,7 @@
 /*global define: true*/
 'use strict';
 define(['./highcharts'], function () {
-	function hcLabelRender(){
+	function hcLabelRender() {
 		var s = this.name;
 		var r = "";
 		var lastAppended = 0;
@@ -61,7 +61,7 @@ define(['./highcharts'], function () {
 	};
 
 	// x categorical, Y categorical
-	function columnChartOptions (chartOptions, categories, xAxisTitle, Y, showLegend){
+	function columnChartOptions (chartOptions, categories, xAxisTitle, Y, showLegend) {
 		var yAxisTitle;
 			yAxisTitle = "Percentage distribution";
 
@@ -107,7 +107,7 @@ define(['./highcharts'], function () {
 			}
 		};
 		//tooltip
-		if (xAxisTitle === ""){
+		if (xAxisTitle === "") {
 			chartOptions.tooltip = {
 				formatter: function () {
 					return Y + ' ' + categories[this.point.x] + ': <b>' + this.point.y + '%</b>';
@@ -122,7 +122,7 @@ define(['./highcharts'], function () {
 			};
 		}
 
-		if (categories.length > 15){
+		if (categories.length > 15) {
 			chartOptions.xAxis.labels = {
 				rotation: -90
 			};
@@ -136,7 +136,7 @@ define(['./highcharts'], function () {
 	}
 
 	// x categorical y float
-	function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle){
+	function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 		chartOptions.legend.align = 'right';
 		chartOptions.legend.margin = 5;
 		chartOptions.legend.title.text = xAxisTitle;
@@ -193,7 +193,7 @@ define(['./highcharts'], function () {
 	    return chartOptions;
 	}
 
-	function scatterChart(chartOptions, xlabel, ylabel){
+	function scatterChart(chartOptions, xlabel, ylabel) {
 		var xAxisTitle = xlabel,
 			yAxisTitle = ylabel;
 
@@ -230,20 +230,20 @@ define(['./highcharts'], function () {
 		return chartOptions;
 	}
 
-	function addSeriesToColumn (chart, sName, ycodeSeries, errorSeries, yIsCategorical, showDataLabel, showLegend, color){
+	function addSeriesToColumn (chart, sName, ycodeSeries, errorSeries, yIsCategorical, showDataLabel, showLegend, color) {
 		var seriesOptions = {
 			name: sName,
 			type: 'column',
 			data: ycodeSeries,
 			maxPointWidth: 50,
-			color:color
+			color: color
 		};
 
 		if (!showLegend) {
 			seriesOptions.showInLegend = false;
 		}
 
-		if (showDataLabel){
+		if (showDataLabel) {
 			if ( yIsCategorical) {
 				seriesOptions.dataLabels = {
 					enabled: true,
@@ -258,7 +258,7 @@ define(['./highcharts'], function () {
 
 		chart.addSeries(seriesOptions, false);
 
-		if (errorSeries){
+		if (errorSeries) {
 			chart.addSeries({
 				name: sName + " +/-standard deviation",
 				type: 'errorbar',
@@ -267,8 +267,8 @@ define(['./highcharts'], function () {
 		}
 	}
 
-	function average(data){
-		var sum = data.reduce(function(a, b){
+	function average(data) {
+		var sum = data.reduce(function(a, b) {
 			return a + b;
 		}, 0);
 
@@ -277,8 +277,8 @@ define(['./highcharts'], function () {
 		return avg;
 	}
 
-	function standardDeviation(values, avg){
-		var squareDiffs = values.map(function(value){
+	function standardDeviation(values, avg) {
+		var squareDiffs = values.map(function(value) {
 			var diff = value - avg;
 			var sqrDiff = diff * diff;
 			return sqrDiff;

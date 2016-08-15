@@ -145,7 +145,7 @@ var fetchGeneProbes = ({dsID, fields}, [samples]) => datasetGeneProbesValues(dsI
 	.map(resp => ({req: indexProbeGeneResponse(resp)}));
 
 // This should really be fetchCoded. Further, it should only return a single
-// code list, i.e. either a single clinical coded field, or a list of genomic 
+// code list, i.e. either a single clinical coded field, or a list of genomic
 // fields all with the same code values.
 var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
 		datasetProbeValues(dsID, samples, fields)

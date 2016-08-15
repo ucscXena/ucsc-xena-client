@@ -22,7 +22,7 @@ define(['d3', 'jquery', 'underscore'
 			vHeight = samplePlot.height(),
 			vTop = samplePlot.offset().top;
 
-		if (frozen){
+		if (frozen) {
 			return;
 		}
 
@@ -51,7 +51,7 @@ define(['d3', 'jquery', 'underscore'
 		}
 	}
 
-	function hide(){
+	function hide() {
 		var crosshairH = $('body').find('.crosshairH'),
 			crosshairV = $('body').find('.crosshairV');
 
@@ -100,7 +100,7 @@ define(['d3', 'jquery', 'underscore'
 			frozen = !frozen;
 		},
 
-		hide: function(){
+		hide: function() {
 			hide();
 		}
 	};

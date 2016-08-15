@@ -48,9 +48,9 @@ function compute(tte, ev) {
 		si = reduce(dini, function (a, dn) { // survival at each t_i (including censor times)
 			var l = last(a) || { s: 1 };
 			if (dn.d) {                      // there were events at this t_i
-				a.push({t: dn.t, e: true, s: l.s * (1 - dn.d / dn.n), n:dn.n, d:dn.d, rate : dn.d / dn.n});
+				a.push({t: dn.t, e: true, s: l.s * (1 - dn.d / dn.n), n: dn.n, d: dn.d, rate: dn.d / dn.n});
 			} else {                          // only censors
-				a.push({t: dn.t, e: false, s: l.s, n:dn.n, d:dn.d, rate: null});
+				a.push({t: dn.t, e: false, s: l.s, n: dn.n, d: dn.d, rate: null});
 			}
 			return a;
 		}, []);
@@ -103,7 +103,7 @@ function compute(tte, ev) {
 // compute the expected total number of events
 // report observed n events, expected n events. pearson's chi-square component (O-E)^2/E
 
-function expectedObservedEventNumber(si, tte, ev){
+function expectedObservedEventNumber(si, tte, ev) {
 	var exits = sortBy(map(tte, function (x, i) { return { tte: x, ev: ev[i] }; }), 'tte'), // sort and collate
 		uexits = _.uniq(_.pluck(exits, 'tte'), true),             // unique tte
 		gexits = groupBy(exits, function (x) { return x.tte; }),  // group by common time of exit
@@ -124,24 +124,24 @@ function expectedObservedEventNumber(si, tte, ev){
 		observedNumber,
 		dataByTimeTable = [];
 
-	si = si.filter(function(item){  //only keep the curve where there is an event
+	si = si.filter(function(item) {  //only keep the curve where there is an event
 		if (item.e) {return true;}
 		else {return false;}
 	});
 
 	expectedNumber = reduce(si, function (memo, item) {
-		var pointerInData = _.find(data, function (x){
-				if (x.t === item.t){
+		var pointerInData = _.find(data, function (x) {
+				if (x.t === item.t) {
 					return true;
 				}
-				if (x.t > item.t){
+				if (x.t > item.t) {
 					return true;
 				}
 				return false;
 			});
 
 
-		if(pointerInData){
+		if(pointerInData) {
 			var expected = pointerInData.n * item.rate;
 			dataByTimeTable.push(pointerInData);
 			return memo + expected;
@@ -163,7 +163,7 @@ function expectedObservedEventNumber(si, tte, ev){
 }
 
 
-function logranktest (allGroupsRes, groupsTte, groupsEv){
+function logranktest (allGroupsRes, groupsTte, groupsEv) {
 	var KM_stats,
 		pValue,
 		dof, // degree of freedom
@@ -176,12 +176,12 @@ function logranktest (allGroupsRes, groupsTte, groupsEv){
 		Ki, Kj, // at risk number from each group
 		n; //total observed
 
-	_.each(groupsTte, function (groupTte, i){
+	_.each(groupsTte, function (groupTte, i) {
 		var group = {tte: groupTte, ev: groupsEv[i]},
 			r = expectedObservedEventNumber(allGroupsRes, group.tte, group.ev);
 			//console.log(group.name, group.tte.length, r.observed, r.expected,
 			//	(r.observed-r.expected)*(r.observed-r.expected)/r.expected, r.timeNumber);
-			if (r.expected){
+			if (r.expected) {
 				O_E_table.push(r);
 				O_minus_E_vector.push(r.observed - r.expected);
 			}
@@ -190,29 +190,29 @@ function logranktest (allGroupsRes, groupsTte, groupsEv){
 		dof = O_E_table.length - 1;
 
 		// logrank stats covariance matrix vv
-		for (i = 0; i < O_E_table.length; i++){
+		for (i = 0; i < O_E_table.length; i++) {
 			vv.push([]);
-			for (j = 0;j < O_E_table.length; j++){
+			for (j = 0;j < O_E_table.length; j++) {
 				vv[i].push(0);
 			}
 		}
 
-		for (i = 0; i < O_E_table.length; i++){
-			for (j = i; j < O_E_table.length; j++){
-				for (t = 0; t < allGroupsRes.length; t++){
+		for (i = 0; i < O_E_table.length; i++) {
+			for (j = i; j < O_E_table.length; j++) {
+				for (t = 0; t < allGroupsRes.length; t++) {
 					N = allGroupsRes[t].n;
 					n = allGroupsRes[t].d;
-					if (t < O_E_table[i].timeNumber && t < O_E_table[j].timeNumber){
+					if (t < O_E_table[i].timeNumber && t < O_E_table[j].timeNumber) {
 						Ki = O_E_table[i].dataByTimeTable[t].n;
 						Kj = O_E_table[j].dataByTimeTable[t].n;
 						// https://books.google.com/books?id=nPkjIEVY-CsC&pg=PA451&lpg=PA451&dq=multivariate+hypergeometric+distribution+covariance&source=bl&ots=yoieGfA4bu&sig=dhRcSYKcYiqLXBPZWOaqzciViMs&hl=en&sa=X&ved=0CEQQ6AEwBmoVChMIkqbU09SuyAIVgimICh0J3w1x#v=onepage&q=multivariate%20hypergeometric%20distribution%20covariance&f=false
 						// when N==1: only 1 subject, no variance
-						if (i !== j && N !== 1){
+						if (i !== j && N !== 1) {
 							vv[i][j] -= n * Ki * Kj * (N - n) / (N * N * (N - 1));
 							vv[j][i] = vv[i][j] ;
 						}
 						else {//i==j
-							if(N !== 1){
+							if(N !== 1) {
 								vv[i][i] += n * Ki * (N - Ki) * (N - n) / (N * N * (N - 1));
 							}
 						}
@@ -223,15 +223,15 @@ function logranktest (allGroupsRes, groupsTte, groupsEv){
 
 		O_minus_E_vector_minus1 = O_minus_E_vector.slice(0, O_minus_E_vector.length - 1);
 		vv_minus1 = vv.slice(0, vv.length - 1);
-		for (i = 0; i < vv_minus1.length; i++){
+		for (i = 0; i < vv_minus1.length; i++) {
 			vv_minus1[i] = vv_minus1[i].slice(0, vv_minus1[i].length - 1);
 		}
 		var vv_minus1_copy = vv_minus1.slice(0, vv_minus1.length);
-		for (i = 0;i < vv_minus1.length; i++){
+		for (i = 0;i < vv_minus1.length; i++) {
 			vv_minus1_copy[i] = vv_minus1[i].slice(0, vv_minus1[i].length);
 		}
 
-		if (dof > 0){
+		if (dof > 0) {
 			var m = new Matrix([O_minus_E_vector_minus1]),
 				m_T = new Matrix([O_minus_E_vector_minus1]).trans(),
 				vv_minus1_inv = new Matrix(jStat.inv(vv_minus1_copy)),
@@ -243,9 +243,9 @@ function logranktest (allGroupsRes, groupsTte, groupsEv){
 		}
 
 		return {
-			dof:dof,
-			KM_stats:KM_stats,
-			pValue:pValue
+			dof,
+			KM_stats,
+			pValue
 		};
 }
 

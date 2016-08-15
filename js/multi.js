@@ -17,7 +17,7 @@ define(['./underscore_ext'], function (_) {
 		var methods = {},
 			getmethod = function() {
 				var dispatch = dispatchfn.apply(this, arguments),
-					method = methods[dispatch] || fn.dflt;
+					method = methods[dispatch] || fn.dflt; //eslint-disable-line no-use-before-define
 
 				if (typeof method !== 'function') {
 					throw new Error('No method for ' + dispatch);

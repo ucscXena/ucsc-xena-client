@@ -48,7 +48,7 @@ var PhenotypeEdit = React.createClass({
 			{features} = this.state,
 			feature = _.findWhere(features, {value: f});
 
-		callback(['edit-dataset', feature.dsID, {type:"clinicalMatrix"}]);
+		callback(['edit-dataset', feature.dsID, {type: "clinicalMatrix"}]);
 		setEditorState({feature: feature.value, dsID: feature.dsID});
 	},
 	render: function () {

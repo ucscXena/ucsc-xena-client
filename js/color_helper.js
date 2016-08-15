@@ -7,7 +7,7 @@ var hexToR = function (h) {return parseInt((cutHex(h)).substring(0, 2), 16);};
 var hexToG = function (h) {return parseInt((cutHex(h)).substring(2, 4), 16);};
 var hexToB = function (h) {return parseInt((cutHex(h)).substring(4, 6), 16);};
 
-var hexToRGB = function(hex, a = 1){
+var hexToRGB = function(hex, a = 1) {
     var c = {},
         r = hexToR(hex),
         g = hexToG(hex),

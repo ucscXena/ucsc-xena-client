@@ -31,7 +31,7 @@ var sVTCases = {
 	'null': (type, fs) => fs,
 	'xena': (type, fs) => _.assoc(fs, 'fieldType', type),
 	'composite': (type, fs) => _.assoc(fs, 'fieldType', type,
-									   'fieldSpecs', _.map(fs.fieldSpecs, setFieldType(type)))
+									   'fieldSpecs', _.map(fs.fieldSpecs, setFieldType(type))) //eslint-disable-line no-use-before-define
 };
 
 // It's a bit unclear how this should behave. For now the use case

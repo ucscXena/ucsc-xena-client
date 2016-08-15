@@ -14,7 +14,7 @@ var filterDatasets = list => list.filter(ds => notIgnored(ds) && loaded(ds));
 var sortByLabel = list => _.sortBy(list, el => el.label.toLowerCase());
 
 function optsFromDatasets(dataSubTypes) {
-	return _.flatten(_.sortBy(Object.keys(dataSubTypes), el=>el.toLowerCase()).map(function(dataSubType){
+	return _.flatten(_.sortBy(Object.keys(dataSubTypes), el=>el.toLowerCase()).map(function(dataSubType) {
 		var datasets = dataSubTypes[dataSubType],
 			sortedOpts = sortByLabel(filterDatasets(datasets)).map(d => ({value: d.dsID, label: d.label}));
 		return [{label: dataSubType, header: true}].concat(sortedOpts);

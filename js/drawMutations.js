@@ -74,9 +74,9 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 				varById = _.groupBy(smallVariants, v => v.data.id),
 				ids = _.keys(varById);
 
-			ids.map(function(id){
+			ids.map(function(id) {
 				var startList = [], endList = [];
-				varById[id].map(function (item){
+				varById[id].map(function (item) {
 					startList.push(item.xStart);
 					endList.push(item.xEnd);
 				});
@@ -147,7 +147,7 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 				};
 			});
 		}));
-		varByIdMap = _.reduce(varByIdMap, function(memo, v){ return _.extend(memo, v); }, {});
+		varByIdMap = _.reduce(varByIdMap, function(memo, v) { return _.extend(memo, v); }, {});
 	}
 	else {
 		varByIdMap = _.mapObject(varById, varList => {
@@ -159,7 +159,7 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 				xStart: xStart,
 				xEnd: xEnd,
 				y: y,
-				h:vHeight,
+				h: vHeight,
 				color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
 				alt: alt,
 				altGene: altGene
@@ -184,9 +184,9 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 			var {xStart, xEnd, y, h} = variant,
 				points = [[]];
 
-			if (xStart === 0 && xEnd <= width){
+			if (xStart === 0 && xEnd <= width) {
 				points = [[xEnd, y, xEnd + 1, y]];
-			} else if (xStart > 0 && xEnd > width){
+			} else if (xStart > 0 && xEnd > width) {
 				points = [[xStart, y, xStart + 1, y]];
 			} else {
 				points = [[xStart, y, xStart + 1, y], [xEnd, y, xEnd + 1, y]];

@@ -123,7 +123,7 @@ var m = (methods, exp, defaultMethod) => {
 function searchAll(ctx, methods, search) {
 	let {cohortSamples, columns, data} = ctx;
 	return _.union(..._.map(columns, (c, key) => methods[c.valueType](ctx, search, data[key])),
-				   methods['samples'](cohortSamples, search));
+				   methods.samples(cohortSamples, search));
 }
 
 function evalFieldExp(ctx, expression, column, data) {

@@ -112,10 +112,10 @@ var DatasetSelect = React.createClass({
 		var {datasets, servers, value} = this.props,
 			activeGroup;
 
-		if (value && value.length === 1){
+		if (value && value.length === 1) {
 			let ds = datasets[value[0]];
 			activeGroup = JSON.parse(ds.dsID).host === LOCAL_DOMAIN ?  LOCAL_DOMAIN_LABEL : ds.dataSubType;
-		} else if (value && value.length > 1){
+		} else if (value && value.length > 1) {
 			activeGroup = phenotypeGroupLabel;
 		} else {
 			activeGroup = '';
@@ -139,7 +139,7 @@ var DatasetSelect = React.createClass({
 		}
 	},
 	onSelectDs: function(dsIDs, groupName) {
-		if (phenotypeDataSubTypeList.indexOf(groupName) !== -1){
+		if (phenotypeDataSubTypeList.indexOf(groupName) !== -1) {
 			this.onSetGroup(phenotypeGroupLabel);
 		}
 		this.props.onSelect(dsIDs);

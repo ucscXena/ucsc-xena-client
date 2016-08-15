@@ -23,6 +23,8 @@ function getColumnLabel(fieldSpecs) {
 	return _.uniq(_.pluck(nonNullFS(fieldSpecs), 'columnLabel')).join(' / ');
 }
 
+var noNullType = ts => ts.filter(t => t !== 'null');
+
 // Use default color from first dataset.
 function getColorClass(fieldSpecs) {
 	var types = _.uniq(noNullType(_.pluck(fieldSpecs, 'colorClass')));
@@ -41,8 +43,6 @@ function getColorClass(fieldSpecs) {
 	return 'default';
 }
 
-var noNullType = ts => ts.filter(t => t !== 'null');
-
 // XXX Need to handle incompatible assemblies in mutation.
 function getValueType(fieldSpecs) {
 	var types = _.uniq(noNullType(_.pluck(fieldSpecs, 'valueType')));
@@ -51,7 +51,7 @@ function getValueType(fieldSpecs) {
 	if (types.length === 1) {
 		return types[0];
 	}
-	
+
 	// If coded, cast to coded.
 	if (_.contains(types, 'coded')) {
 		return 'coded';

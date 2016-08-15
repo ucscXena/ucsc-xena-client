@@ -82,7 +82,7 @@ function parse(x) {
 
 	var findRef = ref => {
 		if (!cache.has(ref.$ref)) {
-			cache.set(ref.$ref, resolve(getRefIn(refd, ref)));
+			cache.set(ref.$ref, resolve(getRefIn(refd, ref))); //eslint-disable-line no-use-before-define
 		}
 		return cache.get(ref.$ref);
 	};

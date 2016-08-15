@@ -67,7 +67,7 @@ var SpreadSheetHighlight = React.createClass({
 			tickWidth, Math.max(pixPerRow * (stripes[i + 1] - offset), 1)
 		]])));
 		if (rects.length > 0) {
-			vg.drawRectangles(rects, {fillStyle:  'rgba(0, 0, 0, 1)'});
+			vg.drawRectangles(rects, {fillStyle: 'rgba(0, 0, 0, 1)'});
 		}
 	},
 	render: function() {

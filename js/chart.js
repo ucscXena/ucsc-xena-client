@@ -267,7 +267,7 @@ define(['./getLabel'], function (getLabel) {
 				if (selectorID === "Xaxis" && columns[column].fields.length !== 1) {
 					continue;
 				}
-				if (columns[column].fieldType === "mutation"){  // to be implemented
+				if (columns[column].fieldType === "mutation") {  // to be implemented
 					continue;
 				}
 
@@ -292,7 +292,7 @@ define(['./getLabel'], function (getLabel) {
 				div.appendChild(option);
 			}
 
-			if (div.length === 0 ){
+			if (div.length === 0 ) {
 				return;
 			}
 
@@ -317,7 +317,7 @@ define(['./getLabel'], function (getLabel) {
 				dropDown.style.visibility = "visible";
 
 				//check current normalizationState variable
-				if (normalizationState[ycolumn] !== undefined){
+				if (normalizationState[ycolumn] !== undefined) {
 					dropDownDiv.selectedIndex = normalizationState[ycolumn];
 				}
 				//intentionally not checking vizSettings, need to understand cursor first.
@@ -341,7 +341,7 @@ define(['./getLabel'], function (getLabel) {
 				dropDown.style.visibility = "visible";
 
 				//check current expState variable
-				if (expState[ycolumn] !== undefined){
+				if (expState[ycolumn] !== undefined) {
 					dropDownDiv.selectedIndex = expState[ycolumn];
 				}
 				else {
@@ -501,14 +501,14 @@ define(['./getLabel'], function (getLabel) {
 				}
 
 				// y exponentiation
-				if (yExponentiation === "exp2"){
+				if (yExponentiation === "exp2") {
 					ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
 				}
 
 				// set scatterPlot coloring UI
 				doScatter = !xIsCategorical && xfield && yfields.length === 1 ;
 				scatterColorUISetting(doScatter);
-				if (doScatter && colorColumn !== "none"){
+				if (doScatter && colorColumn !== "none") {
 					scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values'])[0];
 					scatterColorDataCodemap = _.getIn(xenaState, ['data', colorColumn, 'codes']);
 					scatterLabel = columns[colorColumn].user.fieldLabel;
@@ -518,7 +518,7 @@ define(['./getLabel'], function (getLabel) {
 				var k, yfield;
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
-					if (yNormalization === "subset_stdev"){
+					if (yNormalization === "subset_stdev") {
 						var ydataElement = ydata[k].filter(x => x != null);
 						var allAve = highcharts_helper.average(ydataElement);
 						var allSTDEV = highcharts_helper.standardDeviation(ydataElement, allAve);
@@ -660,9 +660,9 @@ define(['./getLabel'], function (getLabel) {
 				});
 
 				// highlight categories identification : if all the samples in the category are part of the highlighted samples, the caterory will be highlighted
-				if (samplesMatched){
+				if (samplesMatched) {
 					xCategories.map(function (code) {
-						if (xbinnedSample[code].every(sample => samplesMatched.indexOf(sample) !== -1)){
+						if (xbinnedSample[code].every(sample => samplesMatched.indexOf(sample) !== -1)) {
 							highlightcode.push(code);
 						}
 					});
@@ -849,7 +849,7 @@ define(['./getLabel'], function (getLabel) {
 				for (i = 0; i < xdata[0].length; i++) {
 					code = xcodemap[xdata[0][i]];
 					if (code) {
-						if (xbinnedSample[code]){
+						if (xbinnedSample[code]) {
 							xbinnedSample[code].push(i);
 						} else {
 							xbinnedSample[code] = [i];
@@ -919,7 +919,7 @@ define(['./getLabel'], function (getLabel) {
 
 				chartOptions = highcharts_helper.scatterChart(chartOptions, xlabel, ylabel);
 
-				if (yfields.length > 1){ // y multi-subcolumns -- only happen with genomic y data
+				if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
 					chartOptions.legend.title.text = ylabel;
 					chart = new Highcharts.Chart(chartOptions);
 
@@ -965,7 +965,7 @@ define(['./getLabel'], function (getLabel) {
 						colorCode, color, colorLabel,
 						useMultiSeries = scatterColorDataCodemap || !scatterColorData ;
 
-					if (!useMultiSeries){
+					if (!useMultiSeries) {
 						average = highcharts_helper.average(scatterColorData);
 						stdDev = highcharts_helper.standardDeviation(scatterColorData, average);
 						colorScale = d3.scaleLinear()
@@ -989,7 +989,7 @@ define(['./getLabel'], function (getLabel) {
 						if (null != x && null != y && null != colorCode) {
 							y = (y - offsets[yfield]) / STDEV[yfield];
 							if (useMultiSeries ) { // use multi-seriese
-								if (!multi_series[colorCode]){
+								if (!multi_series[colorCode]) {
 									multi_series[colorCode] = {
 										"data": []
 									};
@@ -1036,12 +1036,12 @@ define(['./getLabel'], function (getLabel) {
 					});
 
 					//add single-series data
-					if (single_series.length){
+					if (single_series.length) {
 						chart.addSeries({
 							name: "sample",
 							data: single_series,
-							marker:{
-								opacity:0.1
+							marker: {
+								opacity: 0.1
 							}
 						}, false);
 					}
@@ -1052,13 +1052,13 @@ define(['./getLabel'], function (getLabel) {
 							name: "highlighted samples",
 							data: highlight_series,
 							allowPointSelect: true,
-							marker:{
+							marker: {
                 				symbol: 'circle',
                 				radius: 4,
                 				lineColor: 'black',
                 				fillColor: 'gold',
                 				lineWidth: 1,
-                				states:{
+                				states: {
                 					select: {
                          			   lineWidth: 2,
                          			   radius: 6,
@@ -1243,7 +1243,7 @@ define(['./getLabel'], function (getLabel) {
 
 	    // y axis selector
 	    div = axisSelector("Yaxis", update, updateArgs);
-		if (!div){
+		if (!div) {
 			document.getElementById("myChart").innerHTML =
 				"There is no plottable data, please add some by first clicking the \"Visual Spreadsheet\" button, then the \"+ Data\" button.";
 			return;

@@ -28,8 +28,8 @@ var modeEvent = {
 };
 
 var uiHelp = {
-	'pdf' : ['top', 'Save PDF of this view'],
-	'reload':['top', 'Reload cohorts from all hubs'],
+	'pdf': ['top', 'Save PDF of this view'],
+	'reload': ['top', 'Reload cohorts from all hubs'],
 	'chart': ['top', 'Switch to spreadsheet view of this data'],
 	'heatmap': ['top', 'Switch to chart view of this data'],
 	'samples': ['top', 'Limit samples by dataset'],

@@ -135,7 +135,7 @@ function renderFloatLegend(props) {
 		footnotes.push(datasetMetadata.unit);
 	}
 
-	if (vizSettings &&  vizSettings.colNormalization){
+	if (vizSettings &&  vizSettings.colNormalization) {
 		if (vizSettings.colNormalization === "subset") { // substract mean per subcolumn
 			footnotes.push(normalizationText);
 		}

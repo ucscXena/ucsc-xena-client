@@ -6,12 +6,17 @@ var {ButtonGroup, Button, Input} = require('react-bootstrap/lib');
 var _ = require('../underscore_ext');
 var trim = require('underscore.string').trim;
 
+function toGeneList(str) {
+	// Have to wrap trim because it takes a 2nd param.
+	return _.filter(_.map(str.split(/,| |\n|\t/), s => trim(s), _.identity));
+}
+
 function apply(features, state, hasGenes, dataset) {
 	var {list, genes} = state,
 		fields = toGeneList(list),
 		fieldTxt = fields.join(', ');
 
-	if (hasGenes && genes === undefined){
+	if (hasGenes && genes === undefined) {
 		genes = true;
 	}
 
@@ -27,11 +32,6 @@ function apply(features, state, hasGenes, dataset) {
 }
 
 var valid = ({list}) => list && !!toGeneList(list).length;
-
-function toGeneList(str) {
-	// Have to wrap trim because it takes a 2nd param.
-	return _.filter(_.map(str.split(/,| |\n|\t/), s => trim(s), _.identity));
-}
 
 // Select a list of genes, or list of identifiers. genes/identifier mode
 // is selectable if the dataset supports gene views.

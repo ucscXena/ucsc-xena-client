@@ -31,7 +31,7 @@ var editors = {
 //}
 
 var pickEditor = function(datasets, chosenDs) {
-	if (datasets && chosenDs){
+	if (datasets && chosenDs) {
 		let dsMeta = datasets[chosenDs[0]]; // only 1 entry when dataset sub type is NOT 'phenotype'
 		return _.get(editors, _.get(dsMeta, 'type', 'none'), geneProbeEdit);
 	} else {
@@ -88,13 +88,13 @@ var NavButtons = React.createClass({
 			{choices, onForward} = this.props,
 			disabled = !choices[currentSection] || choices[currentSection].length === 0;
 
-		if (currentSection === "cohort"){
+		if (currentSection === "cohort") {
 			btnLabel = 'Select';
 			icon = '';
-		} else if (currentSection === "dataset"){
+		} else if (currentSection === "dataset") {
 			btnLabel = 'Next';
 			icon = "menu-right";
-		} else if (currentSection === "editor"){
+		} else if (currentSection === "editor") {
 			btnLabel = 'Done';
 			icon = '';
 		}
@@ -265,7 +265,7 @@ var ColumnEdit = React.createClass({
 				positions: updatePositions(nextSpot, positions)
 			});
 			this.setState(newState);
-		} else if (currentSpot === 'editor'){
+		} else if (currentSpot === 'editor') {
 			let {appState: {features, datasets}} = this.props,
 				chosenDs = choices.dataset,
 				{apply} = pickEditor(datasets, chosenDs),
@@ -274,7 +274,7 @@ var ColumnEdit = React.createClass({
 			this.addColumn(apply(features, choices.editor, hasGenes, datasets[chosenDs[0]]));
 		}
 	},
-	onHub: function(){
+	onHub: function() {
 		location.href = "../hub/";
 	},
 	setChoice: function(section, newValue) {
@@ -297,16 +297,16 @@ var ColumnEdit = React.createClass({
 		return (
 			<Modal show={true} className = 'columnEdit container' enforceFocus>
 				<Modal.Header onHide={onHide} closeButton>
-        			<Modal.Title> {positions['cohort'] ? 'Select a cohort' : 'Select data'}
+        			<Modal.Title> {positions.cohort ? 'Select a cohort' : 'Select data'}
         			</Modal.Title>
       			</Modal.Header>
 
 				<Modal.Body ref='columnEditBody' className='columnEditBody'>
-					{positions['cohort'] ?
+					{positions.cohort ?
 					<CohortSelect onSelect={this.onCohortSelect} cohorts={cohorts}
 						cohort={choices.cohort} makeLabel={makeLabel}/> : null}
 
-					{positions['cohort'] ?
+					{positions.cohort ?
 						<div>
 							<br/>
 							<span>If not found, perhaps the cohort is on a different data hub?</span>
@@ -314,21 +314,21 @@ var ColumnEdit = React.createClass({
 							<Button onClick={this.onHub}>Configure My Data Hubs</Button>
 						</div> : null}
 
-					{positions['dataset'] ?
+					{positions.dataset ?
 					<DatasetSelect datasets={datasets} makeLabel={makeLabel}
 						event='dataset' value={chosenDs || null} onSelect={this.onDatasetSelect}
 						servers={_.uniq(_.reduce(servers, (all, list) => all.concat(list), []))}/> : null}
 
-					{positions['editor'] ?
+					{positions.editor ?
 						<div>{makeLabel( chosenDs.length === 1 ?
 							<a href={chosenDsSingleLink} target="_BLANK">{datasets[chosenDs[0]].label}</a> : "Combined phenotypes",
 							"Dataset")}</div>
 						: null}
 					<br/>
 
-					{positions['editor'] ?
+					{positions.editor ?
 					<Editor {...columnEdit} allFeatures={features} callback={callback}
-						{...(this.state.choices['editor'] || {})} chosenDs={chosenDs}
+						{...(this.state.choices.editor || {})} chosenDs={chosenDs}
 						hasGenes={chosenDs && !!datasets[chosenDs[0]].probeMap}
 						makeLabel={makeLabel} setEditorState={this.onSetEditor}/> : null}
 					<br/>

@@ -75,7 +75,7 @@ define(["./xenaQuery", "./underscore_ext"], function (xenaQuery, _) {
 		return result;
 	}
 
-	function JSONToqueryString(obj){
+	function JSONToqueryString(obj) {
     var qString = Object.keys(obj).map(function(k) {
     		return encodeURIComponent(k) + '=' + encodeURIComponent(obj[k]);
   		}).join('&');
@@ -83,12 +83,12 @@ define(["./xenaQuery", "./underscore_ext"], function (xenaQuery, _) {
   }
 
 
-	function tableCreate(row, column){
+	function tableCreate(row, column) {
 	  var tbl  = document.createElement('table'), tr, td, i, j;
 	  tbl.setAttribute("class", "dataSnippetTable");
-	  for(i = 0; i < row; i++){
+	  for(i = 0; i < row; i++) {
       tr = tbl.insertRow(i);
-      for(j = 0; j < column; j++){
+      for(j = 0; j < column; j++) {
         td = tr.insertCell(j);
         td.innerHTML = "...";
       }
@@ -112,7 +112,7 @@ define(["./xenaQuery", "./underscore_ext"], function (xenaQuery, _) {
 		}
 	}
 
-	function loadingCircle(){
+	function loadingCircle() {
 		var div = sectionNode("cohort"),
 			node = document.createElement("div"),
 			i;
