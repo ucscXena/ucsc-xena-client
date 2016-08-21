@@ -381,7 +381,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			setVizSettings(key, value);
 		});
 
-		var text = dom_helper.elt("span", "Normalization ");
+		var text = dom_helper.elt("span", "Transform ");
 		text.setAttribute("class", "text");
 		node.appendChild(text);
 		node.appendChild(dropDownDiv);

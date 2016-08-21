@@ -14,7 +14,6 @@ define(['./getLabel'], function (getLabel) {
 	var highcharts_helper =  require ('./highcharts_helper');
 	var _ = require('./underscore_ext');
 	var colorScales = require ('./colorScales');
-
 	var custom_colors = {};
 
 	//project custom color code
@@ -33,7 +32,7 @@ define(['./getLabel'], function (getLabel) {
 	*/
 
 	return function (root, callback, sessionStorage) {
-		var div,
+		var xdiv, ydiv, // x and y axis dropdown
 			leftContainer, rightContainer,
 			xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
 			cohort, samplesLength, cohortSamples, updateArgs,
@@ -49,6 +48,14 @@ define(['./getLabel'], function (getLabel) {
 		function setStorage(state) {
 			sessionStorage.xena = JSON.stringify(state);
 			callback(['chart-set-state', state.chartState]);
+		}
+
+		function columnLabel (i, colSetting) {
+			var label = colSetting.user.fieldLabel ;
+			if (colSetting.fieldType === "genes") {
+				label += " (gene average)";
+			}
+			return "column " + getLabel(i) + ": " + label;
 		}
 
 		function buildSDDropdown() {
@@ -102,7 +109,7 @@ define(['./getLabel'], function (getLabel) {
 					}, //selected sample level current heatmap normalization
 					{
 						"value": "subset_stdev",
-						"text": "subtract mean, divide stdev",
+						"text": "subtract mean, divide stdev (z-score)",
 						"index": 2
 					} //selected sample level current heatmap normalization
 				],
@@ -127,7 +134,7 @@ define(['./getLabel'], function (getLabel) {
 			});
 
 			node.setAttribute("id", "normDropDown");
-			node.appendChild(document.createTextNode("Y Normalization "));
+			node.appendChild(document.createTextNode(" Transform "));
 			node.appendChild(dropDownDiv);
 			return node;
 		}
@@ -136,13 +143,13 @@ define(['./getLabel'], function (getLabel) {
 			var dropDownDiv, option,
 				dropDown = [{
 						"value": "none",
-						"text": "off",
+						"text": "Log2 scale",
 						"index": 0
 					},
 					{
 						//convert x -> base-2 exponential value of x, for when viewing raw RNAseq data, xena typically converts RNAseq values into log2 space.
 						"value": "exp2",
-						"text": "exp2(k) -- use case: observing original RNAseq values when unit of RNAseq data is in log space",
+						"text": "off", // (effect: take base-2 exponential of the log scale value)",
 						"index": 1
 					},
 				],
@@ -167,7 +174,7 @@ define(['./getLabel'], function (getLabel) {
 			});
 
 			node.setAttribute("id", "expDropDown");
-			node.appendChild(document.createTextNode("Y Exponentiation "));
+			node.appendChild(document.createTextNode(" Log scale "));
 			node.appendChild(dropDownDiv);
 			return node;
 		}
@@ -190,6 +197,12 @@ define(['./getLabel'], function (getLabel) {
 				storedColumn = xenaState.chartState.colorColumn;
 			}
 
+			// none -- no color at the beginning
+			option = document.createElement('option');
+			option.value = "none";
+			option.textContent = "None";
+			dropDownDiv.appendChild(option);
+
 			for (i = 0; i < columnOrder.length; i++) {
 				column = columnOrder[i];
 				if (columns[column].fields.length === 1 &&
@@ -197,22 +210,16 @@ define(['./getLabel'], function (getLabel) {
 					columns[column].valueType === "float")) {  //currently only support non mutation data coloring
 					option = document.createElement('option');
 					option.value = column;
-					option.textContent = getLabel(i) + ": " + columns[column].user.fieldLabel;
+					option.textContent = columnLabel (i, columns[column]) + " " + colUnit(columns[column]);
 
-					if (columns[column].fieldType === "genes") {
-						option.textContent = option.textContent + " (gene average)";
-					}
 					dropDownDiv.appendChild(option);
 					if (column === storedColumn) {
 						dropDownDiv.selectedIndex = dropDownDiv.length - 1;
 					}
 				}
 			}
-			// none -- no color at the end
-			option = document.createElement('option');
-			option.value = "none";
-			option.textContent = "None";
-			dropDownDiv.appendChild(option);
+
+
 			if ("none" === storedColumn) {
 				dropDownDiv.selectedIndex = dropDownDiv.length - 1;
 			}
@@ -238,6 +245,10 @@ define(['./getLabel'], function (getLabel) {
 			div.setAttribute("class", "chart-container");
 			chartContainer.appendChild(div);
 			return chartContainer;
+		}
+
+		function colUnit (colSettings) {
+			return _.map(colSettings.datasetMetadata, metadata => metadata.unit).join();
 		}
 
 		function axisSelector(selectorID) {
@@ -273,11 +284,8 @@ define(['./getLabel'], function (getLabel) {
 
 				option = document.createElement('option');
 				option.value = column;
-				option.textContent = getLabel(i) + ": " + columns[column].user.fieldLabel;
+				option.textContent = columnLabel(i, columns[column]) + " " + colUnit(columns[column]);
 
-				if (columns[column].fieldType === "genes") {
-					option.textContent = option.textContent + " (gene average)";
-				}
 				div.appendChild(option);
 				if (column === storedColumn) {
 					div.selectedIndex = div.length - 1;
@@ -299,8 +307,32 @@ define(['./getLabel'], function (getLabel) {
 			if ("none" === storedColumn) {
 				div.selectedIndex = div.length - 1;
 			}
-			if (!storedColumn) { /// default to summary view
-				div.selectedIndex = div.length - 1;
+
+			// default when there is no settings stored in state
+			if (!storedColumn) {
+				if (selectorID === "Xaxis") {
+					div.selectedIndex = 0;
+				} else if (selectorID === "Yaxis") {
+					div.selectedIndex = div.length - 1;
+				}
+
+				if (selectorID === "Yaxis") {
+					var xvalue = xdiv.options[xdiv.selectedIndex].value,
+						yvalue = div.options[div.selectedIndex].value;
+
+					if (xvalue === yvalue ) {  // x and y axis is the same
+						for (i = 0; i < div.length; i++) {
+							if (div.options[i] !== xvalue) {
+								div.selectedIndex = i;
+								break;
+							}
+						}
+
+						if (div.selectedIndex === div.length - 1) {
+							xdiv.selectedIndex = xdiv.length - 1; // x is summary
+						}
+					}
+				}
 			}
 
 			div.addEventListener('change', function () {
@@ -330,26 +362,57 @@ define(['./getLabel'], function (getLabel) {
 				}
 			} else {
 				dropDown.style.visibility = "hidden";
+				dropDownDiv.selectedIndex = 0;
 			}
 		}
 
-		function expUISetting(visible, ycolumn) {
+		function expUISetting(visible, ycolumn, colSettings) {
 			var dropDown = document.getElementById("expDropDown"),
-				dropDownDiv = document.getElementById("yExponentiation");
+				dropDownDiv = document.getElementById("yExponentiation"),
+				YdropDownDiv = document.getElementById("Yaxis"),
+				i;
 
 			if (visible) {
-				dropDown.style.visibility = "visible";
+				var notLogScale = _.filter(colSettings.datasetMetadata,
+						metadata => !metadata.unit || (metadata.unit && metadata.unit.search(/log/i) === -1)).length !== 0;
 
-				//check current expState variable
-				if (expState[ycolumn] !== undefined) {
-					dropDownDiv.selectedIndex = expState[ycolumn];
+				if (notLogScale) {
+					dropDown.style.visibility = "hidden";
+					dropDownDiv.selectedIndex === 0;
 				}
 				else {
-					dropDownDiv.selectedIndex = 0;
-					expState[ycolumn] = 0;
+					dropDown.style.visibility = "visible";
+
+					//check current expState variable
+					if (expState[ycolumn] !== undefined) {
+						dropDownDiv.selectedIndex = expState[ycolumn];
+					}
+					else {
+						dropDownDiv.selectedIndex = 0;
+						expState[ycolumn] = 0;
+					}
+					//if data in db in logscale, custom option with actual unit
+					if (dropDownDiv.selectedIndex === 0) {
+						dropDownDiv.options[0].text = _.map(colSettings.datasetMetadata,
+							metadata => metadata.unit).join();
+						i = YdropDownDiv.selectedIndex;
+						YdropDownDiv.options[i].text = columnLabel(i, colSettings) + " " + colUnit(colSettings);
+					}
+					// if exp2(data), custom y axis display without log in the unit label
+					else {
+						i = YdropDownDiv.selectedIndex;
+						YdropDownDiv.options[i].text = columnLabel (i, colSettings);
+						var units_string = colUnit(colSettings);
+						// remove log in unit label
+						var regExp = /\(([^)]+)\)/;
+						var matches = regExp.exec(units_string);
+						matches = matches ? matches[1] : '';
+						YdropDownDiv.options[i].text  +=  " " + matches;
+					}
 				}
 			} else {
 				dropDown.style.visibility = "hidden";
+				dropDownDiv.selectedIndex === 0;
 			}
 		}
 
@@ -391,7 +454,9 @@ define(['./getLabel'], function (getLabel) {
 				columns,
 				normUI = document.getElementById("ynormalization"),
 				expUI = document.getElementById("yExponentiation"),
-				colorUI = document.getElementById("scatterColor");
+				colorUI = document.getElementById("scatterColor"),
+				XdropDownDiv = document.getElementById("Xaxis"),
+				YdropDownDiv = document.getElementById("Yaxis");
 
 			dropdown = document.getElementById("Xaxis");
 			xcolumn = dropdown.options[dropdown.selectedIndex].value;
@@ -418,22 +483,14 @@ define(['./getLabel'], function (getLabel) {
 
 			if (xcolumn !== "none") {
 				xfields = columns[xcolumn].fields;
-				xlabel = columns[xcolumn].user.fieldLabel;
-				if (columns[xcolumn].fieldType === "genes") {
-					xlabel = xlabel + " (gene average)";
-				}
+				xlabel = xdiv.options[xdiv.selectedIndex].text;
 				xcolumnType = columns[xcolumn].fieldType;
 			} else {
 				xlabel = "";
 			}
 
 			yfields = columns[ycolumn].fields;
-
-			ylabel = columns[ycolumn].user.fieldLabel;
-			if (columns[ycolumn].fieldType === "genes") {
-				ylabel = ylabel + " (gene average)";
-			}
-
+			ylabel = ydiv.options[ydiv.selectedIndex].text;
 			ycolumnType = columns[ycolumn].fieldType;
 
 			if (xcolumnType === "mutation" || ycolumnType === "mutation") {
@@ -490,7 +547,7 @@ define(['./getLabel'], function (getLabel) {
 				}
 
 				// set y axis exponentiation UI
-				expUISetting(!yIsCategorical, ycolumn);
+				expUISetting(!yIsCategorical, ycolumn, columns[ycolumn]);
 
 				if (yIsCategorical) {
 					yExponentiation = false;
@@ -503,6 +560,17 @@ define(['./getLabel'], function (getLabel) {
 				// y exponentiation
 				if (yExponentiation === "exp2") {
 					ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
+				}
+
+				// set x and y labels based on axis and normalization UI selection
+				if (xcolumn !== "none") {
+					xlabel = XdropDownDiv.options[XdropDownDiv.selectedIndex].text;
+				}
+				ylabel = YdropDownDiv.options[YdropDownDiv.selectedIndex].text;
+				if (normUI.options[normUI.selectedIndex].value === "subset") {
+					ylabel = "mean-centered " + ylabel;
+				} else if (normUI.options[normUI.selectedIndex].value === "subset_stdev") {
+					ylabel = "z-tranformed " + ylabel;
 				}
 
 				// set scatterPlot coloring UI
@@ -660,7 +728,7 @@ define(['./getLabel'], function (getLabel) {
 				});
 
 				// highlight categories identification : if all the samples in the category are part of the highlighted samples, the caterory will be highlighted
-				if (samplesMatched) {
+				if (samplesMatched && samplesMatched.length !== samplesLength) {
 					xCategories.map(function (code) {
 						if (xbinnedSample[code].every(sample => samplesMatched.indexOf(sample) !== -1)) {
 							highlightcode.push(code);
@@ -920,7 +988,7 @@ define(['./getLabel'], function (getLabel) {
 				chartOptions = highcharts_helper.scatterChart(chartOptions, xlabel, ylabel);
 
 				if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
-					chartOptions.legend.title.text = ylabel;
+					//chartOptions.legend.title.text = ylabel;
 					chart = new Highcharts.Chart(chartOptions);
 
 					for (k = 0; k < yfields.length; k++) {
@@ -1008,7 +1076,8 @@ define(['./getLabel'], function (getLabel) {
 								});
 							}
 
-							if (samplesMatched && samplesMatched.indexOf(i) !== -1) {
+							if (samplesMatched && samplesLength !== samplesMatched.length &&
+								samplesMatched.indexOf(i) !== -1) {
 								highlight_series.push({
 									name: sampleLabels[i],
 									x: x,
@@ -1237,30 +1306,27 @@ define(['./getLabel'], function (getLabel) {
 
 	    // x axis selector
 	    leftContainer.appendChild(document.createElement("br"));
-	    div = dom_helper.elt("div", "X: ", axisSelector("Xaxis", update, updateArgs));
-	    div.setAttribute("id", "X");
-	    leftContainer.appendChild(div);
+	    xdiv = axisSelector("Xaxis", update, updateArgs);
 
-	    // y axis selector
-	    div = axisSelector("Yaxis", update, updateArgs);
-		if (!div) {
+	    // y axis selector and Y value controls
+	    ydiv = axisSelector("Yaxis", update, updateArgs);
+		if (!ydiv) {
 			document.getElementById("myChart").innerHTML =
 				"There is no plottable data, please add some by first clicking the \"Visual Spreadsheet\" button, then the \"+ Data\" button.";
 			return;
 		}
-		div = dom_helper.elt("div", "Y: ", div);
-		div.setAttribute("id", "Y");
-		leftContainer.appendChild(div);
 
-		// coloring on scatterplot
-		leftContainer.appendChild(buildColoringDropdown());
+	    leftContainer.appendChild(dom_helper.elt("div", "Y: ", ydiv, buildNormalizationDropdown(), buildExpDropdown()));
+		leftContainer.appendChild(document.createElement("br"));
 
-	    // controls
-		// Y normalization
-		rightContainer.appendChild(buildNormalizationDropdown());
+		leftContainer.appendChild(dom_helper.elt("div", "X: ", xdiv));
+	    leftContainer.appendChild(document.createElement("br"));
 
-		// Y exponentiation
-		rightContainer.appendChild(buildExpDropdown());
+	    // coloring on scatterplot
+		var colorDiv = buildColoringDropdown();
+
+		leftContainer.appendChild(colorDiv);
+		leftContainer.appendChild(document.createElement("br"));
 
 		// whisker is 1, 2, 3 SD
 		rightContainer.appendChild(buildSDDropdown());

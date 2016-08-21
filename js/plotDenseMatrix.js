@@ -131,8 +131,10 @@ function renderFloatLegend(props) {
 		nSamples = data ? data[0].filter(v => v != null).length : 0,
 		normalizationText = "mean is subtracted per column across " + nSamples + " samples";
 
-	if (datasetMetadata && datasetMetadata.unit) {
-		footnotes.push(datasetMetadata.unit);
+	if (datasetMetadata) {
+		footnotes = _.map(datasetMetadata, metadata =>{
+			return metadata.unit;
+		});
 	}
 
 	if (vizSettings &&  vizSettings.colNormalization) {
