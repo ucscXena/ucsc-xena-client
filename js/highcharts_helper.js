@@ -63,7 +63,7 @@ define(['./highcharts'], function () {
 	// x categorical, Y categorical
 	function columnChartOptions (chartOptions, categories, xAxisTitle, Y, showLegend) {
 		var yAxisTitle;
-			yAxisTitle = "Percentage distribution";
+			yAxisTitle = "Distribution";
 
 			chartOptions.legend.align = 'right';
 			chartOptions.legend.verticalAlign = 'middle';
@@ -81,7 +81,7 @@ define(['./highcharts'], function () {
 		}
 
 		chartOptions.title = {
-			text: yAxisTitle + " of " + Y + ((xAxisTitle === "") ? "" : " by " + xAxisTitle)
+			text: yAxisTitle + " of " + Y + ((xAxisTitle === "") ? "" : " according to " + xAxisTitle)
 		};
 		chartOptions.xAxis = {
 			title: {
@@ -144,7 +144,7 @@ define(['./highcharts'], function () {
 		chartOptions.legend.layout = 'vertical';
 
 		chartOptions.title = {
-			text: yAxisTitle + ((xAxisTitle === "") ? "" : " by " + xAxisTitle)
+			text: yAxisTitle + ((xAxisTitle === "") ? "" : " according to " + xAxisTitle)
 		};
 
 		chartOptions.xAxis = {
