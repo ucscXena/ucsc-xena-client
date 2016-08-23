@@ -210,8 +210,7 @@ define(['./getLabel'], function (getLabel) {
 					columns[column].valueType === "float")) {  //currently only support non mutation data coloring
 					option = document.createElement('option');
 					option.value = column;
-					option.textContent = columnLabel (i, columns[column]) + " " + colUnit(columns[column]);
-
+					option.textContent = [columnLabel (i, columns[column]), colUnit(columns[column])].join(" ");
 					dropDownDiv.appendChild(option);
 					if (column === storedColumn) {
 						dropDownDiv.selectedIndex = dropDownDiv.length - 1;
@@ -248,7 +247,7 @@ define(['./getLabel'], function (getLabel) {
 		}
 
 		function colUnit (colSettings) {
-			return _.map(colSettings.datasetMetadata, metadata => metadata.unit).join();
+			return _.filter(_.map(colSettings.datasetMetadata, metadata => metadata.unit), unit => unit).join();
 		}
 
 		function axisSelector(selectorID) {
@@ -284,7 +283,7 @@ define(['./getLabel'], function (getLabel) {
 
 				option = document.createElement('option');
 				option.value = column;
-				option.textContent = columnLabel(i, columns[column]) + " " + colUnit(columns[column]);
+				option.textContent = [columnLabel(i, columns[column]), colUnit(columns[column])].join(" ");
 
 				div.appendChild(option);
 				if (column === storedColumn) {
@@ -396,7 +395,7 @@ define(['./getLabel'], function (getLabel) {
 						dropDownDiv.options[0].text = _.map(colSettings.datasetMetadata,
 							metadata => metadata.unit).join();
 						i = YdropDownDiv.selectedIndex;
-						YdropDownDiv.options[i].text = columnLabel(i, colSettings) + " " + colUnit(colSettings);
+						YdropDownDiv.options[i].text = [columnLabel(i, colSettings), colUnit(colSettings)].join(" ");
 					}
 					// if exp2(data), custom y axis display without log in the unit label
 					else {
@@ -407,7 +406,7 @@ define(['./getLabel'], function (getLabel) {
 						var regExp = /\(([^)]+)\)/;
 						var matches = regExp.exec(units_string);
 						matches = matches ? matches[1] : '';
-						YdropDownDiv.options[i].text  +=  " " + matches;
+						YdropDownDiv.options[i].text = [YdropDownDiv.options[i].text, matches].join(" ");
 					}
 				}
 			} else {
