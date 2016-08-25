@@ -289,15 +289,24 @@ function vgcanvas(el, vgw, vgh) {
 		// drawBackground should take a width and height, rendering a
 		// background color.
 		// drawRows takes a row width and row height, and draws all rows.
+		//
+		// Previously, we kept the scratch buffer at width of 1px, and scaled
+		// it up to the final width in drawImage. However, certain versions of
+		// safari (9.1, 9.1.2, on OSX 10.10) will botch the down-sampling when
+		// the number of rows is large (e.g. 20k, drawn at 500px height). This
+		// results in drawing no probes, or a subset of probes. So, we now
+		// draw to the full width in the scratch buffer. There appears to
+		// be little performance change vs. drawing 1px.
 		drawSharpRows = function (vg, index, count, height,
 					width, drawBackground, drawRows) {
 
 			var s = pickScale(index, count, height);
 			scratch.height(s.height);
-			drawBackground(scratch, 1, s.height);
+			scratch.width(width);
+			drawBackground(scratch, width, s.height);
 			// width of row. height of row.
-			scratch.scale(1, s.scale, () => drawRows(scratch, 1, 1));
-			vg.drawImage(scratch.element(), 0, s.sy, 1, s.sh, 0, 0, width, height);
+			scratch.scale(1, s.scale, () => drawRows(scratch, width, 1));
+			vg.drawImage(scratch.element(), 0, s.sy, width, s.sh, 0, 0, width, height);
 		};
 
 
