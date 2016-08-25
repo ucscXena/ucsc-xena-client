@@ -271,6 +271,13 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		}, []);
 	}
 
+	// underscore union is slow, due to n^2 algorithm using _.contains
+	function union(...args) {
+		var hashes = _.map(args, arr => _.object(arr, arr)),
+			merged = _.merge(...hashes);
+		return Object.values(merged);
+	}
+
 	_.mixin({
 		meannull: meannull,
 		minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
@@ -298,6 +305,7 @@ define(['underscore', 'ehmutable', './defer'], function(_, ehmutable, defer) {
 		filterIndices,
 		reverse,
 		groupByConsec,
+		union,
 		curry,
 		curryN // useful if the fn as multiple arities.
 	});

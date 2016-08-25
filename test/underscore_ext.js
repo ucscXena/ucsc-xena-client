@@ -59,4 +59,29 @@ describe('underscore_ext', function () {
 			assert.throws(() => _.scan([], (acc, x) => acc + x), 'did not throw on empty array');
 		});
 	});
+	function setsEqual(a, b) {
+		assert.equal(a.length, b.length);
+		assert.deepEqual([], _.difference(a, b));
+		assert.deepEqual([], _.difference(b, a));
+	}
+	describe('#union', function () {
+		it('should compute union of one without being stupid slow', function() {
+			setsEqual(_.union([3, 2, 1]), [1, 2, 3]);
+		});
+		it('should compute union of two without being stupid slow', function() {
+			setsEqual(_.union([3], [2, 1]), [1, 2, 3]);
+		});
+		it('should compute union of three without being stupid slow', function() {
+			setsEqual(_.union([3], [2], [1]), [1, 2, 3]);
+		});
+		it('should drop dups without being stupid slow', function() {
+			setsEqual(_.union([3], [3, 2], [3, 2, 1]), [1, 2, 3]);
+		});
+		it('should handle empty sets without being stupid slow', function() {
+			setsEqual(_.union([], [3, 2], [3]), [2, 3]);
+		});
+		it('should handle empty result without being stupid slow', function() {
+			setsEqual(_.union([], [], []), []);
+		});
+	});
 });
