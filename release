@@ -29,7 +29,7 @@ new() {
 	run "Creating release branch ${BRANCH}" git checkout -b ${BRANCH}
 	run "Tagging release" npm version minor
 	run "Incrementing master version" git checkout master
-	run "" npm verison $(${SEMVER} --preid ${PREID} -i preminor ${VERSION})
+	run "" npm verison --no-git-tag-version $(${SEMVER} --preid ${PREID} -i preminor ${VERSION})
 	run "Pushing to origin" git push origin --tags master ${BRANCH}
 	run "Publishing" git checkout ${BRANCH}
 	run "" npm publish
@@ -47,7 +47,7 @@ patch() {
 
 major() {
 	run "Incrementing master version" git checkout master
-	run "" npm version $(${SEMVER} --preid ${PREID} -i premajor ${VERSION})
+	run "" npm version --no-git-tag-version $(${SEMVER} --preid ${PREID} -i premajor ${VERSION})
 	run "Pushing to origin" git push origin --tags ${master}
 }
 
