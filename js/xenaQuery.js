@@ -513,7 +513,9 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		hg18: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
 		GRCh36: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
 		hg19: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
-		GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'}
+		GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
+		hg38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
+		GRCh38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'}
 	};
 
 	function refGene_attrs(row) {
