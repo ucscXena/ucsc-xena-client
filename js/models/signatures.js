@@ -22,9 +22,19 @@ function evalIn({samples}, list) {
 	};
 }
 
+function samplesAsData({samples}) {
+	return {
+		req: {
+			values: [_.range(samples.length)]
+		},
+		codes: samples
+	};
+}
+
 function evalexp(ctx, expression) {
 	return m({
-		'in': list => evalIn(ctx, list)
+		'in': list => evalIn(ctx, list),
+		'samples': () => samplesAsData(ctx)
 	}, expression);
 }
 
