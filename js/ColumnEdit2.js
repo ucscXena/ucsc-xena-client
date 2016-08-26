@@ -204,7 +204,7 @@ var ColumnEdit = React.createClass({
 			'assembly', ds.assembly,
 			'datasetMetadata', meta);
 		this.props.onHide();
-		callback(['add-column', uuid(), settings]);
+		callback(['add-column', uuid(), settings, true]);
 	},
 	onCohortSelect: function(value) {
 		this.setChoice('cohort', value);

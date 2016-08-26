@@ -11,6 +11,8 @@ var fetch = require('../fieldFetch');
 var {allNullFields, nullField} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {searchSamples} = require('../models/searchSamples');
+var {signatureField} = require('../models/fieldSpec');
+var {getColSpec} = require('../models/datasetJoins');
 // pick up signature fetch
 require('../models/signatures');
 
@@ -143,14 +145,35 @@ var setCohortRelatedFields = (state, cohorts) =>
 		'survival', null,
 		'km', null);
 
+// This adds or overwrites a 'sample' column in the state.
+// Called from setCohort, the column data will be fetched after
+// the sample list returns from the server.
+function addSampleColumn(state) {
+	var field = signatureField('samples', {
+			columnLabel: 'samples',
+			valueType: 'coded',
+			signature: ['samples']
+		}),
+		newOrder = _.has(state.columns, 'samples') ? state.columnOrder : [...state.columnOrder, 'samples'],
+		colSpec = getColSpec([field], {}),
+		settings = _.assoc(colSpec,
+				'width', 100,
+				'user', _.pick(colSpec, ['columnLabel', 'fieldLabel'])),
+		newState = _.assocIn(state,
+			['columns', 'samples'], settings,
+			['columnOrder'], newOrder);
+	return _.assocIn(newState, ['data', 'samples', 'status'], 'loading');
+}
+
 var setCohort = (state, cohorts) =>
-		resetZoom(
-			reJoinFields(
-				state.datasets,
-				closeEmptyColumns(
-					setCohortRelatedFields(
-						remapFieldsForCohorts(state, cohorts),
-						cohorts))));
+		addSampleColumn(
+			resetZoom(
+				reJoinFields(
+					state.datasets,
+					closeEmptyColumns(
+						setCohortRelatedFields(
+							remapFieldsForCohorts(state, cohorts),
+							cohorts)))));
 
 var matchSamples = (state, text) => _.assoc(state,
 		'sampleSearch',  text,
