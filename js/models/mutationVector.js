@@ -244,15 +244,6 @@ function cmp({fields}, data, index) {
 }
 
 var sparseDataValues = xenaQuery.dsID_fn(xenaQuery.sparse_data_values);
-var refGeneExonValues = xenaQuery.dsID_fn(xenaQuery.refGene_exon_values);
-
-// support for hg18/CRCh36, hg19/CRCh37
-var refGene = {
-	hg18: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
-	GRCh36: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'}),
-	hg19: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'}),
-	GRCh37: JSON.stringify({host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'})
-};
 
 // XXX Might want to optimize this before committing. We could mutate in-place
 // without affecting anyone. This may be slow for large mutation datasets.
@@ -268,10 +259,11 @@ function mapSamples(samples, data) {
 }
 
 function fetch({dsID, fields, assembly}, [samples]) {
-		return Rx.Observable.zipArray(
-			sparseDataValues(dsID, fields[0], samples),
-			refGene[assembly] ? refGeneExonValues(refGene[assembly], fields) : Rx.Observable.return({})
-		).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
+	var {name, host} = xenaQuery.refGene[assembly] || {};
+	return Rx.Observable.zipArray(
+		sparseDataValues(dsID, fields[0], samples),
+		name ? xenaQuery.refGene_exon_values(host, name, fields) : Rx.Observable.return({})
+	).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
 }
 
 // Group by, returning groups in sorted order. Scales O(n) vs.

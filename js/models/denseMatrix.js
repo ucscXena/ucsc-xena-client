@@ -54,11 +54,20 @@ function computeHeatmap(vizSettings, data, fields, samples, defaultNormalization
 
 var hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min']));
 
+var flopIfNegStrand = (strand, req) =>
+	strand === '-' ?
+		_.assoc(req,
+				'probes', _.reverse(req.probes),
+				'values', _.reverse(req.values)) :
+		req;
+
 function dataToHeatmap(column, vizSettings, data, samples) {
 	if (!_.get(data, 'req')) {
 		return null;
 	}
-	var {req, codes = {}} = data,
+	var {codes = {}} = data,
+		strand = column.strand,
+		req = flopIfNegStrand(strand, data.req),
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples, column.defaultNormalization),
 		colors = map(fields, (p, i) =>

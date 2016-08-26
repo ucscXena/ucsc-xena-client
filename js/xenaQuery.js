@@ -332,6 +332,10 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 			   `             :where [:in :any "name2" ${arrayfmt(genes)}]})`;
 	}
 
+	function gene_position(dsID, gene) {
+		return `(car ((xena-query {:select ["position"] :from [${quote(dsID)}] :where [:in :any "name2" ${arrayfmt([gene])}]}) "position"))`;
+	}
+
 //	function refGene_gene_pos(gene) {
 //		return `(xena-query {:select ["position" "name2"]\n` +
 //			   `             :from ["common/GB/refgene_good"]\n` +
@@ -504,6 +508,14 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		return _.map(s.replace(/,$/, '').split(','), _.partial(parseInt, _, 10));
 	}
 
+	// support for hg18/CRCh36, hg19/CRCh37
+	var refGene = {
+		hg18: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
+		GRCh36: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
+		hg19: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
+		GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'}
+	};
+
 	function refGene_attrs(row) {
 		return {
 			name2: row.name2[0],
@@ -572,6 +584,16 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		});//.catch(Rx.Observable.return([]));  // XXX display message?
 	}
 
+	function refGene_gene_strand({host, name}, gene) {
+		return Rx.DOM.ajax(
+			xena_post(host, gene_position(name, gene))
+		).map(json_resp).map(({strand}) => strand);
+	}
+
+	var probemap_gene_strand = (host, probemap, gene) =>
+		dataset_metadata(host, probemap).flatMap(({assembly}) =>
+			refGene_gene_strand(refGene[assembly ? assembly : 'hg19'], gene));
+
 	return {
 		// helpers:
 		dsID_fn: dsID_fn,
@@ -609,12 +631,14 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		all_cohorts: all_cohorts,
 		dataset_by_name: dataset_by_name,
 		dataset_text: dataset_text,
+		probemap_gene_strand,
 
 		sparse_data_match_genes: sparse_data_match_genes,
 		sparse_data_values: sparse_data_values,
 		refGene_exon_values: refGene_exon_values,
 		match_fields: match_fields,
 		test_host: test_host,
+		refGene
 //		refGene_gene_pos: refGene_gene_pos
 	};
 });

@@ -55,6 +55,15 @@ var resetColumnFields = state =>
 
 var resetLoadPending = state => _.dissoc(state, 'loadPending');
 
+// Fetches the gene strand info for a geneProbes field.
+// We need the gene from one non-null field. This is
+// probably broken in some way for composite views.
+function fetchStrand(serverBus, state, id, gene, dsID) {
+	var {probemap} = _.getIn(state, ['datasets', dsID]),
+		{host} = JSON.parse(dsID);
+	serverBus.onNext(['strand', xenaQuery.probemap_gene_strand(host, probemap, gene), id]);
+}
+
 var controls = {
 	// XXX reset loadPending flag
 	bookmark: (state, bookmark) => resetLoadPending(parseBookmark(bookmark)),
@@ -108,8 +117,21 @@ var controls = {
 				['sampleSearch'], remapFields(columnOrder, newOrder, sampleSearch));
 		return _.assocIn(newState, ['data', id, 'status'], 'loading');
 	},
-	'normalize-fields-post!': (serverBus, state, newState, fields, id) =>
-		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id])),
+	'normalize-fields-post!': (serverBus, state, newState, fields, id, settings, __, xenaFields) => {
+		// For geneProbes, fetch the gene model (just strand right now), and defer the
+		// data fetch.
+		if (settings.fieldType === 'geneProbes') {
+			// Pick first xena field, and 1st gene name.
+			fetchStrand(serverBus, state, id, fields[0][0], _.getIn(settings, xenaFields[0]).dsID);
+		} else {
+			fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
+		}
+	},
+	'strand': (state, strand, id) => _.assocIn(state, ['columns', id, 'strand'], strand),
+	'strand-post!': (serverBus, state, newState, strand, id) => {
+		// Fetch geneProbe data after we have the gene info.
+		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
+	},
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
 		columnOpen(state, id) ?
