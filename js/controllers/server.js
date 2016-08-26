@@ -106,7 +106,7 @@ var controls = {
 				['columns', id], updateFields(settings, xenaFields, fields),
 				['columnOrder'], newOrder,
 				['sampleSearch'], remapFields(columnOrder, newOrder, sampleSearch));
-		return _.assocIn( newState, ['data', id, 'status'], 'loading');
+		return _.assocIn(newState, ['data', id, 'status'], 'loading');
 	},
 	'normalize-fields-post!': (serverBus, state, newState, fields, id) =>
 		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id])),
