@@ -251,8 +251,7 @@ define(['./getLabel'], function (getLabel) {
 		}
 
 		function axisSelector(selectorID) {
-			var div = document.createElement("select"),
-				option, i, column, storedColumn,
+			var div, option, storedColumn,
 				columns, columnOrder;
 
 			if (xenaState) {
@@ -270,15 +269,18 @@ define(['./getLabel'], function (getLabel) {
 				}
 			}
 
+			div = document.createElement("select");
 			div.setAttribute("id", selectorID);
 			div.setAttribute("class", "dropdown-style");
-			for (i = 0; i < columnOrder.length; i++) {
-				column = columnOrder[i];
-				if (selectorID === "Xaxis" && columns[column].fields.length !== 1) {
-					continue;
+			_.map(columnOrder, (column, i) => {
+				if (column === "samples") { // ignore samples column
+					return;
 				}
 				if (columns[column].fieldType === "mutation") {  // to be implemented
-					continue;
+					return;
+				}
+				if (selectorID === "Xaxis" && columns[column].fields.length !== 1) {
+					return;
 				}
 
 				option = document.createElement('option');
@@ -289,7 +291,7 @@ define(['./getLabel'], function (getLabel) {
 				if (column === storedColumn) {
 					div.selectedIndex = div.length - 1;
 				}
-			}
+			});
 
 			// x axis add an extra optioin: none -- summary view
 			if (selectorID === "Xaxis") {
@@ -297,14 +299,14 @@ define(['./getLabel'], function (getLabel) {
 				option.value = "none";
 				option.textContent = "None (i.e. summary view of the Y variable)";
 				div.appendChild(option);
+
+				if ("none" === storedColumn) {
+					div.selectedIndex = div.length - 1;
+				}
 			}
 
 			if (div.length === 0 ) {
 				return;
-			}
-
-			if ("none" === storedColumn) {
-				div.selectedIndex = div.length - 1;
 			}
 
 			// default when there is no settings stored in state
@@ -320,6 +322,7 @@ define(['./getLabel'], function (getLabel) {
 						yvalue = div.options[div.selectedIndex].value;
 
 					if (xvalue === yvalue ) {  // x and y axis is the same
+						var i;
 						for (i = 0; i < div.length; i++) {
 							if (div.options[i] !== xvalue) {
 								div.selectedIndex = i;
