@@ -42,6 +42,7 @@ module.exports = {
 		new webpack.OldWatchingPlugin()
 	],
 	resolve: {
+		fallback: path.join(__dirname, "node_modules"),
 		alias: {
 			rx$: 'rx/dist/rx',
 			'rx.binding$': 'rx/dist/rx.binding',
