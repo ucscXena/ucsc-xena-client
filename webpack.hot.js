@@ -34,5 +34,6 @@ config.plugins = config.plugins.concat([
 ]);
 
 config.devtool = 'eval';
+config.hot = true;
 
 module.exports = config;

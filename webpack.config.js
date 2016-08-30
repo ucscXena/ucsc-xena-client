@@ -9,8 +9,11 @@ module.exports = {
 	entry: "./js/bogorouter",
 	output: {
 		path: __dirname + "/build",
-		publicPath: "/",
+		publicPath: "../",
 		filename: "[name].js"
+	},
+	devServer: {
+		publicPath: '/'
 	},
 	module: {
 		loaders: [
