@@ -61,7 +61,7 @@ var resetLoadPending = state => _.dissoc(state, 'loadPending');
 function fetchStrand(serverBus, state, id, gene, dsID) {
 	var {probemap} = _.getIn(state, ['datasets', dsID]),
 		{host} = JSON.parse(dsID);
-	serverBus.onNext(['strand', xenaQuery.probemap_gene_strand(host, probemap, gene), id]);
+	serverBus.onNext(['strand', xenaQuery.probemap_gene_strand(host, probemap, gene).catch(Rx.Observable.return('+')), id]);
 }
 
 var controls = {
