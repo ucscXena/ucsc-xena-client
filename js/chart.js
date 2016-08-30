@@ -32,7 +32,8 @@ define(['./getLabel'], function (getLabel) {
 	*/
 
 	return function (root, callback, sessionStorage) {
-		var xdiv, ydiv, // x and y axis dropdown
+		var xdiv, ydiv, // x y and color axis dropdown
+			colorDiv, colorElement,
 			leftContainer, rightContainer,
 			xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
 			cohort, samplesLength, cohortSamples, updateArgs,
@@ -179,61 +180,6 @@ define(['./getLabel'], function (getLabel) {
 			return node;
 		}
 
-		function buildColoringDropdown() {
-			var dropDownDiv = document.createElement("select"),
-				option, i,
-				column, columns, columnOrder,
-				storedColumn;
-
-			dropDownDiv.setAttribute("id", "scatterColor");
-			dropDownDiv.setAttribute("class", "dropdown-style");
-
-			if (xenaState) {
-				columnOrder = xenaState.columnOrder;
-				columns = xenaState.columns;
-			}
-
-			if (xenaState && xenaState.chartState) {
-				storedColumn = xenaState.chartState.colorColumn;
-			}
-
-			// none -- no color at the beginning
-			option = document.createElement('option');
-			option.value = "none";
-			option.textContent = "None";
-			dropDownDiv.appendChild(option);
-
-			for (i = 0; i < columnOrder.length; i++) {
-				column = columnOrder[i];
-				if (columns[column].fields.length === 1 &&
-					(columns[column].valueType === "coded" ||
-					columns[column].valueType === "float")) {  //currently only support non mutation data coloring
-					option = document.createElement('option');
-					option.value = column;
-					option.textContent = [columnLabel (i, columns[column]), colUnit(columns[column])].join(" ");
-					dropDownDiv.appendChild(option);
-					if (column === storedColumn) {
-						dropDownDiv.selectedIndex = dropDownDiv.length - 1;
-					}
-				}
-			}
-
-
-			if ("none" === storedColumn) {
-				dropDownDiv.selectedIndex = dropDownDiv.length - 1;
-			}
-
-			dropDownDiv.addEventListener('change', function () {
-				update.apply(this, updateArgs);
-			});
-
-			var node = document.createElement("div");
-			node.setAttribute("id", "colorDropDown");
-			node.appendChild(document.createTextNode("Color: "));
-			node.appendChild(dropDownDiv);
-			return node;
-		}
-
 		function buildEmptyChartContainer() {
 			var chartContainer, div;
 
@@ -251,12 +197,14 @@ define(['./getLabel'], function (getLabel) {
 		}
 
 		function axisSelector(selectorID) {
-			var div, option, storedColumn,
-				columns, columnOrder;
+			var div, option, column, storedColumn,
+				columns, columnOrder,
+				data;
 
 			if (xenaState) {
 				columnOrder = xenaState.columnOrder;
 				columns = xenaState.columns;
+				data = xenaState.data;
 			}
 
 			if (xenaState && xenaState.chartState) {
@@ -265,6 +213,8 @@ define(['./getLabel'], function (getLabel) {
 						storedColumn = xenaState.chartState.xcolumn;
 					} else if (selectorID === "Yaxis") {
 						storedColumn = xenaState.chartState.ycolumn;
+					} else if (selectorID === "scatterColor") {
+						storedColumn = xenaState.chartState.colorColumn;
 					}
 				}
 			}
@@ -272,14 +222,37 @@ define(['./getLabel'], function (getLabel) {
 			div = document.createElement("select");
 			div.setAttribute("id", selectorID);
 			div.setAttribute("class", "dropdown-style");
+
+			// color dropdown add none option at the top
+			if (selectorID === "scatterColor") {
+				// none -- no color at the beginning
+				option = document.createElement('option');
+				option.value = "none";
+				option.textContent = "None";
+				div.appendChild(option);
+			}
+
 			_.map(columnOrder, (column, i) => {
-				if (column === "samples") { // ignore samples column
+				if (column === "samples") {  //ignore samples column
 					return;
 				}
-				if (columns[column].fieldType === "mutation") {  // to be implemented
+				if (columns[column].valueType === "mutation") {  // to be implemented
 					return;
 				}
-				if (selectorID === "Xaxis" && columns[column].fields.length !== 1) {
+				if (data[column].status !== "loaded") { //bad column
+					return;
+				}
+				if (data[column].req.values && data[column].req.values.length === 0) { //bad column
+					return;
+				}
+				if (data[column].req.rows && data[column].req.rows.length === 0) { //bad column
+					return;
+				}
+				if (data[column].codes && data[column].codes.length > 100) { // ignore any coded columns with too many items, like in most cases, the "samples" column
+					return;
+				}
+				if ((selectorID === "Xaxis" || selectorID === "scatterColor") &&
+					data[column].req.values.length !== 1) {
 					return;
 				}
 
@@ -293,11 +266,11 @@ define(['./getLabel'], function (getLabel) {
 				}
 			});
 
-			// x axis add an extra optioin: none -- summary view
+			// x axis add none option at the end-- summary view
 			if (selectorID === "Xaxis") {
 				option = document.createElement('option');
 				option.value = "none";
-				option.textContent = "None (i.e. summary view of the Y variable)";
+				option.textContent = "None";
 				div.appendChild(option);
 
 				if ("none" === storedColumn) {
@@ -309,29 +282,46 @@ define(['./getLabel'], function (getLabel) {
 				return;
 			}
 
-			// default when there is no settings stored in state
+			// default settings
+			// trying to use coded column for X and float column for y
 			if (!storedColumn) {
 				if (selectorID === "Xaxis") {
 					div.selectedIndex = 0;
+					for (i = 0; i < div.length - 1; i++) {
+						column = div.options[i].value;
+						if (columns[column].valueType === "coded") {
+							div.selectedIndex = i;
+							break;
+						}
+					}
+
 				} else if (selectorID === "Yaxis") {
 					div.selectedIndex = div.length - 1;
+					for (i = 0; i < div.length; i++) {
+						column = div.options[i].value;
+						if (columns[column].valueType === "float") {
+							div.selectedIndex = i;
+							break;
+						}
+					}
 				}
-
 				if (selectorID === "Yaxis") {
 					var xvalue = xdiv.options[xdiv.selectedIndex].value,
 						yvalue = div.options[div.selectedIndex].value;
 
-					if (xvalue === yvalue ) {  // x and y axis is the same
+					if (xvalue === yvalue) {  // x and y axis is the same
 						var i;
 						for (i = 0; i < div.length; i++) {
-							if (div.options[i] !== xvalue) {
+							column = div.options[i].value;
+							if (column !== xvalue) {
 								div.selectedIndex = i;
 								break;
 							}
 						}
 
-						if (div.selectedIndex === div.length - 1) {
-							xdiv.selectedIndex = xdiv.length - 1; // x is summary
+						// no good choice for both x and y => set x to none -summary view
+						if (i === div.length) {
+							xdiv.options.selectedIndex = xdiv.options.length - 1;
 						}
 					}
 				}
@@ -419,11 +409,10 @@ define(['./getLabel'], function (getLabel) {
 		}
 
 		function scatterColorUISetting(visible) {
-			var dropDown = document.getElementById("colorDropDown");
 			if (visible) {
-				dropDown.style.visibility = "visible";
+				colorElement.style.visibility = "visible";
 			} else {
-				dropDown.style.visibility = "hidden";
+				colorElement.style.visibility = "hidden";
 			}
 		}
 
@@ -448,23 +437,19 @@ define(['./getLabel'], function (getLabel) {
 			scatterColorUISetting(false);
 			sdDropdownUIsetting(false);
 
-			var dropdown,
-				xcolumn, ycolumn, colorColumn,
+			var xcolumn, ycolumn, colorColumn,
 				xfields, yfields,
 				xlabel, ylabel,
 				xcolumnType, ycolumnType,
 				columns,
 				normUI = document.getElementById("ynormalization"),
 				expUI = document.getElementById("yExponentiation"),
-				colorUI = document.getElementById("scatterColor"),
 				XdropDownDiv = document.getElementById("Xaxis"),
 				YdropDownDiv = document.getElementById("Yaxis");
 
-			dropdown = document.getElementById("Xaxis");
-			xcolumn = dropdown.options[dropdown.selectedIndex].value;
-			dropdown = document.getElementById("Yaxis");
-			ycolumn = dropdown.options[dropdown.selectedIndex].value;
-			colorColumn = colorUI.value;
+			xcolumn = xdiv.options[xdiv.selectedIndex].value;
+			ycolumn = ydiv.options[ydiv.selectedIndex].value;
+			colorColumn = colorDiv.options[colorDiv.selectedIndex].value;
 
 			// save state cohort, xcolumn, ycolumn, colorcolumn
 			if (xenaState) {
@@ -1318,16 +1303,17 @@ define(['./getLabel'], function (getLabel) {
 			return;
 		}
 
+	    // coloring on scatterplot
+	    colorDiv = axisSelector("Color", update, updateArgs);
+
 	    leftContainer.appendChild(dom_helper.elt("div", "Y: ", ydiv, buildNormalizationDropdown(), buildExpDropdown()));
 		leftContainer.appendChild(document.createElement("br"));
 
 		leftContainer.appendChild(dom_helper.elt("div", "X: ", xdiv));
 	    leftContainer.appendChild(document.createElement("br"));
 
-	    // coloring on scatterplot
-		var colorDiv = buildColoringDropdown();
-
-		leftContainer.appendChild(colorDiv);
+	    colorElement = dom_helper.elt("div", "Color: ", colorDiv);
+		leftContainer.appendChild(colorElement);
 		leftContainer.appendChild(document.createElement("br"));
 
 		// whisker is 1, 2, 3 SD
