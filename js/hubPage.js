@@ -1,29 +1,21 @@
-/*eslint-env browser */
-/*global require: false, console: false, module: false */
-
 'use strict';
 
 require('./base');
-var _ = require('./underscore_ext');
+var controller = require('ucsc-xena-datapages/controller');
 const React = require('react');
 const hub = require('ucsc-xena-datapages/hub');
 const connector = require('./connector');
 const createStore = require('./store');
 
-var controls = {
-	servers: (state, servers) => _.assocIn(state, ['servers', 'pending'], servers),
-};
-
-var identity = x => x;
-var controller = {
-	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
-	postAction: (serverBus, state, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, ...args)
-};
-
 var Hub = React.createClass({
-	shouldComponentUpdated: () => false,
+	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
-		hub(this.refs.hubPage);
+		var {state, selector} = this.props;
+		hub(this.refs.hubPage, selector(state));
+	},
+	componentWillReceiveProps: function (newProps) {
+		var {state, selector} = newProps;
+		hub(this.refs.hubPage, selector(state));
 	},
 	render: () => <div ref='hubPage'/>
 });
@@ -31,6 +23,6 @@ var Hub = React.createClass({
 var store = createStore(true);
 var main = window.document.getElementById('main');
 
-var selector = state => state;
+var selector = state => state.servers;
 
 connector({...store, controller, main, selector, Page: Hub, persist: true, history: false});

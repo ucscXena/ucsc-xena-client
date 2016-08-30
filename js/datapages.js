@@ -1,37 +1,28 @@
-/*eslint-env browser */
-/*global require: false, console: false, module: false */
-
 'use strict';
 
 require('./base');
-var _ = require('./underscore_ext');
+var controller = require('ucsc-xena-datapages/controller');
 const React = require('react');
 const datapages = require('ucsc-xena-datapages/datapages');
 const connector = require('./connector');
 const createStore = require('./store');
 
-var controls = {
-	cohort: (state, cohort) => _.assoc(state, 'cohortPending', [{name: cohort}]),
-};
-
-var identity = x => x;
-var controller = {
-	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
-	postAction: (serverBus, state, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, ...args)
-};
-
 var Datapages = React.createClass({
-	shouldComponentUpdated: () => false,
+	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
-		datapages.start(this.refs.datapages);
+		var {state, selector} = this.props;
+		datapages(this.refs.datapages, selector(state));
+	},
+	componentWillReceiveProps: function (newProps) {
+		var {state, selector} = newProps;
+		datapages(this.refs.datapages, selector(state));
 	},
 	render: () => <div ref='datapages'/>
 });
 
-
 var store = createStore(true);
 var main = window.document.getElementById('main');
 
-var selector = state => state;
+var selector = state => state.servers;
 
 connector({...store, controller, main, selector, Page: Datapages, persist: true, history: false});
