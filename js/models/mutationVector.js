@@ -324,7 +324,7 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 }
 
 function index(fieldType, data) {
-	if (!_.get(data, 'req')) {
+	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
 		return null;
 	}
 
