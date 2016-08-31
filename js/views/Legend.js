@@ -69,7 +69,7 @@ var Legend = React.createClass({
 				{ellipsis ?
 					<Row>
 						<Col md={10} mdOffset={1}>
-							...
+							More values ...
 						</Col>
 					</Row> : null}
 				<br/>
