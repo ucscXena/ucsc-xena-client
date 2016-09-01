@@ -45,6 +45,8 @@ function addHelp(id, target) {
 		</OverlayTrigger>);
 }
 
+var asciiA = 65;
+
 // XXX drop this.props.style? Not sure it's used.
 var AppControls = React.createClass({
 	getInitialState() {
@@ -54,7 +56,7 @@ var AppControls = React.createClass({
 		this.setState({bookmarks: true});
 	},
 	componentWillMount() {
-		this.ksub = konami.subscribe(this.enableBookmarks);
+		this.ksub = konami(asciiA).subscribe(this.enableBookmarks);
 	},
 	componentWillUnmount() {
 		this.ksub.dispose();
