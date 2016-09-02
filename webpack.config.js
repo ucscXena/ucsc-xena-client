@@ -13,7 +13,13 @@ module.exports = {
 		filename: "[name].js"
 	},
 	devServer: {
-		publicPath: '/'
+		publicPath: '/',
+		proxy: {
+			'/api/**': {
+				target: 'http://localhost:8000/',
+				pathRewrite: {'^/api': ''}
+			}
+		}
 	},
 	module: {
 		loaders: [

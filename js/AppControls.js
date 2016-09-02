@@ -16,6 +16,7 @@ var {createBookmark} = require('./bookmark');
 var konami = require('./konami');
 var Popover = require('react-bootstrap/lib/Popover');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
+var config = require('./config');
 
 var modeButton = {
 	chart: 'Visual Spreadsheet',
@@ -83,7 +84,7 @@ var AppControls = React.createClass({
 	},
 	onSetBookmark(resp) {
 		var {id} = JSON.parse(resp.response);
-		this.setState({bookmark: `https://genome-cancer.ucsc.edu/proj/site/xena/heatmap/?bookmark=${id}`});
+		this.setState({bookmark: `${location.origin}${config.baseurl}heatmap/?bookmark=${id}`});
 	},
 	onResetBookmark() {
 		this.setState({bookmark: null});
@@ -92,7 +93,7 @@ var AppControls = React.createClass({
 		var {appState} = this.props;
 		Rx.DOM.ajax({
 			method: 'POST',
-			url: '/proj/site/bookmarks',
+			url: '/api/bookmarks/bookmark',
 			headers: {
 				'X-CSRFToken': document.cookie.replace(/.*csrftoken=([0-9a-z]+)/, '$1'),
 				'Content-Type': 'application/x-www-form-urlencoded'

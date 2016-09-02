@@ -33,7 +33,7 @@ function fetchCohorts(serverBus, servers) {
 function fetchBookmark(serverBus, bookmark) {
 	serverBus.onNext(['bookmark', Rx.DOM.ajax({
 		method: 'GET',
-		url: `/proj/site/bookmarks?id=${bookmark}`,
+		url: `/api/bookmarks/bookmark?id=${bookmark}`,
 	}).map(r => r.response)]);
 }
 
