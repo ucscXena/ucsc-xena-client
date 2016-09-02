@@ -7,8 +7,8 @@ deployment:
     dev:
         branch: master
         commands:
-            - HOST=ubuntu@ec2-52-91-68-9.compute-1.amazonaws.com ./deploy
+            - HOST=ec2-52-91-68-9.compute-1.amazonaws.com ./deploy
     beta:
         tag: /v[0-9]+(\.[0-9]+)*/
         commands:
-            - HOST=ubuntu@ec2-52-23-185-93.compute-1.amazonaws.com ./deploy
+            - HOST=ec2-52-23-185-93.compute-1.amazonaws.com ./deploy
