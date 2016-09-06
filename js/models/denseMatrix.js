@@ -65,9 +65,7 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 	if (!_.get(data, 'req')) {
 		return null;
 	}
-	var {codes = {}} = data,
-		strand = column.strand,
-		req = flopIfNegStrand(strand, data.req),
+	var {req, codes = {}} = data,
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples, column.defaultNormalization),
 		colors = map(fields, (p, i) =>
@@ -150,8 +148,8 @@ function indexGeneResponse(samples, genes, data) {
 var fetch = ({dsID, fields}, [samples]) => datasetProbeValues(dsID, samples, fields)
 	.map(resp => ({req: meanNanResponse(fields, resp)}));
 
-var fetchGeneProbes = ({dsID, fields}, [samples]) => datasetGeneProbesValues(dsID, samples, fields)
-	.map(resp => ({req: indexProbeGeneResponse(resp)}));
+var fetchGeneProbes = ({dsID, fields, strand}, [samples]) => datasetGeneProbesValues(dsID, samples, fields)
+	.map(resp => ({req: flopIfNegStrand(strand, indexProbeGeneResponse(resp))}));
 
 // This should really be fetchCoded. Further, it should only return a single
 // code list, i.e. either a single clinical coded field, or a list of genomic

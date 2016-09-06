@@ -21,6 +21,14 @@ function updateFields(fieldSpec, paths, fields) {
 			fieldSpec);
 }
 
+// Update nested 'strand' properties under fieldSpec given
+// by 'paths', to values in 'strand'.
+function updateStrand(fieldSpec, paths, strand) {
+	return _.reduce(paths, (acc, path) =>
+				_.assocIn(acc, [...path, 'strand'], strand),
+			fieldSpec);
+}
+
 function mergeDsIDs(dsIDs, fieldSpecs) {
 	// Preserve null fs. Otherwise we get a {dsID: undefined} fieldSpec, which
 	// is nonsensical.
@@ -74,6 +82,7 @@ var signatureField = (fieldName, opts) => ({
 module.exports = {
 	xenaFieldPaths,
 	updateFields,
+	updateStrand,
 	mergeDsIDs,
 	setFieldType,
 	nullField,

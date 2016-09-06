@@ -9,7 +9,7 @@ var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
 
 var xenaQuery = require('../xenaQuery');
 var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
-var {updateFields, filterByDsID} = require('../models/fieldSpec');
+var {updateFields, xenaFieldPaths, updateStrand, filterByDsID} = require('../models/fieldSpec');
 var {remapFields} = require('../models/searchSamples');
 var identity = x => x;
 var {parseBookmark} = require('../bookmark');
@@ -127,7 +127,11 @@ var controls = {
 			fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
 		}
 	},
-	'strand': (state, strand, id) => _.assocIn(state, ['columns', id, 'strand'], strand),
+	'strand': (state, strand, id) => {
+		// Update composite & all xena fields with strand info.
+		var settings = _.assoc(_.getIn(state, ['columns', id]), 'strand', strand);
+		return _.assocIn(state, ['columns', id], updateStrand(settings, xenaFieldPaths(settings), strand));
+	},
 	'strand-post!': (serverBus, state, newState, strand, id) => {
 		// Fetch geneProbe data after we have the gene info.
 		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
