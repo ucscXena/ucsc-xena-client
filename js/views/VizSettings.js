@@ -44,14 +44,13 @@ var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var Modal = require('react-bootstrap/lib/Modal');
 
-function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization, fieldType) {
+function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization, valueType) {
 	var state = vizState;
 	function datasetSetting() {
 		var node, div = document.createElement("div");
-
-		if (_.contains(['probes', 'genes', 'geneProbes'], fieldType)) {
+		if (valueType === "float") {
 			node = document.createElement("div");
-			genomicMatrixFloat(node);
+			allFloat(node);
 			div.appendChild(node);
 			div.appendChild(buildVizButton());
 		}
@@ -59,7 +58,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 
-	function genomicMatrixFloat(div) {
+	function allFloat(div) {
 		var node;
 
 		// normalization
@@ -398,8 +397,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 var SettingsWrapper = React.createClass({
 	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
-		var {refs: {content}, props: {onVizSettings, vizSettings, id, defaultNormalization, fieldType, onRequestHide}} = this;
-		vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, fieldType);
+		var {refs: {content}, props: {onVizSettings, vizSettings, id, defaultNormalization, valueType, onRequestHide}} = this;
+		vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, valueType);
 	},
 	render: function () {
 		return <div ref='content' />;

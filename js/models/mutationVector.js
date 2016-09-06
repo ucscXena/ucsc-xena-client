@@ -12,29 +12,14 @@ var intervalTree = require('static-interval-tree');
 var {pxTransformFlatmap} = require('../layoutPlot');
 var {hexToRGB, colorStr} = require('../color_helper');
 
-function chromFromAlt(alt) {
-	var start = alt.search(/[\[\]]/),
-		end = alt.search(":");
-	return alt.slice(start + 1, end).replace(/chr/i, "");
-}
-
-function posFromAlt(alt) {
-	var end = alt.search(/[\[\]\A\T\G\C]{1,2}$/),
-		start = alt.search(":");
-	return alt.slice(start + 1, end);
-}
-
-function structuralVariantClass(alt) {
-	var firstBase = _.first(alt),
-		lastBase = _.last(alt);
-	return firstBase === '[' || firstBase === ']' ? 'left' :
-		(lastBase === '[' || lastBase === ']' ? 'right' : null);
-}
-
-// structrual variants (SV) have follow vcf https://samtools.github.io/hts-specs/VCFv4.2.pdf
-// "[" and "]" in alt means these are SV variants
-var isStructuralVariant = ({data: {start, end, alt}}) => {
-	return structuralVariantClass(alt) !== null || (end - start) > 50;
+var mutationDatasetClass = (dataSubType) => {
+	if (dataSubType.search(/SNV|SNP|single/i) !== -1) {
+		return "SNV";
+	} else if (dataSubType.search(/SV|structural/i) !== -1) {
+		return "SV";
+	} else {
+		"SNV_SV";
+	}
 };
 
 var unknownEffect = 0,
@@ -62,7 +47,6 @@ var unknownEffect = 0,
 		'missense_variant': 2,
 		'Missense Variant': 2,
 		'Missense_Mutation': 2,
-		'RNA': 2,
 		'Indel': 2,
 		'start_lost': 2,
 		'start_gained': 2,
@@ -84,25 +68,27 @@ var unknownEffect = 0,
 		'In_Frame_Ins': 2,
 
 		//do not modify protein
-		'exon_variant': 1,
 		'synonymous_variant': 1,
 		'Synonymous Variant': 1,
-		'5_prime_UTR_variant': 1,
-		'3_prime_UTR_variant': 1,
-		"5'Flank": 1,
-		"3'Flank": 1,
-		"3'UTR": 1,
-		"5'UTR": 1,
 		'Silent': 1,
 		'stop_retained_variant': 1,
 
-		//mutations outside the exon region and splice region get organge color, code =0
-		'others': 0,
+		//mutations effect we don't know
+		'lincRNA': 0,
+		'RNA': 0,
+		'exon_variant': 0,
 		'upstream_gene_variant': 0,
 		'downstream_gene_variant': 0,
+		"5'Flank": 0,
+		"3'Flank": 0,
+		"3'UTR": 0,
+		"5'UTR": 0,
+		'5_prime_UTR_variant': 0,
+		'3_prime_UTR_variant': 0,
 		'intron_variant': 0,
 		'intergenic_region': 0,
-		'Complex Substitution': 0
+		'Complex Substitution': 0,
+		'others': 0,
 	},
 	chromColorGB = { //genome browser chrom coloring
 		"1": "#996600",
@@ -151,21 +137,35 @@ var unknownEffect = 0,
 		labels: ['0%', '50%', '100%'],
 		align: 'center'
 	},
-
+	getMutationLegend = mutationDataType => {
+		// have to explicitly call hexToRGB to avoid map passing in index.
+		if (mutationDataType === "SV") {
+			return {
+				colors: _.values(chromColorGB).map(h => hexToRGB(h)).map(colorStr).reverse(),
+				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse(),
+				align: 'left'
+			};
+		} else if (mutationDataType === "SNV") {
+			return {
+				colors: colors.category4.map(colorStr),
+				labels: _.range(_.keys(impactGroups).length).map(i => _.pluck(impactGroups[i], 0).join(', ')),
+				align: 'left'
+			};
+		} else {
+			return {
+				colors: _.values(chromColorGB).map(h => hexToRGB(h)).map(colorStr).reverse().
+					concat(colors.category4.map(colorStr)),
+				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse().
+					concat(_.range(_.keys(impactGroups).length).map(i => _.pluck(impactGroups[i], 0).join(', '))),
+				align: 'left'
+			};
+		}
+	},
 	features = {
 		impact: {
 			get: (a, v) => impact[v.effect] || unknownEffect,
 			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
-			legend: {
-				// have to explicitly call hexToRGB to avoid map passing in index.
-				colors: _.values(chromColorGB).map(h => hexToRGB(h)).map(colorStr).reverse().
-					concat(colors.category4.map(colorStr)),
-				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse().
-					concat(_.range(_.keys(impactGroups).length).map(
-						i => _.pluck(impactGroups[i], 0).join(', '))),
-
-				align: 'left'
-			}
+			legend: dataSubType => getMutationLegend(mutationDatasetClass (dataSubType))
 		},
 		'dna_vaf': {
 			get: (a, v) => v.dna_vaf == null ? undefined : decimateFreq(v.dna_vaf),
@@ -178,6 +178,50 @@ var unknownEffect = 0,
 			legend: vafLegend
 		}
 	};
+
+function chromFromAlt(alt) {
+	var start = alt.search(/[\[\]]/),
+		end = alt.search(":");
+	return alt.slice(start + 1, end).replace(/chr/i, "");
+}
+
+function posFromAlt(alt) {
+	var end = alt.search(/[\[\]\A\T\G\C]{1,2}$/),
+		start = alt.search(":");
+	return alt.slice(start + 1, end);
+}
+
+function structuralVariantClass(alt) {
+	var firstBase = _.first(alt),
+		lastBase = _.last(alt);
+	return firstBase === '[' || firstBase === ']' ? 'left' :
+		(lastBase === '[' || lastBase === ']' ? 'right' : null);
+}
+
+// structrual variants (SV) have follow vcf https://samtools.github.io/hts-specs/VCFv4.2.pdf
+// "[" and "]" in alt means these are SV variants
+var isStructuralVariant = ({data: {start, end, alt}}) => {
+	return structuralVariantClass(alt) !== null || (end - start) > 50;
+};
+
+var getExonPadding = mutationDataType => {
+	if (mutationDataType === "SV") {
+		return {
+			padTxStart: 2000,
+			padTxEnd: 0
+		};
+	} else if (mutationDataType === "SNV") {
+		return {
+			padTxStart: 1000,
+			padTxEnd: 1000
+		};
+	} else {
+		return {
+			padTxStart: 1000,
+			padTxEnd: 1000
+		};
+	}
+};
 
 
 function evalMut(flip, mut) {
@@ -301,7 +345,8 @@ function findNodes(byPosition, layout, feature, samples) {
 }
 
 function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
-		vizSettings, data, sortedSamples, dataset, index, zoom) {
+		vizSettings, data, sortedSamples, datasetMetadata, index, zoom) {
+
 	if (!_.get(data, 'req')) {
 		return {};
 	}
@@ -310,11 +355,14 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 	if (_.isEmpty(refGene)) {
 		return {};
 	}
+
+	var mutationDataType = mutationDatasetClass(datasetMetadata[0].dataSubType),
+		{padTxStart, padTxEnd} = getExonPadding(mutationDataType);
+
 	var refGeneObj = _.values(refGene)[0],
-		padding = 1000, // extra bp on both ends of transcripts
 		startExon = 0,
 		endExon = refGeneObj.exonCount,
-		layout = exonLayout.layout(refGeneObj, width, xzoom, padding, startExon, endExon),
+		layout = exonLayout.layout(refGeneObj, width, xzoom, padTxStart, padTxEnd, startExon, endExon),
 		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples, zoom);
 
 	return {
@@ -323,16 +371,19 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 	};
 }
 
-function index(fieldType, data) {
+function index(fieldType, data, datasetMetadata) {
 	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
 		return null;
 	}
 
+	var mutationDataType = mutationDatasetClass(datasetMetadata[0].dataSubType),
+		{padTxStart, padTxEnd} = getExonPadding(mutationDataType);
+
 	var {req: {rows, samplesInResp}, refGene} = data,
-		padding = 1000, // extra bp on both ends of transcripts  ---- redefined here!
 		refGeneObj = _.values(refGene)[0],
-		newStart = refGeneObj.txStart - padding,
-		newEnd = refGeneObj.txEnd + padding,
+		strand = refGeneObj.strand,
+		newStart = (strand === '+') ? refGeneObj.txStart - padTxStart : refGeneObj.txStart - padTxEnd,
+		newEnd = (strand === '+') ? refGeneObj.txEnd + padTxEnd : refGeneObj.txEnd + padTxStart,
 		bySample = _.groupBy(rows, 'sample'),
 		empty = []; // use a single empty object.
 
@@ -380,6 +431,7 @@ module.exports = {
 	posFromAlt,
 	structuralVariantClass,
 	isStructuralVariant,
+	getMutationLegend,
 	chromColorGB,
 	fetch
 };

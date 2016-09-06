@@ -12,7 +12,10 @@ var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
 var indexSelector = createFmapSelector(
 		state => _.fmap(state.columns,
-			({fieldType}, key) => [fieldType, state.data[key]]),
+			(column, key) => [
+				_.getIn(column, ['fieldType']),
+				state.data[key],
+				_.getIn(column, ['datasetMetadata'])]),
 		args => widgets.index(...args));
 
 function cmpString(s1, s2) {
@@ -54,7 +57,7 @@ var transformSelector = createFmapSelector(
 				_.getIn(column, ['vizSettings']),
 				state.data[key],
 				state.samples,
-				state.datasets[column.dsID],
+				_.getIn(column, ['datasetMetadata']),
 				state.index[key]]),
 		_.apply(widgets.transform));
 

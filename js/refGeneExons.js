@@ -83,6 +83,10 @@ var RefGeneAnnotation = React.createClass({
 
 		vg.box(0, 0, width, refHeight, 'white'); // white background
 
+		// draw a line across to represent the entire horizontal genomic region that will be in display, for promoter and downstream region
+		ctx.fillStyle = 'black';
+		ctx.fillRect(0, refHeight / 2, width, 1);
+
 		pxTransformEach(layout, (toPx, [start, end]) => {
 			var nodes = matches(indx, {start: start, end: end});
 			_.each(nodes.sort((a, b)=> (b.start - a.start)), ({i, start, end, inCds}) => {

@@ -2,8 +2,7 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var {features, chromFromAlt,
-	isStructuralVariant, chromColorGB} = require('./models/mutationVector');
+var {features, chromFromAlt, isStructuralVariant, chromColorGB} = require('./models/mutationVector');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -171,7 +170,7 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 	//SV variants draw color background according to joining chromosome
 	_.each(varByIdMap, variant => {
 		var {xStart, xEnd, y, color, h} = variant,
-			points = [[xStart - padding, y, xEnd + padding, y]];
+			points = [[xStart, y, xEnd, y]];
 
 		vg.drawPoly(points,
 			{strokeStyle: color, lineWidth: h});

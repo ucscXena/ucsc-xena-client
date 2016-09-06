@@ -11,10 +11,13 @@ var _ = require('underscore');
 var reverseIf = (strand, arr) =>
 	(strand === '-') ? arr.slice(0).reverse() : arr;
 
-//pad each end of the transcript with N
-var padBothEnds = (arr, padding) =>
-	_.updateIn(_.updateIn(arr, [0, 0], x => x - padding),
-				  [arr.length - 1, 1], x => x + padding);
+//pad start of the arr interval, ignore strand
+var padStart = (arr, padding) =>
+	_.updateIn(arr, [0, 0], x => x - padding);
+
+//pad end of the arr interval, ignore strand
+var padEnd = (arr, padding) =>
+	_.updateIn(arr, [arr.length - 1, 1], x => x + padding);
 
 function pad1(p, intervals, acc) {
 	if (intervals.length === 1) {
@@ -56,13 +59,20 @@ function pxLen(chrlo) {
 // Layout exons on screen pixels.
 // layout(genepred :: {exonStarts : [<int>, ...], exonEnds: [<int>, ...], strand: <string>)
 //  :: {chrom: [[<int>, <int>], ...], screen: [[<int>, <int>], ...], reversed: <boolean>}
-// padding: promoter region, and region after end of gene padding=0 is just showing the gene
+// padding_TxStart: promoter region padding, padding=0 is just showing the gene
+// padding_TxEnd: region after the last exon, padding=0 is just showing the gene
 // startExonIndex, endExonIndex : used to specify which exon range to show 0,1 for first exon, 0, 2 for 1st and 2nd exon
-function layout({exonStarts, exonEnds, strand}, pxWidth, zoom, padding, startExon, endExon) {
-	var chrIntvls = reverseIf(strand, padBothEnds(pad(spLen, _.zip(exonStarts, exonEnds)), padding)).slice(startExon, endExon),
+function layout({exonStarts, exonEnds, strand}, pxWidth, zoom, paddingTxStart, paddingTxEnd, startExon, endExon) {
+	var addedSpliceIntvls = pad(spLen, _.zip(exonStarts, exonEnds)),
+		startPaddedIntvals = (strand === "+" ) ? padStart (addedSpliceIntvls, paddingTxStart)
+			: padEnd (addedSpliceIntvls, paddingTxStart),
+		endPaddedIntvals = (strand === "+") ? padEnd (startPaddedIntvals, paddingTxEnd)
+			: padStart (startPaddedIntvals, paddingTxEnd),
+		chrIntvls = reverseIf(strand, endPaddedIntvals).slice(startExon, endExon),
 		count = _.getIn(zoom, ['len'], baseLen(chrIntvls)),
 		bpp = count / pxWidth,
 		pixIntvls = toScreen(bpp, chrIntvls, 0, []);
+
 	return {
 		chrom: chrIntvls,
 		screen: pixIntvls,

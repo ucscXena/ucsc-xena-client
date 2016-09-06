@@ -9,12 +9,12 @@ var multi = require('./multi');
 var isNumber = _.isNumber;
 
 var blueWhiteRed = ['#0000ff', '#ffffff', '#ff0000'],
-	greenBlackRed = ['#00ff00', '#000000', '#ff0000'],
-	greenBlackYellow = ['#007f00', '#000000', '#ffff00'];
+	greenBlackRed = ['#00ff00', '#000000', '#ff0000'];
+	//greenBlackYellow = ['#007f00', '#000000', '#ffff00'];
 
 var defaultColors = {
 	'expression': greenBlackRed,
-	'clinical': greenBlackYellow,
+	'clinical': blueWhiteRed, //greenBlackYellow,
 	'default': blueWhiteRed
 };
 
@@ -35,18 +35,21 @@ function colorRangeType(column) {
 
 var colorRange = multi(colorRangeType);
 
-function colorFloat({colorClass}, settings, codes, data) {
+function colorFloat({colorClass}, settings = {}, codes, data) {
 	var values = data,
-		max = _.maxnull(values),
 		[low, zero, high] = defaultColors[colorClass],
-		spec,
-		min;
+		min = ( settings.min != null ) ? settings.min : _.minnull(values),
+		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
+		minStart = settings.minStart,
+		maxStart = settings.maxStart,
+		spec;
 
-	if (!isNumber(max)) {
+	if (!isNumber(max) || !isNumber(min)) {
 		return ['no-data'];
 	}
-	min = _.minnull(values);
-	if (min >= 0 && max >= 0) {
+	if ((minStart != null) && (maxStart != null) && !isNaN(minStart) && !isNaN(maxStart) ) { //custom setting
+		spec = ['float-thresh', low, zero, high, min, minStart, maxStart, max];
+	} else if (min >= 0 && max >= 0) {
 		spec = ['float-pos', zero, high, min, max];
 	} else if (min <= 0 && max <= 0) {
 		spec = ['float-neg', low, zero, min, max];
