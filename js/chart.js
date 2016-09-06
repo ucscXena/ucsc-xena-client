@@ -224,7 +224,7 @@ define(['./getLabel'], function (getLabel) {
 			div.setAttribute("class", "dropdown-style");
 
 			// color dropdown add none option at the top
-			if (selectorID === "scatterColor") {
+			if (selectorID === "Color") {
 				// none -- no color at the beginning
 				option = document.createElement('option');
 				option.value = "none";
@@ -248,10 +248,10 @@ define(['./getLabel'], function (getLabel) {
 				if (data[column].req.rows && data[column].req.rows.length === 0) { //bad column
 					return;
 				}
-				if (data[column].codes && data[column].codes.length > 100) { // ignore any coded columns with too many items, like in most cases, the "samples" column
+				if (data[column].codes && _.uniq(data[column].req.values[0]).length > 100) { // ignore any coded columns with too many items, like in most cases, the "samples" column
 					return;
 				}
-				if ((selectorID === "Xaxis" || selectorID === "scatterColor") &&
+				if ((selectorID === "Xaxis" || selectorID === "Color") &&
 					data[column].req.values.length !== 1) {
 					return;
 				}
@@ -438,7 +438,7 @@ define(['./getLabel'], function (getLabel) {
 			sdDropdownUIsetting(false);
 
 			var xcolumn, ycolumn, colorColumn,
-				xfields, yfields,
+				xfields,
 				xlabel, ylabel,
 				xcolumnType, ycolumnType,
 				columns,
@@ -476,7 +476,6 @@ define(['./getLabel'], function (getLabel) {
 				xlabel = "";
 			}
 
-			yfields = columns[ycolumn].fields;
 			ylabel = ydiv.options[ydiv.selectedIndex].text;
 			ycolumnType = columns[ycolumn].fieldType;
 
@@ -490,6 +489,9 @@ define(['./getLabel'], function (getLabel) {
 					xdata = _.getIn(xenaState, ['data', xcolumn, 'req', 'values']),
 					ycodemap = _.getIn(xenaState, ['data', ycolumn, 'codes']),
 					ydata = _.getIn(xenaState, ['data', ycolumn, 'req', 'values']),
+					yProbes = _.getIn(xenaState, ['data', ycolumn, 'req', 'probes']),
+					yfields = yProbes ? yProbes : columns[ycolumn].fields,
+					reverseStrand = false,
 					samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 					yIsCategorical, xIsCategorical, xfield,
 					offsets = {},  // per y variable
@@ -499,6 +501,10 @@ define(['./getLabel'], function (getLabel) {
 					yNormalizationMeta,
 					yExponentiation;
 
+				//reverse display if ycolumn is on - strand
+				if (columns[ycolumn].strand && (columns[ycolumn].strand === '-' )) {
+					reverseStrand = true;
+				}
 				// XXX normalization is broken in composite branch
 				if (columns[ycolumn].defaultNormalization) {
 					yNormalizationMeta = 1
@@ -583,10 +589,12 @@ define(['./getLabel'], function (getLabel) {
 					}
 				}
 
-				var thunk = offsets => drawChart(cohort, samplesLength, xfield, xcodemap, xdata, yfields, ycodemap, ydata,
-						offsets, xlabel, ylabel, STDEV,
-						scatterLabel, scatterColorData, scatterColorDataCodemap,
-						samplesMatched);
+				var thunk = offsets => drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
+					yfields, ycodemap, ydata, reverseStrand,
+					offsets, xlabel, ylabel, STDEV,
+					scatterLabel, scatterColorData, scatterColorDataCodemap,
+					samplesMatched);
+
 				//offset
 				if (yNormalization === "subset" || yNormalization === "subset_stdev") {
 					offsets = _.object(yfields,
@@ -651,7 +659,8 @@ define(['./getLabel'], function (getLabel) {
 			return ybinnedSample;
 		}
 
-		function drawChart(cohort, samplesLength, xfield, xcodemap, xdata, yfields, ycodemap, ydata,
+		function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
+			yfields, ycodemap, ydata, reverseStrand,
 			offsets, xlabel, ylabel, STDEV,
 			scatterLabel, scatterColorData, scatterColorDataCodemap,
 			samplesMatched) {
@@ -686,7 +695,8 @@ define(['./getLabel'], function (getLabel) {
 					dataMatrix = [], // row is x and column is y
 					stdMatrix = [], // row is x and column is y
 					row,
-					highlightcode = [];
+					highlightcode = [],
+					yDisplayFields;
 
 				xSampleCode = {};
 				xbinnedSample = {};
@@ -762,9 +772,6 @@ define(['./getLabel'], function (getLabel) {
 					}
 				}
 
-				// column chart setup
-				chartOptions = highcharts_helper.columnChartFloat(chartOptions, yfields, xlabel, ylabel);
-				chart = new Highcharts.Chart(chartOptions);
 
 				//add data seriese
 				var offsetsSeries = [],
@@ -800,6 +807,14 @@ define(['./getLabel'], function (getLabel) {
 					colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length];
 				});
 
+				// column chart setup
+				yDisplayFields = yfields.slice(0);
+				if (reverseStrand) {
+					yDisplayFields.reverse();
+				}
+				chartOptions = highcharts_helper.columnChartFloat(chartOptions, yDisplayFields, xlabel, ylabel);
+				chart = new Highcharts.Chart(chartOptions);
+
 				for (i = 0; i < xCategories.length; i++) {
 					code = xCategories[i];
 					dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(cutOffset);
@@ -814,6 +829,10 @@ define(['./getLabel'], function (getLabel) {
 						}
 					}
 
+					if (reverseStrand) {
+						dataSeriese.reverse();
+						errorSeries.reverse();
+					}
 					highcharts_helper.addSeriesToColumn(
 						chart, code, dataSeriese, errorSeries, yIsCategorical,
 						yfields.length * xCategories.length < 30, showLegend,
@@ -821,11 +840,13 @@ define(['./getLabel'], function (getLabel) {
 				}
 				chart.redraw();
 			} else if (!xfield) { //summary view --- messsy code
-				var total = 0;
-					errorSeries = [];
-					dataSeriese = [];
-					ybinnedSample = {};
-					xIsCategorical = true;
+				var total = 0,
+					displayCategories;
+
+				errorSeries = [];
+				dataSeriese = [];
+				ybinnedSample = {};
+				xIsCategorical = true;
 
 				for (k = 0; k < yfields.length; k++) {
 					yfield = yfields[k];
@@ -840,27 +861,33 @@ define(['./getLabel'], function (getLabel) {
 					}
 				}
 
-				categories = Object.keys(ybinnedSample);
 				if (yIsCategorical) {
+					categories = Object.keys(ybinnedSample);
 					categories.forEach(function (code) {
 						total = total + ybinnedSample[code].length;
 					});
+				} else {
+					categories = yfields;
 				}
 
 				xAxisTitle = xlabel;
-
 				showLegend = false;
+
+				displayCategories = categories.slice(0);
+				if (reverseStrand) {
+					displayCategories.reverse();
+				}
 				if (yIsCategorical) {
-				chartOptions = highcharts_helper.columnChartOptions(
-					chartOptions, categories.map(code=> code + " (" + ybinnedSample[code].length + ")"), xAxisTitle, ylabel, showLegend);
+					chartOptions = highcharts_helper.columnChartOptions(
+						chartOptions, categories.map(code=> code + " (" + ybinnedSample[code].length + ")"), xAxisTitle, ylabel, showLegend);
 				}
 				else {
-					chartOptions = highcharts_helper.columnChartFloat (chartOptions, categories, xAxisTitle, ylabel);
+					chartOptions = highcharts_helper.columnChartFloat (chartOptions, displayCategories, xAxisTitle, ylabel);
 				}
 				chart = new Highcharts.Chart(chartOptions);
 
 				//add data to seriese
-				categories.forEach(function (code) {
+				displayCategories.forEach(function (code) {
 					if (yIsCategorical) {
 						var value = ybinnedSample[code].length * 100 / total;
 						dataSeriese.push(parseFloat(value.toPrecision(3)));

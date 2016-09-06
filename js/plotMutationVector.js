@@ -30,8 +30,10 @@ function hotOrNot(component) {
 }
 
 function drawLegend({column}) {
-	var feature = _.getIn(column, ['sFeature']),
-		{colors, labels, align} = features[feature].legend;
+	var dataSubType = column.datasetMetadata[0].dataSubType,
+		feature = _.getIn(column, ['sFeature']),
+		{colors, labels, align} = features[feature].legend(dataSubType);
+
 	return (
 		<Legend
 			colors={['rgb(255,255,255)', ...colors]}

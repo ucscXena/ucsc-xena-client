@@ -5,7 +5,7 @@ var VizSettings = require('./VizSettings');
 // XXX move ColumnEdit2 to views?
 var _ = require('../underscore_ext');
 
-var vizSettingsState = ['defaultNormalization', 'vizSettings', 'fieldType'];
+var vizSettingsState = ['defaultNormalization', 'vizSettings', 'valueType'];
 function vizSettingsSelector(appState, columnId) {
 	return _.pick(_.getIn(appState, ['columns', columnId]), vizSettingsState);
 }
