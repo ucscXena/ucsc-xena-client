@@ -227,19 +227,19 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 	}
 
 	// XXX need server support for functions in :where clauses in order to rewrite this.
-	function sparse_data_match_genes_string(dataset, genes) {
+	var sparse_data_match_field_string = _.curry((field, dataset, genes) => {
 		return '(let [getfield (fn [field]\n' +
 		       '                 (:id (car (query {:select [:field.id]\n' +
 		       '                                   :from [:dataset]\n' +
 		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
-		       '                                   :where [:and [:= :field.name field] [:= :dataset.name ' + quote(dataset) + ']]}))))\n' +
-		       '      genes (getfield "genes")]\n' +
+		       `                                   :where [:and [:= :field.name field] [:= :dataset.name ${quote(dataset)}]]}))))\n` +
+		       `      genes (getfield "${field}")]\n` +
 		       '  (map :gene (query {:select [:%distinct.gene]\n' +
 		       '                     :from [:field_gene]\n' +
 		       '                     :where [:and\n' +
 		       '                             [:= :field_gene.field_id genes]\n' +
-		       '                             [:in :%lower.gene ' + arrayfmt(_.map(genes, g => g.toLowerCase())) + ']]})))';
-	}
+		       `                             [:in :%lower.gene ${arrayfmt(_.map(genes, g => g.toLowerCase()))}]]})))`;
+	});
 
 	function match_fields_string(dataset, fields) {
 		return '(map :name (query {:select [:field.name]\n' +
@@ -504,6 +504,19 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		).map(json_resp).map(resp => indexMutations(gene, resp));
 	}
 
+	function align_matches(input, matches) {
+		var index = _.object(_.map(matches, g => g.toLowerCase()), matches);
+		return _.map(input, g => index[g.toLowerCase()] || g);
+	}
+
+	var sparse_data_match_field = _.curry((field, host, ds, genes) => {
+		return Rx.DOM.ajax(
+			xena_post(host, sparse_data_match_field_string(field, ds, genes))
+		).map(json_resp).map(list => align_matches(genes, list));
+	});
+
+	var sparse_data_match_genes = sparse_data_match_field('genes');
+
 	function splitExon(s) {
 		return _.map(s.replace(/,$/, '').split(','), _.partial(parseInt, _, 10));
 	}
@@ -542,15 +555,10 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		).map(json_resp).map(indexRefGene);
 	}
 
-	function align_matches(input, matches) {
-		var index = _.object(_.map(matches, g => g.toLowerCase()), matches);
-		return _.map(input, g => index[g.toLowerCase()] || g);
-	}
-
-	function sparse_data_match_genes(host, ds, genes) {
-		return Rx.DOM.ajax(
-			xena_post(host, sparse_data_match_genes_string(ds, genes))
-		).map(json_resp).map(list => align_matches(genes, list));
+	// case-insensitive gene lookup
+	function refGene_exon_case(host, ds, genes) {
+		return sparse_data_match_field('name2', host, ds, genes)
+			.flatMap(caseGenes => refGene_exon_values(host, ds, caseGenes));
 	}
 
 	function match_fields(host, ds, fields) {
@@ -638,6 +646,7 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		sparse_data_match_genes: sparse_data_match_genes,
 		sparse_data_values: sparse_data_values,
 		refGene_exon_values: refGene_exon_values,
+		refGene_exon_case,
 		match_fields: match_fields,
 		test_host: test_host,
 		refGene

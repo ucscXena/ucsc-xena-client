@@ -306,7 +306,7 @@ function fetch({dsID, fields, assembly}, [samples]) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return Rx.Observable.zipArray(
 		sparseDataValues(dsID, fields[0], samples),
-		name ? xenaQuery.refGene_exon_values(host, name, fields) : Rx.Observable.return({})
+		name ? xenaQuery.refGene_exon_case(host, name, fields) : Rx.Observable.return({})
 	).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
 }
 
