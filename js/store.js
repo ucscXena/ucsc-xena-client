@@ -11,6 +11,7 @@ var {getNotifications} = require('./notifications');
 var nostate = require('./nostate');
 var {hasBookmark, getBookmark, resetBookmarkLocation} = require('./bookmark');
 var {hasInlineState, resetInlineStateLocation} = require('./inlineState');
+var LZ = require('lz-string');
 
 var defaultServers = [
 	'https://local.xena.ucsc.edu:7223',
@@ -72,7 +73,7 @@ module.exports = function (persist) {
 	};
 
 	if (persist && nostate('xena')) {
-		_.extend(initialState, JSON.parse(sessionStorage.xena));
+		_.extend(initialState, JSON.parse(LZ.decompressFromUTF16(sessionStorage.xena)));
 	}
 
 	if (hasBookmark()) {
