@@ -12,7 +12,7 @@ def save(request):
     if not form.is_valid():
         return HttpResponseBadRequest(json.dumps({'error': form.errors}))
     content = form.cleaned_data['content']
-    id = md5(content).hexdigest()
+    id = md5(content.encode('utf-8')).hexdigest()
     book = Bookmark(id=id, content=content)
     book.save()
     response = HttpResponse(json.dumps({'id': id}))

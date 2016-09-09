@@ -9,6 +9,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 // XXX this introduces a datapages dependency in the heatmap page.
 const session = require('ucsc-xena-datapages/session');
+var LZ = require('lz-string');
 
 function controlRunner(serverBus, controller) {
 	return function (state, ac) {
@@ -85,7 +86,7 @@ module.exports = function({
 	if (persist) {
 		// Save state in sessionStorage on page unload.
 		stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
-			.subscribe(state => sessionStorage.xena = JSON.stringify(state));
+			.subscribe(state => sessionStorage.xena = LZ.compressToUTF16(JSON.stringify(state)));
 	}
 
 	// Kick things off.
