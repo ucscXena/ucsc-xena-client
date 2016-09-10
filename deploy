@@ -3,12 +3,17 @@ set -o nounset
 set -o errexit
 
 USER=ubuntu
+BUILD_DJANGO=build-django
 
 npm run build:prod
 
 # deploy
 rsync -a --delete --rsync-path='sudo rsync' build/ ${USER}@${HOST}:/var/www/html
-rsync -a --delete --rsync-path='sudo rsync' manage.py server bookmarks ${USER}@${HOST}:/var/www/backend/django
+# copy to clean load directory, so we can rsync --delete
+rm -rf ${BUILD_DJANGO}
+mkdir ${BUILD_DJANGO}
+cp -a manage.py server bookmarks ${BUILD_DJANGO}
+rsync -a --delete ${BUILD_DJANGO}/ ${USER}@${HOST}:/var/www/backend/django
 
 requirements=$(cat requirements.txt)
 requirements=$(echo ${requirements}) # drop carriage returns
@@ -18,7 +23,7 @@ ssh -l${USER} ${HOST} <<-ENDSSH
     cp ~/settings/site_settings.py /var/www/backend/django/server/site_settings.py
     . /var/www/backend/virtualenv/bin/activate
     pip install ${requirements}
-	cd /var/www/backend/django
-	python ./manage.py migrate
+    cd /var/www/backend/django
+    python ./manage.py migrate
     sudo apache2ctl restart
 ENDSSH
