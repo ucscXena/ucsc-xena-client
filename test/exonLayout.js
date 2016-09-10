@@ -17,7 +17,7 @@ describe('exonLayout', function () {
 				exonStarts: [100, 200, 300],
 				exonEnds: [110, 210, 310],
 				strand: null
-			}, 330, {len: 33}, padding, 0, 3), {
+			}, 330, {len: 33}, padding, padding, 0, 3), {
 				chrom: [[100 - padding, 113], [197, 213], [297, 310 + padding]],
 				screen: [[0, 2140], [2140, 2310], [2310, 4450]],
 				reversed: false,
@@ -31,7 +31,7 @@ describe('exonLayout', function () {
 				exonStarts: [100, 200, 300],
 				exonEnds: [110, 210, 310],
 				strand: '-'
-			}, 330, {len: 33}, padding, 0, 3), {
+			}, 330, {len: 33}, padding, padding, 0, 3), {
 				chrom: [[297, 310 + padding], [197, 213], [100 - padding, 113]],
 				screen: [[0, 2140], [2140, 2310], [2310, 4450]],
 				reversed: true,
@@ -46,7 +46,7 @@ describe('exonLayout', function () {
 				exonStarts: [100, 200],
 				exonEnds: [110, 220],
 				strand: '-'
-			}, 2120, {len: 212}, padding, 0, 2), {
+			}, 2120, {len: 212}, padding, padding, 0, 2), {
 				chrom: [[197, 220 + padding], [100 - padding, 113]],
 				screen: [[0, 2240], [2240, 4380]],
 				reversed: true,
