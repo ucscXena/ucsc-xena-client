@@ -85,20 +85,20 @@ describe('heatmapColors', function () {
 		it('should return linear scales for clinical float', function() {
 			var column = {fieldType: 'clinical', colorClass: 'clinical'},
 				dataset = {type: 'clinicalMatrix'},
-				settings = null, codes = null;
+				settings = {}, codes = null;
 
 			// positive data
 			assert.deepEqual(colorSpec(column, settings, codes,
 					{a: 1, b: 2, c: 3}, dataset),
-				['float-pos', '#000000', '#ffff00', 1, 3]);
+				['float-pos', '#ffffff', '#ff0000', 1, 3]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings, codes,
 					{a: -1, b: -2, c: -3}, dataset),
-				['float-neg', '#007f00',  '#000000', -3, -1]);
+				['float-neg', '#0000ff',  '#ffffff', -3, -1]);
 			// neg-pos data
 			assert.deepEqual(colorSpec(column, settings, codes,
 					{a: -1, b: -2, c: 3}, dataset),
-				['float', '#007f00', '#000000', '#ffff00', -2, 3]);
+				['float', '#0000ff', '#ffffff', '#ff0000', -2, 3]);
 		});
 		it('should return ordinal scale for clinical category', function() {
 			var column = {fieldType: 'clinical', valueType: 'coded'},
