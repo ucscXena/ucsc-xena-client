@@ -10,7 +10,7 @@ var Rx = require('rx');
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformFlatmap} = require('../layoutPlot');
-var {hexToRGB, colorStr} = require('../color_helper');
+var {colorStr} = require('../color_helper');
 
 var mutationDatasetClass = (dataSubType) => {
 	if (dataSubType.search(/SNV|SNP|single/i) !== -1) {
@@ -119,14 +119,15 @@ var unknownEffect = 0,
 	},
 	colors = {
 		category4: [
-			{r: 255, g: 127, b: 14, a: 1}, // orange #ff7f0e
-			{r: 44, g: 160, b: 44, a: 1},  // green #2ca02c
-			{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
-			{r: 214, g: 39, b: 40, a: 1},   // red #d62728
+			"#FF7F0E",  // orange
+			"#2CA02C",  // green
+			"#1F77B4",  // blue
+			"#D62728"   // red
 		],
 		af: {r: 255, g: 0, b: 0},
 		grey: {r: 128, g: 128, b: 128, a: 1}
 	},
+	greyHEX = "#808080",
 	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
 	decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals
@@ -137,35 +138,55 @@ var unknownEffect = 0,
 		labels: ['0%', '50%', '100%'],
 		align: 'center'
 	},
-	getMutationLegend = mutationDataType => {
+	getMutationLegend = (mutationDataType, customColor) => {
 		// have to explicitly call hexToRGB to avoid map passing in index.
 		if (mutationDataType === "SV") {
 			return {
-				colors: _.values(chromColorGB).map(h => hexToRGB(h)).map(colorStr).reverse(),
-				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse(),
+				colors: _.values((customColor && customColor.SV) ? customColor.SV : chromColorGB)
+					.reverse(),
+				labels: _.keys((customColor && customColor.SV) ? customColor.SV : chromColorGB)
+					.map(key => "chr" + key).reverse(),
 				align: 'left'
 			};
 		} else if (mutationDataType === "SNV") {
 			return {
-				colors: colors.category4.map(colorStr),
-				labels: _.range(_.keys(impactGroups).length).map(i => _.pluck(impactGroups[i], 0).join(', ')),
+				colors: (customColor && customColor.SNV) ? _.values(customColor.SNV) : colors.category4,
+				labels: (customColor && customColor.SNV) ? _.keys(customColor.SNV)
+					: _.range(_.keys(impactGroups).length).map(i => _.pluck(impactGroups[i], 0).join(', ')),
 				align: 'left'
 			};
-		} else {
+		} else { // using default for now but need to be changed if we see this very very unlikely dataset
+			     //(a dataset both SNV and SV), so far we have not seen it yet, most pipelines can only deal with one type
+			     // but a single sample VCF from a commerical company has both types in a single file
 			return {
-				colors: _.values(chromColorGB).map(h => hexToRGB(h)).map(colorStr).reverse().
-					concat(colors.category4.map(colorStr)),
+				colors: _.values(chromColorGB).reverse().concat(colors.category4),
 				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse().
 					concat(_.range(_.keys(impactGroups).length).map(i => _.pluck(impactGroups[i], 0).join(', '))),
 				align: 'left'
 			};
 		}
 	},
+	getSNVColor = (customColor) => {
+		if (customColor && customColor.SNV) {
+			return v => customColor.SNV[v] || greyHEX;
+		} else {
+			return v => colors.category4[impact[v] || unknownEffect];
+		}
+	},
+	getSVColor = (customColor) => {
+		var colorObj = (customColor && customColor.SV) ? customColor.SV : chromColorGB;
+		return v => colorObj[v];
+	},
 	features = {
 		impact: {
 			get: (a, v) => impact[v.effect] || unknownEffect,
-			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
-			legend: dataSubType => getMutationLegend(mutationDatasetClass (dataSubType))
+			color: (customColor) => {
+				return {
+					SNV: getSNVColor (customColor),
+					SV: getSVColor (customColor)
+				};
+			},
+			legend: (dataSubType, customColor = null) => getMutationLegend(mutationDatasetClass(dataSubType), customColor)
 		},
 		'dna_vaf': {
 			get: (a, v) => v.dna_vaf == null ? undefined : decimateFreq(v.dna_vaf),
@@ -337,7 +358,7 @@ function findNodes(byPosition, layout, feature, samples) {
 				y: sindex[v.variant.sample],
 				// XXX 1st param to group was used for extending our coloring to other annotations. See
 				// ga4gh branch.
-				group: group(null, v.variant), // needed for sort, before drawing.
+				group: group(null, v.variant), // needed for sort, before drawing, sort by impact (i.e. group) is disabled now
 				data: v.variant
 			};
 		});
@@ -433,5 +454,6 @@ module.exports = {
 	isStructuralVariant,
 	getMutationLegend,
 	chromColorGB,
+	greyHEX,
 	fetch
 };

@@ -2,7 +2,7 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var {features, chromFromAlt, isStructuralVariant, chromColorGB} = require('./models/mutationVector');
+var {features, chromFromAlt, isStructuralVariant, greyHEX} = require('./models/mutationVector');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -48,7 +48,7 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 		padding = 3;
 
 	// --------- small variants drawing start here ---------
-	var varByImp = _.groupByConsec(smallVariants, v => v.group);
+	var varByImp = _.groupByConsec(smallVariants, v => v.data.effect);
 
 	_.each(varByImp, vars => {
 		var points = vars.map(v => {
@@ -57,7 +57,7 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 			});
 
 		vg.drawPoly(points,
-			{strokeStyle: color(vars[0].group), lineWidth: vHeight});
+			{strokeStyle: color.SNV(vars[0].data.effect), lineWidth: vHeight});
 
 		// no feet variants black center
 		if (vHeight > 4) { // centers when there is enough vertical room for each sample
@@ -140,7 +140,7 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 					xEnd: xEnd,
 					y: y,
 					h: svHeight,
-					color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
+					color: color.SV(chromFromAlt(alt)) || color.SV(chr.replace(/chr/i, "")) || greyHEX,
 					alt: alt,
 					altGene: altGene
 				};
@@ -159,7 +159,7 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 				xEnd: xEnd,
 				y: y,
 				h: vHeight,
-				color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
+				color: color.SV(chromFromAlt(alt)) || color.SV(chr.replace(/chr/i, "")) || greyHEX,
 				alt: alt,
 				altGene: altGene
 			};
@@ -221,14 +221,14 @@ function drawMutations(vg, props) {
 		return;
 	}
 
-	let {feature, samples, index: {bySample: samplesInDS}} = props,
+	let {feature, samples, customColor, index: {bySample: samplesInDS}} = props,
 		last = index + count,
 		toDraw = nodes.filter(v => v.y >= index && v.y < last),
 		pixPerRow = height / count,
 		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]);
 
 	drawBackground(vg, width, height, pixPerRow, hasValue);
-	drawImpactPx(vg, width, index, height, count, pixPerRow, features[feature].color, toDraw);
+	drawImpactPx(vg, width, index, height, count, pixPerRow, features[feature].color(customColor), toDraw);
 }
 
 module.exports = {drawMutations, radius, minVariantHeight, toYPx, labelFont};
