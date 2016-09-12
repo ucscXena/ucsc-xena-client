@@ -34,7 +34,12 @@ function drawLegend({column}) {
 		legendObj,
 		colors, labels, align,
 		dataSubType,
-		metaData = _.getIn(column, ['datasetMetadata']) ? _.getIn(column, ['datasetMetadata'])[0] : null;
+		allMetaData = _.getIn(column, ['datasetMetadata']),
+		metaData;
+
+	if (allMetaData) {
+		metaData = allMetaData[0];
+	}
 
 	if (metaData) {
 		dataSubType = metaData.dataSubType;
