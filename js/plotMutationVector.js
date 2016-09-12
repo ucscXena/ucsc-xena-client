@@ -30,15 +30,20 @@ function hotOrNot(component) {
 }
 
 function drawLegend({column}) {
-	var metaData = _.getIn(column, ['datasetMetadata'])[0],
-		dataSubType = metaData.dataSubType,
-		host = JSON.parse(metaData.dsID).host,
-		feature = _.getIn(column, ['sFeature']),
+	var feature = _.getIn(column, ['sFeature']),
+		legendObj,
 		colors, labels, align,
-		legendObj;
+		dataSubType,
+		metaData = _.getIn(column, ['datasetMetadata']) ? _.getIn(column, ['datasetMetadata'])[0] : null;
 
-	if (metaData.color) {
-		var customColorFile = host + "/download/" + metaData.color;
+	if (metaData) {
+		dataSubType = metaData.dataSubType;
+	}
+
+	if (metaData && metaData.color) {
+		var host = JSON.parse(metaData.dsID).host,
+			customColorFile = host + "/download/" + metaData.color;
+
 		Rx.DOM.ajax({'url': customColorFile, 'async': false, 'method': 'GET'}).subscribe(function(resp) {
 			legendObj = features[feature].legend(dataSubType, JSON.parse(resp.responseText));
 			colors = legendObj.colors;
