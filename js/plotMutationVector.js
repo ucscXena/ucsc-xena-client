@@ -202,15 +202,20 @@ var MutationColumn = hotOrNot(React.createClass({
 	render: function () {
 		var {column, samples, zoom, data, index} = this.props,
 			feature = _.getIn(column, ['sFeature']),
-			metaData = _.getIn(column, ['datasetMetadata'])[0],
-			host = JSON.parse(metaData.dsID).host,
+			allMetaData = _.getIn(column, ['datasetMetadata']),
 			customColor;
 
-		if (metaData.color) {
-			var customColorFile = host + "/download/" + metaData.color;
-			Rx.DOM.ajax({'url': customColorFile, 'async': false, 'method': 'GET'}).subscribe(function(resp) {
-				customColor = JSON.parse(resp.responseText);
-			});
+		if (allMetaData) {
+			var metaData = allMetaData[0];
+
+			if (metaData && metaData.color) {
+				var host = JSON.parse(metaData.dsID).host;
+				var customColorFile = host + "/download/" + metaData.color;
+
+				Rx.DOM.ajax({'url': customColorFile, 'async': false, 'method': 'GET'}).subscribe(function(resp) {
+					customColor = JSON.parse(resp.responseText);
+				});
+			}
 		}
 
 		// XXX Make plot a child instead of a prop? There's also legend.
