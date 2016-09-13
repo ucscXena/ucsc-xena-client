@@ -32,8 +32,10 @@ function handleMessage(event) {
 	}
 }
 
-if (window.postMessage) {
+var hasPostMessage = typeof window !== 'undefined' && window.postMessage;
+
+if (hasPostMessage) {
 	window.addEventListener("message", handleMessage, false);
 }
 
-module.exports = window.postMessage ? setZeroTimeout : _.defer;
+module.exports = hasPostMessage ? setZeroTimeout : _.defer;
