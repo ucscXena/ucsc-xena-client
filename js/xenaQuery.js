@@ -2,7 +2,7 @@
 /*eslint camelcase: 0, no-multi-spaces: 0, no-mixed-spaces-and-tabs: 0 */
 /*global define: false, console: false */
 
-define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
+define(['rx-dom', './underscore_ext', './permuteCase', 'rx.binding'], function (Rx, _, {permuteCase, permuteBitCount}) {
 	'use strict';
 
 	// HELPERS
@@ -226,8 +226,21 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		       `  (map scores-for-gene ${arrayfmt(genes)}))`;
 	}
 
+	var sparse_data_match_field_string_opt = (field, dataset, genes) => {
+		return '(let [getfield (fn [field]\n' +
+		       '                 (:id (car (query {:select [:field.id]\n' +
+		       '                                   :from [:dataset]\n' +
+		       '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
+		       `                                   :where [:and [:= :field.name field] [:= :dataset.name ${quote(dataset)}]]}))))\n` +
+		       `      genes (getfield "${field}")]\n` +
+		       '  (map :gene (query {:select [:%distinct.gene]\n' +
+		       '                     :from [:field_gene]\n' +
+		       `                     :join [{:table [[[:name :varchar ${arrayfmt(_.flatmap(genes, permuteCase))}]] :T]} [:= :T.name :gene]]\n` +
+		       '                     :where [:= :field_gene.field_id genes]})))\n';
+	};
+
 	// XXX need server support for functions in :where clauses in order to rewrite this.
-	var sparse_data_match_field_string = _.curry((field, dataset, genes) => {
+	var sparse_data_match_field_string_slow = (field, dataset, genes) => {
 		return '(let [getfield (fn [field]\n' +
 		       '                 (:id (car (query {:select [:field.id]\n' +
 		       '                                   :from [:dataset]\n' +
@@ -239,7 +252,13 @@ define(['rx-dom', './underscore_ext', 'rx.binding'], function (Rx, _) {
 		       '                     :where [:and\n' +
 		       '                             [:= :field_gene.field_id genes]\n' +
 		       `                             [:in :%lower.gene ${arrayfmt(_.map(genes, g => g.toLowerCase()))}]]})))`;
-	});
+	};
+
+	var sparse_data_match_field_string = _.curry((field, dataset, genes) =>
+		(_.max(_.map(genes, permuteBitCount)) > 7 ?
+			sparse_data_match_field_string_slow :
+			sparse_data_match_field_string_opt)(field, dataset, genes)
+	);
 
 	function match_fields_string(dataset, fields) {
 		return '(map :name (query {:select [:field.name]\n' +
