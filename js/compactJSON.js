@@ -18,7 +18,6 @@
 // to do a linear search with _.isEqual, or use a hashing method, or use better
 // underlying data structures (i.e. not plain js).
 
-/*global require: false, module: false */
 'use strict';
 var _ = require('./underscore_ext');
 

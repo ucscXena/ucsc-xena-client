@@ -1,17 +1,13 @@
 /*global require: false, module: false */
 'use strict';
 
-//var crosshairs = require('./crosshairs');
-//var tooltip = require('./tooltip');
 var _ = require('./underscore_ext');
 var React = require('react');
 var ReactDOM = require('react-dom');
-//var zoom = require('./zoom');
 var intervalTree = require('static-interval-tree');
 var vgcanvas = require('./vgcanvas');
 var layoutPlot = require('./layoutPlot');
 
-//var {zoomIn, zoomOut} = zoom;
 var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
 
