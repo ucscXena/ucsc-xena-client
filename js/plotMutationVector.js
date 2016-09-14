@@ -30,8 +30,9 @@ function hotOrNot(component) {
 }
 
 function drawLegend({column}) {
-	var dataSubType = column.datasetMetadata[0].dataSubType,
+	var allMetaData = _.getIn(column, ['datasetMetadata']),
 		feature = _.getIn(column, ['sFeature']),
+		dataSubType = (allMetaData && allMetaData[0]) ? allMetaData[0].dataSubType : undefined,
 		{colors, labels, align} = features[feature].legend(dataSubType);
 
 	return (
