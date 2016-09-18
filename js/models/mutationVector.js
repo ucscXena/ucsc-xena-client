@@ -13,12 +13,15 @@ var {pxTransformFlatmap} = require('../layoutPlot');
 var {colorStr} = require('../color_helper');
 
 var mutationDatasetClass = (dataSubType) => {
+	if (! dataSubType) {
+		return "SNV_SV";
+	}
 	if (dataSubType.search(/SNV|SNP|single/i) !== -1) {
 		return "SNV";
 	} else if (dataSubType.search(/SV|structural/i) !== -1) {
 		return "SV";
 	} else {
-		"SNV_SV";
+		return "SNV_SV";
 	}
 };
 
@@ -149,12 +152,35 @@ var unknownEffect = 0,
 				align: 'left'
 			};
 		} else if (mutationDataType === "SNV") {
-			return {
-				colors: (customColor && customColor.SNV) ? _.values(customColor.SNV) : colors.category4,
-				labels: (customColor && customColor.SNV) ? _.keys(customColor.SNV)
-					: _.range(_.keys(impactGroups).length).map(i => _.pluck(impactGroups[i], 0).join(', ')),
-				align: 'left'
-			};
+			if (customColor && customColor.SNV) {
+				var colorlist = _.values(customColor.SNV),
+					labellist = _.keys(customColor.SNV),
+					tmpColorArray = labellist.map( (label, i) => {
+						return {
+							'label': label,
+							'color': colorlist[i]
+						};
+					});
+
+				tmpColorArray.sort((a, b) => {
+					return ((a.color < b.color) ? -1 : 1);
+				});
+
+				colorlist = tmpColorArray.map(obj=> obj.color);
+				labellist = tmpColorArray.map(obj=> obj.label);
+				return {
+					colors: colorlist,
+					labels: labellist,
+					align: 'left'
+				};
+			} else {
+				return {
+					colors: colors.category4,
+					labels: _.range(_.keys(impactGroups).length).map(i => _.pluck(impactGroups[i], 0).join(', ')),
+					align: 'left'
+				};
+			}
+
 		} else { // using default for now but need to be changed if we see this very very unlikely dataset
 			     //(a dataset both SNV and SV), so far we have not seen it yet, most pipelines can only deal with one type
 			     // but a single sample VCF from a commerical company has both types in a single file

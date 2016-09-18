@@ -31,36 +31,9 @@ function hotOrNot(component) {
 
 function drawLegend({column}) {
 	var feature = _.getIn(column, ['sFeature']),
-		legendObj,
-		colors, labels, align,
-		dataSubType,
-		allMetaData = _.getIn(column, ['datasetMetadata']),
-		metaData;
-
-	if (allMetaData) {
-		metaData = allMetaData[0];
-	}
-
-	if (metaData) {
-		dataSubType = metaData.dataSubType;
-	}
-
-	if (metaData && metaData.color) {
-		var host = JSON.parse(metaData.dsID).host,
-			customColorFile = host + "/download/" + metaData.color;
-
-		Rx.DOM.ajax({'url': customColorFile, 'async': false, 'method': 'GET'}).subscribe(function(resp) {
-			legendObj = features[feature].legend(dataSubType, JSON.parse(resp.responseText));
-			colors = legendObj.colors;
-			labels = legendObj.labels;
-			align = legendObj.align;
-		});
-	} else {
-		legendObj = features[feature].legend(dataSubType);
-		colors = legendObj.colors;
-		labels = legendObj.labels;
-		align = legendObj.align;
-	}
+		dataSubType = _.getIn(column, ['datasetMetadata', 0, 'datasubtype']),
+		customColor = _.getIn(column, ['datasetMetadata', 0, 'customcolor']),
+		{colors, labels, align} = features[feature].legend(dataSubType, customColor);
 
 	return (
 		<Legend
@@ -202,21 +175,7 @@ var MutationColumn = hotOrNot(React.createClass({
 	render: function () {
 		var {column, samples, zoom, data, index} = this.props,
 			feature = _.getIn(column, ['sFeature']),
-			allMetaData = _.getIn(column, ['datasetMetadata']),
-			customColor;
-
-		if (allMetaData) {
-			var metaData = allMetaData[0];
-
-			if (metaData && metaData.color) {
-				var host = JSON.parse(metaData.dsID).host;
-				var customColorFile = host + "/download/" + metaData.color;
-
-				Rx.DOM.ajax({'url': customColorFile, 'async': false, 'method': 'GET'}).subscribe(function(resp) {
-					customColor = JSON.parse(resp.responseText);
-				});
-			}
-		}
+			customColor = _.getIn(column, ['datasetMetadata', 0, 'customcolor']);
 
 		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
