@@ -1,6 +1,4 @@
 /*eslint-env browser */
-/*global require: false, module: false */
-
 'use strict';
 
 require('./km.css');
@@ -12,7 +10,6 @@ var { Button } = require('react-bootstrap/lib/');
 var Axis = require('./Axis');
 var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
-// XXX Warn on duplicate patients, and list patient ids?
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
 var margin = {top: 20, right: 10, bottom: 30, left: 50};
@@ -25,7 +22,6 @@ function line(xScale, yScale, values) {
 }
 
 function censorLines(xScale, yScale, censors, className) {
-	/*eslint-disable comma-spacing */
 	return censors.map(({t, s}, i) =>
 		<line
 			key={i}
@@ -33,7 +29,6 @@ function censorLines(xScale, yScale, censors, className) {
 			x1={0} x2={0} y1={-5} y2={5}
 			transform={`translate(${xScale(t)},${yScale(s)})`} />
 	);
-	/*eslint-enable comma-spacing */
 }
 
 function calcDims (viewDims, sizeRatios) {
@@ -94,7 +89,6 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 				setActiveLabel={setActiveLabel} />);
 	});
 
-	/*eslint-disable comma-spacing */
 	return (
 		<svg width={size.width} height={size.height}>
 			<g transform={`translate(${margin.left}, ${margin.top})`}>
@@ -132,7 +126,6 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 			</g>
 		</svg>
 	);
-	/*eslint-enable comma-spacing */
 }
 
 var formatPValue = v => v == null ? String.fromCharCode(8709) : v.toPrecision(4);
