@@ -4,6 +4,7 @@
 var _ = require('../underscore_ext');
 var _s = require('underscore.string');
 var {parse} = require('./searchParser');
+var {shouldNormalize} = require('./denseMatrix');
 
 var includes = (target, str) => {
 	return str.toLowerCase().indexOf(target.toLowerCase()) !== -1;
@@ -120,9 +121,19 @@ var m = (methods, exp, defaultMethod) => {
 	return method ? method(...args) : defaultMethod(exp);
 };
 
+// If searching a mean-normalized column, move the search bounds to reflect
+// the normalization. The conversion to float and back is ugly. Otherwise, we'd
+// have to move the searchFloat parsing up somehow, or push the transform down.
+//
+// The mean[0] is because we only handle single-probe columns.
+var normalizeSearch = _.curry(({vizSettings, defaultNormalization}, method) =>
+	shouldNormalize(vizSettings, defaultNormalization) ?
+		(ctx, search, data) => method(ctx, '' + (parseFloat(search) + data.req.mean[0]), data) : method);
+
+
 function searchAll(ctx, methods, search) {
 	let {cohortSamples, columns, data} = ctx;
-	return _.union(..._.map(columns, (c, key) => methods[c.valueType](ctx, search, data[key])),
+	return _.union(..._.map(columns, (c, key) => normalizeSearch(c, methods[c.valueType])(ctx, search, data[key])),
 				   methods.samples(cohortSamples, search));
 }
 
@@ -130,14 +141,15 @@ function evalFieldExp(ctx, expression, column, data) {
 	if (!column || !_.get(data, 'req')) {
 		return [];
 	}
+	var n = normalizeSearch(column);
 	return m({
-		value: search => searchMethod[column.valueType](ctx, search, data),
-		'quoted-value': search => searchExactMethod[column.valueType](ctx, search, data),
+		value: search => n(searchMethod[column.valueType])(ctx, search, data),
+		'quoted-value': search => n(searchExactMethod[column.valueType])(ctx, search, data),
 		ne: exp => invert(evalFieldExp(ctx, exp, column, data), ctx.allSamples),
-		lt: search => searchLt[column.valueType](ctx, search, data),
-		gt: search => searchGt[column.valueType](ctx, search, data),
-		le: search => searchLe[column.valueType](ctx, search, data),
-		ge: search => searchGe[column.valueType](ctx, search, data)
+		lt: search => n(searchLt[column.valueType])(ctx, search, data),
+		gt: search => n(searchGt[column.valueType])(ctx, search, data),
+		le: search => n(searchLe[column.valueType])(ctx, search, data),
+		ge: search => n(searchGe[column.valueType])(ctx, search, data)
 	}, expression);
 }
 
@@ -164,7 +176,7 @@ function createFieldMap(columnOrder) {
 	return _.object(createFieldIds(columnOrder.length), columnOrder);
 }
 
-function searchSamples(search, columns, columnOrder, data, cohortSamples) { //eslint-disable-line no-unused-vars
+function searchSamples(search, columns, columnOrder, data, cohortSamples) {
 	if (!_.get(search, 'length')) {
 		return null;
 	}
