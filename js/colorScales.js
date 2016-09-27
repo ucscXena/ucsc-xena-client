@@ -57,7 +57,7 @@ var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
 		.domain(_.map([min, minThresh, maxThresh, max], x => x.toPrecision(2)))
 		.range([low, zero, zero, high]);
 
-var ordinal = count => d3.scaleOrdinal().range(categoryMore).domain(_.range(count));
+var ordinal = (count, customColor) => d3.scaleOrdinal().range(customColor || categoryMore).domain(_.range(count));
 
 function scaleFloatDouble(low, zero, high, min, max) {
 	var absmax = Math.max(-min, max);
@@ -80,10 +80,12 @@ var colorScale = {
 	'float-thresh-pos': (__, ...args) => scaleFloatThresholdPositive(...args),
 	'float-thresh-neg': (__, ...args) => scaleFloatThresholdNegative(...args),
 	'float-thresh': (__, ...args) => scaleFloatThreshold(...args),
-	'ordinal': (__, count) => ordinal(count)
+	'ordinal': (customColor, count) => ordinal(count, customColor)
 };
 
 module.exports =  {
-	colorScale: ([type, ...args]) => saveMissing(colorScale[type](type, ...args)),
+	colorScale: ([type, ...args], customColor) => {
+		return saveMissing(colorScale[type](customColor, ...args));
+	},
 	categoryMore: categoryMore
 };

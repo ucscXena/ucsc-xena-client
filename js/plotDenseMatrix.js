@@ -11,6 +11,7 @@ var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var drawHeatmap = require('./drawHeatmap');
+var {greyHEX} = require ('./color_helper');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -33,7 +34,9 @@ var map = _.map,
 
 var secondExists = x => x[1] != null;
 
-var colorFns = vs => _.map(vs, colorScales.colorScale);
+var colorFns = (vs, customCategoryMore) => _.map(vs, args => {
+	return colorScales.colorScale (args, customCategoryMore);
+});
 
 //
 // Tooltip
@@ -101,7 +104,7 @@ function categoryLegend(dataIn, colorScale, codes) {
 var cases = ([tag], arg, c) => c[tag](arg);
 
 function legendForColorscale(colorSpec) {
-	var scale = colorScales.colorScale(colorSpec),
+	var scale = colorScales.colorScale(colorSpec, null),
 		values = scale.domain(),
 		colors = _.map(values, scale);
 
@@ -161,9 +164,15 @@ function renderFloatLegend(props) {
 // Might have colorScale but no data (phenotype), no data & no colorScale,
 // or data & colorScale, no colorScale &  data?
 function renderCodedLegend(props) {
-	var {data: [data] = [], codes, colors = []} = props;
+	var {data: [data] = [], codes, colors = [], customColor} = props;
 	var legendProps;
-	var colorfn = _.first(colorFns(colors.slice(0, 1)));
+	var customCategoryMore;
+
+	if (customColor) {
+		customCategoryMore = _.map(codes, s => customColor[s] || greyHEX);
+	}
+
+	var colorfn = _.first(colorFns(colors.slice(0, 1), customCategoryMore));
 
 	// We can use domain() for categorical, but we want to filter out
 	// values not in the plot. Also, we build the categorical from all
@@ -183,6 +192,10 @@ var HeatmapLegend = hotOrNot(React.createClass({
 	render: function() {
 		var {column, data} = this.props,
 			{heatmap, colors, legend, valueType, vizSettings, defaultNormalization, datasetMetadata} = column,
+			fields = _.get (column, 'fields'),
+			cohortNumber = fields.length,
+			customColor = (cohortNumber === 1) ? _.getIn(column, ['datasetMetadata', 0, 'customcolor', fields[0]])
+				: null,
 			props = {
 				colors,
 				legend,
@@ -192,6 +205,7 @@ var HeatmapLegend = hotOrNot(React.createClass({
 				data: heatmap,
 				coded: valueType === 'coded',
 				codes: _.get(data, 'codes'),
+				customColor: customColor
 			};
 		return (props.coded ? renderCodedLegend : renderFloatLegend)(props);
 	}
@@ -255,7 +269,11 @@ var HeatmapColumn = hotOrNot(React.createClass({
 	render: function () {
 		var {data, column, zoom} = this.props,
 			{heatmap, colors} = column,
-			codes = _.get(data, 'codes');
+			codes = _.get(data, 'codes'),
+			fields = _.get (column, 'fields'),
+			cohortNumber = fields.length,
+			customColor = (cohortNumber === 1) ? _.getIn(column, ['datasetMetadata', 0, 'customcolor', fields[0]])
+				: null;
 
 		return (
 			<CanvasDrawing
@@ -272,6 +290,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 					width={_.get(column, 'width')}
 					zoom={zoom}
 					colors={colors}
+					customColor={customColor}
 					heatmapData={heatmap}/>);
 	}
 }));
