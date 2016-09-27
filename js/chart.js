@@ -190,6 +190,9 @@ module.exports = function (root, callback, sessionStorage) {
 	}
 
 	function colUnit (colSettings) {
+		if (!colSettings.datasetMetadata) {
+			return "";
+		}
 		return _.filter(_.map(colSettings.datasetMetadata, metadata => metadata.unit), unit => unit).join();
 	}
 
@@ -362,7 +365,7 @@ module.exports = function (root, callback, sessionStorage) {
 			i;
 
 		if (visible) {
-			var notLogScale = _.filter(colSettings.datasetMetadata,
+			var notLogScale = !colSettings.datasetMetadata  || _.filter(colSettings.datasetMetadata,
 					metadata => !metadata.unit || (metadata.unit && metadata.unit.search(/log/i) === -1)).length !== 0;
 
 			if (notLogScale) {

@@ -188,16 +188,17 @@ var ColumnEdit = React.createClass({
 	},
 	addColumn: function (settings) {
 		let {callback, appState} = this.props,
-			dsIDs = this.state.choices.dataset,
-			dsID = _.has(settings, 'dsID') ? settings.dsID : dsIDs[0],
+			//dsIDs = this.state.choices.dataset,
+			//dsID = _.has(settings, 'dsID') ? settings.dsID : dsIDs[0];
+			dsID = settings.dsID,
 			ds = appState.datasets[dsID],
 			colSpec = getColSpec([settings], appState.datasets),
-			meta = _.map(dsIDs, dsID => {
+			meta = _.map([dsID], dsID => {
 				return appState.datasets[dsID];
 			});
 
 		settings = _.assoc(colSpec,
-			'width', 200, // XXX move this default setting?
+			'width', ds.type === 'mutationVector' ? 200 : 100,
 			'columnLabel', ds.label,
 			'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel},
 			'colorClass', defaultColorClass(ds),
