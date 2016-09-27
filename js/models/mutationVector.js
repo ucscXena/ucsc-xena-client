@@ -10,7 +10,7 @@ var Rx = require('rx');
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformFlatmap} = require('../layoutPlot');
-var {colorStr} = require('../color_helper');
+var {colorStr, greyHEX} = require('../color_helper');
 
 var mutationDatasetClass = (dataSubType) => {
 	if (! dataSubType) {
@@ -130,7 +130,6 @@ var unknownEffect = 0,
 		af: {r: 255, g: 0, b: 0},
 		grey: {r: 128, g: 128, b: 128, a: 1}
 	},
-	greyHEX = "#808080",
 	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
 	decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals
@@ -480,6 +479,5 @@ module.exports = {
 	isStructuralVariant,
 	getMutationLegend,
 	chromColorGB,
-	greyHEX,
 	fetch
 };

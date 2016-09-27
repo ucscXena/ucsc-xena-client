@@ -2,7 +2,8 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var {features, chromFromAlt, isStructuralVariant, greyHEX} = require('./models/mutationVector');
+var {features, chromFromAlt, isStructuralVariant} = require('./models/mutationVector');
+var {greyHEX} = require ('./color_helper');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
