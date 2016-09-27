@@ -232,9 +232,37 @@ function remapFields(oldOrder, order, exp) {
 	return treeToString(remapTreeFields(tree, mapping));
 }
 
+var columnShouldNormalize = ({vizSettings, defaultNormalization}) =>
+	shouldNormalize(vizSettings, defaultNormalization);
+
+var fieldId = (order, colId) => createFieldIds(order.length)[order.indexOf(colId)];
+
+var rewriteFieldExpression = (norm, mean, exp) =>
+	m({
+		ne: iexp => ['ne', rewriteFieldExpression(norm, mean, iexp)]
+	}, exp, ([op, value]) => [op, '' + (parseFloat(value) + (norm ? -mean : mean))]);
+
+var changeFieldNorm = _.curry((id, norm, mean, tree) =>
+	m({
+		and: (...factors) => ['and', ..._.map(factors, changeFieldNorm(id, norm, mean))],
+		or: (...terms) => ['or', ..._.map(terms, changeFieldNorm(id, norm, mean))],
+		field: (field, exp) =>
+			['field', field, id === field ? rewriteFieldExpression(norm, mean, exp) : exp]
+	}, tree, _.identity));
+
+// If normalization has change, rewrite the search expression so the matching
+// range remains the same.
+function checkFieldExpression(oldColumn, newColumn, id, order, data, exp) {
+	var oldNorm = columnShouldNormalize(oldColumn),
+		newNorm = columnShouldNormalize(newColumn);
+	return oldNorm === newNorm ? exp :
+		treeToString(changeFieldNorm(fieldId(order, id), newNorm, data.req.mean[0], parse(_s.trim(exp))));
+}
+
 module.exports = {
 	searchSamples,
 	treeToString,
 	remapFields,
+	checkFieldExpression,
 	parse
 };
