@@ -1,4 +1,3 @@
-/*eslint-env browser */
 'use strict';
 
 require('./km.css');
@@ -10,6 +9,7 @@ var { Button } = require('react-bootstrap/lib/');
 var Axis = require('./Axis');
 var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
+var pdf = require('./kmpdf');
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
 var margin = {top: 20, right: 10, bottom: 30, left: 50};
@@ -307,6 +307,10 @@ var KmPlot = React.createClass({
 		this.setState({ activeLabel: label });
 	},
 
+	pdf: function () {
+		pdf(this.props.km.groups);
+	},
+
 	render: function () {
 		let { km: {title, label, groups}, dims } = this.props,
 			warning = _.get(groups, 'warning'),
@@ -325,6 +329,7 @@ var KmPlot = React.createClass({
 				<h1>Loading...</h1>
 			</div>
 			: <div>
+				<Button onClick={this.pdf}>PDF</Button>
 				{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
 				{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions)}
 			</div>;
