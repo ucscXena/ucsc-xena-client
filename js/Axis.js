@@ -26,10 +26,8 @@ var layout = {
 };
 
 var domainPath = {
-	/*eslint-disable comma-spacing */
 	bottom: ([start, end], height) => `M${start},${height}V0H${end}V${height}`,
 	left: ([start, end], height) => `M${-height},${start}H0V${end}H${-height}`
-	/*eslint-enable comma-spacing */
 };
 
 var Axis = React.createClass({
@@ -37,20 +35,18 @@ var Axis = React.createClass({
 		var {domain, range, scale, tickfn, orientation, groupProps = {},
 			tickHeight = 6} = this.props;
 		var ticks = layout[orientation](domain, range, scale, tickfn, tickHeight);
-		/*eslint-disable comma-spacing */
 		return (
 			<g {...groupProps}>
 			<path className='domain' d={domainPath[orientation](range, tickHeight)} />
 			 {ticks.map(([[x, y], [dx, dy], [lx, ly], label, anchor, off], i) => (
-					 <g key={i} transform={`translate(${x}, ${y})`}>
-					 	<line x2={dx} y2={dy}/>
+					<g key={i} transform={`translate(${x}, ${y})`}>
+						<line x2={dx} y2={dy}/>
 						<text dy={off} y={ly} x={lx} style={{textAnchor: anchor}}>{label}</text>
 					</g>
 			 ))}
 			 {this.props.children}
 			</g>
 		);
-		/*eslint-enable comma-spacing */
 	}
 });
 
