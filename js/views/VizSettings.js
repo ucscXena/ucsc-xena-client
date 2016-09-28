@@ -355,9 +355,14 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 	var normalizationDropDown = React.createClass({
 		getInitialState () {
-			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none';
+			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
+				mapping = {
+					"none": "none",
+					"subset": "subset",
+					true: "subset"
+				};
 			return {
-				optionValue: value
+				optionValue: mapping[value] || "none"
 			};
 		},
 		handleSelect: function (evt, evtKey) {
@@ -371,9 +376,10 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					{"key": "none", "label": "off"},
 					{"key": "subset", "label": "mean subtracted per column across samples"},
 				],
-				title = _.find(options, obj => {
+				activeOption = _.find(options, obj => {
 					return obj.key === optionValue;
-				}).label,
+				}),
+				title = activeOption ? activeOption.label : 'Select',
 				menuItemList = options.map(obj => {
 					var active = (obj.key === optionValue) ? 1 : 0;
 					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
@@ -404,7 +410,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					"clinical": "default"
 				};
 			return {
-				optionValue: mapping[value]
+				optionValue: mapping[value] || 'default'
 			};
 		},
 		handleSelect: function (evt, evtKey) {
@@ -419,9 +425,10 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					{"key": "expression", "label": "red-black-green"},
 					{"key": "blueBlackYellow", "label": "yellow-black-blue"}
 				],
-				title = _.find(options, obj => {
+				activeOption = _.find(options, obj => {
 					return obj.key === optionValue;
-				}).label,
+				}),
+				title = activeOption ? activeOption.label : 'Select',
 				menuItemList = options.map(obj => {
 					var active = (obj.key === optionValue) ? 1 : 0;
 					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
