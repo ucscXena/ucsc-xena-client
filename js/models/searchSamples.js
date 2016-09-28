@@ -121,6 +121,8 @@ var m = (methods, exp, defaultMethod) => {
 	return method ? method(...args) : defaultMethod(exp);
 };
 
+var addMeanOrNull = (s, m) => s === 'null' ? 'null' : ('' + (parseFloat(s) + m));
+
 // If searching a mean-normalized column, move the search bounds to reflect
 // the normalization. The conversion to float and back is ugly. Otherwise, we'd
 // have to move the searchFloat parsing up somehow, or push the transform down.
@@ -128,7 +130,7 @@ var m = (methods, exp, defaultMethod) => {
 // The mean[0] is because we only handle single-probe columns.
 var normalizeSearch = _.curry(({vizSettings, defaultNormalization}, method) =>
 	shouldNormalize(vizSettings, defaultNormalization) ?
-		(ctx, search, data) => method(ctx, '' + (parseFloat(search) + data.req.mean[0]), data) : method);
+		(ctx, search, data) => method(ctx, addMeanOrNull(search, data.req.mean[0]), data) : method);
 
 
 function searchAll(ctx, methods, search) {
