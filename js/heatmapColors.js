@@ -9,13 +9,16 @@ var multi = require('./multi');
 var isNumber = _.isNumber;
 
 var blueWhiteRed = ['#0000ff', '#ffffff', '#ff0000'],
-	greenBlackRed = ['#00ff00', '#000000', '#ff0000'];
+	//greenWhiteRed = ['#00ff00', '#ffffff', '#ff0000'],
+	greenBlackRed = ['#00ff00', '#000000', '#ff0000'],
+	blueBlackYellow = ['#0000ff', '#000000', '#ffff00'];
 	//greenBlackYellow = ['#007f00', '#000000', '#ffff00'];
 
 var defaultColors = {
-	'expression': greenBlackRed,
 	'clinical': blueWhiteRed, //greenBlackYellow,
-	'default': blueWhiteRed
+	'default': blueWhiteRed,
+	'expression': greenBlackRed,
+	'blueBlackYellow': blueBlackYellow
 };
 
 var subTypeClass = ({dataSubType}) =>
@@ -37,7 +40,7 @@ var colorRange = multi(colorRangeType);
 
 function colorFloat({colorClass}, settings = {}, codes, data) {
 	var values = data,
-		[low, zero, high] = defaultColors[colorClass],
+		[low, zero, high] = defaultColors[settings.colorClass || colorClass],
 		min = ( settings.min != null ) ? settings.min : _.minnull(values),
 		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
 		minStart = settings.minStart,
@@ -65,7 +68,7 @@ function colorCoded(column, settings, codes) {
 
 function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
 	var values = data,
-		[low, zero, high] = defaultColors[colorClass],
+		[low, zero, high] = defaultColors[settings.colorClass || colorClass],
 		min = ( settings.min != null ) ? settings.min : _.minnull(values),
 		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
 		minStart = settings.minStart,
