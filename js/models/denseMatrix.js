@@ -172,5 +172,6 @@ module.exports = {
 	fetch,
 	fetchGeneProbes,
 	fetchGene,
-	fetchFeature
+	fetchFeature,
+	shouldNormalize
 };

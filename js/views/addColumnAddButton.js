@@ -16,7 +16,12 @@ function addColumnAddButton(Component) {
 			};
 		},
 		componentWillReceiveProps: function(newProps) {
-			if (!this.state.openColumnEdit && !newProps.appState.cohort[0]) {
+			// If we had a cohort but lost it (e.g. due to change in servers),
+			// and the columnEdit is closed: open it.
+			if (!this.state.openColumnEdit &&
+				this.props.appState.cohort[0] &&
+				!newProps.appState.cohort[0]) {
+
 				this.setState({openColumnEdit: true});
 			}
 		},

@@ -42,9 +42,10 @@ var _ = require('../underscore_ext');
 var floatImg = require('../../images/genomicFloatLegend.jpg');
 var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
-var Modal = require('react-bootstrap/lib/Modal');
+var ReactDOM = require('react-dom');
+var {Modal, DropdownButton, MenuItem, Grid, Row, Col } = require('react-bootstrap/lib/');
 
-function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization, valueType) {
+function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization, defaultColorClass, valueType) {
 	var state = vizState;
 	function datasetSetting() {
 		var node, div = document.createElement("div");
@@ -53,6 +54,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			allFloat(node);
 			div.appendChild(node);
 			div.appendChild(buildVizButton());
+			div.appendChild(document.createTextNode(" "));
+			div.appendChild(buildCloseButton());
 		}
 		return div;
 	}
@@ -62,12 +65,19 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		var node;
 
 		// normalization
-		node = buildNormalizationDropDown();
+		node = document.createElement("div");
+		ReactDOM.render(React.createElement(normalizationDropDown), node);
 		div.appendChild(node);
+		div.appendChild(document.createElement("br"));
 
+		// color choice : green red or blue red
+		node = document.createElement("div");
+		ReactDOM.render(React.createElement(colorDropDown), node);
+		div.appendChild(node);
 		div.appendChild(document.createElement("br"));
 
 		// color scale
+		div.appendChild(document.createElement("br"));
 		node = colorScaleChoices();
 		div.appendChild(node);
 	}
@@ -80,6 +90,18 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		button.addEventListener("click", function () {
 			hide();
 			onVizSettings(id, state);
+		});
+		return button;
+	}
+
+	// close button
+	function buildCloseButton() {
+		var button = document.createElement("BUTTON");
+		button.setAttribute("class", "vizbutton");
+		button.appendChild(document.createTextNode("Close"));
+		button.addEventListener("click", function () {
+			hide();
+			//onVizSettings(id, state);
 		});
 		return button;
 	}
@@ -206,7 +228,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 
 		var node = document.createElement("div"),
-			text = dom_helper.elt("span", "Color Scale "),
+			text = dom_helper.elt("span", "Scale "),
 			label, x, custom,
 			radioGroup = document.createElement("div"),
 			customColorGroup,
@@ -331,61 +353,101 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		return _.getIn(state, [key]);
 	}
 
-	function buildNormalizationDropDown() {
-		var dropDownDiv, option,
-			dropDown = [{
-					"value": "none",
-					"text": "off",
-					"index": 0
-				}, //no normalization
-				{
-					"value": "subset",
-					"text": "mean is subtracted per column across samples",
-					"index": 1
-				} //selected sample level
-			],
-			node;
-
-		node = document.createElement("div");
-		dropDownDiv = document.createElement("select");
-		dropDownDiv.setAttribute("class", "dropDown");
-
-		dropDown.forEach(function (obj) {
-			option = document.createElement('option');
-			option.value = obj.value;
-			option.textContent = obj.text;
-			dropDownDiv.appendChild(option);
-		});
-
-		var value = getVizSettings('colNormalization');
-		if (value) {
-			if (value === "none") {
-				dropDownDiv.selectedIndex = 0;
-			} else if (value === "subset") {
-				dropDownDiv.selectedIndex = 1;
-			} else {
-				dropDownDiv.selectedIndex = 0;
-			}
-		} else {
-			if (defaultNormalization) {
-				dropDownDiv.selectedIndex = 1;
-			} else {
-				dropDownDiv.selectedIndex = 0;
-			}
+	var normalizationDropDown = React.createClass({
+		getInitialState () {
+			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
+				mapping = {
+					"none": "none",
+					"subset": "subset",
+					true: "subset"
+				};
+			return {
+				optionValue: mapping[value] || "none"
+			};
+		},
+		handleSelect: function (evt, evtKey) {
+			var key = "colNormalization";
+			setVizSettings(key, evtKey);
+			this.setState({optionValue: evtKey});
+		},
+		render () {
+			let optionValue = this.state.optionValue,
+				options = [
+					{"key": "none", "label": "off"},
+					{"key": "subset", "label": "mean subtracted per column across samples"},
+				],
+				activeOption = _.find(options, obj => {
+					return obj.key === optionValue;
+				}),
+				title = activeOption ? activeOption.label : 'Select',
+				menuItemList = options.map(obj => {
+					var active = (obj.key === optionValue) ? 1 : 0;
+					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
+						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
+				});
+			return (
+				<Grid>
+					<Row>
+						<Col xs={3} md={2} lg={1}>Transform</Col>
+						<Col xs={15} md={10} lg={5}>
+							<DropdownButton title={title} onSelect={this.handleSelect} >
+								{menuItemList}
+							</DropdownButton>
+						</Col>
+					</Row>
+				</Grid>
+			);
 		}
+	});
 
-		dropDownDiv.addEventListener('change', function () {
-			var key = "colNormalization",
-				value = dropDownDiv.options[dropDownDiv.selectedIndex].value;
-			setVizSettings(key, value);
-		});
-
-		var text = dom_helper.elt("span", "Transform ");
-		text.setAttribute("class", "text");
-		node.appendChild(text);
-		node.appendChild(dropDownDiv);
-		return node;
-	}
+	var colorDropDown = React.createClass({
+		getInitialState () {
+			let	value = getVizSettings('colorClass') || defaultColorClass || 'default',
+				mapping = {
+					"default": "default",
+					"expression": "expression",
+					"blueBlackYellow": "blueBlackYellow",
+					"clinical": "default"
+				};
+			return {
+				optionValue: mapping[value] || 'default'
+			};
+		},
+		handleSelect: function (evt, evtKey) {
+			var key = "colorClass";
+			setVizSettings(key, evtKey);
+			this.setState({optionValue: evtKey});
+		},
+		render () {
+			let optionValue = this.state.optionValue,
+				options = [
+					{"key": "default", "label": "red-white-blue"},
+					{"key": "expression", "label": "red-black-green"},
+					{"key": "blueBlackYellow", "label": "yellow-black-blue"}
+				],
+				activeOption = _.find(options, obj => {
+					return obj.key === optionValue;
+				}),
+				title = activeOption ? activeOption.label : 'Select',
+				menuItemList = options.map(obj => {
+					var active = (obj.key === optionValue) ? 1 : 0;
+					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
+						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
+				});
+			return (
+				<Grid>
+					<Row>
+						<Col xs={3} md={2} lg={1}>Color</Col>
+						<Col xs={15} md={10} lg={5}>
+							<DropdownButton title={title} onSelect={this.handleSelect} >
+								{menuItemList}
+							</DropdownButton>
+						</Col>
+					</Row>
+				</Grid>
+			);
+		}
+	});
 
 	var oldSettings = state,
 		colorParams = ["max", "maxStart", "minStart", "min"];
@@ -397,8 +459,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 var SettingsWrapper = React.createClass({
 	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
-		var {refs: {content}, props: {onVizSettings, vizSettings, id, defaultNormalization, valueType, onRequestHide}} = this;
-		vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, valueType);
+		var {refs: {content}, props: {onVizSettings, vizSettings, id, defaultNormalization, colorClass, valueType, onRequestHide}} = this;
+		vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType);
 	},
 	render: function () {
 		return <div ref='content' />;
