@@ -10,9 +10,10 @@ var Axis = require('./Axis');
 var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
 var pdf = require('./kmpdf');
+var NumberForm = require('./views/NumberForm');
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
-var margin = {top: 20, right: 10, bottom: 30, left: 50};
+var margin = {top: 20, right: 30, bottom: 30, left: 50};
 const HOVER = 'hover';
 
 // XXX point at 100%? [xdomain[0] - 1, 1]
@@ -303,6 +304,14 @@ var KmPlot = React.createClass({
 		callback([eventClose]);
 	},
 
+	// cutoff needs to rewrite the group calc, but we need
+	// the full range in order to range-check the bound. So
+	// the compute should stash the domain.
+	onCutoff: function (v) {
+		let {callback} = this.props;
+		callback(['km-cutoff', v]);
+	},
+
 	setActiveLabel: function (e, label) {
 		this.setState({ activeLabel: label });
 	},
@@ -312,12 +321,14 @@ var KmPlot = React.createClass({
 	},
 
 	render: function () {
-		let { km: {title, label, groups}, dims } = this.props,
+		let {km: {title, label, groups, cutoff}, dims} = this.props,
+			min = _.getIn(groups, ['domain', 0]),
+			max = _.getIn(groups, ['domain', 1]),
 			warning = _.get(groups, 'warning'),
 			fullLabel = warning ? `${label} (${warning})` : label,
-			{ activeLabel } = this.state,
+			{activeLabel} = this.state,
 			sectionDims = calcDims(dims, this.size.ratios);
-		// XXX Use bootstrap to lay this out, instead of tables + divs
+
 		let Content = _.isEmpty(groups)
 			? <div
 				className="jumbotron"
@@ -332,6 +343,16 @@ var KmPlot = React.createClass({
 				<Button onClick={this.pdf}>PDF</Button>
 				{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
 				{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions)}
+				<div style={{clear: 'both'}}>
+				<NumberForm
+					labelClassName="col-md-4"
+					wrapperClassName="col-md-3"
+					onChange={this.onCutoff}
+					dflt={max}
+					min={min}
+					max={max}
+					initialValue={cutoff}/>
+				</div>
 			</div>;
 
 		return (

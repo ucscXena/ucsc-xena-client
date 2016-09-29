@@ -68,9 +68,10 @@ var kmSelector = createSelector(
 		state => _.getIn(state, ['columns', _.getIn(state, ['km', 'id'])]),
 		state => _.getIn(state, ['data', _.getIn(state, ['km', 'id'])]),
 		state => _.getIn(state, ['index', _.getIn(state, ['km', 'id'])]),
+		state => _.getIn(state, ['km', 'cutoff']),
 		state => state.survival,
-		(samples, column, data, index, survival) =>
-			column && survival && km.makeGroups(column, data, index, survival, samples));
+		(samples, column, data, index, cutoff, survival) =>
+			column && survival && km.makeGroups(column, data, index, cutoff, survival, samples));
 
 var index = state => ({...state, index: indexSelector(state)});
 var sort = state => ({...state, samples: sortSelector(state)});

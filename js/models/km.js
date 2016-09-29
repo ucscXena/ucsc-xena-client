@@ -138,6 +138,22 @@ function filterByGroups(feature, groupedIndices) {
 var getFieldData = survival =>
 	_.mapObject(survival, f => _.getIn(f, ['data', 'req', 'values', 0]));
 
+function cutoffData(survivalData, cutoff) {
+	if (cutoff == null) {
+		return survivalData;
+	}
+	let {tte, ev, patient} = survivalData,
+		ctte = _.map(tte, tte => tte >= cutoff ? cutoff : tte),
+		cev = _.map(ev, (ev, i) => tte[i] >= cutoff ? 0 : ev);
+	return {
+		tte: ctte,
+		ev: cev,
+		patient
+	};
+}
+
+var bounds = x => [_.minnull(x), _.maxnull(x)];
+
 // After toCoded, we can still end up with empty groups if
 // we don't have survival data for the samples in question.
 // So, picking MAX groups after filtering for survival data.
@@ -148,8 +164,10 @@ var getFieldData = survival =>
 // 4) pick at-most MAX groups
 // 5) compute km
 
-function makeGroups(column, data, index, survival, samples) {
-	let {tte, ev, patient} = getFieldData(survival),
+function makeGroups(column, data, index, cutoff, survival, samples) {
+	let survivalData = getFieldData(survival),
+		domain = bounds(survivalData.tte),
+		{tte, ev, patient} = cutoffData(survivalData, cutoff),
 		// Convert field to coded.
 		codedFeat = toCoded(column, data, index, samples),
 		{values} = codedFeat,
@@ -170,6 +188,7 @@ function makeGroups(column, data, index, survival, samples) {
 		curves,
 		warning,
 		patientWarning,
+		domain,
 		...pV
 	};
 }
