@@ -37,7 +37,7 @@ var SampleSearch = React.createClass({
 						 className='glyphicon glyphicon-filter'
 						 aria-hidden='true'/>) : null;
 		return (
-			<form className='form-inline'>
+			<form className='form-inline' onSubmit={ev => ev.preventDefault()}>
 				<Input style={{width: '26em'}}
 					type='text'
 					value={value}
