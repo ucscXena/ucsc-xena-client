@@ -22,7 +22,8 @@
     "prebuild": "npm run clean",
     "dist": "npm run clean:dist && mkdir -p dist && cp -r js/* dist && NODE_ENV=production babel -d dist js",
     "prepublish": "npm run dist",
-    "install": "napa"
+    "install": "napa",
+    "chimp": "chimp --mocha --path=./test/chimp"
   },
   "files": [
     "NOTICE",
@@ -47,6 +48,7 @@
     "babel-polyfill": "^6.3.14",
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-react": "^6.3.13",
+    "chimp": "^0.41.1",
     "css-loader": "^0.9.1",
     "csslint": "^0.10.0",
     "eslint": "^1.10.3",

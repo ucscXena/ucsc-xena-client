@@ -58,8 +58,9 @@ module.exports = function({
 		}
 	});
 
+	let devtoolsVisible = false; // Change this to turn on the debug window at start.
 	let DevTools = createDevTools(
-		<DockMonitor toggleVisibilityKey='ctrl-h' changePositionKey='ctrl-q'>
+		<DockMonitor defaultIsVisible={devtoolsVisible} toggleVisibilityKey='ctrl-h' changePositionKey='ctrl-q'>
 			<LogMonitor preserveScrollTop={false} expandStateRoot={false}/>
 		</DockMonitor>
 	);
