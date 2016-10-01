@@ -37,13 +37,14 @@
 // the state, or from a data cache, because we've fetched that already.
 
 'use strict';
-var dom_helper = require('../dom_helper');
 var _ = require('../underscore_ext');
 var floatImg = require('../../images/genomicFloatLegend.jpg');
 var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var {Modal, DropdownButton, MenuItem, Grid, Row, Col } = require('react-bootstrap/lib/');
+var {Modal, DropdownButton, MenuItem, Grid, Row, Col, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
+var Input = require('react-bootstrap/lib/Input');
+var image = require('react-bootstrap/lib/Image');
 
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization, defaultColorClass, valueType) {
 	var state = vizState;
@@ -53,13 +54,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			node = document.createElement("div");
 			allFloat(node);
 			div.appendChild(node);
-			div.appendChild(buildVizButton());
-			div.appendChild(document.createTextNode(" "));
-			div.appendChild(buildCloseButton());
+
+			node = document.createElement("span");
+			ReactDOM.render(React.createElement(finishButtonBar), node);
+			div.appendChild(node);
 		}
 		return div;
 	}
-
 
 	function allFloat(div) {
 		var node;
@@ -77,52 +78,37 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		div.appendChild(document.createElement("br"));
 
 		// color scale
-		div.appendChild(document.createElement("br"));
-		node = colorScaleChoices();
+		node = document.createElement("div");
+		ReactDOM.render(React.createElement(scaleChoice), node);
 		div.appendChild(node);
+		div.appendChild(document.createElement("br"));
 	}
 
 	// discard user changes & close.
-	function buildVizButton() {
-		var button = document.createElement("BUTTON");
-		button.setAttribute("class", "vizbutton");
-		button.appendChild(document.createTextNode("Cancel"));
-		button.addEventListener("click", function () {
+	var finishButtonBar = React.createClass({
+		handleCancelClick () {
 			hide();
 			onVizSettings(id, state);
-		});
-		return button;
-	}
-
-	// close button
-	function buildCloseButton() {
-		var button = document.createElement("BUTTON");
-		button.setAttribute("class", "vizbutton");
-		button.appendChild(document.createTextNode("Close"));
-		button.addEventListener("click", function () {
+		},
+		handleDoneClick () {
 			hide();
-			//onVizSettings(id, state);
-		});
-		return button;
+		},
+		render () {
+			return (
+				<ButtonToolbar>
+					<Button onClick = {this.handleCancelClick}>Cancel</Button>
+					<Button bsStyle="primary" onClick = {this.handleDoneClick}>Done</Button>
+				</ButtonToolbar>
+			);
+		}
+	});
+
+	function getInputSettingsFloat(settings) {
+		return _.fmap(settings, parseFloat);
 	}
 
-	function inputId(param) {
-		return 'custom-' + param;
-	}
-
-	function getInputSettings() {
-		return _.object(colorParams, _.map(colorParams, function (param) {
-			return document.getElementById(inputId(param)).value.replace(/[ \t]/g, '');
-		}));
-	}
-
-	function getInputSettingsFloat() {
-		return _.fmap(getInputSettings(), parseFloat);
-	}
-
-	function validateSettings() {
-		var s = getInputSettings(),
-			vals = _.fmap(s, parseFloat),
+	function validateSettings(s) {
+		var vals = _.fmap(s, parseFloat),
 			fmtErrors = _.fmap(vals, function (v, k) {
 				return (isNaN(v) && s[k]) ? "Invalid number." : "";
 			}),
@@ -159,191 +145,124 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		return _.every(errors, function (s) { return !s; });
 	}
 
-	function displayErrors(errors) {
-		_.each(errors, function (err, k) {
-			document.getElementById('error-custom-' + k).innerHTML = err;
-		});
+	function valToStr(v) {
+		if (v === "-") {
+			return v;
+		}
+		return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
 	}
 
+	var scaleChoice = React.createClass({
+		annotations: {
+			"max": "max: high color 100% saturation",
+			"maxStart": "maxStart: high color 0% saturation",
+			"minStart": "minStart: low color 0% saturation",
+			"min": "min: low color 100% saturation"
+		},
+		defaults: {
+			max: 1,
+			maxStart: null,
+			minStart: null,
+			min: -1
+		},
+		getInitialState () {
+			//check if there is custom value
+			let custom = colorParams.some(function (param) {
+					if (getVizSettings(param)) {
+						return true;
+					}
+				});
 
-	function colorScaleChoices() {
-		function disableTextInputs(trueORfalse) {
-			var id,
-				color = trueORfalse ? "gray" : "black";
-
-			colorParams.forEach(function (param) {
-				id = inputId(param);
-				document.getElementById(id).disabled = trueORfalse;
-				document.getElementById(id).style.color = color;
-			});
-		}
-
-		function buildCustomColorImage(custom) {
-			var customColorImage = new Image();
-			customColorImage.src = customFloatImg;
-			customColorImage.setAttribute("class", "image");
-			customColorImage.style.opacity = custom ? "1.0" : "0.6";
-			return customColorImage;
-		}
-
-		function buildAutoColorImage(auto) {
-			var autoColorImage = new Image();
-			autoColorImage.src = floatImg;
-			autoColorImage.setAttribute("class", "image");
-			autoColorImage.style.opacity = auto ? "1.0" : "0.6";
-			return autoColorImage;
-		}
-
-		function valToStr(v) {
-			return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
-		}
-
-		function buildCustomColorScale(custom) {
-			var node = document.createElement("div"),
-				annotations = {
-					"max": "high color 100% saturation",
-					"maxStart": "high color 0% saturation (black or white)",
-					"minStart": "low color 0% saturation (black or white)",
-					"min": "low color 100% saturation"
-				},
-				defaults = {
-					max: 1,
-					maxStart: null,
-					minStart: null,
-					min: -1
-				},
-				settings = _.getIn(oldSettings, ['max']) ? oldSettings : defaults;
-
-			node.setAttribute("class", "block");
-			colorParams.forEach(function (param) {
-				node.appendChild(buildTextInput(annotations[param], param, inputId(param), custom,
-												valToStr(settings[param])));
-			});
-			node.style.color = custom ? "black" : "gray";
-			return node;
-		}
-
-		function removeAllVizSettings() {
+			return {
+				mode: custom ? "Custom" : "Auto",
+				settings: custom ? oldSettings : _.clone(this.defaults),
+				errors: {}
+			};
+		},
+		autoClick () {
+			this.setState({mode: "Auto"});
+			this.setState({settings: _.clone(this.defaults)});
+			this.setState({errors: {}});
 			onVizSettings(id, _.omit(state, colorParams));
-		}
+		},
+		customClick () {
+			this.setState({mode: "Custom"});
+			onVizSettings(id, _.merge(state, getInputSettingsFloat(this.state.settings)));
+		},
+		changeTextAction() {
+			var errors = validateSettings(this.state.settings);
+			this.setState({errors: errors});
 
-		var node = document.createElement("div"),
-			text = dom_helper.elt("span", "Scale "),
-			label, x, custom,
-			radioGroup = document.createElement("div"),
-			customColorGroup,
-			autoColorImage, customColorImage;
-
-		text.setAttribute("class", "text");
-		node.appendChild(text);
-
-		radioGroup.setAttribute("class", "radiogroup");
-		node.appendChild(radioGroup);
-
-		//check if there is custom value
-		custom = colorParams.some(function (param) {
-			if (getVizSettings(param)) {
-				return true;
+			if (settingsValid(errors)) {
+				onVizSettings(id, _.merge(state, getInputSettingsFloat(this.state.settings)));
 			}
-		});
+		},
+		buildCustomColorScale () {
+			let thisObj = this;
+			node = colorParams.map( param => {
+				let value = valToStr(this.state.settings[param]),
+					label = this.annotations[param],
+					error = this.state.errors[param];
 
-		x = document.createElement("INPUT");
-		x.setAttribute("type", "radio");
-		x.setAttribute("name", "group");
-		x.setAttribute("id", "colorauto");
-		x.value = "auto";
-		x.checked = custom ? false : true;
-		x.addEventListener("click", function () {
-			removeAllVizSettings();
-			customColorGroup.style.color = "gray";
-			autoColorImage.style.opacity = "1.0";
-			customColorImage.style.opacity = "0.6";
-			disableTextInputs(true);
-		});
-		label = dom_helper.elt("LABEL", " Auto");
-		label.setAttribute("for", "colorauto");
-		label.setAttribute("class", "text");
-		radioGroup.appendChild(x);
-		radioGroup.appendChild(label);
+				function scaleParamChange (ev) {
+					let settings = thisObj.state.settings;
+					settings[param] = ev.target.value;
+					thisObj.setState({ settings: settings });
+					thisObj.changeTextAction();
+				}
 
-		//image
-		autoColorImage = buildAutoColorImage(!custom);
-		radioGroup.appendChild(autoColorImage);
+				return (
+					<Row>
+						<Col xs={6} md={5} lg={2}>{label}</Col>
+						<Col xs={3} md={2} lg={1}>
+							<Input type='textinput' placeholder="Auto"
+								value={value} onChange={scaleParamChange}/>
+						</Col>
+						<Col xs={3} md={2} lg={1}>
+							<label bsStyle="danger">{error}</label>
+						</Col>
+					</Row>
+				);
+			});
+			return node;
+		},
 
-		radioGroup.appendChild(document.createElement("br"));
+		render () {
+			let mode = this.state.mode,
+				autoMode = (this.state.mode === "Auto"),
+				modes = ["Auto", "Custom"],
+				funcMapping = {
+					"Auto": this.autoClick,
+					"Custom": this.customClick
+				},
+				buttons = modes.map(mode => {
+					let active = (this.state.mode === mode),
+						func = funcMapping[mode];
+					return active ? (<Button bsStyle="primary" onClick={func} active>{mode}</Button>) :
+						(<Button onClick={func}>{mode}</Button>);
+				}),
+				picture = autoMode ? (<image src={floatImg} responsive/>) :
+					(<image src={customFloatImg} responsive/>),
+				enterInput = autoMode ? null : this.buildCustomColorScale();
 
-		x = document.createElement("INPUT");
-		x.setAttribute("type", "radio");
-		x.setAttribute("name", "group");
-		x.setAttribute("id", "colorcustom");
-		x.value = "custom";
-		x.checked = custom ? true : false;
-		x.addEventListener("click", function () {
-			changeTextAction();
-			customColorGroup.style.color = "black";
-			autoColorImage.style.opacity = "0.6";
-			customColorImage.style.opacity = "1.0";
-			disableTextInputs(false);
-		});
-		label = dom_helper.elt("LABEL", " Custom");
-		label.setAttribute("for", "colorcustom");
-		label.setAttribute("class", "text");
-		radioGroup.appendChild(x);
-		radioGroup.appendChild(label);
-
-		//image
-		customColorImage = buildCustomColorImage(custom);
-		radioGroup.appendChild(customColorImage);
-
-		customColorGroup = buildCustomColorScale(custom);
-		radioGroup.appendChild(customColorGroup);
-
-		return node;
-	}
-
-	function changeTextAction() {
-		var err = validateSettings();
-		displayErrors(err);
-
-		if (settingsValid(err)) {
-			onVizSettings(id, _.merge(state, getInputSettingsFloat()));
+			return (
+				<Grid>
+					<Row>
+						<Col xs={3} md={2} lg={1}>Scale</Col>
+						<Col xs={15} md={10} lg={5}>
+							<ButtonGroup>{buttons}</ButtonGroup>
+							<div>
+								{picture}
+								<Grid>
+									{enterInput}
+								</Grid>
+							</div>
+						</Col>
+					</Row>
+				</Grid>
+			);
 		}
-	}
-
-	function buildTextInput(annotation, label, id, custom, defaultDisplay) {
-		var node = document.createElement("div"),
-			text,
-			input = document.createElement("INPUT"),
-			errors = document.createElement("span");
-
-		text = dom_helper.elt("span", annotation);
-		text.setAttribute("class", "annotation");
-		node.appendChild(text);
-
-		input.setAttribute("type", "text");
-		input.setAttribute("class", "textBox");
-		input.setAttribute("id", id);
-		input.disabled = custom ? false : true;
-		input.value = getVizSettings(label) || defaultDisplay;
-
-
-		input.addEventListener("keydown", function (event) {
-			if (event.keyCode === 13) {
-				changeTextAction();
-			}
-		});
-
-		input.addEventListener("blur", function () {
-			changeTextAction();
-		});
-
-		node.appendChild(input);
-
-		errors.setAttribute("class", "error");
-		errors.setAttribute("id", "error-" + id);
-		node.appendChild(errors);
-		return node;
-	}
+	});
 
 	function setVizSettings(key, value) {
 		onVizSettings(id, _.assoc(state, key, value));
@@ -381,7 +300,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				}),
 				title = activeOption ? activeOption.label : 'Select',
 				menuItemList = options.map(obj => {
-					var active = (obj.key === optionValue) ? 1 : 0;
+					var active = (obj.key === optionValue);
 					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
 						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
 				});
@@ -430,7 +349,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				}),
 				title = activeOption ? activeOption.label : 'Select',
 				menuItemList = options.map(obj => {
-					var active = (obj.key === optionValue) ? 1 : 0;
+					var active = (obj.key === optionValue);
 					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
 						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
 				});
