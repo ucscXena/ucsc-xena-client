@@ -52,8 +52,6 @@ function computeHeatmap(vizSettings, data, fields, samples, defaultNormalization
 	});
 }
 
-var hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min']));
-
 var flopIfNegStrand = (strand, req) =>
 	strand === '-' ?
 		_.assoc(req,
@@ -69,15 +67,8 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples, column.defaultNormalization),
 		colors = map(fields, (p, i) =>
-					 heatmapColors.colorSpec(column, vizSettings,
-											 codes, heatmap[i])),
-		// Provide a legend scheme if more than one field.
-		multiScaled = fields.length > 1 && !hasViz(vizSettings),
-		legend = multiScaled ?
-			{legend: {colors: heatmapColors.defaultColors[column.colorClass], labels: ['lower', '', 'higher']}} :
-			null;
-
-	return {fields, heatmap, colors, ...legend};
+					 heatmapColors.colorSpec(column, vizSettings, codes, heatmap[i]));
+	return {fields, heatmap, colors};
 }
 
 //

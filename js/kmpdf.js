@@ -13,7 +13,7 @@ var vgpdf = require('./vgpdf');
 var _ = require('./underscore_ext');
 var {linear, linearTicks} = require('./scale');
 
-var margin = {top: 20, right: 10, bottom: 30, left: 50};
+var margin = {top: 20, right: 30, bottom: 30, left: 50};
 var bounds = x => [_.min(x), _.max(x)];
 
 // XXX duplicated in km.css

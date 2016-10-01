@@ -122,14 +122,24 @@ function legendForColorscale(colorSpec) {
 // passed in. The caller should provide labels/colors in the 'legend' prop
 // if there are multiple scales.
 function renderFloatLegend(props) {
-	var {colors, legend, vizSettings, defaultNormalization, datasetMetadata, data} = props,
+	var {colors, vizSettings, defaultNormalization, datasetMetadata, data} = props,
 		hasData = _.getIn(colors, [0]);
 
-	var {labels, colors: legendColors} = legend ||
-		(hasData ? legendForColorscale(colors[0]) : {colors: [], labels: []}),
+	var {labels, colors: legendColors} = hasData ? legendForColorscale(colors[0]) :
+		{colors: [], labels: []},
 		footnotes = [],
 		nSamples = (data && data.length) ? data[0].filter(v => v != null).length : 0,
-		normalizationText = "mean is subtracted per column across " + nSamples + " samples";
+		normalizationText = "mean is subtracted per column across " + nSamples + " samples",
+		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min'])),
+		multiScaled = colors && colors.length > 1 && !hasViz(vizSettings);
+
+	if (multiScaled) {
+		labels = labels.map((label, i) => {
+			if (i === 0) {return "lower";}
+			else if(i === labels.length - 1) {return "higher";}
+			else {return "";}
+		});
+	}
 
 	if (datasetMetadata) {
 		footnotes = _.map(datasetMetadata, metadata =>{
