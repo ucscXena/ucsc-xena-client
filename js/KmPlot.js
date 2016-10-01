@@ -81,8 +81,10 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 
 	var groupSvg = _.zip(colors, labels, curves).map((g, index) => {
 		let [, label] = g;
+		// passing bounds to force update when scales change
 		return (<LineGroup
 				key={index}
+				bounds={[xdomain, xrange, ydomain, yrange]}
 				xScale={xScale}
 				yScale={yScale}
 				g={g}
