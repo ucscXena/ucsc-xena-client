@@ -1,12 +1,25 @@
-/*global require: false, describe: false, it: flase, browser: false, expect: false */
+/*global describe: false, it: flase, browser: false, expect: false, beforeEach: false, afterEach: false */
 'use strict';
+
+// monkey-patch mocha colors so they are visible. Might want to move
+// this to a utility file.
+var colors = require('mocha/lib/reporters/base').colors;
+Object.assign(colors, {
+	'error stack': '60',
+	'pass': '60',
+	'fast': '60',
+	'light': '60',
+	'diff gutter': '60'
+});
+//
 
 var data = require('./data');
 var page = require('./page-visualization');
 var actions = page.actions;
 var jv = require('jsverify');
+//var {clickWhenVisible, clickWhenEnabled} = require('./utils');
 
-var cohortSelect = page.cohortSelect;
+//var cohortSelect = page.cohortSelect;
 
 var url = 'http://127.0.0.1:8080';
 
@@ -27,59 +40,59 @@ var url = 'http://127.0.0.1:8080';
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-}
+//function escapeRegExp(string) {
+//  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+//}
 
 // Select a cohort.
 // Assert that cohort name is displayed on page.
 // Assert that sample list is not empty.
 // Assert that sample column is shown.
 //
-// This can fail due to very long query on poor networks (e.g. at a conference).
+
+// Set cohort and verify that cohort is set.
 function cohortSelection(cohort) {
+	actions.selectCohort(cohort);
+	var nextCohort = actions.getCohort();
 
-	// Select a cohort.
-	actions.openCohortSelect(browser);
-	browser.element(cohortSelect.menu).element(`=${cohort}`).waitForVisible(60000);
-	browser.element(cohortSelect.menu).click(`=${cohort}`);
-
-	// XXX write custom chai 'to.contain' instead of RegExp?
-	expect(browser.getText('body')).to.match(new RegExp(escapeRegExp(cohort)));
-
-//	var sampleText = browser.getText(page.yAxis.samples),
-//		sampleMatch = sampleText.match(page.yAxis.sampleCountPattern),
-//		sampleCount = sampleMatch && parseInt(sampleMatch[1], 10);
-//
-//	expect(sampleMatch).to.not.be.null;
-//	expect(sampleCount).to.not.equal(0);
-
-	var selectedCohort = browser.getText(page.cohortSelect.open);
-	expect(selectedCohort).to.equal(cohort);
-
-	return true;
+	expect(nextCohort).to.equal(cohort);
+	return true; // return success, for jv.check
 }
 
 //function spy(msg, x) {
 //	console.log(msg, x);
 //	return x;
 //}
-
 describe('Xena Client', function() {
-  describe('Cohort', function () {
-    it('should be set by cohort selector @watch', function () {
-      browser.url(url);
-      expect(browser.getTitle()).to.equal(page.title);
+	describe('Cohort', function () {
+		beforeEach(function () {
+			browser.newWindow(url);
+			expect(browser.getTitle()).to.equal(page.title);
+			actions.closeColumnAdd();
+		});
+		afterEach(function () {
+			browser.close();
+		});
+		it('should be set by cohort selector', function () {
+			cohortSelection('TCGA Breast Cancer (BRCA)');
+		});
+		it('should be set by cohort selector, random', function () {
+			var arbCohort = jv.oneof(data.cohorts.map(jv.constant));
+			var result = jv.check(jv.forall(arbCohort, cohortSelection), {tests: 5});
+			expect(result).to.equal(true);
+		});
+		it('should toggle mode @watch', function () {
+			var {chartText, heatmapText} = page.modeButton;
+			actions.selectCohort('TCGA Breast Cancer (BRCA)');
 
-	  browser.element(page.columnAdd.pane.close).click();
-      cohortSelection('TCGA Breast Cancer (BRCA)');
-    });
-    it('should be set by cohort selector, random @watch', function () {
-      browser.url(url);
-      expect(browser.getTitle()).to.equal(page.title);
-      var arbCohort = jv.oneof(data.cohorts.map(jv.constant));
-	  var result = jv.check(jv.forall(arbCohort, cohortSelection), {tests: 5});
-	  expect(result).to.equal(true);
-    });
-  });
+			var mode = actions.getMode();
+			actions.toggleMode();
+			var nextMode = actions.getMode();
+			expect(nextMode).to.equal(mode === chartText ? heatmapText : chartText);
+		});
+		it('should select dataset @watch', function () {
+			actions.selectCohort('TCGA Breast Cancer (BRCA)');
+			actions.openDataset('copy number', 'copy number', 'geneMatrix', ['tp53']);
+		});
+	});
 });
