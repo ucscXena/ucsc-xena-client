@@ -1,6 +1,6 @@
 /*global browser: false */
 'use strict';
-var {clickWhenVisible, clickWhenEnabled} = require('./utils');
+var {clickWhenStill, clickWhenVisible, clickWhenEnabled} = require('./utils');
 
 /* Note on matching text:
 
@@ -54,14 +54,29 @@ var columnAdd = {
 			nextText: 'Select'
 		},
 		dataset: {
+			phenotype: `//*[${hasClass('columnEditBody')}]//*[${hasClass('panel-title')}][.="phenotype"]`,
 			sections: `//*[${hasClass('columnEditBody')}]//a[@role="tab"]`,
 			section: name => `//*[${hasClass('columnEditBody')}]//a[@role="tab"][.="${name}"]`,
 			dataset: name => `//*[${hasClass('columnEditBody')}]//a[${hasClass("list-group-item")}][.="${name}"]`
 		},
 		geneProbeSelect: {
 			input: `//*[${hasClass('columnEditBody')}]//textarea`
+		},
+		phenotypeSelect: {
+			open: `//*[${hasClass('columnEditBody')}]//*[${hasClass('dropdown-toggle')}]`,
+			item: field => `//*[${hasClass('columnEditBody')}]//*[@role="menuitem"][.="${field}"]`
 		}
 	}
+};
+
+var columns = {
+	// XXX This is crazy hacky & needs to be fixed. We have no classes work with in spreadsheet columns.
+	// This will also match the error img, for example.
+	loading: `//*[${hasClass('Column')}]//*[${hasClass('resizeOverlay')}]//img`
+};
+
+var column = {
+	title: t => `//*[${hasClass('Column')}]//input[@value="${t}"]`
 };
 
 var yAxis = {
@@ -79,20 +94,43 @@ var actions = {
 	toggleMode: () => browser.element(modeButton.element).click(),
 	getMode: () => browser.element(modeButton.element).getText(),
 	closeColumnAdd: () => clickWhenVisible(columnAdd.close),
-	openDataset: (name, section, type, fields) => {
-		browser.element(columnAdd.open).click();
+	openPhenotypeDataset: field => {
+		browser.element(columnAdd.open).click(); // XXX race, not found? called from 'refactor'
+		clickWhenStill(columnAdd.pane.dataset.phenotype);
+		clickWhenEnabled(columnAdd.next);
 
-		clickWhenVisible(columnAdd.pane.dataset.section(section));
+		var {phenotypeSelect} = columnAdd.pane;
+		clickWhenVisible(phenotypeSelect.open);
+		// XXX Note this won't scroll the item on-screen, so currently only works
+		// for items at the top.
+		clickWhenVisible(phenotypeSelect.item(field));
+		clickWhenEnabled(columnAdd.done);
+	},
+	openDataset: (name, section, type, fields) => {
+		if (name === 'phenotype') {
+			return actions.openPhenotypeDataset(section);
+		}
+		browser.element(columnAdd.open).click(); // XXX race, not found? called from 'refactor'
+
+		clickWhenStill(columnAdd.pane.dataset.section(section));
 		clickWhenVisible(columnAdd.pane.dataset.dataset(name));
 		clickWhenEnabled(columnAdd.next);
 		m({
 			geneMatrix: fields => {
 				clickWhenVisible(columnAdd.pane.geneProbeSelect.input);
 				browser.keys(fields.join(', '));
-			},
+			}
 		}, [type, fields], ([type]) => {throw new Error(`No field method for column type ${type}`);});
 		clickWhenEnabled(columnAdd.done);
 	},
+	// number of column 'loading' images on page
+	getLoadingCount: () => (browser.elements(columns.loading).value || []).length,
+	// wait for all column data to load
+	waitForColumnData: () => browser.waitUntil(
+				() => actions.getLoadingCount() === 0,
+				10000, 'waiting for column data to load', 200),
+	// wait for a specific column to be created, by dataset name
+	waitForColumn: name => browser.waitForVisible(column.title(name))
 };
 
 module.exports = {
@@ -101,5 +139,7 @@ module.exports = {
 	cohortSelect,
 	yAxis,
 	actions,
-	modeButton
+	modeButton,
+	columns,
+	column
 };

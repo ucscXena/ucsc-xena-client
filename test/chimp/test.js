@@ -1,6 +1,8 @@
 /*global describe: false, it: flase, browser: false, expect: false, beforeEach: false, afterEach: false */
 'use strict';
 
+// Note that expect() is from chai, not jasmine.
+
 // monkey-patch mocha colors so they are visible. Might want to move
 // this to a utility file.
 var colors = require('mocha/lib/reporters/base').colors;
@@ -20,6 +22,7 @@ var actions = page.actions;
 var jv = require('jsverify');
 
 var url = 'http://127.0.0.1:8080';
+var devurl = 'http://ec2-52-91-68-9.compute-1.amazonaws.com';
 var huburl = `${url}/hub/`;
 
 var svhub = process.env.SVHUB;
@@ -47,8 +50,8 @@ var svhub = process.env.SVHUB;
 
 // Select a cohort.
 // Assert that cohort name is displayed on page.
-// Assert that sample list is not empty.
-// Assert that sample column is shown.
+// Assert that sample list is not empty. XXX
+// Assert that sample column is shown. XXX
 //
 
 // Set cohort and verify that cohort is set.
@@ -109,6 +112,59 @@ describe('Xena Client', function() {
 			browser.waitUntil(
 				() => hub.actions.getStatus(svhub) === hub.status.connected,
 				2000, 'waiting for hub to connect', 200);
+		});
+	});
+	describe.skip('refactor', function () {
+		beforeEach(function () {
+			browser.newWindow(huburl);
+			expect(browser.getTitle()).to.equal(hub.title);
+		});
+		afterEach(function () {
+			browser.close();
+		});
+		it('should preserve "unit" in dense matrix legend', function () {
+			function drawExpression(url) {
+				browser.setViewportSize({width: 1000, height: 8000}, true);
+				browser.url(huburl);
+				hub.actions.addHub(svhub);
+				browser.url(url);
+				actions.closeColumnAdd(); // XXX not visible after 6s?
+				actions.selectCohort('TCGA Breast Cancer (BRCA)');
+				// dataset with 'unit'
+				var name = 'gene expression RNAseq (ployA+ IlluminaHiSeq pancan normalized)';
+				actions.openDataset(name,
+									'gene expression RNAseq',
+									'geneMatrix', ['tp53']);
+
+				actions.waitForColumn(name);
+				actions.waitForColumnData();
+//				return browser.saveScreenshot(`./expression-${url.replace(/.*\/\//, '')}.png`);
+				return browser.saveScreenshot();
+			}
+			var ss1 = drawExpression(url);
+			var ss2 = drawExpression(devurl);
+
+			expect(ss1).to.deep.equal(ss2);
+		});
+		it('should preserve float legend w/o unit', function () {
+			function drawPhenotype(url) {
+				browser.setViewportSize({width: 1000, height: 8000}, true);
+				browser.url(huburl);
+				hub.actions.addHub(svhub);
+				browser.url(url);
+				actions.closeColumnAdd(); // XXX not visible after 6s?
+				actions.selectCohort('TCGA Breast Cancer (BRCA)');
+
+				actions.openDataset('phenotype', 'age at initial pathologic diagnosis');
+				actions.waitForColumn('Phenotypes');
+				actions.waitForColumnData();
+				//browser.saveScreenshot('phenotype.png');
+				return browser.saveScreenshot();
+			}
+			var ss1 = drawPhenotype(url);
+			var ss2 = drawPhenotype(devurl);
+
+			expect(ss1).to.deep.equal(ss2);
 		});
 	});
 });
