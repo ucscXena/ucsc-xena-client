@@ -15,13 +15,14 @@ Object.assign(colors, {
 
 var data = require('./data');
 var page = require('./page-visualization');
+var hub = require('./page-hub');
 var actions = page.actions;
 var jv = require('jsverify');
-//var {clickWhenVisible, clickWhenEnabled} = require('./utils');
-
-//var cohortSelect = page.cohortSelect;
 
 var url = 'http://127.0.0.1:8080';
+var huburl = `${url}/hub/`;
+
+var svhub = process.env.SVHUB;
 
 // notes on codecept functionality. We are not using codecept.
 //
@@ -64,7 +65,7 @@ function cohortSelection(cohort) {
 //	return x;
 //}
 describe('Xena Client', function() {
-	describe('Cohort', function () {
+	describe('Cohort', function () { // XXX rename heading, or move unrelated tests
 		beforeEach(function () {
 			browser.newWindow(url);
 			expect(browser.getTitle()).to.equal(page.title);
@@ -93,6 +94,21 @@ describe('Xena Client', function() {
 		it('should select dataset @watch', function () {
 			actions.selectCohort('TCGA Breast Cancer (BRCA)');
 			actions.openDataset('copy number', 'copy number', 'geneMatrix', ['tp53']);
+		});
+	});
+	describe('hub', function () {
+		beforeEach(function () {
+			browser.newWindow(huburl);
+			expect(browser.getTitle()).to.equal(hub.title);
+		});
+		afterEach(function () {
+			browser.close();
+		});
+		it('should select hub @watch', function () {
+			hub.actions.addHub(svhub);
+			browser.waitUntil(
+				() => hub.actions.getStatus(svhub) === hub.status.connected,
+				2000, 'waiting for hub to connect', 200);
 		});
 	});
 });
