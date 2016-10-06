@@ -67,6 +67,14 @@ function cohortSelection(cohort) {
 //	console.log(msg, x);
 //	return x;
 //}
+//var fs = require('fs');
+//function pause() {
+//	console.log('^D to continue');
+//	// Only works on linux.
+//	fs.readFileSync('/dev/pts/20');
+//	console.log('continuing');
+//}
+
 describe('Xena Client', function() {
 	describe('Cohort', function () { // XXX rename heading, or move unrelated tests
 		beforeEach(function () {
