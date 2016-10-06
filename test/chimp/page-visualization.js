@@ -56,7 +56,11 @@ var columnAdd = {
 		dataset: {
 			phenotype: `//*[${hasClass('columnEditBody')}]//*[${hasClass('panel-title')}][.="phenotype"]`,
 			sections: `//*[${hasClass('columnEditBody')}]//a[@role="tab"]`,
-			section: name => `//*[${hasClass('columnEditBody')}]//a[@role="tab"][.="${name}"]`,
+			// On linux, the anchor has zero width/hight, and selenium won't click
+			// on it. So, click on the span inside the anchor.
+			section: name => `//*[${hasClass('columnEditBody')}]//a[@role="tab"]//span[.="${name}"]`,
+			// This was working on OSX
+			//section: name => `//*[${hasClass('columnEditBody')}]//a[@role="tab"][text()="${name}"]`,
 			dataset: name => `//*[${hasClass('columnEditBody')}]//a[${hasClass("list-group-item")}][.="${name}"]`
 		},
 		geneProbeSelect: {
@@ -114,7 +118,7 @@ var actions = {
 
 		clickWhenStill(columnAdd.pane.dataset.section(section));
 		clickWhenVisible(columnAdd.pane.dataset.dataset(name));
-		clickWhenEnabled(columnAdd.next);
+		clickWhenStill(columnAdd.next);
 		m({
 			geneMatrix: fields => {
 				clickWhenVisible(columnAdd.pane.geneProbeSelect.input);
