@@ -30,9 +30,13 @@ function hotOrNot(component) {
 }
 
 function drawLegend({column}) {
-	var feature = _.getIn(column, ['sFeature']),
-		dataSubType = _.getIn(column, ['datasetMetadata', 0, 'dataSubType']),
-		{colors, labels, align} = features[feature].legend(dataSubType);
+	var fields = _.get (column, 'fields'),
+		cohortNumber = fields.length,
+		feature = _.getIn(column, ['sFeature']),
+		dataSubType = _.getIn(column, ['datasetMetadata', 0, 'datasubtype']),
+		customColor = (cohortNumber === 1) ?  _.getIn(column, ['datasetMetadata', 0, 'customcolor'])
+			: null,
+		{colors, labels, align} = features[feature].legend(dataSubType, customColor);
 
 	return (
 		<Legend
@@ -173,7 +177,11 @@ var MutationColumn = hotOrNot(React.createClass({
 	},
 	render: function () {
 		var {column, samples, zoom, data, index} = this.props,
-			feature = _.getIn(column, ['sFeature']);
+			fields = _.get (column, 'fields'),
+			cohortNumber = fields.length,
+			feature = _.getIn(column, ['sFeature']),
+			customColor = (cohortNumber === 1) ? _.getIn(column, ['datasetMetadata', 0, 'customcolor'])
+				: null;
 
 		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
@@ -188,6 +196,7 @@ var MutationColumn = hotOrNot(React.createClass({
 						onClick: this.props.onClick
 					}}
 					feature={feature}
+					customColor={customColor}
 					nodes={column.nodes}
 					strand={column.strand}
 					width={column.width}

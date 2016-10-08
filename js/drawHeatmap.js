@@ -4,8 +4,11 @@
 var _ = require('./underscore_ext');
 var partition = require('./partition');
 var colorScales = require('./colorScales');
+var {greyHEX} = require ('./color_helper');
 
-var colorFns = vs => _.map(vs, colorScales.colorScale);
+var colorFns = (vs, customColor) => _.map(vs, function(args) {
+	return colorScales.colorScale (args, customColor);
+});
 
 var drawBackground = (vg, width, height) => vg.box(0, 0, width, height, "gray");
 
@@ -84,7 +87,6 @@ function drawLayout(vg, opts) {
 				drawColumn(rowData, colorScale, (i, color) =>
 					vg.box(0, i * rheight, rwidth, rheight, color));
 
-
 		vg.translate(el.start, 0, () =>
 			vg.drawSharpRows(vg, index, count, height, el.size,
 				drawBackground,
@@ -104,8 +106,13 @@ function drawLayout(vg, opts) {
 }
 
 function drawHeatmap(vg, props) {
-	var {heatmapData = [], codes, colors, width,
-		zoom: {index, count, height}} = props;
+	var {heatmapData = [], codes, colors, width, customColor,
+		zoom: {index, count, height}} = props,
+		customCategoryMore;
+
+	if (customColor) {
+		customCategoryMore = _.map(codes, s => (customColor[s] || greyHEX));
+	}
 
 	drawLayout(vg, {
 		height,
@@ -115,7 +122,7 @@ function drawHeatmap(vg, props) {
 		data: heatmapData,
 		codes,
 		layout: partition.offsets(width, 0, heatmapData.length),
-		colors: colorFns(colors)
+		colors: colorFns(colors, customCategoryMore)  /// functio
 	});
 }
 
