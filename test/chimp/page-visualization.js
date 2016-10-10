@@ -60,7 +60,7 @@ var columnAdd = {
 			// on it. So, click on the span inside the anchor.
 			section: name => `//*[${hasClass('columnEditBody')}]//a[@role="tab"]//span[.="${name}"]`,
 			// This was working on OSX
-			//section: name => `//*[${hasClass('columnEditBody')}]//a[@role="tab"][text()="${name}"]`,
+			//section: name => `//*[${hasClass('columnEditBody')}]//a[@role="tab"][.="${name}"]`,
 			dataset: name => `//*[${hasClass('columnEditBody')}]//a[${hasClass("list-group-item")}][.="${name}"]`
 		},
 		geneProbeSelect: {
@@ -101,7 +101,7 @@ var actions = {
 	openPhenotypeDataset: field => {
 		browser.element(columnAdd.open).click(); // XXX race, not found? called from 'refactor'
 		clickWhenStill(columnAdd.pane.dataset.phenotype);
-		clickWhenEnabled(columnAdd.next);
+		clickWhenStill(columnAdd.next);
 
 		var {phenotypeSelect} = columnAdd.pane;
 		clickWhenVisible(phenotypeSelect.open);
@@ -134,7 +134,7 @@ var actions = {
 				() => actions.getLoadingCount() === 0,
 				10000, 'waiting for column data to load', 200),
 	// wait for a specific column to be created, by dataset name
-	waitForColumn: name => browser.waitForVisible(column.title(name))
+	waitForColumn: name => browser.waitForVisible(column.title(name), 6000)
 };
 
 module.exports = {

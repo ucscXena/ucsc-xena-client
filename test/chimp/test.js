@@ -13,12 +13,12 @@ Object.assign(colors, {
 	'light': '60',
 	'diff gutter': '60'
 });
-//
 
 var data = require('./data');
 var page = require('./page-visualization');
 var hub = require('./page-hub');
 var actions = page.actions;
+var {saveScreenshot} = require('./utils');
 var jv = require('jsverify');
 
 var url = 'http://127.0.0.1:8080';
@@ -63,10 +63,6 @@ function cohortSelection(cohort) {
 	return true; // return success, for jv.check
 }
 
-//function spy(msg, x) {
-//	console.log(msg, x);
-//	return x;
-//}
 //var fs = require('fs');
 //function pause() {
 //	console.log('^D to continue');
@@ -131,8 +127,9 @@ describe('Xena Client', function() {
 			browser.close();
 		});
 		it('should preserve "unit" in dense matrix legend', function () {
+			this.timeout(60000);
 			function drawExpression(url) {
-				browser.setViewportSize({width: 1000, height: 8000}, true);
+				browser.setViewportSize({width: 1000, height: 800}, true);
 				browser.url(huburl);
 				hub.actions.addHub(svhub);
 				browser.url(url);
@@ -146,17 +143,18 @@ describe('Xena Client', function() {
 
 				actions.waitForColumn(name);
 				actions.waitForColumnData();
-//				return browser.saveScreenshot(`./expression-${url.replace(/.*\/\//, '')}.png`);
-				return browser.saveScreenshot();
+//				return saveScreenshot(`./expression-${url.replace(/.*\/\//, '')}.png`);
+				return saveScreenshot();
 			}
-			var ss1 = drawExpression(url);
-			var ss2 = drawExpression(devurl);
+			var ss1 = drawExpression(devurl);
+			var ss2 = drawExpression(url);
 
-			expect(ss1).to.deep.equal(ss2);
+			expect(ss1.equals(ss2)).to.be.true;
 		});
 		it('should preserve float legend w/o unit', function () {
+			this.timeout(60000);
 			function drawPhenotype(url) {
-				browser.setViewportSize({width: 1000, height: 8000}, true);
+				browser.setViewportSize({width: 1000, height: 800}, true);
 				browser.url(huburl);
 				hub.actions.addHub(svhub);
 				browser.url(url);
@@ -166,13 +164,13 @@ describe('Xena Client', function() {
 				actions.openDataset('phenotype', 'age at initial pathologic diagnosis');
 				actions.waitForColumn('Phenotypes');
 				actions.waitForColumnData();
-				//browser.saveScreenshot('phenotype.png');
-				return browser.saveScreenshot();
+//				return saveScreenshot(`phenotype-${url.replace(/.*\/\//, '')}.png`);
+				return saveScreenshot();
 			}
 			var ss1 = drawPhenotype(url);
 			var ss2 = drawPhenotype(devurl);
 
-			expect(ss1).to.deep.equal(ss2);
+			expect(ss1.equals(ss2)).to.be.true;
 		});
 	});
 });
