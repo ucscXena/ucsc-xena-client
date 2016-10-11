@@ -164,7 +164,7 @@ describe('Xena Client', function() {
 				actions.openDataset('phenotype', 'age at initial pathologic diagnosis');
 				actions.waitForColumn('Phenotypes');
 				actions.waitForColumnData();
-//				return saveScreenshot(`phenotype-${url.replace(/.*\/\//, '')}.png`);
+//				return saveScreenshot(`phenotype-${url.replace(/[\/:]/g, '_')}.png`);
 				return saveScreenshot();
 			}
 			var ss1 = drawPhenotype(url);
