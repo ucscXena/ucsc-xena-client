@@ -23,7 +23,7 @@ var jv = require('jsverify');
 
 var url = 'http://127.0.0.1:8080';
 var devurl = 'http://ec2-52-91-68-9.compute-1.amazonaws.com';
-var huburl = `${url}/hub/`;
+var huburl = url => `${url}/hub/`;
 
 var svhub = process.env.SVHUB;
 
@@ -105,7 +105,7 @@ describe('Xena Client', function() {
 	});
 	describe('hub', function () {
 		beforeEach(function () {
-			browser.newWindow(huburl);
+			browser.newWindow(huburl(url));
 			expect(browser.getTitle()).to.equal(hub.title);
 		});
 		afterEach(function () {
@@ -118,9 +118,9 @@ describe('Xena Client', function() {
 				2000, 'waiting for hub to connect', 200);
 		});
 	});
-	describe.skip('refactor', function () {
+	describe.only('refactor', function () {
 		beforeEach(function () {
-			browser.newWindow(huburl);
+			browser.newWindow(huburl(url));
 			expect(browser.getTitle()).to.equal(hub.title);
 		});
 		afterEach(function () {
@@ -130,7 +130,7 @@ describe('Xena Client', function() {
 			this.timeout(60000);
 			function drawExpression(url) {
 				browser.setViewportSize({width: 1000, height: 800}, true);
-				browser.url(huburl);
+				browser.url(huburl(url));
 				hub.actions.addHub(svhub);
 				browser.url(url);
 				actions.closeColumnAdd(); // XXX not visible after 6s?
@@ -155,7 +155,7 @@ describe('Xena Client', function() {
 			this.timeout(60000);
 			function drawPhenotype(url) {
 				browser.setViewportSize({width: 1000, height: 800}, true);
-				browser.url(huburl);
+				browser.url(huburl(url));
 				hub.actions.addHub(svhub);
 				browser.url(url);
 				actions.closeColumnAdd(); // XXX not visible after 6s?
