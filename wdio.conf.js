@@ -11,7 +11,7 @@ exports.config = {
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
     specs: [
-        './test/chimp/*.js'
+        './test/selenium/*.js'
     ],
     // Patterns to exclude.
     exclude: [
