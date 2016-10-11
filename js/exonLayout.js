@@ -83,9 +83,24 @@ function layout({exonStarts, exonEnds, strand}, pxWidth, zoom, paddingTxStart, p
 	};
 }
 
+function intronLayout({txStart, txEnd, strand}, pxWidth, zoom) {
+	var chrIntvls = reverseIf(strand, [[txStart, txEnd]]),
+		count = _.getIn(zoom, ['len'], baseLen(chrIntvls)),
+		bpp = count / pxWidth,
+		pixIntvls = toScreen(bpp, chrIntvls, 0, []);
+
+	return {
+		chrom: chrIntvls,
+		screen: pixIntvls,
+		reversed: strand === '-',
+		baseLen: count,
+		pxLen: pxWidth,
+		zoom: zoom
+	};
+}
+
 module.exports = {
-	chromLayout: ({exonStarts, exonEnds, strand}) =>
-		reverseIf(strand, pad(spLen, _.zip(exonStarts, exonEnds))),
+	intronLayout,
 	screenLayout: (bpp, chrlo) => toScreen(bpp, chrlo, 0, []),
 	baseLen: baseLen,
 	pxLen: pxLen,

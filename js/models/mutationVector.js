@@ -344,7 +344,7 @@ function findNodes(byPosition, layout, feature, samples) {
 	}), v => v.group);
 }
 
-function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
+function dataToDisplay({width, fields, sFeature, showIntrons = false, xzoom = {index: 0}},
 		vizSettings, data, sortedSamples, datasetMetadata, index, zoom) {
 
 	if (!_.get(data, 'req')) {
@@ -362,7 +362,8 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 	var refGeneObj = _.values(refGene)[0],
 		startExon = 0,
 		endExon = refGeneObj.exonCount,
-		layout = exonLayout.layout(refGeneObj, width, xzoom, padTxStart, padTxEnd, startExon, endExon),
+		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
+		layout = createLayout(refGeneObj, width, xzoom, padTxStart, padTxEnd, startExon, endExon),
 		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples, zoom);
 
 	return {
