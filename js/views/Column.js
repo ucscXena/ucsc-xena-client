@@ -224,6 +224,7 @@ var Column = React.createClass({
 				<div style={{height: 20}}>
 					{doRefGene ?
 						<RefGeneAnnotation
+							alternateColors={!_.getIn(column, ['showIntrons'], false)}
 							width={width}
 							refGene={_.values(data.refGene)[0]}
 							layout={column.layout}

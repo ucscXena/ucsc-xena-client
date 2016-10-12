@@ -65,7 +65,7 @@ var RefGeneAnnotation = React.createClass({
 		};
 	},
 
-	draw: function (width, layout, indx) {
+	draw: function (width, layout, indx, alternateColors) {
 		if (!width || !layout || !indx) {
 			return;
 		}
@@ -88,7 +88,7 @@ var RefGeneAnnotation = React.createClass({
 			_.each(nodes.sort((a, b)=> (b.start - a.start)), ({i, start, end, inCds}) => {
 				var {y, h} = annotation[inCds ? 'cds' : 'utr'];
 				var [pstart, pend] = toPx([start, end]);
-				ctx.fillStyle = i % 2 === 0 ? shade2 : shade1;
+				ctx.fillStyle = (alternateColors && i % 2 === 1) ? shade1 : shade2;
 				ctx.fillRect(pstart, y, (pend - pstart) || 1, h);
 				// draw a line across gap to connect exons
 				ctx.fillStyle = 'black';
@@ -103,19 +103,19 @@ var RefGeneAnnotation = React.createClass({
 	},
 
 	componentDidMount: function () {
-		var {width, layout} = this.props;
+		var {width, layout, alternateColors} = this.props;
 		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, refHeight);
-		this.draw(width, layout, this.index);
+		this.draw(width, layout, this.index, alternateColors);
 	},
 
 	render: function () {
-		var {width, layout, refGene} = this.props,
+		var {width, layout, refGene, alternateColors} = this.props,
 //			{baseLen} = layout,
 			intervals = findIntervals(refGene);
 
 		this.index = index(intervals);
 		if (this.vg) {
-			this.draw(width, layout, this.index);
+			this.draw(width, layout, this.index, alternateColors);
 		}
 		return (
 			<canvas
