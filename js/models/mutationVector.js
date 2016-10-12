@@ -227,7 +227,7 @@ var getExonPadding = mutationDataType => {
 function evalMut(flip, mut) {
 	return {
 		impact: features.impact.get(null, mut),
-		right: flip ? -mut.start : mut.start
+		right: flip ? -mut.end : mut.start
 	};
 }
 
