@@ -221,7 +221,7 @@ var Column = React.createClass({
 				<DefaultTextInput
 					onChange={this.onFieldLabel}
 					value={{default: fieldLabel, user: user.fieldLabel}} />
-				<div style={{height: 20}}>
+				<div style={{height: 32}}>
 					{doRefGene ?
 						<RefGeneAnnotation
 							alternateColors={!_.getIn(column, ['showIntrons'], false)}
