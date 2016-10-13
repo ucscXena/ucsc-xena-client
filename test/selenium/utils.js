@@ -1,6 +1,7 @@
 /*global browser: false */
 'use strict';
 var _ = require('underscore');
+var fs = require('fs');
 
 var timeout = 6000;
 
@@ -52,10 +53,20 @@ function saveScreenshot(...args) {
 	return Buffer.isBuffer(b.__proto__) ? complain(b.__proto__) : b;
 }
 
+// This will pause a test run until the user hits ^D in the console. The
+// suite will likely fail at that point due to timeouts. While paused,
+// the browser can be inspected. Useful for debugging.
+function pause() {
+	console.log('^D to continue');
+	fs.readFileSync('/dev/tty');
+	console.log('continuing');
+}
+
 module.exports = {
 	waitUntilStill,
 	clickWhenVisible,
 	clickWhenEnabled,
 	clickWhenStill,
-	saveScreenshot
+	saveScreenshot,
+	pause
 };
