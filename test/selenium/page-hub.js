@@ -7,6 +7,7 @@ var hubInput = '//input[@id="textHub"]';
 var hubAdd =  '//*[@id="hub"]//*[@class="vizbutton"]';
 var hubSelect = url => `//*[@id="checkbox${url}"]`;
 var hubLabel = url => `//*[@id="hubLabel${url}"]`;
+var hubConnectedLabel = url => `//*[@id="hubLabel${url}"][.="connected"]`;
 
 var actions = {
 	addHub: url => {
@@ -14,6 +15,7 @@ var actions = {
 		browser.keys(url);
 		browser.click(hubAdd);
 		clickWhenVisible(hubSelect(url));
+		browser.element(hubConnectedLabel(url)).waitForVisible();
 	},
 	getStatus: url => browser.getText(hubLabel(url))
 };
