@@ -10,7 +10,7 @@ var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
-var {features, chromFromAlt, posFromAlt, structuralVariantClass} = require('./models/mutationVector');
+var mv = require('./models/mutationVector');
 var {drawMutations, radius, labelFont, toYPx} = require('./drawMutations');
 
 // Since we don't set module.exports, but instead register ourselves
@@ -19,7 +19,7 @@ var {drawMutations, radius, labelFont, toYPx} = require('./drawMutations');
 if (module.hot) {
 	module.hot.accept();
 	module.hot.accept('./models/mutationVector', () => {
-		features = require('./models/mutationVector');
+		mv = require('./models/mutationVector');
 	});
 }
 
@@ -32,7 +32,7 @@ function hotOrNot(component) {
 function drawLegend({column}) {
 	var feature = _.getIn(column, ['sFeature']),
 		dataSubType = _.getIn(column, ['datasetMetadata', 0, 'dataSubType']),
-		{colors, labels, align} = features[feature].legend(dataSubType);
+		{colors, labels, align} = mv.features[feature].legend(dataSubType);
 
 	return (
 		<Legend
@@ -73,9 +73,9 @@ function sampleTooltip(sampleFormat, data, gene, assembly) {
 	var dnaVaf = data.dna_vaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dna_vaf)],
 		rnaVaf = data.rna_vaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
 		ref = data.reference && ['value', `${data.reference} to `],
-		altPos = data.alt && structuralVariantClass(data.alt) &&
-			`chr${chromFromAlt(data.alt)}:${posFromAlt(data.alt)}-${posFromAlt(data.alt)}`,
-		alt = data.alt && (structuralVariantClass(data.alt) ?
+		altPos = data.alt && mv.structuralVariantClass(data.alt) &&
+			`chr${mv.chromFromAlt(data.alt)}:${mv.posFromAlt(data.alt)}-${mv.posFromAlt(data.alt)}`,
+		alt = data.alt && (mv.structuralVariantClass(data.alt) ?
 							['url', `${data.alt}`, gbURL(assembly, altPos)] :
 							['value', `${data.alt}`]),
 		pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
