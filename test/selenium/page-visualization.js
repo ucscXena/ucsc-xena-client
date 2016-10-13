@@ -66,6 +66,9 @@ var columnAdd = {
 		geneProbeSelect: {
 			input: `//*[${hasClass('columnEditBody')}]//textarea`
 		},
+		geneSelect: {
+			input: `//*[${hasClass('columnEditBody')}]//input`
+		},
 		phenotypeSelect: {
 			open: `//*[${hasClass('columnEditBody')}]//*[${hasClass('dropdown-toggle')}]`,
 			item: field => `//*[${hasClass('columnEditBody')}]//*[@role="menuitem"][.="${field}"]`
@@ -123,7 +126,11 @@ var actions = {
 			geneMatrix: fields => {
 				clickWhenVisible(columnAdd.pane.geneProbeSelect.input);
 				browser.keys(fields.join(', '));
-			}
+			},
+			mutation: field => {
+				clickWhenVisible(columnAdd.pane.geneSelect.input);
+				browser.keys(field);
+			},
 		}, [type, fields], ([type]) => {throw new Error(`No field method for column type ${type}`);});
 		clickWhenEnabled(columnAdd.done);
 	},
