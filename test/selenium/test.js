@@ -1,4 +1,4 @@
-/*global describe: false, it: flase, browser: false, expect: false, beforeEach: false, afterEach: false */
+/*global describe: false, it: flase, browser: false, expect: false, beforeEach: false, afterEach: false, before: false */
 'use strict';
 
 // Note that expect() is from chai, not jasmine.
@@ -63,14 +63,6 @@ function cohortSelection(cohort) {
 	return true; // return success, for jv.check
 }
 
-//var fs = require('fs');
-//function pause() {
-//	console.log('^D to continue');
-//	// Only works on linux.
-//	fs.readFileSync('/dev/pts/20');
-//	console.log('continuing');
-//}
-
 describe('Xena Client', function() {
 	describe('Cohort', function () { // XXX rename heading, or move unrelated tests
 		beforeEach(function () {
@@ -118,21 +110,15 @@ describe('Xena Client', function() {
 				2000, 'waiting for hub to connect', 200);
 		});
 	});
-	describe.only('refactor', function () {
-		beforeEach(function () {
-			browser.newWindow(huburl(url));
-			expect(browser.getTitle()).to.equal(hub.title);
-		});
-		afterEach(function () {
-			browser.close();
+	describe('refactor', function () {
+		this.timeout(60000);
+		before(function () {
+			browser.setViewportSize({width: 1000, height: 800}, true);
 		});
 		it('should preserve "unit" in dense matrix legend', function () {
-			this.timeout(60000);
 			function drawExpression(url) {
-				browser.setViewportSize({width: 1000, height: 800}, true);
-				browser.url(huburl(url));
-				hub.actions.addHub(svhub);
-				browser.url(url);
+				browser.newWindow(url);
+				expect(browser.getTitle()).to.equal(page.title);
 				actions.closeColumnAdd(); // XXX not visible after 6s?
 				actions.selectCohort('TCGA Breast Cancer (BRCA)');
 				// dataset with 'unit'
@@ -143,8 +129,10 @@ describe('Xena Client', function() {
 
 				actions.waitForColumn(name);
 				actions.waitForColumnData();
-//				return saveScreenshot(`./expression-${url.replace(/.*\/\//, '')}.png`);
-				return saveScreenshot();
+				var screenshot = saveScreenshot(`./expression-${url.replace(/[\/:]/g, '_')}.png`);
+//				var screenshot = saveScreenshot();
+				browser.close();
+				return screenshot;
 			}
 			var ss1 = drawExpression(devurl);
 			var ss2 = drawExpression(url);
@@ -152,23 +140,70 @@ describe('Xena Client', function() {
 			expect(ss1.equals(ss2)).to.be.true;
 		});
 		it('should preserve float legend w/o unit', function () {
-			this.timeout(60000);
 			function drawPhenotype(url) {
-				browser.setViewportSize({width: 1000, height: 800}, true);
-				browser.url(huburl(url));
-				hub.actions.addHub(svhub);
-				browser.url(url);
+				browser.newWindow(url);
+				expect(browser.getTitle()).to.equal(page.title);
 				actions.closeColumnAdd(); // XXX not visible after 6s?
 				actions.selectCohort('TCGA Breast Cancer (BRCA)');
 
 				actions.openDataset('phenotype', 'age at initial pathologic diagnosis');
 				actions.waitForColumn('Phenotypes');
 				actions.waitForColumnData();
-//				return saveScreenshot(`phenotype-${url.replace(/[\/:]/g, '_')}.png`);
-				return saveScreenshot();
+				var screenshot = saveScreenshot(`phenotype-${url.replace(/[\/:]/g, '_')}.png`);
+//				var screenshot = saveScreenshot();
+				browser.close();
+				return screenshot;
 			}
 			var ss1 = drawPhenotype(url);
 			var ss2 = drawPhenotype(devurl);
+
+			expect(ss1.equals(ss2)).to.be.true;
+		});
+		it('should preserve mutation view', function () {
+			function drawMutation(url) {
+				browser.newWindow(url);
+				expect(browser.getTitle()).to.equal(page.title);
+				actions.closeColumnAdd(); // XXX not visible after 6s?
+				actions.selectCohort('TCGA Breast Cancer (BRCA)');
+				var dataset = 'somatic mutation SNPs and small INDELs (wustl curated)';
+
+				actions.openDataset(dataset, 'somatic mutation (SNPs and small INDELs)', 'mutation', 'tp53');
+				actions.waitForColumn(dataset);
+				actions.waitForColumnData();
+				var screenshot = saveScreenshot(`mutation-${url.replace(/[\/:]/g, '_')}.png`);
+//				var screenshot = saveScreenshot();
+				browser.close();
+				return screenshot;
+			}
+			var ss1 = drawMutation(url);
+			var ss2 = drawMutation(devurl);
+
+			expect(ss1.equals(ss2)).to.be.true;
+		});
+		it('should preserve SV view', function () {
+			function drawSV(url) {
+				browser.newWindow(url); // work around /hub/ page not working if visited first
+				expect(browser.getTitle()).to.equal(page.title);
+				browser.element(page.cohortSelect.open).waitForExist();
+				browser.url(huburl(url));
+				expect(browser.getTitle()).to.equal(hub.title);
+				hub.actions.addHub(svhub);
+				browser.url(url);
+				expect(browser.getTitle()).to.equal(page.title);
+				actions.closeColumnAdd(); // XXX not visible after 6s?
+				actions.selectCohort('PCAWG');
+				var dataset = 'PCAWG6 Structural Variant merge set v 1.2';
+
+				actions.openDataset(dataset, 'somatic mutation (structural variant)', 'mutation', 'tp53');
+				actions.waitForColumn(dataset);
+				actions.waitForColumnData();
+				var screenshot = saveScreenshot(`sv-${url.replace(/[\/:]/g, '_')}.png`);
+//				var screenshot = saveScreenshot();
+				browser.close();
+				return screenshot;
+			}
+			var ss1 = drawSV(url);
+			var ss2 = drawSV(devurl);
 
 			expect(ss1.equals(ss2)).to.be.true;
 		});
