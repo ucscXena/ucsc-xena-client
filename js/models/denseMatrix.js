@@ -59,7 +59,7 @@ var flopIfNegStrand = (strand, req) =>
 				'values', _.reverse(req.values)) :
 		req;
 
-function dataToHeatmap(column, vizSettings, data, samples) {
+function dataToHeatmap(column, vizSettings, data, samples, datasets) {
 	if (!_.get(data, 'req')) {
 		return null;
 	}
@@ -67,8 +67,10 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples, column.defaultNormalization),
 		colors = map(fields, (p, i) =>
-					 heatmapColors.colorSpec(column, vizSettings, codes, heatmap[i]));
-	return {fields, heatmap, colors};
+					 heatmapColors.colorSpec(column, vizSettings, codes, heatmap[i])),
+		units = _.map(column.fieldSpecs, ({dsID}) => _.getIn(datasets, [dsID, 'unit']));
+
+	return {fields, heatmap, colors, units};
 }
 
 //

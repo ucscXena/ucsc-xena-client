@@ -344,8 +344,8 @@ function findNodes(byPosition, layout, feature, samples) {
 	}), v => v.group);
 }
 
-function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
-		vizSettings, data, sortedSamples, datasetMetadata, index, zoom) {
+function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index, zoom) {
+	var {width, sFeature, xzoom = {index: 0}, fieldSpecs} = column;
 
 	if (!_.get(data, 'req')) {
 		return {};
@@ -356,7 +356,8 @@ function dataToDisplay({width, fields, sFeature, xzoom = {index: 0}},
 		return {};
 	}
 
-	var mutationDataType = mutationDatasetClass(datasetMetadata[0].dataSubType),
+	// XXX broken for non-composite fields, e.g. signature
+	var mutationDataType = mutationDatasetClass(_.getIn(datasets, [fieldSpecs[0].dsID, 'dataSubType'])),
 		{padTxStart, padTxEnd} = getExonPadding(mutationDataType);
 
 	var refGeneObj = _.values(refGene)[0],

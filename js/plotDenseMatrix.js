@@ -122,12 +122,12 @@ function legendForColorscale(colorSpec) {
 // passed in. The caller should provide labels/colors in the 'legend' prop
 // if there are multiple scales.
 function renderFloatLegend(props) {
-	var {colors, vizSettings, defaultNormalization, datasetMetadata, data} = props,
+	var {units, colors, vizSettings, defaultNormalization, data} = props,
 		hasData = _.getIn(colors, [0]);
 
 	var {labels, colors: legendColors} = hasData ? legendForColorscale(colors[0]) :
 		{colors: [], labels: []},
-		footnotes = [],
+		footnotes = (units || []).slice(0), // copy to avoid modification, below
 		nSamples = (data && data.length) ? data[0].filter(v => v != null).length : 0,
 		normalizationText = "mean is subtracted per column across " + nSamples + " samples",
 		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min'])),
@@ -138,12 +138,6 @@ function renderFloatLegend(props) {
 			if (i === 0) {return "lower";}
 			else if(i === labels.length - 1) {return "higher";}
 			else {return "";}
-		});
-	}
-
-	if (datasetMetadata) {
-		footnotes = _.map(datasetMetadata, metadata =>{
-			return metadata.unit;
 		});
 	}
 
@@ -182,13 +176,13 @@ var HeatmapLegend = hotOrNot(React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function() {
 		var {column, data} = this.props,
-			{heatmap, colors, legend, valueType, vizSettings, defaultNormalization, datasetMetadata} = column,
+			{units, heatmap, colors, legend, valueType, vizSettings, defaultNormalization} = column,
 			props = {
+				units,
 				colors,
 				legend,
 				vizSettings,
 				defaultNormalization,
-				datasetMetadata,
 				data: heatmap,
 				coded: valueType === 'coded',
 				codes: _.get(data, 'codes'),

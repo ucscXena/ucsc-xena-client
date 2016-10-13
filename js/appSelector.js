@@ -57,7 +57,7 @@ var transformSelector = createFmapSelector(
 				_.getIn(column, ['vizSettings']),
 				state.data[key],
 				state.samples,
-				_.getIn(column, ['datasetMetadata']),
+				state.datasets,
 				state.index[key]]),
 		_.apply(widgets.transform));
 
