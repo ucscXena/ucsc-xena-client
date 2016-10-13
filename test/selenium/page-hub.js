@@ -13,11 +13,11 @@ var actions = {
 	addHub: url => {
 		clickWhenVisible(hubInput);
 		browser.keys(url);
-		browser.click(hubAdd);
+		browser.element(hubAdd).click();
 		clickWhenVisible(hubSelect(url));
 		browser.element(hubConnectedLabel(url)).waitForVisible();
 	},
-	getStatus: url => browser.getText(hubLabel(url))
+	getStatus: url => browser.element(hubLabel(url)).getText()
 };
 
 var status = {

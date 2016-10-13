@@ -97,7 +97,7 @@ var actions = {
 		actions.openCohortSelect();
 		clickWhenVisible(cohortSelect.item(cohort));
 	},
-	getCohort: () => browser.getText(cohortSelect.open),
+	getCohort: () => browser.element(cohortSelect.open).getText(),
 	toggleMode: () => browser.element(modeButton.element).click(),
 	getMode: () => browser.element(modeButton.element).getText(),
 	closeColumnAdd: () => clickWhenVisible(columnAdd.close),
@@ -141,7 +141,7 @@ var actions = {
 				() => actions.getLoadingCount() === 0,
 				10000, 'waiting for column data to load', 200),
 	// wait for a specific column to be created, by dataset name
-	waitForColumn: name => browser.waitForVisible(column.title(name), 6000)
+	waitForColumn: name => browser.element(column.title(name)).waitForVisible(6000)
 };
 
 module.exports = {
