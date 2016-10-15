@@ -77,9 +77,11 @@
     "semver": "^5.1.0",
     "style-loader": "^0.8.3",
     "url-loader": "^0.5.5",
+    "webdriverio": "^4.2.16",
     "wdio-mocha-framework": "^0.4.3",
     "wdio-selenium-standalone-service": "0.0.7",
     "wdio-spec-reporter": "0.0.3",
+    "wdio-sync-xena": "^0.5.13-xena.0",
     "webpack": "^1.5.3",
     "webpack-dev-server": "^1.15.1"
   },

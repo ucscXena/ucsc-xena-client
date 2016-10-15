@@ -1,4 +1,19 @@
 'use strict';
+
+
+// There's no working version of wdio-sync. Override
+// the dependency here.
+var Module = require('module').Module;
+var originalLoad = Module._load;
+var wdioSync = require('wdio-sync-xena');
+Module._load = function (request) {
+	if (request === 'wdio-sync') {
+		return wdioSync;
+	}
+
+	return originalLoad.apply(this, arguments);
+};
+
 exports.config = {
 
     //
