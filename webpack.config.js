@@ -13,6 +13,7 @@ module.exports = {
 		filename: "[name].js"
 	},
 	devServer: {
+		host: "localhost",
 		publicPath: '/',
 		proxy: {
 			'/api/**': {
