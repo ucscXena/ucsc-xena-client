@@ -81,7 +81,7 @@ describe('Xena Client', function() {
 			var result = jv.check(jv.forall(arbCohort, cohortSelection), {tests: 5});
 			expect(result).to.equal(true);
 		});
-		it('should toggle mode @watch', function () {
+		it('should toggle mode', function () {
 			var {chartText, heatmapText} = page.modeButton;
 			actions.selectCohort('TCGA Breast Cancer (BRCA)');
 
@@ -90,7 +90,7 @@ describe('Xena Client', function() {
 			var nextMode = actions.getMode();
 			expect(nextMode).to.equal(mode === chartText ? heatmapText : chartText);
 		});
-		it('should select dataset @watch', function () {
+		it('should select dataset', function () {
 			actions.selectCohort('TCGA Breast Cancer (BRCA)');
 			actions.openDataset('copy number', 'copy number', 'geneMatrix', ['tp53']);
 		});
@@ -103,7 +103,7 @@ describe('Xena Client', function() {
 		afterEach(function () {
 			browser.close();
 		});
-		it('should select hub @watch', function () {
+		it('should select hub', function () {
 			hub.actions.addHub(svhub);
 			browser.waitUntil(
 				() => hub.actions.getStatus(svhub) === hub.status.connected,
