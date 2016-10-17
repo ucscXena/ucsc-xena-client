@@ -542,7 +542,7 @@ function splitExon(s) {
 	return _.map(s.replace(/,$/, '').split(','), _.partial(parseInt, _, 10));
 }
 
-// support for hg18/CRCh36, hg19/CRCh37
+// support for hg18/GRCh36, hg19/GRCh37, hg38/GRCh38
 var refGene = {
 	hg18: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
 	GRCh36: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
@@ -550,6 +550,15 @@ var refGene = {
 	GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
 	hg38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
 	GRCh38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'}
+};
+
+var transcript = {
+	hg18: {host: 'https://reference.xenahubs.net', name: 'refGene_hg18'},
+	GRCh36: {host: 'https://reference.xenahubs.net', name: 'refGene_hg18'},
+	hg19: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg19'},
+	GRCh37: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg19'},
+	hg38: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg38'},
+	GRCh38: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg38'}
 };
 
 function refGene_attrs(row) {
@@ -670,5 +679,6 @@ module.exports = {
 	refGene_exon_case,
 	match_fields,
 	test_host,
-	refGene
+	refGene,
+	transcript
 };
