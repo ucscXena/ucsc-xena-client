@@ -190,10 +190,10 @@ module.exports = function (root, callback, sessionStorage) {
 	}
 
 	function colUnit (colSettings) {
-		if (!colSettings.datasetMetadata) {
+		if (!colSettings.units) {
 			return "";
 		}
-		return _.filter(_.map(colSettings.datasetMetadata, metadata => metadata.unit), unit => unit).join();
+		return colSettings.units.join();
 	}
 
 	function axisSelector(selectorID) {
@@ -365,9 +365,7 @@ module.exports = function (root, callback, sessionStorage) {
 			i;
 
 		if (visible) {
-			var notLogScale = !colSettings.datasetMetadata  || _.filter(colSettings.datasetMetadata,
-					metadata => !metadata.unit || (metadata.unit && metadata.unit.search(/log/i) === -1)).length !== 0;
-
+			var notLogScale = _.any(colSettings.units, unit => !unit || unit.search(/log/i) === -1);
 			if (notLogScale) {
 				dropDown.style.visibility = "hidden";
 				dropDownDiv.selectedIndex === 0;
@@ -385,8 +383,7 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 				//if data in db in logscale, custom option with actual unit
 				if (dropDownDiv.selectedIndex === 0) {
-					dropDownDiv.options[0].text = _.map(colSettings.datasetMetadata,
-						metadata => metadata.unit).join();
+					dropDownDiv.options[0].text = colSettings.units.join();
 					i = YdropDownDiv.selectedIndex;
 					YdropDownDiv.options[i].text = [columnLabel(i, colSettings), colUnit(colSettings)].join(" ");
 				}
