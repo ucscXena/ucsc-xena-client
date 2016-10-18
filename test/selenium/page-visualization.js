@@ -141,7 +141,11 @@ var actions = {
 				() => actions.getLoadingCount() === 0,
 				10000, 'waiting for column data to load', 200),
 	// wait for a specific column to be created, by dataset name
-	waitForColumn: name => browser.element(column.title(name)).waitForVisible(6000)
+	waitForColumn: name => browser.element(column.title(name)).waitForVisible(6000),
+	waitForChart: () => {
+		browser.waitForExist('//*[@class="highcharts-container"]', 20000);
+		browser.pause(1000); // animation
+	}
 };
 
 module.exports = {

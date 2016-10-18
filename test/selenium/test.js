@@ -139,6 +139,32 @@ describe('Xena Client', function() {
 
 			expect(ss1.equals(ss2)).to.be.true;
 		});
+		it('should preserve "unit" in dense matrix chart', function () {
+			function drawExpression(url) {
+				browser.newWindow(url);
+				expect(browser.getTitle()).to.equal(page.title);
+				actions.closeColumnAdd(); // XXX not visible after 6s?
+				actions.selectCohort('TCGA Breast Cancer (BRCA)');
+				// dataset with 'unit'
+				var name = 'gene expression RNAseq (ployA+ IlluminaHiSeq pancan normalized)';
+				actions.openDataset(name,
+									'gene expression RNAseq',
+									'geneMatrix', ['tp53']);
+
+				actions.waitForColumn(name);
+				actions.waitForColumnData();
+				actions.toggleMode();
+				actions.waitForChart();
+				var screenshot = saveScreenshot(`./chart-${url.replace(/[\/:]/g, '_')}.png`);
+//				var screenshot = saveScreenshot();
+				browser.close();
+				return screenshot;
+			}
+			var ss1 = drawExpression(devurl);
+			var ss2 = drawExpression(url);
+
+			expect(ss1.equals(ss2)).to.be.true;
+		});
 		it('should preserve float legend w/o unit', function () {
 			function drawPhenotype(url) {
 				browser.newWindow(url);
@@ -150,6 +176,28 @@ describe('Xena Client', function() {
 				actions.waitForColumn('Phenotypes');
 				actions.waitForColumnData();
 				var screenshot = saveScreenshot(`phenotype-${url.replace(/[\/:]/g, '_')}.png`);
+//				var screenshot = saveScreenshot();
+				browser.close();
+				return screenshot;
+			}
+			var ss1 = drawPhenotype(url);
+			var ss2 = drawPhenotype(devurl);
+
+			expect(ss1.equals(ss2)).to.be.true;
+		});
+		it('should preserve float chart', function () {
+			function drawPhenotype(url) {
+				browser.newWindow(url);
+				expect(browser.getTitle()).to.equal(page.title);
+				actions.closeColumnAdd(); // XXX not visible after 6s?
+				actions.selectCohort('TCGA Breast Cancer (BRCA)');
+
+				actions.openDataset('phenotype', 'age at initial pathologic diagnosis');
+				actions.waitForColumn('Phenotypes');
+				actions.waitForColumnData();
+				actions.toggleMode();
+				actions.waitForChart();
+				var screenshot = saveScreenshot(`chart-phenotype-${url.replace(/[\/:]/g, '_')}.png`);
 //				var screenshot = saveScreenshot();
 				browser.close();
 				return screenshot;
