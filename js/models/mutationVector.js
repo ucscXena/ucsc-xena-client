@@ -12,7 +12,10 @@ var intervalTree = require('static-interval-tree');
 var {pxTransformFlatmap} = require('../layoutPlot');
 var {hexToRGB, colorStr} = require('../color_helper');
 
-var mutationDatasetClass = (dataSubType) => {
+var mutationDatasetClass = ({type, dataSubType}) => {
+	if (type !== 'mutationVector') {
+		return 'none';
+	}
 	if (dataSubType.search(/SNV|SNP|single/i) !== -1) {
 		return "SNV";
 	} else if (dataSubType.search(/SV|structural/i) !== -1) {
@@ -165,7 +168,7 @@ var unknownEffect = 0,
 		impact: {
 			get: (a, v) => impact[v.effect] || unknownEffect,
 			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
-			legend: dataSubType => getMutationLegend(mutationDatasetClass (dataSubType))
+			legend: getMutationLegend
 		},
 		'dna_vaf': {
 			get: (a, v) => v.dna_vaf == null ? undefined : decimateFreq(v.dna_vaf),
@@ -345,7 +348,7 @@ function findNodes(byPosition, layout, feature, samples) {
 }
 
 function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index, zoom) {
-	var {width, sFeature, xzoom = {index: 0}, fieldSpecs} = column;
+	var {width, sFeature, xzoom = {index: 0}} = column;
 
 	if (!_.get(data, 'req')) {
 		return {};
@@ -356,9 +359,7 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 		return {};
 	}
 
-	// XXX broken for non-composite fields, e.g. signature
-	var mutationDataType = mutationDatasetClass(_.getIn(datasets, [fieldSpecs[0].dsID, 'dataSubType'])),
-		{padTxStart, padTxEnd} = getExonPadding(mutationDataType);
+	var {padTxStart, padTxEnd} = getExonPadding(column.mutationClass);
 
 	var refGeneObj = _.values(refGene)[0],
 		startExon = 0,
@@ -372,13 +373,12 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 	};
 }
 
-function index(fieldType, data, datasetMetadata) {
+function index(fieldType, data, mutationClass) {
 	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
 		return null;
 	}
 
-	var mutationDataType = mutationDatasetClass(datasetMetadata[0].dataSubType),
-		{padTxStart, padTxEnd} = getExonPadding(mutationDataType);
+	var {padTxStart, padTxEnd} = getExonPadding(mutationClass);
 
 	var {req: {rows, samplesInResp}, refGene} = data,
 		refGeneObj = _.values(refGene)[0],
@@ -434,5 +434,6 @@ module.exports = {
 	isStructuralVariant,
 	getMutationLegend,
 	chromColorGB,
+	mutationDatasetClass,
 	fetch
 };

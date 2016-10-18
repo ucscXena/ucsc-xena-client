@@ -31,8 +31,7 @@ function hotOrNot(component) {
 
 function drawLegend({column}) {
 	var feature = _.getIn(column, ['sFeature']),
-		dataSubType = _.getIn(column, ['datasetMetadata', 0, 'dataSubType']),
-		{colors, labels, align} = mv.features[feature].legend(dataSubType);
+		{colors, labels, align} = mv.features[feature].legend(column.mutationClass);
 
 	return (
 		<Legend

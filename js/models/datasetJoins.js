@@ -43,6 +43,18 @@ function getColorClass(fieldSpecs) {
 	return 'default';
 }
 
+function getMutationClass(fieldSpecs) {
+	var types = _.uniq(noNullType(_.pluck(fieldSpecs, 'mutationClass')));
+
+	// If all types are the same, preserve the type.
+	if (types.length === 1) {
+		return types[0];
+	}
+
+	// Treat as SNV_SV
+	return 'SNV_SV';
+}
+
 // XXX Need to handle incompatible assemblies in mutation.
 function getValueType(fieldSpecs) {
 	var types = _.uniq(noNullType(_.pluck(fieldSpecs, 'valueType')));
@@ -140,6 +152,7 @@ function combineColSpecs(fieldSpecs, datasets) {
 		fieldLabel: getFieldLabel(resetFieldSpecs),
 		columnLabel: getColumnLabel(resetFieldSpecs),
 		colorClass: getColorClass(resetFieldSpecs),
+		mutationClass: getMutationClass(resetFieldSpecs),
 		noGeneDetail: !uniqProbemap, // XXX is this wrong? also have to check field len.
 		assembly: getAssembly(fieldType, resetFieldSpecs),
 		sFeature: getFeature(fieldType, resetFieldSpecs)
