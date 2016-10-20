@@ -62,8 +62,8 @@ function colorFloat({colorClass}, settings = {}, codes, data) {
 	return spec;
 }
 
-function colorCoded(column, settings, codes) {
-	return ['ordinal', codes.length];
+function colorCoded(column, settings, codes, __, customColors) {
+	return ['ordinal', codes.length, customColors];
 }
 
 function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
