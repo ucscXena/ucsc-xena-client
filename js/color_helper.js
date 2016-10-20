@@ -22,7 +22,10 @@ var hexToRGB = function(hex, a = 1) {
 
 var colorStr = c => 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
 
+var greyHEX = "#808080";
+
 module.exports = {
     hexToRGB,
-    colorStr
+    colorStr,
+	greyHEX
 };

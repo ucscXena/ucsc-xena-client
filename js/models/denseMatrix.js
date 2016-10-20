@@ -6,6 +6,7 @@ var {map, find} = _;
 var xenaQuery = require('../xenaQuery');
 var heatmapColors = require('../heatmapColors');
 var widgets = require('../columnWidgets');
+var {greyHEX} = require('../color_helper');
 
 // XXX might want to automatically wrap all of these in xenaQuery.
 var datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
@@ -60,7 +61,7 @@ var flopIfNegStrand = (strand, req) =>
 		req;
 
 var colorCodeMap = (codes, colors) =>
-	colors ? _.map(codes, c => colors[c]) : null;
+	colors ? _.map(codes, c => colors[c] || greyHEX) : null;
 
 var getCustomColor = (fieldSpecs, fields, datasets) =>
 	(fieldSpecs.length === 1 && fields.length === 1) ?
