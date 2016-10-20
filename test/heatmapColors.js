@@ -107,7 +107,7 @@ describe('heatmapColors', function () {
 
 			assert.deepEqual(colorSpec(column, settings, codes,
 					{a: 1, b: 2, c: 3}),
-				['ordinal', 4]);
+				['ordinal', 4, undefined]);
 		});
 		it('should return linear thresholded scales for genomic data', function() {
 			var column = {fieldType: 'probes', colorClass: 'expression'},
