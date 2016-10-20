@@ -70,9 +70,13 @@ var styles = {
 function mutationMenu(props, {onMuPit}) {
 	var {column, data} = props,
 		assembly = _.getIn(column, ['assembly']),
+		valueType = _.getIn(column, ['valueType']),
+		dataSubType = _.getIn(column, ['datasetMetadata', 0, 'dataSubType']),
+		rightValueType = valueType === 'mutation',
+		wrongDataSubType = /SV|structural/i.test(dataSubType),
 		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
-		noMenu = !rightAssembly || (data && _.isEmpty(data.refGene)),
-		noData = !_.get(data, 'req'), // XXX
+		noMenu = !rightValueType || !rightAssembly || wrongDataSubType || (data && _.isEmpty(data.refGene)),
+		noData = !_.get(data, 'req'),
 		menuItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)';
 	return noMenu ? null : <MenuItem disabled={noData} onSelect={onMuPit}>{menuItemName}</MenuItem>;
 }
@@ -143,11 +147,13 @@ var Column = React.createClass({
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
 		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
-			uriList = _.uniq(_.map(rows, n => `${n.chr}:${n.start.toString()}`)).join(','),
-			url = `http://mupit.icm.jhu.edu/?gm=${uriList}`;
+			// mupit current production server no alpha value
+			uriList = _.uniq(_.map(rows, n => `${n.chr}:${n.start}`)).join(','),
+			url = 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=';
 
-		window.open(url);
+		window.open(url + `${uriList}`);
 	},
+
 	onReload: function () {
 		this.props.onReload(this.props.id);
 	},
