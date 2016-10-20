@@ -256,4 +256,37 @@ describe('Xena Client', function() {
 			expect(ss1.equals(ss2)).to.be.true;
 		});
 	});
+	describe('bookmarks', function () {
+		this.timeout(60000);
+		before(function () {
+			browser.setViewportSize({width: 1000, height: 800}, true);
+		});
+		var bookmarks = [
+			"f058b182244540dc61f9095b0e98683b",
+			"796773f751215e1b5dc0a16acb06db52",
+			"d2cd9c3ccaf4ea8d6b8f6317d20cfa4d",
+			"65e35cb1f31de34178bf1ec230bfed16",
+			"daa598ef1ba152825ac7f5e6ec72f9f1"];
+		bookmarks.forEach(bookmark => {
+			it(`should preserve bookmark ${bookmark}`, function () {
+				function drawBookmark(url) {
+					browser.newWindow(url); // work around /hub/ page not working if visited first
+					expect(browser.getTitle()).to.equal(page.title);
+					// XXX fix this
+					browser.pause(5000);
+					var screenshot = saveScreenshot(`bookmark-${url.replace(/[\/:]/g, '_')}.png`);
+	//				var screenshot = saveScreenshot();
+					browser.close();
+					return screenshot;
+				}
+
+//				var url1 = `http://ec2-52-91-68-9.compute-1.amazonaws.com/heatmap/?bookmark=${bookmark}`;
+				var url1 = `https://xenabrowser.net/heatmap/?bookmark=${bookmark}`;
+				var url2 = `http://localhost:8080/heatmap/?bookmark=${bookmark}`;
+				var ss1 = drawBookmark(url1);
+				var ss2 = drawBookmark(url2);
+				expect(ss1.equals(ss2)).equal(true, `bookmark ${bookmark} failed\n${url1}\n${url2}`);
+			});
+		});
+	});
 });
