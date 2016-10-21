@@ -20,12 +20,14 @@ var hub = require('./page-hub');
 var actions = page.actions;
 var {saveScreenshot} = require('./utils');
 var jv = require('jsverify');
+var assert = require('assert');
 
 var url = 'http://127.0.0.1:8080';
 var devurl = 'http://ec2-52-91-68-9.compute-1.amazonaws.com';
 var huburl = url => `${url}/hub/`;
 
 var svhub = process.env.SVHUB;
+assert(svhub, 'svhub not set');
 
 // notes on codecept functionality. We are not using codecept.
 //
