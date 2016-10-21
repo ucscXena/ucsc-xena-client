@@ -71,9 +71,8 @@ function mutationMenu(props, {onMuPit}) {
 	var {column, data} = props,
 		assembly = _.getIn(column, ['assembly']),
 		valueType = _.getIn(column, ['valueType']),
-		dataSubType = _.getIn(column, ['datasetMetadata', 0, 'dataSubType']),
 		rightValueType = valueType === 'mutation',
-		wrongDataSubType = /SV|structural/i.test(dataSubType),
+		wrongDataSubType = _.getIn(column, ['mutationClass']) !== 'SNV',
 		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
 		noMenu = !rightValueType || !rightAssembly || wrongDataSubType || (data && _.isEmpty(data.refGene)),
 		noData = !_.get(data, 'req'),
