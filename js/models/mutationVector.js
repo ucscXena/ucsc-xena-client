@@ -11,6 +11,7 @@ var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformFlatmap} = require('../layoutPlot');
 var {hexToRGB, colorStr} = require('../color_helper');
+var jStat = require('jStat').jStat;
 
 var mutationDatasetClass = ({type, dataSubType}) => {
 	if (type !== 'mutationVector') {
@@ -422,6 +423,43 @@ function index(fieldType, data, mutationClass) {
 	};
 }
 
+// SNV P value calculation is an approximation Jing's got from the internet, it is not tested against the exact calculation.
+// it is ok to use in the mupit viz, but not confident it can be used to represent the true p value
+// in addition, the K value should be the size of the gene coding region, or gene's exon region, or the size of the whole gene including introns, currently set as 1000.
+function SNVPvalue (rows) {
+	let	newRows = _.map(rows, n => `${n.chr}:${n.start}`),
+		total = newRows.length,
+		// gene, protein, etc size is fixed at 1000
+		// this could be actual size of protein or gene, but it is complicated due to mutations could be from exon region and display could be genomics region
+		// for the same gene it is a constant, does it really matter to be different between genes?
+		k = 1000;
+
+	return _.mapObject(_.countBy(newRows, n => n),
+		function (val, key) {
+			// a classic birthday problem: https://en.wikipedia.org/wiki/Birthday_problem
+			// a strong birthday problem: extend to trio (at least a trio) or Quadruple (at least four) etc
+			// Journal of Statistical Planning and Inference 130 (2005) 377 – 389  https://www.math.ucdavis.edu/~tracy/courses/math135A/UsefullCourseMaterial/birthday.pdf
+			// Poisson approximation
+			//        http://math.stackexchange.com/questions/25876/probability-of-3-people-in-a-room-of-30-having-the-same-birthday/25880#25880
+			//        no. 28
+			// simulation: http://www.drmoron.org/3-birthday-problem/
+			var T = (1 / k) * (1 / k) * jStat.combination(total, val),
+				pValue = ( Math.exp(-T) + Math.exp( - (T / (1 + val * (total - val) / (2 * k))))) / 2;
+			//var pValue  = 1 - Math.exp(- jStat.combination(total, val) / Math.pow(k, (val -1)));
+			var [chr, start] = key.split(':');
+
+			return {
+				chr: chr,
+				start: start,
+				total: total,
+				class: k,
+				count: val,
+				pValue: pValue
+			};
+		}
+	);
+}
+
 widgets.cmp.add('mutation', cmp);
 widgets.index.add('mutation', index);
 widgets.transform.add('mutation', dataToDisplay);
@@ -435,5 +473,6 @@ module.exports = {
 	getMutationLegend,
 	chromColorGB,
 	mutationDatasetClass,
+	SNVPvalue,
 	fetch
 };

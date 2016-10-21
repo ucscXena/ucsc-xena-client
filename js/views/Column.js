@@ -18,6 +18,7 @@ var ResizeOverlay = require('./ResizeOverlay');
 var widgets = require('../columnWidgets');
 var aboutDatasetMenu = require('./aboutDatasetMenu');
 var spinner = require('../ajax-loader.gif');
+var mutationVector = require('../models/mutationVector');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -146,9 +147,11 @@ var Column = React.createClass({
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
 		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
-			// mupit current production server no alpha value
-			uriList = _.uniq(_.map(rows, n => `${n.chr}:${n.start}`)).join(','),
+			// mupit server with alpha value
+			SNVPs = mutationVector.SNVPvalue (rows),
+			uriList = _.map(_.values(SNVPs), n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
 			url = 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=';
+			//url = 'http://karchin-web04.icm.jhu.edu:8888/MuPIT_Interactive/?gm=';  // mupit dev server
 
 		window.open(url + `${uriList}`);
 	},
