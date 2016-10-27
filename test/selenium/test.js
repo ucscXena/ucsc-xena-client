@@ -260,7 +260,6 @@ describe('Xena Client', function() {
 		});
 	});
 	describe('bookmarks', function () {
-		this.timeout(60000);
 		before(function () {
 			browser.setViewportSize({width: 1000, height: 800}, true);
 		});
