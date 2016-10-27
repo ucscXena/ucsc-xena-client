@@ -282,8 +282,7 @@ describe('Xena Client', function() {
 					return screenshot;
 				}
 
-//				var url1 = `http://ec2-52-91-68-9.compute-1.amazonaws.com/heatmap/?bookmark=${bookmark}`;
-				var url1 = `https://xenabrowser.net/heatmap/?bookmark=${bookmark}`;
+				var url1 = `${devurl}/heatmap/?bookmark=${bookmark}`;
 				var url2 = `http://localhost:8080/heatmap/?bookmark=${bookmark}`;
 				var ss1 = drawBookmark(url1);
 				var ss2 = drawBookmark(url2);
