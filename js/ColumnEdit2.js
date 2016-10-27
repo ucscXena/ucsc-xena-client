@@ -17,7 +17,6 @@ var {PropTypes} = React;
 var {getColSpec} = require('./models/datasetJoins');
 var {defaultColorClass} = require('./heatmapColors');
 var {easeInOutQuad} = require('./easing');
-var {mutationDatasetClass} = require('./models/mutationVector');
 var Rx = require('rx');
 require('rx.time');
 
@@ -200,7 +199,6 @@ var ColumnEdit = React.createClass({
 			'columnLabel', ds.label,
 			'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel},
 			'colorClass', defaultColorClass(ds),
-			'mutationClass', mutationDatasetClass(ds),
 			'assembly', ds.assembly);
 		this.props.onHide();
 		callback(['add-column', uuid(), settings, true]);

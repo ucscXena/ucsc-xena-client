@@ -67,6 +67,7 @@ const fieldLookup = {
 	'geneProbes': geneProbeMapLookup,
 	'genes': geneProbeMapLookup,
 	'mutation': mutationGeneLookup,
+	'SV': mutationGeneLookup,
 	'probes': probeLookup
 };
 

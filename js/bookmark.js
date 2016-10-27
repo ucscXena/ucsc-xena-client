@@ -4,6 +4,7 @@
 'use strict';
 
 var LZ = require('lz-string');
+var migrateState = require('./migrateState');
 
 var version = 1.0;
 module.exports = {
@@ -14,5 +15,5 @@ module.exports = {
 			location.pathname + location.search.replace(/\?bookmark=([0-9a-z]+)/, '')),
 	createBookmark: appState => LZ.compressToUTF16(JSON.stringify({version, appState})),
 	// Need to add version check & merge of state + bookmark.
-	parseBookmark: bookmark => JSON.parse(LZ.decompressFromUTF16(bookmark)).appState
+	parseBookmark: bookmark => migrateState(JSON.parse(LZ.decompressFromUTF16(bookmark)).appState)
 };

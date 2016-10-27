@@ -13,19 +13,6 @@ var {pxTransformFlatmap} = require('../layoutPlot');
 var {hexToRGB, colorStr} = require('../color_helper');
 var jStat = require('jStat').jStat;
 
-var mutationDatasetClass = ({type, dataSubType}) => {
-	if (type !== 'mutationVector') {
-		return 'none';
-	}
-	if (dataSubType.search(/SNV|SNP|single/i) !== -1) {
-		return "SNV";
-	} else if (dataSubType.search(/SV|structural/i) !== -1) {
-		return "SV";
-	} else {
-		"SNV_SV";
-	}
-};
-
 var unknownEffect = 0,
 	impact = {
 		//destroy protein
@@ -143,13 +130,14 @@ var unknownEffect = 0,
 	},
 	getMutationLegend = mutationDataType => {
 		// have to explicitly call hexToRGB to avoid map passing in index.
+		debugger;
 		if (mutationDataType === "SV") {
 			return {
 				colors: _.values(chromColorGB).map(h => hexToRGB(h)).map(colorStr).reverse(),
 				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse(),
 				align: 'left'
 			};
-		} else if (mutationDataType === "SNV") {
+		} else if (mutationDataType === "mutation") {
 			return {
 				colors: colors.category4.map(colorStr),
 				labels: _.range(_.keys(impactGroups).length).map(i => _.pluck(impactGroups[i], 0).join(', ')),
@@ -214,7 +202,7 @@ var getExonPadding = mutationDataType => {
 			padTxStart: 2000,
 			padTxEnd: 0
 		};
-	} else if (mutationDataType === "SNV") {
+	} else if (mutationDataType === "mutation") {
 		return {
 			padTxStart: 1000,
 			padTxEnd: 1000
@@ -349,7 +337,7 @@ function findNodes(byPosition, layout, feature, samples) {
 }
 
 function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index, zoom) {
-	var {width, sFeature, xzoom = {index: 0}} = column;
+	var {fieldType, width, sFeature, xzoom = {index: 0}} = column;
 
 	if (!_.get(data, 'req')) {
 		return {};
@@ -360,7 +348,7 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 		return {};
 	}
 
-	var {padTxStart, padTxEnd} = getExonPadding(column.mutationClass);
+	var {padTxStart, padTxEnd} = getExonPadding(fieldType);
 
 	var refGeneObj = _.values(refGene)[0],
 		startExon = 0,
@@ -374,12 +362,12 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 	};
 }
 
-function index(fieldType, data, mutationClass) {
+function index(fieldType, data) {
 	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
 		return null;
 	}
 
-	var {padTxStart, padTxEnd} = getExonPadding(mutationClass);
+	var {padTxStart, padTxEnd} = getExonPadding(fieldType);
 
 	var {req: {rows, samplesInResp}, refGene} = data,
 		refGeneObj = _.values(refGene)[0],
@@ -464,15 +452,17 @@ widgets.cmp.add('mutation', cmp);
 widgets.index.add('mutation', index);
 widgets.transform.add('mutation', dataToDisplay);
 
+widgets.cmp.add('SV', cmp);
+widgets.index.add('SV', index);
+widgets.transform.add('SV', dataToDisplay);
+
 module.exports = {
 	features,
 	chromFromAlt,
 	posFromAlt,
 	structuralVariantClass,
 	isStructuralVariant,
-	getMutationLegend,
 	chromColorGB,
-	mutationDatasetClass,
 	SNVPvalue,
 	fetch
 };

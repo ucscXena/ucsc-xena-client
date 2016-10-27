@@ -19,6 +19,7 @@ xenaFetch.add("genes-float", denseMatrix.fetchGene);
 xenaFetch.add("clinical-float", denseMatrix.fetch);
 xenaFetch.add("clinical-coded", denseMatrix.fetchFeature);
 xenaFetch.add('mutation-mutation', mutationVector.fetch);
+xenaFetch.add('SV-mutation', mutationVector.fetch);
 
 fetch.add('xena', xenaFetch);
 fetch.add('empty', () => Rx.Observable.return(null, Rx.Scheduler.timeout));

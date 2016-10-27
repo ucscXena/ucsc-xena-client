@@ -31,7 +31,7 @@ function hotOrNot(component) {
 
 function drawLegend({column}) {
 	var feature = _.getIn(column, ['sFeature']),
-		{colors, labels, align} = mv.features[feature].legend(column.mutationClass);
+		{colors, labels, align} = mv.features[feature].legend(column.fieldType);
 
 	return (
 		<Legend
@@ -200,5 +200,7 @@ var MutationColumn = hotOrNot(React.createClass({
 
 var getColumn = props => <MutationColumn {...props} />;
 widgets.column.add('mutation', getColumn);
+widgets.column.add('SV', getColumn);
 
 widgets.legend.add('mutation', drawLegend);
+widgets.legend.add('SV', drawLegend);

@@ -5,13 +5,16 @@ var React = require('react');
 var Input = require('react-bootstrap/lib/Input');
 var trim = require('underscore.string').trim;
 
+var getFieldType = ({dataSubType}) =>
+	(dataSubType.search(/SV|structural/i) !== -1) ? 'SV' : 'mutation';
+
 function apply(features, state, __, meta) {
 	var gene = trim(state.gene);
 	return {
 		fields: [gene],
 		fetchType: 'xena',
 		valueType: 'mutation',
-		fieldType: 'mutation',
+		fieldType: getFieldType(meta),
 		fieldLabel: gene,
 		dsID: meta.dsID,
 		assembly: meta.assembly,

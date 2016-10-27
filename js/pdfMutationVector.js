@@ -24,3 +24,4 @@ function pdf(column, vg, state, i) {
 }
 
 widgets.pdf.add('mutation', pdf);
+widgets.pdf.add('SV', pdf);

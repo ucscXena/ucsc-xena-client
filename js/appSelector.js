@@ -14,8 +14,7 @@ var indexSelector = createFmapSelector(
 		state => _.fmap(state.columns,
 			(column, key) => [
 				_.getIn(column, ['fieldType']),
-				state.data[key],
-				_.getIn(column, ['mutationClass'])]),
+				state.data[key]]),
 		args => widgets.index(...args));
 
 function cmpString(s1, s2) {
