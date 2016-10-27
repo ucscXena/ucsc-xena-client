@@ -62,9 +62,8 @@ assert(svhub, 'svhub not set');
 // Set cohort and verify that cohort is set.
 function cohortSelection(cohort) {
 	actions.selectCohort(cohort);
-	var nextCohort = actions.getCohort();
 
-	expect(nextCohort).to.equal(cohort);
+	browser.waitUntil(() => actions.getCohort() === cohort);
 	return true; // return success, for jv.check
 }
 
