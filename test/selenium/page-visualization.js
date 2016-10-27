@@ -1,6 +1,7 @@
 /*global browser: false */
 'use strict';
 var {clickWhenStill, clickWhenVisible, clickWhenEnabled} = require('./utils');
+var timeout = 60000;
 
 /* Note on matching text:
 
@@ -139,11 +140,11 @@ var actions = {
 	// wait for all column data to load
 	waitForColumnData: () => browser.waitUntil(
 				() => actions.getLoadingCount() === 0,
-				10000, 'waiting for column data to load', 200),
+				timeout, 'waiting for column data to load', 200),
 	// wait for a specific column to be created, by dataset name
-	waitForColumn: name => browser.element(column.title(name)).waitForVisible(6000),
+	waitForColumn: name => browser.element(column.title(name)).waitForVisible(timeout),
 	waitForChart: () => {
-		browser.waitForExist('//*[@class="highcharts-container"]', 20000);
+		browser.waitForExist('//*[@class="highcharts-container"]', timeout);
 		browser.pause(1000); // animation
 	}
 };

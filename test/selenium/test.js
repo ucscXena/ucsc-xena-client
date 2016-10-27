@@ -14,6 +14,9 @@ Object.assign(colors, {
 	'diff gutter': '60'
 });
 
+// It would be better to use a global setting, like wdio config, but
+// using vararg in the wdio async API is dicey.
+var timeout = 60000;
 var data = require('./data');
 var page = require('./page-visualization');
 var hub = require('./page-hub');
@@ -109,11 +112,10 @@ describe('Xena Client', function() {
 			hub.actions.addHub(svhub);
 			browser.waitUntil(
 				() => hub.actions.getStatus(svhub) === hub.status.connected,
-				2000, 'waiting for hub to connect', 200);
+				timeout, 'waiting for hub to connect', 200);
 		});
 	});
 	describe('refactor', function () {
-		this.timeout(60000);
 		before(function () {
 			browser.setViewportSize({width: 1000, height: 800}, true);
 		});

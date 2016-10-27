@@ -3,7 +3,7 @@
 var _ = require('underscore');
 var fs = require('fs');
 
-var timeout = 6000;
+var timeout = 60000;
 
 function clickWhenEnabled(sel) {
 	browser.element(sel).waitForEnabled(timeout);
