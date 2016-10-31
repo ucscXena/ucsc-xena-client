@@ -87,6 +87,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	onFieldLabel: function (id, value) {
 		this.props.callback(['fieldLabel', id, value]);
 	},
+	onShowIntrons: function (id) {
+		this.props.callback(['showIntrons', id]);
+	},
 	onOpenVizSettings: function (id) {
 		this.props.callback(['vizSettings-open', id]);
 	},
@@ -110,6 +113,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						onViz={this.onOpenVizSettings}
 						onFieldLabel={this.onFieldLabel}
 						onColumnLabel={this.onColumnLabel}
+						onShowIntrons={this.onShowIntrons}
 						onMode={this.onMode}
 						onKm={this.onKm}
 						onRemove={this.onRemove}
