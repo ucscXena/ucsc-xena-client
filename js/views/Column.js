@@ -75,13 +75,14 @@ function mutationMenu(props, {onMuPit, onShowIntrons}) {
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = _.getIn(column, ['mutationClass']) !== 'SNV',
 		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
-		noMenu = !rightValueType || !rightAssembly || wrongDataSubType || (data && _.isEmpty(data.refGene)),
+		noMenu = !rightValueType || !rightAssembly || (data && _.isEmpty(data.refGene)),
+		noMuPit = noMenu || wrongDataSubType,
 		noData = !_.get(data, 'req'),
 		mupitItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)',
 		{showIntrons = false} = column,
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
 	return noMenu ? null : [
-		<MenuItem disabled={noData} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
+		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
 		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>
 	];
 }
