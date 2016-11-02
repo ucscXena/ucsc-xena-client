@@ -68,17 +68,23 @@ var styles = {
 	}
 };
 
-function mutationMenu(props, {onMuPit}) {
+function mutationMenu(props, {onMuPit, onShowIntrons}) {
 	var {column, data} = props,
 		assembly = _.getIn(column, ['assembly']),
 		valueType = _.getIn(column, ['valueType']),
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'SNV',
 		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
-		noMenu = !rightValueType || !rightAssembly || wrongDataSubType || (data && _.isEmpty(data.refGene)),
+		noMenu = !rightValueType || !rightAssembly || (data && _.isEmpty(data.refGene)),
+		noMuPit = noMenu || wrongDataSubType,
 		noData = !_.get(data, 'req'),
-		menuItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)';
-	return noMenu ? null : <MenuItem disabled={noData} onSelect={onMuPit}>{menuItemName}</MenuItem>;
+		mupitItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)',
+		{showIntrons = false} = column,
+		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
+	return noMenu ? null : [
+		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
+		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>
+	];
 }
 
 function matrixMenu(props, {supportsGeneAverage, onMode}) {
@@ -144,6 +150,9 @@ var Column = React.createClass({
 	onFieldLabel: function (value) {
 		this.props.onFieldLabel(this.props.id, value);
 	},
+	onShowIntrons: function () {
+		this.props.onShowIntrons(this.props.id);
+	},
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
 		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
@@ -168,7 +177,8 @@ var Column = React.createClass({
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
 			{width, columnLabel, fieldLabel, user} = column,
-			menu = optionMenu(this.props, {onMode: this.onMode, onMuPit: this.onMuPit, supportsGeneAverage}),
+			{onMode, onMuPit, onShowIntrons} = this,
+			menu = optionMenu(this.props, {onMode, onMuPit, onShowIntrons, supportsGeneAverage}),
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
 			// move this to state to generalize to other annotations.
@@ -220,9 +230,10 @@ var Column = React.createClass({
 				<DefaultTextInput
 					onChange={this.onFieldLabel}
 					value={{default: fieldLabel, user: user.fieldLabel}} />
-				<div style={{height: 20}}>
+				<div style={{height: 32}}>
 					{doRefGene ?
 						<RefGeneAnnotation
+							alternateColors={!_.getIn(column, ['showIntrons'], false)}
 							width={width}
 							refGene={_.values(data.refGene)[0]}
 							layout={column.layout}

@@ -65,7 +65,7 @@ var RefGeneAnnotation = React.createClass({
 		};
 	},
 
-	draw: function (width, layout, indx) {
+	draw: function (width, layout, indx, alternateColors) {
 		if (!width || !layout || !indx) {
 			return;
 		}
@@ -77,22 +77,22 @@ var RefGeneAnnotation = React.createClass({
 			vg.width(width);
 		}
 
-		vg.box(0, 0, width, refHeight, 'white'); // white background
+		vg.box(0, 0, width, refHeight * 2, 'white'); // white background
 
 		// draw a line across to represent the entire horizontal genomic region that will be in display, for promoter and downstream region
 		ctx.fillStyle = 'black';
-		ctx.fillRect(0, refHeight / 2, width, 1);
+		ctx.fillRect(0, refHeight / 2 + refHeight, width, 1);
 
 		pxTransformEach(layout, (toPx, [start, end]) => {
 			var nodes = matches(indx, {start: start, end: end});
 			_.each(nodes.sort((a, b)=> (b.start - a.start)), ({i, start, end, inCds}) => {
 				var {y, h} = annotation[inCds ? 'cds' : 'utr'];
 				var [pstart, pend] = toPx([start, end]);
-				ctx.fillStyle = i % 2 === 0 ? shade2 : shade1;
-				ctx.fillRect(pstart, y, (pend - pstart) || 1, h);
+				ctx.fillStyle = (alternateColors && i % 2 === 1) ? shade1 : shade2;
+				ctx.fillRect(pstart, y + refHeight, (pend - pstart) || 1, h);
 				// draw a line across gap to connect exons
 				ctx.fillStyle = 'black';
-				ctx.fillRect(prevEnd, refHeight / 2, pstart - prevEnd, 1);
+				ctx.fillRect(prevEnd, refHeight / 2 + refHeight, pstart - prevEnd, 1);
 				prevEnd = pend;
 			});
 		});
@@ -103,19 +103,19 @@ var RefGeneAnnotation = React.createClass({
 	},
 
 	componentDidMount: function () {
-		var {width, layout} = this.props;
-		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, refHeight);
-		this.draw(width, layout, this.index);
+		var {width, layout, alternateColors} = this.props;
+		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, refHeight * 2);
+		this.draw(width, layout, this.index, alternateColors);
 	},
 
 	render: function () {
-		var {width, layout, refGene} = this.props,
+		var {width, layout, refGene, alternateColors} = this.props,
 //			{baseLen} = layout,
 			intervals = findIntervals(refGene);
 
 		this.index = index(intervals);
 		if (this.vg) {
-			this.draw(width, layout, this.index);
+			this.draw(width, layout, this.index, alternateColors);
 		}
 		return (
 			<canvas
