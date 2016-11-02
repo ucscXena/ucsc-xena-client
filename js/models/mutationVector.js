@@ -375,18 +375,12 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 	};
 }
 
-function index(fieldType, data, mutationClass) {
+function index(fieldType, data) {
 	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
 		return null;
 	}
 
-	var {padTxStart, padTxEnd} = getExonPadding(mutationClass);
-
-	var {req: {rows, samplesInResp}, refGene} = data,
-		refGeneObj = _.values(refGene)[0],
-		strand = refGeneObj.strand,
-		newStart = (strand === '+') ? refGeneObj.txStart - padTxStart : refGeneObj.txStart - padTxEnd,
-		newEnd = (strand === '+') ? refGeneObj.txEnd + padTxEnd : refGeneObj.txEnd + padTxStart,
+	var {req: {rows, samplesInResp}} = data,
 		bySample = _.groupBy(rows, 'sample'),
 		empty = []; // use a single empty object.
 
@@ -400,11 +394,11 @@ function index(fieldType, data, mutationClass) {
 			let vclass = structuralVariantClass(alt);
 			if (vclass === 'left') {
 				//SV: new segment to the left
-				virtualStart = newStart;
+				virtualStart = -Infinity;
 				//row.id = id;
 			} else if (vclass === 'right') {
 				//SV: new segment on the right
-				virtualEnd = newEnd;
+				virtualEnd = Infinity;
 				//row.id = id;
 			}
 		}
