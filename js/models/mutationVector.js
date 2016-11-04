@@ -130,7 +130,6 @@ var unknownEffect = 0,
 	},
 	getMutationLegend = mutationDataType => {
 		// have to explicitly call hexToRGB to avoid map passing in index.
-		debugger;
 		if (mutationDataType === "SV") {
 			return {
 				colors: _.values(chromColorGB).map(h => hexToRGB(h)).map(colorStr).reverse(),
