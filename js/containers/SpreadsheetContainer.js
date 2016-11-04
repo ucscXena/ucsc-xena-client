@@ -72,6 +72,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	onResize: function (id, size) {
 		this.props.callback(['resize', id, size]);
 	},
+	onXZoom: function(id, xzoom) {
+		this.props.callback(['xzoom', id, xzoom]);
+	},
 	onRemove: function (id) {
 		this.props.callback(['remove', id]);
 	},
@@ -89,6 +92,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	},
 	onShowIntrons: function (id) {
 		this.props.callback(['showIntrons', id]);
+	},
+	onSortVisible: function (id) {
+		this.props.callback(['sortVisible', id]);
 	},
 	onOpenVizSettings: function (id) {
 		this.props.callback(['vizSettings-open', id]);
@@ -114,8 +120,10 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						onFieldLabel={this.onFieldLabel}
 						onColumnLabel={this.onColumnLabel}
 						onShowIntrons={this.onShowIntrons}
+						onSortVisible={this.onSortVisible}
 						onMode={this.onMode}
 						onKm={this.onKm}
+						onXZoom={this.onXZoom}
 						onRemove={this.onRemove}
 						onResize={this.onResize}
 						onReload={this.onReload}

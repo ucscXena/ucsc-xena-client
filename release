@@ -48,7 +48,7 @@ patch() {
 major() {
 	run "Incrementing master version" git checkout master
 	run "" npm version $(${SEMVER} --preid ${PREID} -i premajor ${VERSION})
-	run "Pushing to origin" git push origin --tags ${master}
+	run "Pushing to origin" git push origin --tags master
 }
 
 usage() {

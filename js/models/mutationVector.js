@@ -249,33 +249,37 @@ function rowOrder(row1, row2, flip) {
 	return cmpMut(_.maxWith(row1a, cmpMut), _.maxWith(row2a, cmpMut));
 }
 
-function cmpRowOrNoVariants(v1, v2, flip) {
-	if (v1.length === 0) {
-		return (v2.length === 0) ? 0 : 1;
+function cmpRowOrNoVariants(v1, v2, xzoom, flip) {
+	var vf1 = v1.filter(v => v.start <= xzoom.end && v.end >= xzoom.start),
+		vf2 = v2.filter(v => v.start <= xzoom.end && v.end >= xzoom.start);
+	if (vf1.length === 0) {
+		return (vf2.length === 0) ? 0 : 1;
 	}
-	return (v2.length === 0) ? -1 : rowOrder(v1, v2, flip);
+	return (vf2.length === 0) ? -1 : rowOrder(vf1, vf2, flip);
 }
 
-function cmpRowOrNull(v1, v2, flip) {
+function cmpRowOrNull(v1, v2, xzoom, flip) {
 	if (v1 == null) {
 		return (v2 == null) ? 0 : 1;
 	}
-	return (v2 == null) ? -1 : cmpRowOrNoVariants(v1, v2, flip);
+	return (v2 == null) ? -1 : cmpRowOrNoVariants(v1, v2, xzoom, flip);
 }
 
-function cmpSamples(probes, sample, flip, s1, s2) {
-	return cmpRowOrNull(sample[s1], sample[s2], flip);
+function cmpSamples(probes, xzoom, sample, flip, s1, s2) {
+	return cmpRowOrNull(sample[s1], sample[s2], xzoom, flip);
 }
 
 // XXX Instead of checking strand here, it should be set as a column
 // property as part of the user input: flip if user enters a gene on
 // negative strand. Don't flip for genomic range view, or positive strand.
-function cmp({fields}, data, index) {
-	var refGene = _.getIn(data, ['refGene']),
+function cmp(column, data, index) {
+	var {fields, xzoom, sortVisible} = column,
+		appliedZoom = sortVisible && xzoom ? xzoom : {start: -Infinity, end: Infinity},
+		refGene = _.getIn(data, ['refGene']),
 		samples = _.getIn(index, ['bySample']);
 
 	return (!_.isEmpty(refGene) && samples) ?
-		(s1, s2) => cmpSamples(fields, samples, _.values(refGene)[0].strand !== '+', s1, s2) :
+		(s1, s2) => cmpSamples(fields, appliedZoom, samples, _.values(refGene)[0].strand !== '+', s1, s2) :
 		() => 0;
 }
 
@@ -336,8 +340,21 @@ function findNodes(byPosition, layout, feature, samples) {
 	}), v => v.group);
 }
 
+var swapIf = (strand, [x, y]) => strand === '-' ? [y, x] : [x, y];
+
+function defaultXZoom(refGene, type) {
+	var {txStart, txEnd, strand} = refGene,
+		{padTxStart, padTxEnd} = getExonPadding(type),
+		[startPad, endPad] = swapIf(strand, [padTxStart, padTxEnd]);
+
+	return {
+		start: txStart - startPad,
+		end: txEnd + endPad
+	};
+}
+
 function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index, zoom) {
-	var {fieldType, width, sFeature, showIntrons = false, xzoom = {index: 0}} = column;
+	var {fieldType, width, sFeature, showIntrons = false} = column;
 
 	if (!_.get(data, 'req')) {
 		return {};
@@ -348,13 +365,11 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 		return {};
 	}
 
-	var {padTxStart, padTxEnd} = getExonPadding(fieldType);
-
 	var refGeneObj = _.values(refGene)[0],
-		startExon = 0,
-		endExon = refGeneObj.exonCount,
-		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
-		layout = createLayout(refGeneObj, width, xzoom, padTxStart, padTxEnd, startExon, endExon),
+		{xzoom = defaultXZoom(refGeneObj, fieldType)} = column;
+
+	var createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
+		layout = createLayout(refGeneObj, width, xzoom),
 		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples, zoom);
 
 	return {
@@ -368,13 +383,7 @@ function index(fieldType, data) {
 		return null;
 	}
 
-	var {padTxStart, padTxEnd} = getExonPadding(fieldType);
-
-	var {req: {rows, samplesInResp}, refGene} = data,
-		refGeneObj = _.values(refGene)[0],
-		strand = refGeneObj.strand,
-		newStart = (strand === '+') ? refGeneObj.txStart - padTxStart : refGeneObj.txStart - padTxEnd,
-		newEnd = (strand === '+') ? refGeneObj.txEnd + padTxEnd : refGeneObj.txEnd + padTxStart,
+	var {req: {rows, samplesInResp}} = data,
 		bySample = _.groupBy(rows, 'sample'),
 		empty = []; // use a single empty object.
 
@@ -388,11 +397,11 @@ function index(fieldType, data) {
 			let vclass = structuralVariantClass(alt);
 			if (vclass === 'left') {
 				//SV: new segment to the left
-				virtualStart = newStart;
+				virtualStart = -Infinity;
 				//row.id = id;
 			} else if (vclass === 'right') {
 				//SV: new segment on the right
-				virtualEnd = newEnd;
+				virtualEnd = Infinity;
 				//row.id = id;
 			}
 		}
@@ -465,5 +474,6 @@ module.exports = {
 	isStructuralVariant,
 	chromColorGB,
 	SNVPvalue,
+	defaultXZoom,
 	fetch
 };

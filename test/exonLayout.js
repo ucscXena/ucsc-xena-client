@@ -3,7 +3,6 @@
 var el = require('../js/exonLayout');
 var assert = require('assert');
 
-var padding = 200;
 describe('exonLayout', function () {
 	describe('#pad', function () {
 		it('should pad between intervals', function() {
@@ -17,13 +16,14 @@ describe('exonLayout', function () {
 				exonStarts: [100, 200, 300],
 				exonEnds: [110, 210, 310],
 				strand: null
-			}, 330, {len: 33}, padding, padding, 0, 3), {
-				chrom: [[100 - padding, 113], [197, 213], [297, 310 + padding]],
+			}, 4450, {start: -100, end: 510}), {
+				chrom: [[-100, 113], [197, 213], [297, 510]],
 				screen: [[0, 2140], [2140, 2310], [2310, 4450]],
 				reversed: false,
-				baseLen: 33,
-				pxLen: 330,
-				zoom: {len: 33}
+				/* 3 intvls of 11, 2 pads of 200, 4 intronic buffers */
+				baseLen: 11 * 3 + 200 * 2 + 3 * 4,
+				pxLen: 4450,
+				zoom: {start: -100, end: 510}
 			});
 		});
 		it('should layout reversed intervals', function() {
@@ -31,28 +31,29 @@ describe('exonLayout', function () {
 				exonStarts: [100, 200, 300],
 				exonEnds: [110, 210, 310],
 				strand: '-'
-			}, 330, {len: 33}, padding, padding, 0, 3), {
-				chrom: [[297, 310 + padding], [197, 213], [100 - padding, 113]],
+			}, 4450, {start: -100, end: 510}), {
+				chrom: [[297, 510], [197, 213], [-100, 113]],
 				screen: [[0, 2140], [2140, 2310], [2310, 4450]],
 				reversed: true,
-				baseLen: 33,
-				pxLen: 330,
-				zoom: {len: 33}
+				/* 3 intvls of 11, 2 pads of 200, 4 intronic buffers */
+				baseLen: 11 * 3 + 200 * 2 + 3 * 4,
+				pxLen: 4450,
+				zoom: {start: -100, end: 510}
 			});
 		});
 //		// an asymmetric case
-		it('should layout reversed intervals (2)', function() {
+		it('should layout reversed asym intervals', function() {
 			assert.deepEqual(el.layout({
 				exonStarts: [100, 200],
 				exonEnds: [110, 220],
 				strand: '-'
-			}, 2120, {len: 212}, padding, padding, 0, 2), {
-				chrom: [[197, 220 + padding], [100 - padding, 113]],
+			}, 4380, {start: -100, end: 420}), {
+				chrom: [[197, 420], [-100, 113]],
 				screen: [[0, 2240], [2240, 4380]],
 				reversed: true,
-				baseLen: 212,
-				pxLen: 2120,
-				zoom: {len: 212}
+				baseLen: 11 + 21 + 3 * 2 + 200 * 2,
+				pxLen: 4380,
+				zoom: {start: -100, end: 420}
 			});
 		});
 	});

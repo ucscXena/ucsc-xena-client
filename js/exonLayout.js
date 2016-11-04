@@ -11,11 +11,18 @@ var _ = require('underscore');
 var reverseIf = (strand, arr) =>
 	(strand === '-') ? arr.slice(0).reverse() : arr;
 
+var min = (x, y) => x < y ? x : y;
+var max = (x, y) => x > y ? x : y;
+
 // Apply start and end padding.
-var applyPad = (arr, startPad, endPad) =>
+var applyPad = (arr, {start, end}) =>
 	_.updateIn(arr,
-			[0, 0], x => x - startPad,
-			[arr.length - 1, 1], x => x + endPad);
+			[0, 0], x => start < x ? start :  x,
+			[arr.length - 1, 1], x => end > x ? end : x);
+
+var applyClip = (arr, {start, end}) =>
+	arr.map(([s, e]) => s > end || e < start ? null : [max(s, start), min(e, end)])
+		.filter(x => x);
 
 function pad1(p, intervals, acc) {
 	if (intervals.length === 1) {
@@ -54,20 +61,17 @@ function pxLen(chrlo) {
 	return _.reduce(chrlo, (acc, [s, e]) => acc + e - s, 0);
 }
 
-var swapIf = (strand, [x, y]) => strand === '-' ? [y, x] : [x, y];
-
 // Layout exons on screen pixels.
 // layout(genepred :: {exonStarts : [<int>, ...], exonEnds: [<int>, ...], strand: <string>)
 //  :: {chrom: [[<int>, <int>], ...], screen: [[<int>, <int>], ...], reversed: <boolean>}
-// paddingTxStart: promoter region padding, padding=0 is just showing the gene
-// paddingTxEnd: region after the last exon, padding=0 is just showing the gene
-// startExonIndex, endExonIndex : used to specify which exon range to show 0,1 for first exon, 0, 2 for 1st and 2nd exon
-function layout({exonStarts, exonEnds, strand}, pxWidth, zoom, paddingTxStart, paddingTxEnd, startExon, endExon) {
-	var [startPad, endPad] = swapIf(strand, [paddingTxStart, paddingTxEnd]),
-		addedSpliceIntvls = pad(spLen, _.zip(exonStarts, exonEnds)),
-		paddedIntvals = applyPad(addedSpliceIntvls, startPad, endPad),
-		chrIntvls = reverseIf(strand, paddedIntvals).slice(startExon, endExon),
-		count = _.getIn(zoom, ['len'], baseLen(chrIntvls)),
+// If zoom.start or zoom.end are outside the gene, the first or last exon will be extended to cover
+// the zoom region.
+function layout({exonStarts, exonEnds, strand}, pxWidth, zoom) {
+	var addedSpliceIntvls = pad(spLen, _.zip(exonStarts, exonEnds)),
+		paddedIntvals = applyPad(addedSpliceIntvls, zoom),
+		clippedIntvals = applyClip(paddedIntvals, zoom),
+		chrIntvls = reverseIf(strand, clippedIntvals),
+		count = baseLen(chrIntvls),
 		bpp = count / pxWidth,
 		pixIntvls = toScreen(bpp, chrIntvls, 0, []);
 
@@ -81,11 +85,11 @@ function layout({exonStarts, exonEnds, strand}, pxWidth, zoom, paddingTxStart, p
 	};
 }
 
-function intronLayout({txStart, txEnd, strand}, pxWidth, zoom, paddingTxStart, paddingTxEnd) {
-	var [startPad, endPad] = swapIf(strand, [paddingTxStart, paddingTxEnd]),
-		paddedIntvals = applyPad([[txStart, txEnd]], startPad, endPad),
-		chrIntvls = reverseIf(strand, paddedIntvals),
-		count = _.getIn(zoom, ['len'], baseLen(chrIntvls)),
+function intronLayout({txStart, txEnd, strand}, pxWidth, zoom) {
+	var paddedIntvals = applyPad([[txStart, txEnd]], zoom),
+		clippedIntvals = applyClip(paddedIntvals, zoom),
+		chrIntvls = reverseIf(strand, clippedIntvals),
+		count =  baseLen(chrIntvls),
 		bpp = count / pxWidth,
 		pixIntvls = toScreen(bpp, chrIntvls, 0, []);
 
