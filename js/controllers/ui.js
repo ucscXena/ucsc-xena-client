@@ -302,7 +302,11 @@ var controls = {
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
 		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets, Rx.Scheduler.timeout), thunk]),
 	'sample-search': matchSamples,
-	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id)
+	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id),
+	// Due to wonky react-bootstrap handlers, xzoom can occur after remove, so
+	// check that the column exists before updating.
+	'xzoom': (state, id, xzoom) => _.updateIn(state, ['columns', id],
+			c => c ? _.assoc(c, 'xzoom', xzoom) : c)
 };
 
 module.exports = {

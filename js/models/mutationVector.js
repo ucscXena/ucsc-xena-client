@@ -348,8 +348,21 @@ function findNodes(byPosition, layout, feature, samples) {
 	}), v => v.group);
 }
 
+var swapIf = (strand, [x, y]) => strand === '-' ? [y, x] : [x, y];
+
+function defaultXZoom(refGene, type) {
+	var {txStart, txEnd, strand} = refGene,
+		{padTxStart, padTxEnd} = getExonPadding(type),
+		[startPad, endPad] = swapIf(strand, [padTxStart, padTxEnd]);
+
+	return {
+		start: txStart - startPad,
+		end: txEnd + endPad
+	};
+}
+
 function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index, zoom) {
-	var {width, sFeature, showIntrons = false, xzoom = {index: 0}} = column;
+	var {width, sFeature, showIntrons = false} = column;
 
 	if (!_.get(data, 'req')) {
 		return {};
@@ -359,14 +372,11 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 	if (_.isEmpty(refGene)) {
 		return {};
 	}
-
-	var {padTxStart, padTxEnd} = getExonPadding(column.mutationClass);
-
 	var refGeneObj = _.values(refGene)[0],
-		startExon = 0,
-		endExon = refGeneObj.exonCount,
-		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
-		layout = createLayout(refGeneObj, width, xzoom, padTxStart, padTxEnd, startExon, endExon),
+		{xzoom = defaultXZoom(refGeneObj, column.mutationClass)} = column;
+
+	var createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
+		layout = createLayout(refGeneObj, width, xzoom),
 		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples, zoom);
 
 	return {
@@ -469,5 +479,6 @@ module.exports = {
 	chromColorGB,
 	mutationDatasetClass,
 	SNVPvalue,
+	defaultXZoom,
 	fetch
 };

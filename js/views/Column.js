@@ -5,6 +5,7 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 var _ = require('../underscore_ext');
+var s = require('underscore.string');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var Dropdown = require('react-bootstrap/lib/Dropdown');
 var Button = require('react-bootstrap/lib/Button');
@@ -19,6 +20,8 @@ var widgets = require('../columnWidgets');
 var aboutDatasetMenu = require('./aboutDatasetMenu');
 var spinner = require('../ajax-loader.gif');
 var mutationVector = require('../models/mutationVector');
+var ValidatedInput = require('./ValidatedInput');
+var konami = require('../konami');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -68,12 +71,55 @@ var styles = {
 	}
 };
 
-function mutationMenu(props, {onMuPit, onShowIntrons}) {
+// Manually set focus to avoid triggering dropdown (close) or anchor
+// (navigate) actions.
+var setFocus = ev => {
+	ev.preventDefault();
+	ev.stopPropagation();
+	ev.target.focus();
+};
+
+var stopPropagation = ev => ev.stopPropagation();
+
+var addIdsToArr = arr => arr.map((el, id) => React.cloneElement(el, {id}));
+
+var defaultXZoom = (refGene, type) => {
+	if (_.isEmpty(refGene)) {
+		return {start: 0, end: 0};
+	}
+	var refGeneObj = _.values(refGene)[0];
+	return mutationVector.defaultXZoom(refGeneObj, type);
+};
+
+var isIntString = str => !!s.trim(str).replace(/,/g, '').match(/^[0-9]+$/);
+var parseExtendedInt = str => parseInt(s.trim(str).replace(/,/g, ''), 10);
+
+var boundIsValid = _.curry((type, refGene, str) => {
+	if (_.isEmpty(refGene)) {
+		return false;
+	}
+	if (s.trim(str) === '') {
+		return true;
+	}
+	if (!isIntString(str)) { // must be an int if it's not empty string
+		return false;
+	}
+	var pos = parseExtendedInt(str),
+		def = defaultXZoom(refGene, type);
+
+	return def.start <= pos && pos <= def.end;
+});
+
+function mutationMenu(props, {onMuPit, onShowIntrons, xzoomable}) {
 	var {column, data} = props,
+		mutationClass = _.getIn(column, ['mutationClass']),
+		{start, end} = _.get(column, 'xzoom',
+				defaultXZoom(data.refGene, mutationClass)),
+		bIV = boundIsValid(mutationClass, data.refGene),
 		assembly = _.getIn(column, ['assembly']),
 		valueType = _.getIn(column, ['valueType']),
 		rightValueType = valueType === 'mutation',
-		wrongDataSubType = _.getIn(column, ['mutationClass']) !== 'SNV',
+		wrongDataSubType = mutationClass !== 'SNV',
 		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
 		noMenu = !rightValueType || !rightAssembly || (data && _.isEmpty(data.refGene)),
 		noMuPit = noMenu || wrongDataSubType,
@@ -81,10 +127,19 @@ function mutationMenu(props, {onMuPit, onShowIntrons}) {
 		mupitItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)',
 		{showIntrons = false} = column,
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
-	return noMenu ? null : [
+	return noMenu ? null : addIdsToArr([
 		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
-		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>
-	];
+		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
+		...(xzoomable ? [
+			<MenuItem header style={{fontSize: '80%'}}>Start position</MenuItem>,
+			<MenuItem>
+				<ValidatedInput defaultValue={start} isValid={bIV} ref='start' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
+			</MenuItem>,
+			<MenuItem header style={{fontSize: '80%'}}>End position</MenuItem>,
+			<MenuItem>
+				<ValidatedInput defaultValue={end} isValid={bIV} ref='end' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
+			</MenuItem>] : [])
+	]);
 }
 
 function matrixMenu(props, {supportsGeneAverage, onMode}) {
@@ -125,7 +180,34 @@ function getStatusView(status, onReload) {
 	return null;
 }
 
+function getPosition(type, refGene, start, end) {
+	if (_.isEmpty(refGene) || !boundIsValid(start) || !boundIsValid(end)) {
+		return false;
+	}
+	var def = defaultXZoom(refGene, type);
+
+	start = s.trim(start) === '' ? def.start : parseExtendedInt(start);
+	end = s.trim(end) === '' ? def.end : parseExtendedInt(end);
+
+	return (def.start <= start &&
+			start <= end &&
+			end <= def.end) ? {start, end} : null;
+}
+
 var Column = React.createClass({
+	getInitialState() {
+		return {xzoomable: false};
+	},
+	enablexzoomable() {
+		this.setState({xzoomable: true});
+	},
+	componentWillMount() {
+		var asciiA = 65;
+		this.ksub = konami(asciiA).subscribe(this.enablexzoomable);
+	},
+	componentWillUnmount() {
+		this.ksub.dispose();
+	},
 	onResizeStop: function (size) {
 		this.props.onResize(this.props.id, size);
 	},
@@ -153,6 +235,20 @@ var Column = React.createClass({
 	onShowIntrons: function () {
 		this.props.onShowIntrons(this.props.id);
 	},
+	onMenuToggle: function (open) {
+		var {xzoomable} = this.state,
+			{column: {xzoom, valueType, mutationClass}, data, onXZoom, id} = this.props;
+		if (xzoomable && !open && valueType === 'mutation') {
+			let start = this.refs.start.getValue(),
+				end = this.refs.end.getValue(),
+				refGene = _.get(data, 'refGene'),
+				position = getPosition(mutationClass, refGene, start, end);
+
+			if (position && !_.isEqual(position, xzoom)) {
+				onXZoom(id, position);
+			}
+		}
+	},
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
 		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
@@ -176,9 +272,10 @@ var Column = React.createClass({
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
+			{xzoomable} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
 			{onMode, onMuPit, onShowIntrons} = this,
-			menu = optionMenu(this.props, {onMode, onMuPit, onShowIntrons, supportsGeneAverage}),
+			menu = optionMenu(this.props, {onMode, onMuPit, onShowIntrons, supportsGeneAverage, xzoomable}),
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
 			// move this to state to generalize to other annotations.
@@ -202,7 +299,7 @@ var Column = React.createClass({
 			<div className='Column' style={{width: width, position: 'relative'}}>
 				<br/>
 				{/* Using Dropdown instead of SplitButton so we can put a Tooltip on the caret. :-p */}
-				<Dropdown ref='controls' bsSize='xsmall'>
+				<Dropdown onToggle={this.onMenuToggle} ref='controls' bsSize='xsmall'>
 					<Button componentClass='label'>
 						{moveIcon}
 					</Button>
