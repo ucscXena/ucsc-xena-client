@@ -110,9 +110,10 @@ var boundIsValid = _.curry((type, refGene, str) => {
 	return def.start <= pos && pos <= def.end;
 });
 
-function mutationMenu(props, {onMuPit, onShowIntrons, xzoomable}) {
+function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable}) {
 	var {column, data} = props,
 		mutationClass = _.getIn(column, ['mutationClass']),
+		sortVisible = column.sortVisible,
 		{start, end} = _.get(column, 'xzoom',
 				defaultXZoom(data.refGene, mutationClass)),
 		bIV = boundIsValid(mutationClass, data.refGene),
@@ -126,6 +127,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, xzoomable}) {
 		noData = !_.get(data, 'req'),
 		mupitItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)',
 		{showIntrons = false} = column,
+		sortVisibleItemName = sortVisible ? 'Sort all' : 'Sort visible',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
 	return noMenu ? null : addIdsToArr([
 		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
@@ -138,7 +140,8 @@ function mutationMenu(props, {onMuPit, onShowIntrons, xzoomable}) {
 			<MenuItem header style={{fontSize: '80%'}}>End position</MenuItem>,
 			<MenuItem>
 				<ValidatedInput defaultValue={end} isValid={bIV} ref='end' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
-			</MenuItem>] : [])
+			</MenuItem>,
+			<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>] : [])
 	]);
 }
 
@@ -235,6 +238,9 @@ var Column = React.createClass({
 	onShowIntrons: function () {
 		this.props.onShowIntrons(this.props.id);
 	},
+	onSortVisible: function () {
+		this.props.onSortVisible(this.props.id);
+	},
 	onMenuToggle: function (open) {
 		var {xzoomable} = this.state,
 			{column: {xzoom, valueType, mutationClass}, data, onXZoom, id} = this.props;
@@ -274,8 +280,8 @@ var Column = React.createClass({
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
 			{xzoomable} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
-			{onMode, onMuPit, onShowIntrons} = this,
-			menu = optionMenu(this.props, {onMode, onMuPit, onShowIntrons, supportsGeneAverage, xzoomable}),
+			{onMode, onMuPit, onShowIntrons, onSortVisible} = this,
+			menu = optionMenu(this.props, {onMode, onMuPit, onShowIntrons, onSortVisible, supportsGeneAverage, xzoomable}),
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
 			// move this to state to generalize to other annotations.

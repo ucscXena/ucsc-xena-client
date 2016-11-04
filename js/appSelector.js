@@ -30,7 +30,7 @@ function cmpString(s1, s2) {
 var sortSelector = createSelector(
 	state => state.samples,
 	state => state.cohortSamples,
-	state => _.fmap(state.columns, c => _.pick(c, 'fieldType', 'fields')),
+	state => _.fmap(state.columns, c => _.pick(c, 'fieldType', 'fields', 'xzoom', 'sortVisible')),
 	state => state.columnOrder,
 	state => state.data,
 	state => state.index,

@@ -287,6 +287,8 @@ var controls = {
 		_.assocIn(state, ['columns', dsID, 'user', 'fieldLabel'], value),
 	'showIntrons': (state, dsID) =>
 		_.updateIn(state, ['columns', dsID, 'showIntrons'], v => !v),
+	'sortVisible': (state, dsID) =>
+		_.updateIn(state, ['columns', dsID, 'sortVisible'], v => !v),
 	'km-open': (state, id) => _.assocInAll(state,
 			['km', 'id'], id,
 			['km', 'title'], _.getIn(state, ['columns', id, 'user', 'columnLabel']),
