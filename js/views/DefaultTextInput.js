@@ -7,9 +7,10 @@
  * - Restore the default if the user deletes the text
  */
 
+require('./DefaultTextInput.css');
 const React = require('react');
 var Input = require('react-bootstrap/lib/Input');
-var rxEventsMixin = require('../react-utils').rxEventsMixin;
+var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
 
 var styles = {
 	input: {
@@ -23,7 +24,7 @@ var styles = {
 };
 
 var DefaultTextInput = React.createClass({
-	mixins: [rxEventsMixin],
+	mixins: [rxEventsMixin, deepPureRenderMixin],
 	componentWillMount: function () {
 		this.events('change');
 		this.change = this.ev.change
@@ -68,6 +69,7 @@ var DefaultTextInput = React.createClass({
 
 		return (
 			<Input
+				wrapperClassName='DefaultTextInput'
 				standalone={true}
 				ref='input'
 				onChange={this.ev.change}
@@ -76,8 +78,7 @@ var DefaultTextInput = React.createClass({
 				style={style}
 				type='text'
 				title={value}
-				value={value} />
-		);
+				value={value} />);
 	}
 });
 
