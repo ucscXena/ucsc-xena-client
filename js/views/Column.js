@@ -22,6 +22,7 @@ var spinner = require('../ajax-loader.gif');
 var mutationVector = require('../models/mutationVector');
 var ValidatedInput = require('./ValidatedInput');
 var konami = require('../konami');
+var {deepPureRenderMixin} = require('../react-utils');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -198,6 +199,7 @@ function getPosition(type, refGene, start, end) {
 }
 
 var Column = React.createClass({
+	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		return {xzoomable: false};
 	},
