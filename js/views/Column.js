@@ -198,12 +198,16 @@ function getPosition(type, refGene, start, end) {
 			end <= def.end) ? {start, end} : null;
 }
 
+// Persistent state for xzoomable setting.
+var columnsXZoomable = false;
+
 var Column = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState() {
-		return {xzoomable: false};
+		return {xzoomable: columnsXZoomable};
 	},
 	enablexzoomable() {
+		columnsXZoomable = true;
 		this.setState({xzoomable: true});
 	},
 	componentWillMount() {
