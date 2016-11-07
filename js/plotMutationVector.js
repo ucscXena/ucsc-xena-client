@@ -171,7 +171,7 @@ var MutationColumn = hotOrNot(React.createClass({
 		return tooltip(nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
 	},
 	render: function () {
-		var {column, samples, zoom, data, index} = this.props,
+		var {column, samples, zoom, index} = this.props,
 			feature = _.getIn(column, ['sFeature']);
 
 		// XXX Make plot a child instead of a prop? There's also legend.
@@ -190,7 +190,6 @@ var MutationColumn = hotOrNot(React.createClass({
 					nodes={column.nodes}
 					strand={column.strand}
 					width={column.width}
-					data={data}
 					index={index}
 					samples={samples}
 					xzoom={column.zoom}
