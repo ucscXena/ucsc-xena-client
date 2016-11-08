@@ -364,7 +364,7 @@ function defaultXZoom(refGene, type) {
 	};
 }
 
-function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index, zoom) {
+function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
 	var {width, sFeature, showIntrons = false} = column;
 
 	if (!_.get(data, 'req')) {
@@ -380,7 +380,7 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 
 	var createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
 		layout = createLayout(refGeneObj, width, xzoom),
-		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples, zoom);
+		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples);
 
 	return {
 		layout,
