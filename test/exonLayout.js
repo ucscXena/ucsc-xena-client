@@ -13,6 +13,7 @@ describe('exonLayout', function () {
 	describe('#layout', function () {
 		it('should layout intervals', function() {
 			assert.deepEqual(el.layout({
+				chrom: 'chr1',
 				exonStarts: [100, 200, 300],
 				exonEnds: [110, 210, 310],
 				strand: null
@@ -23,11 +24,13 @@ describe('exonLayout', function () {
 				/* 3 intvls of 11, 2 pads of 200, 4 intronic buffers */
 				baseLen: 11 * 3 + 200 * 2 + 3 * 4,
 				pxLen: 4450,
+				chromName: 'chr1',
 				zoom: {start: -100, end: 510}
 			});
 		});
 		it('should layout reversed intervals', function() {
 			assert.deepEqual(el.layout({
+				chrom: 'chr2',
 				exonStarts: [100, 200, 300],
 				exonEnds: [110, 210, 310],
 				strand: '-'
@@ -38,12 +41,14 @@ describe('exonLayout', function () {
 				/* 3 intvls of 11, 2 pads of 200, 4 intronic buffers */
 				baseLen: 11 * 3 + 200 * 2 + 3 * 4,
 				pxLen: 4450,
+				chromName: 'chr2',
 				zoom: {start: -100, end: 510}
 			});
 		});
 //		// an asymmetric case
 		it('should layout reversed asym intervals', function() {
 			assert.deepEqual(el.layout({
+				chrom: 'chr3',
 				exonStarts: [100, 200],
 				exonEnds: [110, 220],
 				strand: '-'
@@ -53,6 +58,7 @@ describe('exonLayout', function () {
 				reversed: true,
 				baseLen: 11 + 21 + 3 * 2 + 200 * 2,
 				pxLen: 4380,
+				chromName: 'chr3',
 				zoom: {start: -100, end: 420}
 			});
 		});
