@@ -14,6 +14,7 @@ var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var DefaultTextInput = require('./DefaultTextInput');
 var {RefGeneAnnotation} = require('../refGeneExons');
+var DragSelect = require('./DragSelect');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
 var ResizeOverlay = require('./ResizeOverlay');
 var widgets = require('../columnWidgets');
@@ -23,6 +24,8 @@ var mutationVector = require('../models/mutationVector');
 var ValidatedInput = require('./ValidatedInput');
 var konami = require('../konami');
 var {deepPureRenderMixin} = require('../react-utils');
+var Crosshair = require('./Crosshair');
+var {chromPositionFromScreen} = require('../exonLayout');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -247,6 +250,25 @@ var Column = React.createClass({
 	onSortVisible: function () {
 		this.props.onSortVisible(this.props.id);
 	},
+	onXZoomOut: function (ev) {
+		if (this.state.xzoomable && ev.shiftKey) {
+			let {id, onXZoom, data, mutationClass} = this.props,
+				refGene = _.get(data, 'refGene'),
+				position = getPosition(mutationClass, refGene, '', '');
+			onXZoom(id, position);
+		}
+	},
+	onXDragZoom: function (pos) {
+		var {column: {layout}, onXZoom, id} = this.props;
+		var zstart = chromPositionFromScreen(layout, pos.start),
+			zend = chromPositionFromScreen(layout, pos.end),
+			[zmin, zmax] = zstart > zend ? [zend, zstart] : [zstart, zend],
+			tooShort = Math.round(zmin) === Math.round(zmax),
+			[start, end] = tooShort ? [Math.floor(zmin), Math.ceil(zmax) - 1] : // ensure 1 base minimum
+				[Math.round(zmin), Math.round(zmax) - 1];
+
+		onXZoom(id, {start, end});
+	},
 	onMenuToggle: function (open) {
 		var {xzoomable} = this.state,
 			{column: {xzoom, valueType, mutationClass}, data, onXZoom, id} = this.props;
@@ -339,15 +361,19 @@ var Column = React.createClass({
 				<DefaultTextInput
 					onChange={this.onFieldLabel}
 					value={{default: fieldLabel, user: user.fieldLabel}} />
-				<div style={{height: 32}}>
-					{doRefGene ?
-						<RefGeneAnnotation
-							alternateColors={!_.getIn(column, ['showIntrons'], false)}
-							width={width}
-							refGene={_.values(data.refGene)[0]}
-							layout={column.layout}
-							position={{gene: column.fields[0]}}/> : null}
-				</div>
+				<Crosshair>
+					<div style={{height: 32}}>
+						{doRefGene ?
+							<DragSelect enabled={xzoomable} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+									<RefGeneAnnotation
+										alternateColors={!_.getIn(column, ['showIntrons'], false)}
+										width={width}
+										refGene={_.values(data.refGene)[0]}
+										layout={column.layout}
+										position={{gene: column.fields[0]}}/>
+							</DragSelect> : null}
+					</div>
+				</Crosshair>
 
 				<ResizeOverlay
 					onResizeStop={this.onResizeStop}
@@ -362,8 +388,10 @@ var Column = React.createClass({
 						samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 						samplesMatched={samplesMatched}/>
 					<div style={{position: 'relative'}}>
-						{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
-						{getStatusView(status, this.onReload)}
+						<Crosshair>
+							{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
+							{getStatusView(status, this.onReload)}
+						</Crosshair>
 					</div>
 				</ResizeOverlay>
 				<h5 style={{visibility: first ? 'visible' : 'hidden'}}>Legends</h5>

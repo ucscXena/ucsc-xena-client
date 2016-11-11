@@ -12,6 +12,7 @@ var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
 var mv = require('./models/mutationVector');
 var {drawMutations, radius, labelFont, toYPx} = require('./drawMutations');
+var {chromPositionFromScreen} = require('./exonLayout');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -108,15 +109,28 @@ function makeRow(fields, sampleGroup, row) {
 		_.map(fields, f => (row && row[f]) || fieldValue));
 }
 
-function tooltip(nodes, samples, sampleFormat, {height, count, index}, gene, assembly, ev) {
+function posTooltip(layout, samples, sampleFormat, pixPerRow, index, assembly, x, y) {
+	var yIndex = Math.round((y - pixPerRow / 2) / pixPerRow + index),
+		pos = Math.floor(chromPositionFromScreen(layout, x));
+	return {
+		sampleID: sampleFormat(samples[yIndex]),
+		rows: [[['url',
+			`${assembly} ${layout.chromName}:${util.addCommas(pos)}`,
+			gbURL(assembly, pos)]]]};
+}
+
+function tooltip(layout, nodes, samples, sampleFormat, zoom, gene, assembly, ev) {
 	var {x, y} = util.eventOffset(ev),
+		{height, count, index} = zoom,
 		pixPerRow = height / count,
-		yIndex = Math.round((y - pixPerRow / 2) / pixPerRow + index),
-		node = closestNode(nodes, pixPerRow, index, count, x, y);
+		// XXX workaround for old bookmarks w/o chromName
+		lo = _.updateIn(layout, ['chromName'],
+				c => c || _.getIn(nodes, [0, 'data', 'chr'])),
+		node = closestNode(nodes, pixPerRow, zoom.index, zoom.count, x, y);
 
 	return node ?
 		sampleTooltip(sampleFormat, node.data, gene, assembly) :
-		{sampleID: sampleFormat(samples[yIndex])};
+		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
 }
 
 function getRowFields(rows, sampleGroups) {
@@ -146,8 +160,7 @@ var MutationColumn = hotOrNot(React.createClass({
 					.takeUntil(this.ev.mouseout)
 					.map(ev => ({
 						data: this.tooltip(ev),
-						open: true,
-						point: {x: ev.clientX, y: ev.clientY}
+						open: true
 					})) // look up current data
 					.concat(Rx.Observable.return({open: false}));
 			}).subscribe(this.props.tooltip);
@@ -167,8 +180,8 @@ var MutationColumn = hotOrNot(React.createClass({
 		return [rowFields, allRows];
 	},
 	tooltip: function (ev) {
-		var {column: {nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props;
-		return tooltip(nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
+		var {column: {layout, nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props;
+		return tooltip(layout, nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
 	},
 	render: function () {
 		var {column, samples, zoom, data, index} = this.props,

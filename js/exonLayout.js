@@ -66,7 +66,9 @@ function pxLen(chrlo) {
 //  :: {chrom: [[<int>, <int>], ...], screen: [[<int>, <int>], ...], reversed: <boolean>}
 // If zoom.start or zoom.end are outside the gene, the first or last exon will be extended to cover
 // the zoom region.
-function layout({exonStarts, exonEnds, strand}, pxWidth, zoom) {
+// layout chrom pos is closed coords.
+// layout screen pos is half open coords.
+function layout({chrom, exonStarts, exonEnds, strand}, pxWidth, zoom) {
 	var addedSpliceIntvls = pad(spLen, _.zip(exonStarts, exonEnds)),
 		paddedIntvals = applyPad(addedSpliceIntvls, zoom),
 		clippedIntvals = applyClip(paddedIntvals, zoom),
@@ -81,11 +83,14 @@ function layout({exonStarts, exonEnds, strand}, pxWidth, zoom) {
 		reversed: strand === '-',
 		baseLen: count,
 		pxLen: pxWidth,
+		chromName: chrom,
 		zoom: zoom
 	};
 }
 
-function intronLayout({txStart, txEnd, strand}, pxWidth, zoom) {
+// layout chrom pos is closed coords.
+// layout screen pos is half open coords.
+function intronLayout({chrom, txStart, txEnd, strand}, pxWidth, zoom) {
 	var paddedIntvals = applyPad([[txStart, txEnd]], zoom),
 		clippedIntvals = applyClip(paddedIntvals, zoom),
 		chrIntvls = reverseIf(strand, clippedIntvals),
@@ -99,15 +104,30 @@ function intronLayout({txStart, txEnd, strand}, pxWidth, zoom) {
 		reversed: strand === '-',
 		baseLen: count,
 		pxLen: pxWidth,
+		chromName: chrom,
 		zoom: zoom
 	};
+}
+
+function chromPositionFromScreen(layout, x) {
+	var {chrom, screen, reversed} = layout,
+		i = _.findIndex(screen, ([x0, x1]) => x0 < x && x < x1);
+
+	if (i !== -1) {
+		let [xStart, xEnd] = screen[i],
+			[x0, x1] = reversed ? [xEnd, xStart] : [xStart, xEnd],
+			[c0, c1]  = chrom[i];
+		return c0 + (x - x0) * (c1 - c0 + 1) / (x1 - x0);
+	}
+	return null;
 }
 
 module.exports = {
 	intronLayout,
 	screenLayout: (bpp, chrlo) => toScreen(bpp, chrlo, 0, []),
-	baseLen: baseLen,
-	pxLen: pxLen,
-	layout: layout,
-	pad: pad
+	baseLen,
+	pxLen,
+	layout,
+	pad,
+	chromPositionFromScreen
 };
