@@ -7,11 +7,12 @@ var React = require('react');
 var {rxEventsMixin} = require('../react-utils');
 var meta = require('../meta');
 var _ = require('../underscore_ext');
+var {deepPureRenderMixin} = require('../react-utils');
 
 function addTooltip(Component) {
 	return React.createClass({
 		displayName: 'SpreadsheetTooltip',
-		mixins: [rxEventsMixin],
+		mixins: [rxEventsMixin, deepPureRenderMixin],
 		getInitialState: function () {
 			return {
 				crosshair: {open: false},

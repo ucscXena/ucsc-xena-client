@@ -17,6 +17,7 @@ var konami = require('./konami');
 var Popover = require('react-bootstrap/lib/Popover');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var config = require('./config');
+var {deepPureRenderMixin} = require('./react-utils');
 
 var modeButton = {
 	chart: 'Visual Spreadsheet',
@@ -50,6 +51,7 @@ var asciiA = 65;
 
 // XXX drop this.props.style? Not sure it's used.
 var AppControls = React.createClass({
+	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		return {bookmarks: false};
 	},
