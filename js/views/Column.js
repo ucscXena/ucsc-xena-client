@@ -187,11 +187,12 @@ function getStatusView(status, onReload) {
 	return null;
 }
 
-function getPosition(type, refGene, start, end) {
-	if (_.isEmpty(refGene) || !boundIsValid(start) || !boundIsValid(end)) {
+function getPosition(type, refGene, pStart, pEnd) {
+	if (_.isEmpty(refGene) || !boundIsValid(pStart) || !boundIsValid(pEnd)) {
 		return false;
 	}
-	var def = defaultXZoom(refGene, type);
+	var [start, end] = pStart < pEnd ? [pStart, pEnd] : [pEnd, pStart],
+		def = defaultXZoom(refGene, type);
 
 	start = s.trim(start) === '' ? def.start : parseExtendedInt(start);
 	end = s.trim(end) === '' ? def.end : parseExtendedInt(end);
