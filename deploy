@@ -5,7 +5,7 @@ set -o errexit
 USER=ubuntu
 BUILD_DJANGO=build-django
 
-npm run build:prod
+npm run build:prod -- --bail
 
 # deploy
 rsync -a --delete --rsync-path='sudo rsync' build/ ${USER}@${HOST}:/var/www/html
