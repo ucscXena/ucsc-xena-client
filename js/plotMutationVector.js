@@ -11,7 +11,7 @@ var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
 var mv = require('./models/mutationVector');
-var {drawMutations, radius, labelFont, toYPx} = require('./drawMutations');
+var {drawSV, drawMutations, radius, labelFont, toYPx} = require('./drawMutations');
 var {chromPositionFromScreen} = require('./exonLayout');
 
 // Since we don't set module.exports, but instead register ourselves
@@ -184,14 +184,14 @@ var MutationColumn = hotOrNot(React.createClass({
 		return tooltip(layout, nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
 	},
 	render: function () {
-		var {column, samples, zoom, index} = this.props,
+		var {column, samples, zoom, index, draw} = this.props,
 			feature = _.getIn(column, ['sFeature']);
 
 		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
 			<CanvasDrawing
 					ref='plot'
-					draw={drawMutations}
+					draw={draw}
 					wrapperProps={{
 						className: 'Tooltip-target',
 						onMouseMove: this.ev.mousemove,
@@ -210,9 +210,10 @@ var MutationColumn = hotOrNot(React.createClass({
 	}
 }));
 
-var getColumn = props => <MutationColumn {...props} />;
-widgets.column.add('mutation', getColumn);
-widgets.column.add('SV', getColumn);
+widgets.column.add('mutation',
+		props => <MutationColumn draw={drawMutations} {...props} />);
+widgets.column.add('SV',
+		props => <MutationColumn draw={drawSV} {...props} />);
 
 widgets.legend.add('mutation', drawLegend);
 widgets.legend.add('SV', drawLegend);

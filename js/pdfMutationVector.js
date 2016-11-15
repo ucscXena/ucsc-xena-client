@@ -1,17 +1,17 @@
 /*eslint-env browser */
 /*global require: false, module: false */
 'use strict';
-var {drawMutations} = require('./drawMutations');
+var {drawMutations, drawSV} = require('./drawMutations');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');
 
-function pdf(column, vg, state, i) {
+var pdf = _.curry((draw, column, vg, state, i) => {
 	let {zoom} = state,
 		colID = _.getIn(state, ['columnOrder', i]),
 		data = _.getIn(state, ['data', colID]),
 		index = _.getIn(state, ['index', colID]);
 
-	drawMutations(vg, {
+	draw(vg, {
 		feature: column.sFeature,
 		index,
 		column,
@@ -21,7 +21,7 @@ function pdf(column, vg, state, i) {
 		width: column.width,
 		zoom,
 	});
-}
+});
 
-widgets.pdf.add('mutation', pdf);
-widgets.pdf.add('SV', pdf);
+widgets.pdf.add('mutation', pdf(drawMutations));
+widgets.pdf.add('SV', pdf(drawSV));

@@ -189,12 +189,6 @@ function structuralVariantClass(alt) {
 		(lastBase === '[' || lastBase === ']' ? 'right' : null);
 }
 
-// structrual variants (SV) have follow vcf https://samtools.github.io/hts-specs/VCFv4.2.pdf
-// "[" and "]" in alt means these are SV variants
-var isStructuralVariant = ({data: {start, end, alt}}) => {
-	return structuralVariantClass(alt) !== null || (end - start) > 50;
-};
-
 var getExonPadding = mutationDataType => {
 	if (mutationDataType === "SV") {
 		return {
@@ -469,7 +463,6 @@ module.exports = {
 	chromFromAlt,
 	posFromAlt,
 	structuralVariantClass,
-	isStructuralVariant,
 	chromColorGB,
 	SNVPvalue,
 	defaultXZoom,

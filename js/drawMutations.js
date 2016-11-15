@@ -2,7 +2,7 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var {features, chromFromAlt, isStructuralVariant, chromColorGB} = require('./models/mutationVector');
+var {features, chromFromAlt, chromColorGB} = require('./models/mutationVector');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -40,10 +40,9 @@ function drawBackground(vg, width, height, pixPerRow, hasValue) {
 	});
 }
 
-function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variants) {
+function drawImpactNodes(vg, width, index, height, count, pixPerRow, color, smallVariants) {
 	// --------- separate variants to SV(with feet "[" , "]" or size >50bp) vs others (small) ---------
-	var {true: svVariants = [], false: smallVariants = []} = _.groupBy(variants, isStructuralVariant),
-		yPx = toYPx(pixPerRow, index),
+	var yPx = toYPx(pixPerRow, index),
 		vHeight = minVariantHeight(pixPerRow),
 		padding = 3;
 
@@ -95,7 +94,12 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 			});
 		}
 	});
+}
 
+function drawSVNodes(vg, width, index, height, count, pixPerRow, color, svVariants) {
+	// --------- separate variants to SV(with feet "[" , "]" or size >50bp) vs others (small) ---------
+	var yPx = toYPx(pixPerRow, index),
+		vHeight = minVariantHeight(pixPerRow);
 
 	// XXX most of the following code should be in the 'transform' operation. We shouldn't
 	// be reconstructing variant records from draw regions so we can draw breakpoints, for example.
@@ -214,7 +218,7 @@ function drawImpactPx(vg, width, index, height, count, pixPerRow, color, variant
 	};
 }
 
-function drawMutations(vg, props) {
+var drawWithBackground = _.curry((draw, vg, props) => {
 	let {width, zoom: {count, height, index}, nodes} = props;
 	if (!nodes) {
 		vg.box(0, 0, width, height, "gray");
@@ -228,7 +232,10 @@ function drawMutations(vg, props) {
 		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]);
 
 	drawBackground(vg, width, height, pixPerRow, hasValue);
-	drawImpactPx(vg, width, index, height, count, pixPerRow, features[feature].color, toDraw);
-}
+	draw(vg, width, index, height, count, pixPerRow, features[feature].color, toDraw);
+});
 
-module.exports = {drawMutations, radius, minVariantHeight, toYPx, labelFont};
+var drawMutations = drawWithBackground(drawImpactNodes);
+var drawSV = drawWithBackground(drawSVNodes);
+
+module.exports = {drawMutations, drawSV, radius, minVariantHeight, toYPx, labelFont};
