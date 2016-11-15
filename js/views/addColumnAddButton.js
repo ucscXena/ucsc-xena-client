@@ -6,9 +6,11 @@ var ColumnEdit = require('../ColumnEdit2');
 var Button = require('react-bootstrap/lib/Button');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
+var {deepPureRenderMixin} = require('../react-utils');
 
 function addColumnAddButton(Component) {
 	return React.createClass({
+		mixins: [deepPureRenderMixin],
 		displayName: 'SpreadsheetColumnAdd',
 		getInitialState() {
 			return {

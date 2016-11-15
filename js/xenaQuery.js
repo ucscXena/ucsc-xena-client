@@ -567,6 +567,7 @@ function refGene_attrs(row) {
 		strand: row.position.strand,
 		txStart: row.position.chromstart,
 		txEnd: row.position.chromend,
+		chrom: row.position.chrom,
 		cdsStart: row['position (2)'].chromstart,
 		cdsEnd: row['position (2)'].chromend,
 		exonCount: row.exonCount,

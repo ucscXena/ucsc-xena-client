@@ -320,10 +320,9 @@ function findNodes(byPosition, layout, feature, samples) {
 		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e],
 		// sortfn is about 2x faster than sortBy, for large sets of variants
 		sortfn = (coll, keyfn) => _.flatten(sortByGroup(coll, keyfn), true);
+
 	return sortfn(pxTransformFlatmap(layout, (toPx, [start, end]) => {
-		var variants = _.filter(
-			intervalTree.matches(byPosition, {start: start, end: end}),
-			v => _.has(sindex, v.variant.sample));
+		var variants = intervalTree.matches(byPosition, {start: start, end: end});
 		return _.map(variants, v => {
 			var [pstart, pend] = minSize(toPx([v.start, v.end]));
 			return {
@@ -352,7 +351,7 @@ function defaultXZoom(refGene, type) {
 	};
 }
 
-function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index, zoom) {
+function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
 	var {fieldType, width, sFeature, showIntrons = false} = column;
 
 	if (!_.get(data, 'req')) {
@@ -369,7 +368,7 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 
 	var createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
 		layout = createLayout(refGeneObj, width, xzoom),
-		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples, zoom);
+		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples);
 
 	return {
 		layout,

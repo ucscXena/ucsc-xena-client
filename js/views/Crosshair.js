@@ -1,31 +1,38 @@
-/**
- * Created by albertwchang on 3/6/16.
- */
-/*globals require: false, module: false */
-
 'use strict';
 
 var React = require('react');
+var {Portal} = require('react-overlays');
 var {deepPureRenderMixin} = require('../react-utils');
 require('./Crosshair.css');
 
 var Crosshair = React.createClass({
-	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?
-	getDefaultProps: function() {
-		return {
-			point: { x: 0, y: 0 }
-		};
+	mixins: [deepPureRenderMixin],
+	getInitialState() {
+		return {mousing: false, x: -1, y: -1};
+	},
+	onMouseMove(ev) {
+		this.setState({mousing: true, x: ev.clientX, y: ev.clientY});
+	},
+	onMouseOut() {
+		this.setState({mousing: false});
 	},
 	render: function () {
-		let { point: {x, y}, open } = this.props,
-			containerStyle = {display: open ? 'inline' : 'none'};
+		let {mousing, x, y} = this.state,
+			{onMouseMove, onMouseOut} = this;
 		return (
-			<div className='crosshairs' style={containerStyle}>
-				<span className='crosshair crosshairH' style={{top: y}}/>
-				<span className='crosshair crosshairV' style={{left: x}}/>
+			<div style={{cursor: 'none'}} onMouseMove={onMouseMove} onMouseOut={onMouseOut}>
+				{this.props.children}
+				{mousing ?
+					<Portal container={document.body}>
+						<div className='crosshairs'>
+							<span className='crosshair crosshairH' style={{top: y}}/>
+							<span className='crosshair crosshairV' style={{left: x}}/>
+						</div>
+					</Portal> : null}
 			</div>
 		);
 	}
 });
 
 module.exports = Crosshair;
+

@@ -11,16 +11,17 @@
 	user-select: none;
 }
 .crosshair {
+	pointer-events: none;
 	background-image:url('./dots.gif');
 	position: fixed;
 }
 .crosshairH {
 	height: 1px;
-	left: 0px;
+	left: 0;
 	width: 100%;
 }
 .crosshairV {
 	height: 100%;
-	top: 0px;
+	top: 0;
 	width: 1px;
 }

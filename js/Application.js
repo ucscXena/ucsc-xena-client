@@ -11,12 +11,30 @@ var {signatureField} = require('./models/fieldSpec');
 var {getColSpec} = require('./models/datasetJoins');
 var SampleSearch = require('./views/SampleSearch');
 var uuid = require('./uuid');
-//var Perf = require('react/addons').addons.Perf;
+//var Perf = require('react/lib/ReactDefaultPerf');
 
 // should really be in a config file.
 var searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
 
 var Application = React.createClass({
+//	onPerf() {
+//		if (this.perf) {
+//			this.perf = false;
+//			console.log('stop perf');
+//			Perf.stop();
+//			var m = Perf.getLastMeasurements();
+//			console.log('inclusive');
+//			Perf.printInclusive(m);
+//			console.log('exclusive');
+//			Perf.printExclusive(m);
+//			console.log('wasted');
+//			Perf.printWasted(m);
+//		} else {
+//			this.perf = true;
+//			console.log('start perf');
+//			Perf.start();
+//		}
+//	},
 	onFilter: function (matches) {
 		var {callback, state: {cohortSamples}} = this.props,
 			allSamples = _.flatten(cohortSamples),
@@ -63,7 +81,7 @@ var Application = React.createClass({
 			<Grid onClick={this.onClick}>
 			{/*
 				<Row>
-					<Button onClick={this.onPerf}>Perf</Button>
+					<button onClick={this.onPerf}>Perf</button>
 				</Row>
 			*/}
 				<Row>

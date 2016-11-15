@@ -1,20 +1,19 @@
 /*globals require: false, module: false */
 'use strict';
 
-var Crosshair = require('./Crosshair');
 var Tooltip = require('./Tooltip');
 var React = require('react');
 var {rxEventsMixin} = require('../react-utils');
 var meta = require('../meta');
 var _ = require('../underscore_ext');
+var {deepPureRenderMixin} = require('../react-utils');
 
 function addTooltip(Component) {
 	return React.createClass({
 		displayName: 'SpreadsheetTooltip',
-		mixins: [rxEventsMixin],
+		mixins: [rxEventsMixin, deepPureRenderMixin],
 		getInitialState: function () {
 			return {
-				crosshair: {open: false},
 				tooltip: {open: false},
 			};
 		},
@@ -32,15 +31,7 @@ function addTooltip(Component) {
 				// Filter frozen events until frozen state changes.
 				.distinctUntilChanged(([ev, frozen]) => frozen ? frozen : [ev, frozen])
 				.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))
-				.subscribe(ev => {
-					// Keep 'frozen' and 'open' params for both crosshair && tooltip
-					let plotVisuals = {
-						crosshair: _.omit(ev, 'data'), // remove tooltip-related param
-						tooltip: _.omit(ev, 'point' ) // remove crosshair-related param
-					};
-
-					return this.setState(plotVisuals);
-				});
+				.subscribe(ev => this.setState({tooltip: ev}));
 		},
 		componentWillUnmount: function () {
 			this.tooltip.dispose();
@@ -55,7 +46,6 @@ function addTooltip(Component) {
 								tooltip: this.ev.tooltip
 							}))}
 					</Component>
-					<Crosshair {...this.state.crosshair} />
 					<Tooltip onClick={this.ev.click} {...this.state.tooltip}/>
 				</div>);
 		}
