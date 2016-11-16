@@ -133,7 +133,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 		{showIntrons = false} = column,
 		sortVisibleItemName = sortVisible ? 'Sort all' : 'Sort visible',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
-	return noMenu ? null : addIdsToArr([
+	return addIdsToArr([
 		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
 		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
 		...(xzoomable ? [
@@ -146,6 +146,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 				<ValidatedInput defaultValue={end} isValid={bIV} ref='end' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
 			</MenuItem>,
 			<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>] : [])
+
 	]);
 }
 
