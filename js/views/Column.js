@@ -286,13 +286,12 @@ var Column = React.createClass({
 	},
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
-		let rows = _.getIn(this.props, ['data', 'req', 'rows']),
-			// mupit server with alpha value
-			SNVPs = mutationVector.SNVPvalue (rows),
+		let nodes = _.getIn(this.props, ['column', 'nodes']),
+			variants = [...(new Set(_.pluck(nodes, 'data')))],
+			SNVPs = mutationVector.SNVPvalue (variants),
 			uriList = _.map(_.values(SNVPs), n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
 			url = 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=';
 			//url = 'http://karchin-web04.icm.jhu.edu:8888/MuPIT_Interactive/?gm=';  // mupit dev server
-
 		window.open(url + `${uriList}`);
 	},
 
