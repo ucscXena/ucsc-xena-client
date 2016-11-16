@@ -137,11 +137,11 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
 		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
 		...(xzoomable ? [
-			<MenuItem header style={{fontSize: '80%'}}>Start position</MenuItem>,
+			<MenuItem header style={{fontSize: '80%'}}>Start position ( {assembly} )</MenuItem>,
 			<MenuItem>
 				<ValidatedInput defaultValue={start} isValid={bIV} ref='start' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
 			</MenuItem>,
-			<MenuItem header style={{fontSize: '80%'}}>End position</MenuItem>,
+			<MenuItem header style={{fontSize: '80%'}}>End position ( {assembly} )</MenuItem>,
 			<MenuItem>
 				<ValidatedInput defaultValue={end} isValid={bIV} ref='end' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
 			</MenuItem>,

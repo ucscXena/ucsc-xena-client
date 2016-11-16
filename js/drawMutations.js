@@ -44,26 +44,27 @@ function drawImpactNodes(vg, width, index, height, count, pixPerRow, color, smal
 	// --------- separate variants to SV(with feet "[" , "]" or size >50bp) vs others (small) ---------
 	var yPx = toYPx(pixPerRow, index),
 		vHeight = minVariantHeight(pixPerRow),
-		padding = 3;
+		minWidth = 3;
 
 	// --------- small variants drawing start here ---------
 	var varByImp = _.groupByConsec(smallVariants, v => v.group);
 
 	_.each(varByImp, vars => {
 		var points = vars.map(v => {
-				var y = yPx(v.y);
+				var y = yPx(v.y),
+					padding = _.max([minWidth - Math.abs(v.xEnd - v.xStart), 0]);
 				return [v.xStart - padding, y, v.xEnd + padding, y];
 			});
 
 		vg.drawPoly(points,
 			{strokeStyle: color(vars[0].group), lineWidth: vHeight});
 
-		// no feet variants black center
+		/*// no feet variants black center
 		if (vHeight > 4) { // centers when there is enough vertical room for each sample
 			points = vars.map(v => [v.xStart, yPx(v.y), v.xEnd, yPx(v.y)]);
 			vg.drawPoly(points,
 				{strokeStyle: 'black', lineWidth: vHeight});
-		}
+		}*/
 
 		// small variants label
 		if (height / count > labelFont) {
