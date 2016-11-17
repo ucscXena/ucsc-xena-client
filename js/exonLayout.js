@@ -111,7 +111,7 @@ function intronLayout({chrom, txStart, txEnd, strand}, pxWidth, zoom) {
 
 function chromPositionFromScreen(layout, x) {
 	var {chrom, screen, reversed} = layout,
-		i = _.findIndex(screen, ([x0, x1]) => x0 < x && x < x1);
+		i = _.findIndex(screen, ([x0, x1]) => x0 <= x && x < x1);
 
 	if (i !== -1) {
 		let [xStart, xEnd] = screen[i],
