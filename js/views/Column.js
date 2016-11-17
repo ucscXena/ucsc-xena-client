@@ -257,9 +257,9 @@ var Column = React.createClass({
 	},
 	onXZoomOut: function (ev) {
 		if (this.state.xzoomable && ev.shiftKey) {
-			let {id, onXZoom, data, mutationClass} = this.props,
+			let {id, onXZoom, data, column: {fieldType}} = this.props,
 				refGene = _.get(data, 'refGene'),
-				position = getPosition(mutationClass, refGene, '', '');
+				position = getPosition(fieldType, refGene, '', '');
 			onXZoom(id, position);
 		}
 	},
