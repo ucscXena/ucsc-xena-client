@@ -49,11 +49,16 @@ function addHelp(id, target) {
 
 var asciiA = 65;
 
+var bookmarksDefault = false;
+if (process.env.NODE_ENV !== 'production') {
+	bookmarksDefault = true;
+}
+
 // XXX drop this.props.style? Not sure it's used.
 var AppControls = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState() {
-		return {bookmarks: false};
+		return {bookmarks: bookmarksDefault};
 	},
 	enableBookmarks() {
 		this.setState({bookmarks: true});

@@ -205,6 +205,9 @@ function getPosition(type, refGene, pStart, pEnd) {
 
 // Persistent state for xzoomable setting.
 var columnsXZoomable = false;
+if (process.env.NODE_ENV !== 'production') {
+	columnsXZoomable = true;
+}
 
 var Column = React.createClass({
 	mixins: [deepPureRenderMixin],
