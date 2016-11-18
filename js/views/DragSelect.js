@@ -38,7 +38,7 @@ var DragSelect = React.createClass({
 				selection;
 
 			return Rx.DOM.fromEvent(window, 'mousemove').map(function (mm) {
-				selection = {start, end: clip(0, bb.width, targetXPos(target, mm))};
+				selection = {start, end: clip(0, bb.width - 1, targetXPos(target, mm))};
 				return {dragging: true, ...selection};
 			}).takeUntil(Rx.DOM.fromEvent(window, 'mouseup'))
 			.concat(Rx.Observable.defer(() => Rx.Observable.return({selection})));
