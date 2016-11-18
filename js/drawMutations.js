@@ -9,7 +9,21 @@ var labelMargin = 1; // left & right margin
 
 var radius = 4;
 var minVariantHeight = pixPerRow => Math.max(pixPerRow, 2); // minimum draw height of 2
-var toYPx = _.curry((pixPerRow, index, y) => (y - index) * pixPerRow + (pixPerRow / 2));
+
+var toYPx = (zoom, v) => {
+	var {height, count, index} = zoom,
+		svHeight = height / count;
+	return  {svHeight, y: (v.y - index) * svHeight + (svHeight / 2)};
+};
+
+var toYPxSubRow = (zoom, v) => {
+	var {rowCount, subrow} = v,
+		{height, count} = zoom,
+		svHeight = height / (count * rowCount);
+	return {svHeight, y: toYPx(zoom, v).y + svHeight * ((1 - rowCount) / 2 + subrow)};
+};
+
+var splitRows = (count, height) => height / count > labelFont;
 
 function push(arr, v) {
 	arr.push(v);
@@ -40,10 +54,10 @@ function drawBackground(vg, width, height, pixPerRow, hasValue) {
 	});
 }
 
-function drawImpactNodes(vg, width, index, height, count, pixPerRow, color, smallVariants) {
+function drawImpactNodes(vg, width, zoom, color, smallVariants) {
 	// --------- separate variants to SV(with feet "[" , "]" or size >50bp) vs others (small) ---------
-	var yPx = toYPx(pixPerRow, index),
-		vHeight = minVariantHeight(pixPerRow),
+	var {height, count} = zoom,
+		vHeight = minVariantHeight(height / count),
 		minWidth = 3;
 
 	// --------- small variants drawing start here ---------
@@ -51,7 +65,7 @@ function drawImpactNodes(vg, width, index, height, count, pixPerRow, color, smal
 
 	_.each(varByImp, vars => {
 		var points = vars.map(v => {
-				var y = yPx(v.y),
+				var {y} = toYPx(zoom, v),
 					padding = _.max([minWidth - Math.abs(v.xEnd - v.xStart), 0]);
 				return [v.xStart - padding, y, v.xEnd + padding, y];
 			});
@@ -73,7 +87,7 @@ function drawImpactNodes(vg, width, index, height, count, pixPerRow, color, smal
 
 			vars.forEach(function(v) {
 				var {xStart, xEnd, data} = v,
-					y = yPx(v.y),
+					{y} = toYPx(zoom, v),
 					label = data.amino_acid || data.alt,
 					textWidth = vg.textWidth(labelFont, label);
 
@@ -88,54 +102,23 @@ function drawImpactNodes(vg, width, index, height, count, pixPerRow, color, smal
 	});
 }
 
-function drawSVNodes(vg, width, index, height, count, pixPerRow, color, svVariants) {
-	var yPx = toYPx(pixPerRow, index),
-		vHeight = minVariantHeight(pixPerRow),
-		varByIdMap;
-
-	if (height / count > labelFont) {
-		// when there is enough vertical space, each SV of a sample is in a sub-row
-		let svBySample = _.values(_.groupBy(svVariants, v => v.y)); // variants grouped by sample
-
-		varByIdMap = _.flatmap(svBySample, varList => {
-			var svSize = varList.length,
-				svHeight = height / (count * svSize),
-				i = - (svSize - 1) / 2.0;
-
-			return _.map(varList, v => {
-				var {data: {chr, alt, altGene}} = v,
-					y = yPx(v.y) + svHeight * i;
-
-				// XXX overwrite variant list for tooltip
-				v.yTransformed = y;
-				v.svHeight = svHeight;
-				i++;
-
-				return {
-					...v,
-					y,
-					h: svHeight,
-					color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
-					alt,
-					altGene
-				};
-			});
-		});
-	} else {
+function drawSVNodes(vg, width, zoom, color, svVariants) {
+	var {count, height} = zoom,
+		vHeight = minVariantHeight(height / count),
+		toY = splitRows(count, height) ? toYPxSubRow : toYPx,
 		varByIdMap = _.map(svVariants, v => {
 			var {data: {chr, alt, altGene}} = v,
-				y = yPx(v.y);
+				{svHeight, y} = toY(zoom, v);
 
 			return {
 				...v,
 				y,
-				h: vHeight,
+				h: minVariantHeight(svHeight),
 				color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
 				alt,
 				altGene
 			};
 		});
-	}
 
 	//SV variants draw color background according to joining chromosome
 	_.each(varByIdMap, variant => {
@@ -180,7 +163,8 @@ function drawSVNodes(vg, width, index, height, count, pixPerRow, color, svVarian
 }
 
 var drawWithBackground = _.curry((draw, vg, props) => {
-	let {width, zoom: {count, height, index}, nodes} = props;
+	let {width, zoom, nodes} = props,
+		{count, height, index} = zoom;
 	if (!nodes) {
 		vg.box(0, 0, width, height, "gray");
 		return;
@@ -193,10 +177,10 @@ var drawWithBackground = _.curry((draw, vg, props) => {
 		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]);
 
 	drawBackground(vg, width, height, pixPerRow, hasValue);
-	draw(vg, width, index, height, count, pixPerRow, features[feature].color, toDraw);
+	draw(vg, width, zoom, features[feature].color, toDraw);
 });
 
 var drawMutations = drawWithBackground(drawImpactNodes);
 var drawSV = drawWithBackground(drawSVNodes);
 
-module.exports = {drawMutations, drawSV, radius, minVariantHeight, toYPx, labelFont};
+module.exports = {drawMutations, drawSV, splitRows, radius, minVariantHeight, toYPx, toYPxSubRow, labelFont};

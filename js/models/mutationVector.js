@@ -333,17 +333,26 @@ function findSVNodes(byPosition, layout, feature, samples) {
 		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e];
 
 	// _.uniq is something like O(n^2). Using ES6 Set, which should be more like O(n).
-	var matches = new Set(_.flatmap(layout.chrom,
-				([start, end]) => intervalTree.matches(byPosition, {start, end})));
+	var matches = _.groupBy([...new Set(_.flatmap(layout.chrom,
+				([start, end]) => intervalTree.matches(byPosition, {start, end})))],
+				v => v.variant.sample);
 
-	return _.map([...matches], v => {
-		var [xStart, xEnd] = minSize(pxTransformInterval(layout, [v.start, v.end]));
-		return {
-			xStart,
-			xEnd,
-			y: sindex[v.variant.sample],
-			data: v.variant
-		};
+	return _.flatmap(matches, vars => {
+		var count = vars.length;
+
+		return vars.map((v, i) => {
+
+			var [xStart, xEnd] = minSize(pxTransformInterval(layout, [v.start, v.end])),
+				y = sindex[v.variant.sample];
+			return {
+				xStart,
+				xEnd,
+				y,
+				subrow: i,
+				rowCount: count,
+				data: v.variant
+			};
+		});
 	});
 }
 
