@@ -105,7 +105,6 @@ var RefGeneAnnotation = React.createClass({
 
 	render: function () {
 		var {width, layout, refGene, alternateColors} = this.props,
-//			{baseLen} = layout,
 			intervals = findIntervals(refGene);
 
 		this.index = index(intervals);
@@ -123,33 +122,6 @@ var RefGeneAnnotation = React.createClass({
 				ref='canvas' />
 		);
 	}
-
-		// XXX enable zoom events.
-//		this.subs.add($(vg.element()).onAsObservable('dblclick').filter(ev => !ev.shiftKey)
-//			.subscribe(ev => {
-//				var total = baseLen;
-//				var pos = (ev.pageX - $(ev.currentTarget).offset().left) /
-//					$(ev.currentTarget).width();
-//				ev.stopPropagation();
-//				options.cursor.update(s =>
-//					_.update_in(s, ['column', 'zoom'], zoom => {
-//						var {index, len} = zoom || {index: 0, len: total};
-//						var [nindex, nlen] = zoomIn(index, len, total, pos);
-//						return {index: nindex, len: nlen};
-//					}));
-//			}));
-//
-//		this.subs.add($(vg.element()).onAsObservable('click').filter(ev => ev.shiftKey)
-//			.subscribe(ev => {
-//				var total = baseLen;
-//				ev.stopPropagation();
-//				options.cursor.update(s =>
-//					_.update_in(s, ['column', 'zoom'], zoom => {
-//						var {index, len} = zoom || {index: 0, len: total};
-//						var [nindex, nlen] = zoomOut(index, len, total);
-//						return {index: nindex, len: nlen};
-//					}));
-//			}));
 });
 
 module.exports = {
