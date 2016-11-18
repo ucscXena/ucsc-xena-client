@@ -70,8 +70,7 @@ var RefGeneAnnotation = React.createClass({
 			return;
 		}
 		var vg = this.vg,
-			ctx = vg.context(),
-			prevEnd;
+			ctx = vg.context();
 
 		if (vg.width() !== width) {
 			vg.width(width);
@@ -90,10 +89,6 @@ var RefGeneAnnotation = React.createClass({
 				var [pstart, pend] = toPx([start, end]);
 				ctx.fillStyle = (alternateColors && i % 2 === 1) ? shade1 : shade2;
 				ctx.fillRect(pstart, y + refHeight, (pend - pstart) || 1, h);
-				// draw a line across gap to connect exons
-				ctx.fillStyle = 'black';
-				ctx.fillRect(prevEnd, refHeight / 2 + refHeight, pstart - prevEnd, 1);
-				prevEnd = pend;
 			});
 		});
 
