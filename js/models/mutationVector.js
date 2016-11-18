@@ -9,7 +9,7 @@ var xenaQuery = require('../xenaQuery');
 var Rx = require('rx');
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
-var {pxTransformFlatmap} = require('../layoutPlot');
+var {pxTransformInterval} = require('../layoutPlot');
 var {hexToRGB, colorStr} = require('../color_helper');
 var jStat = require('jStat').jStat;
 
@@ -143,13 +143,7 @@ var unknownEffect = 0,
 				align: 'left'
 			};
 		} else {
-			return {
-				colors: _.values(chromColorGB).map(h => hexToRGB(h)).map(colorStr).reverse().
-					concat(colors.category4.map(colorStr)),
-				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse().
-					concat(_.range(_.keys(impactGroups).length).map(i => _.pluck(impactGroups[i], 0).join(', '))),
-				align: 'left'
-			};
+			console.warn('deprecated legend method');
 		}
 	},
 	features = {
@@ -308,28 +302,49 @@ function sortByGroup(arr, keyfn) {
 			k => grouped[k]);
 }
 
-function findNodes(byPosition, layout, feature, samples) {
+function findSNVNodes(byPosition, layout, feature, samples) {
 	var sindex = _.object(samples, _.range(samples.length)),
 		group = features[feature].get,
 		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e],
 		// sortfn is about 2x faster than sortBy, for large sets of variants
 		sortfn = (coll, keyfn) => _.flatten(sortByGroup(coll, keyfn), true);
 
-	return sortfn(pxTransformFlatmap(layout, (toPx, [start, end]) => {
-		var variants = intervalTree.matches(byPosition, {start: start, end: end});
-		return _.map(variants, v => {
-			var [pstart, pend] = minSize(toPx([v.start, v.end]));
-			return {
-				xStart: pstart,
-				xEnd: pend,
-				y: sindex[v.variant.sample],
-				// XXX 1st param to group was used for extending our coloring to other annotations. See
-				// ga4gh branch.
-				group: group(null, v.variant), // needed for sort, before drawing.
-				data: v.variant
-			};
-		});
+
+	// _.uniq is something like O(n^2). Using ES6 Set, which should be more like O(n).
+	var matches = new Set(_.flatmap(layout.chrom,
+				([start, end]) => intervalTree.matches(byPosition, {start, end})));
+
+	return sortfn([...matches].map(v => {
+		var [xStart, xEnd] = minSize(pxTransformInterval(layout, [v.start, v.end]));
+		return {
+			xStart,
+			xEnd,
+			y: sindex[v.variant.sample],
+			// XXX 1st param to group was used for extending our coloring to other annotations. See
+			// ga4gh branch.
+			group: group(null, v.variant), // needed for sort, before drawing.
+			data: v.variant
+		};
 	}), v => v.group);
+}
+
+function findSVNodes(byPosition, layout, feature, samples) {
+	var sindex = _.object(samples, _.range(samples.length)),
+		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e];
+
+	// _.uniq is something like O(n^2). Using ES6 Set, which should be more like O(n).
+	var matches = new Set(_.flatmap(layout.chrom,
+				([start, end]) => intervalTree.matches(byPosition, {start, end})));
+
+	return _.map([...matches], v => {
+		var [xStart, xEnd] = minSize(pxTransformInterval(layout, [v.start, v.end]));
+		return {
+			xStart,
+			xEnd,
+			y: sindex[v.variant.sample],
+			data: v.variant
+		};
+	});
 }
 
 var swapIf = (strand, [x, y]) => strand === '-' ? [y, x] : [x, y];
@@ -362,6 +377,7 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 
 	var createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
 		layout = createLayout(refGeneObj, width, xzoom),
+		findNodes = fieldType === 'SV' ? findSVNodes : findSNVNodes,
 		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples);
 
 	return {
@@ -379,9 +395,8 @@ function index(fieldType, data) {
 		bySample = _.groupBy(rows, 'sample'),
 		empty = []; // use a single empty object.
 
-	rows = rows.map((row, i) => {
+	rows = rows.map(row => {
 		var alt = row.alt,
-			id = 'variant_' + i,
 			virtualStart = row.start,
 			virtualEnd = row.end;
 
@@ -390,14 +405,11 @@ function index(fieldType, data) {
 			if (vclass === 'left') {
 				//SV: new segment to the left
 				virtualStart = -Infinity;
-				//row.id = id;
 			} else if (vclass === 'right') {
 				//SV: new segment on the right
 				virtualEnd = Infinity;
-				//row.id = id;
 			}
 		}
-		row.id = id;
 		return {
 			start: virtualStart,
 			end: virtualEnd,

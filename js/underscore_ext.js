@@ -279,6 +279,16 @@ function union(...args) {
 	return Object.values(merged);
 }
 
+function findIndexDefault(arr, pred, def) {
+	var i = _.findIndex(arr, pred);
+	return i < 0 ? def : i;
+}
+
+function findLastIndexDefault(arr, pred, def) {
+	var i = _.findLastIndex(arr, pred);
+	return i < 0 ? def : i;
+}
+
 _.mixin({
 	meannull: meannull,
 	minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
@@ -307,6 +317,8 @@ _.mixin({
 	reverse,
 	groupByConsec,
 	union,
+	findIndexDefault,
+	findLastIndexDefault,
 	curry,
 	curryN // useful if the fn as multiple arities.
 });

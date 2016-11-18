@@ -269,7 +269,9 @@ describe('Xena Client', function() {
 			"d2cd9c3ccaf4ea8d6b8f6317d20cfa4d",
 			"65e35cb1f31de34178bf1ec230bfed16",
 			"daa598ef1ba152825ac7f5e6ec72f9f1",
-			"1f46986e1195be0cbc41a84fdf646fcb"]; // SV
+			"42a30140caec329f490b8de71bcead2d", // SV reverse
+			"1e97bee1ea4f93b4c057ed0a125c72fe", // SV forward
+			"1f46986e1195be0cbc41a84fdf646fcb"]; // SV forward
 		bookmarks.forEach(bookmark => {
 			it(`should preserve bookmark ${bookmark}`, function () {
 				function drawBookmark(url) {

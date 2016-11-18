@@ -25,7 +25,7 @@ var ValidatedInput = require('./ValidatedInput');
 var konami = require('../konami');
 var {deepPureRenderMixin} = require('../react-utils');
 var Crosshair = require('./Crosshair');
-var {chromPositionFromScreen} = require('../exonLayout');
+var {chromPositionFromScreen, zoomCount} = require('../exonLayout');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -268,7 +268,9 @@ var Column = React.createClass({
 		var zstart = chromPositionFromScreen(layout, pos.start),
 			zend = chromPositionFromScreen(layout, pos.end),
 			[zmin, zmax] = zstart > zend ? [zend, zstart] : [zstart, zend],
-			tooShort = Math.round(zmin) === Math.round(zmax),
+			[nmin, nmax] = [Math.round(zmin), Math.round(zmax) - 1],
+			// put all the math someplace & test it
+			tooShort = zoomCount(layout, nmin, nmax) < 1,
 			[start, end] = tooShort ? [Math.floor(zmin), Math.ceil(zmax) - 1] : // ensure 1 base minimum
 				[Math.round(zmin), Math.round(zmax) - 1];
 

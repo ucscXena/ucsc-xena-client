@@ -122,6 +122,10 @@ function chromPositionFromScreen(layout, x) {
 	return null;
 }
 
+// closed coord len
+var chrlen = ([s, e]) => e - s + 1;
+
+
 module.exports = {
 	intronLayout,
 	screenLayout: (bpp, chrlo) => toScreen(bpp, chrlo, 0, []),
@@ -129,5 +133,7 @@ module.exports = {
 	pxLen,
 	layout,
 	pad,
+	zoomCount: (layout, start, end) =>
+		_.sum(applyClip(layout.chrom, {start, end}).map(chrlen)),
 	chromPositionFromScreen
 };

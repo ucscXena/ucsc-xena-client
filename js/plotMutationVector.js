@@ -187,7 +187,6 @@ var MutationColumn = hotOrNot(React.createClass({
 		var {column, samples, zoom, index, draw} = this.props,
 			feature = _.getIn(column, ['sFeature']);
 
-		// XXX Make plot a child instead of a prop? There's also legend.
 		return (
 			<CanvasDrawing
 					ref='plot'

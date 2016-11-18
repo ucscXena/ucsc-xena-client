@@ -69,21 +69,12 @@ function drawImpactNodes(vg, width, index, height, count, pixPerRow, color, smal
 		// small variants label
 		if (height / count > labelFont) {
 			let h = height / count,
-				minTxtWidth = vg.textWidth(labelFont, 'WWWW'),
-				varById = _.groupBy(smallVariants, v => v.data.id),
-				ids = _.keys(varById);
+				minTxtWidth = vg.textWidth(labelFont, 'WWWW');
 
-			ids.map(function(id) {
-				var startList = [], endList = [];
-				varById[id].map(function (item) {
-					startList.push(item.xStart);
-					endList.push(item.xEnd);
-				});
-
-				var xStart = _.min(startList),
-					xEnd = _.max(endList),
-					y = yPx(varById[id][0].y),
-					label = varById[id][0].data.amino_acid || varById[id][0].data.alt,
+			vars.forEach(function(v) {
+				var {xStart, xEnd, data} = v,
+					y = yPx(v.y),
+					label = data.amino_acid || data.alt,
 					textWidth = vg.textWidth(labelFont, label);
 
 				if ((xEnd - xStart) >= minTxtWidth) {
@@ -98,78 +89,52 @@ function drawImpactNodes(vg, width, index, height, count, pixPerRow, color, smal
 }
 
 function drawSVNodes(vg, width, index, height, count, pixPerRow, color, svVariants) {
-	// --------- separate variants to SV(with feet "[" , "]" or size >50bp) vs others (small) ---------
 	var yPx = toYPx(pixPerRow, index),
-		vHeight = minVariantHeight(pixPerRow);
-
-	// XXX most of the following code should be in the 'transform' operation. We shouldn't
-	// be reconstructing variant records from draw regions so we can draw breakpoints, for example.
-	// We should instead output structures parallel to 'nodes' which hold the info for drawing SVs.
-
-	// --------- SV variants drawing start here ---------
-	//SV variants group by variant
-	var varById = _.groupBy(svVariants, v => v.data.id), //  "svVariant" all belong to the same biological variant
+		vHeight = minVariantHeight(pixPerRow),
 		varByIdMap;
 
 	if (height / count > labelFont) {
 		// when there is enough vertical space, each SV of a sample is in a sub-row
-		var svBySample = {};  // biological variants grouped by sample
+		let svBySample = _.values(_.groupBy(svVariants, v => v.y)); // variants grouped by sample
 
-		_.mapObject(varById, function(varList, id) {
-			var sample = varList[0].data.sample;
-			if (! _.has(svBySample, sample)) {
-				svBySample[sample] = {};
-			}
-			svBySample[sample][id] = varList;
-		});
-
-		varByIdMap = _.values(_.mapObject(svBySample, svObj => {
-			var svSize = _.size(svObj),
+		varByIdMap = _.flatmap(svBySample, varList => {
+			var svSize = varList.length,
 				svHeight = height / (count * svSize),
 				i = - (svSize - 1) / 2.0;
 
-			return _.mapObject(svObj, varList => {
-				var {xStart, y: yIndex, data: {chr, alt, altGene}} = _.min(varList, v => v.xStart),
-					y = yPx(yIndex) + svHeight * i,
-					{xEnd} = _.max(varList, v => v.xEnd);
+			return _.map(varList, v => {
+				var {data: {chr, alt, altGene}} = v,
+					y = yPx(v.y) + svHeight * i;
 
-				_.map(varList, v=> {
-						v.yTransformed = y;
-						v.svHeight = svHeight;
-					});
-
-				i ++;
+				// XXX overwrite variant list for tooltip
+				v.yTransformed = y;
+				v.svHeight = svHeight;
+				i++;
 
 				return {
-					xStart: xStart,
-					xEnd: xEnd,
-					y: y,
+					...v,
+					y,
 					h: svHeight,
 					color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
-					alt: alt,
-					altGene: altGene
+					alt,
+					altGene
 				};
 			});
-		}));
-		varByIdMap = _.reduce(varByIdMap, function(memo, v) { return _.extend(memo, v); }, {});
-	}
-	else {
-		varByIdMap = _.mapObject(varById, varList => {
-			var {xStart, y: yIndex, data: {chr, alt, altGene}} = _.min(varList, v => v.xStart),
-				y = yPx(yIndex),
-				{xEnd} = _.max(varList, v => v.xEnd);
+		});
+	} else {
+		varByIdMap = _.map(svVariants, v => {
+			var {data: {chr, alt, altGene}} = v,
+				y = yPx(v.y);
 
 			return {
-				xStart: xStart,
-				xEnd: xEnd,
-				y: y,
+				...v,
+				y,
 				h: vHeight,
 				color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
-				alt: alt,
-				altGene: altGene
+				alt,
+				altGene
 			};
 		});
-
 	}
 
 	//SV variants draw color background according to joining chromosome
@@ -186,15 +151,10 @@ function drawSVNodes(vg, width, index, height, count, pixPerRow, color, svVarian
 	if (vHeight > 4 && height / count <= labelFont) {
 		_.each(varByIdMap, variant => {
 			var {xStart, xEnd, y, h} = variant,
-				points = [[]];
+				endMark = xEnd <= width ? [[xEnd, y, xEnd + 1, y]] : [],
+				startMark = xStart > 0 ? [[xStart, y, xStart + 1, y]] : [],
+				points = [...startMark, ...endMark];
 
-			if (xStart === 0 && xEnd <= width) {
-				points = [[xEnd, y, xEnd + 1, y]];
-			} else if (xStart > 0 && xEnd > width) {
-				points = [[xStart, y, xStart + 1, y]];
-			} else {
-				points = [[xStart, y, xStart + 1, y], [xEnd, y, xEnd + 1, y]];
-			}
 			vg.drawPoly(points,
 				{strokeStyle: 'black', lineWidth: h});
 		});
@@ -202,7 +162,7 @@ function drawSVNodes(vg, width, index, height, count, pixPerRow, color, svVarian
 
 	//feet variants show text label when there is only one variant for this sample, otherwise, text might overlap
 	if (height / count > labelFont) {
-		var margin = 2 * labelMargin, //more labelMargin due to drawing of breakpoint
+		let margin = 2 * labelMargin, //more labelMargin due to drawing of breakpoint
 			minTxtWidth = vg.textWidth(labelFont, 'WWWW');
 
 		_.each(varByIdMap, variant => {
