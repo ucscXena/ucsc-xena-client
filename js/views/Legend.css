@@ -1,8 +1,11 @@
 .Legend-label {
 	display: block;
-	height: 1.2em;
+	padding: 2px;
+	font-size: 12px;
 	margin-bottom: 0;
 	text-align: center;
 	overflow: hidden;
 	white-space: nowrap;
+	font-weight: normal;
+	font-family: Verdana,Arial,sans-serif;
 }
