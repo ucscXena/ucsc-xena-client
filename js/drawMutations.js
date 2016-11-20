@@ -2,7 +2,6 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var {features, chromFromAlt, chromColorGB} = require('./models/mutationVector');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -54,14 +53,14 @@ function drawBackground(vg, width, height, pixPerRow, hasValue) {
 	});
 }
 
-function drawImpactNodes(vg, width, zoom, color, smallVariants) {
+function drawImpactNodes(vg, width, zoom, smallVariants) {
 	// --------- separate variants to SV(with feet "[" , "]" or size >50bp) vs others (small) ---------
 	var {height, count} = zoom,
 		vHeight = minVariantHeight(height / count),
 		minWidth = 3;
 
 	// --------- small variants drawing start here ---------
-	var varByImp = _.groupByConsec(smallVariants, v => v.group);
+	var varByImp = _.groupByConsec(smallVariants, v => v.color);
 
 	_.each(varByImp, vars => {
 		var points = vars.map(v => {
@@ -71,7 +70,7 @@ function drawImpactNodes(vg, width, zoom, color, smallVariants) {
 			});
 
 		vg.drawPoly(points,
-			{strokeStyle: color(vars[0].group), lineWidth: vHeight});
+			{strokeStyle: vars[0].color, lineWidth: vHeight});
 
 		/*// no feet variants black center
 		if (vHeight > 4) { // centers when there is enough vertical room for each sample
@@ -102,19 +101,18 @@ function drawImpactNodes(vg, width, zoom, color, smallVariants) {
 	});
 }
 
-function drawSVNodes(vg, width, zoom, color, svVariants) {
+function drawSVNodes(vg, width, zoom, svVariants) {
 	var {count, height} = zoom,
 		vHeight = minVariantHeight(height / count),
 		toY = splitRows(count, height) ? toYPxSubRow : toYPx,
 		varByIdMap = _.map(svVariants, v => {
-			var {data: {chr, alt, altGene}} = v,
+			var {data: {alt, altGene}} = v,
 				{svHeight, y} = toY(zoom, v);
 
 			return {
 				...v,
 				y,
 				h: minVariantHeight(svHeight),
-				color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
 				alt,
 				altGene
 			};
@@ -170,14 +168,14 @@ var drawWithBackground = _.curry((draw, vg, props) => {
 		return;
 	}
 
-	let {feature, samples, index: {bySample: samplesInDS}} = props,
+	let {samples, index: {bySample: samplesInDS}} = props,
 		last = index + count,
 		toDraw = nodes.filter(v => v.y >= index && v.y < last),
 		pixPerRow = height / count,
 		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]);
 
 	drawBackground(vg, width, height, pixPerRow, hasValue);
-	draw(vg, width, zoom, features[feature].color, toDraw);
+	draw(vg, width, zoom, toDraw);
 });
 
 var drawMutations = drawWithBackground(drawImpactNodes);

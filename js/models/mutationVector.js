@@ -13,8 +13,30 @@ var {pxTransformInterval} = require('../layoutPlot');
 var {hexToRGB, colorStr} = require('../color_helper');
 var jStat = require('jStat').jStat;
 
-var unknownEffect = 0,
-	impact = {
+function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
+	var inData = new Set(valsInData),
+		groups = _.groupBy(
+			_.filter(_.keys(colorMap), val => inData.has(val)), k => colorMap[k]),
+		colors = _.keys(groups);
+	return {
+		colors,
+		labels: _.map(colors, c => groups[c].join(', ')),
+		align: 'left'
+	};
+}
+
+function sortedLegend(colorMap, valsInData) {
+	var inData = new Set(valsInData),
+		colorList = _.filter(_.pairs(colorMap), ([val]) => inData.has(val))
+			.sort(([, c0], [, c1]) => c0 > c1 ? -1 : 1);
+	return {
+		colors: _.pluck(colorList, 1),
+		labels: _.pluck(colorList, 0),
+		align: 'left'
+	};
+}
+
+var impact = {
 		//destroy protein
 		'Nonsense_Mutation': 3,
 		'frameshift_variant': 3,
@@ -110,55 +132,42 @@ var unknownEffect = 0,
 	},
 	colors = {
 		category4: [
-			{r: 255, g: 127, b: 14, a: 1}, // orange #ff7f0e
-			{r: 44, g: 160, b: 44, a: 1},  // green #2ca02c
-			{r: 31, g: 119, b: 180, a: 1}, // blue #1f77b4
-			{r: 214, g: 39, b: 40, a: 1},   // red #d62728
+			"#FF7F0E",  // orange
+			"#2CA02C",  // green
+			"#1F77B4",  // blue
+			"#D62728"   // red
 		],
 		af: {r: 255, g: 0, b: 0},
-		grey: {r: 128, g: 128, b: 128, a: 1}
+		grey: "#808080"
 	},
+	impactColor = _.mapObject(impact, i => colors.category4[i]),
 	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
 	decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals
-
-	impactGroups = _.groupBy(_.pairs(impact), ([, imp]) => imp),
-	vafLegend = {
+	vafLegend = () => ({
 		colors: [0, 0.5, 1].map(a => colorStr({...colors.af, a})),
 		labels: ['0%', '50%', '100%'],
 		align: 'center'
-	},
-	getMutationLegend = mutationDataType => {
+	}),
+	getSVLegend = chromColorMap => ({
 		// have to explicitly call hexToRGB to avoid map passing in index.
-		if (mutationDataType === "SV") {
-			return {
-				colors: _.values(chromColorGB).map(h => hexToRGB(h)).map(colorStr).reverse(),
-				labels: _.keys(chromColorGB).map(key => "chr" + key).reverse(),
-				align: 'left'
-			};
-		} else if (mutationDataType === "mutation") {
-			return {
-				colors: colors.category4.map(colorStr),
-				labels: _.range(_.keys(impactGroups).length).map(i => _.pluck(impactGroups[i], 0).join(', ')),
-				align: 'left'
-			};
-		} else {
-			console.warn('deprecated legend method');
-		}
-	},
+		colors: _.values(chromColorMap).map(h => hexToRGB(h)).map(colorStr).reverse(),
+		labels: _.keys(chromColorMap).map(key => "chr" + key).reverse(),
+		align: 'left'
+	}),
 	features = {
 		impact: {
-			get: (a, v) => impact[v.effect] || unknownEffect,
-			color: v => colorStr(v == null ? colors.grey : colors.category4[v]),
-			legend: getMutationLegend
+			get: v => v.effect,
+			color: v => impactColor[v] || impactColor.others,
+			legend: sortedLegend
 		},
 		'dna_vaf': {
-			get: (a, v) => v.dna_vaf == null ? undefined : decimateFreq(v.dna_vaf),
+			get: v => v.dna_vaf == null ? undefined : decimateFreq(v.dna_vaf),
 			color: v => colorStr(v == null ? colors.grey : _.assoc(colors.af, 'a', v)),
 			legend: vafLegend
 		},
 		'rna_vaf': {
-			get: (a, v) => v.rna_vaf == null ? undefined : decimateFreq(v.rna_vaf),
+			get: v => v.rna_vaf == null ? undefined : decimateFreq(v.rna_vaf),
 			color: v => colorStr(v == null ? colors.grey : _.assoc(colors.af, 'a', v)),
 			legend: vafLegend
 		}
@@ -205,7 +214,7 @@ var getExonPadding = mutationDataType => {
 
 function evalMut(flip, mut) {
 	return {
-		impact: features.impact.get(null, mut),
+//		impact: features.impact.get(mut),
 		right: flip ? -mut.end : mut.start
 	};
 }
@@ -304,7 +313,8 @@ function sortByGroup(arr, keyfn) {
 
 function findSNVNodes(byPosition, layout, feature, samples) {
 	var sindex = _.object(samples, _.range(samples.length)),
-		group = features[feature].get,
+		{get, color} = features[feature],
+
 		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e],
 		// sortfn is about 2x faster than sortBy, for large sets of variants
 		sortfn = (coll, keyfn) => _.flatten(sortByGroup(coll, keyfn), true);
@@ -320,15 +330,13 @@ function findSNVNodes(byPosition, layout, feature, samples) {
 			xStart,
 			xEnd,
 			y: sindex[v.variant.sample],
-			// XXX 1st param to group was used for extending our coloring to other annotations. See
-			// ga4gh branch.
-			group: group(null, v.variant), // needed for sort, before drawing.
+			color: color(get(v.variant)), // needed for sort, before drawing.
 			data: v.variant
 		};
-	}), v => v.group);
+	}), v => v.color);
 }
 
-function findSVNodes(byPosition, layout, feature, samples) {
+function findSVNodes(byPosition, layout, samples) {
 	var sindex = _.object(samples, _.range(samples.length)),
 		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e];
 
@@ -343,11 +351,13 @@ function findSVNodes(byPosition, layout, feature, samples) {
 		return vars.map((v, i) => {
 
 			var [xStart, xEnd] = minSize(pxTransformInterval(layout, [v.start, v.end])),
-				y = sindex[v.variant.sample];
+				y = sindex[v.variant.sample],
+				{chr, alt} = v.variant;
 			return {
 				xStart,
 				xEnd,
 				y,
+				color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
 				subrow: i,
 				rowCount: count,
 				data: v.variant
@@ -369,29 +379,42 @@ function defaultXZoom(refGene, type) {
 	};
 }
 
-function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
-	var {fieldType, width, sFeature, showIntrons = false} = column;
-
-	if (!_.get(data, 'req')) {
+function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
+	if (_.isEmpty(data) || _.isEmpty(data.req)) {
 		return {};
 	}
-	var {refGene} = data;
-
-	if (_.isEmpty(refGene)) {
-		return {};
-	}
-
-	var refGeneObj = _.values(refGene)[0],
-		{xzoom = defaultXZoom(refGeneObj, fieldType)} = column;
-
-	var createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
+	var {refGene} = data,
+		refGeneObj = _.values(refGene)[0],
+		{width, showIntrons = false,
+			xzoom = defaultXZoom(refGeneObj, 'SV')} = column,
+		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
 		layout = createLayout(refGeneObj, width, xzoom),
-		findNodes = fieldType === 'SV' ? findSVNodes : findSNVNodes,
-		nodes = findNodes(index.byPosition, layout, sFeature, sortedSamples);
+		nodes = findSVNodes(index.byPosition, layout, sortedSamples);
 
 	return {
 		layout,
-		nodes
+		nodes,
+		legend: getSVLegend(chromColorGB)
+	};
+}
+
+function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
+	if (_.isEmpty(data) || _.isEmpty(data.req)) {
+		return {};
+	}
+	var {refGene} = data,
+		refGeneObj = _.values(refGene)[0],
+		{width, showIntrons = false, sFeature,
+			xzoom = defaultXZoom(refGeneObj, 'mutation')} = column,
+		allVals = _.uniq(data.req.rows.map(features[sFeature].get)),
+		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
+		layout = createLayout(refGeneObj, width, xzoom),
+		nodes = findSNVNodes(index.byPosition, layout, sFeature, sortedSamples);
+
+	return {
+		layout,
+		nodes,
+		legend: features[sFeature].legend(impactColor, allVals)
 	};
 }
 
@@ -473,11 +496,11 @@ function SNVPvalue (rows) {
 
 widgets.cmp.add('mutation', cmp);
 widgets.index.add('mutation', index);
-widgets.transform.add('mutation', dataToDisplay);
+widgets.transform.add('mutation', snvDataToDisplay);
 
 widgets.cmp.add('SV', cmp);
 widgets.index.add('SV', index);
-widgets.transform.add('SV', dataToDisplay);
+widgets.transform.add('SV', svDataToDisplay);
 
 module.exports = {
 	features,

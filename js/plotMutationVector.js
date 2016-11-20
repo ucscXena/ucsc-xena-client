@@ -31,8 +31,10 @@ function hotOrNot(component) {
 }
 
 function drawLegend({column}) {
-	var feature = _.getIn(column, ['sFeature']),
-		{colors, labels, align} = mv.features[feature].legend(column.fieldType);
+	if (!column.legend) {
+		return null;
+	}
+	var {colors, labels, align} = column.legend;
 
 	return (
 		<Legend
@@ -201,8 +203,7 @@ var MutationColumn = hotOrNot(React.createClass({
 		return tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
 	},
 	render: function () {
-		var {column, samples, zoom, index, draw} = this.props,
-			feature = _.getIn(column, ['sFeature']);
+		var {column, samples, zoom, index, draw} = this.props;
 
 		return (
 			<CanvasDrawing
@@ -215,7 +216,6 @@ var MutationColumn = hotOrNot(React.createClass({
 						onMouseOver: this.ev.mouseover,
 						onClick: this.props.onClick
 					}}
-					feature={feature}
 					nodes={column.nodes}
 					strand={column.strand}
 					width={column.width}
