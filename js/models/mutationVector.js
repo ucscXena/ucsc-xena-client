@@ -158,9 +158,10 @@ var impact = {
 	features = {
 		impact: {
 			get: v => v.effect,
-			color: v => impactColor[v] || impactColor.others,
+			color: (colorMap, v) => colorMap[v] || colors.grey,
 			legend: sortedLegend
 		},
+		// dna_vaf and rna_vaf need to be updated to reflect the call params.
 		'dna_vaf': {
 			get: v => v.dna_vaf == null ? undefined : decimateFreq(v.dna_vaf),
 			color: v => colorStr(v == null ? colors.grey : _.assoc(colors.af, 'a', v)),
@@ -311,7 +312,7 @@ function sortByGroup(arr, keyfn) {
 			k => grouped[k]);
 }
 
-function findSNVNodes(byPosition, layout, feature, samples) {
+function findSNVNodes(byPosition, layout, colorMap, feature, samples) {
 	var sindex = _.object(samples, _.range(samples.length)),
 		{get, color} = features[feature],
 
@@ -330,7 +331,7 @@ function findSNVNodes(byPosition, layout, feature, samples) {
 			xStart,
 			xEnd,
 			y: sindex[v.variant.sample],
-			color: color(get(v.variant)), // needed for sort, before drawing.
+			color: color(colorMap, get(v.variant)), // needed for sort, before drawing.
 			data: v.variant
 		};
 	}), v => v.color);
@@ -379,6 +380,10 @@ function defaultXZoom(refGene, type) {
 	};
 }
 
+var getCustomColor = (fieldSpecs, datasets) =>
+	(fieldSpecs.length === 1) ?
+		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor'], null) : null;
+
 function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
 	if (_.isEmpty(data) || _.isEmpty(data.req)) {
 		return {};
@@ -409,12 +414,13 @@ function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, in
 		allVals = _.uniq(data.req.rows.map(features[sFeature].get)),
 		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
 		layout = createLayout(refGeneObj, width, xzoom),
-		nodes = findSNVNodes(index.byPosition, layout, sFeature, sortedSamples);
+		colorMap = getCustomColor(column.fieldSpecs, datasets) || impactColor,
+		nodes = findSNVNodes(index.byPosition, layout, colorMap, sFeature, sortedSamples);
 
 	return {
 		layout,
 		nodes,
-		legend: features[sFeature].legend(impactColor, allVals)
+		legend: features[sFeature].legend(colorMap, allVals)
 	};
 }
 
