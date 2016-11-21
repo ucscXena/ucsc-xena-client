@@ -75,6 +75,19 @@ var styles = {
 	}
 };
 
+var uiHelp = {
+	'refGene': ['top', 'Drag zoom. Shift-click zoom out.']
+};
+
+function addHelp(id, target) {
+	var [placement, text] = uiHelp[id],
+		tooltip = <Tooltip>{text}</Tooltip>;
+	return (
+		<OverlayTrigger trigger={['hover']} key={id} placement={placement} overlay={tooltip}>
+			{target}
+		</OverlayTrigger>);
+}
+
 // Manually set focus to avoid triggering dropdown (close) or anchor
 // (navigate) actions.
 var setFocus = ev => {
@@ -370,14 +383,15 @@ var Column = React.createClass({
 				<Crosshair>
 					<div style={{height: 32}}>
 						{doRefGene ?
-							<DragSelect enabled={xzoomable} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-									<RefGeneAnnotation
-										alternateColors={!_.getIn(column, ['showIntrons'], false)}
-										width={width}
-										refGene={_.values(data.refGene)[0]}
-										layout={column.layout}
-										position={{gene: column.fields[0]}}/>
-							</DragSelect> : null}
+							addHelp('refGene',
+								<DragSelect enabled={xzoomable} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+										<RefGeneAnnotation
+											alternateColors={!_.getIn(column, ['showIntrons'], false)}
+											width={width}
+											refGene={_.values(data.refGene)[0]}
+											layout={column.layout}
+											position={{gene: column.fields[0]}}/>
+							</DragSelect>) : null}
 					</div>
 				</Crosshair>
 
