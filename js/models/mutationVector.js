@@ -337,7 +337,7 @@ function findSNVNodes(byPosition, layout, colorMap, feature, samples) {
 	}), v => v.color);
 }
 
-function findSVNodes(byPosition, layout, samples) {
+function findSVNodes(byPosition, layout, colorMap, samples) {
 	var sindex = _.object(samples, _.range(samples.length)),
 		minSize = ([s, e]) => [s, e - s < 1 ? s + 1 : e];
 
@@ -358,7 +358,7 @@ function findSVNodes(byPosition, layout, samples) {
 				xStart,
 				xEnd,
 				y,
-				color: chromColorGB[chromFromAlt(alt)] || chromColorGB[chr.replace(/chr/i, "")],
+				color: colorMap[chromFromAlt(alt)] || colorMap[chr.replace(/chr/i, "")],
 				subrow: i,
 				rowCount: count,
 				data: v.variant
@@ -394,12 +394,13 @@ function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, ind
 			xzoom = defaultXZoom(refGeneObj, 'SV')} = column,
 		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
 		layout = createLayout(refGeneObj, width, xzoom),
-		nodes = findSVNodes(index.byPosition, layout, sortedSamples);
+		colorMap = getCustomColor(column.fieldSpecs, datasets, 'SV') || chromColorGB,
+		nodes = findSVNodes(index.byPosition, layout, colorMap, sortedSamples);
 
 	return {
 		layout,
 		nodes,
-		legend: getSVLegend(chromColorGB)
+		legend: getSVLegend(colorMap)
 	};
 }
 
