@@ -144,7 +144,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 		noData = !_.get(data, 'req'),
 		mupitItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)',
 		{showIntrons = false} = column,
-		sortVisibleItemName = sortVisible ? 'Sort all' : 'Sort visible',
+		sortVisibleItemName = sortVisible ? 'Sort gene' : 'Sort region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
 	return addIdsToArr([
 		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
