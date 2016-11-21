@@ -15,7 +15,6 @@ var Rx = require('rx-dom');
 var {createBookmark} = require('./bookmark');
 var konami = require('./konami');
 var Popover = require('react-bootstrap/lib/Popover');
-var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var config = require('./config');
 var {deepPureRenderMixin} = require('./react-utils');
 
