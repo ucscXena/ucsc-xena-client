@@ -380,9 +380,9 @@ function defaultXZoom(refGene, type) {
 	};
 }
 
-var getCustomColor = (fieldSpecs, datasets) =>
+var getCustomColor = (fieldSpecs, datasets, type) =>
 	(fieldSpecs.length === 1) ?
-		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor'], null) : null;
+		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', type], null) : null;
 
 function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
 	if (_.isEmpty(data) || _.isEmpty(data.req)) {
@@ -414,7 +414,7 @@ function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, in
 		allVals = _.uniq(data.req.rows.map(features[sFeature].get)),
 		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
 		layout = createLayout(refGeneObj, width, xzoom),
-		colorMap = getCustomColor(column.fieldSpecs, datasets) || impactColor,
+		colorMap = getCustomColor(column.fieldSpecs, datasets, 'SNV') || impactColor,
 		nodes = findSNVNodes(index.byPosition, layout, colorMap, sFeature, sortedSamples);
 
 	return {
