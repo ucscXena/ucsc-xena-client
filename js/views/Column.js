@@ -157,9 +157,8 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 			<MenuItem header style={{fontSize: '80%'}}>End position ( {assembly} )</MenuItem>,
 			<MenuItem>
 				<ValidatedInput defaultValue={end} isValid={bIV} ref='end' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
-			</MenuItem>,
-			<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>] : [])
-
+			</MenuItem>] : []),
+		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>
 	]);
 }
 
@@ -269,7 +268,7 @@ var Column = React.createClass({
 		this.props.onSortVisible(this.props.id);
 	},
 	onXZoomOut: function (ev) {
-		if (this.state.xzoomable && ev.shiftKey) {
+		if (ev.shiftKey) {
 			let {id, onXZoom, data, column: {fieldType}} = this.props,
 				refGene = _.get(data, 'refGene'),
 				position = getPosition(fieldType, refGene, '', '');
@@ -384,7 +383,7 @@ var Column = React.createClass({
 					<div style={{height: 32}}>
 						{doRefGene ?
 							addHelp('refGene',
-								<DragSelect enabled={xzoomable} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+								<DragSelect enabled={true} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
 										<RefGeneAnnotation
 											alternateColors={!_.getIn(column, ['showIntrons'], false)}
 											width={width}
