@@ -21,14 +21,18 @@ function push(arr, v) {
 	return arr;
 }
 
+// A recursive implementation might be clearer.
+var backgroundStripes = hasValue =>
+	_.reduce(
+		_.groupByConsec(hasValue, _.identity),
+		([acc, sum], g) =>
+			[g[0] ? acc : push(acc, [sum, g.length]), sum + g.length],
+		[[], 0])[0];
+
 // XXX note this draws outside the zoom area. It could be optimized
 // by considering zoom count and index.
-function drawBackground(vg, width, height, pixPerRow, hasValue) {
-	var [stripes] = _.reduce(
-			_.groupByConsec(hasValue, _.identity),
-			([acc, sum], g) =>
-				[g[0] ? acc : push(acc, [sum, g.length]), sum + g.length],
-			[[], 0]);
+function drawBackground(vg, width, height, count, stripes) {
+	var pixPerRow = height / count;
 
 	vg.smoothing(false);
 	vg.box(0, 0, width, height, 'white'); // white background
@@ -38,24 +42,25 @@ function drawBackground(vg, width, height, pixPerRow, hasValue) {
 		width, pixPerRow * len
 	]);
 	vg.drawRectangles(rects, {fillStyle: 'grey'});
+}
 
-	var nullLabels = stripes.filter(([, len]) => len * pixPerRow > labelFont);
+function labelNulls(vg, width, height, count, stripes) {
+	var pixPerRow = height / count,
+		nullLabels = stripes.filter(([, len]) => len * pixPerRow > labelFont);
+
 	nullLabels.forEach(([offset, len]) => {
 		vg.textCenteredPushRight(0, pixPerRow * offset, width, pixPerRow * len, 'black', labelFont, "null");
 	});
 }
 
-function drawSegments(vg, colorScale, width, zoom, segments) {
-	var {height, count} = zoom,
-		vHeight = minVariantHeight(height / count);
+function drawSegments(vg, colorScale, width, rheight, zoom, segments) {
 
 	var toDraw = _.map(segments, v => {
-		var {y} = toYPx(zoom, v);
-
+		var y = (v.y - zoom.index) * rheight + (rheight / 2);
 		return {
 			...v,
 			y,
-			h: vHeight,
+			h: rheight,
 			color: colorScale(v.value)
 		};
 	});
@@ -81,11 +86,15 @@ var drawSegmented = _.curry((vg, props) => {
 		{samples, index: {bySample: samplesInDS}} = props,
 		last = index + count,
 		toDraw = nodes.filter(v => v.y >= index && v.y < last),
-		pixPerRow = height / count,
-		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]);
+		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]),
+		stripes = backgroundStripes(hasValue);
 
-	drawBackground(vg, width, height, pixPerRow, hasValue);
-	drawSegments(vg, colorScale, width, zoom, toDraw);
+	vg.drawSharpRows(vg, index, count, height, width,
+		(vg, width, height) =>
+			drawBackground(vg, width, height, count, stripes),
+		(vg, rwidth, rheight) =>
+			drawSegments(vg, colorScale, rwidth, rheight, zoom, toDraw));
+	labelNulls(vg, width, height, count, stripes);
 });
 
 module.exports = {drawSegmented, radius, minVariantHeight, toYPx, labelFont};
