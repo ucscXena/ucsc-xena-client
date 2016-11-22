@@ -390,8 +390,8 @@ function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, ind
 	}
 	var {refGene} = data,
 		refGeneObj = _.values(refGene)[0],
-		{width, showIntrons = false,
-			xzoom = defaultXZoom(refGeneObj, 'SV')} = column,
+		maxXZoom = defaultXZoom(refGeneObj, 'SV'),
+		{width, showIntrons = false, xzoom = maxXZoom} = column,
 		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
 		layout = createLayout(refGeneObj, width, xzoom),
 		colorMap = getCustomColor(column.fieldSpecs, datasets, 'SV') || chromColorGB,
@@ -400,6 +400,7 @@ function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, ind
 	return {
 		layout,
 		nodes,
+		maxXZoom,
 		legend: getSVLegend(colorMap)
 	};
 }
@@ -410,8 +411,8 @@ function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, in
 	}
 	var {refGene} = data,
 		refGeneObj = _.values(refGene)[0],
-		{width, showIntrons = false, sFeature,
-			xzoom = defaultXZoom(refGeneObj, 'mutation')} = column,
+		maxXZoom = defaultXZoom(refGeneObj, 'mutation'),
+		{width, showIntrons = false, sFeature, xzoom = maxXZoom} = column,
 		allVals = _.uniq(data.req.rows.map(features[sFeature].get)),
 		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
 		layout = createLayout(refGeneObj, width, xzoom),
@@ -421,6 +422,7 @@ function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, in
 	return {
 		layout,
 		nodes,
+		maxXZoom,
 		legend: features[sFeature].legend(colorMap, allVals)
 	};
 }

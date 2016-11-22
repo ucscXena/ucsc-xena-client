@@ -50,7 +50,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	var state = vizState;
 	function datasetSetting() {
 		var node, div = document.createElement("div");
-		if (valueType === "float") {
+		if (valueType === "float" || valueType === 'segmented') {
 			node = document.createElement("div");
 			allFloat(node);
 			div.appendChild(node);

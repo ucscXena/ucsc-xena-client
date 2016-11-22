@@ -10,7 +10,7 @@ const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL  = 'My Computer Hub' ;
 const phenotypeDataSubTypeList = ["phenotype", "phenotypes", "Phenotype", "Phenotypes"];
 const phenotypeGroupLabel = "phenotype";
-const ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap', 'genomicSegment'];
+const ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap'];
 
 var notIgnored = ds => !_.contains(ignored, ds.type);
 

@@ -4,6 +4,7 @@
 var multi = require('./multi');
 var denseMatrix = require('./models/denseMatrix');
 var mutationVector = require('./models/mutationVector');
+var segmented = require('./models/segmented');
 var _ = require('./underscore_ext');
 var Rx = require('rx');
 
@@ -18,6 +19,7 @@ xenaFetch.add("geneProbes-float", denseMatrix.fetchGeneProbes);
 xenaFetch.add("genes-float", denseMatrix.fetchGene);
 xenaFetch.add("clinical-float", denseMatrix.fetch);
 xenaFetch.add("clinical-coded", denseMatrix.fetchFeature);
+xenaFetch.add('segmented-segmented', segmented.fetch);
 xenaFetch.add('mutation-mutation', mutationVector.fetch);
 xenaFetch.add('SV-mutation', mutationVector.fetch);
 

@@ -267,6 +267,19 @@ getField.add('mutation', (column, samples, fdata) => {
 		'refGene', findFirstProp(fdata, 'refGene'));
 });
 
+// Combining segmented fields.
+// Require same refGene.
+// Map sampleIDs to their order in cohort samples.
+getField.add('segmented', (column, samples, fdata) => {
+	var sampleOffsets = _.initial(_.scan(samples, (acc, list) => acc + list.length, 0)),
+		sampleMaps = _.map(sampleOffsets, offset => s => s + offset),
+		remappedFdata = _.mmap(sampleMaps, fdata, remapSamples);
+
+	return _.assoc(concatMutation(remappedFdata),
+		'refGene', findFirstProp(fdata, 'refGene'));
+});
+
+
 function fetchComposite(column, samples) {
 	var {fieldSpecs} = column;
 	return Rx.Observable.zipArray(fieldSpecs.map((f, i) => fieldFetch(f, [samples[i]])))

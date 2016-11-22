@@ -87,42 +87,55 @@ var stopPropagation = ev => ev.stopPropagation();
 
 var addIdsToArr = arr => arr.map((el, id) => React.cloneElement(el, {id}));
 
-var defaultXZoom = (refGene, type) => {
-	if (_.isEmpty(refGene)) {
-		return {start: 0, end: 0};
-	}
-	var refGeneObj = _.values(refGene)[0];
-	return mutationVector.defaultXZoom(refGeneObj, type);
-};
-
 var isIntString = str => !!s.trim(str).replace(/,/g, '').match(/^[0-9]+$/);
 var parseExtendedInt = str => parseInt(s.trim(str).replace(/,/g, ''), 10);
 
-var boundIsValid = _.curry((type, refGene, str) => {
-	if (_.isEmpty(refGene)) {
-		return false;
-	}
+var boundIsValid = _.curry((maxXZoom, str) => {
 	if (s.trim(str) === '') {
 		return true;
 	}
 	if (!isIntString(str)) { // must be an int if it's not empty string
 		return false;
 	}
-	var pos = parseExtendedInt(str),
-		def = defaultXZoom(refGene, type);
+	var pos = parseExtendedInt(str);
 
-	return def.start <= pos && pos <= def.end;
+	return maxXZoom.start <= pos && pos <= maxXZoom.end;
 });
+
+function zoomMenu(props) {
+	var {column} = props,
+		{xzoom, maxXZoom, assembly} = column,
+		{start, end} = xzoom || maxXZoom || {start: 0, end: 0},
+		bIV = boundIsValid(maxXZoom);
+	return [
+		<MenuItem header style={{fontSize: '80%'}}>Start position ( {assembly} )</MenuItem>,
+		<MenuItem>
+			<ValidatedInput defaultValue={start} isValid={bIV} ref='start' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
+		</MenuItem>,
+		<MenuItem header style={{fontSize: '80%'}}>End position ( {assembly} )</MenuItem>,
+		<MenuItem>
+			<ValidatedInput defaultValue={end} isValid={bIV} ref='end' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
+		</MenuItem>];
+}
+
+
+function segmentedMenu(props, {onShowIntrons, onSortVisible, xzoomable}) {
+	var {column, data} = props,
+		{sortVisible, showIntrons = false} = column,
+		noData = !_.get(data, 'req'),
+		sortVisibleItemName = sortVisible ? 'Sort all' : 'Sort visible',
+		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
+	return addIdsToArr([
+		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
+		...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
+		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>
+
+	]);
+}
 
 function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable}) {
 	var {column, data} = props,
-		fieldType = column.fieldType,
-		sortVisible = column.sortVisible,
-		{start, end} = _.get(column, 'xzoom',
-				defaultXZoom(data.refGene, fieldType)),
-		bIV = boundIsValid(fieldType, data.refGene),
-		assembly = _.getIn(column, ['assembly']),
-		valueType = _.getIn(column, ['valueType']),
+		{valueType, sortVisible, assembly, showIntrons = false} = column,
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'mutation',
 		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
@@ -130,23 +143,13 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 		noMuPit = noMenu || wrongDataSubType,
 		noData = !_.get(data, 'req'),
 		mupitItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)',
-		{showIntrons = false} = column,
 		sortVisibleItemName = sortVisible ? 'Sort all' : 'Sort visible',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
 	return addIdsToArr([
 		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
 		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
-		...(xzoomable ? [
-			<MenuItem header style={{fontSize: '80%'}}>Start position ( {assembly} )</MenuItem>,
-			<MenuItem>
-				<ValidatedInput defaultValue={start} isValid={bIV} ref='start' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
-			</MenuItem>,
-			<MenuItem header style={{fontSize: '80%'}}>End position ( {assembly} )</MenuItem>,
-			<MenuItem>
-				<ValidatedInput defaultValue={end} isValid={bIV} ref='end' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
-			</MenuItem>,
-			<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>] : [])
-
+		...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
+		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>
 	]);
 }
 
@@ -164,7 +167,8 @@ function matrixMenu(props, {supportsGeneAverage, onMode}) {
 // the widgets care about a menu in their container.
 function optionMenu(props, opts) {
 	var {column: {valueType}} = props;
-	return (valueType === 'mutation' ?  mutationMenu : matrixMenu)(props, opts);
+	return (valueType === 'mutation' ?  mutationMenu :
+			(valueType === 'segmented' ? segmentedMenu : matrixMenu))(props, opts);
 }
 
 function getStatusView(status, onReload) {
@@ -188,19 +192,18 @@ function getStatusView(status, onReload) {
 	return null;
 }
 
-function getPosition(type, refGene, pStart, pEnd) {
-	if (_.isEmpty(refGene) || !boundIsValid(pStart) || !boundIsValid(pEnd)) {
+function getPosition(maxXZoom, pStart, pEnd) {
+	if (!boundIsValid(maxXZoom, pStart) || !boundIsValid(maxXZoom, pEnd)) {
 		return false;
 	}
-	var [start, end] = pStart < pEnd ? [pStart, pEnd] : [pEnd, pStart],
-		def = defaultXZoom(refGene, type);
+	var [start, end] = pStart < pEnd ? [pStart, pEnd] : [pEnd, pStart];
 
-	start = s.trim(start) === '' ? def.start : parseExtendedInt(start);
-	end = s.trim(end) === '' ? def.end : parseExtendedInt(end);
+	start = s.trim(start) === '' ? maxXZoom.start : parseExtendedInt(start);
+	end = s.trim(end) === '' ? maxXZoom.end : parseExtendedInt(end);
 
-	return (def.start <= start &&
+	return (maxXZoom.start <= start &&
 			start <= end &&
-			end <= def.end) ? {start, end} : null;
+			end <= maxXZoom.end) ? {start, end} : null;
 }
 
 // Persistent state for xzoomable setting.
@@ -257,9 +260,8 @@ var Column = React.createClass({
 	},
 	onXZoomOut: function (ev) {
 		if (this.state.xzoomable && ev.shiftKey) {
-			let {id, onXZoom, data, column: {fieldType}} = this.props,
-				refGene = _.get(data, 'refGene'),
-				position = getPosition(fieldType, refGene, '', '');
+			let {id, column: {maxXZoom}, onXZoom} = this.props,
+				position = getPosition(maxXZoom, '', '');
 			onXZoom(id, position);
 		}
 	},
@@ -278,12 +280,11 @@ var Column = React.createClass({
 	},
 	onMenuToggle: function (open) {
 		var {xzoomable} = this.state,
-			{column: {xzoom, valueType, fieldType}, data, onXZoom, id} = this.props;
+			{column: {xzoom, maxXZoom, valueType}, onXZoom, id} = this.props;
 		if (xzoomable && !open && valueType === 'mutation') {
 			let start = this.refs.start.getValue(),
 				end = this.refs.end.getValue(),
-				refGene = _.get(data, 'refGene'),
-				position = getPosition(fieldType, refGene, start, end);
+				position = getPosition(maxXZoom, start, end);
 
 			if (position && !_.isEqual(position, xzoom)) {
 				onXZoom(id, position);

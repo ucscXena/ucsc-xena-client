@@ -288,6 +288,27 @@ function sparse_data_string(dataset, samples, gene) {
 		   '                      :where [:and [:in :any "genes" [gene]] [:in "sampleID" samples]]})})';
 }
 
+function segmented_data_range_string(dataset, samples, chr, start, end) {
+	return `(let [samples ${arrayfmt(samples)}\n` +
+		   `      dataset ${quote(dataset)}\n` +
+		   `      chr ${quote(chr)}\n` +
+		   `      start ${start}\n` +
+		   `      end ${end}\n` +
+		   '      getfield (fn [field]\n' +
+		   '                 (:id (car (query {:select [:field.id]\n' +
+		   '                                   :from [:dataset]\n' +
+		   '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
+		   '                                   :where [:and [:= :field.name field] [:= :dataset.name dataset]]}))))\n' +
+		   '      sampleID (getfield "sampleID")]\n' +
+		   '  {:samples (map :value (query {:select [:value]\n' +
+		   '                                :from [:code]\n' +
+		   '                                :where [:and [:in :value samples][:= :field_id sampleID]]}))\n' +
+		   '   :rows (xena-query {:select ["sampleID" "position" "value"]\n' +
+		   '                      :from [dataset]\n' +
+		   '                      :where [:and [:in "position" [[chr start end]]] [:in "sampleID" samples]]})})';
+}
+
+
 function sparse_data_example_string(dataset, count) {
 	return `{:rows (xena-query {:select ["ref" "alt" "altGene" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n` +
 		   `                    :from [${quote(dataset)}]\n` +
@@ -525,6 +546,33 @@ function sparse_data_values(host, ds, gene, samples) {
 	).map(json_resp).map(resp => indexMutations(gene, resp));
 }
 
+var segmented_attrs = list =>
+	_.map(list, row => ({
+		"sample": row.sampleID,
+		"chr": row.position.chrom,
+		"start": row.position.chromstart,
+		"end": row.position.chromend,
+		"value": row.value
+	}));
+
+function indexSegmented(resp) {
+	// XXX The query for samples is returning every row in the dataset,
+	// rather than distinct sampleIDs from the dataset. We need a
+	// 'distinct' function for xena-query.
+	var rows = segmented_attrs(collateRows(resp.rows));
+	return {
+		rows,
+		samplesInResp: _.uniq(resp.samples) // XXX rename this after deprecating samples
+	};
+}
+
+function segmented_data_range_values(host, ds, chr, start, end, samples) {
+	return Rx.DOM.ajax(
+		xena_post(host, segmented_data_range_string(ds, samples, chr, start, end))
+	).map(json_resp).map(indexSegmented);
+}
+
+
 function align_matches(input, matches) {
 	var index = _.object(_.map(matches, g => g.toLowerCase()), matches);
 	return _.map(input, g => index[g.toLowerCase()] || g);
@@ -676,6 +724,7 @@ module.exports = {
 
 	sparse_data_match_genes,
 	sparse_data_values,
+	segmented_data_range_values,
 	refGene_exon_values,
 	refGene_exon_case,
 	match_fields,

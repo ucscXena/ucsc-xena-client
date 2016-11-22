@@ -22,7 +22,8 @@ require('rx.time');
 
 var editors = {
 	'clinicalMatrix': phenotypeEdit,
-	'mutationVector': geneEdit,
+	'mutationVector': geneEdit('mutation'),
+	'genomicSegment': geneEdit('segmented'),
 	'none': {Editor: () => <span></span>, valid: () => false}
 };
 

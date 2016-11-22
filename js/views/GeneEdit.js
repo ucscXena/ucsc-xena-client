@@ -4,23 +4,25 @@
 var React = require('react');
 var Input = require('react-bootstrap/lib/Input');
 var trim = require('underscore.string').trim;
+var _ = require('../underscore_ext');
 
-var getFieldType = ({dataSubType}) =>
-	(dataSubType.search(/SV|structural/i) !== -1) ? 'SV' : 'mutation';
+var getFieldType = ({type, dataSubType}) =>
+	type === 'genomicSegment' ? 'segmented' :
+		((dataSubType.search(/SV|structural/i) !== -1) ? 'SV' : 'mutation');
 
-function apply(features, state, __, meta) {
+var apply = _.curry((valueType, features, state, __, meta) => {
 	var gene = trim(state.gene);
 	return {
 		fields: [gene],
 		fetchType: 'xena',
-		valueType: 'mutation',
+		valueType,
 		fieldType: getFieldType(meta),
 		fieldLabel: gene,
 		dsID: meta.dsID,
 		assembly: meta.assembly,
 		sFeature: 'impact'
 	};
-}
+});
 
 var valid = state => trim(state.gene);
 
@@ -41,8 +43,11 @@ var GeneEdit = React.createClass({
 	}
 });
 
-module.exports = {
+
+var getEditor = valueType => ({
 	Editor: GeneEdit,
 	valid,
-	apply
-};
+	apply: apply(valueType)
+});
+
+module.exports = getEditor;
