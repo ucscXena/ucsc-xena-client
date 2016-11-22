@@ -13,22 +13,47 @@ var {pxTransformInterval} = require('../layoutPlot');
 var {hexToRGB, colorStr} = require('../color_helper');
 var jStat = require('jStat').jStat;
 
-function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
-	var inData = new Set(valsInData),
-		groups = _.groupBy(
-			_.filter(_.keys(colorMap), val => inData.has(val)), k => colorMap[k]),
-		colors = _.keys(groups);
-	return {
-		colors,
-		labels: _.map(colors, c => groups[c].join(', ')),
-		align: 'left'
-	};
-}
+//function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
+//	var inData = new Set(valsInData),
+//		groups = _.groupBy(
+//			_.filter(_.keys(colorMap), val => inData.has(val)), k => colorMap[k]),
+//		colors = _.keys(groups);
+//	return {
+//		colors,
+//		labels: _.map(colors, c => groups[c].join(', ')),
+//		align: 'left'
+//	};
+//}
+//
+//function sortedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
+//	var inData = new Set(valsInData),
+//		colorList = _.filter(_.pairs(colorMap), ([val]) => inData.has(val))
+//			.sort(([, c0], [, c1]) => c0 > c1 ? -1 : 1);
+//	return {
+//		colors: _.pluck(colorList, 1),
+//		labels: _.pluck(colorList, 0),
+//		align: 'left'
+//	};
+//}
 
-function sortedLegend(colorMap, valsInData) {
+var colors = {
+	category4: [
+		"#FF7F0E",  // orange
+		"#2CA02C",  // green
+		"#1F77B4",  // blue
+		"#D62728"   // red
+	],
+	af: {r: 255, g: 0, b: 0},
+	grey: "#808080"
+};
+
+function inorderLegend(colorMap, valsInData) {
 	var inData = new Set(valsInData),
-		colorList = _.filter(_.pairs(colorMap), ([val]) => inData.has(val))
-			.sort(([, c0], [, c1]) => c0 > c1 ? -1 : 1);
+		missing = _.object(
+			_.map(_.filter([...inData], v => !_.has(colorMap, v)),
+				v => [v, colors.grey])),
+		extendedMap = _.merge(colorMap, missing),
+		colorList = _.filter(_.pairs(extendedMap), ([val]) => inData.has(val)).reverse(); // Legend reverses
 	return {
 		colors: _.pluck(colorList, 1),
 		labels: _.pluck(colorList, 0),
@@ -130,16 +155,6 @@ var impact = {
 		"Y": "#CCCCCC",
 		"M": "#CCCC99"
 	},
-	colors = {
-		category4: [
-			"#FF7F0E",  // orange
-			"#2CA02C",  // green
-			"#1F77B4",  // blue
-			"#D62728"   // red
-		],
-		af: {r: 255, g: 0, b: 0},
-		grey: "#808080"
-	},
 	impactColor = _.mapObject(impact, i => colors.category4[i]),
 	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
@@ -159,7 +174,7 @@ var impact = {
 		impact: {
 			get: v => v.effect,
 			color: (colorMap, v) => colorMap[v] || colors.grey,
-			legend: sortedLegend
+			legend: inorderLegend
 		},
 		// dna_vaf and rna_vaf need to be updated to reflect the call params.
 		'dna_vaf': {
