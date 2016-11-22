@@ -42,9 +42,18 @@ function exampleQuery(dsID) {
 		.map(list => _.pluck(list, 'name'));
 }
 
-function fetchExamples(serverBus, state, dsID) {
+function fetchExamples(serverBus, dsID) {
 	serverBus.onNext(['columnEdit-examples', exampleQuery(dsID)]);
 }
+
+function featureQuery(dsID) {
+       return xenaQuery.dsID_fn(xenaQuery.feature_list)(dsID);
+}
+
+function fetchFeatures(serverBus, dsID) {
+	return serverBus.onNext(['columnEdit-features', featureQuery(dsID)]);
+}
+
 
 // Normalization of fields from user input
 function geneProbeMapLookup(settings, state) {
@@ -278,8 +287,12 @@ var controls = {
 			next;
 	},
 	'edit-dataset-post!': (serverBus, state, newState, dsID, meta) => {
-		if (['mutationVector', 'clinicalMatrix'].indexOf(meta.type) === -1) {
-			fetchExamples(serverBus, newState, dsID);
+		if (!_.contains(['mutationVector', 'clinicalMatrix', 'genomicSegment'],
+				meta.type)) {
+			fetchExamples(serverBus, dsID);
+		}
+		if (_.contains(['mutationVector', 'genomicSegment'], meta.type)) {
+			fetchFeatures(serverBus, dsID);
 		}
 	},
 	'columnLabel': (state, dsID, value) =>
