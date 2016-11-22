@@ -13,22 +13,47 @@ var {pxTransformInterval} = require('../layoutPlot');
 var {hexToRGB, colorStr} = require('../color_helper');
 var jStat = require('jStat').jStat;
 
-function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
-	var inData = new Set(valsInData),
-		groups = _.groupBy(
-			_.filter(_.keys(colorMap), val => inData.has(val)), k => colorMap[k]),
-		colors = _.keys(groups);
-	return {
-		colors,
-		labels: _.map(colors, c => groups[c].join(', ')),
-		align: 'left'
-	};
-}
+//function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
+//	var inData = new Set(valsInData),
+//		groups = _.groupBy(
+//			_.filter(_.keys(colorMap), val => inData.has(val)), k => colorMap[k]),
+//		colors = _.keys(groups);
+//	return {
+//		colors,
+//		labels: _.map(colors, c => groups[c].join(', ')),
+//		align: 'left'
+//	};
+//}
+//
+//function sortedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
+//	var inData = new Set(valsInData),
+//		colorList = _.filter(_.pairs(colorMap), ([val]) => inData.has(val))
+//			.sort(([, c0], [, c1]) => c0 > c1 ? -1 : 1);
+//	return {
+//		colors: _.pluck(colorList, 1),
+//		labels: _.pluck(colorList, 0),
+//		align: 'left'
+//	};
+//}
 
-function sortedLegend(colorMap, valsInData) {
+var colors = {
+	category4: [
+		"#FF7F0E",  // orange
+		"#2CA02C",  // green
+		"#1F77B4",  // blue
+		"#D62728"   // red
+	],
+	af: {r: 255, g: 0, b: 0},
+	grey: "#808080"
+};
+
+function inorderLegend(colorMap, valsInData) {
 	var inData = new Set(valsInData),
-		colorList = _.filter(_.pairs(colorMap), ([val]) => inData.has(val))
-			.sort(([, c0], [, c1]) => c0 > c1 ? -1 : 1);
+		missing = _.object(
+			_.map(_.filter([...inData], v => !_.has(colorMap, v)),
+				v => [v, colors.grey])),
+		extendedMap = _.merge(colorMap, missing),
+		colorList = _.filter(_.pairs(extendedMap), ([val]) => inData.has(val)).reverse(); // Legend reverses
 	return {
 		colors: _.pluck(colorList, 1),
 		labels: _.pluck(colorList, 0),
@@ -39,13 +64,20 @@ function sortedLegend(colorMap, valsInData) {
 var impact = {
 		//destroy protein
 		'Nonsense_Mutation': 3,
+		'Nonsense': 3,
 		'frameshift_variant': 3,
+		'Frameshift': 3,
 		'stop_gained': 3,
 		'Stop Gained': 3,
 		'splice_acceptor_variant': 3,
 		'splice_acceptor_variant&intron_variant': 3,
 		'splice_donor_variant': 3,
 		'splice_donor_variant&intron_variant': 3,
+		'SpliceAcceptorDeletion': 3,
+		'SpliceAcceptorSNV': 3,
+		'SpliceDonorBlockSubstitution': 3,
+		'SpliceDonorDeletion': 3,
+		'SpliceDonorSNV': 3,
 		'Splice_Site': 3,
 		'Frame_Shift_Del': 3,
 		'Frame_Shift_Ins': 3,
@@ -60,11 +92,14 @@ var impact = {
 		'missense_variant': 2,
 		'Missense Variant': 2,
 		'Missense_Mutation': 2,
+		'Missense': 2,
+		'MultiAAMissense': 2,
 		'Indel': 2,
 		'start_lost': 2,
 		'start_gained': 2,
 		'De_novo_Start_OutOfFrame': 2,
 		'Translation_Start_Site': 2,
+		'CdsStartSNV': 2,
 		'De_novo_Start_InFrame': 2,
 		'stop_lost': 2,
 		'Stop Lost': 2,
@@ -75,14 +110,17 @@ var impact = {
 		'disruptive_inframe_insertion': 2,
 		'inframe_deletion': 2,
 		'Inframe Deletion': 2,
+		'InFrameDeletion': 2,
 		'inframe_insertion': 2,
 		'Inframe Insertion': 2,
+		'InFrameInsertion': 2,
 		'In_Frame_Del': 2,
 		'In_Frame_Ins': 2,
 
 		//do not modify protein
 		'synonymous_variant': 1,
 		'Synonymous Variant': 1,
+		'Synonymous': 1,
 		'Silent': 1,
 		'stop_retained_variant': 1,
 
@@ -130,16 +168,6 @@ var impact = {
 		"Y": "#CCCCCC",
 		"M": "#CCCC99"
 	},
-	colors = {
-		category4: [
-			"#FF7F0E",  // orange
-			"#2CA02C",  // green
-			"#1F77B4",  // blue
-			"#D62728"   // red
-		],
-		af: {r: 255, g: 0, b: 0},
-		grey: "#808080"
-	},
 	impactColor = _.mapObject(impact, i => colors.category4[i]),
 	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
@@ -159,7 +187,7 @@ var impact = {
 		impact: {
 			get: v => v.effect,
 			color: (colorMap, v) => colorMap[v] || colors.grey,
-			legend: sortedLegend
+			legend: inorderLegend
 		},
 		// dna_vaf and rna_vaf need to be updated to reflect the call params.
 		'dna_vaf': {

@@ -31,7 +31,6 @@ var contrastColor = color => luminance(rgb(color)) < 147 ? '#DDDDDD' : 'black';
 
 var nodata = [["null (no data)", "#808080"]];
 
-// XXX klass? upperBorderIndex?
 var Legend = React.createClass({
 	getDefaultProps: () => ({ max: 40 }),
 	render: function () {

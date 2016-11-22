@@ -75,6 +75,19 @@ var styles = {
 	}
 };
 
+var uiHelp = {
+	'refGene': ['top', 'Drag zoom. Shift-click zoom out.']
+};
+
+function addHelp(id, target) {
+	var [placement, text] = uiHelp[id],
+		tooltip = <Tooltip>{text}</Tooltip>;
+	return (
+		<OverlayTrigger trigger={['hover']} key={id} placement={placement} overlay={tooltip}>
+			{target}
+		</OverlayTrigger>);
+}
+
 // Manually set focus to avoid triggering dropdown (close) or anchor
 // (navigate) actions.
 var setFocus = ev => {
@@ -143,7 +156,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 		noMuPit = noMenu || wrongDataSubType,
 		noData = !_.get(data, 'req'),
 		mupitItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)',
-		sortVisibleItemName = sortVisible ? 'Sort all' : 'Sort visible',
+		sortVisibleItemName = sortVisible ? 'Sort gene' : 'Sort region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
 	return addIdsToArr([
 		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
@@ -259,7 +272,7 @@ var Column = React.createClass({
 		this.props.onSortVisible(this.props.id);
 	},
 	onXZoomOut: function (ev) {
-		if (this.state.xzoomable && ev.shiftKey) {
+		if (ev.shiftKey) {
 			let {id, column: {maxXZoom}, onXZoom} = this.props,
 				position = getPosition(maxXZoom, '', '');
 			onXZoom(id, position);
@@ -371,14 +384,15 @@ var Column = React.createClass({
 				<Crosshair>
 					<div style={{height: 32}}>
 						{doRefGene ?
-							<DragSelect enabled={xzoomable} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-									<RefGeneAnnotation
-										alternateColors={!_.getIn(column, ['showIntrons'], false)}
-										width={width}
-										refGene={_.values(data.refGene)[0]}
-										layout={column.layout}
-										position={{gene: column.fields[0]}}/>
-							</DragSelect> : null}
+							addHelp('refGene',
+								<DragSelect enabled={true} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+										<RefGeneAnnotation
+											alternateColors={!_.getIn(column, ['showIntrons'], false)}
+											width={width}
+											refGene={_.values(data.refGene)[0]}
+											layout={column.layout}
+											position={{gene: column.fields[0]}}/>
+							</DragSelect>) : null}
 					</div>
 				</Crosshair>
 
