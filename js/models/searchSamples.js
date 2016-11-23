@@ -79,6 +79,7 @@ var searchMethod = {
 	coded: searchCoded(includes),
 	float: searchFloat(near),
 	mutation: searchMutation(includes),
+	segmented: searchMutation(includes),
 	samples: searchSampleIds
 };
 
@@ -86,6 +87,7 @@ var searchExactMethod = {
 	coded: searchCoded((target, value) => value === target),
 	float: searchFloat(_.curry((x, y) => x === y)),
 	mutation: searchMutation((target, value) => value === target),
+	segmented: searchMutation((target, value) => value === target),
 	samples: searchSampleIdsExact
 };
 
@@ -94,24 +96,28 @@ var empty = () => [];
 var searchLt = {
 	coded: empty,
 	mutation: empty,
+	segmented: empty,
 	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y < x))
 };
 
 var searchLe = {
 	coded: empty,
 	mutation: empty,
+	segmented: empty,
 	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y <= x))
 };
 
 var searchGt = {
 	coded: empty,
 	mutation: empty,
+	segmented: empty,
 	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y > x))
 };
 
 var searchGe = {
 	coded: empty,
 	mutation: empty,
+	segmented: empty,
 	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y >= x))
 };
 
