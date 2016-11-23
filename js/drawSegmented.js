@@ -29,19 +29,9 @@ var backgroundStripes = hasValue =>
 			[g[0] ? acc : push(acc, [sum, g.length]), sum + g.length],
 		[[], 0])[0];
 
-// XXX note this draws outside the zoom area. It could be optimized
-// by considering zoom count and index.
-function drawBackground(vg, width, height, count, stripes) {
-	var pixPerRow = height / count;
-
+function drawBackground(vg, width, height) {
 	vg.smoothing(false);
-	vg.box(0, 0, width, height, 'white'); // white background
-
-	var rects = stripes.map(([offset, len]) => [
-		0, (offset * pixPerRow),
-		width, pixPerRow * len
-	]);
-	vg.drawRectangles(rects, {fillStyle: 'grey'});
+	vg.box(0, 0, width, height, 'grey'); // white background
 }
 
 function labelNulls(vg, width, height, count, stripes) {
@@ -90,8 +80,7 @@ var drawSegmented = _.curry((vg, props) => {
 		stripes = backgroundStripes(hasValue);
 
 	vg.drawSharpRows(vg, index, count, height, width,
-		(vg, width, height) =>
-			drawBackground(vg, width, height, count, stripes),
+		drawBackground,
 		(vg, rwidth, rheight) =>
 			drawSegments(vg, colorScale, rwidth, rheight, zoom, toDraw));
 	labelNulls(vg, width, height, count, stripes);
