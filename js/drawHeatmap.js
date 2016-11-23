@@ -5,7 +5,7 @@ var _ = require('./underscore_ext');
 var partition = require('./partition');
 var colorScales = require('./colorScales');
 
-var colorFns = vs => _.map(vs, colorScales.colorScale);
+var colorFns = vs => vs.map(colorScales.colorScale);
 
 var drawBackground = (vg, width, height) => vg.box(0, 0, width, height, "gray");
 
@@ -14,9 +14,7 @@ var labelMargin = 1; // left & right margin
 
 var secondExists = x => x[1] != null;
 
-var each = _.each,
-	map = _.map,
-	filter = _.filter,
+var filter = _.filter,
 	zip = _.zip,
 	range = _.range;
 
@@ -25,8 +23,8 @@ function drawColumn(data, colorScale, boxfn) {
 
 	if (colorScale) { // then there exist some non-null values
 		// zip colors and their indexes, then filter out the nulls
-		colors = filter(zip(range(data.length), map(data, colorScale)), secondExists);
-		each(colors, args => boxfn(...args));
+		colors = filter(zip(range(data.length), data.map(colorScale)), secondExists);
+		colors.forEach(args => boxfn(...args));
 	}
 }
 
@@ -49,16 +47,16 @@ function findContiguous(arr, min) {
 
 function codeLabels(codes, rowData, minSpan) {
 	 var groups = findContiguous(rowData, minSpan);
-	 return _.map(groups, ([start, len]) =>
+	 return groups.map(([start, len]) =>
 			 [_.get(codes, rowData[start], null), start, len]);
 }
 
 function floatLabels(rowData, minSpan) {
 	var nnLabels = minSpan <= 1 ?
-			_.filter(_.map(rowData, (v, i) => {
+			_.filter(rowData.map((v, i) => {
  				return (v % 1) ? [v.toPrecision([3]), i, 1] : [v, i, 1]; // display float with 3 significant digit, integer no change
  			}), ([v]) => v !== null) : [],
-		nullLabels = _.filter(_.map(findContiguous(rowData, minSpan), ([start, len]) => [rowData[start], start, len]),
+		nullLabels = _.filter(findContiguous(rowData, minSpan).map(([start, len]) => [rowData[start], start, len]),
 				([v]) => v === null);
 	return [...nnLabels, ...nullLabels];
 }
@@ -77,7 +75,7 @@ function drawLayout(vg, opts) {
 		return;
 	}
 
-	each(layout, function (el, i) {
+	layout.forEach(function (el, i) {
 		var rowData = data[i].slice(first, last),
 			colorScale = colors[i],
 			drawRow = (vg, rwidth, rheight) =>

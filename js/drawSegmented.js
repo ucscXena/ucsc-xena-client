@@ -45,7 +45,7 @@ function labelNulls(vg, width, height, count, stripes) {
 
 function drawSegments(vg, colorScale, width, rheight, zoom, segments) {
 
-	var toDraw = _.map(segments, v => {
+	var toDraw = segments.map(v => {
 		var y = (v.y - zoom.index) * rheight + (rheight / 2);
 		return {
 			...v,
@@ -55,7 +55,7 @@ function drawSegments(vg, colorScale, width, rheight, zoom, segments) {
 		};
 	});
 
-	_.each(toDraw, segment => {
+	toDraw.forEach(segment => {
 		var {xStart, xEnd, y, h, color} = segment,
 			points = [[xStart, y, xEnd, y]];
 

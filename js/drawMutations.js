@@ -62,7 +62,7 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 	// --------- small variants drawing start here ---------
 	var varByImp = _.groupByConsec(smallVariants, v => v.color);
 
-	_.each(varByImp, vars => {
+	varByImp.forEach(vars => {
 		var points = vars.map(v => {
 				var {y} = toYPx(zoom, v),
 					padding = _.max([minWidth - Math.abs(v.xEnd - v.xStart), 0]);
@@ -105,7 +105,7 @@ function drawSVNodes(vg, width, zoom, svVariants) {
 	var {count, height} = zoom,
 		vHeight = minVariantHeight(height / count),
 		toY = splitRows(count, height) ? toYPxSubRow : toYPx,
-		varByIdMap = _.map(svVariants, v => {
+		varByIdMap = svVariants.map(v => {
 			var {data: {alt, altGene}} = v,
 				{svHeight, y} = toY(zoom, v);
 
@@ -119,7 +119,7 @@ function drawSVNodes(vg, width, zoom, svVariants) {
 		});
 
 	//SV variants draw color background according to joining chromosome
-	_.each(varByIdMap, variant => {
+	varByIdMap.forEach(variant => {
 		var {xStart, xEnd, y, color, h} = variant,
 			points = [[xStart, y, xEnd, y]];
 
@@ -130,7 +130,7 @@ function drawSVNodes(vg, width, zoom, svVariants) {
 
 	//feet variants draw breakpoint as black vertical bar
 	if (vHeight > 4 && height / count <= labelFont) {
-		_.each(varByIdMap, variant => {
+		varByIdMap.forEach(variant => {
 			var {xStart, xEnd, y, h} = variant,
 				endMark = xEnd <= width ? [[xEnd, y, xEnd + 1, y]] : [],
 				startMark = xStart > 0 ? [[xStart, y, xStart + 1, y]] : [],
@@ -146,7 +146,7 @@ function drawSVNodes(vg, width, zoom, svVariants) {
 		let margin = 2 * labelMargin, //more labelMargin due to drawing of breakpoint
 			minTxtWidth = vg.textWidth(labelFont, 'WWWW');
 
-		_.each(varByIdMap, variant => {
+		varByIdMap.forEach(variant => {
 			var {xStart, xEnd, y, alt, altGene, h} = variant;
 
 			if ( (h  > labelFont) && ((xEnd - xStart) - margin >= minTxtWidth)) {

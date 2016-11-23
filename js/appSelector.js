@@ -37,6 +37,8 @@ var sortSelector = createSelector(
 		var getSampleID = lookupSample(cohortSamples),
 			cmpFns = _.fmap(columns,
 				(c, id) => widgets.cmp(columns[id], data[id], index[id])),
+			// XXX should further profile this to see how much it's costing us
+			// to create a findValue callback on every cmpFn call.
 			cmpFn = (s1, s2) =>
 				_.findValue(columnOrder, id => cmpFns[id](s1, s2)) ||
 					cmpString(getSampleID(s1), getSampleID(s2));

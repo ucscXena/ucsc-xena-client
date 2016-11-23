@@ -289,6 +289,15 @@ function findLastIndexDefault(arr, pred, def) {
 	return i < 0 ? def : i;
 }
 
+// underscore uniq is absurdly slow
+var uUniq = _.uniq;
+function unique(arr, ...rest) {
+	if (rest.length > 0) {
+		return uUniq(arr, ...rest);
+	}
+	return [...new Set(arr)];
+}
+
 _.mixin({
 	meannull: meannull,
 	minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
@@ -319,6 +328,8 @@ _.mixin({
 	union,
 	findIndexDefault,
 	findLastIndexDefault,
+	uniq: unique,
+	unique,
 	curry,
 	curryN // useful if the fn as multiple arities.
 });
