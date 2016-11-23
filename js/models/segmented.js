@@ -29,58 +29,40 @@ var exonPadding = {
 	padTxEnd: 1000
 };
 
-
-function evalMut(flip, mut) {
-	return {
-//		impact: features.impact.get(mut),
-		right: flip ? -mut.end : mut.start
-	};
+// sum(len * value)/sum(len)
+//
+function segmentAverage(row) {
+	var lengths = row.map(seg => seg.end - seg.start),
+		totalLen = _.sum(lengths),
+		weightedSum = _.sum(row.map((seg, i) => seg.value * lengths[i]));
+	return weightedSum / totalLen;
 }
 
-function cmpMut(mut1, mut2) {
-	/*
-	if (mut1.impact !== mut2.impact) {
-		if (mut1.impact === undefined){
-			return 1;
-		} else if (mut2.impact === undefined) {
-			return -1;
-		} else {
-			return mut2.impact - mut1.impact; // high impact sorts first
-		}
+function rowOrder(row1, row2) {
+	var avg1 = segmentAverage(row1),
+		avg2 = segmentAverage(row2);
+
+	return avg1 === avg2 ? 0 : (avg1 > avg2 ? -1 : 1);
+}
+
+function cmpRowOrNoSegments(r1, r2, xzoom) {
+	var rf1 = r1.filter(v => v.start <= xzoom.end && v.end >= xzoom.start),
+		rf2 = r2.filter(v => v.start <= xzoom.end && v.end >= xzoom.start);
+	if (rf1.length === 0) {
+		return (rf2.length === 0) ? 0 : 1;
 	}
-	*/
-	return mut1.right - mut2.right;       // low coord sorts first
+	return (rf2.length === 0) ? -1 : rowOrder(rf1, rf2);
 }
 
-function rowOrder(row1, row2, flip) {
-	var row1a, row2a;
-
-	// Native map is a lot faster than _.map. Need an es5 polyfill, or
-	// perhaps lodash, or ramda.
-	row1a = row1.map(m => evalMut(flip, m));
-	row2a = row2.map(m => evalMut(flip, m));
-
-	return cmpMut(_.maxWith(row1a, cmpMut), _.maxWith(row2a, cmpMut));
-}
-
-function cmpRowOrNoVariants(v1, v2, xzoom, flip) {
-	var vf1 = v1.filter(v => v.start <= xzoom.end && v.end >= xzoom.start),
-		vf2 = v2.filter(v => v.start <= xzoom.end && v.end >= xzoom.start);
-	if (vf1.length === 0) {
-		return (vf2.length === 0) ? 0 : 1;
+function cmpRowOrNull(r1, r2, xzoom) {
+	if (r1 == null) {
+		return (r2 == null) ? 0 : 1;
 	}
-	return (vf2.length === 0) ? -1 : rowOrder(vf1, vf2, flip);
+	return (r2 == null) ? -1 : cmpRowOrNoSegments(r1, r2, xzoom);
 }
 
-function cmpRowOrNull(v1, v2, xzoom, flip) {
-	if (v1 == null) {
-		return (v2 == null) ? 0 : 1;
-	}
-	return (v2 == null) ? -1 : cmpRowOrNoVariants(v1, v2, xzoom, flip);
-}
-
-function cmpSamples(probes, xzoom, sample, flip, s1, s2) {
-	return cmpRowOrNull(sample[s1], sample[s2], xzoom, flip);
+function cmpSamples(probes, xzoom, sample, s1, s2) {
+	return cmpRowOrNull(sample[s1], sample[s2], xzoom);
 }
 
 // XXX Instead of checking strand here, it should be set as a column
@@ -89,11 +71,10 @@ function cmpSamples(probes, xzoom, sample, flip, s1, s2) {
 function cmp(column, data, index) {
 	var {fields, xzoom, sortVisible} = column,
 		appliedZoom = sortVisible && xzoom ? xzoom : {start: -Infinity, end: Infinity},
-		refGene = _.getIn(data, ['refGene']),
 		samples = _.getIn(index, ['bySample']);
 
-	return (!_.isEmpty(refGene) && samples) ?
-		(s1, s2) => cmpSamples(fields, appliedZoom, samples, _.values(refGene)[0].strand !== '+', s1, s2) :
+	return samples ?
+		(s1, s2) => cmpSamples(fields, appliedZoom, samples, s1, s2) :
 		() => 0;
 }
 
