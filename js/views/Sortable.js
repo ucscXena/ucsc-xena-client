@@ -30,6 +30,17 @@ function hasClass(el, c) {
     return el.className.split(/ +/).indexOf(c) !== -1;
 }
 
+function repeat(n, v) {
+	var arr = new Array(n);
+	for (var i = 0; i < n; ++i) {
+		arr[i] = v;
+	}
+	return arr;
+}
+
+var zeros = n => repeat(n, 0);
+
+
 // If right edge crosses middle of next element, move next element to left.
 // If left edge crosses middle of prev element, move prev element to right.
 //
@@ -47,6 +58,7 @@ function hasClass(el, c) {
 // We cross the midpoint when left2 + offset2 <= left1 + width1 / 2.
 // At that point, we set offset1 to left2 - left1.
 
+var transitionLength = 400;
 var Sortable = React.createClass({
 	componentWillMount: function () {
 		var mousedownSub = new Rx.Subject();
@@ -63,13 +75,14 @@ var Sortable = React.createClass({
 			var target = positions[index];
 			var max = positions[N - 1].left - target.left - target.width + positions[N - 1].width;
 			var min = positions[0].left - target.left;
-			var newPos = _.map(positions, () => 0);
+			var newPos = zeros(N);
+			var finalPos;
 
 			// Calculate delta with mousemove until mouseup
 			return Rx.DOM.fromEvent(window, 'mousemove').map(function (mm) {
 				mm.preventDefault();
 
-				var shift, edge;
+				var shift, edge, finalEl;
 				var dragLeft = mm.clientX - startX;
 
 				dragLeft = dragLeft < min ? min : (dragLeft > max ? max : dragLeft);
@@ -78,36 +91,42 @@ var Sortable = React.createClass({
 					shift = target.left - positions[index - 1].left -
 						(positions[index - 1].width - target.width);
 					edge = target.left + dragLeft;
-					newPos = _.map(_.first(positions, index),
-								   ({left, width}) => edge < left + width / 2 ? shift : 0)
-						.concat([dragLeft],
-							_.map(_.range(N - 1 - index), () => 0));
+					finalEl = _.findIndexDefault(positions, ({left, width}) => edge < left + width / 2, 0);
+					newPos = [...zeros(finalEl), ...repeat(index - finalEl, shift), dragLeft, ...zeros(N - index - 1)],
+					finalPos = positions[finalEl].left - target.left;
 				}  else if (dragLeft > 0) {      // dragging right
 					shift = target.left - positions[index + 1].left;
 					edge = target.left + dragLeft + target.width;
-					newPos = _.map(_.range(index), () => 0)
-						.concat([dragLeft],
-							_.map(_.last(positions, N - 1 - index),
-								  ({left, width}) => edge >= left + width / 2 ? shift : 0));
+					finalEl = _.findLastIndexDefault(positions,
+								   ({left, width}) => edge >= left + width / 2, index);
+					newPos = [...zeros(index), dragLeft, ...repeat(finalEl - index, shift), ...zeros(N - finalEl - 1)];
+					finalPos = positions[finalEl].left - target.left + positions[finalEl].width - target.width;
 				}
 
-				return _.object(order, newPos);
+				return {pos: _.object(order, newPos), dragging: index};
 			}).takeUntil(Rx.DOM.fromEvent(window, 'mouseup'))
 			.concat(Rx.Observable.defer(() => { // Send a re-order event on mouse-up.
-				var indexOrder = _.range(order.length)
-						.sort((i, j) => positions[i].left + newPos[i] > positions[j].left + newPos[j] ? 1 : -1),
+				var finalNewPos = _.assoc(newPos, index, finalPos),
+					indexOrder = _.range(order.length)
+						.sort((i, j) => (positions[i].left + finalNewPos[i]) - (positions[j].left + finalNewPos[j])),
 					newOrder = _.map(indexOrder, i => order[i]);
-				return Rx.Observable.return({order: newOrder});
+				if (_.isEqual(order, newOrder)) {
+					// dragging -1 enables slide transition on all elements.
+					return Rx.Observable.of({dragging: -1, pos: _.object(order, zeros(N))})
+						.concat(Rx.Observable.of({dragging: null}).delay(transitionLength));
+				} else {
+					return Rx.Observable.of({dragging: -1, pos: _.object(order, finalNewPos)})
+						.concat(Rx.Observable.of({dragging: null, order: newOrder}).delay(transitionLength));
+				}
 			}));
 		});
 
         // Update position
-		this.subscription = mousedrag.subscribe(pos => {
-			if (_.has(pos, 'order')) {
-				this.props.onReorder(pos.order);
-			} else {
-				this.setState({pos: pos});
+		this.subscription = mousedrag.subscribe(ev => {
+			if (_.has(ev, 'order')) {
+				this.props.onReorder(ev.order);
 			}
+			this.setState(_.pick(ev, 'pos', 'dragging'));
         });
 
 		this.sortStart = ev => mousedownSub.onNext(ev);
@@ -119,7 +138,7 @@ var Sortable = React.createClass({
 	},
 
 	getInitialState: function () {
-		return {pos: this.initialPositions()};
+		return {pos: this.initialPositions(), dragging: null};
 	},
 
 	componentWillReceiveProps: function () {
@@ -131,19 +150,20 @@ var Sortable = React.createClass({
 	},
 
 	render: function () {
-		var columns = React.Children.map(this.props.children, child =>
-							<td
-								{...this.props}
-								onMouseDown={ev => this.sortStart([child.props.actionKey, ev])}
-								className='Sortable-container'
-								style={{left: this.state.pos[child.props.actionKey]}}
-								ref={child.props.actionKey}>
+		var {dragging} = this.state;
+		var columns = React.Children.map(this.props.children, (child, i) =>
+			<td
+				{...this.props}
+				onMouseDown={ev => this.sortStart([child.props.actionKey, ev])}
+				className={'Sortable-container' + (dragging !== null && i !== dragging ? ' Sortable-slide' : '')}
+				style={{left: this.state.pos[child.props.actionKey]}}
+				ref={child.props.actionKey}>
 
-								{child}
-							</td>);
+				{child}
+			</td>);
 
 		return (
-			<table className="Sortable">
+			<table className='Sortable'>
 				<tbody>
 					<tr>
 						{columns}
