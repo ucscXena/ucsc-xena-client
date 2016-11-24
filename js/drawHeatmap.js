@@ -5,7 +5,7 @@ var _ = require('./underscore_ext');
 var partition = require('./partition');
 var colorScales = require('./colorScales');
 
-var colorFns = vs => vs.map(colorScales.colorScale);
+var colorFns = (vs = []) => vs.map(colorScales.colorScale);
 
 var drawBackground = (vg, width, height) => vg.box(0, 0, width, height, "gray");
 
