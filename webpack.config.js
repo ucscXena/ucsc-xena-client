@@ -27,6 +27,7 @@ module.exports = {
 	},
 	module: {
 		loaders: [
+			{ test: /\.xq$/, loader: "raw" },
 			{ test: /pdfkit|png-js/, loader: "transform?brfs" },
 			{ test: /rx-dom/, loader: "imports?define=>false" },
 			{

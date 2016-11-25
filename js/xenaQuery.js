@@ -136,246 +136,134 @@ function xena_post(host, query) {
 
 // QUERY STRINGS
 
+function xenaCall(queryFn, ...params) {
+	return `(${queryFn} ${params.join(' ')})`;
+}
+
+var datasetSamples = require('./queries/datasetSamples.xq');
 function dataset_samples_query(dataset) {
-	return '(map :value\n' +
-		   '  (query\n' +
-		   '    {:select [:value]\n' +
-		   '     :from [:dataset]\n' +
-		   '     :join [:field [:= :dataset.id :dataset_id]\n' +
-		   '            :code [:= :field.id :field_id]]\n' +
-		   '     :where [:and\n' +
-		   '             [:= :dataset.name ' + quote(dataset) + ']\n' +
-		   '             [:= :field.name "sampleID"]]}))';
+	return xenaCall(datasetSamples, quote(dataset));
 }
 
+var cohortSamples = require('./queries/cohortSamples.xq');
 function all_samples_query(cohort) {
-	return '(map :value\n' +
-		   '  (query\n' +
-		   '    {:select [:%distinct.value]\n' +
-		   '     :from [:dataset]\n' +
-		   '     :join [:field [:= :dataset.id :dataset_id]\n' +
-		   '            :code [:= :field_id :field.id]]\n' +
-		   '     :where [:and [:= :cohort ' + quote_cohort(cohort) + ']\n' +
-		   '                  [:= :field.name "sampleID"]]}))';
+	return xenaCall(cohortSamples, quote_cohort(cohort));
 }
 
+var allCohorts = require('./queries/allCohorts.xq');
 function all_cohorts_query() {
-	return '(map :cohort\n' +
-		   '  (query\n' +
-		   '    {:select [[#sql/call [:distinct #sql/call [:ifnull :cohort "(unassigned)"]] :cohort]]\n' +
-		   '     :from [:dataset]}))';
+	return xenaCall(allCohorts);
 }
 
+var datasetList = require('./queries/datasetList.xq');
 function dataset_list_query(cohorts) {
-	return '(query {:select [:name :type :datasubtype :probemap :text :status]\n' +
-		   '        :from [:dataset]\n' +
-		   `        :where [:in :cohort ${arrayfmt(cohorts)}]})`;
+	return xenaCall(datasetList, arrayfmt(cohorts));
 }
 
-function dataset_query (dataset) {
-	return '(query {:select [:name :longtitle :type :datasubtype :probemap :text :status]\n' +
-		   '        :from [:dataset]\n' +
-		   '        :where [:= :dataset.name ' + quote(dataset) + ']})';
+var datasetMetadata = require('./queries/datasetMetadata.xq');
+function dataset_metadata_string(dataset) {
+	return xenaCall(datasetMetadata, quote(dataset));
 }
 
+var datasetProbeValues = require('./queries/datasetProbeValues.xq');
 function dataset_probe_string(dataset, samples, probes) {
-	return '(fetch [{:table ' + quote(dataset) + '\n' +
-		   '         :columns ' +  arrayfmt(probes) + '\n' +
-		   '         :samples ' + arrayfmt(samples) + '}])';
+	return xenaCall(datasetProbeValues, quote(dataset), arrayfmt(samples), arrayfmt(probes));
 }
 
+var datasetFieldExamples = require('./queries/datasetFieldExamples.xq');
 function dataset_field_examples_string(dataset) {
-	return '(query {:select [:field.name]\n' +
-		   '        :from [:dataset]\n' +
-		   '        :join [:field [:= :dataset.id :dataset_id]]\n' +
-		   '        :where [:= :dataset.name ' + quote(dataset) + ']\n' +
-		   '        :limit 10})';
+	return xenaCall(datasetFieldExamples, quote(dataset));
 }
 
+var datasetField = require('./queries/datasetField.xq');
 function dataset_field_string(dataset) {
-	return '(query {:select [:field.name]\n' +
-		   '        :from [:dataset]\n' +
-		   '        :join [:field [:= :dataset.id :dataset_id]]\n' +
-		   '        :where [:= :dataset.name ' + quote(dataset) + ']})';
+	return xenaCall(datasetField, quote(dataset));
 }
 
+var datasetGeneProbes = require('./queries/datasetGeneProbes.xq');
 function dataset_gene_probes_string(dataset, samples, gene) {
-	return `(let [probemap (:probemap (car (query {:select [:probemap]\n` +
-		   `                                       :from [:dataset]\n` +
-		   `                                       :where [:= :name ${quote(dataset)}]})))\n` +
-		   `      probes ((xena-query {:select ["name"] :from [probemap] :where [:in :any "genes" ${arrayfmt([gene])}]}) "name")]\n` +
-		   `  [probes\n` +
-		   `    (fetch [{:table ${quote(dataset)}\n` +
-		   `             :samples ${arrayfmt(samples)}\n` +
-		   `             :columns probes}])])`;
+	return xenaCall(datasetGeneProbes, quote(dataset), arrayfmt(samples), quote(gene));
 }
+
 
 // Might want to check the performance of the map for probes, since it's
 // being evaled for every element of the probes-map result set.
+var datasetGeneProbeAvg = require('./queries/datasetGeneProbeAvg.xq');
 function dataset_gene_string(dataset, samples, genes) {
-	return `(let [probemap (:probemap (car (query {:select [:probemap]\n` +
-		   `                                       :from [:dataset]\n` +
-		   `                                       :where [:= :name ${quote(dataset)}]})))\n` +
-		   `      probes-for-gene (fn [gene] ((xena-query {:select ["name"] :from [probemap] :where [:in :any "genes" [gene]]}) "name"))\n` +
-		   `      avg (fn [scores] (mean scores 0))\n`  +
-		   `      scores-for-gene (fn [gene]\n` +
-		   `          (let [probes (probes-for-gene gene)\n` +
-		   `                scores (fetch [{:table ${quote(dataset)}\n` +
-		   `                                :samples ${arrayfmt(samples)}\n` +
-		   `                                :columns (probes-for-gene gene)}])]\n` +
-		   `            {:gene gene\n` +
-		   `             :scores (if (car probes) (avg scores) [[]])}))]\n` +
-		   `  (map scores-for-gene ${arrayfmt(genes)}))`;
+	return xenaCall(datasetGeneProbeAvg, quote(dataset), arrayfmt(samples), arrayfmt(genes));
 }
 
-var sparse_data_match_field_string_opt = (field, dataset, genes) => {
-	return '(let [getfield (fn [field]\n' +
-		   '                 (:id (car (query {:select [:field.id]\n' +
-		   '                                   :from [:dataset]\n' +
-		   '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
-		   `                                   :where [:and [:= :field.name field] [:= :dataset.name ${quote(dataset)}]]}))))\n` +
-		   `      genes (getfield "${field}")]\n` +
-		   '  (map :gene (query {:select [:%distinct.gene]\n' +
-		   '                     :from [:field_gene]\n' +
-		   `                     :join [{:table [[[:name :varchar ${arrayfmt(_.flatmap(genes, permuteCase))}]] :T]} [:= :T.name :gene]]\n` +
-		   '                     :where [:= :field_gene.field_id genes]})))\n';
-};
+// XXX should really be called "MatchGene", as this isn't a field
+var sparseDataMatchField = require('./queries/sparseDataMatchField.xq');
+var sparse_data_match_field_string_opt = (field, dataset, gene) =>
+	xenaCall(sparseDataMatchField, quote(field), quote(dataset), arrayfmt(_.flatmap(gene, permuteCase)));
 
 // XXX need server support for functions in :where clauses in order to rewrite this.
-var sparse_data_match_field_string_slow = (field, dataset, genes) => {
-	return '(let [getfield (fn [field]\n' +
-		   '                 (:id (car (query {:select [:field.id]\n' +
-		   '                                   :from [:dataset]\n' +
-		   '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
-		   `                                   :where [:and [:= :field.name field] [:= :dataset.name ${quote(dataset)}]]}))))\n` +
-		   `      genes (getfield "${field}")]\n` +
-		   '  (map :gene (query {:select [:%distinct.gene]\n' +
-		   '                     :from [:field_gene]\n' +
-		   '                     :where [:and\n' +
-		   '                             [:= :field_gene.field_id genes]\n' +
-		   `                             [:in :%lower.gene ${arrayfmt(_.map(genes, g => g.toLowerCase()))}]]})))`;
-};
+// XXX should really be called "MatchGene", as this isn't a field
+var sparseDataMatchFieldSlow = require('./queries/sparseDataMatchFieldSlow.xq');
+var sparse_data_match_field_string_slow = (field, dataset, genes) =>
+	xenaCall(sparseDataMatchFieldSlow, quote(field), quote(dataset), arrayfmt(_.map(genes, g => g.toLowerCase())));
 
+// XXX should really be called "MatchGene", as this isn't a field
 var sparse_data_match_field_string = _.curry((field, dataset, genes) =>
 	(_.max(_.map(genes, permuteBitCount)) > 7 ?
 		sparse_data_match_field_string_slow :
 		sparse_data_match_field_string_opt)(field, dataset, genes)
 );
 
+var matchFields = require('./queries/matchFields.xq');
 function match_fields_string(dataset, fields) {
-	return '(map :name (query {:select [:field.name]\n' +
-		   '                   :from [:dataset]\n' +
-		   '                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
-		   '                   :where [:and [:in :%lower.field.name ' + arrayfmt(_.map(fields, f => f.toLowerCase())) + '] [:= :dataset.name ' + quote(dataset) + ']]}))';
+	return xenaCall(matchFields, quote(dataset), arrayfmt(_.map(fields, f => f.toLowerCase())));
 }
 
+var sparseData = require('./queries/sparseData.xq');
 // XXX Can't rewrite :samples until we can do 'distinct', or 'keys' for category fields, on the server.
 function sparse_data_string(dataset, samples, gene) {
-	return `(let [samples ${arrayfmt(samples)}\n` +
-		   `      dataset ${quote(dataset)}\n` +
-		   `      gene ${quote(gene)}\n` +
-		   '      getfield (fn [field]\n' +
-		   '                 (:id (car (query {:select [:field.id]\n' +
-		   '                                   :from [:dataset]\n' +
-		   '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
-		   '                                   :where [:and [:= :field.name field] [:= :dataset.name dataset]]}))))\n' +
-		   '      sampleID (getfield "sampleID")]\n' +
-		   '  {:samples (map :value (query {:select [:value]\n' +
-		   '                                :from [:code]\n' +
-		   '                                :where [:and [:in :value samples][:= :field_id sampleID]]}))\n' +
-		   '   :rows (xena-query {:select ["ref" "alt" "altGene" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n' +
-		   '                      :from [dataset]\n' +
-		   '                      :where [:and [:in :any "genes" [gene]] [:in "sampleID" samples]]})})';
+	return xenaCall(sparseData, quote(dataset), arrayfmt(samples), quote(gene));
 }
 
+var segmentedDataRange = require('./queries/segementedDataRange.xq');
 function segmented_data_range_string(dataset, samples, chr, start, end) {
-	return `(let [samples ${arrayfmt(samples)}\n` +
-		   `      dataset ${quote(dataset)}\n` +
-		   `      chr ${quote(chr)}\n` +
-		   `      start ${start}\n` +
-		   `      end ${end}\n` +
-		   '      getfield (fn [field]\n' +
-		   '                 (:id (car (query {:select [:field.id]\n' +
-		   '                                   :from [:dataset]\n' +
-		   '                                   :join [:field [:= :dataset.id :field.dataset_id]]\n' +
-		   '                                   :where [:and [:= :field.name field] [:= :dataset.name dataset]]}))))\n' +
-		   '      sampleID (getfield "sampleID")]\n' +
-		   '  {:samples (map :value (query {:select [:value]\n' +
-		   '                                :from [:code]\n' +
-		   '                                :where [:and [:in :value samples][:= :field_id sampleID]]}))\n' +
-		   '   :rows (xena-query {:select ["sampleID" "position" "value"]\n' +
-		   '                      :from [dataset]\n' +
-		   '                      :where [:and [:in "position" [[chr start end]]] [:in "sampleID" samples]]})})';
+	return xenaCall(segmentedDataRange, quote(dataset), arrayfmt(samples), quote(chr), start, end);
 }
 
-
+var sparseDataExample = require('./queries/sparseData.xq');
 function sparse_data_example_string(dataset, count) {
-	return `{:rows (xena-query {:select ["ref" "alt" "altGene" "effect" "dna-vaf" "rna-vaf" "amino-acid" "genes" "sampleID" "position"]\n` +
-		   `                    :from [${quote(dataset)}]\n` +
-		   `                    :limit ${count}})}`;
+	return xenaCall(sparseDataExample, quote(dataset), count);
 }
 
-function dataset_string(dataset) {
-	return '(:text (car (query {:select [:text]\n' +
-		   '                    :from [:dataset]\n' +
-		   '                    :where [:= :name ' + quote(dataset) + ']})))';
-}
-
+var featureList = require('./queries/featureList.xq');
 function feature_list_query(dataset) {
-	return '(query {:select [:field.name :feature.longtitle]\n' +
-		   '        :from [:field]\n' +
-		   '        :where [:= :dataset_id {:select [:id]\n' +
-		   '                         :from [:dataset]\n' +
-		   '                         :where [:= :name ' + quote(dataset) + ']}]\n' +
-		   '        :left-join [:feature [:= :feature.field_id :field.id]]})';
+	return xenaCall(featureList, quote(dataset));
 }
 
-function features_string(dataset, probes) {
-	return '(query\n' +
-		   '  {:select [:P.name :feature.*]\n' +
-		   '   :from [[{:select [:field.name :field.id]\n' +
-		   '            :from [:field]\n' +
-		   '            :join [{:table [[[:name :varchar ' + arrayfmt(probes) + ']] :T]} [:= :T.name :field.name]]\n' +
-		   '            :where [:= :dataset_id {:select [:id]\n' +
-		   '                             :from [:dataset]\n' +
-		   '                             :where [:= :name ' + quote(dataset) + ']}]} :P]]\n' +
-		   '   :left-join [:feature [:= :feature.field_id :P.id]]})';
+var fieldMetadata = require('./queries/fieldMetadata.xq');
+function features_string(dataset, fields) {
+	return xenaCall(fieldMetadata, quote(dataset), arrayfmt(fields));
 }
 
+var allFieldMetadata = require('./queries/allFieldMetadata.xq');
 function all_features_string(dataset) {
-	return '(query {:select [:field.name :feature.*]\n' +
-		   '        :from [:field]\n' +
-		   '        :where [:= :dataset_id {:select [:id]\n' +
-		   '                         :from [:dataset]\n' +
-		   '                         :where [:= :name ' + quote(dataset) + ']}]\n' +
-		   '        :left-join [:feature [:= :feature.field_id :field.id]]})';
+	return xenaCall(allFieldMetadata, quote(dataset));
 }
 
-function codes_string(dataset, probes) {
-	return '(query\n' +
-		   '  {:select [:P.name [#sql/call [:group_concat :value :order :ordering :separator #sql/call [:chr 9]] :code]]\n' +
-		   '   :from [[{:select [:field.id :field.name]\n' +
-		   '            :from [:field]\n' +
-		   '            :join [{:table [[[:name :varchar ' + arrayfmt(probes) + ']] :T]} [:= :T.name :field.name]]\n' +
-		   '            :where [:= :dataset_id {:select [:id]\n' +
-		   '                             :from [:dataset]\n' +
-		   '                             :where [:= :name ' + quote(dataset) + ']}]} :P]]\n' +
-		   '   :left-join [:code [:= :P.id :field_id]]\n' +
-		   '   :group-by [:P.id]})';
+var fieldCodes = require('./queries/fieldCodes.xq');
+function codes_string(dataset, fields) {
+	return xenaCall(fieldCodes, quote(dataset), arrayfmt(fields));
 }
 
 // XXX "position", "position (2)" is really horrible, here. Need better naming for position fields.
 // Might want to allow renaming fields, with [:old-name :new-name]
 // Also, cds doesn't really need to be indexed.
 // XXX Should we write a compact collection type, where columns are in typed arrays? Maybe with codes? Or run-length encoding?
-function refGene_exon_string(dsID, genes) {
-	return `(xena-query {:select ["position (2)" "position" "exonCount" "exonStarts" "exonEnds" "name2"]\n` +
-		   `             :from [${quote(dsID)}]\n` +
-		   `             :where [:in :any "name2" ${arrayfmt(genes)}]})`;
+var refGeneExons = require('./queries/refGeneExons.xq');
+function refGene_exon_string(dataset, genes) {
+	return xenaCall(refGeneExons, quote(dataset), arrayfmt(genes));
 }
 
-function gene_position(dsID, gene) {
-	return `(car ((xena-query {:select ["position"] :from [${quote(dsID)}] :where [:in :any "name2" ${arrayfmt([gene])}]}) "position"))`;
+var refGenePosition = require('./queries/refGenePosition.xq');
+function gene_position(dataset, gene) {
+	return xenaCall(refGenePosition, quote(dataset), quote(gene));
 }
 
 //	function refGene_gene_pos(gene) {
@@ -421,18 +309,14 @@ function code_list(host, ds, probes) {
 	).select(indexCodes);
 }
 
+// XXX is this used? Note dataset_metadata_string returns an array of
+// length one.
 function dataset_by_name(host, name) {
 	return Rx.DOM.ajax(
-		xena_post(host, dataset_query(name))
+		xena_post(host, dataset_metadata_string(name))
 	).map(_.compose(_.partial(xena_dataset_list_transform, host),
 					json_resp))
 	.catch(Rx.Observable.return([]));  // XXX display message?
-}
-
-function dataset_text (host, ds) {
-	return Rx.DOM.ajax(
-		xena_post(host, dataset_query(ds))
-	).map(json_resp);
 }
 
 function dataset_field_examples(host, ds) {
@@ -444,7 +328,7 @@ function dataset_field_examples(host, ds) {
 function dataset_field(host, ds) {
 	return Rx.DOM.ajax(
 		xena_post(host, dataset_field_string(ds))
-		).map(json_resp);
+	).map(json_resp);
 }
 
 function sparse_data_examples(host, ds, count) {
@@ -473,7 +357,7 @@ function dataset_genes_values(host, ds, samples, genes) {
 
 function dataset_metadata(host, ds) {
 	return Rx.DOM.ajax(
-		xena_post(host, dataset_string(ds))
+		xena_post(host, dataset_metadata_string(ds))
 	).map(json_resp);
 }
 
@@ -674,14 +558,13 @@ function test_host (host) {
 }
 
 function refGene_gene_strand({host, name}, gene) {
-	return Rx.DOM.ajax(
-		xena_post(host, gene_position(name, gene))
-	).map(json_resp).map(({strand}) => strand);
+	return Rx.DOM.ajax(xena_post(host, gene_position(name, gene)))
+		.map(json_resp).map(({strand}) => strand);
 }
 
 var probemap_gene_strand = (host, probemap, gene) =>
-	dataset_metadata(host, probemap).flatMap(({assembly}) =>
-		refGene_gene_strand(refGene[assembly ? assembly : 'hg19'], gene));
+	dataset_metadata(host, probemap).flatMap(([{text}]) =>
+		refGene_gene_strand(refGene[_.get(JSON.parse(text), 'assembly', 'hg19')], gene));
 
 module.exports = {
 	// helpers:
@@ -696,7 +579,6 @@ module.exports = {
 	// query strings:
 	codes_string,
 	features_string,
-	dataset_string,
 	dataset_gene_string,
 	dataset_gene_probes_string,
 	dataset_probe_string,
@@ -713,13 +595,11 @@ module.exports = {
 	dataset_probe_values,
 	dataset_gene_probe_values, // XXX mk plural genes?
 	dataset_genes_values,
-	dataset_metadata,
 	dataset_samples,
 	dataset_feature_detail,
 	all_samples,
 	all_cohorts,
 	dataset_by_name,
-	dataset_text,
 	probemap_gene_strand,
 
 	sparse_data_match_genes,
