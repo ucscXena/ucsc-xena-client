@@ -236,7 +236,7 @@ module.exports = function (root, callback, sessionStorage) {
 			if (column === "samples") {  //ignore samples column
 				return;
 			}
-			if (columns[column].valueType === "mutation") {  // to be implemented
+			if (columns[column].valueType === "mutation" || columns[column].valueType === "segmented" ) {  // to be implemented
 				return;
 			}
 			if (data[column].status !== "loaded") { //bad column
@@ -1126,7 +1126,6 @@ module.exports = function (root, callback, sessionStorage) {
 		var xcolumn, ycolumn, colorColumn,
 			xfields,
 			xlabel, ylabel,
-			xcolumnType, ycolumnType,
 			columns,
 			normUI = document.getElementById("ynormalization"),
 			expUI = document.getElementById("yExponentiation"),
@@ -1157,18 +1156,11 @@ module.exports = function (root, callback, sessionStorage) {
 		if (xcolumn !== "none") {
 			xfields = columns[xcolumn].fields;
 			xlabel = xdiv.options[xdiv.selectedIndex].text;
-			xcolumnType = columns[xcolumn].fieldType;
 		} else {
 			xlabel = "";
 		}
 
 		ylabel = ydiv.options[ydiv.selectedIndex].text;
-		ycolumnType = columns[ycolumn].fieldType;
-
-		if (xcolumnType === "mutation" || ycolumnType === "mutation") {
-			document.getElementById("myChart").innerHTML = "x: " + xlabel + "; y:" + ylabel + " not implemented yet";
-			return;
-		}
 
 		(function() {
 			var xcodemap = _.getIn(xenaState, ['data', xcolumn, 'codes']),
