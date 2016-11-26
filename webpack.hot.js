@@ -32,8 +32,8 @@ jsLoader.loaders = ['react-hot'].concat(jsLoader.loaders);
 config.plugins = config.plugins.concat([
 	new webpack.HotModuleReplacementPlugin()
 ]);
+config.devServer.hot = true;
 
 config.devtool = 'eval';
-config.hot = true;
 
 module.exports = config;
