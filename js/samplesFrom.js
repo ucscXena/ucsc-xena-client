@@ -1,7 +1,7 @@
 /*global require: false module: false */
 'use strict';
 var xenaQuery = require('./xenaQuery');
-var datasetSamples = xenaQuery.dsID_fn(xenaQuery.dataset_samples);
+var {datasetSamples} = xenaQuery;
 
 var multi = require('./multi');
 

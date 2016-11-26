@@ -308,7 +308,7 @@ function cmp(column, data, index) {
 		() => 0;
 }
 
-var sparseDataValues = xenaQuery.dsID_fn(xenaQuery.sparse_data_values);
+var {sparseData} = xenaQuery;
 
 // XXX Might want to optimize this before committing. We could mutate in-place
 // without affecting anyone. This may be slow for large mutation datasets.
@@ -326,8 +326,8 @@ function mapSamples(samples, data) {
 function fetch({dsID, fields, assembly}, [samples]) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return Rx.Observable.zipArray(
-		sparseDataValues(dsID, fields[0], samples),
-		name ? xenaQuery.refGene_exon_case(host, name, fields) : Rx.Observable.return({})
+		sparseData(dsID, samples, fields[0]),
+		name ? xenaQuery.refGeneExonCase(host, name, fields) : Rx.Observable.return({})
 	).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
 }
 

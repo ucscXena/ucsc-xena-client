@@ -78,7 +78,7 @@ function cmp(column, data, index) {
 		() => 0;
 }
 
-var segmentedDataRangeValues = xenaQuery.dsID_fn(xenaQuery.segmented_data_range_values);
+var {segmentedDataRange} = xenaQuery;
 
 // XXX Might want to optimize this before committing. We could mutate in-place
 // without affecting anyone. This may be slow for large mutation datasets.
@@ -95,11 +95,11 @@ function mapSamples(samples, data) {
 
 function fetch({dsID, fields, assembly}, [samples]) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
-	return name ? xenaQuery.refGene_exon_case(host, name, fields)
+	return name ? xenaQuery.refGeneExonCase(host, name, fields)
 		.flatMap(refGene => {
 			var {txStart, txEnd, chrom} = _.values(refGene)[0],
 				{padTxStart, padTxEnd} = exonPadding;
-			return segmentedDataRangeValues(dsID, chrom, txStart - padTxStart, txEnd + padTxEnd, samples)
+			return segmentedDataRange(dsID, samples, chrom, txStart - padTxStart, txEnd + padTxEnd)
 				.map(req => mapSamples(samples, {req, refGene}));
 		}) : Rx.Observable.return(null);
 }

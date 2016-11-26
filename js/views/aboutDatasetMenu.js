@@ -6,7 +6,7 @@ var _ = require('../underscore_ext');
 var xenaQuery = require('../xenaQuery'); // XXX does this belong here?
 
 function onAbout(dsID, root) {
-	var [host, dataset] = xenaQuery.parse_host(dsID);
+	var [host, dataset] = xenaQuery.parseDsID(dsID);
 	var url = `${root}/datapages/?dataset=${encodeURIComponent(dataset)}&host=${encodeURIComponent(host)}`;
 	window.open(url);
 }

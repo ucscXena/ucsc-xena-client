@@ -241,7 +241,7 @@ observableProto.spy = function (msg) {
 				observer.onNext(next);
 			},
 			function (err) {
-				log(msg, "error");
+				log(msg, "error", err);
 				observer.onError(err);
 			},
 			function () {

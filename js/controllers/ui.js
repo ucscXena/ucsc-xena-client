@@ -22,7 +22,7 @@ var identity = x => x;
 var unionOfResults = resps => collectResults(resps, results => _.union(...results));
 
 function cohortQuery(servers) {
-	return Rx.Observable.zipArray(_.map(servers, s => reifyErrors(xenaQuery.all_cohorts(s), {host: s})))
+	return Rx.Observable.zipArray(_.map(servers, s => reifyErrors(xenaQuery.allCohorts(s), {host: s})))
 			.flatMap(unionOfResults);
 }
 
@@ -38,7 +38,7 @@ function fetchBookmark(serverBus, bookmark) {
 }
 
 function exampleQuery(dsID) {
-	return xenaQuery.dsID_fn(xenaQuery.dataset_field_examples)(dsID)
+	return xenaQuery.datasetFieldExamples(dsID)
 		.map(list => _.pluck(list, 'name'));
 }
 
@@ -46,12 +46,10 @@ function fetchExamples(serverBus, dsID) {
 	serverBus.onNext(['columnEdit-examples', exampleQuery(dsID)]);
 }
 
-function featureQuery(dsID) {
-       return xenaQuery.dsID_fn(xenaQuery.feature_list)(dsID);
-}
+var {featureList} = xenaQuery;
 
 function fetchFeatures(serverBus, dsID) {
-	return serverBus.onNext(['columnEdit-features', featureQuery(dsID)]);
+	return serverBus.onNext(['columnEdit-features', featureList(dsID)]);
 }
 
 
@@ -59,17 +57,17 @@ function fetchFeatures(serverBus, dsID) {
 function geneProbeMapLookup(settings, state) {
 	const {host} = JSON.parse(settings.dsID),
 		probemap = state.datasets[settings.dsID].probemap;
-	return  xenaQuery.sparse_data_match_genes(host, probemap, settings.fields);
+	return  xenaQuery.sparseDataMatchGenes(host, probemap, settings.fields);
 }
 
 function probeLookup(settings) {
 	const {host, name} = JSON.parse(settings.dsID);
-	return xenaQuery.match_fields(host, name, settings.fields);
+	return xenaQuery.matchFields(host, name, settings.fields);
 }
 
 function mutationGeneLookup(settings) {
 	const {host, name} = JSON.parse(settings.dsID);
-	return xenaQuery.sparse_data_match_genes(host, name, settings.fields);
+	return xenaQuery.sparseDataMatchGenes(host, name, settings.fields);
 }
 
 const fieldLookup = {

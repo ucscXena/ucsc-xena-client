@@ -23,7 +23,7 @@ function datasetQuery(servers, cohort) {
 	var cohorts = _.pluck(cohort, 'name');
 	return Rx.Observable.zipArray(
 		_.map(servers, server => reifyErrors(
-				xenaQuery.dataset_list(server, cohorts).map(datasets => ({server, datasets})),
+				xenaQuery.datasetList(server, cohorts).map(datasets => ({server, datasets})),
 				{host: server}))
 	).flatMap(datasetResults);
 }
@@ -32,8 +32,8 @@ function fetchDatasets(serverBus, servers, cohort) {
 	serverBus.onNext(['datasets', datasetQuery(servers, cohort)]);
 }
 
-var datasetSamples = xenaQuery.dsID_fn(xenaQuery.dataset_samples);
-var allSamples = _.curry((cohort, server) => xenaQuery.all_samples(server, cohort));
+var {datasetSamples} = xenaQuery;
+var allSamples = _.curry((cohort, server) => xenaQuery.cohortSamples(server, cohort));
 
 function unionOfGroup(gb) {
 	return _.union(..._.map(gb, ([, v]) => v));

@@ -8,7 +8,7 @@ var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
 	fetchSamples, fetchColumnData, matchSamples} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
-var datasetFeatures = xenaQuery.dsID_fn(xenaQuery.dataset_feature_detail);
+var {allFieldMetadata} = xenaQuery;
 var {updateFields, xenaFieldPaths, updateStrand, filterByDsID} = require('../models/fieldSpec');
 var {remapFields} = require('../models/searchSamples');
 var identity = x => x;
@@ -21,7 +21,7 @@ function featuresQuery(datasets) {
 	// XXX note that datasetFeatures takes optional args, so don't pass it directly
 	// to map.
 	return Rx.Observable.zipArray(
-				_.map(dsIDs, dsID => reifyErrors(datasetFeatures(dsID), {dsID}))
+				_.map(dsIDs, dsID => reifyErrors(allFieldMetadata(dsID), {dsID}))
 			).flatMap(resps =>
 				collectResults(resps, features => _.object(dsIDs, features)));
 }
@@ -61,7 +61,7 @@ var resetLoadPending = state => _.dissoc(state, 'loadPending');
 function fetchStrand(serverBus, state, id, gene, dsID) {
 	var {probemap} = _.getIn(state, ['datasets', dsID]),
 		{host} = JSON.parse(dsID);
-	serverBus.onNext(['strand', xenaQuery.probemap_gene_strand(host, probemap, gene).catch(Rx.Observable.return('+')), id]);
+	serverBus.onNext(['strand', xenaQuery.probemapGeneStrand(host, probemap, gene).catch(Rx.Observable.return('+')), id]);
 }
 
 var controls = {

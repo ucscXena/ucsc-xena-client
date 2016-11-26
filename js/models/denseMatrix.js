@@ -8,12 +8,8 @@ var heatmapColors = require('../heatmapColors');
 var widgets = require('../columnWidgets');
 var {greyHEX} = require('../color_helper');
 
-// XXX might want to automatically wrap all of these in xenaQuery.
-var datasetProbeValues = xenaQuery.dsID_fn(xenaQuery.dataset_probe_values);
-var datasetGenesValues = xenaQuery.dsID_fn(xenaQuery.dataset_genes_values);
-var datasetGeneProbesValues = xenaQuery.dsID_fn(xenaQuery.dataset_gene_probe_values);
-var datasetCodes = xenaQuery.dsID_fn(xenaQuery.code_list);
-
+var {datasetProbeValues, datasetGenesValues, datasetGeneProbesValues,
+		fieldCodes} = xenaQuery;
 
 function second(x, y) {
 	return y;
@@ -159,7 +155,7 @@ var fetchGeneProbes = ({dsID, fields, strand}, [samples]) => datasetGeneProbesVa
 var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
 		datasetProbeValues(dsID, samples, fields)
 			.map(resp => meanNanResponse(fields, resp)),
-		datasetCodes(dsID, fields)
+		fieldCodes(dsID, fields)
 	).map(([req, codes]) => ({req, codes: _.values(codes)[0]}));
 
 var fetchGene = ({dsID, fields}, [samples]) => datasetGenesValues(dsID, samples, fields)
