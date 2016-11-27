@@ -46,7 +46,7 @@ var GeneProbeEdit = React.createClass({
 
 		var {genes = true, hasGenes, list, examples, makeLabel, setEditorState, chosenDs} = this.props,
 			doGenes = hasGenes && genes,
-			help = doGenes ? 'e.g. TP53 or TP53, PTEN' :
+			help = doGenes ? 'e.g. TP53 or TP53, PTEN, MIMAT0000062' : // MIMAT0000062 is just for xena's current miRNA data, it should be changed to the proper miRNA gene name
 				`e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}`,
 			content,
 			url, host, dataset,
