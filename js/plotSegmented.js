@@ -61,7 +61,8 @@ function renderFloatLegend(props) {
 	var {labels, colors: legendColors} = hasData ? legendForColorscale(colors[0]) :
 		{colors: [], labels: []},
 		footnotes = (units || []).slice(0), // copy to avoid modification, below
-		nSamples = (data && data.length) ? data[0].filter(v => v != null).length : 0,
+		samples = _.getIn(data, ['req', 'samplesInResp']),
+		nSamples = samples ? samples.length : '',
 		normalizationText = "mean is subtracted per column across " + nSamples + " samples",
 		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min'])),
 		multiScaled = colors && colors.length > 1 && !hasViz(vizSettings);
@@ -87,14 +88,14 @@ function renderFloatLegend(props) {
 
 function drawLegend(props) {
 	var {column, data} = props,
-		{units, heatmap, color, legend, valueType, vizSettings, defaultNormalization} = column,
+		{units, color, legend, valueType, vizSettings, defaultNormalization} = column,
 		legendProps = {
 			units,
 			colors: [color],
 			legend,
 			vizSettings,
 			defaultNormalization,
-			data: heatmap,
+			data: data,
 			coded: valueType === 'coded',
 			codes: _.get(data, 'codes'),
 		};
@@ -113,7 +114,7 @@ function closestNode(nodes, zoom, x, y) {
 	return underMouse[0];
 }
 
-var fmtIf = (x, fmt, d = '' ) => x ? fmt(x) : d;
+//var fmtIf = (x, fmt, d = '' ) => x ? fmt(x) : d;
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
 var gbURL =  (assembly, pos) => `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${encodeURIComponent(assembly)}&position=${encodeURIComponent(pos)}`;
@@ -122,7 +123,8 @@ function sampleTooltip(sampleFormat, data, gene, assembly) {
 	var pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
 		posDisplay = data && (data.start === data.end) ? `${data.chr}:${util.addCommas(data.start)}` : pos,
 		posURL = ['url',  `${assembly} ${posDisplay}`, gbURL(assembly, pos)],
-		value = ['value', fmtIf(data.value, x => `${x}, `) + gene];
+		value = ['labelValue', 'value', (data.value != null) ? `${data.value}` : ''];
+
 	return {
 		rows: dropNulls([
 			[value],
