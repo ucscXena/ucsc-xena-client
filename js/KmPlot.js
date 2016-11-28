@@ -255,13 +255,29 @@ function makeGraph(groups, setActiveLabel, activeLabel, size) {
 	);
 }
 
-function makeDefinitions(groups, setActiveLabel, activeLabel, size) {
+function makeSplits(splits, onSplits) {
+	return (
+		<form className='form-horizonal'>
+			<div>
+				<label className="radio-inline">
+					<input value={2} type="radio" name="splits" checked={splits === 2} onChange={onSplits}/>2 groups
+				</label>
+				<label className="radio-inline">
+					<input value={3} type="radio" name="splits" checked={splits === 3} onChange={onSplits}/>3 groups
+				</label>
+			</div>
+		</form>);
+}
+
+function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, splits, onSplits) {
 	// get new size based on size ratio for definitions column
 
 	return (
 		<div className="definitions" style={{width: size.width}}>
 			<PValue pValue={groups.pValue} logRank={groups.KM_stats}
 				patientWarning={groups.patientWarning}/>
+			<br/>
+			{maySplit ? makeSplits(splits, onSplits) : null}
 			<br/>
 			<Legend groups={groups}
 					setActiveLabel={setActiveLabel}
@@ -322,8 +338,14 @@ var KmPlot = React.createClass({
 		pdf(this.props.km.groups);
 	},
 
+	onSplits(ev) {
+		var {callback} = this.props;
+		callback(['km-splits', parseInt(ev.target.value, 10)]);
+	},
+
 	render: function () {
-		let {km: {title, label, groups, cutoff}, dims} = this.props,
+		let {km: {splits = 2, title, label, groups, cutoff}, dims} = this.props,
+			{maySplit = false} = groups,
 			min = _.getIn(groups, ['domain', 0]),
 			max = _.getIn(groups, ['domain', 1]),
 			warning = _.get(groups, 'warning'),
@@ -344,16 +366,16 @@ var KmPlot = React.createClass({
 			: <div>
 				<Button onClick={this.pdf}>PDF</Button>
 				{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
-				{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions)}
+				{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions, maySplit, splits, this.onSplits)}
 				<div style={{clear: 'both'}}>
-				<NumberForm
-					labelClassName="col-md-4"
-					wrapperClassName="col-md-3"
-					onChange={this.onCutoff}
-					dflt={max}
-					min={min}
-					max={max}
-					initialValue={cutoff}/>
+					<NumberForm
+						labelClassName="col-md-4"
+						wrapperClassName="col-md-3"
+						onChange={this.onCutoff}
+						dflt={max}
+						min={min}
+						max={max}
+						initialValue={cutoff}/>
 				</div>
 			</div>;
 

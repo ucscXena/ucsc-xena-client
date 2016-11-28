@@ -143,7 +143,7 @@ var setCohortRelatedFields = (state, cohorts) =>
 		'cohortSamples', [],
 		'data', {},
 		'survival', null,
-		'km', null);
+		'km', _.assoc(state.km, ['id'], null));
 
 // This adds or overwrites a 'sample' column in the state.
 // Called from setCohort, the column data will be fetched after

@@ -33,7 +33,7 @@ var saveNull = fn => v => v == null ? v : fn(v);
 // XXX Here we include samples that might not have tte and ev, when
 // picking the range. Ideal would be to partition not including
 // samples w/o survival data.
-function partitionedVals(avg, uniq, colorfn) {
+function partitionedVals3(avg, uniq, colorfn) { //eslint-disable-line no-unused-vars
 	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
 		min = _.min(vals),
 		max = _.max(vals),
@@ -50,6 +50,20 @@ function partitionedVals(avg, uniq, colorfn) {
 	};
 }
 
+function partitionedVals2(avg, uniq, colorfn) {
+	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
+		min = _.min(vals),
+		max = _.max(vals),
+		mid = vals[Math.round(vals.length / 2)],
+		labelMid = mid.toPrecision(4);
+	return {
+		values: _.map(avg, saveNull(v => v < mid ? 'low' : 'high')),
+		groups: ['low', 'high'],
+		colors: [colorfn(min), colorfn(max)],
+		labels: [`< ${labelMid}`, `>= ${labelMid}`]
+	};
+}
+
 function floatVals(avg, uniq, colorfn) {
 	return {
 		values: avg,
@@ -62,12 +76,14 @@ function floatVals(avg, uniq, colorfn) {
 // We use data.display so the values reflect normalization settings.
 // We average 1st, then see how many unique values there are, then decide
 // whether to partition or not.
-function floatOrPartitionVals({heatmap, colors}) {
+function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
 	var warning = heatmap.length > 1 ? 'gene-level average' : undefined,
 		avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
-		colorfn = _.first(colors.map(colorScale));
-	return {warning, ...(uniq.length > MAX ? partitionedVals : floatVals)(avg, uniq, colorfn)};
+		colorfn = _.first(colors.map(colorScale)),
+		partFn = splits === 3 ? partitionedVals3 : partitionedVals2,
+		maySplit = uniq.length > MAX;
+	return {warning, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
 }
 
 function mutationVals(column, data, {bySample}, sortedSamples) {
@@ -164,12 +180,12 @@ var bounds = x => [_.minnull(x), _.maxnull(x)];
 // 4) pick at-most MAX groups
 // 5) compute km
 
-function makeGroups(column, data, index, cutoff, survival, samples) {
+function makeGroups(column, data, index, cutoff, splits, survival, samples) {
 	let survivalData = getFieldData(survival),
 		domain = bounds(survivalData.tte),
 		{tte, ev, patient} = cutoffData(survivalData, cutoff),
 		// Convert field to coded.
-		codedFeat = toCoded(column, data, index, samples),
+		codedFeat = toCoded(column, data, index, samples, splits),
 		{values} = codedFeat,
 		usableSamples = _.filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
@@ -189,6 +205,7 @@ function makeGroups(column, data, index, cutoff, survival, samples) {
 		warning,
 		patientWarning,
 		domain,
+		maySplit: codedFeat.maySplit,
 		...pV
 	};
 }

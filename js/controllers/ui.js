@@ -308,6 +308,7 @@ var controls = {
 	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
 	'km-close': state => _.assocIn(state, ['km', 'id'], null),
 	'km-cutoff': (state, value) => _.assocIn(state, ['km', 'cutoff'], value),
+	'km-splits': (state, value) => _.assocIn(state, ['km', 'splits'], value),
 	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),
 	'chart': state => _.assoc(state, 'mode', 'chart'),
 	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState),
