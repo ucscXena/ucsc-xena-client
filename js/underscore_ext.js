@@ -125,6 +125,29 @@ function meannull(values) {
 	return null;
 }
 
+function cmpNumberOrNull(v1, v2) {
+	if (v1 == null && v2 == null) {
+		return 0;
+	} else if (v1 == null) {
+		return 1;
+	} else if (v2 == null) {
+		return -1;
+	}
+	return v2 - v1;
+}
+
+function medianNull(values) {
+	if (!values) {
+		return null;
+	}
+	var sorted = values.slice(0).sort(cmpNumberOrNull),
+		firstNull = sorted.indexOf(null),
+		notNull = firstNull !== -1 ? sorted.slice(0, firstNull) : sorted,
+		n = notNull.length;
+
+	return (notNull[Math.ceil(n / 2)] + notNull[Math.floor(n / 2)]) / 2;
+}
+
 function fmapMemoize1(fn) {
 	var prevObj = {}, cache = {};
 	return function memoized(obj) {
@@ -299,39 +322,41 @@ function unique(arr, ...rest) {
 }
 
 _.mixin({
-	meannull: meannull,
-	minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
-	maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
-	memoize1: memoize1,
-	fmap: fmap,
-	apply: apply,
-	pluckPaths: pluckPaths,
-	pluckPathsArray: pluckPathsArray,
-	array: array,
-	concat: concat,
-	partitionN: partitionN,
-	objectFn: objectFn,
-	findValue: findValue,
-	negate: negate,
-	spy: spy,
-	flatmap: _.compose(_.partial(_.flatten, _, 1), _.map),
-	merge: (...args) => _.extend.apply(null, [{}].concat(args)),
-	maxWith: maxWith,
-	sum: arr => _.reduce(arr, (x, y) => x + y, 0),
-	scan,
-	fmapMemoize1,
-	mmap,
-	withoutIndex,
+	apply,
+	array,
+	concat,
+	cmpNumberOrNull,
+	curry,
+	curryN, // useful if the fn as multiple arities.
 	filterIndices,
-	reverse,
-	groupByConsec,
-	union,
 	findIndexDefault,
 	findLastIndexDefault,
+	findValue,
+	flatmap: _.compose(_.partial(_.flatten, _, 1), _.map),
+	fmap,
+	fmapMemoize1,
+	groupByConsec,
+	maxWith,
+	maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
+	meannull,
+	medianNull,
+	memoize1: memoize1,
+	merge: (...args) => _.extend.apply(null, [{}].concat(args)),
+	minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
+	mmap,
+	negate,
+	objectFn,
+	partitionN,
+	pluckPaths,
+	pluckPathsArray,
+	reverse,
+	scan,
+	spy: spy,
+	sum: arr => _.reduce(arr, (x, y) => x + y, 0),
+	union,
 	uniq: unique,
 	unique,
-	curry,
-	curryN // useful if the fn as multiple arities.
+	withoutIndex
 });
 
 module.exports = _;

@@ -82,16 +82,7 @@ function dataToHeatmap(column, vizSettings, data, samples, datasets) {
 // sort
 //
 
-function cmpNumberOrNull(v1, v2) {
-	if (v1 == null && v2 == null) {
-		return 0;
-	} else if (v1 == null) {
-		return 1;
-	} else if (v2 == null) {
-		return -1;
-	}
-	return v2 - v1;
-}
+var {cmpNumberOrNull} = _;
 
 function cmpSamples(probes, data, s1, s2) {
 	var diff = data && find(data, function (f) {

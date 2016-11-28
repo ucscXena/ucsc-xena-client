@@ -44,8 +44,6 @@ function bounded(min, max, x) {
 	return x < min ? min : (x > max ? max : x);
 }
 
-var nn = (...args) => args.filter(x => x); // not "falsey" (null, undefined, false, etc.)
-
 function tooltip(heatmap, fields, sampleFormat, fieldFormat, codes, width, zoom, samples, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
@@ -61,10 +59,11 @@ function tooltip(heatmap, fields, sampleFormat, fieldFormat, codes, width, zoom,
 
 	return {
 		sampleID: sampleFormat(sampleID),
-		rows: nn(
+		rows: [
 			[['labelValue', label, val]],
-			(val !== 'NA' && !code) &&
-				[['labelValue', 'Column mean', prec(_.meannull(heatmap[fieldIndex]))]])
+			...(val !== 'NA' && !code ?
+				[[['labelValue', 'Column mean', prec(_.meannull(heatmap[fieldIndex]))]],
+				[['labelValue', 'Column median', prec(_.medianNull(heatmap[fieldIndex]))]]] : [])]
 	};
 }
 
