@@ -8,7 +8,7 @@ var heatmapColors = require('../heatmapColors');
 var widgets = require('../columnWidgets');
 var {greyHEX} = require('../color_helper');
 
-var {datasetProbeValues, datasetGenesValues, datasetGeneProbesValues,
+var {datasetProbeValues, datasetGeneProbeAvg, datasetGeneProbesValues,
 		fieldCodes} = xenaQuery;
 
 function second(x, y) {
@@ -158,7 +158,7 @@ var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
 		fieldCodes(dsID, fields)
 	).map(([req, codes]) => ({req, codes: _.values(codes)[0]}));
 
-var fetchGene = ({dsID, fields}, [samples]) => datasetGenesValues(dsID, samples, fields)
+var fetchGene = ({dsID, fields}, [samples]) => datasetGeneProbeAvg(dsID, samples, fields)
 			.map(resp => ({req: indexGeneResponse(samples, fields, resp)}));
 
 ['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType => {

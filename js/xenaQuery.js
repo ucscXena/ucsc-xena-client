@@ -288,7 +288,7 @@ function wrapDsIDParams(postMethods) {
 		'datasetField',
 		'datasetProbeValues',
 		'datasetGeneProbesValues',
-		'datasetGenesValues',
+		'datasetGeneProbeAvg',
 		'datasetMetadata',
 		'featureList',
 		'fieldCodes',
