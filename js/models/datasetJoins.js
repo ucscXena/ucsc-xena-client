@@ -227,7 +227,7 @@ function mergeField(field, data, fdata) {
 // We should only join when the probemap is identical, so the probes for the composite field
 // is the same as any of the constituent fields.
 function setProbes(initData, fdata)  {
-	return ['probes', 'position', 'assembly']
+	return ['probes', 'position']
 		.reduce((data, field) => mergeField(field, data, fdata), initData);
 }
 
