@@ -134,19 +134,6 @@ function sampleTooltip(sampleFormat, data, gene, assembly) {
 	};
 }
 
-function makeRow(fields, sampleGroup, row) {
-	console.log("FIXME");
-	let fieldValue;
-	if (_.isArray(sampleGroup) && sampleGroup.length === 0) {
-		fieldValue = 'no variant';
-	}
-	if (_.isEmpty(sampleGroup)) {
-		sampleGroup = [row];
-	}
-	return _.flatmap(sampleGroup, row =>
-		_.map(fields, f => (row && row[f]) || fieldValue));
-}
-
 function posTooltip(layout, samples, sampleFormat, pixPerRow, index, assembly, x, y) {
 	var yIndex = Math.round((y - pixPerRow / 2) / pixPerRow + index),
 		pos = Math.floor(chromPositionFromScreen(layout, x));
@@ -171,20 +158,6 @@ function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, as
 		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
 }
 
-function getRowFields(rows, sampleGroups) {
-	if (_.isEmpty(sampleGroups)) {
-		return []; // When no samples exist
-	} else if (!_.isEmpty(rows)) {
-		return _.keys(rows[0]); // When samples have mutation(s)
-	} else {
-		return ['sample', 'result']; // default fields for mutation-less columns
-	}
-}
-
-function formatSamples(sampleFormat, rows) {
-	return _.map(rows, r => _.updateIn(r, ['sample'], sampleFormat));
-}
-
 var SegmentedColumn = hotOrNot(React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	componentWillMount: function () {
@@ -205,17 +178,6 @@ var SegmentedColumn = hotOrNot(React.createClass({
 	},
 	componentWillUnmount: function () {
 		this.ttevents.dispose();
-	},
-	download: function() {
-		let {data: {req: {rows}}, samples, index, sampleFormat} = this.props,
-			groupedSamples = _.getIn(index, ['bySample']) || [],
-			rowFields = getRowFields(rows, groupedSamples),
-			allRows = _.map(samples, (sId) => {
-				let alternateRow = {sample: sampleFormat(sId)}; // only used for mutation-less samples
-				return makeRow(rowFields, formatSamples(sampleFormat, groupedSamples[sId]),
-					alternateRow);
-			});
-		return [rowFields, allRows];
 	},
 	tooltip: function (ev) {
 		var {column: {fieldType, layout, nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props;

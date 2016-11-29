@@ -186,20 +186,6 @@ var HeatmapLegend = hotOrNot(React.createClass({
 // plot rendering
 //
 
-function tsvProbeMatrix(heatmap, samples, fields, codes) {
-	var fieldNames = ['sample'].concat(fields);
-	var coded = _.map(fields, (f, i) => codes ?
-			_.map(heatmap[i], _.propertyOf(codes)) :
-			heatmap[i]);
-	var transposed = _.zip.apply(null, coded);
-	var tsvData = _.map(samples, (sample, i) => [sample].concat(transposed[i]));
-
-// XXX
-//	if (this.ws.column.dataType === 'clinicalMatrix') {
-//		fieldNames = ['sample'].concat([this.ws.column.fieldLabel.default]);
-//	}
-	return [fieldNames, tsvData];
-}
 
 var HeatmapColumn = hotOrNot(React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
@@ -226,12 +212,6 @@ var HeatmapColumn = hotOrNot(React.createClass({
 			codes = _.get(data, 'codes'),
 			{fields, heatmap, width} = column;
 		return tooltip(heatmap, fields, sampleFormat, fieldFormat(id), codes, width, zoom, samples, ev);
-	},
-	download: function () {
-		var {samples, data, sampleFormat, column } = this.props,
-			{fields, heatmap} = column,
-			tsvSamples = _.map(samples, sampleFormat);
-		return tsvProbeMatrix(heatmap, tsvSamples, fields, data.codes);
 	},
 	// To reduce this set of properties, we could
 	//    - Drop data & move codes into the 'display' obj, outside of data

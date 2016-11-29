@@ -137,6 +137,7 @@ var ApplicationContainer = React.createClass({
 			<Application
 					Spreadsheet={SpreadsheetContainer}
 					onHighlightChange={this.ev.highlightChange}
+					sampleFormat={this.sampleFormat}
 					state={computedState}
 					callback={callback}>
 				<View

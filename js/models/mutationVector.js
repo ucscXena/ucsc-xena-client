@@ -531,13 +531,55 @@ function SNVPvalue (rows) {
 	);
 }
 
+////////////////////////////////
+// download of on-screen data
+
+function makeRow(fields, sampleGroup, row) {
+	let fieldValue;
+	if (_.isArray(sampleGroup) && sampleGroup.length === 0) {
+		fieldValue = 'no variant';
+	}
+	if (_.isEmpty(sampleGroup)) {
+		sampleGroup = [row];
+	}
+	return _.flatmap(sampleGroup, row =>
+		_.map(fields, f => (row && row[f]) || fieldValue));
+}
+
+function getRowFields(rows, sampleGroups) {
+	if (_.isEmpty(sampleGroups)) {
+		return []; // When no samples exist
+	} else if (!_.isEmpty(rows)) {
+		return _.keys(rows[0]); // When samples have mutation(s)
+	} else {
+		return ['sample', 'result']; // default fields for mutation-less columns
+	}
+}
+
+function formatSamples(sampleFormat, rows) {
+	return _.map(rows, r => _.updateIn(r, ['sample'], sampleFormat));
+}
+
+function download({data: {req: {rows}}, samples, index, sampleFormat}) {
+	let groupedSamples = _.getIn(index, ['bySample']) || [],
+		rowFields = getRowFields(rows, groupedSamples),
+		allRows = _.map(samples, (sId) => {
+			let alternateRow = {sample: sampleFormat(sId)}; // only used for mutation-less samples
+			return makeRow(rowFields, formatSamples(sampleFormat, groupedSamples[sId]),
+				alternateRow);
+		});
+	return [rowFields, allRows];
+}
+
 widgets.cmp.add('mutation', cmp);
 widgets.index.add('mutation', index);
 widgets.transform.add('mutation', snvDataToDisplay);
+widgets.download.add('mutation', download);
 
 widgets.cmp.add('SV', cmp);
 widgets.index.add('SV', index);
 widgets.transform.add('SV', svDataToDisplay);
+widgets.download.add('SV', download);
 
 module.exports = {
 	features,

@@ -17,6 +17,7 @@ var konami = require('./konami');
 var Popover = require('react-bootstrap/lib/Popover');
 var config = require('./config');
 var {deepPureRenderMixin} = require('./react-utils');
+var widgets = require('./columnWidgets');
 
 var modeButton = {
 	chart: 'Visual Spreadsheet',
@@ -34,7 +35,8 @@ var uiHelp = {
 	'chart': ['top', 'Switch to spreadsheet view of this data'],
 	'heatmap': ['top', 'Switch to chart view of this data'],
 	'samples': ['top', 'Limit samples by dataset'],
-	'cohort': ['top', 'Change cohort']
+	'cohort': ['top', 'Change cohort'],
+	'download': ['top', 'Download all matrix columns']
 };
 
 function addHelp(id, target) {
@@ -44,6 +46,18 @@ function addHelp(id, target) {
 		<OverlayTrigger trigger={['hover']} key={id} placement={placement} overlay={tooltip}>
 			{target}
 		</OverlayTrigger>);
+}
+
+function download([fields, rows]) {
+	var txt = _.map([fields].concat(rows), row => row.join('\t')).join('\n');
+	// use blob for bug in chrome: https://code.google.com/p/chromium/issues/detail?id=373182
+	var url = URL.createObjectURL(new Blob([txt], { type: 'text/tsv' }));
+	var a = document.createElement('a');
+	var filename = 'xenaDownload.tsv';
+	_.extend(a, { id: filename, download: filename, href: url });
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
 }
 
 var asciiA = 65;
@@ -94,6 +108,23 @@ var AppControls = React.createClass({
 	},
 	onResetBookmark() {
 		this.setState({bookmark: null});
+	},
+	onDownload: function () {
+		var {sampleFormat} = this.props,
+			{samples, columns, columnOrder, index, data} = this.props.appState,
+			// only download rectangular data
+			rectData = columnOrder.filter(id => _.contains(['float', 'coded'], columns[id].valueType)),
+			// Each dataset is two element array: [headers, [rows]]
+			datasets = rectData.map(id =>
+				widgets.download({samples, column: columns[id], index: index[id], data: data[id], sampleFormat})),
+			combinedRows = _.mmap(..._.pluck(datasets, 1), (...rows) => {
+				rows.pop(); // mmap passes index
+				return [...rows[0], ..._.flatten(rows.slice(1).map(cols => cols.slice(1)))];
+			}),
+			combinedHeaders = _.flatmap(datasets, ([headers], i) =>
+				i === 0 ? headers : headers.slice(1));
+
+		download([combinedHeaders, combinedRows]);
 	},
 	onBookmark: function () {
 		var {appState} = this.props;
@@ -156,6 +187,7 @@ var AppControls = React.createClass({
 				{' '}
 				{(noshow || !hasColumn) ? null :
 					addHelp('pdf', <Button onClick={this.onPdf}>PDF</Button>)}
+				{hasColumn ? addHelp('download', <Button onClick={this.onDownload}>Download</Button>) : null}
 				{bookmarks ?
 					<OverlayTrigger onEnter={this.onBookmark} trigger='click' placement='bottom'
 						overlay={<Popover placement='bottom'><p>Your bookmark is {bookmark || 'loading'}</p></Popover>}>

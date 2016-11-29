@@ -229,7 +229,9 @@ function mmapper(cols, fn) {
 	var n = cols.length;
 	// Unroll the most common cases.
 	switch (n) {
-		case 1: return fn;
+		// case 1 looks like a noop, i.e. we could return fn. However _.map also passes 'this', which
+		// messes us up.
+		case 1: return (v0, i) => fn(v0, i);
 		case 2: return (v0, i) => fn(v0, cols[1][i], i);
 		case 3: return (v0, i) => fn(v0, cols[1][i], cols[2][i], i);
 		case 4: return (v0, i) => fn(v0, cols[1][i], cols[2][i], cols[3][i], i);

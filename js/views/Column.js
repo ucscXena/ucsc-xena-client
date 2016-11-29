@@ -248,7 +248,8 @@ var Column = React.createClass({
 		this.props.onRemove(this.props.id);
 	},
 	onDownload: function () {
-		download(this.refs.plot.download());
+		var {column, data, samples, index, sampleFormat} = this.props;
+		download(widgets.download({column, data, samples, index: index, sampleFormat}));
 	},
 	onViz: function () {
 		this.props.onViz(this.props.id);

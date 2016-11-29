@@ -152,9 +152,30 @@ var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
 var fetchGene = ({dsID, fields}, [samples]) => datasetGeneProbeAvg(dsID, samples, fields)
 			.map(resp => ({req: indexGeneResponse(samples, fields, resp)}));
 
+////////////////////////////////
+// download of on-screen data
+
+function tsvProbeMatrix(heatmap, samples, fields, codes) {
+	var fieldNames = ['sample'].concat(fields);
+	var coded = _.map(fields, (f, i) => codes ?
+			_.map(heatmap[i], _.propertyOf(codes)) :
+			heatmap[i]);
+	var transposed = _.zip.apply(null, coded);
+	var tsvData = _.map(samples, (sample, i) => [sample].concat(transposed[i]));
+
+	return [fieldNames, tsvData];
+}
+
+function download({column, data, samples, sampleFormat}) {
+	var {fields, heatmap} = column,
+		tsvSamples = _.map(samples, sampleFormat);
+	return tsvProbeMatrix(heatmap, tsvSamples, fields, data.codes);
+}
+
 ['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType => {
 	widgets.transform.add(fieldType, dataToHeatmap);
 	widgets.cmp.add(fieldType, cmp);
+	widgets.download.add(fieldType, download);
 });
 
 module.exports = {
