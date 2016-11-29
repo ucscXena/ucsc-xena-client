@@ -221,8 +221,10 @@ cvtField.add('mutation->coded', (column, field, samples, acc, data) => {
 // We should only join when the probemap is identical, so the probes for the composite field
 // is the same as any of the constituent fields.
 function setProbes(data, fdata)  {
-	var probes = _.getIn(fdata, [0, 'req', 'probes']);
-	return probes ? _.assocIn(data, ['req', 'probes'], probes) : data;
+	var probes = _.getIn(fdata, [0, 'req', 'probes']),
+		position = _.getIn(fdata, [0, 'req', 'position']),
+		updProbes = probes ? _.assocIn(data, ['req', 'probes'], probes) : data;
+	return position ? _.assocIn(updProbes, ['req', 'position'], position) : updProbes;
 }
 
 // We don't want a reducing function for getField 'mutation'.

@@ -111,9 +111,8 @@ function meanNanResponse(probes, data) {
 }
 
 function indexProbeGeneResponse(data) {
-	var probes = data[0],
-		vals = data[1];
-	return _.extend({probes: probes}, meanNanResponse(probes, vals));
+	var [{name, position}, vals] = data;
+	return _.extend({probes: name, position}, meanNanResponse(name, vals));
 }
 
 function fillNulls(samples, data) {
@@ -130,8 +129,20 @@ function orderByQuery(genes, data) {
 	});
 }
 
+function probeSpan({position}) {
+	return position.length > 0 ? {
+		chromend: _.max(_.pluck(position, 'chromend')),
+		chromstart: _.min(_.pluck(position, 'chromstart')),
+		strand: position[0].strand,
+		chrom: position[0].chrom
+	} : null;
+}
+
 function indexGeneResponse(samples, genes, data) {
-	return meanNanResponse(genes, fillNulls(samples, orderByQuery(genes, data)));
+	return {
+		position: data.map(probeSpan),
+		...meanNanResponse(genes, fillNulls(samples, orderByQuery(genes, data)))
+	};
 }
 
 var fetch = ({dsID, fields}, [samples]) => datasetProbeValues(dsID, samples, fields)
