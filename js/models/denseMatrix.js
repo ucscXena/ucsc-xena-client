@@ -111,8 +111,9 @@ function meanNanResponse(probes, data) {
 }
 
 function indexProbeGeneResponse(data) {
-	var [{name, position}, vals] = data;
-	return _.extend({probes: name, position}, meanNanResponse(name, vals));
+	var [pmap, {name, position}, vals] = data,
+		assembly = _.get(JSON.parse(pmap), 'assembly');
+	return _.extend({probes: name, position, assembly}, meanNanResponse(name, vals));
 }
 
 function fillNulls(samples, data) {
@@ -138,8 +139,10 @@ function probeSpan({position}) {
 	} : null;
 }
 
-function indexGeneResponse(samples, genes, data) {
+function indexGeneResponse(samples, genes, [pmap, data]) {
+	var assembly = _.get(JSON.parse(pmap), 'assembly');
 	return {
+		assembly,
 		position: data.map(probeSpan),
 		...meanNanResponse(genes, fillNulls(samples, orderByQuery(genes, data)))
 	};
