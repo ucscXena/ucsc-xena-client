@@ -54,7 +54,7 @@ function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, po
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
 		fieldIndex = bounded(0, fields.length, Math.floor(coord.x * fields.length / width)),
-		pos = _.get(position, fieldIndex, {}),
+		pos = _.get(position, fieldIndex),
 		field = fields[fieldIndex];
 
 	var val = _.getIn(heatmap, [fieldIndex, sampleIndex]),
@@ -67,7 +67,7 @@ function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, po
 		sampleID: sampleFormat(sampleID),
 		rows: [
 			[['labelValue', label, val]],
-			...(assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos)]]] : []),
+			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos)]]] : []),
 			...(val !== 'NA' && !code ?
 				[[['labelValue', 'Column mean', prec(_.meannull(heatmap[fieldIndex]))]],
 				[['labelValue', 'Column median', prec(_.medianNull(heatmap[fieldIndex]))]]] : [])]
