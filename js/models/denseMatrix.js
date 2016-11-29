@@ -63,6 +63,11 @@ var getCustomColor = (fieldSpecs, fields, datasets) =>
 	(fieldSpecs.length === 1 && fields.length === 1) ?
 		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', fieldSpecs[0].fields[0]], null) : null;
 
+var getAssembly = (fieldSpecs, fields, datasets) => {
+	var all = fieldSpecs.map(fs => _.getIn(datasets, [fs.dsID, 'probemapMeta', 'assembly']));
+	return _.uniq(all).length === 1 ? all[0] : null;
+};
+
 function dataToHeatmap(column, vizSettings, data, samples, datasets) {
 	if (!_.get(data, 'req')) {
 		return null;
@@ -71,11 +76,12 @@ function dataToHeatmap(column, vizSettings, data, samples, datasets) {
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples, column.defaultNormalization),
 		customColors = colorCodeMap(codes, getCustomColor(column.fieldSpecs, fields, datasets)),
+		assembly = getAssembly(column.fieldSpecs, fields, datasets),
 		colors = map(fields, (p, i) =>
 					 heatmapColors.colorSpec(column, vizSettings, codes, heatmap[i], customColors)),
 		units = _.map(column.fieldSpecs, ({dsID}) => _.getIn(datasets, [dsID, 'unit']));
 
-	return {fields, heatmap, colors, units};
+	return {fields, heatmap, assembly, colors, units};
 }
 
 //
