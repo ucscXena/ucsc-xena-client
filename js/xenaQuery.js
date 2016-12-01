@@ -77,13 +77,15 @@ function indexCodes(codes) {
 
 function datasetListTransform(host, list) {
 	return _.map(list, function (ds) {
-		var text = JSON.parse(ds.text) || {};
+		var text = JSON.parse(ds.text) || {},
+			pmtext = ds.pmtext ? JSON.parse(ds.pmtext) : null;
 		// merge curated fields over raw metadata
 		// XXX note that we're case sensitive on raw metadata
 		ds = _.extend(text, _.dissoc(ds, 'text'));
 		return _.extend(ds, {
 			dsID: JSON.stringify({host: host, name: ds.name}),
-			label: ds.label || ds.name
+			label: ds.label || ds.name,
+			probemapMeta: pmtext
 		});
 	});
 }

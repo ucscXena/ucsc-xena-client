@@ -49,12 +49,12 @@ var posString = p => `${p.chrom}:${util.addCommas(p.chromstart)}-${util.addComma
 var gbURL =  (assembly, pos) =>
 	`http://genome.ucsc.edu/cgi-bin/hgTracks?db=${encodeURIComponent(assembly)}&position=${encodeURIComponent(posString(pos))}`;
 
-function tooltip(heatmap, fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
+function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
 		fieldIndex = bounded(0, fields.length, Math.floor(coord.x * fields.length / width)),
-		pos = _.get(position, fieldIndex, {}),
+		pos = _.get(position, fieldIndex),
 		field = fields[fieldIndex];
 
 	var val = _.getIn(heatmap, [fieldIndex, sampleIndex]),
@@ -67,10 +67,10 @@ function tooltip(heatmap, fields, sampleFormat, fieldFormat, codes, position, wi
 		sampleID: sampleFormat(sampleID),
 		rows: [
 			[['labelValue', label, val]],
-			...(pos ? [[['url', posString(pos), gbURL('hg19', pos)]]] : []),
+			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos)]]] : []),
 			...(val !== 'NA' && !code ?
-				[[['labelValue', 'Column mean', prec(_.meannull(heatmap[fieldIndex]))]],
-				[['labelValue', 'Column median', prec(_.medianNull(heatmap[fieldIndex]))]]] : [])]
+				[[['labelValue', 'Mean (Median)', prec(_.meannull(heatmap[fieldIndex])) + ' (' +
+				 prec(_.medianNull(heatmap[fieldIndex])) + ')' ]]] : [])]
 	};
 }
 
@@ -218,8 +218,8 @@ var HeatmapColumn = hotOrNot(React.createClass({
 		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
 			codes = _.get(data, 'codes'),
 			position = _.getIn(data, ['req', 'position']),
-			{fields, heatmap, width} = column;
-		return tooltip(heatmap, fields, sampleFormat, fieldFormat(id), codes, position, width, zoom, samples, ev);
+			{assembly, fields, heatmap, width} = column;
+		return tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat(id), codes, position, width, zoom, samples, ev);
 	},
 	// To reduce this set of properties, we could
 	//    - Drop data & move codes into the 'display' obj, outside of data

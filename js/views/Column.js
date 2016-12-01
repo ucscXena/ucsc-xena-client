@@ -307,9 +307,17 @@ var Column = React.createClass({
 	},
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
-		let nodes = _.getIn(this.props, ['column', 'nodes']),
-			variants = [...(new Set(_.pluck(nodes, 'data')))],
-			SNVPs = mutationVector.SNVPvalue (variants),
+		// total = newRows.length,
+		// k fixed at 100
+		// gene, protein, etc size is fixed at 1000
+		// this could be actual size of protein or gene, but it is complicated due to mutations could be from exon region and display could be genomics region
+		// for the same gene it is a constant, does it really matter to be different between genes?
+
+		let total = _.getIn(this.props, ['data', 'req', 'rows']).length, //length of all variants
+			k = 1000,
+			nodes = _.getIn(this.props, ['column', 'nodes']),
+			variants = [...(new Set(_.pluck(nodes, 'data')))], //only variants in view
+			SNVPs = mutationVector.SNVPvalue(variants, total, k),
 			uriList = _.map(_.values(SNVPs), n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
 			url = 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=';
 			//url = 'http://karchin-web04.icm.jhu.edu:8888/MuPIT_Interactive/?gm=';  // mupit dev server

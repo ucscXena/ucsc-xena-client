@@ -37,10 +37,12 @@ var jStat = require('jStat').jStat;
 //}
 
 var colors = {
-	category4: [
-		"#FF7F0E",  // orange
+	categoryMutation: [
+		"#C7C7C7",	// lighter gray
+		//"#9b9b9b",  // darker grey
 		"#2CA02C",  // green
 		"#1F77B4",  // blue
+		"#FF7F0E",  // orange
 		"#D62728"   // red
 	],
 	af: {r: 255, g: 0, b: 0},
@@ -63,30 +65,32 @@ function inorderLegend(colorMap, valsInData) {
 
 var impact = {
 		//destroy protein
-		'Nonsense_Mutation': 3,
-		'Nonsense': 3,
-		'frameshift_variant': 3,
-		'Frameshift': 3,
-		'stop_gained': 3,
-		'Stop Gained': 3,
+		'Nonsense_Mutation': 4,
+		'Nonsense': 4,
+		'frameshift_variant': 4,
+		'Frameshift': 4,
+		'stop_gained': 4,
+		'Stop Gained': 4,
+		'Frame_Shift_Del': 4,
+		'Frame_Shift_Ins': 4,
+		'Frameshift Deletion': 4,
+		'Frameshift Insertion': 4,
+
+		//splice related
 		'splice_acceptor_variant': 3,
 		'splice_acceptor_variant&intron_variant': 3,
 		'splice_donor_variant': 3,
-		'splice_donor_variant&intron_variant': 3,
 		'SpliceAcceptorDeletion': 3,
 		'SpliceAcceptorSNV': 3,
 		'SpliceDonorBlockSubstitution': 3,
 		'SpliceDonorDeletion': 3,
 		'SpliceDonorSNV': 3,
 		'Splice_Site': 3,
-		'Frame_Shift_Del': 3,
-		'Frame_Shift_Ins': 3,
-		'Frameshift Deletion': 3,
-		'Frameshift Insertion': 3,
+		'splice_region_variant': 3,
+		'splice_region_variant&intron_variant': 3,
+		'splice_donor_variant&intron_variant': 3,
 
 		//modify protein
-		'splice_region_variant': 2,
-		'splice_region_variant&intron_variant': 2,
 		'missense': 2,
 		'non_coding_exon_variant': 2,
 		'missense_variant': 2,
@@ -94,7 +98,6 @@ var impact = {
 		'Missense_Mutation': 2,
 		'Missense': 2,
 		'MultiAAMissense': 2,
-		'Indel': 2,
 		'start_lost': 2,
 		'start_gained': 2,
 		'De_novo_Start_OutOfFrame': 2,
@@ -116,6 +119,7 @@ var impact = {
 		'InFrameInsertion': 2,
 		'In_Frame_Del': 2,
 		'In_Frame_Ins': 2,
+		'Indel': 2,
 
 		//do not modify protein
 		'synonymous_variant': 1,
@@ -136,10 +140,9 @@ var impact = {
 		"5'UTR": 0,
 		'5_prime_UTR_variant': 0,
 		'3_prime_UTR_variant': 0,
+		'Complex Substitution': 0,
 		'intron_variant': 0,
 		'intergenic_region': 0,
-		'Complex Substitution': 0,
-		'others': 0,
 	},
 	chromColorGB = { //genome browser chrom coloring
 		"1": "#996600",
@@ -168,7 +171,7 @@ var impact = {
 		"Y": "#CCCCCC",
 		"M": "#CCCC99"
 	},
-	impactColor = _.mapObject(impact, i => colors.category4[i]),
+	impactColor = _.mapObject(impact, i => colors.categoryMutation[i]),
 	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
 	decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals
@@ -497,14 +500,10 @@ function index(fieldType, data) {
 // SNV P value calculation is an approximation Jing's got from the internet, it is not tested against the exact calculation.
 // it is ok to use in the mupit viz, but not confident it can be used to represent the true p value
 // in addition, the K value should be the size of the gene coding region, or gene's exon region, or the size of the whole gene including introns, currently set as 1000.
-function SNVPvalue (rows) {
-	let	newRows = _.map(rows, n => `${n.chr}:${n.start}`),
-		total = newRows.length,
-		// gene, protein, etc size is fixed at 1000
-		// this could be actual size of protein or gene, but it is complicated due to mutations could be from exon region and display could be genomics region
-		// for the same gene it is a constant, does it really matter to be different between genes?
-		k = 1000;
-
+function SNVPvalue (rows, total, k) {
+	//total: instances, like total number of people in the experiments
+	//k: possible variaty, like 365 days for birthday
+	let	newRows = _.map(rows, n => `${n.chr}:${n.start}`);
 	return _.mapObject(_.countBy(newRows, n => n),
 		function (val, key) {
 			// a classic birthday problem: https://en.wikipedia.org/wiki/Birthday_problem

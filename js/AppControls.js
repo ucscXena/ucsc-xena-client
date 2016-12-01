@@ -36,7 +36,7 @@ var uiHelp = {
 	'heatmap': ['top', 'Switch to chart view of this data'],
 	'samples': ['top', 'Limit samples by dataset'],
 	'cohort': ['top', 'Change cohort'],
-	'download': ['top', 'Download all matrix columns']
+	'download': ['top', 'Dense Data Only Download']
 };
 
 function addHelp(id, target) {
