@@ -1,6 +1,13 @@
 ; datasetProbeValues
 (fn [dataset samples probes]
-	(fetch [{:table dataset
-			 :columns probes
-			 :samples samples}]))
+  (let [probemap (:probemap (car (query {:select [:probemap]
+                                         :from [:dataset]
+                                         :where [:= :name dataset]})))
+        position (if probemap
+                    (xena-query {:select ["name" "position"] :from [(:probemap probemap)] :where [:in :name probes]})
+                    nil)]
+    [position
+     (fetch [{:table dataset
+              :columns probes
+              :samples samples}])]))
 

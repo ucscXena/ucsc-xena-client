@@ -151,8 +151,16 @@ function indexGeneResponse(samples, genes, data) {
 	};
 }
 
+function indexFieldResponse(fields, resp) {
+	var [position, data] = resp;
+	return {
+		position,
+		...meanNanResponse(fields, data)
+	};
+}
+
 var fetch = ({dsID, fields}, [samples]) => datasetProbeValues(dsID, samples, fields)
-	.map(resp => ({req: meanNanResponse(fields, resp)}));
+	.map(resp => ({req: indexFieldResponse(fields, resp)}));
 
 var fetchGeneProbes = ({dsID, fields, strand}, [samples]) => datasetGeneProbesValues(dsID, samples, fields)
 	.map(resp => ({req: flopIfNegStrand(strand, indexProbeGeneResponse(resp))}));
