@@ -139,7 +139,7 @@ var validateCodedData = _.curry((samples, data) => {
 });
 
 describe('fieldFetch', function () {
-	this.timeout(5000);
+	this.timeout(10000);
 	it('should fetch probe', function (done) {
 		var probe = 'chr10_100010855_100011423';
 		fetch(
