@@ -170,7 +170,7 @@ var fetchGeneProbes = ({dsID, fields, strand}, [samples]) => datasetGeneProbesVa
 // fields all with the same code values.
 var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
 		datasetProbeValues(dsID, samples, fields)
-			.map(resp => meanNanResponse(fields, resp)),
+			.map(resp => indexFieldResponse(fields, resp)),
 		fieldCodes(dsID, fields)
 	).map(([req, codes]) => ({req, codes: _.values(codes)[0]}));
 

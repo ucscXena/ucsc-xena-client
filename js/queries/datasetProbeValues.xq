@@ -4,7 +4,7 @@
                                          :from [:dataset]
                                          :where [:= :name dataset]})))
         position (if probemap
-                    (xena-query {:select ["name" "position"] :from [(:probemap probemap)] :where [:in :name probes]})
+                    (xena-query {:select ["name" "position"] :from [probemap] :where [:in :name probes]})
                     nil)]
     [position
      (fetch [{:table dataset
