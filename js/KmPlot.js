@@ -345,7 +345,8 @@ var KmPlot = React.createClass({
 
 	render: function () {
 		let {km: {splits = 2, title, label, groups, cutoff}, dims} = this.props,
-			{maySplit = false} = groups,
+			// groups may be null
+			maySplit = _.get(groups, 'maySplit', false),
 			min = _.getIn(groups, ['domain', 0]),
 			max = _.getIn(groups, ['domain', 1]),
 			warning = _.get(groups, 'warning'),
