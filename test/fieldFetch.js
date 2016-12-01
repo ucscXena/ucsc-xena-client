@@ -12,43 +12,43 @@ require('../js/models/datasetJoins');
 var assert = require('assert');
 
 var AGenomicDsID = JSON.stringify({
-	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
-	'name': 'TCGA/TCGA.BRCA.sampleMap/SNP6.matrix'
+	'host': 'https:tcga.xenahubs.net',
+	'name': 'TCGA.BRCA.sampleMap/SNP6.matrix'
 });
 
 var AClinicalDsID = JSON.stringify({
-	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
-	'name': 'TCGA/TCGA.BRCA.sampleMap/BRCA_clinicalMatrix'
+	'host': 'https:tcga.xenahubs.net',
+	'name': 'TCGA.BRCA.sampleMap/BRCA_clinicalMatrix'
 });
 
 var BClinicalDsID = JSON.stringify({
-	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
-	'name': 'other/balagurunathan2008_public/balagurunathan2008_public_clinicalMatrix'
+	'host': 'https:ucscpublic.xenahubs.net',
+	'name': 'balagurunathan2008_public/balagurunathan2008_public_clinicalMatrix'
 });
 
 var AMutationDsID = JSON.stringify({
-	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
-	'name': 'TCGA/TCGA.BRCA.sampleMap/mutation_unc'
+	'host': 'https:tcga.xenahubs.net',
+	'name': 'TCGA.BRCA.sampleMap/mutation_wustl'
 });
 
 var BGenomicDsID = JSON.stringify({
-	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
-	'name': 'other/balagurunathan2008_public/balagurunathan2008_genomicMatrix'
+	'host': 'https:ucscpublic.xenahubs.net',
+	'name': 'balagurunathan2008_public/balagurunathan2008_genomicMatrix'
 });
 
 var CGenomicDsID = JSON.stringify({
-	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
-	'name': 'TCGA/TCGA.KIRC.sampleMap/HiSeqV2_exon'
+	'host': 'https:tcga.xenahubs.net',
+	'name': 'TCGA.KIRC.sampleMap/HiSeqV2_exon'
 });
 
 var ASecondGenomicDsID = JSON.stringify({
-	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
-	'name': 'TCGA/TCGA.BRCA.sampleMap/HiSeqV2_exon'
+	'host': 'https:tcga.xenahubs.net',
+	'name': 'TCGA.BRCA.sampleMap/HiSeqV2_exon'
 });
 
 var CMutationDsID = JSON.stringify({
-	'host': 'https://genome-cancer.ucsc.edu:443/proj/public/xena',
-	'name': 'TCGA/TCGA.KIRC.sampleMap/mutation'
+	'host': 'https:tcga.xenahubs.net',
+	'name': 'TCGA.KIRC.sampleMap/mutation'
 });
 
 var ASamples = [
@@ -138,7 +138,7 @@ var validateCodedData = _.curry((samples, data) => {
 	assert(isArray(get(data, 'codes')), 'codes is array');
 });
 
-describe('xena fetch', function () {
+describe('fieldFetch', function () {
 	this.timeout(5000);
 	it('should fetch probe', function (done) {
 		var probe = 'chr10_100010855_100011423';
