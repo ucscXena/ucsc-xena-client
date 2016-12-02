@@ -86,27 +86,61 @@ function formatAf(af) {
 var fmtIf = (x, fmt, d = '' ) => x ? fmt(x) : d;
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
+var posRegionString = p => `${p.chr}:${util.addCommas(p.start - 15)}-${util.addCommas(p.end + 15)}`;
 var posDoubleString = p => `${p.chr}:${util.addCommas(p.start)}-${util.addCommas(p.end)}`;
 var posStartString = p => `${p.chr}:${util.addCommas(p.start)}`;
-var gbURL = (assembly, pos) => {
+var gbURL = (assembly, pos, highlightPos) => {
 	// assembly : e.g. hg18
 	// pos: e.g. chr3:178,936,070-178,936,070
+	// highlight: e.g. chr3:178,936,070-178,936,070
 	var assemblyString = encodeURIComponent(assembly),
-		positionString = encodeURIComponent(pos);
-	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${positionString}&position=${positionString}`;
+		positionString = encodeURIComponent(pos),
+		highlightString = encodeURIComponent(highlightPos);
+	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${highlightString}&position=${positionString}`;
+};
+var gbMultiColorURL = (assembly, pos, posColorList) => {
+	// assembly : e.g. hg18
+	// pos: e.g. chr3:178,936,070-178,936,070
+	// posColorList: [[chr3:178,936,070-178,936,070, AA0000], ...]
+	var assemblyString = encodeURIComponent(assembly),
+		positionString = encodeURIComponent(pos),
+		highlightString = posColorList.map(p => `${assemblyString}.${p[0]}${p[1]}`).join('|');
+	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${encodeURIComponent(highlightString)}&position=${positionString}`;
 };
 
 function sampleTooltip(sampleFormat, data, gene, assembly) {
 	var dnaVaf = data.dna_vaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dna_vaf)],
 		rnaVaf = data.rna_vaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
 		ref = data.reference && ['value', `${data.reference} to `],
-		altPos = data.alt && mv.structuralVariantClass(data.alt) &&
-			`chr${mv.chromFromAlt(data.alt)}:${mv.posFromAlt(data.alt)}-${mv.posFromAlt(data.alt)}`,
+
+		//alt
+		altDirection = data.alt && mv.joinedVariantDirection(data.alt),
+		altStart = altDirection && parseInt(mv.posFromAlt(data.alt)),
+		altPos = altDirection && `chr${mv.chromFromAlt(data.alt)}:${altStart}-${altStart}`,
+		altRegion = altDirection && altDirection === 'left' ?
+			`chr${mv.chromFromAlt(data.alt)}:${altStart - 100}-${altStart - 1}` :
+			`chr${mv.chromFromAlt(data.alt)}:${altStart + 1}-${altStart + 100}`,
+		altDisplayRegion = altDirection && `chr${mv.chromFromAlt(data.alt)}:${altStart - 150}-${altStart + 150}`,
+
+		//variant
+		variantDirection = data.alt && mv.structuralVariantClass(data.alt),
+		start = data.start,
+		dataRegion = variantDirection && variantDirection === 'left' ?
+			`${data.chr}:${start - 100}-${start - 1}` :
+			`${data.chr}:${start + 1}-${start + 100}`,
+		dataDisplayRegion = altDirection && `${data.chr}:${start - 150}-${start + 150}`,
+
+		//alt link
 		alt = data.alt && (mv.structuralVariantClass(data.alt) ?
-							['url', `${data.alt}`, gbURL(assembly, altPos)] :
+							['url', `${data.alt}`, gbMultiColorURL(assembly, altDisplayRegion, [[altPos, '#AA0000' ], [altRegion, '#aec7e8']])] :
 							['value', `${data.alt}`]),
+
+		//variant link
 		posDisplay = data && (data.start === data.end) ? posStartString(data) : posDoubleString (data),
-		posURL = ['url',  `${assembly} ${posDisplay}`, gbURL(assembly, posDoubleString (data))],
+		posURL = ['url',  `${assembly} ${posDisplay}`, altDirection ?
+					gbMultiColorURL(assembly, dataDisplayRegion, [[posDoubleString(data), '#AA0000' ], [dataRegion, '#aec7e8']]) :
+					gbURL(assembly, posRegionString(data), posDoubleString (data))],
+
 		effect = ['value', fmtIf(data.effect, x => `${x}, `) + //eslint-disable-line comma-spacing
 					gene +
 					fmtIf(data.amino_acid, x => ` (${x})`) +
@@ -135,7 +169,7 @@ function posTooltip(layout, samples, sampleFormat, pixPerRow, index, assembly, x
 		sampleID: sampleFormat(samples[yIndex]),
 		rows: [[['url',
 			`${assembly} ${posStartString(coordinate)}`,
-			gbURL(assembly, posDoubleString(coordinate))]]]};
+			gbURL(assembly, posRegionString(coordinate), posDoubleString(coordinate))]]]};
 }
 
 function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, assembly, ev) {
@@ -174,8 +208,9 @@ var MutationColumn = hotOrNot(React.createClass({
 		this.ttevents.dispose();
 	},
 	tooltip: function (ev) {
-		var {column: {fieldType, layout, nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props;
-		return tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
+		var {column: {fieldType, layout, nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props,
+			gene = fields[0];
+		return tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, assembly, ev);
 	},
 	render: function () {
 		var {column, samples, zoom, index, draw} = this.props;

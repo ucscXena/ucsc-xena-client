@@ -117,19 +117,22 @@ function closestNode(nodes, zoom, x, y) {
 //var fmtIf = (x, fmt, d = '' ) => x ? fmt(x) : d;
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
+var posRegionString = p => `${p.chr}:${util.addCommas(p.start - Math.round((p.end - p.start) / 4))}-${util.addCommas(p.end + Math.round((p.end - p.start) / 4))}`;
 var posDoubleString = p => `${p.chr}:${util.addCommas(p.start)}-${util.addCommas(p.end)}`;
 var posStartString = p => `${p.chr}:${util.addCommas(p.start)}`;
-var gbURL = (assembly, pos) => {
+var gbURL = (assembly, pos, highlightPos) => {
 	// assembly : e.g. hg18
 	// pos: e.g. chr3:178,936,070-178,936,070
+	// highlight: e.g. chr3:178,936,070-178,936,070
 	var assemblyString = encodeURIComponent(assembly),
-		positionString = encodeURIComponent(pos);
-	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${positionString}&position=${positionString}`;
+		positionString = encodeURIComponent(pos),
+		highlightString = encodeURIComponent(highlightPos);
+	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${highlightString}&position=${positionString}`;
 };
 
 function sampleTooltip(sampleFormat, data, gene, assembly) {
 	var posDisplay = data && (data.start === data.end) ? posStartString(data) : posDoubleString (data),
-		posURL = ['url',  `${assembly} ${posDisplay}`, gbURL(assembly, posDoubleString (data))],
+		posURL = ['url',  `${assembly} ${posDisplay}`, gbURL(assembly, posRegionString(data), posDoubleString (data))],
 		value = ['labelValue', 'value', (data.value != null) ? `${data.value}` : ''];
 
 	return {
@@ -153,7 +156,7 @@ function posTooltip(layout, samples, sampleFormat, pixPerRow, index, assembly, x
 		sampleID: sampleFormat(samples[yIndex]),
 		rows: [[['url',
 			`${assembly} ${posStartString(coordinate)}`,
-			gbURL(assembly, posDoubleString(coordinate))]]]};
+			gbURL(assembly, posRegionString(coordinate), posDoubleString(coordinate))]]]};
 }
 
 function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, assembly, ev) {

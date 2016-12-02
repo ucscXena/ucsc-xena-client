@@ -224,6 +224,13 @@ function structuralVariantClass(alt) {
 		(lastBase === '[' || lastBase === ']' ? 'right' : null);
 }
 
+function joinedVariantDirection(alt) {
+	var firstBase = _.first(alt),
+		lastBase = _.last(alt);
+	return firstBase === ']' || lastBase === ']' ? 'left' :
+		(firstBase === '[' || lastBase === '[' ? 'right' : null);
+}
+
 var getExonPadding = mutationDataType => {
 	if (mutationDataType === "SV") {
 		return {
@@ -585,6 +592,7 @@ module.exports = {
 	chromFromAlt,
 	posFromAlt,
 	structuralVariantClass,
+	joinedVariantDirection,
 	chromColorGB,
 	SNVPvalue,
 	defaultXZoom,
