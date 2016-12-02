@@ -117,12 +117,19 @@ function closestNode(nodes, zoom, x, y) {
 //var fmtIf = (x, fmt, d = '' ) => x ? fmt(x) : d;
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
-var gbURL =  (assembly, pos) => `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${encodeURIComponent(assembly)}&position=${encodeURIComponent(pos)}`;
+var posDoubleString = p => `${p.chr}:${util.addCommas(p.start)}-${util.addCommas(p.end)}`;
+var posStartString = p => `${p.chr}:${util.addCommas(p.start)}`;
+var gbURL = (assembly, pos) => {
+	// assembly : e.g. hg18
+	// pos: e.g. chr3:178,936,070-178,936,070
+	var assemblyString = encodeURIComponent(assembly),
+		positionString = encodeURIComponent(pos);
+	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${positionString}&position=${positionString}`;
+};
 
 function sampleTooltip(sampleFormat, data, gene, assembly) {
-	var pos = data && `${data.chr}:${util.addCommas(data.start)}-${util.addCommas(data.end)}`,
-		posDisplay = data && (data.start === data.end) ? `${data.chr}:${util.addCommas(data.start)}` : pos,
-		posURL = ['url',  `${assembly} ${posDisplay}`, gbURL(assembly, pos)],
+	var posDisplay = data && (data.start === data.end) ? posStartString(data) : posDoubleString (data),
+		posURL = ['url',  `${assembly} ${posDisplay}`, gbURL(assembly, posDoubleString (data))],
 		value = ['labelValue', 'value', (data.value != null) ? `${data.value}` : ''];
 
 	return {
@@ -136,12 +143,17 @@ function sampleTooltip(sampleFormat, data, gene, assembly) {
 
 function posTooltip(layout, samples, sampleFormat, pixPerRow, index, assembly, x, y) {
 	var yIndex = Math.round((y - pixPerRow / 2) / pixPerRow + index),
-		pos = Math.floor(chromPositionFromScreen(layout, x));
+		pos = Math.floor(chromPositionFromScreen(layout, x)),
+		coordinate = {
+			chr: layout.chromName,
+			start: pos,
+			end: pos
+		};
 	return {
 		sampleID: sampleFormat(samples[yIndex]),
 		rows: [[['url',
-			`${assembly} ${layout.chromName}:${util.addCommas(pos)}`,
-			gbURL(assembly, pos)]]]};
+			`${assembly} ${posStartString(coordinate)}`,
+			gbURL(assembly, posDoubleString(coordinate))]]]};
 }
 
 function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, assembly, ev) {

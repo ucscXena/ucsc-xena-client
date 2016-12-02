@@ -86,7 +86,8 @@ function formatAf(af) {
 var fmtIf = (x, fmt, d = '' ) => x ? fmt(x) : d;
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
-var posString = p => `${p.chr}:${util.addCommas(p.start)}-${util.addCommas(p.end)}`;
+var posDoubleString = p => `${p.chr}:${util.addCommas(p.start)}-${util.addCommas(p.end)}`;
+var posStartString = p => `${p.chr}:${util.addCommas(p.start)}`;
 var gbURL = (assembly, pos) => {
 	// assembly : e.g. hg18
 	// pos: e.g. chr3:178,936,070-178,936,070
@@ -104,9 +105,8 @@ function sampleTooltip(sampleFormat, data, gene, assembly) {
 		alt = data.alt && (mv.structuralVariantClass(data.alt) ?
 							['url', `${data.alt}`, gbURL(assembly, altPos)] :
 							['value', `${data.alt}`]),
-		pos = data && posString (data),
-		posDisplay = data && (data.start === data.end) ? `${data.chr}:${util.addCommas(data.start)}` : pos,
-		posURL = ['url',  `${assembly} ${posDisplay}`, gbURL(assembly, pos)],
+		posDisplay = data && (data.start === data.end) ? posStartString(data) : posDoubleString (data),
+		posURL = ['url',  `${assembly} ${posDisplay}`, gbURL(assembly, posDoubleString (data))],
 		effect = ['value', fmtIf(data.effect, x => `${x}, `) + //eslint-disable-line comma-spacing
 					gene +
 					fmtIf(data.amino_acid, x => ` (${x})`) +
@@ -134,8 +134,8 @@ function posTooltip(layout, samples, sampleFormat, pixPerRow, index, assembly, x
 	return {
 		sampleID: sampleFormat(samples[yIndex]),
 		rows: [[['url',
-			`${assembly} ${layout.chromName}:${util.addCommas(pos)}`,
-			gbURL(assembly, posString(coordinate))]]]};
+			`${assembly} ${posStartString(coordinate)}`,
+			gbURL(assembly, posDoubleString(coordinate))]]]};
 }
 
 function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, assembly, ev) {
