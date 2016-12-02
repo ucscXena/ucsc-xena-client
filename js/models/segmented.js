@@ -25,7 +25,7 @@ function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-v
 }
 
 var exonPadding = {
-	padTxStart: 1000,
+	padTxStart: 3000,
 	padTxEnd: 1000
 };
 
