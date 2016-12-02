@@ -46,8 +46,11 @@ function bounded(min, max, x) {
 
 var posString = p => `${p.chrom}:${util.addCommas(p.chromstart)}-${util.addCommas(p.chromend)}`;
 
-var gbURL =  (assembly, pos) =>
-	`http://genome.ucsc.edu/cgi-bin/hgTracks?db=${encodeURIComponent(assembly)}&position=${encodeURIComponent(posString(pos))}`;
+var gbURL = (assembly, pos) => {
+	var assemblyString = encodeURIComponent(assembly),
+		positionString = encodeURIComponent(posString(pos));
+	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${positionString}&position=${positionString}`;
+};
 
 function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
 	var coord = util.eventOffset(ev),

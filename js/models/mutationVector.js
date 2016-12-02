@@ -38,8 +38,8 @@ var jStat = require('jStat').jStat;
 
 var colors = {
 	categoryMutation: [
-		"#C7C7C7",	// lighter gray
-		//"#9b9b9b",  // darker grey
+		//"#C7C7C7",	// lighter gray
+		"#9b9b9b",  // darker grey
 		"#2CA02C",  // green
 		"#1F77B4",  // blue
 		"#FF7F0E",  // orange
@@ -80,6 +80,7 @@ var impact = {
 		'splice_acceptor_variant': 3,
 		'splice_acceptor_variant&intron_variant': 3,
 		'splice_donor_variant': 3,
+		'splice_donor_variant&intron_variant': 3,
 		'SpliceAcceptorDeletion': 3,
 		'SpliceAcceptorSNV': 3,
 		'SpliceDonorBlockSubstitution': 3,
@@ -88,7 +89,6 @@ var impact = {
 		'Splice_Site': 3,
 		'splice_region_variant': 3,
 		'splice_region_variant&intron_variant': 3,
-		'splice_donor_variant&intron_variant': 3,
 
 		//modify protein
 		'missense': 2,

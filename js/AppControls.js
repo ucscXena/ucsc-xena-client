@@ -36,7 +36,7 @@ var uiHelp = {
 	'heatmap': ['top', 'Switch to chart view of this data'],
 	'samples': ['top', 'Limit samples by dataset'],
 	'cohort': ['top', 'Change cohort'],
-	'download': ['top', 'Dense Data Only Download']
+	'download': ['top', 'Download all dense columns']
 };
 
 function addHelp(id, target) {
@@ -53,7 +53,7 @@ function download([fields, rows]) {
 	// use blob for bug in chrome: https://code.google.com/p/chromium/issues/detail?id=373182
 	var url = URL.createObjectURL(new Blob([txt], { type: 'text/tsv' }));
 	var a = document.createElement('a');
-	var filename = 'xenaDownload.tsv';
+	var filename = 'denseDataOnlyDownload.tsv';
 	_.extend(a, { id: filename, download: filename, href: url });
 	document.body.appendChild(a);
 	a.click();
