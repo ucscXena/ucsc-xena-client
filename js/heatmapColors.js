@@ -22,7 +22,7 @@ var defaultColors = {
 };
 
 var subTypeClass = ({dataSubType}) =>
-	dataSubType.indexOf('expression') !== -1 ? 'expression' : 'default';
+	dataSubType && dataSubType.indexOf('expression') !== -1 ? 'expression' : 'default';
 
 var typeClass = {
 	clinicalMatrix: () => 'clinical',

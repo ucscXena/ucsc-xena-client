@@ -86,8 +86,11 @@ function formatAf(af) {
 var fmtIf = (x, fmt, d = '' ) => x ? fmt(x) : d;
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
+//gb position string of the segment with 15bp extra on each side, centered at segment
 var posRegionString = p => `${p.chr}:${util.addCommas(p.start - 15)}-${util.addCommas(p.end + 15)}`;
+//gb position string like chr3:178,936,070-178,936,070
 var posDoubleString = p => `${p.chr}:${util.addCommas(p.start)}-${util.addCommas(p.end)}`;
+//gb position string like chr3:178,936,070
 var posStartString = p => `${p.chr}:${util.addCommas(p.start)}`;
 var gbURL = (assembly, pos, highlightPos) => {
 	// assembly : e.g. hg18
