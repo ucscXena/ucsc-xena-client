@@ -10,13 +10,22 @@ var Crosshair = React.createClass({
 	getInitialState() {
 		return {mousing: false, x: -1, y: -1};
 	},
+	componentWillReceiveProps(nextProps) {
+		if (!nextProps.frozen) {
+			this.setState({mousing: false, x: -1, y: -1});
+		}
+	},
 	onMouseMove(ev) {
-		this.setState({mousing: true, x: ev.clientX, y: ev.clientY});
+		if (!this.props.frozen) {
+			this.setState({mousing: true, x: ev.clientX, y: ev.clientY});
+		}
 	},
 	onMouseOut() {
-		this.setState({mousing: false});
+		if (!this.props.frozen) {
+			this.setState({mousing: false});
+		}
 	},
-	render: function () {
+	render() {
 		let {mousing, x, y} = this.state,
 			{onMouseMove, onMouseOut} = this;
 		return (

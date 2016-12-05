@@ -418,7 +418,7 @@ var Column = React.createClass({
 						samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 						samplesMatched={samplesMatched}/>
 					<div style={{position: 'relative'}}>
-						<Crosshair>
+						<Crosshair frozen={this.props.frozen}>
 							{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 							{getStatusView(status, this.onReload)}
 						</Crosshair>

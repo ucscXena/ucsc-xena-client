@@ -43,7 +43,8 @@ function addTooltip(Component) {
 					<Component {...props} onClick={this.ev.click}>
 						{React.Children.map(children, el =>
 							React.cloneElement(el, {
-								tooltip: this.ev.tooltip
+								tooltip: this.ev.tooltip,
+								frozen: this.state.tooltip.frozen
 							}))}
 					</Component>
 					<Tooltip onClick={this.ev.click} {...this.state.tooltip}/>
