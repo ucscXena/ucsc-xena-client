@@ -29,18 +29,21 @@ var exonPadding = {
 	padTxEnd: 1000
 };
 
+var min = (x, y) => x < y ? x : y;
+var max = (x, y) => x > y ? x : y;
+
 // sum(len * value)/sum(len)
 //
-function segmentAverage(row) {
-	var lengths = row.map(seg => seg.end - seg.start),
+function segmentAverage(row, {start, end}) {
+	var lengths = row.map(seg => min(seg.end, end) - max(seg.start, start)),
 		totalLen = _.sum(lengths),
 		weightedSum = _.sum(row.map((seg, i) => seg.value * lengths[i]));
 	return weightedSum / totalLen;
 }
 
-function rowOrder(row1, row2) {
-	var avg1 = segmentAverage(row1),
-		avg2 = segmentAverage(row2);
+function rowOrder(row1, row2, xzoom) {
+	var avg1 = segmentAverage(row1, xzoom),
+		avg2 = segmentAverage(row2, xzoom);
 
 	return avg1 === avg2 ? 0 : (avg1 > avg2 ? -1 : 1);
 }
@@ -51,7 +54,7 @@ function cmpRowOrNoSegments(r1, r2, xzoom) {
 	if (rf1.length === 0) {
 		return (rf2.length === 0) ? 0 : 1;
 	}
-	return (rf2.length === 0) ? -1 : rowOrder(rf1, rf2);
+	return (rf2.length === 0) ? -1 : rowOrder(rf1, rf2, xzoom);
 }
 
 function cmpRowOrNull(r1, r2, xzoom) {
