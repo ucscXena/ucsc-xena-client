@@ -52,6 +52,7 @@ function computeHeatmap(vizSettings, data, fields, samples, defaultNormalization
 var flopIfNegStrand = (strand, req) =>
 	strand === '-' ?
 		_.assoc(req,
+				'position', _.reverse(req.position),
 				'probes', _.reverse(req.probes),
 				'values', _.reverse(req.values)) :
 		req;

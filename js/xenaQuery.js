@@ -325,8 +325,8 @@ var sparseDataMatchField = _.curry((field, host, dataset, genes) =>
 // Look up gene strand from refGene, using the assembly specified
 // in the probemap metadata
 var probemapGeneStrand = dsIDFn((host, probemap, gene) =>
-	datasetMetadata(host, probemap).flatMap(([{text}]) => {
-		var {host, name} = refGene[_.get(JSON.parse(text), 'assembly', 'hg19')];
+	datasetMetadata(host, probemap).flatMap(([{assembly}]) => {
+		var {host, name} = refGene[assembly || 'hg19'];
 		return refGenePosition(host, name, gene);
 	}).map(({strand}) => strand));
 
