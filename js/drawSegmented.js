@@ -5,7 +5,7 @@ var _ = require('./underscore_ext');
 var colorScales = require('./colorScales');
 
 var labelFont = 12;
-//var labelMargin = 1; // left & right margin
+var labelMargin = 1; // left & right margin
 
 var radius = 4;
 var minVariantHeight = pixPerRow => Math.max(pixPerRow, 2); // minimum draw height of 2
@@ -43,8 +43,26 @@ function labelNulls(vg, width, height, count, stripes) {
 	});
 }
 
-function drawSegments(vg, colorScale, width, rheight, zoom, segments) {
+function labelValues(vg, width, {index, height, count}, toDraw) {
+	var rheight = height / count;
+	if (rheight > labelFont) {
+		let h = rheight;
 
+		toDraw.forEach(function(v) {
+			var {xStart, xEnd, value} = v,
+				y = (v.y - index) * rheight + (rheight / 2),
+				label = '' + value,
+				textWidth = vg.textWidth(labelFont, label);
+
+			if ((xEnd - xStart) >= textWidth) {
+				vg.textCenteredPushRight(xStart + labelMargin, y - h / 2, xEnd - xStart - labelMargin,
+						h, 'black', labelFont, label);
+			}
+		});
+	}
+}
+
+function drawSegments(vg, colorScale, width, rheight, zoom, segments) {
 	var toDraw = segments.map(v => {
 		var y = (v.y - zoom.index) * rheight + (rheight / 2);
 		return {
@@ -84,6 +102,7 @@ var drawSegmented = _.curry((vg, props) => {
 		(vg, rwidth, rheight) =>
 			drawSegments(vg, colorScale, rwidth, rheight, zoom, toDraw));
 	labelNulls(vg, width, height, count, stripes);
+	labelValues(vg, width, zoom, toDraw);
 });
 
 module.exports = {drawSegmented, radius, minVariantHeight, toYPx, labelFont};
