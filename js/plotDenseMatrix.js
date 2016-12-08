@@ -122,7 +122,7 @@ function legendForColorscale(colorSpec) {
 function renderFloatLegend(props) {
 	var {units, colors, vizSettings, defaultNormalization, data} = props;
 
-	if (!data) {
+	if (_.isEmpty(data)) {
 		return <Legend colors={[]} labels={''} footnotes={[]}/>;;
 	}
 	var dataSizeArray = data.map(subcol => subcol.filter(v => v != null).length),
