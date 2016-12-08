@@ -163,13 +163,14 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 		headerFormat: xAxisTitle + ' : {series.name}<br>',
 		formatter: function () {
 			var nNumber = this.series.userOptions.description ? this.series.userOptions.description[this.point.x] : 0;
-			return xAxisTitle + ' : ' + this.series.name + '<br>'
+			return (xAxisTitle ? xAxisTitle + ' : ' : '')
+				+ this.series.name + '<br>'
 				+ (categories.length > 1 ?  yAxisTitle + ' ' : '' )
 				+ categories[this.point.x]
 				+ ': <b>'
 				+ (this.point.high ? (this.point.low + ' to ' + this.point.high ) : this.point.y)
 				+ '</b><br>'
-				+ 'n = ' + nNumber;
+				+ (nNumber ? 'n = ' + nNumber : '');
 		},
 		hideDelay: 0
 	};

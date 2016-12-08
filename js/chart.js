@@ -23,7 +23,8 @@ module.exports = function (root, callback, sessionStorage) {
 		leftContainer, rightContainer,
 		xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
 		cohort, samplesLength, cohortSamples, updateArgs, update,
-		normalizationState = {}, expState = {};
+		normalizationState = xenaState.chartState.normalizationState || {},
+		expState = {};
 
 		if (xenaState)	{
 			cohort = xenaState.cohort;
@@ -113,7 +114,7 @@ module.exports = function (root, callback, sessionStorage) {
 			dropDownDiv.appendChild(option);
 		});
 
-		dropDownDiv.selectedIndex = 0;
+		dropDownDiv.selectedIndex = 0;  //tocken, action in normalizationUISetting function
 
 		dropDownDiv.addEventListener('change', function () {
 			normalizationState[xenaState.chartState.ycolumn] = dropDownDiv.selectedIndex;
@@ -343,7 +344,6 @@ module.exports = function (root, callback, sessionStorage) {
 			}
 		} else {
 			dropDown.style.visibility = "hidden";
-			dropDownDiv.selectedIndex = 0;
 		}
 	}
 
@@ -798,6 +798,7 @@ module.exports = function (root, callback, sessionStorage) {
 
 			errorSeries = [];
 			dataSeriese = [];
+			nNumberSeriese = [];
 			ybinnedSample = {};
 			xIsCategorical = true;
 
@@ -842,13 +843,15 @@ module.exports = function (root, callback, sessionStorage) {
 			//add data to seriese
 			displayCategories.forEach(function (code) {
 				if (yIsCategorical) {
-					var value = ybinnedSample[code].length * 100 / total;
-					dataSeriese.push(parseFloat(value.toPrecision(3)));
+					var value = ybinnedSample[code].length;
+					dataSeriese.push(parseFloat((value * 100 / total).toPrecision(3)));
+					nNumberSeriese.push(value);
 				} else {
 					var average = highchartsHelper.average(ybinnedSample[code]);
 					var stdDev = numSD * highchartsHelper.standardDeviation(ybinnedSample[code], average);
 					if (!isNaN(average)) {
 						dataSeriese.push(parseFloat(((average - offsets[code]) / STDEV[code]).toPrecision(3)));
+						nNumberSeriese.push(ybinnedSample[code].length);
 					} else {
 						dataSeriese.push("");
 					}
@@ -870,7 +873,8 @@ module.exports = function (root, callback, sessionStorage) {
 				seriesLabel = "average";
 			}
 			highchartsHelper.addSeriesToColumn(chart, seriesLabel,
-				dataSeriese, errorSeries, yIsCategorical, categories.length < 30, showLegend);
+				dataSeriese, errorSeries, yIsCategorical, categories.length < 30, showLegend,
+				0, nNumberSeriese);
 			chart.redraw();
 		} else if (xIsCategorical && yIsCategorical) { // x y : categorical --- messsy code
 			//both x and Y is a single variable, i.e. yfields has array size of 1
@@ -1150,7 +1154,8 @@ module.exports = function (root, callback, sessionStorage) {
 				"cohort": cohort,
 				"xcolumn": xcolumn,
 				"ycolumn": ycolumn,
-				"colorColumn": colorColumn
+				"colorColumn": colorColumn,
+				"normalizationState": normalizationState
 			};
 			columns = xenaState.columns;
 			datasets = xenaState.datasets;
