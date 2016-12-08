@@ -162,12 +162,14 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 	chartOptions.tooltip = {
 		headerFormat: xAxisTitle + ' : {series.name}<br>',
 		formatter: function () {
+			var nNumber = this.series.userOptions.description ? this.series.userOptions.description[this.point.x] : 0;
 			return xAxisTitle + ' : ' + this.series.name + '<br>'
 				+ (categories.length > 1 ?  yAxisTitle + ' ' : '' )
 				+ categories[this.point.x]
 				+ ': <b>'
 				+ (this.point.high ? (this.point.low + ' to ' + this.point.high ) : this.point.y)
-				+ '</b>';
+				+ '</b><br>'
+				+ 'n = ' + nNumber;
 		},
 		hideDelay: 0
 	};
@@ -229,13 +231,15 @@ function scatterChart(chartOptions, xlabel, ylabel) {
 	return chartOptions;
 }
 
-function addSeriesToColumn (chart, sName, ycodeSeries, errorSeries, yIsCategorical, showDataLabel, showLegend, color) {
+function addSeriesToColumn (chart, sName, ycodeSeries, errorSeries, yIsCategorical,
+	showDataLabel, showLegend, color, nNumberSeriese = undefined) {
 	var seriesOptions = {
 		name: sName,
 		type: 'column',
 		data: ycodeSeries,
 		maxPointWidth: 50,
-		color: color
+		color: color,
+		description: nNumberSeriese  // use description to carry n=xx information
 	};
 
 	if (!showLegend) {
@@ -261,7 +265,8 @@ function addSeriesToColumn (chart, sName, ycodeSeries, errorSeries, yIsCategoric
 		chart.addSeries({
 			name: sName + " +/-standard deviation",
 			type: 'errorbar',
-			data: errorSeries
+			data: errorSeries,
+			description: nNumberSeriese
 		}, false);
 	}
 }

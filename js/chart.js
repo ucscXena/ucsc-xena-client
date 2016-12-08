@@ -614,6 +614,7 @@ module.exports = function (root, callback, sessionStorage) {
 			ybinnedSample,
 			dataSeriese,
 			errorSeries,
+			nNumberSeriese,
 			yfield,
 			ydataElement,
 			showLegend,
@@ -636,6 +637,7 @@ module.exports = function (root, callback, sessionStorage) {
 			var xCategories = [],
 				dataMatrix = [], // row is x and column is y
 				stdMatrix = [], // row is x and column is y
+				nNumberMatrix = [], // number of data points (real data points) for dataMatrix
 				row,
 				highlightcode = [],
 				yDisplayFields;
@@ -683,6 +685,7 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 				dataMatrix.push(row);
 				stdMatrix.push(_.clone(row));
+				nNumberMatrix.push(_.clone(row));
 			}
 
 
@@ -702,8 +705,10 @@ module.exports = function (root, callback, sessionStorage) {
 
 						if (!isNaN(average)) {
 							dataMatrix[i][k] = parseFloat((average / STDEV[yfield]).toPrecision(3));
+							nNumberMatrix[i][k] = data.length;
 						} else {
 							dataMatrix[i][k] = NaN;
+							nNumberMatrix = 0;
 						}
 						if (!isNaN(stdDev)) {
 							stdMatrix[i][k] = parseFloat((stdDev / STDEV[yfield]).toPrecision(3));
@@ -764,6 +769,7 @@ module.exports = function (root, callback, sessionStorage) {
 				code = xCategories[i];
 				dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(cutOffset);
 				errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(getError);
+				nNumberSeriese = nNumberMatrix[i];
 
 				// highlight coloring
 				if ( highlightcode.length !== 0 ) {
@@ -778,10 +784,12 @@ module.exports = function (root, callback, sessionStorage) {
 					dataSeriese.reverse();
 					errorSeries.reverse();
 				}
+
 				highchartsHelper.addSeriesToColumn(
 					chart, code, dataSeriese, errorSeries, yIsCategorical,
 					yfields.length * xCategories.length < 30, showLegend,
-					customColors && customColors[code] ? customColors[code] : colors[code]);
+					customColors && customColors[code] ? customColors[code] : colors[code],
+					nNumberSeriese);
 			}
 			chart.redraw();
 		} else if (!xfield) { //summary view --- messsy code
