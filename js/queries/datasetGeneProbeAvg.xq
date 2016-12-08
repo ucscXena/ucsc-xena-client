@@ -13,5 +13,5 @@
 									:columns probe-names}])]
 				{:gene gene
 				 :position (probes "position")
-				 :scores (if (car probes) (avg scores) [[]])}))]
+				 :scores (if (car probe-names) (avg scores) [[]])}))]
 	  (map scores-for-gene genes)))
