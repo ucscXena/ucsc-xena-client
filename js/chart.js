@@ -23,13 +23,17 @@ module.exports = function (root, callback, sessionStorage) {
 		leftContainer, rightContainer,
 		xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
 		cohort, samplesLength, cohortSamples, updateArgs, update,
-		normalizationState = xenaState.chartState.normalizationState || {},
+		normalizationState = {},
 		expState = {};
 
 		if (xenaState)	{
 			cohort = xenaState.cohort;
 			samplesLength = xenaState.samples.length;
 			cohortSamples = xenaState.cohortSamples;
+			if (xenaState.chartState) {
+				normalizationState = xenaState.chartState.normalizationState || {};
+			}
+
 		}
 		updateArgs = [cohort, samplesLength, cohortSamples];
 
