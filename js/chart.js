@@ -30,10 +30,7 @@ module.exports = function (root, callback, sessionStorage) {
 			cohort = xenaState.cohort;
 			samplesLength = xenaState.samples.length;
 			cohortSamples = xenaState.cohortSamples;
-			if (xenaState.chartState) {
-				normalizationState = xenaState.chartState.normalizationState || {};
-			}
-
+			normalizationState = _.getIn(xenaState, ['chartState', 'normalizationState'], {});
 		}
 		updateArgs = [cohort, samplesLength, cohortSamples];
 
