@@ -520,10 +520,16 @@ function SNVPvalue (rows, total, k) {
 			//        http://math.stackexchange.com/questions/25876/probability-of-3-people-in-a-room-of-30-having-the-same-birthday/25880#25880
 			//        no. 28
 			// simulation: http://www.drmoron.org/3-birthday-problem/
-			var T = (1 / k) * (1 / k) * jStat.combination(total, val),
-				pValue = ( Math.exp(-T) + Math.exp( - (T / (1 + val * (total - val) / (2 * k))))) / 2;
-			//var pValue  = 1 - Math.exp(- jStat.combination(total, val) / Math.pow(k, (val -1)));
-			var [chr, start] = key.split(':');
+			// total = 30;
+			// val = 4;
+			// k = 365;
+			// result ≈0.028537
+			// P(365,30,3)≃2,85%
+			// P(365,30,4)≃0,0532%
+			var T = jStat.combination(total, val) / Math.pow(k, (val - 1)),
+				pValue = 1 - (Math.exp(-T) + Math.exp( - (T / (1 + val * (total - val) / (2 * k))))) / 2, // no 28
+				//pValue2  = 1 - Math.exp(- jStat.combination(total, val) / Math.pow(k, (val - 1))); //no 51
+				[chr, start] = key.split(':');
 
 			return {
 				chr: chr,
