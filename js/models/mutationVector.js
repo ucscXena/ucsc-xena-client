@@ -423,7 +423,7 @@ var getCustomColor = (fieldSpecs, datasets, type) =>
 		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', type], null) : null;
 
 function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
-	if (_.isEmpty(data) || _.isEmpty(data.req)) {
+	if (_.isEmpty(data) || _.isEmpty(data.req) || _.isEmpty(data.refGene)) {
 		return {};
 	}
 	var {refGene} = data,
@@ -444,7 +444,7 @@ function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, ind
 }
 
 function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
-	if (_.isEmpty(data) || _.isEmpty(data.req)) {
+	if (_.isEmpty(data) || _.isEmpty(data.req) || _.isEmpty(data.refGene)) {
 		return {};
 	}
 	var {refGene} = data,

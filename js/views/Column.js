@@ -308,7 +308,7 @@ var Column = React.createClass({
 	onMuPit: function () {
 		// Construct the url, which will be opened in new window
 		// total = newRows.length,
-		// k fixed at 100
+		// k fixed at 1000
 		// gene, protein, etc size is fixed at 1000
 		// this could be actual size of protein or gene, but it is complicated due to mutations could be from exon region and display could be genomics region
 		// for the same gene it is a constant, does it really matter to be different between genes?
