@@ -13,20 +13,9 @@ var _ = require('./underscore_ext');
 var colorScales = require ('./colorScales');
 var customColors = {};
 
-//project custom color code
-//CKCC
-/*
-var customColors = {
-	"IDHmut-codel":	"#00FFFF",
-	"IDHmut-non-codel":	"#D47D4E",
-	"IDHwt":	"#F5A9F2",
-	"Proneural":	"#FFA500",
-	"Neural":	"#0000FF",
-	"Mesenchymal":	"#00FF00",
-	"Classical":	"#FF0000",
-	"G-CIMP":	"#9A2EFE"
- };
-*/
+var getCustomColor = (fieldSpecs, fields, datasets) =>
+	(fieldSpecs.length === 1 && fields.length === 1) ?
+		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', fieldSpecs[0].fields[0]], null) : null;
 
 module.exports = function (root, callback, sessionStorage) {
 	var xdiv, ydiv, // x y and color axis dropdown
@@ -34,12 +23,14 @@ module.exports = function (root, callback, sessionStorage) {
 		leftContainer, rightContainer,
 		xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
 		cohort, samplesLength, cohortSamples, updateArgs, update,
-		normalizationState = {}, expState = {};
+		normalizationState = {},
+		expState = {};
 
 		if (xenaState)	{
 			cohort = xenaState.cohort;
 			samplesLength = xenaState.samples.length;
 			cohortSamples = xenaState.cohortSamples;
+			normalizationState = _.getIn(xenaState, ['chartState', 'normalizationState'], {});
 		}
 		updateArgs = [cohort, samplesLength, cohortSamples];
 
@@ -124,7 +115,7 @@ module.exports = function (root, callback, sessionStorage) {
 			dropDownDiv.appendChild(option);
 		});
 
-		dropDownDiv.selectedIndex = 0;
+		dropDownDiv.selectedIndex = 0;  //tocken, action in normalizationUISetting function
 
 		dropDownDiv.addEventListener('change', function () {
 			normalizationState[xenaState.chartState.ycolumn] = dropDownDiv.selectedIndex;
@@ -354,7 +345,6 @@ module.exports = function (root, callback, sessionStorage) {
 			}
 		} else {
 			dropDown.style.visibility = "hidden";
-			dropDownDiv.selectedIndex = 0;
 		}
 	}
 
@@ -615,7 +605,8 @@ module.exports = function (root, callback, sessionStorage) {
 		yfields, ycodemap, ydata, reverseStrand,
 		offsets, xlabel, ylabel, STDEV,
 		scatterLabel, scatterColorData, scatterColorDataCodemap,
-		samplesMatched) {
+		samplesMatched,
+		columns, datasets, xcolumn, ycolumn, colorColumn) {
 		var chart,
 			yIsCategorical = ycodemap ? true : false,
 			xIsCategorical = xcodemap ? true : false,
@@ -624,6 +615,7 @@ module.exports = function (root, callback, sessionStorage) {
 			ybinnedSample,
 			dataSeriese,
 			errorSeries,
+			nNumberSeriese,
 			yfield,
 			ydataElement,
 			showLegend,
@@ -646,6 +638,7 @@ module.exports = function (root, callback, sessionStorage) {
 			var xCategories = [],
 				dataMatrix = [], // row is x and column is y
 				stdMatrix = [], // row is x and column is y
+				nNumberMatrix = [], // number of data points (real data points) for dataMatrix
 				row,
 				highlightcode = [],
 				yDisplayFields;
@@ -693,6 +686,7 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 				dataMatrix.push(row);
 				stdMatrix.push(_.clone(row));
+				nNumberMatrix.push(_.clone(row));
 			}
 
 
@@ -712,8 +706,10 @@ module.exports = function (root, callback, sessionStorage) {
 
 						if (!isNaN(average)) {
 							dataMatrix[i][k] = parseFloat((average / STDEV[yfield]).toPrecision(3));
+							nNumberMatrix[i][k] = data.length;
 						} else {
 							dataMatrix[i][k] = NaN;
+							nNumberMatrix = 0;
 						}
 						if (!isNaN(stdDev)) {
 							stdMatrix[i][k] = parseFloat((stdDev / STDEV[yfield]).toPrecision(3));
@@ -755,9 +751,12 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 			};
 
+			customColors = getCustomColor(columns[xcolumn].fieldSpecs, columns[xcolumn].fields, datasets);
+
 			xcodemap.forEach(function (code, i) {
 				colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length];
 			});
+
 
 			// column chart setup
 			yDisplayFields = yfields.slice(0);
@@ -771,6 +770,7 @@ module.exports = function (root, callback, sessionStorage) {
 				code = xCategories[i];
 				dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(cutOffset);
 				errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(getError);
+				nNumberSeriese = nNumberMatrix[i];
 
 				// highlight coloring
 				if ( highlightcode.length !== 0 ) {
@@ -785,10 +785,12 @@ module.exports = function (root, callback, sessionStorage) {
 					dataSeriese.reverse();
 					errorSeries.reverse();
 				}
+
 				highchartsHelper.addSeriesToColumn(
 					chart, code, dataSeriese, errorSeries, yIsCategorical,
 					yfields.length * xCategories.length < 30, showLegend,
-					customColors[code] ? customColors[code] : colors[code]);
+					customColors && customColors[code] ? customColors[code] : colors[code],
+					nNumberSeriese);
 			}
 			chart.redraw();
 		} else if (!xfield) { //summary view --- messsy code
@@ -797,6 +799,7 @@ module.exports = function (root, callback, sessionStorage) {
 
 			errorSeries = [];
 			dataSeriese = [];
+			nNumberSeriese = [];
 			ybinnedSample = {};
 			xIsCategorical = true;
 
@@ -841,13 +844,15 @@ module.exports = function (root, callback, sessionStorage) {
 			//add data to seriese
 			displayCategories.forEach(function (code) {
 				if (yIsCategorical) {
-					var value = ybinnedSample[code].length * 100 / total;
-					dataSeriese.push(parseFloat(value.toPrecision(3)));
+					var value = ybinnedSample[code].length;
+					dataSeriese.push(parseFloat((value * 100 / total).toPrecision(3)));
+					nNumberSeriese.push(value);
 				} else {
 					var average = highchartsHelper.average(ybinnedSample[code]);
 					var stdDev = numSD * highchartsHelper.standardDeviation(ybinnedSample[code], average);
 					if (!isNaN(average)) {
 						dataSeriese.push(parseFloat(((average - offsets[code]) / STDEV[code]).toPrecision(3)));
+						nNumberSeriese.push(ybinnedSample[code].length);
 					} else {
 						dataSeriese.push("");
 					}
@@ -869,7 +874,8 @@ module.exports = function (root, callback, sessionStorage) {
 				seriesLabel = "average";
 			}
 			highchartsHelper.addSeriesToColumn(chart, seriesLabel,
-				dataSeriese, errorSeries, yIsCategorical, categories.length < 30, showLegend);
+				dataSeriese, errorSeries, yIsCategorical, categories.length < 30, showLegend,
+				0, nNumberSeriese);
 			chart.redraw();
 		} else if (xIsCategorical && yIsCategorical) { // x y : categorical --- messsy code
 			//both x and Y is a single variable, i.e. yfields has array size of 1
@@ -931,6 +937,8 @@ module.exports = function (root, callback, sessionStorage) {
 			var ycategories = Object.keys(ybinnedSample);
 
 			//code
+			customColors = getCustomColor(columns[ycolumn].fieldSpecs, columns[ycolumn].fields, datasets);
+
 			ycodemap.map((code, i) =>
 				colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length]);
 
@@ -944,7 +952,7 @@ module.exports = function (root, callback, sessionStorage) {
 				highchartsHelper.addSeriesToColumn(
 					chart, code, ycodeSeries, errorSeries, yIsCategorical,
 					ycodemap.length * categories.length < 30, showLegend,
-					customColors[code] ? customColors[code] : colors[code]);
+					customColors && customColors[code] ? customColors[code] : colors[code]);
 			}
 			chart.redraw();
 		} else { // x y float scatter plot
@@ -1054,10 +1062,15 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 
 				//add multi-series data
+				if (colorColumn !== "none") {
+					customColors = getCustomColor(columns[colorColumn].fieldSpecs, columns[colorColumn].fields, datasets);
+				}
+
 				_.keys(multiSeries).map(colorCode=>{
 					if (scatterColorData) {
-						color = customColors[colorCode] ? customColors[colorCode] : getCodedColor(colorCode);
 						colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
+						color = customColors && customColors[colorLabel] ? customColors[colorLabel] : getCodedColor(colorCode);
+
 					} else {
 						color = null;
 						colorLabel = "sample";
@@ -1126,7 +1139,7 @@ module.exports = function (root, callback, sessionStorage) {
 		var xcolumn, ycolumn, colorColumn,
 			xfields,
 			xlabel, ylabel,
-			columns,
+			columns, datasets,
 			normUI = document.getElementById("ynormalization"),
 			expUI = document.getElementById("yExponentiation"),
 			XdropDownDiv = document.getElementById("Xaxis"),
@@ -1142,9 +1155,11 @@ module.exports = function (root, callback, sessionStorage) {
 				"cohort": cohort,
 				"xcolumn": xcolumn,
 				"ycolumn": ycolumn,
-				"colorColumn": colorColumn
+				"colorColumn": colorColumn,
+				"normalizationState": normalizationState
 			};
 			columns = xenaState.columns;
+			datasets = xenaState.datasets;
 			setStorage(xenaState);
 		}
 
@@ -1271,7 +1286,7 @@ module.exports = function (root, callback, sessionStorage) {
 				yfields, ycodemap, ydata, reverseStrand,
 				offsets, xlabel, ylabel, STDEV,
 				scatterLabel, scatterColorData, scatterColorDataCodemap,
-				samplesMatched);
+				samplesMatched, columns, datasets, xcolumn, ycolumn, colorColumn);
 
 			//offset
 			if (yNormalization === "subset" || yNormalization === "subset_stdev") {
