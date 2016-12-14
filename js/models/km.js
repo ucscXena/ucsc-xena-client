@@ -7,6 +7,7 @@ var _ = require('../underscore_ext');
 var multi = require('../multi');
 var {colorScale} = require('../colorScales');
 var km = require('../km'); // move km down?
+var {segmentAverage} = require('./segmented');
 
 var MAX = 10; // max number of groups to display.
 
@@ -102,10 +103,24 @@ function mutationVals(column, data, {bySample}, sortedSamples) {
 	};
 }
 
+var avgOrNull = (rows, xzoom) => _.isEmpty(rows) ? null : segmentAverage(rows, xzoom);
+
+function segmentedVals(column, data, index, samples, splits) {
+	var {xzoom = {start: -Infinity, end: Infinity}, color} = column,
+	{bySample} = index,
+		warning = 'gene-level average',
+		avg = samples.map(s => avgOrNull(bySample[s], xzoom)),
+		uniq = _.without(_.uniq(avg), null, undefined),
+		colorfn = colorScale(color),
+		partFn = splits === 3 ? partitionedVals3 : partitionedVals2;
+	return {warning, ...partFn(avg, uniq, colorfn)};
+}
+
 var toCoded = multi(fs => fs.valueType);
 toCoded.add('float', floatOrPartitionVals);
 toCoded.add('coded', codedVals);
 toCoded.add('mutation', mutationVals);
+toCoded.add('segmented', segmentedVals);
 
 var has = (obj, v) => obj[v] != null;
 

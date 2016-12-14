@@ -234,6 +234,7 @@ widgets.transform.add('segmented', dataToDisplay);
 widgets.download.add('segmented', download);
 
 module.exports = {
+	segmentAverage,
 	defaultXZoom,
 	fetch
 };
