@@ -11,6 +11,7 @@ var Highcharts = highcharts.Highcharts;
 var highchartsHelper =  require ('./highcharts_helper');
 var _ = require('./underscore_ext');
 var colorScales = require ('./colorScales');
+var {segmentAverage} = require ('./models/segmented');
 var customColors = {};
 
 var getCustomColor = (fieldSpecs, fields, datasets) =>
@@ -227,7 +228,7 @@ module.exports = function (root, callback, sessionStorage) {
 			if (column === "samples") {  //ignore samples column
 				return;
 			}
-			if (columns[column].valueType === "mutation" || columns[column].valueType === "segmented" ) {  // to be implemented
+			if (columns[column].valueType === "mutation") { // to be implemented
 				return;
 			}
 			if (data[column].status !== "loaded") { //bad column
@@ -243,7 +244,7 @@ module.exports = function (root, callback, sessionStorage) {
 				return;
 			}
 			if ((selectorID === "Xaxis" || selectorID === "Color") &&
-				data[column].req.values.length !== 1) {
+				data[column].req.values && data[column].req.values.length !== 1) {
 				return;
 			}
 
@@ -463,6 +464,17 @@ module.exports = function (root, callback, sessionStorage) {
 			}
 		}
 		return ybinnedSample;
+	}
+
+	// convert segment data to matrix data
+	function convertSegToGeneAverage(dataSegment, N, gene) {
+		var tmpdata = new Array(N).fill(null);
+
+		_.mapObject(_.groupBy(dataSegment, x => x.sample), (val, key) => {
+			tmpdata[key] = segmentAverage(val, {start: gene.txStart, end: gene.txEnd});
+		});
+
+		return [tmpdata];
 	}
 
 	function toggleButtons(chart, xIsCategorical, yIsCategorical) {
@@ -1178,10 +1190,14 @@ module.exports = function (root, callback, sessionStorage) {
 		ylabel = ydiv.options[ydiv.selectedIndex].text;
 
 		(function() {
-			var xcodemap = _.getIn(xenaState, ['data', xcolumn, 'codes']),
+			var N = _.getIn(xenaState, ['samples']).length,
+				gene,
+				xcodemap = _.getIn(xenaState, ['data', xcolumn, 'codes']),
 				xdata = _.getIn(xenaState, ['data', xcolumn, 'req', 'values']),
+				xdataSegment = _.getIn(xenaState, ['data', xcolumn, 'req', 'rows']),
 				ycodemap = _.getIn(xenaState, ['data', ycolumn, 'codes']),
 				ydata = _.getIn(xenaState, ['data', ycolumn, 'req', 'values']),
+				ydataSegment = _.getIn(xenaState, ['data', ycolumn, 'req', 'rows']),
 				yProbes = _.getIn(xenaState, ['data', ycolumn, 'req', 'probes']),
 				yfields = yProbes ? yProbes : columns[ycolumn].fields,
 				reverseStrand = false,
@@ -1189,10 +1205,22 @@ module.exports = function (root, callback, sessionStorage) {
 				yIsCategorical, xIsCategorical, xfield,
 				offsets = {},  // per y variable
 				STDEV = {},  // per y variable
-				doScatter, scatterColorData, scatterColorDataCodemap, scatterLabel,
+				doScatter, scatterLabel,
+				scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 				yNormalization,
 				yNormalizationMeta,
 				yExponentiation;
+
+			// convert segment data to matrix data
+			if (ydataSegment) {
+				gene = _.values(_.getIn(xenaState, ['data', ycolumn, 'refGene']))[0];
+				ydata = convertSegToGeneAverage(ydataSegment, N, gene);
+			}
+
+			if (xdataSegment) {
+				gene = _.values(_.getIn(xenaState, ['data', xcolumn, 'refGene']))[0];
+				xdata = convertSegToGeneAverage(xdataSegment, N, gene);
+			}
 
 			//reverse display if ycolumn is on - strand
 			if (columns[ycolumn].strand && (columns[ycolumn].strand === '-' )) {
@@ -1263,9 +1291,16 @@ module.exports = function (root, callback, sessionStorage) {
 			doScatter = !xIsCategorical && xfield && yfields.length === 1 ;
 			scatterColorUISetting(doScatter);
 			if (doScatter && colorColumn !== "none") {
-				scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values'])[0];
+				scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values']);
+				scatterColorDataSegment = _.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
 				scatterColorDataCodemap = _.getIn(xenaState, ['data', colorColumn, 'codes']);
 				scatterLabel = columns[colorColumn].user.fieldLabel;
+
+				if (scatterColorDataSegment) {
+					gene = _.values(_.getIn(xenaState, ['data', colorColumn, 'refGene']))[0];
+					scatterColorData = convertSegToGeneAverage(scatterColorDataSegment, N, gene);
+				}
+				scatterColorData = scatterColorData[0];
 			}
 
 			//per y variable stdev
