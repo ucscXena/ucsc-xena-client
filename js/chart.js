@@ -32,6 +32,7 @@ module.exports = function (root, callback, sessionStorage) {
 			samplesLength = xenaState.samples.length;
 			cohortSamples = xenaState.cohortSamples;
 			normalizationState = _.getIn(xenaState, ['chartState', 'normalizationState'], {});
+			expState = _.getIn(xenaState, ['chartState', 'expState'], {});
 		}
 		updateArgs = [cohort, samplesLength, cohortSamples];
 
@@ -1168,7 +1169,8 @@ module.exports = function (root, callback, sessionStorage) {
 				"xcolumn": xcolumn,
 				"ycolumn": ycolumn,
 				"colorColumn": colorColumn,
-				"normalizationState": normalizationState
+				"normalizationState": normalizationState,
+				"expState": expState
 			};
 			columns = xenaState.columns;
 			datasets = xenaState.datasets;
