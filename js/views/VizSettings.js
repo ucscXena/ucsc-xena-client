@@ -65,11 +65,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	function allFloat(div) {
 		var node;
 
-		// normalization
-		node = document.createElement("div");
-		ReactDOM.render(React.createElement(normalizationDropDown), node);
-		div.appendChild(node);
-		div.appendChild(document.createElement("br"));
+		if (valueType === "float") {
+			// normalization
+			node = document.createElement("div");
+			ReactDOM.render(React.createElement(normalizationDropDown), node);
+			div.appendChild(node);
+			div.appendChild(document.createElement("br"));
+		}
 
 		// color choice : green red or blue red
 		node = document.createElement("div");

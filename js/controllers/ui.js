@@ -8,7 +8,7 @@ var Rx = require('rx');
 var xenaQuery = require('../xenaQuery');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
-var {matchSamples, setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
+var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
 var {nullField, xenaFieldPaths, setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
@@ -248,9 +248,8 @@ var controls = {
 		let ns = _.updateIn(state,
 							["columns"], c => _.dissoc(c, id),
 							["columnOrder"], co => _.without(co, id),
-							["data"], d => _.dissoc(d, id)),
-			nsSearch = _.assoc(ns, 'sampleSearch', remapFields(state.columnOrder, ns.columnOrder, state.sampleSearch));
-		return matchSamples(nsSearch, nsSearch.sampleSearch);
+							["data"], d => _.dissoc(d, id));
+		return _.assoc(ns, 'sampleSearch', remapFields(state.columnOrder, ns.columnOrder, state.sampleSearch));
 	},
 	order: (state, order) => _.assoc(state, 'columnOrder', order,
 									 'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch)),
@@ -299,8 +298,8 @@ var controls = {
 		_.assocIn(state, ['columns', dsID, 'user', 'fieldLabel'], value),
 	'showIntrons': (state, dsID) =>
 		_.updateIn(state, ['columns', dsID, 'showIntrons'], v => !v),
-	'sortVisible': (state, dsID) =>
-		_.updateIn(state, ['columns', dsID, 'sortVisible'], v => !v),
+	'sortVisible': (state, dsID, value) =>
+		_.assocIn(state, ['columns', dsID, 'sortVisible'], value),
 	'km-open': (state, id) => _.assocInAll(state,
 			['km', 'id'], id,
 			['km', 'title'], _.getIn(state, ['columns', id, 'user', 'columnLabel']),
@@ -316,7 +315,7 @@ var controls = {
 		serverBus.onNext(['chart-average-data', getChartOffsets(newState.columns[id]), thunk]),
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
 		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets, Rx.Scheduler.timeout), thunk]),
-	'sample-search': matchSamples,
+	'sample-search': (state, text) => _.assoc(state, 'sampleSearch', text),
 	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id),
 	// Due to wonky react-bootstrap handlers, xzoom can occur after remove, so
 	// check that the column exists before updating.

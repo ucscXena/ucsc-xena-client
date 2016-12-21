@@ -10,7 +10,6 @@ var {reifyErrors, collectResults} = require('./errors');
 var fetch = require('../fieldFetch');
 var {allNullFields, nullField} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
-var {searchSamples} = require('../models/searchSamples');
 var {signatureField} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 // pick up signature fetch
@@ -175,10 +174,6 @@ var setCohort = (state, cohorts) =>
 							remapFieldsForCohorts(state, cohorts),
 							cohorts)))));
 
-var matchSamples = (state, text) => _.assoc(state,
-		'sampleSearch',  text,
-		'samplesMatched', searchSamples(text, state.columns, state.columnOrder, state.data, state.cohortSamples));
-
 module.exports = {
 	fetchDatasets,
 	fetchSamples,
@@ -186,6 +181,5 @@ module.exports = {
 	setCohort,
 	resetZoom,
 	reJoinFields,
-	closeEmptyColumns,
-	matchSamples
+	closeEmptyColumns
 };
