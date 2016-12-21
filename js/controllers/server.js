@@ -5,7 +5,7 @@ var _ = require('../underscore_ext');
 var Rx = require('rx');
 var {reifyErrors, collectResults} = require('./errors');
 var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
-	fetchSamples, fetchColumnData, matchSamples} = require('./common');
+	fetchSamples, fetchColumnData} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
@@ -95,10 +95,9 @@ var controls = {
 	},
 	features: (state, features) => _.assoc(state, "features", features),
 	samples: (state, samples) => {
-		var newState = matchSamples(resetZoom(_.assoc(state,
-						  'cohortSamples', samples,
-						  'samples', _.range(_.sum(_.map(samples, c => c.length))))),
-					state.sampleSearch),
+		var newState = resetZoom(_.assoc(state,
+					'cohortSamples', samples,
+					'samples', _.range(_.sum(_.map(samples, c => c.length))))),
 			{columnOrder} = newState;
 		return _.reduce(
 				columnOrder,
@@ -139,10 +138,8 @@ var controls = {
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
 		columnOpen(state, id) ?
-			matchSamples(
-					_.assocIn(state, ["data", id], _.assoc(data, 'status', 'loaded')),
-					state.sampleSearch) :
-			state,
+			_.assocIn(state, ["data", id], _.assoc(data, 'status', 'loaded'))
+			: state,
 	'widget-data-error': (state, id) =>
 		columnOpen(state, id) ?
 			_.assocIn(state, ["data", id, 'status'], 'error') : state,

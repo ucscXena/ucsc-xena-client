@@ -47,8 +47,8 @@ var searchCoded = _.curry((cmp, ctx, search, data) => {
 var tol = 0.01;
 var near = _.curry((x, y) => (x === null || y === null) ? y === x : Math.abs(x - y) < tol);
 
-var searchFloat = _.curry((cmp, ctx, search, data) => {
-	var {req: {values}} = data,
+var searchFloat = _.curry((dataField, cmp, ctx, search, data) => {
+	var values = _.getIn(data, [dataField, 'values']),
 		searchVal = search === 'null' ? null : parseFloat(search);
 
 	if (searchVal === null) { // special case for null: handle sub-columns.
@@ -77,48 +77,54 @@ var searchMutation = _.curry((cmp, {allSamples}, search, data) => {
 
 var searchMethod = {
 	coded: searchCoded(includes),
-	float: searchFloat(near),
+	float: searchFloat('req', near),
 	mutation: searchMutation(includes),
-	segmented: searchMutation(includes),
+	segmented: searchFloat('avg', near),
 	samples: searchSampleIds
 };
 
+var eq = _.curry((x, y) => x === y);
+
 var searchExactMethod = {
-	coded: searchCoded((target, value) => value === target),
-	float: searchFloat(_.curry((x, y) => x === y)),
-	mutation: searchMutation((target, value) => value === target),
-	segmented: searchMutation((target, value) => value === target),
+	coded: searchCoded(eq),
+	float: searchFloat('req', eq),
+	mutation: searchMutation(eq),
+	segmented: searchFloat('avg', eq),
 	samples: searchSampleIdsExact
 };
 
 var empty = () => [];
+var lt = _.curry((x, y) => x !== null && y !== null && y < x);
+var le = _.curry((x, y) => x !== null && y !== null && y <= x);
+var gt = _.curry((x, y) => x !== null && y !== null && y > x);
+var ge = _.curry((x, y) => x !== null && y !== null && y >= x);
 
 var searchLt = {
 	coded: empty,
 	mutation: empty,
-	segmented: empty,
-	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y < x))
+	segmented: searchFloat('avg', lt),
+	float: searchFloat('req', lt)
 };
 
 var searchLe = {
 	coded: empty,
 	mutation: empty,
-	segmented: empty,
-	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y <= x))
+	segmented: searchFloat('avg', le),
+	float: searchFloat('req', le)
 };
 
 var searchGt = {
 	coded: empty,
 	mutation: empty,
-	segmented: empty,
-	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y > x))
+	segmented: searchFloat('avg', gt),
+	float: searchFloat('req', gt)
 };
 
 var searchGe = {
 	coded: empty,
 	mutation: empty,
-	segmented: empty,
-	float: searchFloat(_.curry((x, y) => x !== null && y !== null && y >= x))
+	segmented: searchFloat('avg', ge),
+	float: searchFloat('req', ge)
 };
 
 var m = (methods, exp, defaultMethod) => {

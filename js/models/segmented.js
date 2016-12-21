@@ -35,49 +35,18 @@ var max = (x, y) => x > y ? x : y;
 // sum(len * value)/sum(len)
 //
 function segmentAverage(row, {start, end}) {
-	var lengths = row.map(seg => min(seg.end, end) - max(seg.start, start)),
+	var lengths = row.map(seg => min(seg.end, end) - max(seg.start, start) + 1),
 		totalLen = _.sum(lengths),
 		weightedSum = _.sum(row.map((seg, i) => seg.value * lengths[i]));
 	return weightedSum / totalLen;
 }
 
-function rowOrder(row1, row2, xzoom) {
-	var avg1 = segmentAverage(row1, xzoom),
-		avg2 = segmentAverage(row2, xzoom);
+function cmp(column, data) {
+	var sortVisible = _.get(column, 'sortVisible', true),
+		values = _.getIn(data, ['avg', sortVisible ? 'values' : 'geneValues', 0]);
 
-	return avg1 === avg2 ? 0 : (avg1 > avg2 ? -1 : 1);
-}
-
-function cmpRowOrNoSegments(r1, r2, xzoom) {
-	var rf1 = r1.filter(v => v.start <= xzoom.end && v.end >= xzoom.start),
-		rf2 = r2.filter(v => v.start <= xzoom.end && v.end >= xzoom.start);
-	if (rf1.length === 0) {
-		return (rf2.length === 0) ? 0 : 1;
-	}
-	return (rf2.length === 0) ? -1 : rowOrder(rf1, rf2, xzoom);
-}
-
-function cmpRowOrNull(r1, r2, xzoom) {
-	if (r1 == null) {
-		return (r2 == null) ? 0 : 1;
-	}
-	return (r2 == null) ? -1 : cmpRowOrNoSegments(r1, r2, xzoom);
-}
-
-function cmpSamples(probes, xzoom, sample, s1, s2) {
-	return cmpRowOrNull(sample[s1], sample[s2], xzoom);
-}
-
-// XXX Instead of checking strand here, it should be set as a column
-// property as part of the user input: flip if user enters a gene on
-// negative strand. Don't flip for genomic range view, or positive strand.
-function cmp(column, data, index) {
-	var {fields, xzoom, sortVisible} = column,
-		appliedZoom = sortVisible && xzoom ? xzoom : {start: -Infinity, end: Infinity},
-		samples = _.getIn(index, ['bySample']);
-
-	return samples ?
-		(s1, s2) => cmpSamples(fields, appliedZoom, samples, s1, s2) :
+	return values ?
+		(s1, s2) => _.cmpNumberOrNull(values[s1], values[s2]) :
 		() => 0;
 }
 
@@ -230,12 +199,47 @@ function download({data: {req: {rows}}, samples, index, sampleFormat}) {
 	return [rowFields, allRows];
 }
 
+var avgOrNull = (rows, xzoom) => _.isEmpty(rows) ? null : segmentAverage(rows, xzoom);
+
+function avgSegWithZoom(samples, byPosition, zoom) {
+	var matches = _.pluck(intervalTree.matches(byPosition, zoom), 'segment'),
+		perSamp = _.groupBy(matches, 'sample');
+	return _.map(samples, s => avgOrNull(perSamp[s], zoom));
+}
+
+// Average segments, clipping to zoom or the gene boundaries, whichever is smaller.
+function averageSegments(column, data, samples, index) {
+	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
+		return null;
+	}
+	var gene = _.values(data.refGene)[0],
+		xzoom = {
+			start: max(gene.txStart, _.getIn(column, ['xzoom', 'start'], -Infinity)),
+			end: min(gene.txEnd, _.getIn(column, ['xzoom', 'end'], Infinity))
+		},
+		values = [avgSegWithZoom(samples, index.byPosition, xzoom)],
+		geneValues = [avgSegWithZoom(samples, index.byPosition, {start: gene.txStart, end: gene.txEnd})];
+
+	return {
+		avg: {
+			values,
+			// re-calculating this isn't really necessary. We could move it earlier, like in the 'index'
+			// selector, since it doesn't depend on zoom.
+			geneValues
+			// XXX do we need the mean? Only for a normalized view. Are we doing that?
+//			mean: values.map(_.meannull)
+		}
+	};
+}
+
 widgets.cmp.add('segmented', cmp);
 widgets.index.add('segmented', index);
 widgets.transform.add('segmented', dataToDisplay);
+widgets.avg.add('segmented', averageSegments);
 widgets.download.add('segmented', download);
 
 module.exports = {
+	averageSegments,
 	segmentAverage,
 	defaultXZoom,
 	fetch

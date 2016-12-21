@@ -134,7 +134,8 @@ function zoomMenu(props) {
 
 function segmentedMenu(props, {onShowIntrons, onSortVisible, xzoomable}) {
 	var {column, data} = props,
-		{sortVisible, showIntrons = false} = column,
+		{showIntrons = false} = column,
+		sortVisible = _.get(column, 'sortVisible', true),
 		noData = !_.get(data, 'req'),
 		sortVisibleItemName = sortVisible ? 'Sort gene' : 'Sort region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
@@ -270,7 +271,10 @@ var Column = React.createClass({
 		this.props.onShowIntrons(this.props.id);
 	},
 	onSortVisible: function () {
-		this.props.onSortVisible(this.props.id);
+		var {id, column} = this.props;
+		var value = _.get(column, 'sortVisible',
+				column.valueType === 'segmented' ? true : false);
+		this.props.onSortVisible(id, !value);
 	},
 	onXZoomOut: function (ev) {
 		if (ev.shiftKey) {

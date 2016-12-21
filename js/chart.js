@@ -11,7 +11,6 @@ var Highcharts = highcharts.Highcharts;
 var highchartsHelper =  require ('./highcharts_helper');
 var _ = require('./underscore_ext');
 var colorScales = require ('./colorScales');
-var {segmentAverage} = require ('./models/segmented');
 var customColors = {};
 
 var getCustomColor = (fieldSpecs, fields, datasets) =>
@@ -465,17 +464,6 @@ module.exports = function (root, callback, sessionStorage) {
 			}
 		}
 		return ybinnedSample;
-	}
-
-	// convert segment data to matrix data
-	function convertSegToGeneAverage(dataSegment, N, gene) {
-		var tmpdata = new Array(N).fill(null);
-
-		_.mapObject(_.groupBy(dataSegment, x => x.sample), (val, key) => {
-			tmpdata[key] = segmentAverage(val, {start: gene.txStart, end: gene.txEnd});
-		});
-
-		return [tmpdata];
 	}
 
 	function toggleButtons(chart, xIsCategorical, yIsCategorical) {
@@ -1192,9 +1180,7 @@ module.exports = function (root, callback, sessionStorage) {
 		ylabel = ydiv.options[ydiv.selectedIndex].text;
 
 		(function() {
-			var N = _.getIn(xenaState, ['samples']).length,
-				gene,
-				xcodemap = _.getIn(xenaState, ['data', xcolumn, 'codes']),
+			var xcodemap = _.getIn(xenaState, ['data', xcolumn, 'codes']),
 				xdata = _.getIn(xenaState, ['data', xcolumn, 'req', 'values']),
 				xdataSegment = _.getIn(xenaState, ['data', xcolumn, 'req', 'rows']),
 				ycodemap = _.getIn(xenaState, ['data', ycolumn, 'codes']),
@@ -1215,13 +1201,11 @@ module.exports = function (root, callback, sessionStorage) {
 
 			// convert segment data to matrix data
 			if (ydataSegment) {
-				gene = _.values(_.getIn(xenaState, ['data', ycolumn, 'refGene']))[0];
-				ydata = convertSegToGeneAverage(ydataSegment, N, gene);
+				ydata = _.getIn(xenaState, ['data', ycolumn, 'avg', 'geneValues']);
 			}
 
 			if (xdataSegment) {
-				gene = _.values(_.getIn(xenaState, ['data', xcolumn, 'refGene']))[0];
-				xdata = convertSegToGeneAverage(xdataSegment, N, gene);
+				xdata = _.getIn(xenaState, ['data', xcolumn, 'avg', 'geneValues']);
 			}
 
 			//reverse display if ycolumn is on - strand
@@ -1299,8 +1283,7 @@ module.exports = function (root, callback, sessionStorage) {
 				scatterLabel = columns[colorColumn].user.fieldLabel;
 
 				if (scatterColorDataSegment) {
-					gene = _.values(_.getIn(xenaState, ['data', colorColumn, 'refGene']))[0];
-					scatterColorData = convertSegToGeneAverage(scatterColorDataSegment, N, gene);
+					scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'avg', 'geneValues']);
 				}
 				scatterColorData = scatterColorData[0];
 			}

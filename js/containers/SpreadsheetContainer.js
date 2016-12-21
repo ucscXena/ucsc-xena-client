@@ -93,8 +93,8 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	onShowIntrons: function (id) {
 		this.props.callback(['showIntrons', id]);
 	},
-	onSortVisible: function (id) {
-		this.props.callback(['sortVisible', id]);
+	onSortVisible: function (id, value) {
+		this.props.callback(['sortVisible', id, value]);
 	},
 	onOpenVizSettings: function (id) {
 		this.props.callback(['vizSettings-open', id]);

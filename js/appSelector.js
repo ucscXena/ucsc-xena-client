@@ -7,6 +7,7 @@ var {createFmapSelector} = require('./selectors');
 var widgets = require('./columnWidgets');
 var km = require('./models/km');
 var {lookupSample} = require('./models/sample');
+var {searchSamples} = require('./models/searchSamples');
 
 var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
@@ -62,6 +63,23 @@ var transformSelector = createFmapSelector(
 				state.index[key]]),
 		_.apply(widgets.transform));
 
+var avgSelector = createFmapSelector(
+		state => _.fmap(state.columns,
+			(column, key) => [
+				_.omit(column, 'user'), // Review column schema + widget.avg.
+				state.data[key],
+				state.samples,
+				state.index[key]]),
+		_.apply(widgets.avg));
+
+var matchSelector = createSelector(
+	state => state.sampleSearch,
+	state => state.columns,
+	state => state.columnOrder,
+	state => state.data,
+	state => state.cohortSamples,
+	searchSamples);
+
 var mergeKeys = (a, b) => _.mapObject(a, (v, k) => _.merge(v, b[k]));
 
 var kmSelector = createSelector(
@@ -76,6 +94,8 @@ var kmSelector = createSelector(
 			column && survival && km.makeGroups(column, data, index, cutoff, splits, survival, samples));
 
 var index = state => ({...state, index: indexSelector(state)});
+var avg = state => ({...state, data: mergeKeys(state.data, avgSelector(state))});
+var match = state => ({...state, samplesMatched: matchSelector(state)});
 var sort = state => ({...state, samples: sortSelector(state)});
 var transform = state => ({...state, columns: mergeKeys(state.columns, transformSelector(state))});
 
@@ -93,6 +113,6 @@ var kmGroups = state => ({...state, km: {
 // The result of the transforms is a state object with the calculated values merged.
 // The transforms are memoized for performance.
 
-var selector = state => kmGroups(transform(sort(index(state))));
+var selector = state => kmGroups(transform(sort(match(avg(index(state))))));
 
 module.exports = selector;
