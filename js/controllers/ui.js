@@ -8,7 +8,8 @@ var Rx = require('rx');
 var xenaQuery = require('../xenaQuery');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
-var {setCohort, fetchDatasets, fetchSamples, fetchColumnData} = require('./common');
+var {userServers, setCohort, fetchDatasets,
+	fetchSamples, fetchColumnData} = require('./common');
 var {nullField, xenaFieldPaths, setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
@@ -160,15 +161,12 @@ var setCohortPending = state =>
 	shouldSetCohort(state) ?
 		_.dissoc(setCohort(state, state.cohortPending), 'cohortPending') : state;
 
-var setServerPending = state =>
-	state.servers.pending ?
-	_.updateIn(state, ['servers'], s => _.dissoc(_.assoc(s, 'user', s.pending), 'pending')) :
-	state;
+var resetServersChanged = state => _.dissoc(state, 'serversChanged');
 
 var fetchCohortData = (serverBus, state) => {
-	let {servers: {user}, cohort} = state;
-	fetchDatasets(serverBus, user, cohort);
-	fetchSamples(serverBus, user, cohort);
+	let user = userServers(state);
+	fetchDatasets(serverBus, user, state.cohort);
+	fetchSamples(serverBus, user, state.cohort);
 };
 
 var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
@@ -197,21 +195,21 @@ function fetchState(serverBus) {
 }
 
 var controls = {
-	init: state => setCohortPending(setServerPending(setLoadingState(state))),
+	init: state => setCohortPending(resetServersChanged(setLoadingState(state))),
 	'init-post!': (serverBus, state, newState) => {
 		if (state.inlineState) {
 			fetchState(serverBus);
 		} else if (state.bookmark) {
 			fetchBookmark(serverBus, state.bookmark);
 		} else {
-			// XXX If we have servers.pending *and* cohortPending, there may be a race here.
+			// XXX If we have serversChanged *and* cohortPending, there may be a race here.
 			// We fetch the cohorts list, and the cohort data. If cohorts completes & the
 			// cohort is not in new list, we reset cohort. Then the cohort data arrives (and
 			// note there are several cascading queries).
 			// Currently datapages + hub won't set cohortPending to a cohort not in the active hubs, so
 			// we shouldn't hit this case.
-			if (!state.cohorts || state.servers.pending && !_.isEqual(state.servers, state.servers.pending)) {
-				fetchCohorts(serverBus, newState.servers.user);
+			if (!state.cohorts || state.serversChanged) {
+				fetchCohorts(serverBus, userServers(state));
 			}
 			if (shouldSetCohort(state)) {
 				fetchCohortData(serverBus, newState);
@@ -223,21 +221,19 @@ var controls = {
 	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
 	'cohort-remove': (state, i) => setCohort(state, _.withoutIndex(state.cohort, i)),
 	'cohort-remove-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
-	'refresh-cohorts-post!': (serverBus, state) => fetchCohorts(serverBus, state.servers.user),
+	'refresh-cohorts-post!': (serverBus, state) =>
+		fetchCohorts(serverBus, userServers(state)),
 	samplesFrom: (state, i, samplesFrom) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, [i, 'samplesFrom'], samplesFrom),
 			'survival', null),
 	'samplesFrom-post!': (serverBus, state, newState) => {
-		let {servers: {user}, cohort} = newState;
-		fetchSamples(serverBus, user, cohort);
+		fetchSamples(serverBus, userServers(state), newState.cohort);
 	},
 	sampleFilter: (state, i, sampleFilter) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, [i, 'sampleFilter'], sampleFilter),
 			'survival', null),
-	'sampleFilter-post!': (serverBus, state, newState) => {
-		let {servers: {user}, cohort} = newState;
-		fetchSamples(serverBus, user, cohort);
-	},
+	'sampleFilter-post!': (serverBus, state, newState) =>
+		fetchSamples(serverBus, userServers(newState), newState.cohort),
 	'add-column-post!': (serverBus, state, newState, id, settings, isFirst) =>
 		normalizeFields(serverBus, newState, id, settings, isFirst),
 	resize: (state, id, {width, height}) =>

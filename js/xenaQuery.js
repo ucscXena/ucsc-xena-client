@@ -338,6 +338,13 @@ var refGeneExonCase = dsIDFn((host, dataset, genes) =>
 		.flatMap(caseGenes => refGeneExons(host, dataset, caseGenes)));
 
 
+// test if host is up
+function testHost (host) {
+	return Rx.DOM.ajax(xenaPost(host, '(+ 1 2)'))
+		.timeout(5000, Rx.Observable.return({}))
+		.map(s => !!(s.responseText && 3 === JSON.parse(s.responseText)));
+}
+
 module.exports = {
 	...queryPosts,
 
@@ -350,6 +357,7 @@ module.exports = {
 	parseDsID,
 	nanstr,
 	xenaPost,
+	testHost,
 
 	// reference
 	refGene,

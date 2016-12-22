@@ -13,17 +13,13 @@ var {hasBookmark, getBookmark, resetBookmarkLocation} = require('./bookmark');
 var {hasInlineState, resetInlineStateLocation} = require('./inlineState');
 var LZ = require('lz-string');
 var migrateState = require('./migrateState');
+var {defaultServers} = require('./defaultServers');
 
-var defaultServers = [
-	'https://local.xena.ucsc.edu:7223',
-	//'https://genome-cancer.ucsc.edu:443/proj/public/xena',
-	"https://ucscpublic.xenahubs.net",
-	"https://tcga.xenahubs.net",
-	"https://icgc.xenahubs.net",
-	"https://toil.xenahubs.net"
-];
+var enabledServer = {user: true, meta: true};
+var defaultServerState = _.object(defaultServers,
+		defaultServers.map(() => enabledServer));
 
-var version = 's1.0';
+var version = 's2.0';
 
 module.exports = function (persist) {
 	// Create a channel for messages from the server. We want to avoid out-of-order
@@ -65,7 +61,7 @@ module.exports = function (persist) {
 
 	var initialState = {
 		version,
-		servers: {'default': defaultServers, user: defaultServers},
+		servers: defaultServerState,
 		mode: 'heatmap',
 		zoom: {height: 300},
 		cohort: [],

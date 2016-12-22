@@ -174,6 +174,8 @@ var setCohort = (state, cohorts) =>
 							remapFieldsForCohorts(state, cohorts),
 							cohorts)))));
 
+var userServers = state => _.keys(state.servers).filter(h => state.servers[h].user);
+
 module.exports = {
 	fetchDatasets,
 	fetchSamples,
@@ -181,5 +183,6 @@ module.exports = {
 	setCohort,
 	resetZoom,
 	reJoinFields,
+	userServers,
 	closeEmptyColumns
 };

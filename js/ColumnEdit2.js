@@ -316,7 +316,7 @@ var ColumnEdit = React.createClass({
 					{positions.dataset ?
 					<DatasetSelect datasets={datasets} makeLabel={makeLabel}
 						event='dataset' value={chosenDs || null} onSelect={this.onDatasetSelect}
-						servers={_.uniq(_.reduce(servers, (all, list) => all.concat(list), []))}/> : null}
+						servers={_.keys(servers).filter(s => servers[s].user)}/> : null}
 
 					{positions.editor ?
 						<div>{makeLabel( chosenDs.length === 1 ?

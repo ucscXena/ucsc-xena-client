@@ -5,7 +5,7 @@ var _ = require('../underscore_ext');
 var Rx = require('rx');
 var {reifyErrors, collectResults} = require('./errors');
 var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
-	fetchSamples, fetchColumnData} = require('./common');
+	userServers, fetchSamples, fetchColumnData} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
@@ -70,7 +70,8 @@ var controls = {
 	inlineState: (state, newState) => resetLoadPending(newState),
 	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),
 	'cohorts-post!': (serverBus, state, newState) => {
-		let {servers: {user}, cohort} = newState;
+		let {cohort} = newState,
+			user = userServers(newState);
 		fetchSamples(serverBus, user, cohort);
 		fetchDatasets(serverBus, user, cohort);
 	},

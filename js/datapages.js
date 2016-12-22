@@ -1,7 +1,7 @@
 'use strict';
 
 require('./base');
-var controller = require('ucsc-xena-datapages/controller');
+var controller = require('./controllers/hub');
 const React = require('react');
 const datapages = require('ucsc-xena-datapages/datapages');
 const connector = require('./connector');
