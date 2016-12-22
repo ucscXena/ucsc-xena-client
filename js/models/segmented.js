@@ -120,7 +120,8 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
 		layout = createLayout(refGeneObj, width, xzoom),
 		nodes = findNodes(index.byPosition, layout, sortedSamples),
-		color = heatmapColors.colorSpec(column, vizSettings, null, _.pluck(data.req.rows, 'value')),
+		//color = heatmapColors.colorSpec(column, vizSettings, null, _.pluck(data.req.rows, 'value')),
+		color = heatmapColors.colorSpec(column, vizSettings, null, _.getIn(data, ['avg', 'geneValues', 0])),
 		units = _.map(column.fieldSpecs, ({dsID}) => _.getIn(datasets, [dsID, 'unit']));
 
 	return {
