@@ -151,7 +151,7 @@ function warnDupPatients(usableSamples, samples, patient) {
 }
 
 function filterByGroups(feature, groupedIndices) {
-	var {labels, colors, groups} = feature,
+	var {labels, colors, groups, warning} = feature,
 		notEmpty = _.range(groups.length).filter(i => _.has(groupedIndices, groups[i])),
 		useIndices = notEmpty.slice(0, MAX),
 		nlabels = useIndices.map(i => labels[i]),
@@ -162,7 +162,8 @@ function filterByGroups(feature, groupedIndices) {
 		labels: nlabels,
 		colors: ncolors,
 		groups: ngroups,
-		warning: notEmpty.length > MAX ? `Limited drawing to ${MAX} categories` : undefined,
+		warning: notEmpty.length > MAX ? `Limited drawing to ${MAX} categories` :
+			(warning ? warning : undefined),
 	};
 }
 

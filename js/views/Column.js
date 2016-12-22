@@ -137,7 +137,7 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, xzoomable}) {
 		{showIntrons = false} = column,
 		sortVisible = _.get(column, 'sortVisible', true),
 		noData = !_.get(data, 'req'),
-		sortVisibleItemName = sortVisible ? 'Sort gene' : 'Sort region',
+		sortVisibleItemName = sortVisible ? 'Sort by gene average' : 'Sort by region average',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
 	return addIdsToArr([
 		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
