@@ -45,11 +45,16 @@ function bounded(min, max, x) {
 }
 
 var posString = p => `${p.chrom}:${util.addCommas(p.chromstart)}-${util.addCommas(p.chromend)}`;
-
+//gb position string of the segment with 15bp extra on each side, centered at segment
+var posRegionString = p => {
+	var pad = (p.chromend - p.chromstart) / 2;
+	return `${p.chrom}:${util.addCommas(p.chromstart - pad)}-${util.addCommas(p.chromend + pad)}`;
+};
 var gbURL = (assembly, pos) => {
 	var assemblyString = encodeURIComponent(assembly),
-		positionString = encodeURIComponent(posString(pos));
-	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${positionString}&position=${positionString}`;
+		positionString = encodeURIComponent(posString(pos)),
+		regionString = encodeURIComponent(posRegionString(pos));
+	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${positionString}&position=${regionString}`;
 };
 
 function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {

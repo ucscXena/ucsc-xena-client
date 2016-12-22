@@ -92,23 +92,59 @@ var posRegionString = p => `${p.chr}:${util.addCommas(p.start - 15)}-${util.addC
 var posDoubleString = p => `${p.chr}:${util.addCommas(p.start)}-${util.addCommas(p.end)}`;
 //gb position string like chr3:178,936,070
 var posStartString = p => `${p.chr}:${util.addCommas(p.start)}`;
-var gbURL = (assembly, pos, highlightPos) => {
+var gbURL = (assembly, pos, highlightPos, GBoptions) => {
 	// assembly : e.g. hg18
 	// pos: e.g. chr3:178,936,070-178,936,070
 	// highlight: e.g. chr3:178,936,070-178,936,070
+	// GBoptions.hubUrl: To build a URL that will load the hub directly
+	// GBoptions.fullTracks: full display mode track list
 	var assemblyString = encodeURIComponent(assembly),
 		positionString = encodeURIComponent(pos),
-		highlightString = encodeURIComponent(highlightPos);
-	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${highlightString}&position=${positionString}`;
+		highlightString = encodeURIComponent(highlightPos),
+		hubString = GBoptions && GBoptions.assembly === assembly && GBoptions.hubUrl ? "&hubUrl=" + encodeURIComponent(GBoptions.hubUrl) : '',
+		trackString = GBoptions && GBoptions.fullTracks ? '&hideTracks=1' + GBoptions.fullTracks.map(track => `&${track}=full`).join('') : '',
+		GBurl = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}${hubString}${trackString}&highlight=${assemblyString}.${highlightString}&position=${positionString}`;
+		return GBurl;
 };
-var gbMultiColorURL = (assembly, pos, posColorList) => {
+var gbMultiColorURL = (assembly, pos, posColorList, GBoptions) => {
 	// assembly : e.g. hg18
 	// pos: e.g. chr3:178,936,070-178,936,070
 	// posColorList: [[chr3:178,936,070-178,936,070, AA0000], ...]
+	// GBoptions.hubUrl: To build a URL that will load the hub directly
+	// GBoptions.fullTracks: full display mode track list
 	var assemblyString = encodeURIComponent(assembly),
 		positionString = encodeURIComponent(pos),
-		highlightString = posColorList.map(p => `${assemblyString}.${p[0]}${p[1]}`).join('|');
-	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${encodeURIComponent(highlightString)}&position=${positionString}`;
+		highlightString = posColorList.map(p => `${assemblyString}.${p[0]}${p[1]}`).join('|'),
+		hubString = GBoptions && GBoptions.hubUrl ? "&hubUrl=" + encodeURIComponent(GBoptions.hubUrl) : '',
+		trackString = GBoptions && GBoptions.assembly === assembly && GBoptions.fullTracks ? '&hideTracks=1' + GBoptions.fullTracks.map(track => `&${track}=full`).join('') : '',
+		GBurl = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}${hubString}${trackString}&highlight=${encodeURIComponent(highlightString)}&position=${positionString}`;
+		return GBurl;
+};
+var defaultSNVSVGBsetting = (assembly) => {
+	if (assembly === 'hg19' || assembly === 'GRCh37') {
+		return {
+			assembly: assembly,
+			hubUrl: 'http://hgwdev.soe.ucsc.edu/~max/immuno/track/hub/hub.txt', // Max Haussler's cancer genomics hub
+			fullTracks: ['knownGene', 'refGene', 'wgEncodeGencodeV24lift37', // gene annotation
+					'ucscGenePfam', 'spUniprot', // protein annotation
+					//'pubs', // publication
+					'wgEncodeRegDnaseClustered', 'wgEncodeAwgSegmentation', // encode regulation
+					'hub_29889_dienstmann', 'hub_29889_civic', 'hub_29889_oncokb' // cancer genomics knowledgebase
+				]
+		};
+	} else if (assembly === 'hg38' || assembly === 'GRCh38') {
+		return {
+			assembly: assembly,
+			fullTracks: ['knownGene', 'refGene', // gene annotation
+					'ucscGenePfam', 'spUniprot', // protein annotation
+					//'pubs', // publication
+					'wgEncodeRegDnaseClustered', // encode regulation
+				]
+		};
+	}
+	else {
+		return {};
+	}
 };
 
 function sampleTooltip(sampleFormat, data, gene, assembly) {
@@ -135,14 +171,14 @@ function sampleTooltip(sampleFormat, data, gene, assembly) {
 
 		//alt link
 		alt = data.alt && (mv.structuralVariantClass(data.alt) ?
-							['url', `${data.alt}`, gbMultiColorURL(assembly, altDisplayRegion, [[altPos, '#AA0000' ], [altRegion, '#aec7e8']])] :
+							['url', `${data.alt}`, gbMultiColorURL(assembly, altDisplayRegion, [[altPos, '#AA0000' ], [altRegion, '#aec7e8']], defaultSNVSVGBsetting(assembly))] :
 							['value', `${data.alt}`]),
 
 		//variant link
 		posDisplay = data && (data.start === data.end) ? posStartString(data) : posDoubleString (data),
 		posURL = ['url',  `${assembly} ${posDisplay}`, altDirection ?
-					gbMultiColorURL(assembly, dataDisplayRegion, [[posDoubleString(data), '#AA0000' ], [dataRegion, '#aec7e8']]) :
-					gbURL(assembly, posRegionString(data), posDoubleString (data))],
+					gbMultiColorURL(assembly, dataDisplayRegion, [[posDoubleString(data), '#AA0000' ], [dataRegion, '#aec7e8']], defaultSNVSVGBsetting(assembly)) :
+					gbURL(assembly, posRegionString(data), posDoubleString (data), defaultSNVSVGBsetting(assembly))],
 
 		effect = ['value', fmtIf(data.effect, x => `${x}, `) + //eslint-disable-line comma-spacing
 					gene +
