@@ -109,10 +109,11 @@ function segmentedVals(column, data, index, samples, splits) {
 	var {color} = column,
 		warning = 'gene-level average',
 		avg = _.getIn(data, ['avg', 'geneValues', 0]),
+		bySampleSortAvg = samples.map( sample => avg[sample]),  // ordered by current sample sort
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = colorScale(color),
 		partFn = splits === 3 ? partitionedVals3 : partitionedVals2;
-	return {warning, ...partFn(avg, uniq, colorfn)};
+	return {warning, ...partFn(bySampleSortAvg, uniq, colorfn)};
 }
 
 var toCoded = multi(fs => fs.valueType);

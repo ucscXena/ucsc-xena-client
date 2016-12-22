@@ -41,8 +41,8 @@ module.exports = function (root, callback, sessionStorage) {
 	}
 
 	function columnLabel (i, colSetting) {
-		var label = colSetting.user.fieldLabel ;
-		if (colSetting.fieldType === "genes") {
+		var label = colSetting.user.fieldLabel;
+		if (colSetting.fieldType === "genes" || colSetting.fieldType === "segmented") {
 			label += " (gene average)";
 		}
 		return "column " + getLabel(i) + ": " + label;
@@ -1203,7 +1203,6 @@ module.exports = function (root, callback, sessionStorage) {
 			if (ydataSegment) {
 				ydata = _.getIn(xenaState, ['data', ycolumn, 'avg', 'geneValues']);
 			}
-
 			if (xdataSegment) {
 				xdata = _.getIn(xenaState, ['data', xcolumn, 'avg', 'geneValues']);
 			}
