@@ -139,7 +139,7 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 		noData = !_.get(data, 'req'),
 		sortVisibleItemName = sortVisible ? 'Sort by gene average' : 'Sort by region average',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
-		specialDownloadItemName = 'Special download';
+		specialDownloadItemName = 'Download segments';
 	return addIdsToArr([
 		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
 		...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),

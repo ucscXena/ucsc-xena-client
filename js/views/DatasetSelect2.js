@@ -4,22 +4,13 @@ var React = require('react');
 var {Accordion, Glyphicon, ListGroup, ListGroupItem, Panel} = require('react-bootstrap/lib');
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
-var konami = require('../konami');
 
 // group header for a server
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL  = 'My Computer Hub' ;
 const phenotypeDataSubTypeList = ["phenotype", "phenotypes", "Phenotype", "Phenotypes"];
 const phenotypeGroupLabel = "phenotype";
-var ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap', 'genomicSegment'];
-
-function enableSegmented() {
-	ignored = _.without(ignored, 'genomicSegment');
-}
-
-if (process.env.NODE_ENV !== 'production') {
-	enableSegmented();
-}
+var ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap'];
 
 var notIgnored = ds => !_.contains(ignored, ds.type);
 
@@ -135,13 +126,6 @@ var DatasetSelect = React.createClass({
 			groups: addIterations(sortDatasets(groupsFromDatasets(datasets, servers)))
 		};
 	},
-	componentWillMount() {
-		var asciiA = 65;
-		this.ksub = konami(asciiA).subscribe(this.enableSegmented);
-	},
-	componentWillUnmount() {
-		this.ksub.dispose();
-	},
 	componentWillReceiveProps: function(newProps) {
 		var keys = ['datasets', 'servers'],
 			updated = _.pick(newProps, keys),
@@ -153,13 +137,6 @@ var DatasetSelect = React.createClass({
 				groups: addIterations(sortDatasets(groupsFromDatasets(datasets, servers)))
 			});
 		}
-	},
-	enableSegmented() {
-		var {datasets, servers} = this.props;
-		enableSegmented();
-		this.setState({
-			groups: addIterations(sortDatasets(groupsFromDatasets(datasets, servers)))
-		});
 	},
 	onSelectDs: function(dsIDs, groupName) {
 		if (phenotypeDataSubTypeList.indexOf(groupName) !== -1) {
