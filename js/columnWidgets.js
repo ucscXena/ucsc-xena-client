@@ -12,6 +12,7 @@ var widget = {
 	transform: multi(fieldTypeSelector),
 	avg: multi(fieldTypeSelector),
 	download: multi(columnFieldTypeSelector),
+    specialDownload: multi(columnFieldTypeSelector),
 	column: multi(columnFieldTypeSelector),
 	legend: multi(columnFieldTypeSelector),
 	pdf: multi(fieldTypeSelector)

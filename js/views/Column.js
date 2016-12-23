@@ -132,18 +132,21 @@ function zoomMenu(props) {
 }
 
 
-function segmentedMenu(props, {onShowIntrons, onSortVisible, xzoomable}) {
+function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, xzoomable, specialDownloadMenu}) {
 	var {column, data} = props,
 		{showIntrons = false} = column,
 		sortVisible = _.get(column, 'sortVisible', true),
 		noData = !_.get(data, 'req'),
 		sortVisibleItemName = sortVisible ? 'Sort by gene average' : 'Sort by region average',
-		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
+		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
+		specialDownloadItemName = 'Special download';
 	return addIdsToArr([
 		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
 		...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
-		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>
-
+		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>,
+		specialDownloadMenu ?
+			<MenuItem disabled={noData} onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
+			: <span/>
 	]);
 }
 
@@ -222,6 +225,7 @@ function getPosition(maxXZoom, pStart, pEnd) {
 
 // Persistent state for xzoomable setting.
 var columnsXZoomable = false;
+var specialDownloadMenu = false;
 if (process.env.NODE_ENV !== 'production') {
 	columnsXZoomable = true;
 }
@@ -229,11 +233,16 @@ if (process.env.NODE_ENV !== 'production') {
 var Column = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState() {
-		return {xzoomable: columnsXZoomable};
+		return {
+			xzoomable: columnsXZoomable,
+			specialDownloadMenu: specialDownloadMenu
+		};
 	},
 	enablexzoomable() {
 		columnsXZoomable = true;
+		specialDownloadMenu = true;
 		this.setState({xzoomable: true});
+		this.setState({specialDownloadMenu: true});
 	},
 	componentWillMount() {
 		var asciiA = 65;
@@ -275,6 +284,10 @@ var Column = React.createClass({
 		var value = _.get(column, 'sortVisible',
 				column.valueType === 'segmented' ? true : false);
 		this.props.onSortVisible(id, !value);
+	},
+	onSpecialDownload: function () {
+		var {column, data, samples, index, sampleFormat} = this.props;
+		download(widgets.specialDownload({column, data, samples, index: index, sampleFormat}));
 	},
 	onXZoomOut: function (ev) {
 		if (ev.shiftKey) {
@@ -339,10 +352,10 @@ var Column = React.createClass({
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
-			{xzoomable} = this.state,
+			{xzoomable, specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
-			{onMode, onMuPit, onShowIntrons, onSortVisible} = this,
-			menu = optionMenu(this.props, {onMode, onMuPit, onShowIntrons, onSortVisible, supportsGeneAverage, xzoomable}),
+			{onMode, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
+			menu = optionMenu(this.props, {onMode, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload, supportsGeneAverage, xzoomable, specialDownloadMenu}),
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
 			// move this to state to generalize to other annotations.

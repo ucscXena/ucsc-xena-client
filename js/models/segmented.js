@@ -189,7 +189,15 @@ function formatSamples(sampleFormat, rows) {
 	return _.map(rows, r => _.updateIn(r, ['sample'], sampleFormat));
 }
 
-function download({data: {req: {rows}}, samples, index, sampleFormat}) {
+function download({column, data, samples, sampleFormat}) {
+	let geneAverages = _.getIn(data, ['avg', 'geneValues', 0]),
+		columnLabel =  column.user.fieldLabel || column.fieldLabel;
+
+	return [['sample', `${columnLabel} (gene average)`],
+		samples.map(sample => [sampleFormat (sample), geneAverages[sample]])];
+}
+
+function downloadOneSampleOneRow({data: {req: {rows}}, samples, index, sampleFormat}) {
 	let groupedSamples = _.getIn(index, ['bySample']) || [],
 		rowFields = getRowFields(rows, groupedSamples),
 		allRows = _.map(samples, (sId) => {
@@ -238,6 +246,7 @@ widgets.index.add('segmented', index);
 widgets.transform.add('segmented', dataToDisplay);
 widgets.avg.add('segmented', averageSegments);
 widgets.download.add('segmented', download);
+widgets.specialDownload.add('segmented', downloadOneSampleOneRow);
 
 module.exports = {
 	averageSegments,
