@@ -228,6 +228,7 @@ var columnsXZoomable = false;
 var specialDownloadMenu = false;
 if (process.env.NODE_ENV !== 'production') {
 	columnsXZoomable = true;
+	specialDownloadMenu = true;
 }
 
 var Column = React.createClass({

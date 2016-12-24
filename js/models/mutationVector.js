@@ -569,7 +569,7 @@ function getRowFields(rows, sampleGroups) {
 }
 
 function formatSamples(sampleFormat, rows) {
-	return _.map(rows, r => _.updateIn(r, ['sample'], sampleFormat));
+	return rows ? _.map(rows, r => _.updateIn(r, ['sample'], sampleFormat)) : rows;
 }
 
 function download({data: {req: {rows}}, samples, index, sampleFormat}) {
