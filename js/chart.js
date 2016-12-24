@@ -12,6 +12,7 @@ var highchartsHelper =  require ('./highcharts_helper');
 var _ = require('./underscore_ext');
 var colorScales = require ('./colorScales');
 var customColors = {};
+var jStat = require('jStat').jStat;
 
 var getCustomColor = (fieldSpecs, fields, datasets) =>
 	(fieldSpecs.length === 1 && fields.length === 1) ?
@@ -690,7 +691,6 @@ module.exports = function (root, callback, sessionStorage) {
 				nNumberMatrix.push(_.clone(row));
 			}
 
-
 			// Y data and fill in the matrix
 			for (k = 0; k < yfields.length; k++) {
 				yfield = yfields[k];
@@ -710,7 +710,7 @@ module.exports = function (root, callback, sessionStorage) {
 							nNumberMatrix[i][k] = data.length;
 						} else {
 							dataMatrix[i][k] = NaN;
-							nNumberMatrix = 0;
+							nNumberMatrix[i][k] = data.length;
 						}
 						if (!isNaN(stdDev)) {
 							stdMatrix[i][k] = parseFloat((stdDev / STDEV[yfield]).toPrecision(3));
@@ -720,7 +720,6 @@ module.exports = function (root, callback, sessionStorage) {
 					}
 				}
 			}
-
 
 			//add data seriese
 			var offsetsSeries = [],
@@ -792,6 +791,28 @@ module.exports = function (root, callback, sessionStorage) {
 					yfields.length * xCategories.length < 30, showLegend,
 					customColors && customColors[code] ? customColors[code] : colors[code],
 					nNumberSeriese);
+			}
+
+			// p value when there is only 2 group comparison
+			if (yfields.length === 1 && xCategories.length === 2 &&
+				nNumberMatrix[0][0] > 1 && nNumberMatrix[1][0] > 1) {
+				// do p value calculation using Welch's t-test
+				var x1 = dataMatrix[0][0], // mean1
+					x2 = dataMatrix[1][0], // mean2
+					v1 = stdMatrix[0][0] * stdMatrix[0][0], //variance 1
+					v2 = stdMatrix[1][0] * stdMatrix[1][0], //variance 2
+					n1 = nNumberMatrix[0][0], // number 1
+					n2 = nNumberMatrix[1][0], // number 2
+					vCombined = v1 / n1 + v2 / n2, // pooled variance
+					sCombined = Math.sqrt(vCombined), //pool sd
+					tStatistics = (x1 - x2) / sCombined, // t statistics
+					dof = vCombined * vCombined / ((v1 / n1) * (v1 / n1) / (n1 - 1) + (v2 / n2) * (v2 / n2) / (n2 - 1)), // degree of freedom
+					cdf = jStat.studentt.cdf(tStatistics, dof),
+					pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
+
+				chart.renderer.text('Welch\'s t-test<br>' +
+					't = ' + tStatistics.toPrecision(4) + '<br>' +
+					'p = ' + pValue.toPrecision(4), 100, 100).add();
 			}
 			chart.redraw();
 		} else if (!xfield) { //summary view --- messsy code
@@ -1018,6 +1039,15 @@ module.exports = function (root, callback, sessionStorage) {
 
 				chartOptions.legend.title.text = "";
 				chart = new Highcharts.Chart(chartOptions);
+
+				// pearson rho value when there is only single series x y scatter plot
+				if (yfields.length === 1 && xdata[0].length > 1) {
+					//Pearson's Rho p value
+					var rho = jStat.corrcoeff(xdata[0], ydata[0]); // r Pearson's Rho correlation coefficient
+					chart.renderer.text('Pearson\'s rho<br>' +
+						'r = ' + rho.toPrecision(4), 100, 100).add();
+				}
+
 
 				yfield = yfields[0];
 				for (i = 0; i < xdata[0].length; i++) {

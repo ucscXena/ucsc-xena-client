@@ -23,8 +23,6 @@ function hcLabelRender() {
 var chartOptions = {
 	chart: {
 		renderTo: 'myChart',
-		panning: true,
-		panKey: 'shift'
 	},
 	subtitle: {
 		useHTML: true
