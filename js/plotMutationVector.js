@@ -148,8 +148,8 @@ var defaultSNVSVGBsetting = (assembly) => {
 };
 
 function sampleTooltip(sampleFormat, data, gene, assembly) {
-	var dnaVaf = data.dna_vaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dna_vaf)],
-		rnaVaf = data.rna_vaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rna_vaf)],
+	var dnaVaf = data.dnaVaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dnaVaf)],
+		rnaVaf = data.rnaVaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rnaVaf)],
 		ref = data.reference && ['value', `${data.reference} to `],
 
 		//alt
@@ -182,7 +182,7 @@ function sampleTooltip(sampleFormat, data, gene, assembly) {
 
 		effect = ['value', fmtIf(data.effect, x => `${x}, `) + //eslint-disable-line comma-spacing
 					gene +
-					fmtIf(data.amino_acid, x => ` (${x})`) +
+					fmtIf(data.aminoAcid, x => ` (${x})`) +
 					fmtIf(data.altGene, x => ` connect to ${x} `)
 					];
 	return {

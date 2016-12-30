@@ -87,7 +87,7 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 			vars.forEach(function(v) {
 				var {xStart, xEnd, data} = v,
 					{y} = toYPx(zoom, v),
-					label = data.amino_acid || data.alt,
+					label = data.aminoAcid || data.alt,
 					textWidth = vg.textWidth(labelFont, label);
 
 				if ((xEnd - xStart) >= minTxtWidth) {
