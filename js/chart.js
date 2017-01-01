@@ -847,6 +847,28 @@ module.exports = function (root, callback, sessionStorage) {
 				categories = yfields;
 			}
 
+			// single parameter float do historgram
+			if (!yIsCategorical && yfields.length === 1) {
+				var valueList = _.values(ybinnedSample)[0];
+				valueList.sort((a, b) => a - b);
+
+				var min = valueList[0],
+					max = valueList[valueList.length - 1],
+					N = 20,
+					gap = (max - min) / (N - 1);
+
+				total = valueList.length;
+				categories = _.range(min, max + gap, gap);
+				categories = categories.map(bin => (bin - gap / 2).toPrecision(3) +
+					' to ' + (bin + gap / 2).toPrecision(3));
+				ybinnedSample = {};
+				categories.map(bin => ybinnedSample[bin] = 0);
+				valueList.map( value => {
+					var bin = categories[Math.floor((value - min) / gap + 0.5)];
+					ybinnedSample[bin] = ybinnedSample[bin] + 1;
+				});
+			}
+
 			xAxisTitle = xlabel;
 			showLegend = false;
 
@@ -856,7 +878,11 @@ module.exports = function (root, callback, sessionStorage) {
 			}
 			if (yIsCategorical) {
 				chartOptions = highchartsHelper.columnChartOptions(
-					chartOptions, categories.map(code=> code + " (" + ybinnedSample[code].length + ")"), xAxisTitle, ylabel, showLegend);
+					chartOptions, categories.map(code=> code + " (" + ybinnedSample[code].length + ")"),
+					xAxisTitle, "Distribution", ylabel, showLegend);
+			} else if (yfields.length === 1) {
+				chartOptions = highchartsHelper.columnChartOptions(
+					chartOptions, categories, xAxisTitle, "Histogram", ylabel, showLegend);
 			}
 			else {
 				chartOptions = highchartsHelper.columnChartFloat (chartOptions, displayCategories, xAxisTitle, ylabel);
@@ -865,10 +891,14 @@ module.exports = function (root, callback, sessionStorage) {
 
 			//add data to seriese
 			displayCategories.forEach(function (code) {
+				var value;
 				if (yIsCategorical) {
-					var value = ybinnedSample[code].length;
+					value = ybinnedSample[code].length;
 					dataSeriese.push(parseFloat((value * 100 / total).toPrecision(3)));
 					nNumberSeriese.push(value);
+				} else if (yfields.length === 1) {
+					value = ybinnedSample[code];
+					dataSeriese.push(value);
 				} else {
 					var average = highchartsHelper.average(ybinnedSample[code]);
 					var stdDev = numSD * highchartsHelper.standardDeviation(ybinnedSample[code], average);
@@ -891,7 +921,9 @@ module.exports = function (root, callback, sessionStorage) {
 			var seriesLabel;
 
 			if (yIsCategorical) {
-			  seriesLabel = " ";
+				seriesLabel = " ";
+			} else if (yfields.length === 1) {
+				seriesLabel = " ";
 			} else {
 				seriesLabel = "average";
 			}
@@ -944,7 +976,7 @@ module.exports = function (root, callback, sessionStorage) {
 
 			chartOptions = highchartsHelper.columnChartOptions(
 				chartOptions, categories.map(code=> code + " (" + xbinnedSample[code].length + ")"),
-				xAxisTitle, ylabel, showLegend);
+				xAxisTitle, 'Distribution', ylabel, showLegend);
 
 			chart = new Highcharts.Chart(chartOptions);
 

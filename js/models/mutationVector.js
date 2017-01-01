@@ -142,7 +142,10 @@ var impact = {
 		'3_prime_UTR_variant': 0,
 		'Complex Substitution': 0,
 		'intron_variant': 0,
+		'intron': 0,
+		'Intron': 0,
 		'intergenic_region': 0,
+		'IGR': 0
 	},
 	chromColorGB = { //genome browser chrom coloring
 		"1": "#996600",

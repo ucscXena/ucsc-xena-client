@@ -23,6 +23,7 @@ function hcLabelRender() {
 var chartOptions = {
 	chart: {
 		renderTo: 'myChart',
+		zoomType: 'x'
 	},
 	subtitle: {
 		useHTML: true
@@ -58,18 +59,17 @@ var chartOptions = {
 };
 
 // x categorical, Y categorical
-function columnChartOptions (chartOptions, categories, xAxisTitle, Y, showLegend) {
-	var yAxisTitle;
-		yAxisTitle = "Distribution";
+function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y, showLegend) {
+	var yAxisTitle = yAxisType === 'Histogram' ? 'Histogram' : 'Distribution';
 
-		chartOptions.legend.align = 'right';
-		chartOptions.legend.verticalAlign = 'middle';
-		chartOptions.legend.layout = 'vertical';
+	chartOptions.legend.align = 'right';
+	chartOptions.legend.verticalAlign = 'middle';
+	chartOptions.legend.layout = 'vertical';
 
-		chartOptions.legend.title.style = {
-			width: "100px",
-			fontStyle: 'italic'
-		};
+	chartOptions.legend.title.style = {
+		width: "100px",
+		fontStyle: 'italic'
+	};
 
 	if (showLegend) {
 		chartOptions.legend.title.text = Y;
@@ -95,7 +95,7 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, Y, showLegend
 	};
 	chartOptions.yAxis = {
 		title: {
-			text: yAxisTitle
+			text: yAxisType === "Histogram" ? "count" : "distribution"
 		}
 	};
 	chartOptions.plotOptions = {
@@ -104,7 +104,15 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, Y, showLegend
 		}
 	};
 	//tooltip
-	if (xAxisTitle === "") {
+	if (xAxisTitle === "" && yAxisType === 'Histogram') {
+		chartOptions.tooltip = {
+			formatter: function () {
+					return Y + '<br>' +
+						categories[this.point.x] + ' <b> n = ' + this.point.y + '</b>';
+			},
+			hideDelay: 0
+		};
+	} else if (xAxisTitle === "" && yAxisType !== 'Histogram') {
 		chartOptions.tooltip = {
 			formatter: function () {
 				return Y + ' ' + categories[this.point.x] + ': <b>' + this.point.y + '%</b>';
@@ -114,7 +122,7 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, Y, showLegend
 	} else {
 		chartOptions.tooltip = {
 			headerFormat: xAxisTitle + ' : {point.key}<br>',
-			pointFormat: Y + ' {series.name}: <b>{point.y}%</b>',
+			pointFormat: Y + ' : <b>{series.name}: {point.y}%</b>',
 			hideDelay: 0
 		};
 	}
@@ -126,7 +134,7 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, Y, showLegend
 	}
 
 	chartOptions.yAxis.labels = {
-		format: '{value} %'
+		format: yAxisType === "Histogram" ? '{value}' : '{value} %'
 	};
 
 	return chartOptions;
