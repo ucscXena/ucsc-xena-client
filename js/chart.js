@@ -849,22 +849,26 @@ module.exports = function (root, callback, sessionStorage) {
 
 			// single parameter float do historgram
 			if (!yIsCategorical && yfields.length === 1) {
-				var valueList = _.values(ybinnedSample)[0];
+				var valueList = _.values(ybinnedSample)[0],
+					offset = _.values(offsets)[0],
+					stdev = _.values(STDEV)[0];
+
 				valueList.sort((a, b) => a - b);
 
 				var min = valueList[0],
 					max = valueList[valueList.length - 1],
 					N = 20,
-					gap = (max - min) / (N - 1);
+					gap = (max - min) / N ;
 
 				total = valueList.length;
 				categories = _.range(min, max + gap, gap);
-				categories = categories.map(bin => (bin - gap / 2).toPrecision(3) +
-					' to ' + (bin + gap / 2).toPrecision(3));
+				categories = categories.map(bin => ((bin - offset) / stdev).toPrecision(3) +
+					' to ' +
+					((bin - offset + gap) / stdev).toPrecision(3));
 				ybinnedSample = {};
 				categories.map(bin => ybinnedSample[bin] = 0);
 				valueList.map( value => {
-					var bin = categories[Math.floor((value - min) / gap + 0.5)];
+					var bin = categories[Math.floor((value - min) / gap)];
 					ybinnedSample[bin] = ybinnedSample[bin] + 1;
 				});
 			}
