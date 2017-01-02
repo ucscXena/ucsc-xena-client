@@ -242,7 +242,7 @@ function addSeriesToColumn (chart, sName, ycodeSeries, errorSeries, yIsCategoric
 	showDataLabel, showLegend, color, nNumberSeriese = undefined) {
 	var seriesOptions = {
 		name: sName,
-		type: 'column',
+		type: (!yIsCategorical && ycodeSeries.length !== 1) ? 'line' : 'column', //histogram uses line
 		data: ycodeSeries,
 		maxPointWidth: 50,
 		color: color,
