@@ -238,11 +238,11 @@ function scatterChart(chartOptions, xlabel, ylabel) {
 	return chartOptions;
 }
 
-function addSeriesToColumn (chart, sName, ycodeSeries, errorSeries, yIsCategorical,
+function addSeriesToColumn (chart, chartType, sName, ycodeSeries, errorSeries, yIsCategorical,
 	showDataLabel, showLegend, color, nNumberSeriese = undefined) {
 	var seriesOptions = {
 		name: sName,
-		type: (!yIsCategorical && ycodeSeries.length !== 1) ? 'line' : 'column', //histogram uses line
+		type: chartType,
 		data: ycodeSeries,
 		maxPointWidth: 50,
 		color: color,

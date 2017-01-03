@@ -787,7 +787,7 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 
 				highchartsHelper.addSeriesToColumn(
-					chart, code, dataSeriese, errorSeries, yIsCategorical,
+					chart, 'column', code, dataSeriese, errorSeries, yIsCategorical,
 					yfields.length * xCategories.length < 30, showLegend,
 					customColors && customColors[code] ? customColors[code] : colors[code],
 					nNumberSeriese);
@@ -922,16 +922,19 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 			});
 			// add seriese to chart
-			var seriesLabel;
+			var seriesLabel, chartType;
 
 			if (yIsCategorical) {
 				seriesLabel = " ";
+				chartType = 'column';
 			} else if (yfields.length === 1) {
 				seriesLabel = " ";
+				chartType = 'line';
 			} else {
 				seriesLabel = "average";
+				chartType = 'column';
 			}
-			highchartsHelper.addSeriesToColumn(chart, seriesLabel,
+			highchartsHelper.addSeriesToColumn(chart, chartType, seriesLabel,
 				dataSeriese, errorSeries, yIsCategorical, categories.length < 30, showLegend,
 				0, nNumberSeriese);
 			chart.redraw();
@@ -1008,7 +1011,7 @@ module.exports = function (root, callback, sessionStorage) {
 						_.partial(yFromCategories, ybinnedSample[code]));
 
 				highchartsHelper.addSeriesToColumn(
-					chart, code, ycodeSeries, errorSeries, yIsCategorical,
+					chart, 'column', code, ycodeSeries, errorSeries, yIsCategorical,
 					ycodemap.length * categories.length < 30, showLegend,
 					customColors && customColors[code] ? customColors[code] : colors[code]);
 			}
