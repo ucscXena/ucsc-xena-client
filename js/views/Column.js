@@ -39,6 +39,16 @@ function download([fields, rows]) {
 	a.click();
 	document.body.removeChild(a);
 }
+function downloadJSON(downloadData) {
+	// use blob for bug in chrome: https://code.google.com/p/chromium/issues/detail?id=373182
+	var url = URL.createObjectURL(new Blob([JSON.stringify(downloadData, undefined, 4)], { type: 'text/json' }));
+	var a = document.createElement('a');
+	var filename = 'xenaDownload.json';
+	_.extend(a, { id: filename, download: filename, href: url });
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+}
 
 var styles = {
 	badge: {
@@ -98,8 +108,10 @@ var setFocus = ev => {
 
 var stopPropagation = ev => ev.stopPropagation();
 
-var addIdsToArr = arr => arr.map((el, id) => React.cloneElement(el, {id}));
-
+var addIdsToArr = arr => {
+	var list = arr.filter(el => el).map((el, id) => React.cloneElement(el, {id}));
+	return _.isEmpty(list) ? null : list;
+};
 var isIntString = str => !!s.trim(str).replace(/,/g, '').match(/^[0-9]+$/);
 var parseExtendedInt = str => parseInt(s.trim(str).replace(/,/g, ''), 10);
 
@@ -170,14 +182,22 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 	]);
 }
 
-function matrixMenu(props, {supportsGeneAverage, onMode}) {
-	var {id, column: {fieldType, noGeneDetail}} = props;
-	return supportsGeneAverage(id) ?
-		(fieldType === 'genes' ?
-			<MenuItem eventKey="geneProbes" title={noGeneDetail ? 'no common probemap' : ''}
-				disabled={noGeneDetail} onSelect={onMode}>Detailed view</MenuItem> :
-			<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>) :
-		null;
+function matrixMenu(props, {supportsGeneAverage, onMode, onSpecialDownload, specialDownloadMenu}) {
+	var {id, column: {fieldType, noGeneDetail, valueType}} = props,
+		wrongDataType = valueType !== 'coded' || id === "samples",
+		specialDownloadItemName = 'Download sample lists (json)';
+
+	return addIdsToArr ([
+		supportsGeneAverage(id) ?
+			(fieldType === 'genes' ?
+				<MenuItem eventKey="geneProbes" title={noGeneDetail ? 'no common probemap' : ''}
+					disabled={noGeneDetail} onSelect={onMode}>Detailed view</MenuItem> :
+				<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>) :
+		null,
+		(specialDownloadMenu && !wrongDataType) ?
+			<MenuItem onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
+			: null
+	]);
 }
 
 // We could try to drive this from the column widgets, but it gets rather complex making
@@ -287,8 +307,13 @@ var Column = React.createClass({
 		this.props.onSortVisible(id, !value);
 	},
 	onSpecialDownload: function () {
-		var {column, data, samples, index, sampleFormat} = this.props;
-		download(widgets.specialDownload({column, data, samples, index: index, sampleFormat}));
+		var {column, data, samples, index, sampleFormat} = this.props,
+			{type, downloadData} = widgets.specialDownload({column, data, samples, index: index, sampleFormat});
+		if (type === "txt") {
+			download(downloadData);
+		} else if(type === "json") {
+			downloadJSON(downloadData);
+		}
 	},
 	onXZoomOut: function (ev) {
 		if (ev.shiftKey) {

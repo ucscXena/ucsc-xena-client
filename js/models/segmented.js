@@ -205,7 +205,10 @@ function downloadOneSampleOneRow({data: {req: {rows}}, samples, index, sampleFor
 			return makeRow(rowFields, formatSamples(sampleFormat, groupedSamples[sId]),
 				alternateRow);
 		});
-	return [rowFields, allRows];
+	return {
+		type: "txt",
+		downloadData: [rowFields, allRows]
+	};
 }
 
 var avgOrNull = (rows, xzoom) => _.isEmpty(rows) ? null : segmentAverage(rows, xzoom);

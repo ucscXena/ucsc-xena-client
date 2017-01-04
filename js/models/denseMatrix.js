@@ -198,11 +198,26 @@ function download({column, data, samples, sampleFormat}) {
 	return tsvProbeMatrix(heatmap, tsvSamples, fields, data.codes);
 }
 
+function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {
+//download json sample lists for coded column
+	var values = _.getIn(data, ['req', 'values', 0]),
+		codes = _.get(data, 'codes'),
+		groupedSamples = _.groupBy(samples, sample => codes[values[sample]]);
+
+	groupedSamples = _.mapObject(groupedSamples, val => val.map(sample => sampleFormat(sample)));
+	return {
+		type: "json",
+		downloadData: groupedSamples
+	};
+}
+
 ['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType => {
 	widgets.transform.add(fieldType, dataToHeatmap);
 	widgets.cmp.add(fieldType, cmp);
 	widgets.download.add(fieldType, download);
 });
+
+widgets.specialDownload.add('clinical', downloadCodedSampleListsJSON);
 
 module.exports = {
 	fetch,
