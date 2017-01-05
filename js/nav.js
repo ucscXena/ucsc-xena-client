@@ -13,7 +13,7 @@ var config = require('./config');
 
 var links = [
 	{href: "http://xena.ucsc.edu", label: "Home"},
-	{href: "../datapages/", label: "Explore Data"},
+	{href: "../datapages/", label: "Data Sets"},
 	{href: "../heatmap/", label: "Visualization"},
 	{href: "../hub/", label: "Data Hubs"},
 	{href: "https://galaxyxena.soe.ucsc.edu", label: "Galaxy Xena"},
