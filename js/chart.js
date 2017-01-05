@@ -263,7 +263,7 @@ module.exports = function (root, callback, sessionStorage) {
 		if (selectorID === "Xaxis") {
 			option = document.createElement('option');
 			option.value = "none";
-			option.textContent = "None";
+			option.textContent = "Histogram/Distribution";
 			div.appendChild(option);
 
 			if ("none" === storedColumn) {
