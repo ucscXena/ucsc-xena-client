@@ -9,16 +9,16 @@ var multi = require('./multi');
 var isNumber = _.isNumber;
 
 var blueWhiteRed = ['#0000ff', '#ffffff', '#ff0000'],
-	//greenWhiteRed = ['#00ff00', '#ffffff', '#ff0000'],
 	greenBlackRed = ['#00ff00', '#000000', '#ff0000'],
-	blueBlackYellow = ['#0000ff', '#000000', '#ffff00'];
-	//greenBlackYellow = ['#007f00', '#000000', '#ffff00'];
+	blueBlackYellow =  ['#0000ff', '#000000', '#ffff00'],
+	whiteBlack = ['#ffffff', '#ffffff', '#000000'];
 
 var defaultColors = {
-	'clinical': blueWhiteRed, //greenBlackYellow,
+	'clinical': blueWhiteRed,
 	'default': blueWhiteRed,
 	'expression': greenBlackRed,
-	'blueBlackYellow': blueBlackYellow
+	'blueBlackYellow': blueBlackYellow,
+	'whiteBlack': whiteBlack
 };
 
 var subTypeClass = ({dataSubType}) =>

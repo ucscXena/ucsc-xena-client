@@ -327,8 +327,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				mapping = {
 					"default": "default",
 					"expression": "expression",
-					"blueBlackYellow": "blueBlackYellow",
-					"clinical": "default"
+					"clinical": "default",
 				};
 			return {
 				optionValue: mapping[value] || 'default'
@@ -344,7 +343,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				options = [
 					{"key": "default", "label": "red-white-blue"},
 					{"key": "expression", "label": "red-black-green"},
-					{"key": "blueBlackYellow", "label": "yellow-black-blue"}
+					{"key": "blueBlackYellow", "label": "yellow-black-blue"},
+					{"key": "whiteBlack", "label": "black-white"}
 				],
 				activeOption = _.find(options, obj => {
 					return obj.key === optionValue;

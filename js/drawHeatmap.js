@@ -4,6 +4,7 @@
 var _ = require('./underscore_ext');
 var partition = require('./partition');
 var colorScales = require('./colorScales');
+var colorHelper = require('./color_helper');
 
 var colorFns = (vs = []) => vs.map(colorScales.colorScale);
 
@@ -92,11 +93,18 @@ function drawLayout(vg, opts) {
 		var minSpan = labelFont / (height / count);
 		if (el.size - 2 * labelMargin >= minTxtWidth) {
 			let labels = codes ? codeLabels(codes, rowData, minSpan) : floatLabels(rowData, minSpan),
-				h = height / count;
+				h = height / count,
+				labelColors = rowData.map(colorScale),
+				uniqStates = _.filter(_.uniq(rowData), c => c != null),
+				colorWhiteBlack = (uniqStates.length === 2 &&  // looking for [0,1]  columns color differently
+					_.indexOf(uniqStates, 1) !== -1 && _.indexOf(uniqStates, 0) !== -1) ? true : false,
+				codedColor = colorWhiteBlack || codes; // coloring as coded column: coded column or binary float column (0s and 1s)
+
 			vg.clip(el.start + labelMargin, 0, el.size - labelMargin, height, () =>
-					labels.forEach(([l, i, ih]) => // label, index, count
-						vg.textCenteredPushRight(el.start + labelMargin, h * i - 1, el.size - labelMargin,
-												 h * ih, 'black', labelFont, l)));
+					labels.forEach(([l, i, ih]) => /* label, index, count */
+							vg.textCenteredPushRight(el.start + labelMargin, h * i - 1, el.size - labelMargin,
+								h * ih, (codedColor && labelColors[i]) ? colorHelper.contrastColor(labelColors[i]) : 'black',
+								labelFont, l)));
 		}
 	});
 }
