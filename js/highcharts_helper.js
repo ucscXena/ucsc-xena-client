@@ -104,25 +104,35 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 		}
 	};
 	//tooltip
-	if (xAxisTitle === "" && yAxisType === 'Histogram') {
+	if (xAxisTitle === "" && yAxisType === 'Histogram') { //histogram
 		chartOptions.tooltip = {
 			formatter: function () {
-					return Y + '<br>' +
-						categories[this.point.x] + ' <b> n = ' + this.point.y + '</b>';
+					return Y + '<br>' + categories[this.point.x]
+						+ '<br>'
+						+ '<b> n = ' + this.point.y + '</b>';
 			},
 			hideDelay: 0
 		};
-	} else if (xAxisTitle === "" && yAxisType !== 'Histogram') {
+	} else if (xAxisTitle === "" && yAxisType !== 'Histogram') { //distribution
 		chartOptions.tooltip = {
 			formatter: function () {
-				return Y + ' ' + categories[this.point.x] + ': <b>' + this.point.y + '%</b>';
+				return Y + '=' + categories[this.point.x]
+					+ '<br>'
+					+ '<b>' + this.point.y + '%</b>';
 			},
 			hideDelay: 0
 		};
 	} else {
 		chartOptions.tooltip = {
 			headerFormat: xAxisTitle + ' : {point.key}<br>',
-			pointFormat: Y + ' : <b>{series.name}: {point.y}%</b>',
+			formatter: function () {
+				var nNumber = this.series.userOptions.description ? this.series.userOptions.description[this.point.x] : 0;
+				return Y + '=<b>' + this.series.name + '</b>'
+					+ '<br>'
+					+ '<b>' + this.point.y + '%</b>'
+					+ '</b><br>'
+					+ (nNumber ? 'n = ' + nNumber : '');
+			},
 			hideDelay: 0
 		};
 	}

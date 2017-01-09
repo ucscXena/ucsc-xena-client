@@ -628,7 +628,9 @@ module.exports = function (root, callback, sessionStorage) {
 			i, k,
 			numSD = document.getElementById("sd").value,
 			colors = {},
-			average, stdDev;
+			average, stdDev,
+			pValue, dof,
+			total;
 
 		document.getElementById("myChart").innerHTML = "Generating chart ...";
 
@@ -805,19 +807,20 @@ module.exports = function (root, callback, sessionStorage) {
 					n2 = nNumberMatrix[1][0], // number 2
 					vCombined = v1 / n1 + v2 / n2, // pooled variance
 					sCombined = Math.sqrt(vCombined), //pool sd
-					tStatistics = (x1 - x2) / sCombined, // t statistics
-					dof = vCombined * vCombined / ((v1 / n1) * (v1 / n1) / (n1 - 1) + (v2 / n2) * (v2 / n2) / (n2 - 1)), // degree of freedom
-					cdf = jStat.studentt.cdf(tStatistics, dof),
-					pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
+					tStatistics = (x1 - x2) / sCombined, // t statistics,
+					cdf;
+
+				dof = vCombined * vCombined / ((v1 / n1) * (v1 / n1) / (n1 - 1) + (v2 / n2) * (v2 / n2) / (n2 - 1)), // degree of freedom
+				cdf = jStat.studentt.cdf(tStatistics, dof),
+				pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
 
 				chart.renderer.text('Welch\'s t-test<br>' +
 					't = ' + tStatistics.toPrecision(4) + '<br>' +
-					'p = ' + pValue.toPrecision(4), 100, 100).add();
+					'p = ' + pValue.toPrecision(4), 100, 75).add();
 			}
 			chart.redraw();
 		} else if (!xfield) { //summary view --- messsy code
-			var total = 0,
-				displayCategories;
+			var displayCategories;
 
 			errorSeries = [];
 			dataSeriese = [];
@@ -838,6 +841,7 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 			}
 
+			total = 0;
 			if (yIsCategorical) {
 				categories = Object.keys(ybinnedSample);
 				categories.forEach(function (code) {
@@ -987,13 +991,13 @@ module.exports = function (root, callback, sessionStorage) {
 
 			chart = new Highcharts.Chart(chartOptions);
 
-			var yFromCategories = function (ycode, xcode) {
+			/*var yFromCategories = function (ycode, xcode) {
 				var value;
 				if (xcode.length) {
 					value = (_.intersection(xcode, ycode).length / xcode.length) * 100;
 				}
 				return value ? parseFloat(value.toPrecision(3)) : " ";
-			};
+			};*/
 
 			var ycategories = Object.keys(ybinnedSample);
 
@@ -1003,18 +1007,73 @@ module.exports = function (root, callback, sessionStorage) {
 			ycodemap.map((code, i) =>
 				colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length]);
 
-			var ycodeSeries;
+			// Pearson's chi-squared test pearson https://en.wikipedia.org/wiki/Pearson's_chi-squared_test
+			// note, another version of pearson's chi-squared test is G-test, Likelihood-ratio test, https://en.wikipedia.org/wiki/Likelihood-ratio_test
+			var observed = [],
+				expected = [],
+				xRatio = [],
+				xMargin = [],
+				yMargin = [];
+
+			total = 0.0;
+			for (i = 0; i < ycategories.length; i++) {
+				code = ycategories[i];
+				observed.push([]);
+				expected.push([]);
+				yMargin.push(ybinnedSample[code].length);
+				total += yMargin[i];
+			}
+			// fill expected matrix
+			for (k = 0; k < categories.length; k++) {
+				code = categories[k];
+				xMargin.push(xbinnedSample[code].length);
+				xRatio.push(xMargin[k] / total);
+			}
+			for (i = 0; i < ycategories.length; i++) {
+				code = ycategories[i];
+				for (k = 0; k < categories.length; k++) {
+					observed[i].push(0.0);
+					observed[i][k] = _.intersection(ybinnedSample[code], xbinnedSample[categories[k]]).length;
+					expected[i].push(0.0);
+					expected[i][k] = xRatio[k] * yMargin[i];
+				}
+			}
+
+
 			for (i = 0; i < ycategories.length; i++) {
 				code = ycategories[i];
 
-				ycodeSeries = _.map(_.map(categories, _.propertyOf(xbinnedSample)),
-						_.partial(yFromCategories, ybinnedSample[code]));
+				var ycodeSeries = [];
+				for (k = 0; k < categories.length; k++) {
+					ycodeSeries.push(" ");
+					if (xMargin[k] && observed[i][k]) {
+						ycodeSeries[k] = parseFloat(((observed[i][k] / xMargin[k]) * 100).toPrecision(3));
+					}
+				}
 
 				highchartsHelper.addSeriesToColumn(
 					chart, 'column', code, ycodeSeries, errorSeries, yIsCategorical,
 					ycodemap.length * categories.length < 30, showLegend,
-					customColors && customColors[code] ? customColors[code] : colors[code]);
+					customColors && customColors[code] ? customColors[code] : colors[code], observed[i]);
 			}
+
+			// pearson chi-square test statistics
+			dof = (ycategories.length - 1) * (categories.length - 1);
+			if (dof) {
+				var chisquareStats = 0.0;
+
+				for (i = 0; i < ycategories.length; i++) {
+					for (k = 0; k < categories.length; k++) {
+						chisquareStats += Math.pow((observed[i][k] - expected[i][k]), 2) / expected[i][k];
+					}
+				}
+
+				pValue = 1 - jStat.chisquare.cdf( chisquareStats, dof);
+				chart.renderer.text('Pearson\'s chi-squared test<br>' +
+						'χ2 = ' + chisquareStats.toPrecision(4) + '<br>' +
+						'p = ' + pValue.toPrecision(4), 100, 75).add();
+			}
+
 			chart.redraw();
 		} else { // x y float scatter plot
 			var sampleLabels = _.flatten(cohortSamples),
@@ -1084,7 +1143,7 @@ module.exports = function (root, callback, sessionStorage) {
 					//Pearson's Rho p value
 					var rho = jStat.corrcoeff(xdata[0], ydata[0]); // r Pearson's Rho correlation coefficient
 					chart.renderer.text('Pearson\'s rho<br>' +
-						'r = ' + rho.toPrecision(4), 100, 100).add();
+						'r = ' + rho.toPrecision(4), 100, 75).add();
 				}
 
 
@@ -1274,6 +1333,14 @@ module.exports = function (root, callback, sessionStorage) {
 			}
 			if (xdataSegment) {
 				xdata = _.getIn(xenaState, ['data', xcolumn, 'avg', 'geneValues']);
+			}
+
+			//convert binary float to categorical data
+			if (!xcodemap && xdata && _.flatten(xdata).every(c =>_.indexOf([0, 1], c) !== -1 || c == null)) {
+				xcodemap = ["0", "1"];
+			}
+			if (!ycodemap && ydata && _.flatten(ydata).every(c =>_.indexOf([0, 1], c) !== -1 || c == null)) {
+				ycodemap = ["0", "1"];
 			}
 
 			//reverse display if ycolumn is on - strand
