@@ -1,7 +1,23 @@
 'use strict';
 
+// This version should be changed if and only if there is a new
+// state migration required. The migration(s) should be added
+// to the 'migrations' object, below, at the bottom, under the
+// *previous* version, not the *new* version. Migrations are
+// applied by finding the migration matching the version in
+// 'state', and all subsequent migrations.
+//
+// That is,
+// 1) Create a new key in 'migration' for the current 'version',
+//    which migrates the state for the new changes.
+// 2) Increment the value of 'version'
+var version = 's2.0';
+
 var _ = require('./underscore_ext');
 var {setFieldType} = require('./models/fieldSpec');
+
+
+var setVersion = state => _.assoc(state, 'version', version);
 
 // XXX put this in common file
 var getFieldType = (datasets, fs) => {
@@ -24,14 +40,17 @@ var setFieldTypeSV = state =>
 	_.updateIn(state, ['columns'],
 		columns => _.mapObject(columns, updateColumn(state.datasets)));
 
+// We have two scenarios: user has visited hub page, or user hasn't visited
+// hub page. If they have, then allHosts is set. Otherwise, we only have user.
+// We are dropping metadataFilterHosts.
 var serverObject = state => {
-	var {server: {allHosts, user, metadataFilterHosts}} = state,
-		newServer = _.object(allHosts, allHosts.map(h => ({
-			user: _.contains(user, h),
-			meta: _.contains(metadataFilterHosts, h)
+	var {servers: {allHosts, user}} = state,
+		all = allHosts || user,
+		newServer = _.object(all, all.map(h => ({
+			user: _.contains(user, h)
 		})));
 
-	return _.assoc(state, 'server', newServer);
+	return _.assoc(state, 'servers', newServer);
 };
 
 var getVersion = state => _.get(state, 'version', 's0.0');
@@ -44,7 +63,7 @@ var migrations = {
 
 // return index of value, or array length
 function indexOf(arr, v) {
-	var i = arr.indexOf(arr, v);
+	var i = arr.indexOf(v);
 	return i === -1 ? arr.length : i;
 }
 
@@ -53,7 +72,7 @@ function apply(state) {
 		versions = _.keys(migrations),
 		toDo = _.flatmap(versions.slice(indexOf(versions, v)), v => migrations[v]);
 
-	return toDo.reduce((prev, fn) => fn(prev), state);
+	return setVersion(toDo.reduce((prev, fn) => fn(prev), state));
 }
 
 module.exports = apply;

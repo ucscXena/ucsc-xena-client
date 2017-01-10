@@ -15,11 +15,9 @@ var LZ = require('lz-string');
 var migrateState = require('./migrateState');
 var {defaultServers} = require('./defaultServers');
 
-var enabledServer = {user: true, meta: true};
+var enabledServer = {user: true};
 var defaultServerState = _.object(defaultServers,
 		defaultServers.map(() => enabledServer));
-
-var version = 's2.0';
 
 module.exports = function (persist) {
 	// Create a channel for messages from the server. We want to avoid out-of-order
@@ -60,7 +58,7 @@ module.exports = function (persist) {
 	var uiCh = uiBus;
 
 	var initialState = {
-		version,
+		version: null, // prevent migrations in new tab
 		servers: defaultServerState,
 		mode: 'heatmap',
 		zoom: {height: 300},

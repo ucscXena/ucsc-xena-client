@@ -11,7 +11,7 @@ var setServersChangedIfUser = (list, state) =>
 
 var controls = {
 	'add-host': (state, host) =>
-		setServersChanged(_.assocIn(state, ['servers', host], {user: true, meta: true})),
+		setServersChanged(_.assocIn(state, ['servers', host], {user: true})),
 	'remove-host': (state, host) =>
 		setServersChanged(_.updateIn(state, ['servers'], s => _.dissoc(s, host))),
 	'enable-host': (state, host, list) =>
