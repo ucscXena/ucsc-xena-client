@@ -35,23 +35,6 @@ function parseServer(s) {
 	return proto + host + (port ? ':' + port : '') + path;
 }
 
-// lists
-// allhosts (default)
-//    when user adds or deletes
-// user
-// 	  when user selects or adds new
-// metadata
-//    when user selects or adds new
-//
-// Better as an object? Yes. Add migration.
-// Modify 'dirty' check.
-//
-// A problem with using an object is there's no enforced order.
-// That means the display order is determined by js object key order
-// behavior: last added is at bottom. I suppose this is ok. Is there
-// reason we'd want it otherwise?
-//
-
 var getName = h => _.get(serverNames, h, h);
 
 var getStatus = (user, ping) =>
