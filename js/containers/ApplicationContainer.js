@@ -124,6 +124,10 @@ var ApplicationContainer = React.createClass({
 		var {columns, datasets} = this.props.state;
 		return datasetMeta(_.get(columns, uuid), datasets);
 	},
+	// raw (before selector) state
+	getState: function () {
+		return this.props.state;
+	},
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback} = this.props,
@@ -138,6 +142,7 @@ var ApplicationContainer = React.createClass({
 					Spreadsheet={SpreadsheetContainer}
 					onHighlightChange={this.ev.highlightChange}
 					sampleFormat={this.sampleFormat}
+					getState={this.getState}
 					state={computedState}
 					callback={callback}>
 				<View

@@ -127,7 +127,7 @@ var AppControls = React.createClass({
 		download([combinedHeaders, combinedRows]);
 	},
 	onBookmark: function () {
-		var {appState} = this.props;
+		var {getState} = this.props;
 		Rx.DOM.ajax({
 			method: 'POST',
 			url: '/api/bookmarks/bookmark',
@@ -135,7 +135,7 @@ var AppControls = React.createClass({
 				'X-CSRFToken': document.cookie.replace(/.*csrftoken=([0-9a-z]+)/, '$1'),
 				'Content-Type': 'application/x-www-form-urlencoded'
 			},
-			body: `content=${encodeURIComponent(createBookmark(appState))}`
+			body: `content=${encodeURIComponent(createBookmark(getState()))}`
 		}).subscribe(this.onSetBookmark);
 	},
 	render: function () {
