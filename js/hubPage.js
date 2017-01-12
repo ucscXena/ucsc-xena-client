@@ -19,21 +19,9 @@ var _s = require('underscore.string');
 var _ = require('./underscore_ext');
 var {serverNames} = require('./defaultServers');
 require('./hub.css');
+var {parseServer} = require('./hubParams');
 
 var RETURN = 13;
-
-function parseServer(s) {
-	// XXX should throw or otherwise indicate parse error on no match
-	var tokens = s.match(/^(https?:\/\/)?([^:\/]+)(:([0-9]+))?(\/(.*))?$/),
-		host = tokens[2],
-		defproto = 'https://',
-		proto = tokens[1] || defproto,
-		defport = (proto === defproto) ? null : '7222',
-		port = tokens[4] || defport,
-		path = tokens[5] || '';
-
-	return proto + host + (port ? ':' + port : '') + path;
-}
 
 var getName = h => _.get(serverNames, h, h);
 

@@ -11,6 +11,7 @@ var {getNotifications} = require('./notifications');
 var nostate = require('./nostate');
 var {hasBookmark, getBookmark, resetBookmarkLocation} = require('./bookmark');
 var {hasInlineState, resetInlineStateLocation} = require('./inlineState');
+var {hubParams} = require('./hubParams');
 var LZ = require('lz-string');
 var migrateState = require('./migrateState');
 var {defaultServers} = require('./defaultServers');
@@ -82,6 +83,13 @@ module.exports = function (persist) {
 	if (hasInlineState()) {
 		_.extend(initialState, {'inlineState': true});
 		resetInlineStateLocation();
+	}
+
+	var hubs = hubParams();
+	if (hubs) {
+		initialState = hubs.reduce(
+			(state, hub) =>_.assocIn(state, ['servers', hub, 'user'], true),
+			initialState);
 	}
 
 	return {

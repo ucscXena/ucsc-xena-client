@@ -1,6 +1,6 @@
-/*eslint-env browser */
-/*global module: false, navigator: false */
 'use strict';
+
+var _ = require('./underscore_ext');
 
 module.exports = {
 	getParameterByName: function (name) {
@@ -9,8 +9,17 @@ module.exports = {
 		var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
 		return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
 	},
-
-
+	allParameters: () => {
+		var search = location.search;
+		return search.length > 1 ?
+			_.mapObject(
+				_.groupBy(
+					search.slice(1).split('&')
+						.map(exp => exp.split('=').map(decodeURIComponent)),
+					_.first),
+				arr => arr.map(([, val]) => val)) :
+			{};
+	},
 	eventOffset: function (ev) {
 		var {top, left} = ev.target.getBoundingClientRect();
 		return {
