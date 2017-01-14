@@ -6,8 +6,7 @@ class UserBookmarksSelect(forms.Form):
         self.fields['bookmarks']= forms.MultipleChoiceField(choices=list, widget=forms.CheckboxSelectMultiple())
 
 class BookmarksSaveForm(forms.Form):
-    content = forms.CharField()
-    note = forms.CharField(required=False)
+    content = forms.CharField(strip=False)
 
 class UserBookmarksSaveForm(forms.Form):
     oldName = forms.CharField()
