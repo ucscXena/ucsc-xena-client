@@ -354,7 +354,8 @@ module.exports = function (root, callback, sessionStorage) {
 		var dropDown = document.getElementById("expDropDown"),
 			dropDownDiv = document.getElementById("yExponentiation"),
 			YdropDownDiv = document.getElementById("Yaxis"),
-			i;
+			i = YdropDownDiv.selectedIndex,
+			columnPos = xenaState.columnOrder.indexOf(ycolumn);
 
 		if (visible) {
 			var notLogScale = _.any(colSettings.units, unit => !unit || unit.search(/log/i) === -1);
@@ -376,19 +377,16 @@ module.exports = function (root, callback, sessionStorage) {
 				//if data in db in logscale, custom option with actual unit
 				if (dropDownDiv.selectedIndex === 0) {
 					dropDownDiv.options[0].text = colSettings.units.join();
-					i = YdropDownDiv.selectedIndex;
-					YdropDownDiv.options[i].text = [columnLabel(i, colSettings), colUnit(colSettings)].join(" ");
+					YdropDownDiv.options[i].text = [columnLabel(columnPos, colSettings), colUnit(colSettings)].join(" ");
 				}
 				// if exp2(data), custom y axis display without log in the unit label
 				else {
-					i = YdropDownDiv.selectedIndex;
-					YdropDownDiv.options[i].text = columnLabel (i, colSettings);
 					var unitsString = colUnit(colSettings);
 					// remove log in unit label
 					var regExp = /\(([^)]+)\)/;
 					var matches = regExp.exec(unitsString);
 					matches = matches ? matches[1] : '';
-					YdropDownDiv.options[i].text = [YdropDownDiv.options[i].text, matches].join(" ");
+					YdropDownDiv.options[i].text = [columnLabel(columnPos, colSettings), matches].join(" ");
 				}
 			}
 		} else {
