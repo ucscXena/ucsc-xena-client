@@ -110,7 +110,7 @@ var Hub = React.createClass({
 						{_.values(hostList).map(h => (
 							<form key={h.host} className="host-form form-horizontal"><FormGroup>
 								<input className='col-md-1' onChange={this.onSelect} checked={h.selected} type='checkbox' data-host={h.host}/>
-								<span className='col-md-1'>
+								<span className='col-md-2'>
 								<Label bsStyle={getStyle(h.statusStr)}>{h.statusStr}</Label>
 								</span>
 								<span className='col-md-4'>
@@ -125,7 +125,7 @@ var Hub = React.createClass({
 							))}
 						<form className="form-horizontal">
 						<FormGroup>
-							<Input onKeyDown={this.onKeyDown} ref='newHost' standalone type='text' wrapperClassName='col-md-8'/>
+							<Input onKeyDown={this.onKeyDown} ref='newHost' standalone type='text' wrapperClassName='col-md-6'/>
 							<Button onClick={this.onAdd} wrapperClassName='col-md-2'>Add</Button>
 						</FormGroup>
 						</form>
