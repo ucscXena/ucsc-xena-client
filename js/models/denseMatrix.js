@@ -199,15 +199,24 @@ function download({column, data, samples, sampleFormat}) {
 }
 
 function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {
-//download json sample lists for coded column
+	//download json sample lists for coded column
 	var values = _.getIn(data, ['req', 'values', 0]),
 		codes = _.get(data, 'codes'),
-		groupedSamples = _.groupBy(samples, sample => codes[values[sample]]);
+		downloadData;
 
-	groupedSamples = _.mapObject(groupedSamples, val => val.map(sample => sampleFormat(sample)));
+	if (codes.length === values.length) {
+		downloadData = {
+			"samples": codes
+		};
+	}
+	else {
+		var groupedSamples = _.groupBy(samples, sample => codes[values[sample]]);
+		downloadData = _.mapObject(groupedSamples, val => val.map(sample => sampleFormat(sample)));
+	}
+
 	return {
 		type: "json",
-		downloadData: groupedSamples
+		downloadData: downloadData
 	};
 }
 

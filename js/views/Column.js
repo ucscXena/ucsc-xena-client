@@ -41,7 +41,7 @@ function download([fields, rows]) {
 }
 function downloadJSON(downloadData) {
 	// use blob for bug in chrome: https://code.google.com/p/chromium/issues/detail?id=373182
-	var url = URL.createObjectURL(new Blob([JSON.stringify(downloadData, undefined, 4)], { type: 'text/json' }));
+	var url = URL.createObjectURL(new Blob([JSON.stringify(downloadData/*, undefined, 4*/)], { type: 'text/json' }));
 	var a = document.createElement('a');
 	var filename = 'xenaDownload.json';
 	_.extend(a, { id: filename, download: filename, href: url });
@@ -184,7 +184,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 
 function matrixMenu(props, {supportsGeneAverage, onMode, onSpecialDownload, specialDownloadMenu}) {
 	var {id, column: {fieldType, noGeneDetail, valueType}} = props,
-		wrongDataType = valueType !== 'coded' || id === "samples",
+		wrongDataType = valueType !== 'coded',
 		specialDownloadItemName = 'Download sample lists (json)';
 
 	return addIdsToArr ([
