@@ -109,6 +109,24 @@ function intronLayout({chrom, txStart, txEnd, strand}, pxWidth, zoom) {
 	};
 }
 
+function chromLayout(__, pxWidth, zoom, {chromStart, baseStart, baseEnd}) {
+	var intvals = [[baseStart, baseEnd]],
+		clippedIntvals = applyClip(intvals, zoom),
+		count =  baseLen(clippedIntvals),
+		bpp = count / pxWidth,
+		pixIntvls = toScreen(bpp, clippedIntvals, 0, []);
+
+	return {
+		chrom: clippedIntvals,
+		screen: pixIntvls,
+		reversed: false,
+		baseLen: count,
+		pxLen: pxWidth,
+		chromName: chromStart,
+		zoom: zoom
+	};
+}
+
 function chromPositionFromScreen(layout, x) {
 	var {chrom, screen, reversed} = layout,
 		i = _.findIndex(screen, ([x0, x1]) => x0 <= x && x < x1);
@@ -127,6 +145,7 @@ var chrlen = ([s, e]) => e - s + 1;
 
 
 module.exports = {
+	chromLayout,
 	intronLayout,
 	screenLayout: (bpp, chrlo) => toScreen(bpp, chrlo, 0, []),
 	baseLen,

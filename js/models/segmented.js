@@ -11,6 +11,7 @@ var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformInterval} = require('../layoutPlot');
 var heatmapColors = require('../heatmapColors');
+var parsePos = require('../parsePos');
 
 function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
 	var inData = new Set(valsInData),
@@ -65,7 +66,12 @@ function mapSamples(samples, data) {
 		   ['req', 'samplesInResp'], sIR => _.map(sIR, s => sampleMap[s]));
 }
 
-function fetch({dsID, fields, assembly}, [samples]) {
+function fetchChrom({dsID}, [samples], pos) {
+	return segmentedDataRange(dsID, samples, pos.chromStart, pos.baseStart, pos.baseEnd)
+		.map(req => mapSamples(samples, {req}));
+}
+
+function fetchGene({dsID, fields, assembly}, [samples]) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return name ? xenaQuery.refGeneExonCase(host, name, fields)
 		.flatMap(refGene => {
@@ -75,6 +81,13 @@ function fetch({dsID, fields, assembly}, [samples]) {
 				.map(req => mapSamples(samples, {req, refGene}));
 		}) : Rx.Observable.return(null);
 }
+
+function fetch(column, cohortSamples) {
+	var pos = parsePos(column.fields[0]),
+		method = pos ? fetchChrom : fetchGene;
+	return method(column, cohortSamples, pos);
+}
+
 
 function findNodes(byPosition, layout, samples) {
 	var sindex = _.object(samples, _.range(samples.length)),
@@ -98,7 +111,13 @@ function findNodes(byPosition, layout, samples) {
 
 var swapIf = (strand, [x, y]) => strand === '-' ? [y, x] : [x, y];
 
-function defaultXZoom(refGene) {
+function defaultXZoom(pos, refGene) {
+	if (pos) { // User supplied chrom position
+		return {
+			start: pos.baseStart,
+			end: pos.baseEnd
+		};
+	}
 	var {txStart, txEnd, strand} = refGene,
 		{padTxStart, padTxEnd} = exonPadding,
 		[startPad, endPad] = swapIf(strand, [padTxStart, padTxEnd]);
@@ -113,14 +132,13 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 	if (_.isEmpty(data) || _.isEmpty(data.req)) {
 		return {};
 	}
-	var {refGene} = data,
-		refGeneObj = _.values(refGene)[0],
-		maxXZoom = defaultXZoom(refGeneObj),
+	var pos = parsePos(column.fields[0]),
+		refGeneObj = _.values(data.refGene)[0],
+		maxXZoom = defaultXZoom(pos, refGeneObj), // exported for zoom controls
 		{width, showIntrons = false, xzoom = maxXZoom} = column,
-		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
-		layout = createLayout(refGeneObj, width, xzoom),
+		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
+		layout = createLayout(refGeneObj, width, xzoom, pos),
 		nodes = findNodes(index.byPosition, layout, sortedSamples),
-		//color = heatmapColors.colorSpec(column, vizSettings, null, _.pluck(data.req.rows, 'value')),
 		color = heatmapColors.colorSpec(column, vizSettings, null, _.getIn(data, ['avg', 'geneValues', 0])),
 		units = _.map(column.fieldSpecs, ({dsID}) => _.getIn(datasets, [dsID, 'unit']));
 
@@ -134,7 +152,7 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 }
 
 function index(fieldType, data) {
-	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
+	if (!_.get(data, 'req')) {
 		return null;
 	}
 
@@ -219,18 +237,34 @@ function avgSegWithZoom(samples, byPosition, zoom) {
 	return _.map(samples, s => avgOrNull(perSamp[s], zoom));
 }
 
+function chromLimits(pos) {
+	return {
+		start: pos.baseStart,
+		end: pos.baseEnd,
+	};
+}
+
+function geneLimits(refGene) {
+	var gene = _.values(refGene)[0];
+	return {
+		start: gene.txStart,
+		end: gene.txEnd
+	};
+}
+
 // Average segments, clipping to zoom or the gene boundaries, whichever is smaller.
 function averageSegments(column, data, samples, index) {
-	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
+	var pos = parsePos(column.fields[0]);
+	if (!_.get(data, 'req') || !(pos || _.values(data.refGene).length)) {
 		return null;
 	}
-	var gene = _.values(data.refGene)[0],
+	var limits = pos ? chromLimits(pos) : geneLimits(data.refGene),
 		xzoom = {
-			start: max(gene.txStart, _.getIn(column, ['xzoom', 'start'], -Infinity)),
-			end: min(gene.txEnd, _.getIn(column, ['xzoom', 'end'], Infinity))
+			start: max(limits.start, _.getIn(column, ['xzoom', 'start'], -Infinity)),
+			end: min(limits.end, _.getIn(column, ['xzoom', 'end'], Infinity))
 		},
 		values = [avgSegWithZoom(samples, index.byPosition, xzoom)],
-		geneValues = [avgSegWithZoom(samples, index.byPosition, {start: gene.txStart, end: gene.txEnd})];
+		geneValues = [avgSegWithZoom(samples, index.byPosition, {start: limits.start, end: limits.end})];
 
 	return {
 		avg: {
@@ -254,6 +288,5 @@ widgets.specialDownload.add('segmented', downloadOneSampleOneRow);
 module.exports = {
 	averageSegments,
 	segmentAverage,
-	defaultXZoom,
 	fetch
 };
