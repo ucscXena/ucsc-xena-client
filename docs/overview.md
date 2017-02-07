@@ -52,6 +52,19 @@ var state = actions.scan(initialState, controlRunner)
 
 where ```actions``` is a stream (Observable) of actions. 
 
+## Immutable data
+
+In this design, application state must be treated as immutable data. Mutating
+state in-place will cause the view to be out of sync with the state.
+
+In practice this means that state should only be changed in an action
+handler, and the action handler 'changes' state by return a new state value.
+
+To make it easy to create a state value, we use an immutability-helper
+library that looks a bit like clojure data methods.
+
+https://github.com/ucscxena/ehmutable
+
 ### Connectors
 
 The state is passed to the view layer by subscribing to the stream.
