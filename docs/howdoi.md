@@ -35,6 +35,16 @@ to evaluate a function of the current value at the desired path in the state tre
 		_.updateIn(state, ['columns', id, 'fieldLabel', 'user'], s => s.toUpperCase()),
 ```
 
+If this isn't clear, review the docs for ehmutable, and try logging the values
+on the console, like so:
+
+```javascript
+	fieldLabelToUpper: (state, id) =>
+		spy('new state', _.updateIn(_.spy('old state', state), ['columns', id, 'fieldLabel', 'user'], s => s.toUpperCase())),
+```
+
+See [Debug strategies](details.md#Debugging)
+
 ### Writing an event handler to dispatch the action
 
 Column control events are handled in the SpreadsheetContainer component, which

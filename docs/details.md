@@ -1,5 +1,112 @@
 # Xena client architecture, details
 
+## Debugging
+
+Debugging this architecture can require some new techniques, if you haven't
+seen it before. DOM updates happen outside the application code, in the
+React library. Most functions are composed entirely of expressions, with
+few temporary variables that you can log to console. The state flow in
+rx Observables is less accessible.
+
+Here are some techniques that will help.
+
+Of course, the usual methods (chrome dev tools, ```debugger```
+statement, ```console.log```) are still available.
+
+### react developer tools
+
+https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi
+
+React developer tools is a plugin for chrome and firefox which extends
+the debugger. It adds a new 'react' tab, which allows you to inspect the
+state of the react library, including the component hierarchy, and
+the ```props``` and ```state``` of each component.
+
+### redux dev tools
+
+https://github.com/gaearon/redux-devtools
+
+Redux dev tools is available in the development build (```npm start```). Click
+on the page and hit ctrl-h to show or hide the tool.
+
+This tool allows you to
+inspect actions, and the application state after each iteration of the
+controller. The complete history of the application is recorded, and can
+be replayed from the tool by selecting or omitting individual actions. 
+This is particularly useful for debugging action handlers, and the view layer.
+
+The dev connector will keep the history across page reloads, if it small enough
+to fit in sessionStorage. Use the 'commit' button to discard history that you
+no longer care about.
+
+### spy(msg, x)
+
+Since most of our functions are pure, composed entirely of expressions, there
+are few local variables or object members that can be inspected in the debugger
+or logged to console. A common problem, then, is how to inspect the values in
+a nested expression. 
+
+```javascript
+	return f(g(x));
+```
+
+You could rewrite the expression with temporary variables.
+
+```javascript
+	var gret = g(x);
+	var fret = f(gret);
+	console.log(x, fret, gret);
+	return fret;
+```
+
+But this is laborious and error-prone. Until the debuggers improve, a workaround
+is to use the ```spy``` method in underscore_ext.js. ```spy(msg, x)``` will
+log ```msg``` and ```x```, and return value ```x```. So, you can insert it into
+expressions without disrupting the structure.
+
+```javascript
+	return f(spy('g', g(x)));
+```
+
+### rxjs spy(msg)
+
+Similarly, rxjs allows writing expressions over observable streams. If
+the stream is not behaving as expected, adding console logs by hand is
+error-prone and complicated. There is a ```spy``` helper operator in rx.ext.js
+which logs all events on the stream: error, next, and complete.
+
+Given an rx expression like the following,
+
+```javascript
+	var stream = inputs.groupby(x => x.foo).concat(other).filter(x =>x).subscribe(doit);
+```
+
+drop the ```spy``` method after any operator to get a console log of that stream.
+
+```javascript
+	var stream = inputs.spy('input').groupby(x => x.foo).spy('group by').concat(other).filter(x =>x).subscribe(doit);
+```
+
+### babel-node
+
+It is often helpful to run small code examples outside of the application. Our
+project uses babel to compile javascript es6, which means node can't directly
+read our modules. Instead, use babel-node.
+
+Note that node has problems with the variable name '_', so use something else.
+Also, any code that references DOM variables (```window```, ```document```) will
+exit with an error.
+
+```
+(master) ~/ucsc-xena-client> babel-node
+> var u = require('./js/underscore_ext')
+'use strict'
+> var y = u.curry((x, y) => x + y)
+'use strict'
+> y(1)(2)
+3
+```
+
 ## column polymorphism
 
 The xena display is composed of a number of heterogenous data columns. For example,
