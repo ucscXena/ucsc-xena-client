@@ -197,8 +197,7 @@ about arrays, or dictionaries (objects with variable keys)?
 There are several possible strategies here. React deals with this by
 requring a unique ```key``` property on lists of elements. Here we
 use the position in a list as the ```key``` property, uniquely identifying
-each ```<li>``` so React can effectively test equality of the passed
- ```props```.
+each ```<li>``` so React can effectively test equality of the passed ```props```.
 
 
 ```jsx
