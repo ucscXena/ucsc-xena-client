@@ -68,11 +68,11 @@ element.
 var state1 = _.assocIn(state0, ['user', 'last'], 'Jones');
 ```
 
-This gives us a new state. Changed references are in red.
+This gives us a new state. Changed references are in bold.
 
 <pre>
-var <b style='color:red'>state1</b> = {
-	<b style='color:red'>user</b>: {first: "Kathy", <b style='color:red'>last</b>: "Jones"},
+var <b>state1</b> = {
+	<b>user</b>: {first: "Kathy", <b>last</b>: "Jones"},
 	post: {headline: "Ouch", date: "11/12/2016"}
 };
 </pre>
@@ -106,11 +106,11 @@ var selector = state => ({
 ```
 
 Now, when we call ```selector(state1)```, we get the following structure.
-Changed references are in red.
+Changed references are in bold.
 
 <pre>
-var <b style='color:red'>selectedState1</b> = {
-	<b style='color:red'>name</b>: "Kathy Jones",
+var <b>selectedState1</b> = {
+	<b>name</b>: "Kathy Jones",
 	header: "Ouch: 11/12/2016"
 };
 </pre>
@@ -163,12 +163,12 @@ var state1 = clone(state0);
 state1.user.last = "Jones";
 ```
 
-This gives us a new state structure, changed references in red:
+This gives us a new state structure, changed references in bold:
 
 <pre>
-var <b style='color:red'>state1</b> = {
-	<b style='color:red'>user</b>: {first: "Kathy", <b style='color:red'>last</b>: "Jones"},
-	<b style='color:red'>post</b>: {headline: "Ouch", date: "11/12/2016"}
+var <b>state1</b> = {
+	<b>user</b>: {first: "Kathy", <b>last</b>: "Jones"},
+	<b>post</b>: {headline: "Ouch", date: "11/12/2016"}
 };
 </pre>
 
@@ -180,7 +180,7 @@ of ```state.post``` in order to determine that the value is unchanged.
 
 In contrast, by using ```_.assocIn()``` above, the selector can simply
 test for reference equality, ```state0.post ==== state1.post```. Review
-the red portions of ```state1```, above.
+the bold portions of ```state1```, above.
 
 In a large state structure, this comparsion is much, much faster. Additionally,
  ```_.assocIn()``` and the other ehmutable methods do not have to do a deep copy
