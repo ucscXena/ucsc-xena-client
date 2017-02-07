@@ -186,7 +186,7 @@ A 'callback' property is passed to the view layer for dispatching actions from
 react components.
 
 ```javascript
-this.props.callback(['fieldLabel', dsID, newText]);
+this.props.callback(['fieldLabel', id, newText]);
 ```
 
 ## View layer
