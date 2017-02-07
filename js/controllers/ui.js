@@ -288,14 +288,14 @@ var controls = {
 			fetchFeatures(serverBus, dsID);
 		}
 	},
-	'columnLabel': (state, dsID, value) =>
-		_.assocIn(state, ['columns', dsID, 'user', 'columnLabel'], value),
-	'fieldLabel': (state, dsID, value) =>
-		_.assocIn(state, ['columns', dsID, 'user', 'fieldLabel'], value),
-	'showIntrons': (state, dsID) =>
-		_.updateIn(state, ['columns', dsID, 'showIntrons'], v => !v),
-	'sortVisible': (state, dsID, value) =>
-		_.assocIn(state, ['columns', dsID, 'sortVisible'], value),
+	'columnLabel': (state, id, value) =>
+		_.assocIn(state, ['columns', id, 'user', 'columnLabel'], value),
+	'fieldLabel': (state, id, value) =>
+		_.assocIn(state, ['columns', id, 'user', 'fieldLabel'], value),
+	'showIntrons': (state, id) =>
+		_.updateIn(state, ['columns', id, 'showIntrons'], v => !v),
+	'sortVisible': (state, id, value) =>
+		_.assocIn(state, ['columns', id, 'sortVisible'], value),
 	'km-open': (state, id) => _.assocInAll(state,
 			['km', 'id'], id,
 			['km', 'title'], _.getIn(state, ['columns', id, 'user', 'columnLabel']),
