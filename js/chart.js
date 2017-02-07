@@ -869,6 +869,7 @@ module.exports = function (root, callback, sessionStorage) {
 					((bin - offset + gap) / stdev).toPrecision(3));
 				ybinnedSample = {};
 				categories.map(bin => ybinnedSample[bin] = 0);
+
 				valueList.map( value => {
 					var bin = categories[Math.floor((value - min) / gap)];
 					ybinnedSample[bin] = ybinnedSample[bin] + 1;
@@ -879,9 +880,6 @@ module.exports = function (root, callback, sessionStorage) {
 			showLegend = false;
 
 			displayCategories = categories.slice(0);
-			if (reverseStrand) {
-				displayCategories.reverse();
-			}
 			if (yIsCategorical) {
 				chartOptions = highchartsHelper.columnChartOptions(
 					chartOptions, categories.map(code=> code + " (" + ybinnedSample[code].length + ")"),
@@ -891,6 +889,9 @@ module.exports = function (root, callback, sessionStorage) {
 					chartOptions, categories, xAxisTitle, "Histogram", ylabel, showLegend);
 			}
 			else {
+				if (reverseStrand) {
+					displayCategories.reverse();
+				}
 				chartOptions = highchartsHelper.columnChartFloat (chartOptions, displayCategories, xAxisTitle, ylabel);
 			}
 			chart = new Highcharts.Chart(chartOptions);
@@ -1139,9 +1140,15 @@ module.exports = function (root, callback, sessionStorage) {
 				// pearson rho value when there is only single series x y scatter plot
 				if (yfields.length === 1 && xdata[0].length > 1) {
 					//Pearson's Rho p value
-					var rho = jStat.corrcoeff(xdata[0], ydata[0]); // r Pearson's Rho correlation coefficient
+					var xlist = _.filter(xdata[0], function (x, i) {return (x != null && ydata[0][i] != null);});
+					var ylist = _.filter(ydata[0], function (y, i) {return (y != null && xdata[0][i] != null);});
+					var rho = jStat.corrcoeff(xlist, ylist); // r Pearson's Rho correlation coefficient
+					var spearmanRho = jStat.spearmancoeff(xlist, ylist); // (spearman's) rank correlation coefficient, rho
 					chart.renderer.text('Pearson\'s rho<br>' +
-						'r = ' + rho.toPrecision(4), 100, 75).add();
+						'r = ' + rho.toPrecision(4) + '<br>' +
+						'Spearman\'s rank rho<br>' +
+						'ρ = ' + spearmanRho.toPrecision(4)
+						, 100, 75).add();
 				}
 
 
