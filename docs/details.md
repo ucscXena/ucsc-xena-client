@@ -18,9 +18,14 @@ statement, ```console.log```) are still available.
 https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi
 
 React developer tools is a plugin for chrome and firefox which extends
-the debugger. It adds a new 'react' tab, which allows you to inspect the
+the debugger. It adds a new 'React' tab, which allows you to inspect the
 state of the react library, including the component hierarchy, and
 the ```props``` and ```state``` of each component.
+
+Note, particularly, that if you select an element in the 'Elements' tab,
+then switch to the React tab, the component containing the selected element
+will be selected. Also, having selected a component, the variable ```$r``` in
+the console will be the selected component.
 
 ### redux dev tools
 
@@ -65,7 +70,7 @@ log ```msg``` and ```x```, and return value ```x```. So, you can insert it into
 expressions without disrupting the structure.
 
 ```javascript
-	return f(spy('g', g(x)));
+	return f(_.spy('g', g(x)));
 ```
 
 ### rxjs spy(msg)
@@ -105,9 +110,11 @@ exit with an error.
 'use strict'
 > y(1)(2)
 3
+> y(1, 2)
+3
 ```
 
-## column polymorphism
+## Column polymorphism
 
 The xena display is composed of a number of heterogenous data columns. For example,
 one might display a copy number column (which is a two-dimensional array of floats),
