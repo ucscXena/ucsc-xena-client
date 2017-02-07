@@ -250,3 +250,9 @@ functions relevant to some domain, which can be used by the other layers
 This is primarily an organizational technique. The major data types are
 represented by models, such as model/denseMatrix.js, model/mutationVector.js,
 model/segmented.js.
+
+## State Schema
+
+An incomplete description of the application state is available here:
+
+http://htmlpreview.github.io/?https://github.com/ucscXena/ucsc-xena-client/blob/master/docs/schema.html#Application
