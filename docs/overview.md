@@ -58,7 +58,7 @@ In this design, application state must be treated as immutable data. Mutating
 state in-place will cause the view to be out of sync with the state.
 
 In practice this means that state should only be changed in an action
-handler, and the action handler 'changes' state by return a new state value.
+handler, and the action handler 'changes' state by returning a new state value.
 
 To make it easy to create a state value, we use an immutability-helper
 library that looks a bit like clojure data methods.
@@ -146,9 +146,9 @@ where ```controls``` is a mapping of action types to action handlers.
 
 ```javascript
 var controls = {
-	/* 'dsID' and 'value' correspond to the fieldLabel action parameters, above */
-	fieldLabel: (state, dsID, value) =>
-		_.assocIn(state, ['columns', dsID, 'user', 'fieldLabel'], value),
+	/* 'id' and 'value' correspond to the fieldLabel action parameters, above */
+	fieldLabel: (state, id, value) =>
+		_.assocIn(state, ['columns', id, 'user', 'fieldLabel'], value),
 
     /* ...other action handlers follow */
 }
