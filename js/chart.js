@@ -614,7 +614,6 @@ module.exports = function (root, callback, sessionStorage) {
 			xAxisTitle,
 			ybinnedSample,
 			dataSeriese,
-			errorSeries,
 			nNumberSeriese,
 			yfield,
 			ydataElement,
@@ -638,12 +637,16 @@ module.exports = function (root, callback, sessionStorage) {
 
 		if (xIsCategorical && !yIsCategorical) { // x : categorical y float
 			var xCategories = [],
-				dataMatrix = [], // row is x and column is y
+				meanMatrix = [],
+				medianMatrix = [], // median row is x and column is y
+				upperMatrix = [], // 75 percentile row is x and column is y
+				lowerMatrix = [], // 25 percentile row is x and column is y
+				upperwhiskerMatrix = [], // upperwhisker percentile row is x and column is y
+				lowerwhiskerMatrix = [], // lowerwhisker percentile row is x and column is y
 				stdMatrix = [], // row is x and column is y
 				nNumberMatrix = [], // number of data points (real data points) for dataMatrix
 				row,
-				highlightcode = [],
-				yDisplayFields;
+				highlightcode = [];
 
 			xSampleCode = {};
 			xbinnedSample = {};
@@ -686,7 +689,12 @@ module.exports = function (root, callback, sessionStorage) {
 				for (k = 0; k < yfields.length; k++) {
 					row.push(NaN);
 				}
-				dataMatrix.push(row);
+				meanMatrix.push(_.clone(row));
+				medianMatrix.push(_.clone(row));
+				upperMatrix.push(_.clone(row));
+				lowerMatrix.push(_.clone(row));
+				upperwhiskerMatrix.push(_.clone(row));
+				lowerwhiskerMatrix.push(_.clone(row));
 				stdMatrix.push(_.clone(row));
 				nNumberMatrix.push(_.clone(row));
 			}
@@ -700,18 +708,33 @@ module.exports = function (root, callback, sessionStorage) {
 				for (i = 0; i < xCategories.length; i++) {
 					code = xCategories[i];
 					if (ybinnedSample[yfield][code].length) {
-						var data = ybinnedSample[yfield][code];
+						var data = ybinnedSample[yfield][code],
+							m = data.length;
 
-						average = highchartsHelper.average(data);
+						data.sort((a, b) => a - b);
+						average =  highchartsHelper.average(data);
 						stdDev = numSD * highchartsHelper.standardDeviation(data, average);
 
-						if (!isNaN(average)) {
-							dataMatrix[i][k] = parseFloat((average / STDEV[yfield]).toPrecision(3));
-							nNumberMatrix[i][k] = data.length;
-						} else {
-							dataMatrix[i][k] = NaN;
-							nNumberMatrix[i][k] = data.length;
-						}
+						// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
+						var median = data[Math.floor( m / 2)],
+							lower =  data[Math.floor( m / 4)],
+							upper =  data[Math.floor( 3 * m / 4)],
+							whisker = 1.5 * upper - lower,
+							upperwhisker = _.findIndex(data, x => x > upper + whisker),
+							lowerwhisker = _.findLastIndex(data, x => x < lower - whisker);
+
+						upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
+						lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
+
+						meanMatrix[i][k] = parseFloat((average / STDEV[yfield]).toPrecision(3));
+						medianMatrix[i][k] = parseFloat((median / STDEV[yfield]).toPrecision(3));
+						lowerMatrix[i][k] = parseFloat((lower / STDEV[yfield]).toPrecision(3));
+
+						upperMatrix[i][k] = parseFloat((upper / STDEV[yfield]).toPrecision(3));
+						lowerwhiskerMatrix[i][k] = parseFloat((lowerwhisker / STDEV[yfield]).toPrecision(3));
+						upperwhiskerMatrix[i][k] = parseFloat((upperwhisker / STDEV[yfield]).toPrecision(3));
+						nNumberMatrix[i][k] = m;
+
 						if (!isNaN(stdDev)) {
 							stdMatrix[i][k] = parseFloat((stdDev / STDEV[yfield]).toPrecision(3));
 						} else {
@@ -721,10 +744,10 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 			}
 
+
 			//add data seriese
 			var offsetsSeries = [],
-				cutOffset,
-				getError;
+				cutOffset;
 
 			showLegend = true;
 			// offsets
@@ -741,16 +764,6 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 			};
 
-			getError = function([average, stdDev, offset]) {
-				if (!isNaN(average) && !isNaN(stdDev)) {
-					return [parseFloat((average - stdDev - offset).toPrecision(3)),
-						parseFloat((average + stdDev - offset).toPrecision(3))
-					];
-				} else {
-					return ["", ""];
-				}
-			};
-
 			customColors = getCustomColor(columns[xcolumn].fieldSpecs, columns[xcolumn].fields, datasets);
 
 			xcodemap.forEach(function (code, i) {
@@ -759,17 +772,17 @@ module.exports = function (root, callback, sessionStorage) {
 
 
 			// column chart setup
-			yDisplayFields = yfields.slice(0);
-			if (reverseStrand) {
-				yDisplayFields.reverse();
-			}
-			chartOptions = highchartsHelper.columnChartFloat(chartOptions, yDisplayFields, xlabel, ylabel);
+			chartOptions = highchartsHelper.columnChartFloat(chartOptions, yfields, xlabel, ylabel);
 			chart = new Highcharts.Chart(chartOptions);
 
 			for (i = 0; i < xCategories.length; i++) {
 				code = xCategories[i];
-				dataSeriese = (_.zip(dataMatrix[i], offsetsSeries)).map(cutOffset);
-				errorSeries = (_.zip(dataMatrix[i], stdMatrix[i], offsetsSeries)).map(getError);
+				var medianSeriese = (_.zip(medianMatrix[i], offsetsSeries)).map(cutOffset),
+					upperSeriese = (_.zip(upperMatrix[i], offsetsSeries)).map(cutOffset),
+					lowerSeriese = (_.zip(lowerMatrix[i], offsetsSeries)).map(cutOffset),
+					upperwhiskerSeriese = (_.zip(upperwhiskerMatrix[i], offsetsSeries)).map(cutOffset),
+					lowerwhiskerSeriese = (_.zip(lowerwhiskerMatrix[i], offsetsSeries)).map(cutOffset);
+
 				nNumberSeriese = nNumberMatrix[i];
 
 				// highlight coloring
@@ -781,13 +794,11 @@ module.exports = function (root, callback, sessionStorage) {
 					}
 				}
 
-				if (reverseStrand) {
-					dataSeriese.reverse();
-					errorSeries.reverse();
-				}
+				dataSeriese = _.zip(lowerwhiskerSeriese, lowerSeriese, medianSeriese, upperSeriese, upperwhiskerSeriese);
 
 				highchartsHelper.addSeriesToColumn(
-					chart, 'column', code, dataSeriese, errorSeries, yIsCategorical,
+					chart, 'boxplot', code,
+					dataSeriese, yIsCategorical,
 					yfields.length * xCategories.length < 30, showLegend,
 					customColors && customColors[code] ? customColors[code] : colors[code],
 					nNumberSeriese);
@@ -797,8 +808,8 @@ module.exports = function (root, callback, sessionStorage) {
 			if (yfields.length === 1 && xCategories.length === 2 &&
 				nNumberMatrix[0][0] > 1 && nNumberMatrix[1][0] > 1) {
 				// do p value calculation using Welch's t-test
-				var x1 = dataMatrix[0][0], // mean1
-					x2 = dataMatrix[1][0], // mean2
+				var x1 = meanMatrix[0][0], // mean1
+					x2 = meanMatrix[1][0], // mean2
 					v1 = stdMatrix[0][0] * stdMatrix[0][0], //variance 1
 					v2 = stdMatrix[1][0] * stdMatrix[1][0], //variance 2
 					n1 = nNumberMatrix[0][0], // number 1
@@ -820,7 +831,6 @@ module.exports = function (root, callback, sessionStorage) {
 		} else if (!xfield) { //summary view --- messsy code
 			var displayCategories;
 
-			errorSeries = [];
 			dataSeriese = [];
 			nNumberSeriese = [];
 			ybinnedSample = {};
@@ -907,21 +917,31 @@ module.exports = function (root, callback, sessionStorage) {
 					value = ybinnedSample[code];
 					dataSeriese.push(value);
 				} else {
-					var average = highchartsHelper.average(ybinnedSample[code]);
-					var stdDev = numSD * highchartsHelper.standardDeviation(ybinnedSample[code], average);
-					if (!isNaN(average)) {
-						dataSeriese.push(parseFloat(((average - offsets[code]) / STDEV[code]).toPrecision(3)));
-						nNumberSeriese.push(ybinnedSample[code].length);
-					} else {
-						dataSeriese.push("");
-					}
-					if (!isNaN(stdDev)) {
-						errorSeries.push([parseFloat(((average - offsets[code] - stdDev) / STDEV[code]).toPrecision(3)),
-							parseFloat(((average - offsets[code] + stdDev) / STDEV[code]).toPrecision(3))
-						]);
-					} else {
-						errorSeries.push(["", ""]);
-					}
+					var data = ybinnedSample[code],
+						m = data.length;
+					data.sort((a, b) => a - b);
+					average = highchartsHelper.average(data);
+					stdDev = numSD * highchartsHelper.standardDeviation(data, average);
+
+					// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
+					var median = data[Math.floor( m / 2)],
+						lower =  data[Math.floor( m / 4)],
+						upper =  data[Math.floor( 3 * m / 4)],
+						whisker = 1.5 * upper - lower,
+						upperwhisker = _.findIndex(data, x => x > upper + whisker),
+						lowerwhisker = _.findLastIndex(data, x => x < lower - whisker);
+
+					upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
+					lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
+
+					median = parseFloat(((median - offsets[code]) / STDEV[code]).toPrecision(3));
+					lower = parseFloat(((lower - offsets[code]) / STDEV[code]).toPrecision(3));
+					upper = parseFloat(((upper - offsets[code]) / STDEV[code]).toPrecision(3));
+					upperwhisker = parseFloat(((upperwhisker - offsets[code]) / STDEV[code]).toPrecision(3));
+					lowerwhisker = parseFloat(((lowerwhisker - offsets[code]) / STDEV[code]).toPrecision(3));
+
+					dataSeriese.push([lowerwhisker, lower, median, upper, upperwhisker]);
+					nNumberSeriese.push(m);
 				}
 			});
 			// add seriese to chart
@@ -935,10 +955,10 @@ module.exports = function (root, callback, sessionStorage) {
 				chartType = 'line';
 			} else {
 				seriesLabel = "average";
-				chartType = 'column';
+				chartType = 'boxplot';
 			}
 			highchartsHelper.addSeriesToColumn(chart, chartType, seriesLabel,
-				dataSeriese, errorSeries, yIsCategorical, categories.length < 30, showLegend,
+				dataSeriese, yIsCategorical, categories.length < 30, showLegend,
 				0, nNumberSeriese);
 			chart.redraw();
 		} else if (xIsCategorical && yIsCategorical) { // x y : categorical --- messsy code
@@ -989,14 +1009,6 @@ module.exports = function (root, callback, sessionStorage) {
 				xAxisTitle, 'Distribution', ylabel, showLegend);
 
 			chart = new Highcharts.Chart(chartOptions);
-
-			/*var yFromCategories = function (ycode, xcode) {
-				var value;
-				if (xcode.length) {
-					value = (_.intersection(xcode, ycode).length / xcode.length) * 100;
-				}
-				return value ? parseFloat(value.toPrecision(3)) : " ";
-			};*/
 
 			var ycategories = Object.keys(ybinnedSample);
 
@@ -1051,7 +1063,7 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 
 				highchartsHelper.addSeriesToColumn(
-					chart, 'column', code, ycodeSeries, errorSeries, yIsCategorical,
+					chart, 'column', code, ycodeSeries, yIsCategorical,
 					ycodemap.length * categories.length < 30, showLegend,
 					customColors && customColors[code] ? customColors[code] : colors[code], observed[i]);
 			}

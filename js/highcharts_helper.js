@@ -152,6 +152,8 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 
 // x categorical y float
 function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
+	yAxisTitle =  yAxisTitle.length > 20 ? yAxisTitle.slice(0, 20) + '...' : yAxisTitle;
+
 	chartOptions.legend.align = 'right';
 	chartOptions.legend.margin = 5;
 	chartOptions.legend.title.text = xAxisTitle;
@@ -184,7 +186,8 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 				+ (categories.length > 1 ?  yAxisTitle + ' ' : '' )
 				+ categories[this.point.x]
 				+ ': <b>'
-				+ (this.point.high ? (this.point.low + ' to ' + this.point.high ) : this.point.y)
+				+ this.point.median + '</b>'
+				+ ' (' + this.point.low + ',' + this.point.q1 + ',' + this.point.q3 + ',' + this.point.high + ')<br>'
 				+ '</b><br>'
 				+ (nNumber ? 'n = ' + nNumber : '');
 		},
@@ -210,6 +213,8 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 
 	return chartOptions;
 }
+
+
 
 function scatterChart(chartOptions, xlabel, ylabel) {
 	var xAxisTitle = xlabel,
@@ -248,7 +253,7 @@ function scatterChart(chartOptions, xlabel, ylabel) {
 	return chartOptions;
 }
 
-function addSeriesToColumn (chart, chartType, sName, ycodeSeries, errorSeries, yIsCategorical,
+function addSeriesToColumn (chart, chartType, sName, ycodeSeries, yIsCategorical,
 	showDataLabel, showLegend, color, nNumberSeriese = undefined) {
 	var seriesOptions = {
 		name: sName,
@@ -277,15 +282,6 @@ function addSeriesToColumn (chart, chartType, sName, ycodeSeries, errorSeries, y
 	}
 
 	chart.addSeries(seriesOptions, false);
-
-	if (errorSeries) {
-		chart.addSeries({
-			name: sName + " +/-standard deviation",
-			type: 'errorbar',
-			data: errorSeries,
-			description: nNumberSeriese
-		}, false);
-	}
 }
 
 function average(data) {
