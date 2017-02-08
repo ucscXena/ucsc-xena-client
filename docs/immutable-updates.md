@@ -179,7 +179,7 @@ avoid recomputing ```header```, but it will have to do a deep-compare
 of ```state.post``` in order to determine that the value is unchanged.
 
 In contrast, by using ```_.assocIn()``` above, the selector can simply
-test for reference equality, ```state0.post ==== state1.post```. Review
+test for reference equality, ```state0.post === state1.post```. Review
 the bold portions of ```state1```, above.
 
 In a large state structure, this comparsion is much, much faster. Additionally,
@@ -217,7 +217,7 @@ appropriate: perhaps a uuid, or a database primary key for the post.
 
 For selectors we instead model collections as dictionaries, and use
 the dictionary selector constuctor ```createFmapSelector```. These
-selectors will execute a function per-key in the dictionary, caching
+selectors will execute a function per key in the dictionary, caching
 the key names and results.
 
 For example, our application state looks a bit like the following,
