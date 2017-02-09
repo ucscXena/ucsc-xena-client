@@ -433,11 +433,7 @@ module.exports = function (root, callback, sessionStorage) {
 		if (xIsCategorical && yIsCategorical) {
 			datalabelButton = document.createElement("button");
 			datalabelButton.setAttribute("class", "showHideButton");
-			if (chart.series.some(function (series) {
-					if (series.type !== 'errorbar' && series.options.dataLabels.enabled) {
-						return true;
-					}
-				})) {
+			if (chart.series.some ( series => series.options.dataLabels.enabled)) {
 				datalabelButton.innerHTML = datalabelHide;
 			} else {
 				datalabelButton.innerHTML = datalabelShow;
@@ -445,20 +441,11 @@ module.exports = function (root, callback, sessionStorage) {
 			datalabelButton.addEventListener("click", function () {
 				if (datalabelButton.innerHTML === datalabelShow) {
 					chart.series.forEach(function (series) {
-						if (series.type !== 'errorbar') {
-							series.update({
-								dataLabels: {
-									enabled: true
-								}
-							}, false);
-							if (yIsCategorical) {
-								series.update({
-									dataLabels: {
-										format: '{point.y} %'
-									}
-								}, false);
+						series.update({
+							dataLabels: {
+								enabled: true,
 							}
-						}
+						}, false);
 					});
 					datalabelButton.innerHTML = datalabelHide;
 				} else {
