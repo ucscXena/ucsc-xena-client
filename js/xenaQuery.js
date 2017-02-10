@@ -148,7 +148,7 @@ var segmentedAttrs = list =>
 		"chr": row.position.chrom,
 		"start": row.position.chromstart,
 		"end": row.position.chromend,
-		"value": row.value
+		"value": nanstr(row.value)
 	}));
 
 function indexSegmented(resp) {
