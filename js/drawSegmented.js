@@ -62,23 +62,81 @@ function labelValues(vg, width, {index, height, count}, toDraw) {
 	}
 }
 
-function drawSegments(vg, colorScale, width, rheight, zoom, segments) {
-	var toDraw = segments.map(v => {
-		var y = (v.y - zoom.index) * rheight + (rheight / 2);
-		return {
-			...v,
-			y,
-			h: rheight,
-			color: colorScale(v.value)
-		};
-	});
+// Convert a color scale to a lookup table, by sampling along its
+// domain. This is much faster than doing interpolation on every data
+// point.
+var maxColors = 200;
+function colorTable(colorScale) {
+	var domain = colorScale.domain(),
+		min = _.min(domain),
+		max = _.max(domain),
+		len = max - min,
+		table = _.range(min, max, len / maxColors).map(colorScale);
+	return {
+		lookup: v => {
+			if (v == null) {
+				return 'gray';
+			}
+			var i = Math.floor((v - min) * maxColors / len),
+				clipped = i < 0 ? 0 : (i >= maxColors ? maxColors - 1 : i);
+			return table[clipped];
+		},
+		table
+	};
+}
 
-	toDraw.forEach(segment => {
-		var {xStart, xEnd, y, h, color} = segment,
-			points = [[xStart, y, xEnd, y]];
+// Rearrange an array in order [floor(N/2), floor(N/2) + 1, floor(N/2) - 1, ...]
+function reorder(arr) {
+	var mid = Math.floor(arr.length / 2), // may round down
+		up = arr.slice(mid, arr.length),  // may be longer
+		down = arr.slice(0, mid).reverse();
+	return _.flatten(_.zip(up, down)).slice(0, arr.length);
+}
+
+// There are two optimizations here, for large inputs. This is close to 2x
+// faster than w/o the optimizations.
+//
+// d3 color scales will interpolate each input, then convert to string.
+// This is much too slow for large collections. Instead, we sample the
+// color scale along its domain to create a table. Then we can
+// look up the color string in the table with a simple divide.
+//
+// After discretizing the color in this fashion, we can group the segments
+// by color. This lets us minimize canvas color changes, which are extremely
+// expensive. This approach has a drawback: it can obscure small features of
+// the data when zoomed out. If red is always drawn after blue, small blue features
+// will not show up. If, instead, we draw segments in random order, red-on-blue
+// and blue-on-red features will both show up, because on average a few red and
+// a few blue will be drawn last. However this is very slow, because of all
+// the canvas color changes.
+//
+// A workaround, here, is to draw the discrete color groups in alternating
+// order from the middle to both extremes, via the reorder() function. So
+// with default colors we draw white, light red, light blue, darker red, darker blue,
+// etc., to each extreme. This shows small feature well in a few representative
+// datasets.
+//
+// It's possible this will work poorly for other datasets, e.g. if there are
+// only a few colors. If this is the case, we might instead want to alternate
+// subsets of the few color groups.
+
+function drawSegments(vg, colorScale, width, rheight, zoom, segments) {
+	var {lookup, table} = colorTable(colorScale),
+		toDraw = segments.map(v => {
+			var y = (v.y - zoom.index) * rheight + (rheight / 2);
+			return {
+				points: [v.xStart, y, v.xEnd, y],
+				color: lookup(v.value)
+			};
+		}),
+		byColor = _.groupBy(toDraw, 'color');
+
+	['gray', ...reorder(table)].forEach(color => {
+		var colorGroup = byColor[color],
+		points = _.pluck(colorGroup, 'points');
 
 		vg.drawPoly(points,
-			{strokeStyle: color, lineWidth: h});
+			{strokeStyle: color, lineWidth: rheight});
 	});
 }
 
