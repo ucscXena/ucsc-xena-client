@@ -75,7 +75,11 @@ function fetchGene({dsID, fields, assembly}, [samples]) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return name ? xenaQuery.refGeneExonCase(host, name, fields)
 		.flatMap(refGene => {
-			var {txStart, txEnd, chrom} = _.values(refGene)[0],
+			var coords = _.values(refGene)[0];
+			if (!coords) {
+				return Rx.Observable.return(null);
+			}
+			var {txStart, txEnd, chrom} = coords,
 				{padTxStart, padTxEnd} = exonPadding;
 			return segmentedDataRange(dsID, samples, chrom, txStart - padTxStart, txEnd + padTxEnd)
 				.map(req => mapSamples(samples, {req, refGene}));
@@ -129,11 +133,11 @@ function defaultXZoom(pos, refGene) {
 }
 
 function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
-	if (_.isEmpty(data) || _.isEmpty(data.req)) {
+	var pos = parsePos(column.fields[0]);
+	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos || _.isEmpty(data.refGene))) {
 		return {};
 	}
-	var pos = parsePos(column.fields[0]),
-		refGeneObj = _.values(data.refGene)[0],
+	var refGeneObj = _.values(data.refGene)[0],
 		maxXZoom = defaultXZoom(pos, refGeneObj), // exported for zoom controls
 		{width, showIntrons = false, xzoom = maxXZoom} = column,
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
