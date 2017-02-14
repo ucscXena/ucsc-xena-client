@@ -134,7 +134,7 @@ function defaultXZoom(pos, refGene) {
 
 function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
 	var pos = parsePos(column.fields[0]);
-	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos || _.isEmpty(data.refGene))) {
+	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {};
 	}
 	var refGeneObj = _.values(data.refGene)[0],
