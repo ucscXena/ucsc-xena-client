@@ -31,7 +31,7 @@ var backgroundStripes = hasValue =>
 
 function drawBackground(vg, width, height) {
 	vg.smoothing(false);
-	vg.box(0, 0, width, height, 'grey'); // white background
+	vg.box(0, 0, width, height, 'grey'); // grey background
 }
 
 function labelNulls(vg, width, height, count, stripes) {
@@ -155,10 +155,12 @@ var drawSegmented = _.curry((vg, props) => {
 		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]),
 		stripes = backgroundStripes(hasValue);
 
-	vg.drawSharpRows(vg, index, count, height, width,
-		drawBackground,
-		(vg, rwidth, rheight) =>
-			drawSegments(vg, colorScale, rwidth, rheight, zoom, toDraw));
+	if (nodes.length > 0) {
+		vg.drawSharpRows(vg, index, count, height, width,
+			drawBackground,
+			(vg, rwidth, rheight) =>
+				drawSegments(vg, colorScale, rwidth, rheight, zoom, toDraw));
+	}
 	labelNulls(vg, width, height, count, stripes);
 	labelValues(vg, width, zoom, toDraw);
 });
