@@ -13,7 +13,7 @@ var assert = require('assert');
 
 var AGenomicDsID = JSON.stringify({
 	'host': 'https:tcga.xenahubs.net',
-	'name': 'TCGA.BRCA.sampleMap/SNP6.matrix'
+	'name': 'TCGA.ACC.sampleMap/Gistic2_CopyNumber_Gistic2_all_data_by_genes'
 });
 
 var AClinicalDsID = JSON.stringify({
@@ -51,16 +51,17 @@ var CMutationDsID = JSON.stringify({
 	'name': 'TCGA.KIRC.sampleMap/mutation'
 });
 
+
 var ASamples = [
-	"TCGA-GI-A2C8-01",
-	'TCGA-EW-A424-01',
-	'TCGA-AC-A23E-01',
-	'TCGA-D8-A147-01',
-	'TCGA-E2-A150-01',
-	'TCGA-E2-A14O-01',
-	'TCGA-A2-A04R-01',
-	'TCGA-E9-A245-01',
-	'TCGA-C8-A1HJ-01'];
+	'TCGA-OR-A5LT-01',
+	'TCGA-OR-A5LO-01',
+	'TCGA-OR-A5JQ-01',
+	'TCGA-OR-A5KY-01',
+	'TCGA-PK-A5HC-01',
+	'TCGA-OR-A5J4-01',
+	'TCGA-OR-A5J8-01',
+	'TCGA-OR-A5LH-01',
+	'TCGA-OR-A5LF-01'];
 
 var BSamples = [
 	'TumPancM11',
