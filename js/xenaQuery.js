@@ -145,7 +145,6 @@ function indexMutations(gene, resp) {
 var segmentedAttrs = list =>
 	_.map(list, row => ({
 		"sample": row.sampleID,
-		"chr": row.position.chrom,
 		"start": row.position.chromstart,
 		"end": row.position.chromend,
 		"value": nanstr(row.value)
