@@ -4,6 +4,7 @@ var widgets = require('./columnWidgets');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var vgcanvas = require('./vgcanvas');
+var {addCommas} = require('./util');
 
 var height = 24; // Move to common file, to match refGeneExons? Pass in as prop?
 var labelHeight = 12;
@@ -39,7 +40,7 @@ function abrev(n) {
 }
 
 function numberOrAbrev(vg, width, font, n) {
-	var s = String(n),
+	var s = addCommas(n),
 		w = vg.textWidth(font, s + ' '); // pad with one space
 	return w > width ? abrev(n) : s;
 }
@@ -66,8 +67,8 @@ function drawChromScale(vg, width, layout) {
 		rangePos = Math.min(pushLeft, (pixelWidth - rangeWidth) / 2);
 
 	// Render start & end position, abreviating if constrained for width.
-	vg.text(pixelStart + 3, height, 'black', font, numberOrAbrev(vg, width / 2, font, baseStart));    // start position at left
-	vg.text(pixelEnd - vg.textWidth(font, endText), height, 'black', font, endText); // end position at right
+	vg.text(pixelStart + 3, height - 1, 'black', font, numberOrAbrev(vg, width / 2, font, baseStart));    // start position at left
+	vg.text(pixelEnd - vg.textWidth(font, endText), height - 1, 'black', font, endText); // end position at right
 
 
 	if (range >= 1) {
