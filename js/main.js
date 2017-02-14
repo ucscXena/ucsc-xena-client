@@ -13,6 +13,8 @@ var _ = require('./underscore_ext');
 require('./plotDenseMatrix');
 require('./plotMutationVector');
 require('./plotSegmented');
+require('./refGeneExons');
+require('./ChromPosition');
 require('./models/denseMatrix');
 require('./models/mutationVector');
 require('./models/segmented');
@@ -48,6 +50,7 @@ if (module.hot) {
 	// XXX Note that hot-loading these won't cause a re-render.
 	module.hot.accept('./models/mutationVector', () => {});
 	module.hot.accept('./models/denseMatrix', () => {});
+	module.hot.accept('./models/segmented', () => {});
 }
 
 var store = createStore(true);

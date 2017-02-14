@@ -2,6 +2,7 @@
 'use strict';
 
 var _ = require('./underscore_ext');
+var widgets = require('./columnWidgets');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var intervalTree = require('static-interval-tree');
@@ -123,6 +124,8 @@ var RefGeneAnnotation = React.createClass({
 		);
 	}
 });
+
+widgets.annotation.add('gene', props => <RefGeneAnnotation {...props}/>);
 
 module.exports = {
 	findIntervals: findIntervals,

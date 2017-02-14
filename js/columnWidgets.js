@@ -2,9 +2,12 @@
 'use strict';
 
 var multi = require('./multi');
+var parsePos = require('./parsePos');
 
 var fieldTypeSelector = x => x.fieldType;
 var columnFieldTypeSelector = x => x.column.fieldType;
+var annotationSelector = ({fields, refGene}) =>
+	parsePos(fields[0]) ? 'chrom' : (refGene ? 'gene' : null);
 
 var widget = {
 	cmp: multi(fieldTypeSelector),
@@ -15,10 +18,12 @@ var widget = {
     specialDownload: multi(columnFieldTypeSelector),
 	column: multi(columnFieldTypeSelector),
 	legend: multi(columnFieldTypeSelector),
-	pdf: multi(fieldTypeSelector)
+	pdf: multi(fieldTypeSelector),
+	annotation: multi(annotationSelector)
 };
 
 widget.index.dflt = () => null;
 widget.avg.dflt = () => null;
+widget.annotation.dflt = () => null;
 
 module.exports = widget;

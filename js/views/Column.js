@@ -13,7 +13,6 @@ var Badge = require('react-bootstrap/lib/Badge');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var DefaultTextInput = require('./DefaultTextInput');
-var {RefGeneAnnotation} = require('../refGeneExons');
 var DragSelect = require('./DragSelect');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
 var ResizeOverlay = require('./ResizeOverlay');
@@ -385,7 +384,6 @@ var Column = React.createClass({
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
 			// move this to state to generalize to other annotations.
-			doRefGene = _.get(data, 'refGene'),
 			sortHelp = <Tooltip>Drag to change column order</Tooltip>,
 			menuHelp = <Tooltip>Column menu</Tooltip>,
 			moveIcon = (
@@ -394,7 +392,13 @@ var Column = React.createClass({
 						className="glyphicon glyphicon-resize-horizontal Sortable-handle"
 						aria-hidden="true">
 					</span>
-				</OverlayTrigger>);
+				</OverlayTrigger>),
+			annotation = widgets.annotation({
+				fields: column.fields,
+				refGene: _.values(data.refGene)[0],
+				layout: column.layout,
+				width,
+				alternateColors: !_.getIn(column, ['showIntrons'], false)});
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
 		// tooltips) for children. We must use a different tag, e.g. 'label'.
@@ -435,15 +439,9 @@ var Column = React.createClass({
 					value={{default: fieldLabel, user: user.fieldLabel}} />
 				<Crosshair>
 					<div style={{height: 32}}>
-						{doRefGene ?
-							addHelp('refGene',
-								<DragSelect enabled={true} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-										<RefGeneAnnotation
-											alternateColors={!_.getIn(column, ['showIntrons'], false)}
-											width={width}
-											refGene={_.values(data.refGene)[0]}
-											layout={column.layout}
-											position={{gene: column.fields[0]}}/>
+						{annotation ? addHelp('refGene',
+							<DragSelect enabled={true} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+									{annotation}
 							</DragSelect>) : null}
 					</div>
 				</Crosshair>
