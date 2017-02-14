@@ -427,8 +427,6 @@ module.exports = function (root, callback, sessionStorage) {
 			datalabelShow = "Show Y data labels",
 			datalabelHide = "Hide Y data labels";
 
-		div.appendChild(document.createElement("br"));
-
 		//showHideDataLabel button
 		if (xIsCategorical && yIsCategorical) {
 			datalabelButton = document.createElement("button");
@@ -751,7 +749,7 @@ module.exports = function (root, callback, sessionStorage) {
 				categories = yfields;
 			}
 
-			// single parameter float do historgram
+			// single parameter float do historgram with smart tick marks
 			if (!yIsCategorical && yfields.length === 1) {
 				var valueList = _.values(ybinnedSample)[0],
 					offset = _.values(offsets)[0],
@@ -762,18 +760,21 @@ module.exports = function (root, callback, sessionStorage) {
 				var min = valueList[0],
 					max = valueList[valueList.length - 1],
 					N = 20,
-					gap = (max - min) / N ;
+					gap = (max - min) / (N * stdev),
+					gapRoundedLower =  Math.pow(10, Math.floor(Math.log(gap) / Math.LN10)), // get a sense of the scale the gap, 0.01, 0.1, 1, 10 ...
+					gapList = [gapRoundedLower, gapRoundedLower * 2, gapRoundedLower * 5, gapRoundedLower * 10], // within the scale, find the closet to this list of easily readable intervals 1,2,5,10
+					gapRounded = _.min(gapList, x => Math.abs(gap - x )),
+					maxRounded = Math.ceil((max - offset) / stdev / gapRounded) * gapRounded,
+					minRounded = Math.floor((min - offset) / stdev / gapRounded) * gapRounded;
 
-				total = valueList.length;
-				categories = _.range(min, max + gap, gap);
-				categories = categories.map(bin => ((bin - offset) / stdev).toPrecision(3) +
-					' to ' +
-					((bin - offset + gap) / stdev).toPrecision(3));
+				categories = _.range(minRounded, maxRounded, gapRounded);
+				categories = categories.map( bin =>
+					(Math.floor(bin * 100) / 100) + ' to ' + (Math.floor((bin + gapRounded) * 100) / 100));
 				ybinnedSample = {};
 				categories.map(bin => ybinnedSample[bin] = 0);
-
 				valueList.map( value => {
-					var bin = categories[Math.floor((value - min) / gap)];
+					var binIndex = Math.floor(((value - offset) / stdev - minRounded) / gapRounded),
+						bin = categories[binIndex];
 					ybinnedSample[bin] = ybinnedSample[bin] + 1;
 				});
 			}
