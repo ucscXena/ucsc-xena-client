@@ -8,16 +8,16 @@ module.exports = function (text) {
 	// strip spaces, cvt to lower, match chr1:2-chr3:4 format
 	text = unicode.normalize(text).replace(/ /g, '').toLowerCase();
 	var pos = text.match(/^(chr[0-9xy]+):([0-9]+)?-([0-9]+)$/),
-		chromStart, baseStart, baseEnd;
+		chrom, baseStart, baseEnd;
 	if (pos) {
-		chromStart = pos[1];
+		chrom = pos[1];
 		baseStart = toInt(pos[2]);
 		baseEnd = toInt(pos[3]);
 		if (baseStart) {
 			baseStart = toInt(baseStart) - 1; // C convention
 		}
-		chromStart = chromStart.replace(/x/, 'X').replace(/y/, 'Y');
-		return {chromStart, baseStart, baseEnd};
+		chrom = chrom.replace(/x/, 'X').replace(/y/, 'Y');
+		return {chrom, baseStart, baseEnd};
 	}
 };
 

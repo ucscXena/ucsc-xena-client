@@ -67,7 +67,7 @@ function mapSamples(samples, data) {
 }
 
 function fetchChrom({dsID}, [samples], pos) {
-	return segmentedDataRange(dsID, samples, pos.chromStart, pos.baseStart, pos.baseEnd)
+	return segmentedDataRange(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd)
 		.map(req => mapSamples(samples, {req}));
 }
 

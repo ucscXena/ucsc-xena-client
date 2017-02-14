@@ -109,7 +109,7 @@ function intronLayout({chrom, txStart, txEnd, strand}, pxWidth, zoom) {
 	};
 }
 
-function chromLayout(__, pxWidth, zoom, {chromStart, baseStart, baseEnd}) {
+function chromLayout(__, pxWidth, zoom, {chrom, baseStart, baseEnd}) {
 	var intvals = [[baseStart, baseEnd]],
 		clippedIntvals = applyClip(intvals, zoom),
 		count =  baseLen(clippedIntvals),
@@ -122,7 +122,7 @@ function chromLayout(__, pxWidth, zoom, {chromStart, baseStart, baseEnd}) {
 		reversed: false,
 		baseLen: count,
 		pxLen: pxWidth,
-		chromName: chromStart,
+		chromName: chrom,
 		zoom: zoom
 	};
 }
