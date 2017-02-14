@@ -49,43 +49,6 @@ module.exports = function (root, callback, sessionStorage) {
 		return "column " + getLabel(i) + ": " + label;
 	}
 
-	function buildSDDropdown() {
-		var dropDownDiv, option,
-			dropDown = [{
-				"value": 1,
-				"text": "1 standard deviation"
-			}, {
-				"value": 2,
-				"text": "2 standard deviation"
-			}, {
-				"value": 3,
-				"text": "3 standard deviation"
-			}],
-			node = document.createElement("div");
-
-		dropDownDiv = document.createElement("select");
-		dropDownDiv.setAttribute("id", "sd");
-		dropDownDiv.setAttribute("class", "dropdown-style");
-
-		dropDown.forEach(function (obj) {
-			option = document.createElement('option');
-			option.value = obj.value;
-			option.textContent = obj.text;
-			dropDownDiv.appendChild(option);
-		});
-
-		dropDownDiv.selectedIndex = 0;
-
-		dropDownDiv.addEventListener('change', function () {
-			update.apply(this, updateArgs);
-		});
-
-		node.setAttribute("id", "sdDropDown");
-		node.appendChild(document.createTextNode(" Whisker "));
-		node.appendChild(dropDownDiv);
-		return node;
-	}
-
 	function buildNormalizationDropdown() {
 		var dropDownDiv, option,
 			dropDown = [{
@@ -403,15 +366,6 @@ module.exports = function (root, callback, sessionStorage) {
 		}
 	}
 
-	function sdDropdownUIsetting (visible) {
-		var dropDown = document.getElementById("sdDropDown");
-		if (visible) {
-			dropDown.style.visibility = "visible";
-		} else {
-			dropDown.style.visibility = "hidden";
-		}
-	}
-
 
 	// returns key:array
 	// categorical: key:array  ------  key is the category
@@ -467,28 +421,19 @@ module.exports = function (root, callback, sessionStorage) {
 
 	function toggleButtons(chart, xIsCategorical, yIsCategorical) {
 		var div = document.getElementById("chartContainer"),
-			seriesButton, errorbarButton, datalabelButton,
+			seriesButton, datalabelButton,
 			hideAll = "Hide all data",
 			showAll = "Show all data",
-			errorbarShow = "Show SD whiskers",
-			errorbarHide = "Hide SD whiskers",
-			errorbarShowTooltip = "Show standard deviation whiskers",
-			errorbarHideTooltip = "Hide standard deviation whiskers",
 			datalabelShow = "Show Y data labels",
-			datalabelHide = "Hide Y data labels",
-			dropDown = document.getElementById("sdDropDown");
+			datalabelHide = "Hide Y data labels";
 
 		div.appendChild(document.createElement("br"));
 
 		//showHideDataLabel button
-		if (xIsCategorical) {
+		if (xIsCategorical && yIsCategorical) {
 			datalabelButton = document.createElement("button");
 			datalabelButton.setAttribute("class", "showHideButton");
-			if (chart.series.some(function (series) {
-					if (series.type !== 'errorbar' && series.options.dataLabels.enabled) {
-						return true;
-					}
-				})) {
+			if (chart.series.some ( series => series.options.dataLabels.enabled)) {
 				datalabelButton.innerHTML = datalabelHide;
 			} else {
 				datalabelButton.innerHTML = datalabelShow;
@@ -496,20 +441,11 @@ module.exports = function (root, callback, sessionStorage) {
 			datalabelButton.addEventListener("click", function () {
 				if (datalabelButton.innerHTML === datalabelShow) {
 					chart.series.forEach(function (series) {
-						if (series.type !== 'errorbar') {
-							series.update({
-								dataLabels: {
-									enabled: true
-								}
-							}, false);
-							if (yIsCategorical) {
-								series.update({
-									dataLabels: {
-										format: '{point.y} %'
-									}
-								}, false);
+						series.update({
+							dataLabels: {
+								enabled: true,
 							}
-						}
+						}, false);
 					});
 					datalabelButton.innerHTML = datalabelHide;
 				} else {
@@ -525,49 +461,6 @@ module.exports = function (root, callback, sessionStorage) {
 				chart.redraw();
 			});
 			div.appendChild(datalabelButton);
-		}
-
-		//showHideErrorBar
-		if (xIsCategorical && !yIsCategorical) {
-			errorbarButton = document.createElement("button");
-			errorbarButton.setAttribute("class", "showHideButton");
-			if (chart.series.some(function (series) {
-					if (series.type === 'errorbar' && series.visible) {
-						return true;
-					}
-				})) {
-				errorbarButton.innerHTML = errorbarHide;
-				errorbarButton.setAttribute("title", errorbarHideTooltip);
-			} else {
-				errorbarButton.innerHTML = errorbarShow;
-				errorbarButton.setAttribute("title", errorbarShowTooltip);
-			}
-
-			errorbarButton.addEventListener("click", function () {
-				if (errorbarButton.innerHTML === errorbarHide) { //hide
-					chart.series.forEach(function (series) {
-						if (series.type === 'errorbar') {
-							series.setVisible(false, false);
-						}
-					});
-					errorbarButton.innerHTML = errorbarShow;
-					errorbarButton.setAttribute("title", errorbarShowTooltip);
-					dropDown.style.visibility = "hidden";
-				} else { /// show
-					var i, series;
-					for (i = 0; i < chart.series.length; i++) {
-						series = chart.series[i];
-						if (series.type === 'errorbar' && chart.series[i - 1].visible) {
-							series.setVisible(true, false);
-						}
-					}
-					errorbarButton.innerHTML = errorbarHide;
-					errorbarButton.setAttribute("title", errorbarHideTooltip);
-					dropDown.style.visibility = "visible";
-				}
-				chart.redraw();
-			});
-			div.appendChild(errorbarButton);
 		}
 
 		//showHideAllbutton
@@ -623,7 +516,6 @@ module.exports = function (root, callback, sessionStorage) {
 			code,
 			categories,
 			i, k,
-			numSD = document.getElementById("sd").value,
 			colors = {},
 			average, stdDev,
 			pValue, dof,
@@ -713,13 +605,13 @@ module.exports = function (root, callback, sessionStorage) {
 
 						data.sort((a, b) => a - b);
 						average =  highchartsHelper.average(data);
-						stdDev = numSD * highchartsHelper.standardDeviation(data, average);
+						stdDev = highchartsHelper.standardDeviation(data, average);
 
 						// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
 						var median = data[Math.floor( m / 2)],
 							lower =  data[Math.floor( m / 4)],
 							upper =  data[Math.floor( 3 * m / 4)],
-							whisker = 1.5 * upper - lower,
+							whisker = 1.5 * (upper - lower),
 							upperwhisker = _.findIndex(data, x => x > upper + whisker),
 							lowerwhisker = _.findLastIndex(data, x => x < lower - whisker);
 
@@ -777,6 +669,7 @@ module.exports = function (root, callback, sessionStorage) {
 
 			for (i = 0; i < xCategories.length; i++) {
 				code = xCategories[i];
+				// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
 				var medianSeriese = (_.zip(medianMatrix[i], offsetsSeries)).map(cutOffset),
 					upperSeriese = (_.zip(upperMatrix[i], offsetsSeries)).map(cutOffset),
 					lowerSeriese = (_.zip(lowerMatrix[i], offsetsSeries)).map(cutOffset),
@@ -795,7 +688,6 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 
 				dataSeriese = _.zip(lowerwhiskerSeriese, lowerSeriese, medianSeriese, upperSeriese, upperwhiskerSeriese);
-
 				highchartsHelper.addSeriesToColumn(
 					chart, 'boxplot', code,
 					dataSeriese, yIsCategorical,
@@ -921,13 +813,13 @@ module.exports = function (root, callback, sessionStorage) {
 						m = data.length;
 					data.sort((a, b) => a - b);
 					average = highchartsHelper.average(data);
-					stdDev = numSD * highchartsHelper.standardDeviation(data, average);
+					stdDev = highchartsHelper.standardDeviation(data, average);
 
 					// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
 					var median = data[Math.floor( m / 2)],
 						lower =  data[Math.floor( m / 4)],
 						upper =  data[Math.floor( 3 * m / 4)],
-						whisker = 1.5 * upper - lower,
+						whisker = 1.5 * (upper - lower),
 						upperwhisker = _.findIndex(data, x => x > upper + whisker),
 						lowerwhisker = _.findLastIndex(data, x => x < lower - whisker);
 
@@ -1280,7 +1172,6 @@ module.exports = function (root, callback, sessionStorage) {
 		normalizationUISetting(false);
 		expUISetting(false);
 		scatterColorUISetting(false);
-		sdDropdownUIsetting(false);
 
 		var xcolumn, ycolumn, colorColumn,
 			xfields,
@@ -1383,9 +1274,6 @@ module.exports = function (root, callback, sessionStorage) {
 			yIsCategorical = ycodemap ? true : false;
 			xfield = xfields ? xfields[0] : undefined;
 			xIsCategorical = xcodemap ? true : false;
-
-			// set sd whisker UI
-			sdDropdownUIsetting (xIsCategorical && !yIsCategorical);
 
 			// set y axis normalization UI
 			normalizationUISetting(!yIsCategorical, ycolumn, yNormalizationMeta);
@@ -1518,9 +1406,6 @@ module.exports = function (root, callback, sessionStorage) {
 	colorElement = domHelper.elt("div", "Color: ", colorDiv);
 	leftContainer.appendChild(colorElement);
 	leftContainer.appendChild(document.createElement("br"));
-
-	// whisker is 1, 2, 3 SD
-	rightContainer.appendChild(buildSDDropdown());
 
 	update.apply(this, updateArgs);
 };

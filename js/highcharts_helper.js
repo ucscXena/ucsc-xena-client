@@ -274,9 +274,10 @@ function addSeriesToColumn (chart, chartType, sName, ycodeSeries, yIsCategorical
 				enabled: true,
 				format: '{point.y} %'
 			};
-		} else {
+		} else {  // boxplot data label is not implemented in highchart, yet
 			seriesOptions.dataLabels = {
-				enabled: true
+				enabled: true,
+				format: '{point.median}'
 			};
 		}
 	}
