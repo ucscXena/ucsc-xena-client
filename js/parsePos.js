@@ -14,7 +14,7 @@ module.exports = function (text) {
 		baseStart = toInt(pos[2]);
 		baseEnd = toInt(pos[3]);
 		if (baseStart) {
-			baseStart = toInt(baseStart) - 1; // C convention
+			baseStart = toInt(baseStart);
 		}
 		chrom = chrom.replace(/x/, 'X').replace(/y/, 'Y');
 		return {chrom, baseStart, baseEnd};
