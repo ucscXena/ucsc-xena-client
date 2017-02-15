@@ -185,11 +185,11 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			this.setState({mode: "Auto"});
 			this.setState({settings: this.defaults});
 			this.setState({errors: {}});
-			onVizSettings(id, _.omit(state, colorParams));
+			onVizSettings(id, _.omit(currentSettings.state, colorParams));
 		},
 		customClick () {
 			this.setState({mode: "Custom"});
-			onVizSettings(id, _.merge(state, getInputSettingsFloat(this.state.settings)));
+			onVizSettings(id, _.merge(currentSettings.state, getInputSettingsFloat(this.state.settings)));
 		},
 		onScaleParamChange(ev) {
 			var {settings} = this.state,
@@ -200,7 +200,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			this.setState({settings: newSettings, errors});
 
 			if (settingsValid(errors)) {
-				onVizSettings(id, _.merge(state, getInputSettingsFloat(newSettings)));
+				onVizSettings(id, _.merge(currentSettings.state, getInputSettingsFloat(newSettings)));
 			}
 		},
 		buildCustomColorScale () {
@@ -259,7 +259,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	});
 
 	function setVizSettings(key, value) {
-		onVizSettings(id, _.assoc(state, key, value));
+		onVizSettings(id, _.assoc(currentSettings.state, key, value));
 	}
 
 	function getVizSettings(key) {
@@ -359,17 +359,22 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	});
 
 	var oldSettings = state,
+		currentSettings = {state: state},
 		colorParams = ["max", "maxStart", "minStart", "min"];
 
 	node.appendChild(datasetSetting());
+	return currentSettings;
 }
 
 // react wrapper for the legacy DOM code, above.
 var SettingsWrapper = React.createClass({
 	shouldComponentUpdate: () => false,
+	componentWillReceiveProps(newProps) {
+		this.currentSettings.state = newProps.vizSettings;
+	},
 	componentDidMount: function () {
 		var {refs: {content}, props: {onVizSettings, vizSettings, id, defaultNormalization, colorClass, valueType, onRequestHide}} = this;
-		vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType);
+		this.currentSettings = vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType);
 	},
 	render: function () {
 		return <div ref='content' />;
