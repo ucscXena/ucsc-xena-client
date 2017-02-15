@@ -177,13 +177,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 			return {
 				mode: custom ? "Custom" : "Auto",
-				settings: custom ? oldSettings : _.clone(this.defaults),
+				settings: custom ? _.pick(oldSettings, colorParams) : this.defaults,
 				errors: {}
 			};
 		},
 		autoClick () {
 			this.setState({mode: "Auto"});
-			this.setState({settings: _.clone(this.defaults)});
+			this.setState({settings: this.defaults});
 			this.setState({errors: {}});
 			onVizSettings(id, _.omit(state, colorParams));
 		},
@@ -191,34 +191,30 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			this.setState({mode: "Custom"});
 			onVizSettings(id, _.merge(state, getInputSettingsFloat(this.state.settings)));
 		},
-		changeTextAction() {
-			var errors = validateSettings(this.state.settings);
-			this.setState({errors: errors});
+		onScaleParamChange(ev) {
+			var {settings} = this.state,
+				param = ev.target.getAttribute('data-param'),
+				newSettings = _.assoc(settings, param, ev.target.value),
+				errors = validateSettings(newSettings);
+
+			this.setState({settings: newSettings, errors});
 
 			if (settingsValid(errors)) {
-				onVizSettings(id, _.merge(state, getInputSettingsFloat(this.state.settings)));
+				onVizSettings(id, _.merge(state, getInputSettingsFloat(newSettings)));
 			}
 		},
 		buildCustomColorScale () {
-			let thisObj = this;
-			node = colorParams.map( param => {
+			node = colorParams.map(param => {
 				let value = valToStr(this.state.settings[param]),
 					label = this.annotations[param],
 					error = this.state.errors[param];
-
-				function scaleParamChange (ev) {
-					let settings = thisObj.state.settings;
-					settings[param] = ev.target.value;
-					thisObj.setState({ settings: settings });
-					thisObj.changeTextAction();
-				}
 
 				return (
 					<Row>
 						<Col xs={6} md={5} lg={2}>{label}</Col>
 						<Col xs={3} md={2} lg={1}>
 							<Input type='textinput' placeholder="Auto"
-								value={value} onChange={scaleParamChange}/>
+								value={value} data-param={param} onChange={this.onScaleParamChange}/>
 						</Col>
 						<Col xs={3} md={2} lg={1}>
 							<label bsStyle="danger">{error}</label>
