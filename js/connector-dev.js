@@ -65,13 +65,10 @@ module.exports = function({
 		</DockMonitor>
 	);
 
-	var sessionLoaded = false; // XXX Ugh. Sorry about this.
 	function getSavedState() {
 		if (persist && nostate('debugSession')) {
 			try {
-				let devState = parse(sessionStorage.debugSession);
-				sessionLoaded = true;
-				return devState;
+				return parse(sessionStorage.debugSession);
 			} catch(err) {
 				console.log("Unable to load saved debug session", err);
 			}
@@ -105,9 +102,6 @@ module.exports = function({
 		return nextState;
 	};
 
-	function prependState(stateObs) {
-		return sessionLoaded ? stateObs.startWith(devInitialState) : stateObs;
-	}
 	let devStateObs = Rx.Observable.merge(serverCh, uiCh).map(ac => ({type: 'PERFORM_ACTION', action: ac}))
 					.merge(devCh)
 					.scan(devInitialState, effectsReducer) // XXX side effects!
@@ -118,7 +112,7 @@ module.exports = function({
 	// than rAF.
 
 	// pass the selector into Page, so we catch errors while rendering & can display an error message.
-	prependState(devStateObs).throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
+	devStateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
 		.subscribe(devState => {
 			return ReactDOM.render(
 				<div>
