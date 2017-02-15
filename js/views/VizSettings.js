@@ -42,7 +42,7 @@ var floatImg = require('../../images/genomicFloatLegend.jpg');
 var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var {Modal, DropdownButton, MenuItem, Grid, Row, Col, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
+var {Modal, DropdownButton, MenuItem, Row, Col, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
 var Input = require('react-bootstrap/lib/Input');
 var image = require('react-bootstrap/lib/Image');
 
@@ -211,12 +211,12 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 				return (
 					<Row>
-						<Col xs={6} md={5} lg={2}>{label}</Col>
-						<Col xs={3} md={2} lg={1}>
+						<Col xs={4} md={4} lg={4}>{label}</Col>
+						<Col xs={3} md={3} lg={3}>
 							<Input type='textinput' placeholder="Auto"
 								value={value} data-param={param} onChange={this.onScaleParamChange}/>
 						</Col>
-						<Col xs={3} md={2} lg={1}>
+						<Col xs={5} md={5} lg={5}>
 							<label bsStyle="danger">{error}</label>
 						</Col>
 					</Row>
@@ -244,20 +244,16 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				enterInput = autoMode ? null : this.buildCustomColorScale();
 
 			return (
-				<Grid>
-					<Row>
-						<Col xs={3} md={2} lg={1}>Scale</Col>
-						<Col xs={15} md={10} lg={5}>
-							<ButtonGroup>{buttons}</ButtonGroup>
-							<div>
-								{picture}
-								<Grid>
-									{enterInput}
-								</Grid>
-							</div>
-						</Col>
-					</Row>
-				</Grid>
+				<Row>
+					<Col xs={3} md={2} lg={2}>Scale</Col>
+					<Col xs={15} md={10} lg={10}>
+						<ButtonGroup>{buttons}</ButtonGroup>
+						<div>
+							{picture}
+							{enterInput}
+						</div>
+					</Col>
+				</Row>
 			);
 		}
 	});
@@ -303,16 +299,14 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
 				});
 			return (
-				<Grid>
-					<Row>
-						<Col xs={3} md={2} lg={1}>Transform</Col>
-						<Col xs={15} md={10} lg={5}>
-							<DropdownButton title={title} onSelect={this.handleSelect} >
-								{menuItemList}
-							</DropdownButton>
-						</Col>
-					</Row>
-				</Grid>
+				<Row>
+					<Col xs={3} md={2} lg={2}>Transform</Col>
+					<Col xs={15} md={10} lg={5}>
+						<DropdownButton title={title} onSelect={this.handleSelect} >
+							{menuItemList}
+						</DropdownButton>
+					</Col>
+				</Row>
 			);
 		}
 	});
@@ -352,16 +346,14 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
 				});
 			return (
-				<Grid>
-					<Row>
-						<Col xs={3} md={2} lg={1}>Color</Col>
-						<Col xs={15} md={10} lg={5}>
-							<DropdownButton title={title} onSelect={this.handleSelect} >
-								{menuItemList}
-							</DropdownButton>
-						</Col>
-					</Row>
-				</Grid>
+				<Row>
+					<Col xs={3} md={2} lg={2}>Color</Col>
+					<Col xs={15} md={10} lg={5}>
+						<DropdownButton title={title} onSelect={this.handleSelect} >
+							{menuItemList}
+						</DropdownButton>
+					</Col>
+				</Row>
 			);
 		}
 	});
