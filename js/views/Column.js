@@ -23,6 +23,7 @@ var konami = require('../konami');
 var {deepPureRenderMixin} = require('../react-utils');
 var Crosshair = require('./Crosshair');
 var {chromPositionFromScreen, zoomCount} = require('../exonLayout');
+var parsePos = require('../parsePos');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -140,13 +141,20 @@ function zoomMenu(props) {
 		</MenuItem>];
 }
 
+function sortVisibleLabel(column) {
+	var sortVisible = _.get(column, 'sortVisible', true),
+		pos = parsePos(column.fields[0]); // XXX Should compute a flag for this.
+
+	return sortVisible ?
+			(pos ? 'Sort by full region avg.' : 'Sort by gene average') :
+			'Sort by zoom region avg.';
+}
 
 function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, xzoomable, specialDownloadMenu}) {
 	var {column, data} = props,
 		{showIntrons = false} = column,
-		sortVisible = _.get(column, 'sortVisible', true),
 		noData = !_.get(data, 'req'),
-		sortVisibleItemName = sortVisible ? 'Sort by gene average' : 'Sort by region average',
+		sortVisibleItemName = sortVisibleLabel(column),
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
 		specialDownloadItemName = 'Download segments';
 	return addIdsToArr([
