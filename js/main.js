@@ -53,7 +53,7 @@ if (module.hot) {
 	module.hot.accept('./models/segmented', () => {});
 }
 
-var store = createStore(true);
+var store = createStore();
 var main = window.document.getElementById('main');
 
 // XXX reducer

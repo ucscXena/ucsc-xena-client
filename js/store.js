@@ -1,6 +1,3 @@
-/*eslint-env browser */
-/*global require: false, module: false */
-
 'use strict';
 
 var Rx = require('./rx.ext');
@@ -8,11 +5,6 @@ require('rx.coincidence');
 var _ = require('./underscore_ext');
 var {getErrorProps, logError} = require('./errors');
 var {getNotifications} = require('./notifications');
-var nostate = require('./nostate');
-var {hasBookmark, getBookmark, resetBookmarkLocation} = require('./bookmark');
-var {hasInlineState, resetInlineStateLocation} = require('./inlineState');
-var {hubParams} = require('./hubParams');
-var LZ = require('lz-string');
 var migrateState = require('./migrateState');
 var {defaultServers} = require('./defaultServers');
 
@@ -20,7 +12,7 @@ var enabledServer = {user: true};
 var defaultServerState = _.object(defaultServers,
 		defaultServers.map(() => enabledServer));
 
-module.exports = function (persist) {
+module.exports = function () {
 	// Create a channel for messages from the server. We want to avoid out-of-order
 	// responses.  To do that, we have to allocate somewhere. We can manage it by
 	// doing using a unique tag for the type of request, and using groupBy, then
@@ -49,8 +41,7 @@ module.exports = function (persist) {
 
 
 
-	// Subject of [slot, obs]. We group by slot and apply switchLatest. If slot is '$none' we just
-	// merge.
+	// Subject of [slot, obs]. We group by slot and apply switchLatest.
 	var serverCh = serverBus.groupBy(([slot]) => slotId(slot))
 		.map(g => g.map(wrapSlotRequest).switchLatest())
 		.mergeAll();
@@ -70,27 +61,6 @@ module.exports = function (persist) {
 		datasets: [],
 		notifications: getNotifications()
 	};
-
-	if (persist && nostate('xena')) {
-		_.extend(initialState, JSON.parse(LZ.decompressFromUTF16(sessionStorage.xena)));
-	}
-
-	if (hasBookmark()) {
-		_.extend(initialState, {'bookmark': getBookmark()});
-		resetBookmarkLocation();
-	}
-
-	if (hasInlineState()) {
-		_.extend(initialState, {'inlineState': true});
-		resetInlineStateLocation();
-	}
-
-	var hubs = hubParams();
-	if (hubs) {
-		initialState = hubs.reduce(
-			(state, hub) =>_.assocIn(state, ['servers', hub, 'user'], true),
-			initialState);
-	}
 
 	return {
 		uiCh,

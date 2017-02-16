@@ -135,7 +135,7 @@ var Hub = React.createClass({
 	}
 });
 
-var store = createStore(true);
+var store = createStore();
 var main = window.document.getElementById('main');
 
 var selector = state => state.servers;

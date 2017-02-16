@@ -10,6 +10,7 @@ import LogMonitor from 'redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
 const session = require('ucsc-xena-datapages/session');
 var nostate = require('./nostate');
+var urlParams = require('./urlParams');
 
 function logError(err) {
 	if (typeof window === 'object' && typeof window.chrome !== 'undefined') {
@@ -23,6 +24,7 @@ function logError(err) {
 var unwrapDevState = state => _.last(state.computedStates).state;
 
 function getSavedState(persist) {
+	delete sessionStorage.xena; // Free up space & don't try to share with prod.
 	if (persist && nostate('debugSession')) {
 		try {
 			return JSON.parse(sessionStorage.debugSession);
@@ -127,6 +129,6 @@ module.exports = function({
 
 	// This causes us to always load cohorts on page load. This is important after
 	// setting hubs, for example.
-	uiBus.onNext(['init']);
+	uiBus.onNext(['init', urlParams()]);
 	return dom;
 };

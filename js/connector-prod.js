@@ -2,6 +2,7 @@
 /*eslint-env browser */
 'use strict';
 
+var _ = require('./underscore_ext');
 var Rx = require('rx');
 var Rx = require('./rx.ext');
 require('rx/dist/rx.time');
@@ -10,6 +11,8 @@ var ReactDOM = require('react-dom');
 // XXX this introduces a datapages dependency in the heatmap page.
 const session = require('ucsc-xena-datapages/session');
 var LZ = require('lz-string');
+var nostate = require('./nostate');
+var urlParams = require('./urlParams');
 
 function controlRunner(serverBus, controller) {
 	return function (state, ac) {
@@ -69,12 +72,18 @@ module.exports = function({
 	main,
 	selector}) {
 
-	var dom = {main};
-	var updater = ac => uiCh.onNext(ac);
-	var runner = controlRunner(serverBus, controller);
+	var dom = {main},
+		updater = ac => uiBus.onNext(ac),
+		runner = controlRunner(serverBus, controller);
 
 	// Shim sessionStorage for code using session.js.
-	session.setCallback(ev => uiCh.onNext(ev));
+	session.setCallback(updater); // still used by datapages
+
+	delete sessionStorage.debugSession; // Free up space & don't try to share with dev
+	if (persist && nostate('xena')) {
+		initialState = _.merge(initialState,
+				JSON.parse(LZ.decompressFromUTF16(sessionStorage.xena)));
+	}
 
 	let stateObs = enableHistory(
 			history,
@@ -90,6 +99,6 @@ module.exports = function({
 	}
 
 	// Kick things off.
-	uiBus.onNext(['init']);
+	uiBus.onNext(['init', urlParams()]);
 	return dom;
 };

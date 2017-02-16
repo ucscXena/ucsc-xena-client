@@ -1,6 +1,3 @@
-/*eslint-env browser */
-/*global require: false, module: false */
-
 'use strict';
 
 var _ = require('../underscore_ext');
@@ -184,32 +181,48 @@ function getChartOffsets(column) {
 	});
 }
 
-function setLoadingState(state) {
-	var pending =  (state.bookmark || state.inlineState) ?
+function setLoadingState(state, params) {
+	var pending =  (_.get(params, 'bookmark') || _.get(params, 'inlineState')) ?
 		_.assoc(state, 'loadPending', true) : state;
-	return _.omit(pending, ['bookmark', 'inlineState']);
+	return pending;
 }
 
 function fetchState(serverBus) {
 	serverBus.onNext(['inlineState', fetchInlineState()]);
 }
 
+function setHubs(state, {hubs}) {
+	return hubs ?
+		hubs.reduce(
+			(state, hub) =>_.assocIn(state, ['servers', hub, 'user'], true),
+			state) :
+		state;
+}
+
 var controls = {
-	init: state => setCohortPending(resetServersChanged(setLoadingState(state))),
-	'init-post!': (serverBus, state, newState) => {
-		if (state.inlineState) {
+	init: (state, params) =>
+		setCohortPending(
+			resetServersChanged(
+				setLoadingState(
+					setHubs(state, params), params))),
+	'init-post!': (serverBus, state, newState, params) => {
+		var bookmark = _.get(params, 'bookmark'),
+			inlineState = _.get(params, 'inlineState');
+		if (inlineState) {
 			fetchState(serverBus);
-		} else if (state.bookmark) {
-			fetchBookmark(serverBus, state.bookmark);
+		} else if (bookmark) {
+			fetchBookmark(serverBus, bookmark);
 		} else {
-			// XXX If we have serversChanged *and* cohortPending, there may be a race here.
-			// We fetch the cohorts list, and the cohort data. If cohorts completes & the
-			// cohort is not in new list, we reset cohort. Then the cohort data arrives (and
-			// note there are several cascading queries).
-			// Currently datapages + hub won't set cohortPending to a cohort not in the active hubs, so
-			// we shouldn't hit this case.
-			if (!state.cohorts || state.serversChanged) {
-				fetchCohorts(serverBus, userServers(state));
+			// XXX If we have serversChanged *and* cohortPending, there may be
+			// a race here.  We fetch the cohorts list, and the cohort data. If
+			// cohorts completes & the cohort is not in new list, we reset
+			// cohort. Then the cohort data arrives (and note there are several
+			// cascading queries).  Currently datapages + hub won't set
+			// cohortPending to a cohort not in the active hubs, so we
+			// shouldn't hit this case.
+			if (!state.cohorts || params.hubs || state.serversChanged) {
+				console.log(state, params);
+				fetchCohorts(serverBus, userServers(newState));
 			}
 			if (shouldSetCohort(state)) {
 				fetchCohortData(serverBus, newState);
