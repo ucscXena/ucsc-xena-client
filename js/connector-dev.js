@@ -1,5 +1,3 @@
-/*global module: false require: false */
-/*eslint-env browser */
 'use strict';
 
 var _ = require('./underscore_ext');
@@ -7,7 +5,6 @@ var Rx = require('./rx.ext');
 require('rx/dist/rx.time');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var compactJSON = require('./compactJSON');
 let {createDevTools} = require('./controllers/devtools');
 import LogMonitor from 'redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
@@ -25,6 +22,17 @@ function logError(err) {
 
 var unwrapDevState = state => _.last(state.computedStates).state;
 
+function getSavedState(persist) {
+	if (persist && nostate('debugSession')) {
+		try {
+			return JSON.parse(sessionStorage.debugSession);
+		} catch(err) {
+			console.log("Unable to load saved debug session", err);
+		}
+	}
+	return null;
+}
+
 module.exports = function({
 	Page,
 	controller,
@@ -37,55 +45,31 @@ module.exports = function({
 	main,
 	selector}) {
 
-	// Change this assignment to JSON to use the browser JSON methods.
-	let {stringify, parse} = compactJSON;
+	var dom = {main},
+		updater = ac => uiBus.onNext(ac),
+		devBus = new Rx.Subject(),
+		devCh = devBus,
+		devtoolsVisible = false; // Change this to turn on the debug window at start.
 
-	var dom = {main};
-	var updater = ac => uiCh.onNext(ac);
-	let devBus = new Rx.Subject();
-
-	// We have an implicit async action on page load ('init'). redux-devtools
-	// 'RESET' command will return us to the initial state, but never
-	// re-issues async actions (which would break the devtools functionality).
-	// This leaves our app in an unusable state after RESET: initial state w/o any
-	// way of issuing the 'init' action. The effect is the cohort list never
-	// loads. Here we intercept the devtools actions & re-issue 'init' on
-	// RESET.
-	let init = () => setTimeout(() => uiCh.onNext(['init']), 0);
-	let devCh = devBus.do(ac => {
-		if (ac.type === 'RESET') {
-			init();
-		}
-	});
-
-	let devtoolsVisible = false; // Change this to turn on the debug window at start.
-	let DevTools = createDevTools(
-		<DockMonitor defaultIsVisible={devtoolsVisible} toggleVisibilityKey='ctrl-h' changePositionKey='ctrl-q'>
+	var DevTools = createDevTools(
+		<DockMonitor defaultIsVisible={devtoolsVisible}
+				toggleVisibilityKey='ctrl-h' changePositionKey='ctrl-q'>
 			<LogMonitor preserveScrollTop={false} expandStateRoot={false}/>
-		</DockMonitor>
-	);
+		</DockMonitor>),
 
-	function getSavedState() {
-		if (persist && nostate('debugSession')) {
-			try {
-				return parse(sessionStorage.debugSession);
-			} catch(err) {
-				console.log("Unable to load saved debug session", err);
-			}
-		}
-		return null;
-	}
-
-	let devReducer = DevTools.instrument(controller, initialState);
-	let devInitialState = getSavedState() || devReducer(null, {});
+		devReducer = DevTools.instrument(controller, initialState),
+		savedState = getSavedState(persist),
+		devInitialState = devReducer(null, savedState ?
+			{type: 'IMPORT_STATE', nextLiftedState: savedState} : {});
 
 	// Shim sessionStorage for code using session.js.
-	session.setCallback(ev => uiCh.onNext(ev));
+	session.setCallback(updater); // still used by datapages.
 
-	// Side-effects (e.g. async) happen here. Ideally we wouldn't call this from 'scan', since 'scan' should
-	// be side-effect free. However we've lost the action by the time scan is complete, so we do it in the scan.
+	// Side-effects (e.g. async) happen here. Ideally we wouldn't call this
+	// from 'scan', since 'scan' should be side-effect free. However we've lost
+	// the action by the time scan is complete, so we do it in the scan.
 	var inEffectsReducer = false;
-	let effectsReducer = (state, ac) => {
+	var effectsReducer = (state, ac) => {
 		if (inEffectsReducer) {
 			throw new Error("Reentry in reducer. Reducers must not invoke actions.");
 		}
@@ -93,16 +77,28 @@ module.exports = function({
 		var nextState = devReducer(state, ac);
 		if (ac.type === 'PERFORM_ACTION') {
 			try {
-				controller.postAction(serverBus, unwrapDevState(state), unwrapDevState(nextState), ac.action);
+				controller.postAction(serverBus, unwrapDevState(state),
+						unwrapDevState(nextState), ac.action);
 			} catch(err) {
 				logError(err);
 			}
+		}
+		// We have an implicit async action on page load: 'init'. redux-devtools
+		// 'RESET' command will return us to the initial state, but never
+		// re-issues async actions (which would break the devtools functionality).
+		// This leaves our app in an unusable state after RESET: initial state w/o any
+		// way of issuing the 'init' action. The effect is the cohort list never
+		// loads. Here we intercept the devtools actions & re-issue 'init' on
+		// RESET.
+		if (ac.type === 'RESET') {
+			uiBus.onNext(['init']);
 		}
 		inEffectsReducer = false;
 		return nextState;
 	};
 
-	let devStateObs = Rx.Observable.merge(serverCh, uiCh).map(ac => ({type: 'PERFORM_ACTION', action: ac}))
+	var devStateObs = Rx.Observable.merge(serverCh, uiCh)
+					.map(ac => ({type: 'PERFORM_ACTION', action: ac}))
 					.merge(devCh)
 					.scan(devInitialState, effectsReducer) // XXX side effects!
 					.share();
@@ -116,7 +112,8 @@ module.exports = function({
 		.subscribe(devState => {
 			return ReactDOM.render(
 				<div>
-					<Page callback={updater} selector={selector} state={unwrapDevState(devState)} />
+					<Page callback={updater} selector={selector}
+							state={unwrapDevState(devState)} />
 					<DevTools dispatch={devBus.onNext.bind(devBus)} {...devState} />
 				</div>,
 				dom.main);
@@ -125,7 +122,7 @@ module.exports = function({
 	if (persist) {
 		// Save state in sessionStorage on page unload.
 		devStateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
-			.subscribe(state => sessionStorage.debugSession = stringify(state));
+			.subscribe(state => sessionStorage.debugSession = JSON.stringify(_.omit(state, 'computedStates')));
 	}
 
 	// This causes us to always load cohorts on page load. This is important after

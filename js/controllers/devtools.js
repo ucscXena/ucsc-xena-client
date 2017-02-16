@@ -108,7 +108,7 @@ function controls(liftedReducer, initialCommittedState) {
 			}
 		),
 		'JUMP_TO_STATE': notImplemented,
-		'IMPORT_STATE': notImplemented
+		'IMPORT_STATE': (devState, {nextLiftedState}) => recomputeStates(liftedReducer, nextLiftedState)
 	};
 }
 
