@@ -1,6 +1,6 @@
 // Compact encoding for structures with multiple references to the same
 // objects, e.g. the type of structures we get by doing a naive path copy in
-// ./immutable.js.
+// ehmutable.js.
 //
 // Such structures waste a lot of space when JSON stringified, because each
 // reference is stringified independently. The routines here will instead
