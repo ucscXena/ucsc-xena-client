@@ -8,9 +8,11 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 // XXX this introduces a datapages dependency in the heatmap page.
 const session = require('ucsc-xena-datapages/session');
-var LZ = require('lz-string');
+var LZ = require('./lz-string');
 var nostate = require('./nostate');
 var urlParams = require('./urlParams');
+var {compactState, expandState} = require('./compactData');
+var migrateState = require('./migrateState');
 
 function controlRunner(serverBus, controller) {
 	return function (state, ac) {
@@ -57,6 +59,11 @@ var [pushState, setState] = (function () {
 var enableHistory = (enable, obs) => enable ?
 	obs.do(pushState).merge(setState) : obs;
 
+// Serialization
+var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(state)));
+var parse = str => migrateState(expandState(JSON.parse(LZ.decompressFromUTF16(str))));
+
+//
 module.exports = function({
 	Page,
 	controller,
@@ -79,8 +86,7 @@ module.exports = function({
 
 	delete sessionStorage.debugSession; // Free up space & don't try to share with dev
 	if (persist && nostate('xena')) {
-		initialState = _.merge(initialState,
-				JSON.parse(LZ.decompressFromUTF16(sessionStorage.xena)));
+		initialState = _.merge(initialState, parse(sessionStorage.xena));
 	}
 
 	let stateObs = enableHistory(
@@ -93,7 +99,7 @@ module.exports = function({
 	if (persist) {
 		// Save state in sessionStorage on page unload.
 		stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
-			.subscribe(state => sessionStorage.xena = LZ.compressToUTF16(JSON.stringify(state)));
+			.subscribe(state => sessionStorage.xena = stringify(state));
 	}
 
 	// Kick things off.

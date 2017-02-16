@@ -11,6 +11,8 @@ import DockMonitor from 'redux-devtools-dock-monitor';
 const session = require('ucsc-xena-datapages/session');
 var nostate = require('./nostate');
 var urlParams = require('./urlParams');
+var LZ = require('./lz-string');
+var {compactState, expandState} = require('./compactData');
 
 function logError(err) {
 	if (typeof window === 'object' && typeof window.chrome !== 'undefined') {
@@ -21,13 +23,29 @@ function logError(err) {
 	}
 }
 
+// serialization
+function stringify(state) {
+	return LZ.compressToUTF16(JSON.stringify({
+		..._.omit(state, 'computedStates', 'committedState'),
+		committedState: compactState(state.committedState)
+	}));
+}
+function parse(str) {
+	var state = JSON.parse(LZ.decompressFromUTF16(str));
+	return {
+		...state,
+		committedState: expandState(state.committedState)
+	};
+}
+
+//
 var unwrapDevState = state => _.last(state.computedStates).state;
 
 function getSavedState(persist) {
 	delete sessionStorage.xena; // Free up space & don't try to share with prod.
 	if (persist && nostate('debugSession')) {
 		try {
-			return JSON.parse(sessionStorage.debugSession);
+			return parse(sessionStorage.debugSession);
 		} catch(err) {
 			console.log("Unable to load saved debug session", err);
 		}
@@ -124,7 +142,7 @@ module.exports = function({
 	if (persist) {
 		// Save state in sessionStorage on page unload.
 		devStateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
-			.subscribe(state => sessionStorage.debugSession = JSON.stringify(_.omit(state, 'computedStates')));
+			.subscribe(state => sessionStorage.debugSession = stringify(state));
 	}
 
 	// This causes us to always load cohorts on page load. This is important after

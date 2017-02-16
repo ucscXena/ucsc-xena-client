@@ -5,7 +5,6 @@ require('rx.coincidence');
 var _ = require('./underscore_ext');
 var {getErrorProps, logError} = require('./errors');
 var {getNotifications} = require('./notifications');
-var migrateState = require('./migrateState');
 var {defaultServers} = require('./defaultServers');
 
 var enabledServer = {user: true};
@@ -67,6 +66,6 @@ module.exports = function () {
 		uiBus,
 		serverCh,
 		serverBus,
-		initialState: migrateState(initialState)
+		initialState
 	};
 };

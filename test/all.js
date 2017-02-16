@@ -15,4 +15,5 @@ require('./fieldFetch');
 require('./fieldSpec');
 require('./fields');
 require('./datasetJoins');
+require('./compactData');
 //require('./matrix-test');
