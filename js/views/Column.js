@@ -146,8 +146,8 @@ function sortVisibleLabel(column) {
 		pos = parsePos(column.fields[0]); // XXX Should compute a flag for this.
 
 	return sortVisible ?
-			(pos ? 'Sort by full region avg.' : 'Sort by gene average') :
-			'Sort by zoom region avg.';
+			(pos ? 'Sort by full region avg' : 'Sort by gene average') :
+			'Sort by zoom region avg';
 }
 
 function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, xzoomable, specialDownloadMenu}) {
