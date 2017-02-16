@@ -1,7 +1,6 @@
-// color scale variants
-
-/*global require: false, module: false */
 'use strict';
+
+// color scale variants
 
 var d3 = require('d3-scale');
 var _ = require('underscore');

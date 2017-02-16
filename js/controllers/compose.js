@@ -1,4 +1,3 @@
-/*global module: false */
 'use strict';
 
 // might want to optimize this with for loops.

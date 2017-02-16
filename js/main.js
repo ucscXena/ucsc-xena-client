@@ -1,6 +1,3 @@
-/*eslint-env browser */
-/*global require: false, console: false, module: false */
-
 'use strict';
 
 require('./base');

@@ -1,4 +1,3 @@
-/*global module: false */
 'use strict';
 
 // http://www.gizma.com/easing/

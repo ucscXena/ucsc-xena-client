@@ -1,6 +1,3 @@
-/*global module: false */
-/*eslint-env browser */
-
 'use strict';
 
 module.exports = storageKey => {

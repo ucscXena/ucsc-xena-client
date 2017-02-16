@@ -1,4 +1,3 @@
-/*global window: false, require: false, module: false */
 // Loading shim for highcharts
 
 'use strict';

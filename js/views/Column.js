@@ -1,5 +1,3 @@
-/*eslint-env browser */
-/*globals require: false, module: false */
 'use strict';
 
 var React = require('react');

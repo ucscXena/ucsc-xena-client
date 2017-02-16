@@ -1,5 +1,3 @@
-/*global module: false require: false */
-/*eslint-env browser */
 'use strict';
 
 var _ = require('./underscore_ext');

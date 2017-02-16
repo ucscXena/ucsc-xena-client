@@ -1,4 +1,3 @@
-/*global require: false, module: false */
 'use strict';
 var _ = require('../underscore_ext');
 var Rx = require('rx');

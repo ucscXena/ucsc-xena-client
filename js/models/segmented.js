@@ -1,4 +1,3 @@
-/*global require: false, module: false */
 'use strict';
 
 // Domain logic for segmented datasets.

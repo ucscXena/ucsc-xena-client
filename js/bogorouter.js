@@ -1,4 +1,3 @@
-/*eslint no-unused-expressions: 0 */
 /*global document: false, require: false, __webpack_public_path__: true, process: false */
 'use strict';
 var config = require('./config');

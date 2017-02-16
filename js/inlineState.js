@@ -1,6 +1,3 @@
-/*global module: false, require: false */
-/*eslint-env browser */
-
 'use strict';
 
 var Rx = require('rx.async');

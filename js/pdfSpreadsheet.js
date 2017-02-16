@@ -1,5 +1,3 @@
-/*eslint-env browser */
-/*global require: false, module: false */
 'use strict';
 var PDFDocument = require('pdfkit');
 var blobStream = require('blob-stream');

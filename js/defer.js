@@ -1,6 +1,3 @@
-/*eslint-env browser */
-/*global require: false, module: false  */
-
 // A 0 ms defer, to replace underscore's.
 // Adapted from http://dbaron.org/log/20100309-faster-timeouts
 // as suggested by mozilla's MDN.

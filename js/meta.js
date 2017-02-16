@@ -1,4 +1,3 @@
-/*global require: false, module: false, navigator: false */
 'use strict';
 
 var _ = require('underscore');

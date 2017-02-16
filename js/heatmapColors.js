@@ -1,7 +1,6 @@
-// Pick color scales based on metadata
-
-/*global require: false, module: false */
 'use strict';
+
+// Pick color scales based on metadata
 
 var _ = require('underscore');
 var multi = require('./multi');

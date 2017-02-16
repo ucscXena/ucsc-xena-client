@@ -1,4 +1,3 @@
-/*globals module: false */
 'use strict';
 
 // pos :: number, position in current zoom to be centered, as fraction of count

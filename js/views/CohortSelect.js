@@ -1,4 +1,3 @@
-/*global require: false, module: false */
 'use strict';
 var React = require('react');
 var Select = require('./Select');

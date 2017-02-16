@@ -1,8 +1,7 @@
+'use strict';
+
 // Helper methods needed by multiple controllers.
 
-/*global require: false, module: false */
-
-'use strict';
 var Rx = require('rx');
 var xenaQuery = require('../xenaQuery');
 var _ = require('../underscore_ext');

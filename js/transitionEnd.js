@@ -1,5 +1,3 @@
-/*eslint-env browser */
-/*global module: false */
 // https://gist.github.com/O-Zone/7230245
 'use strict';
 

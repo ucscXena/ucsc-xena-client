@@ -1,7 +1,6 @@
-// Screen layout of exons for a single gene.
-
-/*global require: false, module: false */
 'use strict';
+
+// Screen layout of exons for a single gene.
 
 var spLen = 3; // size of intronic region to draw between exons
 

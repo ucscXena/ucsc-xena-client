@@ -1,4 +1,3 @@
-/*globals require: false, module: false */
 'use strict';
 var React = require('react');
 var Sortable = require('../views/Sortable');

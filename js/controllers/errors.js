@@ -1,7 +1,6 @@
-// Utilities for handling errors in async actions.
-
-/*global require: false, module: false */
 'use strict';
+
+// Utilities for handling errors in async actions.
 
 var Rx = require('rx');
 var _ = require('../underscore_ext');

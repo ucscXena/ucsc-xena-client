@@ -1,5 +1,3 @@
-/*eslint-env browser */
-/*global require: false, module: false */
 'use strict';
 var drawHeatmap = require('./drawHeatmap');
 var _ = require('./underscore_ext');

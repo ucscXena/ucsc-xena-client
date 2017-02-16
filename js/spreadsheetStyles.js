@@ -1,7 +1,6 @@
-// Styles shared by the spreadsheet viz & pdf output.
-//
-/*global require: false, module: false */
 'use strict';
+
+// Styles shared by the spreadsheet viz & pdf output.
 
 // XXX This isn't the correct margin. It's the observed space
 // between columns on-screen. We need to review the css for

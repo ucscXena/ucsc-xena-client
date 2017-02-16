@@ -1,6 +1,3 @@
-/*global module: false */
-/*eslint-env browser */
-
 'use strict';
 
 var LZ = require('lz-string');

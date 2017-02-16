@@ -1,4 +1,3 @@
-/*global require: false, module: false, document: false */
 'use strict';
 
 var demo = require('../docs/schema');

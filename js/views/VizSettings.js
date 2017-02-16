@@ -1,8 +1,4 @@
 /*eslint camelcase: 0, no-use-before-define: 0 */
-/*eslint-env browser */
-/*jshint browser: true */
-/*global document: false, require: false, module: false */
-
 // Config UI for custom viz settings for heatmaps.
 //
 // State schema. This is the goal, not the current implementation. If

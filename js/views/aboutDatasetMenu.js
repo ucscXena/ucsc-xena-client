@@ -1,4 +1,3 @@
-/*global require: false, module: false, window: false */
 'use strict';
 var React = require('react');
 var MenuItem = require('react-bootstrap/lib/MenuItem');

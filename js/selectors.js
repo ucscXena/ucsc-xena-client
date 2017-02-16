@@ -1,4 +1,3 @@
-/*global require: false, module: false */
 'use strict';
 var {fmapMemoize1} = require('./underscore_ext');
 

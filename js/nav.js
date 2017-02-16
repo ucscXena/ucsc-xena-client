@@ -1,4 +1,3 @@
-/*global window: false, require: false, document: false */
 'use strict';
 
 require('bootstrap/dist/css/bootstrap.css');
