@@ -110,7 +110,7 @@ function segmentedVals(column, data, index, samples, splits) {
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = colorScale(color),
 		partFn = splits === 3 ? partitionedVals3 : partitionedVals2;
-	return {warning, ...partFn(bySampleSortAvg, uniq, colorfn)};
+	return {warning, maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
 }
 
 var toCoded = multi(fs => fs.valueType);
