@@ -343,7 +343,7 @@ var Column = React.createClass({
 	onMenuToggle: function (open) {
 		var {xzoomable} = this.state,
 			{column: {xzoom, maxXZoom, valueType}, onXZoom, id} = this.props;
-		if (xzoomable && !open && valueType === 'mutation') {
+		if (xzoomable && !open && ['mutation', 'segmented'].indexOf(valueType) !== -1) {
 			let start = this.refs.start.getValue(),
 				end = this.refs.end.getValue(),
 				position = getPosition(maxXZoom, start, end);
