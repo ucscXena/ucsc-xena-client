@@ -7,6 +7,7 @@ var widgets = require('./columnWidgets');
 
 require('./pdfMutationVector');
 require('./pdfDenseMatrix');
+require('./pdfSegmented');
 var _ = require('./underscore_ext');
 
 var totalWidth = cols =>
