@@ -4,7 +4,7 @@
 
 var spLen = 3; // size of intronic region to draw between exons
 
-var _ = require('underscore');
+var _ = require('./underscore_ext');
 
 // reverse layout if on negative strand.
 var reverseIf = (strand, arr) =>
@@ -126,18 +126,78 @@ function chromLayout(__, pxWidth, zoom, {chrom, baseStart, baseEnd}) {
 	};
 }
 
-function chromPositionFromScreen(layout, x) {
-	var {chrom, screen, reversed} = layout,
+// Finding chrom position from screen coords is more subtle that one might
+// hope. Perhaps there's an easier way to think about this.
+//
+// Consider a layout with 5 base pairs and three pixels:
+//
+// c | 1| 2| 3| 4| 5|
+// p | 0  |  1 |  2 |
+//
+// For UIs such as drag-zoom, we want to return the largest chrom range
+// that overlaps the pixel range.  For example, if the user zooms pixel positions
+// [1, 2], we want to zoom to chrom coordinates [2, 5]. For the start position
+// we take the lowest overlapping coordinate. For the end position we take the
+// highest overlapping coordinate. If instead we were to project start and end
+// the same way, it becomes impossible to zoom on the edges of the layout. E.g.
+// if we take the lowest overlapping coordinate for both start and end, we
+// zoom to [2, 4], and it becomes impossible to ever zoom on chrom position 5.
+//
+// For start position 1 we project and floor(), to get coordinate 2, like
+// Math.floor(project(x)). For end position 2 it's more complex. It's not just
+// project and ceil(), as that would still give us 4, when the correct answer
+// is 5. We want the last coordinate that is strictly less than the pixel
+// *after* 5. I.e. we project pixel 3, which gives us 6, then take 5 as the
+// largest integer strictly less than 6. We can express this as
+// Math.ceil(project(x + 1) - 1).
+//
+// Alternatively, we can transform the 'end' case to the 'start' case by
+// flopping both the chrom and pixel coordinates. If we compute the coordinates
+// from the right edge by passing the pixels from the right edge, then
+// it still looks like Math.floor(project(x)). Doing it this way has
+// the advantage that it works nicely with our additional complication:
+// our intervals are sometimes reversed, for gene views of genes on the
+// reverse strand. To handle the reversed views, we flop either the
+// pixel coordinate or the chrom coordinate, depending on whether we
+// want the highest or lowest overlapping coordinate.
+//
+// The linear projection works as usual: we translate the input domain
+// to the origin, project to the new size using the slope, then translate to
+// the output range. We parameterize both translations so we can flop
+// the pixel domain, the chrom range, or both.
+
+var toPosition = layout => (px0, chrN, x) => {
+	var {chrom, screen} = layout,
 		i = _.findIndex(screen, ([x0, x1]) => x0 <= x && x < x1);
 
 	if (i !== -1) {
-		let [xStart, xEnd] = screen[i],
-			[x0, x1] = reversed ? [xEnd, xStart] : [xStart, xEnd],
+		let [x0, x1] = screen[i],
 			[c0, c1]  = chrom[i];
-		return c0 + (x - x0) * (c1 - c0 + 1) / (x1 - x0);
+		return chrN(c0, c1, Math.floor(px0(x0, x1, x) * (c1 - c0 + 1) / (x1 - x0)));
 	}
 	return null;
-}
+};
+
+// pixel translated to origin
+var px0 = (start, end, x) => x - start;
+// pixel translated to origin, reversed domain
+var px0r = (start, end, x) => end - 1 - x;
+// chrom translated from origin
+var chrN = (start, end, x) => start + x;
+// chrom translated from origin, reversed range
+var chrNr = (start, end, x) => end - x;
+
+function chromRangeFromScreen(layout, start, end) {
+	var toPos = toPosition(layout);
+	return layout.reversed ?
+		[toPos(px0r, chrN, end), toPos(px0, chrNr, start)] :
+		[toPos(px0, chrN, start), toPos(px0r, chrNr, end)];
+};
+
+// This isn't precisely correct, but should be good enough. Gives us roughly
+// the coordinate in the middle of the pixel.
+var chromPositionFromScreen = (layout, x) =>
+	Math.round(_.meannull(chromRangeFromScreen(layout, x, x)));
 
 // closed coord len
 var chrlen = ([s, e]) => e - s + 1;
@@ -153,5 +213,6 @@ module.exports = {
 	pad,
 	zoomCount: (layout, start, end) =>
 		_.sum(applyClip(layout.chrom, {start, end}).map(chrlen)),
-	chromPositionFromScreen
+	chromPositionFromScreen,
+	chromRangeFromScreen
 };

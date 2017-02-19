@@ -2,14 +2,112 @@
 "use strict";
 var el = require('../js/exonLayout');
 var assert = require('assert');
+var _ = require('underscore');
 
-describe('exonLayout', function () {
+var j = JSON.stringify;
+
+describe.only('exonLayout', function () {
 	describe('#pad', function () {
 		it('should pad between intervals', function() {
 			assert.deepEqual(el.pad(2, [[20, 30], [40, 50], [60, 70]]),
 					[[20, 32], [38, 52], [58, 70]]);
 		});
 	});
+	describe('#chromRangeFromScreen, ppb < 1', function () {
+		// c |11|12|13|14|15|
+		// p | 10 | 11 | 12 |
+		// pixels per base 3 / 5 < 1
+		var layout = {
+			chrom: [[11, 15]],
+			screen: [[10, 13]],
+			reversed: false
+		};
+		it('should return first chrom position under pixel', function () {
+			var res = _.range(3).map(i => el.chromRangeFromScreen(layout, 10 + i, 12)),
+				exp = [[11, 15], [12, 15], [14, 15]];
+			assert.deepEqual(res, exp, `first chrom positions ${j(res)}, expected ${j(exp)}`);
+		});
+		it('should return last chrom position under pixel', function () {
+			var res = _.range(3).map(i => el.chromRangeFromScreen(layout, 10, 10 + i)),
+				exp = [[11, 12], [11, 14], [11, 15]];
+			assert.deepEqual(res, exp, `last chrom positions ${j(res)}, expected ${j(exp)}`);
+		});
+	}),
+	describe('#chromRangeFromScreen, ppb < 1, reversed', function () {
+		// c |15|14|13|12|11|
+		// p | 10 | 11 | 12 |
+		// pixels per base 3 / 5 < 1
+		var layout = {
+			chrom: [[11, 15]],
+			screen: [[10, 13]],
+			reversed: true
+		};
+		it('should return first chrom position under pixel', function () {
+			var res = _.range(3).map(i => el.chromRangeFromScreen(layout, i + 10, 12)),
+				exp = [[11, 15], [11, 14], [11, 12]];
+			assert.deepEqual(res, exp, `first chrom positions ${j(res)}, expected ${j(exp)}`);
+		});
+		it('should return last chrom position under pixel', function () {
+			var res = _.range(3).map(i => el.chromRangeFromScreen(layout, 10, i + 10)),
+				exp = [[14, 15], [12, 15], [11, 15]];
+			assert.deepEqual(res, exp, `last chrom positions ${j(res)}, expected ${j(exp)}`);
+		});
+	}),
+	describe('#chromRangeFromScreen, ppb > 1', function () {
+		// c | 1  |  2 |  3 |
+		// p | 0| 1| 2| 3| 4|
+		// pixels per base 5 / 3 > 1
+		var layout = {
+			chrom: [[1, 3]],
+			screen: [[0, 5]],
+			reversed: false
+		};
+		it('should return first chrom position under pixel', function () {
+			var res = _.range(5).map(i => el.chromRangeFromScreen(layout, i, 4)),
+				exp = [[1, 3], [1, 3], [2, 3], [2, 3], [3, 3]];
+			assert.deepEqual(res, exp, `first chrom positions ${j(res)}, expected ${j(exp)}`);
+		});
+		it('should return last chrom position under pixel', function () {
+			var res = _.range(5).map(i => el.chromRangeFromScreen(layout, 0, i)),
+				exp = [[1, 1], [1, 2], [1, 2], [1, 3], [1, 3]];
+			assert.deepEqual(res, exp, `last chrom positions ${j(res)}, expected ${j(exp)}`);
+		});
+	}),
+	describe('#chromRangeFromScreen, ppb > 1, reversed', function () {
+		// c | 3  |  2 |  1 |
+		// p | 0| 1| 2| 3| 4|
+		// pixels per base 5 / 3 > 1
+		var layout = {
+			chrom: [[1, 3]],
+			screen: [[0, 5]],
+			reversed: true
+		};
+		it('should return first chrom position under pixel', function () {
+			var res = _.range(5).map(i => el.chromRangeFromScreen(layout, i, 4)),
+				exp = [[1, 3], [1, 3], [1, 2], [1, 2], [1, 1]];
+			assert.deepEqual(res, exp, `first chrom positions ${j(res)}, expected ${j(exp)}`);
+		});
+		it('should return last chrom position under pixel', function () {
+			var res = _.range(5).map(i => el.chromRangeFromScreen(layout, 0, i)),
+				exp = [[3, 3], [2, 3], [2, 3], [1, 3], [1, 3]];
+			assert.deepEqual(res, exp, `last chrom positions ${j(res)}, expected ${j(exp)}`);
+		});
+	}),
+	describe('#chromPositionFromScreen, ppb > 1', function () {
+		// c | 1  |  2 |  3 |
+		// p | 0| 1| 2| 3| 4|
+		// pixels per base 5 / 3 > 1
+		var layout = {
+			chrom: [[1, 3]],
+			screen: [[0, 5]],
+			reversed: false
+		};
+		it('should return chrom position under pixel', function () {
+			var res = _.range(5).map(i => el.chromPositionFromScreen(layout, i)),
+				exp = [1, 2, 2, 3, 3];
+			assert.deepEqual(res, exp, `first chrom positions ${j(res)}, expected ${j(exp)}`);
+		});
+	}),
 	describe('#layout', function () {
 		it('should layout intervals', function() {
 			assert.deepEqual(el.layout({

@@ -17,14 +17,20 @@ var styles = {
 };
 
 var min = (x, y) => x < y ? x : y;
+var flop = (x, y) => x < y ? {start: x, end: y} : {start: y, end: x};
 
 var clip = (min, max, x) => x < min ? min : (x > max ? max : x);
 
-function targetXPos(target, ev) {
+function targetXPos(target, ev, width) {
 	var bb = target.getBoundingClientRect();
-	return ev.clientX - bb.left;
+	return clip(0, width - 1, ev.clientX - bb.left);
 }
 
+// Browsers give us coordinates that aren't always within the element. We
+// would expect coords [0, width - 1] to indicate which pixel the mouse is over,
+// but sometimes get coords outside that range.
+//
+// We clip start and end to [0, width - 1].
 var DragSelect = React.createClass({
 	getDefaultProps() {
 		return {enabled: true};
@@ -34,11 +40,13 @@ var DragSelect = React.createClass({
 		var mousedrag = mousedown.selectMany((down) => {
 			var target = down.currentTarget,
 				bb = target.getBoundingClientRect(),
-				start = targetXPos(target, down),
+				start = targetXPos(target, down, bb.width),
 				selection;
 
 			return Rx.DOM.fromEvent(window, 'mousemove').map(function (mm) {
-				selection = {start, end: clip(0, bb.width - 1, targetXPos(target, mm))};
+				var end = targetXPos(target, mm, bb.width);
+
+				selection = flop(start, end);
 				return {dragging: true, ...selection};
 			}).takeUntil(Rx.DOM.fromEvent(window, 'mouseup'))
 			.concat(Rx.Observable.defer(() => Rx.Observable.return({selection})));

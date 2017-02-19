@@ -22,7 +22,7 @@ var ValidatedInput = require('./ValidatedInput');
 var konami = require('../konami');
 var {deepPureRenderMixin} = require('../react-utils');
 var Crosshair = require('./Crosshair');
-var {chromPositionFromScreen, zoomCount} = require('../exonLayout');
+var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 
 // XXX move this?
@@ -328,15 +328,8 @@ var Column = React.createClass({
 		}
 	},
 	onXDragZoom: function (pos) {
-		var {column: {layout}, onXZoom, id} = this.props;
-		var zstart = chromPositionFromScreen(layout, pos.start),
-			zend = chromPositionFromScreen(layout, pos.end),
-			[zmin, zmax] = zstart > zend ? [zend, zstart] : [zstart, zend],
-			[nmin, nmax] = [Math.round(zmin), Math.round(zmax) - 1],
-			// put all the math someplace & test it
-			tooShort = zoomCount(layout, nmin, nmax) < 1,
-			[start, end] = tooShort ? [Math.floor(zmin), Math.ceil(zmax) - 1] : // ensure 1 base minimum
-				[Math.round(zmin), Math.round(zmax) - 1];
+		var {column: {layout}, onXZoom, id} = this.props,
+			[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
 
 		onXZoom(id, {start, end});
 	},
