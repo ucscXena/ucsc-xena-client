@@ -66,5 +66,6 @@ module.exports = {
     hexToRGB,
     colorStr,
     greyHEX,
-    contrastColor
+    contrastColor,
+    rgb
 };

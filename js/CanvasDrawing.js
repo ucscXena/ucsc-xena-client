@@ -128,7 +128,7 @@ var CanvasDrawing = React.createClass({
 			this.setHeight(height);
 		}
 
-		this.props.draw(vg, drawProps);
+		draw(vg, drawProps);
 	}
 });
 
