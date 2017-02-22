@@ -141,9 +141,8 @@ function zoomMenu(props) {
 		</MenuItem>];
 }
 
-function sortVisibleLabel(column) {
-	var sortVisible = _.get(column, 'sortVisible', true),
-		pos = parsePos(column.fields[0]); // XXX Should compute a flag for this.
+function sortVisibleLabel(column, pos) {
+	var sortVisible = _.get(column, 'sortVisible', true);
 
 	return sortVisible ?
 			(pos ? 'Sort by full region avg' : 'Sort by gene average') :
@@ -160,13 +159,14 @@ function segmentedVizOptions(onVizOptions) {
 
 function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, xzoomable, specialDownloadMenu, onVizOptions}) {
 	var {column, data} = props,
+		pos = parsePos(column.fields[0]), // XXX Should compute a flag for this.
 		{showIntrons = false} = column,
 		noData = !_.get(data, 'req'),
-		sortVisibleItemName = sortVisibleLabel(column),
+		sortVisibleItemName = sortVisibleLabel(column, pos),
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
 		specialDownloadItemName = 'Download segments';
 	return addIdsToArr([
-		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
+		...(pos ? [] : [<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>]),
 		...(segmentedVizOptions(onVizOptions)),
 		...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
 		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>,
