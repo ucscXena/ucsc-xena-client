@@ -326,7 +326,7 @@ var ColumnEdit = React.createClass({
 					{positions.editor ?
 					<Editor {...columnEdit} allFeatures={features} callback={callback}
 						{...(this.state.choices.editor || {})} chosenDs={chosenDs}
-						pos={chosenDsSingle.type === 'genomicSegment'}
+						pos={chosenDsSingle && (chosenDsSingle.type === 'genomicSegment')}
 						hasGenes={chosenDs && !!datasets[chosenDs[0]].probeMap}
 						makeLabel={makeLabel} setEditorState={this.onSetEditor}/> : null}
 					<br/>
