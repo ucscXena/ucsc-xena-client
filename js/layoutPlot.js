@@ -14,14 +14,24 @@ function pxTransform1(layout, i, x) {
 }
 
 // check for overlap. closed coords.
-var overlapsRegion = _.curry(([s, e], [cs, ce]) => cs <= e && ce >= s);
+var overlapsRegion = ([s, e]) => ([cs, ce]) => cs <= e && ce >= s;
 
+// Using this due to poor performance of underscore findLastIndex. Also,
+// there's no equivalent es6 method, though there is a [].findIndex.
+function findLastIndex(arr, fn) {
+	for (let i = arr.length - 1; i >= 0; --i) {
+		if (fn(arr[i])) {
+			return i;
+		}
+	}
+	return -1;
+}
 // Find first and last overlapping draw regions
 var regionIndxs = (layout, intvl) => {
 	var overlaps = overlapsRegion(intvl);
 	return [
-		_.findIndex(layout.chrom, overlaps),
-		_.findLastIndex(layout.chrom, overlaps)];
+		layout.chrom.findIndex(overlaps),
+		findLastIndex(layout.chrom, overlaps)];
 };
 
 function flopIfIndexed(layout, [s, e], [si, ei]) {

@@ -125,6 +125,22 @@ function meannull(values) {
 	return null;
 }
 
+// Version that works with iterables. Not using it for now
+// due to babel generator performance. See below.
+//function meannull(values) {
+//	var count = 0, sum = 0;
+//	if (!values) {
+//		return null;
+//	}
+//	for (let v of values) {
+//		if (v != null) {
+//			count += 1;
+//			sum += v;
+//		}
+//	}
+//	return (count > 0) ? sum / count : null;
+//}
+
 function cmpNumberOrNull(v1, v2) {
 	if (v1 == null && v2 == null) {
 		return 0;
@@ -322,6 +338,57 @@ function unique(arr, ...rest) {
 	}
 	return [...new Set(arr)];
 }
+
+// Starting some iterator methods here, but there are some performance
+// concerns. babel generators are slow, possibly due to injecting a try/catch.
+//
+//function* imap(arr, fn) {
+//	for (let v of arr) {
+//		yield fn(v);
+//	}
+//}
+//
+// Trying to avoid a generator function, due to performance, but this iterator
+// can't be used in places that expect an iterable, e.g. spread operator,
+// Array.from(), for...of.
+//
+//function imap(arr, fn) {
+//	return {
+//		next: function() {
+//			var n = arr.next();
+//			if (n.done) {
+//				return {done: true};
+//			}
+//			return fn(n.value);
+//		}
+//	}
+//}
+//
+// Iterable version. Wow, this is ugly.
+function imap(arr, fn) {
+	var iter = arr[Symbol.iterator]();
+	return {
+		[Symbol.iterator]: () => ({
+			next: () => {
+				var n = iter.next();
+				return n.done ? {done: true} : {value: fn(n.value)};
+			}
+		})
+	};
+}
+//
+//function* irange(n) {
+//	for (let i = 0; i < n; ++i) {
+//		yield i;
+//	}
+//}
+//
+//// tack on an iterator namespace. We should probably find a better
+//// functional methods library that supports iterators.
+_.i = {
+	map: imap
+//	range: irange
+};
 
 _.mixin({
 	apply,

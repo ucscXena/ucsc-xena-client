@@ -100,7 +100,7 @@ function findNodes(byPosition, layout, samples) {
 	var matches = new Set(_.flatmap(layout.chrom,
 				([start, end]) => intervalTree.matches(byPosition, {start, end})));
 
-	return [...matches].map(v => {
+	return Array.from(_.i.map(matches, v => {
 		var [xStart, xEnd] = minSize(pxTransformInterval(layout, [v.start, v.end]));
 		return {
 			xStart,
@@ -109,9 +109,8 @@ function findNodes(byPosition, layout, samples) {
 			value: v.segment.value,
 			data: v.segment
 		};
-	});
+	}));
 }
-
 var swapIf = (strand, [x, y]) => strand === '-' ? [y, x] : [x, y];
 
 function defaultXZoom(pos, refGene) {
