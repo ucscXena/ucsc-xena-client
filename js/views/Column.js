@@ -154,6 +154,7 @@ function segmentedVizOptions(onVizOptions) {
 		<MenuItem divider />,
 		<MenuItem onSelect={onVizOptions} data-renderer='line'>Line</MenuItem>,
 		<MenuItem onSelect={onVizOptions} data-renderer='pixel'>Pixel</MenuItem>,
+		<MenuItem onSelect={onVizOptions} data-renderer='power'>Power</MenuItem>,
 		<MenuItem divider />] : [];
 }
 

@@ -8,7 +8,7 @@ var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
-var {drawSegmented, drawSegmentedPixel, toYPx} = require('./drawSegmented');
+var {drawSegmented, drawSegmentedPixel, drawSegmentedPower, toYPx} = require('./drawSegmented');
 var {chromPositionFromScreen} = require('./exonLayout');
 var colorScales = require('./colorScales');
 
@@ -179,6 +179,7 @@ function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, as
 var segmentedRenderer = {
 	'line': drawSegmented,
 	'pixel': drawSegmentedPixel,
+	'power': drawSegmentedPower,
 };
 
 var SegmentedColumn = hotOrNot(React.createClass({

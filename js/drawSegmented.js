@@ -2,7 +2,7 @@
 
 var _ = require('./underscore_ext');
 var colorScales = require('./colorScales');
-var {rgb} = require('./color_helper');
+var {rgb, RGBtoHSV, HSVtoRGB} = require('./color_helper');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -184,7 +184,6 @@ function meannullIter(iter) {
 		return sum / count;
 	}
 	return null;
-
 }
 
 // There must be a better way to compute this.
@@ -199,15 +198,14 @@ function findRegions(index, height, count) {
 var byEnd = (x, y) => x.xEnd - y.xEnd;
 var byStart = (x, y) => x.xStart - y.xStart;
 
-function drawImgSegments(vg, colorScale, index, count, width, height, zoom, nodes) {
-	var {lookup} = colorTable(colorScale, true),
+function drawImgSegments(vg, color, index, count, width, height, zoom, nodes) {
+	var colorScale = colorScales.colorScale(color),
+		{lookup} = colorTable(colorScale, true),
 		ctx = vg.context(),
 		img = ctx.createImageData(width, height), // XXX cache & reuse?
 		regions = findRegions(index, height, count),
 		toPxRow = v => ~~((v.y - index) * height / count), // ~~ for floor
 		byRow = _.groupBy(nodes, toPxRow);
-
-	var totalPx = 0;
 
 	for (let is in byRow) {
 		var i = parseInt(is, 10); // Ugh.
@@ -256,7 +254,6 @@ function drawImgSegments(vg, colorScale, index, count, width, height, zoom, node
 					buffEnd = (pxRow + pxEnd) * 4;
 
 				for (l = buffStart; l < buffEnd; l += 4) {
-					totalPx += 1;
 					img.data[l] = color[0];
 					img.data[l + 1] = color[1];
 					img.data[l + 2] = color[2];
@@ -267,10 +264,167 @@ function drawImgSegments(vg, colorScale, index, count, width, height, zoom, node
 		}
 	}
 	ctx.putImageData(img, 0, 0);
-	console.log('total', totalPx);
 }
 
-var drawSegmentedPixel = (vg, props) => {
+var clip = (min, max, x) => x < min ? min : (x > max ? max : x);
+var rgbToArray = obj => [obj.r, obj.g, obj.b];
+
+// Find the minimum path from h0 to h1 in the hue space, which
+// wraps at 1.
+function minHueRange(h0, h1) {
+	var [low, high] = h0 < h1 ? [h0, h1] : [h1, h0];
+	return high - low > low + 1 - high ? [high, low + 1] : [low, high];
+}
+
+// Since we're doing pixel math, can we just compute the colors on-the-fly, instead
+// of using a table?
+var maxHues = 20;
+var maxSaturations = 10;
+function scaleFloatThreshold(low, zero, high, min, minThresh, maxThresh, max) {
+	var [h0, h1] = minHueRange(RGBtoHSV(...rgb(low)).h, RGBtoHSV(...rgb(high)).h),
+		colors = _.range(h0, h1, (h1 - h0) / maxHues).map(h =>
+			_.range(0, 1, 1 / maxSaturations).map(s => rgbToArray(HSVtoRGB(h, s, 1))));
+	return {
+		// trend is [0, 1], representing net amplification vs. deletion.
+		// power is [0, dataMax], representing avg. distance from mid point.
+		lookup: (trend, power) => {
+			if (power == null) {
+				return [128, 128, 128];
+			}
+			// We project [maxThresh, max] to saturation [0, 1].
+			// minThresh does not affect color in this drawing mode.
+			var s = clip(0, maxSaturations - 1, (power - maxThresh) / (max - maxThresh) * maxSaturations),
+				h = clip(0, maxHues - 1, trend * maxHues),
+				c = colors[~~h][~~s];
+
+			return c;
+		}
+	};
+}
+
+var noDataScale = () => "gray";
+noDataScale.domain = () => [];
+
+var colorPowerScale = ([type, ...args])=> ({
+	'no-data': () => noDataScale,
+	'float-thresh-pos': () => noDataScale,
+	'float-thresh-neg': () => noDataScale,
+	'float-thresh': (__, ...args) => scaleFloatThreshold(...args),
+}[type](type, ...args));
+
+// We compute trend by projecting onto the upper right quadrant of
+// the unit circle. For each segment we compute the difference
+// from the midpoint (determined by min, max settings). We sum
+// positive differences (amplification) and use as the x coordinate.
+// We sum negative differences (deletions) and use as the ycoordinate.
+// Then we use atan2 to find the angle, and normalize by PI/2 to
+// give a range [0, 1].
+//
+// We compute power as root-mean-square from the midpoint.
+function trendPowerNullIter(iter, min, minThresh, maxThresh, max) {
+	var count = 0,
+		mid = (min + max) / 2,
+		highs = 0,
+		lows = 0,
+		sqsum = 0,
+		v,
+		diff,
+		n;
+	if (!iter) {
+		return null;
+	}
+	n = iter.next();
+	while (!n.done) {
+		if (n.value.value != null) {
+			v = n.value.value;
+			if (v < mid) {
+				lows += mid - v;
+			} else {
+				highs += v - mid;
+			}
+			count += 1;
+			diff = v - mid;
+			sqsum += diff * diff;
+		}
+		n = iter.next();
+	}
+	if (count > 0) {
+		return [2 * Math.atan2(highs, lows) / Math.PI, Math.sqrt(sqsum / count)];
+	}
+	return [null, null];
+}
+
+// Render segments using trend and power to select color and saturation,
+// respectively. This avoids the problem of averaging, which draws nearby
+// amplification and deletion as white, since they average to zero.
+function drawImgSegmentsPower(vg, colorSpec, index, count, width, height, zoom, nodes) {
+	var {lookup} = colorPowerScale(colorSpec),
+		ctx = vg.context(),
+		img = ctx.createImageData(width, height), // XXX cache & reuse?
+		regions = findRegions(index, height, count),
+		toPxRow = v => ~~((v.y - index) * height / count), // ~~ for floor
+		byRow = _.groupBy(nodes, toPxRow);
+
+	for (let is in byRow) {
+		var i = parseInt(is, 10); // Ugh.
+		let rowI = byRow[i];
+
+		if (!rowI) {
+			continue;
+		}
+		// Using sort vs. _.sortBy because it's faster.
+		let ends = rowI.slice(0).sort(byEnd),
+			starts = rowI.slice(0).sort(byStart),
+			len = rowI.length,
+			scope = new Set(), // XXX is Set slow?
+			pxStart = starts[0].xStart,
+			pxEnd,
+			nextStartNode, nextEndNode,
+			j = 0, k = 0, l;
+
+		while(j < len || k < len) {
+			while (j < len && starts[j].xStart === pxStart) {
+				scope.add(starts[j++]);
+			}
+			while (k < len && ends[k].xEnd === pxStart + 1) {
+				scope.delete(ends[k++]);
+			}
+
+			if (k >= len) {
+				continue;
+			}
+			nextStartNode = j < len && starts[j];
+			nextEndNode = ends[k];
+			if (j < len && nextStartNode.xStart < nextEndNode.xEnd - 1) {
+				pxEnd = nextStartNode.xStart + 1;
+			} else {
+				pxEnd = nextEndNode.xEnd;
+			}
+			// generators with regenerator seem to be slow, perhaps due to try/catch.
+			// So, _.meannull generator version, and _.i methods are limiting.
+//			let avg = meannullIter(_.i.map(scope.values(), v => v.value)),
+			let mp = trendPowerNullIter(scope.values(), ...colorSpec.slice(4, 8)), // this is much faster than _.i.map
+				lastRow = i + regions[i],
+				color = lookup(...mp);
+			for (let r = i; r < lastRow; ++r) {
+				let pxRow = r * width,
+					buffStart = (pxRow + pxStart) * 4,
+					buffEnd = (pxRow + pxEnd) * 4;
+
+				for (l = buffStart; l < buffEnd; l += 4) {
+					img.data[l] = color[0];
+					img.data[l + 1] = color[1];
+					img.data[l + 2] = color[2];
+					img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
+				}
+			}
+			pxStart = pxEnd - 1;
+		}
+	}
+	ctx.putImageData(img, 0, 0);
+}
+
+var drawSegmentedPixel = drawSegments => (vg, props) => {
 	let {width, zoom, nodes, color} = props,
 		{count, height, index} = zoom;
 	if (!nodes) {
@@ -278,8 +432,7 @@ var drawSegmentedPixel = (vg, props) => {
 		return;
 	}
 
-	let colorScale = colorScales.colorScale(color),
-		{samples, index: {bySample: samplesInDS}} = props,
+	let {samples, index: {bySample: samplesInDS}} = props,
 		last = index + count,
 		toDraw = nodes.filter(v => v.y >= index && v.y < last),
 		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]),
@@ -287,11 +440,20 @@ var drawSegmentedPixel = (vg, props) => {
 
 	if (nodes.length > 0) {
 		drawBackground(vg, width, height);
-		drawImgSegments(vg, colorScale, index, count, width, height, zoom, toDraw);
+		drawSegments(vg, color, index, count, width, height, zoom, toDraw);
 	}
 	labelNulls(vg, width, height, count, stripes);
 	labelValues(vg, width, zoom, toDraw);
 };
 
 
-module.exports = {findRegions, drawSegmented, drawSegmentedPixel, radius, minVariantHeight, toYPx, labelFont};
+module.exports = {
+	findRegions,
+	drawSegmented,
+	drawSegmentedPixel: drawSegmentedPixel(drawImgSegments),
+	drawSegmentedPower: drawSegmentedPixel(drawImgSegmentsPower),
+	radius,
+	minVariantHeight,
+	toYPx,
+	labelFont
+};
