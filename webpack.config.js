@@ -61,7 +61,8 @@ module.exports = {
 			'rx.time$': 'rx/dist/rx.time',
 			'rx.experimental$': 'rx/dist/rx.experimental',
 			'rx.aggregates$': 'rx/dist/rx.aggregates',
-			'rx.coincidence$': 'rx/dist/rx.coincidence'
+			'rx.coincidence$': 'rx/dist/rx.coincidence',
+			'redboxOptions': path.join(__dirname, 'redboxOptions.json')
 		},
 		extensions: ['', '.js', '.json', '.coffee']
 	}
