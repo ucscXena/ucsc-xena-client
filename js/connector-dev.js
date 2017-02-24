@@ -142,6 +142,8 @@ module.exports = function({
 	if (persist) {
 		// Save state in sessionStorage on page unload.
 		devStateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
+			.map(state => sessionStorage.saveDevState ? state :
+					effectsReducer(state, {type: 'COMMIT'}))
 			.subscribe(state => sessionStorage.debugSession = stringify(state));
 	}
 
