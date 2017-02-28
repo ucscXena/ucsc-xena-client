@@ -396,7 +396,7 @@ function drawImgSegmentsPower(vg, colorSpec, index, count, width, height, zoom, 
 			nextStartNode = j < len && starts[j];
 			nextEndNode = ends[k];
 			if (j < len && nextStartNode.xStart < nextEndNode.xEnd - 1) {
-				pxEnd = nextStartNode.xStart + 1;
+				pxEnd = nextStartNode.xStart;
 			} else {
 				pxEnd = nextEndNode.xEnd;
 			}
