@@ -221,7 +221,6 @@ var controls = {
 			// cohortPending to a cohort not in the active hubs, so we
 			// shouldn't hit this case.
 			if (!state.cohorts || params.hubs || state.serversChanged) {
-				console.log(state, params);
 				fetchCohorts(serverBus, userServers(newState));
 			}
 			if (shouldSetCohort(state)) {
