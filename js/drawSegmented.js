@@ -386,7 +386,7 @@ function drawImgSegmentsPower(vg, colorSpec, index, count, width, height, zoom, 
 			while (j < len && starts[j].xStart === pxStart) {
 				scope.add(starts[j++]);
 			}
-			while (k < len && ends[k].xEnd === pxStart + 1) {
+			while (k < len && ends[k].xEnd === pxStart) {
 				scope.delete(ends[k++]);
 			}
 
@@ -418,7 +418,7 @@ function drawImgSegmentsPower(vg, colorSpec, index, count, width, height, zoom, 
 					img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
 				}
 			}
-			pxStart = pxEnd - 1;
+			pxStart = pxEnd;
 		}
 	}
 	ctx.putImageData(img, 0, 0);
