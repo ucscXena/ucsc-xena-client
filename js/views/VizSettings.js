@@ -175,9 +175,9 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				"min": "min: low color 100% saturation"
 			},
 			segmented: {
-				"origin": "origin: neutral or no-effect value",
-				"thresh": "threshold: min absolute value from origin to draw color",
-				"max": "saturation: absolute value from origin to draw full color"
+				"origin": "Origin: value for copy number normal (typical: 0 or 2)",
+				"thresh": "Threshold: absolute value from origin to start showing color",
+				"max": "Saturation: absolute value from origin to draw full color"
 			}
 		},
 		defaults: {
