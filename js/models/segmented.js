@@ -213,7 +213,7 @@ function download({column, data, samples, sampleFormat}) {
 	let geneAverages = _.getIn(data, ['avg', 'geneValues', 0]),
 		columnLabel =  column.user.fieldLabel || column.fieldLabel;
 
-	return [['sample', `${columnLabel} (gene average)`],
+	return [['sample', `${columnLabel} (average)`],
 		samples.map(sample => [sampleFormat (sample), geneAverages[sample]])];
 }
 
