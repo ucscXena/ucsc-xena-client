@@ -261,11 +261,9 @@ function getPosition(maxXZoom, pStart, pEnd) {
 // Persistent state for xzoomable setting.
 var columnsXZoomable = false;
 var specialDownloadMenu = false;
-var renderingOptions = false;
 if (process.env.NODE_ENV !== 'production') {
 	columnsXZoomable = true;
 	specialDownloadMenu = true;
-var renderingOptions = true;
 }
 
 var Column = React.createClass({
@@ -273,17 +271,14 @@ var Column = React.createClass({
 	getInitialState() {
 		return {
 			xzoomable: columnsXZoomable,
-			specialDownloadMenu: specialDownloadMenu,
-			renderingOptions
+			specialDownloadMenu: specialDownloadMenu
 		};
 	},
 	enableHiddenFeatures() {
 		columnsXZoomable = true;
 		specialDownloadMenu = true;
-		renderingOptions = true;
 		this.setState({xzoomable: true});
 		this.setState({specialDownloadMenu: true});
-		this.setState({renderingOptions: true});
 	},
 	componentWillMount() {
 		var asciiA = 65;
@@ -304,10 +299,6 @@ var Column = React.createClass({
 	},
 	onViz: function () {
 		this.props.onViz(this.props.id);
-	},
-	onVizOptions: function (ev) { // only used for konami segmented options
-		var renderer = ev.target.getAttribute('data-renderer');
-		this.props.onVizSettings(this.props.id, _.merge(this.props.column.vizSettings, {renderer}));
 	},
 	onKm: function () {
 		this.props.onKm(this.props.id);
@@ -395,10 +386,10 @@ var Column = React.createClass({
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
-			{xzoomable, specialDownloadMenu, renderingOptions} = this.state,
+			{xzoomable, specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
-			{onMode, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload, onVizOptions} = this,
-			menu = optionMenu(this.props, {onMode, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload, supportsGeneAverage, xzoomable, specialDownloadMenu, onVizOptions: renderingOptions && onVizOptions}),
+			{onMode, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
+			menu = optionMenu(this.props, {onMode, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload, supportsGeneAverage, xzoomable, specialDownloadMenu}),
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
 			// move this to state to generalize to other annotations.

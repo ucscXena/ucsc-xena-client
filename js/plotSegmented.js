@@ -8,7 +8,7 @@ var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
-var {drawSegmented, drawSegmentedPixel, drawSegmentedPower, toYPx} = require('./drawSegmented');
+var {drawSegmentedTrendAmp, toYPx} = require('./drawSegmented');
 var {chromPositionFromScreen} = require('./exonLayout');
 
 // Since we don't set module.exports, but instead register ourselves
@@ -152,12 +152,6 @@ function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, as
 		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
 }
 
-var segmentedRenderer = {
-	'line': drawSegmented,
-	'pixel': drawSegmentedPixel,
-	'power': drawSegmentedPower,
-};
-
 var SegmentedColumn = hotOrNot(React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	componentWillMount: function () {
@@ -184,13 +178,12 @@ var SegmentedColumn = hotOrNot(React.createClass({
 		return tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
 	},
 	render: function () {
-		var {column, samples, zoom, index} = this.props,
-			renderer = 'power'; //_.getIn(column, ['vizSettings', 'renderer'], 'line');
+		var {column, samples, zoom, index} = this.props;
 
 		return (
 			<CanvasDrawing
 					ref='plot'
-					draw={segmentedRenderer[renderer]}
+					draw={drawSegmentedTrendAmp}
 					wrapperProps={{
 						className: 'Tooltip-target',
 						onMouseMove: this.ev.mousemove,
@@ -198,7 +191,6 @@ var SegmentedColumn = hotOrNot(React.createClass({
 						onMouseOver: this.ev.mouseover,
 						onClick: this.props.onClick
 					}}
-					renderer={renderer /* only passed to force update on switch */}
 					color={column.color}
 					nodes={column.nodes}
 					strand={column.strand}

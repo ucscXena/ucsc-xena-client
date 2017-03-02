@@ -167,25 +167,6 @@ var drawSegmented = _.curry((vg, props) => {
 	labelValues(vg, width, zoom, toDraw);
 });
 
-function meannullIter(iter) {
-	var count = 0, sum = 0, n;
-	if (!iter) {
-		return null;
-	}
-	n = iter.next();
-	while (!n.done) {
-		if (n.value.value != null) {
-			count += 1;
-			sum += n.value.value;
-		}
-		n = iter.next();
-	}
-	if (count > 0) {
-		return sum / count;
-	}
-	return null;
-}
-
 // There must be a better way to compute this.
 function findRegions(index, height, count) {
 	var starts = _.uniq(
@@ -197,74 +178,6 @@ function findRegions(index, height, count) {
 
 var byEnd = (x, y) => x.xEnd - y.xEnd;
 var byStart = (x, y) => x.xStart - y.xStart;
-
-function drawImgSegments(vg, color, index, count, width, height, zoom, nodes) {
-	var colorScale = colorScales.colorScale(color),
-		{lookup} = colorTable(colorScale, true),
-		ctx = vg.context(),
-		img = ctx.createImageData(width, height), // XXX cache & reuse?
-		regions = findRegions(index, height, count),
-		toPxRow = v => ~~((v.y - index) * height / count), // ~~ for floor
-		byRow = _.groupBy(nodes, toPxRow);
-
-	for (let is in byRow) {
-		var i = parseInt(is, 10); // Ugh.
-		let rowI = byRow[i];
-
-		if (!rowI) {
-			continue;
-		}
-		// Using sort vs. _.sortBy because it's faster.
-		let ends = rowI.slice(0).sort(byEnd),
-			starts = rowI.slice(0).sort(byStart),
-			len = rowI.length,
-			scope = new Set(), // XXX is Set slow?
-			pxStart = starts[0].xStart,
-			pxEnd,
-			nextStartNode, nextEndNode,
-			j = 0, k = 0, l;
-
-		while(j < len || k < len) {
-			while (j < len && starts[j].xStart === pxStart) {
-				scope.add(starts[j++]);
-			}
-			while (k < len && ends[k].xEnd === pxStart + 1) {
-				scope.delete(ends[k++]);
-			}
-
-			if (k >= len) {
-				continue;
-			}
-			nextStartNode = j < len && starts[j];
-			nextEndNode = ends[k];
-			if (j < len && nextStartNode.xStart < nextEndNode.xEnd - 1) {
-				pxEnd = nextStartNode.xStart + 1;
-			} else {
-				pxEnd = nextEndNode.xEnd;
-			}
-			// generators with regenerator seem to be slow, perhaps due to try/catch.
-			// So, _.meannull generator version, and _.i methods are limiting.
-//			let avg = meannullIter(_.i.map(scope.values(), v => v.value)),
-			let avg = meannullIter(scope.values()), // this is much faster than _.i.map
-				lastRow = i + regions[i],
-				color = lookup(avg);
-			for (let r = i; r < lastRow; ++r) {
-				let pxRow = r * width,
-					buffStart = (pxRow + pxStart) * 4,
-					buffEnd = (pxRow + pxEnd) * 4;
-
-				for (l = buffStart; l < buffEnd; l += 4) {
-					img.data[l] = color[0];
-					img.data[l + 1] = color[1];
-					img.data[l + 2] = color[2];
-					img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
-				}
-			}
-			pxStart = pxEnd - 1;
-		}
-	}
-	ctx.putImageData(img, 0, 0);
-}
 
 var noDataScale = () => "gray";
 noDataScale.domain = () => [];
@@ -381,7 +294,7 @@ function drawImgSegmentsPower(vg, colorSpec, index, count, width, height, zoom, 
 	ctx.putImageData(img, 0, 0);
 }
 
-var drawSegmentedPixel = drawSegments => (vg, props) => {
+var drawSegmentedTrendAmp = (vg, props) => {
 	let {width, zoom, nodes, color} = props,
 		{count, height, index} = zoom;
 	if (!nodes) {
@@ -397,7 +310,7 @@ var drawSegmentedPixel = drawSegments => (vg, props) => {
 
 	if (nodes.length > 0) {
 		drawBackground(vg, width, height);
-		drawSegments(vg, color, index, count, width, height, zoom, toDraw);
+		drawImgSegmentsPower(vg, color, index, count, width, height, zoom, toDraw);
 	}
 	labelNulls(vg, width, height, count, stripes);
 	labelValues(vg, width, zoom, toDraw);
@@ -407,8 +320,7 @@ var drawSegmentedPixel = drawSegments => (vg, props) => {
 module.exports = {
 	findRegions,
 	drawSegmented,
-	drawSegmentedPixel: drawSegmentedPixel(drawImgSegments),
-	drawSegmentedPower: drawSegmentedPixel(drawImgSegmentsPower),
+	drawSegmentedTrendAmp,
 	radius,
 	minVariantHeight,
 	toYPx,

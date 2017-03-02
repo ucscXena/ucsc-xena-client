@@ -116,7 +116,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 				{_.map(columnOrder, (id, i) => (
 					<Column
 						onViz={this.onOpenVizSettings}
-						onVizSettings={this.onVizSettings /* only used for konami segmented options */}
 						onFieldLabel={this.onFieldLabel}
 						onColumnLabel={this.onColumnLabel}
 						onShowIntrons={this.onShowIntrons}
