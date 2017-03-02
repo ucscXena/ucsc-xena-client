@@ -7,7 +7,8 @@ var multi = require('./multi');
 
 var isNumber = _.isNumber;
 
-var blueWhiteRed = ['#0000ff', '#ffffff', '#ff0000'],
+var white = '#ffffff',
+	blueWhiteRed = ['#0000ff', '#ffffff', '#ff0000'],
 	greenBlackRed = ['#00ff00', '#000000', '#ff0000'],
 	blueBlackYellow =  ['#0000ff', '#000000', '#ffff00'],
 	whiteBlack = ['#ffffff', '#ffffff', '#000000'];
@@ -108,7 +109,7 @@ function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
 var prec2 = x => parseFloat(x.toPrecision(2));
 function colorSegmented(column, settings = {}, codes, data) {
 	var values = data,
-		[low, zero, high] = defaultColors[settings.colorClass || column.colorClass],
+		[low, , high] = defaultColors[settings.colorClass || column.colorClass],
 		minVal = _.minnull(values),
 		maxVal = _.maxnull(values),
 		{origin, thresh, max} = settings || {},
@@ -121,11 +122,11 @@ function colorSegmented(column, settings = {}, codes, data) {
 	}
 
 	if ((origin != null) && (thresh != null) && (max != null))  { //custom setting
-		spec = ['trend-amplitude', low, zero, high, origin, thresh, max];
+		spec = ['trend-amplitude', low, white, high, origin, thresh, max];
 	} else {
 		absmax = Math.max(-minVal, maxVal);
 		zone = absmax / 4.0;
-		spec = ['trend-amplitude', low, zero, high,
+		spec = ['trend-amplitude', low, white, high,
 			 0, prec2(zone / 2.0), prec2(absmax / 2.0)];
 	}
 	return spec;

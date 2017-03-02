@@ -275,7 +275,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					<Col xs={15} md={10} lg={10}>
 						<ButtonGroup>{buttons}</ButtonGroup>
 						<div>
-							{picture}
+							{valueType === 'float' ? picture : null}
 							{enterInput}
 						</div>
 					</Col>
@@ -356,17 +356,24 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		},
 		render () {
 			let optionValue = this.state.optionValue,
-				options = [
-					{"key": "default", "label": "red-white-blue"},
-					{"key": "expression", "label": "red-black-green"},
-					{"key": "blueBlackYellow", "label": "yellow-black-blue"},
-					{"key": "whiteBlack", "label": "black-white"}
-				],
-				activeOption = _.find(options, obj => {
+				options = {
+					float: [
+						{"key": "default", "label": "red-white-blue"},
+						{"key": "expression", "label": "red-black-green"},
+						{"key": "blueBlackYellow", "label": "yellow-black-blue"},
+						{"key": "whiteBlack", "label": "black-white"}
+					],
+					segmented: [
+						{"key": "default", "label": "red-white-blue"},
+						{"key": "expression", "label": "red-white-green"},
+						{"key": "blueBlackYellow", "label": "yellow-white-blue"}
+					],
+				},
+				activeOption = _.find(options[valueType], obj => {
 					return obj.key === optionValue;
 				}),
 				title = activeOption ? activeOption.label : 'Select',
-				menuItemList = options.map(obj => {
+				menuItemList = options[valueType].map(obj => {
 					var active = (obj.key === optionValue);
 					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
 						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
