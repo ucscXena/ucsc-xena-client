@@ -24,6 +24,7 @@ var {deepPureRenderMixin} = require('../react-utils');
 var Crosshair = require('./Crosshair');
 var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
+var Rx = require("rx");
 
 // XXX move this?
 function download([fields, rows]) {
@@ -186,9 +187,10 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 		noMenu = !rightValueType || !rightAssembly || (data && _.isEmpty(data.refGene)),
 		noMuPit = noMenu || wrongDataSubType,
 		noData = !_.get(data, 'req'),
-		mupitItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)',
+		mupitItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19 coding)',
 		sortVisibleItemName = sortVisible ? 'Sort gene' : 'Sort region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
+
 	return addIdsToArr([
 		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
 		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
@@ -370,11 +372,24 @@ var Column = React.createClass({
 			variants = [...(new Set(_.pluck(nodes, 'data')))], //only variants in view
 			SNVPs = mutationVector.SNVPvalue(variants, total, k),
 			uriList = _.map(_.values(SNVPs), n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
-			url = 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=';
-			//url = 'http://karchin-web04.icm.jhu.edu:8888/MuPIT_Interactive/?gm=';  // mupit dev server
-		window.open(url + `${uriList}`);
-	},
+			url = 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=',
+			label = _.getIn(this.props, ['column', 'user', 'fieldLabel']),
+			/*
+			http://karchin-web02.icm.jhu.edu/MuPIT_Interactive/rest/showstructure/check?pos=chr1:69094
+			"chr1:69094" should be changed to a coordinate that you want to know the presence of any MuPIT mapping on. The result will be a JSON-format string, in the form of
+			{"hit":true,"status":"normal"}
+			*/
+			checkStrUrl = 'http://karchin-web02.icm.jhu.edu/MuPIT_Interactive/rest/showstructure/check?pos=', // mupit dev server to check structure
+			newRows = _.uniq(_.map(variants, n => `${n.chr}:${n.start}`));
 
+		Rx.Observable.zipArray(_.map(newRows, key => Rx.DOM.get(checkStrUrl + key))).subscribe( x => {
+			if (_.some(x, xhr => JSON.parse(xhr.response).hit)) {
+				window.open(url + `${uriList}`);
+			} else {
+				alert(label + ": No 3D structure found for any of the genomic locations shown in the horizontal view.\n");
+			}
+		});
+	},
 	onReload: function () {
 		this.props.onReload(this.props.id);
 	},
