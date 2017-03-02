@@ -2,7 +2,7 @@
 
 var _ = require('./underscore_ext');
 var colorScales = require('./colorScales');
-var {rgb, RGBtoHSV, HSVtoRGB} = require('./color_helper');
+var {rgb} = require('./color_helper');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -266,51 +266,8 @@ function drawImgSegments(vg, color, index, count, width, height, zoom, nodes) {
 	ctx.putImageData(img, 0, 0);
 }
 
-var clip = (min, max, x) => x < min ? min : (x > max ? max : x);
-var rgbToArray = obj => [obj.r, obj.g, obj.b];
-
-// Find the minimum path from h0 to h1 in the hue space, which
-// wraps at 1.
-function minHueRange(h0, h1) {
-	var [low, high] = h0 < h1 ? [h0, h1] : [h1, h0];
-	return high - low > low + 1 - high ? [high, low + 1] : [low, high];
-}
-
-// Since we're doing pixel math, can we just compute the colors on-the-fly, instead
-// of using a table?
-var maxHues = 20;
-var maxSaturations = 10;
-function scaleFloatThreshold(low, zero, high, min, minThresh, maxThresh, max) {
-	var [h0, h1] = minHueRange(RGBtoHSV(...rgb(low)).h, RGBtoHSV(...rgb(high)).h),
-		colors = _.range(h0, h1, (h1 - h0) / maxHues).map(h =>
-			_.range(0, 1, 1 / maxSaturations).map(s => rgbToArray(HSVtoRGB(h, s, 1))));
-	return {
-		// trend is [0, 1], representing net amplification vs. deletion.
-		// power is [0, dataMax], representing avg. distance from mid point.
-		lookup: (trend, power) => {
-			if (power == null) {
-				return [128, 128, 128];
-			}
-			// We project [maxThresh, max] to saturation [0, 1].
-			// minThresh does not affect color in this drawing mode.
-			var s = clip(0, maxSaturations - 1, (power - maxThresh) / (max - maxThresh) * maxSaturations),
-				h = clip(0, maxHues - 1, trend * maxHues),
-				c = colors[~~h][~~s];
-
-			return c;
-		}
-	};
-}
-
 var noDataScale = () => "gray";
 noDataScale.domain = () => [];
-
-var colorPowerScale = ([type, ...args])=> ({
-	'no-data': () => noDataScale,
-	'float-thresh-pos': () => noDataScale,
-	'float-thresh-neg': () => noDataScale,
-	'float-thresh': (__, ...args) => scaleFloatThreshold(...args),
-}[type](type, ...args));
 
 // We compute trend by projecting onto the upper right quadrant of
 // the unit circle. For each segment we compute the difference
@@ -321,9 +278,8 @@ var colorPowerScale = ([type, ...args])=> ({
 // give a range [0, 1].
 //
 // We compute power as root-mean-square from the midpoint.
-function trendPowerNullIter(iter, min, minThresh, maxThresh, max) {
+function trendPowerNullIter(iter, zero) {
 	var count = 0,
-		mid = (min + max) / 2,
 		highs = 0,
 		lows = 0,
 		sqsum = 0,
@@ -337,13 +293,13 @@ function trendPowerNullIter(iter, min, minThresh, maxThresh, max) {
 	while (!n.done) {
 		if (n.value.value != null) {
 			v = n.value.value;
-			if (v < mid) {
-				lows += mid - v;
+			if (v < zero) {
+				lows += zero - v;
 			} else {
-				highs += v - mid;
+				highs += v - zero;
 			}
 			count += 1;
-			diff = v - mid;
+			diff = v - zero;
 			sqsum += diff * diff;
 		}
 		n = iter.next();
@@ -358,7 +314,8 @@ function trendPowerNullIter(iter, min, minThresh, maxThresh, max) {
 // respectively. This avoids the problem of averaging, which draws nearby
 // amplification and deletion as white, since they average to zero.
 function drawImgSegmentsPower(vg, colorSpec, index, count, width, height, zoom, nodes) {
-	var {lookup} = colorPowerScale(colorSpec),
+	var {lookup} = colorScales.colorScale(colorSpec),
+		[,,,, zero] = colorSpec,
 		ctx = vg.context(),
 		img = ctx.createImageData(width, height), // XXX cache & reuse?
 		regions = findRegions(index, height, count),
@@ -403,7 +360,7 @@ function drawImgSegmentsPower(vg, colorSpec, index, count, width, height, zoom, 
 			// generators with regenerator seem to be slow, perhaps due to try/catch.
 			// So, _.meannull generator version, and _.i methods are limiting.
 //			let avg = meannullIter(_.i.map(scope.values(), v => v.value)),
-			let mp = trendPowerNullIter(scope.values(), ...colorSpec.slice(4, 8)), // this is much faster than _.i.map
+			let mp = trendPowerNullIter(scope.values(), zero), // this is much faster than _.i.map
 				lastRow = i + regions[i],
 				color = lookup(...mp);
 			for (let r = i; r < lastRow; ++r) {

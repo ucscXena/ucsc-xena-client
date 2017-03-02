@@ -105,67 +105,97 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		return _.fmap(settings, parseFloat);
 	}
 
-	function validateSettings(s) {
-		var vals = _.fmap(s, parseFloat),
-			fmtErrors = _.fmap(vals, function (v, k) {
-				return (isNaN(v) && s[k]) ? "Invalid number." : "";
-			}),
-			missing = _.fmap(s, _.constant(null)),
-			rangeErrors;
+	var validateSettings = {
+		float: s => {
+			var vals = _.fmap(s, parseFloat),
+				fmtErrors = _.fmap(vals, function (v, k) {
+					return (isNaN(v) && s[k]) ? "Invalid number." : "";
+				}),
+				missing = _.fmap(s, _.constant(null)),
+				rangeErrors;
 
-		/*jshint -W018 */ /* allow xor idiom */
-		if (!s.minStart !== !s.maxStart) { // xor
-			missing.minStart = 'Both 0% values must be given to take effect.';
+			/*jshint -W018 */ /* allow xor idiom */
+			if (!s.minStart !== !s.maxStart) { // xor
+				missing.minStart = 'Both 0% values must be given to take effect.';
+			}
+			// XXX check for missin min & max
+
+			if (s.minStart && s.maxStart && !fmtErrors.minStart && !fmtErrors.maxStart) {
+				// wrong if missing maxStart: we compare against the wrong thing.
+				rangeErrors = {
+					max: null,
+					maxStart: vals.maxStart <= vals.max ? null :  'Should be lower than max',
+					minStart: vals.minStart <= vals.maxStart ? null : 'Should be lower than maxStart',
+					min: vals.min <= vals.minStart ? null : 'Should be lower than minStart'
+				};
+			} else {
+				rangeErrors = {
+					max: null,
+					min: vals.min <= vals.max ? null : 'Should be lower than max'
+				};
+			}
+
+			return _.fmap(fmtErrors, function (err, k) {
+				return _.filter([err, rangeErrors[k], missing[k]], _.identity).join(' ');
+			});
+		},
+		segmented: s => {
+			var vals = _.fmap(s, parseFloat),
+				fmtErrors = _.fmap(vals, v => {
+					return isNaN(v) ? "Invalid number." : "";
+				}),
+				rangeErrors = {
+					thresh: vals.thresh >= 0 ? null : 'Should be positive',
+					max: vals.max >= 0 ? null : 'Should be positive'
+				};
+			return _.fmap(fmtErrors, function (err, k) {
+				return _.filter([err, rangeErrors[k]], _.identity).join(' ');
+			});
 		}
-		// XXX check for missin min & max
-
-		if (s.minStart && s.maxStart && !fmtErrors.minStart && !fmtErrors.maxStart) {
-			// wrong if missing maxStart: we compare against the wrong thing.
-			rangeErrors = {
-				max: null,
-				maxStart: vals.maxStart <= vals.max ? null :  'Should be lower than max',
-				minStart: vals.minStart <= vals.maxStart ? null : 'Should be lower than maxStart',
-				min: vals.min <= vals.minStart ? null : 'Should be lower than minStart'
-			};
-		} else {
-			rangeErrors = {
-				max: null,
-				min: vals.min <= vals.max ? null : 'Should be lower than max'
-			};
-		}
-
-		return _.fmap(fmtErrors, function (err, k) {
-			return _.filter([err, rangeErrors[k], missing[k]], _.identity).join(' ');
-		});
-	}
+	};
 
 	function settingsValid(errors) {
 		return _.every(errors, function (s) { return !s; });
 	}
 
 	function valToStr(v) {
-		if (v === "-") {
-			return v;
-		}
-		return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
+		return "" + v;
+//		if (v === "-") {
+//			return v;
+//		}
+//		return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
 	}
 
 	var scaleChoice = React.createClass({
 		annotations: {
-			"max": "max: high color 100% saturation",
-			"maxStart": "maxStart: high color 0% saturation",
-			"minStart": "minStart: low color 0% saturation",
-			"min": "min: low color 100% saturation"
+			float: {
+				"max": "max: high color 100% saturation",
+				"maxStart": "maxStart: high color 0% saturation",
+				"minStart": "minStart: low color 0% saturation",
+				"min": "min: low color 100% saturation"
+			},
+			segmented: {
+				"origin": "origin: neutral or no-effect value",
+				"thresh": "threshold: min absolute value from origin to draw color",
+				"max": "saturation: absolute value from origin to draw full color"
+			}
 		},
 		defaults: {
-			max: 1,
-			maxStart: null,
-			minStart: null,
-			min: -1
+			float: {
+				max: 1,
+				maxStart: null,
+				minStart: null,
+				min: -1
+			},
+			segmented: {
+				origin: 0,
+				thresh: 0,
+				max: 1
+			}
 		},
 		getInitialState () {
 			//check if there is custom value
-			let custom = colorParams.some(function (param) {
+			let custom = colorParams[valueType].some(function (param) {
 					if (getVizSettings(param)) {
 						return true;
 					}
@@ -173,15 +203,15 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 			return {
 				mode: custom ? "Custom" : "Auto",
-				settings: custom ? _.pick(oldSettings, colorParams) : this.defaults,
+				settings: custom ? _.pick(oldSettings, colorParams[valueType]) : this.defaults[valueType],
 				errors: {}
 			};
 		},
 		autoClick () {
 			this.setState({mode: "Auto"});
-			this.setState({settings: this.defaults});
+			this.setState({settings: this.defaults[valueType]});
 			this.setState({errors: {}});
-			onVizSettings(id, _.omit(currentSettings.state, colorParams));
+			onVizSettings(id, _.omit(currentSettings.state, colorParams[valueType]));
 		},
 		customClick () {
 			this.setState({mode: "Custom"});
@@ -191,7 +221,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			var {settings} = this.state,
 				param = ev.target.getAttribute('data-param'),
 				newSettings = _.assoc(settings, param, ev.target.value),
-				errors = validateSettings(newSettings);
+				errors = validateSettings[valueType](newSettings);
 
 			this.setState({settings: newSettings, errors});
 
@@ -200,24 +230,24 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			}
 		},
 		buildCustomColorScale () {
-			node = colorParams.map(param => {
-				let value = valToStr(this.state.settings[param]),
-					label = this.annotations[param],
-					error = this.state.errors[param];
+			var node = colorParams[valueType].map(param => {
+					let value = valToStr(this.state.settings[param]),
+						label = this.annotations[valueType][param],
+						error = this.state.errors[param];
 
-				return (
-					<Row>
-						<Col xs={4} md={4} lg={4}>{label}</Col>
-						<Col xs={3} md={3} lg={3}>
-							<Input type='textinput' placeholder="Auto"
-								value={value} data-param={param} onChange={this.onScaleParamChange}/>
-						</Col>
-						<Col xs={5} md={5} lg={5}>
-							<label bsStyle="danger">{error}</label>
-						</Col>
-					</Row>
-				);
-			});
+					return (
+						<Row>
+							<Col xs={4} md={4} lg={4}>{label}</Col>
+							<Col xs={3} md={3} lg={3}>
+								<Input type='textinput' placeholder={_.contains(['minThresh', 'maxThresh'], param) ? 'Auto' : ''}
+									value={value} data-param={param} onChange={this.onScaleParamChange}/>
+							</Col>
+							<Col xs={5} md={5} lg={5}>
+								<label bsStyle="danger">{error}</label>
+							</Col>
+						</Row>
+					);
+				});
 			return node;
 		},
 
@@ -356,7 +386,10 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 	var oldSettings = state,
 		currentSettings = {state: state},
-		colorParams = ["max", "maxStart", "minStart", "min"];
+		colorParams = {
+			float: ["max", "maxStart", "minStart", "min"],
+			segmented: ["origin", "thresh", "max"]
+		};
 
 	node.appendChild(datasetSetting());
 	return currentSettings;

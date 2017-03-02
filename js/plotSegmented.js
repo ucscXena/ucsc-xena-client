@@ -10,7 +10,6 @@ var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
 var {drawSegmented, drawSegmentedPixel, drawSegmentedPower, toYPx} = require('./drawSegmented');
 var {chromPositionFromScreen} = require('./exonLayout');
-var colorScales = require('./colorScales');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -29,24 +28,10 @@ function hotOrNot(component) {
 // Use the domain of the scale as the label.
 // If using thresholded scales, add '<' '>' to labels.
 
-var cases = ([tag], arg, c) => c[tag](arg);
-
 function legendForColorscale(colorSpec) {
-	var scale = colorScales.colorScale(colorSpec),
-		values = scale.domain(),
-		colors = _.map(values, scale);
+	var [, low, zero, high, origin, thresh, max] = colorSpec;
 
-	var labels = cases(colorSpec, values, {
-		'no-data': () => [],
-		'float': _.identity,
-		'float-pos': _.identity,
-		'float-neg': _.identity,
-		'float-thresh': ([nl, nh, pl, ph]) => [nl, nh, pl, ph],
-		'float-thresh-pos': ([low, high]) => [low, high],
-		'float-thresh-neg': ([low, high]) => [low, high]
-	});
-
-	return {colors, labels};
+	return {colors: [low, zero, zero, high], labels: [origin - max, origin - thresh, origin + thresh, origin + max]};
 }
 
 // We never want to draw multiple legends. We only draw the 1st scale
@@ -61,17 +46,8 @@ function renderFloatLegend(props) {
 		footnotes = (units || []).slice(0), // copy to avoid modification, below
 		samples = _.getIn(data, ['req', 'samplesInResp']),
 		nSamples = samples ? samples.length : '',
-		normalizationText = "mean is subtracted per column across " + nSamples + " samples",
-		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min'])),
-		multiScaled = colors && colors.length > 1 && !hasViz(vizSettings);
-
-	if (multiScaled) {
-		labels = labels.map((label, i) => {
-			if (i === 0) {return "lower";}
-			else if(i === labels.length - 1) {return "higher";}
-			else {return "";}
-		});
-	}
+		normalizationText = "mean is subtracted per column across " + nSamples + " samples";
+//		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min']));
 
 	if (vizSettings &&  vizSettings.colNormalization) {
 		if (vizSettings.colNormalization === "subset") { // substract mean per subcolumn
@@ -209,7 +185,7 @@ var SegmentedColumn = hotOrNot(React.createClass({
 	},
 	render: function () {
 		var {column, samples, zoom, index} = this.props,
-			renderer = _.getIn(column, ['vizSettings', 'renderer'], 'line');
+			renderer = 'power'; //_.getIn(column, ['vizSettings', 'renderer'], 'line');
 
 		return (
 			<CanvasDrawing

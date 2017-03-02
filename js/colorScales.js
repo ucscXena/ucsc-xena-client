@@ -4,6 +4,7 @@
 
 var d3 = require('d3-scale');
 var _ = require('underscore');
+var {rgb, RGBtoHSV, HSVtoRGB} = require('./color_helper');
 
 // d3_category20, replace #7f7f7f gray (that aliases with our N/A gray of #808080) with dark grey #434348
 var categoryMore = [
@@ -66,6 +67,41 @@ function scaleFloatDouble(low, zero, high, min, max) {
 		.range([low, zero, high]);
 }
 
+var clip = (min, max, x) => x < min ? min : (x > max ? max : x);
+var rgbToArray = obj => [obj.r, obj.g, obj.b];
+
+// Find the minimum path from h0 to h1 in the hue space, which
+// wraps at 1.
+function minHueRange(h0, h1) {
+	var [low, high] = h0 < h1 ? [h0, h1] : [h1, h0];
+	return high - low > low + 1 - high ? [high, low + 1] : [low, high];
+}
+
+// Since we're doing pixel math, can we just compute the colors on-the-fly, instead
+// of using a table?
+var maxHues = 20;
+var maxSaturations = 10;
+function scaleTrendAmplitude(low, zero, high, origin, thresh, max) {
+	var [h0, h1] = minHueRange(RGBtoHSV(...rgb(low)).h, RGBtoHSV(...rgb(high)).h),
+		colors = _.range(h0, h1, (h1 - h0) / maxHues).map(h =>
+			_.range(0, 1, 1 / maxSaturations).map(s => rgbToArray(HSVtoRGB(h, s, 1))));
+	return {
+		// trend is [0, 1], representing net amplification vs. deletion.
+		// power is [0, dataMax], representing avg. distance from zero point.
+		lookup: (trend, power) => {
+			if (power == null) {
+				return [128, 128, 128];
+			}
+			// We project [thresh, max] to saturation [0, 1].
+			var s = clip(0, maxSaturations - 1, (power - thresh) / (max - origin - thresh) * maxSaturations),
+				h = clip(0, maxHues - 1, trend * maxHues),
+				c = colors[~~h][~~s];
+
+			return c;
+		}
+	};
+}
+
 // A scale for when we have no data. Implements the scale API
 // so we don't have to put a bunch of special cases in the drawing code.
 var noDataScale = () => "gray";
@@ -79,6 +115,7 @@ var colorScale = {
 	'float-thresh-pos': (__, ...args) => scaleFloatThresholdPositive(...args),
 	'float-thresh-neg': (__, ...args) => scaleFloatThresholdNegative(...args),
 	'float-thresh': (__, ...args) => scaleFloatThreshold(...args),
+	'trend-amplitude': (__, ...args) => scaleTrendAmplitude(...args),
 	'ordinal': (__, ...args) => ordinal(...args)
 };
 
