@@ -15,7 +15,7 @@ var links = [
 	{href: "../datapages/", label: "Data Sets"},
 	{href: "../heatmap/", label: "Visualization"},
 	{href: "../hub/", label: "Data Hubs"},
-	{href: "https://galaxyxena.soe.ucsc.edu", label: "Galaxy Xena"},
+	//{href: "https://galaxyxena.soe.ucsc.edu", label: "Galaxy Xena"},
 	{href: "https://genome-cancer.ucsc.edu/download/public/get-xena/index.html", label: "Local Xena"},
 	{href: "https://genome-cancer.ucsc.edu/proj/site/composite/heatmap/#nostate", label: "Beta Features"},
 	{href: "https://docs.google.com/a/soe.ucsc.edu/document/d/1CIWj6L8LAaHFmLek3yrbrjFKRm_l3Sy73lJ4wY-WM8Y", label: "Help"}
