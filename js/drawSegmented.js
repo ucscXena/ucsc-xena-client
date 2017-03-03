@@ -2,7 +2,7 @@
 
 var _ = require('./underscore_ext');
 var colorScales = require('./colorScales');
-var {rgb} = require('./color_helper');
+var {RGBToHex} = require('./color_helper');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -61,111 +61,6 @@ function labelValues(vg, width, {index, height, count}, toDraw) {
 		});
 	}
 }
-
-// Convert a color scale to a lookup table, by sampling along its
-// domain. This is much faster than doing interpolation on every data
-// point.
-var maxColors = 200;
-function colorTable(colorScale, asRgb) {
-	var domain = colorScale.domain(),
-		min = _.min(domain),
-		max = _.max(domain),
-		len = max - min,
-		table = _.range(min, max, len / maxColors).map(colorScale);
-
-	table = asRgb ? table.map(rgb) : table;
-	return {
-		lookup: v => {
-			if (v == null) {
-				return asRgb ? [128, 128, 128] : 'gray';
-			}
-			var i = Math.floor((v - min) * maxColors / len),
-				clipped = i < 0 ? 0 : (i >= maxColors ? maxColors - 1 : i);
-			return table[clipped];
-		},
-		table
-	};
-}
-
-// Rearrange an array in order [floor(N/2), floor(N/2) + 1, floor(N/2) - 1, ...]
-function reorder(arr) {
-	var mid = Math.floor(arr.length / 2), // may round down
-		up = arr.slice(mid, arr.length),  // may be longer
-		down = arr.slice(0, mid).reverse();
-	return _.flatten(_.zip(up, down)).slice(0, arr.length);
-}
-
-// There are two optimizations here, for large inputs. This is close to 2x
-// faster than w/o the optimizations.
-//
-// d3 color scales will interpolate each input, then convert to string.
-// This is much too slow for large collections. Instead, we sample the
-// color scale along its domain to create a table. Then we can
-// look up the color string in the table with a simple divide.
-//
-// After discretizing the color in this fashion, we can group the segments
-// by color. This lets us minimize canvas color changes, which are extremely
-// expensive. This approach has a drawback: it can obscure small features of
-// the data when zoomed out. If red is always drawn after blue, small blue features
-// will not show up. If, instead, we draw segments in random order, red-on-blue
-// and blue-on-red features will both show up, because on average a few red and
-// a few blue will be drawn last. However this is very slow, because of all
-// the canvas color changes.
-//
-// A workaround, here, is to draw the discrete color groups in alternating
-// order from the middle to both extremes, via the reorder() function. So
-// with default colors we draw white, light red, light blue, darker red, darker blue,
-// etc., to each extreme. This shows small feature well in a few representative
-// datasets.
-//
-// It's possible this will work poorly for other datasets, e.g. if there are
-// only a few colors. If this is the case, we might instead want to alternate
-// subsets of the few color groups.
-
-function drawSegments(vg, colorScale, width, rheight, zoom, segments) {
-	var {lookup, table} = colorTable(colorScale),
-		toDraw = segments.map(v => {
-			var y = (v.y - zoom.index) * rheight + (rheight / 2);
-			return {
-				points: [v.xStart, y, v.xEnd, y],
-				color: lookup(v.value)
-			};
-		}),
-		byColor = _.groupBy(toDraw, 'color');
-
-	['gray', ...reorder(table)].forEach(color => {
-		var colorGroup = byColor[color],
-		points = _.pluck(colorGroup, 'points');
-
-		vg.drawPoly(points,
-			{strokeStyle: color, lineWidth: rheight});
-	});
-}
-
-var drawSegmented = _.curry((vg, props) => {
-	let {width, zoom, nodes, color} = props,
-		{count, height, index} = zoom;
-	if (!nodes) {
-		vg.box(0, 0, width, height, "gray");
-		return;
-	}
-
-	let colorScale = colorScales.colorScale(color),
-		{samples, index: {bySample: samplesInDS}} = props,
-		last = index + count,
-		toDraw = nodes.filter(v => v.y >= index && v.y < last),
-		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]),
-		stripes = backgroundStripes(hasValue);
-
-	if (nodes.length > 0) {
-		vg.drawSharpRows(vg, index, count, height, width,
-			drawBackground,
-			(vg, rwidth, rheight) =>
-				drawSegments(vg, colorScale, rwidth, rheight, zoom, toDraw));
-	}
-	labelNulls(vg, width, height, count, stripes);
-	labelValues(vg, width, zoom, toDraw);
-});
 
 // There must be a better way to compute this.
 function findRegions(index, height, count) {
@@ -226,11 +121,9 @@ function trendPowerNullIter(iter, zero) {
 // Render segments using trend and power to select color and saturation,
 // respectively. This avoids the problem of averaging, which draws nearby
 // amplification and deletion as white, since they average to zero.
-function drawImgSegmentsPower(vg, colorSpec, index, count, width, height, zoom, nodes) {
+function* segmentRegions(colorSpec, index, count, width, height, zoom, nodes) {
 	var {lookup} = colorScales.colorScale(colorSpec),
 		[,,,, zero] = colorSpec,
-		ctx = vg.context(),
-		img = ctx.createImageData(width, height), // XXX cache & reuse?
 		regions = findRegions(index, height, count),
 		toPxRow = v => ~~((v.y - index) * height / count), // ~~ for floor
 		byRow = _.groupBy(nodes, toPxRow);
@@ -250,7 +143,7 @@ function drawImgSegmentsPower(vg, colorSpec, index, count, width, height, zoom, 
 			pxStart = starts[0].xStart,
 			pxEnd,
 			nextStartNode, nextEndNode,
-			j = 0, k = 0, l;
+			j = 0, k = 0;
 
 		while(j < len || k < len) {
 			while (j < len && starts[j].xStart === pxStart) {
@@ -276,25 +169,45 @@ function drawImgSegmentsPower(vg, colorSpec, index, count, width, height, zoom, 
 			let mp = trendPowerNullIter(scope.values(), zero), // this is much faster than _.i.map
 				lastRow = i + regions[i],
 				color = lookup(...mp);
-			for (let r = i; r < lastRow; ++r) {
-				let pxRow = r * width,
-					buffStart = (pxRow + pxStart) * 4,
-					buffEnd = (pxRow + pxEnd) * 4;
-
-				for (l = buffStart; l < buffEnd; l += 4) {
-					img.data[l] = color[0];
-					img.data[l + 1] = color[1];
-					img.data[l + 2] = color[2];
-					img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
-				}
-			}
+			yield {pxStart, pxEnd, color, lastRow, i};
 			pxStart = pxEnd;
+		}
+	}
+}
+
+function drawImgSegmentsPixel(vg, colorSpec, index, count, width, height, zoom, nodes) {
+	var ctx = vg.context(),
+		img = ctx.createImageData(width, height), // XXX cache & reuse?
+		regions = segmentRegions(colorSpec, index, count, width, height, zoom, nodes);
+
+	for (var r = regions.next(); !r.done; r = regions.next()) {
+		let {pxStart, pxEnd, color, lastRow, i} = r.value, l;
+		for (let r = i; r < lastRow; ++r) {
+			let pxRow = r * width,
+				buffStart = (pxRow + pxStart) * 4,
+				buffEnd = (pxRow + pxEnd) * 4;
+
+			for (l = buffStart; l < buffEnd; l += 4) {
+				img.data[l] = color[0];
+				img.data[l + 1] = color[1];
+				img.data[l + 2] = color[2];
+				img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
+			}
 		}
 	}
 	ctx.putImageData(img, 0, 0);
 }
 
-var drawSegmentedTrendAmp = (vg, props) => {
+function drawImgSegmentsVector(vg, colorSpec, index, count, width, height, zoom, nodes) {
+	var regions = segmentRegions(colorSpec, index, count, width, height, zoom, nodes);
+
+	for (var r = regions.next(); !r.done; r = regions.next()) {
+		let {pxStart, pxEnd, color, lastRow, i} = r.value;
+		vg.box(pxStart, i, pxEnd - pxStart, lastRow - i, RGBToHex(...color));
+	}
+}
+
+var drawSegmentedByMethod = drawSegments => (vg, props) => {
 	let {width, zoom, nodes, color} = props,
 		{count, height, index} = zoom;
 	if (!nodes) {
@@ -310,7 +223,7 @@ var drawSegmentedTrendAmp = (vg, props) => {
 
 	if (nodes.length > 0) {
 		drawBackground(vg, width, height);
-		drawImgSegmentsPower(vg, color, index, count, width, height, zoom, toDraw);
+		drawSegments(vg, color, index, count, width, height, zoom, toDraw);
 	}
 	labelNulls(vg, width, height, count, stripes);
 	labelValues(vg, width, zoom, toDraw);
@@ -319,8 +232,8 @@ var drawSegmentedTrendAmp = (vg, props) => {
 
 module.exports = {
 	findRegions,
-	drawSegmented,
-	drawSegmentedTrendAmp,
+	drawSegmented: drawSegmentedByMethod(drawImgSegmentsVector),
+	drawSegmentedTrendAmp: drawSegmentedByMethod(drawImgSegmentsPixel),
 	radius,
 	minVariantHeight,
 	toYPx,
