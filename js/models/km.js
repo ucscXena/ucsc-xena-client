@@ -105,7 +105,7 @@ function mutationVals(column, data, {bySample}, sortedSamples) {
 
 function segmentedVals(column, data, index, samples, splits) {
 	var {color} = column,
-		warning = 'gene-level average',
+		warning = 'average',
 		avg = _.getIn(data, ['avg', 'geneValues', 0]),
 		bySampleSortAvg = samples.map( sample => avg[sample]),  // ordered by current sample sort
 		uniq = _.without(_.uniq(avg), null, undefined),
