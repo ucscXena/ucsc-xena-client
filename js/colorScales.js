@@ -79,8 +79,8 @@ function minHueRange(h0, h1) {
 
 // Since we're doing pixel math, can we just compute the colors on-the-fly, instead
 // of using a table?
-var maxHues = 20;
-var maxSaturations = 10;
+var maxHues = 10;
+var maxSaturations = 30;
 function scaleTrendAmplitude(low, zero, high, origin, thresh, max) {
 	var [h0, h1] = minHueRange(RGBtoHSV(...rgb(low)).h, RGBtoHSV(...rgb(high)).h),
 		colors = _.range(h0, h1, (h1 - h0) / maxHues).map(h =>
