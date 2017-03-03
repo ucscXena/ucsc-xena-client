@@ -4,6 +4,7 @@ var _ = require('../underscore_ext');
 var multi = require('../multi');
 var {colorScale} = require('../colorScales');
 var km = require('../km'); // move km down?
+var {RGBToHex} = require('../color_helper');
 //var {segmentAverage} = require('./segmented');
 
 var MAX = 10; // max number of groups to display.
@@ -108,7 +109,9 @@ function segmentedVals(column, data, index, samples, splits) {
 		avg = _.getIn(data, ['avg', 'geneValues', 0]),
 		bySampleSortAvg = samples.map( sample => avg[sample]),  // ordered by current sample sort
 		uniq = _.without(_.uniq(avg), null, undefined),
-		colorfn = colorScale(color),
+		scale = colorScale(color),
+		[,,,, origin] = color,
+		colorfn = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin)),
 		partFn = splits === 3 ? partitionedVals3 : partitionedVals2;
 	return {warning, maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
 }

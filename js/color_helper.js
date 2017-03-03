@@ -26,7 +26,7 @@ function componentToHex(c) {
     return hex.length === 1 ? "0" + hex : hex;
 };
 
-function rgbToHex(r, g, b) {
+function RGBToHex(r, g, b) {
     return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 };
 
@@ -59,7 +59,7 @@ var luminance = ([R, G, B]) => 0.299 * R + 0.587 * G + 0.114 * B;
 var contrastColor = color => {
     let lumi = luminance(rgb(color)),
         brighter = _.min([Math.round(lumi + 190), 221]);
-    return lumi < 128 ? rgbToHex(brighter, brighter, brighter) : 'black';
+    return lumi < 128 ? RGBToHex(brighter, brighter, brighter) : 'black';
 };
 
 function HSVtoRGB(h, s, v) {
@@ -113,6 +113,7 @@ function RGBtoHSV(r, g, b) {
 
 module.exports = {
     hexToRGB,
+    RGBToHex,
     colorStr,
     greyHEX,
     contrastColor,
