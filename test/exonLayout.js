@@ -6,7 +6,7 @@ var _ = require('underscore');
 
 var j = JSON.stringify;
 
-describe.only('exonLayout', function () {
+describe('exonLayout', function () {
 	describe('#pad', function () {
 		it('should pad between intervals', function() {
 			assert.deepEqual(el.pad(2, [[20, 30], [40, 50], [60, 70]]),
