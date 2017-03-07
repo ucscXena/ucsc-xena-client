@@ -2,7 +2,6 @@
 'use strict';
 
 var _ = require('../js/underscore_ext');
-var Rx = require('rx');
 var {isObject, isNumber, isArray, getIn, get, every, pluck} =
 	require('../js/underscore_ext');
 var fetch = require('../js/fieldFetch');
@@ -101,8 +100,6 @@ function isNumOrNull(x) {
 	return isNumber(x) || x == null;
 }
 
-Rx.config.longStackSupport = true;
-
 // Better stack trace, which halts the runner. Don't commit this!
 //mocha.allowUncaught();
 
@@ -139,7 +136,7 @@ var validateCodedData = _.curry((samples, data) => {
 	assert(isArray(get(data, 'codes')), 'codes is array');
 });
 
-describe.skip('fieldFetch', function () {
+describe('fieldFetch', function () {
 	this.timeout(10000);
 	it('should fetch probe', function (done) {
 		var probe = 'chr10_100010855_100011423';

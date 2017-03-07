@@ -4,7 +4,6 @@ var _ = require('../js/underscore_ext');
 //var assert = require('assert');
 var {column} = require('../js/columnWidgets');
 require('../js/plotDenseMatrix');
-require('rx/dist/rx.time');
 
 const TestUtils = require('react-addons-test-utils');
 const {renderIntoDocument} = TestUtils;
