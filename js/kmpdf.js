@@ -7,9 +7,6 @@
 // Another strategy worth exploring is walking the DOM to generate pdf calls. That
 // might also work for highcharts.
 'use strict';
-var PDFDocument = require('pdfkit');
-var blobStream = require('blob-stream');
-var vgpdf = require('./vgpdf');
 var _ = require('./underscore_ext');
 var {linear, linearTicks} = require('./scale');
 
@@ -126,40 +123,45 @@ function lineGroup(vg, {g, xScale, yScale}) {
 var size = {height: 500, width: 500};
 
 function download({colors, labels, curves}) {
-	var height = size.height - margin.top - margin.bottom,
-		width = size.width - margin.left - margin.right,
-		xdomain = bounds(_.pluck(_.flatten(curves), 't')),
-		xrange = [0, width],
-		ydomain = [0, 1],
-		yrange = [height, 0],
-		xScale = linear(xdomain, xrange),
-		yScale = linear(ydomain, yrange),
+	require.ensure(['pdfkit', 'blob-stream', './vgpdf'], () => {
+		var PDFDocument = require('pdfkit');
+		var blobStream = require('blob-stream');
+		var vgpdf = require('./vgpdf');
+		var height = size.height - margin.top - margin.bottom,
+			width = size.width - margin.left - margin.right,
+			xdomain = bounds(_.pluck(_.flatten(curves), 't')),
+			xrange = [0, width],
+			ydomain = [0, 1],
+			yrange = [height, 0],
+			xScale = linear(xdomain, xrange),
+			yScale = linear(ydomain, yrange),
 
-		doc = new PDFDocument({compress: false, size: [size.width, size.height]}),
-		stream = doc.pipe(blobStream()),
-		vg = vgpdf(doc);
+			doc = new PDFDocument({compress: false, size: [size.width, size.height]}),
+			stream = doc.pipe(blobStream()),
+			vg = vgpdf(doc);
 
-	vg.translate(margin.left, margin.top, () => {
-		axis(vg, {domain: ydomain, range: yrange, scale: yScale, tickfn: linearTicks, orientation: 'left'});
-		vg.translate(0, height, () => {
-			axis(vg, {domain: xdomain, range: xrange, scale: xScale, tickfn: linearTicks, orientation: 'bottom'});
+		vg.translate(margin.left, margin.top, () => {
+			axis(vg, {domain: ydomain, range: yrange, scale: yScale, tickfn: linearTicks, orientation: 'left'});
+			vg.translate(0, height, () => {
+				axis(vg, {domain: xdomain, range: xrange, scale: xScale, tickfn: linearTicks, orientation: 'bottom'});
+			});
+			_.each(_.zip(colors, labels, curves), g => {
+				lineGroup(vg, {g, xScale, yScale});
+			});
 		});
-		_.each(_.zip(colors, labels, curves), g => {
-			lineGroup(vg, {g, xScale, yScale});
+
+		doc.end();
+
+		stream.on('finish', () => {
+			var url = stream.toBlobURL('application/pdf');
+
+			var a = document.createElement('a');
+			var filename = 'xenaDownload.pdf';
+			Object.assign(a, { id: filename, download: filename, href: url });
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
 		});
-	});
-
-	doc.end();
-
-	stream.on('finish', () => {
-		var url = stream.toBlobURL('application/pdf');
-
-		var a = document.createElement('a');
-		var filename = 'xenaDownload.pdf';
-		Object.assign(a, { id: filename, download: filename, href: url });
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
 	});
 };
 

@@ -13,14 +13,10 @@ __webpack_public_path__ = config.baseurl; //eslint-disable-line camelcase
 // https://webpack.github.io/analyse
 require('react');
 require('react-dom');
-require('rx');
+require('./rx');
 require('babel-polyfill');
 require('bootstrap/dist/css/bootstrap.css');
 require('underscore');
-require('rx/dist/rx.time');
-require('rx.coincidence');
-require('rx-dom');
-require('rx/dist/rx.binding');
 
 if (document.location.pathname.match(/datapages\/$/)) {
     /* jshint -W030 */ // XXX jshint doesn't like the workaround.

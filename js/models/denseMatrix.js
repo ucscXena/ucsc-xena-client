@@ -1,6 +1,6 @@
 'use strict';
 var _ = require('../underscore_ext');
-var Rx = require('rx');
+var Rx = require('../rx');
 var {map, find} = _;
 var xenaQuery = require('../xenaQuery');
 var heatmapColors = require('../heatmapColors');

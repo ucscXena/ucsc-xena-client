@@ -285,7 +285,7 @@ var Column = React.createClass({
 		this.ksub = konami(asciiA).subscribe(this.enableHiddenFeatures);
 	},
 	componentWillUnmount() {
-		this.ksub.dispose();
+		this.ksub.unsubscribe();
 	},
 	onResizeStop: function (size) {
 		this.props.onResize(this.props.id, size);

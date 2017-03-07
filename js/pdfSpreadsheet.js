@@ -1,7 +1,4 @@
 'use strict';
-var PDFDocument = require('pdfkit');
-var blobStream = require('blob-stream');
-var vgpdf = require('./vgpdf');
 var styles = require('./spreadsheetStyles');
 var widgets = require('./columnWidgets');
 
@@ -22,29 +19,34 @@ function getOffsets(cols) {
 }
 
 var download = state => {
-	let columns = state.columnOrder.map(id => state.columns[id]),
-		width = totalWidth(columns),
-		// pdfkit zlib is pathologically slow.
-		doc = new PDFDocument({compress: false, size: [width, state.zoom.height]}),
-		stream = doc.pipe(blobStream()),
-		vg = vgpdf(doc),
-		offsets = getOffsets(columns);
+	require.ensure(['pdfkit', 'blob-stream', './vgpdf'], () => {
+		var PDFDocument = require('pdfkit');
+		var blobStream = require('blob-stream');
+		var vgpdf = require('./vgpdf');
+		let columns = state.columnOrder.map(id => state.columns[id]),
+			width = totalWidth(columns),
+			// pdfkit zlib is pathologically slow.
+			doc = new PDFDocument({compress: false, size: [width, state.zoom.height]}),
+			stream = doc.pipe(blobStream()),
+			vg = vgpdf(doc),
+			offsets = getOffsets(columns);
 
-	columns.forEach((column, i) =>
-		vg.translate(offsets[i], 0, () => {
-			widgets.pdf(column, vg, state, i);
-		}));
-	doc.end();
+		columns.forEach((column, i) =>
+			vg.translate(offsets[i], 0, () => {
+				widgets.pdf(column, vg, state, i);
+			}));
+		doc.end();
 
-	stream.on('finish', () => {
-		var url = stream.toBlobURL('application/pdf');
+		stream.on('finish', () => {
+			var url = stream.toBlobURL('application/pdf');
 
-		var a = document.createElement('a');
-		var filename = 'xenaDownload.pdf';
-		Object.assign(a, { id: filename, download: filename, href: url });
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
+			var a = document.createElement('a');
+			var filename = 'xenaDownload.pdf';
+			Object.assign(a, { id: filename, download: filename, href: url });
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+		});
 	});
 };
 

@@ -63,7 +63,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 		});
 	},
 	componentWillUnmount() {
-		this.plotClick.dispose();
+		this.plotClick.unsubscribe();
 	},
 	onReorder: function (order) {
 		this.props.callback(['order', order]);
@@ -129,7 +129,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						actionKey={id}
 						first={i === 0}
 						{...columnProps}
-						onClick={this.ev.plotClick}
+						onClick={this.on.plotClick}
 						{...columnSelector(id, i, appState)}/>))}
 			</Spreadsheet>);
 	}

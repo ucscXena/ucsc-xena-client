@@ -2,7 +2,7 @@
 
 // Helper methods needed by multiple controllers.
 
-var Rx = require('rx');
+var Rx = require('../rx');
 var xenaQuery = require('../xenaQuery');
 var _ = require('../underscore_ext');
 var {reifyErrors, collectResults} = require('./errors');
@@ -27,7 +27,7 @@ function datasetQuery(servers, cohort) {
 }
 
 function fetchDatasets(serverBus, servers, cohort) {
-	serverBus.onNext(['datasets', datasetQuery(servers, cohort)]);
+	serverBus.next(['datasets', datasetQuery(servers, cohort)]);
 }
 
 var {datasetSamples} = xenaQuery;
@@ -65,10 +65,10 @@ function samplesQuery(servers, cohort) {
 
 // query samples if non-empty cohorts
 var neSamplesQuery = (servers, cohort) =>
-	cohort.length > 0 ? samplesQuery(servers, cohort) : Rx.Observable.return([], Rx.Scheduler.timeout);
+	cohort.length > 0 ? samplesQuery(servers, cohort) : Rx.Observable.of([], Rx.Scheduler.asap);
 
 function fetchSamples(serverBus, servers, cohort) {
-	serverBus.onNext(['samples', neSamplesQuery(servers, cohort)]);
+	serverBus.next(['samples', neSamplesQuery(servers, cohort)]);
 }
 
 function fetchColumnData(serverBus, samples, id, settings) {
@@ -76,7 +76,7 @@ function fetchColumnData(serverBus, samples, id, settings) {
 	// XXX  Note that the widget-data-xxx slots are leaked in the groupBy
 	// in main.js. We need a better mechanism.
 //	if (Math.random() > 0.5) { // testing error handling
-		serverBus.onNext([['widget-data', id], fetch(settings, samples)]);
+		serverBus.next([['widget-data', id], fetch(settings, samples)]);
 //	} else {
 //		serverBus.onNext([['widget-data', id], Rx.Observable.throw(new Error('Injected error'))]);
 //	}

@@ -1,13 +1,9 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var Rx = require('rx');
-var Rx = require('./rx.ext');
-require('rx/dist/rx.time');
+var Rx = require('./rx');
 var React = require('react');
 var ReactDOM = require('react-dom');
-// XXX this introduces a datapages dependency in the heatmap page.
-const session = require('ucsc-xena-datapages/session');
 var LZ = require('./lz-string');
 var nostate = require('./nostate');
 var urlParams = require('./urlParams');
@@ -50,7 +46,7 @@ var [pushState, setState] = (function () {
 	},
 	// XXX safari issues a 'popstate' on page load, when we have no cache. The filter here
 	// drops those events.
-	Rx.DOM.fromEvent(window, 'popstate').filter(s => !!cache[s.state]).map(s => {
+	Rx.Observable.fromEvent(window, 'popstate').filter(s => !!cache[s.state]).map(s => {
 		i = s.state;
 		return cache[i];
 	})];
@@ -78,11 +74,8 @@ module.exports = function({
 	selector}) {
 
 	var dom = {main},
-		updater = ac => uiBus.onNext(ac),
+		updater = ac => uiBus.next(ac),
 		runner = controlRunner(serverBus, controller);
-
-	// Shim sessionStorage for code using session.js.
-	session.setCallback(updater); // still used by datapages
 
 	delete sessionStorage.debugSession; // Free up space & don't try to share with dev
 	if (persist && nostate('xena')) {
@@ -91,18 +84,18 @@ module.exports = function({
 
 	let stateObs = enableHistory(
 			history,
-			Rx.Observable.merge(serverCh, uiCh).scan(initialState, runner)).share();
+			Rx.Observable.merge(serverCh, uiCh).scan(runner, initialState)).share();
 
-	stateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
+	stateObs.debounceTime(0, Rx.Scheduler.animationFrame)
 		.subscribe(state => ReactDOM.render(<Page callback={updater} selector={selector} state={state} />, dom.main));
 
 	if (persist) {
 		// Save state in sessionStorage on page unload.
-		stateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
+		stateObs.sample(Rx.Observable.fromEvent(window, 'beforeunload'))
 			.subscribe(state => sessionStorage.xena = stringify(state));
 	}
 
 	// Kick things off.
-	uiBus.onNext(['init', urlParams()]);
+	uiBus.next(['init', urlParams()]);
 	return dom;
 };

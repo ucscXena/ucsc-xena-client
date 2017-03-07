@@ -1,7 +1,5 @@
 'use strict';
-var Rx = require('rx');
-require('rx.aggregates');
-require('rx-dom');
+var Rx = require('./rx');
 var _ = require('./underscore_ext');
 
 var codes = [
@@ -19,9 +17,9 @@ var codes = [
 
 module.exports = last => {
 	var target = [...codes, last];
-	return Rx.DOM.keyup(document)
+	return Rx.Observable.fromEvent(document, 'keyup')
         .map(e => e.keyCode)                  // get the key code
-        .windowWithCount(10, 1)               // get the last 10 keys
-        .selectMany(x => x.toArray())         //
+        .windowCount(10, 1)               // get the last 10 keys
+        .flatMap(x => x.toArray())         //
         .filter(x => _.isEqual(x, target));   // compare to known konami code sequence
 };

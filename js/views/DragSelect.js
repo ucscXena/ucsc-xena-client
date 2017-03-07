@@ -2,7 +2,7 @@
 
 var React = require('react');
 //var ReactDOM = require('react-dom');
-var Rx = require('rx');
+var Rx = require('../rx');
 var _ = require('../underscore_ext');
 
 var styles = {
@@ -37,19 +37,19 @@ var DragSelect = React.createClass({
 	},
 	componentWillMount() {
 		var mousedown = new Rx.Subject();
-		var mousedrag = mousedown.selectMany((down) => {
+		var mousedrag = mousedown.flatMap((down) => {
 			var target = down.currentTarget,
 				bb = target.getBoundingClientRect(),
 				start = targetXPos(target, down, bb.width),
 				selection;
 
-			return Rx.DOM.fromEvent(window, 'mousemove').map(function (mm) {
+			return Rx.Observable.fromEvent(window, 'mousemove').map(function (mm) {
 				var end = targetXPos(target, mm, bb.width);
 
 				selection = flop(start, end);
 				return {dragging: true, ...selection};
-			}).takeUntil(Rx.DOM.fromEvent(window, 'mouseup'))
-			.concat(Rx.Observable.defer(() => Rx.Observable.return({selection})));
+			}).takeUntil(Rx.Observable.fromEvent(window, 'mouseup'))
+			.concat(Rx.Observable.defer(() => Rx.Observable.of({selection})));
 		});
 		this.subscription = mousedrag.subscribe(ev => {
 			if (ev.selection) {
@@ -59,10 +59,10 @@ var DragSelect = React.createClass({
 				this.setState(ev);
 			}
 		});
-		this.dragStart = ev => this.props.enabled && mousedown.onNext(ev);
+		this.dragStart = ev => this.props.enabled && mousedown.next(ev);
 	},
 	componentWillUnmount () {
-		this.subscription.dispose();
+		this.subscription.unsubscribe();
 	},
 	getInitialState () {
 		return {dragging: false};

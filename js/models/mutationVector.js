@@ -5,7 +5,7 @@
 var _ = require('../underscore_ext');
 var widgets = require('../columnWidgets');
 var xenaQuery = require('../xenaQuery');
-var Rx = require('rx');
+var Rx = require('../rx');
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformInterval} = require('../layoutPlot');
@@ -339,7 +339,7 @@ function fetch({dsID, fields, assembly}, [samples]) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return Rx.Observable.zipArray(
 		sparseData(dsID, samples, fields[0]),
-		name ? xenaQuery.refGeneExonCase(host, name, fields) : Rx.Observable.return({})
+		name ? xenaQuery.refGeneExonCase(host, name, fields) : Rx.Observable.of({})
 	).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
 }
 

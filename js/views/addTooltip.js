@@ -24,29 +24,29 @@ function addTooltip(Component) {
 
 			this.tooltip = this.ev.tooltip.merge(toggle)
 				// If open + user clicks, toggle freeze of display.
-				.scan([null, false],
-					([tt, frozen], ev) =>
-						ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen])
+				.scan(([tt, frozen], ev) =>
+							ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen],
+						[null, false])
 				// Filter frozen events until frozen state changes.
-				.distinctUntilChanged(([ev, frozen]) => frozen ? frozen : [ev, frozen])
+				.distinctUntilChanged(_.isEqual, ([ev, frozen]) => frozen ? frozen : [ev, frozen])
 				.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))
 				.subscribe(ev => this.setState({tooltip: ev}));
 		},
 		componentWillUnmount: function () {
-			this.tooltip.dispose();
+			this.tooltip.unsubscribe();
 		},
 		render() {
 			var {children, ...props} = this.props;
 			return (
 				<div>
-					<Component {...props} onClick={this.ev.click}>
+					<Component {...props} onClick={this.on.click}>
 						{React.Children.map(children, el =>
 							React.cloneElement(el, {
 								tooltip: this.ev.tooltip,
 								frozen: this.state.tooltip.frozen
 							}))}
 					</Component>
-					<Tooltip onClick={this.ev.click} {...this.state.tooltip}/>
+					<Tooltip onClick={this.on.click} {...this.state.tooltip}/>
 				</div>);
 		}
 	});

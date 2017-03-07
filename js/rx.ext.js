@@ -1,7 +1,12 @@
 // Extensions to rx for the cancer browser
 
 'use strict';
-var Rx = require('rx');
+var Rx = {
+	Observable: require('rxjs/Observable').Observable,
+//	Subject: require('rxjs/Subject').Subject,
+	Scheduler: require('rxjs/Scheduler').Scheduler,
+	Subscription: require('rxjs/Subscription').Subscription
+};
 var _ = require( './underscore_ext');
 
 var observableProto = Rx.Observable.prototype;
@@ -10,7 +15,7 @@ observableProto.usingFirst = function (disposableFactory) {
 	var observable = this;
 	return Rx.Observable.create(function (observer) {
 		var first = true,
-			subscription = new Rx.CompositeDisposable();
+			subscription = new Rx.Subscription();
 
 		subscription.add(observable.subscribe(
 			function (x) {
@@ -18,10 +23,10 @@ observableProto.usingFirst = function (disposableFactory) {
 					subscription.add(disposableFactory(x));
 					first = false;
 				}
-				observer.onNext(x);
+				observer.next(x);
 			},
-			observer.onError.bind(observer),
-			observer.onCompleted.bind(observer)
+			observer.error.bind(observer),
+			observer.complete.bind(observer)
 		));
 		return subscription;
 	});
@@ -81,11 +86,11 @@ observableProto.pluckPathsDistinctUntilChanged = function (paths) {
 					}
 				});
 				if (shouldPush) {
-					observer.onNext(_.extend({}, current));
+					observer.next(_.extend({}, current));
 				}
 			},
-			observer.onError.bind(observer),
-			observer.onCompleted.bind(observer)
+			observer.error.bind(observer),
+			observer.complete.bind(observer)
 		);
 	});
 };
@@ -94,13 +99,13 @@ observableProto.refine = observableProto.pluckPathsDistinctUntilChanged;
 
 observableProto.selectMemoize1 = function (selector) {
 	var last;
-	return this.scan(null, function (acc, val) {
+	return this.scan(function (acc, val) {
 		if (_.isEqual(last, val)) {
 				return acc;
 		}
 		last = val;
 		return selector(val);
-	});
+	}, null);
 };
 
 observableProto.pluckPaths = function (paths) {
@@ -116,10 +121,10 @@ observableProto.pluckPaths = function (paths) {
 						current = _.assoc(current, key, ni);
 					}
 				});
-				observer.onNext(current);
+				observer.next(current);
 			},
-			observer.onError.bind(observer),
-			observer.onCompleted.bind(observer)
+			observer.error.bind(observer),
+			observer.complete.bind(observer)
 		);
 	});
 };
@@ -128,7 +133,7 @@ observableProto.bufferWithExactCount = function(count, skip) {
 	if (arguments.length === 1) {
 		skip = count;
 	}
-	return this.windowWithCount(count, skip).selectMany(function (x) {
+	return this.windowCount(count, skip).flatMap(function (x) {
 		return x.toArray();
 	}).where(function (x) {
 		return x.length >= count;
@@ -143,64 +148,64 @@ observableProto.scanPrevious = function (seedOut, seedIn, selector) {
 	var observable = this,
 		lastValue = seedIn;
 	return Rx.Observable.create(function (observer) {
-		return observable.scan(seedOut, function (acc, value) {
+		return observable.scan(function (acc, value) {
 			var next = selector(acc, lastValue, value);
 			lastValue = value;
 			return next;
-		}).subscribe(observer);
+		}, seedOut).subscribe(observer);
 	});
 };
 
 // Maps over an object.
-observableProto.fmap = function() {
-	var observable = this,
-		data = {},
-		subs = {};
-
-	return Rx.Observable.create(function (observer) {
-		function push() {
-			observer.onNext(_.extend({}, data));
-		}
-
-		function onResp(rid, resp) {
-			data[rid] = resp;
-			push();
-		}
-
-		function onNext(obj) {
-			var req = _.keys(obj),
-				creq = _.keys(subs),
-				nreq = _.difference(req, creq),
-				oreq = _.difference(creq, req);
-
-			_.each(oreq, function (rid) {
-				subs[rid].dispose();
-				delete subs[rid];
-				delete data[rid];
-			});
-			_.each(nreq, function (rid) {
-				var sub = obj[rid]
-					.subscribe(_.partial(onResp, rid), observer.onError.bind(observer));
-				subs[rid] = sub;
-			});
-//            if (oreq.length) { // XXX probably don't need this
-//                push();
-//            }
-		}
-
-		function onCompleted() {
-			_.each(subs, function (sub) {
-				sub.dispose();
-			});
-			observer.onCompleted();
-		}
-
-		return new Rx.CompositeDisposable(
-			observable.subscribe(onNext, observer.onError.bind(observer), onCompleted),
-			new Rx.Disposable(function () { onCompleted(); })
-		);
-	});
-};
+//observableProto.fmap = function() {
+//	var observable = this,
+//		data = {},
+//		subs = {};
+//
+//	return Rx.Observable.create(function (observer) {
+//		function push() {
+//			observer.next(_.extend({}, data));
+//		}
+//
+//		function onResp(rid, resp) {
+//			data[rid] = resp;
+//			push();
+//		}
+//
+//		function onNext(obj) {
+//			var req = _.keys(obj),
+//				creq = _.keys(subs),
+//				nreq = _.difference(req, creq),
+//				oreq = _.difference(creq, req);
+//
+//			_.each(oreq, function (rid) {
+//				subs[rid].unsubscribe();
+//				delete subs[rid];
+//				delete data[rid];
+//			});
+//			_.each(nreq, function (rid) {
+//				var sub = obj[rid]
+//					.subscribe(_.partial(onResp, rid), observer.error.bind(observer));
+//				subs[rid] = sub;
+//			});
+////            if (oreq.length) { // XXX probably don't need this
+////                push();
+////            }
+//		}
+//
+//		function onCompleted() {
+//			_.each(subs, function (sub) {
+//				sub.unsubscribe();
+//			});
+//			observer.complete();
+//		}
+//
+//		return new Rx.Subscription(
+//			observable.subscribe(onNext, observer.error.bind(observer), onCompleted),
+//			new Rx.Disposable(function () { onCompleted(); })
+//		);
+//	});
+//};
 
 // XXX map over a set of underscore.ext fns and add them here, instead of
 // just assoc.
@@ -238,19 +243,19 @@ observableProto.spy = function (msg) {
 		var inner = observable.subscribe(
 			function (next) {
 				log(msg, "sending", next);
-				observer.onNext(next);
+				observer.next(next);
 			},
 			function (err) {
 				log(msg, "error", err);
-				observer.onError(err);
+				observer.error(err);
 			},
 			function () {
 				log(msg, "complete");
-				observer.onCompleted();
+				observer.complete();
 			}
 		);
-		return new Rx.Disposable(function () {
-			inner.dispose();
+		return new Rx.Subscription(function () {
+			inner.unsubscribe();
 			log(msg, "disposed");
 		});
 	});
@@ -262,10 +267,8 @@ observableProto.getIn = function (keys) {
 
 function zipArray(obs) {
 	return obs.length ? Rx.Observable.zip(...obs, (...arr) => arr) :
-		Rx.Observable.return([], Rx.Scheduler.timeout);
+		Rx.Observable.of([], Rx.Scheduler.asap);
 }
 
 Rx.Observable.zipArray = (...obs) =>
 	_.isArray(obs[0]) ? zipArray(obs[0]) : zipArray(obs);
-
-module.exports = Rx;

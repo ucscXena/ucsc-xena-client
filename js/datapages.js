@@ -6,16 +6,17 @@ const React = require('react');
 const datapages = require('ucsc-xena-datapages/datapages');
 const connector = require('./connector');
 const createStore = require('./store');
+var xenaQuery = require('./xenaQuery');
 
 var Datapages = React.createClass({
 	shouldComponentUpdate: () => false,
 	componentDidMount: function () {
-		var {state, selector} = this.props;
-		datapages(this.refs.datapages, selector(state));
+		var {state, selector, callback} = this.props;
+		datapages(this.refs.datapages, selector(state), callback, xenaQuery);
 	},
 	componentWillReceiveProps: function (newProps) {
-		var {state, selector} = newProps;
-		datapages(this.refs.datapages, selector(state));
+		var {state, selector, callback} = newProps;
+		datapages(this.refs.datapages, selector(state), callback, xenaQuery);
 	},
 	render: () => <div ref='datapages'/>
 });

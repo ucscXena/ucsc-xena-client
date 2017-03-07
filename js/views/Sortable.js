@@ -14,7 +14,7 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Rx = require('rx');
+var Rx = require('../rx');
 var _ = require('../underscore_ext');
 require('./Sortable.css');
 
@@ -62,7 +62,7 @@ var Sortable = React.createClass({
 	componentWillMount: function () {
 		var mousedownSub = new Rx.Subject();
 		var mousedown = mousedownSub.filter(([, md]) => hasClass(md.target, 'Sortable-handle'));
-		var mousedrag = mousedown.selectMany(([id, md]) => {
+		var mousedrag = mousedown.flatMap(([id, md]) => {
             // find starting positions on mouse down
 
 			var order = _.map(this.props.children, c => c.props.actionKey);
@@ -78,7 +78,7 @@ var Sortable = React.createClass({
 			var finalPos;
 
 			// Calculate delta with mousemove until mouseup
-			return Rx.DOM.fromEvent(window, 'mousemove').map(function (mm) {
+			return Rx.Observable.fromEvent(window, 'mousemove').map(function (mm) {
 				mm.preventDefault();
 
 				var shift, edge, finalEl;
@@ -103,7 +103,7 @@ var Sortable = React.createClass({
 				}
 
 				return {pos: _.object(order, newPos), dragging: index};
-			}).takeUntil(Rx.DOM.fromEvent(window, 'mouseup'))
+			}).takeUntil(Rx.Observable.fromEvent(window, 'mouseup'))
 			.concat(Rx.Observable.defer(() => { // Send a re-order event on mouse-up.
 				var finalNewPos = _.assoc(newPos, index, finalPos),
 					indexOrder = _.range(order.length)
@@ -128,7 +128,7 @@ var Sortable = React.createClass({
 			this.setState(_.pick(ev, 'pos', 'dragging'));
         });
 
-		this.sortStart = ev => mousedownSub.onNext(ev);
+		this.sortStart = ev => mousedownSub.next(ev);
 	},
 
 	initialPositions () {
@@ -145,7 +145,7 @@ var Sortable = React.createClass({
 	},
 
 	componentWillUnmount: function () {
-		this.subscription.dispose();
+		this.subscription.unsubscribe();
 	},
 
 	render: function () {

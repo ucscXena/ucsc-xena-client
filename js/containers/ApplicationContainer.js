@@ -12,7 +12,7 @@ var kmModel = require('../models/km');
 var {lookupSample} = require('../models/sample');
 var {xenaFieldPaths} = require('../models/fieldSpec');
 var {rxEventsMixin} = require('../react-utils');
-var Rx = require('rx');
+var Rx = require('../rx');
 // Spreadsheet options
 var addTooltip = require('../views/addTooltip');
 var disableSelect = require('../views/disableSelect');
@@ -91,17 +91,16 @@ var ApplicationContainer = React.createClass({
 	componentWillMount: function () {
 		this.events('highlightChange');
 		this.change = this.ev.highlightChange
-			.debounce(200)
+			.debounceTime(200)
 			.subscribe(this.onSearch);
 		// high on 1st change, low after some delay
 		this.highlight = this.ev.highlightChange
-			.map(() => Rx.Observable.return(true).concat(Rx.Observable.return(false).delay(300)))
-			.switchLatest()
-			.distinctUntilChanged();
+			.switchMap(() => Rx.Observable.of(true).concat(Rx.Observable.of(false).delay(300)))
+			.distinctUntilChanged(_.isEqual);
 	},
 	componentWillUnmount: function () {
-		this.change.dispose();
-		this.highlight.dispose();
+		this.change.unsubscribe();
+		this.highlight.unsubscribe();
 	},
 	supportsGeneAverage(uuid) { // XXX could be precomputed in a selector
 		var {columns} = this.props.state;
@@ -139,7 +138,7 @@ var ApplicationContainer = React.createClass({
 		return (
 			<Application
 					Spreadsheet={SpreadsheetContainer}
-					onHighlightChange={this.ev.highlightChange}
+					onHighlightChange={this.on.highlightChange}
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
 					state={computedState}

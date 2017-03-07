@@ -33,7 +33,7 @@ var SpreadSheetHighlight = React.createClass({
 		this.animate = this.props.animate.subscribe(ev => this.setState({animate: ev})); //eslint-disable-line react/no-did-mount-set-state
 	},
 	componentWillUnmount: function () {
-		this.animate.dispose();
+		this.animate.unsubscribe();
 	},
 	componentWillReceiveProps: function (newProps) {
 		if (this.vg && !_.isEqual(newProps, this.props)) {

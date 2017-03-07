@@ -5,7 +5,7 @@ var denseMatrix = require('./models/denseMatrix');
 var mutationVector = require('./models/mutationVector');
 var segmented = require('./models/segmented');
 var _ = require('./underscore_ext');
-var Rx = require('rx');
+var Rx = require('./rx');
 
 var totalSamples = samples => _.sum(_.pluck(samples, 'length'));
 
@@ -23,6 +23,6 @@ xenaFetch.add('mutation-mutation', mutationVector.fetch);
 xenaFetch.add('SV-mutation', mutationVector.fetch);
 
 fetch.add('xena', xenaFetch);
-fetch.add('empty', () => Rx.Observable.return(null, Rx.Scheduler.timeout));
+fetch.add('empty', () => Rx.Observable.of(null, Rx.Scheduler.asap));
 
 module.exports = fetch;

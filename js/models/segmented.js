@@ -5,7 +5,7 @@
 var _ = require('../underscore_ext');
 var widgets = require('../columnWidgets');
 var xenaQuery = require('../xenaQuery');
-var Rx = require('rx');
+var Rx = require('../rx');
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformInterval} = require('../layoutPlot');
@@ -82,7 +82,7 @@ function fetchGene({dsID, fields, assembly}, [samples]) {
 				{padTxStart, padTxEnd} = exonPadding;
 			return segmentedDataRange(dsID, samples, chrom, txStart - padTxStart, txEnd + padTxEnd)
 				.map(req => mapSamples(samples, {req, refGene}));
-		}) : Rx.Observable.return(null);
+		}) : Rx.Observable.of(null);
 }
 
 function fetch(column, cohortSamples) {

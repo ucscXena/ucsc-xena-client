@@ -28,11 +28,11 @@ var DefaultTextInput = React.createClass({
 		this.events('change');
 		this.change = this.ev.change
 		.do(() => this.setState({value: this.refs.input.getValue()}))
-		.throttle(100)
+		.throttleTime(100)
 		.subscribe(this.update);
 	},
 	componentWillUnmount: function () {
-		this.change.dispose();
+		this.change.unsubscribe();
 	},
 	getInitialState: function () {
 		return {value: this.props.value.user};
@@ -71,7 +71,7 @@ var DefaultTextInput = React.createClass({
 				wrapperClassName='DefaultTextInput'
 				standalone={true}
 				ref='input'
-				onChange={this.ev.change}
+				onChange={this.on.change}
 				onKeyUp={this.onKeyUp}
 				onBlur={this.resetIfNull}
 				style={style}

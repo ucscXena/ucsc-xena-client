@@ -2,7 +2,7 @@
 
 var _ = require('../underscore_ext');
 var fieldFetch = require('../fieldFetch');
-var Rx = require('rx');
+var Rx = require('../rx');
 
 // dispatch on variant type (data, not genetic, variant)
 var m = (methods, exp, defaultMethod) => {
@@ -38,8 +38,8 @@ function evalexp(ctx, expression) {
 }
 
 function fetchSignature(column, [samples]) {
-	return Rx.Observable.return(evalexp({samples}, column.signature),
-			Rx.Scheduler.timeout);
+	return Rx.Observable.of(evalexp({samples}, column.signature),
+			Rx.Scheduler.asap);
 }
 
 fieldFetch.add('signature', fetchSignature);

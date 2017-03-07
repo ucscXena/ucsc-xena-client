@@ -1,7 +1,7 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var Rx = require('rx');
+var Rx = require('./rx');
 var React = require('react');
 var Legend = require('./views/Legend');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
@@ -231,18 +231,18 @@ var MutationColumn = hotOrNot(React.createClass({
 		// Compute tooltip events from mouse events.
 		this.ttevents = this.ev.mouseover
 			.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
-			.selectMany(() => {
+			.flatMap(() => {
 				return this.ev.mousemove
 					.takeUntil(this.ev.mouseout)
 					.map(ev => ({
 						data: this.tooltip(ev),
 						open: true
 					})) // look up current data
-					.concat(Rx.Observable.return({open: false}));
+					.concat(Rx.Observable.of({open: false}));
 			}).subscribe(this.props.tooltip);
 	},
 	componentWillUnmount: function () {
-		this.ttevents.dispose();
+		this.ttevents.unsubscribe();
 	},
 	tooltip: function (ev) {
 		var {column: {fieldType, layout, nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props,
@@ -258,9 +258,9 @@ var MutationColumn = hotOrNot(React.createClass({
 					draw={draw}
 					wrapperProps={{
 						className: 'Tooltip-target',
-						onMouseMove: this.ev.mousemove,
-						onMouseOut: this.ev.mouseout,
-						onMouseOver: this.ev.mouseover,
+						onMouseMove: this.on.mousemove,
+						onMouseOut: this.on.mouseout,
+						onMouseOver: this.on.mouseover,
 						onClick: this.props.onClick
 					}}
 					nodes={column.nodes}

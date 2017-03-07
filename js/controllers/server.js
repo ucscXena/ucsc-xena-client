@@ -1,7 +1,7 @@
 'use strict';
 
 var _ = require('../underscore_ext');
-var Rx = require('rx');
+var Rx = require('../rx');
 var {reifyErrors, collectResults} = require('./errors');
 var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
 	userServers, fetchSamples, fetchColumnData} = require('./common');
@@ -26,7 +26,7 @@ function featuresQuery(datasets) {
 }
 
 function fetchFeatures(serverBus, datasets) {
-	serverBus.onNext(['features', featuresQuery(datasets)]);
+	serverBus.next(['features', featuresQuery(datasets)]);
 }
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
@@ -60,7 +60,7 @@ var resetLoadPending = state => _.dissoc(state, 'loadPending');
 function fetchStrand(serverBus, state, id, gene, dsID) {
 	var {probemap} = _.getIn(state, ['datasets', dsID]),
 		{host} = JSON.parse(dsID);
-	serverBus.onNext(['strand', xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.return('+');}), id]);
+	serverBus.next(['strand', xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.of('+');}), id]);
 }
 
 var controls = {

@@ -2,7 +2,7 @@
 var _ = require('underscore');
 var multi = require('../multi');
 var fieldFetch = require('../fieldFetch');
-var Rx = require('rx');
+var Rx = require('../rx');
 var {remapSamples, remapCodes, floatToCoded, concatValuesByFieldPosition,
 		concatMutation, computeMean} = require('./fieldData');
 var samplesFrom = require('../samplesFrom');
@@ -292,7 +292,7 @@ function fetchComposite(column, samples) {
 }
 
 function fetchNull() {
-	return Rx.Observable.return(null);
+	return Rx.Observable.of(null);
 }
 
 fieldFetch.add('composite', fetchComposite);
@@ -304,7 +304,7 @@ function samplesFromComposite(fieldSpec) {
 }
 
 samplesFrom.add('composite', samplesFromComposite);
-samplesFrom.add('null', () => Rx.Observable.return([[]], Rx.Scheduler.timeout));
+samplesFrom.add('null', () => Rx.Observable.of([[]], Rx.Scheduler.asap));
 
 module.exports = {
 	getColSpec

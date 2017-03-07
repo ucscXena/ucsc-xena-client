@@ -15,8 +15,7 @@ var {PropTypes} = React;
 var {getColSpec} = require('./models/datasetJoins');
 var {defaultColorClass} = require('./heatmapColors');
 var {easeInOutQuad} = require('./easing');
-var Rx = require('rx');
-require('rx.time');
+var Rx = require('./rx');
 
 var editors = {
 	'clinicalMatrix': phenotypeEdit,
@@ -166,7 +165,7 @@ var ColumnEdit = React.createClass({
 	},
 	componentWillMount: function () {
 		this.onSelectBus = new Rx.Subject();
-		this.sub = this.onSelectBus.map(scrollTop => {
+		this.sub = this.onSelectBus.switchMap(scrollTop => {
 			// Using a ref to the Modal isn't working, for reasons I don't
 			// understand.
 			var ce = document.getElementsByClassName('columnEdit')[0],
@@ -177,13 +176,13 @@ var ColumnEdit = React.createClass({
 			return Rx.Observable.interval(duration / steps)
 				.map(i => easeInOutQuad(i, current, scrollTop, steps))
 				.take(steps);
-		}).switchLatest().subscribe(scrollTop => {
+		}).subscribe(scrollTop => {
 			var ce = document.getElementsByClassName('columnEdit')[0];
 			ce.scrollTop = scrollTop;
 		});
 	},
 	componentWillUnmount: function () {
-		this.sub.dispose();
+		this.sub.unsubscribe();
 	},
 	addColumn: function (settings) {
 		let {callback, appState} = this.props,
@@ -223,7 +222,7 @@ var ColumnEdit = React.createClass({
 			callback(['edit-dataset', dsID, metas[dsID]]);
 		}
 
-		this.onSelectBus.onNext(this.scrollPositionToNextButton());
+		this.onSelectBus.next(this.scrollPositionToNextButton());
 	},
 	onBack: function() {
 		let {positions} = this.state,

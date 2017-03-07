@@ -1,8 +1,8 @@
 'use strict';
 
-var Rx = require('rx.async');
+var Rx = require('./rx');
 
-var addEventListenerObs = Rx.Observable.fromCallback(window.addEventListener);
+var addEventListenerObs = Rx.Observable.bindCallback(window.addEventListener);
 
 module.exports = {
 	hasInlineState: () => location.search.match(/^\?inline/) && window.opener,

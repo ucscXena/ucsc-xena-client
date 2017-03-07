@@ -1,7 +1,7 @@
 'use strict';
 
 var _ = require('../underscore_ext');
-var Rx = require('rx');
+var Rx = require('../rx');
 var xenaQuery = require('../xenaQuery');
 var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
@@ -25,11 +25,11 @@ function cohortQuery(servers) {
 }
 
 function fetchCohorts(serverBus, servers) {
-	serverBus.onNext(['cohorts', cohortQuery(servers)]);
+	serverBus.next(['cohorts', cohortQuery(servers)]);
 }
 
 function fetchBookmark(serverBus, bookmark) {
-	serverBus.onNext(['bookmark', Rx.DOM.ajax({
+	serverBus.next(['bookmark', Rx.Observable.ajax({
 		method: 'GET',
 		url: `/api/bookmarks/bookmark?id=${bookmark}`,
 	}).map(r => r.response)]);
@@ -41,13 +41,13 @@ function exampleQuery(dsID) {
 }
 
 function fetchExamples(serverBus, dsID) {
-	serverBus.onNext(['columnEdit-examples', exampleQuery(dsID)]);
+	serverBus.next(['columnEdit-examples', exampleQuery(dsID)]);
 }
 
 var {featureList} = xenaQuery;
 
 function fetchFeatures(serverBus, dsID) {
-	return serverBus.onNext(['columnEdit-features', featureList(dsID)]);
+	return serverBus.next(['columnEdit-features', featureList(dsID)]);
 }
 
 
@@ -87,7 +87,7 @@ function allFieldsLookup(settings, xenaFields, state) {
 function normalizeFields(serverBus, state, id, settings, isFirst) {
 	var xenaFields = xenaFieldPaths(settings),
 		lookup = allFieldsLookup(settings, xenaFields, state);
-	serverBus.onNext(['normalize-fields', lookup, id, settings, isFirst, xenaFields]);
+	serverBus.next(['normalize-fields', lookup, id, settings, isFirst, xenaFields]);
 }
 
 var featuresInCohort = (datasets, features, cohort) =>
@@ -148,7 +148,7 @@ function fetchSurvival(serverBus, state) {
 				(k, i) => ({field: fields[k], data: data[i]}));
 
 	// This could be optimized by grouping by server.
-	refetch && serverBus.onNext([
+	refetch && serverBus.next([
 			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
 }
 
@@ -188,7 +188,7 @@ function setLoadingState(state, params) {
 }
 
 function fetchState(serverBus) {
-	serverBus.onNext(['inlineState', fetchInlineState()]);
+	serverBus.next(['inlineState', fetchInlineState()]);
 }
 
 function setHubs(state, {hubs}) {
@@ -320,9 +320,9 @@ var controls = {
 	'chart': state => _.assoc(state, 'mode', 'chart'),
 	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState),
 	'chart-set-average-cohort-post!': (serverBus, state, newState, id, thunk) =>
-		serverBus.onNext(['chart-average-data', getChartOffsets(newState.columns[id]), thunk]),
+		serverBus.next(['chart-average-data', getChartOffsets(newState.columns[id]), thunk]),
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
-		serverBus.onNext(['chart-average-data', Rx.Observable.return(offsets, Rx.Scheduler.timeout), thunk]),
+		serverBus.next(['chart-average-data', Rx.Observable.of(offsets, Rx.Scheduler.timeout), thunk]),
 	'sample-search': (state, text) => _.assoc(state, 'sampleSearch', text),
 	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id),
 	// Due to wonky react-bootstrap handlers, xzoom can occur after remove, so

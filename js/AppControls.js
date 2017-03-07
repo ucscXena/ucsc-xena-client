@@ -10,7 +10,7 @@ var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var pdf = require('./pdfSpreadsheet');
 var _ = require('./underscore_ext');
 require('./AppControls.css');
-var Rx = require('rx-dom');
+var Rx = require('./rx');
 var {createBookmark} = require('./bookmark');
 var konami = require('./konami');
 var Popover = require('react-bootstrap/lib/Popover');
@@ -79,7 +79,7 @@ var AppControls = React.createClass({
 		this.ksub = konami(asciiA).subscribe(this.enableBookmarks);
 	},
 	componentWillUnmount() {
-		this.ksub.dispose();
+		this.ksub.unsubscribe();
 	},
 	onMode: function () {
 		var {callback, appState: {mode}} = this.props;
@@ -127,7 +127,7 @@ var AppControls = React.createClass({
 	},
 	onBookmark: function () {
 		var {getState} = this.props;
-		Rx.DOM.ajax({
+		Rx.Observable.ajax({
 			method: 'POST',
 			url: '/api/bookmarks/bookmark',
 			headers: {

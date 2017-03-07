@@ -1,7 +1,7 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var Rx = require('rx');
+var Rx = require('./rx');
 var widgets = require('./columnWidgets');
 var colorScales = require('./colorScales');
 var util = require('./util');
@@ -208,18 +208,18 @@ var HeatmapColumn = hotOrNot(React.createClass({
 
 		// Compute tooltip events from mouse events.
 		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
-			.selectMany(() => {
+			.flatMap(() => {
 				return this.ev.mousemove
 					.takeUntil(this.ev.mouseout)
 					.map(ev => ({
 						data: this.tooltip(ev),
 						open: true
 					})) // look up current data
-					.concat(Rx.Observable.return({open: false}));
+					.concat(Rx.Observable.of({open: false}));
 			}).subscribe(this.props.tooltip);
 	},
 	componentWillUnmount: function () {
-		this.ttevents.dispose();
+		this.ttevents.unsubscribe();
 	},
 	tooltip: function (ev) {
 		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
@@ -242,9 +242,9 @@ var HeatmapColumn = hotOrNot(React.createClass({
 					draw={drawHeatmap}
 					wrapperProps={{
 						className: 'Tooltip-target',
-						onMouseMove: this.ev.mousemove,
-						onMouseOut: this.ev.mouseout,
-						onMouseOver: this.ev.mouseover,
+						onMouseMove: this.on.mousemove,
+						onMouseOut: this.on.mouseout,
+						onMouseOver: this.on.mouseover,
 						onClick: this.props.onClick
 					}}
 					codes={codes}

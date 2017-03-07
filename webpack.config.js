@@ -29,7 +29,6 @@ module.exports = {
 		loaders: [
 			{ test: /\.xq$/, loader: "raw" },
 			{ test: /pdfkit|png-js/, loader: "transform?brfs" },
-			{ test: /rx-dom/, loader: "imports?define=>false" },
 			{
 				test: /\.js$/,
 				include: [
@@ -55,13 +54,6 @@ module.exports = {
 	resolve: {
 		fallback: path.join(__dirname, "node_modules"),
 		alias: {
-			rx$: 'rx/dist/rx',
-			'rx.binding$': 'rx/dist/rx.binding',
-			'rx.async$': 'rx/dist/rx.async',
-			'rx.time$': 'rx/dist/rx.time',
-			'rx.experimental$': 'rx/dist/rx.experimental',
-			'rx.aggregates$': 'rx/dist/rx.aggregates',
-			'rx.coincidence$': 'rx/dist/rx.coincidence',
 			'redboxOptions': path.join(__dirname, 'redboxOptions.json')
 		},
 		extensions: ['', '.js', '.json', '.coffee']

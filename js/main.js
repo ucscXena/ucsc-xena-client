@@ -1,11 +1,6 @@
 'use strict';
 
 require('./base');
-//var Rx = require('./rx.ext');
-//require('rx.coincidence');
-//require('rx/dist/rx.aggregates');
-//require('rx/dist/rx.time');
-//require('rx-dom');
 var _ = require('./underscore_ext');
 require('./plotDenseMatrix');
 require('./plotMutationVector');

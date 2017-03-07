@@ -29,12 +29,12 @@ const NumberForm = React.createClass({
 		this.change = this.ev.change
 			.map(ev => ev.target.value)
 			.do(value => this.setState({value}))
-			.throttle(200)
+			.throttleTime(200)
 			.filter(isValid(min, max))
 			.subscribe(value => this.props.onChange(parseValue(value, dflt)));
 	},
 	componentWillUnmount: function () {
-		this.change.dispose();
+		this.change.unsubscribe();
 	},
 	getInitialState: function () {
 		var {initialValue} = this.props;
@@ -53,7 +53,7 @@ const NumberForm = React.createClass({
 					placeholder='Enter a number.'
 					bsStyle={validationState(min, max, value)}
 					hasFeedback
-					onChange={this.ev.change}/>
+					onChange={this.on.change}/>
 			</form>
 		);
 	}

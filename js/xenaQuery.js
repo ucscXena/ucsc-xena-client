@@ -2,8 +2,7 @@
 
 'use strict';
 
-var Rx = require('rx-dom');
-require('rx.binding');
+var Rx = require('./rx');
 var _ = require('./underscore_ext');
 var {permuteCase, permuteBitCount} = require('./permuteCase');
 // Load all query files as a map of strings.
@@ -32,7 +31,7 @@ var transcript = {
 ///////////////////////////////////////////////////////
 // Serialization helpers
 
-var jsonResp = xhr =>JSON.parse(xhr.response);
+var jsonResp = xhr => xhr.response;
 
 var quote = s => s == null ? 'nil' : ('"' + s + '"'); // XXX should escape "
 
@@ -194,6 +193,7 @@ function indexRefGene(resp) {
 
 function xenaPost(host, query) {
 	return {
+		crossDomain: true,
 		headers: {'Content-Type': 'text/plain' },
 		url: host + '/data/',
 		body: query,
@@ -220,7 +220,7 @@ function xenaCall(queryFn, ...params) {
 // Given a host, query, and parameters, marshall the parameters and dispatch a
 // POST, returning an observable.
 function doPost(query, host, ...params) {
-	return Rx.DOM.ajax(
+	return Rx.Observable.ajax(
 		xenaPost(host, xenaCall(query, ...params))
 	).map(jsonResp);
 }
@@ -298,6 +298,7 @@ function wrapDsIDParams(postMethods) {
 		'refGeneExons',
 		'refGenePosition',
 		'segmentedDataRange',
+		'segmentedDataExamples',
 		'sparseData',
 		'sparseDataExamples'],
 
@@ -339,9 +340,9 @@ var refGeneExonCase = dsIDFn((host, dataset, genes) =>
 
 // test if host is up
 function testHost (host) {
-	return Rx.DOM.ajax(xenaPost(host, '(+ 1 2)'))
-		.timeout(5000, Rx.Observable.return({}))
-		.map(s => !!(s.responseText && 3 === JSON.parse(s.responseText)));
+	return Rx.Observable.ajax(xenaPost(host, '(+ 1 2)'))
+		.timeout(5000, Rx.Observable.of({}))
+		.map(s => !!(s.response && 3 === JSON.parse(s.response)));
 }
 
 module.exports = {

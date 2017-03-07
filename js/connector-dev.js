@@ -1,14 +1,12 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var Rx = require('./rx.ext');
-require('rx/dist/rx.time');
+var Rx = require('./rx');
 var React = require('react');
 var ReactDOM = require('react-dom');
 let {createDevTools} = require('./controllers/devtools');
 import LogMonitor from 'redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
-const session = require('ucsc-xena-datapages/session');
 var nostate = require('./nostate');
 var urlParams = require('./urlParams');
 var LZ = require('./lz-string');
@@ -66,7 +64,7 @@ module.exports = function({
 	selector}) {
 
 	var dom = {main},
-		updater = ac => uiBus.onNext(ac),
+		updater = ac => uiBus.next(ac),
 		devBus = new Rx.Subject(),
 		devCh = devBus,
 		devtoolsVisible = false; // Change this to turn on the debug window at start.
@@ -81,9 +79,6 @@ module.exports = function({
 		savedState = getSavedState(persist),
 		devInitialState = devReducer(null, savedState ?
 			{type: 'IMPORT_STATE', nextLiftedState: savedState} : {});
-
-	// Shim sessionStorage for code using session.js.
-	session.setCallback(updater); // still used by datapages.
 
 	// Side-effects (e.g. async) happen here. Ideally we wouldn't call this
 	// from 'scan', since 'scan' should be side-effect free. However we've lost
@@ -111,7 +106,7 @@ module.exports = function({
 		// loads. Here we intercept the devtools actions & re-issue 'init' on
 		// RESET.
 		if (ac.type === 'RESET') {
-			uiBus.onNext(['init']);
+			uiBus.next(['init']);
 		}
 		inEffectsReducer = false;
 		return nextState;
@@ -120,7 +115,7 @@ module.exports = function({
 	var devStateObs = Rx.Observable.merge(serverCh, uiCh)
 					.map(ac => ({type: 'PERFORM_ACTION', action: ac}))
 					.merge(devCh)
-					.scan(devInitialState, effectsReducer) // XXX side effects!
+					.scan(effectsReducer, devInitialState) // XXX side effects!
 					.share();
 
 
@@ -128,20 +123,20 @@ module.exports = function({
 	// than rAF.
 
 	// pass the selector into Page, so we catch errors while rendering & can display an error message.
-	devStateObs.throttleWithTimeout(0, Rx.Scheduler.requestAnimationFrame)
+	devStateObs.debounceTime(0, Rx.Scheduler.animationFrame)
 		.subscribe(devState => {
 			return ReactDOM.render(
 				<div>
 					<Page callback={updater} selector={selector}
 							state={unwrapDevState(devState)} />
-					<DevTools dispatch={devBus.onNext.bind(devBus)} {...devState} />
+					<DevTools dispatch={devBus.next.bind(devBus)} {...devState} />
 				</div>,
 				dom.main);
 		});
 
 	if (persist) {
 		// Save state in sessionStorage on page unload.
-		devStateObs.sample(Rx.DOM.fromEvent(window, 'beforeunload'))
+		devStateObs.sample(Rx.Observable.fromEvent(window, 'beforeunload'))
 			.map(state => sessionStorage.saveDevState ? state :
 					effectsReducer(state, {type: 'COMMIT'}))
 			.subscribe(state => sessionStorage.debugSession = stringify(state));
@@ -149,6 +144,6 @@ module.exports = function({
 
 	// This causes us to always load cohorts on page load. This is important after
 	// setting hubs, for example.
-	uiBus.onNext(['init', urlParams()]);
+	uiBus.next(['init', urlParams()]);
 	return dom;
 };

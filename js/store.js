@@ -1,7 +1,6 @@
 'use strict';
 
-var Rx = require('./rx.ext');
-require('rx.coincidence');
+var Rx = require('./rx');
 var _ = require('./underscore_ext');
 var {getErrorProps, logError} = require('./errors');
 var {getNotifications} = require('./notifications');
@@ -31,7 +30,7 @@ module.exports = function () {
 
 	function wrapSlotRequest([slot, req, ...args]) {
 		return req.map(result => [...actionId(slot), result, ...args])
-			.catch(err => Rx.Observable.return([...errorId(slot), getErrorProps(logError(err)), ...args], Rx.Scheduler.timeout));
+			.catch(err => Rx.Observable.of([...errorId(slot), getErrorProps(logError(err)), ...args], Rx.Scheduler.asap));
 	}
 
 	// XXX Note that serverCh.onNext can push stuff that causes us to throw in
@@ -42,7 +41,7 @@ module.exports = function () {
 
 	// Subject of [slot, obs]. We group by slot and apply switchLatest.
 	var serverCh = serverBus.groupBy(([slot]) => slotId(slot))
-		.map(g => g.map(wrapSlotRequest).switchLatest())
+		.map(g => g.switchMap(wrapSlotRequest))
 		.mergeAll();
 
 	var uiBus = new Rx.Subject();
