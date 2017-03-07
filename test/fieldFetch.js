@@ -139,7 +139,7 @@ var validateCodedData = _.curry((samples, data) => {
 	assert(isArray(get(data, 'codes')), 'codes is array');
 });
 
-describe('fieldFetch', function () {
+describe.skip('fieldFetch', function () {
 	this.timeout(10000);
 	it('should fetch probe', function (done) {
 		var probe = 'chr10_100010855_100011423';
