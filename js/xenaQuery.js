@@ -31,7 +31,7 @@ var transcript = {
 ///////////////////////////////////////////////////////
 // Serialization helpers
 
-var jsonResp = xhr => xhr.response;
+var jsonResp = xhr => JSON.parse(xhr.response);
 
 var quote = s => s == null ? 'nil' : ('"' + s + '"'); // XXX should escape "
 
@@ -197,6 +197,12 @@ function xenaPost(host, query) {
 		headers: {'Content-Type': 'text/plain' },
 		url: host + '/data/',
 		body: query,
+		// rxjs 5 defaults to 'json', which will cause the browser to parse
+		// the response before it gets to us. That would be fine, except it's
+		// not well supported cross-browser. In particular, it fails in
+		// phantom 1.9 and IE. If removing this, also remove the JSON.parse
+		// from jsonResp.
+		responseType: 'text',
 		method: 'POST'
 	};
 }
