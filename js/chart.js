@@ -44,7 +44,7 @@ module.exports = function (root, callback, sessionStorage) {
 	function columnLabel (i, colSetting) {
 		var label = colSetting.user.fieldLabel;
 		if (colSetting.fieldType === "genes" || colSetting.fieldType === "segmented") {
-			label += " (gene average)";
+			label += " (average)";
 		}
 		return "column " + getLabel(i) + ": " + label;
 	}

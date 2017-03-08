@@ -28,7 +28,7 @@ var YAxisLabel = React.createClass({
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
 			length = _.getIn(this.props, ['samples', 'length']) || 0,
 			fraction = count === length ? '' :
-				`Zoomed to ${index} - ${index + count - 1} (N=${count})`,
+				`Zoomed to ${index + 1} - ${index + count} (N=${count})`,
 			text = 'Samples (N=' + length.toLocaleString() + ')';
 
 		return (
