@@ -322,7 +322,7 @@ var controls = {
 	'chart-set-average-cohort-post!': (serverBus, state, newState, id, thunk) =>
 		serverBus.next(['chart-average-data', getChartOffsets(newState.columns[id]), thunk]),
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
-		serverBus.next(['chart-average-data', Rx.Observable.of(offsets, Rx.Scheduler.timeout), thunk]),
+		serverBus.next(['chart-average-data', Rx.Observable.of(offsets, Rx.Scheduler.async), thunk]),
 	'sample-search': (state, text) => _.assoc(state, 'sampleSearch', text),
 	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id),
 	// Due to wonky react-bootstrap handlers, xzoom can occur after remove, so
