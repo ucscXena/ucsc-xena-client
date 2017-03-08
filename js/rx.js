@@ -1,14 +1,15 @@
 'use strict';
+var _ = require('./underscore_ext');
+
 var Rx = {
 	Observable: require('rxjs/Observable').Observable,
 	Subject: require('rxjs/Subject').Subject,
 	Scheduler: Object.assign(
 			{},
-			require('rxjs/scheduler/async').async,
+			require('rxjs/scheduler/async'),
 			require('rxjs/scheduler/asap'),
 			require('rxjs/scheduler/animationFrame')),
 	Subscription: require('rxjs/Subscription').Subscription
-
 };
 
 require('rxjs/add/observable/bindCallback');
@@ -44,6 +45,46 @@ require('rxjs/add/operator/timeoutWith');
 require('rxjs/add/operator/toArray');
 require('rxjs/add/operator/windowCount');
 
-require('./rx.ext');
+var observableProto = Rx.Observable.prototype;
+
+function log() {
+	if (console) {
+		console.log.apply(console, arguments);
+	}
+}
+
+observableProto.spy = function (msg) {
+	var observable = this;
+	return Rx.Observable.create(function (observer) {
+		log(msg, "subscribed");
+		var inner = observable.subscribe(
+			function (next) {
+				log(msg, "sending", next);
+				observer.next(next);
+			},
+			function (err) {
+				log(msg, "error", err);
+				observer.error(err);
+			},
+			function () {
+				log(msg, "complete");
+				observer.complete();
+			}
+		);
+		return new Rx.Subscription(function () {
+			inner.unsubscribe();
+			log(msg, "disposed");
+		});
+	});
+};
+
+// zip operator that handles length 0
+function zipArray(obs) {
+	return obs.length ? Rx.Observable.zip(...obs, (...arr) => arr) :
+		Rx.Observable.of([], Rx.Scheduler.asap);
+}
+
+Rx.Observable.zipArray = (...obs) =>
+	_.isArray(obs[0]) ? zipArray(obs[0]) : zipArray(obs);
 
 module.exports = Rx;
