@@ -347,8 +347,9 @@ var refGeneExonCase = dsIDFn((host, dataset, genes) =>
 // test if host is up
 function testHost (host) {
 	return Rx.Observable.ajax(xenaPost(host, '(+ 1 2)'))
-		.timeout(5000, Rx.Observable.of({}))
-		.map(s => !!(s.response && 3 === JSON.parse(s.response)));
+		.map(s => !!(s.response && 3 === JSON.parse(s.response)))
+		.timeoutWith(5000, Rx.Observable.of(false))
+		.catch(() => Rx.Observable.of(false));
 }
 
 module.exports = {

@@ -3,7 +3,8 @@ var Rx = {
 	Observable: require('rxjs/Observable').Observable,
 	Subject: require('rxjs/Subject').Subject,
 	Scheduler: Object.assign(
-			require('rxjs/Scheduler').Scheduler,
+			{},
+			require('rxjs/scheduler/async').async,
 			require('rxjs/scheduler/asap'),
 			require('rxjs/scheduler/animationFrame')),
 	Subscription: require('rxjs/Subscription').Subscription
@@ -39,7 +40,7 @@ require('rxjs/add/operator/switchMap');
 require('rxjs/add/operator/take');
 require('rxjs/add/operator/takeUntil');
 require('rxjs/add/operator/throttleTime');
-require('rxjs/add/operator/timeout');
+require('rxjs/add/operator/timeoutWith');
 require('rxjs/add/operator/toArray');
 require('rxjs/add/operator/windowCount');
 
