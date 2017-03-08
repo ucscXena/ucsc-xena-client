@@ -54,7 +54,8 @@ module.exports = {
 	resolve: {
 		fallback: path.join(__dirname, "node_modules"),
 		alias: {
-			'redboxOptions': path.join(__dirname, 'redboxOptions.json')
+			'redboxOptions': path.join(__dirname, 'redboxOptions.json'),
+			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim')
 		},
 		extensions: ['', '.js', '.json', '.coffee']
 	}
