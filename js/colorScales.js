@@ -77,14 +77,8 @@ function minHueRange(h0, h1) {
 	return high - low > low + 1 - high ? [high, low + 1] : [low, high];
 }
 
-// Since we're doing pixel math, can we just compute the colors on-the-fly, instead
-// of using a table?
-var maxHues = 10;
-var maxSaturations = 30;
 function scaleTrendAmplitude(low, zero, high, origin, thresh, max) {
-	var [h0, h1] = minHueRange(RGBtoHSV(...rgb(low)).h, RGBtoHSV(...rgb(high)).h),
-		colors = _.range(h0, h1, (h1 - h0) / maxHues).map(h =>
-			_.range(0, 1, 1 / maxSaturations).map(s => rgbToArray(HSVtoRGB(h, s, 1))));
+	var [h0, h1] = minHueRange(RGBtoHSV(...rgb(low)).h, RGBtoHSV(...rgb(high)).h);
 	return {
 		// trend is [0, 1], representing net amplification vs. deletion.
 		// power is [0, dataMax], representing avg. distance from zero point.
@@ -92,12 +86,9 @@ function scaleTrendAmplitude(low, zero, high, origin, thresh, max) {
 			if (power == null) {
 				return [128, 128, 128];
 			}
-			// We project [thresh, max] to saturation [0, 1].
-			var s = clip(0, maxSaturations - 1, (power - thresh) / (max - origin - thresh) * maxSaturations),
-				h = clip(0, maxHues - 1, trend * maxHues),
-				c = colors[~~h][~~s];
-
-			return c;
+			var h = clip(h0, h1, h0 + trend * (h1 - h0));
+			var s = clip(0, 1, (power - thresh) / (max - origin - thresh));
+			return rgbToArray(HSVtoRGB(h, s, 1));
 		}
 	};
 }
