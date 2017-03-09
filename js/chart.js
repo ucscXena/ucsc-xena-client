@@ -325,6 +325,7 @@ module.exports = function (root, callback, sessionStorage) {
 			if (notLogScale) {
 				dropDown.style.visibility = "hidden";
 				dropDownDiv.selectedIndex === 0;
+				dropDownDiv.value = "none";
 			}
 			else {
 				dropDown.style.visibility = "visible";
@@ -355,6 +356,7 @@ module.exports = function (root, callback, sessionStorage) {
 		} else {
 			dropDown.style.visibility = "hidden";
 			dropDownDiv.selectedIndex === 0;
+			dropDownDiv.value = "none";
 		}
 	}
 
@@ -1297,7 +1299,6 @@ module.exports = function (root, callback, sessionStorage) {
 			} else {
 				yExponentiation = expUI.value;
 			}
-
 			// y exponentiation
 			if (yExponentiation === "exp2") {
 				ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
