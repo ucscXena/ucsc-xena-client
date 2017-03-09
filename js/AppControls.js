@@ -5,6 +5,8 @@ var React = require('react');
 var CohortSelect = require('./views/CohortSelect');
 var DatasetSelect = require('./views/DatasetSelect');
 var Button = require('react-bootstrap/lib/Button');
+var SplitButton = require('react-bootstrap/lib/SplitButton');
+var MenuItem = require('react-bootstrap/lib/MenuItem');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var pdf = require('./pdfSpreadsheet');
@@ -137,6 +139,28 @@ var AppControls = React.createClass({
 			body: `content=${encodeURIComponent(createBookmark(getState()))}`
 		}).subscribe(this.onSetBookmark);
 	},
+	onExport: function() {
+		var {getState} = this.props;
+		var url = URL.createObjectURL(new Blob([JSON.stringify(getState())], { type: 'application/json' }));
+		var a = document.createElement('a');
+		var filename = 'xenaState.json';
+		_.extend(a, { id: filename, download: filename, href: url });
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+	},
+	onImport: function () {
+		this.refs.import.click();
+	},
+	onImportSelected: function (ev) {
+		var file = ev.target.files[0],
+			reader = new FileReader(),
+			{callback} = this.props;
+
+		reader.onload = () => callback(['import', JSON.parse(reader.result)]);
+		reader.readAsText(file);
+		ev.target.value = null;
+	},
 	render: function () {
 		var {appState: {cohort: activeCohorts, cohorts, datasets, mode, columnOrder}} = this.props,
 			{bookmarks, bookmark} = this.state,
@@ -189,9 +213,13 @@ var AppControls = React.createClass({
 				{hasColumn ? addHelp('download', <Button onClick={this.onDownload}>Download</Button>) : null}
 				{bookmarks ?
 					<OverlayTrigger onEnter={this.onBookmark} trigger='click' placement='bottom'
-						overlay={<Popover placement='bottom'><p>Your bookmark is {bookmark || 'loading'}</p></Popover>}>
-						<Button>Bookmark</Button>
+						overlay={<Popover placement='bottom'><p style={{wordWrap: 'break-word'}}>Your bookmark is {bookmark || 'loading'}</p></Popover>}>
+						<SplitButton title='Bookmark'>
+							<MenuItem onClick={this.onExport}>Export</MenuItem>
+							<MenuItem onClick={this.onImport}>Import</MenuItem>
+						</SplitButton>
 					</OverlayTrigger> : null}
+				{bookmarks ? <input style={{display: 'none'}} ref='import' id='import' onChange={this.onImportSelected} type='file'/> : null}
 			</form>
 		);
 	}

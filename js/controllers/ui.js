@@ -228,6 +228,7 @@ var controls = {
 			}
 		}
 	},
+	'import': (state, newState) => newState,
 	cohort: (state, i, cohort) =>
 		setCohort(state, _.assoc(state.cohort, i, {name: cohort})),
 	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
