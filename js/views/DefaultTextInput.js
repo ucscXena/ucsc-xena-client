@@ -28,7 +28,7 @@ var DefaultTextInput = React.createClass({
 		this.events('change');
 		this.change = this.ev.change
 		.do(() => this.setState({value: this.refs.input.getValue()}))
-		.throttleTime(100)
+		.debounceTime(100)
 		.subscribe(this.update);
 	},
 	componentWillUnmount: function () {

@@ -40,7 +40,7 @@ require('rxjs/add/operator/startWith');
 require('rxjs/add/operator/switchMap');
 require('rxjs/add/operator/take');
 require('rxjs/add/operator/takeUntil');
-require('rxjs/add/operator/throttleTime');
+require('rxjs/add/operator/debounceTime');
 require('rxjs/add/operator/timeoutWith');
 require('rxjs/add/operator/toArray');
 require('rxjs/add/operator/windowCount');

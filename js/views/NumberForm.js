@@ -29,7 +29,7 @@ const NumberForm = React.createClass({
 		this.change = this.ev.change
 			.map(ev => ev.target.value)
 			.do(value => this.setState({value}))
-			.throttleTime(200)
+			.debounceTime(200)
 			.filter(isValid(min, max))
 			.subscribe(value => this.props.onChange(parseValue(value, dflt)));
 	},
