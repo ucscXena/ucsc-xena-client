@@ -19,8 +19,8 @@ var getCustomColor = (fieldSpecs, fields, datasets) =>
 		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', fieldSpecs[0].fields[0]], null) : null;
 
 module.exports = function (root, callback, sessionStorage) {
-	var xdiv, ydiv, // x y and color axis dropdown
-		colorDiv, colorElement,
+	var xdiv, ydiv, // x y  axis dropdown
+		colorDiv, colorElement, // color dropdown
 		leftContainer, rightContainer,
 		xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
 		cohort, samplesLength, cohortSamples, updateArgs, update,
@@ -152,6 +152,34 @@ module.exports = function (root, callback, sessionStorage) {
 		return colSettings.units.join();
 	}
 
+	function axisReview () {
+		_.map(xdiv.options, option => option.disabled = false);
+		_.map(ydiv.options, option => option.disabled = false);
+
+		var data = _.getIn(xenaState, ['data']),
+			xcolumn = xdiv.options[xdiv.selectedIndex].value,
+			ycolumn = ydiv.options[ydiv.selectedIndex].value;
+
+		// x single float, disable y multiple float
+		if (xcolumn !== "none" && !data[xcolumn].codes) {
+			_.map(ydiv.options, option => {
+				var y = option.value;
+				if (data[y].req.values.length > 1) {
+					option.disabled = true;
+				}
+			});
+		}
+		// if y is multiple float, disable x single float
+		if (data[ycolumn].req.values.length > 1) {
+			_.map(xdiv.options, option => {
+				var x = option.value;
+				if (x !== "none" && !data[x].codes) {
+					option.disabled = true;
+				}
+			});
+		}
+	}
+
 	function axisSelector(selectorID) {
 		var div, option, column, storedColumn,
 			columns, columnOrder,
@@ -169,7 +197,7 @@ module.exports = function (root, callback, sessionStorage) {
 					storedColumn = xenaState.chartState.xcolumn;
 				} else if (selectorID === "Yaxis") {
 					storedColumn = xenaState.chartState.ycolumn;
-				} else if (selectorID === "scatterColor") {
+				} else if (selectorID === "Color") {
 					storedColumn = xenaState.chartState.colorColumn;
 				}
 			}
@@ -217,6 +245,7 @@ module.exports = function (root, callback, sessionStorage) {
 			option.textContent = [columnLabel(i, columns[column]), colUnit(columns[column])].join(" ");
 
 			div.appendChild(option);
+
 			if (column === storedColumn) {
 				div.selectedIndex = div.length - 1;
 			}
@@ -1359,6 +1388,7 @@ module.exports = function (root, callback, sessionStorage) {
 				callback(['chart-set-average', offsets, thunk]);
 			}
 		})();
+		axisReview();
 	};
 
 	root.setAttribute("id", "chartRoot");
