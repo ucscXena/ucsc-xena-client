@@ -30,6 +30,7 @@ function fetchCohorts(serverBus, servers) {
 
 function fetchBookmark(serverBus, bookmark) {
 	serverBus.next(['bookmark', Rx.Observable.ajax({
+		responseType: 'text',
 		method: 'GET',
 		url: `/api/bookmarks/bookmark?id=${bookmark}`,
 	}).map(r => r.response)]);

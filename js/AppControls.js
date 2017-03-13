@@ -132,6 +132,7 @@ var AppControls = React.createClass({
 		Rx.Observable.ajax({
 			method: 'POST',
 			url: '/api/bookmarks/bookmark',
+			responseType: 'text',
 			headers: {
 				'X-CSRFToken': document.cookie.replace(/.*csrftoken=([0-9a-z]+)/, '$1'),
 				'Content-Type': 'application/x-www-form-urlencoded'
