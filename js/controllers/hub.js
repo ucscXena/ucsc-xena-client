@@ -8,7 +8,16 @@ var setServersChanged = state => _.assoc(state, 'serversChanged', true);
 var setServersChangedIfUser = (list, state) =>
 	list === 'user' ? setServersChanged(state) : state;
 
+function setHubs(state, {hubs}) {
+	return hubs ?
+		hubs.reduce(
+			(state, hub) =>_.assocIn(state, ['servers', hub, 'user'], true),
+			state) :
+		state;
+}
+
 var controls = {
+	'init': (state, params) => setHubs(state, params),
 	'add-host': (state, host) =>
 		setServersChanged(_.assocIn(state, ['servers', host], {user: true})),
 	'remove-host': (state, host) =>
