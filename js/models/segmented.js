@@ -76,7 +76,7 @@ function fetchGene({dsID, fields, assembly}, [samples]) {
 		.flatMap(refGene => {
 			var coords = _.values(refGene)[0];
 			if (!coords) {
-				return Rx.Observable.return(null);
+				return Rx.Observable.of(null);
 			}
 			var {txStart, txEnd, chrom} = coords,
 				{padTxStart, padTxEnd} = exonPadding;
