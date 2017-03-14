@@ -160,17 +160,17 @@ module.exports = function (root, callback, sessionStorage) {
 			xcolumn = xdiv.options[xdiv.selectedIndex].value,
 			ycolumn = ydiv.options[ydiv.selectedIndex].value;
 
-		// x single float, disable y multiple float
+		// x single float, disable y multiple float of series > 2
 		if (xcolumn !== "none" && !data[xcolumn].codes) {
 			_.map(ydiv.options, option => {
 				var y = option.value;
-				if (data[y].req.values.length > 1) {
+				if (data[y].req.values.length > 2) {
 					option.disabled = true;
 				}
 			});
 		}
-		// if y is multiple float, disable x single float
-		if (data[ycolumn].req.values.length > 1) {
+		// if y is multiple float, disable x single float series > 2
+		if (data[ycolumn].req.values.length > 2) {
 			_.map(xdiv.options, option => {
 				var x = option.value;
 				if (x !== "none" && !data[x].codes) {
@@ -293,6 +293,11 @@ module.exports = function (root, callback, sessionStorage) {
 			if (selectorID === "Yaxis") {
 				var xvalue = xdiv.options[xdiv.selectedIndex].value,
 					yvalue = div.options[div.selectedIndex].value;
+
+				if (xvalue !== "none" && !data[xvalue].codes && data[yvalue].req.values.length > 2) { // x if float and y is multi-float series with >2 series
+					xdiv.options.selectedIndex = xdiv.options.length - 1;
+					xvalue = "none";
+				}
 
 				if (xvalue === yvalue) {  // x and y axis is the same
 					var i;
