@@ -243,7 +243,7 @@ function scatterChart(chartOptions, xlabel, ylabel) {
 	};
 	chartOptions.tooltip = {
 		hideDelay: 0,
-		pointFormat: '{point.name}<br>x: {point.x}<br>y:{point.y}'
+		pointFormat: '<b>{point.colorLabel}</b><br>sample: {point.name}<br>x: {point.x}<br>y:{point.y}'
 	};
 	chartOptions.plotOptions = {
 		series: {

@@ -1112,12 +1112,15 @@ module.exports = function (root, callback, sessionStorage) {
 								};
 							}
 							multiSeries[colorCode].data.push({
+								colorLabel: scatterColorDataCodemap ?
+									(scatterColorDataCodemap[colorCode] || "null (no data)") : '',
 								name: sampleLabels[i],
 								x: x,
 								y: y
 							});
 						} else {
 							singleSeries.push({
+								colorLabel: scatterColorData[i],
 								name: sampleLabels[i],
 								x: x,
 								y: y,
