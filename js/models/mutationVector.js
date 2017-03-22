@@ -11,6 +11,7 @@ var intervalTree = require('static-interval-tree');
 var {pxTransformInterval} = require('../layoutPlot');
 var {hexToRGB, colorStr} = require('../color_helper');
 var jStat = require('jStat').jStat;
+var parsePos = require('../parsePos');
 
 //function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars
 //	var inData = new Set(valsInData),
@@ -302,7 +303,7 @@ function cmpRowOrNull(v1, v2, xzoom, flip) {
 	return (v2 == null) ? -1 : cmpRowOrNoVariants(v1, v2, xzoom, flip);
 }
 
-function cmpSamples(probes, xzoom, sample, flip, s1, s2) {
+function cmpSamples(xzoom, sample, flip, s1, s2) {
 	return cmpRowOrNull(sample[s1], sample[s2], xzoom, flip);
 }
 
@@ -310,17 +311,19 @@ function cmpSamples(probes, xzoom, sample, flip, s1, s2) {
 // property as part of the user input: flip if user enters a gene on
 // negative strand. Don't flip for genomic range view, or positive strand.
 function cmp(column, data, index) {
-	var {fields, xzoom, sortVisible} = column,
+	var {fields: [field], xzoom, sortVisible} = column,
+		pos = parsePos(field),
 		appliedZoom = sortVisible && xzoom ? xzoom : {start: -Infinity, end: Infinity},
 		refGene = _.getIn(data, ['refGene']),
+		flip = !pos && refGene && _.values(refGene)[0].strand === '-',
 		samples = _.getIn(index, ['bySample']);
 
-	return (!_.isEmpty(refGene) && samples) ?
-		(s1, s2) => cmpSamples(fields, appliedZoom, samples, _.values(refGene)[0].strand !== '+', s1, s2) :
+	return samples ?
+		(s1, s2) => cmpSamples(appliedZoom, samples, flip, s1, s2) :
 		() => 0;
 }
 
-var {sparseData} = xenaQuery;
+var {sparseData, sparseDataRange} = xenaQuery;
 
 // XXX Might want to optimize this before committing. We could mutate in-place
 // without affecting anyone. This may be slow for large mutation datasets.
@@ -335,12 +338,23 @@ function mapSamples(samples, data) {
 		   ['req', 'samplesInResp'], sIR => _.map(sIR, s => sampleMap[s]));
 }
 
-function fetch({dsID, fields, assembly}, [samples]) {
+function fetchGene({dsID, fields, assembly}, [samples]) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return Rx.Observable.zipArray(
 		sparseData(dsID, samples, fields[0]),
 		name ? xenaQuery.refGeneExonCase(host, name, fields) : Rx.Observable.of({})
 	).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
+}
+
+function fetchChrom({dsID}, [samples], pos) {
+	return sparseDataRange(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd)
+		.map(req => mapSamples(samples, {req}));
+}
+
+function fetch(column, cohortSamples) {
+	var pos = parsePos(column.fields[0]),
+		method = pos ? fetchChrom : fetchGene;
+	return method(column, cohortSamples, pos);
 }
 
 // Group by, returning groups in sorted order. Scales O(n) vs.
@@ -409,7 +423,13 @@ function findSVNodes(byPosition, layout, colorMap, samples) {
 
 var swapIf = (strand, [x, y]) => strand === '-' ? [y, x] : [x, y];
 
-function defaultXZoom(refGene, type) {
+function defaultXZoom(pos, refGene, type) {
+	if (pos) { // User supplied chrom position
+		return {
+			start: pos.baseStart,
+			end: pos.baseEnd
+		};
+	}
 	var {txStart, txEnd, strand} = refGene,
 		{padTxStart, padTxEnd} = getExonPadding(type),
 		[startPad, endPad] = swapIf(strand, [padTxStart, padTxEnd]);
@@ -425,15 +445,15 @@ var getCustomColor = (fieldSpecs, datasets, type) =>
 		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', type], null) : null;
 
 function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
-	if (_.isEmpty(data) || _.isEmpty(data.req) || _.isEmpty(data.refGene)) {
+	var pos = parsePos(column.fields[0]);
+	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {};
 	}
-	var {refGene} = data,
-		refGeneObj = _.values(refGene)[0],
-		maxXZoom = defaultXZoom(refGeneObj, 'SV'),
+	var refGeneObj = _.values(data.refGene)[0],
+		maxXZoom = defaultXZoom(pos, refGeneObj, 'SV'), // exported for zoom controls
 		{width, showIntrons = false, xzoom = maxXZoom} = column,
-		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
-		layout = createLayout(refGeneObj, width, xzoom),
+		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
+		layout = createLayout(refGeneObj, width, xzoom, pos),
 		colorMap = getCustomColor(column.fieldSpecs, datasets, 'SV') || chromColorGB,
 		nodes = findSVNodes(index.byPosition, layout, colorMap, sortedSamples);
 
@@ -446,16 +466,16 @@ function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, ind
 }
 
 function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
-	if (_.isEmpty(data) || _.isEmpty(data.req) || _.isEmpty(data.refGene)) {
+	var pos = parsePos(column.fields[0]);
+	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {};
 	}
-	var {refGene} = data,
-		refGeneObj = _.values(refGene)[0],
-		maxXZoom = defaultXZoom(refGeneObj, 'mutation'),
+	var refGeneObj = _.values(data.refGene)[0],
+		maxXZoom = defaultXZoom(pos, refGeneObj, 'mutation'), // exported for zoom controls
 		{width, showIntrons = false, sFeature, xzoom = maxXZoom} = column,
 		allVals = _.uniq(data.req.rows.map(features[sFeature].get)),
-		createLayout = showIntrons ? exonLayout.intronLayout : exonLayout.layout,
-		layout = createLayout(refGeneObj, width, xzoom),
+		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
+		layout = createLayout(refGeneObj, width, xzoom, pos),
 		colorMap = getCustomColor(column.fieldSpecs, datasets, 'SNV') || impactColor,
 		nodes = findSNVNodes(index.byPosition, layout, colorMap, sFeature, sortedSamples);
 
@@ -468,7 +488,8 @@ function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, in
 }
 
 function index(fieldType, data) {
-	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
+//	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
+	if (!_.get(data, 'req')) { // XXX check failure case of missing refGene in gene display. Also on segmented.
 		return null;
 	}
 

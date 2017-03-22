@@ -260,6 +260,7 @@ function transformPOSTMethods(postMethods) {
 		datasetMetadata: postFn => (host, dataset) =>
 			postFn(host, dataset).map(resp => datasetListTransform(host, resp)),
 		sparseData: mapResponse(indexMutations),
+		sparseDataRange: mapResponse(indexMutations),
 		// Generate case permutations of the gene parameter
 		sparseDataMatchField: postFn => (host, field, dataset, genes) =>
 			postFn(host, field, dataset, _.flatmap(genes, permuteCase))
@@ -304,6 +305,7 @@ function wrapDsIDParams(postMethods) {
 		'segmentedDataRange',
 		'segmentedDataExamples',
 		'sparseData',
+		'sparseDataRange',
 		'sparseDataExamples'],
 
 		dsIDFnPosts = _.mapObject(_.pick(postMethods, dsIDFns), dsIDFn);
