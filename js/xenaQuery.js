@@ -130,7 +130,7 @@ function collateRows(rows) {
 }
 
 // {:sampleid ["id0", "id1", ...], chromstart: [123, 345...], ...}
-function indexMutations(gene, resp) {
+function indexMutations(resp) {
 	// XXX The query for samples is returning every row in the dataset,
 	// rather than distinct sampleIDs from the dataset. We need a
 	// 'distinct' function for xena-query.
@@ -259,9 +259,7 @@ function transformPOSTMethods(postMethods) {
 		// Apply a transform that requires the 'host' parameter
 		datasetMetadata: postFn => (host, dataset) =>
 			postFn(host, dataset).map(resp => datasetListTransform(host, resp)),
-		// Apply a transform that requires the 'gene' parameter
-		sparseData: postFn => (host, dataset, gene, samples) =>
-			postFn(host, dataset, gene, samples).map(resp => indexMutations(gene, resp)),
+		sparseData: mapResponse(indexMutations),
 		// Generate case permutations of the gene parameter
 		sparseDataMatchField: postFn => (host, field, dataset, genes) =>
 			postFn(host, field, dataset, _.flatmap(genes, permuteCase))
