@@ -315,7 +315,7 @@ function cmp(column, data, index) {
 		pos = parsePos(field),
 		appliedZoom = sortVisible && xzoom ? xzoom : {start: -Infinity, end: Infinity},
 		refGene = _.getIn(data, ['refGene']),
-		flip = !pos && refGene && _.values(refGene)[0].strand === '-',
+		flip = !pos && refGene && _.getIn(_.values(refGene), [0, 'strand']) === '-',
 		samples = _.getIn(index, ['bySample']);
 
 	return samples ?
@@ -488,8 +488,7 @@ function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, in
 }
 
 function index(fieldType, data) {
-//	if (!_.get(data, 'req') || _.values(data.refGene).length === 0) {
-	if (!_.get(data, 'req')) { // XXX check failure case of missing refGene in gene display. Also on segmented.
+	if (!_.get(data, 'req')) {
 		return null;
 	}
 

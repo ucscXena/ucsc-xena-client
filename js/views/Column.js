@@ -114,6 +114,9 @@ var isIntString = str => !!s.trim(str).replace(/,/g, '').match(/^[0-9]+$/);
 var parseExtendedInt = str => parseInt(s.trim(str).replace(/,/g, ''), 10);
 
 var boundIsValid = _.curry((maxXZoom, str) => {
+	if (!maxXZoom) {
+		return false; // no data
+	}
 	if (s.trim(str) === '') {
 		return true;
 	}
