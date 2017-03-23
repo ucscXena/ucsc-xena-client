@@ -111,7 +111,7 @@ function mutationAttrs(list) {
 			"chr": row.position.chrom,
 			"start": row.position.chromstart,
 			"end": row.position.chromend,
-			"gene": row.genes[0],
+			"gene": _.getIn(row, ['genes', 0]),
 			"reference": row.ref,
 			"alt": row.alt,
 			"altGene": row.altGene,
