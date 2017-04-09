@@ -42,13 +42,23 @@ var {Modal, DropdownButton, MenuItem, Row, Col, Button, ButtonToolbar, ButtonGro
 var Input = require('react-bootstrap/lib/Input');
 var image = require('react-bootstrap/lib/Image');
 
-function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization, defaultColorClass, valueType) {
+function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
+	defaultColorClass, valueType, fieldType) {
 	var state = vizState;
 	function datasetSetting() {
 		var node, div = document.createElement("div");
 		if (valueType === "float" || valueType === 'segmented') {
 			node = document.createElement("div");
 			allFloat(node);
+			div.appendChild(node);
+
+			node = document.createElement("span");
+			ReactDOM.render(React.createElement(finishButtonBar), node);
+			div.appendChild(node);
+		}
+		else if (valueType === "mutation" && fieldType === 'SV') {
+			node = document.createElement("div");
+			sv(node);
 			div.appendChild(node);
 
 			node = document.createElement("span");
@@ -78,6 +88,15 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		// color scale
 		node = document.createElement("div");
 		ReactDOM.render(React.createElement(scaleChoice), node);
+		div.appendChild(node);
+		div.appendChild(document.createElement("br"));
+	}
+
+	function sv(div) {
+		var node;
+		// color choice
+		node = document.createElement("div");
+		ReactDOM.render(React.createElement(svColorDropDown), node);
 		div.appendChild(node);
 		div.appendChild(document.createElement("br"));
 	}
@@ -339,14 +358,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 	var colorDropDown = React.createClass({
 		getInitialState () {
-			let	value = getVizSettings('colorClass') || defaultColorClass || 'default',
-				mapping = {
-					"default": "default",
-					"expression": "expression",
-					"clinical": "default",
-				};
 			return {
-				optionValue: mapping[value] || 'default'
+				optionValue: 'default'
 			};
 		},
 		handleSelect: function (evt, evtKey) {
@@ -391,6 +404,53 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 	});
 
+	var svColorDropDown = React.createClass({
+		getInitialState () {
+			let	value = getVizSettings('svColor') || 'none',
+				mapping = {
+					"none": "none",
+					"chromosomeGB": "chromosomeGB",
+					"chromosomePCAWG": "chromosomePCAWG",
+					true: "none"
+				};
+			return {
+				optionValue: mapping[value] || "none"
+			};
+		},
+		handleSelect: function (evt, evtKey) {
+			var key = "svColor";
+			setVizSettings(key, evtKey);
+			this.setState({optionValue: evtKey});
+		},
+		render () {
+			let optionValue = this.state.optionValue,
+				options = [
+					{"key": "none", "label": "grey"},
+					{"key": "chromosomeGB", "label": "by chromosome (Genome Browser)"},
+					{"key": "chromosomePCAWG", "label": "by chromosome (PCAWG)"},
+
+				],
+				activeOption = _.find(options, obj => {
+					return obj.key === optionValue;
+				}),
+				title = activeOption ? activeOption.label : 'Select',
+				menuItemList = options.map(obj => {
+					var active = (obj.key === optionValue);
+					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
+						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
+				});
+			return (
+				<Row>
+					<Col xs={3} md={2} lg={2}>Color</Col>
+					<Col xs={15} md={10} lg={5}>
+						<DropdownButton title={title} onSelect={this.handleSelect} >
+							{menuItemList}
+						</DropdownButton>
+					</Col>
+				</Row>
+			);
+		}
+	});
 	var oldSettings = state,
 		currentSettings = {state: state},
 		colorParams = {
@@ -409,8 +469,8 @@ var SettingsWrapper = React.createClass({
 		this.currentSettings.state = newProps.vizSettings;
 	},
 	componentDidMount: function () {
-		var {refs: {content}, props: {onVizSettings, vizSettings, id, defaultNormalization, colorClass, valueType, onRequestHide}} = this;
-		this.currentSettings = vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType);
+		var {refs: {content}, props: {onVizSettings, vizSettings, id, defaultNormalization, colorClass, valueType, fieldType, onRequestHide}} = this;
+		this.currentSettings = vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType, fieldType);
 	},
 	render: function () {
 		return <div ref='content' />;

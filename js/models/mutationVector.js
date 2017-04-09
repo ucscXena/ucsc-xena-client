@@ -46,7 +46,8 @@ var colors = {
 		"#D62728"   // red
 	],
 	af: {r: 255, g: 0, b: 0},
-	grey: "#808080"
+	darkGrey: "#9b9b9b", // for unknown function
+	grey: "#808080" // for null
 };
 
 function inorderLegend(colorMap, valsInData) {
@@ -174,6 +175,32 @@ var impact = {
 		"Y": "#CCCCCC",
 		"M": "#CCCC99"
 	},
+	chromColorPCAWG = { // PCAWG chrom coloring
+        "1": "#DE47AB",
+		"2": "#72BE97",
+		"3": "#F7F797",
+		"4": "#7C749B",
+		"5": "#E85726",
+		"6": "#B395F8",
+		"7": "#DC8747",
+		"8": "#96D53D",
+		"9": "#DC85EE",
+		"10": "#7D32B3",
+		"11": "#88DB68",
+		"12": "#78AAF1",
+		"13": "#D9C6CA",
+		"14": "#336C80",
+		"15": "#F7CA44",
+		"16": "#32C7C7",
+		"17": "#D4C5F2",
+		"18": "#995493",
+		"19": "#F88B78",
+		"20": "#475ECC",
+		"21": "#E0BD8C",
+		"22": "#9E2800",
+		"X": "#F2BBD2",
+		"Y": "#B6EBEA"
+	},
 	impactColor = _.mapObject(impact, i => colors.categoryMutation[i]),
 	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
@@ -185,8 +212,11 @@ var impact = {
 	}),
 	getSVLegend = chromColorMap => ({
 		// have to explicitly call hexToRGB to avoid map passing in index.
-		colors: _.values(chromColorMap).map(h => hexToRGB(h)).map(colorStr).reverse(),
-		labels: _.keys(chromColorMap).map(key => "chr" + key).reverse(),
+		colors: chromColorMap ?
+			_.values(chromColorMap).map(h => hexToRGB(h)).map(colorStr).reverse() :
+			[colors.darkGrey],
+		labels: chromColorMap ? _.keys(chromColorMap).map(key => "chr" + key).reverse() :
+			['structural variant'],
 		align: 'left'
 	}),
 	features = {
@@ -412,7 +442,9 @@ function findSVNodes(byPosition, layout, colorMap, samples) {
 				xStart,
 				xEnd,
 				y,
-				color: colorMap[chromFromAlt(alt)] || colorMap[chr.replace(/chr/i, "")],
+				color: colorMap ?
+					colorMap[chromFromAlt(alt)] || colorMap[chr.replace(/chr/i, "")] || colors.darkGrey :
+					colors.darkGrey,
 				subrow: i,
 				rowCount: count,
 				data: v.variant
@@ -449,12 +481,20 @@ function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, ind
 	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {};
 	}
+	var colorMapping = {
+		"chromosomeGB": chromColorGB,
+		"chromosomePCAWG": chromColorPCAWG
+	};
+	var getColorMapping = svColor => colorMapping[svColor];
+
 	var refGeneObj = _.values(data.refGene)[0],
 		maxXZoom = defaultXZoom(pos, refGeneObj, 'SV'), // exported for zoom controls
 		{width, showIntrons = false, xzoom = maxXZoom} = column,
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
 		layout = createLayout(refGeneObj, width, xzoom, pos),
-		colorMap = getCustomColor(column.fieldSpecs, datasets, 'SV') || chromColorGB,
+		colorMap = (vizSettings && vizSettings.svColor) ?
+			getColorMapping(vizSettings.svColor) : undefined,
+		//function to get custom color from metadata:  getCustomColor(column.fieldSpecs, datasets, 'SV'),
 		nodes = findSVNodes(index.byPosition, layout, colorMap, sortedSamples);
 
 	return {
