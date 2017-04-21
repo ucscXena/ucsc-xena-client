@@ -102,7 +102,6 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 
 function drawSVNodes(vg, width, zoom, svVariants) {
 	var {count, height} = zoom,
-		vHeight = minVariantHeight(height / count),
 		toY = splitRows(count, height) ? toYPxSubRow : toYPx,
 		varByIdMap = svVariants.map(v => {
 			var {data: {alt, altGene}} = v,
@@ -127,18 +126,16 @@ function drawSVNodes(vg, width, zoom, svVariants) {
 	});
 
 
-	//feet variants draw breakpoint as black vertical bar
-	if (vHeight > 4 && height / count <= labelFont) {
-		varByIdMap.forEach(variant => {
-			var {xStart, xEnd, y, h} = variant,
-				endMark = xEnd <= width ? [[xEnd, y, xEnd + 1, y]] : [],
-				startMark = xStart > 0 ? [[xStart, y, xStart + 1, y]] : [],
-				points = [...startMark, ...endMark];
+	varByIdMap.forEach(variant => {
+		var {xStart, xEnd, y, h} = variant,
+			endMark = xEnd <= width ? [[xEnd, y, xEnd + 1, y]] : [],
+			startMark = xStart > 0 ? [[xStart, y, xStart + 1, y]] : [],
+			points = [...startMark, ...endMark];
 
-			vg.drawPoly(points,
-				{strokeStyle: 'black', lineWidth: h});
-		});
-	}
+		vg.drawPoly(points,
+			{strokeStyle: 'black', lineWidth: h});
+	});
+
 
 	//feet variants show text label when there is only one variant for this sample, otherwise, text might overlap
 	if (height / count > labelFont) {

@@ -21,15 +21,7 @@ var defaultColors = {
 	'whiteBlack': whiteBlack
 };
 
-var subTypeClass = ({dataSubType}) =>
-	dataSubType && dataSubType.indexOf('expression') !== -1 ? 'expression' : 'default';
-
-var typeClass = {
-	clinicalMatrix: () => 'clinical',
-	mutationVector: () => 'mutation'
-};
-
-var defaultColorClass = dataset => (typeClass[dataset.type] || subTypeClass)(dataset);
+var defaultColorClass = 'default';
 
 function colorRangeType(column) {
 	return column.valueType === 'coded' ? 'coded' :

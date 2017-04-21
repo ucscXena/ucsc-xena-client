@@ -133,7 +133,9 @@ function defaultXZoom(pos, refGene) {
 function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
 	var pos = parsePos(column.fields[0]);
 	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
-		return {};
+		return {
+			color: ['no-data']
+		};
 	}
 	var refGeneObj = _.values(data.refGene)[0],
 		maxXZoom = defaultXZoom(pos, refGeneObj), // exported for zoom controls

@@ -196,7 +196,7 @@ var ColumnEdit = React.createClass({
 			'width', ds.type === 'mutationVector' ? 200 : 100,
 			'columnLabel', ds.label,
 			'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel},
-			'colorClass', defaultColorClass(ds),
+			'colorClass', defaultColorClass,
 			'assembly', ds.assembly);
 		this.props.onHide();
 		callback(['add-column', uuid(), settings, true]);

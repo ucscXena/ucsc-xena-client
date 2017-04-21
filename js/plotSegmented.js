@@ -28,21 +28,21 @@ function hotOrNot(component) {
 // Use the domain of the scale as the label.
 // If using thresholded scales, add '<' '>' to labels.
 
-function legendForColorscale(colorSpec) {
-	var [, low, zero, high, origin, thresh, max] = colorSpec;
+var legendProps = {
+	'no-data': () => ({colors: [], labels: []}),
+	'trend-amplitude': (__, low, zero, high, origin, thresh, max) =>
+		({colors: [low, zero, zero, high], labels: [origin - max, origin - thresh, origin + thresh, origin + max]})
+};
 
-	return {colors: [low, zero, zero, high], labels: [origin - max, origin - thresh, origin + thresh, origin + max]};
-}
+var m = (opts, [type, ...args], deflt) => (opts[type] || opts[deflt])(type, ...args);
 
 // We never want to draw multiple legends. We only draw the 1st scale
 // passed in. The caller should provide labels/colors in the 'legend' prop
 // if there are multiple scales.
 function renderFloatLegend(props) {
-	var {units, colors, vizSettings, defaultNormalization, data} = props,
-		hasData = _.getIn(colors, [0]);
+	var {units, color, vizSettings, defaultNormalization, data} = props;
 
-	var {labels, colors: legendColors} = hasData ? legendForColorscale(colors[0]) :
-		{colors: [], labels: []},
+	var {labels, colors: legendColors} = m(legendProps, color, 'no-data'),
 		footnotes = (units || []).slice(0), // copy to avoid modification, below
 		samples = _.getIn(data, ['req', 'samplesInResp']),
 		nSamples = samples ? samples.length : '',
@@ -65,7 +65,7 @@ function drawLegend(props) {
 		{units, color, legend, valueType, vizSettings, defaultNormalization} = column,
 		legendProps = {
 			units,
-			colors: [color],
+			color,
 			legend,
 			vizSettings,
 			defaultNormalization,
