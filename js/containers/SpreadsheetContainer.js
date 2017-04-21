@@ -80,6 +80,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	onKm: function (id) {
 		this.props.callback(['km-open', id]);
 	},
+	onSortDirection: function (id, newDir) {
+		this.props.callback(['sortDirection', id, newDir]);
+	},
 	onMode: function (id, newMode) {
 		this.props.callback(['fieldType', id, newMode]);
 	},
@@ -122,6 +125,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						onSortVisible={this.onSortVisible}
 						onMode={this.onMode}
 						onKm={this.onKm}
+						onSortDirection={this.onSortDirection}
 						onXZoom={this.onXZoom}
 						onRemove={this.onRemove}
 						onResize={this.onResize}

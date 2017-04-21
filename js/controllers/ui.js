@@ -327,6 +327,8 @@ var controls = {
 		serverBus.next(['chart-average-data', Rx.Observable.of(offsets, Rx.Scheduler.async), thunk]),
 	'sample-search': (state, text) => _.assoc(state, 'sampleSearch', text),
 	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id),
+	'sortDirection': (state, id, newDir) =>
+		_.assocIn(state, ['columns', id, 'sortDirection'], newDir),
 	// Due to wonky react-bootstrap handlers, xzoom can occur after remove, so
 	// check that the column exists before updating.
 	'xzoom': (state, id, xzoom) => _.updateIn(state, ['columns', id],

@@ -306,6 +306,11 @@ var Column = React.createClass({
 	onKm: function () {
 		this.props.onKm(this.props.id);
 	},
+	onSortDirection: function () {
+		var newDir = _.get(this.props.column, 'sortDirection', 'forward') === 'forward' ?
+			'reverse' : 'forward';
+		this.props.onSortDirection(this.props.id, newDir);
+	},
 	onMode: function (ev, newMode) {
 		this.props.onMode(this.props.id, newMode);
 	},
@@ -434,6 +439,7 @@ var Column = React.createClass({
 					<Dropdown.Menu>
 						{menu}
 						{menu && <MenuItem divider />}
+						<MenuItem onSelect={this.onSortDirection}>Reverse sort</MenuItem>
 						<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
 						<MenuItem onSelect={this.onDownload}>Download</MenuItem>
 						{aboutDatasetMenu(datasetMeta(id))}

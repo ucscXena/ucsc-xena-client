@@ -26,17 +26,19 @@ function cmpString(s1, s2) {
 	return 0;
 }
 
+var invert = (dir, fn) => dir === 'reverse' ? (s1, s2) => fn(s2, s1) : fn;
+
 var sortSelector = createSelector(
 	state => state.samples,
 	state => state.cohortSamples,
-	state => _.fmap(state.columns, c => _.pick(c, 'fieldType', 'fields', 'xzoom', 'sortVisible')),
+	state => _.fmap(state.columns, c => _.pick(c, 'fieldType', 'fields', 'xzoom', 'sortVisible', 'sortDirection')),
 	state => state.columnOrder,
 	state => state.data,
 	state => state.index,
 	(samples, cohortSamples, columns, columnOrder, data, index) => {
 		var getSampleID = lookupSample(cohortSamples),
 			cmpFns = _.fmap(columns,
-				(c, id) => widgets.cmp(columns[id], data[id], index[id])),
+				(c, id) => invert(c.sortDirection, widgets.cmp(columns[id], data[id], index[id]))),
 			// XXX should further profile this to see how much it's costing us
 			// to create a findValue callback on every cmpFn call.
 			cmpFn = (s1, s2) =>
