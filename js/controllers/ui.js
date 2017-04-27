@@ -36,13 +36,13 @@ function fetchBookmark(serverBus, bookmark) {
 	}).map(r => r.response)]);
 }
 
-function exampleQuery(dsID) {
-	return xenaQuery.datasetFieldExamples(dsID)
+function exampleQuery(dsID, count) {
+	return xenaQuery.datasetFieldExamples(dsID, count)
 		.map(list => _.pluck(list, 'name'));
 }
 
-function fetchExamples(serverBus, dsID) {
-	serverBus.next(['columnEdit-examples', exampleQuery(dsID)]);
+function fetchExamples(serverBus, dsID, count = 2) {
+	serverBus.next(['columnEdit-examples', exampleQuery(dsID, count)]);
 }
 
 var {featureList} = xenaQuery;
