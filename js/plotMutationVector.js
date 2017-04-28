@@ -53,9 +53,7 @@ function closestNodeSNV(nodes, zoom, x, y) {
 			(x > n.xStart - cutoffX) && (x < n.xEnd + cutoffX));
 
 	return nearBy.length > 0 ?
-		_.min(nearBy, n =>
-				Math.pow((y - toYPx(zoom, n).y), 2) + Math.pow((x - (n.xStart + n.xEnd) / 2.0), 2)) :
-		undefined;
+		_.max(nearBy, n => mv.impact[n.data.effect]) : undefined;
 }
 
 function closestNodeSV(nodes, zoom, x, y) {
@@ -145,7 +143,7 @@ var defaultSNVSVGBsetting = (assembly) => {
 	}
 };
 
-function sampleTooltip(sampleFormat, data, gene, assembly) {
+function sampleTooltip(sampleFormat, data, assembly) {
 	var dnaVaf = data.dnaVaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dnaVaf)],
 		rnaVaf = data.rnaVaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rnaVaf)],
 		ref = data.reference && ['value', `${data.reference} to `],
@@ -179,10 +177,11 @@ function sampleTooltip(sampleFormat, data, gene, assembly) {
 					gbURL(assembly, posRegionString(data), posDoubleString (data), defaultSNVSVGBsetting(assembly))],
 
 		effect = ['value', fmtIf(data.effect, x => `${x}, `) + //eslint-disable-line comma-spacing
-					gene +
+					fmtIf(data.gene, x => `${x}`)  +
 					fmtIf(data.aminoAcid, x => ` (${x})`) +
 					fmtIf(data.altGene, x => ` connect to ${x} `)
 					];
+
 	return {
 		rows: dropNulls([
 			[effect],
@@ -209,7 +208,7 @@ function posTooltip(layout, samples, sampleFormat, pixPerRow, index, assembly, x
 			gbURL(assembly, posRegionString(coordinate), posDoubleString(coordinate))]]]};
 }
 
-function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, assembly, ev) {
+function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, assembly, ev) {
 	var {x, y} = util.eventOffset(ev),
 		{height, count, index} = zoom,
 		pixPerRow = height / count,
@@ -219,7 +218,7 @@ function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, as
 		node = closestNode[fieldType](nodes, zoom, x, y);
 
 	return node ?
-		sampleTooltip(sampleFormat, node.data, gene, assembly) :
+		sampleTooltip(sampleFormat, node.data, assembly) :
 		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
 }
 
@@ -245,9 +244,8 @@ var MutationColumn = hotOrNot(React.createClass({
 		this.ttevents.unsubscribe();
 	},
 	tooltip: function (ev) {
-		var {column: {fieldType, layout, nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props,
-			gene = fields[0];
-		return tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, assembly, ev);
+		var {column: {fieldType, layout, nodes, assembly}, samples, sampleFormat, zoom} = this.props;
+		return tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, assembly, ev);
 	},
 	render: function () {
 		var {column, samples, zoom, index, draw} = this.props;

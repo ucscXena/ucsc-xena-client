@@ -664,5 +664,6 @@ module.exports = {
 	chromColorGB,
 	SNVPvalue,
 	defaultXZoom,
-	fetch
+	fetch,
+	impact
 };
