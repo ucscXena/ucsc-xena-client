@@ -439,11 +439,11 @@ var Column = React.createClass({
 					<Dropdown.Menu>
 						{menu}
 						{menu && <MenuItem divider />}
-						<MenuItem onSelect={this.onSortDirection}>Reverse sort</MenuItem>
 						<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
+						<MenuItem onSelect={this.onSortDirection}>Reverse sort</MenuItem>
 						<MenuItem onSelect={this.onDownload}>Download</MenuItem>
 						{aboutDatasetMenu(datasetMeta(id))}
-						<MenuItem onSelect={this.onViz}>Viz Settings</MenuItem>
+						<MenuItem onSelect={this.onViz}>Display Setting</MenuItem>
 						<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 					</Dropdown.Menu>
 				</Dropdown>

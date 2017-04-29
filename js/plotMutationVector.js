@@ -53,7 +53,7 @@ function closestNodeSNV(nodes, zoom, x, y) {
 			(x > n.xStart - cutoffX) && (x < n.xEnd + cutoffX));
 
 	return nearBy.length > 0 ?
-		_.max(nearBy, n => mv.impact[n.data.effect]) : undefined;
+		_.max(nearBy, n => mv.impact[n.data.effect] || 0) : undefined;
 }
 
 function closestNodeSV(nodes, zoom, x, y) {
@@ -79,7 +79,7 @@ function formatAf(af) {
 		Math.round(af * 100) + '%';
 }
 
-var fmtIf = (x, fmt, d = '' ) => x ? fmt(x) : d;
+var fmtIf = (x, fmt, d = '') => (_.isString(x) && x !== 'NaN' && x !== '') ? fmt(x) : d;
 var dropNulls = rows => rows.map(row => row.filter(col => col != null)) // drop empty cols
 	.filter(row => row.length > 0); // drop empty rows
 //gb position string of the segment with 15bp extra on each side, centered at segment
