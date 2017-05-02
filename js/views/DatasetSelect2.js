@@ -10,8 +10,9 @@ const LOCAL_DOMAIN_LABEL  = 'My Computer Hub' ;
 const phenotypeDataSubTypeList = ["phenotype", "phenotypes", "Phenotype", "Phenotypes"];
 const phenotypeGroupLabel = "phenotype";
 var ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap'];
+var sampleFilterDataSubtype = ['Filter', 'filter'];
 
-var notIgnored = ds => !_.contains(ignored, ds.type);
+var notIgnored = ds => !_.contains(ignored, ds.type) && !_.contains(sampleFilterDataSubtype, ds.dataSubType);
 
 var isLoaded = ds => ds.status === 'loaded';
 var filterDatasets = (list, server) =>

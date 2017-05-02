@@ -6,18 +6,22 @@ var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 
 var ignored = ['probeMap', 'genePredExt', 'probemap', 'sampleMap', 'genomicSegment'];
+var sampleFilterDataSubtype = ['Filter', 'filter'];
 var notIgnored = ds => !_.contains(ignored, ds.type);
 var loaded = ds => ds.status === 'loaded';
 
 var filterDatasets = list => list.filter(ds => notIgnored(ds) && loaded(ds));
+var filterDataSubType = list => list.filter(subtype => _.contains(sampleFilterDataSubtype, subtype));
 var sortByLabel = list => _.sortBy(list, el => el.label.toLowerCase());
 
 function optsFromDatasets(dataSubTypes) {
-	return _.flatten(_.sortBy(Object.keys(dataSubTypes), el=>el.toLowerCase()).map(function(dataSubType) {
-		var datasets = dataSubTypes[dataSubType],
-			sortedOpts = sortByLabel(filterDatasets(datasets)).map(d => ({value: d.dsID, label: d.label}));
-		return [{label: dataSubType, header: true}].concat(sortedOpts);
-	}));
+	var filterDs = _.flatten(_.sortBy(filterDataSubType(Object.keys(dataSubTypes)),
+		el=>el.toLowerCase()).map(function(dataSubType) {
+			var datasets = dataSubTypes[dataSubType],
+				sortedOpts = sortByLabel(filterDatasets(datasets)).map(d => ({value: d.dsID, label: d.label}));
+			return sortedOpts;
+		}));
+	return filterDs.length ? [{label: "Filter", header: true}].concat(filterDs) : [];
 }
 
 var DatasetSelect = React.createClass({
