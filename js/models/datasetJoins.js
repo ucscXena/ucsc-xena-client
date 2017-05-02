@@ -14,7 +14,12 @@ var nonNullFS = fss => fss.filter(fs => fs.fetchType !== 'null');
 
 // normalize by default if all datasets normalize by default.
 function getNormalization(fieldSpecs) {
-	return _.every(nonNullFS(fieldSpecs), d => d.defaultNormalization);
+	var allDefaultNormalization = _.uniq(_.map(nonNullFS(fieldSpecs), d => d.defaultNormalization));
+	if (allDefaultNormalization.length === 1 & allDefaultNormalization[0] != null) {
+		return allDefaultNormalization[0];
+	} else {
+		return false;
+	}
 }
 
 // Join column labels.

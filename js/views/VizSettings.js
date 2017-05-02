@@ -317,6 +317,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				mapping = {
 					"none": "none",
 					"subset": "subset",
+					"log2(x+1)": "log2(x+1)",
 					true: "subset"
 				};
 			return {
@@ -331,8 +332,9 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		render () {
 			let optionValue = this.state.optionValue,
 				options = [
-					{"key": "none", "label": "off"},
+					{"key": "none", "label": "none"},
 					{"key": "subset", "label": "mean subtracted per column across samples"},
+					{"key": "log2(x+1)", "label": "log2(x+1)" },
 				],
 				activeOption = _.find(options, obj => {
 					return obj.key === optionValue;
