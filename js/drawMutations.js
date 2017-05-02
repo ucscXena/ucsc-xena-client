@@ -89,7 +89,7 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 					label = data.aminoAcid || data.alt,
 					textWidth = vg.textWidth(labelFont, label);
 
-				if ((xEnd - xStart) >= minTxtWidth) {
+				if ((xEnd - xStart) >= minTxtWidth / 3 * label.length) {
 					vg.textCenteredPushRight( xStart + labelMargin, y - h / 2, xEnd - xStart - labelMargin,
 							h, 'white', labelFont, label);
 				} else {
