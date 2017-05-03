@@ -20,6 +20,7 @@ var apply = _.curry((valueType, features, state, __, meta) => {
 		fieldType: getFieldType(meta),
 		fieldLabel: gene,
 		dsID: meta.dsID,
+		defaultNormalization: _.get(meta, 'colnormalization'),
 		assembly: meta.assembly,
 		sFeature: 'impact'
 	};

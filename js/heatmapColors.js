@@ -99,8 +99,10 @@ function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
 }
 
 var prec2 = x => parseFloat(x.toPrecision(2));
+
 function colorSegmented(column, settings = {}, codes, data) {
-	var values = data,
+	var log2 = _.getIn(column, ["vizSettings", "colNormalization"]) || column.defaultNormalization,
+		values = data,
 		[low, , high] = defaultColors[settings.colorClass || column.colorClass],
 		minVal = _.minnull(values),
 		maxVal = _.maxnull(values),
@@ -118,8 +120,13 @@ function colorSegmented(column, settings = {}, codes, data) {
 	} else {
 		absmax = Math.max(-minVal, maxVal);
 		zone = absmax / 4.0;
-		spec = ['trend-amplitude', low, white, high,
-			 0, prec2(zone / 2.0), prec2(absmax / 2.0)];
+		if (log2 === "log2(x/2)") {  // auto coloring for vizSettings = log2(x/2)
+			spec = ['trend-amplitude', low, white, high,
+				 2, 0, 6];
+		} else { // vizSettings = none
+			spec = ['trend-amplitude', low, white, high,
+				 0, prec2(zone / 2.0), prec2(absmax / 2.0)];
+		}
 	}
 	return spec;
 }

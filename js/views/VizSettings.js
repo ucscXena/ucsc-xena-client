@@ -72,9 +72,17 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		var node;
 
 		if (valueType === "float") {
-			// normalization
+			// transformation
 			node = document.createElement("div");
 			ReactDOM.render(React.createElement(normalizationDropDown), node);
+			div.appendChild(node);
+			div.appendChild(document.createElement("br"));
+		}
+
+		if (valueType === 'segmented') {
+			// transformation
+			node = document.createElement("div");
+			ReactDOM.render(React.createElement(segCNVnormalizationDropDown), node);
 			div.appendChild(node);
 			div.appendChild(document.createElement("br"));
 		}
@@ -335,6 +343,50 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					{"key": "none", "label": "none"},
 					{"key": "subset", "label": "mean subtracted per column across samples"},
 					{"key": "log2(x+1)", "label": "log2(x+1)" },
+				],
+				activeOption = _.find(options, obj => {
+					return obj.key === optionValue;
+				}),
+				title = activeOption ? activeOption.label : 'Select',
+				menuItemList = options.map(obj => {
+					var active = (obj.key === optionValue);
+					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
+						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
+				});
+			return (
+				<Row>
+					<Col xs={3} md={2} lg={2}>Transform</Col>
+					<Col xs={15} md={10} lg={5}>
+						<DropdownButton title={title} onSelect={this.handleSelect} >
+							{menuItemList}
+						</DropdownButton>
+					</Col>
+				</Row>
+			);
+		}
+	});
+
+	var segCNVnormalizationDropDown = React.createClass({
+		getInitialState () {
+			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
+				mapping = {
+					"none": "none",
+					"log2(x/2)": "log2(x/2)",
+				};
+			return {
+				optionValue: mapping[value] || "none"
+			};
+		},
+		handleSelect: function (evt, evtKey) {
+			var key = "colNormalization";
+			setVizSettings(key, evtKey);
+			this.setState({optionValue: evtKey});
+		},
+		render () {
+			let optionValue = this.state.optionValue,
+				options = [
+					{"key": "none", "label": "none"},
+					{"key": "log2(x/2)", "label": "log2(x/2.0)" },
 				],
 				activeOption = _.find(options, obj => {
 					return obj.key === optionValue;

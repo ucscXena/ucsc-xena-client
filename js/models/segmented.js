@@ -290,7 +290,5 @@ widgets.download.add('segmented', download);
 widgets.specialDownload.add('segmented', downloadOneSampleOneRow);
 
 module.exports = {
-	averageSegments,
-	segmentAverage,
 	fetch
 };
