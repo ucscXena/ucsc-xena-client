@@ -72,7 +72,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		var node;
 
 		if (valueType === "float") {
-			// transformation
+			// color center
 			node = document.createElement("div");
 			ReactDOM.render(React.createElement(normalizationDropDown), node);
 			div.appendChild(node);
@@ -80,7 +80,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 
 		if (valueType === 'segmented') {
-			// transformation
+			// color center
 			node = document.createElement("div");
 			ReactDOM.render(React.createElement(segCNVnormalizationDropDown), node);
 			div.appendChild(node);
@@ -98,6 +98,14 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		ReactDOM.render(React.createElement(scaleChoice), node);
 		div.appendChild(node);
 		div.appendChild(document.createElement("br"));
+
+		if (valueType === "float") {
+			// log
+			node = document.createElement("div");
+			ReactDOM.render(React.createElement(logDropDown), node);
+			div.appendChild(node);
+			div.appendChild(document.createElement("br"));
+		}
 	}
 
 	function sv(div) {
@@ -325,7 +333,6 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				mapping = {
 					"none": "none",
 					"subset": "subset",
-					"log2(x+1)": "log2(x+1)",
 					true: "subset"
 				};
 			return {
@@ -341,8 +348,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			let optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "none"},
-					{"key": "subset", "label": "mean subtracted per column across samples"},
-					{"key": "log2(x+1)", "label": "log2(x+1)" },
+					{"key": "subset", "label": "center column color"},
 				],
 				activeOption = _.find(options, obj => {
 					return obj.key === optionValue;
@@ -355,7 +361,51 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Transform</Col>
+					<Col xs={3} md={2} lg={2}>Center color</Col>
+					<Col xs={15} md={10} lg={5}>
+						<DropdownButton title={title} onSelect={this.handleSelect} >
+							{menuItemList}
+						</DropdownButton>
+					</Col>
+				</Row>
+			);
+		}
+	});
+
+	var logDropDown = React.createClass({
+		getInitialState () {
+			let	value = getVizSettings('log') || defaultNormalization || 'none',
+				mapping = {
+					"none": "none",
+					"log2(x+1)": "log2(x+1)"
+				};
+			return {
+				optionValue: mapping[value] || "none"
+			};
+		},
+		handleSelect: function (evt, evtKey) {
+			var key = "log";
+			setVizSettings(key, evtKey);
+			this.setState({optionValue: evtKey});
+		},
+		render () {
+			let optionValue = this.state.optionValue,
+				options = [
+					{"key": "none", "label": "none"},
+					{"key": "log2(x+1)", "label": "log2(x+1)"},
+				],
+				activeOption = _.find(options, obj => {
+					return obj.key === optionValue;
+				}),
+				title = activeOption ? activeOption.label : 'Select',
+				menuItemList = options.map(obj => {
+					var active = (obj.key === optionValue);
+					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
+						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
+				});
+			return (
+				<Row>
+					<Col xs={3} md={2} lg={2}>Log transformation</Col>
 					<Col xs={15} md={10} lg={5}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}
@@ -385,8 +435,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		render () {
 			let optionValue = this.state.optionValue,
 				options = [
-					{"key": "none", "label": "none"},
-					{"key": "log2(x/2)", "label": "log2(x/2.0)" },
+					{"key": "none", "label": "normal = 0"},
+					{"key": "log2(x/2)", "label": "normal = 2" },
 				],
 				activeOption = _.find(options, obj => {
 					return obj.key === optionValue;
@@ -399,7 +449,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Transform</Col>
+					<Col xs={3} md={2} lg={2}>Center Color</Col>
 					<Col xs={15} md={10} lg={5}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}

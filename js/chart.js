@@ -170,7 +170,7 @@ module.exports = function (root, callback, sessionStorage) {
 			});
 		}
 		// if y is multiple float, disable x single float series > 2
-		if (data[ycolumn].req.values.length > 2) {
+		if (data[ycolumn].req.values && data[ycolumn].req.values.length > 2) {
 			_.map(xdiv.options, option => {
 				var x = option.value;
 				if (x !== "none" && !data[x].codes) {

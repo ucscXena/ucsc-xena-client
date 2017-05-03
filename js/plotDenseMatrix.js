@@ -134,10 +134,10 @@ function renderFloatLegend(props) {
 		maxSubCol = dataSizeArray.indexOf(maxSize),
 		{labels, colors: legendColors} = legendForColorscale(colors[maxSubCol]),
 		footnotes = (units || []).slice(0),
-		normalizationText = "mean is subtracted per column across " + maxSize + " samples",
-		log2Text = "log2(x+1)",
 		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min'])),
-		multiScaled = colors && colors.length > 1 && !hasViz(vizSettings);
+		multiScaled = colors && colors.length > 1 && !hasViz(vizSettings),
+		logSettings = _.getIn(vizSettings, ["log"]),
+	 	inLOG = logSettings === "log2(x+1)" || (logSettings == null && defaultNormalization  === 'log2(x+1)');
 
 	if (multiScaled) {
 		labels = labels.map((label, i) => {
@@ -146,19 +146,9 @@ function renderFloatLegend(props) {
 			else {return "";}
 		});
 	}
-
-	if (vizSettings &&  vizSettings.colNormalization) {
-		if (vizSettings.colNormalization === "subset") { // substract mean per subcolumn
-			footnotes.push(normalizationText);
-		} else if (vizSettings.colNormalization === "log2(x+1)") {
-			footnotes.push(log2Text);
-		}
-	} else if (defaultNormalization === true) {
-		footnotes.push(normalizationText);
-	} else if (defaultNormalization === 'log2(x+1)') {
-		footnotes.push(log2Text);
+	if (inLOG) {
+		footnotes.push("log2(x+1) transformed");
 	}
-
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 

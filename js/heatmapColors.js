@@ -5,6 +5,7 @@
 var _ = require('underscore');
 var multi = require('./multi');
 
+
 var isNumber = _.isNumber;
 
 var white = '#ffffff',
@@ -59,11 +60,29 @@ function colorCoded(column, settings, codes, __, customColors) {
 	return ['ordinal', codes.length, customColors];
 }
 
-function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
-	var values = data,
-		[low, zero, high] = defaultColors[settings.colorClass || colorClass],
-		min = ( settings.min != null ) ? settings.min : _.minnull(values),
-		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
+
+function colorFloatGenomicData(column, settings = {}, codes, data) {
+	var vizSettings = _.getIn(column, ["vizSettings", "colNormalization"]),
+		defaultNormalization = column.defaultNormalization,
+	 	colSubtractMean = vizSettings === "subset" ||
+	 		(vizSettings == null && defaultNormalization && typeof defaultNormalization === 'boolean'),
+		colorClass = column.colorClass;
+
+	var values = data.values,
+		originalMin = _.minnull(values),
+		originalMax = _.maxnull(values),
+		transformedMax, transformedMin,
+		mean = data.mean;
+
+	if (colSubtractMean) {
+		transformedMin = originalMin - mean;
+		transformedMax = originalMax - mean;
+	}  else {
+		transformedMin = originalMin;
+		transformedMax = originalMax;
+	}
+
+	var	[low, zero, high] = defaultColors[settings.colorClass || colorClass],
 		minStart = settings.minStart,
 		maxStart = settings.maxStart,
 		spec,
@@ -71,29 +90,42 @@ function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
 		absmax,
 		zone;
 
-	if (!isNumber(max) || !isNumber(min)) {
+	if (!isNumber(originalMax) || !isNumber(originalMin)) {
 		return ['no-data'];
 	}
 
 	if ((settings.min != null) && (settings.max != null))  { //custom setting
 		if (isNaN(minStart)  || isNaN(maxStart) || (minStart === null) || (maxStart === null)) {
-			mid = (max + min) / 2.0;
-			zone = (max - min) / 4.0;
+			mid = (settings.max  + settings.min) / 2.0;
+			zone = (settings.max  - settings.min) / 4.0;
 			minStart = mid  -  zone / 2.0;
 			maxStart = mid  +  zone / 2.0;
 		}
-		spec = ['float-thresh', low, zero, high, min, minStart, maxStart, max];
-	} else if (min < 0 && max > 0) {
-		absmax = Math.max(-min, max);
+		spec = ['float-thresh', low, zero, high, settings.min, minStart, maxStart, settings.max];
+	} else if (transformedMin < 0 && transformedMax > 0) {
+		absmax = Math.max(-transformedMin, transformedMax);
 		zone = absmax / 4.0;
-		spec = ['float-thresh', low, zero, high, -absmax / 2.0, -zone / 2.0,
-			 zone / 2.0, absmax / 2.0];
-	} else	if (min >= 0 && max >= 0) {
-		zone = (max - min) / 4.0;
-		spec = ['float-thresh-pos', zero, high, min + zone, max - zone / 2.0];
+		if (colSubtractMean) {
+			spec = ['float-thresh', low, zero, high, -absmax / 2.0 + mean, -zone / 2.0 + mean,
+			zone / 2.0 + mean, absmax / 2.0 + mean];
+		} else {
+			spec = ['float-thresh', low, zero, high, -absmax / 2.0, -zone / 2.0,
+			zone / 2.0, absmax / 2.0 ];
+		}
+	} else	if (transformedMin >= 0 && transformedMax >= 0) {
+		zone = (transformedMax - transformedMin) / 4.0;
+		if (colSubtractMean) {
+			spec = ['float-thresh-pos', zero, high, transformedMin + zone + mean, transformedMax - zone / 2.0 + mean];
+		} else {
+			spec = ['float-thresh-pos', zero, high, transformedMin + zone, transformedMax - zone / 2.0];
+		}
 	} else { // min <= 0 && max <= 0
-		zone = (max - min) / 4.0;
-		spec = ['float-thresh-neg', low, zero, min + zone / 2.0, max - zone];
+		zone = (transformedMax - transformedMin) / 4.0;
+		if (colSubtractMean) {
+			spec = ['float-thresh-neg', low, zero, transformedMin + zone / 2.0 + mean, transformedMax - zone + mean];
+		} else {
+			spec = ['float-thresh-neg', low, zero, transformedMin + zone / 2.0, transformedMax - zone];
+		}
 	}
 	return spec;
 }
