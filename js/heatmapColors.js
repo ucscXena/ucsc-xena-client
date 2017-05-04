@@ -5,7 +5,6 @@
 var _ = require('underscore');
 var multi = require('./multi');
 
-
 var isNumber = _.isNumber;
 
 var white = '#ffffff',
@@ -23,6 +22,10 @@ var defaultColors = {
 };
 
 var defaultColorClass = 'default';
+
+function shouldNormal2color (vizSettings, defaultNormalization) {
+	return "log2(x/2)" === (vizSettings || defaultNormalization);
+}
 
 function colorRangeType(column) {
 	return column.valueType === 'coded' ? 'coded' :
@@ -151,15 +154,15 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 var prec2 = x => parseFloat(x.toPrecision(2));
 
 function colorSegmented(column, settings = {}, codes, data) {
-	var log2 = _.getIn(column, ["vizSettings", "colNormalization"]) || column.defaultNormalization,
-		values = data,
+	var values = data,
 		[low, , high] = defaultColors[settings.colorClass || column.colorClass],
 		minVal = _.minnull(values),
 		maxVal = _.maxnull(values),
 		{origin, thresh, max} = settings || {},
 		spec,
 		absmax,
-		zone;
+		zone,
+		normal2 = shouldNormal2color(_.getIn(column, ["vizSettings", "colNormalization"]), column.defaultNormalization);
 
 	if (!isNumber(maxVal) || !isNumber(minVal)) {
 		return ['no-data'];
@@ -170,9 +173,9 @@ function colorSegmented(column, settings = {}, codes, data) {
 	} else {
 		absmax = Math.max(-minVal, maxVal);
 		zone = absmax / 4.0;
-		if (log2 === "log2(x/2)") {  // auto coloring for vizSettings = log2(x/2)
+		if (normal2) {  // auto coloring for vizSettings = log2(x/2)
 			spec = ['trend-amplitude', low, white, high,
-				 2, 0, 6];
+				 2, 0, 4];
 		} else { // vizSettings = none
 			spec = ['trend-amplitude', low, white, high,
 				 0, prec2(zone / 2.0), prec2(absmax / 2.0)];
@@ -189,5 +192,6 @@ colorRange.add('segmented', colorSegmented);
 module.exports =  {
 	colorSpec: colorRange,
 	defaultColors,
-	defaultColorClass
+	defaultColorClass,
+	shouldNormal2color
 };

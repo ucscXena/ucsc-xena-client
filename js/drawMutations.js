@@ -1,6 +1,7 @@
 'use strict';
 
 var _ = require('./underscore_ext');
+var {contrastColor, lightgreyHEX} = require('./color_helper');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -56,7 +57,7 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 	// --------- separate variants to SV(with feet "[" , "]" or size >50bp) vs others (small) ---------
 	var {height, count} = zoom,
 		vHeight = minVariantHeight(height / count),
-		minWidth = 3;
+		minWidth = 2;
 
 	// --------- small variants drawing start here ---------
 	var varByImp = _.groupByConsec(smallVariants, v => v.color);
@@ -89,11 +90,11 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 					label = data.aminoAcid || data.alt,
 					textWidth = vg.textWidth(labelFont, label);
 
-				if ((xEnd - xStart) >= minTxtWidth / 3 * label.length) {
+				if ((xEnd - xStart) >= minTxtWidth / 5 * label.length) {
 					vg.textCenteredPushRight( xStart + labelMargin, y - h / 2, xEnd - xStart - labelMargin,
-							h, 'white', labelFont, label);
+							h, contrastColor(vars[0].color), labelFont, label);
 				} else {
-					vg.textCenteredPushRight( xEnd + 2 * labelMargin, y - h / 2, textWidth, h, 'black', labelFont, label);
+					vg.textCenteredPushRight( xStart, y - h / 2, textWidth, h, lightgreyHEX, labelFont, label);
 				}
 			});
 		}

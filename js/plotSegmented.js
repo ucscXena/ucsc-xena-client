@@ -10,6 +10,7 @@ var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
 var {drawSegmentedTrendAmp, toYPx} = require('./drawSegmented');
 var {chromPositionFromScreen} = require('./exonLayout');
+//var {shouldNormal2color} = require('./heatmapColors');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -40,38 +41,27 @@ var m = (opts, [type, ...args], deflt) => (opts[type] || opts[deflt])(type, ...a
 // passed in. The caller should provide labels/colors in the 'legend' prop
 // if there are multiple scales.
 function renderFloatLegend(props) {
-	var {units, color, vizSettings, defaultNormalization, data} = props;
+	var {units, color /*, vizSettings, defaultNormalization*/} = props,
+		{labels, colors: legendColors} = m(legendProps, color, 'no-data'),
+		footnotes = ['unit: ' + (units || [])[0]]; // copy to avoid modification, below
+		//normal2 = shouldNormal2color (vizSettings, defaultNormalization);
 
-	var {labels, colors: legendColors} = m(legendProps, color, 'no-data'),
-		footnotes = ['unit: ' + (units || [])[0]], // copy to avoid modification, below
-		samples = _.getIn(data, ['req', 'samplesInResp']),
-		nSamples = samples ? samples.length : '',
-		normalizationText = "mean is subtracted per column across " + nSamples + " samples";
-//		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min']));
-
-	if (vizSettings &&  vizSettings.colNormalization) {
-		if (vizSettings.colNormalization === "subset") { // substract mean per subcolumn
-			footnotes.push(normalizationText);
-		}
-	} else if (defaultNormalization) {
-		footnotes.push(normalizationText);
+	/*
+	if (normal2) {
+		labels[0] = '0';  //0,2,2,6
 	}
-
+	*/
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 
 function drawLegend(props) {
-	var {column, data} = props,
-		{units, color, legend, valueType, vizSettings, defaultNormalization} = column,
+	var {column} = props,
+		{units, color, vizSettings, defaultNormalization} = column,
 		legendProps = {
 			units,
 			color,
-			legend,
 			vizSettings,
-			defaultNormalization,
-			data: data,
-			coded: valueType === 'coded',
-			codes: _.get(data, 'codes'),
+			defaultNormalization
 		};
 	return renderFloatLegend(legendProps);
 }
