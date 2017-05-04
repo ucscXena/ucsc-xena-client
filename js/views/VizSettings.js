@@ -341,7 +341,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "none"},
-					{"key": "subset", "label": "neural color = column mean"},
+					{"key": "subset", "label": "balanced: x - average"},
 				];
 			if (dataMin > -1 && !(_.any(units, unit=> unit && unit.search(/log/i) !== -1))) {
 				options.push({"key": "log2(x+1)", "label": "log scale coloring: log2(x+1)"});
@@ -416,8 +416,9 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 	var colorDropDown = React.createClass({
 		getInitialState () {
+			let	value = getVizSettings('colorClass') || 'default';
 			return {
-				optionValue: 'default'
+				optionValue: value
 			};
 		},
 		handleSelect: function (evt, evtKey) {
