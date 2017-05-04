@@ -81,22 +81,6 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		ReactDOM.render(React.createElement(scaleChoice), node);
 		div.appendChild(node);
 		div.appendChild(document.createElement("br"));
-
-		if (valueType === "float" && fieldType !== 'clinical') {
-			// color center
-			node = document.createElement("div");
-			ReactDOM.render(React.createElement(normalizationDropDown), node);
-			div.appendChild(node);
-			div.appendChild(document.createElement("br"));
-		}
-
-		if (valueType === 'segmented') {
-			// color center
-			node = document.createElement("div");
-			ReactDOM.render(React.createElement(segCNVnormalizationDropDown), node);
-			div.appendChild(node);
-			div.appendChild(document.createElement("br"));
-		}
 	}
 
 	function sv(div) {
@@ -290,21 +274,34 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					return active ? (<Button bsStyle="primary" onClick={func} active>{mode}</Button>) :
 						(<Button onClick={func}>{mode}</Button>);
 				}),
-				picture = autoMode ? /*(<image src={floatImg} responsive/>)*/ null :
-					(<image src={customFloatImg} responsive/>),
-				enterInput = autoMode ? null : this.buildCustomColorScale();
+				picture = autoMode ? null : (<image src={customFloatImg} responsive/>),
+				enterInput = autoMode ? null : this.buildCustomColorScale(),
+				autocolorTransformation = (valueType === "float" && fieldType !== 'clinical') ?
+					React.createElement(normalizationDropDown) :
+					(valueType === 'segmented' ? React.createElement(segCNVnormalizationDropDown) : null),
+				notransformation = (
+				    <Row>
+						<Col xs={3} md={2} lg={2}>Color transformation</Col>
+						<Col xs={15} md={10} lg={5}>no transformation</Col>
+					</Row>
+				),
+				colorTransformation = autoMode ? autocolorTransformation : notransformation;
 
 			return (
-				<Row>
-					<Col xs={3} md={2} lg={2}>Mode</Col>
-					<Col xs={15} md={10} lg={10}>
-						<ButtonGroup>{buttons}</ButtonGroup>
-						<div>
-							{valueType === 'float' ? picture : null}
-							{enterInput}
-						</div>
-					</Col>
-				</Row>
+				<div>
+					<Row>
+						<Col xs={3} md={2} lg={2}>Mode</Col>
+						<Col xs={15} md={10} lg={10}>
+							<ButtonGroup>{buttons}</ButtonGroup>
+							<div>
+								{picture}
+								{enterInput}
+							</div>
+						</Col>
+					</Row>
+					<br/>
+					{colorTransformation}
+				</div>
 			);
 		}
 	});
@@ -317,6 +314,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		return _.getIn(state, [key]);
 	}
 
+	//color transformation for dense genomics matrix floats
 	var normalizationDropDown = React.createClass({
 		getInitialState () {
 			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
@@ -358,7 +356,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color transformation (Auto)</Col>
+					<Col xs={3} md={2} lg={2}>Color transformation</Col>
 					<Col xs={15} md={10} lg={5}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}
@@ -369,6 +367,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 	});
 
+	//color transformation for segmented cnv
 	var segCNVnormalizationDropDown = React.createClass({
 		getInitialState () {
 			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
@@ -413,6 +412,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 	});
 
+	//color palette dense matrix floats and segmented CNV
 	var colorDropDown = React.createClass({
 		getInitialState () {
 			let	value = getVizSettings('colorClass') || 'default';
@@ -462,17 +462,12 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 	});
 
+	//color palette for SV
 	var svColorDropDown = React.createClass({
 		getInitialState () {
-			let	value = getVizSettings('svColor') || 'none',
-				mapping = {
-					"none": "none",
-					"chromosomeGB": "chromosomeGB",
-					"chromosomePCAWG": "chromosomePCAWG",
-					true: "none"
-				};
+			let	value = getVizSettings('svColor') || 'default';
 			return {
-				optionValue: mapping[value] || "none"
+				optionValue: value
 			};
 		},
 		handleSelect: function (evt, evtKey) {
@@ -482,17 +477,18 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		},
 		render () {
 			let optionValue = this.state.optionValue,
-				options = [
-					{"key": "none", "label": "grey"},
-					{"key": "chromosomeGB", "label": "by chromosome (Genome Browser)"},
-					{"key": "chromosomePCAWG", "label": "by chromosome (PCAWG)"},
-
-				],
-				activeOption = _.find(options, obj => {
+				options = {
+					SV: [
+						{"key": "default", "label": "grey"},
+						{"key": "chromosomeGB", "label": "by chromosome (Genome Browser)"},
+						{"key": "chromosomePCAWG", "label": "by chromosome (PCAWG)"},
+					]
+				},
+				activeOption = _.find(options[fieldType], obj => {
 					return obj.key === optionValue;
 				}),
 				title = activeOption ? activeOption.label : 'Select',
-				menuItemList = options.map(obj => {
+				menuItemList = options[fieldType].map(obj => {
 					var active = (obj.key === optionValue);
 					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
 						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
@@ -509,6 +505,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			);
 		}
 	});
+
 	var oldSettings = state,
 		currentSettings = {state: state},
 		colorParams = {
