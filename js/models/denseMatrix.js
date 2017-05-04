@@ -20,6 +20,7 @@ function saveMissing(fn) {
 	};
 }
 
+/*
 // Decide whether to normalize, perfering the user setting to the
 // dataset default setting.
 function shouldNormalize(vizSettings, defaultNormalization) {
@@ -27,33 +28,21 @@ function shouldNormalize(vizSettings, defaultNormalization) {
 	return user === 'subset' || (user == null && defaultNormalization === true);
 }
 
-// Decide whether to log2(x+1), perfering the user setting to the
-// dataset default setting.
-function shouldLog(vizSettings, defaultNormalization) {
-	var user = _.getIn(vizSettings, ['log']);
-	return user === 'log2(x+1)' || (user == null && defaultNormalization === "log2(x+1)");
-}
-
-/*
 function subbykey(subtrahend, key, val) {
 	return val - subtrahend[key];
 }
 */
-function logxplus1transform(dummy, val) {
-	return Math.log2(val + 1);
-}
 
 // Returns 2d array of numbers, probes X samples.
 // [[number, ...], [number, ...]]
 // Performs sorting and normalization.
-function computeHeatmap(vizSettings, data, fields, samples, defaultNormalization) {
+function computeHeatmap(vizSettings, data, fields, samples) {
 	if (!data) {
 		return [];
 	}
 	var {probes, values} = data,
-		colLog2 = shouldLog(vizSettings, defaultNormalization),
-		transform = (colLog2 && _.partial(logxplus1transform)) || second;
-		//transform =  (colLog2 && _.partial(logxplus1transform)) || (colnormalization && mean && _.partial(subbykey, mean)) || second;
+		transform = second;
+		//transform = (colnormalization && mean && _.partial(subbykey, mean)) || second;
 
 	return map(probes || fields, function (p, i) {
 		var suTrans = saveMissing(v => transform(i, v));
@@ -87,7 +76,7 @@ function dataToHeatmap(column, vizSettings, data, samples, datasets) {
 	}
 	var {req, codes = {}} = data,
 		fields = _.get(req, 'probes', column.fields),
-		heatmap = computeHeatmap(vizSettings, req, fields, samples, column.defaultNormalization),
+		heatmap = computeHeatmap(vizSettings, req, fields, samples),
 		customColors = colorCodeMap(codes, getCustomColor(column.fieldSpecs, fields, datasets)),
 		assembly = getAssembly(column.fieldSpecs, fields, datasets),
 		colors = map(fields, (p, i) =>
@@ -247,6 +236,4 @@ module.exports = {
 	fetchGeneProbes,
 	fetchGene,
 	fetchFeature,
-	shouldNormalize,
-	shouldLog
 };

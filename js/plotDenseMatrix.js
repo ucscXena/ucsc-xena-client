@@ -114,7 +114,10 @@ function legendForColorscale(colorSpec) {
 		'float-neg': _.identity,
 		'float-thresh': ([nl, nh, pl, ph]) => [nl, nh, pl, ph],
 		'float-thresh-pos': ([low, high]) => [low, high],
-		'float-thresh-neg': ([low, high]) => [low, high]
+		'float-thresh-neg': ([low, high]) => [low, high],
+		'float-thresh-log-pos': ([low, high]) => [low, high],
+		'float-thresh-log-neg': ([low, high]) => [low, high],
+		'float-log': ([low, high]) => [low, high],
 	});
 
 	return {colors, labels};
@@ -124,7 +127,7 @@ function legendForColorscale(colorSpec) {
 // passed in. The caller should provide labels/colors in the 'legend' prop
 // if there are multiple scales.
 function renderFloatLegend(props) {
-	var {units, colors, vizSettings, defaultNormalization, data} = props;
+	var {units, colors, vizSettings, data} = props;
 
 	if (_.isEmpty(data)) {
 		return <Legend colors={[]} labels={''} footnotes={[]}/>;;
@@ -133,11 +136,9 @@ function renderFloatLegend(props) {
 		maxSize = _.max(dataSizeArray),
 		maxSubCol = dataSizeArray.indexOf(maxSize),
 		{labels, colors: legendColors} = legendForColorscale(colors[maxSubCol]),
-		footnotes = (units || []).slice(0),
+		footnotes = ['unit: ' + (units || [])[0]],
 		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min'])),
-		multiScaled = colors && colors.length > 1 && !hasViz(vizSettings),
-		logSettings = _.getIn(vizSettings, ["log"]),
-	 	inLOG = logSettings === "log2(x+1)" || (logSettings == null && defaultNormalization  === 'log2(x+1)');
+		multiScaled = colors && colors.length > 1 && !hasViz(vizSettings);
 
 	if (multiScaled) {
 		labels = labels.map((label, i) => {
@@ -146,9 +147,7 @@ function renderFloatLegend(props) {
 			else {return "";}
 		});
 	}
-	if (inLOG) {
-		footnotes.push("log2(x+1) transformed");
-	}
+
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 

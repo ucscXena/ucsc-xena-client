@@ -33,7 +33,7 @@ function colorRangeType(column) {
 var colorRange = multi(colorRangeType);
 
 function colorFloat({colorClass}, settings = {}, codes, data) {
-	var values = data,
+	var values = data.values,
 		[low, zero, high] = defaultColors[settings.colorClass || colorClass],
 		min = ( settings.min != null ) ? settings.min : _.minnull(values),
 		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
@@ -66,6 +66,8 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		defaultNormalization = column.defaultNormalization,
 	 	colSubtractMean = vizSettings === "subset" ||
 	 		(vizSettings == null && defaultNormalization && typeof defaultNormalization === 'boolean'),
+		colLog = vizSettings === "log2(x+1)" ||
+			(vizSettings == null && defaultNormalization && defaultNormalization === 'log2(x+1)'),
 		colorClass = column.colorClass;
 
 	var values = data.values,
@@ -77,10 +79,20 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 	if (colSubtractMean) {
 		transformedMin = originalMin - mean;
 		transformedMax = originalMax - mean;
-	}  else {
+	}  else if (colLog) {
+		// double check log scale can work
+		if (originalMin <= -1) {
+			console.log('data should not have values <=-1');
+		} else {
+			transformedMin = Math.log2(originalMin + 1);
+			transformedMax = Math.log2(originalMax + 1);
+		}
+	}	else {
 		transformedMin = originalMin;
 		transformedMax = originalMax;
 	}
+
+
 
 	var	[low, zero, high] = defaultColors[settings.colorClass || colorClass],
 		minStart = settings.minStart,
@@ -108,6 +120,8 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		if (colSubtractMean) {
 			spec = ['float-thresh', low, zero, high, -absmax / 2.0 + mean, -zone / 2.0 + mean,
 			zone / 2.0 + mean, absmax / 2.0 + mean];
+		} else if (colLog) {
+			spec = ['float-log', low, high, -absmax / 2.0, absmax / 2.0 ]; // no threshold
 		} else {
 			spec = ['float-thresh', low, zero, high, -absmax / 2.0, -zone / 2.0,
 			zone / 2.0, absmax / 2.0 ];
@@ -116,6 +130,8 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		zone = (transformedMax - transformedMin) / 4.0;
 		if (colSubtractMean) {
 			spec = ['float-thresh-pos', zero, high, transformedMin + zone + mean, transformedMax - zone / 2.0 + mean];
+		} else if (colLog) {
+			spec = ['float-thresh-log-pos', zero, high, Math.pow(2, transformedMin + zone) - 1.0, Math.pow(2, (transformedMax - zone / 2.0)) - 1.0];
 		} else {
 			spec = ['float-thresh-pos', zero, high, transformedMin + zone, transformedMax - zone / 2.0];
 		}
@@ -123,6 +139,8 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		zone = (transformedMax - transformedMin) / 4.0;
 		if (colSubtractMean) {
 			spec = ['float-thresh-neg', low, zero, transformedMin + zone / 2.0 + mean, transformedMax - zone + mean];
+		} else if (colLog) {
+			spec = ['float-thresh-log-neg', low, zero, Math.pow(2, transformedMin + zone / 2.0) - 1.0, Math.pow(2, transformedMax - zone) - 1.0];
 		} else {
 			spec = ['float-thresh-neg', low, zero, transformedMin + zone / 2.0, transformedMax - zone];
 		}

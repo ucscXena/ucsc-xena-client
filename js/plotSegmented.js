@@ -43,7 +43,7 @@ function renderFloatLegend(props) {
 	var {units, color, vizSettings, defaultNormalization, data} = props;
 
 	var {labels, colors: legendColors} = m(legendProps, color, 'no-data'),
-		footnotes = (units || []).slice(0), // copy to avoid modification, below
+		footnotes = ['unit: ' + (units || [])[0]], // copy to avoid modification, below
 		samples = _.getIn(data, ['req', 'samplesInResp']),
 		nSamples = samples ? samples.length : '',
 		normalizationText = "mean is subtracted per column across " + nSamples + " samples";

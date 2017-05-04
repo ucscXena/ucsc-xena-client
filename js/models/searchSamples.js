@@ -3,7 +3,7 @@
 var _ = require('../underscore_ext');
 var _s = require('underscore.string');
 var {parse} = require('./searchParser');
-var {shouldNormalize, shouldLog} = require('./denseMatrix');
+//var {shouldNormalize, shouldLog} = require('./denseMatrix');
 
 var includes = (target, str) => {
 	return str.toLowerCase().indexOf(target.toLowerCase()) !== -1;
@@ -132,10 +132,12 @@ var m = (methods, exp, defaultMethod) => {
 	return method ? method(...args) : defaultMethod(exp);
 };
 
+/*
 var addMeanOrNull = (s, m) => s === 'null' ? 'null' : ('' + (parseFloat(s) + m));
 
 // power(2,x) -1
 var power2XplusOneOrNull = (s) => s === 'null' ? 'null' : ('' + (Math.pow(2, parseFloat(s)) - 1.0));
+*/
 
 // If searching a mean-normalized column, move the search bounds to reflect
 // the normalization. The conversion to float and back is ugly. Otherwise, we'd
@@ -143,10 +145,11 @@ var power2XplusOneOrNull = (s) => s === 'null' ? 'null' : ('' + (Math.pow(2, par
 //
 // The mean[0] is because we only handle single-probe columns.
 var normalizeSearch = _.curry(({vizSettings, defaultNormalization}, method) =>
-	shouldNormalize(vizSettings, defaultNormalization) ?
+	method
+	/*shouldNormalize(vizSettings, defaultNormalization) ?
 		(ctx, search, data) => method(ctx, addMeanOrNull(search, data.req.mean[0]), data) :
 			(shouldLog(vizSettings, defaultNormalization) ?
-				(ctx, search, data) => method(ctx, power2XplusOneOrNull(search), data) : method)
+				(ctx, search, data) => method(ctx, power2XplusOneOrNull(search), data) : method)*/
 	);
 
 function searchAll(ctx, methods, search) {
@@ -253,12 +256,12 @@ function remapFields(oldOrder, order, exp) {
 /*
 var columnShouldNormalize = ({vizSettings, defaultNormalization}) =>
 	shouldNormalize(vizSettings, defaultNormalization);
-*/
 
 var columnShouldLogXPlusOne = ({vizSettings, defaultNormalization}) =>
 	shouldLog(vizSettings, defaultNormalization);
 
 var fieldId = (order, colId) => createFieldIds(order.length)[order.indexOf(colId)];
+*/
 
 var rewriteFieldExpression = (norm, mean, exp) =>
 	m({
@@ -290,6 +293,8 @@ var changeFieldLog = _.curry((id, log, tree) =>
 // If transformation has change, rewrite the search expression so the matching
 // range remains the same.
 function checkFieldExpression(oldColumn, newColumn, id, order, data, exp) {
+	return exp;
+	/*
 	var oldLog = columnShouldLogXPlusOne(oldColumn),
 		newLog = columnShouldLogXPlusOne(newColumn);
 
@@ -298,6 +303,7 @@ function checkFieldExpression(oldColumn, newColumn, id, order, data, exp) {
 	} else if (oldLog !== newLog) { // log(x+1) <-> none
 		return treeToString(changeFieldLog(fieldId(order, id), newLog, parse(_s.trim(exp))));
 	}
+	*/
 }
 
 module.exports = {
