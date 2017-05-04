@@ -85,15 +85,16 @@ function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, po
 // Legends
 //
 
-function categoryLegend(dataIn, colorScale, codes) {
+function categoryLegend(dataIn, colorScale, codes, isSamplesColumn) {
 	if (!colorScale) {
-		return {colors: [], labels: [], align: 'left'};
+		return {colors: [], labels: []};
 	}
 	// only finds categories for the current data in the column
 	var data = _.reject(_.uniq(dataIn), x => x == null).sort((v1, v2) =>  v1 - v2),
 		colors = _.map(data, colorScale),
 		labels = _.map(data, d => codes[d]);
-	return {colors: colors, labels: labels, align: 'left'};
+
+	return {colors: colors, labels: labels, isSamplesColumn: isSamplesColumn};
 }
 
 // Color scale cases
@@ -154,7 +155,7 @@ function renderFloatLegend(props) {
 // Might have colorScale but no data (phenotype), no data & no colorScale,
 // or data & colorScale, no colorScale &  data?
 function renderCodedLegend(props) {
-	var {data: [data] = [], codes, colors = []} = props;
+	var {data: [data] = [], codes, colors = [], isSamplesColumn} = props;
 	var legendProps;
 	var colorfn = _.first(colorFns(colors.slice(0, 1)));
 
@@ -163,7 +164,7 @@ function renderCodedLegend(props) {
 	// values in the db (even those not in the plot) so that colors will
 	// match in other datasets.
 	if (data && colorfn) { // category
-		legendProps = categoryLegend(data, colorfn, codes);
+		legendProps = categoryLegend(data, colorfn, codes, isSamplesColumn);
 	} else {
 		return <span />;
 	}
@@ -175,11 +176,11 @@ var HeatmapLegend = hotOrNot(React.createClass({
 	mixins: [deepPureRenderMixin],
 	render: function() {
 		var {column, data} = this.props,
-			{units, heatmap, colors, legend, valueType, vizSettings, defaultNormalization} = column,
+			{units, heatmap, colors, fieldLabel, valueType, vizSettings, defaultNormalization} = column,
 			props = {
 				units,
 				colors,
-				legend,
+				isSamplesColumn: fieldLabel === "samples",
 				vizSettings,
 				defaultNormalization,
 				data: heatmap,

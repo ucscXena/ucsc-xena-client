@@ -12,7 +12,7 @@ var nodata = [["null (no data)", "#808080"]];
 var Legend = React.createClass({
 	getDefaultProps: () => ({ max: 40 }),
 	render: function () {
-		var {labels, colors, max, footnotes} = this.props,
+		var {labels, colors, max, footnotes, isSamplesColumn} = this.props,
 			ellipsis = labels.length > max,
 			items = _.map(nodata.concat(_.last(_.zip(labels, colors), max)), ([l, c], i) =>
 						  <label className='Legend-label'
@@ -29,20 +29,25 @@ var Legend = React.createClass({
 					{text}
 					<br/>
 				</span>) : null;
+
+		if (isSamplesColumn) {
+			items = items.slice(0, 5);
+		}
+
 		return (
 			<div>
-				<Row>
-					<Col md={10} mdOffset={1}>
-						{items}
-					</Col>
-				</Row>
+				{items ?
+					<Row>
+						<Col md={10} mdOffset={1}>
+							{items}
+						</Col>
+					</Row> : null}
 				{ellipsis ?
 					<Row>
 						<Col md={10} mdOffset={1}>
 							More values ...
 						</Col>
 					</Row> : null}
-				<br/>
 				{footnotes ?
 					<Row>
 						<Col md={10} mdOffset={1}>
