@@ -341,10 +341,10 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "none"},
-					{"key": "subset", "label": "balanced: x - average"},
+					{"key": "subset", "label": "x - column average"},
 				];
 			if (dataMin > -1 && !(_.any(units, unit=> unit && unit.search(/log/i) !== -1))) {
-				options.push({"key": "log2(x+1)", "label": "log scale coloring: log2(x+1)"});
+				options.push({"key": "log2(x+1)", "label": "log scale : log2(x+1)"});
 			}
 
 
