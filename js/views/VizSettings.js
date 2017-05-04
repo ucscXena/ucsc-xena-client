@@ -235,7 +235,6 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		},
 		autoClick () {
 			this.setState({mode: "Auto"});
-			this.setState({settings: this.defaults[valueType]});
 			this.setState({errors: {}});
 			onVizSettings(id, _.omit(currentSettings.state, colorParams[valueType]));
 		},
