@@ -57,6 +57,24 @@ var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
 		.domain(_.map([min, minThresh, maxThresh, max], x => x.toPrecision(2)))
 		.range([low, zero, zero, high]);
 
+var scaleFloatThresholdLogNegative = (low, zero, min, thresh) =>
+	d3.scaleLog()
+		.domain(_.map([min, thresh], x => x.toPrecision(2)))
+		.range([low, zero])
+		.base(2);
+
+var scaleFloatThresholdLogPositive = (zero, high, thresh, max) =>
+	d3.scaleLog()
+		.domain(_.map([thresh, max], x => x.toPrecision(2)))
+		.range([zero, high])
+		.base(2);
+
+var scaleFloatLog = (low, high, min, max) =>
+	d3.scaleLog()
+		.domain(_.map([min, max], x => x.toPrecision(2)))
+		.range([low, high])
+		.base(2);
+
 var ordinal = (count, custom) => d3.scaleOrdinal().range(custom || categoryMore).domain(_.range(count));
 
 function scaleFloatDouble(low, zero, high, min, max) {
@@ -106,6 +124,9 @@ var colorScale = {
 	'float-thresh-pos': (__, ...args) => scaleFloatThresholdPositive(...args),
 	'float-thresh-neg': (__, ...args) => scaleFloatThresholdNegative(...args),
 	'float-thresh': (__, ...args) => scaleFloatThreshold(...args),
+	'float-thresh-log-pos': (__, ...args) => scaleFloatThresholdLogPositive(...args),
+	'float-thresh-log-neg': (__, ...args) => scaleFloatThresholdLogNegative(...args),
+	'float-log': (__, ...args) => scaleFloatLog(...args),
 	'trend-amplitude': (__, ...args) => scaleTrendAmplitude(...args),
 	'ordinal': (__, ...args) => ordinal(...args)
 };

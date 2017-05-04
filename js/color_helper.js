@@ -33,6 +33,7 @@ function RGBToHex(r, g, b) {
 var colorStr = c => 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toString() + ')';
 
 var greyHEX = "#808080";
+var lightgreyHEX = "#dcdcdc";
 
 function rgb(color) {
     if (_.isArray(color)) {
@@ -116,6 +117,7 @@ module.exports = {
     RGBToHex,
     colorStr,
     greyHEX,
+    lightgreyHEX,
     contrastColor,
     rgb,
     HSVtoRGB,

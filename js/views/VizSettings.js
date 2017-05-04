@@ -34,7 +34,7 @@
 
 'use strict';
 var _ = require('../underscore_ext');
-var floatImg = require('../../images/genomicFloatLegend.jpg');
+//var floatImg = require('../../images/genomicFloatLegend.jpg');
 var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var ReactDOM = require('react-dom');
@@ -43,7 +43,7 @@ var Input = require('react-bootstrap/lib/Input');
 var image = require('react-bootstrap/lib/Image');
 
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
-	defaultColorClass, valueType, fieldType) {
+	defaultColorClass, valueType, fieldType, data, units) {
 	var state = vizState;
 	function datasetSetting() {
 		var node, div = document.createElement("div");
@@ -51,28 +51,39 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			node = document.createElement("div");
 			allFloat(node);
 			div.appendChild(node);
-
-			node = document.createElement("span");
-			ReactDOM.render(React.createElement(finishButtonBar), node);
-			div.appendChild(node);
 		}
 		else if (valueType === "mutation" && fieldType === 'SV') {
 			node = document.createElement("div");
 			sv(node);
 			div.appendChild(node);
-
-			node = document.createElement("span");
-			ReactDOM.render(React.createElement(finishButtonBar), node);
-			div.appendChild(node);
+		} else {
+			div.appendChild(document.createTextNode("No setting adjustments available."));
+			div.appendChild(document.createElement("br"));
+			div.appendChild(document.createElement("br"));
 		}
+		node = document.createElement("span");
+		ReactDOM.render(React.createElement(finishButtonBar), node);
+		div.appendChild(node);
 		return div;
 	}
 
 	function allFloat(div) {
 		var node;
 
-		if (valueType === "float") {
-			// transformation
+		// color palette : green red or blue red
+		node = document.createElement("div");
+		ReactDOM.render(React.createElement(colorDropDown), node);
+		div.appendChild(node);
+		div.appendChild(document.createElement("br"));
+
+		// color mode
+		node = document.createElement("div");
+		ReactDOM.render(React.createElement(scaleChoice), node);
+		div.appendChild(node);
+		div.appendChild(document.createElement("br"));
+
+		if (valueType === "float" && fieldType !== 'clinical') {
+			// color center
 			node = document.createElement("div");
 			ReactDOM.render(React.createElement(normalizationDropDown), node);
 			div.appendChild(node);
@@ -80,24 +91,12 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 
 		if (valueType === 'segmented') {
-			// transformation
+			// color center
 			node = document.createElement("div");
 			ReactDOM.render(React.createElement(segCNVnormalizationDropDown), node);
 			div.appendChild(node);
 			div.appendChild(document.createElement("br"));
 		}
-
-		// color choice : green red or blue red
-		node = document.createElement("div");
-		ReactDOM.render(React.createElement(colorDropDown), node);
-		div.appendChild(node);
-		div.appendChild(document.createElement("br"));
-
-		// color scale
-		node = document.createElement("div");
-		ReactDOM.render(React.createElement(scaleChoice), node);
-		div.appendChild(node);
-		div.appendChild(document.createElement("br"));
 	}
 
 	function sv(div) {
@@ -292,13 +291,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					return active ? (<Button bsStyle="primary" onClick={func} active>{mode}</Button>) :
 						(<Button onClick={func}>{mode}</Button>);
 				}),
-				picture = autoMode ? (<image src={floatImg} responsive/>) :
+				picture = autoMode ? /*(<image src={floatImg} responsive/>)*/ null :
 					(<image src={customFloatImg} responsive/>),
 				enterInput = autoMode ? null : this.buildCustomColorScale();
 
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Scale</Col>
+					<Col xs={3} md={2} lg={2}>Mode</Col>
 					<Col xs={15} md={10} lg={10}>
 						<ButtonGroup>{buttons}</ButtonGroup>
 						<div>
@@ -338,13 +337,18 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			this.setState({optionValue: evtKey});
 		},
 		render () {
-			let optionValue = this.state.optionValue,
+			let dataMin = _.minnull(_.map(data.req.values, values=>_.minnull(values))),
+				optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "none"},
-					{"key": "subset", "label": "mean subtracted per column across samples"},
-					{"key": "log2(x+1)", "label": "log2(x+1)" },
-				],
-				activeOption = _.find(options, obj => {
+					{"key": "subset", "label": "neural color = column mean"},
+				];
+			if (dataMin > -1 && !(_.any(units, unit=> unit && unit.search(/log/i) !== -1))) {
+				options.push({"key": "log2(x+1)", "label": "log scale coloring: log2(x+1)"});
+			}
+
+
+			var	activeOption = _.find(options, obj => {
 					return obj.key === optionValue;
 				}),
 				title = activeOption ? activeOption.label : 'Select',
@@ -355,7 +359,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Transform</Col>
+					<Col xs={3} md={2} lg={2}>Color transformation (Auto)</Col>
 					<Col xs={15} md={10} lg={5}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}
@@ -385,8 +389,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		render () {
 			let optionValue = this.state.optionValue,
 				options = [
-					{"key": "none", "label": "none"},
-					{"key": "log2(x/2)", "label": "log2(x/2.0)" },
+					{"key": "none", "label": "normal = 0"},
+					{"key": "log2(x/2)", "label": "normal = 2" },
 				],
 				activeOption = _.find(options, obj => {
 					return obj.key === optionValue;
@@ -399,7 +403,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Transform</Col>
+					<Col xs={3} md={2} lg={2}>Color transformation</Col>
 					<Col xs={15} md={10} lg={5}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}
@@ -447,7 +451,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color</Col>
+					<Col xs={3} md={2} lg={2}>Color palette</Col>
 					<Col xs={15} md={10} lg={5}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}
@@ -495,7 +499,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color</Col>
+					<Col xs={3} md={2} lg={2}>Color palette</Col>
 					<Col xs={15} md={10} lg={5}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}
@@ -523,8 +527,8 @@ var SettingsWrapper = React.createClass({
 		this.currentSettings.state = newProps.vizSettings;
 	},
 	componentDidMount: function () {
-		var {refs: {content}, props: {onVizSettings, vizSettings, id, defaultNormalization, colorClass, valueType, fieldType, onRequestHide}} = this;
-		this.currentSettings = vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType, fieldType);
+		var {refs: {content}, props: {data, units, onVizSettings, vizSettings, id, defaultNormalization, colorClass, valueType, fieldType, onRequestHide}} = this;
+		this.currentSettings = vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType, fieldType, data, units);
 	},
 	render: function () {
 		return <div ref='content' />;

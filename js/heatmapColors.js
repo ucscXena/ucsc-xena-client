@@ -23,6 +23,10 @@ var defaultColors = {
 
 var defaultColorClass = 'default';
 
+function shouldNormal2color (vizSettings, defaultNormalization) {
+	return "log2(x/2)" === (vizSettings || defaultNormalization);
+}
+
 function colorRangeType(column) {
 	return column.valueType === 'coded' ? 'coded' :
 		(column.fieldType === 'clinical' ? 'float' :
@@ -32,7 +36,7 @@ function colorRangeType(column) {
 var colorRange = multi(colorRangeType);
 
 function colorFloat({colorClass}, settings = {}, codes, data) {
-	var values = data,
+	var values = data.values,
 		[low, zero, high] = defaultColors[settings.colorClass || colorClass],
 		min = ( settings.min != null ) ? settings.min : _.minnull(values),
 		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
@@ -59,11 +63,41 @@ function colorCoded(column, settings, codes, __, customColors) {
 	return ['ordinal', codes.length, customColors];
 }
 
-function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
-	var values = data,
-		[low, zero, high] = defaultColors[settings.colorClass || colorClass],
-		min = ( settings.min != null ) ? settings.min : _.minnull(values),
-		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
+
+function colorFloatGenomicData(column, settings = {}, codes, data) {
+	var vizSettings = _.getIn(column, ["vizSettings", "colNormalization"]),
+		defaultNormalization = column.defaultNormalization,
+	 	colSubtractMean = vizSettings === "subset" ||
+	 		(vizSettings == null && defaultNormalization && typeof defaultNormalization === 'boolean'),
+		colLog = vizSettings === "log2(x+1)" ||
+			(vizSettings == null && defaultNormalization && defaultNormalization === 'log2(x+1)'),
+		colorClass = column.colorClass;
+
+	var values = data.values,
+		originalMin = _.minnull(values),
+		originalMax = _.maxnull(values),
+		transformedMax, transformedMin,
+		mean = data.mean;
+
+	if (colSubtractMean) {
+		transformedMin = originalMin - mean;
+		transformedMax = originalMax - mean;
+	}  else if (colLog) {
+		// double check log scale can work
+		if (originalMin <= -1) {
+			console.log('data should not have values <=-1');
+		} else {
+			transformedMin = Math.log2(originalMin + 1);
+			transformedMax = Math.log2(originalMax + 1);
+		}
+	}	else {
+		transformedMin = originalMin;
+		transformedMax = originalMax;
+	}
+
+
+
+	var	[low, zero, high] = defaultColors[settings.colorClass || colorClass],
 		minStart = settings.minStart,
 		maxStart = settings.maxStart,
 		spec,
@@ -71,29 +105,48 @@ function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
 		absmax,
 		zone;
 
-	if (!isNumber(max) || !isNumber(min)) {
+	if (!isNumber(originalMax) || !isNumber(originalMin)) {
 		return ['no-data'];
 	}
 
 	if ((settings.min != null) && (settings.max != null))  { //custom setting
 		if (isNaN(minStart)  || isNaN(maxStart) || (minStart === null) || (maxStart === null)) {
-			mid = (max + min) / 2.0;
-			zone = (max - min) / 4.0;
+			mid = (settings.max  + settings.min) / 2.0;
+			zone = (settings.max  - settings.min) / 4.0;
 			minStart = mid  -  zone / 2.0;
 			maxStart = mid  +  zone / 2.0;
 		}
-		spec = ['float-thresh', low, zero, high, min, minStart, maxStart, max];
-	} else if (min < 0 && max > 0) {
-		absmax = Math.max(-min, max);
+		spec = ['float-thresh', low, zero, high, settings.min, minStart, maxStart, settings.max];
+	} else if (transformedMin < 0 && transformedMax > 0) {
+		absmax = Math.max(-transformedMin, transformedMax);
 		zone = absmax / 4.0;
-		spec = ['float-thresh', low, zero, high, -absmax / 2.0, -zone / 2.0,
-			 zone / 2.0, absmax / 2.0];
-	} else	if (min >= 0 && max >= 0) {
-		zone = (max - min) / 4.0;
-		spec = ['float-thresh-pos', zero, high, min + zone, max - zone / 2.0];
+		if (colSubtractMean) {
+			spec = ['float-thresh', low, zero, high, -absmax / 2.0 + mean, -zone / 2.0 + mean,
+			zone / 2.0 + mean, absmax / 2.0 + mean];
+		} else if (colLog) {
+			spec = ['float-log', low, high, -absmax / 2.0, absmax / 2.0 ]; // no threshold
+		} else {
+			spec = ['float-thresh', low, zero, high, -absmax / 2.0, -zone / 2.0,
+			zone / 2.0, absmax / 2.0 ];
+		}
+	} else	if (transformedMin >= 0 && transformedMax >= 0) {
+		zone = (transformedMax - transformedMin) / 4.0;
+		if (colSubtractMean) {
+			spec = ['float-thresh-pos', zero, high, transformedMin + zone + mean, transformedMax - zone / 2.0 + mean];
+		} else if (colLog) {
+			spec = ['float-thresh-log-pos', zero, high, Math.pow(2, transformedMin + zone) - 1.0, Math.pow(2, (transformedMax - zone / 2.0)) - 1.0];
+		} else {
+			spec = ['float-thresh-pos', zero, high, transformedMin + zone, transformedMax - zone / 2.0];
+		}
 	} else { // min <= 0 && max <= 0
-		zone = (max - min) / 4.0;
-		spec = ['float-thresh-neg', low, zero, min + zone / 2.0, max - zone];
+		zone = (transformedMax - transformedMin) / 4.0;
+		if (colSubtractMean) {
+			spec = ['float-thresh-neg', low, zero, transformedMin + zone / 2.0 + mean, transformedMax - zone + mean];
+		} else if (colLog) {
+			spec = ['float-thresh-log-neg', low, zero, Math.pow(2, transformedMin + zone / 2.0) - 1.0, Math.pow(2, transformedMax - zone) - 1.0];
+		} else {
+			spec = ['float-thresh-neg', low, zero, transformedMin + zone / 2.0, transformedMax - zone];
+		}
 	}
 	return spec;
 }
@@ -101,15 +154,15 @@ function colorFloatGenomicData({colorClass}, settings = {}, codes, data) {
 var prec2 = x => parseFloat(x.toPrecision(2));
 
 function colorSegmented(column, settings = {}, codes, data) {
-	var log2 = _.getIn(column, ["vizSettings", "colNormalization"]) || column.defaultNormalization,
-		values = data,
+	var values = data,
 		[low, , high] = defaultColors[settings.colorClass || column.colorClass],
 		minVal = _.minnull(values),
 		maxVal = _.maxnull(values),
 		{origin, thresh, max} = settings || {},
 		spec,
 		absmax,
-		zone;
+		zone,
+		normal2 = shouldNormal2color(_.getIn(column, ["vizSettings", "colNormalization"]), column.defaultNormalization);
 
 	if (!isNumber(maxVal) || !isNumber(minVal)) {
 		return ['no-data'];
@@ -120,9 +173,9 @@ function colorSegmented(column, settings = {}, codes, data) {
 	} else {
 		absmax = Math.max(-minVal, maxVal);
 		zone = absmax / 4.0;
-		if (log2 === "log2(x/2)") {  // auto coloring for vizSettings = log2(x/2)
+		if (normal2) {  // auto coloring for vizSettings = log2(x/2)
 			spec = ['trend-amplitude', low, white, high,
-				 2, 0, 6];
+				 2, 0, 4];
 		} else { // vizSettings = none
 			spec = ['trend-amplitude', low, white, high,
 				 0, prec2(zone / 2.0), prec2(absmax / 2.0)];
@@ -139,5 +192,6 @@ colorRange.add('segmented', colorSegmented);
 module.exports =  {
 	colorSpec: colorRange,
 	defaultColors,
-	defaultColorClass
+	defaultColorClass,
+	shouldNormal2color
 };

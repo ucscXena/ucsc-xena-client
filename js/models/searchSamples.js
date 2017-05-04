@@ -3,7 +3,7 @@
 var _ = require('../underscore_ext');
 var _s = require('underscore.string');
 var {parse} = require('./searchParser');
-var {shouldNormalize, shouldLog} = require('./denseMatrix');
+//var {shouldNormalize, shouldLog} = require('./denseMatrix');
 
 var includes = (target, str) => {
 	return str.toLowerCase().indexOf(target.toLowerCase()) !== -1;
@@ -132,10 +132,12 @@ var m = (methods, exp, defaultMethod) => {
 	return method ? method(...args) : defaultMethod(exp);
 };
 
+/*
 var addMeanOrNull = (s, m) => s === 'null' ? 'null' : ('' + (parseFloat(s) + m));
 
 // power(2,x) -1
 var power2XplusOneOrNull = (s) => s === 'null' ? 'null' : ('' + (Math.pow(2, parseFloat(s)) - 1.0));
+*/
 
 // If searching a mean-normalized column, move the search bounds to reflect
 // the normalization. The conversion to float and back is ugly. Otherwise, we'd
@@ -143,10 +145,11 @@ var power2XplusOneOrNull = (s) => s === 'null' ? 'null' : ('' + (Math.pow(2, par
 //
 // The mean[0] is because we only handle single-probe columns.
 var normalizeSearch = _.curry(({vizSettings, defaultNormalization}, method) =>
-	shouldNormalize(vizSettings, defaultNormalization) ?
+	method
+	/*shouldNormalize(vizSettings, defaultNormalization) ?
 		(ctx, search, data) => method(ctx, addMeanOrNull(search, data.req.mean[0]), data) :
 			(shouldLog(vizSettings, defaultNormalization) ?
-				(ctx, search, data) => method(ctx, power2XplusOneOrNull(search), data) : method)
+				(ctx, search, data) => method(ctx, power2XplusOneOrNull(search), data) : method)*/
 	);
 
 function searchAll(ctx, methods, search) {
@@ -250,6 +253,7 @@ function remapFields(oldOrder, order, exp) {
 	return treeToString(remapTreeFields(tree, mapping));
 }
 
+/*
 var columnShouldNormalize = ({vizSettings, defaultNormalization}) =>
 	shouldNormalize(vizSettings, defaultNormalization);
 
@@ -257,6 +261,7 @@ var columnShouldLogXPlusOne = ({vizSettings, defaultNormalization}) =>
 	shouldLog(vizSettings, defaultNormalization);
 
 var fieldId = (order, colId) => createFieldIds(order.length)[order.indexOf(colId)];
+*/
 
 var rewriteFieldExpression = (norm, mean, exp) =>
 	m({
@@ -267,11 +272,6 @@ var rewriteFieldExpressionLog = (log, exp) =>
 	m({
 		ne: iexp => ['ne', rewriteFieldExpressionLog(log, iexp)]
 	}, exp, ([op, value]) => [op, '' + (log ? Math.log2(parseFloat(value) + 1) : (Math.pow(2, parseFloat(value)) - 1))]);
-
-var rewriteFieldExpressionLogToNorm = (norm, mean, exp) =>
-	m({
-		ne: iexp => ['ne', rewriteFieldExpressionLogToNorm(norm, mean, iexp)]
-	}, exp, ([op, value]) => [op, '' +  (norm ? ((Math.pow(2, parseFloat(value)) - 1) - mean) : Math.log2(parseFloat(value) + mean + 1))]);
 
 var changeFieldNorm = _.curry((id, norm, mean, tree) =>
 	m({
@@ -289,33 +289,21 @@ var changeFieldLog = _.curry((id, log, tree) =>
 			['field', field, id === field ? rewriteFieldExpressionLog(log, exp) : exp]
 	}, tree, _.identity));
 
-var changeFieldLogToNorm = _.curry((id, norm, mean, tree) =>
-	m({
-		and: (...factors) => ['and', ..._.map(factors, changeFieldLogToNorm(id, norm, mean))],
-		or: (...terms) => ['or', ..._.map(terms, changeFieldLogToNorm(id, norm, mean))],
-		field: (field, exp) =>
-			['field', field, id === field ? rewriteFieldExpressionLogToNorm(norm, mean, exp) : exp]
-	}, tree, _.identity));
 
 // If transformation has change, rewrite the search expression so the matching
 // range remains the same.
 function checkFieldExpression(oldColumn, newColumn, id, order, data, exp) {
-	var oldNorm = columnShouldNormalize(oldColumn),
-		newNorm = columnShouldNormalize(newColumn),
-		oldLog = columnShouldLogXPlusOne(oldColumn),
+	return exp;
+	/*
+	var oldLog = columnShouldLogXPlusOne(oldColumn),
 		newLog = columnShouldLogXPlusOne(newColumn);
 
-	if (oldNorm === newNorm && oldLog === newLog) {
+	if (oldLog === newLog) {
 		return exp;
-	} else if (oldNorm === newNorm && oldLog !== newLog) { // log(x+1) <-> none
+	} else if (oldLog !== newLog) { // log(x+1) <-> none
 		return treeToString(changeFieldLog(fieldId(order, id), newLog, parse(_s.trim(exp))));
-	} else if (oldNorm !== newNorm && oldLog === newLog) { // substract mean <-> none
-		return treeToString(changeFieldNorm(fieldId(order, id), newNorm, data.req.mean[0], parse(_s.trim(exp))));
-	} else if (newNorm && !newLog) { // change from log(x+1) to substract mean
-		return treeToString(changeFieldLogToNorm(fieldId(order, id), newNorm, data.req.mean[0], parse(_s.trim(exp))));
-	} else if (!newNorm && newLog) { // chnage from substractmean to log(x+1)
-		return treeToString(changeFieldLogToNorm(fieldId(order, id), newNorm, data.req.mean[0], parse(_s.trim(exp))));
 	}
+	*/
 }
 
 module.exports = {
