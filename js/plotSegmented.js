@@ -10,7 +10,8 @@ var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
 var {drawSegmentedTrendAmp, toYPx} = require('./drawSegmented');
 var {chromPositionFromScreen} = require('./exonLayout');
-//var {shouldNormal2color} = require('./heatmapColors');
+var {defaultNormal2color} = require('./heatmapColors');
+var {hexToRGB, RGBToHex} = require('./color_helper');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -32,7 +33,8 @@ function hotOrNot(component) {
 var legendProps = {
 	'no-data': () => ({colors: [], labels: []}),
 	'trend-amplitude': (__, low, zero, high, origin, thresh, max) =>
-		({colors: [low, zero, zero, high], labels: [origin - max, origin - thresh, origin + thresh, origin + max]})
+		({colors: [low, zero, zero, high], labels: [origin - (max - origin), origin - thresh, origin + thresh, max]})
+		//labels: [origin - max, origin - thresh, origin + thresh, origin + max]})
 };
 
 var m = (opts, [type, ...args], deflt) => (opts[type] || opts[deflt])(type, ...args);
@@ -41,16 +43,19 @@ var m = (opts, [type, ...args], deflt) => (opts[type] || opts[deflt])(type, ...a
 // passed in. The caller should provide labels/colors in the 'legend' prop
 // if there are multiple scales.
 function renderFloatLegend(props) {
-	var {units, color /*, vizSettings, defaultNormalization*/} = props,
+	var {units, color, vizSettings, defaultNormalization} = props,
 		{labels, colors: legendColors} = m(legendProps, color, 'no-data'),
-		footnotes = ['unit: ' + (units || [])[0]]; // copy to avoid modification, below
-		//normal2 = shouldNormal2color (vizSettings, defaultNormalization);
+		footnotes = ['unit: ' + (units || [])[0]],
+		normal2 = defaultNormal2color (vizSettings, defaultNormalization);
 
-	/*
-	if (normal2) {
-		labels[0] = '0';  //0,2,2,6
+	if (normal2 && legendColors[0]) {
+		var currentLow = hexToRGB(legendColors[0]),
+			//white = 255,255,255
+			newLow = RGBToHex (Math.round(127.5 + currentLow.r / 2), Math.round(127.5 + currentLow.g / 2), Math.round(127.5 + currentLow.b / 2));
+		labels[0] = '0';  //-2,2,2,6 => 0,2,2,6
+		legendColors[0] = newLow; //["#0000ff", "#ffffff", "#ffffff", "#ff0000"] => [newLow, "#ffffff", "#ffffff", "#ff0000"]
 	}
-	*/
+
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 

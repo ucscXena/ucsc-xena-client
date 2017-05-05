@@ -23,8 +23,9 @@ var defaultColors = {
 
 var defaultColorClass = 'default';
 
-function shouldNormal2color (vizSettings, defaultNormalization) {
-	return "log2(x/2)" === (vizSettings || defaultNormalization);
+function defaultNormal2color (vizSettings, defaultNormalization) {
+	return "log2(x/2)" === (vizSettings && !vizSettings.origin && !vizSettings.max && vizSettings.colNormalization)
+		|| ((!vizSettings || _.keys(vizSettings).length === 0) && defaultNormalization);
 }
 
 function colorRangeType(column) {
@@ -162,7 +163,7 @@ function colorSegmented(column, settings = {}, codes, data) {
 		spec,
 		absmax,
 		zone,
-		normal2 = shouldNormal2color(_.getIn(column, ["vizSettings", "colNormalization"]), column.defaultNormalization);
+		normal2 = defaultNormal2color(_.getIn(column, ["vizSettings"]), column.defaultNormalization);
 
 	if (!isNumber(maxVal) || !isNumber(minVal)) {
 		return ['no-data'];
@@ -175,7 +176,7 @@ function colorSegmented(column, settings = {}, codes, data) {
 		zone = absmax / 4.0;
 		if (normal2) {  // auto coloring for vizSettings = log2(x/2)
 			spec = ['trend-amplitude', low, white, high,
-				 2, 0, 4];
+				 2, 0, 6];
 		} else { // vizSettings = none
 			spec = ['trend-amplitude', low, white, high,
 				 0, prec2(zone / 2.0), prec2(absmax / 2.0)];
@@ -193,5 +194,5 @@ module.exports =  {
 	colorSpec: colorRange,
 	defaultColors,
 	defaultColorClass,
-	shouldNormal2color
+	defaultNormal2color
 };

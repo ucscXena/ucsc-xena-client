@@ -185,9 +185,9 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				"min": "min: low color 100% saturation"
 			},
 			segmented: {
-				"origin": "Origin: value for copy number normal (typical: 0 or 2)",
+				"origin": "Origin: value for copy number normal (typically: 0 or 2)",
 				"thresh": "Threshold: absolute value from origin to start showing color",
-				"max": "Saturation: absolute value from origin to draw full color"
+				"max": "Saturation: absolute value to draw full color"
 			}
 		},
 		defaults: {
@@ -220,8 +220,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			} else if (valueType === 'segmented') {
 				dataMin = _.minnull(_.map(data.req.rows, row=>row.value));
 				dataMax = _.maxnull(_.map(data.req.rows, row=>row.value));
-				this.defaults[valueType].origin = (dataMax + dataMin) / 2.0;
-				this.defaults[valueType].max = (dataMax - dataMin) / 2.0;
+				if (dataMin >= 0) {
+					this.defaults[valueType].origin = 2;
+					this.defaults[valueType].max = 6;
+				} else {
+					this.defaults[valueType].origin = 0;
+					this.defaults[valueType].max = dataMax;
+				}
 			}
 
 			return {
