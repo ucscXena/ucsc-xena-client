@@ -209,7 +209,20 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					if (getVizSettings(param)) {
 						return true;
 					}
-				});
+				}),
+				dataMin, dataMax;
+
+			if (valueType === "float") {
+				dataMin = _.minnull(_.map(data.req.values, values=>_.minnull(values)));
+				dataMax = _.maxnull(_.map(data.req.values, values=>_.maxnull(values)));
+				this.defaults[valueType].min = dataMin;
+				this.defaults[valueType].max = dataMax;
+			} else if (valueType === 'segmented') {
+				dataMin = _.minnull(_.map(data.req.rows, row=>row.value));
+				dataMax = _.maxnull(_.map(data.req.rows, row=>row.value));
+				this.defaults[valueType].origin = (dataMax + dataMin) / 2.0;
+				this.defaults[valueType].max = (dataMax - dataMin) / 2.0;
+			}
 
 			return {
 				mode: custom ? "Custom" : "Auto",
