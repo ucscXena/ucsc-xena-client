@@ -44,8 +44,10 @@ var Legend = React.createClass({
 					</Row> : null}
 				{ellipsis ?
 					<Row>
-						<Col md={10} mdOffset={1}>
-							More values ...
+						<Col md={10} mdOffset={1} text-right>
+							<label className='Legend-label'>
+								...
+							</label>
 						</Col>
 					</Row> : null}
 				{footnotes ?
