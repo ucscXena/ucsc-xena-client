@@ -53,7 +53,7 @@ module.exports = function (root, callback, sessionStorage) {
 		var dropDownDiv, option,
 			dropDown = [{
 					"value": "none",
-					"text": "off",
+					"text": "none",
 					"index": 0
 				}, //no normalization
 				{
@@ -88,7 +88,7 @@ module.exports = function (root, callback, sessionStorage) {
 		});
 
 		node.setAttribute("id", "normDropDown");
-		node.appendChild(document.createTextNode(" Transform "));
+		node.appendChild(document.createTextNode("Data Transformation "));
 		node.appendChild(dropDownDiv);
 		return node;
 	}
@@ -128,7 +128,7 @@ module.exports = function (root, callback, sessionStorage) {
 		});
 
 		node.setAttribute("id", "expDropDown");
-		node.appendChild(document.createTextNode(" Log scale "));
+		node.appendChild(document.createTextNode(" Log Scale "));
 		node.appendChild(dropDownDiv);
 		return node;
 	}
@@ -323,7 +323,7 @@ module.exports = function (root, callback, sessionStorage) {
 		return div;
 	}
 
-	function normalizationUISetting(visible, ycolumn, yNormalizationMeta) {
+	function normalizationUISetting(visible, ycolumn) {
 		var dropDown = document.getElementById("normDropDown"),
 			dropDownDiv = document.getElementById("ynormalization");
 
@@ -333,14 +333,6 @@ module.exports = function (root, callback, sessionStorage) {
 			//check current normalizationState variable
 			if (normalizationState[ycolumn] !== undefined) {
 				dropDownDiv.selectedIndex = normalizationState[ycolumn];
-			}
-			//intentionally not checking vizSettings, need to understand cursor first.
-			//check meta data
-			// The default column normalization is fetched from the server. Instead it should come from
-			// the state, or from a data cache, because we've fetched that already.
-			else {
-				dropDownDiv.selectedIndex = yNormalizationMeta;
-				normalizationState[ycolumn] = yNormalizationMeta;
 			}
 		} else {
 			dropDown.style.visibility = "hidden";
@@ -1272,7 +1264,6 @@ module.exports = function (root, callback, sessionStorage) {
 				doScatter, scatterLabel,
 				scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 				yNormalization,
-				yNormalizationMeta,
 				yExponentiation;
 
 			// convert segment data to matrix data
@@ -1295,14 +1286,6 @@ module.exports = function (root, callback, sessionStorage) {
 			if (columns[ycolumn].strand && (columns[ycolumn].strand === '-' )) {
 				reverseStrand = true;
 			}
-			// XXX normalization is broken in composite branch
-			if (columns[ycolumn].defaultNormalization) {
-				yNormalizationMeta = 1
-				;
-			} else {
-				yNormalizationMeta = 0;
-			}
-
 			// single xfield only
 			if (xfields && xfields.length > 1) {
 				document.getElementById("myChart").innerHTML = "not applicable: x axis has more than one variable" +
@@ -1316,7 +1299,7 @@ module.exports = function (root, callback, sessionStorage) {
 			xIsCategorical = xcodemap ? true : false;
 
 			// set y axis normalization UI
-			normalizationUISetting(!yIsCategorical, ycolumn, yNormalizationMeta);
+			normalizationUISetting(!yIsCategorical, ycolumn);
 
 			if (yIsCategorical) {
 				yNormalization = false;

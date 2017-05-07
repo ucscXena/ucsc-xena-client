@@ -57,7 +57,7 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 	// --------- separate variants to SV(with feet "[" , "]" or size >50bp) vs others (small) ---------
 	var {height, count} = zoom,
 		vHeight = minVariantHeight(height / count),
-		minWidth = 2;
+		minWidth = 2; // double that is the minimum width we draw
 
 	// --------- small variants drawing start here ---------
 	var varByImp = _.groupByConsec(smallVariants, v => v.color);

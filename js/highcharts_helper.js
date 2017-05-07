@@ -152,7 +152,7 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 
 // x categorical y float
 function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
-	yAxisTitle =  yAxisTitle.length > 20 ? yAxisTitle.slice(0, 20) + '...' : yAxisTitle;
+	yAxisTitle =  yAxisTitle.length > 22 ? yAxisTitle.slice(0, 22) + '...' : yAxisTitle;
 
 	chartOptions.legend.align = 'right';
 	chartOptions.legend.margin = 5;
