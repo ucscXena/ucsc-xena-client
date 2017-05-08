@@ -412,7 +412,7 @@ var Column = React.createClass({
 				</OverlayTrigger>),
 			annotation = widgets.annotation({
 				fields: column.fields,
-				refGene: _.values(data.refGene)[0],
+				refGene: _.values(_.get(data, 'refGene', {}))[0],
 				layout: column.layout,
 				width,
 				alternateColors: !_.getIn(column, ['showIntrons'], false)});

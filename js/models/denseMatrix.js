@@ -105,7 +105,7 @@ function cmpSamples(probes, data, s1, s2) {
 	}
 }
 
-var cmp = ({fields}, {req: {values, probes} = {values, probes}}) =>
+var cmp = ({fields}, {req: {values, probes} = {values, probes}} = {}) =>
 	(s1, s2) => cmpSamples(probes || fields, values, s1, s2); // XXX having probes here is unfortunate.
 
 //
