@@ -8,6 +8,7 @@ var Button = require('react-bootstrap/lib/Button');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
+var Popover = require('react-bootstrap/lib/Popover');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var pdf = require('./pdfSpreadsheet');
 var _ = require('./underscore_ext');
@@ -47,6 +48,18 @@ function addHelp(id, target) {
 		<OverlayTrigger trigger={['hover']} key={id} placement={placement} overlay={tooltip}>
 			{target}
 		</OverlayTrigger>);
+}
+
+function addOverWarning(warn, id, target) {
+	if (warn) {
+		let warning = <Popover style={{zIndex: 1030}} className='bg-danger' title='Cohort too large'>Select a subset</Popover>;
+		return (
+			<OverlayTrigger defaultOverlayShown={true} trigger={[]} placement='left' overlay={warning}>
+				{target}
+			</OverlayTrigger>);
+	} else {
+		return addHelp(id, target);
+	}
 }
 
 function download([fields, rows]) {
@@ -163,7 +176,7 @@ var AppControls = React.createClass({
 		ev.target.value = null;
 	},
 	render: function () {
-		var {appState: {cohort: activeCohorts, cohorts, datasets, mode, columnOrder}} = this.props,
+		var {appState: {cohort: activeCohorts, samplesOver, cohorts, datasets, mode, columnOrder}} = this.props,
 			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			samplesFrom = _.getIn(activeCohorts, [0, 'samplesFrom']),
@@ -184,9 +197,10 @@ var AppControls = React.createClass({
 					<div className='form-group' style={this.props.style}>
 						<label> Samples in </label>
 						{' '}
-						{addHelp('samples',
+						{addOverWarning(samplesOver, 'samples',
 							<DatasetSelect
 								disable={noshow}
+								bsStyle={samplesOver ? 'danger' : 'default'}
 								onSelect={this.onSamplesSelect}
 								nullOpt="Any Datasets (i.e. show all samples)"
 								style={{display: hasCohort ? 'inline' : 'none'}}

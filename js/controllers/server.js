@@ -94,9 +94,10 @@ var controls = {
 		fetchFeatures(serverBus, datasets);
 	},
 	features: (state, features) => _.assoc(state, "features", features),
-	samples: (state, samples) => {
+	samples: (state, {samples, over}) => {
 		var newState = resetZoom(_.assoc(state,
 					'cohortSamples', samples,
+					'samplesOver', over,
 					'samples', _.range(_.sum(_.map(samples, c => c.length))))),
 			{columnOrder} = newState;
 		return _.reduce(
@@ -104,7 +105,7 @@ var controls = {
 				(acc, id) => _.assocIn(acc, ['data', id, 'status'], 'loading'),
 				newState);
 	},
-	'samples-post!': (serverBus, state, newState, samples) =>
+	'samples-post!': (serverBus, state, newState, {samples}) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
 	'normalize-fields': (state, fields, id, settings, isFirst, xenaFields) => {

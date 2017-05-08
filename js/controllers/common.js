@@ -30,8 +30,11 @@ function fetchDatasets(serverBus, servers, cohort) {
 	serverBus.next(['datasets', datasetQuery(servers, cohort)]);
 }
 
+// Might want to bump this up after fixing our rendering problems @ 40k.
+const MAX_SAMPLES = 30 * 1000;
+
 var {datasetSamples} = xenaQuery;
-var allSamples = _.curry((cohort, server) => xenaQuery.cohortSamples(server, cohort));
+var allSamples = _.curry((cohort, server) => xenaQuery.cohortSamples(server, cohort, MAX_SAMPLES));
 
 function unionOfGroup(gb) {
 	return _.union(..._.map(gb, ([, v]) => v));
@@ -48,13 +51,24 @@ function filterSamples(sampleFilter, samples) {
 var cohortSamplesQuery = _.curry(
 	(servers, {name, samplesFrom, sampleFilter}, i) =>
 		(samplesFrom ?
-			[datasetSamples(samplesFrom)] :
+			[datasetSamples(samplesFrom, MAX_SAMPLES)] :
 			_.map(servers, allSamples(name)))
-		.map(resp => resp.map(samples => [i, filterSamples(sampleFilter, samples)])));
+		.map(resp => resp.map(samples => [i, filterSamples(sampleFilter, samples), samples.length >= MAX_SAMPLES])));
 
+// XXX The use of 'i' here looks wrong: it should be the cohort index, to line up with 'cohorts',
+// but collectResults may have dropped a response due to ajax error, shifting the indexes of cohorts
+// after the error.
+// XXX Regarding MAX_SAMPLES, this query operates like this: for each cohort, for each server, fetch
+// the sample list, and collate the results. To enforce MAX_SAMPLES and avoid hammering the server we
+// should 1) limit each (cohort, server) request to MAX_SAMPLES, 2) limit the union per-cohort to MAX_SAMPLES,
+// 3) limit the combined (all cohort) list to MAX_SAMPLES. The latter is harder to do because we can't
+// just slice the list of lists. Currently we only enforce 1 & 2.
 var collateSamplesByCohort = _.curry((cohorts, resps) => {
-	var byCohort = _.groupBy(resps, _.first);
-	return _.map(cohorts, (c, i) => unionOfGroup(byCohort[i] || []));
+	var byCohort = _.groupBy(resps, _.first),
+		serverOver = _.any(resps, ([,, over]) => over),
+		cohortSamples = _.map(cohorts, (c, i) => unionOfGroup(byCohort[i] || []).slice(0, MAX_SAMPLES)),
+		cohortOver = _.any(cohortSamples, samples => samples.length >= MAX_SAMPLES);
+	return {samples: cohortSamples, over: serverOver || cohortOver};
 });
 
 // reifyErrors should be pass the server name, but in this expression we don't have it.
@@ -65,7 +79,7 @@ function samplesQuery(servers, cohort) {
 
 // query samples if non-empty cohorts
 var neSamplesQuery = (servers, cohort) =>
-	cohort.length > 0 ? samplesQuery(servers, cohort) : Rx.Observable.of([], Rx.Scheduler.asap);
+	cohort.length > 0 ? samplesQuery(servers, cohort) : Rx.Observable.of({samples: [], over: false}, Rx.Scheduler.asap);
 
 function fetchSamples(serverBus, servers, cohort) {
 	serverBus.next(['samples', neSamplesQuery(servers, cohort)]);

@@ -32,7 +32,7 @@ var DatasetSelect = React.createClass({
 				.concat(optsFromDatasets(_.groupBy(datasets, 'dataSubType')));
 
 		return (
-			<Select {...other}  options={options} />
+			<Select {...other} options={options} />
 		);
 	}
 });
