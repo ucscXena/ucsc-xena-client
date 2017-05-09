@@ -195,14 +195,14 @@ var AppControls = React.createClass({
 				{' '}
 				{hasCohort ?
 					<div className='form-group' style={this.props.style}>
-						<label> Samples in </label>
+						<label> Sample Filter </label>
 						{' '}
 						{addOverWarning(samplesOver, 'samples',
 							<DatasetSelect
 								disable={noshow}
 								bsStyle={samplesOver ? 'danger' : 'default'}
 								onSelect={this.onSamplesSelect}
-								nullOpt="All samples"
+								nullOpt="All samples in the cohort"
 								style={{display: hasCohort ? 'inline' : 'none'}}
 								datasets={datasets}
 								cohort={cohort}
