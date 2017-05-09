@@ -6,7 +6,8 @@ var servers = {
 	tcgaHub: 'https://tcga.xenahubs.net',
 	icgcHub: 'https://icgc.xenahubs.net',
 	toilHub: 'https://toil.xenahubs.net',
-	pcawgHub: 'https://pcawg.xenahubs.net'
+	pcawgHub: 'https://pcawg.xenahubs.net',
+	singlecellHub: 'https://singlecell.xenahubs.net'
 };
 
 module.exports = {
@@ -16,7 +17,8 @@ module.exports = {
 		[servers.tcgaHub]: 'TCGA hub',
 		[servers.icgcHub]: 'ICGC hub',
 		[servers.toilHub]: 'GA4GH-BD2K (TOIL) hub',
-		[servers.pcawgHub]: 'PCAWG public hub'
+		[servers.pcawgHub]: 'PCAWG public hub',
+		[servers.singlecellHub]: 'Single cell hub'
 	},
 	defaultServers: [
 		servers.localHub,
