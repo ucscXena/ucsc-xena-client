@@ -71,7 +71,7 @@ var Tooltip = React.createClass({
 								<td className='tooltipPrompt'>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</td>
 							</tr>
 							<tr style={{fontSize: "80%"}}>
-								<td className='tooltipPrompt'><a href="http://xena.ucsc.edu/spreadsheet-zoom/">Help with spreadsheet zoom</a></td>
+								<td className='tooltipPrompt'><a href="http://xena.ucsc.edu/spreadsheet-zoom/" target="_blank">Help with zoom</a></td>
 							</tr>
 						</tbody>
 					</table>
