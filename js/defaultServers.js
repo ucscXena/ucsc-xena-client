@@ -18,7 +18,7 @@ module.exports = {
 		[servers.icgcHub]: 'ICGC hub',
 		[servers.toilHub]: 'GA4GH-BD2K (TOIL) hub',
 		[servers.pcawgHub]: 'PCAWG public hub',
-		[servers.singlecellHub]: 'Single cell hub'
+		[servers.singlecellHub]: 'Single-cell RNAseq hub'
 	},
 	defaultServers: [
 		servers.localHub,
