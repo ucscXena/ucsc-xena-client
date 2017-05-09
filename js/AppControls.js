@@ -195,7 +195,7 @@ var AppControls = React.createClass({
 				{' '}
 				{hasCohort ?
 					<div className='form-group' style={this.props.style}>
-						<label> Sample Filter </label>
+						<label> Samples in </label>
 						{' '}
 						{addOverWarning(samplesOver, 'samples',
 							<DatasetSelect
