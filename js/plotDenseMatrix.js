@@ -133,7 +133,7 @@ function renderFloatLegend(props) {
 	if (_.isEmpty(data)) {
 		return <Legend colors={[]} labels={''} footnotes={[]}/>;;
 	}
-	var subColColor = _.max(colors, colorList => _.uniq(colorList.slice(Math.ceil(colorList.length / 2.0), )).length),
+	var subColColor = _.max(colors, colorList => _.uniq(colorList.slice(Math.ceil(colorList.length / 2.0))).length),
 		{labels, colors: legendColors} = legendForColorscale(subColColor),
 		footnotes = [units && units[0] ? ('unit: ' + units[0]) : null],
 		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min'])),
