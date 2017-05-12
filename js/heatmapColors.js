@@ -83,20 +83,18 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 	if (colSubtractMean) {
 		transformedMin = originalMin - mean;
 		transformedMax = originalMax - mean;
-	}  else if (colLog) {
-		// double check log scale can work
-		if (originalMin <= -1) {
-			console.log('data should not have values <=-1');
+	} else if (colLog) {
+		// double check log scale can work, we allow log(0)
+		if (originalMin < 0) {
+			console.log('data should not have values < 0');
 		} else {
 			transformedMin = Math.log2(originalMin + 1);
 			transformedMax = Math.log2(originalMax + 1);
 		}
-	}	else {
+	} else {
 		transformedMin = originalMin;
 		transformedMax = originalMax;
 	}
-
-
 
 	var	[low, zero, high] = defaultColors[settings.colorClass || colorClass],
 		minStart = settings.minStart,

@@ -57,23 +57,35 @@ var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
 		.domain(_.map([min, minThresh, maxThresh, max], x => x.toPrecision(2)))
 		.range([low, zero, zero, high]);
 
-var scaleFloatThresholdLogNegative = (low, zero, min, thresh) =>
-	d3.scaleLog()
-		.domain(_.map([min, thresh], x => x.toPrecision(2)))
-		.range([low, zero])
-		.base(2);
+var scaleFloatThresholdLogNegative = (low, zero, min, thresh) => {
+	if (thresh === 0 && min === 0) { // handle log (0), log(0)
+		return d3.scaleLinear().domain([0, 0]).range([zero, zero]);
+	} else {
+		return d3.scaleLog().base(2)
+			.domain(_.map([min, thresh], x => x.toPrecision(2)))
+			.range([low, zero]);
+	}
+};
 
-var scaleFloatThresholdLogPositive = (zero, high, thresh, max) =>
-	d3.scaleLog()
-		.domain(_.map([thresh, max], x => x.toPrecision(2)))
-		.range([zero, high])
-		.base(2);
+var scaleFloatThresholdLogPositive = (zero, high, thresh, max) => {
+	if (thresh === 0 && max === 0) { // handle log (0), log(0)
+		return d3.scaleLinear().domain([0, 0]).range([zero, zero]);
+	} else {
+		return d3.scaleLog().base(2)
+			.domain(_.map([thresh, max], x => x.toPrecision(2)))
+			.range([zero, high]);
+	}
+};
 
-var scaleFloatLog = (low, high, min, max) =>
-	d3.scaleLog()
-		.domain(_.map([min, max], x => x.toPrecision(2)))
-		.range([low, high])
-		.base(2);
+var scaleFloatLog = (low, high, min, max) => {
+	if (min === 0 && max === 0) { // handle log (0), log(0)
+		return d3.scaleLinear().domain([0, 0]).range([low, low]);
+	} else {
+		return d3.scaleLog().base(2)
+			.domain(_.map([min, max], x => x.toPrecision(2)))
+			.range([low, high]);
+	}
+};
 
 var ordinal = (count, custom) => d3.scaleOrdinal().range(custom || categoryMore).domain(_.range(count));
 
