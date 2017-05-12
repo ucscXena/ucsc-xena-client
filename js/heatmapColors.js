@@ -24,7 +24,7 @@ var defaultColors = {
 var defaultColorClass = 'default';
 
 function defaultNormal2color (vizSettings, defaultNormalization) {
-	return "log2(x/2)" === (vizSettings && !vizSettings.origin && !vizSettings.max && vizSettings.colNormalization)
+	return "normal2" === (vizSettings && !vizSettings.origin && !vizSettings.max && vizSettings.colNormalization)
 		|| ((!vizSettings || _.keys(vizSettings).length === 0) && defaultNormalization);
 }
 
@@ -172,7 +172,7 @@ function colorSegmented(column, settings = {}, codes, data) {
 	} else {
 		absmax = Math.max(-minVal, maxVal);
 		zone = absmax / 4.0;
-		if (normal2) {  // auto coloring for vizSettings = log2(x/2)
+		if (normal2) {  // auto coloring for vizSettings = normal2
 			spec = ['trend-amplitude', low, white, high,
 				 2, 0, 6];
 		} else { // vizSettings = none

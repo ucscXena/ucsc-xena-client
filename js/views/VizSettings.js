@@ -393,7 +393,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
 				mapping = {
 					"none": "none",
-					"log2(x/2)": "log2(x/2)",
+					"normal2": "normal2",
 				};
 			return {
 				optionValue: mapping[value] || "none"
@@ -408,7 +408,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			let optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "normal = 0"},
-					{"key": "log2(x/2)", "label": "normal = 2" },
+					{"key": "normal2", "label": "normal = 2" },
 				],
 				activeOption = _.find(options, obj => {
 					return obj.key === optionValue;
