@@ -339,7 +339,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				mapping = {
 					"none": "none",
 					"subset": "subset",
-					"log2(x+1)": "log2(x+1)",
+					"log2(x)": "log2(x)",
 					true: "subset"
 				};
 			return {
@@ -361,7 +361,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			if (dataMin >= 0 && !(_.any(units, unit=> unit && unit.search(/log/i) !== -1))) {
 				// we allow log(0), necessary for RNAseq data, value =0 (no expression is very common).
 				// display can handle this
-				options.push({"key": "log2(x+1)", "label": "log scale : log2(x)"});
+				options.push({"key": "log2(x)", "label": "log scale : log2(x)"});
 			}
 
 

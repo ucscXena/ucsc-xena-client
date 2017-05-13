@@ -70,8 +70,8 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		defaultNormalization = column.defaultNormalization,
 	 	colSubtractMean = vizSettings === "subset" ||
 	 		(vizSettings == null && defaultNormalization && typeof defaultNormalization === 'boolean'),
-		colLog = vizSettings === "log2(x+1)" ||
-			(vizSettings == null && defaultNormalization && defaultNormalization === 'log2(x+1)'),
+		colLog = vizSettings === "log2(x)" ||
+			(vizSettings == null && defaultNormalization && defaultNormalization === 'log2(x)'),
 		colorClass = column.colorClass;
 
 	var values = data.values,
