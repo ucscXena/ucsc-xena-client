@@ -123,7 +123,11 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 			spec = ['float-thresh', low, zero, high, -absmax / 2.0 + mean, -zone / 2.0 + mean,
 			zone / 2.0 + mean, absmax / 2.0 + mean];
 		} else if (colLog) {
-			spec = ['float-log', low, high, -absmax / 2.0, absmax / 2.0 ]; // no threshold
+			if (Math.pow(2, -absmax / 2.0) === 1.0, Math.pow(2, absmax / 2.0) === 1.0) {
+				spec = ['float', low, zero, high, 0, 0];
+			} else {
+				spec = ['float-log', low, high, Math.pow(2, -absmax / 2.0) - 1.0, Math.pow(2, absmax / 2.0) - 1.0]; // no threshold
+			}
 		} else {
 			spec = ['float-thresh', low, zero, high, -absmax / 2.0, -zone / 2.0,
 			zone / 2.0, absmax / 2.0 ];
@@ -133,7 +137,11 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		if (colSubtractMean) {
 			spec = ['float-thresh-pos', zero, high, transformedMin + zone + mean, transformedMax - zone / 2.0 + mean];
 		} else if (colLog) {
-			spec = ['float-thresh-log-pos', zero, high, Math.pow(2, transformedMin + zone) - 1.0, Math.pow(2, (transformedMax - zone / 2.0)) - 1.0];
+			if ( Math.pow(2, transformedMin + zone) === 1.0, Math.pow(2, (transformedMax - zone / 2.0)) === 1.0) {
+				spec = ['float-pos', zero, high, 0, 0];
+			} else {
+				spec = ['float-thresh-log-pos', zero, high, Math.pow(2, transformedMin + zone) - 1.0, Math.pow(2, (transformedMax - zone / 2.0)) - 1.0];
+			}
 		} else {
 			spec = ['float-thresh-pos', zero, high, transformedMin + zone, transformedMax - zone / 2.0];
 		}
@@ -142,7 +150,11 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		if (colSubtractMean) {
 			spec = ['float-thresh-neg', low, zero, transformedMin + zone / 2.0 + mean, transformedMax - zone + mean];
 		} else if (colLog) {
-			spec = ['float-thresh-log-neg', low, zero, Math.pow(2, transformedMin + zone / 2.0) - 1.0, Math.pow(2, transformedMax - zone) - 1.0];
+			if (Math.pow(2, transformedMin + zone / 2.0) === 1.0, Math.pow(2, transformedMax - zone) === 1.0) {
+				spec = ['float-meg', low, zero, 0, 0];
+			} else {
+				spec = ['float-thresh-log-neg', low, zero, Math.pow(2, transformedMin + zone / 2.0) - 1.0, Math.pow(2, transformedMax - zone) - 1.0];
+			}
 		} else {
 			spec = ['float-thresh-neg', low, zero, transformedMin + zone / 2.0, transformedMax - zone];
 		}
