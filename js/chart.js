@@ -5,7 +5,6 @@ require('../css/chart.css');
 
 var {hexToRGB, colorStr} = require ('./color_helper');
 var d3 = require('d3-scale');
-var domHelper = require('./dom_helper');
 var highcharts = require('./highcharts');
 var Highcharts = highcharts.Highcharts;
 var highchartsHelper =  require ('./highcharts_helper');
@@ -19,8 +18,9 @@ var getCustomColor = (fieldSpecs, fields, datasets) =>
 		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', fieldSpecs[0].fields[0]], null) : null;
 
 module.exports = function (root, callback, sessionStorage) {
-	var xdiv, ydiv, // x y  axis dropdown
-		colorDiv, colorElement, // color dropdown
+	var xdiv, ydiv, xAxisDiv, yAxisDiv, // x y  axis dropdown
+		colorDiv, colorAxisDiv, // color dropdown
+		row, axisContainer,
 		leftContainer, rightContainer,
 		xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
 		cohort, samplesLength, cohortSamples, updateArgs, update,
@@ -88,8 +88,9 @@ module.exports = function (root, callback, sessionStorage) {
 		});
 
 		node.setAttribute("id", "normDropDown");
-		node.appendChild(document.createTextNode("Data Transformation "));
+		node.appendChild(document.createTextNode("Y data transform "));
 		node.appendChild(dropDownDiv);
+		node.className = "col-sm-6";
 		return node;
 	}
 
@@ -128,8 +129,9 @@ module.exports = function (root, callback, sessionStorage) {
 		});
 
 		node.setAttribute("id", "expDropDown");
-		node.appendChild(document.createTextNode(" Log Scale "));
+		node.appendChild(document.createTextNode("Y data log "));
 		node.appendChild(dropDownDiv);
+		node.className = "col-sm-6";
 		return node;
 	}
 
@@ -164,7 +166,7 @@ module.exports = function (root, callback, sessionStorage) {
 		if (xcolumn !== "none" && !data[xcolumn].codes) {
 			_.map(ydiv.options, option => {
 				var y = option.value;
-				if (data[y].req.values.length > 2) {
+				if (data[y].req.values && data[y].req.values.length > 2) {
 					option.disabled = true;
 				}
 			});
@@ -205,7 +207,7 @@ module.exports = function (root, callback, sessionStorage) {
 
 		div = document.createElement("select");
 		div.setAttribute("id", selectorID);
-		div.setAttribute("class", "dropdown-style");
+		div.className = "form-control";//"btn btn-default dropdown-toggle";
 
 		// color dropdown add none option at the top
 		if (selectorID === "Color") {
@@ -271,7 +273,7 @@ module.exports = function (root, callback, sessionStorage) {
 		// trying to use coded column for X and float column for y
 		if (!storedColumn) {
 			if (selectorID === "Xaxis") {
-				div.selectedIndex = 0;
+				div.selectedIndex = div.length - 1;
 				for (let i = 0; i < div.length - 1; i++) {
 					column = div.options[i].value;
 					if (columns[column].valueType === "coded") {
@@ -281,7 +283,7 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 
 			} else if (selectorID === "Yaxis") {
-				div.selectedIndex = div.length - 1;
+				div.selectedIndex = 0;
 				for (let i = 0; i < div.length; i++) {
 					column = div.options[i].value;
 					if (columns[column].valueType === "float") {
@@ -320,7 +322,27 @@ module.exports = function (root, callback, sessionStorage) {
 		div.addEventListener('change', function () {
 			update.apply(this, updateArgs);
 		});
-		return div;
+
+		var labelDiv = document.createElement("label"),
+			listDiv = document.createElement("div"),
+			returnDiv = document.createElement("div");
+
+		labelDiv.className = "col-xs-1";
+		listDiv.className = "col-xs-4";
+		if (selectorID === "Xaxis") {
+			xdiv = div;
+			labelDiv.appendChild(document.createTextNode("X axis"));
+		} else if (selectorID === "Yaxis") {
+			ydiv = div;
+			labelDiv.appendChild(document.createTextNode("Y axis"));
+		} else if (selectorID === "Color") {
+			colorDiv = div;
+			labelDiv.appendChild(document.createTextNode("Color"));
+		}
+		listDiv.appendChild(div);
+		returnDiv.appendChild(labelDiv);
+		returnDiv.appendChild(listDiv);
+		return returnDiv;
 	}
 
 	function normalizationUISetting(visible, ycolumn) {
@@ -388,9 +410,9 @@ module.exports = function (root, callback, sessionStorage) {
 
 	function scatterColorUISetting(visible) {
 		if (visible) {
-			colorElement.style.visibility = "visible";
+			colorAxisDiv.style.visibility = "visible";
 		} else {
-			colorElement.style.visibility = "hidden";
+			colorAxisDiv.style.visibility = "hidden";
 		}
 	}
 
@@ -446,7 +468,7 @@ module.exports = function (root, callback, sessionStorage) {
 		}
 		return ybinnedSample;
 	}
-
+/*
 	function toggleButtons(chart, xIsCategorical, yIsCategorical) {
 		var div = document.getElementById("chartContainer"),
 			seriesButton, datalabelButton,
@@ -519,7 +541,7 @@ module.exports = function (root, callback, sessionStorage) {
 		});
 		div.appendChild(seriesButton);
 	}
-
+*/
 	function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 		yfields, ycodemap, ydata, reverseStrand,
 		offsets, xlabel, ylabel, STDEV,
@@ -1190,9 +1212,9 @@ module.exports = function (root, callback, sessionStorage) {
 			chart.redraw();
 		}
 
-		if (chart) {
+		/*if (chart) {
 			toggleButtons(chart, xIsCategorical, yIsCategorical);
-		}
+		}*/
 	}
 
 	update = function () {
@@ -1383,18 +1405,16 @@ module.exports = function (root, callback, sessionStorage) {
 		axisReview();
 	};
 
-	root.setAttribute("id", "chartRoot");
-	root.style.height = window.innerHeight + 'px';  /// best to do with css, but don't how to set the chart to full window height in css
+	// right panel
+	rightContainer = document.createElement("div");
+	rightContainer.setAttribute("class", "rightContainer");
+	root.appendChild(rightContainer);
 
 	// left panel
 	leftContainer = document.createElement("div");
 	leftContainer.setAttribute("id", "left");
 	root.appendChild(leftContainer);
 
-	// right panel
-	rightContainer = document.createElement("div");
-	rightContainer.setAttribute("class", "rightContainer");
-	root.appendChild(rightContainer);
 
 	// chart container
 	rightContainer.appendChild(buildEmptyChartContainer());
@@ -1405,30 +1425,48 @@ module.exports = function (root, callback, sessionStorage) {
 		return;
 	}
 
-	// x axis selector
 	leftContainer.appendChild(document.createElement("br"));
-	xdiv = axisSelector("Xaxis", update, updateArgs);
+
+	axisContainer = document.createElement("div");
+	axisContainer.className = "container";
+
+	// x
+	xAxisDiv = axisSelector("Xaxis", update, updateArgs);
 
 	// y axis selector and Y value controls
-	ydiv = axisSelector("Yaxis", update, updateArgs);
+	yAxisDiv = axisSelector("Yaxis", update, updateArgs);
 	if (!ydiv) {
 		document.getElementById("myChart").innerHTML =
 			"There is no plottable data, please add some by first clicking the \"Visual Spreadsheet\" button, then the \"+ Data\" button.";
 		return;
 	}
+	row = document.createElement("div");
+	row.className = "form-group row";
+	row.appendChild(yAxisDiv);
+	axisContainer.appendChild(row);
 
-	// coloring on scatterplot
-	colorDiv = axisSelector("Color", update, updateArgs);
+	//mean z
+	row.appendChild(buildNormalizationDropdown());
+	axisContainer.appendChild(row);
 
-	leftContainer.appendChild(domHelper.elt("div", "Y: ", ydiv, buildNormalizationDropdown(), buildExpDropdown()));
-	leftContainer.appendChild(document.createElement("br"));
+	//log
+	row.appendChild(buildExpDropdown());
+	axisContainer.appendChild(row);
 
-	leftContainer.appendChild(domHelper.elt("div", "X: ", xdiv));
-	leftContainer.appendChild(document.createElement("br"));
+	//x
+	row = document.createElement("div");
+	row.className = "form-group row";
+	row.appendChild(xAxisDiv);
+	axisContainer.appendChild(row);
 
-	colorElement = domHelper.elt("div", "Color: ", colorDiv);
-	leftContainer.appendChild(colorElement);
-	leftContainer.appendChild(document.createElement("br"));
+	// color
+	colorAxisDiv = axisSelector("Color", update, updateArgs);
+	row = document.createElement("div");
+	row.className = "form-group row";
+	row.appendChild(colorAxisDiv);
+	axisContainer.appendChild(row);
+
+	leftContainer.appendChild(axisContainer);
 
 	update.apply(this, updateArgs);
 };

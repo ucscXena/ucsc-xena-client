@@ -1,31 +1,10 @@
-#chartRoot {
-    height: 150%;
-}
 .dropdown-style {
-    width: 300px;
+    width: 250px;
     background: white;
     font-size: 12px;
     font-family: 'Lucida Grande';
-}
-.dropdown-style option {
-    padding: 0.3em;
-    background: white;
 }
 
 .dropdown-style:focus {
     outline: 0;
 }
-
-#chartContainer {
-    margin-left: auto;
-    margin-right: auto;
-}
-
-#myChart {
-    height: 100%;
-}
-
-.showHideButton:hover {
-    color: #ff6600;
-}
-
