@@ -44,6 +44,7 @@ var GeneProbeEdit = React.createClass({
 	render: function () {
 		var hgHelp = 'TP53 or TP53, PTEN, MIMAT0000062', // MIMAT0000062 is just for xena's current miRNA data, it should be changed to the proper miRNA gene name,
 			mmHelp = 'RB1 or RB1, PTEN',
+			unknownAssemblyHelp = "genome assembly unknown",
 			helpText = {
 				"hg": hgHelp,
 				"mm": mmHelp
@@ -51,7 +52,7 @@ var GeneProbeEdit = React.createClass({
 			{genes = true, hasGenes, list, examples, makeLabel, setEditorState, chosenDs} = this.props,
 			doGenes = hasGenes && genes,
 			help = doGenes ?
-				helpText[hasGenes.assembly.slice(0, 2)] || hgHelp :
+				helpText[(hasGenes.assembly && hasGenes.assembly.slice(0, 2))] || unknownAssemblyHelp :
 				`e.g. ${examples[0]} or ${examples[0]}, ${examples[1]}`,
 			content,
 			url, host, dataset,

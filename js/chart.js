@@ -17,6 +17,12 @@ var getCustomColor = (fieldSpecs, fields, datasets) =>
 	(fieldSpecs.length === 1 && fields.length === 1) ?
 		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', fieldSpecs[0].fields[0]], null) : null;
 
+var chartHeight = () =>
+	window.innerHeight * 0.7 + "px";
+
+var chartWidth = () =>
+	window.innerWidth * 0.7 + "px";
+
 module.exports = function (root, callback, sessionStorage) {
 	var xdiv, ydiv, xAxisDiv, yAxisDiv, // x y  axis dropdown
 		colorDiv, colorAxisDiv, // color dropdown
@@ -88,7 +94,7 @@ module.exports = function (root, callback, sessionStorage) {
 		});
 
 		node.setAttribute("id", "normDropDown");
-		node.appendChild(document.createTextNode("Y data transform "));
+		node.appendChild(document.createTextNode("Y data linear transform "));
 		node.appendChild(dropDownDiv);
 		node.className = "col-sm-6";
 		return node;
@@ -104,7 +110,7 @@ module.exports = function (root, callback, sessionStorage) {
 				{
 					//convert x -> base-2 exponential value of x, for when viewing raw RNAseq data, xena typically converts RNAseq values into log2 space.
 					"value": "exp2",
-					"text": "off", // (effect: take base-2 exponential of the log scale value)",
+					"text": "before log2 transformation", // (effect: take base-2 exponential of the log scale value)",
 					"index": 1
 				},
 			],
@@ -129,22 +135,18 @@ module.exports = function (root, callback, sessionStorage) {
 		});
 
 		node.setAttribute("id", "expDropDown");
-		node.appendChild(document.createTextNode("Y data log "));
+		node.appendChild(document.createTextNode("Y data log transform "));
 		node.appendChild(dropDownDiv);
 		node.className = "col-sm-6";
 		return node;
 	}
 
 	function buildEmptyChartContainer() {
-		var chartContainer, div;
-
-		chartContainer = document.createElement("div");
-		chartContainer.setAttribute("id", "chartContainer");
-		div = document.createElement("div");
+		var div = document.createElement("div");
 		div.setAttribute("id", "myChart");
-		div.setAttribute("class", "chart-container");
-		chartContainer.appendChild(div);
-		return chartContainer;
+		div.style.height = chartHeight();
+		div.style.width = chartWidth();
+		return div;
 	}
 
 	function colUnit (colSettings) {
@@ -1218,7 +1220,7 @@ module.exports = function (root, callback, sessionStorage) {
 	}
 
 	update = function () {
-		var oldDiv = document.getElementById("chartContainer");
+		var oldDiv = document.getElementById("myChart");
 		rightContainer.replaceChild(buildEmptyChartContainer(), oldDiv);
 
 		//initialization
@@ -1405,27 +1407,20 @@ module.exports = function (root, callback, sessionStorage) {
 		axisReview();
 	};
 
-	// right panel
+	// right panel chart
 	rightContainer = document.createElement("div");
-	rightContainer.setAttribute("class", "rightContainer");
+	rightContainer.appendChild(buildEmptyChartContainer());
 	root.appendChild(rightContainer);
 
-	// left panel
+	// left panel control
 	leftContainer = document.createElement("div");
-	leftContainer.setAttribute("id", "left");
 	root.appendChild(leftContainer);
-
-
-	// chart container
-	rightContainer.appendChild(buildEmptyChartContainer());
 
 	if (!(xenaState && xenaState.cohort && xenaState.samples && xenaState.columnOrder.length > 0)) {
 		document.getElementById("myChart").innerHTML =
 			"There is no data, please add some by first clicking the \"Visual Spreadsheet\" button, then the \"+ Data\" button.";
 		return;
 	}
-
-	leftContainer.appendChild(document.createElement("br"));
 
 	axisContainer = document.createElement("div");
 	axisContainer.className = "container";
@@ -1469,4 +1464,9 @@ module.exports = function (root, callback, sessionStorage) {
 	leftContainer.appendChild(axisContainer);
 
 	update.apply(this, updateArgs);
+
+	window.addEventListener("resize", function() {
+		document.getElementById("myChart").style.height = chartHeight();
+		document.getElementById("myChart").style.width = chartWidth();
+	});
 };
