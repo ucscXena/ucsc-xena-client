@@ -67,7 +67,6 @@ function drawLayout(vg, opts) {
 		first = Math.floor(index),
 		last  = Math.ceil(index + count);
 
-		console.log('with backing canvas');
 	vg.smoothing(false); // For some reason this works better if we do it every time.
 
 	// reset image
@@ -125,7 +124,6 @@ function drawLayoutByPixel(vg, opts) {
 		first = Math.floor(index),
 		last  = Math.ceil(index + count);
 
-		console.log('by pixel');
 	vg.smoothing(false); // For some reason this works better if we do it every time.
 
 	// reset image
