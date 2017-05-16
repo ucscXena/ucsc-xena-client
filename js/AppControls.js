@@ -50,9 +50,14 @@ function addHelp(id, target) {
 		</OverlayTrigger>);
 }
 
-function addOverWarning(warn, id, target) {
+function addOverWarning(warn, id, cb, target) {
 	if (warn) {
-		let warning = <Popover style={{zIndex: 1030}} className='bg-danger' title='Cohort too large'>Select a subset</Popover>;
+		let warning = (
+			<Popover style={{zIndex: 1030}} className='bg-danger' title='Cohort too large'>
+				Select a subset
+				<br/>
+				<Button bsSize='xsmall' onClick={cb}>Use large cohort</Button>
+			</Popover>);
 		return (
 			<OverlayTrigger defaultOverlayShown={true} trigger={[]} placement='left' overlay={warning}>
 				{target}
@@ -116,6 +121,9 @@ var AppControls = React.createClass({
 	onResetSampleFilter: function () {
 		this.props.callback(['sampleFilter', 0 /* index into composite cohorts */, null]);
 	},
+	onAllowOverSamples: function () {
+		this.props.callback(['allowOverSamples', true]);
+	},
 	onSetBookmark(resp) {
 		var {id} = JSON.parse(resp.response);
 		this.setState({bookmark: `${location.origin}${config.baseurl}heatmap/?bookmark=${id}`});
@@ -176,7 +184,7 @@ var AppControls = React.createClass({
 		ev.target.value = null;
 	},
 	render: function () {
-		var {appState: {cohort: activeCohorts, samplesOver, cohorts, datasets, mode, columnOrder}} = this.props,
+		var {appState: {cohort: activeCohorts, samplesOver, allowOverSamples, cohorts, datasets, mode, columnOrder}} = this.props,
 			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			samplesFrom = _.getIn(activeCohorts, [0, 'samplesFrom']),
@@ -197,7 +205,7 @@ var AppControls = React.createClass({
 					<div className='form-group' style={this.props.style}>
 						<label> Samples in </label>
 						{' '}
-						{addOverWarning(samplesOver, 'samples',
+						{addOverWarning(!allowOverSamples && samplesOver, 'samples', this.onAllowOverSamples,
 							<DatasetSelect
 								disable={noshow}
 								bsStyle={samplesOver ? 'danger' : 'default'}

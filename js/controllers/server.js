@@ -71,7 +71,7 @@ var controls = {
 	'cohorts-post!': (serverBus, state, newState) => {
 		let {cohort} = newState,
 			user = userServers(newState);
-		fetchSamples(serverBus, user, cohort);
+		fetchSamples(serverBus, user, cohort, newState.allowOverSamples);
 		fetchDatasets(serverBus, user, cohort);
 	},
 	datasets: (state, datasets) => {

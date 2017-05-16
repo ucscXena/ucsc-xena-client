@@ -164,7 +164,7 @@ var resetServersChanged = state => _.dissoc(state, 'serversChanged');
 var fetchCohortData = (serverBus, state) => {
 	let user = userServers(state);
 	fetchDatasets(serverBus, user, state.cohort);
-	fetchSamples(serverBus, user, state.cohort);
+	fetchSamples(serverBus, user, state.cohort, state.allowOverSamples);
 };
 
 var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
@@ -241,13 +241,13 @@ var controls = {
 			'cohort', _.assocIn(state.cohort, [i, 'samplesFrom'], samplesFrom),
 			'survival', null),
 	'samplesFrom-post!': (serverBus, state, newState) => {
-		fetchSamples(serverBus, userServers(state), newState.cohort);
+		fetchSamples(serverBus, userServers(state), newState.cohort, newState.allowOverSamples);
 	},
 	sampleFilter: (state, i, sampleFilter) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, [i, 'sampleFilter'], sampleFilter),
 			'survival', null),
 	'sampleFilter-post!': (serverBus, state, newState) =>
-		fetchSamples(serverBus, userServers(newState), newState.cohort),
+		fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples),
 	'add-column-post!': (serverBus, state, newState, id, settings, isFirst) =>
 		normalizeFields(serverBus, newState, id, settings, isFirst),
 	resize: (state, id, {width, height}) =>
@@ -329,6 +329,9 @@ var controls = {
 	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id),
 	'sortDirection': (state, id, newDir) =>
 		_.assocIn(state, ['columns', id, 'sortDirection'], newDir),
+	'allowOverSamples': (state, aos) => _.assoc(state, 'allowOverSamples', aos),
+	'allowOverSamples-post!': (serverBus, state, newState, aos) =>
+		fetchSamples(serverBus, userServers(newState), newState.cohort, aos),
 	// Due to wonky react-bootstrap handlers, xzoom can occur after remove, so
 	// check that the column exists before updating.
 	'xzoom': (state, id, xzoom) => _.updateIn(state, ['columns', id],
