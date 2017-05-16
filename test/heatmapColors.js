@@ -4,6 +4,7 @@
 var assert = require('assert');
 var {colorSpec} = require('../js/heatmapColors');
 var {colorScale} = require('../js/colorScales');
+var _ = require('underscore');
 
 // Types of color scales
 //
@@ -76,8 +77,9 @@ describe('heatmapColors', function () {
 			assert.equal(scale(undefined), undefined);
 		});
 		it('should return category19', function() {
-			var scale = colorScale(['ordinal', 12]);
-			assert.equal(12, scale.domain().length);
+			var scale = colorScale(['ordinal', 12]),
+				range = _.uniq(_.range(12).map(scale));
+			assert.equal(12, range.length);
 			assert.equal(scale(undefined), undefined);
 		});
 	});
