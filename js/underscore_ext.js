@@ -313,13 +313,6 @@ function groupByConsec(sortedArray, prop, ctx) {
 	}, []);
 }
 
-// underscore union is slow, due to n^2 algorithm using _.contains
-function union(...args) {
-	var hashes = _.map(args, arr => _.object(arr, arr)),
-		merged = _.merge(...hashes);
-	return Object.values(merged);
-}
-
 function findIndexDefault(arr, pred, def) {
 	var i = _.findIndex(arr, pred);
 	return i < 0 ? def : i;
@@ -337,6 +330,14 @@ function unique(arr, ...rest) {
 		return uUniq(arr, ...rest);
 	}
 	return [...new Set(arr)];
+}
+
+// underscore union is slow, due to n^2 algorithm using _.contains.
+// Perserves order by using unique(), which preserves order by use of
+// Set.
+function union(...args) {
+	var flattened = args.reduce((a, b) => a.concat(b), []);
+	return unique(flattened);
 }
 
 // Starting some iterator methods here, but there are some performance

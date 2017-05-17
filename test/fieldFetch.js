@@ -7,6 +7,7 @@ var {isObject, isNumber, isArray, getIn, get, every, pluck} =
 var fetch = require('../js/fieldFetch');
 require('../js/models/denseMatrix');
 require('../js/models/datasetJoins');
+var Rx = require('../js/rx');
 
 var assert = require('assert');
 
@@ -95,6 +96,8 @@ var CSamples = [
 	'TCGA-A3-3331-01',
 	'TCGA-B0-4690-01',
 	'TCGA-CZ-5466-01'];
+
+fetch.add('debug', column => Rx.Observable.of(column.data), Rx.Scheduler.asap);
 
 function isNumOrNull(x) {
 	return isNumber(x) || x == null;
@@ -414,5 +417,78 @@ describe('fieldFetch', function () {
 			}]
 		}, [ASamples, BSamples]).do(validateCodedData([ASamples, BSamples]))
 		.subscribe(() => done(), e => done(logError(e)));
+	});
+	it('should compose coded #2', function (done) {
+		var ASamples = ['sA', 'sB', 'sC', 'sD'],
+			BSamples = ['sa', 'sb'],
+			exp = {
+				req: {
+					values: [[2, 3, 4, 5, 0, 1]]
+				},
+				codes: ['A', 'B', 'a', 'b', 'c', 'd']
+			};
+		fetch(
+		{
+			fetchType: 'composite',
+			fieldType: 'clinical',
+			valueType: 'coded',
+			fields: ['field0'],
+			fieldSpecs: [{
+				fetchType: 'debug',
+				data: {
+					req: {
+						values: [[0, 1, 2, 3]]
+					},
+					codes: ['a', 'b', 'c', 'd']
+				},
+				fieldType: 'clinical',
+				valueType: 'coded',
+				fields: ['field0']
+			}, {
+				fetchType: 'debug',
+				data: {
+					req: {
+						values: [[0, 1]]
+					},
+					codes: ['A', 'B']
+				},
+				fieldType: 'clinical',
+				valueType: 'coded',
+				fields: ['field1']
+			}]
+		}, [ASamples, BSamples]).do(data => {
+			assert.deepEqual(data, exp, `${JSON.stringify(data)} != ${JSON.stringify(exp)}`);
+		}).subscribe(() => done(), e => done(logError(e)));
+	});
+	it('should compose coded #3', function (done) {
+		var ASamples = ['sC', 'sD', 'sA', 'sB'],
+			exp = {
+				req: {
+					values: [[2, 3, 0, 1]]
+				},
+				codes: ['5', '4', '3', '2', '1']
+			};
+		fetch(
+		{
+			fetchType: 'composite',
+			fieldType: 'clinical',
+			valueType: 'coded',
+			fields: ['field0'],
+			fieldSpecs: [{
+				fetchType: 'debug',
+				data: {
+					req: {
+						values: [[2, 3, 0, 1]]
+					},
+					codes: ['5', '4', '3', '2', '1']
+				},
+				fieldType: 'clinical',
+				valueType: 'coded',
+				fields: ['field0']
+			}]
+		}, [ASamples]).do(data => {
+			// important point is that code order is preserved
+			assert.deepEqual(data, exp, `${JSON.stringify(data)} != ${JSON.stringify(exp)}`);
+		}).subscribe(() => done(), e => done(logError(e)));
 	});
 });
