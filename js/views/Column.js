@@ -200,8 +200,14 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 	]);
 }
 
-function matrixMenu(props, {supportsGeneAverage, onMode, onSpecialDownload, specialDownloadMenu}) {
-	var {id, column: {fieldType, noGeneDetail, valueType}} = props,
+function supportsTumorMap({fieldType, valueType, fields}) {
+	var onlyFeatureThatWorks = "B_cell_PCA_16704732"; // stupid
+	return (['geneProbes', 'genes'].indexOf(fieldType) >= 0 && fields.length === 1) ||
+		(fieldType === "clinical" && valueType === "float" && fields.length === 1 && fields[0] === onlyFeatureThatWorks);
+}
+
+function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDownload, specialDownloadMenu}) {
+	var {id, column: {fieldType, noGeneDetail, valueType, fields}} = props,
 		wrongDataType = valueType !== 'coded',
 		specialDownloadItemName = 'Download sample lists (json)';
 
@@ -210,8 +216,11 @@ function matrixMenu(props, {supportsGeneAverage, onMode, onSpecialDownload, spec
 			(fieldType === 'genes' ?
 				<MenuItem eventKey="geneProbes" title={noGeneDetail ? 'no common probemap' : ''}
 					disabled={noGeneDetail} onSelect={onMode}>Detailed view</MenuItem> :
-				<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>) :
-		null,
+				<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>)
+				: null,
+		supportsTumorMap({fieldType, valueType, fields}) ?
+			<MenuItem onSelect={onTumorMap}>TumorMap</MenuItem>
+			: null,
 		(specialDownloadMenu && !wrongDataType) ?
 			<MenuItem onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
 			: null
@@ -383,6 +392,24 @@ var Column = React.createClass({
 		window.open(url + `${uriList}`);
 	},
 
+	onTumorMap: function () {
+		var fieldSpecs = _.getIn(this.props, ['column', 'fieldSpecs']),
+			map = "PancanAtlas_dev/XenaPancanAtlas",
+			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + map + "&layout=layout";
+
+		_.map(fieldSpecs, spec => {
+			var ds = JSON.parse(spec.dsID),
+				hub = ds.host,
+				dataset = ds.name,
+				feature = spec.fields[0];
+
+			url = url + "&hub=" + hub + "/data/";
+			url = url + "&dataset=" + dataset;
+			url = url + "&attr=" + feature;
+		});
+		window.open(url);
+	},
+
 	onReload: function () {
 		this.props.onReload(this.props.id);
 	},
@@ -396,8 +423,9 @@ var Column = React.createClass({
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
 			{xzoomable, specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
-			{onMode, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
-			menu = optionMenu(this.props, {onMode, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload, supportsGeneAverage, xzoomable, specialDownloadMenu}),
+			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
+			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
+				onSpecialDownload, supportsGeneAverage, xzoomable, specialDownloadMenu}),
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
 			// move this to state to generalize to other annotations.
