@@ -1,8 +1,6 @@
 'use strict';
 
 var getLabel = require('./getLabel');
-require('../css/chart.css');
-
 var {hexToRGB, colorStr} = require ('./color_helper');
 var d3 = require('d3-scale');
 var highcharts = require('./highcharts');
