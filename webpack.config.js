@@ -37,8 +37,16 @@ module.exports = {
 					path.join(__dirname, 'doc')
 				],
 				loaders: ['babel-loader'],
-				type: 'js'},
-			{ test: /\.css$/, loader: "style!css" },
+				type: 'js'
+			},
+			{
+				test: path => path.indexOf('toolbox') !== -1 && path.match(/\.css$/),
+				loaders: [
+					'style-loader',
+					'css-loader?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments',
+				],
+			},
+			{ test: path => path.indexOf('toolbox') === -1 && path.match(/\.css$/), loader: "style!css" },
 			{ test: /\.json$/, loader: "json" },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]
@@ -58,5 +66,11 @@ module.exports = {
 			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim')
 		},
 		extensions: ['', '.js', '.json', '.coffee']
+	},
+	postcss: () => {
+		return [
+			require('postcss-cssnext'),
+			require('postcss-modules-values'),
+		];
 	}
 };

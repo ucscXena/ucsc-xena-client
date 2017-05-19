@@ -10,6 +10,8 @@ var {signatureField} = require('./models/fieldSpec');
 var {getColSpec} = require('./models/datasetJoins');
 var SampleSearch = require('./views/SampleSearch');
 var uuid = require('./uuid');
+import { Button as RTBButton } from 'react-toolbox/lib/button';
+
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 // should really be in a config file.
@@ -83,6 +85,7 @@ var Application = React.createClass({
 					<button onClick={this.onPerf}>Perf</button>
 				</Row>
 			*/}
+				<RTBButton label="Hello"/>
 				<Row>
 					<Col md={12}>
 						<AppControls {...otherProps} appState={state} />
