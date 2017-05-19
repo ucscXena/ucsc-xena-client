@@ -40,13 +40,21 @@ module.exports = {
 				type: 'js'
 			},
 			{
-				test: path => path.indexOf('toolbox') !== -1 && path.match(/\.css$/),
+				// css modules for react-toolbox
+				test: path => (path.indexOf('toolbox') !== -1 && path.match(/\.css$/)) || path.match(/\.mcss$/),
 				loaders: [
 					'style-loader',
 					'css-loader?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments',
 				],
 			},
-			{ test: path => path.indexOf('toolbox') === -1 && path.match(/\.css$/), loader: "style!css" },
+			{
+				// 'sourceMap' and 'modules' breaks existing css, so handle them separately from react-toolbox.
+				test: path => path.indexOf('toolbox') === -1 && path.match(/\.css$/),
+				loaders: [
+					'style-loader',
+					'css-loader?importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments'
+				]
+			},
 			{ test: /\.json$/, loader: "json" },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]

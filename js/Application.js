@@ -11,6 +11,9 @@ var {getColSpec} = require('./models/datasetJoins');
 var SampleSearch = require('./views/SampleSearch');
 var uuid = require('./uuid');
 import { Button as RTBButton } from 'react-toolbox/lib/button';
+require('./foo.css');
+import {hello} from './foo.mcss';
+console.log({hello});
 
 //var Perf = require('react/lib/ReactDefaultPerf');
 
@@ -85,7 +88,8 @@ var Application = React.createClass({
 					<button onClick={this.onPerf}>Perf</button>
 				</Row>
 			*/}
-				<RTBButton label="Hello"/>
+				<RTBButton className={'hello ' + hello } label="Hello"/>
+				<RTBButton label="World"/>
 				<Row>
 					<Col md={12}>
 						<AppControls {...otherProps} appState={state} />
