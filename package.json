@@ -109,6 +109,7 @@
     "postcss-cssnext": "^2.11.0",
     "react": "^0.14.7",
     "react-bootstrap": "^0.28.5",
+    "react-css-themr": "^1.7.2",
     "react-dom": "^0.14.7",
     "react-resizable": "^1.0.1",
     "react-toolbox": "^2.0.0-beta.8",

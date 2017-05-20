@@ -3,6 +3,7 @@
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var webpack = require('webpack');
 var path = require('path');
+var reactToolboxVariables = require('./reactToolboxVariables');
 
 module.exports = {
 	historyApiFallback: true,
@@ -77,7 +78,13 @@ module.exports = {
 	},
 	postcss: () => {
 		return [
-			require('postcss-cssnext'),
+			require('postcss-cssnext')({
+				features: {
+					customProperties: {
+						variables: reactToolboxVariables
+					}
+				}
+			}),
 			require('postcss-modules-values'),
 		];
 	}

@@ -11,9 +11,16 @@ var {getColSpec} = require('./models/datasetJoins');
 var SampleSearch = require('./views/SampleSearch');
 var uuid = require('./uuid');
 import { Button as RTBButton } from 'react-toolbox/lib/button';
+import Input from 'react-toolbox/lib/input';
+import { ThemeProvider } from 'react-css-themr';
 require('./foo.css');
 var hello = require('./foo.mcss');
 console.log({hello});
+import InputTheme from './inputTheme.mcss';
+
+var theme = {
+	RTInput: InputTheme
+};
 
 //var Perf = require('react/lib/ReactDefaultPerf');
 
@@ -82,39 +89,43 @@ var Application = React.createClass({
 				() => this.onFilterZoom(samples, samplesMatched) : null;
 
 		return (
-			<Grid onClick={this.onClick}>
-			{/*
-				<Row>
-					<button onClick={this.onPerf}>Perf</button>
-				</Row>
-			*/}
-				<RTBButton className='hello' theme={hello} label="Hello"/>
-				<RTBButton label="World"/>
-				<Row>
-					<Col md={12}>
-						<AppControls {...otherProps} appState={state} />
-					</Col>
-				</Row>
-				<Row>
-					<Col md={8}>
-						<SampleSearch
-							help={searchHelp}
-							value={sampleSearch}
-							matches={matches}
-							onFilter={onFilter}
-							onZoom={onFilterZoom}
-							onCreateColumn={onFilterColumn}
-							onChange={onHighlightChange}
-							mode={mode}/>
-					</Col>
-				</Row>
-				{children}
-				{_.getIn(state, ['km', 'id']) ? <KmPlot
-						callback={this.props.callback}
-						km={state.km}
-						features={state.features} /> : null}
-				<div className='chartRoot' style={{display: 'none'}} />
-			</Grid>
+			<ThemeProvider theme={theme}>
+				<Grid onClick={this.onClick}>
+				{/*
+					<Row>
+						<button onClick={this.onPerf}>Perf</button>
+					</Row>
+				*/}
+					<RTBButton className='hello' theme={hello} label="Hello"/>
+					<RTBButton label="World"/>
+					<br/>
+					<Input type='text' label="A text input">something</Input>
+					<Row>
+						<Col md={12}>
+							<AppControls {...otherProps} appState={state} />
+						</Col>
+					</Row>
+					<Row>
+						<Col md={8}>
+							<SampleSearch
+								help={searchHelp}
+								value={sampleSearch}
+								matches={matches}
+								onFilter={onFilter}
+								onZoom={onFilterZoom}
+								onCreateColumn={onFilterColumn}
+								onChange={onHighlightChange}
+								mode={mode}/>
+						</Col>
+					</Row>
+					{children}
+					{_.getIn(state, ['km', 'id']) ? <KmPlot
+							callback={this.props.callback}
+							km={state.km}
+							features={state.features} /> : null}
+					<div className='chartRoot' style={{display: 'none'}} />
+				</Grid>
+			</ThemeProvider>
 		);
 	}
 });
