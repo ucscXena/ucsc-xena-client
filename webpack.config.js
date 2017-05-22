@@ -41,16 +41,16 @@ module.exports = {
 				type: 'js'
 			},
 			{
-				// css modules for react-toolbox
-				test: path => (path.indexOf('toolbox') !== -1 && path.match(/\.css$/)) || path.match(/\.mcss$/),
+				// css modules
+				test: path => path.match(/\.css$/) && (path.indexOf('toolbox') !== -1 || path.match(/\.module\.css$/)),
 				loaders: [
 					'style-loader',
 					'css-loader?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments',
 				],
 			},
 			{
-				// 'sourceMap' and 'modules' breaks existing css, so handle them separately from react-toolbox.
-				test: path => path.indexOf('toolbox') === -1 && path.match(/\.css$/),
+				// 'sourceMap' and 'modules' breaks existing css, so handle them separately
+				test: path => path.match(/\.css$/) && !(path.indexOf('toolbox') !== -1 || path.match(/\.module\.css$/)),
 				loaders: [
 					'style-loader',
 					'css-loader?importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments'

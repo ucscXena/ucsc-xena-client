@@ -14,9 +14,9 @@ import { Button as RTBButton } from 'react-toolbox/lib/button';
 import Input from 'react-toolbox/lib/input';
 import { ThemeProvider } from 'react-css-themr';
 require('./foo.css');
-var hello = require('./foo.mcss');
+var hello = require('./foo.module.css');
 console.log({hello});
-import InputTheme from './inputTheme.mcss';
+import InputTheme from './inputTheme.module.css';
 
 var theme = {
 	RTInput: InputTheme
