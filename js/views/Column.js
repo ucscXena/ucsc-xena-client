@@ -395,7 +395,8 @@ var Column = React.createClass({
 	onTumorMap: function () {
 		var fieldSpecs = _.getIn(this.props, ['column', 'fieldSpecs']),
 			map = "PancanAtlas_dev/XenaPancanAtlas",
-			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + map + "&layout=layout";
+			layout = 'mRNA',
+			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + map + "&layout=" + layout;
 
 		_.map(fieldSpecs, spec => {
 			var ds = JSON.parse(spec.dsID),
