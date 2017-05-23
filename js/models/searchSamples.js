@@ -218,6 +218,7 @@ function treeToString(tree) {
 		'quoted-value': value => `"${value}"`,
 		and: (...factors) => _.map(factors, treeToString).join(' '),
 		or: (...terms) => _.map(terms, treeToString).join(' OR '),
+		group: exp => `(${treeToString(exp)})`,
 		field: (field, value) => `${field}:${treeToString(value)}`,
 		ne: term => `!=${treeToString(term)}`,
 		lt: value => `<${value}`,
@@ -231,6 +232,7 @@ function remapTreeFields(tree, mapping) {
 	return m({
 		and: (...factors) => ['and', ..._.map(factors, t => remapTreeFields(t, mapping))],
 		or: (...terms) => ['or', ..._.map(terms, t => remapTreeFields(t, mapping))],
+		group: exp => ['group', remapTreeFields(exp, mapping)],
 		field: (field, value) => ['field', _.get(mapping, field, 'XXX'), value]
 	}, tree, _.identity);
 }
