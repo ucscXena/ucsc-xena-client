@@ -7,7 +7,7 @@
   "scripts": {
     "test": "webpack-dev-server --config webpack.test.js --devtool eval --port 8081",
     "pretest:headless": "webpack --config webpack.test.js --devtool eval",
-    "test:headless": "mocha-phantomjs --ssl-protocol=tlsv1 -R xunit -f test-results.xml build/index.html",
+    "test:headless": "mocha-phantomjs --local-to-remote-url-access=true --ssl-protocol=tlsv1 -R xunit -f test-results.xml build/index.html",
     "lint": "eslint --no-color js/*.js js/*/*.js test/*.js",
     "eslint": "eslint",
     "clean": "rimraf build/*",
