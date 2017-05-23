@@ -132,29 +132,9 @@ var m = (methods, exp, defaultMethod) => {
 	return method ? method(...args) : defaultMethod(exp);
 };
 
-/*
-var addMeanOrNull = (s, m) => s === 'null' ? 'null' : ('' + (parseFloat(s) + m));
-
-// power(2,x) -1
-var power2XplusOneOrNull = (s) => s === 'null' ? 'null' : ('' + (Math.pow(2, parseFloat(s)) - 1.0));
-*/
-
-// If searching a mean-normalized column, move the search bounds to reflect
-// the normalization. The conversion to float and back is ugly. Otherwise, we'd
-// have to move the searchFloat parsing up somehow, or push the transform down.
-//
-// The mean[0] is because we only handle single-probe columns.
-var normalizeSearch = _.curry(({vizSettings, defaultNormalization}, method) =>
-	method
-	/*shouldNormalize(vizSettings, defaultNormalization) ?
-		(ctx, search, data) => method(ctx, addMeanOrNull(search, data.req.mean[0]), data) :
-			(shouldLog(vizSettings, defaultNormalization) ?
-				(ctx, search, data) => method(ctx, power2XplusOneOrNull(search), data) : method)*/
-	);
-
 function searchAll(ctx, methods, search) {
 	let {cohortSamples, columns, data} = ctx;
-	return _.union(..._.map(columns, (c, key) => normalizeSearch(c, methods[c.valueType])(ctx, search, data[key])),
+	return _.union(..._.map(columns, (c, key) => methods[c.valueType](ctx, search, data[key])),
 				   methods.samples(cohortSamples, search));
 }
 
@@ -162,15 +142,14 @@ function evalFieldExp(ctx, expression, column, data) {
 	if (!column || !_.get(data, 'req')) {
 		return [];
 	}
-	var n = normalizeSearch(column);
 	return m({
-		value: search => n(searchMethod[column.valueType])(ctx, search, data),
-		'quoted-value': search => n(searchExactMethod[column.valueType])(ctx, search, data),
+		value: search => searchMethod[column.valueType](ctx, search, data),
+		'quoted-value': search => searchExactMethod[column.valueType](ctx, search, data),
 		ne: exp => invert(evalFieldExp(ctx, exp, column, data), ctx.allSamples),
-		lt: search => n(searchLt[column.valueType])(ctx, search, data),
-		gt: search => n(searchGt[column.valueType])(ctx, search, data),
-		le: search => n(searchLe[column.valueType])(ctx, search, data),
-		ge: search => n(searchGe[column.valueType])(ctx, search, data)
+		lt: search => searchLt[column.valueType](ctx, search, data),
+		gt: search => searchGt[column.valueType](ctx, search, data),
+		le: search => searchLe[column.valueType](ctx, search, data),
+		ge: search => searchGe[column.valueType](ctx, search, data)
 	}, expression);
 }
 
@@ -255,63 +234,9 @@ function remapFields(oldOrder, order, exp) {
 	return treeToString(remapTreeFields(tree, mapping));
 }
 
-/*
-var columnShouldNormalize = ({vizSettings, defaultNormalization}) =>
-	shouldNormalize(vizSettings, defaultNormalization);
-
-var columnShouldLogXPlusOne = ({vizSettings, defaultNormalization}) =>
-	shouldLog(vizSettings, defaultNormalization);
-
-var fieldId = (order, colId) => createFieldIds(order.length)[order.indexOf(colId)];
-*/
-
-var rewriteFieldExpression = (norm, mean, exp) =>
-	m({
-		ne: iexp => ['ne', rewriteFieldExpression(norm, mean, iexp)]
-	}, exp, ([op, value]) => [op, '' + (parseFloat(value) + (norm ? -mean : mean))]);
-
-var rewriteFieldExpressionLog = (log, exp) =>
-	m({
-		ne: iexp => ['ne', rewriteFieldExpressionLog(log, iexp)]
-	}, exp, ([op, value]) => [op, '' + (log ? Math.log2(parseFloat(value) + 1) : (Math.pow(2, parseFloat(value)) - 1))]);
-
-var changeFieldNorm = _.curry((id, norm, mean, tree) =>
-	m({
-		and: (...factors) => ['and', ..._.map(factors, changeFieldNorm(id, norm, mean))],
-		or: (...terms) => ['or', ..._.map(terms, changeFieldNorm(id, norm, mean))],
-		field: (field, exp) =>
-			['field', field, id === field ? rewriteFieldExpression(norm, mean, exp) : exp]
-	}, tree, _.identity));
-
-var changeFieldLog = _.curry((id, log, tree) =>
-	m({
-		and: (...factors) => ['and', ..._.map(factors, changeFieldLog(id, log))],
-		or: (...terms) => ['or', ..._.map(terms, changeFieldLog(id, log))],
-		field: (field, exp) =>
-			['field', field, id === field ? rewriteFieldExpressionLog(log, exp) : exp]
-	}, tree, _.identity));
-
-
-// If transformation has change, rewrite the search expression so the matching
-// range remains the same.
-function checkFieldExpression(oldColumn, newColumn, id, order, data, exp) {
-	return exp;
-	/*
-	var oldLog = columnShouldLogXPlusOne(oldColumn),
-		newLog = columnShouldLogXPlusOne(newColumn);
-
-	if (oldLog === newLog) {
-		return exp;
-	} else if (oldLog !== newLog) { // log(x+1) <-> none
-		return treeToString(changeFieldLog(fieldId(order, id), newLog, parse(_s.trim(exp))));
-	}
-	*/
-}
-
 module.exports = {
 	searchSamples,
 	treeToString,
 	remapFields,
-	checkFieldExpression,
 	parse
 };
