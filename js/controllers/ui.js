@@ -12,7 +12,7 @@ var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
 var fetch = require('../fieldFetch');
-var {remapFields, checkFieldExpression} = require('../models/searchSamples');
+var {remapFields} = require('../models/searchSamples');
 var {fetchInlineState} = require('../inlineState');
 
 var identity = x => x;
@@ -278,21 +278,8 @@ var controls = {
 	'fieldType-post!': (serverBus, state, newState, id) =>
 		fetchColumnData(serverBus, newState.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	// XXX wow, this is painful.
-	vizSettings: (state, column, settings) => {
-		var next = _.assocIn(state, ['columns', column, 'vizSettings'], settings),
-			exp = state.sampleSearch;
-
-		return exp ?
-			_.assoc(next, 'sampleSearch',
-				checkFieldExpression(
-					state.columns[column],
-					next.columns[column],
-					column,
-					state.columnOrder,
-					state.data[column],
-					exp)) :
-			next;
-	},
+	vizSettings: (state, column, settings) =>
+		_.assocIn(state, ['columns', column, 'vizSettings'], settings),
 	'edit-dataset-post!': (serverBus, state, newState, dsID, meta) => {
 		if (!_.contains(['mutationVector', 'clinicalMatrix', 'genomicSegment'],
 				meta.type)) {

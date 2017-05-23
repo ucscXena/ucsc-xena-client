@@ -9,7 +9,7 @@ var ChartView = React.createClass({
 	componentDidMount: function () {
 		var {appState, callback} = this.props,
 			{root} = this.refs;
-		require.ensure(['./chart', '../css/chart.css'], function () {
+		require.ensure(['./chart'], function () {
 			var chart = require('./chart');
 			chart(root, callback, {xena: JSON.stringify(appState)});
 		});
