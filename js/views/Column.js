@@ -200,14 +200,18 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable})
 	]);
 }
 
-function supportsTumorMap({fieldType, valueType, fields}) {
-	var onlyFeatureThatWorks = "B_cell_PCA_16704732"; // stupid
-	return (['geneProbes', 'genes'].indexOf(fieldType) >= 0 && fields.length === 1) ||
-		(fieldType === "clinical" && valueType === "float" && fields.length === 1 && fields[0] === onlyFeatureThatWorks);
+function supportsTumorMap({fieldType, valueType, fields, fieldSpecs}) {
+	// only allow pancanatlas data to transfer to pancanatlas tumorMap
+	// no relevant map that is public.
+	var PancanAtlasHub = "https://pancanatlas.xenahubs.net";
+
+	return (fieldSpecs.map(obj => obj.dsID ? JSON.parse(obj.dsID).host : null).indexOf(PancanAtlasHub) !== -1 ) &&
+		((['geneProbes', 'genes', 'probes'].indexOf(fieldType) !== -1 && fields.length === 1) ||
+			(fieldType === "clinical" && valueType === "float" && fields.length === 1));
 }
 
 function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDownload, specialDownloadMenu}) {
-	var {id, column: {fieldType, noGeneDetail, valueType, fields}} = props,
+	var {id, column: {fieldType, noGeneDetail, valueType, fields, fieldSpecs}} = props,
 		wrongDataType = valueType !== 'coded',
 		specialDownloadItemName = 'Download sample lists (json)';
 
@@ -218,7 +222,7 @@ function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDo
 					disabled={noGeneDetail} onSelect={onMode}>Detailed view</MenuItem> :
 				<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>)
 				: null,
-		supportsTumorMap({fieldType, valueType, fields}) ?
+		supportsTumorMap({fieldType, valueType, fields, fieldSpecs}) ?
 			<MenuItem onSelect={onTumorMap}>TumorMap</MenuItem>
 			: null,
 		(specialDownloadMenu && !wrongDataType) ?
