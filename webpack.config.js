@@ -68,8 +68,12 @@ module.exports = {
 		}),
 		new webpack.OldWatchingPlugin()
 	],
+	resolveLoader: {
+		// http://webpack.github.io/docs/troubleshooting.html#npm-linked-modules-doesn-t-find-their-dependencies
+		fallback: path.join(__dirname, "node_modules")  // handle 'npm ln' for loaders
+	},
 	resolve: {
-		fallback: path.join(__dirname, "node_modules"),
+		fallback: path.join(__dirname, "node_modules"), // handle 'npm ln'
 		alias: {
 			'redboxOptions': path.join(__dirname, 'redboxOptions.json'),
 			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim')
