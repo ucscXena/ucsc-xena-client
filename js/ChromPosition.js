@@ -71,18 +71,18 @@ function drawChromScale(vg, width, layout, genomic = true) {
 
 	if (genomic) {
 		// Render start & end position, abreviating if constrained for width.
-		vg.text(pixelStart, height - 1, 'black', font, startText);    // start position at left
-		vg.text(pixelEnd - vg.textWidth(font, endText), height - 1, 'black', font, endText); // end position at right
+		vg.text(pixelStart, height - 4, 'black', font, startText);    // start position at left
+		vg.text(pixelEnd - vg.textWidth(font, endText), height - 4, 'black', font, endText); // end position at right
 	} else {
-		vg.text(pixelStart, height - 1, 'black', font, "5'");
-		vg.text(pixelEnd - vg.textWidth(font, "3'"), height - 1, 'black', font, "3'");
+		vg.text(pixelStart, height - 4, 'black', font, "5'");
+		vg.text(pixelEnd - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
 	}
 
 	if (range >= 1) {
 		// Render centered scale, pushing to left if constrained for width.
-		vg.box(rangePos, labelHeight / 2, rangeWidth, 1, 'black');
-		vg.box(rangePos, 0, 1, labelHeight, 'black');
-		vg.box(rangePos + rangeWidth, 0, 1, labelHeight, 'black');
+		vg.box(rangePos, labelHeight / 2, rangeWidth, 1, 'grey');
+		vg.box(rangePos, labelHeight / 4, 1, labelHeight / 2, 'black');
+		vg.box(rangePos + rangeWidth, labelHeight / 4, 1, labelHeight / 2, 'black');
 		vg.text(rangePos + rangeWidth + 1, labelHeight - font / 4, 'black', font, rangeText);
 	}
 }

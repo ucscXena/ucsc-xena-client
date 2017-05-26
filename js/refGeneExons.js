@@ -100,8 +100,8 @@ var RefGeneAnnotation = React.createClass({
 			var genomic = false;
 			drawChromScale(vg, width, layout, genomic);
 		} else { // in exon mode, just write 5' and 3'
-			vg.text(0, refHeight - 1, 'black', font, "5'");
-			vg.text(width - vg.textWidth(font, "3'"), refHeight - 1, 'black', font, "3'");
+			vg.text(0, refHeight - 4, 'black', font, "5'");
+			vg.text(width - vg.textWidth(font, "3'"), refHeight - 4, 'black', font, "3'");
 		}
 	},
 
