@@ -104,6 +104,7 @@ module.exports = function (doc/*, vgw, vgh*/) {
 		drawImage = notImplemented,
 
 		smoothing = () => {},
+		labels = cb => cb(),
 
 		drawPoly = function (pts, {fillStyle, strokeStyle, lineWidth}) {
 			pts.forEach(([mtx, mty, ltx, lty]) => {
@@ -165,6 +166,7 @@ module.exports = function (doc/*, vgw, vgh*/) {
 		clipRect,
 		clipReset,
 		clip,
+		labels,
 		text,
 		textCentered,
 		textCenteredPushRight,

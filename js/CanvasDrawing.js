@@ -3,7 +3,7 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var vgcanvas = require('./vgcanvas');
+var vgmixed = require('./vgmixed');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
@@ -11,6 +11,13 @@ var styles = {
 	canvas: {
 		position: 'relative',
 		left: 0,
+		top: 0,
+		zIndex: 1
+	},
+	labels: {
+		position: 'relative',
+		left: 0,
+		zIndex: 2
 	},
 	wrapper: {
 		position: 'relative',
@@ -31,23 +38,27 @@ var CanvasDrawing = React.createClass({
 		var {width, zoom: {height}, wrapperProps} = this.props;
 		return (
 			<div ref='div' {...wrapperProps} style={{...styles.wrapper, width, height}}>
-				<canvas style={{...styles.canvas, top: 0}} ref='canvas'/>
+				<canvas style={styles.canvas} ref='canvas'/>
+				<div style={{...styles.labels, top: -height, width, height}} ref='labels'/>
 			</div>
 		);
 	},
 	componentDidMount: function () {
 		var {width, zoom: {height}} = this.props;
-		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height);
+		this.vg = vgmixed(ReactDOM.findDOMNode(this.refs.canvas), width, height, ReactDOM.findDOMNode(this.refs.labels));
 		this.draw(this.props);
 	},
 
 	setHeight: function (height) {
 		this.vg.height(height);
 		this.refs.div.style.height = `${height}px`;
+		this.refs.labels.style.height = `${height}px`;
+		this.refs.labels.style.top = `-${height}px`;
 	},
 	setWidth: function (width) {
 		this.vg.width(width);
 		this.refs.div.style.width = `${width}px`;
+		this.refs.labels.style.width = `${width}px`;
 	},
 	draw: function (props) {
 		var {draw, ...drawProps} = props,

@@ -226,8 +226,10 @@ var drawSegmentedByMethod = drawSegments => (vg, props) => {
 		drawBackground(vg, width, height);
 		drawSegments(vg, color, index, count, width, height, zoom, toDraw);
 	}
-	labelNulls(vg, width, height, count, stripes);
-	labelValues(vg, width, zoom, toDraw);
+	vg.labels(() => {
+		labelNulls(vg, width, height, count, stripes);
+		labelValues(vg, width, zoom, toDraw);
+	});
 };
 
 

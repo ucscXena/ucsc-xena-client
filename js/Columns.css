@@ -45,3 +45,15 @@
 .Column .react-resizable-handle:hover {
 	visibility: visible;
 }
+
+.ColumnLabels {
+	hyphens: auto;
+	position: absolute;
+	overflow: hidden;
+	display: flex;
+	margin: 0;
+}
+
+.ColumnLabel {
+	margin: auto;
+}

@@ -191,15 +191,17 @@ function drawHeatmap(vg, props) {
 		length = _.getIn(heatmapData, [0, 'length'], 0),
 		draw = length > 30000 ? drawLayoutByPixel : drawLayout;
 
-	draw(vg, {
-		height,
-		width,
-		index,
-		count,
-		data: heatmapData,
-		codes,
-		layout: partition.offsets(width, 0, heatmapData.length),
-		colors: colorFns(colors)
+	vg.labels(() => {
+		draw(vg, {
+			height,
+			width,
+			index,
+			count,
+			data: heatmapData,
+			codes,
+			layout: partition.offsets(width, 0, heatmapData.length),
+			colors: colorFns(colors)
+		});
 	});
 }
 

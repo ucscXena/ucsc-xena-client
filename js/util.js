@@ -21,7 +21,7 @@ module.exports = {
 			{};
 	},
 	eventOffset: function (ev) {
-		var {top, left} = ev.target.getBoundingClientRect();
+		var {top, left} = ev.currentTarget.getBoundingClientRect();
 		return {
 			x: ev.pageX - (left + window.pageXOffset),
 			y: ev.pageY - (top + window.pageYOffset)

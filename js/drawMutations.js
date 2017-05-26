@@ -171,8 +171,10 @@ var drawWithBackground = _.curry((draw, vg, props) => {
 		pixPerRow = height / count,
 		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]);
 
-	drawBackground(vg, width, height, pixPerRow, hasValue);
-	draw(vg, width, zoom, toDraw);
+	vg.labels(() => {
+		drawBackground(vg, width, height, pixPerRow, hasValue);
+		draw(vg, width, zoom, toDraw);
+	});
 });
 
 var drawMutations = drawWithBackground(drawImpactNodes);
