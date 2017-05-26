@@ -83,16 +83,19 @@ module.exports = function (doc/*, vgw, vgh*/) {
 		// right so the left-most (first) characters are visible.
 		textCenteredPushRight = function (x, cy, w, h, c, fontHeight, val) {
 			// See https://github.com/devongovett/pdfkit/issues/351 for y correction.
-			var y = cy - doc._font.ascender / 1000 * fontHeight,
-				txt = String(val),
-				th = fontHeight,
-				tw = textWidth(fontHeight, txt),
-				tx = Math.max(x, x + w / 2 - tw / 2),
-				ty = y + h / 2 + th / 2;
-
 			setfont(fontFamily, fontHeight);
+			var opts = {width: w, height: h, align: 'center'},
+				adj = doc._font.ascender / 1000 * fontHeight,
+				txt = String(val),
+				th = doc.heightOfString(txt, opts),
+				// This calculation isn't making sense to me, but seems to work.
+				// The adj, in paticular, doesn't seem to match the description
+				// in the post, above.
+				ty = cy + h / 2 - th / 2 + adj / 2;
+
 			doc.fill(style(c));
-			doc.text(txt, tx, ty, {lineBreak: false}); // lineBreak is broken; disable it.
+			doc.text(txt, x, ty, opts);
+//			doc.text(txt, tx, ty, {lineBreak: false}); // lineBreak is broken; disable it.
 		},
 
 		textRight = notImplemented,
