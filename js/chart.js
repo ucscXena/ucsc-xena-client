@@ -24,8 +24,9 @@ var chartWidth = () =>
 module.exports = function (root, callback, sessionStorage) {
 	var xdiv, ydiv, xAxisDiv, yAxisDiv, // x y  axis dropdown
 		colorDiv, colorAxisDiv, // color dropdown
+		statsDiv, // statistics
 		row, axisContainer,
-		leftContainer, rightContainer,
+		leftContainer, chartContainer,
 		xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
 		cohort, samplesLength, cohortSamples, updateArgs, update,
 		normalizationState = {},
@@ -140,11 +141,11 @@ module.exports = function (root, callback, sessionStorage) {
 	}
 
 	function buildEmptyChartContainer() {
-		var div = document.createElement("div");
-		div.setAttribute("id", "myChart");
-		div.style.height = chartHeight();
-		div.style.width = chartWidth();
-		return div;
+		var chartdiv = document.createElement("div");
+		chartdiv.setAttribute("id", "myChart");
+		chartdiv.style.height = chartHeight();
+		chartdiv.style.width = chartWidth();
+		return chartdiv;
 	}
 
 	function colUnit (colSettings) {
@@ -542,6 +543,12 @@ module.exports = function (root, callback, sessionStorage) {
 		div.appendChild(seriesButton);
 	}
 */
+	function updateStatsDivPosition (statsDiv, chartContainer) {
+		var rectObject = chartContainer.getBoundingClientRect();
+		statsDiv.style.top = rectObject.top + rectObject.height * 0.1 + "px";
+		statsDiv.style.left = rectObject.right - rectObject.width * 0.1  + "px";
+	}
+
 	function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 		yfields, ycodemap, ydata, reverseStrand,
 		offsets, xlabel, ylabel, STDEV,
@@ -763,9 +770,9 @@ module.exports = function (root, callback, sessionStorage) {
 				cdf = jStat.studentt.cdf(tStatistics, dof),
 				pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
 
-				chart.renderer.text('Welch\'s t-test<br>' +
+				statsDiv.innerHTML = 'Welch\'s t-test<br>' +
 					't = ' + tStatistics.toPrecision(4) + '<br>' +
-					'p = ' + pValue.toPrecision(4), 100, 75).add();
+					'p = ' + pValue.toPrecision(4);
 			}
 			chart.redraw();
 		} else if (!xfield) { //summary view --- messsy code
@@ -1023,9 +1030,9 @@ module.exports = function (root, callback, sessionStorage) {
 				}
 
 				pValue = 1 - jStat.chisquare.cdf( chisquareStats, dof);
-				chart.renderer.text('Pearson\'s chi-squared test<br>' +
+				statsDiv.innerHTML = 'Pearson\'s chi-squared test<br>' +
 						'χ2 = ' + chisquareStats.toPrecision(4) + '<br>' +
-						'p = ' + pValue.toPrecision(4), 100, 75).add();
+						'p = ' + pValue.toPrecision(4);
 			}
 
 			chart.redraw();
@@ -1033,7 +1040,7 @@ module.exports = function (root, callback, sessionStorage) {
 			var sampleLabels = _.flatten(cohortSamples),
 				x, y;
 
-			chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel);
+			chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, samplesLength);
 
 			if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
 				//chartOptions.legend.title.text = ylabel;
@@ -1099,11 +1106,10 @@ module.exports = function (root, callback, sessionStorage) {
 					var ylist = _.filter(ydata[0], function (y, i) {return (y != null && xdata[0][i] != null);});
 					var rho = jStat.corrcoeff(xlist, ylist); // r Pearson's Rho correlation coefficient
 					var spearmanRho = jStat.spearmancoeff(xlist, ylist); // (spearman's) rank correlation coefficient, rho
-					chart.renderer.text('Pearson\'s rho<br>' +
+					statsDiv.innerHTML = 'Pearson\'s rho<br>' +
 						'r = ' + rho.toPrecision(4) + '<br>' +
 						'Spearman\'s rank rho<br>' +
-						'ρ = ' + spearmanRho.toPrecision(4)
-						, 100, 75).add();
+						'ρ = ' + spearmanRho.toPrecision(4);
 				}
 
 
@@ -1178,11 +1184,8 @@ module.exports = function (root, callback, sessionStorage) {
 				//add single-series data
 				if (singleSeries.length) {
 					chart.addSeries({
-						name: "sample",
+						name: scatterColorData ? columns[colorColumn].user.fieldLabel : "sample",
 						data: singleSeries,
-						marker: {
-							opacity: 0.1
-						}
 					}, false);
 				}
 
@@ -1194,17 +1197,9 @@ module.exports = function (root, callback, sessionStorage) {
 						allowPointSelect: true,
 						marker: {
 							symbol: 'circle',
-							radius: 4,
 							lineColor: 'black',
 							fillColor: 'gold',
 							lineWidth: 1,
-							states: {
-								select: {
-								   lineWidth: 2,
-								   radius: 6,
-								   fillColor: 'gold'
-								}
-							}
 						}
 					}, false);
 				}
@@ -1219,7 +1214,8 @@ module.exports = function (root, callback, sessionStorage) {
 
 	update = function () {
 		var oldDiv = document.getElementById("myChart");
-		rightContainer.replaceChild(buildEmptyChartContainer(), oldDiv);
+		oldDiv.parentElement.replaceChild(buildEmptyChartContainer(), oldDiv);
+		statsDiv.innerHTML = "";
 
 		//initialization
 		document.getElementById("myChart").innerHTML = "Querying Xena ...";
@@ -1406,9 +1402,15 @@ module.exports = function (root, callback, sessionStorage) {
 	};
 
 	// right panel chart
-	rightContainer = document.createElement("div");
-	rightContainer.appendChild(buildEmptyChartContainer());
-	root.appendChild(rightContainer);
+	chartContainer = document.createElement("div");
+	chartContainer.appendChild(buildEmptyChartContainer());
+	root.appendChild(chartContainer);
+
+	// statistics
+	statsDiv = document.createElement("div");
+	statsDiv.style.position = "absolute";
+	updateStatsDivPosition (statsDiv, chartContainer);
+	chartContainer.appendChild(statsDiv);
 
 	// left panel control
 	leftContainer = document.createElement("div");
@@ -1423,7 +1425,7 @@ module.exports = function (root, callback, sessionStorage) {
 	axisContainer = document.createElement("div");
 	axisContainer.className = "container";
 
-	// x
+	// x axis
 	xAxisDiv = axisSelector("Xaxis", update, updateArgs);
 
 	// y axis selector and Y value controls
@@ -1466,5 +1468,6 @@ module.exports = function (root, callback, sessionStorage) {
 	window.addEventListener("resize", function() {
 		document.getElementById("myChart").style.height = chartHeight();
 		document.getElementById("myChart").style.width = chartWidth();
+		updateStatsDivPosition (statsDiv, chartContainer);
 	});
 };

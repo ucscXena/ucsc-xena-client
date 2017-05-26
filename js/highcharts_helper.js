@@ -216,7 +216,7 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 
 
 
-function scatterChart(chartOptions, xlabel, ylabel) {
+function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	var xAxisTitle = xlabel,
 		yAxisTitle = ylabel;
 
@@ -231,7 +231,6 @@ function scatterChart(chartOptions, xlabel, ylabel) {
 		title: {
 			text: xAxisTitle
 		},
-		gridLineWidth: 1,
 		minRange: 1,
 		crosshair: true
 	};
@@ -239,6 +238,9 @@ function scatterChart(chartOptions, xlabel, ylabel) {
 		title: {
 			text: yAxisTitle
 		},
+		gridLineWidth: 0,
+		tickWidth: 1,
+		lineWidth: 1,
 		crosshair: true
 	};
 	chartOptions.tooltip = {
@@ -246,6 +248,12 @@ function scatterChart(chartOptions, xlabel, ylabel) {
 		pointFormat: '<b>{point.colorLabel}</b><br>sample: {point.name}<br>x: {point.x}<br>y:{point.y}'
 	};
 	chartOptions.plotOptions = {
+		scatter: {
+			marker: {
+				radius: samplesLength > 10000 ? 1 : 2,
+				opacity: 0.1
+			},
+		},
 		series: {
 			turboThreshold: 0
 		}
