@@ -6,7 +6,7 @@ var ReactDOM = require('react-dom');
 var vgcanvas = require('./vgcanvas');
 var {addCommas} = require('./util');
 
-var height = 24; // Move to common file, to match refGeneExons? Pass in as prop?
+var height = 12; // Move to common file, to match refGeneExons? Pass in as prop?
 var labelHeight = 12;
 var font = 10;
 
@@ -16,6 +16,8 @@ function metric(n) {
 		str = str.replace(/000000$/, 'Mb');
 	} else if (str.match(/000$/)) {
 		str = str.replace(/000$/, 'kb');
+	} else {
+		str = str + 'bp';
 	}
 	return str;
 }
@@ -45,7 +47,7 @@ function numberOrAbrev(vg, width, font, n) {
 	return w > width ? abrev(n) : s;
 }
 
-function drawChromScale(vg, width, layout) {
+function drawChromScale(vg, width, layout, genomic = true) {
 	if (vg.width() !== width) {
 		vg.width(width);
 	}
@@ -60,16 +62,21 @@ function drawChromScale(vg, width, layout) {
 		baseWidth = baseEnd - baseStart + 1,
 		range = pickRange(baseWidth / 2),
 		rangeWidth = pixelWidth * range / baseWidth,
-		endText = numberOrAbrev(vg, width / 2, font, baseEnd),
+		startText = numberOrAbrev(vg, width / 3, font, baseStart),
+		endText = numberOrAbrev(vg, width / 3, font, baseEnd),
 		rangeText = metric(range),
 		rangeTextWidth = vg.textWidth(font, rangeText),
 		pushLeft = Math.max(width - rangeTextWidth - rangeWidth - 1, 0),
 		rangePos = Math.min(pushLeft, (pixelWidth - rangeWidth) / 2);
 
-	// Render start & end position, abreviating if constrained for width.
-	vg.text(pixelStart + 3, height - 1, 'black', font, numberOrAbrev(vg, width / 2, font, baseStart));    // start position at left
-	vg.text(pixelEnd - vg.textWidth(font, endText), height - 1, 'black', font, endText); // end position at right
-
+	if (genomic) {
+		// Render start & end position, abreviating if constrained for width.
+		vg.text(pixelStart, height - 1, 'black', font, startText);    // start position at left
+		vg.text(pixelEnd - vg.textWidth(font, endText), height - 1, 'black', font, endText); // end position at right
+	} else {
+		vg.text(pixelStart, height - 1, 'black', font, "5'");
+		vg.text(pixelEnd - vg.textWidth(font, "3'"), height - 1, 'black', font, "3'");
+	}
 
 	if (range >= 1) {
 		// Render centered scale, pushing to left if constrained for width.
@@ -107,4 +114,4 @@ var ChromPosition = React.createClass({
 
 widgets.annotation.add('chrom', props => <ChromPosition {...props}/>);
 
-module.exports = {ChromPosition, abrev};
+module.exports = {ChromPosition, abrev, drawChromScale};

@@ -7,9 +7,11 @@ var ReactDOM = require('react-dom');
 var intervalTree = require('static-interval-tree');
 var vgcanvas = require('./vgcanvas');
 var layoutPlot = require('./layoutPlot');
+var {drawChromScale} = require('./ChromPosition');
 
 var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
+
 
 // annotate an interval with cds status
 var inCds = ({cdsStart, cdsEnd}, intvl) =>
@@ -43,6 +45,7 @@ function findIntervals(gene) {
 var shade1 = '#cccccc',
 	shade2 = '#999999',
 	refHeight = 12,
+	font = 10,
 	annotation = {
 		utr: {
 			y: refHeight / 4,
@@ -80,7 +83,7 @@ var RefGeneAnnotation = React.createClass({
 
 		// draw a line across to represent the entire horizontal genomic region that will be in display, for promoter and downstream region
 		ctx.fillStyle = 'grey';
-		ctx.fillRect(0, refHeight / 2 + refHeight, width, 1);
+		ctx.fillRect(0, refHeight * 1.5, width, 1);
 
 		pxTransformEach(layout, (toPx, [start, end]) => {
 			var nodes = matches(indx, {start: start, end: end});
@@ -92,9 +95,14 @@ var RefGeneAnnotation = React.createClass({
 			});
 		});
 
-		ctx.font = "12px Verdana";
-		ctx.strokeText("5'", 5, refHeight - 2);
-		ctx.strokeText("3'", width - 15, refHeight - 2);
+		// if in genomic mode i.e. (alternateColors === false), draw scale
+		if (alternateColors === false) {
+			var genomic = false;
+			drawChromScale(vg, width, layout, genomic);
+		} else { // in exon mode, just write 5' and 3'
+			vg.text(0, refHeight - 1, 'black', font, "5'");
+			vg.text(width - vg.textWidth(font, "3'"), refHeight - 1, 'black', font, "3'");
+		}
 	},
 
 	componentDidMount: function () {
