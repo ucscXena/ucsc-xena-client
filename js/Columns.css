@@ -47,7 +47,6 @@
 }
 
 .ColumnLabels {
-	hyphens: auto;
 	position: absolute;
 	overflow: hidden;
 	display: flex;

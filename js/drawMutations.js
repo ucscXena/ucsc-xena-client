@@ -147,7 +147,6 @@ function drawSVNodes(vg, width, zoom, svVariants) {
 			var {xStart, xEnd, y, alt, altGene, h} = variant;
 
 			if ( (h  > labelFont) && ((xEnd - xStart) - margin >= minTxtWidth)) {
-				let h = height / count;
 				vg.clip(xStart + margin, y - h / 2, xEnd - xStart - 2 * margin, h, () =>
 					vg.textCenteredPushRight( xStart + margin, y - h / 2, xEnd - xStart - margin,
 						h, 'black', labelFont, altGene ? altGene + " " + alt : alt)

@@ -24,24 +24,34 @@ module.exports = (el, vgw, vgh, labelEl) => ({
 	labels(cb) {
 		this.labelCtx = [];
 		cb();
+		// Below, we set 'hyphens' to 'none' if there's no room for a 2nd line, so we can fit more
+		// of the text on-screen (instead of hyphenating & wrapping to the 2nd line that we can't see).
+		//
+		// Also, we clip the height to an integer multiple of lineHeight, so we don't, for example, render
+		// the top pixel of the 2nd line, which looks distracting.
 		var style = {textAlign: 'center'},
-			labels = this.labelCtx.map(([x, y, w, h, c, f, t]) => (
-				<div className='ColumnLabels'
-					style={{
-						left: x,
-						top: y,
-						width: w,
-						color: c,
-						lineHeight: `${1.2 * f}px`,
-						fontSize: `${f}px`,
-						// XXX set height to an integer multiple of line height, to avoid
-						// partial lines?
-						height: h}}>
+			labels = this.labelCtx.map(([left, top, width, h, color, f, txt]) => {
+				var lineHeight = 1.2 * f,
+					hyphens = h < 2 * lineHeight ? 'none' : 'auto', // Don't hyphenate on a single line
+					height = Math.floor(h / lineHeight) * lineHeight; // Render integer number of lines
+				return (
+					<div className='ColumnLabels'
+						style={{
+							left,
+							top,
+							width,
+							color,
+							lineHeight: `${lineHeight}px`,
+							fontSize: `${f}px`,
+							// XXX set height to an integer multiple of line height, to avoid
+							// partial lines?
+							height}}>
 
-					<p className='ColumnLabel'>
-						{'' + t}
-					</p>
-				</div>));
+						<p className='ColumnLabel' style={{width, hyphens}}>
+							{'' + txt}
+						</p>
+					</div>);
+			});
 		ReactDOM.render(<div style={style}>{labels}</div>, labelEl);
 		this.labelCtx = undefined;
 	},
