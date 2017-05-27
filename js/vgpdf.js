@@ -81,20 +81,27 @@ module.exports = function (doc/*, vgw, vgh*/) {
 
 		// Center text if there's room. If the box is too narrow, push
 		// right so the left-most (first) characters are visible.
-		textCenteredPushRight = function (x, cy, w, h, c, fontHeight, val) {
+		textCenteredPushRight = function (x, y, w, h, c, fontHeight, val) {
 			// See https://github.com/devongovett/pdfkit/issues/351 for y correction.
 			setfont(fontFamily, fontHeight);
 			var opts = {width: w, height: h, align: 'center'},
-				adj = doc._font.ascender / 1000 * fontHeight,
+//				adj = doc._font.ascender / 1000 * fontHeight,
 				txt = String(val),
 				th = doc.heightOfString(txt, opts),
-				// This calculation isn't making sense to me, but seems to work.
-				// The adj, in paticular, doesn't seem to match the description
-				// in the post, above.
-				ty = cy + h / 2 - th / 2 + adj / 2;
+				// pdfkit places text by upper-left corner, which is the same as
+				// the coord we are passed. Here we center it vertically, if there's
+				// space. Otherwise we use the passed y coordinate so the 1st line
+				// is visible. The +2 fudge is determined emperically, and should
+				// probably be based on line spacing, font height, or something.
+				ty = (th > h ? y  : y + h / 2 - th / 2) + 2;
 
 			doc.fill(style(c));
 			doc.text(txt, x, ty, opts);
+			// There was an infinite loop with 'lineBreak' if text was placed
+			// outside the page margin. We disabled it for that reason. Enabling
+			// it now, because we want text to wrap. So far, the bug has not
+			// reappeared, but any lock-up with 100% cpu is likely due to
+			// hitting this bug, again.
 //			doc.text(txt, tx, ty, {lineBreak: false}); // lineBreak is broken; disable it.
 		},
 

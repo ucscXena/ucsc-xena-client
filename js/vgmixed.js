@@ -43,8 +43,6 @@ module.exports = (el, vgw, vgh, labelEl) => ({
 							color,
 							lineHeight: `${lineHeight}px`,
 							fontSize: `${f}px`,
-							// XXX set height to an integer multiple of line height, to avoid
-							// partial lines?
 							height}}>
 
 						<p className='ColumnLabel' style={{width, hyphens}}>
