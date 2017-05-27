@@ -429,8 +429,8 @@ var Column = React.createClass({
 			url = url + "&attr=" + feature;
 		});
 		window.open(url);
-	},
 
+	},
 	onReload: function () {
 		this.props.onReload(this.props.id);
 	},
