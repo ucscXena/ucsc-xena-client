@@ -33,7 +33,7 @@ var Transcripts = React.createClass({
 var store = createStore();
 var main = window.document.getElementById('main');
 
-var selector = state => state.servers;
+var selector = state => state; // currently unused by Transcripts
 
 // Start the application
 connector({...store, controller, main, selector, Page: Transcripts, persist: true, history: false});
