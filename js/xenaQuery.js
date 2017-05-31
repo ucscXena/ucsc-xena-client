@@ -188,6 +188,24 @@ function indexRefGene(resp) {
 	return _.object(resp.name2, _.map(collateRows(resp), refGeneAttrs));
 }
 
+function transcriptAttrs(row) {
+	return {
+		name: row.name,
+		strand: row.position.strand,
+		txStart: row.position.chromstart,
+		txEnd: row.position.chromend,
+		chrom: row.position.chrom,
+		cdsStart: row['position (2)'].chromstart, // XXX ouch: position (2)
+		cdsEnd: row['position (2)'].chromend,
+		exonCount: row.exonCount,
+		exonStarts: splitExon(row.exonStarts),
+		exonEnds: splitExon(row.exonEnds)
+	};
+}
+function indexTranscripts(resp) {
+	return collateRows(resp).map(transcriptAttrs);
+}
+
 ////////////////////////////////////////////////////
 // Query marshalling and dispatch
 
@@ -251,6 +269,7 @@ function transformPOSTMethods(postMethods) {
 		featureList: mapResponse(indexFeatures),
 		fieldCodes: mapResponse(indexCodes),
 		fieldMetadata: mapResponse(indexFeatureDetail),
+		geneTranscripts: mapResponse(indexTranscripts),
 		refGeneExons: mapResponse(indexRefGene),
 		segmentedDataRange: mapResponse(indexSegmented),
 		// Apply a transform that requires the 'host' parameter

@@ -19,9 +19,12 @@ require('bootstrap/dist/css/bootstrap.css');
 require('underscore');
 
 if (document.location.pathname.match(/datapages\/$/)) {
-    /* jshint -W030 */ // XXX jshint doesn't like the workaround.
 	require.ensure(['./datapages'], function () {
 		require(['./datapages']).foo; // XXX see above
+	});
+} else if (document.location.pathname.match(/transcripts\/$/)) {
+	require.ensure(['./transcripts'], function () {
+		require(['./transcripts']).foo;       // XXX see above
 	});
 } else if (document.location.pathname.match(/hub\/$/)) {
 	require.ensure(['./hubPage'], function () {
