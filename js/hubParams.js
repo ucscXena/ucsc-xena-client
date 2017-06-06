@@ -9,7 +9,7 @@ function parseServer(s) {
 		host = tokens[2],
 		defproto = 'https://',
 		proto = tokens[1] || defproto,
-		defport = (proto === defproto) ? null : '7222',
+		defport = (proto === defproto) ? 443 : '7222',
 		port = tokens[4] || defport,
 		path = tokens[5] || '';
 
