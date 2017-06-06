@@ -45,7 +45,6 @@ function findIntervals(gene) {
 var shade1 = '#cccccc',
 	shade2 = '#999999',
 	refHeight = 12,
-	font = 10,
 	annotation = {
 		utr: {
 			y: refHeight / 4,
@@ -95,13 +94,10 @@ var RefGeneAnnotation = React.createClass({
 			});
 		});
 
-		// if in genomic mode i.e. (alternateColors === false), draw scale
-		if (alternateColors === false) {
-			var genomic = false;
-			drawChromScale(vg, width, layout, genomic);
+		if (alternateColors === false) { // if in genomic mode i.e. (alternateColors === false), draw scale
+			drawChromScale(vg, width, layout, "geneIntron");
 		} else { // in exon mode, just write 5' and 3'
-			vg.text(0, refHeight - 4, 'black', font, "5'");
-			vg.text(width - vg.textWidth(font, "3'"), refHeight - 4, 'black', font, "3'");
+			drawChromScale(vg, width, layout, "geneExon");
 		}
 	},
 

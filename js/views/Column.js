@@ -18,7 +18,7 @@ var widgets = require('../columnWidgets');
 var aboutDatasetMenu = require('./aboutDatasetMenu');
 var spinner = require('../ajax-loader.gif');
 var mutationVector = require('../models/mutationVector');
-var ValidatedInput = require('./ValidatedInput');
+//var ValidatedInput = require('./ValidatedInput');
 var konami = require('../konami');
 var {deepPureRenderMixin} = require('../react-utils');
 var Crosshair = require('./Crosshair');
@@ -98,13 +98,14 @@ function addHelp(id, target) {
 
 // Manually set focus to avoid triggering dropdown (close) or anchor
 // (navigate) actions.
-var setFocus = ev => {
+/*var setFocus = ev => {
 	ev.preventDefault();
 	ev.stopPropagation();
 	ev.target.focus();
 };
 
 var stopPropagation = ev => ev.stopPropagation();
+*/
 
 var addIdsToArr = arr => {
 	var list = arr.filter(el => el).map((el, id) => React.cloneElement(el, {id}));
@@ -128,7 +129,7 @@ var boundIsValid = _.curry((maxXZoom, str) => {
 	return maxXZoom.start <= pos && pos <= maxXZoom.end;
 });
 
-function zoomMenu(props) {
+/*function zoomMenu(props) {
 	var {column} = props,
 		{xzoom, maxXZoom, assembly} = column,
 		{start, end} = xzoom || maxXZoom || {start: 0, end: 0},
@@ -142,7 +143,7 @@ function zoomMenu(props) {
 		<MenuItem>
 			<ValidatedInput defaultValue={end} isValid={bIV} ref='end' onSelect={stopPropagation} onClick={setFocus} type='text' bsSize='small' />
 		</MenuItem>];
-}
+}*/
 
 function sortVisibleLabel(column, pos) {
 	var sortVisible = _.get(column, 'sortVisible', true);
@@ -161,7 +162,7 @@ function segmentedVizOptions(onVizOptions) {
 		<MenuItem divider />] : [];
 }
 
-function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, xzoomable, specialDownloadMenu, onVizOptions}) {
+function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, specialDownloadMenu, onVizOptions}) {
 	var {column, data} = props,
 		pos = parsePos(column.fields[0]), // XXX Should compute a flag for this.
 		{showIntrons = false} = column,
@@ -172,7 +173,7 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 	return addIdsToArr([
 		...(pos ? [] : [<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>]),
 		...(segmentedVizOptions(onVizOptions)),
-		...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
+		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
 		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>,
 		specialDownloadMenu ?
 			<MenuItem disabled={noData} onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
@@ -180,22 +181,22 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 	]);
 }
 
-function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible, xzoomable}) {
+function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 	var {column, data} = props,
 		{valueType, sortVisible, assembly, showIntrons = false} = column,
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'mutation',
 		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
-		noMenu = !rightValueType || !rightAssembly || (data && _.isEmpty(data.refGene)),
+		noMenu = !rightValueType || !rightAssembly,
 		noMuPit = noMenu || wrongDataSubType,
 		noData = !_.get(data, 'req'),
-		mupitItemName = noData ? 'MuPIT View (hg19) Loading' : 'MuPIT View (hg19)',
-		sortVisibleItemName = sortVisible ? 'Sort full region' : 'Sort zoom region',
+		mupitItemName = noData ? 'MuPIT View (hg19 coding) Loading' : 'MuPIT View (hg19 coding)',
+		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
 	return addIdsToArr([
-		<MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
-		<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
-		...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
+		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
+		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
+		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
 		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>
 	]);
 }
@@ -275,10 +276,10 @@ function getPosition(maxXZoom, pStart, pEnd) {
 }
 
 // Persistent state for xzoomable setting.
-var columnsXZoomable = false;
+//var columnsXZoomable = false;
 var specialDownloadMenu = false;
 if (process.env.NODE_ENV !== 'production') {
-	columnsXZoomable = true;
+//	columnsXZoomable = true;
 	specialDownloadMenu = true;
 }
 
@@ -286,14 +287,14 @@ var Column = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		return {
-			xzoomable: columnsXZoomable,
+//			xzoomable: columnsXZoomable,
 			specialDownloadMenu: specialDownloadMenu
 		};
 	},
 	enableHiddenFeatures() {
-		columnsXZoomable = true;
+//		columnsXZoomable = true;
 		specialDownloadMenu = true;
-		this.setState({xzoomable: true});
+//		this.setState({xzoomable: true});
 		this.setState({specialDownloadMenu: true});
 	},
 	componentWillMount() {
@@ -426,11 +427,11 @@ var Column = React.createClass({
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
-			{xzoomable, specialDownloadMenu} = this.state,
+			{specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
-				onSpecialDownload, supportsGeneAverage, xzoomable, specialDownloadMenu}),
+				onSpecialDownload, supportsGeneAverage, specialDownloadMenu}),
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
 			// move this to state to generalize to other annotations.

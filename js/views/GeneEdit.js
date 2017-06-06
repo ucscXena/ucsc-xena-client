@@ -39,7 +39,7 @@ var GeneEdit = React.createClass({
 					<Input type='textinput' value={gene}
 						   onChange={ev => setEditorState({gene: ev.target.value})}/>
 					<div>e.g. TP53</div>
-					{pos ? <div>or chr1:200000-300000</div> : null}
+					{pos ? <div>or chr17:7,564,097-7,591,856</div> : null}
 				</div>);
 		return (
 			<div className="form-group">{makeLabel(content, label)}</div>
