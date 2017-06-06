@@ -11,9 +11,12 @@ function parseServer(s) {
 		proto = tokens[1] || defproto,
 		defport = (proto === defproto) ? 443 : '7222',
 		port = tokens[4] || defport,
-		path = tokens[5] || '';
+		path = tokens[5] || '',
+		serverUrl = proto + host + (port ? ':' + port : '') + path;
 
-	return proto + host + (port ? ':' + port : '') + path;
+	//*.xenahubs.net:443 server drop 443
+	serverUrl = serverUrl.replace(/.xenahubs.net:443$/, ".xenahubs.net");
+	return serverUrl;
 }
 
 // normalize: add http[s]? add port? Do standard replacements?

@@ -2,13 +2,13 @@
 
 var servers = {
 	localHub: 'https://local.xena.ucsc.edu:7223',
-	publicHub: 'https://ucscpublic.xenahubs.net:443',
-	tcgaHub: 'https://tcga.xenahubs.net:443',
-	icgcHub: 'https://icgc.xenahubs.net:443',
-	toilHub: 'https://toil.xenahubs.net:443',
-	pcawgHub: 'https://pcawg.xenahubs.net:443',
-	singlecellHub: 'https://singlecell.xenahubs.net:443',
-	pancanAtlasHub: 'https://pancanatlas.xenahubs.net:443'
+	publicHub: 'https://ucscpublic.xenahubs.net',
+	tcgaHub: 'https://tcga.xenahubs.net',
+	icgcHub: 'https://icgc.xenahubs.net',
+	toilHub: 'https://toil.xenahubs.net',
+	pcawgHub: 'https://pcawg.xenahubs.net',
+	singlecellHub: 'https://singlecell.xenahubs.net',
+	pancanAtlasHub: 'https://pancanatlas.xenahubs.net'
 };
 
 module.exports = {
