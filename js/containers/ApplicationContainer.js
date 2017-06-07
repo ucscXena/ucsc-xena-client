@@ -67,10 +67,16 @@ var getLabel = _.curry((datasets, dsID) => {
 	return ds.label || ds.name;
 });
 
+var getMetaData = _.curry((datasets, dsID) => {
+	var ds = datasets[dsID];
+	return ds;
+});
+
 function datasetMeta(column, datasets) {
 	return {
 		dsIDs: _.map(xenaFieldPaths(column), p => _.getIn(column, [...p, 'dsID'])),
-		label: getLabel(datasets)
+		label: getLabel(datasets),
+		metadata: getMetaData(datasets),
 	};
 }
 

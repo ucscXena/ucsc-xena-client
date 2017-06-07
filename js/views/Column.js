@@ -24,6 +24,7 @@ var {deepPureRenderMixin} = require('../react-utils');
 var Crosshair = require('./Crosshair');
 var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
+var {categoryMore} = require('../colorScales');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -201,14 +202,13 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 	]);
 }
 
-function supportsTumorMap({fieldType, valueType, fields, fieldSpecs}) {
+function supportsTumorMap({fieldType, fields, fieldSpecs}) {
 	// only allow pancanatlas data to transfer to pancanatlas tumorMap
 	// no relevant map that is public.
 	var PancanAtlasHub = "https://pancanatlas.xenahubs.net";
 
 	return (fieldSpecs.map(obj => obj.dsID ? JSON.parse(obj.dsID).host : null).indexOf(PancanAtlasHub) !== -1 ) &&
-		((['geneProbes', 'genes', 'probes'].indexOf(fieldType) !== -1 && fields.length === 1) ||
-			(fieldType === "clinical" && valueType === "float" && fields.length === 1));
+		(['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) !== -1 && fields.length === 1);
 }
 
 function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDownload, specialDownloadMenu}) {
@@ -223,7 +223,7 @@ function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDo
 					disabled={noGeneDetail} onSelect={onMode}>Detailed view</MenuItem> :
 				<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>)
 				: null,
-		supportsTumorMap({fieldType, valueType, fields, fieldSpecs}) ?
+		supportsTumorMap({fieldType, fields, fieldSpecs}) ?
 			<MenuItem onSelect={onTumorMap}>TumorMap</MenuItem>
 			: null,
 		(specialDownloadMenu && !wrongDataType) ?
@@ -398,10 +398,16 @@ var Column = React.createClass({
 	},
 
 	onTumorMap: function () {
+		// TumorMap/Xena API https://tumormap.ucsc.edu/query/addAttributeXena.html
+		// the only connection we have here is on the pancanAtlas data, and currently all categorical data there are using
 		var fieldSpecs = _.getIn(this.props, ['column', 'fieldSpecs']),
-			map = "PancanAtlas_dev/XenaPancanAtlas",
+			valueType = _.getIn(this.props, ['column', 'valueType']),
+			datasetMeta = _.getIn(this.props, ['datasetMeta']),
+			columnid = _.getIn(this.props, ['id']),
+			map = "PancanAtlas/XenaPancanAtlas",
 			layout = 'mRNA',
-			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + map + "&layout=" + layout;
+			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + map + "&layout=" + layout,
+			customColor = {};
 
 		_.map(fieldSpecs, spec => {
 			var ds = JSON.parse(spec.dsID),
@@ -409,10 +415,27 @@ var Column = React.createClass({
 				dataset = ds.name,
 				feature = spec.fields[0];
 
+			customColor = _.extend(customColor, datasetMeta(columnid).metadata(spec.dsID).customcolor);
+
 			url = url + "&hub=" + hub + "/data/";
 			url = url + "&dataset=" + dataset;
 			url = url + "&attr=" + feature;
 		});
+
+		if (valueType === "coded") {
+			var codes = _.getIn(this.props, ['data', 'codes']),
+				cat, colorhex,
+				colors = _.isEmpty(customColor) ? categoryMore : customColor;
+
+			_.map(codes, (code, i) =>{
+				cat = code;
+				colorhex = colors[i % colors.length];
+				colorhex = colorhex.slice(1, colorhex.length);
+				url = url + "&cat=" + encodeURIComponent(cat);
+				url = url + "&color=" + colorhex;
+			});
+		}
+
 		window.open(url);
 	},
 
