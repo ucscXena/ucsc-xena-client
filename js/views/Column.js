@@ -202,17 +202,19 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 	]);
 }
 
-function supportsTumorMap({fieldType, fields, fieldSpecs}) {
-	// only allow pancanatlas data to transfer to pancanatlas tumorMap
-	// no relevant map that is public.
+function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
+	// tumorMap only support "TCGA PancanAtlas" cohort and
+	// data be queried directly from xena
 	var PancanAtlasHub = "https://pancanatlas.xenahubs.net";
+	var foundCohort = _.any(cohort, c => (c.name === "TCGA PancanAtlas"));
 
-	return (fieldSpecs.map(obj => obj.dsID ? JSON.parse(obj.dsID).host : null).indexOf(PancanAtlasHub) !== -1 ) &&
+	return foundCohort &&
+		(fieldSpecs.map(obj => obj.dsID ? JSON.parse(obj.dsID).host : null).indexOf(PancanAtlasHub) !== -1 ) &&
 		(['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) !== -1 && fields.length === 1);
 }
 
 function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDownload, specialDownloadMenu}) {
-	var {id, column: {fieldType, noGeneDetail, valueType, fields, fieldSpecs}} = props,
+	var {id, cohort, column: {fieldType, noGeneDetail, valueType, fields, fieldSpecs}} = props,
 		wrongDataType = valueType !== 'coded',
 		specialDownloadItemName = 'Download sample lists (json)';
 
@@ -223,7 +225,7 @@ function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDo
 					disabled={noGeneDetail} onSelect={onMode}>Detailed view</MenuItem> :
 				<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>)
 				: null,
-		supportsTumorMap({fieldType, fields, fieldSpecs}) ?
+		supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) ?
 			<MenuItem onSelect={onTumorMap}>TumorMap</MenuItem>
 			: null,
 		(specialDownloadMenu && !wrongDataType) ?
@@ -449,7 +451,8 @@ var Column = React.createClass({
 	},
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
-				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching, supportsGeneAverage, onClick, tooltip} = this.props,
+				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
+				supportsGeneAverage, onClick, tooltip} = this.props,
 			{specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
