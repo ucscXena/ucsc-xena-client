@@ -1,0 +1,24 @@
+.nameColumn {
+	margin: 20px;
+	width: 125px;
+	display: flex;
+	flex-wrap: wrap;
+	overflow: hidden;
+	resize: both;
+	float: left;
+}
+
+.nameColumn--item {
+	width: 100%;
+	display: inline-block;
+	position: relative;
+	text-align: center;
+	font-size: 0.85em;
+}
+
+/* This is not making the text align vertically. Not sure why. 
+*/
+.nameColumn--item span{
+	position: relative;
+	vertical-align: middle;
+}

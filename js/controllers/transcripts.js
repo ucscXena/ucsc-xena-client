@@ -36,7 +36,7 @@ var controls = {
 		fetchTranscripts(serverBus, newState.transcripts);
 	},
 	'geneTranscripts':
-		(state, transcripts) => _.assocIn(state, ['transcripts', 'transcripts'], transcripts)
+		(state, transcripts) => _.assocIn(state, ['transcripts', 'genetranscripts'], transcripts)
 };
 
 module.exports = {

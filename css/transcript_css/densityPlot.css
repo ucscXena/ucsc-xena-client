@@ -1,0 +1,25 @@
+.densityPlot {
+	margin: 20px;
+	width: 125px;
+	display: flex;
+	flex-wrap: wrap;
+	overflow: hidden;
+	resize: both;
+	float: left;
+}
+
+.densityPlot--row {
+	width: 100%;
+	display: inline-block;
+}
+
+.densityPlot--row--xAxis {
+	height: 1px;
+	width: 100%;
+	background-color: black;
+	position: relative;
+	top: 50%;
+	vertical-align: middle;
+	z-index: -1
+}
+

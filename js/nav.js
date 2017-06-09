@@ -14,6 +14,7 @@ var links = [
 	{href: "http://xena.ucsc.edu", label: "Home"},
 	{href: "../datapages/", label: "Data Sets"},
 	{href: "../heatmap/", label: "Visualization"},
+	{href: "../transcripts/", label: "Transcripts"},
 	{href: "../hub/", label: "Data Hubs"},
 	//{href: "https://genome-cancer.ucsc.edu/download/public/get-xena/index.html", label: "Local Xena"},
 	{href: "http://xena.ucsc.edu/private-hubs/", label: "View My Data"},
