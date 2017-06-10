@@ -28,5 +28,13 @@ module.exports = {
 		servers.tcgaHub,
 		servers.icgcHub,
 		servers.toilHub
+	],
+	publicServers: [
+		servers.publicHub,
+		servers.tcgaHub,
+		servers.icgcHub,
+		servers.toilHub,
+		servers.pancanAtlasHub,
+		servers.pcawgHub
 	]
 };
