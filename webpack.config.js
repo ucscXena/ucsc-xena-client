@@ -3,6 +3,7 @@
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var webpack = require('webpack');
 var path = require('path');
+var reactToolboxVariables = require('./reactToolboxVariables');
 
 module.exports = {
 	historyApiFallback: true,
@@ -37,8 +38,24 @@ module.exports = {
 					path.join(__dirname, 'doc')
 				],
 				loaders: ['babel-loader'],
-				type: 'js'},
-			{ test: /\.css$/, loader: "style!css" },
+				type: 'js'
+			},
+			{
+				// css modules
+				test: path => path.match(/\.css$/) && (path.indexOf('toolbox') !== -1 || path.match(/\.module\.css$/)),
+				loaders: [
+					'style-loader',
+					'css-loader?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments',
+				],
+			},
+			{
+				// 'sourceMap' and 'modules' breaks existing css, so handle them separately
+				test: path => path.match(/\.css$/) && !(path.indexOf('toolbox') !== -1 || path.match(/\.module\.css$/)),
+				loaders: [
+					'style-loader',
+					'css-loader?importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments'
+				]
+			},
 			{ test: /\.json$/, loader: "json" },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]
@@ -51,12 +68,28 @@ module.exports = {
 		}),
 		new webpack.OldWatchingPlugin()
 	],
+	resolveLoader: {
+		// http://webpack.github.io/docs/troubleshooting.html#npm-linked-modules-doesn-t-find-their-dependencies
+		fallback: path.join(__dirname, "node_modules")  // handle 'npm ln' for loaders
+	},
 	resolve: {
-		fallback: path.join(__dirname, "node_modules"),
+		fallback: path.join(__dirname, "node_modules"), // handle 'npm ln'
 		alias: {
 			'redboxOptions': path.join(__dirname, 'redboxOptions.json'),
 			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim')
 		},
 		extensions: ['', '.js', '.json', '.coffee']
+	},
+	postcss: () => {
+		return [
+			require('postcss-cssnext')({
+				features: {
+					customProperties: {
+						variables: reactToolboxVariables
+					}
+				}
+			}),
+			require('postcss-modules-values'),
+		];
 	}
 };

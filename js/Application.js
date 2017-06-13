@@ -10,6 +10,8 @@ var {signatureField} = require('./models/fieldSpec');
 var {getColSpec} = require('./models/datasetJoins');
 var SampleSearch = require('./views/SampleSearch');
 var uuid = require('./uuid');
+import {ThemeProvider} from 'react-css-themr';
+var {appTheme} = require('./appTheme');
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 // should really be in a config file.
@@ -112,4 +114,13 @@ var Application = React.createClass({
 	}
 });
 
-module.exports = Application;
+var ThemedApplication = React.createClass({
+	render() {
+		return (
+		<ThemeProvider theme={appTheme}>
+			<Application {...this.props}/>
+		</ThemeProvider>);
+	}
+});
+
+module.exports = ThemedApplication;
