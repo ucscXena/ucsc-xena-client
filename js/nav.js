@@ -9,6 +9,8 @@ var Navbar = require('react-bootstrap/lib/Navbar');
 var NavItem = require('react-bootstrap/lib/NavItem');
 var _ = require('./underscore_ext');
 var config = require('./config');
+import {ThemeProvider} from 'react-css-themr';
+var {appTheme} = require('./appTheme');
 
 var links = [
 	{href: "http://xena.ucsc.edu", label: "Home"},
@@ -44,6 +46,15 @@ var XenaNav = React.createClass({
 	}
 });
 
+var ThemedNav = React.createClass({
+	render() {
+		return (
+		<ThemeProvider theme={appTheme}>
+			<XenaNav {...this.props}/>
+		</ThemeProvider>);
+	}
+});
+
 var nav = document.getElementById('navMenuMain');
 
-ReactDOM.render(<XenaNav />, nav);
+ReactDOM.render(<ThemedNav />, nav);
