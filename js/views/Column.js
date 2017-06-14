@@ -25,6 +25,7 @@ var Crosshair = require('./Crosshair');
 var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
+var {publicServers} = require('../defaultServers');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -203,13 +204,18 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 }
 
 function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
-	// tumorMap only support "TCGA PancanAtlas" cohort and
+	// link to tumorMap from any public xena hub columns
 	// data be queried directly from xena
-	var PancanAtlasHub = "https://pancanatlas.xenahubs.net";
-	var foundCohort = _.any(cohort, c => (c.name === "TCGA PancanAtlas"));
+	var foundHub = _.any(fieldSpecs, obj => {
+		if (obj.dsID) {
+			return publicServers.indexOf(JSON.parse(obj.dsID).host) !== -1;
+		} else {
+			return false;
+		}
+	});
+	var foundCohort = _.any(cohort, c => (c.name.search(/^TCGA/) !== -1));
 
-	return foundCohort &&
-		(fieldSpecs.map(obj => obj.dsID ? JSON.parse(obj.dsID).host : null).indexOf(PancanAtlasHub) !== -1 ) &&
+	return foundCohort && foundHub &&
 		(['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) !== -1 && fields.length === 1);
 }
 
@@ -226,7 +232,7 @@ function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDo
 				<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>)
 				: null,
 		supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) ?
-			<MenuItem onSelect={onTumorMap}>TumorMap</MenuItem>
+			<MenuItem onSelect={onTumorMap}>TumorMap (TCGA Pancan)</MenuItem>
 			: null,
 		(specialDownloadMenu && !wrongDataType) ?
 			<MenuItem onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>

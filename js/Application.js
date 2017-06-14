@@ -108,7 +108,6 @@ var Application = React.createClass({
 						callback={this.props.callback}
 						km={state.km}
 						features={state.features} /> : null}
-				<div className='chartRoot' style={{display: 'none'}} />
 			</Grid>
 		);
 	}
