@@ -1,4 +1,7 @@
 # disable test, until we can run headless, or with phantom, or something.
+machine:
+    node:
+        version: 6.7.0
 test:
     override:
         - npm run lint -- -f junit -o $CIRCLE_TEST_REPORTS/lint-results.xml
