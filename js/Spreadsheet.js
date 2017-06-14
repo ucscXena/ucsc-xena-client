@@ -23,6 +23,7 @@ function zoomPopover(zoom, samples, props) {
 var getSpreadsheet = columnsWrapper => {
 	var Columns = getColumns(columnsWrapper);
 	return React.createClass({
+		displayName: 'Spreadsheet',
 		mixins: [deepPureRenderMixin],
 		zoomHelpClose: function () {
 			this.props.callback(['zoom-help-close']);
