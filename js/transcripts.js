@@ -27,29 +27,20 @@ var Transcripts = React.createClass({
 			<pre style={{width: 500}}>
 				{JSON.stringify(this.props.state.transcripts, null, 4).slice(0, 1000)}
 			</pre>) : null;
+		// var {genetranscripts} = data ? data : null;
+		var {genetranscripts} = this.props.state.transcripts ? this.props.state.transcripts : null;
 
 		//for the name column
-		var transcriptNameData = this.props.state.transcripts ? (
-				_.pluck(this.props.state.transcripts.genetranscripts, 'name')) : null;
+		var transcriptNameData = genetranscripts ? _.pluck(genetranscripts, 'name') : null;
 
 		//for the exon-intron visualization
-		var transcriptExonData = this.props.state.transcripts ? [...this.props.state.transcripts.genetranscripts] : null;
-		//removing fields that are not required for the view
-		if(transcriptExonData != null)
-		{
-				for(let i = 0; i < transcriptExonData.length; i++)
-				{
-					transcriptExonData[i] = _.dissoc(transcriptExonData[i], 'name');
-					transcriptExonData[i] = _.dissoc(transcriptExonData[i], 'chrom');
-					transcriptExonData[i] = _.dissoc(transcriptExonData[i], 'expA');
-					transcriptExonData[i] = _.dissoc(transcriptExonData[i], 'expB');
-				}
-		}
+		var transcriptExonData = genetranscripts ? (_.map(genetranscripts, t => _.omit(t, ['name', 'chrom', 'expA', 'expB']))) : null;
+		console.log("exons", transcriptExonData);
 
-		//for the density plot
-		var transcriptDensityData = this.props.state.transcripts ? ({
-			expA: _.pluck(this.props.state.transcripts.genetranscripts, "expA"),
-			expB: _.pluck(this.props.state.transcripts.genetranscripts, "expB")
+		// for the density plot
+		var transcriptDensityData = genetranscripts ? ({
+			expA: _.pluck(genetranscripts, "expA"),
+			expB: _.pluck(genetranscripts, "expB")
 		}) : null;
 
 		return (
@@ -59,15 +50,8 @@ var Transcripts = React.createClass({
 				Hello Transcripts
 				{data}
 				<div>
-				<NameColumn
-					data={transcriptNameData}
-					/>
-				<Exons
-					data={transcriptExonData}
-					/>
-				<DensityPlot
-					data={transcriptDensityData}
-					/>
+
+
 				</div>
 
 			</div>);

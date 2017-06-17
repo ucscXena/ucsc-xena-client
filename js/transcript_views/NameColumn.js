@@ -1,6 +1,7 @@
 'use strict';
 var React = require('react');
 var colorScales = require('../colorScales');
+var {contrastColor} = require('../color_helper');
 import '../../css/transcript_css/nameColumn.css';
 
 var NameColumn = React.createClass({
@@ -14,7 +15,8 @@ var NameColumn = React.createClass({
 			return (
 				<div className="nameColumn--item"
 				 style={{ height: (100 / data.length) + "%",
-				 		  backgroundColor: colors(index)
+				 		  		backgroundColor: colors(index),
+									color: contrastColor(colors(index)),
 				 		}}>
 				 	<span>{name}</span>
 				</div>);
