@@ -28,20 +28,20 @@ var Transcripts = React.createClass({
 				{JSON.stringify(this.props.state.transcripts, null, 4).slice(0, 1000)}
 			</pre>) : null;
 		// var {genetranscripts} = data ? data : null;
-		var {genetranscripts} = this.props.state.transcripts ? this.props.state.transcripts : null;
+		var {genetranscripts} = this.props.state.transcripts || {};
 
 		//for the name column
 		var transcriptNameData = genetranscripts ? _.pluck(genetranscripts, 'name') : null;
+		console.log("name", transcriptNameData);
 
 		//for the exon-intron visualization
-		var transcriptExonData = genetranscripts ? (_.map(genetranscripts, t => _.omit(t, ['name', 'chrom', 'expA', 'expB']))) : null;
-		console.log("exons", transcriptExonData);
+		var transcriptExonData = _.map(genetranscripts, t => _.omit(t, ['name', 'chrom', 'expA', 'expB'])) || {};
 
 		// for the density plot
-		var transcriptDensityData = genetranscripts ? ({
+		var transcriptDensityData = {
 			expA: _.pluck(genetranscripts, "expA"),
 			expB: _.pluck(genetranscripts, "expB")
-		}) : null;
+		} || {};
 
 		return (
 			<div ref='datapages'>
@@ -50,8 +50,15 @@ var Transcripts = React.createClass({
 				Hello Transcripts
 				{data}
 				<div>
-
-
+					<NameColumn
+						data={transcriptNameData}
+						/>
+					<Exons
+						data={transcriptExonData}
+						/>
+					<DensityPlot
+						data={transcriptDensityData}
+						/>
 				</div>
 
 			</div>);
