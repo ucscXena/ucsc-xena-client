@@ -21,9 +21,9 @@
                                 :where [:and [:in "_study" ["GTEX"]]
                                              [:in "_sample_type" ["Normal Tissue"]]
                                              [:in "_primary_site" [subtype]]]}) "sampleID"))}]
-    [(fetch [{:table "TcgaTargetGtex_expected_count"
+    [(fetch [{:table "TcgaTargetGtex_rsem_isoform_tpm"
               :columns transcripts
               :samples ((fetchSamples studyA) subtypeA)}])
-     (fetch [{:table "TcgaTargetGtex_expected_count"
+     (fetch [{:table "TcgaTargetGtex_rsem_isoform_tpm"
               :columns transcripts
               :samples ((fetchSamples studyB) subtypeB)}])]))
