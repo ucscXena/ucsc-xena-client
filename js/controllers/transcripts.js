@@ -28,15 +28,33 @@ function fetchTranscripts(serverBus, params) {
 	serverBus.next(['geneTranscripts', query]);
 }
 
+function filterSubtypes(subtypes) {
+	var {'detailed_category': dc, '_primary_site': ps} = subtypes;
+
+	return {
+		tcga: dc.filter(identity), // filter out ""
+		gtex: ps.filter(identity)
+	};
+}
+
+function fetchSubtypes(serverBus) {
+	serverBus.next(['transcriptSampleSubtypes',
+				   xenaQuery.fieldCodes(expressionHost, 'TcgaTargetGTEX_phenotype.txt', ['detailed_category', '_primary_site'])
+						.map(filterSubtypes)]);
+}
+
 
 var controls = {
+	'init-post!': fetchSubtypes,
 	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB) =>
 		_.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB})),
 	'loadGene-post!': (serverBus, state, newState) => {
 		fetchTranscripts(serverBus, newState.transcripts);
 	},
-	'geneTranscripts':
-		(state, transcripts) => _.assocIn(state, ['transcripts', 'genetranscripts'], transcripts)
+	geneTranscripts:
+		(state, transcripts) => _.assocIn(state, ['transcripts', 'genetranscripts'], transcripts),
+	transcriptSampleSubtypes:
+		(state, subtypes) => _.assocIn(state, ['transcripts', 'subtypes'], subtypes)
 };
 
 module.exports = {
