@@ -37,7 +37,7 @@ var GeneEdit = React.createClass({
 			content =
 				(<div>
 					<GeneSuggest value={gene}
-							onChange={value => setEditorState({gene: _.spy('ev', value)})} />
+							onChange={value => setEditorState({gene: value})} />
 					<div>e.g. TP53</div>
 					{pos ? <div>or chr17:7,564,097-7,591,856</div> : null}
 				</div>);
