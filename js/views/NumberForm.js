@@ -49,7 +49,7 @@ const NumberForm = React.createClass({
 					{...other}
 					type='text'
 					value={'' + value}
-					label={`X-Axis cutoff (in range [${min}, ${max}])`}
+					label={`Survival time cutoff (in range [${min}, ${max}])`}
 					placeholder='Enter a number.'
 					bsStyle={validationState(min, max, value)}
 					hasFeedback

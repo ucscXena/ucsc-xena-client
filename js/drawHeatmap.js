@@ -5,8 +5,6 @@ var partition = require('./partition');
 var colorScales = require('./colorScales');
 var colorHelper = require('./color_helper');
 
-var colorFns = (vs = []) => vs.map(colorScales.colorScale);
-
 var drawBackground = (vg, width, height) => vg.box(0, 0, width, height, "gray");
 
 var labelFont = 12;
@@ -77,7 +75,7 @@ function drawLayout(vg, opts) {
 
 	layout.forEach(function (el, i) {
 		var rowData = data[i].slice(first, last),
-			colorScale = colors[i],
+			colorScale = colorScales.colorScale(colors[i]),
 			drawRow = (vg, rwidth, rheight) =>
 				drawColumn(rowData, colorScale, (i, color) =>
 					vg.box(0, i * rheight, rwidth, rheight, color));
@@ -108,15 +106,57 @@ function drawLayout(vg, opts) {
 	});
 }
 
-// Computes contiguous vertial pixel regions.
-// There must be a better way to compute this.
-function findRegions(index, height, count) {
-	var starts = _.uniq(
-			_.map(_.range(count), y => ~~(y * height / count))),
-		regions = _.partitionN(starts, 2, 1, [height]),
-		lens = regions.map(([s, e]) => e - s);
-	return _.object(starts, lens);
+// Like groupBy, but combine new elements with the group, using
+// the reducing function fn.
+// We use a Map for ordered, numeric keys.
+function reduceByKey(arr, keyFn = x => x, fn) {
+	var ret = new Map();
+	arr.forEach(e => {
+		var k = keyFn(e);
+		ret.set(k, fn(e, k, ret.get(k)));
+	});
+	return ret;
 }
+
+function findRegions(index, height, count) {
+	// Find pixel regions having the same set of samples, e.g.
+	// 10 samples in 1 px, or 1 sample over 10 px. Record the
+	// range of samples in the region.
+	var regions = reduceByKey(_.range(count), i => ~~(i * height / count),
+			(i, y, r) => r ? {...r, end: i} : {y, start: i, end: i}),
+		starts = [...regions.keys()],
+		se = _.partitionN(starts, 2, 1, [height]);
+
+	// XXX side-effecting map
+	_.mmap(starts, se, (start, [s, e]) => regions.get(start).height = e - s);
+
+	return regions;
+}
+
+function groupsByScale(arr, scale) {
+	var domains = scale.domain(),
+		domainGroupBy = _.groupBy(arr, v => _.findIndexDefault(domains, d => v < d, domains.length));
+
+	return _.range(domains.length + 1).map(i => domainGroupBy[i] || []);
+}
+
+var regionColorMethods = {
+	// For ordinal scales, subsample by picking a random data point.
+	'ordinal': (scale, d) => colorHelper.rgb(scale(d[Math.floor(d.length * Math.random())])),
+	// For float scales, compute per-domain average values, and do a weighed mix of the colors.
+	'default': (scale, d) => {
+		var domainGroups = groupsByScale(d, scale),
+			groupColors = domainGroups.map(g => colorHelper.rgb(scale(_.meannull(g)))),
+			groupCounts = domainGroups.map(vs => vs.length),
+			total = _.sum(groupCounts);
+			// blend colors via rms
+			return _.any(groupColors) ? _.range(3).map(ch =>
+					~~Math.sqrt(_.sum(_.mmap(groupColors, groupCounts,
+						(rgb, n) => rgb == null ? 0 : rgb[ch] * rgb[ch] * n / total)))) : null;
+	}
+};
+
+var regionColor = (type, scale, d) => (regionColorMethods[type] || regionColorMethods.default)(scale, d);
 
 function drawLayoutByPixel(vg, opts) {
 	var {height, width, index, count, layout, data, codes, colors} = opts,
@@ -124,46 +164,43 @@ function drawLayoutByPixel(vg, opts) {
 		first = Math.floor(index),
 		last  = Math.ceil(index + count);
 
-	vg.smoothing(false); // For some reason this works better if we do it every time.
-
 	// reset image
+	vg.box(0, 0, width, height, "gray");
 	if (data.length === 0) { // no features to draw
-		vg.box(0, 0, width, height, "gray");
 		return;
 	}
-	var regions = findRegions(index, height, count);
+
+	var regions = findRegions(index, height, count),
+		ctx = vg.context(),
+		img = ctx.createImageData(width, height);
 
 	layout.forEach(function (el, i) {
 		var rowData = data[i].slice(first, last),
-			colorScale = colors[i];
+			colorScale = colorScales.colorScale(colors[i]);
 
-		vg.box(0, 0, width, height, "gray");
-		vg.translate(el.start, 0, () => {
-			for (var r in regions) {
-				var rs = parseInt(r, 10),
-					re = regions[r] + rs,
-					ss = Math.round(rs * count / height),
-					se = Math.round(re * count / height),
-					d = rowData.slice(ss, se).filter(x => x != null);
+		// XXX watch for poor iterator performance in this for...of.
+		for (let rs of regions.keys()) {
+			var r = regions.get(rs),
+				d = rowData.slice(r.start, r.end + 1).filter(x => x != null);
 
-				// Here we pick a random sample to draw. This is fairly
-				// horrible, but is better than averaging the data, which
-				// will produce a white column given an unsorted,
-				// normalized floating point field, since it will all
-				// average to zero. We should adopt a trend-amplitude scale as
-				// in the cnv rendering.
-				if (d.length > 0) {
-					vg.box(0, rs, el.size, regions[r], colorScale(d[Math.floor(d.length * Math.random())]));
+			if (d.length > 0) {
+				let color = regionColor(colors[i][0], colorScale, d);
+
+				for (let y = rs; y < rs + r.height; ++y) {
+					let pxRow = y * width,
+						buffStart = (pxRow + el.start) * 4,
+						buffEnd = (pxRow + el.start + el.size) * 4;
+					for (let l = buffStart; l < buffEnd; l += 4) {
+						img.data[l] = color[0];
+						img.data[l + 1] = color[1];
+						img.data[l + 2] = color[2];
+						img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
+					}
 				}
-//					d = rowData.slice(ss, se),
-//					avg = _.meannull(d),
-//					color = colorScale(avg);
-//
-//				if (avg != null) {
-//					vg.box(0, rs, el.size, regions[r], color);
-//				}
 			}
-		});
+		}
+
+		ctx.putImageData(img, 0, 0);
 
 		// Add labels
 		var minSpan = labelFont / (height / count);
@@ -185,11 +222,9 @@ function drawLayoutByPixel(vg, opts) {
 	});
 }
 
-function drawHeatmap(vg, props) {
+var drawHeatmapByMethod = draw => (vg, props) => {
 	var {heatmapData = [], codes, colors, width,
-		zoom: {index, count, height}} = props,
-		length = _.getIn(heatmapData, [0, 'length'], 0),
-		draw = length > 30000 ? drawLayoutByPixel : drawLayout;
+			zoom: {index, count, height}} = props;
 
 	vg.labels(() => {
 		draw(vg, {
@@ -200,9 +235,12 @@ function drawHeatmap(vg, props) {
 			data: heatmapData,
 			codes,
 			layout: partition.offsets(width, 0, heatmapData.length),
-			colors: colorFns(colors)
+			colors
 		});
 	});
-}
+};
 
-module.exports = drawHeatmap;
+module.exports = {
+	drawHeatmap: drawHeatmapByMethod(drawLayout),
+	drawHeatmapByPixel: drawHeatmapByMethod(drawLayoutByPixel)
+};

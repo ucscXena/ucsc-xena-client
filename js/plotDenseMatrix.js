@@ -9,7 +9,7 @@ var Legend = require('./views/Legend');
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
-var drawHeatmap = require('./drawHeatmap');
+var {drawHeatmapByPixel: drawHeatmap} = require('./drawHeatmap');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -46,7 +46,7 @@ function bounded(min, max, x) {
 var posString = p => `${p.chrom}:${util.addCommas(p.chromstart)}-${util.addCommas(p.chromend)}`;
 //gb position string of the segment with 15bp extra on each side, centered at segment
 var posRegionString = p => {
-	var pad = (p.chromend - p.chromstart) / 2;
+	var pad = Math.round((p.chromend - p.chromstart) / 2);
 	return `${p.chrom}:${util.addCommas(p.chromstart - pad)}-${util.addCommas(p.chromend + pad)}`;
 };
 var gbURL = (assembly, pos) => {

@@ -47,7 +47,7 @@ function numberOrAbrev(vg, width, font, n) {
 	return w > width ? abrev(n) : s;
 }
 
-function drawChromScale(vg, width, layout, genomic = true) {
+function drawChromScale(vg, width, layout, genomic = "coordinate") {
 	if (vg.width() !== width) {
 		vg.width(width);
 	}
@@ -62,23 +62,26 @@ function drawChromScale(vg, width, layout, genomic = true) {
 		baseWidth = baseEnd - baseStart + 1,
 		range = pickRange(baseWidth / 2),
 		rangeWidth = pixelWidth * range / baseWidth,
-		startText = numberOrAbrev(vg, width / 3, font, baseStart),
-		endText = numberOrAbrev(vg, width / 3, font, baseEnd),
+		startText = numberOrAbrev(vg, width / 4, font, baseStart),
+		endText = numberOrAbrev(vg, width / 4, font, baseEnd),
 		rangeText = metric(range),
 		rangeTextWidth = vg.textWidth(font, rangeText),
 		pushLeft = Math.max(width - rangeTextWidth - rangeWidth - 1, 0),
 		rangePos = Math.min(pushLeft, (pixelWidth - rangeWidth) / 2);
 
-	if (genomic) {
+	if (genomic === "coordinate") {
 		// Render start & end position, abreviating if constrained for width.
 		vg.text(pixelStart, height - 4, 'black', font, startText);    // start position at left
 		vg.text(pixelEnd - vg.textWidth(font, endText), height - 4, 'black', font, endText); // end position at right
-	} else {
+	} else if (genomic === "geneIntron") {
 		vg.text(pixelStart, height - 4, 'black', font, "5'");
-		vg.text(pixelEnd - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
+		vg.text(width - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
+	} else if (genomic === "geneExon") {
+		vg.text(pixelStart, height - 4, 'black', font, "5'");
+		vg.text(width - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
 	}
 
-	if (range >= 1) {
+	if (genomic !== "geneExon" && range >= 1) {
 		// Render centered scale, pushing to left if constrained for width.
 		vg.box(rangePos, labelHeight / 2, rangeWidth, 1, 'grey');
 		vg.box(rangePos, labelHeight / 4, 1, labelHeight / 2, 'black');

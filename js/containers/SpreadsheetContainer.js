@@ -118,6 +118,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 			<Spreadsheet onReorder={this.onReorder} onOpenVizSettings={this.onOpenVizSettings} onVizSettings={this.onVizSettings} {...this.props}>
 				{_.map(columnOrder, (id, i) => (
 					<Column
+						cohort={appState.cohort}
 						onViz={this.onOpenVizSettings}
 						onFieldLabel={this.onFieldLabel}
 						onColumnLabel={this.onColumnLabel}

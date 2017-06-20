@@ -169,11 +169,11 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	function valToStr(v) {
-		return "" + v;
+//		return "" + v;
 //		if (v === "-") {
 //			return v;
 //		}
-//		return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
+		return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
 	}
 
 	var scaleChoice = React.createClass({
