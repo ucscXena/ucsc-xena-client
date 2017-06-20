@@ -6,3 +6,4 @@ node_modules
 /dist
 /errorShots
 db.sqlite3
+.idea

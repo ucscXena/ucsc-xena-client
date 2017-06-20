@@ -1,8 +1,6 @@
 'use strict';
 var React = require('react');
-var Grid = require('react-bootstrap/lib/Grid');
-var Row = require('react-bootstrap/lib/Row');
-var Col = require('react-bootstrap/lib/Col');
+var {Grid, Row, Col} = require("react-material-responsive-grid");
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
 var _ = require('./underscore_ext');
@@ -10,8 +8,9 @@ var {signatureField} = require('./models/fieldSpec');
 var {getColSpec} = require('./models/datasetJoins');
 var SampleSearch = require('./views/SampleSearch');
 var uuid = require('./uuid');
+import '../css/index.css'; // Root styles file (reset, fonts, globals)
 import {ThemeProvider} from 'react-css-themr';
-var {appTheme} = require('./appTheme');
+var appTheme = require('./appTheme');
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 // should really be in a config file.
@@ -86,12 +85,12 @@ var Application = React.createClass({
 				</Row>
 			*/}
 				<Row>
-					<Col md={12}>
+					<Col xs4={4} xs8={8} sm={12}>
 						<AppControls {...otherProps} appState={state} />
 					</Col>
 				</Row>
 				<Row>
-					<Col md={8}>
+					<Col xs4={4} xs8={8} sm={12}>
 						<SampleSearch
 							help={searchHelp}
 							value={sampleSearch}

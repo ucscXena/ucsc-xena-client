@@ -1,0 +1,34 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Root styling file to be included at app top level. Includes CSS reset, fonts and globals.
+ *
+ * Based on React Toolbox demo version at https://github.com/alexhisen/mobx-forms-demo/blob/master/src/scss/index.scss.
+ */
+
+/*
+ * Base CSS reset.
+ * This is a populate CSS reset, used to create a standardized, cross-browser base to build app-specific styles on
+ * top of. Required as React Toolbox 2.0 does not include a reset.
+ */
+@import "~normalize.css";
+
+/*
+ * React Toolbox Reset.
+ * Custom CSS resets to be used in addition to base CSS reset (normalize.css).
+ */
+@import './rtb-reset.css';
+
+/*
+ * Fonts.
+ * Local font files for Roboto and Material Icons. Required as React Toolbox 2.0 does not include font files (either
+ * locally or hosted by a service such as Google Fonts).
+ */
+@import '../fonts/index.css';
+
+/*
+ * Typography.
+ * Core typography styles that match with Material Design specs (https://material.io/guidelines/style/typography.html).
+ */
+@import './typography.css';

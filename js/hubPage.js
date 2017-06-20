@@ -9,9 +9,7 @@ var Input = require('react-bootstrap/lib/Input');
 var FormGroup = require('react-bootstrap/lib/FormGroup');
 var PageHeader = require('react-bootstrap/lib/PageHeader');
 var Button = require('react-bootstrap/lib/Button');
-var Grid = require('react-bootstrap/lib/Grid');
-var Row = require('react-bootstrap/lib/Row');
-var Col = require('react-bootstrap/lib/Col');
+var {Grid, Row, Col} = require("react-material-responsive-grid");
 var Label = require('react-bootstrap/lib/Label');
 var Glyphicon = require('react-bootstrap/lib/Glyphicon');
 var {testHost} = require('./xenaQuery');
@@ -105,7 +103,7 @@ var Hub = React.createClass({
 		return (
 			<Grid>
 				<Row>
-					<Col md={10}>
+					<Col xs4={4}>
 						<PageHeader>Data Hubs</PageHeader>
 						{_.values(hostList).map(h => (
 							<form key={h.host} className="host-form form-horizontal"><FormGroup>

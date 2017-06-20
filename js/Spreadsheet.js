@@ -1,8 +1,7 @@
 'use strict';
 
 var React = require('react');
-var Col = require('react-bootstrap/lib/Col');
-var Row = require('react-bootstrap/lib/Row');
+var {Row, Col} = require("react-material-responsive-grid");
 var Button = require('react-bootstrap/lib/Button');
 var Popover = require('react-bootstrap/lib/Popover');
 require('react-resizable/css/styles.css');
@@ -40,13 +39,13 @@ var getSpreadsheet = columnsWrapper => {
 					}) : null;
 			return (
 				<Row>
-					<Col md={1}>
+					<Col xs4={1} xs8={1} sm={1}>
 						<YAxisLabel
 							samples={samples}
 							zoom={zoom}
 						/>
 					</Col>
-					<Col md={11}>
+					<Col xs4={3} xs8={7} sm={11}>
 						<Columns appState={this.props.appState} {...otherProps}>
 							{children}
 						</Columns>

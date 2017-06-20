@@ -38,7 +38,8 @@ var _ = require('../underscore_ext');
 var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var {Modal, DropdownButton, MenuItem, Row, Col, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
+var {Modal, DropdownButton, MenuItem, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
+var {Row, Col} = require("react-material-responsive-grid");
 var Input = require('react-bootstrap/lib/Input');
 var image = require('react-bootstrap/lib/Image');
 
@@ -264,13 +265,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 					return (
 						<Row>
-							<Col xs={4} md={4} lg={4}>{label}</Col>
-							<Col xs={3} md={3} lg={3}>
+							<Col xs4={4} xs8={8} sm={6} smOffset={6}>
+								<label bsStyle="danger">{error}</label>
+							</Col>
+							<Col xs4={4} xs8={4} sm={6}>{label}</Col>
+							<Col xs4={4} xs8={4} sm={6}>
 								<Input type='textinput' placeholder={_.contains(['minThresh', 'maxThresh'], param) ? 'Auto' : ''}
 									value={value} data-param={param} onChange={this.onScaleParamChange}/>
-							</Col>
-							<Col xs={5} md={5} lg={5}>
-								<label bsStyle="danger">{error}</label>
 							</Col>
 						</Row>
 					);
@@ -299,8 +300,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					(valueType === 'segmented' ? React.createElement(segCNVnormalizationDropDown) : null),
 				notransformation = (
 				    <Row>
-						<Col xs={3} md={2} lg={2}>Color transformation</Col>
-						<Col xs={15} md={10} lg={5}>no transformation</Col>
+						<Col xs4={4} xs8={3} sm={3}>Color transformation</Col>
+						<Col xs4={4} xs8={5} sm={9}>no transformation</Col>
 					</Row>
 				),
 				colorTransformation = autoMode ? autocolorTransformation : notransformation;
@@ -308,8 +309,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			return (
 				<div>
 					<Row>
-						<Col xs={3} md={2} lg={2}>Mode</Col>
-						<Col xs={15} md={10} lg={10}>
+						<Col xs4={4} xs8={3} sm={3}>Mode</Col>
+						<Col xs4={4} xs8={5} sm={9}>
 							<ButtonGroup>{buttons}</ButtonGroup>
 							<div>
 								{picture}
@@ -376,8 +377,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color transformation</Col>
-					<Col xs={15} md={10} lg={5}>
+					<Col xs4={4} xs8={3} sm={3}>Color transformation</Col>
+					<Col xs4={4} xs8={5} sm={9}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}
 						</DropdownButton>
@@ -421,8 +422,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color transformation</Col>
-					<Col xs={15} md={10} lg={5}>
+					<Col xs4={4} xs8={3} sm={3}>Color transformation</Col>
+					<Col xs4={4} xs8={5} sm={9}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}
 						</DropdownButton>
@@ -471,8 +472,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color palette</Col>
-					<Col xs={15} md={10} lg={5}>
+					<Col xs4={4} xs8={3} sm={3}>Color palette</Col>
+					<Col xs4={4} xs8={5} sm={9}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}
 						</DropdownButton>
@@ -515,8 +516,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				});
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color palette</Col>
-					<Col xs={15} md={10} lg={5}>
+					<Col xs4={4} xs8={3} sm={3}>Color palette</Col>
+					<Col xs4={4} xs8={5} sm={9}>
 						<DropdownButton title={title} onSelect={this.handleSelect} >
 							{menuItemList}
 						</DropdownButton>

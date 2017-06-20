@@ -2,8 +2,7 @@
 
 var React = require('react');
 var _ = require('../underscore_ext');
-var Row = require('react-bootstrap/lib/Row');
-var Col = require('react-bootstrap/lib/Col');
+var {Row, Col} = require("react-material-responsive-grid");
 var colorHelper = require('../color_helper');
 require('./Legend.css');
 
@@ -38,13 +37,13 @@ var Legend = React.createClass({
 			<div>
 				{items ?
 					<Row>
-						<Col md={10} mdOffset={1}>
+						<Col xs4={4} xs8={8} sm={12}>
 							{items}
 						</Col>
 					</Row> : null}
 				{ellipsis ?
 					<Row>
-						<Col md={10} mdOffset={1} text-right>
+						<Col sm={12} text-right>
 							<label className='Legend-label'>
 								...
 							</label>
@@ -52,7 +51,7 @@ var Legend = React.createClass({
 					</Row> : null}
 				{footnotes ?
 					<Row>
-						<Col md={10} mdOffset={1}>
+						<Col sm={12}>
 						{footnotesItems}
 						</Col>
 					</Row> : null}
