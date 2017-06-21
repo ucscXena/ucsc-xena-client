@@ -51,8 +51,17 @@ var GeneSuggest = React.createClass({ //eslint-disable-line no-unused-vars
 	getInitialState() {
 		return {suggestions: []};
 	},
-	onChange(ev, {newValue}) {
-		this.props.onChange(newValue);
+	onChange(ev, {newValue, method}) {
+		// Don't update the value for 'up' and 'down' keys. If we do update
+		// the value, it gives us an in-place view of the suggestion (pasting
+		// the value into the input field), but the drawback is that it moves
+		// the cursor to the end of the line. This messes up multi-word input.
+		// We could try to preserve the cursor position, perhaps by passing a
+		// custom input renderer. But for now, just don't update the value for
+		// these events.
+		if (method !== 'up' && method !== 'down') {
+			this.props.onChange(newValue);
+		}
 	},
 	getSuggestionValue(suggestion) {
 		var position = this.refs.autosuggest.input.selectionStart,
