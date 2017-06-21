@@ -84,7 +84,7 @@ var GeneProbeEdit = React.createClass({
 		content =
 			(<div>
 				{doGenes ?
-					<GeneSuggest onChange={value => setEditorState({list: value})}
+					<GeneSuggest assembly={hasGenes.assembly} onChange={value => setEditorState({list: value})}
 						value={list}/> :
 					<Input onChange={ev => setEditorState({list: ev.target.value})}
 						type='textarea' value={list} />}

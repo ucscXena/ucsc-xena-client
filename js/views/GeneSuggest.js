@@ -24,13 +24,15 @@ function currentWord(value, position) {
 	return value.slice(i, j);
 }
 
+var defaultAssembly = 'hg38';
+
 // Currently we only match against refGene hg38 genes. We could, instead, match
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
 // require some more work to dispatch the query for each type.
-var GeneSuggest = React.createClass({ //eslint-disable-line no-unused-vars
+var GeneSuggest = React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	componentWillMount() {
-		var {host, name} = refGene.hg38;
+		var {host, name} = refGene[this.props.assembly] || refGene[defaultAssembly];
 		this.events('change');
 		this.ev.change
 			.distinctUntilChanged(_.isEqual)

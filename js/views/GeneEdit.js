@@ -32,11 +32,11 @@ var valid = state => trim(state.gene);
 var GeneEdit = React.createClass({
 	name: 'Gene',
 	render: function () {
-		var {gene, makeLabel, setEditorState, pos} = this.props,
+		var {gene, assembly, makeLabel, setEditorState, pos} = this.props,
 			label = pos ? 'Gene or position' : 'Gene',
 			content =
 				(<div>
-					<GeneSuggest value={gene}
+					<GeneSuggest assembly={assembly} value={gene}
 							onChange={value => setEditorState({gene: value})} />
 					<div>e.g. TP53</div>
 					{pos ? <div>or chr17:7,564,097-7,591,856</div> : null}

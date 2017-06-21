@@ -20,6 +20,7 @@ var refGene = {
 	GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
 	hg38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
 	GRCh38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
+	mm9: {host: 'https://reference.xenahubs.net', name: 'gencode_good_mm10'}, // XXX wrong, but good enough
 	mm10: {host: 'https://reference.xenahubs.net', name: 'gencode_good_mm10'}
 };
 
