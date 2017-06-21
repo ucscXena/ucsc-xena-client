@@ -45,6 +45,11 @@ var GeneSuggest = React.createClass({ //eslint-disable-line no-unused-vars
 			this.ev.change.next(word);
 		}
 	},
+	shouldRenderSuggestions(value) {
+		var position = this.refs.autosuggest.input.selectionStart,
+			word = currentWord(value, position);
+		return word.length > 0;
+	},
 	onSuggestionsClearRequested() {
 		this.setState({suggestions: []});
 	},
@@ -83,6 +88,7 @@ var GeneSuggest = React.createClass({ //eslint-disable-line no-unused-vars
 				onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
 				onSuggestionsClearRequested={this.onSuggestionsClearRequested}
 				getSuggestionValue={this.getSuggestionValue}
+				shouldRenderSuggestions={this.shouldRenderSuggestions}
 				renderSuggestion={v => <span>{v}</span>}
 				inputProps={{value, onChange}}/>);
 	}
