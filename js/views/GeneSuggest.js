@@ -27,9 +27,12 @@ function currentWord(value, position) {
 
 var defaultAssembly = 'hg38';
 
-var wrapOnChange = onChange => value => onChange({target: {value}});
-var renderInputComponent = ({onChange, ...props}) =>
-	<Input {...props} onChange={wrapOnChange(onChange)} />;
+var renderInputComponent = ({ref, onChange, ...props}) => (
+	<Input
+		ref={el => ref(el && el.getWrappedInstance().inputNode)}
+		onChange={(value, ev) => onChange(ev)}
+		label='Gene or position'
+		{...props} />);
 
 // Currently we only match against refGene hg38 genes. We could, instead, match
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
@@ -45,7 +48,7 @@ var GeneSuggest = React.createClass({
 			.switchMap(value => sparseDataMatchPartialField(host, 'name2', name, value, limit)).subscribe(matches => this.setState({suggestions: matches}));
 	},
 	onSuggestionsFetchRequested({value}) {
-		var position = this.refs.autosuggest.input.getWrappedInstance().inputNode.selectionStart,
+		var position = this.refs.autosuggest.input.selectionStart,
 			word = currentWord(value, position);
 
 		if (word !== '') {
@@ -53,7 +56,7 @@ var GeneSuggest = React.createClass({
 		}
 	},
 	shouldRenderSuggestions(value) {
-		var position = this.refs.autosuggest.input.getWrappedInstance().inputNode.selectionStart,
+		var position = this.refs.autosuggest.input.selectionStart,
 			word = currentWord(value, position);
 		return word.length > 0;
 	},
@@ -76,8 +79,8 @@ var GeneSuggest = React.createClass({
 		}
 	},
 	getSuggestionValue(suggestion) {
-		var position = this.refs.autosuggest.input.getWrappedInstance().inputNode.selectionStart,
-			value = this.refs.autosuggest.input.getWrappedInstance().inputNode.value,
+		var position = this.refs.autosuggest.input.selectionStart,
+			value = this.refs.autosuggest.input.value,
 			[i, j] = currentWordPosition(value, position);
 
 		// splice the suggestion into the current word
