@@ -194,7 +194,7 @@ var AppControls = React.createClass({
 			noshow = (mode !== "heatmap");
 
 		return (
-			<form className='form-inline'>
+			<form onSubmit={ev => ev.preventDefault()} className='form-inline'>
 				{addHelp('reload',
 					<Button onClick={this.onRefresh} bsSize='sm' style={{marginRight: 5}}>
 						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
