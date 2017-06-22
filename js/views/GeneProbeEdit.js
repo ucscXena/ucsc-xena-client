@@ -4,6 +4,7 @@ var React = require('react');
 var {ButtonGroup, Button, Input} = require('react-bootstrap/lib');
 var _ = require('../underscore_ext');
 var trim = require('underscore.string').trim;
+var GeneSuggest = require('./GeneSuggest');
 
 function toGeneList(str) {
 	// Have to wrap trim because it takes a 2nd param.
@@ -82,8 +83,11 @@ var GeneProbeEdit = React.createClass({
 
 		content =
 			(<div>
-				<Input onChange={ev => setEditorState({list: ev.target.value})}
-					type='textarea' value={list} />
+				{doGenes ?
+					<GeneSuggest assembly={hasGenes.assembly} onChange={value => setEditorState({list: value})}
+						value={list}/> :
+					<Input onChange={ev => setEditorState({list: ev.target.value})}
+						type='textarea' value={list} />}
 				<div>
 					{help}
 				</div>

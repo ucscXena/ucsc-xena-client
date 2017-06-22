@@ -4,21 +4,27 @@
 
 var Rx = require('./rx');
 var _ = require('./underscore_ext');
-var {permuteCase, permuteBitCount} = require('./permuteCase');
+var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
 // Load all query files as a map of strings.
 var qs = require('val!./loadXenaQueries');
 
+var maxPermute = 7; // max number of chars to permute for case-insensitive match
+
 ///////////////////////////////////////////////////////
-// support for hg18/GRCh36, hg19/GRCh37, hg38/GRCh38
+// support for hg18/GRCh36, hg19/GRCh37, hg38/GRCh38, mm10
+// Xena refGene is the composite gene model we build, NOT literally "refGene annotation"
 var refGene = {
 	hg18: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
 	GRCh36: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
 	hg19: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
 	GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
 	hg38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
-	GRCh38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'}
+	GRCh38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
+	mm9: {host: 'https://reference.xenahubs.net', name: 'gencode_good_mm10'}, // XXX wrong, but good enough
+	mm10: {host: 'https://reference.xenahubs.net', name: 'gencode_good_mm10'}
 };
 
+// support for hg18/GRCh36, hg19/GRCh37, hg38/GRCh38
 var transcript = {
 	hg18: {host: 'https://reference.xenahubs.net', name: 'refGene_hg18'},
 	GRCh36: {host: 'https://reference.xenahubs.net', name: 'refGene_hg18'},
@@ -188,6 +194,17 @@ function indexRefGene(resp) {
 	return _.object(resp.name2, _.map(collateRows(resp), refGeneAttrs));
 }
 
+// Generate sql patterns for case-insensitive match of a prefix, by
+// permutting the characters having case, up to the character limit 'maxPermute'.
+// The results have to be filtered, since they may contain spurious matches.
+var prefixPatterns = prefix =>
+	permuteCase(prefixBitLimit(maxPermute, prefix)).map(g => g + '%');
+
+var filterByPrefix = prefix => list => {
+	var lcPrefix = prefix.toLowerCase();
+	return list.filter(m => m.toLowerCase().indexOf(lcPrefix) === 0);
+};
+
 ////////////////////////////////////////////////////
 // Query marshalling and dispatch
 
@@ -265,6 +282,10 @@ function transformPOSTMethods(postMethods) {
 		sparseDataMatchField: postFn => (host, field, dataset, genes) =>
 			postFn(host, field, dataset, _.flatmap(genes, permuteCase))
 			.map(list => alignMatches(genes, list)),
+		// Generate case permutations of the gene parameter
+		sparseDataMatchPartialField: postFn => (host, field, dataset, prefix, limit) =>
+			postFn(host, field, dataset, prefixPatterns(prefix), limit)
+			.map(filterByPrefix(prefix)),
 		// Convert the gene parameter to lower-case, for matching
 		sparseDataMatchFieldSlow: postFn => (host, field, dataset, genes) =>
 			postFn(host, field, dataset, genes.map(g => g.toLowerCase()))

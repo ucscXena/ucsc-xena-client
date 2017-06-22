@@ -1,10 +1,10 @@
 'use strict';
 
 var React = require('react');
-var Input = require('react-bootstrap/lib/Input');
 var trim = require('underscore.string').trim;
 var _ = require('../underscore_ext');
 var parsePos = require('../parsePos');
+var GeneSuggest = require('./GeneSuggest');
 
 var getFieldType = ({type, dataSubType}) =>
 	type === 'genomicSegment' ? 'segmented' :
@@ -32,12 +32,12 @@ var valid = state => trim(state.gene);
 var GeneEdit = React.createClass({
 	name: 'Gene',
 	render: function () {
-		var {gene, makeLabel, setEditorState, pos} = this.props,
+		var {gene, assembly, makeLabel, setEditorState, pos} = this.props,
 			label = pos ? 'Gene or position' : 'Gene',
 			content =
 				(<div>
-					<Input type='textinput' value={gene}
-						   onChange={ev => setEditorState({gene: ev.target.value})}/>
+					<GeneSuggest assembly={assembly} value={gene}
+							onChange={value => setEditorState({gene: value})} />
 					<div>e.g. TP53</div>
 					{pos ? <div>or chr17:7,564,097-7,591,856</div> : null}
 				</div>);

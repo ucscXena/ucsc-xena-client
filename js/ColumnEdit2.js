@@ -291,7 +291,7 @@ var ColumnEdit = React.createClass({
 				"&host=" + JSON.parse(chosenDsSingle.dsID).host : null;
 
 		return (
-			<Modal show={true} className = 'columnEdit container' enforceFocus>
+			<div>
 				<Modal.Header onHide={onHide} closeButton>
         			<Modal.Title> {positions.cohort ? 'Select a cohort' : 'Select data'}
         			</Modal.Title>
@@ -326,6 +326,7 @@ var ColumnEdit = React.createClass({
 					<Editor {...columnEdit} allFeatures={features} callback={callback}
 						{...(this.state.choices.editor || {})} chosenDs={chosenDs}
 						pos={chosenDsSingle && _.contains(['genomicSegment', 'mutationVector'], chosenDsSingle.type)}
+						assembly={datasets[chosenDs[0]].assembly}
 						hasGenes={chosenDs && !!datasets[chosenDs[0]].probeMap && datasets[chosenDs[0]].probemapMeta}
 						makeLabel={makeLabel} setEditorState={this.onSetEditor}/> : null}
 					<br/>
@@ -339,9 +340,35 @@ var ColumnEdit = React.createClass({
 						/>
 					</span>
 				</div>
-			</Modal>
+			</div>
 		);
 	}
 });
 
-module.exports = ColumnEdit;
+// XXX Important safety tip!
+// When using a controlled input with props passed in from above, the
+// props can't cross a Modal boundary if there is also a component
+// with local state between the Modal and the input. In this case it is
+// Autosuggest. When these stars align, the second rendering context created
+// by the Modal will cause a disconnect between update of the DOM and
+// update of react state, causing the cursor to jump to the end of the input
+// on every key stroke. E.g. user presses key; Autosuggest sets state, and invokes
+// onChange handlers; handlers set state *in the outer rendering context*;
+// Autosuggest renders using the *old* input state; it doesn't match the DOM
+// state, so it looks like programatic value assignment; the outer rendering context
+// is invoked, passing props down to ColumnEdit; eventually Autosuggest renders
+// with the new input state.
+//
+// Avoid this by keeping local state for controlled inputs below the Modal.
+var ColumnEditModal = React.createClass({
+	render() {
+		return (
+			<Modal show={true} className = 'columnEdit container' enforceFocus>
+				<ColumnEdit {...this.props}/>
+			</Modal>);
+	}
+});
+
+
+
+module.exports = ColumnEditModal;
