@@ -2,6 +2,7 @@
 
 var React = require('react');
 import Autosuggest from 'react-autosuggest';
+import Input from 'react-toolbox/lib/input';
 var {sparseDataMatchPartialField, refGene} = require('../xenaQuery');
 var _ = require('../underscore_ext');
 var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
@@ -26,6 +27,10 @@ function currentWord(value, position) {
 
 var defaultAssembly = 'hg38';
 
+var wrapOnChange = onChange => value => onChange({target: {value}});
+var renderInputComponent = ({onChange, ...props}) =>
+	<Input {...props} onChange={wrapOnChange(onChange)} />;
+
 // Currently we only match against refGene hg38 genes. We could, instead, match
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
 // require some more work to dispatch the query for each type.
@@ -40,7 +45,7 @@ var GeneSuggest = React.createClass({
 			.switchMap(value => sparseDataMatchPartialField(host, 'name2', name, value, limit)).subscribe(matches => this.setState({suggestions: matches}));
 	},
 	onSuggestionsFetchRequested({value}) {
-		var position = this.refs.autosuggest.input.selectionStart,
+		var position = this.refs.autosuggest.input.getWrappedInstance().inputNode.selectionStart,
 			word = currentWord(value, position);
 
 		if (word !== '') {
@@ -48,7 +53,7 @@ var GeneSuggest = React.createClass({
 		}
 	},
 	shouldRenderSuggestions(value) {
-		var position = this.refs.autosuggest.input.selectionStart,
+		var position = this.refs.autosuggest.input.getWrappedInstance().inputNode.selectionStart,
 			word = currentWord(value, position);
 		return word.length > 0;
 	},
@@ -71,8 +76,8 @@ var GeneSuggest = React.createClass({
 		}
 	},
 	getSuggestionValue(suggestion) {
-		var position = this.refs.autosuggest.input.selectionStart,
-			value = this.refs.autosuggest.input.value,
+		var position = this.refs.autosuggest.input.getWrappedInstance().inputNode.selectionStart,
+			value = this.refs.autosuggest.input.getWrappedInstance().inputNode.value,
 			[i, j] = currentWordPosition(value, position);
 
 		// splice the suggestion into the current word
@@ -92,6 +97,7 @@ var GeneSuggest = React.createClass({
 				getSuggestionValue={this.getSuggestionValue}
 				shouldRenderSuggestions={this.shouldRenderSuggestions}
 				renderSuggestion={v => <span>{v}</span>}
+				renderInputComponent={renderInputComponent}
 				inputProps={{value, onChange}}/>);
 	}
 });
