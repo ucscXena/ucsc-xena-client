@@ -10,7 +10,6 @@ function smallBox(left, width, multiplyingFactor, strand) {
 
 	let style = { width: (width * multiplyingFactor) + "px",
 					height: "15%",
-					backgroundColor: "#0097a7", //color-1
 					top: "42.5%",
 				};
 	style[origin] = (left * multiplyingFactor) + "px";
@@ -26,7 +25,6 @@ function bigBox(left, width, multiplyingFactor, strand) {
 
 	let style = { width: (width * multiplyingFactor) + "px",
 					height: "30%",
-					backgroundColor: "#26c6da", //color-2
 					top: "35%",
 				};
 	style[origin] = (left * multiplyingFactor) + "px";

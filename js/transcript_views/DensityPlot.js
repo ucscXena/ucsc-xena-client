@@ -4,7 +4,7 @@
 
  import '../../css/transcript_css/densityPlot.css';
 
-var bin = 100; //number of bins
+var bin = 20; //number of bins
 
 var DensityPlot = React.createClass ({
 
@@ -13,19 +13,13 @@ var DensityPlot = React.createClass ({
      let freq;
      (freq = []).length = bin;
      freq.fill(0);
-     for (let i = 1; i <= bin; i++ )
-     {
-       exp.map(value => {
-         if(min + stepSize * (i - 1) <= value && value <= min + stepSize * i)
-         {
-           freq[i - 1]++;
-         }
-       });
-     }
-     for (let i = 0; i < freq.length; i++)
-     {
-       freq[i] = freq[i] / exp.length;
-     }
+     exp.forEach(value => {
+       freq[Math.floor((value - min) / stepSize)]++;
+     });
+     freq.forEach(( value, index) => {
+       value = value; //did this to remove error while committing "value is never used"
+       freq[index] = freq[index] / exp.length;
+     });
      return freq;
   },
 

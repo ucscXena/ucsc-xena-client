@@ -22,24 +22,5 @@
 .exons--row--item {
 	z-index: 1;
 	position: absolute;
-}
-
-/*
-To zoom while hovering. Not necessarily required.
-*/
-.exons--row:hover
-{
-    z-index: 2;
-    -webkit-transition: all 2ms ease-in;
-    -webkit-transform: scale(1.2);
-    -ms-transition: all 2ms ease-in;
-    -ms-transform: scale(1.2);   
-    -moz-transition: all 2ms ease-in;
-    -moz-transform: scale(1.2);
-    transition: all 2ms ease-in;
-    transform: scale(1.2);
-    position: absolute;
-    left: 200px;
-    background-color: white;
-    box-shadow: 0px 0px 3px #000000;
+	background-color: #0097a7;
 }
