@@ -63,6 +63,17 @@ function fetchStrand(serverBus, state, id, gene, dsID) {
 	serverBus.next(['strand', xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.of('+');}), id]);
 }
 
+// Cohort metadata looks like
+// {[cohort]: [tag, tag, ...], [cohort]: [tag, tag, ...], ...}
+// We want data like
+// {[tag]: [cohort, cohort, ...], [tag]: [cohort, cohort, ...], ...}
+function invertCohortMeta(meta) {
+	return _.fmap(
+			_.groupBy(_.flatmap(meta, (tags, cohort) => tags.map(tag => [cohort, tag])),
+				([, tag]) => tag),
+			cohortTags => cohortTags.map(([cohort]) => cohort));
+}
+
 var controls = {
 	// XXX reset loadPending flag
 	bookmark: (state, bookmark) => resetLoadPending(parseBookmark(bookmark)),
@@ -149,7 +160,8 @@ var controls = {
 	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival),
 	// XXX Here we should be updating application state. Instead we invoke a callback, because
 	// chart.js can't handle passed-in state updates.
-	'chart-average-data-post!': (serverBus, state, newState, offsets, thunk) => thunk(offsets)
+	'chart-average-data-post!': (serverBus, state, newState, offsets, thunk) => thunk(offsets),
+	cohortMeta: (state, meta) => _.assoc(state, 'cohortMeta', invertCohortMeta(meta))
 };
 
 module.exports = {

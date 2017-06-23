@@ -4,6 +4,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var {Button, ButtonToolbar, Modal, Glyphicon} = require('react-bootstrap/lib');
 var CohortSelect = require('./views/CohortSelect');
+var DiseaseSuggest = require('./views/DiseaseSuggest');
 var DatasetSelect = require('./views/DatasetSelect2');
 var _ = require('./underscore_ext');
 var uuid = require('./uuid');
@@ -123,6 +124,38 @@ var NavButtons = React.createClass({
 		return (
 			<ButtonToolbar>{buttons}</ButtonToolbar>
 		);
+	}
+});
+
+var CohortOrDisease = React.createClass({
+	getInitialState() {
+		return {mode: 'cohort'};
+	},
+	onChange(ev) {
+		this.setState({mode: ev.target.value});
+	},
+	render() {
+		var {mode} = this.state,
+			{onSelect, cohort, cohorts, cohortMeta} = this.props;
+		return (
+			<div>
+				<input
+					ref='cohort'
+					onChange={this.onChange}
+					type='radio' name='cohort-mode' value='cohort'
+					checked={mode === 'cohort'}/>I know the study I want<br/>
+				<input
+					ref='cohort'
+					onChange={this.onChange}
+					type='radio' name='cohort-mode' value='disease'
+					checked={mode !== 'cohort'}/>Help me find a study<br/>
+
+				{mode === 'cohort' ?
+					<CohortSelect onSelect={onSelect} cohorts={cohorts}
+						cohort={cohort}/> :
+					<DiseaseSuggest onSelect={onSelect} cohorts={cohorts}
+						cohort={cohort} cohortMeta={cohortMeta}/>}
+			</div>);
 	}
 });
 
@@ -283,7 +316,7 @@ var ColumnEdit = React.createClass({
 	},
 	render: function () {
 		var {choices, positions} = this.state,
-			{appState: {cohorts, columnEdit, datasets, features, servers}, callback, onHide} = this.props,
+			{appState: {cohorts, cohortMeta, columnEdit, datasets, features, servers}, callback, onHide} = this.props,
 			chosenDs = choices.dataset,  // choices.dataset is an array of datasets
 			{Editor} = pickEditor(datasets, chosenDs),
 			chosenDsSingle = (chosenDs && chosenDs.length === 1) ? datasets[chosenDs[0]] : null,
@@ -299,8 +332,8 @@ var ColumnEdit = React.createClass({
 
 				<Modal.Body ref='columnEditBody' className='columnEditBody'>
 					{positions.cohort ?
-					<CohortSelect onSelect={this.onCohortSelect} cohorts={cohorts}
-						cohort={choices.cohort} makeLabel={makeLabel}/> : null}
+					<CohortOrDisease cohortMeta={cohortMeta} onSelect={this.onCohortSelect} cohorts={cohorts}
+						cohort={choices.cohort}/> : null}
 
 					{positions.cohort ?
 						<div>

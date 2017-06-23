@@ -373,6 +373,17 @@ function testHost (host) {
 		.catch(() => Rx.Observable.of(false));
 }
 
+var cohortMetaURL = "http://cdn.rawgit.com/ucscXena/cohortMetaData/master/xenacohort_tag.json";
+
+function fetchCohortMeta() {
+	return Rx.Observable.ajax({
+		url: cohortMetaURL,
+		method: 'GET',
+		responseType: 'json',
+		crossDomain: true
+	}).map(xhr => xhr.response);
+}
+
 module.exports = {
 	...queryPosts,
 
@@ -389,5 +400,8 @@ module.exports = {
 
 	// reference
 	refGene,
-	transcript
+	transcript,
+
+	// cohort meta
+	fetchCohortMeta
 };

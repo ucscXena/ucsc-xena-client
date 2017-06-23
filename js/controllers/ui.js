@@ -182,6 +182,10 @@ function getChartOffsets(column) {
 	});
 }
 
+function fetchCohortMeta(serverBus) {
+	serverBus.next(['cohortMeta', xenaQuery.fetchCohortMeta()]);
+}
+
 function setLoadingState(state, params) {
 	var pending =  (_.get(params, 'bookmark') || _.get(params, 'inlineState')) ?
 		_.assoc(state, 'loadPending', true) : state;
@@ -228,6 +232,7 @@ var controls = {
 				fetchCohortData(serverBus, newState);
 			}
 		}
+		fetchCohortMeta(serverBus);
 	},
 	'import': (state, newState) => newState,
 	cohort: (state, i, cohort) =>

@@ -11,15 +11,17 @@ var renderInputComponent = ({ref, onChange, ...props}) => (
 	<Input
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
-		label='Study'
+		label='Primary disease or Tissue of Origin'
 		{...props} />);
 
-var CohortSuggest = React.createClass({
+var DiseaseSuggest = React.createClass({
 	mixins: [deepPureRenderMixin],
 	onSuggestionsFetchRequested({value}) {
-		var lcValue = value.toLowerCase();
+		var lcValue = value.toLowerCase(),
+			{cohortMeta} = this.props,
+			tags = Object.keys(cohortMeta);
 		this.setState({
-			suggestions: _.filter(this.props.cohorts, c => c.toLowerCase().indexOf(lcValue) !== -1).sort()
+			suggestions: _.uniq(_.flatmap(_.filter(tags, t => t.toLowerCase().indexOf(lcValue) === 0), t => cohortMeta[t])).sort()
 		});
 	},
 	onSuggestionsClearRequested() {
@@ -59,4 +61,5 @@ var CohortSuggest = React.createClass({
 	}
 });
 
-module.exports = CohortSuggest;
+module.exports = DiseaseSuggest;
+
