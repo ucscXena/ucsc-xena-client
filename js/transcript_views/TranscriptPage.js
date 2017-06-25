@@ -4,41 +4,34 @@ const React = require('react');
 const NameColumn = require('./NameColumn');
 const Exons = require('./Exons');
 const DensityPlot = require('./DensityPlot');
-const GeneInput = require('./GeneInput');
+const GeneSuggest = require('../views/GeneSuggest');
+var studyA = '', studyB = '', subtypeA = '', subtypeB = '';
 // Placeholder component. I'm expecting the real top-level view
 // will be in a separate file, and imported above.
 var Transcripts = React.createClass({
 	getInitialState() {
 		return {
-			gene: "TP53",
-			studyA: "",
-			subtypeA: "",
-			studyB: "",
-			subtypeB: ""
+			gene: ""
 		};
 	},
 
-	onLoadData() {
+	onLoadData(studyA, subtypeA, studyB, subtypeB) {
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
-		this.props.callback(['loadGene', this.state.gene, this.state.studyA, this.state.subtypeA, this.state.studyB, this.state.subtypeB]);
+		this.state.gene != "" ?
+		this.props.callback(['loadGene', this.state.gene, studyA, subtypeA, studyB, subtypeB]) :
+		null;
 		// this.props.callback(['loadGene', 'TP53', 'tcga', 'Lung Adenocarcinoma', 'gtex', 'Lung']); // hard-coded gene and sample subsets, for demo
 	},
 
 	handleSelect: function() {
-			this.setState({
-				studyA: this.refs.A.value.substring(0, this.refs.A.value.indexOf('|')),
-				subtypeA: this.refs.A.value.substring(this.refs.A.value.indexOf('|') + 1),
-				studyB: this.refs.B.value.substring(0, this.refs.B.value.indexOf('|')),
-				subtypeB: this.refs.B.value.substring(this.refs.A.value.indexOf('|') + 1)
-			});
-			this.onLoadData();
+			[studyA, subtypeA] = this.refs.A.value.split(/\|/);
+			[studyB, subtypeB] = this.refs.B.value.split(/\|/);
+			this.onLoadData(studyA, subtypeA, studyB, subtypeB);
 	},
 
-	handleGeneSelect: function (gene) {
-		this.setState({
-			gene: gene
-		});
+	handleGeneSelect: function () {
+		this.onLoadData(studyA, subtypeA, studyB, subtypeB);
 	},
 
 	render() {
@@ -74,14 +67,18 @@ var Transcripts = React.createClass({
 		return (
 			<div ref='datapages'>
 				<div>
-					<GeneInput geneSelect={this.handleGeneSelect}/>
-					<select ref="A">
+					<GeneSuggest value={this.state.gene}
+											onChange={ value => { this.setState({gene: value}); }}
+										/>
+					<button onClick={this.handleGeneSelect.bind(this)}>OK</button>
+					click this after entering new value of gene
+					<br/>
+					<select ref="A" onChange={this.handleSelect}>
 						{options}
 					</select>
-					<select ref="B">
+					<select ref="B" onChange={this.handleSelect}>
 						{options}
 					</select>
-					<button onClick={this.handleSelect.bind(this)}>OK</button>
 					<br/>
 					<NameColumn
 						data={transcriptNameData}
