@@ -18,7 +18,7 @@ var Transcripts = React.createClass({
 	onLoadData(studyA, subtypeA, studyB, subtypeB) {
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
-		this.state.gene != "" ?
+		this.state.gene !== "" ?
 		this.props.callback(['loadGene', this.state.gene, studyA, subtypeA, studyB, subtypeB]) :
 		null;
 		// this.props.callback(['loadGene', 'TP53', 'tcga', 'Lung Adenocarcinoma', 'gtex', 'Lung']); // hard-coded gene and sample subsets, for demo
