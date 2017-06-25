@@ -43,10 +43,10 @@ var Transcripts = React.createClass({
 		//for data selection
 		var {subtypes} = this.props.state.transcripts || {};
 		var options = [];
-		subtypes.tcga.forEach( name => {
+		subtypes.tcga.sort().forEach( name => {
 			options.push(<option value = {"tcga|" + name}>TCGA {name}</option>);
 		});
-		subtypes.gtex.forEach( name => {
+		subtypes.gtex.sort().forEach( name => {
 			options.push(<option value = {"gtex|" + name}>GTEx {name}</option>);
 		});
 
@@ -80,6 +80,7 @@ var Transcripts = React.createClass({
 						{options}
 					</select>
 					<br/>
+					<h4><strong>Gene: </strong>{this.state.gene} <strong>StudyA: </strong>{studyA} {subtypeA} <strong>StudyB: </strong>{studyB} {subtypeB}</h4>
 					<NameColumn
 						data={transcriptNameData}
 						/>
