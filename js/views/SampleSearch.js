@@ -5,7 +5,66 @@ var Input = require('react-bootstrap/lib/Input');
 var Button = require('react-bootstrap/lib/Button');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
+var Modal = require('react-bootstrap/lib/Modal');
+
 var {deepPureRenderMixin} = require('../react-utils');
+
+var SampleIDInput = React.createClass({
+	getInitialState() {
+		return {
+			show: false,
+			value: ''
+		};
+	},
+	onChange (ev) {
+		var value = ev.target.value;
+		this.setState({value});
+	},
+	close () {
+		this.setState({ show: false});
+	},
+	submit () {
+		var samplesOR = this.state.value.split(/\s+/).join(' OR '),
+			{onSamplesSubmit} = this.props;
+
+		onSamplesSubmit(samplesOR);
+
+		this.props = samplesOR;
+		this.close();
+		this.state.value = '';
+	},
+	render() {
+		return (
+			<span className = "modal-container" >
+				<Button
+					bsSize = "small"
+					onClick = {() => this.setState({ show: true})}>
+					Sample list
+				</Button>
+				<Modal
+					show={this.state.show}
+					onHide={this.close}
+					container={this}
+					aria-labelledby="contained-modal-title">
+					<Modal.Header closeButton>
+						<Modal.Title id="contained-modal-title">Enter a list of samaple IDs to highlight</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<Input style={{width: 550, height: 200}}
+							value={this.state.value}
+							type ="textarea"
+							placeholder='e.g. TCGA-DB-A4XH TCGA-01-2345'
+							onChange={this.onChange}/>
+					</Modal.Body>
+					<Modal.Footer>
+						<Button onClick={this.submit}>Submit</Button>
+						<Button onClick={this.close}>Cancel</Button>
+					</Modal.Footer>
+				</Modal>
+			</span>
+		);
+	}
+});
 
 var SampleSearch = React.createClass({
 	mixins: [deepPureRenderMixin],
@@ -23,6 +82,11 @@ var SampleSearch = React.createClass({
 	onChange: function (ev) {
 		var {onChange} = this.props,
 			value = ev.target.value;
+		this.setState({value});
+		onChange(value);
+	},
+	onSamplesSubmit: function (value) {
+		var {onChange} = this.props;
 		this.setState({value});
 		onChange(value);
 	},
@@ -52,6 +116,7 @@ var SampleSearch = React.createClass({
 						<MenuItem title='Create column from' onClick={onCreateColumn}>New Column</MenuItem>
 					</SplitButton>) : null}
 				{help ? <Button bsStyle='link' target='_blank' href={help}>Help with search</Button> : null}
+				<SampleIDInput onSamplesSubmit={this.onSamplesSubmit}/>
 			</form>
 		);
 	}
