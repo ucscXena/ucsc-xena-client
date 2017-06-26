@@ -49,7 +49,10 @@ var controls = {
 	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB) =>
 		_.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB})),
 	'loadGene-post!': (serverBus, state, newState) => {
-		fetchTranscripts(serverBus, newState.transcripts);
+		if(newState.transcripts.gene)
+		{
+			fetchTranscripts(serverBus, newState.transcripts);
+		}
 	},
 	geneTranscripts:
 		(state, transcripts) => _.assocIn(state, ['transcripts', 'genetranscripts'], transcripts),

@@ -5,13 +5,12 @@ const NameColumn = require('./NameColumn');
 const Exons = require('./Exons');
 const DensityPlot = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
-var studyA = '', studyB = '', subtypeA = '', subtypeB = '';
 // Placeholder component. I'm expecting the real top-level view
 // will be in a separate file, and imported above.
 var Transcripts = React.createClass({
 	getInitialState() {
 		return {
-			gene: ""
+			gene: this.props.state.gene || ""
 		};
 	},
 
@@ -25,23 +24,27 @@ var Transcripts = React.createClass({
 	},
 
 	handleSelect: function() {
-			[studyA, subtypeA] = this.refs.A.value.split(/\|/);
-			[studyB, subtypeB] = this.refs.B.value.split(/\|/);
-			this.onLoadData(studyA, subtypeA, studyB, subtypeB);
+			if(!this.state.gene)
+			alert("Enter gene first");
+
+			[this.studyA, this.subtypeA] = this.refs.A.value.split(/\|/);
+			[this.studyB, this.subtypeB] = this.refs.B.value.split(/\|/);
+			this.onLoadData(this.studyA, this.subtypeA, this.studyB, this.subtypeB);
 	},
 
 	handleGeneSelect: function () {
-		this.onLoadData(studyA, subtypeA, studyB, subtypeB);
+		this.onLoadData(this.studyA, this.subtypeA, this.studyB, this.subtypeB);
 	},
 
 	render() {
-		// var data = this.props.state.transcripts ? (
-		// 	<pre style={{width: 500}}>
-		// 		{JSON.stringify(this.props.state.transcripts, null, 4).slice(0, 1000)}
-		// 	</pre>) : null;
-
 		//for data selection
-		var {subtypes} = this.props.state.transcripts || {};
+		var {subtypes, studyA, subtypeA, studyB, subtypeB} = this.props.state.transcripts || {};
+		if(!subtypes)
+		{
+			return <h4>"Loading available subtypes..."</h4>;
+		}
+		var valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypes.tcga[0]}`;
+		var valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypes.gtex[0]}`;
 		var options = [];
 		subtypes.tcga.sort().forEach( name => {
 			options.push(<option value = {"tcga|" + name}>TCGA {name}</option>);
@@ -73,14 +76,14 @@ var Transcripts = React.createClass({
 					<button onClick={this.handleGeneSelect.bind(this)}>OK</button>
 					click this after entering new value of gene
 					<br/>
-					<select ref="A" onChange={this.handleSelect}>
+					<select ref="A" onChange={this.handleSelect} value={valueA}>
 						{options}
 					</select>
-					<select ref="B" onChange={this.handleSelect}>
+					<select ref="B" onChange={this.handleSelect} value={valueB}>
 						{options}
 					</select>
 					<br/>
-					<h4><strong>Gene: </strong>{this.state.gene} <strong>StudyA: </strong>{studyA} {subtypeA} <strong>StudyB: </strong>{studyB} {subtypeB}</h4>
+					<h5><strong>Gene: </strong>{this.state.gene} <strong>StudyA: </strong>{studyA} {subtypeA} <strong>StudyB: </strong>{studyB} {subtypeB}</h5>
 					<NameColumn
 						data={transcriptNameData}
 						/>
