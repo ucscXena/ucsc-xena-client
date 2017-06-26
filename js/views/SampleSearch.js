@@ -5,15 +5,16 @@ var Input = require('react-bootstrap/lib/Input');
 var Button = require('react-bootstrap/lib/Button');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
 var MenuItem = require('react-bootstrap/lib/MenuItem');
+var Tooltip = require('react-bootstrap/lib/Tooltip');
+var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var Modal = require('react-bootstrap/lib/Modal');
-
 var {deepPureRenderMixin} = require('../react-utils');
 
 var SampleIDInput = React.createClass({
 	getInitialState() {
 		return {
 			show: false,
-			value: ''
+			value: undefined
 		};
 	},
 	onChange (ev) {
@@ -24,23 +25,24 @@ var SampleIDInput = React.createClass({
 		this.setState({ show: false});
 	},
 	submit () {
-		var samplesOR = this.state.value.split(/\s+/).join(' OR '),
-			{onSamplesSubmit} = this.props;
-
-		onSamplesSubmit(samplesOR);
-
-		this.props = samplesOR;
+		var samplesList = this.state.value.split(/\s+/),
+			{onSearchAndFilterColumn, onSamplesSubmit} = this.props;
 		this.close();
 		this.state.value = '';
+		onSearchAndFilterColumn(samplesList);
+		onSamplesSubmit("A:true"); // since the new column is always column A
 	},
 	render() {
+		var tooltip = <Tooltip>Search by sample IDs</Tooltip>;
 		return (
 			<span className = "modal-container" >
-				<Button
-					bsSize = "small"
-					onClick = {() => this.setState({ show: true})}>
-					Sample list
-				</Button>
+				<OverlayTrigger trigger={['hover']} placement="top" overlay={tooltip}>
+					<Button
+						bsSize = "small"
+						onClick = {() => this.setState({ show: true})}>
+						Custom Sample list
+					</Button>
+				</OverlayTrigger>
 				<Modal
 					show={this.state.show}
 					onHide={this.close}
@@ -57,7 +59,7 @@ var SampleIDInput = React.createClass({
 							onChange={this.onChange}/>
 					</Modal.Body>
 					<Modal.Footer>
-						<Button onClick={this.submit}>Submit</Button>
+						<Button bsStyle="primary" onClick={this.submit} disabled={!this.state.value}>Submit</Button>
 						<Button onClick={this.close}>Cancel</Button>
 					</Modal.Footer>
 				</Modal>
@@ -91,7 +93,7 @@ var SampleSearch = React.createClass({
 		onChange(value);
 	},
 	render: function () {
-		var {matches, help, onFilter, onZoom, onCreateColumn, mode} = this.props,
+		var {matches, help, onFilter, onZoom, onCreateColumn, onSearchAndFilterColumn, mode} = this.props,
 			{value} = this.state,
 			noshow = (mode !== "heatmap"),
 			filterButton = onFilter ?
@@ -116,7 +118,9 @@ var SampleSearch = React.createClass({
 						<MenuItem title='Create column from' onClick={onCreateColumn}>New Column</MenuItem>
 					</SplitButton>) : null}
 				{help ? <Button bsStyle='link' target='_blank' href={help}>Help with search</Button> : null}
-				<SampleIDInput onSamplesSubmit={this.onSamplesSubmit}/>
+				<SampleIDInput
+					onSearchAndFilterColumn={onSearchAndFilterColumn}
+					onSamplesSubmit={this.onSamplesSubmit}/>
 			</form>
 		);
 	}
