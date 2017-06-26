@@ -25,7 +25,7 @@ var Transcripts = React.createClass({
 
 	handleSelect: function() {
 			if(!this.state.gene)
-			alert("Enter gene first");
+			{alert("Enter gene first");}
 
 			[this.studyA, this.subtypeA] = this.refs.A.value.split(/\|/);
 			[this.studyB, this.subtypeB] = this.refs.B.value.split(/\|/);
