@@ -33,7 +33,11 @@ var SampleIDInput = React.createClass({
 		onSamplesSubmit("A:true"); // since the new column is always column A
 	},
 	render() {
-		var tooltip = <Tooltip>Search by sample IDs</Tooltip>;
+		var tooltip = <Tooltip>Search by sample IDs</Tooltip>,
+			{cohortSamples} = this.props,
+			help = Object.values(cohortSamples)[0] ?
+				'e.g.\n' + Object.values(cohortSamples)[0].slice(0, 5).join('\n') + '\n...' : null;
+
 		return (
 			<span className = "modal-container" >
 				<OverlayTrigger trigger={['hover']} placement="top" overlay={tooltip}>
@@ -55,7 +59,7 @@ var SampleIDInput = React.createClass({
 						<Input style={{width: 550, height: 200}}
 							value={this.state.value}
 							type ="textarea"
-							placeholder='e.g. TCGA-DB-A4XH TCGA-01-2345'
+							placeholder={help}
 							onChange={this.onChange}/>
 					</Modal.Body>
 					<Modal.Footer>
@@ -93,7 +97,7 @@ var SampleSearch = React.createClass({
 		onChange(value);
 	},
 	render: function () {
-		var {matches, help, onFilter, onZoom, onCreateColumn, onSearchAndFilterColumn, mode} = this.props,
+		var {matches, help, onFilter, onZoom, onCreateColumn, onSearchAndFilterColumn, cohortSamples, mode} = this.props,
 			{value} = this.state,
 			noshow = (mode !== "heatmap"),
 			filterButton = onFilter ?
@@ -107,7 +111,7 @@ var SampleSearch = React.createClass({
 					type='text'
 					value={value}
 					title={value}
-					placeholder='Samples to highlight. e.g. TCGA-DB-A4XH, missense'
+					placeholder={'Samples to highlight. e.g. TCGA-DB-A4XH-01, missense'}
 					onChange={this.onChange}
 					disabled={noshow}/>
 				{` Matching samples: ${matches}`}
@@ -120,7 +124,8 @@ var SampleSearch = React.createClass({
 				{help ? <Button bsStyle='link' target='_blank' href={help}>Help with search</Button> : null}
 				<SampleIDInput
 					onSearchAndFilterColumn={onSearchAndFilterColumn}
-					onSamplesSubmit={this.onSamplesSubmit}/>
+					onSamplesSubmit={this.onSamplesSubmit}
+					cohortSamples={cohortSamples}/>
 			</form>
 		);
 	}
