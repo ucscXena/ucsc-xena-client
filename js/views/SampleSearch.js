@@ -1,5 +1,6 @@
 'use strict';
 
+var _ = require('../underscore_ext');
 var React = require('react');
 var Input = require('react-bootstrap/lib/Input');
 var Button = require('react-bootstrap/lib/Button');
@@ -26,17 +27,16 @@ var SampleIDInput = React.createClass({
 	},
 	submit () {
 		var samplesList = this.state.value.split(/\s+/),
-			{onSearchAndFilterColumn, onSamplesSubmit} = this.props;
+			{onSearchIDAndFilterColumn, onSamplesSubmit} = this.props;
 		this.close();
 		this.state.value = '';
-		onSearchAndFilterColumn(samplesList);
+		onSearchIDAndFilterColumn(samplesList);
 		onSamplesSubmit("A:true"); // since the new column is always column A
 	},
 	render() {
 		var tooltip = <Tooltip>Search by sample IDs</Tooltip>,
 			{cohortSamples} = this.props,
-			help = Object.values(cohortSamples)[0] ?
-				'e.g.\n' + Object.values(cohortSamples)[0].slice(0, 5).join('\n') + '\n...' : null;
+			help = 'e.g.\n' + Object.values(cohortSamples)[0].slice(0, 5).join('\n') + '\n...';
 
 		return (
 			<span className = "modal-container" >
@@ -97,7 +97,7 @@ var SampleSearch = React.createClass({
 		onChange(value);
 	},
 	render: function () {
-		var {matches, help, onFilter, onZoom, onCreateColumn, onSearchAndFilterColumn, cohortSamples, mode} = this.props,
+		var {matches, help, onFilter, onZoom, onCreateColumn, onSearchIDAndFilterColumn, cohortSamples, mode} = this.props,
 			{value} = this.state,
 			noshow = (mode !== "heatmap"),
 			filterButton = onFilter ?
@@ -106,27 +106,28 @@ var SampleSearch = React.createClass({
 						 className='glyphicon glyphicon-filter'
 						 aria-hidden='true'/>) : null;
 		return (
-			<form className='form-inline' onSubmit={ev => ev.preventDefault()}>
-				<Input style={{width: '26em'}}
-					type='text'
-					value={value}
-					title={value}
-					placeholder={'Samples to highlight. e.g. TCGA-DB-A4XH-01, missense'}
-					onChange={this.onChange}
-					disabled={noshow}/>
-				{` Matching samples: ${matches}`}
-				{filterButton ?
-					(<SplitButton onClick={onFilter} bsSize='sm' title={filterButton} disabled={noshow}>
-						<MenuItem title='Apply to filter' onClick={onFilter}>Filter</MenuItem>
-						<MenuItem title='Apply to zoom' onClick={onZoom}>Zoom</MenuItem>
-						<MenuItem title='Create column from' onClick={onCreateColumn}>New Column</MenuItem>
-					</SplitButton>) : null}
-				{help ? <Button bsStyle='link' target='_blank' href={help}>Help with search</Button> : null}
-				<SampleIDInput
-					onSearchAndFilterColumn={onSearchAndFilterColumn}
-					onSamplesSubmit={this.onSamplesSubmit}
-					cohortSamples={cohortSamples}/>
-			</form>
+			!_.isEmpty(cohortSamples) ?
+				<form className='form-inline' onSubmit={ev => ev.preventDefault()}>
+					<Input style={{width: '26em'}}
+						type='text'
+						value={value}
+						title={value}
+						placeholder={'Samples to highlight. e.g. TCGA-DB-A4XH-01, missense'}
+						onChange={this.onChange}
+						disabled={noshow}/>
+					{` Matching samples: ${matches}`}
+					{filterButton ?
+						(<SplitButton onClick={onFilter} bsSize='sm' title={filterButton} disabled={noshow}>
+							<MenuItem title='Apply to filter' onClick={onFilter}>Filter</MenuItem>
+							<MenuItem title='Apply to zoom' onClick={onZoom}>Zoom</MenuItem>
+							<MenuItem title='Create column from' onClick={onCreateColumn}>New Column</MenuItem>
+						</SplitButton>) : null}
+					{help ? <Button bsStyle='link' target='_blank' href={help}>Help with search</Button> : null}
+					<SampleIDInput
+						onSearchIDAndFilterColumn={onSearchIDAndFilterColumn}
+						onSamplesSubmit={this.onSamplesSubmit}
+						cohortSamples={cohortSamples}/>
+				</form> : null
 		);
 	}
 });

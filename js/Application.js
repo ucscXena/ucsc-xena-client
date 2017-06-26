@@ -64,7 +64,7 @@ var Application = React.createClass({
 		callback(['add-column', uuid(), settings, true]);
 		sampleSearch = '';
 	},
-	onSearchAndFilterColumn: function (qsamplesList) {
+	onSearchIDAndFilterColumn: function (qsamplesList) {
 		var {state: {samples, cohortSamples}} = this.props,
 			qsampleListObj = {},
 			cohortSamplesList = [];
@@ -90,7 +90,7 @@ var Application = React.createClass({
 				() => this.onFilterColumn(samplesMatched) : null,
 			onFilterZoom = (matches < samples.length && matches > 0) ?
 				() => this.onFilterZoom(samples, samplesMatched) : null,
-			onSearchAndFilterColumn = this.onSearchAndFilterColumn;
+			onSearchIDAndFilterColumn = this.onSearchIDAndFilterColumn;
 
 		return (
 			<Grid onClick={this.onClick}>
@@ -113,7 +113,7 @@ var Application = React.createClass({
 							onFilter={onFilter}
 							onZoom={onFilterZoom}
 							onCreateColumn={onFilterColumn}
-							onSearchAndFilterColumn={onSearchAndFilterColumn}
+							onSearchIDAndFilterColumn={onSearchIDAndFilterColumn}
 							onChange={onHighlightChange}
 							cohortSamples={cohortSamples}
 							mode={mode}/>
