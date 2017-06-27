@@ -35,7 +35,7 @@ var SampleIDInput = React.createClass({
 	},
 	render() {
 		var tooltip = <Tooltip>Search by sample IDs</Tooltip>,
-			{cohortSamples} = this.props,
+			{cohortSamples, disabled} = this.props,
 			help = 'e.g.\n' + Object.values(cohortSamples)[0].slice(0, 5).join('\n') + '\n...';
 
 		return (
@@ -43,7 +43,8 @@ var SampleIDInput = React.createClass({
 				<OverlayTrigger trigger={['hover']} placement="top" overlay={tooltip}>
 					<Button
 						bsSize = "small"
-						onClick = {() => this.setState({ show: true})}>
+						onClick = {() => this.setState({ show: true})}
+						disabled={disabled}>
 						Custom Sample list
 					</Button>
 				</OverlayTrigger>
@@ -126,7 +127,8 @@ var SampleSearch = React.createClass({
 					<SampleIDInput
 						onSearchIDAndFilterColumn={onSearchIDAndFilterColumn}
 						onSamplesSubmit={this.onSamplesSubmit}
-						cohortSamples={cohortSamples}/>
+						cohortSamples={cohortSamples}
+						disabled={noshow}/>
 				</form> : null
 		);
 	}
