@@ -75,7 +75,7 @@ var Application = React.createClass({
 		cohortSamplesList = _.flatten(_.map(Object.keys(cohortSamples), i => cohortSamples[i]));
 
 		var matches = _.filter(samples, s => qsampleListObj[cohortSamplesList[s]]),
-			fieldLabel = matches.length + ' matches';
+			fieldLabel = matches.length + ((matches.length === 1) ? ' match' : ' matches');
 		this.onFilterColumn(matches, 'sample list', fieldLabel);
 	},
 	render: function() {
