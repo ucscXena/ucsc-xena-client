@@ -96,4 +96,8 @@ var Exons = React.createClass({
 	}
 });
 
-module.exports = Exons;
+module.exports = {
+	Exons,
+	smallBox,
+	bigBox
+};

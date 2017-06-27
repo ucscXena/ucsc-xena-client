@@ -2,7 +2,8 @@
 var _ = require('../underscore_ext');
 const React = require('react');
 const NameColumn = require('./NameColumn');
-const Exons = require('./Exons');
+const {Exons} = require('./Exons');
+const ExonsOnly = require('./ExonsOnly');
 const DensityPlot = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
 // Placeholder component. I'm expecting the real top-level view
@@ -10,11 +11,14 @@ const GeneSuggest = require('../views/GeneSuggest');
 var Transcripts = React.createClass({
 	getInitialState() {
 		return {
-			gene: this.props.state.gene || ""
+			gene: this.props.state.transcripts.gene || ""
 		};
 	},
 
-	onLoadData(studyA, subtypeA, studyB, subtypeB) {
+	onLoadData() {
+		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
+		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
+
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
 		this.state.gene !== "" ?
@@ -23,25 +27,24 @@ var Transcripts = React.createClass({
 		// this.props.callback(['loadGene', 'TP53', 'tcga', 'Lung Adenocarcinoma', 'gtex', 'Lung']); // hard-coded gene and sample subsets, for demo
 	},
 
-	handleSelect: function() {
-			if(!this.state.gene)
-			{alert("Enter gene first");}
-
-			[this.studyA, this.subtypeA] = this.refs.A.value.split(/\|/);
-			[this.studyB, this.subtypeB] = this.refs.B.value.split(/\|/);
-			this.onLoadData(this.studyA, this.subtypeA, this.studyB, this.subtypeB);
-	},
-
-	handleGeneSelect: function () {
-		this.onLoadData(this.studyA, this.subtypeA, this.studyB, this.subtypeB);
-	},
+	// handleSelect: function() {
+	// 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
+	// 	  var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
+	// 		this.onLoadData(studyA, subtypeA, studyB, subtypeB);
+	// },
+	//
+	// handleGeneSelect: function () {
+	// 	var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
+	// 	var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
+	// 	this.onLoadData(studyA, subtypeA, studyB, subtypeB);
+	// },
 
 	render() {
 		//for data selection
 		var {subtypes, studyA, subtypeA, studyB, subtypeB} = this.props.state.transcripts || {};
 		if(!subtypes)
 		{
-			return <h4>"Loading available subtypes..."</h4>;
+			return <h4>Loading available subtypes...</h4>;
 		}
 		var valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypes.tcga[0]}`;
 		var valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypes.gtex[0]}`;
@@ -70,24 +73,29 @@ var Transcripts = React.createClass({
 		return (
 			<div ref='datapages'>
 				<div>
+					<strong>Gene: </strong>
 					<GeneSuggest value={this.state.gene}
 											onChange={ value => { this.setState({gene: value}); }}
 										/>
-					<button onClick={this.handleGeneSelect.bind(this)}>OK</button>
+					<button onClick={this.onLoadData}>OK</button>
 					click this after entering new value of gene
 					<br/>
-					<select ref="A" onChange={this.handleSelect} value={valueA}>
+					<strong>StudyA: </strong>
+					<select ref="A" onChange={this.onLoadData} value={valueA}>
 						{options}
 					</select>
-					<select ref="B" onChange={this.handleSelect} value={valueB}>
+					<strong>StudyB: </strong>
+					<select ref="B" onChange={this.onLoadData} value={valueB}>
 						{options}
 					</select>
 					<br/>
-					<h5><strong>Gene: </strong>{this.state.gene} <strong>StudyA: </strong>{studyA} {subtypeA} <strong>StudyB: </strong>{studyB} {subtypeB}</h5>
 					<NameColumn
 						data={transcriptNameData}
 						/>
 					<Exons
+						data={transcriptExonData}
+						/>
+					<ExonsOnly
 						data={transcriptExonData}
 						/>
 					<DensityPlot
