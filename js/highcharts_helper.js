@@ -1,5 +1,7 @@
 'use strict';
-require('highcharts/highstock');
+
+var Highcharts = require('highcharts/highstock');
+require('highcharts/highcharts-more')(Highcharts);
 
 function hcLabelRender() {
 	var s = this.name;
@@ -292,7 +294,6 @@ function addSeriesToColumn (chart, chartType, sName, ycodeSeries, yIsCategorical
 			};
 		}
 	}
-
 	chart.addSeries(seriesOptions, false);
 }
 
