@@ -6,26 +6,43 @@
 
 var _ = require('./underscore_ext');
 
+// Create a group with one exon
+var initGroup = exon => ({
+	start: exon.start,
+	end: exon.end,
+	exons: [exon]
+});
+
+// Update a group with an overlapping exon
+function updateGroup(group, exon) {
+	var newEnd = group.end < exon.end ? exon.end : group.end;
+	return {
+		start: group.start,
+		end: newEnd,
+		exons: [...group.exons, exon] // XXX potentially slow
+	};
+}
+
 function mergeTop(groups, exon) {
-	var [first, ...rest] = groups, newEnd;
+	var [first, ...rest] = groups;
 	if (first.start < exon.end && exon.start < first.end) {
-		newEnd = first.end < exon.end ? exon.end : first.end;
-		return [{start: first.start, end: newEnd}, ...rest];
+		return [updateGroup(first, exon), ...rest];
 	} else {
-		return [exon, first, ...rest];
+		return [initGroup(exon), first, ...rest];
 	}
 }
 
 // findIntrons(exons :: [[{start, end}, {start, end}, ...], ...]) ::
-//    [[start, end], ...]
+//    [{start, end, exons: [...]}, ...]
+//
+// exons in the returned groups are sorted by start position.
 function exonGroups(exons) {
 	var sorted = _.sortBy(exons, 'start'),
 		[first, ...rest] = sorted;
-	return rest.reduce(mergeTop, [first]).reverse();
+	return rest.reduce(mergeTop, [initGroup(first)]).reverse();
 }
 
-function intronRegions(exons) {
-	var groups = exonGroups(exons);
+function intronRegions(groups) {
 	return groups.slice(1).map(({start, end}, i) => ([groups[i].end, start]));
 }
 

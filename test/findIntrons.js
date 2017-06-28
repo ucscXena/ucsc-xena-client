@@ -3,7 +3,7 @@
 
 var assert = require('assert');
 var jv = require('jsverify');
-var {allExons, intronRegions} = require('../js/findIntrons');
+var {allExons, exonGroups, intronRegions} = require('../js/findIntrons');
 var _ = require('../js/underscore_ext');
 
 var {nearray, tuple, nat, suchthat} = jv;
@@ -60,13 +60,31 @@ describe('findIntrons', function () {
 			}]);
 		});
 	});
+	describe('exonGroups', () => {
+		it('should group overlaps', () => {
+			var exons = allExons([{
+					exonStarts: [100, 110, 300],
+					exonEnds: [120, 120, 310]
+				}]),
+				groups = exonGroups(exons);
+			assert.deepEqual(groups, [{
+					start: 100,
+					end: 120,
+					exons: [{start: 100, end: 120}, {start: 110, end: 120}]
+				}, {
+					start: 300,
+					end: 310,
+					exons: [{start: 300, end: 310}]
+				}]);
+		});
+	});
 	describe('intronRegions', function () {
 		it('should find zero intronic regions', () => {
 			var exons = allExons([{
 					exonStarts: [100, 100],
 					exonEnds: [110, 120]
 				}]),
-				introns = intronRegions(exons);
+				introns = intronRegions(exonGroups(exons));
 			assert.deepEqual(introns, []);
 		});
 		it('should find one intronic region', () => {
@@ -74,7 +92,7 @@ describe('findIntrons', function () {
 					exonStarts: [100, 200],
 					exonEnds: [110, 210]
 				}]),
-				introns = intronRegions(exons);
+				introns = intronRegions(exonGroups(exons));
 			assert.deepEqual(introns, [[110, 200]]);
 		});
 		it('should find two intronic regions', () => {
@@ -82,20 +100,11 @@ describe('findIntrons', function () {
 					exonStarts: [100, 200, 300],
 					exonEnds: [110, 210, 310]
 				}]),
-				introns = intronRegions(exons);
+				introns = intronRegions(exonGroups(exons));
 			assert.deepEqual(introns, [[110, 200], [210, 300]]);
 		});
-//		it.only('should find this intronic region', () => {
-//			var exons = [{"start": 0, "end": 1}, {"start": 4, "end": 10}],
-//				gap = {"start": 1, "end": 2},
-//				introns = intronRegions(exons),
-//				match = introns.filter(([start, end]) =>
-//					start <= gap.start && gap.end <= end);
-//			console.log({exons, gap, introns, match});
-//			assert(match.length === 1, "not found");
-//		});
 		property("intron regions have no exons", exonList, exons => {
-			var introns = intronRegions(exons);
+			var introns = intronRegions(exonGroups(exons));
 			introns.forEach(([iStart, iEnd]) =>
 				exons.forEach(({start, end}) =>
 					assert(!(iStart < end && start < iEnd),
@@ -113,7 +122,7 @@ describe('findIntrons', function () {
 					((start + end) % 2 === 0 ? {start: gap.end, end: gap.end + (end - start)} :
 						{start: gap.start - (end - start), end: gap.start})
 					: {start, end}),
-				introns = intronRegions(shiftedExons),
+				introns = intronRegions(exonGroups(shiftedExons)),
 				match = introns.filter(([start, end]) =>
 					start <= gap.start && gap.end <= end),
 				allOver = _.every(shiftedExons, ({start}) => start >= gap.end),
