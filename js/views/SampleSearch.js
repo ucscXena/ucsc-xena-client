@@ -35,8 +35,8 @@ var SampleIDInput = React.createClass({
 	},
 	render() {
 		var tooltipButton = <Tooltip>Search by sample IDs</Tooltip>,
-			tooltipModalString = 'New binary column will be made using the your list:\
-				matched samples vs. the rest of the samples',
+			tooltipModalString = 'New binary column will be made using your list: \
+				matched samples vs. the rest.',
 			tooltipModal = <Tooltip>{tooltipModalString}</Tooltip>,
 			{cohortSamples, disabled} = this.props,
 			help = 'e.g.\n' + Object.values(cohortSamples)[0].slice(0, 5).join('\n') + '\n...';
@@ -48,7 +48,7 @@ var SampleIDInput = React.createClass({
 						bsSize = "small"
 						onClick = {() => this.setState({ show: true})}
 						disabled={disabled}>
-						Sample list -> New Column
+						Custom Sample List
 					</Button>
 				</OverlayTrigger>
 				<Modal
@@ -58,7 +58,7 @@ var SampleIDInput = React.createClass({
 					aria-labelledby="contained-modal-title">
 					<Modal.Header closeButton>
 						<Modal.Title id="contained-modal-title">
-							Enter a list of samaple IDs
+							Enter a list of samaple IDs to highlight
 							<OverlayTrigger trigger={['hover']} placement="right" overlay={tooltipModal}>
 								<span
 								 className='glyphicon glyphicon-info-sign'
