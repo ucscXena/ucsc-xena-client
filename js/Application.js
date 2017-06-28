@@ -47,12 +47,12 @@ var Application = React.createClass({
 			last = toOrder[_.max(matches, s => toOrder[s])];
 		callback(['zoom', {index, height, count: last - index + 1}]);
 	},
-	onFilterColumn: function (matches) {
+	onFilterColumn: function (matches, columnLabel, fieldLabel) {
 		var {state: {datasets, cohortSamples, sampleSearch}, callback} = this.props,
 			allSamples = _.flatten(cohortSamples),
 			matching = _.map(matches, i => allSamples[i]),
-			field = signatureField(`${sampleSearch}`, {
-				columnLabel: 'filter',
+			field = signatureField(`${fieldLabel ? fieldLabel : sampleSearch}`, {
+				columnLabel: columnLabel ? columnLabel : 'filter',
 				valueType: 'coded',
 				filter: sampleSearch,
 				signature: ['in', matching]
@@ -62,10 +62,25 @@ var Application = React.createClass({
 					'width', 100,
 					'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
 		callback(['add-column', uuid(), settings, true]);
+		sampleSearch = '';
+	},
+	onSearchIDAndFilterColumn: function (qsamplesList) {
+		var {state: {samples, cohortSamples}} = this.props,
+			qsampleListObj = {},
+			cohortSamplesList = [];
+
+		_.map(qsamplesList, (s, i)=>{
+			qsampleListObj[s] = i + 1;
+		});
+		cohortSamplesList = _.flatten(_.map(Object.keys(cohortSamples), i => cohortSamples[i]));
+
+		var matches = _.filter(samples, s => qsampleListObj[cohortSamplesList[s]]),
+			fieldLabel = matches.length + ((matches.length === 1) ? ' match' : ' matches');
+		this.onFilterColumn(matches, 'sample list', fieldLabel);
 	},
 	render: function() {
 		let {state, children, onHighlightChange, ...otherProps} = this.props,
-			{samplesMatched, sampleSearch, samples, mode} = state,
+			{samplesMatched, sampleSearch, samples, cohortSamples, mode} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			// Can these closures be eliminated, now that the selector is above this
 			// component?
@@ -74,7 +89,8 @@ var Application = React.createClass({
 			onFilterColumn = (matches < samples.length && matches > 0) ?
 				() => this.onFilterColumn(samplesMatched) : null,
 			onFilterZoom = (matches < samples.length && matches > 0) ?
-				() => this.onFilterZoom(samples, samplesMatched) : null;
+				() => this.onFilterZoom(samples, samplesMatched) : null,
+			onSearchIDAndFilterColumn = this.onSearchIDAndFilterColumn;
 
 		return (
 			<Grid onClick={this.onClick}>
@@ -97,7 +113,9 @@ var Application = React.createClass({
 							onFilter={onFilter}
 							onZoom={onFilterZoom}
 							onCreateColumn={onFilterColumn}
+							onSearchIDAndFilterColumn={onSearchIDAndFilterColumn}
 							onChange={onHighlightChange}
+							cohortSamples={cohortSamples}
 							mode={mode}/>
 					</Col>
 				</Row>

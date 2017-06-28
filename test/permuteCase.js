@@ -4,7 +4,7 @@
 var assert = require('assert');
 var {prefixBitLimit} = require('../js/permuteCase');
 
-describe.only('permuteCase', () => {
+describe('permuteCase', () => {
 	describe('prefixBitLimit', () => {
 		it('should return full string under n', () => {
 			assert.equal('f', prefixBitLimit(4, 'f'));

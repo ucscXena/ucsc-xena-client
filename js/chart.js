@@ -3,8 +3,7 @@
 var getLabel = require('./getLabel');
 var {hexToRGB, colorStr} = require ('./color_helper');
 var d3 = require('d3-scale');
-var highcharts = require('./highcharts');
-var Highcharts = highcharts.Highcharts;
+var Highcharts = require('highcharts/highstock');
 var highchartsHelper =  require ('./highcharts_helper');
 var _ = require('./underscore_ext');
 var colorScales = require ('./colorScales');

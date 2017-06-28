@@ -1,5 +1,5 @@
 'use strict';
-require('./highcharts');
+require('highcharts/highstock');
 
 function hcLabelRender() {
 	var s = this.name;
@@ -28,6 +28,9 @@ var chartOptions = {
 	subtitle: {
 		useHTML: true
 	},
+    scrollbar: {
+        enabled: true
+    },
 	legend: {
 		title: {
 			style: {
@@ -91,7 +94,7 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 		},
 		type: 'category',
 		categories: categories,
-		minRange: 1
+		minRange: -1
 	};
 	chartOptions.yAxis = {
 		title: {

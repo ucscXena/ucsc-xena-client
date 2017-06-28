@@ -412,7 +412,7 @@ var Column = React.createClass({
 			valueType = _.getIn(this.props, ['column', 'valueType']),
 			datasetMeta = _.getIn(this.props, ['datasetMeta']),
 			columnid = _.getIn(this.props, ['id']),
-			map = "PancanAtlas/XenaPancanAtlas",
+			map = "PancanAtlas/SampleMap",
 			layout = 'mRNA',
 			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + map + "&layout=" + layout,
 			customColor = {};

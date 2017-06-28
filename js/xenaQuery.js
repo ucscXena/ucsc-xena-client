@@ -11,16 +11,20 @@ var qs = require('val!./loadXenaQueries');
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
 
 ///////////////////////////////////////////////////////
-// support for hg18/GRCh36, hg19/GRCh37, hg38/GRCh38
+// support for hg18/GRCh36, hg19/GRCh37, hg38/GRCh38, mm10
+// Xena refGene is the composite gene model we build, NOT literally "refGene annotation"
 var refGene = {
 	hg18: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
 	GRCh36: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
 	hg19: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
 	GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
 	hg38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
-	GRCh38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'}
+	GRCh38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
+	mm9: {host: 'https://reference.xenahubs.net', name: 'gencode_good_mm10'}, // XXX wrong, but good enough
+	mm10: {host: 'https://reference.xenahubs.net', name: 'gencode_good_mm10'}
 };
 
+// support for hg18/GRCh36, hg19/GRCh37, hg38/GRCh38
 var transcript = {
 	hg18: {host: 'https://reference.xenahubs.net', name: 'refGene_hg18'},
 	GRCh36: {host: 'https://reference.xenahubs.net', name: 'refGene_hg18'},
