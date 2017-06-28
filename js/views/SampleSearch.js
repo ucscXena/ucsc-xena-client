@@ -35,8 +35,8 @@ var SampleIDInput = React.createClass({
 	},
 	render() {
 		var tooltipButton = <Tooltip>Search by sample IDs</Tooltip>,
-			tooltipModalString = 'New binary column will be made using your list: \
-				matched samples vs. the rest.',
+			tooltipModalString = 'Samples match your list will be highlighted. \
+				A new binary column will be made using your list: matched samples vs. the rest.',
 			tooltipModal = <Tooltip>{tooltipModalString}</Tooltip>,
 			{cohortSamples, disabled} = this.props,
 			help = 'e.g.\n' + Object.values(cohortSamples)[0].slice(0, 5).join('\n') + '\n...';
@@ -60,9 +60,8 @@ var SampleIDInput = React.createClass({
 						<Modal.Title id="contained-modal-title">
 							Enter a list of samaple IDs to highlight
 							<OverlayTrigger trigger={['hover']} placement="right" overlay={tooltipModal}>
-								<span
-								 className='glyphicon glyphicon-info-sign'
-								 aria-hidden='true'/>
+								<span className='glyphicon glyphicon-info-sign text-muted'
+									style={{margin: '5px'}}/>
 							</OverlayTrigger>
 						</Modal.Title>
 					</Modal.Header>
