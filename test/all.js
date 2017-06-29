@@ -18,4 +18,5 @@ require('./datasetJoins');
 require('./compactData');
 require('./parsePos');
 require('./permuteCase');
+require('./lcs');
 //require('./matrix-test');
