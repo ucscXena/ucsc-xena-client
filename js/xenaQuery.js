@@ -373,7 +373,7 @@ function testHost (host) {
 		.catch(() => Rx.Observable.of(false));
 }
 
-var cohortMetaURL = "http://cdn.rawgit.com/ucscXena/cohortMetaData/master/xenacohort_tag.json";
+var cohortMetaURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/xenacohort_tag.json";
 
 function fetchCohortMeta() {
 	return Rx.Observable.ajax({
