@@ -96,6 +96,7 @@
     "brfs": "^1.4.3",
     "d3-scale": "^0.6.4",
     "ehmutable": "^1.2.0",
+    "highcharts": "^5.0.12",
     "jStat": "1.5.3",
     "jquery": "2.1.0",
     "jquery-ui": "^1.10.5",
@@ -117,7 +118,6 @@
     "transform-loader": "^0.2.3",
     "ucsc-xena-datapages": "^2.29.0",
     "underscore": "^1.7.0",
-    "underscore.string": "^3.0.3",
-    "highcharts": "5.0.12"
+    "underscore.string": "^3.0.3"
   }
 }

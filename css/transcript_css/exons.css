@@ -12,7 +12,7 @@
 .exons--row--axis {
 	height: 1px;
 	display: inline-block;
-	background-color: #0097a7;
+	background-color: #015760;
 	opacity: 1;
 	z-index: -1;
 	position: absolute;
@@ -22,5 +22,14 @@
 .exons--row--item {
 	z-index: 1;
 	position: absolute;
-	background-color: #0097a7;
+	background-color: #015760;
+	border: 1px solid black;
+	text-align: center;
+	font-size: 0.75em;
+}
+
+.exons--row--item span {
+	position: relative;
+	vertical-align: middle;
+	color: white;
 }

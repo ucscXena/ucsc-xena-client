@@ -2,16 +2,17 @@
 var _ = require('../underscore_ext');
 const React = require('react');
 const NameColumn = require('./NameColumn');
-const {Exons} = require('./Exons');
+// const {Exons} = require('./Exons');
 const ExonsOnly = require('./ExonsOnly');
 const DensityPlot = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
+
 // Placeholder component. I'm expecting the real top-level view
 // will be in a separate file, and imported above.
 var Transcripts = React.createClass({
 	getInitialState() {
 		return {
-			gene: this.props.state.transcripts.gene || ""
+			gene: _.getIn(this.props.state, ['transcripts', 'gene'], "")
 		};
 	},
 
@@ -26,18 +27,6 @@ var Transcripts = React.createClass({
 		null;
 		// this.props.callback(['loadGene', 'TP53', 'tcga', 'Lung Adenocarcinoma', 'gtex', 'Lung']); // hard-coded gene and sample subsets, for demo
 	},
-
-	// handleSelect: function() {
-	// 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
-	// 	  var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
-	// 		this.onLoadData(studyA, subtypeA, studyB, subtypeB);
-	// },
-	//
-	// handleGeneSelect: function () {
-	// 	var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
-	// 	var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
-	// 	this.onLoadData(studyA, subtypeA, studyB, subtypeB);
-	// },
 
 	render() {
 		//for data selection
@@ -92,12 +81,12 @@ var Transcripts = React.createClass({
 					<NameColumn
 						data={transcriptNameData}
 						/>
-					<Exons
+					{/* <Exons
 						data={transcriptExonData}
-						/>
+					/> */}
 					<ExonsOnly
 						data={transcriptExonData}
-						/>
+					/>
 					<DensityPlot
 						data={transcriptDensityData}
 						/>

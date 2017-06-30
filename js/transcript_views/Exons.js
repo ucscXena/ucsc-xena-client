@@ -5,7 +5,7 @@ var _ = require('../underscore_ext');
 import '../../css/transcript_css/exons.css';
 
 //this function is to plot exons before cdsStart or after cdsEnd
-function smallBox(left, width, multiplyingFactor, strand) {
+function smallBox(left, width, multiplyingFactor, strand, label = "") {
 	let origin = strand === '-' ? "right" : "left";
 
 	let style = { width: (width * multiplyingFactor) + "px",
@@ -15,12 +15,14 @@ function smallBox(left, width, multiplyingFactor, strand) {
 	style[origin] = (left * multiplyingFactor) + "px";
 
 	return ( <div className="exons--row--item"
-					style={style}/>
+					style={style}>
+					<span>{label}</span>
+				</div>
 		);
 }
 
 //this function is to plot exons between cdsStart and cdsEnd
-function bigBox(left, width, multiplyingFactor, strand) {
+function bigBox(left, width, multiplyingFactor, strand, label = "") {
 	let origin = strand === '-' ? 'right' : 'left';
 
 	let style = { width: (width * multiplyingFactor) + "px",
@@ -30,7 +32,9 @@ function bigBox(left, width, multiplyingFactor, strand) {
 	style[origin] = (left * multiplyingFactor) + "px";
 
 	return ( <div className="exons--row--item"
-					style={style}/>
+					style={style}>
+					<span>{label}</span>
+				</div>
 		);
 }
 
