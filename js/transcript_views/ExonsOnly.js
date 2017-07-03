@@ -23,7 +23,7 @@ function newCoordinates(data, intronRegions, exonGroupGroupBy) {
       _.sortBy(_.keys(exonGroup)).forEach((key, j) => {
         if(('{"start":' + exonStarts + ',"end":' + data.exonEnds[index] + '}') === key)
         {
-          data.strand === '-' ? labels.push(exonGroupGroupBy.length - i + exonGroup.suffix.charAt(j - 1)) :
+          data.strand === '-' ? labels.push(exonGroupGroupBy.length - i + exonGroup.suffix.charAt(_.keys(exonGroup).length - j - 1)) :
           labels.push(i + 1 + exonGroup.suffix.charAt(j - 1));
         }
       });
