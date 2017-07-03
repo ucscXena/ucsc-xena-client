@@ -5,6 +5,8 @@ var xenaQuery = require('../xenaQuery');
 
 // Hard-coded expression dataset
 var expressionHost = 'https://toil.xenahubs.net';
+var subtypeDataset = 'TCGA_GTEX_category.txt';
+var subtypeField = 'TCGA_GTEX_main_category';
 
 var transcriptDataset = {
 	host: 'https://reference.xenahubs.net',
@@ -28,18 +30,19 @@ function fetchTranscripts(serverBus, params) {
 	serverBus.next(['geneTranscripts', query]);
 }
 
+var prefix = 4; // TCGA, GTEX
 function filterSubtypes(subtypes) {
-	var {'detailed_category': dc, '_primary_site': ps} = subtypes;
+	var study = _.groupBy(subtypes[subtypeField], subtype => subtype.slice(0, prefix));
 
 	return {
-		tcga: dc.filter(identity), // filter out ""
-		gtex: ps.filter(identity)
+		tcga: study.TCGA,
+		gtex: study.GTEX
 	};
 }
 
 function fetchSubtypes(serverBus) {
 	serverBus.next(['transcriptSampleSubtypes',
-				   xenaQuery.fieldCodes(expressionHost, 'TcgaTargetGTEX_phenotype.txt', ['detailed_category', '_primary_site'])
+				   xenaQuery.fieldCodes(expressionHost, subtypeDataset, [subtypeField])
 						.map(filterSubtypes)]);
 }
 
