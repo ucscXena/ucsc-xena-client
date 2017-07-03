@@ -33,15 +33,13 @@ var Transcripts = React.createClass({
 		{
 			return <h4>Loading available subtypes...</h4>;
 		}
-		var valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypes.tcga[0]}`;
-		var valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypes.gtex[0]}`;
-		var options = [];
-		_.sortBy(subtypes.tcga).forEach( name => {
-			options.push(<option value = {"tcga|" + name}>{name}</option>);
-		});
-		_.sortBy(subtypes.gtex).forEach( name => {
-			options.push(<option value = {"gtex|" + name}>{name}</option>);
-		});
+		var subtypesTcga = _.sortBy(subtypes.tcga),
+			subtypesGtex = _.sortBy(subtypes.gtex);
+		var valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypesTcga[0]}`;
+		var valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypesGtex[0]}`;
+		var options = _.concat(
+			subtypesTcga.map(name => <option value = {"tcga|" + name}>{name}</option>),
+			subtypesGtex.map(name => <option value = {"gtex|" + name}>{name}</option>));
 
 		var {genetranscripts} = this.props.state.transcripts || {};
 
