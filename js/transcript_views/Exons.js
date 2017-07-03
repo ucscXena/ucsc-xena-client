@@ -4,19 +4,20 @@ var _ = require('../underscore_ext');
 
 import '../../css/transcript_css/exons.css';
 
+var width = 700;
 //this function is to plot exons before cdsStart or after cdsEnd
 function smallBox(left, width, multiplyingFactor, strand, label = "") {
 	let origin = strand === '-' ? "right" : "left";
 
 	let style = { width: (width * multiplyingFactor) + "px",
-					height: "15%",
-					top: "42.5%",
+					height: "20%",
+					top: "40%",
 				};
 	style[origin] = (left * multiplyingFactor) + "px";
 
 	return ( <div className="exons--row--item"
 					style={style}>
-					<span>{label}</span>
+					<span style={{bottom: "20px"}}>{label}</span>
 				</div>
 		);
 }
@@ -26,14 +27,14 @@ function bigBox(left, width, multiplyingFactor, strand, label = "") {
 	let origin = strand === '-' ? 'right' : 'left';
 
 	let style = { width: (width * multiplyingFactor) + "px",
-					height: "30%",
-					top: "35%",
+					height: "35%",
+					top: "32.5%",
 				};
 	style[origin] = (left * multiplyingFactor) + "px";
 
 	return ( <div className="exons--row--item"
 					style={style}>
-					<span>{label}</span>
+					<span style={{bottom: "25px"}}>{label}</span>
 				</div>
 		);
 }
@@ -88,9 +89,9 @@ var Exons = React.createClass({
 		let data = this.props.data ? this.props.data : null;
 
 		//multiplying factor used to calculate position and width
-		let multiplyingFactor = 500 / (Math.max.apply(Math, _.pluck(data, 'txEnd')) - Math.min.apply(Math, _.pluck(data, 'txStart')));
+		let multiplyingFactor = width / (Math.max.apply(Math, _.pluck(data, 'txEnd')) - Math.min.apply(Math, _.pluck(data, 'txStart')));
 
-		let rows = this.row(data, multiplyingFactor);
+		let rows = this.row(_.sortBy(data, 'exonCount').reverse(), multiplyingFactor);
 
 		return (
 				<div className="exons">

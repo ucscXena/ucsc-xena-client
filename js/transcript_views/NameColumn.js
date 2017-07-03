@@ -1,5 +1,6 @@
 'use strict';
 var React = require('react');
+var _ = require('../underscore_ext');
 var colorScales = require('../colorScales');
 var {contrastColor} = require('../color_helper');
 import '../../css/transcript_css/nameColumn.css';
@@ -8,17 +9,16 @@ var NameColumn = React.createClass({
 
 	render() {
 
-		let data = this.props.data ? this.props.data : [];
+		let data = this.props.data || {};
 		let colors = colorScales.colorScale(['ordinal', data.length]);
-
-		let items = data.map((name, index) => {
+		let items = _.sortBy(data, 'exonCount').reverse().map((d, index) => {
 			return (
 				<div className="nameColumn--item"
 				 style={{ height: (100 / data.length) + "%",
 				 		  		backgroundColor: colors(index),
 									color: contrastColor(colors(index)),
 				 		}}>
-				 	<span>{name}</span>
+				 	<span>{d.name}</span>
 				</div>);
 		});
 

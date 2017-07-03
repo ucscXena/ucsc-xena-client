@@ -25,10 +25,10 @@ var DensityPlot = React.createClass ({
 
  	render () {
  		let data = this.props.data ? this.props.data : null;
- 		let rows = _.mmap(data.expA, data.expB, (expA, expB) => {
+ 		let rows = _.mmap(_.sortBy(data.studyA, 'exonCount').reverse(), _.sortBy(data.studyB, 'exonCount').reverse(), (studyA, studyB) => {
       let frequency;
-      let max = Math.max(Math.max.apply(Math, expA), Math.max.apply(Math, expB));
-      let min = Math.min(Math.min.apply(Math, expA), Math.min.apply(Math, expB));
+      let max = Math.max(Math.max.apply(Math, studyA.expA), Math.max.apply(Math, studyB.expB));
+      let min = Math.min(Math.min.apply(Math, studyA.expA), Math.min.apply(Math, studyB.expB));
  			return (
         <div className="densityPlot--row">
  						<div className="densityPlot--row--xAxis"/>
@@ -37,7 +37,7 @@ var DensityPlot = React.createClass ({
                          height: "50%",
                          width: "100%"}}>
             {
-                frequency = this.calculateFrequency(expA, max, min),
+                frequency = this.calculateFrequency(studyA.expA, max, min),
                 frequency.map( f => {
                   return (
                     <div className="densityPlot--row--bin"
@@ -59,7 +59,7 @@ var DensityPlot = React.createClass ({
                          mozTransform: "rotateX(180deg)",
                          transform: "rotateX(180deg)"}}>
               {
-                frequency = this.calculateFrequency(expB, max, min),
+                frequency = this.calculateFrequency(studyB.expB, max, min),
                 frequency.map( f => {
                   return (
                     <div className="densityPlot--row--bin"
@@ -76,7 +76,7 @@ var DensityPlot = React.createClass ({
  		});
  		return (
  			<div className="densityPlot"
- 				 style={{height: (data.expA.length * 70) + "px"}}>
+ 				 style={{height: (data.studyA.length * 70) + "px"}}>
  				{rows}
  			</div>
  			);

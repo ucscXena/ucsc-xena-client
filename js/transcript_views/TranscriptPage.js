@@ -48,15 +48,15 @@ var Transcripts = React.createClass({
 		var {genetranscripts} = this.props.state.transcripts || {};
 
 		//for the name column
-		var transcriptNameData = _.pluck(genetranscripts, 'name');
+		var transcriptNameData = _.map(genetranscripts, t => _.pick(t, 'name', 'exonCount'));
 
 		//for the exon-intron visualization
 		var transcriptExonData = _.map(genetranscripts, t => _.omit(t, ['name', 'chrom', 'expA', 'expB']));
 
 		// for the density plot
 		var transcriptDensityData = {
-			expA: _.pluck(genetranscripts, "expA"),
-			expB: _.pluck(genetranscripts, "expB")
+			studyA: _.map(genetranscripts, t => _.pick(t, 'expA', 'exonCount')),
+			studyB: _.map(genetranscripts, t => _.pick(t, 'expB', 'exonCount'))
 		};
 
 		return (
