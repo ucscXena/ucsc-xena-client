@@ -38,10 +38,10 @@ var Transcripts = React.createClass({
 		var valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypes.tcga[0]}`;
 		var valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypes.gtex[0]}`;
 		var options = [];
-		subtypes.tcga.sort().forEach( name => {
+		_.sortBy(subtypes.tcga).forEach( name => {
 			options.push(<option value = {"tcga|" + name}>TCGA {name}</option>);
 		});
-		subtypes.gtex.sort().forEach( name => {
+		_.sortBy(subtypes.gtex).forEach( name => {
 			options.push(<option value = {"gtex|" + name}>GTEx {name}</option>);
 		});
 
