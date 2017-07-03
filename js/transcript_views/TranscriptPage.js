@@ -39,10 +39,10 @@ var Transcripts = React.createClass({
 		var valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypes.gtex[0]}`;
 		var options = [];
 		_.sortBy(subtypes.tcga).forEach( name => {
-			options.push(<option value = {"tcga|" + name}>TCGA {name}</option>);
+			options.push(<option value = {"tcga|" + name}>{name}</option>);
 		});
 		_.sortBy(subtypes.gtex).forEach( name => {
-			options.push(<option value = {"gtex|" + name}>GTEx {name}</option>);
+			options.push(<option value = {"gtex|" + name}>{name}</option>);
 		});
 
 		var {genetranscripts} = this.props.state.transcripts || {};
