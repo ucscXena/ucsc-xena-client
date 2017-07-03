@@ -15,9 +15,15 @@ var transcriptDataset = {
 
 var identity = x => x;
 
+var prefix = 4; // "TCGA", "GTEX"
+
+// The transcriptExpression query is a bit wonky, because we're pulling the subtypes from TCGA_GTEX_main_category,
+// but in transcriptExpression we filter on _sample_type. This assumes the two are kept in sync. It would be
+// better to use the same field in both places, but first we need to confirm that it will work.
 var fetchExpression = (transcripts, {studyA, subtypeA, studyB, subtypeB}) =>
 	xenaQuery.transcriptExpression(expressionHost,
-			_.pluck(transcripts, 'name'), studyA, subtypeA, studyB, subtypeB)
+			// adding 1 for the space after the prefix
+			_.pluck(transcripts, 'name'), studyA, subtypeA.slice(prefix + 1), studyB, subtypeB.slice(prefix + 1))
 		.map(([expsA, expsB]) => _.mmap(expsA, expsB, transcripts,
 					(expA, expB, transcript) => _.assoc(transcript, 'expA', expA, 'expB', expB)));
 
@@ -30,7 +36,6 @@ function fetchTranscripts(serverBus, params) {
 	serverBus.next(['geneTranscripts', query]);
 }
 
-var prefix = 4; // TCGA, GTEX
 function filterSubtypes(subtypes) {
 	var study = _.groupBy(subtypes[subtypeField], subtype => subtype.slice(0, prefix));
 
