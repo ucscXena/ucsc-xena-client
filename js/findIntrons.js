@@ -37,6 +37,9 @@ function mergeTop(groups, exon) {
 //
 // exons in the returned groups are sorted by start position.
 function exonGroups(exons) {
+	if (exons.length < 1) {
+		return [];
+	}
 	var sorted = _.sortBy(exons, 'start'),
 		[first, ...rest] = sorted;
 	return rest.reduce(mergeTop, [initGroup(first)]).reverse();
