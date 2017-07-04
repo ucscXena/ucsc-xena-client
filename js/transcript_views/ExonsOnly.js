@@ -39,57 +39,61 @@ function newCoordinates(data, intronRegions, exonGroupGroupBy) {
 }
 
 function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFactor, strand, label, origin) {
-  let width = exonEnds - exonStarts;
+  let exonWidth = exonEnds - exonStarts;
+  let startsAt = exonStarts - origin;
 	if(cdsStart > exonEnds)
 	{
-		return smallBox( (exonStarts - origin), (width - (5 / multiplyingFactor)), multiplyingFactor, strand, label);
+		return smallBox( startsAt, (exonWidth - (5 / multiplyingFactor)), multiplyingFactor, strand, label);
 	}
 	else if(exonStarts < cdsStart && cdsStart < exonEnds)
 	{
+    let exonWidth1 = cdsStart - exonStarts;
+    let exonWidth2 = exonEnds - cdsStart;
     // here if-else is only for identifying a suitable box for labeling.
     // labeling is done on the longest of the two boxes.
-    if((cdsStart - exonStarts) < (exonEnds - cdsStart - (5 / multiplyingFactor)))
+    if(exonWidth1 < (exonWidth2 - (5 / multiplyingFactor)))
 		{
-      return [smallBox( (exonStarts - origin), (cdsStart - exonStarts), multiplyingFactor, strand),
-    bigBox( (cdsStart - origin), (exonEnds - cdsStart - (5 / multiplyingFactor)), multiplyingFactor, strand, label)];
+      return [smallBox( startsAt, exonWidth1, multiplyingFactor, strand),
+    bigBox( (cdsStart - origin), (exonWidth2 - (5 / multiplyingFactor)), multiplyingFactor, strand, label)];
     }
     else
     {
-      return [smallBox( (exonStarts - origin), (cdsStart - exonStarts), multiplyingFactor, strand, label),
-    bigBox( (cdsStart - origin), (exonEnds - cdsStart - (5 / multiplyingFactor)), multiplyingFactor, strand)];
+      return [smallBox( startsAt, exonWidth1, multiplyingFactor, strand, label),
+    bigBox( (cdsStart - origin), (exonWidth2 - (5 / multiplyingFactor)), multiplyingFactor, strand)];
     }
 	}
 	else if(exonStarts < cdsEnd && cdsEnd < exonEnds)
 	{
+    let exonWidth1 = cdsEnd - exonStarts;
+    let exonWidth2 = exonEnds - cdsEnd;
     // here if-else is only for identifying a suitable box for labeling.
     // labeling is done on the longest of the two boxes.
-    if((cdsEnd - exonStarts) > (exonEnds - cdsEnd - (5 / multiplyingFactor)))
+    if(exonWidth1 > (exonWidth2 - (5 / multiplyingFactor)))
     {
-		return [bigBox( (exonStarts - origin), (cdsEnd - exonStarts), multiplyingFactor, strand, label),
-    smallBox( (cdsEnd - origin), (exonEnds - cdsEnd - (5 / multiplyingFactor)), multiplyingFactor, strand)];
+		return [bigBox( startsAt, exonWidth1, multiplyingFactor, strand, label),
+    smallBox( (cdsEnd - origin), (exonWidth2 - (5 / multiplyingFactor)), multiplyingFactor, strand)];
     }
     else
     {
-		return [bigBox( (exonStarts - origin), (cdsEnd - exonStarts), multiplyingFactor, strand),
-    smallBox( (cdsEnd - origin), (exonEnds - cdsEnd - (5 / multiplyingFactor)), multiplyingFactor, strand, label)];
+		return [bigBox( startsAt, exonWidth1, multiplyingFactor, strand),
+    smallBox( (cdsEnd - origin), (exonWidth2 - (5 / multiplyingFactor)), multiplyingFactor, strand, label)];
     }
 	}
 	else if(cdsEnd < exonStarts)
 	{
-		return smallBox( (exonStarts - origin), (width - (5 / multiplyingFactor)), multiplyingFactor, strand, label);
+		return smallBox( startsAt, (exonWidth - (5 / multiplyingFactor)), multiplyingFactor, strand, label);
 	}
 	else
 	{
-		return bigBox( (exonStarts - origin), (width - (5 / multiplyingFactor)), multiplyingFactor, strand, label);
+		return bigBox( startsAt, (exonWidth - (5 / multiplyingFactor)), multiplyingFactor, strand, label);
 	}
 }
 
 var ExonsOnly = React.createClass({
 
-  row(data, multiplyingFactor) {
+  row(data, multiplyingFactor, origin) {
 
 		return data.map((d, index) => {
-      let origin = (Math.min.apply(Math, _.pluck(data, 'txStart')));
 			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor - 5) + "px" };
 			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + "px"])
 									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + "px"]);
@@ -133,8 +137,9 @@ var ExonsOnly = React.createClass({
     data = data.map(d => {
       return newCoordinates(d, intronRegionsList, exonGroupGroupBy);
     });
-    let multiplyingFactor = width / (Math.max.apply(Math, _.pluck(data, 'txEnd')) - Math.min.apply(Math, _.pluck(data, 'txStart')));
-    let rows = this.row(data, multiplyingFactor);
+    let origin = Math.min.apply(Math, _.pluck(data, 'txStart'));
+    let multiplyingFactor = width / (Math.max.apply(Math, _.pluck(data, 'txEnd')) - origin);
+    let rows = this.row(data, multiplyingFactor, origin);
     return (
       <div className="exons">
         {rows}

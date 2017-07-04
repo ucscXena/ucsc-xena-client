@@ -6,14 +6,14 @@ import '../../css/transcript_css/exons.css';
 
 var width = 700;
 //this function is to plot exons before cdsStart or after cdsEnd
-function smallBox(left, width, multiplyingFactor, strand, label = "") {
+function smallBox(startsAt, width, multiplyingFactor, strand, label = "") {
 	let origin = strand === '-' ? "right" : "left";
 
 	let style = { width: (width * multiplyingFactor) + "px",
 					height: "20%",
 					top: "40%",
 				};
-	style[origin] = (left * multiplyingFactor) + "px";
+	style[origin] = (startsAt * multiplyingFactor) + "px";
 
 	return ( <div className="exons--row--item"
 					style={style}>
@@ -23,14 +23,14 @@ function smallBox(left, width, multiplyingFactor, strand, label = "") {
 }
 
 //this function is to plot exons between cdsStart and cdsEnd
-function bigBox(left, width, multiplyingFactor, strand, label = "") {
+function bigBox(startsAt, width, multiplyingFactor, strand, label = "") {
 	let origin = strand === '-' ? 'right' : 'left';
 
 	let style = { width: (width * multiplyingFactor) + "px",
 					height: "35%",
 					top: "32.5%",
 				};
-	style[origin] = (left * multiplyingFactor) + "px";
+	style[origin] = (startsAt * multiplyingFactor) + "px";
 
 	return ( <div className="exons--row--item"
 					style={style}>
@@ -41,35 +41,42 @@ function bigBox(left, width, multiplyingFactor, strand, label = "") {
 
 function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFactor, strand, origin) {
 
-	let width = exonEnds - exonStarts;
+	let exonWidth = exonEnds - exonStarts;
+	let startsAt = exonStarts - origin;
 	if(cdsStart > exonEnds)
 	{
-		return smallBox( (exonStarts - origin), width, multiplyingFactor, strand);
+		return smallBox( startsAt, exonWidth, multiplyingFactor, strand);
 	}
 	else if(exonStarts < cdsStart && cdsStart < exonEnds)
 	{
-		return [smallBox( (exonStarts - origin), (cdsStart - exonStarts), multiplyingFactor, strand), bigBox( (cdsStart - origin), (exonEnds - cdsStart), multiplyingFactor, strand)];
+		let exonWidth1 = cdsStart - exonStarts;
+		let exonWidth2 = exonEnds - cdsStart;
+		return [smallBox( startsAt, exonWidth1, multiplyingFactor, strand),
+			bigBox( (cdsStart - origin), exonWidth2, multiplyingFactor, strand)];
 	}
 	else if(exonStarts < cdsEnd && cdsEnd < exonEnds)
 	{
-		return [bigBox( (exonStarts - origin), (cdsEnd - exonStarts), multiplyingFactor, strand), smallBox( (cdsEnd - origin), (exonEnds - cdsEnd), multiplyingFactor, strand)];
+		let exonWidth1 = cdsEnd - exonStarts;
+		let exonWidth2 = exonEnds - cdsEnd;
+		return [bigBox( startsAt, exonWidth1, multiplyingFactor, strand),
+			smallBox( (cdsEnd - origin), exonWidth2, multiplyingFactor, strand)];
 	}
 	else if(cdsEnd < exonStarts)
 	{
-		return smallBox( (exonStarts - origin), width, multiplyingFactor, strand);
+		return smallBox( startsAt, exonWidth, multiplyingFactor, strand);
 	}
 	else
 	{
-		return bigBox( (exonStarts - origin), width, multiplyingFactor, strand);
+		return bigBox( startsAt, exonWidth, multiplyingFactor, strand);
 	}
 }
 
 var Exons = React.createClass({
 
-	row(data, multiplyingFactor) {
+	row(data, multiplyingFactor, origin) {
 
 		return data.map((d, index) => {
-			let origin = (Math.min.apply(Math, _.pluck(data, 'txStart')));
+
 			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + "px" };
 			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + "px"])
 									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + "px"]);
@@ -89,11 +96,11 @@ var Exons = React.createClass({
 
 	render() {
 		let data = this.props.data ? this.props.data : null;
-
+		let origin = Math.min.apply(Math, _.pluck(data, 'txStart'));
 		//multiplying factor used to calculate position and width
-		let multiplyingFactor = width / (Math.max.apply(Math, _.pluck(data, 'txEnd')) - Math.min.apply(Math, _.pluck(data, 'txStart')));
+		let multiplyingFactor = width / (Math.max.apply(Math, _.pluck(data, 'txEnd')) - origin);
 
-		let rows = this.row(data, multiplyingFactor);
+		let rows = this.row(data, multiplyingFactor, origin);
 
 		return (
 				<div className="exons">
