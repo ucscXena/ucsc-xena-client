@@ -39,26 +39,28 @@ function bigBox(left, width, multiplyingFactor, strand, label = "") {
 		);
 }
 
-function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFactor, strand) {
+function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFactor, strand, origin) {
+
+	let width = exonEnds - exonStarts;
 	if(cdsStart > exonEnds)
 	{
-		return smallBox( (exonStarts - (Math.min.apply(Math, _.pluck(data, 'txStart')))), (exonEnds - exonStarts), multiplyingFactor, strand);
+		return smallBox( (exonStarts - origin), width, multiplyingFactor, strand);
 	}
 	else if(exonStarts < cdsStart && cdsStart < exonEnds)
 	{
-		return [smallBox( (exonStarts - (Math.min.apply(Math, _.pluck(data, 'txStart')))), (cdsStart - exonStarts), multiplyingFactor, strand), bigBox( (cdsStart - (Math.min.apply(Math, _.pluck(data, 'txStart')))), (exonEnds - cdsStart), multiplyingFactor, strand)];
+		return [smallBox( (exonStarts - origin), (cdsStart - exonStarts), multiplyingFactor, strand), bigBox( (cdsStart - origin), (exonEnds - cdsStart), multiplyingFactor, strand)];
 	}
 	else if(exonStarts < cdsEnd && cdsEnd < exonEnds)
 	{
-		return [bigBox( (exonStarts - (Math.min.apply(Math, _.pluck(data, 'txStart')))), (cdsEnd - exonStarts), multiplyingFactor, strand), smallBox( (cdsEnd - (Math.min.apply(Math, _.pluck(data, 'txStart')))), (exonEnds - cdsEnd), multiplyingFactor, strand)];
+		return [bigBox( (exonStarts - origin), (cdsEnd - exonStarts), multiplyingFactor, strand), smallBox( (cdsEnd - origin), (exonEnds - cdsEnd), multiplyingFactor, strand)];
 	}
 	else if(cdsEnd < exonStarts)
 	{
-		return smallBox( (exonStarts - (Math.min.apply(Math, _.pluck(data, 'txStart')))), (exonEnds - exonStarts), multiplyingFactor, strand);
+		return smallBox( (exonStarts - origin), width, multiplyingFactor, strand);
 	}
 	else
 	{
-		return bigBox( (exonStarts - (Math.min.apply(Math, _.pluck(data, 'txStart')))), (exonEnds - exonStarts), multiplyingFactor, strand);
+		return bigBox( (exonStarts - origin), width, multiplyingFactor, strand);
 	}
 }
 
@@ -67,17 +69,17 @@ var Exons = React.createClass({
 	row(data, multiplyingFactor) {
 
 		return data.map((d, index) => {
-
+			let origin = (Math.min.apply(Math, _.pluck(data, 'txStart')));
 			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + "px" };
-			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - (Math.min.apply(Math, _.pluck(data, 'txStart')))) * multiplyingFactor) + "px"])
-									 : _.conj(style, ['left', ((d.txStart - (Math.min.apply(Math, _.pluck(data, 'txStart')))) * multiplyingFactor) + "px"]);
+			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + "px"])
+									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + "px"]);
 
 			return ( <div className="exons--row" id={index}>
 						<div className="exons--row--axis"
 							 style={style}/>
 					{
 						_.flatten(_.mmap(d.exonStarts, d.exonEnds, (exonStarts, exonEnds) => {
-							return exonShape(data, exonStarts, exonEnds, d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand);
+							return exonShape(data, exonStarts, exonEnds, d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand, origin);
 						}))
 					}
 					</div>
@@ -91,7 +93,7 @@ var Exons = React.createClass({
 		//multiplying factor used to calculate position and width
 		let multiplyingFactor = width / (Math.max.apply(Math, _.pluck(data, 'txEnd')) - Math.min.apply(Math, _.pluck(data, 'txStart')));
 
-		let rows = this.row(_.sortBy(data, 'exonCount').reverse(), multiplyingFactor);
+		let rows = this.row(data, multiplyingFactor);
 
 		return (
 				<div className="exons">

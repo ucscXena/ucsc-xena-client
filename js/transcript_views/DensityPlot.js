@@ -25,7 +25,7 @@ var DensityPlot = React.createClass ({
 
  	render () {
  		let data = this.props.data ? this.props.data : null;
- 		let rows = _.mmap(_.sortBy(data.studyA, 'exonCount').reverse(), _.sortBy(data.studyB, 'exonCount').reverse(), (studyA, studyB) => {
+ 		let rows = _.mmap(data.studyA, data.studyB, (studyA, studyB) => {
       let frequency;
       let max = Math.max(Math.max.apply(Math, studyA.expA), Math.max.apply(Math, studyB.expB));
       let min = Math.min(Math.min.apply(Math, studyA.expA), Math.min.apply(Math, studyB.expB));

@@ -42,17 +42,20 @@ var Transcripts = React.createClass({
 			subtypesGtex.map(name => <option value = {"gtex|" + name}>{name}</option>));
 
 		var {genetranscripts} = this.props.state.transcripts || {};
-
+		// negative sign in the return statement to arrange in descending order
+		var genetranscriptsSorted = _.sortBy(genetranscripts, function(genetranscript) { return -(genetranscript.txEnd - genetranscript.txStart); });
+		console.log("unsorted", genetranscripts);
+		console.log("sorted", genetranscriptsSorted);
 		//for the name column
-		var transcriptNameData = _.map(genetranscripts, t => _.pick(t, 'name', 'exonCount'));
+		var transcriptNameData = _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'exonCount'));
 
 		//for the exon-intron visualization
-		var transcriptExonData = _.map(genetranscripts, t => _.omit(t, ['name', 'chrom', 'expA', 'expB']));
+		var transcriptExonData = _.map(genetranscriptsSorted, t => _.omit(t, ['name', 'chrom', 'expA', 'expB']));
 
 		// for the density plot
 		var transcriptDensityData = {
-			studyA: _.map(genetranscripts, t => _.pick(t, 'expA', 'exonCount')),
-			studyB: _.map(genetranscripts, t => _.pick(t, 'expB', 'exonCount'))
+			studyA: _.map(genetranscriptsSorted, t => _.pick(t, 'expA')),
+			studyB: _.map(genetranscriptsSorted, t => _.pick(t, 'expB'))
 		};
 
 		return (
