@@ -52,10 +52,9 @@ function drawChromScale(vg, width, layout, genomic = "coordinate") {
 		vg.width(width);
 	}
 	vg.box(0, 0, width, height, 'white'); // white background
-	if (!layout) {
+	if (!layout || !layout.chrom) {
 		return;
 	}
-
 	var [baseStart, baseEnd] = layout.chrom[0],
 		[pixelStart, pixelEnd] = layout.screen[0],
 		pixelWidth = pixelEnd - pixelStart,
