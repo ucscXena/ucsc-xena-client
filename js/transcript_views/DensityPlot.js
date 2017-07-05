@@ -25,10 +25,10 @@ var DensityPlot = React.createClass ({
 
  	render () {
  		let data = this.props.data ? this.props.data : null;
+    let max = Math.max.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
+    let min = Math.min.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
  		let rows = _.mmap(data.studyA, data.studyB, (studyA, studyB) => {
       let frequency;
-      let max = Math.max(Math.max.apply(Math, studyA.expA), Math.max.apply(Math, studyB.expB));
-      let min = Math.min(Math.min.apply(Math, studyA.expA), Math.min.apply(Math, studyB.expB));
  			return (
         <div className="densityPlot--row">
  						<div className="densityPlot--row--xAxis"/>
