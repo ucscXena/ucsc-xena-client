@@ -47,7 +47,7 @@ var tol = 0.01;
 var near = _.curry((x, y) => (x === null || y === null) ? y === x : Math.abs(x - y) < tol);
 
 var searchFloat = _.curry((dataField, cmp, ctx, search, data) => {
-	var values = _.getIn(data, [dataField, 'values']),
+	var values = _.getIn(data, [dataField, 'values'], [[]]),
 		searchVal = search === 'null' ? null : parseFloat(search);
 
 	if (searchVal === null) { // special case for null: handle sub-columns.
