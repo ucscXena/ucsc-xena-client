@@ -46,7 +46,7 @@ function scoreCohorts(cohortMeta, tags, weights) {
 }
 
 // Return list of cohorts ordered by strength of match to input.
-function match(cohortMeta, input) {
+function match(cohortMeta, input) { //eslint-disable-line no-unused-vars
 	var tags = Object.keys(cohortMeta),
 		normInput = toLCWords(input),
 		normTags = tags.map(toLCWords),
@@ -54,6 +54,14 @@ function match(cohortMeta, input) {
 		cohortScores = scoreCohorts(cohortMeta, tags, weights);
 
 	return Object.keys(cohortScores).sort((c, d) => cohortScores[d] - cohortScores[c]);
+}
+
+// match by logical AND, instead of a scoring system
+function matchExact(cohortMeta, input) {
+	var tags = Object.keys(cohortMeta),
+		normInput = toLCWords(input),
+		matches = tags.filter(tag => _.contains(normInput, tag.toLowerCase()));
+	return _.intersection(...matches.map(t => cohortMeta[t]));
 }
 
 // Return the start and end indices of the word in 'value'
@@ -135,7 +143,7 @@ var DiseaseSuggest = React.createClass({
 		var {onChange} = this,
 			{suggestions, value} = this.state,
 			{cohortMeta, cohort} = this.props,
-			results = match(cohortMeta, value);
+			results = matchExact(cohortMeta, value);
 
 		return (
 			<div>
