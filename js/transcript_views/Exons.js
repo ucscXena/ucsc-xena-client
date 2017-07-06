@@ -9,7 +9,6 @@ var width = 700;
 function smallBox(startsAt, width, multiplyingFactor, strand, pad, label = "") {
 	let origin = strand === '-' ? "right" : "left";
 
-	width = width < 0 ? -width : width; // XXX Temporary work-around for layout bug
 	let style = { width: (width * multiplyingFactor) + "px",
 					height: "20%",
 					top: "40%",
@@ -27,7 +26,6 @@ function smallBox(startsAt, width, multiplyingFactor, strand, pad, label = "") {
 function bigBox(startsAt, width, multiplyingFactor, strand, pad, label = "") {
 	let origin = strand === '-' ? 'right' : 'left';
 
-	width = width < 0 ? -width : width; // XXX Temporary work-around for layout bug
 	let style = { width: (width * multiplyingFactor) + "px",
 					height: "35%",
 					top: "32.5%",

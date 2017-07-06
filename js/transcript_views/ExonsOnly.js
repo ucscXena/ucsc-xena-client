@@ -54,7 +54,6 @@ function newCoordinates(data, intronRegions, exonGroupGroupBy) {
 function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFactor, strand, label, origin, pad) {
   let exonWidth = exonEnds - exonStarts;
   let startsAt = exonStarts - origin;
-  console.log("pad", pad);
 	if(cdsStart > exonEnds)
 	{
 		return smallBox( startsAt, (exonWidth ), multiplyingFactor, strand, pad, label);
@@ -132,12 +131,10 @@ var ExonsOnly = React.createClass({
     let data = this.props.data ? this.props.data : [];
     let allExonsList = allExons(data);
     let exonGroupsList = exonGroups(allExonsList);
-    console.log("group", exonGroupsList);
     let intronRegionsList = intronRegions(exonGroupsList);
     var exonGroupGroupBy = exonGroupsList.map((exonGroup) => {
       return _.groupBy(exonGroup.exons.map(exon => { return ({json: JSON.stringify(exon), exon}); }), 'json');
     });
-    console.log("groupGroup", exonGroupGroupBy);
     let exonGroupsWidth = width - padding * (exonGroupsList.length - 1);
     exonGroupGroupBy.forEach(group => {
       if(_.keys(group).length === 1)
