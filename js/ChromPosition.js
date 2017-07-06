@@ -52,40 +52,43 @@ function drawChromScale(vg, width, layout, genomic = "coordinate") {
 		vg.width(width);
 	}
 	vg.box(0, 0, width, height, 'white'); // white background
-	if (!layout || !layout.chrom) {
+	if (!layout) {
 		return;
 	}
-	var [baseStart, baseEnd] = layout.chrom[0],
-		[pixelStart, pixelEnd] = layout.screen[0],
-		pixelWidth = pixelEnd - pixelStart,
-		baseWidth = baseEnd - baseStart + 1,
-		range = pickRange(baseWidth / 2),
-		rangeWidth = pixelWidth * range / baseWidth,
-		startText = numberOrAbrev(vg, width / 4, font, baseStart),
-		endText = numberOrAbrev(vg, width / 4, font, baseEnd),
-		rangeText = metric(range),
-		rangeTextWidth = vg.textWidth(font, rangeText),
-		pushLeft = Math.max(width - rangeTextWidth - rangeWidth - 1, 0),
-		rangePos = Math.min(pushLeft, (pixelWidth - rangeWidth) / 2);
 
-	if (genomic === "coordinate") {
-		// Render start & end position, abreviating if constrained for width.
-		vg.text(pixelStart, height - 4, 'black', font, startText);    // start position at left
-		vg.text(pixelEnd - vg.textWidth(font, endText), height - 4, 'black', font, endText); // end position at right
-	} else if (genomic === "geneIntron") {
-		vg.text(pixelStart, height - 4, 'black', font, "5'");
+	if (genomic === "geneExon") {
+		vg.text(0, height - 4, 'black', font, "5'");
 		vg.text(width - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
-	} else if (genomic === "geneExon") {
-		vg.text(pixelStart, height - 4, 'black', font, "5'");
-		vg.text(width - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
-	}
+	} else {
+		var [baseStart, baseEnd] = layout.chrom[0],
+			[pixelStart, pixelEnd] = layout.screen[0],
+			pixelWidth = pixelEnd - pixelStart,
+			baseWidth = baseEnd - baseStart + 1,
+			range = pickRange(baseWidth / 2),
+			rangeWidth = pixelWidth * range / baseWidth,
+			startText = numberOrAbrev(vg, width / 4, font, baseStart),
+			endText = numberOrAbrev(vg, width / 4, font, baseEnd),
+			rangeText = metric(range),
+			rangeTextWidth = vg.textWidth(font, rangeText),
+			pushLeft = Math.max(width - rangeTextWidth - rangeWidth - 1, 0),
+			rangePos = Math.min(pushLeft, (pixelWidth - rangeWidth) / 2);
 
-	if (genomic !== "geneExon" && range >= 1) {
-		// Render centered scale, pushing to left if constrained for width.
-		vg.box(rangePos, labelHeight / 2, rangeWidth, 1, 'grey');
-		vg.box(rangePos, labelHeight / 4, 1, labelHeight / 2, 'black');
-		vg.box(rangePos + rangeWidth, labelHeight / 4, 1, labelHeight / 2, 'black');
-		vg.text(rangePos + rangeWidth + 1, labelHeight - font / 4, 'black', font, rangeText);
+		if (genomic === "coordinate") {
+			// Render start & end position, abreviating if constrained for width.
+			vg.text(pixelStart, height - 4, 'black', font, startText);    // start position at left
+			vg.text(pixelEnd - vg.textWidth(font, endText), height - 4, 'black', font, endText); // end position at right
+		} else if (genomic === "geneIntron") {
+			vg.text(pixelStart, height - 4, 'black', font, "5'");
+			vg.text(width - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
+		}
+
+		if (range >= 1) {
+			// Render centered scale, pushing to left if constrained for width.
+			vg.box(rangePos, labelHeight / 2, rangeWidth, 1, 'grey');
+			vg.box(rangePos, labelHeight / 4, 1, labelHeight / 2, 'black');
+			vg.box(rangePos + rangeWidth, labelHeight / 4, 1, labelHeight / 2, 'black');
+			vg.text(rangePos + rangeWidth + 1, labelHeight - font / 4, 'black', font, rangeText);
+		}
 	}
 }
 
