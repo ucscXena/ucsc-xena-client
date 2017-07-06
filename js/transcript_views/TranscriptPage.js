@@ -44,8 +44,6 @@ var Transcripts = React.createClass({
 		var {genetranscripts} = this.props.state.transcripts || {};
 		// negative sign in the return statement to arrange in descending order
 		var genetranscriptsSorted = _.sortBy(genetranscripts, function(genetranscript) { return -(genetranscript.txEnd - genetranscript.txStart); });
-		console.log("unsorted", genetranscripts);
-		console.log("sorted", genetranscriptsSorted);
 		//for the name column
 		var transcriptNameData = _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'exonCount'));
 

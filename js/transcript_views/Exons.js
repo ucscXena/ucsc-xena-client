@@ -6,14 +6,14 @@ import '../../css/transcript_css/exons.css';
 
 var width = 700;
 //this function is to plot exons before cdsStart or after cdsEnd
-function smallBox(startsAt, width, multiplyingFactor, strand, label = "") {
+function smallBox(startsAt, width, multiplyingFactor, strand, pad, label = "") {
 	let origin = strand === '-' ? "right" : "left";
 
 	let style = { width: (width * multiplyingFactor) + "px",
 					height: "20%",
 					top: "40%",
 				};
-	style[origin] = (startsAt * multiplyingFactor) + "px";
+	style[origin] = (startsAt * multiplyingFactor) + pad + "px";
 
 	return ( <div className="exons--row--item"
 					style={style}>
@@ -23,14 +23,14 @@ function smallBox(startsAt, width, multiplyingFactor, strand, label = "") {
 }
 
 //this function is to plot exons between cdsStart and cdsEnd
-function bigBox(startsAt, width, multiplyingFactor, strand, label = "") {
+function bigBox(startsAt, width, multiplyingFactor, strand, pad, label = "") {
 	let origin = strand === '-' ? 'right' : 'left';
 
 	let style = { width: (width * multiplyingFactor) + "px",
 					height: "35%",
 					top: "32.5%",
 				};
-	style[origin] = (startsAt * multiplyingFactor) + "px";
+	style[origin] = (startsAt * multiplyingFactor) + pad + "px";
 
 	return ( <div className="exons--row--item"
 					style={style}>
