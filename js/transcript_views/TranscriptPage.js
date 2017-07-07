@@ -42,8 +42,10 @@ var Transcripts = React.createClass({
 			subtypesGtex.map(name => <option value = {"gtex|" + name}>{name}</option>));
 
 		var {genetranscripts} = this.props.state.transcripts || {};
-		// negative sign in the return statement to arrange in descending order
-		var genetranscriptsSorted = _.sortBy(genetranscripts, function(genetranscript) { return -(genetranscript.txEnd - genetranscript.txStart); });
+		var genetranscriptsSorted = _.sortBy(genetranscripts, function(gtranscript) {
+			return _.sum(_.mmap(gtranscript.exonStarts, gtranscript.exonEnds, (exonStarts, exonEnds) => {
+				return exonStarts - exonEnds; // start - end to sort in descending order
+			})); });
 		//for the name column
 		var transcriptNameData = _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'exonCount'));
 

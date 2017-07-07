@@ -23,16 +23,16 @@ function newCoordinates(data, intronRegions, exonGroupGroupBy) {
   });
   data.exonStarts.forEach( (exonStarts, index) => {
     exonGroupGroupBy.forEach( (exonGroup, i) => {
-      let f = 0;
+      let flag = 0;
       _.sortBy(_.keys(exonGroup)).forEach((key, j) => {
         if(('{"start":' + exonStarts + ',"end":' + data.exonEnds[index] + '}') === key)
         {
           data.strand === '-' ? labels.push(exonGroupGroupBy.length - i + exonGroup.suffix.charAt(_.keys(exonGroup).length - j - 1)) :
           labels.push(i + 1 + exonGroup.suffix.charAt(j - 1));
-          if((j === 1 || f === 0) && index !== 0)
+          if((j === 1 || flag === 0))
           {
             pad[index] = padding * i;
-            f = 1;
+            flag = 1;
           }
           else {
             pad[index] = 0;
@@ -107,11 +107,9 @@ var ExonsOnly = React.createClass({
   row(data, multiplyingFactor, origin) {
 
 		return data.map((d, index) => {
-      let extraWidthNumber = (_.countBy(d.padding, num => {
-        return num === 0 ? "zero" : "nonzero";
-      })).nonzero;
-			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + (padding * extraWidthNumber) + "px"};
-			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + "px"])
+      let extraAxisWidth = Math.max.apply(Math, d.padding) - d.padding[0];
+			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + extraAxisWidth + "px"};
+			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + d.padding[0] + "px"])
 									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + "px"]);
 
 			return ( <div className="exons--row" id={index}>
