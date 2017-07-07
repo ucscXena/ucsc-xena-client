@@ -109,7 +109,7 @@ var ExonsOnly = React.createClass({
 
 		return data.map((d, index) => {
       let extraAxisWidth = Math.max.apply(Math, d.padding);
-			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + extraAxisWidth + "px", backgroundColor: "red", zIndex: "7"};
+			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + extraAxisWidth + "px"};
 			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + "px"])
 									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + "px"]);
 
