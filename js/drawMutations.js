@@ -129,7 +129,7 @@ function drawSVNodes(vg, width, zoom, svVariants) {
 
 	varByIdMap.forEach(variant => {
 		var {xStart, xEnd, y, h} = variant,
-			endMark = xEnd <= width ? [[xEnd, y, xEnd + 1, y]] : [],
+			endMark = xEnd < width - 1 ? [[xEnd, y, xEnd + 1, y]] : [],
 			startMark = xStart > 0 ? [[xStart, y, xStart + 1, y]] : [],
 			points = [...startMark, ...endMark];
 
