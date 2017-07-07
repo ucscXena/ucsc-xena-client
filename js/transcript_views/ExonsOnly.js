@@ -108,10 +108,8 @@ var ExonsOnly = React.createClass({
   row(data, multiplyingFactor, origin) {
 
 		return data.map((d, index) => {
-      let extraWidthNumber = (_.countBy(d.padding, num => {
-        return num === 0 ? "zero" : "nonzero";
-      })).nonzero;
-			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + (padding * extraWidthNumber) + "px"};
+      let extraAxisWidth = Math.max.apply(Math, d.padding);
+			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + extraAxisWidth + "px", backgroundColor: "red", zIndex: "7"};
 			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + "px"])
 									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + "px"]);
 
