@@ -237,6 +237,7 @@ var controls = {
 	'import': (state, newState) => newState,
 	cohort: (state, i, cohort) =>
 		setCohort(state, _.assoc(state.cohort, i, {name: cohort})),
+	cohortReset: state => _.assoc(setCohort(state, []), 'wizardMode', true),
 	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
 	'cohort-remove': (state, i) => setCohort(state, _.withoutIndex(state.cohort, i)),
 	'cohort-remove-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
@@ -324,6 +325,8 @@ var controls = {
 	'allowOverSamples': (state, aos) => _.assoc(state, 'allowOverSamples', aos),
 	'allowOverSamples-post!': (serverBus, state, newState, aos) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, aos),
+	showWelcome: (state, show) => _.assoc(state, 'showWelcome', show),
+	wizardMode: (state, mode) => _.assoc(state, 'wizardMode', mode),
 	// Due to wonky react-bootstrap handlers, xzoom can occur after remove, so
 	// check that the column exists before updating.
 	'xzoom': (state, id, xzoom) => _.updateIn(state, ['columns', id],

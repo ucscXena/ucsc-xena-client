@@ -161,6 +161,9 @@ var setCohortRelatedFields = (state, cohorts) =>
 // Called from setCohort, the column data will be fetched after
 // the sample list returns from the server.
 function addSampleColumn(state) {
+	if (state.cohort.length === 0) {
+		return state;
+	}
 	var field = signatureField('samples', {
 			columnLabel: 'samples',
 			valueType: 'coded',

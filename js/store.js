@@ -57,6 +57,8 @@ module.exports = function () {
 		columnOrder: [],
 		samples: [],
 		datasets: [],
+		showWelcome: true,
+		wizardMode: true,
 		notifications: getNotifications()
 	};
 

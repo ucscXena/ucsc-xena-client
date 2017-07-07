@@ -74,6 +74,11 @@ function invertCohortMeta(meta) {
 			cohortTags => cohortTags.map(([cohort]) => cohort));
 }
 
+function resetWizard(state) {
+	return state.columnOrder.length > 2 ?
+		_.assoc(state, 'wizardMode', false) : state;
+}
+
 var controls = {
 	// XXX reset loadPending flag
 	bookmark: (state, bookmark) => resetLoadPending(parseBookmark(bookmark)),
@@ -126,7 +131,7 @@ var controls = {
 				['columns', id], updateFields(settings, xenaFields, fields),
 				['columnOrder'], newOrder,
 				['sampleSearch'], remapFields(columnOrder, newOrder, sampleSearch));
-		return _.assocIn(newState, ['data', id, 'status'], 'loading');
+		return resetWizard(_.assocIn(newState, ['data', id, 'status'], 'loading'));
 	},
 	'normalize-fields-post!': (serverBus, state, newState, fields, id, settings, __, xenaFields) => {
 		// For geneProbes, fetch the gene model (just strand right now), and defer the

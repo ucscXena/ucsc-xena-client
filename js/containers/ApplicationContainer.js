@@ -80,6 +80,19 @@ function datasetMeta(column, datasets) {
 	};
 }
 
+function stepperState(cohort, columnList) {
+	if (cohort.length === 0) {
+		return 'COHORT';
+	}
+	if (columnList.length === 1) { // sample column
+		return 'FIRST_COLUMN';
+	}
+	if (columnList.length === 2) { // sample column + 1st column
+		return 'SECOND_COLUMN';
+	}
+	return 'DONE';
+}
+
 var columnsWrapper = c => addTooltip(makeSortable(disableSelect(addColumnAddButton(addVizEditor(c)))));
 var Spreadsheet = getSpreadsheet(columnsWrapper);
 // XXX without tooltip, we have no mouse pointer. Should make the wrapper add the css
@@ -132,17 +145,30 @@ var ApplicationContainer = React.createClass({
 	getState: function () {
 		return this.props.state;
 	},
+	onWizardMode(mode) {
+		this.props.callback(['wizardMode', mode]);
+	},
+	onShowWelcome(show) {
+		this.props.callback(['showWelcome', show]);
+	},
+	onReset() {
+		this.props.callback(['cohortReset']);
+	},
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback} = this.props,
 			computedState = selector(state),
-			{mode} = computedState,
+			{mode, cohort, columnOrder} = computedState,
 			View = {
 				heatmap: SpreadsheetContainer,
 				chart: ChartView
 			}[mode];
 		return (
 			<Application
+					onReset={this.onReset}
+					onWizardMode={this.onWizardMode}
+					onShowWelcome={this.onShowWelcome}
+					stepperState={stepperState(cohort, columnOrder)}
 					Spreadsheet={SpreadsheetContainer}
 					onHighlightChange={this.on.highlightChange}
 					sampleFormat={this.sampleFormat}

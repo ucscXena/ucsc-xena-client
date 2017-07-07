@@ -184,7 +184,8 @@ var AppControls = React.createClass({
 		ev.target.value = null;
 	},
 	render: function () {
-		var {appState: {cohort: activeCohorts, samplesOver, allowOverSamples, cohorts, datasets, mode, columnOrder}} = this.props,
+		var {appState: {cohort: activeCohorts, samplesOver, allowOverSamples, cohorts, datasets, mode, columnOrder},
+				onReset} = this.props,
 			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			samplesFrom = _.getIn(activeCohorts, [0, 'samplesFrom']),
@@ -195,6 +196,7 @@ var AppControls = React.createClass({
 
 		return (
 			<form onSubmit={ev => ev.preventDefault()} className='form-inline'>
+				<button onClick={() => onReset()}>RESET</button>
 				{addHelp('reload',
 					<Button onClick={this.onRefresh} bsSize='sm' style={{marginRight: 5}}>
 						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>

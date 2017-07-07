@@ -65,8 +65,8 @@ var Application = React.createClass({
 		callback(['add-column', uuid(), settings, true]);
 	},
 	render: function() {
-		let {state, children, onHighlightChange, ...otherProps} = this.props,
-			{samplesMatched, sampleSearch, samples, mode} = state,
+		let {state, children, onHighlightChange, onShowWelcome, stepperState, ...otherProps} = this.props,
+			{samplesMatched, sampleSearch, samples, mode, wizardMode, showWelcome} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			// Can these closures be eliminated, now that the selector is above this
 			// component?
@@ -84,9 +84,17 @@ var Application = React.createClass({
 					<button onClick={this.onPerf}>Perf</button>
 				</Row>
 			*/}
+				{showWelcome ? (
+					<Row>
+						<Col xs4={4} xs8={8} sm={12}>
+							<welcome onClick={() => onShowWelcome(false)}>Welcome placeholder, click to dismiss</welcome>
+						</Col>
+					</Row>) : null
+				}
 				<Row>
 					<Col xs4={4} xs8={8} sm={12}>
-						<AppControls {...otherProps} appState={state} />
+						{wizardMode ? <stepper mode={stepperState}>Stepper placeholder, mode {stepperState}</stepper> :
+								<AppControls {...otherProps} appState={state} />}
 					</Col>
 				</Row>
 				<Row>
