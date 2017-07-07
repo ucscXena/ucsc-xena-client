@@ -1,0 +1,84 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling Material Design-inspired stepper. Used by Stepper component.
+ */
+
+.Stepper {
+	display: flex;
+	flex-direction: row;
+	list-style: none;
+    width: 100%;
+}
+
+/* Stepper step */
+.Stepper li {
+    align-items: center;
+	display: flex;
+	padding-bottom: 20px;
+	padding-top: 24px;
+	position: relative;
+	width: 25%;
+}
+
+/* Step line */
+.Stepper li::after {
+	background-color: rgba(189, 189, 189, 1);
+	content: '';
+	height: 1px;
+	left: 32px;
+	position: absolute;
+	right: 8px;
+	top: 36px;
+	z-index: 1;
+}
+
+/* Step circle */
+.Stepper .stepperCircle {
+	background-color: rgba(0, 0, 0, 0.38);
+	border-radius: 24px;
+	color: white;
+	height: 24px;
+	line-height: 24px;
+	text-align: center;
+	width: 24px;
+}
+
+/* Step label */
+.Stepper .stepperText {
+	background-color: white;
+	color: rgba(0, 0, 0, 0.38);
+	padding-left: 8px;
+	padding-right: 8px;
+	z-index: 2;
+}
+
+/* Active state */
+.Stepper .active .stepperCircle {
+	background-color: var(--color-accent);
+}
+
+.Stepper .active .stepperText {
+	color: rgba(0, 0, 0, 0.87);
+}
+
+/* Completed state */
+.Stepper .completed .stepperCircle {
+	background-color: var(--color-accent);
+	color: var(--color-accent);
+	position: relative;
+}
+
+.Stepper .completed .stepperText {
+	color: rgba(0, 0, 0, 0.38);
+}
+
+.Stepper .completed .stepperCircle:after {
+	color: white;
+	content: "\E5CA"; /* Check mark */
+	font-family: "Material Icons";
+	font-size: 24px;
+	left: 0;
+	position: absolute;
+}
