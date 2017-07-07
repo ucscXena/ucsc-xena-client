@@ -2,15 +2,14 @@
 
 var _ = require('underscore');
 
-var {min, max, round} = Math;
+var {min, max, floor} = Math;
 
 function pxTransform1(layout, i, x) {
 	var {screen, chrom} = layout,
 		pos = chrom[i],
 		[start, end] = pos,
 		[sstart, send] = screen[i];
-
-	return round(sstart + (x - start + 1) * (send - sstart) / (end - start + 1));
+	return floor(sstart + (x - start + 1) * (send - sstart) / (end - start + 1));
 }
 
 // check for overlap. closed coords.
@@ -73,11 +72,11 @@ function pxTransformI(layout, fn, i) {
 
 	var [start, end] = pos;
 	var [sstart, send] = screen[i];
+
 	// If reversed, we mirror the coords in the exon, rather than swapping all the bounds. This might
 	// be simpler.
 	var flop = flopIf(reversed, start, end);
-	// XXX Why round?
-	var toPx = x => round(sstart + (x - start + 1) * (send - sstart) / (end - start + 1));
+	var toPx = x => floor(sstart + (x - start + 1) * (send - sstart) / (end - start + 1));
 	var clip = ([s, e]) => [max(s, start), min(e, end)];
 	var intvlToPx = i => _.map(halfOpen(clip(flop(i))), toPx);
 
