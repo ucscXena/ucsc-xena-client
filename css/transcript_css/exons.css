@@ -32,5 +32,5 @@
 
 .exons--row--item span {
 	position: absolute;
-	vertical-align: middle;
+	transform: translate(-50%, 0)
 }

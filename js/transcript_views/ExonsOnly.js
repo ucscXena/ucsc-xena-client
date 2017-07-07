@@ -23,16 +23,16 @@ function newCoordinates(data, intronRegions, exonGroupGroupBy) {
   });
   data.exonStarts.forEach( (exonStarts, index) => {
     exonGroupGroupBy.forEach( (exonGroup, i) => {
-      let f = 0;
+      let flag = 0;
       _.sortBy(_.keys(exonGroup)).forEach((key, j) => {
         if(('{"start":' + exonStarts + ',"end":' + data.exonEnds[index] + '}') === key)
         {
           data.strand === '-' ? labels.push(exonGroupGroupBy.length - i + exonGroup.suffix.charAt(_.keys(exonGroup).length - j - 1)) :
           labels.push(i + 1 + exonGroup.suffix.charAt(j - 1));
-          if((j === 1 || f === 0) && index !== 0)
+          if((j === 1 || flag === 0))
           {
             pad[index] = padding * i;
-            f = 1;
+            flag = 1;
           }
           else {
             pad[index] = 0;
@@ -54,7 +54,6 @@ function newCoordinates(data, intronRegions, exonGroupGroupBy) {
 function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFactor, strand, label, origin, pad) {
   let exonWidth = exonEnds - exonStarts;
   let startsAt = exonStarts - origin;
-  console.log("pad", pad);
 	if(cdsStart > exonEnds)
 	{
 		return smallBox( startsAt, (exonWidth ), multiplyingFactor, strand, pad, label);
@@ -108,9 +107,9 @@ var ExonsOnly = React.createClass({
   row(data, multiplyingFactor, origin) {
 
 		return data.map((d, index) => {
-      let extraAxisWidth = Math.max.apply(Math, d.padding);
+      let extraAxisWidth = Math.max.apply(Math, d.padding) - d.padding[0];
 			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + extraAxisWidth + "px"};
-			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + "px"])
+			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + d.padding[0] + "px"])
 									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + "px"]);
 
 			return ( <div className="exons--row" id={index}>
@@ -130,12 +129,10 @@ var ExonsOnly = React.createClass({
     let data = this.props.data ? this.props.data : [];
     let allExonsList = allExons(data);
     let exonGroupsList = exonGroups(allExonsList);
-    console.log("group", exonGroupsList);
     let intronRegionsList = intronRegions(exonGroupsList);
     var exonGroupGroupBy = exonGroupsList.map((exonGroup) => {
       return _.groupBy(exonGroup.exons.map(exon => { return ({json: JSON.stringify(exon), exon}); }), 'json');
     });
-    console.log("groupGroup", exonGroupGroupBy);
     let exonGroupsWidth = width - padding * (exonGroupsList.length - 1);
     exonGroupGroupBy.forEach(group => {
       if(_.keys(group).length === 1)
