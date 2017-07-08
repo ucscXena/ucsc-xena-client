@@ -87,7 +87,7 @@ function scoreCohorts3(cohortMeta, tags, weights) { //eslint-disable-line no-unu
 		cohortWeights = _.map(byCohort, (cohortTags, cohort) => {
 			var cohortTagWeights = _.pick(tagWeights, _.pluck(cohortTags, 'tag')),
 				groups = _.map(_.groupBy(cohortTagWeights, 'matches'),
-					weights => _.updateIn(_.maxWith(weights, (x, y) => x.weight - y.weight), ['weight'], w => w * weights.length / cohortTags.length)).filter(({weight}) => weight > 0);
+					weights => _.updateIn(_.maxWith(weights, (x, y) => x.weight - y.weight), ['weight'], w => w * weights.length / Math.sqrt(cohortTags.length))).filter(({weight}) => weight > 0);
 			return {cohort, weight: _.sum(_.pluck(groups, 'weight')), groups};
 		});
 	return _.sortBy(cohortWeights.filter(({weight}) => weight > 0), ({weight}) => -weight);
