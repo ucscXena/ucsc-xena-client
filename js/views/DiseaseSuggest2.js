@@ -56,8 +56,59 @@ function match(cohortMeta, input) { //eslint-disable-line no-unused-vars
 	return Object.keys(cohortScores).sort((c, d) => cohortScores[d] - cohortScores[c]);
 }
 
+function scoreTag2(tag, input) {
+	var matches =  _.intersection(tag, input),
+		wordBiased = applyBias(multiWordBias, matches.length),
+		ordered = matches.length > 0 ? lcs(tag, input) : 0;
+
+	return {matches: matches.sort(), tag, weight: wordBiased * applyBias(orderBias, ordered)};
+}
+
+// For each set of matched input words, pick the highest-scoring match
+function scoreCohorts2(cohortMeta, tags, weights) { //eslint-disable-line no-unused-vars
+	var byCohort = _.groupBy(_.flatmap(cohortMeta, (cohorts, tag) =>
+			cohorts.map(cohort => ({cohort, tag}))), 'cohort'),
+		tagWeights = _.object(tags, weights),
+		cohortWeights = _.map(byCohort, (cohortTags, cohort) => {
+			var cohortTagWeights = _.pick(tagWeights, _.pluck(cohortTags, 'tag')),
+				groups = _.map(_.groupBy(cohortTagWeights, 'matches'),
+					weights => _.maxWith(weights, (x, y) => x.weight - y.weight)).filter(({weight}) => weight > 0);
+			return {cohort, weight: _.sum(_.pluck(groups, 'weight')), groups};
+		});
+	return _.sortBy(cohortWeights.filter(({weight}) => weight > 0), ({weight}) => -weight);
+}
+
+// For each set of matched input words, pick the highest-scoring match,
+// scale by number of matches for the set / total tag count for the cohort
+function scoreCohorts3(cohortMeta, tags, weights) { //eslint-disable-line no-unused-vars
+	var byCohort = _.groupBy(_.flatmap(cohortMeta, (cohorts, tag) =>
+			cohorts.map(cohort => ({cohort, tag}))), 'cohort'),
+		tagWeights = _.object(tags, weights),
+		cohortWeights = _.map(byCohort, (cohortTags, cohort) => {
+			var cohortTagWeights = _.pick(tagWeights, _.pluck(cohortTags, 'tag')),
+				groups = _.map(_.groupBy(cohortTagWeights, 'matches'),
+					weights => _.updateIn(_.maxWith(weights, (x, y) => x.weight - y.weight), ['weight'], w => w * weights.length / cohortTags.length)).filter(({weight}) => weight > 0);
+			return {cohort, weight: _.sum(_.pluck(groups, 'weight')), groups};
+		});
+	return _.sortBy(cohortWeights.filter(({weight}) => weight > 0), ({weight}) => -weight);
+}
+
+// XXX
+var DEBUG = false;
+//var scoreFn = scoreCohorts2;
+var scoreFn = scoreCohorts3;
+// XXX
+
+function matchSimplified(cohortMeta, input) {
+	var tags = Object.keys(cohortMeta),
+		normInput = toLCWords(input),
+		normTags = tags.map(toLCWords),
+		weights = normTags.map(t => scoreTag2(t, normInput));
+	return scoreFn(cohortMeta, tags, weights);
+}
+
 // match by logical AND, instead of a scoring system
-function matchExact(cohortMeta, input) {
+function matchExact(cohortMeta, input) { //eslint-disable-line no-unused-vars
 	var tags = Object.keys(cohortMeta),
 		normInput = toLCWords(input),
 		matches = tags.filter(tag => _.contains(normInput, tag.toLowerCase()));
@@ -143,7 +194,7 @@ var DiseaseSuggest = React.createClass({
 		var {onChange} = this,
 			{suggestions, value} = this.state,
 			{cohortMeta, cohort} = this.props,
-			results = matchExact(cohortMeta, value);
+			results = matchSimplified(cohortMeta, value);
 
 		return (
 			<div>
@@ -160,12 +211,14 @@ var DiseaseSuggest = React.createClass({
 					inputProps={{value, onChange}}/>
 				<button onClick={this.onClear}>x</button>
 				<ul>
-					{results.map(c => (
+					{results.map(({cohort: c, weight, groups}) => (
 						<div>
 							<input type='radio' name='cohort' value={c}
 								checked={c === cohort}
 								onChange={this.onCohort}/>
 							<label>{c}</label>
+							<span style={{display: DEBUG ? 'inline' : 'none', padding: 1, position: 'relative', top: '-.4em', borderRadius: 5, backgroundColor: '#EE8888', fontSize: '70%'}}>{weight.toPrecision(2)}</span>
+							{groups.map(({tag, weight}) => <span style={{display: DEBUG ? 'inline' : 'none', marginLeft: 3, padding: 1, borderRadius: 5, backgroundColor: '#AAAAAA', fontSize: '90%'}}>{tag.join(' ')} <span style={{fontSize: '80%', backgroundColor: '#CCCC00'}}>{weight.toPrecision(2)}</span></span>)}
 						</div>))}
 				</ul>
 			</div>);
