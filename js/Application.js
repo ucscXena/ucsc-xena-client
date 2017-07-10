@@ -8,6 +8,7 @@ var {signatureField} = require('./models/fieldSpec');
 var {getColSpec} = require('./models/datasetJoins');
 var SampleSearch = require('./views/SampleSearch');
 var Stepper = require('./views/Stepper');
+var Welcome = require('./views/Welcome');
 var uuid = require('./uuid');
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
 import {ThemeProvider} from 'react-css-themr';
@@ -80,7 +81,9 @@ var Application = React.createClass({
 
 		return (
 			<div>
-				{wizardMode ? <Stepper mode={stepperState}/> :
+				{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
+					null}
+				{wizardMode ? <Stepper mode={stepperState} /> :
 					<AppControls {...otherProps} appState={state} />}
 				<Grid onClick={this.onClick}>
 				{/*
@@ -88,13 +91,6 @@ var Application = React.createClass({
 						<button onClick={this.onPerf}>Perf</button>
 					</Row>
 				*/}
-					{showWelcome ? (
-						<Row>
-							<Col xs4={4} xs8={8} sm={12}>
-								<welcome onClick={() => onShowWelcome(false)}>Welcome placeholder, click to dismiss</welcome>
-							</Col>
-						</Row>) : null
-					}
 					<Row>
 						<Col xs4={4} xs8={8} sm={12}>
 							<SampleSearch

@@ -12,7 +12,7 @@
  * This is a populate CSS reset, used to create a standardized, cross-browser base to build app-specific styles on
  * top of. Required as React Toolbox 2.0 does not include a reset.
  */
-@import "~normalize.css";
+@import '~normalize.css';
 
 /*
  * React Toolbox Reset.

@@ -14,133 +14,133 @@
  * Defaults and classes below based on Angular Material 1.1.1 (https://material.angularjs.org/).
  */
 a {
-    text-decoration: none;
-    font-weight: 400;
-    -webkit-transition: border-bottom 0.35s;
-    -moz-transition: border-bottom 0.35s;
-    -ms-transition: border-bottom 0.35s;
-    -o-transition: border-bottom 0.35s;
-    transition: border-bottom 0.35s;
+	text-decoration: none;
+	font-weight: 400;
+	-webkit-transition: border-bottom 0.35s;
+	-moz-transition: border-bottom 0.35s;
+	-ms-transition: border-bottom 0.35s;
+	-o-transition: border-bottom 0.35s;
+	transition: border-bottom 0.35s;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    margin-bottom: 1rem;
-    margin-top: 1rem;
+	margin-bottom: 1rem;
+	margin-top: 1rem;
 }
 
 h1 {
-    font-size: 3.400rem;
-    font-weight: 400;
-    line-height: 4rem;
+	font-size: 3.400rem;
+	font-weight: 400;
+	line-height: 4rem;
 }
 
 h2 {
-    font-size: 2.400rem;
-    font-weight: 400;
-    line-height: 3.2rem;
+	font-size: 2.400rem;
+	font-weight: 400;
+	line-height: 3.2rem;
 }
 
 h3 {
-    font-size: 2.000rem;
-    font-weight: 500;
-    letter-spacing: 0.005em;
+	font-size: 2.000rem;
+	font-weight: 500;
+	letter-spacing: 0.005em;
 }
 
 h4 {
-    font-size: 1.600rem;
-    font-weight: 400;
-    letter-spacing: 0.010em;
-    line-height: 2.4rem;
+	font-size: 1.600rem;
+	font-weight: 400;
+	letter-spacing: 0.010em;
+	line-height: 2.4rem;
 }
 
 p {
-    font-size: 1.600rem;
-    font-weight: 400;
-    letter-spacing: 0.010em;
-    line-height: 1.6em;
-    margin: 0.8em 0 1.6em;
+	font-size: 1.600rem;
+	font-weight: 400;
+	letter-spacing: 0.010em;
+	line-height: 1.6em;
+	margin: 0.8em 0 1.6em;
 }
 
 strong {
-    font-weight: 500;
+	font-weight: 500;
 }
 
 .md-display-4 {
-    font-size: 112px;
-    font-weight: 300;
-    letter-spacing: -.01em;
-    line-height: 112px
+	font-size: 112px;
+	font-weight: 300;
+	letter-spacing: -.01em;
+	line-height: 112px
 }
 
 .md-display-3 {
-    font-size: 56px;
-    font-weight: 400;
-    letter-spacing: -.005em;
-    line-height: 56px
+	font-size: 56px;
+	font-weight: 400;
+	letter-spacing: -.005em;
+	line-height: 56px
 }
 
 .md-display-2 {
-    font-size: 45px;
-    font-weight: 400;
-    line-height: 64px
+	font-size: 45px;
+	font-weight: 400;
+	line-height: 64px
 }
 
 .md-display-1 {
-    font-size: 34px;
-    font-weight: 400;
-    line-height: 40px
+	font-size: 34px;
+	font-weight: 400;
+	line-height: 40px
 }
 
 .md-headline {
-    font-size: 24px;
-    font-weight: 400;
-    line-height: 32px
+	font-size: 24px;
+	font-weight: 400;
+	line-height: 32px
 }
 
 .md-title {
-    font-size: 20px;
-    font-weight: 500;
-    letter-spacing: .005em
+	font-size: 20px;
+	font-weight: 500;
+	letter-spacing: .005em
 }
 
 .md-subhead {
-    font-size: 16px;
-    line-height: 24px
+	font-size: 16px;
+	line-height: 24px
 }
 
-.md-body-1,.md-subhead {
-    font-weight: 400;
-    letter-spacing: .01em
+.md-body-1, .md-subhead {
+	font-weight: 400;
+	letter-spacing: .01em
 }
 
 .md-body-1 {
-    font-size: 14px;
-    line-height: 20px
+	font-size: 14px;
+	line-height: 20px
 }
 
 .md-body-2 {
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: .01em;
-    line-height: 24px
+	font-size: 14px;
+	font-weight: 500;
+	letter-spacing: .01em;
+	line-height: 24px
 }
 
 .md-caption {
-    font-size: 12px;
-    letter-spacing: .02em
+	font-size: 12px;
+	letter-spacing: .02em
 }
 
 .md-button {
-    letter-spacing: .01em
+	letter-spacing: .01em
 }
 
 /**
  * Custom "helpers", as per Material Design spec.
  */
 .secondary {
-    color: rgba(0, 0, 0, 0.54);
+	color: rgba(0, 0, 0, 0.54);
 }
 
 .hint {
-    color: rgba(0, 0, 0, 0.38);
+	color: rgba(0, 0, 0, 0.38);
 }
