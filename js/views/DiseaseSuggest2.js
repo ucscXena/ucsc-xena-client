@@ -94,7 +94,7 @@ function scoreCohorts3(cohortMeta, tags, weights) { //eslint-disable-line no-unu
 }
 
 // XXX
-var DEBUG = false;
+var DEBUG = true;
 //var scoreFn = scoreCohorts2;
 var scoreFn = scoreCohorts3;
 // XXX
@@ -104,7 +104,15 @@ function matchSimplified(cohortMeta, input) {
 		normInput = toLCWords(input),
 		normTags = tags.map(toLCWords),
 		weights = normTags.map(t => scoreTag2(t, normInput));
-	return scoreFn(cohortMeta, tags, weights);
+
+	var ma = scoreFn(cohortMeta, tags, weights);
+
+	ma.map(maObj=>{
+		var foundLength = normInput.filter(i => _.flatten(maObj.groups.map(g => g.matches)).indexOf(i) !== -1).length;
+		maObj.weight = maObj.weight * foundLength;
+	});
+	ma = _.sortBy(ma, maObj => maObj.weight).reverse();
+	return ma; //scoreFn(cohortMeta, tags, weights);
 }
 
 // match by logical AND, instead of a scoring system
