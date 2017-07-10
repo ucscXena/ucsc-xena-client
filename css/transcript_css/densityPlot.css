@@ -23,6 +23,24 @@
 	z-index: 2;
 }
 
+.densityPlot--row--studyA {
+	display: flex;
+	align-items: flex-end;
+	height: 50%;
+	width: 100%;
+}
+
+.densityPlot--row--studyB {
+	display: flex;
+	align-items: flex-end;
+	height: 50%;
+	width: 100%;
+	bottom: 50%;
+	-webkit-transform: rotateX(180deg);
+	-moz-transform: rotateX(180deg);
+	transform: rotateX(180deg);
+}
+
 .densityPlot--row--bin {
 	display: inline-block;
 	position: relative;
