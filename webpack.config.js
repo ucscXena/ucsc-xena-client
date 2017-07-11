@@ -13,8 +13,9 @@ module.exports = {
 		filename: "[name].js"
 	},
 	devServer: {
-		host: "localhost",
-		publicPath: '/',
+		host: "0.0.0.0",
+	        publicPath: '/',
+	        public: "ec2-52-91-209-29.compute-1.amazonaws.com:8080",
 		proxy: {
 			'/api/**': {
 				changeOrigin: true,
