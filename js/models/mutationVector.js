@@ -353,7 +353,7 @@ function cmp(column, data, index) {
 		() => 0;
 }
 
-var {sparseData, sparseDataRange} = xenaQuery;
+var {sparseDataRange} = xenaQuery;
 
 // XXX Might want to optimize this before committing. We could mutate in-place
 // without affecting anyone. This may be slow for large mutation datasets.
@@ -368,13 +368,33 @@ function mapSamples(samples, data) {
 		   ['req', 'samplesInResp'], sIR => _.map(sIR, s => sampleMap[s]));
 }
 
-function fetchGene({dsID, fields, assembly}, [samples]) {
+//user input is a gene, get the mutations by the gene's genomic coordinates
+function fetchGeneByCoordinate({dsID, fields, fieldType, assembly}, [samples]) {
+	var {name, host} = xenaQuery.refGene[assembly] || {};
+	console.log(fields);
+	return name ? xenaQuery.refGeneExonCase(host, name, fields)
+		.flatMap(refGene => {
+			var coords = _.values(refGene)[0];
+			if (!coords) {
+				return Rx.Observable.of(null);
+			}
+			var {txStart, txEnd, chrom} = coords,
+				{padTxStart, padTxEnd} = getExonPadding(fieldType);
+			return sparseDataRange(dsID, samples, chrom, txStart - padTxStart, txEnd + padTxEnd)
+				.map(req => mapSamples(samples, {req, refGene}));
+		}) : Rx.Observable.of(null);
+}
+
+/*
+//user input is a gene, get the mutations by gene annotation that comes with the data
+var {sparseData} = xenaQuery;
+function fetchGeneByAnnotation({dsID, fields, assembly}, [samples]) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return Rx.Observable.zipArray(
 		sparseData(dsID, samples, fields[0]),
 		name ? xenaQuery.refGeneExonCase(host, name, fields) : Rx.Observable.of({})
 	).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
-}
+}*/
 
 function fetchChrom({dsID}, [samples], pos) {
 	return sparseDataRange(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd)
@@ -383,7 +403,7 @@ function fetchChrom({dsID}, [samples], pos) {
 
 function fetch(column, cohortSamples) {
 	var pos = parsePos(column.fields[0]),
-		method = pos ? fetchChrom : fetchGene;
+		method = pos ? fetchChrom : fetchGeneByCoordinate;
 	return method(column, cohortSamples, pos);
 }
 
