@@ -23,7 +23,6 @@
     "prebuild": "npm run clean",
     "dist": "npm run clean:dist && mkdir -p dist && cp -r js/* dist && NODE_ENV=production babel -d dist js",
     "prepublish": "npm run dist",
-    "install": "napa",
     "wdio": "wdio"
   },
   "files": [
@@ -65,7 +64,6 @@
     "mocha": "^2.2.1",
     "mocha-loader": "https://github.com/webpack/mocha-loader.git#1.0.0",
     "mocha-phantomjs": "^4.1.0",
-    "napa": "^1.2.0",
     "raw-loader": "^0.5.1",
     "react-addons-test-utils": "^0.14.7",
     "react-hot-loader": "^1.3.0",
@@ -109,8 +107,6 @@
     "react-dom": "^0.14.7",
     "react-resizable": "^1.0.1",
     "reselect": "^2.0.1",
-    "rx": "^2.4.3",
-    "rx-dom": "^4.0.4",
     "rxjs": "^5.2.0",
     "showdown": "1.3.0",
     "static-interval-tree": "^1.3.0",
