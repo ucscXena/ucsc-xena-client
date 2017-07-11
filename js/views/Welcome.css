@@ -1,0 +1,87 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling welcome bar.
+ */
+
+.Welcome {
+	background-color: var(--color-primary);
+	color: white;
+	display: flex;
+	position: relative;
+}
+
+.welcomeIcon {
+	display: none;
+}
+
+.welcomeText {
+	margin: 48px 0;
+	padding-left: 12px;
+	padding-right: 12px;
+}
+
+.welcomeText a {
+	color: white;
+	text-decoration: underline;
+}
+
+.closeIcon {
+	cursor: pointer;
+	font-size: 24px;
+	height: 24px;
+	position: absolute;
+	right: 8px;
+	top: 16px;
+}
+
+/**
+ * Large +
+ */
+@media screen and (min-width: 1280px) {
+
+	.Welcome {
+		height: 220px;
+	}
+
+	.welcomeText {
+		align-self: center;
+		margin-left: 32px;
+		width: 58.33333333%; /* lg 7 */
+	}
+
+	.welcomeIcon {
+		display: block;
+		flex-basis: 33.33332%; /* lg 4 */
+		overflow: hidden;
+		padding-left: 0;
+		position: relative;
+		-ms-flex-preferred-size: 33.33332%; /* lg 4 */
+		max-width: 33.33332%; /* lg 4 */
+	}
+
+	img {
+		height: 100%;
+		left: 50%;
+		position: absolute;
+		transform: translateX(-50%);
+	}
+
+	.closeIcon {
+		right: 24px;
+		top: 24px;
+	}
+}
+
+/*
+ * Custom media query to snap welcome icon to left-hand side, required for larger devices.
+ */
+@media screen and (min-width: 1425px) {
+
+	/* Snap welcome icon to left-hand side */
+	img {
+		left: 0;
+		transform: translateX(0%);
+	}
+}

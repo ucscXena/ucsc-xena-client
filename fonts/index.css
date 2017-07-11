@@ -11,66 +11,64 @@
 
 /* Material Icons */
 @font-face {
-    font-family: 'Material Icons';
-    font-style: normal;
-    font-weight: 400;
-    src: url('./materialIcons/MaterialIcons-Regular.eot'); /* For IE6-8 */
-    src: local('Material Icons'),
-    local('MaterialIcons-Regular'),
-    url('./materialIcons/MaterialIcons-Regular.woff2') format('woff2'),
-    url('./materialIcons/MaterialIcons-Regular.woff') format('woff'),
-    url('./materialIcons/MaterialIcons-Regular.ttf') format('truetype');
+	font-family: 'Material Icons';
+	font-style: normal;
+	font-weight: 400;
+	src: url('./materialIcons/MaterialIcons-Regular.eot'); /* For IE6-8 */
+	src: local('Material Icons'),
+	local('MaterialIcons-Regular'),
+	url('./materialIcons/MaterialIcons-Regular.woff2') format('woff2'),
+	url('./materialIcons/MaterialIcons-Regular.woff') format('woff'),
+	url('./materialIcons/MaterialIcons-Regular.ttf') format('truetype');
 }
 
 .material-icons {
-    font-family: 'Material Icons';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;  /* Preferred icon size */
-    display: inline-block;
-    line-height: 1;
-    text-transform: none;
-    letter-spacing: normal;
-    word-wrap: normal;
-    white-space: nowrap;
-    direction: ltr;
+	font-family: 'Material Icons';
+	font-weight: normal;
+	font-style: normal;
+	font-size: 24px; /* Preferred icon size */
+	display: inline-block;
+	line-height: 1;
+	text-transform: none;
+	letter-spacing: normal;
+	word-wrap: normal;
+	white-space: nowrap;
+	direction: ltr;
 
-    /* Support for all WebKit browsers. */
-    -webkit-font-smoothing: antialiased;
-    /* Support for Safari and Chrome. */
-    text-rendering: optimizeLegibility;
+	/* Support for all WebKit browsers. */
+	-webkit-font-smoothing: antialiased;
+	/* Support for Safari and Chrome. */
+	text-rendering: optimizeLegibility;
 
-    /* Support for Firefox. */
-    -moz-osx-font-smoothing: grayscale;
+	/* Support for Firefox. */
+	-moz-osx-font-smoothing: grayscale;
 
-    /* Support for IE. */
-    font-feature-settings: 'liga';
+	/* Support for IE. */
+	font-feature-settings: 'liga';
 }
 
 /* Roboto - Chrome 3.5+, Safari 3+, FF 3.5+, Opera 10.1+, IE 9+, Android 4.4+, iOS 5.1+ */
 @font-face {
-    font-family: 'Roboto';
-    url('./roboto/Roboto-Light.woff2') format('woff2'), /* Super modern browsers */
-    url('./roboto/Roboto-Light.woff') format('woff'), /* Fairly modern browsers */
-    url('./roboto/Roboto-Light.ttf') format('truetype'),  /* Safari, Android, iOS */
-    font-weight: 300;
-    font-style: normal;
+	font-family: 'Roboto';
+url('./roboto/Roboto-Light.woff2') format('woff2'), /* Super modern browsers */
+url('./roboto/Roboto-Light.woff') format('woff'), /* Fairly modern browsers */
+url('./roboto/Roboto-Light.ttf') format('truetype'),  /* Safari, Android, iOS */
+font-weight: 300;
+	font-style: normal;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    url('./roboto/Roboto-Regular.woff2') format('woff2'),
-    url('./roboto/Roboto-Regular.woff') format('woff'),
-    url('./roboto/Roboto-Regular.ttf') format('truetype'),
-    font-weight: normal; /* 400 */
-    font-style: normal;
+	font-family: 'Roboto';
+url('./roboto/Roboto-Regular.woff2') format('woff2'),
+url('./roboto/Roboto-Regular.woff') format('woff'),
+url('./roboto/Roboto-Regular.ttf') format('truetype'), font-weight: normal; /* 400 */
+	font-style: normal;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    url('./roboto/Roboto-Medium.woff2') format('woff2'),
-    url('./roboto/Roboto-Medium.woff') format('woff'),
-    url('./roboto/Roboto-Medium.ttf') format('truetype'),
-    font-weight: 500;
-    font-style: normal;
+	font-family: 'Roboto';
+url('./roboto/Roboto-Medium.woff2') format('woff2'),
+url('./roboto/Roboto-Medium.woff') format('woff'),
+url('./roboto/Roboto-Medium.ttf') format('truetype'), font-weight: 500;
+	font-style: normal;
 }

@@ -28,15 +28,15 @@ require('./Stepper.css');
 
 // Locals
 var steps = [
-	{label: "Select a Study to Explore"},
-	{label: "Select Your First Variable"},
-	{label: "Select Your Second Variable"}
+	{label: 'Select a Study to Explore'},
+	{label: 'Select Your First Variable'},
+	{label: 'Select Your Second Variable'}
 ];
 
 var stateIndex = {
-	"COHORT": 0,
-	"FIRST_COLUMN": 1,
-	"SECOND_COLUMN": 2
+	'COHORT': 0,
+	'FIRST_COLUMN': 1,
+	'SECOND_COLUMN': 2
 };
 
 var Stepper = React.createClass({
@@ -44,20 +44,20 @@ var Stepper = React.createClass({
 		let {mode} = this.props;
 		let getClassName = (index) => {
 			if (index < stateIndex[mode]) {
-				return "completed";
+				return 'completed';
 			}
 			if (index === stateIndex[mode]) {
-				return "active";
+				return 'active';
 			}
-			return "";
+			return '';
 		};
 		return (
 			<RTBAppBar>
-				<ul className="Stepper">
+				<ul className='Stepper'>
 					{_.map(steps, (step, index) =>
 						<li className={getClassName(index)}>
-							<div className="stepperCircle md-caption">{index + 1}</div>
-							<div className="stepperText md-body-1">{step.label}</div>
+							<div className='stepperCircle md-caption'>{index + 1}</div>
+							<div className='stepperText md-body-1'>{step.label}</div>
 						</li>)}
 				</ul>
 			</RTBAppBar>
