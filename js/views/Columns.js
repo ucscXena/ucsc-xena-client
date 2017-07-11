@@ -23,7 +23,7 @@ var getColumns = wrapperFn => {
 			var {onClick, children, ...wrapperProps} = this.props;
 			return (
 				<Wrapper {...wrapperProps}>
-				{children}
+					{children}
 				</Wrapper>);
 		}
 	});

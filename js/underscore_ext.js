@@ -340,6 +340,15 @@ function union(...args) {
 	return unique(flattened);
 }
 
+// make unique by appending numbered suffix
+function uniquify(strs) {
+	var counts = {};
+	return strs.map(s => {
+		var c = counts[s] = _.has(counts, s) ? counts[s] + 1 : 0;
+		return c > 0 ? `${s} (${c})` : s;
+	});
+}
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -426,6 +435,7 @@ _.mixin({
 	union,
 	uniq: unique,
 	unique,
+	uniquify,
 	withoutIndex
 });
 

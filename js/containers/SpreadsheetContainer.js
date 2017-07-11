@@ -4,6 +4,7 @@ var React = require('react');
 var _ = require('../underscore_ext');
 var {rxEventsMixin} = require('../react-utils');
 var getLabel = require('../getLabel');
+//var CohortOrDisease = require('../views/CohortOrDisease');
 
 function zoomIn(pos, samples, zoom) {
 	var {count, index} = zoom;
@@ -115,7 +116,12 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 		// XXX prune callback from this.props
 		// Currently it's required for ColumnEdit2 and zoom helper.
 		return (
-			<Spreadsheet onReorder={this.onReorder} onOpenVizSettings={this.onOpenVizSettings} onVizSettings={this.onVizSettings} {...this.props}>
+			<Spreadsheet
+					onReorder={this.onReorder}
+					onOpenVizSettings={this.onOpenVizSettings}
+					onVizSettings={this.onVizSettings}
+					{...this.props}>
+
 				{_.map(columnOrder, (id, i) => (
 					<Column
 						cohort={appState.cohort}

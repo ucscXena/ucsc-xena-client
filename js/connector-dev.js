@@ -132,7 +132,7 @@ module.exports = function({
 					<DevTools dispatch={devBus.next.bind(devBus)} {...devState} />
 				</div>,
 				dom.main);
-		});
+		}, err => console.log('err', err));
 
 	if (persist) {
 		// Save state in sessionStorage on page unload.

@@ -20,6 +20,7 @@ var addColumnAddButton = require('../views/addColumnAddButton');
 var addVizEditor = require('../views/addVizEditor');
 var makeSortable = require('../views/makeSortable');
 var getSpreadsheet = require('../Spreadsheet');
+var getStepperState = require('./getStepperState');
 
 // This seems odd. Surely there's a better test?
 function hasSurvival(survival) {
@@ -80,20 +81,7 @@ function datasetMeta(column, datasets) {
 	};
 }
 
-function stepperState(cohort, columnList) {
-	if (cohort.length === 0) {
-		return 'COHORT';
-	}
-	if (columnList.length === 1) { // sample column
-		return 'FIRST_COLUMN';
-	}
-	if (columnList.length === 2) { // sample column + 1st column
-		return 'SECOND_COLUMN';
-	}
-	return 'DONE';
-}
-
-var columnsWrapper = c => addTooltip(makeSortable(disableSelect(addColumnAddButton(addVizEditor(c)))));
+var columnsWrapper = c => addTooltip(addColumnAddButton(makeSortable(disableSelect(addVizEditor(c)))));
 var Spreadsheet = getSpreadsheet(columnsWrapper);
 // XXX without tooltip, we have no mouse pointer. Should make the wrapper add the css
 // that hides the mouse. Currently this is in Column.
@@ -158,7 +146,8 @@ var ApplicationContainer = React.createClass({
 	render() {
 		let {state, selector, callback} = this.props,
 			computedState = selector(state),
-			{mode, cohort, columnOrder} = computedState,
+			{mode} = computedState,
+			stepperState = getStepperState(computedState),
 			View = {
 				heatmap: SpreadsheetContainer,
 				chart: ChartView
@@ -168,7 +157,7 @@ var ApplicationContainer = React.createClass({
 					onReset={this.onReset}
 					onWizardMode={this.onWizardMode}
 					onShowWelcome={this.onShowWelcome}
-					stepperState={stepperState(cohort, columnOrder)}
+					stepperState={stepperState}
 					Spreadsheet={SpreadsheetContainer}
 					onHighlightChange={this.on.highlightChange}
 					sampleFormat={this.sampleFormat}
@@ -176,6 +165,7 @@ var ApplicationContainer = React.createClass({
 					state={computedState}
 					callback={callback}>
 				<View
+					stepperState={stepperState}
 					searching={this.highlight}
 					supportsGeneAverage={this.supportsGeneAverage}
 					disableKM={this.disableKM}

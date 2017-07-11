@@ -109,7 +109,7 @@ var m = (...objs) => _.pick(_.merge(...objs), v => v != null);
 var findFirstProp = (fieldSpecs, prop)  =>
 	_.get(_.find(fieldSpecs, fs => _.has(fs, prop)), prop);
 
-var hasAssembly = fieldType => ['mutation', 'SV'].indexOf(fieldType) !== -1;
+var hasAssembly = fieldType => ['mutation', 'SV', 'segmented'].indexOf(fieldType) !== -1;
 var hasSFeature = hasAssembly;
 
 var getAssembly = (fieldType, fieldSpecs) =>

@@ -512,7 +512,7 @@ function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, in
 	}
 	var refGeneObj = _.values(data.refGene)[0],
 		maxXZoom = defaultXZoom(pos, refGeneObj, 'mutation'), // exported for zoom controls
-		{width, showIntrons = false, sFeature, xzoom = maxXZoom} = column,
+		{width, showIntrons = false, sFeature = 'impact', xzoom = maxXZoom} = column,
 		allVals = _.uniq(data.req.rows.map(features[sFeature].get)),
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
 		layout = createLayout(refGeneObj, width, xzoom, pos),

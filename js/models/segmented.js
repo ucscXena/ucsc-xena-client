@@ -78,13 +78,13 @@ function fetchGene({dsID, fields, assembly}, [samples]) {
 		.flatMap(refGene => {
 			var coords = _.values(refGene)[0];
 			if (!coords) {
-				return Rx.Observable.of(null);
+				return Rx.Observable.of(null, Rx.Scheduler.asap);
 			}
 			var {txStart, txEnd, chrom} = coords,
 				{padTxStart, padTxEnd} = exonPadding;
 			return segmentedDataRange(dsID, samples, chrom, txStart - padTxStart, txEnd + padTxEnd)
 				.map(req => mapSamples(samples, {req, refGene}));
-		}) : Rx.Observable.of(null);
+		}) : Rx.Observable.of(null, Rx.Scheduler.asap);
 }
 
 function fetch(column, cohortSamples) {

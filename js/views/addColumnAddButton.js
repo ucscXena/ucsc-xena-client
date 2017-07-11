@@ -1,63 +1,141 @@
 'use strict';
 var React = require('react');
-// XXX move ColumnEdit2 to views?
-var ColumnEdit = require('../ColumnEdit2');
-var Button = require('react-bootstrap/lib/Button');
-var Tooltip = require('react-bootstrap/lib/Tooltip');
-var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
+var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
+var CohortOrDisease = require('./CohortOrDisease');
+var VariableSelect = require('./VariableSelect');
+var ColumnInlineEditor = require('../views/ColumnInlineEditor');
+var getStepperState = require('../containers/getStepperState'); /// XXX edit path after move
+var trim = require('underscore.string').trim;
+var {getColSpec} = require('../models/datasetJoins');
+var {defaultColorClass} = require('../heatmapColors');
+var uuid = require('../uuid');
 
+function toWordList(str) {
+	// Have to wrap trim because it takes a 2nd param.
+	return _.filter(_.map(str.split(/,| |\n|\t/), s => trim(s), _.identity));
+}
+
+// 'features' is a problem here, because they are not unique across datasets.
+// How do we look up features w/o a dataset?
+function getValueType(dataset, features, fields) {
+	var {type} = dataset,
+		valuetype = _.getIn(features, [fields[0], 'valuetype']);
+
+	if (type === 'mutationVector') {
+		return 'mutation';
+	}
+	if (type === 'genomicSegment') {
+		return 'segmented';
+	}
+	if (type === 'phenotype') {
+		return valuetype === 'category' ? 'coded' : 'float';
+	}
+	return 'float';
+}
+
+function getFieldType(dataset, features, fields, probes) {
+	if (dataset.type === 'mutationVector') {
+		return 'mutation';
+	}
+	if (dataset.type === 'genomicSegment') {
+		return 'segmented';
+	}
+	if (dataset.type === 'phenotype') {
+		return 'clinical';
+	}
+	return  probes ? 'probes' : (fields.length > 1 ? 'genes' : 'geneProbes');
+}
+
+// XXX handle position in all genomic datatypes?
+var parsePos = require('../parsePos');
+function columnSettings(datasets, features, dsID, input, probes) {
+	var meta = datasets[dsID],
+		pos = parsePos(trim(input), meta.assembly),
+		fields = toWordList(input);
+	// My god, this is a disaster.
+	return {
+		fields: pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] : fields,
+		fetchType: 'xena',
+		valueType: getValueType(meta, features, fields),
+		fieldType: getFieldType(meta, features, fields, probes),
+		dsID,
+		defaultNormalization: meta.colnormalization,
+		// XXX this assumes fields[0] doesn't appear in features if ds is genomic
+		fieldLabel: _.get(features, [fields[0], 'longtitle'], fields.join(', ')),
+		colorClass: defaultColorClass,
+		assembly: meta.assembly
+	};
+}
+
+function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps) {
+	if (wizardMode) {
+		if (stepperState === 'COHORT') {
+			return [<CohortOrDisease {...cohortSelectProps}/>];
+		}
+		if (_.contains(['FIRST_COLUMN', 'SECOND_COLUMN'], stepperState)) {
+			return [<VariableSelect {...datasetSelectProps}/>];
+		}
+	}
+	return [];
+}
+
+// 1) if appState.editing, then set editing state, and render editor.
+// 2) if wizard mode
+//      add cohort editor, or
+//      add 1st column editor, or
+//      add 2nd column editor
 function addColumnAddButton(Component) {
 	return React.createClass({
 		mixins: [deepPureRenderMixin],
 		displayName: 'SpreadsheetColumnAdd',
 		getInitialState() {
-			return {
-				openColumnEdit: !this.props.appState.cohort[0] && !this.props.appState.loadPending,
-			};
+			var {editing} = this.props;
+			return {editing};
 		},
 		componentWillReceiveProps: function(newProps) {
-			// If we had a cohort but lost it (e.g. due to change in servers),
+			var {editing} = newProps;
+			// XXX set timeout here for flipping back, when done.
+			this.setState({editing});
+			// XXX If we had a cohort but lost it (e.g. due to change in servers),
 			// and the columnEdit is closed: open it.
-			if (!this.state.openColumnEdit &&
-				this.props.appState.cohort[0] &&
-				!newProps.appState.cohort[0]) {
+//			if (!this.state.openColumnEdit &&
+//				this.props.appState.cohort[0] &&
+//				!newProps.appState.cohort[0]) {
+//
+//				this.setState({openColumnEdit: true});
+//			}
+		},
+		onCohortSelect(cohort) {
+			this.props.callback(['cohort', 0, cohort]);
+		},
+		onDatasetSelect(input, dataset) {
+			// XXX need to remap features
+			var {datasets, features} = this.props.appState,
+				ds = datasets[dataset];
+			// XXX resolve 'probes', set here to false
+			var settings = columnSettings(datasets, features, dataset, input, false),
+				colSpec = getColSpec([settings], datasets);
 
-				this.setState({openColumnEdit: true});
-			}
-		},
-		onShow() {
-			this.setState({openColumnEdit: true});
-		},
-		onHide() {
-			this.setState({openColumnEdit: false});
+			settings = _.assoc(colSpec,
+				'width', ds.type === 'mutationVector' ? 200 : 100,
+				'columnLabel', ds.label,
+				'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel});
+			this.props.callback(['add-column', uuid(), settings, true]);
 		},
 		render() {
-			// XXX appState?
-			var {appState} = this.props,
-				{cohort, zoom: {height}} = appState,
-				{openColumnEdit} = this.state,
-				addHelp = <Tooltip>Add a column</Tooltip>;
+			var {children, appState} = this.props,
+				{cohorts, cohortMeta, wizardMode, datasets} = appState,
+				stepperState = getStepperState(appState),
+				{editing} = this.state,
+				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect},
+				datasetSelectProps = {datasets, onSelect: this.onDatasetSelect},
+				withEditor = React.Children.map(children, el =>
+						editing === el.props.id ? <ColumnInlineEditor column={el} editor='editor'/> : el);
 			return (
 				<Component {...this.props}>
-					{this.props.children}
-					<div style={{height: height}}
-						className='addColumn Column'>
-
-						{cohort[0] ?
-							<OverlayTrigger placement='left' overlay={addHelp}>
-								<Button
-									bsStyle= "primary"
-									onClick={this.onShow}
-									className='Column-add-button'>
-									+ Data
-								</Button>
-							</OverlayTrigger> : null}
-					</div>
-					{openColumnEdit ?
-						<ColumnEdit
-							{...this.props}
-							onHide={this.onHide}/> : null}
+					{withEditor.concat(
+						wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps))}
 				</Component>);
 		}
 	});
