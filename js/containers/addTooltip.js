@@ -1,6 +1,6 @@
 'use strict';
 
-var Tooltip = require('./Tooltip');
+var Tooltip = require('../views/Tooltip');
 var React = require('react');
 var {rxEventsMixin} = require('../react-utils');
 var meta = require('../meta');

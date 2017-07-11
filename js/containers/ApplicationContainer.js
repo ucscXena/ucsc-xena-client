@@ -14,11 +14,11 @@ var {xenaFieldPaths} = require('../models/fieldSpec');
 var {rxEventsMixin} = require('../react-utils');
 var Rx = require('../rx');
 // Spreadsheet options
-var addTooltip = require('../views/addTooltip');
-var disableSelect = require('../views/disableSelect');
-var addColumnAddButton = require('../views/addColumnAddButton');
-var addVizEditor = require('../views/addVizEditor');
-var makeSortable = require('../views/makeSortable');
+var addTooltip = require('./addTooltip');
+var disableSelect = require('./disableSelect');
+var addWizardColumns = require('./addWizardColumns');
+var addVizEditor = require('./addVizEditor');
+var makeSortable = require('./makeSortable');
 var getSpreadsheet = require('../Spreadsheet');
 var getStepperState = require('./getStepperState');
 
@@ -81,7 +81,7 @@ function datasetMeta(column, datasets) {
 	};
 }
 
-var columnsWrapper = c => addTooltip(addColumnAddButton(makeSortable(disableSelect(addVizEditor(c)))));
+var columnsWrapper = c => addTooltip(addWizardColumns(makeSortable(disableSelect(addVizEditor(c)))));
 var Spreadsheet = getSpreadsheet(columnsWrapper);
 // XXX without tooltip, we have no mouse pointer. Should make the wrapper add the css
 // that hides the mouse. Currently this is in Column.

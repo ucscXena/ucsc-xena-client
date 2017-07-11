@@ -2,10 +2,10 @@
 var React = require('react');
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
-var CohortOrDisease = require('./CohortOrDisease');
-var VariableSelect = require('./VariableSelect');
+var CohortOrDisease = require('../views/CohortOrDisease');
+var VariableSelect = require('../views/VariableSelect');
 var ColumnInlineEditor = require('../views/ColumnInlineEditor');
-var getStepperState = require('../containers/getStepperState'); /// XXX edit path after move
+var getStepperState = require('./getStepperState');
 var trim = require('underscore.string').trim;
 var {getColSpec} = require('../models/datasetJoins');
 var {defaultColorClass} = require('../heatmapColors');
