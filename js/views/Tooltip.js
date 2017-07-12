@@ -24,7 +24,7 @@ var element = {
 		<td key={i} className='urlValue'><a href={url} target='_BLANK'>{text}</a></td>
 	),
 	popOver: (i, text, dataList) => (
-		<td key={i} className='urlValue'><a><PopOverVariants label={text} body={dataList}/></a></td>
+		<td key={i}><a><PopOverVariants label={text} body={dataList}/></a></td>
 	),
 };
 
