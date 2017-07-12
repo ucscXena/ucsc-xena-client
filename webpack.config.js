@@ -4,6 +4,13 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var webpack = require('webpack');
 var path = require('path');
 
+var htmlPlugin = process.argv.indexOf('--disable-html-plugin') === -1 ?
+	[new HtmlWebpackPlugin({
+		title: "UCSC Xena",
+		filename: "index.html",
+		template: "page.template"
+	})] : [];
+
 module.exports = {
 	historyApiFallback: true,
 	entry: "./js/bogorouter",
@@ -27,6 +34,7 @@ module.exports = {
 	},
 	module: {
 		loaders: [
+			{ test: /loadXenaQueries.js$/, loader: "val" },
 			{ test: /\.xq$/, loader: "raw" },
 			{ test: /pdfkit|png-js/, loader: "transform?brfs" },
 			{
@@ -43,14 +51,9 @@ module.exports = {
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]
 	},
-	plugins: [
-		new HtmlWebpackPlugin({
-			title: "UCSC Xena",
-			filename: "index.html",
-			template: "page.template"
-		}),
+	plugins: htmlPlugin.concat([
 		new webpack.OldWatchingPlugin()
-	],
+	]),
 	resolve: {
 		fallback: path.join(__dirname, "node_modules"),
 		alias: {
