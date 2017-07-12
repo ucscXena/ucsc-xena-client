@@ -5,6 +5,8 @@ var React = require('react');
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 var meta = require('../meta');
+var Modal = require('react-bootstrap/lib/Modal');
+var {Button} = require('react-bootstrap/lib/');
 require('./Tooltip.css');
 
 var sampleLayout = id => (
@@ -20,7 +22,10 @@ var element = {
 	),
 	url: (i, text, url) =>  (
 		<td key={i} className='urlValue'><a href={url} target='_BLANK'>{text}</a></td>
-	)
+	),
+	popOver: (i, text, dataList) => (
+		<td key={i} className='urlValue'><a><PopOverVariants label={text} body={dataList}/></a></td>
+	),
 };
 
 var styles = {
@@ -38,6 +43,56 @@ var styles = {
 function overlay() {
 	return <div style={styles.overlay()}/>;
 }
+
+var PopOverVariants = React.createClass({
+  getInitialState() {
+    return { showModal: false };
+  },
+
+  close() {
+    this.setState({ showModal: false });
+  },
+
+  open() {
+    this.setState({ showModal: true });
+  },
+
+  render() {
+	var label = this.props.label,
+		dataList = this.props.body;
+
+	var rowsOut = _.map(dataList, (row, i) => (
+		<tr key={i}>
+			{row.map(([type, ...args], i) => element[type](i, ...args))}
+		</tr>
+	));
+
+
+    return (
+      <div>
+        <span
+          onClick={this.open}
+        >
+        {label}
+        </span>
+
+        <Modal show={this.state.showModal} onHide={this.close}>
+          <Modal.Header closeButton>
+            <Modal.Title>Variants</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+			<div>
+				<table> {rowsOut} </table>
+			</div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.close}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+      </div>
+    );
+  }
+});
 
 var Tooltip = React.createClass({
 	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?
