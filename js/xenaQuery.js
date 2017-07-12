@@ -6,7 +6,7 @@ var Rx = require('./rx');
 var _ = require('./underscore_ext');
 var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
 // Load all query files as a map of strings.
-var qs = require('val!./loadXenaQueries');
+var qs = require('./loadXenaQueries');
 
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
 
