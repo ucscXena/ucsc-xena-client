@@ -183,7 +183,11 @@ function getChartOffsets(column) {
 }
 
 function fetchCohortMeta(serverBus) {
-	serverBus.next(['cohortMeta', xenaQuery.fetchCohortMeta()]);
+	serverBus.next(['cohortMeta', xenaQuery.fetchCohortMeta]);
+}
+
+function fetchCohortPreferred(serverBus) {
+	serverBus.next(['cohortPreferred', xenaQuery.fetchCohortPreferred]);
 }
 
 function setLoadingState(state, params) {
@@ -233,6 +237,7 @@ var controls = {
 			}
 		}
 		fetchCohortMeta(serverBus);
+		fetchCohortPreferred(serverBus);
 	},
 	'import': (state, newState) => newState,
 	cohort: (state, i, cohort) =>

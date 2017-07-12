@@ -80,6 +80,18 @@ function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelec
 	return [];
 }
 
+var preferredLabels = {
+	'gene expression': 'Gene Expresion',
+	'copy number': 'Copy Number',
+	'simple somatic mutation': 'Somatic Mutation'
+};
+
+function getPreferedDatasets(cohort, cohortPreferred) {
+	var preferred = _.get(cohortPreferred, _.getIn(cohort, [0, 'name']));
+	return preferred ? _.keys(preferred).map(type =>
+			({dsID: preferred[type], label: preferredLabels[type]})) : null;
+}
+
 // 1) if appState.editing, then set editing state, and render editor.
 // 2) if wizard mode
 //      add cohort editor, or
@@ -125,11 +137,12 @@ function addColumnAddButton(Component) {
 		},
 		render() {
 			var {children, appState} = this.props,
-				{cohorts, cohortMeta, wizardMode, datasets} = appState,
+				{cohort, cohorts, cohortPreferred, cohortMeta, wizardMode, datasets} = appState,
 				stepperState = getStepperState(appState),
 				{editing} = this.state,
+				preferred = getPreferedDatasets(cohort, cohortPreferred),
 				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect},
-				datasetSelectProps = {datasets, onSelect: this.onDatasetSelect},
+				datasetSelectProps = {datasets, preferred, onSelect: this.onDatasetSelect},
 				withEditor = React.Children.map(children, el =>
 						editing === el.props.id ? <ColumnInlineEditor column={el} editor='editor'/> : el);
 			return (

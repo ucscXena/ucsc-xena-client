@@ -166,7 +166,10 @@ var controls = {
 	// XXX Here we should be updating application state. Instead we invoke a callback, because
 	// chart.js can't handle passed-in state updates.
 	'chart-average-data-post!': (serverBus, state, newState, offsets, thunk) => thunk(offsets),
-	cohortMeta: (state, meta) => _.assoc(state, 'cohortMeta', invertCohortMeta(meta))
+	cohortMeta: (state, meta) => _.assoc(state, 'cohortMeta', invertCohortMeta(meta)),
+	cohortPreferred: (state, cohortPreferred) => _.assoc(state, 'cohortPreferred',
+			_.fmap(cohortPreferred,
+				preferred => _.fmap(preferred, ({host, dataset}) => JSON.stringify({host, name: dataset}))))
 };
 
 module.exports = {

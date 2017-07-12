@@ -375,14 +375,16 @@ function testHost (host) {
 
 var cohortMetaURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/xenacohort_tag.json";
 
-function fetchCohortMeta() {
-	return Rx.Observable.ajax({
-		url: cohortMetaURL,
+var cohortPreferredURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/defaultDataset.json";
+
+var fetchJSON = url =>
+	Rx.Observable.ajax({
+		url,
 		method: 'GET',
 		responseType: 'json',
 		crossDomain: true
 	}).map(xhr => xhr.response);
-}
+
 
 module.exports = {
 	...queryPosts,
@@ -403,5 +405,6 @@ module.exports = {
 	transcript,
 
 	// cohort meta
-	fetchCohortMeta
+	fetchCohortMeta: fetchJSON(cohortMetaURL),
+	fetchCohortPreferred: fetchJSON(cohortPreferredURL)
 };

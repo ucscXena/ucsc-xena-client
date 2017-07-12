@@ -2,13 +2,12 @@
 var React = require('react');
 var _ = require('../underscore_ext');
 
-var categories = ['Copy Number', 'Gene Expression', 'Somatic Mutation'];
-
 var BasicDatasetSelect = React.createClass({
 	render() {
+		var {preferred} = this.props;
 		return (
 			<div>
-				{_.flatmap(categories, c => [<input type='checkbox' value={c}/>, <label>{c}</label>, <br/>])}
+				{_.flatmap(preferred, ({dsID, label}) => [<input type='checkbox' value={dsID}/>, <label>{label}</label>, <br/>])}
 			</div>
 		);
 	}

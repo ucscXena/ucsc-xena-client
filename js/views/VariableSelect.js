@@ -12,7 +12,7 @@ var GenotypicForm = props => {
 			<input ref={props.inputRef} type='text' /><br/>
 			<label>Assay Type</label>
 			<button onClick={props.onAdvancedClick}>Show {props.advanced ? 'Basic' : 'Advanced'}</button>
-			<DatasetSelect onSelect={props.onSelect} datasets={props.datasets}/>
+			<DatasetSelect onSelect={props.onSelect} datasets={props.datasets} preferred={props.preferred}/>
 		</div>);
 };
 
@@ -44,8 +44,11 @@ var VariableSelect = React.createClass({
 		this.props.onSelect(this.input.value, dataset);
 	},
 	render() {
+		// XXX If there are no preferred datasets, e.g. for
+		// unassigned cohort, we should coerce to advanced mode,
+		// and hide/disable the 'Show Basic' button.
 		var {mode, advanced} = this.state,
-			{datasets} = this.props,
+			{datasets, preferred} = this.props,
 			ModeForm = getModeFields[mode];
 		return (
 			<div>
@@ -68,6 +71,7 @@ var VariableSelect = React.createClass({
 					inputRef={this.setInput}
 					onSelect={this.onSelect}
 					datasets={datasets}
+					preferred={preferred}
 					onAdvancedClick={this.onAdvancedClick}
 					advanced={advanced}/>
 				<button>Done</button>
