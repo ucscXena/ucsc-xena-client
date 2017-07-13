@@ -151,14 +151,13 @@ var RefGeneAnnotation = React.createClass({
 			});
 		}
 
-
 		var tooltip = (
 			<Tooltip>
 				{this.state.helpText.map(text => (<div>{text}</div>))}
 			</Tooltip>
 		);
 
-		return mode ? (
+		return (
 			<OverlayTrigger trigger={['hover']} placement='top' overlay={tooltip}>
 				<canvas
 					className='Tooltip-target'
@@ -169,7 +168,7 @@ var RefGeneAnnotation = React.createClass({
 					onDblClick={this.props.onDblClick}
 					ref='canvas' />
 			</OverlayTrigger>
-			) : null;
+		);
 	}
 });
 
