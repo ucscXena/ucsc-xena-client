@@ -4,7 +4,6 @@ var multi = require('./multi');
 
 var fieldTypeSelector = x => x.fieldType;
 var columnFieldTypeSelector = x => x.column.fieldType;
-var annotationSelector = () => 'gene';
 
 var widget = {
 	cmp: multi(fieldTypeSelector),
@@ -16,7 +15,7 @@ var widget = {
 	column: multi(columnFieldTypeSelector),
 	legend: multi(columnFieldTypeSelector),
 	pdf: multi(fieldTypeSelector),
-	annotation: multi(annotationSelector)
+	annotation: multi(() => 'gene')
 };
 
 widget.index.dflt = () => null;
