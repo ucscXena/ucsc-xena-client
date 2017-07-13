@@ -16,7 +16,7 @@ var sampleLayout = id => (
 
 var element = {
 	value: (i, v) => <td key={i}><span className='tupleValue'>{v}</span></td>,
-	label: (i, l) => <td key={i}>{l}</td>,
+	label: (i, l) => <td key={i}><span className='tupleLabel'>{l}</span></td>,
 	labelValue: (i, l, v) => (
 		<td key={i}>{l}: <span className='tupleValue'>{v}</span></td>
 	),
@@ -115,19 +115,13 @@ var Tooltip = React.createClass({
 				{frozen ?  overlay(onClick) : null}
 				<div className='Tooltip' style={{zIndex: 999, display: display}}>
 					<table>
-						<colgroup>
-							<col className='valueCol'/>
-							<col className='closeCol'/>
-						</colgroup>
 						<tbody>
 							{sample}
 							{rowsOut}
 							<tr style={{fontSize: "80%"}}>
 								<td className='tooltipPrompt'>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</td>
 							</tr>
-							<tr style={{fontSize: "80%"}}>
-								<td className='tooltipPrompt'><a href="http://xena.ucsc.edu/spreadsheet-zoom/" target="_blank">Help with zoom</a></td>
-							</tr>
+							<a className='tooltipPrompt' style={{fontSize: "80%"}} href="http://xena.ucsc.edu/spreadsheet-zoom/" target="_blank">Help with zoom</a>
 						</tbody>
 					</table>
 				</div>

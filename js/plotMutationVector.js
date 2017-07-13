@@ -152,7 +152,7 @@ function sampleTooltip(sampleFormat, dataList, assembly, fields) {
 	var perRowTip = data => {
 		var dnaVaf = data.dnaVaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dnaVaf)],
 			rnaVaf = data.rnaVaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rnaVaf)],
-			ref = data.reference && ['value', `${data.reference} to `],
+			ref = data.reference && ['label', `${data.reference} to`],
 
 			//alt
 			altDirection = data.alt && mv.joinedVariantDirection(data.alt),
@@ -174,7 +174,7 @@ function sampleTooltip(sampleFormat, dataList, assembly, fields) {
 			//alt link
 			alt = data.alt && (mv.structuralVariantClass(data.alt) ?
 								['url', `${data.alt}`, gbMultiColorURL(assembly, altDisplayRegion, [[altPos, '#AA0000' ], [altRegion, '#aec7e8']], defaultSNVSVGBsetting(assembly))] :
-								['value', `${data.alt}`]),
+								['label', `${data.alt}`]),
 
 			//variant link
 			posDisplay = data && (data.start === data.end) ? posStartString(data) : posDoubleString (data),
