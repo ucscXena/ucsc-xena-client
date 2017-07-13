@@ -357,7 +357,6 @@ var Column = React.createClass({
 	onXDragZoom: function (pos) {
 		var {column: {layout}, onXZoom, id} = this.props,
 			[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
-
 		onXZoom(id, {start, end});
 	},
 	onMenuToggle: function (open) {
@@ -463,15 +462,16 @@ var Column = React.createClass({
 						aria-hidden="true">
 					</span>
 				</OverlayTrigger>),
-			annotation = widgets.annotation({
-				fields: column.fields,
-				refGene: _.get(data, 'refGene', {}),
-				layout: column.layout,
-				width,
-				mode: _.has(column, 'showIntrons') ?
-					(_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon"
-					: "coordinate"
-			});
+			annotation = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
+				widgets.annotation({
+					fields: column.fields,
+					refGene: _.get(data, 'refGene', {}),
+					layout: column.layout,
+					width,
+					mode: _.has(column, 'showIntrons') ?
+						(_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon"
+						: "coordinate"
+				}) : null;
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
 		// tooltips) for children. We must use a different tag, e.g. 'label'.
@@ -513,9 +513,9 @@ var Column = React.createClass({
 					value={{default: fieldLabel, user: user.fieldLabel}} />
 				<Crosshair>
 					<div style={{height: 32}}>
-							<DragSelect enabled={true} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-									{annotation}
-							</DragSelect>
+						<DragSelect enabled={true} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+							{annotation}
+						</DragSelect>
 					</div>
 				</Crosshair>
 
