@@ -1,16 +1,10 @@
 'use strict';
 
 var multi = require('./multi');
-var parsePos = require('./parsePos');
 
 var fieldTypeSelector = x => x.fieldType;
 var columnFieldTypeSelector = x => x.column.fieldType;
-
-// XXX check for null field[0] is an odd artifact of denseMatrix transform which
-// overwrites fields with probes, if the server returns probes. If a gene is not
-// recognized, the probe list is empty. Needs a better semantics.
-var annotationSelector = ({fields, refGene}) =>
-	parsePos(fields[0] || '') ? 'chrom' : (refGene ? 'gene' : null);
+var annotationSelector = () => 'gene';
 
 var widget = {
 	cmp: multi(fieldTypeSelector),

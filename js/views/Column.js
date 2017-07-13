@@ -478,10 +478,13 @@ var Column = React.createClass({
 				</OverlayTrigger>),
 			annotation = widgets.annotation({
 				fields: column.fields,
-				refGene: _.values(_.get(data, 'refGene', {}))[0],
+				refGene: _.get(data, 'refGene', {}),
 				layout: column.layout,
 				width,
-				alternateColors: !_.getIn(column, ['showIntrons'], false)});
+				mode: _.has(column, 'showIntrons') ?
+					(_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon"
+					: "coordinate"
+			});
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
 		// tooltips) for children. We must use a different tag, e.g. 'label'.

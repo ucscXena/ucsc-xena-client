@@ -67,7 +67,7 @@ var RefGeneAnnotation = React.createClass({
 		};
 	},
 
-	draw: function (width, layout, indx, alternateColors) {
+	draw: function (width, layout, indx, mode) {
 		if (!width || !layout || !indx) {
 			return;
 		}
@@ -78,43 +78,62 @@ var RefGeneAnnotation = React.createClass({
 			vg.width(width);
 		}
 
-		vg.box(0, 0, width, refHeight * 2, 'white'); // white background
-
-		// draw a line across to represent the entire horizontal genomic region that will be in display, for promoter and downstream region
-		ctx.fillStyle = 'grey';
-		ctx.fillRect(0, refHeight * 1.5, width, 1);
+		var allSegments = [];
 
 		pxTransformEach(layout, (toPx, [start, end]) => {
 			var nodes = matches(indx, {start: start, end: end});
 			_.each(nodes.sort((a, b)=> (b.start - a.start)), ({i, start, end, inCds}) => {
 				var {y, h} = annotation[inCds ? 'cds' : 'utr'];
 				var [pstart, pend] = toPx([start, end]);
-				ctx.fillStyle = (alternateColors && i % 2 === 1) ? shade1 : shade2;
-				ctx.fillRect(pstart, y + refHeight, (pend - pstart) || 1, h);
+				var	shade = (mode === "geneExon" && i % 2 === 1) ? shade1 : shade2;
+				allSegments.push([pstart, pend, shade, y, h]);
 			});
 		});
 
-		if (alternateColors === false) { // if in genomic mode i.e. (alternateColors === false), draw scale
-			drawChromScale(vg, width, layout, "geneIntron");
-		} else { // in exon mode, just write 5' and 3'
-			drawChromScale(vg, width, layout, "geneExon");
-		}
+		// draw a line across the gene
+		var pGeneStart = _.min(allSegments.map(s => s[0])),
+			pGeneEnd = _.max(allSegments.map(s => s[1]));
+		ctx.fillStyle = shade2;
+		ctx.fillRect(pGeneStart, refHeight * 1.5, pGeneEnd - pGeneStart, 1);
+
+		// draw each segments
+		_.each(allSegments, s => {
+			var [pstart, pend, shade, y, h] = s;
+			ctx.fillStyle = shade;
+			ctx.fillRect(pstart, y + refHeight, (pend - pstart) || 1, h);
+		});
+
+		// draw scale, 5' 3'
+		drawChromScale(vg, width, layout, mode);
 	},
 
 	componentDidMount: function () {
-		var {width, layout, alternateColors} = this.props;
+		var {width, layout, refGene, mode} = this.props;
 		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, refHeight * 2);
-		this.draw(width, layout, this.index, alternateColors);
+		this.vg.box(0, 0, width, refHeight * 2, 'white'); // white background
+		_.values(refGene).map( val => {
+			var intervals = findIntervals(val);
+			this.index = index(intervals);
+			if (this.vg) {
+				this.draw(width, layout, this.index, mode);
+			}
+		});
 	},
 
 	render: function () {
-		var {width, layout, refGene, alternateColors} = this.props,
-			intervals = findIntervals(refGene);
+		var {width, layout, refGene, mode} = this.props;
 
-		this.index = index(intervals);
 		if (this.vg) {
-			this.draw(width, layout, this.index, alternateColors);
+			this.vg.box(0, 0, width, refHeight * 2, 'white'); // white background
+			_.values(refGene).map( val => {
+				var intervals = findIntervals(val);
+				this.index = index(intervals);
+				if (this.vg) {
+					this.draw(width, layout, this.index, mode);
+				}
+			});
 		}
+
 		return (
 			<canvas
 				className='Tooltip-target'
