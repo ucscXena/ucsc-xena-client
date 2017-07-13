@@ -24,15 +24,12 @@ var welcome3xImg = require('../../images/iconXena@3x.png');
 let welcomeSrcSet = `${welcome2xImg} 2x, ${welcome3xImg} 3x`;
 
 var Welcome = React.createClass({
-	onShowDemo: function(e) {
-		e.stopPropagation();
-	},
-	onShowWelcome: function() {
+	dismissWelcome: function() {
 		this.props.onClick();
 	},
 	render() {
 		return (
-			<div className='Welcome' onClick={this.onShowWelcome}>
+			<div className='Welcome'>
 				<div className='welcomeIcon'>
 					<img src={welcomeImg} srcSet={welcomeSrcSet}/>
 				</div>
@@ -41,12 +38,11 @@ var Welcome = React.createClass({
 					<h2 className='md-subhead'>UCSC Xena allows users to explore functional genomic data sets
 						for correlations between genomic and/or phenotypic variables.</h2>
 					<h2 className='md-subhead'>View live example: <a href='http://www.google.com'
-																	 target='_blank'
-																	 onClick={this.onShowDemo}>TP53
+																	 target='_blank'>TP53
 						Expression vs. Mutation in
 						TCGA Pan-Cancer</a></h2>
 				</div>
-				<div className='closeIcon'>
+				<div className='closeIcon' onClick={this.dismissWelcome}>
 					<i className='material-icons'>close</i>
 				</div>
 			</div>

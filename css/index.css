@@ -18,7 +18,7 @@
  * React Toolbox Reset.
  * Custom CSS resets to be used in addition to base CSS reset (normalize.css).
  */
-@import './rtb-reset.css';
+@import './rtbReset.css';
 
 /*
  * Fonts.
