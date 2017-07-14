@@ -2,17 +2,15 @@
  * UCSC Xena Client
  * http://xena.ucsc.edu
  *
- * Typography defaults for text-specific HTML elements as well as classes to match Material Design spec
+ * Typography defaults for text-specific HTML elements based on Material Design spec
  * (https://material.io/guidelines/style/typography.html).
  *
- * Also contains custom helpers such as converting text to either secondary or hint styles (as per Material Design spec).
+ * These defaults are required as React Toolbox does not specify any typography functionality.
  *
- * These defaults, classes and helpers are required as React Toolbox does not specify any typography functionality.
+ * This file is included in the core index.css and the rules below are therefore automatically applied to all
+ * components.
  */
 
-/*
- * Defaults and classes below based on Angular Material 1.1.1 (https://material.angularjs.org/).
- */
 a {
 	text-decoration: none;
 	font-weight: 400;
@@ -63,84 +61,4 @@ p {
 
 strong {
 	font-weight: 500;
-}
-
-.md-display-4 {
-	font-size: 112px;
-	font-weight: 300;
-	letter-spacing: -.01em;
-	line-height: 112px
-}
-
-.md-display-3 {
-	font-size: 56px;
-	font-weight: 400;
-	letter-spacing: -.005em;
-	line-height: 56px
-}
-
-.md-display-2 {
-	font-size: 45px;
-	font-weight: 400;
-	line-height: 64px
-}
-
-.md-display-1 {
-	font-size: 34px;
-	font-weight: 400;
-	line-height: 40px
-}
-
-.md-headline {
-	font-size: 24px;
-	font-weight: 400;
-	line-height: 32px
-}
-
-.md-title {
-	font-size: 20px;
-	font-weight: 500;
-	letter-spacing: .005em
-}
-
-.md-subhead {
-	font-size: 16px;
-	line-height: 24px
-}
-
-.md-body-1, .md-subhead {
-	font-weight: 400;
-	letter-spacing: .01em
-}
-
-.md-body-1 {
-	font-size: 14px;
-	line-height: 20px
-}
-
-.md-body-2 {
-	font-size: 14px;
-	font-weight: 500;
-	letter-spacing: .01em;
-	line-height: 24px
-}
-
-.md-caption {
-	font-size: 12px;
-	letter-spacing: .02em
-}
-
-.md-button {
-	letter-spacing: .01em
-}
-
-/**
- * Custom "helpers", as per Material Design spec.
- */
-.secondary {
-	color: rgba(0, 0, 0, 0.54);
-}
-
-.hint {
-	color: rgba(0, 0, 0, 0.38);
 }

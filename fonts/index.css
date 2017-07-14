@@ -7,6 +7,9 @@
  *
  * Must either host our own fonts (or reference from a service such as Google Fonts) as React Toolbox does not include
  * font definitions.
+ *
+ * This fonts file is included in the core index.css and the rules below are therefore automatically applied to all
+ * components.
  */
 
 /* Material Icons */

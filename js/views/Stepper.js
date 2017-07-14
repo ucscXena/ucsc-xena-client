@@ -19,12 +19,13 @@
 'use strict';
 
 // Core dependencies, components
+var classNames = require('classnames');
 var React = require('react');
-import { AppBar as RTBAppBar } from 'react-toolbox/lib/app_bar';
+import {AppBar as RTBAppBar} from 'react-toolbox/lib/app_bar';
 var _ = require('../underscore_ext');
 
 // Styles
-require('./Stepper.css');
+var compStyles = require('./Stepper.module.css');
 
 // Locals
 var steps = [
@@ -42,22 +43,20 @@ var stateIndex = {
 var Stepper = React.createClass({
 	render() {
 		let {mode} = this.props;
-		let getClassName = (index) => {
-			if (index < stateIndex[mode]) {
-				return 'completed';
-			}
-			if (index === stateIndex[mode]) {
-				return 'active';
-			}
-			return '';
+		let getStepClassName = (index) => {
+			return classNames({
+				[compStyles.step]: true,
+				[compStyles.completed]: index < stateIndex[mode],
+				[compStyles.active]: index === stateIndex[mode]
+			});
 		};
 		return (
 			<RTBAppBar>
-				<ul className='Stepper'>
+				<ul className={compStyles.Stepper}>
 					{_.map(steps, (step, index) =>
-						<li className={getClassName(index)}>
-							<div className='stepperCircle md-caption'>{index + 1}</div>
-							<div className='stepperText md-body-1'>{step.label}</div>
+						<li className={getStepClassName(index)}>
+							<div className={compStyles.stepperCircle}>{index + 1}</div>
+							<div className={compStyles.stepperText}>{step.label}</div>
 						</li>)}
 				</ul>
 			</RTBAppBar>

@@ -61,7 +61,7 @@
 		max-width: 33.33332%; /* lg 4 */
 	}
 
-	img {
+	imgXena {
 		height: 100%;
 		left: 50%;
 		position: absolute;
@@ -80,7 +80,7 @@
 @media screen and (min-width: 1425px) {
 
 	/* Snap welcome icon to left-hand side */
-	img {
+	.imgXena {
 		left: 0;
 		transform: translateX(0%);
 	}

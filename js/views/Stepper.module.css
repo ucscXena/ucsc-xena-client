@@ -13,7 +13,7 @@
 }
 
 /* Stepper step */
-.Stepper li {
+.step {
 	align-items: center;
 	display: flex;
 	padding-bottom: 20px;
@@ -23,7 +23,7 @@
 }
 
 /* Step line */
-.Stepper li::after {
+.step::after {
 	background-color: rgba(189, 189, 189, 1);
 	content: '';
 	height: 1px;
@@ -35,7 +35,8 @@
 }
 
 /* Step circle */
-.Stepper .stepperCircle {
+.stepperCircle {
+	composes: mdCaption from '../../css/typography.module.css';
 	background-color: rgba(0, 0, 0, 0.38);
 	border-radius: 24px;
 	color: white;
@@ -46,7 +47,8 @@
 }
 
 /* Step label */
-.Stepper .stepperText {
+.stepperText {
+	composes: mdBody1 from '../../css/typography.module.css';
 	background-color: white;
 	color: rgba(0, 0, 0, 0.38);
 	padding-left: 8px;
@@ -55,26 +57,26 @@
 }
 
 /* Active state */
-.Stepper .active .stepperCircle {
+.active .stepperCircle {
 	background-color: var(--color-accent);
 }
 
-.Stepper .active .stepperText {
+.active .stepperText {
 	color: rgba(0, 0, 0, 0.87);
 }
 
 /* Completed state */
-.Stepper .completed .stepperCircle {
+.completed .stepperCircle {
 	background-color: var(--color-accent);
 	color: var(--color-accent);
 	position: relative;
 }
 
-.Stepper .completed .stepperText {
+.completed .stepperText {
 	color: rgba(0, 0, 0, 0.38);
 }
 
-.Stepper .completed .stepperCircle:after {
+.completed .stepperCircle:after {
 	color: white;
 	content: '\E5CA'; /* Check mark */
 	font-family: 'Material Icons';

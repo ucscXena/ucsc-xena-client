@@ -11,12 +11,13 @@
  * Usage:
  *
  * @value black3 from "path/to/variables.css";
+ * ...
  * body {
  *     background-color: black3;
  * }
  *
- * Note: this variables file is not included in the core index.css. It must be explicitly included in the nested
- * CSS files that make sure of the variables defined below (as per usage example above).
+ * This variables file is not included in the core index.css. It must be explicitly included in the nested
+ * CSS files that make use of the variables defined below (as per usage example above).
  */
 
 /**

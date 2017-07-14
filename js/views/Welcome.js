@@ -15,7 +15,8 @@
 var React = require('react');
 
 // Styles
-require('./Welcome.css');
+var compStyles = require('./Welcome.module.css');
+var typStyles = require('../../css/typography.module.css');
 
 // Images
 var welcomeImg = require('../../images/iconXena.png');
@@ -29,20 +30,20 @@ var Welcome = React.createClass({
 	},
 	render() {
 		return (
-			<div className='Welcome'>
-				<div className='welcomeIcon'>
-					<img src={welcomeImg} srcSet={welcomeSrcSet}/>
+			<div className={compStyles.Welcome}>
+				<div className={compStyles.welcomeIcon}>
+					<img className={compStyles.imgXena} src={welcomeImg} srcSet={welcomeSrcSet}/>
 				</div>
-				<div className='welcomeText'>
-					<h1 className='md-headline'>Welcome to the Xena Functional Genomics Explorer</h1>
-					<h2 className='md-subhead'>UCSC Xena allows users to explore functional genomic data sets
+				<div className={compStyles.welcomeText}>
+					<h1 className={typStyles.mdHeadline}>Welcome to the Xena Functional Genomics Explorer</h1>
+					<h2 className={typStyles.mdSubhead}>UCSC Xena allows users to explore functional genomic data sets
 						for correlations between genomic and/or phenotypic variables.</h2>
-					<h2 className='md-subhead'>View live example: <a href='http://www.google.com'
-																	 target='_blank'>TP53
+					<h2 className={typStyles.mdSubhead}>View live example: <a href='http://www.google.com'
+																			   target='_blank'>TP53
 						Expression vs. Mutation in
 						TCGA Pan-Cancer</a></h2>
 				</div>
-				<div className='closeIcon' onClick={this.dismissWelcome}>
+				<div className={compStyles.closeIcon} onClick={this.dismissWelcome}>
 					<i className='material-icons'>close</i>
 				</div>
 			</div>

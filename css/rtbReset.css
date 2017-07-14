@@ -10,6 +10,9 @@
  *
  * These resets were originally included in earlier versions of React Toolbox but not in v2. Loosely based on React
  * Toolbox demo version at https://github.com/alexhisen/mobx-forms-demo/blob/master/src/scss/global.scss.
+ *
+ * These resets are included in the core index.css and the rules below are therefore automatically applied to all
+ * components.
  */
 
 html {
