@@ -69,7 +69,7 @@ var RefGeneAnnotation = React.createClass({
 		};
 	},
 
-	draw: function (width, layout, indx, mode) {
+	draw: function (width, layout, indx, mode, refGene) {
 		if (!width || !layout || !indx) {
 			return;
 		}
@@ -93,10 +93,19 @@ var RefGeneAnnotation = React.createClass({
 		});
 
 		// draw a line across the gene
-		var pGeneStart = _.min(allSegments.map(s => s[0])),
-			pGeneEnd = _.max(allSegments.map(s => s[1]));
 		ctx.fillStyle = shade2;
-		ctx.fillRect(pGeneStart, refHeight * 1.5, pGeneEnd - pGeneStart, 1);
+		if (_.isEmpty(allSegments)) {  // check if inside a gene, if so draw a line across
+			_.mapObject(refGene,  (val) => {
+				var [start, end] = layout.chrom[0];
+				if ((val.txStart <= end) && (val.txEnd >= start)) {
+					ctx.fillRect(0, refHeight * 1.5, width, 1);
+				}
+			});
+		} else {
+			var pGeneStart = _.min(allSegments.map(s => s[0])),
+				pGeneEnd = _.max(allSegments.map(s => s[1]));
+			ctx.fillRect(pGeneStart, refHeight * 1.5, pGeneEnd - pGeneStart, 1);
+		}
 
 		// draw each segments
 		_.each(allSegments, s => {
@@ -132,7 +141,7 @@ var RefGeneAnnotation = React.createClass({
 			var intervals = findIntervals(val);
 			this.index = index(intervals);
 			if (this.vg) {
-				this.draw(width, layout, this.index, mode);
+				this.draw(width, layout, this.index, mode, refGene);
 			}
 		});
 	},
@@ -146,7 +155,7 @@ var RefGeneAnnotation = React.createClass({
 				var intervals = findIntervals(val);
 				this.index = index(intervals);
 				if (this.vg) {
-					this.draw(width, layout, this.index, mode);
+					this.draw(width, layout, this.index, mode, refGene);
 				}
 			});
 		}
