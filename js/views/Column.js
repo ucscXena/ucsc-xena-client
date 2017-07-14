@@ -161,10 +161,10 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 		sortVisibleItemName = sortVisibleLabel(column, pos),
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
 		specialDownloadItemName = 'Download segments';
+
 	return addIdsToArr([
 		...(pos ? [] : [<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>]),
 		...(segmentedVizOptions(onVizOptions)),
-		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
 		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>,
 		specialDownloadMenu ?
 			<MenuItem disabled={noData} onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
@@ -174,6 +174,7 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 
 function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 	var {column, data} = props,
+		pos = parsePos(column.fields[0]),
 		{valueType, sortVisible, assembly, showIntrons = false} = column,
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'mutation',
@@ -184,10 +185,10 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		mupitItemName = noData ? 'MuPIT View (hg19 coding) Loading' : 'MuPIT View (hg19 coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
+
 	return addIdsToArr([
 		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
-		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
-		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
+		pos ? null : <MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
 		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>
 	]);
 }
@@ -493,11 +494,10 @@ var Column = React.createClass({
 					refGene: _.get(data, 'refGene', {}),
 					layout: column.layout,
 					width,
-					mode: _.has(column, 'showIntrons') ?
-						(_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon"
-						: "coordinate"
+					mode: parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+						"coordinate" :
+						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")
 				}) : null;
-
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
 		// tooltips) for children. We must use a different tag, e.g. 'label'.
 		// Button and Dropdown.Toggle will allow overriding the tag.  However
