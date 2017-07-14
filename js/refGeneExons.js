@@ -4,18 +4,12 @@ var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Tooltip = require('react-bootstrap/lib/Tooltip');
-var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
-var util = require('./util');
 var intervalTree = require('static-interval-tree');
 var vgcanvas = require('./vgcanvas');
 var layoutPlot = require('./layoutPlot');
 var {drawChromScale} = require('./ChromPosition');
-var {chromPositionFromScreen} = require('./exonLayout');
-
 var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
-
 
 // annotate an interval with cds status
 var inCds = ({cdsStart, cdsEnd}, intvl) =>
@@ -60,16 +54,7 @@ var shade1 = '#cccccc',
 		}
 	};
 
-var helpText =  'Drag zoom. Shift-click zoom out.';
-
 var RefGeneAnnotation = React.createClass({
-	getInitialState: function () {
-		return {
-			helpText: [helpText]
-		};
-	},
-
-
 	draw: function (width, layout, mode, refGene) {
 		if (!width || !layout) {
 			return;
@@ -130,21 +115,6 @@ var RefGeneAnnotation = React.createClass({
 		drawChromScale(vg, width, layout, mode);
 	},
 
-	onMouseMove: function(ev) {
-		var {layout, refGene} = this.props,
-			{x} = util.eventOffset(ev),
-			pos = Math.floor(chromPositionFromScreen(layout, x)),
-			matches = [];
-
-		_.mapObject(refGene,  (val, key) => {
-			if ((pos >= val.txStart) && (pos <= val.txEnd)) {
-				matches.push(key);
-			}
-		});
-
-		this.setState({ helpText: [matches.join(' '), helpText]});
-	},
-
 	componentDidMount: function () {
 		var {width, layout, refGene, mode} = this.props;
 		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, refHeight * 2);
@@ -158,23 +128,15 @@ var RefGeneAnnotation = React.createClass({
 			this.draw(width, layout, mode, refGene);
 		}
 
-		var tooltip = (
-			<Tooltip>
-				{this.state.helpText.map(text => (<div>{text}</div>))}
-			</Tooltip>
-		);
-
 		return (
-			<OverlayTrigger trigger={['hover']} placement='top' overlay={tooltip}>
-				<canvas
-					className='Tooltip-target'
-					onMouseMove={this.onMouseMove}
-					onMouseOut={this.props.onMouseOut}
-					onMouseOver={this.props.onMouseOver}
-					onClick={this.props.onClick}
-					onDblClick={this.props.onDblClick}
-					ref='canvas' />
-			</OverlayTrigger>
+			<canvas
+				className='Tooltip-target'
+				onMouseMove={this.props.onMouseMove}
+				onMouseOut={this.props.onMouseOut}
+				onMouseOver={this.props.onMouseOver}
+				onClick={this.props.onClick}
+				onDblClick={this.props.onDblClick}
+				ref='canvas' />
 		);
 	}
 });

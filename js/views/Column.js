@@ -26,6 +26,8 @@ var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
+var util = require('../util');
+var {chromPositionFromScreen} = require('../exonLayout');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -270,11 +272,10 @@ function getPosition(maxXZoom, pStart, pEnd) {
 			end <= maxXZoom.end) ? {start, end} : null;
 }
 
-// Persistent state for xzoomable setting.
-//var columnsXZoomable = false;
 var specialDownloadMenu = false;
+var annotationHelpText =  'Drag zoom. Shift-click zoom out.';
+
 if (process.env.NODE_ENV !== 'production') {
-//	columnsXZoomable = true;
 	specialDownloadMenu = true;
 }
 
@@ -282,14 +283,23 @@ var Column = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		return {
-//			xzoomable: columnsXZoomable,
+			annotationHelpText: [annotationHelpText],
 			specialDownloadMenu: specialDownloadMenu
 		};
 	},
+	addAnnotationHelp(target) {
+		var tooltip = (
+			<Tooltip>
+				{this.state.annotationHelpText.map(text => (<div>{text}</div>))}
+			</Tooltip>
+		);
+		return (
+			<OverlayTrigger trigger={['hover']} placement='top' overlay={tooltip}>
+				{target}
+			</OverlayTrigger>);
+	},
 	enableHiddenFeatures() {
-//		columnsXZoomable = true;
 		specialDownloadMenu = true;
-//		this.setState({xzoomable: true});
 		this.setState({specialDownloadMenu: true});
 	},
 	componentWillMount() {
@@ -441,6 +451,21 @@ var Column = React.createClass({
 			labelWidth = ReactDOM.findDOMNode(this.refs.label).getBoundingClientRect().width;
 		return controlWidth + labelWidth;
 	},
+	onMouseMove: function(ev) {
+		var {x} = util.eventOffset(ev),
+			{data, column} = this.props,
+			layout = column.layout,
+			refGene = _.get(data, 'refGene', {}),
+			pos = Math.floor(chromPositionFromScreen(layout, x)),
+			matches = [];
+
+		_.mapObject(refGene,  (val, key) => {
+			if ((pos >= val.txStart) && (pos <= val.txEnd)) {
+				matches.push(key);
+			}
+		});
+		this.setState({ annotationHelpText: [matches.join(' '), annotationHelpText]});
+	},
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
@@ -513,9 +538,15 @@ var Column = React.createClass({
 					value={{default: fieldLabel, user: user.fieldLabel}} />
 				<Crosshair>
 					<div style={{height: 32}}>
-						<DragSelect enabled={true} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-							{annotation}
-						</DragSelect>
+						{this.addAnnotationHelp (
+							<DragSelect
+								enabled={true}
+								onClick={this.onXZoomOut}
+								onSelect={this.onXDragZoom}
+								onMouseMove={this.onMouseMove}>
+								{annotation}
+							</DragSelect>
+							)}
 					</div>
 				</Crosshair>
 
