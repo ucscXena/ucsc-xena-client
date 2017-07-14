@@ -69,8 +69,9 @@ var RefGeneAnnotation = React.createClass({
 		};
 	},
 
-	draw: function (width, layout, indx, mode, refGene) {
-		if (!width || !layout || !indx) {
+
+	draw: function (width, layout, mode, refGene) {
+		if (!width || !layout) {
 			return;
 		}
 		var vg = this.vg,
@@ -80,32 +81,38 @@ var RefGeneAnnotation = React.createClass({
 			vg.width(width);
 		}
 
-		var allSegments = [];
+		this.vg.box(0, 0, width, refHeight * 2, 'white'); // white background
+		var [start, end] = layout.chrom[0],
+			allSegments = [],
+			matchGenes = [];
 
-		pxTransformEach(layout, (toPx, [start, end]) => {
-			var nodes = matches(indx, {start: start, end: end});
-			_.each(nodes.sort((a, b)=> (b.start - a.start)), ({i, start, end, inCds}) => {
-				var {y, h} = annotation[inCds ? 'cds' : 'utr'];
-				var [pstart, pend] = toPx([start, end]);
-				var	shade = (mode === "geneExon" && i % 2 === 1) ? shade1 : shade2;
-				allSegments.push([pstart, pend, shade, y, h]);
-			});
+		_.values(refGene).map( (val, key) => {
+			if ((val.txStart <= end) && (val.txEnd >= start)) {
+				var intervals = findIntervals(val),
+					indx = index(intervals),
+					segments = [];
+
+				matchGenes.push(key);
+				//find segments for one gene
+				pxTransformEach(layout, (toPx, [start, end]) => {
+					var nodes = matches(indx, {start: start, end: end});
+					_.each(nodes.sort((a, b)=> (b.start - a.start)), ({i, start, end, inCds}) => {
+						var {y, h} = annotation[inCds ? 'cds' : 'utr'];
+						var [pstart, pend] = toPx([start, end]);
+						var	shade = (mode === "geneExon" && i % 2 === 1) ? shade1 : shade2;
+						segments.push([pstart, pend, shade, y, h]);
+					});
+				});
+
+				// draw a line across the gene
+				var pGeneStart = _.min(segments.map(s => s[0])),
+					pGeneEnd = _.max(segments.map(s => s[1]));
+				ctx.fillStyle = shade2;
+				ctx.fillRect(pGeneStart, refHeight * 1.5, pGeneEnd - pGeneStart, 1);
+
+				allSegments = allSegments.concat(segments);
+			}
 		});
-
-		// draw a line across the gene
-		ctx.fillStyle = shade2;
-		if (_.isEmpty(allSegments)) {  // check if inside a gene, if so draw a line across
-			_.mapObject(refGene,  (val) => {
-				var [start, end] = layout.chrom[0];
-				if ((val.txStart <= end) && (val.txEnd >= start)) {
-					ctx.fillRect(0, refHeight * 1.5, width, 1);
-				}
-			});
-		} else {
-			var pGeneStart = _.min(allSegments.map(s => s[0])),
-				pGeneEnd = _.max(allSegments.map(s => s[1]));
-			ctx.fillRect(pGeneStart, refHeight * 1.5, pGeneEnd - pGeneStart, 1);
-		}
 
 		// draw each segments
 		_.each(allSegments, s => {
@@ -114,6 +121,11 @@ var RefGeneAnnotation = React.createClass({
 			ctx.fillRect(pstart, y + refHeight, (pend - pstart) || 1, h);
 		});
 
+		// draw a line across column if in an intron only region
+		if (_.isEmpty(allSegments) && !_.isEmpty(matchGenes)) {
+			 ctx.fillStyle = shade2;
+			ctx.fillRect(0, refHeight * 1.5, width, 1);
+		}
 		// draw scale, and 5' 3'
 		drawChromScale(vg, width, layout, mode);
 	},
@@ -136,28 +148,14 @@ var RefGeneAnnotation = React.createClass({
 	componentDidMount: function () {
 		var {width, layout, refGene, mode} = this.props;
 		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, refHeight * 2);
-		this.vg.box(0, 0, width, refHeight * 2, 'white'); // white background
-		_.values(refGene).map( val => {
-			var intervals = findIntervals(val);
-			this.index = index(intervals);
-			if (this.vg) {
-				this.draw(width, layout, this.index, mode, refGene);
-			}
-		});
+		this.draw(width, layout, mode, refGene);
 	},
 
 	render: function () {
 		var {width, layout, refGene, mode} = this.props;
 
 		if (this.vg) {
-			this.vg.box(0, 0, width, refHeight * 2, 'white'); // white background
-			_.values(refGene).map( val => {
-				var intervals = findIntervals(val);
-				this.index = index(intervals);
-				if (this.vg) {
-					this.draw(width, layout, this.index, mode, refGene);
-				}
-			});
+			this.draw(width, layout, mode, refGene);
 		}
 
 		var tooltip = (
