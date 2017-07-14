@@ -3,8 +3,8 @@
 	width: 125px;
 	display: flex;
 	flex-wrap: wrap;
-	overflow: hidden;
-	resize: both;
+	/*overflow: hidden;*/
+	/*resize: both;*/
 	float: left;
 }
 
