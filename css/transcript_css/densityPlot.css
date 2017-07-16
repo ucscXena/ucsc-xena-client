@@ -3,8 +3,8 @@
 	width: 125px;
 	display: flex;
 	flex-wrap: wrap;
-	overflow: hidden;
-	resize: both;
+	/*overflow: hidden;*/
+	/*resize: both;*/
 	float: left;
 }
 
@@ -21,6 +21,24 @@
 	top: 50%;
 	vertical-align: middle;
 	z-index: 2;
+}
+
+.densityPlot--row--studyA {
+	display: flex;
+	align-items: flex-end;
+	height: 50%;
+	width: 100%;
+}
+
+.densityPlot--row--studyB {
+	display: flex;
+	align-items: flex-end;
+	height: 50%;
+	width: 100%;
+	bottom: 50%;
+	-webkit-transform: rotateX(180deg);
+	-moz-transform: rotateX(180deg);
+	transform: rotateX(180deg);
 }
 
 .densityPlot--row--bin {
