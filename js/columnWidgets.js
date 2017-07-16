@@ -14,12 +14,10 @@ var widget = {
     specialDownload: multi(columnFieldTypeSelector),
 	column: multi(columnFieldTypeSelector),
 	legend: multi(columnFieldTypeSelector),
-	pdf: multi(fieldTypeSelector),
-	annotation: multi(() => 'gene')
+	pdf: multi(fieldTypeSelector)
 };
 
 widget.index.dflt = () => null;
 widget.avg.dflt = () => null;
-widget.annotation.dflt = () => null;
 
 module.exports = widget;

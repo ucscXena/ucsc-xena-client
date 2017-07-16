@@ -28,6 +28,8 @@ var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
 var util = require('../util');
 var {chromPositionFromScreen} = require('../exonLayout');
+var {ChromPosition} = require('../ChromPosition');
+var {RefGeneAnnotation} = require('../refGeneExons');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -51,6 +53,8 @@ function downloadJSON(downloadData) {
 	a.click();
 	document.body.removeChild(a);
 }
+var annotationHeight = 30,
+	scaleHeight = 12;
 
 var styles = {
 	badge: {
@@ -284,9 +288,54 @@ var Column = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		return {
+			specialDownloadMenu: specialDownloadMenu,
 			annotationHelpText: [annotationHelpText],
-			specialDownloadMenu: specialDownloadMenu
+			annotationLanes: null
 		};
+	},
+
+	computeAnnotationLanes (position, refGene) {
+		var fieldType = _.getIn(this.props, ['column', 'fieldType'], undefined),
+			newAnnotationLanes;
+
+		if (['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1 && position && refGene) {
+			var lanes = [],
+				[start, end] = position;
+
+			//only keep genes with in the current view
+			refGene = _.values(refGene).filter((val) => {
+				return ((val.txStart <= end) && (val.txEnd >= start));
+			});
+
+			//multip lane no-overlapping genes
+			refGene.forEach( val => {
+				var added = lanes.some(lane => {
+					if (lane.every( gene => !((val.txStart <= gene.txEnd) && (val.txEnd >= val.txStart)))) {
+						return lane.push(val);
+					}
+				});
+				if (!added) { // add a new lane
+					lanes.push([val]);
+				}
+			});
+			var perLaneHeight = _.min([annotationHeight / lanes.length, 12]),
+				laneOffset = (annotationHeight - perLaneHeight * lanes.length) / 2;
+
+			newAnnotationLanes = {
+				lanes: lanes,
+				perLaneHeight: perLaneHeight,
+				laneOffset: laneOffset,
+				annotationHeight: annotationHeight
+			};
+		} else {
+			newAnnotationLanes = {
+				lanes: undefined,
+				perLaneHeight: undefined,
+				laneOffset: undefined,
+				annotationHeight: annotationHeight
+			};
+		}
+		return newAnnotationLanes;
 	},
 	addAnnotationHelp(target) {
 		var tooltip = (
@@ -370,6 +419,48 @@ var Column = React.createClass({
 			[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
 		onXZoom(id, {start, end});
 	},
+	componentWillUpdate() {
+		var {column, data} = this.props,
+			newAnnotationLanes = this.computeAnnotationLanes (
+					_.getIn(column, ['layout', 'chrom', 0], undefined),
+					_.getIn(data, ['refGene'], {}));
+
+		if (this.state.annotationLanes !== newAnnotationLanes) {
+			this.setState({"annotationLanes": newAnnotationLanes});
+		}
+	},
+	onMouseMove: function(ev) {
+		if (!this.state.annotationLanes) {
+			return;
+		}
+		var {column} = this.props,
+			{x, y} = util.eventOffset(ev),
+			{perLaneHeight, laneOffset, lanes} = this.state.annotationLanes;
+		if (y > scaleHeight + annotationHeight) {
+			return;
+		}
+		else if (y >= scaleHeight + annotationHeight - laneOffset) {
+			this.setState({ annotationHelpText: [annotationHelpText]});
+		} else if (y < scaleHeight + laneOffset) {
+			this.setState({ annotationHelpText: [annotationHelpText]});
+		} else {
+			var layout = column.layout,
+				pos = Math.floor(chromPositionFromScreen(layout, x)),
+				matches = [],
+				laneIndex = Math.floor((y - scaleHeight - laneOffset) / perLaneHeight); //find which lane by y
+
+			lanes[laneIndex].forEach(val => {
+				if ((pos >= val.txStart) && (pos <= val.txEnd)) {
+					matches.push(val.name2);
+				}
+			});
+			if (matches.length > 0)	{
+				this.setState({ annotationHelpText: [matches.join(' ')]});
+			} else {
+				this.setState({ annotationHelpText: [annotationHelpText]});
+			}
+		}
+	},
 	onMenuToggle: function (open) {
 		var {xzoomable} = this.state,
 			{column: {xzoom, maxXZoom, valueType}, onXZoom, id} = this.props;
@@ -452,26 +543,12 @@ var Column = React.createClass({
 			labelWidth = ReactDOM.findDOMNode(this.refs.label).getBoundingClientRect().width;
 		return controlWidth + labelWidth;
 	},
-	onMouseMove: function(ev) {
-		var {x} = util.eventOffset(ev),
-			{data, column} = this.props,
-			layout = column.layout,
-			refGene = _.get(data, 'refGene', {}),
-			pos = Math.floor(chromPositionFromScreen(layout, x)),
-			matches = [];
-
-		_.mapObject(refGene,  (val, key) => {
-			if ((pos >= val.txStart) && (pos <= val.txEnd)) {
-				matches.push(key);
-			}
-		});
-		this.setState({ annotationHelpText: [matches.join(' '), annotationHelpText]});
-	},
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
-				supportsGeneAverage, onClick, tooltip} = this.props,
-			{specialDownloadMenu} = this.state,
+				supportsGeneAverage, onClick, tooltip} = this.props;
+
+		var {specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
@@ -489,15 +566,27 @@ var Column = React.createClass({
 					</span>
 				</OverlayTrigger>),
 			annotation = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
-				widgets.annotation({
-					fields: column.fields,
-					refGene: _.get(data, 'refGene', {}),
-					layout: column.layout,
-					width,
-					mode: parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+				<RefGeneAnnotation
+					fields = {column.fields}
+					annotationLanes = {this.computeAnnotationLanes(
+						_.getIn(column, ['layout', 'chrom', 0], undefined),
+						_.getIn(data, ['refGene'], {}))}
+					layout = {column.layout}
+					width= {width}
+					mode= {parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
 						"coordinate" :
-						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")
-				}) : null;
+						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
+				: null,
+			scale = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
+				<ChromPosition
+					layout = {column.layout}
+					width = {width}
+					scaleHeight ={scaleHeight}
+					mode = {parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+						"coordinate" :
+						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
+				: null;
+
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
 		// tooltips) for children. We must use a different tag, e.g. 'label'.
 		// Button and Dropdown.Toggle will allow overriding the tag.  However
@@ -537,16 +626,17 @@ var Column = React.createClass({
 					onChange={this.onFieldLabel}
 					value={{default: fieldLabel, user: user.fieldLabel}} />
 				<Crosshair>
-					<div style={{height: 32}}>
+					<div style={{height: annotationHeight + scaleHeight}}>
 						{this.addAnnotationHelp (
 							<DragSelect
 								enabled={true}
 								onClick={this.onXZoomOut}
 								onSelect={this.onXDragZoom}
 								onMouseMove={this.onMouseMove}>
+								{scale}
 								{annotation}
 							</DragSelect>
-							)}
+						)}
 					</div>
 				</Crosshair>
 
@@ -555,7 +645,6 @@ var Column = React.createClass({
 					width={width}
 					minWidth={this.getControlWidth}
 					height={zoom.height}>
-
 					<SpreadSheetHighlight
 						animate={searching}
 						width={width}
