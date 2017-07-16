@@ -2,7 +2,7 @@
 
 var _ = require('./underscore_ext');
 var {contrastColor, lightgreyHEX} = require('./color_helper');
-
+var {impact} = require('./models/mutationVector');
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
 
@@ -61,6 +61,7 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 
 	// --------- small variants drawing start here ---------
 	var varByImp = _.groupByConsec(smallVariants, v => v.color);
+	varByImp = _.sortBy(varByImp, list => impact[list[0].data.effect]); // draw variants from low to high impact
 
 	varByImp.forEach(vars => {
 		var points = vars.map(v => {
@@ -71,13 +72,6 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 
 		vg.drawPoly(points,
 			{strokeStyle: vars[0].color, lineWidth: vHeight});
-
-		/*// no feet variants black center
-		if (vHeight > 4) { // centers when there is enough vertical room for each sample
-			points = vars.map(v => [v.xStart, yPx(v.y), v.xEnd, yPx(v.y)]);
-			vg.drawPoly(points,
-				{strokeStyle: 'black', lineWidth: vHeight});
-		}*/
 
 		// small variants label
 		if (height / count > labelFont) {
@@ -129,7 +123,7 @@ function drawSVNodes(vg, width, zoom, svVariants) {
 
 	varByIdMap.forEach(variant => {
 		var {xStart, xEnd, y, h} = variant,
-			endMark = xEnd <= width ? [[xEnd, y, xEnd + 1, y]] : [],
+			endMark = xEnd < width - 1 ? [[xEnd, y, xEnd + 1, y]] : [],
 			startMark = xStart > 0 ? [[xStart, y, xStart + 1, y]] : [],
 			points = [...startMark, ...endMark];
 

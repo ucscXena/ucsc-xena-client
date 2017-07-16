@@ -6,7 +6,7 @@ var Rx = require('./rx');
 var _ = require('./underscore_ext');
 var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
 // Load all query files as a map of strings.
-var qs = require('val!./loadXenaQueries');
+var qs = require('./loadXenaQueries');
 
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
 
@@ -16,8 +16,8 @@ var maxPermute = 7; // max number of chars to permute for case-insensitive match
 var refGene = {
 	hg18: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
 	GRCh36: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
-	hg19: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
-	GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
+	hg19: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19_V24lift37'},
+	GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19_V24lift37'},
 	hg38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
 	GRCh38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
 	mm9: {host: 'https://reference.xenahubs.net', name: 'gencode_good_mm10'}, // XXX wrong, but good enough
@@ -28,10 +28,10 @@ var refGene = {
 var transcript = {
 	hg18: {host: 'https://reference.xenahubs.net', name: 'refGene_hg18'},
 	GRCh36: {host: 'https://reference.xenahubs.net', name: 'refGene_hg18'},
-	hg19: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg19'},
-	GRCh37: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg19'},
-	hg38: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg38'},
-	GRCh38: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg38'}
+	hg19: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasicV24lift37'},
+	GRCh37: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasicV24lift37'},
+	hg38: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasicV24'},
+	GRCh38: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasicV24'}
 };
 
 ///////////////////////////////////////////////////////

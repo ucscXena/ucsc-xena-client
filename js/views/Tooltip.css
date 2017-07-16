@@ -13,8 +13,8 @@
 	background-color: white;
 	box-shadow: 2px 5px 10px rgba(0,0,0,.5);
 }
-.Tooltip table {
-	font-size: 1.2em;
+.Tooltip .tupleLabel {
+	padding: 2px;
 }
 .Tooltip .tupleValue {
 	padding: 2px;
@@ -23,15 +23,11 @@
 .Tooltip .urlValue {
 	padding: 2px;
 }
-.TooltipClose {
-	float: right;
-}
 .Tooltip .sampleID {
 	font-style: italic;
 }
 .Tooltip .tooltipPrompt {
 	float:right;
-	padding-left: 4px;
 }
 .Tooltip a {
 	text-decoration: underline;

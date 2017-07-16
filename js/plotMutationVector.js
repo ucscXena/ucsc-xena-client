@@ -148,11 +148,11 @@ var defaultSNVSVGBsetting = (assembly) => {
 	}
 };
 
-function sampleTooltip(sampleFormat, dataList, assembly) {
+function sampleTooltip(sampleFormat, dataList, assembly, fields) {
 	var perRowTip = data => {
 		var dnaVaf = data.dnaVaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dnaVaf)],
 			rnaVaf = data.rnaVaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rnaVaf)],
-			ref = data.reference && ['value', `${data.reference} to `],
+			ref = data.reference && ['label', `${data.reference} to`],
 
 			//alt
 			altDirection = data.alt && mv.joinedVariantDirection(data.alt),
@@ -174,7 +174,7 @@ function sampleTooltip(sampleFormat, dataList, assembly) {
 			//alt link
 			alt = data.alt && (mv.structuralVariantClass(data.alt) ?
 								['url', `${data.alt}`, gbMultiColorURL(assembly, altDisplayRegion, [[altPos, '#AA0000' ], [altRegion, '#aec7e8']], defaultSNVSVGBsetting(assembly))] :
-								['value', `${data.alt}`]),
+								['label', `${data.alt}`]),
 
 			//variant link
 			posDisplay = data && (data.start === data.end) ? posStartString(data) : posDoubleString (data),
@@ -195,9 +195,14 @@ function sampleTooltip(sampleFormat, dataList, assembly) {
 			]);
 	};
 
-	var rows =  _.reduce(_.map(dataList.slice(0, 3), perRowTip), function(a, b) { return b.concat(a); }, []);
+	//sort dataList by fields[0], put variants annoated with fields[0] in dataset in front
+	dataList = _.sortBy(dataList, obj => obj.gene === fields[0]).reverse();
+
+	var rows =  _.reduce(_.map(dataList.slice(0, 3), perRowTip), function(a, b) {return a.concat(b);}, []);
+
 	if (dataList.length > 3) {
-		rows.push([["value", dataList.length - 3 + " more ..."]]);
+		var allRows = rows.concat(_.reduce(_.map(dataList.slice(3), perRowTip), function(a, b) { return b.concat(a); }, []));
+		rows.push([["popOver", dataList.length - 3 + " more ...", allRows]]);
 	}
 	return {
 		rows: rows,
@@ -220,7 +225,7 @@ function posTooltip(layout, samples, sampleFormat, pixPerRow, index, assembly, x
 			gbURL(assembly, posRegionString(coordinate), posDoubleString(coordinate))]]]};
 }
 
-function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, assembly, ev) {
+function tooltip(fieldType, fields, layout, nodes, samples, sampleFormat, zoom, assembly, ev) {
 	var {x, y} = util.eventOffset(ev),
 		{height, count, index} = zoom,
 		pixPerRow = height / count,
@@ -230,7 +235,7 @@ function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, assembly
 		closestNodes = closestNode[fieldType](nodes, zoom, x, y);
 
 	return closestNodes.length > 0 ?
-		sampleTooltip(sampleFormat, _.map(closestNodes, n => n.data), assembly) :
+		sampleTooltip(sampleFormat, _.map(closestNodes, n => n.data), assembly, fields) :
 		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
 }
 
@@ -256,8 +261,8 @@ var MutationColumn = hotOrNot(React.createClass({
 		this.ttevents.unsubscribe();
 	},
 	tooltip: function (ev) {
-		var {column: {fieldType, layout, nodes, assembly}, samples, sampleFormat, zoom} = this.props;
-		return tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, assembly, ev);
+		var {column: {fieldType, fields, layout, nodes, assembly}, samples, sampleFormat, zoom} = this.props;
+		return tooltip(fieldType, fields, layout, nodes, samples, sampleFormat, zoom, assembly, ev);
 	},
 	render: function () {
 		var {column, samples, zoom, index, draw} = this.props;
