@@ -1,13 +1,11 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var widgets = require('./columnWidgets');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var intervalTree = require('static-interval-tree');
 var vgcanvas = require('./vgcanvas');
 var layoutPlot = require('./layoutPlot');
-var {drawChromScale} = require('./ChromPosition');
 var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
 
@@ -42,20 +40,65 @@ function findIntervals(gene) {
 
 var shade1 = '#cccccc',
 	shade2 = '#999999',
-	refHeight = 12,
-	annotation = {
+	shade3 = '#000080';
+
+function getAnnotation (index, perLaneHeight, offset) {
+	return {
 		utr: {
-			y: refHeight / 4,
-			h: refHeight / 2
+			y: offset + perLaneHeight * (index + 0.25),
+			h: perLaneHeight / 2
 		},
 		cds: {
-			y: 0,
-			h: refHeight
+			y: offset + perLaneHeight * index,
+			h: perLaneHeight
 		}
 	};
+}
+
+function drawIntroArrows (ctx, xStart, xEnd, endY, segments, strand) {
+	if (xEnd - xStart < 10) {
+		return;
+	}
+	var arrowSize = 2, //arrowSize
+		gapSize = 4;
+
+	for (var i = xStart; i < xEnd; i = i + 10) {
+		var found = segments.filter(seg => (Math.abs(seg[0] - i) < gapSize ||
+				Math.abs(seg[0] - i - arrowSize) < gapSize ||
+				Math.abs(seg[1] - i) < gapSize ||
+				Math.abs(seg[1] - i - arrowSize) < gapSize));
+
+		if (_.isEmpty(found)) {
+			if (strand === '+') {
+				ctx.beginPath();
+				ctx.moveTo(i, endY - arrowSize);
+				ctx.lineTo(i + arrowSize, endY );
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(i, endY + arrowSize);
+				ctx.lineTo(i + arrowSize, endY );
+				ctx.stroke();
+			} else { // "-" strand
+				ctx.beginPath();
+				ctx.moveTo(i + arrowSize, endY - arrowSize);
+				ctx.lineTo(i, endY );
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(i + arrowSize, endY + arrowSize);
+				ctx.lineTo(i, endY);
+				ctx.stroke();
+			}
+		}
+	}
+}
 
 var RefGeneAnnotation = React.createClass({
-	draw: function (width, layout, mode, refGene) {
+	draw: function (width, layout, mode, annotationLanes) {
+		var {lanes, perLaneHeight, laneOffset, annotationHeight} = annotationLanes;
+
+		// white background
+		this.vg.box(0, 0, width, annotationHeight, 'white');
+
 		if (!width || !layout) {
 			return;
 		}
@@ -66,66 +109,78 @@ var RefGeneAnnotation = React.createClass({
 			vg.width(width);
 		}
 
-		this.vg.box(0, 0, width, refHeight * 2, 'white'); // white background
-		var [start, end] = layout.chrom[0],
-			allSegments = [],
-			matchGenes = [];
+		if ( _.isEmpty(layout.chrom) || _.isEmpty(lanes)) {
+			return;
+		}
 
-		_.values(refGene).map( (val, key) => {
-			if ((val.txStart <= end) && (val.txEnd >= start)) {
+		//drawing start here, one lane at a time
+		lanes.forEach((lane, k) => {
+			var annotation = getAnnotation(k, perLaneHeight, laneOffset);
+
+			lane.forEach( val => {
 				var intervals = findIntervals(val),
 					indx = index(intervals),
 					segments = [];
 
-				matchGenes.push(key);
 				//find segments for one gene
 				pxTransformEach(layout, (toPx, [start, end]) => {
 					var nodes = matches(indx, {start: start, end: end});
-					_.each(nodes.sort((a, b)=> (b.start - a.start)), ({i, start, end, inCds}) => {
+					nodes = nodes.sort((a, b)=> (a.start - b.start));
+					_.each(nodes, ({i, start, end, inCds}) => {
 						var {y, h} = annotation[inCds ? 'cds' : 'utr'];
 						var [pstart, pend] = toPx([start, end]);
-						var	shade = (mode === "geneExon" && i % 2 === 1) ? shade1 : shade2;
+						var	shade = (mode === "geneExon") ? ((i % 2 === 1) ? shade1 : shade2)
+							: ((mode === "coordinate") ? shade3 : shade2);
 						segments.push([pstart, pend, shade, y, h]);
 					});
+
+					// draw a line across the gene
+					ctx.fillStyle = shade2;
+					var lineY = laneOffset + perLaneHeight * (k + 0.5);
+					if (nodes.length === 0) {
+						ctx.fillRect(0, lineY, width, 1);
+						if (mode === 'coordinate') {
+							drawIntroArrows (ctx, 0, width, lineY, segments, val.strand);
+						}
+					} else {
+						var [pGeneStart, pGeneEnd] = toPx([nodes[0].start, nodes[nodes.length - 1].end]);
+						if (nodes.length !== intervals.length) {
+							if (nodes[0].start === intervals[0].start) {
+								pGeneEnd = width;
+							} else if (nodes[nodes.length - 1].start === intervals[intervals.length - 1].start) {
+								pGeneStart = 0;
+							}
+							else {
+								pGeneStart = 0;
+								pGeneEnd = width;
+							}
+						}
+						ctx.fillRect(pGeneStart, lineY, pGeneEnd - pGeneStart, 1);
+						if (mode === 'coordinate') {
+							drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, val.strand);
+						}
+					}
+					// draw each segments
+					_.each(segments, s => {
+						var [pstart, pend, shade, y, h] = s;
+						ctx.fillStyle = shade;
+						ctx.fillRect(pstart, y, (pend - pstart) || 1, h);
+					});
 				});
-
-				// draw a line across the gene
-				var pGeneStart = _.min(segments.map(s => s[0])),
-					pGeneEnd = _.max(segments.map(s => s[1]));
-				ctx.fillStyle = shade2;
-				ctx.fillRect(pGeneStart, refHeight * 1.5, pGeneEnd - pGeneStart, 1);
-
-				allSegments = allSegments.concat(segments);
-			}
+			});
 		});
-
-		// draw each segments
-		_.each(allSegments, s => {
-			var [pstart, pend, shade, y, h] = s;
-			ctx.fillStyle = shade;
-			ctx.fillRect(pstart, y + refHeight, (pend - pstart) || 1, h);
-		});
-
-		// draw a line across column if in an intron only region
-		if (_.isEmpty(allSegments) && !_.isEmpty(matchGenes)) {
-			 ctx.fillStyle = shade2;
-			ctx.fillRect(0, refHeight * 1.5, width, 1);
-		}
-		// draw scale, and 5' 3'
-		drawChromScale(vg, width, layout, mode);
 	},
 
 	componentDidMount: function () {
-		var {width, layout, refGene, mode} = this.props;
-		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, refHeight * 2);
-		this.draw(width, layout, mode, refGene);
+		var {width, layout, annotationLanes, mode} = this.props;
+		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, annotationLanes.annotationHeight);
+		this.draw(width, layout, mode, annotationLanes);
 	},
 
 	render: function () {
-		var {width, layout, refGene, mode} = this.props;
-
+		var {width, layout, annotationLanes, mode} = this.props;
 		if (this.vg) {
-			this.draw(width, layout, mode, refGene);
+			this.draw(width, layout, mode, annotationLanes);
 		}
 
 		return (
@@ -141,7 +196,7 @@ var RefGeneAnnotation = React.createClass({
 	}
 });
 
-widgets.annotation.add('gene', props => <RefGeneAnnotation {...props}/>);
+//widgets.annotation.add('gene', props => <RefGeneAnnotation {...props}/>);
 
 module.exports = {
 	findIntervals: findIntervals,
