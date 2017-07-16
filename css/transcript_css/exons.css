@@ -20,7 +20,7 @@
 	top: 50%;
 }
 
-.exons--row--item {
+.exons--row--item-small {
 	z-index: 1;
 	position: absolute;
 	/*background-color: #015760;*/
@@ -28,9 +28,30 @@
 	border: 1px solid black;
 	text-align: center;
 	font-size: 0.70em;
+	height: 20%;
+	top: 40%;
 }
 
-.exons--row--item span {
+.exons--row--item-big {
+	z-index: 1;
 	position: absolute;
-	transform: translate(-50%, 0)
+	/*background-color: #015760;*/
+	background-color: #004466;
+	border: 1px solid black;
+	text-align: center;
+	font-size: 0.70em;
+	height: 35%;
+	top: 32.5%;
+}
+
+.exons--row--item-small span {
+	position: absolute;
+	transform: translate(-50%, 0);
+	bottom: 20px;
+}
+
+.exons--row--item-big span {
+	position: absolute;
+	transform: translate(-50%, 0);
+	bottom: 25px;
 }

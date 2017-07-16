@@ -2,7 +2,7 @@
 var React = require('react');
 var _ = require('../underscore_ext');
 var {allExons, exonGroups, intronRegions} = require('../findIntrons');
-var {smallBox, bigBox} = require('./Exons');
+var {box, renderExon} = require('./Exons');
 import '../../css/transcript_css/exons.css';
 
 const width = 700;
@@ -56,7 +56,7 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
   let startsAt = exonStarts - origin;
 	if(cdsStart > exonEnds)
 	{
-		return smallBox( startsAt, (exonWidth ), multiplyingFactor, strand, pad, label);
+		return [box( 'small', startsAt, (exonWidth ), multiplyingFactor, strand, pad, label)];
 	}
 	else if(exonStarts < cdsStart && cdsStart < exonEnds)
 	{
@@ -66,13 +66,13 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
     // labeling is done on the longest of the two boxes.
     if(exonWidth1 < (exonWidth2 ))
 		{
-      return [smallBox( startsAt, exonWidth1, multiplyingFactor, strand, pad),
-    bigBox( (cdsStart - origin), (exonWidth2 ), multiplyingFactor, strand, pad, label)];
+      return [box( 'small', startsAt, exonWidth1, multiplyingFactor, strand, pad),
+    box( 'big', (cdsStart - origin), (exonWidth2 ), multiplyingFactor, strand, pad, label)];
     }
     else
     {
-      return [smallBox( startsAt, exonWidth1, multiplyingFactor, strand, pad, label),
-    bigBox( (cdsStart - origin), (exonWidth2 ), multiplyingFactor, strand, pad)];
+      return [box( 'small', startsAt, exonWidth1, multiplyingFactor, strand, pad, label),
+    box( 'big', (cdsStart - origin), (exonWidth2 ), multiplyingFactor, strand, pad)];
     }
 	}
 	else if(exonStarts < cdsEnd && cdsEnd < exonEnds)
@@ -83,22 +83,22 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
     // labeling is done on the longest of the two boxes.
     if(exonWidth1 > (exonWidth2 ))
     {
-		return [bigBox( startsAt, exonWidth1, multiplyingFactor, strand, pad, label),
-    smallBox( (cdsEnd - origin), (exonWidth2 ), multiplyingFactor, strand, pad)];
+		return [box( 'big', startsAt, exonWidth1, multiplyingFactor, strand, pad, label),
+    box( 'small', (cdsEnd - origin), (exonWidth2 ), multiplyingFactor, strand, pad)];
     }
     else
     {
-		return [bigBox( startsAt, exonWidth1, multiplyingFactor, strand, pad),
-    smallBox( (cdsEnd - origin), (exonWidth2 ), multiplyingFactor, strand, pad, label)];
+		return [box( 'big', startsAt, exonWidth1, multiplyingFactor, strand, pad),
+    box( 'small', (cdsEnd - origin), (exonWidth2 ), multiplyingFactor, strand, pad, label)];
     }
 	}
 	else if(cdsEnd < exonStarts)
 	{
-		return smallBox( startsAt, (exonWidth ), multiplyingFactor, strand, pad, label);
+		return [box( 'small', startsAt, (exonWidth ), multiplyingFactor, strand, pad, label)];
 	}
 	else
 	{
-		return bigBox( startsAt, (exonWidth ), multiplyingFactor, strand, pad, label);
+		return [box( 'big', startsAt, (exonWidth ), multiplyingFactor, strand, pad, label)];
 	}
 }
 
@@ -117,7 +117,7 @@ var ExonsOnly = React.createClass({
 							 style={style}/>
 					{
 						_.flatten(_.mmap(d.exonStarts, d.exonEnds, d.labels, d.padding, (exonStarts, exonEnds, label, pad) => {
-              return exonShape(data, exonStarts, exonEnds, d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand, label, origin, pad);
+              return _.map(exonShape(data, exonStarts, exonEnds, d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand, label, origin, pad), renderExon);
 						}))
 					}
 					</div>
