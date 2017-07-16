@@ -88,6 +88,11 @@ var Transcripts = React.createClass({
 					/>
 					<DensityPlot
 						data={transcriptDensityData}
+						type="density"
+						/>
+					<DensityPlot
+						data={transcriptDensityData}
+						type="histogram"
 						/>
 				</div>
 			</div>);
