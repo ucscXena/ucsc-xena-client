@@ -104,7 +104,18 @@ function matchSimplified(cohortMeta, input) {
 		normInput = toLCWords(input),
 		normTags = tags.map(toLCWords),
 		weights = normTags.map(t => scoreTag2(t, normInput));
-	return scoreFn(cohortMeta, tags, weights);
+
+	//return scoreFn(cohortMeta, tags, weights);
+
+	// cohort's matching weight is linearly normalized (multiplication) by the number of normalized input found divided by the length of the inputs
+	var ma = scoreFn(cohortMeta, tags, weights);
+	ma.map(maObj=>{
+		var matchedPerCohort = _.flatten(maObj.groups.map(g => g.matches));
+		var foundLength = normInput.filter(i => matchedPerCohort.indexOf(i) !== -1).length;
+		maObj.weight = maObj.weight * foundLength / normInput.length;
+	});
+	ma = _.sortBy(ma, maObj => maObj.weight).reverse();
+	return ma;
 }
 
 // match by logical AND, instead of a scoring system
@@ -217,7 +228,7 @@ var DiseaseSuggest = React.createClass({
 								checked={c === cohort}
 								onChange={this.onCohort}/>
 							<label>{c}</label>
-							<span style={{display: DEBUG ? 'inline' : 'none', padding: 1, position: 'relative', top: '-.4em', borderRadius: 5, backgroundColor: '#EE8888', fontSize: '70%'}}>{weight.toPrecision(2)}</span>
+							<span style={{display: /*DEBUG ?*/ 'inline' /*: 'none'*/, padding: 1, position: 'relative', top: '-.4em', borderRadius: 5, backgroundColor: '#EE8888', fontSize: '70%'}}>{weight.toPrecision(2)}</span>
 							{groups.map(({tag, weight}) => <span style={{display: DEBUG ? 'inline' : 'none', marginLeft: 3, padding: 1, borderRadius: 5, backgroundColor: '#AAAAAA', fontSize: '90%'}}>{tag.join(' ')} <span style={{fontSize: '80%', backgroundColor: '#CCCC00'}}>{weight.toPrecision(2)}</span></span>)}
 						</div>))}
 				</ul>
