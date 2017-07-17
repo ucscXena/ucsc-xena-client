@@ -1,0 +1,43 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying global overrides to all RadioGroup and RadioButton components.
+ *
+ * Uses theme key RTRadio and theme end points to override specific classes. See
+ * http://react-toolbox.com/#/components/radio_group for details.
+ */
+
+/* Wrapper class around radio button and corresponding label */
+label.field {
+	margin: 16px 0 0 0;
+}
+
+label.field:first-child {
+	margin-top: 8px;
+}
+
+/* Mock radio button circle */
+div.radio {
+	border: 2px solid rgba(0, 0, 0, 0.38);
+}
+
+div.radio::before {
+	background-color: var(--color-accent); /* Force accent color on blur of radio */
+}
+
+div.radioChecked {
+	border: 2px solid var(--color-accent);
+}
+
+div.radioChecked::before {
+	background-color: var(--color-accent);
+}
+
+/* Radio button label */
+span.text {
+	color: rgba(0, 0, 0, 0.87);
+	font-size: 16px;
+	font-weight: 400;
+	padding-left: 16px;
+}

@@ -12,4 +12,5 @@
 
 module.exports = {
     // RTAppBar: require('./navTheme.module.css')
+	RTRadio: require('./views/XRadioGroupTheme.module.css')
 };

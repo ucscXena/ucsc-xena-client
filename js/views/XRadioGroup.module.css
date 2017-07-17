@@ -1,0 +1,33 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling standard Xena radio group. Rules may also include overrides to are outside of the React Toolbox theming end
+ * points for RadioGroup and RadioButton components.
+ *
+ * Global overrides of RadioGroup and RadioButton components are defined in XRadioGroupTheme.module.css.
+ */
+
+.XRadioGroup {
+	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+	padding: 12px 16px 24px 24px;
+}
+
+/* Additional action, eg "Show Detail" or "Hide Detail" */
+.additionalAction {
+	composes: mdCaption from '../../css/typography.module.css';
+}
+
+/* Field name */
+.label {
+	composes: mdCaption hint from '../../css/typography.module.css';
+}
+
+/* Container for field name and additional action */
+.toolbar {
+	color: var(--color-accent);
+	display: flex;
+	justify-content: space-between;
+}
+
+
