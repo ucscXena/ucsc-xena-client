@@ -18,12 +18,13 @@ module.exports = function (text, assembly) {
 			cm = _.getIn(centromere, [assembly, chrom]),
 			maxEnd = _.getIn(chromInfo, [assembly, chrom], 250 * M),
 			baseStart, baseEnd;
-
 		if (pos[3] !== undefined) {
-			baseStart = clip(baseEnd, toInt(pos[4].replace(/,/g, '')));
-			baseEnd = baseStart;
 			if (pos[6] !== undefined) {
 				baseEnd = clip(maxEnd, toInt(pos[6].replace(/,/g, '')));
+				baseStart = clip(baseEnd, toInt(pos[4].replace(/,/g, '')));
+			} else {
+				baseStart = clip(maxEnd, toInt(pos[4].replace(/,/g, '')));
+				baseEnd = baseStart;
 			}
 		} else if (cm && pos[2] === 'p') {
 			baseStart = 1;
