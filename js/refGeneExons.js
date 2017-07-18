@@ -199,7 +199,6 @@ var RefGeneAnnotation = React.createClass({
 			{x, y} = util.eventOffset(ev),
 			{annotationHeight, perLaneHeight, laneOffset, lanes} = annotationLanes;
 
-
 		if (y > laneOffset && y < annotationHeight - laneOffset) {
 			var pos = Math.floor(chromPositionFromScreen(layout, x)),
 				matches = [],
@@ -213,19 +212,20 @@ var RefGeneAnnotation = React.createClass({
 			if (matches.length > 0)	{
 				var rows = [];
 				matches.forEach(match => {
-					var contextPadding = Math.floor((match.txEnd - match.txStart) / 4),
-						pos = `${match.chrom}:${util.addCommas(match.txStart - contextPadding)}-${util.addCommas(match.txEnd + contextPadding)}`,
-						highlightPos = `${match.chrom}:${util.addCommas(match.txStart)}-${util.addCommas(match.txEnd)}`;
+					var contextPadding = Math.floor((layout.chrom[0][1] - layout.chrom[0][0]) / 4),
+						posGene = `${match.chrom}:${util.addCommas(match.txStart)}-${util.addCommas(match.txEnd)}`,
+						posLayout = `${match.chrom}:${util.addCommas(layout.chrom[0][0])}-${util.addCommas(layout.chrom[0][1])}`,
+						posLayoutPadding = `${match.chrom}:${util.addCommas(layout.chrom[0][0] - contextPadding)}-${util.addCommas(layout.chrom[0][1] + contextPadding)}`;
 
 					var assemblyString = encodeURIComponent(assembly),
-						positionString = encodeURIComponent(pos),
-						highlightString = encodeURIComponent(highlightPos),
-						GBurl = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${highlightString}&position=${positionString}`;
-						//hubString = GBoptions && GBoptions.assembly === assembly && GBoptions.hubUrl ? "&hubUrl=" + encodeURIComponent(GBoptions.hubUrl) : '',
-						//trackString = GBoptions && GBoptions.fullTracks ? '&hideTracks=1' + GBoptions.fullTracks.map(track => `&${track}=full`).join('') : '',
+						positionGeneString = encodeURIComponent(posGene),
+						posLayoutString = encodeURIComponent(posLayout),
+						posLayoutPaddingString = encodeURIComponent(posLayoutPadding),
+						GBurlGene = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&position=${positionGeneString}&enableHighlightingDialog=0`,
+						GBurlZoom = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${posLayoutString}&position=${posLayoutPaddingString}`;
 
-					rows.push([['value', `Gene: ${match.name2}`]]);
-					rows.push([['url', `${assembly} ${highlightPos}`, GBurl]]);
+					rows.push([['value', 'Gene '], ['url', `${match.name2}`, GBurlGene]]);
+					rows.push([['value', 'Column'], ['url', `${assembly} ${posLayout}`, GBurlZoom]]);
 				});
 
 				return {
