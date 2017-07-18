@@ -3,11 +3,15 @@
 var _ = require('./underscore_ext');
 var React = require('react');
 var ReactDOM = require('react-dom');
+var Rx = require('./rx');
 var intervalTree = require('static-interval-tree');
 var vgcanvas = require('./vgcanvas');
 var layoutPlot = require('./layoutPlot');
 var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
+var {rxEventsMixin} = require('./react-utils');
+var util = require('./util');
+var {chromPositionFromScreen} = require('./exonLayout');
 
 // annotate an interval with cds status
 var inCds = ({cdsStart, cdsEnd}, intvl) =>
@@ -93,6 +97,8 @@ function drawIntroArrows (ctx, xStart, xEnd, endY, segments, strand) {
 }
 
 var RefGeneAnnotation = React.createClass({
+	mixins: [rxEventsMixin],
+
 	draw: function (width, layout, mode, annotationLanes) {
 		var {lanes, perLaneHeight, laneOffset, annotationHeight} = annotationLanes;
 
@@ -170,7 +176,64 @@ var RefGeneAnnotation = React.createClass({
 			});
 		});
 	},
+	componentWillMount: function () {
+		this.events('mouseout', 'mousemove', 'mouseover');
+		// Compute tooltip events from mouse events.
+		this.ttevents = this.ev.mouseover
+			.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
+			.flatMap(() => {
+				return this.ev.mousemove
+					.takeUntil(this.ev.mouseout)
+					.map(ev => ({
+						data: this.tooltip(ev),
+						open: true
+					})) // look up current data
+					.concat(Rx.Observable.of({open: false}));
+			}).subscribe(this.props.tooltip);
+	},
+	componentWillUnmount: function () {
+		this.ttevents.unsubscribe();
+	},
+	tooltip: function (ev) {
+		var {layout, annotationLanes, column} = this.props,
+			{x, y} = util.eventOffset(ev),
+			{annotationHeight, perLaneHeight, laneOffset, lanes} = annotationLanes;
 
+
+		if (y > laneOffset && y < annotationHeight - laneOffset) {
+			var pos = Math.floor(chromPositionFromScreen(layout, x)),
+				matches = [],
+				laneIndex = Math.floor((y - laneOffset) / perLaneHeight), //find which lane by y
+				{assembly} = column;
+			lanes[laneIndex].forEach(val => {
+				if ((pos >= val.txStart) && (pos <= val.txEnd)) {
+					matches.push(val);
+				}
+			});
+			if (matches.length > 0)	{
+				var rows = [];
+				matches.forEach(match => {
+					var contextPadding = Math.floor((match.txEnd - match.txStart) / 4),
+						pos = `${match.chrom}:${util.addCommas(match.txStart - contextPadding)}-${util.addCommas(match.txEnd + contextPadding)}`,
+						highlightPos = `${match.chrom}:${util.addCommas(match.txStart)}-${util.addCommas(match.txEnd)}`;
+
+					var assemblyString = encodeURIComponent(assembly),
+						positionString = encodeURIComponent(pos),
+						highlightString = encodeURIComponent(highlightPos),
+						GBurl = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${highlightString}&position=${positionString}`;
+						//hubString = GBoptions && GBoptions.assembly === assembly && GBoptions.hubUrl ? "&hubUrl=" + encodeURIComponent(GBoptions.hubUrl) : '',
+						//trackString = GBoptions && GBoptions.fullTracks ? '&hideTracks=1' + GBoptions.fullTracks.map(track => `&${track}=full`).join('') : '',
+
+					rows.push([['value', `Gene: ${match.name2}`]]);
+					rows.push([['url', highlightPos, GBurl]]);
+				});
+
+				return {
+					rows: rows
+				};
+			}
+		}
+	},
 	componentDidMount: function () {
 		var {width, layout, annotationLanes, mode} = this.props;
 		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, annotationLanes.annotationHeight);
@@ -186,9 +249,9 @@ var RefGeneAnnotation = React.createClass({
 		return (
 			<canvas
 				className='Tooltip-target'
-				onMouseMove={this.props.onMouseMove}
-				onMouseOut={this.props.onMouseOut}
-				onMouseOver={this.props.onMouseOver}
+				onMouseMove={this.on.mousemove}
+				onMouseOut={this.on.mouseout}
+				onMouseOver={this.on.mouseover}
 				onClick={this.props.onClick}
 				onDblClick={this.props.onDblClick}
 				ref='canvas' />

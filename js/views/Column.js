@@ -26,8 +26,6 @@ var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
-var util = require('../util');
-var {chromPositionFromScreen} = require('../exonLayout');
 var {ChromPosition} = require('../ChromPosition');
 var {RefGeneAnnotation} = require('../refGeneExons');
 
@@ -289,7 +287,6 @@ var Column = React.createClass({
 	getInitialState() {
 		return {
 			specialDownloadMenu: specialDownloadMenu,
-			annotationHelpText: [annotationHelpText],
 			annotationLanes: null
 		};
 	},
@@ -340,7 +337,7 @@ var Column = React.createClass({
 	addAnnotationHelp(target) {
 		var tooltip = (
 			<Tooltip>
-				{this.state.annotationHelpText.map(text => (<div>{text}</div>))}
+				{annotationHelpText}
 			</Tooltip>
 		);
 		return (
@@ -427,38 +424,6 @@ var Column = React.createClass({
 
 		if (this.state.annotationLanes !== newAnnotationLanes) {
 			this.setState({"annotationLanes": newAnnotationLanes});
-		}
-	},
-	onMouseMove: function(ev) {
-		if (!this.state.annotationLanes) {
-			return;
-		}
-		var {column} = this.props,
-			{x, y} = util.eventOffset(ev),
-			{perLaneHeight, laneOffset, lanes} = this.state.annotationLanes;
-		if (y > scaleHeight + annotationHeight) {
-			return;
-		}
-		else if (y >= scaleHeight + annotationHeight - laneOffset) {
-			this.setState({ annotationHelpText: [annotationHelpText]});
-		} else if (y < scaleHeight + laneOffset) {
-			this.setState({ annotationHelpText: [annotationHelpText]});
-		} else {
-			var layout = column.layout,
-				pos = Math.floor(chromPositionFromScreen(layout, x)),
-				matches = [],
-				laneIndex = Math.floor((y - scaleHeight - laneOffset) / perLaneHeight); //find which lane by y
-
-			lanes[laneIndex].forEach(val => {
-				if ((pos >= val.txStart) && (pos <= val.txEnd)) {
-					matches.push(val.name2);
-				}
-			});
-			if (matches.length > 0)	{
-				this.setState({ annotationHelpText: [matches.join(' ')]});
-			} else {
-				this.setState({ annotationHelpText: [annotationHelpText]});
-			}
 		}
 	},
 	onMenuToggle: function (open) {
@@ -567,10 +532,11 @@ var Column = React.createClass({
 				</OverlayTrigger>),
 			annotation = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
 				<RefGeneAnnotation
-					fields = {column.fields}
+					column = {column}
 					annotationLanes = {this.computeAnnotationLanes(
 						_.getIn(column, ['layout', 'chrom', 0], undefined),
 						_.getIn(data, ['refGene'], {}))}
+					tooltip = {tooltip}
 					layout = {column.layout}
 					width= {width}
 					mode= {parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
@@ -625,14 +591,13 @@ var Column = React.createClass({
 				<DefaultTextInput
 					onChange={this.onFieldLabel}
 					value={{default: fieldLabel, user: user.fieldLabel}} />
-				<Crosshair>
-					<div style={{height: annotationHeight + scaleHeight}}>
+				<Crosshair frozen={this.props.frozen}>
+					<div style={{height: annotationHeight + scaleHeight + 5}}>
 						{this.addAnnotationHelp (
 							<DragSelect
 								enabled={true}
 								onClick={this.onXZoomOut}
-								onSelect={this.onXDragZoom}
-								onMouseMove={this.onMouseMove}>
+								onSelect={this.onXDragZoom}>
 								{scale}
 								{annotation}
 							</DragSelect>
