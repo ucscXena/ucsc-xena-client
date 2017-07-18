@@ -11,6 +11,6 @@
 'use strict';
 
 module.exports = {
-    // RTAppBar: require('./navTheme.module.css')
+	RTCheckbox: require('./views/XCheckboxGroupTheme.module.css'),
 	RTRadio: require('./views/XRadioGroupTheme.module.css')
 };

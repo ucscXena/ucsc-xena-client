@@ -1,0 +1,66 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * 1. React Toolbox theme for applying global overrides to all Checkbox components.
+ * 2. Rules necessary for styling standard Xena checkbox group that are outside of the RTB checkbox theming API
+ *    (for example, displaying a checkbox group in advanced mode where checkboxes are grouped together under a
+ *    subheading).
+ *
+ * Note that RTB does not currently have the concept of a "CheckboxGroup", we are rolling our own here to match
+ * RTB's RadioGroup.
+ *
+ * Uses theme key RTCheckbox and theme end points to override specific classes. See
+ * http://react-toolbox.com/#/components/checkbox for details.
+ */
+
+/**
+ * Core RTB checkbox theming API end points.
+ */
+
+/* Wrapper class around checkbox and corresponding label */
+label.field {
+	font-weight: 400; /* BS override */
+	margin: 16px 0 0 0;
+}
+
+/* Mock checkbox check */
+div.check {
+	border: 2px solid rgba(0, 0, 0, 0.38);
+}
+
+div.check.checked {
+	background-color: var(--color-accent);
+	border: 2px solid var(--color-accent);
+}
+
+/* Checkbox label */
+span.text {
+	color: rgba(0, 0, 0, 0.87);
+	font-size: 16px;
+	font-weight: 400;
+	padding-left: 16px;
+}
+
+/* Advanced checkbox list title */
+
+/**
+ * Custom classes applied to checkbox
+ */
+.XCheckboxGroup {
+	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+	padding: 12px 16px 24px 24px;
+}
+
+/* Subgroup header when in advanced view */
+.subgroupHeader {
+	composes: mdBody2 from '../../css/typography.module.css';
+	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+	color: rgba(0, 0, 0, 0.87);
+	display: block;
+	padding: 24px 0 8px 0;
+}
+
+.subgroupHeader:first-child {
+	padding-top: 8px;
+}

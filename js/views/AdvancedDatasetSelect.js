@@ -1,6 +1,10 @@
 'use strict';
 var React = require('react');
 var _ = require('../underscore_ext');
+import {Checkbox} from 'react-toolbox/lib/checkbox';
+
+// Styles
+var compStyles = require('./XCheckboxGroupTheme.module.css');
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL  = 'My Computer Hub' ;
@@ -21,29 +25,29 @@ function createLabels(datasets) {
 
 // Create dataset list. Sorts by category and label, and enforces unique labels by
 // appending a suffix.
-function datasetList(datasets) {
+function datasetList(datasets, onChange) {
 	var groups = _.fmap(_.groupBy(datasets.filter(notIgnored), category), createLabels);
-
-	return _.sortBy(_.keys(groups), g => g.toLowerCase()).map(group => (
-		<div>
-			<label>{group}</label>
-			<ul>{groups[group].map(({dsID, label}) => (<li data-dsid={dsID}>{label}</li>))}</ul>
-	   </div>));
+	return _.sortBy(_.keys(groups), g => g.toLowerCase()).map(group => ([
+			<span className={compStyles.subgroupHeader}>{group}</span>,
+			<div>{groups[group].map(({dsID, label}) => (<Checkbox key={label} label={label}
+																  onChange={() => onChange(dsID)}/>))}</div>
+	]));
 }
 
 // Group by local hub, dataSubType, or other.
 // Add numbers to labels for duplicate labels.
 var AdvancedDatasetSelect = React.createClass({
-	onClick(ev) {
-		var dsID = ev.target.dataset.dsid;
+	onChange(dsID) {
 		console.log(dsID);
 		if (dsID) {
-			this.props.onSelect(dsID);
-		}
+				this.props.onSelect(dsID);
+			}
 	},
 	render() {
 		var {datasets} = this.props;
-		return <div onClick={this.onClick}>{datasetList(_.values(datasets))}</div>;
+		return (
+			<div>{datasetList(_.values(datasets), this.onChange)}</div>
+		);
 	}
 });
 

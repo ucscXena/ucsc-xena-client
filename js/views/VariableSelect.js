@@ -3,6 +3,10 @@
 var React = require('react');
 var BasicDatasetSelect = require('./BasicDatasetSelect');
 var AdvancedDatasetSelect = require('./AdvancedDatasetSelect');
+import {RadioButton} from 'react-toolbox/lib/radio';
+var XCheckboxGroup = require('./XCheckboxGroup');
+var XRadioGroup = require('./XRadioGroup');
+var XInputToolbar = require('./XInputToolbar');
 
 var GenotypicForm = props => {
 	let DatasetSelect = props.advanced ? AdvancedDatasetSelect : BasicDatasetSelect;
@@ -10,9 +14,12 @@ var GenotypicForm = props => {
 		<div>
 			<label>Genes, Identifiers, or Coordinates</label><br/>
 			<input ref={props.inputRef} type='text' /><br/>
-			<label>Assay Type</label>
-			<button onClick={props.onAdvancedClick}>Show {props.advanced ? 'Basic' : 'Advanced'}</button>
-			<DatasetSelect onSelect={props.onSelect} datasets={props.datasets} preferred={props.preferred}/>
+			<XCheckboxGroup>
+				<XInputToolbar label='Assay Type'
+							   additionalAction={props.advanced ? 'Show Basic' : 'Show Advanced'}
+							   onAdditionalAction={props.onAdvancedClick}/>
+				<DatasetSelect onSelect={props.onSelect} datasets={props.datasets} preferred={props.preferred}/>
+			</XCheckboxGroup>
 		</div>);
 };
 
@@ -31,8 +38,8 @@ var VariableSelect = React.createClass({
 	getInitialState() {
 		return {mode: 'Genotypic', advanced: false};
 	},
-	onModeChange(ev) {
-		this.setState({mode: ev.target.value});
+	onModeChange(value) {
+		this.setState({mode: value});
 	},
 	onAdvancedClick() {
 		this.setState({advanced: !this.state.advanced});
@@ -52,21 +59,11 @@ var VariableSelect = React.createClass({
 			ModeForm = getModeFields[mode];
 		return (
 			<div>
-				<label>Data Type</label><br/>
-				<input
-					type='radio'
-					onChange={this.onModeChange}
-					checked={mode === 'Genotypic'}
-					name='data-mode'
-					value='Genotypic'/>
-				<label>Genotypic</label><br/>
-				<input
-					type='radio'
-					onChange={this.onModeChange}
-					checked={mode === 'Phenotypic'}
-					name='data-mode'
-					value='Phenotypic'/>
-				<label>Phenotypic</label><br/>
+				<XRadioGroup value={mode} onChange={this.onModeChange}>
+					<XInputToolbar label='Data Type'/>
+					<RadioButton label='Genotypic' value='Genotypic'/>
+					<RadioButton label='Phenotypic' value='Phenotypic'/>
+				</XRadioGroup>
 				<ModeForm
 					inputRef={this.setInput}
 					onSelect={this.onSelect}

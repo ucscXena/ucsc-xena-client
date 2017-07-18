@@ -2,16 +2,9 @@
 var React = require('react');
 var CohortSelect = require('./CohortSelect');
 var DiseaseSuggest = require('./DiseaseSuggest2');
+import {RadioButton} from 'react-toolbox/lib/radio';
 var XRadioGroup = require('./XRadioGroup');
-
-// Options for rendering study radio group
-var studyOptions = [{
-	label: 'Help me select a study',
-	value: 'disease'
-}, {
-	label: 'I know the study I want to use',
-	value: 'cohort'
-}];
+var XInputToolbar = require('./XInputToolbar');
 
 var CohortOrDisease = React.createClass({
 	getInitialState() {
@@ -29,16 +22,13 @@ var CohortOrDisease = React.createClass({
 	render() {
 		var {mode, cohort} = this.state,
 			{cohorts, cohortMeta} = this.props;
-		var getStudyProps = function() {
-			return {
-				label: 'Study',
-				value: mode,
-				options: studyOptions,
-			};
-		};
 		return (
 			<div>
-				<XRadioGroup {...getStudyProps()} onChange={this.onChange}/>
+				<XRadioGroup value={mode} onChange={this.onChange}>
+					<XInputToolbar label='Study Discovery'/>
+					<RadioButton label='Help me select a study' value='disease'/>
+					<RadioButton label='I know the study I want to use' value='cohort'/>
+				</XRadioGroup>
 				{mode === 'cohort' ?
 					<CohortSelect onSelect={this.onSelect} cohorts={cohorts}
 						cohort={cohort}/> :

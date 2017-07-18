@@ -7,7 +7,9 @@ var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 require('./GeneSuggest.css'); // XXX rename file
 var lcs = require('../lcs');
-
+import {RadioButton} from 'react-toolbox/lib/radio';
+var XInputToolbar = require('./XInputToolbar');
+var XRadioGroup = require('./XRadioGroup');
 
 function toLCWords(str) {
 	return str.toLowerCase().split(/[ \t]/);
@@ -185,8 +187,8 @@ var DiseaseSuggest = React.createClass({
 	onClear() {
 		this.setState({value: ""});
 	},
-	onCohort(ev) {
-		this.props.onSelect(ev.target.value);
+	onCohort(value) {
+		this.props.onSelect(value);
 	},
 	shouldRenderSuggestions(value) {
 		var position = this.refs.autosuggest.input.selectionStart,
@@ -221,17 +223,14 @@ var DiseaseSuggest = React.createClass({
 					renderInputComponent={renderInputComponent}
 					inputProps={{value, onChange}}/>
 				<button onClick={this.onClear}>x</button>
-				<ul>
-					{results.map(({cohort: c, weight, groups}) => (
-						<div>
-							<input type='radio' name='cohort' value={c}
-								checked={c === cohort}
-								onChange={this.onCohort}/>
-							<label>{c}</label>
-							<span style={{display: /*DEBUG ?*/ 'inline' /*: 'none'*/, padding: 1, position: 'relative', top: '-.4em', borderRadius: 5, backgroundColor: '#EE8888', fontSize: '70%'}}>{weight.toPrecision(2)}</span>
-							{groups.map(({tag, weight}) => <span style={{display: DEBUG ? 'inline' : 'none', marginLeft: 3, padding: 1, borderRadius: 5, backgroundColor: '#AAAAAA', fontSize: '90%'}}>{tag.join(' ')} <span style={{fontSize: '80%', backgroundColor: '#CCCC00'}}>{weight.toPrecision(2)}</span></span>)}
-						</div>))}
-				</ul>
+				<XRadioGroup value={cohort} onChange={this.onCohort}>
+					<XInputToolbar label='Study'/>
+					{results.map(({cohort: c, weight, groups}) => ([
+						<RadioButton label={c} value={c}/>,
+						<span style={{display: DEBUG ? 'inline' : 'none', padding: 1, position: 'relative', top: '-.4em', borderRadius: 5, backgroundColor: '#EE8888', fontSize: '70%'}}>{weight.toPrecision(2)}</span>,
+						<span>{groups.map(({tag, weight}) => <span style={{display: DEBUG ? 'inline' : 'none', marginLeft: 3, padding: 1, borderRadius: 5, backgroundColor: '#AAAAAA', fontSize: '90%'}}>{tag.join(' ')} <span style={{fontSize: '80%', backgroundColor: '#CCCC00'}}>{weight.toPrecision(2)}</span></span>)}</span>
+					]))}
+				</XRadioGroup>
 			</div>);
 	}
 });
