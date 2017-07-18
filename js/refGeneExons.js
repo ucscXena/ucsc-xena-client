@@ -225,7 +225,7 @@ var RefGeneAnnotation = React.createClass({
 						//trackString = GBoptions && GBoptions.fullTracks ? '&hideTracks=1' + GBoptions.fullTracks.map(track => `&${track}=full`).join('') : '',
 
 					rows.push([['value', `Gene: ${match.name2}`]]);
-					rows.push([['url', highlightPos, GBurl]]);
+					rows.push([['url', `${assembly} ${highlightPos}`, GBurl]]);
 				});
 
 				return {
