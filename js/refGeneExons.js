@@ -203,9 +203,9 @@ var RefGeneAnnotation = React.createClass({
 
 		var rows = [],
 			assemblyString = encodeURIComponent(assembly),
-			contextPadding = Math.floor((layout.chrom[0][1] - layout.chrom[0][0]) / 4),
-			posLayout = `${layout.chromName}:${util.addCommas(layout.chrom[0][0])}-${util.addCommas(layout.chrom[0][1])}`,
-			posLayoutPadding = `${layout.chromName}:${util.addCommas(layout.chrom[0][0] - contextPadding)}-${util.addCommas(layout.chrom[0][1] + contextPadding)}`,
+			contextPadding = Math.floor((layout.zoom.end - layout.zoom.start) / 4),
+			posLayout = `${layout.chromName}:${util.addCommas(layout.zoom.start)}-${util.addCommas(layout.zoom.end)}`,
+			posLayoutPadding = `${layout.chromName}:${util.addCommas(layout.zoom.start - contextPadding)}-${util.addCommas(layout.zoom.end + contextPadding)}`,
 			posLayoutString = encodeURIComponent(posLayout),
 			posLayoutPaddingString = encodeURIComponent(posLayoutPadding),
 			GBurlZoom = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${posLayoutString}&position=${posLayoutPaddingString}`;
