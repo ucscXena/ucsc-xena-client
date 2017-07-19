@@ -51,7 +51,7 @@ var Stepper = React.createClass({
 			});
 		};
 		return (
-			<RTBAppBar>
+			<RTBAppBar className={compStyles.StepperAppBar}>
 				<ul className={compStyles.Stepper}>
 					{_.map(steps, (step, index) =>
 						<li className={getStepClassName(index)} key={index}>
