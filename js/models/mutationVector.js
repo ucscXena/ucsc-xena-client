@@ -353,7 +353,7 @@ function cmp(column, data, index) {
 		() => 0;
 }
 
-var {sparseDataRange} = xenaQuery;
+var {sparseDataRange, refGeneRange} = xenaQuery;
 
 // XXX Might want to optimize this before committing. We could mutate in-place
 // without affecting anyone. This may be slow for large mutation datasets.
@@ -395,9 +395,12 @@ function fetchGeneByAnnotation({dsID, fields, assembly}, [samples]) {
 	).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
 }*/
 
-function fetchChrom({dsID}, [samples], pos) {
-	return sparseDataRange(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd)
-		.map(req => mapSamples(samples, {req}));
+function fetchChrom({dsID, assembly}, [samples], pos) {
+	var {name, host} = xenaQuery.refGene[assembly] || {};
+	return refGeneRange(host, name, pos.chrom, pos.baseStart, pos.baseEnd)
+		.flatMap(refGene =>
+			sparseDataRange(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd)
+				.map(req => mapSamples(samples, {req, refGene})));
 }
 
 function fetch(column, cohortSamples) {

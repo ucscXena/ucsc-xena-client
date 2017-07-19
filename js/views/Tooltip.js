@@ -101,6 +101,11 @@ var Tooltip = React.createClass({
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 
+		// no tooltip info
+		if (!rows && !sampleID) {
+			return (<div/>);
+		}
+
 		var rowsOut = _.map(rows, (row, i) => (
 			<tr key={i}>
 				{row.map(([type, ...args], i) => element[type](i, ...args))}

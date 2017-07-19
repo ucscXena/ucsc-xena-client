@@ -1,17 +1,17 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var widgets = require('./columnWidgets');
 var React = require('react');
 var ReactDOM = require('react-dom');
+var Rx = require('./rx');
 var intervalTree = require('static-interval-tree');
 var vgcanvas = require('./vgcanvas');
 var layoutPlot = require('./layoutPlot');
-var {drawChromScale} = require('./ChromPosition');
-
 var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
-
+var {rxEventsMixin} = require('./react-utils');
+var util = require('./util');
+var {chromPositionFromScreen} = require('./exonLayout');
 
 // annotate an interval with cds status
 var inCds = ({cdsStart, cdsEnd}, intvl) =>
@@ -44,31 +44,68 @@ function findIntervals(gene) {
 
 var shade1 = '#cccccc',
 	shade2 = '#999999',
-	refHeight = 12,
-	annotation = {
+	shade3 = '#000080';
+
+function getAnnotation (index, perLaneHeight, offset) {
+	return {
 		utr: {
-			y: refHeight / 4,
-			h: refHeight / 2
+			y: offset + perLaneHeight * (index + 0.25),
+			h: perLaneHeight / 2
 		},
 		cds: {
-			y: 0,
-			h: refHeight
+			y: offset + perLaneHeight * index,
+			h: perLaneHeight
 		}
 	};
+}
+
+function drawIntroArrows (ctx, xStart, xEnd, endY, segments, strand) {
+	if (xEnd - xStart < 10) {
+		return;
+	}
+	var arrowSize = 2, //arrowSize
+		gapSize = 4;
+
+	for (var i = xStart; i < xEnd; i = i + 10) {
+		var found = segments.filter(seg => (Math.abs(seg[0] - i) < gapSize ||
+				Math.abs(seg[0] - i - arrowSize) < gapSize ||
+				Math.abs(seg[1] - i) < gapSize ||
+				Math.abs(seg[1] - i - arrowSize) < gapSize));
+
+		if (_.isEmpty(found)) {
+			if (strand === '+') {
+				ctx.beginPath();
+				ctx.moveTo(i, endY - arrowSize);
+				ctx.lineTo(i + arrowSize, endY );
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(i, endY + arrowSize);
+				ctx.lineTo(i + arrowSize, endY );
+				ctx.stroke();
+			} else { // "-" strand
+				ctx.beginPath();
+				ctx.moveTo(i + arrowSize, endY - arrowSize);
+				ctx.lineTo(i, endY );
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(i + arrowSize, endY + arrowSize);
+				ctx.lineTo(i, endY);
+				ctx.stroke();
+			}
+		}
+	}
+}
 
 var RefGeneAnnotation = React.createClass({
-	getGeneInfo: function () {
-		return {
-			name: this.data.name2,
-			scaleX: this.scaleX,
-			txStart: this.data.txStart,
-			txEnd: this.data.txEnd,
-			strand: this.data.strand
-		};
-	},
+	mixins: [rxEventsMixin],
 
-	draw: function (width, layout, indx, alternateColors) {
-		if (!width || !layout || !indx) {
+	draw: function (width, layout, mode, annotationLanes) {
+		var {lanes, perLaneHeight, laneOffset, annotationHeight} = annotationLanes;
+
+		// white background
+		this.vg.box(0, 0, width, annotationHeight, 'white');
+
+		if (!width || !layout) {
 			return;
 		}
 		var vg = this.vg,
@@ -78,49 +115,147 @@ var RefGeneAnnotation = React.createClass({
 			vg.width(width);
 		}
 
-		vg.box(0, 0, width, refHeight * 2, 'white'); // white background
+		if ( _.isEmpty(layout.chrom) || _.isEmpty(lanes)) {
+			return;
+		}
 
-		// draw a line across to represent the entire horizontal genomic region that will be in display, for promoter and downstream region
-		ctx.fillStyle = 'grey';
-		ctx.fillRect(0, refHeight * 1.5, width, 1);
+		//drawing start here, one lane at a time
+		lanes.forEach((lane, k) => {
+			var annotation = getAnnotation(k, perLaneHeight, laneOffset);
 
-		pxTransformEach(layout, (toPx, [start, end]) => {
-			var nodes = matches(indx, {start: start, end: end});
-			_.each(nodes.sort((a, b)=> (b.start - a.start)), ({i, start, end, inCds}) => {
-				var {y, h} = annotation[inCds ? 'cds' : 'utr'];
-				var [pstart, pend] = toPx([start, end]);
-				ctx.fillStyle = (alternateColors && i % 2 === 1) ? shade1 : shade2;
-				ctx.fillRect(pstart, y + refHeight, (pend - pstart) || 1, h);
+			lane.forEach( val => {
+				var intervals = findIntervals(val),
+					indx = index(intervals),
+					segments = [];
+
+				//find segments for one gene
+				pxTransformEach(layout, (toPx, [start, end]) => {
+					var nodes = matches(indx, {start: start, end: end});
+					nodes = nodes.sort((a, b)=> (a.start - b.start));
+					_.each(nodes, ({i, start, end, inCds}) => {
+						var {y, h} = annotation[inCds ? 'cds' : 'utr'];
+						var [pstart, pend] = toPx([start, end]);
+						var	shade = (mode === "geneExon") ? ((i % 2 === 1) ? shade1 : shade2)
+							: ((mode === "coordinate") ? shade3 : shade2);
+						segments.push([pstart, pend, shade, y, h]);
+					});
+
+					// draw a line across the gene
+					ctx.fillStyle = shade2;
+					var lineY = laneOffset + perLaneHeight * (k + 0.5);
+					if (nodes.length === 0) {
+						ctx.fillRect(0, lineY, width, 1);
+						if (mode === 'coordinate') {
+							drawIntroArrows (ctx, 0, width, lineY, segments, val.strand);
+						}
+					} else {
+						var [pGeneStart, pGeneEnd] = toPx([nodes[0].start, nodes[nodes.length - 1].end]);
+						if (nodes.length !== intervals.length) {
+							if (nodes[0].start === intervals[0].start) {
+								pGeneEnd = width;
+							} else if (nodes[nodes.length - 1].start === intervals[intervals.length - 1].start) {
+								pGeneStart = 0;
+							}
+							else {
+								pGeneStart = 0;
+								pGeneEnd = width;
+							}
+						}
+						ctx.fillRect(pGeneStart, lineY, pGeneEnd - pGeneStart, 1);
+						if (mode === 'coordinate') {
+							drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, val.strand);
+						}
+					}
+					// draw each segments
+					_.each(segments, s => {
+						var [pstart, pend, shade, y, h] = s;
+						ctx.fillStyle = shade;
+						ctx.fillRect(pstart, y, (pend - pstart) || 1, h);
+					});
+				});
 			});
 		});
-
-		if (alternateColors === false) { // if in genomic mode i.e. (alternateColors === false), draw scale
-			drawChromScale(vg, width, layout, "geneIntron");
-		} else { // in exon mode, just write 5' and 3'
-			drawChromScale(vg, width, layout, "geneExon");
-		}
 	},
+	componentWillMount: function () {
+		this.events('mouseout', 'mousemove', 'mouseover');
 
+		// Compute tooltip events from mouse events.
+		this.ttevents = this.ev.mouseover
+			.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
+			.flatMap(() => {
+				return this.ev.mousemove
+					.takeUntil(this.ev.mouseout)
+					.map(ev => ({
+						data: this.tooltip(ev),
+						open: true
+					})) // look up current data
+					.concat(Rx.Observable.of({open: false}));
+			}).subscribe(this.props.tooltip);
+	},
+	componentWillUnmount: function () {
+		this.ttevents.unsubscribe();
+	},
+	tooltip: function (ev) {
+		var {layout, annotationLanes, column} = this.props,
+			{x, y} = util.eventOffset(ev),
+			{assembly} = column,
+			{annotationHeight, perLaneHeight, laneOffset, lanes} = annotationLanes;
+
+		var rows = [],
+			assemblyString = encodeURIComponent(assembly),
+			contextPadding = Math.floor((layout.chrom[0][1] - layout.chrom[0][0]) / 4),
+			posLayout = `${layout.chromName}:${util.addCommas(layout.chrom[0][0])}-${util.addCommas(layout.chrom[0][1])}`,
+			posLayoutPadding = `${layout.chromName}:${util.addCommas(layout.chrom[0][0] - contextPadding)}-${util.addCommas(layout.chrom[0][1] + contextPadding)}`,
+			posLayoutString = encodeURIComponent(posLayout),
+			posLayoutPaddingString = encodeURIComponent(posLayoutPadding),
+			GBurlZoom = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${posLayoutString}&position=${posLayoutPaddingString}`;
+
+		if (y > laneOffset && y < annotationHeight - laneOffset) {
+			var posStart = chromPositionFromScreen(layout, x - 0.5),
+				posEnd = chromPositionFromScreen(layout, x + 0.5),
+				matches = [],
+				laneIndex = Math.floor((y - laneOffset) / perLaneHeight); //find which lane by y
+
+			lanes[laneIndex].forEach(val => {
+				if ((posEnd >= val.txStart) && (posStart <= val.txEnd)) {
+					matches.push(val);
+				}
+			});
+
+			if (matches.length > 0)	{
+				matches.forEach(match => {
+					var posGene = `${match.chrom}:${util.addCommas(match.txStart)}-${util.addCommas(match.txEnd)}`,
+						positionGeneString = encodeURIComponent(posGene),
+						GBurlGene = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&position=${positionGeneString}&enableHighlightingDialog=0`;
+
+					rows.push([['value', 'Gene '], ['url', `${match.name2}`, GBurlGene]]);
+				});
+			}
+		}
+
+		rows.push([['value', 'Column'], ['url', `${assembly} ${posLayout}`, GBurlZoom]]);
+		return {
+			rows: rows
+		};
+	},
 	componentDidMount: function () {
-		var {width, layout, alternateColors} = this.props;
-		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, refHeight * 2);
-		this.draw(width, layout, this.index, alternateColors);
+		var {width, layout, annotationLanes, mode} = this.props;
+		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, annotationLanes.annotationHeight);
+		this.draw(width, layout, mode, annotationLanes);
 	},
 
 	render: function () {
-		var {width, layout, refGene, alternateColors} = this.props,
-			intervals = findIntervals(refGene);
-
-		this.index = index(intervals);
+		var {width, layout, annotationLanes, mode} = this.props;
 		if (this.vg) {
-			this.draw(width, layout, this.index, alternateColors);
+			this.draw(width, layout, mode, annotationLanes);
 		}
+
 		return (
 			<canvas
 				className='Tooltip-target'
-				onMouseMove={this.props.onMouseMove}
-				onMouseOut={this.props.onMouseOut}
-				onMouseOver={this.props.onMouseOver}
+				onMouseMove={this.on.mousemove}
+				onMouseOut={this.on.mouseout}
+				onMouseOver={this.on.mouseover}
 				onClick={this.props.onClick}
 				onDblClick={this.props.onDblClick}
 				ref='canvas' />
@@ -128,7 +263,7 @@ var RefGeneAnnotation = React.createClass({
 	}
 });
 
-widgets.annotation.add('gene', props => <RefGeneAnnotation {...props}/>);
+//widgets.annotation.add('gene', props => <RefGeneAnnotation {...props}/>);
 
 module.exports = {
 	findIntervals: findIntervals,
