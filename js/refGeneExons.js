@@ -178,6 +178,7 @@ var RefGeneAnnotation = React.createClass({
 	},
 	componentWillMount: function () {
 		this.events('mouseout', 'mousemove', 'mouseover');
+
 		// Compute tooltip events from mouse events.
 		this.ttevents = this.ev.mouseover
 			.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
@@ -197,42 +198,45 @@ var RefGeneAnnotation = React.createClass({
 	tooltip: function (ev) {
 		var {layout, annotationLanes, column} = this.props,
 			{x, y} = util.eventOffset(ev),
+			{assembly} = column,
 			{annotationHeight, perLaneHeight, laneOffset, lanes} = annotationLanes;
 
+		var rows = [],
+			assemblyString = encodeURIComponent(assembly),
+			contextPadding = Math.floor((layout.chrom[0][1] - layout.chrom[0][0]) / 4),
+			posLayout = `${layout.chromName}:${util.addCommas(layout.chrom[0][0])}-${util.addCommas(layout.chrom[0][1])}`,
+			posLayoutPadding = `${layout.chromName}:${util.addCommas(layout.chrom[0][0] - contextPadding)}-${util.addCommas(layout.chrom[0][1] + contextPadding)}`,
+			posLayoutString = encodeURIComponent(posLayout),
+			posLayoutPaddingString = encodeURIComponent(posLayoutPadding),
+			GBurlZoom = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${posLayoutString}&position=${posLayoutPaddingString}`;
+
 		if (y > laneOffset && y < annotationHeight - laneOffset) {
-			var pos = Math.floor(chromPositionFromScreen(layout, x)),
+			var posStart = chromPositionFromScreen(layout, x - 0.5),
+				posEnd = chromPositionFromScreen(layout, x + 0.5),
 				matches = [],
-				laneIndex = Math.floor((y - laneOffset) / perLaneHeight), //find which lane by y
-				{assembly} = column;
+				laneIndex = Math.floor((y - laneOffset) / perLaneHeight); //find which lane by y
+
 			lanes[laneIndex].forEach(val => {
-				if ((pos >= val.txStart) && (pos <= val.txEnd)) {
+				if ((posEnd >= val.txStart) && (posStart <= val.txEnd)) {
 					matches.push(val);
 				}
 			});
-			if (matches.length > 0)	{
-				var rows = [];
-				matches.forEach(match => {
-					var contextPadding = Math.floor((layout.chrom[0][1] - layout.chrom[0][0]) / 4),
-						posGene = `${match.chrom}:${util.addCommas(match.txStart)}-${util.addCommas(match.txEnd)}`,
-						posLayout = `${match.chrom}:${util.addCommas(layout.chrom[0][0])}-${util.addCommas(layout.chrom[0][1])}`,
-						posLayoutPadding = `${match.chrom}:${util.addCommas(layout.chrom[0][0] - contextPadding)}-${util.addCommas(layout.chrom[0][1] + contextPadding)}`;
 
-					var assemblyString = encodeURIComponent(assembly),
+			if (matches.length > 0)	{
+				matches.forEach(match => {
+					var posGene = `${match.chrom}:${util.addCommas(match.txStart)}-${util.addCommas(match.txEnd)}`,
 						positionGeneString = encodeURIComponent(posGene),
-						posLayoutString = encodeURIComponent(posLayout),
-						posLayoutPaddingString = encodeURIComponent(posLayoutPadding),
-						GBurlGene = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&position=${positionGeneString}&enableHighlightingDialog=0`,
-						GBurlZoom = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${posLayoutString}&position=${posLayoutPaddingString}`;
+						GBurlGene = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&position=${positionGeneString}&enableHighlightingDialog=0`;
 
 					rows.push([['value', 'Gene '], ['url', `${match.name2}`, GBurlGene]]);
-					rows.push([['value', 'Column'], ['url', `${assembly} ${posLayout}`, GBurlZoom]]);
 				});
-
-				return {
-					rows: rows
-				};
 			}
 		}
+
+		rows.push([['value', 'Column'], ['url', `${assembly} ${posLayout}`, GBurlZoom]]);
+		return {
+			rows: rows
+		};
 	},
 	componentDidMount: function () {
 		var {width, layout, annotationLanes, mode} = this.props;

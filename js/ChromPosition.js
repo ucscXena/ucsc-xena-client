@@ -88,6 +88,8 @@ var ChromPosition = React.createClass({
 				vg.box(rangePos, labelHeight / 4, 1, labelHeight / 2, 'black');
 				vg.box(rangePos + rangeWidth, labelHeight / 4, 1, labelHeight / 2, 'black');
 				vg.text(rangePos + rangeWidth + 1, labelHeight - font / 4, 'black', font, rangeText);
+			} else {
+				vg.text((width - rangeWidth) / 2, labelHeight - font / 4, 'black', font, '1bp');
 			}
 		}
 	},
