@@ -592,13 +592,14 @@ var Column = React.createClass({
 					onChange={this.onFieldLabel}
 					value={{default: fieldLabel, user: user.fieldLabel}} />
 				<Crosshair frozen={this.props.frozen}>
-					<div style={{height: annotationHeight + scaleHeight + 5}}>
+					<div style={{height: annotationHeight + scaleHeight + 4}}>
 						{this.addAnnotationHelp (
 							<DragSelect
 								enabled={true}
 								onClick={this.onXZoomOut}
 								onSelect={this.onXDragZoom}>
 								{scale}
+								<div style={{height: 2}}/>
 								{annotation}
 							</DragSelect>
 						)}
