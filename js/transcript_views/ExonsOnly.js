@@ -110,7 +110,7 @@ var ExonsOnly = React.createClass({
       let extraAxisWidth = Math.max.apply(Math, d.padding) - d.padding[0];
 			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + extraAxisWidth + "px"};
 			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + d.padding[0] + "px"])
-									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + "px"]);
+									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + d.padding[0] + "px"]);
 
 			return ( <div className="exons--row" id={index}>
 						<div className="exons--row--axis"
