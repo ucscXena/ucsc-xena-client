@@ -191,7 +191,6 @@ var ColumnEdit = React.createClass({
 			dsID = settings.dsID,
 			ds = appState.datasets[dsID],
 			colSpec = getColSpec([settings], appState.datasets);
-
 		settings = _.assoc(colSpec,
 			'width', ds.type === 'mutationVector' ? 200 : 100,
 			'columnLabel', ds.label,
