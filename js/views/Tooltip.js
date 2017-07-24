@@ -101,6 +101,11 @@ var Tooltip = React.createClass({
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 
+		// no tooltip info
+		if (!rows && !sampleID) {
+			return (<div/>);
+		}
+
 		var rowsOut = _.map(rows, (row, i) => (
 			<tr key={i}>
 				{row.map(([type, ...args], i) => element[type](i, ...args))}
@@ -119,7 +124,7 @@ var Tooltip = React.createClass({
 							{sample}
 							{rowsOut}
 							<tr style={{fontSize: "80%"}}>
-								<td className='tooltipPrompt'>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</td>
+								<td>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</td>
 							</tr>
 							<a className='tooltipPrompt' style={{fontSize: "80%"}} href="http://xena.ucsc.edu/spreadsheet-zoom/" target="_blank">Help with zoom</a>
 						</tbody>
