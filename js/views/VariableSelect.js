@@ -3,7 +3,6 @@
 var React = require('react');
 var BasicDatasetSelect = require('./BasicDatasetSelect');
 var AdvancedDatasetSelect = require('./AdvancedDatasetSelect');
-import {RadioButton} from 'react-toolbox/lib/radio';
 var XCheckboxGroup = require('./XCheckboxGroup');
 var XRadioGroup = require('./XRadioGroup');
 var XInputToolbar = require('./XInputToolbar');
@@ -57,13 +56,21 @@ var VariableSelect = React.createClass({
 		var {mode, advanced} = this.state,
 			{datasets, preferred} = this.props,
 			ModeForm = getModeFields[mode];
+		var dataTypeProps = {
+			label: 'Data Type',
+			value: mode,
+			onChange: this.onModeChange,
+			options: [{
+				label: 'Genotypic',
+				value: 'Genotypic'
+			}, {
+				label: 'Phenotypic',
+				value: 'Phenotypic'
+			}]
+		};
 		return (
 			<div>
-				<XRadioGroup value={mode} onChange={this.onModeChange}>
-					<XInputToolbar label='Data Type'/>
-					<RadioButton label='Genotypic' value='Genotypic'/>
-					<RadioButton label='Phenotypic' value='Phenotypic'/>
-				</XRadioGroup>
+				<XRadioGroup {...dataTypeProps} />
 				<ModeForm
 					inputRef={this.setInput}
 					onSelect={this.onSelect}
