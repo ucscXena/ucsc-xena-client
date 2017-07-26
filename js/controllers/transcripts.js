@@ -20,10 +20,11 @@ var prefix = 4; // "TCGA", "GTEX"
 // The transcriptExpression query is a bit wonky, because we're pulling the subtypes from TCGA_GTEX_main_category,
 // but in transcriptExpression we filter on _sample_type. This assumes the two are kept in sync. It would be
 // better to use the same field in both places, but first we need to confirm that it will work.
-var fetchExpression = (transcripts, {studyA, subtypeA, studyB, subtypeB}) =>
+var fetchExpression = (transcripts, {studyA, subtypeA, studyB, subtypeB, unit}) =>
 	xenaQuery.transcriptExpression(expressionHost,
 			// adding 1 for the space after the prefix
-			_.pluck(transcripts, 'name'), studyA, subtypeA.slice(prefix + 1), studyB, subtypeB.slice(prefix + 1))
+			_.pluck(transcripts, 'name'), studyA, subtypeA.slice(prefix + 1), studyB, subtypeB.slice(prefix + 1),
+			unit)
 		.map(([expsA, expsB]) => _.mmap(expsA, expsB, transcripts,
 					(expA, expB, transcript) => _.assoc(transcript, 'expA', expA, 'expB', expB)));
 
@@ -54,8 +55,8 @@ function fetchSubtypes(serverBus) {
 
 var controls = {
 	'init-post!': fetchSubtypes,
-	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB) =>
-		_.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB})),
+	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) =>
+		_.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB, unit})),
 	'loadGene-post!': (serverBus, state, newState) => {
 		if(newState.transcripts.gene)
 		{
