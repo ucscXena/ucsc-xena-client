@@ -10,7 +10,7 @@
  *
  * Usage:
  *
- * @value black3 from "path/to/variables.css";
+ * @value black3 from 'path/to/variables.css';
  * ...
  * body {
  *     background-color: black3;

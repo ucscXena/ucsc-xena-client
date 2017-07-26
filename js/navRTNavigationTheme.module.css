@@ -1,0 +1,12 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying nav-specific overrides to Xena's top nav's Navigation component. Used by navTheme.
+ *
+ * Uses theme key RTNavigation, see http://react-toolbox.com/#/components/navigation.
+ */
+
+.horizontal {
+	margin-left: 64px;
+}

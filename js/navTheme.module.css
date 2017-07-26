@@ -2,39 +2,11 @@
  * UCSC Xena Client
  * http://xena.ucsc.edu
  *
- * 1. React Toolbox theme for applying global overrides to all app bar components.
- * 2. Rules necessary for styling standard Xena app bar components that are outside of the RTB app bar theming API (for
- *    example, styles for the UCSC logo).
- *
- * Although naming of this file matches the core Xena nav.js component, the overrides are specific to the
- * RTB Navigation and RTB Link sub-component inside of the RTB AppBar (as specified in nav.js).
- *
- * Uses theme key RTAppBar and theme end points to override specific classes. See
- * http://react-toolbox.com/#/components/app_bar, http://react-toolbox.com/#/components/navigation and
- * http://react-toolbox.com/#/components/link for details.
- */
-
-@value black12 from "../css/variables.css";
-
-/**
- * Core RTB app bar theming API end points.
- */
-
-nav.horizontal {
-	margin-left: 64px;
-}
-
-/**
- * Custom classes applied to radio group or radio buttons
+ * Rules necessary for styling standard Xena top nav, that are outside of the RTB app bar theming API (for example,
+ * styles for the UCSC logo).
  */
 
 .logoXena {
 	max-width: 139px;
 	height: auto;
-}
-
-/* Removal of box shadow, adding border to nav. Nav is either stacked above stepper or app controls so box shadow is not necessary. */
-.NavAppBar:not(.flat) {
-	border-bottom: 1px solid black12;
-	box-shadow: none;
 }

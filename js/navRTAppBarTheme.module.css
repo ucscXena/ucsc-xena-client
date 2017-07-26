@@ -1,0 +1,16 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying nav-specific overrides to Xena's top nav's AppBar component. Used by navTheme.
+ *
+ * Uses theme key RTAppBar, see http://react-toolbox.com/#/components/app_bar.
+ */
+
+@value black12 from '../css/variables.css';
+
+/* Removal of box shadow, adding border to nav. Nav is either stacked above stepper or app controls so box shadow is not necessary. */
+.appBar {
+	border-bottom: 1px solid black12;
+	box-shadow: none;
+}

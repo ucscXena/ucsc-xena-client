@@ -5,11 +5,6 @@
  * Rules necessary for styling Material Design-inspired stepper. Used by Stepper component.
  */
 
-.StepperAppBar:not(.theme__flat___1J9he) {
-	box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .14); /* Simplify RTB AppBar box shadow to prevent bleed into nav bar */
-	margin-bottom: 48px;
-}
-
 .Stepper {
 	display: flex;
 	flex-direction: row;
