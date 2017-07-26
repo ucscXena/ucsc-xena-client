@@ -13,11 +13,10 @@ var NameColumn = React.createClass({
 		let items = data.map((d, index) => {
 			return (
 				<div className="nameColumn--item"
-				 style={{ height: (100 / data.length) + "%",
-				 		  		backgroundColor: colors(index),
+				 style={{	backgroundColor: colors(index),
 									color: contrastColor(colors(index)),
 				 		}}>
-				 	<span>{d.name}</span>
+				 	<span><i>{d.name}</i></span>
 				</div>);
 		});
 

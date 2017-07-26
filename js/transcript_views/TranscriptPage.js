@@ -7,6 +7,8 @@ const ExonsOnly = require('./ExonsOnly');
 const DensityPlot = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
 
+import '../../css/transcript_css/transcriptPage.css';
+
 // Placeholder component. I'm expecting the real top-level view
 // will be in a separate file, and imported above.
 var Transcripts = React.createClass({
@@ -19,10 +21,11 @@ var Transcripts = React.createClass({
 	onLoadData() {
 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
 		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
+		var unit = this.refs.unit.value;
 
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
-		this.props.callback(['loadGene', this.state.gene, studyA, subtypeA, studyB, subtypeB]);
+		this.props.callback(['loadGene', this.state.gene, studyA, subtypeA, studyB, subtypeB, unit]);
 		// this.props.callback(['loadGene', 'TP53', 'tcga', 'Lung Adenocarcinoma', 'gtex', 'Lung']); // hard-coded gene and sample subsets, for demo
 	},
 
@@ -61,18 +64,29 @@ var Transcripts = React.createClass({
 		return (
 			<div ref='datapages'>
 				<div>
+					<div className="selectors">
 					<strong>Gene: </strong>
 					<GeneSuggest value={this.state.gene}
-											onChange={ value => { this.setState({gene: value}); }}
-										/>
-					<button onClick={this.onLoadData}>OK</button>
+											onChange={ value => { this.setState({gene: value}); }}/>
+					</div>
+					<button className="selectors" onClick={this.onLoadData}>OK</button>
 					click this after entering new value of gene
+					<strong className="selectors">Unit: </strong>
+					<select ref="unit" onChange={this.onLoadData}>
+						<option value="tpm">tpm</option>
+						<option value="isoformPercentage">isoformPercentage</option>
+					</select>
+					<div className="legend-holder">
+						Legends
+						<div className="legend" style={{backgroundColor: "#008080"}}><label>Study A</label></div>
+						<div className="legend" style={{backgroundColor: "steelblue"}}><label>Study B</label></div>
+					</div>
 					<br/>
-					<strong>StudyA: </strong>
+					<strong className="selectors">StudyA: </strong>
 					<select ref="A" onChange={this.onLoadData} value={valueA}>
 						{options}
 					</select>
-					<strong>StudyB: </strong>
+					<strong className="selectors">StudyB: </strong>
 					<select ref="B" onChange={this.onLoadData} value={valueB}>
 						{options}
 					</select>

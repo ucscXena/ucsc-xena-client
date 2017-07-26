@@ -38,10 +38,9 @@ var DensityPlot = React.createClass ({
     // _.range(0, Math.floor(1 / pxWidth)).forEach(
     //   () => yHeights.unshift(1 - percentNonZero)
     // );
-
+    polylinePoints += plotWidth + "," + plotHeight;
     let zeroWidth = 1 / pxWidth;
     let zeroHeight = (1 - percentNonZero) * plotHeight;
-
     return {
       polylinePoints: polylinePoints,
       zeroWidth: zeroWidth,
@@ -128,10 +127,7 @@ var DensityPlot = React.createClass ({
    			return (
           <div className="densityPlot--row">
    						<div className="densityPlot--row--xAxis"/>
-              <div style={{display: "flex",
-                           alignItems: "flex-end",
-                           height: "50%",
-                           width: "100%"}}>
+              <div className="densityPlot--row--studyA">
               {
                   frequency = this.calculateFrequency(studyA.expA, max, min),
                   frequency.map( f => {
@@ -146,14 +142,7 @@ var DensityPlot = React.createClass ({
                   })
                 }
               </div>
-              <div style={{display: "flex",
-                           alignItems: "flex-end",
-                           height: "50%",
-                           width: "100%",
-                           bottom: "50%",
-                           webkitTransform: "rotateX(180deg)",
-                           mozTransform: "rotateX(180deg)",
-                           transform: "rotateX(180deg)"}}>
+              <div className="densityPlot--row--studyB">
                 {
                   frequency = this.calculateFrequency(studyB.expB, max, min),
                   frequency.map( f => {
