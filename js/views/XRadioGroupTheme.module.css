@@ -24,7 +24,7 @@ label.field:first-child {
 }
 
 /* Mock radio button circle */
-div.radio {
+.radio {
 	border: 2px solid rgba(0, 0, 0, 0.38);
 }
 

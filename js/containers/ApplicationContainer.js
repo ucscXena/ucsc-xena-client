@@ -1,7 +1,6 @@
 'use strict';
 
 // XXX move Application to views
-var Application = require('../Application');
 var React = require('react');
 //var _ = require('../underscore_ext');
 var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
@@ -21,6 +20,7 @@ var addVizEditor = require('./addVizEditor');
 var makeSortable = require('./makeSortable');
 var getSpreadsheet = require('../Spreadsheet');
 var getStepperState = require('./getStepperState');
+var Application = require('../Application');
 
 // This seems odd. Surely there's a better test?
 function hasSurvival(survival) {

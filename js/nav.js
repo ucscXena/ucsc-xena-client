@@ -17,7 +17,7 @@ var config = require('./config');
 import AppBar from 'react-toolbox/lib/app_bar';
 import Navigation from 'react-toolbox/lib/navigation';
 import {ThemeProvider} from 'react-css-themr';
-var appTheme = require('./appTheme');
+var navTheme = require('./navTheme');
 
 // Styles
 var compStyles = require('./navTheme.module.css');
@@ -70,7 +70,7 @@ var XenaNav = React.createClass({
 var ThemedNav = React.createClass({
 	render() {
 		return (
-			<ThemeProvider theme={appTheme}>
+			<ThemeProvider theme={navTheme}>
 				<XenaNav {...this.props}/>
 			</ThemeProvider>);
 	}

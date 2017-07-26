@@ -19,14 +19,11 @@
 var React = require('react');
 import {RadioGroup} from 'react-toolbox/lib/radio';
 
-// Styles
-var compStyles = require('./XRadioGroupTheme.module.css');
-
 var XRadioGroup = React.createClass({
 	render() {
 		var {children, ...props} = this.props;
 		return (
-			<RadioGroup {...props} className={compStyles.XRadioGroup}>
+			<RadioGroup {...props}>
 				{children}
 			</RadioGroup>
 		);
