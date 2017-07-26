@@ -20,6 +20,12 @@
  */
 @import './rtbReset.css';
 
+/**
+ * Global Xena styles.
+ * Required for applying styles that are outside of the React component hierarchy.
+ */
+@import './xena.css';
+
 /*
  * Fonts.
  * Local font files for Roboto and Material Icons. Required as React Toolbox 2.0 does not include font files (either
