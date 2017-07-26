@@ -1,12 +1,12 @@
 'use strict';
 
 var React = require('react');
-import Autosuggest from 'react-autosuggest';
 import Input from 'react-toolbox/lib/input';
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 require('./GeneSuggest.css'); // XXX rename file
 var lcs = require('../lcs');
+var XAutosuggest = require('./XAutosuggest');
 var XRadioGroup = require('./XRadioGroup');
 
 function toLCWords(str) {
@@ -146,13 +146,13 @@ var renderInputComponent = ({ref, onChange, ...props}) => (
 	<Input
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
-		label='Primary disease or Tissue of Origin'
+		label='Primary Disease or Tissue of Origin'
 		{...props} />);
 
 var DiseaseSuggest = React.createClass({
 	mixins: [deepPureRenderMixin],
 	onSuggestionsFetchRequested({value}) {
-		var position = this.refs.autosuggest.input.selectionStart,
+		var position = this.refs.xautosuggest.refs.autosuggest.input.selectionStart,
 			word = currentWord(value, position),
 			lcValue = word.toLowerCase(),
 			{cohortMeta} = this.props,
@@ -189,13 +189,13 @@ var DiseaseSuggest = React.createClass({
 		this.props.onSelect(value);
 	},
 	shouldRenderSuggestions(value) {
-		var position = this.refs.autosuggest.input.selectionStart,
+		var position = this.refs.xautosuggest.refs.autosuggest.input.selectionStart,
 			word = currentWord(value, position);
 		return word.length > 0;
 	},
 	getSuggestionValue(suggestion) {
-		var position = this.refs.autosuggest.input.selectionStart,
-			value = this.refs.autosuggest.input.value,
+		var position = this.refs.xautosuggest.refs.autosuggest.input.selectionStart,
+			value = this.refs.xautosuggest.refs.autosuggest.input.value,
 			[i, j] = currentWordPosition(value, position);
 
 		// splice the suggestion into the current word
@@ -223,8 +223,8 @@ var DiseaseSuggest = React.createClass({
 		};
 		return (
 			<div>
-				<Autosuggest
-					ref='autosuggest'
+				<XAutosuggest
+					ref='xautosuggest'
 					suggestions={suggestions}
 					onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
 					onSuggestionsClearRequested={this.onSuggestionsClearRequested}
@@ -233,8 +233,9 @@ var DiseaseSuggest = React.createClass({
 					shouldRenderSuggestions={this.shouldRenderSuggestions}
 					renderSuggestion={v => <span>{v}</span>}
 					renderInputComponent={renderInputComponent}
-					inputProps={{value, onChange}}/>
-				<button onClick={this.onClear}>x</button>
+					inputProps={{value, onChange}}
+					value={value}
+					onClear={this.onClear}/>
 				<XRadioGroup {...studyProps} />
 			</div>);
 	}

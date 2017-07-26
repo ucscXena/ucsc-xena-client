@@ -1,0 +1,39 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying global overrides to the input component.
+ *
+ * Uses theme key RTInput and theme end points to override specific classes. See
+ * http://react-toolbox.com/#/components/input for details.
+ */
+
+@value black38 from '../../css/variables.css';
+@value black87 from '../../css/variables.css';
+
+label.label {
+	color: black38;
+	font-weight: 400; /* BS override */
+	padding-left: 24px;
+	padding-right: 24px;
+}
+
+/* Add specificity here to remove highlight color on label when it floats above input, on focus of input */
+input.inputElement:focus:not([disabled]):not([readonly]) ~ .label:not(.fixed) {
+	color: black38;
+}
+
+/* Input element */
+.inputElement {
+	composes: mdSubhead hint from '../../css/typography.module.css';
+}
+
+input.inputElement {
+	border-bottom: 0;
+	color: black87;
+	padding: 6px 24px 6px 24px;
+}
+
+span.bar {
+	display: none;
+}

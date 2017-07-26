@@ -3,7 +3,7 @@
  * http://xena.ucsc.edu
  *
  * Standard Xena input toolbar, displayed above radio group or checkbox group. Displays input field name and optionally,
- * an additional action with corresponding click hander.
+ * an additional action with corresponding click handler.
  *
  * State
  * -----

@@ -1,11 +1,11 @@
 'use strict';
 
 var React = require('react');
-import Autosuggest from 'react-autosuggest';
 import Input from 'react-toolbox/lib/input';
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 require('./GeneSuggest.css'); // XXX rename file
+var XAutosuggest = require('./XAutosuggest');
 
 var renderInputComponent = ({ref, onChange, ...props}) => (
 	<Input
@@ -31,6 +31,9 @@ var CohortSuggest = React.createClass({
 	componentWillReceiveProps(props) {
 		this.setState({value: props.cohort || ""});
 	},
+	onClear() {
+		this.setState({value: ""});
+	},
 	onChange(ev, {newValue}) {
 		this.setState({value: newValue});
 	},
@@ -43,10 +46,8 @@ var CohortSuggest = React.createClass({
 	render() {
 		var {onChange, onBlur} = this,
 			{suggestions, value} = this.state;
-
 		return (
-			<Autosuggest
-				ref='autosuggest'
+			<XAutosuggest
 				suggestions={suggestions}
 				onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
 				onSuggestionsClearRequested={this.onSuggestionsClearRequested}
@@ -55,7 +56,10 @@ var CohortSuggest = React.createClass({
 				shouldRenderSuggestions={this.shouldRenderSuggestions}
 				renderSuggestion={v => <span>{v}</span>}
 				renderInputComponent={renderInputComponent}
-				inputProps={{value, onChange, onBlur}}/>);
+				inputProps={{value, onChange, onBlur}}
+				onClear={this.onClear}
+				value={value} />
+		);
 	}
 });
 

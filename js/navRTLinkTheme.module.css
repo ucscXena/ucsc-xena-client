@@ -14,11 +14,7 @@
 		color: var(--color-accent);
 		margin: 0 16px;
 		opacity: 1;
-		-webkit-transition: color 0.35s; /** Must override RTB's opacity transition here */
-		-moz-transition: color 0.35s;
-		-ms-transition: color 0.35s;
-		-o-transition: color 0.35s;
-		transition: color 0.35s;
+		transition: color 0.35s; /** Must override RTB's opacity transition here */
 		&:hover, &:focus {
 			color: var(--color-primary-contrast);
 			text-decoration: none;
