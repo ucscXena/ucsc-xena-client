@@ -50,7 +50,7 @@ function cmp(column, data) {
 		() => 0;
 }
 
-var {segmentedDataRange} = xenaQuery;
+var {segmentedDataRange, refGeneRange} = xenaQuery;
 
 //
 
@@ -67,9 +67,12 @@ function mapSamples(samples, data) {
 		   ['req', 'samplesInResp'], sIR => _.map(sIR, s => sampleMap[s]));
 }
 
-function fetchChrom({dsID}, [samples], pos) {
-	return segmentedDataRange(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd)
-		.map(req => mapSamples(samples, {req}));
+function fetchChrom({dsID, assembly}, [samples], pos) {
+	var {name, host} = xenaQuery.refGene[assembly] || {};
+	return refGeneRange(host, name, pos.chrom, pos.baseStart, pos.baseEnd)
+		.flatMap(refGene =>
+			segmentedDataRange(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd)
+				.map(req => mapSamples(samples, {req, refGene})));
 }
 
 function fetchGene({dsID, fields, assembly}, [samples]) {

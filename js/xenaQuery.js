@@ -288,6 +288,7 @@ function transformPOSTMethods(postMethods) {
 		fieldMetadata: mapResponse(indexFeatureDetail),
 		geneTranscripts: mapResponse(indexTranscripts),
 		refGeneExons: mapResponse(indexRefGene),
+		refGeneRange: mapResponse(indexRefGene),
 		segmentedDataRange: mapResponse(indexSegmented),
 		// Apply a transform that requires the 'host' parameter
 		datasetList: postFn => (host, cohort) =>
@@ -342,6 +343,7 @@ function wrapDsIDParams(postMethods) {
 		'fieldCodes',
 		'refGeneExons',
 		'refGenePosition',
+		'refGeneRange',
 		'segmentedDataRange',
 		'segmentedDataExamples',
 		'sparseData',
@@ -360,7 +362,7 @@ queryPosts = wrapDsIDParams(transformPOSTMethods(queryPosts));
 ////////////////////////////////////////////////////
 // Derived queries
 
-var {datasetMetadata, refGenePosition, refGeneExons} = queryPosts;
+var {datasetMetadata, refGenePosition, refGeneExons, refGeneRange} = queryPosts;
 
 // Override sparseDataMatchField to dispatch to the 'Slow' version
 // if necessary.
@@ -398,6 +400,7 @@ module.exports = {
 	// derived query posts
 	probemapGeneStrand,
 	refGeneExonCase,
+	refGeneRange,
 	sparseDataMatchGenes: sparseDataMatchField('genes'),
 
 	// helpers:
