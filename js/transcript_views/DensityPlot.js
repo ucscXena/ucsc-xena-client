@@ -4,6 +4,7 @@
 
  import '../../css/transcript_css/densityPlot.css';
  var sc = require('science');
+ var {deepPureRenderMixin} = require('../react-utils');
 
 const bin = 20; //number of bins
 const plotWidth = 125;
@@ -11,14 +12,14 @@ const plotHeight = 35;
 var binWidth;
 
 var DensityPlot = React.createClass ({
+ mixins: [deepPureRenderMixin],
 
- calculateHeight(exp, max) {
-    var logMin = Math.log2(0.001);
-    let pxWidth = (max - logMin) / plotWidth;
-    var newExp = exp.filter(e => e > logMin);
+ calculateHeight(exp, max, min) {
+    let minValue = this.props.unit === "tpm" ? Math.log2(0.001) : min;
+    let pxWidth = (max - minValue) / plotWidth;
+    var newExp = exp.filter(e => e > minValue);
     var percentNonZero = newExp.length / exp.length;
-
-    var kdePoints = sc.stats.kde().sample(newExp)(_.range(logMin, max + pxWidth, pxWidth));
+    var kdePoints = sc.stats.kde().sample(newExp)(_.range(minValue, max + pxWidth, pxWidth));
     let yHeights;
     var estimates = kdePoints.map(kdep => {
       return kdep[1];
@@ -29,7 +30,7 @@ var DensityPlot = React.createClass ({
     });
 
     //polyline points here
-    let polylinePoints = "";
+    let polylinePoints = "0," + plotHeight + " ";
     binWidth = plotWidth / yHeights.length;
     yHeights.forEach( (y, i) => {
       polylinePoints += (i * binWidth) + ',' + (1 - y) * plotHeight + ' ';

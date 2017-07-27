@@ -4,6 +4,7 @@ var _ = require('../underscore_ext');
 var {allExons, exonGroups, intronRegions} = require('../findIntrons');
 var {box, renderExon} = require('./Exons');
 import '../../css/transcript_css/exons.css';
+var {deepPureRenderMixin} = require('../react-utils');
 
 const width = 700;
 const padding = 5;
@@ -103,7 +104,7 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
 }
 
 var ExonsOnly = React.createClass({
-
+  mixins: [deepPureRenderMixin],
   row(data, multiplyingFactor, origin) {
 
 		return data.map((d, index) => {

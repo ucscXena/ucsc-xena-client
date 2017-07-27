@@ -3,11 +3,11 @@ var React = require('react');
 var colorScales = require('../colorScales');
 var {contrastColor} = require('../color_helper');
 import '../../css/transcript_css/nameColumn.css';
+var {deepPureRenderMixin} = require('../react-utils');
 
 var NameColumn = React.createClass({
-
+	mixins: [deepPureRenderMixin],
 	render() {
-
 		let data = this.props.data || {};
 		let colors = colorScales.colorScale(['ordinal', data.length]);
 		let items = data.map((d, index) => {

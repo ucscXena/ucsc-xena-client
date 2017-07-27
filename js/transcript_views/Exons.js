@@ -3,6 +3,7 @@ var React = require('react');
 var _ = require('../underscore_ext');
 
 import '../../css/transcript_css/exons.css';
+var {deepPureRenderMixin} = require('../react-utils');
 
 var width = 700;
 
@@ -71,7 +72,7 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
 }
 
 var Exons = React.createClass({
-
+	mixins: [deepPureRenderMixin],
 	row(data, multiplyingFactor, origin) {
 
 		return data.map((d, index) => {

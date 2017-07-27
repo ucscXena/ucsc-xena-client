@@ -31,7 +31,7 @@ var Transcripts = React.createClass({
 
 	render() {
 		//for data selection
-		var {subtypes, studyA, subtypeA, studyB, subtypeB} = this.props.state.transcripts || {};
+		var {subtypes, studyA, subtypeA, studyB, subtypeB, unit} = this.props.state.transcripts || {};
 		if(!subtypes)
 		{
 			return <h4>Loading available subtypes...</h4>;
@@ -72,7 +72,7 @@ var Transcripts = React.createClass({
 					<button className="selectors" onClick={this.onLoadData}>OK</button>
 					click this after entering new value of gene
 					<strong className="selectors">Unit: </strong>
-					<select ref="unit" onChange={this.onLoadData}>
+					<select ref="unit" onChange={this.onLoadData} value={unit}>
 						<option value="tpm">tpm</option>
 						<option value="isoformPercentage">isoformPercentage</option>
 					</select>
@@ -103,10 +103,12 @@ var Transcripts = React.createClass({
 					<DensityPlot
 						data={transcriptDensityData}
 						type="density"
+						unit={unit}
 						/>
 					<DensityPlot
 						data={transcriptDensityData}
 						type="histogram"
+						unit={unit}
 						/>
 				</div>
 			</div>);
