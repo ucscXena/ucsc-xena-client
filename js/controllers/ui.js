@@ -208,6 +208,11 @@ function setHubs(state, {hubs}) {
 		state;
 }
 
+function resetWizard(state) {
+	return state.columnOrder.length > 2 ?
+		_.assoc(state, 'wizardMode', false) : state;
+}
+
 var controls = {
 	init: (state, params) =>
 		setCohortPending(
@@ -259,6 +264,16 @@ var controls = {
 			'survival', null),
 	'sampleFilter-post!': (serverBus, state, newState) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples),
+	'add-column': (state, id, settings) => {
+		var {columnOrder, sampleSearch} = state, // old settings
+			[sampleColumn, ...rest] = columnOrder,
+			newOrder = [sampleColumn, id, ...rest],
+			newState = _.assocIn(state,
+				['columns', id], settings,
+				['columnOrder'], newOrder,
+				['sampleSearch'], remapFields(columnOrder, newOrder, sampleSearch));
+		return resetWizard(_.assocIn(newState, ['data', id, 'status'], 'loading'));
+	},
 	'add-column-post!': (serverBus, state, newState, id, settings) =>
 		normalizeFields(serverBus, newState, id, settings),
 	resize: (state, id, {width, height}) =>
