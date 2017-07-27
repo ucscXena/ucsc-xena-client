@@ -1,0 +1,33 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying global overrides to all checkbox components.
+ *
+ * Uses theme key RTCheckbox and theme end points to override specific classes. See
+ * http://react-toolbox.com/#/components/checkbox for details.
+ */
+
+/* Wrapper class around checkbox and corresponding label */
+.field {
+	font-weight: 400; /* BS override */
+	margin: 16px 0 0 0;
+}
+
+/* Mock checkbox check */
+.check {
+	border: 2px solid rgba(0, 0, 0, 0.38);
+}
+
+.check.checked {
+	background-color: var(--color-accent);
+	border: 2px solid var(--color-accent);
+}
+
+/* Checkbox label */
+.text {
+	color: rgba(0, 0, 0, 0.87);
+	font-size: 16px;
+	font-weight: 400;
+	padding-left: 16px;
+}

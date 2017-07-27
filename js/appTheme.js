@@ -12,7 +12,7 @@
 
 module.exports = {
 	RTAppBar: require('./views/RTAppBarTheme.module.css'),
-	RTCheckbox: require('./views/XCheckboxGroupTheme.module.css'),
+	RTCheckbox: require('./views/RTCheckboxTheme.module.css'),
 	RTInput: require('./views/RTInputTheme.module.css'),
 	RTRadio: require('./views/XRadioGroupTheme.module.css')
 };
