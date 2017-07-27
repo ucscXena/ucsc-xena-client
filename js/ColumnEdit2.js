@@ -232,7 +232,7 @@ var ColumnEdit = React.createClass({
 			'colorClass', defaultColorClass,
 			'assembly', ds.assembly);
 		this.props.onHide();
-		callback(['add-column', uuid(), settings, true]);
+		callback(['add-column', uuid(), settings]);
 	},
 	onCohortSelect: function(value) {
 		this.setChoice('cohort', value);

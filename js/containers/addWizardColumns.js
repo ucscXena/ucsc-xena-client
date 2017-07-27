@@ -133,7 +133,7 @@ function addColumnAddButton(Component) {
 				'width', ds.type === 'mutationVector' ? 200 : 100,
 				'columnLabel', ds.label,
 				'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel});
-			this.props.callback(['add-column', uuid(), settings, true]);
+			this.props.callback(['add-column', uuid(), settings]);
 		},
 		render() {
 			var {children, appState} = this.props,

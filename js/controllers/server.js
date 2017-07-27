@@ -124,16 +124,17 @@ var controls = {
 	'samples-post!': (serverBus, state, newState, {samples}) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
-	'normalize-fields': (state, fields, id, settings, isFirst, xenaFields) => {
+	'normalize-fields': (state, fields, id, settings, xenaFields) => {
 		var {columnOrder, sampleSearch} = state, // old settings
-			newOrder = isFirst ? [id, ...columnOrder] : [...columnOrder, id],
+			[sampleColumn, ...rest] = columnOrder,
+			newOrder = [sampleColumn, id, ...rest],
 			newState = _.assocIn(state,
 				['columns', id], updateFields(settings, xenaFields, fields),
 				['columnOrder'], newOrder,
 				['sampleSearch'], remapFields(columnOrder, newOrder, sampleSearch));
 		return resetWizard(_.assocIn(newState, ['data', id, 'status'], 'loading'));
 	},
-	'normalize-fields-post!': (serverBus, state, newState, fields, id, settings, __, xenaFields) => {
+	'normalize-fields-post!': (serverBus, state, newState, fields, id, settings, xenaFields) => {
 		// For geneProbes, fetch the gene model (just strand right now), and defer the
 		// data fetch.
 		if (settings.fieldType === 'geneProbes') {

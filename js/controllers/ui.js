@@ -85,10 +85,10 @@ function allFieldsLookup(settings, xenaFields, state) {
 			(fieldLookup[fs.fieldType] || probeLookup)(fs, state)), {/*host info?*/}));
 }
 
-function normalizeFields(serverBus, state, id, settings, isFirst) {
+function normalizeFields(serverBus, state, id, settings) {
 	var xenaFields = xenaFieldPaths(settings),
 		lookup = allFieldsLookup(settings, xenaFields, state);
-	serverBus.next(['normalize-fields', lookup, id, settings, isFirst, xenaFields]);
+	serverBus.next(['normalize-fields', lookup, id, settings, xenaFields]);
 }
 
 var featuresInCohort = (datasets, features, cohort) =>
@@ -259,8 +259,8 @@ var controls = {
 			'survival', null),
 	'sampleFilter-post!': (serverBus, state, newState) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples),
-	'add-column-post!': (serverBus, state, newState, id, settings, isFirst) =>
-		normalizeFields(serverBus, newState, id, settings, isFirst),
+	'add-column-post!': (serverBus, state, newState, id, settings) =>
+		normalizeFields(serverBus, newState, id, settings),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
 				['zoom', 'height'], height,

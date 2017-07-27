@@ -64,7 +64,7 @@ var Application = React.createClass({
 			settings = _.assoc(colSpec,
 					'width', 100,
 					'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
-		callback(['add-column', uuid(), settings, true]);
+		callback(['add-column', uuid(), settings]);
 	},
 	render: function() {
 		let {state, children, onHighlightChange, onShowWelcome, stepperState, ...otherProps} = this.props,
