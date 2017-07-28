@@ -97,7 +97,7 @@ function getPreferedDatasets(cohort, cohortPreferred) {
 //      add cohort editor, or
 //      add 1st column editor, or
 //      add 2nd column editor
-function addColumnAddButton(Component) {
+function addWizardColumns(Component) {
 	return React.createClass({
 		mixins: [deepPureRenderMixin],
 		displayName: 'SpreadsheetColumnAdd',
@@ -154,4 +154,4 @@ function addColumnAddButton(Component) {
 	});
 }
 
-module.exports = addColumnAddButton;
+module.exports = addWizardColumns;
