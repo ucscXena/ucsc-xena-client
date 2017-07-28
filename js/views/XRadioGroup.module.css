@@ -1,0 +1,12 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling standard Xena radio group that are outside of the RTB radio group theming API (for
+ * example, styles for the full-width radio group with a border bottom).
+ */
+
+.XRadioGroup {
+	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+	padding: 12px 16px 24px 24px;
+}

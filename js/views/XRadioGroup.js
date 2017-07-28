@@ -28,7 +28,7 @@ var XRadioMeta = require('./XRadioMeta');
 var XInputToolbar = require('./XInputToolbar');
 
 // Styles
-var compStyles = require('./XRadioGroupTheme.module.css');
+var compStyles = require('./XRadioGroup.module.css');
 
 var XRadioGroup = React.createClass({
 	onChange: function (value) {

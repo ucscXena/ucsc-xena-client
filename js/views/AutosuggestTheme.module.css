@@ -2,14 +2,11 @@
  * UCSC Xena Client
  * http://xena.ucsc.edu
  *
- * 1. Theme overrides for styling react-autosuggest.
- * 2. Custom CSS outside of react-autosuggest theming API.
- *
+ * Theme overrides for styling react-autosuggest.
  */
 
 @value black3 from '../../css/variables.css';
 @value black12 from '../../css/variables.css';
-@value black38 from '../../css/variables.css';
 
 /**
  * Core react-autosuggest theming API end points.
@@ -63,22 +60,4 @@
 /* Suggestions onfocus */
 .suggestionHighlighted {
 	background-color: black3;
-}
-
-/**
- * Custom CSS outside of react-autosuggest theming API.
- */
-
-.XAutosuggest {
-	position: relative;
-}
-
-.XAutosuggest i {
-	color: black38;
-	cursor: pointer;
-	background-color: rgba(255, 255, 255, 1);
-	padding: 16px;
-	position: absolute;
-	right: 0;
-	top: 10px;
 }

@@ -20,7 +20,7 @@ import {ThemeProvider} from 'react-css-themr';
 var navTheme = require('./navTheme');
 
 // Styles
-var compStyles = require('./navTheme.module.css');
+var compStyles = require('./nav.module.css');
 
 // Images
 var logoSantaCruzImg = require('../images/logoSantaCruz.png');

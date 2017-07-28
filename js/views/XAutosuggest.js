@@ -23,7 +23,8 @@ var React = require('react');
 import Autosuggest from 'react-autosuggest';
 
 // Styles
-var compStyles = require('./XAutosuggestTheme.module.css');
+var autosuggestTheme = require('./AutosuggestTheme.module.css');
+var compStyles = require('./XAutosuggest.module.css');
 
 var XAutosuggest = React.createClass({
 	render() {
@@ -32,7 +33,7 @@ var XAutosuggest = React.createClass({
 			<div className={compStyles.XAutosuggest}>
 				<Autosuggest {...autoProps}
 							ref='autosuggest'
-							theme={compStyles}/>
+							theme={autosuggestTheme}/>
 				{value ? <i className='material-icons' onClick={onClear}>close</i> : null}
 			</div>
 		);
