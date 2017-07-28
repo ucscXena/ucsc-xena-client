@@ -59,7 +59,7 @@ var resetLoadPending = state => _.dissoc(state, 'loadPending');
 function fetchStrand(serverBus, state, id, gene, dsID) {
 	var {probemap} = _.getIn(state, ['datasets', dsID]),
 		{host} = JSON.parse(dsID);
-	serverBus.next(['strand', xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.of('+');}), id]);
+	serverBus.next([['strand', id], xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.of('+');})]);
 }
 
 // Cohort metadata looks like
@@ -118,9 +118,9 @@ var controls = {
 	'samples-post!': (serverBus, state, newState, {samples}) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
-	'normalize-fields': (state, fields, id, settings, xenaFields) =>
+	'normalize-fields': (state, id, fields, settings, xenaFields) =>
 		_.assocIn(state, ['columns', id], updateFields(settings, xenaFields, fields)),
-	'normalize-fields-post!': (serverBus, state, newState, fields, id, settings, xenaFields) => {
+	'normalize-fields-post!': (serverBus, state, newState, id, fields, settings, xenaFields) => {
 		// For geneProbes, fetch the gene model (just strand right now), and defer the
 		// data fetch.
 		if (settings.fieldType === 'geneProbes') {
@@ -130,12 +130,12 @@ var controls = {
 			fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
 		}
 	},
-	'strand': (state, strand, id) => {
+	'strand': (state, id, strand) => {
 		// Update composite & all xena fields with strand info.
 		var settings = _.assoc(_.getIn(state, ['columns', id]), 'strand', strand);
 		return _.assocIn(state, ['columns', id], updateStrand(settings, xenaFieldPaths(settings), strand));
 	},
-	'strand-post!': (serverBus, state, newState, strand, id) => {
+	'strand-post!': (serverBus, state, newState, id) => {
 		// Fetch geneProbe data after we have the gene info.
 		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
 	},

@@ -88,7 +88,7 @@ function allFieldsLookup(settings, xenaFields, state) {
 function normalizeFields(serverBus, state, id, settings) {
 	var xenaFields = xenaFieldPaths(settings),
 		lookup = allFieldsLookup(settings, xenaFields, state);
-	serverBus.next(['normalize-fields', lookup, id, settings, xenaFields]);
+	serverBus.next([['normalize-fields', id], lookup, settings, xenaFields]);
 }
 
 var featuresInCohort = (datasets, features, cohort) =>
@@ -264,18 +264,22 @@ var controls = {
 			'survival', null),
 	'sampleFilter-post!': (serverBus, state, newState) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples),
-	'add-column': (state, id, settings) => {
-		var {columnOrder, sampleSearch} = state, // old settings
+	'add-column': (state, ...idSettingsList) => {
+		var {columnOrder, columns, sampleSearch, data} = state, // old settings
 			[sampleColumn, ...rest] = columnOrder,
-			newOrder = [sampleColumn, id, ...rest],
-			newState = _.assocIn(state,
-				['columns', id], settings,
-				['columnOrder'], newOrder,
-				['sampleSearch'], remapFields(columnOrder, newOrder, sampleSearch));
-		return resetWizard(_.assocIn(newState, ['data', id, 'status'], 'loading'));
+			ids = _.pluck(idSettingsList, 'id'),
+			settingsList = _.pluck(idSettingsList, 'settings'),
+			newOrder = [sampleColumn, ...ids, ...rest],
+			newState = _.assoc(state,
+				'columns', _.merge(columns, _.object(ids, settingsList)),
+				'columnOrder', newOrder,
+				'sampleSearch', remapFields(columnOrder, newOrder, sampleSearch),
+				'data', _.merge(data, _.object(ids, ids.map(_.constant({'status': 'loading'})))));
+		return resetWizard(newState);
 	},
-	'add-column-post!': (serverBus, state, newState, id, settings) =>
-		normalizeFields(serverBus, newState, id, settings),
+	'add-column-post!': (serverBus, state, newState, ...idSettingsList) =>
+		idSettingsList.forEach(({id, settings}) =>
+			normalizeFields(serverBus, newState, id, settings)),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
 				['zoom', 'height'], height,

@@ -92,6 +92,18 @@ function getPreferedDatasets(cohort, cohortPreferred) {
 			({dsID: preferred[type], label: preferredLabels[type]})) : null;
 }
 
+var computeSettings = _.curry((datasets, features, fields, dataset) => {
+	var ds = datasets[dataset];
+	// XXX resolve 'probes' if user has selected probes. Set here to false
+	var settings = columnSettings(datasets, features, dataset, fields, false),
+		colSpec = getColSpec([settings], datasets);
+
+	return _.assoc(colSpec,
+		'width', ds.type === 'mutationVector' ? 200 : 100,
+		'columnLabel', ds.label,
+		'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel});
+});
+
 // 1) if appState.editing, then set editing state, and render editor.
 // 2) if wizard mode
 //      add cohort editor, or
@@ -121,19 +133,12 @@ function addWizardColumns(Component) {
 		onCohortSelect(cohort) {
 			this.props.callback(['cohort', 0, cohort]);
 		},
-		onDatasetSelect(input, dataset) {
+		onDatasetSelect(input, datasetList) {
 			// XXX need to remap features
-			var {datasets, features} = this.props.appState,
-				ds = datasets[dataset];
-			// XXX resolve 'probes', set here to false
-			var settings = columnSettings(datasets, features, dataset, input, false),
-				colSpec = getColSpec([settings], datasets);
-
-			settings = _.assoc(colSpec,
-				'width', ds.type === 'mutationVector' ? 200 : 100,
-				'columnLabel', ds.label,
-				'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel});
-			this.props.callback(['add-column', uuid(), settings]);
+			var {datasets, features} = this.props.appState;
+			var settingsList = datasetList.map(computeSettings(datasets, features, input));
+			this.props.callback(['add-column',
+					..._.flatmap(settingsList, settings => ({id: uuid(), settings}))]);
 		},
 		render() {
 			var {children, appState} = this.props,
