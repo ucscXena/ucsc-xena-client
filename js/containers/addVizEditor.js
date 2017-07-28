@@ -1,7 +1,6 @@
 'use strict';
 var React = require('react');
 var VizSettings = require('../views/VizSettings');
-// XXX move ColumnEdit2 to views?
 var _ = require('../underscore_ext');
 
 var vizSettingsState = ['defaultNormalization', 'colorClass', 'vizSettings', 'valueType', 'fieldType'];
