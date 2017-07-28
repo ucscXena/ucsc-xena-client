@@ -1,0 +1,22 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying global overrides to all Button components.
+ *
+ * Uses theme key RTButton and theme end points to override specific classes. See
+ * http://react-toolbox.com/#/components/button for details.
+ */
+
+/* Button accent */
+.accent {
+	color: var(--color-accent);
+}
+
+.button {
+	composes: mdBody1 from '../../css/typography.module.css';
+}
+
+.button span {
+	letter-spacing: 0.5px;
+}

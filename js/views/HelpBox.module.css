@@ -1,0 +1,108 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling Material Design-inspired help boxes.
+ */
+
+@value black38 from '../../css/variables.css';
+
+/**
+ * Styles shared by both below and right help boxes.
+ */
+
+/* Main help box wrapper element, used by both below and right help boxes */
+.HelpBox {
+	composes: mdSubhead from '../../css/typography.module.css';
+	color: black54;
+	position: absolute;
+}
+
+/* Core help box container, holding content, actions and triangle. Used by both right and below help boxes. */
+.helpBoxBounds {
+	background-color: #ffffff;
+	border-radius: 2px;
+	box-shadow: 0 19px 75px rgba(0, 0, 0, .3), 0 15px 20px rgba(0, 0, 0, .22); /* based on <Dialog>, updated spread to 75px (from 60px) to provide shadow for triangles */
+	z-index: 3; /* to cover the Stepper if required */
+}
+
+/* HelpBox triangle - shared styles */
+.helpBoxBounds:before {
+	background-color: #ffffff;
+	content: '';
+	display: block;
+	height: 23px;
+	position: absolute;
+	width: 23px;
+	z-index: 2;
+}
+
+/* HelpBox text container */
+.helpBoxContent {
+	padding: 24px;
+}
+
+/* HelpBox text */
+p {
+	margin: 0;
+	padding: 8px 0 8px 0;
+}
+
+p:first-child {
+	padding-top: 0;
+}
+
+/* Button container */
+.buttonContainer {
+	display: flex;
+	justify-content: flex-end;
+	padding: 8px;
+}
+
+/**
+ * Help box right
+ */
+
+/* Main help box wrapper element for help boxes positioned to the right, with row marker */
+.withMarker {
+	display: flex;
+	position: absolute;
+}
+
+.withMarker .helpBoxBounds {
+	position: relative;
+}
+
+/* HelpBox triangle right */
+.withMarker .helpBoxBounds:before {
+	left: -11.5px;
+	top: 50%;
+	transform: translateY(-50%) rotate(-45deg);
+}
+
+/* Dashed line row marker, used by right help boxes only. */
+.rowMarker {
+	position: relative;
+	margin-right: 27px; /* 16px margin + 11px for triangle */
+}
+
+.rowMarker:after {
+	border: 1px dashed black38;
+	content: '';
+	display: block;
+	position: absolute;
+	top: 50%;
+	z-index: 2;
+	width: 100%;
+}
+
+/**
+ * Help box below
+ */
+
+/* HelpBox triangle below */
+.HelpBox:not(.withMarker).helpBoxBounds:before {
+	left: 50%;
+	top: -11.5px;
+	transform: translateX(-50%) rotate(-45deg);
+}
