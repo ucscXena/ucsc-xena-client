@@ -39,16 +39,19 @@ var preferredList = preferred => ([
 	}
 ]);
 
+var RETURN = 13;
+var returnPressed = cb => ev => ev.keyCode === RETURN && cb();
+
 var GenotypicForm = props => (
 	<div>
 		<label>Genes, Identifiers, or Coordinates</label><br/>
-		<input ref={props.inputRef} type='text'/>
+		<input onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} ref={props.inputRef} type='text'/>
 		<br/>
 		<XCheckboxGroup
 			label='Assay Type'
 			additionalAction={props.advanced ? 'Show Basic' : 'Show Advanced'}
 			onAdditionalAction={props.onAdvancedClick}
-			onSelect={props.onSelect}
+			onChange={props.onChange}
 			options={props.advanced ? datasetList(props.datasets) :
 				preferredList(props.preferred)}/>
 	</div>);
@@ -56,7 +59,7 @@ var GenotypicForm = props => (
 var PhenotypicForm = props => (
 	<div>
 		<label>Phenotype</label>
-		<input ref={props.inputRef} type='text'/>
+		<input onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} ref={props.inputRef} type='text'/>
 	</div>);
 
 var getModeFields = {
@@ -64,9 +67,11 @@ var getModeFields = {
 	Phenotypic: PhenotypicForm
 };
 
+var isValid = (value, selected) => value.trim().length > 0 && selected.length > 0;
+
 var VariableSelect = React.createClass({
 	getInitialState() {
-		return {mode: 'Genotypic', advanced: false};
+		return {mode: 'Genotypic', advanced: false, valid: false};
 	},
 	onModeChange(value) {
 		this.setState({mode: value});
@@ -77,14 +82,23 @@ var VariableSelect = React.createClass({
 	setInput(el) {
 		this.input = el;
 	},
-	onSelect(dataset) {
-		this.props.onSelect(this.input.value, dataset);
+	onChange(selected) {
+		this.selected = selected;
+		this.setState({valid: isValid(this.input.value, selected)});
+	},
+	onFieldChange() {
+		this.setState({valid: isValid(this.input.value, this.selected || [])});
+	},
+	onDone() {
+		if (this.state.valid) {
+			this.props.onSelect(this.input.value, this.selected[0]);
+		}
 	},
 	render() {
 		// XXX If there are no preferred datasets, e.g. for
 		// unassigned cohort, we should coerce to advanced mode,
 		// and hide/disable the 'Show Basic' button.
-		var {mode, advanced} = this.state,
+		var {mode, advanced, valid} = this.state,
 			{datasets, preferred} = this.props,
 			ModeForm = getModeFields[mode];
 		var dataTypeProps = {
@@ -106,12 +120,14 @@ var VariableSelect = React.createClass({
 				<XRadioGroup {...dataTypeProps} />
 				<ModeForm
 					inputRef={this.setInput}
-					onSelect={this.onSelect}
+					onChange={this.onChange}
+					onReturn={this.onDone}
+					onFieldChange={this.onFieldChange}
 					datasets={datasets}
 					preferred={preferred}
 					onAdvancedClick={this.onAdvancedClick}
 					advanced={advanced}/>
-				<button>Done</button>
+				<button disabled={!valid} onClick={this.onDone}>Done</button>
 			</div>);
 	}
 });

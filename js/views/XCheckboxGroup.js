@@ -15,7 +15,7 @@
  * Actions
  * -------
  * onAdditionalAction - called when additional action link is clicked.
- * onSelect - called when selected checkbox value is changed.
+ * onChange - called when a checkbox value is changed.
  */
 
 'use strict';
@@ -25,13 +25,25 @@ var React = require('react');
 import {Checkbox} from 'react-toolbox/lib/checkbox';
 var _ = require('../underscore_ext');
 var XInputToolbar = require('./XInputToolbar');
+var {deepPureRenderMixin} = require('../react-utils');
 
 // Styles
 var compStyles = require('./XCheckboxGroup.module.css');
 
 var XCheckboxGroup = React.createClass({
-	onChange: function (value) {
-		this.props.onSelect(value);
+	mixins: [deepPureRenderMixin],
+	onChange: function (isOn, ev) {
+		var value = ev.target.dataset.value;
+		this.props.onChange(_.keys(_.pick(_.assoc(this.state, value, isOn), x => x)));
+		this.setState({[value]: isOn});
+	},
+	getInitialState() {
+		return {};
+	},
+	componentWillReceiveProps(newProps) {
+		if (!_.isEqual(newProps, this.props)) {
+			this.replaceState({});
+		}
 	},
 	render() {
 		var {additionalAction, label, onAdditionalAction, options} = this.props;
@@ -40,7 +52,7 @@ var XCheckboxGroup = React.createClass({
 				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
 				{_.map(options, group => [
 					group.label ? <span className={compStyles.subgroupHeader}>{group.label}</span> : null,
-					_.map(group.options, o => <Checkbox key={o.label} label={o.label} onChange={() => this.onChange(o.value)}/>)
+					_.map(group.options, o => <Checkbox data-value={o.value} key={o.label} label={o.label} checked={this.state[o.value]} onChange={this.onChange}/>)
 				])}
 			</div>
 		);
