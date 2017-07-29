@@ -49,3 +49,9 @@
 	float: left;
 	z-index: 1;
 }
+
+.densityPlot--row--zoom {
+	width: 100%;
+	height: 140px;
+	display: inline-block;
+}

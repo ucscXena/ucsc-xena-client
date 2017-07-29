@@ -13,8 +13,13 @@ import '../../css/transcript_css/transcriptPage.css';
 // will be in a separate file, and imported above.
 var Transcripts = React.createClass({
 	getInitialState() {
+		let genetranscripts = _.getIn(this.props.state, ['transcripts', 'genetranscripts'], []);
+		genetranscripts.forEach(t => {
+			t.zoom = false;
+		});
 		return {
-			gene: _.getIn(this.props.state, ['transcripts', 'gene'], "")
+			gene: _.getIn(this.props.state, ['transcripts', 'gene'], ""),
+			genetranscripts: genetranscripts,
 		};
 	},
 
@@ -27,6 +32,22 @@ var Transcripts = React.createClass({
 		// expression data.
 		this.props.callback(['loadGene', this.state.gene, studyA, subtypeA, studyB, subtypeB, unit]);
 		// this.props.callback(['loadGene', 'TP53', 'tcga', 'Lung Adenocarcinoma', 'gtex', 'Lung']); // hard-coded gene and sample subsets, for demo
+	},
+
+	onZoom(name) {
+		let newState = _.updateIn(this.props.state, ['transcripts', 'genetranscripts'], g => {
+			[...g].forEach((t, index) => {
+				if(_.isMatch(t, {name: name}))
+				{
+					g[index] = _.assoc(t, "zoom", !t.zoom);
+				}
+			});
+			return g;
+		});
+		let genetranscript = _.getIn(newState, ['transcripts', 'genetranscripts'], []);
+		this.setState({
+			genetranscript: genetranscript,
+		});
 	},
 
 	render() {
@@ -50,15 +71,16 @@ var Transcripts = React.createClass({
 				return exonStarts - exonEnds; // start - end to sort in descending order
 			})); });
 		//for the name column
-		var transcriptNameData = _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'exonCount'));
+		var transcriptNameData = _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'exonCount', 'zoom'));
 
 		//for the exon-intron visualization
-		var transcriptExonData = _.map(genetranscriptsSorted, t => _.omit(t, ['name', 'chrom', 'expA', 'expB']));
+		var transcriptExonData = _.map(genetranscriptsSorted, t => _.omit(t, ['chrom', 'expA', 'expB']));
 
 		// for the density plot
 		var transcriptDensityData = {
 			studyA: _.map(genetranscriptsSorted, t => _.pick(t, 'expA')),
-			studyB: _.map(genetranscriptsSorted, t => _.pick(t, 'expB'))
+			studyB: _.map(genetranscriptsSorted, t => _.pick(t, 'expB')),
+			nameAndZoom: _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'zoom')),
 		};
 
 		return (
@@ -93,22 +115,26 @@ var Transcripts = React.createClass({
 					<br/>
 					<NameColumn
 						data={transcriptNameData}
+						getNameZoom={this.onZoom}
 						/>
 					{/* <Exons
 						data={transcriptExonData}
 					/> */}
 					<ExonsOnly
 						data={transcriptExonData}
+						getNameZoom={this.onZoom}
 					/>
 					<DensityPlot
 						data={transcriptDensityData}
 						type="density"
 						unit={unit}
+						getNameZoom={this.onZoom}
 						/>
 					<DensityPlot
 						data={transcriptDensityData}
 						type="histogram"
 						unit={unit}
+						getNameZoom={this.onZoom}
 						/>
 				</div>
 			</div>);

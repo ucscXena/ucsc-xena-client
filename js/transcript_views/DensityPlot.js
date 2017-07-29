@@ -1,4 +1,4 @@
-'use strict';
+   'use strict';
  var React = require('react');
  var _ = require('../underscore_ext');
 
@@ -14,7 +14,7 @@ var binWidth;
 var DensityPlot = React.createClass ({
  mixins: [deepPureRenderMixin],
 
- calculateHeight(exp, max, min) {
+ calculateHeight(exp, max, min, plotHt) {
     let minValue = this.props.unit === "tpm" ? Math.log2(0.001) : min;
     let pxWidth = (max - minValue) / plotWidth;
     var newExp = exp.filter(e => e > minValue);
@@ -30,18 +30,18 @@ var DensityPlot = React.createClass ({
     });
 
     //polyline points here
-    let polylinePoints = "0," + plotHeight + " ";
+    let polylinePoints = "0," + plotHt + " ";
     binWidth = plotWidth / yHeights.length;
     yHeights.forEach( (y, i) => {
-      polylinePoints += (i * binWidth) + ',' + (1 - y) * plotHeight + ' ';
+      polylinePoints += (i * binWidth) + ',' + (1 - y) * plotHt + ' ';
     });
 
     // _.range(0, Math.floor(1 / pxWidth)).forEach(
     //   () => yHeights.unshift(1 - percentNonZero)
     // );
-    polylinePoints += plotWidth + "," + plotHeight;
+    polylinePoints += plotWidth + "," + plotHt;
     let zeroWidth = 1 / pxWidth;
-    let zeroHeight = (1 - percentNonZero) * plotHeight;
+    let zeroHeight = (1 - percentNonZero) * plotHt;
     return {
       polylinePoints: polylinePoints,
       zeroWidth: zeroWidth,
@@ -71,19 +71,21 @@ var DensityPlot = React.createClass ({
  		let data = this.props.data ? this.props.data : null;
     let max = Math.max.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
     let min = Math.min.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
- 		let rows = _.mmap(data.studyA, data.studyB, (studyA, studyB) => {
+ 		let rows = _.mmap(data.studyA, data.studyB, data.nameAndZoom, (studyA, studyB, nameAndZoom) => {
+      let rowClass = nameAndZoom.zoom ? "densityPlot--row--zoom" : "densityPlot--row";
       if(this.props.type === 'density')
       {
         // let kdepoints;
         let polylinePoints, zeroWidth, zeroHeight;
+        let plotHt = nameAndZoom.zoom ? plotHeight * 2 : plotHeight;
         return (
-          <div className="densityPlot--row">
+          <div className={rowClass} onClick={() => this.props.getNameZoom(nameAndZoom.name)}>
             <div className="densityPlot--row--xAxis"/>
             <div className="densityPlot--row--studyA">
                  {
-                   {polylinePoints, zeroWidth, zeroHeight} = this.calculateHeight(studyA.expA, max, min),
-                   <svg width={plotWidth} height={plotHeight}>
-                     <rect x="0" y={plotHeight - zeroHeight} width={zeroWidth} height={zeroHeight} fill="#008080"/>
+                   {polylinePoints, zeroWidth, zeroHeight} = this.calculateHeight(studyA.expA, max, min, plotHt),
+                   <svg width={plotWidth} height={plotHt}>
+                     <rect x="0" y={plotHt - zeroHeight} width={zeroWidth} height={zeroHeight} fill="#008080"/>
                      <polyline points={polylinePoints} fill="#008080"/>
                    </svg>
                   //  kdepoints = this.calculateHeight(studyA.expA, max, min),
@@ -101,9 +103,9 @@ var DensityPlot = React.createClass ({
             </div>
             <div className="densityPlot--row--studyB">
                  {
-                   {polylinePoints, zeroWidth, zeroHeight} = this.calculateHeight(studyB.expB, max, min),
-                   <svg width={plotWidth} height={plotHeight}>
-                     <rect x="0" y={plotHeight - zeroHeight} width={zeroWidth} height={zeroHeight} fill="steelblue"/>
+                   {polylinePoints, zeroWidth, zeroHeight} = this.calculateHeight(studyB.expB, max, min, plotHt),
+                   <svg width={plotWidth} height={plotHt}>
+                     <rect x="0" y={plotHt - zeroHeight} width={zeroWidth} height={zeroHeight} fill="steelblue"/>
                      <polyline points={polylinePoints} fill="steelblue"/>
                    </svg>
                   //  kdepoints = this.calculateHeight(studyB.expB, max, min),
@@ -163,7 +165,7 @@ var DensityPlot = React.createClass ({
  		});
  		return (
  			<div className="densityPlot"
- 				 style={{height: (data.studyA.length * 70) + "px"}}>
+ 				 style={{height: (data.studyA.length * plotHeight * 2) + "px"}}>
  				{rows}
  			</div>
  			);

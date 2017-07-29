@@ -9,6 +9,12 @@
 	position: relative;
 }
 
+.exons--row--zoom {
+	height: 140px;
+	width: 700px;
+	position: relative;
+}
+
 .exons--row--axis {
 	height: 1px;
 	display: inline-block;
@@ -43,11 +49,11 @@
 .exons--row--item-small span {
 	position: absolute;
 	transform: translate(-50%, 0);
-	bottom: 20px;
+	bottom: 142.857%;
 }
 
 .exons--row--item-big span {
 	position: absolute;
 	transform: translate(-50%, 0);
-	bottom: 25px;
+	bottom: 102.041%;
 }

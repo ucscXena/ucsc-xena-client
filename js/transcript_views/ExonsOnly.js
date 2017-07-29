@@ -112,8 +112,8 @@ var ExonsOnly = React.createClass({
 			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + extraAxisWidth + "px"};
 			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + d.padding[0] + "px"])
 									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + d.padding[0] + "px"]);
-
-			return ( <div className="exons--row" id={index}>
+      let rowClass = d.zoom ? "exons--row--zoom" : "exons--row";
+			return ( <div className={rowClass} id={index} onClick={() => this.props.getNameZoom(d.name)}>
 						<div className="exons--row--axis"
 							 style={style}/>
 					{
