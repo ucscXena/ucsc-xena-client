@@ -349,6 +349,8 @@ function uniquify(strs) {
 	});
 }
 
+var insert = (arr, i, vals) => [...arr.slice(0, i), ...vals, ...arr.slice(i)];
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -415,6 +417,7 @@ _.mixin({
 	fmap,
 	fmapMemoize1,
 	groupByConsec,
+	insert,
 	maxWith,
 	maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
 	meannull,

@@ -91,7 +91,7 @@ var VariableSelect = React.createClass({
 	},
 	onDone() {
 		if (this.state.valid) {
-			this.props.onSelect(this.input.value, this.selected);
+			this.props.onSelect(this.props.pos, this.input.value, this.selected);
 		}
 	},
 	render() {

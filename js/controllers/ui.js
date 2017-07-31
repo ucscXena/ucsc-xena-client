@@ -264,35 +264,48 @@ var controls = {
 			'survival', null),
 	'sampleFilter-post!': (serverBus, state, newState) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples),
-	'add-column': (state, ...idSettingsList) => {
+	'add-column': (state, pos, ...idSettingsList) => {
 		var {columnOrder, columns, sampleSearch, data} = state, // old settings
-			[sampleColumn, ...rest] = columnOrder,
 			ids = _.pluck(idSettingsList, 'id'),
 			settingsList = _.pluck(idSettingsList, 'settings'),
-			newOrder = [sampleColumn, ...ids, ...rest],
+			newOrder = _.insert(columnOrder, pos + 1, ids),
 			newState = _.assoc(state,
 				'columns', _.merge(columns, _.object(ids, settingsList)),
 				'columnOrder', newOrder,
 				'sampleSearch', remapFields(columnOrder, newOrder, sampleSearch),
+				'editing', null, // is editing always off after column add?
 				'data', _.merge(data, _.object(ids, ids.map(_.constant({'status': 'loading'})))));
 		return resetWizard(newState);
 	},
-	'add-column-post!': (serverBus, state, newState, ...idSettingsList) =>
+	'add-column-post!': (serverBus, state, newState, pos, ...idSettingsList) =>
 		idSettingsList.forEach(({id, settings}) =>
 			normalizeFields(serverBus, newState, id, settings)),
+	'edit-column': (state, editing) => _.assoc(state, 'editing', editing),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
 				['zoom', 'height'], height,
 				['columns', id, 'width'], width),
+	// If 'editing' is a blank column (isNumber), we need to decrement it
+	// if it is higher than id index, to preserve its position in the order.
 	remove: (state, id) => {
-		let ns = _.updateIn(state,
-							["columns"], c => _.dissoc(c, id),
-							["columnOrder"], co => _.without(co, id),
-							["data"], d => _.dissoc(d, id));
+		var {columns, columnOrder, data, editing} = state,
+			newEditing = _.isNumber(editing) &&
+				editing >= state.columnOrder.indexOf(id) ? editing - 1 : editing,
+			ns = _.assoc(state,
+				'editing', newEditing,
+				'columns', _.dissoc(columns, id),
+				'columnOrder', _.without(columnOrder, id),
+				'data', _.dissoc(data, id));
 		return _.assoc(ns, 'sampleSearch', remapFields(state.columnOrder, ns.columnOrder, state.sampleSearch));
 	},
-	order: (state, order) => _.assoc(state, 'columnOrder', order,
-									 'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch)),
+	order: (state, order) => {
+		// Filter out 'editing' columns
+		var newOrder = order.filter(id => !_.isNumber(id)),
+			editing = _.findIndexDefault(order.slice(1), _.isNumber, null);
+		return _.assoc(state, 'columnOrder', newOrder,
+			'editing', editing,
+			'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch));
+	},
 	zoom: (state, zoom) => warnZoom(_.assoc(state, "zoom", zoom)),
 	'zoom-help-close': zoomHelpClose,
 	'zoom-help-disable': zoomHelpClose,

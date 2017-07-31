@@ -18,6 +18,7 @@ var disableSelect = require('./disableSelect');
 var addWizardColumns = require('./addWizardColumns');
 var addVizEditor = require('./addVizEditor');
 var makeSortable = require('./makeSortable');
+var addColumnAdd = require('./addColumnAdd');
 var getSpreadsheet = require('../Spreadsheet');
 var getStepperState = require('./getStepperState');
 var Application = require('../Application');
@@ -81,7 +82,7 @@ function datasetMeta(column, datasets) {
 	};
 }
 
-var columnsWrapper = c => addTooltip(addWizardColumns(makeSortable(disableSelect(addVizEditor(c)))));
+var columnsWrapper = c => addTooltip(addWizardColumns(addColumnAdd(makeSortable(disableSelect(addVizEditor(c))))));
 var Spreadsheet = getSpreadsheet(columnsWrapper);
 // XXX without tooltip, we have no mouse pointer. Should make the wrapper add the css
 // that hides the mouse. Currently this is in Column.
