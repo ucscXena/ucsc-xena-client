@@ -28,7 +28,7 @@ function getValueType(dataset, features, fields) {
 	if (type === 'genomicSegment') {
 		return 'segmented';
 	}
-	if (type === 'phenotype') {
+	if (type === 'clinicalMatrix') {
 		return valuetype === 'category' ? 'coded' : 'float';
 	}
 	return 'float';
@@ -41,7 +41,7 @@ function getFieldType(dataset, features, fields, probes) {
 	if (dataset.type === 'genomicSegment') {
 		return 'segmented';
 	}
-	if (dataset.type === 'phenotype') {
+	if (dataset.type === 'clinicalMatrix') {
 		return 'clinical';
 	}
 	return  probes ? 'probes' : (fields.length > 1 ? 'genes' : 'geneProbes');
@@ -57,12 +57,12 @@ function columnSettings(datasets, features, dsID, input, probes) {
 	return {
 		fields: pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] : fields,
 		fetchType: 'xena',
-		valueType: getValueType(meta, features, fields),
-		fieldType: getFieldType(meta, features, fields, probes),
+		valueType: getValueType(meta, features[dsID], fields),
+		fieldType: getFieldType(meta, features[dsID], fields, probes),
 		dsID,
 		defaultNormalization: meta.colnormalization,
 		// XXX this assumes fields[0] doesn't appear in features if ds is genomic
-		fieldLabel: _.get(features, [fields[0], 'longtitle'], fields.join(', ')),
+		fieldLabel: _.get(features, [dsID, fields[0], 'longtitle'], fields.join(', ')),
 		colorClass: defaultColorClass,
 		assembly: meta.assembly
 	};
@@ -92,6 +92,21 @@ function getPreferedDatasets(cohort, cohortPreferred) {
 	return preferred ? _.keys(preferred).map(type =>
 			({dsID: preferred[type], label: preferredLabels[type]})) : null;
 }
+
+var stripFields = f => ({dsID: f.dsID, label: (f.longtitle || f.name), value: f.name});
+
+var consolidateFeatures = featureSet => {
+	return _.reduce(featureSet, (all, features, dsID) => {
+		let strippedFeatures = _.toArray(_.mapObject(features, f =>
+			_.extend(stripFields(f), {dsID: dsID})));
+		return all.concat(strippedFeatures);
+	}, []);
+};
+
+var sortFeatures = features => _.sortBy(features, f => f.label.toUpperCase());
+
+var removeSampleID = features => _.filter(features, f => f.value !== "sampleID");
+
 
 var computeSettings = _.curry((datasets, features, fields, dataset) => {
 	var ds = datasets[dataset];
@@ -143,12 +158,12 @@ function addWizardColumns(Component) {
 		},
 		render() {
 			var {children, appState} = this.props,
-				{cohort, cohorts, cohortPreferred, cohortMeta, wizardMode, datasets} = appState,
+				{cohort, cohorts, cohortPreferred, cohortMeta, wizardMode, datasets, features} = appState,
 				stepperState = getStepperState(appState),
 				{editing} = appState,
 				preferred = getPreferedDatasets(cohort, cohortPreferred),
 				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect},
-				datasetSelectProps = {datasets, preferred, onSelect: this.onDatasetSelect},
+				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect},
 				columns = React.Children.toArray(children),
 				withEditor = columns.map(el =>
 						editing === el.props.id ? <ColumnInlineEditor column={el} editor='editor'/> : el),

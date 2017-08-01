@@ -5,6 +5,7 @@ var _ = require('../underscore_ext');
 var XCheckboxGroup = require('./XCheckboxGroup');
 var XRadioGroup = require('./XRadioGroup');
 var GeneSuggest = require('./GeneSuggest');
+var PhenotypeSuggest = require('./PhenotypeSuggest');
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
@@ -46,7 +47,7 @@ var returnPressed = cb => ev => ev.keyCode === RETURN && cb();
 var GenotypicForm = props => (
 	<div>
 		<label>Genes, Identifiers, or Coordinates</label><br/>
-		<GeneSuggest value={props.value} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} inputRef={props.inputRef} type='text'/>
+		<GeneSuggest onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} inputRef={props.inputRef} type='text'/>
 		<br/>
 		<XCheckboxGroup
 			label='Assay Type'
@@ -60,7 +61,7 @@ var GenotypicForm = props => (
 var PhenotypicForm = props => (
 	<div>
 		<label>Phenotype</label>
-		<input onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} ref={props.inputRef} type='text'/>
+		<PhenotypeSuggest features={props.features} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} inputRef={props.inputRef} type='text'/>
 	</div>);
 
 var getModeFields = {
@@ -68,16 +69,21 @@ var getModeFields = {
 	Phenotypic: PhenotypicForm
 };
 
-var isValid = (value, selected) => value.trim().length > 0 && selected.length > 0;
+var isValid = {
+	Genotypic: (value, selected) => value.trim().length > 0 && selected.length > 0,
+	Phenotypic: (value, selected, features) => _.findWhere(features, {label: value})
+};
 
 var VariableSelect = React.createClass({
 	getInitialState() {
 		return {mode: 'Genotypic', advanced: false, valid: false};
 	},
 	onModeChange(value) {
+		this.selected = [];
 		this.setState({mode: value});
 	},
 	onAdvancedClick() {
+		this.selected = [];
 		this.setState({advanced: !this.state.advanced});
 	},
 	setInput(input) {
@@ -85,14 +91,19 @@ var VariableSelect = React.createClass({
 	},
 	onChange(selected) {
 		this.selected = selected;
-		this.setState({valid: isValid(this.input.value, selected)});
+		this.setState({valid: isValid[this.state.mode](this.input.value, selected, this.props.features)});
 	},
-	onFieldChange() {
-		this.setState({valid: isValid(this.input.value, this.selected || [])});
+	onFieldChange(value) {
+		this.setState({valid: isValid[this.state.mode](value, this.selected || [], this.props.features)});
 	},
 	onDone() {
 		if (this.state.valid) {
-			this.props.onSelect(this.props.pos, this.input.value, this.selected);
+			if (this.state.mode === 'Genotypic') {
+				this.props.onSelect(this.props.pos, this.input.value, this.selected);
+			} else {
+				let feature = _.findWhere(this.props.features, {label: this.input.value});
+				this.props.onSelect(this.props.pos, feature.value, [feature.dsID]);
+			}
 		}
 	},
 	render() {
@@ -100,7 +111,7 @@ var VariableSelect = React.createClass({
 		// unassigned cohort, we should coerce to advanced mode,
 		// and hide/disable the 'Show Basic' button.
 		var {mode, advanced, valid} = this.state,
-			{datasets, preferred} = this.props,
+			{datasets, features, preferred} = this.props,
 			ModeForm = getModeFields[mode];
 		var dataTypeProps = {
 			label: 'Data Type',
@@ -125,6 +136,7 @@ var VariableSelect = React.createClass({
 					onReturn={this.onDone}
 					onFieldChange={this.onFieldChange}
 					datasets={datasets}
+					features={features}
 					preferred={preferred}
 					onAdvancedClick={this.onAdvancedClick}
 					advanced={advanced}/>

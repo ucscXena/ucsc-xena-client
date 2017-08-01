@@ -98,6 +98,7 @@ var GeneSuggest = React.createClass({
 	},
 	render() {
 		var {onChange} = this,
+			{onKeyDown} = this.props,
 			{suggestions, value} = this.state;
 
 		return (
@@ -110,7 +111,7 @@ var GeneSuggest = React.createClass({
 				shouldRenderSuggestions={this.shouldRenderSuggestions}
 				renderSuggestion={v => <span>{v}</span>}
 				renderInputComponent={renderInputComponent}
-				inputProps={{value, onChange}}/>);
+				inputProps={{value, onKeyDown, onChange}}/>);
 	}
 });
 
