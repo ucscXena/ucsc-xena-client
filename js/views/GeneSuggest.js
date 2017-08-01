@@ -1,7 +1,7 @@
 'use strict';
 
 var React = require('react');
-import Autosuggest from 'react-autosuggest';
+var XAutosuggest = require('./XAutosuggest');
 import Input from 'react-toolbox/lib/input';
 var {sparseDataMatchPartialField, refGene} = require('../xenaQuery');
 var _ = require('../underscore_ext');
@@ -48,7 +48,7 @@ var GeneSuggest = React.createClass({
 			.switchMap(value => sparseDataMatchPartialField(host, 'name2', name, value, limit)).subscribe(matches => this.setState({suggestions: matches}));
 	},
 	onSuggestionsFetchRequested({value}) {
-		var position = this.refs.autosuggest.input.selectionStart,
+		var position = this.input.selectionStart,
 			word = currentWord(value, position);
 
 		if (word !== '') {
@@ -56,7 +56,7 @@ var GeneSuggest = React.createClass({
 		}
 	},
 	shouldRenderSuggestions(value) {
-		var position = this.refs.autosuggest.input.selectionStart,
+		var position = this.input.selectionStart,
 			word = currentWord(value, position);
 		return word.length > 0;
 	},
@@ -64,7 +64,7 @@ var GeneSuggest = React.createClass({
 		this.setState({suggestions: []});
 	},
 	getInitialState() {
-		return {suggestions: []};
+		return {suggestions: [], value: ''};
 	},
 	onChange(ev, {newValue, method}) {
 		// Don't update the value for 'up' and 'down' keys. If we do update
@@ -75,25 +75,34 @@ var GeneSuggest = React.createClass({
 		// custom input renderer. But for now, just don't update the value for
 		// these events.
 		if (method !== 'up' && method !== 'down') {
-			this.props.onChange(newValue);
+			this.setState({value: newValue});
+			if (this.props.onChange) {
+				this.props.onChange(newValue);
+			}
 		}
 	},
 	getSuggestionValue(suggestion) {
-		var position = this.refs.autosuggest.input.selectionStart,
-			value = this.refs.autosuggest.input.value,
+		var position = this.input.selectionStart,
+			value = this.input.value,
 			[i, j] = currentWordPosition(value, position);
 
 		// splice the suggestion into the current word
 		return value.slice(0, i) + suggestion + value.slice(j);
 	},
+	setInput(input) {
+		var {inputRef} = this.props;
+		this.input = input;
+		if (inputRef) {
+			inputRef(this.input);
+		}
+	},
 	render() {
 		var {onChange} = this,
-			{suggestions} = this.state,
-			{value = ""} = this.props;
+			{suggestions, value} = this.state;
 
 		return (
-			<Autosuggest
-				ref='autosuggest'
+			<XAutosuggest
+				inputRef={this.setInput}
 				suggestions={suggestions}
 				onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
 				onSuggestionsClearRequested={this.onSuggestionsClearRequested}

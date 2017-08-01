@@ -4,6 +4,7 @@ var React = require('react');
 var _ = require('../underscore_ext');
 var XCheckboxGroup = require('./XCheckboxGroup');
 var XRadioGroup = require('./XRadioGroup');
+var GeneSuggest = require('./GeneSuggest');
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
@@ -45,7 +46,7 @@ var returnPressed = cb => ev => ev.keyCode === RETURN && cb();
 var GenotypicForm = props => (
 	<div>
 		<label>Genes, Identifiers, or Coordinates</label><br/>
-		<input onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} ref={props.inputRef} type='text'/>
+		<GeneSuggest value={props.value} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} inputRef={props.inputRef} type='text'/>
 		<br/>
 		<XCheckboxGroup
 			label='Assay Type'
@@ -79,8 +80,8 @@ var VariableSelect = React.createClass({
 	onAdvancedClick() {
 		this.setState({advanced: !this.state.advanced});
 	},
-	setInput(el) {
-		this.input = el;
+	setInput(input) {
+		this.input = input;
 	},
 	onChange(selected) {
 		this.selected = selected;

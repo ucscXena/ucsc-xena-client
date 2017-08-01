@@ -152,7 +152,7 @@ var renderInputComponent = ({ref, onChange, ...props}) => (
 var DiseaseSuggest = React.createClass({
 	mixins: [deepPureRenderMixin],
 	onSuggestionsFetchRequested({value}) {
-		var position = this.refs.xautosuggest.refs.autosuggest.input.selectionStart,
+		var position = this.input.selectionStart,
 			word = currentWord(value, position),
 			lcValue = word.toLowerCase(),
 			{cohortMeta} = this.props,
@@ -189,17 +189,20 @@ var DiseaseSuggest = React.createClass({
 		this.props.onSelect(value);
 	},
 	shouldRenderSuggestions(value) {
-		var position = this.refs.xautosuggest.refs.autosuggest.input.selectionStart,
+		var position = this.input.selectionStart,
 			word = currentWord(value, position);
 		return word.length > 0;
 	},
 	getSuggestionValue(suggestion) {
-		var position = this.refs.xautosuggest.refs.autosuggest.input.selectionStart,
-			value = this.refs.xautosuggest.refs.autosuggest.input.value,
+		var position = this.input.selectionStart,
+			value = this.input.value,
 			[i, j] = currentWordPosition(value, position);
 
 		// splice the suggestion into the current word
 		return value.slice(0, i) + suggestion + value.slice(j);
+	},
+	setInput(input) {
+		this.input = input;
 	},
 	render() {
 		var {onChange} = this,
@@ -224,7 +227,7 @@ var DiseaseSuggest = React.createClass({
 		return (
 			<div>
 				<XAutosuggest
-					ref='xautosuggest'
+					inputRef={this.setInput}
 					suggestions={suggestions}
 					onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
 					onSuggestionsClearRequested={this.onSuggestionsClearRequested}

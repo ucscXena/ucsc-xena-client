@@ -20,6 +20,7 @@
 
 // Core dependencies, components
 var React = require('react');
+var _ = require('../underscore_ext');
 import Autosuggest from 'react-autosuggest';
 
 // Styles
@@ -27,12 +28,18 @@ var autosuggestTheme = require('./AutosuggestTheme.module.css');
 var compStyles = require('./XAutosuggest.module.css');
 
 var XAutosuggest = React.createClass({
+	callInputRef(autosuggest) {
+		var {inputRef} = this.props;
+		if (inputRef) {
+			inputRef(_.get(autosuggest, 'input'));
+		}
+	},
 	render() {
 		var {value, onClear, ...autoProps} = this.props;
 		return (
 			<div className={compStyles.XAutosuggest}>
 				<Autosuggest {...autoProps}
-							ref='autosuggest'
+							ref={this.callInputRef}
 							theme={autosuggestTheme}/>
 				{value ? <i className='material-icons' onClick={onClear}>close</i> : null}
 			</div>
