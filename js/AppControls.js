@@ -2,7 +2,6 @@
 'use strict';
 
 var React = require('react');
-var CohortSelect = require('./views/CohortSelect');
 var DatasetSelect = require('./views/DatasetSelect');
 var Button = require('react-bootstrap/lib/Button');
 var SplitButton = require('react-bootstrap/lib/SplitButton');
@@ -184,7 +183,7 @@ var AppControls = React.createClass({
 		ev.target.value = null;
 	},
 	render: function () {
-		var {appState: {cohort: activeCohorts, samplesOver, allowOverSamples, cohorts, datasets, mode, columnOrder},
+		var {appState: {cohort: activeCohorts, samplesOver, allowOverSamples, datasets, mode, columnOrder},
 				onReset} = this.props,
 			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
@@ -201,7 +200,7 @@ var AppControls = React.createClass({
 					<Button onClick={this.onRefresh} bsSize='sm' style={{marginRight: 5}}>
 						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
 					</Button>)}
-				{addHelp('cohort', <CohortSelect cohort={cohort} cohorts={cohorts} disable={noshow} onSelect={this.onCohortSelect}/>)}
+				{cohort}
 				{' '}
 				{hasCohort ?
 					<div className='form-group' style={this.props.style}>

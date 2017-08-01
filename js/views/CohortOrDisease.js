@@ -1,6 +1,6 @@
 'use strict';
 var React = require('react');
-var CohortSelect = require('./CohortSelect');
+var CohortSuggest = require('./CohortSuggest');
 var DiseaseSuggest = require('./DiseaseSuggest2');
 var XRadioGroup = require('./XRadioGroup');
 
@@ -36,7 +36,7 @@ var CohortOrDisease = React.createClass({
 			<div>
 				<XRadioGroup {...studyDiscoveryProps} />
 				{mode === 'cohort' ?
-					<CohortSelect onSelect={this.onSelect} cohorts={cohorts}
+					<CohortSuggest onSelect={this.onSelect} cohorts={cohorts}
 						cohort={cohort}/> :
 					<DiseaseSuggest onSelect={this.onSelect} cohorts={cohorts}
 						cohort={cohort} cohortMeta={cohortMeta}/>}
