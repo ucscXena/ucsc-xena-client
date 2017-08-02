@@ -10,6 +10,7 @@ var trim = require('underscore.string').trim;
 var {getColSpec} = require('../models/datasetJoins');
 var {defaultColorClass} = require('../heatmapColors');
 var uuid = require('../uuid');
+var Rx = require('../rx');
 
 function toWordList(str) {
 	// Have to wrap trim because it takes a 2nd param.
@@ -108,14 +109,14 @@ var sortFeatures = features => _.sortBy(features, f => f.label.toUpperCase());
 var removeSampleID = features => _.filter(features, f => f.value !== "sampleID");
 
 
-var computeSettings = _.curry((datasets, features, fields, dataset) => {
+var computeSettings = _.curry((datasets, features, fields, width, dataset) => {
 	var ds = datasets[dataset];
 	// XXX resolve 'probes' if user has selected probes. Set here to false
 	var settings = columnSettings(datasets, features, dataset, fields, false),
 		colSpec = getColSpec([settings], datasets);
 
 	return _.assoc(colSpec,
-		'width', ds.type === 'mutationVector' ? 200 : 100,
+		'width', width, //ds.type === 'mutationVector' ? 200 : 100,
 		'columnLabel', ds.label,
 		'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel});
 });
@@ -131,7 +132,15 @@ function addWizardColumns(Component) {
 		displayName: 'SpreadsheetWizardColumns',
 		getInitialState() {
 			var {editing} = this.props;
-			return {editing};
+			return {editing, viewWidth: document.documentElement.clientWidth};
+		},
+		componentWillMount() {
+			this.sub = Rx.Observable.fromEvent(window, 'resize')
+				.debounceTime(200).subscribe(() =>
+					this.setState({viewWidth: document.documentElement.clientWidth}));
+		},
+		componentWillUnmount() {
+			this.sub.unsubscribe();
 		},
 		componentWillReceiveProps: function(newProps) {
 			var {editing} = newProps;
@@ -151,8 +160,9 @@ function addWizardColumns(Component) {
 		},
 		onDatasetSelect(posOrId, input, datasetList) {
 			var {datasets, features} = this.props.appState,
+				width = Math.floor(this.state.viewWidth / 4),
 				isPos = _.isNumber(posOrId),
-				settingsList = datasetList.map(computeSettings(datasets, features, input));
+				settingsList = datasetList.map(computeSettings(datasets, features, input, width));
 			this.props.callback(['add-column', posOrId,
 					...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		},
