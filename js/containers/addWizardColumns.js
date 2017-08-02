@@ -176,7 +176,17 @@ function addWizardColumns(Component) {
 				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect},
 				columns = React.Children.toArray(children),
 				withEditor = columns.map(el =>
-						editing === el.props.id ? <ColumnInlineEditor actionKey={editing} show='editor' column={el} editor={<VariableSelect pos={editing} {...datasetSelectProps} />}/> : el),
+						editing === el.props.id ?
+							<ColumnInlineEditor
+								actionKey={editing}
+								show='editor'
+								column={el}
+								editor={<VariableSelect
+									pos={editing}
+									fields={appState.columns[editing].fieldSpecs[0].fields}
+									dataset={appState.columns[editing].fieldSpecs[0].dsID}
+									{...datasetSelectProps} />}
+							/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
 						editing === i ? [el, <VariableSelect actionKey={i} pos={i} {...datasetSelectProps}/>] : [el]);
 			return (

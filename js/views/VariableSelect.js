@@ -83,10 +83,27 @@ var isValid = {
 	Phenotypic: (value, selected, features) => _.findWhere(features, {label: value})
 };
 
+function applyInitialState(fields, dataset, datasets, features, preferred, defaults) {
+	var isGenomic = notIgnored(datasets[dataset]),
+		mode = isGenomic ? 'Genotypic' : 'Phenotypic',
+		isPreferred = _.contains(_.pluck(preferred, 'dsID'), dataset),
+		value = isGenomic ? fields.join(' ') :
+			_.findWhere(features, {value: fields[0]}).label,
+		selected = isGenomic ? [dataset] : [],
+		valid = isValid[mode](value, selected, features);
+
+	return _.assocIn(defaults,
+		['mode'], mode,
+		['advanced'], isGenomic && !isPreferred,
+		['value', mode], value,
+		['selected', !isPreferred], selected,
+		['valid'], valid);
+}
+
 var VariableSelect = React.createClass({
 	getInitialState() {
-		var {preferred, mode = 'Genotypic'} = this.props;
-		return {
+		var {fields, dataset, datasets, features, preferred, mode = 'Genotypic'} = this.props;
+		var defaults = {
 			mode,
 			advanced: _.isEmpty(preferred),
 			selected: {
@@ -99,6 +116,8 @@ var VariableSelect = React.createClass({
 			},
 			valid: false // XXX if selections are passed, we need to compute this
 		};
+		return fields && dataset ?
+			applyInitialState(fields, dataset, datasets, features, preferred, defaults) : defaults;
 	},
 	onModeChange(value) {
 		this.setState({mode: value});
