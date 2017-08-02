@@ -30,13 +30,10 @@ var PhenotypeSuggest = React.createClass({
 		this.setState({suggestions: []});
 	},
 	getInitialState() {
-		return {suggestions: [], value: this.props.value || ""};
+		return {suggestions: []};
 	},
 	onChange(ev, {newValue}) {
-		this.setState({value: newValue});
-		if (this.props.onChange) {
-			this.props.onChange(newValue);
-		}
+		this.props.onChange(newValue);
 	},
 	setInput(input) {
 		var {inputRef} = this.props;
@@ -47,8 +44,8 @@ var PhenotypeSuggest = React.createClass({
 	},
 	render() {
 		var {onChange} = this,
-			{onKeyDown} = this.props,
-			{suggestions, value} = this.state;
+			{onKeyDown, value = ''} = this.props,
+			{suggestions} = this.state;
 
 		return (
 			<XAutosuggest

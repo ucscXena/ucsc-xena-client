@@ -64,7 +64,7 @@ var GeneSuggest = React.createClass({
 		this.setState({suggestions: []});
 	},
 	getInitialState() {
-		return {suggestions: [], value: ''};
+		return {suggestions: []};
 	},
 	onChange(ev, {newValue, method}) {
 		// Don't update the value for 'up' and 'down' keys. If we do update
@@ -75,10 +75,7 @@ var GeneSuggest = React.createClass({
 		// custom input renderer. But for now, just don't update the value for
 		// these events.
 		if (method !== 'up' && method !== 'down') {
-			this.setState({value: newValue});
-			if (this.props.onChange) {
-				this.props.onChange(newValue);
-			}
+			this.props.onChange(newValue);
 		}
 	},
 	getSuggestionValue(suggestion) {
@@ -98,8 +95,8 @@ var GeneSuggest = React.createClass({
 	},
 	render() {
 		var {onChange} = this,
-			{onKeyDown} = this.props,
-			{suggestions, value} = this.state;
+			{onKeyDown, value = ''} = this.props,
+			{suggestions} = this.state;
 
 		return (
 			<XAutosuggest

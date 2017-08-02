@@ -34,16 +34,7 @@ var XCheckboxGroup = React.createClass({
 	mixins: [deepPureRenderMixin],
 	onChange: function (isOn, ev) {
 		var value = ev.target.dataset.value;
-		this.props.onChange(_.keys(_.pick(_.assoc(this.state, value, isOn), x => x)));
-		this.setState({[value]: isOn});
-	},
-	getInitialState() {
-		return {};
-	},
-	componentWillReceiveProps(newProps) {
-		if (!_.isEqual(newProps, this.props)) {
-			this.replaceState({});
-		}
+		this.props.onChange(value, isOn);
 	},
 	render() {
 		var {additionalAction, label, onAdditionalAction, options} = this.props;
@@ -52,7 +43,7 @@ var XCheckboxGroup = React.createClass({
 				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
 				{_.map(options, group => [
 					group.label ? <span className={compStyles.subgroupHeader}>{group.label}</span> : null,
-					_.map(group.options, o => <Checkbox data-value={o.value} key={o.label} label={o.label} checked={this.state[o.value]} onChange={this.onChange}/>)
+					_.map(group.options, o => <Checkbox data-value={o.value} key={o.label} label={o.label} checked={o.checked} onChange={this.onChange}/>)
 				])}
 			</div>
 		);
