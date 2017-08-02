@@ -51,7 +51,7 @@ var GenotypicForm = props => (
 		<br/>
 		<XCheckboxGroup
 			label='Assay Type'
-			additionalAction={props.advanced ? 'Show Basic' : 'Show Advanced'}
+			additionalAction={!_.isEmpty(props.preferred) && (props.advanced ? 'Show Basic' : 'Show Advanced')}
 			onAdditionalAction={props.onAdvancedClick}
 			onChange={props.onChange}
 			options={props.advanced ? datasetList(props.datasets) :
@@ -76,7 +76,8 @@ var isValid = {
 
 var VariableSelect = React.createClass({
 	getInitialState() {
-		return {mode: 'Genotypic', advanced: false, valid: false};
+		var {preferred} = this.props;
+		return {mode: 'Genotypic', advanced: _.isEmpty(preferred), valid: false};
 	},
 	onModeChange(value) {
 		this.selected = [];
@@ -107,9 +108,6 @@ var VariableSelect = React.createClass({
 		}
 	},
 	render() {
-		// XXX If there are no preferred datasets, e.g. for
-		// unassigned cohort, we should coerce to advanced mode,
-		// and hide/disable the 'Show Basic' button.
 		var {mode, advanced, valid} = this.state,
 			{datasets, features, preferred} = this.props,
 			ModeForm = getModeFields[mode];
