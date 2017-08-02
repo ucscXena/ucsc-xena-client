@@ -264,11 +264,13 @@ var controls = {
 			'survival', null),
 	'sampleFilter-post!': (serverBus, state, newState) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples),
-	'add-column': (state, pos, ...idSettingsList) => {
+	'add-column': (state, posOrId, ...idSettingsList) => {
 		var {columnOrder, columns, sampleSearch, data} = state, // old settings
+			isPos = _.isNumber(posOrId),
+			pos = isPos ? posOrId : columnOrder.indexOf(posOrId) - 1,
 			ids = _.pluck(idSettingsList, 'id'),
 			settingsList = _.pluck(idSettingsList, 'settings'),
-			newOrder = _.insert(columnOrder, pos + 1, ids),
+			newOrder = _.splice(columnOrder, pos + 1, isPos ? 0 : 1, ...ids),
 			newState = _.assoc(state,
 				'columns', _.merge(columns, _.object(ids, settingsList)),
 				'columnOrder', newOrder,
@@ -301,7 +303,7 @@ var controls = {
 	order: (state, order) => {
 		// Filter out 'editing' columns
 		var newOrder = order.filter(id => !_.isNumber(id)),
-			editing = _.findIndexDefault(order.slice(1), _.isNumber, null);
+			editing = _.findIndexDefault(order.slice(1), _.isNumber, state.editing);
 		return _.assoc(state, 'columnOrder', newOrder,
 			'editing', editing,
 			'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch));

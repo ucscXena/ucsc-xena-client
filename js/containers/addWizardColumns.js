@@ -128,7 +128,7 @@ var computeSettings = _.curry((datasets, features, fields, dataset) => {
 function addWizardColumns(Component) {
 	return React.createClass({
 		mixins: [deepPureRenderMixin],
-		displayName: 'SpreadsheetColumnAdd',
+		displayName: 'SpreadsheetWizardColumns',
 		getInitialState() {
 			var {editing} = this.props;
 			return {editing};
@@ -149,12 +149,12 @@ function addWizardColumns(Component) {
 		onCohortSelect(cohort) {
 			this.props.callback(['cohort', 0, cohort]);
 		},
-		onDatasetSelect(pos, input, datasetList) {
-			// XXX need to remap features
-			var {datasets, features} = this.props.appState;
-			var settingsList = datasetList.map(computeSettings(datasets, features, input));
-			this.props.callback(['add-column', pos,
-					..._.flatmap(settingsList, settings => ({id: uuid(), settings}))]);
+		onDatasetSelect(posOrId, input, datasetList) {
+			var {datasets, features} = this.props.appState,
+				isPos = _.isNumber(posOrId),
+				settingsList = datasetList.map(computeSettings(datasets, features, input));
+			this.props.callback(['add-column', posOrId,
+					...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		},
 		render() {
 			var {children, appState} = this.props,
@@ -166,7 +166,7 @@ function addWizardColumns(Component) {
 				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect},
 				columns = React.Children.toArray(children),
 				withEditor = columns.map(el =>
-						editing === el.props.id ? <ColumnInlineEditor column={el} editor='editor'/> : el),
+						editing === el.props.id ? <ColumnInlineEditor actionKey={editing} show='editor' column={el} editor={<VariableSelect pos={editing} {...datasetSelectProps} />}/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
 						editing === i ? [el, <VariableSelect actionKey={i} pos={i} {...datasetSelectProps}/>] : [el]);
 			return (

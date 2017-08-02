@@ -325,6 +325,9 @@ var Column = React.createClass({
 	onViz: function () {
 		this.props.onViz(this.props.id);
 	},
+	onEdit: function () {
+		this.props.onEdit(this.props.id);
+	},
 	onKm: function () {
 		this.props.onKm(this.props.id);
 	},
@@ -510,6 +513,7 @@ var Column = React.createClass({
 						<MenuItem onSelect={this.onDownload}>Download</MenuItem>
 						{aboutDatasetMenu(datasetMeta(id))}
 						<MenuItem onSelect={this.onViz}>Display Setting</MenuItem>
+						<MenuItem disabled={!this.props.onEdit} onSelect={this.onEdit}>Edit</MenuItem>
 						<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
 					</Dropdown.Menu>
 				</Dropdown>

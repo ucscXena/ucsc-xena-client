@@ -104,6 +104,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	onVizSettings: function (id, state) {
 		this.props.callback(['vizSettings', id, state]);
 	},
+	onEdit: function (id) {
+		this.props.callback(['edit-column', id]);
+	},
 	onAddColumn(pos) {
 		this.props.callback(['edit-column', pos]);
 	},
@@ -129,6 +132,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 					<Column
 						cohort={appState.cohort}
 						onViz={this.onOpenVizSettings}
+						onEdit={appState.editing == null ? this.onEdit : null}
 						onFieldLabel={this.onFieldLabel}
 						onColumnLabel={this.onColumnLabel}
 						onShowIntrons={this.onShowIntrons}

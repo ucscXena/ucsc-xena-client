@@ -350,6 +350,12 @@ function uniquify(strs) {
 }
 
 var insert = (arr, i, vals) => [...arr.slice(0, i), ...vals, ...arr.slice(i)];
+// immutable splice
+var splice = (arr, i, c, ...vals) => {
+	var ret = arr.slice(0);
+	ret.splice(i, c, ...vals);
+	return ret;
+};
 
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
@@ -422,7 +428,7 @@ _.mixin({
 	maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
 	meannull,
 	medianNull,
-	memoize1: memoize1,
+	memoize1,
 	merge: (...args) => _.extend.apply(null, [{}].concat(args)),
 	minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
 	mmap,
@@ -433,7 +439,8 @@ _.mixin({
 	pluckPathsArray,
 	reverse,
 	scan,
-	spy: spy,
+	splice,
+	spy,
 	sum: arr => _.reduce(arr, (x, y) => x + y, 0),
 	union,
 	uniq: unique,
