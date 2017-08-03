@@ -7,7 +7,7 @@
  var {deepPureRenderMixin} = require('../react-utils');
 
 const bin = 20; //number of bins
-const plotWidth = 125;
+var plotWidth = 125;
 const plotHeight = 35;
 const zoomFactor = 3;
 var binWidth;
@@ -74,6 +74,7 @@ var DensityPlot = React.createClass ({
     let min = Math.min.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
  		let rows = _.mmap(data.studyA, data.studyB, data.nameAndZoom, (studyA, studyB, nameAndZoom) => {
       let rowClass = nameAndZoom.zoom ? "densityPlot--row--zoom" : "densityPlot--row";
+      plotWidth = nameAndZoom.zoom ? 200 : 125;
       if(this.props.type === 'density')
       {
         // let kdepoints;

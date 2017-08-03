@@ -1,6 +1,6 @@
 .densityPlot {
 	margin: 20px;
-	width: 125px;
+	width: 200px;
 	display: flex;
 	flex-wrap: wrap;
 	/*overflow: hidden;*/
@@ -9,7 +9,7 @@
 }
 
 .densityPlot--row {
-	width: 100%;
+	width: 62.5%;
 	display: inline-block;
 }
 
