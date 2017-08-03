@@ -9,6 +9,7 @@
 const bin = 20; //number of bins
 const plotWidth = 125;
 const plotHeight = 35;
+const zoomFactor = 3;
 var binWidth;
 
 var DensityPlot = React.createClass ({
@@ -77,7 +78,7 @@ var DensityPlot = React.createClass ({
       {
         // let kdepoints;
         let polylinePoints, zeroWidth, zeroHeight;
-        let plotHt = nameAndZoom.zoom ? plotHeight * 2 : plotHeight;
+        let plotHt = nameAndZoom.zoom ? plotHeight * zoomFactor : plotHeight;
         return (
           <div className={rowClass} onClick={() => this.props.getNameZoom(nameAndZoom.name)}>
             <div className="densityPlot--row--xAxis"/>

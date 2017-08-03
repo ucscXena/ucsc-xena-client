@@ -85,7 +85,7 @@ var Transcripts = React.createClass({
 
 		return (
 			<div ref='datapages'>
-				<div>
+				<div style={{margin: "0 auto", width: "1200px"}}>
 					<div className="selectors">
 					<strong>Gene: </strong>
 					<GeneSuggest value={this.state.gene}
@@ -130,12 +130,12 @@ var Transcripts = React.createClass({
 						unit={unit}
 						getNameZoom={this.onZoom}
 						/>
-					<DensityPlot
+					{/* <DensityPlot
 						data={transcriptDensityData}
 						type="histogram"
 						unit={unit}
 						getNameZoom={this.onZoom}
-						/>
+						/> */}
 				</div>
 			</div>);
 	}

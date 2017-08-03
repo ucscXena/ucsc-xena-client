@@ -27,11 +27,11 @@
 
 .nameColumn--item--zoom {
 	width: 100%;
-	height: 140px;
+	height: 210px;
 	display: inline-block;
 	position: relative;
 	text-align: center;
 	vertical-align: middle;
-	line-height: 140px;
+	line-height: 210px;
 	font-size: 0.85em;
 }
