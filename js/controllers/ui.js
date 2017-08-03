@@ -245,8 +245,8 @@ var controls = {
 		fetchCohortPreferred(serverBus);
 	},
 	'import': (state, newState) => newState,
-	cohort: (state, i, cohort) =>
-		setCohort(state, _.assoc(state.cohort, i, {name: cohort})),
+	cohort: (state, i, cohort, width) =>
+		setCohort(state, _.assoc(state.cohort, i, {name: cohort}), width),
 	cohortReset: state => _.assoc(setCohort(state, []), 'wizardMode', true),
 	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
 	'cohort-remove': (state, i) => setCohort(state, _.withoutIndex(state.cohort, i)),

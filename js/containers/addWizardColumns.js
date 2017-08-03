@@ -155,12 +155,15 @@ function addWizardColumns(Component) {
 //				this.setState({openColumnEdit: true});
 //			}
 		},
+		defaultWidth() {
+			return Math.floor(this.state.viewWidth / 4);
+		},
 		onCohortSelect(cohort) {
-			this.props.callback(['cohort', 0, cohort]);
+			this.props.callback(['cohort', 0, cohort, this.defaultWidth()]);
 		},
 		onDatasetSelect(posOrId, input, datasetList) {
 			var {datasets, features} = this.props.appState,
-				width = Math.floor(this.state.viewWidth / 4),
+				width = this.defaultWidth(),
 				isPos = _.isNumber(posOrId),
 				settingsList = datasetList.map(computeSettings(datasets, features, input, width));
 			this.props.callback(['add-column', posOrId,

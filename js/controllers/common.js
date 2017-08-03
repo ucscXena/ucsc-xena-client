@@ -160,7 +160,7 @@ var setCohortRelatedFields = (state, cohorts) =>
 // This adds or overwrites a 'sample' column in the state.
 // Called from setCohort, the column data will be fetched after
 // the sample list returns from the server.
-function addSampleColumn(state) {
+function addSampleColumn(state, width) {
 	if (state.cohort.length === 0) {
 		return state;
 	}
@@ -172,7 +172,7 @@ function addSampleColumn(state) {
 		newOrder = _.has(state.columns, 'samples') ? state.columnOrder : [...state.columnOrder, 'samples'],
 		colSpec = getColSpec([field], {}),
 		settings = _.assoc(colSpec,
-				'width', 100,
+				'width', width == null ? 100 : width,
 				'user', _.pick(colSpec, ['columnLabel', 'fieldLabel'])),
 		newState = _.assocIn(state,
 			['columns', 'samples'], settings,
@@ -180,7 +180,7 @@ function addSampleColumn(state) {
 	return _.assocIn(newState, ['data', 'samples', 'status'], 'loading');
 }
 
-var setCohort = (state, cohorts) =>
+var setCohort = (state, cohorts, width) =>
 		addSampleColumn(
 			resetZoom(
 				reJoinFields(
@@ -188,7 +188,7 @@ var setCohort = (state, cohorts) =>
 					closeEmptyColumns(
 						setCohortRelatedFields(
 							remapFieldsForCohorts(state, cohorts),
-							cohorts)))));
+							cohorts)))), width);
 
 var userServers = state => _.keys(state.servers).filter(h => state.servers[h].user);
 
