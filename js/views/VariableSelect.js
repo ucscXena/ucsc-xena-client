@@ -4,6 +4,7 @@ var React = require('react');
 var _ = require('../underscore_ext');
 var XCheckboxGroup = require('./XCheckboxGroup');
 var XRadioGroup = require('./XRadioGroup');
+var WizardCard = require('./WizardCard');
 var GeneSuggest = require('./GeneSuggest');
 var PhenotypeSuggest = require('./PhenotypeSuggest');
 
@@ -166,8 +167,9 @@ var VariableSelect = React.createClass({
 		var {mode, advanced, valid} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[advanced],
-			{datasets, features, preferred} = this.props,
+			{datasets, features, preferred, title, helpText} = this.props,
 			ModeForm = getModeFields[mode];
+		var wizardProps = {title, helpText, onDone: this.onDone, valid};
 		var dataTypeProps = {
 			label: 'Data Type',
 			value: mode,
@@ -183,7 +185,7 @@ var VariableSelect = React.createClass({
 			]
 		};
 		return (
-			<div>
+			<WizardCard {...wizardProps}>
 				<XRadioGroup {...dataTypeProps} />
 				<ModeForm
 					inputRef={this.setInput}
@@ -197,8 +199,7 @@ var VariableSelect = React.createClass({
 					preferred={preferred}
 					onAdvancedClick={this.onAdvancedClick}
 					advanced={advanced}/>
-				<button disabled={!valid} onClick={this.onDone}>Done</button>
-			</div>);
+			</WizardCard>);
 	}
 });
 

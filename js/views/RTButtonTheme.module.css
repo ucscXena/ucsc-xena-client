@@ -14,9 +14,6 @@
 }
 
 .button {
-	composes: mdBody1 from '../../css/typography.module.css';
-}
-
-.button span {
+	composes: mdBody2 from '../../css/typography.module.css';
 	letter-spacing: 0.5px;
 }

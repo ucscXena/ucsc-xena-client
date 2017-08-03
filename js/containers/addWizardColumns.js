@@ -69,14 +69,27 @@ function columnSettings(datasets, features, dsID, input, probes) {
 	};
 }
 
+// Configuration for first and second variable select cards that are displayed during wizard.
+var variableSelectConfig = {
+	'FIRST_COLUMN': {
+		helpText: 'Select the first variable tincidunt non arcu non congue. Vestibulum vitae pharetra nunc. Etiam mattis aliquet aliquet.',
+		pos: 1,
+		title: 'First Variable'
+	},
+	'SECOND_COLUMN': {
+		helpText: 'Select the second variable tincidunt non arcu non congue. Vestibulum vitae pharetra nunc. Etiam mattis aliquet aliquet.',
+		pos: 2,
+		title: 'Second Variable'
+	}
+};
+
 function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps) {
 	if (wizardMode) {
 		if (stepperState === 'COHORT') {
 			return [<CohortOrDisease {...cohortSelectProps}/>];
 		}
 		if (_.contains(['FIRST_COLUMN', 'SECOND_COLUMN'], stepperState)) {
-			var pos = stepperState === 'FIRST_COLUMN' ? 1 : 2;
-			return [<VariableSelect pos={pos} {...datasetSelectProps}/>];
+			return [<VariableSelect {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>];
 		}
 	}
 	return [];
@@ -188,10 +201,11 @@ function addWizardColumns(Component) {
 									pos={editing}
 									fields={appState.columns[editing].fieldSpecs[0].fields}
 									dataset={appState.columns[editing].fieldSpecs[0].dsID}
+									title='Edit Variable'
 									{...datasetSelectProps} />}
 							/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
-						editing === i ? [el, <VariableSelect actionKey={i} pos={i} {...datasetSelectProps}/>] : [el]);
+						editing === i ? [el, <VariableSelect actionKey={i} pos={i} title='Add Variable' {...datasetSelectProps}/>] : [el]);
 			return (
 				<Component {...this.props}>
 					{withNewColumns.concat(

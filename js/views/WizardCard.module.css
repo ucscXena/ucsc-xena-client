@@ -1,0 +1,44 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Custom CSS styling of MD cards, displayed during wizard setup.
+ */
+
+@value black6 from '../../css/variables.css';
+@value black38 from '../../css/variables.css';
+
+.WizardCard {
+	width: calc(25% - 16px);
+}
+
+/* Avatar specific to displaying variable on wizard cards */
+.wizardVariableAvatar {
+	background-color: black6;
+	border-radius: 40px;
+	height: 40px;
+	line-height: 40px;
+	margin-right: 16px;
+	text-align: center;
+	width: 40px;
+}
+
+/* Card actions specific to wizard */
+.wizardActions {
+	display: flex;
+	justify-content: flex-end;
+}
+
+/* Positioning of close icon */
+.wizardTitle {
+	position: relative;
+}
+
+/* Close icon */
+.wizardTitle i {
+	color: black38;
+	cursor: pointer;
+	position: absolute;
+	right: 14px;
+	top: 24px;
+}

@@ -1,0 +1,84 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying global overrides to all Card components.
+ *
+ * Uses theme key RTCard and theme end points to override specific classes. See
+ * http://react-toolbox.com/#/components/card for details.
+ */
+
+@value black12 from '../../css/variables.css';
+@value black54 from '../../css/variables.css';
+@value black87 from '../../css/variables.css';
+
+.card {
+	overflow: visible;
+}
+
+/* Card title container */
+.cardTitle {
+	border-bottom: 1px solid black12;
+	display: flex; /* deals with subtitle positioning */
+	height: 73px; /* includes border */
+}
+
+.cardTitle > div {
+	min-width: 40px; /* required to maintain avatar shape */
+}
+
+.cardTitle.large {
+	padding: 24px 16px;
+}
+
+/* Card title text */
+.cardTitle.large .title {
+	color: black87;
+	font-size: 14px; /* mdbody2 composes issue */
+	font-weight: 500; /* mdbody2 composes issue */
+	letter-spacing: .01em; /* mdbody2 composes issue */
+	line-height: 24px; /* mdbody2 composes issue */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Card title text with avatar */
+.cardTitle.small .title {
+	color: black87;
+	font-size: 14px; /* mdbody2 composes issue */
+	font-weight: 500; /* mdbody2 composes issue */
+	letter-spacing: .01em; /* mdbody2 composes issue */
+	line-height: 24px; /* mdbody2 composes issue */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Card subtitle */
+.cardTitle .subtitle{
+	color: black54; /* secondary composes issue */
+	font-weight: 500; /* mdbody2 composes issue */
+	margin-top: -4px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Card text container */
+.cardText {
+	border-bottom: 1px solid black12;
+	padding: 24px 16px;
+}
+
+/* Card text styling */
+.cardText p {
+	color: black87;
+	line-height: 20px; /* mdbody1 composes issue */
+	white-space: normal; /* overriding whitespace from .Columns class */
+}
+
+/* Card action container */
+.cardActions {
+	padding: 16px 8px 8px;
+}

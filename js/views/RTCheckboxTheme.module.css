@@ -29,5 +29,9 @@
 	color: rgba(0, 0, 0, 0.87);
 	font-size: 16px;
 	font-weight: 400;
+	overflow: hidden;
 	padding-left: 16px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	width: calc(100% - 16px);
 }

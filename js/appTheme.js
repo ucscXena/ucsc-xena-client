@@ -12,6 +12,8 @@
 
 module.exports = {
 	RTAppBar: require('./views/RTAppBarTheme.module.css'),
+	RTButton: require('./views/RTButtonTheme.module.css'),
+	RTCard: require('./views/RTCardTheme.module.css'),
 	RTCheckbox: require('./views/RTCheckboxTheme.module.css'),
 	RTInput: require('./views/RTInputTheme.module.css'),
 	RTRadio: require('./views/RTRadioGroupTheme.module.css')
