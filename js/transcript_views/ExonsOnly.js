@@ -55,7 +55,7 @@ function newCoordinates(data, intronRegions, exonGroupGroupBy) {
 function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFactor, strand, label, origin, pad, zoom) {
   let exonWidth = exonEnds - exonStarts;
   let startsAt = exonStarts - origin;
-  if(cdsStart == cdsEnd)
+  if(cdsStart === cdsEnd)
 	{
 		return [box( 'small', startsAt, exonWidth, multiplyingFactor, strand, pad, zoom, label)];
 	}

@@ -7,7 +7,7 @@ var {deepPureRenderMixin} = require('../react-utils');
 
 var width = 700;
 
-function box(type, startsAt, width, multiplyingFactor, strand, pad=0, zoom=false, label = "") {
+function box(type, startsAt, width, multiplyingFactor, strand, pad = 0, zoom = false, label = "") {
 	let exon = {
 					type: type,
 					label: label,
@@ -46,7 +46,7 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
 
 	let exonWidth = exonEnds - exonStarts;
 	let startsAt = exonStarts - origin;
-	if(cdsStart == cdsEnd)
+	if(cdsStart === cdsEnd)
 	{
 		return [box( 'small', startsAt, exonWidth, multiplyingFactor, strand)];
 	}
