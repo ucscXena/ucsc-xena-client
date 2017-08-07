@@ -1,6 +1,6 @@
 'use strict';
 var React = require('react');
-var {Grid, Row, Col} = require("react-material-responsive-grid");
+var {Grid} = require("react-material-responsive-grid");
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
 var _ = require('./underscore_ext');
@@ -84,26 +84,22 @@ var Application = React.createClass({
 				{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
 					null}
 				{wizardMode ? <Stepper mode={stepperState} /> :
-					<AppControls {...otherProps} appState={state} />}
+					<AppControls {...otherProps} appState={state} matches={matches} help={searchHelp}>
+						<SampleSearch
+							value={sampleSearch}
+							onFilter={onFilter}
+							onZoom={onFilterZoom}
+							onCreateColumn={onFilterColumn}
+							onChange={onHighlightChange}
+							mode={mode}/>
+					</AppControls>
+						}
 				<Grid onClick={this.onClick}>
 				{/*
 					<Row>
 						<button onClick={this.onPerf}>Perf</button>
 					</Row>
 				*/}
-					<Row>
-						<Col xs4={4} xs8={8} sm={12}>
-							<SampleSearch
-								help={searchHelp}
-								value={sampleSearch}
-								matches={matches}
-								onFilter={onFilter}
-								onZoom={onFilterZoom}
-								onCreateColumn={onFilterColumn}
-								onChange={onHighlightChange}
-								mode={mode}/>
-						</Col>
-					</Row>
 					{children}
 					{_.getIn(state, ['km', 'id']) ? <KmPlot
 							callback={this.props.callback}

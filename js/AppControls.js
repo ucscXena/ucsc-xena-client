@@ -4,14 +4,13 @@
 var React = require('react');
 var DatasetSelect = require('./views/DatasetSelect');
 var Button = require('react-bootstrap/lib/Button');
-var SplitButton = require('react-bootstrap/lib/SplitButton');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
 var Tooltip = require('react-bootstrap/lib/Tooltip');
 var Popover = require('react-bootstrap/lib/Popover');
 var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var pdf = require('./pdfSpreadsheet');
 var _ = require('./underscore_ext');
-require('./AppControls.css');
+import AppBar from 'react-toolbox/lib/app_bar';
+import {IconMenu, MenuItem, MenuDivider } from 'react-toolbox/lib/menu';
 var Rx = require('./rx');
 var {createBookmark} = require('./bookmark');
 var konami = require('./konami');
@@ -20,9 +19,12 @@ var config = require('./config');
 var {deepPureRenderMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
 
-var modeButton = {
-	chart: 'Visual Spreadsheet',
-	heatmap: 'Chart'
+// Styles
+var compStyles = require('./AppControls.module.css');
+
+var modeIcon = {
+	chart: 'image',
+	heatmap: 'insert_chart'
 };
 
 var modeEvent = {
@@ -31,13 +33,7 @@ var modeEvent = {
 };
 
 var uiHelp = {
-	'pdf': ['top', 'Save PDF of this view'],
-	'reload': ['top', 'Reload cohorts from all hubs'],
-	'chart': ['top', 'Switch to spreadsheet view of this data'],
-	'heatmap': ['top', 'Switch to chart view of this data'],
-	'samples': ['top', 'Limit samples by dataset'],
-	'cohort': ['top', 'Change cohort'],
-	'download': ['top', 'Download all dense columns']
+	'samples': ['top', 'Limit samples by dataset']
 };
 
 function addHelp(id, target) {
@@ -184,67 +180,66 @@ var AppControls = React.createClass({
 	},
 	render: function () {
 		var {appState: {cohort: activeCohorts, samplesOver, allowOverSamples, datasets, mode, columnOrder},
-				onReset} = this.props,
+				onReset, children, help, matches} = this.props,
 			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			samplesFrom = _.getIn(activeCohorts, [0, 'samplesFrom']),
 			sampleFilter = _.getIn(activeCohorts, [0, 'sampleFilter']),
 			hasCohort = !!cohort,
 			hasColumn = !!columnOrder.length,
-			noshow = (mode !== "heatmap");
+			noshow = (mode !== "heatmap"),
+			bookmarkText = `Your bookmark is ${bookmark ? bookmark : 'loading'}`;
 
 		return (
-			<form onSubmit={ev => ev.preventDefault()} className='form-inline'>
-				<button onClick={() => onReset()}>RESET</button>
-				{addHelp('reload',
-					<Button onClick={this.onRefresh} bsSize='sm' style={{marginRight: 5}}>
-						<span className="glyphicon glyphicon-refresh" aria-hidden="true"/>
-					</Button>)}
-				{cohort}
-				{' '}
-				{hasCohort ?
-					<div className='form-group' style={this.props.style}>
-						<label> Samples in </label>
-						{' '}
-						{addOverWarning(!allowOverSamples && samplesOver, 'samples', this.onAllowOverSamples,
-							<DatasetSelect
-								disable={noshow}
-								bsStyle={samplesOver ? 'danger' : 'default'}
-								onSelect={this.onSamplesSelect}
-								nullOpt="All samples in the cohort"
-								style={{display: hasCohort ? 'inline' : 'none'}}
-								datasets={datasets}
-								cohort={cohort}
-								value={samplesFrom} />)}
-						{sampleFilter ?
-							(<span>
-								&#8745;
-								<Button disabled={noshow} className='hoverStrike'
-									onClick={this.onResetSampleFilter}>
-
-									{sampleFilter.length} samples
-								</Button>
-							</span>) : null}
-					</div> : null}
-				{' '}
-				{hasColumn ?
-					addHelp(mode, <Button disabled={!hasColumn} onClick={this.onMode} bsStyle='primary'>
-						{modeButton[mode]}
-					</Button>) : null}
-				{' '}
-				{(noshow || !hasColumn) ? null :
-					addHelp('pdf', <Button onClick={this.onPdf}>PDF</Button>)}
-				{hasColumn ? addHelp('download', <Button onClick={this.onDownload}>Download</Button>) : null}
-				{bookmarks ?
-					<OverlayTrigger onEnter={this.onBookmark} trigger='click' placement='bottom'
-						overlay={<Popover placement='bottom'><p style={{wordWrap: 'break-word'}}>Your bookmark is {bookmark || 'loading'}</p></Popover>}>
-						<SplitButton title='Bookmark'>
-							<MenuItem onClick={this.onExport}>Export</MenuItem>
-							<MenuItem onClick={this.onImport}>Import</MenuItem>
-						</SplitButton>
-					</OverlayTrigger> : null}
-				{bookmarks ? <input style={{display: 'none'}} ref='import' id='import' onChange={this.onImportSelected} type='file'/> : null}
-			</form>
+				<AppBar>
+					<div className={compStyles.appBarContainer}>
+						<div>
+							<span className={compStyles.title}>{cohort}</span>
+							<span className={compStyles.subtitle}>{matches} Samples</span>
+						</div>
+						<i className='material-icons' onClick={this.onRefresh}>refresh</i>
+						<i className='material-icons' onClick={() => onReset()}>close</i>
+					</div>
+					<div className={compStyles.appBarContainer}>
+						<i className='material-icons'>filter_list</i>
+						{hasCohort ?
+							<div className='form-group' style={this.props.style}>
+								<label> Samples in </label>
+								{addOverWarning(!allowOverSamples && samplesOver, 'samples', this.onAllowOverSamples,
+									<DatasetSelect
+										disable={noshow}
+										bsStyle={samplesOver ? 'danger' : 'default'}
+										onSelect={this.onSamplesSelect}
+										nullOpt="All samples in the cohort"
+										style={{display: hasCohort ? 'inline' : 'none'}}
+										datasets={datasets}
+										cohort={cohort}
+										value={samplesFrom} />)}
+								{sampleFilter ?
+									(<span>
+									&#8745;
+										<Button disabled={noshow} className={compStyles.hoverStrike}
+												onClick={this.onResetSampleFilter}>
+										{sampleFilter.length} samples
+									</Button>
+								</span>) : null}
+							</div> : null}
+						{children}
+						{hasColumn ? <i className='material-icons' onClick={this.onMode}>{modeIcon[mode]}</i> : null}
+						{(noshow || !hasColumn) ? null : <i className='material-icons' onClick={this.onPdf}>picture_as_pdf</i> }
+						{hasColumn ? <i className='material-icons' onClick={this.onDownload}>file_download</i> : null}
+						{bookmarks ?
+							[<IconMenu icon='bookmark' onShow={this.onBookmark} menuRipple>
+								<MenuItem onClick={this.onExport} caption='Export'/>
+								<MenuItem onClick={this.onImport} caption='Import'/>
+								<MenuDivider/>
+								<MenuItem disabled={true} caption={bookmarkText}/>
+							</IconMenu>,
+							<input style={{display: 'none'}} ref='import' id='import' onChange={this.onImportSelected} type='file'/>]
+							: null}
+						{help ? <a href={help} target='_blank'><i className='material-icons'>help</i></a> : null}
+					</div>
+				</AppBar>
 		);
 	}
 });
