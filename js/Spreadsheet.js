@@ -1,13 +1,11 @@
 'use strict';
 
 var React = require('react');
-var {Row, Col} = require("react-material-responsive-grid");
 var Button = require('react-bootstrap/lib/Button');
 var Popover = require('react-bootstrap/lib/Popover');
 require('react-resizable/css/styles.css');
 var {deepPureRenderMixin} = require('./react-utils');
 require('./Columns.css'); // XXX switch to js styles
-var YAxisLabel = require('./views/YAxisLabel');
 var getColumns = require('./views/Columns');
 
 function zoomPopover(zoom, samples, props) {
@@ -38,20 +36,12 @@ var getSpreadsheet = columnsWrapper => {
 						onDisableClick: this.zoomHelpDisable
 					}) : null;
 			return (
-				<Row>
-					<Col xs4={1} xs8={1} sm={1}>
-						<YAxisLabel
-							samples={samples}
-							zoom={zoom}
-						/>
-					</Col>
-					<Col xs4={3} xs8={7} sm={11}>
-						<Columns appState={this.props.appState} {...otherProps}>
-							{children}
-						</Columns>
-						{zoomHelper}
-					</Col>
-				</Row>
+				<div>
+					<Columns appState={this.props.appState} {...otherProps}>
+						{children}
+					</Columns>
+					{zoomHelper}
+				</div>
 			);
 		}
 	});

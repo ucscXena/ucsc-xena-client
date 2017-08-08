@@ -148,7 +148,8 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						first={i === 0}
 						{...columnProps}
 						onClick={this.on.plotClick}
-						{...columnSelector(id, i, appState)}/>))}
+						{...columnSelector(id, i, appState)}
+						wizardMode={appState.wizardMode}/>))}
 			</Spreadsheet>);
 	}
 });

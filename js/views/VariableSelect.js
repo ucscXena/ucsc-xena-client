@@ -55,9 +55,7 @@ function selectedOptions(selected, options) {
 
 var GenotypicForm = props => (
 	<div>
-		<label>Genes, Identifiers, or Coordinates</label><br/>
 		<GeneSuggest value={props.value} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} inputRef={props.inputRef} type='text'/>
-		<br/>
 		<XCheckboxGroup
 			label='Assay Type'
 			additionalAction={!_.isEmpty(props.preferred) && (props.advanced ? 'Show Basic' : 'Show Advanced')}
@@ -70,7 +68,6 @@ var GenotypicForm = props => (
 
 var PhenotypicForm = props => (
 	<div>
-		<label>Phenotype</label>
 		<PhenotypeSuggest value={props.value} features={props.features} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} inputRef={props.inputRef} type='text'/>
 	</div>);
 
@@ -167,22 +164,14 @@ var VariableSelect = React.createClass({
 		var {mode, advanced, valid} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[advanced],
-			{datasets, features, preferred, title, helpText} = this.props,
+			{datasets, features, preferred, title, helpText, width} = this.props,
 			ModeForm = getModeFields[mode];
-		var wizardProps = {title, helpText, onDone: this.onDone, valid};
+		var wizardProps = {title, helpText, onDone: this.onDone, valid, width};
 		var dataTypeProps = {
 			label: 'Data Type',
 			value: mode,
 			onChange: this.onModeChange,
-			options: [
-				{
-					label: 'Genotypic',
-					value: 'Genotypic'
-				}, {
-					label: 'Phenotypic',
-					value: 'Phenotypic'
-				}
-			]
+			options: [{label: 'Genotypic', value: 'Genotypic'}, {label: 'Phenotypic', value: 'Phenotypic'}]
 		};
 		return (
 			<WizardCard {...wizardProps}>

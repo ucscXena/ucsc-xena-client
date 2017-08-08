@@ -8,10 +8,6 @@
 @value black6 from '../../css/variables.css';
 @value black38 from '../../css/variables.css';
 
-.WizardCard {
-	width: calc(25% - 16px);
-}
-
 /* Avatar specific to displaying variable on wizard cards */
 .wizardVariableAvatar {
 	background-color: black6;

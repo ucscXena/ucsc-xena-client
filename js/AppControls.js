@@ -188,14 +188,18 @@ var AppControls = React.createClass({
 			hasCohort = !!cohort,
 			hasColumn = !!columnOrder.length,
 			noshow = (mode !== "heatmap"),
-			bookmarkText = `Your bookmark is ${bookmark ? bookmark : 'loading'}`;
+			bookmarkText = `Your bookmark is ${bookmark ? bookmark : 'loading'}`,
+			index = _.getIn(this.props, ['zoom', 'index']) || 0,
+			count = _.getIn(this.props, ['zoom', 'count']) || 0,
+			fraction = count === matches ? '' :
+				`- Zoomed to ${index + 1} - ${index + count} (N=${count})`;
 
 		return (
 				<AppBar>
 					<div className={compStyles.appBarContainer}>
 						<div>
 							<span className={compStyles.title}>{cohort}</span>
-							<span className={compStyles.subtitle}>{matches} Samples</span>
+							<span className={compStyles.subtitle}>{matches} Samples {fraction ? fraction : null}</span>
 						</div>
 						<i className='material-icons' onClick={this.onRefresh}>refresh</i>
 						<i className='material-icons' onClick={() => onReset()}>close</i>

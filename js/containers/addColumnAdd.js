@@ -11,9 +11,9 @@ function addColumnAdd(Component) {
 			var {children, onAddColumn, ...otherProps} = this.props,
 		   		{appState: {editing}} = otherProps,
 				columns = editing ? children : React.Children.map(this.props.children, (child, i) => (
-					<div style={{display: 'inline-block'}} actionKey={child.props.actionKey}>
-						<div style={{display: 'inline-block'}}>{child}</div>
-						<p style={{display: 'inline-block'}} onClick={() => onAddColumn(i)}>+</p>
+					<div style={{display: 'flex'}} actionKey={child.props.actionKey}>
+						{child}
+						<span style={{width: 16, textAlign: 'center'}} onClick={() => onAddColumn(i)}>+</span>
 					</div>));
 			return (
 				<Component {...otherProps}>

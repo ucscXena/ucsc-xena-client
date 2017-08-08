@@ -11,6 +11,7 @@
  * subtitle - Text displayed as subtitle.
  * helpText - Text displayed under title/subtitle and above children.
  * valid - True if wizard card is complete and done button is enabled.
+ * width - Width of card.
  *
  * Actions
  * -------
@@ -32,10 +33,10 @@ var WizardCard = React.createClass({
 		this.props.onDone();
 	},
 	render() {
-		var {colId, title, subtitle, helpText, children, valid} = this.props;
+		var {colId, title, subtitle, helpText, children, valid, width} = this.props;
 		var variableAvatar = colId ? <div className={compStyles.wizardVariableAvatar}>{colId}</div> : null;
 		return (
-			<Card className={compStyles.WizardCard}>
+			<Card style={{width: width}}>
 				<div className={compStyles.wizardTitle}>
 					<CardTitle avatar={variableAvatar} title={title} subtitle={subtitle} />
 					<i className='material-icons'>close</i>

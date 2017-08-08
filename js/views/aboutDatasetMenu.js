@@ -1,6 +1,6 @@
 'use strict';
 var React = require('react');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
+import {MenuItem, MenuDivider } from 'react-toolbox/lib/menu';
 var _ = require('../underscore_ext');
 var xenaQuery = require('../xenaQuery'); // XXX does this belong here?
 
@@ -11,7 +11,7 @@ function onAbout(dsID, root) {
 }
 
 var getAbout = (dsID, root, text) => (
-	<MenuItem key={dsID} onSelect={() => onAbout(dsID, root)}>{text} </MenuItem>);
+	<MenuItem key={dsID} onClick={() => onAbout(dsID, root)} caption={text}/>);
 
 function aboutDatasetMenu({dsIDs, label}, root = '..') {
 	if (dsIDs.length === 0) {
@@ -20,10 +20,10 @@ function aboutDatasetMenu({dsIDs, label}, root = '..') {
 		return getAbout(dsIDs[0], root, 'About the Dataset');
 	}
 	return [
-		<MenuItem key='d0' divider/>,
-		<MenuItem key='header' header>About the Datasets</MenuItem>,
+		<MenuDivider key='d0'/>,
+		<MenuItem key='header' header caption='About the Datasets'/>,
 		..._.map(dsIDs, dsID => getAbout(dsID, label(dsID))),
-		<MenuItem key='d1' divider/>
+		<MenuDivider key='d1'/>
 	];
 }
 

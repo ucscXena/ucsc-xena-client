@@ -12,3 +12,7 @@
 	vertical-align: top;
 	display: inline-table;
 }
+
+.Sortable {
+	display: flex;
+}

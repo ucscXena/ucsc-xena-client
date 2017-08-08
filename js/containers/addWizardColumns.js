@@ -169,7 +169,7 @@ function addWizardColumns(Component) {
 //			}
 		},
 		defaultWidth() {
-			return Math.floor(this.state.viewWidth / 4);
+			return Math.floor((this.state.viewWidth - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
 		},
 		onCohortSelect(cohort) {
 			this.props.callback(['cohort', 0, cohort, this.defaultWidth()]);
@@ -188,8 +188,9 @@ function addWizardColumns(Component) {
 				stepperState = getStepperState(appState),
 				{editing} = appState,
 				preferred = getPreferedDatasets(cohort, cohortPreferred),
-				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect},
-				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect},
+				width = this.defaultWidth(),
+				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect, width},
+				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect, width},
 				columns = React.Children.toArray(children),
 				withEditor = columns.map(el =>
 						editing === el.props.id ?

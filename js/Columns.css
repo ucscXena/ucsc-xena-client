@@ -1,27 +1,21 @@
-.Column-add-button {
-	position: relative;
-	top: 20px;
-}
-
-.Column {
-	user-select: none;
-	position: relative;
-	display: inline-block;
-	margin-left: 5px;
-	margin-right: 5px;
-	cursor: crosshair;
-}
-
+/** Column wrapper, for both wizard and completed setup */
 .Columns {
-	white-space: nowrap;
-}
-
-.Columns .Sortable {
-	white-space: normal;
+	display: flex;
+	margin-left: 12px; /* Match 24px gutter (12px from grid + 12px here) */
+	margin-right: 12px; /* Match 24px gutter (12px from grid + 12px here) */
 }
 
 .Columns canvas {
 	display: block;
+}
+
+/** Wizard and completed card */
+.Column {
+	cursor: default;
+	overflow: visible;
+	margin-left: 0;
+	margin-right: 0;
+	user-select: none;
 }
 
 .Column .react-resizable-handle {

@@ -4,12 +4,6 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var _ = require('../underscore_ext');
 var s = require('underscore.string');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
-var Dropdown = require('react-bootstrap/lib/Dropdown');
-var Button = require('react-bootstrap/lib/Button');
-var Badge = require('react-bootstrap/lib/Badge');
-var Tooltip = require('react-bootstrap/lib/Tooltip');
-var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var DefaultTextInput = require('./DefaultTextInput');
 var DragSelect = require('./DragSelect');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
@@ -26,6 +20,8 @@ var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
+import {Card, CardTitle} from 'react-toolbox/lib/card';
+import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 
 // XXX move this?
 function download([fields, rows]) {
@@ -51,15 +47,6 @@ function downloadJSON(downloadData) {
 }
 
 var styles = {
-	badge: {
-		fontSize: '100%',
-		// Fix the width so it doesn't change if the label changes. This is important
-		// when resizing, because we (unfortunately) inspect the DOM to discover
-		// the minimum width we need to draw the column controls. If the label changes
-		// to a different character, the width will be different, and our minimum width
-		// becomes invalid.
-		width: 24
-	},
 	status: {
 		pointerEvents: 'none',
 		textAlign: 'center',
@@ -75,28 +62,8 @@ var styles = {
 		textAlign: 'center',
 		pointerEvents: 'all',
 		cursor: 'pointer'
-	},
-	columnMenuToggle: {
-		position: 'absolute',
-		left: 0,
-		top: 0,
-		width: '100%',
-		height: '100%'
 	}
 };
-
-var uiHelp = {
-	'refGene': ['top', 'Drag zoom. Shift-click zoom out.']
-};
-
-function addHelp(id, target) {
-	var [placement, text] = uiHelp[id],
-		tooltip = <Tooltip>{text}</Tooltip>;
-	return (
-		<OverlayTrigger trigger={['hover']} key={id} placement={placement} overlay={tooltip}>
-			{target}
-		</OverlayTrigger>);
-}
 
 // Manually set focus to avoid triggering dropdown (close) or anchor
 // (navigate) actions.
@@ -157,11 +124,11 @@ function sortVisibleLabel(column, pos) {
 
 function segmentedVizOptions(onVizOptions) {
 	return onVizOptions ? [
-		<MenuItem divider />,
-		<MenuItem onSelect={onVizOptions} data-renderer='line'>Line</MenuItem>,
-		<MenuItem onSelect={onVizOptions} data-renderer='pixel'>Pixel</MenuItem>,
-		<MenuItem onSelect={onVizOptions} data-renderer='power'>Power</MenuItem>,
-		<MenuItem divider />] : [];
+		<MenuDivider/>,
+		<MenuItem onSelect={onVizOptions} data-renderer='line' caption='Line'/>,
+		<MenuItem onSelect={onVizOptions} data-renderer='pixel' caption='Pixel'/>,
+		<MenuItem onSelect={onVizOptions} data-renderer='power' caption='Power'/>,
+		<MenuDivider/>] : [];
 }
 
 function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, specialDownloadMenu, onVizOptions}) {
@@ -173,12 +140,12 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
 		specialDownloadItemName = 'Download segments';
 	return addIdsToArr([
-		...(pos ? [] : [<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>]),
+		...(pos ? [] : [<MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>]),
 		...(segmentedVizOptions(onVizOptions)),
 		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
-		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>,
+		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>,
 		specialDownloadMenu ?
-			<MenuItem disabled={noData} onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
+			<MenuItem disabled={noData} onClick={onSpecialDownload} caption={specialDownloadItemName}/>
 			: <span/>
 	]);
 }
@@ -196,10 +163,10 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
 	return addIdsToArr([
-		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
-		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
+		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noMuPit} onClick={onMuPit} caption={mupitItemName}/>,
+		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>,
 		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
-		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>
+		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>
 	]);
 }
 
@@ -227,15 +194,15 @@ function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDo
 	return addIdsToArr ([
 		supportsGeneAverage(id) ?
 			(fieldType === 'genes' ?
-				<MenuItem eventKey="geneProbes" title={noGeneDetail ? 'no common probemap' : ''}
-					disabled={noGeneDetail} onSelect={onMode}>Detailed view</MenuItem> :
-				<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>)
+				<MenuItem title={noGeneDetail ? 'no common probemap' : ''}
+					disabled={noGeneDetail} onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
+				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>)
 				: null,
 		supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) ?
-			<MenuItem onSelect={onTumorMap}>TumorMap (TCGA Pancan)</MenuItem>
+			<MenuItem onClick={onTumorMap} caption='TumorMap (TCGA Pancan)'/>
 			: null,
 		(specialDownloadMenu && !wrongDataType) ?
-			<MenuItem onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
+			<MenuItem onClick={onSpecialDownload} caption={specialDownloadItemName}/>
 			: null
 	]);
 }
@@ -461,7 +428,7 @@ var Column = React.createClass({
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
-				supportsGeneAverage, onClick, tooltip} = this.props,
+				supportsGeneAverage, onClick, tooltip, wizardMode} = this.props,
 			{specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
@@ -469,16 +436,7 @@ var Column = React.createClass({
 				onSpecialDownload, supportsGeneAverage, specialDownloadMenu}),
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
-			// move this to state to generalize to other annotations.
-			sortHelp = <Tooltip>Drag to change column order</Tooltip>,
-			menuHelp = <Tooltip>Column menu</Tooltip>,
-			moveIcon = (
-				<OverlayTrigger placement='top' overlay={sortHelp}>
-					<span
-						className="glyphicon glyphicon-resize-horizontal Sortable-handle"
-						aria-hidden="true">
-					</span>
-				</OverlayTrigger>),
+			moveIcon = (<i className='Sortable-handle material-icons'>drag_handle</i>),
 			annotation = widgets.annotation({
 				fields: column.fields,
 				refGene: _.values(_.get(data, 'refGene', {}))[0],
@@ -492,54 +450,46 @@ var Column = React.createClass({
 		// Splitbutton will not pass props down to the underlying Button, so we
 		// can't use Splitbutton.
 		return (
-			<div className='Column' style={{width: width, position: 'relative'}}>
-				<br/>
-				{/* Using Dropdown instead of SplitButton so we can put a Tooltip on the caret. :-p */}
-				<Dropdown onToggle={this.onMenuToggle} ref='controls' bsSize='xsmall'>
-					<Button componentClass='label'>
-						{moveIcon}
-					</Button>
-					{/* If OverlayTrigger contains Dropdown.Toggle, the toggle doesn't work. So we invert the nesting and use a span to cover the trigger area. */}
-					<Dropdown.Toggle componentClass='label'>
-						<OverlayTrigger placement='top' overlay={menuHelp}>
-							<span style={styles.columnMenuToggle}></span>
-						</OverlayTrigger>
-					</Dropdown.Toggle>
-					<Dropdown.Menu>
-						{menu}
-						{menu && <MenuItem divider />}
-						<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
-						<MenuItem onSelect={this.onSortDirection}>Reverse sort</MenuItem>
-						<MenuItem onSelect={this.onDownload}>Download</MenuItem>
-						{aboutDatasetMenu(datasetMeta(id))}
-						<MenuItem onSelect={this.onViz}>Display Setting</MenuItem>
-						<MenuItem disabled={!this.props.onEdit} onSelect={this.onEdit}>Edit</MenuItem>
-						<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
-					</Dropdown.Menu>
-				</Dropdown>
-				<Badge ref='label' style={styles.badge} className='pull-right'>{label}</Badge>
-				<br/>
-				<DefaultTextInput
-					onChange={this.onColumnLabel}
-					value={{default: columnLabel, user: user.columnLabel}} />
-				<DefaultTextInput
-					onChange={this.onFieldLabel}
-					value={{default: fieldLabel, user: user.fieldLabel}} />
+			<Card className='Column' style={{width: width}} >
+				<CardTitle>
+					<span ref='label'>{label}</span>
+					<DefaultTextInput
+						onChange={this.onColumnLabel}
+						value={{default: columnLabel, user: user.columnLabel}} />
+					<DefaultTextInput
+						onChange={this.onFieldLabel}
+						value={{default: fieldLabel, user: user.fieldLabel}} />
+					{wizardMode ? null :
+						<div ref='controls'>
+							{first ? null : moveIcon}
+							<IconMenu icon='more_vert' menuRipple>
+								{menu}
+								{menu && <MenuDivider />}
+								<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
+										  caption='Kaplan Meier Plot'/>
+								<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
+								<MenuItem onClick={this.onDownload} caption='Download'/>
+								{aboutDatasetMenu(datasetMeta(id))}
+								<MenuItem onClick={this.onViz} caption='Display Setting'/>
+								<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
+								<MenuItem onClick={this.onRemove} caption='Remove'/>
+							</IconMenu>
+						</div>
+					}
+				</CardTitle>
 				<Crosshair>
 					<div style={{height: 32}}>
-						{annotation ? addHelp('refGene',
+						{annotation ?
 							<DragSelect enabled={true} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-									{annotation}
-							</DragSelect>) : null}
+								{annotation}
+							</DragSelect> : null}
 					</div>
 				</Crosshair>
-
 				<ResizeOverlay
 					onResizeStop={this.onResizeStop}
 					width={width}
 					minWidth={this.getControlWidth}
 					height={zoom.height}>
-
 					<SpreadSheetHighlight
 						animate={searching}
 						width={width}
@@ -553,9 +503,7 @@ var Column = React.createClass({
 						</Crosshair>
 					</div>
 				</ResizeOverlay>
-				<h5 style={{visibility: first ? 'visible' : 'hidden'}}>Legends</h5>
-				{widgets.legend({column, data})}
-			</div>
+			</Card>
 		);
 	}
 });

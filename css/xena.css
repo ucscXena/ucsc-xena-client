@@ -7,6 +7,7 @@
 
 /* Adding styles for sticky footer */
 body {
+	background-color: #fafafa;
 	height: 100%;
 	min-height: 100vh;
 	padding-bottom: 163px; /* 115 for height of footer + 48px padding */

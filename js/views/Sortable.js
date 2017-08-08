@@ -151,7 +151,7 @@ var Sortable = React.createClass({
 	render: function () {
 		var {dragging} = this.state;
 		var columns = React.Children.map(this.props.children, (child, i) =>
-			<td
+			<div
 				{...this.props}
 				onMouseDown={ev => this.sortStart([child.props.actionKey, ev])}
 				className={'Sortable-container' + (dragging !== null && i !== dragging ? ' Sortable-slide' : '')}
@@ -159,16 +159,12 @@ var Sortable = React.createClass({
 				ref={child.props.actionKey}>
 
 				{child}
-			</td>);
+			</div>);
 
 		return (
-			<table className='Sortable'>
-				<tbody>
-					<tr>
-						{columns}
-					</tr>
-				</tbody>
-			</table>
+			<div className='Sortable'>
+				{columns}
+			</div>
 		);
     }
 });
