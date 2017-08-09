@@ -19,11 +19,11 @@ function addColumnAdd(Component) {
 		mixins: [deepPureRenderMixin],
 		render() {
 			var {children, onAddColumn, ...otherProps} = this.props,
-		   		{appState: {editing}} = otherProps,
+				{appState: {editing, wizardMode}} = otherProps,
 				columns = editing ? children : React.Children.map(this.props.children, (child, i) => (
 					<div style={{display: 'flex'}} actionKey={child.props.actionKey}>
 						{child}
-						<ColumnAdd onClick={() => onAddColumn(i)}/>
+						{wizardMode ? null : <ColumnAdd onClick={() => onAddColumn(i)}/>}
 					</div>));
 			return (
 				<Component {...otherProps}>

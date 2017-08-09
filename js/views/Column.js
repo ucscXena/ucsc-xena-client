@@ -481,6 +481,7 @@ var Column = React.createClass({
 					</div>
 				</Crosshair>
 				<ResizeOverlay
+					enable={!wizardMode}
 					onResizeStop={this.onResizeStop}
 					width={width}
 					minWidth={this.getControlWidth}
