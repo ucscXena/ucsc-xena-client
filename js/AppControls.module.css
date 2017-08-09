@@ -2,7 +2,8 @@
  * UCSC Xena Client
  * http://xena.ucsc.edu
  *
- * Rules necessary for styling Xena sub app bar that are outside of the RTB app bar theming API.
+ * Rules necessary for styling Xena App Control.
+ *
  */
 
 @value black12 from '../css/variables.css';
@@ -46,20 +47,51 @@
 .appBarContainer i {
 	color: black87;
 	cursor: pointer;
+	padding: 6px;
 }
 
+/* Left-hand container */
 .appBarContainer:first-of-type i {
-	padding-right: 16px;
+//margin-right: 4px;
 }
 
+.appBarContainer i {
+	margin-left: 4px;
+}
+
+/* Positions the first and any other i after the title and subtitle to the end of the left container */
 .appBarContainer:first-of-type i:first-of-type {
 	margin-left: auto;
 }
 
-.appBarContainer:last-of-type i {
-	padding-left: 16px;
+/* Margin for the last i in left-hand container */
+.appBarContainer:first-of-type i:last-of-type {
+	margin-right: 10px;
 }
 
+/* Positions second and all other i to the end of the right container */
 .appBarContainer:last-of-type i:nth-of-type(2) {
 	margin-left: auto;
+}
+
+/* Margin for the first i in right-hand container */
+.appBarContainer:last-of-type > i:first-child {
+	margin-left: 10px;
+}
+
+/* Bookmark icon */
+.iconBookmark {
+	margin-left: 4px;
+}
+
+/* Help icon */
+.appBarContainer a {
+	line-height: 0;
+	text-decoration: none;
+	margin-left: 4px;
+}
+
+/* Strips margin for the Help icon only in right-hand container.  Help icon wrapped in <a> class. */
+.appBarContainer:last-of-type a > i {
+	margin-left: 0px;
 }
