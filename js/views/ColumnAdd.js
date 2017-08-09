@@ -22,9 +22,21 @@ var ColumnAdd = React.createClass({
 	onClick: function () {
 		this.props.onClick();
 	},
+	onMouseOut() {
+		var {onHover, actionKey} = this.props;
+		onHover(actionKey, false);
+	},
+	onMouseOver() {
+		var {onHover, actionKey} = this.props;
+		onHover(actionKey, true);
+	},
 	render() {
 		return (
-			<div className={compStyles.ColumnAdd} onClick={this.onClick}>
+			<div className={compStyles.ColumnAdd}
+				onClick={this.onClick}
+				onMouseOut={this.onMouseOut}
+				onMouseOver={this.onMouseOver}>
+
 				<div className={compStyles.text}>
 					Click to Add Column
 				</div>
