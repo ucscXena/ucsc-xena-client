@@ -239,7 +239,7 @@ var DiseaseSuggest = React.createClass({
 					inputProps={{value, onChange}}
 					value={value}
 					onClear={this.onClear}/>
-				<XRadioGroup {...studyProps} />
+				{results.length > 0 ? <XRadioGroup {...studyProps} /> : null}
 			</div>);
 	}
 });
