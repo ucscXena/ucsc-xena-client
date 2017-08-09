@@ -18,6 +18,12 @@
 	letter-spacing: 0.5px;
 }
 
+/* Icon button for AppControl - maintains vertical positioning of bookmark icon */
+.toggle {
+	line-height: 0;
+}
+
+/* Icon button for AppControl - for bookmark */
 .toggle > .icon {
 	font-size: 24px;
 }

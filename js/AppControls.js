@@ -233,7 +233,7 @@ var AppControls = React.createClass({
 						{(noshow || !hasColumn) ? null : <i className='material-icons' onClick={this.onPdf}>picture_as_pdf</i> }
 						{hasColumn ? <i className='material-icons' onClick={this.onDownload}>file_download</i> : null}
 						{bookmarks ?
-							[<IconMenu icon='bookmark' onShow={this.onBookmark} menuRipple>
+							[<IconMenu className={compStyles.iconBookmark} icon='bookmark' onShow={this.onBookmark} iconRipple={false}>
 								<MenuItem onClick={this.onExport} caption='Export'/>
 								<MenuItem onClick={this.onImport} caption='Import'/>
 								<MenuDivider/>
