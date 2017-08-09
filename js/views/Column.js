@@ -472,7 +472,7 @@ var Column = React.createClass({
 							</IconMenu>
 						</div>
 					}>
-				<Crosshair>
+				<Crosshair frozen={wizardMode}>
 					<div style={{height: 32}}>
 						{annotation ?
 							<DragSelect enabled={true} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
@@ -493,7 +493,7 @@ var Column = React.createClass({
 						samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 						samplesMatched={samplesMatched}/>
 					<div style={{position: 'relative'}}>
-						<Crosshair frozen={this.props.frozen}>
+						<Crosshair frozen={wizardMode || this.props.frozen}>
 							{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 							{getStatusView(status, this.onReload)}
 						</Crosshair>
