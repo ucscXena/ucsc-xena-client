@@ -475,7 +475,7 @@ var Column = React.createClass({
 				<Crosshair frozen={wizardMode}>
 					<div style={{height: 32}}>
 						{annotation ?
-							<DragSelect enabled={true} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+							<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
 								{annotation}
 							</DragSelect> : null}
 					</div>

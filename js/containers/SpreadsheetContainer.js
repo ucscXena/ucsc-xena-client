@@ -117,7 +117,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 		var columnProps = _.pick(this.props,
 				['searching', 'supportsGeneAverage', 'disableKM', 'datasetMeta', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
 			{appState} = this.props,
-			{columnOrder} = appState;
+			{columnOrder} = appState,
+			onClick = appState.wizardMode ? null : this.on.plotClick;
+
 		// XXX prune callback from this.props
 		// Currently it's required for ColumnEdit2 and zoom helper.
 		return (
@@ -147,7 +149,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						actionKey={id}
 						first={i === 0}
 						{...columnProps}
-						onClick={this.on.plotClick}
+						onClick={onClick}
 						{...columnSelector(id, i, appState)}
 						wizardMode={appState.wizardMode}/>))}
 			</Spreadsheet>);
