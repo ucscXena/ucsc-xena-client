@@ -10,7 +10,7 @@ var CohortOrDisease = React.createClass({
 		return {mode: 'cohort', cohort: null};
 	},
 	onChange(value) {
-		this.setState({mode: value});
+		this.setState({mode: value, cohort: null});
 	},
 	onDone() {
 		this.props.onSelect(this.state.cohort);
@@ -30,7 +30,9 @@ var CohortOrDisease = React.createClass({
 		var wizardProps = {
 			title: 'Study',
 			helpText: 'If you would like help determining the data set to use, Xena can suggest data sets if you provide a primary disease or tissue of origin.',
-			onDone: this.onDone, valid: true, width
+			onDone: this.onDone,
+			valid: !!cohort,
+			width
 		};
 		return (
 			<WizardCard {...wizardProps}>
