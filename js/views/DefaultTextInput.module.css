@@ -1,0 +1,19 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Custom CSS styling of default text input, displayed in column card title.
+ */
+
+.input {
+	border: 0;
+	font-family: inherit;
+	font-size: inherit;
+	font-weight: inherit;
+	letter-spacing: inherit;
+	line-height: inherit;
+	margin: 0;
+	padding: 0;
+	text-overflow: ellipsis;
+	width: calc(100% - 8px);
+}

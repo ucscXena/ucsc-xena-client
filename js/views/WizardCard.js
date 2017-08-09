@@ -6,10 +6,8 @@
  *
  * State
  * -----
- * colId - ID of column (eg 'A', 'B').
- * title - Text displayed as title.
- * subtitle - Text displayed as subtitle.
  * helpText - Text displayed under title/subtitle and above children.
+ * title - Text displayed as title.
  * valid - True if wizard card is complete and done button is enabled.
  * width - Width of card.
  *
@@ -33,17 +31,16 @@ var WizardCard = React.createClass({
 		this.props.onDone();
 	},
 	render() {
-		var {colId, title, subtitle, helpText, children, valid, width} = this.props;
-		var variableAvatar = colId ? <div className={compStyles.wizardVariableAvatar}>{colId}</div> : null;
+		var {title, helpText, children, valid, width} = this.props;
 		return (
 			<Card style={{width: width}}>
-				<div className={compStyles.wizardTitle}>
-					<CardTitle avatar={variableAvatar} title={title} subtitle={subtitle} />
+				<div className={compStyles.titleContainer}>
+					<CardTitle className={compStyles.title} title={title} />
 					<i className='material-icons'>close</i>
 				</div>
 				{helpText ? <CardText>{helpText}</CardText> : null}
 				{children}
-				<CardActions className={compStyles.wizardActions}>
+				<CardActions className={compStyles.actions}>
 					<Button accent disabled={!valid} onClick={this.onDone}>Done</Button>
 				</CardActions>
 			</Card>

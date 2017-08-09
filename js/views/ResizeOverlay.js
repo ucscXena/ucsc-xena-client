@@ -3,6 +3,9 @@
 var React = require('react');
 var Resizable = require('react-resizable').Resizable;
 
+// Styles
+require('./ResizeOverlay.css');
+
 var max = (x, y) => x > y ? x : y;
 var minWidthSize = (minWidth, {width, height}) => ({width: max(minWidth, width), height});
 

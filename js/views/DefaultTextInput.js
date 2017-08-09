@@ -6,28 +6,19 @@
  * - Restore the default if the user deletes the text
  */
 
-require('./DefaultTextInput.css');
+// Core dependencies, components
 const React = require('react');
-var Input = require('react-bootstrap/lib/Input');
 var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
 
-var styles = {
-	input: {
-		defaultValue: {
-			fontStyle: 'italic',
-			color: '#666666'
-		},
-		user: {
-		}
-	}
-};
+// Comp styles
+var compStyles = require('./DefaultTextInput.module.css');
 
 var DefaultTextInput = React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	componentWillMount: function () {
 		this.events('change');
 		this.change = this.ev.change
-		.do(() => this.setState({value: this.refs.input.getValue()}))
+		.do(() => this.setState({value: this.refs.input.value}))
 		.debounceTime(100)
 		.subscribe(this.update);
 	},
@@ -42,7 +33,7 @@ var DefaultTextInput = React.createClass({
 	},
 	resetIfNull: function () {
 		var {onChange, value: {'default': defaultValue}} = this.props,
-			val = this.refs.input.getValue();
+			val = this.refs.input.value;
 
 		if (val === "") {
 			this.setState({value: defaultValue});
@@ -61,20 +52,15 @@ var DefaultTextInput = React.createClass({
 		}
 	},
 	render: function () {
-		var {value: {'default': defaultValue}} = this.props,
-			{value} = this.state,
-			style = (value === defaultValue) ?
-				styles.input.defaultValue : styles.input.user;
+		var {value} = this.state;
 
 		return (
-			<Input
-				wrapperClassName='DefaultTextInput'
-				standalone={true}
+			<input
+				className={compStyles.input}
 				ref='input'
 				onChange={this.on.change}
 				onKeyUp={this.onKeyUp}
 				onBlur={this.resetIfNull}
-				style={style}
 				type='text'
 				title={value}
 				value={value} />);

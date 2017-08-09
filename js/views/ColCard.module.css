@@ -1,0 +1,64 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Custom CSS styling of MD cards, displayed after wizard setup is complete and each card contains a visualization.
+ */
+
+@value black6 from '../../css/variables.css';
+@value black12 from '../../css/variables.css';
+
+/* Core styling of column. 'Column' class must not be namespaced as they are used in page-vizualization functionality. */
+:global(.Column) {
+	cursor: default;
+	overflow: visible;
+	margin-left: 0;
+	margin-right: 0;
+	user-select: none;
+}
+
+:global(.Column:hover .react-resizable-handle) {
+	visibility: visible;
+}
+
+/* Avatar specific to displaying variable on column cards */
+.avatar {
+	background-color: black6;
+	border-radius: 40px;
+	height: 40px;
+	line-height: 40px;
+	margin-right: 16px;
+	min-width: 40px; /* required to maintain avatar shape */
+	text-align: center;
+	width: 40px;
+}
+
+/* Wrapper around title/subtitle and controls */
+.titleContainer {
+	border-bottom: 1px solid black12;
+	height: 73px; /* includes border */
+	display: flex;
+	padding: 24px 16px;
+}
+
+.titleContainer > div {
+	display: flex;
+	align-items: center;
+}
+
+/* Title to take up remaining available space */
+.avatar + div {
+	flex: 1; /* Allows title passed in as <input> to take up all remaining space */
+}
+
+/* Card title/subtitle */
+.title {
+	flex: 1;
+	padding: 0 !important; /* Using important here to override cardTitle.small from theme */
+}
+
+/* Drag icon TODO(mim) revisit this - can we use a namespaced class name for the drag handle here? */
+.titleContainer i {
+	cursor: move;
+	padding: 6px;
+}

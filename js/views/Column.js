@@ -1,7 +1,6 @@
 'use strict';
 
 var React = require('react');
-var ReactDOM = require('react-dom');
 var _ = require('../underscore_ext');
 var s = require('underscore.string');
 var DefaultTextInput = require('./DefaultTextInput');
@@ -20,8 +19,8 @@ var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
-import {Card, CardTitle} from 'react-toolbox/lib/card';
 import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
+var ColCard = require('./ColCard');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -421,9 +420,7 @@ var Column = React.createClass({
 		this.props.onReload(this.props.id);
 	},
 	getControlWidth: function () {
-		var controlWidth = ReactDOM.findDOMNode(this.refs.controls).getBoundingClientRect().width,
-			labelWidth = ReactDOM.findDOMNode(this.refs.label).getBoundingClientRect().width;
-		return controlWidth + labelWidth;
+		return 236; // TODO(mim) revisit - how narrow do we want to go here?
 	},
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
@@ -450,19 +447,18 @@ var Column = React.createClass({
 		// Splitbutton will not pass props down to the underlying Button, so we
 		// can't use Splitbutton.
 		return (
-			<Card className='Column' style={{width: width}} >
-				<CardTitle>
-					<span ref='label'>{label}</span>
-					<DefaultTextInput
+			<ColCard colId={label}
+					 width={width}
+					 title={<DefaultTextInput
 						onChange={this.onColumnLabel}
-						value={{default: columnLabel, user: user.columnLabel}} />
-					<DefaultTextInput
+						value={{default: columnLabel, user: user.columnLabel}} />}
+					subtitle={<DefaultTextInput
 						onChange={this.onFieldLabel}
-						value={{default: fieldLabel, user: user.fieldLabel}} />
-					{wizardMode ? null :
-						<div ref='controls'>
+						value={{default: fieldLabel, user: user.fieldLabel}} />}
+					controls={wizardMode ? null :
+						<div>
 							{first ? null : moveIcon}
-							<IconMenu icon='more_vert' menuRipple>
+							<IconMenu icon='more_vert' menuRipple iconRippe={false}>
 								{menu}
 								{menu && <MenuDivider />}
 								<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
@@ -475,8 +471,7 @@ var Column = React.createClass({
 								<MenuItem onClick={this.onRemove} caption='Remove'/>
 							</IconMenu>
 						</div>
-					}
-				</CardTitle>
+					}>
 				<Crosshair>
 					<div style={{height: 32}}>
 						{annotation ?
@@ -503,7 +498,7 @@ var Column = React.createClass({
 						</Crosshair>
 					</div>
 				</ResizeOverlay>
-			</Card>
+			</ColCard>
 		);
 	}
 });

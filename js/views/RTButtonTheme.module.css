@@ -17,3 +17,7 @@
 	composes: mdBody2 from '../../css/typography.module.css';
 	letter-spacing: 0.5px;
 }
+
+.toggle > .icon {
+	font-size: 24px;
+}
