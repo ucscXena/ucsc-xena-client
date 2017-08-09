@@ -1,0 +1,41 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling Column Add component.
+ */
+
+@value black12 from '../../css/variables.css';
+@value black38 from '../../css/variables.css';
+
+.ColumnAdd {
+	cursor: pointer;
+	padding: 0 8px;
+	position: relative;
+}
+
+.ColumnAdd:before {
+	content: '';
+	background-color: black12;
+	display: block;
+	height: 100%;
+	width: 1px;
+}
+
+.text {
+	composes: mdCaption from '../../css/typography.module.css';
+	background-color: #fafafa; /* Match body background color */
+	color: black38;
+	height: 2px;
+	margin-top: -1px;
+	line-height: 0;
+	left: 50%;
+	/*!*opacity: 0;*!*/
+	padding: 0 16px;
+	position: absolute;
+	text-align: center;
+	top: 50%;
+	transform: translateX(-50%) rotate(-90deg);
+	transition: opacity 150ms ease-in-out;
+	white-space: nowrap;
+}
