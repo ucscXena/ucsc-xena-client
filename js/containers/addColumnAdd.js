@@ -10,11 +10,15 @@
 // Core dependencies, components
 var React = require('react');
 var {deepPureRenderMixin} = require('../react-utils');
+var classNames = require('classnames');
 var ColumnAdd = require('../views/ColumnAdd');
 
+// Styles
+var compStyles = require('./addColumnAdd.module.css');
+
 var hoverClass = (index, hover) =>
-	index === hover ? 'hover-left' :
-		(index - 1 === hover ? 'hover-right' : undefined);
+	index === hover ? compStyles.hoverLeft :
+		(index - 1 === hover ? compStyles.hoverRight : undefined);
 
 // XXX move layout to a view, after we know what the final layout will be.
 function addColumnAdd(Component) {
@@ -23,6 +27,10 @@ function addColumnAdd(Component) {
 		mixins: [deepPureRenderMixin],
 		getInitialState() {
 			return {hover: null};
+		},
+		onClick(index) {
+			this.props.onAddColumn(index);
+			this.setState({hover: null});
 		},
 		onHover(index, hovering) {
 			var {hover} = this.state;
@@ -35,13 +43,17 @@ function addColumnAdd(Component) {
 			}
 		},
 		render() {
-			var {children, onAddColumn, ...otherProps} = this.props,
+			var {children, ...otherProps} = this.props,
 				{appState: {editing, wizardMode}} = otherProps,
 				{hover} = this.state,
-				columns = editing ? children : React.Children.map(this.props.children, (child, i) => (
-					<div style={{display: 'flex'}} className={hoverClass(i, hover)}  actionKey={child.props.actionKey}>
+				lastIndex = children.length - 1,
+				columns = (editing != null) ? children : React.Children.map(children, (child, i) => (
+					<div className={classNames(compStyles.ColumnWrap, hoverClass(i, hover))} actionKey={child.props.actionKey}>
 						{child}
-						{wizardMode ? null : <ColumnAdd actionKey={i} onHover={this.onHover} onClick={() => onAddColumn(i)}/>}
+						{wizardMode ? null : <ColumnAdd actionKey={i}
+														last={i === lastIndex}
+														onHover={this.onHover}
+														onClick={() => this.onClick(i)}/>}
 					</div>));
 			return (
 				<Component {...otherProps}>

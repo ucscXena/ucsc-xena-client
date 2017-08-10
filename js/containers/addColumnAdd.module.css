@@ -1,0 +1,22 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for wrapper around columns, as well as add column hover functionality on individual columns.
+ */
+
+.ColumnWrap {
+	display: flex;
+}
+
+/* Scoot column to the left of "add column" component, to the left by 8px */
+.hoverLeft :global(.Column) {
+	margin-left: -8px;
+	margin-right: 8px;
+}
+
+/* Scoot column to the right of "add column" component, to the right by 8px */
+.hoverRight :global(.Column) {
+	margin-left: 8px;
+	margin-right: -8px;
+}

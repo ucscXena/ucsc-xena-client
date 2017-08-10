@@ -40,3 +40,7 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+
+.WizardCard {
+	margin-right :16px; /* Always add 16px to the right of each card as there is no "add column" enabled during wizard (or edit) to force gutter */
+}

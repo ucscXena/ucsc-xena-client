@@ -8,12 +8,14 @@
 @value black6 from '../../css/variables.css';
 @value black12 from '../../css/variables.css';
 
-/* Core styling of column. 'Column' class must not be namespaced as they are used in page-vizualization functionality. */
+/* Core styling of column. 'Column' class must not be namespaced as it is used in page-vizualization functionality, as 
+   well as the add column hover functionality. */
 :global(.Column) {
 	cursor: default;
 	overflow: visible;
 	margin-left: 0;
 	margin-right: 0;
+	transition: margin 200ms 150ms ease-in-out; /* Match transition of opacity of ColumnAdd, this is for animating the add column hover functionality. */
 	user-select: none;
 }
 
@@ -21,24 +23,29 @@
 	visibility: visible;
 }
 
-/* Avatar specific to displaying variable on column cards */
+/* Avatar specific to displaying variable on column cards. */
 .avatar {
 	background-color: black6;
 	border-radius: 40px;
 	height: 40px;
 	line-height: 40px;
 	margin-right: 16px;
-	min-width: 40px; /* required to maintain avatar shape */
+	min-width: 40px; /* required to maintain avatar shape. */
 	text-align: center;
 	width: 40px;
 }
 
-/* Title to take up remaining available space */
+/* Title to take up remaining available space. */
 .avatar + div {
-	flex: 1; /* Allows title passed in as <input> to take up all remaining space */
+	flex: 1; /* Allows title passed in as <input> to take up all remaining space. */
 }
 
-/* Wrapper around title/subtitle and controls */
+/* Must add additional padding as add column functionality is disabled and default gutter between columns therefore has been removed. */
+.frozen {
+	margin-right: 16px;
+}
+
+/* Wrapper around title/subtitle and controls. */
 .titleContainer {
 	border-bottom: 1px solid black12;
 	display: flex;
@@ -51,14 +58,14 @@
 	display: flex;
 }
 
-/* Card title/subtitle */
+/* Card title/subtitle. */
 .title {
 	flex: 1;
-	padding: 0 !important; /* Using important here to override cardTitle.small from theme */
+	padding: 0 !important; /* Using important here to override cardTitle.small from theme. */
 }
 
-/* Drag icon TODO(mim) revisit this - can we use a namespaced class name for the drag handle here? */
-.titleContainer i {
+/* Drag icon */
+.titleContainer :global(.Sortable-handle) {
 	cursor: move;
 	padding: 6px;
 }
