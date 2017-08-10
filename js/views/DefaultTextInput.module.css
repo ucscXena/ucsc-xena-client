@@ -15,5 +15,5 @@
 	margin: 0;
 	padding: 0;
 	text-overflow: ellipsis;
-	width: calc(100% - 8px);
+	width: 100%;
 }

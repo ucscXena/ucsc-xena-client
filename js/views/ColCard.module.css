@@ -33,22 +33,22 @@
 	width: 40px;
 }
 
+/* Title to take up remaining available space */
+.avatar + div {
+	flex: 1; /* Allows title passed in as <input> to take up all remaining space */
+}
+
 /* Wrapper around title/subtitle and controls */
 .titleContainer {
 	border-bottom: 1px solid black12;
-	height: 73px; /* includes border */
 	display: flex;
+	height: 73px; /* includes border */
 	padding: 24px 16px;
 }
 
 .titleContainer > div {
-	display: flex;
 	align-items: center;
-}
-
-/* Title to take up remaining available space */
-.avatar + div {
-	flex: 1; /* Allows title passed in as <input> to take up all remaining space */
+	display: flex;
 }
 
 /* Card title/subtitle */

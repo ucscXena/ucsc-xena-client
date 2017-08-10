@@ -458,7 +458,7 @@ var Column = React.createClass({
 					controls={wizardMode ? null :
 						<div>
 							{first ? null : moveIcon}
-							<IconMenu icon='more_vert' menuRipple iconRippe={false}>
+							<IconMenu icon='more_vert' menuRipple iconRipple={false}>
 								{menu}
 								{menu && <MenuDivider />}
 								<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
