@@ -1,0 +1,38 @@
+
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Custom CSS outside of react-card theming API for ghost variable select cards.
+ */
+
+@value black12 from '../../css/variables.css';
+@value black38 from '../../css/variables.css';
+
+/* Core ghost container */
+.GhostVariableSelect {
+	border: 1px dashed black38;
+	margin-right :16px; /* Always add 16px to the right of each ghost card as there is no "add column" enabled during wizard (or edit) to force gutter */
+}
+
+/* Ghost title */
+.title {
+	composes: mdCaption from '../../css/typography.module.css';
+	align-items: center;
+	border-bottom: 1px dashed black12;
+	color: black38;
+	display: flex;
+	padding: 16px;
+}
+
+/* Ghost avatar */
+.title:before {
+	border: 0.5px dashed black38;
+	border-radius: 40px;
+	content: '';
+	height: 40px;
+	line-height: 40px;
+	margin-right: 16px;
+	text-align: center;
+	width: 40px;
+}
