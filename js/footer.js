@@ -20,14 +20,14 @@ var Footer = React.createClass({
 			<div className={compStyles.footer}>
 				<div className={compStyles.footerLinks}>
 					<ul>
-						<li><a href=''>UCSC</a></li>
-						<li><a href=''>UCSC Genomics Institute</a></li>
-						<li><a href=''>UCSC Genomics Institute</a></li>
+						<li><a href='https://www.ucsc.edu/' target='_blank'>UCSC</a></li>
+						<li><a href='https://ucscgenomics.soe.ucsc.edu/' target='_blank'>UCSC Genomics Institute</a></li>
+						<li><a href='https://cgl.genomics.ucsc.edu/' target='_blank'>UCSC Genomics Institute</a></li>
 					</ul>
 					<ul>
-						<li><a href=''>email</a></li>
-						<li><a href=''>twitter</a></li>
-						<li><a href=''>github</a></li>
+						<li><a href='mailto:genome-cancer@soe.ucsc.edu'>Email</a></li>
+						<li><a href='https://twitter.com/ucscxena' target='_blank'>Twitter</a></li>
+						<li><a href='https://github.com/ucscXena' target='_blank'>Github</a></li>
 					</ul>
 				</div>
 				<div className={compStyles.footerCR}>Copyright © 2016, The Regents of the University of California,
