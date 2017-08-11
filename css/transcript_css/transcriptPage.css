@@ -33,7 +33,7 @@
 
 .densityplot--label-x {
   position: absolute;
-  font-size: .85em;
+  font-size: .75em;
   transform: translate(-50%, 0);
 }
 

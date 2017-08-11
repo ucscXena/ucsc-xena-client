@@ -6,7 +6,7 @@ const NameColumn = require('./NameColumn');
 const ExonsOnly = require('./ExonsOnly');
 const DensityPlot = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
-
+var {linearTicks} = require('../scale.js');
 import '../../css/transcript_css/transcriptPage.css';
 
 // Placeholder component. I'm expecting the real top-level view
@@ -83,7 +83,9 @@ var Transcripts = React.createClass({
 			nameAndZoom: _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'zoom')),
 		};
 
-		var densityplotAxisLabel = ["-10", "-5", "0", "5", "10"];
+		//calculation of max and min same as in DensityPlot.js and passing max, min as parameters to linearTicks
+		var densityplotAxisLabel = linearTicks(Math.max.apply(Math, _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB")))),
+															 Math.min.apply(Math, _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB")))));
 
 		return (
 			<div ref='datapages'>
@@ -121,7 +123,7 @@ var Transcripts = React.createClass({
 						<div>
 							{
 								densityplotAxisLabel.map((label, index) => {
-									return <label className="densityplot--label-x" style={{left: `${index * 125 / 4}px`}}>{label}</label>;
+									return <label className="densityplot--label-x" style={{left: `${index * 125 / (densityplotAxisLabel.length - 1)}px`}}>{label}</label>;
 								})
 							}
 						</div>
