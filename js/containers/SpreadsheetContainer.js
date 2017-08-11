@@ -4,6 +4,7 @@ var React = require('react');
 var _ = require('../underscore_ext');
 var {rxEventsMixin} = require('../react-utils');
 var getLabel = require('../getLabel');
+var {hasSignatureField} = require('../models/fieldSpec');
 
 function zoomIn(pos, samples, zoom) {
 	var {count, index} = zoom;
@@ -134,7 +135,8 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 					<Column
 						cohort={appState.cohort}
 						onViz={this.onOpenVizSettings}
-						onEdit={appState.editing == null ? this.onEdit : null}
+						onEdit={!hasSignatureField(_.get(appState.columns, id)) &&
+							appState.editing == null ? this.onEdit : null}
 						onFieldLabel={this.onFieldLabel}
 						onColumnLabel={this.onColumnLabel}
 						onShowIntrons={this.onShowIntrons}
