@@ -1,5 +1,5 @@
 'use strict';
-var {drawHeatmap} = require('./drawHeatmap');
+var {drawSamples} = require('./drawSamples');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');
 
@@ -8,18 +8,14 @@ function pdf(id, column, vg, state, i) {
 		colID = _.getIn(state, ['columnOrder', i]),
 		data = _.getIn(state, ['data', colID]),
 		codes = _.getIn(data, ['codes']),
-		{heatmap, colors} = column;
+		{heatmap} = column;
 
-	drawHeatmap(vg, {
+	drawSamples(vg, {
 		codes,
 		width: _.getIn(column, ['width']),
 		zoom,
-		colors,
 		heatmapData: heatmap
 	});
 }
 
-widgets.pdf.add('probes', pdf);
-widgets.pdf.add('geneProbes', pdf);
-widgets.pdf.add('genes', pdf);
-widgets.pdf.add('clinical', pdf);
+widgets.pdf.add('samples', pdf);

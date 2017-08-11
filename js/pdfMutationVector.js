@@ -3,7 +3,7 @@ var {drawMutations, drawSV} = require('./drawMutations');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');
 
-var pdf = _.curry((draw, column, vg, state, i) => {
+var pdf = _.curry((draw, id, column, vg, state, i) => {
 	let {zoom} = state,
 		colID = _.getIn(state, ['columnOrder', i]),
 		data = _.getIn(state, ['data', colID]),

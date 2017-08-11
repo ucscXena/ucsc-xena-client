@@ -42,10 +42,12 @@ module.exports = (el, vgw, vgh, labelEl) => ({
 							width,
 							color,
 							lineHeight: `${lineHeight}px`,
-							fontSize: `${f}px`,
 							height}}>
 
-						<p className='ColumnLabel' style={{width, hyphens}}>
+						<p className='ColumnLabel' style={{
+								fontSize: `${f}px`,
+								width,
+								hyphens}}>
 							{'' + txt}
 						</p>
 					</div>);

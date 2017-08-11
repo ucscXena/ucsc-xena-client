@@ -5,6 +5,7 @@ var _ = require('./underscore_ext');
 require('./plotDenseMatrix');
 require('./plotMutationVector');
 require('./plotSegmented');
+require('./plotSamples');
 require('./refGeneExons');
 require('./ChromPosition');
 require('./models/denseMatrix');

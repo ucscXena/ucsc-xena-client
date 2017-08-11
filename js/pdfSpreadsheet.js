@@ -5,6 +5,7 @@ var widgets = require('./columnWidgets');
 require('./pdfMutationVector');
 require('./pdfDenseMatrix');
 require('./pdfSegmented');
+require('./pdfSamples');
 var _ = require('./underscore_ext');
 
 var totalWidth = cols =>
@@ -33,7 +34,7 @@ var download = state => {
 
 		columns.forEach((column, i) =>
 			vg.translate(offsets[i], 0, () => {
-				widgets.pdf(column, vg, state, i);
+				widgets.pdf(state.columnOrder[i], column, vg, state, i);
 			}));
 		doc.end();
 

@@ -19,4 +19,5 @@ require('./compactData');
 require('./parsePos');
 require('./permuteCase');
 require('./lcs');
+require('./stripeHeight');
 //require('./matrix-test');

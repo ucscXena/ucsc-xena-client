@@ -4,7 +4,7 @@ var lcs = require('../js/lcs');
 
 var assert = require('assert');
 
-describe.only('lcs', () => {
+describe('lcs', () => {
 	it('should match prefix', () => {
 		assert.equal(lcs('foo', 'fo'), 2);
 	});

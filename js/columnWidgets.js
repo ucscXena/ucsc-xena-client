@@ -4,6 +4,8 @@ var multi = require('./multi');
 var parsePos = require('./parsePos');
 
 var fieldTypeSelector = x => x.fieldType;
+var fieldTypeOrSamplesSelector = (id, x) => id === 'samples' ? 'samples' : x.fieldType;
+var columnFieldTypeOrSamplesSelector = x => x.id === 'samples' ? 'samples' : x.column.fieldType;
 var columnFieldTypeSelector = x => x.column.fieldType;
 
 // XXX check for null field[0] is an odd artifact of denseMatrix transform which
@@ -19,9 +21,9 @@ var widget = {
 	avg: multi(fieldTypeSelector),
 	download: multi(columnFieldTypeSelector),
     specialDownload: multi(columnFieldTypeSelector),
-	column: multi(columnFieldTypeSelector),
-	legend: multi(columnFieldTypeSelector),
-	pdf: multi(fieldTypeSelector),
+	column: multi(columnFieldTypeOrSamplesSelector),
+	legend: multi(columnFieldTypeOrSamplesSelector),
+	pdf: multi(fieldTypeOrSamplesSelector),
 	annotation: multi(annotationSelector)
 };
 
