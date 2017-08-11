@@ -13,7 +13,9 @@ function makeSortable(Component) {
 				[first, ...rest] = React.Children.toArray(children);
 			return (
 				<Component {...otherProps}>
-					{first}
+					<div onClick={onClick}>
+						{first}
+					</div>
 					<Sortable onClick={onClick} onReorder={order => onReorder([first.props.actionKey, ...order])}>
 						{rest}
 					</Sortable>
