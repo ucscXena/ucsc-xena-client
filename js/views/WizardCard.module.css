@@ -16,8 +16,8 @@
 
 /* Wrapper around title and close/cancel icon */
 .titleContainer {
-	position: relative; /* Positioning of close icon */
 	border-bottom: 1px solid black12;
+	display: flex;
 	height: 73px; /* includes border */
 	padding: 24px 16px;
 }
@@ -26,11 +26,21 @@
 .titleContainer i {
 	color: black38;
 	cursor: pointer;
-	position: absolute;
-	right: 14px;
-	top: 24px;
 }
 
 .title {
+	flex: 1;
+	min-width: 0; /* To allow for allipsis of title within the flex */
 	padding: 0 !important; /* Using important here to override cardTitle.large from theme */
+}
+
+/* Ellipsis on title */
+.title > div {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.WizardCard {
+	margin-right :16px; /* Always add 16px to the right of each card as there is no "add column" enabled during wizard (or edit) to force gutter */
 }

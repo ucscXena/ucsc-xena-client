@@ -415,7 +415,8 @@ var Column = React.createClass({
 
 		window.open(url);
 	},
-
+	onRefresh: function () {
+	},
 	onReload: function () {
 		this.props.onReload(this.props.id);
 	},
@@ -425,7 +426,7 @@ var Column = React.createClass({
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
-				supportsGeneAverage, onClick, tooltip, wizardMode} = this.props,
+				supportsGeneAverage, onClick, tooltip, wizardMode, editing} = this.props,
 			{specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
@@ -439,7 +440,9 @@ var Column = React.createClass({
 				refGene: _.values(_.get(data, 'refGene', {}))[0],
 				layout: column.layout,
 				width,
-				alternateColors: !_.getIn(column, ['showIntrons'], false)});
+				alternateColors: !_.getIn(column, ['showIntrons'], false)}),
+			refreshIcon = (<i className='material-icons' onClick={this.onRefresh}>close</i>),
+			frozen = (wizardMode || (editing != null)); // Column add is hidden and, crosshair, resize and tooltip are disabled
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
 		// tooltips) for children. We must use a different tag, e.g. 'label'.
@@ -448,6 +451,7 @@ var Column = React.createClass({
 		// can't use Splitbutton.
 		return (
 			<ColCard colId={label}
+					 frozen={frozen}
 					 width={width}
 					 title={<DefaultTextInput
 						onChange={this.onColumnLabel}
@@ -455,10 +459,10 @@ var Column = React.createClass({
 					subtitle={<DefaultTextInput
 						onChange={this.onFieldLabel}
 						value={{default: fieldLabel, user: user.fieldLabel}} />}
-					controls={wizardMode ? null :
+					controls={wizardMode ? (first ? refreshIcon : null) :
 						<div>
 							{first ? null : moveIcon}
-							<IconMenu icon='more_vert' menuRipple iconRippe={false}>
+							<IconMenu icon='more_vert' menuRipple iconRipple={false}>
 								{menu}
 								{menu && <MenuDivider />}
 								<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}

@@ -50,11 +50,6 @@
 	padding: 6px;
 }
 
-/* Left-hand container */
-.appBarContainer:first-of-type i {
-//margin-right: 4px;
-}
-
 .appBarContainer i {
 	margin-left: 4px;
 }
@@ -87,8 +82,8 @@
 /* Help icon */
 .appBarContainer a {
 	line-height: 0;
-	text-decoration: none;
 	margin-left: 4px;
+	text-decoration: none;
 }
 
 /* Strips margin for the Help icon only in right-hand container.  Help icon wrapped in <a> class. */

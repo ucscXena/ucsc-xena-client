@@ -5,15 +5,22 @@
  * Column add component, displayed between column cards and after last column card. Used as click handler for inserting
  * or adding new card.
  *
+ * State
+ * -----
+ * actionKey - Index of add column.
+ * last - True if add column is after the last visualization column.
+ *
  * Actions
  * -------
  * onClick - called on click of component.
+ * onHover - called on mouse over and mouse out on component.
  */
 
 'use strict';
 
 // Core dependencies, components
 var React = require('react');
+var classNames = require('classnames');
 
 // Styles
 var compStyles = require('./ColumnAdd.module.css');
@@ -23,22 +30,26 @@ var ColumnAdd = React.createClass({
 		this.props.onClick();
 	},
 	onMouseOut() {
-		var {onHover, actionKey} = this.props;
-		onHover(actionKey, false);
+		var {last, onHover, actionKey} = this.props;
+		if ( !last ) {
+			onHover(actionKey, false);
+		}
 	},
 	onMouseOver() {
-		var {onHover, actionKey} = this.props;
-		onHover(actionKey, true);
+		var {last, onHover, actionKey} = this.props;
+		if ( !last ) {
+			onHover(actionKey, true);
+		}
 	},
 	render() {
+		var {last} = this.props;
 		return (
-			<div className={compStyles.ColumnAdd}
+			<div className={classNames(compStyles.ColumnAdd, {[compStyles.last]: last})}
 				onClick={this.onClick}
 				onMouseOut={this.onMouseOut}
 				onMouseOver={this.onMouseOver}>
-
 				<div className={compStyles.text}>
-					Click to Add Column
+					Click to {last ? 'Add' : 'Insert'} Column
 				</div>
 			</div>
 		);

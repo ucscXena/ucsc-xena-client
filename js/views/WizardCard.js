@@ -6,6 +6,7 @@
  *
  * State
  * -----
+ * controls - Icons and/or menu displayed at right of card title.
  * helpText - Text displayed under title/subtitle and above children.
  * title - Text displayed as title.
  * valid - True if wizard card is complete and done button is enabled.
@@ -31,12 +32,12 @@ var WizardCard = React.createClass({
 		this.props.onDone();
 	},
 	render() {
-		var {title, helpText, children, valid, width} = this.props;
+		var {title, helpText, children, controls, valid, width} = this.props;
 		return (
-			<Card style={{width: width}}>
+			<Card style={{width: width}} className={compStyles.WizardCard}>
 				<div className={compStyles.titleContainer}>
 					<CardTitle className={compStyles.title} title={title} />
-					<i className='material-icons'>close</i>
+					{controls}
 				</div>
 				{helpText ? <CardText>{helpText}</CardText> : null}
 				{children}

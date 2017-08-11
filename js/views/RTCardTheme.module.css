@@ -22,9 +22,6 @@
 	font-weight: 500; /* mdbody2 composes issue */
 	letter-spacing: .01em; /* mdbody2 composes issue */
 	line-height: 24px; /* mdbody2 composes issue */
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 /* Card title text with avatar */

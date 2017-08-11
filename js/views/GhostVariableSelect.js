@@ -1,0 +1,31 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Standard Xena ghost variable select card, displaying during wizard setup.
+ *
+ * State
+ * -----
+ * title - Text displayed as title.
+ * width - Width of card.
+ */
+
+'use strict';
+
+// Core dependencies, components
+var React = require('react');
+
+// Styles
+var compStyles = require('./GhostVariableSelect.module.css');
+
+var GhostVariableSelect = React.createClass({
+	render() {
+		var {title, width} = this.props;
+		return (
+			<div className={compStyles.GhostVariableSelect} style={{width: width}}>
+				<div className={compStyles.title}>{title}</div>
+			</div>
+		);
+	}
+});
+module.exports = GhostVariableSelect;
