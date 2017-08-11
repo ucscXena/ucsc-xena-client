@@ -85,6 +85,11 @@ var drawSamples = (vg, props) => {
 	let {heatmapData, codes, width, zoom} = props,
 		{count, height, index} = zoom;
 
+	if (_.isEmpty(heatmapData)) { // no features to draw
+		vg.box(0, 0, width, height, "gray");
+		return;
+	}
+
 	vg.labels(() => {
 		draw(vg, {
 			height,
