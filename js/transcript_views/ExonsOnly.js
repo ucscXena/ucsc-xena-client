@@ -149,7 +149,14 @@ var ExonsOnly = React.createClass({
         let suffix = "";
         _.keys(group).forEach((subgroup, j) => {
           subgroup = subgroup;
-          suffix += String.fromCharCode(65 + j);
+          if(j <= 25)
+          {
+              suffix += String.fromCharCode(97 + j);
+          }
+          else if(j > 25)
+          {
+              suffix += String.fromCharCode(65 + j - 26);
+          }
         });
         _.extend(group, {suffix: suffix});
       }

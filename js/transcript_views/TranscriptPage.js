@@ -83,6 +83,8 @@ var Transcripts = React.createClass({
 			nameAndZoom: _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'zoom')),
 		};
 
+		var densityplotAxisLabel = ["-10", "-5", "0", "5", "10"];
+
 		return (
 			<div ref='datapages'>
 				<div style={{margin: "0 auto", width: "1200px"}}>
@@ -113,6 +115,20 @@ var Transcripts = React.createClass({
 						{options}
 					</select>
 					<br/>
+
+					<div className="densityplot--label-div">
+						<label style={{fontSize: "0.85em"}}>expression</label>
+						<div>
+							{
+								densityplotAxisLabel.map((label, index) => {
+									return <label className="densityplot--label-x" style={{left: `${index * 125 / 4}px`}}>{label}</label>;
+								})
+							}
+						</div>
+						<div className="densityplot--label--axis-x"/>
+					</div>
+					<div style={{width: "100%", height: "35px"}}></div>
+
 					<NameColumn
 						data={transcriptNameData}
 						getNameZoom={this.onZoom}
@@ -136,6 +152,10 @@ var Transcripts = React.createClass({
 						unit={unit}
 						getNameZoom={this.onZoom}
 						/> */}
+
+					<div className="densityplot--label-div-y">
+						<label className="densityplot--label-y">density</label>
+					</div>
 				</div>
 			</div>);
 	}

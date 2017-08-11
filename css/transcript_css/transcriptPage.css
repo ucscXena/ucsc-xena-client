@@ -21,3 +21,44 @@
 .selectors {
   margin: 5px 20px;
 }
+
+.densityplot--label-div {
+  margin-left: 885px;
+  position: fixed;
+  width: 125px;
+  height: 40px;
+  z-index: 10;
+  text-align: center;
+}
+
+.densityplot--label-x {
+  position: absolute;
+  font-size: .85em;
+  transform: translate(-50%, 0);
+}
+
+.densityplot--label--axis-x {
+  height: 1px;
+  width: 100%;
+  background-color: black;
+  bottom: 0px;
+  position: absolute;
+}
+
+.densityplot--label-div-y {
+  height: 70px;
+  width: 20px;
+  z-index: 10;
+  float: right;
+  margin-right: 75px;
+}
+
+.densityplot--label-y {
+  font-size: .85em;
+  top: 50%;
+  line-height: 100px;
+  vertical-align: middle;
+  -webkit-transform: rotate(-90deg);
+	-moz-transform: rotate(-90deg);
+	transform: rotate(-90deg);
+}
