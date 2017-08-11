@@ -29,7 +29,7 @@ var Crosshair = React.createClass({
 		let {mousing, x, y} = this.state,
 			{onMouseMove, onMouseOut} = this,
 			{frozen, children} = this.props,
-			cursor = frozen ? 'pointer' : 'none';
+			cursor = frozen ? 'default' : 'none';
 		return (
 			<div style={{cursor}} onMouseMove={onMouseMove} onMouseOut={onMouseOut}>
 				{children}

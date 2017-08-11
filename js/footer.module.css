@@ -39,5 +39,6 @@
 
 .footerCR {
 	composes: mdCaption from '../css/typography.module.css';
+	font-weight: 300;
 	padding-top: 12px;
 }

@@ -171,6 +171,10 @@ function addWizardColumns(Component) {
 		defaultWidth() {
 			return Math.floor((this.state.viewWidth - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
 		},
+		onCancelAdd() {
+		},
+		onCancelEdit() {
+		},
 		onCohortSelect(cohort) {
 			this.props.callback(['cohort', 0, cohort, this.defaultWidth()]);
 		},
@@ -192,6 +196,8 @@ function addWizardColumns(Component) {
 				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect, width},
 				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect, width},
 				columns = React.Children.toArray(children),
+				cancelAddIcon = (<i className='material-icons' onClick={this.onCancelAdd}>close</i>),
+				cancelEditIcon = (<i className='material-icons' onClick={this.onCancelEdit}>close</i>),
 				withEditor = columns.map(el =>
 						editing === el.props.id ?
 							<ColumnInlineEditor
@@ -203,10 +209,13 @@ function addWizardColumns(Component) {
 									fields={appState.columns[editing].fieldSpecs[0].fields}
 									dataset={appState.columns[editing].fieldSpecs[0].dsID}
 									title='Edit Variable'
-									{...datasetSelectProps} />}
+									{...datasetSelectProps}
+									colId={el.props.label}
+									controls={cancelEditIcon}/>}
 							/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
-						editing === i ? [el, <VariableSelect actionKey={i} pos={i} title='Add Variable' {...datasetSelectProps}/>] : [el]);
+						editing === i ? [el, <VariableSelect actionKey={i} pos={i} title='Add Variable'
+															 {...datasetSelectProps} controls={cancelAddIcon}/>] : [el]);
 			return (
 				<Component {...this.props}>
 					{withNewColumns.concat(

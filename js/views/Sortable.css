@@ -1,6 +1,5 @@
 .Sortable-container {
     position: relative;
-	vertical-align: top;
 	transition: left 0s;
 }
 

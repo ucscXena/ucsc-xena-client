@@ -164,9 +164,9 @@ var VariableSelect = React.createClass({
 		var {mode, advanced, valid} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[advanced],
-			{datasets, features, preferred, title, helpText, width} = this.props,
+			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
 			ModeForm = getModeFields[mode];
-		var wizardProps = {title, helpText, onDone: this.onDone, valid, width};
+		var wizardProps = {colId, controls, title, helpText, onDone: this.onDone, valid, width};
 		var dataTypeProps = {
 			label: 'Data Type',
 			value: mode,

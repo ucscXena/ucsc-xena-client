@@ -6,6 +6,7 @@
  *
  * State
  * -----
+ * colId - ID of column (eg 'A', 'B'). Only applicable on edit of column.
  * controls - Icons and/or menu displayed at right of card title.
  * helpText - Text displayed under title/subtitle and above children.
  * title - Text displayed as title.
@@ -32,11 +33,12 @@ var WizardCard = React.createClass({
 		this.props.onDone();
 	},
 	render() {
-		var {title, helpText, children, controls, valid, width} = this.props;
+		var {children, colId, controls, helpText, title, valid, width} = this.props;
+		var variableAvatar = colId ? <div className={compStyles.avatar}>{colId}</div> : null;
 		return (
 			<Card style={{width: width}} className={compStyles.WizardCard}>
 				<div className={compStyles.titleContainer}>
-					<CardTitle className={compStyles.title} title={title} />
+					<CardTitle className={compStyles.title} avatar={variableAvatar} title={title} />
 					{controls}
 				</div>
 				{helpText ? <CardText>{helpText}</CardText> : null}
