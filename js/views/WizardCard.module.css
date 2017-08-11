@@ -32,6 +32,11 @@
 	flex: 1; /* Allows title passed in as <input> to take up all remaining space. */
 }
 
+/* Body of wizard card including help text, if any, and children */
+.content {
+	flex: 1; /* Force content to fill space vertically so that actions are always push to bottom of card */
+}
+
 /* Wrapper around title and close/cancel icon */
 .titleContainer {
 	border-bottom: 1px solid black12;
@@ -61,4 +66,5 @@
 
 .WizardCard {
 	margin-right :16px; /* Always add 16px to the right of each card as there is no "add column" enabled during wizard (or edit) to force gutter */
+	min-height: 572px; /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
 }

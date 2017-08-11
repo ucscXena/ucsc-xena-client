@@ -13,6 +13,7 @@
 .GhostVariableSelect {
 	border: 1px dashed black38;
 	margin-right :16px; /* Always add 16px to the right of each ghost card as there is no "add column" enabled during wizard (or edit) to force gutter */
+	min-height: 572px; /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup. Dupe of WizardCard. */
 }
 
 /* Ghost title */

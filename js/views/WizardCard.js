@@ -41,8 +41,10 @@ var WizardCard = React.createClass({
 					<CardTitle className={compStyles.title} avatar={variableAvatar} title={title} />
 					{controls}
 				</div>
-				{helpText ? <CardText>{helpText}</CardText> : null}
-				{children}
+				<div className={compStyles.content}>
+					{helpText ? <CardText>{helpText}</CardText> : null}
+					{children}
+				</div>
 				<CardActions className={compStyles.actions}>
 					<Button accent disabled={!valid} onClick={this.onDone}>Done</Button>
 				</CardActions>

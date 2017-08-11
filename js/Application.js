@@ -1,6 +1,6 @@
 'use strict';
 var React = require('react');
-var {Grid} = require("react-material-responsive-grid");
+var {Grid, Row, Col} = require("react-material-responsive-grid");
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
 var _ = require('./underscore_ext');
@@ -100,11 +100,15 @@ var Application = React.createClass({
 						<button onClick={this.onPerf}>Perf</button>
 					</Row>
 				*/}
+					<Row>
+						<Col xs4={4}>
 					{children}
 					{_.getIn(state, ['km', 'id']) ? <KmPlot
 							callback={this.props.callback}
 							km={state.km}
 							features={state.features} /> : null}
+						</Col>
+					</Row>
 				</Grid>
 			</div>
 		);

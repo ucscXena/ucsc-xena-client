@@ -51,7 +51,7 @@ module.exports = function () {
 		version: null, // prevent migrations in new tab
 		servers: defaultServerState,
 		mode: 'heatmap',
-		zoom: {height: 300},
+		zoom: {height: 458}, // 458px forces visualizations to match min height of variable select card, required to maintain consistent heights across cohort/disease and variable select during wizard mode
 		cohort: [],
 		columns: {},
 		columnOrder: [],

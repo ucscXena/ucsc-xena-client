@@ -84,7 +84,6 @@ var SamplesColumn = hotOrNot(React.createClass({
 		var {data, column, zoom} = this.props,
 			{heatmap} = column,
 			codes = _.get(data, 'codes');
-
 		return (
 			<CanvasDrawing
 					ref='plot'

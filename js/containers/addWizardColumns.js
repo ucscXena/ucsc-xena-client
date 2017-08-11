@@ -196,8 +196,8 @@ function addWizardColumns(Component) {
 				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect, width},
 				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect, width},
 				columns = React.Children.toArray(children),
-				cancelAddIcon = (<i className='material-icons' onClick={this.onCancelAdd}>close</i>),
-				cancelEditIcon = (<i className='material-icons' onClick={this.onCancelEdit}>close</i>),
+				cancelAddIcon = (<i className='material-icons' onClick={this.onCancelAdd}>cancel</i>),
+				cancelEditIcon = (<i className='material-icons' onClick={this.onCancelEdit}>cancel</i>),
 				withEditor = columns.map(el =>
 						editing === el.props.id ?
 							<ColumnInlineEditor
