@@ -55,7 +55,7 @@ function selectedOptions(selected, options) {
 
 var GenotypicForm = props => (
 	<div>
-		<GeneSuggest value={props.value} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} inputRef={props.inputRef} type='text'/>
+		<GeneSuggest value={props.value} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} type='text'/>
 		<XCheckboxGroup
 			label='Assay Type'
 			additionalAction={!_.isEmpty(props.preferred) && (props.advanced ? 'Show Basic' : 'Show Advanced')}
@@ -68,7 +68,7 @@ var GenotypicForm = props => (
 
 var PhenotypicForm = props => (
 	<div>
-		<PhenotypeSuggest value={props.value} features={props.features} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} inputRef={props.inputRef} type='text'/>
+		<PhenotypeSuggest value={props.value} features={props.features} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} type='text'/>
 	</div>);
 
 var getModeFields = {
@@ -123,9 +123,6 @@ var VariableSelect = React.createClass({
 	onAdvancedClick() {
 		this.setState({advanced: !this.state.advanced});
 	},
-	setInput(input) {
-		this.input = input;
-	},
 	onChange(selectValue, isOn) {
 		var {props: {features}, state: {mode, advanced}} = this,
 			value = this.state.value[mode],
@@ -177,7 +174,6 @@ var VariableSelect = React.createClass({
 			<WizardCard {...wizardProps}>
 				<XRadioGroup {...dataTypeProps} />
 				<ModeForm
-					inputRef={this.setInput}
 					onChange={this.onChange}
 					onReturn={this.onDone}
 					onFieldChange={this.onFieldChange}
