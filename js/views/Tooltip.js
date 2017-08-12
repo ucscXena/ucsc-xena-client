@@ -1,80 +1,57 @@
-
 'use strict';
 
 var React = require('react');
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 var meta = require('../meta');
-require('./Tooltip.css');
+var classNames = require('classnames');
 
-var sampleLayout = id => (
-		<tr>
-			<td className='sampleID'>{id}</td>
-		</tr>);
+// Styles
+var compStyles = require('./Tooltip.module.css');
 
 var element = {
-	value: (i, v) => <td key={i}><span className='tupleValue'>{v}</span></td>,
-	label: (i, l) => <td key={i}>{l}</td>,
+	value: (i, v) => <span key={i}>{v}</span>,
+	label: (i, l) => <span key={i}>{l}</span>,
 	labelValue: (i, l, v) => (
-		<td key={i}>{l}: <span className='tupleValue'>{v}</span></td>
+		<span key={i}>{l}: {v}</span>
 	),
 	url: (i, text, url) =>  (
-		<td key={i} className='urlValue'><a href={url} target='_BLANK'>{text}</a></td>
+		<span key={i}><a href={url} target='_blank'>{text}</a></span>
 	)
 };
 
-var styles = {
-	overlay: () => ({
-		zIndex: 998,
-		position: 'fixed',
-		top: 0,
-		left: 0,
-		width: document.body.clientWidth,
-		height: document.body.clientHeight,
-		backgroundColor: 'transparent'
-	})
-};
-
 function overlay() {
-	return <div style={styles.overlay()}/>;
+	return <div className={compStyles.overlay}/>;
 }
 
 var Tooltip = React.createClass({
 	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?
+	onUnfreeze: function() {
+	},
 	render: function () {
 		var {data, open, onClick, frozen} = this.props,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
-
 		var rowsOut = _.map(rows, (row, i) => (
-			<tr key={i}>
+			<li key={i}>
 				{row.map(([type, ...args], i) => element[type](i, ...args))}
-			</tr>
+			</li>
 		));
-		var sample = sampleID ? sampleLayout(sampleID) : null;
-		var display = open ? 'block' : 'none';
-		// className 'tooltip' aliases with bootstrap css.
+		var closeIcon = frozen ? <i className='material-icons' onClick={this.onUnfreeze}>close</i> : null;
+		var sample = sampleID ? <span>{sampleID}</span> : null;
 		/*global document: false */
 		return (
 			<div onClick={onClick} style={{position: 'relative'}}>
 				{frozen ?  overlay(onClick) : null}
-				<div className='Tooltip' style={{zIndex: 999, display: display}}>
-					<table>
-						<colgroup>
-							<col className='valueCol'/>
-							<col className='closeCol'/>
-						</colgroup>
-						<tbody>
-							{sample}
-							{rowsOut}
-							<tr style={{fontSize: "80%"}}>
-								<td className='tooltipPrompt'>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</td>
-							</tr>
-							<tr style={{fontSize: "80%"}}>
-								<td className='tooltipPrompt'><a href="http://xena.ucsc.edu/spreadsheet-zoom/" target="_blank">Help with zoom</a></td>
-							</tr>
-						</tbody>
-					</table>
+				<div className={classNames(compStyles.Tooltip, {[compStyles.open]: open})}>
+					<ul className={compStyles.content}>
+						<li className={compStyles.title}>{sample}{closeIcon}</li>
+						{rowsOut}
+					</ul>
+					<div className={compStyles.actions}>
+						<span className={compStyles.zoomHint}>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</span>
+						<a href="http://xena.ucsc.edu/spreadsheet-zoom/" target="_blank"><i className='material-icons'>help</i></a>
+					</div>
 				</div>
 			</div>
 		);
