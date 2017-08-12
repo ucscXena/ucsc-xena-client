@@ -112,6 +112,10 @@ var AppControls = React.createClass({
 			body: `content=${encodeURIComponent(createBookmark(getState()))}`
 		}).subscribe(this.onSetBookmark);
 	},
+	onCopyBookmarkToClipboard: function() {
+		this.bookmarkEl.select();
+		document.execCommand('copy');
+	},
 	onExport: function() {
 		var {getState} = this.props;
 		var url = URL.createObjectURL(new Blob([JSON.stringify(getState())], { type: 'application/json' }));
@@ -141,12 +145,14 @@ var AppControls = React.createClass({
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			hasColumn = !!columnOrder.length,
 			noshow = (mode !== "heatmap"),
-			bookmarkText = `Your bookmark is ${bookmark ? bookmark : 'loading'}`,
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
 			fraction = count === matches ? '' :
 				`- Zoomed to ${index + 1} - ${index + count} (N=${count})`;
-
+		// min-width specified on first MenuItem of bookmark menu is a hack to force menu items to extend full
+		// width for both no bookmark and bookmark states. RTB positions and clips the menu content according to the
+		// initial menu item content which causes problems when we move from the "Your Bookmark is Loading" to "Copy to Clipboard"
+		// states. Do not remove this inline style!
 		return (
 				<AppBar>
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
@@ -166,12 +172,15 @@ var AppControls = React.createClass({
 							{hasColumn ? <i className='material-icons' onClick={this.onMode}>{modeIcon[mode]}</i> : null}
 							{bookmarks ?
 								[<IconMenu className={compStyles.iconBookmark} icon='bookmark' onShow={this.onBookmark} iconRipple={false}>
-									<MenuItem onClick={this.onExport} caption='Export'/>
+									<MenuItem style={{minWidth: 218}} onClick={this.onExport} caption='Export'/>
 									<MenuItem onClick={this.onImport} caption='Import'/>
 									<MenuDivider/>
-									<MenuItem disabled={true} caption={bookmarkText}/>
+									{bookmark ? [<MenuItem onClick={this.onCopyBookmarkToClipboard}
+														   caption='Copy Bookmark'/>,
+												<input className={compStyles.bookmarkInput} ref={(input) => this.bookmarkEl = input} value={bookmark}/>] :
+										<MenuItem disabled={true} caption='Your Bookmark is Loading'/>}
 								</IconMenu>,
-									<input style={{display: 'none'}} ref='import' id='import' onChange={this.onImportSelected} type='file'/>]
+									<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>]
 								: null}
 							{(noshow || !hasColumn) ? null : <i className='material-icons' onClick={this.onPdf}>picture_as_pdf</i> }
 							{hasColumn ? <i className='material-icons' onClick={this.onDownload}>cloud_download</i> : null}

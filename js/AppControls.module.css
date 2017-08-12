@@ -84,3 +84,17 @@
 	line-height: 0;
 	text-decoration: none;
 }
+
+/* Copy bookmark input */
+.bookmarkInput {
+	left: 0;
+	opactiy: 0;
+	position: fixed; /* Take input out of flow of app controls */
+	pointer-events: none;
+	bottom: 0;
+}
+
+/* Import input */
+.importInput[type='file'] {
+	display: none;
+}
