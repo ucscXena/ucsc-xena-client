@@ -40,7 +40,6 @@ import {Button} from 'react-toolbox/lib/button';
 
 // Styles
 var compStyles = require('./HelpBox.module.css');
-var buttonStyles = require('./RTButtonTheme.module.css');
 
 // Setup for help box displayed to right of item being highlighted (with row marker). 27.5 used in width calculations
 // of marker comes from 16px margin (standard MD width) plus 11.5px for triangle. This smaller width creates the
@@ -80,7 +79,7 @@ var HelpBox = React.createClass({
 					{children}
 				</div>
 				<div className={compStyles.buttonContainer}>
-					<Button className={buttonStyles.buttonRight} accent onClick={this.onClose}>GOT IT</Button>
+					<Button accent onClick={this.onClose}>GOT IT</Button>
 				</div>
 			</Box>
 		);
