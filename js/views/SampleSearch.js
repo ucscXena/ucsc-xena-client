@@ -1,10 +1,14 @@
 'use strict';
 
 var React = require('react');
-var Input = require('react-bootstrap/lib/Input');
-var SplitButton = require('react-bootstrap/lib/SplitButton');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
 var {deepPureRenderMixin} = require('../react-utils');
+var _ = require('../underscore_ext');
+import Input from 'react-toolbox/lib/input';
+import {IconMenu, MenuItem} from 'react-toolbox/lib/menu';
+var classNames = require('classnames');
+
+// Styles
+var compStyles = require('./SampleSearch.module.css');
 
 var SampleSearch = React.createClass({
 	mixins: [deepPureRenderMixin],
@@ -19,37 +23,37 @@ var SampleSearch = React.createClass({
 	getInitialState: function () {
 		return {value: this.props.value};
 	},
-	onChange: function (ev) {
-		var {onChange} = this.props,
-			value = ev.target.value;
+	onChange: function (value) {
+		var {onChange} = this.props;
 		this.setState({value});
 		onChange(value);
 	},
+	onResetSampleFilter: function () {
+		this.props.callback(['sampleFilter', 0 /* index into composite cohorts */, null]);
+	},
 	render: function () {
-		var {onFilter, onZoom, onCreateColumn, mode} = this.props,
+		var {onFilter, onZoom, onCreateColumn, mode, cohort} = this.props,
 			{value} = this.state,
 			noshow = (mode !== "heatmap"),
-			filterButton = onFilter ?
-					(<span
-						 title='Apply as filter'
-						 className='glyphicon glyphicon-filter'
-						 aria-hidden='true'/>) : null;
+			sampleFilter = _.getIn(cohort, [0, 'sampleFilter']),
+			filterDisabled = (noshow || !value);
 		return (
-			<form className='form-inline' onSubmit={ev => ev.preventDefault()}>
-				<Input style={{width: '26em'}}
+			<div className={compStyles.SampleSearch}>
+				<Input className={compStyles.inputContainer}
 					type='text'
 					value={value}
 					title={value}
 					placeholder='Samples to highlight. e.g. TCGA-DB-A4XH, missense'
 					onChange={this.onChange}
 					disabled={noshow}/>
-				{filterButton ?
-					(<SplitButton onClick={onFilter} bsSize='sm' title={filterButton} disabled={noshow}>
-						<MenuItem title='Apply to filter' onClick={onFilter}>Filter</MenuItem>
-						<MenuItem title='Apply to zoom' onClick={onZoom}>Zoom</MenuItem>
-						<MenuItem title='Create column from' onClick={onCreateColumn}>New Column</MenuItem>
-					</SplitButton>) : null}
-			</form>
+				{filterDisabled ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
+				<IconMenu className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
+					{sampleFilter ? <MenuItem caption='Clear Filter' onClick={this.onResetSampleFilter}/> :
+						<MenuItem caption='Filter' onClick={onFilter}/>}
+					<MenuItem caption='Zoom' onClick={onZoom}/>
+					<MenuItem caption='New Column' onClick={onCreateColumn}/>
+				</IconMenu>}
+			</div>
 		);
 	}
 });

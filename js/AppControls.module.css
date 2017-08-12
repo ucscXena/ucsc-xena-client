@@ -20,16 +20,27 @@
 	height: 100%;
 }
 
+.appBarContainer i {
+	color: black87;
+	cursor: pointer;
+	padding: 6px; /* Match padding of bookmark (ie RTB MenuIcon) */
+}
+
+.appBarContainer i {
+	margin-left: 4px;
+}
+
 /* Left-hand container, displaying cohort name, sample count and refresh/reload icons */
-.appBarContainer:first-of-type {
+.cohort {
 	border-right: 1px solid black12;
+	padding-right: 10px;
 	min-width: 460px;
 	width: 33.3333%;
 }
 
-/* Right-hand container, containing filter and download etc icons */
-.appBarContainer:last-of-type {
-	flex: 1;
+/* Positions the first and any other i after the title and subtitle to the end of the left container */
+.cohort i:first-of-type {
+	margin-left: auto;
 }
 
 .title {
@@ -44,34 +55,23 @@
 	line-height: 16px;
 }
 
-.appBarContainer i {
-	color: black87;
-	cursor: pointer;
-	padding: 6px;
+/* Right-hand container, containing filter and download etc icons */
+.tools {
+	display: flex;
+	flex: 1;
+	padding: 16px;
 }
 
-.appBarContainer i {
-	margin-left: 4px;
+/* Filter section, inside tools */
+.filter {
+	align-items: center;
+	display: flex;
 }
 
-/* Positions the first and any other i after the title and subtitle to the end of the left container */
-.appBarContainer:first-of-type i:first-of-type {
+/* Actions section, inside tools eg chart/visualization toggle, download, PDF, bookmark */
+.actions {
+	display: flex;
 	margin-left: auto;
-}
-
-/* Margin for the last i in left-hand container */
-.appBarContainer:first-of-type i:last-of-type {
-	margin-right: 10px;
-}
-
-/* Positions second and all other i to the end of the right container */
-.appBarContainer:last-of-type i:nth-of-type(2) {
-	margin-left: auto;
-}
-
-/* Margin for the first i in right-hand container */
-.appBarContainer:last-of-type > i:first-child {
-	margin-left: 10px;
 }
 
 /* Bookmark icon */
@@ -82,11 +82,5 @@
 /* Help icon */
 .appBarContainer a {
 	line-height: 0;
-	margin-left: 4px;
 	text-decoration: none;
-}
-
-/* Strips margin for the Help icon only in right-hand container.  Help icon wrapped in <a> class. */
-.appBarContainer:last-of-type a > i {
-	margin-left: 0px;
 }

@@ -68,7 +68,8 @@ var Application = React.createClass({
 	},
 	render: function() {
 		let {state, children, onHighlightChange, onShowWelcome, stepperState, ...otherProps} = this.props,
-			{samplesMatched, sampleSearch, samples, mode, wizardMode, showWelcome, zoom} = state,
+			{callback} = otherProps,
+			{cohort, samplesMatched, sampleSearch, samples, mode, wizardMode, showWelcome, zoom} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			// Can these closures be eliminated, now that the selector is above this
 			// component?
@@ -78,7 +79,6 @@ var Application = React.createClass({
 				() => this.onFilterColumn(samplesMatched) : null,
 			onFilterZoom = (matches < samples.length && matches > 0) ?
 				() => this.onFilterZoom(samples, samplesMatched) : null;
-
 		return (
 			<div>
 				{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
@@ -91,7 +91,9 @@ var Application = React.createClass({
 							onZoom={onFilterZoom}
 							onCreateColumn={onFilterColumn}
 							onChange={onHighlightChange}
-							mode={mode}/>
+							mode={mode}
+							cohort={cohort}
+							callback={callback}/>
 					</AppControls>
 						}
 				<Grid onClick={this.onClick}>
@@ -104,7 +106,7 @@ var Application = React.createClass({
 						<Col xs4={4}>
 					{children}
 					{_.getIn(state, ['km', 'id']) ? <KmPlot
-							callback={this.props.callback}
+							callback={callback}
 							km={state.km}
 							features={state.features} /> : null}
 						</Col>

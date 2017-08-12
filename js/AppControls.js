@@ -2,22 +2,17 @@
 'use strict';
 
 var React = require('react');
-var DatasetSelect = require('./views/DatasetSelect');
-var Button = require('react-bootstrap/lib/Button');
-var Tooltip = require('react-bootstrap/lib/Tooltip');
-var Popover = require('react-bootstrap/lib/Popover');
-var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var pdf = require('./pdfSpreadsheet');
 var _ = require('./underscore_ext');
 import AppBar from 'react-toolbox/lib/app_bar';
-import {IconMenu, MenuItem, MenuDivider } from 'react-toolbox/lib/menu';
+import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 var Rx = require('./rx');
 var {createBookmark} = require('./bookmark');
 var konami = require('./konami');
-var Popover = require('react-bootstrap/lib/Popover');
 var config = require('./config');
 var {deepPureRenderMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
+var classNames = require('classnames');
 
 // Styles
 var compStyles = require('./AppControls.module.css');
@@ -31,36 +26,6 @@ var modeEvent = {
 	chart: 'heatmap',
 	heatmap: 'chart'
 };
-
-var uiHelp = {
-	'samples': ['top', 'Limit samples by dataset']
-};
-
-function addHelp(id, target) {
-	var [placement, text] = uiHelp[id],
-		tooltip = <Tooltip>{text}</Tooltip>;
-	return (
-		<OverlayTrigger trigger={['hover']} key={id} placement={placement} overlay={tooltip}>
-			{target}
-		</OverlayTrigger>);
-}
-
-function addOverWarning(warn, id, cb, target) {
-	if (warn) {
-		let warning = (
-			<Popover style={{zIndex: 1030}} className='bg-danger' title='Cohort too large'>
-				Select a subset
-				<br/>
-				<Button bsSize='xsmall' onClick={cb}>Use large cohort</Button>
-			</Popover>);
-		return (
-			<OverlayTrigger defaultOverlayShown={true} trigger={[]} placement='left' overlay={warning}>
-				{target}
-			</OverlayTrigger>);
-	} else {
-		return addHelp(id, target);
-	}
-}
 
 function download([fields, rows]) {
 	var txt = _.map([fields].concat(rows), row => row.join('\t')).join('\n');
@@ -107,17 +72,8 @@ var AppControls = React.createClass({
 	onPdf: function () {
 		pdf(this.props.appState);
 	},
-	onSamplesSelect: function (value) {
-		this.props.callback(['samplesFrom', 0 /* index into composite cohorts */, value]);
-	},
 	onCohortSelect: function (value) {
 		this.props.callback(['cohort', 0 /* index into composite cohorts */, value]);
-	},
-	onResetSampleFilter: function () {
-		this.props.callback(['sampleFilter', 0 /* index into composite cohorts */, null]);
-	},
-	onAllowOverSamples: function () {
-		this.props.callback(['allowOverSamples', true]);
 	},
 	onSetBookmark(resp) {
 		var {id} = JSON.parse(resp.response);
@@ -179,13 +135,10 @@ var AppControls = React.createClass({
 		ev.target.value = null;
 	},
 	render: function () {
-		var {appState: {cohort: activeCohorts, samplesOver, allowOverSamples, datasets, mode, columnOrder},
+		var {appState: {cohort: activeCohorts, mode, columnOrder},
 				onReset, children, help, matches} = this.props,
 			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
-			samplesFrom = _.getIn(activeCohorts, [0, 'samplesFrom']),
-			sampleFilter = _.getIn(activeCohorts, [0, 'sampleFilter']),
-			hasCohort = !!cohort,
 			hasColumn = !!columnOrder.length,
 			noshow = (mode !== "heatmap"),
 			bookmarkText = `Your bookmark is ${bookmark ? bookmark : 'loading'}`,
@@ -196,7 +149,7 @@ var AppControls = React.createClass({
 
 		return (
 				<AppBar>
-					<div className={compStyles.appBarContainer}>
+					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
 						<div>
 							<span className={compStyles.title}>{cohort}</span>
 							<span className={compStyles.subtitle}>{matches} Samples {fraction ? fraction : null}</span>
@@ -204,44 +157,25 @@ var AppControls = React.createClass({
 						<i className='material-icons' onClick={this.onRefresh}>refresh</i>
 						<i className='material-icons' onClick={() => onReset()}>close</i>
 					</div>
-					<div className={compStyles.appBarContainer}>
-						<i className='material-icons'>filter_list</i>
-						{hasCohort ?
-							<div className='form-group' style={this.props.style}>
-								<label> Samples in </label>
-								{addOverWarning(!allowOverSamples && samplesOver, 'samples', this.onAllowOverSamples,
-									<DatasetSelect
-										disable={noshow}
-										bsStyle={samplesOver ? 'danger' : 'default'}
-										onSelect={this.onSamplesSelect}
-										nullOpt="All samples in the cohort"
-										style={{display: hasCohort ? 'inline' : 'none'}}
-										datasets={datasets}
-										cohort={cohort}
-										value={samplesFrom} />)}
-								{sampleFilter ?
-									(<span>
-									&#8745;
-										<Button disabled={noshow} className={compStyles.hoverStrike}
-												onClick={this.onResetSampleFilter}>
-										{sampleFilter.length} samples
-									</Button>
-								</span>) : null}
-							</div> : null}
-						{children}
-						{hasColumn ? <i className='material-icons' onClick={this.onMode}>{modeIcon[mode]}</i> : null}
-						{(noshow || !hasColumn) ? null : <i className='material-icons' onClick={this.onPdf}>picture_as_pdf</i> }
-						{hasColumn ? <i className='material-icons' onClick={this.onDownload}>file_download</i> : null}
-						{bookmarks ?
-							[<IconMenu className={compStyles.iconBookmark} icon='bookmark' onShow={this.onBookmark} iconRipple={false}>
-								<MenuItem onClick={this.onExport} caption='Export'/>
-								<MenuItem onClick={this.onImport} caption='Import'/>
-								<MenuDivider/>
-								<MenuItem disabled={true} caption={bookmarkText}/>
-							</IconMenu>,
-							<input style={{display: 'none'}} ref='import' id='import' onChange={this.onImportSelected} type='file'/>]
-							: null}
-						{help ? <a href={help} target='_blank'><i className='material-icons'>help</i></a> : null}
+					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
+						<div className={compStyles.filter}>
+							{children}
+							{help ? <a href={help} target='_blank'><i className='material-icons'>help</i></a> : null}
+						</div>
+						<div className={compStyles.actions}>
+							{hasColumn ? <i className='material-icons' onClick={this.onMode}>{modeIcon[mode]}</i> : null}
+							{bookmarks ?
+								[<IconMenu className={compStyles.iconBookmark} icon='bookmark' onShow={this.onBookmark} iconRipple={false}>
+									<MenuItem onClick={this.onExport} caption='Export'/>
+									<MenuItem onClick={this.onImport} caption='Import'/>
+									<MenuDivider/>
+									<MenuItem disabled={true} caption={bookmarkText}/>
+								</IconMenu>,
+									<input style={{display: 'none'}} ref='import' id='import' onChange={this.onImportSelected} type='file'/>]
+								: null}
+							{(noshow || !hasColumn) ? null : <i className='material-icons' onClick={this.onPdf}>picture_as_pdf</i> }
+							{hasColumn ? <i className='material-icons' onClick={this.onDownload}>cloud_download</i> : null}
+						</div>
 					</div>
 				</AppBar>
 		);

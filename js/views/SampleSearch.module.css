@@ -1,0 +1,37 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling Xena sample search component.
+ */
+
+@value black12 from '../../css/variables.css';
+
+.SampleSearch {
+	align-items: center;
+	display: flex;
+}
+
+/* Filter menu */
+.filterMenu {
+	margin-left: 4px; /* Match margin-left of app bar icons (to match disabled menu icon) */
+}
+
+/* Handle disabled filter menu icon. RTB does not have this functionality out of the box so we have to hand roll here. */
+i.menuDisabled {
+	color: black12;
+	cursor: default;
+}
+
+/* Filter input container */
+.inputContainer {
+	margin-right: 4px;
+}
+
+/* Input element - override RT theme (and our own global overrides) */
+.inputContainer input {
+	border-bottom: 1px solid black12 !important; /* Using important here to override RTB inputElement styles. */
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	width: 400px;
+}
