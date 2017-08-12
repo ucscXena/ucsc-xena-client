@@ -19,4 +19,5 @@ require('./compactData');
 require('./parsePos');
 require('./permuteCase');
 require('./findIntrons');
+require('./layoutPlot');
 //require('./matrix-test');
