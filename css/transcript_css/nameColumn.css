@@ -3,8 +3,6 @@
 	width: 125px;
 	display: flex;
 	flex-wrap: wrap;
-	/*overflow: hidden;*/
-	/*resize: both;*/
 	float: left;
 }
 
@@ -19,8 +17,6 @@
 	font-size: 0.85em;
 }
 
-/* This is not making the text align vertically. Not sure why.
-*/
 .nameColumn--item span{
 	position: relative;
 }

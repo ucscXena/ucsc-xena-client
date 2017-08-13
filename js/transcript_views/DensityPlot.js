@@ -7,56 +7,29 @@
  var {deepPureRenderMixin} = require('../react-utils');
 
 const bin = 20; //number of bins
-var plotWidth = 125;
 const plotHeight = 35;
 const zoomFactor = 3;
-var binWidth;
 
-var DensityPlot = React.createClass ({
- mixins: [deepPureRenderMixin],
+function calculateHeight(exp, max, min, plotHt, plotWidth, unit) {
+   let minValue = unit === "tpm" ? Math.log2(0.001) : min;
+   let pxWidth = (max - minValue) / plotWidth;
+   let newExp = exp.filter(e => e > minValue);
+   let percentNonZero = newExp.length / exp.length;
+   let kdePoints = sc.stats.kde().sample(newExp)(_.range(minValue, max + pxWidth, pxWidth));
+   let yHeights = kdePoints.map(kdep => kdep[1] * percentNonZero);
+   let binWidth = plotWidth / yHeights.length;
+   //polyline points here
+   let polylinePoints = [`0,${plotHt}`, ...yHeights.map((y, i) => `${i * binWidth},${(1 - y) * plotHt}`), `${plotWidth},${plotHt}`].join(' ');
+   return {
+     polylinePoints: polylinePoints,
+     zeroWidth: 1 / pxWidth,
+     zeroHeight: (1 - percentNonZero) * plotHt
+   };
+ }
 
- calculateHeight(exp, max, min, plotHt) {
-    let minValue = this.props.unit === "tpm" ? Math.log2(0.001) : min;
-    let pxWidth = (max - minValue) / plotWidth;
-    var newExp = exp.filter(e => e > minValue);
-    var percentNonZero = newExp.length / exp.length;
-    var kdePoints = sc.stats.kde().sample(newExp)(_.range(minValue, max + pxWidth, pxWidth));
-    let yHeights;
-    var estimates = kdePoints.map(kdep => {
-      return kdep[1];
-     });
-
-    yHeights = estimates.map(est => {
-      return est * percentNonZero;
-    });
-
-    //polyline points here
-    let polylinePoints = "0," + plotHt + " ";
-    binWidth = plotWidth / yHeights.length;
-    yHeights.forEach( (y, i) => {
-      polylinePoints += (i * binWidth) + ',' + (1 - y) * plotHt + ' ';
-    });
-
-    // _.range(0, Math.floor(1 / pxWidth)).forEach(
-    //   () => yHeights.unshift(1 - percentNonZero)
-    // );
-    polylinePoints += plotWidth + "," + plotHt;
-    let zeroWidth = 1 / pxWidth;
-    let zeroHeight = (1 - percentNonZero) * plotHt;
-    return {
-      polylinePoints: polylinePoints,
-      zeroWidth: zeroWidth,
-      zeroHeight: zeroHeight
-    };
-
-    // return yHeights;
-  },
-
-  calculateFrequency(exp, max, min) {
+ function calculateFrequency(exp, max, min) {
      const stepSize = (max - min) / bin;
-     let freq;
-     (freq = []).length = bin;
-     freq.fill(0);
+     let freq = _.times(bin, _.constant(0));
 
      exp.forEach(value => {
        freq[Math.floor((value - min) / stepSize)]++;
@@ -66,9 +39,12 @@ var DensityPlot = React.createClass ({
        freq[index] = freq[index] / exp.length;
      });
     return freq;
-  },
+  }
 
+var DensityPlot = React.createClass ({
+ mixins: [deepPureRenderMixin],
  	render () {
+    let plotWidth = 125;
  		let data = this.props.data ? this.props.data : null;
     let max = Math.max.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
     let min = Math.min.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
@@ -77,7 +53,6 @@ var DensityPlot = React.createClass ({
       plotWidth = nameAndZoom.zoom ? 200 : 125;
       if(this.props.type === 'density')
       {
-        // let kdepoints;
         let polylinePoints, zeroWidth, zeroHeight;
         let plotHt = nameAndZoom.zoom ? plotHeight * zoomFactor : plotHeight;
         return (
@@ -85,42 +60,20 @@ var DensityPlot = React.createClass ({
             <div className="densityPlot--row--xAxis"/>
             <div className="densityPlot--row--studyA">
                  {
-                   {polylinePoints, zeroWidth, zeroHeight} = this.calculateHeight(studyA.expA, max, min, plotHt),
+                   {polylinePoints, zeroWidth, zeroHeight} = calculateHeight(studyA.expA, max, min, plotHt, plotWidth, this.props.unit),
                    <svg width={plotWidth} height={plotHt}>
                      <rect x="0" y={plotHt - zeroHeight} width={zeroWidth} height={zeroHeight} fill="#008080"/>
                      <polyline points={polylinePoints} fill="#008080"/>
                    </svg>
-                  //  kdepoints = this.calculateHeight(studyA.expA, max, min),
-                  //  kdepoints.map(kde => {
-                  //    return (
-                  //      <div className="densityPlot--row--bin"
-                  //           style={{height: (kde * 100) + "%",
-                  //                   width: "1px",
-                  //                   backgroundColor: "#008080"
-                  //                 }}
-                  //               />
-                  //    );
-                  //  })
                  }
             </div>
             <div className="densityPlot--row--studyB">
                  {
-                   {polylinePoints, zeroWidth, zeroHeight} = this.calculateHeight(studyB.expB, max, min, plotHt),
+                   {polylinePoints, zeroWidth, zeroHeight} = calculateHeight(studyB.expB, max, min, plotHt, plotWidth, this.props.unit),
                    <svg width={plotWidth} height={plotHt}>
                      <rect x="0" y={plotHt - zeroHeight} width={zeroWidth} height={zeroHeight} fill="steelblue"/>
                      <polyline points={polylinePoints} fill="steelblue"/>
                    </svg>
-                  //  kdepoints = this.calculateHeight(studyB.expB, max, min),
-                  //  kdepoints.map(kde => {
-                  //    return (
-                  //      <div className="densityPlot--row--bin"
-                  //           style={{height: (kde * 100) + "%",
-                  //                   width: "1px",
-                  //                   backgroundColor: "lightsteelblue"
-                  //                 }}
-                  //               />
-                  //    );
-                  //  })
                  }
             </div>
           </div>
@@ -134,7 +87,7 @@ var DensityPlot = React.createClass ({
    						<div className="densityPlot--row--xAxis"/>
               <div className="densityPlot--row--studyA">
               {
-                  frequency = this.calculateFrequency(studyA.expA, max, min),
+                  frequency = calculateFrequency(studyA.expA, max, min),
                   frequency.map( f => {
                     return (
                       <div className="densityPlot--row--bin"
@@ -149,7 +102,7 @@ var DensityPlot = React.createClass ({
               </div>
               <div className="densityPlot--row--studyB">
                 {
-                  frequency = this.calculateFrequency(studyB.expB, max, min),
+                  frequency = calculateFrequency(studyB.expB, max, min),
                   frequency.map( f => {
                     return (
                       <div className="densityPlot--row--bin"
