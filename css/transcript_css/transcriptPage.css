@@ -31,6 +31,14 @@
   text-align: center;
 }
 
+.densityplot--label-div--zoom {
+  margin-left: 885px;
+  position: fixed;
+  width: 200px;
+  height: 40px;
+  z-index: 10;
+  text-align: center;
+}
 .densityplot--label-x {
   position: absolute;
   font-size: .75em;

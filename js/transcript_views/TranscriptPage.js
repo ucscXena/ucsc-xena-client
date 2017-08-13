@@ -20,10 +20,14 @@ var Transcripts = React.createClass({
 		return {
 			gene: _.getIn(this.props.state, ['transcripts', 'gene'], ""),
 			genetranscripts: genetranscripts,
+			scaleZoom: false,
 		};
 	},
 
 	onLoadData() {
+		this.setState({
+			scaleZoom: false
+		});
 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
 		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
 		var unit = this.refs.unit.value;
@@ -47,6 +51,12 @@ var Transcripts = React.createClass({
 		let genetranscript = _.getIn(newState, ['transcripts', 'genetranscripts'], []);
 		this.setState({
 			genetranscript: genetranscript,
+		});
+	},
+
+	scaleZoom() {
+		this.setState({
+			scaleZoom: !this.state.scaleZoom,
 		});
 	},
 
@@ -120,15 +130,15 @@ var Transcripts = React.createClass({
 					</select>
 					<br/>
 
-					<div className="densityplot--label-div">
+					<div className={this.state.scaleZoom ? "densityplot--label-div--zoom" : "densityplot--label-div"} onClick={this.scaleZoom.bind(this)}>
 						<label style={{fontSize: "0.85em"}}>expression</label>
 						<div>
 							{
 								densityplotAxisLabel.map(label => {
 									return (
 										<div>
-											<label className="densityplot--label-x" style={{left: `${(label - min) * 125 / range}px`}}>{label}</label>
-											<div className="densityplot--label-vertical-tick" style={{left: `${(label - min) * 125 / range}px`}}/>
+											<label className="densityplot--label-x" style={{left: `${(label - min) * (this.state.scaleZoom ? 200 : 125) / range}px`}}>{label}</label>
+											<div className="densityplot--label-vertical-tick" style={{left: `${(label - min) * (this.state.scaleZoom ? 200 : 125) / range}px`}}/>
 										</div>
 									);
 								})
