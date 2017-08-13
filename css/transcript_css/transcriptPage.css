@@ -35,6 +35,7 @@
   position: absolute;
   font-size: .75em;
   transform: translate(-50%, 0);
+  bottom: 0px;
 }
 
 .densityplot--label--axis-x {
@@ -61,4 +62,12 @@
   -webkit-transform: rotate(-90deg);
 	-moz-transform: rotate(-90deg);
 	transform: rotate(-90deg);
+}
+
+.densityplot--label-vertical-tick {
+  width: 1px;
+  height: 4px;
+  position: absolute;
+  bottom: 0px;
+  background-color: red;
 }

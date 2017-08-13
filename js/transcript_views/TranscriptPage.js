@@ -6,7 +6,7 @@ const NameColumn = require('./NameColumn');
 const ExonsOnly = require('./ExonsOnly');
 const DensityPlot = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
-var {linearTicks} = require('../scale.js');
+var {linearTicks} = require('../scale');
 import '../../css/transcript_css/transcriptPage.css';
 
 // Placeholder component. I'm expecting the real top-level view
@@ -84,8 +84,10 @@ var Transcripts = React.createClass({
 		};
 
 		//calculation of max and min same as in DensityPlot.js and passing max, min as parameters to linearTicks
-		var densityplotAxisLabel = linearTicks(Math.max.apply(Math, _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB")))),
-															 Math.min.apply(Math, _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB")))));
+		var max = Math.max.apply(Math, _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB"))));
+		var min = Math.min.apply(Math, _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB"))));
+		var densityplotAxisLabel = isFinite(max) && isFinite(min) ? linearTicks(min, max) : [];
+		var range = max - min;
 
 		return (
 			<div ref='datapages'>
@@ -122,8 +124,13 @@ var Transcripts = React.createClass({
 						<label style={{fontSize: "0.85em"}}>expression</label>
 						<div>
 							{
-								densityplotAxisLabel.map((label, index) => {
-									return <label className="densityplot--label-x" style={{left: `${index * 125 / (densityplotAxisLabel.length - 1)}px`}}>{label}</label>;
+								densityplotAxisLabel.map(label => {
+									return (
+										<div>
+											<label className="densityplot--label-x" style={{left: `${(label - min) * 125 / range}px`}}>{label}</label>
+											<div className="densityplot--label-vertical-tick" style={{left: `${(label - min) * 125 / range}px`}}/>
+										</div>
+									);
 								})
 							}
 						</div>
