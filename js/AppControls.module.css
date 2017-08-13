@@ -34,7 +34,7 @@
 .cohort {
 	border-right: 1px solid black12;
 	padding-right: 10px;
-	min-width: 460px;
+	min-width: 452px; /* Matches min (default) width of visualization columns, snapped at 1280px */
 	width: 33.3333%;
 }
 

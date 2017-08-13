@@ -169,7 +169,10 @@ function addWizardColumns(Component) {
 //			}
 		},
 		defaultWidth() {
-			return Math.floor((this.state.viewWidth - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
+			// Use min app width (1280px) if viewport width is currently smaller than min app width. (App is responsive
+			// above 1280px but components are snapped at a minimum width of 1280px)
+			var width = (this.state.viewWidth < 1280 ? 1280 : this.state.viewWidth);
+			return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
 		},
 		onCancelAdd() {
 		},

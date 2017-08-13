@@ -5,6 +5,8 @@
  * Rules necessary for styling welcome bar.
  */
 
+@value appMinWidth from '../../css/variables.css';
+
 .Welcome {
 	background-color: var(--color-primary);
 	color: white;
@@ -39,7 +41,7 @@
 /**
  * Large +
  */
-@media screen and (min-width: 1280px) {
+@media screen and (min-width: appMinWidth) {
 
 	.Welcome {
 		height: 220px;

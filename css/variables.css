@@ -31,3 +31,9 @@
 @value black38: rgba(0, 0, 0, 0.38);
 @value black54: rgba(0, 0, 0, 0.54);
 @value black87: rgba(0, 0, 0, 0.87);
+
+/**
+ * Media
+ */
+
+@value appMinWidth: 1280px; /* Snap components at min width of 1280px, responsive above 1280px */
