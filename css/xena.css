@@ -10,9 +10,21 @@
 /* Adding styles for sticky footer */
 body {
 	background-color: #fafafa;
+	display: inline-block; /* If visualization columns extend beyond viewport width (ie horizontal scroll is enabled), force header, app bar and footer to match width of columns */
 	height: 100%;
 	min-height: 100vh;
-	min-width: appMinWidth;
+	min-width: 100%; /* Required due to display: inline-block */
 	padding-bottom: 163px; /* 115 for height of footer + 48px padding */
 	position: relative;
+}
+
+/*
+ * Add a wrapper around app content to force min width of 1280px. Without this, it appears that there is a minimum width
+ * on the app due to the display: inline-block on the body (see above), which forces each sibling element in the body to
+ * stretch to the width of the longest sibling. In Xena's case, the longest sibling is the app controls component.
+ * If the app controls component is removed, the nav etc start to wrap etc. Must therefore add an explicit wrapper to
+ * force the 1280px.
+ */
+.minWidthWrapper {
+	min-width: appMinWidth;
 }

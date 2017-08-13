@@ -43,15 +43,17 @@
 	</script>
   </head>
   <body id="body">
-	<div id="navMenuMain">
-	</div>
-	<div id="main">
-		<div id='noJScript' style="text-align:center; background: yellow; color: black; font-size: small; width: 500px; margin: auto;">
-			<em>Warning</em>: It appears as though you do not have javascript enabled.  The UCSC Cancer Genomics browser relies heavily on JavaScript and will not function without it enabled.  Thank you for your understanding.
+	<div class="minWidthWrapper">
+		<div id="navMenuMain">
+		</div>
+		<div id="main">
+			<div id='noJScript' style="text-align:center; background: yellow; color: black; font-size: small; width: 500px; margin: auto;">
+				<em>Warning</em>: It appears as though you do not have javascript enabled.  The UCSC Cancer Genomics browser relies heavily on JavaScript and will not function without it enabled.  Thank you for your understanding.
+			</div>
+		</div>
+		<div id="footer">
 		</div>
 	</div>
-    <div id="footer">
-    </div>
 	{% for (var a in o.htmlWebpackPlugin.assets) { %}
 	<script src="{%=o.htmlWebpackPlugin.assets[a]%}"></script>
     {% } %}
