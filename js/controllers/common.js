@@ -165,7 +165,7 @@ function addSampleColumn(state, width) {
 		return state;
 	}
 	var field = signatureField('samples', {
-			columnLabel: 'samples',
+			columnLabel: 'Sample ID',
 			valueType: 'coded',
 			signature: ['samples']
 		}),

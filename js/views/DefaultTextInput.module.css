@@ -16,4 +16,5 @@
 	padding: 0;
 	text-overflow: ellipsis;
 	width: 100%;
+	background-color: inherit;
 }

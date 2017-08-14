@@ -52,12 +52,14 @@ var DefaultTextInput = React.createClass({
 		}
 	},
 	render: function () {
-		var {value} = this.state;
+		var {value} = this.state,
+			{disabled = false} = this.props;
 
 		return (
 			<input
 				className={compStyles.input}
 				ref='input'
+				disabled={disabled}
 				onChange={this.on.change}
 				onKeyUp={this.onKeyUp}
 				onBlur={this.resetIfNull}

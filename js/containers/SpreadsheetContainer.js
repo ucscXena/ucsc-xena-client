@@ -5,6 +5,7 @@ var _ = require('../underscore_ext');
 var {rxEventsMixin} = require('../react-utils');
 var getLabel = require('../getLabel');
 var {hasSignatureField} = require('../models/fieldSpec');
+var {addCommas} = require('../util');
 
 function zoomIn(pos, samples, zoom) {
 	var {count, index} = zoom;
@@ -32,8 +33,16 @@ function targetPos(ev) {
 var zoomInClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
 var zoomOutClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
+function fixSampleTitle(column, i, samples, wizardMode, cohort) {
+	return i === 0 ? _.updateIn(column,
+		['user', 'fieldLabel'], label => wizardMode ?
+			`${addCommas(samples.length)} samples` : label,
+		['user', 'columnLabel'], label => wizardMode ? cohort[0].name : label) :
+	column;
+}
+
 function columnSelector(id, i, appState) {
-	var {data, zoom, columns, samples, samplesMatched} = appState;
+	var {data, zoom, columns, samples, samplesMatched, wizardMode, cohort} = appState;
 	return {
 		id: id,
 		key: id,
@@ -43,7 +52,7 @@ function columnSelector(id, i, appState) {
 		index: _.getIn(appState, ['index', id]),
 		vizSettings: _.getIn(appState, ['columns', id, 'vizSettings']),
 		data: _.getIn(data, [id]) /* refGene */,
-		column: _.getIn(columns, [id]),
+		column: fixSampleTitle(_.getIn(columns, [id]), i, samples, wizardMode, cohort),
 		label: getLabel(i) // <<- put in Spreadsheet? We don't really need it here.
 	};
 }
