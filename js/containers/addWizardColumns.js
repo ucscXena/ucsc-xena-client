@@ -184,9 +184,8 @@ function addWizardColumns(Component) {
 			var width = (this.state.viewWidth < 1280 ? 1280 : this.state.viewWidth);
 			return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
 		},
-		onCancelAdd() {
-		},
-		onCancelEdit() {
+		onCancel() {
+			this.props.callback(['edit-column', null]);
 		},
 		onCohortSelect(cohort) {
 			this.props.callback(['cohort', 0, cohort, this.defaultWidth()]);
@@ -209,8 +208,8 @@ function addWizardColumns(Component) {
 				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect, width},
 				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect, width},
 				columns = React.Children.toArray(children),
-				cancelAddIcon = (<i className='material-icons' onClick={this.onCancelAdd}>cancel</i>),
-				cancelEditIcon = (<i className='material-icons' onClick={this.onCancelEdit}>cancel</i>),
+				cancelAddIcon = (<i className='material-icons' onClick={this.onCancel}>cancel</i>),
+				cancelEditIcon = (<i className='material-icons' onClick={this.onCancel}>cancel</i>),
 				withEditor = columns.map(el =>
 						editing === el.props.id ?
 							<ColumnInlineEditor
