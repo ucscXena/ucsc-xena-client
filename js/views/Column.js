@@ -415,8 +415,6 @@ var Column = React.createClass({
 
 		window.open(url);
 	},
-	onRefresh: function () {
-	},
 	onReload: function () {
 		this.props.onReload(this.props.id);
 	},
@@ -426,7 +424,8 @@ var Column = React.createClass({
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
-				supportsGeneAverage, onClick, tooltip, wizardMode, editing} = this.props,
+				supportsGeneAverage, onClick, tooltip, wizardMode, editing,
+				onReset} = this.props,
 			{specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
@@ -441,7 +440,7 @@ var Column = React.createClass({
 				layout: column.layout,
 				width,
 				alternateColors: !_.getIn(column, ['showIntrons'], false)}),
-			refreshIcon = (<i className='material-icons' onClick={this.onRefresh}>close</i>),
+			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			frozen = (wizardMode || (editing != null)); // Column add is hidden and, crosshair, resize and tooltip are disabled
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for

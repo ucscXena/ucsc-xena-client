@@ -114,6 +114,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	onReload: function (id) {
 		this.props.callback(['reload', id]);
 	},
+	onReset() {
+		this.props.callback(['cohortReset']);
+	},
 	render() {
 		var columnProps = _.pick(this.props,
 				['searching', 'supportsGeneAverage', 'disableKM', 'datasetMeta', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
@@ -139,6 +142,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 							appState.editing == null ? this.onEdit : null}
 						onFieldLabel={this.onFieldLabel}
 						onColumnLabel={this.onColumnLabel}
+						onReset={this.onReset}
 						onShowIntrons={this.onShowIntrons}
 						onSortVisible={this.onSortVisible}
 						onMode={this.onMode}
