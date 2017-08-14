@@ -17,12 +17,13 @@ function addTooltip(Component) {
 			};
 		},
 		componentWillMount: function () {
-			this.events('tooltip', 'click');
+			this.events('tooltip', 'click', 'close');
 
 			var toggle = this.ev.click.filter(ev => ev[meta.key])
-				.map(() => 'toggle');
+					.map(() => 'toggle'),
+				close = this.ev.close.map(() => 'toggle');
 
-			this.tooltip = this.ev.tooltip.merge(toggle)
+			this.tooltip = this.ev.tooltip.merge(toggle).merge(close)
 				// If open + user clicks, toggle freeze of display.
 				.scan(([tt, frozen], ev) =>
 							ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen],
@@ -49,7 +50,7 @@ function addTooltip(Component) {
 							}))}
 					</Component>
 					{wizardMode ? null :
-						<Tooltip onClick={this.on.click} {...this.state.tooltip}/>}
+						<Tooltip onClose={this.on.close} onClick={this.on.click} {...this.state.tooltip}/>}
 				</div>);
 		}
 	});

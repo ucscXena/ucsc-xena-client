@@ -26,10 +26,8 @@ function overlay() {
 
 var Tooltip = React.createClass({
 	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?
-	onUnfreeze: function() {
-	},
 	render: function () {
-		var {data, open, onClick, frozen} = this.props,
+		var {data, open, onClick, onClose, frozen} = this.props,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 		var rowsOut = _.map(rows, (row, i) => (
@@ -37,7 +35,7 @@ var Tooltip = React.createClass({
 				{row.map(([type, ...args], i) => element[type](i, ...args))}
 			</li>
 		));
-		var closeIcon = frozen ? <i className='material-icons' onClick={this.onUnfreeze}>close</i> : null;
+		var closeIcon = frozen ? <i className='material-icons' onClick={onClose}>close</i> : null;
 		var sample = sampleID ? <span>{sampleID}</span> : null;
 		/*global document: false */
 		return (
