@@ -4,6 +4,7 @@ var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 var CohortOrDisease = require('../views/CohortOrDisease');
 var VariableSelect = require('../views/VariableSelect');
+var GhostVariableSelect = require('../views/GhostVariableSelect');
 var ColumnInlineEditor = require('../views/ColumnInlineEditor');
 var getStepperState = require('./getStepperState');
 var trim = require('underscore.string').trim;
@@ -83,13 +84,22 @@ var variableSelectConfig = {
 	}
 };
 
-function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps) {
+function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, width) {
 	if (wizardMode) {
 		if (stepperState === 'COHORT') {
-			return [<CohortOrDisease {...cohortSelectProps}/>];
+			return [
+				<CohortOrDisease {...cohortSelectProps}/>,
+				<GhostVariableSelect width={width} {...variableSelectConfig.FIRST_COLUMN}/>,
+				<GhostVariableSelect width={width} {...variableSelectConfig.SECOND_COLUMN}/>];
 		}
-		if (_.contains(['FIRST_COLUMN', 'SECOND_COLUMN'], stepperState)) {
-			return [<VariableSelect {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>];
+		if (stepperState === 'FIRST_COLUMN') {
+			return [
+				<VariableSelect {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
+				<GhostVariableSelect width={width} {...variableSelectConfig.SECOND_COLUMN} />];
+		}
+		if (stepperState === 'SECOND_COLUMN') {
+			return [
+				<VariableSelect {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>];
 		}
 	}
 	return [];
@@ -222,7 +232,7 @@ function addWizardColumns(Component) {
 			return (
 				<Component {...this.props}>
 					{withNewColumns.concat(
-						wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps))}
+						wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, this.defaultWidth()))}
 				</Component>);
 		}
 	});
