@@ -130,7 +130,7 @@ var Transcripts = React.createClass({
 					</select>
 					<br/>
 
-					<div className={this.state.scaleZoom ? "densityplot--label-div--zoom" : "densityplot--label-div"} onClick={this.scaleZoom.bind(this)}>
+					<div className={this.state.scaleZoom ? "densityplot--label-div--zoom" : "densityplot--label-div"} onClick={this.scaleZoom}>
 						<label style={{fontSize: "0.85em"}}>expression</label>
 						<div>
 							{
