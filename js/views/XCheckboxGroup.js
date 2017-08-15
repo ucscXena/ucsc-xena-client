@@ -43,7 +43,7 @@ var XCheckboxGroup = React.createClass({
 				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
 				{_.map(options, group => [
 					group.label ? <span className={compStyles.subgroupHeader}>{group.label}</span> : null,
-					_.map(group.options, o => <Checkbox data-value={o.value} key={o.label} label={o.label} checked={o.checked} onChange={this.onChange}/>)
+					_.map(group.options, o => <span title={o.label}><Checkbox data-value={o.value} key={o.label} label={o.label} checked={o.checked} onChange={this.onChange}/></span>)
 				])}
 			</div>
 		);

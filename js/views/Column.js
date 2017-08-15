@@ -419,7 +419,7 @@ var Column = React.createClass({
 		this.props.onReload(this.props.id);
 	},
 	getControlWidth: function () {
-		return 73; //236; // TODO(mim) revisit - how narrow do we want to go here? same min width for filter column (see Application.js)
+		return 73; //236; // Matches min possible width of new (filter) column (see Application.js)
 	},
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,

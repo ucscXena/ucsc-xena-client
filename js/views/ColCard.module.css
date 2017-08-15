@@ -7,6 +7,7 @@
 
 @value black6 from '../../css/variables.css';
 @value black12 from '../../css/variables.css';
+@value black38 from '../../css/variables.css';
 
 /* Core styling of column. 'Column' class must not be namespaced as it is used in page-vizualization functionality, as 
    well as the add column hover functionality. */
@@ -57,6 +58,11 @@
 .titleContainer > div {
 	align-items: center;
 	display: flex;
+}
+
+/* Icons */
+.titleContainer i {
+	cursor: pointer;
 }
 
 /* Card title/subtitle. */

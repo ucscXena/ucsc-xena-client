@@ -48,7 +48,6 @@
 
 /* Close icon */
 .title i {
-	color: black38;
 	cursor: pointer;
 	line-height: 0; /* Prevent icon from jiggling title on show/hide when freezing/unfreezing */
 }
