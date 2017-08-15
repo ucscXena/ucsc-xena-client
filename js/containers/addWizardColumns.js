@@ -18,6 +18,11 @@ function toWordList(str) {
 	return _.filter(_.map(str.split(/,| |\n|\t/), s => trim(s), _.identity));
 }
 
+var typeWidth = {
+	matrix: 100,
+	chrom: 200
+};
+
 // 'features' is a problem here, because they are not unique across datasets.
 // How do we look up features w/o a dataset?
 function getValueType(dataset, features, fields) {
@@ -139,10 +144,15 @@ var computeSettings = _.curry((datasets, features, fields, width, dataset) => {
 		colSpec = getColSpec([settings], datasets);
 
 	return _.assoc(colSpec,
-		'width', width, //ds.type === 'mutationVector' ? 200 : 100,
+		'width', _.contains(['mutationVector', 'segmented'], ds.type) ? typeWidth.chrom : typeWidth.matrix,
 		'columnLabel', ds.label,
 		'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel});
 });
+
+var ammendWidth = (columnEl, width) =>
+	React.cloneElement(columnEl, {
+		column: _.assoc(columnEl.props.column, ['width'], width)
+	});
 
 // 1) if appState.editing, then set editing state, and render editor.
 // 2) if wizard mode
@@ -188,7 +198,7 @@ function addWizardColumns(Component) {
 			this.props.callback(['edit-column', null]);
 		},
 		onCohortSelect(cohort) {
-			this.props.callback(['cohort', 0, cohort, this.defaultWidth()]);
+			this.props.callback(['cohort', 0, cohort, typeWidth.matrix]);
 		},
 		onDatasetSelect(posOrId, input, datasetList) {
 			var {datasets, features} = this.props.appState,
@@ -224,7 +234,7 @@ function addWizardColumns(Component) {
 									{...datasetSelectProps}
 									colId={el.props.label}
 									controls={cancelEditIcon}/>}
-							/> : el),
+							/> : (wizardMode ? ammendWidth(el, width) : el)),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
 						editing === i ? [el, <VariableSelect actionKey={i} pos={i} title='Add Variable'
 															 {...datasetSelectProps} controls={cancelAddIcon}/>] : [el]);
