@@ -34,13 +34,18 @@
 .cohort {
 	border-right: 1px solid black12;
 	padding-right: 10px;
-	min-width: 452px; /* Matches min (default) width of visualization columns, snapped at 1280px */
-	width: 33.3333%;
+	width: 452px; /* Matches min (default) width of wizard columns, snapped at 1280px */
 }
 
 /* Positions the first and any other i after the title and subtitle to the end of the left container */
 .cohort i:first-of-type {
 	margin-left: auto;
+}
+
+.titleContainer {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .title {

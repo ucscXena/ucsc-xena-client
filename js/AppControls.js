@@ -156,7 +156,7 @@ var AppControls = React.createClass({
 		return (
 				<AppBar>
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
-						<div>
+						<div className={compStyles.titleContainer}>
 							<span className={compStyles.title}>{cohort}</span>
 							<span className={compStyles.subtitle}>{matches} Samples {fraction ? fraction : null}</span>
 						</div>

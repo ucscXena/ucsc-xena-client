@@ -47,8 +47,9 @@ function addColumnAdd(Component) {
 				{appState: {editing, wizardMode}} = otherProps,
 				{hover} = this.state,
 				lastIndex = children.length - 1,
-				columns = (editing != null) ? children : React.Children.map(children, (child, i) => (
-					<div className={classNames(compStyles.ColumnWrap, hoverClass(i, hover))} actionKey={child.props.actionKey}>
+				columns = (editing != null) ? <div className={compStyles.ColumnWrap}>{children}</div>
+					: React.Children.map(children, (child, i) => (
+					<div className={classNames(compStyles.AddColumnWrap, hoverClass(i, hover))} actionKey={child.props.actionKey}>
 						{child}
 						{wizardMode ? null : <ColumnAdd actionKey={i}
 														last={i === lastIndex}

@@ -5,7 +5,6 @@ var {deepPureRenderMixin} = require('../react-utils');
 var CohortOrDisease = require('../views/CohortOrDisease');
 var VariableSelect = require('../views/VariableSelect');
 var GhostVariableSelect = require('../views/GhostVariableSelect');
-var ColumnInlineEditor = require('../views/ColumnInlineEditor');
 var getStepperState = require('./getStepperState');
 var trim = require('underscore.string').trim;
 var {getColSpec} = require('../models/datasetJoins');
@@ -222,19 +221,14 @@ function addWizardColumns(Component) {
 				cancelEditIcon = (<i className='material-icons' onClick={this.onCancel}>cancel</i>),
 				withEditor = columns.map(el =>
 						editing === el.props.id ?
-							<ColumnInlineEditor
-								actionKey={editing}
-								show='editor'
-								column={el}
-								editor={<VariableSelect
-									pos={editing}
-									fields={appState.columns[editing].fieldSpecs[0].fields}
-									dataset={appState.columns[editing].fieldSpecs[0].dsID}
-									title='Edit Variable'
-									{...datasetSelectProps}
-									colId={el.props.label}
-									controls={cancelEditIcon}/>}
-							/> : (wizardMode ? ammendWidth(el, width) : el)),
+							<VariableSelect
+								pos={editing}
+								fields={appState.columns[editing].fieldSpecs[0].fields}
+								dataset={appState.columns[editing].fieldSpecs[0].dsID}
+								title='Edit Variable'
+								{...datasetSelectProps}
+								colId={el.props.label}
+								controls={cancelEditIcon}/> : (wizardMode ? ammendWidth(el, width) : el)),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
 						editing === i ? [el, <VariableSelect actionKey={i} pos={i} title='Add Variable'
 															 {...datasetSelectProps} controls={cancelAddIcon}/>] : [el]);

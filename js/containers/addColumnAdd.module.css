@@ -5,8 +5,20 @@
  * Rules necessary for wrapper around columns, as well as add column hover functionality on individual columns.
  */
 
+/** Wrapper around column and add column components - applicable only when add column functionality is enabled  */
+.AddColumnWrap {
+	display: flex;
+}
+
+/* Wrapper around column component - applicable only when add column functionality is disabled. The add column
+ * components between each col card has a width of 16px except for the final add column component which has an
+ * additional 8px padding left (to prevent it from jamming right up next to the final col card. When add column
+ * functionality is disabled, each col card is given a margin right of 16px to make up for the missing add column
+ * components. We must add an additional 8px here to account for the final add column component.
+ */
 .ColumnWrap {
 	display: flex;
+	margin-right: 8px;
 }
 
 /* Scoot column to the left of "add column" component, to the left by 8px */
