@@ -138,8 +138,11 @@ var AppControls = React.createClass({
 		reader.readAsText(file);
 		ev.target.value = null;
 	},
+	onShowWelcome: function () {
+		this.props.onShowWelcome();
+	},
 	render: function () {
-		var {appState: {cohort: activeCohorts, mode, columnOrder},
+		var {appState: {cohort: activeCohorts, mode, columnOrder, showWelcome},
 				onReset, children, help, matches} = this.props,
 			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
@@ -166,7 +169,7 @@ var AppControls = React.createClass({
 					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
 						<div className={compStyles.filter}>
 							{children}
-							{help ? <a href={help} target='_blank'><i className='material-icons'>help</i></a> : null}
+							{help ? <a href={help} target='_blank' className={compStyles.filterHelp}><i className='material-icons'>help_outline</i></a> : null}
 						</div>
 						<div className={compStyles.actions}>
 							{hasColumn ? <i className='material-icons' onClick={this.onMode}>{modeIcon[mode]}</i> : null}
@@ -184,6 +187,7 @@ var AppControls = React.createClass({
 								: null}
 							{(noshow || !hasColumn) ? null : <i className='material-icons' onClick={this.onPdf}>picture_as_pdf</i> }
 							{hasColumn ? <i className='material-icons' onClick={this.onDownload}>cloud_download</i> : null}
+							{showWelcome ? null : <i className='material-icons' onClick={this.onShowWelcome}>help</i>}
 						</div>
 					</div>
 				</AppBar>
