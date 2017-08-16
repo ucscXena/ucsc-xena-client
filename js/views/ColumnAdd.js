@@ -8,6 +8,7 @@
  * State
  * -----
  * actionKey - Index of add column.
+ * height - Height of add column component.
  * last - True if add column is after the last visualization column.
  *
  * Actions
@@ -42,9 +43,10 @@ var ColumnAdd = React.createClass({
 		}
 	},
 	render() {
-		var {last} = this.props;
+		var {height, last} = this.props;
 		return (
 			<div className={classNames(compStyles.ColumnAdd, {[compStyles.last]: last})}
+				 style={{height: height}}
 				onClick={this.onClick}
 				onMouseOut={this.onMouseOut}
 				onMouseOver={this.onMouseOver}>

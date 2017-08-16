@@ -41,11 +41,6 @@
 	flex: 1; /* Allows title passed in as <input> to take up all remaining space. */
 }
 
-/* Must add additional padding as add column functionality is disabled and default gutter between columns therefore has been removed. */
-.frozen {
-	margin-right: 16px;
-}
-
 /* Wrapper around title/subtitle and controls. */
 .titleContainer {
 	border-bottom: 1px solid black12;

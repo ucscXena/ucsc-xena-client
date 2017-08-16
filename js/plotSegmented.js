@@ -45,7 +45,8 @@ var m = (opts, [type, ...args], deflt) => (opts[type] || opts[deflt])(type, ...a
 function renderFloatLegend(props) {
 	var {units, color, vizSettings, defaultNormalization} = props,
 		{labels, colors: legendColors} = m(legendProps, color, 'no-data'),
-		footnotes = ['unit: ' + (units || [])[0]],
+		unitText = (units || [])[0],
+		footnotes = [<span title={unitText}>{unitText}</span>],
 		normal2 = defaultNormal2color (vizSettings, defaultNormalization);
 
 	if (normal2 && legendColors[0]) {

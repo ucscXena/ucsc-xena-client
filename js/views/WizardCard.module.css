@@ -64,6 +64,5 @@
 }
 
 .WizardCard {
-	margin-right: 16px; /* Always add 16px to the right of each card as there is no "add column" enabled during wizard (or edit) to force gutter */
 	min-height: 573px; /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
 }

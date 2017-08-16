@@ -424,8 +424,7 @@ var Column = React.createClass({
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
-				supportsGeneAverage, onClick, tooltip, wizardMode, editing,
-				onReset} = this.props,
+				supportsGeneAverage, onClick, tooltip, wizardMode, onReset} = this.props,
 			{specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
@@ -440,8 +439,7 @@ var Column = React.createClass({
 				layout: column.layout,
 				width,
 				alternateColors: !_.getIn(column, ['showIntrons'], false)}),
-			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
-			frozen = (wizardMode || (editing != null)); // Column add is hidden and, crosshair, resize and tooltip are disabled
+			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>);
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
 		// tooltips) for children. We must use a different tag, e.g. 'label'.
@@ -449,62 +447,63 @@ var Column = React.createClass({
 		// Splitbutton will not pass props down to the underlying Button, so we
 		// can't use Splitbutton.
 		return (
-			<ColCard colId={label}
-					 frozen={frozen}
-					 width={width}
-					 title={<DefaultTextInput
-						disabled={wizardMode}
-						onChange={this.onColumnLabel}
-						value={{default: columnLabel, user: user.columnLabel}} />}
-					subtitle={<DefaultTextInput
-						disabled={wizardMode}
-						onChange={this.onFieldLabel}
-						value={{default: fieldLabel, user: user.fieldLabel}} />}
-					controls={wizardMode ? (first ? refreshIcon : null) :
-						<div>
-							{first ? null : moveIcon}
-							<IconMenu icon='more_vert' menuRipple iconRipple={false}>
-								{menu}
-								{menu && <MenuDivider />}
-								<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
-										  caption='Kaplan Meier Plot'/>
-								<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
-								<MenuItem onClick={this.onDownload} caption='Download'/>
-								{aboutDatasetMenu(datasetMeta(id))}
-								<MenuItem onClick={this.onViz} caption='Display Setting'/>
-								<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
-								<MenuItem onClick={this.onRemove} caption='Remove'/>
-							</IconMenu>
+			<div style={{width: width}}>
+				<ColCard colId={label}
+						 title={<DefaultTextInput
+							disabled={wizardMode}
+							onChange={this.onColumnLabel}
+							value={{default: columnLabel, user: user.columnLabel}} />}
+						subtitle={<DefaultTextInput
+							disabled={wizardMode}
+							onChange={this.onFieldLabel}
+							value={{default: fieldLabel, user: user.fieldLabel}} />}
+						controls={wizardMode ? (first ? refreshIcon : null) :
+							<div>
+								{first ? null : moveIcon}
+								<IconMenu icon='more_vert' menuRipple iconRipple={false}>
+									{menu}
+									{menu && <MenuDivider />}
+									<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
+											  caption='Kaplan Meier Plot'/>
+									<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
+									<MenuItem onClick={this.onDownload} caption='Download'/>
+									{aboutDatasetMenu(datasetMeta(id))}
+									<MenuItem onClick={this.onViz} caption='Display Setting'/>
+									<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
+									<MenuItem onClick={this.onRemove} caption='Remove'/>
+								</IconMenu>
+							</div>
+						}>
+					<Crosshair frozen={wizardMode}>
+						<div style={{height: 32}}>
+							{annotation ?
+								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+									{annotation}
+								</DragSelect> : null}
 						</div>
-					}>
-				<Crosshair frozen={wizardMode}>
-					<div style={{height: 32}}>
-						{annotation ?
-							<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-								{annotation}
-							</DragSelect> : null}
-					</div>
-				</Crosshair>
-				<ResizeOverlay
-					enable={!wizardMode}
-					onResizeStop={this.onResizeStop}
-					width={width}
-					minWidth={this.getControlWidth}
-					height={zoom.height}>
-					<SpreadSheetHighlight
-						animate={searching}
+					</Crosshair>
+					<ResizeOverlay
+						enable={!wizardMode}
+						onResizeStop={this.onResizeStop}
 						width={width}
-						height={zoom.height}
-						samples={samples.slice(zoom.index, zoom.index + zoom.count)}
-						samplesMatched={samplesMatched}/>
-					<div style={{position: 'relative'}}>
-						<Crosshair frozen={wizardMode || this.props.frozen}>
-							{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
-							{getStatusView(status, this.onReload)}
-						</Crosshair>
-					</div>
-				</ResizeOverlay>
-			</ColCard>
+						minWidth={this.getControlWidth}
+						height={zoom.height}>
+						<SpreadSheetHighlight
+							animate={searching}
+							width={width}
+							height={zoom.height}
+							samples={samples.slice(zoom.index, zoom.index + zoom.count)}
+							samplesMatched={samplesMatched}/>
+						<div style={{position: 'relative'}}>
+							<Crosshair frozen={wizardMode || this.props.frozen}>
+								{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
+								{getStatusView(status, this.onReload)}
+							</Crosshair>
+						</div>
+					</ResizeOverlay>
+				</ColCard>
+				{widgets.legend({column, data})}
+			</div>
 		);
 	}
 });
