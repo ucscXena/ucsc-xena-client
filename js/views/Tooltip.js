@@ -39,7 +39,7 @@ var Tooltip = React.createClass({
 		var sample = sampleID ? <span>{sampleID}</span> : null;
 		/*global document: false */
 		return (
-			<div onClick={onClick} style={{position: 'relative'}}>
+			<div onClick={onClick}>
 				{frozen ?  overlay(onClick) : null}
 				<div className={classNames(compStyles.Tooltip, {[compStyles.open]: open})}>
 					<ul className={compStyles.content}>

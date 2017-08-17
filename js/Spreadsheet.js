@@ -42,7 +42,7 @@ var getSpreadsheet = columnsWrapper => {
 						onDisableClick: this.zoomHelpDisable
 					}) : null;
 			return (
-				<div>
+				<div className={compStyles.Spreadsheet}>
 					<Columns appState={this.props.appState} {...otherProps}>
 						{children}
 					</Columns>

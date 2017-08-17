@@ -7,16 +7,21 @@
 
 @value black6 from '../css/variables.css';
 
+.Spreadsheet {
+	position: relative;
+	padding: 48px 0;
+}
+
 .zoomDialog {
 	background-color: #ffffff;
 	border-radius: 2px;
 	box-shadow: 0 19px 60px rgba(0, 0, 0, .3), 0 15px 20px rgba(0, 0, 0, .22); /* Based on <Dialog>. */
 	display: none;
-	left: 24px;
+	left: 12px;
 	min-width: 272px;
-	position: fixed;
+	position: absolute;
 	text-align: left;
-	top: 152px;
+	top: 24px;
 	white-space: nowrap;
 	z-index: 999;
 }
