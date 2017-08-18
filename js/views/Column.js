@@ -502,7 +502,7 @@ var Column = React.createClass({
 						</div>
 					</ResizeOverlay>
 				</ColCard>
-				{widgets.legend({column, data})}
+				{widgets.legend({column, id, data})}
 			</div>
 		);
 	}
