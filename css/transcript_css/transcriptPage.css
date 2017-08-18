@@ -1,0 +1,81 @@
+.legend-holder {
+  float: right;
+  margin-right: 150px;
+}
+
+.legend {
+    height: 15px;
+    width: 100px;
+    color: white;
+    position: relative;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 15px;
+}
+
+.legend label {
+  font-size: 0.85em;
+  position: relative;
+}
+
+.selectors {
+  margin: 5px 20px;
+}
+
+.densityplot--label-div {
+  margin-left: 885px;
+  position: fixed;
+  width: 125px;
+  height: 40px;
+  z-index: 10;
+  text-align: center;
+}
+
+.densityplot--label-div--zoom {
+  margin-left: 885px;
+  position: fixed;
+  width: 200px;
+  height: 40px;
+  z-index: 10;
+  text-align: center;
+}
+.densityplot--label-x {
+  position: absolute;
+  font-size: .75em;
+  transform: translate(-50%, 0);
+  bottom: 0px;
+}
+
+.densityplot--label--axis-x {
+  height: 1px;
+  width: 100%;
+  background-color: black;
+  bottom: 0px;
+  position: absolute;
+}
+
+.densityplot--label-div-y {
+  height: 70px;
+  width: 20px;
+  z-index: 10;
+  float: right;
+  margin-right: 75px;
+}
+
+.densityplot--label-y {
+  font-size: .85em;
+  top: 50%;
+  line-height: 100px;
+  vertical-align: middle;
+  -webkit-transform: rotate(-90deg);
+	-moz-transform: rotate(-90deg);
+	transform: rotate(-90deg);
+}
+
+.densityplot--label-vertical-tick {
+  width: 1px;
+  height: 4px;
+  position: absolute;
+  bottom: 0px;
+  background-color: red;
+}

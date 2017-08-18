@@ -3,16 +3,18 @@ var React = require('react');
 var _ = require('../underscore_ext');
 
 import '../../css/transcript_css/exons.css';
+var {deepPureRenderMixin} = require('../react-utils');
 
 var width = 700;
 
-function box(type, startsAt, width, multiplyingFactor, strand, pad, label = "") {
+function box(type, startsAt, width, multiplyingFactor, strand, pad = 0, zoom = false, label = "") {
 	let exon = {
 					type: type,
 					label: label,
 					width: (width * multiplyingFactor) + "px",
 					origin: strand === '-' ? "right" : "left",
-					position: (startsAt * multiplyingFactor) + pad + "px"
+					position: (startsAt * multiplyingFactor) + pad + "px",
+					zoom: zoom
 				};
 	return exon;
 }
@@ -24,14 +26,16 @@ function renderExon(exon) {
 	style[exon.origin] = exon.position;
 	if(exon.type === 'small')
 	{
-		return (<div className="exons--row--item-small"
+		let boxClass = exon.zoom ? "exons--row--item-small--zoom" : "exons--row--item-small";
+		return (<div className={boxClass}
 						style={style}>
 						<span>{exon.label}</span>
 					</div>);
 	}
 	else if(exon.type === 'big')
 	{
-			return (<div className="exons--row--item-big"
+			let boxClass = exon.zoom ? "exons--row--item-big--zoom" : "exons--row--item-big";
+			return (<div className={boxClass}
 							style={style}>
 							<span>{exon.label}</span>
 						</div>);
@@ -42,7 +46,11 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
 
 	let exonWidth = exonEnds - exonStarts;
 	let startsAt = exonStarts - origin;
-	if(cdsStart > exonEnds)
+	if(cdsStart === cdsEnd)
+	{
+		return [box( 'small', startsAt, exonWidth, multiplyingFactor, strand)];
+	}
+	else if(cdsStart > exonEnds)
 	{
 		return [box( 'small', startsAt, exonWidth, multiplyingFactor, strand)];
 	}
@@ -71,7 +79,7 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
 }
 
 var Exons = React.createClass({
-
+	mixins: [deepPureRenderMixin],
 	row(data, multiplyingFactor, origin) {
 
 		return data.map((d, index) => {
@@ -85,7 +93,7 @@ var Exons = React.createClass({
 							 style={style}/>
 					{
 						_.flatten(_.mmap(d.exonStarts, d.exonEnds, (exonStarts, exonEnds) => {
-							return exonShape(data, exonStarts, exonEnds, d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand, origin);
+							return _.map(exonShape(data, exonStarts, exonEnds, d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand, origin), renderExon);
 						}))
 					}
 					</div>

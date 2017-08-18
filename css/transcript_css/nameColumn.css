@@ -3,22 +3,31 @@
 	width: 125px;
 	display: flex;
 	flex-wrap: wrap;
-	/*overflow: hidden;*/
-	/*resize: both;*/
 	float: left;
 }
 
 .nameColumn--item {
 	width: 100%;
+	height: 70px;
 	display: inline-block;
 	position: relative;
 	text-align: center;
+	vertical-align: middle;
+	line-height: 70px;
 	font-size: 0.85em;
 }
 
-/* This is not making the text align vertically. Not sure why.
-*/
 .nameColumn--item span{
 	position: relative;
+}
+
+.nameColumn--item--zoom {
+	width: 100%;
+	height: 210px;
+	display: inline-block;
+	position: relative;
+	text-align: center;
 	vertical-align: middle;
+	line-height: 210px;
+	font-size: 0.85em;
 }

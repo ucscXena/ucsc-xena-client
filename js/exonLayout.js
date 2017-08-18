@@ -35,21 +35,11 @@ function pad1(p, intervals, acc) {
 // can drop this wrapper with babel, using param default acc=[], above.
 var	pad = (p, intervals) => pad1(p, intervals, []);
 
-// XXX This generates exon boundaries on pixel fractions. Might want to
-// change it to integer pixels. Note that we can't round + continue the
-// calculation because the rounding errors can sum to over a pixel length by
-// the end. Instead, project all the lengths from zero & round to avoid
-// rounding error accumulating at the end.
-
-// Tail call version. Will be optimized when we switch to babel.
-// Also, use defaults offset=0, acc=[]
-function toScreen(bpp, [next, ...rest], offset, acc) {
-	if (!next) {
-		return acc;
-	}
-	var [start, end] = next,
-		len = (end - start + 1) / bpp;
-	return toScreen(bpp, rest, len + offset, acc.concat([[offset, len + offset]]));
+function toScreen(bpp, chrIntvls) {
+	var lens = chrIntvls.map(([s, e]) => e - s + 1),
+		starts = _.scan(lens, (acc, x) => acc + x, 0),
+		pxStarts = starts.map(x => Math.round(x / bpp));
+	return _.partitionN(pxStarts, 2, 1).slice(0, chrIntvls.length);
 }
 
 function baseLen(chrlo) {
@@ -74,7 +64,7 @@ function layout({chrom, exonStarts, exonEnds, strand}, pxWidth, zoom) {
 		chrIntvls = reverseIf(strand, clippedIntvals),
 		count = baseLen(chrIntvls),
 		bpp = count / pxWidth,
-		pixIntvls = toScreen(bpp, chrIntvls, 0, []);
+		pixIntvls = toScreen(bpp, chrIntvls);
 
 	return {
 		chrom: chrIntvls,
@@ -95,7 +85,7 @@ function intronLayout({chrom, txStart, txEnd, strand}, pxWidth, zoom) {
 		chrIntvls = reverseIf(strand, clippedIntvals),
 		count =  baseLen(chrIntvls),
 		bpp = count / pxWidth,
-		pixIntvls = toScreen(bpp, chrIntvls, 0, []);
+		pixIntvls = toScreen(bpp, chrIntvls);
 
 	return {
 		chrom: chrIntvls,
@@ -113,7 +103,7 @@ function chromLayout(__, pxWidth, zoom, {chrom, baseStart, baseEnd}) {
 		clippedIntvals = applyClip(intvals, zoom),
 		count =  baseLen(clippedIntvals),
 		bpp = count / pxWidth,
-		pixIntvls = toScreen(bpp, clippedIntvals, 0, []);
+		pixIntvls = toScreen(bpp, clippedIntvals);
 
 	return {
 		chrom: clippedIntvals,
@@ -206,7 +196,7 @@ var chrlen = ([s, e]) => e - s + 1;
 module.exports = {
 	chromLayout,
 	intronLayout,
-	screenLayout: (bpp, chrlo) => toScreen(bpp, chrlo, 0, []),
+	screenLayout: toScreen,
 	baseLen,
 	pxLen,
 	layout,

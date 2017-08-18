@@ -1,6 +1,7 @@
 ; transcriptExpression
-(fn [transcripts studyA subtypeA studyB subtypeB]
-  (let [tcgaTypes
+(fn [transcripts studyA subtypeA studyB subtypeB unit]
+  (let [dataset ({"tpm" "TcgaTargetGtex_rsem_isoform_tpm" "isoformPercentage" "TcgaTargetGtex_rsem_isopct"} unit)
+		tcgaTypes
         (map :value (query {:select [:value]
                             :from [:code]
                             :join [:field [:= :field_id :field.id]
@@ -21,9 +22,9 @@
                                 :where [:and [:in "_study" ["GTEX"]]
                                              [:in "_sample_type" ["Normal Tissue"]]
                                              [:in "_primary_site" [subtype]]]}) "sampleID"))}]
-    [(fetch [{:table "TcgaTargetGtex_rsem_isoform_tpm"
+    [(fetch [{:table dataset
               :columns transcripts
               :samples ((fetchSamples studyA) subtypeA)}])
-     (fetch [{:table "TcgaTargetGtex_rsem_isoform_tpm"
+     (fetch [{:table dataset
               :columns transcripts
               :samples ((fetchSamples studyB) subtypeB)}])]))
