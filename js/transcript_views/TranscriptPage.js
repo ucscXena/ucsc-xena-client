@@ -129,8 +129,7 @@ var Transcripts = React.createClass({
 						{options}
 					</select>
 					<br/>
-
-					<div className={this.state.scaleZoom ? "densityplot--label-div--zoom" : "densityplot--label-div"} onClick={this.scaleZoom.bind(this)}>
+					<div className={this.state.scaleZoom ? "densityplot--label-div--zoom" : "densityplot--label-div"} onClick={this.scaleZoom}>
 						<label style={{fontSize: "0.85em"}}>expression</label>
 						<div>
 							{
@@ -147,7 +146,6 @@ var Transcripts = React.createClass({
 						<div className="densityplot--label--axis-x"/>
 					</div>
 					<div style={{width: "100%", height: "35px"}}></div>
-
 					<NameColumn
 						data={transcriptNameData}
 						getNameZoom={this.onZoom}
