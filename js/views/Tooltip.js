@@ -119,6 +119,7 @@ var Tooltip = React.createClass({
 			<div onClick={onClick} style={{position: 'relative'}}>
 				{frozen ?  overlay(onClick) : null}
 				<div className='Tooltip' style={{zIndex: 999, display: display}}>
+					<a className='tooltipPrompt' style={{fontSize: "80%"}} href="http://xena.ucsc.edu/spreadsheet-zoom/" target="_blank">Help with zoom</a>
 					<table>
 						<tbody>
 							{sample}
@@ -126,7 +127,6 @@ var Tooltip = React.createClass({
 							<tr style={{fontSize: "80%"}}>
 								<td>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</td>
 							</tr>
-							<a className='tooltipPrompt' style={{fontSize: "80%"}} href="http://xena.ucsc.edu/spreadsheet-zoom/" target="_blank">Help with zoom</a>
 						</tbody>
 					</table>
 				</div>

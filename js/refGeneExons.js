@@ -123,52 +123,35 @@ var RefGeneAnnotation = React.createClass({
 		lanes.forEach((lane, k) => {
 			var annotation = getAnnotation(k, perLaneHeight, laneOffset);
 
-			lane.forEach( val => {
-				var intervals = findIntervals(val),
+			lane.forEach(gene => {
+				var intervals = findIntervals(gene),
 					indx = index(intervals),
-					segments = [];
+					lineY = laneOffset + perLaneHeight * (k + 0.5);
+
 
 				//find segments for one gene
 				pxTransformEach(layout, (toPx, [start, end]) => {
-					var nodes = matches(indx, {start: start, end: end});
-					nodes = nodes.sort((a, b)=> (a.start - b.start));
-					_.each(nodes, ({i, start, end, inCds}) => {
-						var {y, h} = annotation[inCds ? 'cds' : 'utr'];
-						var [pstart, pend] = toPx([start, end]);
-						var	shade = (mode === "geneExon") ? ((i % 2 === 1) ? shade1 : shade2)
-							: ((mode === "coordinate") ? shade3 : shade2);
-						segments.push([pstart, pend, shade, y, h]);
-					});
+					var nodes = matches(indx, {start: start, end: end}),
+						segments = nodes.map(({i, start, end, inCds}) => {
+							var {y, h} = annotation[inCds ? 'cds' : 'utr'],
+								[pstart, pend] = toPx([start, end]),
+								shade = (mode === "geneExon") ?
+									(i % 2 === 1 ? shade1 : shade2) :
+									(mode === "coordinate" ? shade3 : shade2);
+							return [pstart, pend, shade, y, h];
+						}),
+						[pGeneStart, pGeneEnd] = toPx([gene.txStart, gene.txEnd]);
 
 					// draw a line across the gene
 					ctx.fillStyle = shade2;
-					var lineY = laneOffset + perLaneHeight * (k + 0.5);
-					if (nodes.length === 0) {
-						ctx.fillRect(0, lineY, width, 1);
-						if (mode === 'coordinate') {
-							drawIntroArrows (ctx, 0, width, lineY, segments, val.strand);
-						}
-					} else {
-						var [pGeneStart, pGeneEnd] = toPx([nodes[0].start, nodes[nodes.length - 1].end]);
-						if (nodes.length !== intervals.length) {
-							if (nodes[0].start === intervals[0].start) {
-								pGeneEnd = width;
-							} else if (nodes[nodes.length - 1].start === intervals[intervals.length - 1].start) {
-								pGeneStart = 0;
-							}
-							else {
-								pGeneStart = 0;
-								pGeneEnd = width;
-							}
-						}
-						ctx.fillRect(pGeneStart, lineY, pGeneEnd - pGeneStart, 1);
-						if (mode === 'coordinate') {
-							drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, val.strand);
-						}
+					ctx.fillRect(pGeneStart, lineY, pGeneEnd - pGeneStart, 1);
+
+					if (mode === 'coordinate') {
+						drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, gene.strand);
 					}
-					// draw each segments
-					_.each(segments, s => {
-						var [pstart, pend, shade, y, h] = s;
+
+					// draw each segment
+					_.each(segments, ([pstart, pend, shade, y, h]) => {
 						ctx.fillStyle = shade;
 						ctx.fillRect(pstart, y, (pend - pstart) || 1, h);
 					});
@@ -216,9 +199,9 @@ var RefGeneAnnotation = React.createClass({
 				matches = [],
 				laneIndex = Math.floor((y - laneOffset) / perLaneHeight); //find which lane by y
 
-			lanes[laneIndex].forEach(val => {
-				if ((posEnd >= val.txStart) && (posStart <= val.txEnd)) {
-					matches.push(val);
+			lanes[laneIndex].forEach(gene => {
+				if ((posEnd >= gene.txStart) && (posStart <= gene.txEnd)) {
+					matches.push(gene);
 				}
 			});
 

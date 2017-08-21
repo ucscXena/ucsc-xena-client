@@ -13,10 +13,13 @@ const zoomFactor = 3;
 function calculateHeight(exp, max, min, plotHt, plotWidth, unit) {
    let minValue = unit === "tpm" ? Math.log2(0.001) : min;
    let pxWidth = (max - minValue) / plotWidth;
+  //  console.log(exp);
+  // exp.forEach(e => e === NaN ? console.log(e) : null);
    let newExp = exp.filter(e => e > minValue);
    let percentNonZero = newExp.length / exp.length;
    let kdePoints = sc.stats.kde().sample(newExp)(_.range(minValue, max + pxWidth, pxWidth));
    let yHeights = kdePoints.map(kdep => kdep[1] * percentNonZero);
+   yHeights.forEach(y => y === 'NaN' ? console.log(y) : null);
    let binWidth = plotWidth / yHeights.length;
    //polyline points here
    let polylinePoints = [`0,${plotHt}`, ...yHeights.map((y, i) => `${i * binWidth},${(1 - y) * plotHt}`), `${plotWidth},${plotHt}`].join(' ');
