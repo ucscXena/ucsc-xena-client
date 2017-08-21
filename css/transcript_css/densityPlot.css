@@ -1,13 +1,13 @@
 .densityPlot {
 	margin: 20px;
-	width: 200px;
+	width: 220px;
 	display: flex;
 	flex-wrap: wrap;
 	float: left;
 }
 
 .densityPlot--row {
-	width: 62.5%;
+	width: 56.818%;
 	display: inline-block;
 }
 
@@ -49,7 +49,7 @@
 }
 
 .densityPlot--row--zoom {
-	width: 100%;
+	width: 90.909%;
 	height: 210px;
 	display: inline-block;
 }

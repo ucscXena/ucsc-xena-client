@@ -129,25 +129,28 @@ var Transcripts = React.createClass({
 						{options}
 					</select>
 					<br/>
-
-					<div className={this.state.scaleZoom ? "densityplot--label-div--zoom" : "densityplot--label-div"} onClick={this.scaleZoom}>
-						<label style={{fontSize: "0.85em"}}>expression</label>
-						<div>
-							{
-								densityplotAxisLabel.map(label => {
-									return (
-										<div>
-											<label className="densityplot--label-x" style={{left: `${(label - min) * (this.state.scaleZoom ? 200 : 125) / range}px`}}>{label}</label>
-											<div className="densityplot--label-vertical-tick" style={{left: `${(label - min) * (this.state.scaleZoom ? 200 : 125) / range}px`}}/>
-										</div>
-									);
-								})
-							}
+					{
+						genetranscripts ?
+					<div>
+							<div className={this.state.scaleZoom ? "densityplot--label-div--zoom" : "densityplot--label-div"} onClick={this.scaleZoom}>
+							<label style={{fontSize: "0.85em"}}>expression</label>
+							<div>
+								{
+									densityplotAxisLabel.map(label => {
+										return (
+											<div>
+												<label className="densityplot--label-x" style={{left: `${(label - min) * (this.state.scaleZoom ? 200 : 125) / range}px`}}>{label}</label>
+												<div className="densityplot--label-vertical-tick" style={{left: `${(label - min) * (this.state.scaleZoom ? 200 : 125) / range}px`}}/>
+											</div>
+										);
+									})
+								}
+							</div>
+							<div className="densityplot--label--axis-x"/>
 						</div>
-						<div className="densityplot--label--axis-x"/>
-					</div>
-					<div style={{width: "100%", height: "35px"}}></div>
-
+						<div style={{width: "100%", height: "35px"}}></div>
+					</div> : null
+				}
 					<NameColumn
 						data={transcriptNameData}
 						getNameZoom={this.onZoom}
@@ -171,10 +174,12 @@ var Transcripts = React.createClass({
 						unit={unit}
 						getNameZoom={this.onZoom}
 						/> */}
-
-					<div className="densityplot--label-div-y">
-						<label className="densityplot--label-y">density</label>
-					</div>
+					{
+						genetranscripts ?
+						<div className="densityplot--label-div-y">
+							<label className="densityplot--label-y">density</label>
+						</div> : null
+					}
 				</div>
 			</div>);
 	}
