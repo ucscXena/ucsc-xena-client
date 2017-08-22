@@ -19,36 +19,41 @@ function calculateHeight(exp, max, min, plotHt, plotWidth, unit) {
    let percentNonZero = newExp.length / exp.length;
    let kdePoints = newExp.length ? sc.stats.kde().sample(newExp)(_.range(minValue, max + pxWidth, pxWidth)) : [];
    let yHeights = kdePoints.map(kdep => kdep[1] * percentNonZero);
-   let binWidth = plotWidth / yHeights.length;
+  //  let binWidth = plotWidth / yHeights.length;
    let zPxWidth = 5; // draw zero at 5 px width
    let zeroWidth = pxWidth * zPxWidth;
    let zeroHeight = (1 - percentNonZero) / zeroWidth;
-   let vscale = Math.max(zeroHeight, ...yHeights);
-   //polyline points here
-   let polylinePoints = [`0,${plotHt}`, ...yHeights.map((y, i) => `${i * binWidth},${(1 - y / vscale) * plotHt}`), `${plotWidth},${plotHt}`].join(' ');
-
-//   For debugging the scaling. The 'sum' should be 1: area under the curve
-//   of a density plot should always be 1. We take the values from kde and scale
-//   them by percentNonZero, then compute zeroHeight to perserve the correct area.
-//
-//   We then scale the y axis by the max y value, to ensure that the data is
-//   not clipped (for a sharp spike), or drawn too small to see (for a uniform
-//   distribution).
-//
-//   pxSum and zPxSum compute the pixel area for zero and non-zero points. They
-//   should have the same ratio as zeroSum and nonZeroSum if we've scaled correctly.
-//
-//   var zeroSum = zeroWidth * zeroHeight;
-//   var nonZeroSum = _.sum(kdePoints.map(([, y]) => y * pxWidth)) * percentNonZero;
-//   var pxSum = _.sum(yHeights.map(y => y * plotHt * binWidth));
-//   var zPxSum = zPxWidth * zeroHeight * plotHt;
-//   console.log('sum', nonZeroSum + zeroSum, JSON.stringify({nonZeroSum, zeroSum}));
-//   console.log(JSON.stringify({nz: pxSum / (pxSum + zPxSum), z: zPxSum / (pxSum + zPxSum)}));
-   return {
-     polylinePoints: polylinePoints,
-     zeroWidth: zPxWidth,
-     zeroHeight: zeroHeight / vscale * plotHt
-   };
+  //    let vscale = Math.max(zeroHeight, ...yHeights);
+  //    //polyline points here
+  //    let polylinePoints = [`0,${plotHt}`, ...yHeights.map((y, i) => `${i * binWidth},${(1 - y / vscale) * plotHt}`), `${plotWidth},${plotHt}`].join(' ');
+  //
+  // //   For debugging the scaling. The 'sum' should be 1: area under the curve
+  // //   of a density plot should always be 1. We take the values from kde and scale
+  // //   them by percentNonZero, then compute zeroHeight to perserve the correct area.
+  // //
+  // //   We then scale the y axis by the max y value, to ensure that the data is
+  // //   not clipped (for a sharp spike), or drawn too small to see (for a uniform
+  // //   distribution).
+  // //
+  // //   pxSum and zPxSum compute the pixel area for zero and non-zero points. They
+  // //   should have the same ratio as zeroSum and nonZeroSum if we've scaled correctly.
+  // //
+  // //   var zeroSum = zeroWidth * zeroHeight;
+  // //   var nonZeroSum = _.sum(kdePoints.map(([, y]) => y * pxWidth)) * percentNonZero;
+  // //   var pxSum = _.sum(yHeights.map(y => y * plotHt * binWidth));
+  // //   var zPxSum = zPxWidth * zeroHeight * plotHt;
+  // //   console.log('sum', nonZeroSum + zeroSum, JSON.stringify({nonZeroSum, zeroSum}));
+  // //   console.log(JSON.stringify({nz: pxSum / (pxSum + zPxSum), z: zPxSum / (pxSum + zPxSum)}));
+  //    return {
+  //      polylinePoints: polylinePoints,
+  //      zeroWidth: zPxWidth,
+  //      zeroHeight: zeroHeight / vscale * plotHt
+  //    };
+  return {
+    yHeights: yHeights,
+    zeroWidth: zPxWidth,
+    zeroHeight: zeroHeight
+  };
  }
 
  function calculateFrequency(exp, max, min) {
@@ -77,25 +82,34 @@ var DensityPlot = React.createClass ({
       plotWidth = nameAndZoom.zoom ? 200 : 125;
       if(this.props.type === 'density')
       {
-        let polylinePoints, zeroWidth, zeroHeight;
+        let polylinePoints, vscale, binWidth;
         let plotHt = nameAndZoom.zoom ? plotHeight * zoomFactor : plotHeight;
+        let {yHeights: yHeightsA, zeroWidth: zeroWidthA, zeroHeight: zeroHeightA} = calculateHeight(studyA.expA, max, min, plotHt, plotWidth, this.props.unit);
+        let {yHeights: yHeightsB, zeroWidth: zeroWidthB, zeroHeight: zeroHeightB} = calculateHeight(studyB.expB, max, min, plotHt, plotWidth, this.props.unit);
+        vscale = Math.max(zeroHeightA, zeroHeightB, ...yHeightsA, ...yHeightsB);
         return (
           <div className={rowClass} onClick={() => this.props.getNameZoom(nameAndZoom.name)}>
             <div className="densityPlot--row--xAxis"/>
             <div className="densityPlot--row--studyA">
                  {
-                   {polylinePoints, zeroWidth, zeroHeight} = calculateHeight(studyA.expA, max, min, plotHt, plotWidth, this.props.unit),
+                  //  {yHeights, zeroWidth, zeroHeight} = calculateHeight(studyA.expA, max, min, plotHt, plotWidth, this.props.unit),
+                   binWidth = plotWidth / yHeightsA.length,
+                   polylinePoints = [`0,${plotHt}`, ...yHeightsA.map((y, i) => `${i * binWidth},${(1 - y / vscale) * plotHt}`), `${plotWidth},${plotHt}`].join(' '),
+                   zeroHeightA = zeroHeightA / vscale * plotHt,
                    <svg width={plotWidth} height={plotHt}>
-                     <rect x="0" y={plotHt - zeroHeight} width={zeroWidth} height={zeroHeight} fill="#008080"/>
+                     <rect x="0" y={plotHt - zeroHeightA} width={zeroWidthA} height={zeroHeightA} fill="#008080"/>
                      <polyline points={polylinePoints} fill="#008080"/>
                    </svg>
                  }
             </div>
             <div className="densityPlot--row--studyB">
                  {
-                   {polylinePoints, zeroWidth, zeroHeight} = calculateHeight(studyB.expB, max, min, plotHt, plotWidth, this.props.unit),
+                  //  {yHeights, zeroWidth, zeroHeight} = calculateHeight(studyB.expB, max, min, plotHt, plotWidth, this.props.unit),
+                  binWidth = plotWidth / yHeightsB.length,
+                  polylinePoints = [`0,${plotHt}`, ...yHeightsB.map((y, i) => `${i * binWidth},${(1 - y / vscale) * plotHt}`), `${plotWidth},${plotHt}`].join(' '),
+                  zeroHeightB = zeroHeightB / vscale * plotHt,
                    <svg width={plotWidth} height={plotHt}>
-                     <rect x="0" y={plotHt - zeroHeight} width={zeroWidth} height={zeroHeight} fill="steelblue"/>
+                     <rect x="0" y={plotHt - zeroHeightB} width={zeroWidthB} height={zeroHeightB} fill="steelblue"/>
                      <polyline points={polylinePoints} fill="steelblue"/>
                    </svg>
                  }
