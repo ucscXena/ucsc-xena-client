@@ -64,8 +64,10 @@ function fetchSubtypes(serverBus) {
 
 var controls = {
 	'init-post!': serverBus => fetchSubtypes(serverBus),
-	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) =>
-		_.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB, unit})),
+	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) => {
+		var zoom = gene === state.transcripts.gene ? state.transcripts.zoom : {};
+		return _.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB, unit, zoom}));
+	},
 	'loadGene-post!': (serverBus, state, newState) => {
 		if(newState.transcripts.gene)
 		{
@@ -78,7 +80,8 @@ var controls = {
 												  ['transcripts', 'datasetUnit'], unit),
 	transcriptSampleSubtypes:
 		(state, subtypes) => _.assocIn(state, ['transcripts', 'subtypes'], subtypes),
-	units: (state, units) => _.assocIn(state, ['transcripts', 'units'], units)
+	units: (state, units) => _.assocIn(state, ['transcripts', 'units'], units),
+	zoom: (state, name) => _.updateIn(state, ['transcripts', 'zoom', name], z => !z)
 };
 
 module.exports = {

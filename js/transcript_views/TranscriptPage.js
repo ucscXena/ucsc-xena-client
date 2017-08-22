@@ -13,13 +13,8 @@ import '../../css/transcript_css/transcriptPage.css';
 // will be in a separate file, and imported above.
 var Transcripts = React.createClass({
 	getInitialState() {
-		let genetranscripts = _.getIn(this.props.state, ['transcripts', 'genetranscripts'], []);
-		genetranscripts.forEach(t => {
-			t.zoom = false;
-		});
 		return {
 			gene: _.getIn(this.props.state, ['transcripts', 'gene'], ""),
-			genetranscripts: genetranscripts,
 			scaleZoom: false,
 		};
 	},
@@ -39,19 +34,7 @@ var Transcripts = React.createClass({
 	},
 
 	onZoom(name) {
-		let newState = _.updateIn(this.props.state, ['transcripts', 'genetranscripts'], g => {
-			[...g].forEach((t, index) => {
-				if(_.isMatch(t, {name: name}))
-				{
-					g[index] = _.assoc(t, "zoom", !t.zoom);
-				}
-			});
-			return g;
-		});
-		let genetranscript = _.getIn(newState, ['transcripts', 'genetranscripts'], []);
-		this.setState({
-			genetranscript: genetranscript,
-		});
+		this.props.callback(['zoom', name]);
 	},
 
 	scaleZoom() {
@@ -62,7 +45,7 @@ var Transcripts = React.createClass({
 
 	render() {
 		//for data selection
-		var {subtypes, studyA, subtypeA, studyB, subtypeB, unit} = this.props.state.transcripts || {};
+		var {subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = this.props.state.transcripts || {};
 		if(!subtypes)
 		{
 			return <h4>Loading available subtypes...</h4>;
@@ -79,7 +62,7 @@ var Transcripts = React.createClass({
 		var genetranscriptsSorted = _.sortBy(genetranscripts, function(gtranscript) {
 			return _.sum(_.mmap(gtranscript.exonStarts, gtranscript.exonEnds, (exonStarts, exonEnds) => {
 				return exonStarts - exonEnds; // start - end to sort in descending order
-			})); });
+			})); }).map(t => _.assoc(t, 'zoom', zoom[t.name]));
 		//for the name column
 		var transcriptNameData = _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'exonCount', 'zoom'));
 
@@ -102,6 +85,7 @@ var Transcripts = React.createClass({
 		return (
 			<div ref='datapages'>
 				<div style={{margin: "0 auto", width: "1200px"}}>
+					<a style={{fontSize: "80%"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors">
 					<strong>Gene: </strong>
 					<GeneSuggest value={this.state.gene}
