@@ -17,7 +17,7 @@ function calculateHeight(exp, max, min, plotHt, plotWidth, unit) {
   // exp.forEach(e => e === NaN ? console.log(e) : null);
    let newExp = exp.filter(e => e > minValue);
    let percentNonZero = newExp.length / exp.length;
-   let kdePoints = sc.stats.kde().sample(newExp)(_.range(minValue, max + pxWidth, pxWidth));
+   let kdePoints = newExp.length ? sc.stats.kde().sample(newExp)(_.range(minValue, max + pxWidth, pxWidth)) : [];
    let yHeights = kdePoints.map(kdep => kdep[1] * percentNonZero);
    yHeights.forEach(y => y === 'NaN' ? console.log(y) : null);
    let binWidth = plotWidth / yHeights.length;
