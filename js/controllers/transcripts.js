@@ -66,7 +66,7 @@ var controls = {
 	'init-post!': serverBus => fetchSubtypes(serverBus),
 	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) => {
 		var zoom = gene === state.transcripts.gene ? state.transcripts.zoom : {};
-		return _.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB, unit, zoom}));
+		return _.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB, unit, zoom, genetranscripts: null}));
 	},
 	'loadGene-post!': (serverBus, state, newState) => {
 		if(newState.transcripts.gene)
