@@ -21,12 +21,34 @@ function calculateHeight(exp, max, min, plotHt, plotWidth, unit) {
    let yHeights = kdePoints.map(kdep => kdep[1] * percentNonZero);
    yHeights.forEach(y => y === 'NaN' ? console.log(y) : null);
    let binWidth = plotWidth / yHeights.length;
+   let zPxWidth = 5; // draw zero at 5 px width
+   let zeroWidth = pxWidth * zPxWidth;
+   let zeroHeight = (1 - percentNonZero) / zeroWidth;
+   let vscale = Math.max(zeroHeight, ...yHeights);
    //polyline points here
-   let polylinePoints = [`0,${plotHt}`, ...yHeights.map((y, i) => `${i * binWidth},${(1 - y) * plotHt}`), `${plotWidth},${plotHt}`].join(' ');
+   let polylinePoints = [`0,${plotHt}`, ...yHeights.map((y, i) => `${i * binWidth},${(1 - y / vscale) * plotHt}`), `${plotWidth},${plotHt}`].join(' ');
+
+//   For debugging the scaling. The 'sum' should be 1: area under the curve
+//   of a density plot should always be 1. We take the values from kde and scale
+//   them by percentNonZero, then compute zeroHeight to perserve the correct area.
+//
+//   We then scale the y axis by the max y value, to ensure that the data is
+//   not clipped (for a sharp spike), or drawn too small to see (for a uniform
+//   distribution).
+//
+//   pxSum and zPxSum compute the pixel area for zero and non-zero points. They
+//   should have the same ratio as zeroSum and nonZeroSum if we've scaled correctly.
+//
+//   var zeroSum = zeroWidth * zeroHeight;
+//   var nonZeroSum = _.sum(kdePoints.map(([, y]) => y * pxWidth)) * percentNonZero;
+//   var pxSum = _.sum(yHeights.map(y => y * plotHt * binWidth));
+//   var zPxSum = zPxWidth * zeroHeight * plotHt;
+//   console.log('sum', nonZeroSum + zeroSum, JSON.stringify({nonZeroSum, zeroSum}));
+//   console.log(JSON.stringify({nz: pxSum / (pxSum + zPxSum), z: zPxSum / (pxSum + zPxSum)}));
    return {
      polylinePoints: polylinePoints,
-     zeroWidth: 1 / pxWidth,
-     zeroHeight: (1 - percentNonZero) * plotHt
+     zeroWidth: zPxWidth,
+     zeroHeight: zeroHeight / vscale * plotHt
    };
  }
 
