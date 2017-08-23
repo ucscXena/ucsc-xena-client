@@ -41,7 +41,7 @@ var WelcomeContainer = React.createClass({
 			this.setState({link: links[Math.floor(Math.random() * links.length)]}));
 	},
 	componentWillUnmount() {
-		clearInterval(this.timeout);
+		this.sub.unsubscribe();
 	},
 	render() {
 		var {link} = this.state;
