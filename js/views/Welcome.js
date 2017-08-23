@@ -29,6 +29,8 @@ var Welcome = React.createClass({
 		this.props.onClick();
 	},
 	render() {
+		var {link: [bookmark, text], linkProps} = this.props,
+			link = `https://xenabrowser.net/heatmap/?bookmark=${bookmark}`;
 		return (
 			<div className={compStyles.Welcome}>
 				<div className={compStyles.welcomeIcon}>
@@ -38,10 +40,8 @@ var Welcome = React.createClass({
 					<h1 className={typStyles.mdHeadline}>Welcome to the Xena Functional Genomics Explorer</h1>
 					<h2 className={typStyles.mdSubhead}>UCSC Xena allows users to explore functional genomic data sets
 						for correlations between genomic and/or phenotypic variables.</h2>
-					<h2 className={typStyles.mdSubhead}>View live example: <a href='http://www.google.com'
-																			   target='_blank'>TP53
-						Expression vs. Mutation in
-						TCGA Pan-Cancer</a></h2>
+					<h2 className={typStyles.mdSubhead}>View live example: <a {...linkProps} href={link}
+																			   target='_blank'>{text}</a></h2>
 				</div>
 				<div className={compStyles.closeIcon} onClick={this.dismissWelcome}>
 					<i className='material-icons'>close</i>

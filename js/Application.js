@@ -8,7 +8,7 @@ var {signatureField} = require('./models/fieldSpec');
 var {getColSpec} = require('./models/datasetJoins');
 var SampleSearch = require('./views/SampleSearch');
 var Stepper = require('./views/Stepper');
-var Welcome = require('./views/Welcome');
+var Welcome = require('./containers/WelcomeContainer');
 var uuid = require('./uuid');
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
 import {ThemeProvider} from 'react-css-themr';
