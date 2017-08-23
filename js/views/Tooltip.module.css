@@ -16,8 +16,8 @@
 	display: none; /* Hidden by default */
 	min-width: 272px;
 	overflow: hidden;
-	position: absolute;
-	right: 12px;
+	position: fixed;
+	right: 24px;
 	text-align: left;
 	top: 24px;
 	white-space: nowrap;
