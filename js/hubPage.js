@@ -49,10 +49,10 @@ var Hub = React.createClass({
 		var {state, selector} = this.props,
 			allHosts = _.keys(selector(state));
 
-		allHosts.forEach(h => checkHost(h).subscribe(this.updatePing));
+		this.sub = allHosts.forEach(h => checkHost(h).subscribe(this.updatePing));
 	},
 	componentWillUnmount() {
-		this.sub.dispose();
+		this.sub.unsubscribe();
 	},
 	componentWillReceiveProps(newProps) {
 		var {ping} = this.state,
