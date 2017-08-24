@@ -18,7 +18,7 @@ function toWordList(str) {
 }
 
 var typeWidth = {
-	matrix: 100,
+	matrix: 136,
 	chrom: 200
 };
 

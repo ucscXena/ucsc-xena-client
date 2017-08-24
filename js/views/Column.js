@@ -419,7 +419,7 @@ var Column = React.createClass({
 		this.props.onReload(this.props.id);
 	},
 	getControlWidth: function () {
-		return 73; //236; // Matches min possible width of new (filter) column (see Application.js)
+		return 136;
 	},
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
@@ -473,7 +473,8 @@ var Column = React.createClass({
 									<MenuItem onClick={this.onRemove} caption='Remove'/>
 								</IconMenu>
 							</div>
-						}>
+						}
+						 wizardMode={wizardMode}>
 					<Crosshair frozen={wizardMode}>
 						<div style={{height: 32}}>
 							{annotation ?

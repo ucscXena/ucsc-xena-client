@@ -15,6 +15,9 @@
 // Core dependencies, components
 var React = require('react');
 
+// App dependencies
+var CardAvatar = require('./CardAvatar');
+
 // Styles
 var compStyles = require('./GhostVariableSelect.module.css');
 
@@ -23,6 +26,9 @@ var GhostVariableSelect = React.createClass({
 		var {title, width} = this.props;
 		return (
 			<div className={compStyles.GhostVariableSelect} style={{width: width}}>
+				<div className={compStyles.headerContainer}>
+					<CardAvatar/>
+				</div>
 				<div className={compStyles.title}>{title}</div>
 			</div>
 		);

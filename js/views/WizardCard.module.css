@@ -9,40 +9,37 @@
 @value black12 from '../../css/variables.css';
 @value black38 from '../../css/variables.css';
 
+.WizardCard {
+	min-height: 630px; /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
+}
+
 /* Card actions specific to wizard */
 .actions {
 	display: flex;
 	justify-content: flex-end;
 }
 
-/* Avatar specific to displaying variable on column cards. Similar to ColCard. */
-.avatar {
-	background-color: black6;
-	border-radius: 40px;
-	height: 40px;
-	line-height: 40px;
-	margin-right: 16px;
-	min-width: 40px; /* required to maintain avatar shape. */
-	text-align: center;
-	width: 40px;
+/* Container around column label (A, B, C etc) and controls */
+.headerContainer {
+	align-items: center;
+	border-bottom: 1px solid black12;
+	display: flex;
+	line-height: 0;
+	justify-content: space-between;
+	padding: 16px;
 }
 
-/* Title to take up remaining available space. Similar to ColCard. */
-.avatar + div {
-	flex: 1; /* Allows title passed in as <input> to take up all remaining space. */
-}
-
-/* Body of wizard card including help text, if any, and children */
-.content {
-	flex: 1; /* Force content to fill space vertically so that actions are always push to bottom of card */
+/* Icons */
+.controls i {
+	cursor: pointer;
 }
 
 /* Wrapper around title and close/cancel icon */
 .titleContainer {
 	border-bottom: 1px solid black12;
 	display: flex;
-	height: 73px; /* includes border */
-	padding: 24px 16px;
+	height: 61px; /* Includes border */
+	padding: 8px 16px;
 }
 
 /* Close icon */
@@ -52,17 +49,14 @@
 
 .title {
 	flex: 1;
-	min-width: 0; /* To allow for allipsis of title within the flex */
 	padding: 0 !important; /* Using important here to override cardTitle.large from theme */
 }
 
-/* Ellipsis on title */
 .title > div {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	width: 100%; /* Force RTB title to be full width */
 }
 
-.WizardCard {
-	min-height: 573px; /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
+/* Body of wizard card including help text, if any, and children */
+.content {
+	flex: 1; /* Force content to fill space vertically so that actions are always push to bottom of card */
 }

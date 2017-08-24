@@ -25,6 +25,9 @@ var React = require('react');
 import {Button} from 'react-toolbox/lib/button';
 import {Card, CardTitle, CardText, CardActions} from 'react-toolbox/lib/card';
 
+// App dependencies
+var CardAvatar = require('./CardAvatar');
+
 // Styles
 var compStyles = require('./WizardCard.module.css');
 
@@ -34,12 +37,16 @@ var WizardCard = React.createClass({
 	},
 	render() {
 		var {children, colId, controls, helpText, title, valid, width} = this.props;
-		var variableAvatar = colId ? <div className={compStyles.avatar}>{colId}</div> : null;
 		return (
 			<Card style={{width: width}} className={compStyles.WizardCard}>
+				<div className={compStyles.headerContainer}>
+					<CardAvatar colId={colId}/>
+					<div className={compStyles.controls}>
+						{controls}
+					</div>
+				</div>
 				<div className={compStyles.titleContainer}>
-					<CardTitle className={compStyles.title} avatar={variableAvatar} title={title} />
-					{controls}
+					<CardTitle className={compStyles.title} title={title} />
 				</div>
 				<div className={compStyles.content}>
 					{helpText ? <CardText>{helpText}</CardText> : null}

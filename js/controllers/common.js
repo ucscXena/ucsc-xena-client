@@ -172,7 +172,7 @@ function addSampleColumn(state, width) {
 		newOrder = _.has(state.columns, 'samples') ? state.columnOrder : [...state.columnOrder, 'samples'],
 		colSpec = getColSpec([field], {}),
 		settings = _.assoc(colSpec,
-				'width', width == null ? 100 : width,
+				'width', width == null ? 136 : width,
 				'user', _.pick(colSpec, ['columnLabel', 'fieldLabel'])),
 		newState = _.assocIn(state,
 			['columns', 'samples'], settings,

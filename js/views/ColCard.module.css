@@ -24,51 +24,59 @@
 	visibility: visible;
 }
 
-/* Avatar specific to displaying variable on column cards. Similar to WizardCard. */
-.avatar {
-	background-color: black6;
-	border-radius: 40px;
-	height: 40px;
-	line-height: 40px;
-	margin-right: 16px;
-	min-width: 40px; /* required to maintain avatar shape. */
-	text-align: center;
-	width: 40px;
+/* Container around column label (A, B, C etc) and controls */
+.headerContainer {
+	align-items: center;
+	border-bottom: 1px solid black12;
+	display: flex;
+	line-height: 0;
+	justify-content: space-between;
+	padding: 16px;
 }
 
-/* Title to take up remaining available space. Similar to WizardCard. */
-.avatar + div {
-	flex: 1; /* Allows title passed in as <input> to take up all remaining space. */
+/* Drag icon */
+.headerContainer :global(.Sortable-handle) {
+	cursor: move;
+	padding: 6px;
+}
+
+.headerContainer:hover .controls.showOnHover {
+	opacity: 1;
+	visibility: visible;
+}
+
+/* Controls - close/menu etc icons displayed in header container */
+.controls.showOnHover {
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 200ms 150ms ease-in-out, visibility 200ms 150ms ease-in-out;
+}
+
+/* Wrapper around controls that are passed in as a prop */
+.controls > div {
+	align-items: center;
+	display: flex;
+}
+
+/* Icons */
+.controls i {
+	cursor: pointer;
 }
 
 /* Wrapper around title/subtitle and controls. */
 .titleContainer {
 	border-bottom: 1px solid black12;
 	display: flex;
-	height: 73px; /* includes border */
+	height: 61px; /* Includes border */
 	margin-bottom: 8px; /* Add additional margin here to prevent visualization from bumping up against title */
-	padding: 24px 16px;
+	padding: 8px 16px;
 }
 
-.titleContainer > div {
-	align-items: center;
-	display: flex;
-}
-
-/* Icons */
-.titleContainer i {
-	cursor: pointer;
-}
-
-/* Card title/subtitle. */
 .title {
 	flex: 1;
-	min-width: 0; /* To allow for allipsis of title within the flex */
 	padding: 0 !important; /* Using important here to override cardTitle.small from theme. */
 }
 
-/* Drag icon */
-.titleContainer :global(.Sortable-handle) {
-	cursor: move;
-	padding: 6px;
+.title > div {
+	width: 100%; /* Force RTB title to be full width */ 
 }

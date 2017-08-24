@@ -1,0 +1,30 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * CSS styling of card avatar, used by wizard, col and ghost cards.
+ */
+
+@value black6 from '../../css/variables.css';
+@value black38 from '../../css/variables.css';
+
+.avatar {
+	border-radius: 36px;
+	height: 36px;
+	line-height: 36px;
+	margin-right: 12px; /* Match margin between control icons */
+	min-width: 36px; /* Required to maintain avatar shape. */
+	text-align: center;
+	width: 36px;
+}
+
+/* Avatar specific to displaying variable wizard and column cards. */
+.avatar:not(.ghost) {
+	background-color: black6;
+}
+
+
+/* Avatar specific to ghost cards or "create mode" of a wizard card. */
+.avatar.ghost {
+	border: 0.5px dashed black38;
+}

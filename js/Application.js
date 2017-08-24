@@ -62,7 +62,7 @@ var Application = React.createClass({
 			}),
 			colSpec = getColSpec([field], datasets),
 			settings = _.assoc(colSpec,
-					'width', 73, // 236, // Matches min possible width of column on resize (see Column.js)
+					'width', 136,
 					'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
 		callback(['add-column', 0, {id: uuid(), settings}]);
 	},

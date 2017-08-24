@@ -46,7 +46,7 @@ function addColumnAdd(Component) {
 			var {children, ...otherProps} = this.props,
 				{appState: {editing, wizardMode, zoom}} = otherProps,
 				{hover} = this.state,
-				height = zoom.height + 113, // zoom + 113 = height of col cards TODO revisit - brittle
+				height = zoom.height + 170, // zoom + 170 = height of col cards TODO revisit - brittle
 				lastIndex = children.length - 1,
 				columns = (editing != null) ?
 					React.Children.map(children, (child, i) => (
