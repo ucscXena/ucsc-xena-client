@@ -116,6 +116,9 @@ var Transcripts = React.createClass({
 					{
 						genetranscripts ?
 					<div>
+							<div className="densityplot--label-div-zero">
+								<label className="densityplot--label-zero">zero</label>
+							</div>
 							<div className={this.state.scaleZoom ? "densityplot--label-div--zoom" : "densityplot--label-div"} onClick={this.scaleZoom}>
 							<label style={{fontSize: "0.85em"}}>expression</label>
 							<div>
