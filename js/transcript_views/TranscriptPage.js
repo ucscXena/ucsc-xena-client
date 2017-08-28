@@ -85,7 +85,7 @@ var Transcripts = React.createClass({
 		return (
 			<div ref='datapages'>
 				<div style={{margin: "0 auto", width: "1200px"}}>
-					<a style={{fontSize: "80%"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
+					<a className="selectors" style={{fontSize: "80%"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors">
 					<strong>Gene: </strong>
 					<GeneSuggest value={this.state.gene}
