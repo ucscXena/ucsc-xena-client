@@ -205,14 +205,32 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 			return false;
 		}
 	});
-	var foundCohort = _.any(cohort, c => (c.name.search(/^TCGA/) !== -1));
 
-	return foundCohort && foundHub &&
-		(['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) !== -1 && fields.length === 1);
+	var foundCohort = _.find(cohort, c => (c.name.search(/^TCGA/) !== -1 || c.name === "Treehouse public expression dataset (July 2017)"));
+
+	if (foundCohort && foundHub && (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) !== -1 && fields.length === 1)) {
+		if (foundCohort.name === "Treehouse public expression dataset (July 2017)" ) {
+			return {
+				label: "Treehouse",
+				map: "Treehouse/THPED_July2017",
+				layout: ""
+			};
+		} else if (foundCohort.name.search(/^TCGA/) !== -1) {
+			return {
+				label: "TCGA Pancan Atlas",
+				map: "PancanAtlas/SampleMap",
+				layout: "mRNA"
+			};
+		}
+		return null;
+	} else {
+		return null;
+	}
 }
 
 function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDownload, specialDownloadMenu}) {
 	var {id, cohort, column: {fieldType, noGeneDetail, valueType, fields, fieldSpecs}} = props,
+		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs}),
 		wrongDataType = valueType !== 'coded',
 		specialDownloadItemName = 'Download sample lists (json)';
 
@@ -223,8 +241,8 @@ function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDo
 					disabled={noGeneDetail} onSelect={onMode}>Detailed view</MenuItem> :
 				<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>)
 				: null,
-		supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) ?
-			<MenuItem onSelect={onTumorMap}>TumorMap (TCGA Pancan)</MenuItem>
+		tumorMapCohort ?
+			<MenuItem onSelect={(e) => onTumorMap(tumorMapCohort, e)}>TumorMap ({tumorMapCohort.label})</MenuItem>
 			: null,
 		(specialDownloadMenu && !wrongDataType) ?
 			<MenuItem onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
@@ -284,6 +302,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 var Column = React.createClass({
 	mixins: [deepPureRenderMixin],
+
 	getInitialState() {
 		return {
 			specialDownloadMenu: specialDownloadMenu,
@@ -458,16 +477,15 @@ var Column = React.createClass({
 		window.open(url + `${uriList}`);
 	},
 
-	onTumorMap: function () {
+	onTumorMap: function (tumorMap) {
 		// TumorMap/Xena API https://tumormap.ucsc.edu/query/addAttributeXena.html
-		// the only connection we have here is on the pancanAtlas data, and currently all categorical data there are using
+		// the only connection we have here is on the pancanAtlas data and
+		//
 		var fieldSpecs = _.getIn(this.props, ['column', 'fieldSpecs']),
 			valueType = _.getIn(this.props, ['column', 'valueType']),
 			datasetMeta = _.getIn(this.props, ['datasetMeta']),
 			columnid = _.getIn(this.props, ['id']),
-			map = "PancanAtlas/SampleMap",
-			layout = 'mRNA',
-			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + map + "&layout=" + layout,
+			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout,
 			customColor = {};
 
 		_.map(fieldSpecs, spec => {
