@@ -4,7 +4,7 @@ const React = require('react');
 const NameColumn = require('./NameColumn');
 // const {Exons} = require('./Exons');
 const ExonsOnly = require('./ExonsOnly');
-const DensityPlot = require('./DensityPlot');
+var {DensityPlot, bottomColor, topColor, plotWidth} = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
 import '../../css/transcript_css/transcriptPage.css';
@@ -85,11 +85,16 @@ var Transcripts = React.createClass({
 		return (
 			<div ref='datapages'>
 				<div style={{margin: "0 auto", width: "1200px"}}>
-					<a style={{fontSize: "80%"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
+					{ genetranscripts ?
+						<div className="legend-holder">
+							<div className="legend" style={{backgroundColor: topColor}}><label>{subtypeA}</label></div>
+							<div className="legend" style={{backgroundColor: bottomColor}}><label>{subtypeB}</label></div>
+						</div> : null
+					}
+					<a className="selectors" style={{fontSize: "80%"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors">
 					<strong>Gene: </strong>
-					<GeneSuggest value={this.state.gene}
-											onChange={ value => { this.setState({gene: value}); }}/>
+					<GeneSuggest value={this.state.gene} onChange={ value => { this.setState({gene: value}); }}/>
 					</div>
 					<button className="selectors" onClick={this.onLoadData}>OK</button>
 					click this after entering new value of gene
@@ -98,11 +103,6 @@ var Transcripts = React.createClass({
 						<option value="tpm">tpm</option>
 						<option value="isoformPercentage">isoformPercentage</option>
 					</select>
-					<div className="legend-holder">
-						Legends
-						<div className="legend" style={{backgroundColor: "#008080"}}><label>Study A</label></div>
-						<div className="legend" style={{backgroundColor: "steelblue"}}><label>Study B</label></div>
-					</div>
 					<br/>
 					<strong className="selectors">StudyA: </strong>
 					<select ref="A" onChange={this.onLoadData} value={valueA}>
@@ -113,31 +113,28 @@ var Transcripts = React.createClass({
 						{options}
 					</select>
 					<br/>
-					{
-						genetranscripts ?
-					<div>
+					{ genetranscripts ?
+						<div>
 							<div className="densityplot--label-div-zero">
-								<label className="densityplot--label-zero">zero</label>
+								<label className="densityplot--label-zero">no expression</label>
 							</div>
-							<div className={this.state.scaleZoom ? "densityplot--label-div--zoom" : "densityplot--label-div"} onClick={this.scaleZoom}>
-							<label style={{fontSize: "0.85em"}}>expression</label>
-							<div>
-								{
-									densityplotAxisLabel.map(label => {
+							<div className="densityplot--label-div--zoom" onClick={this.scaleZoom}>
+								<label style={{fontSize: "0.85em", width: plotWidth}}>{unit}</label>
+								<div>
+									{ densityplotAxisLabel.map((label, i) => {
 										return (
 											<div>
-												<label className="densityplot--label-x" style={{left: `${(label - min) * (this.state.scaleZoom ? 200 : 125) / range}px`}}>{label}</label>
-												<div className="densityplot--label-vertical-tick" style={{left: `${(label - min) * (this.state.scaleZoom ? 200 : 125) / range}px`}}/>
-											</div>
-										);
-									})
-								}
+												<label className="densityplot--label-x" style={{left: `${(label - min) * plotWidth / range}px`}}>{label}{(unit === "isoformPercentage" && i === densityplotAxisLabel.length - 1) ? "%" : "" }</label>
+												<div className="densityplot--label-vertical-tick" style={{left: `${(label - min) * plotWidth / range}px`}}/>
+											</div>);
+										})
+									}
+								</div>
+								<div className="densityplot--label--axis-x"/>
 							</div>
-							<div className="densityplot--label--axis-x"/>
-						</div>
-						<div style={{width: "100%", height: "35px"}}></div>
-					</div> : null
-				}
+							<div style={{width: "100%", height: "35px"}}></div>
+						</div> : null
+					}
 					<NameColumn
 						data={transcriptNameData}
 						getNameZoom={this.onZoom}
@@ -161,12 +158,7 @@ var Transcripts = React.createClass({
 						unit={unit}
 						getNameZoom={this.onZoom}
 						/> */}
-					{
-						genetranscripts ?
-						<div className="densityplot--label-div-y">
-							<label className="densityplot--label-y">density</label>
-						</div> : null
-					}
+					{ genetranscripts ? <label className="densityplot--label-y">density</label> : null}
 				</div>
 			</div>);
 	}

@@ -5,8 +5,6 @@ var {contrastColor} = require('../color_helper');
 import '../../css/transcript_css/nameColumn.css';
 var {deepPureRenderMixin} = require('../react-utils');
 
-const rowHeight = 70;
-
 var NameColumn = React.createClass({
 	mixins: [deepPureRenderMixin],
 
@@ -17,9 +15,7 @@ var NameColumn = React.createClass({
 			let rowClass = d.zoom ? "nameColumn--item--zoom" : "nameColumn--item";
 			return (
 				<div className={rowClass}
-				 style={{	backgroundColor: colors(index),
-									color: contrastColor(colors(index)),
-				 		}}
+				 style={{backgroundColor: colors(index), color: contrastColor(colors(index))}}
 				 onClick={() => this.props.getNameZoom(d.name)}>
 				 	<span><i>{d.name}</i></span>
 				</div>);
@@ -27,8 +23,7 @@ var NameColumn = React.createClass({
 
 		//height of each row has been set to 70px
 		return(
-				<div className="nameColumn"
-					 style={{height: (data.length * rowHeight) + "px"}}>
+				<div className="nameColumn">
 					{items}
 				</div>
 

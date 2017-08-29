@@ -8,7 +8,11 @@
 
 const bin = 20; //number of bins
 const plotHeight = 35;
+const plotWidth = 200;
 const zoomFactor = 3;
+const topColor = "#BAA0CF";//"#008080";
+const bottomColor = "#79C6C5";//"steelblue";
+
 
 function calculateHeight(exp, max, min, plotHt, plotWidth, unit) {
    let minValue = unit === "tpm" ? Math.log2(0.001) : min;
@@ -71,15 +75,12 @@ function calculateHeight(exp, max, min, plotHt, plotWidth, unit) {
 var DensityPlot = React.createClass ({
  mixins: [deepPureRenderMixin],
  	render () {
-    let plotWidth = 125,
-        totalWidth = 135;
+    let totalWidth = plotWidth + 20;
  		let data = this.props.data ? this.props.data : null;
     let max = Math.max.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
     let min = Math.min.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
  		let rows = _.mmap(data.studyA, data.studyB, data.nameAndZoom, (studyA, studyB, nameAndZoom) => {
       let rowClass = nameAndZoom.zoom ? "densityPlot--row--zoom" : "densityPlot--row";
-      plotWidth = nameAndZoom.zoom ? 200 : 125;
-      totalWidth = nameAndZoom.zoom ? 220 : 145;
       if(this.props.type === 'density')
       {
         let polylinePoints, vscale, binWidth;
@@ -97,8 +98,8 @@ var DensityPlot = React.createClass ({
                    polylinePoints = [`20,${plotHt}`, ...yHeightsA.map((y, i) => `${i * binWidth + 20},${(1 - y / vscale) * plotHt}`), `${plotWidth + 20},${plotHt}`].join(' '),
                    zeroHeightA = zeroHeightA / vscale * plotHt,
                    <svg width={totalWidth} height={plotHt}>
-                     <rect x="0" y={plotHt - zeroHeightA} width={zeroWidthA} height={zeroHeightA} fill="#008080"/>
-                     <polyline points={polylinePoints} fill="#008080"/>
+                     <rect x="0" y={plotHt - zeroHeightA} width={zeroWidthA} height={zeroHeightA} fill={topColor}/>
+                     <polyline points={polylinePoints} fill={topColor}/>
                    </svg>
                  }
             </div>
@@ -109,8 +110,8 @@ var DensityPlot = React.createClass ({
                   polylinePoints = [`20,${plotHt}`, ...yHeightsB.map((y, i) => `${i * binWidth + 20},${(1 - y / vscale) * plotHt}`), `${plotWidth + 20},${plotHt}`].join(' '),
                   zeroHeightB = zeroHeightB / vscale * plotHt,
                    <svg width={totalWidth} height={plotHt}>
-                     <rect x="0" y={plotHt - zeroHeightB} width={zeroWidthB} height={zeroHeightB} fill="steelblue" margin="5"/>
-                     <polyline points={polylinePoints} fill="steelblue"/>
+                     <rect x="0" y={plotHt - zeroHeightB} width={zeroWidthB} height={zeroHeightB} fill={bottomColor} margin="5"/>
+                     <polyline points={polylinePoints} fill={bottomColor}/>
                    </svg>
                  }
             </div>
@@ -157,12 +158,11 @@ var DensityPlot = React.createClass ({
       }
  		});
  		return (
- 			<div className="densityPlot"
- 				 style={{height: (data.studyA.length * plotHeight * 2) + "px"}}>
+ 			<div className="densityPlot">
  				{rows}
  			</div>
  			);
  	}
  });
 
- module.exports = DensityPlot;
+ module.exports = {DensityPlot, bottomColor, topColor, plotWidth};
