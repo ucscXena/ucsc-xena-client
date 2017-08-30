@@ -222,6 +222,7 @@ function addWizardColumns(Component) {
 				withEditor = columns.map(el =>
 						editing === el.props.id ?
 							<VariableSelect
+								actionKey={editing}
 								pos={editing}
 								fields={appState.columns[editing].fieldSpecs[0].fields}
 								dataset={appState.columns[editing].fieldSpecs[0].dsID}

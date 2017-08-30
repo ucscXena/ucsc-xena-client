@@ -75,9 +75,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	componentWillUnmount() {
 		this.plotClick.unsubscribe();
 	},
-	onReorder: function (order) {
-		this.props.callback(['order', order]);
-	},
 	onResize: function (id, size) {
 		this.props.callback(['resize', id, size]);
 	},
@@ -138,7 +135,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 		return (
 			<Spreadsheet
 					onAddColumn={this.onAddColumn}
-					onReorder={this.onReorder}
 					onOpenVizSettings={this.onOpenVizSettings}
 					onVizSettings={this.onVizSettings}
 					{...this.props}>

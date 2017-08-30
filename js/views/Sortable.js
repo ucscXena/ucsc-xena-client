@@ -2,7 +2,7 @@
 
 // Horizontal sortable widget, with Rx and React.
 //
-// <Sortable setOrder={this.setOrder}>
+// <Sortable Component={Component} onReorder={this.onReorder}>
 // 	{map(order, id => child[id]}
 // </Sortable>
 //
@@ -17,6 +17,8 @@ var ReactDOM = require('react-dom');
 var Rx = require('../rx');
 var _ = require('../underscore_ext');
 require('./Sortable.css');
+
+var skip = 1; // Don't allow sort of <skip> elements on the left
 
 function leftWidth(rect) {
 	return {
@@ -73,7 +75,7 @@ var Sortable = React.createClass({
 			var index = _.indexOf(order, id);
 			var target = positions[index];
 			var max = positions[N - 1].left - target.left - target.width + positions[N - 1].width;
-			var min = positions[0].left - target.left;
+			var min = positions[skip].left - target.left;
 			var newPos = zeros(N);
 			var finalPos;
 
@@ -149,22 +151,21 @@ var Sortable = React.createClass({
 	},
 
 	render: function () {
-		var {dragging} = this.state;
-		var columns = React.Children.map(this.props.children, (child, i) =>
-			<div
-				{...this.props}
-				onMouseDown={ev => this.sortStart([child.props.actionKey, ev])}
-				className={'Sortable-container' + (dragging !== null && i !== dragging ? ' Sortable-slide' : '')}
-				style={{left: this.state.pos[child.props.actionKey]}}
-				ref={child.props.actionKey}>
+		var {dragging} = this.state,
+			{Component, children, ...otherProps} = this.props;
 
-				{child}
-			</div>);
+		var columns = React.Children.map(children, (child, i) =>
+			React.cloneElement(child, {
+				onMouseDown: i < skip ? undefined : ev => this.sortStart([child.props.actionKey, ev]),
+				className: 'Sortable-container' + (dragging !== null && i !== dragging ? ' Sortable-slide' : ''),
+				style: {left: this.state.pos[child.props.actionKey]},
+				ref: child.props.actionKey
+			}));
 
 		return (
-			<div className='Sortable'>
+			<Component {...otherProps} className='Sortable'>
 				{columns}
-			</div>
+			</Component>
 		);
     }
 });

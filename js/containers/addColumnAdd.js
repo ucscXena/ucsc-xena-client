@@ -48,22 +48,20 @@ function addColumnAdd(Component) {
 				{hover} = this.state,
 				height = zoom.height + 170, // zoom + 170 = height of col cards TODO revisit - brittle
 				lastIndex = children.length - 1,
-				columns = (editing != null) ?
-					React.Children.map(children, (child, i) => (
-						<div className={classNames(compStyles.addOrEditMode, {[compStyles.last]: i === lastIndex})}>
-							{child}
-						</div>
-					))
-					: React.Children.map(children, (child, i) => (
-						<div className={classNames(compStyles.visualizationOrWizardMode, hoverClass(i, hover), {[compStyles.wizardModeMargins]: wizardMode})}
-							 actionKey={child.props.actionKey}>
-							<div>{child}</div>
-							{wizardMode ? null : <ColumnAdd actionKey={i}
-															height={height}
-															last={i === lastIndex}
-															onHover={this.onHover}
-															onClick={() => this.onClick(i)}/>}
-						</div>));
+				columns = React.Children.map(children, (child, i) => (
+					<div
+						className={classNames(compStyles.visualizationOrWizardMode, hoverClass(i, hover), {[compStyles.wizardModeMargins]: wizardMode})}
+						actionKey={child.props.actionKey}>
+
+						{child}
+						<ColumnAdd
+							show={!wizardMode && editing == null}
+							actionKey={i}
+							height={height}
+							last={i === lastIndex}
+							onHover={this.onHover}
+							onClick={() => this.onClick(i)}/>
+					</div>));
 			return (
 				<Component {...otherProps}>
 					{columns}

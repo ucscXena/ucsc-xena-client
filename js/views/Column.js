@@ -446,8 +446,9 @@ var Column = React.createClass({
 		// Button and Dropdown.Toggle will allow overriding the tag.  However
 		// Splitbutton will not pass props down to the underlying Button, so we
 		// can't use Splitbutton.
+		// XXX put position into a css module
 		return (
-			<div style={{width: width}}>
+			<div style={{width: width, position: 'relative'}}>
 				<ColCard colId={label}
 						 title={<DefaultTextInput
 							disabled={wizardMode}
@@ -503,7 +504,6 @@ var Column = React.createClass({
 						</div>
 					</ResizeOverlay>
 				</ColCard>
-				{widgets.legend({column, id, data})}
 			</div>
 		);
 	}

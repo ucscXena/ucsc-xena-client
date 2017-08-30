@@ -5,20 +5,6 @@
  * Rules necessary for wrapper around columns, as well as add column hover functionality on individual columns.
  */
 
-/* Handle add/edit mode of column - must add additional padding during add or edit of column as add column functionality
- * is disabled and default gutter between columns therefore has been removed. */
-.addOrEditMode {
-	margin-right: 16px;
-}
-
-/* The add column components between each col card has a width of 16px except for the final add column component which 
- * has an additional 8px padding left (to prevent it from jamming right up next to the final col card). When add column
- * functionality is disabled (ie when we're adding or editing a column), each column is given a margin right of 16px to 
- * make up for the missing add column components. We must add an additional 8px here to account for the final add column component. */
-.addOrEditMode.last {
-	margin-right: 24px;
-}
-
 /** Handle visualization or wizard mode - add wrapper around column and add column components. */
 .visualizationOrWizardMode {
 	display: flex;

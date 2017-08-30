@@ -8,18 +8,15 @@ function makeSortable(Component) {
 	return React.createClass({
 		displayName: 'SpreadsheetSortable',
 		mixins: [deepPureRenderMixin],
+		onReorder: function (order) {
+			this.props.callback(['order', order]);
+		},
 		render() {
-			var {onClick, onReorder, children, ...otherProps} = this.props,
-				[first, ...rest] = React.Children.toArray(children);
+			var {children, ...otherProps} = this.props;
 			return (
-				<Component {...otherProps}>
-					<div onClick={onClick}>
-						{first}
-					</div>
-					<Sortable onClick={onClick} onReorder={order => onReorder([first.props.actionKey, ...order])}>
-						{rest}
-					</Sortable>
-				</Component>);
+				<Sortable {...otherProps} Component={Component} onReorder={this.onReorder}>
+					{children}
+				</Sortable>);
 		}
 	});
 }

@@ -5,10 +5,11 @@ var {deepPureRenderMixin} = require('../react-utils');
 
 var ColumnsWrapper = React.createClass({
 	render() {
-		var {children, widgetProps, ...optProps} = this.props;
+		var {children, widgetProps, append, ...optProps} = this.props;
 		return (
 			<div {...optProps} className="Columns">
 				{children}
+				{append}
 			</div>);
 	}
 });
