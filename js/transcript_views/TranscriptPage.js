@@ -30,7 +30,6 @@ var Transcripts = React.createClass({
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
 		this.props.callback(['loadGene', this.state.gene, studyA, subtypeA, studyB, subtypeB, unit]);
-		// this.props.callback(['loadGene', 'TP53', 'tcga', 'Lung Adenocarcinoma', 'gtex', 'Lung']); // hard-coded gene and sample subsets, for demo
 	},
 
 	onZoom(name) {
@@ -51,14 +50,24 @@ var Transcripts = React.createClass({
 			return <h4>Loading available subtypes...</h4>;
 		}
 		var subtypesTcga = _.sortBy(subtypes.tcga),
-			subtypesGtex = _.sortBy(subtypes.gtex);
-		var valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypesTcga[0]}`;
-		var valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypesGtex[0]}`;
-		var options = _.concat(
-			subtypesTcga.map(name => <option value = {"tcga|" + name}>{name}</option>),
-			subtypesGtex.map(name => <option value = {"gtex|" + name}>{name}</option>));
+			subtypesGtex = _.sortBy(subtypes.gtex),
+			valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypesTcga[0]}`,
+			valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypesGtex[0]}`,
+			options = _.concat(
+				subtypesTcga.map(name => <option value = {"tcga|" + name}>{name}</option>),
+				subtypesGtex.map(name => <option value = {"gtex|" + name}>{name}</option>)),
+			unitLabels = {
+				tpm: {
+					dropdown: "TPM",
+					axis: "log2 (TPM)"
+				},
+				isoformPercentage: {
+					dropdown: "Isoform Percentage",
+					axis: "Isoform Percentage"
+				}
+			};
 
-		var {genetranscripts} = this.props.state.transcripts || {};
+		var {genetranscripts} = this.props.state.transcripts || [];
 		var genetranscriptsSorted = _.sortBy(genetranscripts, function(gtranscript) {
 			return _.sum(_.mmap(gtranscript.exonStarts, gtranscript.exonEnds, (exonStarts, exonEnds) => {
 				return exonStarts - exonEnds; // start - end to sort in descending order
@@ -85,7 +94,7 @@ var Transcripts = React.createClass({
 		return (
 			<div ref='datapages'>
 				<div style={{margin: "0 auto", width: "1200px"}}>
-					{ genetranscripts ?
+					{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
 						<div className="legend-holder">
 							<div className="legend" style={{backgroundColor: topColor}}><label>{subtypeA}</label></div>
 							<div className="legend" style={{backgroundColor: bottomColor}}><label>{subtypeB}</label></div>
@@ -93,33 +102,33 @@ var Transcripts = React.createClass({
 					}
 					<a className="selectors" style={{fontSize: "80%"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors">
-					<strong>Gene: </strong>
+					<strong>Gene</strong>
 					<GeneSuggest value={this.state.gene} onChange={ value => { this.setState({gene: value}); }}/>
 					</div>
 					<button className="selectors" onClick={this.onLoadData}>OK</button>
-					click this after entering new value of gene
-					<strong className="selectors">Unit: </strong>
+					click this after entering new gene
+					<strong className="selectors">Expression Unit</strong>
 					<select ref="unit" onChange={this.onLoadData} value={unit}>
-						<option value="tpm">tpm</option>
-						<option value="isoformPercentage">isoformPercentage</option>
+						<option value="tpm">{unitLabels.tpm.dropdown}</option>
+						<option value="isoformPercentage">{unitLabels.isoformPercentage.dropdown}</option>
 					</select>
 					<br/>
-					<strong className="selectors">StudyA: </strong>
+					<strong className="selectors">Study A</strong>
 					<select ref="A" onChange={this.onLoadData} value={valueA}>
 						{options}
 					</select>
-					<strong className="selectors">StudyB: </strong>
+					<strong className="selectors">Study B</strong>
 					<select ref="B" onChange={this.onLoadData} value={valueB}>
 						{options}
 					</select>
 					<br/>
-					{ genetranscripts ?
+					{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
 						<div>
 							<div className="densityplot--label-div-zero">
 								<label className="densityplot--label-zero">no expression</label>
 							</div>
 							<div className="densityplot--label-div--zoom" onClick={this.scaleZoom}>
-								<label style={{fontSize: "0.85em", width: plotWidth}}>{unit}</label>
+								<label style={{fontSize: "0.85em", width: plotWidth}}>{unitLabels[unit].axis}</label>
 								<div>
 									{ densityplotAxisLabel.map((label, i) => {
 										return (
@@ -158,7 +167,9 @@ var Transcripts = React.createClass({
 						unit={unit}
 						getNameZoom={this.onZoom}
 						/> */}
-					{ genetranscripts ? <label className="densityplot--label-y">density</label> : null}
+					{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
+						<label className="densityplot--label-y">density</label> : null
+					}
 				</div>
 			</div>);
 	}
