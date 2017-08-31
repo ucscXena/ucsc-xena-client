@@ -9,15 +9,14 @@ var NameColumn = React.createClass({
 	mixins: [deepPureRenderMixin],
 
 	render() {
-		let data = this.props.data || {};
+		let data = this.props.data || {},
+			gene = this.props.gene;
 		let colors = colorScales.colorScale(['ordinal', data.length]);
 		let items = data.map((d, index) => {
 			let rowClass = d.zoom ? "nameColumn--item--zoom" : "nameColumn--item";
 			return (
-				<div className={rowClass}
-				 style={{backgroundColor: colors(index), color: contrastColor(colors(index))}}
-				 onClick={() => this.props.getNameZoom(d.name)}>
-				 	<span><i>{d.name}</i></span>
+				<div className={rowClass} style={{backgroundColor: colors(index), color: contrastColor(colors(index))}}>
+					<span><i>{gene} {d.name}</i></span>
 				</div>);
 		});
 

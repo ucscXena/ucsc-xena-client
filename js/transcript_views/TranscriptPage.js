@@ -146,7 +146,7 @@ var Transcripts = React.createClass({
 					}
 					<NameColumn
 						data={transcriptNameData}
-						getNameZoom={this.onZoom}
+						gene={this.state.gene}
 						/>
 					{/* <Exons
 						data={transcriptExonData}
