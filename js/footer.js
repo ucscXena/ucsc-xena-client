@@ -22,7 +22,8 @@ var Footer = React.createClass({
 					<ul>
 						<li><a href='https://www.ucsc.edu/' target='_blank'>UCSC</a></li>
 						<li><a href='https://ucscgenomics.soe.ucsc.edu/' target='_blank'>UCSC Genomics Institute</a></li>
-						<li><a href='https://cgl.genomics.ucsc.edu/' target='_blank'>UCSC Genomics Institute</a></li>
+						<li><a href='https://cgl.genomics.ucsc.edu/' target='_blank'>UCSC Computational Genomics Laboratory</a></li>
+						<li><a href='http://xena.ucsc.edu/' target='_blank'>UCSC Xena</a></li>
 					</ul>
 					<ul>
 						<li><a href='mailto:genome-cancer@soe.ucsc.edu'>Email</a></li>

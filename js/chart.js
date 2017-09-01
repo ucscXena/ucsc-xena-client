@@ -11,6 +11,9 @@ var colorScales = require ('./colorScales');
 var customColors = {};
 var jStat = require('jStat').jStat;
 
+// Styles
+var compStyles = require('./chart.module.css');
+
 var getCustomColor = (fieldSpecs, fields, datasets) =>
 	(fieldSpecs.length === 1 && fields.length === 1) ?
 		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', fieldSpecs[0].fields[0]], null) : null;
@@ -72,11 +75,12 @@ module.exports = function (root, callback, sessionStorage) {
 					"index": 2
 				} //selected sample level current heatmap normalization
 			],
-			node = document.createElement("div");
+			node = document.createElement("div"),
+			labelDiv = document.createElement("label");
 
 		dropDownDiv = document.createElement("select");
 		dropDownDiv.setAttribute("id", "ynormalization");
-		dropDownDiv.setAttribute("class", "dropdown-style");
+		dropDownDiv.setAttribute("class", "form-control");
 
 		dropDown.map(function (obj) {
 			option = document.createElement('option');
@@ -92,10 +96,11 @@ module.exports = function (root, callback, sessionStorage) {
 			update.apply(this, updateArgs);
 		});
 
+		node.className = compStyles.column;
 		node.setAttribute("id", "normDropDown");
-		node.appendChild(document.createTextNode("Y data linear transform "));
+		labelDiv.appendChild(document.createTextNode("Y data linear transform "));
+		node.appendChild(labelDiv);
 		node.appendChild(dropDownDiv);
-		node.className = "col-sm-6";
 		return node;
 	}
 
@@ -113,11 +118,12 @@ module.exports = function (root, callback, sessionStorage) {
 					"index": 1
 				},
 			],
-			node = document.createElement("div");
+			node = document.createElement("div"),
+			labelDiv = document.createElement("label");
 
 		dropDownDiv = document.createElement("select");
 		dropDownDiv.setAttribute("id", "yExponentiation");
-		dropDownDiv.setAttribute("class", "dropdown-style");
+		dropDownDiv.setAttribute("class", "form-control");
 
 		dropDown.map(function (obj) {
 			option = document.createElement('option');
@@ -133,10 +139,11 @@ module.exports = function (root, callback, sessionStorage) {
 			update.apply(this, updateArgs);
 		});
 
+		node.className = compStyles.column;
 		node.setAttribute("id", "expDropDown");
-		node.appendChild(document.createTextNode("Y data log transform "));
+		labelDiv.appendChild(document.createTextNode("Y data log transform "));
+		node.appendChild(labelDiv);
 		node.appendChild(dropDownDiv);
-		node.className = "col-sm-6";
 		return node;
 	}
 
@@ -328,8 +335,6 @@ module.exports = function (root, callback, sessionStorage) {
 			listDiv = document.createElement("div"),
 			returnDiv = document.createElement("div");
 
-		labelDiv.className = "col-xs-1";
-		listDiv.className = "col-xs-4";
 		if (selectorID === "Xaxis") {
 			xdiv = div;
 			labelDiv.appendChild(document.createTextNode("X axis"));
@@ -343,6 +348,7 @@ module.exports = function (root, callback, sessionStorage) {
 		listDiv.appendChild(div);
 		returnDiv.appendChild(labelDiv);
 		returnDiv.appendChild(listDiv);
+		returnDiv.className = compStyles.column;
 		return returnDiv;
 	}
 
@@ -543,11 +549,6 @@ module.exports = function (root, callback, sessionStorage) {
 		div.appendChild(seriesButton);
 	}
 */
-	function updateStatsDivPosition (statsDiv, chartContainer) {
-		var rectObject = chartContainer.getBoundingClientRect();
-		statsDiv.style.top = rectObject.top + rectObject.height * 0.1 + "px";
-		statsDiv.style.left = rectObject.right - rectObject.width * 0.1  + "px";
-	}
 
 	function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 		yfields, ycodemap, ydata, reverseStrand,
@@ -773,6 +774,7 @@ module.exports = function (root, callback, sessionStorage) {
 				statsDiv.innerHTML = 'Welch\'s t-test<br>' +
 					't = ' + tStatistics.toPrecision(4) + '<br>' +
 					'p = ' + pValue.toPrecision(4);
+				statsDiv.classList.toggle(compStyles.visible);
 			}
 			chart.redraw();
 		} else if (!xfield) { //summary view --- messsy code
@@ -1033,6 +1035,7 @@ module.exports = function (root, callback, sessionStorage) {
 				statsDiv.innerHTML = 'Pearson\'s chi-squared test<br>' +
 						'χ2 = ' + chisquareStats.toPrecision(4) + '<br>' +
 						'p = ' + pValue.toPrecision(4);
+				statsDiv.classList.toggle(compStyles.visible);
 			}
 
 			chart.redraw();
@@ -1110,6 +1113,7 @@ module.exports = function (root, callback, sessionStorage) {
 						'r = ' + rho.toPrecision(4) + '<br>' +
 						'Spearman\'s rank rho<br>' +
 						'ρ = ' + spearmanRho.toPrecision(4);
+					statsDiv.classList.toggle(compStyles.visible);
 				}
 
 
@@ -1216,6 +1220,7 @@ module.exports = function (root, callback, sessionStorage) {
 		var oldDiv = document.getElementById("myChart");
 		oldDiv.parentElement.replaceChild(buildEmptyChartContainer(), oldDiv);
 		statsDiv.innerHTML = "";
+		statsDiv.classList.toggle(compStyles.visible, false);
 
 		//initialization
 		document.getElementById("myChart").innerHTML = "Querying Xena ...";
@@ -1408,12 +1413,14 @@ module.exports = function (root, callback, sessionStorage) {
 
 	// statistics
 	statsDiv = document.createElement("div");
-	statsDiv.style.position = "absolute";
-	updateStatsDivPosition (statsDiv, chartContainer);
+	statsDiv.className = compStyles.stats;
 	chartContainer.appendChild(statsDiv);
 
 	// left panel control
 	leftContainer = document.createElement("div");
+	leftContainer.setAttribute("id", "controlPanel");
+	leftContainer.className = compStyles.controlPanel;
+	leftContainer.style.width = chartWidth();
 	root.appendChild(leftContainer);
 
 	if (!(xenaState && xenaState.cohort && xenaState.samples && xenaState.columnOrder.length > 0)) {
@@ -1423,7 +1430,6 @@ module.exports = function (root, callback, sessionStorage) {
 	}
 
 	axisContainer = document.createElement("div");
-	axisContainer.className = "container";
 
 	// x axis
 	xAxisDiv = axisSelector("Xaxis", update, updateArgs);
@@ -1436,7 +1442,7 @@ module.exports = function (root, callback, sessionStorage) {
 		return;
 	}
 	row = document.createElement("div");
-	row.className = "form-group row";
+	row.className = compStyles.row;
 	row.appendChild(yAxisDiv);
 	axisContainer.appendChild(row);
 
@@ -1450,14 +1456,14 @@ module.exports = function (root, callback, sessionStorage) {
 
 	//x
 	row = document.createElement("div");
-	row.className = "form-group row";
+	row.className = compStyles.row;
 	row.appendChild(xAxisDiv);
 	axisContainer.appendChild(row);
 
 	// color
 	colorAxisDiv = axisSelector("Color", update, updateArgs);
 	row = document.createElement("div");
-	row.className = "form-group row";
+	row.className = compStyles.row;
 	row.appendChild(colorAxisDiv);
 	axisContainer.appendChild(row);
 
@@ -1468,6 +1474,6 @@ module.exports = function (root, callback, sessionStorage) {
 	window.addEventListener("resize", function() {
 		document.getElementById("myChart").style.height = chartHeight();
 		document.getElementById("myChart").style.width = chartWidth();
-		updateStatsDivPosition (statsDiv, chartContainer);
+		document.getElementById("controlPanel").style.width = chartWidth();
 	});
 };

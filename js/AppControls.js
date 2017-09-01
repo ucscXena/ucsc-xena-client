@@ -18,7 +18,7 @@ var classNames = require('classnames');
 var compStyles = require('./AppControls.module.css');
 
 var modeIcon = {
-	chart: 'image',
+	chart: 'view_column',
 	heatmap: 'insert_chart'
 };
 
