@@ -460,18 +460,19 @@ var Column = React.createClass({
 						controls={wizardMode ? (first ? refreshIcon : null) :
 							<div>
 								{first ? null : moveIcon}
-								<IconMenu icon='more_vert' menuRipple iconRipple={false}>
-									{menu}
-									{menu && <MenuDivider />}
-									<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
-											  caption='Kaplan Meier Plot'/>
-									<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
-									<MenuItem onClick={this.onDownload} caption='Download'/>
-									{aboutDatasetMenu(datasetMeta(id))}
-									<MenuItem onClick={this.onViz} caption='Display Setting'/>
-									<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
-									<MenuItem onClick={this.onRemove} caption='Remove'/>
-								</IconMenu>
+								{first ? null : (
+									<IconMenu icon='more_vert' menuRipple iconRipple={false}>
+										{menu}
+										{menu && <MenuDivider />}
+										<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
+										caption='Kaplan Meier Plot'/>
+										<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
+										<MenuItem onClick={this.onDownload} caption='Download'/>
+										{aboutDatasetMenu(datasetMeta(id))}
+										<MenuItem onClick={this.onViz} caption='Display Setting'/>
+										<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
+										<MenuItem onClick={this.onRemove} caption='Remove'/>
+										</IconMenu>)}
 							</div>
 						}
 						 wizardMode={wizardMode}>
