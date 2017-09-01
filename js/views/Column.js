@@ -425,7 +425,7 @@ var Column = React.createClass({
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
 				supportsGeneAverage, onClick, tooltip, wizardMode, onReset,
-				interactive} = this.props,
+				interactive, append} = this.props,
 			{specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
@@ -505,6 +505,7 @@ var Column = React.createClass({
 						</div>
 					</ResizeOverlay>
 				</ColCard>
+				{append}
 			</div>
 		);
 	}

@@ -18,6 +18,18 @@
 	position: absolute;
 }
 
+.helpBelow {
+	left: 50%;
+	transform: translateX(-50%);
+	top: calc(100% + 35px); /* 24px + 11px triangle */
+}
+
+.helpRight {
+	left: calc(100% + 35px); /* 24px + 11px triangle */
+	top: 50%;
+	transform: translateY(-50%);
+}
+
 /* Core help box container, holding content, actions and triangle. Used by both right and below help boxes. */
 .helpBoxBounds {
 	background-color: #ffffff;

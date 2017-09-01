@@ -45,10 +45,10 @@ var compStyles = require('./HelpBox.module.css');
 // of marker comes from 16px margin (standard MD width) plus 11.5px for triangle. This smaller width creates the
 // necessary break between the marker and the right triangle.
 var HelpBoxR = props => {
-	var {x, y, w, children} = props;
+	var {w, children} = props;
 	return (
-		<div className={classNames(compStyles.HelpBox, compStyles.withMarker)} style={{top: y}} >
-			<div style={{width: x - 27.5}} className={compStyles.rowMarker} />
+		<div className={classNames(compStyles.HelpBox, compStyles.withMarker, compStyles.helpRight)} >
+			<div style={{width: 100}} className={compStyles.rowMarker} />
 			<div style={{width: w}} className={compStyles.helpBoxBounds}>
 				{children}
 			</div>
@@ -58,9 +58,9 @@ var HelpBoxR = props => {
 
 // Setup for help box displayed below item being highlighted.
 var HelpBoxB = props => {
-	var {x, y, w, children} = props;
+	var {w, children} = props;
 	return (
-		<div style={{left: x, top: y, width: w}} className={classNames(compStyles.HelpBox, compStyles.helpBoxBounds)}>
+		<div style={{width: w}} className={classNames(compStyles.HelpBox, compStyles.helpBoxBounds, compStyles.helpBelow)}>
 			{children}
 		</div>
 	);
@@ -68,7 +68,7 @@ var HelpBoxB = props => {
 
 var HelpBox = React.createClass({
 	onClose() {
-		console.log('close');
+		this.props.onClose();
 	},
 	render() {
 		var {children, o, ...boxProps} = this.props;
