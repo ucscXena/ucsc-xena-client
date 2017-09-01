@@ -24,7 +24,7 @@ function addLegend(Component) {
 						return (
 							<div actionKey={id}>
 								{el}
-								{editing !== id && !_.isNumber(id) ? (
+								{id != null && editing !== id && !_.isNumber(id) ? (
 									<div style={{width: column.width}}>
 										{widgets.legend({column, id, data})}
 									</div>) : null}
