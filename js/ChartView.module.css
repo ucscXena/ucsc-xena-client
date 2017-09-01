@@ -1,0 +1,12 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling chart component.
+ */
+
+/* Container around highcharts */
+.ChartView {
+	margin: 48px 12px;
+	position: relative; /* Required for positioning stats */
+}
