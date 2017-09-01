@@ -424,7 +424,8 @@ var Column = React.createClass({
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
-				supportsGeneAverage, onClick, tooltip, wizardMode, onReset} = this.props,
+				supportsGeneAverage, onClick, tooltip, wizardMode, onReset,
+				interactive} = this.props,
 			{specialDownloadMenu} = this.state,
 			{width, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
@@ -451,14 +452,14 @@ var Column = React.createClass({
 			<div style={{width: width, position: 'relative'}}>
 				<ColCard colId={label}
 						 title={<DefaultTextInput
-							disabled={wizardMode}
+							disabled={!interactive}
 							onChange={this.onColumnLabel}
 							value={{default: columnLabel, user: user.columnLabel}} />}
 						subtitle={<DefaultTextInput
-							disabled={wizardMode}
+							disabled={!interactive}
 							onChange={this.onFieldLabel}
 							value={{default: fieldLabel, user: user.fieldLabel}} />}
-						controls={wizardMode ? (first ? refreshIcon : null) :
+						controls={!interactive ? (first ? refreshIcon : null) :
 							<div>
 								{first ? null : moveIcon}
 								<IconMenu icon='more_vert' menuRipple iconRipple={false}>
@@ -476,7 +477,7 @@ var Column = React.createClass({
 							</div>
 						}
 						 wizardMode={wizardMode}>
-					<Crosshair frozen={wizardMode}>
+					<Crosshair frozen={!interactive || this.props.frozen}>
 						<div style={{height: 32}}>
 							{annotation ?
 								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
@@ -485,7 +486,7 @@ var Column = React.createClass({
 						</div>
 					</Crosshair>
 					<ResizeOverlay
-						enable={!wizardMode}
+						enable={interactive}
 						onResizeStop={this.onResizeStop}
 						width={width}
 						minWidth={this.getControlWidth}
@@ -497,7 +498,7 @@ var Column = React.createClass({
 							samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 							samplesMatched={samplesMatched}/>
 						<div style={{position: 'relative'}}>
-							<Crosshair frozen={wizardMode || this.props.frozen}>
+							<Crosshair frozen={!interactive || this.props.frozen}>
 								{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 								{getStatusView(status, this.onReload)}
 							</Crosshair>

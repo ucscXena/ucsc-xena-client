@@ -16,14 +16,15 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var Rx = require('../rx');
 var _ = require('../underscore_ext');
+var {deepPureRenderMixin} = require('../react-utils');
 require('./Sortable.css');
 
 var skip = 1; // Don't allow sort of <skip> elements on the left
 
-function leftWidth(rect) {
+function leftWidth(rect, width) {
 	return {
 		left: rect.left,
-		width: rect.right - rect.left
+		width
 	};
 }
 
@@ -61,6 +62,7 @@ var zeros = n => repeat(n, 0);
 
 var transitionLength = 400;
 var Sortable = React.createClass({
+	mixins: [deepPureRenderMixin],
 	componentWillMount: function () {
 		var mousedownSub = new Rx.Subject();
 		var mousedown = mousedownSub.filter(([, md]) => hasClass(md.target, 'Sortable-handle'));
@@ -69,8 +71,9 @@ var Sortable = React.createClass({
 
 			var order = _.map(this.props.children, c => c.props.actionKey);
 			var startX = md.clientX;
+			var {widths} = this.props;
 			var positions = _.map(order,
-								  id => leftWidth(ReactDOM.findDOMNode(this.refs[id]).getBoundingClientRect()));
+								  (id, i) => leftWidth(ReactDOM.findDOMNode(this.refs[id]).getBoundingClientRect(), widths[i]));
 			var N = positions.length;
 			var index = _.indexOf(order, id);
 			var target = positions[index];
@@ -128,6 +131,7 @@ var Sortable = React.createClass({
 				this.props.onReorder(ev.order);
 			}
 			this.setState(_.pick(ev, 'pos', 'dragging'));
+			this.props.onDrag(!!ev.dragging);
         });
 
 		this.sortStart = ev => mousedownSub.next(ev);
@@ -159,6 +163,7 @@ var Sortable = React.createClass({
 				onMouseDown: i < skip ? undefined : ev => this.sortStart([child.props.actionKey, ev]),
 				className: 'Sortable-container' + (dragging !== null && i !== dragging ? ' Sortable-slide' : ''),
 				style: {left: this.state.pos[child.props.actionKey]},
+				id: child.props.actionKey,
 				ref: child.props.actionKey
 			}));
 

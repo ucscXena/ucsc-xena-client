@@ -37,10 +37,10 @@ var Tooltip = React.createClass({
 		));
 		var closeIcon = frozen ? <i className='material-icons' onClick={onClose}>close</i> : null;
 		var sample = sampleID ? <span>{sampleID}</span> : null;
-		/*global document: false */
+
 		return (
 			<div onClick={onClick}>
-				{frozen ?  overlay(onClick) : null}
+				{frozen ? overlay(onClick) : null}
 				<div className={classNames(compStyles.Tooltip, {[compStyles.open]: open})}>
 					<ul className={compStyles.content}>
 						<li className={compStyles.title}>{sample}{closeIcon}</li>

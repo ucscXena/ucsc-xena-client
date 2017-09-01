@@ -44,7 +44,7 @@ function addColumnAdd(Component) {
 		},
 		render() {
 			var {children, ...otherProps} = this.props,
-				{appState: {editing, wizardMode, zoom}} = otherProps,
+				{appState: {wizardMode, zoom}, interactive} = otherProps,
 				{hover} = this.state,
 				height = zoom.height + 170, // zoom + 170 = height of col cards TODO revisit - brittle
 				lastIndex = children.length - 1,
@@ -55,7 +55,7 @@ function addColumnAdd(Component) {
 
 						{child}
 						<ColumnAdd
-							show={!wizardMode && editing == null}
+							show={interactive}
 							actionKey={i}
 							height={height}
 							last={i === lastIndex}

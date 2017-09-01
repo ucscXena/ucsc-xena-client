@@ -38,13 +38,14 @@ function addTooltip(Component) {
 		},
 		render() {
 			var {children, ...props} = this.props,
-				{wizardMode} = props.appState,
-				onClick = wizardMode ? null : this.on.click;
+				{interactive} = props,
+				open = this.state.tooltip.open && interactive,
+				onClick = interactive ? this.on.click : null;
 			return (
 				<Component
 					{...props}
 					onClick={onClick}
-					append={<Tooltip show={!wizardMode} onClose={this.on.close} onClick={this.on.click} {...this.state.tooltip}/>}>
+					append={<Tooltip show={interactive} onClose={this.on.close} onClick={this.on.click} {...{...this.state.tooltip, open}}/>}>
 					{React.Children.map(children, el =>
 						React.cloneElement(el, {
 							tooltip: this.ev.tooltip,

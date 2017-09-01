@@ -60,6 +60,15 @@ function columnSelector(id, i, appState) {
 var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	displayName: 'SpreadsheetContainer',
 	mixins: [rxEventsMixin],
+	getInitialState() {
+		return {
+			interactive: {}
+		};
+	},
+	onInteractive(key, interactive) {
+		this.setState({interactive:
+			_.assoc(this.state.interactive, key, interactive)});
+	},
 	componentWillMount() {
 		this.events('plotClick');
 
@@ -127,8 +136,10 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 		var columnProps = _.pick(this.props,
 				['searching', 'supportsGeneAverage', 'disableKM', 'datasetMeta', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
 			{appState} = this.props,
-			{columnOrder} = appState,
-			onClick = appState.wizardMode ? null : this.on.plotClick;
+			{columnOrder, wizardMode, editing} = appState,
+			interactive = !wizardMode && editing == null &&
+				_.every(this.state.interactive),
+			onClick = interactive ? this.on.plotClick : null;
 
 		// XXX prune callback from this.props
 		// Currently it's required for ColumnEdit2 and zoom helper.
@@ -137,14 +148,17 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 					onAddColumn={this.onAddColumn}
 					onOpenVizSettings={this.onOpenVizSettings}
 					onVizSettings={this.onVizSettings}
+					interactive={interactive}
+					onInteractive={this.onInteractive}
 					{...this.props}>
 
 				{_.map(columnOrder, (id, i) => (
 					<Column
+						interactive={interactive}
 						cohort={appState.cohort}
 						onViz={this.onOpenVizSettings}
 						onEdit={!hasSignatureField(_.get(appState.columns, id)) &&
-							appState.editing == null ? this.onEdit : null}
+							interactive ? this.onEdit : null}
 						onFieldLabel={this.onFieldLabel}
 						onColumnLabel={this.onColumnLabel}
 						onReset={this.onReset}
@@ -162,7 +176,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						{...columnProps}
 						onClick={onClick}
 						{...columnSelector(id, i, appState)}
-						wizardMode={appState.wizardMode}
+						wizardMode={wizardMode}
 						editing={appState.editing}/>))}
 			</Spreadsheet>);
 	}

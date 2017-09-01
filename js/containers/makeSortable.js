@@ -11,10 +11,21 @@ function makeSortable(Component) {
 		onReorder: function (order) {
 			this.props.callback(['order', order]);
 		},
+		onDrag(dragging) {
+			this.props.onInteractive('drag', !dragging);
+		},
 		render() {
-			var {children, ...otherProps} = this.props;
+			var {children, ...otherProps} = this.props,
+				widths = this.props.appState.columnOrder.map(id =>
+					this.props.appState.columns[id].width);
 			return (
-				<Sortable {...otherProps} Component={Component} onReorder={this.onReorder}>
+				<Sortable
+					widths={widths}
+					{...otherProps}
+					Component={Component}
+					onDrag={this.onDrag}
+					onReorder={this.onReorder}>
+
 					{children}
 				</Sortable>);
 		}

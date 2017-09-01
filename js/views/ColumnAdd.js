@@ -45,7 +45,7 @@ var ColumnAdd = React.createClass({
 	render() {
 		var {height, show, last} = this.props;
 		return (
-			<div className={classNames(compStyles.ColumnAdd, {[compStyles.last]: last})}
+			<div className={classNames(compStyles.ColumnAdd, {[compStyles.last]: last && show})}
 				 style={{height: height, visibility: show ? 'visible' : 'hidden'}}
 				onClick={this.onClick}
 				onMouseOut={this.onMouseOut}
