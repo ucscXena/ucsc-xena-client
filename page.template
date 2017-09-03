@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{%=o.htmlWebpackPlugin.options.title || 'Webpack App'%}</title>
+    <title>{%=o.htmlWebpackPlugin.options.title || 'UCSC Xena'%}</title>
 	<script type="text/javascript">
 	// Keep near the top of the page so it executes immediately.
 	(function (cssCode) {
@@ -28,7 +28,7 @@
 	</script>
 	<!--#include file="config.js" -->
 	<script type="text/javascript">
-	 	var ga_id = config.ga_id;
+		var ga_id = config.ga_id;
 		if (ga_id) {
 			var _gaq = _gaq || [];
 			_gaq.push(['_setAccount', ga_id]);
@@ -48,14 +48,71 @@
 		</div>
 		<div id="main">
 			<div id='noJScript' style="text-align:center; background: yellow; color: black; font-size: small; width: 500px; margin: auto;">
-				<em>Warning</em>: It appears as though you do not have javascript enabled.  The UCSC Cancer Genomics browser relies heavily on JavaScript and will not function without it enabled.  Thank you for your understanding.
+				<em>Warning</em>: It appears as though you do not have javascript enabled.  The UCSC Xena browser relies heavily on JavaScript and will not function without it enabled.  Thank you for your understanding.
 			</div>
 		</div>
 		<div id="footer">
 		</div>
 	</div>
-	{% for (var a in o.htmlWebpackPlugin.assets) { %}
-	<script src="{%=o.htmlWebpackPlugin.assets[a]%}"></script>
-    {% } %}
+	{% if (o.htmlWebpackPlugin.files.chunks.init) { %}
+	<script src="{%=o.htmlWebpackPlugin.files.chunks.init.entry%}"></script>
+		{% if (o.htmlWebpackPlugin.files.chunks.init.css) { %}
+	<link href="{%=o.htmlWebpackPlugin.files.chunks.init.css[0]%}" rel="stylesheet">
+		{% } %}
+	{% } %}
+	<script type="text/javascript">
+		(function () {
+			var pages = {
+					datapages: {
+						js: "{%=o.htmlWebpackPlugin.files.chunks.datapages.entry%}",
+						css: "{%=o.htmlWebpackPlugin.files.chunks.datapages.css[0]%}"
+					},
+					hub: {
+						js: "{%=o.htmlWebpackPlugin.files.chunks.hubPage.entry%}",
+						css: "{%=o.htmlWebpackPlugin.files.chunks.hubPage.css[0]%}"
+					},
+					{% if (process.env.NODE_ENV !== '"production"') { %}
+					docs: {
+						js: "{%=o.htmlWebpackPlugin.files.chunks.docs.entry%}",
+						css: "{%=o.htmlWebpackPlugin.files.chunks.docs.css[0]%}"
+					},
+					{% } %}
+					heatmap: {
+						js: "{%=o.htmlWebpackPlugin.files.chunks.heatmap.entry%}",
+						css: "{%=o.htmlWebpackPlugin.files.chunks.heatmap.css[0]%}"
+					}
+				},
+				path = document.location.pathname,
+				page = (function () {
+					var p;
+					for (p in pages) {
+						if ('/' + p + '/' === path) {
+							return pages[p];
+						}
+					}
+					return pages.heatmap;
+				})();
+			function addScript(path) {
+				var st = document.createElement('script');
+				st.type = 'text/javascript';
+				st.async = true;
+				st.src = path;
+				var s = document.getElementsByTagName('script')[0];
+				s.parentNode.insertBefore(st, s);
+			}
+			function addStyle(path) {
+				var css = document.createElement('link');
+				css.type = 'text/css';
+				css.rel = 'stylesheet';
+				css.href = path;
+				document.getElementsByTagName("head")[0].appendChild(css);
+			}
+
+			addScript(page.js);
+			if (page.css) {
+				addStyle(page.css);
+			}
+		}());
+	</script>
   </body>
 </html>

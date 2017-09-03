@@ -7,7 +7,7 @@ var reactToolboxVariables = require('./reactToolboxVariables');
 
 module.exports = {
 	historyApiFallback: true,
-	entry: "./js/bogorouter",
+	entry: {datapages: './js/datapages', hubPage: './js/hubPage', heatmap: './js/main', docs: './js/docs'},
 	output: {
 		path: __dirname + "/build",
 		publicPath: "../",
@@ -43,18 +43,22 @@ module.exports = {
 			{
 				// css modules
 				test: path => path.match(/\.css$/) && (path.indexOf('toolbox') !== -1 || path.match(/\.module\.css$/)),
+				// must be two-element array. See webpack.prod.js
 				loaders: [
 					'style-loader',
 					'css-loader?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments',
 				],
+				extract: true // XXX see webpack.prod.js
 			},
 			{
 				// 'sourceMap' and 'modules' breaks existing css, so handle them separately
 				test: path => path.match(/\.css$/) && !(path.indexOf('toolbox') !== -1 || path.match(/\.module\.css$/)),
+				// must be two-element array. See webpack.prod.js
 				loaders: [
 					'style-loader',
 					'css-loader?importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments'
-				]
+				],
+				extract: true // XXX see webpack.prod.js
 			},
 			{ test: /\.json$/, loader: "json" },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
