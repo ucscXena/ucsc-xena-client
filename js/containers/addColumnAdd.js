@@ -44,9 +44,8 @@ function addColumnAdd(Component) {
 		},
 		render() {
 			var {children, ...otherProps} = this.props,
-				{appState: {wizardMode, zoom}, interactive} = otherProps,
+				{appState: {wizardMode}, interactive} = otherProps,
 				{hover} = this.state,
-				height = zoom.height + 170, // zoom + 170 = height of col cards TODO revisit - brittle
 				lastIndex = children.length - 1,
 				columns = React.Children.map(children, (child, i) => (
 					<div
@@ -57,7 +56,6 @@ function addColumnAdd(Component) {
 						<ColumnAdd
 							show={interactive}
 							actionKey={i}
-							height={height}
 							last={i === lastIndex}
 							onHover={this.onHover}
 							onClick={() => this.onClick(i)}/>
