@@ -148,11 +148,6 @@ var computeSettings = _.curry((datasets, features, fields, width, dataset) => {
 		'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel});
 });
 
-var ammendWidth = (columnEl, width) =>
-	React.cloneElement(columnEl, {
-		column: _.assoc(columnEl.props.column, ['width'], width)
-	});
-
 // 1) if appState.editing, then set editing state, and render editor.
 // 2) if wizard mode
 //      add cohort editor, or
@@ -164,12 +159,14 @@ function addWizardColumns(Component) {
 		displayName: 'SpreadsheetWizardColumns',
 		getInitialState() {
 			var {editing} = this.props;
-			return {editing, viewWidth: document.documentElement.clientWidth};
+			return {editing};
 		},
 		componentWillMount() {
-			this.sub = Rx.Observable.fromEvent(window, 'resize')
+			var {callback} = this.props;
+			this.sub = Rx.Observable.of(true)
+				.concat(Rx.Observable.fromEvent(window, 'resize'))
 				.debounceTime(200).subscribe(() =>
-					this.setState({viewWidth: document.documentElement.clientWidth}));
+					callback(['viewportWidth', document.documentElement.clientWidth]));
 		},
 		componentWillUnmount() {
 			this.sub.unsubscribe();
@@ -187,12 +184,6 @@ function addWizardColumns(Component) {
 //				this.setState({openColumnEdit: true});
 //			}
 		},
-		defaultWidth() {
-			// Use min app width (1280px) if viewport width is currently smaller than min app width. (App is responsive
-			// above 1280px but components are snapped at a minimum width of 1280px)
-			var width = (this.state.viewWidth < 1280 ? 1280 : this.state.viewWidth);
-			return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
-		},
 		onCancel() {
 			this.props.callback(['edit-column', null]);
 		},
@@ -200,20 +191,20 @@ function addWizardColumns(Component) {
 			this.props.callback(['cohort', 0, cohort, typeWidth.matrix]);
 		},
 		onDatasetSelect(posOrId, input, datasetList) {
-			var {datasets, features} = this.props.appState,
-				width = this.defaultWidth(),
+			var {datasets, features, defaultWidth} = this.props.appState,
 				isPos = _.isNumber(posOrId),
-				settingsList = datasetList.map(computeSettings(datasets, features, input, width));
+				settingsList = datasetList.map(computeSettings(datasets, features, input, defaultWidth));
 			this.props.callback(['add-column', posOrId,
 					...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		},
 		render() {
 			var {children, appState} = this.props,
-				{cohort, cohorts, cohortPreferred, cohortMeta, wizardMode, datasets, features} = appState,
+				{cohort, cohorts, cohortPreferred, cohortMeta, wizardMode, datasets,
+					features, defaultWidth} = appState,
 				stepperState = getStepperState(appState),
 				{editing} = appState,
 				preferred = getPreferedDatasets(cohort, cohortPreferred),
-				width = this.defaultWidth(),
+				width = defaultWidth,
 				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect, width},
 				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect, width},
 				columns = React.Children.toArray(children),
@@ -228,14 +219,14 @@ function addWizardColumns(Component) {
 								title='Edit Variable'
 								{...datasetSelectProps}
 								colId={el.props.label}
-								controls={cancelEditIcon}/> : (wizardMode ? ammendWidth(el, width) : el)),
+								controls={cancelEditIcon}/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
 						editing === i ? [el, <VariableSelect actionKey={i} pos={i} title='Add Variable'
 															 {...datasetSelectProps} controls={cancelAddIcon}/>] : [el]);
 			return (
 				<Component {...this.props}>
 					{withNewColumns.concat(
-						wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, this.defaultWidth()))}
+						wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, width))}
 				</Component>);
 		}
 	});
