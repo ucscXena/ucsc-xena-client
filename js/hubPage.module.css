@@ -1,0 +1,30 @@
+.status {
+	background-color: #777777;
+	border-radius: .25em;
+	color: #ffffff;
+	margin: .2em;
+	padding: .2em .6em .3em;
+}
+
+.status:empty {
+	display:none;
+}
+
+.connected {
+	background-color: #5bc0de;
+}
+
+.hostForm .remove {
+	visibility: hidden;
+}
+
+.hostForm:hover .remove {
+	visibility: visible;
+}
+
+.input {
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	font-size: 14px;
+	padding: 6px 12px;
+}

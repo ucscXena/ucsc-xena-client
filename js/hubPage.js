@@ -5,18 +5,22 @@ var controller = require('./controllers/hub');
 var React = require('react');
 var connector = require('./connector');
 var createStore = require('./store');
-var Input = require('react-bootstrap/lib/Input');
-var FormGroup = require('react-bootstrap/lib/FormGroup');
-var PageHeader = require('react-bootstrap/lib/PageHeader');
-var Button = require('react-bootstrap/lib/Button');
+import {ThemeProvider} from 'react-css-themr';
+import '../css/index.css'; // Root styles file (reset, fonts, globals)
+var appTheme = require('./appTheme');
+var classNames = require('classnames');
+
+import {Button} from 'react-toolbox/lib/button';
+// Can't get this styled in a usable way.
+//import Input from 'react-toolbox/lib/input';
+var typStyles = require('../css/typography.module.css');
+
 var {Grid, Row, Col} = require("react-material-responsive-grid");
-var Label = require('react-bootstrap/lib/Label');
-var Glyphicon = require('react-bootstrap/lib/Glyphicon');
 var {testHost} = require('./xenaQuery');
 var _s = require('underscore.string');
 var _ = require('./underscore_ext');
 var {serverNames} = require('./defaultServers');
-require('./hub.css');
+var styles = require('./hubPage.module.css');
 var {parseServer} = require('./hubParams');
 
 var RETURN = 13;
@@ -27,7 +31,7 @@ var getStatus = (user, ping) =>
 	user ? (ping === true ? 'connected' : 'selected') : '';
 
 var getStyle = statusStr =>
-	statusStr === 'connected' ? 'info' : 'default';
+	statusStr === 'connected' ? styles.connected : null;
 
 var reqStatus = (ping) =>
 	ping == null ? ' (connecting...)' :
@@ -78,7 +82,7 @@ var Hub = React.createClass({
 		this.props.callback([checked ? 'enable-host' : 'disable-host', host, 'user']);
 	},
 	onAdd() {
-		var target = this.refs.newHost.refs.input,
+		var target = this.refs.newHost,
 			value = _s.trim(target.value);
 		if (value !== '') {
 			this.props.callback(['add-host', parseServer(value)]);
@@ -103,39 +107,47 @@ var Hub = React.createClass({
 		return (
 			<Grid>
 				<Row>
-					<Col xs4={4}>
-						<PageHeader>Data Hubs</PageHeader>
+					<Col mdOffset={2} md={8} xs4={4}>
+						<h1 className={typStyles.mdHeadline}>Data Hubs</h1>
+					</Col>
+				</Row>
+				<Row>
+					<Col mdOffset={2} md={8} xs4={4}>
 						{_.values(hostList).map(h => (
-							<form key={h.host} className="host-form form-horizontal"><FormGroup>
-								<input className='col-md-1' onChange={this.onSelect} checked={h.selected} type='checkbox' data-host={h.host}/>
-								<span className='col-md-2'>
-								<Label bsStyle={getStyle(h.statusStr)}>{h.statusStr}</Label>
-								</span>
-								<span className='col-md-4'>
+							<Row className={styles.hostForm}>
+								<Col md={2}>
+									<input onChange={this.onSelect} checked={h.selected} type='checkbox' data-host={h.host}/>
+									<span className={classNames(styles.status, getStyle(h.statusStr))}>{h.statusStr}</span>
+								</Col>
+								<Col md={4}>
 									<a href={`../datapages/?host=${h.host}`}>
 										{h.name}{h.reqStatus}
 									</a>
-								</span>
-								<Button className='remove' bsSize='xsmall' data-host={h.host} onClick={this.onRemove}>
-									<Glyphicon glyph='remove' />
-								</Button>
-							</FormGroup></form>
+									<Button icon='close' data-host={h.host} className={styles.remove} onClick={this.onRemove}/>
+								</Col>
+							</Row>
 							))}
-						<form className="form-horizontal">
-						<FormGroup>
-							<Input onKeyDown={this.onKeyDown} ref='newHost' standalone type='text' wrapperClassName='col-md-6'/>
-							<Button onClick={this.onAdd} wrapperClassName='col-md-2'>Add</Button>
-						</FormGroup>
-						</form>
+							<input className={styles.input} onKeyDown={this.onKeyDown} ref='newHost' type='text'/>
+							<Button onClick={this.onAdd}>Add</Button>
 					</Col>
 				</Row>
 			</Grid>);
 	}
 });
 
+var ThemedHub = React.createClass({
+	render() {
+		return (
+		<ThemeProvider theme={appTheme}>
+			<Hub {...this.props}/>
+		</ThemeProvider>);
+	}
+});
+
+
 var store = createStore();
 var main = window.document.getElementById('main');
 
 var selector = state => state.servers;
 
-connector({...store, controller, main, selector, Page: Hub, persist: true, history: false});
+connector({...store, controller, main, selector, Page: ThemedHub, persist: true, history: false});
