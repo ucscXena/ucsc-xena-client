@@ -48,7 +48,7 @@ var HelpBoxR = props => {
 	var {w, children} = props;
 	return (
 		<div className={classNames(compStyles.HelpBox, compStyles.withMarker, compStyles.helpRight)} >
-			<div style={{width: 100}} className={compStyles.rowMarker} />
+			<div className={compStyles.rowMarker} />
 			<div style={{width: w}} className={compStyles.helpBoxBounds}>
 				{children}
 			</div>
