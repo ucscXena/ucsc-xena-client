@@ -313,7 +313,7 @@ var controls = {
 	'zoom-help-disable': zoomHelpClose,
 	'zoom-help-disable-post!': (serverBus, state, newState) =>
 		setNotifications(newState.notifications),
-	'notifications-disable': (state, key) => _.assocIn(state, ['notifications', key, true]),
+	'notifications-disable': (state, key) => _.assocIn(state, ['notifications', key], true),
 	'notifications-disable-post!': (serverBus, state, newState) => setNotifications(newState.notifications),
 	reload: (state, id) => _.assocIn(state, ['data', id, 'status'], 'loading'),
 	'reload-post!': (serverBus, state, newState, id) =>
