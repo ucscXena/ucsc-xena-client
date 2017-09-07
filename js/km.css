@@ -75,6 +75,11 @@ path.outline {
 	font-size: small;
 }
 
+/* no idea why RT sets min-width, but it breaks stuff. */
+.kmDialog button {
+	min-width: 0;
+}
+
 /*.kmdiv {*/
 /*position: relative;*/
 /*}*/

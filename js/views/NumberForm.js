@@ -2,7 +2,7 @@
 var React = require('react');
 var _ = require('../underscore_ext');
 var _s = require('underscore.string');
-var Input = require('react-bootstrap/lib/Input');
+import Input from 'react-toolbox/lib/input';
 var rxEventsMixin = require('../react-utils').rxEventsMixin;
 
 var isValid = _.curry((min, max, value) => {
@@ -10,9 +10,6 @@ var isValid = _.curry((min, max, value) => {
 		i = parseInt(v);
 	return v === '' || !(isNaN(i) || i < min || i > max);
 });
-
-var validationState = (min, max, value) =>
-	isValid(min, max, value) ? 'success' : 'error';
 
 function parseValue(value, dflt) {
 	var v = _s.trim(value);
@@ -27,7 +24,6 @@ const NumberForm = React.createClass({
 		var {dflt, min, max} = this.props;
 		this.events('change');
 		this.change = this.ev.change
-			.map(ev => ev.target.value)
 			.do(value => this.setState({value}))
 			.debounceTime(200)
 			.filter(isValid(min, max))
@@ -36,23 +32,29 @@ const NumberForm = React.createClass({
 	componentWillUnmount: function () {
 		this.change.unsubscribe();
 	},
+	onBlur() {
+		this.setState({focused: false});
+	},
+	onFocus() {
+		this.setState({focused: true});
+	},
 	getInitialState: function () {
 		var {initialValue} = this.props;
-		return {value: initialValue == null ? '' : '' + initialValue};
+		return {value: initialValue == null ? '' : '' + initialValue, focused: false};
 	},
 	render() {
 		var {min, max, dflt, initialValue, ...other} = this.props,
-			{value} = this.state;
+			{value, focused} = this.state;
 		return (
 			<form className="form-horizontal">
 				<Input
 					{...other}
+					onBlur={this.onBlur}
+					onFocus={this.onFocus}
 					type='text'
 					value={'' + value}
 					label={`Survival time cutoff (in range [${min}, ${max}])`}
-					placeholder='Enter a number.'
-					bsStyle={validationState(min, max, value)}
-					hasFeedback
+					placeholder={focused ? 'Enter a number.' : undefined}
 					onChange={this.on.change}/>
 			</form>
 		);
