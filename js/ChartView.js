@@ -2,6 +2,9 @@
 
 var React = require('react');
 
+// Styles
+var compStyles = require('./ChartView.module.css');
+
 var ChartView = React.createClass({
 	shouldComponentUpdate: function () {
 		return false;
@@ -15,7 +18,7 @@ var ChartView = React.createClass({
 		});
 	},
 	render: function () {
-		return <div ref='root'/>;
+		return <div ref='root' className={compStyles.ChartView}/>;
 	}
 });
 

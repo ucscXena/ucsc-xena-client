@@ -213,6 +213,14 @@ function resetWizard(state) {
 		_.assoc(state, 'wizardMode', false) : state;
 }
 
+// Use min app width (1280px) if viewport width is currently smaller than min
+// app width. (App is responsive above 1280px but components are snapped at a
+// minimum width of 1280px)
+var defaultWidth = viewportWidth => {
+	var width = (viewportWidth < 1280 ? 1280 : viewportWidth);
+	return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
+};
+
 var controls = {
 	init: (state, params) =>
 		setCohortPending(
@@ -368,6 +376,7 @@ var controls = {
 		fetchSamples(serverBus, userServers(newState), newState.cohort, aos),
 	showWelcome: (state, show) => _.assoc(state, 'showWelcome', show),
 	wizardMode: (state, mode) => _.assoc(state, 'wizardMode', mode),
+	viewportWidth: (state, width) => _.assoc(state, 'defaultWidth', defaultWidth(width)),
 	// Due to wonky react-bootstrap handlers, xzoom can occur after remove, so
 	// check that the column exists before updating.
 	'xzoom': (state, id, xzoom) => _.updateIn(state, ['columns', id],

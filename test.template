@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+  </head>
+  <body id="body">
+	<script src="{%=o.htmlWebpackPlugin.files.chunks.test.entry%}"></script>
+  </body>
+</html>

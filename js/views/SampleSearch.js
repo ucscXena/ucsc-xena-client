@@ -47,7 +47,7 @@ var SampleSearch = React.createClass({
 					onChange={this.onChange}
 					disabled={noshow}/>
 				{filterDisabled ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
-				<IconMenu className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
+				<IconMenu title='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
 					{sampleFilter ? <MenuItem caption='Clear Filter' onClick={this.onResetSampleFilter}/> :
 						<MenuItem caption='Filter' onClick={onFilter}/>}
 					<MenuItem caption='Zoom' onClick={onZoom}/>

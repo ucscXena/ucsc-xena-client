@@ -18,13 +18,18 @@ var classNames = require('classnames');
 var compStyles = require('./AppControls.module.css');
 
 var modeIcon = {
-	chart: 'image',
+	chart: 'view_column',
 	heatmap: 'insert_chart'
 };
 
 var modeEvent = {
 	chart: 'heatmap',
 	heatmap: 'chart'
+};
+
+var modeHelp = {
+	chart: 'View as columns',
+	heatmap: 'View as chart'
 };
 
 function download([fields, rows]) {
@@ -163,8 +168,8 @@ var AppControls = React.createClass({
 							<span className={compStyles.title}>{cohort}</span>
 							<span className={compStyles.subtitle}>{matches} Samples {fraction ? fraction : null}</span>
 						</div>
-						<i className='material-icons' onClick={this.onRefresh}>refresh</i>
-						<i className='material-icons' onClick={() => onReset()}>close</i>
+						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>
+						<i className='material-icons' onClick={() => onReset()} title='Pick new cohort'>close</i>
 					</div>
 					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
 						<div className={compStyles.filter}>
@@ -172,9 +177,9 @@ var AppControls = React.createClass({
 							{help ? <a href={help} target='_blank' className={compStyles.filterHelp}><i className='material-icons'>help_outline</i></a> : null}
 						</div>
 						<div className={compStyles.actions}>
-							{hasColumn ? <i className='material-icons' onClick={this.onMode}>{modeIcon[mode]}</i> : null}
+							{hasColumn ? <i className='material-icons' onClick={this.onMode} title={modeHelp[mode]}>{modeIcon[mode]}</i> : null}
 							{bookmarks ?
-								[<IconMenu className={compStyles.iconBookmark} icon='bookmark' onShow={this.onBookmark} iconRipple={false}>
+								[<IconMenu title='Bookmark' className={compStyles.iconBookmark} icon='bookmark' onShow={this.onBookmark} iconRipple={false}>
 									<MenuItem style={{minWidth: 218}} onClick={this.onExport} caption='Export'/>
 									<MenuItem onClick={this.onImport} caption='Import'/>
 									<MenuDivider/>
@@ -185,8 +190,8 @@ var AppControls = React.createClass({
 								</IconMenu>,
 									<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>]
 								: null}
-							{(noshow || !hasColumn) ? null : <i className='material-icons' onClick={this.onPdf}>picture_as_pdf</i> }
-							{hasColumn ? <i className='material-icons' onClick={this.onDownload}>cloud_download</i> : null}
+							{(noshow || !hasColumn) ? null : <i className='material-icons' onClick={this.onPdf} title='Download as PDF'>picture_as_pdf</i> }
+							{hasColumn ? <i className='material-icons' onClick={this.onDownload} title='Download as tsv'>cloud_download</i> : null}
 							{showWelcome ? null : <i className='material-icons' onClick={this.onShowWelcome}>help</i>}
 						</div>
 					</div>

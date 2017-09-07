@@ -5,7 +5,7 @@ var _ = require('./underscore_ext');
 var React = require('react');
 var { PropTypes } = React;
 var Modal = require('react-bootstrap/lib/Modal');
-var { Button } = require('react-bootstrap/lib/');
+import {Button} from 'react-toolbox/lib/button';
 var Axis = require('./Axis');
 var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
@@ -144,7 +144,6 @@ var WarningTrigger = React.createClass({
 		return (
 			<span className = "modal-container" style={{height: 200}}>
 				<Button
-					bsSize = "small"
 					onClick = {() => this.setState({ show: true})}
 				 >
 					<div className = "glyphicon glyphicon-warning-sign text-danger"/>

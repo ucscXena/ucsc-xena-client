@@ -60,7 +60,7 @@ var XenaNav = React.createClass({
 		let logoSrcSet = `${logoSantaCruz2xImg} 2x, ${logoSantaCruz3xImg} 3x`;
 		return (
 			<AppBar className={compStyles.NavAppBar}>
-				<a href='/'><img className={compStyles.logoXena} src={logoSantaCruzImg} srcSet={logoSrcSet}/></a>
+				<a href='http://xena.ucsc.edu/'><img className={compStyles.logoXena} src={logoSantaCruzImg} srcSet={logoSrcSet}/></a>
 				<Navigation type="horizontal" routes={routes}/>
 			</AppBar>
 		);

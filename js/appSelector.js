@@ -95,11 +95,19 @@ var kmSelector = createSelector(
 		(samples, column, data, index, cutoff, splits, survival) =>
 			column && survival && km.makeGroups(column, data, index, cutoff, splits, survival, samples));
 
+// Enforce default width in wizardMode
+var ammedWidthSelector = createFmapSelector(
+		({columns, wizardMode, defaultWidth}) =>
+			_.fmap(columns, column => ({column, wizardMode, defaultWidth})),
+		({column, wizardMode, defaultWidth}) => wizardMode ?
+			_.assoc(column, 'width', defaultWidth) : column);
+
 var index = state => ({...state, index: indexSelector(state)});
 var avg = state => ({...state, data: mergeKeys(state.data, avgSelector(state))});
 var match = state => ({...state, samplesMatched: matchSelector(state)});
 var sort = state => ({...state, samples: sortSelector(state)});
 var transform = state => ({...state, columns: mergeKeys(state.columns, transformSelector(state))});
+var ammedWidth = state => ({...state, columns: ammedWidthSelector(state)});
 
 // kmGroups transform calculates the km data, and merges it into the state.km object.
 
@@ -115,6 +123,6 @@ var kmGroups = state => ({...state, km: {
 // The result of the transforms is a state object with the calculated values merged.
 // The transforms are memoized for performance.
 
-var selector = state => kmGroups(transform(sort(match(avg(index(state))))));
+var selector = state => kmGroups(transform(sort(match(avg(index(ammedWidth(state)))))));
 
 module.exports = selector;

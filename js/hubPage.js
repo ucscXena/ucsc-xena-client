@@ -5,19 +5,23 @@ var controller = require('./controllers/hub');
 var React = require('react');
 var connector = require('./connector');
 var createStore = require('./store');
-var Input = require('react-bootstrap/lib/Input');
-var FormGroup = require('react-bootstrap/lib/FormGroup');
-var PageHeader = require('react-bootstrap/lib/PageHeader');
-var Button = require('react-bootstrap/lib/Button');
-var {Grid, Row, Col} = require("react-material-responsive-grid");
-var Label = require('react-bootstrap/lib/Label');
-var Glyphicon = require('react-bootstrap/lib/Glyphicon');
+import {ThemeProvider} from 'react-css-themr';
+import '../css/index.css'; // Root styles file (reset, fonts, globals)
+var appTheme = require('./appTheme');
+var classNames = require('classnames');
+
+import {Button} from 'react-toolbox/lib/button';
+import {Card} from 'react-toolbox/lib/card';
+import {Checkbox} from 'react-toolbox/lib/checkbox';
+var typStyles = require('../css/typography.module.css');
+
 var {testHost} = require('./xenaQuery');
 var _s = require('underscore.string');
 var _ = require('./underscore_ext');
 var {serverNames} = require('./defaultServers');
-require('./hub.css');
+var styles = require('./hubPage.module.css');
 var {parseServer} = require('./hubParams');
+
 
 var RETURN = 13;
 
@@ -27,7 +31,7 @@ var getStatus = (user, ping) =>
 	user ? (ping === true ? 'connected' : 'selected') : '';
 
 var getStyle = statusStr =>
-	statusStr === 'connected' ? 'info' : 'default';
+	statusStr === 'connected' ? styles.connected : null;
 
 var reqStatus = (ping) =>
 	ping == null ? ' (connecting...)' :
@@ -72,13 +76,13 @@ var Hub = React.createClass({
 			this.onAdd();
 		}
 	},
-	onSelect(ev) {
+	onSelect(isOn, ev) {
 		var {checked} = ev.target,
 			host = ev.target.getAttribute('data-host');
 		this.props.callback([checked ? 'enable-host' : 'disable-host', host, 'user']);
 	},
 	onAdd() {
-		var target = this.refs.newHost.refs.input,
+		var target = this.refs.newHost,
 			value = _s.trim(target.value);
 		if (value !== '') {
 			this.props.callback(['add-host', parseServer(value)]);
@@ -101,41 +105,52 @@ var Hub = React.createClass({
 				reqStatus: reqStatus(ping[h])
 			}));
 		return (
-			<Grid>
-				<Row>
-					<Col xs4={4}>
-						<PageHeader>Data Hubs</PageHeader>
+			<div className={styles.hubPage}>
+				<h1 className={typStyles.mdHeadline}>Data Hubs</h1>
+				<Card>
+					<ul className={styles.hubList}>
 						{_.values(hostList).map(h => (
-							<form key={h.host} className="host-form form-horizontal"><FormGroup>
-								<input className='col-md-1' onChange={this.onSelect} checked={h.selected} type='checkbox' data-host={h.host}/>
-								<span className='col-md-2'>
-								<Label bsStyle={getStyle(h.statusStr)}>{h.statusStr}</Label>
-								</span>
-								<span className='col-md-4'>
-									<a href={`../datapages/?host=${h.host}`}>
-										{h.name}{h.reqStatus}
-									</a>
-								</span>
-								<Button className='remove' bsSize='xsmall' data-host={h.host} onClick={this.onRemove}>
-									<Glyphicon glyph='remove' />
-								</Button>
-							</FormGroup></form>
-							))}
-						<form className="form-horizontal">
-						<FormGroup>
-							<Input onKeyDown={this.onKeyDown} ref='newHost' standalone type='text' wrapperClassName='col-md-6'/>
-							<Button onClick={this.onAdd} wrapperClassName='col-md-2'>Add</Button>
-						</FormGroup>
-						</form>
-					</Col>
-				</Row>
-			</Grid>);
+						<li>
+							<Checkbox className={styles.checkbox} onChange={this.onSelect} checked={h.selected}
+									  data-host={h.host}/>
+							<div className={styles.statusContainer}>
+								<span className={classNames(styles.status, getStyle(h.statusStr))}>{h.statusStr}</span>
+							</div>
+							<div className={styles.hubNameContainer}>
+								<a href={`../datapages/?host=${h.host}`}>
+									{h.name}{h.reqStatus}
+								</a>
+							</div>
+							<i className={classNames('material-icons', styles.remove)} data-host={h.host}
+							   onClick={this.onRemove}>close</i>
+						</li>
+						))}
+						<li>
+							<div className={styles.hostForm}>
+								<input className={styles.input} onKeyDown={this.onKeyDown} ref='newHost'
+									   type='text' placeholder='Add Host'/>
+								<Button onClick={this.onAdd} accent>Add</Button>
+							</div>
+						</li>
+					</ul>
+				</Card>
+			</div>);
 	}
 });
+
+var ThemedHub = React.createClass({
+	render() {
+		return (
+		<ThemeProvider theme={appTheme}>
+			<Hub {...this.props}/>
+		</ThemeProvider>);
+	}
+});
+
 
 var store = createStore();
 var main = window.document.getElementById('main');
 
 var selector = state => state.servers;
 
-connector({...store, controller, main, selector, Page: Hub, persist: true, history: false});
+connector({...store, controller, main, selector, Page: ThemedHub, persist: true, history: false});
