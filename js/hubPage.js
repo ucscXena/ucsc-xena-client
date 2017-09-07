@@ -128,7 +128,7 @@ var Hub = React.createClass({
 						<li>
 							<div className={styles.hostForm}>
 								<input className={styles.input} onKeyDown={this.onKeyDown} ref='newHost'
-									   type='text' placeholder='Add Host'/>
+									   type='text' placeholder='Add Hub'/>
 								<Button onClick={this.onAdd} accent>Add</Button>
 							</div>
 						</li>
