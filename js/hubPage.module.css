@@ -1,9 +1,63 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling data hubs page.
+ */
+
+@value black3 from '../css/variables.css';
+@value black6 from '../css/variables.css';
+@value black38 from '../css/variables.css';
+@value black87 from '../css/variables.css';
+
+/* Hub page container - add padding to match vis container */
+.hubPage {
+	padding: 48px;
+}
+
+/* Hub list */
+ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+li {
+	align-items: center;
+	border-bottom: 1px solid black6;
+	display: flex;
+	padding: 0 8px;
+	min-height: 64px;
+	transition: background-color 200ms linear;
+}
+
+/* All immediate children in hub list element */
+li > * {
+	margin: 0 8px;
+}
+
+li:not(:last-child):hover { /* No hover on last list element (ie add host form) */
+	background-color: black3;
+}
+
+/* Checkbox */
+.checkbox {
+	margin: 0 8px; /* Override themed RTB checkbox margin to match margin of immediate children of li */
+}
+
+/* Status */
+.statusContainer {
+	min-width: 100px;
+}
+
 .status {
-	background-color: #777777;
-	border-radius: .25em;
-	color: #ffffff;
-	margin: .2em;
-	padding: .2em .6em .3em;
+	composes: mdCaption from '../css/typography.module.css';
+	background-color: black6;
+	border-radius: 24px;
+	display: block;
+	color: black87;
+	padding: 7px 12px;
+	text-align: center;
 }
 
 .status:empty {
@@ -11,20 +65,48 @@
 }
 
 .connected {
-	background-color: #5bc0de;
+	background-color: var(--color-accent);
+	color: #ffffff;
 }
 
-.hostForm .remove {
-	visibility: hidden;
+/* Hub name */
+.hubNameContainer {
+	flex: 1;
 }
 
-.hostForm:hover .remove {
-	visibility: visible;
+a {
+	color: var(--color-accent);
+	transition: color 200ms linear;
+}
+
+a:hover {
+	color: var(--color-primary-contrast);
+}
+
+/* Remove icon */
+.remove {
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 100ms linear;
+}
+
+li:hover .remove {
+	opacity: 1;
+}
+
+/* Add host form */
+.hostForm {
+	align-items: center;
+	display: flex;
+	margin-left: 158px; /* Align after checkbox and chip of existing hosts */
 }
 
 .input {
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	font-size: 14px;
-	padding: 6px 12px;
+	composes: mdBody1 from '../css/typography.module.css';
+	border: 0;
+	border-bottom: 1px solid black38;
+	font-family: inherit; /* BS override to force Roboto */
+	margin-right: 16px;
+	min-width: 400px;
+	padding: 8px 0;
 }

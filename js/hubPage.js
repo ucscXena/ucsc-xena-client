@@ -11,17 +11,17 @@ var appTheme = require('./appTheme');
 var classNames = require('classnames');
 
 import {Button} from 'react-toolbox/lib/button';
-// Can't get this styled in a usable way.
-//import Input from 'react-toolbox/lib/input';
+import {Card} from 'react-toolbox/lib/card';
+import {Checkbox} from 'react-toolbox/lib/checkbox';
 var typStyles = require('../css/typography.module.css');
 
-var {Grid, Row, Col} = require("react-material-responsive-grid");
 var {testHost} = require('./xenaQuery');
 var _s = require('underscore.string');
 var _ = require('./underscore_ext');
 var {serverNames} = require('./defaultServers');
 var styles = require('./hubPage.module.css');
 var {parseServer} = require('./hubParams');
+
 
 var RETURN = 13;
 
@@ -76,7 +76,7 @@ var Hub = React.createClass({
 			this.onAdd();
 		}
 	},
-	onSelect(ev) {
+	onSelect(isOn, ev) {
 		var {checked} = ev.target,
 			host = ev.target.getAttribute('data-host');
 		this.props.callback([checked ? 'enable-host' : 'disable-host', host, 'user']);
@@ -105,33 +105,36 @@ var Hub = React.createClass({
 				reqStatus: reqStatus(ping[h])
 			}));
 		return (
-			<Grid>
-				<Row>
-					<Col mdOffset={2} md={8} xs4={4}>
-						<h1 className={typStyles.mdHeadline}>Data Hubs</h1>
-					</Col>
-				</Row>
-				<Row>
-					<Col mdOffset={2} md={8} xs4={4}>
+			<div className={styles.hubPage}>
+				<h1 className={typStyles.mdHeadline}>Data Hubs</h1>
+				<Card>
+					<ul className={styles.hubList}>
 						{_.values(hostList).map(h => (
-							<Row className={styles.hostForm}>
-								<Col md={2}>
-									<input onChange={this.onSelect} checked={h.selected} type='checkbox' data-host={h.host}/>
-									<span className={classNames(styles.status, getStyle(h.statusStr))}>{h.statusStr}</span>
-								</Col>
-								<Col md={4}>
-									<a href={`../datapages/?host=${h.host}`}>
-										{h.name}{h.reqStatus}
-									</a>
-									<Button icon='close' data-host={h.host} className={styles.remove} onClick={this.onRemove}/>
-								</Col>
-							</Row>
-							))}
-							<input className={styles.input} onKeyDown={this.onKeyDown} ref='newHost' type='text'/>
-							<Button onClick={this.onAdd}>Add</Button>
-					</Col>
-				</Row>
-			</Grid>);
+						<li>
+							<Checkbox className={styles.checkbox} onChange={this.onSelect} checked={h.selected}
+									  data-host={h.host}/>
+							<div className={styles.statusContainer}>
+								<span className={classNames(styles.status, getStyle(h.statusStr))}>{h.statusStr}</span>
+							</div>
+							<div className={styles.hubNameContainer}>
+								<a href={`../datapages/?host=${h.host}`}>
+									{h.name}{h.reqStatus}
+								</a>
+							</div>
+							<i className={classNames('material-icons', styles.remove)} data-host={h.host}
+							   onClick={this.onRemove}>close</i>
+						</li>
+						))}
+						<li>
+							<div className={styles.hostForm}>
+								<input className={styles.input} onKeyDown={this.onKeyDown} ref='newHost'
+									   type='text' placeholder='Add Host'/>
+								<Button onClick={this.onAdd} accent>Add</Button>
+							</div>
+						</li>
+					</ul>
+				</Card>
+			</div>);
 	}
 });
 
