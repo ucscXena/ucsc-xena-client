@@ -21,4 +21,5 @@ require('./permuteCase');
 require('./lcs');
 require('./stripeHeight');
 require('./findIntrons');
+require('./layoutPlot');
 //require('./matrix-test');

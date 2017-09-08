@@ -2,6 +2,7 @@
 
 var _ = require('../underscore_ext');
 var xenaQuery = require('../xenaQuery');
+var Rx = require('../rx');
 
 // Hard-coded expression dataset
 var expressionHost = 'https://toil.xenahubs.net';
@@ -11,6 +12,11 @@ var subtypeField = 'TCGA_GTEX_main_category';
 var transcriptDataset = {
 	host: 'https://reference.xenahubs.net',
 	name: 'wgEncodeGencodeBasicV23'
+};
+
+var expressionDataset = {
+	tpm: "TcgaTargetGtex_rsem_isoform_tpm",
+	isoformPercentage: "TcgaTargetGtex_rsem_isopct"
 };
 
 var identity = x => x;
@@ -24,15 +30,18 @@ var fetchExpression = (transcripts, {studyA, subtypeA, studyB, subtypeB, unit}) 
 	xenaQuery.transcriptExpression(expressionHost,
 			// adding 1 for the space after the prefix
 			_.pluck(transcripts, 'name'), studyA, subtypeA.slice(prefix + 1), studyB, subtypeB.slice(prefix + 1),
-			unit)
+			expressionDataset[unit])
 		.map(([expsA, expsB]) => _.mmap(expsA, expsB, transcripts,
 					(expA, expB, transcript) => _.assoc(transcript, 'expA', expA, 'expB', expB)));
 
 function fetchTranscripts(serverBus, params) {
 	var {host, name} = transcriptDataset,
-		query = xenaQuery.geneTranscripts(host, name, params.gene)
-			.flatMap(transcripts =>
-					fetchExpression(transcripts, params));
+		query = Rx.Observable.zip(
+			xenaQuery.geneTranscripts(host, name, params.gene)
+				.flatMap(transcripts =>
+						fetchExpression(transcripts, params)),
+			xenaQuery.datasetMetadata(expressionHost, expressionDataset[params.unit]),
+			(transcripts, [meta]) => ({transcripts, unit: meta.unit}));
 
 	serverBus.next(['geneTranscripts', query]);
 }
@@ -54,9 +63,11 @@ function fetchSubtypes(serverBus) {
 
 
 var controls = {
-	'init-post!': fetchSubtypes,
-	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) =>
-		_.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB, unit})),
+	'init-post!': serverBus => fetchSubtypes(serverBus),
+	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) => {
+		var zoom = gene === state.transcripts.gene ? state.transcripts.zoom : {};
+		return _.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB, unit, zoom, genetranscripts: null}));
+	},
 	'loadGene-post!': (serverBus, state, newState) => {
 		if(newState.transcripts.gene)
 		{
@@ -64,9 +75,13 @@ var controls = {
 		}
 	},
 	geneTranscripts:
-		(state, transcripts) => _.assocIn(state, ['transcripts', 'genetranscripts'], transcripts),
+		(state, {transcripts, unit}) => _.assocIn(state,
+												  ['transcripts', 'genetranscripts'], transcripts,
+												  ['transcripts', 'datasetUnit'], unit),
 	transcriptSampleSubtypes:
-		(state, subtypes) => _.assocIn(state, ['transcripts', 'subtypes'], subtypes)
+		(state, subtypes) => _.assocIn(state, ['transcripts', 'subtypes'], subtypes),
+	units: (state, units) => _.assocIn(state, ['transcripts', 'units'], units),
+	zoom: (state, name) => _.updateIn(state, ['transcripts', 'zoom', name], z => !z)
 };
 
 module.exports = {

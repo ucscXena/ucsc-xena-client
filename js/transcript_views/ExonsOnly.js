@@ -4,6 +4,7 @@ var _ = require('../underscore_ext');
 var {allExons, exonGroups, intronRegions} = require('../findIntrons');
 var {box, renderExon} = require('./Exons');
 import '../../css/transcript_css/exons.css';
+var {deepPureRenderMixin} = require('../react-utils');
 
 const width = 700;
 const padding = 5;
@@ -51,12 +52,16 @@ function newCoordinates(data, intronRegions, exonGroupGroupBy) {
                        'padding', pad);
 }
 
-function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFactor, strand, label, origin, pad) {
+function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFactor, strand, label, origin, pad, zoom) {
   let exonWidth = exonEnds - exonStarts;
   let startsAt = exonStarts - origin;
-	if(cdsStart > exonEnds)
+  if(cdsStart === cdsEnd)
 	{
-		return [box( 'small', startsAt, (exonWidth ), multiplyingFactor, strand, pad, label)];
+		return [box( 'small', startsAt, exonWidth, multiplyingFactor, strand, pad, zoom, label)];
+	}
+	else if(cdsStart > exonEnds)
+	{
+		return [box( 'small', startsAt, (exonWidth ), multiplyingFactor, strand, pad, zoom, label)];
 	}
 	else if(exonStarts < cdsStart && cdsStart < exonEnds)
 	{
@@ -66,13 +71,13 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
     // labeling is done on the longest of the two boxes.
     if(exonWidth1 < (exonWidth2 ))
 		{
-      return [box( 'small', startsAt, exonWidth1, multiplyingFactor, strand, pad),
-    box( 'big', (cdsStart - origin), (exonWidth2 ), multiplyingFactor, strand, pad, label)];
+      return [box( 'small', startsAt, exonWidth1, multiplyingFactor, strand, pad, zoom),
+    box( 'big', (cdsStart - origin), (exonWidth2 ), multiplyingFactor, strand, pad, zoom, label)];
     }
     else
     {
-      return [box( 'small', startsAt, exonWidth1, multiplyingFactor, strand, pad, label),
-    box( 'big', (cdsStart - origin), (exonWidth2 ), multiplyingFactor, strand, pad)];
+      return [box( 'small', startsAt, exonWidth1, multiplyingFactor, strand, pad, zoom, label),
+    box( 'big', (cdsStart - origin), (exonWidth2 ), multiplyingFactor, strand, pad, zoom)];
     }
 	}
 	else if(exonStarts < cdsEnd && cdsEnd < exonEnds)
@@ -83,27 +88,27 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
     // labeling is done on the longest of the two boxes.
     if(exonWidth1 > (exonWidth2 ))
     {
-		return [box( 'big', startsAt, exonWidth1, multiplyingFactor, strand, pad, label),
-    box( 'small', (cdsEnd - origin), (exonWidth2 ), multiplyingFactor, strand, pad)];
+		return [box( 'big', startsAt, exonWidth1, multiplyingFactor, strand, pad, zoom, label),
+    box( 'small', (cdsEnd - origin), (exonWidth2 ), multiplyingFactor, strand, pad, zoom)];
     }
     else
     {
-		return [box( 'big', startsAt, exonWidth1, multiplyingFactor, strand, pad),
-    box( 'small', (cdsEnd - origin), (exonWidth2 ), multiplyingFactor, strand, pad, label)];
+		return [box( 'big', startsAt, exonWidth1, multiplyingFactor, strand, pad, zoom),
+    box( 'small', (cdsEnd - origin), (exonWidth2 ), multiplyingFactor, strand, pad, zoom, label)];
     }
 	}
 	else if(cdsEnd < exonStarts)
 	{
-		return [box( 'small', startsAt, (exonWidth ), multiplyingFactor, strand, pad, label)];
+		return [box( 'small', startsAt, (exonWidth ), multiplyingFactor, strand, pad, zoom, label)];
 	}
 	else
 	{
-		return [box( 'big', startsAt, (exonWidth ), multiplyingFactor, strand, pad, label)];
+		return [box( 'big', startsAt, (exonWidth ), multiplyingFactor, strand, pad, zoom, label)];
 	}
 }
 
 var ExonsOnly = React.createClass({
-
+  mixins: [deepPureRenderMixin],
   row(data, multiplyingFactor, origin) {
 
 		return data.map((d, index) => {
@@ -111,13 +116,13 @@ var ExonsOnly = React.createClass({
 			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + extraAxisWidth + "px"};
 			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + d.padding[0] + "px"])
 									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + d.padding[0] + "px"]);
-
-			return ( <div className="exons--row" id={index}>
+      let rowClass = d.zoom ? "exons--row--zoom" : "exons--row";
+			return ( <div className={rowClass} id={index} onClick={() => this.props.getNameZoom(d.name)}>
 						<div className="exons--row--axis"
 							 style={style}/>
 					{
-						_.flatten(_.mmap(d.exonStarts, d.exonEnds, d.labels, d.padding, (exonStarts, exonEnds, label, pad) => {
-              return _.map(exonShape(data, exonStarts, exonEnds, d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand, label, origin, pad), renderExon);
+						_.flatten(_.mmap(d.exonStarts, d.exonEnds, d.labels, d.padding, _.range(0, d.exonStarts.length).map(() => d.zoom), (exonStarts, exonEnds, label, pad, zoom) => {
+              return _.map(exonShape(data, exonStarts, exonEnds, d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand, label, origin, pad, zoom), renderExon);
 						}))
 					}
 					</div>
@@ -144,7 +149,14 @@ var ExonsOnly = React.createClass({
         let suffix = "";
         _.keys(group).forEach((subgroup, j) => {
           subgroup = subgroup;
-          suffix += String.fromCharCode(65 + j);
+          if(j <= 25)
+          {
+              suffix += String.fromCharCode(97 + j);
+          }
+          else if(j > 25)
+          {
+              suffix += String.fromCharCode(65 + j - 26);
+          }
         });
         _.extend(group, {suffix: suffix});
       }
