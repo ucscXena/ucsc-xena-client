@@ -140,12 +140,13 @@ var computeSettings = _.curry((datasets, features, fields, width, dataset) => {
 	var ds = datasets[dataset];
 	// XXX resolve 'probes' if user has selected probes. Set here to false
 	var settings = columnSettings(datasets, features, dataset, fields, false),
-		colSpec = getColSpec([settings], datasets);
+		colSpec = getColSpec([settings], datasets),
+		columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +  ds.label;
 
 	return _.assoc(colSpec,
 		'width', _.contains(['mutationVector', 'segmented'], ds.type) ? typeWidth.chrom : typeWidth.matrix,
-		'columnLabel', ds.label,
-		'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel});
+		'columnLabel', columnLabel,
+		'user', {columnLabel: columnLabel, fieldLabel: colSpec.fieldLabel});
 });
 
 // 1) if appState.editing, then set editing state, and render editor.
