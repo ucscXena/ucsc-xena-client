@@ -17,12 +17,65 @@ var element = {
 	),
 	url: (i, text, url) =>  (
 		<span key={i}><a href={url} target='_blank'>{text}</a></span>
-	)
+	),
+//	popOver: (i, text, dataList) => (
+//		<span key={i}><a><PopOverVariants label={text} body={dataList}/></a></span>
+//	),
 };
 
 function overlay() {
 	return <div className={compStyles.overlay}/>;
 }
+
+//var PopOverVariants = React.createClass({
+//  getInitialState() {
+//    return { showModal: false };
+//  },
+//
+//  close() {
+//    this.setState({ showModal: false });
+//  },
+//
+//  open() {
+//    this.setState({ showModal: true });
+//  },
+//
+//  render() {
+//	var label = this.props.label,
+//		dataList = this.props.body;
+//
+//	var rowsOut = _.map(dataList, (row, i) => (
+//		<tr key={i}>
+//			{row.map(([type, ...args], i) => element[type](i, ...args))}
+//		</tr>
+//	));
+//
+//
+//    return (
+//      <div>
+//        <span
+//          onClick={this.open}
+//        >
+//        {label}
+//        </span>
+//
+//        <Modal show={this.state.showModal} onHide={this.close}>
+//          <Modal.Header closeButton>
+//            <Modal.Title>Variants</Modal.Title>
+//          </Modal.Header>
+//          <Modal.Body>
+//			<div>
+//				<table> {rowsOut} </table>
+//			</div>
+//          </Modal.Body>
+//          <Modal.Footer>
+//            <Button onClick={this.close}>Close</Button>
+//          </Modal.Footer>
+//        </Modal>
+//      </div>
+//    );
+//  }
+//});
 
 var Tooltip = React.createClass({
 	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?
@@ -30,6 +83,12 @@ var Tooltip = React.createClass({
 		var {data, open, onClick, onClose, frozen} = this.props,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
+
+		// no tooltip info
+		if (!rows && !sampleID) {
+			return (<div/>);
+		}
+
 		var rowsOut = _.map(rows, (row, i) => (
 			<li key={i}>
 				{row.map(([type, ...args], i) => element[type](i, ...args))}

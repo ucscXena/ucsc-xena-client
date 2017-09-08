@@ -1,0 +1,51 @@
+.densityPlot {
+	margin: 20px;
+	width: 125px;
+	display: flex;
+	flex-wrap: wrap;
+	/*overflow: hidden;*/
+	/*resize: both;*/
+	float: left;
+}
+
+.densityPlot--row {
+	width: 100%;
+	display: inline-block;
+}
+
+.densityPlot--row--xAxis {
+	height: 1px;
+	width: 100%;
+	background-color: black;
+	position: relative;
+	top: 50%;
+	vertical-align: middle;
+	z-index: 2;
+}
+
+.densityPlot--row--studyA {
+	display: flex;
+	align-items: flex-end;
+	height: 50%;
+	width: 100%;
+}
+
+.densityPlot--row--studyB {
+	display: flex;
+	align-items: flex-end;
+	height: 50%;
+	width: 100%;
+	bottom: 50%;
+	-webkit-transform: rotateX(180deg);
+	-moz-transform: rotateX(180deg);
+	transform: rotateX(180deg);
+}
+
+.densityPlot--row--bin {
+	display: inline-block;
+	position: relative;
+	flex: 1;
+	margin: 0px;
+	float: left;
+	z-index: 1;
+}

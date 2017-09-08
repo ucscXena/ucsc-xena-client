@@ -20,4 +20,5 @@ require('./parsePos');
 require('./permuteCase');
 require('./lcs');
 require('./stripeHeight');
+require('./findIntrons');
 //require('./matrix-test');

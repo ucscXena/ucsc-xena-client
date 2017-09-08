@@ -1,0 +1,23 @@
+.legend-holder {
+  float: right;
+  margin-right: 300px;
+}
+
+.legend {
+    height: 15px;
+    width: 100px;
+    color: white;
+    position: relative;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 15px;
+}
+
+.legend label {
+  font-size: 0.85em;
+  position: relative;
+}
+
+.selectors {
+  margin: 5px 20px;
+}

@@ -21,6 +21,8 @@ var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
 import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 var ColCard = require('./ColCard');
+var {ChromPosition} = require('../ChromPosition');
+var {RefGeneAnnotation} = require('../refGeneExons');
 
 // XXX move this?
 function download([fields, rows]) {
@@ -44,6 +46,8 @@ function downloadJSON(downloadData) {
 	a.click();
 	document.body.removeChild(a);
 }
+var annotationHeight = 30,
+	scaleHeight = 12;
 
 var styles = {
 	status: {
@@ -138,6 +142,7 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 		sortVisibleItemName = sortVisibleLabel(column, pos),
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
 		specialDownloadItemName = 'Download segments';
+
 	return addIdsToArr([
 		...(pos ? [] : [<MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>]),
 		...(segmentedVizOptions(onVizOptions)),
@@ -151,6 +156,7 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 
 function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 	var {column, data} = props,
+		pos = parsePos(column.fields[0]),
 		{valueType, sortVisible, assembly, showIntrons = false} = column,
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'mutation',
@@ -161,9 +167,10 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		mupitItemName = noData ? 'MuPIT View (hg19 coding) Loading' : 'MuPIT View (hg19 coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
+
 	return addIdsToArr([
 		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noMuPit} onClick={onMuPit} caption={mupitItemName}/>,
-		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>,
+		pos ? null : <MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>,
 		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
 		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>
 	]);
@@ -249,11 +256,10 @@ function getPosition(maxXZoom, pStart, pEnd) {
 			end <= maxXZoom.end) ? {start, end} : null;
 }
 
-// Persistent state for xzoomable setting.
-//var columnsXZoomable = false;
 var specialDownloadMenu = false;
+//var annotationHelpText =  'Drag zoom. Shift-click zoom out.';
+
 if (process.env.NODE_ENV !== 'production') {
-//	columnsXZoomable = true;
 	specialDownloadMenu = true;
 }
 
@@ -261,14 +267,67 @@ var Column = React.createClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		return {
-//			xzoomable: columnsXZoomable,
-			specialDownloadMenu: specialDownloadMenu
+			specialDownloadMenu: specialDownloadMenu,
+			annotationLanes: null
 		};
 	},
+
+	computeAnnotationLanes (position, refGene) {
+		var fieldType = _.getIn(this.props, ['column', 'fieldType'], undefined),
+			newAnnotationLanes;
+
+		if (['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1 && position && refGene) {
+			var lanes = [],
+				[start, end] = position;
+
+			//only keep genes with in the current view
+			refGene = _.values(refGene).filter((val) => {
+				return ((val.txStart <= end) && (val.txEnd >= start));
+			});
+
+			//multip lane no-overlapping genes
+			refGene.forEach( val => {
+				var added = lanes.some(lane => {
+					if (lane.every( gene => !((val.txStart <= gene.txEnd) && (val.txEnd >= val.txStart)))) {
+						return lane.push(val);
+					}
+				});
+				if (!added) { // add a new lane
+					lanes.push([val]);
+				}
+			});
+			var perLaneHeight = _.min([annotationHeight / lanes.length, 12]),
+				laneOffset = (annotationHeight - perLaneHeight * lanes.length) / 2;
+
+			newAnnotationLanes = {
+				lanes: lanes,
+				perLaneHeight: perLaneHeight,
+				laneOffset: laneOffset,
+				annotationHeight: annotationHeight
+			};
+		} else {
+			newAnnotationLanes = {
+				lanes: undefined,
+				perLaneHeight: undefined,
+				laneOffset: undefined,
+				annotationHeight: annotationHeight
+			};
+		}
+		return newAnnotationLanes;
+	},
+//	addAnnotationHelp(target) {
+//		var tooltip = (
+//			<Tooltip>
+//				{annotationHelpText}
+//			</Tooltip>
+//		);
+//		return (
+//			<OverlayTrigger trigger={['hover']} placement='top' overlay={tooltip}>
+//				{target}
+//			</OverlayTrigger>);
+//	},
 	enableHiddenFeatures() {
-//		columnsXZoomable = true;
 		specialDownloadMenu = true;
-//		this.setState({xzoomable: true});
 		this.setState({specialDownloadMenu: true});
 	},
 	componentWillMount() {
@@ -339,8 +398,17 @@ var Column = React.createClass({
 	onXDragZoom: function (pos) {
 		var {column: {layout}, onXZoom, id} = this.props,
 			[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
-
 		onXZoom(id, {start, end});
+	},
+	componentWillUpdate() {
+		var {column, data} = this.props,
+			newAnnotationLanes = this.computeAnnotationLanes (
+					_.getIn(column, ['layout', 'chrom', 0], undefined),
+					_.getIn(data, ['refGene'], {}));
+
+		if (this.state.annotationLanes !== newAnnotationLanes) {
+			this.setState({"annotationLanes": newAnnotationLanes});
+		}
 	},
 	onMenuToggle: function (open) {
 		var {xzoomable} = this.state,
@@ -381,7 +449,7 @@ var Column = React.createClass({
 			valueType = _.getIn(this.props, ['column', 'valueType']),
 			datasetMeta = _.getIn(this.props, ['datasetMeta']),
 			columnid = _.getIn(this.props, ['id']),
-			map = "PancanAtlas/XenaPancanAtlas",
+			map = "PancanAtlas/SampleMap",
 			layout = 'mRNA',
 			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + map + "&layout=" + layout,
 			customColor = {};
@@ -434,13 +502,30 @@ var Column = React.createClass({
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
 			moveIcon = (<i className='Sortable-handle material-icons'>drag_handle</i>),
-			annotation = widgets.annotation({
-				fields: column.fields,
-				refGene: _.values(_.get(data, 'refGene', {}))[0],
-				layout: column.layout,
-				width,
-				alternateColors: !_.getIn(column, ['showIntrons'], false)}),
-			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>);
+			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
+			// move this to state to generalize to other annotations.
+			annotation = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
+				<RefGeneAnnotation
+					column = {column}
+					annotationLanes = {this.computeAnnotationLanes(
+						_.getIn(column, ['layout', 'chrom', 0], undefined),
+						_.getIn(data, ['refGene'], {}))}
+					tooltip = {tooltip}
+					layout = {column.layout}
+					width= {width}
+					mode= {parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+						"coordinate" :
+						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
+				: null,
+			scale = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
+				<ChromPosition
+					layout = {column.layout}
+					width = {width}
+					scaleHeight ={scaleHeight}
+					mode = {parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+						"coordinate" :
+						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
+				: null;
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
 		// tooltips) for children. We must use a different tag, e.g. 'label'.
@@ -479,9 +564,11 @@ var Column = React.createClass({
 						}
 						 wizardMode={wizardMode}>
 					<Crosshair frozen={!interactive || this.props.frozen}>
-						<div style={{height: 32}}>
+						<div style={{height: annotationHeight + scaleHeight + 4}}>
 							{annotation ?
 								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+									{scale}
+									<div style={{height: 2}}/>
 									{annotation}
 								</DragSelect> : null}
 						</div>

@@ -1,0 +1,75 @@
+'use strict';
+
+var _ = require('../underscore_ext');
+var xenaQuery = require('../xenaQuery');
+
+// Hard-coded expression dataset
+var expressionHost = 'https://toil.xenahubs.net';
+var subtypeDataset = 'TCGA_GTEX_category.txt';
+var subtypeField = 'TCGA_GTEX_main_category';
+
+var transcriptDataset = {
+	host: 'https://reference.xenahubs.net',
+	name: 'wgEncodeGencodeBasicV23'
+};
+
+var identity = x => x;
+
+var prefix = 4; // "TCGA", "GTEX"
+
+// The transcriptExpression query is a bit wonky, because we're pulling the subtypes from TCGA_GTEX_main_category,
+// but in transcriptExpression we filter on _sample_type. This assumes the two are kept in sync. It would be
+// better to use the same field in both places, but first we need to confirm that it will work.
+var fetchExpression = (transcripts, {studyA, subtypeA, studyB, subtypeB, unit}) =>
+	xenaQuery.transcriptExpression(expressionHost,
+			// adding 1 for the space after the prefix
+			_.pluck(transcripts, 'name'), studyA, subtypeA.slice(prefix + 1), studyB, subtypeB.slice(prefix + 1),
+			unit)
+		.map(([expsA, expsB]) => _.mmap(expsA, expsB, transcripts,
+					(expA, expB, transcript) => _.assoc(transcript, 'expA', expA, 'expB', expB)));
+
+function fetchTranscripts(serverBus, params) {
+	var {host, name} = transcriptDataset,
+		query = xenaQuery.geneTranscripts(host, name, params.gene)
+			.flatMap(transcripts =>
+					fetchExpression(transcripts, params));
+
+	serverBus.next(['geneTranscripts', query]);
+}
+
+function filterSubtypes(subtypes) {
+	var study = _.groupBy(subtypes[subtypeField], subtype => subtype.slice(0, prefix));
+
+	return {
+		tcga: study.TCGA,
+		gtex: study.GTEX
+	};
+}
+
+function fetchSubtypes(serverBus) {
+	serverBus.next(['transcriptSampleSubtypes',
+				   xenaQuery.fieldCodes(expressionHost, subtypeDataset, [subtypeField])
+						.map(filterSubtypes)]);
+}
+
+
+var controls = {
+	'init-post!': fetchSubtypes,
+	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) =>
+		_.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB, unit})),
+	'loadGene-post!': (serverBus, state, newState) => {
+		if(newState.transcripts.gene)
+		{
+			fetchTranscripts(serverBus, newState.transcripts);
+		}
+	},
+	geneTranscripts:
+		(state, transcripts) => _.assocIn(state, ['transcripts', 'genetranscripts'], transcripts),
+	transcriptSampleSubtypes:
+		(state, subtypes) => _.assocIn(state, ['transcripts', 'subtypes'], subtypes)
+};
+
+module.exports = {
+	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
+	postAction: (serverBus, state, newState, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, newState, ...args)
+};

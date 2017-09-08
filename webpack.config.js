@@ -5,6 +5,13 @@ var webpack = require('webpack');
 var path = require('path');
 var reactToolboxVariables = require('./reactToolboxVariables');
 
+var htmlPlugin = process.argv.indexOf('--disable-html-plugin') === -1 ?
+	[new HtmlWebpackPlugin({
+		title: "UCSC Xena",
+		filename: "index.html",
+		template: "page.template"
+	})] : [];
+
 module.exports = {
 	historyApiFallback: true,
 	entry: {datapages: './js/datapages', hubPage: './js/hubPage', heatmap: './js/main', docs: './js/docs'},
@@ -28,6 +35,7 @@ module.exports = {
 	},
 	module: {
 		loaders: [
+			{ test: /loadXenaQueries.js$/, loader: "val" },
 			{ test: /\.xq$/, loader: "raw" },
 			{ test: /pdfkit|png-js/, loader: "transform?brfs" },
 			{
@@ -64,14 +72,9 @@ module.exports = {
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]
 	},
-	plugins: [
-		new HtmlWebpackPlugin({
-			title: "UCSC Xena",
-			filename: "index.html",
-			template: "page.template"
-		}),
+	plugins: htmlPlugin.concat([
 		new webpack.OldWatchingPlugin()
-	],
+	]),
 	resolveLoader: {
 		// http://webpack.github.io/docs/troubleshooting.html#npm-linked-modules-doesn-t-find-their-dependencies
 		fallback: path.join(__dirname, "node_modules")  // handle 'npm ln' for loaders

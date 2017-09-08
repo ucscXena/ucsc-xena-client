@@ -6,7 +6,7 @@ var Rx = require('./rx');
 var _ = require('./underscore_ext');
 var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
 // Load all query files as a map of strings.
-var qs = require('val!./loadXenaQueries');
+var qs = require('./loadXenaQueries');
 
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
 
@@ -16,8 +16,8 @@ var maxPermute = 7; // max number of chars to permute for case-insensitive match
 var refGene = {
 	hg18: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
 	GRCh36: {host: 'https://reference.xenahubs.net', name: 'refgene_good_hg18'},
-	hg19: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
-	GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19'},
+	hg19: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19_V24lift37'},
+	GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19_V24lift37'},
 	hg38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
 	GRCh38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
 	mm9: {host: 'https://reference.xenahubs.net', name: 'gencode_good_mm10'}, // XXX wrong, but good enough
@@ -28,10 +28,10 @@ var refGene = {
 var transcript = {
 	hg18: {host: 'https://reference.xenahubs.net', name: 'refGene_hg18'},
 	GRCh36: {host: 'https://reference.xenahubs.net', name: 'refGene_hg18'},
-	hg19: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg19'},
-	GRCh37: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg19'},
-	hg38: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg38'},
-	GRCh38: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasic_hg38'}
+	hg19: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasicV24lift37'},
+	GRCh37: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasicV24lift37'},
+	hg38: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasicV24'},
+	GRCh38: {host: 'https://reference.xenahubs.net', name: 'wgEncodeGencodeBasicV24'}
 };
 
 ///////////////////////////////////////////////////////
@@ -194,6 +194,24 @@ function indexRefGene(resp) {
 	return _.object(resp.name2, _.map(collateRows(resp), refGeneAttrs));
 }
 
+function transcriptAttrs(row) {
+	return {
+		name: row.name,
+		strand: row.position.strand,
+		txStart: row.position.chromstart,
+		txEnd: row.position.chromend,
+		chrom: row.position.chrom,
+		cdsStart: row['position (2)'].chromstart, // XXX ouch: position (2)
+		cdsEnd: row['position (2)'].chromend,
+		exonCount: row.exonCount,
+		exonStarts: splitExon(row.exonStarts),
+		exonEnds: splitExon(row.exonEnds)
+	};
+}
+function indexTranscripts(resp) {
+	return collateRows(resp).map(transcriptAttrs);
+}
+
 // Generate sql patterns for case-insensitive match of a prefix, by
 // permutting the characters having case, up to the character limit 'maxPermute'.
 // The results have to be filtered, since they may contain spurious matches.
@@ -268,7 +286,9 @@ function transformPOSTMethods(postMethods) {
 		featureList: mapResponse(indexFeatures),
 		fieldCodes: mapResponse(indexCodes),
 		fieldMetadata: mapResponse(indexFeatureDetail),
+		geneTranscripts: mapResponse(indexTranscripts),
 		refGeneExons: mapResponse(indexRefGene),
+		refGeneRange: mapResponse(indexRefGene),
 		segmentedDataRange: mapResponse(indexSegmented),
 		// Apply a transform that requires the 'host' parameter
 		datasetList: postFn => (host, cohort) =>
@@ -323,6 +343,7 @@ function wrapDsIDParams(postMethods) {
 		'fieldCodes',
 		'refGeneExons',
 		'refGenePosition',
+		'refGeneRange',
 		'segmentedDataRange',
 		'segmentedDataExamples',
 		'sparseData',
@@ -341,7 +362,7 @@ queryPosts = wrapDsIDParams(transformPOSTMethods(queryPosts));
 ////////////////////////////////////////////////////
 // Derived queries
 
-var {datasetMetadata, refGenePosition, refGeneExons} = queryPosts;
+var {datasetMetadata, refGenePosition, refGeneExons, refGeneRange} = queryPosts;
 
 // Override sparseDataMatchField to dispatch to the 'Slow' version
 // if necessary.
@@ -392,6 +413,7 @@ module.exports = {
 	// derived query posts
 	probemapGeneStrand,
 	refGeneExonCase,
+	refGeneRange,
 	sparseDataMatchGenes: sparseDataMatchField('genes'),
 
 	// helpers:

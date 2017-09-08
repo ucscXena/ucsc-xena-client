@@ -1,5 +1,7 @@
 'use strict';
-require('./highcharts');
+
+var Highcharts = require('highcharts/highstock');
+require('highcharts/highcharts-more')(Highcharts);
 
 function hcLabelRender() {
 	var s = this.name;
@@ -23,11 +25,13 @@ function hcLabelRender() {
 var chartOptions = {
 	chart: {
 		renderTo: 'myChart',
-		zoomType: 'x'
 	},
 	subtitle: {
 		useHTML: true
 	},
+    scrollbar: {
+        enabled: true
+    },
 	legend: {
 		title: {
 			style: {
@@ -62,6 +66,7 @@ var chartOptions = {
 function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y, showLegend) {
 	var yAxisTitle = yAxisType === 'Histogram' ? 'Histogram' : 'Distribution';
 
+	chartOptions.chart.zoomType = 'x';
 	chartOptions.legend.align = 'right';
 	chartOptions.legend.verticalAlign = 'middle';
 	chartOptions.legend.layout = 'vertical';
@@ -91,7 +96,7 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 		},
 		type: 'category',
 		categories: categories,
-		minRange: 1
+		minRange: -1
 	};
 	chartOptions.yAxis = {
 		title: {
@@ -154,6 +159,7 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 	yAxisTitle =  yAxisTitle.length > 22 ? yAxisTitle.slice(0, 22) + '...' : yAxisTitle;
 
+	chartOptions.chart.zoomType = 'x';
 	chartOptions.legend.align = 'right';
 	chartOptions.legend.margin = 5;
 	chartOptions.legend.title.text = xAxisTitle;
@@ -214,12 +220,11 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 	return chartOptions;
 }
 
-
-
 function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	var xAxisTitle = xlabel,
 		yAxisTitle = ylabel;
 
+	chartOptions.chart.zoomType = 'xy';
 	chartOptions.legend.align = 'right';
 	chartOptions.legend.verticalAlign = 'middle';
 	chartOptions.legend.layout = 'vertical';
@@ -231,7 +236,7 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 		title: {
 			text: xAxisTitle
 		},
-		minRange: 1,
+		minRange: -1,
 		crosshair: true
 	};
 	chartOptions.yAxis = {
@@ -241,7 +246,11 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 		gridLineWidth: 0,
 		tickWidth: 1,
 		lineWidth: 1,
-		crosshair: true
+		crosshair: true,
+		scrollbar: {
+			enabled: true,
+			showFull: false
+		}
 	};
 	chartOptions.tooltip = {
 		hideDelay: 0,
@@ -255,7 +264,8 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 			},
 		},
 		series: {
-			turboThreshold: 0
+			turboThreshold: 0,
+			stickyTracking: false
 		}
 	};
 	return chartOptions;
@@ -289,7 +299,6 @@ function addSeriesToColumn (chart, chartType, sName, ycodeSeries, yIsCategorical
 			};
 		}
 	}
-
 	chart.addSeries(seriesOptions, false);
 }
 

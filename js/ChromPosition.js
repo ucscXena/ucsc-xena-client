@@ -1,12 +1,10 @@
 'use strict';
 
-var widgets = require('./columnWidgets');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var vgcanvas = require('./vgcanvas');
 var {addCommas} = require('./util');
 
-var height = 12; // Move to common file, to match refGeneExons? Pass in as prop?
 var labelHeight = 12;
 var font = 10;
 
@@ -48,62 +46,70 @@ function numberOrAbrev(vg, width, font, n) {
 }
 
 var margin = 8;
-
-function drawChromScale(vg, width, layout, genomic = "coordinate") {
-	if (vg.width() !== width) {
-		vg.width(width);
-	}
-	vg.box(0, 0, width, height, 'white'); // white background
-	if (!layout) {
-		return;
-	}
-
-	var [baseStart, baseEnd] = layout.chrom[0],
-		[pixelStart, pixelEnd] = layout.screen[0],
-		pixelWidth = pixelEnd - pixelStart,
-		baseWidth = baseEnd - baseStart + 1,
-		range = pickRange(baseWidth / 2),
-		rangeWidth = pixelWidth * range / baseWidth,
-		startText = numberOrAbrev(vg, width / 4, font, baseStart),
-		endText = numberOrAbrev(vg, width / 4, font, baseEnd),
-		rangeText = metric(range),
-		rangeTextWidth = vg.textWidth(font, rangeText),
-		pushLeft = Math.max(width - rangeTextWidth - rangeWidth - 1, 0),
-		rangePos = Math.min(pushLeft, (pixelWidth - rangeWidth) / 2);
-
-	if (genomic === "coordinate") {
-		// Render start & end position, abreviating if constrained for width.
-		vg.text(pixelStart + margin, height - 4, 'black', font, startText);    // start position at left
-		vg.text(pixelEnd - margin - vg.textWidth(font, endText), height - 4, 'black', font, endText); // end position at right
-	} else if (genomic === "geneIntron") {
-		vg.text(pixelStart + margin, height - 4, 'black', font, "5'");
-		vg.text(width - margin - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
-	} else if (genomic === "geneExon") {
-		vg.text(pixelStart + margin, height - 4, 'black', font, "5'");
-		vg.text(width - margin - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
-	}
-
-	if (genomic !== "geneExon" && range >= 1) {
-		// Render centered scale, pushing to left if constrained for width.
-		vg.box(rangePos, labelHeight / 2, rangeWidth, 1, 'grey');
-		vg.box(rangePos, labelHeight / 4, 1, labelHeight / 2, 'black');
-		vg.box(rangePos + rangeWidth, labelHeight / 4, 1, labelHeight / 2, 'black');
-		vg.text(rangePos + rangeWidth + 1, labelHeight - font / 4, 'black', font, rangeText);
-	}
-}
-
 var ChromPosition = React.createClass({
-	shouldComponentUpdate: () => false,
+	draw(width, height, layout, mode = "coordinate") {
+		var vg = this.vg;
+
+		if (vg.width() !== width) {
+			vg.width(width);
+		}
+		vg.box(0, 0, width, height, 'white'); // white background
+		if (!layout) {
+			return;
+		}
+		if (mode === "geneExon") {
+			vg.text(margin, height - 4, 'black', font, "5'");
+			vg.text(width - margin - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
+		} else {
+			var [baseStart, baseEnd] = layout.chrom[0],
+				[pixelStart, pixelEnd] = layout.screen[0],
+				pixelWidth = pixelEnd - pixelStart,
+				baseWidth = baseEnd - baseStart + 1,
+				range = pickRange(baseWidth / 2),
+				rangeWidth = pixelWidth * range / baseWidth,
+				startText = numberOrAbrev(vg, width / 4, font, baseStart),
+				endText = numberOrAbrev(vg, width / 4, font, baseEnd),
+				rangeText = metric(range),
+				rangeTextWidth = vg.textWidth(font, rangeText),
+				pushLeft = Math.max(width - rangeTextWidth - rangeWidth - 1, 0),
+				rangePos = Math.min(pushLeft, (pixelWidth - rangeWidth) / 2);
+
+			if (mode === "coordinate") {
+				// Render start & end position, abreviating if constrained for width.
+				vg.text(pixelStart + margin, height - 4, 'black', font, startText);    // start position at left
+				vg.text(pixelEnd - margin - vg.textWidth(font, endText), height - 4, 'black', font, endText); // end position at right
+			} else if (mode === "geneIntron") {
+				vg.text(pixelStart + margin, height - 4, 'black', font, "5'");
+				vg.text(width - margin - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
+			}
+
+			if (range >= 1) {
+				// Render centered scale, pushing to left if constrained for width.
+				vg.box(rangePos, labelHeight / 2, rangeWidth, 1, 'grey');
+				vg.box(rangePos, labelHeight / 4, 1, labelHeight / 2, 'black');
+				vg.box(rangePos + rangeWidth, labelHeight / 4, 1, labelHeight / 2, 'black');
+				vg.text(rangePos + rangeWidth + 1, labelHeight - font / 4, 'black', font, rangeText);
+			} else {
+				vg.text((width - rangeWidth) / 2, labelHeight - font / 4, 'black', font, '1bp');
+			}
+		}
+	},
+	//shouldComponentUpdate: () => false,
 	componentDidMount() {
-		var {width, layout} = this.props;
-		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height);
-		drawChromScale(this.vg, width, layout);
+		var {width, layout, scaleHeight, mode} = this.props;
+		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, scaleHeight);
+		this.draw(width, scaleHeight, layout, mode);
 	},
-	componentWillReceiveProps(props) {
-		var {width, layout} = props;
-		drawChromScale(this.vg, width, layout);
-	},
+	/*componentWillReceiveProps() {
+		var {width, layout, scaleHeight, mode} = this.props;
+		this.draw(width, scaleHeight, layout, mode);
+	},*/
 	render() {
+		var {width, layout, scaleHeight, mode} = this.props;
+
+		if (this.vg) {
+			this.draw(width, scaleHeight, layout, mode);
+		}
 		return (
 			<canvas
 				className='Tooltip-target'
@@ -114,9 +120,6 @@ var ChromPosition = React.createClass({
 				onDblClick={this.props.onDblClick}
 				ref='canvas' />);
 	}
-
 });
 
-widgets.annotation.add('chrom', props => <ChromPosition {...props}/>);
-
-module.exports = {ChromPosition, abrev, drawChromScale};
+module.exports = {ChromPosition, abrev};

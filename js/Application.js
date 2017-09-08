@@ -50,12 +50,12 @@ var Application = React.createClass({
 			last = toOrder[_.max(matches, s => toOrder[s])];
 		callback(['zoom', {index, height, count: last - index + 1}]);
 	},
-	onFilterColumn: function (matches) {
+	onFilterColumn: function (matches, columnLabel, fieldLabel) {
 		var {state: {datasets, cohortSamples, sampleSearch}, callback} = this.props,
 			allSamples = _.flatten(cohortSamples),
 			matching = _.map(matches, i => allSamples[i]),
-			field = signatureField(`${sampleSearch}`, {
-				columnLabel: 'filter',
+			field = signatureField(`${fieldLabel ? fieldLabel : sampleSearch}`, {
+				columnLabel: columnLabel ? columnLabel : 'filter',
 				valueType: 'coded',
 				filter: sampleSearch,
 				signature: ['in', matching]
@@ -66,6 +66,20 @@ var Application = React.createClass({
 					'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
 		callback(['add-column', 0, {id: uuid(), settings}]);
 	},
+//	onSearchIDAndFilterColumn: function (qsamplesList) {
+//		var {state: {samples, cohortSamples}} = this.props,
+//			qsampleListObj = {},
+//			cohortSamplesList = [];
+//
+//		_.map(qsamplesList, (s, i)=>{
+//			qsampleListObj[s] = i + 1;
+//		});
+//		cohortSamplesList = _.flatten(_.map(Object.keys(cohortSamples), i => cohortSamples[i]));
+//
+//		var matches = _.filter(samples, s => qsampleListObj[cohortSamplesList[s]]),
+//			fieldLabel = matches.length + ((matches.length === 1) ? ' match' : ' matches');
+//		this.onFilterColumn(matches, 'sample list', fieldLabel);
+//	},
 	render: function() {
 		let {state, children, onHighlightChange, onShowWelcome, stepperState, ...otherProps} = this.props,
 			{callback} = otherProps,
@@ -79,6 +93,8 @@ var Application = React.createClass({
 				() => this.onFilterColumn(samplesMatched) : null,
 			onFilterZoom = (matches < samples.length && matches > 0) ?
 				() => this.onFilterZoom(samples, samplesMatched) : null;
+//			onSearchIDAndFilterColumn = this.onSearchIDAndFilterColumn;
+
 		return (
 			<div>
 				{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
