@@ -190,11 +190,13 @@ var ColumnEdit = React.createClass({
 			//dsID = _.has(settings, 'dsID') ? settings.dsID : dsIDs[0];
 			dsID = settings.dsID,
 			ds = appState.datasets[dsID],
-			colSpec = getColSpec([settings], appState.datasets);
+			colSpec = getColSpec([settings], appState.datasets),
+			columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +  ds.label;
+
 		settings = _.assoc(colSpec,
 			'width', ds.type === 'mutationVector' ? 200 : 100,
-			'columnLabel', ds.label,
-			'user', {columnLabel: ds.label, fieldLabel: colSpec.fieldLabel},
+			'columnLabel', columnLabel,
+			'user', {columnLabel: columnLabel, fieldLabel: colSpec.fieldLabel},
 			'colorClass', defaultColorClass,
 			'assembly', ds.assembly);
 		this.props.onHide();
