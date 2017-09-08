@@ -5,6 +5,7 @@ require('./base');
 var controller = require('./controllers/transcripts');
 const connector = require('./connector');
 const createStore = require('./store');
+require('bootstrap/dist/css/bootstrap.css');
 const Transcripts = require('./transcript_views/TranscriptPage');
 
 var store = createStore();
