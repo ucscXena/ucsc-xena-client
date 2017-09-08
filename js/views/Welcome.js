@@ -30,7 +30,7 @@ var Welcome = React.createClass({
 	},
 	render() {
 		var {link: [bookmark, text], linkProps} = this.props,
-			link = `https://xenabrowser.net/heatmap/?bookmark=${bookmark}`;
+			link = `${document.location.origin}/heatmap/?bookmark=${bookmark}`;
 		return (
 			<div className={compStyles.Welcome}>
 				<div className={compStyles.welcomeIcon}>
