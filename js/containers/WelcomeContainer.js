@@ -6,22 +6,23 @@ var Welcome = require('../views/Welcome');
 var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
 
 var links = [
-	['da4ff33d35d9c83f3459c383897371b1',
-		'Overall survival difference of TERT over- vs under-expressed patients'],
-	['b34336d5c5cff6583f2f617aea022d10',
-		'Co-deletion of 1p, 19q in Lower Grade Glioma oligodendroglioma subtype'],
-	['e093b1c13486b1bf19c1f4f957bb4343',
-		'Overall survival difference of patients with/without an IDH1 mutation'],
-	['f356e922ae5891367c62f128fca17a10',
-		'CNV amplification of EGFR in GBM samples compared to LGG in TCGA'],
-	['f070d9f3563b951cc20d6dd2975c0e0e',
-		'Overall survival profile of different breast cancer PAM50 subtypes'],
-	['d2a79e46e22456036a732c49c2e4c5b3',
-		'Mutation pile-ups in introns overlap enhancer regions in ICGC Lymphoma'],
-	['c76c69014656ad834d41cd9e619a1468',
-		'Transcript expression of FOXM1A, B, C. TCGA tumor vs GTEx normal'],
-	['1c880a8cab1359f89b4be28272fc59c6',
-		'ATRX, TERT in Lower Grade Glioma. Two pathways to telomere lengthening']];
+	['fb34475113dd2c3a8d95038004badcae',
+		'FOXM1A, FOXM1B, FOXM1C transcript expression in tumor vs. normal samples'],
+	['cacded9e96a7a505f357c8806f0e284e',
+		'Mutation pile-ups in intron enhancers in ICGC lymphoma'],
+	['553d7d1fa81f0be10409ee7bcf3fbd31',
+		'KM plot (overall survival) of breast cancer PAM50 subtypes'],
+	['4bc244f52913641e2cd75bba43d96a85',
+		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
+	['0005ba1c0624f002302d0542697e4e68',
+		'PDL1 (CD274) expression across 39 cancer types in TCGA and TARGET'],
+	['ea04ae7f86a885f928b2c09de2ca51f3',
+		'ERG-TMPRSS2 fusion by chr21 deletion in prostate cancer'],
+	['2e4660f0e4c07821657ea3df1ddd7cb1',
+		'ATRX, TERT, TP53 in lower grade glioma. Two pathways to telomere lengthening'],
+	['4d0061b6890fb1b82894287b02c95d7b',
+		'Co-deletion of chromosome 1p and 19q in TCGA lower grade gliomas']];
+
 
 var refresh = 5000; // ms between link switch
 var WelcomeContainer = React.createClass({
