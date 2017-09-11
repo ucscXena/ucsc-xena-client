@@ -42,7 +42,7 @@ function getValueType(dataset, features, fields) {
 
 function getFieldType(dataset, features, fields, probes) {
 	if (dataset.type === 'mutationVector') {
-		return 'mutation';
+		return dataset.dataSubType.search(/SV|structural/i) !== -1 ? 'SV' : 'mutation';
 	}
 	if (dataset.type === 'genomicSegment') {
 		return 'segmented';
