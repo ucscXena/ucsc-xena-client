@@ -13,6 +13,7 @@
 	padding: 34px 24px 32px;
 	position: absolute;
 	width: 100%;
+	box-sizing: border-box;
 }
 
 .footerLinks {
