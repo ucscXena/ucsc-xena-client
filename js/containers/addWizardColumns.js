@@ -68,7 +68,8 @@ function columnSettings(datasets, features, dsID, input, probes) {
 		dsID,
 		defaultNormalization: meta.colnormalization,
 		// XXX this assumes fields[0] doesn't appear in features if ds is genomic
-		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle'], fields.join(', ')),
+		//fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle'], fields.join(', ')),
+		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle']) || fields.join(', '),
 		colorClass: defaultColorClass,
 		assembly: meta.assembly
 	};
