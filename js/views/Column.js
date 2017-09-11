@@ -456,8 +456,9 @@ var Column = React.createClass({
 			variants = [...(new Set(_.pluck(nodes, 'data')))], //only variants in view
 			SNVPs = mutationVector.SNVPvalue(variants, total, k),
 			uriList = _.map(_.values(SNVPs), n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
-			url = 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=';
-			//url = 'http://karchin-web04.icm.jhu.edu:8888/MuPIT_Interactive/?gm=';  // mupit dev server
+			//url = 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm='; mupit hg38 server
+			url = 'http://hg19.cravat.us/MuPIT_Interactive?gm='; // mupit hg19 server
+
 		window.open(url + `${uriList}`);
 	},
 
