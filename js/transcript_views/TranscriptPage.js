@@ -16,12 +16,14 @@ var Transcripts = React.createClass({
 		return {
 			gene: _.getIn(this.props.state, ['transcripts', 'gene'], ""),
 			scaleZoom: false,
+			OKbuttons: true
 		};
 	},
 
 	onLoadData() {
 		this.setState({
-			scaleZoom: false
+			scaleZoom: false,
+			OKbutton: false
 		});
 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
 		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
@@ -92,34 +94,46 @@ var Transcripts = React.createClass({
 		var range = max - min;
 
 		return (
-				<div style={{margin: "0 auto", width: "1200px"}}>
+				<div style={{margin: "20px auto", width: "1200px"}}>
 					{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
 						<div className="legend-holder">
 							<div className="legend" style={{backgroundColor: topColor}}><label>{subtypeA}</label></div>
 							<div className="legend" style={{backgroundColor: bottomColor}}><label>{subtypeB}</label></div>
 						</div> : null
 					}
-					<a className="selectors" href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
-					<div className="selectors">
-						<GeneSuggest label="Add Gene" value={this.state.gene} onChange={ value => {this.setState({gene: value});} }/>
+					<a className="selectors" style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
+					<div className="selectors" style={{width: "1200px", height: "80px"}}>
+						<div id="geneBox" style={{float: "left", width: "385px"}}>
+							<GeneSuggest label="Add Gene" value={this.state.gene}
+								onChange={ value => {this.setState({gene: value, OKbutton: true});} }/>
+						</div>
+						{ this.state.OKbutton ?
+							<div>
+								<button className="horizontalSegmentButton" onClick={this.onLoadData}>OK</button>
+								click OK to update gene
+							</div> : null}
 					</div>
-					<button className="selectors" onClick={this.onLoadData}>OK</button>
-					click this after entering new gene
-					<strong className="selectors">Expression Unit</strong>
-					<select ref="unit" onChange={this.onLoadData} value={unit}>
-						<option value="tpm">{unitLabels.tpm.dropdown}</option>
-						<option value="isoformPercentage">{unitLabels.isoformPercentage.dropdown}</option>
-					</select>
-					<br/>
-					<strong className="selectors">Study A</strong>
-					<select ref="A" onChange={this.onLoadData} value={valueA}>
-						{options}
-					</select>
-					<strong className="selectors">Study B</strong>
-					<select ref="B" onChange={this.onLoadData} value={valueB}>
-						{options}
-					</select>
-					<br/>
+
+					<div style={{width: "1200px"}}>
+						<div style={{"margin-bottom": "10px"}}>
+							<span className="selectors">Study A</span>
+							<select ref="A" onChange={this.onLoadData} value={valueA}>
+								{options}
+							</select>
+							<span className="selectors">Study B</span>
+							<select ref="B" onChange={this.onLoadData} value={valueB}>
+								{options}
+							</select>
+						</div>
+						<div>
+							<span className="selectors">Expression Unit</span>
+							<select ref="unit" onChange={this.onLoadData} value={unit}>
+								<option value="tpm">{unitLabels.tpm.dropdown}</option>
+								<option value="isoformPercentage">{unitLabels.isoformPercentage.dropdown}</option>
+							</select>
+						</div>
+					</div>
+
 					{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
 						<div>
 							<div className="densityplot--label-div-zero">

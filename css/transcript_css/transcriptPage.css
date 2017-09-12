@@ -2,16 +2,32 @@ body {
   font-family: 'Roboto', Arial, Verdana,'Lucida Grande', Verdana, Helvetica, sans-serif;
 }
 
-body #main {
-  margin-top:20px;
-}
-
 body #footer {
   display: none;
 }
 
 body #footer ul {
   padding-left: 0;
+}
+
+#geneBox * {
+  border-bottom: 0;
+
+}
+
+.horizontalSegment {
+  margin: 0px 20px;
+  height: 90px;
+}
+
+.horizontalSegmentButton {
+	margin: 25px 15px 20px 30px;
+	height: 30px;
+	width: 40px;
+	background-color: #1f77b4;
+	color: white;
+	border: 1px solid #1f77b4;
+	border-radius: 5px;
 }
 
 .legend-holder {
@@ -35,7 +51,7 @@ body #footer ul {
 }
 
 .selectors {
-  margin: 5px 20px;
+  margin: 0px 20px;
 }
 
 .densityplot--label-div--zoom {
