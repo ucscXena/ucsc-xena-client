@@ -101,7 +101,7 @@ var Transcripts = React.createClass({
 					}
 					<a className="selectors" href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors">
-					<GeneSuggest value={this.state.gene} onChange={ value => { this.setState({gene: value}); }}/>
+						<GeneSuggest label="Add Gene" value={this.state.gene} onChange={ value => {this.setState({gene: value});} }/>
 					</div>
 					<button className="selectors" onClick={this.onLoadData}>OK</button>
 					click this after entering new gene

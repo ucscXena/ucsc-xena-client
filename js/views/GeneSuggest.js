@@ -27,11 +27,11 @@ function currentWord(value, position) {
 
 var defaultAssembly = 'hg38';
 
-var renderInputComponent = ({ref, onChange, ...props}) => (
+var renderInputComponent = ({ref, onChange, label, ...props}) => (
 	<Input
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
-		label='Gene or position'
+		label= {label || 'Gene or position'}
 		{...props} />);
 
 // Currently we only match against refGene hg38 genes. We could, instead, match
@@ -95,7 +95,7 @@ var GeneSuggest = React.createClass({
 	},
 	render() {
 		var {onChange} = this,
-			{onKeyDown, value = ''} = this.props,
+			{onKeyDown, value = '', label} = this.props,
 			{suggestions} = this.state;
 
 		return (
@@ -108,7 +108,7 @@ var GeneSuggest = React.createClass({
 				shouldRenderSuggestions={this.shouldRenderSuggestions}
 				renderSuggestion={v => <span>{v}</span>}
 				renderInputComponent={renderInputComponent}
-				inputProps={{value, onKeyDown, onChange}}/>);
+				inputProps={{value, label, onKeyDown, onChange}}/>);
 	}
 });
 
