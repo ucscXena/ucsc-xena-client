@@ -92,7 +92,6 @@ var Transcripts = React.createClass({
 		var range = max - min;
 
 		return (
-			<div ref='datapages'>
 				<div style={{margin: "0 auto", width: "1200px"}}>
 					{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
 						<div className="legend-holder">
@@ -100,9 +99,8 @@ var Transcripts = React.createClass({
 							<div className="legend" style={{backgroundColor: bottomColor}}><label>{subtypeB}</label></div>
 						</div> : null
 					}
-					<a className="selectors" style={{fontSize: "80%"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
+					<a className="selectors" href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors">
-					<strong>Gene</strong>
 					<GeneSuggest value={this.state.gene} onChange={ value => { this.setState({gene: value}); }}/>
 					</div>
 					<button className="selectors" onClick={this.onLoadData}>OK</button>
@@ -171,7 +169,7 @@ var Transcripts = React.createClass({
 						<label className="densityplot--label-y">density</label> : null
 					}
 				</div>
-			</div>);
+		);
 	}
 });
 

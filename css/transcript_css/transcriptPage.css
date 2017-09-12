@@ -1,3 +1,19 @@
+body {
+  font-family: 'Roboto', Arial, Verdana,'Lucida Grande', Verdana, Helvetica, sans-serif;
+}
+
+body #main {
+  margin-top:20px;
+}
+
+body #footer {
+  display: none;
+}
+
+body #footer ul {
+  padding-left: 0;
+}
+
 .legend-holder {
   float: right;
   margin: 0px 50px;
