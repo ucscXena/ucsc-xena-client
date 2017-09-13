@@ -111,7 +111,7 @@ function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelec
 }
 
 var preferredLabels = {
-	'gene expression': 'Gene Expresion',
+	'gene expression': 'Gene Expression',
 	'copy number': 'Copy Number',
 	'simple somatic mutation': 'Somatic Mutation'
 };
