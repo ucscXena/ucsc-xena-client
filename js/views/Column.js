@@ -464,30 +464,29 @@ var Column = React.createClass({
 
 	onTumorMap: function (tumorMap) {
 		// TumorMap/Xena API https://tumormap.ucsc.edu/query/addAttributeXena.html
-		// the only connection we have here is on the pancanAtlas data and
-		//
-		var fieldSpecs = _.getIn(this.props, ['column', 'fieldSpecs']),
+		// only use spec of the first cohort (in the context of composite cohort)
+		var fieldSpecs = _.getIn(this.props, ['column', 'fieldSpecs', 0]),
+			data = _.getIn(this.props, ['data']),
 			valueType = _.getIn(this.props, ['column', 'valueType']),
+			fieldType = _.getIn(this.props, ['column', 'fieldType']),
 			datasetMeta = _.getIn(this.props, ['datasetMeta']),
 			columnid = _.getIn(this.props, ['id']),
 			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout,
-			customColor = {};
+			customColor = datasetMeta(columnid).metadata(fieldSpecs.dsID).customcolor;
 
-		_.map(fieldSpecs, spec => {
-			var ds = JSON.parse(spec.dsID),
-				hub = ds.host,
-				dataset = ds.name,
-				feature = spec.fields[0];
+		var ds = JSON.parse(fieldSpecs.dsID),
+			hub = ds.host,
+			dataset = ds.name,
+			feature = (fieldType !== "geneProbes") ? fieldSpecs.fields[0] : _.getIn(data, ['req', 'probes', 0]);
 
-			customColor = _.extend(customColor, datasetMeta(columnid).metadata(spec.dsID).customcolor);
+		customColor = _.extend(customColor, );
 
-			url = url + "&hub=" + hub + "/data/";
-			url = url + "&dataset=" + dataset;
-			url = url + "&attr=" + feature;
-		});
+		url = url + "&hub=" + hub + "/data/";
+		url = url + "&dataset=" + dataset;
+		url = url + "&attr=" + feature;
 
 		if (valueType === "coded") {
-			var codes = _.getIn(this.props, ['data', 'codes']),
+			var codes = _.getIn(data, ['codes']),
 				cat, colorhex,
 				colors = _.isEmpty(customColor) ? categoryMore : customColor;
 
