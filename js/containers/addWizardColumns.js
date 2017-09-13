@@ -78,12 +78,12 @@ function columnSettings(datasets, features, dsID, input, probes) {
 // Configuration for first and second variable select cards that are displayed during wizard.
 var variableSelectConfig = {
 	'FIRST_COLUMN': {
-		helpText: 'Select the first variable tincidunt non arcu non congue. Vestibulum vitae pharetra nunc. Etiam mattis aliquet aliquet.',
+		helpText: 'Select the first variable.', // XXX expand on this :-p
 		pos: 1,
 		title: 'First Variable'
 	},
 	'SECOND_COLUMN': {
-		helpText: 'Select the second variable tincidunt non arcu non congue. Vestibulum vitae pharetra nunc. Etiam mattis aliquet aliquet.',
+		helpText: 'Select the second variable.',
 		pos: 2,
 		title: 'Second Variable'
 	}
