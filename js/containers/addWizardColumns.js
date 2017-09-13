@@ -208,8 +208,7 @@ function addWizardColumns(Component) {
 				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect, width},
 				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect, width},
 				columns = React.Children.toArray(children),
-				cancelAddIcon = (<i className='material-icons' onClick={this.onCancel}>cancel</i>),
-				cancelEditIcon = (<i className='material-icons' onClick={this.onCancel}>cancel</i>),
+				cancelIcon = <i className='material-icons' onClick={this.onCancel}>cancel</i>,
 				withEditor = columns.map(el =>
 						editing === el.props.id ?
 							<VariableSelect
@@ -220,10 +219,10 @@ function addWizardColumns(Component) {
 								title='Edit Variable'
 								{...datasetSelectProps}
 								colId={el.props.label}
-								controls={cancelEditIcon}/> : el),
+								controls={cancelIcon}/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
 						editing === i ? [el, <VariableSelect actionKey={i} pos={i} title='Add Variable'
-															 {...datasetSelectProps} controls={cancelAddIcon}/>] : [el]);
+															 {...datasetSelectProps} controls={cancelIcon}/>] : [el]);
 			return (
 				<Component {...this.props}>
 					{withNewColumns.concat(
