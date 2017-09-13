@@ -7,7 +7,7 @@ var kmModel = require('../models/km');
 var {reifyErrors, collectResults} = require('./errors');
 var {userServers, setCohort, fetchDatasets,
 	fetchSamples, fetchColumnData} = require('./common');
-var {nullField, xenaFieldPaths, setFieldType} = require('../models/fieldSpec');
+var {nullField, setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
@@ -49,46 +49,6 @@ var {featureList} = xenaQuery;
 
 function fetchFeatures(serverBus, dsID) {
 	return serverBus.next(['columnEdit-features', featureList(dsID)]);
-}
-
-
-// Normalization of fields from user input
-function geneProbeMapLookup(settings, state) {
-	const {host} = JSON.parse(settings.dsID),
-		probemap = state.datasets[settings.dsID].probemap;
-	return  xenaQuery.sparseDataMatchGenes(host, probemap, settings.fields);
-}
-
-function probeLookup(settings) {
-	const {host, name} = JSON.parse(settings.dsID);
-	return xenaQuery.matchFields(host, name, settings.fields);
-}
-
-function mutationGeneLookup(settings) {
-	const {host, name} = JSON.parse(settings.dsID);
-	return xenaQuery.sparseDataMatchGenes(host, name, settings.fields);
-}
-
-const fieldLookup = {
-	'geneProbes': geneProbeMapLookup,
-	'genes': geneProbeMapLookup,
-	'mutation': mutationGeneLookup,
-	'SV': mutationGeneLookup,
-	'probes': probeLookup
-};
-
-// XXX need collectResults?
-function allFieldsLookup(settings, xenaFields, state) {
-	var fieldSpecs = _.map(xenaFields, path => _.getIn(settings, path));
-	return Rx.Observable.zipArray(
-		_.map(fieldSpecs, fs => reifyErrors(
-			(fieldLookup[fs.fieldType] || probeLookup)(fs, state)), {/*host info?*/}));
-}
-
-function normalizeFields(serverBus, state, id, settings) {
-	var xenaFields = xenaFieldPaths(settings),
-		lookup = allFieldsLookup(settings, xenaFields, state);
-	serverBus.next([['normalize-fields', id], lookup, settings, xenaFields]);
 }
 
 var featuresInCohort = (datasets, features, cohort) =>
@@ -213,6 +173,15 @@ function resetWizard(state) {
 		_.assoc(state, 'wizardMode', false) : state;
 }
 
+// Fetches the gene strand info for a geneProbes field.
+// We need the gene from one non-null field. This is
+// probably broken in some way for composite views.
+function fetchStrand(serverBus, state, id, gene, dsID) {
+	var {probemap} = _.getIn(state, ['datasets', dsID]),
+		{host} = JSON.parse(dsID);
+	serverBus.next([['strand', id], xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.of('+');})]);
+}
+
 // Use min app width (1280px) if viewport width is currently smaller than min
 // app width. (App is responsive above 1280px but components are snapped at a
 // minimum width of 1280px)
@@ -287,9 +256,18 @@ var controls = {
 				'data', _.merge(data, _.object(ids, ids.map(_.constant({'status': 'loading'})))));
 		return resetWizard(newState);
 	},
-	'add-column-post!': (serverBus, state, newState, pos, ...idSettingsList) =>
-		idSettingsList.forEach(({id, settings}) =>
-			normalizeFields(serverBus, newState, id, settings)),
+	'add-column-post!': (serverBus, state, newState, pos, ...idSettingsList) => {
+		idSettingsList.forEach(({id, settings}) => {
+			// For geneProbes, fetch the gene model (just strand right now), and defer the
+			// data fetch.
+			if (settings.fieldType === 'geneProbes') {
+				// Pick first fieldSpec, and 1st gene name.
+				fetchStrand(serverBus, state, id, settings.fieldSpecs[0].fields[0], settings.fieldSpecs[0].dsID);
+			} else {
+				fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
+			}
+		});
+	},
 	'edit-column': (state, editing) => _.assoc(state, 'editing', editing),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,

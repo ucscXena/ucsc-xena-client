@@ -371,7 +371,7 @@ function mapSamples(samples, data) {
 //user input is a gene, get the mutations by the gene's genomic coordinates
 function fetchGeneByCoordinate({dsID, fields, fieldType, assembly}, [samples]) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
-	return name ? xenaQuery.refGeneExonCase(host, name, fields)
+	return name ? xenaQuery.refGeneExons(host, name, fields)
 		.flatMap(refGene => {
 			var coords = _.values(refGene)[0];
 			if (!coords) {

@@ -168,7 +168,7 @@ function indexSegmented(resp) {
 
 function alignMatches(input, matches) {
 	var index = _.object(_.map(matches, g => g.toLowerCase()), matches);
-	return _.map(input, g => index[g.toLowerCase()] || g);
+	return _.map(input, g => index[g.toLowerCase()]);
 }
 
 function splitExon(s) {
@@ -344,6 +344,7 @@ function wrapDsIDParams(postMethods) {
 		'refGeneExons',
 		'refGenePosition',
 		'refGeneRange',
+		'matchFields',
 		'segmentedDataRange',
 		'segmentedDataExamples',
 		'sparseData',
@@ -383,7 +384,7 @@ var probemapGeneStrand = dsIDFn((host, probemap, gene) =>
 // case-insensitive gene lookup
 var refGeneExonCase = dsIDFn((host, dataset, genes) =>
 	sparseDataMatchField('name2', host, dataset, genes)
-		.flatMap(caseGenes => refGeneExons(host, dataset, caseGenes)));
+		.flatMap(caseGenes => refGeneExons(host, dataset, _.filter(caseGenes, _.identity))));
 
 
 // test if host is up
@@ -414,7 +415,7 @@ module.exports = {
 	probemapGeneStrand,
 	refGeneExonCase,
 	refGeneRange,
-	sparseDataMatchGenes: sparseDataMatchField('genes'),
+	sparseDataMatchGenes: dsIDFn(sparseDataMatchField('genes')),
 
 	// helpers:
 	parseDsID,

@@ -22,6 +22,7 @@ require('rxjs/add/observable/of');
 require('rxjs/add/observable/throw');
 require('rxjs/add/observable/zip');
 require('rxjs/add/operator/catch');
+require('rxjs/add/operator/combineLatest');
 require('rxjs/add/operator/concat');
 require('rxjs/add/operator/debounceTime');
 require('rxjs/add/operator/distinctUntilChanged');
@@ -44,6 +45,7 @@ require('rxjs/add/operator/debounceTime');
 require('rxjs/add/operator/timeoutWith');
 require('rxjs/add/operator/toArray');
 require('rxjs/add/operator/windowCount');
+require('rxjs/add/operator/withLatestFrom');
 
 var observableProto = Rx.Observable.prototype;
 

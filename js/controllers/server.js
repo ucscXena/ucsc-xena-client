@@ -8,7 +8,7 @@ var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
 
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
-var {updateFields, xenaFieldPaths, updateStrand, filterByDsID} = require('../models/fieldSpec');
+var {xenaFieldPaths, updateStrand, filterByDsID} = require('../models/fieldSpec');
 var identity = x => x;
 var {parseBookmark} = require('../bookmark');
 
@@ -52,15 +52,6 @@ var resetColumnFields = state =>
 			dropUnknownFields(state)));
 
 var resetLoadPending = state => _.dissoc(state, 'loadPending');
-
-// Fetches the gene strand info for a geneProbes field.
-// We need the gene from one non-null field. This is
-// probably broken in some way for composite views.
-function fetchStrand(serverBus, state, id, gene, dsID) {
-	var {probemap} = _.getIn(state, ['datasets', dsID]),
-		{host} = JSON.parse(dsID);
-	serverBus.next([['strand', id], xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.of('+');})]);
-}
 
 // Cohort metadata looks like
 // {[cohort]: [tag, tag, ...], [cohort]: [tag, tag, ...], ...}
@@ -118,18 +109,6 @@ var controls = {
 	'samples-post!': (serverBus, state, newState, {samples}) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
-	'normalize-fields': (state, id, fields, settings, xenaFields) =>
-		_.assocIn(state, ['columns', id], updateFields(settings, xenaFields, fields)),
-	'normalize-fields-post!': (serverBus, state, newState, id, fields, settings, xenaFields) => {
-		// For geneProbes, fetch the gene model (just strand right now), and defer the
-		// data fetch.
-		if (settings.fieldType === 'geneProbes') {
-			// Pick first xena field, and 1st gene name.
-			fetchStrand(serverBus, state, id, fields[0][0], _.getIn(settings, xenaFields[0]).dsID);
-		} else {
-			fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
-		}
-	},
 	'strand': (state, id, strand) => {
 		// Update composite & all xena fields with strand info.
 		var settings = _.assoc(_.getIn(state, ['columns', id]), 'strand', strand);

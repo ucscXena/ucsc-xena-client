@@ -55,13 +55,12 @@ function getFieldType(dataset, features, fields, probes) {
 
 // XXX handle position in all genomic datatypes?
 var parsePos = require('../parsePos');
-function columnSettings(datasets, features, dsID, input, probes) {
+function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
-		pos = parsePos(trim(input), meta.assembly),
-		fields = toWordList(input);
+		pos = parsePos(trim(input), meta.assembly);
 	// My god, this is a disaster.
 	return {
-		fields: pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] : fields,
+		fields: pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] : fields.map(f => f ? f : "[unknown]"),
 		fetchType: 'xena',
 		valueType: getValueType(meta, features[dsID], fields),
 		fieldType: getFieldType(meta, features[dsID], fields, probes),
@@ -69,7 +68,7 @@ function columnSettings(datasets, features, dsID, input, probes) {
 		defaultNormalization: meta.colnormalization,
 		// XXX this assumes fields[0] doesn't appear in features if ds is genomic
 		//fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle'], fields.join(', ')),
-		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle']) || fields.join(', '),
+		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle']) || toWordList(input).join(', '),
 		colorClass: defaultColorClass,
 		assembly: meta.assembly
 	};
@@ -137,10 +136,9 @@ var sortFeatures = features => _.sortBy(features, f => f.label.toUpperCase());
 var removeSampleID = features => _.filter(features, f => f.value !== "sampleID");
 
 
-var computeSettings = _.curry((datasets, features, fields, width, dataset) => {
+var computeSettings = _.curry((datasets, features, inputFields, width, dataset, matches) => {
 	var ds = datasets[dataset];
-	// XXX resolve 'probes' if user has selected probes. Set here to false
-	var settings = columnSettings(datasets, features, dataset, fields, false),
+	var settings = columnSettings(datasets, features, dataset, inputFields, matches.fields, matches.type === 'probes'),
 		colSpec = getColSpec([settings], datasets),
 		columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +  ds.label;
 
@@ -192,10 +190,10 @@ function addWizardColumns(Component) {
 		onCohortSelect(cohort) {
 			this.props.callback(['cohort', 0, cohort, typeWidth.matrix]);
 		},
-		onDatasetSelect(posOrId, input, datasetList) {
+		onDatasetSelect(posOrId, input, datasetList, fieldList) {
 			var {datasets, features, defaultWidth} = this.props.appState,
 				isPos = _.isNumber(posOrId),
-				settingsList = datasetList.map(computeSettings(datasets, features, input, defaultWidth));
+				settingsList = _.mmap(datasetList, fieldList, computeSettings(datasets, features, input, defaultWidth));
 			this.props.callback(['add-column', posOrId,
 					...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		},
