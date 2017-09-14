@@ -20,7 +20,6 @@
 	display: inline-block;
 	background-color: #004466;
 	opacity: 1;
-	z-index: -1;
 	position: absolute;
 	top: 50%;
 }
@@ -28,17 +27,17 @@
 .exons--row--item-small {
 	z-index: 1;
 	position: absolute;
-	background-color: #004466;
+	background-color: #7fa1b2;
 	text-align: center;
 	font-size: 0.70em;
-	height: 20%;
-	top: 40%;
+	height: 17%;
+	top: 42%;
 }
 
 .exons--row--item-small--zoom {
 	z-index: 1;
 	position: absolute;
-	background-color: #004466;
+	background-color: #7fa1b2;
 	text-align: center;
 	font-size: 0.70em;
 	height: 6.6667%;
@@ -51,8 +50,8 @@
 	background-color: #004466;
 	text-align: center;
 	font-size: 0.70em;
-	height: 35%;
-	top: 32.5%;
+	height: 28%;
+	top: 36%;
 }
 
 .exons--row--item-big--zoom {
