@@ -224,7 +224,7 @@ var controls = {
 	'import': (state, newState) => newState,
 	cohort: (state, i, cohort, width) =>
 		setCohort(state, _.assoc(state.cohort, i, {name: cohort}), width),
-	cohortReset: state => _.assoc(setCohort(state, []), 'wizardMode', true),
+	cohortReset: state => _.assoc(setCohort(state, []), 'wizardMode', true, 'mode', 'heatmap'),
 	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
 	'cohort-remove': (state, i) => setCohort(state, _.withoutIndex(state.cohort, i)),
 	'cohort-remove-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
