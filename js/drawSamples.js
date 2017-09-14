@@ -12,13 +12,13 @@ var labelFont = 12;
 // rounding that up to the next half-order.
 //
 // XXX 1.2 is lifted from vgmixed, which uses this to set line height for
-// a given font. The 0.5 fudge is due to floating point noise, I think. Otherwise
+// a given font. The 0.1 fudge is due to floating point noise, I think. Otherwise
 // we can end up with a height that is smaller than one line, and the labels
 // will not be drawn due to clipping in vgmixed.
 function stripeHeight(start, end, height) {
-	var in10 = (end - start) * (1.2 * labelFont + 0.5) / height,
+	var in10 = (end - start) * (1.2 * labelFont + 0.1) / height,
 		order = Math.pow(10, Math.floor(Math.log10(in10))),
-		fsd = Math.floor(in10 / order), // 1st significant digit, 1..9
+		fsd = in10 / order, // 1st significant digit, 1..9
 		rounded = fsd > 5 ? 10 : fsd > 1 ? 5 : 1;
 
 	return Math.max(rounded * order, 1);
