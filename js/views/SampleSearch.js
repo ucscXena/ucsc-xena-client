@@ -109,7 +109,7 @@ var SampleSearch = React.createClass({
 		onChange(value);
 	},
 	render: function () {
-		var {onFilter, onZoom, onCreateColumn, mode, cohort} = this.props,
+		var {matches, onFilter, onZoom, onCreateColumn, mode, cohort} = this.props,
 			{value} = this.state,
 			noshow = (mode !== "heatmap"),
 			sampleFilter = _.getIn(cohort, [0, 'sampleFilter']),
@@ -122,7 +122,9 @@ var SampleSearch = React.createClass({
 					title={value}
 					placeholder='Find samples e.g. TCGA-DB-A4XH, missense'
 					onChange={this.onChange}
-					disabled={noshow}/>
+					disabled={noshow}>
+				<span className={compStyles.subtitle}>{`${matches} matching samples`}</span>
+				</Input>
 				{filterDisabled ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
 				<IconMenu title='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
 					{sampleFilter ? <MenuItem caption='Clear Filter' onClick={this.onResetSampleFilter}/> :

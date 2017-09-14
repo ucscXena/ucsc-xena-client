@@ -147,16 +147,16 @@ var AppControls = React.createClass({
 		this.props.onShowWelcome();
 	},
 	render: function () {
-		var {appState: {cohort: activeCohorts, mode, columnOrder, showWelcome},
-				onReset, children, help, matches} = this.props,
+		var {appState: {cohort: activeCohorts, mode, columnOrder, showWelcome, samples},
+				onReset, children, help} = this.props,
 			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			hasColumn = !!columnOrder.length,
 			noshow = (mode !== "heatmap"),
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
-			fraction = count === matches ? '' :
-				`- Zoomed to ${index + 1} - ${index + count} (N=${count})`;
+			fraction = count === samples.length ? '' :
+				`- Zoomed to ${index + 1} - ${index + count}`;
 		// min-width specified on first MenuItem of bookmark menu is a hack to force menu items to extend full
 		// width for both no bookmark and bookmark states. RTB positions and clips the menu content according to the
 		// initial menu item content which causes problems when we move from the "Your Bookmark is Loading" to "Copy to Clipboard"
@@ -166,7 +166,7 @@ var AppControls = React.createClass({
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
 						<div className={compStyles.titleContainer}>
 							<span className={compStyles.title}>{cohort}</span>
-							<span className={compStyles.subtitle}>{matches} Samples {fraction ? fraction : null}</span>
+							<span className={compStyles.subtitle}>{samples.length} Samples {fraction ? fraction : null}</span>
 						</div>
 						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>
 						<i className='material-icons' onClick={() => onReset()} title='Pick new cohort'>close</i>

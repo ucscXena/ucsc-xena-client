@@ -6,6 +6,7 @@
  */
 
 @value black12 from '../../css/variables.css';
+@value black38 from '../../css/variables.css';
 
 .SampleSearch {
 	align-items: center;
@@ -34,4 +35,11 @@ i.menuDisabled {
 	padding-left: 0 !important;
 	padding-right: 0 !important;
 	width: 400px;
+}
+
+.subtitle {
+	composes: mdCaption from '../../css/typography.module.css';
+	color: black38;
+	display: block;
+	line-height: 16px;
 }

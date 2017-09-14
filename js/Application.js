@@ -108,6 +108,7 @@ var Application = React.createClass({
 								 zoom={zoom} onShowWelcome={() => onShowWelcome(true)}>
 						<SampleSearch
 							value={sampleSearch}
+							matches={matches}
 							onFilter={onFilter}
 							onZoom={onFilterZoom}
 							onCreateColumn={onFilterColumn}
