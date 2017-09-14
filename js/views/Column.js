@@ -253,7 +253,7 @@ function getStatusView(status, onReload) {
 					onClick={onReload}
 					title='Error loading data. Click to reload.'
 					style={styles.error}
-					className='glyphicon glyphicon-warning-sign Sortable-handle'
+					className='glyphicon glyphicon-warning-sign'
 					aria-hidden='true'/>
 			</div>);
 	}
