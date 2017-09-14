@@ -15,6 +15,7 @@ var Transcripts = React.createClass({
 	getInitialState() {
 		return {
 			gene: _.getIn(this.props.state, ['transcripts', 'gene'], ""),
+			input: _.getIn(this.props.state, ['transcripts', 'gene'], ""),
 			scaleZoom: false,
 			OKbuttons: true
 		};
@@ -28,10 +29,13 @@ var Transcripts = React.createClass({
 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
 		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
 		var unit = this.refs.unit.value;
+		var gene = this.state.input;
+
+		this.setState({gene: gene});
 
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
-		this.props.callback(['loadGene', this.state.gene, studyA, subtypeA, studyB, subtypeB, unit]);
+		this.props.callback(['loadGene', gene, studyA, subtypeA, studyB, subtypeB, unit]);
 	},
 
 	onZoom(name) {
@@ -95,25 +99,25 @@ var Transcripts = React.createClass({
 
 		return (
 				<div style={{margin: "20px auto", width: "1200px"}}>
-					{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
-						<div className="legend-holder">
-							<div className="legend" style={{backgroundColor: topColor}}><label>{subtypeA}</label></div>
-							<div className="legend" style={{backgroundColor: bottomColor}}><label>{subtypeB}</label></div>
-						</div> : null
-					}
 					<a className="selectors" style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors" style={{width: "1200px", height: "80px"}}>
 						<div id="geneBox" style={{float: "left", width: "385px"}}>
-							<GeneSuggest label="Add Gene" value={this.state.gene}
-								onChange={ value => {this.setState({gene: value, OKbutton: true});} }/>
+							<GeneSuggest label="Add Gene" value={this.state.input}
+								onChange={ value => {this.setState({input: value, OKbutton: true});} }/>
 						</div>
 						{ this.state.OKbutton ?
-							<div>
-								<button className="horizontalSegmentButton" onClick={this.onLoadData}>OK</button>
-								click OK to update gene
-							</div> : null}
+							<button className="horizontalSegmentButton" onClick={this.onLoadData}>Update Gene</button>
+							: null
+						}
+						{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
+							<div className="legend-holder">
+								<div style={{display: "inline-block"}}>
+									<div className="legend" style={{backgroundColor: topColor}}><label>{subtypeA}</label></div>
+									<div className="legend" style={{backgroundColor: bottomColor}}><label>{subtypeB}</label></div>
+								</div>
+							</div> : null
+						}
 					</div>
-
 					<div style={{width: "1200px"}}>
 						<div style={{"margin-bottom": "10px"}}>
 							<span className="selectors">Study A</span>
