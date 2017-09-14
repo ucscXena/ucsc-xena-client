@@ -70,7 +70,9 @@ var searchMutation = _.curry((cmp, {allSamples}, search, data) => {
 		return invert(samplesInResp, allSamples);
 	}
 
-	let matchingRows = _.filter(rows, row => _.any(row, v => cmp(search, _.isString(v) ? v : String(v))));
+	// omit 'sample' from the variant search, because it is not stable:
+	// it's an index into the sample id list, and so changes after filter.
+	let matchingRows = _.filter(rows, row => _.any(row, (v, k) => k !== 'sample' && cmp(search, _.isString(v) ? v : String(v))));
 	return _.uniq(_.pluck(matchingRows, 'sample'));
 });
 
