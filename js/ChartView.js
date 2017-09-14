@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var _ = require('./underscore_ext');
 
 // Styles
 var compStyles = require('./ChartView.module.css');
@@ -10,10 +11,21 @@ var ChartView = React.createClass({
 		return false;
 	},
 	componentDidMount: function () {
-		var {appState, callback} = this.props,
+		this.chartRender(this.props);
+	},
+	componentWillReceiveProps(newProps) {
+		// Updating this way is clumsy. Need to refactor chart view.
+		if (!_.isEqual(_.omit(this.props.appState, 'chartState'),
+				_.omit(newProps.appState, 'chartState'))) {
+			this.chartRender(newProps);
+		}
+	},
+	chartRender(props) {
+		var {appState, callback} = props,
 			{root} = this.refs;
 		require.ensure(['./chart'], function () {
 			var chart = require('./chart');
+			root.innerHTML = '';
 			chart(root, callback, {xena: JSON.stringify(appState)});
 		});
 	},
