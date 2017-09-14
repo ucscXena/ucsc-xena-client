@@ -1,9 +1,7 @@
 'use strict';
 
-var _ = require('../underscore_ext');
 var React = require('react');
 var {deepPureRenderMixin} = require('../react-utils');
-var _ = require('../underscore_ext');
 import Input from 'react-toolbox/lib/input';
 import {IconMenu, MenuItem} from 'react-toolbox/lib/menu';
 var classNames = require('classnames');
@@ -100,20 +98,15 @@ var SampleSearch = React.createClass({
 		this.setState({value});
 		onChange(value);
 	},
-	onResetSampleFilter: function () {
-		this.props.callback(['sampleFilter', 0 /* index into composite cohorts */, null]);
-	},
 	onSamplesSubmit: function (value) {
 		var {onChange} = this.props;
 		this.setState({value});
 		onChange(value);
 	},
 	render: function () {
-		var {matches, onFilter, onZoom, onCreateColumn, mode, cohort} = this.props,
+		var {matches, onFilter, onZoom, onCreateColumn, mode} = this.props,
 			{value} = this.state,
-			noshow = (mode !== "heatmap"),
-			sampleFilter = _.getIn(cohort, [0, 'sampleFilter']),
-			filterDisabled = (noshow || !value);
+			noshow = (mode !== "heatmap");
 		return (
 			<div className={compStyles.SampleSearch}>
 				<Input className={compStyles.inputContainer}
@@ -125,10 +118,9 @@ var SampleSearch = React.createClass({
 					disabled={noshow}>
 				<span className={compStyles.subtitle}>{`${matches} matching samples`}</span>
 				</Input>
-				{filterDisabled ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
+				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
 				<IconMenu title='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
-					{sampleFilter ? <MenuItem caption='Clear Filter' onClick={this.onResetSampleFilter}/> :
-						<MenuItem caption='Filter' onClick={onFilter}/>}
+					<MenuItem caption='Filter' onClick={onFilter}/>
 					<MenuItem caption='Zoom' onClick={onZoom}/>
 					<MenuItem caption='New Column' onClick={onCreateColumn}/>
 				</IconMenu>}

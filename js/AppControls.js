@@ -148,13 +148,15 @@ var AppControls = React.createClass({
 	},
 	render: function () {
 		var {appState: {cohort: activeCohorts, mode, columnOrder, showWelcome, samples},
-				onReset, children, help} = this.props,
+				onReset, children, help, onResetSampleFilter} = this.props,
 			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			hasColumn = !!columnOrder.length,
 			noshow = (mode !== "heatmap"),
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
+			sampleFilter = _.getIn(activeCohorts, [0, 'sampleFilter']),
+			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null,
 			fraction = count === samples.length ? '' :
 				`- Zoomed to ${index + 1} - ${index + count}`;
 		// min-width specified on first MenuItem of bookmark menu is a hack to force menu items to extend full
@@ -166,7 +168,7 @@ var AppControls = React.createClass({
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
 						<div className={compStyles.titleContainer}>
 							<span className={compStyles.title}>{cohort}</span>
-							<span className={compStyles.subtitle}>{samples.length} Samples {fraction ? fraction : null}</span>
+							<span className={compStyles.subtitle}>{filter} {samples.length} Samples {fraction ? fraction : null}</span>
 						</div>
 						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>
 						<i className='material-icons' onClick={() => onReset()} title='Pick new cohort'>close</i>

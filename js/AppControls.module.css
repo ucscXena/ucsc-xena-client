@@ -10,7 +10,11 @@
 @value black38 from '../css/variables.css';
 @value black87 from '../css/variables.css';
 
-.hoverStrike:hover { /** TODO(mim) revisit this - is this necessary once skin is complete? */
+.appliedFilter {
+	cursor: pointer
+}
+
+.appliedFilter:hover {
 	text-decoration: line-through;
 }
 

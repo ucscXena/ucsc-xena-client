@@ -145,6 +145,9 @@ var ApplicationContainer = React.createClass({
 	onReset() {
 		this.props.callback(['cohortReset']);
 	},
+	onResetSampleFilter: function () {
+		this.props.callback(['sampleFilter', 0 /* index into composite cohorts */, null]);
+	},
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback} = this.props,
@@ -158,6 +161,7 @@ var ApplicationContainer = React.createClass({
 		return (
 			<Application
 					onReset={this.onReset}
+					onResetSampleFilter={this.onResetSampleFilter}
 					onWizardMode={this.onWizardMode}
 					onShowWelcome={this.onShowWelcome}
 					stepperState={stepperState}

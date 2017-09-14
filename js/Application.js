@@ -104,7 +104,7 @@ var Application = React.createClass({
 				{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
 					null}
 				{wizardMode ? <Stepper mode={stepperState} /> :
-					<AppControls {...otherProps} appState={state} matches={matches} help={searchHelp}
+					<AppControls {...otherProps} appState={state} help={searchHelp}
 								 zoom={zoom} onShowWelcome={() => onShowWelcome(true)}>
 						<SampleSearch
 							value={sampleSearch}
