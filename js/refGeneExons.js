@@ -146,9 +146,7 @@ var RefGeneAnnotation = React.createClass({
 					ctx.fillStyle = shade2;
 					ctx.fillRect(pGeneStart, lineY, pGeneEnd - pGeneStart, 1);
 
-					if (mode === 'coordinate') {
-						drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, gene.strand);
-					}
+					drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, mode === 'coordinate' ? gene.strand : '+');
 
 					// draw each segment
 					_.each(segments, ([pstart, pend, shade, y, h]) => {
