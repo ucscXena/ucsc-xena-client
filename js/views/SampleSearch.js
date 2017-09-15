@@ -104,7 +104,7 @@ var SampleSearch = React.createClass({
 		onChange(value);
 	},
 	render: function () {
-		var {matches, onFilter, onZoom, onCreateColumn, mode} = this.props,
+		var {matches, onFilter, onZoom, onCreateColumn, onResetSampleFilter, mode} = this.props,
 			{value} = this.state,
 			noshow = (mode !== "heatmap");
 		return (
@@ -121,6 +121,7 @@ var SampleSearch = React.createClass({
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
 				<IconMenu title='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
 					<MenuItem caption='Filter' onClick={onFilter}/>
+					<MenuItem caption='Clear Filter' onClick={onResetSampleFilter}/>
 					<MenuItem caption='Zoom' onClick={onZoom}/>
 					<MenuItem caption='New Column' onClick={onCreateColumn}/>
 				</IconMenu>}

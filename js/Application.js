@@ -82,7 +82,7 @@ var Application = React.createClass({
 //	},
 	render: function() {
 		let {state, children, onHighlightChange, onShowWelcome, stepperState, ...otherProps} = this.props,
-			{callback} = otherProps,
+			{callback, onResetSampleFilter} = otherProps,
 			{cohort, samplesMatched, sampleSearch, samples, mode, wizardMode, showWelcome, zoom, loadPending} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			// Can these closures be eliminated, now that the selector is above this
@@ -114,6 +114,7 @@ var Application = React.createClass({
 							onCreateColumn={onFilterColumn}
 							onChange={onHighlightChange}
 							mode={mode}
+							onResetSampleFilter={onResetSampleFilter}
 							cohort={cohort}
 							callback={callback}/>
 					</AppControls>
