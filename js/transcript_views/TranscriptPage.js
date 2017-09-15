@@ -9,16 +9,30 @@ const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
 import '../../css/transcript_css/transcriptPage.css';
 
+var defaultGene = 'KRAS',
+	defaultStudyA = 'tcga',
+	defaultStudyB = 'gtex',
+	defaultSubtypeA  = 'TCGA Lung Adenocarcinoma',
+	defaultSubtypeB  = 'GTEX Lung',
+	defaultUnit = 'tpm';
+
+
 // Placeholder component. I'm expecting the real top-level view
 // will be in a separate file, and imported above.
 var Transcripts = React.createClass({
 	getInitialState() {
 		return {
-			gene: _.getIn(this.props.state, ['transcripts', 'gene'], ""),
-			input: _.getIn(this.props.state, ['transcripts', 'gene'], ""),
+			gene: _.getIn(this.props.state, ['transcripts', 'gene'], defaultGene),
+			input: _.getIn(this.props.state, ['transcripts', 'gene'], defaultGene),
 			scaleZoom: false,
 			OKbuttons: true
 		};
+	},
+
+	componentDidMount () {
+		if (!this.props.state.transcripts) {
+			this.props.callback(['loadGene', defaultGene, defaultStudyA, defaultSubtypeA, defaultStudyB, defaultSubtypeB, defaultUnit]);
+		}
 	},
 
 	onLoadData() {
@@ -51,7 +65,7 @@ var Transcripts = React.createClass({
 	render() {
 		//for data selection
 		var {subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = this.props.state.transcripts || {};
-		if(!subtypes)
+		if (!subtypes)
 		{
 			return <h4>Loading available subtypes...</h4>;
 		}
