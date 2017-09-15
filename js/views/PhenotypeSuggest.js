@@ -10,7 +10,7 @@ var renderInputComponent = ({ref, onChange, ...props}) => (
 	<Input
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
-		label='Phenotype'
+		label='Add Phenotype'
 		{...props} />);
 
 var filterFeatures = (lcValue, features) =>

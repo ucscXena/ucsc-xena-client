@@ -31,7 +31,7 @@ var renderInputComponent = ({ref, onChange, label, ...props}) => (
 	<Input
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
-		label= {label || 'Gene or position'}
+		label= {label || 'Add Gene or Position'}
 		{...props} />);
 
 // Currently we only match against refGene hg38 genes. We could, instead, match
