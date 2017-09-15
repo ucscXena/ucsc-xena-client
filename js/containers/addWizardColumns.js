@@ -77,12 +77,18 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 // Configuration for first and second variable select cards that are displayed during wizard.
 var variableSelectConfig = {
 	'FIRST_COLUMN': {
-		helpText: 'Select the first variable.', // XXX expand on this :-p
+		helpText: {
+			'Genotypic': 'Add a gene (e.g. RB1) or position (e.g. chr19p), and select a dataset.',
+			'Phenotypic': 'Add a phenotype (e.g Type).'
+		},
 		pos: 1,
 		title: 'First Variable'
 	},
 	'SECOND_COLUMN': {
-		helpText: 'Select the second variable.',
+		helpText: {
+			'Genotypic': 'Add a gene (e.g. RB1) or position (e.g. chr19p), and select a dataset.',
+			'Phenotypic': 'Add a phenotype (e.g Type).'
+		},
 		pos: 2,
 		title: 'Second Variable'
 	}

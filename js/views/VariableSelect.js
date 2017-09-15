@@ -236,13 +236,15 @@ var VariableSelect = React.createClass({
 			value = this.state.value[mode],
 			selected = this.state.selected[advanced],
 			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
+			contentSpecificHelp = _.getIn(helpText, [mode]),
 			ModeForm = getModeFields[mode];
-		var wizardProps = {colId, controls, title, helpText, onDone: this.onDone, valid, width};
+
+		var wizardProps = {colId, controls, title, contentSpecificHelp, onDone: this.onDone, valid, width};
 		var dataTypeProps = {
 			label: 'Data Type',
 			value: mode,
 			onChange: this.on.mode,
-			options: [{label: 'Genotypic', value: 'Genotypic'}, {label: 'Phenotypic', value: 'Phenotypic'}]
+			options: [{label: 'Genomic', value: 'Genotypic'}, {label: 'Phenotypic', value: 'Phenotypic'}]
 		};
 		return (
 			<WizardCard {...wizardProps}>
