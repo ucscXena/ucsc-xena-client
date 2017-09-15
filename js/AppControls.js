@@ -45,6 +45,7 @@ function download([fields, rows]) {
 }
 
 var asciiA = 65;
+var asciiB = 66;
 
 var bookmarksDefault = false;
 if (process.env.NODE_ENV !== 'production') {
@@ -62,9 +63,13 @@ var AppControls = React.createClass({
 	},
 	componentWillMount() {
 		this.ksub = konami(asciiA).subscribe(this.enableBookmarks);
+		this.nsub = konami(asciiB).subscribe(() => {
+			this.props.callback(['notifications-enable']);
+		});
 	},
 	componentWillUnmount() {
 		this.ksub.unsubscribe();
+		this.nsub.unsubscribe();
 	},
 	onMode: function () {
 		var {callback, appState: {mode}} = this.props;
