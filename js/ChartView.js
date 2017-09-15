@@ -12,6 +12,13 @@ var ChartView = React.createClass({
 	},
 	componentDidMount: function () {
 		this.chartRender(this.props);
+		window.addEventListener('resize', this.setSize);
+	},
+	componentWillUnmount() {
+		window.removeEventListener('resize', this.setSize);
+		if (this.destroy) {
+			this.destroy();
+		}
 	},
 	componentWillReceiveProps(newProps) {
 		// Updating this way is clumsy. Need to refactor chart view.
@@ -20,13 +27,22 @@ var ChartView = React.createClass({
 			this.chartRender(newProps);
 		}
 	},
+	setSize() {
+		if (this.chart) {
+			let height = this.chart.chartHeight(),
+				width = this.chart.chartWidth();
+			document.getElementById("myChart").style.height = height;
+			document.getElementById("myChart").style.width = width;
+			document.getElementById("controlPanel").style.width = width;
+		}
+	},
 	chartRender(props) {
 		var {appState, callback} = props,
 			{root} = this.refs;
-		require.ensure(['./chart'], function () {
-			var chart = require('./chart');
+		require.ensure(['./chart'], () => {
+			this.chart = require('./chart');
 			root.innerHTML = '';
-			chart(root, callback, {xena: JSON.stringify(appState)});
+			this.destroy = this.chart.render(root, callback, {xena: JSON.stringify(appState)});
 		});
 	},
 	render: function () {

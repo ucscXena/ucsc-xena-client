@@ -24,7 +24,7 @@ var chartHeight = () =>
 var chartWidth = () =>
 	window.innerWidth * 0.7 + "px";
 
-module.exports = function (root, callback, sessionStorage) {
+function render(root, callback, sessionStorage) {
 	var xdiv, ydiv, xAxisDiv, yAxisDiv, // x y  axis dropdown
 		colorDiv, colorAxisDiv, // color dropdown
 		statsDiv, // statistics
@@ -33,7 +33,8 @@ module.exports = function (root, callback, sessionStorage) {
 		xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
 		cohort, samplesLength, cohortSamples, updateArgs, update,
 		normalizationState = {},
-		expState = {};
+		expState = {},
+		chart;
 
 		if (xenaState)	{
 			cohort = xenaState.cohort;
@@ -550,14 +551,19 @@ module.exports = function (root, callback, sessionStorage) {
 	}
 */
 
+	function destroy() {
+		if (chart) {
+			chart.destroy();
+			chart = undefined;
+		}
+	}
 	function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 		yfields, ycodemap, ydata, reverseStrand,
 		offsets, xlabel, ylabel, STDEV,
 		scatterLabel, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
 		columns, datasets, xcolumn, ycolumn, colorColumn) {
-		var chart,
-			yIsCategorical = ycodemap ? true : false,
+		var yIsCategorical = ycodemap ? true : false,
 			xIsCategorical = xcodemap ? true : false,
 			chartOptions = _.clone(highchartsHelper.chartOptions),
 			xAxisTitle,
@@ -577,6 +583,7 @@ module.exports = function (root, callback, sessionStorage) {
 			pValue, dof,
 			total;
 
+		destroy();
 		document.getElementById("myChart").innerHTML = "Generating chart ...";
 
 		chartOptions.subtitle = {
@@ -1470,10 +1477,7 @@ module.exports = function (root, callback, sessionStorage) {
 	leftContainer.appendChild(axisContainer);
 
 	update.apply(this, updateArgs);
-
-	window.addEventListener("resize", function() {
-		document.getElementById("myChart").style.height = chartHeight();
-		document.getElementById("myChart").style.width = chartWidth();
-		document.getElementById("controlPanel").style.width = chartWidth();
-	});
+	return destroy;
 };
+
+module.exports = {render, chartHeight, chartWidth};
