@@ -9,13 +9,13 @@ const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
 import '../../css/transcript_css/transcriptPage.css';
 
-var defaultGene = 'KRAS',
-	defaultStudyA = 'tcga',
+var defaultGene = 'KRAS';
+	/*defaultStudyA = 'tcga',
 	defaultStudyB = 'gtex',
 	defaultSubtypeA  = 'TCGA Lung Adenocarcinoma',
 	defaultSubtypeB  = 'GTEX Lung',
 	defaultUnit = 'tpm';
-
+	*/
 
 // Placeholder component. I'm expecting the real top-level view
 // will be in a separate file, and imported above.
@@ -24,21 +24,19 @@ var Transcripts = React.createClass({
 		return {
 			gene: _.getIn(this.props.state, ['transcripts', 'gene'], defaultGene),
 			input: _.getIn(this.props.state, ['transcripts', 'gene'], defaultGene),
-			scaleZoom: false,
-			OKbuttons: true
+			scaleZoom: false
 		};
 	},
 
 	componentDidMount () {
-		if (!this.props.state.transcripts) {
-			this.props.callback(['loadGene', defaultGene, defaultStudyA, defaultSubtypeA, defaultStudyB, defaultSubtypeB, defaultUnit]);
-		}
+	//	if (!this.props.state.transcripts) {
+	//		this.props.callback(['loadGene', defaultGene, defaultStudyA, defaultSubtypeA, defaultStudyB, defaultSubtypeB, defaultUnit]);
+	//	}
 	},
 
 	onLoadData() {
 		this.setState({
-			scaleZoom: false,
-			OKbutton: false
+			scaleZoom: false
 		});
 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
 		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
@@ -115,14 +113,11 @@ var Transcripts = React.createClass({
 				<div style={{margin: "20px auto", width: "1200px"}}>
 					<a className="selectors" style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors" style={{width: "1200px", height: "80px"}}>
-						<div id="geneBox" style={{float: "left", width: "385px"}}>
-							<GeneSuggest label="Add Gene" value={this.state.input}
-								onChange={ value => {this.setState({input: value, OKbutton: true});} }/>
+						<div id="geneBox" style={{float: "left", width: "200px"}}>
+							<GeneSuggest label="Gene (e.g. KRAS)" value={this.state.input}
+								onChange={ value => {this.setState({input: value});} }/>
 						</div>
-						{ this.state.OKbutton ?
-							<button className="horizontalSegmentButton" onClick={this.onLoadData}>Update Gene</button>
-							: null
-						}
+						<button className="horizontalSegmentButton" onClick={this.onLoadData}>Add Gene</button>
 						{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
 							<div className="legend-holder">
 								<div style={{display: "inline-block"}}>
