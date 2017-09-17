@@ -79,7 +79,7 @@ var variableSelectConfig = {
 	'FIRST_COLUMN': {
 		helpText: {
 			'Genotypic': 'Add a gene (e.g. RB1) or position (e.g. chr19p), and select a dataset.',
-			'Phenotypic': 'Add a phenotype (e.g sample type).'
+			'Phenotypic': 'Add a phenotype (e.g. sample type, age).'
 		},
 		pos: 1,
 		title: 'First Variable'
@@ -87,7 +87,7 @@ var variableSelectConfig = {
 	'SECOND_COLUMN': {
 		helpText: {
 			'Genotypic': 'Add a gene (e.g. RB1) or position (e.g. chr19p), and select a dataset.',
-			'Phenotypic': 'Add a phenotype (e.g Sample type).'
+			'Phenotypic': 'Add a phenotype (e.g. sample type, age).'
 		},
 		pos: 2,
 		title: 'Second Variable'
