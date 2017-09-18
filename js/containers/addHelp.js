@@ -2,10 +2,10 @@
 
 var React = require('react');
 var HelpBox = require('../views/HelpBox');
-
+//old text:  The left-most column is used for the initial row sort. In case of a tie, the value in the next column to the right is used to break the tie.
 var columnHelp = onClose => (
 	<HelpBox w={400} o='Below' onClose={onClose}>
-		<p>The left-most column is used for the initial row sort. In case of a tie, the value in the next column to the right is used to break the tie.</p>
+		<p>Column B value is used to sort the rows. In case of a tie, the next columns to the right are used to break the tie.</p>
 	</HelpBox>);
 
 var rowHelp = onClose => (
