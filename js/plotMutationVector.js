@@ -152,7 +152,7 @@ function sampleTooltip(sampleFormat, dataList, assembly, fields) {
 	var perRowTip = data => {
 		var dnaVaf = data.dnaVaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dnaVaf)],
 			rnaVaf = data.rnaVaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rnaVaf)],
-			ref = data.reference && ['label', `${data.reference} to`],
+			ref = data.reference && ['label', ` ${data.reference} to `],
 
 			//alt
 			altDirection = data.alt && mv.joinedVariantDirection(data.alt),
