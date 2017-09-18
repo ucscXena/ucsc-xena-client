@@ -170,7 +170,7 @@ function setHubs(state, {hubs}) {
 
 function resetWizard(state) {
 	return state.columnOrder.length > 2 ?
-		_.assoc(state, 'wizardMode', false) : state;
+		_.assoc(state, 'wizardMode', false, 'showWelcome', false) : state;
 }
 
 // Fetches the gene strand info for a geneProbes field.
