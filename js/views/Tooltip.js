@@ -106,7 +106,7 @@ var Tooltip = React.createClass({
 						{rowsOut}
 					</ul>
 					<div className={compStyles.actions}>
-						<span className={compStyles.zoomHint}>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"}`}</span>
+						<span className={compStyles.zoomHint}>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"} tooltip`}</span>
 						<a href="http://xena.ucsc.edu/spreadsheet-zoom/" target="_blank"><i className='material-icons'>help</i></a>
 					</div>
 				</div>
