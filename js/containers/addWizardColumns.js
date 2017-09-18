@@ -121,10 +121,15 @@ var preferredLabels = {
 	'simple somatic mutation': 'Somatic Mutation'
 };
 
-function getPreferedDatasets(cohort, cohortPreferred) {
-	var preferred = _.get(cohortPreferred, _.getIn(cohort, [0, 'name']));
-	return preferred ? _.keys(preferred).map(type =>
-			({dsID: preferred[type], label: preferredLabels[type]})) : null;
+function getPreferedDatasets(cohort, cohortPreferred, hubs) {
+	var active = _.keys(hubs).filter(hub => hubs[hub].user),
+		// Only include datasets on active hubs.
+		preferred = _.pick(_.get(cohortPreferred, _.getIn(cohort, [0, 'name'])),
+							ds => _.contains(active, JSON.parse(ds).host));
+	// Use isEmpty to handle 1) no configured preferred datasets or 2) preferred dataset list
+	// is empty after filtering by active hubs.
+	return _.isEmpty(preferred) ? null : _.keys(preferred).map(type =>
+			({dsID: preferred[type], label: preferredLabels[type]}));
 }
 
 var stripFields = f => ({dsID: f.dsID, label: (f.longtitle || f.name), value: f.name});
@@ -206,10 +211,10 @@ function addWizardColumns(Component) {
 		render() {
 			var {children, appState} = this.props,
 				{cohort, cohorts, cohortPreferred, cohortMeta, wizardMode, datasets,
-					features, defaultWidth} = appState,
+					features, defaultWidth, servers} = appState,
 				stepperState = getStepperState(appState),
 				{editing} = appState,
-				preferred = getPreferedDatasets(cohort, cohortPreferred),
+				preferred = getPreferedDatasets(cohort, cohortPreferred, servers),
 				width = defaultWidth,
 				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect, width},
 				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect, width},
