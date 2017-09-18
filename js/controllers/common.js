@@ -180,15 +180,18 @@ function addSampleColumn(state, width) {
 	return _.assocIn(newState, ['data', 'samples', 'status'], 'loading');
 }
 
+var setWizardAndMode = state => _.assoc(state, 'wizardMode', true, 'mode', 'heatmap');
+
 var setCohort = (state, cohorts, width) =>
 		addSampleColumn(
-			resetZoom(
-				reJoinFields(
-					state.datasets,
-					closeEmptyColumns(
-						setCohortRelatedFields(
-							remapFieldsForCohorts(state, cohorts),
-							cohorts)))), width);
+			setWizardAndMode(
+				resetZoom(
+					reJoinFields(
+						state.datasets,
+						closeEmptyColumns(
+							setCohortRelatedFields(
+								remapFieldsForCohorts(state, cohorts),
+								cohorts))))), width);
 
 var userServers = state => _.keys(state.servers).filter(h => state.servers[h].user);
 
