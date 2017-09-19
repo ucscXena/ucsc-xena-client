@@ -380,20 +380,22 @@ var KmPlot = React.createClass({
 			</div>;
 
 		return (
-			<Modal show={true} bsSize='large' className='kmDialog' onHide={this.hide} ref="kmPlot">
-				<Modal.Header closeButton className="container-fluid">
-					<span className="col-md-2">
-						<Modal.Title>Kaplan Meier</Modal.Title>
-					</span>
-					<span style={{overflow: 'hidden'}} className="col-md-9 label label-default featureLabel">{title}</span>
-				</Modal.Header>
-				<Modal.Body className="container-fluid">
-					{Content}
-				</Modal.Body>
-				<Modal.Footer className="container-fluid">
-					<samp className='featureLabel'>{fullLabel}</samp>
-				</Modal.Footer>
-			</Modal>
+			<div className='kmContainer'>
+				<Modal autoFocus={false} enforceFocus={false} container={this} show={true} bsSize='large' className='kmDialog' onHide={this.hide} ref="kmPlot">
+					<Modal.Header closeButton className="container-fluid">
+						<span className="col-md-2">
+							<Modal.Title>Kaplan Meier</Modal.Title>
+						</span>
+						<span style={{overflow: 'hidden'}} className="col-md-9 label label-default featureLabel">{title}</span>
+					</Modal.Header>
+					<Modal.Body className="container-fluid">
+						{Content}
+					</Modal.Body>
+					<Modal.Footer className="container-fluid">
+						<samp className='featureLabel'>{fullLabel}</samp>
+					</Modal.Footer>
+				</Modal>
+			</div>
 		);
 	}
 });

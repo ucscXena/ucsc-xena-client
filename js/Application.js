@@ -13,6 +13,7 @@ var uuid = require('./uuid');
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
 import {ThemeProvider} from 'react-css-themr';
 var appTheme = require('./appTheme');
+var BookmarkMenu = require('./views/BookmarkMenu');
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 // should really be in a config file.
@@ -66,6 +67,9 @@ var Application = React.createClass({
 					'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
 		callback(['add-column', 0, {id: uuid(), settings}]);
 	},
+	onImport(state) {
+		this.props.callback(['import', state]);
+	},
 //	onSearchIDAndFilterColumn: function (qsamplesList) {
 //		var {state: {samples, cohortSamples}} = this.props,
 //			qsampleListObj = {},
@@ -101,40 +105,43 @@ var Application = React.createClass({
 
 		return (
 			<div>
-				{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
-					null}
-				{wizardMode ? <Stepper mode={stepperState} /> :
-					<AppControls {...otherProps} appState={state} help={searchHelp}
-								 zoom={zoom} onShowWelcome={() => onShowWelcome(true)}>
-						<SampleSearch
-							value={sampleSearch}
-							matches={matches}
-							onFilter={onFilter}
-							onZoom={onFilterZoom}
-							onCreateColumn={onFilterColumn}
-							onChange={onHighlightChange}
-							mode={mode}
-							onResetSampleFilter={onResetSampleFilter}
-							cohort={cohort}
-							callback={callback}/>
-					</AppControls>
-						}
-				<Grid onClick={this.onClick}>
-				{/*
-					<Row>
-						<button onClick={this.onPerf}>Perf</button>
-					</Row>
-				*/}
-					<Row>
-						<Col xs4={4}>
-					{children}
+				<BookmarkMenu getState={this.props.getState} onImport={this.onImport}/>
+				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}
+					{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
+						null}
+					{wizardMode ? <Stepper mode={stepperState} /> :
+						<AppControls {...otherProps} appState={state} help={searchHelp}
+									 zoom={zoom} onShowWelcome={() => onShowWelcome(true)}>
+							<SampleSearch
+								value={sampleSearch}
+								matches={matches}
+								onFilter={onFilter}
+								onZoom={onFilterZoom}
+								onCreateColumn={onFilterColumn}
+								onChange={onHighlightChange}
+								mode={mode}
+								onResetSampleFilter={onResetSampleFilter}
+								cohort={cohort}
+								callback={callback}/>
+						</AppControls>
+							}
+					<Grid onClick={this.onClick}>
+					{/*
+						<Row>
+							<button onClick={this.onPerf}>Perf</button>
+						</Row>
+					*/}
+						<Row>
+							<Col xs4={4}>
+						{children}
+							</Col>
+						</Row>
+					</Grid>
 					{_.getIn(state, ['km', 'id']) ? <KmPlot
 							callback={callback}
 							km={state.km}
 							features={state.features} /> : null}
-						</Col>
-					</Row>
-				</Grid>
+				</div>
 			</div>
 		);
 	}

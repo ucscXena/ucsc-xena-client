@@ -1,0 +1,33 @@
+
+/* Bookmark icon */
+.iconBookmark {
+	margin-left: 4px;
+	z-index: 1060; /* in front of KmPlot dialog */
+}
+
+
+/* Copy bookmark input */
+.bookmarkInput {
+	bottom: 0;
+	left: 0;
+	opacity: 0;
+	pointer-events: none;
+	position: fixed; /* Take input out of flow of app controls */
+}
+
+/* Import input */
+.importInput[type='file'] {
+	display: none;
+}
+
+.placeholder {
+	visibility: hidden;
+}
+
+/* position above the app */
+.wrapper {
+	margin: 5;
+	position: absolute;
+	right: 0;
+	top: 0;
+}

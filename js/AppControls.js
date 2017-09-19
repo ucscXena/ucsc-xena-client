@@ -5,11 +5,7 @@ var React = require('react');
 var pdf = require('./pdfSpreadsheet');
 var _ = require('./underscore_ext');
 import AppBar from 'react-toolbox/lib/app_bar';
-import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
-var Rx = require('./rx');
-var {createBookmark} = require('./bookmark');
 var konami = require('./konami');
-var config = require('./config');
 var {deepPureRenderMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var classNames = require('classnames');
@@ -44,31 +40,17 @@ function download([fields, rows]) {
 	document.body.removeChild(a);
 }
 
-var asciiA = 65;
 var asciiB = 66;
-
-var bookmarksDefault = false;
-if (process.env.NODE_ENV !== 'production') {
-	bookmarksDefault = true;
-}
 
 // XXX drop this.props.style? Not sure it's used.
 var AppControls = React.createClass({
 	mixins: [deepPureRenderMixin],
-	getInitialState() {
-		return {bookmarks: bookmarksDefault};
-	},
-	enableBookmarks() {
-		this.setState({bookmarks: true});
-	},
 	componentWillMount() {
-		this.ksub = konami(asciiA).subscribe(this.enableBookmarks);
 		this.nsub = konami(asciiB).subscribe(() => {
 			this.props.callback(['notifications-enable']);
 		});
 	},
 	componentWillUnmount() {
-		this.ksub.unsubscribe();
 		this.nsub.unsubscribe();
 	},
 	onMode: function () {
@@ -84,13 +66,6 @@ var AppControls = React.createClass({
 	},
 	onCohortSelect: function (value) {
 		this.props.callback(['cohort', 0 /* index into composite cohorts */, value]);
-	},
-	onSetBookmark(resp) {
-		var {id} = JSON.parse(resp.response);
-		this.setState({bookmark: `${location.origin}${config.baseurl}heatmap/?bookmark=${id}`});
-	},
-	onResetBookmark() {
-		this.setState({bookmark: null});
 	},
 	onDownload: function () {
 		var {sampleFormat} = this.props,
@@ -109,52 +84,12 @@ var AppControls = React.createClass({
 
 		download([combinedHeaders, combinedRows]);
 	},
-	onBookmark: function () {
-		var {getState} = this.props;
-		Rx.Observable.ajax({
-			method: 'POST',
-			url: '/api/bookmarks/bookmark',
-			responseType: 'text',
-			headers: {
-				'X-CSRFToken': document.cookie.replace(/.*csrftoken=([0-9a-z]+)/, '$1'),
-				'Content-Type': 'application/x-www-form-urlencoded'
-			},
-			body: `content=${encodeURIComponent(createBookmark(getState()))}`
-		}).subscribe(this.onSetBookmark);
-	},
-	onCopyBookmarkToClipboard: function() {
-		this.bookmarkEl.select();
-		document.execCommand('copy');
-	},
-	onExport: function() {
-		var {getState} = this.props;
-		var url = URL.createObjectURL(new Blob([JSON.stringify(getState())], { type: 'application/json' }));
-		var a = document.createElement('a');
-		var filename = 'xenaState.json';
-		_.extend(a, { id: filename, download: filename, href: url });
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-	},
-	onImport: function () {
-		this.refs.import.click();
-	},
-	onImportSelected: function (ev) {
-		var file = ev.target.files[0],
-			reader = new FileReader(),
-			{callback} = this.props;
-
-		reader.onload = () => callback(['import', JSON.parse(reader.result)]);
-		reader.readAsText(file);
-		ev.target.value = null;
-	},
 	onShowWelcome: function () {
 		this.props.onShowWelcome();
 	},
 	render: function () {
 		var {appState: {cohort: activeCohorts, mode, columnOrder, showWelcome, samples},
 				onReset, children, help, onResetSampleFilter} = this.props,
-			{bookmarks, bookmark} = this.state,
 			cohort = _.getIn(activeCohorts, [0, 'name']),
 			hasColumn = !!columnOrder.length,
 			noshow = (mode !== "heatmap"),
@@ -164,10 +99,6 @@ var AppControls = React.createClass({
 			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null,
 			fraction = count === samples.length ? '' :
 				`- Zoomed to ${index + 1} - ${index + count}`;
-		// min-width specified on first MenuItem of bookmark menu is a hack to force menu items to extend full
-		// width for both no bookmark and bookmark states. RTB positions and clips the menu content according to the
-		// initial menu item content which causes problems when we move from the "Your Bookmark is Loading" to "Copy to Clipboard"
-		// states. Do not remove this inline style!
 		return (
 				<AppBar>
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
@@ -185,18 +116,6 @@ var AppControls = React.createClass({
 						</div>
 						<div className={compStyles.actions}>
 							{hasColumn ? <i className='material-icons' onClick={this.onMode} title={modeHelp[mode]}>{modeIcon[mode]}</i> : null}
-							{bookmarks ?
-								[<IconMenu title='Bookmark' className={compStyles.iconBookmark} icon='bookmark' onShow={this.onBookmark} iconRipple={false}>
-									<MenuItem style={{minWidth: 218}} onClick={this.onExport} caption='Export'/>
-									<MenuItem onClick={this.onImport} caption='Import'/>
-									<MenuDivider/>
-									{bookmark ? [<MenuItem onClick={this.onCopyBookmarkToClipboard}
-														   caption='Copy Bookmark'/>,
-												<input className={compStyles.bookmarkInput} ref={(input) => this.bookmarkEl = input} value={bookmark}/>] :
-										<MenuItem disabled={true} caption='Your Bookmark is Loading'/>}
-								</IconMenu>,
-									<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>]
-								: null}
 							{(noshow || !hasColumn) ? null : <i className='material-icons' onClick={this.onPdf} title='Download as PDF'>picture_as_pdf</i> }
 							{hasColumn ? <i className='material-icons' onClick={this.onDownload} title='Download as tsv'>cloud_download</i> : null}
 							{showWelcome ? null : <i className='material-icons' onClick={this.onShowWelcome}>help</i>}

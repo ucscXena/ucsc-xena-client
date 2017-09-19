@@ -119,12 +119,25 @@ path.outline {
 	display: block;
 }
 
+.kmContainer {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	top: 0px;
+	position: absolute;
+}
+
+.kmContainer .modal, .kmContainer .modal-backdrop {
+  position: absolute;
+}
+
 .kmDialog .featureLabel {
 	float: left;
 	/*margin-top: 5px;*/
 	margin-right: 40px;
 	font-size: 20px;
 	vertical-align: center;
+	overflow: hidden;
 	/*padding: 3px;*/
 }
 

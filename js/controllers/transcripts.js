@@ -3,6 +3,7 @@
 var _ = require('../underscore_ext');
 var xenaQuery = require('../xenaQuery');
 var Rx = require('../rx');
+var {parseBookmark} = require('../bookmark');
 
 // Hard-coded expression dataset
 var expressionHost = 'https://toil.xenahubs.net';
@@ -61,9 +62,22 @@ function fetchSubtypes(serverBus) {
 						.map(filterSubtypes)]);
 }
 
+function fetchBookmark(serverBus, bookmark) {
+	serverBus.next(['bookmark', Rx.Observable.ajax({
+		responseType: 'text',
+		method: 'GET',
+		url: `/api/bookmarks/bookmark?id=${bookmark}`,
+	}).map(r => r.response)]);
+}
 
 var controls = {
-	'init-post!': serverBus => fetchSubtypes(serverBus),
+	'init-post!': (serverBus, state, newState, params) => {
+		var bookmark = _.get(params, 'bookmark');
+		fetchSubtypes(serverBus);
+		if (bookmark) {
+			fetchBookmark(serverBus, bookmark);
+		}
+	},
 	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) => {
 		var zoom = (state.transcripts && gene === state.transcripts.gene) ? state.transcripts.zoom : {};
 		return _.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB, unit, zoom, genetranscripts: null}));
@@ -81,7 +95,9 @@ var controls = {
 	transcriptSampleSubtypes:
 		(state, subtypes) => _.assocIn(state, ['transcripts', 'subtypes'], subtypes),
 	units: (state, units) => _.assocIn(state, ['transcripts', 'units'], units),
-	zoom: (state, name) => _.updateIn(state, ['transcripts', 'zoom', name], z => !z)
+	zoom: (state, name) => _.updateIn(state, ['transcripts', 'zoom', name], z => !z),
+	'import': (state, newState) => newState,
+	bookmark: (state, bookmark) => parseBookmark(bookmark)
 };
 
 module.exports = {

@@ -7,6 +7,7 @@ const ExonsOnly = require('./ExonsOnly');
 var {DensityPlot, bottomColor, topColor, plotWidth} = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
+var BookmarkMenu = require('../views/BookmarkMenu');
 import '../../css/transcript_css/transcriptPage.css';
 
 var defaultGene = 'KRAS';
@@ -22,7 +23,6 @@ var defaultGene = 'KRAS';
 var Transcripts = React.createClass({
 	getInitialState() {
 		return {
-			gene: _.getIn(this.props.state, ['transcripts', 'gene'], defaultGene),
 			input: _.getIn(this.props.state, ['transcripts', 'gene'], defaultGene),
 			scaleZoom: false
 		};
@@ -34,6 +34,10 @@ var Transcripts = React.createClass({
 	//	}
 	},
 
+	componentWillReceiveProps(props) {
+		this.setState({input: _.getIn(props.state, ['transcripts', 'gene'])});
+	},
+
 	onLoadData() {
 		this.setState({
 			scaleZoom: false
@@ -42,8 +46,6 @@ var Transcripts = React.createClass({
 		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
 		var unit = this.refs.unit.value;
 		var gene = this.state.input;
-
-		this.setState({gene: gene});
 
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
@@ -58,6 +60,14 @@ var Transcripts = React.createClass({
 		this.setState({
 			scaleZoom: !this.state.scaleZoom,
 		});
+	},
+
+	getState() {
+		return this.props.state;
+	},
+
+	onImport(state) {
+		this.props.callback(['import', state]);
 	},
 
 	render() {
@@ -112,6 +122,7 @@ var Transcripts = React.createClass({
 
 		return (
 				<div style={{margin: "20px auto", width: "1200px"}}>
+					<BookmarkMenu getState={this.getState} onImport={this.onImport}/>
 					<a className="selectors" style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors" style={{width: "1200px", height: "80px"}}>
 						<div id="geneBox" style={{float: "left", width: "200px"}}>
@@ -175,7 +186,7 @@ var Transcripts = React.createClass({
 					}
 					<NameColumn
 						data={transcriptNameData}
-						gene={this.state.gene}
+						gene={this.props.state.transcripts.gene}
 						/>
 					{/* <Exons
 						data={transcriptExonData}
