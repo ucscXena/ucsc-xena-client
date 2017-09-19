@@ -24,6 +24,7 @@
 var React = require('react');
 import {Button} from 'react-toolbox/lib/button';
 import {Card, CardTitle, CardText, CardActions} from 'react-toolbox/lib/card';
+var spinner = require('../ajax-loader.gif');
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');
@@ -36,7 +37,7 @@ var WizardCard = React.createClass({
 		this.props.onDone();
 	},
 	render() {
-		var {children, colId, controls, contentSpecificHelp, title, valid, width} = this.props;
+		var {children, colId, controls, contentSpecificHelp, title, valid, loading, width} = this.props;
 		return (
 			<Card style={{width: width}} className={compStyles.WizardCard}>
 				<div className={compStyles.headerContainer}>
@@ -53,6 +54,8 @@ var WizardCard = React.createClass({
 					{children}
 				</div>
 				<CardActions className={compStyles.actions}>
+					{loading ? <img src={spinner}/> : null}
+					{valid ? <i className='material-icons'>done</i> : null}
 					<Button accent disabled={!valid} onClick={this.onDone}>Done</Button>
 				</CardActions>
 			</Card>

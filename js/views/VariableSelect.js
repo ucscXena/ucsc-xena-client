@@ -202,9 +202,10 @@ var VariableSelect = React.createClass({
 		// user input.
 		this.validSub = mode.combineLatest(advanced, selected, value,
 				(mode, advanced, selected, value) => ([mode, advanced, selected, value]))
+			.do(() =>this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, advanced, selected, value]) =>
 					matchFields(this.props.datasets, this.props.features, mode, selected[advanced], value[mode]))
-			.subscribe(valid => this.setState(valid));
+			.subscribe(valid => this.setState({loading: false, ...valid}), () => this.setState({valid: false, loading: false}));
 	},
 	componentWillUnmount() {
 		this.modeSub.unsubscribe();
@@ -232,14 +233,14 @@ var VariableSelect = React.createClass({
 		}
 	},
 	render() {
-		var {mode, advanced, valid} = this.state,
+		var {mode, advanced, valid, loading} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[advanced],
 			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
 			contentSpecificHelp = _.getIn(helpText, [mode]),
 			ModeForm = getModeFields[mode];
 
-		var wizardProps = {colId, controls, title, contentSpecificHelp, onDone: this.onDone, valid, width};
+		var wizardProps = {colId, controls, title, contentSpecificHelp, onDone: this.onDone, valid, loading, width};
 		var dataTypeProps = {
 			label: 'Data Type',
 			value: mode,
