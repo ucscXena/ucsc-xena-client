@@ -108,6 +108,7 @@ var Transcripts = React.createClass({
 		var min = Math.min.apply(Math, _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB"))));
 		var densityplotAxisLabel = isFinite(max) && isFinite(min) ? linearTicks(min, max) : [];
 		var range = max - min;
+		var hasPlots = genetranscripts && ! _.isEmpty(genetranscripts);
 
 		return (
 				<div style={{margin: "20px auto", width: "1200px"}}>
@@ -117,8 +118,11 @@ var Transcripts = React.createClass({
 							<GeneSuggest label="Gene (e.g. KRAS)" value={this.state.input}
 								onChange={ value => {this.setState({input: value});} }/>
 						</div>
-						<button className="horizontalSegmentButton" onClick={this.onLoadData}>Add Gene</button>
-						{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
+						{this.state.input ?
+							<button className="horizontalSegmentButton" onClick={this.onLoadData}>Update Gene</button> :
+							<button className="horizontalSegmentButton" onClick={this.onLoadData}>Add Gene</button>
+						}
+						{ hasPlots ?
 							<div className="legend-holder">
 								<div style={{display: "inline-block"}}>
 									<div className="legend" style={{backgroundColor: topColor}}><label>{subtypeA}</label></div>
@@ -147,7 +151,7 @@ var Transcripts = React.createClass({
 						</div>
 					</div>
 
-					{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
+					{ hasPlots ?
 						<div>
 							<div className="densityplot--label-div-zero">
 								<label className="densityplot--label-zero">no expression</label>
