@@ -113,7 +113,7 @@ function fetchSurvival(serverBus, state) {
 			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
 }
 
-var shouldSetCohort = state => (state.cohortPending && state.cohort !== state.cohortPending);
+var shouldSetCohort = state => state.cohortPending && !_.isEqual(state.cohort, state.cohortPending);
 
 var setCohortPending = state =>
 	shouldSetCohort(state) ?
