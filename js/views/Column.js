@@ -519,7 +519,6 @@ var Column = React.createClass({
 				onSpecialDownload, supportsGeneAverage, specialDownloadMenu}),
 			[kmDisabled, kmTitle] = disableKM(id),
 			status = _.get(data, 'status'),
-			moveIcon = (<i className='Sortable-handle material-icons'>drag_handle</i>),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
 			annotation = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
@@ -564,7 +563,6 @@ var Column = React.createClass({
 							value={{default: fieldLabel, user: user.fieldLabel}} />}
 						controls={!interactive ? (first ? refreshIcon : null) :
 							<div>
-								{first ? null : moveIcon}
 								{first ? null : (
 									<IconMenu icon='more_vert' menuRipple iconRipple={false}>
 										{menu}

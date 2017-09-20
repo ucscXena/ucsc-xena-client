@@ -26,18 +26,13 @@
 
 /* Container around column label (A, B, C etc) and controls */
 .headerContainer {
+	cursor: move;
 	align-items: center;
 	border-bottom: 1px solid black12;
 	display: flex;
 	line-height: 0;
 	justify-content: space-between;
 	padding: 16px;
-}
-
-/* Drag icon */
-.headerContainer :global(.Sortable-handle) {
-	cursor: move;
-	padding: 6px;
 }
 
 .headerContainer:hover .controls.showOnHover {

@@ -31,7 +31,7 @@ var ColCard = React.createClass({
 		var {children, controls, colId, subtitle, title, wizardMode} = this.props;
 		return (
 			<Card className='Column'>
-				<div className={compStyles.headerContainer}>
+				<div className={classNames(compStyles.headerContainer, 'Sortable-handle')}>
 					<CardAvatar colId={colId}/>
 					<div className={classNames(compStyles.controls, {[compStyles.showOnHover]: !wizardMode})}>
 						{controls}
