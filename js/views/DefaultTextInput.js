@@ -26,7 +26,7 @@ var DefaultTextInput = React.createClass({
 		this.change.unsubscribe();
 	},
 	getInitialState: function () {
-		return {value: this.props.value.user};
+		return {value: this.props.value.user, focused: false};
 	},
 	componentWillReceiveProps: function (newProps) {
 		this.setState({value: newProps.value.user});
@@ -40,6 +40,13 @@ var DefaultTextInput = React.createClass({
 			onChange(defaultValue);
 		}
 	},
+	onBlur() {
+		this.setState({focused: false});
+		this.resetIfNull();
+	},
+	onFocus() {
+		this.setState({focused: true});
+	},
 	update: function () {
 		var {onChange} = this.props,
 			{value} = this.state;
@@ -49,23 +56,29 @@ var DefaultTextInput = React.createClass({
 	onKeyUp: function (ev) {
 		if (ev.key === 'Enter' && this) {
 			this.resetIfNull();
+			this.refs.input.blur();
 		}
 	},
 	render: function () {
-		var {value} = this.state,
+		var {value, focused} = this.state,
 			{disabled = false} = this.props;
 
 		return (
+			<span style={{position: 'relative'}}>
+			<label className={focused ? compStyles.labelFocused : compStyles.label}>Customize label</label>
 			<input
-				className={compStyles.input}
+				className={focused ? compStyles.inputFocused : compStyles.input}
+				spellCheck={false}
 				ref='input'
 				disabled={disabled}
 				onChange={this.on.change}
 				onKeyUp={this.onKeyUp}
-				onBlur={this.resetIfNull}
+				onBlur={this.onBlur}
+				onFocus={this.onFocus}
 				type='text'
 				title={value}
-				value={value} />);
+				value={value}/>
+			</span>);
 	}
 });
 

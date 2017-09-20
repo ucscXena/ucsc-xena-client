@@ -17,4 +17,33 @@
 	text-overflow: ellipsis;
 	width: 100%;
 	background-color: inherit;
+	transition: transform 0.5s, padding-top 0.5s;
+	transform-origin: 0 0;
+}
+
+.inputFocused {
+	composes: input;
+	padding-top: 8px; /* XXX just picked this visually. Needed to push the input below the label.*/
+	background-color: white;
+	/* box-shadow is copied from RT card, with all pixel values halved, to compensate for scale */
+	box-shadow: 1px 1px 0 rgba(0, 0, 0, .14), 0 1.5px 0.5px -1px rgba(0, 0, 0, .2), 0 0.5px 2.5px 0 rgba(0, 0, 0, .12);
+	position: relative;
+	transform: scale(1.5, 1.5);
+	z-index: 1000;
+	transition: transform 0.5s, padding-top 0.5s;
+}
+
+.label {
+	position: absolute;
+	color: #aaaaaa;
+	opacity: 0;
+	z-index: -1;
+	font-weight: 500;
+	transition: opacity 0.5s;
+}
+
+.labelFocused {
+	composes: label;
+	z-index: 1001;
+	opacity: 1;
 }
