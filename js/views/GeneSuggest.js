@@ -27,13 +27,15 @@ function currentWord(value, position) {
 
 var defaultAssembly = 'hg38';
 
-var renderInputComponent = ({ref, onChange, label, ...props}) => (
+var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 	<Input
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
 		label= {label || 'Add Gene or Position'}
-		{...props} />);
-
+		{...props} >
+		<i style={{color: 'red', opacity: error ? 1 : 0}} className='material-icons'>error</i>
+	</Input>
+);
 // Currently we only match against refGene hg38 genes. We could, instead, match
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
 // require some more work to dispatch the query for each type.
@@ -95,7 +97,7 @@ var GeneSuggest = React.createClass({
 	},
 	render() {
 		var {onChange} = this,
-			{onKeyDown, value = '', label} = this.props,
+			{onKeyDown, value = '', label, error} = this.props,
 			{suggestions} = this.state;
 
 		return (
@@ -108,7 +110,7 @@ var GeneSuggest = React.createClass({
 				shouldRenderSuggestions={this.shouldRenderSuggestions}
 				renderSuggestion={v => <span>{v}</span>}
 				renderInputComponent={renderInputComponent}
-				inputProps={{value, label, onKeyDown, onChange}}/>);
+				inputProps={{value, label, error, onKeyDown, onChange}}/>);
 	}
 });
 

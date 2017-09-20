@@ -60,7 +60,7 @@ function selectedOptions(selected, options) {
 
 var GenotypicForm = props => (
 	<div>
-		<GeneSuggest value={props.value} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} type='text'/>
+		<GeneSuggest error={props.error} value={props.value} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} type='text'/>
 		<XCheckboxGroup
 			label='Assay Type'
 			additionalAction={!_.isEmpty(props.preferred) && (props.advanced ? 'Show Basic' : 'Show Advanced')}
@@ -194,7 +194,7 @@ var VariableSelect = React.createClass({
 		this.modeSub = mode.subscribe(mode => this.setState({mode}));
 		this.advancedSub = advanced.subscribe(advanced => this.setState({advanced}));
 		this.selectedSub = selected.subscribe(selected => this.setState({selected}));
-		this.valueSub = value.subscribe(value => this.setState({value}));
+		this.valueSub = value.subscribe(value => this.setState({value, error: false}));
 
 		// XXX there may be a race here, where user changes the input, making the fields invalid, but
 		// we wait 200ms to set 'valid'. Need to instead reset valid immediately, and then update matches.
@@ -232,25 +232,39 @@ var VariableSelect = React.createClass({
 			}
 		}
 	},
+	onDoneInvalid() {
+		this.setState({error: true});
+	},
 	render() {
 		var {mode, advanced, valid, loading} = this.state,
 			value = this.state.value[mode],
+			error = this.state.error,
 			selected = this.state.selected[advanced],
 			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
 			contentSpecificHelp = _.getIn(helpText, [mode]),
-			ModeForm = getModeFields[mode];
-
-		var wizardProps = {colId, controls, title, contentSpecificHelp, onDone: this.onDone, valid, loading, width};
-		var dataTypeProps = {
-			label: 'Data Type',
-			value: mode,
-			onChange: this.on.mode,
-			options: [{label: 'Genomic', value: 'Genotypic'}, {label: 'Phenotypic', value: 'Phenotypic'}]
-		};
+			ModeForm = getModeFields[mode],
+			wizardProps = {
+				colId,
+				controls,
+				title,
+				contentSpecificHelp,
+				onDone: this.onDone,
+				onDoneInvalid: this.onDoneInvalid,
+				valid,
+				loading,
+				width
+			},
+			dataTypeProps = {
+				label: 'Data Type',
+				value: mode,
+				onChange: this.on.mode,
+				options: [{label: 'Genomic', value: 'Genotypic'}, {label: 'Phenotypic', value: 'Phenotypic'}]
+			};
 		return (
 			<WizardCard {...wizardProps}>
 				<XRadioGroup {...dataTypeProps} />
 				<ModeForm
+					error={error}
 					onChange={this.onChange}
 					onReturn={this.onDone}
 					onFieldChange={this.on.field}

@@ -36,6 +36,12 @@ var WizardCard = React.createClass({
 	onDone() {
 		this.props.onDone();
 	},
+	onDoneInvalid(ev) {
+		var {valid, onDoneInvalid} = this.props;
+		if (onDoneInvalid && !valid) {
+			onDoneInvalid(ev);
+		}
+	},
 	render() {
 		var {children, colId, controls, contentSpecificHelp, title, valid, loading, width} = this.props;
 		return (
@@ -56,7 +62,9 @@ var WizardCard = React.createClass({
 				<CardActions className={compStyles.actions}>
 					{loading ? <img src={spinner}/> : null}
 					{valid ? <i className='material-icons'>done</i> : null}
-					<Button accent disabled={!valid} onClick={this.onDone}>Done</Button>
+					<span onClick={this.onDoneInvalid}>
+						<Button accent disabled={!valid} onClick={this.onDone}>Done</Button>
+					</span>
 				</CardActions>
 			</Card>
 		);
