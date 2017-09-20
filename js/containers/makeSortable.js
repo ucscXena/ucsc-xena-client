@@ -11,7 +11,7 @@ function makeSortable(Component) {
 		onReorder: function (order) {
 			this.props.callback(['order', order]);
 		},
-		onDrag(dragging) {
+		onDragging(dragging) {
 			this.props.onInteractive('drag', !dragging);
 		},
 		render() {
@@ -23,7 +23,7 @@ function makeSortable(Component) {
 					widths={widths}
 					{...otherProps}
 					Component={Component}
-					onDrag={this.onDrag}
+					onDragging={this.onDragging}
 					onReorder={this.onReorder}>
 
 					{children}

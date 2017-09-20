@@ -131,7 +131,7 @@ var Sortable = React.createClass({
 				this.props.onReorder(ev.order);
 			}
 			this.setState(_.pick(ev, 'pos', 'dragging'));
-			this.props.onDrag(!!ev.dragging);
+			this.props.onDragging(!!ev.dragging);
         });
 
 		this.sortStart = ev => mousedownSub.next(ev);
