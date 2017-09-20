@@ -35,7 +35,7 @@ var Transcripts = React.createClass({
 	},
 
 	componentWillReceiveProps(props) {
-		this.setState({input: _.getIn(props.state, ['transcripts', 'gene'])});
+		this.setState({input: _.getIn(props.state, ['transcripts', 'gene'], defaultGene)});
 	},
 
 	onLoadData() {
