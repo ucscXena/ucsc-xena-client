@@ -271,8 +271,8 @@ var controls = {
 	'edit-column': (state, editing) => _.assoc(state, 'editing', editing),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,
-				['zoom', 'height'], height,
-				['columns', id, 'width'], width),
+				['zoom', 'height'], Math.round(height),
+				['columns', id, 'width'], Math.round(width)),
 	// If 'editing' is a blank column (isNumber), we need to decrement it
 	// if it is higher than id index, to preserve its position in the order.
 	remove: (state, id) => {
