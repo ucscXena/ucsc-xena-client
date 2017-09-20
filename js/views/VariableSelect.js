@@ -73,7 +73,7 @@ var GenotypicForm = props => (
 
 var PhenotypicForm = props => (
 	<div>
-		<PhenotypeSuggest value={props.value} features={props.features} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} type='text'/>
+		<PhenotypeSuggest error={props.error} value={props.value} features={props.features} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} type='text'/>
 	</div>);
 
 var getModeFields = {
@@ -81,9 +81,14 @@ var getModeFields = {
 	Phenotypic: PhenotypicForm
 };
 
+var isValueValid = {
+	Genotypic: value => value.trim().length > 0,
+	Phenotypic: (value, features) => _.findWhere(features, {label: value})
+};
+
 var isValid = {
-	Genotypic: (value, selected) => value.trim().length > 0 && selected.length > 0,
-	Phenotypic: (value, selected, features) => _.findWhere(features, {label: value})
+	Genotypic: (value, selected) => isValueValid.Genotypic(value) && selected.length > 0,
+	Phenotypic: (value, selected, features) => isValueValid.Phenotypic(value, features)
 };
 
 function applyInitialState(fields, dataset, datasets, features, preferred, defaults) {
@@ -191,7 +196,7 @@ var VariableSelect = React.createClass({
 			value = this.ev.field.withLatestFrom(mode, (field, mode) => ([field, mode]))
 				.scan((value, [field, mode]) => _.assoc(value, mode, field), this.state.value).startWith(this.state.value);
 
-		this.modeSub = mode.subscribe(mode => this.setState({mode}));
+		this.modeSub = mode.subscribe(mode => this.setState({mode, error: false}));
 		this.advancedSub = advanced.subscribe(advanced => this.setState({advanced}));
 		this.selectedSub = selected.subscribe(selected => this.setState({selected}));
 		this.valueSub = value.subscribe(value => this.setState({value, error: false}));
@@ -233,7 +238,13 @@ var VariableSelect = React.createClass({
 		}
 	},
 	onDoneInvalid() {
-		this.setState({error: true});
+		var {features} = this.props,
+			{mode} = this.state,
+			value = this.state.value[mode];
+
+		if (!isValueValid[mode](value, features)) {
+			this.setState({error: true});
+		}
 	},
 	render() {
 		var {mode, advanced, valid, loading} = this.state,
