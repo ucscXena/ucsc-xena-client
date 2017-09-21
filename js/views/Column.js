@@ -286,54 +286,10 @@ var Column = React.createClass({
 
 	getInitialState() {
 		return {
-			specialDownloadMenu: specialDownloadMenu,
-			annotationLanes: null
+			specialDownloadMenu: specialDownloadMenu
 		};
 	},
 
-	computeAnnotationLanes (position, refGene) {
-		var fieldType = _.getIn(this.props, ['column', 'fieldType'], undefined),
-			newAnnotationLanes;
-
-		if (['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1 && position && refGene) {
-			var lanes = [],
-				[start, end] = position;
-
-			//only keep genes with in the current view
-			refGene = _.values(refGene).filter((val) => {
-				return ((val.txStart <= end) && (val.txEnd >= start));
-			});
-
-			//multip lane no-overlapping genes
-			refGene.forEach( val => {
-				var added = lanes.some(lane => {
-					if (lane.every( gene => !((val.txStart <= gene.txEnd) && (val.txEnd >= val.txStart)))) {
-						return lane.push(val);
-					}
-				});
-				if (!added) { // add a new lane
-					lanes.push([val]);
-				}
-			});
-			var perLaneHeight = _.min([annotationHeight / lanes.length, 12]),
-				laneOffset = (annotationHeight - perLaneHeight * lanes.length) / 2;
-
-			newAnnotationLanes = {
-				lanes: lanes,
-				perLaneHeight: perLaneHeight,
-				laneOffset: laneOffset,
-				annotationHeight: annotationHeight
-			};
-		} else {
-			newAnnotationLanes = {
-				lanes: undefined,
-				perLaneHeight: undefined,
-				laneOffset: undefined,
-				annotationHeight: annotationHeight
-			};
-		}
-		return newAnnotationLanes;
-	},
 //	addAnnotationHelp(target) {
 //		var tooltip = (
 //			<Tooltip>
@@ -418,16 +374,6 @@ var Column = React.createClass({
 		var {column: {layout}, onXZoom, id} = this.props,
 			[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
 		onXZoom(id, {start, end});
-	},
-	componentWillUpdate() {
-		var {column, data} = this.props,
-			newAnnotationLanes = this.computeAnnotationLanes (
-					_.getIn(column, ['layout', 'chrom', 0], undefined),
-					_.getIn(data, ['refGene'], {}));
-
-		if (this.state.annotationLanes !== newAnnotationLanes) {
-			this.setState({"annotationLanes": newAnnotationLanes});
-		}
 	},
 	onMenuToggle: function (open) {
 		var {xzoomable} = this.state,
@@ -523,14 +469,14 @@ var Column = React.createClass({
 			// move this to state to generalize to other annotations.
 			annotation = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
 				<RefGeneAnnotation
-					column = {column}
-					annotationLanes = {this.computeAnnotationLanes(
-						_.getIn(column, ['layout', 'chrom', 0], undefined),
-						_.getIn(data, ['refGene'], {}))}
-					tooltip = {tooltip}
-					layout = {column.layout}
-					width= {width}
-					mode= {parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+					column={column}
+					position={_.getIn(column, ['layout', 'chrom', 0])}
+					refGene={_.getIn(data, ['refGene'], {})}
+					tooltip={tooltip}
+					layout={column.layout}
+					height={annotationHeight}
+					width={width}
+					mode={parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null,

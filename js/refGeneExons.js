@@ -98,9 +98,86 @@ function drawIntroArrows (ctx, xStart, xEnd, endY, segments, strand) {
 
 var RefGeneAnnotation = React.createClass({
 	mixins: [rxEventsMixin],
+	componentWillMount: function () {
+		this.events('mouseout', 'mousemove', 'mouseover');
 
-	draw: function (width, layout, mode, annotationLanes) {
-		var {lanes, perLaneHeight, laneOffset, annotationHeight} = annotationLanes;
+		// Compute tooltip events from mouse events.
+		this.ttevents = this.ev.mouseover
+			.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
+			.flatMap(() => {
+				return this.ev.mousemove
+					.takeUntil(this.ev.mouseout)
+					.map(ev => ({
+						data: this.tooltip(ev),
+						open: true
+					})) // look up current data
+					.concat(Rx.Observable.of({open: false}));
+			}).subscribe(this.props.tooltip);
+	},
+	componentWillUnmount: function () {
+		this.ttevents.unsubscribe();
+	},
+	componentDidMount: function () {
+		var {width, height} = this.props;
+		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height);
+		this.draw(this.props);
+	},
+	shouldComponentUpdate() {
+		return false;
+	},
+	componentWillReceiveProps(newProps) {
+		if (this.vg && !_.isEqual(newProps, this.props)) {
+			this.draw(newProps);
+		}
+	},
+	computeAnnotationLanes({position, refGene, height, column}) {
+		var fieldType = _.get(column, 'fieldType', undefined),
+			newAnnotationLanes;
+
+		if (['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1 && position && refGene) {
+			var lanes = [],
+				[start, end] = position;
+
+			//only keep genes with in the current view
+			refGene = _.values(refGene).filter((val) => {
+				return ((val.txStart <= end) && (val.txEnd >= start));
+			});
+
+			//multip lane no-overlapping genes
+			refGene.forEach( val => {
+				var added = lanes.some(lane => {
+					if (lane.every( gene => !((val.txStart <= gene.txEnd) && (val.txEnd >= val.txStart)))) {
+						return lane.push(val);
+					}
+				});
+				if (!added) { // add a new lane
+					lanes.push([val]);
+				}
+			});
+			var perLaneHeight = _.min([height / lanes.length, 12]),
+				laneOffset = (height - perLaneHeight * lanes.length) / 2;
+
+			newAnnotationLanes = {
+				lanes: lanes,
+				perLaneHeight: perLaneHeight,
+				laneOffset: laneOffset,
+				annotationHeight: height
+			};
+		} else {
+			newAnnotationLanes = {
+				lanes: undefined,
+				perLaneHeight: undefined,
+				laneOffset: undefined,
+				annotationHeight: height
+			};
+		}
+		// cache for tooltip
+		this.annotationLanes = newAnnotationLanes;
+	},
+	draw: function (props) {
+		var {width, layout, mode} = props;
+		this.computeAnnotationLanes(props);
+		var {lanes, perLaneHeight, laneOffset, annotationHeight} = this.annotationLanes;
 
 		// white background
 		this.vg.box(0, 0, width, annotationHeight, 'white');
@@ -157,30 +234,10 @@ var RefGeneAnnotation = React.createClass({
 			});
 		});
 	},
-	componentWillMount: function () {
-		this.events('mouseout', 'mousemove', 'mouseover');
-
-		// Compute tooltip events from mouse events.
-		this.ttevents = this.ev.mouseover
-			.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
-			.flatMap(() => {
-				return this.ev.mousemove
-					.takeUntil(this.ev.mouseout)
-					.map(ev => ({
-						data: this.tooltip(ev),
-						open: true
-					})) // look up current data
-					.concat(Rx.Observable.of({open: false}));
-			}).subscribe(this.props.tooltip);
-	},
-	componentWillUnmount: function () {
-		this.ttevents.unsubscribe();
-	},
 	tooltip: function (ev) {
-		var {layout, annotationLanes, column} = this.props,
+		var {layout, column: {assembly}} = this.props,
 			{x, y} = util.eventOffset(ev),
-			{assembly} = column,
-			{annotationHeight, perLaneHeight, laneOffset, lanes} = annotationLanes;
+			{annotationHeight, perLaneHeight, laneOffset, lanes} = this.annotationLanes;
 
 		var rows = [],
 			assemblyString = encodeURIComponent(assembly),
@@ -219,18 +276,7 @@ var RefGeneAnnotation = React.createClass({
 			rows: rows
 		};
 	},
-	componentDidMount: function () {
-		var {width, layout, annotationLanes, mode} = this.props;
-		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, annotationLanes.annotationHeight);
-		this.draw(width, layout, mode, annotationLanes);
-	},
-
 	render: function () {
-		var {width, layout, annotationLanes, mode} = this.props;
-		if (this.vg) {
-			this.draw(width, layout, mode, annotationLanes);
-		}
-
 		return (
 			<canvas
 				className='Tooltip-target'
