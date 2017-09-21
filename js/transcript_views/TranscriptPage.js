@@ -10,8 +10,9 @@ var {linearTicks} = require('../scale');
 var BookmarkMenu = require('../views/BookmarkMenu');
 import '../../css/transcript_css/transcriptPage.css';
 
+/*
 var defaultGene = 'KRAS';
-	/*defaultStudyA = 'tcga',
+	defaultStudyA = 'tcga',
 	defaultStudyB = 'gtex',
 	defaultSubtypeA  = 'TCGA Lung Adenocarcinoma',
 	defaultSubtypeB  = 'GTEX Lung',
@@ -23,8 +24,9 @@ var defaultGene = 'KRAS';
 var Transcripts = React.createClass({
 	getInitialState() {
 		return {
-			input: _.getIn(this.props.state, ['transcripts', 'gene'], defaultGene),
-			scaleZoom: false
+			input: _.getIn(this.props.state, ['transcripts', 'gene']),
+			scaleZoom: false,
+			updateButton: false
 		};
 	},
 
@@ -35,12 +37,13 @@ var Transcripts = React.createClass({
 	},
 
 	componentWillReceiveProps(props) {
-		this.setState({input: _.getIn(props.state, ['transcripts', 'gene'], defaultGene)});
+		this.setState({input: _.getIn(props.state, ['transcripts', 'gene'])});
 	},
 
 	onLoadData() {
 		this.setState({
-			scaleZoom: false
+			scaleZoom: false,
+			updateButton: false
 		});
 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
 		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
@@ -126,12 +129,11 @@ var Transcripts = React.createClass({
 					<a className="selectors" style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors" style={{width: "1200px", height: "80px"}}>
 						<div id="geneBox" style={{float: "left", width: "200px"}}>
-							<GeneSuggest label="Gene (e.g. KRAS)" value={this.state.input}
-								onChange={ value => {this.setState({input: value});} }/>
+							<GeneSuggest label="Add Gene (e.g. KRAS)" value={this.state.input}
+								onChange={ value => {this.setState({input: value, updateButton: true});} }/>
 						</div>
-						{this.state.input ?
-							<button className="horizontalSegmentButton" onClick={this.onLoadData}>Update Gene</button> :
-							<button className="horizontalSegmentButton" onClick={this.onLoadData}>Add Gene</button>
+						{this.state.updateButton ?
+							<button className="horizontalSegmentButton" onClick={this.onLoadData}>Update Gene</button> : null
 						}
 						{ hasPlots ?
 							<div className="legend-holder">
