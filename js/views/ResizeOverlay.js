@@ -2,6 +2,7 @@
 
 var React = require('react');
 var Resizable = require('react-resizable').Resizable;
+var _ = require('../underscore_ext');
 
 // Styles
 require('./ResizeOverlay.css');
@@ -37,26 +38,26 @@ var ResizeOverlay = React.createClass({
 					{children}
 				</div>);
 		return (
-			<div className='resizeOverlay' style={{position: 'relative'}}>
-				{zooming ? <div style={{
-					width: zoomSize.width,
-					height: zoomSize.height,
+			<div className={enable ? 'resize-enable' : ''} style={{position: 'relative'}}>
+				<div style={{
+					display: zooming ? 'block' : 'none',
+					width: _.get(zoomSize, 'width', 0),
+					height: _.get(zoomSize, 'height', 0),
 					position: 'absolute',
 					top: 0,
 					left: 0,
 					zIndex: 999,
-					backgroundColor: 'rgba(0, 0, 0, 0.12)'
-				}} /> : null}
-				{enable ? (
-					<Resizable handleSize={[20, 20]}
-						onResizeStop={this.onResizeStop}
-						onResize={this.onResize}
-						onResizeStart={this.onResizeStart}
-						width={width}
-						height={height}>
+					backgroundColor: 'rgba(0, 0, 0, 0.12)'}} />
+				<Resizable handleSize={[20, 20]}
+					axis={'both'}
+					onResizeStop={this.onResizeStop}
+					onResize={this.onResize}
+					onResizeStart={this.onResizeStart}
+					width={width}
+					height={height}>
 
-						{content}
-					</Resizable>) : content}
+					{content}
+				</Resizable>
 			</div>
 		);
 	}

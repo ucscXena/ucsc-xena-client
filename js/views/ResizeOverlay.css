@@ -18,7 +18,3 @@
 	 * want the canvas to get events. */
 	z-index: -1;
 }
-
-.Column .react-resizable-handle:hover {
-	visibility: visible;
-}

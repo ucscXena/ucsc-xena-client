@@ -20,7 +20,7 @@
 	user-select: none;
 }
 
-:global(.Column:hover .react-resizable-handle) {
+:global(.Column:hover .resize-enable .react-resizable-handle) {
 	visibility: visible;
 }
 

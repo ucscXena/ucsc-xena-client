@@ -22,8 +22,8 @@ var Legend = React.createClass({
 								  color: colorHelper.contrastColor(c)}}>
 							  {l}
 						  </label>).reverse(),
-			footnotesItems = footnotes ? footnotes.map(text =>
-				<div className={compStyles.footnotes}>
+			footnotesItems = footnotes ? footnotes.map((text, i) =>
+				<div key={i} className={compStyles.footnotes}>
 					{text}
 				</div>) : null;
 		return (

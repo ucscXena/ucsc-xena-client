@@ -57,6 +57,12 @@ function columnSelector(id, i, appState) {
 	};
 }
 
+function isInteractive(props, state) {
+	var {interactive} = state,
+		{appState: {wizardMode, editing}} = props;
+	return !wizardMode && editing == null && _.every(interactive);
+}
+
 var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	displayName: 'SpreadsheetContainer',
 	mixins: [rxEventsMixin],
@@ -132,14 +138,20 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	onReset() {
 		this.props.callback(['cohortReset']);
 	},
+	onPlotClick(ev) {
+		// Having callback that checks isInteractive is better than only
+		// passing a callback when isInteractive is true, because the latter
+		// causes downstream props to change, which causes re-renders.
+		if (isInteractive(this.props, this.state)) {
+			this.on.plotClick(ev);
+		}
+	},
 	render() {
 		var columnProps = _.pick(this.props,
 				['searching', 'supportsGeneAverage', 'disableKM', 'datasetMeta', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
 			{appState} = this.props,
-			{columnOrder, wizardMode, editing} = appState,
-			interactive = !wizardMode && editing == null &&
-				_.every(this.state.interactive),
-			onClick = interactive ? this.on.plotClick : null;
+			{columnOrder, wizardMode} = appState,
+			interactive = isInteractive(this.props, this.state);
 
 		// XXX prune callback from this.props
 		// Currently it's required for ColumnEdit2 and zoom helper.
@@ -174,7 +186,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						actionKey={id}
 						first={i === 0}
 						{...columnProps}
-						onClick={onClick}
+						onClick={this.onPlotClick}
 						{...columnSelector(id, i, appState)}
 						wizardMode={wizardMode}
 						editing={appState.editing}/>))}
