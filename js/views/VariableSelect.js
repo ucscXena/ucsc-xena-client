@@ -157,7 +157,8 @@ function matchFields(datasets, features, mode, selected, value) {
 		return Rx.Observable.of({valid: isValid.Phenotypic(value, selected, features)});
 	}
 	if (isValid.Genotypic(value, selected)) {
-		let fields = value.trim().split(/[ ,]/);
+		// Be sure to handle leading and trailing commas, as might occur during user edits
+		let fields = value.trim().replace(/^,+|,+$/g, '').split(/[\s,]+/);
 		return Rx.Observable.zip(
 			...selected.map(dsID => matchDatasetFields(datasets, dsID, fields)),
 			(...matches) => ({matches, valid: true}));
@@ -210,7 +211,7 @@ var VariableSelect = React.createClass({
 			.do(() =>this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, advanced, selected, value]) =>
 					matchFields(this.props.datasets, this.props.features, mode, selected[advanced], value[mode]))
-			.subscribe(valid => this.setState({loading: false, ...valid}), () => this.setState({valid: false, loading: false}));
+			.subscribe(valid => this.setState({loading: false, ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
 	},
 	componentWillUnmount() {
 		this.modeSub.unsubscribe();
