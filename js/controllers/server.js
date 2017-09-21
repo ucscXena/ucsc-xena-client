@@ -64,9 +64,19 @@ function invertCohortMeta(meta) {
 			cohortTags => cohortTags.map(([cohort]) => cohort));
 }
 
+function parseBookmarkCheck(old, bookmark) {
+	var state;
+	try {
+		state = parseBookmark(bookmark);
+	} catch (e) {
+		console.log('bookmark', e);
+	}
+	return _.has(state, 'wizardMode') ? state : _.assoc(old, 'stateError', 'bookmark');
+}
+
 var controls = {
 	// XXX reset loadPending flag
-	bookmark: (state, bookmark) => resetLoadPending(parseBookmark(bookmark)),
+	bookmark: (state, bookmark) => resetLoadPending(parseBookmarkCheck(state, bookmark)),
 	inlineState: (state, newState) => resetLoadPending(newState),
 	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),
 	'cohorts-post!': (serverBus, state, newState) => {

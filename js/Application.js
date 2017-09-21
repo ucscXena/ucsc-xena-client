@@ -3,6 +3,7 @@ var React = require('react');
 var {Grid, Row, Col} = require("react-material-responsive-grid");
 var AppControls = require('./AppControls');
 var KmPlot = require('./KmPlot');
+var StateError = require('./StateError');
 var _ = require('./underscore_ext');
 var {signatureField} = require('./models/fieldSpec');
 var {getColSpec} = require('./models/datasetJoins');
@@ -70,6 +71,9 @@ var Application = React.createClass({
 	onImport(state) {
 		this.props.callback(['import', state]);
 	},
+	onHideError() {
+		this.props.callback(['stateError', null]);
+	},
 //	onSearchIDAndFilterColumn: function (qsamplesList) {
 //		var {state: {samples, cohortSamples}} = this.props,
 //			qsampleListObj = {},
@@ -87,7 +91,7 @@ var Application = React.createClass({
 	render: function() {
 		let {state, children, onHighlightChange, onShowWelcome, stepperState, ...otherProps} = this.props,
 			{callback, onResetSampleFilter} = otherProps,
-			{cohort, samplesMatched, sampleSearch, samples, mode, wizardMode, showWelcome, zoom, loadPending} = state,
+			{cohort, stateError, samplesMatched, sampleSearch, samples, mode, wizardMode, showWelcome, zoom, loadPending} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			// Can these closures be eliminated, now that the selector is above this
 			// component?
@@ -141,6 +145,7 @@ var Application = React.createClass({
 							callback={callback}
 							km={state.km}
 							features={state.features} /> : null}
+					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
 				</div>
 			</div>
 		);

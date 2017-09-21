@@ -59,6 +59,17 @@ var enableHistory = (enable, obs) => enable ?
 var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(state)));
 var parse = str => migrateState(expandState(JSON.parse(LZ.decompressFromUTF16(str))));
 
+function parseCheck(session) {
+	var state;
+	try {
+		state = parse(session);
+	} catch (e) {
+		console.log('session', e);
+	}
+	return _.has(state, 'wizardMode') ? state : {stateError: 'session'};
+}
+
+
 //
 module.exports = function({
 	Page,
@@ -79,7 +90,7 @@ module.exports = function({
 
 	delete sessionStorage.debugSession; // Free up space & don't try to share with dev
 	if (persist && nostate('xena')) {
-		initialState = _.merge(initialState, parse(sessionStorage.xena));
+		initialState = _.merge(initialState, parseCheck(sessionStorage.xena));
 	}
 
 	let stateObs = enableHistory(

@@ -221,7 +221,9 @@ var controls = {
 		fetchCohortMeta(serverBus);
 		fetchCohortPreferred(serverBus);
 	},
-	'import': (state, newState) => newState,
+	'import': (state, newState) => _.has(newState, 'wizardMode') ?
+		newState : _.assoc(state, 'stateError', 'import'),
+	stateError: (state, error) => _.assoc(state, 'stateError', error),
 	cohort: (state, i, cohort, width) =>
 		setCohort(state, _.assoc(state.cohort, i, {name: cohort}), width),
 	cohortReset: state => setCohort(state, []),

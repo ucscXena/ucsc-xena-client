@@ -1,0 +1,11 @@
+.StateErrorContainer {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	top: 0;
+	position: absolute;
+}
+
+.StateErrorContainer .modal, .StateErrorContainer .modal-backdrop {
+  position: absolute;
+}
