@@ -113,12 +113,21 @@ var matchDatasetFields = multi((datasets, dsID) => {
 	return meta.type === 'genomicMatrix' && meta.probemap ? 'genomicMatrix-probemap' : meta.type;
 });
 
+// XXX The error handling here isn't great, because it can leave us with a
+// field of the wrong case, e.g. foxm1 vs. FOXM1, or treat a probe as a gene.
+// However, it's better to handle it than to lose the observable, which wedges
+// the widget. Better handling would warn the user and wait for the network
+// error to clear.
+
 // default to probes
 matchDatasetFields.dflt = (datasets, dsID, fields) =>
 	xenaQuery.matchFields(dsID, fields).map(fields => ({
 		type: 'probes',
 		fields
-	}));
+	})).catch(err => {
+		console.log(err);
+		return Rx.Observable.of({type: 'probes', fields: fields});
+	});
 
 matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, fields) => {
 	const {host} = JSON.parse(dsID);
@@ -132,7 +141,10 @@ matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, fields) => {
 			} : {
 				type: 'genes',
 				fields: genes
-			});
+	}).catch(err => {
+		console.log(err);
+		return Rx.Observable.of({type: 'genes', fields: fields});
+	});
 });
 
 function matchAssembly(datasets, dsID, fields) {
@@ -140,7 +152,10 @@ function matchAssembly(datasets, dsID, fields) {
 	return xenaQuery.sparseDataMatchField(ref.host, 'name2', ref.name, fields).map(fields => ({
 		type: 'genes',
 		fields
-	}));
+	})).catch(err => {
+		console.log(err);
+		return Rx.Observable.of({type: 'genes', fields: fields});
+	});
 }
 
 matchDatasetFields.add('genomicSegment', matchAssembly);
