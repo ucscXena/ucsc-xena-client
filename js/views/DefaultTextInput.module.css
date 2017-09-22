@@ -34,16 +34,20 @@
 }
 
 .label {
+	max-width: 100%;
+	overflow: hidden;
+	white-space: nowrap;
 	position: absolute;
 	color: #aaaaaa;
 	opacity: 0;
 	z-index: -1;
 	font-weight: 500;
-	transition: opacity 0.5s;
+	transition: opacity 0.5s, max-width 0.5s;
 }
 
 .labelFocused {
 	composes: label;
+	max-width: 150%; /* match scale() transform, above */
 	z-index: 1001;
 	opacity: 1;
 }
