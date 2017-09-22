@@ -499,7 +499,8 @@ var Column = React.createClass({
 		return (
 			<div style={{width: width, position: 'relative'}}>
 				<ColCard colId={label}
-						 title={<DefaultTextInput
+						sortable={!first}
+						title={<DefaultTextInput
 							disabled={!interactive}
 							onChange={this.onColumnLabel}
 							value={{default: columnLabel, user: user.columnLabel}} />}

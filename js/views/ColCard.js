@@ -28,10 +28,10 @@ var compStyles = require('./ColCard.module.css');
 
 var ColCard = React.createClass({
 	render() {
-		var {children, controls, colId, subtitle, title, wizardMode} = this.props;
+		var {children, sortable, controls, colId, subtitle, title, wizardMode} = this.props;
 		return (
 			<Card className='Column'>
-				<div className={classNames(compStyles.headerContainer, 'Sortable-handle')}>
+				<div className={classNames(compStyles.headerContainer, sortable && 'Sortable-handle')}>
 					<CardAvatar colId={colId}/>
 					<div className={classNames(compStyles.controls, {[compStyles.showOnHover]: !wizardMode})}>
 						{controls}

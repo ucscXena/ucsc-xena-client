@@ -15,3 +15,8 @@
 .Sortable {
 	display: flex;
 }
+
+.Sortable-handle {
+	cursor: move;
+}
+

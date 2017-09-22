@@ -26,7 +26,6 @@
 
 /* Container around column label (A, B, C etc) and controls */
 .headerContainer {
-	cursor: move;
 	align-items: center;
 	border-bottom: 1px solid black12;
 	display: flex;
