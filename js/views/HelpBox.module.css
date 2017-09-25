@@ -94,6 +94,7 @@ p:first-child {
 
 /* Dashed line row marker, used by right help boxes only. */
 .rowMarker {
+	pointer-events: none;
 	position: relative;
 	width: 2000px;
 	margin-left: -2000px;
