@@ -451,7 +451,8 @@ var Column = React.createClass({
 		this.props.onReload(this.props.id);
 	},
 	getControlWidth: function () {
-		return 136;
+		return 90;
+//		return 136;
 	},
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
