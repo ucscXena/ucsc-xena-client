@@ -24,7 +24,10 @@
 	padding: 32px 0 8px 0;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	font-weight: bold;
+	/* The css loading order changes in production (XXX), causing typography to override these
+	 * settings. Using !important to work around it, for the moment.
+	 */
+	font-weight: bold !important;
 }
 
 .subgroupHeader:first-of-type {
