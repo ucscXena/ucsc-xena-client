@@ -24,6 +24,7 @@
 	padding: 32px 0 8px 0;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	font-weight: bold;
 }
 
 .subgroupHeader:first-of-type {
