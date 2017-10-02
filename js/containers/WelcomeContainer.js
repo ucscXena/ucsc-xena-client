@@ -6,21 +6,21 @@ var Welcome = require('../views/Welcome');
 var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
 
 var links = [
-	['afde237fe86016c42cf9c508ff443a65',
+	['9cefe9084d867f10ca00e6a4a641987d',
 		'FOXM1a, FOXM1b, FOXM1c transcript expression in tumor vs. normal samples'],
 	['27d8bc5b7904f768374a1eeae9baed81',
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma'],
-	['fe50ac4b7dce75c460d1a7d46c55c049',
+	['73f3cc8ab6f934e605a2f3568d00f91a',
 		'KM plot (overall survival) of breast cancer PAM50 subtypes'],
-	['6145233b5e8421a6dbb62f677728d7a8',
+	['a9bfaf0d54c826bc1c8d1f5423df4818',
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
 	['b095250231c43f1ff5e071ebf5cf3d0b',
 		'PDL1 and PD1 expression across 39 cancer types in TCGA and TARGET'],
-	['288e299bcd917d0c1e7cfbe4658ee830',
+	['0c994f539703ddae5e7f8ca0153e7c28',
 		'ERG-TMPRSS2 fusion by chr21 deletion in prostate cancer'],
-	['a0a591a997198c4ffc3d66380e9c1d97',
+	['e52775e76ecb7179306ae74c29742ecf',
 		'TERT, ATRX, TP53 in lower grade glioma. Two pathways to telomere lengthening'],
-	['fdb3fa1573bc4f293281c6059e7ca702',
+	['0bf10d0dd69ee9871fe0abce78a96dbc',
 		'Co-deletion of chromosome 1p and 19q in TCGA lower grade gliomas']];
 
 
