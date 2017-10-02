@@ -52,7 +52,9 @@ var SpreadSheetHighlight = React.createClass({
 		if (!samplesMatched) {
 			return;
 		}
-		var matchMap = _.object(samplesMatched, _.range(samplesMatched.length)),
+		// Previously we used _.object, but hit a Safari bug https://bugs.webkit.org/show_bug.cgi?id=177772
+		// with assigning numeric values to numeric keys. So, using an Array instead.
+		var matchMap = samplesMatched.reduce((acc, v, i) => { acc[v] = i; return acc; }, new Array(samples.length)),
 			stripeGroups = _.groupByConsec(samples, s => _.has(matchMap, s)),
 			stripes = _.scan(stripeGroups, (acc, g) => acc + g.length, 0),
 			hasMatch = _.map(stripeGroups, (s, i) => _.has(matchMap, stripeGroups[i][0])),
