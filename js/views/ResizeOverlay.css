@@ -8,7 +8,7 @@
 .Column .react-resizable-handle {
 	bottom: -6px;
 	right: -6px;
-	visibility: hidden;
+	opacity: 0;
 	width: 12px;
 	height: 12px;
 	background: url('../resizer.gif');

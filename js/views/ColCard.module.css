@@ -21,7 +21,7 @@
 }
 
 :global(.Column:hover .resize-enable .react-resizable-handle) {
-	visibility: visible;
+	opacity: 1;
 }
 
 /* Container around column label (A, B, C etc) and controls */

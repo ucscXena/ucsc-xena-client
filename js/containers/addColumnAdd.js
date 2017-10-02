@@ -33,14 +33,7 @@ function addColumnAdd(Component) {
 			this.setState({hover: null});
 		},
 		onHover(index, hovering) {
-			var {hover} = this.state;
-			// I don't trust in/out events to arrive in order, so only
-			// reset state if it matches the current index.
-			if (hovering) {
-				this.setState({hover: index});
-			} else if (hover === index) {
-				this.setState({hover: null});
-			}
+			this.setState({hover: hovering ? index : null});
 		},
 		render() {
 			var {children, ...otherProps} = this.props,

@@ -27,7 +27,7 @@ function addTooltip(Component) {
 				// If open + user clicks, toggle freeze of display.
 				.scan(([tt, frozen], ev) =>
 							ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen],
-						[null, false])
+						[{open: false}, false])
 				// Filter frozen events until frozen state changes.
 				.distinctUntilChanged(_.isEqual, ([ev, frozen]) => frozen ? frozen : [ev, frozen])
 				.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))

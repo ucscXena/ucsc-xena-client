@@ -128,7 +128,7 @@ var Transcripts = React.createClass({
 					<BookmarkMenu getState={this.getState} onImport={this.onImport}/>
 					<a className="selectors" style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors" style={{width: "1200px", height: "80px"}}>
-						<div id="geneBox" style={{float: "left", width: "200px"}}>
+						<div id="geneBox" style={{float: "left", width: "300px"}}>
 							<GeneSuggest label="Add Gene (e.g. KRAS)" value={this.state.input}
 								onChange={ value => {this.setState({input: value, updateButton: true});} }/>
 						</div>
