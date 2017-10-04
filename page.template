@@ -107,7 +107,7 @@
 				css.type = 'text/css';
 				css.rel = 'stylesheet';
 				css.href = path;
-				document.getElementsByTagName("head")[0].appendChild(css);
+				document.getElementsByTagName("body")[0].appendChild(css);
 			}
 
 			addScript(page.js);
