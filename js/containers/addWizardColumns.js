@@ -151,7 +151,8 @@ var computeSettings = _.curry((datasets, features, inputFields, width, dataset, 
 	var ds = datasets[dataset];
 	var settings = columnSettings(datasets, features, dataset, inputFields, matches.fields, matches.type === 'probes'),
 		colSpec = getColSpec([settings], datasets),
-		columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +  ds.label;
+		columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +
+			(ds.dataSubType && ds.dataSubType.match(/phenotype/i) ? '' : ds.label);
 
 	return _.assoc(colSpec,
 		'width', _.contains(['mutationVector', 'segmented'], ds.type) ? typeWidth.chrom : typeWidth.matrix,
