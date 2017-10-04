@@ -51,10 +51,7 @@ function render(root, callback, sessionStorage) {
 	}
 
 	function columnLabel (i, colSetting) {
-		var label = colSetting.user.fieldLabel + (colSetting.user.columnLabel.trim() ? ' - ' + colSetting.user.columnLabel : '');
-		/*if (colSetting.fieldType === "genes" || colSetting.fieldType === "segmented") {
-			label += " (average)";
-		}*/
+		var	label = [colSetting.user.fieldLabel, colSetting.user.columnLabel].filter(e => e.trim() !== '').join(" - ");
 		return "column " + getLabel(i) + ": " + label;
 	}
 
@@ -253,7 +250,7 @@ function render(root, callback, sessionStorage) {
 
 			option = document.createElement('option');
 			option.value = column;
-			option.textContent = [columnLabel(i, columns[column]), colUnit(columns[column])].join(" - ");
+			option.textContent = [columnLabel(i, columns[column]), colUnit(columns[column])].filter(e => e.trim() !== '').join(" - ");
 
 			div.appendChild(option);
 
@@ -397,7 +394,7 @@ function render(root, callback, sessionStorage) {
 				//if data in db in logscale, custom option with actual unit
 				if (dropDownDiv.selectedIndex === 0) {
 					dropDownDiv.options[0].text = colSettings.units.join();
-					YdropDownDiv.options[i].text = [columnLabel(columnPos, colSettings), colUnit(colSettings)].join(" - ");
+					YdropDownDiv.options[i].text = [columnLabel(columnPos, colSettings), colUnit(colSettings)].filter(e => e.trim() !== '').join(" - ");
 				}
 				// if exp2(data), custom y axis display without log in the unit label
 				else {
@@ -406,7 +403,7 @@ function render(root, callback, sessionStorage) {
 					var regExp = /\(([^)]+)\)/;
 					var matches = regExp.exec(unitsString);
 					matches = matches ? matches[1] : '';
-					YdropDownDiv.options[i].text = [columnLabel(columnPos, colSettings), matches].join(" - ");
+					YdropDownDiv.options[i].text = [columnLabel(columnPos, colSettings), matches].filter(e => e.trim() !== '').join(" - ");
 				}
 			}
 		} else {
