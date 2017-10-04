@@ -27,6 +27,12 @@
 	font-weight: bold;
 }
 
+/* XXX workaround for long group names */
+.subgroupHeader:hover {
+	overflow: visible;
+}
+
+
 .subgroupHeader:first-of-type {
 	padding-top: 8px;
 }

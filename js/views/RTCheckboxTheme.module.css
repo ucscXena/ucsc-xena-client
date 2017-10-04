@@ -35,3 +35,8 @@
 	white-space: nowrap;
 	width: calc(100% - 16px);
 }
+
+/* XXX workaround for long dataset names */
+.text:hover {
+	overflow: visible;
+}
