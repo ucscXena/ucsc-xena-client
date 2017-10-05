@@ -87,12 +87,7 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 	};
 	chartOptions.xAxis = {
 		title: {
-			text: xAxisTitle,
-			margin: 10,
-			style: {
-				color: 'black',
-				fontSize: '20px'
-			}
+			text: xAxisTitle
 		},
 		type: 'category',
 		categories: categories,
@@ -136,7 +131,7 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 					+ '<br>'
 					+ '<b>' + this.point.y + '%</b>'
 					+ '</b><br>'
-					+ (nNumber ? 'n = ' + nNumber : '');
+					+ 'n = ' + nNumber;
 			},
 			hideDelay: 0
 		};
@@ -155,10 +150,8 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 	return chartOptions;
 }
 
-// x categorical y float
+// x categorical y float  boxplot
 function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
-	yAxisTitle =  yAxisTitle.length > 22 ? yAxisTitle.slice(0, 22) + '...' : yAxisTitle;
-
 	chartOptions.chart.zoomType = 'x';
 	chartOptions.legend.align = 'right';
 	chartOptions.legend.margin = 5;
@@ -167,20 +160,22 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 	chartOptions.legend.layout = 'vertical';
 
 	chartOptions.title = {
-		text: yAxisTitle + ((xAxisTitle === "") ? "" : " according to " + xAxisTitle)
+		text: '' // boxplot no chart tile because both x and y axis are clearlly marked.
 	};
 
 	chartOptions.xAxis = {
 		title: {
-			margin: 10,
-			style: {
-				color: 'black',
-				fontSize: '20px'
-			}
+			text: xAxisTitle
 		},
 		type: 'category',
 		categories: categories.length === 1 ? [''] : categories,
 		minRange: -1
+	};
+
+	chartOptions.yAxis = {
+		title: {
+			text: yAxisTitle
+		}
 	};
 
 	chartOptions.tooltip = {
@@ -206,11 +201,6 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 		};
 	}
 
-	chartOptions.yAxis = {
-		title: {
-			text: yAxisTitle
-		}
-	};
 	chartOptions.plotOptions = {
 		errorbar: {
 			color: 'gray'
@@ -230,7 +220,7 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	chartOptions.legend.layout = 'vertical';
 	chartOptions.chart.type = 'scatter';
 	chartOptions.title = {
-		text: yAxisTitle + " vs " + xAxisTitle
+		text: '' // scatter plot no chart tile because both x and y axis are clearlly marked.
 	};
 	chartOptions.xAxis = {
 		title: {

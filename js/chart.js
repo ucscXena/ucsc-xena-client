@@ -473,80 +473,6 @@ function render(root, callback, sessionStorage) {
 		}
 		return ybinnedSample;
 	}
-/*
-	function toggleButtons(chart, xIsCategorical, yIsCategorical) {
-		var div = document.getElementById("chartContainer"),
-			seriesButton, datalabelButton,
-			hideAll = "Hide all data",
-			showAll = "Show all data",
-			datalabelShow = "Show Y data labels",
-			datalabelHide = "Hide Y data labels";
-
-		//showHideDataLabel button
-		if (xIsCategorical && yIsCategorical) {
-			datalabelButton = document.createElement("button");
-			datalabelButton.setAttribute("class", "showHideButton");
-			if (chart.series.some ( series => series.options.dataLabels.enabled)) {
-				datalabelButton.innerHTML = datalabelHide;
-			} else {
-				datalabelButton.innerHTML = datalabelShow;
-			}
-			datalabelButton.addEventListener("click", function () {
-				if (datalabelButton.innerHTML === datalabelShow) {
-					chart.series.forEach(function (series) {
-						series.update({
-							dataLabels: {
-								enabled: true,
-							}
-						}, false);
-					});
-					datalabelButton.innerHTML = datalabelHide;
-				} else {
-					chart.series.forEach(function (series) {
-						series.update({
-							dataLabels: {
-								enabled: false
-							}
-						}, false);
-					});
-					datalabelButton.innerHTML = datalabelShow;
-				}
-				chart.redraw();
-			});
-			div.appendChild(datalabelButton);
-		}
-
-		//showHideAllbutton
-		seriesButton = document.createElement("button");
-		seriesButton.setAttribute("class", "showHideButton");
-		seriesButton.innerHTML = hideAll;
-		seriesButton.addEventListener("click", function () {
-			if (seriesButton.innerHTML === hideAll) { //hide all
-				chart.series.forEach(function (series) {
-					if (series.visible) {
-						series.setVisible(false, false);
-					}
-				});
-				seriesButton.innerHTML = showAll;
-				chart.redraw();
-
-			} else { /// show all
-				if (chart.series.length < 20) {
-					chart.series.forEach(function (series) {
-						if (!series.visible) {
-							series.setVisible(true, false);
-						}
-					});
-					seriesButton.innerHTML = hideAll;
-					chart.redraw();
-				} else { //redraw from scratch
-					update.apply(this, updateArgs);
-				}
-			}
-		});
-		div.appendChild(seriesButton);
-	}
-*/
 
 	function destroy() {
 		if (chart) {
@@ -554,6 +480,7 @@ function render(root, callback, sessionStorage) {
 			chart = undefined;
 		}
 	}
+
 	function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 		yfields, ycodemap, ydata, reverseStrand,
 		offsets, xlabel, ylabel, STDEV,
@@ -985,8 +912,8 @@ function render(root, callback, sessionStorage) {
 			total = 0.0;
 			for (i = 0; i < ycategories.length; i++) {
 				code = ycategories[i];
-				observed.push([]);
-				expected.push([]);
+				observed.push(new Array(categories.length));
+				expected.push(new Array(categories.length));
 				yMargin.push(ybinnedSample[code].length);
 				total += yMargin[i];
 			}
@@ -999,22 +926,19 @@ function render(root, callback, sessionStorage) {
 			for (i = 0; i < ycategories.length; i++) {
 				code = ycategories[i];
 				for (k = 0; k < categories.length; k++) {
-					observed[i].push(0.0);
 					observed[i][k] = _.intersection(ybinnedSample[code], xbinnedSample[categories[k]]).length;
-					expected[i].push(0.0);
 					expected[i][k] = xRatio[k] * yMargin[i];
 				}
 			}
 
-
 			for (i = 0; i < ycategories.length; i++) {
 				code = ycategories[i];
-
-				var ycodeSeries = [];
+				var ycodeSeries = new Array(categories.length);
 				for (k = 0; k < categories.length; k++) {
-					ycodeSeries.push(" ");
 					if (xMargin[k] && observed[i][k]) {
 						ycodeSeries[k] = parseFloat(((observed[i][k] / xMargin[k]) * 100).toPrecision(3));
+					} else {
+						ycodeSeries[k] = 0;
 					}
 				}
 
@@ -1214,10 +1138,6 @@ function render(root, callback, sessionStorage) {
 			}
 			chart.redraw();
 		}
-
-		/*if (chart) {
-			toggleButtons(chart, xIsCategorical, yIsCategorical);
-		}*/
 	}
 
 	update = function () {
