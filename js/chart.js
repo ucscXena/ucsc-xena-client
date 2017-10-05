@@ -1202,7 +1202,8 @@ function render(root, callback, sessionStorage) {
 				ydata = _.getIn(xenaState, ['data', ycolumn, 'req', 'values']),
 				ydataSegment = _.getIn(xenaState, ['data', ycolumn, 'req', 'rows']),
 				yProbes = _.getIn(xenaState, ['data', ycolumn, 'req', 'probes']),
-				yfields = yProbes ? yProbes : columns[ycolumn].fields,
+				yfields = yProbes ? yProbes :
+					((['segmented', 'mutation', 'SV'].indexOf(columns[ycolumn].fieldType) !== -1) ? [columns[ycolumn].fields[0]] : columns[ycolumn].fields),
 				reverseStrand = false,
 				samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 				yIsCategorical, xIsCategorical, xfield,
