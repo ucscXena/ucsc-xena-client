@@ -235,11 +235,14 @@ var RefGeneAnnotation = React.createClass({
 		});
 	},
 	tooltip: function (ev) {
-		var {layout, column: {assembly}} = this.props,
-			{x, y} = util.eventOffset(ev),
-			{annotationHeight, perLaneHeight, laneOffset, lanes} = this.annotationLanes;
+		var {layout, column: {assembly}} = this.props;
 
-		var rows = [],
+		if (!layout) { // gene model not loaded
+			return;
+		}
+		var {x, y} = util.eventOffset(ev),
+			{annotationHeight, perLaneHeight, laneOffset, lanes} = this.annotationLanes,
+			rows = [],
 			assemblyString = encodeURIComponent(assembly),
 			contextPadding = Math.floor((layout.zoom.end - layout.zoom.start) / 4),
 			posLayout = `${layout.chromName}:${util.addCommas(layout.zoom.start)}-${util.addCommas(layout.zoom.end)}`,
