@@ -12,10 +12,10 @@ var {defaultColorClass} = require('../heatmapColors');
 var uuid = require('../uuid');
 var Rx = require('../rx');
 
-function toWordList(str) {
+/*function toWordList(str) {
 	// Have to wrap trim because it takes a 2nd param.
 	return _.filter(_.map(str.split(/,| |\n|\t/), s => trim(s), _.identity));
-}
+}*/
 
 var typeWidth = {
 	matrix: 136,
@@ -57,18 +57,22 @@ function getFieldType(dataset, features, fields, probes) {
 var parsePos = require('../parsePos');
 function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
-		pos = parsePos(trim(input), meta.assembly);
+		pos = parsePos(trim(input), meta.assembly),
+		fieldType = getFieldType(meta, features[dsID], fields, probes),
+		normalizedFields = pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :
+			((['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1) ? [fields[0]] : fields).map(f => f ? f : "[unknown]");
+
 	// My god, this is a disaster.
 	return {
-		fields: pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] : fields.map(f => f ? f : "[unknown]"),
+		fields: normalizedFields,
 		fetchType: 'xena',
 		valueType: getValueType(meta, features[dsID], fields),
-		fieldType: getFieldType(meta, features[dsID], fields, probes),
+		fieldType: fieldType,
 		dsID,
 		defaultNormalization: meta.colnormalization,
 		// XXX this assumes fields[0] doesn't appear in features if ds is genomic
 		//fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle'], fields.join(', ')),
-		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle']) || toWordList(input).join(', '),
+		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle']) || normalizedFields.join(', '),
 		colorClass: defaultColorClass,
 		assembly: meta.assembly
 	};
