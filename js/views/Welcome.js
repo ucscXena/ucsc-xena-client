@@ -29,8 +29,8 @@ var Welcome = React.createClass({
 		this.props.onClick();
 	},
 	render() {
-		var {link: [bookmark, text], linkProps} = this.props,
-			link = `${document.location.origin}/heatmap/?bookmark=${bookmark}`;
+		var {link: [app, bookmark, text], linkProps} = this.props,
+			link = `${document.location.origin}/${app}/?bookmark=${bookmark}`;
 		return (
 			<div className={compStyles.Welcome}>
 				<div className={compStyles.welcomeIcon}>
