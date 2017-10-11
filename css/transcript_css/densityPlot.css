@@ -1,5 +1,8 @@
 .densityPlot {
-	margin: 20px;
+	margin-top: 20px;
+	margin-left: 20px;
+	margin-bottom: 20px;
+	margin-right: -10px;
 	width: 230px;
 	display: flex;
 	flex-wrap: wrap;

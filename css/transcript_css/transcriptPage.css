@@ -53,7 +53,7 @@
 }
 
 .densityplot--label-div--zoom {
-  margin-left: 905px;
+  margin-left: 205px;
   position: absolute;
   height: 40px;
   z-index: 10;
@@ -77,6 +77,7 @@
 .densityplot--label-y {
   font-size: .85em;
   line-height: 110px;
+  position: absolute;
   -webkit-transform: rotate(-90deg);
 	-moz-transform: rotate(-90deg);
 	transform: rotate(-90deg);
@@ -91,7 +92,7 @@
 }
 
 .densityplot--label-div-zero {
-  margin-left: 860px;
+  margin-left: 160px;
   position: absolute;
   height: 50px;
   width: 50px;
