@@ -93,6 +93,7 @@ var DensityPlot = React.createClass ({
             <div className="densityPlot--row--xAxis" style={{width: `${plotWidth * 100 / totalWidth}%`, left: "20px"}}/>
             <div className="densityPlot--row--studyA" style={{width: totalWidth}}>
                  {
+                   //rectangle starts at 0,plotHt and polyline starts at 20,plotHt
                   //  {yHeights, zeroWidth, zeroHeight} = calculateHeight(studyA.expA, max, min, plotHt, plotWidth, this.props.unit),
                    binWidth = plotWidth / yHeightsA.length,
                    polylinePoints = [`20,${plotHt}`, ...yHeightsA.map((y, i) => `${i * binWidth + 20},${(1 - y / vscale) * plotHt}`), `${plotWidth + 20},${plotHt}`].join(' '),
