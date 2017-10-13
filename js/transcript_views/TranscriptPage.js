@@ -144,7 +144,7 @@ var Transcripts = React.createClass({
 							</div> : null
 						}
 					</div>
-					<div style={{width: "1200px", marginBottom: "50px"}}>
+					<div style={{width: "1200px", marginBottom: "40px"}}>
 						<div style={{"margin-bottom": "10px"}}>
 							<span className="selectors">Study A</span>
 							<select ref="A" onChange={this.onLoadData} value={valueA}>
@@ -155,7 +155,7 @@ var Transcripts = React.createClass({
 								{options}
 							</select>
 						</div>
-						<div style={{position: "absolute", right: "460px"}}>
+						<div>
 							<span className="selectors">Expression Unit</span>
 							<select ref="unit" onChange={this.onLoadData} value={unit}>
 								<option value="tpm">{unitLabels.tpm.dropdown}</option>
@@ -199,9 +199,9 @@ var Transcripts = React.createClass({
 						unit={unit}
 						getNameZoom={this.onZoom}
 						/>
-					{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
-						<label className="densityplot--label-y">density</label> : null
-					}
+						{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
+							<label className="densityplot--label-y">density</label> : null
+						}
 					<ExonsOnly
 						data={transcriptExonData}
 						getNameZoom={this.onZoom}

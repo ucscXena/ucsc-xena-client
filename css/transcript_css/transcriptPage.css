@@ -75,10 +75,10 @@
 }
 
 .densityplot--label-y {
-  font-size: .85em;
-  line-height: 110px;
-  position: absolute;
-  left: 500px;
+  display: inline-block;
+  width: 0px;
+  margin-top: 60px;
+  float: left;
   -webkit-transform: rotate(-90deg);
 	-moz-transform: rotate(-90deg);
 	transform: rotate(-90deg);
