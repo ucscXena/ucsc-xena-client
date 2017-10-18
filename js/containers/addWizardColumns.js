@@ -125,15 +125,27 @@ var preferredLabels = {
 	'simple somatic mutation': 'Somatic Mutation'
 };
 
+var activeHubs = hubs => _.keys(hubs).filter(hub => hubs[hub].user);
+var cohortName = cohort => _.getIn(cohort, [0, 'name']);
+var getCohortPreferred = (table, cohort) => _.get(table, cohortName(cohort));
+
 function getPreferedDatasets(cohort, cohortPreferred, hubs) {
-	var active = _.keys(hubs).filter(hub => hubs[hub].user),
+	var active = activeHubs(hubs),
 		// Only include datasets on active hubs.
-		preferred = _.pick(_.get(cohortPreferred, _.getIn(cohort, [0, 'name'])),
+		preferred = _.pick(getCohortPreferred(cohortPreferred, cohort),
 							ds => _.contains(active, JSON.parse(ds).host));
 	// Use isEmpty to handle 1) no configured preferred datasets or 2) preferred dataset list
 	// is empty after filtering by active hubs.
 	return _.isEmpty(preferred) ? null : _.keys(preferred).map(type =>
 			({dsID: preferred[type], label: preferredLabels[type]}));
+}
+
+function getPreferredPhenotypes(cohort, cohortPreferredPhenotypes, hubs) {
+	var active = activeHubs(hubs),
+		preferred = _.filter(getCohortPreferred(cohortPreferredPhenotypes, cohort),
+			({dsID}) => _.contains(active, JSON.parse(dsID).host));
+
+	return _.isEmpty(preferred) ? null : preferred;
 }
 
 var stripFields = f => ({dsID: f.dsID, label: (f.longtitle || f.name), value: f.name});
@@ -215,14 +227,25 @@ function addWizardColumns(Component) {
 		},
 		render() {
 			var {children, appState} = this.props,
-				{cohort, cohorts, cohortPreferred, cohortMeta, wizardMode, datasets,
-					features, defaultWidth, servers} = appState,
+				{cohort, cohorts, cohortPreferred, cohortPhenotype, cohortMeta,
+					wizardMode, datasets, features, defaultWidth, servers} = appState,
 				stepperState = getStepperState(appState),
 				{editing} = appState,
 				preferred = getPreferedDatasets(cohort, cohortPreferred, servers),
+				preferredPhenotypes = getPreferredPhenotypes(cohort, cohortPhenotype, servers),
 				width = defaultWidth,
-				cohortSelectProps = {cohorts, cohortMeta, onSelect: this.onCohortSelect, width},
-				datasetSelectProps = {datasets, features: sortFeatures(removeSampleID(consolidateFeatures(features))), preferred, onSelect: this.onDatasetSelect, width},
+				cohortSelectProps = {
+					cohorts,
+					cohortMeta,
+					onSelect: this.onCohortSelect,
+					width},
+				datasetSelectProps = {
+					datasets,
+					features: sortFeatures(removeSampleID(consolidateFeatures(features))),
+					preferred,
+					preferredPhenotypes,
+					onSelect: this.onDatasetSelect,
+					width},
 				columns = React.Children.toArray(children),
 				cancelIcon = <i className='material-icons' onClick={this.onCancel}>cancel</i>,
 				withEditor = columns.map(el =>

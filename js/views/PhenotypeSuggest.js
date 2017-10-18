@@ -53,6 +53,7 @@ var PhenotypeSuggest = React.createClass({
 			<XAutosuggest
 				inputRef={this.setInput}
 				suggestions={suggestions}
+				onSuggestionSelected={this.props.onSuggestionSelected}
 				onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
 				onSuggestionsClearRequested={this.onSuggestionsClearRequested}
 				getSuggestionValue={x => x.label}

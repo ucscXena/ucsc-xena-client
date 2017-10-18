@@ -145,7 +145,10 @@ var controls = {
 	cohortMeta: (state, meta) => _.assoc(state, 'cohortMeta', invertCohortMeta(meta)),
 	cohortPreferred: (state, cohortPreferred) => _.assoc(state, 'cohortPreferred',
 			_.fmap(cohortPreferred,
-				preferred => _.fmap(preferred, ({host, dataset}) => JSON.stringify({host, name: dataset}))))
+				preferred => _.fmap(preferred, ({host, dataset}) => JSON.stringify({host, name: dataset})))),
+	cohortPhenotype: (state, cohortPhenotype) => _.assoc(state, 'cohortPhenotype',
+			_.fmap(cohortPhenotype,
+				preferred => _.map(preferred, ({host, dataset, feature}) => ({dsID: JSON.stringify({host, name: dataset}), feature}))))
 };
 
 module.exports = {

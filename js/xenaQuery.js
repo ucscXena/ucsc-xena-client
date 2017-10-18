@@ -399,6 +399,8 @@ var cohortMetaURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/m
 
 var cohortPreferredURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/defaultDataset.json";
 
+var cohortPhenotypeURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/defaultPhenotype.json";
+
 var fetchJSON = url =>
 	Rx.Observable.ajax({
 		url,
@@ -429,5 +431,6 @@ module.exports = {
 
 	// cohort meta
 	fetchCohortMeta: fetchJSON(cohortMetaURL),
-	fetchCohortPreferred: fetchJSON(cohortPreferredURL)
+	fetchCohortPreferred: fetchJSON(cohortPreferredURL),
+	fetchCohortPhenotype: fetchJSON(cohortPhenotypeURL)
 };

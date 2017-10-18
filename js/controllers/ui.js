@@ -150,6 +150,10 @@ function fetchCohortPreferred(serverBus) {
 	serverBus.next(['cohortPreferred', xenaQuery.fetchCohortPreferred]);
 }
 
+function fetchCohortPhenotype(serverBus) {
+	serverBus.next(['cohortPhenotype', xenaQuery.fetchCohortPhenotype]);
+}
+
 function setLoadingState(state, params) {
 	var pending =  (_.get(params, 'bookmark') || _.get(params, 'inlineState')) ?
 		_.assoc(state, 'loadPending', true) : state;
@@ -220,6 +224,7 @@ var controls = {
 		}
 		fetchCohortMeta(serverBus);
 		fetchCohortPreferred(serverBus);
+		fetchCohortPhenotype(serverBus);
 	},
 	'import': (state, newState) => _.has(newState, 'wizardMode') ?
 		newState : _.assoc(state, 'stateError', 'import'),

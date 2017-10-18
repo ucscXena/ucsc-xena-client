@@ -60,7 +60,12 @@ function selectedOptions(selected, options) {
 
 var GenotypicForm = props => (
 	<div>
-		<GeneSuggest error={props.error} value={props.value} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} type='text'/>
+		<GeneSuggest
+			error={props.error}
+			value={props.value}
+			onKeyDown={returnPressed(props.onReturn)}
+			onChange={props.onFieldChange}
+			type='text'/>
 		<XCheckboxGroup
 			label='Assay Type'
 			additionalAction={!_.isEmpty(props.preferred) && (props.advanced ? 'Show Basic' : 'Show Advanced')}
@@ -71,10 +76,44 @@ var GenotypicForm = props => (
 					preferredList(props.preferred))}/>
 	</div>);
 
-var PhenotypicForm = props => (
-	<div>
-		<PhenotypeSuggest error={props.error} value={props.value} features={props.features} onKeyDown={returnPressed(props.onReturn)} onChange={props.onFieldChange} type='text'/>
-	</div>);
+var featureLabel = (list, f) => {
+	var match = _.findWhere(list, {dsID: f.dsID, value: f.feature});
+	return _.get(match, 'label', f.feature);
+};
+
+var phenotypeList = (preferred, features) => ([{
+	options: preferred.map(f => {
+		var label = featureLabel(features, f);
+		return {label: label, value: JSON.stringify(f)};
+	})
+}]);
+
+var allPhenotypeList = features => ([{
+	options: features.map(f => {
+		return {label: _.get(f, 'label', f.feature), value: JSON.stringify({dsID: f.dsID, feature: f.value})};
+	})
+}]);
+
+var PhenotypicForm = props => {
+	var options = selectedOptions(props.selected,
+			props.advanced ? allPhenotypeList(props.features) : phenotypeList(props.phenotypes, props.features));
+	return (
+		<div>
+			<XCheckboxGroup
+				label='Phenotype'
+				additionalAction={!_.isEmpty(props.phenotypes) && (props.advanced ? 'Show Basic' : 'Show All')}
+				onAdditionalAction={props.onAdvancedClick}
+				onChange={props.onChange}
+				options={options}/>
+			<PhenotypeSuggest
+				error={props.error}
+				value={props.value}
+				features={props.features}
+				onSuggestionSelected={(ev, {suggestion: {label}}) => props.onAddPhenotype(label)}
+				onKeyDown={returnPressed(props.onAddPhenotype)}
+				onChange={props.onFieldChange} type='text'/>
+		</div>);
+};
 
 var getModeFields = {
 	Genotypic: GenotypicForm,
@@ -83,30 +122,64 @@ var getModeFields = {
 
 var isValueValid = {
 	Genotypic: value => value.trim().length > 0,
-	Phenotypic: (value, features) => _.findWhere(features, {label: value})
+	Phenotypic: () => true
 };
 
 var isValid = {
 	Genotypic: (value, selected) => isValueValid.Genotypic(value) && selected.length > 0,
-	Phenotypic: (value, selected, features) => isValueValid.Phenotypic(value, features)
+	Phenotypic: (value, selected) => selected.length > 0
 };
 
-function applyInitialState(fields, dataset, datasets, features, preferred, defaults) {
-	var isGenomic = notIgnored(datasets[dataset]),
-		mode = isGenomic ? 'Genotypic' : 'Phenotypic',
-		isPreferred = _.contains(_.pluck(preferred, 'dsID'), dataset),
-		value = isGenomic ? fields.join(' ') :
-			_.findWhere(features, {value: fields[0]}).label,
-		selected = isGenomic ? [dataset] : [],
-		valid = isValid[mode](value, selected, features);
+var applyInitialState = {
+	Genotypic: (fields, dataset, datasets, features, preferred, defaults) => {
+		var mode = 'Genotypic',
+			isPreferred = _.contains(_.pluck(preferred, 'dsID'), dataset),
+			value = fields.join(' '),
+			selected = [dataset],
+			valid = isValid[mode](value, selected);
 
-	return _.assocIn(defaults,
-		['mode'], mode,
-		['advanced'], isGenomic && !isPreferred,
-		['value', mode], value,
-		['selected', !isPreferred], selected,
-		['valid'], valid);
-}
+		return _.assocIn(defaults,
+			['mode'], mode,
+			['advanced', mode], !isPreferred,
+			['value', mode], value,
+			['selected', mode, !isPreferred], selected,
+			['valid'], valid);
+	},
+	Phenotypic: (fields, dataset, datasets, features, preferred, defaults) => {
+		var mode = 'Phenotypic',
+			phenotype = {dsID: dataset, feature: _.findWhere(features, {value: fields[0]}).value},
+			selected = [JSON.stringify(phenotype)],
+			valid = isValid[mode]('', selected);
+
+		return _.assocIn(defaults,
+			['mode'], mode,
+			['phenotypes'], _.uniq([...defaults.phenotypes, phenotype]),
+			['selected', mode, false], selected,
+			['valid'], valid);
+	}
+};
+
+var datasetMode = (datasets, dataset) =>
+	notIgnored(datasets[dataset]) ? 'Genotypic' : 'Phenotypic';
+
+// if phenotype, ensure that the chosen feature is in phenotypes, and
+// check it. Always start in basic mode.
+//function applyInitialState(fields, dataset, datasets, features, preferred, defaults) {
+//	var isGenomic = notIgnored(datasets[dataset]),
+//		mode = isGenomic ? 'Genotypic' : 'Phenotypic',
+//		isPreferred = _.contains(_.pluck(preferred, 'dsID'), dataset),
+//		value = isGenomic ? fields.join(' ') :
+//			_.findWhere(features, {value: fields[0]}).label,
+//		selected = isGenomic ? [dataset] : [],
+//		valid = isValid[mode](value, selected);
+//
+//	return _.assocIn(defaults,
+//		['mode'], mode,
+//		['advanced'], isGenomic && !isPreferred,
+//		['value', mode], value,
+//		['selected', !isPreferred], selected,
+//		['valid'], valid);
+//}
 
 var matchDatasetFields = multi((datasets, dsID) => {
 	var meta = datasets[dsID];
@@ -184,13 +257,23 @@ function matchFields(datasets, features, mode, selected, value) {
 var VariableSelect = React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	getInitialState() {
-		var {fields, dataset, datasets, features, preferred, mode = 'Genotypic'} = this.props;
+		var {fields, dataset, datasets, features, preferred, preferredPhenotypes, mode = 'Genotypic'} = this.props;
 		var defaults = {
 			mode,
-			advanced: _.isEmpty(preferred),
+			advanced: {
+				Genotypic: _.isEmpty(preferred),
+				Phenotypic: _.isEmpty(preferredPhenotypes)
+			},
+			phenotypes: preferredPhenotypes,
 			selected: {
-				true: [], // advanced
-				false: [] // !advanced
+				Genotypic: {
+					true: [], // advanced
+					false: [] // !advanced
+				},
+				Phenotypic: {
+					true: [], // advanced
+					false: [] // !advanced
+				}
 			},
 			value: {
 				Genotypic: '',
@@ -199,33 +282,38 @@ var VariableSelect = React.createClass({
 			valid: false
 		};
 		return fields && dataset ?
-			applyInitialState(fields, dataset, datasets, features, preferred, defaults) : defaults;
+			applyInitialState[datasetMode(datasets, dataset)](fields, dataset, datasets, features, preferred, defaults) : defaults;
 	},
 	componentWillMount() {
 		this.events('mode', 'advanced', 'field', 'dataset');
 		var mode = this.ev.mode.startWith(this.state.mode),
-			advanced = this.ev.advanced.scan(a => !a, this.state.advanced).startWith(this.state.advanced),
-			selected = this.ev.dataset.withLatestFrom(advanced, (dataset, advanced) => ([dataset, advanced]))
-				.scan((selected, [{selectValue, isOn}, advanced]) =>
-					_.updateIn(selected, [advanced], selected => (isOn ? _.conj : _.without)(selected, selectValue)),
-					this.state.selected).startWith(this.state.selected),
-			value = this.ev.field.withLatestFrom(mode, (field, mode) => ([field, mode]))
-				.scan((value, [field, mode]) => _.assoc(value, mode, field), this.state.value).startWith(this.state.value);
+			advanced = this.ev.advanced
+				.withLatestFrom(mode, (advanced, mode) => mode)
+				.scan((advanced, mode) => _.updateIn(advanced, [mode], a => !a), this.state.advanced)
+				.startWith(this.state.advanced),
+			selected = this.ev.dataset
+				.withLatestFrom(advanced, mode, (dataset, advanced, mode) => ([dataset, mode, advanced[mode]]))
+				.scan((selected, [{selectValue, isOn}, mode, advanced]) =>
+					_.updateIn(selected, [mode, advanced], selected => (isOn ? _.conj : _.without)(selected, selectValue)),
+					this.state.selected)
+				.startWith(this.state.selected),
+			value = this.ev.field
+				.withLatestFrom(mode, (field, mode) => ([field, mode]))
+				.scan((value, [field, mode]) => _.assoc(value, mode, field), this.state.value)
+				.startWith(this.state.value);
 
 		this.modeSub = mode.subscribe(mode => this.setState({mode, error: false}));
 		this.advancedSub = advanced.subscribe(advanced => this.setState({advanced}));
 		this.selectedSub = selected.subscribe(selected => this.setState({selected}));
 		this.valueSub = value.subscribe(value => this.setState({value, error: false}));
 
-		// XXX there may be a race here, where user changes the input, making the fields invalid, but
-		// we wait 200ms to set 'valid'. Need to instead reset valid immediately, and then update matches.
 		// valid should only be set true after assessing disposition, but should be set false immediately on
 		// user input.
 		this.validSub = mode.combineLatest(advanced, selected, value,
-				(mode, advanced, selected, value) => ([mode, advanced, selected, value]))
+				(mode, advanced, selected, value) => ([mode, selected[mode][advanced[mode]], value[mode]]))
 			.do(() =>this.setState({valid: false, loading: true})) // XXX side-effects
-			.debounceTime(200).switchMap(([mode, advanced, selected, value]) =>
-					matchFields(this.props.datasets, this.props.features, mode, selected[advanced], value[mode]))
+			.debounceTime(200).switchMap(([mode, selected, value]) =>
+					matchFields(this.props.datasets, this.props.features, mode, selected, value))
 			.subscribe(valid => this.setState({loading: false, ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
 	},
 	componentWillUnmount() {
@@ -239,17 +327,19 @@ var VariableSelect = React.createClass({
 		this.on.dataset({selectValue, isOn});
 	},
 	onDone() {
-		var {features, pos, onSelect} = this.props,
+		var {pos, onSelect} = this.props,
 			{mode, advanced, valid, matches} = this.state,
 			value = this.state.value[mode],
-			selected = this.state.selected[advanced];
+			selected = this.state.selected[mode][advanced[mode]];
 
 		if (valid) {
 			if (mode === 'Genotypic') {
 				onSelect(pos, value, selected, matches);
 			} else {
-				let feature = _.findWhere(features, {label: value});
-				onSelect(pos, feature.value, [feature.dsID], [{fields: [feature.value]}]);
+				let features = selected.map(s => JSON.parse(s)),
+					datasets = _.pluck(features, 'dsID'),
+					fields = features.map(f => ({fields: [f.feature]}));
+				onSelect(pos, "", datasets, fields);
 			}
 		}
 	},
@@ -262,11 +352,23 @@ var VariableSelect = React.createClass({
 			this.setState({error: true});
 		}
 	},
+	onAddPhenotype(valueIn) {
+		var {features} = this.props,
+			{phenotypes, value, mode} = this.state,
+			match = _.findWhere(features, {label: valueIn || value[mode]});
+		if (match) {
+			let newPheno = {dsID: match.dsID, feature: match.value};
+			if (!_.findWhere(phenotypes, newPheno)) {
+				this.setState({phenotypes: _.uniq([...phenotypes, newPheno])});
+				this.on.dataset({selectValue: JSON.stringify(newPheno), isOn: true});
+				this.on.field("");
+			}
+		}
+	},
 	render() {
-		var {mode, advanced, valid, loading} = this.state,
+		var {mode, advanced, valid, loading, error, phenotypes} = this.state,
 			value = this.state.value[mode],
-			error = this.state.error,
-			selected = this.state.selected[advanced],
+			selected = this.state.selected[mode][advanced[mode]],
 			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
 			contentSpecificHelp = _.getIn(helpText, [mode]),
 			ModeForm = getModeFields[mode],
@@ -282,7 +384,7 @@ var VariableSelect = React.createClass({
 				width
 			},
 			dataTypeProps = {
-				label: 'Data Type',
+				label: 'Select Data Type',
 				value: mode,
 				onChange: this.on.mode,
 				options: [{label: 'Genomic', value: 'Genotypic'}, {label: 'Phenotypic', value: 'Phenotypic'}]
@@ -300,8 +402,10 @@ var VariableSelect = React.createClass({
 					value={value}
 					features={features}
 					preferred={preferred}
+					phenotypes={phenotypes}
+					onAddPhenotype={this.onAddPhenotype}
 					onAdvancedClick={this.on.advanced}
-					advanced={advanced}/>
+					advanced={advanced[mode]}/>
 			</WizardCard>);
 	}
 });
