@@ -10,7 +10,7 @@ var renderInputComponent = ({ref, onChange, error, ...props}) => (
 	<Input
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
-		label='Add Phenotype'
+		label='Search Phenotype'
 		{...props}>
 		<i style={{color: 'red', opacity: error ? 1 : 0}} className='material-icons'>error</i>
 	</Input>);
