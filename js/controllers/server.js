@@ -148,7 +148,7 @@ var controls = {
 				preferred => _.fmap(preferred, ({host, dataset}) => JSON.stringify({host, name: dataset})))),
 	cohortPhenotype: (state, cohortPhenotype) => _.assoc(state, 'cohortPhenotype',
 			_.fmap(cohortPhenotype,
-				preferred => _.map(preferred, ({host, dataset, feature}) => ({dsID: JSON.stringify({host, name: dataset}), feature}))))
+				preferred => _.map(preferred, ({host, dataset, feature}) => ({dsID: JSON.stringify({host, name: dataset}), name: feature}))))
 };
 
 module.exports = {

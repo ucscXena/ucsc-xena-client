@@ -148,19 +148,17 @@ function getPreferredPhenotypes(cohort, cohortPreferredPhenotypes, hubs) {
 	return _.isEmpty(preferred) ? [] : preferred;
 }
 
-var stripFields = f => ({dsID: f.dsID, label: (f.longtitle || f.name), value: f.name});
-
 var consolidateFeatures = featureSet => {
 	return _.reduce(featureSet, (all, features, dsID) => {
 		let strippedFeatures = _.toArray(_.mapObject(features, f =>
-			_.extend(stripFields(f), {dsID: dsID})));
+			_.extend(f, {dsID: dsID, label: (f.longtitle || f.name)})));
 		return all.concat(strippedFeatures);
 	}, []);
 };
 
 var sortFeatures = features => _.sortBy(features, f => f.label.toUpperCase());
 
-var removeSampleID = features => _.filter(features, f => f.value !== "sampleID");
+var removeSampleID = features => _.filter(features, f => f.name !== "sampleID");
 
 
 var computeSettings = _.curry((datasets, features, inputFields, width, dataset, matches) => {
@@ -243,7 +241,7 @@ function addWizardColumns(Component) {
 					datasets,
 					features: sortFeatures(removeSampleID(consolidateFeatures(features))),
 					preferred,
-					preferredPhenotypes,
+					basicFeatures: preferredPhenotypes,
 					onSelect: this.onDatasetSelect,
 					width},
 				columns = React.Children.toArray(children),
