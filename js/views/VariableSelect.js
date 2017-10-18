@@ -105,13 +105,15 @@ var PhenotypicForm = props => {
 				onAdditionalAction={props.onAdvancedClick}
 				onChange={props.onChange}
 				options={options}/>
-			<PhenotypeSuggest
-				error={props.error}
-				value={props.value}
-				features={props.features}
-				onSuggestionSelected={(ev, {suggestion: {label}}) => props.onAddPhenotype(label)}
-				onKeyDown={returnPressed(props.onAddPhenotype)}
-				onChange={props.onFieldChange} type='text'/>
+			{props.advanced ?
+				null :
+				(<PhenotypeSuggest
+					error={props.error}
+					value={props.value}
+					features={props.features}
+					onSuggestionSelected={(ev, {suggestion: {label}}) => props.onAddPhenotype(label)}
+					onKeyDown={returnPressed(props.onAddPhenotype)}
+					onChange={props.onFieldChange} type='text'/>)}
 		</div>);
 };
 
