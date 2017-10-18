@@ -222,6 +222,9 @@ function matchFields(datasets, features, mode, selected, value) {
 	return Rx.Observable.of({valid: false});
 }
 
+var featureIndexes = (features, list) =>
+	list.map(f => _.findIndex(features, _.matcher(f)).toString()).filter(x => x !== "-1");
+
 var VariableSelect = React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	getInitialState() {
@@ -232,7 +235,7 @@ var VariableSelect = React.createClass({
 				Genotypic: _.isEmpty(preferred),
 				Phenotypic: false
 			},
-			basicFeatures: basicFeatures.map(f => _.findIndex(features, _.matcher(f)).toString()),
+			basicFeatures: featureIndexes(features, basicFeatures),
 			selected: {
 				Genotypic: {
 					true: [], // advanced
@@ -251,6 +254,11 @@ var VariableSelect = React.createClass({
 		};
 		return fields && dataset ?
 			applyInitialState[datasetMode(datasets, dataset)](fields, dataset, datasets, features, preferred, defaults) : defaults;
+	},
+	componentWillReceiveProps({features, basicFeatures}) {
+		this.setState({
+			basicFeatures: featureIndexes(features, basicFeatures),
+		});
 	},
 	componentWillMount() {
 		this.events('mode', 'advanced', 'field', 'select');
