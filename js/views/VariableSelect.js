@@ -101,7 +101,7 @@ var PhenotypicForm = props => {
 		<div>
 			<XCheckboxGroup
 				label='Phenotype'
-				additionalAction={!_.isEmpty(props.phenotypes) && (props.advanced ? 'Show Basic' : 'Show All')}
+				additionalAction={props.advanced ? 'Show Basic' : 'Show All'}
 				onAdditionalAction={props.onAdvancedClick}
 				onChange={props.onChange}
 				options={options}/>
@@ -264,7 +264,7 @@ var VariableSelect = React.createClass({
 			mode,
 			advanced: {
 				Genotypic: _.isEmpty(preferred),
-				Phenotypic: _.isEmpty(preferredPhenotypes)
+				Phenotypic: false
 			},
 			phenotypes: preferredPhenotypes,
 			selected: {

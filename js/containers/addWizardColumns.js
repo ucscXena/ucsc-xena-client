@@ -145,7 +145,7 @@ function getPreferredPhenotypes(cohort, cohortPreferredPhenotypes, hubs) {
 		preferred = _.filter(getCohortPreferred(cohortPreferredPhenotypes, cohort),
 			({dsID}) => _.contains(active, JSON.parse(dsID).host));
 
-	return _.isEmpty(preferred) ? null : preferred;
+	return _.isEmpty(preferred) ? [] : preferred;
 }
 
 var stripFields = f => ({dsID: f.dsID, label: (f.longtitle || f.name), value: f.name});
