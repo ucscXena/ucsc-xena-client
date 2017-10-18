@@ -12,8 +12,9 @@ var {xenaFieldPaths, updateStrand, filterByDsID} = require('../models/fieldSpec'
 var identity = x => x;
 var {parseBookmark} = require('../bookmark');
 
+var phenoPat = /^phenotypes?$/i;
 function featuresQuery(datasets) {
-	var clinicalMatrices = _.filter(datasets, ds => ds.type === 'clinicalMatrix'),
+	var clinicalMatrices = _.filter(datasets, ds => ds.type === 'clinicalMatrix' && ds.dataSubType.match(phenoPat)),
 		dsIDs = _.pluck(clinicalMatrices, 'dsID');
 
 	// XXX note that datasetFeatures takes optional args, so don't pass it directly
