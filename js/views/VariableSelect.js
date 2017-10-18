@@ -262,7 +262,7 @@ var VariableSelect = React.createClass({
 			selected = this.ev.select
 				.withLatestFrom(advanced, mode, (dataset, advanced, mode) => ([dataset, mode, advanced[mode]]))
 				.scan((selected, [{selectValue, isOn}, mode, advanced]) =>
-					_.updateIn(selected, [mode, advanced], selected => (isOn ? _.conj : _.without)(selected, selectValue)),
+					_.updateIn(selected, [mode, advanced], selected => _.uniq((isOn ? _.conj : _.without)(selected, selectValue))),
 					this.state.selected)
 				.startWith(this.state.selected),
 			value = this.ev.field
@@ -325,11 +325,9 @@ var VariableSelect = React.createClass({
 			{basicFeatures, value, mode} = this.state,
 			i = (featureIn ? features.indexOf(featureIn) : _.findIndex(features, _.matcher({label: value[mode]}))).toString();
 		if (i) {
-			if (!_.contains(basicFeatures, i)) {
-				this.setState({basicFeatures: _.uniq([...basicFeatures, i])});
-				this.on.select({selectValue: i, isOn: true});
-				this.on.field("");
-			}
+			this.setState({basicFeatures: _.uniq([...basicFeatures, i])});
+			this.on.select({selectValue: i, isOn: true});
+			this.on.field("");
 		}
 	},
 	render() {
