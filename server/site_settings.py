@@ -19,3 +19,9 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+# TIES integration
+
+TIES_NAME = ''
+TIES_SECRET = ''
+TIES_URL = ''
