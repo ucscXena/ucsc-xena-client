@@ -1,3 +1,9 @@
+certifi==2017.7.27.1
+chardet==3.0.4
 Django==1.10
+idna==2.6
 psycopg2==2.6.2
+PyJWT==1.5.3
+requests==2.18.4
+urllib3==1.22
 wheel==0.24.0
