@@ -160,16 +160,16 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		{valueType, sortVisible, assembly, showIntrons = false} = column,
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'mutation',
-		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
+		rightAssembly = (["hg19", "hg38", "GRCh37", "GRCh38"].indexOf(assembly) !== -1) ? true : false,  //MuPIT support hg19, hg38
 		noMenu = !rightValueType || !rightAssembly,
 		noMuPit = noMenu || wrongDataSubType,
 		noData = !_.get(data, 'req'),
-		mupitItemName = noData ? 'MuPIT View (hg19 coding) Loading' : 'MuPIT View (hg19 coding)',
+		mupitItemName = noData ? 'MuPIT 3D Loading' : 'MuPIT 3D (' + assembly + ' coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
 
 	return addIdsToArr([
-		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noMuPit} onClick={onMuPit} caption={mupitItemName}/>,
+		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noMuPit} onClick={(e) => onMuPit(assembly, e)} caption={mupitItemName}/>,
 		pos ? null : <MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>,
 		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
 		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>
@@ -388,22 +388,26 @@ var Column = React.createClass({
 			}
 		}
 	},
-	onMuPit: function () {
+	onMuPit: function (assembly) {
 		// Construct the url, which will be opened in new window
 		// total = newRows.length,
 		// k fixed at 1000
 		// gene, protein, etc size is fixed at 1000
 		// this could be actual size of protein or gene, but it is complicated due to mutations could be from exon region and display could be genomics region
 		// for the same gene it is a constant, does it really matter to be different between genes?
-
 		let total = _.getIn(this.props, ['data', 'req', 'rows']).length, //length of all variants
 			k = 1000,
 			nodes = _.getIn(this.props, ['column', 'nodes']),
 			variants = [...(new Set(_.pluck(nodes, 'data')))], //only variants in view
 			SNVPs = mutationVector.SNVPvalue(variants, total, k),
 			uriList = _.map(_.values(SNVPs), n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
-			//url = 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm='; mupit hg38 server
-			url = 'http://hg19.cravat.us/MuPIT_Interactive?gm='; // mupit hg19 server
+			mupitUrl = {
+				"hg19": 'http://hg19.cravat.us/MuPIT_Interactive?gm=', // mupit hg19 server
+				"GRCh37": 'http://hg19.cravat.us/MuPIT_Interactive?gm=', // mupit hg19 server
+				"hg38": 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=', //mupit hg38 server
+				"GRCh38": 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=' //mupit hg38 server
+			},
+			url = mupitUrl[assembly];
 
 		window.open(url + `${uriList}`);
 	},
