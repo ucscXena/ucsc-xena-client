@@ -26,7 +26,10 @@ var Transcripts = React.createClass({
 		return {
 			input: _.getIn(this.props.state, ['transcripts', 'gene']),
 			scaleZoom: false,
-			updateButton: false
+			updateButton: false,
+			dropdownColor: "black",
+			dropdownBackgroundColorTop: "white",
+			dropdownBackgroundColorBottom: "white"
 		};
 	},
 
@@ -41,15 +44,25 @@ var Transcripts = React.createClass({
 	},
 
 	onLoadData() {
-		this.setState({
-			scaleZoom: false,
-			updateButton: false
-		});
 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
 		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
 		var unit = this.refs.unit.value;
 		var gene = this.state.input;
 
+		this.setState({
+			scaleZoom: false,
+			updateButton: false
+		});
+
+		gene ? this.setState ({
+			dropdownColor: "white",
+			dropdownBackgroundColorTop: topColor,
+			dropdownBackgroundColorBottom: bottomColor
+		}) : this.setState ({
+			dropdownColor: "black",
+			dropdownBackgroundColorTop: "white",
+			dropdownBackgroundColorBottom: "white"
+		});
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
 		this.props.callback(['loadGene', gene, studyA, subtypeA, studyB, subtypeB, unit]);
@@ -139,11 +152,13 @@ var Transcripts = React.createClass({
 					<div style={{width: "1200px", marginBottom: "40px"}}>
 						<div style={{"margin-bottom": "10px"}}>
 							<span className="selectors">Study A</span>
-							<select ref="A" onChange={this.onLoadData} value={valueA} style={{color: "white", backgroundColor: topColor}}>
+							<select ref="A" onChange={this.onLoadData} value={valueA}
+								style={{color: this.state.dropdownColor, backgroundColor: this.state.dropdownBackgroundColorTop}}>
 								{options}
 							</select>
 							<span className="selectors">Study B</span>
-							<select ref="B" onChange={this.onLoadData} value={valueB} style={{color: "white", backgroundColor: bottomColor}}>
+							<select ref="B" onChange={this.onLoadData} value={valueB}
+								style={{color: this.state.dropdownColor, backgroundColor: this.state.dropdownBackgroundColorBottom}}>
 								{options}
 							</select>
 						</div>
