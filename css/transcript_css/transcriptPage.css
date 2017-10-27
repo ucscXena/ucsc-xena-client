@@ -28,26 +28,6 @@
 	color: #ff6b6b;
 }
 
-.legend-holder {
-  width: 300px;
-  float: right;
-  margin-right: 75px;
-  text-align: center;
-}
-
-.legend {
-    height: 25px;
-    color: white;
-    text-align: center;
-    vertical-align: middle;
-    line-height: 15px;
-    padding: 5px;
-}
-
-.legend label {
-  font-size: 0.85em;
-}
-
 .selectors {
   margin: 0px 20px;
 }

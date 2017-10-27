@@ -135,23 +135,15 @@ var Transcripts = React.createClass({
 						{this.state.updateButton ?
 							<button className="horizontalSegmentButton" onClick={this.onLoadData}>Update Gene</button> : null
 						}
-						{ hasPlots ?
-							<div className="legend-holder">
-								<div style={{display: "inline-block"}}>
-									<div className="legend" style={{backgroundColor: topColor}}><label>{subtypeA}</label></div>
-									<div className="legend" style={{backgroundColor: bottomColor}}><label>{subtypeB}</label></div>
-								</div>
-							</div> : null
-						}
 					</div>
 					<div style={{width: "1200px", marginBottom: "40px"}}>
 						<div style={{"margin-bottom": "10px"}}>
 							<span className="selectors">Study A</span>
-							<select ref="A" onChange={this.onLoadData} value={valueA}>
+							<select ref="A" onChange={this.onLoadData} value={valueA} style={{color: "white", backgroundColor: topColor}}>
 								{options}
 							</select>
 							<span className="selectors">Study B</span>
-							<select ref="B" onChange={this.onLoadData} value={valueB}>
+							<select ref="B" onChange={this.onLoadData} value={valueB} style={{color: "white", backgroundColor: bottomColor}}>
 								{options}
 							</select>
 						</div>
