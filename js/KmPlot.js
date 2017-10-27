@@ -363,21 +363,24 @@ var KmPlot = React.createClass({
 				}}>
 				<h1>Loading...</h1>
 			</div>
-			: <div>
-				<Button onClick={this.pdf}>PDF</Button>
-				{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
-				{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions, maySplit, splits, this.onSplits)}
-				<div style={{clear: 'both'}}>
-					<NumberForm
-						labelClassName="col-md-4"
-						wrapperClassName="col-md-3"
-						onChange={this.onCutoff}
-						dflt={max}
-						min={min}
-						max={max}
-						initialValue={cutoff}/>
+			: (_.isEmpty(groups.colors)
+				? <div><h3>Unfortunately, KM plot can not be made. There is no survival data overlapping column data.</h3></div>
+				: <div>
+					<Button onClick={this.pdf}>PDF</Button>
+					{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
+					{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions, maySplit, splits, this.onSplits)}
+					<div style={{clear: 'both'}}>
+						<NumberForm
+							labelClassName="col-md-4"
+							wrapperClassName="col-md-3"
+							onChange={this.onCutoff}
+							dflt={max}
+							min={min}
+							max={max}
+							initialValue={cutoff}/>
+					</div>
 				</div>
-			</div>;
+			);
 
 		return (
 			<div className='kmContainer'>
