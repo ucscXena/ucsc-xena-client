@@ -9,7 +9,8 @@ var servers = {
 	pcawgHub: 'https://pcawg.xenahubs.net',
 	singlecellHub: 'https://singlecell.xenahubs.net',
 	pancanAtlasHub: 'https://pancanatlas.xenahubs.net',
-	treehouseHub: 'https://treehouse.xenahubs.net'
+	treehouseHub: 'https://treehouse.xenahubs.net',
+	gdcHub: "https://gdc.xenahubs.net"
 };
 
 module.exports = {
@@ -22,7 +23,8 @@ module.exports = {
 		[servers.pcawgHub]: 'PCAWG public hub',
 		[servers.singlecellHub]: 'Single-cell RNAseq hub',
 		[servers.pancanAtlasHub]: 'PanCanAtlas Hub',
-		[servers.treehouseHub]: 'Treehouse Hub'
+		[servers.treehouseHub]: 'Treehouse Hub',
+		[servers.gdcHub]: 'GDC Hub'
 	},
 	defaultServers: [
 		servers.localHub,
@@ -30,7 +32,8 @@ module.exports = {
 		servers.tcgaHub,
 		servers.icgcHub,
 		servers.toilHub,
-		servers.treehouseHub
+		servers.treehouseHub,
+		servers.gdcHub
 	],
 	publicServers: [
 		servers.publicHub,
@@ -39,6 +42,7 @@ module.exports = {
 		servers.toilHub,
 		servers.pancanAtlasHub,
 		servers.pcawgHub,
-		servers.treehouseHub
+		servers.treehouseHub,
+		servers.gdcHub
 	]
 };
