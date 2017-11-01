@@ -1,12 +1,14 @@
 {
 	"presets": ["react", "es2015"],
 	"plugins": [
-		"transform-object-rest-spread"
+		"transform-object-rest-spread",
+		"tailcall-optimization"
 	],
 	"env": {
 		"development": {
 			"plugins": [
 				"transform-object-rest-spread",
+				"tailcall-optimization",
 				["react-transform", {
 					"transforms": [{
 						"transform": "react-transform-catch-errors",
