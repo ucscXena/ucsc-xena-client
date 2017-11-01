@@ -7,6 +7,8 @@ var widgets = require('./columnWidgets');
 var km = require('./models/km');
 var {lookupSample} = require('./models/sample');
 var {searchSamples} = require('./models/searchSamples');
+var {publicServers} = require('./defaultServers');
+var {parseDsID} = require('./xenaQuery');
 
 var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
@@ -74,6 +76,14 @@ var avgSelector = createFmapSelector(
 				state.index[key]]),
 		_.apply(widgets.avg));
 
+// XXX Note that this does *not* catch a sample column that includes private data.
+var isPublicSelector = createSelector(
+		state => _.pluck(state.columns, 'fieldSpecs'),
+		allSpecs => !_.any(allSpecs,
+						  colSpecs => _.any(colSpecs,
+											({fetchType, dsID}) =>
+											fetchType === 'xena' && !_.contains(publicServers, parseDsID(dsID)[0]))));
+
 var matchSelector = createSelector(
 	state => state.sampleSearch,
 	state => state.columns,
@@ -108,6 +118,7 @@ var match = state => ({...state, samplesMatched: matchSelector(state)});
 var sort = state => ({...state, samples: sortSelector(state)});
 var transform = state => ({...state, columns: mergeKeys(state.columns, transformSelector(state))});
 var ammedWidth = state => ({...state, columns: ammedWidthSelector(state)});
+var setPublic = state => ({...state, isPublic: isPublicSelector(state)});
 
 // kmGroups transform calculates the km data, and merges it into the state.km object.
 
@@ -123,6 +134,6 @@ var kmGroups = state => ({...state, km: {
 // The result of the transforms is a state object with the calculated values merged.
 // The transforms are memoized for performance.
 
-var selector = state => kmGroups(transform(sort(match(avg(index(ammedWidth(state)))))));
+var selector = state => kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state))))))));
 
 module.exports = selector;

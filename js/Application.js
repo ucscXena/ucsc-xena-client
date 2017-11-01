@@ -91,7 +91,8 @@ var Application = React.createClass({
 	render: function() {
 		let {state, children, onHighlightChange, onShowWelcome, stepperState, ...otherProps} = this.props,
 			{callback, onResetSampleFilter} = otherProps,
-			{cohort, stateError, samplesMatched, sampleSearch, samples, mode, wizardMode, showWelcome, zoom, loadPending} = state,
+			{isPublic, cohort, stateError, samplesMatched, sampleSearch,
+				samples, mode, wizardMode, showWelcome, zoom, loadPending} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			// Can these closures be eliminated, now that the selector is above this
 			// component?
@@ -109,7 +110,7 @@ var Application = React.createClass({
 
 		return (
 			<div>
-				<BookmarkMenu getState={this.props.getState} onImport={this.onImport}/>
+				<BookmarkMenu isPublic={isPublic} getState={this.props.getState} onImport={this.onImport}/>
 				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}
 					{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
 						null}

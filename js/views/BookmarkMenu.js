@@ -91,7 +91,8 @@ var BookmarkMenu = React.createClass({
 		this.setState({bookmark: null});
 	},
 	render() {
-		var {bookmarks, bookmark, loading} = this.state;
+		var {bookmarks, bookmark, loading} = this.state,
+			{isPublic} = this.props;
 
 		if (!bookmarks) {
 			return null;
@@ -109,9 +110,9 @@ var BookmarkMenu = React.createClass({
 		return (
 			<div className={compStyles.wrapper}>
 				<IconMenu title='Bookmark' className={compStyles.iconBookmark} icon='bookmark' iconRipple={false} onShow={this.resetBookmark}>
-					<NoCloseMenuItem style={{minWidth: 218}} onClick={this.onBookmark} caption='Bookmark'/>
-					<MenuItem onClick={this.onExport} caption='Export'/>
-					<MenuItem onClick={this.onImport} caption='Import'/>
+					<NoCloseMenuItem style={{minWidth: 218}} disabled={!isPublic} onClick={this.onBookmark} caption='Bookmark'/>
+					<MenuItem onClick={this.onExport} title={null} caption='Export'/>
+					<MenuItem onClick={this.onImport} title={null} caption='Import'/>
 					<MenuDivider/>
 					{bookmark ? <MenuItem onClick={this.onCopyBookmarkToClipboard} caption='Copy Bookmark'/> : null}
 					{loading ? <MenuItem disabled={true} caption='Your Bookmark is Loading'/> : null}

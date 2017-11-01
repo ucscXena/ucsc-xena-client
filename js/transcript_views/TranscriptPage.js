@@ -88,7 +88,8 @@ var Transcripts = React.createClass({
 
 	render() {
 		//for data selection
-		var {subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = this.props.state.transcripts || {};
+		var {subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = this.props.state.transcripts || {},
+			isPublic = this.props.state.isPublic;
 		if (!subtypes)
 		{
 			return <h4>Loading available subtypes...</h4>;
@@ -138,7 +139,7 @@ var Transcripts = React.createClass({
 
 		return (
 				<div style={{margin: "20px auto", width: "1200px"}}>
-					<BookmarkMenu getState={this.getState} onImport={this.onImport}/>
+					<BookmarkMenu isPublic={isPublic} getState={this.getState} onImport={this.onImport}/>
 					<a className="selectors" style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors" style={{width: "1200px", height: "80px"}}>
 						<div id="geneBox" style={{float: "left", width: "300px"}}>
