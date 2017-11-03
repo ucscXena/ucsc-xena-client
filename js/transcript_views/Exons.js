@@ -22,8 +22,8 @@ function box(type, startsAt, width, multiplyingFactor, strand, pad = 0, zoom = f
 function renderExon(exon) {
 	let style = {
 		width: exon.width,
+		[exon.origin]: exon.position
 	};
-	style[exon.origin] = exon.position;
 	if(exon.type === 'small')
 	{
 		let boxClass = exon.zoom ? "exons--row--item-small--zoom" : "exons--row--item-small";
@@ -84,9 +84,10 @@ var Exons = React.createClass({
 
 		return data.map((d, index) => {
 
-			let style = { width: ((d.txEnd - d.txStart) * multiplyingFactor) + "px" };
-			style = d.strand === '-' ? _.conj(style, ['right', ((d.txStart - origin) * multiplyingFactor) + "px"])
-									 : _.conj(style, ['left', ((d.txStart - origin) * multiplyingFactor) + "px"]);
+			let style = {
+				width: ((d.txEnd - d.txStart) * multiplyingFactor) + "px",
+				[d.strand === '-' ? 'right' : 'left']: ((d.txStart - origin) * multiplyingFactor) + "px"
+			};
 
 			return ( <div className="exons--row" id={index}>
 						<div className="exons--row--axis"
