@@ -1,30 +1,29 @@
-   'use strict';
- var React = require('react');
- var _ = require('../underscore_ext');
+'use strict';
 
- import '../../css/transcript_css/densityPlot.css';
- var sc = require('science');
- var {deepPureRenderMixin} = require('../react-utils');
+var React = require('react');
+var _ = require('../underscore_ext');
+import '../../css/transcript_css/densityPlot.css';
+var sc = require('science');
+var {deepPureRenderMixin} = require('../react-utils');
 
 const bin = 20; //number of bins
 const plotHeight = 35;
 const plotWidth = 200;
 const zoomFactor = 3;
-const topColor = "#BAA0CF";//"#008080";
-const bottomColor = "#79C6C5";//"steelblue";
-
+const topColor = "#BAA0CF";
+const bottomColor = "#79C6C5";
 
 function calculateHeight(exp, max, min, plotHt, plotWidth, unit) {
-   let minValue = unit === "tpm" ? Math.log2(0.001) : min;
-   let pxWidth = (max - minValue) / plotWidth;
-   let newExp = exp.filter(e => e > minValue);
-   let percentNonZero = newExp.length / exp.length;
-   let kdePoints = newExp.length ? sc.stats.kde().sample(newExp)(_.range(minValue, max + pxWidth, pxWidth)) : [];
-   let yHeights = kdePoints.map(kdep => kdep[1] * percentNonZero);
-  //  let binWidth = plotWidth / yHeights.length;
-   let zPxWidth = 5; // draw zero at 5 px width
-   let zeroWidth = pxWidth * zPxWidth;
-   let zeroHeight = (1 - percentNonZero) / zeroWidth;
+	let minValue = unit === "tpm" ? Math.log2(0.001) : min;
+	let pxWidth = (max - minValue) / plotWidth;
+	let newExp = exp.filter(e => e > minValue);
+	let percentNonZero = newExp.length / exp.length;
+	let kdePoints = newExp.length ? sc.stats.kde().sample(newExp)(_.range(minValue, max + pxWidth, pxWidth)) : [];
+	let yHeights = kdePoints.map(kdep => kdep[1] * percentNonZero);
+	//  let binWidth = plotWidth / yHeights.length;
+	let zPxWidth = 5; // draw zero at 5 px width
+	let zeroWidth = pxWidth * zPxWidth;
+	let zeroHeight = (1 - percentNonZero) / zeroWidth;
   //    let vscale = Math.max(zeroHeight, ...yHeights);
   //    //polyline points here
   //    let polylinePoints = [`0,${plotHt}`, ...yHeights.map((y, i) => `${i * binWidth},${(1 - y / vscale) * plotHt}`), `${plotWidth},${plotHt}`].join(' ');
@@ -51,118 +50,98 @@ function calculateHeight(exp, max, min, plotHt, plotWidth, unit) {
   //      zeroWidth: zPxWidth,
   //      zeroHeight: zeroHeight / vscale * plotHt
   //    };
-  return {
-    yHeights: yHeights,
-    zeroWidth: zPxWidth,
-    zeroHeight: zeroHeight
-  };
+	return {
+		yHeights,
+		zeroWidth: zPxWidth,
+		zeroHeight
+	};
  }
 
- function calculateFrequency(exp, max, min) {
-     const stepSize = (max - min) / bin;
-     let freq = _.times(bin, _.constant(0));
+function calculateFrequency(exp, max, min) {
+	var stepSize = (max - min) / bin,
+		freq = _.times(bin, _.constant(0));
 
-     exp.forEach(value => {
-       freq[Math.floor((value - min) / stepSize)]++;
-     });
-     freq.forEach(( value, index) => {
-       value = value; //did this to remove error while committing "value is never used"
-       freq[index] = freq[index] / exp.length;
-     });
-    return freq;
-  }
+	// We could do this immutably with reduce/assoc, but it would cause
+	// many array copies. Could also do groupBy/count, but it seems excessive.
+	exp.forEach(value => {
+		freq[Math.floor((value - min) / stepSize)]++;
+	});
+	freq.forEach(( value, index) => {
+		freq[index] = freq[index] / exp.length; //eslint-disable-line local/no-property-assignments
+	});
+	return freq;
+}
+
+function densitySvg(heights, height, totalWidth, vscale, A) {
+	let {yHeights, zeroWidth, zeroHeight} = heights,
+		binWidth = plotWidth / yHeights.length,
+		polylinePoints = [`20,${height}`, ...yHeights.map((y, i) => `${i * binWidth + 20},${(1 - y / vscale) * height}`), `${plotWidth + 20},${height}`].join(' '),
+		scaledZeroHeight = zeroHeight / vscale * height;
+	return (
+		<svg width={totalWidth} height={height}>
+			<rect x="0" y={height - scaledZeroHeight} width={zeroWidth} height={scaledZeroHeight} fill={A ? topColor : bottomColor} margin={A ? "" : "5"}/>
+			<polyline points={polylinePoints} fill={A ? topColor : bottomColor}/>
+		</svg>);
+}
+
+var drawDensityPlot = (min, max, totalWidth, unit, getNameZoom) => (studyA, studyB, nameAndZoom) => {
+	let height = nameAndZoom.zoom ? plotHeight * zoomFactor : plotHeight,
+		rowClass = nameAndZoom.zoom ? "densityPlot--row--zoom" : "densityPlot--row",
+		aHeight = calculateHeight(studyA.expA, max, min, height, plotWidth, unit),
+		bHeight = calculateHeight(studyB.expB, max, min, height, plotWidth, unit),
+		vscale = Math.max(aHeight.zeroHeight, bHeight.zeroHeight, ...aHeight.yHeights, ...bHeight.yHeights);
+	return (
+		<div className={rowClass} style={{width: `${totalWidth}px`}}onClick={() => getNameZoom(nameAndZoom.name)}>
+			<div className="densityPlot--row--xAxis" style={{width: `${plotWidth * 100 / totalWidth}%`, left: "20px"}}/>
+
+			<div className="densityPlot--row--studyA" style={{width: totalWidth}}>
+				{densitySvg(aHeight, height, totalWidth, vscale, true)}
+			</div>
+
+			<div className="densityPlot--row--studyB" style={{width: totalWidth}}>
+				{densitySvg(bHeight, height, totalWidth, vscale, false)}
+			</div>
+		</div>);
+};
+
+var histogramRowBin = backgroundColor => freq => (
+	<div className="densityPlot--row--bin"
+		style={{
+			height: (freq * 100) + "%",
+			width: (1 / bin * 100) + "%",
+			backgroundColor}}/>);
+
+var drawHistogram = (min, max) => (studyA, studyB) => {
+	let freqA = calculateFrequency(studyA.expA, max, min),
+		freqB = calculateFrequency(studyB.expB, max, min);
+	return (
+		<div className="densityPlot--row">
+			<div className="densityPlot--row--xAxis"/>
+
+			<div className="densityPlot--row--studyA">
+				{freqA.map(histogramRowBin(topColor))}
+			</div>
+
+			<div className="densityPlot--row--studyB">
+				{freqB.map(histogramRowBin(bottomColor))}
+			</div>
+		</div>);
+};
 
 var DensityPlot = React.createClass ({
  mixins: [deepPureRenderMixin],
  	render () {
-    let totalWidth = plotWidth + 20;
- 		let data = this.props.data ? this.props.data : null;
-    let max = Math.max.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
-    let min = Math.min.apply(Math, _.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB"))));
- 		let rows = _.mmap(data.studyA, data.studyB, data.nameAndZoom, (studyA, studyB, nameAndZoom) => {
-      let rowClass = nameAndZoom.zoom ? "densityPlot--row--zoom" : "densityPlot--row";
-      if(this.props.type === 'density')
-      {
-        let polylinePoints, vscale, binWidth;
-        let plotHt = nameAndZoom.zoom ? plotHeight * zoomFactor : plotHeight;
-        let {yHeights: yHeightsA, zeroWidth: zeroWidthA, zeroHeight: zeroHeightA} = calculateHeight(studyA.expA, max, min, plotHt, plotWidth, this.props.unit);
-        let {yHeights: yHeightsB, zeroWidth: zeroWidthB, zeroHeight: zeroHeightB} = calculateHeight(studyB.expB, max, min, plotHt, plotWidth, this.props.unit);
-        vscale = Math.max(zeroHeightA, zeroHeightB, ...yHeightsA, ...yHeightsB);
-        return (
-          <div className={rowClass} style={{width: `${totalWidth}px`}}onClick={() => this.props.getNameZoom(nameAndZoom.name)}>
-            <div className="densityPlot--row--xAxis" style={{width: `${plotWidth * 100 / totalWidth}%`, left: "20px"}}/>
-            <div className="densityPlot--row--studyA" style={{width: totalWidth}}>
-                 {
-                   //rectangle starts at 0,plotHt and polyline starts at 20,plotHt
-                  //  {yHeights, zeroWidth, zeroHeight} = calculateHeight(studyA.expA, max, min, plotHt, plotWidth, this.props.unit),
-                   binWidth = plotWidth / yHeightsA.length,
-                   polylinePoints = [`20,${plotHt}`, ...yHeightsA.map((y, i) => `${i * binWidth + 20},${(1 - y / vscale) * plotHt}`), `${plotWidth + 20},${plotHt}`].join(' '),
-                   zeroHeightA = zeroHeightA / vscale * plotHt,
-                   <svg width={totalWidth} height={plotHt}>
-                     <rect x="0" y={plotHt - zeroHeightA} width={zeroWidthA} height={zeroHeightA} fill={topColor}/>
-                     <polyline points={polylinePoints} fill={topColor}/>
-                   </svg>
-                 }
-            </div>
-            <div className="densityPlot--row--studyB" style={{width: totalWidth}}>
-                 {
-                  //  {yHeights, zeroWidth, zeroHeight} = calculateHeight(studyB.expB, max, min, plotHt, plotWidth, this.props.unit),
-                  binWidth = plotWidth / yHeightsB.length,
-                  polylinePoints = [`20,${plotHt}`, ...yHeightsB.map((y, i) => `${i * binWidth + 20},${(1 - y / vscale) * plotHt}`), `${plotWidth + 20},${plotHt}`].join(' '),
-                  zeroHeightB = zeroHeightB / vscale * plotHt,
-                   <svg width={totalWidth} height={plotHt}>
-                     <rect x="0" y={plotHt - zeroHeightB} width={zeroWidthB} height={zeroHeightB} fill={bottomColor} margin="5"/>
-                     <polyline points={polylinePoints} fill={bottomColor}/>
-                   </svg>
-                 }
-            </div>
-          </div>
-        );
-      }
-      else if(this.props.type === 'histogram')
-      {
-        let frequency;
-   			return (
-          <div className="densityPlot--row">
-   						<div className="densityPlot--row--xAxis"/>
-              <div className="densityPlot--row--studyA">
-              {
-                  frequency = calculateFrequency(studyA.expA, max, min),
-                  frequency.map( f => {
-                    return (
-                      <div className="densityPlot--row--bin"
-                           style={{height: (f * 100) + "%",
-                                   width: (1 / bin * 100) + "%",
-                                   backgroundColor: "#008080",
-                                   }}
-                         />
-                    );
-                  })
-                }
-              </div>
-              <div className="densityPlot--row--studyB">
-                {
-                  frequency = calculateFrequency(studyB.expB, max, min),
-                  frequency.map( f => {
-                    return (
-                      <div className="densityPlot--row--bin"
-                           style={{height: (f * 100) + "%",
-                                   width: (1 / bin * 100) + "%",
-                                   backgroundColor: "steelblue"
-                                   }}
-                         />
-                    );
-                  })
-              }
-            </div>
-   			 	</div>);
-      }
- 		});
- 		return (
- 			<div className="densityPlot">
- 				{rows}
- 			</div>
- 			);
+		let {unit, getNameZoom, type} = this.props,
+			totalWidth = plotWidth + 20,
+			data = this.props.data ? this.props.data : null,
+			max = _.max(_.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB")))),
+			min = _.min(_.flatten(_.pluck(data.studyA, "expA").concat(_.pluck(data.studyB, "expB")))),
+			drawPlot = (type === 'density' ? drawDensityPlot : drawHistogram)(min, max, totalWidth, unit, getNameZoom),
+			rows = _.mmap(data.studyA, data.studyB, data.nameAndZoom, drawPlot);
+		return (
+			<div className="densityPlot">
+				{rows}
+			</div>);
  	}
  });
 
