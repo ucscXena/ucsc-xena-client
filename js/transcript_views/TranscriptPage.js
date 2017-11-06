@@ -24,7 +24,7 @@ var defaultGene = 'KRAS';
 var Transcripts = React.createClass({
 	getInitialState() {
 		return {
-			input: _.getIn(this.props.state, ['transcripts', 'gene']),
+			input: _.getIn(this.props.state, ['transcripts', 'gene']), // XXX this is outside the selector
 			scaleZoom: false,
 			updateButton: false,
 			dropdownColor: "black",
@@ -87,9 +87,10 @@ var Transcripts = React.createClass({
 	},
 
 	render() {
-		//for data selection
-		var {subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = this.props.state.transcripts || {},
-			isPublic = this.props.state.isPublic;
+		var {selector} = this.props,
+			state = selector(this.props.state),
+			{subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = state.transcripts || {},
+			isPublic = state.isPublic;
 		if (!subtypes)
 		{
 			return <h4>Loading available subtypes...</h4>;
@@ -112,7 +113,7 @@ var Transcripts = React.createClass({
 				}
 			};
 
-		var {genetranscripts} = this.props.state.transcripts || [];
+		var {genetranscripts} = state.transcripts || [];
 		var genetranscriptsSorted = _.sortBy(genetranscripts, function(gtranscript) {
 			return _.sum(_.mmap(gtranscript.exonStarts, gtranscript.exonEnds, (exonStarts, exonEnds) => {
 				return exonStarts - exonEnds; // start - end to sort in descending order
@@ -196,7 +197,7 @@ var Transcripts = React.createClass({
 					}
 					<NameColumn
 						data={transcriptNameData}
-						gene={this.props.state.transcripts.gene}
+						gene={state.transcripts.gene}
 						/>
 					{/* <Exons
 						data={transcriptExonData}
