@@ -26,10 +26,7 @@ var Transcripts = React.createClass({
 		return {
 			input: _.getIn(this.props.state, ['transcripts', 'gene']),
 			scaleZoom: false,
-			updateButton: false,
-			dropdownColor: "black",
-			dropdownBackgroundColorTop: "white",
-			dropdownBackgroundColorBottom: "white"
+			updateButton: false
 		};
 	},
 
@@ -37,10 +34,6 @@ var Transcripts = React.createClass({
 	//	if (!this.props.state.transcripts) {
 	//		this.props.callback(['loadGene', defaultGene, defaultStudyA, defaultSubtypeA, defaultStudyB, defaultSubtypeB, defaultUnit]);
 	//	}
-	},
-
-	componentWillReceiveProps(props) {
-		this.setState({input: _.getIn(props.state, ['transcripts', 'gene'])});
 	},
 
 	onLoadData() {
@@ -54,15 +47,6 @@ var Transcripts = React.createClass({
 			updateButton: false
 		});
 
-		gene ? this.setState ({
-			dropdownColor: "white",
-			dropdownBackgroundColorTop: topColor,
-			dropdownBackgroundColorBottom: bottomColor
-		}) : this.setState ({
-			dropdownColor: "black",
-			dropdownBackgroundColorTop: "white",
-			dropdownBackgroundColorBottom: "white"
-		});
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
 		this.props.callback(['loadGene', gene, studyA, subtypeA, studyB, subtypeB, unit]);
@@ -136,6 +120,9 @@ var Transcripts = React.createClass({
 		var densityplotAxisLabel = isFinite(max) && isFinite(min) ? linearTicks(min, max) : [];
 		var range = max - min;
 		var hasPlots = genetranscripts && ! _.isEmpty(genetranscripts);
+		var dropdownBackgroundColorTop = hasPlots ? topColor : "white";
+		var dropdownBackgroundColorBottom = hasPlots ? bottomColor : "white";
+		var dropdownColor = hasPlots ? "white" : "black";
 
 		return (
 				<div style={{margin: "20px auto", width: "1200px"}}>
@@ -154,12 +141,12 @@ var Transcripts = React.createClass({
 						<div style={{"margin-bottom": "10px"}}>
 							<span className="selectors">Study A</span>
 							<select ref="A" onChange={this.onLoadData} value={valueA}
-								style={{color: this.state.dropdownColor, backgroundColor: this.state.dropdownBackgroundColorTop}}>
+								style={{color: dropdownColor, backgroundColor: dropdownBackgroundColorTop}}>
 								{options}
 							</select>
 							<span className="selectors">Study B</span>
 							<select ref="B" onChange={this.onLoadData} value={valueB}
-								style={{color: this.state.dropdownColor, backgroundColor: this.state.dropdownBackgroundColorBottom}}>
+								style={{color: dropdownColor, backgroundColor: dropdownBackgroundColorBottom}}>
 								{options}
 							</select>
 						</div>
