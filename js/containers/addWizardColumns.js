@@ -11,6 +11,9 @@ var {getColSpec} = require('../models/datasetJoins');
 var {defaultColorClass} = require('../heatmapColors');
 var uuid = require('../uuid');
 var Rx = require('../rx');
+var parsePos = require('../parsePos');
+var parseGeneSignature = require('../parseGeneSignature');
+var {signatureField} = require('../models/fieldSpec');
 
 /*function toWordList(str) {
 	// Have to wrap trim because it takes a 2nd param.
@@ -54,15 +57,28 @@ function getFieldType(dataset, features, fields, probes) {
 }
 
 // XXX handle position in all genomic datatypes?
-var parsePos = require('../parsePos');
 function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
 		pos = parsePos(trim(input), meta.assembly),
+        sig = parseGeneSignature(trim(input)),
 		fieldType = getFieldType(meta, features[dsID], fields, probes),
-		normalizedFields = pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :
-			((['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1) ? [fields[0]] : fields).map(f => f ? f : "[unknown]");
+		normalizedFields = (
+            pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :
+			((['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1) ?
+             [fields[0]] : fields).map(f => f ? f : "[unknown]"));
 
 	// My god, this is a disaster.
+	if (sig) {
+		return signatureField('signature', {
+			signature: ['geneSignature', dsID, sig.genes, sig.weights],
+			fieldType: 'probes',
+			defaultNormalization: meta.colnormalization,
+			colorClass: defaultColorClass,
+			fields: [input],
+			dsID
+		});
+	}
+
 	return {
 		fields: normalizedFields,
 		fetchType: 'xena',

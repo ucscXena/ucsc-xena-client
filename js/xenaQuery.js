@@ -40,8 +40,11 @@ var transcript = {
 var jsonResp = xhr => JSON.parse(xhr.response);
 
 var quote = s => s == null ? 'nil' : ('"' + s + '"'); // XXX should escape "
+var toString = x => x.toString();
 
-var sep = l => _.map(l, quote).join(' ');
+var sep = l =>
+	typeof _.get(l, 0) === 'number' ? _.map(l, toString).join(' ') :
+	_.map(l, quote).join(' ');
 
 var arrayfmt = l => '[' + sep(l) + ']';
 
@@ -336,6 +339,7 @@ function wrapDsIDParams(postMethods) {
 		'datasetFieldExamples',
 		'datasetField',
 		'datasetProbeValues',
+		'datasetProbeSignature',
 		'datasetGeneProbesValues',
 		'datasetGeneProbeAvg',
 		'datasetMetadata',
