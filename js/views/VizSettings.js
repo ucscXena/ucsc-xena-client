@@ -357,12 +357,12 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "none"},
-					{"key": "subset", "label": "x - column average"},
+					{"key": "subset", "label": "center by column mean : x - column average"},
 				];
 			if (dataMin >= 0 && !(_.any(units, unit=> unit && unit.search(/log/i) !== -1))) {
 				// we allow log(0), necessary for RNAseq data, value =0 (no expression is very common).
 				// display can handle this
-				options.push({"key": "log2(x)", "label": "log scale : log2(x)"});
+				options.push({"key": "log2(x)", "label": "log scale : log2(x+1)"});
 			}
 
 
