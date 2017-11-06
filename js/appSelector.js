@@ -79,10 +79,13 @@ var avgSelector = createFmapSelector(
 // XXX Note that this does *not* catch a sample column that includes private data.
 var isPublicSelector = createSelector(
 		state => _.pluck(state.columns, 'fieldSpecs'),
-		allSpecs => !_.any(allSpecs,
-						  colSpecs => _.any(colSpecs,
-											({fetchType, dsID}) =>
-											fetchType === 'xena' && !_.contains(publicServers, parseDsID(dsID)[0]))));
+		state => state.hasPrivateSamples,
+		(allSpecs, hasPrivateSamples) =>
+			!hasPrivateSamples &&
+			!_.any(allSpecs,
+					  colSpecs => _.any(colSpecs,
+										({fetchType, dsID}) =>
+										fetchType === 'xena' && !_.contains(publicServers, parseDsID(dsID)[0]))));
 
 var matchSelector = createSelector(
 	state => state.sampleSearch,

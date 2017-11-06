@@ -106,10 +106,11 @@ var controls = {
 		fetchFeatures(serverBus, datasets);
 	},
 	features: (state, features) => _.assoc(state, "features", features),
-	samples: (state, {samples, over}) => {
+	samples: (state, {samples, over, hasPrivateSamples}) => {
 		var newState = resetZoom(_.assoc(state,
 					'cohortSamples', samples,
 					'samplesOver', over,
+					'hasPrivateSamples', hasPrivateSamples,
 					'samples', _.range(_.sum(_.map(samples, c => c.length))))),
 			{columnOrder} = newState;
 		return _.reduce(

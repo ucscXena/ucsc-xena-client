@@ -11,6 +11,7 @@ var {allNullFields, nullField} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {signatureField} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
+var {publicServers} = require('../defaultServers');
 // pick up signature fetch
 require('../models/signatures');
 
@@ -39,6 +40,15 @@ function unionOfGroup(gb) {
 	return _.union(..._.map(gb, ([, v]) => v));
 }
 
+// Performance of this is probably poor, esp. due to underscore's horrible
+// n^2 set operations.
+function cohortHasPrivateSamples(cohortResps) {
+	var {'true': pub, 'false': priv} = _.groupBy(cohortResps, ([,,, server]) => _.contains(publicServers, server)),
+		pubSamps = unionOfGroup(pub),
+		privSamps = unionOfGroup(priv);
+	return _.difference(privSamps, pubSamps).length > 0;
+}
+
 function filterSamples(sampleFilter, samples) {
 	return sampleFilter ? _.intersection(sampleFilter, samples) : samples;
 }
@@ -50,7 +60,7 @@ function filterSamples(sampleFilter, samples) {
 var cohortSamplesQuery = _.curry(
 	(servers, max, {name, sampleFilter}, i) =>
 		_.map(servers, allSamples(name, max))
-			.map(resp => resp.map(samples => [i, filterSamples(sampleFilter, samples), samples.length >= max])));
+			.map((resp, j) => resp.map(samples => [i, filterSamples(sampleFilter, samples), samples.length >= max, servers[j]])));
 
 // XXX The use of 'i' here looks wrong: it should be the cohort index, to line up with 'cohorts',
 // but collectResults may have dropped a response due to ajax error, shifting the indexes of cohorts
@@ -64,8 +74,9 @@ var collateSamplesByCohort = _.curry((cohorts, max, resps) => {
 	var byCohort = _.groupBy(resps, _.first),
 		serverOver = _.any(resps, ([,, over]) => over),
 		cohortSamples = _.map(cohorts, (c, i) => unionOfGroup(byCohort[i] || []).slice(0, max)),
-		cohortOver = _.any(cohortSamples, samples => samples.length >= max);
-	return {samples: cohortSamples, over: serverOver || cohortOver};
+		cohortOver = _.any(cohortSamples, samples => samples.length >= max),
+		hasPrivateSamples = _.any(byCohort, cohortHasPrivateSamples);
+	return {samples: cohortSamples, over: serverOver || cohortOver, hasPrivateSamples};
 });
 
 // reifyErrors should be pass the server name, but in this expression we don't have it.
@@ -149,6 +160,7 @@ var setCohortRelatedFields = (state, cohorts) =>
 	_.assoc(state,
 		'cohort', cohorts,
 		'samples', [],
+		'hasPrivateSamples', false,
 		'cohortSamples', [],
 		'data', {},
 		'survival', null,
