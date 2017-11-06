@@ -237,12 +237,6 @@ var controls = {
 	'cohort-remove-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
 	'refresh-cohorts-post!': (serverBus, state) =>
 		fetchCohorts(serverBus, userServers(state)),
-	samplesFrom: (state, i, samplesFrom) => _.assoc(state,
-			'cohort', _.assocIn(state.cohort, [i, 'samplesFrom'], samplesFrom),
-			'survival', null),
-	'samplesFrom-post!': (serverBus, state, newState) => {
-		fetchSamples(serverBus, userServers(state), newState.cohort, newState.allowOverSamples);
-	},
 	sampleFilter: (state, i, sampleFilter) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, [i, 'sampleFilter'], sampleFilter),
 			'survival', null),

@@ -33,7 +33,6 @@ function fetchDatasets(serverBus, servers, cohort) {
 // Might want to bump this up after fixing our rendering problems @ 40k.
 const MAX_SAMPLES = 30 * 1000;
 
-var {datasetSamples} = xenaQuery;
 var allSamples = _.curry((cohort, max, server) => xenaQuery.cohortSamples(server, cohort, max === Infinity ? null : max));
 
 function unionOfGroup(gb) {
@@ -44,16 +43,14 @@ function filterSamples(sampleFilter, samples) {
 	return sampleFilter ? _.intersection(sampleFilter, samples) : samples;
 }
 
-// For the cohort, either fetch samplesFrom, or query all servers,
-// Return a stream per-cohort, each of which returns an event
+// For the cohort, query all servers,
+// return a stream per-cohort, each of which returns an event
 // [cohort, [sample, ...]].
 // By not combining them here, we can uniformly handle errors, below.
 var cohortSamplesQuery = _.curry(
-	(servers, max, {name, samplesFrom, sampleFilter}, i) =>
-		(samplesFrom ?
-			[datasetSamples(samplesFrom, max)] :
-			_.map(servers, allSamples(name, max)))
-		.map(resp => resp.map(samples => [i, filterSamples(sampleFilter, samples), samples.length >= max])));
+	(servers, max, {name, sampleFilter}, i) =>
+		_.map(servers, allSamples(name, max))
+			.map(resp => resp.map(samples => [i, filterSamples(sampleFilter, samples), samples.length >= max])));
 
 // XXX The use of 'i' here looks wrong: it should be the cohort index, to line up with 'cohorts',
 // but collectResults may have dropped a response due to ajax error, shifting the indexes of cohorts
