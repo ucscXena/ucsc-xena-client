@@ -7,19 +7,19 @@ var parser = require('./models/geneSignatureParser').parse;
 //
 
 function parse(str) {
-    if (str[0] !== '=') {
-        return;
-    }
-    try {
-        var list = parser(str.slice(1));
-        return {
-            weights: pluck(list, 0),
-            genes: pluck(list, 1)
-        };
-    } catch (e) {
+	if (str[0] !== '=') {
+		return;
+	}
+	try {
+		var list = parser(str.slice(1));
+		return {
+			weights: pluck(list, 0),
+				genes: pluck(list, 1)
+		};
+	} catch (e) {
 		console.log('parsing error', e);
-    }
-    return;
+	}
+	return;
 }
 
 module.exports = parse;
