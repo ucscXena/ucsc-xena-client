@@ -12,6 +12,7 @@ var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
 var xenaQuery = require('../xenaQuery');
 var Rx = require('../rx');
 var multi = require('../multi');
+var parseGeneSignature = require('../parseGeneSignature');
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
@@ -149,9 +150,9 @@ var applyInitialState = {
 var datasetMode = (datasets, dataset) =>
 	notIgnored(datasets[dataset]) ? 'Genotypic' : 'Phenotypic';
 
-var matchDatasetFields = multi((datasets, dsID) => {
+var matchDatasetFields = multi((datasets, dsID, fields, isSignature) => {
 	var meta = datasets[dsID];
-	return meta.type === 'genomicMatrix' && meta.probemap ? 'genomicMatrix-probemap' : meta.type;
+	return meta.type === 'genomicMatrix' && meta.probemap && !isSignature ? 'genomicMatrix-probemap' : meta.type;
 });
 
 // XXX The error handling here isn't great, because it can leave us with a
@@ -214,9 +215,11 @@ function matchFields(datasets, features, mode, selected, value) {
 	}
 	if (isValid.Genotypic(value, selected)) {
 		// Be sure to handle leading and trailing commas, as might occur during user edits
-		let fields = value.trim().replace(/^,+|,+$/g, '').split(/[\s,]+/);
+		let sig = parseGeneSignature(value.trim()),
+			fields = sig ? sig.genes :
+				value.trim().replace(/^,+|,+$/g, '').split(/[\s,]+/);
 		return Rx.Observable.zip(
-			...selected.map(dsID => matchDatasetFields(datasets, dsID, fields)),
+			...selected.map(dsID => matchDatasetFields(datasets, dsID, fields, sig)),
 			(...matches) => ({matches, valid: true}));
 	}
 	return Rx.Observable.of({valid: false});

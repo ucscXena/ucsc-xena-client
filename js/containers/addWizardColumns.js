@@ -56,6 +56,14 @@ function getFieldType(dataset, features, fields, probes) {
 	return  probes ? 'probes' : (fields.length > 1 ? 'genes' : 'geneProbes');
 }
 
+function sigFields(fields, {genes, weights}) {
+	return {
+		missing: genes.filter((p, i) => !fields[i]),
+		genes: fields.filter(p => p),
+		weights: weights.filter((p, i) => fields[i])
+	};
+}
+
 // XXX handle position in all genomic datatypes?
 function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
@@ -69,8 +77,11 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 
 	// My god, this is a disaster.
 	if (sig) {
-		return signatureField('signature', {
-			signature: ['geneSignature', dsID, sig.genes, sig.weights],
+		let {missing, genes, weights} = sigFields(fields, sig),
+			missingLabel = missing ? ` (missing terms: ${missing.join(', ')})` : '';
+		return signatureField('signature' + missingLabel, {
+			signature: ['geneSignature', dsID, genes, weights],
+			missing,
 			fieldType: 'probes',
 			defaultNormalization: meta.colnormalization,
 			colorClass: defaultColorClass,
