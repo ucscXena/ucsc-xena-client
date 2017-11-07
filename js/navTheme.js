@@ -12,6 +12,7 @@
 
 module.exports = {
 	RTAppBar: require('./navRTAppBarTheme.module.css'),
+	RTButton: require('./navRTButtonTheme.module.css'),
 	RTLink: require('./navRTLinkTheme.module.css'),
 	RTNavigation: require('./navRTNavigationTheme.module.css')
 };

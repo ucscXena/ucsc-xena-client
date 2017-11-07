@@ -14,7 +14,6 @@ var uuid = require('./uuid');
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
 import {ThemeProvider} from 'react-css-themr';
 var appTheme = require('./appTheme');
-var BookmarkMenu = require('./views/BookmarkMenu');
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 // should really be in a config file.
@@ -68,9 +67,6 @@ var Application = React.createClass({
 					'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
 		callback(['add-column', 0, {id: uuid(), settings}]);
 	},
-	onImport(state) {
-		this.props.callback(['import', state]);
-	},
 	onHideError() {
 		this.props.callback(['stateError', null]);
 	},
@@ -91,7 +87,7 @@ var Application = React.createClass({
 	render: function() {
 		let {state, children, onHighlightChange, onShowWelcome, stepperState, ...otherProps} = this.props,
 			{callback, onResetSampleFilter} = otherProps,
-			{isPublic, cohort, stateError, samplesMatched, sampleSearch,
+			{cohort, stateError, samplesMatched, sampleSearch,
 				samples, mode, wizardMode, showWelcome, zoom, loadPending} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			// Can these closures be eliminated, now that the selector is above this
@@ -110,7 +106,6 @@ var Application = React.createClass({
 
 		return (
 			<div>
-				<BookmarkMenu isPublic={isPublic} getState={this.props.getState} onImport={this.onImport}/>
 				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}
 					{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
 						null}

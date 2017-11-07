@@ -7,8 +7,8 @@ const ExonsOnly = require('./ExonsOnly');
 var {DensityPlot, bottomColor, topColor, plotWidth} = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
-var BookmarkMenu = require('../views/BookmarkMenu');
 import '../../css/transcript_css/transcriptPage.css';
+var nav = require('../nav');
 
 /*
 var defaultGene = 'KRAS';
@@ -70,13 +70,18 @@ var Transcripts = React.createClass({
 		this.props.callback(['import', state]);
 	},
 
+	componentDidUpdate() {
+		var {isPublic} = this.props.state,
+			{getState, onImport} = this;
+
+		// nested render to different DOM tree
+		nav({isPublic, getState, onImport});
+	},
+
 	render() {
-		var {selector} = this.props,
-			state = selector(this.props.state),
-			{subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = state.transcripts || {},
-			isPublic = state.isPublic;
-		if (!subtypes)
-		{
+		var {state} = this.props,
+			{subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = state.transcripts || {};
+		if (!subtypes) {
 			return <h4>Loading available subtypes...</h4>;
 		}
 		var subtypesTcga = _.sortBy(subtypes.tcga),
@@ -127,7 +132,6 @@ var Transcripts = React.createClass({
 
 		return (
 				<div style={{margin: "20px auto", width: "1200px"}}>
-					<BookmarkMenu isPublic={isPublic} getState={this.getState} onImport={this.onImport}/>
 					<a className="selectors" style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className="selectors" style={{width: "1200px", height: "80px"}}>
 						<div id="geneBox" style={{float: "left", width: "300px"}}>
@@ -213,4 +217,7 @@ var Transcripts = React.createClass({
 	}
 });
 
-module.exports = Transcripts;
+var SelectedTranscripts = ({state, selector, ...props}) =>
+	<Transcripts {...{...props, state: selector(state)}}/>;
+
+module.exports = SelectedTranscripts;

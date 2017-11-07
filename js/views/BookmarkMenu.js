@@ -1,5 +1,6 @@
 'use strict';
-import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
+import {Menu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
+import {Button} from 'react-toolbox/lib/button';
 var React = require('react');
 //var config = require('../config');
 var _ = require('../underscore_ext');
@@ -29,7 +30,7 @@ var NoCloseMenuItem = React.createClass({
 
 var BookmarkMenu = React.createClass({
 	getInitialState() {
-		return {loading: false, bookmarks: bookmarksDefault};
+		return {loading: false, bookmarks: bookmarksDefault, open: false};
 	},
 	componentWillMount() {
 		this.ksub = konami(asciiA).subscribe(this.enableBookmarks);
@@ -90,8 +91,17 @@ var BookmarkMenu = React.createClass({
 	resetBookmark() {
 		this.setState({bookmark: null});
 	},
+	onClick() {
+		this.setState({open: !this.state.open});
+	},
+	handleMenuHide() {
+		this.setState({open: false});
+		if (this.props.onHide) {
+			this.props.onHide();
+		}
+	},
 	render() {
-		var {bookmarks, bookmark, loading} = this.state,
+		var {bookmarks, bookmark, loading, open} = this.state,
 			{isPublic} = this.props;
 
 		if (!bookmarks) {
@@ -108,8 +118,9 @@ var BookmarkMenu = React.createClass({
 		// eventual 'Copy' item. Otherwise it will be clipped, because Menu
 		// does not re-compute clipping when children change.
 		return (
-			<div className={compStyles.wrapper}>
-				<IconMenu title='Bookmark' className={compStyles.iconBookmark} icon='bookmark' iconRipple={false} onShow={this.resetBookmark}>
+			<div style={{display: 'inline', position: 'relative'}}>
+				<Button onClick={this.onClick}>Bookmark</Button>
+				<Menu position='auto' active={open} onHide={this.handleMenuHide} className={compStyles.iconBookmark} iconRipple={false} onShow={this.resetBookmark}>
 					<NoCloseMenuItem style={{minWidth: 218}} disabled={!isPublic} onClick={this.onBookmark} caption='Bookmark'/>
 					<MenuItem onClick={this.onExport} title={null} caption='Export'/>
 					<MenuItem onClick={this.onImport} title={null} caption='Import'/>
@@ -119,7 +130,7 @@ var BookmarkMenu = React.createClass({
 					{!bookmark && !loading ? <MenuItem className={compStyles.placeholder} disabled={true}>Placeholder</MenuItem> : null}
 					<input className={compStyles.bookmarkInput} ref={(input) => this.bookmarkEl = input} value={bookmark}/>
 					<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>
-				</IconMenu>
+				</Menu>
 			</div>);
 	}
 });

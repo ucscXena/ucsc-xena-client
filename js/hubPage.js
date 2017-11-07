@@ -21,7 +21,9 @@ var _ = require('./underscore_ext');
 var {serverNames} = require('./defaultServers');
 var styles = require('./hubPage.module.css');
 var {parseServer} = require('./hubParams');
+var nav = require('./nav');
 
+nav();
 
 var RETURN = 13;
 

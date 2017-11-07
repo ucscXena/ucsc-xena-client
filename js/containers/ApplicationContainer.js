@@ -24,6 +24,7 @@ var addHelp = require('./addHelp');
 var getSpreadsheet = require('../Spreadsheet');
 var getStepperState = require('./getStepperState');
 var Application = require('../Application');
+var nav = require('../nav');
 
 // This seems odd. Surely there's a better test?
 function hasSurvival(survival) {
@@ -148,12 +149,21 @@ var ApplicationContainer = React.createClass({
 	onResetSampleFilter: function () {
 		this.props.callback(['sampleFilter', 0 /* index into composite cohorts */, null]);
 	},
+	onImport(state) {
+		this.props.callback(['import', state]);
+	},
+	componentDidUpdate() {
+		var {isPublic} = this.props.state,
+			{getState, onImport} = this;
+
+		// nested render to different DOM tree
+		nav({isPublic, getState, onImport});
+	},
 	// XXX Change state to appState in Application, for consistency.
 	render() {
-		let {state, selector, callback} = this.props,
-			computedState = selector(state),
-			{mode} = computedState,
-			stepperState = getStepperState(computedState),
+		let {state, callback} = this.props,
+			{mode} = state,
+			stepperState = getStepperState(state),
 			View = {
 				heatmap: SpreadsheetContainer,
 				chart: ChartView
@@ -169,7 +179,7 @@ var ApplicationContainer = React.createClass({
 					onHighlightChange={this.on.highlightChange}
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
-					state={computedState}
+					state={state}
 					callback={callback}>
 				<View
 					stepperState={stepperState}
@@ -179,10 +189,13 @@ var ApplicationContainer = React.createClass({
 					fieldFormat={this.fieldFormat}
 					sampleFormat={this.sampleFormat}
 					datasetMeta={this.datasetMeta}
-					appState={computedState}
+					appState={state}
 					callback={callback}/>
 			</Application>);
 	}
 });
 
-module.exports = ApplicationContainer;
+var SelectedApplication = ({state, selector, ...props}) =>
+	<ApplicationContainer {...{...props, state: selector(state)}}/>;
+
+module.exports = SelectedApplication;

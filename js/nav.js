@@ -17,7 +17,9 @@ var config = require('./config');
 import AppBar from 'react-toolbox/lib/app_bar';
 import Navigation from 'react-toolbox/lib/navigation';
 import {ThemeProvider} from 'react-css-themr';
+import Link from 'react-toolbox/lib/link';
 var navTheme = require('./navTheme');
+var BookmarkMenu = require('./views/BookmarkMenu');
 
 // Styles
 var compStyles = require('./nav.module.css');
@@ -36,11 +38,12 @@ var links = [
 	// {href: 'https://genome-cancer.ucsc.edu/download/public/get-xena/index.html', label: 'Local Xena'},
 	{href: 'http://xena.ucsc.edu/private-hubs/', label: 'View My Data'},
 	{href: 'http://xena.ucsc.edu/xena-python-api/', label: 'Python'},
-	{
-		href: 'https://docs.google.com/a/soe.ucsc.edu/document/d/1CIWj6L8LAaHFmLek3yrbrjFKRm_l3Sy73lJ4wY-WM8Y',
-		label: 'Help'
-	}
 ];
+
+var helpLink = {
+	href: 'https://docs.google.com/a/soe.ucsc.edu/document/d/1CIWj6L8LAaHFmLek3yrbrjFKRm_l3Sy73lJ4wY-WM8Y',
+	label: 'Help'
+};
 
 var active = (l, activeTab) => l.label === activeTab;
 
@@ -52,7 +55,8 @@ var XenaNav = React.createClass({
 		return {activeTab: activeLink.label};
 	},
 	render: function () {
-		let {activeTab} = this.state;
+		let {activeTab} = this.state,
+			{isPublic, getState, onImport} = this.props;
 		let routes = _.map(links, l => {
 			return {...l, active: active(l, activeTab)};
 		});
@@ -60,7 +64,10 @@ var XenaNav = React.createClass({
 		return (
 			<AppBar className={compStyles.NavAppBar}>
 				<a href='http://xena.ucsc.edu/'><img className={compStyles.logoXena} src={logoSantaCruzImg} srcSet={logoSrcSet}/></a>
-				<Navigation type="horizontal" routes={routes}/>
+				<Navigation type="horizontal" routes={routes}>
+					{getState ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
+					<Link {...helpLink} />
+				</Navigation>
 			</AppBar>
 		);
 	}
@@ -77,4 +84,4 @@ var ThemedNav = React.createClass({
 
 var nav = document.getElementById('navMenuMain');
 
-ReactDOM.render(<ThemedNav />, nav);
+module.exports = props => ReactDOM.render(<ThemedNav {...props} />, nav);

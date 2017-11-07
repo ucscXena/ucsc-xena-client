@@ -7,6 +7,9 @@ const datapages = require('ucsc-xena-datapages/datapages');
 const connector = require('./connector');
 const createStore = require('./store');
 var xenaQuery = require('./xenaQuery');
+var nav = require('./nav');
+
+nav();
 
 var Datapages = React.createClass({
 	shouldComponentUpdate: () => false,
