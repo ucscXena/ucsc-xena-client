@@ -130,7 +130,7 @@ var BookmarkMenu = React.createClass({
 				<Menu position='auto' active={open} onHide={this.handleMenuHide} className={compStyles.iconBookmark} iconRipple={false} onShow={this.resetBookmark}>
 					<BookmarkElement
 						tooltip={privateWarning}
-						style={{minWidth: 218}}
+						style={{minWidth: 218, pointerEvents: 'all' /* override MenuItem 'disabled' class */}}
 						disabled={!isPublic}
 						onClick={this.onBookmark}
 						caption='Bookmark'/>
