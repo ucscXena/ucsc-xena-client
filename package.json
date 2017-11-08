@@ -21,7 +21,7 @@
     "build:prod": "npm run build -- --config webpack.prod.js --devtool source-map",
     "build:analyze": "npm run -s build:prod -- --profile --json > stats.json",
     "prebuild": "npm run clean",
-    "dist": "npm run clean:dist && mkdir -p dist && cp -r js/* dist && NODE_ENV=production babel -d dist js && webpack --disable-html-plugin --entry './js/loadXenaQueries' --output-file loadXenaQueries.js --output-path dist --output-library xenaQuery --output-library-target commonjs2",
+    "dist": "npm run clean:dist && mkdir -p dist && cp -r js/* dist && NODE_ENV=production babel -d dist js && webpack --config webpack.dist.js",
     "prepublish": "npm run dist",
     "wdio": "wdio"
   },
