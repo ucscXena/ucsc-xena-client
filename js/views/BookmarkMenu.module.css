@@ -2,7 +2,8 @@
 /* Bookmark icon */
 .iconBookmark {
 	margin-left: 4px;
-	z-index: 1060; /* in front of KmPlot dialog */
+	/* Using !important, because I can't out why the css ordering is wrong */
+	z-index: 1060 !important; /* in front of KmPlot dialog */
 }
 
 
