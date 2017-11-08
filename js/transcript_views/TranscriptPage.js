@@ -62,17 +62,12 @@ var Transcripts = React.createClass({
 		});
 	},
 
-	getState() {
-		return this.props.state;
-	},
-
 	onImport(state) {
 		this.props.callback(['import', state]);
 	},
 
 	componentDidUpdate() {
-		var {isPublic} = this.props.state,
-			{getState, onImport} = this;
+		var {onImport, props: {getState, state: {isPublic}}} = this;
 
 		// nested render to different DOM tree
 		nav({isPublic, getState, onImport});
@@ -217,7 +212,14 @@ var Transcripts = React.createClass({
 	}
 });
 
-var SelectedTranscripts = ({state, selector, ...props}) =>
-	<Transcripts {...{...props, state: selector(state)}}/>;
+var TranscriptsContainer = React.createClass({
+	getState() {
+		return this.props.state;
+	},
+	render() {
+		var {state, selector, ...props} = this.props;
+		return <Transcripts {...{...props, state: selector(state)}} getState={this.getState}/>;
+	}
+});
 
-module.exports = SelectedTranscripts;
+module.exports = TranscriptsContainer;

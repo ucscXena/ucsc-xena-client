@@ -14,6 +14,7 @@ var uuid = require('./uuid');
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
 import {ThemeProvider} from 'react-css-themr';
 var appTheme = require('./appTheme');
+var nav = require('./nav');
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 // should really be in a config file.
@@ -38,6 +39,12 @@ var Application = React.createClass({
 //			Perf.start();
 //		}
 //	},
+	componentDidUpdate() {
+		var {getState, onImport, state: {isPublic}} = this.props;
+
+		// nested render to different DOM tree
+		nav({isPublic, getState, onImport});
+	},
 	onFilter: function (matches) {
 		var {callback, state: {cohortSamples}} = this.props,
 			allSamples = _.flatten(cohortSamples),
