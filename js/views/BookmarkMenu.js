@@ -1,6 +1,7 @@
 'use strict';
 import {Menu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 import {Button} from 'react-toolbox/lib/button';
+import Link from 'react-toolbox/lib/link';
 import Tooltip from 'react-toolbox/lib/tooltip';
 var React = require('react');
 //var config = require('../config');
@@ -135,6 +136,7 @@ var BookmarkMenu = React.createClass({
 						caption='Bookmark'/>
 					<MenuItem onClick={this.onExport} title={null} caption='Export'/>
 					<MenuItem onClick={this.onImport} title={null} caption='Import'/>
+					<Link className={compStyles.help} target='_blank' href='http://xena.ucsc.edu/bookmarks/' label='Help'/>
 					<MenuDivider/>
 					{bookmark ? <MenuItem onClick={this.onCopyBookmarkToClipboard} caption='Copy Bookmark'/> : null}
 					{loading ? <MenuItem disabled={true} caption='Your Bookmark is Loading'/> : null}

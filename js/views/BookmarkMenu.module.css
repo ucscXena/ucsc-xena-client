@@ -31,3 +31,7 @@
 	right: 0;
 	top: 0;
 }
+
+.help {
+	justify-content: flex-end;
+}
