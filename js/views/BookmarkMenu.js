@@ -1,6 +1,7 @@
 'use strict';
 import {Menu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 import {Button} from 'react-toolbox/lib/button';
+import Tooltip from 'react-toolbox/lib/tooltip';
 var React = require('react');
 //var config = require('../config');
 var _ = require('../underscore_ext');
@@ -27,6 +28,10 @@ var NoCloseMenuItem = React.createClass({
 		return <MenuItem {...this.props}/>;
 	}
 });
+
+var TooltipNoCloseMenuItem = Tooltip(NoCloseMenuItem);
+
+var privateWarning = 'Unable to create bookmark link due to private data in view. Use export instead';
 
 var BookmarkMenu = React.createClass({
 	getInitialState() {
@@ -102,7 +107,8 @@ var BookmarkMenu = React.createClass({
 	},
 	render() {
 		var {bookmarks, bookmark, loading, open} = this.state,
-			{isPublic} = this.props;
+			{isPublic} = this.props,
+			BookmarkElement = isPublic ? NoCloseMenuItem : TooltipNoCloseMenuItem;
 
 		if (!bookmarks) {
 			return null;
@@ -121,7 +127,12 @@ var BookmarkMenu = React.createClass({
 			<div style={{display: 'inline', position: 'relative'}}>
 				<Button onClick={this.onClick}>Bookmark</Button>
 				<Menu position='auto' active={open} onHide={this.handleMenuHide} className={compStyles.iconBookmark} iconRipple={false} onShow={this.resetBookmark}>
-					<NoCloseMenuItem style={{minWidth: 218}} disabled={!isPublic} onClick={this.onBookmark} caption='Bookmark'/>
+					<BookmarkElement
+						tooltip={privateWarning}
+						style={{minWidth: 218}}
+						disabled={!isPublic}
+						onClick={this.onBookmark}
+						caption='Bookmark'/>
 					<MenuItem onClick={this.onExport} title={null} caption='Export'/>
 					<MenuItem onClick={this.onImport} title={null} caption='Import'/>
 					<MenuDivider/>
