@@ -179,7 +179,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 	// link to tumorMap from any public xena hub columns
 	// data be queried directly from xena
-	var foundHub = _.any(fieldSpecs, obj => {
+	var foundPublicHub = _.any(fieldSpecs, obj => {
 		if (obj.dsID) {
 			return publicServers.indexOf(JSON.parse(obj.dsID).host) !== -1;
 		} else {
@@ -189,21 +189,23 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 
 	var foundCohort = _.find(cohort, c => (c.name.search(/^TCGA/) !== -1 || c.name === "Treehouse public expression dataset (July 2017)"));
 
-	if (foundCohort && foundHub && (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) !== -1 && fields.length === 1)) {
-		if (foundCohort.name === "Treehouse public expression dataset (July 2017)" ) {
-			return {
-				label: "Treehouse",
-				map: "Treehouse/THPED_July2017",
-				layout: ""
-			};
-		} else if (foundCohort.name.search(/^TCGA/) !== -1) {
-			return {
-				label: "TCGA Pancan Atlas",
-				map: "PancanAtlas/SampleMap",
-				layout: "mRNA"
-			};
-		}
+	if (!foundCohort || !foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
+		_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1)) {
 		return null;
+	}
+
+	if (foundCohort.name === "Treehouse public expression dataset (July 2017)" ) {
+		return {
+			label: "Treehouse",
+			map: "Treehouse/THPED_July2017",
+			layout: ""
+		};
+	} else if (foundCohort.name.search(/^TCGA/) !== -1) {
+		return {
+			label: "TCGA Pancan Atlas",
+			map: "PancanAtlas/SampleMap",
+			layout: "mRNA"
+		};
 	} else {
 		return null;
 	}
