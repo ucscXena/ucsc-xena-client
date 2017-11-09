@@ -55,7 +55,6 @@ module.exports = function () {
 		cohort: [],
 		columns: {},
 		columnOrder: [],
-		samples: [],
 		datasets: [],
 		showWelcome: true,
 		wizardMode: true,

@@ -110,8 +110,7 @@ var controls = {
 		var newState = resetZoom(_.assoc(state,
 					'cohortSamples', samples,
 					'samplesOver', over,
-					'hasPrivateSamples', hasPrivateSamples,
-					'samples', _.range(_.sum(_.map(samples, c => c.length))))),
+					'hasPrivateSamples', hasPrivateSamples)),
 			{columnOrder} = newState;
 		return _.reduce(
 				columnOrder,

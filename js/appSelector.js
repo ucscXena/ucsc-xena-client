@@ -30,13 +30,12 @@ function cmpString(s1, s2) {
 var invert = (dir, fn) => dir === 'reverse' ? (s1, s2) => fn(s2, s1) : fn;
 
 var sortSelector = createSelector(
-	state => state.samples,
 	state => state.cohortSamples,
 	state => _.fmap(state.columns, c => _.pick(c, 'fieldType', 'fields', 'xzoom', 'sortVisible', 'sortDirection')),
 	state => state.columnOrder,
 	state => state.data,
 	state => state.index,
-	(samples, cohortSamples, columns, columnOrder, data, index) => {
+	(cohortSamples, columns, columnOrder, data, index) => {
 		var getSampleID = lookupSample(cohortSamples),
 			order = columnOrder.slice(1), // skip 'samples' in sort
 			cmpFns = _.fmap(columns,
@@ -47,7 +46,7 @@ var sortSelector = createSelector(
 				_.findValue(order, id => cmpFns[id](s1, s2)) ||
 					cmpString(getSampleID(s1), getSampleID(s2));
 
-		return (samples || []).slice(0).sort(cmpFn);
+		return _.range(_.get(cohortSamples, 0, []).length).slice(0).sort(cmpFn);
 	}
 );
 

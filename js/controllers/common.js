@@ -105,7 +105,7 @@ function fetchColumnData(serverBus, samples, id, settings) {
 }
 
 function resetZoom(state) {
-	let count = _.get(state, "samples").length;
+	let count = _.getIn(state, ['cohortSamples', 0, 'length'], 0);
 	return _.updateIn(state, ["zoom"],
 					 z => _.merge(z, {count: count, index: 0}));
 }
@@ -159,7 +159,6 @@ var remapFieldsForCohorts = (state, cohorts) => {
 var setCohortRelatedFields = (state, cohorts) =>
 	_.assoc(state,
 		'cohort', cohorts,
-		'samples', [],
 		'hasPrivateSamples', false,
 		'cohortSamples', [],
 		'data', {},
