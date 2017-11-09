@@ -17,6 +17,7 @@ require('bootstrap/dist/css/bootstrap.css');
 var Application = require('./containers/ApplicationContainer');
 var selector = require('./appSelector');
 var compose = require('./controllers/compose');
+var shimComposite = require('./controllers/shimComposite').controller;
 const connector = require('./connector');
 const createStore = require('./store');
 
@@ -50,6 +51,6 @@ var store = createStore();
 var main = window.document.getElementById('main');
 
 // XXX reducer
-var controller = compose(serverController, uiController);
+var controller = shimComposite(compose(serverController, uiController));
 
 connector({...store, controller, main, selector, Page: Application, persist: true, history: false});

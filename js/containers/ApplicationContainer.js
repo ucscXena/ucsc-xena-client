@@ -8,7 +8,6 @@ var ChartView = require('../ChartView');
 var Column = require('../views/Column');
 var _ = require('../underscore_ext');
 var kmModel = require('../models/km');
-var {lookupSample} = require('../models/sample');
 var {xenaFieldPaths} = require('../models/fieldSpec');
 var {rxEventsMixin} = require('../react-utils');
 var Rx = require('../rx');
@@ -126,7 +125,7 @@ var ApplicationContainer = React.createClass({
 	},
 	sampleFormat: function (index) {
 		var {cohortSamples} = this.props.state;
-		return lookupSample(cohortSamples, index);
+		return _.get(cohortSamples, index);
 	},
 	datasetMeta: function (uuid) {
 		var {columns, datasets} = this.props.state;

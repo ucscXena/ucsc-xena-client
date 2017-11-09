@@ -14,6 +14,7 @@ var fetchSamplesFrom = require('../samplesFrom');
 var fetch = require('../fieldFetch');
 var {remapFields} = require('../models/searchSamples');
 var {fetchInlineState} = require('../inlineState');
+var {lift} = require('./shimComposite');
 
 var identity = x => x;
 
@@ -227,7 +228,7 @@ var controls = {
 		fetchCohortPhenotype(serverBus);
 	},
 	'import': (state, newState) => _.has(newState, 'wizardMode') ?
-		newState : _.assoc(state, 'stateError', 'import'),
+		lift(newState) : _.assoc(state, 'stateError', 'import'),
 	stateError: (state, error) => _.assoc(state, 'stateError', error),
 	cohort: (state, i, cohort, width) =>
 		setCohort(state, _.assoc(state.cohort, i, {name: cohort}), width),

@@ -11,6 +11,7 @@ var {allFieldMetadata} = xenaQuery;
 var {xenaFieldPaths, updateStrand, filterByDsID} = require('../models/fieldSpec');
 var identity = x => x;
 var {parseBookmark} = require('../bookmark');
+var {lift} = require('./shimComposite');
 
 var phenoPat = /^phenotypes?$/i;
 function featuresQuery(datasets) {
@@ -77,8 +78,8 @@ function parseBookmarkCheck(old, bookmark) {
 
 var controls = {
 	// XXX reset loadPending flag
-	bookmark: (state, bookmark) => resetLoadPending(parseBookmarkCheck(state, bookmark)),
-	inlineState: (state, newState) => resetLoadPending(newState),
+	bookmark: (state, bookmark) => resetLoadPending(lift(parseBookmarkCheck(state, bookmark))),
+	inlineState: (state, newState) => resetLoadPending(lift(newState)),
 	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),
 	'cohorts-post!': (serverBus, state, newState) => {
 		let {cohort} = newState,

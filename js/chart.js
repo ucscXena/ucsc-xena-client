@@ -511,7 +511,7 @@ function render(root, callback, sessionStorage) {
 		document.getElementById("myChart").innerHTML = "Generating chart ...";
 
 		chartOptions.subtitle = {
-			text: "cohort: " + _.pluck(cohort, 'name').join(' / ') + " (n=" + samplesLength + ")"
+			text: "cohort: " + _.get(cohort, 'name') + " (n=" + samplesLength + ")"
 		};
 
 		if (xIsCategorical && !yIsCategorical) { // x : categorical y float
@@ -968,7 +968,7 @@ function render(root, callback, sessionStorage) {
 
 			chart.redraw();
 		} else { // x y float scatter plot
-			var sampleLabels = _.flatten(cohortSamples),
+			var sampleLabels = cohortSamples,
 				x, y;
 
 			chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, samplesLength);

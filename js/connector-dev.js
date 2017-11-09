@@ -11,6 +11,7 @@ var nostate = require('./nostate');
 var urlParams = require('./urlParams');
 var LZ = require('./lz-string');
 var {compactState, expandState} = require('./compactData');
+var migrateState = require('./migrateState');
 
 function logError(err) {
 	if (typeof window === 'object' && typeof window.chrome !== 'undefined') {
@@ -32,7 +33,7 @@ function parse(str) {
 	var state = JSON.parse(LZ.decompressFromUTF16(str));
 	return {
 		...state,
-		committedState: expandState(state.committedState)
+		committedState: migrateState(expandState(state.committedState))
 	};
 }
 

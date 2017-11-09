@@ -153,7 +153,7 @@ var preferredLabels = {
 };
 
 var activeHubs = hubs => _.keys(hubs).filter(hub => hubs[hub].user);
-var cohortName = cohort => _.getIn(cohort, [0, 'name']);
+var cohortName = cohort => _.get(cohort, 'name');
 var getCohortPreferred = (table, cohort) => _.get(table, cohortName(cohort));
 
 function getPreferedDatasets(cohort, cohortPreferred, hubs) {

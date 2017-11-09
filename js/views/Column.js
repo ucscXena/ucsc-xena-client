@@ -187,7 +187,7 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 		}
 	});
 
-	var foundCohort = _.find(cohort, c => (c.name.search(/^TCGA/) !== -1 || c.name === "Treehouse public expression dataset (July 2017)"));
+	var foundCohort = cohort.name.search(/^TCGA/) !== -1 || cohort.name === "Treehouse public expression dataset (July 2017)" ? cohort : undefined;
 
 	if (!foundCohort || !foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
 		_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1)) {

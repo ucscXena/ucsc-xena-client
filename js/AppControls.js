@@ -88,14 +88,14 @@ var AppControls = React.createClass({
 		this.props.onShowWelcome();
 	},
 	render: function () {
-		var {appState: {cohort: activeCohorts, mode, columnOrder, showWelcome, samples},
+		var {appState: {cohort, mode, columnOrder, showWelcome, samples},
 				onReset, children, help, onResetSampleFilter} = this.props,
-			cohort = _.getIn(activeCohorts, [0, 'name']),
+			cohortName = _.get(cohort, 'name'),
 			hasColumn = !!columnOrder.length,
 			noshow = (mode !== "heatmap"),
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
-			sampleFilter = _.getIn(activeCohorts, [0, 'sampleFilter']),
+			sampleFilter = _.get(cohort, 'sampleFilter'),
 			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null,
 			fraction = count === samples.length ? '' :
 				`- Zoomed to ${index + 1} - ${index + count}`;
@@ -103,7 +103,7 @@ var AppControls = React.createClass({
 				<AppBar>
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
 						<div className={compStyles.titleContainer}>
-							<span className={compStyles.title}>{cohort}</span>
+							<span className={compStyles.title}>{cohortName}</span>
 							<span className={compStyles.subtitle}>{filter} {samples.length} Samples {fraction ? fraction : null}</span>
 						</div>
 						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>

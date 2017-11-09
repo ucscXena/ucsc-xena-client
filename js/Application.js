@@ -47,8 +47,7 @@ var Application = React.createClass({
 	},
 	onFilter: function (matches) {
 		var {callback, state: {cohortSamples}} = this.props,
-			allSamples = _.flatten(cohortSamples),
-			matching = _.map(matches, i => allSamples[i]);
+			matching = _.map(matches, i => cohortSamples[i]);
 		callback(['sampleFilter', 0 /* cohort */, matching]);
 	},
 	onFilterZoom: function (samples, matches) {
@@ -60,8 +59,7 @@ var Application = React.createClass({
 	},
 	onFilterColumn: function (matches, columnLabel, fieldLabel) {
 		var {state: {datasets, cohortSamples, sampleSearch}, callback} = this.props,
-			allSamples = _.flatten(cohortSamples),
-			matching = _.map(matches, i => allSamples[i]),
+			matching = _.map(matches, i => cohortSamples[i]),
 			field = signatureField(`${fieldLabel ? fieldLabel : sampleSearch}`, {
 				columnLabel: columnLabel ? columnLabel : 'filter',
 				valueType: 'coded',
