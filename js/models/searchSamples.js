@@ -173,7 +173,7 @@ function searchSamples(search, columns, columnOrder, data, cohortSamples) {
 		return null;
 	}
 	let fieldMap = createFieldMap(columnOrder),
-		allSamples = _.range(cohortSamples.length);
+		allSamples = _.range(_.get(cohortSamples, 'length'));
 	try {
 		var exp = parse(_s.trim(search));
 		return evalexp({columns, data, fieldMap, cohortSamples, allSamples}, exp);
