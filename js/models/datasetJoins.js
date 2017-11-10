@@ -149,7 +149,10 @@ function combineColSpecs(fieldSpecs, datasets) {
 		colorClass: getColorClass(resetFieldSpecs),
 		noGeneDetail: !uniqProbemap, // XXX is this wrong? also have to check field len.
 		assembly: getAssembly(fieldType, resetFieldSpecs),
-		sFeature: getFeature(fieldType, resetFieldSpecs)
+		sFeature: getFeature(fieldType, resetFieldSpecs), // XXX deprecate?
+		// until we ditch composite, copy these for signatures
+		dsID: _.get(fieldSpecs[0], 'dsID'),
+		missing: _.get(fieldSpecs[0], 'missing'),
 	});
 }
 
