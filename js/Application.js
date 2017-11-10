@@ -144,8 +144,7 @@ var Application = React.createClass({
 					</Grid>
 					{_.getIn(state, ['km', 'id']) ? <KmPlot
 							callback={callback}
-							km={state.km}
-							features={state.features} /> : null}
+							km={state.km} /> : null}
 					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
 				</div>
 			</div>

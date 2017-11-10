@@ -97,7 +97,7 @@ var ApplicationContainer = React.createClass({
 		return supportsGeneAverage(_.get(columns, uuid));
 	},
 	disableKM(uuid) { // XXX could be precomputed in a selector
-		var {columns, features, km} = this.props.state;
+		var {columns, wizard: {features}, km} = this.props.state;
 		return disableKM(_.get(columns, uuid), features, km);
 	},
 	fieldFormat: function (uuid) {

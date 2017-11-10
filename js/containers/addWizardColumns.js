@@ -245,7 +245,7 @@ function addWizardColumns(Component) {
 			this.props.callback(['cohort', 0, cohort, typeWidth.matrix]);
 		},
 		onDatasetSelect(posOrId, input, datasetList, fieldList) {
-			var {datasets, features, defaultWidth} = this.props.appState,
+			var {wizard: {datasets, features}, defaultWidth} = this.props.appState,
 				isPos = _.isNumber(posOrId),
 				settingsList = _.mmap(datasetList, fieldList, computeSettings(datasets, features, input, defaultWidth));
 			this.props.callback(['add-column', posOrId,
@@ -253,8 +253,9 @@ function addWizardColumns(Component) {
 		},
 		render() {
 			var {children, appState} = this.props,
-				{cohort, cohorts, cohortPreferred, cohortPhenotype, cohortMeta,
-					wizardMode, datasets, features, defaultWidth, servers} = appState,
+				{cohort, wizardMode, defaultWidth, servers, wizard} = appState,
+				{cohorts, cohortPreferred, cohortMeta,
+					cohortPhenotype, datasets, features} = wizard,
 				stepperState = getStepperState(appState),
 				{editing} = appState,
 				preferred = getPreferedDatasets(cohort, cohortPreferred, servers),

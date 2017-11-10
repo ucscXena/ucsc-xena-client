@@ -33,7 +33,7 @@ function fetchFeatures(serverBus, datasets) {
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 
 var resetCohort = state => {
-	let activeCohorts = _.filter(state.cohort, c => _.contains(state.cohorts, c.name));
+	let activeCohorts = _.filter(state.cohort, c => _.contains(state.wizard.cohorts, c.name));
 	return _.isEqual(activeCohorts, state.cohort) ? state :
 		setCohort(state, activeCohorts);
 };
@@ -49,7 +49,7 @@ var dropUnknownFields = state =>
 
 var resetColumnFields = state =>
 	reJoinFields(
-		state.datasets,
+		state.wizard.datasets,
 		closeEmptyColumns(
 			dropUnknownFields(state)));
 
@@ -80,7 +80,7 @@ var controls = {
 	// XXX reset loadPending flag
 	bookmark: (state, bookmark) => resetLoadPending(lift(parseBookmarkCheck(state, bookmark))),
 	inlineState: (state, newState) => resetLoadPending(lift(newState)),
-	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),
+	cohorts: (state, cohorts) => resetCohort(_.assocIn(state, ["wizard", "cohorts"], cohorts)),
 	'cohorts-post!': (serverBus, state, newState) => {
 		let {cohort} = newState,
 			user = userServers(newState);
@@ -88,7 +88,7 @@ var controls = {
 		fetchDatasets(serverBus, user, cohort);
 	},
 	datasets: (state, datasets) => {
-		var newState = resetColumnFields(_.assoc(state, "datasets", datasets)),
+		var newState = resetColumnFields(_.assocIn(state, ['wizard', 'datasets'], datasets)),
 			{cohortSamples, columnOrder} = newState;
 		if (cohortSamples) {
 			return _.reduce(
@@ -106,7 +106,7 @@ var controls = {
 		}
 		fetchFeatures(serverBus, datasets);
 	},
-	features: (state, features) => _.assoc(state, "features", features),
+	features: (state, features) => _.assocIn(state, ['wizard', 'features'], features),
 	samples: (state, {samples, over, hasPrivateSamples}) => {
 		var newState = resetZoom(_.assoc(state,
 					'cohortSamples', samples,
@@ -144,11 +144,11 @@ var controls = {
 	// XXX Here we should be updating application state. Instead we invoke a callback, because
 	// chart.js can't handle passed-in state updates.
 	'chart-average-data-post!': (serverBus, state, newState, offsets, thunk) => thunk(offsets),
-	cohortMeta: (state, meta) => _.assoc(state, 'cohortMeta', invertCohortMeta(meta)),
-	cohortPreferred: (state, cohortPreferred) => _.assoc(state, 'cohortPreferred',
+	cohortMeta: (state, meta) => _.assocIn(state, ['wizard', 'cohortMeta'], invertCohortMeta(meta)),
+	cohortPreferred: (state, cohortPreferred) => _.assocIn(state, ['wizard', 'cohortPreferred'],
 			_.fmap(cohortPreferred,
 				preferred => _.fmap(preferred, ({host, dataset}) => JSON.stringify({host, name: dataset})))),
-	cohortPhenotype: (state, cohortPhenotype) => _.assoc(state, 'cohortPhenotype',
+	cohortPhenotype: (state, cohortPhenotype) => _.assocIn(state, ['wizard', 'cohortPhenotype'],
 			_.fmap(cohortPhenotype,
 				preferred => _.map(preferred, ({host, dataset, feature}) => ({dsID: JSON.stringify({host, name: dataset}), name: feature}))))
 };

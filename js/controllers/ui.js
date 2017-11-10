@@ -100,7 +100,7 @@ function survivalFields(cohorts, datasets, features) {
 
 // If field set has changed, re-fetch.
 function fetchSurvival(serverBus, state) {
-	let {cohort, datasets, features, survival, cohortSamples} = state,
+	let {cohort, wizard: {datasets, features}, survival, cohortSamples} = state,
 		fields = survivalFields(cohort, datasets, features),
 		refetch = _.some(survFields,
 				f => !_.isEqual(fields[f], _.getIn(survival, [f, 'field']))),
@@ -182,7 +182,7 @@ function resetWizard(state) {
 // We need the gene from one non-null field. This is
 // probably broken in some way for composite views.
 function fetchStrand(serverBus, state, id, gene, dsID) {
-	var {probemap} = _.getIn(state, ['datasets', dsID]),
+	var {probemap} = _.getIn(state, ['wizard', 'datasets', dsID]),
 		{host} = JSON.parse(dsID);
 	serverBus.next([['strand', id], xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.of('+');})]);
 }
@@ -216,7 +216,7 @@ var controls = {
 			// cascading queries).  Currently datapages + hub won't set
 			// cohortPending to a cohort not in the active hubs, so we
 			// shouldn't hit this case.
-			if (!state.cohorts || params.hubs || state.serversChanged) {
+			if (!state.wizard.cohorts || params.hubs || state.serversChanged) {
 				fetchCohorts(serverBus, userServers(newState));
 			}
 			if (shouldSetCohort(state)) {

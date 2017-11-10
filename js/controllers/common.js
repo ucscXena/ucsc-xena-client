@@ -156,6 +156,7 @@ var remapFieldsForCohorts = (state, cohorts) => {
 		_.mapObject(state.columns, updateColumnFields(cohorts, oldCohorts)));
 };
 
+// XXX datasets? features?
 var setCohortRelatedFields = (state, cohorts) =>
 	_.assoc(state,
 		'cohort', cohorts,
@@ -195,7 +196,7 @@ var setCohort = (state, cohorts, width) =>
 			setWizardAndMode(
 				resetZoom(
 					reJoinFields(
-						state.datasets,
+						state.wizard.datasets,
 						closeEmptyColumns(
 							setCohortRelatedFields(
 								remapFieldsForCohorts(state, cohorts),

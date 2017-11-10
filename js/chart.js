@@ -486,7 +486,7 @@ function render(root, callback, sessionStorage) {
 		offsets, xlabel, ylabel, STDEV,
 		scatterLabel, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
-		columns, datasets, xcolumn, ycolumn, colorColumn) {
+		columns, xcolumn, ycolumn, colorColumn) {
 		var yIsCategorical = ycodemap ? true : false,
 			xIsCategorical = xcodemap ? true : false,
 			chartOptions = _.clone(highchartsHelper.chartOptions),
@@ -1155,7 +1155,7 @@ function render(root, callback, sessionStorage) {
 		var xcolumn, ycolumn, colorColumn,
 			xfields,
 			xlabel, ylabel,
-			columns, datasets,
+			columns,
 			normUI = document.getElementById("ynormalization"),
 			expUI = document.getElementById("yExponentiation"),
 			XdropDownDiv = document.getElementById("Xaxis"),
@@ -1176,7 +1176,6 @@ function render(root, callback, sessionStorage) {
 				"expState": expState
 			};
 			columns = xenaState.columns;
-			datasets = xenaState.datasets;
 			setStorage(xenaState);
 		}
 
@@ -1316,7 +1315,7 @@ function render(root, callback, sessionStorage) {
 				yfields, ycodemap, ydata, reverseStrand,
 				offsets, xlabel, ylabel, STDEV,
 				scatterLabel, scatterColorData, scatterColorDataCodemap,
-				samplesMatched, columns, datasets, xcolumn, ycolumn, colorColumn);
+				samplesMatched, columns, xcolumn, ycolumn, colorColumn);
 
 			//offset
 			if (yNormalization === "subset" || yNormalization === "subset_stdev") {

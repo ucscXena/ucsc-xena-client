@@ -54,9 +54,9 @@ module.exports = function () {
 		zoom: {height: 460}, // 460px forces visualizations to match min height of variable select card, required to maintain consistent heights across cohort/disease and variable select during wizard mode
 		columns: {},
 		columnOrder: [],
-		datasets: [],
 		showWelcome: true,
 		wizardMode: true,
+		wizard: {},
 		notifications: getNotifications()
 	};
 
