@@ -8,7 +8,6 @@ var ChartView = require('../ChartView');
 var Column = require('../views/Column');
 var _ = require('../underscore_ext');
 var kmModel = require('../models/km');
-var {xenaFieldPaths} = require('../models/fieldSpec');
 var {rxEventsMixin} = require('../react-utils');
 var Rx = require('../rx');
 // Spreadsheet options
@@ -65,24 +64,6 @@ function getFieldFormat(uuid, columns, data) {
 	}
 }
 
-var getLabel = _.curry((datasets, dsID) => {
-	var ds = datasets[dsID];
-	return ds.label || ds.name;
-});
-
-var getMetaData = _.curry((datasets, dsID) => {
-	var ds = datasets[dsID];
-	return ds;
-});
-
-function datasetMeta(column, datasets) {
-	return {
-		dsIDs: _.map(xenaFieldPaths(column), p => _.getIn(column, [...p, 'dsID'])),
-		label: getLabel(datasets),
-		metadata: getMetaData(datasets),
-	};
-}
-
 var columnsWrapper = c => addHelp(addTooltip(addWizardColumns(addColumnAdd(addLegend(makeSortable(addVizEditor(c)))))));
 var Spreadsheet = getSpreadsheet(columnsWrapper);
 // XXX without tooltip, we have no mouse pointer. Should make the wrapper add the css
@@ -126,10 +107,6 @@ var ApplicationContainer = React.createClass({
 	sampleFormat: function (index) {
 		var {cohortSamples} = this.props.state;
 		return _.get(cohortSamples, index);
-	},
-	datasetMeta: function (uuid) {
-		var {columns, datasets} = this.props.state;
-		return datasetMeta(_.get(columns, uuid), datasets);
 	},
 	// raw (before selector) state
 	getState: function () {
@@ -181,7 +158,6 @@ var ApplicationContainer = React.createClass({
 					disableKM={this.disableKM}
 					fieldFormat={this.fieldFormat}
 					sampleFormat={this.sampleFormat}
-					datasetMeta={this.datasetMeta}
 					appState={computedState}
 					callback={callback}/>
 			</Application>);

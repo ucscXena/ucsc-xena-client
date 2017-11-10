@@ -135,7 +135,7 @@ function defaultXZoom(pos, refGene) {
 	};
 }
 
-function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
+function dataToDisplay(column, vizSettings, data, sortedSamples, index) {
 	var pos = parsePos(column.fields[0]);
 	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {
@@ -144,12 +144,12 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 	}
 	var refGeneObj = _.values(data.refGene)[0],
 		maxXZoom = defaultXZoom(pos, refGeneObj), // exported for zoom controls
-		{width, showIntrons = false, xzoom = maxXZoom} = column,
+		{dataset, width, showIntrons = false, xzoom = maxXZoom} = column,
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
 		layout = createLayout(refGeneObj, width, xzoom, pos),
 		nodes = findNodes(index.byPosition, layout, sortedSamples),
 		color = heatmapColors.colorSpec(column, vizSettings, null, _.getIn(data, ['avg', 'geneValues', 0])),
-		units = _.map(column.fieldSpecs, ({dsID}) => _.getIn(datasets, [dsID, 'unit']));
+		units = [_.get(dataset, 'unit')];
 
 	return {
 		layout,

@@ -148,7 +148,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	},
 	render() {
 		var columnProps = _.pick(this.props,
-				['searching', 'supportsGeneAverage', 'disableKM', 'datasetMeta', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
+				['searching', 'supportsGeneAverage', 'disableKM', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
 			{appState} = this.props,
 			{columnOrder, wizardMode} = appState,
 			interactive = isInteractive(this.props, this.state);

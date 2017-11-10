@@ -197,6 +197,7 @@ var computeSettings = _.curry((datasets, features, inputFields, width, dataset, 
 
 	return _.assoc(colSpec,
 		'width', _.contains(['mutationVector', 'segmented'], ds.type) ? typeWidth.chrom : typeWidth.matrix,
+		'dataset', ds,
 		'columnLabel', columnLabel,
 		'user', {columnLabel: columnLabel, fieldLabel: colSpec.fieldLabel});
 });

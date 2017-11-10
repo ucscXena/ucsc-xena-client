@@ -61,29 +61,25 @@ var flopIfNegStrand = (strand, req) =>
 var colorCodeMap = (codes, colors) =>
 	colors ? _.map(codes, c => colors[c] || greyHEX) : null;
 
-var getCustomColor = (fieldSpecs, fields, datasets) =>
-	(fieldSpecs.length === 1 && fields.length === 1) ?
-		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', fieldSpecs[0].fields[0]], null) : null;
+var getCustomColor = (fieldSpecs, fields, dataset) =>
+	fields.length === 1 ?
+		_.getIn(dataset, ['customcolor', fieldSpecs[0].fields[0]], null) : null;
 
-var getAssembly = (fieldSpecs, fields, datasets) => {
-	var all = fieldSpecs.map(fs => _.getIn(datasets, [fs.dsID, 'probemapMeta', 'assembly']));
-	return _.uniq(all).length === 1 ? all[0] : null;
-};
-
-function dataToHeatmap(column, vizSettings, data, samples, datasets) {
+function dataToHeatmap(column, vizSettings, data, samples) {
 	if (!_.get(data, 'req')) {
 		return null;
 	}
 	var {req, codes = {}} = data,
+		{dataset, fieldSpecs} = column,
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples),
-		customColors = colorCodeMap(codes, getCustomColor(column.fieldSpecs, fields, datasets)),
-		assembly = getAssembly(column.fieldSpecs, fields, datasets),
+		customColors = colorCodeMap(codes, getCustomColor(fieldSpecs, fields, dataset)),
+		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
 		colors = map(fields, (p, i) =>
 					 heatmapColors.colorSpec(column, vizSettings, codes,
 					 	{'values': heatmap[i], 'mean': req.mean ? req.mean[i] : undefined},
 					 	customColors)),
-		units = _.map(column.fieldSpecs, ({dsID}) => _.getIn(datasets, [dsID, 'unit']));
+		units = [_.get(dataset, 'unit')];
 
 	return {fields, heatmap, assembly, colors, units};
 }
