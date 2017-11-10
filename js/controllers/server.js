@@ -3,12 +3,12 @@
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
 var {reifyErrors, collectResults} = require('./errors');
-var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
+var {resetZoom, setCohort, fetchDatasets,
 	userServers, fetchSamples, fetchColumnData} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
-var {xenaFieldPaths, updateStrand, filterByDsID} = require('../models/fieldSpec');
+var {xenaFieldPaths, updateStrand} = require('../models/fieldSpec');
 var identity = x => x;
 var {parseBookmark} = require('../bookmark');
 var {lift} = require('./shimComposite');
@@ -37,21 +37,6 @@ var resetCohort = state => {
 	return _.isEqual(activeCohorts, state.cohort) ? state :
 		setCohort(state, activeCohorts);
 };
-
-var filterColumnDs = _.curry(
-	(datasets, column) => _.updateIn(column, ['fieldSpecs'], filterByDsID(datasets)));
-
-
-// we must re-fetch widget data after this operation, since the column
-// definitions are changing.
-var dropUnknownFields = state =>
-	_.assoc(state, 'columns', _.mapObject(state.columns, filterColumnDs(state.datasets)));
-
-var resetColumnFields = state =>
-	reJoinFields(
-		state.wizard.datasets,
-		closeEmptyColumns(
-			dropUnknownFields(state)));
 
 var resetLoadPending = state => _.dissoc(state, 'loadPending');
 
@@ -87,25 +72,9 @@ var controls = {
 		fetchSamples(serverBus, user, cohort, newState.allowOverSamples);
 		fetchDatasets(serverBus, user, cohort);
 	},
-	datasets: (state, datasets) => {
-		var newState = resetColumnFields(_.assocIn(state, ['wizard', 'datasets'], datasets)),
-			{cohortSamples, columnOrder} = newState;
-		if (cohortSamples) {
-			return _.reduce(
-					columnOrder,
-					(acc, id) => _.assocIn(acc, ['data', id, 'status'], 'loading'),
-					newState);
-		}
-		return newState;
-	},
-	'datasets-post!': (serverBus, state, newState, datasets) => {
-		var {cohortSamples, columns} = newState;
-		if (cohortSamples) {
-			_.mapObject(columns, (settings, id) =>
-					fetchColumnData(serverBus, cohortSamples, id, settings));
-		}
-		fetchFeatures(serverBus, datasets);
-	},
+	datasets: (state, datasets) => _.assocIn(state, ['wizard', 'datasets'], datasets),
+	'datasets-post!': (serverBus, state, newState, datasets) =>
+		fetchFeatures(serverBus, datasets),
 	features: (state, features) => _.assocIn(state, ['wizard', 'features'], features),
 	samples: (state, {samples, over, hasPrivateSamples}) => {
 		var newState = resetZoom(_.assoc(state,
