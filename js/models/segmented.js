@@ -240,10 +240,12 @@ function downloadOneSampleOneRow({data: {req: {rows}}, samples, index, sampleFor
 
 var avgOrNull = (rows, xzoom) => _.isEmpty(rows) ? null : segmentAverage(rows, xzoom);
 
-function avgSegWithZoom(samples, byPosition, zoom) {
+function avgSegWithZoom(count, byPosition, zoom) {
 	var matches = _.pluck(intervalTree.matches(byPosition, zoom), 'segment'),
 		perSamp = _.groupBy(matches, 'sample');
-	return _.map(samples, s => avgOrNull(perSamp[s], zoom));
+	// Would be nice to not have to instantiate an array for this. Iterators are
+	// also slow, so aren't a good alternative.
+	return _.range(count).map(i => avgOrNull(perSamp[i], zoom));
 }
 
 function chromLimits(pos) {
@@ -262,7 +264,7 @@ function geneLimits(refGene) {
 }
 
 // Average segments, clipping to zoom or the gene boundaries, whichever is smaller.
-function averageSegments(column, data, samples, index) {
+function averageSegments(column, data, count, index) {
 	var pos = parsePos(column.fields[0]);
 	if (!_.get(data, 'req') || !(pos || _.values(data.refGene).length)) {
 		return null;
@@ -272,8 +274,8 @@ function averageSegments(column, data, samples, index) {
 			start: max(limits.start, _.getIn(column, ['xzoom', 'start'], -Infinity)),
 			end: min(limits.end, _.getIn(column, ['xzoom', 'end'], Infinity))
 		},
-		values = [avgSegWithZoom(samples, index.byPosition, xzoom)],
-		geneValues = [avgSegWithZoom(samples, index.byPosition, {start: limits.start, end: limits.end})];
+		values = [avgSegWithZoom(count, index.byPosition, xzoom)],
+		geneValues = [avgSegWithZoom(count, index.byPosition, {start: limits.start, end: limits.end})];
 
 	return {
 		avg: {

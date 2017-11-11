@@ -70,7 +70,7 @@ var avgSelector = createFmapSelector(
 			(column, key) => [
 				_.omit(column, 'user'), // Review column schema + widget.avg.
 				state.data[key],
-				state.samples,
+				_.getIn(state.cohortSamples, [0, 'length'], 0),
 				state.index[key]]),
 		_.apply(widgets.avg));
 
