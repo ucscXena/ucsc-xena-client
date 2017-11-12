@@ -93,19 +93,19 @@ var ApplicationContainer = React.createClass({
 		this.highlight.unsubscribe();
 	},
 	supportsGeneAverage(uuid) { // XXX could be precomputed in a selector
-		var {columns} = this.props.state;
+		var {spreadsheet: {columns}} = this.props.state;
 		return supportsGeneAverage(_.get(columns, uuid));
 	},
 	disableKM(uuid) { // XXX could be precomputed in a selector
-		var {columns, wizard: {features}, km} = this.props.state;
+		var {spreadsheet: {columns}, wizard: {features}, km} = this.props.state;
 		return disableKM(_.get(columns, uuid), features, km);
 	},
 	fieldFormat: function (uuid) {
-		var {columns, data} = this.props.state;
+		var {spreadsheet: {columns, data}} = this.props.state;
 		return getFieldFormat(uuid, columns, data);
 	},
 	sampleFormat: function (index) {
-		var {cohortSamples} = this.props.state;
+		var {spreadsheet: {cohortSamples}} = this.props.state;
 		return _.get(cohortSamples, index);
 	},
 	// raw (before selector) state
@@ -131,7 +131,7 @@ var ApplicationContainer = React.createClass({
 	render() {
 		let {state, selector, callback} = this.props,
 			computedState = selector(state),
-			{mode} = computedState,
+			{spreadsheet: {mode}} = computedState,
 			stepperState = getStepperState(computedState),
 			View = {
 				heatmap: SpreadsheetContainer,
@@ -149,7 +149,7 @@ var ApplicationContainer = React.createClass({
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
 					onImport={this.onImport}
-					state={computedState}
+					state={computedState.spreadsheet}
 					callback={callback}>
 				<View
 					stepperState={stepperState}
@@ -158,7 +158,8 @@ var ApplicationContainer = React.createClass({
 					disableKM={this.disableKM}
 					fieldFormat={this.fieldFormat}
 					sampleFormat={this.sampleFormat}
-					appState={computedState}
+					appState={computedState.spreadsheet}
+					wizard={computedState.wizard}
 					callback={callback}/>
 			</Application>);
 	}

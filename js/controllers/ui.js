@@ -4,9 +4,8 @@ var _ = require('../underscore_ext');
 var Rx = require('../rx');
 var xenaQuery = require('../xenaQuery');
 var kmModel = require('../models/km');
-var {reifyErrors, collectResults} = require('./errors');
-var {userServers, setCohort, fetchDatasets,
-	fetchSamples, fetchColumnData} = require('./common');
+var {userServers, setCohort, fetchSamples,
+	fetchColumnData, fetchCohortData, fetchCohorts, updateWizard} = require('./common');
 var {nullField, setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
@@ -15,19 +14,7 @@ var fetch = require('../fieldFetch');
 var {remapFields} = require('../models/searchSamples');
 var {fetchInlineState} = require('../inlineState');
 var {lift} = require('./shimComposite');
-
-var identity = x => x;
-
-var unionOfResults = resps => collectResults(resps, results => _.union(...results));
-
-function cohortQuery(servers) {
-	return Rx.Observable.zipArray(_.map(servers, s => reifyErrors(xenaQuery.allCohorts(s), {host: s})))
-			.flatMap(unionOfResults);
-}
-
-function fetchCohorts(serverBus, servers) {
-	serverBus.next(['cohorts', cohortQuery(servers)]);
-}
+var {compose, make, mount} = require('./utils');
 
 function fetchBookmark(serverBus, bookmark) {
 	serverBus.next(['bookmark', Rx.Observable.ajax({
@@ -100,7 +87,8 @@ function survivalFields(cohorts, datasets, features) {
 
 // If field set has changed, re-fetch.
 function fetchSurvival(serverBus, state) {
-	let {cohort, wizard: {datasets, features}, survival, cohortSamples} = state,
+	let {wizard: {datasets, features},
+			spreadsheet: {cohort, survival, cohortSamples}} = state,
 		fields = survivalFields(cohort, datasets, features),
 		refetch = _.some(survFields,
 				f => !_.isEqual(fields[f], _.getIn(survival, [f, 'field']))),
@@ -121,12 +109,6 @@ var setCohortPending = state =>
 		_.dissoc(setCohort(state, state.cohortPending), 'cohortPending') : state;
 
 var resetServersChanged = state => _.dissoc(state, 'serversChanged');
-
-var fetchCohortData = (serverBus, state) => {
-	let user = userServers(state);
-	fetchDatasets(serverBus, user, state.cohort);
-	fetchSamples(serverBus, user, state.cohort, state.allowOverSamples);
-};
 
 var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
 	_.assoc(state, 'zoomHelp', true) : state;
@@ -179,10 +161,8 @@ function resetWizard(state) {
 }
 
 // Fetches the gene strand info for a geneProbes field.
-// We need the gene from one non-null field. This is
-// probably broken in some way for composite views.
-function fetchStrand(serverBus, state, id, gene, dsID) {
-	var {probemap} = _.getIn(state, ['wizard', 'datasets', dsID]),
+function fetchStrand(serverBus, state, id, gene, dataset) {
+	var {probemap, dsID} = dataset,
 		{host} = JSON.parse(dsID);
 	serverBus.next([['strand', id], xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.of('+');})]);
 }
@@ -195,12 +175,18 @@ var defaultWidth = viewportWidth => {
 	return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
 };
 
+var clearWizardCohort = state =>
+	_.assocIn(state, ['wizard', 'datasets'], undefined,
+					 ['wizard', 'features'], undefined);
+
 var controls = {
 	init: (state, params) =>
-		setCohortPending(
-			resetServersChanged(
-				setLoadingState(
-					setHubs(state, params), params))),
+		(shouldSetCohort(state) ? clearWizardCohort : _.identity)
+			(_.updateIn(state, ['spreadsheet'], state =>
+						setCohortPending(
+							resetServersChanged(
+								setLoadingState(
+									setHubs(state, params), params))))),
 	'init-post!': (serverBus, state, newState, params) => {
 		var bookmark = _.get(params, 'bookmark'),
 			inlineState = _.get(params, 'inlineState');
@@ -209,6 +195,10 @@ var controls = {
 		} else if (bookmark) {
 			fetchBookmark(serverBus, bookmark);
 		} else {
+			// 'servers' is in spreadsheet state. After loading a bookmark or inline
+			// state, we need to update wizard data. Otherwise, we need to update
+			// wizard data here if something has changed.
+			//
 			// XXX If we have serversChanged *and* cohortPending, there may be
 			// a race here.  We fetch the cohorts list, and the cohort data. If
 			// cohorts completes & the cohort is not in new list, we reset
@@ -216,28 +206,41 @@ var controls = {
 			// cascading queries).  Currently datapages + hub won't set
 			// cohortPending to a cohort not in the active hubs, so we
 			// shouldn't hit this case.
-			if (!state.wizard.cohorts || params.hubs || state.serversChanged) {
-				fetchCohorts(serverBus, userServers(newState));
+			if (!state.wizard.cohorts || params.hubs || state.spreadsheet.serversChanged) {
+				fetchCohorts(serverBus, userServers(newState.spreadsheet));
 			}
-			if (shouldSetCohort(state)) {
-				fetchCohortData(serverBus, newState);
+			if (shouldSetCohort(state.spreadsheet)) {
+				fetchCohortData(serverBus, newState.spreadsheet);
 			}
 		}
-		fetchCohortMeta(serverBus);
-		fetchCohortPreferred(serverBus);
-		fetchCohortPhenotype(serverBus);
+		// These are independent of server settings.
+		if (!newState.wizard.cohortMeta) {
+			fetchCohortMeta(serverBus);
+		}
+		if (!newState.wizard.cohortPreferred) {
+			fetchCohortPreferred(serverBus);
+		}
+		if (!newState.wizard.cohortPhenotype) {
+			fetchCohortPhenotype(serverBus);
+		}
 	},
-	'import': (state, newState) => _.has(newState, 'wizardMode') ?
-		lift(newState) : _.assoc(state, 'stateError', 'import'),
-	stateError: (state, error) => _.assoc(state, 'stateError', error),
 	cohort: (state, i, cohort, width) =>
-		setCohort(state, _.assoc(state.cohort, i, {name: cohort}), width),
-	cohortReset: state => setCohort(state, []),
-	'cohort-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
-	'cohort-remove': (state, i) => setCohort(state, _.withoutIndex(state.cohort, i)),
-	'cohort-remove-post!': (serverBus, state, newState) => fetchCohortData(serverBus, newState),
-	'refresh-cohorts-post!': (serverBus, state) =>
-		fetchCohorts(serverBus, userServers(state)),
+		clearWizardCohort(
+			_.updateIn(state, ['spreadsheet'], setCohort([{name: cohort}], width))),
+	'cohort-post!': (serverBus, state, newState) =>
+		fetchCohortData(serverBus, newState.spreadsheet),
+	cohortReset: state =>
+			clearWizardCohort(
+				_.updateIn(state, ['spreadsheet'], setCohort([], undefined))),
+	'import': (state, newState) => _.has(newState.spreadsheet, 'wizardMode') ?
+		lift(clearWizardCohort(newState)) : _.assocIn(state, ['spreadsheet', 'stateError'], 'import'),
+	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
+};
+
+var spreadsheetControls = {
+	'import-post!': updateWizard,
+	stateError: (state, error) => _.assoc(state, 'stateError', error),
+	'refresh-cohorts-post!': updateWizard,
 	sampleFilter: (state, i, sampleFilter) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, [i, 'sampleFilter'], sampleFilter),
 			'survival', null),
@@ -264,7 +267,7 @@ var controls = {
 			// data fetch.
 			if (settings.fieldType === 'geneProbes') {
 				// Pick first fieldSpec, and 1st gene name.
-				fetchStrand(serverBus, state, id, settings.fieldSpecs[0].fields[0], settings.fieldSpecs[0].dsID);
+				fetchStrand(serverBus, state, id, settings.fieldSpecs[0].fields[0], settings.dataset);
 			} else {
 				fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
 			}
@@ -338,7 +341,7 @@ var controls = {
 			['km', 'id'], id,
 			['km', 'title'], _.getIn(state, ['columns', id, 'user', 'columnLabel']),
 			['km', 'label'], `Grouped by ${_.getIn(state, ['columns', id, 'user', 'fieldLabel'])}`),
-	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
+	// see km-open-post! in controls, above. Requires wizard.datasets.
 	'km-close': state => _.assocIn(state, ['km', 'id'], null),
 	'km-cutoff': (state, value) => _.assocIn(state, ['km', 'cutoff'], value),
 	'km-splits': (state, value) => _.assocIn(state, ['km', 'splits'], value),
@@ -365,7 +368,6 @@ var controls = {
 			c => c ? _.assoc(c, 'xzoom', xzoom) : c)
 };
 
-module.exports = {
-	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
-	postAction: (serverBus, state, newState, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, newState, ...args)
-};
+module.exports = compose(
+		mount(make(spreadsheetControls), ['spreadsheet']),
+		make(controls));

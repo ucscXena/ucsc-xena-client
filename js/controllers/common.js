@@ -145,24 +145,52 @@ function addSampleColumn(state, width) {
 var setWizardAndMode = state =>
 	_.assocIn(state,
 			['wizardMode'], true,
-			['wizard', 'features'], undefined,
-			['wizard', 'datasets'], undefined,
 			['mode'], 'heatmap');
 
-var setCohort = (state, cohort, width) =>
-	addSampleColumn(
+var setCohort = _.curry((cohort, width, state) =>
+		addSampleColumn(
 			setWizardAndMode(
 				resetZoom(
 					setCohortRelatedFields(state, cohort))),
-			width);
+			width));
 
 var userServers = state => _.keys(state.servers).filter(h => state.servers[h].user);
 
+var fetchCohortData = (serverBus, state) => {
+	let user = userServers(state);
+	if (state.cohort) {
+		fetchDatasets(serverBus, user, state.cohort);
+		fetchSamples(serverBus, user, state.cohort, state.allowOverSamples);
+	}
+};
+
+var unionOfResults = resps => collectResults(resps, results => _.union(...results));
+
+function cohortQuery(servers) {
+	return Rx.Observable.zipArray(_.map(servers, s => reifyErrors(xenaQuery.allCohorts(s), {host: s})))
+			.flatMap(unionOfResults);
+}
+
+function fetchCohorts(serverBus, servers) {
+	serverBus.next(['cohorts', cohortQuery(servers)]);
+}
+
+function updateWizard(serverBus, state, newState) {
+	let user = userServers(state);
+	fetchCohorts(serverBus, userServers(newState));
+	if (newState.cohort) {
+		fetchDatasets(serverBus, user, newState.cohort);
+	}
+}
+
 module.exports = {
+	fetchCohortData,
+	fetchCohorts,
+	fetchColumnData,
 	fetchDatasets,
 	fetchSamples,
-	fetchColumnData,
-	setCohort,
 	resetZoom,
-	userServers
+	setCohort,
+	userServers,
+	updateWizard
 };

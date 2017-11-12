@@ -49,15 +49,17 @@ module.exports = function () {
 
 	var initialState = {
 		version: 1,
-		servers: defaultServerState,
-		mode: 'heatmap',
-		zoom: {height: 460}, // 460px forces visualizations to match min height of variable select card, required to maintain consistent heights across cohort/disease and variable select during wizard mode
-		columns: {},
-		columnOrder: [],
-		showWelcome: true,
-		wizardMode: true,
+		spreadsheet: {
+			columnOrder: [],
+			columns: {},
+			mode: 'heatmap',
+			notifications: getNotifications(),
+			servers: defaultServerState,
+			showWelcome: true,
+			wizardMode: true,
+			zoom: {height: 460} // 460px forces visualizations to match min height of variable select card, required to maintain consistent heights across cohort/disease and variable select during wizard mode
+		},
 		wizard: {},
-		notifications: getNotifications()
 	};
 
 	return {

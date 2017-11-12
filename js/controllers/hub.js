@@ -1,5 +1,6 @@
 'use strict';
 var _ = require('../underscore_ext');
+var {make, mount} = require('./utils');
 
 // After settings change, mark the server list dirty.
 // This is used by the viz page.
@@ -29,10 +30,4 @@ var controls = {
 	 cohort: (state, cohort) => _.assoc(state, 'cohortPending', [{name: cohort}])
 };
 
-var identity = x => x;
-
-module.exports = {
-	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
-	postAction: (serverBus, state, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, ...args)
-};
-
+module.exports = mount(make(controls), ['spreadsheet']);

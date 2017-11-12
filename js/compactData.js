@@ -48,12 +48,12 @@ var decode = data => (decodings[_.getIn(data, ['req', 'rows', 'encoding'])] || _
 
 
 var compactState = state =>
-	_.updateIn(state, ['data'], data =>
+	_.updateIn(state, ['spreadsheet', 'data'], data =>
 		_.fmap(data, (colData, uuid) => encode(
 				_.getIn(state, ['columns', uuid, 'fieldType']), colData)));
 
 var expandState = state =>
-	_.updateIn(state, ['data'], data =>
+	_.updateIn(state, ['spreadsheet', 'data'], data =>
 		_.fmap(data, decode));
 
 module.exports = {

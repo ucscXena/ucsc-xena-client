@@ -27,6 +27,6 @@ var Datapages = React.createClass({
 var store = createStore();
 var main = window.document.getElementById('main');
 
-var selector = state => state.servers;
+var selector = state => state.spreadsheet.servers;
 
 connector({...store, controller, main, selector, Page: Datapages, persist: true, history: false});

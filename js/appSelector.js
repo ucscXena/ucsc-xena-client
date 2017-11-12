@@ -114,6 +114,9 @@ var kmGroups = state => ({...state, km: {
 	...state.km,
 	groups: kmSelector(state)}});
 
+var spreadsheetSelector = selector =>
+		state => _.updateIn(state, ['spreadsheet'], selector);
+
 ///////
 // This is the main transform ('selector') of the application state, before passing to the view.
 // We build indexes of the column data, sort samples by the column data, transform
@@ -124,4 +127,4 @@ var kmGroups = state => ({...state, km: {
 
 var selector = state => kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state))))))));
 
-module.exports = selector;
+module.exports = spreadsheetSelector(selector);
