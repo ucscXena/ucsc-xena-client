@@ -16,7 +16,7 @@ var serverController = require('./controllers/server');
 require('bootstrap/dist/css/bootstrap.css');
 var Application = require('./containers/ApplicationContainer');
 var selector = require('./appSelector');
-var compose = require('./controllers/compose');
+var {compose} = require('./controllers/utils');
 var shimComposite = require('./controllers/shimComposite').controller;
 const connector = require('./connector');
 const createStore = require('./store');
