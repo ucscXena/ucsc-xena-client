@@ -243,9 +243,7 @@ var avgOrNull = (rows, xzoom) => _.isEmpty(rows) ? null : segmentAverage(rows, x
 function avgSegWithZoom(count, byPosition, zoom) {
 	var matches = _.pluck(intervalTree.matches(byPosition, zoom), 'segment'),
 		perSamp = _.groupBy(matches, 'sample');
-	// Would be nice to not have to instantiate an array for this. Iterators are
-	// also slow, so aren't a good alternative.
-	return _.range(count).map(i => avgOrNull(perSamp[i], zoom));
+	return _.times(count, i => avgOrNull(perSamp[i], zoom));
 }
 
 function chromLimits(pos) {

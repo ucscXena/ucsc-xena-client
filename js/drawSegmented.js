@@ -65,8 +65,7 @@ function labelValues(vg, width, {index, height, count}, toDraw) {
 // Computes contiguous vertial pixel regions.
 // There must be a better way to compute this.
 function findRegions(index, height, count) {
-	var starts = _.uniq(
-			_.map(_.range(count), y => ~~(y * height / count))),
+	var starts = _.uniq(_.times(count, y => ~~(y * height / count))),
 		regions = _.partitionN(starts, 2, 1, [height]),
 		lens = regions.map(([s, e]) => e - s);
 	return _.object(starts, lens);

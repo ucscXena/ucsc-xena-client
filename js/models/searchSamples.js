@@ -161,7 +161,7 @@ function evalexp(ctx, expression) {
 
 function createFieldIds(len) {
 	const A = 'A'.charCodeAt(0);
-	return _.range(len).map(i => String.fromCharCode(i + A));
+	return _.times(len, i => String.fromCharCode(i + A));
 }
 
 function createFieldMap(columnOrder) {

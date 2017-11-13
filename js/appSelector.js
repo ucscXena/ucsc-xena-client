@@ -45,7 +45,7 @@ var sortSelector = createSelector(
 				_.findValue(order, id => cmpFns[id](s1, s2)) ||
 					cmpString(getSampleID(s1), getSampleID(s2));
 
-		return _.range((cohortSamples || []).length).slice(0).sort(cmpFn);
+		return _.range((cohortSamples || []).length).sort(cmpFn);
 	}
 );
 
