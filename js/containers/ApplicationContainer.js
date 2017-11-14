@@ -110,7 +110,7 @@ var ApplicationContainer = React.createClass({
 	},
 	// raw (before selector) state
 	getState: function () {
-		return this.props.state;
+		return _.pick(this.props.state, 'version', 'spreadsheet');
 	},
 	onWizardMode(mode) {
 		this.props.callback(['wizardMode', mode]);

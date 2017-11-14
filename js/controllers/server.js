@@ -3,7 +3,7 @@
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
 var {reifyErrors, collectResults} = require('./errors');
-var {resetZoom, fetchColumnData, updateWizard} = require('./common');
+var {resetZoom, fetchColumnData, updateWizard, clearWizardCohort} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
@@ -70,7 +70,7 @@ var wizardControls = {
 };
 
 var controls = {
-	bookmark: (state, bookmark) => resetLoadPending(lift(parseBookmarkCheck(state, bookmark))),
+	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(lift(parseBookmarkCheck(state, bookmark)))),
 	// see bookmark-post!, below
 	inlineState: (state, newState) => resetLoadPending(lift(newState)),
 	// see inlineState-post!, below

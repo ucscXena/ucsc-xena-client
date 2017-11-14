@@ -5,7 +5,8 @@ var Rx = require('../rx');
 var xenaQuery = require('../xenaQuery');
 var kmModel = require('../models/km');
 var {userServers, setCohort, fetchSamples,
-	fetchColumnData, fetchCohortData, fetchCohorts, updateWizard} = require('./common');
+	fetchColumnData, fetchCohortData, fetchCohorts,
+	updateWizard, clearWizardCohort} = require('./common');
 var {nullField, setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
@@ -175,18 +176,18 @@ var defaultWidth = viewportWidth => {
 	return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
 };
 
-var clearWizardCohort = state =>
-	_.assocIn(state, ['wizard', 'datasets'], undefined,
-					 ['wizard', 'features'], undefined);
-
 var controls = {
-	init: (state, params) =>
-		(shouldSetCohort(state) ? clearWizardCohort : _.identity)
-			(_.updateIn(state, ['spreadsheet'], state =>
+	init: (state, params = {}) => {
+		var wizardUpate = shouldSetCohort(state) || params.hubs ||
+			params.inlineState || state.serversChanged ?
+				clearWizardCohort : _.identity,
+			next = _.updateIn(state, ['spreadsheet'], state =>
 						setCohortPending(
 							resetServersChanged(
 								setLoadingState(
-									setHubs(state, params), params))))),
+									setHubs(state, params), params))));
+		return wizardUpate(next);
+	},
 	'init-post!': (serverBus, state, newState, params) => {
 		var bookmark = _.get(params, 'bookmark'),
 			inlineState = _.get(params, 'inlineState');
@@ -207,7 +208,7 @@ var controls = {
 			// cohortPending to a cohort not in the active hubs, so we
 			// shouldn't hit this case.
 			if (!state.wizard.cohorts || params.hubs || state.spreadsheet.serversChanged) {
-				fetchCohorts(serverBus, userServers(newState.spreadsheet));
+				fetchCohorts(serverBus, state.spreadsheet, newState.spreadsheet, {force: true});
 			}
 			if (shouldSetCohort(state.spreadsheet)) {
 				fetchCohortData(serverBus, newState.spreadsheet);
@@ -233,14 +234,20 @@ var controls = {
 			clearWizardCohort(
 				_.updateIn(state, ['spreadsheet'], setCohort([], undefined))),
 	'import': (state, newState) => _.has(newState.spreadsheet, 'wizardMode') ?
-		lift(clearWizardCohort(newState)) : _.assocIn(state, ['spreadsheet', 'stateError'], 'import'),
+		clearWizardCohort(_.merge(state, lift(newState))) : _.assocIn(state, ['spreadsheet', 'stateError'], 'import'),
+	'refresh-cohorts': clearWizardCohort,
 	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
 };
 
 var spreadsheetControls = {
 	'import-post!': updateWizard,
 	stateError: (state, error) => _.assoc(state, 'stateError', error),
-	'refresh-cohorts-post!': updateWizard,
+	'refresh-cohorts-post!': (serverBus, state, newState) => {
+		fetchCohortMeta(serverBus);
+		fetchCohortPreferred(serverBus);
+		fetchCohortPhenotype(serverBus);
+		updateWizard(serverBus, state, newState, {force: true});
+	},
 	sampleFilter: (state, i, sampleFilter) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, [i, 'sampleFilter'], sampleFilter),
 			'survival', null),
@@ -317,7 +324,6 @@ var spreadsheetControls = {
 				['data', id, 'status'], () => 'loading'),
 	'fieldType-post!': (serverBus, state, newState, id) =>
 		fetchColumnData(serverBus, newState.cohortSamples, id, _.getIn(newState, ['columns', id])),
-	// XXX wow, this is painful.
 	vizSettings: (state, column, settings) =>
 		_.assocIn(state, ['columns', column, 'vizSettings'], settings),
 	'edit-dataset-post!': (serverBus, state, newState, dsID, meta) => {

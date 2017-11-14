@@ -214,7 +214,7 @@ var Transcripts = React.createClass({
 
 var TranscriptsContainer = React.createClass({
 	getState() {
-		return this.props.state;
+		return _.pick(this.props.state, 'version', 'transcripts');
 	},
 	render() {
 		var {state, selector, ...props} = this.props;

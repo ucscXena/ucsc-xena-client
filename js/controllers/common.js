@@ -171,17 +171,25 @@ function cohortQuery(servers) {
 			.flatMap(unionOfResults);
 }
 
-function fetchCohorts(serverBus, servers) {
-	serverBus.next(['cohorts', cohortQuery(servers)]);
+function fetchCohorts(serverBus, state, newState, {force} = {}) {
+	var user = userServers(state),
+		newUser = userServers(newState);
+	if (force || !_.listSetsEqual(user, newUser)) {
+		serverBus.next(['cohorts', cohortQuery(newUser)]);
+	}
 }
 
-function updateWizard(serverBus, state, newState) {
+function updateWizard(serverBus, state, newState, force) {
+	fetchCohorts(serverBus, state, newState, force);
 	let user = userServers(state);
-	fetchCohorts(serverBus, userServers(newState));
-	if (newState.cohort) {
+	if (newState.cohort && newState.cohort !== state.cohort) {
 		fetchDatasets(serverBus, user, newState.cohort);
 	}
 }
+
+var clearWizardCohort = state =>
+	_.assocIn(state, ['wizard', 'datasets'], undefined,
+					 ['wizard', 'features'], undefined);
 
 module.exports = {
 	fetchCohortData,
@@ -192,5 +200,6 @@ module.exports = {
 	resetZoom,
 	setCohort,
 	userServers,
-	updateWizard
+	updateWizard,
+	clearWizardCohort
 };

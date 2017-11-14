@@ -357,6 +357,14 @@ var splice = (arr, i, c, ...vals) => {
 	return ret;
 };
 
+function listSetsEqual(l1, l2) {
+	if (l1.length !== l2.length) {
+		return false;
+	}
+	var s1 = new Set(l1);
+	return _.every(l2, v => s1.has(v));
+}
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -424,6 +432,7 @@ _.mixin({
 	fmapMemoize1,
 	groupByConsec,
 	insert,
+	listSetsEqual,
 	maxWith,
 	maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
 	meannull,
