@@ -7,10 +7,8 @@ var xenaQuery = require('../xenaQuery');
 var _ = require('../underscore_ext');
 var {reifyErrors, collectResults} = require('./errors');
 var fetch = require('../fieldFetch');
-var {allNullFields, nullField} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {signatureField} = require('../models/fieldSpec');
-var {getColSpec} = require('../models/datasetJoins');
 var {publicServers} = require('../defaultServers');
 // pick up signature fetch
 require('../models/signatures');
@@ -110,57 +108,13 @@ function resetZoom(state) {
 					 z => _.merge(z, {count: count, index: 0}));
 }
 
-var closeEmptyColumns = state => {
-	const {columns} = state,
-		columnOrder = _.filter(state.columnOrder,
-				id => !allNullFields(columns[id].fieldSpecs));
-	return _.assoc(state,
-				   'columnOrder', columnOrder,
-				   'columns', _.pick(columns, columnOrder));
-};
-
-// This is all way too complex. We want to update the fieldSpecs in each column
-// when something changes, e.g. active cohort list changes, available datasets
-// changes, etc.
-//
-// The strategy here is
-// 1 - set fields to nullField if they are unavailble
-// 2 - drop empty columns (every field is nullField)
-// 3 - recalculate getColSpec
-
-// Recompute the composite field after the underlying fieldSpecs have
-// changed.
-var reJoinFields = (datasets, state) =>
-	_.assoc(state, 'columns',
-		_.mapObject(state.columns, c => _.merge(c, getColSpec(c.fieldSpecs, datasets))));
-
-// Shuffle fieldSpecs for a column to align to new cohort list.
-var remapFields = _.curry(
-		(oldCohorts, fieldSpecs, {name}) => fieldSpecs[oldCohorts[name]] || nullField);
-
-// Update all column fieldSpecs for new cohort list.
-var updateColumnFields = _.curry(
-	(cohorts, oldCohorts, column) =>
-		_.assoc(column, 'fieldSpecs',
-				_.map(cohorts, remapFields(oldCohorts, column.fieldSpecs))));
-
-// Remap column fieldSpecs to reflect a new active cohort list.
-// This will 1) drop fieldSpec for inactive cohorts, 2) move
-// fieldSpec for still active cohorts, 3) insert nullField for
-// newly active cohorts.
-var remapFieldsForCohorts = (state, cohorts) => {
-	var oldCohorts = _.object(_.pluck(state.cohort, 'name'),
-			_.range(state.cohort.length));
-
-	return _.assoc(state, 'columns',
-		_.mapObject(state.columns, updateColumnFields(cohorts, oldCohorts)));
-};
-
-var setCohortRelatedFields = (state, cohorts) =>
+var setCohortRelatedFields = (state, cohort) =>
 	_.assoc(state,
-		'cohort', cohorts,
+		'cohort', cohort,
 		'hasPrivateSamples', false,
 		'cohortSamples', [],
+		'columns', {},
+		'columnOrder', [],
 		'data', {},
 		'survival', null,
 		'km', _.assoc(state.km, ['id'], null));
@@ -188,28 +142,55 @@ function addSampleColumn(state, width) {
 	return _.assocIn(newState, ['data', 'samples', 'status'], 'loading');
 }
 
-var setWizardAndMode = state => _.assoc(state, 'wizardMode', true, 'mode', 'heatmap');
+var setWizardAndMode = state =>
+	_.assocIn(state,
+			['wizardMode'], true,
+			['mode'], 'heatmap');
 
-var setCohort = (state, cohorts, width) =>
+var setCohort = _.curry((cohort, width, state) =>
 		addSampleColumn(
 			setWizardAndMode(
 				resetZoom(
-					reJoinFields(
-						state.datasets,
-						closeEmptyColumns(
-							setCohortRelatedFields(
-								remapFieldsForCohorts(state, cohorts),
-								cohorts))))), width);
+					setCohortRelatedFields(state, cohort))),
+			width));
 
 var userServers = state => _.keys(state.servers).filter(h => state.servers[h].user);
 
+var fetchCohortData = (serverBus, state) => {
+	let user = userServers(state);
+	if (state.cohort) {
+		fetchDatasets(serverBus, user, state.cohort);
+		fetchSamples(serverBus, user, state.cohort, state.allowOverSamples);
+	}
+};
+
+var unionOfResults = resps => collectResults(resps, results => _.union(...results));
+
+function cohortQuery(servers) {
+	return Rx.Observable.zipArray(_.map(servers, s => reifyErrors(xenaQuery.allCohorts(s), {host: s})))
+			.flatMap(unionOfResults);
+}
+
+function fetchCohorts(serverBus, servers) {
+	serverBus.next(['cohorts', cohortQuery(servers)]);
+}
+
+function updateWizard(serverBus, state, newState) {
+	let user = userServers(state);
+	fetchCohorts(serverBus, userServers(newState));
+	if (newState.cohort) {
+		fetchDatasets(serverBus, user, newState.cohort);
+	}
+}
+
 module.exports = {
+	fetchCohortData,
+	fetchCohorts,
+	fetchColumnData,
 	fetchDatasets,
 	fetchSamples,
-	fetchColumnData,
-	setCohort,
 	resetZoom,
-	reJoinFields,
+	setCohort,
 	userServers,
-	closeEmptyColumns
+	updateWizard
 };

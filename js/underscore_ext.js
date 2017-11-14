@@ -446,7 +446,10 @@ _.mixin({
 	uniq: unique,
 	unique,
 	uniquify,
-	withoutIndex
+	withoutIndex,
+	// This inscrutable method allows one to write a 'let' expression via
+	// es6 default arguments, e.g. _.Let((x = 5, y = x + 2) => x + y) === 12
+	Let: f => f()
 });
 
 module.exports = _;

@@ -13,18 +13,8 @@ function invert(matches, allSamples) {
 	return _.difference(allSamples, matches);
 }
 
-// XXX ugh. Need a tail call.
 function filterSampleIds(cohortSamples, cmp, str) {
-	var i = 0, res = [];
-	cohortSamples.forEach(samples => {
-		samples.forEach(s => {
-			if (cmp(str, s)) {
-				res.push(i);
-			}
-			++i;
-		});
-	});
-	return res;
+	return _.filterIndices(cohortSamples, s => cmp(str, s));
 }
 
 function searchSampleIds(cohortSamples, str) {
@@ -171,7 +161,7 @@ function evalexp(ctx, expression) {
 
 function createFieldIds(len) {
 	const A = 'A'.charCodeAt(0);
-	return _.range(len).map(i => String.fromCharCode(i + A));
+	return _.times(len, i => String.fromCharCode(i + A));
 }
 
 function createFieldMap(columnOrder) {
@@ -183,7 +173,7 @@ function searchSamples(search, columns, columnOrder, data, cohortSamples) {
 		return null;
 	}
 	let fieldMap = createFieldMap(columnOrder),
-		allSamples = _.range(_.sum(_.pluck(cohortSamples, 'length')));
+		allSamples = _.range(_.get(cohortSamples, 'length'));
 	try {
 		var exp = parse(_s.trim(search));
 		return evalexp({columns, data, fieldMap, cohortSamples, allSamples}, exp);

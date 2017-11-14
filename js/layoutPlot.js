@@ -86,7 +86,7 @@ function pxTransformI(layout, fn, i) {
 function pxTransformEach(layout, fn) {
 	var {chrom} = layout;
 
-	_.each(_.range(chrom.length), i => pxTransformI(layout, fn, i));
+	_.times(chrom.length, i => pxTransformI(layout, fn, i));
 }
 
 

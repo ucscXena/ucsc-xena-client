@@ -37,7 +37,7 @@ function fixSampleTitle(column, i, samples, wizardMode, cohort) {
 	return i === 0 ? _.updateIn(column,
 		['user', 'fieldLabel'], label => wizardMode ?
 			`${addCommas(samples.length)} samples` : label,
-		['user', 'columnLabel'], label => wizardMode ? cohort[0].name : label) :
+		['user', 'columnLabel'], label => wizardMode ? cohort.name : label) :
 	column;
 }
 
@@ -148,7 +148,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	},
 	render() {
 		var columnProps = _.pick(this.props,
-				['searching', 'supportsGeneAverage', 'disableKM', 'datasetMeta', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
+				['searching', 'supportsGeneAverage', 'disableKM', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
 			{appState} = this.props,
 			{columnOrder, wizardMode} = appState,
 			interactive = isInteractive(this.props, this.state);

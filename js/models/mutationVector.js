@@ -494,11 +494,10 @@ function defaultXZoom(pos, refGene, type) {
 	};
 }
 
-var getCustomColor = (fieldSpecs, datasets, type) =>
-	(fieldSpecs.length === 1) ?
-		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', type], null) : null;
+var getCustomColor = (dataset, type) =>
+	_.getIn(dataset, ['customcolor', type], impactColor);
 
-function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
+function svDataToDisplay(column, vizSettings, data, sortedSamples, index) {
 	var pos = parsePos(column.fields[0]);
 	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {};
@@ -527,18 +526,19 @@ function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, ind
 	};
 }
 
-function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
+function snvDataToDisplay(column, vizSettings, data, sortedSamples, index) {
 	var pos = parsePos(column.fields[0]);
 	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {};
 	}
 	var refGeneObj = _.values(data.refGene)[0],
 		maxXZoom = defaultXZoom(pos, refGeneObj, 'mutation'), // exported for zoom controls
-		{width, showIntrons = false, sFeature = 'impact', xzoom = maxXZoom} = column,
+		{dataset, width, showIntrons = false,
+			sFeature = 'impact', xzoom = maxXZoom} = column,
 		allVals = _.uniq(data.req.rows.map(features[sFeature].get)),
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
 		layout = createLayout(refGeneObj, width, xzoom, pos),
-		colorMap = getCustomColor(column.fieldSpecs, datasets, 'SNV') || impactColor,
+		colorMap = getCustomColor(dataset, 'SNV'),
 		nodes = findSNVNodes(index.byPosition, layout, colorMap, sFeature, sortedSamples);
 
 	return {

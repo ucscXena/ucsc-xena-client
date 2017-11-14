@@ -135,7 +135,7 @@ function defaultXZoom(pos, refGene) {
 	};
 }
 
-function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
+function dataToDisplay(column, vizSettings, data, sortedSamples, index) {
 	var pos = parsePos(column.fields[0]);
 	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {
@@ -144,12 +144,12 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 	}
 	var refGeneObj = _.values(data.refGene)[0],
 		maxXZoom = defaultXZoom(pos, refGeneObj), // exported for zoom controls
-		{width, showIntrons = false, xzoom = maxXZoom} = column,
+		{dataset, width, showIntrons = false, xzoom = maxXZoom} = column,
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
 		layout = createLayout(refGeneObj, width, xzoom, pos),
 		nodes = findNodes(index.byPosition, layout, sortedSamples),
 		color = heatmapColors.colorSpec(column, vizSettings, null, _.getIn(data, ['avg', 'geneValues', 0])),
-		units = _.map(column.fieldSpecs, ({dsID}) => _.getIn(datasets, [dsID, 'unit']));
+		units = [_.get(dataset, 'unit')];
 
 	return {
 		layout,
@@ -243,9 +243,7 @@ var avgOrNull = (rows, xzoom) => _.isEmpty(rows) ? null : segmentAverage(rows, x
 function avgSegWithZoom(count, byPosition, zoom) {
 	var matches = _.pluck(intervalTree.matches(byPosition, zoom), 'segment'),
 		perSamp = _.groupBy(matches, 'sample');
-	// Would be nice to not have to instantiate an array for this. Iterators are
-	// also slow, so aren't a good alternative.
-	return _.range(count).map(i => avgOrNull(perSamp[i], zoom));
+	return _.times(count, i => avgOrNull(perSamp[i], zoom));
 }
 
 function chromLimits(pos) {

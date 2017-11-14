@@ -135,7 +135,7 @@ function mutationAttrs(list) {
 // {field: [value, ...], ...} -> [{field: value, ...}, ...]
 function collateRows(rows) {
 	var keys = _.keys(rows);
-	return _.map(_.range(rows[keys[0]].length), i => _.object(keys, _.map(keys, k => rows[k][i])));
+	return _.times(rows[keys[0]].length, i => _.object(keys, _.map(keys, k => rows[k][i])));
 }
 
 // {:sampleid ["id0", "id1", ...], chromstart: [123, 345...], ...}

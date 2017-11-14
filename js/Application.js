@@ -47,8 +47,7 @@ var Application = React.createClass({
 	},
 	onFilter: function (matches) {
 		var {callback, state: {cohortSamples}} = this.props,
-			allSamples = _.flatten(cohortSamples),
-			matching = _.map(matches, i => allSamples[i]);
+			matching = _.map(matches, i => cohortSamples[i]);
 		callback(['sampleFilter', 0 /* cohort */, matching]);
 	},
 	onFilterZoom: function (samples, matches) {
@@ -59,16 +58,15 @@ var Application = React.createClass({
 		callback(['zoom', {index, height, count: last - index + 1}]);
 	},
 	onFilterColumn: function (matches, columnLabel, fieldLabel) {
-		var {state: {datasets, cohortSamples, sampleSearch}, callback} = this.props,
-			allSamples = _.flatten(cohortSamples),
-			matching = _.map(matches, i => allSamples[i]),
+		var {state: {cohortSamples, sampleSearch}, callback} = this.props,
+			matching = _.map(matches, i => cohortSamples[i]),
 			field = signatureField(`${fieldLabel ? fieldLabel : sampleSearch}`, {
 				columnLabel: columnLabel ? columnLabel : 'filter',
 				valueType: 'coded',
 				filter: sampleSearch,
 				signature: ['in', matching]
 			}),
-			colSpec = getColSpec([field], datasets),
+			colSpec = getColSpec([field], []),
 			settings = _.assoc(colSpec,
 					'width', 136,
 					'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
@@ -146,8 +144,7 @@ var Application = React.createClass({
 					</Grid>
 					{_.getIn(state, ['km', 'id']) ? <KmPlot
 							callback={callback}
-							km={state.km}
-							features={state.features} /> : null}
+							km={state.km} /> : null}
 					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
 				</div>
 			</div>

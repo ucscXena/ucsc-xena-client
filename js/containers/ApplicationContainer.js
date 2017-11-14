@@ -8,8 +8,6 @@ var ChartView = require('../ChartView');
 var Column = require('../views/Column');
 var _ = require('../underscore_ext');
 var kmModel = require('../models/km');
-var {lookupSample} = require('../models/sample');
-var {xenaFieldPaths} = require('../models/fieldSpec');
 var {rxEventsMixin} = require('../react-utils');
 var Rx = require('../rx');
 // Spreadsheet options
@@ -66,24 +64,6 @@ function getFieldFormat(uuid, columns, data) {
 	}
 }
 
-var getLabel = _.curry((datasets, dsID) => {
-	var ds = datasets[dsID];
-	return ds.label || ds.name;
-});
-
-var getMetaData = _.curry((datasets, dsID) => {
-	var ds = datasets[dsID];
-	return ds;
-});
-
-function datasetMeta(column, datasets) {
-	return {
-		dsIDs: _.map(xenaFieldPaths(column), p => _.getIn(column, [...p, 'dsID'])),
-		label: getLabel(datasets),
-		metadata: getMetaData(datasets),
-	};
-}
-
 var columnsWrapper = c => addHelp(addTooltip(addWizardColumns(addColumnAdd(addLegend(makeSortable(addVizEditor(c)))))));
 var Spreadsheet = getSpreadsheet(columnsWrapper);
 // XXX without tooltip, we have no mouse pointer. Should make the wrapper add the css
@@ -113,24 +93,20 @@ var ApplicationContainer = React.createClass({
 		this.highlight.unsubscribe();
 	},
 	supportsGeneAverage(uuid) { // XXX could be precomputed in a selector
-		var {columns} = this.props.state;
+		var {spreadsheet: {columns}} = this.props.state;
 		return supportsGeneAverage(_.get(columns, uuid));
 	},
 	disableKM(uuid) { // XXX could be precomputed in a selector
-		var {columns, features, km} = this.props.state;
+		var {spreadsheet: {columns}, wizard: {features}, km} = this.props.state;
 		return disableKM(_.get(columns, uuid), features, km);
 	},
 	fieldFormat: function (uuid) {
-		var {columns, data} = this.props.state;
+		var {spreadsheet: {columns, data}} = this.props.state;
 		return getFieldFormat(uuid, columns, data);
 	},
 	sampleFormat: function (index) {
-		var {cohortSamples} = this.props.state;
-		return lookupSample(cohortSamples, index);
-	},
-	datasetMeta: function (uuid) {
-		var {columns, datasets} = this.props.state;
-		return datasetMeta(_.get(columns, uuid), datasets);
+		var {spreadsheet: {cohortSamples}} = this.props.state;
+		return _.get(cohortSamples, index);
 	},
 	// raw (before selector) state
 	getState: function () {
@@ -155,7 +131,7 @@ var ApplicationContainer = React.createClass({
 	render() {
 		let {state, selector, callback} = this.props,
 			computedState = selector(state),
-			{mode} = computedState,
+			{spreadsheet: {mode}} = computedState,
 			stepperState = getStepperState(computedState),
 			View = {
 				heatmap: SpreadsheetContainer,
@@ -173,7 +149,7 @@ var ApplicationContainer = React.createClass({
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
 					onImport={this.onImport}
-					state={computedState}
+					state={computedState.spreadsheet}
 					callback={callback}>
 				<View
 					stepperState={stepperState}
@@ -182,8 +158,8 @@ var ApplicationContainer = React.createClass({
 					disableKM={this.disableKM}
 					fieldFormat={this.fieldFormat}
 					sampleFormat={this.sampleFormat}
-					datasetMeta={this.datasetMeta}
-					appState={computedState}
+					appState={computedState.spreadsheet}
+					wizard={computedState.wizard}
 					callback={callback}/>
 			</Application>);
 	}

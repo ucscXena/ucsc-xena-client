@@ -19,7 +19,7 @@ function bysize(n, sizes, total) {
 }
 
 function equally(n, m) {
-	var starts = _.map(_.range(m), i => Math.round(i * n / m));
+	var starts = _.times(m, i => Math.round(i * n / m));
 	return _.map(starts, (s, i) => (i === m - 1 ? n : starts[i + 1]) - s);
 }
 

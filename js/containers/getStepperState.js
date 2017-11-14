@@ -3,7 +3,7 @@
 // maybe should put this in appSelector
 
 module.exports = ({cohort, columnOrder}) => {
-	if (cohort.length === 0) {
+	if (cohort == null) {
 		return 'COHORT';
 	}
 	if (columnOrder.length === 1) { // sample column

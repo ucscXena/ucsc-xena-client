@@ -1,7 +1,6 @@
 'use strict';
 var React = require('react');
-import {MenuItem, MenuDivider } from 'react-toolbox/lib/menu';
-var _ = require('../underscore_ext');
+import {MenuItem} from 'react-toolbox/lib/menu';
 var xenaQuery = require('../xenaQuery'); // XXX does this belong here?
 
 function onAbout(dsID, root) {
@@ -13,18 +12,8 @@ function onAbout(dsID, root) {
 var getAbout = (dsID, root, text) => (
 	<MenuItem key={dsID} onClick={() => onAbout(dsID, root)} caption={text}/>);
 
-function aboutDatasetMenu({dsIDs, label}, root = '..') {
-	if (dsIDs.length === 0) {
-		return null;
-	} else if (dsIDs.length === 1) {
-		return getAbout(dsIDs[0], root, 'About the Dataset');
-	}
-	return [
-		<MenuDivider key='d0'/>,
-		<MenuItem key='header' header caption='About the Datasets'/>,
-		..._.map(dsIDs, dsID => getAbout(dsID, label(dsID))),
-		<MenuDivider key='d1'/>
-	];
+function aboutDatasetMenu(dsID, root = '..') {
+	return dsID ? getAbout(dsID, root, 'About the Dataset') : null;
 }
 
 module.exports = aboutDatasetMenu;

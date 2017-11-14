@@ -5,7 +5,6 @@ var {createSelectorCreator, defaultMemoize} = require('reselect');
 var {createFmapSelector} = require('./selectors');
 var widgets = require('./columnWidgets');
 var km = require('./models/km');
-var {lookupSample} = require('./models/sample');
 var {searchSamples} = require('./models/searchSamples');
 var isPublicSelector = require('./isPublicSelector');
 
@@ -36,7 +35,7 @@ var sortSelector = createSelector(
 	state => state.data,
 	state => state.index,
 	(cohortSamples, columns, columnOrder, data, index) => {
-		var getSampleID = lookupSample(cohortSamples),
+		var getSampleID = i => _.get(cohortSamples, i),
 			order = columnOrder.slice(1), // skip 'samples' in sort
 			cmpFns = _.fmap(columns,
 				(c, id) => invert(c.sortDirection, widgets.cmp(columns[id], data[id], index[id]))),
@@ -46,7 +45,7 @@ var sortSelector = createSelector(
 				_.findValue(order, id => cmpFns[id](s1, s2)) ||
 					cmpString(getSampleID(s1), getSampleID(s2));
 
-		return _.range(_.get(cohortSamples, 0, []).length).slice(0).sort(cmpFn);
+		return _.range((cohortSamples || []).length).sort(cmpFn);
 	}
 );
 
@@ -61,7 +60,6 @@ var transformSelector = createFmapSelector(
 				_.getIn(column, ['vizSettings']),
 				state.data[key],
 				state.samples,
-				state.datasets,
 				state.index[key]]),
 		_.apply(widgets.transform));
 
@@ -70,7 +68,7 @@ var avgSelector = createFmapSelector(
 			(column, key) => [
 				_.omit(column, 'user'), // Review column schema + widget.avg.
 				state.data[key],
-				_.getIn(state.cohortSamples, [0, 'length'], 0),
+				_.get(state.cohortSamples, 'length', 0),
 				state.index[key]]),
 		_.apply(widgets.avg));
 
@@ -116,6 +114,9 @@ var kmGroups = state => ({...state, km: {
 	...state.km,
 	groups: kmSelector(state)}});
 
+var spreadsheetSelector = selector =>
+		state => _.updateIn(state, ['spreadsheet'], selector);
+
 ///////
 // This is the main transform ('selector') of the application state, before passing to the view.
 // We build indexes of the column data, sort samples by the column data, transform
@@ -126,4 +127,4 @@ var kmGroups = state => ({...state, km: {
 
 var selector = state => kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state))))))));
 
-module.exports = selector;
+module.exports = spreadsheetSelector(selector);

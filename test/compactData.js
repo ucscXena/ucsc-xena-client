@@ -19,7 +19,7 @@ function property(name, ...args) {
     });
 }
 
-describe('datasetJoins', function () {
+describe('compactData', function () {
 	describe('compactState', function () {
 		var segment = record({
 				start: uint32,
@@ -30,7 +30,7 @@ describe('datasetJoins', function () {
 			rows = array(segment);
 		property('expandState(compactState(x)) is identity',
 			rows, function (rows) {
-				var state = {
+				var spreadsheet = {
 					columns: {
 						a: {fieldType: 'segmented'},
 						b: {fieldType: 'blah'}
@@ -51,7 +51,7 @@ describe('datasetJoins', function () {
 							}
 						}
 					}
-				};
+				}, state = {spreadsheet};
 				assert.deepEqual(state, expandState(compactState(state)));
 				return true;
 			});

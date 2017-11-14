@@ -137,7 +137,7 @@ function groupsByScale(arr, scale) {
 	var domains = scale.domain(),
 		domainGroupBy = _.groupBy(arr, v => _.findIndexDefault(domains, d => v < d, domains.length));
 
-	return _.range(domains.length + 1).map(i => domainGroupBy[i] || []);
+	return _.times(domains.length + 1, i => domainGroupBy[i] || []);
 }
 
 var regionColorMethods = {
@@ -150,7 +150,7 @@ var regionColorMethods = {
 			groupCounts = domainGroups.map(vs => vs.length),
 			total = _.sum(groupCounts);
 			// blend colors via rms
-			return _.any(groupColors) ? _.range(3).map(ch =>
+			return _.any(groupColors) ? _.times(3, ch =>
 					~~Math.sqrt(_.sum(_.mmap(groupColors, groupCounts,
 						(rgb, n) => rgb == null ? 0 : rgb[ch] * rgb[ch] * n / total)))) : null;
 	}

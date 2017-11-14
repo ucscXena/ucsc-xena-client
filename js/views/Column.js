@@ -187,7 +187,7 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 		}
 	});
 
-	var foundCohort = _.find(cohort, c => (c.name.search(/^TCGA/) !== -1 || c.name === "Treehouse public expression dataset (July 2017)"));
+	var foundCohort = cohort.name.search(/^TCGA/) !== -1 || cohort.name === "Treehouse public expression dataset (July 2017)" ? cohort : undefined;
 
 	if (!foundCohort || !foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
 		_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1)) {
@@ -421,10 +421,8 @@ var Column = React.createClass({
 			data = _.getIn(this.props, ['data']),
 			valueType = _.getIn(this.props, ['column', 'valueType']),
 			fieldType = _.getIn(this.props, ['column', 'fieldType']),
-			datasetMeta = _.getIn(this.props, ['datasetMeta']),
-			columnid = _.getIn(this.props, ['id']),
 			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout,
-			customColor = datasetMeta(columnid).metadata(fieldSpecs.dsID).customcolor;
+			customColor = this.column.dataset.customcolor;
 
 		var ds = JSON.parse(fieldSpecs.dsID),
 			hub = ds.host,
@@ -462,11 +460,11 @@ var Column = React.createClass({
 	},
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
-				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
+				zoom, data, fieldFormat, sampleFormat, disableKM, searching,
 				supportsGeneAverage, onClick, tooltip, wizardMode, onReset,
 				interactive, append} = this.props,
 			{specialDownloadMenu} = this.state,
-			{width, columnLabel, fieldLabel, user} = column,
+			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
 				onSpecialDownload, supportsGeneAverage, specialDownloadMenu}),
@@ -525,7 +523,7 @@ var Column = React.createClass({
 										caption='Kaplan Meier Plot'/>
 										<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
 										<MenuItem onClick={this.onDownload} caption='Download'/>
-										{aboutDatasetMenu(datasetMeta(id))}
+										{aboutDatasetMenu(_.get(dataset, 'dsID'))}
 										<MenuItem onClick={this.onViz} caption='Display Setting'/>
 										<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
 										<MenuItem onClick={this.onRemove} caption='Remove'/>

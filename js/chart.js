@@ -14,9 +14,9 @@ var jStat = require('jStat').jStat;
 // Styles
 var compStyles = require('./chart.module.css');
 
-var getCustomColor = (fieldSpecs, fields, datasets) =>
-	(fieldSpecs.length === 1 && fields.length === 1) ?
-		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', fieldSpecs[0].fields[0]], null) : null;
+var getCustomColor = (fieldSpecs, fields, dataset) =>
+	fields.length === 1 ?
+		_.getIn(dataset, ['customcolor', fieldSpecs[0].fields[0]], null) : null;
 
 var chartHeight = () =>
 	window.innerHeight * 0.7 + "px";
@@ -486,7 +486,7 @@ function render(root, callback, sessionStorage) {
 		offsets, xlabel, ylabel, STDEV,
 		scatterLabel, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
-		columns, datasets, xcolumn, ycolumn, colorColumn) {
+		columns, xcolumn, ycolumn, colorColumn) {
 		var yIsCategorical = ycodemap ? true : false,
 			xIsCategorical = xcodemap ? true : false,
 			chartOptions = _.clone(highchartsHelper.chartOptions),
@@ -511,7 +511,7 @@ function render(root, callback, sessionStorage) {
 		document.getElementById("myChart").innerHTML = "Generating chart ...";
 
 		chartOptions.subtitle = {
-			text: "cohort: " + _.pluck(cohort, 'name').join(' / ') + " (n=" + samplesLength + ")"
+			text: "cohort: " + _.get(cohort, 'name') + " (n=" + samplesLength + ")"
 		};
 
 		if (xIsCategorical && !yIsCategorical) { // x : categorical y float
@@ -643,7 +643,7 @@ function render(root, callback, sessionStorage) {
 				}
 			};
 
-			customColors = getCustomColor(columns[xcolumn].fieldSpecs, columns[xcolumn].fields, datasets);
+			customColors = getCustomColor(columns[xcolumn].fieldSpecs, columns[xcolumn].fields, columns[xcolumn].dataset);
 
 			xcodemap.forEach(function (code, i) {
 				colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length];
@@ -896,7 +896,7 @@ function render(root, callback, sessionStorage) {
 			var ycategories = Object.keys(ybinnedSample);
 
 			//code
-			customColors = getCustomColor(columns[ycolumn].fieldSpecs, columns[ycolumn].fields, datasets);
+			customColors = getCustomColor(columns[ycolumn].fieldSpecs, columns[ycolumn].fields, columns[ycolumn].dataset);
 
 			ycodemap.map((code, i) =>
 				colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length]);
@@ -968,7 +968,7 @@ function render(root, callback, sessionStorage) {
 
 			chart.redraw();
 		} else { // x y float scatter plot
-			var sampleLabels = _.flatten(cohortSamples),
+			var sampleLabels = cohortSamples,
 				x, y;
 
 			chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, samplesLength);
@@ -1093,7 +1093,7 @@ function render(root, callback, sessionStorage) {
 
 				//add multi-series data
 				if (colorColumn !== "none") {
-					customColors = getCustomColor(columns[colorColumn].fieldSpecs, columns[colorColumn].fields, datasets);
+					customColors = getCustomColor(columns[colorColumn].fieldSpecs, columns[colorColumn].fields, columns[colorColumn].dataset);
 				}
 
 				_.keys(multiSeries).map(colorCode=>{
@@ -1155,7 +1155,7 @@ function render(root, callback, sessionStorage) {
 		var xcolumn, ycolumn, colorColumn,
 			xfields,
 			xlabel, ylabel,
-			columns, datasets,
+			columns,
 			normUI = document.getElementById("ynormalization"),
 			expUI = document.getElementById("yExponentiation"),
 			XdropDownDiv = document.getElementById("Xaxis"),
@@ -1176,7 +1176,6 @@ function render(root, callback, sessionStorage) {
 				"expState": expState
 			};
 			columns = xenaState.columns;
-			datasets = xenaState.datasets;
 			setStorage(xenaState);
 		}
 
@@ -1316,7 +1315,7 @@ function render(root, callback, sessionStorage) {
 				yfields, ycodemap, ydata, reverseStrand,
 				offsets, xlabel, ylabel, STDEV,
 				scatterLabel, scatterColorData, scatterColorDataCodemap,
-				samplesMatched, columns, datasets, xcolumn, ycolumn, colorColumn);
+				samplesMatched, columns, xcolumn, ycolumn, colorColumn);
 
 			//offset
 			if (yNormalization === "subset" || yNormalization === "subset_stdev") {
