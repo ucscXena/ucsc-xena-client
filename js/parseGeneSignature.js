@@ -11,7 +11,7 @@ function parse(str) {
 		return;
 	}
 	try {
-		var list = parser(str.slice(1));
+		var list = parser(str.slice(1).trim());
 		return {
 			weights: pluck(list, 0),
 				genes: pluck(list, 1)
