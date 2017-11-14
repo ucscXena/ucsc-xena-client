@@ -78,7 +78,7 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 	// My god, this is a disaster.
 	if (sig) {
 		let {missing, genes, weights} = sigFields(fields, sig),
-			missingLabel = missing ? ` (missing terms: ${missing.join(', ')})` : '';
+			missingLabel = _.isEmpty(missing) ? '' : ` (missing terms: ${missing.join(', ')})`;
 		return signatureField('signature' + missingLabel, {
 			signature: ['geneSignature', dsID, genes, weights],
 			missing,
