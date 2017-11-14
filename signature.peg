@@ -1,0 +1,27 @@
+// Simgle pegjs weighted gene signature parser.
+// Allows bare gene, signed gene, or weighted, signed gene
+// cul1 cul2
+// 2* cul1 cul2
+// 2* cul1 - cul2
+
+Signature
+  = head:Term tail:(_ Term)* {
+      return tail.reduce(function(acc, element) {
+        acc.push(element[1]);
+        return acc;
+      }, [head]);
+    }
+
+Term = SignedGene
+
+SignedGene = sign:[+-]? _ gene:(Gene / WeightGene) {
+    return sign === '-' ? [-gene[0], gene[1]] : gene
+}
+Gene = gene:[a-zA-Z][-a-zA-Z0-9]* { return [1, text()]; }
+WeightGene = weight: Number _ "*" _ gene:Gene {return [weight, gene[1]];}
+
+Number "number"
+  = _ [0-9]+([.][0-9]*)? { return parseFloat(text()); }
+
+_ "whitespace"
+  = [ \t\n\r]*
