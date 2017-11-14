@@ -71,7 +71,7 @@ var AppControls = React.createClass({
 		var {sampleFormat} = this.props,
 			{samples, columns, columnOrder, index, data} = this.props.appState,
 			// only download rectangular data
-			rectData = columnOrder.filter(id => _.contains(['float', 'coded', 'segmented'], columns[id].valueType)),
+			rectData = columnOrder.filter(id => _.contains(['float', 'coded', 'segmented'], columns[id].valueType) && _.getIn(data, [id, 'status']) === 'loaded'),
 			// Each dataset is two element array: [headers, [rows]]
 			datasets = rectData.map(id =>
 				widgets.download({samples, column: columns[id], index: index[id], data: data[id], sampleFormat})),
