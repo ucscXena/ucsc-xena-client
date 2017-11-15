@@ -13,7 +13,7 @@ var assert = require('assert');
 
 var AGenomicDsID = JSON.stringify({
 	'host': 'https:tcga.xenahubs.net',
-	'name': 'TCGA.ACC.sampleMap/Gistic2_CopyNumber_Gistic2_all_data_by_genes'
+	'name': 'TCGA.ACC.sampleMap/HumanMethylation450'
 });
 
 var AClinicalDsID = JSON.stringify({
