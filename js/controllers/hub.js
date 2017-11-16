@@ -26,8 +26,7 @@ var controls = {
 	'enable-host': (state, host, list) =>
 		setServersChangedIfUser(list, _.assocIn(state, ['servers', host, list], true)),
 	'disable-host': (state, host, list) =>
-		setServersChangedIfUser(list, _.assocIn(state, ['servers', host, list], false)),
-	 cohort: (state, cohort) => _.assoc(state, 'cohortPending', {name: cohort})
+		setServersChangedIfUser(list, _.assocIn(state, ['servers', host, list], false))
 };
 
 module.exports = mount(make(controls), ['spreadsheet']);
