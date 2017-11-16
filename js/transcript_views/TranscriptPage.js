@@ -7,8 +7,8 @@ const ExonsOnly = require('./ExonsOnly');
 var {DensityPlot, bottomColor, topColor, plotWidth} = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
-import '../../css/transcript_css/transcriptPage.css';
 var nav = require('../nav');
+var styles = require('./TranscriptPage.module.css');
 
 /*
 var defaultGene = 'KRAS';
@@ -31,9 +31,10 @@ var Transcripts = React.createClass({
 	},
 
 	componentDidMount () {
-	//	if (!this.props.state.transcripts) {
-	//		this.props.callback(['loadGene', defaultGene, defaultStudyA, defaultSubtypeA, defaultStudyB, defaultSubtypeB, defaultUnit]);
-	//	}
+		var {onImport, props: {getState, state: {isPublic}}} = this;
+
+		// nested render to different DOM tree
+		nav({isPublic, getState, onImport, onNavigate: this.onNavigate, activeLink: 'transcripts'});
 	},
 
 	onLoadData() {
@@ -62,15 +63,12 @@ var Transcripts = React.createClass({
 		});
 	},
 
-	onImport(state) {
-		this.props.callback(['import', state]);
+	onNavigate(page) {
+		this.props.callback(['navigate', page]);
 	},
 
-	componentDidUpdate() {
-		var {onImport, props: {getState, state: {isPublic}}} = this;
-
-		// nested render to different DOM tree
-		nav({isPublic, getState, onImport});
+	onImport(state) {
+		this.props.callback(['import', state]);
 	},
 
 	render() {
@@ -126,32 +124,32 @@ var Transcripts = React.createClass({
 		var dropdownColor = hasPlots ? "white" : "black";
 
 		return (
-				<div style={{margin: "20px auto", width: "1200px"}}>
-					<a className="selectors" style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
-					<div className="selectors" style={{width: "1200px", height: "80px"}}>
-						<div id="geneBox" style={{float: "left", width: "300px"}}>
+				<div className={styles.main}>
+					<a className={styles.selectors} style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
+					<div className={styles.selectors} style={{width: "1200px", height: "80px"}}>
+						<div className={styles.geneBox} style={{float: "left", width: "300px"}}>
 							<GeneSuggest label="Add Gene (e.g. KRAS)" value={this.state.input}
 								onChange={ value => {this.setState({input: value, updateButton: true});} }/>
 						</div>
 						{this.state.updateButton ?
-							<button className="horizontalSegmentButton" onClick={this.onLoadData}>Update Gene</button> : null
+							<button className={styles.horizontalSegmentButton} onClick={this.onLoadData}>Update Gene</button> : null
 						}
 					</div>
 					<div style={{width: "1200px", marginBottom: "40px"}}>
 						<div style={{"margin-bottom": "10px"}}>
-							<span className="selectors">Study A</span>
+							<span className={styles.selectors}>Study A</span>
 							<select ref="A" onChange={this.onLoadData} value={valueA}
 								style={{color: dropdownColor, backgroundColor: dropdownBackgroundColorTop}}>
 								{options}
 							</select>
-							<span className="selectors">Study B</span>
+							<span className={styles.selectors}>Study B</span>
 							<select ref="B" onChange={this.onLoadData} value={valueB}
 								style={{color: dropdownColor, backgroundColor: dropdownBackgroundColorBottom}}>
 								{options}
 							</select>
 						</div>
 						<div>
-							<span className="selectors">Expression Unit</span>
+							<span className={styles.selectors}>Expression Unit</span>
 							<select ref="unit" onChange={this.onLoadData} value={unit}>
 								<option value="tpm">{unitLabels.tpm.dropdown}</option>
 								<option value="isoformPercentage">{unitLabels.isoformPercentage.dropdown}</option>
@@ -161,22 +159,22 @@ var Transcripts = React.createClass({
 
 					{ hasPlots ?
 						<div>
-							<div className="densityplot--label-div-zero">
-								<label className="densityplot--label-zero">no expression</label>
+							<div className={styles["densityplot--label-div-zero"]}>
+								<label className={styles["densityplot--label-zero"]}>no expression</label>
 							</div>
-							<div className="densityplot--label-div--zoom" onClick={this.scaleZoom}>
+							<div className={styles["densityplot--label-div--zoom"]} onClick={this.scaleZoom}>
 								<label style={{fontSize: "0.85em", width: plotWidth}}>{unitLabels[unit].axis}</label>
 								<div>
 									{ densityplotAxisLabel.map((label, i) => {
 										return (
 											<div>
-												<label className="densityplot--label-x" style={{left: `${(label - min) * plotWidth / range}px`}}>{label}{(unit === "isoformPercentage" && i === densityplotAxisLabel.length - 1) ? "%" : "" }</label>
-												<div className="densityplot--label-vertical-tick" style={{left: `${(label - min) * plotWidth / range}px`}}/>
+												<label className={styles["densityplot--label-x"]} style={{left: `${(label - min) * plotWidth / range}px`}}>{label}{(unit === "isoformPercentage" && i === densityplotAxisLabel.length - 1) ? "%" : "" }</label>
+												<div className={styles["densityplot--label-vertical-tick"]} style={{left: `${(label - min) * plotWidth / range}px`}}/>
 											</div>);
 										})
 									}
 								</div>
-								<div className="densityplot--label--axis-x"/>
+								<div className={styles["densityplot--label--axis-x"]}/>
 							</div>
 							<div style={{width: "100%", height: "35px"}}></div>
 						</div> : null
@@ -195,12 +193,13 @@ var Transcripts = React.createClass({
 						getNameZoom={this.onZoom}
 						/>
 						{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
-							<label className="densityplot--label-y">density</label> : null
+							<label className={styles["densityplot--label-y"]}>density</label> : null
 						}
 					<ExonsOnly
 						data={transcriptExonData}
 						getNameZoom={this.onZoom}
 					/>
+					<div style={{clear: 'both'}}></div>
 					{/* <DensityPlot
 						data={transcriptDensityData}
 						type="histogram"
@@ -214,7 +213,7 @@ var Transcripts = React.createClass({
 
 var TranscriptsContainer = React.createClass({
 	getState() {
-		return _.pick(this.props.state, 'version', 'transcripts');
+		return _.pick(this.props.state, 'version', 'page', 'transcripts');
 	},
 	render() {
 		var {state, selector, ...props} = this.props;

@@ -13,8 +13,11 @@ require('./models/mutationVector');
 require('./models/segmented');
 var uiController = require('./controllers/ui');
 var serverController = require('./controllers/server');
+var hubController = require('./controllers/hub');
+var transcriptController = require('./controllers/transcripts');
 require('bootstrap/dist/css/bootstrap.css');
-var Application = require('./containers/ApplicationContainer');
+//var Application = require('./containers/ApplicationContainer');
+var PageContainer = require('./containers/PageContainer');
 var selector = require('./appSelector');
 var {compose} = require('./controllers/utils');
 var shimComposite = require('./controllers/shimComposite').controller;
@@ -51,6 +54,6 @@ var store = createStore();
 var main = window.document.getElementById('main');
 
 // XXX reducer
-var controller = shimComposite(compose(serverController, uiController));
+var controller = shimComposite(compose(serverController, uiController, hubController, transcriptController));
 
-connector({...store, controller, main, selector, Page: Application, persist: true, history: false});
+connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});

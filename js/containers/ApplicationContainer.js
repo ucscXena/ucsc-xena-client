@@ -110,7 +110,7 @@ var ApplicationContainer = React.createClass({
 	},
 	// raw (before selector) state
 	getState: function () {
-		return _.pick(this.props.state, 'version', 'spreadsheet');
+		return _.pick(this.props.state, 'version', 'page', 'spreadsheet');
 	},
 	onWizardMode(mode) {
 		this.props.callback(['wizardMode', mode]);
@@ -123,6 +123,9 @@ var ApplicationContainer = React.createClass({
 	},
 	onResetSampleFilter: function () {
 		this.props.callback(['sampleFilter', 0 /* index into composite cohorts */, null]);
+	},
+	onNavigate(page) {
+		this.props.callback(['navigate', page]);
 	},
 	onImport(state) {
 		this.props.callback(['import', state]);
@@ -148,6 +151,7 @@ var ApplicationContainer = React.createClass({
 					onHighlightChange={this.on.highlightChange}
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
+					onNavigate={this.onNavigate}
 					onImport={this.onImport}
 					state={computedState.spreadsheet}
 					callback={callback}>

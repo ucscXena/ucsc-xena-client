@@ -107,6 +107,6 @@ module.exports = function({
 	}
 
 	// Kick things off.
-	uiBus.next(['init', urlParams()]);
+	uiBus.next(['init', location.pathname, urlParams()]);
 	return dom;
 };

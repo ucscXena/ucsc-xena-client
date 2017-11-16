@@ -13,7 +13,6 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 var _ = require('./underscore_ext');
-var config = require('./config');
 import AppBar from 'react-toolbox/lib/app_bar';
 import Navigation from 'react-toolbox/lib/navigation';
 import {ThemeProvider} from 'react-css-themr';
@@ -31,10 +30,10 @@ var logoSantaCruz3xImg = require('../images/logoSantaCruz@3x.png');
 
 // Locals
 var links = [
-	{href: '../datapages/', label: 'Data Sets'},
-	{href: '../heatmap/', label: 'Visualization'},
-	{href: '../transcripts/', label: 'Transcripts'},
-	{href: '../hub/', label: 'Data Hubs'},
+	{label: 'Data Sets', nav: 'datapages'},
+	{label: 'Visualization', nav: 'heatmap'},
+	{label: 'Transcripts', nav: 'transcripts'},
+	{label: 'Data Hubs', nav: 'hub'},
 	// {href: 'https://genome-cancer.ucsc.edu/download/public/get-xena/index.html', label: 'Local Xena'},
 	{href: 'http://xena.ucsc.edu/private-hubs/', label: 'View My Data'},
 	{href: 'http://xena.ucsc.edu/xena-python-api/', label: 'Python'},
@@ -45,20 +44,18 @@ var helpLink = {
 	label: 'Help'
 };
 
-var active = (l, activeTab) => l.label === activeTab;
+var active = (l, activeLink) => l.nav === activeLink;
 
 var XenaNav = React.createClass({
-	getInitialState: function () {
-		let path = window.location.pathname.slice(config.baseurl.length - 1),
-			defaultLink = _.find(links, l => l.label === 'Visualization'),
-			activeLink = path === "/" ? defaultLink : (_.find(links, l => l.href.includes(path)) || defaultLink);
-		return {activeTab: activeLink.label};
+	onClick(nav) {
+		this.props.onNavigate(nav);
 	},
 	render: function () {
-		let {activeTab} = this.state,
-			{isPublic, getState, onImport} = this.props;
+		let {isPublic, activeLink, getState, onImport} = this.props;
 		let routes = _.map(links, l => {
-			return {...l, active: active(l, activeTab)};
+			var {nav, ...others} = l,
+			onClick = nav ? () => this.onClick(nav) : undefined;
+			return {...l, onClick, active: active(l, activeLink)};
 		});
 		let logoSrcSet = `${logoSantaCruz2xImg} 2x, ${logoSantaCruz3xImg} 3x`;
 		return (

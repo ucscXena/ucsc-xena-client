@@ -1,10 +1,8 @@
 'use strict';
 
 require('./base');
-var controller = require('./controllers/hub');
 var React = require('react');
-var connector = require('./connector');
-var createStore = require('./store');
+var Rx = require('./rx');
 import {ThemeProvider} from 'react-css-themr';
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
 var appTheme = require('./appTheme');
@@ -22,8 +20,6 @@ var {serverNames} = require('./defaultServers');
 var styles = require('./hubPage.module.css');
 var {parseServer} = require('./hubParams');
 var nav = require('./nav');
-
-nav();
 
 var RETURN = 13;
 
@@ -47,13 +43,20 @@ var Hub = React.createClass({
 			ping: {}
 		};
 	},
+	onNavigate(page) {
+		this.props.callback(['navigate', page]);
+	},
 	componentDidMount() {
 		// XXX Use a connector to get rid of selector, here.
 		// Or use a sub-component.
 		var {state, selector} = this.props,
 			allHosts = _.keys(selector(state));
 
-		this.sub = allHosts.forEach(h => checkHost(h).subscribe(this.updatePing));
+		nav({activeLink: 'hub', onNavigate: this.onNavigate});
+
+		this.sub = Rx.Observable.from(allHosts.map(checkHost))
+			.mergeAll()
+			.subscribe(this.updatePing);
 	},
 	componentWillUnmount() {
 		this.sub.unsubscribe();
@@ -140,19 +143,15 @@ var Hub = React.createClass({
 	}
 });
 
+var selector = state => state.spreadsheet.servers;
+
 var ThemedHub = React.createClass({
 	render() {
 		return (
 		<ThemeProvider theme={appTheme}>
-			<Hub {...this.props}/>
+			<Hub {...this.props} selector={selector}/>
 		</ThemeProvider>);
 	}
 });
 
-
-var store = createStore();
-var main = window.document.getElementById('main');
-
-var selector = state => state.spreadsheet.servers;
-
-connector({...store, controller, main, selector, Page: ThemedHub, persist: true, history: false});
+module.exports = ThemedHub;

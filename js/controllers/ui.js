@@ -176,8 +176,16 @@ var defaultWidth = viewportWidth => {
 	return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
 };
 
+var getPage = path =>
+	path === '/transcripts/' ? 'transcripts' :
+	path === '/hub/' ? 'hub' :
+	path === '/datapages/' ? 'datapages' :
+	'heatmap';
+
+var setPage = (state, path) => _.assoc(state, 'page', getPage(path));
+
 var controls = {
-	init: (state, params = {}) => {
+	init: (state, pathname = '/', params = {}) => {
 		var wizardUpate = shouldSetCohort(state) || params.hubs ||
 			params.inlineState || state.serversChanged ?
 				clearWizardCohort : _.identity,
@@ -186,7 +194,7 @@ var controls = {
 							resetServersChanged(
 								setLoadingState(
 									setHubs(state, params), params))));
-		return wizardUpate(next);
+		return wizardUpate(setPage(next, pathname));
 	},
 	'init-post!': (serverBus, state, newState, params) => {
 		var bookmark = _.get(params, 'bookmark'),
@@ -225,6 +233,8 @@ var controls = {
 			fetchCohortPhenotype(serverBus);
 		}
 	},
+	navigate: (state, page) => _.assoc(state, 'page', page),
+	'navigate-post!': (serverBus, state, newState, page) => history.pushState({}, '', `/${page}/`),
 	cohort: (state, i, cohort, width) =>
 		clearWizardCohort(
 			_.updateIn(state, ['spreadsheet'], setCohort([{name: cohort}], width))),
@@ -233,7 +243,7 @@ var controls = {
 	cohortReset: state =>
 			clearWizardCohort(
 				_.updateIn(state, ['spreadsheet'], setCohort([], undefined))),
-	'import': (state, newState) => _.has(newState.spreadsheet, 'wizardMode') ?
+	'import': (state, newState) => _.has(newState, 'page') ?
 		clearWizardCohort(_.merge(state, lift(newState))) : _.assocIn(state, ['spreadsheet', 'stateError'], 'import'),
 	'refresh-cohorts': clearWizardCohort,
 	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user

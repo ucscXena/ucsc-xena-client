@@ -40,10 +40,10 @@ var Application = React.createClass({
 //		}
 //	},
 	componentDidUpdate() {
-		var {getState, onImport, state: {isPublic}} = this.props;
+		var {getState, onImport, onNavigate, state: {isPublic}} = this.props;
 
 		// nested render to different DOM tree
-		nav({isPublic, getState, onImport});
+		nav({isPublic, getState, onImport, onNavigate, activeLink: 'heatmap'});
 	},
 	onFilter: function (matches) {
 		var {callback, state: {cohortSamples}} = this.props,
@@ -73,7 +73,7 @@ var Application = React.createClass({
 		callback(['add-column', 0, {id: uuid(), settings}]);
 	},
 	onHideError() {
-		this.props.callback(['stateError', null]);
+		this.props.callback(['stateError', undefined]);
 	},
 //	onSearchIDAndFilterColumn: function (qsamplesList) {
 //		var {state: {samples, cohortSamples}} = this.props,

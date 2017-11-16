@@ -14,7 +14,7 @@ var htmlPlugin = process.argv.indexOf('--disable-html-plugin') === -1 ?
 
 module.exports = {
 	historyApiFallback: true,
-	entry: {datapages: './js/datapages', hubPage: './js/hubPage', heatmap: './js/main', docs: './js/docs', transcripts: './js/transcripts'},
+	entry: {heatmap: './js/main', docs: './js/docs'},
 	output: {
 		path: __dirname + "/build",
 		publicPath: "../",

@@ -3,7 +3,8 @@ var React = require('react');
 var _ = require('../underscore_ext');
 var {allExons, exonGroups, intronRegions} = require('../findIntrons');
 var {box, renderExon} = require('./Exons');
-import '../../css/transcript_css/exons.css';
+var styles = require('./Exons.module.css');
+
 var {deepPureRenderMixin} = require('../react-utils');
 
 const width = 700;
@@ -113,8 +114,8 @@ function drawRows(data, multiplyingFactor, origin, getNameZoom) {
 			transcriptExonShape = exonShape(d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand, origin, d.zoom),
 			allBoxes = _.flatten(_.mmap(d.exonStarts, d.exonEnds, d.labelsAndPad, transcriptExonShape));
 		return (
-			<div className={rowClass} id={index} onClick={() => getNameZoom(d.name)}>
-				<div className="exons--row--axis" style={style}/>
+			<div className={styles[rowClass]} id={index} onClick={() => getNameZoom(d.name)}>
+				<div className={styles["exons--row--axis"]} style={style}/>
 				{allBoxes.map(renderExon)}
 			</div>);
 	});
@@ -135,7 +136,7 @@ var ExonsOnly = React.createClass({
 			multiplyingFactor = exonGroupsWidth / (maxEnd - origin),
 			rows = drawRows(newData, multiplyingFactor, origin, this.props.getNameZoom);
 		return (
-				<div className="exons">
+				<div className={styles.exons}>
 					{rows}
 				</div>);
 	}

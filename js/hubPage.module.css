@@ -13,16 +13,17 @@
 /* Hub page container - add padding to match vis container */
 .hubPage {
 	padding: 48px;
+	line-height: 1.15; /* bootstrap is messing with this */
 }
 
 /* Hub list */
-ul {
+.hubPage ul {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
-li {
+.hubPage li {
 	align-items: center;
 	border-bottom: 1px solid black6;
 	display: flex;
@@ -32,11 +33,11 @@ li {
 }
 
 /* All immediate children in hub list element */
-li > * {
+.hubPage li > * {
 	margin: 0 8px;
 }
 
-li:not(:last-child):hover { /* No hover on last list element (ie add host form) */
+.hubPage li:not(:last-child):hover { /* No hover on last list element (ie add host form) */
 	background-color: black3;
 }
 
@@ -74,12 +75,12 @@ li:not(:last-child):hover { /* No hover on last list element (ie add host form) 
 	flex: 1;
 }
 
-a {
+.hubPage a {
 	color: var(--color-accent);
 	transition: color 200ms linear;
 }
 
-a:hover {
+.hubPage a:hover {
 	color: var(--color-primary-contrast);
 }
 
@@ -90,7 +91,7 @@ a:hover {
 	transition: opacity 100ms linear;
 }
 
-li:hover .remove {
+.hubPage li:hover .remove {
 	opacity: 1;
 }
 
@@ -98,7 +99,10 @@ li:hover .remove {
 .hostForm {
 	align-items: center;
 	display: flex;
-	margin-left: 158px; /* Align after checkbox and chip of existing hosts */
+	/* After qualifing li with .hubPage, above, it matches before this rule, messing up
+	 * the margin. Adding !important.
+	 */
+	margin-left: 158px !important; /* Align after checkbox and chip of existing hosts */
 }
 
 .input {

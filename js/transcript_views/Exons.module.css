@@ -1,0 +1,90 @@
+.exons {
+	float: left;
+	margin-top: 20px;
+	margin-left: 40px;
+}
+
+.exons--row {
+	height: 71px;
+	width: 700px;
+	position: relative;
+}
+
+.exons--row--zoom {
+	height: 210px;
+	width: 700px;
+	position: relative;
+}
+
+.exons--row--axis {
+	height: 1px;
+	display: inline-block;
+	background-color: #004466;
+	opacity: 1;
+	position: absolute;
+	top: 50%;
+}
+
+.exons--row--item-small {
+	z-index: 1;
+	position: absolute;
+	background-color: #7fa1b2;
+	text-align: center;
+	font-size: 0.70em;
+	height: 17%;
+	top: 42%;
+}
+
+.exons--row--item-small--zoom {
+	z-index: 1;
+	position: absolute;
+	background-color: #7fa1b2;
+	text-align: center;
+	font-size: 0.70em;
+	height: 6.6667%;
+	top: 46.6667%
+}
+
+.exons--row--item-big {
+	z-index: 1;
+	position: absolute;
+	background-color: #004466;
+	text-align: center;
+	font-size: 0.70em;
+	height: 28%;
+	top: 36%;
+}
+
+.exons--row--item-big--zoom {
+	z-index: 1;
+	position: absolute;
+	background-color: #004466;
+	text-align: center;
+	font-size: 0.70em;
+	height: 11.6667%;
+	top: 44.1667%;
+}
+
+.exons--row--item-small span {
+	position: absolute;
+	transform: translate(-50%, 0);
+	bottom: 142.857%;
+}
+
+.exons--row--item-small--zoom span {
+	position: absolute;
+	transform: translate(-50%, 0);
+	bottom: 142.857%;
+}
+
+.exons--row--item-big span {
+	position: absolute;
+	transform: translate(-50%, 0);
+	bottom: 102.041%;
+}
+
+.exons--row--item-big--zoom span {
+	position: absolute;
+	transform: translate(-50%, 0);
+	bottom: 102.041%;
+}

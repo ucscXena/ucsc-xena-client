@@ -146,6 +146,6 @@ module.exports = function({
 
 	// This causes us to always load cohorts on page load. This is important after
 	// setting hubs, for example.
-	uiBus.next(['init', urlParams()]);
+	uiBus.next(['init', location.pathname, urlParams()]);
 	return dom;
 };

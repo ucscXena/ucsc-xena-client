@@ -15,6 +15,7 @@ var Rx = {
 require('rxjs/add/observable/bindCallback');
 require('rxjs/add/observable/defer');
 require('rxjs/add/observable/dom/ajax');
+require('rxjs/add/observable/from');
 require('rxjs/add/observable/fromEvent');
 require('rxjs/add/observable/interval');
 require('rxjs/add/observable/merge');

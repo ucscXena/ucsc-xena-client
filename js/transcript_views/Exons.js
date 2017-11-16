@@ -2,7 +2,7 @@
 var React = require('react');
 var _ = require('../underscore_ext');
 
-import '../../css/transcript_css/exons.css';
+var styles = require('./Exons.module.css');
 var {deepPureRenderMixin} = require('../react-utils');
 
 var width = 700;
@@ -27,7 +27,7 @@ function renderExon(exon) {
 	if(exon.type === 'small')
 	{
 		let boxClass = exon.zoom ? "exons--row--item-small--zoom" : "exons--row--item-small";
-		return (<div className={boxClass}
+		return (<div className={styles[boxClass]}
 						style={style}>
 						<span>{exon.label}</span>
 					</div>);
@@ -35,7 +35,7 @@ function renderExon(exon) {
 	else if(exon.type === 'big')
 	{
 			let boxClass = exon.zoom ? "exons--row--item-big--zoom" : "exons--row--item-big";
-			return (<div className={boxClass}
+			return (<div className={styles[boxClass]}
 							style={style}>
 							<span>{exon.label}</span>
 						</div>);
@@ -89,8 +89,8 @@ var Exons = React.createClass({
 				[d.strand === '-' ? 'right' : 'left']: ((d.txStart - origin) * multiplyingFactor) + "px"
 			};
 
-			return ( <div className="exons--row" id={index}>
-						<div className="exons--row--axis"
+			return ( <div className={styles["exons--row"]} id={index}>
+						<div className={styles["exons--row--axis"]}
 							 style={style}/>
 					{
 						_.flatten(_.mmap(d.exonStarts, d.exonEnds, (exonStarts, exonEnds) => {
@@ -111,7 +111,7 @@ var Exons = React.createClass({
 		let rows = this.row(data, multiplyingFactor, origin);
 
 		return (
-				<div className="exons">
+				<div className={styles.exons}>
 					{rows}
 				</div>
 			);

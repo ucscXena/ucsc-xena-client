@@ -62,21 +62,9 @@ function fetchSubtypes(serverBus) {
 						.map(filterSubtypes)]);
 }
 
-function fetchBookmark(serverBus, bookmark) {
-	serverBus.next(['bookmark', Rx.Observable.ajax({
-		responseType: 'text',
-		method: 'GET',
-		url: `/api/bookmarks/bookmark?id=${bookmark}`,
-	}).map(r => r.response)]);
-}
-
 var controls = {
-	'init-post!': (serverBus, state, newState, params) => {
-		var bookmark = _.get(params, 'bookmark');
+	'init-post!': serverBus => {
 		fetchSubtypes(serverBus);
-		if (bookmark) {
-			fetchBookmark(serverBus, bookmark);
-		}
 	},
 	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) => {
 		var zoom = (state.transcripts && gene === state.transcripts.gene) ? state.transcripts.zoom : {};

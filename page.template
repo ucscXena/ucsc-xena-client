@@ -61,18 +61,6 @@
 	<script type="text/javascript">
 		(function () {
 			var pages = {
-					datapages: {
-						js: "{%=o.htmlWebpackPlugin.files.chunks.datapages.entry%}",
-						css: "{%=o.htmlWebpackPlugin.files.chunks.datapages.css[0]%}"
-					},
-					hub: {
-						js: "{%=o.htmlWebpackPlugin.files.chunks.hubPage.entry%}",
-						css: "{%=o.htmlWebpackPlugin.files.chunks.hubPage.css[0]%}"
-					},
-					transcripts: {
-						js: "{%=o.htmlWebpackPlugin.files.chunks.transcripts.entry%}",
-						css: "{%=o.htmlWebpackPlugin.files.chunks.transcripts.css[0]%}"
-					},
 					{% if (process.env.NODE_ENV !== '"production"') { %}
 					docs: {
 						js: "{%=o.htmlWebpackPlugin.files.chunks.docs.entry%}",

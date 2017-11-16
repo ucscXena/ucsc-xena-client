@@ -2,7 +2,7 @@
 
 var React = require('react');
 var _ = require('../underscore_ext');
-import '../../css/transcript_css/densityPlot.css';
+var styles = require('./DensityPlot.module.css');
 var sc = require('science');
 var {deepPureRenderMixin} = require('../react-utils');
 
@@ -91,21 +91,21 @@ var drawDensityPlot = (min, max, totalWidth, unit, getNameZoom) => (studyA, stud
 		bHeight = calculateHeight(studyB.expB, max, min, height, plotWidth, unit),
 		vscale = Math.max(aHeight.zeroHeight, bHeight.zeroHeight, ...aHeight.yHeights, ...bHeight.yHeights);
 	return (
-		<div className={rowClass} style={{width: `${totalWidth}px`}}onClick={() => getNameZoom(nameAndZoom.name)}>
-			<div className="densityPlot--row--xAxis" style={{width: `${plotWidth * 100 / totalWidth}%`, left: "20px"}}/>
+		<div className={styles[rowClass]} style={{width: `${totalWidth}px`}}onClick={() => getNameZoom(nameAndZoom.name)}>
+			<div className={styles["densityPlot--row--xAxis"]} style={{width: `${plotWidth * 100 / totalWidth}%`, left: "20px"}}/>
 
-			<div className="densityPlot--row--studyA" style={{width: totalWidth}}>
+			<div className={styles["densityPlot--row--studyA"]} style={{width: totalWidth}}>
 				{densitySvg(aHeight, height, totalWidth, vscale, true)}
 			</div>
 
-			<div className="densityPlot--row--studyB" style={{width: totalWidth}}>
+			<div className={styles["densityPlot--row--studyB"]} style={{width: totalWidth}}>
 				{densitySvg(bHeight, height, totalWidth, vscale, false)}
 			</div>
 		</div>);
 };
 
 var histogramRowBin = backgroundColor => freq => (
-	<div className="densityPlot--row--bin"
+	<div className={styles["densityPlot--row--bin"]}
 		style={{
 			height: (freq * 100) + "%",
 			width: (1 / bin * 100) + "%",
@@ -115,14 +115,14 @@ var drawHistogram = (min, max) => (studyA, studyB) => {
 	let freqA = calculateFrequency(studyA.expA, max, min),
 		freqB = calculateFrequency(studyB.expB, max, min);
 	return (
-		<div className="densityPlot--row">
-			<div className="densityPlot--row--xAxis"/>
+		<div className={styles["densityPlot--row"]}>
+			<div className={styles["densityPlot--row--xAxis"]}/>
 
-			<div className="densityPlot--row--studyA">
+			<div className={styles["densityPlot--row--studyA"]}>
 				{freqA.map(histogramRowBin(topColor))}
 			</div>
 
-			<div className="densityPlot--row--studyB">
+			<div className={styles["densityPlot--row--studyB"]}>
 				{freqB.map(histogramRowBin(bottomColor))}
 			</div>
 		</div>);
@@ -139,7 +139,7 @@ var DensityPlot = React.createClass ({
 			drawPlot = (type === 'density' ? drawDensityPlot : drawHistogram)(min, max, totalWidth, unit, getNameZoom),
 			rows = _.mmap(data.studyA, data.studyB, data.nameAndZoom, drawPlot);
 		return (
-			<div className="densityPlot">
+			<div className={styles.densityPlot}>
 				{rows}
 			</div>);
  	}
