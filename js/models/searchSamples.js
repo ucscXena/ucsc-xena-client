@@ -1,7 +1,6 @@
 'use strict';
 
 var _ = require('../underscore_ext');
-var _s = require('underscore.string');
 var {parse} = require('./searchParser');
 //var {shouldNormalize, shouldLog} = require('./denseMatrix');
 
@@ -175,7 +174,7 @@ function searchSamples(search, columns, columnOrder, data, cohortSamples) {
 	let fieldMap = createFieldMap(columnOrder),
 		allSamples = _.range(_.get(cohortSamples, 'length'));
 	try {
-		var exp = parse(_s.trim(search));
+		var exp = parse(search.trim());
 		return evalexp({columns, data, fieldMap, cohortSamples, allSamples}, exp);
 	} catch(e) {
 		console.log('parsing error', e);
@@ -222,7 +221,7 @@ function remapFields(oldOrder, order, exp) {
 		oldFieldMap = _.invert(createFieldMap(oldOrder)),
 		newOrder = _.map(order, uuid => oldFieldMap[uuid]),
 		mapping = _.object(newOrder, fieldIds),
-		tree = parse(_s.trim(exp));
+		tree = parse(exp.trim());
 	return treeToString(remapTreeFields(tree, mapping));
 }
 

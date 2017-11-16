@@ -6,7 +6,6 @@ var CohortOrDisease = require('../views/CohortOrDisease');
 var VariableSelect = require('../views/VariableSelect');
 var GhostVariableSelect = require('../views/GhostVariableSelect');
 var getStepperState = require('./getStepperState');
-var trim = require('underscore.string').trim;
 var {getColSpec} = require('../models/datasetJoins');
 var {defaultColorClass} = require('../heatmapColors');
 var uuid = require('../uuid');
@@ -17,7 +16,7 @@ var {signatureField} = require('../models/fieldSpec');
 
 /*function toWordList(str) {
 	// Have to wrap trim because it takes a 2nd param.
-	return _.filter(_.map(str.split(/,| |\n|\t/), s => trim(s), _.identity));
+	return _.filter(_.map(str.split(/,| |\n|\t/), s => s.trim(), _.identity));
 }*/
 
 var typeWidth = {
@@ -67,8 +66,8 @@ function sigFields(fields, {genes, weights}) {
 // XXX handle position in all genomic datatypes?
 function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
-		pos = parsePos(trim(input), meta.assembly),
-        sig = parseGeneSignature(trim(input)),
+		pos = parsePos(input.trim(), meta.assembly),
+        sig = parseGeneSignature(input.trim()),
 		fieldType = getFieldType(meta, features[dsID], fields, probes),
 		normalizedFields = (
             pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :

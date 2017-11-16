@@ -1,18 +1,17 @@
 'use strict';
 var React = require('react');
 var _ = require('../underscore_ext');
-var _s = require('underscore.string');
 import Input from 'react-toolbox/lib/input';
 var rxEventsMixin = require('../react-utils').rxEventsMixin;
 
 var isValid = _.curry((min, max, value) => {
-	var v = _s.trim(value),
+	var v = value.trim(),
 		i = parseInt(v);
 	return v === '' || !(isNaN(i) || i < min || i > max);
 });
 
 function parseValue(value, dflt) {
-	var v = _s.trim(value);
+	var v = value.trim();
 	return v === '' ? dflt : parseInt(v);
 };
 

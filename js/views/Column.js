@@ -2,7 +2,6 @@
 
 var React = require('react');
 var _ = require('../underscore_ext');
-var s = require('underscore.string');
 var DefaultTextInput = require('./DefaultTextInput');
 var DragSelect = require('./DragSelect');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
@@ -83,14 +82,14 @@ var addIdsToArr = arr => {
 	var list = arr.filter(el => el).map((el, id) => React.cloneElement(el, {id}));
 	return _.isEmpty(list) ? null : list;
 };
-var isIntString = str => !!s.trim(str).replace(/,/g, '').match(/^[0-9]+$/);
-var parseExtendedInt = str => parseInt(s.trim(str).replace(/,/g, ''), 10);
+var isIntString = str => !!str.trim().replace(/,/g, '').match(/^[0-9]+$/);
+var parseExtendedInt = str => parseInt(str.trim().replace(/,/g, ''), 10);
 
 var boundIsValid = _.curry((maxXZoom, str) => {
 	if (!maxXZoom) {
 		return false; // no data
 	}
-	if (s.trim(str) === '') {
+	if (str.trim() === '') {
 		return true;
 	}
 	if (!isIntString(str)) { // must be an int if it's not empty string
@@ -268,8 +267,8 @@ function getPosition(maxXZoom, pStart, pEnd) {
 	}
 	var [start, end] = pStart < pEnd ? [pStart, pEnd] : [pEnd, pStart];
 
-	start = s.trim(start) === '' ? maxXZoom.start : parseExtendedInt(start);
-	end = s.trim(end) === '' ? maxXZoom.end : parseExtendedInt(end);
+	start = start.trim() === '' ? maxXZoom.start : parseExtendedInt(start);
+	end = end.trim() === '' ? maxXZoom.end : parseExtendedInt(end);
 
 	return (maxXZoom.start <= start &&
 			start <= end &&

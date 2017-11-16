@@ -14,7 +14,6 @@ import {Checkbox} from 'react-toolbox/lib/checkbox';
 var typStyles = require('../css/typography.module.css');
 
 var {testHost} = require('./xenaQuery');
-var _s = require('underscore.string');
 var _ = require('./underscore_ext');
 var {serverNames} = require('./defaultServers');
 var styles = require('./hubPage.module.css');
@@ -88,7 +87,7 @@ var Hub = React.createClass({
 	},
 	onAdd() {
 		var target = this.refs.newHost,
-			value = _s.trim(target.value);
+			value = target.value.trim();
 		if (value !== '') {
 			this.props.callback(['add-host', parseServer(value)]);
 			target.value = '';

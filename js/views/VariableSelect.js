@@ -2,7 +2,6 @@
 
 var React = require('react');
 var _ = require('../underscore_ext');
-//var trim = require('underscore.string').trim;
 var XCheckboxGroup = require('./XCheckboxGroup');
 var XRadioGroup = require('./XRadioGroup');
 var WizardCard = require('./WizardCard');
