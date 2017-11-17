@@ -1,0 +1,57 @@
+.datapages {
+	margin-left: auto;
+	width: 80%;
+}
+
+.datapages ul {
+	list-style: none;
+}
+
+.groupList {
+	padding-left: 40px;
+}
+
+.groupList li {
+	margin: 16px 0 16px 0;
+}
+
+.star {
+	color: red;
+}
+
+.link {
+	display: inline;
+}
+
+.dataHubs {
+	float: right;
+}
+
+.sidebar {
+	float: right;
+	width: 20%;
+}
+
+.description {
+	display: block;
+	font-size: 0.8em;
+}
+
+.key {
+	margin: 5px 0 5px 0;
+	width: 150px;
+	display: inline-block;
+}
+
+.header {
+	width: 70%;
+	font-size: 0.9em;
+}
+
+.value {
+	margin: 5px 0 5px 0;
+	width: 70%;
+	display: inline-block;
+	vertical-align: middle;
+	font-size: 0.9em;
+}

@@ -16,6 +16,7 @@ var {remapFields} = require('../models/searchSamples');
 var {fetchInlineState} = require('../inlineState');
 var {lift} = require('./shimComposite');
 var {compose, make, mount} = require('./utils');
+var {JSONToqueryString} = require('../dom_helper');
 
 function fetchBookmark(serverBus, bookmark) {
 	serverBus.next(['bookmark', Rx.Observable.ajax({
@@ -176,13 +177,21 @@ var defaultWidth = viewportWidth => {
 	return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
 };
 
+// XXX This same info appears in Datapages.js, and in various links.
 var getPage = path =>
 	path === '/transcripts/' ? 'transcripts' :
 	path === '/hub/' ? 'hub' :
 	path === '/datapages/' ? 'datapages' :
 	'heatmap';
 
-var setPage = (state, path) => _.assoc(state, 'page', getPage(path));
+// XXX This same info also appears in urlParams.js
+var savedParams = params => _.pick(params, 'dataset', 'hub', 'host', 'cohort');
+var setPage = (state, path, params) =>
+	_.assoc(state,
+			'page', getPage(path),
+			'params', savedParams(params));
+
+var paramList = params => _.isEmpty(params) ? '' : `?${JSONToqueryString(params)}`;
 
 var controls = {
 	init: (state, pathname = '/', params = {}) => {
@@ -194,7 +203,7 @@ var controls = {
 							resetServersChanged(
 								setLoadingState(
 									setHubs(state, params), params))));
-		return wizardUpate(setPage(next, pathname));
+		return wizardUpate(setPage(next, pathname, params));
 	},
 	'init-post!': (serverBus, state, newState, params) => {
 		var bookmark = _.get(params, 'bookmark'),
@@ -233,8 +242,11 @@ var controls = {
 			fetchCohortPhenotype(serverBus);
 		}
 	},
-	navigate: (state, page) => _.assoc(state, 'page', page),
-	'navigate-post!': (serverBus, state, newState, page) => history.pushState({}, '', `/${page}/`),
+	navigate: (state, page, params = {}) => _.assoc(state, 'page', page, 'params', params),
+	'navigate-post!': (serverBus, state, newState, page, params) => history.pushState({}, '', `/${page}/${paramList(params)}`),
+	history: (state, history) => _.isEmpty(history) ? state :
+		_.Let(({page, params = {}} = history) =>
+			_.assoc(state, 'page', page, 'params', params)),
 	cohort: (state, i, cohort, width) =>
 		clearWizardCohort(
 			_.updateIn(state, ['spreadsheet'], setCohort([{name: cohort}], width))),

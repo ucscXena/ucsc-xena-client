@@ -44,6 +44,10 @@ if (module.hot) {
 		var newModule = require('./controllers/server');
 		_.extend(serverController, newModule);
 	});
+	module.hot.accept('./controllers/hub', () => {
+		var newModule = require('./controllers/hub');
+		_.extend(hubController, newModule);
+	});
 	// XXX Note that hot-loading these won't cause a re-render.
 	module.hot.accept('./models/mutationVector', () => {});
 	module.hot.accept('./models/denseMatrix', () => {});

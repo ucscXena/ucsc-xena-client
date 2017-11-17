@@ -201,5 +201,6 @@ module.exports = {
 	setCohort,
 	userServers,
 	updateWizard,
-	clearWizardCohort
+	clearWizardCohort,
+	datasetQuery
 };

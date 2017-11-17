@@ -25,9 +25,9 @@ function array() {
 	return _.toArray(arguments);
 }
 
-// Concat array with following arrays
-function concat(arr, ...arrs) {
-	return arr.concat(...arrs);
+// Concat arrays
+function concat(...arrs) {
+	return [].concat(...arrs);
 }
 
 function pluckPaths(paths, obj) {

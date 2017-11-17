@@ -37,26 +37,29 @@ function controlRunner(serverBus, controller) {
 //  new state: append state & invalidate  5 - 7? The browser will
 //     invalidate them.
 
-var [pushState, setState] = (function () {
-	var i = 0, cache = [];
-	return [function (s) {
-		cache[i] = s;
-		history.pushState(i, '');
-		i = (i + 1) % 100;
-	},
-	// XXX safari issues a 'popstate' on page load, when we have no cache. The filter here
-	// drops those events.
-	Rx.Observable.fromEvent(window, 'popstate').filter(s => !!cache[s.state]).map(s => {
-		i = s.state;
-		return cache[i];
-	})];
-})();
-
-var enableHistory = (enable, obs) => enable ?
-	obs.do(pushState).merge(setState) : obs;
+//var [pushState, setState] = (function () {
+//	var i = 0, cache = [];
+//	return [function (s) {
+//		cache[i] = s;
+//		history.pushState(i, '');
+//		i = (i + 1) % 100;
+//	},
+//	// XXX safari issues a 'popstate' on page load, when we have no cache. The filter here
+//	// drops those events.
+//	Rx.Observable.fromEvent(window, 'popstate').filter(s => !!cache[s.state]).map(s => {
+//		i = s.state;
+//		return cache[i];
+//	})];
+//})();
+//
+//var enableHistory = (enable, obs) => enable ?
+//	obs.do(pushState).merge(setState) : obs;
+//
+var dropTransient = state =>
+	_.assoc(state, 'wizard', {}, 'datapages', undefined);
 
 // Serialization
-var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(state)));
+var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(dropTransient(state))));
 var parse = str => migrateState(expandState(JSON.parse(LZ.decompressFromUTF16(str))));
 
 function parseCheck(session) {
@@ -69,13 +72,17 @@ function parseCheck(session) {
 	return _.has(state, 'wizardMode') ? state : {stateError: 'session'};
 }
 
+var getPage = () => location.pathname.replace(/^[/]|[/]$/g, '');
+
+var historyObs = Rx.Observable
+	.fromEvent(window, 'popstate')
+	.map(() => ['history', {page: getPage(), params: urlParams()}]);
 
 //
 module.exports = function({
 	Page,
 	controller,
 	persist,
-	history,
 	initialState,
 	serverBus,
 	serverCh,
@@ -93,9 +100,7 @@ module.exports = function({
 		initialState = _.merge(initialState, parseCheck(sessionStorage.xena));
 	}
 
-	let stateObs = enableHistory(
-			history,
-			Rx.Observable.merge(serverCh, uiCh).scan(runner, initialState)).share();
+	let stateObs = Rx.Observable.merge(serverCh, uiCh, historyObs).scan(runner, initialState).share();
 
 	stateObs.debounceTime(0, Rx.Scheduler.animationFrame)
 		.subscribe(state => ReactDOM.render(<Page callback={updater} selector={selector} state={state} />, dom.main));

@@ -22,11 +22,15 @@ function logError(err) {
 	}
 }
 
+var dropTransient = state =>
+	_.assoc(state, 'wizard', {}, 'datapages', undefined);
+
+
 // serialization
 function stringify(state) {
 	return LZ.compressToUTF16(JSON.stringify({
 		..._.omit(state, 'computedStates', 'committedState'),
-		committedState: compactState(state.committedState)
+		   committedState: compactState(dropTransient(state.committedState))
 	}));
 }
 function parse(str) {
@@ -51,6 +55,12 @@ function getSavedState(persist) {
 	}
 	return null;
 }
+
+var getPage = () => location.pathname.replace(/^[/]|[/]$/g, '');
+
+var historyObs = Rx.Observable
+	.fromEvent(window, 'popstate')
+	.map(() => ['history', {page: getPage(), params: urlParams()}]);
 
 module.exports = function({
 	Page,
@@ -114,7 +124,7 @@ module.exports = function({
 		return nextState;
 	};
 
-	var devStateObs = Rx.Observable.merge(serverCh, uiCh)
+	var devStateObs = Rx.Observable.merge(serverCh, uiCh, historyObs)
 					.map(ac => ({type: 'PERFORM_ACTION', action: ac}))
 					.merge(devCh)
 					.scan(effectsReducer, devInitialState) // XXX side effects!
