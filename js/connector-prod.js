@@ -69,7 +69,8 @@ function parseCheck(session) {
 	} catch (e) {
 		console.log('session', e);
 	}
-	return _.has(state, 'wizardMode') ? state : {stateError: 'session'};
+	return _.has(state, 'wizard') ? state :
+		_.assocIn(state, ['spreadsheet', 'stateError'], 'session');
 }
 
 var getPage = () => location.pathname.replace(/^[/]|[/]$/g, '');
