@@ -13,6 +13,7 @@ import {Checkbox} from 'react-toolbox/lib/checkbox';
 import {Button} from 'react-toolbox/lib/button';
 var showdown = require('showdown');
 var {stripHTML} = require('./dom_helper');
+var treehouseImg = require('../images/Treehouse.jpg');
 
 var getHubName = host => get(serverNames, host, host);
 
@@ -64,6 +65,10 @@ var DataHubs = React.createClass({
 // Cohort Summary Page
 //
 
+var treehouse = cohort =>
+	cohort.search(/^Treehouse/gi) === -1 ? null :
+	<img src={treehouseImg} height='40px'/>;
+
 var cohortLink = (name, onClick) => (
 	<Link
 		className={styles.link}
@@ -87,7 +92,11 @@ var CohortSummary = ({cohorts, onCohort}) => {
 			<h2>{nCohorts} Cohorts, {nDatasets} Datasets</h2>
 			<ul className={styles.list}>
 				{map(names, name =>
-					<li>{cohortLink(name, onCohort)}{` (${cohorts[name]} datasets)`}</li>)}
+					<li>
+						{treehouse(name)}
+						{cohortLink(name, onCohort)}
+						{` (${cohorts[name]} datasets)`}
+					</li>)}
 			</ul>
 		</div>);
 };
@@ -178,7 +187,7 @@ var CohortPage = React.createClass({
 				<div className={styles.sidebar}>
 					<Button onClick={this.onViz} accent>Visualize</Button>
 				</div>
-				<h2>cohort: {cohort.cohort}</h2>
+				<h2>cohort: {treehouse(cohort.cohort)}{cohort.cohort}</h2>
 				{dataSubTypes.map(drawGroup(dsGroups, preferred, this.onDataset))}
 				{preferred.size === 0 ? null : (
 					<span>
