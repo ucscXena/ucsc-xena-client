@@ -281,7 +281,7 @@ var DatasetPage = React.createClass({
 			assembly, version, url, articletitle, citation, pmid,
 			dataproducer, author = dataproducer,
 			'wrangling_procedure': wranglingProcedure,
-			type = TYPE_NULL, status, loader} = meta;
+			type = TYPE_NULL, status, loader, count} = meta;
 
 		return (
 			<div className={styles.datapages}>
@@ -296,7 +296,7 @@ var DatasetPage = React.createClass({
 					dataPair('dataset ID', name),
 					getStatus(status, loader),
 					dataPair('download', downloadLink, toDownloadLink),
-					dataPair('samples', '<FIX ME>'),
+					dataPair('samples', count),
 					dataPair('version', version),
 					dataPair('hub', host),
 					dataPair('type of data', dataSubType),
