@@ -16,6 +16,7 @@
 }
 
 .star {
+	font-size: 1.5em;
 	color: red;
 }
 
@@ -25,6 +26,10 @@
 
 .link {
 	display: inline;
+}
+
+.link > abbr {
+	text-transform: none;
 }
 
 .dataHubs {

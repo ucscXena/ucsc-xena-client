@@ -129,7 +129,7 @@ var datasetLink = (preferred, onClick) => ds => {
 				label={ds.label}
 				onClick={onClick}/>
 			{preferred.has(ds.dsID) ? <span className={styles.star}>*</span> : null}
-			<span className={styles.count}> (n={ds.count})</span>
+			<span className={styles.count}> (n={ds.count.toLocaleString()})</span>
 			<span> {getHubName(host)}</span>
 			<div className={styles.lineClamp}>
 				<span className={styles.description}>{stripHTML(ds.description)}</span>
@@ -180,6 +180,11 @@ var CohortPage = React.createClass({
 				</div>
 				<h2>cohort: {cohort.cohort}</h2>
 				{dataSubTypes.map(drawGroup(dsGroups, preferred, this.onDataset))}
+				{preferred.size === 0 ? null : (
+					<span>
+						<span className={styles.star}>*</span>
+						<span>default dataset in visualization basic mode</span>
+					</span>)}
 			</div>);
 	}
 });
