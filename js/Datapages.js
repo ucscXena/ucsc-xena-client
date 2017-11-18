@@ -138,7 +138,7 @@ var datasetLink = (preferred, onClick) => ds => {
 };
 
 var drawGroup = (groups, preferred, onClick) => dataSubType => {
-	var list = sortBy(groups[dataSubType], 'label');
+	var list = sortBy(groups[dataSubType], g => g.label.toLowerCase());
 	return (
 		<div>
 			<h3>{dataSubType}</h3>
@@ -170,7 +170,7 @@ var CohortPage = React.createClass({
 			cohort = getIn(datapages, ['cohort', 'cohort']) === params.cohort ?
 				datapages.cohort : {cohort: '...', datasets: []},
 			dsGroups = groupBy(values(cohort.datasets), 'dataSubType'),
-			dataSubTypes = keys(dsGroups).sort(),
+			dataSubTypes = sortBy(keys(dsGroups), g => g.toLowerCase()),
 			preferred = getPreferred(wizard, params.cohort);
 
 		return (
