@@ -252,8 +252,9 @@ var getStatus = (status, loaderWarning) =>
 var split = (str, pat) => str ? str.split(pat) : [];
 
 var DatasetPage = React.createClass({
-	onCohort() {
-		var {cohort} = getIn(this.props.state,
+	onCohort(ev) {
+		ev.preventDefault();
+		var cohort = getIn(this.props.state,
 			['datapages', 'dataset', 'meta', 'cohort'], COHORT_NULL);
 		this.props.callback(['navigate', 'datapages', {cohort}]);
 	},
