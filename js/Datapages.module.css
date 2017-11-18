@@ -41,6 +41,15 @@
 	font-size: 0.8em;
 }
 
+.lineClamp {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	-ms-box-orient: vertical;
+	-moz-box-orient: vertical;
+	overflow: hidden;
+}
+
 .key {
 	margin: 5px 0 5px 0;
 	width: 150px;

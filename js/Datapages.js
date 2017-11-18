@@ -12,6 +12,7 @@ var {serverNames} = require('./defaultServers');
 import {Checkbox} from 'react-toolbox/lib/checkbox';
 import {Button} from 'react-toolbox/lib/button';
 var showdown = require('showdown');
+var {stripHTML} = require('./dom_helper');
 
 var getHubName = host => get(serverNames, host, host);
 
@@ -130,7 +131,9 @@ var datasetLink = (preferred, onClick) => ds => {
 			{preferred.has(ds.dsID) ? <span className={styles.star}>*</span> : null}
 			<span className={styles.count}> (n={ds.count})</span>
 			<span> {getHubName(host)}</span>
-			<span className={styles.description}>{ds.description}</span>
+			<div className={styles.lineClamp}>
+				<span className={styles.description}>{stripHTML(ds.description)}</span>
+			</div>
 		</li>);
 };
 
