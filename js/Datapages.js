@@ -128,6 +128,7 @@ var datasetLink = (preferred, onClick) => ds => {
 				label={ds.label}
 				onClick={onClick}/>
 			{preferred.has(ds.dsID) ? <span className={styles.star}>*</span> : null}
+			<span className={styles.count}> (n={ds.count})</span>
 			<span> {getHubName(host)}</span>
 			<span className={styles.description}>{ds.description}</span>
 		</li>);
