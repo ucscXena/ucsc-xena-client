@@ -84,7 +84,7 @@ var collateCohorts = hubCohorts =>
 		{});
 
 var CohortSummary = ({cohorts, onCohort}) => {
-	var names = keys(cohorts).sort(),
+	var names = sortBy(keys(cohorts), c => c.toLowerCase()),
 		nCohorts = names.length,
 		nDatasets = sum(values(cohorts));
 	return (
