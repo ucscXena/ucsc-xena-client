@@ -43,7 +43,8 @@ var WizardCard = React.createClass({
 		}
 	},
 	render() {
-		var {children, colId, controls, contentSpecificHelp, title, valid, loading, width} = this.props;
+		var {children, colId, controls, contentSpecificHelp,
+            title, valid, loading, loadingCohort, width} = this.props;
 		return (
 			<Card style={{width: width}} className={compStyles.WizardCard}>
 				<div className={compStyles.headerContainer}>
@@ -57,6 +58,7 @@ var WizardCard = React.createClass({
 				</div>
 				<div className={compStyles.content}>
 					{contentSpecificHelp ? <CardText>{contentSpecificHelp}</CardText> : null}
+                    {loadingCohort ? <CardText>Loading datasets...</CardText> : null}
 					{children}
 				</div>
 				<CardActions className={compStyles.actions}>

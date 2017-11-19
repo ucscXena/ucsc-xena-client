@@ -162,7 +162,7 @@ function getPreferedDatasets(cohort, cohortPreferred, hubs) {
 							ds => _.contains(active, JSON.parse(ds).host));
 	// Use isEmpty to handle 1) no configured preferred datasets or 2) preferred dataset list
 	// is empty after filtering by active hubs.
-	return _.isEmpty(preferred) ? null : _.keys(preferred).map(type =>
+	return _.isEmpty(preferred) ? [] : _.keys(preferred).map(type =>
 			({dsID: preferred[type], label: preferredLabels[type]}));
 }
 
@@ -257,8 +257,8 @@ function addWizardColumns(Component) {
 					cohortPhenotype, datasets, features} = wizard,
 				stepperState = getStepperState(appState),
 				{editing} = appState,
-				preferred = getPreferedDatasets(cohort, cohortPreferred, servers),
-				preferredPhenotypes = getPreferredPhenotypes(cohort, cohortPhenotype, servers),
+				preferred = cohortPreferred && getPreferedDatasets(cohort, cohortPreferred, servers),
+				preferredPhenotypes = cohortPhenotype && getPreferredPhenotypes(cohort, cohortPhenotype, servers),
 				width = defaultWidth,
 				cohortSelectProps = {
 					cohorts,
@@ -267,7 +267,7 @@ function addWizardColumns(Component) {
 					width},
 				datasetSelectProps = {
 					datasets,
-					features: sortFeatures(removeSampleID(consolidateFeatures(features))),
+					features: features && sortFeatures(removeSampleID(consolidateFeatures(features))),
 					preferred,
 					basicFeatures: preferredPhenotypes,
 					onSelect: this.onDatasetSelect,

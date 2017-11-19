@@ -385,4 +385,31 @@ var VariableSelect = React.createClass({
 	}
 });
 
-module.exports = VariableSelect;
+// Render a load warning in a wrapper component so we don't
+// try to initialize state when we're not holding the cohort
+// data. There might be a better state model that avoids this.
+//
+// Cohort data is expected to be falsey if not loaded, empty
+// if loaded but nothing for this cohort, or non-empty otherwise.
+var LoadingNotice = React.createClass({
+	render() {
+		var {preferred, datasets, features, basicFeatures} = this.props;
+		if (!preferred || !datasets || !features || !basicFeatures) {
+			let {colId, controls, title, width} = this.props,
+				wizardProps = {
+					colId,
+					controls,
+					title,
+					loading: true,
+					loadingCohort: true,
+					width
+				};
+			return (
+				<WizardCard {...wizardProps}>
+				</WizardCard>);
+		}
+		return <VariableSelect {...this.props}/>;
+	}
+});
+
+module.exports = LoadingNotice;
