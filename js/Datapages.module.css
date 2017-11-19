@@ -1,5 +1,7 @@
 .datapages {
 	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 40px;
 	width: 80%;
 }
 
@@ -72,4 +74,19 @@
 	display: inline-block;
 	vertical-align: middle;
 	font-size: 0.9em;
+}
+
+.dataSnippetTable {
+	border-collapse:collapse;
+	width: 100%;
+}
+
+.dataSnippetTable tr td {
+	border: 5px solid rgb(225,225,225);
+	text-align: right;
+	word-wrap: break-word;
+	color: #505050;
+	font-size: 85%;
+	max-width: 100px;
+	min-width: 30px;
 }

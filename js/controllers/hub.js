@@ -1,8 +1,10 @@
 'use strict';
 var {assoc, updateIn, dissoc, contains, pick, isEqual, get,
-	getIn, assocIn, constant, identity} = require('../underscore_ext');
+	pluck, getIn, assocIn, identity} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
-var {cohortSummary, datasetMetadata} = require('../xenaQuery');
+var {cohortSummary, datasetMetadata, datasetSamplesExamples,
+	datasetFieldExamples, fieldCodes, datasetProbeValues,
+	sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
 var {userServers, datasetQuery} = require('./common');
 var Rx = require('../rx');
 
@@ -21,7 +23,7 @@ function setHubs(state, {hubs}) {
 		state;
 }
 
-var {ajax, of, zipArray} = Rx.Observable;
+var {ajax, of, zip, zipArray} = Rx.Observable;
 var ajaxGet = url => ajax({url, crossDomain: true, method: 'GET', responseType: 'text'});
 
 var hubMeta = host => ajaxGet(`${host}/download/meta/info.mdown`).map(r => r.response)
@@ -46,23 +48,71 @@ function fetchDatasets(serverBus, state) {
 	serverBus.next(['cohort-datasets', datasetQuery(servers, [{name: cohort}]), cohort]);
 }
 
-var head = url => ({url, crossDomain: true, method: 'HEAD'});
+// emit url if HEAD request succeeds
+var head = url => ajax({url, crossDomain: true, method: 'HEAD'}).map(() => url);
 
-// Do HEAD request for dataset download link. If not there,
-// try the link with '.gz' suffix. If not there, return undefined.
+// Check for dataset download link. If not there, try the link with '.gz'
+// suffix. If not there, return undefined.
 var checkDownload = (host, dataset) => {
 	var link = `${host}/download/${dataset}`,
-		gzlink = `${link}.gz`;
-	return ajax(head(link)).map(constant(link))
-		.catch(() => ajax(head(gzlink)).map(constant(gzlink))
-				.catch(() => of(undefined)));
+		gzlink = `${link}.gz`,
+		dl = head(link),
+		gzdl = head(gzlink),
+		nodl = of(undefined);
+
+	return dl.catch(() => gzdl).catch(() => nodl);
 };
 
-var datasetMetaAndLinks = (host, dataset) =>
-	zipArray(datasetMetadata(host, dataset), checkDownload(host, dataset))
-		.mergeMap(([[meta], downloadLink]) =>
-			(get(meta, 'probeMap') ? checkDownload(host, meta.probeMap) : of(undefined))
-				.map(probemapLink => [meta, {downloadLink, probemapLink}]));
+function fetchMatrixDataSnippets(host, dataset, meta, nProbes = 10, nSamples = 10) {
+	var samplesQ = datasetSamplesExamples(host, dataset, nSamples).share(),
+		fieldQ = datasetFieldExamples(host, dataset, nProbes).share(),
+		codeQ = fieldQ.mergeMap(probes => fieldCodes(host, dataset, probes)),
+		dataQ = zipArray(samplesQ, fieldQ)
+			.mergeMap(([samples, fields]) => datasetProbeValues(host, dataset, samples, fields).map(data => data[1]));
+
+	return zipArray(samplesQ, fieldQ, codeQ, dataQ)
+		.map(([samples, fields, codes, data]) => ({samples, fields, codes, data}));
+}
+
+var mutationAttrs = ({rows}) => ({
+	chrom: pluck(rows.position, 'chrom'),
+	chromstart: pluck(rows.position, 'chromstart'),
+	chromend: pluck(rows.position, 'chromend'),
+	...pick(rows, 'sampleID', 'ref', 'alt', 'effect', 'amino-acid', 'gene')
+});
+
+var fetchMutationDataSnippets = (host, dataset, nProbes = 10) =>
+	sparseDataExamples(host, dataset, nProbes).map(mutationAttrs);
+
+var segmentAttrs = ({rows}) => ({
+	chrom: pluck(rows.position, 'chrom'),
+	chromstart: pluck(rows.position, 'chromstart'),
+	chromend: pluck(rows.position, 'chromend'),
+	...pick(rows, 'sampleID', 'value')
+});
+
+var fetchSegmentedDataSnippets = (host, dataset, nProbes = 10) =>
+	segmentDataExamples(host, dataset, nProbes).map(segmentAttrs);
+
+var noSnippets = () => of(undefined);
+
+var snippetMethod = ({type = 'genomicMatrix'} = {}) =>
+	type === 'clinicalMatrix' ? fetchMatrixDataSnippets :
+	type === 'genomicMatrix' ? fetchMatrixDataSnippets :
+	type === 'mutationVector' ? fetchMutationDataSnippets :
+	type === 'genomicSegment' ? fetchSegmentedDataSnippets :
+	noSnippets;
+
+var datasetMetaAndLinks = (host, dataset) => {
+	var metaQ = datasetMetadata(host, dataset).map(m => m[0]).share(),
+		downloadQ = checkDownload(host, dataset),
+		dataQ = metaQ.mergeMap(meta => snippetMethod(meta)(host, dataset)),
+		probemapQ = metaQ.mergeMap(meta =>
+			get(meta, 'probeMap') ? checkDownload(host, meta.probeMap) : of(undefined));
+
+	return zip(metaQ, dataQ, downloadQ, probemapQ, (meta, data, downloadLink, probemapLink) =>
+			({meta, data, downloadLink, probemapLink}));
+};
 
 function fetchDataset(serverBus, state) {
 	var {host, dataset} = state.params;
@@ -86,8 +136,8 @@ var controls = {
 		assocIn(state, ['datapages', 'cohorts'], cohorts),
 	'cohort-datasets': (state, datasets, cohort) =>
 		assocIn(state, ['datapages', 'cohort'], {cohort, datasets}),
-	'dataset-meta': (state, [meta, links], host, dataset) =>
-		assocIn(state, ['datapages', 'dataset'], {host, dataset, meta, ...links})
+	'dataset-meta': (state, metaAndLinks, host, dataset) =>
+		assocIn(state, ['datapages', 'dataset'], {host, dataset, ...metaAndLinks})
 };
 
 var getSection = ({dataset, host, cohort}) =>

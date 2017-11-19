@@ -2,8 +2,9 @@
 
 require('./base');
 const React = require('react');
-var {uniq, flatten, sortBy, groupBy, map, flatmap, pluck, concat, where, contains,
-	get, updateIn, identity, getIn, sum, keys, values} = require('./underscore_ext');
+var {uniq, flatten, sortBy, groupBy, map, flatmap,
+	pluck, concat, where, contains, get, updateIn,
+	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext');
 var {parseDsID} = require('./xenaQuery');
 import Link from 'react-toolbox/lib/link';
 var styles = require('./Datapages.module.css');
@@ -251,6 +252,54 @@ var getStatus = (status, loaderWarning) =>
 // split, handling falsey values
 var split = (str, pat) => str ? str.split(pat) : [];
 
+var resolveCodes = (probes, codes, data) =>
+	mmap(probes, data, (probe, row) =>
+			codes[probe] ? map(row, v => isNaN(v) ? v : codes[probe][v]) :
+			row);
+
+// not the most efficient algorithm :-/
+var addHeaders = (fields, samples, data) =>
+	mmap(['', ...fields], [samples, ...data], (header, row) => [header, ...row]);
+
+var transpose = data => zip.apply(null, data);
+
+// Transpose matrix if it's clinical
+var transposeClinical = (meta, data) =>
+	get(meta, 'type') === 'clinicalMatrix' ? transpose(data) :
+	data;
+
+var table = data => (
+		<table className={styles.dataSnippetTable}>
+			<tbody>
+				{map(data, row => <tr>{map(row, c => <td>{c}</td>)}</tr>)}
+			</tbody>
+		</table>);
+
+var matrixTable = (meta, {fields, samples, codes, data}) =>
+	table(transposeClinical(meta, addHeaders(fields, samples, resolveCodes(fields, codes, data))));
+
+// swap chromend & chromstart when sorting fields
+var cmpSparseFields = (a, b) =>
+	a === 'chromend' && b === 'chromstart' ? 1 :
+	a === 'chromstart' && b === 'chromend' ? -1 :
+	a.localeCompare(b);
+
+var sparseTable = (meta, data) => {
+	var fields = keys(data).sort(cmpSparseFields),
+		rows = fields.map(field => data[field]),
+		samples = data.sampleID;
+	return table(transpose(addHeaders(fields, samples, rows)));
+};
+
+var noTable = () => null;
+
+var dataMethod = ({type = 'genomicMatrix'} = {}) =>
+	type === 'genomicMatrix' ? matrixTable :
+	type === 'clinicalMatrix' ? matrixTable :
+	type === 'mutationVector' ? sparseTable :
+	type === 'genomicSegment' ? sparseTable :
+	noTable;
+
 var DatasetPage = React.createClass({
 	onCohort(ev) {
 		ev.preventDefault();
@@ -267,7 +316,7 @@ var DatasetPage = React.createClass({
 	render() {
 		var {state} = this.props,
 			{params: {host, dataset}, datapages} = state,
-			{meta, downloadLink, probemapLink, dataset: currentDataset,
+			{meta, data, downloadLink, probemapLink, dataset: currentDataset,
 				host: currentHost} = get(datapages, 'dataset', {});
 
 		if (!meta || currentHost !== host || currentDataset !== dataset) {
@@ -312,6 +361,7 @@ var DatasetPage = React.createClass({
 						dataPair('raw data', url, toLink)),
 					dataPair('wrangling', wranglingProcedure, toHTML),
 					dataPair('input data format', FORMAT_MAPPING[type])])}
+				{dataMethod(meta)(meta, data)}
 			</div>);
 	}
 });
