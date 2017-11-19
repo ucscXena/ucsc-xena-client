@@ -410,9 +410,7 @@ var LoadingNotice = React.createClass({
 					loadingCohort: true,
 					width
 				};
-			return (
-				<WizardCard {...wizardProps}>
-				</WizardCard>);
+			return <WizardCard {...wizardProps}/>;
 		}
 		return <VariableSelect {...this.props}/>;
 	}
