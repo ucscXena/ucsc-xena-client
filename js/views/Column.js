@@ -457,6 +457,11 @@ var Column = React.createClass({
 		return 90;
 //		return 136;
 	},
+	onAbout(ev) {
+		ev.preventDefault();
+		var {host, dataset} = ev.target.parentElement.dataset;
+		this.props.onAbout(host, dataset);
+	},
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, fieldFormat, sampleFormat, disableKM, searching,
@@ -522,7 +527,7 @@ var Column = React.createClass({
 										caption='Kaplan Meier Plot'/>
 										<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
 										<MenuItem onClick={this.onDownload} caption='Download'/>
-										{aboutDatasetMenu(_.get(dataset, 'dsID'))}
+										{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
 										<MenuItem onClick={this.onViz} caption='Display Setting'/>
 										<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
 										<MenuItem onClick={this.onRemove} caption='Remove'/>

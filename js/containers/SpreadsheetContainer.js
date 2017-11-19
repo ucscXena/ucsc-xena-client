@@ -146,6 +146,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 			this.on.plotClick(ev);
 		}
 	},
+    onAbout(host, dataset) {
+        this.props.callback(['navigate', 'datapages', {host, dataset}]);
+    },
 	render() {
 		var columnProps = _.pick(this.props,
 				['searching', 'supportsGeneAverage', 'disableKM', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
@@ -168,6 +171,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 					<Column
 						interactive={interactive}
 						cohort={appState.cohort}
+                        onAbout={this.onAbout}
 						onViz={this.onOpenVizSettings}
 						onEdit={supportsEdit(_.get(appState.columns, id)) &&
 							interactive ? this.onEdit : null}
