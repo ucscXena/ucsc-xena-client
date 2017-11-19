@@ -262,23 +262,29 @@ var VariableSelect = React.createClass({
 			basicFeatures: featureIndexes(features, basicFeatures),
 		});
 	},
+	// Sharing these streams, to avoid recompute, is complicated by the
+	// startWith() operator, which does not subscribe to base observable until
+	// the queued value is emitted. The result of this is that the
+	// withLatestFrom() operators do not subscribe to their upstream sources,
+	// and miss the startWith() of those. The workaround here is to use replay
+	// subjects. This is all much too complex.
 	componentWillMount() {
 		this.events('mode', 'advanced', 'field', 'select');
-		var mode = this.ev.mode.startWith(this.state.mode),
+		var mode = this.ev.mode.startWith(this.state.mode).publishReplay(1).refCount(),
 			advanced = this.ev.advanced
 				.withLatestFrom(mode, (advanced, mode) => mode)
 				.scan((advanced, mode) => _.updateIn(advanced, [mode], a => !a), this.state.advanced)
-				.startWith(this.state.advanced),
+				.startWith(this.state.advanced).publishReplay(1).refCount(),
 			selected = this.ev.select
 				.withLatestFrom(advanced, mode, (dataset, advanced, mode) => ([dataset, mode, advanced[mode]]))
 				.scan((selected, [{selectValue, isOn}, mode, advanced]) =>
 					_.updateIn(selected, [mode, advanced], selected => _.uniq((isOn ? _.conj : _.without)(selected, selectValue))),
 					this.state.selected)
-				.startWith(this.state.selected),
+				.startWith(this.state.selected).publishReplay(1).refCount(),
 			value = this.ev.field
 				.withLatestFrom(mode, (field, mode) => ([field, mode]))
 				.scan((value, [field, mode]) => _.assoc(value, mode, field), this.state.value)
-				.startWith(this.state.value);
+				.startWith(this.state.value).publishReplay(1).refCount();
 
 		this.modeSub = mode.subscribe(mode => this.setState({mode, error: false}));
 		this.advancedSub = advanced.subscribe(advanced => this.setState({advanced}));

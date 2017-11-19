@@ -35,6 +35,7 @@ require('rxjs/add/operator/map');
 require('rxjs/add/operator/merge');
 require('rxjs/add/operator/mergeAll');
 require('rxjs/add/operator/mergeMap');
+require('rxjs/add/operator/publishReplay');
 require('rxjs/add/operator/sample');
 require('rxjs/add/operator/scan');
 require('rxjs/add/operator/share');
