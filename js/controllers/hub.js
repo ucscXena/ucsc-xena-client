@@ -1,5 +1,5 @@
 'use strict';
-var {assoc, updateIn, dissoc, contains, pick, isEqual, get,
+var {updateIn, dissoc, contains, pick, isEqual, get,
 	pluck, getIn, assocIn, identity} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
 var {cohortSummary, datasetMetadata, datasetSamplesExamples,
@@ -7,13 +7,6 @@ var {cohortSummary, datasetMetadata, datasetSamplesExamples,
 	sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
 var {userServers, datasetQuery} = require('./common');
 var Rx = require('../rx');
-
-// After settings change, mark the server list dirty.
-// This is used by the viz page.
-var setServersChanged = state => assoc(state, 'serversChanged', true);
-
-var setServersChangedIfUser = (list, state) =>
-	list === 'user' ? setServersChanged(state) : state;
 
 function setHubs(state, {hubs}) {
 	return hubs ?
@@ -122,13 +115,13 @@ function fetchDataset(serverBus, state) {
 var spreadsheetControls = {
 	'init': (state, params) => setHubs(state, params),
 	'add-host': (state, host) =>
-		setServersChanged(assocIn(state, ['servers', host], {user: true})),
+		assocIn(state, ['servers', host], {user: true}),
 	'remove-host': (state, host) =>
-		setServersChanged(updateIn(state, ['servers'], s => dissoc(s, host))),
+		updateIn(state, ['servers'], s => dissoc(s, host)),
 	'enable-host': (state, host, list) =>
-		setServersChangedIfUser(list, assocIn(state, ['servers', host, list], true)),
+		assocIn(state, ['servers', host, list], true),
 	'disable-host': (state, host, list) =>
-		setServersChangedIfUser(list, assocIn(state, ['servers', host, list], false))
+		assocIn(state, ['servers', host, list], false)
 };
 
 var controls = {

@@ -104,14 +104,6 @@ function fetchSurvival(serverBus, state) {
 			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
 }
 
-var shouldSetCohort = state => state.cohortPending && !_.isEqual(state.cohort, state.cohortPending);
-
-var setCohortPending = state =>
-	shouldSetCohort(state) ?
-		_.dissoc(setCohort([state.cohortPending], undefined, state), 'cohortPending') : state;
-
-var resetServersChanged = state => _.dissoc(state, 'serversChanged');
-
 var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
 	_.assoc(state, 'zoomHelp', true) : state;
 
@@ -195,14 +187,11 @@ var paramList = params => _.isEmpty(params) ? '' : `?${JSONToqueryString(params)
 
 var controls = {
 	init: (state, pathname = '/', params = {}) => {
-		var wizardUpate = shouldSetCohort(state) || params.hubs ||
-			params.inlineState || state.serversChanged ?
+		var wizardUpate = params.hubs || params.inlineState ?
 				clearWizardCohort : _.identity,
 			next = _.updateIn(state, ['spreadsheet'], state =>
-						setCohortPending(
-							resetServersChanged(
-								setLoadingState(
-									setHubs(state, params), params))));
+					setLoadingState(
+						setHubs(state, params), params));
 		return wizardUpate(setPage(next, pathname, params));
 	},
 	'init-post!': (serverBus, state, newState, params) => {
@@ -216,18 +205,11 @@ var controls = {
 			// 'servers' is in spreadsheet state. After loading a bookmark or inline
 			// state, we need to update wizard data. Otherwise, we need to update
 			// wizard data here if something has changed.
-			//
-			// XXX If we have serversChanged *and* cohortPending, there may be
-			// a race here.  We fetch the cohorts list, and the cohort data. If
-			// cohorts completes & the cohort is not in new list, we reset
-			// cohort. Then the cohort data arrives (and note there are several
-			// cascading queries).  Currently datapages + hub won't set
-			// cohortPending to a cohort not in the active hubs, so we
-			// shouldn't hit this case.
-			if (!state.wizard.cohorts || params.hubs || state.spreadsheet.serversChanged) {
+
+			if (!state.wizard.cohorts || params.hubs) {
 				fetchCohorts(serverBus, state.spreadsheet, newState.spreadsheet, {force: true});
 			}
-			if (shouldSetCohort(state.spreadsheet)) {
+			if (_.get(newState.spreadsheet, 'cohort')) {
 				fetchCohortData(serverBus, newState.spreadsheet);
 			}
 		}
