@@ -1,6 +1,6 @@
 'use strict';
-var {updateIn, dissoc, contains, pick, isEqual, get,
-	pluck, getIn, assocIn, identity} = require('../underscore_ext');
+var {updateIn, dissoc, contains, pick, isEqual, get, difference,
+	concat, pluck, getIn, assocIn, identity} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
 var {cohortSummary, datasetMetadata, datasetSamplesExamples,
 	datasetFieldExamples, fieldCodes, datasetProbeValues,
@@ -28,9 +28,8 @@ var genomicCohortSummary = server =>
 		.map(([cohorts, meta]) => ({server, meta, cohorts}))
 		.catch(err => {console.log(err); return of({server, cohorts: []});});
 
-function fetchCohortSummary(serverBus, state) {
-	var servers = userServers(state.spreadsheet),
-		q = Rx.Observable.zipArray(servers.map(genomicCohortSummary));
+function fetchCohortSummary(serverBus, servers) {
+	var q = Rx.Observable.zipArray(servers.map(genomicCohortSummary));
 
 	serverBus.next(['cohort-summary', q]);
 }
@@ -126,7 +125,8 @@ var spreadsheetControls = {
 
 var controls = {
 	'cohort-summary': (state, cohorts) =>
-		assocIn(state, ['datapages', 'cohorts'], cohorts),
+		updateIn(state, ['datapages', 'cohorts'],
+				(list = []) => concat(list, cohorts)),
 	'cohort-datasets': (state, datasets, cohort) =>
 		assocIn(state, ['datapages', 'cohort'], {cohort, datasets}),
 	'dataset-meta': (state, metaAndLinks, host, dataset) =>
@@ -139,11 +139,12 @@ var getSection = ({dataset, host, cohort}) =>
 	cohort ? 'cohort' :
 	'summary';
 
-var needCohorts = state =>
+var needCohortHubs = state =>
 	state.page === 'datapages' &&
-	contains(['summary', 'hub'], getSection(state.params));
+	contains(['summary', 'hub'], getSection(state.params)) ?
+	userServers(state.spreadsheet) : [];
 
-var hasCohorts = state => getIn(state, ['datapages', 'cohorts']);
+var hasCohortHubs = state => pluck(getIn(state, ['datapages', 'cohorts'], []), 'server');
 
 
 var needACohort = state =>
@@ -170,9 +171,15 @@ var hasDataset = (state, {dataset, host}) =>
 function datapagesPostActions(serverBus, state, newState, action) {
 	var [type] = action;
 
-	if (needCohorts(newState) && !hasCohorts(newState) &&
-			(type === 'init' || !needCohorts(state))) {
-		fetchCohortSummary(serverBus, newState);
+	// Fast check for the typical case, where nothing has changed
+	if (type === 'init' || newState.spreadsheet.servers !== state.spreadsheet.servers) {
+		let needHubs = needCohortHubs(newState),
+			hasHubs = hasCohortHubs(newState),
+			missing = difference(needHubs, hasHubs);
+
+		if (missing.length) {
+			fetchCohortSummary(serverBus, missing);
+		}
 	}
 
 	var aCohort = needACohort(newState);
