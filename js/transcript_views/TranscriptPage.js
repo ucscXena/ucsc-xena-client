@@ -136,7 +136,7 @@ var Transcripts = React.createClass({
 						}
 					</div>
 					<div style={{width: "1200px", marginBottom: "40px"}}>
-						<div style={{"margin-bottom": "10px"}}>
+						<div style={{marginBottom: "10px"}}>
 							<span className={styles.selectors}>Study A</span>
 							<select ref="A" onChange={this.onLoadData} value={valueA}
 								style={{color: dropdownColor, backgroundColor: dropdownBackgroundColorTop}}>
