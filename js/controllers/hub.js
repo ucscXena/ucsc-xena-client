@@ -171,10 +171,9 @@ var hasDataset = (state, {dataset, host}) =>
 function datapagesPostActions(serverBus, state, newState, action) {
 	var [type] = action;
 
-	// Fast check for the typical case, where nothing has changed
-	if (type === 'init' || newState.spreadsheet.servers !== state.spreadsheet.servers) {
-		let needHubs = needCohortHubs(newState),
-			hasHubs = hasCohortHubs(newState),
+	var needHubs = needCohortHubs(newState);
+	if (needHubs) {
+		let hasHubs = hasCohortHubs(newState),
 			missing = difference(needHubs, hasHubs);
 
 		if (missing.length) {
