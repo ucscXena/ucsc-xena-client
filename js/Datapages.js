@@ -333,7 +333,7 @@ var DatasetPage = React.createClass({
 	render() {
 		var {state} = this.props,
 			{params: {host, dataset}, datapages} = state,
-			{meta, data, downloadLink, probemapLink, dataset: currentDataset,
+			{meta, probeCount = 0, data, downloadLink, probemapLink, dataset: currentDataset,
 				host: currentHost} = get(datapages, 'dataset', {});
 
 		if (!meta || currentHost !== host || currentDataset !== dataset) {
@@ -378,6 +378,10 @@ var DatasetPage = React.createClass({
 						dataPair('raw data', url, toLink)),
 					dataPair('wrangling', wranglingProcedure, toHTML),
 					dataPair('input data format', FORMAT_MAPPING[type])])}
+				{type === 'genomicMatrix' ?
+					`${probeCount.toLocaleString()} identifiers X ${count} samples` : null}
+				{type === 'clinicalMatrix' ?
+					`${count} samples X ${probeCount.toLocaleString()} identifiers` : null}
 				<a
 					href={`?host=${host}&dataset=${encodeURIComponent(dataset)}&allIdentifiers=true`}
 					onClick={this.onIdentifiers}>All Identifiers</a>

@@ -2,7 +2,7 @@
 var {updateIn, dissoc, contains, pick, isEqual, get, difference,
 	concat, pluck, getIn, assocIn, identity} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
-var {cohortSummary, datasetMetadata, datasetSamplesExamples,
+var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetFieldExamples, fieldCodes, datasetField, datasetFetch,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
 var {userServers, datasetQuery} = require('./common');
@@ -98,15 +98,24 @@ var snippetMethod = ({type = 'genomicMatrix'} = {}) =>
 	type === 'genomicSegment' ? fetchSegmentedDataSnippets :
 	noSnippets;
 
+
+var noProbeCount = () => of(undefined);
+
+var probeCountMethod = ({type = 'genomicMatrix'} = {}) =>
+	type === 'clinicalMatrix' ? datasetFieldN :
+	type === 'genomicMatrix' ? datasetFieldN :
+	noProbeCount;
+
 var datasetMetaAndLinks = (host, dataset) => {
 	var metaQ = datasetMetadata(host, dataset).map(m => m[0]).share(),
 		downloadQ = checkDownload(host, dataset),
 		dataQ = metaQ.mergeMap(meta => snippetMethod(meta)(host, dataset)),
+		probeCountQ = metaQ.mergeMap(meta => probeCountMethod(meta)(host, dataset)),
 		probemapQ = metaQ.mergeMap(meta =>
 			get(meta, 'probeMap') ? checkDownload(host, meta.probeMap) : of(undefined));
 
-	return zip(metaQ, dataQ, downloadQ, probemapQ, (meta, data, downloadLink, probemapLink) =>
-			({meta, data, downloadLink, probemapLink}));
+	return zip(metaQ, dataQ, probeCountQ, downloadQ, probemapQ, (meta, data, probeCount, downloadLink, probemapLink) =>
+			({meta, data, probeCount, downloadLink, probemapLink}));
 };
 
 function fetchDataset(serverBus, state) {
