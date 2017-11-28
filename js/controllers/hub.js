@@ -3,7 +3,7 @@ var {updateIn, dissoc, contains, pick, isEqual, get, difference,
 	concat, pluck, getIn, assocIn, identity} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
 var {cohortSummary, datasetMetadata, datasetSamplesExamples,
-	datasetFieldExamples, fieldCodes, datasetProbeValues,
+	datasetFieldExamples, fieldCodes, datasetProbeValues, datasetField,
 	sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
 var {userServers, datasetQuery} = require('./common');
 var Rx = require('../rx');
@@ -111,6 +111,11 @@ function fetchDataset(serverBus, state) {
 	serverBus.next(['dataset-meta', datasetMetaAndLinks(host, dataset), host, dataset]);
 }
 
+function fetchIdentifiers(serverBus, state) {
+	var {host, dataset} = state.params;
+	serverBus.next(['dataset-identifiers', datasetField(host, dataset), host, dataset]);
+}
+
 var spreadsheetControls = {
 	'init': (state, params) => setHubs(state, params),
 	'add-host': (state, host) =>
@@ -130,10 +135,13 @@ var controls = {
 	'cohort-datasets': (state, datasets, cohort) =>
 		assocIn(state, ['datapages', 'cohort'], {cohort, datasets}),
 	'dataset-meta': (state, metaAndLinks, host, dataset) =>
-		assocIn(state, ['datapages', 'dataset'], {host, dataset, ...metaAndLinks})
+		assocIn(state, ['datapages', 'dataset'], {host, dataset, ...metaAndLinks}),
+	'dataset-identifiers': (state, identifiers, host, dataset) =>
+		assocIn(state, ['datapages', 'identifiers'], {host, dataset, identifiers})
 };
 
-var getSection = ({dataset, host, cohort}) =>
+var getSection = ({dataset, host, cohort, allIdentifiers}) =>
+	allIdentifiers ? 'identifiers' :
 	dataset && host ? 'dataset' :
 	host ? 'hub' :
 	cohort ? 'cohort' :
@@ -164,6 +172,15 @@ var hasDataset = (state, {dataset, host}) =>
 	dataset === getIn(state, ['datapages', 'dataset', 'dataset']) &&
 	host === getIn(state, ['datapages', 'dataset', 'host']);
 
+var needIdentifiers = state =>
+	state.page === 'datapages' &&
+	getSection(state.params) === 'identifiers' &&
+	pick(state.params, 'dataset', 'host');
+
+var hasIdentifiers = (state, {dataset, host}) =>
+	dataset === getIn(state, ['datapages', 'identifiers', 'dataset']) &&
+	host === getIn(state, ['datapages', 'identifiers', 'host']) &&
+	getIn(state, ['datapages', 'identifiers', 'identifers']);
 
 // We don't save datapages over reload. We fetch missing data the first
 // time it is required, meaning a) in the previous state we did not
@@ -191,6 +208,12 @@ function datapagesPostActions(serverBus, state, newState, action) {
 	if (dataset && !hasDataset(state, dataset) &&
 			(type === 'init' || !isEqual(needDataset(state), dataset))) {
 		fetchDataset(serverBus, newState);
+	}
+
+	var identifiers = needIdentifiers(newState);
+	if (identifiers && !hasIdentifiers(state, identifiers) &&
+			(type === 'init' || !isEqual(needIdentifiers(state), identifiers))) {
+		fetchIdentifiers(serverBus, newState);
 	}
 }
 

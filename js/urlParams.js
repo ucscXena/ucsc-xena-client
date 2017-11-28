@@ -32,7 +32,7 @@ function hubParams() {
 
 function datasetParams() {
 	// only take the first of these
-	return mapObject(pick(allParameters(), 'cohort', 'dataset', 'host'), l => l[0]);
+	return mapObject(pick(allParameters(), 'cohort', 'dataset', 'host', 'allIdentifiers'), l => l[0]);
 }
 
 function getParams() {

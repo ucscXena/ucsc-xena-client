@@ -2,9 +2,10 @@
 
 require('./base');
 const React = require('react');
-var {uniq, flatten, sortBy, groupBy, map, flatmap,
-	pluck, concat, where, contains, get, updateIn,
+var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN,
+	pluck, concat, where, contains, get, updateIn, range,
 	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext');
+var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx');
 var {parseDsID} = require('./xenaQuery');
 import Link from 'react-toolbox/lib/link';
 var styles = require('./Datapages.module.css');
@@ -15,6 +16,7 @@ import {Button} from 'react-toolbox/lib/button';
 var showdown = require('showdown');
 var {stripHTML} = require('./dom_helper');
 var treehouseImg = require('../images/Treehouse.jpg');
+var {rxEventsMixin} = require('./react-utils');
 
 var getHubName = host => get(serverNames, host, host);
 
@@ -313,6 +315,11 @@ var DatasetPage = React.createClass({
 		this.props.callback(['cohort', 0, cohort]);
 		this.props.callback(['navigate', 'heatmap']);
 	},
+	onIdentifiers(ev) {
+		var {host, dataset} = this.props.state.params;
+		ev.preventDefault();
+		this.props.callback(['navigate', 'datapages', {host, dataset, allIdentifiers: true}]);
+	},
 	render() {
 		var {state} = this.props,
 			{params: {host, dataset}, datapages} = state,
@@ -361,6 +368,9 @@ var DatasetPage = React.createClass({
 						dataPair('raw data', url, toLink)),
 					dataPair('wrangling', wranglingProcedure, toHTML),
 					dataPair('input data format', FORMAT_MAPPING[type])])}
+				<a
+					href={`?host=${host}&dataset=${encodeURIComponent(dataset)}&allIdentifiers=true`}
+					onClick={this.onIdentifiers}>All Identifiers</a>
 				{dataMethod(meta)(meta, data)}
 			</div>);
 	}
@@ -401,10 +411,68 @@ var HubPage = React.createClass({
 });
 
 //
+// Identifiers page
+//
+
+var IdentifiersPage = React.createClass({
+	mixins: [rxEventsMixin],
+	componentWillMount: function () {
+		var {state} = this.props,
+			identifiers = getIn(state, ['datapages', 'identifiers', 'identifiers']);
+		this.events('identifiers');
+		var chunks = this.ev.identifiers
+			.startWith(identifiers)
+			.distinctUntilChanged()
+			.filter(identity)
+			.switchMap(ids => {
+				var chunks = partitionN(ids, 1000).map(a => a.join('\n'));
+				return from(range(chunks.length), animationFrame)
+					.map(i => chunks.slice(0, i + 1));
+			});
+
+		this.sub = chunks.subscribe(chunks => {
+			this.setState({chunks});
+		});
+	},
+	componentWillUnmount() {
+		this.sub.unsubscribe();
+	},
+	componentWillReceiveProps(props) {
+		var {state} = props,
+			identifiers = getIn(state, ['datapages', 'identifiers', 'identifiers']);
+
+		this.on.identifiers(identifiers);
+	},
+	getInitialState() {
+		return {};
+	},
+	render() {
+		var {state} = this.props,
+			{params: {host, dataset}, datapages} = state,
+			{dataset: currentDataset, host: currentHost}
+				= getIn(datapages, ['identifiers'], {}),
+			chunks = currentHost !== host || currentDataset !== dataset ?
+				undefined : this.state.chunks;
+
+		return (
+			<div className={styles.datapages}>
+				<h3>dataset: {dataset}</h3>
+				<h4>Identifiers</h4>
+				{chunks ? chunks.map(c => (
+					<pre className={styles.identifiers}>
+						{c}
+					</pre>
+				)) : 'Loading...'}
+			</div>);
+	}
+});
+
+//
 // Top-level dispatch to sub-pages
 //
 
-var getPage = ({dataset, host, cohort}) =>
+var getPage = ({dataset, host, cohort, allIdentifiers}) =>
+	allIdentifiers ? IdentifiersPage :
 	dataset && host ? DatasetPage :
 	host ? HubPage :
 	cohort ? CohortPage :

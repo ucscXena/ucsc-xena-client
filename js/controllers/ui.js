@@ -177,7 +177,7 @@ var getPage = path =>
 	'heatmap';
 
 // XXX This same info also appears in urlParams.js
-var savedParams = params => _.pick(params, 'dataset', 'hub', 'host', 'cohort');
+var savedParams = params => _.pick(params, 'dataset', 'hub', 'host', 'cohort', 'allIdentifiers');
 var setPage = (state, path, params) =>
 	_.assoc(state,
 			'page', getPage(path),
