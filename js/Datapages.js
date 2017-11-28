@@ -420,9 +420,15 @@ var HubPage = React.createClass({
 });
 
 //
-// Identifiers page
+// Samples / Identifiers page
 //
 
+
+var binSize = 1000;
+// The point of ListPage is to render a potentially very long list
+// incrementally, so we get a fast first render, and don't lock up the UI.
+// We do that by rendering binSize rows at a time, on a requestAnimationFrame
+// timeout.
 var ListPage = React.createClass({
 	mixins: [rxEventsMixin],
 	componentWillMount: function () {
@@ -434,7 +440,7 @@ var ListPage = React.createClass({
 			.distinctUntilChanged()
 			.filter(identity)
 			.switchMap(ids => {
-				var chunks = partitionN(ids, 1000).map(a => a.join('\n'));
+				var chunks = partitionN(ids, binSize).map(a => a.join('\n'));
 				return from(range(chunks.length), animationFrame)
 					.map(i => chunks.slice(0, i + 1));
 			});
