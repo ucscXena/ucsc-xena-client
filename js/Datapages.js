@@ -442,11 +442,11 @@ var ListPage = React.createClass({
 			.switchMap(ids => {
 				var chunks = partitionN(ids, binSize).map(a => a.join('\n'));
 				return from(range(chunks.length), animationFrame)
-					.map(i => chunks.slice(0, i + 1));
+					.map(i => ({chunks: chunks.slice(0, i + 1), total: chunks.length}));
 			});
 
 		this.sub = chunks.subscribe(chunks => {
-			this.setState({chunks});
+			this.setState(chunks);
 		});
 	},
 	componentWillUnmount() {
@@ -466,13 +466,16 @@ var ListPage = React.createClass({
 			{params: {host, dataset}, datapages} = state,
 			{dataset: currentDataset, host: currentHost}
 				= getIn(datapages, [path], {}),
-			chunks = currentHost !== host || currentDataset !== dataset ?
-				undefined : this.state.chunks;
+			{chunks, total} = currentHost !== host || currentDataset !== dataset ?
+				{} : this.state,
+			percent = !chunks ? ' 0%' :
+				chunks.length === total ? '' :
+				` ${Math.floor(chunks.length / total * 100)}%`;
 
 		return (
 			<div className={styles.datapages}>
 				<h3>dataset: {dataset}</h3>
-				<h4>{title}</h4>
+				<h4>{title}{percent}</h4>
 				{chunks ? chunks.map(c => (
 					<pre className={styles.list}>
 						{c}
