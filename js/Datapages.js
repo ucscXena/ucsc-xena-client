@@ -320,6 +320,11 @@ var DatasetPage = React.createClass({
 		ev.preventDefault();
 		this.props.callback(['navigate', 'datapages', {host, dataset, allIdentifiers: true}]);
 	},
+	onSamples(ev) {
+		var {host, dataset} = this.props.state.params;
+		ev.preventDefault();
+		this.props.callback(['navigate', 'datapages', {host, dataset, allSamples: true}]);
+	},
 	render() {
 		var {state} = this.props,
 			{params: {host, dataset}, datapages} = state,
@@ -371,6 +376,10 @@ var DatasetPage = React.createClass({
 				<a
 					href={`?host=${host}&dataset=${encodeURIComponent(dataset)}&allIdentifiers=true`}
 					onClick={this.onIdentifiers}>All Identifiers</a>
+				{' '}
+				<a
+					href={`?host=${host}&dataset=${encodeURIComponent(dataset)}&allSamples=true`}
+					onClick={this.onSamples}>All Samples</a>
 				{dataMethod(meta)(meta, data)}
 			</div>);
 	}
@@ -414,14 +423,14 @@ var HubPage = React.createClass({
 // Identifiers page
 //
 
-var IdentifiersPage = React.createClass({
+var ListPage = React.createClass({
 	mixins: [rxEventsMixin],
 	componentWillMount: function () {
-		var {state} = this.props,
-			identifiers = getIn(state, ['datapages', 'identifiers', 'identifiers']);
-		this.events('identifiers');
-		var chunks = this.ev.identifiers
-			.startWith(identifiers)
+		var {state, path} = this.props,
+			list = getIn(state, ['datapages', path, 'list']);
+		this.events('list');
+		var chunks = this.ev.list
+			.startWith(list)
 			.distinctUntilChanged()
 			.filter(identity)
 			.switchMap(ids => {
@@ -438,28 +447,28 @@ var IdentifiersPage = React.createClass({
 		this.sub.unsubscribe();
 	},
 	componentWillReceiveProps(props) {
-		var {state} = props,
-			identifiers = getIn(state, ['datapages', 'identifiers', 'identifiers']);
+		var {state, path} = props,
+			list = getIn(state, ['datapages', path, 'list']);
 
-		this.on.identifiers(identifiers);
+		this.on.list(list);
 	},
 	getInitialState() {
 		return {};
 	},
 	render() {
-		var {state} = this.props,
+		var {state, path, title} = this.props,
 			{params: {host, dataset}, datapages} = state,
 			{dataset: currentDataset, host: currentHost}
-				= getIn(datapages, ['identifiers'], {}),
+				= getIn(datapages, [path], {}),
 			chunks = currentHost !== host || currentDataset !== dataset ?
 				undefined : this.state.chunks;
 
 		return (
 			<div className={styles.datapages}>
 				<h3>dataset: {dataset}</h3>
-				<h4>Identifiers</h4>
+				<h4>{title}</h4>
 				{chunks ? chunks.map(c => (
-					<pre className={styles.identifiers}>
+					<pre className={styles.list}>
 						{c}
 					</pre>
 				)) : 'Loading...'}
@@ -467,11 +476,18 @@ var IdentifiersPage = React.createClass({
 	}
 });
 
+var IdentifiersPage = props =>
+	<ListPage title='Identifiers' path='identifiers' {...props}/>;
+
+var SamplesPage = props =>
+	<ListPage title='Samples' path='samples' {...props}/>;
+
 //
 // Top-level dispatch to sub-pages
 //
 
-var getPage = ({dataset, host, cohort, allIdentifiers}) =>
+var getPage = ({dataset, host, cohort, allIdentifiers, allSamples}) =>
+	allSamples ? SamplesPage :
 	allIdentifiers ? IdentifiersPage :
 	dataset && host ? DatasetPage :
 	host ? HubPage :
