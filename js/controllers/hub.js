@@ -55,6 +55,8 @@ var checkDownload = (host, dataset) => {
 	return dl.catch(() => gzdl).catch(() => nodl);
 };
 
+var noSnippets = () => of(undefined);
+
 function fetchMatrixDataSnippets(host, dataset, meta, nProbes = 10, nSamples = 10) {
 	var samplesQ = datasetSamplesExamples(host, dataset, nSamples).share(),
 		fieldQ = datasetFieldExamples(host, dataset, nProbes).share(),
@@ -63,7 +65,8 @@ function fetchMatrixDataSnippets(host, dataset, meta, nProbes = 10, nSamples = 1
 			.mergeMap(([samples, fields]) => datasetFetch(host, dataset, samples, fields));
 
 	return zipArray(samplesQ, fieldQ, codeQ, dataQ)
-		.map(([samples, fields, codes, data]) => ({samples, fields, codes, data}));
+		.map(([samples, fields, codes, data]) => ({samples, fields, codes, data}))
+		.catch(noSnippets);
 }
 
 var mutationAttrs = ({rows}) => ({
@@ -74,7 +77,8 @@ var mutationAttrs = ({rows}) => ({
 });
 
 var fetchMutationDataSnippets = (host, dataset, nProbes = 10) =>
-	sparseDataExamples(host, dataset, nProbes).map(mutationAttrs);
+	sparseDataExamples(host, dataset, nProbes).map(mutationAttrs)
+	.catch(noSnippets);
 
 var segmentAttrs = ({rows}) => ({
 	chrom: pluck(rows.position, 'chrom'),
@@ -84,9 +88,8 @@ var segmentAttrs = ({rows}) => ({
 });
 
 var fetchSegmentedDataSnippets = (host, dataset, nProbes = 10) =>
-	segmentDataExamples(host, dataset, nProbes).map(segmentAttrs);
-
-var noSnippets = () => of(undefined);
+	segmentDataExamples(host, dataset, nProbes).map(segmentAttrs)
+	.catch(noSnippets);
 
 var snippetMethod = ({type = 'genomicMatrix'} = {}) =>
 	type === 'clinicalMatrix' ? fetchMatrixDataSnippets :

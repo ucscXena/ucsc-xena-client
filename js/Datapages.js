@@ -141,7 +141,11 @@ var datasetLink = (preferred, onClick) => ds => {
 				label={ds.label}
 				onClick={onClick}/>
 			{preferred.has(ds.dsID) ? <span className={styles.star}>*</span> : null}
-			<span className={styles.count}> (n={ds.count.toLocaleString()})</span>
+			{ds.status !== 'loaded' ?
+				<span className={styles.count}> [{ds.status}]</span> : null}
+			{ds.status === 'loaded' ?
+				<span className={styles.count}> (n={ds.count.toLocaleString()})</span> :
+				null}
 			<span> {getHubName(host)}</span>
 			<div className={styles.lineClamp}>
 				<span className={styles.description}>{stripHTML(ds.description)}</span>
@@ -295,7 +299,8 @@ var sparseTable = (meta, data) => {
 
 var noTable = () => null;
 
-var dataMethod = ({type = 'genomicMatrix'} = {}) =>
+var dataMethod = ({type = 'genomicMatrix', status} = {}) =>
+	status !== 'loaded' ? noTable :
 	type === 'genomicMatrix' ? matrixTable :
 	type === 'clinicalMatrix' ? matrixTable :
 	type === 'mutationVector' ? sparseTable :
