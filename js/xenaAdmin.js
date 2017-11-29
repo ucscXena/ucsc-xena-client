@@ -1,23 +1,8 @@
 /*global define: false */
 'use strict';
 var Rx = require('./rx');
-var {isArray, zip, map, apply, times,
-	constant, flatmap, merge} = require('./underscore_ext');
-
-function expandArrays(v, k) {
-	if (isArray(v)) {
-		return zip(v, times(v.length, constant(k)));
-	}
-	return [[v, k]];
-}
-
-function encodeParam(v, k) {
-	return k + "=" + encodeURIComponent(v);
-}
-
-function encodeObject(obj) {
-	return map(flatmap(obj, expandArrays), apply(encodeParam)).join("&");
-}
+var {encodeObject} = require('./util');
+var {isArray, merge} = require('./underscore_ext');
 
 function update(host, files, flags) {
 	files = isArray(files) ? files : [files];

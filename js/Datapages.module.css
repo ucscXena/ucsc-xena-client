@@ -88,6 +88,10 @@
 	font-size: 0.9em;
 }
 
+.value > [data-react-toolbox='link'] {
+	opacity: 1; /* override RT link opacity */
+}
+
 .dataSnippetTable {
 	border-collapse:collapse;
 	width: 100%;
@@ -109,6 +113,11 @@
 
 .tableControls * {
 	margin: 10px;
+}
+
+.tableControls > [data-react-toolbox='link'] {
+	opacity: 1;
+	display: inline;
 }
 
 .tableControls *:first-child {

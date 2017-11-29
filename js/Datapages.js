@@ -2,7 +2,7 @@
 
 require('./base');
 const React = require('react');
-var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN,
+var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
 	pluck, concat, where, contains, get, updateIn, range,
 	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext');
 var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx');
@@ -19,10 +19,28 @@ var treehouseImg = require('../images/Treehouse.jpg');
 var {rxEventsMixin} = require('./react-utils');
 var {servers: {localHub}} = require('./defaultServers');
 import Dialog from 'react-toolbox/lib/dialog';
+var {encodeObject, urlParams} = require('./util');
 
 var getHubName = host => get(serverNames, host, host);
 
 var pluralize = (str, count) => count === 1 ? `1 ${str}` : `${count} ${str}s`;
+
+//
+// event handler for navigating within datapages. Prevents page load, and
+// sets url params.
+//
+
+var navHandler = paramFn => {
+	return function(ev) {
+		ev.preventDefault();
+		this.props.callback(['navigate', 'datapages', paramFn(ev, this.props.state)]);
+	};
+};
+
+//var paramFromDataset = ev => ev.target.parentElement.dataset;
+
+// Get params from the anchor href. With RT Link, the anchor is parentElement.
+var paramFromHref = ev => mapObject(urlParams(ev.target.parentElement.href), a => a[0]);
 
 //
 // Data hubs sidebar
@@ -31,17 +49,12 @@ var pluralize = (str, count) => count === 1 ? `1 ${str}` : `${count} ${str}s`;
 var hubLink = (host, onClick) => (
 	<Link
 		className={styles.link}
-		href={`?host=${host}`}
-		data-host={host}
+		href={'?' + encodeObject({host})}
 		label={getHubName(host)}
 		onClick={onClick}/>);
 
 var DataHubs = React.createClass({
-	onHub(ev) {
-		ev.preventDefault();
-		var host = ev.target.parentElement.dataset.host;
-		this.props.callback(['navigate', 'datapages', {host}]);
-	},
+	onHub: navHandler(paramFromHref),
 	onSelect(isOn, ev) {
 		var {checked} = ev.target,
 			host = ev.target.getAttribute('data-host');
@@ -76,12 +89,11 @@ var treehouse = cohort =>
 	cohort.search(/^Treehouse/gi) === -1 ? null :
 	<img src={treehouseImg} height='40px'/>;
 
-var cohortLink = (name, onClick) => (
+var cohortLink = (cohort, onClick) => (
 	<Link
 		className={styles.link}
-		href={`?cohort=${name}`}
-		data-cohort={name}
-		label={name}
+		href={'?' + encodeObject({cohort})}
+		label={cohort}
 		onClick={onClick}/>);
 
 var collateCohorts = hubCohorts =>
@@ -109,11 +121,7 @@ var CohortSummary = ({cohorts, onCohort}) => {
 };
 
 var CohortSummaryPage = React.createClass({
-	onCohort(ev) {
-		ev.preventDefault();
-		var cohort = ev.target.parentElement.dataset.cohort;
-		this.props.callback(['navigate', 'datapages', {cohort}]);
-	},
+	onCohort: navHandler(paramFromHref),
 	render() {
 		var {state} = this.props,
 			{spreadsheet: {servers}} = state,
@@ -178,9 +186,7 @@ var datasetLink = (callback, preferred, onClick) => ds => {
 		<li>
 			<Link
 				className={styles.link}
-				href={`?dataset=${ds.name}&host=${host}`}
-				data-host={host}
-				data-dataset={ds.name}
+				href={'?' + encodeObject({dataset: ds.name, host})}
 				label={ds.label}
 				onClick={onClick}/>
 			{preferred.has(ds.dsID) ? <span className={styles.star}>*</span> : null}
@@ -221,11 +227,7 @@ var CohortPage = React.createClass({
 		this.props.callback(['cohort', 0, cohort]);
 		this.props.callback(['navigate', 'heatmap']);
 	},
-	onDataset(ev) {
-		ev.preventDefault();
-		var {host, dataset} = ev.target.parentElement.dataset;
-		this.props.callback(['navigate', 'datapages', {host, dataset}]);
-	},
+	onDataset: navHandler(paramFromHref),
 	render() {
 		var {datapages, params, wizard} = this.props.state,
 			cohort = getIn(datapages, ['cohort', 'cohort']) === params.cohort ?
@@ -270,12 +272,11 @@ var dataPair = (key, value, method = identity) => value == null ? [] : [
 	<br/>];
 
 var toLink = value => <a href={value}>{value}</a>;
-var toCohortLink = onClick => value => (
-	<a
-		href={`?cohort=${encodeURIComponent(value)}`}
-		onClick={onClick}>
-		{value}
-	</a>);
+var toCohortLink = onClick => cohort => (
+	<Link
+		href={'?' + encodeObject({cohort})}
+		onClick={onClick}
+		label={cohort}/>);
 var toPMIDLink = value => (
 	<a href={`http://www.ncbi.nlm.nih.gov/pubmed/?term=${value.toString()}`}>
 		{value}
@@ -354,28 +355,15 @@ var dataMethod = ({type = 'genomicMatrix', status} = {}) =>
 	noTable;
 
 var DatasetPage = React.createClass({
-	onCohort(ev) {
-		ev.preventDefault();
-		var cohort = getIn(this.props.state,
-			['datapages', 'dataset', 'meta', 'cohort'], COHORT_NULL);
-		this.props.callback(['navigate', 'datapages', {cohort}]);
-	},
+	onCohort: navHandler(paramFromHref),
 	onViz() {
 		var {datapages} = this.props.state,
 			cohort = getIn(datapages, ['dataset', 'meta', 'cohort'], COHORT_NULL);
 		this.props.callback(['cohort', 0, cohort]);
 		this.props.callback(['navigate', 'heatmap']);
 	},
-	onIdentifiers(ev) {
-		var {host, dataset} = this.props.state.params;
-		ev.preventDefault();
-		this.props.callback(['navigate', 'datapages', {host, dataset, allIdentifiers: true}]);
-	},
-	onSamples(ev) {
-		var {host, dataset} = this.props.state.params;
-		ev.preventDefault();
-		this.props.callback(['navigate', 'datapages', {host, dataset, allSamples: true}]);
-	},
+	onIdentifiers: navHandler(paramFromHref),
+	onSamples: navHandler(paramFromHref),
 	render() {
 		var {callback, state} = this.props,
 			{params: {host, dataset}, datapages} = state,
@@ -431,12 +419,12 @@ var DatasetPage = React.createClass({
 						`${probeCount.toLocaleString()} identifiers X ${count} samples` : null}
 					{type === 'clinicalMatrix' ?
 						`${count} samples X ${probeCount.toLocaleString()} identifiers` : null}
-					<a
-						href={`?host=${host}&dataset=${encodeURIComponent(dataset)}&allIdentifiers=true`}
-						onClick={this.onIdentifiers}>All Identifiers</a>
-					<a
-						href={`?host=${host}&dataset=${encodeURIComponent(dataset)}&allSamples=true`}
-						onClick={this.onSamples}>All Samples</a>
+					<Link
+						href={'?' + encodeObject({host, dataset, allIdentifiers: true})}
+						onClick={this.onIdentifiers} label='All Identifiers'/>
+					<Link
+						href={'?' + encodeObject({host, dataset, allSamples: true})}
+						onClick={this.onSamples} label='All Samples'/>
 				</span>
 				{dataMethod(meta)(meta, data)}
 			</div>);
@@ -456,11 +444,7 @@ var markdownValue = value => {
 };
 
 var HubPage = React.createClass({
-	onCohort(ev) {
-		ev.preventDefault();
-		var cohort = ev.target.parentElement.dataset.cohort;
-		this.props.callback(['navigate', 'datapages', {cohort}]);
-	},
+	onCohort: navHandler(paramFromHref),
 	render() {
 		var {state} = this.props,
 			{params: {host}} = state,
