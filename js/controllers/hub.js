@@ -23,6 +23,10 @@ var ajaxGet = url => ajax({url, crossDomain: true, method: 'GET', responseType: 
 var hubMeta = host => ajaxGet(`${host}/download/meta/info.mdown`).map(r => r.response)
 	.catch(() => of(undefined));
 
+var cohortMetaHost = 'https://rawgit.com/ucscXena/cohortMetaData/master';
+var cohortMeta = cohort => ajaxGet(`${cohortMetaHost}/cohort_${cohort}/info.mdown`).map(r => r.response)
+	.catch(() => of(undefined));
+
 var notGenomic = ["sampleMap", "probeMap", "genePred", "genePredExt"];
 var genomicCohortSummary = server =>
 		zipArray([cohortSummary(server, notGenomic), hubMeta(server)])
@@ -35,10 +39,11 @@ function fetchCohortSummary(serverBus, servers) {
 	serverBus.next(['cohort-summary', q]);
 }
 
-function fetchDatasets(serverBus, state) {
+function fetchCohortData(serverBus, state) {
 	var {cohort} = state.params,
-		servers = userServers(state.spreadsheet);
-	serverBus.next(['cohort-datasets', datasetQuery(servers, [{name: cohort}]), cohort]);
+		servers = userServers(state.spreadsheet),
+		q = zipArray(datasetQuery(servers, [{name: cohort}]), cohortMeta(cohort));
+	serverBus.next(['cohort-data', q, cohort]);
 }
 
 // emit url if HEAD request succeeds
@@ -150,8 +155,8 @@ var controls = {
 	'cohort-summary': (state, cohorts) =>
 		updateIn(state, ['datapages', 'cohorts'],
 				(list = []) => concat(list, cohorts)),
-	'cohort-datasets': (state, datasets, cohort) =>
-		assocIn(state, ['datapages', 'cohort'], {cohort, datasets}),
+	'cohort-data': (state, [datasets, meta], cohort) =>
+		assocIn(state, ['datapages', 'cohort'], {cohort, datasets, meta}),
 	'dataset-meta': (state, metaAndLinks, host, dataset) =>
 		assocIn(state, ['datapages', 'dataset'], {host, dataset, ...metaAndLinks}),
 	'dataset-identifiers': (state, list, host, dataset) =>
@@ -241,7 +246,7 @@ function datapagesPostActions(serverBus, state, newState, action) {
 	var aCohort = needACohort(newState);
 	if (aCohort && !hasACohort(newState, aCohort) &&
 		   (type === 'init' || needACohort(state) !== aCohort)) {
-		fetchDatasets(serverBus, newState);
+		fetchCohortData(serverBus, newState);
 	}
 
 	var dataset = needDataset(newState);

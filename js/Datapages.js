@@ -178,6 +178,14 @@ var DeleteButton = React.createClass({
 var canDelete = ({status}, host) =>
 	host === localHub && contains(['loaded', 'error'], status);
 
+var markdownValue = value => {
+	if (value) {
+		var converter = new showdown.Converter();
+		return (<div className={styles.header}
+			dangerouslySetInnerHTML={{__html: converter.makeHtml(value)}}/>);
+	}
+};
+
 //
 // Cohort Datasets Page
 //
@@ -241,6 +249,7 @@ var CohortPage = React.createClass({
 
 		return (
 			<div className={styles.datapages}>
+				{markdownValue(cohort.meta)}
 				<div className={styles.sidebar}>
 					<Button onClick={this.onViz} accent>Visualize</Button>
 				</div>
@@ -436,14 +445,6 @@ var DatasetPage = React.createClass({
 //
 // Hub page
 //
-
-var markdownValue = value => {
-	if (value) {
-		var converter = new showdown.Converter();
-		return (<div className={styles.header}
-			dangerouslySetInnerHTML={{__html: converter.makeHtml(value)}}/>);
-	}
-};
 
 var HubPage = React.createClass({
 	onCohort: navHandler(paramFromHref),
