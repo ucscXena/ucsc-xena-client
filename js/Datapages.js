@@ -425,18 +425,19 @@ var DatasetPage = React.createClass({
 						dataPair('raw data', url, toLink)),
 					dataPair('wrangling', wranglingProcedure, toHTML),
 					dataPair('input data format', FORMAT_MAPPING[type])])}
-				<span className={styles.tableControls}>
-					{type === 'genomicMatrix' ?
-						`${probeCount.toLocaleString()} identifiers X ${count} samples` : null}
-					{type === 'clinicalMatrix' ?
-						`${count} samples X ${probeCount.toLocaleString()} identifiers` : null}
-					<Link
-						href={'?' + encodeObject({host, dataset, allIdentifiers: true})}
-						onClick={this.onIdentifiers} label='All Identifiers'/>
-					<Link
-						href={'?' + encodeObject({host, dataset, allSamples: true})}
-						onClick={this.onSamples} label='All Samples'/>
-				</span>
+				{status === 'loaded' ?
+					<span className={styles.tableControls}>
+						{type === 'genomicMatrix' ?
+							`${probeCount.toLocaleString()} identifiers X ${count} samples` : null}
+						{type === 'clinicalMatrix' ?
+							`${count} samples X ${probeCount.toLocaleString()} identifiers` : null}
+						<Link
+							href={'?' + encodeObject({host, dataset, allIdentifiers: true})}
+							onClick={this.onIdentifiers} label='All Identifiers'/>
+						<Link
+							href={'?' + encodeObject({host, dataset, allSamples: true})}
+							onClick={this.onSamples} label='All Samples'/>
+					</span> : null}
 				{dataMethod(meta)(meta, data)}
 			</div>);
 	}
