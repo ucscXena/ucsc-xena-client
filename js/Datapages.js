@@ -22,6 +22,8 @@ import Dialog from 'react-toolbox/lib/dialog';
 
 var getHubName = host => get(serverNames, host, host);
 
+var pluralize = (str, count) => count === 1 ? `1 ${str}` : `${count} ${str}s`;
+
 //
 // Data hubs sidebar
 //
@@ -94,13 +96,13 @@ var CohortSummary = ({cohorts, onCohort}) => {
 		nDatasets = sum(values(cohorts));
 	return (
 		<div>
-			<h2>{nCohorts} Cohorts, {nDatasets} Datasets</h2>
+			<h2>{pluralize('Cohort', nCohorts)}, {pluralize('Dataset', nDatasets)}</h2>
 			<ul className={styles.list}>
 				{map(names, name =>
 					<li>
 						{treehouse(name)}
 						{cohortLink(name, onCohort)}
-						{` (${cohorts[name]} datasets)`}
+						{` (${pluralize('dataset', cohorts[name])})`}
 					</li>)}
 			</ul>
 		</div>);
