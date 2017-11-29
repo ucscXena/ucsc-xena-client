@@ -34,6 +34,10 @@
 	display: inline;
 }
 
+.link:not(.active) {
+	opacity: 1.0;
+}
+
 .link > abbr {
 	text-transform: none;
 }
@@ -100,5 +104,13 @@
 }
 
 .list {
-	font-size: 13px;
+	font-size: 16px;
+}
+
+.tableControls * {
+	margin: 10px;
+}
+
+.tableControls *:first-child {
+	margin-left: 0;
 }
