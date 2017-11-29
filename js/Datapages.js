@@ -20,6 +20,8 @@ var {rxEventsMixin} = require('./react-utils');
 var {servers: {localHub}} = require('./defaultServers');
 import Dialog from 'react-toolbox/lib/dialog';
 var {encodeObject, urlParams} = require('./util');
+import {ThemeProvider} from 'react-css-themr';
+var appTheme = require('./appTheme');
 
 var getHubName = host => get(serverNames, host, host);
 
@@ -567,6 +569,15 @@ var Datapages = React.createClass({
 	}
 });
 
+var ThemedDatapages = React.createClass({
+	render() {
+		return (
+		<ThemeProvider theme={appTheme}>
+			<Datapages {...this.props}/>
+		</ThemeProvider>);
+	}
+});
+
 var selector = state => state;
 
-module.exports = props => <Datapages {...props} selector={selector}/>;
+module.exports = props => <ThemedDatapages {...props} selector={selector}/>;
