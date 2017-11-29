@@ -5,6 +5,7 @@ var {make, mount, compose} = require('./utils');
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetFieldExamples, fieldCodes, datasetField, datasetFetch,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
+var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers, datasetQuery} = require('./common');
 var Rx = require('../rx');
 
@@ -156,7 +157,11 @@ var controls = {
 	'dataset-identifiers': (state, list, host, dataset) =>
 		assocIn(state, ['datapages', 'identifiers'], {host, dataset, list}),
 	'dataset-samples': (state, list, host, dataset) =>
-		assocIn(state, ['datapages', 'samples'], {host, dataset, list})
+		assocIn(state, ['datapages', 'samples'], {host, dataset, list}),
+	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
+		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
+	// Force page load after delete, to refresh all data.
+	'dataset-deleted-post!': () => location.reload()
 };
 
 var getSection = ({dataset, host, cohort, allIdentifiers, allSamples}) =>

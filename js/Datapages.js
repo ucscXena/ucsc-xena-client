@@ -17,6 +17,8 @@ var showdown = require('showdown');
 var {stripHTML} = require('./dom_helper');
 var treehouseImg = require('../images/Treehouse.jpg');
 var {rxEventsMixin} = require('./react-utils');
+var {servers: {localHub}} = require('./defaultServers');
+import Dialog from 'react-toolbox/lib/dialog';
 
 var getHubName = host => get(serverNames, host, host);
 
@@ -126,10 +128,49 @@ var CohortSummaryPage = React.createClass({
 });
 
 //
+// Dataset delete button
+//
+
+var DeleteButton = React.createClass({
+	getInitialState() {
+		return {active: false};
+	},
+	onDelete() {
+		this.setState({active: !this.state.active});
+	},
+	onReally() {
+		var {name} = this.props;
+		this.props.callback(['navigate', 'datapages', {host: localHub}]);
+		this.props.callback(['delete-dataset', localHub, name]);
+	},
+	actions() {
+		return [
+			{label: 'Cancel', onClick: this.onDelete},
+			{label: 'Really Delete', onClick: this.onReally}];
+	},
+	render() {
+		var {active} = this.state,
+			{label} = this.props;
+		return (
+			<div className={styles.deleteButton}>
+				<Dialog actions={this.actions()} active={active}
+						onEscKeyDown={this.onDelete} onOverlayClick={this.onDelete}
+						title='Delete dataset'>
+					{label}
+				</Dialog>
+				<Button onClick={this.onDelete} accent>Delete</Button>
+			</div>);
+	}
+});
+
+var canDelete = ({status}, host) =>
+	host === localHub && contains(['loaded', 'error'], status);
+
+//
 // Cohort Datasets Page
 //
 
-var datasetLink = (preferred, onClick) => ds => {
+var datasetLink = (callback, preferred, onClick) => ds => {
 	var [host] = parseDsID(ds.dsID);
 	return (
 		<li>
@@ -144,22 +185,24 @@ var datasetLink = (preferred, onClick) => ds => {
 			{ds.status !== 'loaded' ?
 				<span className={styles.count}> [{ds.status}]</span> : null}
 			{ds.status === 'loaded' ?
-				<span className={styles.count}> (n={ds.count.toLocaleString()})</span> :
+				<span className={styles.count}> (n={(ds.count || 0).toLocaleString()})</span> :
 				null}
 			<span> {getHubName(host)}</span>
+			{canDelete(ds, host) ?
+				<DeleteButton callback={callback} name={ds.name} label={ds.label || ds.name}/> : null}
 			<div className={styles.lineClamp}>
 				<span className={styles.description}>{stripHTML(ds.description)}</span>
 			</div>
 		</li>);
 };
 
-var drawGroup = (groups, preferred, onClick) => dataSubType => {
+var drawGroup = (callback, groups, preferred, onClick) => dataSubType => {
 	var list = sortBy(groups[dataSubType], g => g.label.toLowerCase());
 	return (
 		<div>
 			<h3>{dataSubType}</h3>
 			<ul className={styles.groupList}>
-				{map(list, datasetLink(preferred, onClick))}
+				{map(list, datasetLink(callback, preferred, onClick))}
 			</ul>
 		</div>);
 };
@@ -185,6 +228,7 @@ var CohortPage = React.createClass({
 		var {datapages, params, wizard} = this.props.state,
 			cohort = getIn(datapages, ['cohort', 'cohort']) === params.cohort ?
 				datapages.cohort : {cohort: '...', datasets: []},
+			{callback} = this.props,
 			dsGroups = groupBy(values(cohort.datasets), 'dataSubType'),
 			dataSubTypes = sortBy(keys(dsGroups), g => g.toLowerCase()),
 			preferred = getPreferred(wizard, params.cohort);
@@ -195,7 +239,7 @@ var CohortPage = React.createClass({
 					<Button onClick={this.onViz} accent>Visualize</Button>
 				</div>
 				<h2>cohort: {treehouse(cohort.cohort)}{cohort.cohort}</h2>
-				{dataSubTypes.map(drawGroup(dsGroups, preferred, this.onDataset))}
+				{dataSubTypes.map(drawGroup(callback, dsGroups, preferred, this.onDataset))}
 				{preferred.size === 0 ? null : (
 					<span>
 						<span className={styles.star}>*</span>
@@ -331,7 +375,7 @@ var DatasetPage = React.createClass({
 		this.props.callback(['navigate', 'datapages', {host, dataset, allSamples: true}]);
 	},
 	render() {
-		var {state} = this.props,
+		var {callback, state} = this.props,
 			{params: {host, dataset}, datapages} = state,
 			{meta, probeCount = 0, data, downloadLink, probemapLink, dataset: currentDataset,
 				host: currentHost} = get(datapages, 'dataset', {});
@@ -353,6 +397,8 @@ var DatasetPage = React.createClass({
 			<div className={styles.datapages}>
 				<div className={styles.sidebar}>
 					<Button onClick={this.onViz} accent>Visualize</Button>
+					{canDelete(meta, host) ?
+						<DeleteButton callback={callback} name={name} label={label}/> : null}
 				</div>
 				<h2>dataset: {(dataSubType ? dataSubType + ' - ' : '') + label}</h2>
 				{headerValue(longTitle)}

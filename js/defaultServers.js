@@ -14,6 +14,7 @@ var servers = {
 };
 
 module.exports = {
+	servers,
 	serverNames: {
 		[servers.localHub]: "My computer hub",
 		[servers.publicHub]: 'UCSC public hub',
