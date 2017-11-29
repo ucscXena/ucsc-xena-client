@@ -76,7 +76,6 @@
 }
 
 .header {
-	width: 70%;
 	font-size: 0.9em;
 }
 
@@ -91,7 +90,6 @@
 
 .value {
 	margin: 5px 0 5px 0;
-/*	width: 70%; */
 	display: inline-block;
 	vertical-align: middle;
 	font-size: 0.9em;
