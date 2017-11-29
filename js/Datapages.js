@@ -42,6 +42,8 @@ var navHandler = paramFn => {
 // Get params from the anchor href. With RT Link, the anchor is parentElement.
 var paramFromHref = ev => mapObject(urlParams(ev.target.parentElement.href), a => a[0]);
 
+var getUserServers = servers => keys(servers).filter(k => servers[k].user);
+
 //
 // Data hubs sidebar
 //
@@ -125,7 +127,7 @@ var CohortSummaryPage = React.createClass({
 	render() {
 		var {state} = this.props,
 			{spreadsheet: {servers}} = state,
-			userServers = keys(servers).filter(k => servers[k].user),
+			userServers = getUserServers(servers),
 			cohorts = getIn(this.props.state, ['datapages', 'cohorts'], []),
 			activeCohorts = cohorts.filter(c => contains(userServers, c.server)),
 			combined = collateCohorts(activeCohorts);
@@ -450,11 +452,13 @@ var HubPage = React.createClass({
 			{params: {host}} = state,
 			cohorts = getIn(state, ['datapages', 'cohorts'], []),
 			hubCohorts = where(cohorts, {server: host}),
-			coll = collateCohorts(hubCohorts);
+			coll = collateCohorts(hubCohorts),
+			inHubs = contains(getUserServers(state.spreadsheet.servers), host) ?
+				'' : ' (not in my data hubs)';
 		return (
 			<div className={styles.datapages}>
 				{markdownValue(getIn(hubCohorts, [0, 'meta']))}
-				<h2>{getHubName(host)}</h2>
+				<h2>{getHubName(host)}{inHubs}</h2>
 				<p>Host address: {host}</p>
 				<CohortSummary cohorts={coll} onCohort={this.onCohort}/>
 			</div>);

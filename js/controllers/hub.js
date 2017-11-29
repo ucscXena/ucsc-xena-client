@@ -172,10 +172,13 @@ var getSection = ({dataset, host, cohort, allIdentifiers, allSamples}) =>
 	cohort ? 'cohort' :
 	'summary';
 
+var linkedHub = state =>
+	state.params.host ? [state.params.host] : [];
+
 var needCohortHubs = state =>
 	state.page === 'datapages' &&
 	contains(['summary', 'hub'], getSection(state.params)) ?
-	userServers(state.spreadsheet) : [];
+	userServers(state.spreadsheet).concat(linkedHub(state)) : [];
 
 var hasCohortHubs = state => pluck(getIn(state, ['datapages', 'cohorts'], []), 'server');
 
