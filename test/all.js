@@ -23,3 +23,4 @@ require('./stripeHeight');
 require('./findIntrons');
 require('./layoutPlot');
 //require('./matrix-test');
+require('./Legend');
