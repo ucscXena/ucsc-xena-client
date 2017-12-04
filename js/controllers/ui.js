@@ -209,9 +209,7 @@ var controls = {
 			if (!state.wizard.cohorts || params.hubs) {
 				fetchCohorts(serverBus, state.spreadsheet, newState.spreadsheet, {force: true});
 			}
-			if (_.get(newState.spreadsheet, 'cohort')) {
-				fetchCohortData(serverBus, newState.spreadsheet);
-			}
+			updateWizard(serverBus, state.spreadsheet, newState.spreadsheet);
 		}
 		// These are independent of server settings.
 		if (!newState.wizard.cohortMeta) {
