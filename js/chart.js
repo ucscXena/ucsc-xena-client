@@ -686,74 +686,89 @@ function render(root, callback, sessionStorage) {
 			}
 
 			// p value when there is only 2 group comparison student t-test
-			if (yfields.length === 1 && xCategories.length === 2 &&
-				nNumberMatrix[0][0] > 1 && nNumberMatrix[1][0] > 1) {
-				// do p value calculation using Welch's t-test
-				var x1 = meanMatrix[0][0], // mean1
-					x2 = meanMatrix[1][0], // mean2
-					v1 = stdMatrix[0][0] * stdMatrix[0][0], //variance 1
-					v2 = stdMatrix[1][0] * stdMatrix[1][0], //variance 2
-					n1 = nNumberMatrix[0][0], // number 1
-					n2 = nNumberMatrix[1][0], // number 2
-					vCombined = v1 / n1 + v2 / n2, // pooled variance
-					sCombined = Math.sqrt(vCombined), //pool sd
-					tStatistics = (x1 - x2) / sCombined, // t statistics,
-					cdf;
+			if (xCategories.length === 2) {
+				statsDiv.innerHTML = 'Welch\'s t-test<br>';
+				_.range(yfields.length).map(k => {
+					if (nNumberMatrix[0][k] > 1 && nNumberMatrix[1][k] > 1) {
+						// p value calculation using Welch's t-test
+						let x1 = meanMatrix[0][k], // mean1
+							x2 = meanMatrix[1][k], // mean2
+							v1 = stdMatrix[0][k] * stdMatrix[0][k], //variance 1
+							v2 = stdMatrix[1][k] * stdMatrix[1][k], //variance 2
+							n1 = nNumberMatrix[0][k], // number 1
+							n2 = nNumberMatrix[1][k], // number 2
+							vCombined = v1 / n1 + v2 / n2, // pooled variance
+							sCombined = Math.sqrt(vCombined), //pool sd
+							tStatistics = (x1 - x2) / sCombined, // t statistics,
+							cdf;
 
-				dof = vCombined * vCombined / ((v1 / n1) * (v1 / n1) / (n1 - 1) + (v2 / n2) * (v2 / n2) / (n2 - 1)), // degree of freedom
-				cdf = jStat.studentt.cdf(tStatistics, dof),
-				pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
+						dof = vCombined * vCombined / ((v1 / n1) * (v1 / n1) / (n1 - 1) + (v2 / n2) * (v2 / n2) / (n2 - 1)), // degree of freedom
+						cdf = jStat.studentt.cdf(tStatistics, dof),
+						pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
 
-				statsDiv.innerHTML = 'Welch\'s t-test<br>' +
-					't = ' + tStatistics.toPrecision(4) + '<br>' +
-					'p = ' + pValue.toPrecision(4);
+						statsDiv.innerHTML += (
+							(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
+							't = ' + tStatistics.toPrecision(4) + '<br>' +
+							'p = ' + pValue.toPrecision(4) + '<br>'
+						);
+					}
+				});
 				statsDiv.classList.toggle(compStyles.visible);
 			}
 
 			// p value for >2 groups one-way ANOVA
 			// https://en.wikipedia.org/wiki/One-way_analysis_of_variance
-			if (yfields.length === 1 && xCategories.length > 2) {
-				let flattenArray = _.flatten(xCategories.map(code => ybinnedSample[yfields[0]][code])),
-					// Calculate the overall mean
-					totalMean = flattenArray.reduce((sum, el) => sum + el, 0) / flattenArray.length,
-					//Calculate the "between-group" sum of squared differences
-					sB = _.range(xCategories.length).reduce((sum, index) => {
-						if (nNumberMatrix[index][0] > 0) {
-							return sum + nNumberMatrix[index][0] * (meanMatrix[index][0] - totalMean) * (meanMatrix[index][0] - totalMean);
-						} else {
-							return sum;
-						}
-					}, 0),
-					// between-group degrees of freedom
-					fB = _.range(xCategories.length).filter(index => nNumberMatrix[index][0] > 0).length - 1,
-					// between-group mean square differences
-					msB = sB / fB,
-					// Calculate the "within-group" sum of squares
-					sW = _.range(xCategories.length).reduce((sum, index) => {
-						if (nNumberMatrix[index][0] > 0) {
-							return sum + stdMatrix[index][0] * stdMatrix[index][0] * (nNumberMatrix[index][0]);
-						} else {
-							return sum;
-						}
-					}, 0),
-					// within-group degrees of freedom
-					fW = _.range(xCategories.length).reduce((sum, index) => {
-						if (nNumberMatrix[index][0] > 0) {
-							return sum + nNumberMatrix[index][0] - 1;
-						} else {
-							return sum;
-						}
-					}, 0),
-					// within-group mean difference
-					msW = sW / fW,
-					//  F-ratio
-					fScore = msB / msW,
-					// p value
-					pValue = jStat.ftest(fScore, fB, fW);
+			else if (xCategories.length > 2) {
+				statsDiv.innerHTML = 'One-way Anova<br>';
+				_.range(yfields.length).map(k => {
+					yfield = yfields[k];
+					ydataElement = ydata[k];
+					ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, xCategories, xSampleCode);
 
-				statsDiv.innerHTML = 'One-way Anova<br>' +
-					'f = ' + fScore.toPrecision(4) + '<br>' +
-					'p = ' + pValue.toPrecision(4);
+					let flattenArray = _.flatten(xCategories.map(code => ybinnedSample[yfield][code])),
+						// Calculate the overall mean
+						totalMean = flattenArray.reduce((sum, el) => sum + el, 0) / flattenArray.length,
+						//Calculate the "between-group" sum of squared differences
+						sB = _.range(xCategories.length).reduce((sum, index) => {
+							if (nNumberMatrix[index][0] > 0) {
+								return sum + nNumberMatrix[index][k] * Math.pow((meanMatrix[index][k] - totalMean), 2);
+							} else {
+								return sum;
+							}
+						}, 0),
+						// between-group degrees of freedom
+						fB = _.range(xCategories.length).filter(index => nNumberMatrix[index][k] > 0).length - 1,
+						// between-group mean square differences
+						msB = sB / fB,
+						// Calculate the "within-group" sum of squares
+						sW = _.range(xCategories.length).reduce((sum, index) => {
+							if (nNumberMatrix[index][k] > 0) {
+								return sum + Math.pow(stdMatrix[index][k], 2) * nNumberMatrix[index][k];
+							} else {
+								return sum;
+							}
+						}, 0),
+						// within-group degrees of freedom
+						fW = _.range(xCategories.length).reduce((sum, index) => {
+							if (nNumberMatrix[index][k] > 0) {
+								return sum + nNumberMatrix[index][k] - 1;
+							} else {
+								return sum;
+							}
+						}, 0),
+						// within-group mean difference
+						msW = sW / fW,
+						//  F-ratio
+						fScore = msB / msW,
+						// p value
+						pValue = jStat.ftest(fScore, fB, fW);
+
+					statsDiv.innerHTML += (
+						(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
+						'f = ' + fScore.toPrecision(4) + '<br>' +
+						'p = ' + pValue.toPrecision(4) + '<br>'
+					);
+				});
 				statsDiv.classList.toggle(compStyles.visible);
 			}
 
