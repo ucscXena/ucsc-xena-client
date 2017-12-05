@@ -118,7 +118,7 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 			formatter: function () {
 				return Y + '=' + categories[this.point.x]
 					+ '<br>'
-					+ '<b>' + this.point.y + '%</b>';
+					+ '<b>' + this.point.y.toPrecision(3) + '%</b>';
 			},
 			hideDelay: 0
 		};
@@ -187,8 +187,11 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 				+ (categories.length > 1 ?  yAxisTitle + ' ' : '' )
 				+ categories[this.point.x]
 				+ ': <b>'
-				+ this.point.median + '</b>'
-				+ ' (' + this.point.low + ',' + this.point.q1 + ',' + this.point.q3 + ',' + this.point.high + ')<br>'
+				+ this.point.median.toPrecision(3) + '</b>'
+				+ ' (' + this.point.low.toPrecision(3) + ','
+				+ this.point.q1.toPrecision(3) + ','
+				+ this.point.q3.toPrecision(3) + ','
+				+ this.point.high.toPrecision(3) + ')<br>'
 				+ '</b><br>'
 				+ (nNumber ? 'n = ' + nNumber : '');
 		},
@@ -244,7 +247,12 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	};
 	chartOptions.tooltip = {
 		hideDelay: 0,
-		pointFormat: '<b>{point.colorLabel}</b><br>sample: {point.name}<br>x: {point.x}<br>y:{point.y}'
+		formatter: function () {
+			return '<b>' + this.point.colorLabel + '</b><br>' +
+				'sample: ' + this.point.name + '<br>' +
+				'x: ' + this.point.x.toPrecision(3) + '<br>' +
+				'y: ' + this.point.y.toPrecision(3);
+			}
 	};
 	chartOptions.plotOptions = {
 		scatter: {
@@ -280,7 +288,7 @@ function addSeriesToColumn (chart, chartType, sName, ycodeSeries, yIsCategorical
 		if ( yIsCategorical) {
 			seriesOptions.dataLabels = {
 				enabled: true,
-				format: '{point.y} %'
+				formatter: function () { return this.point.y.toPrecision(3) + '%';}
 			};
 		} else {  // boxplot data label is not implemented in highchart, yet
 			seriesOptions.dataLabels = {

@@ -586,9 +586,10 @@ function render(root, callback, sessionStorage) {
 
 				for (i = 0; i < xCategories.length; i++) {
 					code = xCategories[i];
+					let data, m;
 					if (ybinnedSample[yfield][code].length) {
-						var data = ybinnedSample[yfield][code],
-							m = data.length;
+						data = ybinnedSample[yfield][code],
+						m = data.length;
 
 						data.sort((a, b) => a - b);
 						average =  highchartsHelper.average(data);
@@ -604,21 +605,22 @@ function render(root, callback, sessionStorage) {
 
 						upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
 						lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
+						meanMatrix[i][k] = average / STDEV[yfield];
+						medianMatrix[i][k] = median / STDEV[yfield];
+						lowerMatrix[i][k] = lower / STDEV[yfield];
 
-						meanMatrix[i][k] = parseFloat((average / STDEV[yfield]).toPrecision(3));
-						medianMatrix[i][k] = parseFloat((median / STDEV[yfield]).toPrecision(3));
-						lowerMatrix[i][k] = parseFloat((lower / STDEV[yfield]).toPrecision(3));
-
-						upperMatrix[i][k] = parseFloat((upper / STDEV[yfield]).toPrecision(3));
-						lowerwhiskerMatrix[i][k] = parseFloat((lowerwhisker / STDEV[yfield]).toPrecision(3));
-						upperwhiskerMatrix[i][k] = parseFloat((upperwhisker / STDEV[yfield]).toPrecision(3));
+						upperMatrix[i][k] = upper / STDEV[yfield];
+						lowerwhiskerMatrix[i][k] = lowerwhisker / STDEV[yfield];
+						upperwhiskerMatrix[i][k] = upperwhisker / STDEV[yfield];
 						nNumberMatrix[i][k] = m;
 
 						if (!isNaN(stdDev)) {
-							stdMatrix[i][k] = parseFloat((stdDev / STDEV[yfield]).toPrecision(3));
+							stdMatrix[i][k] = stdDev / STDEV[yfield];
 						} else {
 							stdMatrix[i][k] = NaN;
 						}
+					} else {
+						nNumberMatrix[i][k] = 0;
 					}
 				}
 			}
@@ -637,7 +639,7 @@ function render(root, callback, sessionStorage) {
 
 			cutOffset = function([average, offset]) {
 				if (!isNaN(average)) {
-					return parseFloat((average - offset).toPrecision(3));
+					return average - offset;
 				} else {
 					return "";
 				}
@@ -683,7 +685,7 @@ function render(root, callback, sessionStorage) {
 					nNumberSeriese);
 			}
 
-			// p value when there is only 2 group comparison
+			// p value when there is only 2 group comparison student t-test
 			if (yfields.length === 1 && xCategories.length === 2 &&
 				nNumberMatrix[0][0] > 1 && nNumberMatrix[1][0] > 1) {
 				// do p value calculation using Welch's t-test
@@ -707,6 +709,54 @@ function render(root, callback, sessionStorage) {
 					'p = ' + pValue.toPrecision(4);
 				statsDiv.classList.toggle(compStyles.visible);
 			}
+
+			// p value for >2 groups one-way ANOVA
+			// https://en.wikipedia.org/wiki/One-way_analysis_of_variance
+			if (yfields.length === 1 && xCategories.length > 2) {
+				let flattenArray = _.flatten(xCategories.map(code => ybinnedSample[yfields[0]][code])),
+					// Calculate the overall mean
+					totalMean = flattenArray.reduce((sum, el) => sum + el, 0) / flattenArray.length,
+					//Calculate the "between-group" sum of squared differences
+					sB = _.range(xCategories.length).reduce((sum, index) => {
+						if (nNumberMatrix[index][0] > 0) {
+							return sum + nNumberMatrix[index][0] * (meanMatrix[index][0] - totalMean) * (meanMatrix[index][0] - totalMean);
+						} else {
+							return sum;
+						}
+					}, 0),
+					// between-group degrees of freedom
+					fB = _.range(xCategories.length).filter(index => nNumberMatrix[index][0] > 0).length - 1,
+					// between-group mean square differences
+					msB = sB / fB,
+					// Calculate the "within-group" sum of squares
+					sW = _.range(xCategories.length).reduce((sum, index) => {
+						if (nNumberMatrix[index][0] > 0) {
+							return sum + stdMatrix[index][0] * stdMatrix[index][0] * (nNumberMatrix[index][0]);
+						} else {
+							return sum;
+						}
+					}, 0),
+					// within-group degrees of freedom
+					fW = _.range(xCategories.length).reduce((sum, index) => {
+						if (nNumberMatrix[index][0] > 0) {
+							return sum + nNumberMatrix[index][0] - 1;
+						} else {
+							return sum;
+						}
+					}, 0),
+					// within-group mean difference
+					msW = sW / fW,
+					//  F-ratio
+					fScore = msB / msW,
+					// p value
+					pValue = jStat.ftest(fScore, fB, fW);
+
+				statsDiv.innerHTML = 'One-way Anova<br>' +
+					'f = ' + fScore.toPrecision(4) + '<br>' +
+					'p = ' + pValue.toPrecision(4);
+				statsDiv.classList.toggle(compStyles.visible);
+			}
+
 			chart.redraw();
 		} else if (!xfield) { //summary view --- messsy code
 			var displayCategories;
@@ -780,8 +830,7 @@ function render(root, callback, sessionStorage) {
 			} else if (yfields.length === 1) {
 				chartOptions = highchartsHelper.columnChartOptions(
 					chartOptions, categories, xAxisTitle, "Histogram", ylabel, showLegend);
-			}
-			else {
+			} else {
 				if (reverseStrand) {
 					displayCategories.reverse();
 				}
@@ -794,7 +843,7 @@ function render(root, callback, sessionStorage) {
 				var value;
 				if (yIsCategorical) {
 					value = ybinnedSample[code].length;
-					dataSeriese.push(parseFloat((value * 100 / total).toPrecision(3)));
+					dataSeriese.push(value * 100 / total);
 					nNumberSeriese.push(value);
 				} else if (yfields.length === 1) {
 					value = ybinnedSample[code];
@@ -817,16 +866,17 @@ function render(root, callback, sessionStorage) {
 					upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
 					lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
 
-					median = parseFloat(((median - offsets[code]) / STDEV[code]).toPrecision(3));
-					lower = parseFloat(((lower - offsets[code]) / STDEV[code]).toPrecision(3));
-					upper = parseFloat(((upper - offsets[code]) / STDEV[code]).toPrecision(3));
-					upperwhisker = parseFloat(((upperwhisker - offsets[code]) / STDEV[code]).toPrecision(3));
-					lowerwhisker = parseFloat(((lowerwhisker - offsets[code]) / STDEV[code]).toPrecision(3));
+					median = (median - offsets[code]) / STDEV[code];
+					lower = (lower - offsets[code]) / STDEV[code];
+					upper = (upper - offsets[code]) / STDEV[code];
+					upperwhisker = (upperwhisker - offsets[code]) / STDEV[code];
+					lowerwhisker = (lowerwhisker - offsets[code]) / STDEV[code];
 
 					dataSeriese.push([lowerwhisker, lower, median, upper, upperwhisker]);
 					nNumberSeriese.push(m);
 				}
 			});
+
 			// add seriese to chart
 			var seriesLabel, chartType;
 
