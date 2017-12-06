@@ -24,7 +24,7 @@
     "dist": "npm run clean:dist && mkdir -p dist && cp -r js/* dist && NODE_ENV=production babel -d dist js && webpack --config webpack.dist.js",
     "prepublish": "npm run dist",
     "wdio": "wdio",
-    "cyprus:open": "cypress open"
+    "cypress:open": "cypress open"
   },
   "files": [
     "NOTICE",
