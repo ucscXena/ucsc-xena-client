@@ -12,6 +12,7 @@ var xenaQuery = require('../xenaQuery');
 var Rx = require('../rx');
 var multi = require('../multi');
 var parseGeneSignature = require('../parseGeneSignature');
+var parseInput = require('../parseInput');
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
@@ -215,8 +216,7 @@ function matchFields(datasets, features, mode, selected, value) {
 	if (isValid.Genotypic(value, selected)) {
 		// Be sure to handle leading and trailing commas, as might occur during user edits
 		let sig = parseGeneSignature(value.trim()),
-			fields = sig ? sig.genes :
-				value.trim().replace(/^,+|,+$/g, '').split(/[\s,]+/);
+			fields = sig ? sig.genes : parseInput(value);
 		return Rx.Observable.zip(
 			...selected.map(dsID => matchDatasetFields(datasets, dsID, fields, sig)),
 			(...matches) => ({matches, valid: true}));

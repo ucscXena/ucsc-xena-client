@@ -12,6 +12,7 @@ var uuid = require('../uuid');
 var Rx = require('../rx');
 var parsePos = require('../parsePos');
 var parseGeneSignature = require('../parseGeneSignature');
+var parseInput = require('../parseInput');
 var {signatureField} = require('../models/fieldSpec');
 
 /*function toWordList(str) {
@@ -69,10 +70,11 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 		pos = parsePos(input.trim(), meta.assembly),
         sig = parseGeneSignature(input.trim()),
 		fieldType = getFieldType(meta, features[dsID], fields, probes),
+		fieldsInput = sig ? sig.genes : parseInput(input),
 		normalizedFields = (
             pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :
 			((['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1) ?
-             [fields[0]] : fields).map(f => f ? f : "[unknown]"));
+             [fields[0]] : fields).map((f, i) => f ? f : fieldsInput[i] + " (unknown)"));
 
 	// My god, this is a disaster.
 	if (sig) {
