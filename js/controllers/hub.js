@@ -1,5 +1,5 @@
 'use strict';
-var {updateIn, dissoc, contains, pick, isEqual, get, difference,
+var {updateIn, dissoc, contains, pick, isEqual, get, difference, uniq,
 	concat, pluck, getIn, assocIn, identity} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
@@ -183,7 +183,7 @@ var linkedHub = state =>
 var needCohortHubs = state =>
 	state.page === 'datapages' &&
 	contains(['summary', 'hub'], getSection(state.params)) ?
-	userServers(state.spreadsheet).concat(linkedHub(state)) : [];
+	uniq(userServers(state.spreadsheet).concat(linkedHub(state))) : [];
 
 var hasCohortHubs = state => pluck(getIn(state, ['datapages', 'cohorts'], []), 'server');
 
