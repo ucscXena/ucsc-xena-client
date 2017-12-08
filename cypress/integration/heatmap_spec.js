@@ -154,6 +154,15 @@ var bootstrapAnimation = 2000;
 describe('Bookmark', function() {
 	it.only('Saves and restores heatmap and chart', function() {
 		cy.server();
+		// Ignore local hubs that are missing.  Would like to return a
+		// connection refused, but I don't think cy.route() will do that.
+		// Might be able to use a sinon mock.
+		cy.route({
+			method: 'POST',
+			url: 'https://local.xena.ucsc.edu:7223/*',
+			status: 500,
+			response: ''
+		});
 		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
 
 		///////////////////////////////////////
