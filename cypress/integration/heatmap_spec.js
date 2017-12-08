@@ -60,54 +60,57 @@ function renderASpreadsheet() {
 
 	wizard.cohortInput().type(aCohort.slice(0, 10));
 	wizard.cohortSelect(aCohort);
-	cy.contains('Done').click();
+	wizard.cohortDone().click();
 
 	wizard.geneExpression().click();
 	wizard.somaticMutation().click();
 	wizard.copyNumber().click();
 	wizard.geneFieldInput().type('TP53');
-	cy.contains('Done').click();
+	wizard.columnDone().click();
+	spreadsheet.loadingSpinners().should('not.be.visible');
 
 //	cy.contains('GOT IT').click();
 //	cy.contains('GOT IT').click();
 }
 
+var ignoreLocalHub = () => {
+	// Ignore local hubs that are missing.  Would like to return a
+	// connection refused, but I don't think cy.route() will do that.
+	// Might be able to use a sinon mock.
+	cy.route({
+		method: 'POST',
+		url: 'https://local.xena.ucsc.edu:7223/*',
+		status: 500,
+		response: ''
+	});
+};
+
 describe('Viz page', function() {
-	it('Renders a spreadsheet', renderASpreadsheet);
+	it('Renders a spreadsheet', exec(ignoreLocalHub, renderASpreadsheet));
 	it('Renders a chart', function() {
-		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
-
-		wizard.cohortInput().type(aCohort.slice(0, 10));
-		wizard.cohortSelect(aCohort);
-		cy.contains('Done').click();
-
-		wizard.geneExpression().click();
-		wizard.somaticMutation().click();
-		wizard.copyNumber().click();
-		wizard.geneFieldInput().type('TP53');
-		cy.contains('Done').click();
-
-//		cy.contains('GOT IT').click();
-//		cy.contains('GOT IT').click();
-
+		ignoreLocalHub();
+		renderASpreadsheet();
 		spreadsheet.chartView().click();
+		cy.get('.highcharts-root');
 	});
 });
 
+function renderATranscript() {
+	cy.visit(transcriptPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+	transcriptPage.studyA().select(aTCGAStudy);
+	transcriptPage.studyB().select(aGTEXStudy);
+	transcriptPage.geneFieldInput().type('KRAS');
+	transcriptPage.updateGene().click();
+	// cypress doesn't seem to have a way to wait on unspecified ajax
+	// requests to complete, or to ignore canceled requests. So, if we
+	// don't wait on something else here, we'll get an error in the *next*
+	// test when the transcript expression request aborts.
+	cy.contains('no expression'); // stupid way to wait for ajax
+}
+
 // XXX move to different file
 describe('Transcript page', function() {
-	it('Loads', function() {
-		cy.visit(transcriptPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
-		transcriptPage.studyA().select(aTCGAStudy);
-		transcriptPage.studyB().select(aGTEXStudy);
-		transcriptPage.geneFieldInput().type('KRAS');
-		transcriptPage.updateGene().click();
-		// cypress doesn't seem to have a way to wait on unspecified ajax
-		// requests to complete, or to ignore canceled requests. So, if we
-		// don't wait on something else here, we'll get an error in the *next*
-		// test when the transcript expression request aborts.
-		cy.contains('no expression'); // stupid way to wait for ajax
-	});
+	it('Draws', renderATranscript);
 });
 
 // This works around https://github.com/cypress-io/cypress/issues/76
@@ -140,6 +143,8 @@ var replayBookmark = xhr => {
 };
 
 var screenshot = file => () => {
+	// This is a clunky work-around to get cypress controls out of the way while
+	// screenshotting.
 	var reporter = window.parent.document.getElementsByClassName('reporter-wrap')[0],
 		display = reporter.style.display;
 	reporter.style.display = 'none';
@@ -152,17 +157,9 @@ var query = url => url.split(/\?/)[1];
 var highchartAnimation = 2000;
 var bootstrapAnimation = 2000;
 describe('Bookmark', function() {
-	it.only('Saves and restores heatmap and chart', function() {
+	it('Saves and restores heatmap and chart', function() {
 		cy.server();
-		// Ignore local hubs that are missing.  Would like to return a
-		// connection refused, but I don't think cy.route() will do that.
-		// Might be able to use a sinon mock.
-		cy.route({
-			method: 'POST',
-			url: 'https://local.xena.ucsc.edu:7223/*',
-			status: 500,
-			response: ''
-		});
+		ignoreLocalHub();
 		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
 
 		///////////////////////////////////////
@@ -170,7 +167,6 @@ describe('Bookmark', function() {
 		//
 
 		renderASpreadsheet();
-		cy.get('[data-xena="loading"').should('not.be.visible');
 
 		cy.scrollTo('topLeft').then(screenshot('heatmap'));
 
@@ -185,7 +181,7 @@ describe('Bookmark', function() {
 
 		cy.visit(heatmapPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
-		cy.get('[data-xena="loading"').should('not.be.visible');
+		spreadsheet.loadingSpinners().should('not.be.visible');
 		cy.scrollTo('topLeft').then(screenshot('heatmapBookmark'));
 
 		//
@@ -224,7 +220,7 @@ describe('Bookmark', function() {
 
 		cy.visit(heatmapPage.url + '?bookmark=a1b2', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=a1b2'));
-		cy.get('[data-xena="loading"').should('not.be.visible');
+		spreadsheet.loadingSpinners().should('not.be.visible');
 		cy.wait(bootstrapAnimation);
 		cy.scrollTo('topLeft').then(screenshot('kaplanMeierBookmark'));
 
@@ -253,7 +249,7 @@ describe('Bookmark', function() {
 		// Capture the bookmark, and load it in a new session
 		//
 
-		cy.wait('@bookmark').then(replayBookmark);//xhr => {
+		cy.wait('@bookmark').then(replayBookmark);
 
 		cy.visit(heatmapPage.url + '?bookmark=abcd', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=abcd'));
@@ -265,6 +261,40 @@ describe('Bookmark', function() {
 		//
 
 		cy.exec('babel-node cypress/compareImages.js chart chartBookmark')
+			.its('stdout').should('contain', 'same');
+	});
+	it('Saves and restores transcript', function() {
+		cy.server();
+		ignoreLocalHub();
+		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
+
+		///////////////////////////////////////
+		// Bookmark a spreadsheet
+		//
+
+		renderATranscript();
+
+		cy.scrollTo('topLeft').then(screenshot('transcript'));
+
+		nav.bookmarkMenu().click();
+		nav.bookmark().click();
+
+		//
+		// Capture the bookmark, and load it in a new session
+		//
+
+		cy.wait('@bookmark').then(replayBookmark);
+
+		cy.visit(transcriptPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
+		cy.contains('no expression'); // stupid way to wait for ajax
+		cy.scrollTo('topLeft').then(screenshot('transcriptBookmark'));
+
+		//
+		// Assert that the bookmark image matches the original heatmap
+		//
+
+		cy.exec('babel-node cypress/compareImages.js transcript transcriptBookmark')
 			.its('stdout').should('contain', 'same');
 	});
 });

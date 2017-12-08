@@ -14,13 +14,16 @@ var wizard = {
 	geneExpression: () => cy.contains('Gene Expression'),
 	somaticMutation: () => cy.contains('Somatic Mutation'),
 	copyNumber: () => cy.contains('Copy Number'),
-	geneFieldInput: () => cy.contains('label', 'Add Gene').siblings('input')
+	geneFieldInput: () => cy.contains('label', 'Add Gene').siblings('input'),
+	cohortDone: () => cy.contains('Done'),
+	columnDone: () => cy.contains('Done')
 };
 
 var spreadsheet = {
 	chartView: () => cy.get('[title="View as chart"]'),
 	colControls: i => cy.get('[class^=ColCard-module__controls]').eq(i),
-	colCanvas: i => cy.get('.resize-enable').eq(i).find('.Tooltip-target canvas')
+	colCanvas: i => cy.get('.resize-enable').eq(i).find('.Tooltip-target canvas'),
+	loadingSpinners: () => cy.get('[data-xena="loading"]')
 };
 
 var nav = {
