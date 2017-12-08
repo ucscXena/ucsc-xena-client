@@ -106,13 +106,11 @@ function render(root, callback, sessionStorage) {
 		var dropDownDiv, option,
 			dropDown = [{
 					"value": "none",
-					"text": "Log2 scale",
 					"index": 0
 				},
 				{
 					//convert x -> base-2 exponential value of x, for when viewing raw RNAseq data, xena typically converts RNAseq values into log2 space.
 					"value": "exp2",
-					"text": "before log2 transformation", // (effect: take base-2 exponential of the log scale value)",
 					"index": 1
 				},
 			],
@@ -139,7 +137,7 @@ function render(root, callback, sessionStorage) {
 
 		node.className = compStyles.column;
 		node.setAttribute("id", "expDropDown");
-		labelDiv.appendChild(document.createTextNode("Y data log transform "));
+		labelDiv.appendChild(document.createTextNode("Y unit "));
 		node.appendChild(labelDiv);
 		node.appendChild(dropDownDiv);
 		return node;
@@ -250,7 +248,7 @@ function render(root, callback, sessionStorage) {
 
 			option = document.createElement('option');
 			option.value = column;
-			option.textContent = [columnLabel(i, columns[column]), colUnit(columns[column])].filter(e => e.trim() !== '').join(" - ");
+			option.textContent = columnLabel(i, columns[column]);
 
 			div.appendChild(option);
 
@@ -368,21 +366,23 @@ function render(root, callback, sessionStorage) {
 
 	function expUISetting(visible, ycolumn, colSettings) {
 		var dropDown = document.getElementById("expDropDown"),
-			dropDownDiv = document.getElementById("yExponentiation"),
-			YdropDownDiv = document.getElementById("Yaxis"),
-			i = YdropDownDiv.selectedIndex,
-			columnPos = xenaState.columnOrder.indexOf(ycolumn);
+			dropDownDiv = document.getElementById("yExponentiation");
 
-		if (visible) {
+		if (visible && colSettings.units) {
+			dropDown.style.visibility = "visible";
 			var notLogScale = _.any(colSettings.units, unit => !unit || unit.search(/log/i) === -1);
 			if (notLogScale) {
-				dropDown.style.visibility = "hidden";
 				dropDownDiv.selectedIndex === 0;
 				dropDownDiv.value = "none";
+				// unit labels
+				if (_.filter(colSettings.units, unit => unit).length === 0) {
+					dropDownDiv.options[0].text = "unknown";
+				} else {
+					dropDownDiv.options[0].text = colSettings.units.join();
+				}
+				dropDownDiv.options[1].text = '';
 			}
 			else {
-				dropDown.style.visibility = "visible";
-
 				//check current expState variable
 				if (expState[ycolumn] !== undefined) {
 					dropDownDiv.selectedIndex = expState[ycolumn];
@@ -391,20 +391,14 @@ function render(root, callback, sessionStorage) {
 					dropDownDiv.selectedIndex = 0;
 					expState[ycolumn] = 0;
 				}
-				//if data in db in logscale, custom option with actual unit
-				if (dropDownDiv.selectedIndex === 0) {
-					dropDownDiv.options[0].text = colSettings.units.join();
-					YdropDownDiv.options[i].text = [columnLabel(columnPos, colSettings), colUnit(colSettings)].filter(e => e.trim() !== '').join(" - ");
-				}
-				// if exp2(data), custom y axis display without log in the unit label
-				else {
-					var unitsString = colUnit(colSettings);
-					// remove log in unit label
-					var regExp = /\(([^)]+)\)/;
-					var matches = regExp.exec(unitsString);
-					matches = matches ? matches[1] : '';
-					YdropDownDiv.options[i].text = [columnLabel(columnPos, colSettings), matches].filter(e => e.trim() !== '').join(" - ");
-				}
+
+				// unit labels
+				dropDownDiv.options[0].text = colSettings.units.join();
+				var unitsString = colUnit(colSettings);
+				var regExp = /\(([^)]+)\)/;
+				var matches = regExp.exec(unitsString);
+				matches = matches ? matches[1] : '';
+				dropDownDiv.options[1].text = matches;  // remove log in unit label ///////// double check the +1 part
 			}
 		} else {
 			dropDown.style.visibility = "hidden";
@@ -686,6 +680,7 @@ function render(root, callback, sessionStorage) {
 			}
 
 			// p value when there is only 2 group comparison student t-test
+			// https://en.wikipedia.org/wiki/Welch%27s_t-test
 			if (xCategories.length === 2) {
 				statsDiv.innerHTML = 'Welch\'s t-test<br>';
 				_.range(yfields.length).map(k => {
@@ -1219,7 +1214,7 @@ function render(root, callback, sessionStorage) {
 
 		var xcolumn, ycolumn, colorColumn,
 			xfields,
-			xlabel, ylabel,
+			xlabel, ylabel, yunit,
 			columns,
 			normUI = document.getElementById("ynormalization"),
 			expUI = document.getElementById("yExponentiation"),
@@ -1340,11 +1335,13 @@ function render(root, callback, sessionStorage) {
 			if (xcolumn !== "none") {
 				xlabel = XdropDownDiv.options[XdropDownDiv.selectedIndex].text;
 			}
-			ylabel = YdropDownDiv.options[YdropDownDiv.selectedIndex].text;
+			yunit = expUI.options[expUI.selectedIndex].text;
+			ylabel = [YdropDownDiv.options[YdropDownDiv.selectedIndex].text, 'Unit: ' + yunit].join('<br>');
+
 			if (normUI.options[normUI.selectedIndex].value === "subset") {
-				ylabel = "mean-centered " + ylabel;
+				ylabel = ylabel + '<br>mean-centered';
 			} else if (normUI.options[normUI.selectedIndex].value === "subset_stdev") {
-				ylabel = "z-tranformed " + ylabel;
+				ylabel = ylabel + '<br>z-tranformed';
 			}
 
 			// set scatterPlot coloring UI
@@ -1435,12 +1432,12 @@ function render(root, callback, sessionStorage) {
 	row.appendChild(yAxisDiv);
 	axisContainer.appendChild(row);
 
-	//mean z
-	row.appendChild(buildNormalizationDropdown());
+	// unit log
+	row.appendChild(buildExpDropdown());
 	axisContainer.appendChild(row);
 
-	//log
-	row.appendChild(buildExpDropdown());
+	//mean z
+	row.appendChild(buildNormalizationDropdown());
 	axisContainer.appendChild(row);
 
 	//x
