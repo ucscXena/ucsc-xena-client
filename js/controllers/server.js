@@ -51,7 +51,7 @@ function parseBookmarkCheck(old, bookmark) {
 	} catch (e) {
 		console.log('bookmark', e);
 	}
-	return _.has(state, 'wizardMode') ? state : _.assoc(old, 'stateError', 'bookmark');
+	return _.has(state, 'page') ? state : _.assoc(old, 'stateError', 'bookmark');
 }
 
 var wizardControls = {
