@@ -18,12 +18,20 @@ var wizard = {
 };
 
 var spreadsheet = {
-	chartView: () => cy.get('[title="View as chart"]')
+	chartView: () => cy.get('[title="View as chart"]'),
+	colControls: i => cy.get('[class^=ColCard-module__controls]').eq(i),
+	colCanvas: i => cy.get('.resize-enable').eq(i).find('.Tooltip-target canvas')
+};
+
+var nav = {
+	bookmarkMenu: () => cy.get('button:contains("Bookmark")'),
+	bookmark: () => cy.get('li:contains("Bookmark")')
 };
 
 module.exports = {
 	url: '/heatmap/',
 	wizard,
+	nav,
 	spreadsheet,
 	chart: {},
 	km: {}

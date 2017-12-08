@@ -1,17 +1,17 @@
 'use strict';
-/*global describe: false, it: false, cy: false, beforeEach: false */
+/*global describe: false, it: false, cy: false, beforeEach: false, expect: false */
 
 var heatmapPage = require('../pages/heatmap');
-var {wizard, spreadsheet} = heatmapPage;
+var {nav, wizard, spreadsheet} = heatmapPage;
 var transcriptPage = require('../pages/transcripts');
 
 var aCohort = 'TCGA Breast Cancer (BRCA)';
 var aTCGAStudy = 'TCGA Lung Adenocarcinoma';
 var aGTEXStudy = 'GTEX Lung';
-//function spy(msg, x) {
-//	console.log(msg, x);
-//	return x;
-//}
+function spy(msg, x) { //eslint-disable-line no-unused-vars
+	console.log(msg, x);
+	return x;
+}
 // Notes
 // cypress proxy is introducing long delays when checking for a local hub.
 // This can be avoided by 1) going to hub page in the cypress browser, 2)
@@ -48,25 +48,34 @@ function clearSessionStorage() {
 	window.sessionStorage.clear();
 }
 
+function disableHelp() {
+	window.localStorage.xenaNotifications = '{"rowHelp":true,"columnHelp":true,"zoomHelp":true}';
+}
+
+// run a set of side effects
+var exec = (...fns) => () => fns.forEach(fn => fn());
+
+function renderASpreadsheet() {
+	cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+
+	wizard.cohortInput().type(aCohort.slice(0, 10));
+	wizard.cohortSelect(aCohort);
+	cy.contains('Done').click();
+
+	wizard.geneExpression().click();
+	wizard.somaticMutation().click();
+	wizard.copyNumber().click();
+	wizard.geneFieldInput().type('TP53');
+	cy.contains('Done').click();
+
+//	cy.contains('GOT IT').click();
+//	cy.contains('GOT IT').click();
+}
+
 describe('Viz page', function() {
-	it('Renders a spreadsheet', function() {
-		cy.visit(heatmapPage.url, {onBeforeLoad: clearSessionStorage});
-
-		wizard.cohortInput().type(aCohort.slice(0, 10));
-		wizard.cohortSelect(aCohort);
-		cy.contains('Done').click();
-
-		wizard.geneExpression().click();
-		wizard.somaticMutation().click();
-		wizard.copyNumber().click();
-		wizard.geneFieldInput().type('TP53');
-		cy.contains('Done').click();
-
-		cy.contains('GOT IT').click();
-		cy.contains('GOT IT').click();
-	});
+	it('Renders a spreadsheet', renderASpreadsheet);
 	it('Renders a chart', function() {
-		cy.visit(heatmapPage.url, {onBeforeLoad: clearSessionStorage});
+		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 
 		wizard.cohortInput().type(aCohort.slice(0, 10));
 		wizard.cohortSelect(aCohort);
@@ -78,8 +87,8 @@ describe('Viz page', function() {
 		wizard.geneFieldInput().type('TP53');
 		cy.contains('Done').click();
 
-		cy.contains('GOT IT').click();
-		cy.contains('GOT IT').click();
+//		cy.contains('GOT IT').click();
+//		cy.contains('GOT IT').click();
 
 		spreadsheet.chartView().click();
 	});
@@ -88,10 +97,165 @@ describe('Viz page', function() {
 // XXX move to different file
 describe('Transcript page', function() {
 	it('Loads', function() {
-		cy.visit(transcriptPage.url, {onBeforeLoad: clearSessionStorage});
+		cy.visit(transcriptPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		transcriptPage.studyA().select(aTCGAStudy);
 		transcriptPage.studyB().select(aGTEXStudy);
 		transcriptPage.geneFieldInput().type('KRAS');
 		transcriptPage.updateGene().click();
+		// cypress doesn't seem to have a way to wait on unspecified ajax
+		// requests to complete, or to ignore canceled requests. So, if we
+		// don't wait on something else here, we'll get an error in the *next*
+		// test when the transcript expression request aborts.
+		cy.contains('no expression'); // stupid way to wait for ajax
+	});
+});
+
+// This works around https://github.com/cypress-io/cypress/issues/76
+// Large responses can't be stubbed in cypress, due to misdesign. Shim
+// the response handler, here.
+//
+// A different workaround might be possible with
+// cy.exec(`echo ${content} > fixtures/bookmark`)
+var shimResponse = response => xhr => {
+	var orsc = xhr.xhr.onreadystatechange;
+	xhr.xhr.onreadystatechange = function() {
+		if (this.readyState === 4) {
+			Object.defineProperty(this, 'response', {
+				writable: true
+			});
+			this.response = response;
+		}
+		orsc.apply(this, arguments);
+	};
+};
+
+var replayBookmark = xhr => {
+	var content = decodeURIComponent(xhr.request.body.slice("content=".length));
+	cy.route({
+		url: '/api/bookmarks/bookmark*',
+		method: 'GET',
+		onRequest: shimResponse(content),
+		response: 'placeholder',
+	}).as('readBookmark');
+};
+
+var screenshot = file => () => {
+	var reporter = window.parent.document.getElementsByClassName('reporter-wrap')[0],
+		display = reporter.style.display;
+	reporter.style.display = 'none';
+	return cy.wait(1).screenshot(file).then(() => {
+		reporter.style.display = display;
+	});
+};
+
+var query = url => url.split(/\?/)[1];
+var highchartAnimation = 2000;
+var bootstrapAnimation = 2000;
+describe('Bookmark', function() {
+	it.only('Saves and restores heatmap and chart', function() {
+		cy.server();
+		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
+
+		///////////////////////////////////////
+		// Bookmark a spreadsheet
+		//
+
+		renderASpreadsheet();
+		cy.get('[data-xena="loading"').should('not.be.visible');
+
+		cy.scrollTo('topLeft').then(screenshot('heatmap'));
+
+		nav.bookmarkMenu().click();
+		nav.bookmark().click();
+
+		//
+		// Capture the bookmark, and load it in a new session
+		//
+
+		cy.wait('@bookmark').then(replayBookmark);
+
+		cy.visit(heatmapPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
+		cy.get('[data-xena="loading"').should('not.be.visible');
+		cy.scrollTo('topLeft').then(screenshot('heatmapBookmark'));
+
+		//
+		// Assert that the bookmark image matches the original heatmap
+		//
+
+		cy.exec('babel-node cypress/compareImages.js heatmap heatmapBookmark')
+			.its('stdout').should('contain', 'same');
+
+		///////////////////////////////////////
+		// Bookmark KM
+		//
+
+		cy.scrollTo('topLeft');
+
+		// XXX Coerce a re-render, which is necessary if we haven't rendered
+		// the column since the features were fetched. This is because we
+		// only compute disableKM on render. If we don't re-render, the KM button
+		// will be disabled, becase we rendered before 'features' were fetched.
+		// Should move disableKM to a selector.
+		spreadsheet.colCanvas(1).click({force: true}); // zoom to re-render
+
+		spreadsheet.colControls(1).contains('Kaplan Meier').click({force: true});
+		cy.wait(bootstrapAnimation);
+		cy.get('.kmDialog');
+		cy.scrollTo('topLeft').then(screenshot('kaplanMeier'));
+
+		nav.bookmarkMenu().click();
+		nav.bookmark().click();
+
+		//
+		// Capture the bookmark, and load it in a new session
+		//
+
+		cy.wait('@bookmark').then(replayBookmark);
+
+		cy.visit(heatmapPage.url + '?bookmark=a1b2', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=a1b2'));
+		cy.get('[data-xena="loading"').should('not.be.visible');
+		cy.wait(bootstrapAnimation);
+		cy.scrollTo('topLeft').then(screenshot('kaplanMeierBookmark'));
+
+		//
+		// Assert that the bookmark image matches the original KM
+		//
+
+		cy.exec('babel-node cypress/compareImages.js kaplanMeier kaplanMeierBookmark')
+			.its('stdout').should('contain', 'same');
+
+		cy.get('.kmDialog .close').click();
+
+		///////////////////////////////////////
+		// Bokmark chart mode
+		//
+
+		spreadsheet.chartView().click();
+
+		cy.get('.highcharts-root').wait(highchartAnimation);
+		cy.scrollTo('topLeft').then(screenshot('chart'));
+
+		nav.bookmarkMenu().click();
+		nav.bookmark().click();
+
+		//
+		// Capture the bookmark, and load it in a new session
+		//
+
+		cy.wait('@bookmark').then(replayBookmark);//xhr => {
+
+		cy.visit(heatmapPage.url + '?bookmark=abcd', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=abcd'));
+		cy.get('.highcharts-root').wait(highchartAnimation);
+		cy.scrollTo('topLeft').then(screenshot('chartBookmark'));
+
+		//
+		// Assert that the bookmark image matches the original heatmap
+		//
+
+		cy.exec('babel-node cypress/compareImages.js chart chartBookmark')
+			.its('stdout').should('contain', 'same');
 	});
 });
