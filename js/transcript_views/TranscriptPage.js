@@ -31,10 +31,10 @@ var Transcripts = React.createClass({
 	},
 
 	componentDidMount () {
-		var {onImport, props: {getState, state: {isPublic}}} = this;
+		var {onImport, props: {getState}} = this;
 
 		// nested render to different DOM tree
-		nav({isPublic, getState, onImport, onNavigate: this.onNavigate, activeLink: 'transcripts'});
+		nav({isPublic: true, getState, onImport, onNavigate: this.onNavigate, activeLink: 'transcripts'});
 	},
 
 	onLoadData() {
