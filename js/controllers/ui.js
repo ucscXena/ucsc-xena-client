@@ -194,7 +194,7 @@ var controls = {
 						setHubs(state, params), params));
 		return wizardUpate(setPage(next, pathname, params));
 	},
-	'init-post!': (serverBus, state, newState, params) => {
+	'init-post!': (serverBus, state, newState, pathname, params) => {
 		var bookmark = _.get(params, 'bookmark'),
 			inlineState = _.get(params, 'inlineState');
 		if (inlineState) {
