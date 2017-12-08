@@ -30,6 +30,13 @@ var Transcripts = React.createClass({
 		};
 	},
 
+	componentWillReceiveProps(props) {
+		var newGene = _.getIn(props.state, ['transcripts', 'gene']);
+		if (newGene) {
+			this.setState({input: newGene});
+		}
+	},
+
 	componentDidMount () {
 		var {onImport, props: {getState}} = this;
 
