@@ -6,7 +6,6 @@ var controller = require('./controllers/transcripts');
 const connector = require('./connector');
 const createStore = require('./store');
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
-require('bootstrap/dist/css/bootstrap.css');
 const Transcripts = require('./transcript_views/TranscriptPage');
 var isPublicSelector = require('./isPublicSelector');
 
