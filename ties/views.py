@@ -1,6 +1,6 @@
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError
 import ties.request
-from ties.forms import TermForm
+from ties.forms import TermForm, QuerySearchForm
 import json
 
 def query(request):
@@ -8,19 +8,19 @@ def query(request):
         return HttpResponseBadRequest(json.dumps({'error': 'request.method not supported'}))
 
     if request.method == 'POST':
-        form = TermForm(request.POST)
+        form = QuerySearchForm(request.POST)
     else:
-        form = TermForm(request.GET)
+        form = QuerySearchForm(request.GET)
 
     if form.is_valid():
         try:
-            resp = ties.request.query(form.cleaned_data['term'])
+            params = {k: v for k, v in form.cleaned_data.items() if v}
+            resp = ties.request.query(params)
         except Exception as e:
-            # XXX log exception
-            return HttpResponseServerError(json.dumps({'type': 'server', 'error': 'Error contacting TIES server'}))
+            return HttpResponseServerError(json.dumps({'type': 'server', 'error': 'Error contacting TIES server (' + str(e) + ')'}))
 
         if resp.status_code != 200:
-            return HttpResponseServerError(json.dumps({'type': 'server', 'error': 'Error contacting TIES server'}))
+            return HttpResponseServerError(json.dumps({'type': 'server', 'error': 'Error contacting TIES server (' + str(resp) + ')'}))
         return HttpResponse(resp.text)
     return HttpResponseBadRequest(json.dumps({'type': 'form', 'error': form.errors}))
 
@@ -35,12 +35,12 @@ def search(request):
 
     if form.is_valid():
         try:
-            resp = ties.request.search(form.cleaned_data['term'])
+            params = {k: v for k, v in form.cleaned_data.items() if v}
+            resp = ties.request.search(params)
         except Exception as e:
-            # XXX log exception
-            return HttpResponseServerError(json.dumps({'type': 'server', 'error': 'Error contacting TIES server'}))
+            return HttpResponseServerError(json.dumps({'type': 'server', 'error': 'Error contacting TIES server (' + str(e) + ')'}))
 
         if resp.status_code != 200:
-            return HttpResponseServerError(json.dumps({'type': 'server', 'error': 'Error contacting TIES server'}))
+            return HttpResponseServerError(json.dumps({'type': 'server', 'error': 'Error contacting TIES server (' + str(resp) + ')'}))
         return HttpResponse(resp.text)
     return HttpResponseBadRequest(json.dumps({'type': 'form', 'error': form.errors}))

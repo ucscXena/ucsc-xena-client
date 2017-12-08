@@ -10,13 +10,10 @@ headers = {
     'Authorization': 'Bearer ' + token
 }
 
-def quote(s):
-    return "'" + s + "'"
-
-def query(term):
-    r = requests.get(settings.TIES_URL + 'query', params={"term": quote(term)}, headers=headers)
+def query(params):
+    r = requests.get(settings.TIES_URL + 'query', params=params, headers=headers)
     return r
 
-def search(term):
-    r = requests.get(settings.TIES_URL + 'concepts/search', params={"term": quote(term)}, headers=headers)
+def search(params):
+    r = requests.get(settings.TIES_URL + 'concepts/search', params=params, headers=headers)
     return r
