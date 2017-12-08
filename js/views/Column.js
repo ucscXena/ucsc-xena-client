@@ -243,7 +243,7 @@ function optionMenu(props, opts) {
 function getStatusView(status, onReload) {
 	if (status === 'loading') {
 		return (
-			<div style={styles.status}>
+			<div data-xena='loading' style={styles.status}>
 				<img style={{textAlign: 'center'}} src={spinner}/>
 			</div>);
 	}
