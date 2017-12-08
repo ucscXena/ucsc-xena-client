@@ -3,7 +3,6 @@
 var _ = require('../underscore_ext');
 var xenaQuery = require('../xenaQuery');
 var Rx = require('../rx');
-var {parseBookmark} = require('../bookmark');
 
 // Hard-coded expression dataset
 var expressionHost = 'https://toil.xenahubs.net';
@@ -83,9 +82,7 @@ var controls = {
 	transcriptSampleSubtypes:
 		(state, subtypes) => _.assocIn(state, ['transcripts', 'subtypes'], subtypes),
 	units: (state, units) => _.assocIn(state, ['transcripts', 'units'], units),
-	zoom: (state, name) => _.updateIn(state, ['transcripts', 'zoom', name], z => !z),
-	'import': (state, newState) => _.merge(state, newState),
-	bookmark: (state, bookmark) => parseBookmark(bookmark)
+	zoom: (state, name) => _.updateIn(state, ['transcripts', 'zoom', name], z => !z)
 };
 
 module.exports = {
