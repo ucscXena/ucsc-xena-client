@@ -34,6 +34,7 @@ function render(root, callback, sessionStorage) {
 		cohort, samplesLength, cohortSamples, updateArgs, update,
 		normalizationState = {},
 		expState = {},
+		expXState = {},
 		chart;
 
 		if (xenaState)	{
@@ -42,6 +43,7 @@ function render(root, callback, sessionStorage) {
 			cohortSamples = xenaState.cohortSamples;
 			normalizationState = _.getIn(xenaState, ['chartState', 'normalizationState'], {});
 			expState = _.getIn(xenaState, ['chartState', 'expState'], {});
+			expXState = _.getIn(xenaState, ['chartState', 'expXState'], {});
 		}
 		updateArgs = [cohort, samplesLength, cohortSamples];
 
@@ -102,7 +104,7 @@ function render(root, callback, sessionStorage) {
 		return node;
 	}
 
-	function buildExpDropdown() {
+	function buildYExpDropdown() {
 		var dropDownDiv, option,
 			dropDown = [{
 					"value": "none",
@@ -136,8 +138,49 @@ function render(root, callback, sessionStorage) {
 		});
 
 		node.className = compStyles.column;
-		node.setAttribute("id", "expDropDown");
+		node.setAttribute("id", "expYDropDown");
 		labelDiv.appendChild(document.createTextNode("Y unit "));
+		node.appendChild(labelDiv);
+		node.appendChild(dropDownDiv);
+		return node;
+	}
+
+	function buildXExpDropdown() {
+		var dropDownDiv, option,
+			dropDown = [{
+					"value": "none",
+					"index": 0
+				},
+				{
+					//convert x -> base-2 exponential value of x, for when viewing raw RNAseq data, xena typically converts RNAseq values into log2 space.
+					"value": "exp2",
+					"index": 1
+				},
+			],
+			node = document.createElement("div"),
+			labelDiv = document.createElement("label");
+
+		dropDownDiv = document.createElement("select");
+		dropDownDiv.setAttribute("id", "xExponentiation");
+		dropDownDiv.setAttribute("class", "form-control");
+
+		dropDown.map(function (obj) {
+			option = document.createElement('option');
+			option.value = obj.value;
+			option.textContent = obj.text;
+			dropDownDiv.appendChild(option);
+		});
+
+		dropDownDiv.selectedIndex = 0;
+
+		dropDownDiv.addEventListener('change', function () {
+			expXState[xenaState.chartState.xcolumn] = dropDownDiv.selectedIndex;
+			update.apply(this, updateArgs);
+		});
+
+		node.className = compStyles.column;
+		node.setAttribute("id", "expXDropDown");
+		labelDiv.appendChild(document.createTextNode("X unit "));
 		node.appendChild(labelDiv);
 		node.appendChild(dropDownDiv);
 		return node;
@@ -364,10 +407,7 @@ function render(root, callback, sessionStorage) {
 		}
 	}
 
-	function expUISetting(visible, ycolumn, colSettings) {
-		var dropDown = document.getElementById("expDropDown"),
-			dropDownDiv = document.getElementById("yExponentiation");
-
+	function expUISetting(visible, expState, column, colSettings, dropDown, dropDownDiv) {
 		if (visible && colSettings.units) {
 			dropDown.style.visibility = "visible";
 			var notLogScale = _.any(colSettings.units, unit => !unit || unit.search(/log/i) === -1);
@@ -384,12 +424,12 @@ function render(root, callback, sessionStorage) {
 			}
 			else {
 				//check current expState variable
-				if (expState[ycolumn] !== undefined) {
-					dropDownDiv.selectedIndex = expState[ycolumn];
+				if (expState[column] !== undefined) {
+					dropDownDiv.selectedIndex = expState[column];
 				}
 				else {
 					dropDownDiv.selectedIndex = 0;
-					expState[ycolumn] = 0;
+					expState[column] = 0;
 				}
 
 				// unit labels
@@ -398,7 +438,7 @@ function render(root, callback, sessionStorage) {
 				var regExp = /\(([^)]+)\)/;
 				var matches = regExp.exec(unitsString);
 				matches = matches ? matches[1] : '';
-				dropDownDiv.options[1].text = matches;  // remove log in unit label ///////// double check the +1 part
+				dropDownDiv.options[1].text = matches;  // remove log in unit label
 			}
 		} else {
 			dropDown.style.visibility = "hidden";
@@ -1206,24 +1246,29 @@ function render(root, callback, sessionStorage) {
 		statsDiv.innerHTML = "";
 		statsDiv.classList.toggle(compStyles.visible, false);
 
-		//initialization
-		document.getElementById("myChart").innerHTML = "Querying Xena ...";
-		normalizationUISetting(false);
-		expUISetting(false);
-		scatterColorUISetting(false);
-
 		var xcolumn, ycolumn, colorColumn,
 			xfields,
-			xlabel, ylabel, yunit,
+			xlabel, ylabel,
+			xunit, yunit,
 			columns,
 			normUI = document.getElementById("ynormalization"),
-			expUI = document.getElementById("yExponentiation"),
+			expYUIParent = document.getElementById("expYDropDown"),
+			expYUI = document.getElementById("yExponentiation"),
+			expXUIParent = document.getElementById("expXDropDown"),
+			expXUI = document.getElementById("xExponentiation"),
 			XdropDownDiv = document.getElementById("Xaxis"),
 			YdropDownDiv = document.getElementById("Yaxis");
 
 		xcolumn = xdiv.options[xdiv.selectedIndex].value;
 		ycolumn = ydiv.options[ydiv.selectedIndex].value;
 		colorColumn = colorDiv.options[colorDiv.selectedIndex].value;
+
+		//initialization
+		document.getElementById("myChart").innerHTML = "Querying Xena ...";
+		normalizationUISetting(false);
+		expUISetting(false, expState, ycolumn, null, expYUIParent, expYUI);
+		expUISetting(false, expXState, xcolumn, null, expXUIParent, expXUI);
+		scatterColorUISetting(false);
 
 		// save state cohort, xcolumn, ycolumn, colorcolumn
 		if (xenaState) {
@@ -1233,7 +1278,8 @@ function render(root, callback, sessionStorage) {
 				"ycolumn": ycolumn,
 				"colorColumn": colorColumn,
 				"normalizationState": normalizationState,
-				"expState": expState
+				"expState": expState,
+				"expXState": expXState
 			};
 			columns = xenaState.columns;
 			setStorage(xenaState);
@@ -1271,7 +1317,7 @@ function render(root, callback, sessionStorage) {
 				doScatter, scatterLabel,
 				scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 				yNormalization,
-				yExponentiation;
+				xExponentiation, yExponentiation;
 
 			// convert segment data to matrix data
 			if (ydataSegment) {
@@ -1316,27 +1362,49 @@ function render(root, callback, sessionStorage) {
 				yNormalization = normUI.value;
 			}
 
-			// set y axis exponentiation UI
-			expUISetting(!yIsCategorical, ycolumn, columns[ycolumn]);
+			// set y axis unit exponentiation UI
+			expUISetting(!yIsCategorical, expState, ycolumn, columns[ycolumn], expYUIParent, expYUI);
 
+			// set x axis unit exponentiation UI
+			expUISetting(!xIsCategorical && xcolumn !== "none", expXState, xcolumn, columns[xcolumn], expXUIParent, expXUI);
+
+			// y exponentiation
 			if (yIsCategorical) {
 				yExponentiation = false;
-			} else if (expUI.value === "none") {
+			} else if (expYUI.value === "none") {
 				yExponentiation = false;
 			} else {
-				yExponentiation = expUI.value;
+				yExponentiation = expYUI.value;
 			}
-			// y exponentiation
 			if (yExponentiation === "exp2") {
 				ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
+			}
+
+			// x exponentiation
+			if (xIsCategorical) {
+				xExponentiation = false;
+			} else if (expXUI.value === "none") {
+				xExponentiation = false;
+			} else {
+				xExponentiation = expXUI.value;
+			}
+			if (xExponentiation === "exp2") {
+				xdata =  _.map(xdata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
 			}
 
 			// set x and y labels based on axis and normalization UI selection
 			if (xcolumn !== "none") {
 				xlabel = XdropDownDiv.options[XdropDownDiv.selectedIndex].text;
+				if (!xIsCategorical) {
+					xunit = expXUI.options[expXUI.selectedIndex].text;
+					xlabel += '<br>Unit: ' + xunit;
+				}
 			}
-			yunit = expUI.options[expUI.selectedIndex].text;
-			ylabel = [YdropDownDiv.options[YdropDownDiv.selectedIndex].text, 'Unit: ' + yunit].join('<br>');
+			ylabel = YdropDownDiv.options[YdropDownDiv.selectedIndex].text;
+			if (!yIsCategorical) {
+				yunit = expYUI.options[expYUI.selectedIndex].text;
+				ylabel += '<br>Unit: ' + yunit;
+			}
 
 			if (normUI.options[normUI.selectedIndex].value === "subset") {
 				ylabel = ylabel + '<br>mean-centered';
@@ -1430,11 +1498,9 @@ function render(root, callback, sessionStorage) {
 	row = document.createElement("div");
 	row.className = compStyles.row;
 	row.appendChild(yAxisDiv);
-	axisContainer.appendChild(row);
 
-	// unit log
-	row.appendChild(buildExpDropdown());
-	axisContainer.appendChild(row);
+	// Y unit (log)
+	row.appendChild(buildYExpDropdown());
 
 	//mean z
 	row.appendChild(buildNormalizationDropdown());
@@ -1444,6 +1510,9 @@ function render(root, callback, sessionStorage) {
 	row = document.createElement("div");
 	row.className = compStyles.row;
 	row.appendChild(xAxisDiv);
+
+	// X unit (log)
+	row.appendChild(buildXExpDropdown());
 	axisContainer.appendChild(row);
 
 	// color
