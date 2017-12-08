@@ -8,7 +8,6 @@ var {resetZoom, fetchColumnData, updateWizard, clearWizardCohort} = require('./c
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
 var {xenaFieldPaths, updateStrand} = require('../models/fieldSpec');
-var {parseBookmark} = require('../bookmark');
 var {lift} = require('./shimComposite');
 var {compose, make, mount} = require('./utils');
 
@@ -44,14 +43,8 @@ function invertCohortMeta(meta) {
 			cohortTags => cohortTags.map(([cohort]) => cohort));
 }
 
-function parseBookmarkCheck(old, bookmark) {
-	var state;
-	try {
-		state = parseBookmark(bookmark);
-	} catch (e) {
-		console.log('bookmark', e);
-	}
-	return _.has(state, 'page') ? state : _.assoc(old, 'stateError', 'bookmark');
+function bookmarkCheck(state, bookmark) {
+	return _.has(bookmark, 'page') ? _.merge(state, bookmark) : _.assoc(state, 'stateError', 'bookmark');
 }
 
 var wizardControls = {
@@ -70,7 +63,7 @@ var wizardControls = {
 };
 
 var controls = {
-	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(lift(parseBookmarkCheck(state, bookmark)))),
+	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(lift(bookmarkCheck(state, bookmark)))),
 	// see bookmark-post!, below
 	inlineState: (state, newState) => resetLoadPending(lift(newState)),
 	// see inlineState-post!, below

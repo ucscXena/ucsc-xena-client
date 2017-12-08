@@ -17,13 +17,14 @@ var {fetchInlineState} = require('../inlineState');
 var {lift} = require('./shimComposite');
 var {compose, make, mount} = require('./utils');
 var {JSONToqueryString} = require('../dom_helper');
+var {parseBookmark} = require('../bookmark');
 
 function fetchBookmark(serverBus, bookmark) {
 	serverBus.next(['bookmark', Rx.Observable.ajax({
 		responseType: 'text',
 		method: 'GET',
-		url: `/api/bookmarks/bookmark?id=${bookmark}`,
-	}).map(r => r.response)]);
+		url: `/api/bookmarks/bookmark?id=${bookmark}`
+	}).map(r => parseBookmark(r.response))]);
 }
 
 function exampleQuery(dsID, count) {
