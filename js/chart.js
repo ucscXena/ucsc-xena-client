@@ -725,6 +725,7 @@ function render(root, callback, sessionStorage) {
 				statsDiv.innerHTML = 'Welch\'s t-test<br>';
 				_.range(yfields.length).map(k => {
 					if (nNumberMatrix[0][k] > 1 && nNumberMatrix[1][k] > 1) {
+						yfield = yfields[k];
 						// p value calculation using Welch's t-test
 						let x1 = meanMatrix[0][k], // mean1
 							x2 = meanMatrix[1][k], // mean2
