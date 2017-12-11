@@ -2,7 +2,8 @@
 var {assoc, updateIn} = require('../underscore_ext');
 
 // Lift in 'spreadsheet' subtree.
-var sslifter = f => state => updateIn(state, ['spreadsheet'], f);
+var sslifter = f => state => state.spreadsheet ? updateIn(state, ['spreadsheet'], f) :
+	state;
 
 var lift = sslifter(state => assoc(state,
 		'cohort', state.cohort ? [state.cohort] : [],

@@ -179,9 +179,11 @@ function fetchCohorts(serverBus, state, newState, {force} = {}) {
 	}
 }
 
-function updateWizard(serverBus, state, newState, force) {
-	fetchCohorts(serverBus, state, newState, force);
+function updateWizard(serverBus, state, newState, opts) {
+	fetchCohorts(serverBus, state, newState, opts);
 	let user = userServers(state);
+	// If there's a bookmark on wizard mode step 2, will we fail
+	// to load the dataset?
 	if (newState.cohort && newState.cohort !== state.cohort) {
 		fetchDatasets(serverBus, user, newState.cohort);
 	}

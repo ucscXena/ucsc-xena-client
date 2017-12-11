@@ -63,15 +63,21 @@ var wizardControls = {
 };
 
 var controls = {
-	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(lift(bookmarkCheck(state, bookmark)))),
-	// see bookmark-post!, below
+	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(bookmarkCheck(state, lift(bookmark)))),
+	// Here we need to load cohort data if servers or cohort has changed,
+	// *or* if we never loaded cohort data (e.g. due to waiting on bookmark).
+	'bookmark-post!': (serverBus, state, newState) => {
+		updateWizard(serverBus, state.spreadsheet, newState.spreadsheet,
+				{force: !_.getIn(newState, ['wizard', 'cohorts'])});
+	},
 	inlineState: (state, newState) => resetLoadPending(lift(newState)),
-	// see inlineState-post!, below
+	'inlineState-post!': (serverBus, state, newState) => {
+		updateWizard(serverBus, state.spreadsheet, newState.spreadsheet,
+				{force: !_.getIn(newState, ['wizard', 'cohorts'])});
+	}
 };
 
 var spreadsheetControls = {
-	'bookmark-post!': updateWizard,
-	'inlineState-post!': updateWizard,
 	samples: (state, {samples, over, hasPrivateSamples}) => {
 		var newState = resetZoom(_.assoc(state,
 					'cohortSamples', samples,
