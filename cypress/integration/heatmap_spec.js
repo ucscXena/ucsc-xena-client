@@ -55,8 +55,10 @@ function disableHelp() {
 // run a set of side effects
 var exec = (...fns) => () => fns.forEach(fn => fn());
 
-function renderASpreadsheet() {
-	cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+function renderASpreadsheet(load = true) {
+	if (load) {
+		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+	}
 
 	wizard.cohortInput().type(aCohort.slice(0, 10));
 	wizard.cohortSelect(aCohort);
@@ -86,9 +88,12 @@ var ignoreLocalHub = () => {
 };
 
 describe('Viz page', function() {
-	it('Renders a spreadsheet', exec(ignoreLocalHub, renderASpreadsheet));
-	it('Renders a chart', function() {
+	beforeEach(() => {
+		cy.server(),
 		ignoreLocalHub();
+	});
+	it('Renders a spreadsheet',  renderASpreadsheet),
+	it('Renders a chart', function() {
 		renderASpreadsheet();
 		spreadsheet.chartView().click();
 		cy.get('.highcharts-root');
@@ -110,6 +115,10 @@ function renderATranscript() {
 
 // XXX move to different file
 describe('Transcript page', function() {
+	beforeEach(() => {
+		cy.server(),
+		ignoreLocalHub();
+	});
 	it('Draws', renderATranscript);
 });
 
@@ -157,9 +166,11 @@ var query = url => url.split(/\?/)[1];
 var highchartAnimation = 2000;
 var bootstrapAnimation = 2000;
 describe('Bookmark', function() {
-	it('Saves and restores heatmap and chart', function() {
-		cy.server();
+	beforeEach(() => {
+		cy.server(),
 		ignoreLocalHub();
+	});
+	it('Saves and restores heatmap and chart', function() {
 		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
 
 		///////////////////////////////////////
@@ -264,12 +275,10 @@ describe('Bookmark', function() {
 			.its('stdout').should('contain', 'same');
 	});
 	it('Saves and restores transcript', function() {
-		cy.server();
-		ignoreLocalHub();
 		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
 
 		///////////////////////////////////////
-		// Bookmark a spreadsheet
+		// Bookmark a transcript
 		//
 
 		renderATranscript();
@@ -296,5 +305,36 @@ describe('Bookmark', function() {
 
 		cy.exec('babel-node cypress/compareImages.js transcript transcriptBookmark')
 			.its('stdout').should('contain', 'same');
+	});
+	it('Doesn\'t conflict with other pages', function() {
+		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
+		///////////////////////////////////////
+		// Restore from transcript page should not alter spreadsheet.
+		// Wizard should be functional.
+		//
+		// Save initial screenshot
+
+		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		cy.scrollTo('topLeft').then(screenshot('initialSpreadsheet'));
+		renderATranscript();
+
+		nav.bookmarkMenu().click();
+		nav.bookmark().click();
+		cy.wait('@bookmark').then(replayBookmark);
+
+		// Loading transcript bookmark
+		cy.visit(transcriptPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
+		cy.contains('no expression'); // stupid way to wait for ajax
+
+		// Switch to heatmap
+		cy.get('nav').contains('Visualization').click();
+		cy.scrollTo('topLeft').then(screenshot('afterBookmarkSpreadsheet'));
+
+		cy.exec('babel-node cypress/compareImages.js initialSpreadsheet afterBookmarkSpreadsheet')
+			.its('stdout').should('contain', 'same');
+
+		// Confirm wizard is functioning
+		renderASpreadsheet(false);
 	});
 });

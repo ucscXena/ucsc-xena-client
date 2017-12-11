@@ -5,7 +5,7 @@ var Rx = require('../rx');
 var xenaQuery = require('../xenaQuery');
 var kmModel = require('../models/km');
 var {userServers, setCohort, fetchSamples,
-	fetchColumnData, fetchCohortData, fetchCohorts,
+	fetchColumnData, fetchCohortData,
 	updateWizard, clearWizardCohort} = require('./common');
 var {nullField, setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
@@ -190,9 +190,9 @@ var controls = {
 	init: (state, pathname = '/', params = {}) => {
 		var wizardUpate = params.hubs || params.inlineState ?
 				clearWizardCohort : _.identity,
-			next = _.updateIn(state, ['spreadsheet'], state =>
-					setLoadingState(
-						setHubs(state, params), params));
+			next = setLoadingState(
+					_.updateIn(state, ['spreadsheet'], state =>
+						setHubs(state, params)), params);
 		return wizardUpate(setPage(next, pathname, params));
 	},
 	'init-post!': (serverBus, state, newState, pathname, params) => {
@@ -204,13 +204,10 @@ var controls = {
 			fetchBookmark(serverBus, bookmark);
 		} else {
 			// 'servers' is in spreadsheet state. After loading a bookmark or inline
-			// state, we need to update wizard data. Otherwise, we need to update
-			// wizard data here if something has changed.
+			// state, we need to update wizard data. Otherwise, we need to load
+			// wizard data here.
 
-			if (!state.wizard.cohorts || params.hubs) {
-				fetchCohorts(serverBus, state.spreadsheet, newState.spreadsheet, {force: true});
-			}
-			updateWizard(serverBus, state.spreadsheet, newState.spreadsheet);
+			updateWizard(serverBus, state.spreadsheet, newState.spreadsheet, {force: true});
 		}
 		// These are independent of server settings.
 		if (!newState.wizard.cohortMeta) {
