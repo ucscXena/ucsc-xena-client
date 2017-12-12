@@ -1,9 +1,12 @@
 'use strict';
-/*global describe: false, it: false, cy: false, beforeEach: false, expect: false */
+/*global describe: false, it: false, cy: false, beforeEach: false, expect: false, Cypress: false, before: false, after: false */
 
 var heatmapPage = require('../pages/heatmap');
 var {nav, wizard, spreadsheet} = heatmapPage;
 var transcriptPage = require('../pages/transcripts');
+
+var merge = (...args) => Object.assign({}, ...args);
+var {isArray, findIndex, pick, identity} = Cypress._;
 
 var aCohort = 'TCGA Breast Cancer (BRCA)';
 var aTCGAStudy = 'TCGA Lung Adenocarcinoma';
@@ -12,6 +15,16 @@ function spy(msg, x) { //eslint-disable-line no-unused-vars
 	console.log(msg, x);
 	return x;
 }
+
+// Strategy here is to run test cases in record mode when
+// this is true, but skip any generative tests. Can
+// do a record session by setting env in a file, by
+// editing this line, or by cli option.
+var RECORD = Cypress.env('RECORD'); // default to false
+
+// describe test that does not record.
+var describeNR = RECORD ? identity : describe;
+
 // Notes
 // cypress proxy is introducing long delays when checking for a local hub.
 // This can be avoided by 1) going to hub page in the cypress browser, 2)
@@ -55,6 +68,25 @@ function disableHelp() {
 // run a set of side effects
 var exec = (...fns) => () => fns.forEach(fn => fn());
 
+// This works around https://github.com/cypress-io/cypress/issues/76
+// Large responses can't be stubbed in cypress, due to misdesign. Shim
+// the response handler, here.
+//
+// A different workaround might be possible with
+// cy.exec(`echo ${content} > fixtures/bookmark`)
+var shimResponse = response => xhr => {
+	var orsc = xhr.xhr.onreadystatechange;
+	xhr.xhr.onreadystatechange = function() {
+		if (this.readyState === 4) {
+			Object.defineProperty(this, 'response', {
+				writable: true
+			});
+			this.response = response;
+		}
+		orsc.apply(this, arguments);
+	};
+};
+
 function renderASpreadsheet(load = true) {
 	if (load) {
 		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
@@ -87,16 +119,80 @@ var ignoreLocalHub = () => {
 	});
 };
 
-describe('Viz page', function() {
-	beforeEach(() => {
-		cy.server(),
+function saveFile(file, data) {
+	return cy.writeFile(`cypress/${file}.json`, JSON.stringify(data));
+}
+
+function readFile(file) {
+	return cy.readFile(`cypress/${file}.json`);
+}
+
+var playback = responses => xhr => {
+	if (xhr.url.match(/sockjs-node/)) {
+		return;
+	}
+	// I think what's happening here is that for responseType 'json'
+	// the browser will parse the response before it reaches the app,
+	// so we should also provide a 'parsed' response to the app. For
+	// other responseTypes, the browser will not parse it for the app,
+	// so we should provide an 'unparsed' stringified response.
+	var stringify = xhr.xhr.responseType === 'json' ? identity : JSON.stringify,
+		i = findIndex(responses, entry =>
+			entry.body === xhr.request.body && entry.url === xhr.url);
+	if (i === -1) {
+		console.error('Missing response for request', xhr);
+	}
+	shimResponse(stringify(responses[i].response))(xhr);
+};
+
+var titleToFile = str => str.replace(/ /g, '-');
+function setupPlayback(sources) {
+	sources = isArray(sources) ? sources : [sources];
+	before(function() {
+		this.responses = [];
+		sources.forEach(title => {
+			readFile(titleToFile(title)).then(q => this.responses.push(...q));
+		});
+	});
+	beforeEach(function() {
+		cy.server();
+		cy.route({url: '*://**', method: 'POST', onRequest: playback(this.responses), response: 'placeholder'});
+		cy.route({url: '*://**', method: 'GET', onRequest: playback(this.responses), response: 'placeholder'});
 		ignoreLocalHub();
 	});
-	it('Renders a spreadsheet',  renderASpreadsheet),
-	it('Renders a chart', function() {
-		renderASpreadsheet();
+}
+
+function setupRecord(title) {
+	before(function() {
+		this.cache = [];
+		this.record = xhr => {
+			this.cache.push(merge(
+				pick(xhr, 'url', 'method', 'status'), {body: xhr.request.body, response: xhr.response.body}));
+		};
+	});
+	after(function() {
+		// XXX make unique here
+		saveFile(titleToFile(title), this.cache);
+	});
+	beforeEach(function() {
+		cy.server();
+		cy.route({url: '*://**', method: 'POST', onResponse: this.record});
+		cy.route({url: '*://**', method: 'GET', onResponse: this.record});
+		ignoreLocalHub();
+	});
+}
+
+function playRecord(title) {
+	(RECORD ? setupRecord : setupPlayback)(title);
+}
+
+describe('Viz page', function() {
+	playRecord(this.title);
+	it('Renders spreadsheet heatmap and chart', function() {
+		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		renderASpreadsheet(false);
 		spreadsheet.chartView().click();
-		cy.get('.highcharts-root');
+		cy.get('.highcharts-root'); // XXX move to page object
 	});
 });
 
@@ -110,36 +206,14 @@ function renderATranscript() {
 	// requests to complete, or to ignore canceled requests. So, if we
 	// don't wait on something else here, we'll get an error in the *next*
 	// test when the transcript expression request aborts.
-	cy.contains('no expression'); // stupid way to wait for ajax
+	cy.contains('no expression'); // stupid way to wait for ajax XXX move to page object
 }
 
-// XXX move to different file
+// XXX move to different file, or revisit the name of this file.
 describe('Transcript page', function() {
-	beforeEach(() => {
-		cy.server(),
-		ignoreLocalHub();
-	});
+	playRecord(this.title);
 	it('Draws', renderATranscript);
 });
-
-// This works around https://github.com/cypress-io/cypress/issues/76
-// Large responses can't be stubbed in cypress, due to misdesign. Shim
-// the response handler, here.
-//
-// A different workaround might be possible with
-// cy.exec(`echo ${content} > fixtures/bookmark`)
-var shimResponse = response => xhr => {
-	var orsc = xhr.xhr.onreadystatechange;
-	xhr.xhr.onreadystatechange = function() {
-		if (this.readyState === 4) {
-			Object.defineProperty(this, 'response', {
-				writable: true
-			});
-			this.response = response;
-		}
-		orsc.apply(this, arguments);
-	};
-};
 
 var replayBookmark = xhr => {
 	var content = decodeURIComponent(xhr.request.body.slice("content=".length));
@@ -151,25 +225,26 @@ var replayBookmark = xhr => {
 	}).as('readBookmark');
 };
 
+//var rAF = () =>
+//	new Cypress.Promise(resolve => window.requestAnimationFrame(() => resolve()));
+
 var screenshot = file => () => {
 	// This is a clunky work-around to get cypress controls out of the way while
 	// screenshotting.
 	var reporter = window.parent.document.getElementsByClassName('reporter-wrap')[0],
 		display = reporter.style.display;
 	reporter.style.display = 'none';
-	return cy.wait(1).screenshot(file).then(() => {
+
+	return cy.wait(100).screenshot(file).then(() => {
 		reporter.style.display = display;
 	});
 };
 
 var query = url => url.split(/\?/)[1];
-var highchartAnimation = 2000;
+var highchartAnimation = 2000; // XXX move to page object
 var bootstrapAnimation = 2000;
-describe('Bookmark', function() {
-	beforeEach(() => {
-		cy.server(),
-		ignoreLocalHub();
-	});
+describeNR.skip('Bookmark', function() {
+	setupPlayback(['Viz page', 'Transcript page']);
 	it('Saves and restores heatmap and chart', function() {
 		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
 
@@ -215,9 +290,10 @@ describe('Bookmark', function() {
 		// Should move disableKM to a selector.
 		spreadsheet.colCanvas(1).click({force: true}); // zoom to re-render
 
+		// XXX move to page object
 		spreadsheet.colControls(1).contains('Kaplan Meier').click({force: true});
 		cy.wait(bootstrapAnimation);
-		cy.get('.kmDialog');
+		cy.get('.kmDialog'); // XXX move to page object
 		cy.scrollTo('topLeft').then(screenshot('kaplanMeier'));
 
 		nav.bookmarkMenu().click();
@@ -242,6 +318,7 @@ describe('Bookmark', function() {
 		cy.exec('babel-node cypress/compareImages.js kaplanMeier kaplanMeierBookmark')
 			.its('stdout').should('contain', 'same');
 
+		// XXX move to page object
 		cy.get('.kmDialog .close').click();
 
 		///////////////////////////////////////
@@ -250,6 +327,7 @@ describe('Bookmark', function() {
 
 		spreadsheet.chartView().click();
 
+		// XXX move to page object
 		cy.get('.highcharts-root').wait(highchartAnimation);
 		cy.scrollTo('topLeft').then(screenshot('chart'));
 
@@ -264,6 +342,7 @@ describe('Bookmark', function() {
 
 		cy.visit(heatmapPage.url + '?bookmark=abcd', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=abcd'));
+		// XXX move to page object
 		cy.get('.highcharts-root').wait(highchartAnimation);
 		cy.scrollTo('topLeft').then(screenshot('chartBookmark'));
 
@@ -296,7 +375,7 @@ describe('Bookmark', function() {
 
 		cy.visit(transcriptPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
-		cy.contains('no expression'); // stupid way to wait for ajax
+		cy.contains('no expression'); // stupid way to wait for ajax XXX move to page object
 		cy.scrollTo('topLeft').then(screenshot('transcriptBookmark'));
 
 		//
@@ -315,7 +394,11 @@ describe('Bookmark', function() {
 		// Save initial screenshot
 
 		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		spreadsheet.waitForViewport();
+		// Hide "View live example" link because it keeps changing.
+		spreadsheet.examples().then(el => el.hide());
 		cy.scrollTo('topLeft').then(screenshot('initialSpreadsheet'));
+		spreadsheet.examples().then(el => el.show());
 		renderATranscript();
 
 		nav.bookmarkMenu().click();
@@ -325,16 +408,57 @@ describe('Bookmark', function() {
 		// Loading transcript bookmark
 		cy.visit(transcriptPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
-		cy.contains('no expression'); // stupid way to wait for ajax
+		cy.contains('no expression'); // stupid way to wait for ajax XXX move to page object
 
 		// Switch to heatmap
-		cy.get('nav').contains('Visualization').click();
+		nav.heatmap().click();
+		nav.waitForTransition();
+		spreadsheet.examples().then(el => el.hide());
 		cy.scrollTo('topLeft').then(screenshot('afterBookmarkSpreadsheet'));
+		spreadsheet.examples().then(el => el.show());
 
 		cy.exec('babel-node cypress/compareImages.js initialSpreadsheet afterBookmarkSpreadsheet')
 			.its('stdout').should('contain', 'same');
 
 		// Confirm wizard is functioning
 		renderASpreadsheet(false);
+	});
+	it.skip('Bookmarks wizard states', function() {
+//		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
+
+		// Do step 1
+		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		wizard.cohortInput().type(aCohort.slice(0, 10));
+		wizard.cohortSelect(aCohort);
+		wizard.cohortDone().click();
+
+		// screenshot & bookmark step 1
+		spreadsheet.examples().then(el => el.hide());
+		cy.scrollTo('topLeft').then(screenshot('step1'));
+		spreadsheet.examples().then(el => el.show());
+
+//		nav.bookmarkMenu().click();
+//		nav.bookmark().click();
+
+		// load bookmark
+//		cy.wait('@bookmark').then(replayBookmark);
+		cy.visit(heatmapPage.url);
+//		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
+
+		wizard.cards(); // wait for render
+
+		spreadsheet.examples().then(el => el.hide());
+		cy.scrollTo('topLeft').then(screenshot('step1Bookmark'));
+		spreadsheet.examples().then(el => el.show());
+		cy.exec('babel-node cypress/compareImages.js step1 step1Bookmark');
+
+		// Ensure sure step 2 still works
+		wizard.geneExpression().click();
+		wizard.somaticMutation().click();
+		wizard.copyNumber().click();
+		wizard.geneFieldInput().type('TP53');
+		wizard.columnDone().click();
+		spreadsheet.loadingSpinners().should('not.be.visible');
+
 	});
 });
