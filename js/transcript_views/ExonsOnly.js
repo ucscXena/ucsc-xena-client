@@ -43,19 +43,29 @@ function newCoordinates(data, intronRegions, labelsAndPad) {
                        'labelsAndPad', exonLabelsAndPad);
 }
 
-
-var cmpExons = (e1, e2) =>
-	e1.start > e2.start ? 1 :
-	e1.start < e2.start ? -1 :
-	e1.end > e2.end ? 1 :
-	e1.end < e2.end ? -1 :
-	0;
+var cmpExons = (negativeStrand) => {
+	if(negativeStrand) {
+		return (e1, e2) =>
+			e1.end > e2.end ? 1 :
+			e1.end < e2.end ? -1 :
+			e1.start > e2.start ? 1 :
+			e1.start < e2.start ? -1 :
+			0;
+	} else {
+		return (e1, e2) =>
+		e1.start > e2.start ? 1 :
+		e1.start < e2.start ? -1 :
+		e1.end > e2.end ? 1 :
+		e1.end < e2.end ? -1 :
+		0;
+	}
+};
 
 function exonLabelsAndPad(exonGroups, neg) {
 	var uniqExonGroups = exonGroups.map(exonGroup =>
 		_.uniq(exonGroup.exons.map(exon => JSON.stringify(exon)))
 			.map(es => JSON.parse(es))
-			.sort(cmpExons)),
+			.sort(cmpExons(neg))),
 		labels = _.apply(_.merge)(_.flatmap(uniqExonGroups, (exonGroup, i) =>
 			exonGroup
 				.map((exon, j) => [exon.start, exon.end, i * padding, exonLabel(exonGroups.length, i, neg) + suffix(exonGroup.length, j, neg)])
