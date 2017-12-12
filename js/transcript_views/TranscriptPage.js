@@ -104,9 +104,15 @@ var Transcripts = React.createClass({
 
 		var {genetranscripts} = state.transcripts || [];
 		var genetranscriptsSorted = _.sortBy(genetranscripts, function(gtranscript) {
-			return _.sum(_.mmap(gtranscript.exonStarts, gtranscript.exonEnds, (exonStarts, exonEnds) => {
-				return exonStarts - exonEnds; // start - end to sort in descending order
-			})); }).map(t => _.assoc(t, 'zoom', zoom[t.name]));
+			// sort by start of transcript in transcript direction left to right
+			// known issue: tie break
+			return gtranscript.strand === '+' ? gtranscript.exonStarts[0] :
+				- (gtranscript.exonEnds[gtranscript.exonCount - 1]);
+			/*return _.sum(_.mmap(gtranscript.exonStarts, gtranscript.exonEnds, (exonStarts, exonEnds) => {
+				return exonStarts - exonEnds;
+			}));*/ // sort by transcript size large to small
+			}).map(t => _.assoc(t, 'zoom', zoom[t.name]));
+
 		//for the name column
 		var transcriptNameData = _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'exonCount', 'zoom'));
 
@@ -190,9 +196,6 @@ var Transcripts = React.createClass({
 						data={transcriptNameData}
 						gene={state.transcripts.gene}
 						/>
-					{/* <Exons
-						data={transcriptExonData}
-					/> */}
 					<DensityPlot
 						data={transcriptDensityData}
 						type="density"
@@ -207,12 +210,6 @@ var Transcripts = React.createClass({
 						getNameZoom={this.onZoom}
 					/>
 					<div style={{clear: 'both'}}></div>
-					{/* <DensityPlot
-						data={transcriptDensityData}
-						type="histogram"
-						unit={unit}
-						getNameZoom={this.onZoom}
-						/> */}
 				</div>
 		);
 	}

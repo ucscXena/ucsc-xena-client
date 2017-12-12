@@ -51,12 +51,27 @@ function computeHeatmap(vizSettings, data, fields, samples) {
 }
 
 var flopIfNegStrand = (strand, req) =>
-	strand === '-' ?
+	// sorted by start of probe in transcript direction (strand), for negative strand, the start of the probe is chromend
+	// known issue: tie break
+	{
+		if (strand === '-') {
+			let sortedReq = _.sortBy(_.zip(req.position, req.probes, req.values), item => -(item[0].chromend));
+			let [sortedPosition, sortedProbes, sortedValues] = _.unzip(sortedReq);
+			return _.assoc(req,
+				'position', sortedPosition,
+				'probes', sortedProbes,
+				'values', sortedValues);
+		} else {
+			return req;
+		}
+	};
+
+	/*strand === '-' ?
 		_.assoc(req,
 				'position', _.reverse(req.position),
 				'probes', _.reverse(req.probes),
 				'values', _.reverse(req.values)) :
-		req;
+		req;*/
 
 var colorCodeMap = (codes, colors) =>
 	colors ? _.map(codes, c => colors[c] || greyHEX) : null;
