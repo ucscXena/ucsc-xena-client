@@ -9,9 +9,18 @@ var expressionHost = 'https://toil.xenahubs.net';
 var subtypeDataset = 'TCGA_GTEX_category.txt';
 var subtypeField = 'TCGA_GTEX_main_category';
 
+/*
+//basic gencode annotataion
 var transcriptDataset = {
 	host: 'https://reference.xenahubs.net',
 	name: 'wgEncodeGencodeBasicV23'
+};
+*/
+
+// comprehensive gencode annotataion -- TOIL run was using the v23 comprehensive gencode annotataion
+var transcriptDataset = {
+	host: 'https://reference.xenahubs.net',
+	name: 'wgEncodeGencodeCompV23'
 };
 
 var expressionDataset = {
