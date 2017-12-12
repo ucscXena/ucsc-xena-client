@@ -22,8 +22,12 @@ var wizard = {
 
 var spreadsheet = {
 	chartView: () => cy.get('[title="View as chart"]'),
+	heatmapView: () => cy.get('[title="View as columns"]'),
 	colControls: i => cy.get('[class^=ColCard-module__controls]').eq(i),
 	colCanvas: i => cy.get('.resize-enable').eq(i).find('.Tooltip-target canvas'),
+	chart: () => cy.get('.highcharts-root'),
+	kaplanMeierButton: i => spreadsheet.colControls(i).contains('Kaplan Meier'),
+	kaplanMeier: () => cy.get('.kmDialog'),
 	loadingSpinners: () => cy.get('[data-xena="loading"]'),
 	// "View live example" link
 	examples: () => cy.get('[class^=Welcome-module] a'),

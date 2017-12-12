@@ -22,8 +22,10 @@ function spy(msg, x) { //eslint-disable-line no-unused-vars
 // editing this line, or by cli option.
 var RECORD = Cypress.env('RECORD'); // default to false
 
+var noop = Object.assign(() => {}, {skip: () => {}, only: () => {}});
+
 // describe test that does not record.
-var describeNR = RECORD ? identity : describe;
+var describeNR = RECORD ? noop : describe;
 
 // Notes
 // cypress proxy is introducing long delays when checking for a local hub.
@@ -147,17 +149,18 @@ var playback = responses => xhr => {
 
 var titleToFile = str => str.replace(/ /g, '-');
 function setupPlayback(sources) {
+	var responses;
 	sources = isArray(sources) ? sources : [sources];
 	before(function() {
-		this.responses = [];
+		responses = [];
 		sources.forEach(title => {
-			readFile(titleToFile(title)).then(q => this.responses.push(...q));
+			readFile(titleToFile(title)).then(q => responses.push(...q));
 		});
 	});
 	beforeEach(function() {
 		cy.server();
-		cy.route({url: '*://**', method: 'POST', onRequest: playback(this.responses), response: 'placeholder'});
-		cy.route({url: '*://**', method: 'GET', onRequest: playback(this.responses), response: 'placeholder'});
+		cy.route({url: '*://**', method: 'POST', onRequest: playback(responses), response: 'placeholder'});
+		cy.route({url: '*://**', method: 'GET', onRequest: playback(responses), response: 'placeholder'});
 		ignoreLocalHub();
 	});
 }
@@ -192,7 +195,10 @@ describe('Viz page', function() {
 		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		renderASpreadsheet(false);
 		spreadsheet.chartView().click();
-		cy.get('.highcharts-root'); // XXX move to page object
+		spreadsheet.chart();
+		spreadsheet.heatmapView().click();
+		spreadsheet.kaplanMeierButton(1).click({force: true});
+		spreadsheet.kaplanMeier();
 	});
 });
 
@@ -243,7 +249,7 @@ var screenshot = file => () => {
 var query = url => url.split(/\?/)[1];
 var highchartAnimation = 2000; // XXX move to page object
 var bootstrapAnimation = 2000;
-describeNR.skip('Bookmark', function() {
+describeNR('Bookmark', function() {
 	setupPlayback(['Viz page', 'Transcript page']);
 	it('Saves and restores heatmap and chart', function() {
 		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
@@ -290,10 +296,9 @@ describeNR.skip('Bookmark', function() {
 		// Should move disableKM to a selector.
 		spreadsheet.colCanvas(1).click({force: true}); // zoom to re-render
 
-		// XXX move to page object
-		spreadsheet.colControls(1).contains('Kaplan Meier').click({force: true});
+		spreadsheet.kaplanMeierButton(1).click({force: true});
 		cy.wait(bootstrapAnimation);
-		cy.get('.kmDialog'); // XXX move to page object
+		spreadsheet.kaplanMeier();
 		cy.scrollTo('topLeft').then(screenshot('kaplanMeier'));
 
 		nav.bookmarkMenu().click();
