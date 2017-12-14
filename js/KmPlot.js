@@ -367,6 +367,7 @@ var KmPlot = React.createClass({
 				? <div><h3>Unfortunately, KM plot can not be made. There is no survival data overlapping column data.</h3></div>
 				: <div>
 					<Button onClick={this.pdf}>PDF</Button>
+					<a href="http://xena.ucsc.edu/km-plot-help/">help with KM</a>
 					{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
 					{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions, maySplit, splits, this.onSplits)}
 					<div style={{clear: 'both'}}>
