@@ -528,7 +528,7 @@ var Column = React.createClass({
 										<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
 										<MenuItem onClick={this.onDownload} caption='Download'/>
 										{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
-										<MenuItem onClick={this.onViz} caption='Display Setting'/>
+										<MenuItem onClick={this.onViz} caption='Display'/>
 										<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
 										<MenuItem onClick={this.onRemove} caption='Remove'/>
 										</IconMenu>)}
