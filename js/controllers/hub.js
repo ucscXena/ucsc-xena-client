@@ -235,11 +235,15 @@ function datapagesPostActions(serverBus, state, newState, action) {
 
 	var needHubs = needCohortHubs(newState);
 	if (needHubs) {
-		let hasHubs = hasCohortHubs(newState),
-			missing = difference(needHubs, hasHubs);
+		let prevHubs = needCohortHubs(state),
+			hubChange = difference(needHubs, prevHubs);
+		if (type === 'init' || hubChange.length) {
+			let hasHubs = hasCohortHubs(newState),
+				missing = difference(needHubs, hasHubs);
 
-		if (missing.length) {
-			fetchCohortSummary(serverBus, missing);
+			if (missing.length) {
+				fetchCohortSummary(serverBus, missing);
+			}
 		}
 	}
 
