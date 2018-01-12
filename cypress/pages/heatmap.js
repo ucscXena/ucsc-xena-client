@@ -21,11 +21,14 @@ var wizard = {
 };
 
 var spreadsheet = {
+	appControlsCohort: () => cy.get('[class*=AppControls-module__cohort]'),
+	resetCohort: () => spreadsheet.appControlsCohort().contains('close'),
 	chartView: () => cy.get('[title="View as chart"]'),
 	heatmapView: () => cy.get('[title="View as columns"]'),
 	colControls: i => cy.get('[class^=ColCard-module__controls]').eq(i),
 	colCanvas: i => cy.get('.resize-enable').eq(i).find('.Tooltip-target canvas'),
 	chart: () => cy.get('.highcharts-root'),
+	closeCohort: () => spreadsheet.colControls(0).contains('close'),
 	kaplanMeierButton: i => spreadsheet.colControls(i).contains('Kaplan Meier'),
 	kaplanMeier: () => cy.get('.kmDialog'),
 	loadingSpinners: () => cy.get('[data-xena="loading"]'),
@@ -37,10 +40,10 @@ var spreadsheet = {
 var nav = {
 	bookmarkMenu: () => cy.get('button:contains("Bookmark")'),
 	bookmark: () => cy.get('li:contains("Bookmark")'),
-	heatmap: () => cy.get('nav').contains('Visualization'),
-	transcript: () => cy.get('nav').contains('Transcripts'),
+	spreadsheet: () => cy.get('nav').contains('Visualization'),
+	transcripts: () => cy.get('nav').contains('Transcripts'),
 	datapages: () => cy.get('nav').contains('Data Sets'),
-	hubs: () => cy.get('nav').contains('Data Hubs'),
+	hub: () => cy.get('nav').contains('Data Hubs'),
 	waitForTransition: () => cy.wait(350) // 350ms css transition on navigation buttons
 };
 

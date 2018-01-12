@@ -53,7 +53,7 @@
     "chai": "^3.5.0",
     "css-loader": "^0.28.1",
     "csslint": "^0.10.0",
-    "cypress": "^1.1.4",
+    "cypress": "^1.4.1",
     "eslint": "^1.10.3",
     "eslint-plugin-react": "^3.16.1",
     "exports-loader": "^0.6.2",

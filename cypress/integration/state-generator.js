@@ -23,8 +23,7 @@ var weightOptions = cmds =>
 
 // Return commands that are valid from the current state.
 var availableCommands = (cmdIdx, state) =>
-	values(cmdIdx)
-		.filter(cmd => cmd.canCreate(state))
+	weightOptions(values(cmdIdx).filter(cmd => cmd.canCreate(state)))
 		.map(cmd => cmd.generate(state));
 
 // Mutating array push that returns the array.
@@ -34,7 +33,7 @@ var push = (arr, val) => (arr.push(val), arr);
 // tail recursive, so we're limited by stack size. Might want to rewrite as a loop.
 function cmdSeqHelper(state, cmdIdx, size, acc = []) {
 	return flatmap(
-		oneof(weightOptions(availableCommands(cmdIdx, state))),
+		oneof(availableCommands(cmdIdx, state)),
 		cmd => size === 0 ? constant(push(acc, {state, cmd})) :
 			   cmdSeqHelper(cmdIdx[cmd.type].apply(state, cmd), cmdIdx, size - 1, push(acc, {state, cmd})));
 }

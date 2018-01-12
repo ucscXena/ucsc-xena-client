@@ -44,10 +44,13 @@ var GeneSuggest = React.createClass({
 	componentWillMount() {
 		var {host, name} = refGene[this.props.assembly] || refGene[defaultAssembly];
 		this.events('change');
-		this.ev.change
+		this.change = this.ev.change
 			.distinctUntilChanged(_.isEqual)
 			.debounceTime(200)
 			.switchMap(value => sparseDataMatchPartialField(host, 'name2', name, value, limit)).subscribe(matches => this.setState({suggestions: matches}));
+	},
+	componentWillUnmount() {
+		this.change.unsubscribe();
 	},
 	onSuggestionsFetchRequested({value}) {
 		var position = this.input.selectionStart,

@@ -2,8 +2,13 @@
 /*global describe: false, it: false, cy: false, beforeEach: false, expect: false, Cypress: false, before: false, after: false */
 
 var heatmapPage = require('../pages/heatmap');
-var {nav, wizard, spreadsheet} = heatmapPage;
 var transcriptPage = require('../pages/transcripts');
+var datapagesPage = require('../pages/datapages');
+var hubPage = require('../pages/hub');
+
+var {nav, wizard, spreadsheet} = heatmapPage;
+var {openpage, property: pageWalkProperty} = require('./page-spec');
+var jsc = require('jsverify');
 
 var merge = (...args) => Object.assign({}, ...args);
 var {isArray, findIndex, pick, identity} = Cypress._;
@@ -165,22 +170,51 @@ function setupPlayback(sources) {
 	});
 }
 
+// promise that resolves when all xhrs after a certain time (mark) are complete.
+// Call onRequest(xhr) for every xhr request. Call onResponse(xhr), onAbort(xhr) for every xhr response or abort.
+// Call mark(), and .then() the promise to wait for all currently outstanding requests to finish.
+function xhrWaitPromise() {
+	var xhrs = new Map(),
+		done,
+		p = new Cypress.Promise(resolve => done = resolve),
+		onComplete = xhr => {
+			xhrs.set(xhr, true);
+			if ([...xhrs.values()].every(x => x)) {
+				done();
+			}
+		};
+
+	xhrs.set('mark', false);
+	p.onRequest = xhr => xhrs.set(xhr, false);
+	p.onResponse = onComplete;
+	p.onAbort = onComplete;
+	p.mark = () => onComplete('mark');
+
+	return p;
+}
+
 function setupRecord(title) {
 	before(function() {
+		this.promise = xhrWaitPromise();
 		this.cache = [];
 		this.record = xhr => {
+			this.promise.onResponse(xhr);
 			this.cache.push(merge(
 				pick(xhr, 'url', 'method', 'status'), {body: xhr.request.body, response: xhr.response.body}));
 		};
 	});
 	after(function() {
-		// XXX make unique here
-		saveFile(titleToFile(title), this.cache);
+		this.promise.mark();
+		cy.wrap(this.promise).then(() => {
+			// XXX make unique here
+			saveFile(titleToFile(title), this.cache);
+		});
 	});
 	beforeEach(function() {
+		var {onRequest, onAbort} = this.promise;
 		cy.server();
-		cy.route({url: '*://**', method: 'POST', onResponse: this.record});
-		cy.route({url: '*://**', method: 'GET', onResponse: this.record});
+		cy.route({url: '*://**', method: 'POST', onResponse: this.record, onAbort,  onRequest});
+		cy.route({url: '*://**', method: 'GET', onResponse: this.record, onAbort, onRequest});
 		ignoreLocalHub();
 	});
 }
@@ -212,13 +246,31 @@ function renderATranscript() {
 	// requests to complete, or to ignore canceled requests. So, if we
 	// don't wait on something else here, we'll get an error in the *next*
 	// test when the transcript expression request aborts.
-	cy.contains('no expression'); // stupid way to wait for ajax XXX move to page object
+	transcriptPage.geneIsLoaded();
 }
 
 // XXX move to different file, or revisit the name of this file.
 describe('Transcript page', function() {
 	playRecord(this.title);
 	it('Draws', renderATranscript);
+});
+
+describe('Datapages', function () {
+	playRecord(this.title);
+	it('loads', function() {
+		cy.visit(datapagesPage.url,
+		         {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		datapagesPage.cohortList().should('not.be.empty');
+	});
+});
+
+describe('Hub page', function () {
+	playRecord(this.title);
+	it('loads', function() {
+		cy.visit(hubPage.url,
+		         {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		hubPage.hubList().should('not.be.empty');
+	});
 });
 
 var replayBookmark = xhr => {
@@ -380,7 +432,7 @@ describeNR('Bookmark', function() {
 
 		cy.visit(transcriptPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
-		cy.contains('no expression'); // stupid way to wait for ajax XXX move to page object
+		transcriptPage.geneIsLoaded();
 		cy.scrollTo('topLeft').then(screenshot('transcriptBookmark'));
 
 		//
@@ -413,10 +465,10 @@ describeNR('Bookmark', function() {
 		// Loading transcript bookmark
 		cy.visit(transcriptPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
-		cy.contains('no expression'); // stupid way to wait for ajax XXX move to page object
+		transcriptPage.geneIsLoaded();
 
 		// Switch to heatmap
-		nav.heatmap().click();
+		nav.spreadsheet().click();
 		nav.waitForTransition();
 		spreadsheet.examples().then(el => el.hide());
 		cy.scrollTo('topLeft').then(screenshot('afterBookmarkSpreadsheet'));
@@ -467,3 +519,45 @@ describeNR('Bookmark', function() {
 
 	});
 });
+
+describeNR.only('Random walk', function() {
+	setupPlayback(['Viz page', 'Transcript page', 'Hub page', 'Datapages']);
+	it('should open page', function() {
+		openpage();
+	});
+	it('should do load pages', function() {
+		// error closing, here:
+		// 001f04cd975bae6382
+		return jsc.assert(pageWalkProperty, {rngState: '001f04cd975bae6382', tests: 5});
+	});
+});
+
+// testing cy.softerror
+describe.skip('abort test', function () {
+	it('should abort', function () {
+		cy.softerror();
+		cy.visit('/heatmap/');
+		cy.get('[class^=WiardCard-module]').click();
+		cy.visit('/datapages/');
+
+		cy.recover().then(err => console.log('err', err));
+		cy.visit('/hub/');
+	});
+	it('should pass', function () {
+		console.log(cy.state('softerror'));
+	});
+});
+
+
+// problem is that noops have random sequences inside them, state
+// changes on one or both pages. Does the runner need to know that?
+// The random sequence has to also be executed by the runner. The
+// runner should probably just do one step, then.
+//
+// Running assertions should not be part of the sequence that can
+// be dropped.
+//var noops = [
+//	{steps: ['bookmark', 'sequence', 'restore']},
+//	{steps: ['reload']},
+//	{steps: ['switchPage', 'sequence', 'switchBack']}
+//];
