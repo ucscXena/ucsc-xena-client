@@ -32,12 +32,14 @@ var ignoreLocalHub = () => {
 	});
 };
 
+var cacheDir = 'cypress/xhr-cache';
+
 function saveFile(file, data) {
-	return cy.writeFile(`cypress/${file}.json`, JSON.stringify(data));
+	return cy.writeFile(`${cacheDir}/${file}.json`, JSON.stringify(data));
 }
 
 function readFile(file) {
-	return cy.readFile(`cypress/${file}.json`);
+	return cy.readFile(`${cacheDir}/${file}.json`);
 }
 
 var playback = (jsonStringify, responses) => xhr => {
