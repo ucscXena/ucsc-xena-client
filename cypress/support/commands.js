@@ -25,37 +25,3 @@
 //
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
-
-Cypress.Commands.each(({name}) =>
-	Cypress.Commands.overwrite(name, (fn, ...args) => {
-		if (cy.state('softerror')) {
-			return fn(...args).catch(err => {
-				var n = cy.state('current').get('next');
-				while (n && n.get('name') !== 'recover') {
-					n.skip();
-					n = n.get('next');
-				}
-				cy.state('abort', err);
-				Cypress.log({
-					displayName: `softerror(${name})`,
-					consoleProps: () => ({err})});
-			});
-		} else {
-			return fn(...args);
-		}
-	}));
-
-Cypress.Commands.add('softerror', () => {
-	cy.state('softerror', true);
-});
-
-Cypress.Commands.add('recover', () => {
-	var s = cy.state('abort');
-	cy.state('abort', false);
-	return cy.wrap(s);
-});
-
-// root mocha hook
-beforeEach(function() {
-	cy.state('softerror', false);
-});

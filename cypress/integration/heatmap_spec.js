@@ -7,11 +7,8 @@ var datapagesPage = require('../pages/datapages');
 var hubPage = require('../pages/hub');
 
 var {nav, wizard, spreadsheet} = heatmapPage;
-var {openpage, property: pageWalkProperty} = require('./page-spec');
-var jsc = require('jsverify');
 
-var merge = (...args) => Object.assign({}, ...args);
-var {isArray, findIndex, pick, identity} = Cypress._;
+var {setupRecord, setupPlayback, shimResponse} = require('./xhrPlayRecord');
 
 var aCohort = 'TCGA Breast Cancer (BRCA)';
 var aTCGAStudy = 'TCGA Lung Adenocarcinoma';
@@ -75,25 +72,6 @@ function disableHelp() {
 // run a set of side effects
 var exec = (...fns) => () => fns.forEach(fn => fn());
 
-// This works around https://github.com/cypress-io/cypress/issues/76
-// Large responses can't be stubbed in cypress, due to misdesign. Shim
-// the response handler, here.
-//
-// A different workaround might be possible with
-// cy.exec(`echo ${content} > fixtures/bookmark`)
-var shimResponse = response => xhr => {
-	var orsc = xhr.xhr.onreadystatechange;
-	xhr.xhr.onreadystatechange = function() {
-		if (this.readyState === 4) {
-			Object.defineProperty(this, 'response', {
-				writable: true
-			});
-			this.response = response;
-		}
-		orsc.apply(this, arguments);
-	};
-};
-
 function renderASpreadsheet(load = true) {
 	if (load) {
 		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
@@ -112,111 +90,6 @@ function renderASpreadsheet(load = true) {
 
 //	cy.contains('GOT IT').click();
 //	cy.contains('GOT IT').click();
-}
-
-var ignoreLocalHub = () => {
-	// Ignore local hubs that are missing.  Would like to return a
-	// connection refused, but I don't think cy.route() will do that.
-	// Might be able to use a sinon mock.
-	cy.route({
-		method: 'POST',
-		url: 'https://local.xena.ucsc.edu:7223/*',
-		status: 500,
-		response: ''
-	});
-};
-
-function saveFile(file, data) {
-	return cy.writeFile(`cypress/${file}.json`, JSON.stringify(data));
-}
-
-function readFile(file) {
-	return cy.readFile(`cypress/${file}.json`);
-}
-
-var playback = responses => xhr => {
-	if (xhr.url.match(/sockjs-node/)) {
-		return;
-	}
-	// I think what's happening here is that for responseType 'json'
-	// the browser will parse the response before it reaches the app,
-	// so we should also provide a 'parsed' response to the app. For
-	// other responseTypes, the browser will not parse it for the app,
-	// so we should provide an 'unparsed' stringified response.
-	var stringify = xhr.xhr.responseType === 'json' ? identity : JSON.stringify,
-		i = findIndex(responses, entry =>
-			entry.body === xhr.request.body && entry.url === xhr.url);
-	if (i === -1) {
-		console.error('Missing response for request', xhr);
-	}
-	shimResponse(stringify(responses[i].response))(xhr);
-};
-
-var titleToFile = str => str.replace(/ /g, '-');
-function setupPlayback(sources) {
-	var responses;
-	sources = isArray(sources) ? sources : [sources];
-	before(function() {
-		responses = [];
-		sources.forEach(title => {
-			readFile(titleToFile(title)).then(q => responses.push(...q));
-		});
-	});
-	beforeEach(function() {
-		cy.server();
-		cy.route({url: '*://**', method: 'POST', onRequest: playback(responses), response: 'placeholder'});
-		cy.route({url: '*://**', method: 'GET', onRequest: playback(responses), response: 'placeholder'});
-		ignoreLocalHub();
-	});
-}
-
-// promise that resolves when all xhrs after a certain time (mark) are complete.
-// Call onRequest(xhr) for every xhr request. Call onResponse(xhr), onAbort(xhr) for every xhr response or abort.
-// Call mark(), and .then() the promise to wait for all currently outstanding requests to finish.
-function xhrWaitPromise() {
-	var xhrs = new Map(),
-		done,
-		p = new Cypress.Promise(resolve => done = resolve),
-		onComplete = xhr => {
-			xhrs.set(xhr, true);
-			if ([...xhrs.values()].every(x => x)) {
-				done();
-			}
-		};
-
-	xhrs.set('mark', false);
-	p.onRequest = xhr => xhrs.set(xhr, false);
-	p.onResponse = onComplete;
-	p.onAbort = onComplete;
-	p.mark = () => onComplete('mark');
-
-	return p;
-}
-
-function setupRecord(title) {
-	before(function() {
-		this.promise = xhrWaitPromise();
-		this.cache = [];
-		this.record = xhr => {
-			this.promise.onResponse(xhr);
-			this.cache.push(merge(
-				pick(xhr, 'url', 'method', 'status'), {body: xhr.request.body, response: xhr.response.body}));
-		};
-	});
-	after(function() {
-		this.promise.mark();
-		cy.wrap(this.promise).then(() => {
-			// XXX make unique here
-			saveFile(titleToFile(title), this.cache);
-		});
-	});
-	beforeEach(function() {
-		var {onRequest, onAbort} = this.promise;
-		cy.server();
-		cy.route({url: '*://**', method: 'POST', onResponse: this.record, onAbort,  onRequest});
-		cy.route({url: '*://**', method: 'GET', onResponse: this.record, onAbort, onRequest});
-		ignoreLocalHub();
-	});
 }
 
 function playRecord(title) {
@@ -519,35 +392,6 @@ describeNR('Bookmark', function() {
 
 	});
 });
-
-describeNR.only('Random walk', function() {
-	setupPlayback(['Viz page', 'Transcript page', 'Hub page', 'Datapages']);
-	it('should open page', function() {
-		openpage();
-	});
-	it('should do load pages', function() {
-		// error closing, here:
-		// 001f04cd975bae6382
-		return jsc.assert(pageWalkProperty, {rngState: '001f04cd975bae6382', tests: 5});
-	});
-});
-
-// testing cy.softerror
-describe.skip('abort test', function () {
-	it('should abort', function () {
-		cy.softerror();
-		cy.visit('/heatmap/');
-		cy.get('[class^=WiardCard-module]').click();
-		cy.visit('/datapages/');
-
-		cy.recover().then(err => console.log('err', err));
-		cy.visit('/hub/');
-	});
-	it('should pass', function () {
-		console.log(cy.state('softerror'));
-	});
-});
-
 
 // problem is that noops have random sequences inside them, state
 // changes on one or both pages. Does the runner need to know that?
