@@ -231,6 +231,8 @@ var featureID = (dsID, feature) => ({
 	name: _.getIn(feature, ['name'])
 });
 
+// I believe 'user' is current unused. It's passed the spreadsheet.km object, which
+// I believe in theory would hold user override of the survival columns.
 function pickSurvivalVars(featuresByDataset, user) {
 	var allFeatures = _.flatmap(featuresByDataset,
 			(features, dsID) => _.map(features, f => featureID(dsID, f))),

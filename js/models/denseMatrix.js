@@ -96,7 +96,12 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 					 	customColors)),
 		units = [_.get(dataset, 'unit')];
 
-	return {fields, heatmap, assembly, colors, units};
+	// column.fields is overwritten by this, which is problematic. It was
+	// supposed to simplify the rendering layer by resolving whether the
+	// field id maps to multiple probes, but we need the original field list
+	// in the rendering layer, to determine if we support KM and gene average.
+	// We could compute this in a selector, perhaps.
+	return {fields, fieldList: column.fields, heatmap, assembly, colors, units};
 }
 
 //

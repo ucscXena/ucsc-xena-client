@@ -110,9 +110,7 @@ var setPublic = state => ({...state, isPublic: isPublicSelector(state)});
 
 // kmGroups transform calculates the km data, and merges it into the state.km object.
 
-var kmGroups = state => ({...state, km: {
-	...state.km,
-	groups: kmSelector(state)}});
+var kmGroups = state => ({...state, km: { ...state.km, groups: kmSelector(state)}});
 
 var spreadsheetSelector = selector =>
 		state => _.updateIn(state, ['spreadsheet'], selector);
@@ -127,4 +125,17 @@ var spreadsheetSelector = selector =>
 
 var selector = state => kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state))))))));
 
-module.exports = spreadsheetSelector(selector);
+// This seems odd. Surely there's a better test?
+var hasSurvival = survival =>
+	!!(_.get(survival, 'ev') &&
+		_.get(survival, 'tte') &&
+		_.get(survival, 'patient'));
+
+var survivalSelector = createSelector(
+	state => state.wizard.features,
+	state => state.spreadsheet.km,
+	(features, kmState) => hasSurvival(km.pickSurvivalVars(features, kmState)));
+
+var setSurvival = selector => state => selector(_.assocIn(state, ['spreadsheet', 'hasSurvival'], survivalSelector(state)));
+
+module.exports = setSurvival(spreadsheetSelector(selector));

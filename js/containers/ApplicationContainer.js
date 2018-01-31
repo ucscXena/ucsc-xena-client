@@ -7,7 +7,6 @@ var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
 var ChartView = require('../ChartView');
 var Column = require('../views/Column');
 var _ = require('../underscore_ext');
-var kmModel = require('../models/km');
 var {rxEventsMixin} = require('../react-utils');
 var Rx = require('../rx');
 // Spreadsheet options
@@ -22,34 +21,6 @@ var addHelp = require('./addHelp');
 var getSpreadsheet = require('../Spreadsheet');
 var getStepperState = require('./getStepperState');
 var Application = require('../Application');
-
-// This seems odd. Surely there's a better test?
-function hasSurvival(survival) {
-	return !! (_.get(survival, 'ev') &&
-			   _.get(survival, 'tte') &&
-			   _.get(survival, 'patient'));
-}
-
-// For geneProbes we will average across probes to compute KM. For
-// other types, we can't support multiple fields.
-// XXX maybe put in a selector.
-function disableKM(column, features, km) {
-	var survival = kmModel.pickSurvivalVars(features, km);
-	if (!hasSurvival(survival)) {
-		return [true, 'No survival data for cohort'];
-	}
-	if (column.fields.length > 1) {
-		return [true, 'Unsupported for multiple genes/ids'];
-	}
-	return [false, ''];
-}
-
-// We check the field length here, before overlaying a probe list from the
-// server, and sending to the Application view. XXX Maybe put the result in a selector,
-// to avoid passing it far down the component stack.
-function supportsGeneAverage({fieldType, fields: {length}}) {
-	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && length === 1;
-}
 
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
@@ -91,14 +62,6 @@ var ApplicationContainer = React.createClass({
 	componentWillUnmount: function () {
 		this.change.unsubscribe();
 		this.highlight.unsubscribe();
-	},
-	supportsGeneAverage(uuid) { // XXX could be precomputed in a selector
-		var {spreadsheet: {columns}} = this.props.state;
-		return supportsGeneAverage(_.get(columns, uuid));
-	},
-	disableKM(uuid) { // XXX could be precomputed in a selector
-		var {spreadsheet: {columns}, wizard: {features}, km} = this.props.state;
-		return disableKM(_.get(columns, uuid), features, km);
 	},
 	fieldFormat: function (uuid) {
 		var {spreadsheet: {columns, data}} = this.props.state;
@@ -159,8 +122,6 @@ var ApplicationContainer = React.createClass({
 				<View
 					stepperState={stepperState}
 					searching={this.highlight}
-					supportsGeneAverage={this.supportsGeneAverage}
-					disableKM={this.disableKM}
 					fieldFormat={this.fieldFormat}
 					sampleFormat={this.sampleFormat}
 					appState={computedState.spreadsheet}

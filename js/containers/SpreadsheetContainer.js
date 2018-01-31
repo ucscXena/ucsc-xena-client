@@ -151,9 +151,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
     },
 	render() {
 		var columnProps = _.pick(this.props,
-				['searching', 'supportsGeneAverage', 'disableKM', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
+				['searching', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
 			{appState} = this.props,
-			{columnOrder, wizardMode} = appState,
+			{columnOrder, wizardMode, hasSurvival} = appState,
 			interactive = isInteractive(this.props, this.state);
 
 		// XXX prune callback from this.props
@@ -170,6 +170,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 				{_.map(columnOrder, (id, i) => (
 					<Column
 						interactive={interactive}
+						hasSurvival={hasSurvival}
 						cohort={appState.cohort}
                         onAbout={this.onAbout}
 						onViz={this.onOpenVizSettings}

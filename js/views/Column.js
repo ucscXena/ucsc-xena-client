@@ -210,14 +210,21 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 	}
 }
 
-function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDownload, specialDownloadMenu}) {
-	var {id, cohort, column: {fieldType, noGeneDetail, valueType, fields, fieldSpecs}} = props,
+// Maybe put in a selector.
+function supportsGeneAverage(column) {
+	var {fieldType, fields, fieldList} = column;
+	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && (fieldList || fields).length === 1;
+}
+
+function matrixMenu(props, {onTumorMap, onMode, onSpecialDownload, specialDownloadMenu}) {
+	var {cohort, column} = props,
+		{fieldType, noGeneDetail, valueType, fields, fieldSpecs} = column,
 		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs}),
 		wrongDataType = valueType !== 'coded',
 		specialDownloadItemName = 'Download sample lists (json)';
 
 	return addIdsToArr ([
-		supportsGeneAverage(id) ?
+		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?
 				<MenuItem title={noGeneDetail ? 'no common probemap' : ''}
 					disabled={noGeneDetail} onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
@@ -280,6 +287,19 @@ var specialDownloadMenu = false;
 
 if (process.env.NODE_ENV !== 'production') {
 	specialDownloadMenu = true;
+}
+
+// For geneProbes we will average across probes to compute KM. For
+// other types, we can't support multiple fields.
+function disableKM(column, hasSurvival) {
+	if (!hasSurvival) {
+		return [true, 'No survival data for cohort'];
+	}
+	// XXX need to refactor column.fields & column.fieldList
+	if ((column.fieldList || column.fields).length > 1) {
+		return [true, 'Unsupported for multiple genes/ids'];
+	}
+	return [false, ''];
 }
 
 var Column = React.createClass({
@@ -464,15 +484,15 @@ var Column = React.createClass({
 	},
 	render: function () {
 		var {first, id, label, samples, samplesMatched, column, index,
-				zoom, data, fieldFormat, sampleFormat, disableKM, searching,
-				supportsGeneAverage, onClick, tooltip, wizardMode, onReset,
+				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
+				onClick, tooltip, wizardMode, onReset,
 				interactive, append} = this.props,
 			{specialDownloadMenu} = this.state,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
-				onSpecialDownload, supportsGeneAverage, specialDownloadMenu}),
-			[kmDisabled, kmTitle] = disableKM(id),
+				onSpecialDownload, specialDownloadMenu}),
+			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
