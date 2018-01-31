@@ -260,7 +260,7 @@ var CohortPage = React.createClass({
 				{preferred.size === 0 ? null : (
 					<span>
 						<span className={styles.star}>*</span>
-						<span>default dataset in visualization basic mode</span>
+						<span>default dataset in visualization</span>
 					</span>)}
 			</div>);
 	}
