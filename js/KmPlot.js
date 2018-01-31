@@ -122,7 +122,7 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 						x={-height}
 						dy='.71em'
 						textAnchor='start'>
-						Survival Fraction
+						Survival probability
 					</text>
 				</Axis>
 				{groupSvg}

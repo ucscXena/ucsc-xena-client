@@ -12,7 +12,7 @@ var links = [
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma'],
 	['heatmap', '20ac60405f8dbcfb61ce001bb12094a7',
 		'KM plot (overall survival) of breast cancer PAM50 subtypes'],
-	['heatmap', '2cbde6fd415785aaa5ecfbe9138a2b1f',
+	['heatmap', '1529e36190e1107c4716b9888bd3324a',
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
 	['heatmap', 'e5080f15c2715bc027a9a7b63c18ccf9',
 		'PDL1 and PD1 expression across 39 cancer types in TCGA and TARGET'],
