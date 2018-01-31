@@ -6,23 +6,23 @@ var Welcome = require('../views/Welcome');
 var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
 
 var links = [
-	['heatmap', '8ff9f773bbabafece2259a0249e5a013',
+	['heatmap', '0345d7916e21265748ceddf95fe6941b',
 		'FOXM1a, FOXM1b, FOXM1c transcript expression in tumor vs. normal samples'],
-	['heatmap', '27d8bc5b7904f768374a1eeae9baed81',
+	['heatmap', 'e1649cf9068043e626d7edb5a2203479',
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma'],
-	['heatmap', 'd763ecad2c49bb745ea5031e7c239ec2',
+	['heatmap', '20ac60405f8dbcfb61ce001bb12094a7',
 		'KM plot (overall survival) of breast cancer PAM50 subtypes'],
-	['heatmap', 'a9bfaf0d54c826bc1c8d1f5423df4818',
+	['heatmap', '2cbde6fd415785aaa5ecfbe9138a2b1f',
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
-	['heatmap', 'b095250231c43f1ff5e071ebf5cf3d0b',
+	['heatmap', 'e5080f15c2715bc027a9a7b63c18ccf9',
 		'PDL1 and PD1 expression across 39 cancer types in TCGA and TARGET'],
-	['heatmap', 'e9493253e163d8570a55f83eabe1c4f8',
+	['heatmap', '4581843a2f792aa8f215964d0d756896',
 		'ERG-TMPRSS2 fusion by chr21 deletion in prostate cancer'],
-	['heatmap', '04b175f632ff1c1c0fbddb2d271aa3df',
+	['heatmap', 'e5cdbea6320c823004772c0eaced3924',
 		'TERT, ATRX, TP53 in lower grade glioma. Two pathways to telomere lengthening'],
-	['heatmap', '0bf10d0dd69ee9871fe0abce78a96dbc',
+	['heatmap', 'bb15f97f0e0dc0fad854582d59f1d13b',
 		'Co-deletion of chromosome 1p and 19q in TCGA lower grade gliomas'],
-	['transcripts', '48b01d48b554be306b58aef69ea276ff',
+	['transcripts', '25a9782db8c1166ce7bae6686e98124c',
 		'KRAS isoform expression in TCGA pancreatic cancer vs. GTEx pancreas normal']];
 
 
