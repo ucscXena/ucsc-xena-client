@@ -134,7 +134,7 @@ var ApplicationContainer = React.createClass({
 	render() {
 		let {state, selector, callback} = this.props,
 			computedState = selector(state),
-			{spreadsheet: {mode}} = computedState,
+			{spreadsheet: {mode}, loadPending} = computedState,
 			stepperState = getStepperState(computedState),
 			View = {
 				heatmap: SpreadsheetContainer,
@@ -153,6 +153,7 @@ var ApplicationContainer = React.createClass({
 					getState={this.getState}
 					onNavigate={this.onNavigate}
 					onImport={this.onImport}
+					loadPending={loadPending}
 					state={computedState.spreadsheet}
 					callback={callback}>
 				<View

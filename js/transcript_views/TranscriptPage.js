@@ -80,7 +80,11 @@ var Transcripts = React.createClass({
 
 	render() {
 		var {state} = this.props,
+			{loadPending} = state,
 			{subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = state.transcripts || {};
+		if (loadPending) {
+			return <p style={{margin: 10}}>Loading your view...</p>;
+		}
 		if (!subtypes) {
 			return <h4>Loading available subtypes...</h4>;
 		}
