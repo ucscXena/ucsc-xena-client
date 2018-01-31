@@ -6,7 +6,7 @@ var Welcome = require('../views/Welcome');
 var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
 
 var links = [
-	['heatmap', '0345d7916e21265748ceddf95fe6941b',
+	['heatmap', 'fff0ba742442246f0fd600d41d163d60',
 		'FOXM1a, FOXM1b, FOXM1c transcript expression in tumor vs. normal samples'],
 	['heatmap', 'e1649cf9068043e626d7edb5a2203479',
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma'],
