@@ -22,6 +22,10 @@ var links = [
 		'TERT, ATRX, TP53 in lower grade glioma. Two pathways to telomere lengthening'],
 	['heatmap', 'bb15f97f0e0dc0fad854582d59f1d13b',
 		'Co-deletion of chromosome 1p and 19q in TCGA lower grade gliomas'],
+	['heatmap', 'eae46203a94f4b3904c2c9130789372d',
+		'Genetic separation of lower grade gliomas into two disease entities: \
+		one characterized by loss of chromosome arms 1p and 19q and TERT over-expresssion, \
+		the other by TP53 and ATRX mutations.'],
 	['transcripts', '25a9782db8c1166ce7bae6686e98124c',
 		'KRAS isoform expression in TCGA pancreatic cancer vs. GTEx pancreas normal']];
 
