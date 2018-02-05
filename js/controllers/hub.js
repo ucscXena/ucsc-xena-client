@@ -41,9 +41,9 @@ function fetchCohortSummary(serverBus, servers) {
 
 function fetchCohortData(serverBus, state) {
 	var {cohort} = state.params,
-		servers = userServers(state.spreadsheet),
-		q = zipArray(datasetQuery(servers, [{name: cohort}]), cohortMeta(cohort));
-	serverBus.next(['cohort-data', q, cohort]);
+		servers = userServers(state.spreadsheet);
+	serverBus.next(['cohort-data', datasetQuery(servers, [{name: cohort}]), cohort]);
+	serverBus.next(['cohort-data-meta', cohortMeta(cohort), cohort]);
 }
 
 // emit url if HEAD request succeeds
@@ -155,8 +155,13 @@ var controls = {
 	'cohort-summary': (state, cohorts) =>
 		updateIn(state, ['datapages', 'cohorts'],
 				(list = []) => concat(list, cohorts)),
-	'cohort-data': (state, [datasets, meta], cohort) =>
-		assocIn(state, ['datapages', 'cohort'], {cohort, datasets, meta}),
+	'cohort-data': (state, datasets, cohort) =>
+		assocIn(state,
+				['datapages', 'cohort', 'cohort'], cohort,
+				['datapages', 'cohort', 'datasets'], datasets),
+	'cohort-data-meta': (state, meta) =>
+		assocIn(state,
+			   ['datapages', 'cohort', 'meta'], meta),
 	'dataset-meta': (state, metaAndLinks, host, dataset) =>
 		assocIn(state, ['datapages', 'dataset'], {host, dataset, ...metaAndLinks}),
 	'dataset-identifiers': (state, list, host, dataset) =>
