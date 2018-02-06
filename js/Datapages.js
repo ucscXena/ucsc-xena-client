@@ -234,9 +234,12 @@ var getPreferred = (wizard, cohort) =>
 
 var CohortPage = React.createClass({
 	onViz() {
-		var {datapages} = this.props.state,
+		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 			cohort = getIn(datapages, ['cohort', 'cohort'], COHORT_NULL);
-		this.props.callback(['cohort', 0, cohort]);
+
+		if (cohort !== get(currentCohort, 'name')) {
+			this.props.callback(['cohort', 0, cohort]);
+		}
 		this.props.callback(['navigate', 'heatmap']);
 	},
 	onDataset: navHandler(paramFromHref),
@@ -370,9 +373,12 @@ var dataMethod = ({type = 'genomicMatrix', status} = {}) =>
 var DatasetPage = React.createClass({
 	onCohort: navHandler(paramFromHref),
 	onViz() {
-		var {datapages} = this.props.state,
+		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 			cohort = getIn(datapages, ['dataset', 'meta', 'cohort'], COHORT_NULL);
-		this.props.callback(['cohort', 0, cohort]);
+
+		if (cohort !== get(currentCohort, 'name')) {
+			this.props.callback(['cohort', 0, cohort]);
+		}
 		this.props.callback(['navigate', 'heatmap']);
 	},
 	onIdentifiers: navHandler(paramFromHref),
