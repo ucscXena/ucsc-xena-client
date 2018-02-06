@@ -134,12 +134,13 @@ describe('Datapages', function () {
 		cy.visit(datapagesPage.url,
 		         {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		datapagesPage.cohortList().should('not.be.empty');
+		datapagesPage.cohortSelect(aCohort);
 	});
 });
 
 describe('Hub page', function () {
 	playRecord(this.title);
-	it('loads', function() {
+	it('loads', function () {
 		cy.visit(hubPage.url,
 		         {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		hubPage.hubList().should('not.be.empty');
@@ -156,9 +157,6 @@ var replayBookmark = xhr => {
 	}).as('readBookmark');
 };
 
-//var rAF = () =>
-//	new Cypress.Promise(resolve => window.requestAnimationFrame(() => resolve()));
-
 var screenshot = file => () => {
 	// This is a clunky work-around to get cypress controls out of the way while
 	// screenshotting.
@@ -170,6 +168,25 @@ var screenshot = file => () => {
 		reporter.style.display = display;
 	});
 };
+
+// XXX would like to cover this in a generative test.
+describeNR('Datapages circuit', function () {
+	setupPlayback(['Datapages', 'Viz page']);
+	it('retains heatmap view if cohort unchanged', function () {
+
+		renderASpreadsheet(true);
+		cy.scrollTo('topLeft').then(screenshot('heatmap'));
+
+		cy.visit(datapagesPage.url);
+		datapagesPage.cohortSelect(aCohort);
+		datapagesPage.cohortVisualize().click();
+
+		nav.waitForTransition(); // nav button animation
+		cy.scrollTo('topLeft').then(screenshot('heatmapAgain'));
+		cy.exec('babel-node cypress/compareImages.js heatmap heatmapAgain')
+			.its('stdout').should('contain', 'same');
+	});
+});
 
 var query = url => url.split(/\?/)[1];
 var highchartAnimation = 2000; // XXX move to page object
@@ -326,6 +343,7 @@ describeNR('Bookmark', function() {
 		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		spreadsheet.waitForViewport();
 		// Hide "View live example" link because it keeps changing.
+		// XXX should we close the header, instead?
 		spreadsheet.examples().then(el => el.hide());
 		cy.scrollTo('topLeft').then(screenshot('initialSpreadsheet'));
 		spreadsheet.examples().then(el => el.show());
@@ -353,8 +371,8 @@ describeNR('Bookmark', function() {
 		// Confirm wizard is functioning
 		renderASpreadsheet(false);
 	});
-	it.skip('Bookmarks wizard states', function() {
-//		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
+	it('Bookmarks wizard states', function() {
+		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
 
 		// Do step 1
 		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
@@ -367,13 +385,13 @@ describeNR('Bookmark', function() {
 		cy.scrollTo('topLeft').then(screenshot('step1'));
 		spreadsheet.examples().then(el => el.show());
 
-//		nav.bookmarkMenu().click();
-//		nav.bookmark().click();
+		nav.bookmarkMenu().click();
+		nav.bookmark().click();
 
 		// load bookmark
-//		cy.wait('@bookmark').then(replayBookmark);
-		cy.visit(heatmapPage.url);
-//		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
+		cy.wait('@bookmark').then(replayBookmark);
+		cy.visit(heatmapPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
 
 		wizard.cards(); // wait for render
 
@@ -389,7 +407,6 @@ describeNR('Bookmark', function() {
 		wizard.geneFieldInput().type('TP53');
 		wizard.columnDone().click();
 		spreadsheet.loadingSpinners().should('not.be.visible');
-
 	});
 });
 

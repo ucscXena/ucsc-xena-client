@@ -7,7 +7,7 @@ var {memoize, isArray, findIndex, pick, identity} = Cypress._;
 // This works around https://github.com/cypress-io/cypress/issues/76
 // Large responses can't be stubbed in cypress, due to misdesign. Shim
 // the response handler, here.
-var shimResponse = response => xhr => {
+var shimResponse = (response, status) => xhr => {
 	var orsc = xhr.xhr.onreadystatechange;
 	xhr.xhr.onreadystatechange = function() {
 		if (this.readyState === 4) {
@@ -15,6 +15,10 @@ var shimResponse = response => xhr => {
 				writable: true
 			});
 			this.response = response;
+			Object.defineProperty(this, 'status', {
+				writable: true
+			});
+			this.status = status;
 		}
 		orsc.apply(this, arguments);
 	};
@@ -57,7 +61,7 @@ var playback = (jsonStringify, responses) => xhr => {
 	if (i === -1) {
 		console.error('Missing response for request', xhr);
 	}
-	shimResponse(stringify(responses[i].response))(xhr);
+	shimResponse(stringify(responses[i].response), responses[i].status)(xhr);
 };
 
 var titleToFile = str => str.replace(/ /g, '-');
