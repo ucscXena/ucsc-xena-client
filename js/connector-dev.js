@@ -56,11 +56,9 @@ function getSavedState(persist) {
 	return null;
 }
 
-var getPage = () => location.pathname.replace(/^[/]|[/]$/g, '');
-
 var historyObs = Rx.Observable
 	.fromEvent(window, 'popstate')
-	.map(() => ['history', {page: getPage(), params: urlParams()}]);
+	.map(() => ['history', {path: location.pathname, params: urlParams()}]);
 
 module.exports = function({
 	Page,

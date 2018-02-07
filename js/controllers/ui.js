@@ -223,8 +223,8 @@ var controls = {
 	navigate: (state, page, params = {}) => _.assoc(state, 'page', page, 'params', params),
 	'navigate-post!': (serverBus, state, newState, page, params) => history.pushState({}, '', `/${page}/${paramList(params)}`),
 	history: (state, history) => _.isEmpty(history) ? state :
-		_.Let(({page, params = {}} = history) =>
-			_.assoc(state, 'page', page, 'params', params)),
+		_.Let(({path, params = {}} = history) =>
+			_.assoc(state, 'page', getPage(path), 'params', params)),
 	cohort: (state, i, cohort, width) =>
 		clearWizardCohort(
 			_.updateIn(state, ['spreadsheet'], setCohort([{name: cohort}], width))),
