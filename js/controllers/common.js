@@ -29,8 +29,7 @@ function fetchDatasets(serverBus, servers, cohort) {
 	serverBus.next(['datasets', datasetQuery(servers, cohort)]);
 }
 
-// Might want to bump this up after fixing our rendering problems @ 40k.
-const MAX_SAMPLES = 30 * 1000;
+const MAX_SAMPLES = 50 * 1000;
 
 var allSamples = _.curry((cohort, max, server) => xenaQuery.cohortSamples(server, cohort, max === Infinity ? null : max));
 
