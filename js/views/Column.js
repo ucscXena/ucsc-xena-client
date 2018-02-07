@@ -477,9 +477,8 @@ var Column = React.createClass({
 		return 90;
 //		return 136;
 	},
-	onAbout(ev) {
+	onAbout(ev, host, dataset) {
 		ev.preventDefault();
-		var {host, dataset} = ev.target.parentElement.dataset;
 		this.props.onAbout(host, dataset);
 	},
 	render: function () {

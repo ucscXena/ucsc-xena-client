@@ -5,7 +5,7 @@ var {parseDsID} = require('../xenaQuery');
 
 var getAbout = (onClick, dsID, root, text) => {
     var [host, dataset] = parseDsID(dsID);
-	return <MenuItem key='about' data-host={host} data-dataset={dataset} onClick={onClick} caption={text}/>;
+	return <MenuItem key='about' onClick={ev => onClick(ev, host, dataset)} caption={text}/>;
 };
 
 
