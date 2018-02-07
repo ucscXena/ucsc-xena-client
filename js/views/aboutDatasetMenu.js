@@ -10,7 +10,7 @@ var getAbout = (onClick, dsID, root, text) => {
 
 
 function aboutDatasetMenu(onClick, dsID, root = '..') {
-	return dsID ? getAbout(onClick, dsID, root, 'About the data') : null;
+	return dsID ? getAbout(onClick, dsID, root, 'About') : null;
 }
 
 module.exports = aboutDatasetMenu;
