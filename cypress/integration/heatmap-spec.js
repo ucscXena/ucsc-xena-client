@@ -152,7 +152,7 @@ var replayBookmark = xhr => {
 	cy.route({
 		url: '/api/bookmarks/bookmark*',
 		method: 'GET',
-		onRequest: shimResponse(content),
+		onRequest: shimResponse(content, 200),
 		response: 'placeholder',
 	}).as('readBookmark');
 };
