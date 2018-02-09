@@ -90,9 +90,9 @@ var Application = React.createClass({
 //		this.onFilterColumn(matches, 'sample list', fieldLabel);
 //	},
 	render: function() {
-		let {state, children, onHighlightChange, onShowWelcome, stepperState, loadPending, ...otherProps} = this.props,
+		let {state, stateError, children, onHighlightChange, onShowWelcome, stepperState, loadPending, ...otherProps} = this.props,
 			{callback, onResetSampleFilter} = otherProps,
-			{cohort, stateError, samplesMatched, sampleSearch,
+			{cohort, samplesMatched, sampleSearch,
 				samples, mode, wizardMode, showWelcome, zoom} = state,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			// Can these closures be eliminated, now that the selector is above this

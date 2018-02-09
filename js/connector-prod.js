@@ -9,6 +9,7 @@ var nostate = require('./nostate');
 var urlParams = require('./urlParams');
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
+var {schemaCheckThrow} = require('./schemaCheck');
 
 function controlRunner(serverBus, controller) {
 	return function (state, ac) {
@@ -60,18 +61,7 @@ var dropTransient = state =>
 
 // Serialization
 var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(dropTransient(state))));
-var parse = str => migrateState(expandState(JSON.parse(LZ.decompressFromUTF16(str))));
-
-function parseCheck(session) {
-	var state;
-	try {
-		state = parse(session);
-	} catch (e) {
-		console.log('session', e);
-	}
-	return _.has(state, 'wizard') ? state :
-		_.assocIn(state, ['spreadsheet', 'stateError'], 'session');
-}
+var parse = str => schemaCheckThrow(migrateState(expandState(JSON.parse(LZ.decompressFromUTF16(str)))));
 
 var historyObs = Rx.Observable
 	.fromEvent(window, 'popstate')
@@ -96,7 +86,11 @@ module.exports = function({
 
 	delete sessionStorage.debugSession; // Free up space & don't try to share with dev
 	if (persist && nostate('xena')) {
-		initialState = _.merge(initialState, parseCheck(sessionStorage.xena));
+		try {
+			initialState = parse(sessionStorage.xena);
+		} catch (e) {
+			initialState = _.assoc(initialState, 'stateError', 'session');
+		}
 	}
 
 	let stateObs = Rx.Observable.merge(serverCh, uiCh, historyObs).scan(runner, initialState).share();

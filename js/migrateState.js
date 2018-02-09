@@ -17,13 +17,13 @@ var setVersion = state => assoc(state, 'version', version);
 var getVersion = state =>
 	Let((s = get(state, 'version', 0)) => isString(s) ? 0 : s);
 
-var noComposite = state => assoc(state,
-		'cohort', state.cohort[0],
-		'cohortSamples', state.cohortSamples[0]);
+//var noComposite = state => assoc(state,
+//		'cohort', state.cohort[0],
+//		'cohortSamples', state.cohortSamples[0]);
 
 // This must be sorted, with later versions appearing last.
 var migrations = [
-	[noComposite]
+	[/*noComposite*/]
 ];
 
 function apply(state) {

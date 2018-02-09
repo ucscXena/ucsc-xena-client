@@ -43,10 +43,6 @@ function invertCohortMeta(meta) {
 			cohortTags => cohortTags.map(([cohort]) => cohort));
 }
 
-function bookmarkCheck(state, bookmark) {
-	return _.has(bookmark, 'page') ? _.merge(state, bookmark) : _.assoc(state, 'stateError', 'bookmark');
-}
-
 var wizardControls = {
 	cohorts: (state, cohorts) => _.assoc(state, "cohorts", cohorts),
 	datasets: (state, datasets) => _.assoc(state, 'datasets', datasets),
@@ -63,7 +59,8 @@ var wizardControls = {
 };
 
 var controls = {
-	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(bookmarkCheck(state, lift(bookmark)))),
+	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(_.merge(state, lift(bookmark)))),
+	'bookmark-error': state => resetLoadPending(_.assoc(state, 'stateError', 'bookmark')),
 	// Here we need to load cohort data if servers or cohort has changed,
 	// *or* if we never loaded cohort data (e.g. due to waiting on bookmark).
 	'bookmark-post!': (serverBus, state, newState) => {

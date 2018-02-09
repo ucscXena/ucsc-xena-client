@@ -12,6 +12,7 @@ var urlParams = require('./urlParams');
 var LZ = require('./lz-string');
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
+var {schemaCheckThrow} = require('./schemaCheck');
 
 function logError(err) {
 	if (typeof window === 'object' && typeof window.chrome !== 'undefined') {
@@ -37,7 +38,7 @@ function parse(str) {
 	var state = JSON.parse(LZ.decompressFromUTF16(str));
 	return {
 		...state,
-		committedState: migrateState(expandState(state.committedState))
+		committedState: schemaCheckThrow(migrateState(expandState(state.committedState)))
 	};
 }
 
@@ -86,6 +87,9 @@ module.exports = function({
 
 		devReducer = DevTools.instrument(controller, initialState),
 		savedState = getSavedState(persist),
+		// Here we need not just the initial state, but to know if we have a
+		// saved state. The initial state is used in devtools as the 'reset'
+		// target. So, we can't replace initial state with saved state.
 		devInitialState = devReducer(null, savedState ?
 			{type: 'IMPORT_STATE', nextLiftedState: savedState} : {});
 

@@ -233,15 +233,15 @@ var controls = {
 	cohortReset: state =>
 			clearWizardCohort(
 				_.updateIn(state, ['spreadsheet'], setCohort([], undefined))),
-	'import': (state, newState) => _.has(newState, 'page') ?
-		clearWizardCohort(_.merge(state, lift(newState))) : _.assocIn(state, ['spreadsheet', 'stateError'], 'import'),
+	'import': (state, newState) => clearWizardCohort(_.merge(state, lift(newState))),
+	'import-error': state => _.assoc(state, 'stateError', 'import'),
 	'refresh-cohorts': clearWizardCohort,
+	stateError: (state, error) => _.assoc(state, 'stateError', error),
 	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
 };
 
 var spreadsheetControls = {
 	'import-post!': updateWizard,
-	stateError: (state, error) => _.assoc(state, 'stateError', error),
 	'refresh-cohorts-post!': (serverBus, state, newState) => {
 		fetchCohortMeta(serverBus);
 		fetchCohortPreferred(serverBus);

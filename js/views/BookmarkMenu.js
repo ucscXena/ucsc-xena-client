@@ -90,7 +90,7 @@ var BookmarkMenu = React.createClass({
 			reader = new FileReader(),
 			{onImport} = this.props;
 
-		reader.onload = () => onImport(JSON.parse(reader.result));
+		reader.onload = () => onImport(reader.result);
 		reader.readAsText(file);
 		ev.target.value = null;
 	},

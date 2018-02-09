@@ -9,6 +9,8 @@ const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
 var nav = require('../nav');
 var styles = require('./TranscriptPage.module.css');
+var StateError = require('../StateError');
+var {schemaCheckThrow} = require('../schemaCheck');
 
 /*
 var defaultGene = 'KRAS';
@@ -74,13 +76,21 @@ var Transcripts = React.createClass({
 		this.props.callback(['navigate', page]);
 	},
 
-	onImport(state) {
-		this.props.callback(['import', state]);
+	onImport(content) {
+		try {
+			this.props.callback(['import', schemaCheckThrow(JSON.parse(content))]);
+		} catch(err) {
+			this.props.callback(['import-error']);
+		}
+	},
+
+	onHideError() {
+		this.props.callback(['stateError', undefined]);
 	},
 
 	render() {
 		var {state} = this.props,
-			{loadPending} = state,
+			{loadPending, stateError} = state,
 			{subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = state.transcripts || {};
 		if (loadPending) {
 			return <p style={{margin: 10}}>Loading your view...</p>;
@@ -142,6 +152,7 @@ var Transcripts = React.createClass({
 
 		return (
 				<div className={styles.main}>
+					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
 					<a className={styles.selectors} style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className={styles.selectors} style={{width: "1200px", height: "80px"}}>
 						<div className={styles.geneBox} style={{float: "left", width: "300px"}}>

@@ -21,6 +21,7 @@ var addHelp = require('./addHelp');
 var getSpreadsheet = require('../Spreadsheet');
 var getStepperState = require('./getStepperState');
 var Application = require('../Application');
+var {schemaCheckThrow} = require('../schemaCheck');
 
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
@@ -90,12 +91,17 @@ var ApplicationContainer = React.createClass({
 	onNavigate(page) {
 		this.props.callback(['navigate', page]);
 	},
-	onImport(state) {
-		this.props.callback(['import', state]);
+	onImport(content) {
+		try {
+			this.props.callback(['import', schemaCheckThrow(JSON.parse(content))]);
+		} catch (err) {
+			this.props.callback(['import-error']);
+		}
 	},
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback} = this.props,
+			{stateError} = state,
 			computedState = selector(state),
 			{spreadsheet: {mode}, loadPending} = computedState,
 			stepperState = getStepperState(computedState),
@@ -117,6 +123,7 @@ var ApplicationContainer = React.createClass({
 					onNavigate={this.onNavigate}
 					onImport={this.onImport}
 					loadPending={loadPending}
+					stateError={stateError}
 					state={computedState.spreadsheet}
 					callback={callback}>
 				<View
