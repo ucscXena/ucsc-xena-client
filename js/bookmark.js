@@ -13,7 +13,7 @@ var version = 1;
 
 // Serialization
 var stringify = state => LZ.compressToUTF16(JSON.stringify({version, appState: compactState(state)}));
-var parse = bookmark => schemaCheckThrow(migrateState(expandState(JSON.parse(LZ.decompressFromUTF16(bookmark)).appState)));
+var parse = bookmark => schemaCheckThrow(expandState(migrateState(JSON.parse(LZ.decompressFromUTF16(bookmark)).appState)));
 
 module.exports = {
 	version,

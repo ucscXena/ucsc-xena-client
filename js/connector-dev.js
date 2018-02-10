@@ -38,7 +38,7 @@ function parse(str) {
 	var state = JSON.parse(LZ.decompressFromUTF16(str));
 	return {
 		...state,
-		committedState: schemaCheckThrow(migrateState(expandState(state.committedState)))
+		committedState: schemaCheckThrow(expandState(migrateState(state.committedState)))
 	};
 }
 

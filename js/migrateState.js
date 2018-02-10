@@ -11,19 +11,38 @@
 
 var version = 1;
 
-var {assoc, get, Let, isString, flatten} = require('./underscore_ext');
+var {assoc, get, getIn, Let, pick, isString, flatten, /*contains, */updateIn, without} = require('./underscore_ext');
 
 var setVersion = state => assoc(state, 'version', version);
 var getVersion = state =>
 	Let((s = get(state, 'version', 0)) => isString(s) ? 0 : s);
 
-//var noComposite = state => assoc(state,
-//		'cohort', state.cohort[0],
-//		'cohortSamples', state.cohortSamples[0]);
+var noComposite = state => assoc(state,
+		'cohort', state.cohort[0],
+		'cohortSamples', state.cohortSamples[0]);
+
+var spreadsheetProps = ['columnOrder', 'columns', 'mode', 'notifications', 'servers', 'showWelcome', 'wizardMode', 'zoom', 'defaultWidth', 'data', 'cohort', 'cohortSamples', 'km', 'survival', 'sampleSearch', 'samplesOver', 'editing', 'openVizSettings', 'chartState', 'hasPrivateSamples'];
+//var dropProps = ['cohortMeta', 'cohortPreferred', 'cohortPhenotype', 'cohorts', 'datasets', 'features', 'samples', 'columnEdit'];
+
+var splitPages = state => {
+//	console.log('Unhandled state', pick(state, (v, k) => !contains(spreadsheetProps, k) && !contains(dropProps, k)));
+	return {
+		spreadsheet: pick(state, spreadsheetProps),
+		page: 'heatmap'
+	};
+};
+
+// This will break bookmarks with sample search and samples to the right
+var samplesToLeft = state =>
+	// We don't want to create a blank spreadsheet object if there is none, so check
+	// if there's a columnOrder before doing anything. indexOf could be -1 or 0
+	getIn(state, ['spreadsheet', 'columnOrder'], []).indexOf('samples') > 0 ?
+		updateIn(state, ['spreadsheet', 'columnOrder'], order => ['samples', ...without(order, 'samples')]) :
+		state;
 
 // This must be sorted, with later versions appearing last.
 var migrations = [
-	[/*noComposite*/]
+	[noComposite, splitPages, samplesToLeft]
 ];
 
 function apply(state) {

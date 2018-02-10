@@ -61,7 +61,7 @@ var dropTransient = state =>
 
 // Serialization
 var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(dropTransient(state))));
-var parse = str => schemaCheckThrow(migrateState(expandState(JSON.parse(LZ.decompressFromUTF16(str)))));
+var parse = str => schemaCheckThrow(expandState(migrateState(JSON.parse(LZ.decompressFromUTF16(str)))));
 
 var historyObs = Rx.Observable
 	.fromEvent(window, 'popstate')
