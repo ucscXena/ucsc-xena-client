@@ -17,3 +17,7 @@ def query(params):
 def search(params):
     r = requests.get(settings.TIES_URL + 'concepts/search', params=params, headers=headers)
     return r
+
+def documents(docId):
+    r = requests.get(settings.TIES_URL + 'documents' + '/' + str(docId), params={}, headers=headers)
+    return r

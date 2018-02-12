@@ -44,3 +44,12 @@ def search(request):
             return HttpResponseServerError(json.dumps({'type': 'server', 'error': 'Error contacting TIES server (' + str(resp) + ')'}))
         return HttpResponse(resp.text)
     return HttpResponseBadRequest(json.dumps({'type': 'form', 'error': form.errors}))
+
+def documents(request, docId):
+    if not (request.method == 'GET'):
+        return HttpResponseBadRequest(json.dumps({'error': 'request.method not supported'}))
+
+    resp = ties.request.documents(docId)
+    if resp.status_code != 200:
+        return HttpResponseServerError(json.dumps({'type': 'server', 'error': 'Error contacting TIES server (' + str(resp) + ')'}))
+    return HttpResponse(resp.text)
