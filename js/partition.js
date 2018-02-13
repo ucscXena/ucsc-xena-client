@@ -1,21 +1,18 @@
 'use strict';
 
-var _ = require('underscore');
-
-// XXX These recursive methods are going to suck for performance & eating memory
-// when the sizes array gets big.
+var _ = require('./underscore_ext');
 
 // Partition n bins (e.g. pixels) proportional to sizes,
 // distributing bins that won't evenly divide.
 //
 // total is optional & should be the sum of sizes.
-function bysize(n, sizes, total) {
-	if (sizes.length === 1) {
-		return [n];
-	}
-	total = total || _(sizes).reduce(function (x, y) { return x + y; });
-	var p = Math.round(sizes[0] * n / total); // this bysize size.
-	return [ p ].concat(bysize(n - p, _(sizes).rest(1), total - sizes[0])); // XXX performance
+function bysize(n, sizes, total = _.sum(sizes)) {
+	return sizes.map(size => {
+		var p = Math.round(size * n / total);
+		n -= p;
+		total -= size;
+		return p;
+	});
 }
 
 function equally(n, m) {
@@ -50,7 +47,7 @@ function offsets(n, sep, sizes) {
 }
 
 module.exports = {
-	bysize: bysize,
-	equally: equally,
-	offsets: offsets
+	bysize,
+	equally,
+	offsets
 };
