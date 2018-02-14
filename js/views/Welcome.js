@@ -13,6 +13,7 @@
 
 // Core dependencies, components
 var React = require('react');
+var {times} = require('../underscore_ext');
 
 // Styles
 var compStyles = require('./Welcome.module.css');
@@ -29,7 +30,7 @@ var Welcome = React.createClass({
 		this.props.onClick();
 	},
 	render() {
-		var {link: [app, bookmark, text], linkProps} = this.props,
+		var {link: [app, bookmark, text], count, i, linkProps, bulletProps} = this.props,
 			link = `${document.location.origin}/${app}/?bookmark=${bookmark}`;
 		return (
 			<div className={compStyles.Welcome}>
@@ -42,6 +43,18 @@ var Welcome = React.createClass({
 						for correlations between genomic and/or phenotypic variables.</h2>
 					<h2 className={typStyles.mdSubhead}>View live example: <a {...linkProps} href={link}
 																			   target='_blank'>{text}</a></h2>
+					<div className={compStyles.bulletWrapper}>
+						<div className={compStyles.bullets}>
+							{times(count, j => <div
+													key={j}
+													data-index={j}
+													{...bulletProps}
+													className={i === j ? compStyles.bulletActive : compStyles.bullet}>
+
+													{'\u2022'}
+												</div>)}
+						</div>
+					</div>
 				</div>
 				<div className={compStyles.closeIcon} onClick={this.dismissWelcome}>
 					<i className='material-icons'>close</i>

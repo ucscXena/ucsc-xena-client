@@ -30,22 +30,25 @@ var links = [
 		'KRAS isoform expression in TCGA pancreatic cancer vs. GTEx pancreas normal']];
 
 
+var evToIndex = ev => parseInt(ev.currentTarget.dataset.index, 10);
+
 var refresh = 5000; // ms between link switch
 var WelcomeContainer = React.createClass({
 	mixins: [rxEventsMixin, deepPureRenderMixin],
 	getInitialState() {
-		return {link: links[Math.floor(Math.random() * links.length)]};
+		return {link: 0};
 	},
 	componentWillMount() {
-		this.events('mouseover', 'mouseout');
+		this.events('mouseover', 'mouseout', 'bulletover');
+		var {mouseover, mouseout, bulletover} = this.ev;
 
 		// Emit events on an interval, pausing if the user mouses-over
 		// the target link. The timer restarts on mouse-out, so it won't
 		// change immediately.
-		this.sub = Rx.Observable.of(true).merge(this.ev.mouseout).flatMap(
-			() => Rx.Observable.interval(refresh).takeUntil(this.ev.mouseover)
-		).subscribe(() =>
-			this.setState({link: links[Math.floor(Math.random() * links.length)]}));
+		this.sub = Rx.Observable.of(true).merge(mouseout).flatMap(
+			() => Rx.Observable.interval(refresh).takeUntil(mouseover.merge(bulletover)).map(() => undefined)
+		).merge(bulletover.map(evToIndex)).subscribe(i =>
+			this.setState({link: i === undefined ? (this.state.link + 1) % links.length : i}));
 	},
 	componentWillUnmount() {
 		this.sub.unsubscribe();
@@ -54,9 +57,12 @@ var WelcomeContainer = React.createClass({
 		var {link} = this.state;
 		return (
 			<Welcome
+				count={links.length}
+				i={link}
 				linkProps={{onMouseOver: this.on.mouseover, onMouseOut: this.on.mouseout}}
+				bulletProps={{onMouseOver: this.on.bulletover, onMouseOut: this.on.mouseout}}
 				{...this.props}
-				link={link} />);
+				link={links[link]} />);
 	}
 });
 
