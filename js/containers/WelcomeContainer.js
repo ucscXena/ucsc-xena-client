@@ -13,7 +13,7 @@ var links = [
 	['heatmap', '20ac60405f8dbcfb61ce001bb12094a7',
 		'KM plot (overall survival) of breast cancer PAM50 subtypes'],
 	['heatmap', '7723e1da309d09100b4b7d3d26c93928',
-		'PAM50 gene expression pattern in breast cancer subtypes']
+		'PAM50 gene expression pattern in breast cancer subtypes'],
 	['heatmap', '1529e36190e1107c4716b9888bd3324a',
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
 	['heatmap', 'e5080f15c2715bc027a9a7b63c18ccf9',
