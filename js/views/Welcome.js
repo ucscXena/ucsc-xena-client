@@ -12,27 +12,28 @@
 'use strict';
 
 // Core dependencies, components
-var React = require('react');
-var {times} = require('../underscore_ext');
+import React from 'react';
+import {times} from './../underscore_ext';
 
 // Styles
-var compStyles = require('./Welcome.module.css');
-var typStyles = require('../../css/typography.module.css');
+import compStyles from'./Welcome.module.css';
+import typStyles from '../../css/typography.module.css';
 
 // Images
-var welcomeImg = require('../../images/iconXena.png');
-var welcome2xImg = require('../../images/iconXena@2x.png');
-var welcome3xImg = require('../../images/iconXena@3x.png');
+import welcomeImg from '../../images/iconXena.png';
+import welcome2xImg from '../../images/iconXena@2x.png';
+import welcome3xImg  from '../../images/iconXena@3x.png';
+
 let welcomeSrcSet = `${welcome2xImg} 2x, ${welcome3xImg} 3x`;
 
-var Welcome = React.createClass({
-	dismissWelcome: function() {
+class Welcome extends React.Component{
+	dismissWelcome(){
 		this.props.onClick();
-	},
-	render() {
-		var {link: [app, bookmark, text], count, i, linkProps, bulletProps} = this.props,
+	}
+	render(){
+		const {link: [app, bookmark, text], count, i, linkProps, bulletProps} = this.props,
 			link = `${document.location.origin}/${app}/?bookmark=${bookmark}`;
-		return (
+		return(
 			<div className={compStyles.Welcome}>
 				<div className={compStyles.welcomeIcon}>
 					<img className={compStyles.imgXena} src={welcomeImg} srcSet={welcomeSrcSet}/>
@@ -56,12 +57,13 @@ var Welcome = React.createClass({
 						</div>
 					</div>
 				</div>
-				<div className={compStyles.closeIcon} onClick={this.dismissWelcome}>
+				<div className={compStyles.closeIcon} onClick={this.dismissWelcome.bind(this)}>
 					<i className='material-icons'>close</i>
 				</div>
 			</div>
-		);
+		)
 	}
-});
+
+}
 
 module.exports = Welcome;
