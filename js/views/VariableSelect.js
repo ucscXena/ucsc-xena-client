@@ -18,9 +18,11 @@ const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
 
 const ignoredType = ['probeMap', 'genePredExt', 'probemap', 'sampleMap']; // Important for unassigned cohort
-const ignoredSubtype = ['Filter', 'filter', 'phenotype', 'phenotypes', 'Phenotype', 'Phenotypes']; // XXX Looks brittle. use regex?
+const ignoredClinical = (type, subtype) =>
+	type === 'clinicalMatrix' && !subtype || subtype.match(/^phenotypes?|filter/i);
 
-var notIgnored = ({type, dataSubType}) => !_.contains(ignoredType, type) && !_.contains(ignoredSubtype, dataSubType);
+var notIgnored = ({type, dataSubType}) => !_.contains(ignoredType, type) &&
+	!ignoredClinical(type, dataSubType);
 
 var category = ({dsID, dataSubType}) =>
 	dsID.includes(LOCAL_DOMAIN) ? LOCAL_DOMAIN_LABEL : (dataSubType ? dataSubType : 'others');

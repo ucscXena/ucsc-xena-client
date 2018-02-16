@@ -13,7 +13,8 @@ var {compose, make, mount} = require('./utils');
 
 var phenoPat = /^phenotypes?$/i;
 function featuresQuery(datasets) {
-	var clinicalMatrices = _.filter(datasets, ds => ds.type === 'clinicalMatrix' && ds.dataSubType.match(phenoPat)),
+	var clinicalMatrices = _.filter(datasets,
+			ds => ds.type === 'clinicalMatrix' && (!ds.dataSubType || ds.dataSubType.match(phenoPat))),
 		dsIDs = _.pluck(clinicalMatrices, 'dsID');
 
 	// XXX note that datasetFeatures takes optional args, so don't pass it directly
