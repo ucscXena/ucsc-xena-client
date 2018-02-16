@@ -214,13 +214,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				dataMin, dataMax;
 
 			if (valueType === "float") {
-				dataMin = _.minnull(_.map(data.req.values, values=>_.minnull(values)));
-				dataMax = _.maxnull(_.map(data.req.values, values=>_.maxnull(values)));
+				dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values)));
+				dataMax = _.maxnull(_.map(data.req.values, values => _.maxnull(values)));
 				this.defaults[valueType].min = dataMin;
 				this.defaults[valueType].max = dataMax;
 			} else if (valueType === 'segmented') {
-				dataMin = _.minnull(_.map(data.req.rows, row=>row.value));
-				dataMax = _.maxnull(_.map(data.req.rows, row=>row.value));
+				dataMin = _.minnull(_.map(data.req.rows, row => row.value));
+				dataMax = _.maxnull(_.map(data.req.rows, row => row.value));
 				if (dataMin >= 0) {
 					this.defaults[valueType].origin = 2;
 					this.defaults[valueType].max = 6;
@@ -353,13 +353,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			this.setState({optionValue: evtKey});
 		},
 		render () {
-			let dataMin = _.minnull(_.map(data.req.values, values=>_.minnull(values))),
+			let dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values))),
 				optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "none"},
 					{"key": "subset", "label": "center by column mean : x - column average"},
 				];
-			if (dataMin >= 0 && !(_.any(units, unit=> unit && unit.search(/log/i) !== -1))) {
+			if (dataMin >= 0 && !(_.any(units, unit => unit && unit.search(/log/i) !== -1))) {
 				// we allow log(0), necessary for RNAseq data, value =0 (no expression is very common).
 				// display can handle this
 				options.push({"key": "log2(x)", "label": "log scale : log2(x+1)"});

@@ -145,7 +145,7 @@ function fetchState(serverBus) {
 function setHubs(state, {hubs}) {
 	return hubs ?
 		hubs.reduce(
-			(state, hub) =>_.assocIn(state, ['servers', hub, 'user'], true),
+			(state, hub) => _.assocIn(state, ['servers', hub, 'user'], true),
 			state) :
 		state;
 }

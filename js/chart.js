@@ -876,7 +876,7 @@ function render(root, callback, sessionStorage) {
 			displayCategories = categories.slice(0);
 			if (yIsCategorical) {
 				chartOptions = highchartsHelper.columnChartOptions(
-					chartOptions, categories.map(code=> code + " (" + ybinnedSample[code].length + ")"),
+					chartOptions, categories.map(code => code + " (" + ybinnedSample[code].length + ")"),
 					xAxisTitle, "Distribution", ylabel, showLegend);
 			} else if (yfields.length === 1) {
 				chartOptions = highchartsHelper.columnChartOptions(
@@ -951,7 +951,7 @@ function render(root, callback, sessionStorage) {
 			xbinnedSample = {};
 
 			// x data
-			xcodemap.map(code=> xbinnedSample[code] = []);
+			xcodemap.map(code => xbinnedSample[code] = []);
 
 			//probes by samples
 			for (i = 0; i < xdata[0].length; i++) {
@@ -989,7 +989,7 @@ function render(root, callback, sessionStorage) {
 			showLegend = true;
 
 			chartOptions = highchartsHelper.columnChartOptions(
-				chartOptions, categories.map(code=> code + " (" + xbinnedSample[code].length + ")"),
+				chartOptions, categories.map(code => code + " (" + xbinnedSample[code].length + ")"),
 				xAxisTitle, 'Distribution', ylabel, showLegend);
 
 			chart = new Highcharts.Chart(chartOptions);
@@ -1197,7 +1197,7 @@ function render(root, callback, sessionStorage) {
 					customColors = getCustomColor(columns[colorColumn].fieldSpecs, columns[colorColumn].fields, columns[colorColumn].dataset);
 				}
 
-				_.keys(multiSeries).map(colorCode=>{
+				_.keys(multiSeries).map(colorCode => {
 					if (scatterColorData) {
 						colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
 						color = customColors && customColors[colorLabel] ? customColors[colorLabel] : getCodedColor(colorCode);
@@ -1329,10 +1329,10 @@ function render(root, callback, sessionStorage) {
 			}
 
 			//convert binary float to categorical data
-			if (!xcodemap && xdata && _.flatten(xdata).every(c =>_.indexOf([0, 1], c) !== -1 || c == null)) {
+			if (!xcodemap && xdata && _.flatten(xdata).every(c => _.indexOf([0, 1], c) !== -1 || c == null)) {
 				xcodemap = ["0", "1"];
 			}
-			if (!ycodemap && ydata && _.flatten(ydata).every(c =>_.indexOf([0, 1], c) !== -1 || c == null)) {
+			if (!ycodemap && ydata && _.flatten(ydata).every(c => _.indexOf([0, 1], c) !== -1 || c == null)) {
 				ycodemap = ["0", "1"];
 			}
 

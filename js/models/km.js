@@ -211,7 +211,7 @@ function makeGroups(column, data, index, cutoff, splits, survival, samples) {
 		{groups, colors, labels, warning} = usableData,
 		gtte = groups.map(g => groupedIndices[g].map(i => tte[samples[i]])),
 		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
-		curves = groups.map((g, i)=> km.compute(gtte[i], gev[i])),
+		curves = groups.map((g, i) => km.compute(gtte[i], gev[i])),
 		pV = pValue(gtte, gev);
 
 	return {

@@ -109,7 +109,7 @@ function matchSimplified(cohortMeta, input) {
 
 	// cohort's matching weight is linearly normalized (multiplication) by the number of normalized input found divided by the length of the inputs
 	var ma = scoreFn(cohortMeta, tags, weights);
-	ma.map(maObj=>{
+	ma.map(maObj => {
 		var matchedPerCohort = _.flatten(maObj.groups.map(g => g.matches));
 		var foundLength = normInput.filter(i => matchedPerCohort.indexOf(i) !== -1).length;
 		maObj.weight = maObj.weight * foundLength / normInput.length;

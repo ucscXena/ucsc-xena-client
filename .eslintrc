@@ -12,6 +12,7 @@
 	},
 	"parser": "babel-eslint",
 	"rules": {
+		"arrow-spacing": 2,
 		"camelcase": 2,
 		"dot-notation": [2, { "allowKeywords": true }],
 		"eol-last": 2,

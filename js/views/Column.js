@@ -459,7 +459,7 @@ var Column = React.createClass({
 				cat, colorhex,
 				colors = _.isEmpty(customColor) ? categoryMore : customColor;
 
-			_.map(codes, (code, i) =>{
+			_.map(codes, (code, i) => {
 				cat = code;
 				colorhex = colors[i % colors.length];
 				colorhex = colorhex.slice(1, colorhex.length);

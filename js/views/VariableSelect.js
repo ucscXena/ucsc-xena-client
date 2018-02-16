@@ -297,7 +297,7 @@ var VariableSelect = React.createClass({
 		// user input.
 		this.validSub = mode.combineLatest(advanced, selected, value,
 				(mode, advanced, selected, value) => ([mode, selected[mode][advanced[mode]], value[mode]]))
-			.do(() =>this.setState({valid: false, loading: true})) // XXX side-effects
+			.do(() => this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
 					matchFields(this.props.datasets, this.props.features, mode, selected, value))
 			.subscribe(valid => this.setState({loading: false, ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});

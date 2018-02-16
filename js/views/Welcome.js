@@ -27,7 +27,7 @@ import welcome3xImg  from '../../images/iconXena@3x.png';
 let welcomeSrcSet = `${welcome2xImg} 2x, ${welcome3xImg} 3x`;
 
 class Welcome extends Component {
-	dismissWelcome= ()=> {
+	dismissWelcome = () => {
 		this.props.onClick();
 	};
 	render() {
