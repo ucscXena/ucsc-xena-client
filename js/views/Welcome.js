@@ -12,8 +12,8 @@
 'use strict';
 
 // Core dependencies, components
-import React from 'react';
-import {times} from './../underscore_ext';
+import React, { Component } from 'react';
+import { times } from './../underscore_ext';
 
 // Styles
 import compStyles from'./Welcome.module.css';
@@ -26,11 +26,11 @@ import welcome3xImg  from '../../images/iconXena@3x.png';
 
 let welcomeSrcSet = `${welcome2xImg} 2x, ${welcome3xImg} 3x`;
 
-class Welcome extends React.Component{
-	dismissWelcome(){
+class Welcome extends Component {
+	dismissWelcome= ()=> {
 		this.props.onClick();
-	}
-	render(){
+	};
+	render() {
 		const {link: [app, bookmark, text], count, i, linkProps, bulletProps} = this.props,
 			link = `${document.location.origin}/${app}/?bookmark=${bookmark}`;
 		return(
@@ -57,11 +57,11 @@ class Welcome extends React.Component{
 						</div>
 					</div>
 				</div>
-				<div className={compStyles.closeIcon} onClick={this.dismissWelcome.bind(this)}>
+				<div className={compStyles.closeIcon} onClick={this.dismissWelcome}>
 					<i className='material-icons'>close</i>
 				</div>
 			</div>
-		)
+		);
 	}
 
 }
