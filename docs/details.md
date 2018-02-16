@@ -78,7 +78,7 @@ expressions without disrupting the structure.
 Similarly, rxjs allows writing expressions over observable streams. If
 the stream is not behaving as expected, adding console logs by hand is
 error-prone and complicated. There is a ```spy``` helper operator in rx.ext.js
-which logs all events on the stream: error, next, and complete.
+which logs all events on the stream: error, next, complete, and dispose.
 
 Given an rx expression like the following,
 
@@ -134,7 +134,7 @@ the value to be used for dispatch.
 var cmp = multi(x => x.fieldType)
 ```
 
-cmp is a function that will dispatch on the ```fieldType``` property of its
+In this example, cmp is a function that will dispatch on the ```fieldType``` property of its
 first parameter. When first declared, there are no concrete implementations of
 the method, so it will throw a 'No method' error for all inputs. To add an
 implementation for a specific fieldType, call ```cmp.add```.
@@ -156,12 +156,11 @@ domains.
 
 ## Widget hierarchy
 
-Install react developer tools from chrome and FF.
+Install react developer tools for chrome and FF.
 
 https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi
 
-Very roughly, and neglecting bootstrap layout components, our widget hierarchy
-looks like this.
+Very roughly, our widget hierarchy looks like this.
 
 ```
 <ApplicationContainer>
@@ -240,7 +239,3 @@ Provides the controls at the top of each column, resize handle, legend, etc.
 
 Renders canvas, polymorphically, for the various data types. These are
 implement in plotDenseMatrix.js, plotMutationVector.js, and plotSegmented.js.
-
-### ColumnEdit2
-
-Implements the pop-up for adding data (via the "+ Data" button).
