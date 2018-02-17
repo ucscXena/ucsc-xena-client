@@ -25,7 +25,7 @@
     "prepublish": "npm run dist",
     "wdio": "wdio",
     "cypress:open": "cypress open",
-    "cypress:gen": "mocha cypress/generators/suite.js"
+    "cypress:gen": "mocha --require babel-core/register cypress/generators/suite.js"
   },
   "files": [
     "NOTICE",
