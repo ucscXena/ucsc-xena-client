@@ -12,8 +12,8 @@ var Rx = require('../rx');
 function setHubs(state, {hubs}) {
 	return hubs ?
 		hubs.reduce(
-			(state, hub) => assocIn(state, ['servers', hub, 'user'], true),
-			state) :
+				(state, hub) => assocIn(state, ['servers', hub, 'user'], true),
+				state) :
 		state;
 }
 

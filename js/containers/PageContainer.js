@@ -1,26 +1,21 @@
 'use strict';
-const React = require('react');
-var Application = require('./ApplicationContainer');
-var Hub = require('../hubPage');
-var Datapages = require('../Datapages');
-const Transcripts = require('../transcript_views/TranscriptPage');
+import React from 'react';
+import Application from './ApplicationContainer';
+import  Hub  from '../hubPage';
+import Datapages from '../Datapages';
+import Transcripts from '../transcript_views/TranscriptPage';
 
-var pages = {
+const pages = {
 	'hub': Hub,
 	'heatmap': Application,
 	'datapages': Datapages,
 	'transcripts': Transcripts
 };
-
-var notFound = () => <p>Oops... can't find this page</p>;
-
-var PageContainer = React.createClass({
-	render() {
-		var {page} = this.props.state,
-			Page = pages[page] || notFound;
-		return <Page {...this.props}/>;
-
-	}
-});
+const notFound = () => <p>Oops... can't find this page</p>;
+const PageContainer = (props) => {
+	let { page } = props.state;
+	let Page = pages[page] || notFound;
+	return <Page {...props}/>;
+};
 
 module.exports = PageContainer;
