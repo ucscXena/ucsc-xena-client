@@ -142,14 +142,6 @@ function fetchState(serverBus) {
 	serverBus.next(['inlineState', fetchInlineState()]);
 }
 
-function setHubs(state, {hubs}) {
-	return hubs ?
-		hubs.reduce(
-			(state, hub) => _.assocIn(state, ['servers', hub, 'user'], true),
-			state) :
-		state;
-}
-
 function resetWizard(state) {
 	return state.columnOrder.length > 2 ?
 		_.assoc(state, 'wizardMode', false, 'showWelcome', false) : state;
@@ -178,7 +170,7 @@ var getPage = path =>
 	'heatmap';
 
 // XXX This same info also appears in urlParams.js
-var savedParams = params => _.pick(params, 'dataset', 'hub', 'host', 'cohort', 'allIdentifiers');
+var savedParams = params => _.pick(params, 'dataset', 'hubs', 'host', 'cohort', 'allIdentifiers');
 var setPage = (state, path, params) =>
 	_.assoc(state,
 			'page', getPage(path),
@@ -190,9 +182,7 @@ var controls = {
 	init: (state, pathname = '/', params = {}) => {
 		var wizardUpate = params.hubs || params.inlineState ?
 				clearWizardCohort : _.identity,
-			next = setLoadingState(
-					_.updateIn(state, ['spreadsheet'], state =>
-						setHubs(state, params)), params);
+			next = setLoadingState(state, params);
 		return wizardUpate(setPage(next, pathname, params));
 	},
 	'init-post!': (serverBus, state, newState, pathname, params) => {
