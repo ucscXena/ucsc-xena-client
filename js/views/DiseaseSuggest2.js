@@ -6,7 +6,7 @@ var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 require('./GeneSuggest.css'); // XXX rename file
 var lcs = require('../lcs');
-var XAutosuggest = require('./XAutosuggest');
+import XAutosuggest from './XAutosuggest';
 var XRadioGroup = require('./XRadioGroup');
 
 function toLCWords(str) {
