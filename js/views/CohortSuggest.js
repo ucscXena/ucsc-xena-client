@@ -1,11 +1,11 @@
 'use strict';
 
-var React = require('react');
+import React from 'react';
 import Input from 'react-toolbox/lib/input';
-var _ = require('../underscore_ext');
-var {deepPureRenderMixin} = require('../react-utils');
-require('./GeneSuggest.css'); // XXX rename file
-var XAutosuggest = require('./XAutosuggest');
+import _ from '../underscore_ext';
+import { deepPureRenderMixin } from '../react-utils';
+import './GeneSuggest.css'; // XXX rename file
+import XAutosuggest from './XAutosuggest';
 
 var renderInputComponent = ({ref, onChange, ...props}) => (
 	<Input

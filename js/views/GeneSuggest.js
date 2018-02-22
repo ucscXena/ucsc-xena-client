@@ -1,7 +1,7 @@
 'use strict';
 
 var React = require('react');
-var XAutosuggest = require('./XAutosuggest');
+import XAutosuggest from './XAutosuggest';
 import Input from 'react-toolbox/lib/input';
 var {sparseDataMatchPartialField, refGene} = require('../xenaQuery');
 var _ = require('../underscore_ext');

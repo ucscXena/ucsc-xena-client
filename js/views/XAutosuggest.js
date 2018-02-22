@@ -19,21 +19,22 @@
 'use strict';
 
 // Core dependencies, components
-var React = require('react');
-var _ = require('../underscore_ext');
+import React from 'react';
+import _ from '../underscore_ext';
 import Autosuggest from 'react-autosuggest';
 
 // Styles
-var autosuggestTheme = require('./AutosuggestTheme.module.css');
-var compStyles = require('./XAutosuggest.module.css');
+import autosuggestTheme from './AutosuggestTheme.module.css';
+import compStyles from './XAutosuggest.module.css';
 
-var XAutosuggest = React.createClass({
-	callInputRef(autosuggest) {
+class XAutosuggest extends React.Component {
+	callInputRef = autosuggest => {
 		var {inputRef} = this.props;
 		if (inputRef) {
 			inputRef(_.get(autosuggest, 'input'));
 		}
-	},
+	}
+
 	render() {
 		var {value, onClear, ...autoProps} = this.props;
 		return (
@@ -45,6 +46,6 @@ var XAutosuggest = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
-module.exports = XAutosuggest;
+export default XAutosuggest;
