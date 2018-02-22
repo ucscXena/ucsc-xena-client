@@ -16,11 +16,13 @@ var renderInputComponent = ({ref, onChange, ...props}) => (
 
 var CohortSuggest = React.createClass({
 	mixins: [deepPureRenderMixin],
-	onSuggestionsFetchRequested({value}) {
-		var lcValue = value.toLowerCase();
-		this.setState({
-			suggestions: _.filter(this.props.cohorts, c => c.toLowerCase().indexOf(lcValue) !== -1).sort()
-		});
+	onSuggestionsFetchRequested({ value }) {
+		const wordValues = value.toLowerCase().trim().split(/\s+/);
+
+		const filteredSuggestions = this.props.cohorts.filter(c =>
+			_.every(wordValues, value => c.toLowerCase().indexOf(value) > -1)).sort();
+
+		this.setState({ suggestions: filteredSuggestions });
 	},
 	onSuggestionsClearRequested() {
 		this.setState({suggestions: []});
