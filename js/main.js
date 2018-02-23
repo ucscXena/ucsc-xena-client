@@ -1,26 +1,27 @@
 'use strict';
-
-require('./base');
-var _ = require('./underscore_ext');
-require('./plotDenseMatrix');
-require('./plotMutationVector');
-require('./plotSegmented');
-require('./plotSamples');
-require('./refGeneExons');
-require('./ChromPosition');
-require('./models/denseMatrix');
-require('./models/mutationVector');
-require('./models/segmented');
-var uiController = require('./controllers/ui');
-var serverController = require('./controllers/server');
-var hubController = require('./controllers/hub');
-var transcriptController = require('./controllers/transcripts');
-require('bootstrap/dist/css/bootstrap.css');
+import './base';
+import _ from './underscore_ext';
+import './plotDenseMatrix';
+import './plotMutationVector';
+import './plotSegmented';
+import './plotSamples';
+import './refGeneExons';
+import './ChromPosition';
+import './models/denseMatrix';
+import './models/mutationVector';
+import './models/segmented';
+import 'bootstrap/dist/css/bootstrap.css';
 //var Application = require('./containers/ApplicationContainer');
-var PageContainer = require('./containers/PageContainer');
-var selector = require('./appSelector');
-var {compose} = require('./controllers/utils');
-var shimComposite = require('./controllers/shimComposite').controller;
+
+import uiController from './controllers/ui';
+import serverController from './controllers/server';
+import hubController from './controllers/hub';
+import transcriptController from './controllers/transcripts';
+import PageContainer from './containers/PageContainer';
+import selector from './appSelector';
+import { compose } from './controllers/utils';
+import { controller as shimComposite } from './controllers/shimComposite';
+
 const connector = require('./connector');
 const createStore = require('./store');
 
@@ -37,15 +38,15 @@ const createStore = require('./store');
 
 if (module.hot) {
 	module.hot.accept('./controllers/ui', () => {
-		var newModule = require('./controllers/ui');
+		let newModule = require('./controllers/ui');
 		_.extend(uiController, newModule);
 	});
 	module.hot.accept('./controllers/server', () => {
-		var newModule = require('./controllers/server');
+		let newModule = require('./controllers/server');
 		_.extend(serverController, newModule);
 	});
 	module.hot.accept('./controllers/hub', () => {
-		var newModule = require('./controllers/hub');
+		let newModule = require('./controllers/hub');
 		_.extend(hubController, newModule);
 	});
 	// XXX Note that hot-loading these won't cause a re-render.
@@ -54,10 +55,10 @@ if (module.hot) {
 	module.hot.accept('./models/segmented', () => {});
 }
 
-var store = createStore();
-var main = window.document.getElementById('main');
+const store = createStore();
+const main = window.document.getElementById('main');
 
 // XXX reducer
-var controller = shimComposite(compose(serverController, uiController, hubController, transcriptController));
+const controller = shimComposite(compose(serverController, uiController, hubController, transcriptController));
 
 connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});

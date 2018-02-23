@@ -64,4 +64,4 @@ var Stepper = React.createClass({
 	}
 });
 
-module.exports = Stepper;
+module.exports = { Stepper };
