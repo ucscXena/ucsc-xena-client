@@ -130,4 +130,4 @@ var SampleSearch = React.createClass({
 	}
 });
 
-module.exports = SampleSearch;
+module.exports = { SampleSearch };

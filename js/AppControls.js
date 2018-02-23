@@ -126,4 +126,4 @@ var AppControls = React.createClass({
 	}
 });
 
-module.exports = AppControls;
+module.exports = { AppControls };
