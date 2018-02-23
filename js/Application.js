@@ -1,27 +1,27 @@
 'use strict';
-var React = require('react');
-var {Grid, Row, Col} = require("react-material-responsive-grid");
-var AppControls = require('./AppControls');
-var KmPlot = require('./KmPlot');
-var StateError = require('./StateError');
-var _ = require('./underscore_ext');
-var {signatureField} = require('./models/fieldSpec');
-var {getColSpec} = require('./models/datasetJoins');
-var SampleSearch = require('./views/SampleSearch');
-var Stepper = require('./views/Stepper');
-var Welcome = require('./containers/WelcomeContainer');
-var uuid = require('./uuid');
+import React, { Component } from 'react';
+import { Grid, Row, Col } from "react-material-responsive-grid";
+import { AppControls } from './AppControls';
+import { KmPlot } from './KmPlot';
+import StateError from'./StateError';
+import _  from './underscore_ext';
+import { signatureField } from './models/fieldSpec';
+import { getColSpec } from './models/datasetJoins';
+import { SampleSearch } from './views/SampleSearch';
+import { Stepper } from './views/Stepper';
+import Welcome from './containers/WelcomeContainer';
+import uuid from './uuid';
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
-import {ThemeProvider} from 'react-css-themr';
-var appTheme = require('./appTheme');
-var nav = require('./nav');
+import { ThemeProvider } from 'react-css-themr';
+import appTheme from './appTheme';
+import nav from './nav';
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 // should really be in a config file.
-var searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
+const searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
 
-var Application = React.createClass({
-//	onPerf() {
+class Application extends Component {
+//	onPerf = () => {
 //		if (this.perf) {
 //			this.perf = false;
 //			console.log('stop perf');
@@ -38,27 +38,27 @@ var Application = React.createClass({
 //			console.log('start perf');
 //			Perf.start();
 //		}
-//	},
+//	}
 	componentDidUpdate() {
-		var {getState, onImport, onNavigate, state: {isPublic}} = this.props;
+		const { getState, onImport, onNavigate, state: { isPublic } } = this.props;
 
 		// nested render to different DOM tree
 		nav({isPublic, getState, onImport, onNavigate, activeLink: 'heatmap'});
-	},
-	onFilter: function (matches) {
-		var {callback, state: {cohortSamples}} = this.props,
+	}
+	onFilter= (matches) => {
+		const {callback, state: {cohortSamples}} = this.props,
 			matching = _.map(matches, i => cohortSamples[i]);
 		callback(['sampleFilter', 0 /* cohort */, matching]);
-	},
-	onFilterZoom: function (samples, matches) {
-		var {state: {zoom: {height}}, callback} = this.props,
+	};
+	onFilterZoom = (samples, matches) => {
+		const { state: { zoom: { height } }, callback } = this.props,
 			toOrder = _.object(samples, _.range(samples.length)),
 			index = toOrder[_.min(matches, s => toOrder[s])],
 			last = toOrder[_.max(matches, s => toOrder[s])];
 		callback(['zoom', {index, height, count: last - index + 1}]);
-	},
-	onFilterColumn: function (matches, columnLabel, fieldLabel) {
-		var {state: {cohortSamples, sampleSearch}, callback} = this.props,
+	};
+	onFilterColumn= ( matches, columnLabel, fieldLabel) => {
+		const {state: {cohortSamples, sampleSearch}, callback} = this.props,
 			matching = _.map(matches, i => cohortSamples[i]),
 			field = signatureField(`${fieldLabel ? fieldLabel : sampleSearch}`, {
 				columnLabel: columnLabel ? columnLabel : 'filter',
@@ -71,11 +71,11 @@ var Application = React.createClass({
 					'width', 136,
 					'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
 		callback(['add-column', 0, {id: uuid(), settings}]);
-	},
-	onHideError() {
+	};
+	onHideError = () => {
 		this.props.callback(['stateError', undefined]);
-	},
-//	onSearchIDAndFilterColumn: function (qsamplesList) {
+	};
+//	onSearchIDAndFilterColumn = (qsamplesList) => {
 //		var {state: {samples, cohortSamples}} = this.props,
 //			qsampleListObj = {},
 //			cohortSamplesList = [];
@@ -88,8 +88,8 @@ var Application = React.createClass({
 //		var matches = _.filter(samples, s => qsampleListObj[cohortSamplesList[s]]),
 //			fieldLabel = matches.length + ((matches.length === 1) ? ' match' : ' matches');
 //		this.onFilterColumn(matches, 'sample list', fieldLabel);
-//	},
-	render: function() {
+//	};
+	render() {
 		let {state, stateError, children, onHighlightChange, onShowWelcome, stepperState, loadPending, ...otherProps} = this.props,
 			{callback, onResetSampleFilter} = otherProps,
 			{cohort, samplesMatched, sampleSearch,
@@ -150,15 +150,13 @@ var Application = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
-var ThemedApplication = React.createClass({
-	render() {
+const ThemedApplication = (props) => {
 		return (
 		<ThemeProvider theme={appTheme}>
-			<Application {...this.props}/>
+			<Application {...props}/>
 		</ThemeProvider>);
-	}
-});
+};
 
 module.exports = ThemedApplication;
