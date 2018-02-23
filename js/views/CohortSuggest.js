@@ -43,7 +43,7 @@ var CohortSuggest = React.createClass({
 		this.props.onSelect(suggestionValue);
 	},
 	onBlur() {
-		this.setState({value: this.props.cohort || ""});
+		this.setState({value: this.props.cohort || this.state.value});
 	},
 	render() {
 		var {onChange, onBlur} = this,
