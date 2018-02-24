@@ -238,7 +238,7 @@ var CohortPage = React.createClass({
 			cohort = getIn(datapages, ['cohort', 'cohort'], COHORT_NULL);
 
 		if (cohort !== get(currentCohort, 'name')) {
-			this.props.callback(['cohort', 0, cohort]);
+			this.props.callback(['cohort', cohort]);
 		}
 		this.props.callback(['navigate', 'heatmap']);
 	},
@@ -377,7 +377,7 @@ var DatasetPage = React.createClass({
 			cohort = getIn(datapages, ['dataset', 'meta', 'cohort'], COHORT_NULL);
 
 		if (cohort !== get(currentCohort, 'name')) {
-			this.props.callback(['cohort', 0, cohort]);
+			this.props.callback(['cohort', cohort]);
 		}
 		this.props.callback(['navigate', 'heatmap']);
 	},

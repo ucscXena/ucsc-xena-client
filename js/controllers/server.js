@@ -8,7 +8,6 @@ var {resetZoom, fetchColumnData, updateWizard, clearWizardCohort} = require('./c
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
 var {xenaFieldPaths, updateStrand} = require('../models/fieldSpec');
-var {lift} = require('./shimComposite');
 var {compose, make, mount} = require('./utils');
 
 var phenoPat = /^phenotypes?$/i;
@@ -60,7 +59,7 @@ var wizardControls = {
 };
 
 var controls = {
-	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(_.merge(state, lift(bookmark)))),
+	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(_.merge(state, bookmark))),
 	'bookmark-error': state => resetLoadPending(_.assoc(state, 'stateError', 'bookmark')),
 	// Here we need to load cohort data if servers or cohort has changed,
 	// *or* if we never loaded cohort data (e.g. due to waiting on bookmark).
@@ -68,7 +67,7 @@ var controls = {
 		updateWizard(serverBus, state.spreadsheet, newState.spreadsheet,
 				{force: !_.getIn(newState, ['wizard', 'cohorts'])});
 	},
-	inlineState: (state, newState) => resetLoadPending(lift(newState)),
+	inlineState: (state, newState) => resetLoadPending(newState),
 	'inlineState-post!': (serverBus, state, newState) => {
 		updateWizard(serverBus, state.spreadsheet, newState.spreadsheet,
 				{force: !_.getIn(newState, ['wizard', 'cohorts'])});

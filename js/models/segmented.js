@@ -67,7 +67,7 @@ function mapSamples(samples, data) {
 		   ['req', 'samplesInResp'], sIR => _.map(sIR, s => sampleMap[s]));
 }
 
-function fetchChrom({dsID, assembly}, [samples], pos) {
+function fetchChrom({dsID, assembly}, samples, pos) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return refGeneRange(host, name, pos.chrom, pos.baseStart, pos.baseEnd)
 		.flatMap(refGene =>
@@ -75,7 +75,7 @@ function fetchChrom({dsID, assembly}, [samples], pos) {
 				.map(req => mapSamples(samples, {req, refGene})));
 }
 
-function fetchGene({dsID, fields, assembly}, [samples]) {
+function fetchGene({dsID, fields, assembly}, samples) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return name ? xenaQuery.refGeneExons(host, name, fields)
 		.flatMap(refGene => {

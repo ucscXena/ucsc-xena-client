@@ -179,22 +179,22 @@ function indexFieldResponse(fields, resp) {
 	};
 }
 
-var fetch = ({dsID, fields}, [samples]) => datasetProbeValues(dsID, samples, fields)
+var fetch = ({dsID, fields}, samples) => datasetProbeValues(dsID, samples, fields)
 	.map(resp => ({req: indexFieldResponse(fields, resp)}));
 
-var fetchGeneProbes = ({dsID, fields, strand}, [samples]) => datasetGeneProbesValues(dsID, samples, fields)
+var fetchGeneProbes = ({dsID, fields, strand}, samples) => datasetGeneProbesValues(dsID, samples, fields)
 	.map(resp => ({req: flopIfNegStrand(strand, indexProbeGeneResponse(resp))}));
 
 // This should really be fetchCoded. Further, it should only return a single
 // code list, i.e. either a single clinical coded field, or a list of genomic
 // fields all with the same code values.
-var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
+var fetchFeature = ({dsID, fields}, samples) => Rx.Observable.zipArray(
 		datasetProbeValues(dsID, samples, fields)
 			.map(resp => indexFieldResponse(fields, resp)),
 		fieldCodes(dsID, fields)
 	).map(([req, codes]) => ({req, codes: _.values(codes)[0]}));
 
-var fetchGene = ({dsID, fields}, [samples]) => datasetGeneProbeAvg(dsID, samples, fields)
+var fetchGene = ({dsID, fields}, samples) => datasetGeneProbeAvg(dsID, samples, fields)
 			.map(resp => ({req: indexGeneResponse(samples, fields, resp)}));
 
 ////////////////////////////////

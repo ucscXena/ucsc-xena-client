@@ -293,9 +293,10 @@ getField.add('segmented', (column, samples, fdata) => {
 });
 
 
+// XXX deprecate this
 function fetchComposite(column, samples) {
 	var {fieldSpecs} = column;
-	return Rx.Observable.zipArray(fieldSpecs.map((f, i) => fieldFetch(f, [samples[i]])))
+	return Rx.Observable.zipArray(fieldSpecs.map(f => fieldFetch(f, samples)))
 		.map(fdata => getField(column, samples, fdata));
 }
 

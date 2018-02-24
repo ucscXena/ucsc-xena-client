@@ -7,14 +7,13 @@ var kmModel = require('../models/km');
 var {userServers, setCohort, fetchSamples,
 	fetchColumnData, fetchCohortData,
 	updateWizard, clearWizardCohort} = require('./common');
-var {nullField, setFieldType} = require('../models/fieldSpec');
+var {setFieldType} = require('../models/fieldSpec');
 var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
 var fetch = require('../fieldFetch');
 var {remapFields} = require('../models/searchSamples');
 var {fetchInlineState} = require('../inlineState');
-var {lift} = require('./shimComposite');
 var {compose, make, mount} = require('./utils');
 var {JSONToqueryString} = require('../dom_helper');
 var {parseBookmark} = require('../bookmark');
@@ -42,13 +41,6 @@ function fetchFeatures(serverBus, dsID) {
 	return serverBus.next(['columnEdit-features', featureList(dsID)]);
 }
 
-var featuresInCohort = (datasets, features, cohort) =>
-		_.pick(features, (f, dsID) => datasets[dsID].cohort === cohort);
-
-var survivalVarsForCohorts = (cohort, datasets, features) =>
-	_.map(cohort, ({name}) =>
-			kmModel.pickSurvivalVars(featuresInCohort(datasets, features, name)));
-
 var hasSurvFields  = vars => !!(vars.ev && vars.tte && vars.patient);
 
 var probeFieldSpec = ({dsID, name}) => ({
@@ -67,25 +59,19 @@ var codedFieldSpec = ({dsID, name}) => ({
 	fields: [name]
 });
 
-var checkNullField = fn => field => field ? fn(field) : nullField;
-
 function mapToObj(keys, fn) {
 	return _.object(keys, _.map(keys, fn));
 }
 
 var survFields = ['ev', 'tte', 'patient'];
-var getFieldSpec = _.object(survFields,
-		[probeFieldSpec, probeFieldSpec, codedFieldSpec].map(checkNullField));
 
-// XXX Note that we merge the 'patient' field across cohorts. This will
-// be wrong in some cases, where 'patient' aliases, and right in other cases,
-// such as TCGA patients in multiple cohorts.
-function survivalFields(cohorts, datasets, features) {
-	var vars = survivalVarsForCohorts(cohorts, datasets, features);
-	return _.find(vars, hasSurvFields) ?  // at least one cohort w/surv data
-		mapToObj(survFields, fname =>
-				getColSpec(_.map(_.pluck(vars, fname), getFieldSpec[fname]), datasets))
-		: null;
+function survivalFields(cohort, datasets, features) {
+	var vars = kmModel.pickSurvivalVars(features);
+	return hasSurvFields(vars) ? {
+		ev: getColSpec([probeFieldSpec(vars.ev)], datasets),
+		tte: getColSpec([probeFieldSpec(vars.tte)], datasets),
+		patient: getColSpec([codedFieldSpec(vars.patient)], datasets),
+	} : null;
 }
 
 // If field set has changed, re-fetch.
@@ -100,7 +86,6 @@ function fetchSurvival(serverBus, state) {
 		collate = data => mapToObj(survFields,
 				(k, i) => ({field: fields[k], data: data[i]}));
 
-	// This could be optimized by grouping by server.
 	refetch && serverBus.next([
 			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
 }
@@ -215,15 +200,15 @@ var controls = {
 	history: (state, history) => _.isEmpty(history) ? state :
 		_.Let(({path, params = {}} = history) =>
 			_.assoc(state, 'page', getPage(path), 'params', params)),
-	cohort: (state, i, cohort, width) =>
+	cohort: (state, cohort, width) =>
 		clearWizardCohort(
-			_.updateIn(state, ['spreadsheet'], setCohort([{name: cohort}], width))),
+			_.updateIn(state, ['spreadsheet'], setCohort({name: cohort}, width))),
 	'cohort-post!': (serverBus, state, newState) =>
 		fetchCohortData(serverBus, newState.spreadsheet),
 	cohortReset: state =>
 			clearWizardCohort(
-				_.updateIn(state, ['spreadsheet'], setCohort([], undefined))),
-	'import': (state, newState) => clearWizardCohort(_.merge(state, lift(newState))),
+				_.updateIn(state, ['spreadsheet'], setCohort(undefined, undefined))),
+	'import': (state, newState) => clearWizardCohort(_.merge(state, newState)),
 	'import-error': state => _.assoc(state, 'stateError', 'import'),
 	'refresh-cohorts': clearWizardCohort,
 	stateError: (state, error) => _.assoc(state, 'stateError', error),
@@ -238,8 +223,8 @@ var spreadsheetControls = {
 		fetchCohortPhenotype(serverBus);
 		updateWizard(serverBus, state, newState, {force: true});
 	},
-	sampleFilter: (state, i, sampleFilter) => _.assoc(state,
-			'cohort', _.assocIn(state.cohort, [i, 'sampleFilter'], sampleFilter),
+	sampleFilter: (state, sampleFilter) => _.assoc(state,
+			'cohort', _.assocIn(state.cohort, ['sampleFilter'], sampleFilter),
 			'survival', null),
 	'sampleFilter-post!': (serverBus, state, newState) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples),

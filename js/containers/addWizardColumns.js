@@ -243,7 +243,7 @@ function addWizardColumns(Component) {
 			this.props.callback(['edit-column', null]);
 		},
 		onCohortSelect(cohort) {
-			this.props.callback(['cohort', 0, cohort, typeWidth.matrix]);
+			this.props.callback(['cohort', cohort, typeWidth.matrix]);
 		},
 		onDatasetSelect(posOrId, input, datasetList, fieldList) {
 			var {wizard: {datasets, features}, appState: {defaultWidth}} = this.props,

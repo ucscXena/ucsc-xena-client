@@ -369,7 +369,7 @@ function mapSamples(samples, data) {
 }
 
 //user input is a gene, get the mutations by the gene's genomic coordinates
-function fetchGeneByCoordinate({dsID, fields, fieldType, assembly}, [samples]) {
+function fetchGeneByCoordinate({dsID, fields, fieldType, assembly}, samples) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return name ? xenaQuery.refGeneExons(host, name, fields)
 		.flatMap(refGene => {
@@ -395,7 +395,7 @@ function fetchGeneByAnnotation({dsID, fields, assembly}, [samples]) {
 	).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
 }*/
 
-function fetchChrom({dsID, assembly}, [samples], pos) {
+function fetchChrom({dsID, assembly}, samples, pos) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return refGeneRange(host, name, pos.chrom, pos.baseStart, pos.baseEnd)
 		.flatMap(refGene =>

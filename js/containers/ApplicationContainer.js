@@ -86,7 +86,7 @@ var ApplicationContainer = React.createClass({
 		this.props.callback(['cohortReset']);
 	},
 	onResetSampleFilter: function () {
-		this.props.callback(['sampleFilter', 0 /* index into composite cohorts */, null]);
+		this.props.callback(['sampleFilter', null]);
 	},
 	onNavigate(page) {
 		this.props.callback(['navigate', page]);

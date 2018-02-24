@@ -42,7 +42,7 @@ function fetchCohortSummary(serverBus, servers) {
 function fetchCohortData(serverBus, state) {
 	var {cohort} = state.params,
 		servers = userServers(state.spreadsheet);
-	serverBus.next(['cohort-data', datasetQuery(servers, [{name: cohort}]), cohort]);
+	serverBus.next(['cohort-data', datasetQuery(servers, {name: cohort}), cohort]);
 	serverBus.next(['cohort-data-meta', cohortMeta(cohort), cohort]);
 }
 

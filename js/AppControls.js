@@ -65,7 +65,7 @@ var AppControls = React.createClass({
 		pdf(this.props.appState);
 	},
 	onCohortSelect: function (value) {
-		this.props.callback(['cohort', 0 /* index into composite cohorts */, value]);
+		this.props.callback(['cohort', value]);
 	},
 	onDownload: function () {
 		var {sampleFormat} = this.props,

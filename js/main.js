@@ -20,7 +20,6 @@ import transcriptController from './controllers/transcripts';
 import PageContainer from './containers/PageContainer';
 import selector from './appSelector';
 import { compose } from './controllers/utils';
-import { controller as shimComposite } from './controllers/shimComposite';
 
 const connector = require('./connector');
 const createStore = require('./store');
@@ -59,6 +58,6 @@ const store = createStore();
 const main = window.document.getElementById('main');
 
 // XXX reducer
-const controller = shimComposite(compose(serverController, uiController, hubController, transcriptController));
+const controller = compose(serverController, uiController, hubController, transcriptController);
 
 connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});

@@ -48,7 +48,7 @@ class Application extends Component {
 	onFilter= (matches) => {
 		const {callback, state: {cohortSamples}} = this.props,
 			matching = _.map(matches, i => cohortSamples[i]);
-		callback(['sampleFilter', 0 /* cohort */, matching]);
+		callback(['sampleFilter', matching]);
 	};
 	onFilterZoom = (samples, matches) => {
 		const { state: { zoom: { height } }, callback } = this.props,

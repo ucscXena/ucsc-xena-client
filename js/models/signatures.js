@@ -65,7 +65,7 @@ function evalexp(ctx, expression) {
 	}, expression);
 }
 
-function fetchSignature(column, [samples]) {
+function fetchSignature(column, samples) {
 	return evalexp({samples}, column.signature);
 }
 
