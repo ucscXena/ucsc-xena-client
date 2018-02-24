@@ -404,4 +404,4 @@ var KmPlot = React.createClass({
 	}
 });
 
-module.exports = KmPlot;
+module.exports = {KmPlot};
