@@ -69,15 +69,16 @@ function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, po
 		label = fieldFormat(field);
 
 	val = code ? code : prec(val);
-
+	let mean = prec(_.meannull(heatmap[fieldIndex]));
+	let median = prec(_.medianNull(heatmap[fieldIndex]));
 	return {
 		sampleID: sampleFormat(sampleID),
 		rows: [
 			[['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos)]]] : []),
-			...(val !== 'NA' && !code ?
-				[[['labelValue', 'Mean (Median)', prec(_.meannull(heatmap[fieldIndex])) + ' (' +
-				 prec(_.medianNull(heatmap[fieldIndex])) + ')' ]]] : [])]
+			...(!code && (mean !== 'NA') && (median !== 'NA')) ?
+				[[['labelValue', 'Mean (Median)', mean + ' (' +
+				 median + ')' ]]] : []]
 	};
 }
 
