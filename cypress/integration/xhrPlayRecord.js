@@ -107,27 +107,31 @@ function xhrWaitPromise() {
 }
 
 function setupRecord(title) {
+	var cache = [],
+		record,
+		promise;
+
 	before(function() {
-		this.promise = xhrWaitPromise();
-		this.cache = [];
-		this.record = xhr => {
-			this.promise.onResponse(xhr);
-			this.cache.push(merge(
+		promise = xhrWaitPromise();
+		cache = [];
+		record = xhr => {
+			promise.onResponse(xhr);
+			cache.push(merge(
 				pick(xhr, 'url', 'method', 'status'), {body: xhr.request.body, response: xhr.response.body}));
 		};
 	});
 	after(function() {
-		this.promise.mark();
-		cy.wrap(this.promise).then(() => {
+		promise.mark();
+		cy.wrap(promise).then(() => {
 			// XXX make unique here
-			saveFile(titleToFile(title), this.cache);
+			saveFile(titleToFile(title), cache);
 		});
 	});
 	beforeEach(function() {
-		var {onRequest, onAbort} = this.promise;
+		var {onRequest, onAbort} = promise;
 		cy.server();
-		cy.route({url: '*://**', method: 'POST', onResponse: this.record, onAbort,  onRequest});
-		cy.route({url: '*://**', method: 'GET', onResponse: this.record, onAbort, onRequest});
+		cy.route({url: '*://**', method: 'POST', onResponse: record, onAbort,  onRequest});
+		cy.route({url: '*://**', method: 'GET', onResponse: record, onAbort, onRequest});
 		ignoreLocalHub();
 	});
 }
