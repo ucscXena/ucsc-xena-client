@@ -104,6 +104,7 @@
     "brfs": "^1.4.3",
     "classnames": "2.2.5",
     "d3-scale": "^0.6.4",
+    "detect-browser": "^2.1.0",
     "ehmutable": "^1.2.0",
     "highcharts": "^5.0.12",
     "jStat": "1.5.3",

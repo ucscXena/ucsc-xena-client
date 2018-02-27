@@ -19,6 +19,7 @@ import nav from './nav';
 
 // should really be in a config file.
 const searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
+const { detect } = require('detect-browser');
 
 class Application extends Component {
 //	onPerf = () => {
@@ -45,7 +46,7 @@ class Application extends Component {
 		// nested render to different DOM tree
 		nav({isPublic, getState, onImport, onNavigate, activeLink: 'heatmap'});
 	}
-	onFilter= (matches) => {
+	onFilter = (matches) => {
 		const {callback, state: {cohortSamples}} = this.props,
 			matching = _.map(matches, i => cohortSamples[i]);
 		callback(['sampleFilter', matching]);
@@ -108,7 +109,17 @@ class Application extends Component {
 		if (loadPending) {
 			return <p style={{margin: 10}}>Loading your view...</p>;
 		}
-
+		//Check for warnIE key, if false and browser is IE show then notification
+		const browser = detect();
+		if(!this.props.state.notifications.warnIE && browser.name === 'ie') {
+			return(
+				<div>
+					<h2>Using Internet Explorer may lead to unexpected errors, We recommend you to Update your browser</h2>
+					<button onClick={() => { window.location.href = "https://browser-update.org/update.html"; }}>Update Browser</button>
+					<button onClick={() => this.props.callback(['notifications-disable', 'warnIE'])}>Ignore</button>
+				</div>
+			);
+		}
 		return (
 			<div>
 				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}

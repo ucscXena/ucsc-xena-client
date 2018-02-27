@@ -11,6 +11,7 @@ var nav = require('../nav');
 var styles = require('./TranscriptPage.module.css');
 var StateError = require('../StateError');
 var {schemaCheckThrow} = require('../schemaCheck');
+const { detect } = require('detect-browser');
 
 /*
 var defaultGene = 'KRAS';
@@ -149,7 +150,16 @@ var Transcripts = React.createClass({
 		var dropdownBackgroundColorTop = hasPlots ? topColor : "white";
 		var dropdownBackgroundColorBottom = hasPlots ? bottomColor : "white";
 		var dropdownColor = hasPlots ? "white" : "black";
-
+		const browser = detect();
+		if(!this.props.state.spreadsheet.notifications.warnIE && browser.name === 'ie') {
+			return(
+				<div>
+					<h2>Using Internet Explorer may lead to unexpected errors, We recommend you to Update your browser</h2>
+					<button onClick={() => { window.location.href = "https://browser-update.org/update.html"; }}>Update Browser</button>
+					<button onClick={() => this.props.callback(['notifications-disable', 'warnIE'])}>Ignore</button>
+				</div>
+			);
+		}
 		return (
 				<div className={styles.main}>
 					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
