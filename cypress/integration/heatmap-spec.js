@@ -133,7 +133,7 @@ describe('Datapages', function () {
 	it('loads', function() {
 		cy.visit(datapagesPage.url,
 		         {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
-		datapagesPage.cohortList().should('not.be.empty');
+		datapagesPage.cohortList().should('exist');
 		datapagesPage.cohortSelect(aCohort);
 	});
 });
