@@ -141,9 +141,42 @@ describe('Datapages', function () {
 describe('Hub page', function () {
 	playRecord(this.title);
 	it('loads', function () {
-		cy.visit(hubPage.url,
-		         {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
-		hubPage.hubList().should('not.be.empty');
+		cy.visit(hubPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		hubPage.hubList().should('exist');
+	});
+	it('updates cohorts', function () {
+		cy.visit(hubPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		hubPage.hubItem(hubPage.hubs.tcga).click();
+		nav.spreadsheet().click(); // via nav link
+		nav.waitForTransition();
+		wizard.cohortInput().type(aCohort.slice(0, 10));
+		wizard.cohortSuggestItems().should('exist')
+			.then(items => items.toArray().map(e => e.innerText))
+			.should('not.contain', aCohort);
+		nav.hub().click();         // via nav link
+		nav.waitForTransition();
+		hubPage.hubItem(hubPage.hubs.tcga).click();
+		nav.spreadsheet().click(); // via nav link
+		nav.waitForTransition();
+		wizard.cohortInput().type(aCohort.slice(0, 10));
+		wizard.cohortSuggestItems().should('exist')
+			.then(items => items.toArray().map(e => e.innerText))
+			.should('contain', aCohort);
+
+		cy.visit(hubPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
+		hubPage.hubItem(hubPage.hubs.tcga).click();
+		cy.visit(heatmapPage.url); // via page load
+		wizard.cohortInput().type(aCohort.slice(0, 10));
+		wizard.cohortSuggestItems().should('exist')
+			.then(items => items.toArray().map(e => e.innerText))
+			.should('not.contain', aCohort);
+		cy.visit(hubPage.url);     // via page load
+		hubPage.hubItem(hubPage.hubs.tcga).click();
+		cy.visit(heatmapPage.url); // via page load
+		wizard.cohortInput().type(aCohort.slice(0, 10));
+		wizard.cohortSuggestItems().should('exist')
+			.then(items => items.toArray().map(e => e.innerText))
+			.should('contain', aCohort);
 	});
 });
 

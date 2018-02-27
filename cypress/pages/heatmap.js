@@ -9,6 +9,7 @@ var exactMatch = (selector, str)  =>
 var wizard = {
 	// The cohort card input field
 	cohortInput: () => cy.contains('label', 'Study').siblings('input'),
+	cohortSuggestItems: () => cy.get('[class^=AutosuggestTheme-module__suggestion__]'),
 	// Select a cohort from the drop-down
 	cohortSelect: cohort => exactMatch('li', cohort).click(),
 	geneExpression: () => cy.contains('Gene Expression'),
