@@ -7,3 +7,4 @@ node_modules
 /errorShots
 db.sqlite3
 .idea
+.DS_Store
