@@ -595,7 +595,7 @@ function SNVPvalue (rows, total, k) {
 	//total: instances, like total number of people in the experiments
 	//k: possible variaty, like 365 days for birthday
 	let	newRows = _.map(rows, n => `${n.chr}:${n.start}`);
-	return _.mapObject(_.countBy(newRows, n => n),
+	return _.values(_.mapObject(_.countBy(newRows, n => n),
 		function (val, key) {
 			// a classic birthday problem: https://en.wikipedia.org/wiki/Birthday_problem
 			// a strong birthday problem: extend to trio (at least a trio) or Quadruple (at least four) etc
@@ -624,7 +624,7 @@ function SNVPvalue (rows, total, k) {
 				pValue: pValue
 			};
 		}
-	);
+	));
 }
 
 ////////////////////////////////
