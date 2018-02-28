@@ -22,6 +22,7 @@ import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
 var {RefGeneAnnotation} = require('../refGeneExons');
+import { matches } from 'static-interval-tree';
 
 // XXX move this?
 function download([fields, rows]) {
@@ -302,6 +303,23 @@ function disableKM(column, hasSurvival) {
 	return [false, ''];
 }
 
+function getCodingVariants(index, exons) {
+	const resultSet = new Set();
+
+	exons.forEach(([start, end]) => {
+		matches(index, {start: start, end: end})
+			.forEach(item => resultSet.add(item.variant));
+	});
+
+	return [...resultSet];
+}
+
+function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
+	return _.zip(exonStarts, exonEnds)
+		.filter(([start, end]) => !(end < cdsStart || start > cdsEnd))
+		.map(([start, end]) => [Math.max(start, cdsStart), Math.min(end, cdsEnd)]);
+}
+
 var Column = React.createClass({
 	mixins: [deepPureRenderMixin],
 
@@ -416,12 +434,23 @@ var Column = React.createClass({
 		// gene, protein, etc size is fixed at 1000
 		// this could be actual size of protein or gene, but it is complicated due to mutations could be from exon region and display could be genomics region
 		// for the same gene it is a constant, does it really matter to be different between genes?
-		let total = _.getIn(this.props, ['data', 'req', 'rows']).length, //length of all variants
-			k = 1000,
-			nodes = _.getIn(this.props, ['column', 'nodes']),
-			variants = [...(new Set(_.pluck(nodes, 'data')))], //only variants in view
-			SNVPs = mutationVector.SNVPvalue(variants, total, k),
-			uriList = _.map(_.values(SNVPs), n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
+		const k = 1000,
+			indexByPos = this.props.index.byPosition,
+			{ exonStarts, exonEnds, cdsStart, cdsEnd } = _.values(this.props.data.refGene)[0];
+
+		const exons = filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd),
+			variants = getCodingVariants(indexByPos, exons); //coding variants
+
+		let SNVPs = mutationVector.SNVPvalue(variants, variants.length, k);
+		if (this.props.column.xzoom) {
+			const { start: zoomStart, end: zoomEnd } = this.props.column.xzoom;
+			SNVPs = _.filter(_.values(SNVPs), value => {
+				const valueStart = parseInt(value.start);
+				return valueStart >= zoomStart && valueStart <= zoomEnd;
+			});
+		}
+
+		const uriList = _.map(_.values(SNVPs), n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
 			mupitUrl = {
 				"hg19": 'http://hg19.cravat.us/MuPIT_Interactive?gm=', // mupit hg19 server
 				"GRCh37": 'http://hg19.cravat.us/MuPIT_Interactive?gm=', // mupit hg19 server
