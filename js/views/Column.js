@@ -470,7 +470,7 @@ var Column = React.createClass({
 			valueType = _.getIn(this.props, ['column', 'valueType']),
 			fieldType = _.getIn(this.props, ['column', 'fieldType']),
 			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout,
-			customColor = this.column.dataset.customcolor;
+			customColor = _.getIn(this.props, ['column', 'dataset', 'customcolor']);
 
 		var ds = JSON.parse(fieldSpecs.dsID),
 			hub = ds.host,
