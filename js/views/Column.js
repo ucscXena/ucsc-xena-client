@@ -444,12 +444,13 @@ var Column = React.createClass({
 		let SNVPs = mutationVector.SNVPvalue(variants, variants.length, k);
 		if (this.props.column.xzoom) {
 			const { start: zoomStart, end: zoomEnd } = this.props.column.xzoom;
-			SNVPs = _.filter(SNVPs, value => {
-				return value.start >= zoomStart && value.start <= zoomEnd;
+			SNVPs = _.filter(_.values(SNVPs), value => {
+				const valueStart = parseInt(value.start);
+				return valueStart >= zoomStart && valueStart <= zoomEnd;
 			});
 		}
 
-		const uriList = _.map(SNVPs, n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
+		const uriList = _.map(_.values(SNVPs), n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
 			mupitUrl = {
 				"hg19": 'http://hg19.cravat.us/MuPIT_Interactive?gm=', // mupit hg19 server
 				"GRCh37": 'http://hg19.cravat.us/MuPIT_Interactive?gm=', // mupit hg19 server

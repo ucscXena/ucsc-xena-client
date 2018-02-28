@@ -594,8 +594,8 @@ function index(fieldType, data) {
 function SNVPvalue (rows, total, k) {
 	//total: instances, like total number of people in the experiments
 	//k: possible variaty, like 365 days for birthday
-	let	newRows = _.map(rows, n => [n.chr, n.start]);
-	return _.values(_.mapObject(_.countBy(newRows, n => n),
+	let	newRows = _.map(rows, n => `${n.chr}:${n.start}`);
+	return _.mapObject(_.countBy(newRows, n => n),
 		function (val, key) {
 			// a classic birthday problem: https://en.wikipedia.org/wiki/Birthday_problem
 			// a strong birthday problem: extend to trio (at least a trio) or Quadruple (at least four) etc
@@ -613,7 +613,7 @@ function SNVPvalue (rows, total, k) {
 			var T = jStat.combination(total, val) / Math.pow(k, (val - 1)),
 				pValue = 1 - (Math.exp(-T) + Math.exp( - (T / (1 + val * (total - val) / (2 * k))))) / 2, // no 28
 				//pValue2  = 1 - Math.exp(- jStat.combination(total, val) / Math.pow(k, (val - 1))); //no 51
-				[chr, start] = key.split(',');
+				[chr, start] = key.split(':');
 
 			return {
 				chr: chr,
@@ -624,7 +624,7 @@ function SNVPvalue (rows, total, k) {
 				pValue: pValue
 			};
 		}
-	));
+	);
 }
 
 ////////////////////////////////
