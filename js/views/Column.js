@@ -19,10 +19,22 @@ var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
 import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
+import Tooltip from 'react-toolbox/lib/tooltip';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
 var {RefGeneAnnotation} = require('../refGeneExons');
 import { matches } from 'static-interval-tree';
+
+const TooltipMenuItem = Tooltip(MenuItem);
+
+const tooltipConfig = (message) => {
+	return {
+		tooltipDelay: 750,
+		tooltip: message,
+		tooltipPosition: "horizontal",
+		style: { pointerEvents: 'all' }
+	};
+};
 
 // XXX move this?
 function download([fields, rows]) {
@@ -162,14 +174,21 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		wrongDataSubType = column.fieldType !== 'mutation',
 		rightAssembly = (["hg19", "hg38", "GRCh37", "GRCh38"].indexOf(assembly) !== -1) ? true : false,  //MuPIT support hg19, hg38
 		noMenu = !rightValueType || !rightAssembly,
-		noMuPit = noMenu || wrongDataSubType,
+		noMuPit = noMenu || wrongDataSubType || pos,
 		noData = !_.get(data, 'req'),
 		mupitItemName = noData ? 'MuPIT 3D Loading' : 'MuPIT 3D (' + assembly + ' coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
-		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
+		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
+		mupitMenuItem = null;
+
+	if (!(data && _.isEmpty(data.refGene))) {
+		mupitMenuItem = pos ? <TooltipMenuItem disabled={noMuPit} onClick={(e) => onMuPit(assembly, e)}
+		                            {...tooltipConfig("Only available for gene view")} caption={mupitItemName}/>
+		                    : <MenuItem disabled={noMuPit} onClick={(e) => onMuPit(assembly, e)} caption={mupitItemName}/>;
+	}
 
 	return addIdsToArr([
-		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noMuPit} onClick={(e) => onMuPit(assembly, e)} caption={mupitItemName}/>,
+		mupitMenuItem,
 		pos ? null : <MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>,
 		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
 		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>
