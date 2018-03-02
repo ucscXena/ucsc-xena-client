@@ -31,7 +31,7 @@ var CohortSuggest = React.createClass({
 		return {suggestions: [], value: this.props.cohort || ""};
 	},
 	componentWillReceiveProps(props) {
-		this.setState({value: props.cohort || ""});
+		this.setState({value: this.state.value || props.cohort || ""});
 	},
 	onClear() {
 		this.setState({value: ""});

@@ -20,7 +20,7 @@ var CohortOrDisease = React.createClass({
 	},
 	render() {
 		var {mode, cohort} = this.state,
-			{cohorts, cohortMeta, width} = this.props;
+			{cohorts = [], cohortMeta, width} = this.props;
 		var studyDiscoveryProps = {
 			label: 'Study Discovery',
 			value: mode,
