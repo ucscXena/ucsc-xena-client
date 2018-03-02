@@ -34,13 +34,20 @@ var CohortSuggest = React.createClass({
 		this.setState({value: this.state.value || props.cohort || ""});
 	},
 	onClear() {
-		this.setState({value: ""});
+		this.setState({value: ''});
+		_.defer(() => this.props.onSelect(null));
 	},
 	onChange(ev, {newValue}) {
 		this.setState({value: newValue});
 	},
 	onSelect(ev, {suggestionValue}) {
-		this.props.onSelect(suggestionValue);
+		// When props arrive we need to prefer user input, however that
+		// prevents us setting state (setState here will be overwritten
+		// by setState in componentWillReceiveProps, which will use the
+		// old value of state). A horrible work-around is to defer
+		// the call to onSelect. Similarly, with onClear, above.
+		this.setState({value: ''});
+		_.defer(() => this.props.onSelect(suggestionValue));
 	},
 	onBlur() {
 		this.setState({value: this.props.cohort || this.state.value});
