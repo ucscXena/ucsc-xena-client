@@ -173,18 +173,17 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'mutation',
 		rightAssembly = (["hg19", "hg38", "GRCh37", "GRCh38"].indexOf(assembly) !== -1) ? true : false,  //MuPIT support hg19, hg38
-		noMenu = !rightValueType || !rightAssembly,
-		noMuPit = noMenu || wrongDataSubType || pos,
+		noMuPit = !rightValueType || !rightAssembly || wrongDataSubType || pos,
 		noData = !_.get(data, 'req'),
 		mupitItemName = noData ? 'MuPIT 3D Loading' : 'MuPIT 3D (' + assembly + ' coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
 		mupitMenuItem = null;
 
-	if (!(data && _.isEmpty(data.refGene))) {
-		mupitMenuItem = pos ? <TooltipMenuItem disabled={noMuPit} onClick={(e) => onMuPit(assembly, e)}
-		                            {...tooltipConfig("Only available for gene view")} caption={mupitItemName}/>
-		                    : <MenuItem disabled={noMuPit} onClick={(e) => onMuPit(assembly, e)} caption={mupitItemName}/>;
+	if (data && !(_.isEmpty(data.refGene))) {
+		mupitMenuItem = pos ? <TooltipMenuItem disabled={noMuPit} {...tooltipConfig("Only available for gene view")} caption={mupitItemName}/>
+		                    : ( noMuPit ? <TooltipMenuItem disabled={noMuPit} {...tooltipConfig("Only available for SNPs on hg19 and hg38")} caption={mupitItemName}/>
+								: <MenuItem onClick={(e) => onMuPit(assembly, e)} caption={mupitItemName}/>);
 	}
 
 	return addIdsToArr([
