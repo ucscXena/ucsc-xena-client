@@ -107,7 +107,7 @@ function runSequence(seq) {
 }
 
 describe('Sequence runner', function() {
-	setupPlayback(['Viz page', 'Transcript page', 'Hub page', 'Datapages']);
+	setupPlayback();
 	it('should run sequence', function() {
 		readSequence().then(seq => {
 			// If we do then(runSequence), cypress fails. This is really

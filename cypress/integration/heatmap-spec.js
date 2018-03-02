@@ -8,58 +8,16 @@ var hubPage = require('../pages/hub');
 
 var {nav, wizard, spreadsheet} = heatmapPage;
 
-var {setupRecord, setupPlayback, shimResponse} = require('./xhrPlayRecord');
+var {setupPlayback, shimResponse} = require('./xhrPlayRecord');
 
 var aCohort = 'TCGA Breast Cancer (BRCA)';
 var aTCGAStudy = 'TCGA Lung Adenocarcinoma';
 var aGTEXStudy = 'GTEX Lung';
+
 function spy(msg, x) { //eslint-disable-line no-unused-vars
 	console.log(msg, x);
 	return x;
 }
-
-// Strategy here is to run test cases in record mode when
-// this is true, but skip any generative tests. Can
-// do a record session by setting env in a file, by
-// editing this line, or by cli option.
-var RECORD = Cypress.env('RECORD'); // default to false
-
-var noop = Object.assign(() => {}, {skip: () => {}, only: () => {}});
-
-// describe test that does not record.
-var describeNR = RECORD ? noop : describe;
-
-// Notes
-// cypress proxy is introducing long delays when checking for a local hub.
-// This can be avoided by 1) going to hub page in the cypress browser, 2)
-// disabling localhost, 3) reloading, to force save of sessionStorage.
-//
-// A test run starts by destroying the current app frame, which prevents
-// beforeunload handlers from running.
-//
-// Unclear how hot-loading should work in this context. Do we want the dev
-// stuff to be active?
-//
-// Initial problems: 1) ajax mucked up, 2) filter( contains() ) not working,
-// 3) no tab API, makes it hard to test bookmarks in a new tab
-//
-// sessionStorage
-// 	  It is convenient right now, because it allows disabling the local hub.
-// 	  To test a "new tab", we have to explicitly reset tab state: zero sessionStorage;
-// 	     and what about history? Does it matter? Or window.opener?
-//
-// localStorage
-// 	  Can we avoid clearing localStorage? Otherwise we will always get the pop-ups.
-// 	  Or perhaps, instead, we should explicity turn them off. That may work
-// 	  in local test, because the domains are the same, but might fail testing
-// 	  against dev, since they are different (cypress served locally, dev on
-// 	  aws).
-// 	  Nope, it still works. Weird.
-// 	  To test localStorage, I think we have to nav to a page, set localStorage,
-// 	  nav to a page again, and verify the result.
-//
-//	localStorage.xenaNotifications = "{"rowHelp":true,"columnHelp":true}";
-
 
 function clearSessionStorage() {
 	window.sessionStorage.clear();
@@ -92,12 +50,8 @@ function renderASpreadsheet(load = true) {
 //	cy.contains('GOT IT').click();
 }
 
-function playRecord(title) {
-	(RECORD ? setupRecord : setupPlayback)(title);
-}
-
 describe('Viz page', function() {
-	playRecord(this.title);
+	setupPlayback();
 	it('Renders spreadsheet heatmap and chart', function() {
 		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		renderASpreadsheet(false);
@@ -124,12 +78,12 @@ function renderATranscript() {
 
 // XXX move to different file, or revisit the name of this file.
 describe('Transcript page', function() {
-	playRecord(this.title);
+	setupPlayback();
 	it('Draws', renderATranscript);
 });
 
 describe('Datapages', function () {
-	playRecord(this.title);
+	setupPlayback();
 	it('loads', function() {
 		cy.visit(datapagesPage.url,
 		         {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
@@ -139,7 +93,7 @@ describe('Datapages', function () {
 });
 
 describe('Hub page', function () {
-	playRecord(this.title);
+	setupPlayback();
 	it('loads', function () {
 		cy.visit(hubPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		hubPage.hubList().should('exist');
@@ -181,11 +135,11 @@ describe('Hub page', function () {
 });
 
 var replayBookmark = xhr => {
-	var content = decodeURIComponent(xhr.request.body.slice("content=".length));
+	var response = decodeURIComponent(xhr.request.body.slice("content=".length));
 	cy.route({
 		url: '/api/bookmarks/bookmark*',
 		method: 'GET',
-		onRequest: shimResponse(content, 200),
+		onRequest: shimResponse(Promise.resolve({response, status: 200})),
 		response: 'placeholder',
 	}).as('readBookmark');
 };
@@ -203,8 +157,8 @@ var screenshot = file => () => {
 };
 
 // XXX would like to cover this in a generative test.
-describeNR('Datapages circuit', function () {
-	setupPlayback(['Datapages', 'Viz page']);
+describe('Datapages circuit', function () {
+	setupPlayback();
 	it('retains heatmap view if cohort unchanged', function () {
 
 		renderASpreadsheet(true);
@@ -224,8 +178,8 @@ describeNR('Datapages circuit', function () {
 var query = url => url.split(/\?/)[1];
 var highchartAnimation = 2000; // XXX move to page object
 var bootstrapAnimation = 2000;
-describeNR('Bookmark', function() {
-	setupPlayback(['Viz page', 'Transcript page']);
+describe('Bookmark', function() {
+	setupPlayback();
 	it('Saves and restores heatmap and chart', function() {
 		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
 
@@ -442,16 +396,3 @@ describeNR('Bookmark', function() {
 		spreadsheet.loadingSpinners().should('not.be.visible');
 	});
 });
-
-// problem is that noops have random sequences inside them, state
-// changes on one or both pages. Does the runner need to know that?
-// The random sequence has to also be executed by the runner. The
-// runner should probably just do one step, then.
-//
-// Running assertions should not be part of the sequence that can
-// be dropped.
-//var noops = [
-//	{steps: ['bookmark', 'sequence', 'restore']},
-//	{steps: ['reload']},
-//	{steps: ['switchPage', 'sequence', 'switchBack']}
-//];

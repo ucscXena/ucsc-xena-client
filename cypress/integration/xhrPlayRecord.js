@@ -1,26 +1,38 @@
 'use strict';
 /*global cy: false, beforeEach: false, Cypress: false, before: false, after: false */
 
-var merge = (...args) => Object.assign({}, ...args);
-var {memoize, isArray, findIndex, pick, identity} = Cypress._;
+
+var sha = require('js-sha1');
+
+function setXHRProp(xhr, key, value) {
+	Object.defineProperty(xhr, key, {writable: true});
+	xhr[key] = value;
+}
 
 // This works around https://github.com/cypress-io/cypress/issues/76
 // Large responses can't be stubbed in cypress, due to misdesign. Shim
 // the response handler, here.
-var shimResponse = (response, status) => xhr => {
+var shimResponse = p => xhr => {
 	var orsc = xhr.xhr.onreadystatechange;
 	xhr.xhr.onreadystatechange = function() {
+		var args = arguments;
 		if (this.readyState === 4) {
-			Object.defineProperty(this, 'response', {
-				writable: true
+			p.then(({response, status}) => {
+				setXHRProp(this, 'response', response);
+
+				if (xhr.xhr.responseType === 'text' || xhr.xhr.responseType === '') {
+					setXHRProp(this, 'responseText', response);
+				}
+
+				setXHRProp(this, 'status', status);
+
+				// Populate the proxy after setting response & responseText.
+				xhr._setResponseBody();
+				orsc.apply(this, args);
 			});
-			this.response = response;
-			Object.defineProperty(this, 'status', {
-				writable: true
-			});
-			this.status = status;
+		} else {
+			orsc.apply(this, args);
 		}
-		orsc.apply(this, arguments);
 	};
 };
 
@@ -38,106 +50,73 @@ var ignoreLocalHub = () => {
 
 var cacheDir = 'cypress/xhr-cache';
 
-function saveFile(file, data) {
-	return cy.writeFile(`${cacheDir}/${file}.json`, JSON.stringify(data));
-}
+var playback = timeout => xhr => {
+	var {url, method, request: {body}} = xhr,
+		hash = sha.hex(JSON.stringify([url, method, body]));
+	var p = Cypress.backend("read:file", `${cacheDir}/${hash}`, 'utf8')
+		.then(r => {
+			return JSON.parse(r.contents);
+		}).catch(() => {
+			// XXX Could there be a race between writing the file & reading it
+			// on the next request?
 
-function readFile(file) {
-	return cy.readFile(`${cacheDir}/${file}.json`);
-}
 
-var playback = (jsonStringify, responses) => xhr => {
-	if (xhr.url.match(/sockjs-node/)) {
-		return;
-	}
-	// I think what's happening here is that for responseType 'json'
-	// the browser will parse the response before it reaches the app,
-	// so we should also provide a 'parsed' response to the app. For
-	// other responseTypes, the browser will not parse it for the app,
-	// so we should provide an 'unparsed' stringified response.
-	var stringify = xhr.xhr.responseType === 'json' ? identity : jsonStringify,
-		i = findIndex(responses, entry =>
-			entry.body === xhr.request.body && entry.url === xhr.url);
-	if (i === -1) {
-		console.error('Missing response for request', xhr);
-	}
-	shimResponse(stringify(responses[i].response), responses[i].status)(xhr);
+			// This pattern is used in cypress 'request' method. I don't
+			// understand how the timeouts work. I just copied the pattern.
+			//  //# need to remove the current timeout
+			//  //# because we're handling timeouts ourselves
+			cy.clearTimeout("http:request");
+			return Cypress.backend('http:request', {
+					gzip: true,
+					followRedirect: true,
+					method, url, body})
+				.timeout(timeout)
+				.then(cyResp => {
+				// cy.request will interpret the response content-type,
+				// parsing the result if the type is json. This doesn't help
+				// us, because browsers parse based on the requestType
+				// property. The uninterpreted response is in allRequestResponses.
+				var response = cyResp.allRequestResponses[0]['Response Body'],
+					{status} = cyResp;
+
+				if (xhr.xhr.responseType === 'json') {
+					response = JSON.parse(response);
+				}
+				return {response, status};
+			}).catch(() => {
+				// timeout, connection-refused, etc. cy.request will throw on
+				// these.
+				return {response: null, status: 0};
+			}).then(respStat => {
+				var {response, status} = respStat;
+
+				Cypress.backend(
+					'write:file',
+					`${cacheDir}/${hash}`,
+					JSON.stringify({response, status}),
+					'utf8');
+				return respStat;
+			});
+		});
+
+	shimResponse(p)(xhr);
 };
 
-var titleToFile = str => str.replace(/ /g, '-');
-function setupPlayback(sources) {
-	var responses;
-	sources = isArray(sources) ? sources : [sources];
-	before(function() {
-		responses = [];
-		sources.forEach(title => {
-			readFile(titleToFile(title)).then(q => responses.push(...q));
-		});
-	});
+var defaultRequestTimeout = Cypress.config('responseTimeout');
+
+// exclude test harness traffic
+var matchXhrs = /^(?!.*(hot-update.json|sockjs-node))/;
+
+function setupPlayback(timeout = defaultRequestTimeout) {
 	beforeEach(function() {
-		var stringify = memoize(JSON.stringify);
 		cy.server();
-		cy.route({url: '*://**', method: 'POST', onRequest: playback(stringify, responses), response: 'placeholder'});
-		cy.route({url: '*://**', method: 'GET', onRequest: playback(stringify, responses), response: 'placeholder'});
-		ignoreLocalHub();
-	});
-}
-
-// promise that resolves when all xhrs after a certain time (mark) are complete.
-// Call onRequest(xhr) for every xhr request. Call onResponse(xhr), onAbort(xhr) for every xhr response or abort.
-// Call mark(), and .then() the promise to wait for all currently outstanding requests to finish.
-function xhrWaitPromise() {
-	var xhrs = new Map(),
-		done,
-		p = new Cypress.Promise(resolve => done = resolve),
-		onComplete = xhr => {
-			xhrs.set(xhr, true);
-			if ([...xhrs.values()].every(x => x)) {
-				done();
-			}
-		};
-
-	xhrs.set('mark', false);
-	p.onRequest = xhr => xhrs.set(xhr, false);
-	p.onResponse = onComplete;
-	p.onAbort = onComplete;
-	p.mark = () => onComplete('mark');
-
-	return p;
-}
-
-function setupRecord(title) {
-	var cache = [],
-		record,
-		promise;
-
-	before(function() {
-		promise = xhrWaitPromise();
-		cache = [];
-		record = xhr => {
-			promise.onResponse(xhr);
-			cache.push(merge(
-				pick(xhr, 'url', 'method', 'status'), {body: xhr.request.body, response: xhr.response.body}));
-		};
-	});
-	after(function() {
-		promise.mark();
-		cy.wrap(promise).then(() => {
-			// XXX make unique here
-			saveFile(titleToFile(title), cache);
-		});
-	});
-	beforeEach(function() {
-		var {onRequest, onAbort} = promise;
-		cy.server();
-		cy.route({url: '*://**', method: 'POST', onResponse: record, onAbort,  onRequest});
-		cy.route({url: '*://**', method: 'GET', onResponse: record, onAbort, onRequest});
+		cy.route({url: matchXhrs, method: 'POST', onRequest: playback(timeout), response: 'placeholder'});
+		cy.route({url: matchXhrs, method: 'GET', onRequest: playback(timeout), response: 'placeholder'});
 		ignoreLocalHub();
 	});
 }
 
 module.exports = {
 	setupPlayback,
-	setupRecord,
 	shimResponse
 };
