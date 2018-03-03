@@ -4,8 +4,6 @@ var jsc = require('jsverify');
 
 var cmdSequence = require('./state-generator');
 
-var jsc = require('jsverify');
-
 var {record, oneof, constant} = jsc;
 
 var merge = (...args) => Object.assign({}, ...args);
@@ -67,7 +65,9 @@ var commands = [
 		priority: 4,
 		canCreate: ({page}) => page === 'transcripts',
 		apply: (state, {gene}) => merge(state, {'transcripts': gene}),
-		generate: () => constant({type: 'transcripts-select-gene', gene: 'KRAS'}), // later change to be variable?
+		generate: () => record({type: constant('transcripts-select-gene'),
+		                        gene: oneof(['KRAS', 'TP53', 'PTEN', 'FOXM1']
+		                              .map(constant))}),
 		canApply: ({page}) => page === 'transcripts'
 	},
 	{
