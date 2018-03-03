@@ -26,7 +26,8 @@ function saveFailure(videoFile, sequenceFile) {
 
 var tmpDir = 'cypress/tmp';
 
-var cmd = `./node_modules/.bin/cypress run --reporter xunit --reporter-options output=${path.join(tmpDir, 'cypress-result.xml')} --spec cypress/integration/page-loading-spec.js`;
+var headed = process.env.HEADED == null ? '' : '--headed';
+var cmd = `./node_modules/.bin/cypress run ${headed} --reporter xunit --reporter-options output=${path.join(tmpDir, 'cypress-result.xml')} --spec cypress/integration/page-loading-spec.js`;
 
 var sequenceFile = path.join(tmpDir, 'sequence.json');
 
