@@ -1,30 +1,37 @@
 'use strict';
 
-require('./StateError.css');
 var React = require('react');
-var Modal = require('react-bootstrap/lib/Modal');
 var {deepPureRenderMixin} = require('./react-utils');
+import stateErrorStyle from './StateError.module.css';
+import Dialog from 'react-toolbox/lib/dialog';
 
 var StateError = React.createClass({
 	mixins: [deepPureRenderMixin],
+	render() {
 
-	render: function () {
-		var {error, onHide} = this.props;
+		const actions = [
+			{
+				label: <i className='material-icons'>close</i>,
+				className: stateErrorStyle.dialogClose,
+				onClick: this.props.onHide
+			},
+		];
 		return (
-			<div className='StateErrorContainer'>
-				<Modal autoFocus={false} enforceFocus={false} container={this} show={true} bsSize='large' className='kmDialog' onHide={onHide}>
-					<Modal.Header closeButton className="container-fluid">
-						<span className="col-md-2">
-							<Modal.Title>Whoops...</Modal.Title>
-						</span>
-					</Modal.Header>
-					<Modal.Body className="container-fluid">
-						<p>We were unable to restore the view from your {error}, possibly due to software updates. Sorry about that!</p>
-					</Modal.Body>
-				</Modal>
+			<div>
+				<Dialog
+					actions={actions}
+					active={true}
+					title='Whoops...'
+					className={stateErrorStyle.dialog}
+					onEscKeyDown={this.props.onHide}
+					onOverlayClick={this.props.onHide}>
+					<p>We were unable to restore the view from your {this.props.error}, possibly due to software
+						updates. Sorry about that!</p>
+				</Dialog>
 			</div>
 		);
 	}
+
 });
 
 module.exports = StateError;
