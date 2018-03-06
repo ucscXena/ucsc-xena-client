@@ -157,13 +157,6 @@ module.exports = function (doc/*, vgw, vgh*/) {
 					doc.stroke(style(strokeStyle));
 				}
 			}
-		},
-
-		drawSharpRows = function (vg, index, count, height,
-					width, drawBackground, drawRows) {
-
-			drawBackground(vg, width, height);
-			drawRows(vg, width, height / count);
 		};
 
 	return {
@@ -191,7 +184,6 @@ module.exports = function (doc/*, vgw, vgh*/) {
 		alpha,
 		scale,
 		translate,
-		drawSharpRows,
 		drawRectangles
 	};
 };

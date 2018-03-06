@@ -81,10 +81,10 @@ function drawLayout(vg, opts) {
 					vg.box(0, i * rheight, rwidth, rheight, color));
 
 
-		vg.translate(el.start, 0, () =>
-			vg.drawSharpRows(vg, index, count, height, el.size,
-				drawBackground,
-				drawRow));
+		vg.translate(el.start, 0, () => {
+			drawBackground(vg, el.size, height);
+			drawRow(vg, el.size, height / count);
+		});
 
 		// Add labels
 		var minSpan = labelFont / (height / count);
