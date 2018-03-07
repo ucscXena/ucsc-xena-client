@@ -218,10 +218,14 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 		yAxisTitle = ylabel;
 
 	chartOptions.chart.zoomType = 'xy';
+	chartOptions.chart.type = 'scatter';
+	chartOptions.chart.boost = {
+        useGPUTranslations: true,
+        usePreAllocated: true
+    };
 	chartOptions.legend.align = 'right';
 	chartOptions.legend.verticalAlign = 'middle';
 	chartOptions.legend.layout = 'vertical';
-	chartOptions.chart.type = 'scatter';
 	chartOptions.title = {
 		text: '' // scatter plot no chart tile because both x and y axis are clearlly marked.
 	};
@@ -263,7 +267,8 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 		},
 		series: {
 			turboThreshold: 0,
-			stickyTracking: false
+			stickyTracking: false,
+			boostThreshold: 1000
 		}
 	};
 	return chartOptions;

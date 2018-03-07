@@ -6,6 +6,7 @@ var d3 = require('d3-scale');
 var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
 var highchartsHelper =  require ('./highcharts_helper');
+require('highcharts/modules/boost')(Highcharts);
 var _ = require('./underscore_ext');
 var colorScales = require ('./colorScales');
 var customColors = {};
@@ -1075,7 +1076,6 @@ function render(root, callback, sessionStorage) {
 			chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, samplesLength);
 
 			if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
-				//chartOptions.legend.title.text = ylabel;
 				chart = new Highcharts.Chart(chartOptions);
 
 				for (k = 0; k < yfields.length; k++) {
@@ -1102,13 +1102,14 @@ function render(root, callback, sessionStorage) {
 				}
 			} else { // y single subcolumn  --- coloring with a 3rd column
 				var multiSeries = {},
-					singleSeries = [], colorScale,
+					colorScale, getCodedColor,
 					highlightSeries = [],
 					opacity = 0.6,
 					colorCode, color, colorLabel,
-					useMultiSeries = scatterColorDataCodemap || !scatterColorData ;
+					useCodedSeries = scatterColorDataCodemap || !scatterColorData,
+					bin;
 
-				function getCodedColor (code) {
+				getCodedColor = code => {
 					if ("null" === code) {
 						var gray = {};
 						gray.r = 150;
@@ -1118,11 +1119,12 @@ function render(root, callback, sessionStorage) {
 						return colorStr(gray);
 					}
 					return colorStr(hexToRGB(colorScales.categoryMore[code % colorScales.categoryMore.length], opacity));
-				}
+				};
 
-				if (!useMultiSeries) {
+				if (!useCodedSeries) {
 					average = highchartsHelper.average(scatterColorData);
 					stdDev = highchartsHelper.standardDeviation(scatterColorData, average);
+					bin = stdDev * 0.1;
 					colorScale = d3.scaleLinear()
 						.domain([average - 2 * stdDev, average, average + 2 * stdDev])
 						.range(['blue', 'white', 'red']);
@@ -1131,20 +1133,32 @@ function render(root, callback, sessionStorage) {
 				chartOptions.legend.title.text = "";
 				chart = new Highcharts.Chart(chartOptions);
 
-				// pearson rho value when there is only single series x y scatter plot
-				if (yfields.length === 1 && xdata[0].length > 1) {
-					//Pearson's Rho p value
-					var xlist = _.filter(xdata[0], function (x, i) {return (x != null && ydata[0][i] != null);});
-					var ylist = _.filter(ydata[0], function (y, i) {return (y != null && xdata[0][i] != null);});
+				function printSpearmanRho(div, xVector, yVector) {
+					var [xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x, y) {return x != null && y != null;}));
 					var rho = jStat.corrcoeff(xlist, ylist); // r Pearson's Rho correlation coefficient
 					var spearmanRho = jStat.spearmancoeff(xlist, ylist); // (spearman's) rank correlation coefficient, rho
-					statsDiv.innerHTML = 'Pearson\'s rho<br>' +
+					div.innerHTML = 'Pearson\'s rho<br>' +
 						'r = ' + rho.toPrecision(4) + '<br>' +
 						'Spearman\'s rank rho<br>' +
 						'ρ = ' + spearmanRho.toPrecision(4);
-					statsDiv.classList.toggle(compStyles.visible);
 				}
 
+				// pearson rho value when there is only single series x y scatter plot
+				if (yfields.length === 1 && xdata[0].length > 1) {
+					if (xdata[0].length < 5000) {
+						//Pearson's Rho p value
+						printSpearmanRho(statsDiv, xdata[0], ydata[0]);
+					}
+					else { // a button to trigger stats for sample size > 5000, otherwise it is too slow
+						var btn = document.createElement("BUTTON"); // need to refractor to react style, and material UI css
+						statsDiv.appendChild(btn);
+						btn.innerHTML = "Run Stats";
+						btn.onclick = function() {
+							printSpearmanRho(statsDiv, xdata[0], ydata[0]);
+						};
+					}
+					statsDiv.classList.toggle(compStyles.visible);
+				}
 
 				yfield = yfields[0];
 				for (i = 0; i < xdata[0].length; i++) {
@@ -1158,7 +1172,7 @@ function render(root, callback, sessionStorage) {
 
 					if (null != x && null != y && null != colorCode) {
 						y = (y - offsets[yfield]) / STDEV[yfield];
-						if (useMultiSeries ) { // use multi-seriese
+						if (useCodedSeries) { // use multi-seriese
 							if (!multiSeries[colorCode]) {
 								multiSeries[colorCode] = {
 									"data": []
@@ -1171,13 +1185,18 @@ function render(root, callback, sessionStorage) {
 								x: x,
 								y: y
 							});
-						} else {
-							singleSeries.push({
+						} else { // convert float to multi-seriese
+							colorCode = Math.floor((colorCode - average) / bin);
+							if (!multiSeries[colorCode]) {
+								multiSeries[colorCode] = {
+									"data": []
+								};
+							}
+							multiSeries[colorCode].data.push({
 								colorLabel: scatterColorData[i],
 								name: sampleLabels[i],
 								x: x,
 								y: y,
-								color: colorScale (colorCode)
 							});
 						}
 
@@ -1192,42 +1211,42 @@ function render(root, callback, sessionStorage) {
 					}
 				}
 
-				//add multi-series data
-				if (colorColumn !== "none") {
+				if (colorColumn !== "none") { // custome categorial color
 					customColors = getCustomColor(columns[colorColumn].fieldSpecs, columns[colorColumn].fields, columns[colorColumn].dataset);
 				}
 
-				_.keys(multiSeries).map(colorCode => {
+				_.keys(multiSeries).map( (colorCode, i) => {
+					var showInLegend;
 					if (scatterColorData) {
-						colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
-						color = customColors && customColors[colorLabel] ? customColors[colorLabel] : getCodedColor(colorCode);
+						if (useCodedSeries) {
+							colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
+							color = customColors && customColors[colorLabel] ? customColors[colorLabel] : getCodedColor(colorCode);
+							showInLegend = true;
+						} else {
+							color = colorScale (colorCode * bin + average);
+							colorLabel = columns[colorColumn].user.fieldLabel;
+							showInLegend = (i === 0) ? true : false;
+						}
 
 					} else {
 						color = null;
 						colorLabel = "sample";
+						showInLegend = true;
 					}
 
 					chart.addSeries({
 						name: colorLabel,
+						showInLegend: showInLegend,
 						data: multiSeries[colorCode].data,
-						color: color
+						color: color,
 					}, false);
 				});
-
-				//add single-series data
-				if (singleSeries.length) {
-					chart.addSeries({
-						name: scatterColorData ? columns[colorColumn].user.fieldLabel : "sample",
-						data: singleSeries,
-					}, false);
-				}
 
 				// add highlightSeries color in gold with black border
 				if (highlightSeries.length > 0 ) {
 					chart.addSeries({
 						name: "highlighted samples",
 						data: highlightSeries,
-						allowPointSelect: true,
 						marker: {
 							symbol: 'circle',
 							lineColor: 'black',
