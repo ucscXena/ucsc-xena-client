@@ -8,7 +8,7 @@ var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
-var {drawSegmentedTrendAmp, toYPx} = require('./drawSegmented');
+var {drawSegmented, toYPx} = require('./drawSegmented');
 var {chromPositionFromScreen} = require('./exonLayout');
 var {defaultNormal2color} = require('./heatmapColors');
 var {hexToRGB, RGBToHex} = require('./color_helper');
@@ -179,7 +179,7 @@ var SegmentedColumn = hotOrNot(React.createClass({
 		return (
 			<CanvasDrawing
 					ref='plot'
-					draw={drawSegmentedTrendAmp}
+					draw={drawSegmented}
 					wrapperProps={{
 						className: 'Tooltip-target',
 						onMouseMove: this.on.mousemove,
