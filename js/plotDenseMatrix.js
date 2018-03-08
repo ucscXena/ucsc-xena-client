@@ -9,7 +9,7 @@ var Legend = require('./views/Legend');
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
 var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
-var {drawHeatmapByPixel: drawHeatmap} = require('./drawHeatmap');
+var {drawHeatmap} = require('./drawHeatmap');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.

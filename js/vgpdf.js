@@ -6,7 +6,7 @@ var style = function (c) {
 			c.match(/rgba?\(([0-9]+), ([0-9]+), ([0-9]+)(, 1)?\)/).slice(1, 4) : c;
 };
 
-module.exports = function (doc/*, vgw, vgh*/) {
+module.exports = function (doc, vgw, vgh) {
 	var fontFamily = 'Helvetica',
 
 		notImplemented = () => console.log('Not implemented'),
@@ -15,7 +15,7 @@ module.exports = function (doc/*, vgw, vgh*/) {
 
 		scale = function (x, y, cb) {
 			doc.save();
-			doc.scale(x, y);
+			doc.scale(x, y, {});
 			cb.apply(this);
 			doc.restore();
 		},
@@ -58,7 +58,23 @@ module.exports = function (doc/*, vgw, vgh*/) {
 
 		element = notImplemented,
 
-		context = notImplemented,
+		// getting a bit weird, here. Writing mock 2d canvas ctx in order to
+		// support img data in pdf. Should probably improve the vg API, instead.
+		context = () => {
+			var el = document.createElement('canvas'),
+				ctx = el.getContext('2d');
+
+			el.width = vgw;
+			el.height = vgh;
+
+			return {
+				createImageData: (w, h) => ctx.createImageData(w, h),
+				putImageData: (img, x, y) => {
+					ctx.putImageData(img, x, y);
+					doc.image(el.toDataURL(), 0, 0);
+				}
+			};
+		},
 
 		text = function (x, cy, c, fontHeight, txt) {
 			// See https://github.com/devongovett/pdfkit/issues/351 for y correction.
@@ -160,30 +176,30 @@ module.exports = function (doc/*, vgw, vgh*/) {
 		};
 
 	return {
+		alpha,
 		box,
 		circle,
 		clear,
-		context,
-		width,
-		height,
+		clip,
 		clipRect,
 		clipReset,
-		clip,
+		context,
+		drawImage,
+		drawPoly,
+		drawRectangles,
+		element,
+		height,
 		labels,
+		makeColorGradient,
+		scale,
+		smoothing,
 		text,
 		textCentered,
 		textCenteredPushRight,
-		textWidth,
 		textRight,
-		verticalTextRight,
-		makeColorGradient,
-		drawImage,
-		drawPoly,
-		smoothing,
-		element,
-		alpha,
-		scale,
+		textWidth,
 		translate,
-		drawRectangles
+		verticalTextRight,
+		width
 	};
 };

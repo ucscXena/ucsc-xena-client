@@ -19,6 +19,8 @@ function getOffsets(cols) {
 	return _.scan(widths, (acc, n) => acc + n + m, 0);
 }
 
+var pdfImgHeight = 2000;
+
 var download = state => {
 	require.ensure(['pdfkit', 'blob-stream', './vgpdf'], () => {
 		var PDFDocument = require('pdfkit');
@@ -29,7 +31,7 @@ var download = state => {
 			// pdfkit zlib is pathologically slow.
 			doc = new PDFDocument({compress: false, size: [width, state.zoom.height]}),
 			stream = doc.pipe(blobStream()),
-			vg = vgpdf(doc),
+			vg = vgpdf(doc, pdfImgHeight * width / state.zoom.height, pdfImgHeight),
 			offsets = getOffsets(columns);
 
 		columns.forEach((column, i) =>
