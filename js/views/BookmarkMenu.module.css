@@ -4,6 +4,7 @@
 	margin-left: 4px;
 	/* Using !important, because I can't out why the css ordering is wrong */
 	z-index: 1060 !important; /* in front of KmPlot dialog */
+	margin-top: 30px; /* let the menu do not overlay the "bookmark" icon */
 }
 
 
