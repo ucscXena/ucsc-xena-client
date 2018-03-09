@@ -235,12 +235,10 @@ function supportsGeneAverage(column) {
 	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && (fieldList || fields).length === 1;
 }
 
-function matrixMenu(props, {onTumorMap, onMode, onSpecialDownload, specialDownloadMenu}) {
+function matrixMenu(props, {onTumorMap, onMode}) {
 	var {cohort, column} = props,
-		{fieldType, noGeneDetail, valueType, fields, fieldSpecs} = column,
-		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs}),
-		wrongDataType = valueType !== 'coded',
-		specialDownloadItemName = 'Download sample lists (json)';
+		{fieldType, noGeneDetail, fields, fieldSpecs} = column,
+		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs});
 
 	return addIdsToArr ([
 		supportsGeneAverage(column) ?
@@ -250,10 +248,7 @@ function matrixMenu(props, {onTumorMap, onMode, onSpecialDownload, specialDownlo
 				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>)
 				: null,
 		tumorMapCohort ?
-			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`TumorMap (${tumorMapCohort.label})`}/>
-			: null,
-		(specialDownloadMenu && !wrongDataType) ?
-			<MenuItem onClick={onSpecialDownload} caption={specialDownloadItemName}/>
+			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`TumorMap`}/>
 			: null
 	]);
 }
