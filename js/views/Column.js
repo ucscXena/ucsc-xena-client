@@ -146,7 +146,7 @@ function segmentedVizOptions(onVizOptions) {
 		<MenuDivider/>] : [];
 }
 
-function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, specialDownloadMenu, onVizOptions}) {
+function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, onVizOptions}) {
 	var {column, data} = props,
 		pos = parsePos(column.fields[0]), // XXX Should compute a flag for this.
 		{showIntrons = false} = column,
@@ -160,9 +160,7 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 		...(segmentedVizOptions(onVizOptions)),
 		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
 		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>,
-		specialDownloadMenu ?
-			<MenuItem disabled={noData} onClick={onSpecialDownload} caption={specialDownloadItemName}/>
-			: <span/>
+		<MenuItem disabled={noData} onClick={onSpecialDownload} caption={specialDownloadItemName}/>
 	]);
 }
 
