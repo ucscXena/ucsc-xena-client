@@ -4,8 +4,10 @@ require('./km.css');
 var _ = require('./underscore_ext');
 var React = require('react');
 var { PropTypes } = React;
-var Modal = require('react-bootstrap/lib/Modal');
 import {Button} from 'react-toolbox/lib/button';
+
+import Dialog from 'react-toolbox/lib/dialog';
+
 var Axis = require('./Axis');
 var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
@@ -56,8 +58,8 @@ var LineGroup = React.createClass({
 
 		return (
 			<g key={label} className='subgroup' stroke={color}
-				onMouseOver={(e) => setActiveLabel(e, label)}
-				onMouseOut={(e) => setActiveLabel(e, '')}>
+			   	onMouseOver={(e) => setActiveLabel(e, label)}
+			   	onMouseOut={(e) => setActiveLabel(e, '')}>
 				<path className={`outline ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
 				<path className={`line ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
 				{censorLines(xScale, yScale, censors, `outline ${activeLabelClassName}`)}
@@ -89,7 +91,7 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 				yScale={yScale}
 				g={g}
 				isActive={label === activeLabel}
-				setActiveLabel={setActiveLabel} />);
+				setActiveLabel={setActiveLabel}/>);
 	});
 
 	return (
@@ -118,8 +120,8 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 
 					<text
 						transform='rotate(-90)'
-						y='6'
-						x={-height}
+						y='5'
+						x={-height + 5}
 						dy='.71em'
 						textAnchor='start'>
 						Survival probability
@@ -138,34 +140,57 @@ var WarningTrigger = React.createClass({
 		return { show: false };
 	},
 
-	render() {
-		let close = () => this.setState({ show: false});
-		let {header, body} = this.props;
-		return (
-			<span className = "modal-container" style={{height: 200}}>
-				<Button
-					onClick = {() => this.setState({ show: true})}
-				 >
-					<div className = "glyphicon glyphicon-warning-sign text-danger"/>
-				</Button>
+	close: function() {
+		this.setState({show: false}).bind(this);
+	},
 
-				<Modal
-					show={this.state.show}
-					onHide={close}
-					container={this}
-					aria-labelledby="contained-modal-title"
+	render() {
+		let {header, body} = this.props;
+
+		return (
+			<div className={"warningContainer"}>
+				<Button
+					onClick={() => this.setState({show: true})}
+					className={"showPWarningButton"}
 				>
-					<Modal.Header closeButton>
-						<Modal.Title id="contained-modal-title">{header}</Modal.Title>
-					</Modal.Header>
-					<Modal.Body>
-						{body}
-					</Modal.Body>
-					<Modal.Footer>
-						<Button onClick={close}>Close</Button>
-					</Modal.Footer>
-				</Modal>
-			</span>
+					<span className="glyphicon glyphicon-warning-sign pWarningIcon"/>
+				</Button>
+				{this.state.show ? <WarningDialog onHide={this.close} header={header} body={body}/> : null}
+			</div>
+		);
+	}
+});
+
+var WarningDialog = React.createClass({
+
+	componentDidMount: function() {
+		var body = document.getElementById("body");
+		body.style.overflow = "auto";
+	},
+
+	render() {
+
+		const actions = [
+			{
+				label: <i className='material-icons'>close</i>,
+				className: "warningDialogClose",
+				onClick: this.props.onHide
+			},
+		];
+
+		return (
+			<Dialog
+				actions={actions}
+				active={true}
+				title={this.props.header}
+				className={"kmWarningDialog"}
+				onEscKeyDown={this.props.onHide}
+				onOverlayClick={this.props.onHide}
+				theme={{
+					wrapper: 'dialogWrapper',
+					overlay: 'dialogOverlay'}}>
+				{this.props.body}
+			</Dialog>
 		);
 	}
 });
@@ -177,9 +202,8 @@ var PValue = React.createClass({
 		var {logRank, pValue, patientWarning} = this.props;
 		return (
 			<div>
-				<div>
-					<span><i>P</i>-value = {formatPValue(pValue)}</span>
-					{' '}
+				<div className={"PValueArea"}>
+					<div className={"PValueP"}><i>P</i>-value = {formatPValue(pValue)}</div>
 					{patientWarning ?
 						<WarningTrigger
 							header="P value warning"
@@ -215,10 +239,10 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	return (
 		<li
 			key={label}
-			className={`list-group-item ${activeLabelClassName}`}
+			className={`kmListItem ${activeLabelClassName}`}
 			onMouseOver={(e) => setActiveLabel(e, label)}
 			onMouseOut={(e) => setActiveLabel(e, '')}>
-			<span style={legendLineStyle} /> {label} (n={sampleCount(curves)})
+			<span style={legendLineStyle}/> {label} (n={sampleCount(curves)})
 		</li>
 
 	);
@@ -235,9 +259,9 @@ var Legend = React.createClass({
 
 	render: function () {
 		let { groups, setActiveLabel, activeLabel } = this.props;
-		let { colors, curves, labels } = groups;
+		let {colors, curves, labels} = groups;
 		let sets = _.zip(colors, curves, labels)
-					.map(set => makeLegendKey(set, setActiveLabel, activeLabel));
+				.map(set => makeLegendKey(set, setActiveLabel, activeLabel));
 
 		return (
 			<div className="legend">{sets}</div>
@@ -247,8 +271,8 @@ var Legend = React.createClass({
 
 function makeGraph(groups, setActiveLabel, activeLabel, size) {
 	return (
-		<div className="graph" style={{width: size.width}}>
-			{svg(groups, setActiveLabel, activeLabel, size)}
+		<div className="graph" style={{width: 0.9 * size.width}}>
+			{svg(groups, setActiveLabel, activeLabel, {height: 0.8 * size.height, width: 0.9 * size.width})}
 			<div className='kmScreen'/>
 		</div>
 	);
@@ -256,13 +280,15 @@ function makeGraph(groups, setActiveLabel, activeLabel, size) {
 
 function makeSplits(splits, onSplits) {
 	return (
-		<form className='form-horizonal'>
+		<form>
 			<div>
-				<label className="radio-inline">
-					<input value={2} type="radio" name="splits" checked={splits === 2} onChange={onSplits}/>2 groups
+				<label className={"kmSplitLabel"}>
+					<input value={2} type="radio" name="splits" checked={splits === 2} onChange={onSplits}/>
+					<span className={"kmSplitHint"}>2 groups</span>
 				</label>
-				<label className="radio-inline">
-					<input value={3} type="radio" name="splits" checked={splits === 3} onChange={onSplits}/>3 groups
+				<label className={"kmSplitLabel"}>
+					<input value={3} type="radio" name="splits" checked={splits === 3} onChange={onSplits}/>
+					<span className={"kmSplitHint"}>3 groups</span>
 				</label>
 			</div>
 		</form>);
@@ -280,7 +306,7 @@ function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, sp
 			<br/>
 			<Legend groups={groups}
 					setActiveLabel={setActiveLabel}
-					activeLabel={activeLabel} />
+					activeLabel={activeLabel}/>
 		</div>
 	);
 }
@@ -312,7 +338,7 @@ var KmPlot = React.createClass({
 		}
 	}),
 
-	getInitialState: function() {
+	getInitialState: function () {
 		return { activeLabel: '' };
 	},
 
@@ -337,9 +363,18 @@ var KmPlot = React.createClass({
 		pdf(this.props.km.groups);
 	},
 
+	help: function () {
+		window.location.href = "http://xena.ucsc.edu/km-plot-help/";
+	},
+
 	onSplits(ev) {
 		var {callback} = this.props;
 		callback(['km-splits', parseInt(ev.target.value, 10)]);
+	},
+
+	componentDidMount: function() {
+		var body = document.getElementById("body");
+		body.style.overflow = "auto";
 	},
 
 	render: function () {
@@ -355,7 +390,6 @@ var KmPlot = React.createClass({
 
 		let Content = _.isEmpty(groups)
 			? <div
-				className="jumbotron"
 				style={{
 					height: dims.height,
 					textAlign: 'center',
@@ -364,41 +398,52 @@ var KmPlot = React.createClass({
 				<h1>Loading...</h1>
 			</div>
 			: (_.isEmpty(groups.colors)
-				? <div><h3>Unfortunately, KM plot can not be made. There is no survival data overlapping column data.</h3></div>
-				: <div>
-					<Button onClick={this.pdf}>PDF</Button>
-					<a href="http://xena.ucsc.edu/km-plot-help/">help with KM</a>
-					{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
-					{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions, maySplit, splits, this.onSplits)}
-					<div style={{clear: 'both'}}>
-						<NumberForm
-							labelClassName="col-md-4"
-							wrapperClassName="col-md-3"
-							onChange={this.onCutoff}
-							dflt={max}
-							min={min}
-							max={max}
-							initialValue={cutoff}/>
+					? <div><h3>Unfortunately, KM plot can not be made. There is no survival data overlapping column
+						data.</h3></div>
+					: <div>
+						<Button onClick={this.pdf} className={"kmPDFButton"}>
+							<span className="glyphicon glyphicon-download kmButtonIcon"/>
+							PDF
+						</Button>
+						<Button onClick={this.help} className={"kmHelpButton"}>
+							<span className={"glyphicon glyphicon-question-sign kmButtonIcon"}/>
+							Help
+						</Button>
+						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
+						{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions, maySplit, splits, this.onSplits)}
+						<div style={{clear: 'both'}}>
+							<NumberForm
+								onChange={this.onCutoff}
+								dflt={max}
+								min={min}
+								max={max}
+								initialValue={cutoff}/>
+						</div>
+						<samp className='featureLabel'>{fullLabel}</samp>
 					</div>
-				</div>
 			);
 
+		const actions = [
+			{
+				label: <i className='material-icons'>close</i>,
+				className: "kmDialogClose",
+				onClick: this.hide
+			},
+		];
 		return (
-			<div className='kmContainer'>
-				<Modal autoFocus={false} enforceFocus={false} container={this} show={true} bsSize='large' className='kmDialog' onHide={this.hide} ref="kmPlot">
-					<Modal.Header closeButton className="container-fluid">
-						<span className="col-md-2">
-							<Modal.Title>Kaplan Meier</Modal.Title>
-						</span>
-						<span style={{overflow: 'hidden'}} className="col-md-9 label label-default featureLabel">{title}</span>
-					</Modal.Header>
-					<Modal.Body className="container-fluid">
-						{Content}
-					</Modal.Body>
-					<Modal.Footer className="container-fluid">
-						<samp className='featureLabel'>{fullLabel}</samp>
-					</Modal.Footer>
-				</Modal>
+			<div>
+				<Dialog
+					actions={actions}
+					active={true}
+					title={'Kaplan Meier' + title}
+					className={"kmDialog"}
+					onEscKeyDown={this.hide}
+					onOverlayClick={this.hide}
+					theme={{
+						wrapper: 'dialogWrapper',
+						overlay: 'dialogOverlay'}}>
+					{Content}
+				</Dialog>
 			</div>
 		);
 	}

@@ -64,15 +64,19 @@ path.outline {
 
 .kmDialog .legend li {
 	vertical-align: middle;
+	cursor: default;
 }
 
 .kmDialog .graph {
+	margin-top: 20px;
 	float: left;
+	width: 500px;
 }
 
 .kmDialog .definitions {
 	float: right;
 	font-size: small;
+	margin-top: -10px;
 }
 
 /* no idea why RT sets min-width, but it breaks stuff. */
@@ -90,9 +94,7 @@ path.outline {
 	left: 0;
 	right: 0;
 	background-color: white;
-	border-color: black;
-	border-width: 2px;
-	border-style: solid;
+	border: 2px solid #000;
 	margin: 5px;
 	padding: 10px;
 	width: auto;
@@ -123,7 +125,7 @@ path.outline {
 	height: 100%;
 	width: 100%;
 	overflow: hidden;
-	top: 0px;
+	top: 0;
 	position: absolute;
 }
 
@@ -133,12 +135,13 @@ path.outline {
 
 .kmDialog .featureLabel {
 	float: left;
-	/*margin-top: 5px;*/
-	margin-right: 40px;
 	font-size: 20px;
-	vertical-align: center;
 	overflow: hidden;
-	/*padding: 3px;*/
+	border-top: 1px solid #e0e0e0;
+	padding-top: 10px;
+	padding-bottom: -20px;
+	padding-left: 20px;
+	width: 100%;
 }
 
 .labelbutton {
@@ -151,3 +154,143 @@ path.outline {
 	background-color: #E1E1E1
 }
 
+button.kmDialogClose {
+	background-color: #ffffff;
+}
+
+.kmDialogClose:hover {
+	background-color: #d3d3d3;
+}
+
+.kmDialogClose, .warningDialogClose {
+	position: absolute;
+	top: 20px;
+	right: 30px;
+	line-height: 40px;
+	height: 40px;
+	width: 40px;
+	padding: 8px;
+	box-sizing: border-box;
+}
+
+.kmDialogClose > i, .warningDialogClose > i {
+	color: #b6b6b6;
+}
+
+.kmDialog {
+	width: 850px;
+	height: 600px;
+	overflow: auto;
+	padding-top: 10px;
+	margin-top: 30px;
+	margin-left: calc((100% - 850px) / 2);
+}
+
+.kmWarningDialog {
+	width: 600px;
+	overflow: auto;
+	padding-top: 10px;
+	margin-left: calc((100% - 600px) / 2);
+	margin-top: 200px;
+}
+
+.kmButtonIcon {
+	margin-right: 10px;
+	margin-top: -2px;
+	box-sizing: border-box;
+	font-size: 18px;
+}
+
+.kmPDFButton {
+	margin: 30px 0 20px 50px;
+}
+
+.kmHelpButton {
+	margin-left: 20px;
+}
+
+.pWarningIcon {
+	color: #8d0000;
+	float: left;
+}
+
+.showPWarningButton {
+	margin-left: 10px;
+	margin-top: 20px;
+}
+
+.kmSplitLabel {
+	margin-left: 20px;
+}
+
+.kmSplitHint {
+	margin-left: 10px;
+}
+
+.kmDialog .legend {
+	border-radius: 4px;
+}
+
+.kmListItem {
+	position: relative;
+	display: block;
+	padding: 10px 15px;
+	margin-bottom: -1px;
+	background-color: #fff;
+	border: 1px solid #ddd;
+}
+.kmListItem:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+}
+.kmListItem:last-child {
+	margin-bottom: 0;
+	border-bottom-right-radius: 4px;
+	border-bottom-left-radius: 4px;
+}
+
+.kmListItem:hover,
+.kmListItem:focus {
+	color: #555;
+	text-decoration: none;
+	background-color: #f5f5f5;
+}
+
+.kmDialog > nav {
+	padding: 0;
+}
+
+.PValueArea {
+	height: 60px;
+	box-sizing: border-box;
+	position: relative;
+	display: block;
+}
+
+.PValueP {
+	width: 200px;
+	line-height: 60px;
+	height: 60px;
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+.warningContainer {
+	position: absolute;
+	left: 140px;
+	top: -10px;
+}
+
+.dialogWrapper {
+	display: block;
+	position: absolute;
+	height: calc(100% - 179px);
+	top: 64px; /*var(--appbar-height);*/
+}
+
+.dialogOverlay {
+	position: absolute;
+	height: 100%;
+	top: 0;
+}
