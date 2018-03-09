@@ -8,16 +8,16 @@
 
 // Core dependencies, components
 const React = require('react');
-var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
+var {rxEvents, deepPureRenderMixin} = require('../react-utils');
 
 // Comp styles
 var compStyles = require('./DefaultTextInput.module.css');
 
 var DefaultTextInput = React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
+	mixins: [deepPureRenderMixin],
 	componentWillMount: function () {
-		this.events('change');
-		this.change = this.ev.change
+		var events = rxEvents(this, 'change');
+		this.change = events.change
 		.do(() => this.setState({value: this.refs.input.value}))
 		.debounceTime(100)
 		.subscribe(this.update);

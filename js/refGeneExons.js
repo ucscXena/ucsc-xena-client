@@ -9,7 +9,7 @@ var vgcanvas = require('./vgcanvas');
 var layoutPlot = require('./layoutPlot');
 var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
-var {rxEventsMixin} = require('./react-utils');
+var {rxEvents} = require('./react-utils');
 var util = require('./util');
 var {chromPositionFromScreen} = require('./exonLayout');
 
@@ -97,16 +97,15 @@ function drawIntroArrows (ctx, xStart, xEnd, endY, segments, strand) {
 }
 
 var RefGeneAnnotation = React.createClass({
-	mixins: [rxEventsMixin],
 	componentWillMount: function () {
-		this.events('mouseout', 'mousemove', 'mouseover');
+		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
-		this.ttevents = this.ev.mouseover
+		this.ttevents = events.mouseover
 			.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
 			.flatMap(() => {
-				return this.ev.mousemove
-					.takeUntil(this.ev.mouseout)
+				return events.mousemove
+					.takeUntil(events.mouseout)
 					.map(ev => ({
 						data: this.tooltip(ev),
 						open: true

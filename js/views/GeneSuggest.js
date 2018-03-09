@@ -5,7 +5,7 @@ import XAutosuggest from './XAutosuggest';
 import Input from 'react-toolbox/lib/input';
 var {sparseDataMatchPartialField, refGene} = require('../xenaQuery');
 var _ = require('../underscore_ext');
-var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
+var {rxEvents, deepPureRenderMixin} = require('../react-utils');
 require('./GeneSuggest.css');
 var limit = 8;
 
@@ -40,11 +40,11 @@ var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
 // require some more work to dispatch the query for each type.
 var GeneSuggest = React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
+	mixins: [deepPureRenderMixin],
 	componentWillMount() {
 		var {host, name} = refGene[this.props.assembly] || refGene[defaultAssembly];
-		this.events('change');
-		this.change = this.ev.change
+		var events = rxEvents(this, 'change');
+		this.change = events.change
 			.distinctUntilChanged(_.isEqual)
 			.debounceTime(200)
 			.switchMap(value => sparseDataMatchPartialField(host, 'name2', name, value, limit)).subscribe(matches => this.setState({suggestions: matches}));
@@ -57,7 +57,7 @@ var GeneSuggest = React.createClass({
 			word = currentWord(value, position);
 
 		if (word !== '') {
-			this.ev.change.next(word);
+			this.on.change(word);
 		}
 	},
 	shouldRenderSuggestions(value) {

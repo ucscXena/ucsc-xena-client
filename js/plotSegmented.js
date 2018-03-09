@@ -4,7 +4,7 @@ var _ = require('./underscore_ext');
 var Rx = require('./rx');
 var React = require('react');
 var Legend = require('./views/Legend');
-var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
+var {deepPureRenderMixin, rxEvents} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
@@ -149,16 +149,16 @@ function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, as
 }
 
 var SegmentedColumn = hotOrNot(React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
+	mixins: [deepPureRenderMixin],
 	componentWillMount: function () {
-		this.events('mouseout', 'mousemove', 'mouseover');
+		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
-		this.ttevents = this.ev.mouseover
+		this.ttevents = events.mouseover
 			.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
 			.flatMap(() => {
-				return this.ev.mousemove
-					.takeUntil(this.ev.mouseout)
+				return events.mousemove
+					.takeUntil(events.mouseout)
 					.map(ev => ({
 						data: this.tooltip(ev),
 						open: true

@@ -16,7 +16,7 @@ import {Button} from 'react-toolbox/lib/button';
 var showdown = require('showdown');
 var {stripHTML} = require('./dom_helper');
 var treehouseImg = require('../images/Treehouse.jpg');
-var {rxEventsMixin} = require('./react-utils');
+var {rxEvents} = require('./react-utils');
 var {servers: {localHub}} = require('./defaultServers');
 import Dialog from 'react-toolbox/lib/dialog';
 var {encodeObject, urlParams} = require('./util');
@@ -496,12 +496,11 @@ var binSize = 1000;
 // We do that by rendering binSize rows at a time, on a requestAnimationFrame
 // timeout.
 var ListPage = React.createClass({
-	mixins: [rxEventsMixin],
 	componentWillMount: function () {
 		var {state, path} = this.props,
 			list = getIn(state, ['datapages', path, 'list']);
-		this.events('list');
-		var chunks = this.ev.list
+		var events = rxEvents(this, 'list');
+		var chunks = events.list
 			.startWith(list)
 			.distinctUntilChanged()
 			.filter(identity)

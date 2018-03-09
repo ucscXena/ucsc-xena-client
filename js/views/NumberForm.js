@@ -2,7 +2,7 @@
 var React = require('react');
 var _ = require('../underscore_ext');
 import Input from 'react-toolbox/lib/input';
-var rxEventsMixin = require('../react-utils').rxEventsMixin;
+var {rxEvents} = require('../react-utils');
 
 var isValid = _.curry((min, max, value) => {
 	var v = value.trim(),
@@ -18,11 +18,10 @@ function parseValue(value, dflt) {
 // initialValue is int or null.
 // dflt, min, max are int.
 const NumberForm = React.createClass({
-	mixins: [rxEventsMixin],
 	componentWillMount: function () {
 		var {dflt, min, max} = this.props;
-		this.events('change');
-		this.change = this.ev.change
+		var events = rxEvents(this, 'change');
+		this.change = events.change
 			.do(value => this.setState({value}))
 			.debounceTime(200)
 			.filter(isValid(min, max))

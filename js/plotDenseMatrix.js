@@ -8,7 +8,7 @@ var util = require('./util');
 var Legend = require('./views/Legend');
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
-var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
+var {deepPureRenderMixin, rxEvents} = require('./react-utils');
 var {drawHeatmap} = require('./drawHeatmap');
 
 // Since we don't set module.exports, but instead register ourselves
@@ -196,15 +196,15 @@ var HeatmapLegend = hotOrNot(React.createClass({
 
 
 var HeatmapColumn = hotOrNot(React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
+	mixins: [deepPureRenderMixin],
 	componentWillMount: function () {
-		this.events('mouseout', 'mousemove', 'mouseover');
+		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
-		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
+		this.ttevents = events.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
 			.flatMap(() => {
-				return this.ev.mousemove
-					.takeUntil(this.ev.mouseout)
+				return events.mousemove
+					.takeUntil(events.mouseout)
 					.map(ev => ({
 						data: this.tooltip(ev),
 						open: true

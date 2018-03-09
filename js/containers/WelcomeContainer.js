@@ -3,7 +3,7 @@
 var React = require('react');
 var Rx = require('../rx');
 var Welcome = require('../views/Welcome');
-var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
+var {rxEvents, deepPureRenderMixin} = require('../react-utils');
 
 var links = [
 	['heatmap', 'fff0ba742442246f0fd600d41d163d60',
@@ -36,13 +36,13 @@ var evToIndex = ev => parseInt(ev.currentTarget.dataset.index, 10);
 
 var refresh = 5000; // ms between link switch
 var WelcomeContainer = React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
+	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		return {link: 0};
 	},
 	componentWillMount() {
-		this.events('mouseover', 'mouseout', 'bulletover');
-		var {mouseover, mouseout, bulletover} = this.ev;
+		var events = rxEvents(this, 'mouseover', 'mouseout', 'bulletover');
+		var {mouseover, mouseout, bulletover} = events;
 
 		// Emit events on an interval, pausing if the user mouses-over
 		// the target link. The timer restarts on mouse-out, so it won't

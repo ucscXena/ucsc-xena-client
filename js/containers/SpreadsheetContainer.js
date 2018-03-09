@@ -2,7 +2,7 @@
 
 var React = require('react');
 var _ = require('../underscore_ext');
-var {rxEventsMixin} = require('../react-utils');
+var {rxEvents} = require('../react-utils');
 var getLabel = require('../getLabel');
 var {supportsEdit} = require('../models/fieldSpec');
 var {addCommas} = require('../util');
@@ -65,7 +65,6 @@ function isInteractive(props, state) {
 
 var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 	displayName: 'SpreadsheetContainer',
-	mixins: [rxEventsMixin],
 	getInitialState() {
 		return {
 			interactive: {}
@@ -76,9 +75,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 			_.assoc(this.state.interactive, key, interactive)});
 	},
 	componentWillMount() {
-		this.events('plotClick');
+		var events = rxEvents(this, 'plotClick');
 
-		this.plotClick = this.ev.plotClick.subscribe(ev => {
+		this.plotClick = events.plotClick.subscribe(ev => {
 			let {callback, appState: {zoom, samples}} = this.props;
 			if (zoomOutClick(ev)) {
 				callback(['zoom', zoomOut(samples.length, zoom)]);

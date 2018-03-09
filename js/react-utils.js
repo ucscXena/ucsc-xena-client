@@ -4,16 +4,15 @@ var Rx = require('./rx');
 
 // XXX Should also do a takeUntil componentWillUnmount, perhaps
 // via rx-react.
-var rxEventsMixin = {
-	events: function (...args) {
-		this.ev = this.ev || {};
-		this.on = this.on || {};
-		_.each(args, ev => {
-			var sub = new Rx.Subject();
-			this.ev[ev] = sub;
-			this.on[ev] = sub.next.bind(sub);
-		});
-	}
+var rxEvents = (comp, ...args) => {
+	var ev = {};
+	comp.on = {};
+	_.each(args, name => {
+		var sub = new Rx.Subject();
+		ev[name] = sub;
+		comp.on[name] = sub.next.bind(sub);
+	});
+	return ev;
 };
 
 var deepPureRenderMixin = {
@@ -24,6 +23,6 @@ var deepPureRenderMixin = {
 };
 
 module.exports = {
-	rxEventsMixin: rxEventsMixin,
+	rxEvents,
 	deepPureRenderMixin: deepPureRenderMixin
 };

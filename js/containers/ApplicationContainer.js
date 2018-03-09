@@ -7,7 +7,7 @@ var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
 var ChartView = require('../ChartView');
 var Column = require('../views/Column');
 var _ = require('../underscore_ext');
-var {rxEventsMixin} = require('../react-utils');
+var {rxEvents} = require('../react-utils');
 var Rx = require('../rx');
 // Spreadsheet options
 var addTooltip = require('./addTooltip');
@@ -45,18 +45,17 @@ var SpreadsheetContainer = getSpreadsheetContainer(Column, Spreadsheet);
 
 
 var ApplicationContainer = React.createClass({
-	mixins: [rxEventsMixin],
 	onSearch: function (value) {
 		var {callback} = this.props;
 		callback(['sample-search', value]);
 	},
 	componentWillMount: function () {
-		this.events('highlightChange');
-		this.change = this.ev.highlightChange
+		var events = rxEvents(this, 'highlightChange');
+		this.change = events.highlightChange
 			.debounceTime(200)
 			.subscribe(this.onSearch);
 		// high on 1st change, low after some delay
-		this.highlight = this.ev.highlightChange
+		this.highlight = events.highlightChange
 			.switchMap(() => Rx.Observable.of(true).concat(Rx.Observable.of(false).delay(300)))
 			.distinctUntilChanged(_.isEqual);
 	},

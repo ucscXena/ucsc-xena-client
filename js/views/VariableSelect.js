@@ -7,7 +7,7 @@ var XRadioGroup = require('./XRadioGroup');
 var WizardCard = require('./WizardCard');
 var GeneSuggest = require('./GeneSuggest');
 var PhenotypeSuggest = require('./PhenotypeSuggest');
-var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
+var {rxEvents, deepPureRenderMixin} = require('../react-utils');
 var xenaQuery = require('../xenaQuery');
 var Rx = require('../rx');
 var multi = require('../multi');
@@ -230,7 +230,7 @@ var featureIndexes = (features, list) =>
 	list.map(f => _.findIndex(features, _.matcher(f)).toString()).filter(x => x !== "-1");
 
 var VariableSelect = React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
+	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = this.props;
 		var defaults = {
@@ -271,19 +271,19 @@ var VariableSelect = React.createClass({
 	// and miss the startWith() of those. The workaround here is to use replay
 	// subjects. This is all much too complex.
 	componentWillMount() {
-		this.events('mode', 'advanced', 'field', 'select');
-		var mode = this.ev.mode.startWith(this.state.mode).publishReplay(1).refCount(),
-			advanced = this.ev.advanced
+		var events = rxEvents(this, 'mode', 'advanced', 'field', 'select');
+		var mode = events.mode.startWith(this.state.mode).publishReplay(1).refCount(),
+			advanced = events.advanced
 				.withLatestFrom(mode, (advanced, mode) => mode)
 				.scan((advanced, mode) => _.updateIn(advanced, [mode], a => !a), this.state.advanced)
 				.startWith(this.state.advanced).publishReplay(1).refCount(),
-			selected = this.ev.select
+			selected = events.select
 				.withLatestFrom(advanced, mode, (dataset, advanced, mode) => ([dataset, mode, advanced[mode]]))
 				.scan((selected, [{selectValue, isOn}, mode, advanced]) =>
 					_.updateIn(selected, [mode, advanced], selected => _.uniq((isOn ? _.conj : _.without)(selected, selectValue))),
 					this.state.selected)
 				.startWith(this.state.selected).publishReplay(1).refCount(),
-			value = this.ev.field
+			value = events.field
 				.withLatestFrom(mode, (field, mode) => ([field, mode]))
 				.scan((value, [field, mode]) => _.assoc(value, mode, field), this.state.value)
 				.startWith(this.state.value).publishReplay(1).refCount();

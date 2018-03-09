@@ -6,7 +6,7 @@ var widgets = require('./columnWidgets');
 var util = require('./util');
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
-var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
+var {deepPureRenderMixin, rxEvents} = require('./react-utils');
 var {drawSamples} = require('./drawSamples');
 
 // Since we don't set module.exports, but instead register ourselves
@@ -52,15 +52,15 @@ function tooltip(heatmap, sampleFormat, codes, width, zoom, samples, ev) {
 //
 
 var SamplesColumn = hotOrNot(React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
+	mixins: [deepPureRenderMixin],
 	componentWillMount: function () {
-		this.events('mouseout', 'mousemove', 'mouseover');
+		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
-		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
+		this.ttevents = events.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
 			.flatMap(() => {
-				return this.ev.mousemove
-					.takeUntil(this.ev.mouseout)
+				return events.mousemove
+					.takeUntil(events.mouseout)
 					.map(ev => ({
 						data: this.tooltip(ev),
 						open: true
