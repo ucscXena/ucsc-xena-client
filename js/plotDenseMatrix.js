@@ -69,8 +69,8 @@ function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, po
 		label = fieldFormat(field);
 
 	val = code ? code : prec(val);
-	let mean = prec(_.meannull(heatmap[fieldIndex]));
-	let median = prec(_.medianNull(heatmap[fieldIndex]));
+	let mean = heatmap && prec(_.meannull(heatmap[fieldIndex])),
+		median = heatmap && prec(_.medianNull(heatmap[fieldIndex]));
 	return {
 		sampleID: sampleFormat(sampleID),
 		rows: [
