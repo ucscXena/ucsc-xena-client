@@ -8,12 +8,13 @@
 
 // Core dependencies, components
 const React = require('react');
+const createReactClass = require('create-react-class');
 var {rxEvents, deepPureRenderMixin} = require('../react-utils');
 
 // Comp styles
 var compStyles = require('./DefaultTextInput.module.css');
 
-var DefaultTextInput = React.createClass({
+var DefaultTextInput = createReactClass({
 	mixins: [deepPureRenderMixin],
 	componentWillMount: function () {
 		var events = rxEvents(this, 'change');

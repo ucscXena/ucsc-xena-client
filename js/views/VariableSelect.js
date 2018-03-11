@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 var _ = require('../underscore_ext');
 var XCheckboxGroup = require('./XCheckboxGroup');
 var XRadioGroup = require('./XRadioGroup');
@@ -229,7 +230,7 @@ function matchFields(datasets, features, mode, selected, value) {
 var featureIndexes = (features, list) =>
 	list.map(f => _.findIndex(features, _.matcher(f)).toString()).filter(x => x !== "-1");
 
-var VariableSelect = React.createClass({
+var VariableSelect = createReactClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = this.props;
@@ -399,7 +400,7 @@ var VariableSelect = React.createClass({
 //
 // Cohort data is expected to be falsey if not loaded, empty
 // if loaded but nothing for this cohort, or non-empty otherwise.
-var LoadingNotice = React.createClass({
+class LoadingNotice extends React.Component {
 	render() {
 		var {preferred, datasets, features, basicFeatures} = this.props;
 		if (!preferred || !datasets || !features || !basicFeatures) {
@@ -416,6 +417,6 @@ var LoadingNotice = React.createClass({
 		}
 		return <VariableSelect {...this.props}/>;
 	}
-});
+}
 
 module.exports = LoadingNotice;

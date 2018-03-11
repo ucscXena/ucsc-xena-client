@@ -40,7 +40,7 @@ var stateIndex = {
 	'SECOND_COLUMN': 2
 };
 
-var Stepper = React.createClass({
+class Stepper extends React.Component {
 	render() {
 		let {mode} = this.props;
 		let getStepClassName = (index) => {
@@ -62,6 +62,6 @@ var Stepper = React.createClass({
 			</RTBAppBar>
 		);
 	}
-});
+}
 
 module.exports = { Stepper };

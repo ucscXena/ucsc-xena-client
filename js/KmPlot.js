@@ -3,7 +3,7 @@
 require('./km.css');
 var _ = require('./underscore_ext');
 var React = require('react');
-var { PropTypes } = React;
+var createReactClass = require('create-react-class');
 import {Button} from 'react-toolbox/lib/button';
 
 import Dialog from 'react-toolbox/lib/dialog';
@@ -45,12 +45,12 @@ function checkIfActive(currentLabel, activeLabel) {
 	return !!activeLabel && (activeLabel === currentLabel);
 }
 
-var LineGroup = React.createClass({
-	shouldComponentUpdate: function(newProps) {
+class LineGroup extends React.Component {
+	shouldComponentUpdate(newProps) {
 		return !_.isEqual(_.omit(newProps, 'xScale', 'yScale'), _.omit(this.props, 'xScale', 'yScale'));
-	},
+	}
 
-	render: function() {
+	render() {
 		let {xScale, yScale, g, setActiveLabel, isActive} = this.props;
 		let [color, label, curve] = g;
 		var censors = curve.filter(pt => !pt.e);
@@ -67,7 +67,7 @@ var LineGroup = React.createClass({
 			</g>
 		);
 	}
-});
+}
 
 var bounds = x => [_.min(x), _.max(x)];
 
@@ -135,14 +135,12 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 
 var formatPValue = v => v == null ? String.fromCharCode(8709) : v.toPrecision(4);
 
-var WarningTrigger = React.createClass({
-	getInitialState() {
-		return { show: false };
-	},
+class WarningTrigger extends React.Component {
+	state = { show: false };
 
-	close: function() {
+	close = () => {
 		this.setState({show: false}).bind(this);
-	},
+	};
 
 	render() {
 		let {header, body} = this.props;
@@ -159,14 +157,13 @@ var WarningTrigger = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
-var WarningDialog = React.createClass({
-
-	componentDidMount: function() {
+class WarningDialog extends React.Component {
+	componentDidMount() {
 		var body = document.getElementById("body");
 		body.style.overflow = "auto";
-	},
+	}
 
 	render() {
 
@@ -193,10 +190,10 @@ var WarningDialog = React.createClass({
 			</Dialog>
 		);
 	}
-});
+}
 
 
-var PValue = React.createClass({
+var PValue = createReactClass({
 	mixins: [deepPureRenderMixin],
 	render: function () {
 		var {logRank, pValue, patientWarning} = this.props;
@@ -248,14 +245,8 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	);
 }
 
-var Legend = React.createClass({
+var Legend = createReactClass({
 	mixins: [deepPureRenderMixin],
-	propTypes: {
-		activeLabel: PropTypes.string,
-		columns: PropTypes.number,
-		groups: PropTypes.object,
-		setActiveLabel: PropTypes.func
-	},
 
 	render: function () {
 		let { groups, setActiveLabel, activeLabel } = this.props;
@@ -311,12 +302,9 @@ function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, sp
 	);
 }
 
-var KmPlot = React.createClass({
+var KmPlot = createReactClass({
 	mixins: [deepPureRenderMixin],
-	propTypes: {
-		eventClose: PropTypes.string,
-		dims: PropTypes.object
-	},
+
 	size: {
 		ratios: {
 			graph: {

@@ -14,7 +14,7 @@ var ReactDOM = require('react-dom');
 // Styles
 var compStyles = require('./footer.module.css');
 
-var Footer = React.createClass({
+class Footer extends React.Component {
 	render() {
 		return (
 			<div className={compStyles.footer}>
@@ -37,7 +37,7 @@ var Footer = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
 var footer = document.getElementById('footer');
 

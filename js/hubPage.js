@@ -36,15 +36,15 @@ var reqStatus = (ping) =>
 
 var checkHost = host => testHost(host).take(1).map(v => ({[host]: v}));
 
-var Hub = React.createClass({
-	getInitialState() {
-		return {
-			ping: {}
-		};
-	},
-	onNavigate(page) {
+class Hub extends React.Component {
+	state = {
+	    ping: {}
+	};
+
+	onNavigate = (page) => {
 		this.props.callback(['navigate', page]);
-	},
+	};
+
 	componentDidMount() {
 		// XXX Use a connector to get rid of selector, here.
 		// Or use a sub-component.
@@ -56,10 +56,12 @@ var Hub = React.createClass({
 		this.sub = Rx.Observable.from(allHosts.map(checkHost))
 			.mergeAll()
 			.subscribe(this.updatePing);
-	},
+	}
+
 	componentWillUnmount() {
 		this.sub.unsubscribe();
-	},
+	}
+
 	componentWillReceiveProps(newProps) {
 		var {ping} = this.state,
 			{state, selector} = newProps,
@@ -70,33 +72,39 @@ var Hub = React.createClass({
 
 		_.difference(_.keys(servers), _.keys(ping))
 			.forEach(h => checkHost(h).subscribe(this.updatePing));
-	},
-	updatePing(h) {
+	}
+
+	updatePing = (h) => {
 		this.setState({ping: {...this.state.ping, ...h}});
-	},
-	onKeyDown(ev) {
+	};
+
+	onKeyDown = (ev) => {
 		if (ev.keyCode === RETURN) {
 			ev.preventDefault();
 			this.onAdd();
 		}
-	},
-	onSelect(isOn, ev) {
+	};
+
+	onSelect = (isOn, ev) => {
 		var {checked} = ev.target,
 			host = ev.target.getAttribute('data-host');
 		this.props.callback([checked ? 'enable-host' : 'disable-host', host, 'user']);
-	},
-	onAdd() {
+	};
+
+	onAdd = () => {
 		var target = this.refs.newHost,
 			value = target.value.trim();
 		if (value !== '') {
 			this.props.callback(['add-host', parseServer(value)]);
 			target.value = '';
 		}
-	},
-	onRemove(ev) {
+	};
+
+	onRemove = (ev) => {
 		var host = ev.currentTarget.getAttribute('data-host');
 		this.props.callback(['remove-host', host]);
-	},
+	};
+
 	render() {
 		var {state, selector} = this.props,
 			{ping} = this.state,
@@ -140,17 +148,17 @@ var Hub = React.createClass({
 				</Card>
 			</div>);
 	}
-});
+}
 
 var selector = state => state.spreadsheet.servers;
 
-var ThemedHub = React.createClass({
+class ThemedHub extends React.Component {
 	render() {
 		return (
 		<ThemeProvider theme={appTheme}>
 			<Hub {...this.props} selector={selector}/>
 		</ThemeProvider>);
 	}
-});
+}
 
 module.exports = ThemedHub;

@@ -3,6 +3,7 @@
 var _ = require('./underscore_ext');
 var Rx = require('./rx');
 var React = require('react');
+var createReactClass = require('create-react-class');
 var Legend = require('./views/Legend');
 var {deepPureRenderMixin, rxEvents} = require('./react-utils');
 var widgets = require('./columnWidgets');
@@ -148,7 +149,7 @@ function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, as
 		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
 }
 
-var SegmentedColumn = hotOrNot(React.createClass({
+var SegmentedColumn = hotOrNot(createReactClass({
 	mixins: [deepPureRenderMixin],
 	componentWillMount: function () {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');

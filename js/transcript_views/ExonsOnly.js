@@ -1,5 +1,6 @@
 'use strict';
 var React = require('react');
+var createReactClass = require('create-react-class');
 var _ = require('../underscore_ext');
 var {allExons, exonGroups, intronRegions} = require('../findIntrons');
 var {box, renderExon} = require('./Exons');
@@ -131,7 +132,7 @@ function drawRows(data, multiplyingFactor, origin, getNameZoom) {
 	});
 }
 
-var ExonsOnly = React.createClass({
+var ExonsOnly = createReactClass({
 	mixins: [deepPureRenderMixin],
 
 	render() {

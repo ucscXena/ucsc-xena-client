@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 import XAutosuggest from './XAutosuggest';
 import Input from 'react-toolbox/lib/input';
 var {deepPureRenderMixin} = require('../react-utils');
@@ -8,7 +9,7 @@ require('./GeneSuggest.css'); // XXX rename file
 
 var renderInputComponent = ({ref, onChange, error, ...props}) => (
 	<Input
-		ref={el => ref(el && el.getWrappedInstance().inputNode)}
+		innerRef={el => ref(el && el.inputNode)}
 		onChange={(value, ev) => onChange(ev)}
 		label='Search Phenotype'
 		{...props}>
@@ -18,7 +19,7 @@ var renderInputComponent = ({ref, onChange, error, ...props}) => (
 var filterFeatures = (lcValue, features) =>
 	features.filter(f => f.label.toLowerCase().indexOf(lcValue) !== -1);
 
-var PhenotypeSuggest = React.createClass({
+var PhenotypeSuggest = createReactClass({
 	mixins: [deepPureRenderMixin],
 	onSuggestionsFetchRequested({value}) {
 		var lcValue = value.toLowerCase(),

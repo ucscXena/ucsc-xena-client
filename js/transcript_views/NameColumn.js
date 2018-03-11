@@ -1,12 +1,13 @@
 'use strict';
 var React = require('react');
+var createReactClass = require('create-react-class');
 var colorScales = require('../colorScales');
 var {contrastColor} = require('../color_helper');
 import '../../css/transcript_css/nameColumn.css';
 var styles = require('./NameColumn.module.css');
 var {deepPureRenderMixin} = require('../react-utils');
 
-var NameColumn = React.createClass({
+var NameColumn = createReactClass({
 	mixins: [deepPureRenderMixin],
 
 	render() {

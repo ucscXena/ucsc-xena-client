@@ -1,6 +1,7 @@
 'use strict';
 
 import React from 'react';
+import createReactClass from 'create-react-class';
 import Input from 'react-toolbox/lib/input';
 import _ from '../underscore_ext';
 import { deepPureRenderMixin } from '../react-utils';
@@ -9,12 +10,12 @@ import XAutosuggest from './XAutosuggest';
 
 var renderInputComponent = ({ref, onChange, ...props}) => (
 	<Input
-		ref={el => ref(el && el.getWrappedInstance().inputNode)}
+		innerRef={el => ref(el && el.inputNode)}
 		onChange={(value, ev) => onChange(ev)}
 		label='Study'
 		{...props} />);
 
-var CohortSuggest = React.createClass({
+var CohortSuggest = createReactClass({
 	mixins: [deepPureRenderMixin],
 	onSuggestionsFetchRequested({ value }) {
 		const wordValues = value.toLowerCase().trim().split(/\s+/);

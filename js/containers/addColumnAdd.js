@@ -9,6 +9,7 @@
 
 // Core dependencies, components
 var React = require('react');
+var createReactClass = require('create-react-class');
 var {deepPureRenderMixin} = require('../react-utils');
 var classNames = require('classnames');
 var ColumnAdd = require('../views/ColumnAdd');
@@ -22,7 +23,7 @@ var hoverClass = (index, hover) =>
 
 // XXX move layout to a view, after we know what the final layout will be.
 function addColumnAdd(Component) {
-	return React.createClass({
+	return createReactClass({
 		displayName: 'SpreadsheetColumnAdd',
 		mixins: [deepPureRenderMixin],
 		getInitialState() {

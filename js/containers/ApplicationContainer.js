@@ -44,12 +44,13 @@ var Spreadsheet = getSpreadsheet(columnsWrapper);
 var SpreadsheetContainer = getSpreadsheetContainer(Column, Spreadsheet);
 
 
-var ApplicationContainer = React.createClass({
-	onSearch: function (value) {
+class ApplicationContainer extends React.Component {
+	onSearch = (value) => {
 		var {callback} = this.props;
 		callback(['sample-search', value]);
-	},
-	componentWillMount: function () {
+	};
+
+	componentWillMount() {
 		var events = rxEvents(this, 'highlightChange');
 		this.change = events.highlightChange
 			.debounceTime(200)
@@ -58,45 +59,56 @@ var ApplicationContainer = React.createClass({
 		this.highlight = events.highlightChange
 			.switchMap(() => Rx.Observable.of(true).concat(Rx.Observable.of(false).delay(300)))
 			.distinctUntilChanged(_.isEqual);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.change.unsubscribe();
 		this.highlight.unsubscribe();
-	},
-	fieldFormat: function (uuid) {
+	}
+
+	fieldFormat = (uuid) => {
 		var {spreadsheet: {columns, data}} = this.props.state;
 		return getFieldFormat(uuid, columns, data);
-	},
-	sampleFormat: function (index) {
+	};
+
+	sampleFormat = (index) => {
 		var {spreadsheet: {cohortSamples}} = this.props.state;
 		return _.get(cohortSamples, index);
-	},
+	};
+
 	// raw (before selector) state
-	getState: function () {
+	getState = () => {
 		return _.pick(this.props.state, 'version', 'page', 'spreadsheet');
-	},
-	onWizardMode(mode) {
+	};
+
+	onWizardMode = (mode) => {
 		this.props.callback(['wizardMode', mode]);
-	},
-	onShowWelcome(show) {
+	};
+
+	onShowWelcome = (show) => {
 		this.props.callback(['showWelcome', show]);
-	},
-	onReset() {
+	};
+
+	onReset = () => {
 		this.props.callback(['cohortReset']);
-	},
-	onResetSampleFilter: function () {
+	};
+
+	onResetSampleFilter = () => {
 		this.props.callback(['sampleFilter', null]);
-	},
-	onNavigate(page) {
+	};
+
+	onNavigate = (page) => {
 		this.props.callback(['navigate', page]);
-	},
-	onImport(content) {
+	};
+
+	onImport = (content) => {
 		try {
 			this.props.callback(['import', schemaCheckThrow(JSON.parse(content))]);
 		} catch (err) {
 			this.props.callback(['import-error']);
 		}
-	},
+	};
+
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback} = this.props,
@@ -135,6 +147,6 @@ var ApplicationContainer = React.createClass({
 					callback={callback}/>
 			</Application>);
 	}
-});
+}
 
 module.exports = ApplicationContainer;

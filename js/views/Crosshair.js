@@ -1,11 +1,12 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 var {Portal} = require('react-overlays');
 var {deepPureRenderMixin} = require('../react-utils');
 require('./Crosshair.css');
 
-var Crosshair = React.createClass({
+var Crosshair = createReactClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		return {mousing: false, x: -1, y: -1};

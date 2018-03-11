@@ -1,9 +1,10 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 var {deepPureRenderMixin} = require('../react-utils');
 
-var ColumnsWrapper = React.createClass({
+class ColumnsWrapper extends React.Component {
 	render() {
 		var {children, widgetProps, append, ...optProps} = this.props;
 		return (
@@ -12,12 +13,12 @@ var ColumnsWrapper = React.createClass({
 				{append}
 			</div>);
 	}
-});
+}
 
 var getColumns = wrapperFn => {
 	let Wrapper = wrapperFn(ColumnsWrapper);
 
-	return React.createClass({
+	return createReactClass({
 		displayName: 'SpreadsheetColumns',
 		mixins: [deepPureRenderMixin],
 		render() {

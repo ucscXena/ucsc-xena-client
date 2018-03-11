@@ -5,6 +5,7 @@ var Rx = require('./rx');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var React = require('react');
+var createReactClass = require('create-react-class');
 var CanvasDrawing = require('./CanvasDrawing');
 var {deepPureRenderMixin, rxEvents} = require('./react-utils');
 var {drawSamples} = require('./drawSamples');
@@ -51,7 +52,7 @@ function tooltip(heatmap, sampleFormat, codes, width, zoom, samples, ev) {
 // plot rendering
 //
 
-var SamplesColumn = hotOrNot(React.createClass({
+var SamplesColumn = hotOrNot(createReactClass({
 	mixins: [deepPureRenderMixin],
 	componentWillMount: function () {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');

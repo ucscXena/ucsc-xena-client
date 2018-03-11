@@ -63,17 +63,18 @@ function isInteractive(props, state) {
 	return !wizardMode && editing == null && _.every(interactive);
 }
 
-var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
-	displayName: 'SpreadsheetContainer',
-	getInitialState() {
-		return {
-			interactive: {}
-		};
-	},
-	onInteractive(key, interactive) {
+var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Component {
+	static displayName = 'SpreadsheetContainer';
+
+	state = {
+	    interactive: {}
+	};
+
+	onInteractive = (key, interactive) => {
 		this.setState({interactive:
 			_.assoc(this.state.interactive, key, interactive)});
-	},
+	};
+
 	componentWillMount() {
 		var events = rxEvents(this, 'plotClick');
 
@@ -85,69 +86,89 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
 			}
 		});
-	},
+	}
+
 	componentWillUnmount() {
 		this.plotClick.unsubscribe();
-	},
-	onResize: function (id, size) {
+	}
+
+	onResize = (id, size) => {
 		this.props.callback(['resize', id, size]);
-	},
-	onXZoom: function(id, xzoom) {
+	};
+
+	onXZoom = (id, xzoom) => {
 		this.props.callback(['xzoom', id, xzoom]);
-	},
-	onRemove: function (id) {
+	};
+
+	onRemove = (id) => {
 		this.props.callback(['remove', id]);
-	},
-	onKm: function (id) {
+	};
+
+	onKm = (id) => {
 		this.props.callback(['km-open', id]);
-	},
-	onSortDirection: function (id, newDir) {
+	};
+
+	onSortDirection = (id, newDir) => {
 		this.props.callback(['sortDirection', id, newDir]);
-	},
-	onMode: function (id, newMode) {
+	};
+
+	onMode = (id, newMode) => {
 		this.props.callback(['fieldType', id, newMode]);
-	},
-	onColumnLabel: function (id, value) {
+	};
+
+	onColumnLabel = (id, value) => {
 		this.props.callback(['columnLabel', id, value]);
-	},
-	onFieldLabel: function (id, value) {
+	};
+
+	onFieldLabel = (id, value) => {
 		this.props.callback(['fieldLabel', id, value]);
-	},
-	onShowIntrons: function (id) {
+	};
+
+	onShowIntrons = (id) => {
 		this.props.callback(['showIntrons', id]);
-	},
-	onSortVisible: function (id, value) {
+	};
+
+	onSortVisible = (id, value) => {
 		this.props.callback(['sortVisible', id, value]);
-	},
-	onOpenVizSettings: function (id) {
+	};
+
+	onOpenVizSettings = (id) => {
 		this.props.callback(['vizSettings-open', id]);
-	},
-	onVizSettings: function (id, state) {
+	};
+
+	onVizSettings = (id, state) => {
 		this.props.callback(['vizSettings', id, state]);
-	},
-	onEdit: function (id) {
+	};
+
+	onEdit = (id) => {
 		this.props.callback(['edit-column', id]);
-	},
-	onAddColumn(pos) {
+	};
+
+	onAddColumn = (pos) => {
 		this.props.callback(['edit-column', pos]);
-	},
-	onReload: function (id) {
+	};
+
+	onReload = (id) => {
 		this.props.callback(['reload', id]);
-	},
-	onReset() {
+	};
+
+	onReset = () => {
 		this.props.callback(['cohortReset']);
-	},
-	onPlotClick(ev) {
+	};
+
+	onPlotClick = (ev) => {
 		// Having callback that checks isInteractive is better than only
 		// passing a callback when isInteractive is true, because the latter
 		// causes downstream props to change, which causes re-renders.
 		if (isInteractive(this.props, this.state)) {
 			this.on.plotClick(ev);
 		}
-	},
-    onAbout(host, dataset) {
+	};
+
+	onAbout = (host, dataset) => {
         this.props.callback(['navigate', 'datapages', {host, dataset}]);
-    },
+	};
+
 	render() {
 		var columnProps = _.pick(this.props,
 				['searching', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
@@ -196,6 +217,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => React.createClass({
 						editing={appState.editing}/>))}
 			</Spreadsheet>);
 	}
-});
+};
 
 module.exports = {getSpreadsheetContainer};

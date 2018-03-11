@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 var _ = require('../underscore_ext');
 var DefaultTextInput = require('./DefaultTextInput');
 var DragSelect = require('./DragSelect');
@@ -331,7 +332,7 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 		.map(([start, end]) => [Math.max(start, cdsStart), Math.min(end, cdsEnd)]);
 }
 
-var Column = React.createClass({
+var Column = createReactClass({
 	mixins: [deepPureRenderMixin],
 
 	getInitialState() {

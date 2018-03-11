@@ -46,11 +46,12 @@ var helpLink = {
 
 var active = (l, activeLink) => l.nav === activeLink;
 
-var XenaNav = React.createClass({
-	onClick(nav) {
+class XenaNav extends React.Component {
+	onClick = (nav) => {
 		this.props.onNavigate(nav);
-	},
-	render: function () {
+	};
+
+	render() {
 		let {isPublic, activeLink, getState, onImport} = this.props;
 		let routes = _.map(links, l => {
 			var {nav, ...others} = l,
@@ -68,16 +69,16 @@ var XenaNav = React.createClass({
 			</AppBar>
 		);
 	}
-});
+}
 
-var ThemedNav = React.createClass({
+class ThemedNav extends React.Component {
 	render() {
 		return (
 			<ThemeProvider theme={navTheme}>
 				<XenaNav {...this.props}/>
 			</ThemeProvider>);
 	}
-});
+}
 
 var nav = document.getElementById('navMenuMain');
 

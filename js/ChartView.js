@@ -6,28 +6,32 @@ var _ = require('./underscore_ext');
 // Styles
 var compStyles = require('./ChartView.module.css');
 
-var ChartView = React.createClass({
-	shouldComponentUpdate: function () {
+class ChartView extends React.Component {
+	shouldComponentUpdate() {
 		return false;
-	},
-	componentDidMount: function () {
+	}
+
+	componentDidMount() {
 		this.chartRender(this.props);
 		window.addEventListener('resize', this.setSize);
-	},
+	}
+
 	componentWillUnmount() {
 		window.removeEventListener('resize', this.setSize);
 		if (this.destroy) {
 			this.destroy();
 		}
-	},
+	}
+
 	componentWillReceiveProps(newProps) {
 		// Updating this way is clumsy. Need to refactor chart view.
 		if (!_.isEqual(_.omit(this.props.appState, 'chartState'),
 				_.omit(newProps.appState, 'chartState'))) {
 			this.chartRender(newProps);
 		}
-	},
-	setSize() {
+	}
+
+	setSize = () => {
 		if (this.chart) {
 			let height = this.chart.chartHeight(),
 				width = this.chart.chartWidth();
@@ -35,8 +39,9 @@ var ChartView = React.createClass({
 			document.getElementById("myChart").style.width = width;
 			document.getElementById("controlPanel").style.width = width;
 		}
-	},
-	chartRender(props) {
+	};
+
+	chartRender = (props) => {
 		var {appState, callback} = props,
 			{root} = this.refs;
 		require.ensure(['./chart'], () => {
@@ -44,10 +49,11 @@ var ChartView = React.createClass({
 			root.innerHTML = '';
 			this.destroy = this.chart.render(root, callback, {xena: JSON.stringify(appState)});
 		});
-	},
-	render: function () {
+	};
+
+	render() {
 		return <div ref='root' className={compStyles.ChartView}/>;
 	}
-});
+}
 
 module.exports = ChartView;

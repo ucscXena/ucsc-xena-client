@@ -1,11 +1,12 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 var {deepPureRenderMixin} = require('./react-utils');
 import stateErrorStyle from './StateError.module.css';
 import Dialog from 'react-toolbox/lib/dialog';
 
-var StateError = React.createClass({
+var StateError = createReactClass({
 	mixins: [deepPureRenderMixin],
 	render() {
 

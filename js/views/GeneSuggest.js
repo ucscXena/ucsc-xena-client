@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 import XAutosuggest from './XAutosuggest';
 import Input from 'react-toolbox/lib/input';
 var {sparseDataMatchPartialField, refGene} = require('../xenaQuery');
@@ -29,7 +30,7 @@ var defaultAssembly = 'hg38';
 
 var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 	<Input
-		ref={el => ref(el && el.getWrappedInstance().inputNode)}
+		innerRef={el => ref(el && el.inputNode)}
 		onChange={(value, ev) => onChange(ev)}
 		label= {label || 'Add Gene or Position'}
 		{...props} >
@@ -39,7 +40,7 @@ var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 // Currently we only match against refGene hg38 genes. We could, instead, match
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
 // require some more work to dispatch the query for each type.
-var GeneSuggest = React.createClass({
+var GeneSuggest = createReactClass({
 	mixins: [deepPureRenderMixin],
 	componentWillMount() {
 		var {host, name} = refGene[this.props.assembly] || refGene[defaultAssembly];

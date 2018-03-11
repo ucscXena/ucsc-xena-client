@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 var meta = require('../meta');
@@ -77,7 +78,7 @@ function overlay() {
 //  }
 //});
 
-var Tooltip = React.createClass({
+var Tooltip = createReactClass({
 	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?
 	render: function () {
 		var {data, open, onClick, onClose, frozen} = this.props,

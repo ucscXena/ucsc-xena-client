@@ -96,8 +96,8 @@ function drawIntroArrows (ctx, xStart, xEnd, endY, segments, strand) {
 	}
 }
 
-var RefGeneAnnotation = React.createClass({
-	componentWillMount: function () {
+class RefGeneAnnotation extends React.Component {
+	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
@@ -112,24 +112,29 @@ var RefGeneAnnotation = React.createClass({
 					})) // look up current data
 					.concat(Rx.Observable.of({open: false}));
 			}).subscribe(this.props.tooltip);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.ttevents.unsubscribe();
-	},
-	componentDidMount: function () {
+	}
+
+	componentDidMount() {
 		var {width, height} = this.props;
 		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height);
 		this.draw(this.props);
-	},
+	}
+
 	shouldComponentUpdate() {
 		return false;
-	},
+	}
+
 	componentWillReceiveProps(newProps) {
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}
-	},
-	computeAnnotationLanes({position, refGene, height, column}) {
+	}
+
+	computeAnnotationLanes = ({position, refGene, height, column}) => {
 		var fieldType = _.get(column, 'fieldType', undefined),
 			newAnnotationLanes;
 
@@ -172,8 +177,9 @@ var RefGeneAnnotation = React.createClass({
 		}
 		// cache for tooltip
 		this.annotationLanes = newAnnotationLanes;
-	},
-	draw: function (props) {
+	};
+
+	draw = (props) => {
 		var {width, layout, mode} = props;
 		this.computeAnnotationLanes(props);
 		var {lanes, perLaneHeight, laneOffset, annotationHeight} = this.annotationLanes;
@@ -232,8 +238,9 @@ var RefGeneAnnotation = React.createClass({
 				});
 			});
 		});
-	},
-	tooltip: function (ev) {
+	};
+
+	tooltip = (ev) => {
 		var {layout, column: {assembly}} = this.props;
 
 		if (!layout) { // gene model not loaded
@@ -277,8 +284,9 @@ var RefGeneAnnotation = React.createClass({
 		return {
 			rows: rows
 		};
-	},
-	render: function () {
+	};
+
+	render() {
 		return (
 			<canvas
 				className='Tooltip-target'
@@ -290,7 +298,7 @@ var RefGeneAnnotation = React.createClass({
 				ref='canvas' />
 		);
 	}
-});
+}
 
 //widgets.annotation.add('gene', props => <RefGeneAnnotation {...props}/>);
 

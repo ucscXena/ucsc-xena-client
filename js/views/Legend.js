@@ -9,9 +9,10 @@ var compStyles = require('./Legend.module.css');
 
 var nodata = [["null (no data)", "#808080"]];
 
-var Legend = React.createClass({
-	getDefaultProps: () => ({ max: 40 }),
-	render: function () {
+class Legend extends React.Component {
+	static defaultProps = { max: 40 };
+
+	render() {
 		var {labels, colors, max, footnotes} = this.props,
 			ellipsis = labels.length > max,
 			items = _.map(nodata.concat(_.last(_.zip(labels, colors), max)), ([l, c], i) =>
@@ -34,6 +35,6 @@ var Legend = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = Legend;

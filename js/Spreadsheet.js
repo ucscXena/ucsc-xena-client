@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 require('react-resizable/css/styles.css');
 var {deepPureRenderMixin} = require('./react-utils');
 var getColumns = require('./views/Columns');
@@ -24,7 +25,7 @@ function zoomPopover(props) {
 
 var getSpreadsheet = columnsWrapper => {
 	var Columns = getColumns(columnsWrapper);
-	return React.createClass({
+	return createReactClass({
 		displayName: 'Spreadsheet',
 		mixins: [deepPureRenderMixin],
 		zoomHelpClose: function () {

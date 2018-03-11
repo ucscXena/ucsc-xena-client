@@ -19,7 +19,7 @@ var classNames = require('classnames');
 // Styles
 var compStyles = require('./CardAvatar.module.css');
 
-var CardAvatar = React.createClass({
+class CardAvatar extends React.Component {
 	render() {
 		var {colId} = this.props,
 			ghost = !colId;
@@ -27,5 +27,6 @@ var CardAvatar = React.createClass({
 			<div className={classNames(compStyles.avatar, {[compStyles.ghost]: ghost})}>{colId}</div>
 		);
 	}
-});
+}
+
 module.exports = CardAvatar;

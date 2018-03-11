@@ -46,8 +46,9 @@ function numberOrAbrev(vg, width, font, n) {
 }
 
 var margin = 8;
-var ChromPosition = React.createClass({
-	draw (width, height, layout, mode = "coordinate") {
+
+class ChromPosition extends React.Component {
+	draw = (width, height, layout, mode = "coordinate") => {
 		var vg = this.vg;
 
 		if (vg.width() !== width) {
@@ -99,13 +100,15 @@ var ChromPosition = React.createClass({
 				}
 			}
 		}
-	},
+	};
+
 	//shouldComponentUpdate: () => false,
 	componentDidMount() {
 		var {width, layout, scaleHeight, mode} = this.props;
 		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, scaleHeight);
 		this.draw(width, scaleHeight, layout, mode);
-	},
+	}
+
 	/*componentWillReceiveProps() {
 		var {width, layout, scaleHeight, mode} = this.props;
 		this.draw(width, scaleHeight, layout, mode);
@@ -126,6 +129,6 @@ var ChromPosition = React.createClass({
 				onDblClick={this.props.onDblClick}
 				ref='canvas' />);
 	}
-});
+}
 
 module.exports = {ChromPosition, abrev};

@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 var Rx = require('../rx');
 var Welcome = require('../views/Welcome');
 var {rxEvents, deepPureRenderMixin} = require('../react-utils');
@@ -35,7 +36,7 @@ var links = [
 var evToIndex = ev => parseInt(ev.currentTarget.dataset.index, 10);
 
 var refresh = 5000; // ms between link switch
-var WelcomeContainer = React.createClass({
+var WelcomeContainer = createReactClass({
 	mixins: [deepPureRenderMixin],
 	getInitialState() {
 		return {link: 0};

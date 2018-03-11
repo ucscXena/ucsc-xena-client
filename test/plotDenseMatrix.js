@@ -5,8 +5,7 @@ var _ = require('../js/underscore_ext');
 var {column} = require('../js/columnWidgets');
 require('../js/plotDenseMatrix');
 
-const TestUtils = require('react-addons-test-utils');
-const {renderIntoDocument} = TestUtils;
+import {renderIntoDocument} from 'react-dom/test-utils';
 
 var basicDenseColumn = {
 	column: {

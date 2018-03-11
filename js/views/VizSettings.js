@@ -37,6 +37,7 @@ var _ = require('../underscore_ext');
 //var floatImg = require('../../images/genomicFloatLegend.jpg');
 var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
+var createReactClass = require('create-react-class');
 var ReactDOM = require('react-dom');
 var {Modal, DropdownButton, MenuItem, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
 var {Row, Col} = require("react-material-responsive-grid");
@@ -94,15 +95,17 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	// discard user changes & close.
-	var finishButtonBar = React.createClass({
-		handleCancelClick () {
+	class finishButtonBar extends React.Component {
+	    handleCancelClick = () => {
 			hide();
 			onVizSettings(id, state);
-		},
-		handleDoneClick () {
+		};
+
+	    handleDoneClick = () => {
 			hide();
-		},
-		render () {
+		};
+
+	    render() {
 			return (
 				<ButtonToolbar>
 					<Button onClick = {this.handleCancelClick}>Cancel</Button>
@@ -110,7 +113,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</ButtonToolbar>
 			);
 		}
-	});
+	}
 
 	function getInputSettingsFloat(settings) {
 		return _.fmap(settings, parseFloat);
@@ -177,7 +180,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
 	}
 
-	var scaleChoice = React.createClass({
+	var scaleChoice = createReactClass({
 		annotations: {
 			float: {
 				"max": "max: high color 100% saturation",
@@ -334,25 +337,29 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	//color transformation for dense genomics matrix floats
-	var normalizationDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
+	class normalizationDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
 				mapping = {
 					"none": "none",
 					"subset": "subset",
 					"log2(x)": "log2(x)",
 					true: "subset"
 				};
-			return {
+
+	        this.state = {
 				optionValue: mapping[value] || "none"
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+	    handleSelect = (evt, evtKey) => {
 			var key = "colNormalization";
 			setVizSettings(key, evtKey);
 			this.setState({optionValue: evtKey});
-		},
-		render () {
+		};
+
+	    render() {
 			let dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values))),
 				optionValue = this.state.optionValue,
 				options = [
@@ -386,26 +393,30 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</Row>
 			);
 		}
-	});
+	}
 
 	//color transformation for segmented cnv
-	var segCNVnormalizationDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
+	class segCNVnormalizationDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
 				mapping = {
 					"none": "none",
 					"normal2": "normal2",
 				};
-			return {
+
+	        this.state = {
 				optionValue: mapping[value] || "none"
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+	    handleSelect = (evt, evtKey) => {
 			var key = "colNormalization";
 			setVizSettings(key, evtKey);
 			this.setState({optionValue: evtKey});
-		},
-		render () {
+		};
+
+	    render() {
 			let optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "normal = 0"},
@@ -431,22 +442,26 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</Row>
 			);
 		}
-	});
+	}
 
 	//color palette dense matrix floats and segmented CNV
-	var colorDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('colorClass') || 'default';
-			return {
+	class colorDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('colorClass') || 'default';
+
+	        this.state = {
 				optionValue: value
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+	    handleSelect = (evt, evtKey) => {
 			var key = "colorClass";
 			setVizSettings(key, evtKey);
 			this.setState({optionValue: evtKey});
-		},
-		render () {
+		};
+
+	    render() {
 			let optionValue = this.state.optionValue,
 				options = {
 					float: [
@@ -481,22 +496,26 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</Row>
 			);
 		}
-	});
+	}
 
 	//color palette for SV
-	var svColorDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('svColor') || 'default';
-			return {
+	class svColorDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('svColor') || 'default';
+
+	        this.state = {
 				optionValue: value
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+	    handleSelect = (evt, evtKey) => {
 			var key = "svColor";
 			setVizSettings(key, evtKey);
 			this.setState({optionValue: evtKey});
-		},
-		render () {
+		};
+
+	    render() {
 			let optionValue = this.state.optionValue,
 				options = {
 					SV: [
@@ -525,7 +544,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</Row>
 			);
 		}
-	});
+	}
 
 	var oldSettings = state,
 		currentSettings = {state: state},
@@ -539,7 +558,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 }
 
 // react wrapper for the legacy DOM code, above.
-var SettingsWrapper = React.createClass({
+var SettingsWrapper = createReactClass({
 	shouldComponentUpdate: () => false,
 	componentWillReceiveProps(newProps) {
 		this.currentSettings.state = newProps.vizSettings;
@@ -553,8 +572,8 @@ var SettingsWrapper = React.createClass({
 	}
 });
 
-var VizSettings = React.createClass({
-	render: function() {
+class VizSettings extends React.Component {
+	render() {
 		var {onRequestHide} = this.props;
 		return (
 			<Modal show={true} onHide={onRequestHide}>
@@ -567,6 +586,6 @@ var VizSettings = React.createClass({
 			</Modal>
 		);
 	}
-});
+}
 
 module.exports = VizSettings;

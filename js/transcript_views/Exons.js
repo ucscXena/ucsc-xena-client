@@ -1,5 +1,6 @@
 'use strict';
 var React = require('react');
+var createReactClass = require('create-react-class');
 var _ = require('../underscore_ext');
 
 var styles = require('./Exons.module.css');
@@ -78,7 +79,7 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
 	}
 }
 
-var Exons = React.createClass({
+var Exons = createReactClass({
 	mixins: [deepPureRenderMixin],
 	row(data, multiplyingFactor, origin) {
 

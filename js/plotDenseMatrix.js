@@ -7,6 +7,7 @@ var colorScales = require('./colorScales');
 var util = require('./util');
 var Legend = require('./views/Legend');
 var React = require('react');
+var createReactClass = require('create-react-class');
 var CanvasDrawing = require('./CanvasDrawing');
 var {deepPureRenderMixin, rxEvents} = require('./react-utils');
 var {drawHeatmap} = require('./drawHeatmap');
@@ -76,9 +77,8 @@ function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, po
 		rows: [
 			[['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos)]]] : []),
-			...(!code && (mean !== 'NA') && (median !== 'NA')) ?
-				[[['labelValue', 'Mean (Median)', mean + ' (' +
-				 median + ')' ]]] : []]
+			...((!code && (mean !== 'NA') && (median !== 'NA') ? [[['labelValue', 'Mean (Median)', mean + ' (' +
+	         median + ')' ]]] : []))]
 	};
 }
 
@@ -172,7 +172,7 @@ function renderCodedLegend(props) {
 	return <Legend {...legendProps} />;
 }
 
-var HeatmapLegend = hotOrNot(React.createClass({
+var HeatmapLegend = hotOrNot(createReactClass({
 	mixins: [deepPureRenderMixin],
 	render: function() {
 		var {column, data} = this.props,
@@ -195,7 +195,7 @@ var HeatmapLegend = hotOrNot(React.createClass({
 //
 
 
-var HeatmapColumn = hotOrNot(React.createClass({
+var HeatmapColumn = hotOrNot(createReactClass({
 	mixins: [deepPureRenderMixin],
 	componentWillMount: function () {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');

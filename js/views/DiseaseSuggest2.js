@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 import Input from 'react-toolbox/lib/input';
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
@@ -144,12 +145,12 @@ function currentWord(value, position) {
 
 var renderInputComponent = ({ref, onChange, ...props}) => (
 	<Input
-		ref={el => ref(el && el.getWrappedInstance().inputNode)}
+		innerRef={el => ref(el && el.inputNode)}
 		onChange={(value, ev) => onChange(ev)}
 		label='Primary Disease or Tissue of Origin'
 		{...props} />);
 
-var DiseaseSuggest = React.createClass({
+var DiseaseSuggest = createReactClass({
 	mixins: [deepPureRenderMixin],
 	onSuggestionsFetchRequested({value}) {
 		var position = this.input.selectionStart,

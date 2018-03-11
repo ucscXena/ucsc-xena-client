@@ -22,6 +22,7 @@
 
 // Core dependencies, components
 var React = require('react');
+var createReactClass = require('create-react-class');
 import {Checkbox} from 'react-toolbox/lib/checkbox';
 var _ = require('../underscore_ext');
 var XInputToolbar = require('./XInputToolbar');
@@ -30,7 +31,7 @@ var {deepPureRenderMixin} = require('../react-utils');
 // Styles
 var compStyles = require('./XCheckboxGroup.module.css');
 
-var XCheckboxGroup = React.createClass({
+var XCheckboxGroup = createReactClass({
 	mixins: [deepPureRenderMixin],
 	onChange: function (isOn, ev) {
 		var value = ev.target.dataset.value;

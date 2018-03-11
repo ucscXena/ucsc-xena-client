@@ -5,6 +5,7 @@
 var _ = require('./underscore_ext');
 var vgmixed = require('./vgmixed');
 var React = require('react');
+var createReactClass = require('create-react-class');
 var ReactDOM = require('react-dom');
 
 var styles = {
@@ -27,7 +28,7 @@ var styles = {
 	}
 };
 
-var CanvasDrawing = React.createClass({
+var CanvasDrawing = createReactClass({
 	componentWillReceiveProps: function (newProps) {
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);

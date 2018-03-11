@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 var {deepPureRenderMixin} = require('../react-utils');
 import Input from 'react-toolbox/lib/input';
 import {IconMenu, MenuItem} from 'react-toolbox/lib/menu';
@@ -80,7 +81,7 @@ var compStyles = require('./SampleSearch.module.css');
 //	}
 //});
 
-var SampleSearch = React.createClass({
+var SampleSearch = createReactClass({
 	mixins: [deepPureRenderMixin],
 	componentWillReceiveProps: function (newProps) {
 		if (this.state.value === this.props.value) {
@@ -111,7 +112,7 @@ var SampleSearch = React.createClass({
 			<div className={compStyles.SampleSearch}>
 				<Input className={compStyles.inputContainer}
 					type='text'
-					value={value}
+					value={value || ''}
 					title={value}
 					placeholder='Find samples e.g. TCGA-DB-A4XH, missense'
 					onChange={this.onChange}

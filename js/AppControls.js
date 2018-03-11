@@ -2,6 +2,7 @@
 'use strict';
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 var pdf = require('./pdfSpreadsheet');
 var _ = require('./underscore_ext');
 import AppBar from 'react-toolbox/lib/app_bar';
@@ -43,7 +44,7 @@ function download([fields, rows]) {
 var asciiB = 66;
 
 // XXX drop this.props.style? Not sure it's used.
-var AppControls = React.createClass({
+var AppControls = createReactClass({
 	mixins: [deepPureRenderMixin],
 	componentWillMount() {
 		this.nsub = konami(asciiB).subscribe(() => {

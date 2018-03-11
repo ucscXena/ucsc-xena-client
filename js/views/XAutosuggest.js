@@ -20,7 +20,6 @@
 
 // Core dependencies, components
 import React from 'react';
-import _ from '../underscore_ext';
 import Autosuggest from 'react-autosuggest';
 
 // Styles
@@ -31,7 +30,7 @@ class XAutosuggest extends React.Component {
 	callInputRef = autosuggest => {
 		var {inputRef} = this.props;
 		if (inputRef) {
-			inputRef(_.get(autosuggest, 'input'));
+			inputRef(autosuggest && autosuggest.input);
 		}
 	}
 

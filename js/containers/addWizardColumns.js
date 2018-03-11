@@ -1,5 +1,6 @@
 'use strict';
 var React = require('react');
+var createReactClass = require('create-react-class');
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 var CohortOrDisease = require('../views/CohortOrDisease');
@@ -209,7 +210,7 @@ var computeSettings = _.curry((datasets, features, inputFields, width, dataset, 
 //      add 1st column editor, or
 //      add 2nd column editor
 function addWizardColumns(Component) {
-	return React.createClass({
+	return createReactClass({
 		mixins: [deepPureRenderMixin],
 		displayName: 'SpreadsheetWizardColumns',
 		getInitialState() {

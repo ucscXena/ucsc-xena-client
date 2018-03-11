@@ -66,10 +66,11 @@ var HelpBoxB = props => {
 	);
 };
 
-var HelpBox = React.createClass({
-	onClose() {
+class HelpBox extends React.Component {
+	onClose = () => {
 		this.props.onClose();
-	},
+	};
+
 	render() {
 		var {children, o, ...boxProps} = this.props;
 		var Box = (o === 'Right') ? HelpBoxR : HelpBoxB;
@@ -84,5 +85,6 @@ var HelpBox = React.createClass({
 			</Box>
 		);
 	}
-});
+}
+
 module.exports = HelpBox;

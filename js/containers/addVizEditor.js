@@ -9,12 +9,14 @@ function vizSettingsSelector(appState, columnId) {
 }
 
 function addVizEditor(Component) {
-	return React.createClass({
-		displayName: 'SpreadsheetVizSettings',
-		onHideViz: function () {
+	return class extends React.Component {
+	    static displayName = 'SpreadsheetVizSettings';
+
+	    onHideViz = () => {
 			this.props.onOpenVizSettings(null);
-		},
-		render() {
+		};
+
+	    render() {
 			// XXX appState?
 
 			var {onVizSettings, ...componentProps} = this.props,
@@ -36,7 +38,7 @@ function addVizEditor(Component) {
 						null}
 				</Component>);
 		}
-	});
+	};
 }
 
 module.exports = addVizEditor;

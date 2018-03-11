@@ -13,6 +13,7 @@
 // should re-render the component with the childen in the new order.
 
 var React = require('react');
+var createReactClass = require('create-react-class');
 var ReactDOM = require('react-dom');
 var Rx = require('../rx');
 var _ = require('../underscore_ext');
@@ -61,7 +62,7 @@ var zeros = n => repeat(n, 0);
 // At that point, we set offset1 to left2 - left1.
 
 var transitionLength = 400;
-var Sortable = React.createClass({
+var Sortable = createReactClass({
 	mixins: [deepPureRenderMixin],
 	componentWillMount: function () {
 		var mousedownSub = new Rx.Subject();

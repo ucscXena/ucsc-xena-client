@@ -1,11 +1,12 @@
 'use strict';
 var React = require('react');
+var createReactClass = require('create-react-class');
 var Sortable = require('../views/Sortable');
 var {deepPureRenderMixin} = require('../react-utils');
 
 // We skip the first column to keep 'samples' on the left.
 function makeSortable(Component) {
-	return React.createClass({
+	return createReactClass({
 		displayName: 'SpreadsheetSortable',
 		mixins: [deepPureRenderMixin],
 		onReorder: function (order) {

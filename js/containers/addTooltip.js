@@ -2,13 +2,14 @@
 
 var Tooltip = require('../views/Tooltip');
 var React = require('react');
+var createReactClass = require('create-react-class');
 var {rxEvents} = require('../react-utils');
 var meta = require('../meta');
 var _ = require('../underscore_ext');
 var {deepPureRenderMixin} = require('../react-utils');
 
 function addTooltip(Component) {
-	return React.createClass({
+	return createReactClass({
 		displayName: 'SpreadsheetTooltip',
 		mixins: [deepPureRenderMixin],
 		getInitialState: function () {
