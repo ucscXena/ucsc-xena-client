@@ -9,6 +9,7 @@ import XAutosuggest from './XAutosuggest';
 
 var renderInputComponent = ({ref, onChange, ...props}) => (
 	<Input
+		spellCheck={false}
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
 		label='Study'

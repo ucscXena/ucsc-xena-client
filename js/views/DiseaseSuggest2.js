@@ -144,6 +144,7 @@ function currentWord(value, position) {
 
 var renderInputComponent = ({ref, onChange, ...props}) => (
 	<Input
+		spellCheck={false}
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
 		label='Primary Disease or Tissue of Origin'

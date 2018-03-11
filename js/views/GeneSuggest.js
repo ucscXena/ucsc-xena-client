@@ -29,6 +29,7 @@ var defaultAssembly = 'hg38';
 
 var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 	<Input
+		spellCheck={false}
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
 		label= {label || 'Add Gene or Position'}

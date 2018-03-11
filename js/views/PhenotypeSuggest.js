@@ -8,6 +8,7 @@ require('./GeneSuggest.css'); // XXX rename file
 
 var renderInputComponent = ({ref, onChange, error, ...props}) => (
 	<Input
+		spellCheck={false}
 		ref={el => ref(el && el.getWrappedInstance().inputNode)}
 		onChange={(value, ev) => onChange(ev)}
 		label='Search Phenotype'
