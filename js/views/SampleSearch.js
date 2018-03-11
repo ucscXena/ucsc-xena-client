@@ -111,6 +111,7 @@ var SampleSearch = createReactClass({
 		return (
 			<div className={compStyles.SampleSearch}>
 				<Input className={compStyles.inputContainer}
+					spellCheck={false}
 					type='text'
 					value={value || ''}
 					title={value}

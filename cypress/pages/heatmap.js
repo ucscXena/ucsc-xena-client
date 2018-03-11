@@ -32,6 +32,7 @@ var spreadsheet = {
 	closeCohort: () => spreadsheet.colControls(0).contains('close'),
 	kaplanMeierButton: i => spreadsheet.colControls(i).contains('Kaplan Meier'),
 	kaplanMeier: () => cy.get('.kmDialog'),
+	kaplanMeierClose: () => cy.get('.kmDialogClose'),
 	loadingSpinners: () => cy.get('[data-xena="loading"]'),
 	// "View live example" link
 	examples: () => cy.get('[class^=Welcome-module] a'),

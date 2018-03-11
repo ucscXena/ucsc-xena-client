@@ -252,8 +252,7 @@ describe('Bookmark', function() {
 		cy.exec('babel-node cypress/compareImages.js kaplanMeier kaplanMeierBookmark')
 			.its('stdout').should('contain', 'same');
 
-		// XXX move to page object
-		cy.get('.kmDialog .close').click();
+		spreadsheet.kaplanMeierClose().click();
 
 		///////////////////////////////////////
 		// Bokmark chart mode

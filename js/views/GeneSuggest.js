@@ -30,6 +30,7 @@ var defaultAssembly = 'hg38';
 
 var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 	<Input
+		spellCheck={false}
 		innerRef={el => ref(el && el.inputNode)}
 		onChange={(value, ev) => onChange(ev)}
 		label= {label || 'Add Gene or Position'}
