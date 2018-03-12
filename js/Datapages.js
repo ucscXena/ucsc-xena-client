@@ -28,22 +28,18 @@ var getHubName = host => get(serverNames, host, host);
 
 var pluralize = (str, count) => count === 1 ? `1 ${str}` : `${count} ${str}s`;
 
+// Get params from the anchor href. With RT Link, the anchor is parentElement.
+var paramFromHref = ev => mapObject(urlParams(ev.target.parentElement.href), a => a[0]);
+
 //
 // event handler for navigating within datapages. Prevents page load, and
 // sets url params.
 //
 
-var navHandler = paramFn => {
-	return function(ev) {
-		ev.preventDefault();
-		this.props.callback(['navigate', 'datapages', paramFn(ev, this.props.state)]);
-	};
+function navHandler(ev) {
+	ev.preventDefault();
+	this.props.callback(['navigate', 'datapages', paramFromHref(ev, this.props.state)]);
 };
-
-//var paramFromDataset = ev => ev.target.parentElement.dataset;
-
-// Get params from the anchor href. With RT Link, the anchor is parentElement.
-var paramFromHref = ev => mapObject(urlParams(ev.target.parentElement.href), a => a[0]);
 
 var getUserServers = servers => keys(servers).filter(k => servers[k].user);
 
@@ -59,7 +55,7 @@ var hubLink = (host, onClick) => (
 		onClick={onClick}/>);
 
 var DataHubs = createReactClass({
-	onHub: navHandler(paramFromHref),
+	onHub: function (ev) { navHandler.call(this, ev); },
 	onSelect(isOn, ev) {
 		var {checked} = ev.target,
 			host = ev.target.getAttribute('data-host');
@@ -126,7 +122,7 @@ var CohortSummary = ({cohorts, onCohort}) => {
 };
 
 var CohortSummaryPage = createReactClass({
-	onCohort: navHandler(paramFromHref),
+	onCohort: function (ev) { navHandler.call(this, ev); },
 	render() {
 		var {state} = this.props,
 			{spreadsheet: {servers}} = state,
@@ -245,7 +241,7 @@ var CohortPage = createReactClass({
 		}
 		this.props.callback(['navigate', 'heatmap']);
 	},
-	onDataset: navHandler(paramFromHref),
+	onDataset: function (ev) { navHandler.call(this, ev); },
 	render() {
 		var {datapages, params, wizard} = this.props.state,
 			cohort = getIn(datapages, ['cohort', 'cohort']) === params.cohort ?
@@ -374,7 +370,7 @@ var dataMethod = ({type = 'genomicMatrix', status} = {}) =>
 	noTable;
 
 var DatasetPage = createReactClass({
-	onCohort: navHandler(paramFromHref),
+	onCohort: function (ev) { navHandler.call(this, ev); },
 	onViz() {
 		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 			cohort = getIn(datapages, ['dataset', 'meta', 'cohort'], COHORT_NULL);
@@ -384,8 +380,8 @@ var DatasetPage = createReactClass({
 		}
 		this.props.callback(['navigate', 'heatmap']);
 	},
-	onIdentifiers: navHandler(paramFromHref),
-	onSamples: navHandler(paramFromHref),
+	onIdentifiers: function (ev) { navHandler.call(this, ev); },
+	onSamples: function (ev) { navHandler.call(this, ev); },
 	render() {
 		var {callback, state} = this.props,
 			{params: {host, dataset}, datapages} = state,
@@ -469,7 +465,7 @@ var defaultHost = params =>
 //
 
 var HubPage = createReactClass({
-	onCohort: navHandler(paramFromHref),
+	onCohort: function (ev) { navHandler.call(this, ev); },
 	render() {
 		var {state} = this.props,
 			{host} = defaultHost(state.params),
