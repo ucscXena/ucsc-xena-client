@@ -2,10 +2,10 @@
 
 var _ = require('./underscore_ext');
 var Rx = require('./rx');
+import PureComponent from './PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 var Legend = require('./views/Legend');
-var {deepPureRenderMixin, rxEvents} = require('./react-utils');
+var {rxEvents} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
@@ -149,9 +149,8 @@ function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, as
 		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
 }
 
-var SegmentedColumn = hotOrNot(createReactClass({
-	mixins: [deepPureRenderMixin],
-	componentWillMount: function () {
+var SegmentedColumn = hotOrNot(class extends PureComponent {
+	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
@@ -166,15 +165,18 @@ var SegmentedColumn = hotOrNot(createReactClass({
 					})) // look up current data
 					.concat(Rx.Observable.of({open: false}));
 			}).subscribe(this.props.tooltip);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.ttevents.unsubscribe();
-	},
-	tooltip: function (ev) {
+	}
+
+	tooltip = (ev) => {
 		var {column: {fieldType, layout, nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props;
 		return tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
-	},
-	render: function () {
+	};
+
+	render() {
 		var {column, samples, zoom, index} = this.props;
 
 		return (
@@ -197,7 +199,7 @@ var SegmentedColumn = hotOrNot(createReactClass({
 					xzoom={column.zoom}
 					zoom={zoom}/>);
 	}
-}));
+});
 
 widgets.column.add('segmented',
 		props => <SegmentedColumn {...props} />);

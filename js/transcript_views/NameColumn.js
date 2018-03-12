@@ -1,15 +1,11 @@
 'use strict';
 var React = require('react');
-var createReactClass = require('create-react-class');
 var colorScales = require('../colorScales');
 var {contrastColor} = require('../color_helper');
 import '../../css/transcript_css/nameColumn.css';
 var styles = require('./NameColumn.module.css');
-var {deepPureRenderMixin} = require('../react-utils');
 
-var NameColumn = createReactClass({
-	mixins: [deepPureRenderMixin],
-
+class NameColumn extends React.PureComponent {
 	render() {
 		let data = this.props.data || {},
 			gene = this.props.gene;
@@ -30,6 +26,6 @@ var NameColumn = createReactClass({
 
 			);
 	}
-});
+}
 
 module.exports = NameColumn;

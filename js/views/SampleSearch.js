@@ -1,8 +1,7 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
-var {deepPureRenderMixin} = require('../react-utils');
 import Input from 'react-toolbox/lib/input';
 import {IconMenu, MenuItem} from 'react-toolbox/lib/menu';
 var classNames = require('classnames');
@@ -81,30 +80,31 @@ var compStyles = require('./SampleSearch.module.css');
 //	}
 //});
 
-var SampleSearch = createReactClass({
-	mixins: [deepPureRenderMixin],
-	componentWillReceiveProps: function (newProps) {
+class SampleSearch extends PureComponent {
+	state = {value: this.props.value};
+
+	componentWillReceiveProps(newProps) {
 		if (this.state.value === this.props.value) {
 			this.setState({value: newProps.value});
 		}
 		// otherwise we have buffered changes to state, and
 		// updating from props would revert the user input
 		// and move the carat to the end.
-	},
-	getInitialState: function () {
-		return {value: this.props.value};
-	},
-	onChange: function (value) {
+	}
+
+	onChange = (value) => {
 		var {onChange} = this.props;
 		this.setState({value});
 		onChange(value);
-	},
-	onSamplesSubmit: function (value) {
+	};
+
+	onSamplesSubmit = (value) => {
 		var {onChange} = this.props;
 		this.setState({value});
 		onChange(value);
-	},
-	render: function () {
+	};
+
+	render() {
 		var {matches, onFilter, onZoom, onCreateColumn, onResetSampleFilter, mode} = this.props,
 			{value} = this.state,
 			noshow = (mode !== "heatmap");
@@ -130,6 +130,6 @@ var SampleSearch = createReactClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = { SampleSearch };

@@ -1,10 +1,10 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 var Rx = require('../rx');
 var Welcome = require('../views/Welcome');
-var {rxEvents, deepPureRenderMixin} = require('../react-utils');
+var {rxEvents} = require('../react-utils');
 
 var links = [
 	['heatmap', 'fff0ba742442246f0fd600d41d163d60',
@@ -36,11 +36,10 @@ var links = [
 var evToIndex = ev => parseInt(ev.currentTarget.dataset.index, 10);
 
 var refresh = 5000; // ms between link switch
-var WelcomeContainer = createReactClass({
-	mixins: [deepPureRenderMixin],
-	getInitialState() {
-		return {link: 0};
-	},
+
+class WelcomeContainer extends PureComponent {
+	state = {link: 0};
+
 	componentWillMount() {
 		var events = rxEvents(this, 'mouseover', 'mouseout', 'bulletover');
 		var {mouseover, mouseout, bulletover} = events;
@@ -52,10 +51,12 @@ var WelcomeContainer = createReactClass({
 			() => Rx.Observable.interval(refresh).takeUntil(mouseover.merge(bulletover)).map(() => undefined)
 		).merge(bulletover.map(evToIndex)).subscribe(i =>
 			this.setState({link: i === undefined ? (this.state.link + 1) % links.length : i}));
-	},
+	}
+
 	componentWillUnmount() {
 		this.sub.unsubscribe();
-	},
+	}
+
 	render() {
 		var {link} = this.state;
 		return (
@@ -67,6 +68,6 @@ var WelcomeContainer = createReactClass({
 				{...this.props}
 				link={links[link]} />);
 	}
-});
+}
 
 module.exports = WelcomeContainer;

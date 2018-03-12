@@ -2,7 +2,6 @@
 
 require('./base');
 const React = require('react');
-const createReactClass = require('create-react-class');
 var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
 	pluck, concat, where, contains, get, updateIn, range, Let,
 	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext');
@@ -39,7 +38,7 @@ var paramFromHref = ev => mapObject(urlParams(ev.target.parentElement.href), a =
 function navHandler(ev) {
 	ev.preventDefault();
 	this.props.callback(['navigate', 'datapages', paramFromHref(ev, this.props.state)]);
-};
+}
 
 var getUserServers = servers => keys(servers).filter(k => servers[k].user);
 
@@ -54,13 +53,15 @@ var hubLink = (host, onClick) => (
 		label={getHubName(host)}
 		onClick={onClick}/>);
 
-var DataHubs = createReactClass({
-	onHub: function (ev) { navHandler.call(this, ev); },
-	onSelect(isOn, ev) {
+class DataHubs extends React.Component {
+	onHub = (ev) => { navHandler.call(this, ev); };
+
+	onSelect = (isOn, ev) => {
 		var {checked} = ev.target,
 			host = ev.target.getAttribute('data-host');
 		this.props.callback([checked ? 'enable-host' : 'disable-host', host, 'user']);
-	},
+	};
+
 	render() {
 		var {spreadsheet: {servers}} = this.props.state;
 		return (
@@ -79,7 +80,7 @@ var DataHubs = createReactClass({
 				</ul>
 			</div>);
 	}
-});
+}
 
 
 //
@@ -121,8 +122,9 @@ var CohortSummary = ({cohorts, onCohort}) => {
 		</div>);
 };
 
-var CohortSummaryPage = createReactClass({
-	onCohort: function (ev) { navHandler.call(this, ev); },
+class CohortSummaryPage extends React.Component {
+	onCohort = (ev) => { navHandler.call(this, ev); };
+
 	render() {
 		var {state} = this.props,
 			{spreadsheet: {servers}} = state,
@@ -136,7 +138,7 @@ var CohortSummaryPage = createReactClass({
 				<CohortSummary cohorts={combined} onCohort={this.onCohort}/>
 			</div>);
 	}
-});
+}
 
 //
 // Dataset delete button
@@ -231,8 +233,8 @@ var COHORT_NULL = '(unassigned)';
 var getPreferred = (wizard, cohort) =>
 	new Set(values(getIn(wizard, ['cohortPreferred', cohort], {})));
 
-var CohortPage = createReactClass({
-	onViz() {
+class CohortPage extends React.Component {
+	onViz = () => {
 		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 			cohort = getIn(datapages, ['cohort', 'cohort'], COHORT_NULL);
 
@@ -240,8 +242,10 @@ var CohortPage = createReactClass({
 			this.props.callback(['cohort', cohort]);
 		}
 		this.props.callback(['navigate', 'heatmap']);
-	},
-	onDataset: function (ev) { navHandler.call(this, ev); },
+	};
+
+	onDataset = (ev) => { navHandler.call(this, ev); };
+
 	render() {
 		var {datapages, params, wizard} = this.props.state,
 			cohort = getIn(datapages, ['cohort', 'cohort']) === params.cohort ?
@@ -266,7 +270,7 @@ var CohortPage = createReactClass({
 					</span>)}
 			</div>);
 	}
-});
+}
 
 //
 // Dataset Page
@@ -369,9 +373,10 @@ var dataMethod = ({type = 'genomicMatrix', status} = {}) =>
 	type === 'genomicSegment' ? sparseTable :
 	noTable;
 
-var DatasetPage = createReactClass({
-	onCohort: function (ev) { navHandler.call(this, ev); },
-	onViz() {
+class DatasetPage extends React.Component {
+	onCohort = (ev) => { navHandler.call(this, ev); };
+
+	onViz = () => {
 		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 			cohort = getIn(datapages, ['dataset', 'meta', 'cohort'], COHORT_NULL);
 
@@ -379,9 +384,11 @@ var DatasetPage = createReactClass({
 			this.props.callback(['cohort', cohort]);
 		}
 		this.props.callback(['navigate', 'heatmap']);
-	},
-	onIdentifiers: function (ev) { navHandler.call(this, ev); },
-	onSamples: function (ev) { navHandler.call(this, ev); },
+	};
+
+	onIdentifiers = (ev) => { navHandler.call(this, ev); };
+	onSamples = (ev) => { navHandler.call(this, ev); };
+
 	render() {
 		var {callback, state} = this.props,
 			{params: {host, dataset}, datapages} = state,
@@ -448,7 +455,7 @@ var DatasetPage = createReactClass({
 				{dataMethod(meta)(meta, data)}
 			</div>);
 	}
-});
+}
 
 // Our handling of parameters 'hub' and 'host', is somewhat confusing. 'host'
 // means "show the hub page for this url". 'hub' means "add this url to the
@@ -464,8 +471,9 @@ var defaultHost = params =>
 // Hub page
 //
 
-var HubPage = createReactClass({
-	onCohort: function (ev) { navHandler.call(this, ev); },
+class HubPage extends React.Component {
+	onCohort = (ev) => { navHandler.call(this, ev); };
+
 	render() {
 		var {state} = this.props,
 			{host} = defaultHost(state.params),
@@ -482,7 +490,7 @@ var HubPage = createReactClass({
 				<CohortSummary cohorts={coll} onCohort={this.onCohort}/>
 			</div>);
 	}
-});
+}
 
 //
 // Samples / Identifiers page

@@ -37,7 +37,6 @@ var _ = require('../underscore_ext');
 //var floatImg = require('../../images/genomicFloatLegend.jpg');
 var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
-var createReactClass = require('create-react-class');
 var ReactDOM = require('react-dom');
 var {Modal, DropdownButton, MenuItem, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
 var {Row, Col} = require("react-material-responsive-grid");
@@ -206,17 +205,19 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			max: 1
 		}
 	};
-	var scaleChoice = createReactClass({
-		getInitialState () {
-			//check if there is custom value
-			let custom = colorParams[valueType].some(function (param) {
+
+	class scaleChoice extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        //check if there is custom value
+	        let custom = colorParams[valueType].some(function (param) {
 					if (getVizSettings(param)) {
 						return true;
 					}
 				}),
 				dataMin, dataMax;
 
-			if (valueType === "float") {
+	        if (valueType === "float") {
 				dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values)));
 				dataMax = _.maxnull(_.map(data.req.values, values => _.maxnull(values)));
 				scaleDefaults[valueType].min = dataMin;
@@ -233,22 +234,25 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				}
 			}
 
-			return {
+	        this.state = {
 				mode: custom ? "Custom" : "Auto",
 				settings: custom ? _.pick(oldSettings, colorParams[valueType]) : scaleDefaults[valueType],
 				errors: {}
 			};
-		},
-		autoClick () {
+	    }
+
+	    autoClick = () => {
 			this.setState({mode: "Auto"});
 			this.setState({errors: {}});
 			onVizSettings(id, _.omit(currentSettings.state, colorParams[valueType]));
-		},
-		customClick () {
+		};
+
+	    customClick = () => {
 			this.setState({mode: "Custom"});
 			onVizSettings(id, _.merge(currentSettings.state, getInputSettingsFloat(this.state.settings)));
-		},
-		onScaleParamChange(ev) {
+		};
+
+	    onScaleParamChange = (ev) => {
 			var {settings} = this.state,
 				param = ev.target.getAttribute('data-param'),
 				newSettings = _.assoc(settings, param, ev.target.value),
@@ -259,8 +263,9 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			if (settingsValid(errors)) {
 				onVizSettings(id, _.merge(currentSettings.state, getInputSettingsFloat(newSettings)));
 			}
-		},
-		buildCustomColorScale () {
+		};
+
+	    buildCustomColorScale = () => {
 			var node = colorParams[valueType].map(param => {
 					let value = valToStr(this.state.settings[param]),
 						label = scaleAnnotations[valueType][param],
@@ -280,9 +285,9 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					);
 				});
 			return node;
-		},
+		};
 
-		render () {
+	    render() {
 			let mode = this.state.mode,
 				autoMode = (this.state.mode === "Auto"),
 				modes = ["Auto", "Custom"],
@@ -326,7 +331,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</div>
 			);
 		}
-	});
+	}
 
 	function setVizSettings(key, value) {
 		onVizSettings(id, _.assoc(currentSettings.state, key, value));
@@ -558,21 +563,24 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 }
 
 // react wrapper for the legacy DOM code, above.
-var SettingsWrapper = createReactClass({
-	shouldComponentUpdate: function () {
+class SettingsWrapper extends React.Component {
+	shouldComponentUpdate() {
 		return false;
-	},
+	}
+
 	componentWillReceiveProps(newProps) {
 		this.currentSettings.state = newProps.vizSettings;
-	},
-	componentDidMount: function () {
+	}
+
+	componentDidMount() {
 		var {refs: {content}, props: {data, units, onVizSettings, vizSettings, id, defaultNormalization, colorClass, valueType, fieldType, onRequestHide}} = this;
 		this.currentSettings = vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType, fieldType, data, units);
-	},
-	render: function () {
+	}
+
+	render() {
 		return <div ref='content' />;
 	}
-});
+}
 
 class VizSettings extends React.Component {
 	render() {

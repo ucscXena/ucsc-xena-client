@@ -2,14 +2,13 @@
 
 require('./km.css');
 var _ = require('./underscore_ext');
+import PureComponent from './PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 import {Button} from 'react-toolbox/lib/button';
 
 import Dialog from 'react-toolbox/lib/dialog';
 
 var Axis = require('./Axis');
-var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
 var pdf = require('./kmpdf');
 var NumberForm = require('./views/NumberForm');
@@ -193,9 +192,8 @@ class WarningDialog extends React.Component {
 }
 
 
-var PValue = createReactClass({
-	mixins: [deepPureRenderMixin],
-	render: function () {
+class PValue extends PureComponent {
+	render() {
 		var {logRank, pValue, patientWarning} = this.props;
 		return (
 			<div>
@@ -213,7 +211,7 @@ var PValue = createReactClass({
 			</div>
 		);
 	}
-});
+}
 
 // Sample count is 'n' at 1st time point.
 function sampleCount(curve) {
@@ -245,10 +243,8 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	);
 }
 
-var Legend = createReactClass({
-	mixins: [deepPureRenderMixin],
-
-	render: function () {
+class Legend extends PureComponent {
+	render() {
 		let { groups, setActiveLabel, activeLabel } = this.props;
 		let {colors, curves, labels} = groups;
 		let sets = _.zip(colors, curves, labels)
@@ -258,7 +254,7 @@ var Legend = createReactClass({
 			<div className="legend">{sets}</div>
 		);
 	}
-});
+}
 
 function makeGraph(groups, setActiveLabel, activeLabel, size) {
 	return (
@@ -315,57 +311,53 @@ var plotSize = {
 	}
 };
 
-var KmPlot = createReactClass({
-	mixins: [deepPureRenderMixin],
-
-	getDefaultProps: () => ({
+class KmPlot extends PureComponent {
+	static defaultProps = {
 		eventClose: 'km-close',
 		dims: {
 			height: 450,
 			width: 700
 		}
-	}),
+	};
 
-	getInitialState: function () {
-		return { activeLabel: '' };
-	},
+	state = { activeLabel: '' };
 
-	hide: function () {
+	hide = () => {
 		let {callback, eventClose} = this.props;
 		callback([eventClose]);
-	},
+	};
 
 	// cutoff needs to rewrite the group calc, but we need
 	// the full range in order to range-check the bound. So
 	// the compute should stash the domain.
-	onCutoff: function (v) {
+	onCutoff = (v) => {
 		let {callback} = this.props;
 		callback(['km-cutoff', v]);
-	},
+	};
 
-	setActiveLabel: function (e, label) {
+	setActiveLabel = (e, label) => {
 		this.setState({ activeLabel: label });
-	},
+	};
 
-	pdf: function () {
+	pdf = () => {
 		pdf(this.props.km.groups);
-	},
+	};
 
-	help: function () {
+	help = () => {
 		window.location.href = "http://xena.ucsc.edu/km-plot-help/";
-	},
+	};
 
-	onSplits(ev) {
+	onSplits = (ev) => {
 		var {callback} = this.props;
 		callback(['km-splits', parseInt(ev.target.value, 10)]);
-	},
+	};
 
-	componentDidMount: function() {
+	componentDidMount() {
 		var body = document.getElementById("body");
 		body.style.overflow = "auto";
-	},
+	}
 
-	render: function () {
+	render() {
 		let {km: {splits = 2, title, label, groups, cutoff}, dims} = this.props,
 			// groups may be undefined if data hasn't loaded yet.
 			maySplit = _.get(groups, 'maySplit', false),
@@ -435,6 +427,6 @@ var KmPlot = createReactClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = {KmPlot};

@@ -1,9 +1,8 @@
 'use strict';
 
+import PureComponent from './PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 require('react-resizable/css/styles.css');
-var {deepPureRenderMixin} = require('./react-utils');
 var getColumns = require('./views/Columns');
 var classNames = require('classnames');
 import {Button} from 'react-toolbox/lib/button';
@@ -25,16 +24,18 @@ function zoomPopover(props) {
 
 var getSpreadsheet = columnsWrapper => {
 	var Columns = getColumns(columnsWrapper);
-	return createReactClass({
-		displayName: 'Spreadsheet',
-		mixins: [deepPureRenderMixin],
-		zoomHelpClose: function () {
+	return class extends PureComponent {
+	    static displayName = 'Spreadsheet';
+
+	    zoomHelpClose = () => {
 			this.props.callback(['zoom-help-close']);
-		},
-		zoomHelpDisable: function () {
+		};
+
+	    zoomHelpDisable = () => {
 			this.props.callback(['zoom-help-disable']);
-		},
-		render: function () {
+		};
+
+	    render() {
 			var {appState: {zoomHelp}, children, ...otherProps} = this.props,
 				zoomHelper = zoomHelp ?
 					zoomPopover({
@@ -51,7 +52,7 @@ var getSpreadsheet = columnsWrapper => {
 				</div>
 			);
 		}
-	});
+	};
 };
 
 module.exports = getSpreadsheet;

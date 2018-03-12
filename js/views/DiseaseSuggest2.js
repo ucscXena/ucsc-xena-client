@@ -1,10 +1,9 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 import Input from 'react-toolbox/lib/input';
 var _ = require('../underscore_ext');
-var {deepPureRenderMixin} = require('../react-utils');
 require('./GeneSuggest.css'); // XXX rename file
 var lcs = require('../lcs');
 import XAutosuggest from './XAutosuggest';
@@ -151,9 +150,10 @@ var renderInputComponent = ({ref, onChange, ...props}) => (
 		label='Primary Disease or Tissue of Origin'
 		{...props} />);
 
-var DiseaseSuggest = createReactClass({
-	mixins: [deepPureRenderMixin],
-	onSuggestionsFetchRequested({value}) {
+class DiseaseSuggest extends PureComponent {
+	state = {suggestions: [], value: ""};
+
+	onSuggestionsFetchRequested = ({value}) => {
 		var position = this.input.selectionStart,
 			word = currentWord(value, position),
 			lcValue = word.toLowerCase(),
@@ -162,14 +162,13 @@ var DiseaseSuggest = createReactClass({
 		this.setState({
 			suggestions: _.filter(tags, t => t.toLowerCase().indexOf(lcValue) === 0)
 		});
-	},
-	onSuggestionsClearRequested() {
+	};
+
+	onSuggestionsClearRequested = () => {
 		this.setState({suggestions: []});
-	},
-	getInitialState() {
-		return {suggestions: [], value: ""};
-	},
-	onChange(ev, {newValue, method}) {
+	};
+
+	onChange = (ev, {newValue, method}) => {
 		// Don't update the value for 'up' and 'down' keys. If we do update
 		// the value, it gives us an in-place view of the suggestion (pasting
 		// the value into the input field), but the drawback is that it moves
@@ -180,32 +179,39 @@ var DiseaseSuggest = createReactClass({
 		if (method !== 'up' && method !== 'down') {
 			this.setState({value: newValue});
 		}
-	},
-	onSelect(ev, {suggestionValue}) {
+	};
+
+	onSelect = (ev, {suggestionValue}) => {
 		this.setState({value: suggestionValue});
-	},
-	onClear() {
+	};
+
+	onClear = () => {
 		this.setState({value: ""});
-	},
-	onCohort(value) {
+	};
+
+	onCohort = (value) => {
 		this.props.onSelect(value);
-	},
-	shouldRenderSuggestions(value) {
+	};
+
+	shouldRenderSuggestions = (value) => {
 		var position = this.input.selectionStart,
 			word = currentWord(value, position);
 		return word.length > 0;
-	},
-	getSuggestionValue(suggestion) {
+	};
+
+	getSuggestionValue = (suggestion) => {
 		var position = this.input.selectionStart,
 			value = this.input.value,
 			[i, j] = currentWordPosition(value, position);
 
 		// splice the suggestion into the current word
 		return value.slice(0, i) + suggestion + value.slice(j);
-	},
-	setInput(input) {
+	};
+
+	setInput = (input) => {
 		this.input = input;
-	},
+	};
+
 	render() {
 		var {onChange} = this,
 			{suggestions, value} = this.state,
@@ -244,6 +250,6 @@ var DiseaseSuggest = createReactClass({
 				{results.length > 0 ? <XRadioGroup {...studyProps} /> : null}
 			</div>);
 	}
-});
+}
 
 module.exports = DiseaseSuggest;

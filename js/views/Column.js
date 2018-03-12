@@ -1,7 +1,7 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 var _ = require('../underscore_ext');
 var DefaultTextInput = require('./DefaultTextInput');
 var DragSelect = require('./DragSelect');
@@ -13,7 +13,6 @@ var spinner = require('../ajax-loader.gif');
 var mutationVector = require('../models/mutationVector');
 //var ValidatedInput = require('./ValidatedInput');
 var konami = require('../konami');
-var {deepPureRenderMixin} = require('../react-utils');
 var Crosshair = require('./Crosshair');
 var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
@@ -332,80 +331,91 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 		.map(([start, end]) => [Math.max(start, cdsStart), Math.min(end, cdsEnd)]);
 }
 
-var Column = createReactClass({
-	mixins: [deepPureRenderMixin],
+class Column extends PureComponent {
+	state = {
+	    specialDownloadMenu: specialDownloadMenu
+	};
 
-	getInitialState() {
-		return {
-			specialDownloadMenu: specialDownloadMenu
-		};
-	},
-
-//	addAnnotationHelp(target) {
-//		var tooltip = (
-//			<Tooltip>
-//				{annotationHelpText}
-//			</Tooltip>
-//		);
-//		return (
-//			<OverlayTrigger trigger={['hover']} placement='top' overlay={tooltip}>
-//				{target}
-//			</OverlayTrigger>);
-//	},
-	enableHiddenFeatures() {
+	//	addAnnotationHelp(target) {
+	//		var tooltip = (
+	//			<Tooltip>
+	//				{annotationHelpText}
+	//			</Tooltip>
+	//		);
+	//		return (
+	//			<OverlayTrigger trigger={['hover']} placement='top' overlay={tooltip}>
+	//				{target}
+	//			</OverlayTrigger>);
+	//	},
+	enableHiddenFeatures = () => {
 		specialDownloadMenu = true;
 		this.setState({specialDownloadMenu: true});
-	},
+	};
+
 	componentWillMount() {
 		var asciiA = 65;
 		this.ksub = konami(asciiA).subscribe(this.enableHiddenFeatures);
-	},
+	}
+
 	componentWillUnmount() {
 		this.ksub.unsubscribe();
-	},
-	onResizeStop: function (size) {
+	}
+
+	onResizeStop = (size) => {
 		this.props.onResize(this.props.id, size);
-	},
-	onRemove: function () {
+	};
+
+	onRemove = () => {
 		this.props.onRemove(this.props.id);
-	},
-	onDownload: function () {
+	};
+
+	onDownload = () => {
 		var {column, data, samples, index, sampleFormat} = this.props;
 		download(widgets.download({column, data, samples, index: index, sampleFormat}));
-	},
-	onViz: function () {
+	};
+
+	onViz = () => {
 		this.props.onViz(this.props.id);
-	},
-	onEdit: function () {
+	};
+
+	onEdit = () => {
 		this.props.onEdit(this.props.id);
-	},
-	onKm: function () {
+	};
+
+	onKm = () => {
 		this.props.onKm(this.props.id);
-	},
-	onSortDirection: function () {
+	};
+
+	onSortDirection = () => {
 		var newDir = _.get(this.props.column, 'sortDirection', 'forward') === 'forward' ?
 			'reverse' : 'forward';
 		this.props.onSortDirection(this.props.id, newDir);
-	},
-	onMode: function (ev, newMode) {
+	};
+
+	onMode = (ev, newMode) => {
 		this.props.onMode(this.props.id, newMode);
-	},
-	onColumnLabel: function (value) {
+	};
+
+	onColumnLabel = (value) => {
 		this.props.onColumnLabel(this.props.id, value);
-	},
-	onFieldLabel: function (value) {
+	};
+
+	onFieldLabel = (value) => {
 		this.props.onFieldLabel(this.props.id, value);
-	},
-	onShowIntrons: function () {
+	};
+
+	onShowIntrons = () => {
 		this.props.onShowIntrons(this.props.id);
-	},
-	onSortVisible: function () {
+	};
+
+	onSortVisible = () => {
 		var {id, column} = this.props;
 		var value = _.get(column, 'sortVisible',
 				column.valueType === 'segmented' ? true : false);
 		this.props.onSortVisible(id, !value);
-	},
-	onSpecialDownload: function () {
+	};
+
+	onSpecialDownload = () => {
 		var {column, data, samples, index, sampleFormat} = this.props,
 			{type, downloadData} = widgets.specialDownload({column, data, samples, index: index, sampleFormat});
 		if (type === "txt") {
@@ -413,20 +423,23 @@ var Column = createReactClass({
 		} else if(type === "json") {
 			downloadJSON(downloadData);
 		}
-	},
-	onXZoomOut: function (ev) {
+	};
+
+	onXZoomOut = (ev) => {
 		if (ev.shiftKey) {
 			let {id, column: {maxXZoom}, onXZoom} = this.props,
 				position = getPosition(maxXZoom, '', '');
 			onXZoom(id, position);
 		}
-	},
-	onXDragZoom: function (pos) {
+	};
+
+	onXDragZoom = (pos) => {
 		var {column: {layout}, onXZoom, id} = this.props,
 			[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
 		onXZoom(id, {start, end});
-	},
-	onMenuToggle: function (open) {
+	};
+
+	onMenuToggle = (open) => {
 		var {xzoomable} = this.state,
 			{column: {xzoom, maxXZoom, valueType}, onXZoom, id} = this.props;
 		if (xzoomable && !open && ['mutation', 'segmented'].indexOf(valueType) !== -1) {
@@ -438,8 +451,9 @@ var Column = createReactClass({
 				onXZoom(id, position);
 			}
 		}
-	},
-	onMuPit: function (assembly) {
+	};
+
+	onMuPit = (assembly) => {
 		// Construct the url, which will be opened in new window
 		// total = newRows.length,
 		// k fixed at 1000
@@ -472,9 +486,9 @@ var Column = createReactClass({
 			url = mupitUrl[assembly];
 
 		window.open(url + `${uriList}`);
-	},
+	};
 
-	onTumorMap: function (tumorMap) {
+	onTumorMap = (tumorMap) => {
 		// TumorMap/Xena API https://tumormap.ucsc.edu/query/addAttributeXena.html
 		// only use spec of the first cohort (in the context of composite cohort)
 		var fieldSpecs = _.getIn(this.props, ['column', 'fieldSpecs', 0]),
@@ -510,19 +524,23 @@ var Column = createReactClass({
 		}
 
 		window.open(url);
-	},
-	onReload: function () {
+	};
+
+	onReload = () => {
 		this.props.onReload(this.props.id);
-	},
-	getControlWidth: function () {
+	};
+
+	getControlWidth = () => {
 		return 90;
 //		return 136;
-	},
-	onAbout(ev, host, dataset) {
+	};
+
+	onAbout = (ev, host, dataset) => {
 		ev.preventDefault();
 		this.props.onAbout(host, dataset);
-	},
-	render: function () {
+	};
+
+	render() {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
@@ -629,6 +647,6 @@ var Column = createReactClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = Column;

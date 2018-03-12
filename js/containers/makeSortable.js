@@ -1,21 +1,22 @@
 'use strict';
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 var Sortable = require('../views/Sortable');
-var {deepPureRenderMixin} = require('../react-utils');
 
 // We skip the first column to keep 'samples' on the left.
 function makeSortable(Component) {
-	return createReactClass({
-		displayName: 'SpreadsheetSortable',
-		mixins: [deepPureRenderMixin],
-		onReorder: function (order) {
+	return class extends PureComponent {
+	    static displayName = 'SpreadsheetSortable';
+
+	    onReorder = (order) => {
 			this.props.callback(['order', order]);
-		},
-		onDragging(dragging) {
+		};
+
+	    onDragging = (dragging) => {
 			this.props.onInteractive('drag', !dragging);
-		},
-		render() {
+		};
+
+	    render() {
 			var {children, ...otherProps} = this.props,
 				widths = this.props.appState.columnOrder.map(id =>
 					this.props.appState.columns[id].width);
@@ -30,7 +31,7 @@ function makeSortable(Component) {
 					{children}
 				</Sortable>);
 		}
-	});
+	};
 }
 
 module.exports = makeSortable;

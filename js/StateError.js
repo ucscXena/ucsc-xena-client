@@ -1,13 +1,11 @@
 'use strict';
 
+import PureComponent from './PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
-var {deepPureRenderMixin} = require('./react-utils');
 import stateErrorStyle from './StateError.module.css';
 import Dialog from 'react-toolbox/lib/dialog';
 
-var StateError = createReactClass({
-	mixins: [deepPureRenderMixin],
+class StateError extends PureComponent {
 	render() {
 
 		const actions = [
@@ -32,7 +30,6 @@ var StateError = createReactClass({
 			</div>
 		);
 	}
-
-});
+}
 
 module.exports = StateError;

@@ -7,32 +7,33 @@
  */
 
 // Core dependencies, components
+import PureComponent from '../PureComponent';
 const React = require('react');
-const createReactClass = require('create-react-class');
-var {rxEvents, deepPureRenderMixin} = require('../react-utils');
+var {rxEvents} = require('../react-utils');
 
 // Comp styles
 var compStyles = require('./DefaultTextInput.module.css');
 
-var DefaultTextInput = createReactClass({
-	mixins: [deepPureRenderMixin],
-	componentWillMount: function () {
+class DefaultTextInput extends PureComponent {
+	state = {value: this.props.value.user, focused: false};
+
+	componentWillMount() {
 		var events = rxEvents(this, 'change');
 		this.change = events.change
 		.do(() => this.setState({value: this.refs.input.value}))
 		.debounceTime(100)
 		.subscribe(this.update);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.change.unsubscribe();
-	},
-	getInitialState: function () {
-		return {value: this.props.value.user, focused: false};
-	},
-	componentWillReceiveProps: function (newProps) {
+	}
+
+	componentWillReceiveProps(newProps) {
 		this.setState({value: newProps.value.user});
-	},
-	resetIfNull: function () {
+	}
+
+	resetIfNull = () => {
 		var {onChange, value: {'default': defaultValue}} = this.props,
 			val = this.refs.input.value;
 
@@ -40,27 +41,32 @@ var DefaultTextInput = createReactClass({
 			this.setState({value: defaultValue});
 			onChange(defaultValue);
 		}
-	},
-	onBlur() {
+	};
+
+	onBlur = () => {
 		this.setState({focused: false});
 		this.resetIfNull();
-	},
-	onFocus() {
+	};
+
+	onFocus = () => {
 		this.setState({focused: true});
-	},
-	update: function () {
+	};
+
+	update = () => {
 		var {onChange} = this.props,
 			{value} = this.state;
 
 		onChange(value);
-	},
-	onKeyUp: function (ev) {
+	};
+
+	onKeyUp = (ev) => {
 		if (ev.key === 'Enter' && this) {
 			this.resetIfNull();
 			this.refs.input.blur();
 		}
-	},
-	render: function () {
+	};
+
+	render() {
 		var {value, focused} = this.state,
 			{disabled = false} = this.props;
 
@@ -81,6 +87,6 @@ var DefaultTextInput = createReactClass({
 				value={value}/>
 			</span>);
 	}
-});
+}
 
 module.exports = DefaultTextInput;

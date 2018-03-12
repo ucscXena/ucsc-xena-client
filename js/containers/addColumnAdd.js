@@ -8,9 +8,8 @@
 'use strict';
 
 // Core dependencies, components
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
-var {deepPureRenderMixin} = require('../react-utils');
 var classNames = require('classnames');
 var ColumnAdd = require('../views/ColumnAdd');
 
@@ -23,20 +22,20 @@ var hoverClass = (index, hover) =>
 
 // XXX move layout to a view, after we know what the final layout will be.
 function addColumnAdd(Component) {
-	return createReactClass({
-		displayName: 'SpreadsheetColumnAdd',
-		mixins: [deepPureRenderMixin],
-		getInitialState() {
-			return {hover: null};
-		},
-		onClick(index) {
+	return class extends PureComponent {
+	    static displayName = 'SpreadsheetColumnAdd';
+	    state = {hover: null};
+
+	    onClick = (index) => {
 			this.props.onAddColumn(index);
 			this.setState({hover: null});
-		},
-		onHover(index, hovering) {
+		};
+
+	    onHover = (index, hovering) => {
 			this.setState({hover: hovering ? index : null});
-		},
-		render() {
+		};
+
+	    render() {
 			var {children, ...otherProps} = this.props,
 				{appState: {wizardMode}, interactive} = otherProps,
 				{hover} = this.state,
@@ -59,7 +58,7 @@ function addColumnAdd(Component) {
 					{columns}
 				</Component>);
 		}
-	});
+	};
 }
 
 module.exports = addColumnAdd;

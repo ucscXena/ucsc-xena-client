@@ -1,23 +1,21 @@
 'use strict';
 
 var Tooltip = require('../views/Tooltip');
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 var {rxEvents} = require('../react-utils');
 var meta = require('../meta');
 var _ = require('../underscore_ext');
-var {deepPureRenderMixin} = require('../react-utils');
 
 function addTooltip(Component) {
-	return createReactClass({
-		displayName: 'SpreadsheetTooltip',
-		mixins: [deepPureRenderMixin],
-		getInitialState: function () {
-			return {
-				tooltip: {open: false},
-			};
-		},
-		componentWillMount: function () {
+	return class extends PureComponent {
+	    static displayName = 'SpreadsheetTooltip';
+
+	    state = {
+	        tooltip: {open: false},
+	    };
+
+	    componentWillMount() {
 			var events = this.ev = rxEvents(this, 'tooltip', 'click', 'close');
 
 			var toggle = events.click.filter(ev => ev[meta.key])
@@ -33,11 +31,13 @@ function addTooltip(Component) {
 				.distinctUntilChanged(_.isEqual, ([ev, frozen]) => frozen ? frozen : [ev, frozen])
 				.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))
 				.subscribe(ev => this.setState({tooltip: ev}));
-		},
-		componentWillUnmount: function () {
+		}
+
+	    componentWillUnmount() {
 			this.tooltip.unsubscribe();
-		},
-		render() {
+		}
+
+	    render() {
 			var {children, ...props} = this.props,
 				{interactive} = props,
 				open = this.state.tooltip.open && interactive,
@@ -54,7 +54,7 @@ function addTooltip(Component) {
 						}))}
 				</Component>);
 		}
-	});
+	};
 }
 
 module.exports = addTooltip;

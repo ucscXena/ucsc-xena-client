@@ -1,10 +1,9 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 import XAutosuggest from './XAutosuggest';
 import Input from 'react-toolbox/lib/input';
-var {deepPureRenderMixin} = require('../react-utils');
 require('./GeneSuggest.css'); // XXX rename file
 
 var renderInputComponent = ({ref, onChange, error, ...props}) => (
@@ -20,32 +19,34 @@ var renderInputComponent = ({ref, onChange, error, ...props}) => (
 var filterFeatures = (lcValue, features) =>
 	features.filter(f => f.label.toLowerCase().indexOf(lcValue) !== -1);
 
-var PhenotypeSuggest = createReactClass({
-	mixins: [deepPureRenderMixin],
-	onSuggestionsFetchRequested({value}) {
+class PhenotypeSuggest extends PureComponent {
+	state = {suggestions: []};
+
+	onSuggestionsFetchRequested = ({value}) => {
 		var lcValue = value.toLowerCase(),
 			{features} = this.props;
 
 		this.setState({
 			suggestions: filterFeatures(lcValue, features)
 		});
-	},
-	onSuggestionsClearRequested() {
+	};
+
+	onSuggestionsClearRequested = () => {
 		this.setState({suggestions: []});
-	},
-	getInitialState() {
-		return {suggestions: []};
-	},
-	onChange(ev, {newValue}) {
+	};
+
+	onChange = (ev, {newValue}) => {
 		this.props.onChange(newValue);
-	},
-	setInput(input) {
+	};
+
+	setInput = (input) => {
 		var {inputRef} = this.props;
 		this.input = input;
 		if (inputRef) {
 			inputRef(this.input);
 		}
-	},
+	};
+
 	render() {
 		var {onChange} = this,
 			{onKeyDown, value = '', error} = this.props,
@@ -64,6 +65,6 @@ var PhenotypeSuggest = createReactClass({
 				renderInputComponent={renderInputComponent}
 				inputProps={{value, error, onKeyDown, onChange}}/>);
 	}
-});
+}
 
 module.exports = PhenotypeSuggest;

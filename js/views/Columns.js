@@ -1,8 +1,7 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
-var {deepPureRenderMixin} = require('../react-utils');
 
 class ColumnsWrapper extends React.Component {
 	render() {
@@ -18,17 +17,17 @@ class ColumnsWrapper extends React.Component {
 var getColumns = wrapperFn => {
 	let Wrapper = wrapperFn(ColumnsWrapper);
 
-	return createReactClass({
-		displayName: 'SpreadsheetColumns',
-		mixins: [deepPureRenderMixin],
-		render() {
+	return class extends PureComponent {
+	    static displayName = 'SpreadsheetColumns';
+
+	    render() {
 			var {onClick, children, ...wrapperProps} = this.props;
 			return (
 				<Wrapper {...wrapperProps}>
 					{children}
 				</Wrapper>);
 		}
-	});
+	};
 };
 
 module.exports = getColumns;

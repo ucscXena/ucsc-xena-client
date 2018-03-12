@@ -1,11 +1,9 @@
 'use strict';
 
 var React = require('react');
-var createReactClass = require('create-react-class');
 var _ = require('../underscore_ext');
 var styles = require('./DensityPlot.module.css');
 var sc = require('science');
-var {deepPureRenderMixin} = require('../react-utils');
 
 const bin = 20; //number of bins
 const plotHeight = 35;
@@ -129,9 +127,8 @@ var drawHistogram = (min, max) => (studyA, studyB) => {
 		</div>);
 };
 
-var DensityPlot = createReactClass({
- mixins: [deepPureRenderMixin],
- 	render () {
+class DensityPlot extends React.PureComponent {
+	render() {
 		let {unit, getNameZoom, type} = this.props,
 			totalWidth = plotWidth + 20,
 			data = this.props.data ? this.props.data : null,
@@ -144,6 +141,6 @@ var DensityPlot = createReactClass({
 				{rows}
 			</div>);
  	}
- });
+}
 
 module.exports = {DensityPlot, bottomColor, topColor, plotWidth};

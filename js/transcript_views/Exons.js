@@ -1,10 +1,8 @@
 'use strict';
 var React = require('react');
-var createReactClass = require('create-react-class');
 var _ = require('../underscore_ext');
 
 var styles = require('./Exons.module.css');
-var {deepPureRenderMixin} = require('../react-utils');
 
 var width = 700;
 
@@ -79,9 +77,8 @@ function exonShape(data, exonStarts, exonEnds, cdsStart, cdsEnd, multiplyingFact
 	}
 }
 
-var Exons = createReactClass({
-	mixins: [deepPureRenderMixin],
-	row(data, multiplyingFactor, origin) {
+class Exons extends React.PureComponent {
+	row = (data, multiplyingFactor, origin) => {
 
 		return data.map((d, index) => {
 
@@ -101,7 +98,7 @@ var Exons = createReactClass({
 					</div>
 					);
 		});
-	},
+	};
 
 	render() {
 		let data = this.props.data ? this.props.data : null;
@@ -117,7 +114,7 @@ var Exons = createReactClass({
 				</div>
 			);
 	}
-});
+}
 
 module.exports = {
 	Exons,

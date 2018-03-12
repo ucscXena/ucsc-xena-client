@@ -1,9 +1,8 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 var _ = require('../underscore_ext');
-var {deepPureRenderMixin} = require('../react-utils');
 var meta = require('../meta');
 var classNames = require('classnames');
 
@@ -78,9 +77,8 @@ function overlay() {
 //  }
 //});
 
-var Tooltip = createReactClass({
-	mixins: [deepPureRenderMixin], // XXX any reason to use deep vs. shallow?
-	render: function () {
+class Tooltip extends PureComponent {
+	render() {
 		var {data, open, onClick, onClose, frozen} = this.props,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
@@ -114,6 +112,6 @@ var Tooltip = createReactClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = Tooltip;

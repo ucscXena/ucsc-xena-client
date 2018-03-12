@@ -12,12 +12,11 @@
 // The setOrder callback is invoked when a sort is completed, and
 // should re-render the component with the childen in the new order.
 
+import PureComponent from '../PureComponent';
 var React = require('react');
-var createReactClass = require('create-react-class');
 var ReactDOM = require('react-dom');
 var Rx = require('../rx');
 var _ = require('../underscore_ext');
-var {deepPureRenderMixin} = require('../react-utils');
 require('./Sortable.css');
 
 var skip = 1; // Don't allow sort of <skip> elements on the left
@@ -62,9 +61,9 @@ var zeros = n => repeat(n, 0);
 // At that point, we set offset1 to left2 - left1.
 
 var transitionLength = 400;
-var Sortable = createReactClass({
-	mixins: [deepPureRenderMixin],
-	componentWillMount: function () {
+
+class Sortable extends PureComponent {
+	componentWillMount() {
 		var mousedownSub = new Rx.Subject();
 		var mousedown = mousedownSub.filter(([, md]) => hasClass(md.target, 'Sortable-handle'));
 		var mousedrag = mousedown.flatMap(([id, md]) => {
@@ -136,26 +135,24 @@ var Sortable = createReactClass({
         });
 
 		this.sortStart = ev => mousedownSub.next(ev);
-	},
+	}
 
-	initialPositions () {
+	initialPositions = () => {
 		return _.object(_.map(this.props.children, c => [c.props.actionKey, 0]));
 
-	},
+	};
 
-	getInitialState: function () {
-		return {pos: this.initialPositions(), dragging: null};
-	},
+	state = {pos: this.initialPositions(), dragging: null};
 
-	componentWillReceiveProps: function () {
+	componentWillReceiveProps() {
 		this.setState({pos: this.initialPositions()});
-	},
+	}
 
-	componentWillUnmount: function () {
+	componentWillUnmount() {
 		this.subscription.unsubscribe();
-	},
+	}
 
-	render: function () {
+	render() {
 		var {dragging} = this.state,
 			{Component, children, ...otherProps} = this.props;
 
@@ -174,6 +171,6 @@ var Sortable = createReactClass({
 			</Component>
 		);
     }
-});
+}
 
 module.exports = Sortable;
