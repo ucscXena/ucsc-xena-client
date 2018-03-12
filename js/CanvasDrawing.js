@@ -34,7 +34,9 @@ var CanvasDrawing = createReactClass({
 			this.draw(newProps);
 		}
 	},
-	shouldComponentUpdate: () => false,
+	shouldComponentUpdate: function () {
+		return false;
+	},
 	render: function () {
 		var {width, zoom: {height}, wrapperProps} = this.props;
 		return (
