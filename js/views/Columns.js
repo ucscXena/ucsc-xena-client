@@ -5,9 +5,9 @@ var React = require('react');
 
 class ColumnsWrapper extends React.Component {
 	render() {
-		var {children, widgetProps, append, ...optProps} = this.props;
+		var {children, append, onClick} = this.props;
 		return (
-			<div {...optProps} className="Columns">
+			<div onClick={onClick} className="Columns">
 				{children}
 				{append}
 			</div>);
