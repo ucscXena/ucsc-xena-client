@@ -302,21 +302,21 @@ function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, sp
 	);
 }
 
+var plotSize = {
+	ratios: {
+		graph: {
+			width: 0.75,
+			height: 1.0
+		},
+		definitions: {
+			width: 0.4,
+			height: 1.0
+		}
+	}
+};
+
 var KmPlot = createReactClass({
 	mixins: [deepPureRenderMixin],
-
-	size: {
-		ratios: {
-			graph: {
-				width: 0.75,
-				height: 1.0
-			},
-			definitions: {
-				width: 0.4,
-				height: 1.0
-			}
-		}
-	},
 
 	getDefaultProps: () => ({
 		eventClose: 'km-close',
@@ -374,7 +374,7 @@ var KmPlot = createReactClass({
 			warning = _.get(groups, 'warning'),
 			fullLabel = warning ? `${label} (${warning})` : label,
 			{activeLabel} = this.state,
-			sectionDims = calcDims(dims, this.size.ratios);
+			sectionDims = calcDims(dims, plotSize.ratios);
 
 		let Content = _.isEmpty(groups)
 			? <div
