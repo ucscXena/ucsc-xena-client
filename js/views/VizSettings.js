@@ -180,33 +180,33 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
 	}
 
+	var scaleAnnotations = {
+		float: {
+			"max": "max: high color 100% saturation",
+			"maxStart": "maxStart: high color 0% saturation",
+			"minStart": "minStart: low color 0% saturation",
+			"min": "min: low color 100% saturation"
+		},
+		segmented: {
+			"origin": "Origin: value for copy number normal (typically: 0 or 2)",
+			"thresh": "Threshold: absolute value from origin to start showing color",
+			"max": "Saturation: absolute value to draw full color"
+		}
+	};
+	var scaleDefaults = {
+		float: {
+			max: 1,
+			maxStart: null,
+			minStart: null,
+			min: -1
+		},
+		segmented: {
+			origin: 0,
+			thresh: 0,
+			max: 1
+		}
+	};
 	var scaleChoice = createReactClass({
-		annotations: {
-			float: {
-				"max": "max: high color 100% saturation",
-				"maxStart": "maxStart: high color 0% saturation",
-				"minStart": "minStart: low color 0% saturation",
-				"min": "min: low color 100% saturation"
-			},
-			segmented: {
-				"origin": "Origin: value for copy number normal (typically: 0 or 2)",
-				"thresh": "Threshold: absolute value from origin to start showing color",
-				"max": "Saturation: absolute value to draw full color"
-			}
-		},
-		defaults: {
-			float: {
-				max: 1,
-				maxStart: null,
-				minStart: null,
-				min: -1
-			},
-			segmented: {
-				origin: 0,
-				thresh: 0,
-				max: 1
-			}
-		},
 		getInitialState () {
 			//check if there is custom value
 			let custom = colorParams[valueType].some(function (param) {
@@ -219,23 +219,23 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			if (valueType === "float") {
 				dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values)));
 				dataMax = _.maxnull(_.map(data.req.values, values => _.maxnull(values)));
-				this.defaults[valueType].min = dataMin;
-				this.defaults[valueType].max = dataMax;
+				scaleDefaults[valueType].min = dataMin;
+				scaleDefaults[valueType].max = dataMax;
 			} else if (valueType === 'segmented') {
 				dataMin = _.minnull(_.map(data.req.rows, row => row.value));
 				dataMax = _.maxnull(_.map(data.req.rows, row => row.value));
 				if (dataMin >= 0) {
-					this.defaults[valueType].origin = 2;
-					this.defaults[valueType].max = 6;
+					scaleDefaults[valueType].origin = 2;
+					scaleDefaults[valueType].max = 6;
 				} else {
-					this.defaults[valueType].origin = 0;
-					this.defaults[valueType].max = dataMax;
+					scaleDefaults[valueType].origin = 0;
+					scaleDefaults[valueType].max = dataMax;
 				}
 			}
 
 			return {
 				mode: custom ? "Custom" : "Auto",
-				settings: custom ? _.pick(oldSettings, colorParams[valueType]) : this.defaults[valueType],
+				settings: custom ? _.pick(oldSettings, colorParams[valueType]) : scaleDefaults[valueType],
 				errors: {}
 			};
 		},
@@ -263,7 +263,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		buildCustomColorScale () {
 			var node = colorParams[valueType].map(param => {
 					let value = valToStr(this.state.settings[param]),
-						label = this.annotations[valueType][param],
+						label = scaleAnnotations[valueType][param],
 						error = this.state.errors[param];
 
 					return (
@@ -559,7 +559,9 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 // react wrapper for the legacy DOM code, above.
 var SettingsWrapper = createReactClass({
-	shouldComponentUpdate: () => false,
+	shouldComponentUpdate: function () {
+		return false;
+	},
 	componentWillReceiveProps(newProps) {
 		this.currentSettings.state = newProps.vizSettings;
 	},
