@@ -15,14 +15,6 @@ var rxEvents = (comp, ...args) => {
 	return ev;
 };
 
-var deepPureRenderMixin = {
-	shouldComponentUpdate: function (nextProps, nextState) {
-		return !_.isEqual(nextProps, this.props) ||
-			!_.isEqual(nextState, this.state);
-	}
-};
-
 module.exports = {
-	rxEvents,
-	deepPureRenderMixin: deepPureRenderMixin
+	rxEvents
 };
