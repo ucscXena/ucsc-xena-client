@@ -92,7 +92,7 @@ var stopPropagation = ev => ev.stopPropagation();
 */
 
 var addIdsToArr = arr => {
-	var list = arr.filter(el => el).map((el, id) => React.cloneElement(el, {id}));
+	var list = arr.filter(el => el).map((el, id) => React.cloneElement(el, {key: id}));
 	return _.isEmpty(list) ? null : list;
 };
 var isIntString = str => !!str.trim().replace(/,/g, '').match(/^[0-9]+$/);
