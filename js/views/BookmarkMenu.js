@@ -26,7 +26,8 @@ var asciiA = 65;
 // MenuItem, we avoid this.
 class NoCloseMenuItem extends React.Component {
 	render() {
-		return <MenuItem {...this.props}/>;
+		var {tooltip, ...otherProps} = this.props;
+		return <MenuItem {...otherProps}/>;
 	}
 }
 
