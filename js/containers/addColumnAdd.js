@@ -43,7 +43,7 @@ function addColumnAdd(Component) {
 				columns = React.Children.map(children, (child, i) => (
 					<div
 						className={classNames(compStyles.visualizationOrWizardMode, hoverClass(i, hover), {[compStyles.wizardModeMargins]: wizardMode})}
-						actionKey={child.props.actionKey}>
+						data-actionKey={child.props.actionKey}>
 
 						{child}
 						<ColumnAdd

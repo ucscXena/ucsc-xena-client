@@ -18,11 +18,11 @@ function addLegend(Component) {
 			return (
 				<Component {...props}>
 					{React.Children.map(children, el => {
-						var id = el.props.actionKey,
+						var id = el.props['data-actionKey'],
 							data = columnData[id],
 							column = columns[id];
 						return (
-							<div actionKey={id}>
+							<div data-actionKey={id}>
 								{el}
 								{id != null && editing !== id && !_.isNumber(id) ? (
 									<div style={{width: column.width}}>

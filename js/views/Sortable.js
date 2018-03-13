@@ -69,7 +69,7 @@ class Sortable extends PureComponent {
 		var mousedrag = mousedown.flatMap(([id, md]) => {
             // find starting positions on mouse down
 
-			var order = _.map(this.props.children, c => c.props.actionKey);
+			var order = _.map(this.props.children, c => c.props['data-actionKey']);
 			var startX = md.clientX;
 			var {widths} = this.props;
 			var positions = _.map(order,
@@ -138,7 +138,7 @@ class Sortable extends PureComponent {
 	}
 
 	initialPositions = () => {
-		return _.object(_.map(this.props.children, c => [c.props.actionKey, 0]));
+		return _.object(_.map(this.props.children, c => [c.props['data-actionKey'], 0]));
 
 	};
 
@@ -156,14 +156,16 @@ class Sortable extends PureComponent {
 		var {dragging} = this.state,
 			{Component, children, ...otherProps} = this.props;
 
-		var columns = React.Children.map(children, (child, i) =>
-			React.cloneElement(child, {
-				onMouseDown: i < skip ? undefined : ev => this.sortStart([child.props.actionKey, ev]),
+		var columns = React.Children.map(children, (child, i) => {
+			var actionKey = child.props['data-actionKey'];
+			return React.cloneElement(child, {
+				onMouseDown: i < skip ? undefined : ev => this.sortStart([actionKey, ev]),
 				className: 'Sortable-container' + (dragging !== null && i !== dragging ? ' Sortable-slide' : ''),
-				style: {left: this.state.pos[child.props.actionKey]},
-				id: child.props.actionKey,
-				ref: child.props.actionKey
-			}));
+				style: {left: this.state.pos[actionKey]},
+				id: actionKey,
+				ref: actionKey
+			});
+		});
 
 		return (
 			<Component {...otherProps} className='Sortable'>
