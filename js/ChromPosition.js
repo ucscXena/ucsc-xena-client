@@ -126,7 +126,6 @@ class ChromPosition extends React.Component {
 				onMouseOut={this.props.onMouseOut}
 				onMouseOver={this.props.onMouseOver}
 				onClick={this.props.onClick}
-				onDblClick={this.props.onDblClick}
 				ref='canvas' />);
 	}
 }
