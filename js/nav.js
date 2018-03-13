@@ -56,7 +56,7 @@ class XenaNav extends React.Component {
 		let routes = _.map(links, l => {
 			var {nav, ...others} = l,
 			onClick = nav ? () => this.onClick(nav) : undefined;
-			return {...l, onClick, active: active(l, activeLink)};
+			return {...others, onClick, active: active(l, activeLink)};
 		});
 		let logoSrcSet = `${logoSantaCruz2xImg} 2x, ${logoSantaCruz3xImg} 3x`;
 		return (
