@@ -130,18 +130,18 @@ function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelec
 	if (wizardMode) {
 		if (stepperState === 'COHORT') {
 			return [
-				<CohortOrDisease {...cohortSelectProps}/>,
-				<GhostVariableSelect width={width} {...variableSelectConfig.FIRST_COLUMN}/>,
-				<GhostVariableSelect width={width} {...variableSelectConfig.SECOND_COLUMN}/>];
+				<CohortOrDisease key='c1' {...cohortSelectProps}/>,
+				<GhostVariableSelect key='c2' width={width} {...variableSelectConfig.FIRST_COLUMN}/>,
+				<GhostVariableSelect key='c3' width={width} {...variableSelectConfig.SECOND_COLUMN}/>];
 		}
 		if (stepperState === 'FIRST_COLUMN') {
 			return [
-				<VariableSelect {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
-				<GhostVariableSelect width={width} {...variableSelectConfig.SECOND_COLUMN} />];
+				<VariableSelect key='c2' {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
+				<GhostVariableSelect key='c3' width={width} {...variableSelectConfig.SECOND_COLUMN} />];
 		}
 		if (stepperState === 'SECOND_COLUMN') {
 			return [
-				<VariableSelect {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>];
+				<VariableSelect key='c3' {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>];
 		}
 	}
 	return [];
