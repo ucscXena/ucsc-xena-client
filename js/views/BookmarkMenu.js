@@ -154,7 +154,7 @@ class BookmarkMenu extends React.Component {
 					{bookmark ? <MenuItem onClick={this.onCopyBookmarkToClipboard} caption='Copy Bookmark'/> : null}
 					{loading ? <MenuItem disabled={true} caption='Your Bookmark is Loading'/> : null}
 					{!bookmark && !loading ? <MenuItem className={compStyles.placeholder} disabled={true}>Placeholder</MenuItem> : null}
-					<input className={compStyles.bookmarkInput} ref={(input) => this.bookmarkEl = input} value={bookmark}/>
+					<input className={compStyles.bookmarkInput} ref={(input) => this.bookmarkEl = input} value={bookmark || ''}/>
 					<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>
 				</Menu>
 			</div>);
