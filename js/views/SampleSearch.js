@@ -106,7 +106,8 @@ var SampleSearch = React.createClass({
 	render: function () {
 		var {matches, onFilter, onZoom, onCreateColumn, onResetSampleFilter, mode} = this.props,
 			{value} = this.state,
-			noshow = (mode !== "heatmap");
+			noshow = (mode !== "heatmap"),
+			disableFilterMenuOptions = matches === 0;
 		return (
 			<div className={compStyles.SampleSearch}>
 				<Input className={compStyles.inputContainer}
@@ -121,10 +122,10 @@ var SampleSearch = React.createClass({
 				</Input>
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
 				<IconMenu title='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
-					<MenuItem caption='Filter' onClick={onFilter}/>
-					<MenuItem caption='Clear Filter' onClick={onResetSampleFilter}/>
-					<MenuItem caption='Zoom' onClick={onZoom}/>
-					<MenuItem caption='New Column' onClick={onCreateColumn}/>
+					<MenuItem caption='Filter' onClick={onFilter} disabled={disableFilterMenuOptions}/>
+					<MenuItem caption='Clear Filter' onClick={onResetSampleFilter} disabled={disableFilterMenuOptions}/>
+					<MenuItem caption='Zoom' onClick={onZoom} disabled={disableFilterMenuOptions}/>
+					<MenuItem caption='New Column' onClick={onCreateColumn} disabled={disableFilterMenuOptions}/>
 				</IconMenu>}
 			</div>
 		);
