@@ -342,15 +342,14 @@ var VariableSelect = React.createClass({
 		var {features} = this.props,
 			{basicFeatures, value, mode} = this.state,
 			i = (featureIn ? features.indexOf(featureIn) : _.findIndex(features, _.matcher({label: value[mode]}))).toString();
-		// i === -1  when random text is searched 
-		// the error caused was in this.setState({basicFeatures....}) which stopeed the further execution
-		//error was features[i] is udefined because i was -1
+		
 		if (i !== "-1") {
 			this.setState({basicFeatures: _.uniq([...basicFeatures, i])});
 			this.on.select({selectValue: i, isOn: true});
 			this.on.field("");
 		}
-		if(i === "-1"){
+		
+		if (i === "-1") {
 			this.on.field("");
 		}
 	},
