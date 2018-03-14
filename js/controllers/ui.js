@@ -17,6 +17,7 @@ var {fetchInlineState} = require('../inlineState');
 var {compose, make, mount} = require('./utils');
 var {JSONToqueryString} = require('../dom_helper');
 var {parseBookmark} = require('../bookmark');
+import parseManifest from '../manifest';
 
 function fetchBookmark(serverBus, bookmark) {
 	serverBus.next(['bookmark', Rx.Observable.ajax({
@@ -24,6 +25,14 @@ function fetchBookmark(serverBus, bookmark) {
 		method: 'GET',
 		url: `/api/bookmarks/bookmark?id=${bookmark}`
 	}).map(r => parseBookmark(r.response))]);
+}
+
+function fetchManifest(serverBus, url) {
+	serverBus.next(['manifest', Rx.Observable.ajax({
+		responseType: 'text',
+		method: 'GET',
+		url
+	}).map(r => parseManifest(r.response))]);
 }
 
 function exampleQuery(dsID, count) {
@@ -172,7 +181,8 @@ var controls = {
 	},
 	'init-post!': (serverBus, state, newState, pathname, params) => {
 		var bookmark = _.get(params, 'bookmark'),
-			inlineState = _.get(params, 'inlineState');
+			inlineState = _.get(params, 'inlineState'),
+			manifest = _.get(params, 'manifest');
 		if (inlineState) {
 			fetchState(serverBus);
 		} else if (bookmark) {
@@ -193,6 +203,9 @@ var controls = {
 		}
 		if (!newState.wizard.cohortPhenotype) {
 			fetchCohortPhenotype(serverBus);
+		}
+		if (manifest) {
+			fetchManifest(serverBus, manifest);
 		}
 	},
 	navigate: (state, page, params = {}) => _.assoc(state, 'page', page, 'params', params),
