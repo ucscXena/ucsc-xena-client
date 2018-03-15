@@ -1,6 +1,6 @@
 'use strict';
 
-require('./km.css');
+import kmStyle from "./km.module.css";
 var _ = require('./underscore_ext');
 import PureComponent from './PureComponent';
 var React = require('react');
@@ -15,7 +15,6 @@ var NumberForm = require('./views/NumberForm');
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
 var margin = {top: 20, right: 30, bottom: 30, left: 50};
-const HOVER = 'hover';
 
 // XXX point at 100%? [xdomain[0] - 1, 1]
 function line(xScale, yScale, values) {
@@ -53,16 +52,18 @@ class LineGroup extends React.Component {
 		let {xScale, yScale, g, setActiveLabel, isActive} = this.props;
 		let [color, label, curve] = g;
 		var censors = curve.filter(pt => !pt.e);
-		let activeLabelClassName = isActive ? HOVER : '';
+
+		let outlineStyle = isActive ? kmStyle.outlineHover : kmStyle.outline;
+		let lineStyle = isActive ? kmStyle.lineHover : kmStyle.line;
 
 		return (
-			<g key={label} className='subgroup' stroke={color}
+			<g key={label} className={kmStyle.subgroup} stroke={color}
 			   	onMouseOver={(e) => setActiveLabel(e, label)}
 			   	onMouseOut={(e) => setActiveLabel(e, '')}>
-				<path className={`outline ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
-				<path className={`line ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
-				{censorLines(xScale, yScale, censors, `outline ${activeLabelClassName}`)}
-				{censorLines(xScale, yScale, censors, `line' ${activeLabelClassName}`)}
+				<path className={outlineStyle} d={line(xScale, yScale, curve)}/>
+				<path className={lineStyle} d={line(xScale, yScale, curve)}/>
+				{censorLines(xScale, yScale, censors, outlineStyle)}
+				{censorLines(xScale, yScale, censors, lineStyle)}
 			</g>
 		);
 	}
@@ -98,7 +99,7 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 			<g transform={`translate(${margin.left}, ${margin.top})`}>
 				<Axis
 					groupProps={{
-						className: 'x axis',
+						className: `x ${kmStyle.axis}`,
 						transform: `translate(0, ${height})`
 					}}
 					domain={xdomain}
@@ -109,7 +110,7 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 				/>
 				<Axis
 					groupProps={{
-						className: 'y axis'
+						className: `y ${kmStyle.axis}`
 					}}
 					domain={ydomain}
 					range={yrange}
@@ -145,12 +146,12 @@ class WarningTrigger extends React.Component {
 		let {header, body} = this.props;
 
 		return (
-			<div className={"warningContainer"}>
+			<div className={kmStyle.warningContainer}>
 				<Button
 					onClick={() => this.setState({show: true})}
-					className={"showPWarningButton"}
+					className={kmStyle.showPWarningButton}
 				>
-					<span className="glyphicon glyphicon-warning-sign pWarningIcon"/>
+					<span className={`glyphicon glyphicon-warning-sign ${kmStyle.pWarningIcon}`}/>
 				</Button>
 				{this.state.show ? <WarningDialog onHide={this.close} header={header} body={body}/> : null}
 			</div>
@@ -169,7 +170,7 @@ class WarningDialog extends React.Component {
 		const actions = [
 			{
 				label: <i className='material-icons'>close</i>,
-				className: "warningDialogClose",
+				className: kmStyle.warningDialogClose,
 				onClick: this.props.onHide
 			},
 		];
@@ -179,12 +180,12 @@ class WarningDialog extends React.Component {
 				actions={actions}
 				active={true}
 				title={this.props.header}
-				className={"kmWarningDialog"}
+				className={kmStyle.warningDialog}
 				onEscKeyDown={this.props.onHide}
 				onOverlayClick={this.props.onHide}
 				theme={{
-					wrapper: 'dialogWrapper',
-					overlay: 'dialogOverlay'}}>
+					wrapper: kmStyle.dialogWrapper,
+					overlay: kmStyle.dialogOverlay}}>
 				{this.props.body}
 			</Dialog>
 		);
@@ -197,8 +198,8 @@ class PValue extends PureComponent {
 		var {logRank, pValue, patientWarning} = this.props;
 		return (
 			<div>
-				<div className={"PValueArea"}>
-					<div className={"PValueP"}><i>P</i>-value = {formatPValue(pValue)}</div>
+				<div className={kmStyle.PValueArea}>
+					<div className={kmStyle.PValueP}><i>P</i>-value = {formatPValue(pValue)}</div>
 					{patientWarning ?
 						<WarningTrigger
 							header="P value warning"
@@ -221,7 +222,7 @@ function sampleCount(curve) {
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
 	let isActive = checkIfActive(label, activeLabel);
-	let activeLabelClassName = isActive ? 'grey' : '';
+	let labelClassName = isActive ? kmStyle.activeListItem : kmStyle.listItem;
 	let legendLineStyle = {
 		backgroundColor: color,
 		border: (isActive ? 2 : 1).toString() + 'px solid',
@@ -234,7 +235,7 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	return (
 		<li
 			key={label}
-			className={`kmListItem ${activeLabelClassName}`}
+			className={labelClassName}
 			onMouseOver={(e) => setActiveLabel(e, label)}
 			onMouseOut={(e) => setActiveLabel(e, '')}>
 			<span style={legendLineStyle}/> {label} (n={sampleCount(curves)})
@@ -251,16 +252,16 @@ class Legend extends PureComponent {
 				.map(set => makeLegendKey(set, setActiveLabel, activeLabel));
 
 		return (
-			<div className="legend">{sets}</div>
+			<div className={kmStyle.legend}>{sets}</div>
 		);
 	}
 }
 
 function makeGraph(groups, setActiveLabel, activeLabel, size) {
 	return (
-		<div className="graph" style={{width: 0.9 * size.width}}>
+		<div className={kmStyle.graph} style={{width: 0.9 * size.width}}>
 			{svg(groups, setActiveLabel, activeLabel, {height: 0.8 * size.height, width: 0.9 * size.width})}
-			<div className='kmScreen'/>
+			<div className={kmStyle.screen}/>
 		</div>
 	);
 }
@@ -269,13 +270,13 @@ function makeSplits(splits, onSplits) {
 	return (
 		<form>
 			<div>
-				<label className={"kmSplitLabel"}>
+				<label className={kmStyle.splitLabel}>
 					<input value={2} type="radio" name="splits" checked={splits === 2} onChange={onSplits}/>
-					<span className={"kmSplitHint"}>2 groups</span>
+					<span className={kmStyle.splitHint}>2 groups</span>
 				</label>
-				<label className={"kmSplitLabel"}>
+				<label className={kmStyle.splitLabel}>
 					<input value={3} type="radio" name="splits" checked={splits === 3} onChange={onSplits}/>
-					<span className={"kmSplitHint"}>3 groups</span>
+					<span className={kmStyle.splitHint}>3 groups</span>
 				</label>
 			</div>
 		</form>);
@@ -285,7 +286,7 @@ function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, sp
 	// get new size based on size ratio for definitions column
 
 	return (
-		<div className="definitions" style={{width: size.width}}>
+		<div className={kmStyle.definitions} style={{width: size.width}}>
 			<PValue pValue={groups.pValue} logRank={groups.KM_stats}
 				patientWarning={groups.patientWarning}/>
 			<br/>
@@ -381,12 +382,12 @@ class KmPlot extends PureComponent {
 					? <div><h3>Unfortunately, KM plot can not be made. There is no survival data overlapping column
 						data.</h3></div>
 					: <div>
-						<Button onClick={this.pdf} className={"kmPDFButton"}>
-							<span className="glyphicon glyphicon-download kmButtonIcon"/>
+						<Button onClick={this.pdf} className={kmStyle.PDFButton}>
+							<span className={`glyphicon glyphicon-download ${kmStyle.buttonIcon}`}/>
 							PDF
 						</Button>
-						<Button onClick={this.help} className={"kmHelpButton"}>
-							<span className={"glyphicon glyphicon-question-sign kmButtonIcon"}/>
+						<Button onClick={this.help} className={kmStyle.helpButton}>
+							<span className={`glyphicon glyphicon-question-sign ${kmStyle.buttonIcon}`}/>
 							Help
 						</Button>
 						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
@@ -399,14 +400,14 @@ class KmPlot extends PureComponent {
 								max={max}
 								initialValue={cutoff}/>
 						</div>
-						<samp className='featureLabel'>{fullLabel}</samp>
+						<samp className={kmStyle.featureLabel}>{fullLabel}</samp>
 					</div>
 			);
 
 		const actions = [
 			{
 				label: <i className='material-icons'>close</i>,
-				className: "kmDialogClose",
+				className: kmStyle.mainDialogClose,
 				onClick: this.hide
 			},
 		];
@@ -416,12 +417,12 @@ class KmPlot extends PureComponent {
 					actions={actions}
 					active={true}
 					title={'Kaplan Meier' + title}
-					className={"kmDialog"}
+					className={kmStyle.mainDialog}
 					onEscKeyDown={this.hide}
 					onOverlayClick={this.hide}
 					theme={{
-						wrapper: 'dialogWrapper',
-						overlay: 'dialogOverlay'}}>
+						wrapper: kmStyle.dialogWrapper,
+						overlay: kmStyle.dialogOverlay}}>
 					{Content}
 				</Dialog>
 			</div>

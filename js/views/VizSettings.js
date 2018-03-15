@@ -38,10 +38,12 @@ var _ = require('../underscore_ext');
 var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var {Modal, DropdownButton, MenuItem, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
+var {DropdownButton, MenuItem, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
 var {Row, Col} = require("react-material-responsive-grid");
 var Input = require('react-bootstrap/lib/Input');
 var image = require('react-bootstrap/lib/Image');
+import Dialog from 'react-toolbox/lib/dialog';
+import vizSettingStyle from "./vizSetting.module.css";
 
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
 	defaultColorClass, valueType, fieldType, data, units) {
@@ -585,15 +587,25 @@ class SettingsWrapper extends React.Component {
 class VizSettings extends React.Component {
 	render() {
 		var {onRequestHide} = this.props;
+
+		const actions = [
+			{
+				label: <i className='material-icons'>close</i>,
+				className: vizSettingStyle.dialogClose,
+				onClick: onRequestHide
+			},
+		];
+
 		return (
-			<Modal show={true} onHide={onRequestHide}>
-				<Modal.Header closeButton>
-					<Modal.Title>Dataset Visualization Settings</Modal.Title>
-				</Modal.Header>
-				<Modal.Body>
-					<SettingsWrapper {...this.props} />
-				</Modal.Body>
-			</Modal>
+			<Dialog
+				actions={actions}
+				active={true}
+				title='Dataset Visualization Settings'
+				className={vizSettingStyle.dialog}
+				onEscKeyDown={this.props.onHide}
+				onOverlayClick={this.props.onHide}>
+				<SettingsWrapper {...this.props} />
+			</Dialog>
 		);
 	}
 }
