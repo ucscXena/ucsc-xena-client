@@ -31,8 +31,8 @@ var spreadsheet = {
 	chart: () => cy.get('.highcharts-root'),
 	closeCohort: () => spreadsheet.colControls(0).contains('close'),
 	kaplanMeierButton: i => spreadsheet.colControls(i).contains('Kaplan Meier'),
-	kaplanMeier: () => cy.get('.kmDialog'),
-	kaplanMeierClose: () => cy.get('.kmDialogClose'),
+	kaplanMeier: () => cy.get('[class*=km-module__mainDialog]'),
+	kaplanMeierClose: () => cy.get('[class*=km-module__mainDialogClose]'),
 	loadingSpinners: () => cy.get('[data-xena="loading"]'),
 	// "View live example" link
 	examples: () => cy.get('[class^=Welcome-module] a'),
