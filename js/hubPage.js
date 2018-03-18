@@ -122,7 +122,7 @@ class Hub extends React.Component {
 				<Card>
 					<ul className={styles.hubList}>
 						{_.values(hostList).map(h => (
-						<li>
+						<li key={h.host}>
 							<Checkbox className={styles.checkbox} onChange={this.onSelect} checked={h.selected}
 									  data-host={h.host}/>
 							<div className={styles.statusContainer}>

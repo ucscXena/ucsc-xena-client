@@ -13,7 +13,7 @@ class NameColumn extends React.PureComponent {
 		let items = data.map((d, index) => {
 			let rowClass = d.zoom ? "nameColumn--item--zoom" : "nameColumn--item";
 			return (
-				<div className={styles[rowClass]} style={{backgroundColor: colors(index), color: contrastColor(colors(index))}}>
+				<div key={d.name} className={styles[rowClass]} style={{backgroundColor: colors(index), color: contrastColor(colors(index))}}>
 					<span><i>{gene} {d.name}</i></span>
 				</div>);
 		});

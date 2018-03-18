@@ -101,8 +101,8 @@ class Transcripts extends React.Component {
 			valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypesTcga[0]}`,
 			valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypesGtex[0]}`,
 			options = _.concat(
-				subtypesTcga.map(name => <option value = {"tcga|" + name}>{name}</option>),
-				subtypesGtex.map(name => <option value = {"gtex|" + name}>{name}</option>)),
+				subtypesTcga.map(name => <option key={`tcga|${name}`} value={`tcga|${name}`}>{name}</option>),
+				subtypesGtex.map(name => <option key={`gtex|${name}`} value={`gtex|${name}`}>{name}</option>)),
 			unitLabels = {
 				tpm: {
 					dropdown: "TPM",
@@ -193,7 +193,7 @@ class Transcripts extends React.Component {
 								<div>
 									{ densityplotAxisLabel.map((label, i) => {
 										return (
-											<div>
+											<div key={i}>
 												<label className={styles["densityplot--label-x"]} style={{left: `${(label - min) * plotWidth / range}px`}}>{label}{(unit === "isoformPercentage" && i === densityplotAxisLabel.length - 1) ? "%" : "" }</label>
 												<div className={styles["densityplot--label-vertical-tick"]} style={{left: `${(label - min) * plotWidth / range}px`}}/>
 											</div>);

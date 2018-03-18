@@ -70,7 +70,7 @@ class DataHubs extends React.Component {
 				<ul>
 					{map(servers,
 						({user}, host) => (
-							<li>
+							<li key={host}>
 								<Checkbox
 									label={hubLink(host, this.onHub)}
 									onChange={this.onSelect}
@@ -113,7 +113,7 @@ var CohortSummary = ({cohorts, onCohort}) => {
 			<h2>{pluralize('Cohort', nCohorts)}, {pluralize('Dataset', nDatasets)}</h2>
 			<ul className={styles.list}>
 				{map(names, name =>
-					<li>
+					<li key={name}>
 						{treehouse(name)}
 						{cohortLink(name, onCohort)}
 						{` (${pluralize('dataset', cohorts[name])})`}
@@ -196,7 +196,7 @@ var markdownValue = value => {
 var datasetLink = (callback, preferred, onClick) => ds => {
 	var [host] = parseDsID(ds.dsID);
 	return (
-		<li>
+		<li key={ds.name}>
 			<Link
 				className={styles.link}
 				href={'?' + encodeObject({dataset: ds.name, host})}
@@ -220,7 +220,7 @@ var datasetLink = (callback, preferred, onClick) => ds => {
 var drawGroup = (callback, groups, preferred, onClick) => dataSubType => {
 	var list = sortBy(groups[dataSubType], g => g.label.toLowerCase());
 	return (
-		<div>
+		<div key={dataSubType}>
 			<h3>{dataSubType}</h3>
 			<ul className={styles.groupList}>
 				{map(list, datasetLink(callback, preferred, onClick))}
@@ -343,7 +343,7 @@ var transposeClinical = (meta, data) =>
 var table = data => (
 		<table className={styles.dataSnippetTable}>
 			<tbody>
-				{map(data, row => <tr>{map(row, c => <td>{c}</td>)}</tr>)}
+				{map(data, (row, i) => <tr key={i}>{map(row, (c, j) => <td key={j}>{c}</td>)}</tr>)}
 			</tbody>
 		</table>);
 
@@ -372,6 +372,8 @@ var dataMethod = ({type = 'genomicMatrix', status} = {}) =>
 	type === 'mutationVector' ? sparseTable :
 	type === 'genomicSegment' ? sparseTable :
 	noTable;
+
+var setKey = arr => arr.map((el, i) => React.cloneElement(el, {key: i}));
 
 class DatasetPage extends React.Component {
 	onCohort = (ev) => { navHandler.call(this, ev); };
@@ -418,7 +420,7 @@ class DatasetPage extends React.Component {
 				<h2>dataset: {(dataSubType ? dataSubType + ' - ' : '') + label}</h2>
 				{headerValue(longTitle)}
 				{htmlValue(description)}
-				{flatten([
+				{setKey(flatten([
 					dataPair('cohort', cohort, toCohortLink(this.onCohort)),
 					dataPair('dataset ID', name),
 					getStatus(status, loader),
@@ -438,7 +440,7 @@ class DatasetPage extends React.Component {
 					flatmap(uniq(split(url, /,/)), url =>
 						dataPair('raw data', url, toLink)),
 					dataPair('wrangling', wranglingProcedure, toHTML),
-					dataPair('input data format', FORMAT_MAPPING[type])])}
+					dataPair('input data format', FORMAT_MAPPING[type])]))}
 				{status === 'loaded' ?
 					<span className={styles.tableControls}>
 						{type === 'genomicMatrix' ?
@@ -551,8 +553,8 @@ class ListPage extends React.Component {
 			<div className={styles.datapages}>
 				<h3>dataset: {dataset}</h3>
 				<h4>{title}{percent}</h4>
-				{chunks ? chunks.map(c => (
-					<pre className={styles.list}>
+				{chunks ? chunks.map((c, i) => (
+					<pre key={i} className={styles.list}>
 						{c}
 					</pre>
 				)) : 'Loading...'}

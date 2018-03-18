@@ -78,7 +78,7 @@ function densitySvg(heights, height, totalWidth, vscale, A) {
 		scaledZeroHeight = zeroHeight / vscale * height;
 	return (
 		<svg width={totalWidth} height={height}>
-			<rect x="0" y={height - scaledZeroHeight} width={zeroWidth} height={scaledZeroHeight} fill={A ? topColor : bottomColor} margin={A ? "" : "5"}/>
+			<rect x="0" y={height - scaledZeroHeight} width={zeroWidth} height={scaledZeroHeight} fill={A ? topColor : bottomColor}/>
 			<polyline points={polylinePoints} fill={A ? topColor : bottomColor}/>
 		</svg>);
 }
@@ -90,7 +90,7 @@ var drawDensityPlot = (min, max, totalWidth, unit, getNameZoom) => (studyA, stud
 		bHeight = calculateHeight(studyB.expB, max, min, height, plotWidth, unit),
 		vscale = Math.max(aHeight.zeroHeight, bHeight.zeroHeight, ...aHeight.yHeights, ...bHeight.yHeights);
 	return (
-		<div className={styles[rowClass]} style={{width: `${totalWidth}px`}}onClick={() => getNameZoom(nameAndZoom.name)}>
+		<div key={nameAndZoom.name} className={styles[rowClass]} style={{width: `${totalWidth}px`}}onClick={() => getNameZoom(nameAndZoom.name)}>
 			<div className={styles["densityPlot--row--xAxis"]} style={{width: `${plotWidth * 100 / totalWidth}%`, left: "20px"}}/>
 
 			<div className={styles["densityPlot--row--studyA"]} style={{width: totalWidth}}>

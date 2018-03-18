@@ -139,7 +139,7 @@ class WarningTrigger extends React.Component {
 	state = { show: false };
 
 	close = () => {
-		this.setState({show: false}).bind(this);
+		this.setState({show: false});
 	};
 
 	render() {
@@ -169,7 +169,7 @@ class WarningDialog extends React.Component {
 
 		const actions = [
 			{
-				label: <i className='material-icons'>close</i>,
+				children: [<i className='material-icons'>close</i>],
 				className: kmStyle.warningDialogClose,
 				onClick: this.props.onHide
 			},
@@ -406,7 +406,7 @@ class KmPlot extends PureComponent {
 
 		const actions = [
 			{
-				label: <i className='material-icons'>close</i>,
+				children: [<i className='material-icons'>close</i>],
 				className: kmStyle.mainDialogClose,
 				onClick: this.hide
 			},

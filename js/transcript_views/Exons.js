@@ -18,7 +18,7 @@ function box(type, startsAt, width, multiplyingFactor, strand, pad = 0, zoom = f
 	return exon;
 }
 
-function renderExon(exon) {
+function renderExon(exon, key) {
 	let style = {
 		width: exon.width,
 		[exon.origin]: exon.position
@@ -26,7 +26,7 @@ function renderExon(exon) {
 	if(exon.type === 'small')
 	{
 		let boxClass = exon.zoom ? "exons--row--item-small--zoom" : "exons--row--item-small";
-		return (<div className={styles[boxClass]}
+		return (<div key={key} className={styles[boxClass]}
 						style={style}>
 						<span>{exon.label}</span>
 					</div>);
@@ -34,7 +34,7 @@ function renderExon(exon) {
 	else if(exon.type === 'big')
 	{
 			let boxClass = exon.zoom ? "exons--row--item-big--zoom" : "exons--row--item-big";
-			return (<div className={styles[boxClass]}
+			return (<div key={key} className={styles[boxClass]}
 							style={style}>
 							<span>{exon.label}</span>
 						</div>);

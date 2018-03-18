@@ -122,7 +122,7 @@ function drawRows(data, multiplyingFactor, origin, getNameZoom) {
 			transcriptExonShape = exonShape(d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand, origin, d.zoom),
 			allBoxes = _.flatten(_.mmap(d.exonStarts, d.exonEnds, d.labelsAndPad, transcriptExonShape));
 		return (
-			<div className={styles[rowClass]} id={index} onClick={() => getNameZoom(d.name)}>
+			<div key={d.name} className={styles[rowClass]} id={index} onClick={() => getNameZoom(d.name)}>
 				<div className={styles["exons--row--axis"]} style={style}/>
 				{allBoxes.map(renderExon)}
 			</div>);
