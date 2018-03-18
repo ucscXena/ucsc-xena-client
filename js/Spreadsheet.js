@@ -14,7 +14,7 @@ var compStyles = require('./Spreadsheet.module.css');
 function zoomPopover(props) {
 	return (
 		<div className={classNames(compStyles.zoomDialog, {[compStyles.active]: props.active})} {...props}>
-			<div className={compStyles.content}>Shift-click on data to zoom out.<br/><br>Click to zoom in.</br></div>
+			<div className={compStyles.content}>Shift-click on data to zoom out.<br/>Click to zoom in.</div>
 			<div className={compStyles.actions}>
 				<Button accent onClick={props.onDisableClick}>GOT IT</Button>
 			</div>
