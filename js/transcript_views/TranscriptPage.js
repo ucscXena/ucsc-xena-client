@@ -61,7 +61,7 @@ class Transcripts extends React.Component {
 	};
 
 	onZoom = (name) => {
-		this.props.callback(['zoom', name]);
+		this.props.callback(['transcriptZoom', name]);
 	};
 
 	scaleZoom = () => {

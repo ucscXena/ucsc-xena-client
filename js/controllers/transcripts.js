@@ -91,7 +91,7 @@ var controls = {
 	transcriptSampleSubtypes:
 		(state, subtypes) => _.assocIn(state, ['transcripts', 'subtypes'], subtypes),
 	units: (state, units) => _.assocIn(state, ['transcripts', 'units'], units),
-	zoom: (state, name) => _.updateIn(state, ['transcripts', 'zoom', name], z => !z)
+	transcriptZoom: (state, name) => _.updateIn(state, ['transcripts', 'zoom', name], z => !z)
 };
 
 module.exports = {
