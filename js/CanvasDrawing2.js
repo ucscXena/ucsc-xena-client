@@ -3,29 +3,15 @@
 'use strict';
 
 var _ = require('./underscore_ext');
-var vgmixed = require('./vgmixed');
+var vgcanvas = require('./vgcanvas');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var styles = {
-	canvas: {
-		position: 'relative',
-		left: 0,
-		top: 0,
-		zIndex: 1
-	},
-	labels: {
-		position: 'relative',
-		left: 0,
-		zIndex: 2
-	},
-	wrapper: {
-		position: 'relative',
-		zIndex: 1,
-		overflow: 'hidden',
-		backgroundColor: 'gray'
-	}
-};
+// This is a quick hack to work around the very different styling requirements
+// of BandLegend, vs. the other canvas elements we have. Here we never change
+// the pixel buffer size, but manipulate the canvas css size to scale over
+// resize. The main point of this is that the size of the canvas width is
+// driven by the css, so we're not holding the final width when we draw.
 
 class CanvasDrawing extends React.Component {
 	componentWillReceiveProps(newProps) {
@@ -39,32 +25,22 @@ class CanvasDrawing extends React.Component {
 	}
 
 	render() {
-		var {width, zoom: {height}, wrapperProps} = this.props;
-		return (
-			<div ref='div' {...wrapperProps} style={{...styles.wrapper, width, height}}>
-				<canvas style={styles.canvas} ref='canvas'/>
-				<div style={{...styles.labels, top: -height, width, height}} ref='labels'/>
-			</div>
-		);
+		var {style} = this.props;
+		return <canvas style={style} ref='canvas'/>;
 	}
 
 	componentDidMount() {
 		var {width, zoom: {height}} = this.props;
-		this.vg = vgmixed(ReactDOM.findDOMNode(this.refs.canvas), width, height, ReactDOM.findDOMNode(this.refs.labels));
+		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, height);
 		this.draw(this.props);
 	}
 
 	setHeight = (height) => {
 		this.vg.height(height);
-		this.refs.div.style.height = `${height}px`;
-		this.refs.labels.style.height = `${height}px`;
-		this.refs.labels.style.top = `-${height}px`;
 	};
 
 	setWidth = (width) => {
 		this.vg.width(width);
-		this.refs.div.style.width = `${width}px`;
-		this.refs.labels.style.width = `${width}px`;
 	};
 
 	draw = (props) => {

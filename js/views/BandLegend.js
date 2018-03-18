@@ -1,7 +1,7 @@
 'use strict';
 
 import React from 'react';
-import CanvasDrawing from '../CanvasDrawing';
+import CanvasDrawing2 from '../CanvasDrawing2';
 import {rgb} from '../color_helper';
 
 //// Styles
@@ -26,17 +26,17 @@ function draw(vg, opts) {
 	ctx.putImageData(img, 0, 0);
 }
 
-var addClass = className => el =>
-	React.cloneElement(el, {className});
+var addClass = className => (el, i) =>
+	React.cloneElement(el, {className, key: i});
 
-class Legend extends React.Component {
+class BandLegend extends React.Component {
 	render() {
 		var {range, multiScaled, width, height, footnotes, colorScale} = this.props,
 			labels = multiScaled ? {min: 'low', max: 'high'} :
 				{min: range.min.toPrecision(2), max: range.max.toPrecision(2)},
 			drawing = (
-				<CanvasDrawing
-					wrapperProps={{className: compStyles.wrapper}}
+				<CanvasDrawing2
+					style={{width: '100%', height}}
 					draw={draw}
 					range={range}
 					width={width}
@@ -59,4 +59,4 @@ class Legend extends React.Component {
 	}
 }
 
-module.exports = Legend;
+module.exports = BandLegend;
