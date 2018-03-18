@@ -4,6 +4,9 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 var widgets = require('../columnWidgets');
 var _ = require('../underscore_ext');
+var konami = require('../konami');
+
+var newLegend = false;
 
 // XXX doing layout here.
 // XXX we could push width down into widgets.legend, but would
@@ -11,6 +14,22 @@ var _ = require('../underscore_ext');
 function addLegend(Component) {
 	return class extends PureComponent {
 	    static displayName = 'SpreadsheetLegend';
+
+		state = {newLegend};
+
+		enableNew = () => {
+			newLegend = true;
+			this.setState({newLegend});
+		}
+
+		componentWillMount() {
+			var asciiC = 67;
+			this.ksub = konami(asciiC).subscribe(this.enableNew);
+		}
+
+		componentWillUnmount() {
+			this.ksub.unsubscribe();
+		}
 
 	    render() {
 			var {children, ...props} = this.props,
@@ -26,7 +45,7 @@ function addLegend(Component) {
 								{el}
 								{id != null && editing !== id && !_.isNumber(id) ? (
 									<div style={{width: column.width}}>
-										{widgets.legend({column, id, data})}
+										{widgets.legend({column, id, data, newLegend})}
 									</div>) : null}
 							</div>);
 					 })}

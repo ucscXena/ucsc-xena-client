@@ -41,8 +41,8 @@ class CanvasDrawing extends React.Component {
 	render() {
 		var {width, zoom: {height}, wrapperProps} = this.props;
 		return (
-			<div ref='div' {...wrapperProps} style={{...styles.wrapper, width, height}}>
-				<canvas style={styles.canvas} ref='canvas'/>
+			<div ref='div' {...wrapperProps} style={{...styles.wrapper, height}}>
+				<canvas style={{height, ...styles.canvas}} ref='canvas'/>
 				<div style={{...styles.labels, top: -height, width, height}} ref='labels'/>
 			</div>
 		);

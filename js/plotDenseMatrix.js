@@ -6,6 +6,7 @@ var widgets = require('./columnWidgets');
 var colorScales = require('./colorScales');
 var util = require('./util');
 var Legend = require('./views/Legend');
+var BandLegend = require('./views/BandLegend');
 import PureComponent from './PureComponent';
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
@@ -152,6 +153,31 @@ function renderFloatLegend(props) {
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 
+function renderFloatLegendNew(props) {
+	var {units, colors, vizSettings} = props;
+
+	if (!colors) {
+		return null;
+	}
+
+	var colorSpec = _.max(colors, colorList => _.uniq(colorList.slice(Math.ceil(colorList.length / 2.0))).length),
+		scale = colorScales.colorScale(colorSpec),
+		values = scale.domain(),
+		unitText = units[0],
+		footnotes = [units && units[0] ? <span title={unitText}>{unitText}</span> : null],
+		hasViz = !isNaN(_.getIn(vizSettings, ['min'])),
+		multiScaled = colors && colors.length > 1 && !hasViz;
+
+	return (
+		<BandLegend
+			multiScaled={multiScaled}
+			range={{min: _.first(values), max: _.last(values)}}
+			colorScale={scale}
+			footnotes={footnotes}
+			width={50}
+			height={20}/>);
+}
+
 // Might have colorScale but no data (phenotype), no data & no colorScale,
 // or data & colorScale, no colorScale &  data?
 function renderCodedLegend(props) {
@@ -174,7 +200,7 @@ function renderCodedLegend(props) {
 
 var HeatmapLegend = hotOrNot(class extends PureComponent {
 	render() {
-		var {column, data} = this.props,
+		var {column, data, newLegend} = this.props,
 			{units, heatmap, colors, valueType, vizSettings, defaultNormalization} = column,
 			props = {
 				units,
@@ -185,7 +211,9 @@ var HeatmapLegend = hotOrNot(class extends PureComponent {
 				coded: valueType === 'coded',
 				codes: _.get(data, 'codes'),
 			};
-		return (props.coded ? renderCodedLegend : renderFloatLegend)(props);
+		return (props.coded ? renderCodedLegend :
+			newLegend ? renderFloatLegendNew :
+			renderFloatLegend)(props);
 	}
 });
 
