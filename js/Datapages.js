@@ -115,7 +115,7 @@ var CohortSummary = ({cohorts, onCohort}) => {
 			<h2>{pluralize('Cohort', nCohorts)}, {pluralize('Dataset', nDatasets)}</h2>
 			<ul className={styles.list}>
 				{map(names, name =>
-					<li key={name} onClick={() => {ReactGA.event({category:'Dataset Click',action:`${name}`})}}>
+					<li key={name} onClick={() => {ReactGA.event({category: 'Dataset Click', action: `${name}`});}}>
 						{treehouse(name)}
 						{cohortLink(name, onCohort)}
 						{` (${pluralize('dataset', cohorts[name])})`}
