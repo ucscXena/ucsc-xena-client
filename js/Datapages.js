@@ -2,6 +2,8 @@
 
 require('./base');
 const React = require('react');
+import ReactGA from 'react-ga';
+ReactGA.initialize('UA-115940157-1');
 var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
 	pluck, concat, where, contains, get, updateIn, range, Let,
 	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext');
@@ -113,7 +115,7 @@ var CohortSummary = ({cohorts, onCohort}) => {
 			<h2>{pluralize('Cohort', nCohorts)}, {pluralize('Dataset', nDatasets)}</h2>
 			<ul className={styles.list}>
 				{map(names, name =>
-					<li key={name}>
+					<li key={name} onClick={() => {ReactGA.event({category:'Dataset Click',action:`${name}`})}}>
 						{treehouse(name)}
 						{cohortLink(name, onCohort)}
 						{` (${pluralize('dataset', cohorts[name])})`}
