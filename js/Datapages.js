@@ -239,7 +239,7 @@ class CohortPage extends React.Component {
 	onViz = () => {
 		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 			cohort = getIn(datapages, ['cohort', 'cohort'], COHORT_NULL);
-
+		ReactGA.event({category: 'Visualize Click', action: `${cohort}`});
 		if (cohort !== get(currentCohort, 'name')) {
 			this.props.callback(['cohort', cohort]);
 		}
