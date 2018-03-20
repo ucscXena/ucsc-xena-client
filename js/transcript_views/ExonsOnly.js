@@ -5,8 +5,6 @@ var {allExons, exonGroups, intronRegions} = require('../findIntrons');
 var {box, renderExon} = require('./Exons');
 var styles = require('./Exons.module.css');
 
-var {deepPureRenderMixin} = require('../react-utils');
-
 const width = 700;
 const padding = 5;
 var suffixList = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -124,16 +122,14 @@ function drawRows(data, multiplyingFactor, origin, getNameZoom) {
 			transcriptExonShape = exonShape(d.cdsStart, d.cdsEnd, multiplyingFactor, d.strand, origin, d.zoom),
 			allBoxes = _.flatten(_.mmap(d.exonStarts, d.exonEnds, d.labelsAndPad, transcriptExonShape));
 		return (
-			<div className={styles[rowClass]} id={index} onClick={() => getNameZoom(d.name)}>
+			<div key={d.name} className={styles[rowClass]} id={index} onClick={() => getNameZoom(d.name)}>
 				<div className={styles["exons--row--axis"]} style={style}/>
 				{allBoxes.map(renderExon)}
 			</div>);
 	});
 }
 
-var ExonsOnly = React.createClass({
-	mixins: [deepPureRenderMixin],
-
+class ExonsOnly extends React.PureComponent {
 	render() {
 		var data = this.props.data ? this.props.data : [],
 			exonGroupsList = exonGroups(allExons(data)),
@@ -150,6 +146,6 @@ var ExonsOnly = React.createClass({
 					{rows}
 				</div>);
 	}
-});
+}
 
 module.exports = ExonsOnly;

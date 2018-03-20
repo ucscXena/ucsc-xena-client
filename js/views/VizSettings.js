@@ -38,10 +38,12 @@ var _ = require('../underscore_ext');
 var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var {Modal, DropdownButton, MenuItem, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
+var {DropdownButton, MenuItem, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
 var {Row, Col} = require("react-material-responsive-grid");
 var Input = require('react-bootstrap/lib/Input');
 var image = require('react-bootstrap/lib/Image');
+import Dialog from 'react-toolbox/lib/dialog';
+import vizSettingStyle from "./vizSetting.module.css";
 
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
 	defaultColorClass, valueType, fieldType, data, units) {
@@ -94,15 +96,17 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	// discard user changes & close.
-	var finishButtonBar = React.createClass({
-		handleCancelClick () {
+	class finishButtonBar extends React.Component {
+	    handleCancelClick = () => {
 			hide();
 			onVizSettings(id, state);
-		},
-		handleDoneClick () {
+		};
+
+	    handleDoneClick = () => {
 			hide();
-		},
-		render () {
+		};
+
+	    render() {
 			return (
 				<ButtonToolbar>
 					<Button onClick = {this.handleCancelClick}>Cancel</Button>
@@ -110,7 +114,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</ButtonToolbar>
 			);
 		}
-	});
+	}
 
 	function getInputSettingsFloat(settings) {
 		return _.fmap(settings, parseFloat);
@@ -177,75 +181,80 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
 	}
 
-	var scaleChoice = React.createClass({
-		annotations: {
-			float: {
-				"max": "max: high color 100% saturation",
-				"maxStart": "maxStart: high color 0% saturation",
-				"minStart": "minStart: low color 0% saturation",
-				"min": "min: low color 100% saturation"
-			},
-			segmented: {
-				"origin": "Origin: value for copy number normal (typically: 0 or 2)",
-				"thresh": "Threshold: absolute value from origin to start showing color",
-				"max": "Saturation: absolute value to draw full color"
-			}
+	var scaleAnnotations = {
+		float: {
+			"max": "max: high color 100% saturation",
+			"maxStart": "maxStart: high color 0% saturation",
+			"minStart": "minStart: low color 0% saturation",
+			"min": "min: low color 100% saturation"
 		},
-		defaults: {
-			float: {
-				max: 1,
-				maxStart: null,
-				minStart: null,
-				min: -1
-			},
-			segmented: {
-				origin: 0,
-				thresh: 0,
-				max: 1
-			}
+		segmented: {
+			"origin": "Origin: value for copy number normal (typically: 0 or 2)",
+			"thresh": "Threshold: absolute value from origin to start showing color",
+			"max": "Saturation: absolute value to draw full color"
+		}
+	};
+	var scaleDefaults = {
+		float: {
+			max: 1,
+			maxStart: null,
+			minStart: null,
+			min: -1
 		},
-		getInitialState () {
-			//check if there is custom value
-			let custom = colorParams[valueType].some(function (param) {
+		segmented: {
+			origin: 0,
+			thresh: 0,
+			max: 1
+		}
+	};
+
+	class scaleChoice extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        //check if there is custom value
+	        let custom = colorParams[valueType].some(function (param) {
 					if (getVizSettings(param)) {
 						return true;
 					}
 				}),
 				dataMin, dataMax;
 
-			if (valueType === "float") {
+	        if (valueType === "float") {
 				dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values)));
 				dataMax = _.maxnull(_.map(data.req.values, values => _.maxnull(values)));
-				this.defaults[valueType].min = dataMin;
-				this.defaults[valueType].max = dataMax;
+				scaleDefaults[valueType].min = dataMin;
+				scaleDefaults[valueType].max = dataMax;
 			} else if (valueType === 'segmented') {
 				dataMin = _.minnull(_.map(data.req.rows, row => row.value));
 				dataMax = _.maxnull(_.map(data.req.rows, row => row.value));
 				if (dataMin >= 0) {
-					this.defaults[valueType].origin = 2;
-					this.defaults[valueType].max = 6;
+					scaleDefaults[valueType].origin = 2;
+					scaleDefaults[valueType].max = 6;
 				} else {
-					this.defaults[valueType].origin = 0;
-					this.defaults[valueType].max = dataMax;
+					scaleDefaults[valueType].origin = 0;
+					scaleDefaults[valueType].max = dataMax;
 				}
 			}
 
-			return {
+	        this.state = {
 				mode: custom ? "Custom" : "Auto",
-				settings: custom ? _.pick(oldSettings, colorParams[valueType]) : this.defaults[valueType],
+				settings: custom ? _.pick(oldSettings, colorParams[valueType]) : scaleDefaults[valueType],
 				errors: {}
 			};
-		},
-		autoClick () {
+	    }
+
+	    autoClick = () => {
 			this.setState({mode: "Auto"});
 			this.setState({errors: {}});
 			onVizSettings(id, _.omit(currentSettings.state, colorParams[valueType]));
-		},
-		customClick () {
+		};
+
+	    customClick = () => {
 			this.setState({mode: "Custom"});
 			onVizSettings(id, _.merge(currentSettings.state, getInputSettingsFloat(this.state.settings)));
-		},
-		onScaleParamChange(ev) {
+		};
+
+	    onScaleParamChange = (ev) => {
 			var {settings} = this.state,
 				param = ev.target.getAttribute('data-param'),
 				newSettings = _.assoc(settings, param, ev.target.value),
@@ -256,11 +265,12 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			if (settingsValid(errors)) {
 				onVizSettings(id, _.merge(currentSettings.state, getInputSettingsFloat(newSettings)));
 			}
-		},
-		buildCustomColorScale () {
+		};
+
+	    buildCustomColorScale = () => {
 			var node = colorParams[valueType].map(param => {
 					let value = valToStr(this.state.settings[param]),
-						label = this.annotations[valueType][param],
+						label = scaleAnnotations[valueType][param],
 						error = this.state.errors[param];
 
 					return (
@@ -277,9 +287,9 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					);
 				});
 			return node;
-		},
+		};
 
-		render () {
+	    render() {
 			let mode = this.state.mode,
 				autoMode = (this.state.mode === "Auto"),
 				modes = ["Auto", "Custom"],
@@ -323,7 +333,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</div>
 			);
 		}
-	});
+	}
 
 	function setVizSettings(key, value) {
 		onVizSettings(id, _.assoc(currentSettings.state, key, value));
@@ -334,25 +344,29 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	//color transformation for dense genomics matrix floats
-	var normalizationDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
+	class normalizationDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
 				mapping = {
 					"none": "none",
 					"subset": "subset",
 					"log2(x)": "log2(x)",
 					true: "subset"
 				};
-			return {
+
+	        this.state = {
 				optionValue: mapping[value] || "none"
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+	    handleSelect = (evt, evtKey) => {
 			var key = "colNormalization";
 			setVizSettings(key, evtKey);
 			this.setState({optionValue: evtKey});
-		},
-		render () {
+		};
+
+	    render() {
 			let dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values))),
 				optionValue = this.state.optionValue,
 				options = [
@@ -386,26 +400,30 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</Row>
 			);
 		}
-	});
+	}
 
 	//color transformation for segmented cnv
-	var segCNVnormalizationDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
+	class segCNVnormalizationDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
 				mapping = {
 					"none": "none",
 					"normal2": "normal2",
 				};
-			return {
+
+	        this.state = {
 				optionValue: mapping[value] || "none"
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+	    handleSelect = (evt, evtKey) => {
 			var key = "colNormalization";
 			setVizSettings(key, evtKey);
 			this.setState({optionValue: evtKey});
-		},
-		render () {
+		};
+
+	    render() {
 			let optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "normal = 0"},
@@ -431,22 +449,26 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</Row>
 			);
 		}
-	});
+	}
 
 	//color palette dense matrix floats and segmented CNV
-	var colorDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('colorClass') || 'default';
-			return {
+	class colorDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('colorClass') || 'default';
+
+	        this.state = {
 				optionValue: value
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+	    handleSelect = (evt, evtKey) => {
 			var key = "colorClass";
 			setVizSettings(key, evtKey);
 			this.setState({optionValue: evtKey});
-		},
-		render () {
+		};
+
+	    render() {
 			let optionValue = this.state.optionValue,
 				options = {
 					float: [
@@ -481,22 +503,26 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</Row>
 			);
 		}
-	});
+	}
 
 	//color palette for SV
-	var svColorDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('svColor') || 'default';
-			return {
+	class svColorDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('svColor') || 'default';
+
+	        this.state = {
 				optionValue: value
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+	    handleSelect = (evt, evtKey) => {
 			var key = "svColor";
 			setVizSettings(key, evtKey);
 			this.setState({optionValue: evtKey});
-		},
-		render () {
+		};
+
+	    render() {
 			let optionValue = this.state.optionValue,
 				options = {
 					SV: [
@@ -525,7 +551,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</Row>
 			);
 		}
-	});
+	}
 
 	var oldSettings = state,
 		currentSettings = {state: state},
@@ -539,34 +565,49 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 }
 
 // react wrapper for the legacy DOM code, above.
-var SettingsWrapper = React.createClass({
-	shouldComponentUpdate: () => false,
+class SettingsWrapper extends React.Component {
+	shouldComponentUpdate() {
+		return false;
+	}
+
 	componentWillReceiveProps(newProps) {
 		this.currentSettings.state = newProps.vizSettings;
-	},
-	componentDidMount: function () {
+	}
+
+	componentDidMount() {
 		var {refs: {content}, props: {data, units, onVizSettings, vizSettings, id, defaultNormalization, colorClass, valueType, fieldType, onRequestHide}} = this;
 		this.currentSettings = vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType, fieldType, data, units);
-	},
-	render: function () {
+	}
+
+	render() {
 		return <div ref='content' />;
 	}
-});
+}
 
-var VizSettings = React.createClass({
-	render: function() {
+class VizSettings extends React.Component {
+	render() {
 		var {onRequestHide} = this.props;
+
+		const actions = [
+			{
+				label: <i className='material-icons'>close</i>,
+				className: vizSettingStyle.dialogClose,
+				onClick: onRequestHide
+			},
+		];
+
 		return (
-			<Modal show={true} onHide={onRequestHide}>
-				<Modal.Header closeButton>
-					<Modal.Title>Dataset Visualization Settings</Modal.Title>
-				</Modal.Header>
-				<Modal.Body>
-					<SettingsWrapper {...this.props} />
-				</Modal.Body>
-			</Modal>
+			<Dialog
+				actions={actions}
+				active={true}
+				title='Dataset Visualization Settings'
+				className={vizSettingStyle.dialog}
+				onEscKeyDown={this.props.onHide}
+				onOverlayClick={this.props.onHide}>
+				<SettingsWrapper {...this.props} />
+			</Dialog>
 		);
 	}
-});
+}
 
 module.exports = VizSettings;

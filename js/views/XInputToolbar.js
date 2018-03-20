@@ -23,10 +23,11 @@ var React = require('react');
 // Styles
 var compStyles = require('./XInputToolbar.module.css');
 
-var XInputGroup = React.createClass({
-	onAdditionalAction: function (value) {
+class XInputGroup extends React.Component {
+	onAdditionalAction = (value) => {
 		this.props.onAdditionalAction(value);
-	},
+	};
+
 	render() {
 		var {additionalAction, label} = this.props;
 		return (
@@ -39,7 +40,7 @@ var XInputGroup = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = XInputGroup;
 

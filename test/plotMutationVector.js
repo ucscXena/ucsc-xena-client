@@ -5,8 +5,7 @@
 var {column} = require('../js/columnWidgets');
 require('../js/plotMutationVector');
 
-const TestUtils = require('react-addons-test-utils');
-const {renderIntoDocument} = TestUtils;
+import {renderIntoDocument} from 'react-dom/test-utils';
 var {index} = require('static-interval-tree');
 
 var basicMutationColumn = {

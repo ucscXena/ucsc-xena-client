@@ -15,4 +15,20 @@ button.dialogClose > i {
 
 .dialog {
 	padding-top: 10px;
+	width: 500px;
+	margin-left: calc((100% - 500px) / 2);
+	margin-top: 150px;
+}
+
+.dialogWrapper {
+	display: block;
+	position: absolute;
+	height: calc(100% - 179px);
+	top: 64px;
+}
+
+.dialogOverlay {
+	position: absolute;
+	height: 100%;
+	top: 0;
 }

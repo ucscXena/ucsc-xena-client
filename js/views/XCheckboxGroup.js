@@ -21,21 +21,21 @@
 'use strict';
 
 // Core dependencies, components
+import PureComponent from '../PureComponent';
 var React = require('react');
 import {Checkbox} from 'react-toolbox/lib/checkbox';
 var _ = require('../underscore_ext');
 var XInputToolbar = require('./XInputToolbar');
-var {deepPureRenderMixin} = require('../react-utils');
 
 // Styles
 var compStyles = require('./XCheckboxGroup.module.css');
 
-var XCheckboxGroup = React.createClass({
-	mixins: [deepPureRenderMixin],
-	onChange: function (isOn, ev) {
+class XCheckboxGroup extends PureComponent {
+	onChange = (isOn, ev) => {
 		var value = ev.target.dataset.value;
 		this.props.onChange(value, isOn);
-	},
+	};
+
 	render() {
 		var {additionalAction, label, onAdditionalAction, options} = this.props;
 		return (
@@ -48,6 +48,6 @@ var XCheckboxGroup = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = XCheckboxGroup;

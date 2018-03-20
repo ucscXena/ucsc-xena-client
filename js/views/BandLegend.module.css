@@ -1,0 +1,45 @@
+
+.Legend {
+	margin-top: 20px;
+	padding: 4px 10px 0;
+	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14);
+	overflow: hidden;
+	text-align: center;
+}
+
+
+.wrapper {
+	display: inline-block;
+	vertical-align: top;
+	width: 100%;
+}
+
+.footnotes {
+	font-size: 80%;
+}
+
+.container {
+	max-width: 180px;
+	overflow: hidden;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.left {
+	float: left;
+	margin-right: 4px;
+}
+
+.right {
+	float: right;
+	margin-left: 4px;
+}
+
+.center {
+	overflow: hidden;
+}
+
+.center canvas {
+	width: 100%;
+}
+

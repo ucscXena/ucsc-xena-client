@@ -23,30 +23,28 @@ var defaultGene = 'KRAS';
 
 // Placeholder component. I'm expecting the real top-level view
 // will be in a separate file, and imported above.
-var Transcripts = React.createClass({
-	getInitialState() {
-		return {
-			input: _.getIn(this.props.state, ['transcripts', 'gene']), // XXX this is outside the selector
-			scaleZoom: false,
-			updateButton: false
-		};
-	},
+class Transcripts extends React.Component {
+	state = {
+	    input: _.getIn(this.props.state, ['transcripts', 'gene']), // XXX this is outside the selector
+	    scaleZoom: false,
+	    updateButton: false
+	};
 
 	componentWillReceiveProps(props) {
 		var newGene = _.getIn(props.state, ['transcripts', 'gene']);
 		if (newGene) {
 			this.setState({input: newGene});
 		}
-	},
+	}
 
-	componentDidMount () {
+	componentDidMount() {
 		var {onImport, props: {getState}} = this;
 
 		// nested render to different DOM tree
 		nav({isPublic: true, getState, onImport, onNavigate: this.onNavigate, activeLink: 'transcripts'});
-	},
+	}
 
-	onLoadData() {
+	onLoadData = () => {
 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
 		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
 		var unit = this.refs.unit.value;
@@ -60,33 +58,33 @@ var Transcripts = React.createClass({
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
 		this.props.callback(['loadGene', gene, studyA, subtypeA, studyB, subtypeB, unit]);
-	},
+	};
 
-	onZoom(name) {
-		this.props.callback(['zoom', name]);
-	},
+	onZoom = (name) => {
+		this.props.callback(['transcriptZoom', name]);
+	};
 
-	scaleZoom() {
+	scaleZoom = () => {
 		this.setState({
 			scaleZoom: !this.state.scaleZoom,
 		});
-	},
+	};
 
-	onNavigate(page) {
+	onNavigate = (page) => {
 		this.props.callback(['navigate', page]);
-	},
+	};
 
-	onImport(content) {
+	onImport = (content) => {
 		try {
 			this.props.callback(['import', schemaCheckThrow(JSON.parse(content))]);
 		} catch(err) {
 			this.props.callback(['import-error']);
 		}
-	},
+	};
 
-	onHideError() {
+	onHideError = () => {
 		this.props.callback(['stateError', undefined]);
-	},
+	};
 
 	render() {
 		var {state} = this.props,
@@ -103,8 +101,8 @@ var Transcripts = React.createClass({
 			valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypesTcga[0]}`,
 			valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypesGtex[0]}`,
 			options = _.concat(
-				subtypesTcga.map(name => <option value = {"tcga|" + name}>{name}</option>),
-				subtypesGtex.map(name => <option value = {"gtex|" + name}>{name}</option>)),
+				subtypesTcga.map(name => <option key={`tcga|${name}`} value={`tcga|${name}`}>{name}</option>),
+				subtypesGtex.map(name => <option key={`gtex|${name}`} value={`gtex|${name}`}>{name}</option>)),
 			unitLabels = {
 				tpm: {
 					dropdown: "TPM",
@@ -195,7 +193,7 @@ var Transcripts = React.createClass({
 								<div>
 									{ densityplotAxisLabel.map((label, i) => {
 										return (
-											<div>
+											<div key={i}>
 												<label className={styles["densityplot--label-x"]} style={{left: `${(label - min) * plotWidth / range}px`}}>{label}{(unit === "isoformPercentage" && i === densityplotAxisLabel.length - 1) ? "%" : "" }</label>
 												<div className={styles["densityplot--label-vertical-tick"]} style={{left: `${(label - min) * plotWidth / range}px`}}/>
 											</div>);
@@ -228,16 +226,17 @@ var Transcripts = React.createClass({
 				</div>
 		);
 	}
-});
+}
 
-var TranscriptsContainer = React.createClass({
-	getState() {
+class TranscriptsContainer extends React.Component {
+	getState = () => {
 		return _.pick(this.props.state, 'version', 'page', 'transcripts');
-	},
+	};
+
 	render() {
 		var {state, selector, ...props} = this.props;
 		return <Transcripts {...{...props, state: selector(state)}} getState={this.getState}/>;
 	}
-});
+}
 
 module.exports = TranscriptsContainer;

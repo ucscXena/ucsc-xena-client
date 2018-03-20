@@ -14,7 +14,7 @@ var _ = require('../underscore_ext');
 // Styles
 var compStyles = require('./XRadioMeta.module.css');
 
-var XRadioMeta = React.createClass({
+class XRadioMeta extends React.Component {
 	render() {
 		var {meta} = this.props;
 		return (
@@ -25,6 +25,6 @@ var XRadioMeta = React.createClass({
 			</ul>
 		);
 	}
-});
+}
 
 module.exports = XRadioMeta;

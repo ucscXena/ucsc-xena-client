@@ -26,22 +26,25 @@ var classNames = require('classnames');
 // Styles
 var compStyles = require('./ColumnAdd.module.css');
 
-var ColumnAdd = React.createClass({
-	onClick: function () {
+class ColumnAdd extends React.Component {
+	onClick = () => {
 		this.props.onClick();
-	},
-	onMouseOut() {
+	};
+
+	onMouseOut = () => {
 		var {last, onHover, actionKey} = this.props;
 		if ( !last ) {
 			onHover(actionKey, false);
 		}
-	},
-	onMouseOver() {
+	};
+
+	onMouseOver = () => {
 		var {last, onHover, actionKey} = this.props;
 		if ( !last ) {
 			onHover(actionKey, true);
 		}
-	},
+	};
+
 	render() {
 		var {show, last} = this.props;
 		return (
@@ -56,6 +59,6 @@ var ColumnAdd = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = ColumnAdd;

@@ -24,30 +24,33 @@ var asciiA = 65;
 // a MenuItem is clicked by intercepting the onClick handler. However, it
 // only intercepts onClick handlers of MenuItem children. By simply wrapping
 // MenuItem, we avoid this.
-var NoCloseMenuItem = React.createClass({
+class NoCloseMenuItem extends React.Component {
 	render() {
-		return <MenuItem {...this.props}/>;
+		var {tooltip, ...otherProps} = this.props;
+		return <MenuItem {...otherProps}/>;
 	}
-});
+}
 
 var TooltipNoCloseMenuItem = Tooltip(NoCloseMenuItem);
 
 var privateWarning = 'Unable to create bookmark link due to private data in view. Use export instead';
 
-var BookmarkMenu = React.createClass({
-	getInitialState() {
-		return {loading: false, bookmarks: bookmarksDefault, open: false};
-	},
+class BookmarkMenu extends React.Component {
+	state = {loading: false, bookmarks: bookmarksDefault, open: false};
+
 	componentWillMount() {
 		this.ksub = konami(asciiA).subscribe(this.enableBookmarks);
-	},
+	}
+
 	componentWillUnmount() {
 		this.ksub.unsubscribe();
-	},
-	enableBookmarks() {
+	}
+
+	enableBookmarks = () => {
 		this.setState({bookmarks: true});
-	},
-	onBookmark() {
+	};
+
+	onBookmark = () => {
 		var {getState} = this.props;
 		this.setState({loading: true});
 		Rx.Observable.ajax({
@@ -60,19 +63,23 @@ var BookmarkMenu = React.createClass({
 			},
 			body: `content=${encodeURIComponent(createBookmark(getState()))}`
 		}).subscribe(this.onSetBookmark, () => this.setState({loading: false}));
-	},
-	onSetBookmark(resp) {
+	};
+
+	onSetBookmark = (resp) => {
 		var {id} = JSON.parse(resp.response);
 		this.setState({bookmark: `${location.href}?bookmark=${id}`, loading: false});
-	},
-	onResetBookmark() {
+	};
+
+	onResetBookmark = () => {
 		this.setState({bookmark: null});
-	},
-	onCopyBookmarkToClipboard() {
+	};
+
+	onCopyBookmarkToClipboard = () => {
 		this.bookmarkEl.select();
 		document.execCommand('copy');
-	},
-	onExport() {
+	};
+
+	onExport = () => {
 		var {getState} = this.props;
 		var url = URL.createObjectURL(new Blob([JSON.stringify(getState())], { type: 'application/json' }));
 		var a = document.createElement('a');
@@ -81,11 +88,13 @@ var BookmarkMenu = React.createClass({
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
-	},
-	onImport() {
+	};
+
+	onImport = () => {
 		this.refs.import.click();
-	},
-	onImportSelected(ev) {
+	};
+
+	onImportSelected = (ev) => {
 		var file = ev.target.files[0],
 			reader = new FileReader(),
 			{onImport} = this.props;
@@ -93,19 +102,23 @@ var BookmarkMenu = React.createClass({
 		reader.onload = () => onImport(reader.result);
 		reader.readAsText(file);
 		ev.target.value = null;
-	},
-	resetBookmark() {
+	};
+
+	resetBookmark = () => {
 		this.setState({bookmark: null});
-	},
-	onClick() {
+	};
+
+	onClick = () => {
 		this.setState({open: !this.state.open});
-	},
-	handleMenuHide() {
+	};
+
+	handleMenuHide = () => {
 		this.setState({open: false});
 		if (this.props.onHide) {
 			this.props.onHide();
 		}
-	},
+	};
+
 	render() {
 		var {bookmarks, bookmark, loading, open} = this.state,
 			{isPublic} = this.props,
@@ -141,11 +154,11 @@ var BookmarkMenu = React.createClass({
 					{bookmark ? <MenuItem onClick={this.onCopyBookmarkToClipboard} caption='Copy Bookmark'/> : null}
 					{loading ? <MenuItem disabled={true} caption='Your Bookmark is Loading'/> : null}
 					{!bookmark && !loading ? <MenuItem className={compStyles.placeholder} disabled={true}>Placeholder</MenuItem> : null}
-					<input className={compStyles.bookmarkInput} ref={(input) => this.bookmarkEl = input} value={bookmark}/>
+					<input className={compStyles.bookmarkInput} ref={(input) => this.bookmarkEl = input} value={bookmark || ''}/>
 					<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>
 				</Menu>
 			</div>);
 	}
-});
+}
 
 module.exports = BookmarkMenu;

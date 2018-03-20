@@ -1,22 +1,20 @@
 'use strict';
 
-require('./km.css');
+import kmStyle from "./km.module.css";
 var _ = require('./underscore_ext');
+import PureComponent from './PureComponent';
 var React = require('react');
-var { PropTypes } = React;
 import {Button} from 'react-toolbox/lib/button';
 
 import Dialog from 'react-toolbox/lib/dialog';
 
 var Axis = require('./Axis');
-var {deepPureRenderMixin} = require('./react-utils');
 var {linear, linearTicks} = require('./scale');
 var pdf = require('./kmpdf');
 var NumberForm = require('./views/NumberForm');
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
 var margin = {top: 20, right: 30, bottom: 30, left: 50};
-const HOVER = 'hover';
 
 // XXX point at 100%? [xdomain[0] - 1, 1]
 function line(xScale, yScale, values) {
@@ -45,29 +43,31 @@ function checkIfActive(currentLabel, activeLabel) {
 	return !!activeLabel && (activeLabel === currentLabel);
 }
 
-var LineGroup = React.createClass({
-	shouldComponentUpdate: function(newProps) {
+class LineGroup extends React.Component {
+	shouldComponentUpdate(newProps) {
 		return !_.isEqual(_.omit(newProps, 'xScale', 'yScale'), _.omit(this.props, 'xScale', 'yScale'));
-	},
+	}
 
-	render: function() {
+	render() {
 		let {xScale, yScale, g, setActiveLabel, isActive} = this.props;
 		let [color, label, curve] = g;
 		var censors = curve.filter(pt => !pt.e);
-		let activeLabelClassName = isActive ? HOVER : '';
+
+		let outlineStyle = isActive ? kmStyle.outlineHover : kmStyle.outline;
+		let lineStyle = isActive ? kmStyle.lineHover : kmStyle.line;
 
 		return (
-			<g key={label} className='subgroup' stroke={color}
+			<g key={label} className={kmStyle.subgroup} stroke={color}
 			   	onMouseOver={(e) => setActiveLabel(e, label)}
 			   	onMouseOut={(e) => setActiveLabel(e, '')}>
-				<path className={`outline ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
-				<path className={`line ${activeLabelClassName}`} d={line(xScale, yScale, curve)}/>
-				{censorLines(xScale, yScale, censors, `outline ${activeLabelClassName}`)}
-				{censorLines(xScale, yScale, censors, `line' ${activeLabelClassName}`)}
+				<path className={outlineStyle} d={line(xScale, yScale, curve)}/>
+				<path className={lineStyle} d={line(xScale, yScale, curve)}/>
+				{censorLines(xScale, yScale, censors, outlineStyle)}
+				{censorLines(xScale, yScale, censors, lineStyle)}
 			</g>
 		);
 	}
-});
+}
 
 var bounds = x => [_.min(x), _.max(x)];
 
@@ -99,7 +99,7 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 			<g transform={`translate(${margin.left}, ${margin.top})`}>
 				<Axis
 					groupProps={{
-						className: 'x axis',
+						className: `x ${kmStyle.axis}`,
 						transform: `translate(0, ${height})`
 					}}
 					domain={xdomain}
@@ -110,7 +110,7 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 				/>
 				<Axis
 					groupProps={{
-						className: 'y axis'
+						className: `y ${kmStyle.axis}`
 					}}
 					domain={ydomain}
 					range={yrange}
@@ -135,45 +135,42 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 
 var formatPValue = v => v == null ? String.fromCharCode(8709) : v.toPrecision(4);
 
-var WarningTrigger = React.createClass({
-	getInitialState() {
-		return { show: false };
-	},
+class WarningTrigger extends React.Component {
+	state = { show: false };
 
-	close: function() {
-		this.setState({show: false}).bind(this);
-	},
+	close = () => {
+		this.setState({show: false});
+	};
 
 	render() {
 		let {header, body} = this.props;
 
 		return (
-			<div className={"warningContainer"}>
+			<div className={kmStyle.warningContainer}>
 				<Button
 					onClick={() => this.setState({show: true})}
-					className={"showPWarningButton"}
+					className={kmStyle.showPWarningButton}
 				>
-					<span className="glyphicon glyphicon-warning-sign pWarningIcon"/>
+					<span className={`glyphicon glyphicon-warning-sign ${kmStyle.pWarningIcon}`}/>
 				</Button>
 				{this.state.show ? <WarningDialog onHide={this.close} header={header} body={body}/> : null}
 			</div>
 		);
 	}
-});
+}
 
-var WarningDialog = React.createClass({
-
-	componentDidMount: function() {
+class WarningDialog extends React.Component {
+	componentDidMount() {
 		var body = document.getElementById("body");
 		body.style.overflow = "auto";
-	},
+	}
 
 	render() {
 
 		const actions = [
 			{
-				label: <i className='material-icons'>close</i>,
-				className: "warningDialogClose",
+				children: [<i className='material-icons'>close</i>],
+				className: kmStyle.warningDialogClose,
 				onClick: this.props.onHide
 			},
 		];
@@ -183,27 +180,26 @@ var WarningDialog = React.createClass({
 				actions={actions}
 				active={true}
 				title={this.props.header}
-				className={"kmWarningDialog"}
+				className={kmStyle.warningDialog}
 				onEscKeyDown={this.props.onHide}
 				onOverlayClick={this.props.onHide}
 				theme={{
-					wrapper: 'dialogWrapper',
-					overlay: 'dialogOverlay'}}>
+					wrapper: kmStyle.dialogWrapper,
+					overlay: kmStyle.dialogOverlay}}>
 				{this.props.body}
 			</Dialog>
 		);
 	}
-});
+}
 
 
-var PValue = React.createClass({
-	mixins: [deepPureRenderMixin],
-	render: function () {
+class PValue extends PureComponent {
+	render() {
 		var {logRank, pValue, patientWarning} = this.props;
 		return (
 			<div>
-				<div className={"PValueArea"}>
-					<div className={"PValueP"}><i>P</i>-value = {formatPValue(pValue)}</div>
+				<div className={kmStyle.PValueArea}>
+					<div className={kmStyle.PValueP}><i>P</i>-value = {formatPValue(pValue)}</div>
 					{patientWarning ?
 						<WarningTrigger
 							header="P value warning"
@@ -216,7 +212,7 @@ var PValue = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
 // Sample count is 'n' at 1st time point.
 function sampleCount(curve) {
@@ -226,7 +222,7 @@ function sampleCount(curve) {
 function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	// show colored line and category of curve
 	let isActive = checkIfActive(label, activeLabel);
-	let activeLabelClassName = isActive ? 'grey' : '';
+	let labelClassName = isActive ? kmStyle.activeListItem : kmStyle.listItem;
 	let legendLineStyle = {
 		backgroundColor: color,
 		border: (isActive ? 2 : 1).toString() + 'px solid',
@@ -239,7 +235,7 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	return (
 		<li
 			key={label}
-			className={`kmListItem ${activeLabelClassName}`}
+			className={labelClassName}
 			onMouseOver={(e) => setActiveLabel(e, label)}
 			onMouseOut={(e) => setActiveLabel(e, '')}>
 			<span style={legendLineStyle}/> {label} (n={sampleCount(curves)})
@@ -248,32 +244,24 @@ function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
 	);
 }
 
-var Legend = React.createClass({
-	mixins: [deepPureRenderMixin],
-	propTypes: {
-		activeLabel: PropTypes.string,
-		columns: PropTypes.number,
-		groups: PropTypes.object,
-		setActiveLabel: PropTypes.func
-	},
-
-	render: function () {
+class Legend extends PureComponent {
+	render() {
 		let { groups, setActiveLabel, activeLabel } = this.props;
 		let {colors, curves, labels} = groups;
 		let sets = _.zip(colors, curves, labels)
 				.map(set => makeLegendKey(set, setActiveLabel, activeLabel));
 
 		return (
-			<div className="legend">{sets}</div>
+			<div className={kmStyle.legend}>{sets}</div>
 		);
 	}
-});
+}
 
 function makeGraph(groups, setActiveLabel, activeLabel, size) {
 	return (
-		<div className="graph" style={{width: 0.9 * size.width}}>
+		<div className={kmStyle.graph} style={{width: 0.9 * size.width}}>
 			{svg(groups, setActiveLabel, activeLabel, {height: 0.8 * size.height, width: 0.9 * size.width})}
-			<div className='kmScreen'/>
+			<div className={kmStyle.screen}/>
 		</div>
 	);
 }
@@ -282,13 +270,13 @@ function makeSplits(splits, onSplits) {
 	return (
 		<form>
 			<div>
-				<label className={"kmSplitLabel"}>
+				<label className={kmStyle.splitLabel}>
 					<input value={2} type="radio" name="splits" checked={splits === 2} onChange={onSplits}/>
-					<span className={"kmSplitHint"}>2 groups</span>
+					<span className={kmStyle.splitHint}>2 groups</span>
 				</label>
-				<label className={"kmSplitLabel"}>
+				<label className={kmStyle.splitLabel}>
 					<input value={3} type="radio" name="splits" checked={splits === 3} onChange={onSplits}/>
-					<span className={"kmSplitHint"}>3 groups</span>
+					<span className={kmStyle.splitHint}>3 groups</span>
 				</label>
 			</div>
 		</form>);
@@ -298,7 +286,7 @@ function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, sp
 	// get new size based on size ratio for definitions column
 
 	return (
-		<div className="definitions" style={{width: size.width}}>
+		<div className={kmStyle.definitions} style={{width: size.width}}>
 			<PValue pValue={groups.pValue} logRank={groups.KM_stats}
 				patientWarning={groups.patientWarning}/>
 			<br/>
@@ -311,73 +299,66 @@ function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, sp
 	);
 }
 
-var KmPlot = React.createClass({
-	mixins: [deepPureRenderMixin],
-	propTypes: {
-		eventClose: PropTypes.string,
-		dims: PropTypes.object
-	},
-	size: {
-		ratios: {
-			graph: {
-				width: 0.75,
-				height: 1.0
-			},
-			definitions: {
-				width: 0.4,
-				height: 1.0
-			}
+var plotSize = {
+	ratios: {
+		graph: {
+			width: 0.75,
+			height: 1.0
+		},
+		definitions: {
+			width: 0.4,
+			height: 1.0
 		}
-	},
+	}
+};
 
-	getDefaultProps: () => ({
+class KmPlot extends PureComponent {
+	static defaultProps = {
 		eventClose: 'km-close',
 		dims: {
 			height: 450,
 			width: 700
 		}
-	}),
+	};
 
-	getInitialState: function () {
-		return { activeLabel: '' };
-	},
+	state = { activeLabel: '' };
 
-	hide: function () {
+	hide = () => {
 		let {callback, eventClose} = this.props;
 		callback([eventClose]);
-	},
+	};
 
 	// cutoff needs to rewrite the group calc, but we need
 	// the full range in order to range-check the bound. So
 	// the compute should stash the domain.
-	onCutoff: function (v) {
+	onCutoff = (v) => {
 		let {callback} = this.props;
 		callback(['km-cutoff', v]);
-	},
+	};
 
-	setActiveLabel: function (e, label) {
+	setActiveLabel = (e, label) => {
 		this.setState({ activeLabel: label });
-	},
+	};
 
-	pdf: function () {
+	pdf = () => {
 		pdf(this.props.km.groups);
-	},
+	};
 
-	help: function () {
+	help = () => {
 		window.location.href = "http://xena.ucsc.edu/km-plot-help/";
-	},
+	};
 
-	onSplits(ev) {
+	onSplits = (ev) => {
 		var {callback} = this.props;
 		callback(['km-splits', parseInt(ev.target.value, 10)]);
-	},
+	};
 
-	componentDidMount: function() {
+	componentDidMount() {
 		var body = document.getElementById("body");
 		body.style.overflow = "auto";
-	},
+	}
 
-	render: function () {
+	render() {
 		let {km: {splits = 2, title, label, groups, cutoff}, dims} = this.props,
 			// groups may be undefined if data hasn't loaded yet.
 			maySplit = _.get(groups, 'maySplit', false),
@@ -386,7 +367,7 @@ var KmPlot = React.createClass({
 			warning = _.get(groups, 'warning'),
 			fullLabel = warning ? `${label} (${warning})` : label,
 			{activeLabel} = this.state,
-			sectionDims = calcDims(dims, this.size.ratios);
+			sectionDims = calcDims(dims, plotSize.ratios);
 
 		let Content = _.isEmpty(groups)
 			? <div
@@ -401,12 +382,12 @@ var KmPlot = React.createClass({
 					? <div><h3>Unfortunately, KM plot can not be made. There is no survival data overlapping column
 						data.</h3></div>
 					: <div>
-						<Button onClick={this.pdf} className={"kmPDFButton"}>
-							<span className="glyphicon glyphicon-download kmButtonIcon"/>
+						<Button onClick={this.pdf} className={kmStyle.PDFButton}>
+							<span className={`glyphicon glyphicon-download ${kmStyle.buttonIcon}`}/>
 							PDF
 						</Button>
-						<Button onClick={this.help} className={"kmHelpButton"}>
-							<span className={"glyphicon glyphicon-question-sign kmButtonIcon"}/>
+						<Button onClick={this.help} className={kmStyle.helpButton}>
+							<span className={`glyphicon glyphicon-question-sign ${kmStyle.buttonIcon}`}/>
 							Help
 						</Button>
 						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
@@ -419,14 +400,14 @@ var KmPlot = React.createClass({
 								max={max}
 								initialValue={cutoff}/>
 						</div>
-						<samp className='featureLabel'>{fullLabel}</samp>
+						<samp className={kmStyle.featureLabel}>{fullLabel}</samp>
 					</div>
 			);
 
 		const actions = [
 			{
-				label: <i className='material-icons'>close</i>,
-				className: "kmDialogClose",
+				children: [<i className='material-icons'>close</i>],
+				className: kmStyle.mainDialogClose,
 				onClick: this.hide
 			},
 		];
@@ -436,17 +417,17 @@ var KmPlot = React.createClass({
 					actions={actions}
 					active={true}
 					title={'Kaplan Meier' + title}
-					className={"kmDialog"}
+					className={kmStyle.mainDialog}
 					onEscKeyDown={this.hide}
 					onOverlayClick={this.hide}
 					theme={{
-						wrapper: 'dialogWrapper',
-						overlay: 'dialogOverlay'}}>
+						wrapper: kmStyle.dialogWrapper,
+						overlay: kmStyle.dialogOverlay}}>
 					{Content}
 				</Dialog>
 			</div>
 		);
 	}
-});
+}
 
 module.exports = {KmPlot};

@@ -4,9 +4,10 @@ var _ = require('./underscore_ext');
 var Rx = require('./rx');
 var widgets = require('./columnWidgets');
 var util = require('./util');
+import PureComponent from './PureComponent';
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
-var {deepPureRenderMixin, rxEvents} = require('./react-utils');
+var {rxEvents} = require('./react-utils');
 var {drawSamples} = require('./drawSamples');
 
 // Since we don't set module.exports, but instead register ourselves
@@ -51,9 +52,12 @@ function tooltip(heatmap, sampleFormat, codes, width, zoom, samples, ev) {
 // plot rendering
 //
 
-var SamplesColumn = hotOrNot(React.createClass({
-	mixins: [deepPureRenderMixin],
-	componentWillMount: function () {
+var SamplesColumn = hotOrNot(//
+// plot rendering
+//
+
+class extends PureComponent {
+	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
@@ -67,20 +71,23 @@ var SamplesColumn = hotOrNot(React.createClass({
 					})) // look up current data
 					.concat(Rx.Observable.of({open: false}));
 			}).subscribe(this.props.tooltip);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.ttevents.unsubscribe();
-	},
-	tooltip: function (ev) {
+	}
+
+	tooltip = (ev) => {
 		var {samples, data, column, zoom, sampleFormat} = this.props,
 			codes = _.get(data, 'codes'),
 			{heatmap, width} = column;
 		return tooltip(heatmap, sampleFormat, codes, width, zoom, samples, ev);
-	},
+	};
+
 	// To reduce this set of properties, we could
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
-	render: function () {
+	render() {
 		var {data, column, zoom} = this.props,
 			{heatmap} = column,
 			codes = _.get(data, 'codes');
@@ -100,7 +107,7 @@ var SamplesColumn = hotOrNot(React.createClass({
 					zoom={zoom}
 					heatmapData={heatmap}/>);
 	}
-}));
+});
 
 var getColumn = props => <SamplesColumn {...props} />;
 

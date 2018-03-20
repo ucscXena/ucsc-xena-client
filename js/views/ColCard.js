@@ -26,7 +26,7 @@ var CardAvatar = require('./CardAvatar');
 // Styles
 var compStyles = require('./ColCard.module.css');
 
-var ColCard = React.createClass({
+class ColCard extends React.Component {
 	render() {
 		var {children, sortable, controls, colId, subtitle, title, wizardMode} = this.props;
 		return (
@@ -44,5 +44,6 @@ var ColCard = React.createClass({
 			</Card>
 		);
 	}
-});
+}
+
 module.exports = ColCard;

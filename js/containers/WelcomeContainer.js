@@ -1,19 +1,18 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
 var Rx = require('../rx');
 var Welcome = require('../views/Welcome');
-var {rxEvents, deepPureRenderMixin} = require('../react-utils');
+var {rxEvents} = require('../react-utils');
 
 var links = [
 	['heatmap', 'fff0ba742442246f0fd600d41d163d60',
 		'FOXM1a, FOXM1b, FOXM1c transcript expression in tumor vs. normal samples'],
 	['heatmap', 'e1649cf9068043e626d7edb5a2203479',
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma'],
-	['heatmap', '20ac60405f8dbcfb61ce001bb12094a7',
+	['heatmap', 'ffa03ad3926c4799269715288eacba97',
 		'KM plot (overall survival) of breast cancer PAM50 subtypes'],
-	['heatmap', '7723e1da309d09100b4b7d3d26c93928',
-		'PAM50 gene expression pattern in breast cancer subtypes'],
 	['heatmap', '1529e36190e1107c4716b9888bd3324a',
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
 	['heatmap', 'e5080f15c2715bc027a9a7b63c18ccf9',
@@ -35,11 +34,10 @@ var links = [
 var evToIndex = ev => parseInt(ev.currentTarget.dataset.index, 10);
 
 var refresh = 5000; // ms between link switch
-var WelcomeContainer = React.createClass({
-	mixins: [deepPureRenderMixin],
-	getInitialState() {
-		return {link: 0};
-	},
+
+class WelcomeContainer extends PureComponent {
+	state = {link: 0};
+
 	componentWillMount() {
 		var events = rxEvents(this, 'mouseover', 'mouseout', 'bulletover');
 		var {mouseover, mouseout, bulletover} = events;
@@ -51,10 +49,12 @@ var WelcomeContainer = React.createClass({
 			() => Rx.Observable.interval(refresh).takeUntil(mouseover.merge(bulletover)).map(() => undefined)
 		).merge(bulletover.map(evToIndex)).subscribe(i =>
 			this.setState({link: i === undefined ? (this.state.link + 1) % links.length : i}));
-	},
+	}
+
 	componentWillUnmount() {
 		this.sub.unsubscribe();
-	},
+	}
+
 	render() {
 		var {link} = this.state;
 		return (
@@ -66,6 +66,6 @@ var WelcomeContainer = React.createClass({
 				{...this.props}
 				link={links[link]} />);
 	}
-});
+}
 
 module.exports = WelcomeContainer;

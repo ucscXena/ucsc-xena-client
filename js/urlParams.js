@@ -35,8 +35,13 @@ function datasetParams() {
 	return mapObject(pick(allParameters(), 'cohort', 'dataset', 'host', 'allIdentifiers'), l => l[0]);
 }
 
+function manifest() {
+	// only take the first of these
+	return mapObject(pick(allParameters(), 'manifest'), l => l[0]);
+}
+
 function getParams() {
-	return merge(bookmarkParam(), inlineStateParam(), hubParams(), datasetParams());
+	return merge(bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest());
 }
 
 module.exports = getParams;

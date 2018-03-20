@@ -21,7 +21,7 @@ var CardAvatar = require('./CardAvatar');
 // Styles
 var compStyles = require('./GhostVariableSelect.module.css');
 
-var GhostVariableSelect = React.createClass({
+class GhostVariableSelect extends React.Component {
 	render() {
 		var {title, width} = this.props;
 		return (
@@ -33,5 +33,6 @@ var GhostVariableSelect = React.createClass({
 			</div>
 		);
 	}
-});
+}
+
 module.exports = GhostVariableSelect;

@@ -20,27 +20,32 @@ var style = {
 	transition: 'border-color 0.3s linear'
 };
 
-var SpreadSheetHighlight = React.createClass({
-	shouldComponentUpdate: function (nextProps, nextState) {
+class SpreadSheetHighlight extends React.Component {
+	state = {animate: false};
+
+	shouldComponentUpdate(nextProps, nextState) {
 		// ignore props.
 		return !_.isEqual(this.state, nextState);
-	},
-	getInitialState: () => ({animate: false}),
-	componentDidMount: function () {
+	}
+
+	componentDidMount() {
 		var {height} = this.props;
 		this.vg = vgcanvas(this.refs.canvas, tickWidth, height);
 		this.draw(this.props);
 		this.animate = this.props.animate.subscribe(ev => this.setState({animate: ev})); //eslint-disable-line react/no-did-mount-set-state
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.animate.unsubscribe();
-	},
-	componentWillReceiveProps: function (newProps) {
+	}
+
+	componentWillReceiveProps(newProps) {
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}
-	},
-	draw: function (props) {
+	}
+
+	draw = (props) => {
 		var {samples, samplesMatched, height} = props,
 			{vg} = this;
 
@@ -70,14 +75,15 @@ var SpreadSheetHighlight = React.createClass({
 		if (rects.length > 0) {
 			vg.drawRectangles(rects, {fillStyle: 'rgba(0, 0, 0, 1)'});
 		}
-	},
-	render: function() {
+	};
+
+	render() {
 		var {animate} = this.state,
 			border = animate ? {
 				borderColor: 'red',
 			} : {};
 		return <canvas style={{...style, ...border}} ref='canvas' />;
 	}
-});
+}
 
 module.exports = SpreadSheetHighlight;

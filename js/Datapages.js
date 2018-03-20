@@ -27,22 +27,18 @@ var getHubName = host => get(serverNames, host, host);
 
 var pluralize = (str, count) => count === 1 ? `1 ${str}` : `${count} ${str}s`;
 
+// Get params from the anchor href. With RT Link, the anchor is parentElement.
+var paramFromHref = ev => mapObject(urlParams(ev.target.parentElement.href), a => a[0]);
+
 //
 // event handler for navigating within datapages. Prevents page load, and
 // sets url params.
 //
 
-var navHandler = paramFn => {
-	return function(ev) {
-		ev.preventDefault();
-		this.props.callback(['navigate', 'datapages', paramFn(ev, this.props.state)]);
-	};
-};
-
-//var paramFromDataset = ev => ev.target.parentElement.dataset;
-
-// Get params from the anchor href. With RT Link, the anchor is parentElement.
-var paramFromHref = ev => mapObject(urlParams(ev.target.parentElement.href), a => a[0]);
+function navHandler(ev) {
+	ev.preventDefault();
+	this.props.callback(['navigate', 'datapages', paramFromHref(ev, this.props.state)]);
+}
 
 var getUserServers = servers => keys(servers).filter(k => servers[k].user);
 
@@ -57,13 +53,15 @@ var hubLink = (host, onClick) => (
 		label={getHubName(host)}
 		onClick={onClick}/>);
 
-var DataHubs = React.createClass({
-	onHub: navHandler(paramFromHref),
-	onSelect(isOn, ev) {
+class DataHubs extends React.Component {
+	onHub = (ev) => { navHandler.call(this, ev); };
+
+	onSelect = (isOn, ev) => {
 		var {checked} = ev.target,
 			host = ev.target.getAttribute('data-host');
 		this.props.callback([checked ? 'enable-host' : 'disable-host', host, 'user']);
-	},
+	};
+
 	render() {
 		var {spreadsheet: {servers}} = this.props.state;
 		return (
@@ -72,7 +70,7 @@ var DataHubs = React.createClass({
 				<ul>
 					{map(servers,
 						({user}, host) => (
-							<li>
+							<li key={host}>
 								<Checkbox
 									label={hubLink(host, this.onHub)}
 									onChange={this.onSelect}
@@ -82,7 +80,7 @@ var DataHubs = React.createClass({
 				</ul>
 			</div>);
 	}
-});
+}
 
 
 //
@@ -115,7 +113,7 @@ var CohortSummary = ({cohorts, onCohort}) => {
 			<h2>{pluralize('Cohort', nCohorts)}, {pluralize('Dataset', nDatasets)}</h2>
 			<ul className={styles.list}>
 				{map(names, name =>
-					<li>
+					<li key={name}>
 						{treehouse(name)}
 						{cohortLink(name, onCohort)}
 						{` (${pluralize('dataset', cohorts[name])})`}
@@ -124,8 +122,9 @@ var CohortSummary = ({cohorts, onCohort}) => {
 		</div>);
 };
 
-var CohortSummaryPage = React.createClass({
-	onCohort: navHandler(paramFromHref),
+class CohortSummaryPage extends React.Component {
+	onCohort = (ev) => { navHandler.call(this, ev); };
+
 	render() {
 		var {state} = this.props,
 			{spreadsheet: {servers}} = state,
@@ -139,29 +138,31 @@ var CohortSummaryPage = React.createClass({
 				<CohortSummary cohorts={combined} onCohort={this.onCohort}/>
 			</div>);
 	}
-});
+}
 
 //
 // Dataset delete button
 //
 
-var DeleteButton = React.createClass({
-	getInitialState() {
-		return {active: false};
-	},
-	onDelete() {
+class DeleteButton extends React.Component {
+	state = {active: false};
+
+	onDelete = () => {
 		this.setState({active: !this.state.active});
-	},
-	onReally() {
+	};
+
+	onReally = () => {
 		var {name} = this.props;
 		this.props.callback(['navigate', 'datapages', {host: localHub}]);
 		this.props.callback(['delete-dataset', localHub, name]);
-	},
-	actions() {
+	};
+
+	actions = () => {
 		return [
 			{label: 'Cancel', onClick: this.onDelete},
 			{label: 'Really Delete', onClick: this.onReally}];
-	},
+	};
+
 	render() {
 		var {active} = this.state,
 			{label} = this.props;
@@ -175,7 +176,7 @@ var DeleteButton = React.createClass({
 				<Button onClick={this.onDelete} accent>Delete</Button>
 			</div>);
 	}
-});
+}
 
 var canDelete = ({status}, host) =>
 	host === localHub && contains(['loaded', 'error'], status);
@@ -195,7 +196,7 @@ var markdownValue = value => {
 var datasetLink = (callback, preferred, onClick) => ds => {
 	var [host] = parseDsID(ds.dsID);
 	return (
-		<li>
+		<li key={ds.name}>
 			<Link
 				className={styles.link}
 				href={'?' + encodeObject({dataset: ds.name, host})}
@@ -219,7 +220,7 @@ var datasetLink = (callback, preferred, onClick) => ds => {
 var drawGroup = (callback, groups, preferred, onClick) => dataSubType => {
 	var list = sortBy(groups[dataSubType], g => g.label.toLowerCase());
 	return (
-		<div>
+		<div key={dataSubType}>
 			<h3>{dataSubType}</h3>
 			<ul className={styles.groupList}>
 				{map(list, datasetLink(callback, preferred, onClick))}
@@ -232,8 +233,8 @@ var COHORT_NULL = '(unassigned)';
 var getPreferred = (wizard, cohort) =>
 	new Set(values(getIn(wizard, ['cohortPreferred', cohort], {})));
 
-var CohortPage = React.createClass({
-	onViz() {
+class CohortPage extends React.Component {
+	onViz = () => {
 		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 			cohort = getIn(datapages, ['cohort', 'cohort'], COHORT_NULL);
 
@@ -241,8 +242,10 @@ var CohortPage = React.createClass({
 			this.props.callback(['cohort', cohort]);
 		}
 		this.props.callback(['navigate', 'heatmap']);
-	},
-	onDataset: navHandler(paramFromHref),
+	};
+
+	onDataset = (ev) => { navHandler.call(this, ev); };
+
 	render() {
 		var {datapages, params, wizard} = this.props.state,
 			cohort = getIn(datapages, ['cohort', 'cohort']) === params.cohort ?
@@ -267,7 +270,7 @@ var CohortPage = React.createClass({
 					</span>)}
 			</div>);
 	}
-});
+}
 
 //
 // Dataset Page
@@ -340,7 +343,7 @@ var transposeClinical = (meta, data) =>
 var table = data => (
 		<table className={styles.dataSnippetTable}>
 			<tbody>
-				{map(data, row => <tr>{map(row, c => <td>{c}</td>)}</tr>)}
+				{map(data, (row, i) => <tr key={i}>{map(row, (c, j) => <td key={j}>{c}</td>)}</tr>)}
 			</tbody>
 		</table>);
 
@@ -370,9 +373,12 @@ var dataMethod = ({type = 'genomicMatrix', status} = {}) =>
 	type === 'genomicSegment' ? sparseTable :
 	noTable;
 
-var DatasetPage = React.createClass({
-	onCohort: navHandler(paramFromHref),
-	onViz() {
+var setKey = arr => arr.map((el, i) => React.cloneElement(el, {key: i}));
+
+class DatasetPage extends React.Component {
+	onCohort = (ev) => { navHandler.call(this, ev); };
+
+	onViz = () => {
 		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 			cohort = getIn(datapages, ['dataset', 'meta', 'cohort'], COHORT_NULL);
 
@@ -380,9 +386,11 @@ var DatasetPage = React.createClass({
 			this.props.callback(['cohort', cohort]);
 		}
 		this.props.callback(['navigate', 'heatmap']);
-	},
-	onIdentifiers: navHandler(paramFromHref),
-	onSamples: navHandler(paramFromHref),
+	};
+
+	onIdentifiers = (ev) => { navHandler.call(this, ev); };
+	onSamples = (ev) => { navHandler.call(this, ev); };
+
 	render() {
 		var {callback, state} = this.props,
 			{params: {host, dataset}, datapages} = state,
@@ -412,7 +420,7 @@ var DatasetPage = React.createClass({
 				<h2>dataset: {(dataSubType ? dataSubType + ' - ' : '') + label}</h2>
 				{headerValue(longTitle)}
 				{htmlValue(description)}
-				{flatten([
+				{setKey(flatten([
 					dataPair('cohort', cohort, toCohortLink(this.onCohort)),
 					dataPair('dataset ID', name),
 					getStatus(status, loader),
@@ -432,7 +440,7 @@ var DatasetPage = React.createClass({
 					flatmap(uniq(split(url, /,/)), url =>
 						dataPair('raw data', url, toLink)),
 					dataPair('wrangling', wranglingProcedure, toHTML),
-					dataPair('input data format', FORMAT_MAPPING[type])])}
+					dataPair('input data format', FORMAT_MAPPING[type])]))}
 				{status === 'loaded' ?
 					<span className={styles.tableControls}>
 						{type === 'genomicMatrix' ?
@@ -449,7 +457,7 @@ var DatasetPage = React.createClass({
 				{dataMethod(meta)(meta, data)}
 			</div>);
 	}
-});
+}
 
 // Our handling of parameters 'hub' and 'host', is somewhat confusing. 'host'
 // means "show the hub page for this url". 'hub' means "add this url to the
@@ -465,8 +473,9 @@ var defaultHost = params =>
 // Hub page
 //
 
-var HubPage = React.createClass({
-	onCohort: navHandler(paramFromHref),
+class HubPage extends React.Component {
+	onCohort = (ev) => { navHandler.call(this, ev); };
+
 	render() {
 		var {state} = this.props,
 			{host} = defaultHost(state.params),
@@ -483,7 +492,7 @@ var HubPage = React.createClass({
 				<CohortSummary cohorts={coll} onCohort={this.onCohort}/>
 			</div>);
 	}
-});
+}
 
 //
 // Samples / Identifiers page
@@ -491,12 +500,15 @@ var HubPage = React.createClass({
 
 
 var binSize = 1000;
+
 // The point of ListPage is to render a potentially very long list
 // incrementally, so we get a fast first render, and don't lock up the UI.
 // We do that by rendering binSize rows at a time, on a requestAnimationFrame
 // timeout.
-var ListPage = React.createClass({
-	componentWillMount: function () {
+class ListPage extends React.Component {
+	state = {};
+
+	componentWillMount() {
 		var {state, path} = this.props,
 			list = getIn(state, ['datapages', path, 'list']);
 		var events = rxEvents(this, 'list');
@@ -513,19 +525,19 @@ var ListPage = React.createClass({
 		this.sub = chunks.subscribe(chunks => {
 			this.setState(chunks);
 		});
-	},
+	}
+
 	componentWillUnmount() {
 		this.sub.unsubscribe();
-	},
+	}
+
 	componentWillReceiveProps(props) {
 		var {state, path} = props,
 			list = getIn(state, ['datapages', path, 'list']);
 
 		this.on.list(list);
-	},
-	getInitialState() {
-		return {};
-	},
+	}
+
 	render() {
 		var {state, path, title} = this.props,
 			{params: {host, dataset}, datapages} = state,
@@ -541,14 +553,14 @@ var ListPage = React.createClass({
 			<div className={styles.datapages}>
 				<h3>dataset: {dataset}</h3>
 				<h4>{title}{percent}</h4>
-				{chunks ? chunks.map(c => (
-					<pre className={styles.list}>
+				{chunks ? chunks.map((c, i) => (
+					<pre key={i} className={styles.list}>
 						{c}
 					</pre>
 				)) : 'Loading...'}
 			</div>);
 	}
-});
+}
 
 var IdentifiersPage = props =>
 	<ListPage title='Identifiers' path='identifiers' {...props}/>;
@@ -568,29 +580,31 @@ var getPage = ({dataset, host, cohort, allIdentifiers, allSamples}) =>
 	cohort ? CohortPage :
 	CohortSummaryPage;
 
-var Datapages = React.createClass({
-	componentDidMount: function () {
+class Datapages extends React.Component {
+	componentDidMount() {
 		nav({activeLink: 'datapages', onNavigate: this.onNavigate});
-	},
-	onNavigate(page) {
+	}
+
+	onNavigate = (page) => {
 		this.props.callback(['navigate', page]);
-	},
+	};
+
 	render() {
 		var {state: {params}} = this.props, // XXX
 			Page = getPage(defaultHost(params));
 
 		return <Page {...this.props} />;
 	}
-});
+}
 
-var ThemedDatapages = React.createClass({
+class ThemedDatapages extends React.Component {
 	render() {
 		return (
 		<ThemeProvider theme={appTheme}>
 			<Datapages {...this.props}/>
 		</ThemeProvider>);
 	}
-});
+}
 
 var selector = state => state;
 

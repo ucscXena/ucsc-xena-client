@@ -13,12 +13,18 @@ var isValid = _.curry((min, max, value) => {
 function parseValue(value, dflt) {
 	var v = value.trim();
 	return v === '' ? dflt : parseInt(v);
-};
+}
 
 // initialValue is int or null.
 // dflt, min, max are int.
-const NumberForm = React.createClass({
-	componentWillMount: function () {
+class NumberForm extends React.Component {
+	constructor(props) {
+	    super(props);
+	    var {initialValue} = props;
+	    this.state = {value: initialValue == null ? '' : '' + initialValue, focused: false};
+	}
+
+	componentWillMount() {
 		var {dflt, min, max} = this.props;
 		var events = rxEvents(this, 'change');
 		this.change = events.change
@@ -26,20 +32,20 @@ const NumberForm = React.createClass({
 			.debounceTime(200)
 			.filter(isValid(min, max))
 			.subscribe(value => this.props.onChange(parseValue(value, dflt)));
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.change.unsubscribe();
-	},
-	onBlur() {
+	}
+
+	onBlur = () => {
 		this.setState({focused: false});
-	},
-	onFocus() {
+	};
+
+	onFocus = () => {
 		this.setState({focused: true});
-	},
-	getInitialState: function () {
-		var {initialValue} = this.props;
-		return {value: initialValue == null ? '' : '' + initialValue, focused: false};
-	},
+	};
+
 	render() {
 		var {min, max, dflt, initialValue, ...other} = this.props,
 			{value, focused} = this.state;
@@ -57,6 +63,6 @@ const NumberForm = React.createClass({
 			</form>
 		);
 	}
-});
+}
 
 module.exports = NumberForm;

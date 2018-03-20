@@ -2,9 +2,11 @@
 
 var _ = require('./underscore_ext');
 var Rx = require('./rx');
+import PureComponent from './PureComponent';
 var React = require('react');
 var Legend = require('./views/Legend');
-var {deepPureRenderMixin, rxEvents} = require('./react-utils');
+var BandLegend = require('./views/BandLegend');
+var {rxEvents} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
@@ -12,6 +14,7 @@ var {drawSegmented, toYPx} = require('./drawSegmented');
 var {chromPositionFromScreen} = require('./exonLayout');
 var {defaultNormal2color} = require('./heatmapColors');
 var {hexToRGB, RGBToHex} = require('./color_helper');
+var colorScales = require('./colorScales');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -27,8 +30,6 @@ function hotOrNot(component) {
 }
 
 // Color scale cases
-// Use the domain of the scale as the label.
-// If using thresholded scales, add '<' '>' to labels.
 
 var legendProps = {
 	'no-data': () => ({colors: [], labels: []}),
@@ -60,8 +61,33 @@ function renderFloatLegend(props) {
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 
+function renderFloatLegendNew(props) {
+	var {units, color} = props;
+
+	if (!color) {
+		return null;
+	}
+	var unitText = (units || [])[0],
+		footnotes = [<span title={unitText}>{unitText}</span>];
+
+	var [origin, , max] = color.slice(4),
+		powerScale = colorScales.colorScale(color).lookup,
+		scale = v => v < origin ?
+			powerScale(0, origin - v) :
+			powerScale(1, v - origin),
+		min = origin - (max - origin);
+
+	return (
+		<BandLegend
+			range={{min, max}}
+			colorScale={scale}
+			footnotes={footnotes}
+			width={50}
+			height={20}/>);
+}
+
 function drawLegend(props) {
-	var {column} = props,
+	var {column, newLegend} = props,
 		{units, color, vizSettings, defaultNormalization} = column,
 		legendProps = {
 			units,
@@ -69,7 +95,7 @@ function drawLegend(props) {
 			vizSettings,
 			defaultNormalization
 		};
-	return renderFloatLegend(legendProps);
+	return (newLegend ? renderFloatLegendNew : renderFloatLegend)(legendProps);
 }
 
 function closestNode(nodes, zoom, x, y) {
@@ -148,9 +174,8 @@ function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, as
 		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
 }
 
-var SegmentedColumn = hotOrNot(React.createClass({
-	mixins: [deepPureRenderMixin],
-	componentWillMount: function () {
+var SegmentedColumn = hotOrNot(class extends PureComponent {
+	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
@@ -165,15 +190,18 @@ var SegmentedColumn = hotOrNot(React.createClass({
 					})) // look up current data
 					.concat(Rx.Observable.of({open: false}));
 			}).subscribe(this.props.tooltip);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.ttevents.unsubscribe();
-	},
-	tooltip: function (ev) {
+	}
+
+	tooltip = (ev) => {
 		var {column: {fieldType, layout, nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props;
 		return tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
-	},
-	render: function () {
+	};
+
+	render() {
 		var {column, samples, zoom, index} = this.props;
 
 		return (
@@ -196,7 +224,7 @@ var SegmentedColumn = hotOrNot(React.createClass({
 					xzoom={column.zoom}
 					zoom={zoom}/>);
 	}
-}));
+});
 
 widgets.column.add('segmented',
 		props => <SegmentedColumn {...props} />);

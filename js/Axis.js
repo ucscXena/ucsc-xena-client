@@ -29,8 +29,8 @@ var domainPath = {
 	left: ([start, end], height) => `M${-height},${start}H0V${end}H${-height}`
 };
 
-var Axis = React.createClass({
-	render: function () {
+class Axis extends React.Component {
+	render() {
 		var {domain, range, scale, tickfn, orientation, groupProps = {},
 			tickHeight = 6} = this.props;
 		var ticks = layout[orientation](domain, range, scale, tickfn, tickHeight);
@@ -47,6 +47,6 @@ var Axis = React.createClass({
 			</g>
 		);
 	}
-});
+}
 
 module.exports = Axis;

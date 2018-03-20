@@ -15,15 +15,18 @@ var rowHelp = onClose => (
 	</HelpBox>);
 
 function addHelp(Component) {
-	return React.createClass({
-		displayName: 'SpreadsheetHelp',
-		onColumnHelp() {
+	return class extends React.Component {
+	    static displayName = 'SpreadsheetHelp';
+
+	    onColumnHelp = () => {
 			this.props.callback(['notifications-disable', 'columnHelp']);
-		},
-		onRowHelp() {
+		};
+
+	    onRowHelp = () => {
 			this.props.callback(['notifications-disable', 'rowHelp']);
-		},
-		render() {
+		};
+
+	    render() {
 			var {children, ...props} = this.props,
 				{columnOrder, notifications, wizardMode} = this.props.appState,
 				last = columnOrder.length - 1;
@@ -38,7 +41,7 @@ function addHelp(Component) {
 					 })}
 				</Component>);
 		}
-	});
+	};
 }
 
 module.exports = addHelp;

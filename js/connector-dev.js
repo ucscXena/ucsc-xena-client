@@ -119,7 +119,7 @@ module.exports = function({
 		// loads. Here we intercept the devtools actions & re-issue 'init' on
 		// RESET.
 		if (ac.type === 'RESET') {
-			setTimeout(() => uiBus.next(['init', urlParams()]), 0);
+			setTimeout(() => uiBus.next(['init', location.pathname, urlParams()]), 0);
 		}
 
 		inEffectsReducer = false;

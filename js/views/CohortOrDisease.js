@@ -5,19 +5,21 @@ var DiseaseSuggest = require('./DiseaseSuggest2');
 var XRadioGroup = require('./XRadioGroup');
 var WizardCard = require('./WizardCard');
 
-var CohortOrDisease = React.createClass({
-	getInitialState() {
-		return {mode: 'cohort', cohort: null};
-	},
-	onChange(value) {
+class CohortOrDisease extends React.Component {
+	state = {mode: 'cohort', cohort: null};
+
+	onChange = (value) => {
 		this.setState({mode: value, cohort: null});
-	},
-	onDone() {
+	};
+
+	onDone = () => {
 		this.props.onSelect(this.state.cohort);
-	},
-	onSelect(cohort) {
+	};
+
+	onSelect = (cohort) => {
 		this.setState({cohort});
-	},
+	};
+
 	render() {
 		var {mode, cohort} = this.state,
 			{cohorts = [], cohortMeta, width} = this.props;
@@ -44,6 +46,6 @@ var CohortOrDisease = React.createClass({
 										cohort={cohort} cohortMeta={cohortMeta}/>}
 			</WizardCard>);
 	}
-});
+}
 
 module.exports = CohortOrDisease;

@@ -10,27 +10,31 @@ require('./ResizeOverlay.css');
 var max = (x, y) => x > y ? x : y;
 var minWidthSize = (minWidth, {width, height}) => ({width: max(minWidth, width), height});
 
-var ResizeOverlay = React.createClass({
-	getInitialState: () => ({zooming: false}),
-	onResizeStart: function () {
+class ResizeOverlay extends React.Component {
+	state = {zooming: false};
+
+	onResizeStart = () => {
 		var {width, height} = this.props,
 			minWidth = this.props.minWidth();
 		this.setState({zooming: true, zoomSize: {width, height}, minWidth});
-	},
-	onResize: function (ev, {size}) {
+	};
+
+	onResize = (ev, {size}) => {
 		var {width, height} = size,
 			{minWidth} = this.state;
 		this.setState({zoomSize: {width: max(width, minWidth), height}});
-	},
-	onResizeStop: function (ev, {size}) {
+	};
+
+	onResizeStop = (ev, {size}) => {
 		var {onResizeStop} = this.props,
 			{minWidth} = this.state;
 		this.setState({zooming: false});
 		if (onResizeStop) {
 			onResizeStop(minWidthSize(minWidth, size));
 		}
-	},
-	render: function () {
+	};
+
+	render() {
 		var {zooming, zoomSize} = this.state,
 			{width, height, children, enable} = this.props,
 			content = (
@@ -61,6 +65,6 @@ var ResizeOverlay = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = ResizeOverlay;

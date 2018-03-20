@@ -1,8 +1,8 @@
 'use strict';
 
+import PureComponent from './PureComponent';
 var React = require('react');
 require('react-resizable/css/styles.css');
-var {deepPureRenderMixin} = require('./react-utils');
 var getColumns = require('./views/Columns');
 var classNames = require('classnames');
 import {Button} from 'react-toolbox/lib/button';
@@ -14,7 +14,7 @@ var compStyles = require('./Spreadsheet.module.css');
 function zoomPopover(props) {
 	return (
 		<div className={classNames(compStyles.zoomDialog, {[compStyles.active]: props.active})} {...props}>
-			<div className={compStyles.content}>Shift-click on data to zoom out.<br/><br>Click to zoom in.</br></div>
+			<div className={compStyles.content}>Shift-click on data to zoom out.<br/>Click to zoom in.</div>
 			<div className={compStyles.actions}>
 				<Button accent onClick={props.onDisableClick}>GOT IT</Button>
 			</div>
@@ -24,16 +24,18 @@ function zoomPopover(props) {
 
 var getSpreadsheet = columnsWrapper => {
 	var Columns = getColumns(columnsWrapper);
-	return React.createClass({
-		displayName: 'Spreadsheet',
-		mixins: [deepPureRenderMixin],
-		zoomHelpClose: function () {
+	return class extends PureComponent {
+	    static displayName = 'Spreadsheet';
+
+	    zoomHelpClose = () => {
 			this.props.callback(['zoom-help-close']);
-		},
-		zoomHelpDisable: function () {
+		};
+
+	    zoomHelpDisable = () => {
 			this.props.callback(['zoom-help-disable']);
-		},
-		render: function () {
+		};
+
+	    render() {
 			var {appState: {zoomHelp}, children, ...otherProps} = this.props,
 				zoomHelper = zoomHelp ?
 					zoomPopover({
@@ -50,7 +52,7 @@ var getSpreadsheet = columnsWrapper => {
 				</div>
 			);
 		}
-	});
+	};
 };
 
 module.exports = getSpreadsheet;

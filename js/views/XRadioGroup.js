@@ -21,8 +21,8 @@
 
 // Core dependencies, components
 var React = require('react');
-import {RadioGroup} from 'react-toolbox/lib/radio';
-import {RadioButton} from 'react-toolbox/lib/radio';
+import {RadioButton, RadioGroup} from 'react-toolbox/lib/radio';
+//import {RadioButton} from 'react-toolbox/lib/radio';
 var _ = require('../underscore_ext');
 var XRadioMeta = require('./XRadioMeta');
 var XInputToolbar = require('./XInputToolbar');
@@ -30,10 +30,11 @@ var XInputToolbar = require('./XInputToolbar');
 // Styles
 var compStyles = require('./XRadioGroup.module.css');
 
-var XRadioGroup = React.createClass({
-	onChange: function (value) {
+class XRadioGroup extends React.Component {
+	onChange = (value) => {
 		this.props.onChange(value);
-	},
+	};
+
 	render() {
 		var {additionalAction, label, onAdditionalAction, options, value} = this.props;
 		return (
@@ -45,6 +46,6 @@ var XRadioGroup = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = XRadioGroup;

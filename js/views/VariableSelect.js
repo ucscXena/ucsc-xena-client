@@ -1,5 +1,6 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
 var _ = require('../underscore_ext');
 var XCheckboxGroup = require('./XCheckboxGroup');
@@ -7,7 +8,7 @@ var XRadioGroup = require('./XRadioGroup');
 var WizardCard = require('./WizardCard');
 var GeneSuggest = require('./GeneSuggest');
 var PhenotypeSuggest = require('./PhenotypeSuggest');
-var {rxEvents, deepPureRenderMixin} = require('../react-utils');
+var {rxEvents} = require('../react-utils');
 var xenaQuery = require('../xenaQuery');
 var Rx = require('../rx');
 var multi = require('../multi');
@@ -229,11 +230,11 @@ function matchFields(datasets, features, mode, selected, value) {
 var featureIndexes = (features, list) =>
 	list.map(f => _.findIndex(features, _.matcher(f)).toString()).filter(x => x !== "-1");
 
-var VariableSelect = React.createClass({
-	mixins: [deepPureRenderMixin],
-	getInitialState() {
-		var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = this.props;
-		var defaults = {
+class VariableSelect extends PureComponent {
+	constructor(props) {
+	    super(props);
+	    var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
+	    var defaults = {
 			mode,
 			advanced: {
 				Genotypic: _.isEmpty(preferred),
@@ -256,14 +257,17 @@ var VariableSelect = React.createClass({
 			},
 			valid: false
 		};
-		return fields && dataset ?
+
+	    this.state = fields && dataset ?
 			applyInitialState[datasetMode(datasets, dataset)](fields, dataset, datasets, features, preferred, defaults) : defaults;
-	},
+	}
+
 	componentWillReceiveProps({features, basicFeatures}) {
 		this.setState({
 			basicFeatures: featureIndexes(features, basicFeatures),
 		});
-	},
+	}
+
 	// Sharing these streams, to avoid recompute, is complicated by the
 	// startWith() operator, which does not subscribe to base observable until
 	// the queued value is emitted. The result of this is that the
@@ -301,18 +305,21 @@ var VariableSelect = React.createClass({
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
 					matchFields(this.props.datasets, this.props.features, mode, selected, value))
 			.subscribe(valid => this.setState({loading: false, ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
-	},
+	}
+
 	componentWillUnmount() {
 		this.modeSub.unsubscribe();
 		this.advancedSub.unsubscribe();
 		this.selectedSub.unsubscribe();
 		this.valueSub.unsubscribe();
 		this.validSub.unsubscribe();
-	},
-	onChange(selectValue, isOn) {
+	}
+
+	onChange = (selectValue, isOn) => {
 		this.on.select({selectValue, isOn});
-	},
-	onDone() {
+	};
+
+	onDone = () => {
 		var {pos, features, onSelect} = this.props,
 			{mode, advanced, valid, matches} = this.state,
 			value = this.state.value[mode],
@@ -328,8 +335,9 @@ var VariableSelect = React.createClass({
 				onSelect(pos, "", datasets, fields);
 			}
 		}
-	},
-	onDoneInvalid() {
+	};
+
+	onDoneInvalid = () => {
 		var {features} = this.props,
 			{mode} = this.state,
 			value = this.state.value[mode];
@@ -337,17 +345,19 @@ var VariableSelect = React.createClass({
 		if (!isValueValid[mode](value, features)) {
 			this.setState({error: true});
 		}
-	},
-	onAddFeature(featureIn) {
+	};
+
+	onAddFeature = (featureIn) => {
 		var {features} = this.props,
 			{basicFeatures, value, mode} = this.state,
 			i = (featureIn ? features.indexOf(featureIn) : _.findIndex(features, _.matcher({label: value[mode]}))).toString();
-		if (i) {
+		if (i !== "-1") {
 			this.setState({basicFeatures: _.uniq([...basicFeatures, i])});
 			this.on.select({selectValue: i, isOn: true});
-			this.on.field("");
 		}
-	},
+		this.on.field("");
+	};
+
 	render() {
 		var {mode, advanced, valid, loading, error, basicFeatures} = this.state,
 			value = this.state.value[mode],
@@ -391,7 +401,7 @@ var VariableSelect = React.createClass({
 					advanced={advanced[mode]}/>
 			</WizardCard>);
 	}
-});
+}
 
 // Render a load warning in a wrapper component so we don't
 // try to initialize state when we're not holding the cohort
@@ -399,7 +409,7 @@ var VariableSelect = React.createClass({
 //
 // Cohort data is expected to be falsey if not loaded, empty
 // if loaded but nothing for this cohort, or non-empty otherwise.
-var LoadingNotice = React.createClass({
+class LoadingNotice extends React.Component {
 	render() {
 		var {preferred, datasets, features, basicFeatures} = this.props;
 		if (!preferred || !datasets || !features || !basicFeatures) {
@@ -416,6 +426,6 @@ var LoadingNotice = React.createClass({
 		}
 		return <VariableSelect {...this.props}/>;
 	}
-});
+}
 
 module.exports = LoadingNotice;

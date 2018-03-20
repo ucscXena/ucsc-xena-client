@@ -3,7 +3,8 @@
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
 var {reifyErrors, collectResults} = require('./errors');
-var {resetZoom, fetchColumnData, updateWizard, clearWizardCohort} = require('./common');
+var {resetZoom, fetchColumnData, fetchCohortData, setCohort,
+	fetchColumnData, updateWizard, clearWizardCohort} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
@@ -67,6 +68,11 @@ var controls = {
 		updateWizard(serverBus, state.spreadsheet, newState.spreadsheet,
 				{force: !_.getIn(newState, ['wizard', 'cohorts'])});
 	},
+	'manifest': (state, {cohort, samples}) =>
+		clearWizardCohort(
+				_.updateIn(state, ['spreadsheet'], setCohort({name: cohort, sampleFilter: samples}, null))),
+	'manifest-post!': (serverBus, state, newState) =>
+		fetchCohortData(serverBus, newState.spreadsheet),
 	inlineState: (state, newState) => resetLoadPending(newState),
 	'inlineState-post!': (serverBus, state, newState) => {
 		updateWizard(serverBus, state.spreadsheet, newState.spreadsheet,

@@ -1,7 +1,7 @@
 'use strict';
+import PureComponent from '../PureComponent';
 var React = require('react');
 var _ = require('../underscore_ext');
-var {deepPureRenderMixin} = require('../react-utils');
 var CohortOrDisease = require('../views/CohortOrDisease');
 var VariableSelect = require('../views/VariableSelect');
 var GhostVariableSelect = require('../views/GhostVariableSelect');
@@ -130,18 +130,18 @@ function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelec
 	if (wizardMode) {
 		if (stepperState === 'COHORT') {
 			return [
-				<CohortOrDisease {...cohortSelectProps}/>,
-				<GhostVariableSelect width={width} {...variableSelectConfig.FIRST_COLUMN}/>,
-				<GhostVariableSelect width={width} {...variableSelectConfig.SECOND_COLUMN}/>];
+				<CohortOrDisease key='c1' {...cohortSelectProps}/>,
+				<GhostVariableSelect key='c2' width={width} {...variableSelectConfig.FIRST_COLUMN}/>,
+				<GhostVariableSelect key='c3' width={width} {...variableSelectConfig.SECOND_COLUMN}/>];
 		}
 		if (stepperState === 'FIRST_COLUMN') {
 			return [
-				<VariableSelect {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
-				<GhostVariableSelect width={width} {...variableSelectConfig.SECOND_COLUMN} />];
+				<VariableSelect key='c2' {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
+				<GhostVariableSelect key='c3' width={width} {...variableSelectConfig.SECOND_COLUMN} />];
 		}
 		if (stepperState === 'SECOND_COLUMN') {
 			return [
-				<VariableSelect {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>];
+				<VariableSelect key='c3' {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>];
 		}
 	}
 	return [];
@@ -209,24 +209,28 @@ var computeSettings = _.curry((datasets, features, inputFields, width, dataset, 
 //      add 1st column editor, or
 //      add 2nd column editor
 function addWizardColumns(Component) {
-	return React.createClass({
-		mixins: [deepPureRenderMixin],
-		displayName: 'SpreadsheetWizardColumns',
-		getInitialState() {
-			var {editing} = this.props;
-			return {editing};
-		},
-		componentWillMount() {
+	return class extends PureComponent {
+	    static displayName = 'SpreadsheetWizardColumns';
+
+	    constructor(props) {
+	        super(props);
+	        var {editing} = props;
+	        this.state = {editing};
+	    }
+
+	    componentWillMount() {
 			var {callback} = this.props;
 			this.sub = Rx.Observable.of(true)
 				.concat(Rx.Observable.fromEvent(window, 'resize'))
 				.debounceTime(200).subscribe(() =>
 					callback(['viewportWidth', document.documentElement.clientWidth]));
-		},
-		componentWillUnmount() {
+		}
+
+	    componentWillUnmount() {
 			this.sub.unsubscribe();
-		},
-		componentWillReceiveProps: function(newProps) {
+		}
+
+	    componentWillReceiveProps(newProps) {
 			var {editing} = newProps;
 			// XXX set timeout here for flipping back, when done.
 			this.setState({editing});
@@ -238,21 +242,25 @@ function addWizardColumns(Component) {
 //
 //				this.setState({openColumnEdit: true});
 //			}
-		},
-		onCancel() {
+		}
+
+	    onCancel = () => {
 			this.props.callback(['edit-column', null]);
-		},
-		onCohortSelect(cohort) {
+		};
+
+	    onCohortSelect = (cohort) => {
 			this.props.callback(['cohort', cohort, typeWidth.matrix]);
-		},
-		onDatasetSelect(posOrId, input, datasetList, fieldList) {
+		};
+
+	    onDatasetSelect = (posOrId, input, datasetList, fieldList) => {
 			var {wizard: {datasets, features}, appState: {defaultWidth}} = this.props,
 				isPos = _.isNumber(posOrId),
 				settingsList = _.mmap(datasetList, fieldList, computeSettings(datasets, features, input, defaultWidth));
 			this.props.callback(['add-column', posOrId,
 					...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
-		},
-		render() {
+		};
+
+	    render() {
 			var {children, appState, wizard} = this.props,
 				{cohort, wizardMode, defaultWidth, servers} = appState,
 				{cohorts, cohortPreferred, cohortMeta,
@@ -296,7 +304,7 @@ function addWizardColumns(Component) {
 						wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, width))}
 				</Component>);
 		}
-	});
+	};
 }
 
 module.exports = addWizardColumns;

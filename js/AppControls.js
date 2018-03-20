@@ -1,12 +1,12 @@
 
 'use strict';
 
+import PureComponent from './PureComponent';
 var React = require('react');
 var pdf = require('./pdfSpreadsheet');
 var _ = require('./underscore_ext');
 import AppBar from 'react-toolbox/lib/app_bar';
 var konami = require('./konami');
-var {deepPureRenderMixin} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var classNames = require('classnames');
 
@@ -43,31 +43,36 @@ function download([fields, rows]) {
 var asciiB = 66;
 
 // XXX drop this.props.style? Not sure it's used.
-var AppControls = React.createClass({
-	mixins: [deepPureRenderMixin],
+class AppControls extends PureComponent {
 	componentWillMount() {
 		this.nsub = konami(asciiB).subscribe(() => {
 			this.props.callback(['notifications-enable']);
 		});
-	},
+	}
+
 	componentWillUnmount() {
 		this.nsub.unsubscribe();
-	},
-	onMode: function () {
+	}
+
+	onMode = () => {
 		var {callback, appState: {mode}} = this.props;
 		callback([modeEvent[mode]]);
-	},
-	onRefresh: function () {
+	};
+
+	onRefresh = () => {
 		var {callback} = this.props;
 		callback(['refresh-cohorts']);
-	},
-	onPdf: function () {
+	};
+
+	onPdf = () => {
 		pdf(this.props.appState);
-	},
-	onCohortSelect: function (value) {
+	};
+
+	onCohortSelect = (value) => {
 		this.props.callback(['cohort', value]);
-	},
-	onDownload: function () {
+	};
+
+	onDownload = () => {
 		var {sampleFormat} = this.props,
 			{samples, columns, columnOrder, index, data} = this.props.appState,
 			// only download rectangular data
@@ -83,11 +88,13 @@ var AppControls = React.createClass({
 				i === 0 ? headers : headers.slice(1));
 
 		download([combinedHeaders, combinedRows]);
-	},
-	onShowWelcome: function () {
+	};
+
+	onShowWelcome = () => {
 		this.props.onShowWelcome();
-	},
-	render: function () {
+	};
+
+	render() {
 		var {appState: {cohort, mode, columnOrder, showWelcome, samples},
 				onReset, children, help, onResetSampleFilter} = this.props,
 			cohortName = _.get(cohort, 'name'),
@@ -124,6 +131,6 @@ var AppControls = React.createClass({
 				</AppBar>
 		);
 	}
-});
+}
 
 module.exports = { AppControls };

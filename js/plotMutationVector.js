@@ -2,9 +2,10 @@
 
 var _ = require('./underscore_ext');
 var Rx = require('./rx');
+import PureComponent from './PureComponent';
 var React = require('react');
 var Legend = require('./views/Legend');
-var {deepPureRenderMixin, rxEvents} = require('./react-utils');
+var {rxEvents} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
@@ -239,9 +240,8 @@ function tooltip(fieldType, fields, layout, nodes, samples, sampleFormat, zoom, 
 		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
 }
 
-var MutationColumn = hotOrNot(React.createClass({
-	mixins: [deepPureRenderMixin],
-	componentWillMount: function () {
+var MutationColumn = hotOrNot(class extends PureComponent {
+	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
@@ -256,15 +256,18 @@ var MutationColumn = hotOrNot(React.createClass({
 					})) // look up current data
 					.concat(Rx.Observable.of({open: false}));
 			}).subscribe(this.props.tooltip);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.ttevents.unsubscribe();
-	},
-	tooltip: function (ev) {
+	}
+
+	tooltip = (ev) => {
 		var {column: {fieldType, fields, layout, nodes, assembly}, samples, sampleFormat, zoom} = this.props;
 		return tooltip(fieldType, fields, layout, nodes, samples, sampleFormat, zoom, assembly, ev);
-	},
-	render: function () {
+	};
+
+	render() {
 		var {column, samples, zoom, index, draw} = this.props;
 
 		return (
@@ -286,7 +289,7 @@ var MutationColumn = hotOrNot(React.createClass({
 					xzoom={column.zoom}
 					zoom={zoom}/>);
 	}
-}));
+});
 
 widgets.column.add('mutation',
 		props => <MutationColumn draw={drawMutations} {...props} />);

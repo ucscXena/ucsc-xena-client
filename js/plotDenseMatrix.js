@@ -6,9 +6,11 @@ var widgets = require('./columnWidgets');
 var colorScales = require('./colorScales');
 var util = require('./util');
 var Legend = require('./views/Legend');
+var BandLegend = require('./views/BandLegend');
+import PureComponent from './PureComponent';
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
-var {deepPureRenderMixin, rxEvents} = require('./react-utils');
+var {rxEvents} = require('./react-utils');
 var {drawHeatmap} = require('./drawHeatmap');
 
 // Since we don't set module.exports, but instead register ourselves
@@ -76,9 +78,8 @@ function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, po
 		rows: [
 			[['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos)]]] : []),
-			...(!code && (mean !== 'NA') && (median !== 'NA')) ?
-				[[['labelValue', 'Mean (Median)', mean + ' (' +
-				 median + ')' ]]] : []]
+			...((!code && (mean !== 'NA') && (median !== 'NA') ? [[['labelValue', 'Mean (Median)', mean + ' (' +
+	         median + ')' ]]] : []))]
 	};
 }
 
@@ -152,6 +153,31 @@ function renderFloatLegend(props) {
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 
+function renderFloatLegendNew(props) {
+	var {units, colors, vizSettings} = props;
+
+	if (!colors) {
+		return null;
+	}
+
+	var colorSpec = _.max(colors, colorList => _.uniq(colorList.slice(Math.ceil(colorList.length / 2.0))).length),
+		scale = colorScales.colorScale(colorSpec),
+		values = scale.domain(),
+		unitText = units[0],
+		footnotes = [units && units[0] ? <span title={unitText}>{unitText}</span> : null],
+		hasViz = !isNaN(_.getIn(vizSettings, ['min'])),
+		multiScaled = colors && colors.length > 1 && !hasViz;
+
+	return (
+		<BandLegend
+			multiScaled={multiScaled}
+			range={{min: _.first(values), max: _.last(values)}}
+			colorScale={scale}
+			footnotes={footnotes}
+			width={50}
+			height={20}/>);
+}
+
 // Might have colorScale but no data (phenotype), no data & no colorScale,
 // or data & colorScale, no colorScale &  data?
 function renderCodedLegend(props) {
@@ -172,10 +198,9 @@ function renderCodedLegend(props) {
 	return <Legend {...legendProps} />;
 }
 
-var HeatmapLegend = hotOrNot(React.createClass({
-	mixins: [deepPureRenderMixin],
-	render: function() {
-		var {column, data} = this.props,
+var HeatmapLegend = hotOrNot(class extends PureComponent {
+	render() {
+		var {column, data, newLegend} = this.props,
 			{units, heatmap, colors, valueType, vizSettings, defaultNormalization} = column,
 			props = {
 				units,
@@ -186,18 +211,24 @@ var HeatmapLegend = hotOrNot(React.createClass({
 				coded: valueType === 'coded',
 				codes: _.get(data, 'codes'),
 			};
-		return (props.coded ? renderCodedLegend : renderFloatLegend)(props);
+		return (props.coded ? renderCodedLegend :
+			newLegend ? renderFloatLegendNew :
+			renderFloatLegend)(props);
 	}
-}));
+});
 
 //
 // plot rendering
 //
 
 
-var HeatmapColumn = hotOrNot(React.createClass({
-	mixins: [deepPureRenderMixin],
-	componentWillMount: function () {
+var HeatmapColumn = hotOrNot(//
+// plot rendering
+//
+
+
+class extends PureComponent {
+	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
@@ -211,21 +242,24 @@ var HeatmapColumn = hotOrNot(React.createClass({
 					})) // look up current data
 					.concat(Rx.Observable.of({open: false}));
 			}).subscribe(this.props.tooltip);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.ttevents.unsubscribe();
-	},
-	tooltip: function (ev) {
+	}
+
+	tooltip = (ev) => {
 		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
 			codes = _.get(data, 'codes'),
 			position = _.getIn(data, ['req', 'position']),
 			{assembly, fields, heatmap, width} = column;
 		return tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat(id), codes, position, width, zoom, samples, ev);
-	},
+	};
+
 	// To reduce this set of properties, we could
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
-	render: function () {
+	render() {
 		var {data, column, zoom} = this.props,
 			{heatmap, colors} = column,
 			codes = _.get(data, 'codes');
@@ -247,7 +281,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 					colors={colors}
 					heatmapData={heatmap}/>);
 	}
-}));
+});
 
 var getColumn = props => <HeatmapColumn {...props} />;
 

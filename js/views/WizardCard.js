@@ -32,16 +32,18 @@ var CardAvatar = require('./CardAvatar');
 // Styles
 var compStyles = require('./WizardCard.module.css');
 
-var WizardCard = React.createClass({
-	onDone() {
+class WizardCard extends React.Component {
+	onDone = () => {
 		this.props.onDone();
-	},
-	onDoneInvalid(ev) {
+	};
+
+	onDoneInvalid = (ev) => {
 		var {valid, onDoneInvalid} = this.props;
 		if (onDoneInvalid && !valid) {
 			onDoneInvalid(ev);
 		}
-	},
+	};
+
 	render() {
 		var {children, colId, controls, contentSpecificHelp,
             title, valid, loading, loadingCohort, width} = this.props;
@@ -71,5 +73,6 @@ var WizardCard = React.createClass({
 			</Card>
 		);
 	}
-});
+}
+
 module.exports = WizardCard;
