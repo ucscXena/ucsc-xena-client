@@ -97,12 +97,7 @@ class Application extends Component {
 			matches = _.get(samplesMatched, 'length', samples.length),
 			// Can these closures be eliminated, now that the selector is above this
 			// component?
-			onFilter = (matches < samples.length && matches > 0) ?
-				() => this.onFilter(samplesMatched) : null,
-			onFilterColumn = (matches < samples.length && matches > 0) ?
-				() => this.onFilterColumn(samplesMatched) : null,
-			onFilterZoom = (matches < samples.length && matches > 0) ?
-				() => this.onFilterZoom(samples, samplesMatched) : null;
+			actionsDisabled = !(matches < samples.length && matches > 0) || matches === 0;
 //			onSearchIDAndFilterColumn = this.onSearchIDAndFilterColumn;
 
 		if (loadPending) {
@@ -120,9 +115,10 @@ class Application extends Component {
 							<SampleSearch
 								value={sampleSearch}
 								matches={matches}
-								onFilter={onFilter}
-								onZoom={onFilterZoom}
-								onCreateColumn={onFilterColumn}
+								actionsDisabled={actionsDisabled}
+								onFilter={this.onFilter}
+								onZoom={this.onFilterZoom}
+								onCreateColumn={this.onFilterColumn}
 								onChange={onHighlightChange}
 								mode={mode}
 								onResetSampleFilter={onResetSampleFilter}

@@ -104,10 +104,10 @@ var SampleSearch = React.createClass({
 		onChange(value);
 	},
 	render: function () {
-		var {matches, onFilter, onZoom, onCreateColumn, onResetSampleFilter, mode} = this.props,
+		var {matches, actionsDisabled, onFilter, onZoom, onCreateColumn, onResetSampleFilter, mode} = this.props,
 			{value} = this.state,
-			noshow = (mode !== "heatmap"),
-			disableFilterMenuOptions = matches === 0;
+			noshow = (mode !== "heatmap");
+
 		return (
 			<div className={compStyles.SampleSearch}>
 				<Input className={compStyles.inputContainer}
@@ -122,10 +122,10 @@ var SampleSearch = React.createClass({
 				</Input>
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
 				<IconMenu title='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
-					<MenuItem caption='Filter' onClick={onFilter} disabled={disableFilterMenuOptions}/>
-					<MenuItem caption='Clear Filter' onClick={onResetSampleFilter} disabled={disableFilterMenuOptions}/>
-					<MenuItem caption='Zoom' onClick={onZoom} disabled={disableFilterMenuOptions}/>
-					<MenuItem caption='New Column' onClick={onCreateColumn} disabled={disableFilterMenuOptions}/>
+					<MenuItem caption='Filter' onClick={onFilter} disabled={actionsDisabled}/>
+					<MenuItem caption='Clear Filter' onClick={onResetSampleFilter} disabled={actionsDisabled}/>
+					<MenuItem caption='Zoom' onClick={onZoom} disabled={actionsDisabled}/>
+					<MenuItem caption='New Column' onClick={onCreateColumn} disabled={actionsDisabled}/>
 				</IconMenu>}
 			</div>
 		);
