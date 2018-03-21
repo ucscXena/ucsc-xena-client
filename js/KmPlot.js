@@ -416,7 +416,7 @@ class KmPlot extends PureComponent {
 				<Dialog
 					actions={actions}
 					active={true}
-					title={'Kaplan Meier' + title}
+					title={'Kaplan Meier ' + title}
 					className={kmStyle.mainDialog}
 					onEscKeyDown={this.hide}
 					onOverlayClick={this.hide}
