@@ -61,6 +61,10 @@ function renderFloatLegend(props) {
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 
+// might want to use <wbr> here, instead, so cut & paste work better, but that
+// will require a recursive split/flatmap to inject the <wbr> elements.
+var addWordBreaks = str => str.replace(/([_/])/g, '\u200B$1\u200B');
+
 function renderFloatLegendNew(props) {
 	var {units, color} = props;
 
@@ -68,7 +72,7 @@ function renderFloatLegendNew(props) {
 		return null;
 	}
 	var unitText = (units || [])[0],
-		footnotes = [<span title={unitText}>{unitText}</span>];
+		footnotes = [<span title={unitText}>{addWordBreaks(unitText)}</span>];
 
 	var [origin, , max] = color.slice(4),
 		powerScale = colorScales.colorScale(color).lookup,

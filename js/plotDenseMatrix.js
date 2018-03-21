@@ -153,6 +153,10 @@ function renderFloatLegend(props) {
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 
+// might want to use <wbr> here, instead, so cut & paste work better, but that
+// will require a recursive split/flatmap to inject the <wbr> elements.
+var addWordBreaks = str => str.replace(/([_/])/g, '\u200B$1\u200B');
+
 function renderFloatLegendNew(props) {
 	var {units, colors, vizSettings} = props;
 
@@ -169,7 +173,7 @@ function renderFloatLegendNew(props) {
 	var scale = colorScales.colorScale(colorSpec),
 		values = scale.domain(),
 		unitText = units[0],
-		footnotes = [units && units[0] ? <span title={unitText}>{unitText}</span> : null],
+		footnotes = [units && units[0] ? <span title={unitText}>{addWordBreaks(unitText)}</span> : null],
 		hasViz = !isNaN(_.getIn(vizSettings, ['min'])),
 		multiScaled = colors && colors.length > 1 && !hasViz;
 
