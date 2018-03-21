@@ -64,7 +64,7 @@ function renderFloatLegend(props) {
 function renderFloatLegendNew(props) {
 	var {units, color} = props;
 
-	if (!color) {
+	if (color[0] === 'no-data') {
 		return null;
 	}
 	var unitText = (units || [])[0],
