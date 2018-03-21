@@ -154,12 +154,13 @@ class Sortable extends PureComponent {
 
 	render() {
 		var {dragging} = this.state,
-			{Component, children, ...otherProps} = this.props;
+			{Component, children, ...otherProps} = this.props,
+			{wizardMode} = this.props.appState;
 
 		var columns = React.Children.map(children, (child, i) => {
 			var actionKey = child.props['data-actionKey'];
 			return React.cloneElement(child, {
-				onMouseDown: i < skip ? undefined : ev => this.sortStart([actionKey, ev]),
+				onMouseDown: wizardMode || i < skip ? undefined : ev => this.sortStart([actionKey, ev]),
 				className: 'Sortable-container' + (dragging !== null && i !== dragging ? ' Sortable-slide' : ''),
 				style: {left: this.state.pos[actionKey]},
 				id: actionKey,
