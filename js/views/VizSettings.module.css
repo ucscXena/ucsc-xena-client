@@ -30,12 +30,14 @@ button.dialogClose > i {
     display: block;
     position: absolute;
     height: calc(100% - 179px);
+    width:100%;
     top: 64px;
 }
 
 .dialogOverlay {
     position: absolute;
     height: 100%;
+    width:100%;
     top: 0;
 }
 
