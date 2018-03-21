@@ -45,21 +45,21 @@ class Application extends Component {
 		// nested render to different DOM tree
 		nav({isPublic, getState, onImport, onNavigate, activeLink: 'heatmap'});
 	}
-	onFilter= (matches) => {
-		const {callback, state: {cohortSamples}} = this.props,
-			matching = _.map(matches, i => cohortSamples[i]);
+	onFilter = () => {
+		const {callback, state: {cohortSamples, samplesMatched}} = this.props,
+			matching = _.map(samplesMatched, i => cohortSamples[i]);
 		callback(['sampleFilter', matching]);
 	};
-	onFilterZoom = (samples, matches) => {
-		const { state: { zoom: { height } }, callback } = this.props,
+	onFilterZoom = () => {
+		const { state: { samples, samplesMatched, zoom: { height } }, callback } = this.props,
 			toOrder = _.object(samples, _.range(samples.length)),
-			index = toOrder[_.min(matches, s => toOrder[s])],
-			last = toOrder[_.max(matches, s => toOrder[s])];
+			index = toOrder[_.min(samplesMatched, s => toOrder[s])],
+			last = toOrder[_.max(samplesMatched, s => toOrder[s])];
 		callback(['zoom', {index, height, count: last - index + 1}]);
 	};
-	onFilterColumn= ( matches, columnLabel, fieldLabel) => {
-		const {state: {cohortSamples, sampleSearch}, callback} = this.props,
-			matching = _.map(matches, i => cohortSamples[i]),
+	onFilterColumn = ( columnLabel, fieldLabel) => {
+		const {state: {cohortSamples, samplesMatched, sampleSearch}, callback} = this.props,
+			matching = _.map(samplesMatched, i => cohortSamples[i]),
 			field = signatureField(`${fieldLabel ? fieldLabel : sampleSearch}`, {
 				columnLabel: columnLabel ? columnLabel : 'filter',
 				valueType: 'coded',
