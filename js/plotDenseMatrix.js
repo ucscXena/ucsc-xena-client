@@ -160,8 +160,13 @@ function renderFloatLegendNew(props) {
 		return null;
 	}
 
-	var colorSpec = _.max(colors, colorList => _.uniq(colorList.slice(Math.ceil(colorList.length / 2.0))).length),
-		scale = colorScales.colorScale(colorSpec),
+	var colorSpec = _.max(colors, colorList => _.uniq(colorList.slice(Math.ceil(colorList.length / 2.0))).length);
+
+	if (colorSpec[0] === 'no-data') {
+		return null;
+	}
+
+	var scale = colorScales.colorScale(colorSpec),
 		values = scale.domain(),
 		unitText = units[0],
 		footnotes = [units && units[0] ? <span title={unitText}>{unitText}</span> : null],
