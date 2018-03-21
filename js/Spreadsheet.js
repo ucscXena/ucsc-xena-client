@@ -13,7 +13,7 @@ var compStyles = require('./Spreadsheet.module.css');
 
 function zoomPopover(props) {
 	return (
-		<div className={classNames(compStyles.zoomDialog, {[compStyles.active]: props.active})} {...props}>
+		<div className={classNames(compStyles.zoomDialog, {[compStyles.active]: props.active})}>
 			<div className={compStyles.content}>Shift-click on data to zoom out.<br/>Click to zoom in.</div>
 			<div className={compStyles.actions}>
 				<Button accent onClick={props.onDisableClick}>GOT IT</Button>
@@ -27,10 +27,6 @@ var getSpreadsheet = columnsWrapper => {
 	return class extends PureComponent {
 	    static displayName = 'Spreadsheet';
 
-	    zoomHelpClose = () => {
-			this.props.callback(['zoom-help-close']);
-		};
-
 	    zoomHelpDisable = () => {
 			this.props.callback(['zoom-help-disable']);
 		};
@@ -40,7 +36,6 @@ var getSpreadsheet = columnsWrapper => {
 				zoomHelper = zoomHelp ?
 					zoomPopover({
 						active: true,
-						onClick: this.zoomHelpClose,
 						onDisableClick: this.zoomHelpDisable
 					}) : null;
 			return (

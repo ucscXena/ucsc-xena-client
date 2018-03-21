@@ -283,7 +283,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						error = this.state.errors[param];
 
 					return (
-						<Row>
+						<Row key={param}>
 							<Col xs4={4} xs8={8} sm={6} smOffset={6}>
 								<label className={vizSettingStyle.errorLabel}>{error}</label>
 							</Col>
@@ -315,9 +315,9 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				},
 				buttons = modes.map(mode => {
 					let active = (this.state.mode === mode),
+						style = vizSettingStyle[active ? 'activeModeButton' : 'inactiveModeButton'],
 						func = funcMapping[mode];
-					return active ? (<Button onMouseUp={func} className={vizSettingStyle.activeModeButton}>{mode}</Button>) :
-						(<Button onMouseUp={func} className={vizSettingStyle.inactiveModeButton}>{mode}</Button>);
+					return <Button key={mode} onMouseUp={func} className={style}>{mode}</Button>;
 				}),
 				enterInput = autoMode ? null : this.buildCustomColorScale(),
 				autocolorTransformation = (valueType === "float" && fieldType !== 'clinical') ?
@@ -632,7 +632,7 @@ class VizSettings extends React.Component {
 
 		const actions = [
 			{
-				label: <i className='material-icons'>close</i>,
+				children: [<i className='material-icons'>close</i>],
 				className: vizSettingStyle.dialogClose,
 				onClick: onRequestHide
 			},
