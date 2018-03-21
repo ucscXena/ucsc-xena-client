@@ -6,7 +6,7 @@ var widgets = require('../columnWidgets');
 var _ = require('../underscore_ext');
 var konami = require('../konami');
 
-var newLegend = false;
+var newLegend = true; // deprecate this after next release
 
 // XXX doing layout here.
 // XXX we could push width down into widgets.legend, but would
