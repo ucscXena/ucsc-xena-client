@@ -57,8 +57,8 @@ class NumberForm extends React.Component {
 					onFocus={this.onFocus}
 					type='text'
 					value={'' + value}
-					label={`Survival time cutoff (in range [${min}, ${max}])`}
-					placeholder={focused ? 'Enter a number.' : undefined}
+					label={`Custom survival time cutoff`}
+					placeholder={focused ? `Enter a number between ${min} and ${max}` : undefined}
 					onChange={this.on.change}/>
 			</form>
 		);
