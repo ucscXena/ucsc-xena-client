@@ -7,6 +7,7 @@ import Dialog from 'react-toolbox/lib/dialog';
 
 class StateError extends PureComponent {
 	componentDidMount() {
+		document.documentElement.scrollTop = 0;
 		var body = document.getElementById("body");
 		body.style.overflow = "auto";
 	}
