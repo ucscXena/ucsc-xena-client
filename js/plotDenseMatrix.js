@@ -172,8 +172,7 @@ function renderFloatLegendNew(props) {
 
 	var scale = colorScales.colorScale(colorSpec),
 		values = scale.domain(),
-		unitText = units[0],
-		footnotes = [units && units[0] ? <span title={unitText}>{addWordBreaks(unitText)}</span> : null],
+		footnotes = units && units[0] ? [<span title={units[0]}>{addWordBreaks(units[0])}</span>] : null,
 		hasViz = !isNaN(_.getIn(vizSettings, ['min'])),
 		multiScaled = colors && colors.length > 1 && !hasViz;
 

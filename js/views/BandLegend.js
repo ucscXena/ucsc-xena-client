@@ -53,7 +53,7 @@ class BandLegend extends React.Component {
 						</div>
 					</div>
 				</div>
-				{footnotes.map(addClass(compStyles.footnotes))}
+				{footnotes ? footnotes.map(addClass(compStyles.footnotes)) : null}
 			</div>
 		);
 	}
