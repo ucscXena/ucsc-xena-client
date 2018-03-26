@@ -623,6 +623,7 @@ class SettingsWrapper extends React.Component {
 class VizSettings extends React.Component {
 
 	componentDidMount() {
+		document.documentElement.scrollTop = 0;
 		var body = document.getElementById("body");
 		body.style.overflow = "auto";
 	}

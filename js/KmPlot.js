@@ -161,6 +161,7 @@ class WarningTrigger extends React.Component {
 
 class WarningDialog extends React.Component {
 	componentDidMount() {
+		document.documentElement.scrollTop = 0;
 		var body = document.getElementById("body");
 		body.style.overflow = "auto";
 	}
@@ -354,6 +355,7 @@ class KmPlot extends PureComponent {
 	};
 
 	componentDidMount() {
+		document.documentElement.scrollTop = 0;
 		var body = document.getElementById("body");
 		body.style.overflow = "auto";
 	}
