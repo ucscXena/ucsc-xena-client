@@ -151,7 +151,7 @@ class WarningTrigger extends React.Component {
 					onClick={() => this.setState({show: true})}
 					className={kmStyle.showPWarningButton}
 				>
-					<span className={`glyphicon glyphicon-warning-sign ${kmStyle.pWarningIcon}`}/>
+					<i className={`material-icons ${kmStyle.pWarningIcon}`}>warning</i>
 				</Button>
 				{this.state.show ? <WarningDialog onHide={this.close} header={header} body={body}/> : null}
 			</div>
@@ -385,12 +385,12 @@ class KmPlot extends PureComponent {
 						data.</h3></div>
 					: <div>
 						<Button onClick={this.pdf} className={kmStyle.PDFButton}>
-							<span className={`glyphicon glyphicon-download ${kmStyle.buttonIcon}`}/>
-							PDF
+							<i className={`material-icons ${kmStyle.buttonIcon}`}>file_download</i>
+							<span className={kmStyle.buttonText}>PDF</span>
 						</Button>
 						<Button onClick={this.help} className={kmStyle.helpButton}>
-							<span className={`glyphicon glyphicon-question-sign ${kmStyle.buttonIcon}`}/>
-							Help
+							<i className={`material-icons ${kmStyle.buttonIcon}`}>help</i>
+							<span className={kmStyle.buttonText}>Help</span>
 						</Button>
 						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
 						{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions, maySplit, splits, this.onSplits)}

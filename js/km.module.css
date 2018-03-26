@@ -143,11 +143,16 @@ div.warningDialog {
     margin-top: 200px;
 }
 
-.buttonIcon {
+i.buttonIcon {
     margin-right: 10px;
-    margin-top: -2px;
+    margin-top: 10px;
     box-sizing: border-box;
     font-size: 18px;
+}
+
+.buttonText {
+    display: inline-block;
+    margin-top: -10px;
 }
 
 .PDFButton {
@@ -161,6 +166,7 @@ div.warningDialog {
 .pWarningIcon {
     color: #8d0000;
     float: left;
+    font-size: 18px;
 }
 
 .showPWarningButton {
