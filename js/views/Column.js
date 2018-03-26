@@ -269,12 +269,11 @@ function getStatusView(status, onReload) {
 	if (status === 'error') {
 		return (
 			<div style={styles.status}>
-				<span
-					onClick={onReload}
-					title='Error loading data. Click to reload.'
-					style={styles.error}
-					className='glyphicon glyphicon-warning-sign'
-					aria-hidden='true'/>
+				<i onClick={onReload}
+				   style={styles.error}
+				   title='Error loading data. Click to reload.'
+				   aria-hidden='true'
+				   className={'material-icons'}>warning</i>
 			</div>);
 	}
 	return null;
