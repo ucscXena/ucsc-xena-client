@@ -68,7 +68,11 @@ module.exports = function (doc, vgw, vgh) {
 			el.height = vgh;
 
 			return {
-				createImageData: (w, h) => ctx.createImageData(w, h),
+				createImageData: (w, h) => {
+					el.width = w;
+					el.height = h;
+					return ctx.createImageData(w, h);
+				},
 				putImageData: (img, x, y) => {
 					ctx.putImageData(img, x, y);
 					doc.image(el.toDataURL(), 0, 0);
