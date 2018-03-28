@@ -135,8 +135,12 @@ function drawLayoutByPixel(vg, opts) {
 			}
 		}
 
-		ctx.putImageData(img, 0, 0);
+	});
+	ctx.putImageData(img, 0, 0);
 
+	layout.forEach(function (el, i) {
+		var rowData = data[i].slice(first, last),
+			colorScale = colorScales.colorScale(colors[i]);
 		// Add labels
 		var minSpan = labelFont / (height / count);
 		if (el.size - 2 * labelMargin >= minTxtWidth) {
