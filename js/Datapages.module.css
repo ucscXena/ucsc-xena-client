@@ -106,6 +106,7 @@
 .dataSnippetTable {
 	border-collapse:collapse;
 	width: 100%;
+	table-layout: fixed;
 }
 
 .dataSnippetTable tr td {
@@ -114,8 +115,6 @@
 	word-wrap: break-word;
 	color: #505050;
 	font-size: 85%;
-	max-width: 100px;
-	min-width: 30px;
 }
 
 .list {
