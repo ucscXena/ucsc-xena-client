@@ -34,7 +34,6 @@
 
 'use strict';
 var _ = require('../underscore_ext');
-//var floatImg = require('../../images/genomicFloatLegend.jpg');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var {Row, Col} = require("react-material-responsive-grid");
@@ -47,55 +46,61 @@ import vizSettingStyle from "./VizSettings.module.css";
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
 	defaultColorClass, valueType, fieldType, data, units) {
 	var state = vizState;
-	function datasetSetting() {
-		var node, div = document.createElement("div");
-		if (valueType === "float" || valueType === 'segmented') {
-			node = document.createElement("div");
-			allFloat(node);
-			div.appendChild(node);
+	class DatasetSetting extends React.Component {
+		render() {
+			let settingsContent = valueType === "float" || valueType === 'segmented' ? <AllFloat /> :
+				valueType === "mutation" && fieldType === 'SV' ? <Sv /> :
+					<NoSettings />;
+			return (
+				<div>
+					{settingsContent}
+					<FinishButtonBar/>
+				</div>
+			);
 		}
-		else if (valueType === "mutation" && fieldType === 'SV') {
-			node = document.createElement("div");
-			sv(node);
-			div.appendChild(node);
-		} else {
-			div.appendChild(document.createTextNode("No setting adjustments available."));
-			div.appendChild(document.createElement("br"));
-			div.appendChild(document.createElement("br"));
+	}
+	class AllFloat extends React.Component {
+		render() {
+			return (
+				<div>
+					<div>
+						<ColorDropDown />
+					</div>
+					<br />
+					<div>
+						<ScaleChoice />
+					</div>
+					<br />
+				</div>
+			);
 		}
-		node = document.createElement("span");
-		ReactDOM.render(React.createElement(finishButtonBar), node);
-		div.appendChild(node);
-		return div;
 	}
-
-	function allFloat(div) {
-		var node;
-
-		// color palette : green red or blue red
-		node = document.createElement("div");
-		ReactDOM.render(React.createElement(colorDropDown), node);
-		div.appendChild(node);
-		div.appendChild(document.createElement("br"));
-
-		// color mode
-		node = document.createElement("div");
-		ReactDOM.render(React.createElement(scaleChoice), node);
-		div.appendChild(node);
-		div.appendChild(document.createElement("br"));
+	class Sv extends React.Component {
+		render() {
+			return (
+				<div>
+					<div>
+						<SvColorDropDown />
+					</div>
+					<br />
+				</div>
+			);
+		}
 	}
-
-	function sv(div) {
-		var node;
-		// color choice
-		node = document.createElement("div");
-		ReactDOM.render(React.createElement(svColorDropDown), node);
-		div.appendChild(node);
-		div.appendChild(document.createElement("br"));
+	class NoSettings extends React.Component {
+		render() {
+			return (
+				<div>
+					<div>No setting adjustments available.</div>
+					<br />
+					<br />
+				</div>
+			);
+		}
 	}
 
 	// discard user changes & close.
-	class finishButtonBar extends React.Component {
+	class FinishButtonBar extends React.Component {
 	    handleCancelClick = () => {
 			hide();
 			onVizSettings(id, state);
@@ -178,14 +183,6 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		return _.every(errors, function (s) { return !s; });
 	}
 
-	function valToStr(v) {
-//		return "" + v;
-//		if (v === "-") {
-//			return v;
-//		}
-		return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
-	}
-
 	var scaleAnnotations = {
 		float: {
 			"max": "max: high color 100% saturation",
@@ -213,7 +210,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 	};
 
-	class scaleChoice extends React.Component {
+	class ScaleChoice extends React.Component {
 	    constructor(props) {
 	        super(props);
 	        //check if there is custom value
@@ -249,7 +246,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	    }
 
 		componentWillMount() {
-			let initStates = colorParams[valueType].map((colorParam) => valToStr(this.state.settings[colorParam]));
+			let initStates = colorParams[valueType].map((colorParam) => _.valToStr(this.state.settings[colorParam]));
 			this.setState(_.object(colorParams[valueType], initStates));
 		}
 
@@ -321,8 +318,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				}),
 				enterInput = autoMode ? null : this.buildCustomColorScale(),
 				autocolorTransformation = (valueType === "float" && fieldType !== 'clinical') ?
-					React.createElement(normalizationDropDown) :
-					(valueType === 'segmented' ? React.createElement(segCNVnormalizationDropDown) : null),
+					<NormalizationDropDown /> :
+					(valueType === 'segmented' ? <SegCNVnormalizationDropDown /> : null),
 				notransformation = (
 				    <Row>
 						<Col xs4={4} xs8={3} sm={3}>Color transformation</Col>
@@ -362,7 +359,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	//color transformation for dense genomics matrix floats
-	class normalizationDropDown extends React.Component {
+	class NormalizationDropDown extends React.Component {
 	    constructor(props) {
 	        super(props);
 	        let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
@@ -424,7 +421,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	//color transformation for segmented cnv
-	class segCNVnormalizationDropDown extends React.Component {
+	class SegCNVnormalizationDropDown extends React.Component {
 	    constructor(props) {
 	        super(props);
 	        let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
@@ -478,7 +475,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	//color palette dense matrix floats and segmented CNV
-	class colorDropDown extends React.Component {
+	class ColorDropDown extends React.Component {
 	    constructor(props) {
 	        super(props);
 	        let	value = getVizSettings('colorClass') || 'default';
@@ -537,7 +534,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	//color palette for SV
-	class svColorDropDown extends React.Component {
+	class SvColorDropDown extends React.Component {
 	    constructor(props) {
 	        super(props);
 	        let	value = getVizSettings('svColor') || 'default';
@@ -596,7 +593,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			segmented: ["origin", "thresh", "max"]
 		};
 
-	node.appendChild(datasetSetting());
+	ReactDOM.render(React.createElement(DatasetSetting), node);
 	return currentSettings;
 }
 

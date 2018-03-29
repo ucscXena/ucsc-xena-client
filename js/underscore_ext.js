@@ -402,6 +402,11 @@ function imap(arr, fn) {
 		})
 	};
 }
+
+function valToStr(v) {
+	return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
+}
+
 //
 //function* irange(n) {
 //	for (let i = 0; i < n; ++i) {
@@ -456,6 +461,7 @@ _.mixin({
 	unique,
 	uniquify,
 	withoutIndex,
+	valToStr,
 	// This inscrutable method allows one to write a 'let' expression via
 	// es6 default arguments, e.g. _.Let((x = 5, y = x + 2) => x + y) === 12
 	Let: f => f()
