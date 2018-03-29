@@ -9,8 +9,6 @@ var {rgb, RGBtoHSV, HSVtoRGB} = require('./color_helper');
 // d3_category20, replace #7f7f7f gray (that aliases with our N/A gray of #808080) with dark grey #434348
 var categoryMore = [
 		"#1f77b4", // dark blue
-		"#ff6b6b", // xena pink
-		"#4cc9c0", // xena green
 //		"#17becf", // dark blue-green
 		"#bcbd22", // dark mustard
 		"#d62728", // dark red
@@ -21,7 +19,7 @@ var categoryMore = [
 		"#2ca02c", // dark green
 		"#434348", // very dark grey
 		"#aec7e8", // light blue
-		"#9edae5", // light blue-green
+//		"#9edae5", // light blue-green
 		"#dbdb8d", // light mustard
 		"#ff9896", // light salmon
 		"#c5b0d5", // light lavender
