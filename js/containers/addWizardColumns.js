@@ -287,6 +287,7 @@ function addWizardColumns(Component) {
 				withEditor = columns.map(el =>
 						editing === el.props.id ?
 							<VariableSelect
+								key={editing}
 								actionKey={editing}
 								pos={editing}
 								fields={appState.columns[editing].fieldSpecs[0].fields}
@@ -296,7 +297,7 @@ function addWizardColumns(Component) {
 								colId={el.props.label}
 								controls={cancelIcon}/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
-						editing === i ? [el, <VariableSelect actionKey={i} pos={i} title='Add Variable'
+						editing === i ? [el, <VariableSelect key={i} actionKey={i} pos={i} title='Add Variable'
 															 {...datasetSelectProps} controls={cancelIcon}/>] : [el]);
 			return (
 				<Component {...this.props}>
