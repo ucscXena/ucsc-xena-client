@@ -229,7 +229,8 @@ var controls = {
 };
 
 var spreadsheetControls = {
-	'import-post!': updateWizard,
+	'import-post!': (serverBus, state, newState) =>
+		updateWizard(serverBus, state, newState, {force: true}),
 	'refresh-cohorts-post!': (serverBus, state, newState) => {
 		fetchCohortMeta(serverBus);
 		fetchCohortPreferred(serverBus);
