@@ -87,6 +87,7 @@
     "schema-shorthand": "^3.1.0",
     "semver": "^5.1.0",
     "style-loader": "^0.17.0",
+    "transform-loader": "^0.2.3",
     "url-loader": "^0.5.5",
     "val-loader": "^0.5.0",
     "wdio-mocha-framework": "^0.4.3",
@@ -125,7 +126,6 @@
     "science": "^1.9.3",
     "showdown": "1.3.0",
     "static-interval-tree": "^1.3.0",
-    "transform-loader": "^0.2.3",
     "underscore": "^1.7.0"
   }
 }
