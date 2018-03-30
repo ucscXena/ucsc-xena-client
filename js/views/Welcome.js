@@ -42,19 +42,19 @@ class Welcome extends Component {
 					<h1 className={typStyles.mdHeadline}>Welcome to the Xena Functional Genomics Explorer</h1>
 					<h2 className={typStyles.mdSubhead}>UCSC Xena allows users to explore functional genomic data sets
 						for correlations between genomic and/or phenotypic variables.</h2>
-					<h2 className={typStyles.mdSubhead}>View live example: <a {...linkProps} href={link}
+					<h2 className={`${compStyles.example} ${typStyles.mdSubhead}`}>View live example: <a {...linkProps} href={link}
 																			   target='_blank'>{text}</a></h2>
-					<div className={compStyles.bulletWrapper}>
-						<div className={compStyles.bullets}>
-							{times(count, j => <div
-													key={j}
-													data-index={j}
-													{...bulletProps}
-													className={i === j ? compStyles.bulletActive : compStyles.bullet}>
+				</div>
+				<div className={compStyles.bulletWrapper}>
+					<div className={compStyles.bullets}>
+						{times(count, j => <div
+							key={j}
+							data-index={j}
+							{...bulletProps}
+							className={i === j ? compStyles.bulletActive : compStyles.bullet}>
 
-													{'\u2022'}
-												</div>)}
-						</div>
+							{'\u2022'}
+						</div>)}
 					</div>
 				</div>
 				<div className={compStyles.closeIcon} onClick={this.dismissWelcome}>

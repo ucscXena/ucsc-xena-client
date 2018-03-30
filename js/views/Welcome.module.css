@@ -19,7 +19,7 @@
 }
 
 .welcomeText {
-	margin: 48px 0;
+	margin: 30px 0 48px 0;
 	padding-left: 24px;
 	padding-right: 24px;
 	position: relative;
@@ -31,16 +31,19 @@
 	text-decoration: underline;
 }
 
+.example {
+	height: 48px;
+}
+
 .bulletWrapper {
 	position: absolute;
-	left: 50%;
 	bottom: 0;
+	left: 35%;
 }
 
 .bullets {
 	display: inline-block;
 	position: relative;
-	left: -50%;
 	cursor: default;
 }
 
@@ -75,8 +78,8 @@
 	}
 
 	.welcomeText {
+		margin: 48px 0 48px 32px;
 		align-self: center;
-		margin-left: 32px;
 		width: 58.33333333%; /* lg 7 */
 	}
 
@@ -99,6 +102,10 @@
 	.closeIcon {
 		right: 24px;
 		top: 24px;
+	}
+
+	.bulletWrapper {
+		left: 57%;
 	}
 }
 
