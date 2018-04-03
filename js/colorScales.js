@@ -10,14 +10,14 @@ var {rgb, RGBtoHSV, HSVtoRGB} = require('./color_helper');
 var categoryMore = [
 		"#1f77b4", // dark blue
 //		"#17becf", // dark blue-green
-		"#bcbd22", // dark mustard
 		"#d62728", // dark red
 		"#9467bd", // dark purple
 		"#ff7f0e", // dark orange
 		"#8c564b", // dark brown
 		"#e377c2", // dark pink
 		"#2ca02c", // dark green
-		"#434348", // very dark grey
+		"#bcbd22", // dark mustard
+//		"#434348", // very dark grey
 		"#aec7e8", // light blue
 //		"#9edae5", // light blue-green
 		"#dbdb8d", // light mustard
