@@ -12,13 +12,28 @@
  */
 
 a {
+	color: #337ab7;
 	text-decoration: none;
 	font-weight: 400;
+	background-color: transparent;
 	-webkit-transition: border-bottom 0.35s;
 	-moz-transition: border-bottom 0.35s;
 	-ms-transition: border-bottom 0.35s;
 	-o-transition: border-bottom 0.35s;
 	transition: border-bottom 0.35s;
+}
+
+a:hover,
+a:focus {
+	outline: 0;
+	color: #23527c;
+	text-decoration: underline;
+}
+
+a:focus {
+	outline: thin dotted;
+	outline: 5px auto -webkit-focus-ring-color;
+	outline-offset: -2px;
 }
 
 h1, h2, h3, h4, h5, h6 {
