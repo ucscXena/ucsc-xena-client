@@ -23,7 +23,7 @@ module.exports = {
 		[servers.toilHub]: 'GA4GH (TOIL) hub',
 		[servers.pcawgHub]: 'PCAWG public hub',
 		[servers.singlecellHub]: 'Single-cell RNAseq hub',
-		[servers.pancanAtlasHub]: 'Pan-Caner Atlas Hub',
+		[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
 		[servers.treehouseHub]: 'Treehouse Hub',
 		[servers.gdcHub]: 'GDC Hub'
 	},
