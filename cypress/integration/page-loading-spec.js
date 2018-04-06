@@ -65,9 +65,10 @@ var commands = [
 		run: ({gene}) => {
 			pages.transcripts.studyA().select(aTCGAStudy);
 			pages.transcripts.studyB().select(aGTEXStudy);
+			pages.transcripts.loadingSpinners().should('not.exist');
 			pages.transcripts.geneFieldInput().clear().type(gene);
 			pages.transcripts.updateGene().click();
-			pages.transcripts.geneIsLoaded();
+			pages.transcripts.loadingSpinners().should('not.exist');
 		}
 	},
 	{

@@ -71,12 +71,25 @@ function fetchSubtypes(serverBus) {
 }
 
 var controls = {
-	'init-post!': serverBus => {
+	'init-post!': (serverBus, state, newState) => {
+		var {gene, studyA, status} = newState.transcripts || {};
 		fetchSubtypes(serverBus);
+		if ((status === 'loading' || status === 'error') && gene && studyA) {
+			fetchTranscripts(serverBus, newState.transcripts);
+		}
 	},
 	loadGene: (state, gene, studyA, subtypeA, studyB, subtypeB, unit) => {
 		var zoom = (state.transcripts && gene === state.transcripts.gene) ? state.transcripts.zoom : {};
-		return _.updateIn(state, ['transcripts'], s => _.merge(s, {gene, studyA, subtypeA, studyB, subtypeB, unit, zoom, genetranscripts: null}));
+		return _.updateIn(state, ['transcripts'], s =>
+			_.merge(s, {
+					status: gene ? 'loading' : undefined,
+					gene,
+					studyA,
+					subtypeA,
+					studyB,
+					subtypeB,
+					unit,
+					zoom}));
 	},
 	'loadGene-post!': (serverBus, state, newState) => {
 		if(newState.transcripts.gene)
@@ -86,8 +99,10 @@ var controls = {
 	},
 	geneTranscripts:
 		(state, {transcripts, unit}) => _.assocIn(state,
+												  ['transcripts', 'status'], 'loaded',
 												  ['transcripts', 'genetranscripts'], transcripts,
 												  ['transcripts', 'datasetUnit'], unit),
+	'geneTranscripts-error': state => _.assocIn(state, ['transcripts', 'status'], 'error'),
 	transcriptSampleSubtypes:
 		(state, subtypes) => _.assocIn(state, ['transcripts', 'subtypes'], subtypes),
 	units: (state, units) => _.assocIn(state, ['transcripts', 'units'], units),

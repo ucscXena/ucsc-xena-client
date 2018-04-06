@@ -73,7 +73,8 @@ function renderATranscript() {
 	// requests to complete, or to ignore canceled requests. So, if we
 	// don't wait on something else here, we'll get an error in the *next*
 	// test when the transcript expression request aborts.
-	transcriptPage.geneIsLoaded();
+	transcriptPage.loadingSpinners().should('not.exist');
+	cy.wait(transcriptPage.loadTransition);
 }
 
 // XXX move to different file, or revisit the name of this file.
@@ -308,7 +309,8 @@ describe('Bookmark', function() {
 
 		cy.visit(transcriptPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
-		transcriptPage.geneIsLoaded();
+		nav.waitForTransition();
+		transcriptPage.bookmarkLoading().should('not.exist');
 		cy.scrollTo('topLeft').then(screenshot('transcriptBookmark'));
 
 		//
@@ -342,7 +344,7 @@ describe('Bookmark', function() {
 		// Loading transcript bookmark
 		cy.visit(transcriptPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
-		transcriptPage.geneIsLoaded();
+		transcriptPage.loadingSpinners().should('not.be.visible');
 
 		// Switch to heatmap
 		nav.spreadsheet().click();

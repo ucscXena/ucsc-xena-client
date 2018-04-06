@@ -11,6 +11,7 @@ var nav = require('../nav');
 var styles = require('./TranscriptPage.module.css');
 var StateError = require('../StateError');
 var {schemaCheckThrow} = require('../schemaCheck');
+var spinner = require('../ajax-loader.gif');
 
 /*
 var defaultGene = 'KRAS';
@@ -21,8 +22,25 @@ var defaultGene = 'KRAS';
 	defaultUnit = 'tpm';
 	*/
 
-// Placeholder component. I'm expecting the real top-level view
-// will be in a separate file, and imported above.
+function getStatusView(status, onReload) {
+	if (status === 'loading') {
+		return (
+			<div data-xena='loading' className={styles.status}>
+				<img style={{textAlign: 'center'}} src={spinner}/>
+			</div>);
+	}
+	if (status === 'error') {
+		return (
+			<div className={styles.status}>
+				<i onClick={onReload}
+				   title='Error loading data. Click to reload.'
+				   aria-hidden='true'
+				   className={`material-icons ${styles.errorIcon}`}>warning</i>
+			</div>);
+	}
+	return null;
+}
+
 class Transcripts extends React.Component {
 	state = {
 	    input: _.getIn(this.props.state, ['transcripts', 'gene']), // XXX this is outside the selector
@@ -89,7 +107,7 @@ class Transcripts extends React.Component {
 	render() {
 		var {state} = this.props,
 			{loadPending, stateError} = state,
-			{subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = state.transcripts || {};
+			{status, subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = state.transcripts || {};
 		if (loadPending) {
 			return <p style={{margin: 10}}>Loading your view...</p>;
 		}
@@ -205,23 +223,28 @@ class Transcripts extends React.Component {
 							<div style={{width: "100%", height: "35px"}}></div>
 						</div> : null
 					}
-					<NameColumn
-						data={transcriptNameData}
-						gene={state.transcripts.gene}
-						/>
-					<DensityPlot
-						data={transcriptDensityData}
-						type="density"
-						unit={unit}
-						getNameZoom={this.onZoom}
-						/>
-						{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
-							<label className={styles["densityplot--label-y"]}>density</label> : null
-						}
-					<ExonsOnly
-						data={transcriptExonData}
-						getNameZoom={this.onZoom}
-					/>
+					<div style={{position: 'relative'}}>
+						{getStatusView(status, this.onLoadData)}
+						<div className={`${styles[status || 'loaded']} ${styles.loadStatus}` }>
+							<NameColumn
+								data={transcriptNameData}
+								gene={state.transcripts.gene}
+								/>
+							<DensityPlot
+								data={transcriptDensityData}
+								type="density"
+								unit={unit}
+								getNameZoom={this.onZoom}
+								/>
+								{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
+									<label className={styles["densityplot--label-y"]}>density</label> : null
+								}
+							<ExonsOnly
+								data={transcriptExonData}
+								getNameZoom={this.onZoom}
+							/>
+						</div>
+					</div>
 					<div style={{clear: 'both'}}></div>
 				</div>
 		);

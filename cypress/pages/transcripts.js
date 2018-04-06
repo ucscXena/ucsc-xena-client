@@ -7,5 +7,7 @@ module.exports = {
 	studyB: () => cy.get(':contains("Study B") + select'),
 	geneFieldInput: () => cy.contains('label', 'Add Gene').siblings('input'),
 	updateGene: () => cy.contains('Update Gene'),
-	geneIsLoaded: () => cy.contains('no expression') // stupid way to wait for ajax
+	bookmarkLoading: () => cy.contains('Loading your view'),
+	loadingSpinners: () => cy.get('[data-xena="loading"]'),
+	loadTransition: 220
 };
