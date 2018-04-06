@@ -5,7 +5,7 @@ var _ = require('./underscore_ext');
 import PureComponent from './PureComponent';
 var React = require('react');
 import {Button} from 'react-toolbox/lib/button';
-
+import Dropdown from 'react-toolbox/lib/dropdown';
 import Dialog from 'react-toolbox/lib/dialog';
 
 var Axis = require('./Axis');
@@ -258,11 +258,41 @@ class Legend extends PureComponent {
 	}
 }
 
-function makeGraph(groups, setActiveLabel, activeLabel, size) {
+function makeSurvivalTypeUI (survType, survivalTypes, onSurvType) {
+	var survivalLabel = {
+		'osEv': 'Overall survival',
+		'dfiEv': 'Disease free interval',
+		'dssEv': 'Disease specific survival',
+		'pfiEv': 'Progression-free interval',
+		'ev': 'survival'
+	};
+
+	return (
+		<Dropdown className={kmStyle.survType}
+			source = {survivalTypes.map(t => ({
+						value: t,
+						label: survivalLabel[t]
+					}))}
+			value = {survType || survivalTypes[0]}
+			onChange={onSurvType}
+		/>
+	);
+}
+
+function makeGraph(groups, setActiveLabel, activeLabel, size, survType, survivalTypes, onSurvType, min, max, onCutoff, cutoff) {
 	return (
 		<div className={kmStyle.graph} style={{width: 0.9 * size.width}}>
 			{svg(groups, setActiveLabel, activeLabel, {height: 0.8 * size.height, width: 0.9 * size.width})}
 			<div className={kmStyle.screen}/>
+			{makeSurvivalTypeUI(survType, survivalTypes, onSurvType)}
+			<div>
+				<NumberForm
+					onChange={onCutoff}
+					dflt={max}
+					min={min}
+					max={max}
+					initialValue={cutoff}/>
+			</div>
 		</div>
 	);
 }
@@ -271,6 +301,7 @@ function makeSplits(splits, onSplits) {
 	return (
 		<form>
 			<div>
+				<br/>
 				<label className={kmStyle.splitLabel}>
 					<input value={2} type="radio" name="splits" checked={splits === 2} onChange={onSplits}/>
 					<span className={kmStyle.splitHint}>2 groups</span>
@@ -283,19 +314,19 @@ function makeSplits(splits, onSplits) {
 		</form>);
 }
 
-function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, splits, onSplits) {
+function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, splits, onSplits, label, clarification, warning) {
 	// get new size based on size ratio for definitions column
-
 	return (
 		<div className={kmStyle.definitions} style={{width: size.width}}>
 			<PValue pValue={groups.pValue} logRank={groups.KM_stats}
 				patientWarning={groups.patientWarning}/>
 			<br/>
-			{maySplit ? makeSplits(splits, onSplits) : null}
-			<br/>
+			<label>{label} {clarification}</label>
 			<Legend groups={groups}
 					setActiveLabel={setActiveLabel}
 					activeLabel={activeLabel}/>
+			{maySplit ? makeSplits(splits, onSplits) : null}
+			{warning}
 		</div>
 	);
 }
@@ -354,6 +385,11 @@ class KmPlot extends PureComponent {
 		callback(['km-splits', parseInt(ev.target.value, 10)]);
 	};
 
+	onSurvType = (ev) => {
+		var {callback} = this.props;
+		callback(['km-survivalType', ev]);
+	};
+
 	componentDidMount() {
 		document.documentElement.scrollTop = 0;
 		var body = document.getElementById("body");
@@ -361,15 +397,16 @@ class KmPlot extends PureComponent {
 	}
 
 	render() {
-		let {km: {splits = 2, title, label, groups, cutoff}, dims} = this.props,
+		let {km: {splits = 2, title, label, groups, cutoff, survivalType}, survivalKeys, dims} = this.props,
 			// groups may be undefined if data hasn't loaded yet.
 			maySplit = _.get(groups, 'maySplit', false),
 			min = _.getIn(groups, ['domain', 0]),
 			max = _.getIn(groups, ['domain', 1]),
 			warning = _.get(groups, 'warning'),
-			fullLabel = warning ? `${label} (${warning})` : label,
+			clarification = _.get(groups, 'clarification'),
 			{activeLabel} = this.state,
-			sectionDims = calcDims(dims, plotSize.ratios);
+			sectionDims = calcDims(dims, plotSize.ratios),
+			survivalTypes = _.intersection(survivalKeys, ['osEv', 'dfiEv', 'dssEv', 'pfiEv', 'ev']);
 
 		let Content = _.isEmpty(groups)
 			? <div
@@ -392,17 +429,10 @@ class KmPlot extends PureComponent {
 							<i className={`material-icons ${kmStyle.buttonIcon}`}>help</i>
 							<span className={kmStyle.buttonText}>Help</span>
 						</Button>
-						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph)}
-						{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions, maySplit, splits, this.onSplits)}
-						<div style={{clear: 'both'}}>
-							<NumberForm
-								onChange={this.onCutoff}
-								dflt={max}
-								min={min}
-								max={max}
-								initialValue={cutoff}/>
-						</div>
-						<samp className={kmStyle.featureLabel}>{fullLabel}</samp>
+						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph,
+							survivalType, survivalTypes, this.onSurvType, min, max, this.onCutoff, cutoff)}
+						{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions,
+							maySplit, splits, this.onSplits, label, clarification, warning)}
 					</div>
 			);
 

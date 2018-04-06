@@ -76,13 +76,13 @@ function floatVals(avg, uniq, colorfn) {
 // We average 1st, then see how many unique values there are, then decide
 // whether to partition or not.
 function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
-	var warning = heatmap.length > 1 ? 'gene-level average' : undefined,
+	var clarification = heatmap.length > 1 ? 'gene-level average' : undefined,
 		avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = _.first(colors.map(colorScale)),
 		partFn = splits === 3 ? partitionedVals3 : partitionedVals2,
 		maySplit = uniq.length > MAX;
-	return {warning, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
+	return {clarification, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
 }
 
 function mutationVals(column, data, {bySample}, sortedSamples) {
@@ -105,7 +105,6 @@ function mutationVals(column, data, {bySample}, sortedSamples) {
 
 function segmentedVals(column, data, index, samples, splits) {
 	var {color} = column,
-		warning = 'average',
 		avg = _.getIn(data, ['avg', 'geneValues', 0]),
 		bySampleSortAvg = samples.map( sample => avg[sample]),  // ordered by current sample sort
 		uniq = _.without(_.uniq(avg), null, undefined),
@@ -113,7 +112,7 @@ function segmentedVals(column, data, index, samples, splits) {
 		[,,,, origin] = color,
 		colorfn = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin)),
 		partFn = splits === 3 ? partitionedVals3 : partitionedVals2;
-	return {warning, maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
+	return {maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
 }
 
 var toCoded = multi(fs => fs.valueType);
@@ -151,7 +150,7 @@ function warnDupPatients(usableSamples, samples, patient) {
 }
 
 function filterByGroups(feature, groupedIndices) {
-	var {labels, colors, groups, warning} = feature,
+	var {labels, colors, groups, clarification} = feature,
 		notEmpty = _.range(groups.length).filter(i => _.has(groupedIndices, groups[i])),
 		useIndices = notEmpty.slice(0, MAX),
 		nlabels = useIndices.map(i => labels[i]),
@@ -162,8 +161,8 @@ function filterByGroups(feature, groupedIndices) {
 		labels: nlabels,
 		colors: ncolors,
 		groups: ngroups,
-		warning: notEmpty.length > MAX ? `Limited drawing to ${MAX} categories` :
-			(warning ? warning : undefined),
+		warning: notEmpty.length > MAX ? `Limited drawing to ${MAX} categories` : undefined,
+		clarification: clarification
 	};
 }
 
@@ -184,6 +183,41 @@ function cutoffData(survivalData, cutoff) {
 	};
 }
 
+function findSurvDataByType(survivalData, survivalType) {
+	survivalType = survivalType ? survivalType :
+		_.intersection(_.keys(survivalData), ["osEv", "dfiEv", "dssEv", "pfiEv", "ev"])[0];
+
+	if (survivalType === "osEv") {
+		return {
+			patient: survivalData.patient,
+			tte: survivalData.osTte,
+			ev: survivalData.osEv
+		};
+	} else if (survivalType === "dfiEv") {
+		return {
+			patient: survivalData.patient,
+			tte: survivalData.dfiTte,
+			ev: survivalData.dfiEv
+		};
+	} else if (survivalType === "dssEv") {
+		return {
+			patient: survivalData.patient,
+			tte: survivalData.dssTte,
+			ev: survivalData.dssEv
+		};
+	} else if (survivalType === "pfiEv") {
+		return {
+			patient: survivalData.patient,
+			tte: survivalData.pfiTte,
+			ev: survivalData.pfiEv
+		};
+	} else if (survivalType === "ev") {
+		return _.pick(survivalData, ['patient', 'ev', 'tte']);
+	} else {
+		return null;
+	}
+}
+
 var bounds = x => [_.minnull(x), _.maxnull(x)];
 
 // After toCoded, we can still end up with empty groups if
@@ -196,8 +230,8 @@ var bounds = x => [_.minnull(x), _.maxnull(x)];
 // 4) pick at-most MAX groups
 // 5) compute km
 
-function makeGroups(column, data, index, cutoff, splits, survival, samples) {
-	let survivalData = getFieldData(survival),
+function makeGroups(column, data, index, cutoff, splits, survivalType, survival, samples) {
+	let survivalData = findSurvDataByType(getFieldData(survival), survivalType),
 		domain = bounds(survivalData.tte),
 		{tte, ev, patient} = cutoffData(survivalData, cutoff),
 		// Convert field to coded.
@@ -208,7 +242,7 @@ function makeGroups(column, data, index, cutoff, splits, survival, samples) {
 		patientWarning = warnDupPatients(usableSamples, samples, patient),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
 		usableData = filterByGroups(codedFeat, groupedIndices),
-		{groups, colors, labels, warning} = usableData,
+		{groups, colors, labels, warning, clarification} = usableData,
 		gtte = groups.map(g => groupedIndices[g].map(i => tte[samples[i]])),
 		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
 		curves = groups.map((g, i) => km.compute(gtte[i], gev[i])),
@@ -219,6 +253,7 @@ function makeGroups(column, data, index, cutoff, splits, survival, samples) {
 		labels,
 		curves,
 		warning,
+		clarification,
 		patientWarning,
 		domain,
 		maySplit: codedFeat.maySplit,
@@ -238,11 +273,27 @@ function pickSurvivalVars(featuresByDataset, user) {
 			(features, dsID) => _.map(features, f => featureID(dsID, f))),
 		ev = _.find(allFeatures, ({name}) => name === '_EVENT'),
 		tte = _.find(allFeatures, ({name}) => name === '_TIME_TO_EVENT'),
+		osEv = _.find(allFeatures, ({name}) => name === 'OS'),
+		osTte = _.find(allFeatures, ({name}) => name === 'OS.time'),
+		dfiEv = _.find(allFeatures, ({name}) => name === 'DFI'),
+		dfiTte = _.find(allFeatures, ({name}) => name === 'DFI.time'),
+		dssEv = _.find(allFeatures, ({name}) => name === 'DSS'),
+		dssTte = _.find(allFeatures, ({name}) => name === 'DSS.time'),
+		pfiEv = _.find(allFeatures, ({name}) => name === 'PFI'),
+		pfiTte = _.find(allFeatures, ({name}) => name === 'PFI.time'),
 		patient = _.find(allFeatures, ({name}) => name === '_PATIENT') || _.find(allFeatures, ({name}) => name === 'sampleID');
 
 	return {
 		ev: _.getIn(user, ['ev'], ev),
 		tte: _.getIn(user, ['tte'], tte),
+		osEv: _.getIn(user, ['osEv'], osEv),
+		osTte: _.getIn(user, ['osTte'], osTte),
+		dfiEv: _.getIn(user, ['dfiEv'], dfiEv),
+		dfiTte: _.getIn(user, ['dfiTte'], dfiTte),
+		dssEv: _.getIn(user, ['dssEv'], dssEv),
+		dssTte: _.getIn(user, ['dssTte'], dssTte),
+		pfiEv: _.getIn(user, ['pfiEv'], pfiEv),
+		pfiTte: _.getIn(user, ['pfiTte'], pfiTte),
 		patient: _.getIn(user, ['patient'], patient)
 	};
 }

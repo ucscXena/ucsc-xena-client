@@ -144,6 +144,7 @@ class Application extends Component {
 					</Grid>
 					{_.getIn(state, ['km', 'id']) ? <KmPlot
 							callback={callback}
+							survivalKeys={_.keys(state.survival)}
 							km={state.km} /> : null}
 					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
 				</div>

@@ -50,7 +50,12 @@ function fetchFeatures(serverBus, dsID) {
 	return serverBus.next(['columnEdit-features', featureList(dsID)]);
 }
 
-var hasSurvFields  = vars => !!(vars.ev && vars.tte && vars.patient);
+var hasSurvFields  = vars => !!(((vars.ev && vars.tte) ||
+								(vars.osEv && vars.osTte) ||
+								(vars.dfiEv && vars.dfiTte) ||
+								(vars.dssEv && vars.dssTte) ||
+								(vars.pfiEv && vars.pfiTte))
+								&& vars.patient);
 
 var probeFieldSpec = ({dsID, name}) => ({
 	dsID,
@@ -72,15 +77,38 @@ function mapToObj(keys, fn) {
 	return _.object(keys, _.map(keys, fn));
 }
 
-var survFields = ['ev', 'tte', 'patient'];
-
 function survivalFields(cohort, datasets, features) {
-	var vars = kmModel.pickSurvivalVars(features);
-	return hasSurvFields(vars) ? {
-		ev: getColSpec([probeFieldSpec(vars.ev)], datasets),
-		tte: getColSpec([probeFieldSpec(vars.tte)], datasets),
-		patient: getColSpec([codedFieldSpec(vars.patient)], datasets),
-	} : null;
+	var vars = kmModel.pickSurvivalVars(features),
+		fields = {};
+
+	if (hasSurvFields(vars)) {
+		fields[`patient`] = getColSpec([codedFieldSpec(vars.patient)], datasets);
+		if (vars.osEv && vars.osTte) {
+			fields[`osEv`] = getColSpec([probeFieldSpec(vars.osEv)], datasets);
+			fields[`osTte`] = getColSpec([probeFieldSpec(vars.osTte)], datasets);
+		}
+		if (vars.dfiEv && vars.dfiTte) {
+			fields[`dfiEv`] = getColSpec([probeFieldSpec(vars.dfiEv)], datasets);
+			fields[`dfiTte`] = getColSpec([probeFieldSpec(vars.dfiTte)], datasets);
+		}
+		if (vars.dssEv && vars.dssTte) {
+			fields[`dssEv`] = getColSpec([probeFieldSpec(vars.dssEv)], datasets);
+			fields[`dssTte`] = getColSpec([probeFieldSpec(vars.dssTte)], datasets);
+		}
+		if (vars.pfiEv && vars.pfiTte) {
+			fields[`pfiEv`] = getColSpec([probeFieldSpec(vars.pfiEv)], datasets);
+			fields[`pfiTte`] = getColSpec([probeFieldSpec(vars.pfiTte)], datasets);
+		}
+		if (vars.ev && vars.tte &&
+			!(vars.osEv && vars.osTte) &&
+			!(vars.dfiEv && vars.dfiTte) &&
+			!(vars.dssEv && vars.dssTte) &&
+			!(vars.pfiEv && vars.pfiTte)) {
+				fields[`ev`] = getColSpec([probeFieldSpec(vars.ev)], datasets);
+				fields[`tte`] = getColSpec([probeFieldSpec(vars.tte)], datasets);
+		}
+	}
+	return fields;
 }
 
 // If field set has changed, re-fetch.
@@ -88,9 +116,9 @@ function fetchSurvival(serverBus, state) {
 	let {wizard: {datasets, features},
 			spreadsheet: {cohort, survival, cohortSamples}} = state,
 		fields = survivalFields(cohort, datasets, features),
+		survFields = _.keys(fields),
 		refetch = _.some(survFields,
 				f => !_.isEqual(fields[f], _.getIn(survival, [f, 'field']))),
-
 		queries = _.map(survFields, key => fetch(fields[key], cohortSamples)),
 		collate = data => mapToObj(survFields,
 				(k, i) => ({field: fields[k], data: data[i]}));
@@ -335,11 +363,13 @@ var spreadsheetControls = {
 	'km-open': (state, id) => _.assocInAll(state,
 			['km', 'id'], id,
 			['km', 'title'], _.getIn(state, ['columns', id, 'user', 'columnLabel']),
-			['km', 'label'], `Grouped by ${_.getIn(state, ['columns', id, 'user', 'fieldLabel'])}`),
+			['km', 'label'], _.getIn(state, ['columns', id, 'user', 'fieldLabel']),
+			['km', 'survivalType'], _.intersection([_.getIn(state, ['km', 'survivalType'])], _.keys(_.getIn(state, ['survival']))) [0]),
 	// see km-open-post! in controls, above. Requires wizard.datasets.
 	'km-close': state => _.assocIn(state, ['km', 'id'], null),
 	'km-cutoff': (state, value) => _.assocIn(state, ['km', 'cutoff'], value),
 	'km-splits': (state, value) => _.assocIn(state, ['km', 'splits'], value),
+	'km-survivalType': (state, value) => _.assocIn(state, ['km', 'survivalType'], value),
 	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),
 	'chart': state => _.assoc(state, 'mode', 'chart'),
 	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState),
