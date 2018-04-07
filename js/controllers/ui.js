@@ -51,11 +51,10 @@ function fetchFeatures(serverBus, dsID) {
 }
 
 var hasSurvFields  = vars => !!(((vars.ev && vars.tte) ||
-								(vars.osEv && vars.osTte) ||
-								(vars.dfiEv && vars.dfiTte) ||
-								(vars.dssEv && vars.dssTte) ||
-								(vars.pfiEv && vars.pfiTte))
-								&& vars.patient);
+				(vars.osEv && vars.osTte) ||
+				(vars.dfiEv && vars.dfiTte) ||
+				(vars.dssEv && vars.dssTte) ||
+				(vars.pfiEv && vars.pfiTte)) && vars.patient);
 
 var probeFieldSpec = ({dsID, name}) => ({
 	dsID,
@@ -106,7 +105,7 @@ function survivalFields(cohort, datasets, features) {
 			!(vars.pfiEv && vars.pfiTte)) {
 				fields[`ev`] = getColSpec([probeFieldSpec(vars.ev)], datasets);
 				fields[`tte`] = getColSpec([probeFieldSpec(vars.tte)], datasets);
-		}
+			}
 	}
 	return fields;
 }

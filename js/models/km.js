@@ -184,38 +184,43 @@ function cutoffData(survivalData, cutoff) {
 }
 
 function findSurvDataByType(survivalData, survivalType) {
-	survivalType = survivalType ? survivalType :
-		_.intersection(_.keys(survivalData), ["osEv", "dfiEv", "dssEv", "pfiEv", "ev"])[0];
+	var survData = {
+			"osEv": {
+				patient: survivalData.patient,
+				tte: survivalData.osTte,
+				ev: survivalData.osEv
+			},
+			"dfiEv": {
+				patient: survivalData.patient,
+				tte: survivalData.dfiTte,
+				ev: survivalData.dfiEv
+			},
+			"dssEv": {
+				patient: survivalData.patient,
+				tte: survivalData.dssTte,
+				ev: survivalData.dssEv
+			},
+			"pfiEv": {
+				patient: survivalData.patient,
+				tte: survivalData.pfiTte,
+				ev: survivalData.pfiEv
+			},
+			"ev": {
+				patient: survivalData.patient,
+				tte: survivalData.tte,
+				ev: survivalData.ev
+			}
+		},
+		eligibleSurv = ["osEv", "dfiEv", "dssEv", "pfiEv", "ev"];
 
-	if (survivalType === "osEv") {
-		return {
-			patient: survivalData.patient,
-			tte: survivalData.osTte,
-			ev: survivalData.osEv
-		};
-	} else if (survivalType === "dfiEv") {
-		return {
-			patient: survivalData.patient,
-			tte: survivalData.dfiTte,
-			ev: survivalData.dfiEv
-		};
-	} else if (survivalType === "dssEv") {
-		return {
-			patient: survivalData.patient,
-			tte: survivalData.dssTte,
-			ev: survivalData.dssEv
-		};
-	} else if (survivalType === "pfiEv") {
-		return {
-			patient: survivalData.patient,
-			tte: survivalData.pfiTte,
-			ev: survivalData.pfiEv
-		};
-	} else if (survivalType === "ev") {
-		return _.pick(survivalData, ['patient', 'ev', 'tte']);
-	} else {
+	survivalType = survivalType ? survivalType :
+		_.intersection(_.keys(survivalData), eligibleSurv)[0];
+
+	if (eligibleSurv.indexOf(survivalType) === -1) {
 		return null;
 	}
+
+	return survData[survivalType];
 }
 
 var bounds = x => [_.minnull(x), _.maxnull(x)];
