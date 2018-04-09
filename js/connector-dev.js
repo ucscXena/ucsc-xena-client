@@ -81,7 +81,6 @@ module.exports = function({
 
 	var DevTools = createDevTools(
 		<DockMonitor defaultIsVisible={devtoolsVisible}
-				select={state => state.spreadsheet.ties}
 				toggleVisibilityKey='ctrl-h' changePositionKey='ctrl-q'>
 			<LogMonitor preserveScrollTop={false} expandStateRoot={false}/>
 		</DockMonitor>),
