@@ -2,7 +2,7 @@
 
 var React = require('react');
 import PureComponent from '../PureComponent';
-var {mapObject, values} = require('../underscore_ext');
+var {times, mapObject, values} = require('../underscore_ext');
 
 var styles = {
 	section: {
@@ -42,8 +42,9 @@ class Ties extends PureComponent {
 		onPage({i: i - 1, n});
 	}
 
-	onPage = i => {
-		var {onPage, state: {ties: {page: {n}}}} = this.props;
+	onPage = ev => {
+		var i = parseInt(ev.target.value, 10) - 1,
+			{onPage, state: {ties: {page: {n}}}} = this.props;
 		onPage({i, n});
 	}
 
@@ -78,6 +79,7 @@ class Ties extends PureComponent {
 		var {onHideDoc, state} = this.props,
 			{terms = [], docs = [], matches = {},
 				filter, showDoc, doc, page} = state.ties,
+			pageCount = Math.ceil(docs.length / page.n),
 			byTerm = mapObject(matches, ({matches}) => new Set(matches)); // XXX put in selector
 		return (
 			<div>
@@ -101,9 +103,12 @@ class Ties extends PureComponent {
 					doc {doc && doc.id} {doc && doc.text.slice(0, 100)}
 				</p>
 				<div style={styles.section}>
-					Page {page.i}
+					Page
+					<select value={page.i + 1} onChange={this.onPage}>
+						{times(pageCount, i => <option key={i} value={i + 1}>{i + 1}</option>)}
+					</select>
 					<button disabled={page.i === 0} onClick={this.onBack}>&lt;</button>
-					<button onClick={this.onForward}>&gt;</button>
+					<button disabled={page.i > pageCount - 2} onClick={this.onForward}>&gt;</button>
 					<br/>
 					Page length
 					<select value={page.n} onChange={this.onPageSize}>
