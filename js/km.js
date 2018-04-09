@@ -252,6 +252,5 @@ function logranktest (allGroupsRes, groupsTte, groupsEv) {
 
 module.exports = {
 	compute: compute,
-	expectedObservedEventNumber: expectedObservedEventNumber,
 	logranktest: logranktest
 };
