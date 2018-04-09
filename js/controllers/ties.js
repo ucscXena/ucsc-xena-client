@@ -74,9 +74,10 @@ var setKeep = (state, index, keep) => _.assocIn(state, ['filter', index], keep);
 var tiesControls = {
 	'ties-open': state => _.assoc(state,
 			'open', true,
-            'page', {i: 0, n: 10},
-            'terms', [],
-            'matches', {},
+			'page', {i: 0, n: 10},
+			'terms', [],
+			'showDoc', undefined,
+			'matches', {},
 			'filter', {}), // init the filter
 	'ties-dismiss': state => _.dissoc(state, 'open'), // XXX clean up doc list?
 	'ties-add-term': (state, term) =>
