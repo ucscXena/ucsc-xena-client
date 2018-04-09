@@ -22,8 +22,10 @@ function fetchDocs(serverBus, state, newState) {
 }
 
 function fetchDoc(serverBus, state, newState) {
-	var id = newState.showDoc;
-	serverBus.next(['ties-doc', tiesQuery.doc(id)]);
+	var {showDoc, docs} = newState;
+	if (showDoc != null) {
+		serverBus.next(['ties-doc', tiesQuery.doc(docs[showDoc].doc)]);
+	}
 };
 
 // underscore intersect sucks. Using a set, for O(n + m) performance.
@@ -47,6 +49,30 @@ function fetchMatches(serverBus, state, newState, term) {
                     term}))]);
 }
 
+function findIndexAfter(coll, i, pred) {
+	while (i < coll.length) {
+		if (pred(coll[i])) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+var advanceDoc = state => {
+	var {docs, showDoc} = state,
+		next = findIndexAfter(docs, showDoc + 1, ({doc}) => doc);
+	return next === -1 ? _.dissoc(state, 'showDoc') :
+		_.assoc(state, 'showDoc', next);
+};
+
+var advancePage = state => {
+	var {page, showDoc} = state;
+	return showDoc < page.n * (page.i + 1) ? state :
+		_.updateIn(state, ['page', 'i'], i => i + 1);
+};
+
+var setKeep = (state, index, keep) => _.assocIn(state, ['filter', index], keep);
+
 var tiesControls = {
 	'ties-open': state => _.assoc(state,
 			'open', true,
@@ -57,9 +83,9 @@ var tiesControls = {
 	'ties-dismiss': state => _.dissoc(state, 'open'), // XXX clean up doc list?
 	'ties-add-term': (state, term) =>
 		_.assoc(state, 'terms', _.conj(state.terms || [], term)),
-	'ties-keep-sample': (state, sampleID, keep) =>
-		_.assocIn(state, ['filter', sampleID], keep),
-	'ties-show-doc': (state, docID) => _.assoc(state, 'showDoc', docID),
+	'ties-keep-row': (state, index, keep) => advancePage(advanceDoc(setKeep(state, index, keep))),
+	'ties-keep-row-post!': fetchDoc,
+	'ties-show-doc': (state, index) => _.assoc(state, 'showDoc', index),
 	'ties-show-doc-post!': fetchDoc,
 	'ties-hide-doc': state => _.dissoc(state, 'showDoc'),
 	'ties-set-page': (state, page) => _.assoc(state, 'page', page),

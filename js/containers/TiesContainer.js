@@ -12,12 +12,12 @@ class TiesContainer extends PureComponent {
 		this.props.callback(['ties-add-term', term]);
 	}
 
-	onKeepSample = keep => {
-		this.props.callback(['ties-keep-sample', keep]);
+	onKeepRow = (index, keep) => {
+		this.props.callback(['ties-keep-row', index, keep]);
 	}
 
-	onShowDoc = doc => {
-		this.props.callback(['ties-show-doc', doc]);
+	onShowDoc = index => {
+		this.props.callback(['ties-show-doc', index]);
 	}
 
 	onHideDoc = () => {
@@ -38,7 +38,7 @@ class TiesContainer extends PureComponent {
 	}
 
 	render() {
-		var handlers = pick(this, ['onAddTerm', 'onKeepSample', 'onShowDoc',
+		var handlers = pick(this, ['onAddTerm', 'onKeepRow', 'onShowDoc',
 				'onHideDoc', 'onPage', 'onCreateColumn', 'onDismiss']);
 		return (
 			<Ties

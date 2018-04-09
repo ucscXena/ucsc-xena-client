@@ -12,6 +12,9 @@ var styles = {
 		marginTop: 0,
 		marginBottom: 0,
 		cursor: 'pointer'
+	},
+	show: {
+		backgroundColor: '#EEEEFF'
 	}
 };
 
@@ -21,6 +24,12 @@ var returnPressed = ev => ev.keyCode === RETURN;
 var setKey = arr => arr.map((el, i) => React.cloneElement(el, {key: i}));
 
 var pageSizes = [10, 20, 50, 100];
+
+var filterIcon = (hasDoc, filter) =>
+	!hasDoc ? '-' :
+	filter == null ? '\u00A0' :
+	filter ? 'y' :
+	'n';
 
 class Ties extends PureComponent {
 	onForward = () => {
@@ -46,8 +55,15 @@ class Ties extends PureComponent {
 	}
 
 	onShowDoc = ev => {
-		var doc = ev.target.dataset.doc;
-		this.props.onShowDoc(doc);
+		var index = parseInt(ev.target.dataset.index, 10);
+		this.props.onShowDoc(index);
+	}
+
+	onKeepRow = ev => {
+		var keep = ev.target.dataset.keep === 'true',
+			{onKeepRow, state: {ties: {showDoc}}} = this.props;
+
+		onKeepRow(showDoc, keep);
 	}
 
 	onKeyDown = ev => {
@@ -62,7 +78,7 @@ class Ties extends PureComponent {
 		var {onHideDoc, state} = this.props,
 			{terms = [], docs = [], matches = {},
 				filter, showDoc, doc, page} = state.ties,
-			byTerm = mapObject(matches, ({matches}) => new Set(matches));
+			byTerm = mapObject(matches, ({matches}) => new Set(matches)); // XXX put in selector
 		return (
 			<div>
 				<p style={styles.section}>
@@ -75,12 +91,13 @@ class Ties extends PureComponent {
 				<p style={styles.section}>
 					Filter<br/>
 					Keep {values(filter).filter(v => v === true).length}<br/>
-					Drop {values(filter).filter(v => v === false).length}<br/>
-					Undetermined {values(filter).filter(v => v == null).length}
+					Drop {values(filter).filter(v => v === false).length}
 				</p>
 				<p style={styles.section}>
 					showDoc {showDoc}
 					{showDoc && <button onClick={onHideDoc}>hide</button>}<br/>
+					{showDoc && <button data-keep={true} onClick={this.onKeepRow}>keep</button>}<br/>
+					{showDoc && <button data-keep={false} onClick={this.onKeepRow}>discard</button>}<br/>
 					doc {doc && doc.id} {doc && doc.text.slice(0, 100)}
 				</p>
 				<div style={styles.section}>
@@ -96,8 +113,14 @@ class Ties extends PureComponent {
 					showing {page.i * page.n} - {(page.i + 1) * page.n - 1}
 					<br/>
 					{setKey(docs.slice(page.i * page.n, (page.i + 1) * page.n).map(
-						({patient, doc}) =>
-							<p style={styles.doc} data-doc={doc} onClick={this.onShowDoc}>{patient}: {doc} {terms.map(t => byTerm[t] && byTerm[t].has(patient) ? t : '').join(' ')}</p>))}
+						({patient, doc}, i) =>
+							<p style={{...styles.doc, ...(page.i * page.n + i === showDoc ? styles.show : {})}}
+							   data-index={page.i * page.n + i}
+							   onClick={this.onShowDoc}>
+							   {filterIcon(doc, filter[page.i * page.n + i])}
+							   {' '}
+							   {patient}: {doc} {terms.map(t => byTerm[t] && byTerm[t].has(patient) ? t : '').join(' ')}
+						   </p>))}
 				</div>
 			</div>);
 	}
