@@ -3,6 +3,7 @@ var _ = require('../underscore_ext');
 var {compose, make, mount} = require('./utils');
 var tiesQuery = require('../tiesQuery');
 var Rx = require('../rx');
+var {fetchSurvival} = require('./common');
 
 var collateDocs = patients => docs => {
     var idx = new Map();
@@ -12,13 +13,9 @@ var collateDocs = patients => docs => {
     return patients.map(p => ({patient: p, doc: idx.get(p)}));
 };
 
-// XXX fetch patient list!
-var toPatientIds = arr => arr.map(s => s.replace(/-[01][01]$/, ''));
-
-function fetchDocs(serverBus, state, newState) {
-    var patients = toPatientIds(newState.cohortSamples);
+function fetchDocs(serverBus, patients) {
 	serverBus.next(['ties-doc-list',
-            tiesQuery.docs(_.uniq(patients)).map(collateDocs(patients))]);
+            tiesQuery.docs(patients).map(collateDocs(patients))]);
 }
 
 function fetchDoc(serverBus, state, newState) {
@@ -38,7 +35,7 @@ var collateMatches = (patients, matches) =>
     intersect(patients, _.pluck(matches, 'patientId'));
 
 function fetchMatches(serverBus, state, newState, term) {
-    var patients = toPatientIds(newState.cohortSamples);
+	var patients = _.getIn(newState, ['survival', 'patient', 'data', 'codes']);
 	serverBus.next(['ties-matches',
 			Rx.Observable.zip(
                 tiesQuery.concepts(term),
@@ -97,10 +94,27 @@ var tiesControls = {
 };
 
 var spreadsheetControls = {
-	'ties-open-post!': fetchDocs,
 	'ties-add-term-post!': fetchMatches,
+	'km-survival-data-post!': (serverBus, state, newState) => {
+		var patients = _.getIn(newState, ['survival', 'patient', 'data', 'codes']);
+		if (_.getIn(newState, ['ties', 'open'])) {
+			fetchDocs(serverBus, patients);
+		}
+	}
+};
+
+var controls = {
+	'ties-open-post!': (serverBus, state, newState) => {
+		var patients = _.getIn(newState, ['spreadsheet', 'survival', 'patient', 'data', 'codes']);
+		if (patients) {
+			fetchDocs(serverBus, patients);
+		} else {
+			fetchSurvival(serverBus, newState);
+		}
+	},
 };
 
 module.exports = compose(
+		make(controls),
 		mount(make(spreadsheetControls), ['spreadsheet']),
 		mount(make(tiesControls), ['spreadsheet', 'ties']));

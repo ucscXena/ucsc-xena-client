@@ -86,9 +86,6 @@ function getFilterColumn(title, samples, opts = {}) {
 	return {id: uuid(), settings};
 }
 
-// XXX fetch patient list!
-var toPatientId = s => s.replace(/-[01][01]$/, '');
-
 // XXX drop this.props.style? Not sure it's used.
 class AppControls extends PureComponent {
 	componentWillMount() {
@@ -123,9 +120,11 @@ class AppControls extends PureComponent {
 	};
 
 	onTiesColumn = () => {
-		const {appState: {ties: {filter, docs}, cohortSamples}, callback} = this.props,
-			patients = new Set(Object.keys(filter).filter(k => filter[k]).map(i => docs[i].patient)),
-			matching = cohortSamples.filter(s => patients.has(toPatientId(s)));
+		const {appState: {ties: {filter, docs}, cohortSamples, survival: {patient}}, callback} = this.props,
+			pindex = patient.data.req.values[0],
+			pcodes = patient.data.codes,
+			keep = new Set(Object.keys(filter).filter(k => filter[k]).map(i => docs[i].patient)),
+			matching = cohortSamples.filter((s, i) => keep.has(pcodes[pindex[i]]));
 		callback(['add-column', 0, getFilterColumn('TIES selection', matching)]);
 		callback(['ties-dismiss']);
 	};

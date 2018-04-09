@@ -3,12 +3,10 @@
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
 var xenaQuery = require('../xenaQuery');
-var kmModel = require('../models/km');
 var {userServers, setCohort, fetchSamples,
-	fetchColumnData, fetchCohortData,
+	fetchColumnData, fetchCohortData, fetchSurvival,
 	updateWizard, clearWizardCohort} = require('./common');
 var {setFieldType} = require('../models/fieldSpec');
-var {getColSpec} = require('../models/datasetJoins');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
 var fetch = require('../fieldFetch');
@@ -48,67 +46,6 @@ var {featureList} = xenaQuery;
 
 function fetchFeatures(serverBus, dsID) {
 	return serverBus.next(['columnEdit-features', featureList(dsID)]);
-}
-
-var hasSurvFields  = vars => !!(_.some(_.values(kmModel.survivalOptions),
-	option => vars[option.ev] && vars[option.tte] && vars[option.patient]));
-
-var probeFieldSpec = ({dsID, name}) => ({
-	dsID,
-	fetchType: 'xena', // maybe take from dataset meta instead of hard-coded
-	valueType: 'float',
-	fieldType: 'probes',
-	fields: [name]
-});
-
-var codedFieldSpec = ({dsID, name}) => ({
-	dsID,
-	fetchType: 'xena', // maybe take from dataset meta instead of hard-coded
-	valueType: 'coded',
-	fieldType: 'clinical',
-	fields: [name]
-});
-
-function mapToObj(keys, fn) {
-	return _.object(keys, _.map(keys, fn));
-}
-
-function survivalFields(cohort, datasets, features) {
-	var vars = kmModel.pickSurvivalVars(features),
-		fields = {};
-
-	if (hasSurvFields(vars)) {
-		fields[`patient`] = getColSpec([codedFieldSpec(vars.patient)], datasets);
-
-		_.values(kmModel.survivalOptions).forEach(function(option) {
-			if (vars[option.ev] && vars[option.tte]) {
-				fields[option.ev] = getColSpec([probeFieldSpec(vars[option.ev])], datasets);
-				fields[option.tte] = getColSpec([probeFieldSpec(vars[option.tte])], datasets);
-			}
-		});
-
-		if (_.has(fields, 'ev') && _.keys(fields).length > 3) {
-			delete fields.ev;
-			delete fields.tte;
-		}
-	}
-	return fields;
-}
-
-// If field set has changed, re-fetch.
-function fetchSurvival(serverBus, state) {
-	let {wizard: {datasets, features},
-			spreadsheet: {cohort, survival, cohortSamples}} = state,
-		fields = survivalFields(cohort, datasets, features),
-		survFields = _.keys(fields),
-		refetch = _.some(survFields,
-				f => !_.isEqual(fields[f], _.getIn(survival, [f, 'field']))),
-		queries = _.map(survFields, key => fetch(fields[key], cohortSamples)),
-		collate = data => mapToObj(survFields,
-				(k, i) => ({field: fields[k], data: data[i]}));
-
-	refetch && serverBus.next([
-			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
 }
 
 var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
