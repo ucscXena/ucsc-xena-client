@@ -9,6 +9,49 @@ var {RGBToHex} = require('../color_helper');
 
 var MAX = 10; // max number of groups to display.
 
+var survivalOptions = {
+	"osEv": {
+		patient: 'patient',
+		ev: 'osEv',
+		tte: 'osTte',
+		evFeature: 'OS',
+		tteFeature: 'OS.time',
+		label: 'Overall survival'
+	},
+	"dfiEv": {
+		patient: 'patient',
+		ev: 'dfiEv',
+		tte: 'dfiTte',
+		evFeature: 'DFI',
+		tteFeature: 'DFI.time',
+		label: 'Disease free interval'
+	},
+	"dssEv": {
+		patient: 'patient',
+		ev: 'dssEv',
+		tte: 'dssTte',
+		evFeature: 'DSS',
+		tteFeature: 'DSS.time',
+		label: 'Disease specific survival'
+	},
+	"pfiEv": {
+		patient: 'patient',
+		ev: 'pfiEv',
+		tte: 'pfiTte',
+		evFeature: 'PFI',
+		tteFeature: 'PFI.time',
+		label: 'Progression-free interval'
+	},
+	"ev": {
+		patient: 'patient',
+		ev: 'ev',
+		tte: 'tte',
+		evFeature: '_EVENT',
+		tteFeature: '_TIME_TO_EVENT',
+		label: 'Survival'
+	}
+};
+
 function average(data) {
 	return data[0].map((v, s) => _.meannull(data.map(p => p[s])));
 }
@@ -76,13 +119,13 @@ function floatVals(avg, uniq, colorfn) {
 // We average 1st, then see how many unique values there are, then decide
 // whether to partition or not.
 function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
-	var warning = heatmap.length > 1 ? 'gene-level average' : undefined,
+	var clarification = heatmap.length > 1 ? 'gene-level average' : undefined,
 		avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = _.first(colors.map(colorScale)),
 		partFn = splits === 3 ? partitionedVals3 : partitionedVals2,
 		maySplit = uniq.length > MAX;
-	return {warning, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
+	return {clarification, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
 }
 
 function mutationVals(column, data, {bySample}, sortedSamples) {
@@ -105,7 +148,6 @@ function mutationVals(column, data, {bySample}, sortedSamples) {
 
 function segmentedVals(column, data, index, samples, splits) {
 	var {color} = column,
-		warning = 'average',
 		avg = _.getIn(data, ['avg', 'geneValues', 0]),
 		bySampleSortAvg = samples.map( sample => avg[sample]),  // ordered by current sample sort
 		uniq = _.without(_.uniq(avg), null, undefined),
@@ -113,7 +155,7 @@ function segmentedVals(column, data, index, samples, splits) {
 		[,,,, origin] = color,
 		colorfn = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin)),
 		partFn = splits === 3 ? partitionedVals3 : partitionedVals2;
-	return {warning, maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
+	return {maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
 }
 
 var toCoded = multi(fs => fs.valueType);
@@ -151,7 +193,7 @@ function warnDupPatients(usableSamples, samples, patient) {
 }
 
 function filterByGroups(feature, groupedIndices) {
-	var {labels, colors, groups, warning} = feature,
+	var {labels, colors, groups, clarification} = feature,
 		notEmpty = _.range(groups.length).filter(i => _.has(groupedIndices, groups[i])),
 		useIndices = notEmpty.slice(0, MAX),
 		nlabels = useIndices.map(i => labels[i]),
@@ -162,8 +204,8 @@ function filterByGroups(feature, groupedIndices) {
 		labels: nlabels,
 		colors: ncolors,
 		groups: ngroups,
-		warning: notEmpty.length > MAX ? `Limited drawing to ${MAX} categories` :
-			(warning ? warning : undefined),
+		warning: notEmpty.length > MAX ? `Limited drawing to ${MAX} categories` : undefined,
+		clarification: clarification
 	};
 }
 
@@ -184,6 +226,23 @@ function cutoffData(survivalData, cutoff) {
 	};
 }
 
+function findSurvDataByType(survivalData, survivalType) {
+	var	eligibleSurv = _.keys(survivalOptions);
+
+	survivalType = survivalType ? survivalType :
+		_.intersection(_.keys(survivalData), eligibleSurv)[0];
+
+	if (eligibleSurv.indexOf(survivalType) === -1) {
+		return null;
+	}
+
+	return {
+		patient: survivalData[survivalOptions[survivalType].patient],
+		tte: survivalData[survivalOptions[survivalType].tte],
+		ev: survivalData[survivalOptions[survivalType].ev]
+	};
+}
+
 var bounds = x => [_.minnull(x), _.maxnull(x)];
 
 // After toCoded, we can still end up with empty groups if
@@ -196,8 +255,8 @@ var bounds = x => [_.minnull(x), _.maxnull(x)];
 // 4) pick at-most MAX groups
 // 5) compute km
 
-function makeGroups(column, data, index, cutoff, splits, survival, samples) {
-	let survivalData = getFieldData(survival),
+function makeGroups(column, data, index, cutoff, splits, survivalType, survival, samples) {
+	let survivalData = findSurvDataByType(getFieldData(survival), survivalType),
 		domain = bounds(survivalData.tte),
 		{tte, ev, patient} = cutoffData(survivalData, cutoff),
 		// Convert field to coded.
@@ -208,7 +267,7 @@ function makeGroups(column, data, index, cutoff, splits, survival, samples) {
 		patientWarning = warnDupPatients(usableSamples, samples, patient),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
 		usableData = filterByGroups(codedFeat, groupedIndices),
-		{groups, colors, labels, warning} = usableData,
+		{groups, colors, labels, warning, clarification} = usableData,
 		gtte = groups.map(g => groupedIndices[g].map(i => tte[samples[i]])),
 		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
 		curves = groups.map((g, i) => km.compute(gtte[i], gev[i])),
@@ -219,6 +278,7 @@ function makeGroups(column, data, index, cutoff, splits, survival, samples) {
 		labels,
 		curves,
 		warning,
+		clarification,
 		patientWarning,
 		domain,
 		maySplit: codedFeat.maySplit,
@@ -236,15 +296,24 @@ var featureID = (dsID, feature) => ({
 function pickSurvivalVars(featuresByDataset, user) {
 	var allFeatures = _.flatmap(featuresByDataset,
 			(features, dsID) => _.map(features, f => featureID(dsID, f))),
-		ev = _.find(allFeatures, ({name}) => name === '_EVENT'),
-		tte = _.find(allFeatures, ({name}) => name === '_TIME_TO_EVENT'),
+		featureMapping = {},
 		patient = _.find(allFeatures, ({name}) => name === '_PATIENT') || _.find(allFeatures, ({name}) => name === 'sampleID');
 
-	return {
-		ev: _.getIn(user, ['ev'], ev),
-		tte: _.getIn(user, ['tte'], tte),
-		patient: _.getIn(user, ['patient'], patient)
-	};
+	_.values(survivalOptions).forEach(function(option) {
+		var evFeature = _.find(allFeatures, ({name}) => name === option.evFeature);
+		var tteFeature = _.find(allFeatures, ({name}) => name === option.tteFeature);
+		featureMapping[option.ev] =  _.getIn(user, [option.ev], evFeature);
+		featureMapping[option.tte] = _.getIn(user, [option.tte], tteFeature);
+	});
+	//ev = _.find(allFeatures, ({name}) => name === '_EVENT'),
+	//tte = _.find(allFeatures, ({name}) => name === '_TIME_TO_EVENT'),
+	featureMapping[`patient`] = _.getIn(user, [`patient`], patient);
+	//{
+	//	ev: _.getIn(user, ['ev'], ev),
+	//	tte: _.getIn(user, ['tte'], tte),
+	//};
+
+	return featureMapping;
 }
 
-module.exports = {makeGroups, pickSurvivalVars};
+module.exports = {makeGroups, pickSurvivalVars, survivalOptions};

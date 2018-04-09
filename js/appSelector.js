@@ -89,9 +89,10 @@ var kmSelector = createSelector(
 		state => _.getIn(state, ['index', _.getIn(state, ['km', 'id'])]),
 		state => _.getIn(state, ['km', 'cutoff']),
 		state => _.getIn(state, ['km', 'splits']),
+		state => _.getIn(state, ['km', 'survivalType']),
 		state => state.survival,
-		(samples, column, data, index, cutoff, splits, survival) =>
-			column && survival && km.makeGroups(column, data, index, cutoff, splits, survival, samples));
+		(samples, column, data, index, cutoff, splits, survivalType, survival) =>
+			column && survival && km.makeGroups(column, data, index, cutoff, splits, survivalType, survival, samples));
 
 // Enforce default width in wizardMode
 var ammedWidthSelector = createFmapSelector(
@@ -132,11 +133,11 @@ var tiesSelector = state =>
 
 var selector = state => tiesSelector(kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state)))))))));
 
+
 // This seems odd. Surely there's a better test?
 var hasSurvival = survival =>
-	!!(_.get(survival, 'ev') &&
-		_.get(survival, 'tte') &&
-		_.get(survival, 'patient'));
+	!!(_.some(_.values(km.survivalOptions),
+		option => _.get(survival, option.ev) && _.get(survival, option.tte)) && _.get(survival, 'patient'));
 
 var survivalSelector = createSelector(
 	state => state.wizard.features,

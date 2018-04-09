@@ -92,17 +92,6 @@ line.outlineHover {
     display: block;
 }
 
-.featureLabel {
-    float: left;
-    font-size: 20px;
-    overflow: hidden;
-    border-top: 1px solid #e0e0e0;
-    padding-top: 10px;
-    padding-bottom: -20px;
-    padding-left: 20px;
-    width: 100%;
-}
-
 button.mainDialogClose {
     background-color: #ffffff;
 }
@@ -148,15 +137,17 @@ i.buttonIcon {
     margin-top: 10px;
     box-sizing: border-box;
     font-size: 18px;
+    color: #757575;
 }
 
 .buttonText {
     display: inline-block;
     margin-top: -10px;
+    color: #757575;
 }
 
 .PDFButton {
-    margin: 30px 0 20px 50px;
+    margin: 0px 0 15px 50px;
 }
 
 .helpButton {
@@ -239,6 +230,10 @@ i.buttonIcon {
     position: absolute;
     left: 140px;
     top: -10px;
+}
+
+.survType input {
+    background-color: #f5f5f5;
 }
 
 div.dialogWrapper {
