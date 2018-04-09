@@ -50,11 +50,8 @@ function fetchFeatures(serverBus, dsID) {
 	return serverBus.next(['columnEdit-features', featureList(dsID)]);
 }
 
-var hasSurvFields  = vars => !!(((vars.ev && vars.tte) ||
-				(vars.osEv && vars.osTte) ||
-				(vars.dfiEv && vars.dfiTte) ||
-				(vars.dssEv && vars.dssTte) ||
-				(vars.pfiEv && vars.pfiTte)) && vars.patient);
+var hasSurvFields  = vars => !!(_.some(_.values(kmModel.survivalOptions),
+	option => vars[option.ev] && vars[option.tte] && vars[option.patient]));
 
 var probeFieldSpec = ({dsID, name}) => ({
 	dsID,
@@ -82,30 +79,18 @@ function survivalFields(cohort, datasets, features) {
 
 	if (hasSurvFields(vars)) {
 		fields[`patient`] = getColSpec([codedFieldSpec(vars.patient)], datasets);
-		if (vars.osEv && vars.osTte) {
-			fields[`osEv`] = getColSpec([probeFieldSpec(vars.osEv)], datasets);
-			fields[`osTte`] = getColSpec([probeFieldSpec(vars.osTte)], datasets);
-		}
-		if (vars.dfiEv && vars.dfiTte) {
-			fields[`dfiEv`] = getColSpec([probeFieldSpec(vars.dfiEv)], datasets);
-			fields[`dfiTte`] = getColSpec([probeFieldSpec(vars.dfiTte)], datasets);
-		}
-		if (vars.dssEv && vars.dssTte) {
-			fields[`dssEv`] = getColSpec([probeFieldSpec(vars.dssEv)], datasets);
-			fields[`dssTte`] = getColSpec([probeFieldSpec(vars.dssTte)], datasets);
-		}
-		if (vars.pfiEv && vars.pfiTte) {
-			fields[`pfiEv`] = getColSpec([probeFieldSpec(vars.pfiEv)], datasets);
-			fields[`pfiTte`] = getColSpec([probeFieldSpec(vars.pfiTte)], datasets);
-		}
-		if (vars.ev && vars.tte &&
-			!(vars.osEv && vars.osTte) &&
-			!(vars.dfiEv && vars.dfiTte) &&
-			!(vars.dssEv && vars.dssTte) &&
-			!(vars.pfiEv && vars.pfiTte)) {
-				fields[`ev`] = getColSpec([probeFieldSpec(vars.ev)], datasets);
-				fields[`tte`] = getColSpec([probeFieldSpec(vars.tte)], datasets);
+
+		_.values(kmModel.survivalOptions).forEach(function(option) {
+			if (vars[option.ev] && vars[option.tte]) {
+				fields[option.ev] = getColSpec([probeFieldSpec(vars[option.ev])], datasets);
+				fields[option.tte] = getColSpec([probeFieldSpec(vars[option.tte])], datasets);
 			}
+		});
+
+		if (_.has(fields, 'ev') && _.keys(fields).length > 3) {
+			delete fields.ev;
+			delete fields.tte;
+		}
 	}
 	return fields;
 }

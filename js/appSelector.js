@@ -126,14 +126,11 @@ var spreadsheetSelector = selector =>
 
 var selector = state => kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state))))))));
 
+
 // This seems odd. Surely there's a better test?
 var hasSurvival = survival =>
-	!!(((_.get(survival, 'ev') && _.get(survival, 'tte')) ||
-		(_.get(survival, 'osEv') && _.get(survival, 'osTte')) ||
-		(_.get(survival, 'dfiEv') && _.get(survival, 'dfiTte')) ||
-		(_.get(survival, 'dssEv') && _.get(survival, 'dssTte')) ||
-		(_.get(survival, 'pfiEv') && _.get(survival, 'pfiTte')))
-	 && _.get(survival, 'patient'));
+	!!(_.some(_.values(km.survivalOptions),
+		option => _.get(survival, option.ev) && _.get(survival, option.tte)) && _.get(survival, 'patient'));
 
 var survivalSelector = createSelector(
 	state => state.wizard.features,

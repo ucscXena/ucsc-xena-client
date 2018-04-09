@@ -9,6 +9,49 @@ var {RGBToHex} = require('../color_helper');
 
 var MAX = 10; // max number of groups to display.
 
+var survivalOptions = {
+	"osEv": {
+		patient: 'patient',
+		ev: 'osEv',
+		tte: 'osTte',
+		evFeature: 'OS',
+		tteFeature: 'OS.time',
+		label: 'Overall survival'
+	},
+	"dfiEv": {
+		patient: 'patient',
+		ev: 'dfiEv',
+		tte: 'dfiTte',
+		evFeature: 'DFI',
+		tteFeature: 'DFI.time',
+		label: 'Disease free interval'
+	},
+	"dssEv": {
+		patient: 'patient',
+		ev: 'dssEv',
+		tte: 'dssTte',
+		evFeature: 'DSS',
+		tteFeature: 'DSS.time',
+		label: 'Disease specific survival'
+	},
+	"pfiEv": {
+		patient: 'patient',
+		ev: 'pfiEv',
+		tte: 'pfiTte',
+		evFeature: 'PFI',
+		tteFeature: 'PFI.time',
+		label: 'Progression-free interval'
+	},
+	"ev": {
+		patient: 'patient',
+		ev: 'ev',
+		tte: 'tte',
+		evFeature: '_EVENT',
+		tteFeature: '_TIME_TO_EVENT',
+		label: 'Survival'
+	}
+};
+
 function average(data) {
 	return data[0].map((v, s) => _.meannull(data.map(p => p[s])));
 }
@@ -184,34 +227,7 @@ function cutoffData(survivalData, cutoff) {
 }
 
 function findSurvDataByType(survivalData, survivalType) {
-	var survData = {
-			"osEv": {
-				patient: survivalData.patient,
-				tte: survivalData.osTte,
-				ev: survivalData.osEv
-			},
-			"dfiEv": {
-				patient: survivalData.patient,
-				tte: survivalData.dfiTte,
-				ev: survivalData.dfiEv
-			},
-			"dssEv": {
-				patient: survivalData.patient,
-				tte: survivalData.dssTte,
-				ev: survivalData.dssEv
-			},
-			"pfiEv": {
-				patient: survivalData.patient,
-				tte: survivalData.pfiTte,
-				ev: survivalData.pfiEv
-			},
-			"ev": {
-				patient: survivalData.patient,
-				tte: survivalData.tte,
-				ev: survivalData.ev
-			}
-		},
-		eligibleSurv = ["osEv", "dfiEv", "dssEv", "pfiEv", "ev"];
+	var	eligibleSurv = _.keys(survivalOptions);
 
 	survivalType = survivalType ? survivalType :
 		_.intersection(_.keys(survivalData), eligibleSurv)[0];
@@ -220,7 +236,11 @@ function findSurvDataByType(survivalData, survivalType) {
 		return null;
 	}
 
-	return survData[survivalType];
+	return {
+		patient: survivalData[survivalOptions[survivalType].patient],
+		tte: survivalData[survivalOptions[survivalType].tte],
+		ev: survivalData[survivalOptions[survivalType].ev]
+	};
 }
 
 var bounds = x => [_.minnull(x), _.maxnull(x)];
@@ -276,31 +296,24 @@ var featureID = (dsID, feature) => ({
 function pickSurvivalVars(featuresByDataset, user) {
 	var allFeatures = _.flatmap(featuresByDataset,
 			(features, dsID) => _.map(features, f => featureID(dsID, f))),
-		ev = _.find(allFeatures, ({name}) => name === '_EVENT'),
-		tte = _.find(allFeatures, ({name}) => name === '_TIME_TO_EVENT'),
-		osEv = _.find(allFeatures, ({name}) => name === 'OS'),
-		osTte = _.find(allFeatures, ({name}) => name === 'OS.time'),
-		dfiEv = _.find(allFeatures, ({name}) => name === 'DFI'),
-		dfiTte = _.find(allFeatures, ({name}) => name === 'DFI.time'),
-		dssEv = _.find(allFeatures, ({name}) => name === 'DSS'),
-		dssTte = _.find(allFeatures, ({name}) => name === 'DSS.time'),
-		pfiEv = _.find(allFeatures, ({name}) => name === 'PFI'),
-		pfiTte = _.find(allFeatures, ({name}) => name === 'PFI.time'),
+		featureMapping = {},
 		patient = _.find(allFeatures, ({name}) => name === '_PATIENT') || _.find(allFeatures, ({name}) => name === 'sampleID');
 
-	return {
-		ev: _.getIn(user, ['ev'], ev),
-		tte: _.getIn(user, ['tte'], tte),
-		osEv: _.getIn(user, ['osEv'], osEv),
-		osTte: _.getIn(user, ['osTte'], osTte),
-		dfiEv: _.getIn(user, ['dfiEv'], dfiEv),
-		dfiTte: _.getIn(user, ['dfiTte'], dfiTte),
-		dssEv: _.getIn(user, ['dssEv'], dssEv),
-		dssTte: _.getIn(user, ['dssTte'], dssTte),
-		pfiEv: _.getIn(user, ['pfiEv'], pfiEv),
-		pfiTte: _.getIn(user, ['pfiTte'], pfiTte),
-		patient: _.getIn(user, ['patient'], patient)
-	};
+	_.values(survivalOptions).forEach(function(option) {
+		var evFeature = _.find(allFeatures, ({name}) => name === option.evFeature);
+		var tteFeature = _.find(allFeatures, ({name}) => name === option.tteFeature);
+		featureMapping[option.ev] =  _.getIn(user, [option.ev], evFeature);
+		featureMapping[option.tte] = _.getIn(user, [option.tte], tteFeature);
+	});
+	//ev = _.find(allFeatures, ({name}) => name === '_EVENT'),
+	//tte = _.find(allFeatures, ({name}) => name === '_TIME_TO_EVENT'),
+	featureMapping[`patient`] = _.getIn(user, [`patient`], patient);
+	//{
+	//	ev: _.getIn(user, ['ev'], ev),
+	//	tte: _.getIn(user, ['tte'], tte),
+	//};
+
+	return featureMapping;
 }
 
-module.exports = {makeGroups, pickSurvivalVars};
+module.exports = {makeGroups, pickSurvivalVars, survivalOptions};

@@ -12,6 +12,7 @@ var Axis = require('./Axis');
 var {linear, linearTicks} = require('./scale');
 var pdf = require('./kmpdf');
 var NumberForm = require('./views/NumberForm');
+var {survivalOptions} = require('./models/km');
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
 var margin = {top: 20, right: 30, bottom: 30, left: 50};
@@ -259,19 +260,11 @@ class Legend extends PureComponent {
 }
 
 function makeSurvivalTypeUI (survType, survivalTypes, onSurvType) {
-	var survivalLabel = {
-		'osEv': 'Overall survival',
-		'dfiEv': 'Disease free interval',
-		'dssEv': 'Disease specific survival',
-		'pfiEv': 'Progression-free interval',
-		'ev': 'survival'
-	};
-
 	return (
 		<Dropdown className={kmStyle.survType}
 			source = {survivalTypes.map(t => ({
 						value: t,
-						label: survivalLabel[t]
+						label: survivalOptions[t].label
 					}))}
 			value = {survType || survivalTypes[0]}
 			onChange={onSurvType}
@@ -406,7 +399,7 @@ class KmPlot extends PureComponent {
 			clarification = _.get(groups, 'clarification'),
 			{activeLabel} = this.state,
 			sectionDims = calcDims(dims, plotSize.ratios),
-			survivalTypes = _.intersection(survivalKeys, ['osEv', 'dfiEv', 'dssEv', 'pfiEv', 'ev']);
+			survivalTypes = _.intersection(survivalKeys, _.keys(survivalOptions));
 
 		let Content = _.isEmpty(groups)
 			? <div
