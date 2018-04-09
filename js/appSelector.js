@@ -115,6 +115,13 @@ var kmGroups = state => ({...state, km: { ...state.km, groups: kmSelector(state)
 var spreadsheetSelector = selector =>
 		state => _.updateIn(state, ['spreadsheet'], selector);
 
+//
+
+var supportsTies = state => _.getIn(state, ['cohort', 'name'], '').indexOf('TCGA') === 0;
+
+var tiesSelector = state =>
+	_.assoc(state, 'tiesEnabled', supportsTies(state));
+
 ///////
 // This is the main transform ('selector') of the application state, before passing to the view.
 // We build indexes of the column data, sort samples by the column data, transform
@@ -123,7 +130,7 @@ var spreadsheetSelector = selector =>
 // The result of the transforms is a state object with the calculated values merged.
 // The transforms are memoized for performance.
 
-var selector = state => kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state))))))));
+var selector = state => tiesSelector(kmGroups(transform(sort(match(avg(index(ammedWidth(setPublic(state)))))))));
 
 // This seems odd. Surely there's a better test?
 var hasSurvival = survival =>

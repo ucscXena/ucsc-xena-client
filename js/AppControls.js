@@ -72,6 +72,10 @@ class AppControls extends PureComponent {
 		this.props.callback(['cohort', value]);
 	};
 
+    onTies = () => {
+        this.props.callback(['ties-open']);
+    };
+
 	onDownload = () => {
 		var {sampleFormat} = this.props,
 			{samples, columns, columnOrder, index, data} = this.props.appState,
@@ -95,7 +99,7 @@ class AppControls extends PureComponent {
 	};
 
 	render() {
-		var {appState: {cohort, mode, columnOrder, showWelcome, samples},
+		var {appState: {cohort, mode, columnOrder, showWelcome, samples, tiesEnabled},
 				onReset, children, help, onResetSampleFilter} = this.props,
 			cohortName = _.get(cohort, 'name'),
 			hasColumn = !!columnOrder.length,
@@ -120,6 +124,7 @@ class AppControls extends PureComponent {
 						<div className={compStyles.filter}>
 							{children}
 							{help ? <a href={help} target='_blank' className={compStyles.filterHelp}><i className='material-icons'>help_outline</i></a> : null}
+                            {tiesEnabled ? <a onClick={this.onTies} className={compStyles.filterHelp}><i className='material-icons'>toys</i></a> : null}
 						</div>
 						<div className={compStyles.actions}>
 							{hasColumn ? <i className='material-icons' onClick={this.onMode} title={modeHelp[mode]}>{modeIcon[mode]}</i> : null}

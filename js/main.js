@@ -17,6 +17,7 @@ import uiController from './controllers/ui';
 import serverController from './controllers/server';
 import hubController from './controllers/hub';
 import transcriptController from './controllers/transcripts';
+import tiesController from './controllers/ties';
 import PageContainer from './containers/PageContainer';
 import selector from './appSelector';
 import { compose } from './controllers/utils';
@@ -48,6 +49,14 @@ if (module.hot) {
 		let newModule = require('./controllers/hub');
 		_.extend(hubController, newModule);
 	});
+	module.hot.accept('./controllers/transcripts', () => {
+		let newModule = require('./controllers/transcripts');
+		_.extend(transcriptController, newModule);
+	});
+	module.hot.accept('./controllers/ties', () => {
+		let newModule = require('./controllers/ties');
+		_.extend(tiesController, newModule);
+	});
 	// XXX Note that hot-loading these won't cause a re-render.
 	module.hot.accept('./models/mutationVector', () => {});
 	module.hot.accept('./models/denseMatrix', () => {});
@@ -58,6 +67,6 @@ const store = createStore();
 const main = window.document.getElementById('main');
 
 // XXX reducer
-const controller = compose(serverController, uiController, hubController, transcriptController);
+const controller = compose(serverController, uiController, hubController, transcriptController, tiesController);
 
 connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});
