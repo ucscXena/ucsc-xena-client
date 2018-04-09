@@ -26,7 +26,9 @@ module.exports = {
 		proxy: {
 			'/api/**': {
 				changeOrigin: true,
-				target: 'https://xenabrowser.net/api',
+//				target: 'https://xenabrowser.net/api',
+				// XXX For TIES work, hit the dev backend.
+				target: 'http://dev.xenabrowser.net/api',
 				// For local django dev, use this instead & remove changeOrigin.
 				//target: 'http://localhost:8000/',
 				pathRewrite: {'^/api': ''}
