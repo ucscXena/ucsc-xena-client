@@ -54,6 +54,7 @@ function findIndexAfter(coll, i, pred) {
 		if (pred(coll[i])) {
 			return i;
 		}
+		++i;
 	}
 	return -1;
 }
