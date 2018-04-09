@@ -121,7 +121,7 @@ class Ties extends PureComponent {
 						({patient, doc}, i) =>
 							<p style={{...styles.doc, ...(page.i * page.n + i === showDoc ? styles.show : {})}}
 							   data-index={page.i * page.n + i}
-							   onClick={this.onShowDoc}>
+							   onClick={doc ? this.onShowDoc : undefined}>
 							   {filterIcon(doc, filter[page.i * page.n + i])}
 							   {' '}
 							   {patient}: {doc} {terms.map(t => byTerm[t] && byTerm[t].has(patient) ? t : '').join(' ')}
