@@ -29,7 +29,7 @@ def query(request):
         if resp.status_code != 200:
             return HttpResponseServerError(
                 json.dumps({'type': 'server',
-                            'error': 'Error contacting TIES server (' + str(resp) + ')'}))
+                            'error': 'Error from TIES server (' + str(resp.status_code) + str(resp.text) + ')'}))
         return HttpResponse(resp.text)
     return HttpResponseBadRequest(json.dumps({'type': 'form', 'error': form.errors}))
 
@@ -57,7 +57,7 @@ def search(request):
         if resp.status_code != 200:
             return HttpResponseServerError(
                 json.dumps({'type': 'server',
-                            'error': 'Error contacting TIES server (' + str(resp) + ')'}))
+                            'error': 'Error from TIES server (' + str(resp.status_code) + str(resp.text) + ')'}))
         return HttpResponse(resp.text)
     return HttpResponseBadRequest(json.dumps({'type': 'form', 'error': form.errors}))
 
@@ -71,7 +71,7 @@ def documents(request, doc_id):
     if resp.status_code != 200:
         return HttpResponseServerError(
             json.dumps({'type': 'server',
-                        'error': 'Error contacting TIES server (' + str(resp) + ')'}))
+                        'error': 'Error from TIES server (' + str(resp.status_code) + str(resp.text) + ')'}))
     return HttpResponse(resp.text)
 
 @csrf_exempt
@@ -96,5 +96,5 @@ def doc_list(request):
     if resp.status_code != 200:
         return HttpResponseServerError(
             json.dumps({'type': 'server',
-                        'error': 'Error contacting TIES server (' + str(resp) + ')'}))
+                        'error': 'Error from TIES server (' + str(resp.status_code) + str(resp.text) + ')'}))
     return HttpResponse(resp.text)
