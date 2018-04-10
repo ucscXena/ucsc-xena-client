@@ -37,7 +37,7 @@ var intersect = (c0, c1) => {
 };
 
 var union = (c0, c1) => {
-	var s = new Set(c1);
+	var s = new Set(c0);
 	c1.forEach(v => s.add(v));
 	return Array.from(s.values());
 };
