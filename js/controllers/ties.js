@@ -2,7 +2,7 @@
 var _ = require('../underscore_ext');
 var {compose, make, mount} = require('./utils');
 var tiesQuery = require('../tiesQuery');
-var Rx = require('../rx');
+//var Rx = require('../rx');
 var {fetchSurvival} = require('./common');
 
 var collateDocs = patients => docs => {
@@ -25,25 +25,36 @@ function fetchDoc(serverBus, state, newState) {
 	}
 };
 
-// underscore intersect sucks. Using a set, for O(n + m) performance.
-var intersect = (c0, c1) => {
-    var s = new Set(c0);
-    return c1.filter(v => s.has(v));
+// XXX Make this transient. We don't need to save this data.
+function fetchConcepts(serverBus) {
+	serverBus.next(['ties-concepts', tiesQuery.goodConcepts()]);
 };
 
-var collateMatches = (patients, matches) =>
-    intersect(patients, _.pluck(matches, 'patientId'));
+// underscore intersect sucks. Using a set, for O(n + m) performance.
+var intersect = (c0, c1) => {
+	var s = new Set(c0);
+	return c1.filter(v => s.has(v));
+};
+
+var union = (c0, c1) => {
+	var s = new Set(c1);
+	c1.forEach(v => s.add(v));
+	return Array.from(s.values());
+};
+
+var unionOfHits = (h0, h1) =>
+	union(_.pluck(h0, 'patientId'), _.pluck(h1, 'patientId'));
 
 function fetchMatches(serverBus, state, newState, term) {
 	var patients = _.getIn(newState, ['survival', 'patient', 'data', 'codes']);
 	serverBus.next(['ties-matches',
-			Rx.Observable.zip(
-                tiesQuery.concepts(term),
-                tiesQuery.matches(patients, term),
-                (concept, matches) => ({
-                    cui: _.getIn(concept, [0,  'cui']), // XXX first cui
-                    matches: collateMatches(patients, matches),
-                    term}))]);
+		// Running these sequentially because the backend falls over if we send them in parallel.
+		// This is super slow.
+		tiesQuery.conceptMatches(patients, term).flatMap(conceptHits =>
+			tiesQuery.textMatches(patients, term).map(textHits => ({conceptHits, textHits})))
+			.map(({conceptHits, textHits}) => ({
+				matches: intersect(patients, unionOfHits(conceptHits, textHits)),
+				term}))]);
 }
 
 function findIndexAfter(coll, i, pred) {
@@ -89,6 +100,7 @@ var tiesControls = {
 	'ties-hide-doc': state => _.dissoc(state, 'showDoc'),
 	'ties-set-page': (state, page) => _.assoc(state, 'page', page),
 	'ties-doc-list': (state, docs) => _.assoc(state, 'docs', docs),
+	'ties-concepts': (state, concepts) => _.assoc(state, 'concepts', concepts),
 	'ties-doc': (state, doc) => _.assoc(state, 'doc', doc),
 	'ties-matches': (state, {matches, cui, term}) =>
         _.assocIn(state, ['matches', term], {cui, matches})
@@ -106,7 +118,11 @@ var spreadsheetControls = {
 
 var controls = {
 	'ties-open-post!': (serverBus, state, newState) => {
-		var patients = _.getIn(newState, ['spreadsheet', 'survival', 'patient', 'data', 'codes']);
+		var patients = _.getIn(newState, ['spreadsheet', 'survival', 'patient', 'data', 'codes']),
+			concepts = _.getIn(newState, ['spreadsheet', 'ties', 'concepts']);
+		if (!concepts) {
+			fetchConcepts(serverBus);
+		}
 		if (patients) {
 			fetchDocs(serverBus, patients);
 		} else {
