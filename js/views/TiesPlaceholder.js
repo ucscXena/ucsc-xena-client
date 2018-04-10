@@ -2,6 +2,7 @@
 
 var React = require('react');
 import PureComponent from '../PureComponent';
+import ConceptSuggest from './ConceptSuggest';
 var {times, mapObject, values} = require('../underscore_ext');
 
 var styles = {
@@ -17,9 +18,6 @@ var styles = {
 		backgroundColor: '#EEEEFF'
 	}
 };
-
-var RETURN = 13;
-var returnPressed = ev => ev.keyCode === RETURN;
 
 var setKey = arr => arr.map((el, i) => React.cloneElement(el, {key: i}));
 
@@ -67,18 +65,10 @@ class Ties extends PureComponent {
 		onKeepRow(showDoc, keep);
 	}
 
-	onKeyDown = ev => {
-		var value = ev.target.value.trim();
-		if (returnPressed(ev) && value.length > 0) {
-			this.props.onAddTerm(value);
-			ev.target.value = '';
-		}
-	}
-
 	render() {
-		var {onHideDoc, state} = this.props,
+		var {onHideDoc, onAddTerm, state} = this.props,
 			{terms = [], docs = [], matches = {},
-				filter, showDoc, doc, page} = state.ties,
+				filter, showDoc, doc, page, concepts = []} = state.ties,
 			pageCount = Math.ceil(docs.length / page.n),
 			byTerm = mapObject(matches, ({matches}) => new Set(matches)); // XXX put in selector
 		return (
@@ -86,10 +76,10 @@ class Ties extends PureComponent {
 				<p style={styles.section}>
 					<button onClick={this.props.onDismiss}>dismiss</button>
 				</p>
-				<p style={styles.section}>
-					Terms: {terms.join(', ')} <br/>
-					<input type='text' onKeyDown={this.onKeyDown}/>
-				</p>
+				<div style={styles.section}>
+					Terms: {terms.map(t => matches[t] ? t : `${t} (loading)`).join(', ')} <br/>
+					<ConceptSuggest onAddTerm={onAddTerm} concepts={concepts}/>
+				</div>
 				<p style={styles.section}>
 					Filter<br/>
 					Keep {values(filter).filter(v => v === true).length}<br/>

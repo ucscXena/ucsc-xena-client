@@ -52,9 +52,8 @@ function fetchMatches(serverBus, state, newState, term) {
 		// This is super slow.
 		tiesQuery.conceptMatches(patients, term).flatMap(conceptHits =>
 			tiesQuery.textMatches(patients, term).map(textHits => ({conceptHits, textHits})))
-			.map(({conceptHits, textHits}) => ({
-				matches: intersect(patients, unionOfHits(conceptHits, textHits)),
-				term}))]);
+			.map(({conceptHits, textHits}) => intersect(patients, unionOfHits(conceptHits, textHits))),
+		term]);
 }
 
 function findIndexAfter(coll, i, pred) {
@@ -102,8 +101,10 @@ var tiesControls = {
 	'ties-doc-list': (state, docs) => _.assoc(state, 'docs', docs),
 	'ties-concepts': (state, concepts) => _.assoc(state, 'concepts', concepts),
 	'ties-doc': (state, doc) => _.assoc(state, 'doc', doc),
-	'ties-matches': (state, {matches, cui, term}) =>
-        _.assocIn(state, ['matches', term], {cui, matches})
+	'ties-matches': (state, matches, term) =>
+		_.assocIn(state, ['matches', term], {matches}),
+	'ties-matches-error': (state, err, term) =>
+		_.updateIn(state, ['terms'], terms => _.without(terms, term))
 };
 
 var spreadsheetControls = {
