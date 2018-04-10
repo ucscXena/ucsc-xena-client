@@ -58,7 +58,7 @@ var BasicSearch = ({help, onTies, tiesEnabled, ...searchProps}) => (
 	<div className={compStyles.filter}>
 		<SampleSearch {...searchProps}/>
 		{help ? <a href={help} target='_blank' className={compStyles.filterHelp}><i className='material-icons'>help_outline</i></a> : null}
-		{tiesEnabled ? <a onClick={onTies} className={compStyles.filterHelp}><i className='material-icons'>toys</i></a> : null}
+		{tiesEnabled ? <a onClick={onTies} className={compStyles.ties}><i className='material-icons'>toys</i></a> : null}
 	</div>);
 
 var TiesSearch = () => (
