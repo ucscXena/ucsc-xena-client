@@ -34,13 +34,13 @@
 	padding: 16px;
 }
 
-.headerContainer:hover .controls.showOnHover {
+.headerContainer:hover .controls.showOnHover button{
 	opacity: 1;
 	visibility: visible;
 }
 
 /* Controls - close/menu etc icons displayed in header container */
-.controls.showOnHover {
+.controls.showOnHover button{
 	opacity: 0;
 	visibility: hidden;
 	transition: opacity 200ms 150ms ease-in-out, visibility 200ms 150ms ease-in-out;
