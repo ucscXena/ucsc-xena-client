@@ -67,9 +67,9 @@ class Ties extends PureComponent {
 
 	render() {
 		var {onHideDoc, onAddTerm, state} = this.props,
-			{terms = [], docs = [], matches = {},
+			{terms = [], docs, matches = {},
 				filter, showDoc, doc, page, concepts = []} = state.ties,
-			pageCount = Math.ceil(docs.length / page.n),
+			pageCount = Math.ceil((docs || []).length / page.n),
 			byTerm = mapObject(matches, ({matches}) => new Set(matches)); // XXX put in selector
 		return (
 			<div>
@@ -107,7 +107,7 @@ class Ties extends PureComponent {
 					<br/>
 					showing {page.i * page.n} - {(page.i + 1) * page.n - 1}
 					<br/>
-					{setKey(docs.slice(page.i * page.n, (page.i + 1) * page.n).map(
+					{docs ? setKey(docs.slice(page.i * page.n, (page.i + 1) * page.n).map(
 						({patient, doc}, i) =>
 							<p style={{...styles.doc, ...(page.i * page.n + i === showDoc ? styles.show : {})}}
 							   data-index={page.i * page.n + i}
@@ -115,7 +115,7 @@ class Ties extends PureComponent {
 							   {filterIcon(doc, filter[page.i * page.n + i])}
 							   {' '}
 							   {patient}: {doc} {terms.map(t => byTerm[t] && byTerm[t].has(patient) ? t : '').join(' ')}
-						   </p>))}
+						   </p>)) : "loading docs..."}
 				</div>
 			</div>);
 	}

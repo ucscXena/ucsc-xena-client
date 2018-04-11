@@ -81,6 +81,8 @@ var advancePage = state => {
 
 var setKeep = (state, index, keep) => _.assocIn(state, ['filter', index], keep);
 
+var reset = state => _.assoc(state, 'open', false, 'docs', undefined);
+
 var tiesControls = {
 	'ties-open': state => _.assoc(state,
 			'open', true,
@@ -104,14 +106,19 @@ var tiesControls = {
 	'ties-matches': (state, matches, term) =>
 		_.assocIn(state, ['matches', term], {matches}),
 	'ties-matches-error': (state, err, term) =>
-		_.updateIn(state, ['terms'], terms => _.without(terms, term))
+		_.updateIn(state, ['terms'], terms => _.without(terms, term)),
+	cohort: reset,
+	cohortReset: reset,
+	manifest: reset
 };
 
 var spreadsheetControls = {
 	'ties-add-term-post!': fetchMatches,
 	'km-survival-data-post!': (serverBus, state, newState) => {
-		var patients = _.getIn(newState, ['survival', 'patient', 'data', 'codes']);
-		if (_.getIn(newState, ['ties', 'open'])) {
+		var patients = _.getIn(newState, ['survival', 'patient', 'data', 'codes']),
+			docs = _.getIn(newState, ['ties', 'docs']),
+			open = _.getIn(newState, ['ties', 'open']);
+		if (open && !docs) {
 			fetchDocs(serverBus, patients);
 		}
 	}
@@ -120,12 +127,15 @@ var spreadsheetControls = {
 var controls = {
 	'ties-open-post!': (serverBus, state, newState) => {
 		var patients = _.getIn(newState, ['spreadsheet', 'survival', 'patient', 'data', 'codes']),
+			docs = _.getIn(newState, ['spreadsheet', 'ties', 'docs']),
 			concepts = _.getIn(newState, ['spreadsheet', 'ties', 'concepts']);
 		if (!concepts) {
 			fetchConcepts(serverBus);
 		}
 		if (patients) {
-			fetchDocs(serverBus, patients);
+			if (!docs) {
+				fetchDocs(serverBus, patients);
+			}
 		} else {
 			fetchSurvival(serverBus, newState);
 		}
