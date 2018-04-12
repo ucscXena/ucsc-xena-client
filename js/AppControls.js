@@ -9,6 +9,10 @@ import AppBar from 'react-toolbox/lib/app_bar';
 var konami = require('./konami');
 var widgets = require('./columnWidgets');
 var classNames = require('classnames');
+import { signatureField } from './models/fieldSpec';
+import { getColSpec } from './models/datasetJoins';
+import { SampleSearch } from './views/SampleSearch';
+import uuid from './uuid';
 
 // Styles
 var compStyles = require('./AppControls.module.css');
@@ -42,6 +46,46 @@ function download([fields, rows]) {
 
 var asciiB = 66;
 
+var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}) => (
+	<div className={compStyles.actions}>
+		{hasColumn ? <i className='material-icons' onClick={onMode} title={modeHelp[mode]}>{modeIcon[mode]}</i> : null}
+		{(hasColumn && mode === 'heatmap') ? <i className='material-icons' onClick={onPdf} title='Download as PDF'>picture_as_pdf</i> : null}
+		{hasColumn ? <i className='material-icons' onClick={onDownload} title='Download as tsv'>cloud_download</i> : null}
+		{showWelcome ? null : <i className='material-icons' onClick={onShowWelcome}>help</i>}
+	</div>);
+
+var BasicSearch = ({help, onTies, tiesEnabled, ...searchProps}) => (
+	<div className={compStyles.filter}>
+		<SampleSearch {...searchProps}/>
+		{help ? <a href={help} target='_blank' className={compStyles.filterHelp}><i className='material-icons'>help_outline</i></a> : null}
+		{tiesEnabled ? <a onClick={onTies} className={compStyles.ties}><i className='material-icons'>toys</i></a> : null}
+	</div>);
+
+var TiesSearch = () => (
+		<div className={compStyles.filter}>
+			<span>Pathology Report Search and Filter by TIES</span>
+		</div>);
+
+var TiesActions = ({onTies, onTiesColumn}) => (
+	<div className={compStyles.actions}>
+		<button onClick={onTiesColumn}>Create filtered column</button>
+		<a onClick={onTies} className={compStyles.filterHelp}><i className='material-icons'>close</i></a>
+	</div>);
+
+function getFilterColumn(title, samples, opts = {}) {
+	var field = signatureField(title, {
+			columnLabel: 'filter',
+			valueType: 'coded',
+			signature: ['in', samples],
+			...opts
+		}),
+		colSpec = getColSpec([field], []),
+		settings = _.assoc(colSpec,
+				'width', 136,
+				'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
+	return {id: uuid(), settings};
+}
+
 // XXX drop this.props.style? Not sure it's used.
 class AppControls extends PureComponent {
 	componentWillMount() {
@@ -53,6 +97,37 @@ class AppControls extends PureComponent {
 	componentWillUnmount() {
 		this.nsub.unsubscribe();
 	}
+
+	onFilter = () => {
+		const {callback, appState: {samplesMatched, cohortSamples}} = this.props,
+			matching = _.map(samplesMatched, i => cohortSamples[i]);
+		callback(['sampleFilter', matching]);
+	};
+
+	onFilterZoom = () => {
+		const {appState: {samples, samplesMatched, zoom: {height}}, callback} = this.props,
+			toOrder = _.object(samples, _.range(samples.length)),
+			index = toOrder[_.min(samplesMatched, s => toOrder[s])],
+			last = toOrder[_.max(samplesMatched, s => toOrder[s])];
+		callback(['zoom', {index, height, count: last - index + 1}]);
+	};
+
+	onFilterColumn = () => {
+		const {appState: {cohortSamples, sampleSearch, samplesMatched}, callback} = this.props,
+			matching = _.map(samplesMatched, i => cohortSamples[i]);
+
+		callback(['add-column', 0, getFilterColumn(sampleSearch, matching, {filter: sampleSearch})]);
+	};
+
+	onTiesColumn = () => {
+		const {appState: {ties: {filter, docs}, cohortSamples, survival: {patient}}, callback} = this.props,
+			pindex = patient.data.req.values[0],
+			pcodes = patient.data.codes,
+			keep = new Set(Object.keys(filter).filter(k => filter[k]).map(i => docs[i].patient)),
+			matching = cohortSamples.filter((s, i) => keep.has(pcodes[pindex[i]]));
+		callback(['add-column', 0, getFilterColumn('TIES selection', matching)]);
+		callback(['ties-dismiss']);
+	};
 
 	onMode = () => {
 		var {callback, appState: {mode}} = this.props;
@@ -71,6 +146,11 @@ class AppControls extends PureComponent {
 	onCohortSelect = (value) => {
 		this.props.callback(['cohort', value]);
 	};
+
+    onTies = () => {
+		var {appState: {ties}} = this.props;
+        this.props.callback([_.get(ties, 'open') ? 'ties-dismiss' : 'ties-open']);
+    };
 
 	onDownload = () => {
 		var {sampleFormat} = this.props,
@@ -95,11 +175,13 @@ class AppControls extends PureComponent {
 	};
 
 	render() {
-		var {appState: {cohort, mode, columnOrder, showWelcome, samples},
-				onReset, children, help, onResetSampleFilter} = this.props,
+		var {appState: {cohort, mode, columnOrder, showWelcome, samples, sampleSearch, samplesMatched, tiesEnabled, ties},
+				onReset, help, onResetSampleFilter, onHighlightChange, callback} = this.props,
+			matches = _.get(samplesMatched, 'length', samples.length),
+			{onPdf, onDownload, onShowWelcome, onMode} = this,
+			tiesOpen = _.get(ties, 'open'),
 			cohortName = _.get(cohort, 'name'),
 			hasColumn = !!columnOrder.length,
-			noshow = (mode !== "heatmap"),
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
 			sampleFilter = _.get(cohort, 'sampleFilter'),
@@ -114,19 +196,28 @@ class AppControls extends PureComponent {
 							<span className={compStyles.subtitle}>{filter} {samples.length} Samples {fraction ? fraction : null}</span>
 						</div>
 						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>
-						<i className='material-icons' onClick={() => onReset()} title='Pick new cohort'>close</i>
+						<i className='material-icons' onClick={onReset} title='Pick new cohort'>close</i>
 					</div>
 					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
-						<div className={compStyles.filter}>
-							{children}
-							{help ? <a href={help} target='_blank' className={compStyles.filterHelp}><i className='material-icons'>help_outline</i></a> : null}
-						</div>
-						<div className={compStyles.actions}>
-							{hasColumn ? <i className='material-icons' onClick={this.onMode} title={modeHelp[mode]}>{modeIcon[mode]}</i> : null}
-							{(noshow || !hasColumn) ? null : <i className='material-icons' onClick={this.onPdf} title='Download as PDF'>picture_as_pdf</i> }
-							{hasColumn ? <i className='material-icons' onClick={this.onDownload} title='Download as tsv'>cloud_download</i> : null}
-							{showWelcome ? null : <i className='material-icons' onClick={this.onShowWelcome}>help</i>}
-						</div>
+						{tiesOpen ?
+							<TiesSearch {...{onTies: this.onTies}}/> :
+							<BasicSearch {...{
+								value: sampleSearch,
+								matches,
+								sampleCount: samples.length,
+								onFilter: this.onFilter,
+								onZoom: this.onFilterZoom,
+								onCreateColumn: this.onFilterColumn,
+								onChange: onHighlightChange,
+								mode,
+								onResetSampleFilter,
+								cohort,
+								callback,
+								help,
+								onTies: this.onTies,
+								tiesEnabled}}/>}
+						{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
+							<Actions {...{onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}}/>}
 					</div>
 				</AppBar>
 		);
