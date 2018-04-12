@@ -32,6 +32,7 @@ def bookmark(request):
             id = form.cleaned_data['id']
             try:
                 bookmark = Bookmark.objects.get(pk=id)
+                bookmark.save(update_fields=['last_use'])
                 response = HttpResponse(bookmark.content)
                 response['Content-Type'] = "application/json"
                 return response
