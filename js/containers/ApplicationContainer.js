@@ -21,7 +21,7 @@ var addHelp = require('./addHelp');
 var getSpreadsheet = require('../Spreadsheet');
 var getStepperState = require('./getStepperState');
 var Application = require('../Application');
-import TiesContainer from './TiesContainer';
+//import TiesContainer from './TiesContainer';
 var {schemaCheckThrow} = require('../schemaCheck');
 
 function getFieldFormat(uuid, columns, data) {
@@ -120,7 +120,7 @@ class ApplicationContainer extends React.Component {
 			View = {
 				heatmap: SpreadsheetContainer,
 				chart: ChartView,
-				ties: TiesContainer,
+//				ties: TiesContainer,
 			}[open ? 'ties' : mode];
 		return (
 			<Application

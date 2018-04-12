@@ -175,7 +175,7 @@ class AppControls extends PureComponent {
 	};
 
 	render() {
-		var {appState: {cohort, mode, columnOrder, showWelcome, samples, sampleSearch, samplesMatched, tiesEnabled, ties},
+		var {appState: {cohort, mode, columnOrder, showWelcome, samples, sampleSearch, samplesMatched, /*tiesEnabled, */ties},
 				onReset, help, onResetSampleFilter, onHighlightChange, callback} = this.props,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			{onPdf, onDownload, onShowWelcome, onMode} = this,
@@ -215,7 +215,7 @@ class AppControls extends PureComponent {
 								callback,
 								help,
 								onTies: this.onTies,
-								tiesEnabled}}/>}
+								tiesEnabled: false}}/>}
 						{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
 							<Actions {...{onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}}/>}
 					</div>
