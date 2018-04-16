@@ -81,7 +81,7 @@ function render(root, callback, sessionStorage) {
 
 		dropDownDiv = document.createElement("select");
 		dropDownDiv.setAttribute("id", "ynormalization");
-		dropDownDiv.setAttribute("class", "form-control");
+		dropDownDiv.setAttribute("class", compStyles.formControl);
 
 		dropDown.map(function (obj) {
 			option = document.createElement('option');
@@ -122,7 +122,7 @@ function render(root, callback, sessionStorage) {
 
 		dropDownDiv = document.createElement("select");
 		dropDownDiv.setAttribute("id", "yExponentiation");
-		dropDownDiv.setAttribute("class", "form-control");
+		dropDownDiv.setAttribute("class", compStyles.formControl);
 
 		dropDown.map(function (obj) {
 			option = document.createElement('option');
@@ -163,7 +163,7 @@ function render(root, callback, sessionStorage) {
 
 		dropDownDiv = document.createElement("select");
 		dropDownDiv.setAttribute("id", "xExponentiation");
-		dropDownDiv.setAttribute("class", "form-control");
+		dropDownDiv.setAttribute("class", compStyles.formControl);
 
 		dropDown.map(function (obj) {
 			option = document.createElement('option');
@@ -255,7 +255,7 @@ function render(root, callback, sessionStorage) {
 
 		div = document.createElement("select");
 		div.setAttribute("id", selectorID);
-		div.className = "form-control";//"btn btn-default dropdown-toggle";
+		div.className = compStyles.formControl;//"btn btn-default dropdown-toggle";
 
 		// color dropdown add none option at the top
 		if (selectorID === "Color") {
