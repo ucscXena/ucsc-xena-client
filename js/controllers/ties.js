@@ -5,17 +5,16 @@ var tiesQuery = require('../tiesQuery');
 //var Rx = require('../rx');
 var {fetchSurvival} = require('./common');
 
-var collateDocs = patients => docs => {
-	var idx = new Map();
-	docs.forEach(({patientId, docs}) => {
-		idx.set(patientId, _.getIn(docs, [0, 'id']));
-	});
-	return patients.map(p => ({patient: p, doc: idx.get(p)}));
+// Pick first doc, as TCGA patients have at most one, and put patients with docs first.
+var collateDocs = docs => {
+	var firstDoc = docs.map(({patientId, docs}) => ({patient: patientId, doc: _.getIn(docs, [0, 'id'])})),
+		{true: t, false: f} = _.groupBy(firstDoc, ({doc}) => !!doc); // groupBy is faster than sort, when cardinality is low
+	return t.concat(f);
 };
 
 function fetchDocs(serverBus, patients) {
 	serverBus.next(['ties-doc-list',
-		tiesQuery.docs(patients).map(collateDocs(patients))]);
+		tiesQuery.docs(patients).map(collateDocs)]);
 }
 
 function fetchDoc(serverBus, state, newState) {
