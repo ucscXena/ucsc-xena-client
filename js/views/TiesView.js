@@ -144,7 +144,7 @@ class Ties extends PureComponent {
 				</div>
 				<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
 				<XDialog {...dialogProps}
-						 terms={terms}
+						 terms={showDoc != null ? terms.filter(term => byTerm[term].has(docs[showDoc].patient)) : []}
 						 reportText={doc && doc.text.slice(0, 100)}
 						 fullReportText={doc && doc.text}/>
 				{showWelcome ? <div className={compStyles.tiesWelcome}>
