@@ -57,14 +57,6 @@ var Pagenation = ({onPage, onPageSize, onForward, onBack, page, pageCount}) => (
 
 class Ties extends PureComponent {
 
-	constructor(props) {
-		super(props);
-		this.state = {
-			dialogActive: false,
-			patient: null
-		};
-	}
-
 	onForward = () => {
 		var {onPage, state: {ties: {page: {i, n}}}} = this.props;
 		onPage({i: i + 1, n});
@@ -88,12 +80,11 @@ class Ties extends PureComponent {
 
 	onHideDoc = () => {
 		this.props.onHideDoc();
-		this.setState({dialogActive: !this.state.dialogActive});
 	};
 
-	onShowDoc = (index, patient) => {
+	onShowDoc = ev => {
+		var index = parseInt(ev.currentTarget.dataset.index, 10);
 		this.props.onShowDoc(index);
-		this.setState({dialogActive: !this.state.dialogActive, patient: patient});
 	};
 
 	onKeepRow = ev => {
@@ -110,9 +101,9 @@ class Ties extends PureComponent {
 				filter, showDoc, doc, page, concepts = []
 			} = state.ties,
 			dialogProps = {
-				dialogActive: this.state.dialogActive,
+				dialogActive: !!showDoc,
 				onKeepRow: this.onKeepRow,
-				patient: this.state.patient,
+				patient: showDoc && docs[showDoc].patient,
 				closeReport: this.onHideDoc
 			},
 			pageCount = Math.ceil((docs || []).length / page.n),
@@ -141,7 +132,8 @@ class Ties extends PureComponent {
 							<div className={classNames(
 								compStyles.tiesTableRow,
 								{[compStyles.tiesTableRowActive]: (page.i * page.n + i === showDoc)})}
-								 onClick={doc ? () => this.onShowDoc(page.i * page.n + i, patient) : undefined}>
+								data-index={page.i * page.n + i}
+								onClick={doc ? this.onShowDoc : undefined}>
 								<div>{filterIcon(doc, filter[page.i * page.n + i])}</div>
 								<div>{patient}</div>
 								<div>{doc ? <i className={compStyles.reportIcon}>description</i> : null}</div>
