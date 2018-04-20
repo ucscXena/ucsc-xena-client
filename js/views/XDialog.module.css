@@ -1,0 +1,75 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling standard Xena dialog that are outside of the RTB checkbox theming API.
+ *
+ */
+
+@value black6 from '../../css/variables.css';
+@value black54 from '../../css/variables.css';
+@value black87 from '../../css/variables.css';
+
+.reportHeader {
+	color: black87;
+}
+
+/* Report header */
+.reportTitle {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 8px;
+}
+
+.reportTitle i {
+	cursor: pointer;
+}
+
+/* Report filter results */
+.reportFilter {
+	composes: mdBody1 from '../../css/typography.module.css';
+	border-bottom: 1px solid black6;
+	border-top: 1px solid black6;
+	color: black87;
+	margin: 24px -24px;
+	padding: 24px 24px;
+	position: relative; /* Allows for positioning the action buttons */
+}
+
+/* Report results header */
+.reportFilter div:first-of-type {
+	color: black54;
+	margin-bottom: 8px;
+}
+
+/* Report result word - highlighted - TODO */
+.reportFilter .highlightWord {
+	background-color: palegreen;
+}
+
+/* Action buttons container */
+.reportAction {
+	bottom: 0;
+	padding: 8px 8px;
+	position: absolute;
+	right: 0;
+}
+
+/* Action button (keep / discard) */
+.reportAction button {
+	margin-left: 8px;
+	min-width: 0;
+}
+
+/* Report content */
+.reportContent {
+	composes: mdBody1 from '../../css/typography.module.css';
+	color: black87;
+	overflow: scroll;
+}
+
+/* Report content - paragraph spacing */
+.reportContent p:not(:last-of-type) {
+	margin-bottom: 16px;
+}

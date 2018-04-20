@@ -1,0 +1,196 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling ties placeholder.
+ */
+
+@value black12 from '../../css/variables.css';
+@value black38 from '../../css/variables.css';
+@value black54 from '../../css/variables.css';
+@value black87 from '../../css/variables.css';
+
+/* Container around Ties */
+.tiesView {
+	margin: 24px 8px;
+	min-height: 656px;
+	position: relative; /* For positioning of close icon - welcome text */
+	width: auto; /* Takes up full width of screen */
+}
+
+/* Ties filter and table pagination container */
+.tiesViewHeader {
+	align-items: center;
+	display: flex;
+	height: 76px; /* Matches height of Autosuggest */
+	justify-content: space-between;
+	margin-left: 64px; /* 88px total left margin to line up with sample id */
+	padding: 0 24px;
+}
+
+/* Ties filter and filter subtitle container */
+.tiesFilter {
+	flex: 1;
+	position: relative; /* For positioning of search term text - tiesFilterTerms */
+}
+
+/* Ties filter input search terms */
+.tiesFilterTerms {
+	composes: mdCaption from '../../css/typography.module.css';
+	color: black38;
+	display: block;
+	line-height: 16px;
+	position: absolute;
+	top: 56px;
+}
+
+/* Table pagination */
+.pagination {
+	composes: mdCaption from '../../css/typography.module.css';
+	align-items: center;
+	color: black38;
+	display: flex;
+}
+
+/* Table pagination - bottom of table only */
+.tiesView > .pagination {
+	height: 56px;
+	margin-left: auto; /* Right aligns bottom pagination */
+	margin-right: 24px;
+}
+
+/* Pagination page numbers */
+.pagination > span {
+	align-items: center;
+	display: flex;
+	margin-right: 16px;
+}
+
+/* Pagination - indexes 1 - x of total n */
+.pagination > span:nth-of-type(3) {
+	display: flex;
+	justify-content: flex-end;
+	text-align: right;
+	margin: 0 0 0 16px;
+	width: 120px;
+}
+
+/* Left and right pagination icon */
+.paginationIcon {
+	color: black38 !important;
+}
+
+/* Pagination drop down */
+.pageDropdown {
+	composes: mdCaption from '../../css/typography.module.css';
+	width: 60px;
+}
+
+/* Pagination drop down input */
+.pageDropdown input {
+	padding: 0 24px 0 8px !important;
+}
+
+/* Ties table row header and row */
+.tiesTableRow, .tiesTableRowHeader {
+	composes: mdBody1 from '../../css/typography.module.css';
+	align-items: center;
+	border-bottom: 1px solid black12;
+	display: flex;
+	min-height: 48px;
+	padding: 0 24px;
+}
+
+/* Ties table row header */
+.tiesTableRowHeader {
+	color: black54;
+	font-weight: 500;
+}
+
+/* Ties table row header text - overflow hidden */
+.tiesTableRowHeader > div {
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap;
+}
+
+/* Ties table row */
+.tiesTableRow {
+	cursor: pointer;
+}
+
+/* Ties table row active */
+.tiesTableRowActive {
+	background-color: black87;
+	color: #ffffff;
+}
+
+/* Ties table row when active - pathology document icon */
+.tiesTableRowActive .reportIcon {
+	color: #ffffff;
+}
+
+/* Ties table row hover */
+.tiesTableRow:hover {
+	background-color: black12;
+}
+
+/* Ties table - first column - filter status */
+.tiesTableRowHeader > div:first-of-type, .tiesTableRow > div:first-of-type {
+	height: 20px; /* Forces icon to be vertically centered */
+	width: 36px;
+}
+
+/* Ties table - remaining columns - sample Id, pathology report and filter results */
+.tiesTableRowHeader > div:nth-of-type(n+2), .tiesTableRow > div:nth-of-type(n+2) {
+	padding: 0 28px;
+	width: 186px; /* Fixed width of 130px + 56px padding */
+}
+
+/* Filter status icons, and pathology document icon */
+.tiesTableRow i {
+	color: black38;
+	font-family: 'Material Icons';
+	font-size: 18px;
+	font-style: normal; /* Overrides italic font style */
+}
+
+/* Filter status icon - keep */
+.tiesTableRow .filterStatusKeep {
+	color: var(--color-accent);
+}
+
+/* Ties welcome */
+.tiesWelcome {
+	background: linear-gradient(rgba(76, 201, 192, 0.05), rgba(76, 201, 192, 0.05)), linear-gradient(#ffffff, #ffffff);
+	border-top: 1px solid rgba(0, 0, 0, 0.12);
+	bottom: 0;
+	display: flex;
+	flex-direction: column;
+	position: absolute; /* Allows positioning of close icon */
+	top: 76px;
+	width: 100%;
+	z-index: 2; /* Positions welcome above ties table */
+}
+
+/* Ties welcome close */
+.tiesWelcome i {
+	cursor: pointer;
+	position: absolute;
+	right: 24px;
+	top: 24px;
+}
+
+/* Welcome text */
+.welcomeTiesText {
+	margin: 48px 0;
+	height: 100%;
+	padding: 0 88px; /* Positions welcome text in line with Ties filter on LHS */
+}
+
+/* Welcome description */
+.welcomeTiesText h2:nth-of-type(2) {
+	color: inherit;
+	cursor: pointer;
+	text-decoration: underline;
+}

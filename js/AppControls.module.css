@@ -81,7 +81,7 @@
 	margin-left: -4px; /* Pull help icon in closer to filter icon */
 }
 
-/* Actions section, inside tools eg chart/visualization toggle, download, PDF, bookmark */
+/* Actions section, inside tools eg chart/visualization toggle, download, PDF, bookmark, also Ties close button and Ties create column. */
 .actions {
 	display: flex;
 	margin-left: auto;
@@ -93,6 +93,13 @@
 	text-decoration: none;
 }
 
+/* Ties title */
+.tiesTitle {
+	composes: mdBody1 from '../css/typography.module.css';
+	color: black87;
+}
+
+/* Ties icon */
 .ties i {
 	background: linear-gradient(to bottom right, red, yellow, blue, orange);
 	-webkit-text-fill-color: transparent;
@@ -111,4 +118,9 @@
 	to {
 		transform: rotate(360deg);
 	}
+}
+
+/* Ties create column button */
+.tiesCreateButton {
+	margin: 0 16px;
 }

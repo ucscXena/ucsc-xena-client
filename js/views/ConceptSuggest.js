@@ -2,8 +2,9 @@
 
 import PureComponent from '../PureComponent';
 import React from 'react';
-import XAutosuggest from './XAutosuggest';
+import TAutosuggest from './TAutosuggest';
 import Input from 'react-toolbox/lib/input';
+
 
 var RETURN = 13;
 var returnPressed = ev => ev.keyCode === RETURN;
@@ -64,7 +65,7 @@ class ConceptSuggest extends PureComponent {
 			{suggestions, value} = this.state;
 
 		return (
-			<XAutosuggest
+			<TAutosuggest
 				inputRef={this.setInput}
 				suggestions={suggestions}
 				renderSuggestion={v => <span>{v}</span>}

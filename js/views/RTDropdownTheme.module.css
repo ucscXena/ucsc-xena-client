@@ -1,0 +1,23 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying global overrides to all Dropdown components.
+ *
+ * Uses theme key RTDropdown and theme end points to override specific classes. See
+ * http://react-toolbox.com/#/components/dropdown for details.
+ */
+
+@value black12 from '../../css/variables.css';
+
+/* Dropdown value component */
+.value {
+	padding: 0;
+}
+
+/* Input field */
+.dropdown input {
+	border-bottom: 1px solid black12 !important;
+	color: inherit !important;
+	font-size: inherit;
+}

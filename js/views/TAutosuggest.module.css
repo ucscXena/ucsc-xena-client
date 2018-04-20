@@ -1,0 +1,40 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Custom CSS outside of react-autosuggest theming API.
+ */
+
+@value black38 from '../../css/variables.css';
+
+@value black12 from '../../css/variables.css';
+
+@value black38 from '../../css/variables.css';
+
+@value black87 from '../../css/variables.css';
+
+/* Ties filter */
+.TAutosuggest {
+  //height: calc(100% - 20px);
+}
+
+.TAutosuggest > div:first-of-type > div {
+  border-bottom: none;
+  //height: 56px;
+  padding-bottom: 0;
+}
+
+/* Ties filter input element - override RT theme (and our own global overrides) - mimics SampleSearch styles */
+.TAutosuggest input {
+  border-bottom: 1px solid black12 !important; /* Using important here to override RTB inputElement styles. */
+  padding: 6px 0 !important;
+  width: 400px; /* Mimics width of SampleSearch module */
+}
+
+.TAutosuggest label {
+  padding: 0 !important; /* Using important here to override RTB inputElement styles. */
+}
+
+.TAutosuggest {
+  position: relative;
+}

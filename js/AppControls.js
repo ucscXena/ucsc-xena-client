@@ -13,6 +13,7 @@ import { signatureField } from './models/fieldSpec';
 import { getColSpec } from './models/datasetJoins';
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
+import {Button} from 'react-toolbox/lib/button';
 
 // Styles
 var compStyles = require('./AppControls.module.css');
@@ -58,18 +59,18 @@ var BasicSearch = ({help, onTies, tiesEnabled, ...searchProps}) => (
 	<div className={compStyles.filter}>
 		<SampleSearch {...searchProps}/>
 		{help ? <a href={help} target='_blank' className={compStyles.filterHelp}><i className='material-icons'>help_outline</i></a> : null}
-		{tiesEnabled ? <a onClick={onTies} className={compStyles.ties}><i className='material-icons'>toys</i></a> : null}
+		{tiesEnabled ? <a onClick={onTies} className={compStyles.ties}><i className='material-icons'>settings_input_svideo</i></a> : null}
 	</div>);
 
 var TiesSearch = () => (
-		<div className={compStyles.filter}>
+		<div className={compStyles.tiesTitle}>
 			<span>Pathology Report Search and Filter by TIES</span>
 		</div>);
 
 var TiesActions = ({onTies, onTiesColumn}) => (
 	<div className={compStyles.actions}>
-		<button onClick={onTiesColumn}>Create filtered column</button>
-		<a onClick={onTies} className={compStyles.filterHelp}><i className='material-icons'>close</i></a>
+		<Button accent onClick={onTiesColumn} className={compStyles.tiesCreateButton}>Create column</Button>
+		<i className='material-icons' onClick={onTies}>close</i>
 	</div>);
 
 function getFilterColumn(title, samples, opts = {}) {

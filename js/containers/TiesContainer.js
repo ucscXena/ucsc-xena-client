@@ -2,7 +2,8 @@
 
 var React = require('react');
 import PureComponent from '../PureComponent';
-import Ties from '../views/TiesPlaceholder';
+import Ties from '../views/TiesView';
+
 var {pick} = require('../underscore_ext');
 
 class TiesContainer extends PureComponent {
@@ -39,7 +40,7 @@ class TiesContainer extends PureComponent {
 
 	render() {
 		var handlers = pick(this, ['onAddTerm', 'onKeepRow', 'onShowDoc',
-				'onHideDoc', 'onPage', 'onCreateColumn', 'onDismiss']);
+			'onHideDoc', 'onPage', 'onCreateColumn', 'onDismiss']);
 		return (
 			<Ties
 				state={this.props.appState}

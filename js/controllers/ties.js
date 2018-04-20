@@ -6,16 +6,16 @@ var tiesQuery = require('../tiesQuery');
 var {fetchSurvival} = require('./common');
 
 var collateDocs = patients => docs => {
-    var idx = new Map();
-    docs.forEach(({patientId, docs}) => {
-        idx.set(patientId, _.getIn(docs, [0, 'id']));
-    });
-    return patients.map(p => ({patient: p, doc: idx.get(p)}));
+	var idx = new Map();
+	docs.forEach(({patientId, docs}) => {
+		idx.set(patientId, _.getIn(docs, [0, 'id']));
+	});
+	return patients.map(p => ({patient: p, doc: idx.get(p)}));
 };
 
 function fetchDocs(serverBus, patients) {
 	serverBus.next(['ties-doc-list',
-            tiesQuery.docs(patients).map(collateDocs(patients))]);
+		tiesQuery.docs(patients).map(collateDocs(patients))]);
 }
 
 function fetchDoc(serverBus, state, newState) {
@@ -85,12 +85,12 @@ var reset = state => _.assoc(state, 'open', false, 'docs', undefined);
 
 var tiesControls = {
 	'ties-open': state => _.assoc(state,
-			'open', true,
-			'page', {i: 0, n: 10},
-			'terms', [],
-			'showDoc', undefined,
-			'matches', {},
-			'filter', {}), // init the filter
+		'open', true,
+		'page', {i: 0, n: 10},
+		'terms', [],
+		'showDoc', undefined,
+		'matches', {},
+		'filter', {}), // init the filter
 	'ties-dismiss': state => _.dissoc(state, 'open'), // XXX clean up doc list?
 	'ties-add-term': (state, term) =>
 		_.assoc(state, 'terms', _.conj(state.terms || [], term)),
@@ -143,6 +143,6 @@ var controls = {
 };
 
 module.exports = compose(
-		make(controls),
-		mount(make(spreadsheetControls), ['spreadsheet']),
-		mount(make(tiesControls), ['spreadsheet', 'ties']));
+	make(controls),
+	mount(make(spreadsheetControls), ['spreadsheet']),
+	mount(make(tiesControls), ['spreadsheet', 'ties']));
