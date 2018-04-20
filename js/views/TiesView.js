@@ -101,9 +101,9 @@ class Ties extends PureComponent {
 				filter, showDoc, doc, page, concepts = []
 			} = state.ties,
 			dialogProps = {
-				dialogActive: !!showDoc,
+				dialogActive: showDoc != null,
 				onKeepRow: this.onKeepRow,
-				patient: showDoc && docs[showDoc].patient,
+				patient: showDoc != null && docs[showDoc].patient,
 				closeReport: this.onHideDoc
 			},
 			pageCount = Math.ceil((docs || []).length / page.n),
