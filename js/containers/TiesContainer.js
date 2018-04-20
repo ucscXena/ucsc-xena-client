@@ -29,11 +29,6 @@ class TiesContainer extends PureComponent {
 		this.props.callback(['ties-set-page', page]);
 	}
 
-	onCreateColumn = () => {
-		console.log('onCreateColumn FIXME');
-		// getColSpec, blah blah
-	}
-
 	onDismiss = () => {
 		this.props.callback(['ties-dismiss']);
 	}
@@ -44,7 +39,7 @@ class TiesContainer extends PureComponent {
 
 	render() {
 		var handlers = pick(this, ['onAddTerm', 'onKeepRow', 'onShowDoc',
-			'onHideDoc', 'onPage', 'onCreateColumn', 'onDismiss', 'onDismissWelcome']);
+			'onHideDoc', 'onPage', 'onDismiss', 'onDismissWelcome']);
 		return (
 			<Ties
 				state={this.props.appState}
