@@ -6,6 +6,7 @@ import PureComponent from '../PureComponent';
 import ConceptSuggest from './ConceptSuggest';
 import Dropdown from 'react-toolbox/lib/dropdown';
 import {IconButton} from 'react-toolbox/lib/button';
+var {times, pick} = require('../underscore_ext');
 
 var XDialog = require('./XDialog');
 
@@ -29,14 +30,37 @@ var filterIcon = (hasDoc, filter) =>
 			filter ? <i className={compStyles.filterStatusKeep}>check</i> :
 				<i>close</i>;
 
+var Pagenation = ({onPage, onPageSize, onForward, onBack, page, pageCount}) => (
+	<div className={compStyles.pagination}>
+		<span>Goto page:
+			<Dropdown className={compStyles.pageDropdown}
+					  auto
+					  onChange={onPage}
+					  source={times(pageCount, i => ({value: i, label: i + 1}))}
+					  value={page.i}
+			/>
+		</span>
+		<span>Items per page:
+			<Dropdown className={compStyles.pageDropdown}
+					  auto
+					  onChange={onPageSize}
+					  source={pageSizes}
+					  value={page.n}
+			/>
+		</span>
+		<IconButton className={compStyles.paginationIcon} icon='chevron_left' disabled={page.i === 0}
+					onClick={onBack}/>
+		<IconButton className={compStyles.paginationIcon} icon='chevron_right'
+					disabled={page.i > pageCount - 2} onClick={onForward}/>
+		<span>{page.i * page.n} - {(page.i + 1) * page.n - 1} of {page.n * pageCount - 1}</span>
+	</div>);
+
 class Ties extends PureComponent {
 
 	constructor(props) {
 		super(props);
 		this.state = {
 			dialogActive: false,
-			pageSelected: 1,
-			pageSizeSelected: 10,
 			patient: null
 		};
 	}
@@ -51,17 +75,13 @@ class Ties extends PureComponent {
 		onPage({i: i - 1, n});
 	};
 
-	onPage = ev => {
-		var i = ev - 1,
-			// var i = parseInt(ev.target.value, 10) - 1,
-			{onPage, state: {ties: {page: {n}}}} = this.props;
+	onPage = i => {
+		var {onPage, state: {ties: {page: {n}}}} = this.props;
 		onPage({i, n});
 	};
 
-	onPageSize = ev => {
+	onPageSize = n => {
 		var {onPage, state: {ties: {page}}} = this.props,
-			n = ev,
-			// n = parseInt(ev.target.value, 10),
 			i = Math.floor((page.n * page.i) / n);
 		onPage({i, n});
 	};
@@ -83,28 +103,6 @@ class Ties extends PureComponent {
 		onKeepRow(showDoc, keep);
 	};
 
-	handlePageSizeChange = (value) => {
-		this.setState({pageSizeSelected: value});
-		this.onPageSize(value);
-	};
-
-	handlePageChange = (value) => {
-		this.setState({pageSelected: value});
-		this.onPage(value);
-	};
-
-	getPages = (pageCount) => {
-		var pages = [];
-		for (var i = 0; i < pageCount; i++) {
-			pages[i] = {
-				value: i + 1,
-				label: i + 1
-			};
-		}
-		;
-		return pages;
-	};
-
 	render() {
 		var {onAddTerm, state} = this.props,
 			{
@@ -118,6 +116,7 @@ class Ties extends PureComponent {
 				closeReport: this.onHideDoc
 			},
 			pageCount = Math.ceil((docs || []).length / page.n),
+			pagenationHandlers = pick(this, ['onPage', 'onPageSize', 'onForward', 'onBack']),
 			byTerm = mapObject(matches, ({matches}) => new Set(matches)); // XXX put in selector
 		return (
 			<Card className={compStyles.tiesView}>
@@ -128,29 +127,7 @@ class Ties extends PureComponent {
 							Search Terms: {terms.map(t => matches[t] ? t : `${t} (loading)`).join(', ')}
 							</span>
 					</div>
-					<div className={compStyles.pagination}>
-						<span>Goto page:
-							<Dropdown className={compStyles.pageDropdown}
-									  auto
-									  onChange={this.handlePageChange}
-									  source={this.getPages(pageCount)}
-									  value={this.state.pageSelected}
-							/>
-						</span>
-						<span>Items per page:
-							<Dropdown className={compStyles.pageDropdown}
-									  auto
-									  onChange={this.handlePageSizeChange}
-									  source={pageSizes}
-									  value={this.state.pageSizeSelected}
-							/>
-						</span>
-						<IconButton className={compStyles.paginationIcon} icon='chevron_left' disabled={page.i === 0}
-									onClick={this.onBack}/>
-						<IconButton className={compStyles.paginationIcon} icon='chevron_right'
-									disabled={page.i > pageCount - 2} onClick={this.onForward}/>
-						<span>{page.i * page.n} - {(page.i + 1) * page.n - 1} of {page.n * pageCount - 1}</span>
-					</div>
+					<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
 				</div>
 				<div>
 					<div className={compStyles.tiesTableRowHeader}>
@@ -173,29 +150,7 @@ class Ties extends PureComponent {
 							</div>
 					)) : '...loading'}
 				</div>
-				<div className={compStyles.pagination}>
-					<span>Goto page:
-						<Dropdown className={compStyles.pageDropdown}
-								  auto
-								  onChange={this.handlePageChange}
-								  source={this.getPages(pageCount)}
-								  value={this.state.pageSelected}
-						/>
-					</span>
-					<span>Items per page:
-						<Dropdown className={compStyles.pageDropdown}
-								  auto
-								  onChange={this.handlePageSizeChange}
-								  source={pageSizes}
-								  value={this.state.pageSizeSelected}
-						/>
-					</span>
-					<IconButton className={compStyles.paginationIcon} icon='chevron_left' disabled={page.i === 0}
-								onClick={this.onBack}/>
-					<IconButton className={compStyles.paginationIcon} icon='chevron_right'
-								disabled={page.i > pageCount - 2} onClick={this.onForward}/>
-					<span>{page.i * page.n} - {(page.i + 1) * page.n - 1} of {page.n * pageCount - 1}</span>
-				</div>
+				<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
 				<XDialog {...dialogProps}
 						 terms={terms}
 						 reportText={doc && doc.text.slice(0, 100)}
