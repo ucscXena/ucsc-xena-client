@@ -13,7 +13,7 @@ var XDialog = require('./XDialog');
 var {mapObject} = require('../underscore_ext');
 
 var compStyles = require('./TiesView.module.css');
-// var typStyles = require('../../css/typography.module.css');
+var typStyles = require('../../css/typography.module.css');
 var classNames = require('classnames');
 var setKey = arr => arr.map((el, i) => React.cloneElement(el, {key: i}));
 
@@ -22,8 +22,6 @@ const pageSizes = [
 	{value: 20, label: '20'},
 	{value: 50, label: '50'},
 	{value: 100, label: '100'}];
-
-// var showTiesWelcome = true;
 
 var filterIcon = (hasDoc, filter) =>
 	!hasDoc ? <i>remove</i> :
@@ -42,10 +40,6 @@ class Ties extends PureComponent {
 			patient: null
 		};
 	}
-
-	// dismissTiesWelcome = () => {
-	// 	showTiesWelcome = false;
-	// }
 
 	onForward = () => {
 		var {onPage, state: {ties: {page: {i, n}}}} = this.props;
@@ -114,7 +108,7 @@ class Ties extends PureComponent {
 	render() {
 		var {onAddTerm, state} = this.props,
 			{
-				terms = [], docs, matches = {},
+				terms = [], docs, matches = {}, showWelcome = true,
 				filter, showDoc, doc, page, concepts = []
 			} = state.ties,
 			dialogProps = {
@@ -206,19 +200,19 @@ class Ties extends PureComponent {
 						 terms={terms}
 						 reportText={doc && doc.text.slice(0, 100)}
 						 fullReportText={doc && doc.text}/>
-				{/*{showTiesWelcome ? <div className={compStyles.tiesWelcome}>*/}
-				{/*<i className='material-icons' onClick={this.dismissTiesWelcome}>close</i>*/}
-				{/*<div className={compStyles.welcomeTiesText}>*/}
-				{/*<h1 className={typStyles.mdHeadline}>Welcome to the Pathology Report Filtering Tool by Ties</h1>*/}
-				{/*<h2 className={typStyles.mdSubhead}>This tool allows users to view and search the pathology*/}
-				{/*reports,*/}
-				{/*using them to <br/>select samples of interest and then create a filtered column based on the*/}
-				{/*samples<br/>*/}
-				{/*of interest.</h2>*/}
-				{/*<h2 className={typStyles.mdSubhead} onClick={this.dismissTiesWelcome}>Begin by searching using*/}
-				{/*key words of interest</h2>*/}
-				{/*</div>*/}
-				{/*</div> : null}*/}
+				{showWelcome ? <div className={compStyles.tiesWelcome}>
+				<i className='material-icons' onClick={this.props.onDismissWelcome}>close</i>
+				<div className={compStyles.welcomeTiesText}>
+				<h1 className={typStyles.mdHeadline}>Welcome to the Pathology Report Filtering Tool by Ties</h1>
+				<h2 className={typStyles.mdSubhead}>This tool allows users to view and search the pathology
+				reports,
+				using them to <br/>select samples of interest and then create a filtered column based on the
+				samples<br/>
+				of interest.</h2>
+				<h2 className={typStyles.mdSubhead} onClick={this.props.onDismissWelcome}>Begin by searching using
+				key words of interest</h2>
+				</div>
+				</div> : null}
 			</Card>
 		);
 	}

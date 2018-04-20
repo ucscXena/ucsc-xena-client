@@ -38,9 +38,13 @@ class TiesContainer extends PureComponent {
 		this.props.callback(['ties-dismiss']);
 	}
 
+	onDismissWelcome = () => {
+		this.props.callback(['ties-dismiss-welcome']);
+	}
+
 	render() {
 		var handlers = pick(this, ['onAddTerm', 'onKeepRow', 'onShowDoc',
-			'onHideDoc', 'onPage', 'onCreateColumn', 'onDismiss']);
+			'onHideDoc', 'onPage', 'onCreateColumn', 'onDismiss', 'onDismissWelcome']);
 		return (
 			<Ties
 				state={this.props.appState}

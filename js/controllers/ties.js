@@ -92,6 +92,7 @@ var tiesControls = {
 		'matches', {},
 		'filter', {}), // init the filter
 	'ties-dismiss': state => _.dissoc(state, 'open'), // XXX clean up doc list?
+	'ties-dismiss-welcome': state => _.assoc(state, 'showWelcome', false),
 	'ties-add-term': (state, term) =>
 		_.assoc(state, 'terms', _.conj(state.terms || [], term)),
 	'ties-keep-row': (state, index, keep) => advancePage(advanceDoc(setKeep(state, index, keep))),
