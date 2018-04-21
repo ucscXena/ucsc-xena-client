@@ -44,8 +44,44 @@
 }
 
 /* Report result word - highlighted - TODO */
-.reportFilter .highlightWord {
-	background-color: palegreen;
+.highlight0 {
+	background-color: #1f77b4;
+}
+
+.highlight1 {
+	background-color: #d62728;
+}
+
+.highlight2 {
+	background-color: #9467bd;
+}
+
+.highlight3 {
+	background-color: #ff7f0e;
+}
+
+.highlight4 {
+	background-color: #8c564b;
+}
+
+.highlight5 {
+	background-color: #e377c2;
+}
+
+.highlight5 {
+	background-color: #2ca02c;
+}
+
+.highlight7 {
+	background-color: #bcbd22;
+}
+
+.highlight8 {
+	background-color: #aec7e8;
+}
+
+.highlight9 {
+	background-color: #dbdb8d;
 }
 
 /* Action buttons container */

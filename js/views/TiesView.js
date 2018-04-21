@@ -6,10 +6,9 @@ import PureComponent from '../PureComponent';
 import ConceptSuggest from './ConceptSuggest';
 import Dropdown from 'react-toolbox/lib/dropdown';
 import {IconButton} from 'react-toolbox/lib/button';
-var {times, pick} = require('../underscore_ext');
+var {map, flatmap, times, pick} = require('../underscore_ext');
 
 var XDialog = require('./XDialog');
-
 
 var {mapObject} = require('../underscore_ext');
 
@@ -109,6 +108,20 @@ class Ties extends PureComponent {
 			pageCount = Math.ceil((docs || []).length / page.n),
 			pagenationHandlers = pick(this, ['onPage', 'onPageSize', 'onForward', 'onBack']),
 			byTerm = mapObject(matches, ({matches}) => new Set(matches)); // XXX put in selector
+		if (doc && showDoc != null && doc.id.toString() === docs[showDoc].doc) {
+			// XXX move to fn
+			var parser = new DOMParser(),
+				xml = parser.parseFromString(doc.highlightText, "application/xml"),
+				highlights = flatmap(terms, (term, index) => {
+					var sel = `Annotation Concept[cn="${term}"]`,
+						matches = xml.querySelectorAll(sel);
+
+					return map(matches, c =>
+						({index,
+							start: parseInt(c.parentNode.attributes.startOffset.value, 10),
+							end: parseInt(c.parentNode.attributes.endOffset.value, 10)}));
+				});
+		}
 		return (
 			<Card className={compStyles.tiesView}>
 				<div className={compStyles.tiesViewHeader}>
@@ -144,9 +157,9 @@ class Ties extends PureComponent {
 				</div>
 				<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
 				<XDialog {...dialogProps}
-						 terms={showDoc != null ? terms.filter(term => byTerm[term].has(docs[showDoc].patient)) : []}
-						 reportText={doc && doc.text.slice(0, 100)}
-						 fullReportText={doc && doc.text}/>
+						highlights={highlights}
+						terms={showDoc != null ? terms.filter(term => byTerm[term].has(docs[showDoc].patient)) : []}
+						fullReportText={doc && doc.text}/>
 				{showWelcome ? <div className={compStyles.tiesWelcome}>
 				<i className='material-icons' onClick={this.props.onDismissWelcome}>close</i>
 				<div className={compStyles.welcomeTiesText}>
