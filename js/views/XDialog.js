@@ -49,8 +49,9 @@ function splitText(highlights, text) {
 							i === highlights.length - 1 ? text.length :
 							sortedHighlights[i + 1].start)))}</span>));
 
-	return setKey(
-			[<span>{setKey(newlines(text.slice(0, sortedHighlights[0].start)))}</span>, ...interleave(textHighlights, textPlain)]);
+	return highlights.length ? setKey(
+			[<span>{setKey(newlines(text.slice(0, sortedHighlights[0].start)))}</span>, ...interleave(textHighlights, textPlain)]) :
+		<span>{setKey(newlines(text))}</span>;
 }
 
 
