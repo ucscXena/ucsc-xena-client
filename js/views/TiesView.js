@@ -6,8 +6,9 @@ import PureComponent from '../PureComponent';
 import ConceptSuggest from './ConceptSuggest';
 import Dropdown from 'react-toolbox/lib/dropdown';
 import {IconButton} from 'react-toolbox/lib/button';
-var {isString, Let, last, initial, groupBy, mapObject,
-	sortBy, flatmap, times, pick} = require('../underscore_ext');
+var intvlTree = require('static-interval-tree');
+var {uniq, partitionN, isString, Let, last, initial, mapObject,
+	sortBy, flatmap, times, pick, pluck} = require('../underscore_ext');
 
 var XDialog = require('./XDialog');
 
@@ -57,64 +58,18 @@ var Pagenation = ({onPage, onPageSize, onForward, onBack, page, pageCount}) => (
 		<span>{page.i * page.n} - {(page.i + 1) * page.n - 1} of {page.n * pageCount - 1}</span>
 	</div>);
 
-//function logOverlaps(xml) {
-//	var matches = xml.querySelectorAll('Concept'),
-//		ranges = map(matches, c =>
-//			({concept: c,
-//				start: parseInt(c.parentNode.attributes.startOffset.value, 10),
-//				end: parseInt(c.parentNode.attributes.endOffset.value, 10)}));
-//	ranges.forEach((r, i) => {
-//		ranges.slice(i + 1).forEach(s => {
-//			if (s !== r && s.start < r.end && s.end > r.start) {
-//				console.log('overlap', s, r);
-//			}
-//		});
-//	});
-//}
-
-var push = (arr, v) => (arr.push(v), arr);
-
-function transition(list, i = 0, last = 0, ctx = new Set(), acc = []) {
-	if (i === list.length) {
-		return acc;
-	}
-	var g = list[i],
-		coord = g[0].match[g[0].type],
-		r = {start: last, end: coord, ctx: Array.from(ctx)},
-		{start = [], end = []} = groupBy(g, 'type');
-
-	// There's a subtle order dependency here on certain edge cases.
-	// On a zero-length match, doing 'end' then 'start' will erroneously
-	// set the match on. On adjacent matches with the same index, doing
-	// 'start' then 'end' will erroneously set the match off. So, we
-	// filter zero-length matches.
-	end.forEach(t => ctx.delete(t.match.index));
-	start.forEach(t => ctx.add(t.match.index));
-
-	return transition(list, i + 1, coord, ctx, push(acc, r));
-}
-
-// Wish this were simpler. We have a list of possibly overlapping match regions.
-// We need to find contiguous regions of color. The color of the region depends
-// on the set of matches overlapping it.
-// Strategy is to put all the start & end coords together, group by coord,
-// sort by coord, then keep a running tally of overlaps by adding to the tally
-// for each 'start' coord, and removing from the tally for each 'end' coord, and
-// emitting a region for each coord group.
+// Highlights may overlap. To compute contiguous color regions, put highlights
+// into an interval tree, split the length of the text at each highlight boundary,
+// then query all the resulting regions to find highlights overlapping the region.
 function computeRegions(matches, text) {
-	var nzMatches = matches.filter(({start, end}) => start !== end), // matches having non-zero length
-		transitions = groupBy(
-			nzMatches.map(m => ({type: 'start', match: m}))
-				.concat(nzMatches.map(m => ({type: 'end', match: m}))),
-			t => t.match[t.type]),
-		ordered = sortBy(Object.values(transitions), g => g[0].match[g[0].type]),
-		regions = transition(ordered),
-		ptAtEnd = {
-			start: regions[regions.length - 1].end,
-			end: text.length,
-			ctx: []};
+	var idx = intvlTree.index(matches),
+		coords = sortBy(
+			uniq([0, text.length, ...pluck(matches, 'start'), ...pluck(matches, 'end')]),
+			x => x);
 
-	return [...regions, ptAtEnd];
+	return initial(partitionN(coords, 2, 1)).map(([start, end]) => ({
+		start, end,
+		ctx: uniq(pluck(intvlTree.matches01(idx, {start, end}), 'index'))}));
 }
 
 function highlightRegions(doc, terms) {
