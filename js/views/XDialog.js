@@ -33,7 +33,8 @@ class XDialog extends React.Component {
 	};
 
 	render() {
-		var {dialogActive, patient, terms, children, getHighlight} = this.props;
+		var {dialogActive, patient, terms, children} = this.props;
+
 		return (
 			<div>
 				<Dialog active={dialogActive} onEscKeyDown={this.closeReport}>
@@ -47,9 +48,9 @@ class XDialog extends React.Component {
 					<div className={compStyles.reportFilter}>
 						<div>Report Results:</div>
 						<div>
-							{terms.map((t, i) => (
+							{terms.map(({term, color}, i) => (
 								<span key={i}>
-									"<span style={{backgroundColor: getHighlight(i)}}>{t}</span>"
+									"<span style={{backgroundColor: color}}>{term}</span>"
 									{i === terms.length - 1 ? '' : ', '}
 								</span>))}
 						</div>

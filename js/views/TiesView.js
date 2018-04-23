@@ -7,7 +7,7 @@ import ConceptSuggest from './ConceptSuggest';
 import Dropdown from 'react-toolbox/lib/dropdown';
 import {IconButton} from 'react-toolbox/lib/button';
 var intvlTree = require('static-interval-tree');
-var {uniq, partitionN, isString, Let, last, initial, mapObject,
+var {memoize1, uniq, partitionN, isString, Let, last, initial, mapObject,
 	sortBy, flatmap, times, pick, pluck} = require('../underscore_ext');
 
 var XDialog = require('./XDialog');
@@ -72,9 +72,16 @@ function computeRegions(matches, text) {
 		ctx: uniq(pluck(intvlTree.matches01(idx, {start, end}), 'index'))}));
 }
 
+var stringMatches = (terms, text) =>
+	Let((lc = text.toLowerCase()) =>
+		flatmap(terms, (term, index) =>
+			Let((lcterm = term.toLowerCase(), i = lc.indexOf(lcterm)) =>
+				i === -1 ? [] : [{start: i, end: i + lcterm.length, index}])));
+
 function highlightRegions(doc, terms) {
-	var highlights = flatmap(terms, (term, index) =>
-			doc.highlights[term].map(hl => ({...hl, index})));
+	var conceptHighlights = flatmap(terms, (term, index) =>
+			(doc.highlights[term] || []).map(hl => ({...hl, index}))),
+		highlights = conceptHighlights.concat(stringMatches(terms, doc.text));
 
 	return highlights.length ? computeRegions(highlights, doc.text) :
 		[{start: 0, end: doc.text.length, ctx: []}];
@@ -124,15 +131,13 @@ var splitText = (regions, text) =>
 			{setKey(newlines(text.slice(start, end)))}
 		</span>)));
 
-
 // highlight compute in component to avoid recompute
 class DocText extends PureComponent {
 	render() {
-		var {doc, terms} = this.props;
+		var {doc, regions} = this.props;
 		if (!doc) {
 			return null;
 		}
-		var regions = highlightRegions(doc, terms);
 		return <p>{splitText(regions, doc.text)}</p>;
 	}
 }
@@ -176,20 +181,35 @@ class Ties extends PureComponent {
 		onKeepRow(showDoc, keep);
 	};
 
+	// Trying a local cache pattern, instead of adding to the application selector.
+	// The important bits are that the memoize call happens when the instance
+	// is instantiated, and the es6 initialization form binds 'this' in the
+	// method.
+	byTerm = Let(
+		(fn = memoize1(matches =>
+					   mapObject(matches, ({matches}) => new Set(matches)))) =>
+			() => fn(this.props.state.ties.matches || {}));
+
+	getRegions = Let(
+		(fn = memoize1(highlightRegions)) =>
+			() => Let(({terms = [], doc} = this.props.state.ties) => fn(doc, terms)));
+
 	render() {
 		var {onAddTerm, state} = this.props,
 			{
 				terms = [], docs, matches = {}, showWelcome = true,
 				filter, showDoc, doc, page, concepts = []
 			} = state.ties,
-			byTerm = mapObject(matches, ({matches}) => new Set(matches)), // XXX put in selector
-			docTerms = doc ? terms.filter(term => byTerm[term] && byTerm[term].has(doc.patient)) : [],
+			byTerm = this.byTerm(),
+			docTerms = doc ? terms.map((term, i) => ({term, color: getHighlight(i)}))
+				.filter(({term}) => byTerm[term] && byTerm[term].has(doc.patient)) :
+				[],
+			regions = this.getRegions(),
 			dialogProps = {
 				dialogActive: showDoc != null,
 				onKeepRow: this.onKeepRow,
 				patient: showDoc != null && docs[showDoc].patient,
 				terms: docTerms,
-				getHighlight: getHighlight,
 				closeReport: this.onHideDoc
 			},
 			pageCount = Math.ceil((docs || []).length / page.n),
@@ -229,7 +249,7 @@ class Ties extends PureComponent {
 				</div>
 				<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
 				<XDialog {...dialogProps}>
-					<DocText doc={doc} terms={docTerms}/>
+					<DocText doc={doc} regions={regions}/>
 				</XDialog>
 				{showWelcome ? <div className={compStyles.tiesWelcome}>
 				<i className='material-icons' onClick={this.props.onDismissWelcome}>close</i>
