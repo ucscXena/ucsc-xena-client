@@ -183,7 +183,7 @@ class Ties extends PureComponent {
 				filter, showDoc, doc, page, concepts = []
 			} = state.ties,
 			byTerm = mapObject(matches, ({matches}) => new Set(matches)), // XXX put in selector
-			docTerms = doc ? terms.filter(term => byTerm[term].has(doc.patient)) : [],
+			docTerms = doc ? terms.filter(term => byTerm[term] && byTerm[term].has(doc.patient)) : [],
 			dialogProps = {
 				dialogActive: showDoc != null,
 				onKeepRow: this.onKeepRow,
