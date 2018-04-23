@@ -6,7 +6,8 @@ import PureComponent from '../PureComponent';
 import ConceptSuggest from './ConceptSuggest';
 import Dropdown from 'react-toolbox/lib/dropdown';
 import {IconButton} from 'react-toolbox/lib/button';
-var {map, flatmap, times, pick} = require('../underscore_ext');
+var {isString, Let, last, initial, groupBy,
+	sortBy, flatmap, times, pick} = require('../underscore_ext');
 
 var XDialog = require('./XDialog');
 
@@ -15,7 +16,9 @@ var {mapObject} = require('../underscore_ext');
 var compStyles = require('./TiesView.module.css');
 var typStyles = require('../../css/typography.module.css');
 var classNames = require('classnames');
-var setKey = arr => arr.map((el, i) => React.cloneElement(el, {key: i}));
+
+var setKey = arr => arr.map((el, i) => isString(el) ? el :
+		React.cloneElement(el, {key: i}));
 
 const pageSizes = [
 	{value: 10, label: '10'},
@@ -28,6 +31,8 @@ var filterIcon = (hasDoc, filter) =>
 		filter == null ? '\u00A0' :
 			filter ? <i className={compStyles.filterStatusKeep}>check</i> :
 				<i>close</i>;
+
+
 
 var Pagenation = ({onPage, onPageSize, onForward, onBack, page, pageCount}) => (
 	<div className={compStyles.pagination}>
@@ -53,6 +58,131 @@ var Pagenation = ({onPage, onPageSize, onForward, onBack, page, pageCount}) => (
 					disabled={page.i > pageCount - 2} onClick={onForward}/>
 		<span>{page.i * page.n} - {(page.i + 1) * page.n - 1} of {page.n * pageCount - 1}</span>
 	</div>);
+
+//function logOverlaps(xml) {
+//	var matches = xml.querySelectorAll('Concept'),
+//		ranges = map(matches, c =>
+//			({concept: c,
+//				start: parseInt(c.parentNode.attributes.startOffset.value, 10),
+//				end: parseInt(c.parentNode.attributes.endOffset.value, 10)}));
+//	ranges.forEach((r, i) => {
+//		ranges.slice(i + 1).forEach(s => {
+//			if (s !== r && s.start < r.end && s.end > r.start) {
+//				console.log('overlap', s, r);
+//			}
+//		});
+//	});
+//}
+
+var push = (arr, v) => (arr.push(v), arr);
+
+function transition(list, i = 0, last = 0, ctx = new Set(), acc = []) {
+	if (i === list.length) {
+		return acc;
+	}
+	var g = list[i],
+		coord = g[0].match[g[0].type],
+		r = {start: last, end: coord, ctx: Array.from(ctx)},
+		{start = [], end = []} = groupBy(g, 'type');
+
+	// There's a subtle order dependency here on certain edge cases.
+	// On a zero-length match, doing 'end' then 'start' will erroneously
+	// set the match on. On adjacent matches with the same index, doing
+	// 'start' then 'end' will erroneously set the match off. So, we
+	// filter zero-length matches.
+	end.forEach(t => ctx.delete(t.match.index));
+	start.forEach(t => ctx.add(t.match.index));
+
+	return transition(list, i + 1, coord, ctx, push(acc, r));
+}
+
+// Wish this were simpler. We have a list of possibly overlapping match regions.
+// We need to find contiguous regions of color. The color of the region depends
+// on the set of matches overlapping it.
+// Strategy is to put all the start & end coords together, group by coord,
+// sort by coord, then keep a running tally of overlaps by adding to the tally
+// for each 'start' coord, and removing from the tally for each 'end' coord, and
+// emitting a region for each coord group.
+function computeRegions(matches, text) {
+	var nzMatches = matches.filter(({start, end}) => start !== end), // matches having non-zero length
+		transitions = groupBy(
+			nzMatches.map(m => ({type: 'start', match: m}))
+				.concat(nzMatches.map(m => ({type: 'end', match: m}))),
+			t => t.match[t.type]),
+		ordered = sortBy(Object.values(transitions), g => g[0].match[g[0].type]),
+		regions = transition(ordered),
+		ptAtEnd = {
+			start: regions[regions.length - 1].end,
+			end: text.length,
+			ctx: []};
+
+	return [...regions, ptAtEnd];
+}
+
+function highlightRegions(doc, terms) {
+	var highlights = flatmap(terms, (term, index) =>
+			doc.highlights[term].map(hl => ({...hl, index})));
+
+	return highlights.length ? computeRegions(highlights, doc.text) :
+		[{start: 0, end: doc.text.length, ctx: []}];
+}
+
+var highlights = [
+	"#aec7e8", // light blue
+	"#dbdb8d", // light mustard
+	"#ff9896", // light salmon
+	"#c5b0d5", // light lavender
+	"#ffbb78", // light orange
+	"#c49c94", // light tan
+	"#f7b6d2", // light pink
+	"#98df8a", // light green
+	"#c7c7c7",  // light grey
+	"#1f77b4", // dark blue
+	"#d62728", // dark red
+	"#9467bd", // dark purple
+	"#ff7f0e", // dark orange
+	"#8c564b", // dark brown
+	"#e377c2", // dark pink
+	"#2ca02c", // dark green
+	"#bcbd22" // dark mustard
+];
+
+var getHighlight = i => highlights[i % highlights.length];
+
+var newlines = s =>
+	Let ((segments = s.split(/\n/)) =>
+		[...flatmap(initial(segments), s => [s, <br/>]), last(segments)]);
+
+
+var percent = n => (100 / n).toPrecision(3);
+
+var gradientStops = idxs =>
+	Let((pct = percent(idxs.length)) =>
+		idxs.map(i => `${getHighlight(i)} ${pct}%`));
+
+// XXX Should check this cross-browser. prefixer, even if it's working in the
+// build, won't help us for assigned styles.
+var gradient = idxs =>
+	`linear-gradient(to bottom, ${gradientStops(idxs).join(', ')}, ${getHighlight(last(idxs))})`;
+
+var splitText = (regions, text) =>
+	setKey(regions.map(({start, end, ctx}) => (
+		<span style={ctx.length ? {background: gradient(ctx)} : {}}>
+			{setKey(newlines(text.slice(start, end)))}
+		</span>)));
+
+
+// highlight compute in component to avoid recompute
+class DocText extends PureComponent {
+	render() {
+		var {doc, terms} = this.props;
+		if (!doc) {
+			return null;
+		}
+		var regions = highlightRegions(doc, terms);
+		return <p>{splitText(regions, doc.text)}</p>;
+	}
+}
 
 class Ties extends PureComponent {
 
@@ -99,29 +229,18 @@ class Ties extends PureComponent {
 				terms = [], docs, matches = {}, showWelcome = true,
 				filter, showDoc, doc, page, concepts = []
 			} = state.ties,
+			byTerm = mapObject(matches, ({matches}) => new Set(matches)), // XXX put in selector
+			docTerms = doc ? terms.filter(term => byTerm[term].has(doc.patient)) : [],
 			dialogProps = {
 				dialogActive: showDoc != null,
 				onKeepRow: this.onKeepRow,
 				patient: showDoc != null && docs[showDoc].patient,
+				terms: docTerms,
+				getHighlight: getHighlight,
 				closeReport: this.onHideDoc
 			},
 			pageCount = Math.ceil((docs || []).length / page.n),
-			pagenationHandlers = pick(this, ['onPage', 'onPageSize', 'onForward', 'onBack']),
-			byTerm = mapObject(matches, ({matches}) => new Set(matches)); // XXX put in selector
-		if (doc && showDoc != null && doc.id.toString() === docs[showDoc].doc) {
-			// XXX move to fn
-			var parser = new DOMParser(),
-				xml = parser.parseFromString(doc.highlightText, "application/xml"),
-				highlights = flatmap(terms, (term, index) => {
-					var sel = `Annotation Concept[cn="${term}"]`,
-						matches = xml.querySelectorAll(sel);
-
-					return map(matches, c =>
-						({index,
-							start: parseInt(c.parentNode.attributes.startOffset.value, 10),
-							end: parseInt(c.parentNode.attributes.endOffset.value, 10)}));
-				});
-		}
+			pagenationHandlers = pick(this, ['onPage', 'onPageSize', 'onForward', 'onBack']);
 		return (
 			<Card className={compStyles.tiesView}>
 				<div className={compStyles.tiesViewHeader}>
@@ -156,10 +275,9 @@ class Ties extends PureComponent {
 					)) : '...loading'}
 				</div>
 				<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
-				<XDialog {...dialogProps}
-						highlights={highlights}
-						terms={showDoc != null ? terms.filter(term => byTerm[term].has(docs[showDoc].patient)) : []}
-						fullReportText={doc && doc.text}/>
+				<XDialog {...dialogProps}>
+					<DocText doc={doc} terms={docTerms}/>
+				</XDialog>
 				{showWelcome ? <div className={compStyles.tiesWelcome}>
 				<i className='material-icons' onClick={this.props.onDismissWelcome}>close</i>
 				<div className={compStyles.welcomeTiesText}>

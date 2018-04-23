@@ -17,10 +17,27 @@ function fetchDocs(serverBus, patients) {
 		tiesQuery.docs(patients).map(collateDocs)]);
 }
 
+function parseHighlights(text) {
+	let parser = new DOMParser(),
+		xml = parser.parseFromString(text, "application/xml"),
+		concepts = xml.querySelectorAll('Annotation Concept');
+
+	return _.object(
+		_.values(_.groupBy(concepts, c => c.attributes.cn.value)).map(clist =>
+				[clist[0].attributes.cn.value,
+				 clist.map(c => (
+					{start: parseInt(c.parentNode.attributes.startOffset.value, 10),
+					end: parseInt(c.parentNode.attributes.endOffset.value, 10)}))]));
+}
+
+var getHighlights = ({id, text, highlightText}) =>
+	({id, text, highlights: parseHighlights(highlightText)});
+
 function fetchDoc(serverBus, state, newState) {
 	var {showDoc, docs} = newState;
 	if (showDoc != null) {
-		serverBus.next(['ties-doc', tiesQuery.doc(docs[showDoc].doc)]);
+		serverBus.next(['ties-doc',
+			tiesQuery.doc(docs[showDoc].doc).map(getHighlights), docs[showDoc].patient]);
 	}
 };
 
@@ -102,7 +119,7 @@ var tiesControls = {
 	'ties-set-page': (state, page) => _.assoc(state, 'page', page),
 	'ties-doc-list': (state, docs) => _.assoc(state, 'docs', docs),
 	'ties-concepts': (state, concepts) => _.assoc(state, 'concepts', concepts),
-	'ties-doc': (state, doc) => _.assoc(state, 'doc', doc),
+	'ties-doc': (state, doc, patient) => _.assoc(state, 'doc', {...doc, patient}),
 	'ties-matches': (state, matches, term) =>
 		_.assocIn(state, ['matches', term], {matches}),
 	'ties-matches-error': (state, err, term) =>
