@@ -6,12 +6,10 @@ import PureComponent from '../PureComponent';
 import ConceptSuggest from './ConceptSuggest';
 import Dropdown from 'react-toolbox/lib/dropdown';
 import {IconButton} from 'react-toolbox/lib/button';
-var {isString, Let, last, initial, groupBy,
+var {isString, Let, last, initial, groupBy, mapObject,
 	sortBy, flatmap, times, pick} = require('../underscore_ext');
 
 var XDialog = require('./XDialog');
-
-var {mapObject} = require('../underscore_ext');
 
 var compStyles = require('./TiesView.module.css');
 var typStyles = require('../../css/typography.module.css');
