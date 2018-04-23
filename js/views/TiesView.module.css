@@ -6,8 +6,11 @@
  */
 
 @value black12 from '../../css/variables.css';
+
 @value black38 from '../../css/variables.css';
+
 @value black54 from '../../css/variables.css';
+
 @value black87 from '../../css/variables.css';
 
 /* Container around Ties */
@@ -91,6 +94,11 @@
 	padding: 0 24px 0 8px !important;
 }
 
+/* Ties table */
+.tiesTable {
+	flex: 1;
+}
+
 /* Ties table row header and row */
 .tiesTableRow, .tiesTableRowHeader {
 	composes: mdBody1 from '../../css/typography.module.css';
@@ -161,7 +169,7 @@
 }
 
 /* Ties welcome */
-.tiesWelcome {
+.tiesWelcome, .tiesLoading {
 	background: linear-gradient(rgba(76, 201, 192, 0.05), rgba(76, 201, 192, 0.05)), linear-gradient(#ffffff, #ffffff);
 	border-top: 1px solid rgba(0, 0, 0, 0.12);
 	bottom: 0;
@@ -182,7 +190,7 @@
 }
 
 /* Welcome text */
-.welcomeTiesText {
+.welcomeTiesText, .loadingTiesText {
 	margin: 48px 0;
 	height: 100%;
 	padding: 0 88px; /* Positions welcome text in line with Ties filter on LHS */

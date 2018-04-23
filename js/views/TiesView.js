@@ -217,15 +217,16 @@ class Ties extends PureComponent {
 		return (
 			<Card className={compStyles.tiesView}>
 				<div className={compStyles.tiesViewHeader}>
-					<div className={compStyles.tiesFilter}>
+					{!docs || showWelcome ? null : <div className={compStyles.tiesFilter}>
 						<ConceptSuggest onAddTerm={onAddTerm} concepts={concepts}/>
 						<span className={compStyles.tiesFilterTerms}>
 							Search Terms: {terms.map(t => matches[t] ? t : `${t} (loading)`).join(', ')}
 							</span>
-					</div>
-					<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
+					</div>}
+					{!docs || showWelcome ? null :
+						<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>}
 				</div>
-				<div>
+				<div className={compStyles.tiesTable}>
 					<div className={compStyles.tiesTableRowHeader}>
 						<div>Filter</div>
 						<div>Sample ID</div>
@@ -237,33 +238,38 @@ class Ties extends PureComponent {
 							<div className={classNames(
 								compStyles.tiesTableRow,
 								{[compStyles.tiesTableRowActive]: (page.i * page.n + i === showDoc)})}
-								data-index={page.i * page.n + i}
-								onClick={doc ? this.onShowDoc : undefined}>
+								 data-index={page.i * page.n + i}
+								 onClick={doc ? this.onShowDoc : undefined}>
 								<div>{filterIcon(doc, filter[page.i * page.n + i])}</div>
 								<div>{patient}</div>
 								<div>{doc ? <i className={compStyles.reportIcon}>description</i> : null}</div>
 								{terms.map((t, i) => byTerm[t] && byTerm[t].has(patient) ? <div key={i}>{t}</div> :
 									<div key={i}></div>)}
 							</div>
-					)) : '...loading'}
+					)) : null}
 				</div>
 				<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
 				<XDialog {...dialogProps}>
 					<DocText doc={doc} regions={regions}/>
 				</XDialog>
 				{showWelcome ? <div className={compStyles.tiesWelcome}>
-				<i className='material-icons' onClick={this.props.onDismissWelcome}>close</i>
-				<div className={compStyles.welcomeTiesText}>
-				<h1 className={typStyles.mdHeadline}>Welcome to the Pathology Report Filtering Tool by Ties</h1>
-				<h2 className={typStyles.mdSubhead}>This tool allows users to view and search the pathology
-				reports,
-				using them to <br/>select samples of interest and then create a filtered column based on the
-				samples<br/>
-				of interest.</h2>
-				<h2 className={typStyles.mdSubhead} onClick={this.props.onDismissWelcome}>Begin by searching using
-				key words of interest</h2>
-				</div>
-				</div> : null}
+					<i className='material-icons' onClick={this.props.onDismissWelcome}>close</i>
+					<div className={compStyles.welcomeTiesText}>
+						<h1 className={typStyles.mdHeadline}>Welcome to the Pathology Report Filtering Tool by Ties</h1>
+						<h2 className={typStyles.mdSubhead}>This tool allows users to view and search the pathology
+							reports,
+							using them to <br/>select samples of interest and then create a filtered column based on the
+							samples<br/>
+							of interest.</h2>
+						<h2 className={typStyles.mdSubhead} onClick={this.props.onDismissWelcome}>Begin by searching
+							using
+							key words of interest</h2>
+					</div>
+				</div> : docs ? null : <div className={compStyles.tiesLoading}>
+					<div className={compStyles.loadingTiesText}>
+						<div className={typStyles.mdSubhead}>Pathology Report Filtering Tool Loading...</div>
+					</div>
+				</div>}
 			</Card>
 		);
 	}
