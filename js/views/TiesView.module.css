@@ -5,6 +5,8 @@
  * Rules necessary for styling ties placeholder.
  */
 
+@value black3 from '../../css/variables.css';
+
 @value black12 from '../../css/variables.css';
 
 @value black38 from '../../css/variables.css';
@@ -25,26 +27,31 @@
 .tiesViewHeader {
 	align-items: center;
 	display: flex;
-	height: 76px; /* Matches height of Autosuggest */
+	height: 86px; /* Matches height of Autosuggest */
 	justify-content: space-between;
 	margin-left: 64px; /* 88px total left margin to line up with sample id */
 	padding: 0 24px;
 }
 
-/* Ties filter and filter subtitle container */
+/* Ties filter container */
 .tiesFilter {
-	flex: 1;
-	position: relative; /* For positioning of search term text - tiesFilterTerms */
+	width: 348px;
 }
 
-/* Ties filter input search terms */
+/* Ties search terms */
 .tiesFilterTerms {
-	composes: mdCaption from '../../css/typography.module.css';
+	composes: mdBody1 from '../../css/typography.module.css';
+	align-items: center;
+	background-color: black3;
 	color: black38;
-	display: block;
-	line-height: 16px;
-	position: absolute;
-	top: 56px;
+	display: flex;
+	height: 56px;
+	padding: 0 24px 0 88px;
+}
+
+.tiesFilterTerms span:nth-of-type(2) {
+	color: var(--color-accent);
+	padding: 0 4px;
 }
 
 /* Table pagination */
@@ -176,17 +183,9 @@
 	display: flex;
 	flex-direction: column;
 	position: absolute; /* Allows positioning of close icon */
-	top: 76px;
+	top: 0;
 	width: 100%;
 	z-index: 2; /* Positions welcome above ties table */
-}
-
-/* Ties welcome close */
-.tiesWelcome i {
-	cursor: pointer;
-	position: absolute;
-	right: 24px;
-	top: 24px;
 }
 
 /* Welcome text */
@@ -196,9 +195,8 @@
 	padding: 0 88px; /* Positions welcome text in line with Ties filter on LHS */
 }
 
-/* Welcome description */
-.welcomeTiesText h2:nth-of-type(2) {
-	color: inherit;
-	cursor: pointer;
-	text-decoration: underline;
+/* Welcome start button */
+.tiesWelcome button {
+	background-color: #ffffff;
+	margin: 8px 0;
 }

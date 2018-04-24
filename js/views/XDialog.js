@@ -45,14 +45,14 @@ class XDialog extends React.Component {
 						</div>
 						<div className={typStyles.mdBody1}>{patient}</div>
 					</div>
-					<div className={compStyles.reportFilter}>
-						<div>Report Results:</div>
+					<div className={compStyles.reportTerms}>
+						<div>Search Terms:</div>
 						<div>
-							{terms.map(({term, color}, i) => (
+							{terms.length ? terms.map(({term, color}, i) => (
 								<span key={i}>
 									"<span style={{backgroundColor: color}}>{term}</span>"
 									{i === terms.length - 1 ? '' : ', '}
-								</span>))}
+								</span>)) : <span>No terms</span>}
 						</div>
 						<div className={compStyles.reportAction}>
 							<Button data-keep={false} onClick={this.onKeepRow}>DISCARD</Button>

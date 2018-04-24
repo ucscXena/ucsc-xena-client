@@ -7,7 +7,9 @@
  */
 
 @value black6 from '../../css/variables.css';
+
 @value black54 from '../../css/variables.css';
+
 @value black87 from '../../css/variables.css';
 
 .reportHeader {
@@ -26,8 +28,8 @@
 	cursor: pointer;
 }
 
-/* Report filter results */
-.reportFilter {
+/* Report filter terms */
+.reportTerms {
 	composes: mdBody1 from '../../css/typography.module.css';
 	border-bottom: 1px solid black6;
 	border-top: 1px solid black6;
@@ -37,10 +39,15 @@
 	position: relative; /* Allows for positioning the action buttons */
 }
 
-/* Report results header */
-.reportFilter div:first-of-type {
+/* Report terms header */
+.reportTerms div:first-of-type {
 	color: black54;
 	margin-bottom: 8px;
+}
+
+/* Report terms results */
+.reportTerms div:nth-of-type(2) {
+	width: calc(100% - 137px); /* Search terms will wrap before the action button container (positioned absolute) */
 }
 
 /* Action buttons container */

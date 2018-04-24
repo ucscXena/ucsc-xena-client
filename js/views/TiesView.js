@@ -5,10 +5,13 @@ import {Card} from 'react-toolbox/lib/card';
 import PureComponent from '../PureComponent';
 import ConceptSuggest from './ConceptSuggest';
 import Dropdown from 'react-toolbox/lib/dropdown';
-import {IconButton} from 'react-toolbox/lib/button';
+import {Button, IconButton} from 'react-toolbox/lib/button';
+
 var intvlTree = require('static-interval-tree');
-var {memoize1, uniq, partitionN, isString, Let, last, initial, mapObject,
-	sortBy, flatmap, times, pick, pluck} = require('../underscore_ext');
+var {
+	memoize1, uniq, partitionN, isString, Let, last, initial, mapObject,
+	sortBy, flatmap, times, pick, pluck
+} = require('../underscore_ext');
 
 var XDialog = require('./XDialog');
 
@@ -17,7 +20,7 @@ var typStyles = require('../../css/typography.module.css');
 var classNames = require('classnames');
 
 var setKey = arr => arr.map((el, i) => isString(el) ? el :
-		React.cloneElement(el, {key: i}));
+	React.cloneElement(el, {key: i}));
 
 const pageSizes = [
 	{value: 10, label: '10'},
@@ -30,7 +33,6 @@ var filterIcon = (hasDoc, filter) =>
 		filter == null ? '\u00A0' :
 			filter ? <i className={compStyles.filterStatusKeep}>check</i> :
 				<i>close</i>;
-
 
 
 var Pagenation = ({onPage, onPageSize, onForward, onBack, page, pageCount}) => (
@@ -69,7 +71,8 @@ function computeRegions(matches, text) {
 
 	return initial(partitionN(coords, 2, 1)).map(([start, end]) => ({
 		start, end,
-		ctx: uniq(pluck(intvlTree.matches01(idx, {start, end}), 'index'))}));
+		ctx: uniq(pluck(intvlTree.matches01(idx, {start, end}), 'index'))
+	}));
 }
 
 var stringMatches = (terms, text) =>
@@ -79,7 +82,7 @@ var stringMatches = (terms, text) =>
 				i === -1 ? [] : [{start: i, end: i + lcterm.length, index}])));
 
 function highlightRegions(doc, terms) {
-	if ( !doc ) {
+	if (!doc) {
 		return [{start: 0, end: 0, ctx: []}];
 	}
 	var conceptHighlights = flatmap(terms, (term, index) =>
@@ -113,7 +116,7 @@ var highlights = [
 var getHighlight = i => highlights[i % highlights.length];
 
 var newlines = s =>
-	Let ((segments = s.split(/\n/)) =>
+	Let((segments = s.split(/\n/)) =>
 		[...flatmap(initial(segments), s => [s, <br/>]), last(segments)]);
 
 
@@ -190,7 +193,7 @@ class Ties extends PureComponent {
 	// method.
 	byTerm = Let(
 		(fn = memoize1(matches =>
-					   mapObject(matches, ({matches}) => new Set(matches)))) =>
+			mapObject(matches, ({matches}) => new Set(matches)))) =>
 			() => fn(this.props.state.ties.matches || {}));
 
 	getRegions = Let(
@@ -205,7 +208,7 @@ class Ties extends PureComponent {
 			} = state.ties,
 			byTerm = this.byTerm(),
 			docTerms = doc ? terms.map((term, i) => ({term, color: getHighlight(i)}))
-				.filter(({term}) => byTerm[term] && byTerm[term].has(doc.patient)) :
+					.filter(({term}) => byTerm[term] && byTerm[term].has(doc.patient)) :
 				[],
 			regions = this.getRegions(),
 			dialogProps = {
@@ -220,14 +223,13 @@ class Ties extends PureComponent {
 		return (
 			<Card className={compStyles.tiesView}>
 				<div className={compStyles.tiesViewHeader}>
-					{!docs || showWelcome ? null : <div className={compStyles.tiesFilter}>
+					<div className={compStyles.tiesFilter}>
 						<ConceptSuggest onAddTerm={onAddTerm} concepts={concepts}/>
-						<span className={compStyles.tiesFilterTerms}>
-							Search Terms: {terms.map(t => matches[t] ? t : `${t} (loading)`).join(', ')}
-							</span>
-					</div>}
-					{!docs || showWelcome ? null :
-						<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>}
+					</div>
+					<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
+				</div>
+				<div className={compStyles.tiesFilterTerms}>
+					<span>Search Terms:</span><span>{terms.map(t => matches[t] ? t : `${t} (loading)`).join(', ')}</span>
 				</div>
 				<div className={compStyles.tiesTable}>
 					<div className={compStyles.tiesTableRowHeader}>
@@ -256,7 +258,6 @@ class Ties extends PureComponent {
 					<DocText doc={doc} regions={regions}/>
 				</XDialog>
 				{showWelcome ? <div className={compStyles.tiesWelcome}>
-					<i className='material-icons' onClick={this.props.onDismissWelcome}>close</i>
 					<div className={compStyles.welcomeTiesText}>
 						<h1 className={typStyles.mdHeadline}>Welcome to the Pathology Report Filtering Tool by Ties</h1>
 						<h2 className={typStyles.mdSubhead}>This tool allows users to view and search the pathology
@@ -264,9 +265,10 @@ class Ties extends PureComponent {
 							using them to <br/>select samples of interest and then create a filtered column based on the
 							samples<br/>
 							of interest.</h2>
-						<h2 className={typStyles.mdSubhead} onClick={this.props.onDismissWelcome}>Begin by searching
+						<h2 className={typStyles.mdSubhead}>Begin by searching
 							using
-							key words of interest</h2>
+							key words of interest.</h2>
+						<Button accent onClick={this.props.onDismissWelcome} className={compStyles.tiesCreateButton}>Start</Button>
 					</div>
 				</div> : docs ? null : <div className={compStyles.tiesLoading}>
 					<div className={compStyles.loadingTiesText}>
