@@ -79,6 +79,9 @@ var stringMatches = (terms, text) =>
 				i === -1 ? [] : [{start: i, end: i + lcterm.length, index}])));
 
 function highlightRegions(doc, terms) {
+	if ( !doc ) {
+		return [{start: 0, end: 0, ctx: []}];
+	}
 	var conceptHighlights = flatmap(terms, (term, index) =>
 			(doc.highlights[term] || []).map(hl => ({...hl, index}))),
 		highlights = conceptHighlights.concat(stringMatches(terms, doc.text));
