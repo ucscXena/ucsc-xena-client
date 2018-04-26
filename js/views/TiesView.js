@@ -115,8 +115,12 @@ var highlights = [
 
 var getHighlight = i => highlights[i % highlights.length];
 
+// drop trailing whitespace, and consecutive newlines beyond two.
+var reduceWhiteSpace = s =>
+	s.replace(/ +\n/g, '\n').replace(/\n\n(\n)+/g, '\n\n');
+
 var newlines = s =>
-	Let((segments = s.split(/\n/)) =>
+	Let((segments = reduceWhiteSpace(s).split(/\n/)) =>
 		[...flatmap(initial(segments), s => [s, <br/>]), last(segments)]);
 
 
