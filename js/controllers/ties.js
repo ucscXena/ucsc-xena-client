@@ -95,6 +95,33 @@ var advancePage = state => {
 		_.updateIn(state, ['page', 'i'], i => i + 1);
 };
 
+var cmpPatientDoc = (p0, p1) =>
+	!!p0.doc === !!p1.doc ? 0 :
+	p0.doc ? -1 :
+	1;
+
+var cmpPatient = (docs, terms, byTerm) => (i0, i1) =>
+	_.findValue(terms, term =>
+		_.Let((matches = byTerm[term]) =>
+			!matches || matches.has(docs[i0].patient) === matches.has(docs[i1].patient) ?
+				cmpPatientDoc(docs[i0], docs[i1]) :
+			matches.has(docs[i0].patient) ? -1 :
+			1));
+
+// This will affect showDoc, filter. What should showDoc do?
+// Should we shift the table, or change the showDoc?
+function sortByMatches(state) {
+	var {terms, docs, matches, showDoc, filter} = state,
+		byTerm = _.mapObject(matches, ({matches}) => new Set(matches)),
+		order = _.range(docs.length).sort(cmpPatient(docs, terms, byTerm)),
+		inv = _.invertMap(order);
+
+	return _.assoc(state,
+			'docs', order.map(i => docs[i]),
+			'showDoc', inv[showDoc],
+			'filter', _.mapKeys(filter, i => inv[i]));
+}
+
 var setKeep = (state, index, keep) => _.assocIn(state, ['filter', index], keep);
 
 var reset = state => _.assoc(state, 'open', false, 'docs', undefined);
@@ -121,7 +148,7 @@ var tiesControls = {
 	'ties-concepts': (state, concepts) => _.assoc(state, 'concepts', concepts),
 	'ties-doc': (state, doc, patient) => _.assoc(state, 'doc', {...doc, patient}),
 	'ties-matches': (state, matches, term) =>
-		_.assocIn(state, ['matches', term], {matches}),
+		sortByMatches(_.assocIn(state, ['matches', term], {matches})),
 	'ties-matches-error': (state, err, term) =>
 		_.updateIn(state, ['terms'], terms => _.without(terms, term)),
 	cohort: reset,

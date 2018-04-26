@@ -56,6 +56,14 @@ function partitionN(arr, n, step, pad) {
 	return ret;
 }
 
+function mapKeys(obj, fn) {
+	var ret = {};
+	for (var k in obj) {
+		ret[fn(k)] = obj[k];
+	}
+	return ret;
+}
+
 function objectFn(keys, fn) {
 	return _.reduce(keys, function (acc, k) {
 		acc[k] = fn(k);
@@ -365,6 +373,14 @@ function listSetsEqual(l1, l2) {
 	return _.every(l2, v => s1.has(v));
 }
 
+function invertMap(arr) {
+	var ret = new Array(arr.length);
+	for (var i = 0; i < arr.length; ++i) {
+		ret[arr[i]] = i;
+	}
+	return ret;
+}
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -437,7 +453,9 @@ _.mixin({
 	fmapMemoize1,
 	groupByConsec,
 	insert,
+	invertMap,
 	listSetsEqual,
+	mapKeys,
 	maxWith,
 	maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
 	meannull,
