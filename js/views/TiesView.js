@@ -10,7 +10,7 @@ import {Button, IconButton} from 'react-toolbox/lib/button';
 var intvlTree = require('static-interval-tree');
 var {
 	memoize1, uniq, partitionN, isString, Let, last, initial, mapObject,
-	sortBy, flatmap, times, pick, pluck
+	sortBy, flatmap, times, pick, pluck, get
 } = require('../underscore_ext');
 
 var XDialog = require('./XDialog');
@@ -34,8 +34,9 @@ var filterIcon = (hasDoc, filter) =>
 			filter ? <i className={compStyles.filterStatusKeep}>check</i> :
 				<i>close</i>;
 
+var min = (x, y) => x < y ? x : y;
 
-var Pagenation = ({onPage, onPageSize, onForward, onBack, page, pageCount}) => (
+var Pagenation = ({onPage, onPageSize, onForward, onBack, page, pageCount, count}) => (
 	<div className={compStyles.pagination}>
 		<span>Goto page:
 			<Dropdown className={compStyles.pageDropdown}
@@ -57,7 +58,7 @@ var Pagenation = ({onPage, onPageSize, onForward, onBack, page, pageCount}) => (
 					onClick={onBack}/>
 		<IconButton className={compStyles.paginationIcon} icon='chevron_right'
 					disabled={page.i > pageCount - 2} onClick={onForward}/>
-		<span>{page.i * page.n} - {(page.i + 1) * page.n - 1} of {page.n * pageCount - 1}</span>
+		<span>{page.i * page.n + 1} - {min(count, (page.i + 1) * page.n)} of {count}</span>
 	</div>);
 
 // Highlights may overlap. To compute contiguous color regions, put highlights
@@ -230,7 +231,7 @@ class Ties extends PureComponent {
 					<div className={compStyles.tiesFilter}>
 						<ConceptSuggest onAddTerm={onAddTerm} concepts={concepts}/>
 					</div>
-					<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
+					<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount} count={get(docs, 'length', 0)}/>
 				</div>
 				<div className={compStyles.tiesFilterTerms}>
 					<span>Search Terms:</span><span>{terms.map(t => matches[t] ? t : `${t} (loading)`).join(', ')}</span>
@@ -257,7 +258,7 @@ class Ties extends PureComponent {
 							</div>
 					)) : null}
 				</div>
-				<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount}/>
+				<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount} count={get(docs, 'length', 0)}/>
 				<XDialog {...dialogProps}>
 					<DocText doc={doc} regions={regions}/>
 				</XDialog>
