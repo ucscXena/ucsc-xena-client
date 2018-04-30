@@ -37,7 +37,11 @@ class XDialog extends React.Component {
 
 		return (
 			<div>
-				<Dialog active={dialogActive} onEscKeyDown={this.closeReport}>
+				<Dialog active={dialogActive} onEscKeyDown={this.closeReport}
+						theme={{
+							body: compStyles.dialogBody,
+							dialog: compStyles.dialog
+						}}>
 					<div className={compStyles.reportHeader}>
 						<div className={compStyles.reportTitle}>
 							<span className={typStyles.mdHeadline}>Pathology Report</span>

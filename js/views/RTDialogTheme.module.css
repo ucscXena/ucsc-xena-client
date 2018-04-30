@@ -8,30 +8,8 @@
  * http://react-toolbox.com/#/components/dialog for details.
  */
 
-/* Wrapper to set boundaries for dialog */
-.wrapper {
-	bottom: 115px; /* Dialog wrapper positioned above Footer */
-	align-items: flex-start; /* Positions dialog at top of wrapper */
-	height: auto;
-	top: 128px; /* Dialog wrapper positioned below AppBar */
-}
-
 /* Dialog overlay colour */
 .overlay {
 	background-color: #ffffff;
 }
 
-/* Dialog */
-.dialog {
-	height: calc(100% - 48px);
-	margin: 24px 0;
-	max-height: 735px;
-	min-height: 656px;
-	width: 704px;
-}
-
-/* Dialog body */
-.body {
-	display: flex; /* For sticky report header */
-	flex-direction: column; /* For sticky report header */
-}
