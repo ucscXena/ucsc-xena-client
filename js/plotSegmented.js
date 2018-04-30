@@ -71,7 +71,7 @@ function renderFloatLegendNew(props) {
 	if (color[0] === 'no-data') {
 		return null;
 	}
-	var unitText = (units || [])[0],
+	var unitText = (units || [''])[0] || '',
 		footnotes = [<span title={unitText}>{addWordBreaks(unitText)}</span>];
 
 	var [origin, , max] = color.slice(4),
