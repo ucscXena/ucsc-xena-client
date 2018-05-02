@@ -4,7 +4,7 @@ import kmStyle from "./km.module.css";
 var _ = require('./underscore_ext');
 import PureComponent from './PureComponent';
 var React = require('react');
-import {Button} from 'react-toolbox/lib/button';
+import {Button, IconButton} from 'react-toolbox/lib/button';
 import Dropdown from 'react-toolbox/lib/dropdown';
 import Dialog from 'react-toolbox/lib/dialog';
 
@@ -150,8 +150,7 @@ class WarningTrigger extends React.Component {
 			<div className={kmStyle.warningContainer}>
 				<Button
 					onClick={() => this.setState({show: true})}
-					className={kmStyle.showPWarningButton}
-				>
+					className={kmStyle.showPWarningButton}>
 					<i className={`material-icons ${kmStyle.pWarningIcon}`}>warning</i>
 				</Button>
 				{this.state.show ? <WarningDialog onHide={this.close} header={header} body={body}/> : null}
@@ -259,25 +258,36 @@ class Legend extends PureComponent {
 	}
 }
 
-function makeSurvivalTypeUI (survType, survivalTypes, onSurvType) {
+var survURL = {
+	"TCGA PanCanAtlas": encodeURI(
+		"https://www.cell.com/action/showFullTableImage?isHtml=true&tableId=tbl3&pii=S0092867418302290&code=cell-site")
+};
+
+function makeSurvivalTypeUI (cohort, survInfoURL, survType, survivalTypes, onSurvType) {
 	return (
-		<Dropdown className={kmStyle.survType}
-			source = {survivalTypes.map(t => ({
-						value: t,
-						label: survivalOptions[t].label
-					}))}
-			value = {survType || survivalTypes[0]}
-			onChange={onSurvType}
-		/>
+		<div className={kmStyle.survTypeContainer}>
+			<Dropdown className={kmStyle.survType}
+				source = {survivalTypes.map(t => ({
+							value: t,
+							label: survivalOptions[t].label
+						}))}
+				value = {survType || survivalTypes[0]}
+				onChange={onSurvType}
+			/>
+			{survInfoURL ?
+				<IconButton onClick={() => (window.location.href = survInfoURL)}>
+					<i className={`material-icons ${kmStyle.infoIcon}`}>info</i>
+				</IconButton> : null}
+		</div>
 	);
 }
 
-function makeGraph(groups, setActiveLabel, activeLabel, size, survType, survivalTypes, onSurvType, min, max, onCutoff, cutoff) {
+function makeGraph(groups, setActiveLabel, activeLabel, size, cohort, survInfoURL,
+	survType, survivalTypes, onSurvType, min, max, onCutoff, cutoff) {
 	return (
-		<div className={kmStyle.graph} style={{width: 0.9 * size.width}}>
+		<div className={kmStyle.graph}>
 			{svg(groups, setActiveLabel, activeLabel, {height: 0.8 * size.height, width: 0.9 * size.width})}
-			<div className={kmStyle.screen}/>
-			{makeSurvivalTypeUI(survType, survivalTypes, onSurvType)}
+			{makeSurvivalTypeUI(cohort, survInfoURL, survType, survivalTypes, onSurvType)}
 			<div>
 				<NumberForm
 					onChange={onCutoff}
@@ -390,7 +400,7 @@ class KmPlot extends PureComponent {
 	}
 
 	render() {
-		let {km: {splits = 2, title, label, groups, cutoff, survivalType}, survivalKeys, dims} = this.props,
+		let {km: {splits = 2, title, label, groups, cutoff, survivalType}, survivalKeys, cohort, dims} = this.props,
 			// groups may be undefined if data hasn't loaded yet.
 			maySplit = _.get(groups, 'maySplit', false),
 			min = _.getIn(groups, ['domain', 0]),
@@ -399,7 +409,8 @@ class KmPlot extends PureComponent {
 			clarification = _.get(groups, 'clarification'),
 			{activeLabel} = this.state,
 			sectionDims = calcDims(dims, plotSize.ratios),
-			survivalTypes = _.intersection(survivalKeys, _.keys(survivalOptions));
+			survivalTypes = _.intersection(survivalKeys, _.keys(survivalOptions)),
+			survInfoURL = _.getIn(survURL, [cohort], null);
 
 		let Content = _.isEmpty(groups)
 			? <div
@@ -422,7 +433,7 @@ class KmPlot extends PureComponent {
 							<i className={`material-icons ${kmStyle.buttonIcon}`}>help</i>
 							<span className={kmStyle.buttonText}>Help</span>
 						</Button>
-						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph,
+						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph, cohort, survInfoURL,
 							survivalType, survivalTypes, this.onSurvType, min, max, this.onCutoff, cutoff)}
 						{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions,
 							maySplit, splits, this.onSplits, label, clarification, warning)}

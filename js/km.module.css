@@ -66,30 +66,13 @@ line.outlineHover {
 }
 
 .graph {
-    margin-top: 20px;
     float: left;
-    width: 500px;
 }
 
 .definitions {
     float: right;
     font-size: small;
     margin-top: -10px;
-}
-
-.screen {
-    position: absolute;
-    background-color: #ffffff;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 5;
-    display: none;
-}
-
-.screen.notify {
-    display: block;
 }
 
 button.mainDialogClose {
@@ -229,6 +212,19 @@ i.buttonIcon {
     position: absolute;
     left: 140px;
     top: -10px;
+}
+
+.survTypeContainer {
+    display: flex;
+    align-items: center;
+}
+
+.survType {
+    width: 90%;
+}
+
+.infoIcon {
+    color: #757575;
 }
 
 .survType input {

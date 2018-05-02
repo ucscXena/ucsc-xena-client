@@ -92,7 +92,8 @@ class Application extends Component {
 					{_.getIn(state, ['km', 'id']) ? <KmPlot
 							callback={callback}
 							survivalKeys={_.keys(state.survival)}
-							km={state.km} /> : null}
+							km={state.km}
+							cohort={state.cohort.name} /> : null}
 					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
 				</div>
 			</div>
