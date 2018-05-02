@@ -234,7 +234,7 @@ class Ties extends PureComponent {
 					<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount} count={get(docs, 'length', 0)}/>
 				</div>
 				<div className={compStyles.tiesFilterTerms}>
-					<span>Search Terms:</span><span>{terms.map(t => matches[t] ? t : `${t} (loading)`).join(', ')}</span>
+					<span>Search Terms:</span><span>{terms.map((t, i) => matches[t] ? <span>{t}{i === terms.length - 1 ? '' : ', '}</span> : <div>{t} <i className='material-icons'>loop</i></div>)}</span>
 				</div>
 				<div className={compStyles.tiesTable}>
 					<div className={compStyles.tiesTableRowHeader}>

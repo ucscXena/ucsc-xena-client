@@ -49,9 +49,38 @@
 	padding: 0 24px 0 88px;
 }
 
-.tiesFilterTerms span:nth-of-type(2) {
+/* Search term result - listed result */
+.tiesFilterTerms > span:nth-of-type(2) {
+	//align-items: center;
 	color: var(--color-accent);
+	//display: flex;
 	padding: 0 4px;
+}
+
+/* Search term result - loading result */
+.tiesFilterTerms > span:nth-of-type(2) div {
+	align-items: center;
+	display: inline-flex;
+}
+
+/* Search term result - loading icon */
+.tiesFilterTerms > span:nth-of-type(2) div i {
+	animation-duration: 2s;
+	animation-name: spin;
+	animation-iteration-count: infinite;
+	animation-timing-function: linear;
+	font-size: 18px;
+	padding: 8px;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0);
+	}
+
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 /* Table pagination */
