@@ -15,9 +15,9 @@ var {
 
 var XDialog = require('./XDialog');
 
+var classNames = require('classnames');
 var compStyles = require('./TiesView.module.css');
 var typStyles = require('../../css/typography.module.css');
-var classNames = require('classnames');
 
 var setKey = arr => arr.map((el, i) => isString(el) ? el :
 	React.cloneElement(el, {key: i}));
@@ -209,7 +209,7 @@ class Ties extends PureComponent {
 		var {onAddTerm, state} = this.props,
 			{
 				terms = [], docs, matches = {}, showWelcome = true,
-				filter, showDoc, doc, page, concepts = []
+				filter, showDoc, doc, page, concepts = [], conceptsError = true
 			} = state.ties,
 			byTerm = this.byTerm(),
 			docTerms = doc ? terms.map((term, i) => ({term, color: getHighlight(i)}))
@@ -230,11 +230,12 @@ class Ties extends PureComponent {
 				<div className={compStyles.tiesViewHeader}>
 					<div className={compStyles.tiesFilter}>
 						<ConceptSuggest onAddTerm={onAddTerm} concepts={concepts}/>
+						{conceptsError ? <div className={compStyles.conceptsError}>Search API Error. Please Retry.</div> : null }
 					</div>
 					<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount} count={get(docs, 'length', 0)}/>
 				</div>
 				<div className={compStyles.tiesFilterTerms}>
-					<span>Search Terms:</span><span>{terms.map((t, i) => matches[t] ? <span>{t}{i === terms.length - 1 ? '' : ', '}</span> : <div>{t} <i className='material-icons'>loop</i></div>)}</span>
+					<span>Search Terms:</span><span>{terms.map((t, i) => matches[t] ? <span key={i}>{t}{i === terms.length - 1 ? '' : ', '}</span> : <div key={i}>{t} <i className='material-icons'>loop</i></div>)}</span>
 				</div>
 				<div className={compStyles.tiesTable}>
 					<div className={compStyles.tiesTableRowHeader}>

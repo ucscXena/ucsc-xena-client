@@ -35,7 +35,15 @@
 
 /* Ties filter container */
 .tiesFilter {
+	position: relative; /* For positioning of filter concepts error text */
 	width: 348px;
+}
+
+.conceptsError {
+	composes: mdCaption from '../../css/typography.module.css';
+	bottom: 8px;
+	color: var(--color-primary-contrast);
+	position: absolute;
 }
 
 /* Ties search terms */
@@ -51,9 +59,7 @@
 
 /* Search term result - listed result */
 .tiesFilterTerms > span:nth-of-type(2) {
-	//align-items: center;
 	color: var(--color-accent);
-	//display: flex;
 	padding: 0 4px;
 }
 
@@ -66,8 +72,8 @@
 /* Search term result - loading icon */
 .tiesFilterTerms > span:nth-of-type(2) div i {
 	animation-duration: 2s;
-	animation-name: spin;
 	animation-iteration-count: infinite;
+	animation-name: spin;
 	animation-timing-function: linear;
 	font-size: 18px;
 	padding: 8px;
