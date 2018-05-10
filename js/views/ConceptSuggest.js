@@ -53,6 +53,9 @@ class ConceptSuggest extends PureComponent {
 			this.props.onAddTerm(value);
 			this.setState({value: ''});
 		}
+		if (this.props.onKeyDown) {
+			this.props.onKeyDown(ev);
+		}
 	}
 
 	getSuggestionValue = suggestion =>  suggestion;

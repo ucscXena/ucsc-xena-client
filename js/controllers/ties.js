@@ -150,7 +150,9 @@ var tiesControls = {
 	'ties-matches': (state, matches, term) =>
 		sortByMatches(_.assocIn(state, ['matches', term], {matches})),
 	'ties-matches-error': (state, err, term) =>
-		_.updateIn(state, ['terms'], terms => _.without(terms, term)),
+		_.assoc(_.updateIn(state, ['terms'], terms => _.without(terms, term)),
+		        'conceptsError', true),
+	'ties-matches-reset-error': state => _.assoc(state, 'conceptsError', false),
 	cohort: reset,
 	cohortReset: reset,
 	manifest: reset

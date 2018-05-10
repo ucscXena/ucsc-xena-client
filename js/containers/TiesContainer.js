@@ -4,7 +4,7 @@ var React = require('react');
 import PureComponent from '../PureComponent';
 import Ties from '../views/TiesView';
 
-var {pick} = require('../underscore_ext');
+var {pick, getIn} = require('../underscore_ext');
 
 class TiesContainer extends PureComponent {
 	static displayName = 'TiesContainer';
@@ -37,9 +37,15 @@ class TiesContainer extends PureComponent {
 		this.props.callback(['ties-dismiss-welcome']);
 	}
 
+	onKeyDown = () => {
+		if (getIn(this.props.appState, ['ties', 'conceptsError'])) {
+			this.props.callback(['ties-matches-reset-error']);
+		}
+	}
+
 	render() {
 		var handlers = pick(this, ['onAddTerm', 'onKeepRow', 'onShowDoc',
-			'onHideDoc', 'onPage', 'onDismiss', 'onDismissWelcome']);
+			'onHideDoc', 'onPage', 'onDismiss', 'onDismissWelcome', 'onKeyDown']);
 		return (
 			<Ties
 				state={this.props.appState}

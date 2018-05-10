@@ -206,10 +206,10 @@ class Ties extends PureComponent {
 			() => Let(({terms = [], doc} = this.props.state.ties) => fn(doc, terms)));
 
 	render() {
-		var {onAddTerm, state} = this.props,
+		var {onAddTerm, onKeyDown, state} = this.props,
 			{
 				terms = [], docs, matches = {}, showWelcome = true,
-				filter, showDoc, doc, page, concepts = [], conceptsError = true
+				filter, showDoc, doc, page, concepts = [], conceptsError
 			} = state.ties,
 			byTerm = this.byTerm(),
 			docTerms = doc ? terms.map((term, i) => ({term, color: getHighlight(i)}))
@@ -229,7 +229,7 @@ class Ties extends PureComponent {
 			<Card className={compStyles.tiesView}>
 				<div className={compStyles.tiesViewHeader}>
 					<div className={compStyles.tiesFilter}>
-						<ConceptSuggest onAddTerm={onAddTerm} concepts={concepts}/>
+						<ConceptSuggest onKeyDown={onKeyDown} onAddTerm={onAddTerm} concepts={concepts}/>
 						{conceptsError ? <div className={compStyles.conceptsError}>Search API Error. Please Retry.</div> : null }
 					</div>
 					<Pagenation {...pagenationHandlers} page={page} pageCount={pageCount} count={get(docs, 'length', 0)}/>
