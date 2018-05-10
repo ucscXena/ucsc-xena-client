@@ -25,9 +25,9 @@ function array() {
 	return _.toArray(arguments);
 }
 
-// Concat array with following arrays
-function concat(arr, ...arrs) {
-	return arr.concat(...arrs);
+// Concat arrays
+function concat(...arrs) {
+	return [].concat(...arrs);
 }
 
 function pluckPaths(paths, obj) {
@@ -340,6 +340,31 @@ function union(...args) {
 	return unique(flattened);
 }
 
+// make unique by appending numbered suffix
+function uniquify(strs) {
+	var counts = {};
+	return strs.map(s => {
+		var c = counts[s] = _.has(counts, s) ? counts[s] + 1 : 0;
+		return c > 0 ? `${s} (${c})` : s;
+	});
+}
+
+var insert = (arr, i, vals) => [...arr.slice(0, i), ...vals, ...arr.slice(i)];
+// immutable splice
+var splice = (arr, i, c, ...vals) => {
+	var ret = arr.slice(0);
+	ret.splice(i, c, ...vals);
+	return ret;
+};
+
+function listSetsEqual(l1, l2) {
+	if (l1.length !== l2.length) {
+		return false;
+	}
+	var s1 = new Set(l1);
+	return _.every(l2, v => s1.has(v));
+}
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -377,6 +402,11 @@ function imap(arr, fn) {
 		})
 	};
 }
+
+function valToStr(v) {
+	return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
+}
+
 //
 //function* irange(n) {
 //	for (let i = 0; i < n; ++i) {
@@ -406,11 +436,13 @@ _.mixin({
 	fmap,
 	fmapMemoize1,
 	groupByConsec,
+	insert,
+	listSetsEqual,
 	maxWith,
 	maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
 	meannull,
 	medianNull,
-	memoize1: memoize1,
+	memoize1,
 	merge: (...args) => _.extend.apply(null, [{}].concat(args)),
 	minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
 	mmap,
@@ -421,12 +453,18 @@ _.mixin({
 	pluckPathsArray,
 	reverse,
 	scan,
-	spy: spy,
+	splice,
+	spy,
 	sum: arr => _.reduce(arr, (x, y) => x + y, 0),
 	union,
 	uniq: unique,
 	unique,
-	withoutIndex
+	uniquify,
+	withoutIndex,
+	valToStr,
+	// This inscrutable method allows one to write a 'let' expression via
+	// es6 default arguments, e.g. _.Let((x = 5, y = x + 2) => x + y) === 12
+	Let: f => f()
 });
 
 module.exports = _;

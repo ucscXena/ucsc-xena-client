@@ -1,0 +1,97 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Styles for tooltip that is displayed on column hover (or alt-click on column to freeze tooltip).
+ */
+
+@value black6 from '../../css/variables.css';
+@value black12 from '../../css/variables.css';
+@value black38 from '../../css/variables.css';
+
+.Tooltip {
+	background-color: #ffffff;
+	border-radius: 2px;
+	box-shadow: 0 19px 60px rgba(0, 0, 0, .3), 0 15px 20px rgba(0, 0, 0, .22); /* Based on <Dialog>. */
+	display: none; /* Hidden by default */
+	min-width: 272px;
+	overflow: hidden;
+	position: fixed;
+	right: 24px;
+	text-align: left;
+	top: 24px;
+	white-space: nowrap;
+	z-index: 999;
+}
+
+.Tooltip.open {
+	display: block; /* Show on hover of column */
+}
+
+.overlay {
+	background-color: black12;
+	bottom: 0;
+	left: 0;
+	position: fixed;
+	right: 0;
+	top: 0;
+	z-index: 998;
+}
+
+/* Sample display text */
+.title {
+	align-items: center;
+	composes: mdTitle from '../../css/typography.module.css';
+	display: flex;
+	justify-content: space-between;
+}
+
+/* Close icon */
+.title i {
+	cursor: pointer;
+	line-height: 0; /* Prevent icon from jiggling title on show/hide when freezing/unfreezing */
+}
+
+/* Rows */
+.content {
+	composes: mdBody1 from '../../css/typography.module.css';
+	list-style: none;
+	margin: 8px;
+}
+
+.content li {
+	padding: 8px 0;
+}
+
+.content li:not(:first-child) {
+	border-top: 1px solid black6;
+}
+
+.content a {
+	color: var(--color-accent);
+	transition: color 0.35s;
+}
+
+.content a:hover {
+	color: var(--color-primary-contrast);
+	text-decoration: none;
+}
+
+/* Zoom hint text and help link */
+.actions {
+	align-items: center;
+	border-top: 1px solid black6;
+	display: flex;
+	justify-content: space-between;
+	padding: 8px;
+	margin-top: 24px;
+}
+
+.zoomHint {
+	composes: mdCaption from '../../css/typography.module.css';
+}
+
+.actions a {
+	color: black38;
+	line-height: 0;
+}

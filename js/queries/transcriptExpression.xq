@@ -1,7 +1,6 @@
 ; transcriptExpression
-(fn [transcripts studyA subtypeA studyB subtypeB unit]
-  (let [dataset ({"tpm" "TcgaTargetGtex_rsem_isoform_tpm" "isoformPercentage" "TcgaTargetGtex_rsem_isopct"} unit)
-		tcgaTypes
+(fn [transcripts studyA subtypeA studyB subtypeB dataset]
+  (let [tcgaTypes
         (map :value (query {:select [:value]
                             :from [:code]
                             :join [:field [:= :field_id :field.id]

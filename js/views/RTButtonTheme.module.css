@@ -1,0 +1,30 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying global overrides to all Button components.
+ *
+ * Uses theme key RTButton and theme end points to override specific classes. See
+ * http://react-toolbox.com/#/components/button for details.
+ */
+
+/* Button accent */
+.accent {
+	color: var(--color-accent);
+}
+
+.button {
+	composes: mdBody2 from '../../css/typography.module.css';
+	background-color: #f7f7f7;
+	letter-spacing: 0.5px;
+}
+
+/* Icon button for AppControl - maintains vertical positioning of bookmark icon in Xena app bar and menu in col card */
+.toggle {
+	line-height: 0;
+}
+
+/* Icon button for AppControl - for bookmark icon in Xena app bar, filter in samples search and menu in col card */
+.toggle > .icon {
+	font-size: 24px;
+}

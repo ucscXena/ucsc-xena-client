@@ -1,0 +1,59 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling Column Add component.
+ */
+
+@value black12 from '../../css/variables.css';
+@value black38 from '../../css/variables.css';
+
+.ColumnAdd {
+	cursor: pointer;
+	/* 15px padding + 1px width for line = 16px (this prevents jiggle when add column functionality is turned off and
+	   on as wizard and col cards have a margin of 16px when column function is turned off) */
+	padding: 0 8px 0 7px;
+	position: relative;
+	transition: opacity 200ms 150ms ease-in-out;  /* Match transition of margin of ColCard, this is for animating the add column hover functionality */
+}
+
+/* Final add column should always be visible */
+.ColumnAdd:not(.last) {
+	opacity: 0;
+}
+
+/* Show add column on hover */ 
+.ColumnAdd:not(.last):hover {
+	opacity: 1;
+}
+
+/* Add extra margin-left for final add column as there is no associated hover functionality on the preceding card */
+.ColumnAdd.last {
+	margin-left: 8px;
+}
+
+/* Vertical line */
+.ColumnAdd:before {
+	content: '';
+	background-color: black12;
+	display: block;
+	height: 100%;
+	width: 1px;
+}
+
+/* "Click to Add Column" text */
+.text {
+	composes: mdCaption from '../../css/typography.module.css';
+	background-color: #fafafa; /* Match body background color */
+	color: black38;
+	height: 2px;
+	margin-top: -1px;
+	line-height: 0;
+	left: 50%;
+	padding: 0 16px;
+	position: absolute;
+	text-align: center;
+	top: 50%;
+	transform: translateX(-50%) rotate(-90deg);
+	white-space: nowrap;
+}

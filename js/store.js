@@ -48,16 +48,18 @@ module.exports = function () {
 	var uiCh = uiBus;
 
 	var initialState = {
-		version: null, // prevent migrations in new tab
-		servers: defaultServerState,
-		mode: 'heatmap',
-		zoom: {height: 300},
-		cohort: [],
-		columns: {},
-		columnOrder: [],
-		samples: [],
-		datasets: [],
-		notifications: getNotifications()
+		version: 1,
+		spreadsheet: {
+			columnOrder: [],
+			columns: {},
+			mode: 'heatmap',
+			notifications: getNotifications(),
+			servers: defaultServerState,
+			showWelcome: true,
+			wizardMode: true,
+			zoom: {height: 460} // 460px forces visualizations to match min height of variable select card, required to maintain consistent heights across cohort/disease and variable select during wizard mode
+		},
+		wizard: {},
 	};
 
 	return {

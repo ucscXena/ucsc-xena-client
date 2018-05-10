@@ -1,9 +1,0 @@
-.Select .dropdown-menu {
-	max-height: 20em;
-	overflow-y: scroll;
-}
-
-/* Not sure why we're off by 1px for the Select input element */
-.Select-input {
-	margin-left: 1px;
-}

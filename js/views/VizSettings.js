@@ -34,82 +34,97 @@
 
 'use strict';
 var _ = require('../underscore_ext');
-//var floatImg = require('../../images/genomicFloatLegend.jpg');
-var customFloatImg = require('../../images/genomicCustomFloatLegend.jpg');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var {Modal, DropdownButton, MenuItem, Row, Col, Button, ButtonToolbar, ButtonGroup} = require('react-bootstrap/lib/');
-var Input = require('react-bootstrap/lib/Input');
-var image = require('react-bootstrap/lib/Image');
+var {Row, Col} = require("react-material-responsive-grid");
+import {Dialog} from 'react-toolbox/lib/dialog';
+import {Dropdown} from 'react-toolbox/lib/dropdown';
+import {Button} from 'react-toolbox/lib/button';
+import {Input} from 'react-toolbox/lib/input';
+import vizSettingStyle from "./VizSettings.module.css";
 
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
 	defaultColorClass, valueType, fieldType, data, units) {
 	var state = vizState;
-	function datasetSetting() {
-		var node, div = document.createElement("div");
-		if (valueType === "float" || valueType === 'segmented') {
-			node = document.createElement("div");
-			allFloat(node);
-			div.appendChild(node);
+	class DatasetSetting extends React.Component {
+		render() {
+			let settingsContent = valueType === "float" || valueType === 'segmented' ? <AllFloat /> :
+				valueType === "mutation" && fieldType === 'SV' ? <Sv /> :
+					<NoSettings />;
+			return (
+				<div>
+					{settingsContent}
+					<FinishButtonBar/>
+				</div>
+			);
 		}
-		else if (valueType === "mutation" && fieldType === 'SV') {
-			node = document.createElement("div");
-			sv(node);
-			div.appendChild(node);
-		} else {
-			div.appendChild(document.createTextNode("No setting adjustments available."));
-			div.appendChild(document.createElement("br"));
-			div.appendChild(document.createElement("br"));
+	}
+	class AllFloat extends React.Component {
+		render() {
+			return (
+				<div>
+					<div>
+						<ColorDropDown />
+					</div>
+					<br />
+					<div>
+						<ScaleChoice />
+					</div>
+					<br />
+				</div>
+			);
 		}
-		node = document.createElement("span");
-		ReactDOM.render(React.createElement(finishButtonBar), node);
-		div.appendChild(node);
-		return div;
 	}
-
-	function allFloat(div) {
-		var node;
-
-		// color palette : green red or blue red
-		node = document.createElement("div");
-		ReactDOM.render(React.createElement(colorDropDown), node);
-		div.appendChild(node);
-		div.appendChild(document.createElement("br"));
-
-		// color mode
-		node = document.createElement("div");
-		ReactDOM.render(React.createElement(scaleChoice), node);
-		div.appendChild(node);
-		div.appendChild(document.createElement("br"));
+	class Sv extends React.Component {
+		render() {
+			return (
+				<div>
+					<div>
+						<SvColorDropDown />
+					</div>
+					<br />
+				</div>
+			);
+		}
 	}
-
-	function sv(div) {
-		var node;
-		// color choice
-		node = document.createElement("div");
-		ReactDOM.render(React.createElement(svColorDropDown), node);
-		div.appendChild(node);
-		div.appendChild(document.createElement("br"));
+	class NoSettings extends React.Component {
+		render() {
+			return (
+				<div>
+					<div>No setting adjustments available.</div>
+					<br />
+					<br />
+				</div>
+			);
+		}
 	}
 
 	// discard user changes & close.
-	var finishButtonBar = React.createClass({
-		handleCancelClick () {
+	class FinishButtonBar extends React.Component {
+	    handleCancelClick = () => {
 			hide();
 			onVizSettings(id, state);
-		},
-		handleDoneClick () {
+		};
+
+	    handleDoneClick = () => {
 			hide();
-		},
-		render () {
+		};
+
+	    render() {
 			return (
-				<ButtonToolbar>
-					<Button onClick = {this.handleCancelClick}>Cancel</Button>
-					<Button bsStyle="primary" onClick = {this.handleDoneClick}>Done</Button>
-				</ButtonToolbar>
+				<div>
+					<Button onMouseUp={this.handleCancelClick}
+							className={vizSettingStyle.cancelButton}>
+						Cancel
+					</Button>
+					<Button onMouseUp={this.handleDoneClick}
+							className={vizSettingStyle.confirmButton}>
+						Done
+					</Button>
+				</div>
 			);
 		}
-	});
+	}
 
 	function getInputSettingsFloat(settings) {
 		return _.fmap(settings, parseFloat);
@@ -168,117 +183,126 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		return _.every(errors, function (s) { return !s; });
 	}
 
-	function valToStr(v) {
-//		return "" + v;
-//		if (v === "-") {
-//			return v;
-//		}
-		return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
-	}
+	var scaleAnnotations = {
+		float: {
+			"max": "max: high color 100% saturation",
+			"maxStart": "maxStart: high color 0% saturation",
+			"minStart": "minStart: low color 0% saturation",
+			"min": "min: low color 100% saturation"
+		},
+		segmented: {
+			"origin": "Origin: value for copy number normal (typically: 0 or 2)",
+			"thresh": "Threshold: absolute value from origin to start showing color",
+			"max": "Saturation: absolute value to draw full color"
+		}
+	};
+	var scaleDefaults = {
+		float: {
+			max: 1,
+			maxStart: null,
+			minStart: null,
+			min: -1
+		},
+		segmented: {
+			origin: 0,
+			thresh: 0,
+			max: 1
+		}
+	};
 
-	var scaleChoice = React.createClass({
-		annotations: {
-			float: {
-				"max": "max: high color 100% saturation",
-				"maxStart": "maxStart: high color 0% saturation",
-				"minStart": "minStart: low color 0% saturation",
-				"min": "min: low color 100% saturation"
-			},
-			segmented: {
-				"origin": "Origin: value for copy number normal (typically: 0 or 2)",
-				"thresh": "Threshold: absolute value from origin to start showing color",
-				"max": "Saturation: absolute value to draw full color"
-			}
-		},
-		defaults: {
-			float: {
-				max: 1,
-				maxStart: null,
-				minStart: null,
-				min: -1
-			},
-			segmented: {
-				origin: 0,
-				thresh: 0,
-				max: 1
-			}
-		},
-		getInitialState () {
-			//check if there is custom value
-			let custom = colorParams[valueType].some(function (param) {
+	class ScaleChoice extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        //check if there is custom value
+	        let custom = colorParams[valueType].some(function (param) {
 					if (getVizSettings(param)) {
 						return true;
 					}
 				}),
 				dataMin, dataMax;
 
-			if (valueType === "float") {
-				dataMin = _.minnull(_.map(data.req.values, values=>_.minnull(values)));
-				dataMax = _.maxnull(_.map(data.req.values, values=>_.maxnull(values)));
-				this.defaults[valueType].min = dataMin;
-				this.defaults[valueType].max = dataMax;
+	        if (valueType === "float") {
+				dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values)));
+				dataMax = _.maxnull(_.map(data.req.values, values => _.maxnull(values)));
+				scaleDefaults[valueType].min = dataMin;
+				scaleDefaults[valueType].max = dataMax;
 			} else if (valueType === 'segmented') {
-				dataMin = _.minnull(_.map(data.req.rows, row=>row.value));
-				dataMax = _.maxnull(_.map(data.req.rows, row=>row.value));
+				dataMin = _.minnull(_.map(data.req.rows, row => row.value));
+				dataMax = _.maxnull(_.map(data.req.rows, row => row.value));
 				if (dataMin >= 0) {
-					this.defaults[valueType].origin = 2;
-					this.defaults[valueType].max = 6;
+					scaleDefaults[valueType].origin = 2;
+					scaleDefaults[valueType].max = 6;
 				} else {
-					this.defaults[valueType].origin = 0;
-					this.defaults[valueType].max = dataMax;
+					scaleDefaults[valueType].origin = 0;
+					scaleDefaults[valueType].max = dataMax;
 				}
 			}
 
-			return {
+	        this.state = {
 				mode: custom ? "Custom" : "Auto",
-				settings: custom ? _.pick(oldSettings, colorParams[valueType]) : this.defaults[valueType],
+				settings: custom ? _.pick(oldSettings, colorParams[valueType]) : scaleDefaults[valueType],
 				errors: {}
 			};
-		},
-		autoClick () {
+	    }
+
+		componentWillMount() {
+			let initStates = colorParams[valueType].map((colorParam) => _.valToStr(this.state.settings[colorParam]));
+			this.setState(_.object(colorParams[valueType], initStates));
+		}
+
+	    autoClick = () => {
 			this.setState({mode: "Auto"});
 			this.setState({errors: {}});
 			onVizSettings(id, _.omit(currentSettings.state, colorParams[valueType]));
-		},
-		customClick () {
+		};
+
+	    customClick = () => {
 			this.setState({mode: "Custom"});
 			onVizSettings(id, _.merge(currentSettings.state, getInputSettingsFloat(this.state.settings)));
-		},
-		onScaleParamChange(ev) {
-			var {settings} = this.state,
-				param = ev.target.getAttribute('data-param'),
-				newSettings = _.assoc(settings, param, ev.target.value),
-				errors = validateSettings[valueType](newSettings);
+		};
 
-			this.setState({settings: newSettings, errors});
+		handleChange = (name, value) => {
+			var {settings} = this.state,
+				newSettings = _.assoc(settings, name, value),
+				errors = validateSettings[valueType](newSettings);
+			this.setState({settings: newSettings,
+				errors,
+				[name]: value});
 
 			if (settingsValid(errors)) {
 				onVizSettings(id, _.merge(currentSettings.state, getInputSettingsFloat(newSettings)));
 			}
-		},
-		buildCustomColorScale () {
+		};
+
+	    buildCustomColorScale = () => {
 			var node = colorParams[valueType].map(param => {
-					let value = valToStr(this.state.settings[param]),
-						label = this.annotations[valueType][param],
+					let label = scaleAnnotations[valueType][param],
 						error = this.state.errors[param];
 
 					return (
-						<Row>
-							<Col xs={4} md={4} lg={4}>{label}</Col>
-							<Col xs={3} md={3} lg={3}>
-								<Input type='textinput' placeholder={_.contains(['minThresh', 'maxThresh'], param) ? 'Auto' : ''}
-									value={value} data-param={param} onChange={this.onScaleParamChange}/>
+						<Row key={param}>
+							<Col xs4={4} xs8={8} sm={6} smOffset={6}>
+								<label className={vizSettingStyle.errorLabel}>{error}</label>
 							</Col>
-							<Col xs={5} md={5} lg={5}>
-								<label bsStyle="danger">{error}</label>
+							<Col xs4={4} xs8={4} sm={6}>
+								<div className={vizSettingStyle.inputLabel}>
+									{label}
+								</div>
+							</Col>
+							<Col xs4={4} xs8={4} sm={6}>
+								<Input type='text'
+									   value={this.state[param]}
+									   className={vizSettingStyle.rangeInput}
+									   hint={_.contains(['minThresh', 'maxThresh'], param) ? 'Auto' : ''}
+									   onChange={this.handleChange.bind(this, param)}/>
 							</Col>
 						</Row>
 					);
 				});
 			return node;
-		},
+		};
 
-		render () {
+	    render() {
 			let mode = this.state.mode,
 				autoMode = (this.state.mode === "Auto"),
 				modes = ["Auto", "Custom"],
@@ -288,19 +312,18 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				},
 				buttons = modes.map(mode => {
 					let active = (this.state.mode === mode),
+						style = vizSettingStyle[active ? 'activeModeButton' : 'inactiveModeButton'],
 						func = funcMapping[mode];
-					return active ? (<Button bsStyle="primary" onClick={func} active>{mode}</Button>) :
-						(<Button onClick={func}>{mode}</Button>);
+					return <Button key={mode} onMouseUp={func} className={style}>{mode}</Button>;
 				}),
-				picture = autoMode ? null : (<image src={customFloatImg} responsive/>),
 				enterInput = autoMode ? null : this.buildCustomColorScale(),
 				autocolorTransformation = (valueType === "float" && fieldType !== 'clinical') ?
-					React.createElement(normalizationDropDown) :
-					(valueType === 'segmented' ? React.createElement(segCNVnormalizationDropDown) : null),
+					<NormalizationDropDown /> :
+					(valueType === 'segmented' ? <SegCNVnormalizationDropDown /> : null),
 				notransformation = (
 				    <Row>
-						<Col xs={3} md={2} lg={2}>Color transformation</Col>
-						<Col xs={15} md={10} lg={5}>no transformation</Col>
+						<Col xs4={4} xs8={3} sm={3}>Color transformation</Col>
+						<Col xs4={4} xs8={5} sm={9}>no transformation</Col>
 					</Row>
 				),
 				colorTransformation = autoMode ? autocolorTransformation : notransformation;
@@ -308,11 +331,14 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			return (
 				<div>
 					<Row>
-						<Col xs={3} md={2} lg={2}>Mode</Col>
-						<Col xs={15} md={10} lg={10}>
-							<ButtonGroup>{buttons}</ButtonGroup>
+						<Col xs4={4} xs8={3} sm={3}>
+							<div className={vizSettingStyle.buttonGroupLabel}>
+								Mode
+							</div>
+						</Col>
+						<Col xs4={4} xs8={5} sm={9}>
+							{buttons}
 							<div>
-								{picture}
 								{enterInput}
 							</div>
 						</Col>
@@ -322,7 +348,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				</div>
 			);
 		}
-	});
+	}
 
 	function setVizSettings(key, value) {
 		onVizSettings(id, _.assoc(currentSettings.state, key, value));
@@ -333,119 +359,139 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	//color transformation for dense genomics matrix floats
-	var normalizationDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
+	class NormalizationDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
 				mapping = {
 					"none": "none",
 					"subset": "subset",
 					"log2(x)": "log2(x)",
 					true: "subset"
 				};
-			return {
+
+	        this.state = {
 				optionValue: mapping[value] || "none"
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+	    handleChange = (value) => {
 			var key = "colNormalization";
-			setVizSettings(key, evtKey);
-			this.setState({optionValue: evtKey});
-		},
-		render () {
-			let dataMin = _.minnull(_.map(data.req.values, values=>_.minnull(values))),
+			setVizSettings(key, value);
+			this.setState({optionValue: value});
+		};
+
+	    render() {
+			let dataMin = _.minnull(_.map(data.req.values, values => _.minnull(values))),
 				optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "none"},
-					{"key": "subset", "label": "x - column average"},
+					{"key": "subset", "label": "center by column mean : x - column average"},
 				];
-			if (dataMin >= 0 && !(_.any(units, unit=> unit && unit.search(/log/i) !== -1))) {
+			if (dataMin >= 0 && !(_.any(units, unit => unit && unit.search(/log/i) !== -1))) {
 				// we allow log(0), necessary for RNAseq data, value =0 (no expression is very common).
 				// display can handle this
-				options.push({"key": "log2(x)", "label": "log scale : log2(x)"});
+				options.push({"key": "log2(x)", "label": "log scale : log2(x+1)"});
 			}
-
-
-			var	activeOption = _.find(options, obj => {
-					return obj.key === optionValue;
-				}),
-				title = activeOption ? activeOption.label : 'Select',
-				menuItemList = options.map(obj => {
-					var active = (obj.key === optionValue);
-					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
-						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
-				});
+			let normalizations = options.map((option) => ({
+				value: option.key,
+				label: option.label
+			}));
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color transformation</Col>
-					<Col xs={15} md={10} lg={5}>
-						<DropdownButton title={title} onSelect={this.handleSelect} >
-							{menuItemList}
-						</DropdownButton>
+					<Col xs4={4} xs8={3} sm={3}>
+						<div className={vizSettingStyle.selectLabel}>
+							Color transformation
+						</div>
+					</Col>
+					<Col xs4={4} xs8={5} sm={9}>
+						<Dropdown
+							auto
+							onChange={this.handleChange}
+							source={normalizations}
+							value={optionValue}
+							className={vizSettingStyle.dropDown}
+							theme={{
+								selected: vizSettingStyle.selected
+							}} />
 					</Col>
 				</Row>
 			);
 		}
-	});
+	}
 
 	//color transformation for segmented cnv
-	var segCNVnormalizationDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
+	class SegCNVnormalizationDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('colNormalization') || defaultNormalization || 'none',
 				mapping = {
 					"none": "none",
 					"normal2": "normal2",
 				};
-			return {
+
+	        this.state = {
 				optionValue: mapping[value] || "none"
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+	    handleChange = (value) => {
 			var key = "colNormalization";
-			setVizSettings(key, evtKey);
-			this.setState({optionValue: evtKey});
-		},
-		render () {
+			setVizSettings(key, value);
+			this.setState({optionValue: value});
+		};
+
+	    render() {
 			let optionValue = this.state.optionValue,
 				options = [
 					{"key": "none", "label": "normal = 0"},
 					{"key": "normal2", "label": "normal = 2" },
 				],
-				activeOption = _.find(options, obj => {
-					return obj.key === optionValue;
-				}),
-				title = activeOption ? activeOption.label : 'Select',
-				menuItemList = options.map(obj => {
-					var active = (obj.key === optionValue);
-					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
-						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
-				});
+				normalizations = options.map((option) => ({
+					value: option.key,
+					label: option.label
+				}));
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color transformation</Col>
-					<Col xs={15} md={10} lg={5}>
-						<DropdownButton title={title} onSelect={this.handleSelect} >
-							{menuItemList}
-						</DropdownButton>
+					<Col xs4={4} xs8={3} sm={3}>
+						<div className={vizSettingStyle.selectLabel}>
+							Color transformation
+						</div>
+					</Col>
+					<Col xs4={4} xs8={5} sm={9}>
+						<Dropdown
+							auto
+							onChange={this.handleChange}
+							source={normalizations}
+							value={optionValue}
+							className={vizSettingStyle.dropDown}
+							theme={{
+								selected: vizSettingStyle.selected
+							}} />
 					</Col>
 				</Row>
 			);
 		}
-	});
+	}
 
 	//color palette dense matrix floats and segmented CNV
-	var colorDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('colorClass') || 'default';
-			return {
+	class ColorDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('colorClass') || 'default';
+
+	        this.state = {
 				optionValue: value
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+		handleChange = (value) => {
 			var key = "colorClass";
-			setVizSettings(key, evtKey);
-			this.setState({optionValue: evtKey});
-		},
-		render () {
+			setVizSettings(key, value);
+			this.setState({optionValue: value});
+		};
+
+	    render() {
 			let optionValue = this.state.optionValue,
 				options = {
 					float: [
@@ -460,42 +506,51 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						{"key": "blueBlackYellow", "label": "yellow-white-blue"}
 					],
 				},
-				activeOption = _.find(options[valueType], obj => {
-					return obj.key === optionValue;
-				}),
-				title = activeOption ? activeOption.label : 'Select',
-				menuItemList = options[valueType].map(obj => {
-					var active = (obj.key === optionValue);
-					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
-						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
-				});
+				colors = options[valueType].map((option) => ({
+					value: option.key,
+					label: option.label
+				}));
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color palette</Col>
-					<Col xs={15} md={10} lg={5}>
-						<DropdownButton title={title} onSelect={this.handleSelect} >
-							{menuItemList}
-						</DropdownButton>
+					<Col xs4={4} xs8={3} sm={3}>
+						<div className={vizSettingStyle.selectLabel}>
+							Color palette
+						</div>
+					</Col>
+					<Col xs4={4} xs8={5} sm={9}>
+						<Dropdown
+							auto
+							onChange={this.handleChange}
+							source={colors}
+							value={optionValue}
+							className={vizSettingStyle.dropDown}
+							theme={{
+								selected: vizSettingStyle.selected
+							}} />
 					</Col>
 				</Row>
 			);
 		}
-	});
+	}
 
 	//color palette for SV
-	var svColorDropDown = React.createClass({
-		getInitialState () {
-			let	value = getVizSettings('svColor') || 'default';
-			return {
+	class SvColorDropDown extends React.Component {
+	    constructor(props) {
+	        super(props);
+	        let	value = getVizSettings('svColor') || 'default';
+
+	        this.state = {
 				optionValue: value
 			};
-		},
-		handleSelect: function (evt, evtKey) {
+	    }
+
+		handleChange = (value) => {
 			var key = "svColor";
-			setVizSettings(key, evtKey);
-			this.setState({optionValue: evtKey});
-		},
-		render () {
+			setVizSettings(key, value);
+			this.setState({optionValue: value});
+		};
+
+	    render() {
 			let optionValue = this.state.optionValue,
 				options = {
 					SV: [
@@ -504,27 +559,32 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 						{"key": "chromosomePCAWG", "label": "by chromosome (PCAWG)"},
 					]
 				},
-				activeOption = _.find(options[fieldType], obj => {
-					return obj.key === optionValue;
-				}),
-				title = activeOption ? activeOption.label : 'Select',
-				menuItemList = options[fieldType].map(obj => {
-					var active = (obj.key === optionValue);
-					return active ? (<MenuItem eventKey={obj.key} active>{obj.label}</MenuItem>) :
-						(<MenuItem eventKey={obj.key}>{obj.label}</MenuItem>);
-				});
+				colors = options[fieldType].map((option) => ({
+						value: option.key,
+						label: option.label
+					}));
 			return (
 				<Row>
-					<Col xs={3} md={2} lg={2}>Color palette</Col>
-					<Col xs={15} md={10} lg={5}>
-						<DropdownButton title={title} onSelect={this.handleSelect} >
-							{menuItemList}
-						</DropdownButton>
+					<Col xs4={4} xs8={3} sm={3}>
+						<div className={vizSettingStyle.selectLabel}>
+							Color palette
+						</div>
+					</Col>
+					<Col xs4={4} xs8={5} sm={9}>
+						<Dropdown
+							auto
+							onChange={this.handleChange}
+							source={colors}
+							value={optionValue}
+							className={vizSettingStyle.dropDown}
+							theme={{
+								selected: vizSettingStyle.selected
+							}} />
 					</Col>
 				</Row>
 			);
 		}
-	});
+	}
 
 	var oldSettings = state,
 		currentSettings = {state: state},
@@ -533,39 +593,64 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			segmented: ["origin", "thresh", "max"]
 		};
 
-	node.appendChild(datasetSetting());
+	ReactDOM.render(React.createElement(DatasetSetting), node);
 	return currentSettings;
 }
 
 // react wrapper for the legacy DOM code, above.
-var SettingsWrapper = React.createClass({
-	shouldComponentUpdate: () => false,
+class SettingsWrapper extends React.Component {
+	shouldComponentUpdate() {
+		return false;
+	}
+
 	componentWillReceiveProps(newProps) {
 		this.currentSettings.state = newProps.vizSettings;
-	},
-	componentDidMount: function () {
+	}
+
+	componentDidMount() {
 		var {refs: {content}, props: {data, units, onVizSettings, vizSettings, id, defaultNormalization, colorClass, valueType, fieldType, onRequestHide}} = this;
 		this.currentSettings = vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType, fieldType, data, units);
-	},
-	render: function () {
+	}
+
+	render() {
 		return <div ref='content' />;
 	}
-});
+}
 
-var VizSettings = React.createClass({
-	render: function() {
+class VizSettings extends React.Component {
+
+	componentDidMount() {
+		document.documentElement.scrollTop = 0;
+		var body = document.getElementById("body");
+		body.style.overflow = "auto";
+	}
+
+	render() {
 		var {onRequestHide} = this.props;
+
+		const actions = [
+			{
+				children: [<i className='material-icons'>close</i>],
+				className: vizSettingStyle.dialogClose,
+				onClick: onRequestHide
+			},
+		];
+
 		return (
-			<Modal show={true} onHide={onRequestHide}>
-				<Modal.Header closeButton>
-					<Modal.Title>Dataset Visualization Settings</Modal.Title>
-				</Modal.Header>
-				<Modal.Body>
-					<SettingsWrapper {...this.props} />
-				</Modal.Body>
-			</Modal>
+			<Dialog
+				actions={actions}
+				active={true}
+				title='Dataset Visualization Settings'
+				className={vizSettingStyle.dialog}
+				onEscKeyDown={onRequestHide}
+				onOverlayClick={onRequestHide}
+				theme={{
+					wrapper: vizSettingStyle.dialogWrapper,
+					overlay: vizSettingStyle.dialogOverlay}}>
+				<SettingsWrapper {...this.props} />
+			</Dialog>
 		);
 	}
-});
+}
 
 module.exports = VizSettings;

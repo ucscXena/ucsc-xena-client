@@ -2,58 +2,69 @@
 
 var React = require('react');
 var Resizable = require('react-resizable').Resizable;
+var _ = require('../underscore_ext');
+
+// Styles
+require('./ResizeOverlay.css');
 
 var max = (x, y) => x > y ? x : y;
 var minWidthSize = (minWidth, {width, height}) => ({width: max(minWidth, width), height});
 
-var ResizeOverlay = React.createClass({
-	getInitialState: () => ({zooming: false}),
-	onResizeStart: function () {
+class ResizeOverlay extends React.Component {
+	state = {zooming: false};
+
+	onResizeStart = () => {
 		var {width, height} = this.props,
 			minWidth = this.props.minWidth();
 		this.setState({zooming: true, zoomSize: {width, height}, minWidth});
-	},
-	onResize: function (ev, {size}) {
+	};
+
+	onResize = (ev, {size}) => {
 		var {width, height} = size,
 			{minWidth} = this.state;
 		this.setState({zoomSize: {width: max(width, minWidth), height}});
-	},
-	onResizeStop: function (ev, {size}) {
+	};
+
+	onResizeStop = (ev, {size}) => {
 		var {onResizeStop} = this.props,
 			{minWidth} = this.state;
 		this.setState({zooming: false});
 		if (onResizeStop) {
 			onResizeStop(minWidthSize(minWidth, size));
 		}
-	},
-	render: function () {
-		var {zooming, zoomSize} = this.state;
-		// XXX This margin setting really belongs elsewhere.
+	};
+
+	render() {
+		var {zooming, zoomSize} = this.state,
+			{width, height, children, enable} = this.props,
+			content = (
+				<div style={{position: 'relative', cursor: 'none', zIndex: 0}}>
+					{children}
+				</div>);
 		return (
-			<div className='resizeOverlay' style={{position: 'relative', marginBottom: '5px'}}>
-				{zooming ? <div style={{
-					width: zoomSize.width,
-					height: zoomSize.height,
+			<div className={enable ? 'resize-enable' : ''} style={{position: 'relative'}}>
+				<div style={{
+					display: zooming ? 'block' : 'none',
+					width: _.get(zoomSize, 'width', 0),
+					height: _.get(zoomSize, 'height', 0),
 					position: 'absolute',
 					top: 0,
 					left: 0,
 					zIndex: 999,
-					backgroundColor: 'rgba(0,0,0,0.4)'
-				}} /> : null}
+					backgroundColor: 'rgba(0, 0, 0, 0.12)'}} />
 				<Resizable handleSize={[20, 20]}
+					axis={'both'}
 					onResizeStop={this.onResizeStop}
 					onResize={this.onResize}
 					onResizeStart={this.onResizeStart}
-					width={this.props.width}
-					height={this.props.height}>
+					width={width}
+					height={height}>
 
-					<div style={{position: 'relative', cursor: 'none', zIndex: 0}}>
-						{this.props.children}
-					</div>
+					{content}
 				</Resizable>
 			</div>
 		);
 	}
-});
+}
 
 module.exports = ResizeOverlay;

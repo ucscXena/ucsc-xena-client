@@ -2,9 +2,10 @@
 
 var _ = require('./underscore_ext');
 var Rx = require('./rx');
+import PureComponent from './PureComponent';
 var React = require('react');
 var Legend = require('./views/Legend');
-var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
+var {rxEvents} = require('./react-utils');
 var widgets = require('./columnWidgets');
 var util = require('./util');
 var CanvasDrawing = require('./CanvasDrawing');
@@ -152,7 +153,7 @@ function sampleTooltip(sampleFormat, dataList, assembly, fields) {
 	var perRowTip = data => {
 		var dnaVaf = data.dnaVaf == null ? null : ['labelValue',  'DNA variant allele freq', formatAf(data.dnaVaf)],
 			rnaVaf = data.rnaVaf == null ? null : ['labelValue',  'RNA variant allele freq', formatAf(data.rnaVaf)],
-			ref = data.reference && ['label', `${data.reference} to`],
+			ref = data.reference && ['label', ` ${data.reference} to `],
 
 			//alt
 			altDirection = data.alt && mv.joinedVariantDirection(data.alt),
@@ -198,12 +199,12 @@ function sampleTooltip(sampleFormat, dataList, assembly, fields) {
 	//sort dataList by fields[0], put variants annoated with fields[0] in dataset in front
 	dataList = _.sortBy(dataList, obj => obj.gene === fields[0]).reverse();
 
-	var rows =  _.reduce(_.map(dataList.slice(0, 3), perRowTip), function(a, b) {return a.concat(b);}, []);
+	var rows =  _.reduce(_.map(dataList/*.slice(0, 3)*/, perRowTip), function(a, b) {return a.concat(b);}, []);
 
-	if (dataList.length > 3) {
-		var allRows = rows.concat(_.reduce(_.map(dataList.slice(3), perRowTip), function(a, b) { return b.concat(a); }, []));
-		rows.push([["popOver", dataList.length - 3 + " more ...", allRows]]);
-	}
+//	if (dataList.length > 3) {
+//		var allRows = rows.concat(_.reduce(_.map(dataList.slice(3), perRowTip), function(a, b) { return b.concat(a); }, []));
+//		rows.push([["popOver", dataList.length - 3 + " more ...", allRows]]);
+//	}
 	return {
 		rows: rows,
 		sampleID: sampleFormat(dataList[0].sample)
@@ -239,32 +240,34 @@ function tooltip(fieldType, fields, layout, nodes, samples, sampleFormat, zoom, 
 		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
 }
 
-var MutationColumn = hotOrNot(React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
-	componentWillMount: function () {
-		this.events('mouseout', 'mousemove', 'mouseover');
+var MutationColumn = hotOrNot(class extends PureComponent {
+	componentWillMount() {
+		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
-		this.ttevents = this.ev.mouseover
+		this.ttevents = events.mouseover
 			.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
 			.flatMap(() => {
-				return this.ev.mousemove
-					.takeUntil(this.ev.mouseout)
+				return events.mousemove
+					.takeUntil(events.mouseout)
 					.map(ev => ({
 						data: this.tooltip(ev),
 						open: true
 					})) // look up current data
 					.concat(Rx.Observable.of({open: false}));
 			}).subscribe(this.props.tooltip);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.ttevents.unsubscribe();
-	},
-	tooltip: function (ev) {
+	}
+
+	tooltip = (ev) => {
 		var {column: {fieldType, fields, layout, nodes, assembly}, samples, sampleFormat, zoom} = this.props;
 		return tooltip(fieldType, fields, layout, nodes, samples, sampleFormat, zoom, assembly, ev);
-	},
-	render: function () {
+	};
+
+	render() {
 		var {column, samples, zoom, index, draw} = this.props;
 
 		return (
@@ -286,7 +289,7 @@ var MutationColumn = hotOrNot(React.createClass({
 					xzoom={column.zoom}
 					zoom={zoom}/>);
 	}
-}));
+});
 
 widgets.column.add('mutation',
 		props => <MutationColumn draw={drawMutations} {...props} />);

@@ -1,0 +1,135 @@
+.datapages {
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 20px;
+	padding: 40px;
+	padding-top: 20px;
+	width: 80%;
+	background-color: #ffffff;
+	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
+}
+
+.datapages ul {
+	list-style: none;
+}
+
+.groupList {
+	padding-left: 40px;
+}
+
+.groupList li {
+	margin: 16px 0 16px 0;
+}
+
+.deleteButton {
+	display: inline;
+}
+
+.star {
+	font-size: 1.5em;
+	color: red;
+}
+
+.count {
+	color:#006600;
+}
+
+.link {
+	display: inline;
+}
+
+.link:not(.active) {
+	opacity: 1.0;
+}
+
+.link > abbr {
+	text-transform: none;
+}
+
+.dataHubs {
+	float: right;
+}
+
+.sidebar {
+	float: right;
+	width: 20%;
+}
+
+.sidebar button {
+	display: block
+}
+
+.description {
+	display: block;
+	font-size: 0.8em;
+}
+
+.lineClamp {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	-ms-box-orient: vertical;
+	-moz-box-orient: vertical;
+	overflow: hidden;
+}
+
+.key {
+	margin: 5px 0 5px 0;
+	width: 150px;
+	display: inline-block;
+}
+
+.header {
+	font-size: 0.9em;
+}
+
+.header ul {
+	padding-left: 40px;
+	list-style-type: disc;
+}
+
+.header ul ul {
+	list-style-type: circle;
+}
+
+.value {
+	margin: 5px 0 5px 0;
+	display: inline-block;
+	vertical-align: middle;
+	font-size: 0.9em;
+}
+
+.value > [data-react-toolbox='link'] {
+	opacity: 1; /* override RT link opacity */
+}
+
+.dataSnippetTable {
+	border-collapse:collapse;
+	width: 100%;
+	table-layout: fixed;
+}
+
+.dataSnippetTable tr td {
+	border: 5px solid rgb(225,225,225);
+	text-align: right;
+	word-wrap: break-word;
+	color: #505050;
+	font-size: 85%;
+}
+
+.list {
+	font-size: 16px;
+}
+
+.tableControls * {
+	margin: 10px;
+}
+
+.tableControls > [data-react-toolbox='link'] {
+	opacity: 1;
+	display: inline;
+}
+
+.tableControls *:first-child {
+	margin-left: 0;
+}

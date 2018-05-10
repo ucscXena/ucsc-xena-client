@@ -18,7 +18,7 @@ function drawBands(vg, bands, color, layout, indx) {
 	var count = bands.length,
 		height = vg.height() / count;
 
-	pxTransformEach(layout, (toPx, [start, end]) =>{
+	pxTransformEach(layout, (toPx, [start, end]) => {
 		var matching = matches(indx, {start: start, end: end});
 		var dbg = _.groupBy(matching, 'val');
 

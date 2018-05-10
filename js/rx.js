@@ -15,6 +15,7 @@ var Rx = {
 require('rxjs/add/observable/bindCallback');
 require('rxjs/add/observable/defer');
 require('rxjs/add/observable/dom/ajax');
+require('rxjs/add/observable/from');
 require('rxjs/add/observable/fromEvent');
 require('rxjs/add/observable/interval');
 require('rxjs/add/observable/merge');
@@ -22,6 +23,7 @@ require('rxjs/add/observable/of');
 require('rxjs/add/observable/throw');
 require('rxjs/add/observable/zip');
 require('rxjs/add/operator/catch');
+require('rxjs/add/operator/combineLatest');
 require('rxjs/add/operator/concat');
 require('rxjs/add/operator/debounceTime');
 require('rxjs/add/operator/distinctUntilChanged');
@@ -33,6 +35,8 @@ require('rxjs/add/operator/map');
 require('rxjs/add/operator/merge');
 require('rxjs/add/operator/mergeAll');
 require('rxjs/add/operator/mergeMap');
+require('rxjs/add/operator/publishReplay');
+require('rxjs/add/operator/retry');
 require('rxjs/add/operator/sample');
 require('rxjs/add/operator/scan');
 require('rxjs/add/operator/share');
@@ -44,6 +48,7 @@ require('rxjs/add/operator/debounceTime');
 require('rxjs/add/operator/timeoutWith');
 require('rxjs/add/operator/toArray');
 require('rxjs/add/operator/windowCount');
+require('rxjs/add/operator/withLatestFrom');
 
 var observableProto = Rx.Observable.prototype;
 

@@ -1,25 +1,41 @@
 'use strict';
 
-var _ = require('./underscore_ext');
+var {flatmap, apply, map, first, zip, times, isArray, constant, mapObject, groupBy} = require('./underscore_ext');
+
+function expandArrays(v, k) {
+	if (isArray(v)) {
+		return zip(v, times(v.length, constant(k)));
+	}
+	return [[v, k]];
+}
+
+var encodeParam = (v, k) => k + "=" + encodeURIComponent(v);
+
+var encodeObject = obj => map(flatmap(obj, expandArrays), apply(encodeParam)).join("&");
+
+var searchParams = search =>
+	search.length > 1 ?
+		mapObject(
+			groupBy(
+				search.slice(1).split('&')
+					.map(exp => exp.split('=').map(decodeURIComponent)),
+				first),
+			arr => arr.map(([, val]) => val)) :
+		{};
 
 module.exports = {
+	encodeObject,
 	getParameterByName: function (name) {
 		// TODO duplicates galaxy.js, so extract into common file
 		// see http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values/901144#901144
 		var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
 		return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
 	},
-	allParameters: () => {
-		var search = location.search;
-		return search.length > 1 ?
-			_.mapObject(
-				_.groupBy(
-					search.slice(1).split('&')
-						.map(exp => exp.split('=').map(decodeURIComponent)),
-					_.first),
-				arr => arr.map(([, val]) => val)) :
-			{};
+	urlParams: url => {
+		var i = url.indexOf('?');
+		return i === -1 ? {} : searchParams(url.slice(i));
 	},
+	allParameters: () => searchParams(location.search),
 	eventOffset: function (ev) {
 		var {top, left} = ev.currentTarget.getBoundingClientRect();
 		return {

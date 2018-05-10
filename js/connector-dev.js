@@ -11,6 +11,8 @@ var nostate = require('./nostate');
 var urlParams = require('./urlParams');
 var LZ = require('./lz-string');
 var {compactState, expandState} = require('./compactData');
+var migrateState = require('./migrateState');
+var {schemaCheckThrow} = require('./schemaCheck');
 
 function logError(err) {
 	if (typeof window === 'object' && typeof window.chrome !== 'undefined') {
@@ -21,18 +23,22 @@ function logError(err) {
 	}
 }
 
+var dropTransient = state =>
+	_.assoc(state, 'wizard', {}, 'datapages', undefined);
+
+
 // serialization
 function stringify(state) {
 	return LZ.compressToUTF16(JSON.stringify({
 		..._.omit(state, 'computedStates', 'committedState'),
-		committedState: compactState(state.committedState)
+		   committedState: compactState(dropTransient(state.committedState))
 	}));
 }
 function parse(str) {
 	var state = JSON.parse(LZ.decompressFromUTF16(str));
 	return {
 		...state,
-		committedState: expandState(state.committedState)
+		committedState: schemaCheckThrow(expandState(migrateState(state.committedState)))
 	};
 }
 
@@ -50,6 +56,10 @@ function getSavedState(persist) {
 	}
 	return null;
 }
+
+var historyObs = Rx.Observable
+	.fromEvent(window, 'popstate')
+	.map(() => ['history', {path: location.pathname, params: urlParams()}]);
 
 module.exports = function({
 	Page,
@@ -77,6 +87,9 @@ module.exports = function({
 
 		devReducer = DevTools.instrument(controller, initialState),
 		savedState = getSavedState(persist),
+		// Here we need not just the initial state, but to know if we have a
+		// saved state. The initial state is used in devtools as the 'reset'
+		// target. So, we can't replace initial state with saved state.
 		devInitialState = devReducer(null, savedState ?
 			{type: 'IMPORT_STATE', nextLiftedState: savedState} : {});
 
@@ -106,13 +119,14 @@ module.exports = function({
 		// loads. Here we intercept the devtools actions & re-issue 'init' on
 		// RESET.
 		if (ac.type === 'RESET') {
-			uiBus.next(['init']);
+			setTimeout(() => uiBus.next(['init', location.pathname, urlParams()]), 0);
 		}
+
 		inEffectsReducer = false;
 		return nextState;
 	};
 
-	var devStateObs = Rx.Observable.merge(serverCh, uiCh)
+	var devStateObs = Rx.Observable.merge(serverCh, uiCh, historyObs)
 					.map(ac => ({type: 'PERFORM_ACTION', action: ac}))
 					.merge(devCh)
 					.scan(effectsReducer, devInitialState) // XXX side effects!
@@ -132,7 +146,7 @@ module.exports = function({
 					<DevTools dispatch={devBus.next.bind(devBus)} {...devState} />
 				</div>,
 				dom.main);
-		});
+		}, err => console.log('err', err));
 
 	if (persist) {
 		// Save state in sessionStorage on page unload.
@@ -144,6 +158,6 @@ module.exports = function({
 
 	// This causes us to always load cohorts on page load. This is important after
 	// setting hubs, for example.
-	uiBus.next(['init', urlParams()]);
+	uiBus.next(['init', location.pathname, urlParams()]);
 	return dom;
 };

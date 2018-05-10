@@ -1,21 +1,27 @@
 'use strict';
+import './base';
+import _ from './underscore_ext';
+import './plotDenseMatrix';
+import './plotMutationVector';
+import './plotSegmented';
+import './plotSamples';
+import './refGeneExons';
+import './ChromPosition';
+import './models/denseMatrix';
+import './models/mutationVector';
+import './models/segmented';
+import 'bootstrap/dist/css/bootstrap.css';
+//var Application = require('./containers/ApplicationContainer');
 
-require('./base');
-var _ = require('./underscore_ext');
-require('./plotDenseMatrix');
-require('./plotMutationVector');
-require('./plotSegmented');
-require('./refGeneExons');
-require('./ChromPosition');
-require('./models/denseMatrix');
-require('./models/mutationVector');
-require('./models/segmented');
-var uiController = require('./controllers/ui');
-var serverController = require('./controllers/server');
-require('bootstrap/dist/css/bootstrap.css');
-var Application = require('./containers/ApplicationContainer');
-var selector = require('./appSelector');
-var compose = require('./controllers/compose');
+import uiController from './controllers/ui';
+import serverController from './controllers/server';
+import hubController from './controllers/hub';
+import transcriptController from './controllers/transcripts';
+//import tiesController from './controllers/ties';
+import PageContainer from './containers/PageContainer';
+import selector from './appSelector';
+import { compose } from './controllers/utils';
+
 const connector = require('./connector');
 const createStore = require('./store');
 
@@ -32,23 +38,35 @@ const createStore = require('./store');
 
 if (module.hot) {
 	module.hot.accept('./controllers/ui', () => {
-		var newModule = require('./controllers/ui');
+		let newModule = require('./controllers/ui');
 		_.extend(uiController, newModule);
 	});
 	module.hot.accept('./controllers/server', () => {
-		var newModule = require('./controllers/server');
+		let newModule = require('./controllers/server');
 		_.extend(serverController, newModule);
 	});
+	module.hot.accept('./controllers/hub', () => {
+		let newModule = require('./controllers/hub');
+		_.extend(hubController, newModule);
+	});
+	module.hot.accept('./controllers/transcripts', () => {
+		let newModule = require('./controllers/transcripts');
+		_.extend(transcriptController, newModule);
+	});
+//	module.hot.accept('./controllers/ties', () => {
+//		let newModule = require('./controllers/ties');
+//		_.extend(tiesController, newModule);
+//	});
 	// XXX Note that hot-loading these won't cause a re-render.
 	module.hot.accept('./models/mutationVector', () => {});
 	module.hot.accept('./models/denseMatrix', () => {});
 	module.hot.accept('./models/segmented', () => {});
 }
 
-var store = createStore();
-var main = window.document.getElementById('main');
+const store = createStore();
+const main = window.document.getElementById('main');
 
 // XXX reducer
-var controller = compose(serverController, uiController);
+const controller = compose(serverController, uiController, hubController, transcriptController/*, tiesController*/);
 
-connector({...store, controller, main, selector, Page: Application, persist: true, history: false});
+connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});

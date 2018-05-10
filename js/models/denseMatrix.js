@@ -51,41 +51,57 @@ function computeHeatmap(vizSettings, data, fields, samples) {
 }
 
 var flopIfNegStrand = (strand, req) =>
-	strand === '-' ?
+	// sorted by start of probe in transcript direction (strand), for negative strand, the start of the probe is chromend
+	// known issue: tie break
+	{
+		if (strand === '-') {
+			let sortedReq = _.sortBy(_.zip(req.position, req.probes, req.values), item => -(item[0].chromend));
+			let [sortedPosition, sortedProbes, sortedValues] = _.unzip(sortedReq);
+			return _.assoc(req,
+				'position', sortedPosition,
+				'probes', sortedProbes,
+				'values', sortedValues);
+		} else {
+			return req;
+		}
+	};
+
+	/*strand === '-' ?
 		_.assoc(req,
 				'position', _.reverse(req.position),
 				'probes', _.reverse(req.probes),
 				'values', _.reverse(req.values)) :
-		req;
+		req;*/
 
 var colorCodeMap = (codes, colors) =>
 	colors ? _.map(codes, c => colors[c] || greyHEX) : null;
 
-var getCustomColor = (fieldSpecs, fields, datasets) =>
-	(fieldSpecs.length === 1 && fields.length === 1) ?
-		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', fieldSpecs[0].fields[0]], null) : null;
+var getCustomColor = (fieldSpecs, fields, dataset) =>
+	fields.length === 1 ?
+		_.getIn(dataset, ['customcolor', fieldSpecs[0].fields[0]], null) : null;
 
-var getAssembly = (fieldSpecs, fields, datasets) => {
-	var all = fieldSpecs.map(fs => _.getIn(datasets, [fs.dsID, 'probemapMeta', 'assembly']));
-	return _.uniq(all).length === 1 ? all[0] : null;
-};
-
-function dataToHeatmap(column, vizSettings, data, samples, datasets) {
+function dataToHeatmap(column, vizSettings, data, samples) {
 	if (!_.get(data, 'req')) {
 		return null;
 	}
 	var {req, codes = {}} = data,
+		{dataset, fieldSpecs} = column,
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples),
-		customColors = colorCodeMap(codes, getCustomColor(column.fieldSpecs, fields, datasets)),
-		assembly = getAssembly(column.fieldSpecs, fields, datasets),
+		customColors = colorCodeMap(codes, getCustomColor(fieldSpecs, fields, dataset)),
+		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
 		colors = map(fields, (p, i) =>
 					 heatmapColors.colorSpec(column, vizSettings, codes,
 					 	{'values': heatmap[i], 'mean': req.mean ? req.mean[i] : undefined},
 					 	customColors)),
-		units = _.map(column.fieldSpecs, ({dsID}) => _.getIn(datasets, [dsID, 'unit']));
+		units = [_.get(dataset, 'unit')];
 
-	return {fields, heatmap, assembly, colors, units};
+	// column.fields is overwritten by this, which is problematic. It was
+	// supposed to simplify the rendering layer by resolving whether the
+	// field id maps to multiple probes, but we need the original field list
+	// in the rendering layer, to determine if we support KM and gene average.
+	// We could compute this in a selector, perhaps.
+	return {fields, fieldList: column.fields, heatmap, assembly, colors, units};
 }
 
 //
@@ -163,22 +179,22 @@ function indexFieldResponse(fields, resp) {
 	};
 }
 
-var fetch = ({dsID, fields}, [samples]) => datasetProbeValues(dsID, samples, fields)
+var fetch = ({dsID, fields}, samples) => datasetProbeValues(dsID, samples, fields)
 	.map(resp => ({req: indexFieldResponse(fields, resp)}));
 
-var fetchGeneProbes = ({dsID, fields, strand}, [samples]) => datasetGeneProbesValues(dsID, samples, fields)
+var fetchGeneProbes = ({dsID, fields, strand}, samples) => datasetGeneProbesValues(dsID, samples, fields)
 	.map(resp => ({req: flopIfNegStrand(strand, indexProbeGeneResponse(resp))}));
 
 // This should really be fetchCoded. Further, it should only return a single
 // code list, i.e. either a single clinical coded field, or a list of genomic
 // fields all with the same code values.
-var fetchFeature = ({dsID, fields}, [samples]) => Rx.Observable.zipArray(
+var fetchFeature = ({dsID, fields}, samples) => Rx.Observable.zipArray(
 		datasetProbeValues(dsID, samples, fields)
 			.map(resp => indexFieldResponse(fields, resp)),
 		fieldCodes(dsID, fields)
 	).map(([req, codes]) => ({req, codes: _.values(codes)[0]}));
 
-var fetchGene = ({dsID, fields}, [samples]) => datasetGeneProbeAvg(dsID, samples, fields)
+var fetchGene = ({dsID, fields}, samples) => datasetGeneProbeAvg(dsID, samples, fields)
 			.map(resp => ({req: indexGeneResponse(samples, fields, resp)}));
 
 ////////////////////////////////

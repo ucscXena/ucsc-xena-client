@@ -1,0 +1,76 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Custom CSS styling of MD cards, displayed after wizard setup is complete and each card contains a visualization.
+ */
+
+@value black6 from '../../css/variables.css';
+@value black12 from '../../css/variables.css';
+@value black38 from '../../css/variables.css';
+
+/* Core styling of column. 'Column' class must not be namespaced as it is used in page-vizualization functionality, as 
+   well as the add column hover functionality. */
+:global(.Column) {
+	cursor: default;
+	overflow: visible;
+	margin-left: 0;
+	margin-right: 0;
+	transition: margin 200ms 150ms ease-in-out; /* Match transition of opacity of ColumnAdd, this is for animating the add column hover functionality. */
+	user-select: none;
+}
+
+:global(.Column:hover .resize-enable .react-resizable-handle) {
+	opacity: 1;
+}
+
+/* Container around column label (A, B, C etc) and controls */
+.headerContainer {
+	align-items: center;
+	border-bottom: 1px solid black12;
+	display: flex;
+	line-height: 0;
+	justify-content: space-between;
+	padding: 16px;
+}
+
+.headerContainer:hover .controls.showOnHover {
+	opacity: 1;
+	visibility: visible;
+}
+
+/* Controls - close/menu etc icons displayed in header container */
+.controls.showOnHover {
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 200ms 150ms ease-in-out, visibility 200ms 150ms ease-in-out;
+}
+
+/* Wrapper around controls that are passed in as a prop */
+.controls > div {
+	align-items: center;
+	display: flex;
+}
+
+/* Icons */
+.controls i {
+	cursor: pointer;
+}
+
+/* Wrapper around title/subtitle and controls. */
+.titleContainer {
+	border-bottom: 1px solid black12;
+	display: flex;
+	height: 61px; /* Includes border */
+	margin-bottom: 8px; /* Add additional margin here to prevent visualization from bumping up against title */
+	padding: 8px 16px;
+}
+
+.title {
+	flex: 1;
+	padding: 0 !important; /* Using important here to override cardTitle.small from theme. */
+}
+
+.title > div {
+	width: 100%; /* Force RTB title to be full width */ 
+}

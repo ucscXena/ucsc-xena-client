@@ -3,18 +3,18 @@
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
 var {reifyErrors, collectResults} = require('./errors');
-var {closeEmptyColumns, reJoinFields, resetZoom, setCohort, fetchDatasets,
-	userServers, fetchSamples, fetchColumnData} = require('./common');
+var {resetZoom, fetchColumnData, fetchCohortData, setCohort,
+	fetchColumnData, updateWizard, clearWizardCohort} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
-var {updateFields, xenaFieldPaths, updateStrand, filterByDsID} = require('../models/fieldSpec');
-var {remapFields} = require('../models/searchSamples');
-var identity = x => x;
-var {parseBookmark} = require('../bookmark');
+var {xenaFieldPaths, updateStrand} = require('../models/fieldSpec');
+var {compose, make, mount} = require('./utils');
 
+var phenoPat = /^phenotypes?$/i;
 function featuresQuery(datasets) {
-	var clinicalMatrices = _.filter(datasets, ds => ds.type === 'clinicalMatrix'),
+	var clinicalMatrices = _.filter(datasets,
+			ds => ds.type === 'clinicalMatrix' && (!ds.dataSubType || ds.dataSubType.match(phenoPat))),
 		dsIDs = _.pluck(clinicalMatrices, 'dsID');
 
 	// XXX note that datasetFeatures takes optional args, so don't pass it directly
@@ -31,74 +31,61 @@ function fetchFeatures(serverBus, datasets) {
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
 
-var resetCohort = state => {
-	let activeCohorts = _.filter(state.cohort, c => _.contains(state.cohorts, c.name));
-	return _.isEqual(activeCohorts, state.cohort) ? state :
-		setCohort(state, activeCohorts);
-};
-
-var filterColumnDs = _.curry(
-	(datasets, column) => _.updateIn(column, ['fieldSpecs'], filterByDsID(datasets)));
-
-
-// we must re-fetch widget data after this operation, since the column
-// definitions are changing.
-var dropUnknownFields = state =>
-	_.assoc(state, 'columns', _.mapObject(state.columns, filterColumnDs(state.datasets)));
-
-var resetColumnFields = state =>
-	reJoinFields(
-		state.datasets,
-		closeEmptyColumns(
-			dropUnknownFields(state)));
-
 var resetLoadPending = state => _.dissoc(state, 'loadPending');
 
-// Fetches the gene strand info for a geneProbes field.
-// We need the gene from one non-null field. This is
-// probably broken in some way for composite views.
-function fetchStrand(serverBus, state, id, gene, dsID) {
-	var {probemap} = _.getIn(state, ['datasets', dsID]),
-		{host} = JSON.parse(dsID);
-	serverBus.next(['strand', xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.of('+');}), id]);
+// Cohort metadata looks like
+// {[cohort]: [tag, tag, ...], [cohort]: [tag, tag, ...], ...}
+// We want data like
+// {[tag]: [cohort, cohort, ...], [tag]: [cohort, cohort, ...], ...}
+function invertCohortMeta(meta) {
+	return _.fmap(
+			_.groupBy(_.flatmap(meta, (tags, cohort) => tags.map(tag => [cohort, tag])),
+				([, tag]) => tag),
+			cohortTags => cohortTags.map(([cohort]) => cohort));
 }
 
+var wizardControls = {
+	cohorts: (state, cohorts) => _.assoc(state, "cohorts", cohorts),
+	datasets: (state, datasets) => _.assoc(state, 'datasets', datasets),
+	'datasets-post!': (serverBus, state, newState, datasets) =>
+		fetchFeatures(serverBus, datasets),
+	features: (state, features) => _.assoc(state, 'features', features),
+	cohortMeta: (state, meta) => _.assoc(state, 'cohortMeta', invertCohortMeta(meta)),
+	cohortPreferred: (state, cohortPreferred) => _.assoc(state, 'cohortPreferred',
+			_.fmap(cohortPreferred,
+				preferred => _.fmap(preferred, ({host, dataset}) => JSON.stringify({host, name: dataset})))),
+	cohortPhenotype: (state, cohortPhenotype) => _.assoc(state, 'cohortPhenotype',
+			_.fmap(cohortPhenotype,
+				preferred => _.map(preferred, ({host, dataset, feature}) => ({dsID: JSON.stringify({host, name: dataset}), name: feature}))))
+};
+
 var controls = {
-	// XXX reset loadPending flag
-	bookmark: (state, bookmark) => resetLoadPending(parseBookmark(bookmark)),
+	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(_.merge(state, bookmark))),
+	'bookmark-error': state => resetLoadPending(_.assoc(state, 'stateError', 'bookmark')),
+	// Here we need to load cohort data if servers or cohort has changed,
+	// *or* if we never loaded cohort data (e.g. due to waiting on bookmark).
+	'bookmark-post!': (serverBus, state, newState) => {
+		updateWizard(serverBus, state.spreadsheet, newState.spreadsheet,
+				{force: !_.getIn(newState, ['wizard', 'cohorts'])});
+	},
+	'manifest': (state, {cohort, samples}) =>
+		clearWizardCohort(
+				_.updateIn(state, ['spreadsheet'], setCohort({name: cohort, sampleFilter: samples}, null))),
+	'manifest-post!': (serverBus, state, newState) =>
+		fetchCohortData(serverBus, newState.spreadsheet),
 	inlineState: (state, newState) => resetLoadPending(newState),
-	cohorts: (state, cohorts) => resetCohort(_.assoc(state, "cohorts", cohorts)),
-	'cohorts-post!': (serverBus, state, newState) => {
-		let {cohort} = newState,
-			user = userServers(newState);
-		fetchSamples(serverBus, user, cohort, newState.allowOverSamples);
-		fetchDatasets(serverBus, user, cohort);
-	},
-	datasets: (state, datasets) => {
-		var newState = resetColumnFields(_.assoc(state, "datasets", datasets)),
-			{cohortSamples, columnOrder} = newState;
-		if (cohortSamples) {
-			return _.reduce(
-					columnOrder,
-					(acc, id) => _.assocIn(acc, ['data', id, 'status'], 'loading'),
-					newState);
-		}
-		return newState;
-	},
-	'datasets-post!': (serverBus, state, newState, datasets) => {
-		var {cohortSamples, columns} = newState;
-		if (cohortSamples) {
-			_.mapObject(columns, (settings, id) =>
-					fetchColumnData(serverBus, cohortSamples, id, settings));
-		}
-		fetchFeatures(serverBus, datasets);
-	},
-	features: (state, features) => _.assoc(state, "features", features),
-	samples: (state, {samples, over}) => {
+	'inlineState-post!': (serverBus, state, newState) => {
+		updateWizard(serverBus, state.spreadsheet, newState.spreadsheet,
+				{force: !_.getIn(newState, ['wizard', 'cohorts'])});
+	}
+};
+
+var spreadsheetControls = {
+	samples: (state, {samples, over, hasPrivateSamples}) => {
 		var newState = resetZoom(_.assoc(state,
 					'cohortSamples', samples,
 					'samplesOver', over,
-					'samples', _.range(_.sum(_.map(samples, c => c.length))))),
+					'hasPrivateSamples', hasPrivateSamples)),
 			{columnOrder} = newState;
 		return _.reduce(
 				columnOrder,
@@ -108,31 +95,12 @@ var controls = {
 	'samples-post!': (serverBus, state, newState, {samples}) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
-	'normalize-fields': (state, fields, id, settings, isFirst, xenaFields) => {
-		var {columnOrder, sampleSearch} = state, // old settings
-			newOrder = isFirst ? [id, ...columnOrder] : [...columnOrder, id],
-			newState = _.assocIn(state,
-				['columns', id], updateFields(settings, xenaFields, fields),
-				['columnOrder'], newOrder,
-				['sampleSearch'], remapFields(columnOrder, newOrder, sampleSearch));
-		return _.assocIn(newState, ['data', id, 'status'], 'loading');
-	},
-	'normalize-fields-post!': (serverBus, state, newState, fields, id, settings, __, xenaFields) => {
-		// For geneProbes, fetch the gene model (just strand right now), and defer the
-		// data fetch.
-		if (settings.fieldType === 'geneProbes') {
-			// Pick first xena field, and 1st gene name.
-			fetchStrand(serverBus, state, id, fields[0][0], _.getIn(settings, xenaFields[0]).dsID);
-		} else {
-			fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
-		}
-	},
-	'strand': (state, strand, id) => {
+	'strand': (state, id, strand) => {
 		// Update composite & all xena fields with strand info.
 		var settings = _.assoc(_.getIn(state, ['columns', id]), 'strand', strand);
 		return _.assocIn(state, ['columns', id], updateStrand(settings, xenaFieldPaths(settings), strand));
 	},
-	'strand-post!': (serverBus, state, newState, strand, id) => {
+	'strand-post!': (serverBus, state, newState, id) => {
 		// Fetch geneProbe data after we have the gene info.
 		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
 	},
@@ -152,7 +120,7 @@ var controls = {
 	'chart-average-data-post!': (serverBus, state, newState, offsets, thunk) => thunk(offsets)
 };
 
-module.exports = {
-	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
-	postAction: (serverBus, state, newState, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, newState, ...args)
-};
+module.exports = compose(
+		make(controls),
+		mount(make(wizardControls), ['wizard']),
+		mount(make(spreadsheetControls), ['spreadsheet']));

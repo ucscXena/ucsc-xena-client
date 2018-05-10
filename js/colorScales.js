@@ -9,24 +9,24 @@ var {rgb, RGBtoHSV, HSVtoRGB} = require('./color_helper');
 // d3_category20, replace #7f7f7f gray (that aliases with our N/A gray of #808080) with dark grey #434348
 var categoryMore = [
 		"#1f77b4", // dark blue
-		"#aec7e8", // light blue
-		"#2ca02c", // dark green
-		"#98df8a", // light green
+//		"#17becf", // dark blue-green
 		"#d62728", // dark red
-		"#ff9896", // light salmon
-		"#ff7f0e", // dark orange
-		"#ffbb78", // light orange
 		"#9467bd", // dark purple
-		"#c5b0d5", // light lavender
+		"#ff7f0e", // dark orange
 		"#8c564b", // dark brown
-		"#c49c94", // light tan
 		"#e377c2", // dark pink
-		"#f7b6d2", // light pink
+		"#2ca02c", // dark green
 		"#bcbd22", // dark mustard
+//		"#434348", // very dark grey
+		"#aec7e8", // light blue
+//		"#9edae5", // light blue-green
 		"#dbdb8d", // light mustard
-		"#17becf", // dark blue-green
-		"#9edae5", // light blue-green
-		"#434348", // very dark grey
+		"#ff9896", // light salmon
+		"#c5b0d5", // light lavender
+		"#ffbb78", // light orange
+		"#c49c94", // light tan
+		"#f7b6d2", // light pink
+		"#98df8a", // light green
 		"#c7c7c7"  // light grey
 	];
 

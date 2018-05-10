@@ -142,11 +142,13 @@ function createDevTools(children) {
 		(state, action) => Monitor.update(monitorProps, state, action),
 		initialState
 	);
-	var DevTools = React.createClass({
-		render: function() {
+
+	class DevTools extends React.Component {
+	    render() {
 			return (<Monitor {...this.props} {...monitorProps}/>);
 		}
-	});
+	}
+
 	DevTools.instrument = enhancer;
 	return DevTools;
 }

@@ -1,7 +1,6 @@
 'use strict';
 
 var _ = require('../underscore_ext');
-var _s = require('underscore.string');
 var {parse} = require('./searchParser');
 //var {shouldNormalize, shouldLog} = require('./denseMatrix');
 
@@ -13,18 +12,8 @@ function invert(matches, allSamples) {
 	return _.difference(allSamples, matches);
 }
 
-// XXX ugh. Need a tail call.
 function filterSampleIds(cohortSamples, cmp, str) {
-	var i = 0, res = [];
-	cohortSamples.forEach(samples => {
-		samples.forEach(s => {
-			if (cmp(str, s)) {
-				res.push(i);
-			}
-			++i;
-		});
-	});
-	return res;
+	return _.filterIndices(cohortSamples, s => cmp(str, s));
 }
 
 function searchSampleIds(cohortSamples, str) {
@@ -70,7 +59,9 @@ var searchMutation = _.curry((cmp, {allSamples}, search, data) => {
 		return invert(samplesInResp, allSamples);
 	}
 
-	let matchingRows = _.filter(rows, row => _.any(row, v => cmp(search, _.isString(v) ? v : String(v))));
+	// omit 'sample' from the variant search, because it is not stable:
+	// it's an index into the sample id list, and so changes after filter.
+	let matchingRows = _.filter(rows, row => _.any(row, (v, k) => k !== 'sample' && cmp(search, _.isString(v) ? v : String(v))));
 	return _.uniq(_.pluck(matchingRows, 'sample'));
 });
 
@@ -169,7 +160,7 @@ function evalexp(ctx, expression) {
 
 function createFieldIds(len) {
 	const A = 'A'.charCodeAt(0);
-	return _.range(len).map(i => String.fromCharCode(i + A));
+	return _.times(len, i => String.fromCharCode(i + A));
 }
 
 function createFieldMap(columnOrder) {
@@ -181,9 +172,9 @@ function searchSamples(search, columns, columnOrder, data, cohortSamples) {
 		return null;
 	}
 	let fieldMap = createFieldMap(columnOrder),
-		allSamples = _.range(_.sum(_.pluck(cohortSamples, 'length')));
+		allSamples = _.range(_.get(cohortSamples, 'length'));
 	try {
-		var exp = parse(_s.trim(search));
+		var exp = parse(search.trim());
 		return evalexp({columns, data, fieldMap, cohortSamples, allSamples}, exp);
 	} catch(e) {
 		console.log('parsing error', e);
@@ -230,7 +221,7 @@ function remapFields(oldOrder, order, exp) {
 		oldFieldMap = _.invert(createFieldMap(oldOrder)),
 		newOrder = _.map(order, uuid => oldFieldMap[uuid]),
 		mapping = _.object(newOrder, fieldIds),
-		tree = parse(_s.trim(exp));
+		tree = parse(exp.trim());
 	return treeToString(remapTreeFields(tree, mapping));
 }
 

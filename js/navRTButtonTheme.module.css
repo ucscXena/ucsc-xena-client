@@ -1,0 +1,32 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Copied from navRTLinkTheme by bc, and is probably wrong.
+ *
+ * React Toolbox theme for applying nav-specific overrides to Button components. Used by navTheme.
+ *
+ * Uses theme key RTButton and theme end points to override specific classes. See
+ * http://react-toolbox.com/#/components/link for details.
+ */
+
+.accent {
+}
+
+.button {
+	composes: mdBody1 from '../css/typography.module.css';
+	&[data-react-toolbox='button'] {
+		/* RTB color is overriding color unless using !important. No idea why. */
+		color: var(--color-accent) !important;
+		margin: 0 16px;
+		opacity: 1;
+		transition: color 0.35s; /** Must override RTB's opacity transition here */
+		&:hover, &:focus {
+			color: var(--color-primary-contrast);
+			text-decoration: none;
+		}
+		& > abbr {
+			text-transform: uppercase;
+		}
+	}
+}

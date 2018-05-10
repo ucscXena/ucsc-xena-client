@@ -1,0 +1,29 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for wrapper around columns, as well as add column hover functionality on individual columns.
+ */
+
+/** Handle visualization or wizard mode - add wrapper around column and add column components. */
+.visualizationOrWizardMode {
+	display: flex;
+}
+
+/* During wizard mode, add 16px to the right of each column as there is no "add column" enabled during wizard (or edit) 
+ * to force gutter */
+.wizardModeMargins {
+	margin-right: 16px;
+}
+
+/* Scoot column to the left of "add column" component, to the left by 8px */
+.hoverLeft :global(.Column) {
+	margin-left: -8px;
+	margin-right: 8px;
+}
+
+/* Scoot column to the right of "add column" component, to the right by 8px */
+.hoverRight :global(.Column) {
+	margin-left: 8px;
+	margin-right: -8px;
+}

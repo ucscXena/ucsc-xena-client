@@ -1,0 +1,20 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Styling of resize handler on column cards. 
+ */
+
+.Column .react-resizable-handle {
+	bottom: -6px;
+	right: -6px;
+	opacity: 0;
+	width: 12px;
+	height: 12px;
+	background: url('../resizer.gif');
+	/* Not sure if -1 is a good idea, but nothing else seems to work.
+	 * giving canvas index 2 and this index 1, for example, results in
+	 * the handle getting events in the corner of the canvas, where we
+	 * want the canvas to get events. */
+	z-index: -1;
+}

@@ -5,26 +5,8 @@ var partition = require('./partition');
 var colorScales = require('./colorScales');
 var colorHelper = require('./color_helper');
 
-var drawBackground = (vg, width, height) => vg.box(0, 0, width, height, "gray");
-
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
-
-var secondExists = x => x[1] != null;
-
-var filter = _.filter,
-	zip = _.zip,
-	range = _.range;
-
-function drawColumn(data, colorScale, boxfn) {
-	var colors;
-
-	if (colorScale) { // then there exist some non-null values
-		// zip colors and their indexes, then filter out the nulls
-		colors = filter(zip(range(data.length), data.map(colorScale)), secondExists);
-		colors.forEach(args => boxfn(...args));
-	}
-}
 
 // Writing this optimized because it's expensive when
 // zoomed out on a large cohort.
@@ -59,53 +41,6 @@ function floatLabels(rowData, minSpan) {
 	return [...nnLabels, ...nullLabels];
 }
 
-function drawLayout(vg, opts) {
-	var {height, width, index, count, layout, data, codes, colors} = opts,
-		minTxtWidth = vg.textWidth(labelFont, 'WWWW'),
-		first = Math.floor(index),
-		last  = Math.ceil(index + count);
-
-	vg.smoothing(false); // For some reason this works better if we do it every time.
-
-	// reset image
-	if (data.length === 0) { // no features to draw
-		vg.box(0, 0, width, height, "gray");
-		return;
-	}
-
-	layout.forEach(function (el, i) {
-		var rowData = data[i].slice(first, last),
-			colorScale = colorScales.colorScale(colors[i]),
-			drawRow = (vg, rwidth, rheight) =>
-				drawColumn(rowData, colorScale, (i, color) =>
-					vg.box(0, i * rheight, rwidth, rheight, color));
-
-
-		vg.translate(el.start, 0, () =>
-			vg.drawSharpRows(vg, index, count, height, el.size,
-				drawBackground,
-				drawRow));
-
-		// Add labels
-		var minSpan = labelFont / (height / count);
-		if (el.size - 2 * labelMargin >= minTxtWidth) {
-			let labels = codes ? codeLabels(codes, rowData, minSpan) : floatLabels(rowData, minSpan),
-				h = height / count,
-				labelColors = rowData.map(colorScale),
-				uniqStates = _.filter(_.uniq(rowData), c => c != null),
-				colorWhiteBlack = (uniqStates.length === 2 &&  // looking for [0,1]  columns color differently
-					_.indexOf(uniqStates, 1) !== -1 && _.indexOf(uniqStates, 0) !== -1) ? true : false,
-				codedColor = colorWhiteBlack || codes; // coloring as coded column: coded column or binary float column (0s and 1s)
-
-			vg.clip(el.start + labelMargin, 0, el.size - labelMargin, height, () =>
-					labels.forEach(([l, i, ih]) => /* label, index, count */
-							vg.textCenteredPushRight(el.start + labelMargin, h * i - 1, el.size - labelMargin,
-								h * ih, (codedColor && labelColors[i]) ? colorHelper.contrastColor(labelColors[i]) : 'black',
-								labelFont, l)));
-		}
-	});
-}
-
 // Like groupBy, but combine new elements with the group, using
 // the reducing function fn.
 // We use a Map for ordered, numeric keys.
@@ -137,7 +72,7 @@ function groupsByScale(arr, scale) {
 	var domains = scale.domain(),
 		domainGroupBy = _.groupBy(arr, v => _.findIndexDefault(domains, d => v < d, domains.length));
 
-	return _.range(domains.length + 1).map(i => domainGroupBy[i] || []);
+	return _.times(domains.length + 1, i => domainGroupBy[i] || []);
 }
 
 var regionColorMethods = {
@@ -150,7 +85,7 @@ var regionColorMethods = {
 			groupCounts = domainGroups.map(vs => vs.length),
 			total = _.sum(groupCounts);
 			// blend colors via rms
-			return _.any(groupColors) ? _.range(3).map(ch =>
+			return _.any(groupColors) ? _.times(3, ch =>
 					~~Math.sqrt(_.sum(_.mmap(groupColors, groupCounts,
 						(rgb, n) => rgb == null ? 0 : rgb[ch] * rgb[ch] * n / total)))) : null;
 	}
@@ -200,8 +135,12 @@ function drawLayoutByPixel(vg, opts) {
 			}
 		}
 
-		ctx.putImageData(img, 0, 0);
+	});
+	ctx.putImageData(img, 0, 0);
 
+	layout.forEach(function (el, i) {
+		var rowData = data[i].slice(first, last),
+			colorScale = colorScales.colorScale(colors[i]);
 		// Add labels
 		var minSpan = labelFont / (height / count);
 		if (el.size - 2 * labelMargin >= minTxtWidth) {
@@ -241,6 +180,5 @@ var drawHeatmapByMethod = draw => (vg, props) => {
 };
 
 module.exports = {
-	drawHeatmap: drawHeatmapByMethod(drawLayout),
-	drawHeatmapByPixel: drawHeatmapByMethod(drawLayoutByPixel)
+	drawHeatmap: drawHeatmapByMethod(drawLayoutByPixel)
 };

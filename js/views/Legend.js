@@ -2,63 +2,39 @@
 
 var React = require('react');
 var _ = require('../underscore_ext');
-var Row = require('react-bootstrap/lib/Row');
-var Col = require('react-bootstrap/lib/Col');
 var colorHelper = require('../color_helper');
-require('./Legend.css');
+
+// Styles
+var compStyles = require('./Legend.module.css');
 
 var nodata = [["null (no data)", "#808080"]];
 
-var Legend = React.createClass({
-	getDefaultProps: () => ({ max: 40 }),
-	render: function () {
-		var {labels, colors, max, footnotes, isSamplesColumn} = this.props,
+class Legend extends React.Component {
+	static defaultProps = { max: 40 };
+
+	render() {
+		var {labels, colors, max, footnotes} = this.props,
 			ellipsis = labels.length > max,
 			items = _.map(nodata.concat(_.last(_.zip(labels, colors), max)), ([l, c], i) =>
-						  <label className='Legend-label'
+						  <label className={compStyles.label}
 							  key={i}
 							  title={l}
 							  style={{backgroundColor: c,
-								  color: colorHelper.contrastColor(c),
-								  textAlign: 'center'}}>
-
+								  color: colorHelper.contrastColor(c)}}>
 							  {l}
 						  </label>).reverse(),
-			footnotesItems = footnotes ? footnotes.map(text =>
-				<span>
+			footnotesItems = footnotes ? footnotes.map((text, i) =>
+				<div key={i} className={compStyles.footnotes}>
 					{text}
-					<br/>
-				</span>) : null;
-
-		if (isSamplesColumn) {
-			items = items.slice(0, 5);
-		}
-
+				</div>) : null;
 		return (
-			<div>
-				{items ?
-					<Row>
-						<Col md={10} mdOffset={1}>
-							{items}
-						</Col>
-					</Row> : null}
-				{ellipsis ?
-					<Row>
-						<Col md={10} mdOffset={1} text-right>
-							<label className='Legend-label'>
-								...
-							</label>
-						</Col>
-					</Row> : null}
-				{footnotes ?
-					<Row>
-						<Col md={10} mdOffset={1}>
-						{footnotesItems}
-						</Col>
-					</Row> : null}
+			<div className={compStyles.Legend}>
+				{items ? <div className={compStyles.column}>{items}</div> : null}
+				{ellipsis ? <div>...</div> : null}
+				{footnotes ? footnotesItems : null}
 			</div>
 		);
 	}
-});
+}
 
 module.exports = Legend;

@@ -68,9 +68,9 @@ function colorCoded(column, settings, codes, __, customColors) {
 function colorFloatGenomicData(column, settings = {}, codes, data) {
 	var vizSettings = _.getIn(column, ["vizSettings", "colNormalization"]),
 		defaultNormalization = column.defaultNormalization,
-	 	colSubtractMean = vizSettings === "subset" ||
+		colSubtractMean = (vizSettings === "subset") ||
 	 		(vizSettings == null && defaultNormalization && typeof defaultNormalization === 'boolean'),
-		colLog = vizSettings === "log2(x)" ||
+		colLog = (vizSettings === "log2(x)") ||
 			(vizSettings == null && defaultNormalization && defaultNormalization === 'log2(x)'),
 		colorClass = column.colorClass;
 
@@ -84,9 +84,12 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		transformedMin = originalMin - mean;
 		transformedMax = originalMax - mean;
 	} else if (colLog) {
-		// double check log scale can work, we allow log(0)
-		if (originalMin < 0) {
-			console.log('data should not have values < 0');
+		// double check log scale can work, we allow value =0  by using log (x+1);
+		if (originalMin <= -1) {
+			console.log('data should not have values <= -1, log (x+1) math will not work, set to no color transformation');
+			transformedMin = originalMin;
+			transformedMax = originalMax;
+			colLog = false;
 		} else {
 			transformedMin = Math.log2(originalMin + 1);
 			transformedMax = Math.log2(originalMax + 1);
@@ -123,21 +126,17 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 			spec = ['float-thresh', low, zero, high, -absmax / 2.0 + mean, -zone / 2.0 + mean,
 			zone / 2.0 + mean, absmax / 2.0 + mean];
 		} else if (colLog) {
-			if (Math.pow(2, -absmax / 2.0) === 1.0, Math.pow(2, absmax / 2.0) === 1.0) {
-				spec = ['float', low, zero, high, 0, 0];
-			} else {
-				spec = ['float-log', low, high, Math.pow(2, -absmax / 2.0) - 1.0, Math.pow(2, absmax / 2.0) - 1.0]; // no threshold
-			}
+			spec = ['float-log', low, high, Math.pow(2, -absmax / 2.0) - 1.0, Math.pow(2, absmax / 2.0) - 1.0]; // no threshold
 		} else {
 			spec = ['float-thresh', low, zero, high, -absmax / 2.0, -zone / 2.0,
 			zone / 2.0, absmax / 2.0 ];
 		}
-	} else	if (transformedMin >= 0 && transformedMax >= 0) {
+	} else if (transformedMin >= 0 && transformedMax >= 0) {
 		zone = (transformedMax - transformedMin) / 4.0;
 		if (colSubtractMean) {
 			spec = ['float-thresh-pos', zero, high, transformedMin + zone + mean, transformedMax - zone / 2.0 + mean];
 		} else if (colLog) {
-			if ( Math.pow(2, transformedMin + zone) === 1.0, Math.pow(2, (transformedMax - zone / 2.0)) === 1.0) {
+			if ( transformedMin === 0 && transformedMax === 0) { // this applis to all original data are zeros case
 				spec = ['float-pos', zero, high, 0, 0];
 			} else {
 				spec = ['float-thresh-log-pos', zero, high, Math.pow(2, transformedMin + zone) - 1.0, Math.pow(2, (transformedMax - zone / 2.0)) - 1.0];
@@ -145,16 +144,12 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		} else {
 			spec = ['float-thresh-pos', zero, high, transformedMin + zone, transformedMax - zone / 2.0];
 		}
-	} else { // min <= 0 && max <= 0
+	} else { // transformedMin <= 0 && transformedMax <= 0
 		zone = (transformedMax - transformedMin) / 4.0;
 		if (colSubtractMean) {
 			spec = ['float-thresh-neg', low, zero, transformedMin + zone / 2.0 + mean, transformedMax - zone + mean];
 		} else if (colLog) {
-			if (Math.pow(2, transformedMin + zone / 2.0) === 1.0, Math.pow(2, transformedMax - zone) === 1.0) {
-				spec = ['float-meg', low, zero, 0, 0];
-			} else {
-				spec = ['float-thresh-log-neg', low, zero, Math.pow(2, transformedMin + zone / 2.0) - 1.0, Math.pow(2, transformedMax - zone) - 1.0];
-			}
+			spec = ['float-thresh-log-neg', low, zero, Math.pow(2, transformedMin + zone / 2.0) - 1.0, Math.pow(2, transformedMax - zone) - 1.0];
 		} else {
 			spec = ['float-thresh-neg', low, zero, transformedMin + zone / 2.0, transformedMax - zone];
 		}

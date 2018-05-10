@@ -1,25 +1,24 @@
 'use strict';
 
 require('./base');
-var controller = require('./controllers/hub');
 var React = require('react');
-var connector = require('./connector');
-var createStore = require('./store');
-var Input = require('react-bootstrap/lib/Input');
-var FormGroup = require('react-bootstrap/lib/FormGroup');
-var PageHeader = require('react-bootstrap/lib/PageHeader');
-var Button = require('react-bootstrap/lib/Button');
-var Grid = require('react-bootstrap/lib/Grid');
-var Row = require('react-bootstrap/lib/Row');
-var Col = require('react-bootstrap/lib/Col');
-var Label = require('react-bootstrap/lib/Label');
-var Glyphicon = require('react-bootstrap/lib/Glyphicon');
+var Rx = require('./rx');
+import {ThemeProvider} from 'react-css-themr';
+import '../css/index.css'; // Root styles file (reset, fonts, globals)
+var appTheme = require('./appTheme');
+var classNames = require('classnames');
+
+import {Button} from 'react-toolbox/lib/button';
+import {Card} from 'react-toolbox/lib/card';
+import {Checkbox} from 'react-toolbox/lib/checkbox';
+var typStyles = require('../css/typography.module.css');
+
 var {testHost} = require('./xenaQuery');
-var _s = require('underscore.string');
 var _ = require('./underscore_ext');
 var {serverNames} = require('./defaultServers');
-require('./hub.css');
+var styles = require('./hubPage.module.css');
 var {parseServer} = require('./hubParams');
+var nav = require('./nav');
 
 var RETURN = 13;
 
@@ -29,7 +28,7 @@ var getStatus = (user, ping) =>
 	user ? (ping === true ? 'connected' : 'selected') : '';
 
 var getStyle = statusStr =>
-	statusStr === 'connected' ? 'info' : 'default';
+	statusStr === 'connected' ? styles.connected : null;
 
 var reqStatus = (ping) =>
 	ping == null ? ' (connecting...)' :
@@ -37,23 +36,32 @@ var reqStatus = (ping) =>
 
 var checkHost = host => testHost(host).take(1).map(v => ({[host]: v}));
 
-var Hub = React.createClass({
-	getInitialState() {
-		return {
-			ping: {}
-		};
-	},
+class Hub extends React.Component {
+	state = {
+	    ping: {}
+	};
+
+	onNavigate = (page) => {
+		this.props.callback(['navigate', page]);
+	};
+
 	componentDidMount() {
 		// XXX Use a connector to get rid of selector, here.
 		// Or use a sub-component.
 		var {state, selector} = this.props,
 			allHosts = _.keys(selector(state));
 
-		allHosts.forEach(h => checkHost(h).subscribe(this.updatePing));
-	},
+		nav({activeLink: 'hub', onNavigate: this.onNavigate});
+
+		this.sub = Rx.Observable.from(allHosts.map(checkHost))
+			.mergeAll()
+			.subscribe(this.updatePing);
+	}
+
 	componentWillUnmount() {
-		this.sub.dispose();
-	},
+		this.sub.unsubscribe();
+	}
+
 	componentWillReceiveProps(newProps) {
 		var {ping} = this.state,
 			{state, selector} = newProps,
@@ -64,33 +72,39 @@ var Hub = React.createClass({
 
 		_.difference(_.keys(servers), _.keys(ping))
 			.forEach(h => checkHost(h).subscribe(this.updatePing));
-	},
-	updatePing(h) {
+	}
+
+	updatePing = (h) => {
 		this.setState({ping: {...this.state.ping, ...h}});
-	},
-	onKeyDown(ev) {
+	};
+
+	onKeyDown = (ev) => {
 		if (ev.keyCode === RETURN) {
 			ev.preventDefault();
 			this.onAdd();
 		}
-	},
-	onSelect(ev) {
+	};
+
+	onSelect = (isOn, ev) => {
 		var {checked} = ev.target,
 			host = ev.target.getAttribute('data-host');
 		this.props.callback([checked ? 'enable-host' : 'disable-host', host, 'user']);
-	},
-	onAdd() {
-		var target = this.refs.newHost.refs.input,
-			value = _s.trim(target.value);
+	};
+
+	onAdd = () => {
+		var target = this.refs.newHost,
+			value = target.value.trim();
 		if (value !== '') {
 			this.props.callback(['add-host', parseServer(value)]);
 			target.value = '';
 		}
-	},
-	onRemove(ev) {
+	};
+
+	onRemove = (ev) => {
 		var host = ev.currentTarget.getAttribute('data-host');
 		this.props.callback(['remove-host', host]);
-	},
+	};
+
 	render() {
 		var {state, selector} = this.props,
 			{ping} = this.state,
@@ -103,41 +117,48 @@ var Hub = React.createClass({
 				reqStatus: reqStatus(ping[h])
 			}));
 		return (
-			<Grid>
-				<Row>
-					<Col md={10}>
-						<PageHeader>Data Hubs</PageHeader>
+			<div className={styles.hubPage}>
+				<h1 className={typStyles.mdHeadline}>Data Hubs</h1>
+				<Card>
+					<ul className={styles.hubList}>
 						{_.values(hostList).map(h => (
-							<form key={h.host} className="host-form form-horizontal"><FormGroup>
-								<input className='col-md-1' onChange={this.onSelect} checked={h.selected} type='checkbox' data-host={h.host}/>
-								<span className='col-md-2'>
-								<Label bsStyle={getStyle(h.statusStr)}>{h.statusStr}</Label>
-								</span>
-								<span className='col-md-4'>
-									<a href={`../datapages/?host=${h.host}`}>
-										{h.name}{h.reqStatus}
-									</a>
-								</span>
-								<Button className='remove' bsSize='xsmall' data-host={h.host} onClick={this.onRemove}>
-									<Glyphicon glyph='remove' />
-								</Button>
-							</FormGroup></form>
-							))}
-						<form className="form-horizontal">
-						<FormGroup>
-							<Input onKeyDown={this.onKeyDown} ref='newHost' standalone type='text' wrapperClassName='col-md-6'/>
-							<Button onClick={this.onAdd} wrapperClassName='col-md-2'>Add</Button>
-						</FormGroup>
-						</form>
-					</Col>
-				</Row>
-			</Grid>);
+						<li key={h.host}>
+							<Checkbox className={styles.checkbox} onChange={this.onSelect} checked={h.selected}
+									  data-host={h.host}/>
+							<div className={styles.statusContainer}>
+								<span className={classNames(styles.status, getStyle(h.statusStr))}>{h.statusStr}</span>
+							</div>
+							<div className={styles.hubNameContainer}>
+								<a href={`../datapages/?host=${h.host}`}>
+									{h.name}{h.reqStatus}
+								</a>
+							</div>
+							<i className={classNames('material-icons', styles.remove)} data-host={h.host}
+							   onClick={this.onRemove}>close</i>
+						</li>
+						))}
+						<li>
+							<div className={styles.hostForm}>
+								<input className={styles.input} onKeyDown={this.onKeyDown} ref='newHost'
+									   type='text' placeholder='Add Hub'/>
+								<Button onClick={this.onAdd} accent>Add</Button>
+							</div>
+						</li>
+					</ul>
+				</Card>
+			</div>);
 	}
-});
+}
 
-var store = createStore();
-var main = window.document.getElementById('main');
+var selector = state => state.spreadsheet.servers;
 
-var selector = state => state.servers;
+class ThemedHub extends React.Component {
+	render() {
+		return (
+		<ThemeProvider theme={appTheme}>
+			<Hub {...this.props} selector={selector}/>
+		</ThemeProvider>);
+	}
+}
 
-connector({...store, controller, main, selector, Page: Hub, persist: true, history: false});
+module.exports = ThemedHub;

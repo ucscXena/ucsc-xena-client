@@ -369,9 +369,9 @@ function mapSamples(samples, data) {
 }
 
 //user input is a gene, get the mutations by the gene's genomic coordinates
-function fetchGeneByCoordinate({dsID, fields, fieldType, assembly}, [samples]) {
+function fetchGeneByCoordinate({dsID, fields, fieldType, assembly}, samples) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
-	return name ? xenaQuery.refGeneExonCase(host, name, fields)
+	return name ? xenaQuery.refGeneExons(host, name, fields)
 		.flatMap(refGene => {
 			var coords = _.values(refGene)[0];
 			if (!coords) {
@@ -395,7 +395,7 @@ function fetchGeneByAnnotation({dsID, fields, assembly}, [samples]) {
 	).map(resp => mapSamples(samples, _.object(['req', 'refGene'], resp)));
 }*/
 
-function fetchChrom({dsID, assembly}, [samples], pos) {
+function fetchChrom({dsID, assembly}, samples, pos) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return refGeneRange(host, name, pos.chrom, pos.baseStart, pos.baseEnd)
 		.flatMap(refGene =>
@@ -494,11 +494,10 @@ function defaultXZoom(pos, refGene, type) {
 	};
 }
 
-var getCustomColor = (fieldSpecs, datasets, type) =>
-	(fieldSpecs.length === 1) ?
-		_.getIn(datasets, [fieldSpecs[0].dsID, 'customcolor', type], null) : null;
+var getCustomColor = (dataset, type) =>
+	_.getIn(dataset, ['customcolor', type], impactColor);
 
-function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
+function svDataToDisplay(column, vizSettings, data, sortedSamples, index) {
 	var pos = parsePos(column.fields[0]);
 	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {};
@@ -527,18 +526,19 @@ function svDataToDisplay(column, vizSettings, data, sortedSamples, datasets, ind
 	};
 }
 
-function snvDataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
+function snvDataToDisplay(column, vizSettings, data, sortedSamples, index) {
 	var pos = parsePos(column.fields[0]);
 	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {};
 	}
 	var refGeneObj = _.values(data.refGene)[0],
 		maxXZoom = defaultXZoom(pos, refGeneObj, 'mutation'), // exported for zoom controls
-		{width, showIntrons = false, sFeature, xzoom = maxXZoom} = column,
+		{dataset, width, showIntrons = false,
+			sFeature = 'impact', xzoom = maxXZoom} = column,
 		allVals = _.uniq(data.req.rows.map(features[sFeature].get)),
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
 		layout = createLayout(refGeneObj, width, xzoom, pos),
-		colorMap = getCustomColor(column.fieldSpecs, datasets, 'SNV') || impactColor,
+		colorMap = getCustomColor(dataset, 'SNV'),
 		nodes = findSNVNodes(index.byPosition, layout, colorMap, sFeature, sortedSamples);
 
 	return {
@@ -595,7 +595,7 @@ function SNVPvalue (rows, total, k) {
 	//total: instances, like total number of people in the experiments
 	//k: possible variaty, like 365 days for birthday
 	let	newRows = _.map(rows, n => `${n.chr}:${n.start}`);
-	return _.mapObject(_.countBy(newRows, n => n),
+	return _.values(_.mapObject(_.countBy(newRows, n => n),
 		function (val, key) {
 			// a classic birthday problem: https://en.wikipedia.org/wiki/Birthday_problem
 			// a strong birthday problem: extend to trio (at least a trio) or Quadruple (at least four) etc
@@ -624,7 +624,7 @@ function SNVPvalue (rows, total, k) {
 				pValue: pValue
 			};
 		}
-	);
+	));
 }
 
 ////////////////////////////////

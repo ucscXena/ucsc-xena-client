@@ -9,6 +9,7 @@ var nostate = require('./nostate');
 var urlParams = require('./urlParams');
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
+var {schemaCheckThrow} = require('./schemaCheck');
 
 function controlRunner(serverBus, controller) {
 	return function (state, ac) {
@@ -37,34 +38,40 @@ function controlRunner(serverBus, controller) {
 //  new state: append state & invalidate  5 - 7? The browser will
 //     invalidate them.
 
-var [pushState, setState] = (function () {
-	var i = 0, cache = [];
-	return [function (s) {
-		cache[i] = s;
-		history.pushState(i, '');
-		i = (i + 1) % 100;
-	},
-	// XXX safari issues a 'popstate' on page load, when we have no cache. The filter here
-	// drops those events.
-	Rx.Observable.fromEvent(window, 'popstate').filter(s => !!cache[s.state]).map(s => {
-		i = s.state;
-		return cache[i];
-	})];
-})();
-
-var enableHistory = (enable, obs) => enable ?
-	obs.do(pushState).merge(setState) : obs;
+//var [pushState, setState] = (function () {
+//	var i = 0, cache = [];
+//	return [function (s) {
+//		cache[i] = s;
+//		history.pushState(i, '');
+//		i = (i + 1) % 100;
+//	},
+//	// XXX safari issues a 'popstate' on page load, when we have no cache. The filter here
+//	// drops those events.
+//	Rx.Observable.fromEvent(window, 'popstate').filter(s => !!cache[s.state]).map(s => {
+//		i = s.state;
+//		return cache[i];
+//	})];
+//})();
+//
+//var enableHistory = (enable, obs) => enable ?
+//	obs.do(pushState).merge(setState) : obs;
+//
+var dropTransient = state =>
+	_.assoc(state, 'wizard', {}, 'datapages', undefined);
 
 // Serialization
-var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(state)));
-var parse = str => migrateState(expandState(JSON.parse(LZ.decompressFromUTF16(str))));
+var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(dropTransient(state))));
+var parse = str => schemaCheckThrow(expandState(migrateState(JSON.parse(LZ.decompressFromUTF16(str)))));
+
+var historyObs = Rx.Observable
+	.fromEvent(window, 'popstate')
+	.map(() => ['history', {path: location.pathname, params: urlParams()}]);
 
 //
 module.exports = function({
 	Page,
 	controller,
 	persist,
-	history,
 	initialState,
 	serverBus,
 	serverCh,
@@ -79,12 +86,14 @@ module.exports = function({
 
 	delete sessionStorage.debugSession; // Free up space & don't try to share with dev
 	if (persist && nostate('xena')) {
-		initialState = _.merge(initialState, parse(sessionStorage.xena));
+		try {
+			initialState = parse(sessionStorage.xena);
+		} catch (e) {
+			initialState = _.assoc(initialState, 'stateError', 'session');
+		}
 	}
 
-	let stateObs = enableHistory(
-			history,
-			Rx.Observable.merge(serverCh, uiCh).scan(runner, initialState)).share();
+	let stateObs = Rx.Observable.merge(serverCh, uiCh, historyObs).scan(runner, initialState).share();
 
 	stateObs.debounceTime(0, Rx.Scheduler.animationFrame)
 		.subscribe(state => ReactDOM.render(<Page callback={updater} selector={selector} state={state} />, dom.main));
@@ -96,6 +105,6 @@ module.exports = function({
 	}
 
 	// Kick things off.
-	uiBus.next(['init', urlParams()]);
+	uiBus.next(['init', location.pathname, urlParams()]);
 	return dom;
 };

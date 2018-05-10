@@ -1,0 +1,12 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying overrides to Xena's toolbar's AppBar component. Used by appTheme.
+ *
+ * Uses theme key RTAppBar, see http://react-toolbox.com/#/components/app_bar.
+ */
+
+.appBar:not(.flat) {
+	box-shadow: 0 4px 5px 0 rgba(0, 0, 0, .14); /* Simplify RTB AppBar box shadow to prevent bleed into nav bar */
+}

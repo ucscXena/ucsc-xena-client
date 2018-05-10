@@ -12,7 +12,7 @@ rsync -a --delete --rsync-path='sudo rsync' build/ ${USER}@${HOST}:/var/www/html
 # copy to clean load directory, so we can rsync --delete
 rm -rf ${BUILD_DJANGO}
 mkdir ${BUILD_DJANGO}
-cp -a manage.py server bookmarks ${BUILD_DJANGO}
+cp -a manage.py server bookmarks ties ${BUILD_DJANGO}
 rsync -a --delete ${BUILD_DJANGO}/ ${USER}@${HOST}:/var/www/backend/django
 
 requirements=$(cat requirements.txt)

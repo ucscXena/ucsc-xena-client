@@ -20,27 +20,32 @@ var style = {
 	transition: 'border-color 0.3s linear'
 };
 
-var SpreadSheetHighlight = React.createClass({
-	shouldComponentUpdate: function (nextProps, nextState) {
+class SpreadSheetHighlight extends React.Component {
+	state = {animate: false};
+
+	shouldComponentUpdate(nextProps, nextState) {
 		// ignore props.
 		return !_.isEqual(this.state, nextState);
-	},
-	getInitialState: () => ({animate: false}),
-	componentDidMount: function () {
+	}
+
+	componentDidMount() {
 		var {height} = this.props;
 		this.vg = vgcanvas(this.refs.canvas, tickWidth, height);
 		this.draw(this.props);
 		this.animate = this.props.animate.subscribe(ev => this.setState({animate: ev})); //eslint-disable-line react/no-did-mount-set-state
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.animate.unsubscribe();
-	},
-	componentWillReceiveProps: function (newProps) {
+	}
+
+	componentWillReceiveProps(newProps) {
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}
-	},
-	draw: function (props) {
+	}
+
+	draw = (props) => {
 		var {samples, samplesMatched, height} = props,
 			{vg} = this;
 
@@ -52,7 +57,9 @@ var SpreadSheetHighlight = React.createClass({
 		if (!samplesMatched) {
 			return;
 		}
-		var matchMap = _.object(samplesMatched, _.range(samplesMatched.length)),
+		// Previously we used _.object, but hit a Safari bug https://bugs.webkit.org/show_bug.cgi?id=177772
+		// with assigning numeric values to numeric keys. So, using an Array instead.
+		var matchMap = samplesMatched.reduce((acc, v, i) => { acc[v] = i; return acc; }, new Array(samples.length)),
 			stripeGroups = _.groupByConsec(samples, s => _.has(matchMap, s)),
 			stripes = _.scan(stripeGroups, (acc, g) => acc + g.length, 0),
 			hasMatch = _.map(stripeGroups, (s, i) => _.has(matchMap, stripeGroups[i][0])),
@@ -68,14 +75,15 @@ var SpreadSheetHighlight = React.createClass({
 		if (rects.length > 0) {
 			vg.drawRectangles(rects, {fillStyle: 'rgba(0, 0, 0, 1)'});
 		}
-	},
-	render: function() {
+	};
+
+	render() {
 		var {animate} = this.state,
 			border = animate ? {
 				borderColor: 'red',
 			} : {};
 		return <canvas style={{...style, ...border}} ref='canvas' />;
 	}
-});
+}
 
 module.exports = SpreadSheetHighlight;

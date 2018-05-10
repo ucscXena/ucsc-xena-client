@@ -30,22 +30,24 @@ module.exports = (el, vgw, vgh, labelEl) => ({
 		// Also, we clip the height to an integer multiple of lineHeight, so we don't, for example, render
 		// the top pixel of the 2nd line, which looks distracting.
 		var style = {textAlign: 'center'},
-			labels = this.labelCtx.map(([left, top, width, h, color, f, txt]) => {
+			labels = this.labelCtx.map(([left, top, width, h, color, f, txt], i) => {
 				var lineHeight = 1.2 * f,
 					hyphens = h < 2 * lineHeight ? 'none' : 'auto', // Don't hyphenate on a single line
 					height = Math.floor(h / lineHeight) * lineHeight; // Render integer number of lines
 				return (
-					<div className='ColumnLabels'
+					<div key={i} className='ColumnLabels'
 						style={{
 							left,
 							top,
 							width,
 							color,
 							lineHeight: `${lineHeight}px`,
-							fontSize: `${f}px`,
 							height}}>
 
-						<p className='ColumnLabel' style={{width, hyphens}}>
+						<p className='ColumnLabel' style={{
+								fontSize: `${f}px`,
+								width,
+								hyphens}}>
 							{'' + txt}
 						</p>
 					</div>);

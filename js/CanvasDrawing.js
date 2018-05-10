@@ -27,14 +27,18 @@ var styles = {
 	}
 };
 
-var CanvasDrawing = React.createClass({
-	componentWillReceiveProps: function (newProps) {
+class CanvasDrawing extends React.Component {
+	componentWillReceiveProps(newProps) {
 		if (this.vg && !_.isEqual(newProps, this.props)) {
 			this.draw(newProps);
 		}
-	},
-	shouldComponentUpdate: () => false,
-	render: function () {
+	}
+
+	shouldComponentUpdate() {
+		return false;
+	}
+
+	render() {
 		var {width, zoom: {height}, wrapperProps} = this.props;
 		return (
 			<div ref='div' {...wrapperProps} style={{...styles.wrapper, width, height}}>
@@ -42,25 +46,28 @@ var CanvasDrawing = React.createClass({
 				<div style={{...styles.labels, top: -height, width, height}} ref='labels'/>
 			</div>
 		);
-	},
-	componentDidMount: function () {
+	}
+
+	componentDidMount() {
 		var {width, zoom: {height}} = this.props;
 		this.vg = vgmixed(ReactDOM.findDOMNode(this.refs.canvas), width, height, ReactDOM.findDOMNode(this.refs.labels));
 		this.draw(this.props);
-	},
+	}
 
-	setHeight: function (height) {
+	setHeight = (height) => {
 		this.vg.height(height);
 		this.refs.div.style.height = `${height}px`;
 		this.refs.labels.style.height = `${height}px`;
 		this.refs.labels.style.top = `-${height}px`;
-	},
-	setWidth: function (width) {
+	};
+
+	setWidth = (width) => {
 		this.vg.width(width);
 		this.refs.div.style.width = `${width}px`;
 		this.refs.labels.style.width = `${width}px`;
-	},
-	draw: function (props) {
+	};
+
+	draw = (props) => {
 		var {draw, ...drawProps} = props,
 			{zoom, width} = drawProps,
 			{height} = zoom,
@@ -75,7 +82,7 @@ var CanvasDrawing = React.createClass({
 		}
 
 		draw(vg, drawProps);
-	}
-});
+	};
+}
 
 module.exports = CanvasDrawing;

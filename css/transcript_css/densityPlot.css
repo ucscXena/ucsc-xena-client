@@ -1,19 +1,18 @@
 .densityPlot {
 	margin: 20px;
-	width: 200px;
+	width: 230px;
 	display: flex;
 	flex-wrap: wrap;
 	float: left;
 }
 
 .densityPlot--row {
-	width: 62.5%;
+	height: 71px;
 	display: inline-block;
 }
 
 .densityPlot--row--xAxis {
 	height: 1px;
-	width: 100%;
 	background-color: black;
 	position: relative;
 	top: 50%;
@@ -25,14 +24,12 @@
 	display: flex;
 	align-items: flex-end;
 	height: 50%;
-	width: 100%;
 }
 
 .densityPlot--row--studyB {
 	display: flex;
 	align-items: flex-end;
 	height: 50%;
-	width: 100%;
 	bottom: 50%;
 	-webkit-transform: rotateX(180deg);
 	-moz-transform: rotateX(180deg);
@@ -49,7 +46,6 @@
 }
 
 .densityPlot--row--zoom {
-	width: 100%;
 	height: 210px;
 	display: inline-block;
 }

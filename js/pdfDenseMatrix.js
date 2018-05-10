@@ -3,7 +3,7 @@ var {drawHeatmap} = require('./drawHeatmap');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');
 
-function pdf(column, vg, state, i) {
+function pdf(id, column, vg, state, i) {
 	let {zoom} = state,
 		colID = _.getIn(state, ['columnOrder', i]),
 		data = _.getIn(state, ['data', colID]),

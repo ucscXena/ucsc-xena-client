@@ -109,7 +109,7 @@ var m = (...objs) => _.pick(_.merge(...objs), v => v != null);
 var findFirstProp = (fieldSpecs, prop)  =>
 	_.get(_.find(fieldSpecs, fs => _.has(fs, prop)), prop);
 
-var hasAssembly = fieldType => ['mutation', 'SV'].indexOf(fieldType) !== -1;
+var hasAssembly = fieldType => ['mutation', 'SV', 'segmented'].indexOf(fieldType) !== -1;
 var hasSFeature = hasAssembly;
 
 var getAssembly = (fieldType, fieldSpecs) =>
@@ -149,7 +149,10 @@ function combineColSpecs(fieldSpecs, datasets) {
 		colorClass: getColorClass(resetFieldSpecs),
 		noGeneDetail: !uniqProbemap, // XXX is this wrong? also have to check field len.
 		assembly: getAssembly(fieldType, resetFieldSpecs),
-		sFeature: getFeature(fieldType, resetFieldSpecs)
+		sFeature: getFeature(fieldType, resetFieldSpecs), // XXX deprecate?
+		// until we ditch composite, copy these for signatures
+		dsID: _.get(fieldSpecs[0], 'dsID'),
+		missing: _.get(fieldSpecs[0], 'missing'),
 	});
 }
 
@@ -290,9 +293,10 @@ getField.add('segmented', (column, samples, fdata) => {
 });
 
 
+// XXX deprecate this
 function fetchComposite(column, samples) {
 	var {fieldSpecs} = column;
-	return Rx.Observable.zipArray(fieldSpecs.map((f, i) => fieldFetch(f, [samples[i]])))
+	return Rx.Observable.zipArray(fieldSpecs.map(f => fieldFetch(f, samples)))
 		.map(fdata => getField(column, samples, fdata));
 }
 

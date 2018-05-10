@@ -1,53 +1,28 @@
 'use strict';
 
 // XXX move Application to views
-var Application = require('../Application');
 var React = require('react');
 //var _ = require('../underscore_ext');
 var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
 var ChartView = require('../ChartView');
 var Column = require('../views/Column');
 var _ = require('../underscore_ext');
-var kmModel = require('../models/km');
-var {lookupSample} = require('../models/sample');
-var {xenaFieldPaths} = require('../models/fieldSpec');
-var {rxEventsMixin} = require('../react-utils');
+var {rxEvents} = require('../react-utils');
 var Rx = require('../rx');
 // Spreadsheet options
-var addTooltip = require('../views/addTooltip');
-var disableSelect = require('../views/disableSelect');
-var addColumnAddButton = require('../views/addColumnAddButton');
-var addVizEditor = require('../views/addVizEditor');
-var makeSortable = require('../views/makeSortable');
+var addTooltip = require('./addTooltip');
+//var disableSelect = require('./disableSelect');
+var addWizardColumns = require('./addWizardColumns');
+var addVizEditor = require('./addVizEditor');
+var makeSortable = require('./makeSortable');
+var addColumnAdd = require('./addColumnAdd');
+var addLegend = require('./addLegend');
+var addHelp = require('./addHelp');
 var getSpreadsheet = require('../Spreadsheet');
-
-// This seems odd. Surely there's a better test?
-function hasSurvival(survival) {
-	return !! (_.get(survival, 'ev') &&
-			   _.get(survival, 'tte') &&
-			   _.get(survival, 'patient'));
-}
-
-// For geneProbes we will average across probes to compute KM. For
-// other types, we can't support multiple fields.
-// XXX maybe put in a selector.
-function disableKM(column, features, km) {
-	var survival = kmModel.pickSurvivalVars(features, km);
-	if (!hasSurvival(survival)) {
-		return [true, 'No survival data for cohort'];
-	}
-	if (column.fields.length > 1) {
-		return [true, 'Unsupported for multiple genes/ids'];
-	}
-	return [false, ''];
-}
-
-// We check the field length here, before overlaying a probe list from the
-// server, and sending to the Application view. XXX Maybe put the result in a selector,
-// to avoid passing it far down the component stack.
-function supportsGeneAverage({fieldType, fields: {length}}) {
-	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && length === 1;
-}
+var getStepperState = require('./getStepperState');
+var Application = require('../Application');
+//import TiesContainer from './TiesContainer';
+var {schemaCheckThrow} = require('../schemaCheck');
 
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
@@ -62,25 +37,7 @@ function getFieldFormat(uuid, columns, data) {
 	}
 }
 
-var getLabel = _.curry((datasets, dsID) => {
-	var ds = datasets[dsID];
-	return ds.label || ds.name;
-});
-
-var getMetaData = _.curry((datasets, dsID) => {
-	var ds = datasets[dsID];
-	return ds;
-});
-
-function datasetMeta(column, datasets) {
-	return {
-		dsIDs: _.map(xenaFieldPaths(column), p => _.getIn(column, [...p, 'dsID'])),
-		label: getLabel(datasets),
-		metadata: getMetaData(datasets),
-	};
-}
-
-var columnsWrapper = c => addTooltip(makeSortable(disableSelect(addColumnAddButton(addVizEditor(c)))));
+var columnsWrapper = c => addHelp(addTooltip(addWizardColumns(addColumnAdd(addLegend(makeSortable(addVizEditor(c)))))));
 var Spreadsheet = getSpreadsheet(columnsWrapper);
 // XXX without tooltip, we have no mouse pointer. Should make the wrapper add the css
 // that hides the mouse. Currently this is in Column.
@@ -88,78 +45,110 @@ var Spreadsheet = getSpreadsheet(columnsWrapper);
 var SpreadsheetContainer = getSpreadsheetContainer(Column, Spreadsheet);
 
 
-var ApplicationContainer = React.createClass({
-	mixins: [rxEventsMixin],
-	onSearch: function (value) {
+class ApplicationContainer extends React.Component {
+	onSearch = (value) => {
 		var {callback} = this.props;
 		callback(['sample-search', value]);
-	},
-	componentWillMount: function () {
-		this.events('highlightChange');
-		this.change = this.ev.highlightChange
+	};
+
+	componentWillMount() {
+		var events = rxEvents(this, 'highlightChange');
+		this.change = events.highlightChange
 			.debounceTime(200)
 			.subscribe(this.onSearch);
 		// high on 1st change, low after some delay
-		this.highlight = this.ev.highlightChange
+		this.highlight = events.highlightChange
 			.switchMap(() => Rx.Observable.of(true).concat(Rx.Observable.of(false).delay(300)))
 			.distinctUntilChanged(_.isEqual);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.change.unsubscribe();
 		this.highlight.unsubscribe();
-	},
-	supportsGeneAverage(uuid) { // XXX could be precomputed in a selector
-		var {columns} = this.props.state;
-		return supportsGeneAverage(_.get(columns, uuid));
-	},
-	disableKM(uuid) { // XXX could be precomputed in a selector
-		var {columns, features, km} = this.props.state;
-		return disableKM(_.get(columns, uuid), features, km);
-	},
-	fieldFormat: function (uuid) {
-		var {columns, data} = this.props.state;
+	}
+
+	fieldFormat = (uuid) => {
+		var {spreadsheet: {columns, data}} = this.props.state;
 		return getFieldFormat(uuid, columns, data);
-	},
-	sampleFormat: function (index) {
-		var {cohortSamples} = this.props.state;
-		return lookupSample(cohortSamples, index);
-	},
-	datasetMeta: function (uuid) {
-		var {columns, datasets} = this.props.state;
-		return datasetMeta(_.get(columns, uuid), datasets);
-	},
+	};
+
+	sampleFormat = (index) => {
+		var {spreadsheet: {cohortSamples}} = this.props.state;
+		return _.get(cohortSamples, index);
+	};
+
 	// raw (before selector) state
-	getState: function () {
-		return this.props.state;
-	},
+	getState = () => {
+		return _.pick(this.props.state, 'version', 'page', 'spreadsheet');
+	};
+
+	onWizardMode = (mode) => {
+		this.props.callback(['wizardMode', mode]);
+	};
+
+	onShowWelcome = (show) => {
+		this.props.callback(['showWelcome', show]);
+	};
+
+	onReset = () => {
+		this.props.callback(['cohortReset']);
+	};
+
+	onResetSampleFilter = () => {
+		this.props.callback(['sampleFilter', null]);
+	};
+
+	onNavigate = (page) => {
+		this.props.callback(['navigate', page]);
+	};
+
+	onImport = (content) => {
+		try {
+			this.props.callback(['import', schemaCheckThrow(JSON.parse(content))]);
+		} catch (err) {
+			this.props.callback(['import-error']);
+		}
+	};
+
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback} = this.props,
+			{stateError} = state,
 			computedState = selector(state),
-			{mode} = computedState,
+			{spreadsheet: {mode, ties: {open} = {}}, loadPending} = computedState,
+			stepperState = getStepperState(computedState),
 			View = {
 				heatmap: SpreadsheetContainer,
-				chart: ChartView
-			}[mode];
+				chart: ChartView,
+//				ties: TiesContainer,
+			}[open ? 'ties' : mode];
 		return (
 			<Application
+					onReset={this.onReset}
+					onResetSampleFilter={this.onResetSampleFilter}
+					onWizardMode={this.onWizardMode}
+					onShowWelcome={this.onShowWelcome}
+					stepperState={stepperState}
 					Spreadsheet={SpreadsheetContainer}
 					onHighlightChange={this.on.highlightChange}
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
-					state={computedState}
+					onNavigate={this.onNavigate}
+					onImport={this.onImport}
+					loadPending={loadPending}
+					stateError={stateError}
+					state={computedState.spreadsheet}
 					callback={callback}>
 				<View
+					stepperState={stepperState}
 					searching={this.highlight}
-					supportsGeneAverage={this.supportsGeneAverage}
-					disableKM={this.disableKM}
 					fieldFormat={this.fieldFormat}
 					sampleFormat={this.sampleFormat}
-					datasetMeta={this.datasetMeta}
-					appState={computedState}
+					appState={computedState.spreadsheet}
+					wizard={computedState.wizard}
 					callback={callback}/>
 			</Application>);
 	}
-});
+}
 
 module.exports = ApplicationContainer;

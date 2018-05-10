@@ -40,8 +40,11 @@ var transcript = {
 var jsonResp = xhr => JSON.parse(xhr.response);
 
 var quote = s => s == null ? 'nil' : ('"' + s + '"'); // XXX should escape "
+var toString = x => x.toString();
 
-var sep = l => _.map(l, quote).join(' ');
+var sep = l =>
+	typeof _.get(l, 0) === 'number' ? _.map(l, toString).join(' ') :
+	_.map(l, quote).join(' ');
 
 var arrayfmt = l => '[' + sep(l) + ']';
 
@@ -132,7 +135,7 @@ function mutationAttrs(list) {
 // {field: [value, ...], ...} -> [{field: value, ...}, ...]
 function collateRows(rows) {
 	var keys = _.keys(rows);
-	return _.map(_.range(rows[keys[0]].length), i => _.object(keys, _.map(keys, k => rows[k][i])));
+	return _.times(rows[keys[0]].length, i => _.object(keys, _.map(keys, k => rows[k][i])));
 }
 
 // {:sampleid ["id0", "id1", ...], chromstart: [123, 345...], ...}
@@ -168,7 +171,7 @@ function indexSegmented(resp) {
 
 function alignMatches(input, matches) {
 	var index = _.object(_.map(matches, g => g.toLowerCase()), matches);
-	return _.map(input, g => index[g.toLowerCase()] || g);
+	return _.map(input, g => index[g.toLowerCase()]);
 }
 
 function splitExon(s) {
@@ -336,6 +339,7 @@ function wrapDsIDParams(postMethods) {
 		'datasetFieldExamples',
 		'datasetField',
 		'datasetProbeValues',
+		'datasetProbeSignature',
 		'datasetGeneProbesValues',
 		'datasetGeneProbeAvg',
 		'datasetMetadata',
@@ -344,6 +348,7 @@ function wrapDsIDParams(postMethods) {
 		'refGeneExons',
 		'refGenePosition',
 		'refGeneRange',
+		'matchFields',
 		'segmentedDataRange',
 		'segmentedDataExamples',
 		'sparseData',
@@ -383,7 +388,7 @@ var probemapGeneStrand = dsIDFn((host, probemap, gene) =>
 // case-insensitive gene lookup
 var refGeneExonCase = dsIDFn((host, dataset, genes) =>
 	sparseDataMatchField('name2', host, dataset, genes)
-		.flatMap(caseGenes => refGeneExons(host, dataset, caseGenes)));
+		.flatMap(caseGenes => refGeneExons(host, dataset, _.filter(caseGenes, _.identity))));
 
 
 // test if host is up
@@ -394,6 +399,21 @@ function testHost (host) {
 		.catch(() => Rx.Observable.of(false));
 }
 
+var cohortMetaURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/xenacohort_tag.json";
+
+var cohortPreferredURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/defaultDataset.json";
+
+var cohortPhenotypeURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/defaultPhenotype.json";
+
+var fetchJSON = url =>
+	Rx.Observable.ajax({
+		url,
+		method: 'GET',
+		responseType: 'json',
+		crossDomain: true
+	}).map(xhr => xhr.response);
+
+
 module.exports = {
 	...queryPosts,
 
@@ -401,7 +421,7 @@ module.exports = {
 	probemapGeneStrand,
 	refGeneExonCase,
 	refGeneRange,
-	sparseDataMatchGenes: sparseDataMatchField('genes'),
+	sparseDataMatchGenes: dsIDFn(sparseDataMatchField('genes')),
 
 	// helpers:
 	parseDsID,
@@ -411,5 +431,10 @@ module.exports = {
 
 	// reference
 	refGene,
-	transcript
+	transcript,
+
+	// cohort meta
+	fetchCohortMeta: fetchJSON(cohortMetaURL),
+	fetchCohortPreferred: fetchJSON(cohortPreferredURL),
+	fetchCohortPhenotype: fetchJSON(cohortPhenotypeURL)
 };

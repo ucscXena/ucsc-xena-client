@@ -2,7 +2,7 @@
 
 // Horizontal sortable widget, with Rx and React.
 //
-// <Sortable setOrder={this.setOrder}>
+// <Sortable Component={Component} onReorder={this.onReorder}>
 // 	{map(order, id => child[id]}
 // </Sortable>
 //
@@ -12,16 +12,19 @@
 // The setOrder callback is invoked when a sort is completed, and
 // should re-render the component with the childen in the new order.
 
+import PureComponent from '../PureComponent';
 var React = require('react');
 var ReactDOM = require('react-dom');
 var Rx = require('../rx');
 var _ = require('../underscore_ext');
 require('./Sortable.css');
 
-function leftWidth(rect) {
+var skip = 1; // Don't allow sort of <skip> elements on the left
+
+function leftWidth(rect, width) {
 	return {
 		left: rect.left,
-		width: rect.right - rect.left
+		width
 	};
 }
 
@@ -58,22 +61,24 @@ var zeros = n => repeat(n, 0);
 // At that point, we set offset1 to left2 - left1.
 
 var transitionLength = 400;
-var Sortable = React.createClass({
-	componentWillMount: function () {
+
+class Sortable extends PureComponent {
+	componentWillMount() {
 		var mousedownSub = new Rx.Subject();
 		var mousedown = mousedownSub.filter(([, md]) => hasClass(md.target, 'Sortable-handle'));
 		var mousedrag = mousedown.flatMap(([id, md]) => {
             // find starting positions on mouse down
 
-			var order = _.map(this.props.children, c => c.props.actionKey);
+			var order = _.map(this.props.children, c => c.props['data-actionKey']);
 			var startX = md.clientX;
+			var {widths} = this.props;
 			var positions = _.map(order,
-								  id => leftWidth(ReactDOM.findDOMNode(this.refs[id]).getBoundingClientRect()));
+								  (id, i) => leftWidth(ReactDOM.findDOMNode(this.refs[id]).getBoundingClientRect(), widths[i]));
 			var N = positions.length;
 			var index = _.indexOf(order, id);
 			var target = positions[index];
 			var max = positions[N - 1].left - target.left - target.width + positions[N - 1].width;
-			var min = positions[0].left - target.left;
+			var min = positions[skip].left - target.left;
 			var newPos = zeros(N);
 			var finalPos;
 
@@ -126,51 +131,49 @@ var Sortable = React.createClass({
 				this.props.onReorder(ev.order);
 			}
 			this.setState(_.pick(ev, 'pos', 'dragging'));
+			this.props.onDragging(!!ev.dragging);
         });
 
 		this.sortStart = ev => mousedownSub.next(ev);
-	},
+	}
 
-	initialPositions () {
-		return _.object(_.map(this.props.children, c => [c.props.actionKey, 0]));
+	initialPositions = () => {
+		return _.object(_.map(this.props.children, c => [c.props['data-actionKey'], 0]));
 
-	},
+	};
 
-	getInitialState: function () {
-		return {pos: this.initialPositions(), dragging: null};
-	},
+	state = {pos: this.initialPositions(), dragging: null};
 
-	componentWillReceiveProps: function () {
+	componentWillReceiveProps() {
 		this.setState({pos: this.initialPositions()});
-	},
+	}
 
-	componentWillUnmount: function () {
+	componentWillUnmount() {
 		this.subscription.unsubscribe();
-	},
+	}
 
-	render: function () {
-		var {dragging} = this.state;
-		var columns = React.Children.map(this.props.children, (child, i) =>
-			<td
-				{...this.props}
-				onMouseDown={ev => this.sortStart([child.props.actionKey, ev])}
-				className={'Sortable-container' + (dragging !== null && i !== dragging ? ' Sortable-slide' : '')}
-				style={{left: this.state.pos[child.props.actionKey]}}
-				ref={child.props.actionKey}>
+	render() {
+		var {dragging} = this.state,
+			{Component, children, ...otherProps} = this.props,
+			{wizardMode} = this.props.appState;
 
-				{child}
-			</td>);
+		var columns = React.Children.map(children, (child, i) => {
+			var actionKey = child.props['data-actionKey'];
+			return React.cloneElement(child, {
+				onMouseDown: wizardMode || i < skip ? undefined : ev => this.sortStart([actionKey, ev]),
+				className: 'Sortable-container' + (dragging !== null && i !== dragging ? ' Sortable-slide' : ''),
+				style: {left: this.state.pos[actionKey]},
+				id: actionKey,
+				ref: actionKey
+			});
+		});
 
 		return (
-			<table className='Sortable'>
-				<tbody>
-					<tr>
-						{columns}
-					</tr>
-				</tbody>
-			</table>
+			<Component {...otherProps} className='Sortable'>
+				{columns}
+			</Component>
 		);
     }
-});
+}
 
 module.exports = Sortable;

@@ -2,7 +2,6 @@
 
 var _ = require('./underscore_ext');
 var colorScales = require('./colorScales');
-var {RGBToHex} = require('./color_helper');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -65,8 +64,7 @@ function labelValues(vg, width, {index, height, count}, toDraw) {
 // Computes contiguous vertial pixel regions.
 // There must be a better way to compute this.
 function findRegions(index, height, count) {
-	var starts = _.uniq(
-			_.map(_.range(count), y => ~~(y * height / count))),
+	var starts = _.uniq(_.times(count, y => ~~(y * height / count))),
 		regions = _.partitionN(starts, 2, 1, [height]),
 		lens = regions.map(([s, e]) => e - s);
 	return _.object(starts, lens);
@@ -199,15 +197,6 @@ function drawImgSegmentsPixel(vg, colorSpec, index, count, width, height, zoom, 
 	ctx.putImageData(img, 0, 0);
 }
 
-function drawImgSegmentsVector(vg, colorSpec, index, count, width, height, zoom, nodes) {
-	var regions = segmentRegions(colorSpec, index, count, width, height, zoom, nodes);
-
-	for (var r = regions.next(); !r.done; r = regions.next()) {
-		let {pxStart, pxEnd, color, lastRow, i} = r.value;
-		vg.box(pxStart, i, pxEnd - pxStart, lastRow - i, RGBToHex(...color));
-	}
-}
-
 var drawSegmentedByMethod = drawSegments => (vg, props) => {
 	let {width, zoom, nodes, color} = props,
 		{count, height, index} = zoom;
@@ -235,8 +224,7 @@ var drawSegmentedByMethod = drawSegments => (vg, props) => {
 
 module.exports = {
 	findRegions,
-	drawSegmented: drawSegmentedByMethod(drawImgSegmentsVector),
-	drawSegmentedTrendAmp: drawSegmentedByMethod(drawImgSegmentsPixel),
+	drawSegmented: drawSegmentedByMethod(drawImgSegmentsPixel),
 	radius,
 	minVariantHeight,
 	toYPx,

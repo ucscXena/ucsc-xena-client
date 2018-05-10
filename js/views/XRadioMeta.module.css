@@ -1,0 +1,45 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Styles for listing radio or checkbox meta data, when viewing advanced mode.
+ */
+
+.XRadioMeta {
+	composes: mdCaption from '../../css/typography.module.css';
+	padding-left: 36px;
+	margin-top: 8px;
+}
+
+.meta {
+	border-top: 1px solid rgba(0, 0, 0, 0.06);
+	color: rgba(0, 0, 0, 0.87);
+	display: flex;
+	padding: 8px 0;
+}
+
+.meta:last-child {
+	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Meta label (key) */
+.label:nth-child(1) {
+	flex: 0 0 100px;
+}
+
+/* Meta value */
+.value:nth-child(2) {
+	color: rgba(0, 0, 0, 0.38);
+	flex: 1 1 75%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Meta "+ n more" link */
+.more:nth-child(3) {
+	color: var(--color-accent);
+	text-align: end;
+	white-space: nowrap;
+	padding-left: 16px;
+}

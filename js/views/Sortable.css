@@ -1,6 +1,5 @@
 .Sortable-container {
     position: relative;
-	vertical-align: top;
 	transition: left 0s;
 }
 
@@ -12,3 +11,12 @@
 	vertical-align: top;
 	display: inline-table;
 }
+
+.Sortable {
+	display: flex;
+}
+
+.Sortable-handle {
+	cursor: move;
+}
+

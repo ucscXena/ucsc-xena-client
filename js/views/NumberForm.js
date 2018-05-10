@@ -1,62 +1,68 @@
 'use strict';
 var React = require('react');
 var _ = require('../underscore_ext');
-var _s = require('underscore.string');
-var Input = require('react-bootstrap/lib/Input');
-var rxEventsMixin = require('../react-utils').rxEventsMixin;
+import Input from 'react-toolbox/lib/input';
+var {rxEvents} = require('../react-utils');
 
 var isValid = _.curry((min, max, value) => {
-	var v = _s.trim(value),
+	var v = value.trim(),
 		i = parseInt(v);
 	return v === '' || !(isNaN(i) || i < min || i > max);
 });
 
-var validationState = (min, max, value) =>
-	isValid(min, max, value) ? 'success' : 'error';
-
 function parseValue(value, dflt) {
-	var v = _s.trim(value);
+	var v = value.trim();
 	return v === '' ? dflt : parseInt(v);
-};
+}
 
 // initialValue is int or null.
 // dflt, min, max are int.
-const NumberForm = React.createClass({
-	mixins: [rxEventsMixin],
-	componentWillMount: function () {
+class NumberForm extends React.Component {
+	constructor(props) {
+	    super(props);
+	    var {initialValue} = props;
+	    this.state = {value: initialValue == null ? '' : '' + initialValue, focused: false};
+	}
+
+	componentWillMount() {
 		var {dflt, min, max} = this.props;
-		this.events('change');
-		this.change = this.ev.change
-			.map(ev => ev.target.value)
+		var events = rxEvents(this, 'change');
+		this.change = events.change
 			.do(value => this.setState({value}))
 			.debounceTime(200)
 			.filter(isValid(min, max))
 			.subscribe(value => this.props.onChange(parseValue(value, dflt)));
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.change.unsubscribe();
-	},
-	getInitialState: function () {
-		var {initialValue} = this.props;
-		return {value: initialValue == null ? '' : '' + initialValue};
-	},
+	}
+
+	onBlur = () => {
+		this.setState({focused: false});
+	};
+
+	onFocus = () => {
+		this.setState({focused: true});
+	};
+
 	render() {
 		var {min, max, dflt, initialValue, ...other} = this.props,
-			{value} = this.state;
+			{value, focused} = this.state;
 		return (
 			<form className="form-horizontal">
 				<Input
 					{...other}
+					onBlur={this.onBlur}
+					onFocus={this.onFocus}
 					type='text'
 					value={'' + value}
-					label={`Survival time cutoff (in range [${min}, ${max}])`}
-					placeholder='Enter a number.'
-					bsStyle={validationState(min, max, value)}
-					hasFeedback
+					label={`Custom survival time cutoff`}
+					placeholder={focused ? `Enter a number between ${min} and ${max}` : undefined}
 					onChange={this.on.change}/>
 			</form>
 		);
 	}
-});
+}
 
 module.exports = NumberForm;

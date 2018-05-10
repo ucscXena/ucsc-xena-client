@@ -3,14 +3,8 @@
 }
 
 .react-autosuggest__input {
-  width: 240px;
-  height: 30px;
-  padding: 5px 20px;
-  font-weight: 300;
-  font-size: 16px;
-  border: 1px solid #aaa;
-  border-radius: 4px;
-  padding: 5px 5px;
+  padding: 10px 10px;
+  max-width: 30em;
 }
 
 .react-autosuggest__input--focused {
@@ -34,6 +28,7 @@
   display: block;
   font-size: 1.1em;
   position: absolute;
+  top: 100%;
   width: 100%;
   z-index: 2;
 }

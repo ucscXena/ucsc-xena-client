@@ -9,35 +9,6 @@ var style = function (c) {
 	return c;
 };
 
-// The browsers want to smooth our images, which messes them up. We avoid
-// certain scaling operations to prevent this.
-// If there are more values than pixels, draw at one-pixel-per-value
-// to avoid sub-pixel aliasing, then scale down to the final size with
-// drawImage(). If there are more pixels than values, draw at an integer
-// scale per-value, giving us an image larger than the final size, then scale
-// down to avoid blurring.
-// We can ditch this complexity when all the browsers allow us to disable
-// smoothing.
-// index & count are floating point.
-function pickScale(index, count, height) {
-	var first = Math.floor(index),
-		last  = Math.ceil(index + count),
-		length = last - first,
-		scale = (height >= length) ? Math.ceil(height / length) : 1,
-		scaledHeight = length * scale || 1, // need min 1 px to draw gray when no data
-		sy =  (index - first) * scale,
-		sh = scale * count;
-
-	return {
-		scale,              // chosen scale that avoids blurring
-		height: scaledHeight,
-		sy,                 // pixels off-screen at top of buffer
-		sh                  // pixels on-screen in buffer
-	};
-}
-
-var scratch;
-
 function vgcanvas(el, vgw, vgh) {
 	var fontFamily = 'Verdana,Arial,sans-serif',
 		ctx = el.getContext('2d'),
@@ -276,34 +247,6 @@ function vgcanvas(el, vgw, vgh) {
 				ctx.strokeStyle = style(strokeStyle);
 				ctx.stroke();
 			}
-		},
-
-		// See comment above pickScale. This method draws a view over
-		// rows, avoiding blurring. The view is defined by the index
-		// and count, which can be floating-point, e.g. show 3.5 rows,
-		// starting at row 1.3, or index = 1.3, count = 3.5.
-		// height and width are the size of the viewport.
-		// drawBackground should take a width and height, rendering a
-		// background color.
-		// drawRows takes a row width and row height, and draws all rows.
-		//
-		// Previously, we kept the scratch buffer at width of 1px, and scaled
-		// it up to the final width in drawImage. However, certain versions of
-		// safari (9.1, 9.1.2, on OSX 10.10) will botch the down-sampling when
-		// the number of rows is large (e.g. 20k, drawn at 500px height). This
-		// results in drawing no probes, or a subset of probes. So, we now
-		// draw to the full width in the scratch buffer. There appears to
-		// be little performance change vs. drawing 1px.
-		drawSharpRows = function (vg, index, count, height,
-					width, drawBackground, drawRows) {
-
-			var s = pickScale(index, count, height);
-			scratch.height(s.height);
-			scratch.width(width);
-			drawBackground(scratch, width, s.height);
-			// width of row. height of row.
-			scratch.scale(1, s.scale, () => drawRows(scratch, width, 1));
-			vg.drawImage(scratch.element(), 0, s.sy, width, s.sh, 0, 0, width, height);
 		};
 
 
@@ -334,11 +277,8 @@ function vgcanvas(el, vgw, vgh) {
 		alpha,
 		scale,
 		translate,
-		drawSharpRows,
 		drawRectangles
 	};
 };
-
-scratch = vgcanvas(document.createElement('canvas'), 1, 1); // scratch buffer
 
 module.exports = vgcanvas;

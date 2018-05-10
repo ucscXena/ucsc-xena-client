@@ -1,36 +1,39 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
 var {Portal} = require('react-overlays');
-var {deepPureRenderMixin} = require('../react-utils');
 require('./Crosshair.css');
 
-var Crosshair = React.createClass({
-	mixins: [deepPureRenderMixin],
-	getInitialState() {
-		return {mousing: false, x: -1, y: -1};
-	},
+class Crosshair extends PureComponent {
+	state = {mousing: false, x: -1, y: -1};
+
 	componentWillReceiveProps(nextProps) {
 		if (!nextProps.frozen) {
 			this.setState({mousing: false, x: -1, y: -1});
 		}
-	},
-	onMouseMove(ev) {
+	}
+
+	onMouseMove = (ev) => {
 		if (!this.props.frozen) {
 			this.setState({mousing: true, x: ev.clientX, y: ev.clientY});
 		}
-	},
-	onMouseOut() {
+	};
+
+	onMouseOut = () => {
 		if (!this.props.frozen) {
 			this.setState({mousing: false});
 		}
-	},
+	};
+
 	render() {
 		let {mousing, x, y} = this.state,
-			{onMouseMove, onMouseOut} = this;
+			{onMouseMove, onMouseOut} = this,
+			{frozen, children} = this.props,
+			cursor = frozen ? 'default' : 'none';
 		return (
-			<div style={{cursor: 'none'}} onMouseMove={onMouseMove} onMouseOut={onMouseOut}>
-				{this.props.children}
+			<div style={{cursor}} onMouseMove={onMouseMove} onMouseOut={onMouseOut}>
+				{children}
 				{mousing ?
 					<Portal container={document.body}>
 						<div className='crosshairs'>
@@ -41,7 +44,7 @@ var Crosshair = React.createClass({
 			</div>
 		);
 	}
-});
+}
 
 module.exports = Crosshair;
 

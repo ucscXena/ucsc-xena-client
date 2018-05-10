@@ -45,7 +45,7 @@ function sectionNode(label) {
 }
 
 function stripHTML(html) {
-	return html.replace(/(<([^>]+)>)/ig, "");
+	return html ? html.replace(/(<([^>]+)>)/ig, "") : '';
 }
 
 function stripScripts(html) {

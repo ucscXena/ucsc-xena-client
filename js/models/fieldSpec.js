@@ -12,6 +12,15 @@ function xenaFieldPaths(fs, path = [], acc = []) {
 			 []);
 }
 
+var canEdit = ([type]) => type === 'geneSignature';
+
+function supportsEdit(fs) {
+	return (
+		fs.fetchType === 'signature' ? canEdit(fs.signature) :
+		fs.fetchType === 'composite' ? _.every(fs.fieldSpecs, supportsEdit) :
+		true);
+}
+
 // Update nested 'fields' properties under fieldSpec given
 // by 'paths', to values in 'fields'.
 function updateFields(fieldSpec, paths, fields) {
@@ -87,5 +96,6 @@ module.exports = {
 	nullField,
 	allNullFields,
 	filterByDsID,
-	signatureField
+	signatureField,
+	supportsEdit
 };

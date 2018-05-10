@@ -7,10 +7,10 @@ var xenaQuery = require('../xenaQuery');
 var _ = require('../underscore_ext');
 var {reifyErrors, collectResults} = require('./errors');
 var fetch = require('../fieldFetch');
-var {allNullFields, nullField} = require('../models/fieldSpec');
+var kmModel = require('../models/km');
 var {getColSpec} = require('../models/datasetJoins');
 var {signatureField} = require('../models/fieldSpec');
-var {getColSpec} = require('../models/datasetJoins');
+var {publicServers} = require('../defaultServers');
 // pick up signature fetch
 require('../models/signatures');
 
@@ -18,10 +18,9 @@ var datasetResults = resps => collectResults(resps, servers =>
 		_.object(_.flatmap(servers, s => _.map(s.datasets, d => [d.dsID, d]))));
 
 function datasetQuery(servers, cohort) {
-	var cohorts = _.pluck(cohort, 'name');
 	return Rx.Observable.zipArray(
 		_.map(servers, server => reifyErrors(
-				xenaQuery.datasetList(server, cohorts).map(datasets => ({server, datasets})),
+				xenaQuery.datasetList(server, [cohort.name]).map(datasets => ({server, datasets})),
 				{host: server}))
 	).flatMap(datasetResults);
 }
@@ -30,59 +29,52 @@ function fetchDatasets(serverBus, servers, cohort) {
 	serverBus.next(['datasets', datasetQuery(servers, cohort)]);
 }
 
-// Might want to bump this up after fixing our rendering problems @ 40k.
-const MAX_SAMPLES = 30 * 1000;
+const MAX_SAMPLES = 50 * 1000;
 
-var {datasetSamples} = xenaQuery;
 var allSamples = _.curry((cohort, max, server) => xenaQuery.cohortSamples(server, cohort, max === Infinity ? null : max));
 
 function unionOfGroup(gb) {
-	return _.union(..._.map(gb, ([, v]) => v));
+	return _.union(..._.map(gb, ([v]) => v));
+}
+
+// Performance of this is probably poor, esp. due to underscore's horrible
+// n^2 set operations.
+function cohortHasPrivateSamples(cohortResps) {
+	var {'true': pub, 'false': priv} = _.groupBy(cohortResps, ([,, server]) => _.contains(publicServers, server)),
+		pubSamps = unionOfGroup(pub),
+		privSamps = unionOfGroup(priv);
+	return _.difference(privSamps, pubSamps).length > 0;
 }
 
 function filterSamples(sampleFilter, samples) {
 	return sampleFilter ? _.intersection(sampleFilter, samples) : samples;
 }
 
-// For the cohort, either fetch samplesFrom, or query all servers,
-// Return a stream per-cohort, each of which returns an event
+// For the cohort, query all servers,
+// return a stream per-cohort, each of which returns an event
 // [cohort, [sample, ...]].
 // By not combining them here, we can uniformly handle errors, below.
-var cohortSamplesQuery = _.curry(
-	(servers, max, {name, samplesFrom, sampleFilter}, i) =>
-		(samplesFrom ?
-			[datasetSamples(samplesFrom, max)] :
-			_.map(servers, allSamples(name, max)))
-		.map(resp => resp.map(samples => [i, filterSamples(sampleFilter, samples), samples.length >= max])));
+var cohortSamplesQuery =
+	(servers, max, {name, sampleFilter}) =>
+		_.map(servers, allSamples(name, max))
+			.map((resp, j) => resp.map(samples => [filterSamples(sampleFilter, samples), samples.length >= max, servers[j]]));
 
-// XXX The use of 'i' here looks wrong: it should be the cohort index, to line up with 'cohorts',
-// but collectResults may have dropped a response due to ajax error, shifting the indexes of cohorts
-// after the error.
-// XXX Regarding MAX_SAMPLES, this query operates like this: for each cohort, for each server, fetch
-// the sample list, and collate the results. To enforce MAX_SAMPLES and avoid hammering the server we
-// should 1) limit each (cohort, server) request to MAX_SAMPLES, 2) limit the union per-cohort to MAX_SAMPLES,
-// 3) limit the combined (all cohort) list to MAX_SAMPLES. The latter is harder to do because we can't
-// just slice the list of lists. Currently we only enforce 1 & 2.
-var collateSamplesByCohort = _.curry((cohorts, max, resps) => {
-	var byCohort = _.groupBy(resps, _.first),
-		serverOver = _.any(resps, ([,, over]) => over),
-		cohortSamples = _.map(cohorts, (c, i) => unionOfGroup(byCohort[i] || []).slice(0, max)),
-		cohortOver = _.any(cohortSamples, samples => samples.length >= max);
-	return {samples: cohortSamples, over: serverOver || cohortOver};
+var collateSamples = _.curry((cohorts, max, resps) => {
+	var serverOver = _.any(resps, ([, over]) => over),
+		cohortSamples = unionOfGroup(resps || []).slice(0, max),
+		cohortOver = cohortSamples.length >= max,
+		hasPrivateSamples = cohortHasPrivateSamples(resps);
+	return {samples: cohortSamples, over: serverOver || cohortOver, hasPrivateSamples};
 });
 
 // reifyErrors should be pass the server name, but in this expression we don't have it.
 function samplesQuery(servers, cohort, max) {
-	return Rx.Observable.zipArray(_.flatmap(cohort, cohortSamplesQuery(servers, max)).map(reifyErrors))
-		.flatMap(resps => collectResults(resps, collateSamplesByCohort(cohort, max)));
+	return Rx.Observable.zipArray(cohortSamplesQuery(servers, max, cohort).map(reifyErrors))
+		.flatMap(resps => collectResults(resps, collateSamples(cohort, max)));
 }
 
-// query samples if non-empty cohorts
-var neSamplesQuery = (servers, cohort, max) =>
-	cohort.length > 0 ? samplesQuery(servers, cohort, max) : Rx.Observable.of({samples: [], over: false}, Rx.Scheduler.asap);
-
 function fetchSamples(serverBus, servers, cohort, allowOverSamples) {
-	serverBus.next(['samples', neSamplesQuery(servers, cohort, allowOverSamples ? Infinity : MAX_SAMPLES)]);
+	serverBus.next(['samples', samplesQuery(servers, cohort, allowOverSamples ? Infinity : MAX_SAMPLES)]);
 }
 
 function fetchColumnData(serverBus, samples, id, settings) {
@@ -97,62 +89,18 @@ function fetchColumnData(serverBus, samples, id, settings) {
 }
 
 function resetZoom(state) {
-	let count = _.get(state, "samples").length;
+	let count = _.getIn(state, ['cohortSamples', 'length'], 0);
 	return _.updateIn(state, ["zoom"],
 					 z => _.merge(z, {count: count, index: 0}));
 }
 
-var closeEmptyColumns = state => {
-	const {columns} = state,
-		columnOrder = _.filter(state.columnOrder,
-				id => !allNullFields(columns[id].fieldSpecs));
-	return _.assoc(state,
-				   'columnOrder', columnOrder,
-				   'columns', _.pick(columns, columnOrder));
-};
-
-// This is all way too complex. We want to update the fieldSpecs in each column
-// when something changes, e.g. active cohort list changes, available datasets
-// changes, etc.
-//
-// The strategy here is
-// 1 - set fields to nullField if they are unavailble
-// 2 - drop empty columns (every field is nullField)
-// 3 - recalculate getColSpec
-
-// Recompute the composite field after the underlying fieldSpecs have
-// changed.
-var reJoinFields = (datasets, state) =>
-	_.assoc(state, 'columns',
-		_.mapObject(state.columns, c => _.merge(c, getColSpec(c.fieldSpecs, datasets))));
-
-// Shuffle fieldSpecs for a column to align to new cohort list.
-var remapFields = _.curry(
-		(oldCohorts, fieldSpecs, {name}) => fieldSpecs[oldCohorts[name]] || nullField);
-
-// Update all column fieldSpecs for new cohort list.
-var updateColumnFields = _.curry(
-	(cohorts, oldCohorts, column) =>
-		_.assoc(column, 'fieldSpecs',
-				_.map(cohorts, remapFields(oldCohorts, column.fieldSpecs))));
-
-// Remap column fieldSpecs to reflect a new active cohort list.
-// This will 1) drop fieldSpec for inactive cohorts, 2) move
-// fieldSpec for still active cohorts, 3) insert nullField for
-// newly active cohorts.
-var remapFieldsForCohorts = (state, cohorts) => {
-	var oldCohorts = _.object(_.pluck(state.cohort, 'name'),
-			_.range(state.cohort.length));
-
-	return _.assoc(state, 'columns',
-		_.mapObject(state.columns, updateColumnFields(cohorts, oldCohorts)));
-};
-
-var setCohortRelatedFields = (state, cohorts) =>
+var setCohortRelatedFields = (state, cohort) =>
 	_.assoc(state,
-		'cohort', cohorts,
-		'samples', [],
+		'cohort', cohort,
+		'hasPrivateSamples', false,
 		'cohortSamples', [],
+		'columns', {},
+		'columnOrder', [],
 		'data', {},
 		'survival', null,
 		'km', _.assoc(state.km, ['id'], null));
@@ -160,16 +108,19 @@ var setCohortRelatedFields = (state, cohorts) =>
 // This adds or overwrites a 'sample' column in the state.
 // Called from setCohort, the column data will be fetched after
 // the sample list returns from the server.
-function addSampleColumn(state) {
+function addSampleColumn(state, width) {
+	if (!_.get(state.cohort, ['name'])) {
+		return state;
+	}
 	var field = signatureField('samples', {
-			columnLabel: 'samples',
+			columnLabel: 'Sample ID',
 			valueType: 'coded',
 			signature: ['samples']
 		}),
 		newOrder = _.has(state.columns, 'samples') ? state.columnOrder : [...state.columnOrder, 'samples'],
 		colSpec = getColSpec([field], {}),
 		settings = _.assoc(colSpec,
-				'width', 100,
+				'width', Math.round(width == null ? 136 : width),
 				'user', _.pick(colSpec, ['columnLabel', 'fieldLabel'])),
 		newState = _.assocIn(state,
 			['columns', 'samples'], settings,
@@ -177,25 +128,134 @@ function addSampleColumn(state) {
 	return _.assocIn(newState, ['data', 'samples', 'status'], 'loading');
 }
 
-var setCohort = (state, cohorts) =>
+var setWizardAndMode = state =>
+	_.assocIn(state,
+			['wizardMode'], true,
+			['mode'], 'heatmap');
+
+var setCohort = _.curry((cohort, width, state) =>
 		addSampleColumn(
-			resetZoom(
-				reJoinFields(
-					state.datasets,
-					closeEmptyColumns(
-						setCohortRelatedFields(
-							remapFieldsForCohorts(state, cohorts),
-							cohorts)))));
+			setWizardAndMode(
+				resetZoom(
+					setCohortRelatedFields(state, cohort))),
+			width));
 
 var userServers = state => _.keys(state.servers).filter(h => state.servers[h].user);
 
+var fetchCohortData = (serverBus, state) => {
+	let user = userServers(state);
+	if (state.cohort) {
+		fetchDatasets(serverBus, user, state.cohort);
+		fetchSamples(serverBus, user, state.cohort, state.allowOverSamples);
+	}
+};
+
+var unionOfResults = resps => collectResults(resps, results => _.union(...results));
+
+function cohortQuery(servers) {
+	return Rx.Observable.zipArray(_.map(servers, s => reifyErrors(xenaQuery.allCohorts(s), {host: s})))
+			.flatMap(unionOfResults);
+}
+
+function fetchCohorts(serverBus, state, newState, {force} = {}) {
+	var user = userServers(state),
+		newUser = userServers(newState);
+	if (force || !_.listSetsEqual(user, newUser)) {
+		serverBus.next(['cohorts', cohortQuery(newUser)]);
+	}
+}
+
+function updateWizard(serverBus, state, newState, opts = {}) {
+	fetchCohorts(serverBus, state, newState, opts);
+	let user = userServers(newState);
+	// If there's a bookmark on wizard mode step 2, will we fail
+	// to load the dataset?
+	if (newState.cohort && (opts.force || (newState.cohort.name !== _.get(state.cohort, 'name')))) {
+		fetchDatasets(serverBus, user, newState.cohort);
+	}
+}
+
+var clearWizardCohort = state =>
+	_.assocIn(state, ['wizard', 'datasets'], undefined,
+					 ['wizard', 'features'], undefined);
+
+//
+// survival fields
+//
+
+var hasSurvFields  = vars => !!(_.some(_.values(kmModel.survivalOptions),
+	option => vars[option.ev] && vars[option.tte] && vars[option.patient]));
+
+var probeFieldSpec = ({dsID, name}) => ({
+	dsID,
+	fetchType: 'xena', // maybe take from dataset meta instead of hard-coded
+	valueType: 'float',
+	fieldType: 'probes',
+	fields: [name]
+});
+
+var codedFieldSpec = ({dsID, name}) => ({
+	dsID,
+	fetchType: 'xena', // maybe take from dataset meta instead of hard-coded
+	valueType: 'coded',
+	fieldType: 'clinical',
+	fields: [name]
+});
+
+function mapToObj(keys, fn) {
+	return _.object(keys, _.map(keys, fn));
+}
+
+function survivalFields(cohort, datasets, features) {
+	var vars = kmModel.pickSurvivalVars(features),
+		fields = {};
+
+	if (hasSurvFields(vars)) {
+		fields[`patient`] = getColSpec([codedFieldSpec(vars.patient)], datasets);
+
+		_.values(kmModel.survivalOptions).forEach(function(option) {
+			if (vars[option.ev] && vars[option.tte]) {
+				fields[option.ev] = getColSpec([probeFieldSpec(vars[option.ev])], datasets);
+				fields[option.tte] = getColSpec([probeFieldSpec(vars[option.tte])], datasets);
+			}
+		});
+
+		if (_.has(fields, 'ev') && _.keys(fields).length > 3) {
+			delete fields.ev;
+			delete fields.tte;
+		}
+	}
+	return fields;
+}
+
+// If field set has changed, re-fetch.
+function fetchSurvival(serverBus, state) {
+	let {wizard: {datasets, features},
+			spreadsheet: {cohort, survival, cohortSamples}} = state,
+		fields = survivalFields(cohort, datasets, features),
+		survFields = _.keys(fields),
+		refetch = _.some(survFields,
+				f => !_.isEqual(fields[f], _.getIn(survival, [f, 'field']))),
+		queries = _.map(survFields, key => fetch(fields[key], cohortSamples)),
+		collate = data => mapToObj(survFields,
+				(k, i) => ({field: fields[k], data: data[i]}));
+
+	refetch && serverBus.next([
+			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
+}
+
+
 module.exports = {
+	fetchCohortData,
+	fetchCohorts,
+	fetchColumnData,
 	fetchDatasets,
 	fetchSamples,
-	fetchColumnData,
-	setCohort,
+	fetchSurvival,
 	resetZoom,
-	reJoinFields,
+	setCohort,
 	userServers,
-	closeEmptyColumns
+	updateWizard,
+	clearWizardCohort,
+	datasetQuery
 };

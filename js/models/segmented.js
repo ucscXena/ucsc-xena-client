@@ -67,7 +67,7 @@ function mapSamples(samples, data) {
 		   ['req', 'samplesInResp'], sIR => _.map(sIR, s => sampleMap[s]));
 }
 
-function fetchChrom({dsID, assembly}, [samples], pos) {
+function fetchChrom({dsID, assembly}, samples, pos) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
 	return refGeneRange(host, name, pos.chrom, pos.baseStart, pos.baseEnd)
 		.flatMap(refGene =>
@@ -75,19 +75,19 @@ function fetchChrom({dsID, assembly}, [samples], pos) {
 				.map(req => mapSamples(samples, {req, refGene})));
 }
 
-function fetchGene({dsID, fields, assembly}, [samples]) {
+function fetchGene({dsID, fields, assembly}, samples) {
 	var {name, host} = xenaQuery.refGene[assembly] || {};
-	return name ? xenaQuery.refGeneExonCase(host, name, fields)
+	return name ? xenaQuery.refGeneExons(host, name, fields)
 		.flatMap(refGene => {
 			var coords = _.values(refGene)[0];
 			if (!coords) {
-				return Rx.Observable.of(null);
+				return Rx.Observable.of(null, Rx.Scheduler.asap);
 			}
 			var {txStart, txEnd, chrom} = coords,
 				{padTxStart, padTxEnd} = exonPadding;
 			return segmentedDataRange(dsID, samples, chrom, txStart - padTxStart, txEnd + padTxEnd)
 				.map(req => mapSamples(samples, {req, refGene}));
-		}) : Rx.Observable.of(null);
+		}) : Rx.Observable.of(null, Rx.Scheduler.asap);
 }
 
 function fetch(column, cohortSamples) {
@@ -135,7 +135,7 @@ function defaultXZoom(pos, refGene) {
 	};
 }
 
-function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index) {
+function dataToDisplay(column, vizSettings, data, sortedSamples, index) {
 	var pos = parsePos(column.fields[0]);
 	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return {
@@ -144,12 +144,12 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, datasets, index
 	}
 	var refGeneObj = _.values(data.refGene)[0],
 		maxXZoom = defaultXZoom(pos, refGeneObj), // exported for zoom controls
-		{width, showIntrons = false, xzoom = maxXZoom} = column,
+		{dataset, width, showIntrons = false, xzoom = maxXZoom} = column,
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
 		layout = createLayout(refGeneObj, width, xzoom, pos),
 		nodes = findNodes(index.byPosition, layout, sortedSamples),
 		color = heatmapColors.colorSpec(column, vizSettings, null, _.getIn(data, ['avg', 'geneValues', 0])),
-		units = _.map(column.fieldSpecs, ({dsID}) => _.getIn(datasets, [dsID, 'unit']));
+		units = [_.get(dataset, 'unit')];
 
 	return {
 		layout,
@@ -240,10 +240,10 @@ function downloadOneSampleOneRow({data: {req: {rows}}, samples, index, sampleFor
 
 var avgOrNull = (rows, xzoom) => _.isEmpty(rows) ? null : segmentAverage(rows, xzoom);
 
-function avgSegWithZoom(samples, byPosition, zoom) {
+function avgSegWithZoom(count, byPosition, zoom) {
 	var matches = _.pluck(intervalTree.matches(byPosition, zoom), 'segment'),
 		perSamp = _.groupBy(matches, 'sample');
-	return _.map(samples, s => avgOrNull(perSamp[s], zoom));
+	return _.times(count, i => avgOrNull(perSamp[i], zoom));
 }
 
 function chromLimits(pos) {
@@ -262,7 +262,7 @@ function geneLimits(refGene) {
 }
 
 // Average segments, clipping to zoom or the gene boundaries, whichever is smaller.
-function averageSegments(column, data, samples, index) {
+function averageSegments(column, data, count, index) {
 	var pos = parsePos(column.fields[0]);
 	if (!_.get(data, 'req') || !(pos || _.values(data.refGene).length)) {
 		return null;
@@ -272,8 +272,8 @@ function averageSegments(column, data, samples, index) {
 			start: max(limits.start, _.getIn(column, ['xzoom', 'start'], -Infinity)),
 			end: min(limits.end, _.getIn(column, ['xzoom', 'end'], Infinity))
 		},
-		values = [avgSegWithZoom(samples, index.byPosition, xzoom)],
-		geneValues = [avgSegWithZoom(samples, index.byPosition, {start: limits.start, end: limits.end})];
+		values = [avgSegWithZoom(count, index.byPosition, xzoom)],
+		geneValues = [avgSegWithZoom(count, index.byPosition, {start: limits.start, end: limits.end})];
 
 	return {
 		avg: {

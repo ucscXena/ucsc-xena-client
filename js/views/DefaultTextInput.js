@@ -6,79 +6,87 @@
  * - Restore the default if the user deletes the text
  */
 
-require('./DefaultTextInput.css');
+// Core dependencies, components
+import PureComponent from '../PureComponent';
 const React = require('react');
-var Input = require('react-bootstrap/lib/Input');
-var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
+var {rxEvents} = require('../react-utils');
 
-var styles = {
-	input: {
-		defaultValue: {
-			fontStyle: 'italic',
-			color: '#666666'
-		},
-		user: {
-		}
-	}
-};
+// Comp styles
+var compStyles = require('./DefaultTextInput.module.css');
 
-var DefaultTextInput = React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
-	componentWillMount: function () {
-		this.events('change');
-		this.change = this.ev.change
-		.do(() => this.setState({value: this.refs.input.getValue()}))
+class DefaultTextInput extends PureComponent {
+	state = {value: this.props.value.user, focused: false};
+
+	componentWillMount() {
+		var events = rxEvents(this, 'change');
+		this.change = events.change
+		.do(() => this.setState({value: this.refs.input.value}))
 		.debounceTime(100)
 		.subscribe(this.update);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.change.unsubscribe();
-	},
-	getInitialState: function () {
-		return {value: this.props.value.user};
-	},
-	componentWillReceiveProps: function (newProps) {
+	}
+
+	componentWillReceiveProps(newProps) {
 		this.setState({value: newProps.value.user});
-	},
-	resetIfNull: function () {
+	}
+
+	resetIfNull = () => {
 		var {onChange, value: {'default': defaultValue}} = this.props,
-			val = this.refs.input.getValue();
+			val = this.refs.input.value;
 
 		if (val === "") {
 			this.setState({value: defaultValue});
 			onChange(defaultValue);
 		}
-	},
-	update: function () {
+	};
+
+	onBlur = () => {
+		this.setState({focused: false});
+		this.resetIfNull();
+	};
+
+	onFocus = () => {
+		this.setState({focused: true});
+	};
+
+	update = () => {
 		var {onChange} = this.props,
 			{value} = this.state;
 
 		onChange(value);
-	},
-	onKeyUp: function (ev) {
+	};
+
+	onKeyUp = (ev) => {
 		if (ev.key === 'Enter' && this) {
 			this.resetIfNull();
+			this.refs.input.blur();
 		}
-	},
-	render: function () {
-		var {value: {'default': defaultValue}} = this.props,
-			{value} = this.state,
-			style = (value === defaultValue) ?
-				styles.input.defaultValue : styles.input.user;
+	};
+
+	render() {
+		var {value, focused} = this.state,
+			{disabled = false} = this.props;
 
 		return (
-			<Input
-				wrapperClassName='DefaultTextInput'
-				standalone={true}
+			<span style={{position: 'relative'}}>
+			<label className={focused ? compStyles.labelFocused : compStyles.label}>Customize label</label>
+			<input
+				className={focused ? compStyles.inputFocused : compStyles.input}
+				spellCheck={false}
 				ref='input'
+				disabled={disabled}
 				onChange={this.on.change}
 				onKeyUp={this.onKeyUp}
-				onBlur={this.resetIfNull}
-				style={style}
+				onBlur={this.onBlur}
+				onFocus={this.onFocus}
 				type='text'
 				title={value}
-				value={value} />);
+				value={value}/>
+			</span>);
 	}
-});
+}
 
 module.exports = DefaultTextInput;

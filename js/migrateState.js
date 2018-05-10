@@ -1,76 +1,53 @@
 'use strict';
 
-// This version should be changed if and only if there is a new
-// state migration required. The migration(s) should be added
-// to the 'migrations' object, below, at the bottom, under the
-// *previous* version, not the *new* version. Migrations are
-// applied by finding the migration matching the version in
-// 'state', and all subsequent migrations.
+// Desired behavior:
+// When we change the state structure, add a migration.
+// Sources of state:
+//   sessionStorage
+//   bookmarks
+//   initial state
 //
-// That is,
-// 1) Create a new key in 'migration' for the current 'version',
-//    which migrates the state for the new changes.
-// 2) Increment the value of 'version'
-var version = 's2.0';
+//
 
-var _ = require('./underscore_ext');
-var {setFieldType} = require('./models/fieldSpec');
+var version = 1;
 
+var {assoc, get, getIn, Let, pick, isString, flatten, /*contains, */updateIn, without} = require('./underscore_ext');
 
-var setVersion = state => _.assoc(state, 'version', version);
+var setVersion = state => assoc(state, 'version', version);
+var getVersion = state =>
+	Let((s = get(state, 'version', 0)) => isString(s) ? 0 : s);
 
-// XXX put this in common file
-var getFieldType = (datasets, fs) => {
-	if (fs.fieldType !== 'mutation') {
-		return fs.fieldType;
-	}
-	var dataSubType = _.getIn(datasets, [fs.dsID, 'dataSubType'], '');
-	return (dataSubType.search(/SV|structural/i) !== -1) ? 'SV' : 'mutation';
+var noComposite = state => assoc(state,
+		'cohort', state.cohort[0],
+		'cohortSamples', state.cohortSamples[0]);
+
+var spreadsheetProps = ['columnOrder', 'columns', 'mode', 'notifications', 'servers', 'showWelcome', 'wizardMode', 'zoom', 'defaultWidth', 'data', 'cohort', 'cohortSamples', 'km', 'survival', 'sampleSearch', 'samplesOver', 'editing', 'openVizSettings', 'chartState', 'hasPrivateSamples'];
+//var dropProps = ['cohortMeta', 'cohortPreferred', 'cohortPhenotype', 'cohorts', 'datasets', 'features', 'samples', 'columnEdit'];
+
+var splitPages = state => {
+//	console.log('Unhandled state', pick(state, (v, k) => !contains(spreadsheetProps, k) && !contains(dropProps, k)));
+	return {
+		spreadsheet: pick(state, spreadsheetProps),
+		page: 'heatmap'
+	};
 };
 
-// This isn't quite right, if we have a composite view that mixes
-// SV & non-SV. Pretty sure we don't.
-var shouldSetSV = (datasets, column) =>
-	_.any(column.fieldSpecs, fs => getFieldType(datasets, fs) === 'SV');
-
-var updateColumn = _.curry(
-	(datasets, c) => shouldSetSV(datasets, c) ? setFieldType('SV', c) : c);
-
-var setFieldTypeSV = state =>
-	_.updateIn(state, ['columns'],
-		columns => _.mapObject(columns, updateColumn(state.datasets)));
-
-// We have two scenarios: user has visited hub page, or user hasn't visited
-// hub page. If they have, then allHosts is set. Otherwise, we only have user.
-// We are dropping metadataFilterHosts.
-var serverObject = state => {
-	var {servers: {allHosts, user}} = state,
-		all = allHosts || user,
-		newServer = _.object(all, all.map(h => ({
-			user: _.contains(user, h)
-		})));
-
-	return _.assoc(state, 'servers', newServer);
-};
-
-var getVersion = state => _.get(state, 'version', 's0.0');
+// This will break bookmarks with sample search and samples to the right
+var samplesToLeft = state =>
+	// We don't want to create a blank spreadsheet object if there is none, so check
+	// if there's a columnOrder before doing anything. indexOf could be -1 or 0
+	getIn(state, ['spreadsheet', 'columnOrder'], []).indexOf('samples') > 0 ?
+		updateIn(state, ['spreadsheet', 'columnOrder'], order => ['samples', ...without(order, 'samples')]) :
+		state;
 
 // This must be sorted, with later versions appearing last.
-var migrations = {
-	's0.0': [setFieldTypeSV],
-	's1.0': [serverObject]
-};
-
-// return index of value, or array length
-function indexOf(arr, v) {
-	var i = arr.indexOf(v);
-	return i === -1 ? arr.length : i;
-}
+var migrations = [
+	[noComposite, splitPages, samplesToLeft]
+];
 
 function apply(state) {
 	var v = getVersion(state),
-		versions = _.keys(migrations),
-		toDo = _.flatmap(versions.slice(indexOf(versions, v)), v => migrations[v]);
+		toDo = flatten(migrations.slice(v));
 
 	return setVersion(toDo.reduce((prev, fn) => fn(prev), state));
 }

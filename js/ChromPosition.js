@@ -45,8 +45,10 @@ function numberOrAbrev(vg, width, font, n) {
 	return w > width ? abrev(n) : s;
 }
 
-var ChromPosition = React.createClass({
-	draw(width, height, layout, mode = "coordinate") {
+var margin = 8;
+
+class ChromPosition extends React.Component {
+	draw = (width, height, layout, mode = "coordinate") => {
 		var vg = this.vg;
 
 		if (vg.width() !== width) {
@@ -57,8 +59,8 @@ var ChromPosition = React.createClass({
 			return;
 		}
 		if (mode === "geneExon") {
-			vg.text(0, height - 4, 'black', font, "5'");
-			vg.text(width - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
+			vg.text(margin, height - 4, 'black', font, "5'");
+			vg.text(width - margin - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
 		} else {
 			var [baseStart, baseEnd] = layout.chrom[0],
 				[pixelStart, pixelEnd] = layout.screen[0],
@@ -73,32 +75,40 @@ var ChromPosition = React.createClass({
 				pushLeft = Math.max(width - rangeTextWidth - rangeWidth - 1, 0),
 				rangePos = Math.min(pushLeft, (pixelWidth - rangeWidth) / 2);
 
-			if (mode === "coordinate") {
-				// Render start & end position, abreviating if constrained for width.
-				vg.text(pixelStart, height - 4, 'black', font, startText);    // start position at left
-				vg.text(pixelEnd - vg.textWidth(font, endText), height - 4, 'black', font, endText); // end position at right
-			} else if (mode === "geneIntron") {
-				vg.text(pixelStart, height - 4, 'black', font, "5'");
-				vg.text(width - vg.textWidth(font, "3'"), height - 4, 'black', font, "3'");
+			if (mode === "geneIntron") {
+				startText = "5'";
+				endText = "3'";
 			}
 
-			if (range >= 1) {
-				// Render centered scale, pushing to left if constrained for width.
-				vg.box(rangePos, labelHeight / 2, rangeWidth, 1, 'grey');
-				vg.box(rangePos, labelHeight / 4, 1, labelHeight / 2, 'black');
-				vg.box(rangePos + rangeWidth, labelHeight / 4, 1, labelHeight / 2, 'black');
-				vg.text(rangePos + rangeWidth + 1, labelHeight - font / 4, 'black', font, rangeText);
-			} else {
-				vg.text((width - rangeWidth) / 2, labelHeight - font / 4, 'black', font, '1bp');
+			var gap = width / 2  - margin  - rangeWidth / 2  - vg.textWidth(font, endText);
+
+			// Render start & end position, abreviating if constrained for width.
+			if (mode === "coordinate" || gap > vg.textWidth(font, rangeText)) {
+				vg.text(pixelStart + margin, height - 4, 'black', font, startText);    // start position at left
+				vg.text(pixelEnd - margin - vg.textWidth(font, endText), height - 4, 'black', font, endText); // end position at right
+			}
+
+			if (mode === 'geneIntron' || gap > vg.textWidth(font, rangeText)) {
+				if (range >= 1) {
+					// Render centered scale, pushing to left if constrained for width.
+					vg.box(rangePos, labelHeight / 2, rangeWidth, 1, 'grey');
+					vg.box(rangePos, labelHeight / 4, 1, labelHeight / 2, 'black');
+					vg.box(rangePos + rangeWidth, labelHeight / 4, 1, labelHeight / 2, 'black');
+					vg.text(rangePos + rangeWidth + 1, labelHeight - font / 4, 'black', font, rangeText);
+				} else {
+					vg.text((width - rangeWidth) / 2, labelHeight - font / 4, 'black', font, '1bp');
+				}
 			}
 		}
-	},
+	};
+
 	//shouldComponentUpdate: () => false,
 	componentDidMount() {
 		var {width, layout, scaleHeight, mode} = this.props;
 		this.vg = vgcanvas(ReactDOM.findDOMNode(this.refs.canvas), width, scaleHeight);
 		this.draw(width, scaleHeight, layout, mode);
-	},
+	}
+
 	/*componentWillReceiveProps() {
 		var {width, layout, scaleHeight, mode} = this.props;
 		this.draw(width, scaleHeight, layout, mode);
@@ -116,9 +126,8 @@ var ChromPosition = React.createClass({
 				onMouseOut={this.props.onMouseOut}
 				onMouseOver={this.props.onMouseOver}
 				onClick={this.props.onClick}
-				onDblClick={this.props.onDblClick}
 				ref='canvas' />);
 	}
-});
+}
 
 module.exports = {ChromPosition, abrev};

@@ -4,82 +4,145 @@ const React = require('react');
 const NameColumn = require('./NameColumn');
 // const {Exons} = require('./Exons');
 const ExonsOnly = require('./ExonsOnly');
-const DensityPlot = require('./DensityPlot');
+var {DensityPlot, bottomColor, topColor, plotWidth} = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
-import '../../css/transcript_css/transcriptPage.css';
+var nav = require('../nav');
+var styles = require('./TranscriptPage.module.css');
+var StateError = require('../StateError');
+var {schemaCheckThrow} = require('../schemaCheck');
+var spinner = require('../ajax-loader.gif');
 
-// Placeholder component. I'm expecting the real top-level view
-// will be in a separate file, and imported above.
-var Transcripts = React.createClass({
-	getInitialState() {
-		let genetranscripts = _.getIn(this.props.state, ['transcripts', 'genetranscripts'], []);
-		genetranscripts.forEach(t => {
-			t.zoom = false;
-		});
-		return {
-			gene: _.getIn(this.props.state, ['transcripts', 'gene'], ""),
-			genetranscripts: genetranscripts,
-			scaleZoom: false,
-		};
-	},
+/*
+var defaultGene = 'KRAS';
+	defaultStudyA = 'tcga',
+	defaultStudyB = 'gtex',
+	defaultSubtypeA  = 'TCGA Lung Adenocarcinoma',
+	defaultSubtypeB  = 'GTEX Lung',
+	defaultUnit = 'tpm';
+	*/
 
-	onLoadData() {
-		this.setState({
-			scaleZoom: false
-		});
+function getStatusView(status, onReload) {
+	if (status === 'loading') {
+		return (
+			<div data-xena='loading' className={styles.status}>
+				<img style={{textAlign: 'center'}} src={spinner}/>
+			</div>);
+	}
+	if (status === 'error') {
+		return (
+			<div className={styles.status}>
+				<i onClick={onReload}
+				   title='Error loading data. Click to reload.'
+				   aria-hidden='true'
+				   className={`material-icons ${styles.errorIcon}`}>warning</i>
+			</div>);
+	}
+	return null;
+}
+
+class Transcripts extends React.Component {
+	state = {
+	    input: _.getIn(this.props.state, ['transcripts', 'gene']), // XXX this is outside the selector
+	    scaleZoom: false,
+	    updateButton: false
+	};
+
+	componentWillReceiveProps(props) {
+		var newGene = _.getIn(props.state, ['transcripts', 'gene']);
+		if (newGene) {
+			this.setState({input: newGene});
+		}
+	}
+
+	componentDidMount() {
+		var {onImport, props: {getState}} = this;
+
+		// nested render to different DOM tree
+		nav({isPublic: true, getState, onImport, onNavigate: this.onNavigate, activeLink: 'transcripts'});
+	}
+
+	onLoadData = () => {
 		var [studyA, subtypeA] = this.refs.A.value.split(/\|/);
 		var [studyB, subtypeB] = this.refs.B.value.split(/\|/);
 		var unit = this.refs.unit.value;
+		var gene = this.state.input;
+
+		this.setState({
+			scaleZoom: false,
+			updateButton: false
+		});
 
 		// Invoke action 'loadGene', which will load transcripts and
 		// expression data.
-		this.props.callback(['loadGene', this.state.gene, studyA, subtypeA, studyB, subtypeB, unit]);
-		// this.props.callback(['loadGene', 'TP53', 'tcga', 'Lung Adenocarcinoma', 'gtex', 'Lung']); // hard-coded gene and sample subsets, for demo
-	},
+		this.props.callback(['loadGene', gene, studyA, subtypeA, studyB, subtypeB, unit]);
+	};
 
-	onZoom(name) {
-		let newState = _.updateIn(this.props.state, ['transcripts', 'genetranscripts'], g => {
-			[...g].forEach((t, index) => {
-				if(_.isMatch(t, {name: name}))
-				{
-					g[index] = _.assoc(t, "zoom", !t.zoom);
-				}
-			});
-			return g;
-		});
-		let genetranscript = _.getIn(newState, ['transcripts', 'genetranscripts'], []);
-		this.setState({
-			genetranscript: genetranscript,
-		});
-	},
+	onZoom = (name) => {
+		this.props.callback(['transcriptZoom', name]);
+	};
 
-	scaleZoom() {
+	scaleZoom = () => {
 		this.setState({
 			scaleZoom: !this.state.scaleZoom,
 		});
-	},
+	};
+
+	onNavigate = (page) => {
+		this.props.callback(['navigate', page]);
+	};
+
+	onImport = (content) => {
+		try {
+			this.props.callback(['import', schemaCheckThrow(JSON.parse(content))]);
+		} catch(err) {
+			this.props.callback(['import-error']);
+		}
+	};
+
+	onHideError = () => {
+		this.props.callback(['stateError', undefined]);
+	};
 
 	render() {
-		//for data selection
-		var {subtypes, studyA, subtypeA, studyB, subtypeB, unit} = this.props.state.transcripts || {};
-		if(!subtypes)
-		{
+		var {state} = this.props,
+			{loadPending, stateError} = state,
+			{status, subtypes, studyA, subtypeA, studyB, subtypeB, unit, zoom = {}} = state.transcripts || {};
+		if (loadPending) {
+			return <p style={{margin: 10}}>Loading your view...</p>;
+		}
+		if (!subtypes) {
 			return <h4>Loading available subtypes...</h4>;
 		}
 		var subtypesTcga = _.sortBy(subtypes.tcga),
-			subtypesGtex = _.sortBy(subtypes.gtex);
-		var valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypesTcga[0]}`;
-		var valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypesGtex[0]}`;
-		var options = _.concat(
-			subtypesTcga.map(name => <option value = {"tcga|" + name}>{name}</option>),
-			subtypesGtex.map(name => <option value = {"gtex|" + name}>{name}</option>));
+			subtypesGtex = _.sortBy(subtypes.gtex),
+			valueA = studyA && subtypeA ? `${studyA}|${subtypeA}` : `tcga|${subtypesTcga[0]}`,
+			valueB = studyB && subtypeB ? `${studyB}|${subtypeB}` : `gtex|${subtypesGtex[0]}`,
+			options = _.concat(
+				subtypesTcga.map(name => <option key={`tcga|${name}`} value={`tcga|${name}`}>{name}</option>),
+				subtypesGtex.map(name => <option key={`gtex|${name}`} value={`gtex|${name}`}>{name}</option>)),
+			unitLabels = {
+				tpm: {
+					dropdown: "TPM",
+					axis: "log2 (TPM)"
+				},
+				isoformPercentage: {
+					dropdown: "Isoform Percentage",
+					axis: "Isoform Percentage"
+				}
+			};
 
-		var {genetranscripts} = this.props.state.transcripts || {};
+		var {genetranscripts} = state.transcripts || [];
 		var genetranscriptsSorted = _.sortBy(genetranscripts, function(gtranscript) {
-			return _.sum(_.mmap(gtranscript.exonStarts, gtranscript.exonEnds, (exonStarts, exonEnds) => {
-				return exonStarts - exonEnds; // start - end to sort in descending order
-			})); });
+			// sort by start of transcript in transcript direction left to right
+			// known issue: tie break
+			return gtranscript.strand === '+' ? gtranscript.exonStarts[0] :
+				- (gtranscript.exonEnds[gtranscript.exonCount - 1]);
+			/*return _.sum(_.mmap(gtranscript.exonStarts, gtranscript.exonEnds, (exonStarts, exonEnds) => {
+				return exonStarts - exonEnds;
+			}));*/ // sort by transcript size large to small
+			}).map(t => _.assoc(t, 'zoom', zoom[t.name]));
+
 		//for the name column
 		var transcriptNameData = _.map(genetranscriptsSorted, t => _.pick(t, 'name', 'exonCount', 'zoom'));
 
@@ -98,86 +161,105 @@ var Transcripts = React.createClass({
 		var min = Math.min.apply(Math, _.flatten(_.pluck(transcriptDensityData.studyA, "expA").concat(_.pluck(transcriptDensityData.studyB, "expB"))));
 		var densityplotAxisLabel = isFinite(max) && isFinite(min) ? linearTicks(min, max) : [];
 		var range = max - min;
+		var hasPlots = genetranscripts && ! _.isEmpty(genetranscripts);
+		var dropdownBackgroundColorTop = hasPlots ? topColor : "white";
+		var dropdownBackgroundColorBottom = hasPlots ? bottomColor : "white";
+		var dropdownColor = hasPlots ? "white" : "black";
 
 		return (
-			<div ref='datapages'>
-				<div style={{margin: "0 auto", width: "1200px"}}>
-					<div className="selectors">
-					<strong>Gene: </strong>
-					<GeneSuggest value={this.state.gene}
-											onChange={ value => { this.setState({gene: value}); }}/>
-					</div>
-					<button className="selectors" onClick={this.onLoadData}>OK</button>
-					click this after entering new value of gene
-					<strong className="selectors">Unit: </strong>
-					<select ref="unit" onChange={this.onLoadData} value={unit}>
-						<option value="tpm">tpm</option>
-						<option value="isoformPercentage">isoformPercentage</option>
-					</select>
-					<div className="legend-holder">
-						Legends
-						<div className="legend" style={{backgroundColor: "#008080"}}><label>Study A</label></div>
-						<div className="legend" style={{backgroundColor: "steelblue"}}><label>Study B</label></div>
-					</div>
-					<br/>
-					<strong className="selectors">StudyA: </strong>
-					<select ref="A" onChange={this.onLoadData} value={valueA}>
-						{options}
-					</select>
-					<strong className="selectors">StudyB: </strong>
-					<select ref="B" onChange={this.onLoadData} value={valueB}>
-						{options}
-					</select>
-					<br/>
-
-					<div className={this.state.scaleZoom ? "densityplot--label-div--zoom" : "densityplot--label-div"} onClick={this.scaleZoom}>
-						<label style={{fontSize: "0.85em"}}>expression</label>
-						<div>
-							{
-								densityplotAxisLabel.map(label => {
-									return (
-										<div>
-											<label className="densityplot--label-x" style={{left: `${(label - min) * (this.state.scaleZoom ? 200 : 125) / range}px`}}>{label}</label>
-											<div className="densityplot--label-vertical-tick" style={{left: `${(label - min) * (this.state.scaleZoom ? 200 : 125) / range}px`}}/>
-										</div>
-									);
-								})
-							}
+				<div className={styles.main}>
+					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
+					<a className={styles.selectors} style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
+					<div className={styles.selectors} style={{width: "1200px", height: "80px"}}>
+						<div className={styles.geneBox} style={{float: "left", width: "300px"}}>
+							<GeneSuggest label="Add Gene (e.g. KRAS)" value={this.state.input}
+								onChange={ value => {this.setState({input: value, updateButton: true});} }/>
 						</div>
-						<div className="densityplot--label--axis-x"/>
+						{this.state.updateButton ?
+							<button className={styles.horizontalSegmentButton} onClick={this.onLoadData}>Update Gene</button> : null
+						}
 					</div>
-					<div style={{width: "100%", height: "35px"}}></div>
-
-					<NameColumn
-						data={transcriptNameData}
-						getNameZoom={this.onZoom}
-						/>
-					{/* <Exons
-						data={transcriptExonData}
-					/> */}
-					<ExonsOnly
-						data={transcriptExonData}
-						getNameZoom={this.onZoom}
-					/>
-					<DensityPlot
-						data={transcriptDensityData}
-						type="density"
-						unit={unit}
-						getNameZoom={this.onZoom}
-						/>
-					{/* <DensityPlot
-						data={transcriptDensityData}
-						type="histogram"
-						unit={unit}
-						getNameZoom={this.onZoom}
-						/> */}
-
-					<div className="densityplot--label-div-y">
-						<label className="densityplot--label-y">density</label>
+					<div style={{width: "1200px", marginBottom: "40px"}}>
+						<div style={{marginBottom: "10px"}}>
+							<span className={styles.selectors}>Study A</span>
+							<select ref="A" onChange={this.onLoadData} value={valueA}
+								style={{color: dropdownColor, backgroundColor: dropdownBackgroundColorTop}}>
+								{options}
+							</select>
+							<span className={styles.selectors}>Study B</span>
+							<select ref="B" onChange={this.onLoadData} value={valueB}
+								style={{color: dropdownColor, backgroundColor: dropdownBackgroundColorBottom}}>
+								{options}
+							</select>
+						</div>
+						<div>
+							<span className={styles.selectors}>Expression Unit</span>
+							<select ref="unit" onChange={this.onLoadData} value={unit}>
+								<option value="tpm">{unitLabels.tpm.dropdown}</option>
+								<option value="isoformPercentage">{unitLabels.isoformPercentage.dropdown}</option>
+							</select>
+						</div>
 					</div>
+
+					{ hasPlots ?
+						<div>
+							<div className={styles["densityplot--label-div-zero"]}>
+								<label className={styles["densityplot--label-zero"]}>no expression</label>
+							</div>
+							<div className={styles["densityplot--label-div--zoom"]} onClick={this.scaleZoom}>
+								<label style={{fontSize: "0.85em", width: plotWidth}}>{unitLabels[unit].axis}</label>
+								<div>
+									{ densityplotAxisLabel.map((label, i) => {
+										return (
+											<div key={i}>
+												<label className={styles["densityplot--label-x"]} style={{left: `${(label - min) * plotWidth / range}px`}}>{label}{(unit === "isoformPercentage" && i === densityplotAxisLabel.length - 1) ? "%" : "" }</label>
+												<div className={styles["densityplot--label-vertical-tick"]} style={{left: `${(label - min) * plotWidth / range}px`}}/>
+											</div>);
+										})
+									}
+								</div>
+								<div className={styles["densityplot--label--axis-x"]}/>
+							</div>
+							<div style={{width: "100%", height: "35px"}}></div>
+						</div> : null
+					}
+					<div style={{position: 'relative'}}>
+						{getStatusView(status, this.onLoadData)}
+						<div className={`${styles[status || 'loaded']} ${styles.loadStatus}` }>
+							<NameColumn
+								data={transcriptNameData}
+								gene={state.transcripts.gene}
+								/>
+							<DensityPlot
+								data={transcriptDensityData}
+								type="density"
+								unit={unit}
+								getNameZoom={this.onZoom}
+								/>
+								{ (genetranscripts && ! _.isEmpty(genetranscripts)) ?
+									<label className={styles["densityplot--label-y"]}>density</label> : null
+								}
+							<ExonsOnly
+								data={transcriptExonData}
+								getNameZoom={this.onZoom}
+							/>
+						</div>
+					</div>
+					<div style={{clear: 'both'}}></div>
 				</div>
-			</div>);
+		);
 	}
-});
+}
 
-module.exports = Transcripts;
+class TranscriptsContainer extends React.Component {
+	getState = () => {
+		return _.pick(this.props.state, 'version', 'page', 'transcripts');
+	};
+
+	render() {
+		var {state, selector, ...props} = this.props;
+		return <Transcripts {...{...props, state: selector(state)}} getState={this.getState}/>;
+	}
+}
+
+module.exports = TranscriptsContainer;

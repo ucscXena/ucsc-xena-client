@@ -1,7 +1,0 @@
-.host-form .remove {
-	visibility: hidden;
-}
-
-.host-form:hover .remove {
-	visibility: visible;
-}

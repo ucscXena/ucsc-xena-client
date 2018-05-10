@@ -31,10 +31,10 @@ function targetXPos(target, ev, width) {
 // but sometimes get coords outside that range.
 //
 // We clip start and end to [0, width - 1].
-var DragSelect = React.createClass({
-	getDefaultProps() {
-		return {enabled: true};
-	},
+class DragSelect extends React.Component {
+	static defaultProps = {enabled: true};
+	state = {dragging: false};
+
 	componentWillMount() {
 		var mousedown = new Rx.Subject();
 		var mousedrag = mousedown.flatMap((down) => {
@@ -60,13 +60,12 @@ var DragSelect = React.createClass({
 			}
 		});
 		this.dragStart = ev => this.props.enabled && mousedown.next(ev);
-	},
-	componentWillUnmount () {
+	}
+
+	componentWillUnmount() {
 		this.subscription.unsubscribe();
-	},
-	getInitialState () {
-		return {dragging: false};
-	},
+	}
+
 	render() {
 		var {dragging} = this.state,
 			containerProps = _.omit(this.props, 'onSelect', 'enabled'),
@@ -83,6 +82,6 @@ var DragSelect = React.createClass({
 				{this.props.children}
 			</div>);
 	}
-});
+}
 
 module.exports = DragSelect;

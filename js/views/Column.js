@@ -1,15 +1,8 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
-var ReactDOM = require('react-dom');
 var _ = require('../underscore_ext');
-var s = require('underscore.string');
-var MenuItem = require('react-bootstrap/lib/MenuItem');
-var Dropdown = require('react-bootstrap/lib/Dropdown');
-var Button = require('react-bootstrap/lib/Button');
-var Badge = require('react-bootstrap/lib/Badge');
-var Tooltip = require('react-bootstrap/lib/Tooltip');
-var OverlayTrigger = require('react-bootstrap/lib/OverlayTrigger');
 var DefaultTextInput = require('./DefaultTextInput');
 var DragSelect = require('./DragSelect');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
@@ -20,14 +13,28 @@ var spinner = require('../ajax-loader.gif');
 var mutationVector = require('../models/mutationVector');
 //var ValidatedInput = require('./ValidatedInput');
 var konami = require('../konami');
-var {deepPureRenderMixin} = require('../react-utils');
 var Crosshair = require('./Crosshair');
 var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
+import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
+import Tooltip from 'react-toolbox/lib/tooltip';
+var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
 var {RefGeneAnnotation} = require('../refGeneExons');
+import { matches } from 'static-interval-tree';
+
+const TooltipMenuItem = Tooltip(MenuItem);
+
+const tooltipConfig = (message) => {
+	return {
+		tooltipDelay: 750,
+		tooltip: message,
+		tooltipPosition: "horizontal",
+		style: { pointerEvents: 'all' }
+	};
+};
 
 // XXX move this?
 function download([fields, rows]) {
@@ -55,15 +62,6 @@ var annotationHeight = 30,
 	scaleHeight = 12;
 
 var styles = {
-	badge: {
-		fontSize: '100%',
-		// Fix the width so it doesn't change if the label changes. This is important
-		// when resizing, because we (unfortunately) inspect the DOM to discover
-		// the minimum width we need to draw the column controls. If the label changes
-		// to a different character, the width will be different, and our minimum width
-		// becomes invalid.
-		width: 24
-	},
 	status: {
 		pointerEvents: 'none',
 		textAlign: 'center',
@@ -79,13 +77,6 @@ var styles = {
 		textAlign: 'center',
 		pointerEvents: 'all',
 		cursor: 'pointer'
-	},
-	columnMenuToggle: {
-		position: 'absolute',
-		left: 0,
-		top: 0,
-		width: '100%',
-		height: '100%'
 	}
 };
 
@@ -101,17 +92,17 @@ var stopPropagation = ev => ev.stopPropagation();
 */
 
 var addIdsToArr = arr => {
-	var list = arr.filter(el => el).map((el, id) => React.cloneElement(el, {id}));
+	var list = arr.filter(el => el).map((el, id) => React.cloneElement(el, {key: id}));
 	return _.isEmpty(list) ? null : list;
 };
-var isIntString = str => !!s.trim(str).replace(/,/g, '').match(/^[0-9]+$/);
-var parseExtendedInt = str => parseInt(s.trim(str).replace(/,/g, ''), 10);
+var isIntString = str => !!str.trim().replace(/,/g, '').match(/^[0-9]+$/);
+var parseExtendedInt = str => parseInt(str.trim().replace(/,/g, ''), 10);
 
 var boundIsValid = _.curry((maxXZoom, str) => {
 	if (!maxXZoom) {
 		return false; // no data
 	}
-	if (s.trim(str) === '') {
+	if (str.trim() === '') {
 		return true;
 	}
 	if (!isIntString(str)) { // must be an int if it's not empty string
@@ -148,14 +139,14 @@ function sortVisibleLabel(column, pos) {
 
 function segmentedVizOptions(onVizOptions) {
 	return onVizOptions ? [
-		<MenuItem divider />,
-		<MenuItem onSelect={onVizOptions} data-renderer='line'>Line</MenuItem>,
-		<MenuItem onSelect={onVizOptions} data-renderer='pixel'>Pixel</MenuItem>,
-		<MenuItem onSelect={onVizOptions} data-renderer='power'>Power</MenuItem>,
-		<MenuItem divider />] : [];
+		<MenuDivider/>,
+		<MenuItem onSelect={onVizOptions} data-renderer='line' caption='Line'/>,
+		<MenuItem onSelect={onVizOptions} data-renderer='pixel' caption='Pixel'/>,
+		<MenuItem onSelect={onVizOptions} data-renderer='power' caption='Power'/>,
+		<MenuDivider/>] : [];
 }
 
-function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, specialDownloadMenu, onVizOptions}) {
+function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, onVizOptions}) {
 	var {column, data} = props,
 		pos = parsePos(column.fields[0]), // XXX Should compute a flag for this.
 		{showIntrons = false} = column,
@@ -165,12 +156,11 @@ function segmentedMenu(props, {onShowIntrons, onSortVisible, onSpecialDownload, 
 		specialDownloadItemName = 'Download segments';
 
 	return addIdsToArr([
-		...(pos ? [] : [<MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>]),
+		...(pos ? [] : [<MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>]),
 		...(segmentedVizOptions(onVizOptions)),
-		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>,
-		specialDownloadMenu ?
-			<MenuItem disabled={noData} onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
-			: <span/>
+		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
+		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>,
+		<MenuItem disabled={noData} onClick={onSpecialDownload} caption={specialDownloadItemName}/>
 	]);
 }
 
@@ -180,54 +170,83 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		{valueType, sortVisible, assembly, showIntrons = false} = column,
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'mutation',
-		rightAssembly = (assembly === "hg19" || assembly === "GRCh37") ? true : false,  //MuPIT currently only support hg19
-		noMenu = !rightValueType || !rightAssembly,
-		noMuPit = noMenu || wrongDataSubType,
+		rightAssembly = (["hg19", "hg38", "GRCh37", "GRCh38"].indexOf(assembly) !== -1) ? true : false,  //MuPIT support hg19, hg38
+		noMuPit = !rightValueType || !rightAssembly || wrongDataSubType || pos,
 		noData = !_.get(data, 'req'),
-		mupitItemName = noData ? 'MuPIT View (hg19 coding) Loading' : 'MuPIT View (hg19 coding)',
+		mupitItemName = noData ? 'MuPIT 3D Loading' : 'MuPIT 3D (' + assembly + ' coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
-		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
+		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
+		mupitMenuItem = null;
+
+	if (data && !(_.isEmpty(data.refGene))) {
+		mupitMenuItem = pos ? <TooltipMenuItem disabled={noMuPit} {...tooltipConfig("Only available for gene view")} caption={mupitItemName}/>
+		                    : ( noMuPit ? <TooltipMenuItem disabled={noMuPit} {...tooltipConfig("Only available for SNPs on hg19 and hg38")} caption={mupitItemName}/>
+								: <MenuItem onClick={(e) => onMuPit(assembly, e)} caption={mupitItemName}/>);
+	}
 
 	return addIdsToArr([
-		(data && _.isEmpty(data.refGene)) ? null : <MenuItem disabled={noMuPit} onSelect={onMuPit}>{mupitItemName}</MenuItem>,
-		pos ? null : <MenuItem disabled={noData} onSelect={onShowIntrons}>{intronsItemName}</MenuItem>,
-		<MenuItem disabled={noData} onSelect={onSortVisible}>{sortVisibleItemName}</MenuItem>
+		mupitMenuItem,
+		pos ? null : <MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/>,
+		//...(xzoomable ? zoomMenu(props, {onSortVisible}) : []),
+		<MenuItem disabled={noData} onClick={onSortVisible} caption={sortVisibleItemName}/>
 	]);
 }
 
 function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 	// link to tumorMap from any public xena hub columns
 	// data be queried directly from xena
-	var foundHub = _.any(fieldSpecs, obj => {
+	var foundPublicHub = _.any(fieldSpecs, obj => {
 		if (obj.dsID) {
 			return publicServers.indexOf(JSON.parse(obj.dsID).host) !== -1;
 		} else {
 			return false;
 		}
 	});
-	var foundCohort = _.any(cohort, c => (c.name.search(/^TCGA/) !== -1));
 
-	return foundCohort && foundHub &&
-		(['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) !== -1 && fields.length === 1);
+	var foundCohort = cohort.name.search(/^TCGA/) !== -1 || cohort.name === "Treehouse public expression dataset (July 2017)" ? cohort : undefined;
+
+	if (!foundCohort || !foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
+		_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1)) {
+		return null;
+	}
+
+	if (foundCohort.name === "Treehouse public expression dataset (July 2017)" ) {
+		return {
+			label: "Treehouse",
+			map: "Treehouse/THPED_July2017",
+			layout: ""
+		};
+	} else if (foundCohort.name.search(/^TCGA/) !== -1) {
+		return {
+			label: "TCGA Pancan Atlas",
+			map: "PancanAtlas/SampleMap",
+			layout: "mRNA"
+		};
+	} else {
+		return null;
+	}
 }
 
-function matrixMenu(props, {onTumorMap, supportsGeneAverage, onMode, onSpecialDownload, specialDownloadMenu}) {
-	var {id, cohort, column: {fieldType, noGeneDetail, valueType, fields, fieldSpecs}} = props,
-		wrongDataType = valueType !== 'coded',
-		specialDownloadItemName = 'Download sample lists (json)';
+// Maybe put in a selector.
+function supportsGeneAverage(column) {
+	var {fieldType, fields, fieldList} = column;
+	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && (fieldList || fields).length === 1;
+}
+
+function matrixMenu(props, {onTumorMap, onMode}) {
+	var {cohort, column} = props,
+		{fieldType, noGeneDetail, fields, fieldSpecs} = column,
+		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs});
 
 	return addIdsToArr ([
-		supportsGeneAverage(id) ?
+		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?
-				<MenuItem eventKey="geneProbes" title={noGeneDetail ? 'no common probemap' : ''}
-					disabled={noGeneDetail} onSelect={onMode}>Detailed view</MenuItem> :
-				<MenuItem eventKey="genes" onSelect={onMode}>Gene average</MenuItem>)
+				<MenuItem title={noGeneDetail ? 'no common probemap' : ''}
+					disabled={noGeneDetail} onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
+				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>)
 				: null,
-		supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) ?
-			<MenuItem onSelect={onTumorMap}>TumorMap (TCGA Pancan)</MenuItem>
-			: null,
-		(specialDownloadMenu && !wrongDataType) ?
-			<MenuItem onSelect={onSpecialDownload}>{specialDownloadItemName}</MenuItem>
+		tumorMapCohort ?
+			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`TumorMap`}/>
 			: null
 	]);
 }
@@ -243,19 +262,18 @@ function optionMenu(props, opts) {
 function getStatusView(status, onReload) {
 	if (status === 'loading') {
 		return (
-			<div style={styles.status}>
+			<div data-xena='loading' style={styles.status}>
 				<img style={{textAlign: 'center'}} src={spinner}/>
 			</div>);
 	}
 	if (status === 'error') {
 		return (
 			<div style={styles.status}>
-				<span
-					onClick={onReload}
-					title='Error loading data. Click to reload.'
-					style={styles.error}
-					className='glyphicon glyphicon-warning-sign Sortable-handle'
-					aria-hidden='true'/>
+				<i onClick={onReload}
+				   style={styles.error}
+				   title='Error loading data. Click to reload.'
+				   aria-hidden='true'
+				   className={'material-icons'}>warning</i>
 			</div>);
 	}
 	return null;
@@ -267,8 +285,8 @@ function getPosition(maxXZoom, pStart, pEnd) {
 	}
 	var [start, end] = pStart < pEnd ? [pStart, pEnd] : [pEnd, pStart];
 
-	start = s.trim(start) === '' ? maxXZoom.start : parseExtendedInt(start);
-	end = s.trim(end) === '' ? maxXZoom.end : parseExtendedInt(end);
+	start = start.trim() === '' ? maxXZoom.start : parseExtendedInt(start);
+	end = end.trim() === '' ? maxXZoom.end : parseExtendedInt(end);
 
 	return (maxXZoom.start <= start &&
 			start <= end &&
@@ -276,126 +294,127 @@ function getPosition(maxXZoom, pStart, pEnd) {
 }
 
 var specialDownloadMenu = false;
-var annotationHelpText =  'Drag zoom. Shift-click zoom out.';
+//var annotationHelpText =  'Drag zoom. Shift-click zoom out.';
 
 if (process.env.NODE_ENV !== 'production') {
 	specialDownloadMenu = true;
 }
 
-var Column = React.createClass({
-	mixins: [deepPureRenderMixin],
-	getInitialState() {
-		return {
-			specialDownloadMenu: specialDownloadMenu,
-			annotationLanes: null
-		};
-	},
+// For geneProbes we will average across probes to compute KM. For
+// other types, we can't support multiple fields.
+function disableKM(column, hasSurvival) {
+	if (!hasSurvival) {
+		return [true, 'No survival data for cohort'];
+	}
+	// XXX need to refactor column.fields & column.fieldList
+	if ((column.fieldList || column.fields).length > 1) {
+		return [true, 'Unsupported for multiple genes/ids'];
+	}
+	return [false, ''];
+}
 
-	computeAnnotationLanes (position, refGene) {
-		var fieldType = _.getIn(this.props, ['column', 'fieldType'], undefined),
-			newAnnotationLanes;
+function getCodingVariants(index, exons) {
+	const resultSet = new Set();
 
-		if (['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1 && position && refGene) {
-			var lanes = [],
-				[start, end] = position;
+	exons.forEach(([start, end]) => {
+		matches(index, {start: start, end: end})
+			.forEach(item => resultSet.add(item.variant));
+	});
 
-			//only keep genes with in the current view
-			refGene = _.values(refGene).filter((val) => {
-				return ((val.txStart <= end) && (val.txEnd >= start));
-			});
+	return [...resultSet];
+}
 
-			//multip lane no-overlapping genes
-			refGene.forEach( val => {
-				var added = lanes.some(lane => {
-					if (lane.every( gene => !((val.txStart <= gene.txEnd) && (val.txEnd >= val.txStart)))) {
-						return lane.push(val);
-					}
-				});
-				if (!added) { // add a new lane
-					lanes.push([val]);
-				}
-			});
-			var perLaneHeight = _.min([annotationHeight / lanes.length, 12]),
-				laneOffset = (annotationHeight - perLaneHeight * lanes.length) / 2;
+function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
+	return _.zip(exonStarts, exonEnds)
+		.filter(([start, end]) => !(end < cdsStart || start > cdsEnd))
+		.map(([start, end]) => [Math.max(start, cdsStart), Math.min(end, cdsEnd)]);
+}
 
-			newAnnotationLanes = {
-				lanes: lanes,
-				perLaneHeight: perLaneHeight,
-				laneOffset: laneOffset,
-				annotationHeight: annotationHeight
-			};
-		} else {
-			newAnnotationLanes = {
-				lanes: undefined,
-				perLaneHeight: undefined,
-				laneOffset: undefined,
-				annotationHeight: annotationHeight
-			};
-		}
-		return newAnnotationLanes;
-	},
-	addAnnotationHelp(target) {
-		var tooltip = (
-			<Tooltip>
-				{annotationHelpText}
-			</Tooltip>
-		);
-		return (
-			<OverlayTrigger trigger={['hover']} placement='top' overlay={tooltip}>
-				{target}
-			</OverlayTrigger>);
-	},
-	enableHiddenFeatures() {
+class Column extends PureComponent {
+	state = {
+	    specialDownloadMenu: specialDownloadMenu
+	};
+
+	//	addAnnotationHelp(target) {
+	//		var tooltip = (
+	//			<Tooltip>
+	//				{annotationHelpText}
+	//			</Tooltip>
+	//		);
+	//		return (
+	//			<OverlayTrigger trigger={['hover']} placement='top' overlay={tooltip}>
+	//				{target}
+	//			</OverlayTrigger>);
+	//	},
+	enableHiddenFeatures = () => {
 		specialDownloadMenu = true;
 		this.setState({specialDownloadMenu: true});
-	},
+	};
+
 	componentWillMount() {
 		var asciiA = 65;
 		this.ksub = konami(asciiA).subscribe(this.enableHiddenFeatures);
-	},
+	}
+
 	componentWillUnmount() {
 		this.ksub.unsubscribe();
-	},
-	onResizeStop: function (size) {
+	}
+
+	onResizeStop = (size) => {
 		this.props.onResize(this.props.id, size);
-	},
-	onRemove: function () {
+	};
+
+	onRemove = () => {
 		this.props.onRemove(this.props.id);
-	},
-	onDownload: function () {
+	};
+
+	onDownload = () => {
 		var {column, data, samples, index, sampleFormat} = this.props;
 		download(widgets.download({column, data, samples, index: index, sampleFormat}));
-	},
-	onViz: function () {
+	};
+
+	onViz = () => {
 		this.props.onViz(this.props.id);
-	},
-	onKm: function () {
+	};
+
+	onEdit = () => {
+		this.props.onEdit(this.props.id);
+	};
+
+	onKm = () => {
 		this.props.onKm(this.props.id);
-	},
-	onSortDirection: function () {
+	};
+
+	onSortDirection = () => {
 		var newDir = _.get(this.props.column, 'sortDirection', 'forward') === 'forward' ?
 			'reverse' : 'forward';
 		this.props.onSortDirection(this.props.id, newDir);
-	},
-	onMode: function (ev, newMode) {
+	};
+
+	onMode = (ev, newMode) => {
 		this.props.onMode(this.props.id, newMode);
-	},
-	onColumnLabel: function (value) {
+	};
+
+	onColumnLabel = (value) => {
 		this.props.onColumnLabel(this.props.id, value);
-	},
-	onFieldLabel: function (value) {
+	};
+
+	onFieldLabel = (value) => {
 		this.props.onFieldLabel(this.props.id, value);
-	},
-	onShowIntrons: function () {
+	};
+
+	onShowIntrons = () => {
 		this.props.onShowIntrons(this.props.id);
-	},
-	onSortVisible: function () {
+	};
+
+	onSortVisible = () => {
 		var {id, column} = this.props;
 		var value = _.get(column, 'sortVisible',
 				column.valueType === 'segmented' ? true : false);
 		this.props.onSortVisible(id, !value);
-	},
-	onSpecialDownload: function () {
+	};
+
+	onSpecialDownload = () => {
 		var {column, data, samples, index, sampleFormat} = this.props,
 			{type, downloadData} = widgets.specialDownload({column, data, samples, index: index, sampleFormat});
 		if (type === "txt") {
@@ -403,30 +422,23 @@ var Column = React.createClass({
 		} else if(type === "json") {
 			downloadJSON(downloadData);
 		}
-	},
-	onXZoomOut: function (ev) {
+	};
+
+	onXZoomOut = (ev) => {
 		if (ev.shiftKey) {
 			let {id, column: {maxXZoom}, onXZoom} = this.props,
 				position = getPosition(maxXZoom, '', '');
 			onXZoom(id, position);
 		}
-	},
-	onXDragZoom: function (pos) {
+	};
+
+	onXDragZoom = (pos) => {
 		var {column: {layout}, onXZoom, id} = this.props,
 			[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
 		onXZoom(id, {start, end});
-	},
-	componentWillUpdate() {
-		var {column, data} = this.props,
-			newAnnotationLanes = this.computeAnnotationLanes (
-					_.getIn(column, ['layout', 'chrom', 0], undefined),
-					_.getIn(data, ['refGene'], {}));
+	};
 
-		if (this.state.annotationLanes !== newAnnotationLanes) {
-			this.setState({"annotationLanes": newAnnotationLanes});
-		}
-	},
-	onMenuToggle: function (open) {
+	onMenuToggle = (open) => {
 		var {xzoomable} = this.state,
 			{column: {xzoom, maxXZoom, valueType}, onXZoom, id} = this.props;
 		if (xzoomable && !open && ['mutation', 'segmented'].indexOf(valueType) !== -1) {
@@ -438,57 +450,70 @@ var Column = React.createClass({
 				onXZoom(id, position);
 			}
 		}
-	},
-	onMuPit: function () {
+	};
+
+	onMuPit = (assembly) => {
 		// Construct the url, which will be opened in new window
 		// total = newRows.length,
 		// k fixed at 1000
 		// gene, protein, etc size is fixed at 1000
 		// this could be actual size of protein or gene, but it is complicated due to mutations could be from exon region and display could be genomics region
 		// for the same gene it is a constant, does it really matter to be different between genes?
+		const k = 1000,
+			indexByPos = this.props.index.byPosition,
+			{ exonStarts, exonEnds, cdsStart, cdsEnd } = _.values(this.props.data.refGene)[0];
 
-		let total = _.getIn(this.props, ['data', 'req', 'rows']).length, //length of all variants
-			k = 1000,
-			nodes = _.getIn(this.props, ['column', 'nodes']),
-			variants = [...(new Set(_.pluck(nodes, 'data')))], //only variants in view
-			SNVPs = mutationVector.SNVPvalue(variants, total, k),
-			uriList = _.map(_.values(SNVPs), n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
-			url = 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=';
-			//url = 'http://karchin-web04.icm.jhu.edu:8888/MuPIT_Interactive/?gm=';  // mupit dev server
+		const exons = filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd),
+			variants = getCodingVariants(indexByPos, exons); //coding variants
+
+		let SNVPs = mutationVector.SNVPvalue(variants, variants.length, k);
+		if (this.props.column.xzoom) {
+			const { start: zoomStart, end: zoomEnd } = this.props.column.xzoom;
+			SNVPs = _.filter(SNVPs, value => {
+				const valueStart = parseInt(value.start);
+				return valueStart >= zoomStart && valueStart <= zoomEnd;
+			});
+		}
+
+		const uriList = _.map(SNVPs, n => `${n.chr}:${n.start}:${1 - n.pValue}`).join(','),
+			mupitUrl = {
+				"hg19": 'http://hg19.cravat.us/MuPIT_Interactive?gm=', // mupit hg19 server
+				"GRCh37": 'http://hg19.cravat.us/MuPIT_Interactive?gm=', // mupit hg19 server
+				"hg38": 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=', //mupit hg38 server
+				"GRCh38": 'http://mupit.icm.jhu.edu/MuPIT_Interactive?gm=' //mupit hg38 server
+			},
+			url = mupitUrl[assembly];
+
 		window.open(url + `${uriList}`);
-	},
+	};
 
-	onTumorMap: function () {
+	onTumorMap = (tumorMap) => {
 		// TumorMap/Xena API https://tumormap.ucsc.edu/query/addAttributeXena.html
-		// the only connection we have here is on the pancanAtlas data, and currently all categorical data there are using
-		var fieldSpecs = _.getIn(this.props, ['column', 'fieldSpecs']),
+		// only use spec of the first cohort (in the context of composite cohort)
+		var fieldSpecs = _.getIn(this.props, ['column', 'fieldSpecs', 0]),
+			data = _.getIn(this.props, ['data']),
 			valueType = _.getIn(this.props, ['column', 'valueType']),
-			datasetMeta = _.getIn(this.props, ['datasetMeta']),
-			columnid = _.getIn(this.props, ['id']),
-			map = "PancanAtlas/SampleMap",
-			layout = 'mRNA',
-			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + map + "&layout=" + layout,
-			customColor = {};
+			fieldType = _.getIn(this.props, ['column', 'fieldType']),
+			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout,
+			customColor = _.getIn(this.props, ['column', 'dataset', 'customcolor']);
 
-		_.map(fieldSpecs, spec => {
-			var ds = JSON.parse(spec.dsID),
-				hub = ds.host,
-				dataset = ds.name,
-				feature = spec.fields[0];
+		var ds = JSON.parse(fieldSpecs.dsID),
+			hub = ds.host,
+			dataset = ds.name,
+			feature = (fieldType !== "geneProbes") ? fieldSpecs.fields[0] : _.getIn(data, ['req', 'probes', 0]);
 
-			customColor = _.extend(customColor, datasetMeta(columnid).metadata(spec.dsID).customcolor);
+		customColor = _.extend(customColor, );
 
-			url = url + "&hub=" + hub + "/data/";
-			url = url + "&dataset=" + dataset;
-			url = url + "&attr=" + feature;
-		});
+		url = url + "&hub=" + hub + "/data/";
+		url = url + "&dataset=" + dataset;
+		url = url + "&attr=" + feature;
 
 		if (valueType === "coded") {
-			var codes = _.getIn(this.props, ['data', 'codes']),
+			var codes = _.getIn(data, ['codes']),
 				cat, colorhex,
 				colors = _.isEmpty(customColor) ? categoryMore : customColor;
 
-			_.map(codes, (code, i) =>{
+			_.map(codes, (code, i) => {
 				cat = code;
 				colorhex = colors[i % colors.length];
 				colorhex = colorhex.slice(1, colorhex.length);
@@ -498,48 +523,46 @@ var Column = React.createClass({
 		}
 
 		window.open(url);
-	},
+	};
 
-	onReload: function () {
+	onReload = () => {
 		this.props.onReload(this.props.id);
-	},
-	getControlWidth: function () {
-		var controlWidth = ReactDOM.findDOMNode(this.refs.controls).getBoundingClientRect().width,
-			labelWidth = ReactDOM.findDOMNode(this.refs.label).getBoundingClientRect().width;
-		return controlWidth + labelWidth;
-	},
-	render: function () {
-		var {first, id, label, samples, samplesMatched, column, index,
-				zoom, data, datasetMeta, fieldFormat, sampleFormat, disableKM, searching,
-				supportsGeneAverage, onClick, tooltip} = this.props;
+	};
 
-		var {specialDownloadMenu} = this.state,
-			{width, columnLabel, fieldLabel, user} = column,
+	getControlWidth = () => {
+		return 90;
+//		return 136;
+	};
+
+	onAbout = (ev, host, dataset) => {
+		ev.preventDefault();
+		this.props.onAbout(host, dataset);
+	};
+
+	render() {
+		var {first, id, label, samples, samplesMatched, column, index,
+				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
+				onClick, tooltip, wizardMode, onReset,
+				interactive, append} = this.props,
+			{specialDownloadMenu} = this.state,
+			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
-				onSpecialDownload, supportsGeneAverage, specialDownloadMenu}),
-			[kmDisabled, kmTitle] = disableKM(id),
+				onSpecialDownload, specialDownloadMenu}),
+			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			status = _.get(data, 'status'),
+			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
-			sortHelp = <Tooltip>Drag to change column order</Tooltip>,
-			menuHelp = <Tooltip>Column menu</Tooltip>,
-			moveIcon = (
-				<OverlayTrigger placement='top' overlay={sortHelp}>
-					<span
-						className="glyphicon glyphicon-resize-horizontal Sortable-handle"
-						aria-hidden="true">
-					</span>
-				</OverlayTrigger>),
 			annotation = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
 				<RefGeneAnnotation
-					column = {column}
-					annotationLanes = {this.computeAnnotationLanes(
-						_.getIn(column, ['layout', 'chrom', 0], undefined),
-						_.getIn(data, ['refGene'], {}))}
-					tooltip = {tooltip}
-					layout = {column.layout}
-					width= {width}
-					mode= {parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+					column={column}
+					position={_.getIn(column, ['layout', 'chrom', 0])}
+					refGene={_.getIn(data, ['refGene'], {})}
+					tooltip={tooltip}
+					layout={column.layout}
+					height={annotationHeight}
+					width={width}
+					mode={parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null,
@@ -558,77 +581,71 @@ var Column = React.createClass({
 		// Button and Dropdown.Toggle will allow overriding the tag.  However
 		// Splitbutton will not pass props down to the underlying Button, so we
 		// can't use Splitbutton.
+		// XXX put position into a css module
 		return (
-			<div className='Column' style={{width: width, position: 'relative'}}>
-				<br/>
-				{/* Using Dropdown instead of SplitButton so we can put a Tooltip on the caret. :-p */}
-				<Dropdown onToggle={this.onMenuToggle} ref='controls' bsSize='xsmall'>
-					<Button componentClass='label'>
-						{moveIcon}
-					</Button>
-					{/* If OverlayTrigger contains Dropdown.Toggle, the toggle doesn't work. So we invert the nesting and use a span to cover the trigger area. */}
-					<Dropdown.Toggle componentClass='label'>
-						<OverlayTrigger placement='top' overlay={menuHelp}>
-							<span style={styles.columnMenuToggle}></span>
-						</OverlayTrigger>
-					</Dropdown.Toggle>
-					<Dropdown.Menu>
-						{menu}
-						{menu && <MenuItem divider />}
-						<MenuItem title={kmTitle} onSelect={this.onKm} disabled={kmDisabled}>Kaplan Meier Plot</MenuItem>
-						<MenuItem onSelect={this.onSortDirection}>Reverse sort</MenuItem>
-						<MenuItem onSelect={this.onDownload}>Download</MenuItem>
-						{aboutDatasetMenu(datasetMeta(id))}
-						<MenuItem onSelect={this.onViz}>Display Setting</MenuItem>
-						<MenuItem onSelect={this.onRemove}>Remove</MenuItem>
-					</Dropdown.Menu>
-				</Dropdown>
-				<Badge ref='label' style={styles.badge} className='pull-right'>{label}</Badge>
-				<br/>
-				<DefaultTextInput
-					onChange={this.onColumnLabel}
-					value={{default: columnLabel, user: user.columnLabel}} />
-				<DefaultTextInput
-					onChange={this.onFieldLabel}
-					value={{default: fieldLabel, user: user.fieldLabel}} />
-				<Crosshair frozen={this.props.frozen}>
-					<div style={{height: annotationHeight + scaleHeight + 4}}>
-						{this.addAnnotationHelp (
-							<DragSelect
-								enabled={true}
-								onClick={this.onXZoomOut}
-								onSelect={this.onXDragZoom}>
-								{scale}
-								<div style={{height: 2}}/>
-								{annotation}
-							</DragSelect>
-						)}
-					</div>
-				</Crosshair>
-
-				<ResizeOverlay
-					onResizeStop={this.onResizeStop}
-					width={width}
-					minWidth={this.getControlWidth}
-					height={zoom.height}>
-					<SpreadSheetHighlight
-						animate={searching}
+			<div style={{width: width, position: 'relative'}}>
+				<ColCard colId={label}
+						sortable={!first}
+						title={<DefaultTextInput
+							disabled={!interactive}
+							onChange={this.onColumnLabel}
+							value={{default: columnLabel, user: user.columnLabel}} />}
+						subtitle={<DefaultTextInput
+							disabled={!interactive}
+							onChange={this.onFieldLabel}
+							value={{default: fieldLabel, user: user.fieldLabel}} />}
+						controls={!interactive ? (first ? refreshIcon : null) :
+							<div>
+								{first ? null : (
+									<IconMenu icon='more_vert' menuRipple iconRipple={false}>
+										{menu}
+										{menu && <MenuDivider />}
+										<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
+										caption='Kaplan Meier Plot'/>
+										<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
+										<MenuItem onClick={this.onDownload} caption='Download'/>
+										{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
+										<MenuItem onClick={this.onViz} caption='Display'/>
+										<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
+										<MenuItem onClick={this.onRemove} caption='Remove'/>
+										</IconMenu>)}
+							</div>
+						}
+						 wizardMode={wizardMode}>
+					<Crosshair frozen={!interactive || this.props.frozen}>
+						<div style={{height: annotationHeight + scaleHeight + 4}}>
+							{annotation ?
+								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+									{scale}
+									<div style={{height: 2}}/>
+									{annotation}
+								</DragSelect> : null}
+						</div>
+					</Crosshair>
+					<ResizeOverlay
+						enable={interactive}
+						onResizeStop={this.onResizeStop}
 						width={width}
-						height={zoom.height}
-						samples={samples.slice(zoom.index, zoom.index + zoom.count)}
-						samplesMatched={samplesMatched}/>
-					<div style={{position: 'relative'}}>
-						<Crosshair frozen={this.props.frozen}>
-							{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
-							{getStatusView(status, this.onReload)}
-						</Crosshair>
-					</div>
-				</ResizeOverlay>
-				<h5 style={{visibility: first ? 'visible' : 'hidden'}}>Legends</h5>
-				{widgets.legend({column, data})}
+						minWidth={this.getControlWidth}
+						height={zoom.height}>
+						<SpreadSheetHighlight
+							animate={searching}
+							width={width}
+							height={zoom.height}
+							samples={samples.slice(zoom.index, zoom.index + zoom.count)}
+							samplesMatched={samplesMatched}/>
+						<div style={{position: 'relative'}}>
+							<Crosshair frozen={!interactive || this.props.frozen}>
+								{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
+								{getStatusView(status, this.onReload)}
+							</Crosshair>
+						</div>
+					</ResizeOverlay>
+				</ColCard>
+				{append}
 			</div>
 		);
 	}
-});
+}
 
 module.exports = Column;

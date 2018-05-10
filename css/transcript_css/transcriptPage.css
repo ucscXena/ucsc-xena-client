@@ -1,40 +1,40 @@
-.legend-holder {
-  float: right;
-  margin-right: 150px;
+#main {
+  font-size:14px;
 }
 
-.legend {
-    height: 15px;
-    width: 100px;
-    color: white;
-    position: relative;
-    text-align: center;
-    vertical-align: middle;
-    line-height: 15px;
+#main span {
+  -webkit-font-smoothing: subpixel-antialiased;
 }
 
-.legend label {
-  font-size: 0.85em;
-  position: relative;
+#geneBox * {
+  border-bottom: 0;
+}
+
+.horizontalSegment {
+  margin: 0px 20px;
+  height: 90px;
+}
+
+.horizontalSegmentButton {
+	margin: 15px;
+	padding: 10px;
+	background-color: #1f77b4;
+	color: white;
+	border: 1px solid #1f77b4;
+	border-radius: 5px;
+}
+
+.horizontalSegmentButton:hover {
+	color: #ff6b6b;
 }
 
 .selectors {
-  margin: 5px 20px;
-}
-
-.densityplot--label-div {
-  margin-left: 885px;
-  position: fixed;
-  width: 125px;
-  height: 40px;
-  z-index: 10;
-  text-align: center;
+  margin: 0px 20px;
 }
 
 .densityplot--label-div--zoom {
-  margin-left: 885px;
-  position: fixed;
-  width: 200px;
+  margin-left: 205px;
+  position: absolute;
   height: 40px;
   z-index: 10;
   text-align: center;
@@ -54,19 +54,11 @@
   position: absolute;
 }
 
-.densityplot--label-div-y {
-  height: 70px;
-  width: 20px;
-  z-index: 10;
-  float: right;
-  margin-right: 75px;
-}
-
 .densityplot--label-y {
-  font-size: .85em;
-  top: 50%;
-  line-height: 100px;
-  vertical-align: middle;
+  display: inline-block;
+  width: 0px;
+  margin-top: 60px;
+  float: left;
   -webkit-transform: rotate(-90deg);
 	-moz-transform: rotate(-90deg);
 	transform: rotate(-90deg);
@@ -77,5 +69,23 @@
   height: 4px;
   position: absolute;
   bottom: 0px;
-  background-color: red;
+  background-color: black;
+}
+
+.densityplot--label-div-zero {
+  margin-left: 160px;
+  position: absolute;
+  height: 50px;
+  width: 50px;
+  z-index: 10;
+  display: inline-block;
+  text-align: center;
+}
+
+.densityplot--label-zero {
+  font-size: .85em;
+  line-height: 10px;
+  -webkit-transform: rotate(-90deg);
+	-moz-transform: rotate(-90deg);
+	transform: rotate(-90deg);
 }

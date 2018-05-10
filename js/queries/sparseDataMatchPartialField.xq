@@ -1,4 +1,4 @@
-; sparseDataMatchField
+; sparseDataMatchPartialField
 (fn [field dataset names limit]
 	(let [getfield (fn [field]
 					 (:id (car (query {:select [:field.id]

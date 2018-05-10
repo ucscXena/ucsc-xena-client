@@ -1,0 +1,12 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling standard Xena top nav, that are outside of the RTB app bar theming API (for example,
+ * styles for the UCSC logo).
+ */
+
+.logoXena {
+	max-width: 139px;
+	height: auto;
+}

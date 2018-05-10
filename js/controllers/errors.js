@@ -18,6 +18,8 @@ var collectResults = _.curry((filter, arr, selector) => {
 		response = selector(filter ? (groups.false || []) : arr),
 		errors = groups.true;
 
+	// XXX This mechanism needs work. It doesn't compose well. Operators on
+	// this (e.g. zip) may cause the error to be caught in the wrong place.
 	return errors ?
 		Rx.Observable.of(response)
 			.concat(Rx.Observable.throw(compositeError('Composite Error', ...errors))) :

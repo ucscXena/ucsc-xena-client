@@ -1,10 +1,12 @@
 'use strict';
 
+import PureComponent from '../PureComponent';
 var React = require('react');
-import Autosuggest from 'react-autosuggest';
+import XAutosuggest from './XAutosuggest';
+import Input from 'react-toolbox/lib/input';
 var {sparseDataMatchPartialField, refGene} = require('../xenaQuery');
 var _ = require('../underscore_ext');
-var {rxEventsMixin, deepPureRenderMixin} = require('../react-utils');
+var {rxEvents} = require('../react-utils');
 require('./GeneSuggest.css');
 var limit = 8;
 
@@ -26,39 +28,56 @@ function currentWord(value, position) {
 
 var defaultAssembly = 'hg38';
 
+var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
+	<Input
+		spellCheck={false}
+		innerRef={el => ref(el && el.inputNode)}
+		onChange={(value, ev) => onChange(ev)}
+		label= {label || 'Add Gene or Position'}
+		{...props} >
+		<i style={{color: 'red', opacity: error ? 1 : 0}} className='material-icons'>error</i>
+	</Input>
+);
+
 // Currently we only match against refGene hg38 genes. We could, instead, match
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
 // require some more work to dispatch the query for each type.
-var GeneSuggest = React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
+class GeneSuggest extends PureComponent {
+	state = {suggestions: []};
+
 	componentWillMount() {
 		var {host, name} = refGene[this.props.assembly] || refGene[defaultAssembly];
-		this.events('change');
-		this.ev.change
+		var events = rxEvents(this, 'change');
+		this.change = events.change
 			.distinctUntilChanged(_.isEqual)
 			.debounceTime(200)
 			.switchMap(value => sparseDataMatchPartialField(host, 'name2', name, value, limit)).subscribe(matches => this.setState({suggestions: matches}));
-	},
-	onSuggestionsFetchRequested({value}) {
-		var position = this.refs.autosuggest.input.selectionStart,
+	}
+
+	componentWillUnmount() {
+		this.change.unsubscribe();
+	}
+
+	onSuggestionsFetchRequested = ({value}) => {
+		var position = this.input.selectionStart,
 			word = currentWord(value, position);
 
 		if (word !== '') {
-			this.ev.change.next(word);
+			this.on.change(word);
 		}
-	},
-	shouldRenderSuggestions(value) {
-		var position = this.refs.autosuggest.input.selectionStart,
+	};
+
+	shouldRenderSuggestions = (value) => {
+		var position = this.input.selectionStart,
 			word = currentWord(value, position);
 		return word.length > 0;
-	},
-	onSuggestionsClearRequested() {
+	};
+
+	onSuggestionsClearRequested = () => {
 		this.setState({suggestions: []});
-	},
-	getInitialState() {
-		return {suggestions: []};
-	},
-	onChange(ev, {newValue, method}) {
+	};
+
+	onChange = (ev, {newValue, method}) => {
 		// Don't update the value for 'up' and 'down' keys. If we do update
 		// the value, it gives us an in-place view of the suggestion (pasting
 		// the value into the input field), but the drawback is that it moves
@@ -69,31 +88,42 @@ var GeneSuggest = React.createClass({
 		if (method !== 'up' && method !== 'down') {
 			this.props.onChange(newValue);
 		}
-	},
-	getSuggestionValue(suggestion) {
-		var position = this.refs.autosuggest.input.selectionStart,
-			value = this.refs.autosuggest.input.value,
+	};
+
+	getSuggestionValue = (suggestion) => {
+		var position = this.input.selectionStart,
+			value = this.input.value,
 			[i, j] = currentWordPosition(value, position);
 
 		// splice the suggestion into the current word
 		return value.slice(0, i) + suggestion + value.slice(j);
-	},
+	};
+
+	setInput = (input) => {
+		var {inputRef} = this.props;
+		this.input = input;
+		if (inputRef) {
+			inputRef(this.input);
+		}
+	};
+
 	render() {
 		var {onChange} = this,
-			{suggestions} = this.state,
-			{value = ""} = this.props;
+			{onKeyDown, value = '', label, error} = this.props,
+			{suggestions} = this.state;
 
 		return (
-			<Autosuggest
-				ref='autosuggest'
+			<XAutosuggest
+				inputRef={this.setInput}
 				suggestions={suggestions}
 				onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
 				onSuggestionsClearRequested={this.onSuggestionsClearRequested}
 				getSuggestionValue={this.getSuggestionValue}
 				shouldRenderSuggestions={this.shouldRenderSuggestions}
 				renderSuggestion={v => <span>{v}</span>}
-				inputProps={{value, onChange}}/>);
+				renderInputComponent={renderInputComponent}
+				inputProps={{value, label, error, onKeyDown, onChange}}/>);
 	}
-});
+}
 
 module.exports = GeneSuggest;

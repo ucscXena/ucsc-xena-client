@@ -6,10 +6,12 @@ var widgets = require('./columnWidgets');
 var colorScales = require('./colorScales');
 var util = require('./util');
 var Legend = require('./views/Legend');
+var BandLegend = require('./views/BandLegend');
+import PureComponent from './PureComponent';
 var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
-var {deepPureRenderMixin, rxEventsMixin} = require('./react-utils');
-var {drawHeatmapByPixel: drawHeatmap} = require('./drawHeatmap');
+var {rxEvents} = require('./react-utils');
+var {drawHeatmap} = require('./drawHeatmap');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -69,15 +71,15 @@ function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, po
 		label = fieldFormat(field);
 
 	val = code ? code : prec(val);
-
+	let mean = heatmap && prec(_.meannull(heatmap[fieldIndex])),
+		median = heatmap && prec(_.medianNull(heatmap[fieldIndex]));
 	return {
 		sampleID: sampleFormat(sampleID),
 		rows: [
 			[['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos)]]] : []),
-			...(val !== 'NA' && !code ?
-				[[['labelValue', 'Mean (Median)', prec(_.meannull(heatmap[fieldIndex])) + ' (' +
-				 prec(_.medianNull(heatmap[fieldIndex])) + ')' ]]] : [])]
+			...((!code && (mean !== 'NA') && (median !== 'NA') ? [[['labelValue', 'Mean (Median)', mean + ' (' +
+	         median + ')' ]]] : []))]
 	};
 }
 
@@ -85,7 +87,7 @@ function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, po
 // Legends
 //
 
-function categoryLegend(dataIn, colorScale, codes, isSamplesColumn) {
+function categoryLegend(dataIn, colorScale, codes) {
 	if (!colorScale) {
 		return {colors: [], labels: []};
 	}
@@ -94,7 +96,7 @@ function categoryLegend(dataIn, colorScale, codes, isSamplesColumn) {
 		colors = _.map(data, colorScale),
 		labels = _.map(data, d => codes[d]);
 
-	return {colors: colors, labels: labels, isSamplesColumn: isSamplesColumn};
+	return {colors: colors, labels: labels};
 }
 
 // Color scale cases
@@ -135,7 +137,8 @@ function renderFloatLegend(props) {
 	}
 	var subColColor = _.max(colors, colorList => _.uniq(colorList.slice(Math.ceil(colorList.length / 2.0))).length),
 		{labels, colors: legendColors} = legendForColorscale(subColColor),
-		footnotes = [units && units[0] ? ('unit: ' + units[0]) : null],
+		unitText = units[0],
+		footnotes = [units && units[0] ? <span title={unitText}>{unitText}</span> : null],
 		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min'])),
 		multiScaled = colors && colors.length > 1 && !hasViz(vizSettings);
 
@@ -150,10 +153,43 @@ function renderFloatLegend(props) {
 	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
 }
 
+// might want to use <wbr> here, instead, so cut & paste work better, but that
+// will require a recursive split/flatmap to inject the <wbr> elements.
+var addWordBreaks = str => str.replace(/([_/])/g, '\u200B$1\u200B');
+
+function renderFloatLegendNew(props) {
+	var {units, colors, vizSettings} = props;
+
+	if (!colors) {
+		return null;
+	}
+
+	var colorSpec = _.max(colors, colorList => _.uniq(colorList.slice(Math.ceil(colorList.length / 2.0))).length);
+
+	if (colorSpec[0] === 'no-data') {
+		return null;
+	}
+
+	var scale = colorScales.colorScale(colorSpec),
+		values = scale.domain(),
+		footnotes = units && units[0] ? [<span title={units[0]}>{addWordBreaks(units[0])}</span>] : null,
+		hasViz = !isNaN(_.getIn(vizSettings, ['min'])),
+		multiScaled = colors && colors.length > 1 && !hasViz;
+
+	return (
+		<BandLegend
+			multiScaled={multiScaled}
+			range={{min: _.first(values), max: _.last(values)}}
+			colorScale={scale}
+			footnotes={footnotes}
+			width={50}
+			height={20}/>);
+}
+
 // Might have colorScale but no data (phenotype), no data & no colorScale,
 // or data & colorScale, no colorScale &  data?
 function renderCodedLegend(props) {
-	var {data: [data] = [], codes, colors = [], isSamplesColumn} = props;
+	var {data: [data] = [], codes, colors = []} = props;
 	var legendProps;
 	var colorfn = _.first(colorFns(colors.slice(0, 1)));
 
@@ -162,7 +198,7 @@ function renderCodedLegend(props) {
 	// values in the db (even those not in the plot) so that colors will
 	// match in other datasets.
 	if (data && colorfn) { // category
-		legendProps = categoryLegend(data, colorfn, codes, isSamplesColumn);
+		legendProps = categoryLegend(data, colorfn, codes);
 	} else {
 		return <span />;
 	}
@@ -170,61 +206,68 @@ function renderCodedLegend(props) {
 	return <Legend {...legendProps} />;
 }
 
-var HeatmapLegend = hotOrNot(React.createClass({
-	mixins: [deepPureRenderMixin],
-	render: function() {
-		var {column, data} = this.props,
-			{units, heatmap, colors, fieldLabel, valueType, vizSettings, defaultNormalization} = column,
+var HeatmapLegend = hotOrNot(class extends PureComponent {
+	render() {
+		var {column, data, newLegend} = this.props,
+			{units, heatmap, colors, valueType, vizSettings, defaultNormalization} = column,
 			props = {
 				units,
 				colors,
-				isSamplesColumn: fieldLabel === "samples",
 				vizSettings,
 				defaultNormalization,
 				data: heatmap,
 				coded: valueType === 'coded',
 				codes: _.get(data, 'codes'),
 			};
-		return (props.coded ? renderCodedLegend : renderFloatLegend)(props);
+		return (props.coded ? renderCodedLegend :
+			newLegend ? renderFloatLegendNew :
+			renderFloatLegend)(props);
 	}
-}));
+});
 
 //
 // plot rendering
 //
 
 
-var HeatmapColumn = hotOrNot(React.createClass({
-	mixins: [rxEventsMixin, deepPureRenderMixin],
-	componentWillMount: function () {
-		this.events('mouseout', 'mousemove', 'mouseover');
+var HeatmapColumn = hotOrNot(//
+// plot rendering
+//
+
+
+class extends PureComponent {
+	componentWillMount() {
+		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
 		// Compute tooltip events from mouse events.
-		this.ttevents = this.ev.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
+		this.ttevents = events.mouseover.filter(ev => util.hasClass(ev.currentTarget, 'Tooltip-target'))
 			.flatMap(() => {
-				return this.ev.mousemove
-					.takeUntil(this.ev.mouseout)
+				return events.mousemove
+					.takeUntil(events.mouseout)
 					.map(ev => ({
 						data: this.tooltip(ev),
 						open: true
 					})) // look up current data
 					.concat(Rx.Observable.of({open: false}));
 			}).subscribe(this.props.tooltip);
-	},
-	componentWillUnmount: function () {
+	}
+
+	componentWillUnmount() {
 		this.ttevents.unsubscribe();
-	},
-	tooltip: function (ev) {
+	}
+
+	tooltip = (ev) => {
 		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
 			codes = _.get(data, 'codes'),
 			position = _.getIn(data, ['req', 'position']),
 			{assembly, fields, heatmap, width} = column;
 		return tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat(id), codes, position, width, zoom, samples, ev);
-	},
+	};
+
 	// To reduce this set of properties, we could
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
-	render: function () {
+	render() {
 		var {data, column, zoom} = this.props,
 			{heatmap, colors} = column,
 			codes = _.get(data, 'codes');
@@ -246,7 +289,7 @@ var HeatmapColumn = hotOrNot(React.createClass({
 					colors={colors}
 					heatmapData={heatmap}/>);
 	}
-}));
+});
 
 var getColumn = props => <HeatmapColumn {...props} />;
 
