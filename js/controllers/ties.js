@@ -126,6 +126,8 @@ var setKeep = (state, index, keep) => _.assocIn(state, ['filter', index], keep);
 
 var reset = state => _.assoc(state, 'open', false, 'docs', undefined);
 
+var dismiss = state => _.dissoc(state, 'open'); // XXX clean up doc list?
+
 var tiesControls = {
 	'ties-open': state => _.assoc(state,
 		'open', true,
@@ -134,7 +136,7 @@ var tiesControls = {
 		'showDoc', undefined,
 		'matches', {},
 		'filter', {}), // init the filter
-	'ties-dismiss': state => _.dissoc(state, 'open'), // XXX clean up doc list?
+	'ties-dismiss': dismiss,
 	'ties-dismiss-welcome': state => _.assoc(state, 'showWelcome', false),
 	'ties-add-term': (state, term) =>
 		_.assoc(state, 'terms', _.conj(state.terms || [], term)),
@@ -145,6 +147,7 @@ var tiesControls = {
 	'ties-hide-doc': state => _.dissoc(state, 'showDoc'),
 	'ties-set-page': (state, page) => _.assoc(state, 'page', page),
 	'ties-doc-list': (state, docs) => _.assoc(state, 'docs', docs),
+	'ties-doc-list-error': dismiss,
 	'ties-concepts': (state, concepts) => _.assoc(state, 'concepts', concepts),
 	'ties-doc': (state, doc, patient) => _.assoc(state, 'doc', {...doc, patient}),
 	'ties-matches': (state, matches, term) =>
