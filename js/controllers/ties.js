@@ -159,18 +159,18 @@ var tiesControls = {
 var spreadsheetControls = {
 	'ties-add-term-post!': fetchMatches,
 	'km-survival-data-post!': (serverBus, state, newState) => {
-		var patients = _.getIn(newState, ['survival', 'patient', 'data', 'codes']),
+		var patients = _.getIn(newState, ['survival', 'patient', 'data']),
 			docs = _.getIn(newState, ['ties', 'docs']),
 			open = _.getIn(newState, ['ties', 'open']);
 		if (open && !docs) {
-			fetchDocs(serverBus, patients);
+			fetchDocs(serverBus, patients.req.values[0].map(i => patients.codes[i]));
 		}
 	}
 };
 
 var controls = {
 	'ties-open-post!': (serverBus, state, newState) => {
-		var patients = _.getIn(newState, ['spreadsheet', 'survival', 'patient', 'data', 'codes']),
+		var patients = _.getIn(newState, ['spreadsheet', 'survival', 'patient', 'data']),
 			docs = _.getIn(newState, ['spreadsheet', 'ties', 'docs']),
 			concepts = _.getIn(newState, ['spreadsheet', 'ties', 'concepts']);
 		if (!concepts) {
@@ -178,7 +178,7 @@ var controls = {
 		}
 		if (patients) {
 			if (!docs) {
-				fetchDocs(serverBus, patients);
+				fetchDocs(serverBus, patients.req.values[0].map(i => patients.codes[i]));
 			}
 		} else {
 			fetchSurvival(serverBus, newState);
