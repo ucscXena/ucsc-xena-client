@@ -2,7 +2,7 @@
 var _ = require('../underscore_ext');
 var {compose, make, mount} = require('./utils');
 var tiesQuery = require('../tiesQuery');
-//var Rx = require('../rx');
+var Rx = require('../rx');
 var {fetchSurvival} = require('./common');
 
 // Pick first doc, as TCGA patients have at most one, and put patients with docs first.
@@ -13,8 +13,9 @@ var collateDocs = docs => {
 };
 
 function fetchDocs(serverBus, patients) {
+	var nn = patients.req.values[0].map(i => patients.codes[i]).filter(x => x);
 	serverBus.next(['ties-doc-list',
-		tiesQuery.docs(patients).map(collateDocs)]);
+		nn.length ? tiesQuery.docs(nn).map(collateDocs) : Rx.Observable.of([], Rx.Scheduler.asap)]);
 }
 
 function parseHighlights(text) {
@@ -165,7 +166,7 @@ var spreadsheetControls = {
 			docs = _.getIn(newState, ['ties', 'docs']),
 			open = _.getIn(newState, ['ties', 'open']);
 		if (open && !docs) {
-			fetchDocs(serverBus, patients.req.values[0].map(i => patients.codes[i]));
+			fetchDocs(serverBus, patients);
 		}
 	}
 };
@@ -180,7 +181,7 @@ var controls = {
 		}
 		if (patients) {
 			if (!docs) {
-				fetchDocs(serverBus, patients.req.values[0].map(i => patients.codes[i]));
+				fetchDocs(serverBus, patients);
 			}
 		} else {
 			fetchSurvival(serverBus, newState);
