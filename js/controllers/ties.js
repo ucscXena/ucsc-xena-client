@@ -158,6 +158,7 @@ var tiesControls = {
 	'ties-matches-reset-error': state => _.assoc(state, 'conceptsError', false),
 	cohort: reset,
 	cohortReset: reset,
+	sampleFilter: reset,
 	manifest: reset
 };
 
