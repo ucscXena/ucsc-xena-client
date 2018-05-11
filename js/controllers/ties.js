@@ -46,29 +46,25 @@ function fetchConcepts(serverBus) {
 	serverBus.next(['ties-concepts', tiesQuery.goodConcepts()]);
 };
 
-// underscore intersect sucks. Using a set, for O(n + m) performance.
-var intersect = (c0, c1) => {
-	var s = new Set(c0);
-	return c1.filter(v => s.has(v));
-};
-
 var union = (c0, c1) => {
 	var s = new Set(c0);
 	c1.forEach(v => s.add(v));
 	return Array.from(s.values());
 };
 
-var unionOfHits = (h0, h1) =>
-	union(_.pluck(h0, 'patientId'), _.pluck(h1, 'patientId'));
-
 function fetchMatches(serverBus, state, newState, term) {
-	var patients = _.getIn(newState, ['survival', 'patient', 'data', 'codes']);
+	var docs = _.get(newState, 'docs', []),
+		docIds = _.pluck(docs, 'doc'),
+		f = docIds.filter(x => x),
+		patients = _.pluck(docs, 'patient'),
+		mapping = _.object(docIds, patients);
+
 	serverBus.next(['ties-matches',
 		// Running these sequentially because the backend falls over if we send them in parallel.
 		// This is super slow.
-		tiesQuery.conceptMatches(patients, term).flatMap(conceptHits =>
-			tiesQuery.textMatches(patients, term).map(textHits => ({conceptHits, textHits})))
-			.map(({conceptHits, textHits}) => intersect(patients, unionOfHits(conceptHits, textHits))),
+		tiesQuery.conceptMatches(f, term).flatMap(conceptHits =>
+			tiesQuery.textMatches(f, term)
+			.map(textHits => union(conceptHits, textHits).map(d => mapping[d]))),
 		term]);
 }
 
@@ -140,6 +136,7 @@ var tiesControls = {
 	'ties-dismiss-welcome': state => _.assoc(state, 'showWelcome', false),
 	'ties-add-term': (state, term) =>
 		_.assoc(state, 'terms', _.conj(state.terms || [], term)),
+	'ties-add-term-post!': fetchMatches,
 	'ties-keep-row': (state, index, keep) => advancePage(advanceDoc(setKeep(state, index, keep))),
 	'ties-keep-row-post!': fetchDoc,
 	'ties-show-doc': (state, index) => _.assoc(state, 'showDoc', index),
@@ -163,7 +160,6 @@ var tiesControls = {
 };
 
 var spreadsheetControls = {
-	'ties-add-term-post!': fetchMatches,
 	'km-survival-data-post!': (serverBus, state, newState) => {
 		var patients = _.getIn(newState, ['survival', 'patient', 'data']),
 			docs = _.getIn(newState, ['ties', 'docs']),

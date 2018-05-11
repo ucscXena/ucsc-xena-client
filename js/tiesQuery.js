@@ -18,27 +18,29 @@ var doc = id =>
 	}).map(result => JSON.parse(result.response));
 
 // XXX Currently, no way to limit by sample id?
-var conceptMatches = (patients, concept) =>
+var conceptMatches = (docIds, concept) =>
 	Rx.Observable.ajax({
-		url: '/api/ties/query/',
-        body: {
-            concept,
-            limit: 1000 * 1000, // try to defeat limit
-        },
+		url: '/api/ties/documents/filter',
+		headers: {'Content-Type': 'text/plain' },
+		body: JSON.stringify({
+			concept,
+			docIds,
+		}),
 		responseType: 'text',
 		method: 'POST'
-	}).map(result => JSON.parse(result.response).results);
+	}).map(result => JSON.parse(result.response));
 
-var textMatches = (patients, text) =>
+var textMatches = (docIds, text) =>
 	Rx.Observable.ajax({
-		url: '/api/ties/query/',
-        body: {
-            text,
-            limit: 1000 * 1000, // try to defeat limit
-        },
+		url: '/api/ties/documents/filter',
+		headers: {'Content-Type': 'text/plain' },
+		body: JSON.stringify({
+			docIds,
+			text,
+		}),
 		responseType: 'text',
 		method: 'POST'
-	}).map(result => JSON.parse(result.response).results);
+	}).map(result => JSON.parse(result.response));
 
 var concepts = term =>
 	Rx.Observable.ajax({
