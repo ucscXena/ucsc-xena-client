@@ -7,14 +7,16 @@
  */
 
 @value black6 from '../../css/variables.css';
+
 @value black54 from '../../css/variables.css';
+
 @value black87 from '../../css/variables.css';
 
 /* Dialog */
 .dialog {
 	height: calc(100% - 88px); /* AppBar and margin above footer (64px + 24px) */
 	max-height: 814px;
-	min-height: 692px;
+	min-height: 565px; /* For min browser height of 653px */
 	position: absolute;
 	top: 64px;
 }

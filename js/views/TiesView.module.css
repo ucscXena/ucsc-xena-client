@@ -67,6 +67,7 @@
 .tiesFilterTerms > span:nth-of-type(2) div {
 	align-items: center;
 	display: inline-flex;
+	padding: 0 2px;
 }
 
 /* Search term result - loading icon */
@@ -76,7 +77,7 @@
 	animation-name: spin;
 	animation-timing-function: linear;
 	font-size: 18px;
-	padding: 8px;
+	padding: 2px;
 }
 
 @keyframes spin {
