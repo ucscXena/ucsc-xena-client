@@ -236,7 +236,7 @@ class Ties extends PureComponent {
 				</div>
 				<div className={compStyles.tiesFilterTerms}>
 					<span>Search Terms:</span><span>{terms.map(
-						(t, i) => <div>{!!i}{matches[t] ? <div>{t} ({matches[t].matches.length})</div> :
+						(t, i) => <div key={i}>{matches[t] ? <div>{t} ({matches[t].matches.length})</div> :
 							<div>{t} <i className='material-icons'>loop</i></div>}</div>)}</span>
 				</div>
 				<div className={compStyles.tiesTable}>
