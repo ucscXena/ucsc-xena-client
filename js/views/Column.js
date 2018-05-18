@@ -24,6 +24,7 @@ var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
 var {RefGeneAnnotation} = require('../refGeneExons');
 import { matches } from 'static-interval-tree';
+var gaEvents = require('../gaEvents');
 
 const TooltipMenuItem = Tooltip(MenuItem);
 
@@ -370,6 +371,7 @@ class Column extends PureComponent {
 
 	onDownload = () => {
 		var {column, data, samples, index, sampleFormat} = this.props;
+		gaEvents('spreadsheet', 'download', 'column');
 		download(widgets.download({column, data, samples, index: index, sampleFormat}));
 	};
 
@@ -382,6 +384,7 @@ class Column extends PureComponent {
 	};
 
 	onKm = () => {
+		gaEvents('spreadsheet', 'km');
 		this.props.onKm(this.props.id);
 	};
 

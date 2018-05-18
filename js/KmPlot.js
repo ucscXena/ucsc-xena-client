@@ -13,6 +13,7 @@ var {linear, linearTicks} = require('./scale');
 var pdf = require('./kmpdf');
 var NumberForm = require('./views/NumberForm');
 var {survivalOptions} = require('./models/km');
+var gaEvents = require('./gaEvents');
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
 var margin = {top: 20, right: 30, bottom: 30, left: 50};
@@ -376,6 +377,7 @@ class KmPlot extends PureComponent {
 	};
 
 	pdf = () => {
+		gaEvents('spreadsheet', 'pdf', 'km');
 		pdf(this.props.km.groups);
 	};
 

@@ -6,6 +6,7 @@ var {rxEvents} = require('../react-utils');
 var getLabel = require('../getLabel');
 var {supportsEdit} = require('../models/fieldSpec');
 var {addCommas} = require('../util');
+var gaEvents = require('../gaEvents');
 
 function zoomIn(pos, samples, zoom) {
 	var {count, index} = zoom;
@@ -81,8 +82,10 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		this.plotClick = events.plotClick.subscribe(ev => {
 			let {callback, appState: {zoom, samples}} = this.props;
 			if (zoomOutClick(ev)) {
+				gaEvents('spreadsheet', 'zoom', 'out');
 				callback(['zoom', zoomOut(samples.length, zoom)]);
 			} else if (zoomInClick(ev)) {
+				gaEvents('spreadsheet', 'zoom', 'in');
 				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
 			}
 		});

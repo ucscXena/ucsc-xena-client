@@ -9,6 +9,7 @@ import AppBar from 'react-toolbox/lib/app_bar';
 var konami = require('./konami');
 var widgets = require('./columnWidgets');
 var classNames = require('classnames');
+var gaEvents = require('./gaEvents');
 import { signatureField } from './models/fieldSpec';
 import { getColSpec } from './models/datasetJoins';
 import { SampleSearch } from './views/SampleSearch';
@@ -101,6 +102,7 @@ class AppControls extends PureComponent {
 	onFilter = () => {
 		const {callback, appState: {samplesMatched, cohortSamples}} = this.props,
 			matching = _.map(samplesMatched, i => cohortSamples[i]);
+		gaEvents('spreadsheet', 'samplesearch', 'filter');
 		callback(['sampleFilter', matching]);
 	};
 
@@ -109,6 +111,7 @@ class AppControls extends PureComponent {
 			toOrder = _.object(samples, _.range(samples.length)),
 			index = toOrder[_.min(samplesMatched, s => toOrder[s])],
 			last = toOrder[_.max(samplesMatched, s => toOrder[s])];
+		gaEvents('spreadsheet', 'samplesearch', 'zoom');
 		callback(['zoom', {index, height, count: last - index + 1}]);
 	};
 
@@ -116,6 +119,7 @@ class AppControls extends PureComponent {
 		const {appState: {cohortSamples, sampleSearch, samplesMatched}, callback} = this.props,
 			matching = _.map(samplesMatched, i => cohortSamples[i]);
 
+		gaEvents('spreadsheet', 'samplesearch', 'new column');
 		callback(['add-column', 0, getFilterColumn(sampleSearch, matching, {filter: sampleSearch})]);
 	};
 
@@ -131,6 +135,7 @@ class AppControls extends PureComponent {
 
 	onMode = () => {
 		var {callback, appState: {mode}} = this.props;
+		gaEvents('spreadsheet', 'mode', modeEvent[mode]);
 		callback([modeEvent[mode]]);
 	};
 
@@ -140,6 +145,7 @@ class AppControls extends PureComponent {
 	};
 
 	onPdf = () => {
+		gaEvents('spreadsheet', 'pdf', 'spreadsheet');
 		pdf(this.props.appState);
 	};
 
@@ -167,6 +173,7 @@ class AppControls extends PureComponent {
 			combinedHeaders = _.flatmap(datasets, ([headers], i) =>
 				i === 0 ? headers : headers.slice(1));
 
+		gaEvents('spreadsheet', 'download', 'spreadsheet');
 		download([combinedHeaders, combinedRows]);
 	};
 
