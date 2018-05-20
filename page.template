@@ -28,7 +28,8 @@
 	</script>
 	<!--#include file="config.js" -->
 	<script type="text/javascript">
-		var ga_id = config.ga_id;
+		var ga_id = (window.localStorage && window.localStorage.noga) ?
+				undefined : config.ga_id;
 		if (ga_id) {
 			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -70,6 +71,9 @@
 					heatmap: {
 						js: "{%=o.htmlWebpackPlugin.files.chunks.heatmap.entry%}",
 						css: "{%=o.htmlWebpackPlugin.files.chunks.heatmap.css[0]%}"
+					},
+					register: {
+						js: "{%=o.htmlWebpackPlugin.files.chunks.register.entry%}",
 					}
 				},
 				path = document.location.pathname,
