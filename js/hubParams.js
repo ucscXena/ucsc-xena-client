@@ -2,6 +2,7 @@
 
 var util = require('./util');
 var _ = require('./underscore_ext');
+var {defaultServers} = require('./defaultServers');
 
 function parseServer(s) {
 	// XXX should throw or otherwise indicate parse error on no match
@@ -19,10 +20,19 @@ function parseServer(s) {
 	return serverUrl;
 }
 
+var getUserServers = servers => _.keys(servers).filter(k => servers[k].user);
+
+var getHubParams = state =>
+	_.Let((hubs = getUserServers(_.getIn(state, ['spreadsheet', 'servers'], {}))) => ({
+		addHub: _.difference(hubs, defaultServers),
+		removeHub: _.difference(defaultServers, hubs)
+	}));
+
 // normalize: add http[s]? add port? Do standard replacements?
 // What are our standard replacements?
 
 module.exports = {
 	hubParams: () => _.map(util.allParameters().hub, parseServer),
+	getHubParams,
 	parseServer
 };

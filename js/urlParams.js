@@ -25,10 +25,13 @@ function inlineStateParam() {
 	return ret;
 }
 
+// XXX Deprecating these, in favor of hubParams2.
 function hubParams() {
 	var hubs = getHubParams();
 	return hubs.length ? {hubs} : {};
 }
+
+var hubParams2 = pick(allParameters(), 'addHub', 'removeHub');
 
 function datasetParams() {
 	// only take the first of these
@@ -41,7 +44,7 @@ function manifest() {
 }
 
 function getParams() {
-	return merge(bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest());
+	return merge(hubParams2, bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest());
 }
 
 module.exports = getParams;
