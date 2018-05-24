@@ -110,6 +110,7 @@ var getPage = path =>
 	path === '/transcripts/' ? 'transcripts' :
 	path === '/hub/' ? 'hub' :
 	path === '/datapages/' ? 'datapages' :
+	path === '/import/' ? 'import' :
 	'heatmap';
 
 // XXX This same info also appears in urlParams.js
