@@ -1,10 +1,13 @@
-/* eslint-disable */
+/* eslint-disable */ 
+'use strict';
 import React from 'react';
 import styles from './ImportPage.module.css';
 import appTheme from '../appTheme';
 
-import {ThemeProvider} from 'react-css-themr';
-import Input from 'react-toolbox/lib/input';
+import { ThemeProvider } from 'react-css-themr';
+import { Input, Button } from 'react-toolbox/lib';
+
+// import c
 
 
 const readFile = (file) => {
@@ -16,6 +19,8 @@ class ImportPage extends React.Component {
 		return(
 			<div className={styles.container}> 
 				<Input type='file' name='importFile' onChange={this.handleFileSelected} /> 
+
+				<Button icon='save' label='Save' raised onClick={this.handleSubmitClicked}/>
 			</div>
 		);
 	}
@@ -24,8 +29,10 @@ class ImportPage extends React.Component {
 		if (evt.target.files.length > 0) {
 			readFile(evt.target.files[0]);
 		}
+	}
 
-		//issue http post with whole blob
+	handleSubmitClicked = () => {
+		this.props.callback(['import-file', 'my data'])
 	}
 }
 
@@ -35,4 +42,4 @@ const ThemedPage = (props) =>
 	</ThemeProvider>
 
 // header disappears after refresh
-export default ThemedPage;
+export default ImportPage;
