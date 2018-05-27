@@ -2,16 +2,26 @@
 'use strict';
 import Rx from '../rx';
 import { make, mount, compose } from './utils';
-import { localHub } from '../defaultServers';
+import { servers } from '../defaultServers';
+
 
 const postFile = (file) => {
-    return Rx.Observable.ajax.post(`${localHub}/upload`, file).map(r => console.log(r));
+    const payload = {
+        //headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        url: `${servers.localHub}/upload/`,
+        body: file,
+        method: 'POST',
+        crossDomain: true
+    }
+
+    return Rx.Observable.ajax(payload).map(r => console.log(r));
 }
 
 var importControls = {
-    'import-file-post!': (serverBus, state, newState, data) => {
-        console.log('success');
+    'import-file-post!': (serverBus, state, newState, file) => serverBus.next(['import-file', postFile(file)]),
+    'import-file': (a, b, c) => {
+        console.log(a);
     }
 }
 
-module.exports = compose(mount(make(importControls), ['import']));
+export default mount(make(importControls), ['import']);
