@@ -66,6 +66,7 @@ class ImportForm extends React.Component {
 			customCohort: '',
 			displayName: '',
 			description: '',
+			probeMapFile: null,
 
 			//ui state
 			hasOwnDataType: false,
@@ -111,6 +112,10 @@ class ImportForm extends React.Component {
 					onCheckboxChange={this.handleHasOwnCohortChange}
 				/>
 
+				<Input type='file' name='probemap' className={styles.field} floating={true}
+					onChange={this.handleProbeMapFileChange} label="Probe map file"
+				/>
+
 				<Input type='text' label="Display name" className={styles.field}
 					onChange={this.handleDisplayNameChange}
 					value={this.state.displayName}
@@ -143,6 +148,8 @@ class ImportForm extends React.Component {
 
 	handleHasOwnCohortChange = value => this.setState({ hasOwnCohort: value });
 
+	handleProbeMapFileChange = file => this.setState({ probeMapFile: file });
+
 	handleDisplayNameChange = displayName => this.setState({ displayName: displayName });
 
 	handleDescriptionChange = description => this.setState({ description: description });
@@ -152,12 +159,12 @@ class ImportForm extends React.Component {
 
 		const reader = new FileReader();
 		reader.onload = (e) => {
-			this.props.changeStatus('');
+			this.props.callback(['set-status', '']);
 			this.props.postFile(e.target.result, this.state.file.name);
 
 			this.setState({fileReadInprogress: false});
 		};
-		this.props.changeStatus('Reading file...');
+		this.props.callback(['set-status', 'Reading file...']);
 
 		reader.readAsBinaryString(this.state.file);
 
@@ -172,6 +179,7 @@ class ImportForm extends React.Component {
 
 	createMetaDataFile = () => {
 		return JSON.stringify({
+			version: new Date().toISOString().split('T')[0],
 			cohort: this.state.hasOwnCohort ? this.state.customCohort : this.state.cohort,
 			label: this.state.displayName,
 			description: this.state.description,
@@ -186,31 +194,29 @@ class ImportForm extends React.Component {
 class ImportPage extends React.Component {
 	constructor() {
 		super();
-		this.state = { status: '' }
 	}
 	render() {
 		const cohorts = getDropdownOptions(this.props.state.wizard.cohorts || []);
+		const status = this.props.state.import.status;
 
 		return (
 			<div className={styles.container}>
-				<p className={styles.status}>{this.state.status}</p>
+				<p className={styles.status}>{status}</p>
 
 				<ImportForm cohorts={cohorts} 
-				
-					changeStatus={this.handleStatusChange}
+					callback={this.props.callback}
 					postFile={this.postFile}					
 				/>
 			</div>
 		);
 	}
 
-	handleStatusChange = statusStr => this.setState({ status: statusStr });
-
 	postFile = (contents, fileName) => {
 		var formData = new FormData();
 		formData.append("file", new Blob([contents]), fileName);
 
 		this.props.callback(['import-file', formData]);
+		this.props.callback(['update-file', formData]);
 	}
 }
 
