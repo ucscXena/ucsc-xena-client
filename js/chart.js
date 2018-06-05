@@ -408,31 +408,40 @@ function render(root, callback, sessionStorage) {
 		}
 	}
 
-	function expUISetting(visible, expState, column, colSettings, dropDown, dropDownDiv) {
+	function expUISetting(visible, expState, column, colSettings, dropDown, dropDownDiv, data) {
 		if (visible && colSettings.units) {
 			dropDown.style.visibility = "visible";
+
+			//check current expState variable
+			if (expState[column] !== undefined) {
+				dropDownDiv.selectedIndex = expState[column];
+			}
+			else {
+				dropDownDiv.selectedIndex = 0;
+				expState[column] = 0;
+			}
+
 			var notLogScale = _.any(colSettings.units, unit => !unit || unit.search(/log/i) === -1);
 			if (notLogScale) {
-				dropDownDiv.selectedIndex === 0;
-				dropDownDiv.value = "none";
-				// unit labels
+				// unit labels first option
 				if (_.filter(colSettings.units, unit => unit).length === 0) {
 					dropDownDiv.options[0].text = "unknown";
 				} else {
 					dropDownDiv.options[0].text = colSettings.units.join();
 				}
-				dropDownDiv.options[1].text = '';
+				// unit labels second option
+				if (_.some(data, d => _.some(d, v => v < 0))) {
+					dropDownDiv.options[1].text = '';
+				} else {
+					if (_.filter(colSettings.units, unit => unit).length === 0) {
+						dropDownDiv.options[1].text = '';
+					} else {
+						dropDownDiv.options[1].text = "log2(" + colSettings.units.join() + "+1)";
+						dropDownDiv.options[1].value = "log2";
+					}
+				}
 			}
 			else {
-				//check current expState variable
-				if (expState[column] !== undefined) {
-					dropDownDiv.selectedIndex = expState[column];
-				}
-				else {
-					dropDownDiv.selectedIndex = 0;
-					expState[column] = 0;
-				}
-
 				// unit labels
 				dropDownDiv.options[0].text = colSettings.units.join();
 				var unitsString = colUnit(colSettings);
@@ -1286,8 +1295,8 @@ function render(root, callback, sessionStorage) {
 		//initialization
 		document.getElementById("myChart").innerHTML = "Querying Xena ...";
 		normalizationUISetting(false);
-		expUISetting(false, expState, ycolumn, null, expYUIParent, expYUI);
-		expUISetting(false, expXState, xcolumn, null, expXUIParent, expXUI);
+		expUISetting(false, expState, ycolumn, null, expYUIParent, expYUI, null);
+		expUISetting(false, expXState, xcolumn, null, expXUIParent, expXUI, null);
 		scatterColorUISetting(false);
 
 		// save state cohort, xcolumn, ycolumn, colorcolumn
@@ -1383,10 +1392,10 @@ function render(root, callback, sessionStorage) {
 			}
 
 			// set y axis unit exponentiation UI
-			expUISetting(!yIsCategorical, expState, ycolumn, columns[ycolumn], expYUIParent, expYUI);
+			expUISetting(!yIsCategorical, expState, ycolumn, columns[ycolumn], expYUIParent, expYUI, ydata);
 
 			// set x axis unit exponentiation UI
-			expUISetting(!xIsCategorical && xcolumn !== "none", expXState, xcolumn, columns[xcolumn], expXUIParent, expXUI);
+			expUISetting(!xIsCategorical && xcolumn !== "none", expXState, xcolumn, columns[xcolumn], expXUIParent, expXUI, xdata);
 
 			// y exponentiation
 			if (yIsCategorical) {
@@ -1398,6 +1407,8 @@ function render(root, callback, sessionStorage) {
 			}
 			if (yExponentiation === "exp2") {
 				ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
+			} else if (yExponentiation === "log2") {
+				ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.log(2, x + 1) : null));
 			}
 
 			// x exponentiation
@@ -1410,6 +1421,8 @@ function render(root, callback, sessionStorage) {
 			}
 			if (xExponentiation === "exp2") {
 				xdata =  _.map(xdata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
+			} else if (xExponentiation === "log2") {
+				xdata =  _.map(xdata, d => _.map(d, x => (x != null) ? Math.log2(x + 1) : null));
 			}
 
 			// set x and y labels based on axis and normalization UI selection
