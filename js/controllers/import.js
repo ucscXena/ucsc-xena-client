@@ -8,7 +8,6 @@ import { servers } from '../defaultServers';
 
 import { assocIn, updateIn } from "../underscore_ext";
 
-
 const postFile = (file) => {
     const payload = {
         url: `${servers.localHub}/upload/`,
@@ -55,7 +54,8 @@ const formControls = {
     'custom-cohort': changeFormProp('customCohort'),
     'probemap-file': changeFormProp('probeMapFile'),
     'display-name': changeFormProp('displayName'),
-    'description': changeFormProp('description')
+    'description': changeFormProp('description'),
+    'errors': changeFormProp('errors')
 }
 
 

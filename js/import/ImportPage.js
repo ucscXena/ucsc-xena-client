@@ -11,6 +11,7 @@ import {
 } from 'react-toolbox/lib';
 
 import DefaultTextInput from '../views/DefaultTextInput';
+import getErrors from './errorChecking';
 
 const formatOptions = [
 	{
@@ -47,6 +48,19 @@ const dataTypes = [
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 const dataTypeOptions = getDropdownOptions(dataTypes);
 
+const readFile = (handler) => {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			resolve(e.target.result);
+		};
+		reader.onerror = (e) => {
+			reject(e.toString());
+		};
+		reader.readAsBinaryString(handler);
+	});
+}
+
 class ImportForm extends React.Component {
 	constructor() {
 		super();
@@ -61,7 +75,7 @@ class ImportForm extends React.Component {
 	render() {
 		const { cohort, customCohort, dataType, 
 			customDataType, fileFormat, displayName, 
-			description, file, probeMapFile } = this.props.state;
+			description, file, probeMapFile, errors } = this.props.state;
 
 		return (
 			<div>
@@ -113,6 +127,8 @@ class ImportForm extends React.Component {
 					value={description}
 				/>
 
+				<ErrorArea errors={errors} />
+
 				<Button icon='save' label='Save' raised 
 					disabled={!file || this.state.fileReadInprogress}
 					onClick={this.onSubmitClicked} 
@@ -147,19 +163,29 @@ class ImportForm extends React.Component {
 		const { file } = this.props.state;
 		this.setState({fileReadInprogress: true});
 
-		const reader = new FileReader();
-		reader.onload = (e) => {
-			this.props.callback(['set-status', '']);
-			this.props.postFile(e.target.result, file.name);
+		readFile(file).then(fileContent => {
+			this.props.callback(['set-status', 'Checking for errors...']);
 
-			this.setState({fileReadInprogress: false});
-		};
-		this.props.callback(['set-status', 'Reading file...']);
+			const errors = getErrors(file, fileContent);
 
-		reader.readAsBinaryString(file);
+			if(errors.length) {
+				//there's some errors
+				this.props.callback(['errors', errors]);
+				this.props.callback(['set-status', 'There was some error found in the file']);
+			} else {
+				//no errors
 
-		this.props.postFile(this.createMetaDataFile(), file.name + '.json');
-		this.props.updateFile(file.name);
+				this.props.postFile(contents, file.name);
+				this.props.postFile(this.createMetaDataFile(), file.name + '.json');
+				this.props.updateFile(file.name);
+				this.setState({fileReadInprogress: false});
+
+				this.props.callback(['set-status', '']);
+			}
+
+		}).catch(e => console.log(e));
+
+		this.props.callback(['set-status', 'Reading file...']);		
 	}
 
 	createMetaDataFile = () => {
@@ -235,6 +261,15 @@ const DropdownWithInput = ({ showInput, label, checkboxLbl, onDropdownChange, on
 			/>
 		</div>
 	);
+}
+
+const ErrorArea = ({ errors }) => {
+	const items = (errors || []).map(error => <p>{error}</p>);
+	return (
+		<div className={styles.errorContainer}>
+			{items}
+		</div>
+	)
 }
 
 const ThemedPage = (props) =>
