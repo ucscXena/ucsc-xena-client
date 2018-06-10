@@ -21,28 +21,44 @@ const postFile = (file) => {
     return Rx.Observable.ajax(payload).map(r => r.status);
 }
 
-const update = (file) => {
+const updateFile = (fileName) => {
     const payload = {
         url: `${servers.localHub}/update/`,
-        body: file,
+        body: {'filename': fileName},
         responseType: 'text',
         method: 'POST',
         crossDomain: true
     }
-
     return Rx.Observable.ajax(payload).map(r => r.status);
 }
 
-var importControls = {
+const importControls = {
     'import-file-post!': (serverBus, state, newState, file) => serverBus.next(['import-file-done', postFile(file)]),
     'import-file-done': (state, b, c) => {
         return state;
     },
-    'update-file-post!': (serverBus, state, newState, file) => serverBus.next(['update-file-done', update(file)]),
+    'update-file-post!': (serverBus, state, newState, file) => serverBus.next(['update-file-done', updateFile(fileName)]),
     'update-file-done': (state, b, c) => {
         return state;
     },
     'set-status': (state, status, x) => assocIn(state, ['status'], status),
 }
 
-export default mount(make(importControls), ['import']);
+const changeFormProp = propName => (state, propValue) => assocIn(state, ['form', propName], propValue);
+
+const formControls = {
+    'file': changeFormProp('file'),
+    'file-format': changeFormProp('fileFormat'),
+    'data-type': changeFormProp('dataType'),
+    'custom-data-type': changeFormProp('customDataType'),
+    'cohort': changeFormProp('cohort'),
+    'custom-cohort': changeFormProp('customCohort'),
+    'probemap-file': changeFormProp('probeMapFile'),
+    'display-name': changeFormProp('displayName'),
+    'description': changeFormProp('description')
+}
+
+
+export default  mount(compose(
+    make(importControls), 
+    make(formControls)), ['import']);

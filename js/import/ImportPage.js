@@ -45,29 +45,12 @@ const dataTypes = [
 ];
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
-
 const dataTypeOptions = getDropdownOptions(dataTypes);
-
-
-const readFile = (file) => {
-	console.log(file);
-}
 
 class ImportForm extends React.Component {
 	constructor() {
 		super();
 		this.state = {
-			// move to store
-			file: null,
-			fileFormat: 'genomicMatrix',
-			dataType: '',
-			customDataType: '',
-			cohort: '',
-			customCohort: '',
-			displayName: '',
-			description: '',
-			probeMapFile: null,
-
 			//ui state
 			hasOwnDataType: false,
 			hasOwnCohort: false,
@@ -76,15 +59,19 @@ class ImportForm extends React.Component {
 	}
 
 	render() {
+		const { cohort, customCohort, dataType, 
+			customDataType, fileFormat, displayName, 
+			description, file, probeMapFile } = this.props.state;
+
 		return (
 			<div>
 				<Input type='file' name='importFile' className={styles.field}
-					onChange={this.handleFileSelected}
+					onChange={this.onFileChange('file')}
 				/>
 
-				<Dropdown onChange={this.handleFileFormatChange}
+				<Dropdown onChange={this.onFileFormatChange}
 					source={formatOptions}
-					value={this.state.fileFormat}
+					value={fileFormat}
 					allowBlank={false}
 					label="File format"
 					className={styles.field}
@@ -93,100 +80,99 @@ class ImportForm extends React.Component {
 				<DropdownWithInput showInput={this.state.hasOwnDataType}
 					label="Type of data" checkboxLbl="Or enter your own type"
 					dropdownSource={dataTypeOptions}
-					dropdownVal={this.state.dataType}
-					inputVal={this.state.customDataType}
+					dropdownVal={dataType}
+					inputVal={customDataType}
 
-					onDropdownChange={this.handleDataTypeChange}
-					onInputChange={this.handleCustomDataTypeChange}
-					onCheckboxChange={this.handleHasOwnDataTypeChange}
+					onDropdownChange={this.onDataTypeChange}
+					onInputChange={this.onCustomDataTypeChange}
+					onCheckboxChange={this.onHasOwnDataTypeChange}
 				/>
 
 				<DropdownWithInput showInput={this.state.hasOwnCohort}
 					label="Cohort" checkboxLbl="Or enter your own cohort"
 					dropdownSource={this.props.cohorts}
-					dropdownVal={this.state.cohort}
-					inputVal={this.state.customCohort}
+					dropdownVal={cohort}
+					inputVal={customCohort}
 
-					onDropdownChange={this.handleCohortChange}
-					onInputChange={this.handleCustomCohortChange}
-					onCheckboxChange={this.handleHasOwnCohortChange}
+					onDropdownChange={this.onCohortChange}
+					onInputChange={this.onCustomCohortChange}
+					onCheckboxChange={this.onHasOwnCohortChange}
 				/>
 
 				<Input type='file' name='probemap' className={styles.field} floating={true}
-					onChange={this.handleProbeMapFileChange} label="Probe map file"
+					onChange={this.onFileChange('probemap-file')} label="Probe map file"
 				/>
 
 				<Input type='text' label="Display name" className={styles.field}
-					onChange={this.handleDisplayNameChange}
-					value={this.state.displayName}
+					onChange={this.onDisplayNameChange}
+					value={displayName}
 				/>
 
 				<Input type='text' label="Description" multiline={true}
-					onChange={this.handleDescriptionChange}
-					value={this.state.description}
+					onChange={this.onDescriptionChange}
+					value={description}
 				/>
 
 				<Button icon='save' label='Save' raised 
-					disabled={!this.state.file || this.state.fileReadInprogress}
-					onClick={this.handleSubmitClicked} 
+					disabled={!file || this.state.fileReadInprogress}
+					onClick={this.onSubmitClicked} 
 				/>
 			</div>
 		)
 	}
 
-	handleFileFormatChange = format => this.setState({ fileFormat: format });
+	onFileChange = (fileProp) => (fileName, evt) => {
+		if (evt.target.files.length > 0) {
+			this.props.callback([fileProp, evt.target.files[0]]);
+		}
+	}
 
-	handleHasOwnDataTypeChange = value => this.setState({ hasOwnDataType: value });
+	onFileFormatChange = format => this.props.callback(['file-format', format]);
 
-	handleCustomDataTypeChange = value => this.setState({ customDataType: value });
+	onDataTypeChange = type => this.props.callback(['data-type', type]);
 
-	handleDataTypeChange = type => this.setState({ dataType: type });
+	onCustomDataTypeChange = type => this.props.callback(['custom-data-type', type]);
+	onHasOwnDataTypeChange = value => this.setState({ hasOwnDataType: value });
 
-	handleCohortChange = cohort => this.setState({ cohort: cohort });
+	onCohortChange = cohort => this.props.callback(['cohort', cohort]);
 
-	handleCustomCohortChange = cohort => this.setState({ customCohort: cohort });
+	onCustomCohortChange = cohort => this.props.callback(['custom-cohort', cohort]);
+	onHasOwnCohortChange = value => this.setState({ hasOwnCohort: value });
 
-	handleHasOwnCohortChange = value => this.setState({ hasOwnCohort: value });
+	onDisplayNameChange = displayName => this.props.callback(['display-name', displayName]);
 
-	handleProbeMapFileChange = file => this.setState({ probeMapFile: file });
+	onDescriptionChange = description => this.props.callback(['description', description]);
 
-	handleDisplayNameChange = displayName => this.setState({ displayName: displayName });
-
-	handleDescriptionChange = description => this.setState({ description: description });
-
-	handleSubmitClicked = () => {
+	onSubmitClicked = () => {
+		const { file } = this.props.state;
 		this.setState({fileReadInprogress: true});
 
 		const reader = new FileReader();
 		reader.onload = (e) => {
 			this.props.callback(['set-status', '']);
-			this.props.postFile(e.target.result, this.state.file.name);
+			this.props.postFile(e.target.result, file.name);
 
 			this.setState({fileReadInprogress: false});
 		};
 		this.props.callback(['set-status', 'Reading file...']);
 
-		reader.readAsBinaryString(this.state.file);
+		reader.readAsBinaryString(file);
 
-		this.props.postFile(this.createMetaDataFile(), this.state.file.name + '.json');
-	}
-
-	handleFileSelected = (fileName, evt) => {
-		if (evt.target.files.length > 0) {
-			this.setState({ file: evt.target.files[0] });
-		}
+		this.props.postFile(this.createMetaDataFile(), file.name + '.json');
+		this.props.updateFile(file.name);
 	}
 
 	createMetaDataFile = () => {
+		const state = this.props.state;
 		return JSON.stringify({
 			version: new Date().toISOString().split('T')[0],
-			cohort: this.state.hasOwnCohort ? this.state.customCohort : this.state.cohort,
-			label: this.state.displayName,
-			description: this.state.description,
+			cohort: this.state.hasOwnCohort ? state.customCohort : state.cohort,
+			label: state.displayName,
+			description: state.description,
 			//dataSubType: '',
-			dataSubType: this.state.hasOwnDataType ? this.state.customDataType : this.state.dataType,
+			dataSubType: this.state.hasOwnDataType ? state.customDataType : state.dataType,
 			//assembly: '',
-			type: this.state.fileFormat
+			type: state.fileFormat
 		}, null, 4);
 	}
 }
@@ -205,7 +191,10 @@ class ImportPage extends React.Component {
 
 				<ImportForm cohorts={cohorts} 
 					callback={this.props.callback}
-					postFile={this.postFile}					
+					postFile={this.postFile}	
+					updateFile={this.updateFile}	
+					
+					state={this.props.state.import.form}
 				/>
 			</div>
 		);
@@ -216,8 +205,9 @@ class ImportPage extends React.Component {
 		formData.append("file", new Blob([contents]), fileName);
 
 		this.props.callback(['import-file', formData]);
-		this.props.callback(['update-file', formData]);
 	}
+
+	updateFile = (fileName) => this.props.callback(['update-file', fileName]);
 }
 
 
