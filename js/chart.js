@@ -1143,7 +1143,7 @@ function render(root, callback, sessionStorage) {
 				chart = new Highcharts.Chart(chartOptions);
 
 				function printSpearmanRho(div, xVector, yVector) {
-					var [xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x, y) {return x != null && y != null;}));
+					var [xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x) {return x[0] != null && x[1] != null;}));
 					var rho = jStat.corrcoeff(xlist, ylist); // r Pearson's Rho correlation coefficient
 					var spearmanRho = jStat.spearmancoeff(xlist, ylist); // (spearman's) rank correlation coefficient, rho
 					div.innerHTML = 'Pearson\'s rho<br>' +
