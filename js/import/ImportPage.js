@@ -25,6 +25,10 @@ const formatOptions = [
 	{
 		label: 'Mutation by Position',
 		value: 'mutationVector'
+	},
+	{
+		label: 'Segmented data',
+		value: 'segmented'
 	}
 ];
 
@@ -160,13 +164,13 @@ class ImportForm extends React.Component {
 	onDescriptionChange = description => this.props.callback(['description', description]);
 
 	onSubmitClicked = () => {
-		const { file } = this.props.state;
+		const { file, fileFormat } = this.props.state;
 		this.setState({fileReadInprogress: true});
 
 		readFile(file).then(fileContent => {
 			this.props.callback(['set-status', 'Checking for errors...']);
 
-			const errors = getErrors(file, fileContent);
+			const errors = getErrors(file, fileContent, fileFormat);
 
 			if(errors.length) {
 				//there's some errors
@@ -264,7 +268,7 @@ const DropdownWithInput = ({ showInput, label, checkboxLbl, onDropdownChange, on
 }
 
 const ErrorArea = ({ errors }) => {
-	const items = (errors || []).map(error => <p>{error}</p>);
+	const items = (errors || []).map((error, i) => <p key={i}>{error}</p>);
 	return (
 		<div className={styles.errorContainer}>
 			{items}
