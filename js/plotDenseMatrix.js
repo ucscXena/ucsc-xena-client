@@ -158,9 +158,9 @@ function renderFloatLegend(props) {
 var addWordBreaks = str => str.replace(/([_/])/g, '\u200B$1\u200B');
 
 function renderFloatLegendNew(props) {
-	var {units, colors, vizSettings} = props;
+	var {units, colors, data, vizSettings} = props;
 
-	if (!colors) {
+	if (_.isEmpty(data)) {
 		return null;
 	}
 
