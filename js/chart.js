@@ -1405,10 +1405,11 @@ function render(root, callback, sessionStorage) {
 			} else {
 				yExponentiation = expYUI.value;
 			}
+
 			if (yExponentiation === "exp2") {
 				ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
 			} else if (yExponentiation === "log2") {
-				ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.log(2, x + 1) : null));
+				ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.log2(x + 1) : null));
 			}
 
 			// x exponentiation
