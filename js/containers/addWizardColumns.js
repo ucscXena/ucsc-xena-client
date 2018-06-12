@@ -157,11 +157,15 @@ var activeHubs = hubs => _.keys(hubs).filter(hub => hubs[hub].user);
 var cohortName = cohort => _.get(cohort, 'name');
 var getCohortPreferred = (table, cohort) => _.get(table, cohortName(cohort));
 
-function getPreferedDatasets(cohort, cohortPreferred, hubs) {
+function getPreferedDatasets(cohort, cohortPreferred, hubs, datasets) {
 	var active = activeHubs(hubs),
-		// Only include datasets on active hubs.
+		// Only include datasets on active hubs & real existing datasets (more reliable against mistakes in the .json file)
 		preferred = _.pick(getCohortPreferred(cohortPreferred, cohort),
-							ds => _.contains(active, JSON.parse(ds).host));
+							ds => _.contains(active, JSON.parse(ds).host) && _.has(datasets, ds));
+
+	// filter out key used to support geneset/pathway view
+	preferred = _.pick(preferred, (ds, key) => key !==  "copy number for pathway view");
+
 	// Use isEmpty to handle 1) no configured preferred datasets or 2) preferred dataset list
 	// is empty after filtering by active hubs.
 	return _.isEmpty(preferred) ? [] : _.keys(preferred).map(type =>
@@ -267,7 +271,7 @@ function addWizardColumns(Component) {
 					cohortPhenotype, datasets, features} = wizard,
 				stepperState = getStepperState(appState),
 				{editing} = appState,
-				preferred = cohortPreferred && getPreferedDatasets(cohort, cohortPreferred, servers),
+				preferred = cohortPreferred && getPreferedDatasets(cohort, cohortPreferred, servers, datasets),
 				preferredPhenotypes = cohortPhenotype && getPreferredPhenotypes(cohort, cohortPhenotype, servers),
 				width = defaultWidth,
 				cohortSelectProps = {
