@@ -42,8 +42,8 @@ class Hub extends React.Component {
 	    ping: {}
 	};
 
-	onNavigate = (page) => {
-		this.props.callback(['navigate', page]);
+	onNavigate = (page, params) => {
+		this.props.callback(['navigate', page, params]);
 	};
 
 	componentDidMount() {

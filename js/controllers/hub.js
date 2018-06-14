@@ -1,9 +1,9 @@
 'use strict';
-var {updateIn, dissoc, contains, pick, isEqual, get, difference, uniq,
+var {updateIn, dissoc, contains, pick, isEqual, get, difference, uniq, reject,
 	concat, pluck, getIn, assocIn, identity} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
-	datasetFieldExamples, fieldCodes, datasetField, datasetFetch,
+	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, // testHost,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
 var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers, datasetQuery, updateWizard} = require('./common');
@@ -172,6 +172,9 @@ var controls = {
 	'cohort-summary': (state, cohorts) =>
 		updateIn(state, ['datapages', 'cohorts'],
 				(list = []) => concat(list, cohorts)),
+	'cohort-summary-clear': (state, pred) =>
+		updateIn(state, ['datapages', 'cohorts'],
+				(list = []) => reject(list, pred)),
 	'cohort-data': (state, datasets, cohort) =>
 		assocIn(state,
 				['datapages', 'cohort', 'cohort'], cohort,
@@ -188,7 +191,7 @@ var controls = {
 	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
 	// Force page load after delete, to refresh all data.
-	'dataset-deleted-post!': () => location.reload()
+	'dataset-deleted-post!': () => location.reload(),
 };
 
 var getSection = ({dataset, host, cohort, allIdentifiers, allSamples}) =>
@@ -259,7 +262,9 @@ function datapagesPostActions(serverBus, state, newState, action) {
 	if (needHubs) {
 		let prevHubs = needCohortHubs(state),
 			hubChange = difference(needHubs, prevHubs);
-		if (type === 'init' || hubChange.length) {
+		// We really should be tracking outstanding queries, instead of
+		// checking 'type'.
+		if (type === 'init' || type === 'cohort-summary-clear' || hubChange.length) {
 			let hasHubs = hasCohortHubs(newState),
 				missing = difference(needHubs, hasHubs);
 

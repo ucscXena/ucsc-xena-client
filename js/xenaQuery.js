@@ -390,14 +390,17 @@ var refGeneExonCase = dsIDFn((host, dataset, genes) =>
 	sparseDataMatchField('name2', host, dataset, genes)
 		.flatMap(caseGenes => refGeneExons(host, dataset, _.filter(caseGenes, _.identity))));
 
+function testStatus(host, timeout = 5000) {
+	return Rx.Observable.ajax(xenaPost(host, '(+ 1 2)'))
+		.map(s => ({status: s.response && 3 === JSON.parse(s.response) ? 'up' : 'down'}))
+		.timeoutWith(timeout, Rx.Observable.of({status: 'down'}))
+		.catch(({status, response}) => Rx.Observable.of(
+			{status: status === 503 && response === 'Database booting' ? 'starting' : 'down'}));
+}
+
 
 // test if host is up
-function testHost (host) {
-	return Rx.Observable.ajax(xenaPost(host, '(+ 1 2)'))
-		.map(s => !!(s.response && 3 === JSON.parse(s.response)))
-		.timeoutWith(5000, Rx.Observable.of(false))
-		.catch(() => Rx.Observable.of(false));
-}
+var testHost = (host, timeout = 5000) => testStatus(host, timeout).map(({status}) => status === 'up');
 
 var cohortMetaURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/xenacohort_tag.json";
 
@@ -428,6 +431,7 @@ module.exports = {
 	nanstr,
 	xenaPost,
 	testHost,
+	testStatus,
 
 	// reference
 	refGene,

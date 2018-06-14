@@ -3,10 +3,10 @@
 require('./base');
 const React = require('react');
 var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
-	pluck, concat, where, contains, get, updateIn, range, Let,
+	pluck, concat, where, contains, get, updateIn, range, Let, pick,
 	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext');
 var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx');
-var {parseDsID} = require('./xenaQuery');
+var {parseDsID, testStatus} = require('./xenaQuery');
 import Link from 'react-toolbox/lib/link';
 var styles = require('./Datapages.module.css');
 var nav = require('./nav');
@@ -22,6 +22,11 @@ var {encodeObject, urlParams} = require('./util');
 import {ThemeProvider} from 'react-css-themr';
 var appTheme = require('./appTheme');
 var {getHubParams} = require('./hubParams');
+var Rx = require('./rx');
+var platform = require('platform');
+import Drawer from 'react-toolbox/lib/drawer';
+import PureComponent from './PureComponent';
+var spinner = require('./ajax-loader.gif');
 
 var getHubName = host => get(serverNames, host, host);
 
@@ -104,13 +109,13 @@ var collateCohorts = hubCohorts =>
 			(v = 0) => cohort.count + v),
 		{});
 
-var CohortSummary = ({cohorts, onCohort, hubParams}) => {
+var CohortSummary = ({cohorts, onCohort, hubParams, action}) => {
 	var names = sortBy(keys(cohorts), c => c.toLowerCase()),
 		nCohorts = names.length,
 		nDatasets = sum(values(cohorts));
 	return (
 		<div>
-			<h2>{pluralize('Cohort', nCohorts)}, {pluralize('Dataset', nDatasets)}</h2>
+			<h2>{pluralize('Cohort', nCohorts)}, {pluralize('Dataset', nDatasets)} {action}</h2>
 			<ul className={styles.list}>
 				{map(names, name =>
 					<li key={name}>
@@ -469,29 +474,231 @@ var defaultHost = params =>
 	Let(({host, hubs} = params) =>
 			!host && hubs ? {...params, host: hubs[0]} : params);
 
+var osFiles = {
+		osxJre: {
+			pattern: "ucsc_xena_macos_[_0-9]*_with_jre.dmg",
+			description: "OSX installer, bundled JRE",
+			help: "Recommended for OSX 10.7 and above"
+		},
+		osxNoJre: {
+			pattern: "ucsc_xena_macos_[_0-9]*.dmg",
+			description: "OSX installer, no JRE",
+			help: "Recommended for OSX 10.6"
+		},
+		win32: {
+			pattern: "ucsc_xena_windows_[_0-9]*.exe",
+			description: "Windows 32 bit installer, bundled JRE",
+			help: "Recommended for all 32 bit versions of Windows"
+		},
+		win64: {
+			pattern: "ucsc_xena_windows-x64_[_0-9]*.exe",
+			description: "Windows 64 bit installer, bundled JRE",
+			help: "Recommended for all 64 bit versions of Windows"
+		},
+		tar: {
+			pattern: "ucsc_xena_[_0-9]*.tar.gz",
+			description: "Tar archive, no updater or JRE",
+			help: "Recommended for linux server deployments"
+		}
+	}, defaults = {
+		'OS X': {32: 'osxNoJre', 64: 'osxJre'},
+		'Windows': {32: 'win32', 64: 'win64'},
+		'Linux': {32: 'tar', 64: 'tar'}
+	};
+
+function findMatch(pattern, list) {
+	var matches = list.filter(s => s.match(pattern));
+	return matches.length > 0 ? matches[0] : undefined;
+}
+
+var matchPaths = serverFiles =>
+	mapObject(osFiles, ({pattern}, key) =>
+			  findMatch(osFiles[key].pattern, serverFiles));
+
+var parseInt10 = s => parseInt(s, 10);
+
+function osxArch() {
+	var version = getIn(platform, ['os', 'version']),
+		parts = version && version.match(/(\d*)\.(\d*)/).slice(1).map(parseInt10); // [maj, min, patch]
+	return (parts && parts[0] === 10 && parts[1] <= 6) ? 32 : 64;
+}
+
+function getOs() {
+	var family = getIn(platform, ['os', 'family']);
+	if (family) {
+		if (family.indexOf('Windows') !== -1) {
+			return 'Windows';
+		}
+		if (family.indexOf('OS X') !== -1) {
+			return 'OS X';
+		}
+		if (family.indexOf('Linux') !== -1) {
+			return 'Linux';
+		}
+	}
+}
+
+var downloadDir = 'https://genome-cancer.ucsc.edu/download/public/get-xena';
+var updatesPath = `${downloadDir}/updates.xml`;
+var downloadPath = name => `${downloadDir}/${name}`;
+var getFileName = e => downloadPath(e.getAttribute('fileName'));
+
+class XenaDownload extends React.Component {
+	state = {};
+
+	componentDidMount() {
+		this.sub = Rx.Observable.ajax({method: 'GET', responseType: 'xml', url: updatesPath, crossDomain: true}).subscribe(xml => {
+			var files = matchPaths([...xml.response.getElementsByTagName('entry')]
+								   .map(getFileName));
+
+			this.setState({files}); //eslint-disable-line react/no-did-mount-set-state
+		});
+	}
+
+	componentWillUnmount() {
+		this.sub.unsubscribe();
+	}
+
+	render() {
+		var {files} = this.state,
+			os = getOs(),
+			arch = os === 'OS X' ? osxArch() : getIn(platform, ['os', 'architecture']),
+			defaultTarget = getIn(defaults, [os, arch]),
+			defaultInstall = get(files, defaultTarget);
+
+		return (
+			<div className={styles.download}>
+				{defaultInstall ? <Link className={styles.downloadLink} href={defaultInstall} label="Install UCSC Xena hub"/> : null}
+				{defaultInstall ? <br/> : null}
+				{defaultInstall ? 'Other installers' : 'Please download an installer'}
+				{files ? map(pick(osFiles, (_, k) => files[k]), (info, key) =>
+					 <Link className={styles.downloadLink} href={files[key]} title={info.help} label={info.description}/>) : null}
+				<br/>
+				<Link className={styles.helpLink} href='http://xena.ucsc.edu/private-hubs/'>Help</Link>
+			</div>);
+	}
+}
+
 //
 // Hub page
 //
 
-class HubPage extends React.Component {
-	onCohort = (ev) => { navHandler.call(this, ev); };
+var refresh = 2000;
+var localTimeout = 500; // use a short timeout for localhost
+
+class HubPage extends PureComponent {
+	state = {status: undefined, launched: undefined, showDownloads: false};
+
+	onCohort = (ev) => {navHandler.call(this, ev);};
+
+	launch = () => {
+		var i = document.getElementById('xenaLauncher');
+		if (i) {
+			document.body.removeChild(i);
+		}
+		i = document.createElement('iframe');
+		i.id = 'xenaLauncher';
+		document.body.appendChild(i);
+		i.src = 'ucscxena://';
+		this.setState({launched: true});
+	}
+
+	onRaise = () => {
+		Rx.Observable.ajax({method: 'GET', url: `${localHub}/raise/`,
+				crossDomain: true}).subscribe(() => {});
+	}
+
+	componentDidMount() {
+		var {state} = this.props,
+			{host} = defaultHost(state.params),
+			isLocal = host === localHub;
+
+		if (isLocal) {
+			this.sub = Rx.Observable.of(true).merge(Rx.Observable.interval(refresh))
+				.flatMap(() => testStatus(host, localTimeout))
+				.takeWhile(({status}) => status !== 'up')
+				.concat(Rx.Observable.of({status: 'up'}))
+				.subscribe(this.updatePing);
+
+			// Try to launch if we don't get a response.
+			this.timeoutID = setTimeout(() => {
+				if (this.state.status !== 'up' && !this.state.launched) {
+					this.launch();
+				}
+			}, 2000);
+		}
+	}
+
+	componentWillUnmount() {
+		if (this.timeoutID) {
+			clearTimeout(this.timeoutID);
+		}
+		if (this.sub) {
+			this.sub.unsubscribe();
+		}
+	}
+
+	updatePing = resp => {
+		if (resp.status === 'up' && this.state.status !== 'up') {
+			this.props.callback(['cohort-summary-clear', {server: localHub}]);
+		}
+		this.setState(resp);
+	}
+
+	onShowDownloads = () => {
+		this.setState({showDownloads: true});
+	}
+
+	onHideDownloads = () => {
+		this.setState({showDownloads: false});
+	}
 
 	render() {
-		var {state, hubParams} = this.props,
+		var {status, showDownloads, launched} = this.state,
+			{state, hubParams} = this.props,
 			{spreadsheet: {servers}} = state,
 			userServers = getUserServers(servers),
 			{host} = defaultHost(state.params),
+			isLocal = host === localHub,
 			cohorts = getIn(state, ['datapages', 'cohorts'], []),
 			hubCohorts = where(cohorts, {server: host}),
 			coll = collateCohorts(hubCohorts),
 			inHubs = contains(userServers, host) ?
 				'' : ' (not in my data hubs)';
+
 		return (
 			<div className={styles.datapages}>
+				<i className={`material-icons ${styles.open}`} onClick={this.onShowDownloads} title={'Install'}>chevron_left</i>
+				<Drawer onOverlayClick={this.onHideDownloads} className={styles.drawer} active={showDownloads} type='right'>
+					<i className={`material-icons ${styles.close}`} onClick={this.onHideDownloads} title={'Install'}>chevron_right</i>
+					<XenaDownload/>
+				</Drawer>
+				<div className={isLocal && status !== 'up' ? styles.noticeVisible : styles.noticeHidden}>
+
+					<div className={styles.localHubNotice}>
+						<p>{status === 'starting' ? 'Local hub is starting.' :
+							launched ? 'Trying to start local hub.' :
+							'Trying to contact local hub.'}
+							<img className={styles.spinner} src={spinner}/></p>
+							{status !== 'starting' && launched ? (
+								<div>
+									<p>If you have previously installed a local
+									hub, it should start momentarly. If it does not, please start it manually.</p>
+									<br/>
+									<p>If you would like to install a hub, open the links at right.</p>
+								</div>) : null}
+					</div>
+				</div>
+
 				{markdownValue(getIn(hubCohorts, [0, 'meta']))}
 				<h2>{getHubName(host)}{inHubs}</h2>
 				<p>Host address: {host}</p>
-				<CohortSummary hubParams={hubParams} cohorts={coll} onCohort={this.onCohort}/>
+				<CohortSummary
+					hubParams={hubParams}
+					cohorts={coll}
+					onCohort={this.onCohort}
+					action={isLocal && status === 'up' ?
+						<Button onClick={this.onRaise} accent>Import</Button> : null}/>
 			</div>);
 	}
 }
@@ -587,8 +794,8 @@ class Datapages extends React.Component {
 		nav({activeLink: 'datapages', onNavigate: this.onNavigate});
 	}
 
-	onNavigate = (page) => {
-		this.props.callback(['navigate', page]);
+	onNavigate = (page, params) => {
+		this.props.callback(['navigate', page, params]);
 	};
 
 	render() {
