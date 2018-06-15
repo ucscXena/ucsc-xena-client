@@ -40,7 +40,39 @@ var survivalOptions = {
 		tte: 'pfiTte',
 		evFeature: 'PFI',
 		tteFeature: 'PFI.time',
-		label: 'Progression-free interval'
+		label: 'Progression free interval'
+	},
+	"lriEv": {
+		patient: 'patient',
+		ev: 'lriEv',
+		tte: 'lriTte',
+		evFeature: 'LRI',
+		tteFeature: 'LRI.time',
+		label: 'Local recurrence interval'
+	},
+	"dmiEv": {
+		patient: 'patient',
+		ev: 'dmiEv',
+		tte: 'dmiTte',
+		evFeature: 'DMI',
+		tteFeature: 'DMI.time',
+		label: 'Distant metastasis interval'
+	},
+	"ddfsEv": {
+		patient: 'patient',
+		ev: 'ddfsEv',
+		tte: 'ddfsTte',
+		evFeature: 'DDFS',
+		tteFeature: 'DDFS.time',
+		label: 'Distant disease free survival'
+	},
+	"idfsEv": {
+		patient: 'patient',
+		ev: 'idfsEv',
+		tte: 'idfsTte',
+		evFeature: 'IDFS',
+		tteFeature: 'IDFS.time',
+		label: 'Invasive disease free survival'
 	},
 	"ev": {
 		patient: 'patient',
