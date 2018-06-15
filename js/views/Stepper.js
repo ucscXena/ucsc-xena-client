@@ -28,13 +28,13 @@ var _ = require('../underscore_ext');
 var compStyles = require('./Stepper.module.css');
 
 // Locals
-var steps = [
+var localSteps = [
 	{label: 'Select a Study to Explore'},
 	{label: 'Select Your First Variable'},
 	{label: 'Select Your Second Variable'}
 ];
 
-var stateIndex = {
+var locaStateIndex = {
 	'COHORT': 0,
 	'FIRST_COLUMN': 1,
 	'SECOND_COLUMN': 2
@@ -42,7 +42,11 @@ var stateIndex = {
 
 class Stepper extends React.Component {
 	render() {
-		let {mode} = this.props;
+		let { mode } = this.props;
+		const steps = this.props.steps || localSteps,
+			stateIndex = this.props.stateIndex || locaStateIndex;
+
+
 		let getStepClassName = (index) => {
 			return classNames({
 				[compStyles.step]: true,

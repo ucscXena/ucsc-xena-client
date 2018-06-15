@@ -66,7 +66,6 @@ const getErrors = (file, contents, fileFormat) => {
         dataType = dataTypeByFileFormat[fileFormat],
         errCheckFunc = functionByDataType[dataType];
 
-
     errors.push(checkSizeLimit(file));
     errors.push(hasSampleColumn(getColumns(lines[0])[0]));
 
@@ -86,13 +85,13 @@ const hasSparseDataColumns = (header, fileFormat) => {
     return colRegExps.map(r => hasColumn(header, r.name, r.regexp));
 }
 
-const hasSampleColumn = header => hasColumn(header, "sampleid", /sample[ _]*(name|id)?/gi);
-
 const hasColumn = (header, columnName, regexp) => {
     if(!header.match(regexp)) {
         return MESSAGES.COLUMN_IS_REQUIRED(columnName);
     }
 }
+
+const hasSampleColumn = header => hasColumn(header, "sampleid", /sample[ _]*(name|id)?/gi);
 
 const getColumns = line => line.split(/\t/g);
 const getColumnsCount = cols => cols.length;
@@ -107,13 +106,9 @@ const columnDataCountMatch = (lines) => {
     }
 }
 
+//for dense data
 const checkUniqueSampleIDs = () => {
 
 }
-//required columns for mutation data
-
-//required columns for segmented copy number data
-
-
 
 export default getErrors;

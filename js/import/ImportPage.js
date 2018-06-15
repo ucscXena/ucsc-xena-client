@@ -3,14 +3,20 @@
 import React from 'react';
 import styles from './ImportPage.module.css';
 import appTheme from '../appTheme';
+import _ from "../underscore_ext";
 
 import { ThemeProvider } from 'react-css-themr';
 import {
-	Input, Button, Dropdown, Checkbox
+	Input, Button, Dropdown, Checkbox, Tooltip
 
 } from 'react-toolbox/lib';
 
+const TooltipButton = Tooltip(Button);
+const TooltipDiv = Tooltip(<div></div>);
+
 import DefaultTextInput from '../views/DefaultTextInput';
+import { Stepper } from '../views/Stepper';
+import WizardSection from './WizardSection';
 import getErrors from './errorChecking';
 
 const formatOptions = [
@@ -49,6 +55,21 @@ const dataTypes = [
 	"PARADIGM pathway activity"
 ];
 
+var steps = [
+	{ label: 'Select the file' },
+	{ label: 'Enter information about file' },
+	{ label: 'Check for errors' },
+	{ label: 'Save file to hub' },
+	{ label: 'Step number five' }
+];
+
+const pageStates = ['SELECT_FILE', 'FILE_INFO', 'CHECK_ERRORS', 'SAVE_FILE', 'STEP_FIVE'];
+
+var pageStateIndex = pageStates.reduce((obj, currVal, i) => {
+	obj[currVal] = i;
+	return obj;
+}, {});
+
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 const dataTypeOptions = getDropdownOptions(dataTypes);
 
@@ -77,69 +98,105 @@ class ImportForm extends React.Component {
 	}
 
 	render() {
-		const { cohort, customCohort, dataType, 
-			customDataType, fileFormat, displayName, 
-			description, file, probeMapFile, errors } = this.props.state;
-
+		const { wizardPage } = this.props;
 		return (
 			<div>
-				<Input type='file' name='importFile' className={styles.field}
-					onChange={this.onFileChange('file')}
-				/>
-
-				<Dropdown onChange={this.onFileFormatChange}
-					source={formatOptions}
-					value={fileFormat}
-					allowBlank={false}
-					label="File format"
-					className={styles.field}
-				/>
-
-				<DropdownWithInput showInput={this.state.hasOwnDataType}
-					label="Type of data" checkboxLbl="Or enter your own type"
-					dropdownSource={dataTypeOptions}
-					dropdownVal={dataType}
-					inputVal={customDataType}
-
-					onDropdownChange={this.onDataTypeChange}
-					onInputChange={this.onCustomDataTypeChange}
-					onCheckboxChange={this.onHasOwnDataTypeChange}
-				/>
-
-				<DropdownWithInput showInput={this.state.hasOwnCohort}
-					label="Cohort" checkboxLbl="Or enter your own cohort"
-					dropdownSource={this.props.cohorts}
-					dropdownVal={cohort}
-					inputVal={customCohort}
-
-					onDropdownChange={this.onCohortChange}
-					onInputChange={this.onCustomCohortChange}
-					onCheckboxChange={this.onHasOwnCohortChange}
-				/>
-
-				<Input type='file' name='probemap' className={styles.field} floating={true}
-					onChange={this.onFileChange('probemap-file')} label="Probe map file"
-				/>
-
-				<Input type='text' label="Display name" className={styles.field}
-					onChange={this.onDisplayNameChange}
-					value={displayName}
-				/>
-
-				<Input type='text' label="Description" multiline={true}
-					onChange={this.onDescriptionChange}
-					value={description}
-				/>
-
-				<ErrorArea errors={errors} />
-
-				<Button icon='save' label='Save' raised 
-					disabled={!file || this.state.fileReadInprogress}
-					onClick={this.onSubmitClicked} 
-				/>
+				{this.renderWizardSection(this.props.state, wizardPage)}
 			</div>
 		)
 	}
+
+	renderWizardSection = ({ cohort, customCohort, dataType, customDataType, fileFormat, displayName, 
+		description, file, probeMapFile, errors
+	}, wizardPage) => {
+
+		const fieldsByPageState = {
+			0: <Input type='file' name='importFile' className={styles.field}
+					onChange={this.onFileChange('file')}
+				/>,
+			1: <div>
+					<Dropdown onChange={this.onFileFormatChange}
+						source={formatOptions}
+						value={fileFormat}
+						allowBlank={false}
+						label="File format"
+						className={styles.field}
+					/>
+
+					<DropdownWithInput showInput={this.state.hasOwnDataType}
+						label="Type of data" checkboxLbl="Or enter your own type"
+						dropdownSource={dataTypeOptions}
+						dropdownVal={dataType}
+						inputVal={customDataType}
+
+						onDropdownChange={this.onDataTypeChange}
+						onInputChange={this.onCustomDataTypeChange}
+						onCheckboxChange={this.onHasOwnDataTypeChange}
+					/>
+
+					<DropdownWithInput showInput={this.state.hasOwnCohort}
+						label="Cohort" checkboxLbl="Or enter your own cohort"
+						dropdownSource={this.props.cohorts}
+						dropdownVal={cohort}
+						inputVal={customCohort}
+
+						onDropdownChange={this.onCohortChange}
+						onInputChange={this.onCustomCohortChange}
+						onCheckboxChange={this.onHasOwnCohortChange}
+					/>
+
+					<Input type='file' name='probemap' className={styles.field} floating={true}
+						onChange={this.onFileChange('probemap-file')} label="Probe map file"
+					/>
+				</div>,
+			2: <div>
+					<Input type='text' label="Display name" className={styles.field}
+						onChange={this.onDisplayNameChange}
+						value={displayName}
+					/>
+
+					<Input type='text' label="Description" multiline={true} className={styles.field}
+						onChange={this.onDescriptionChange}
+						value={description}
+					/>
+				</div>,
+			3: <div>
+				<Button icon='youtube_searched_for' label='Begin checking' raised
+					disabled={!file.size}
+					onClick={this.onCheckForErrors}
+				/>
+				<ErrorArea errors={errors} />
+
+				</div>,
+			4: <Button icon='save' label='Save' raised 
+					disabled={!file.size}
+					onClick={this.onSaveFile} 
+				/>
+		};
+
+		const pageIndex = pageStateIndex[wizardPage] || 0;
+
+		return (
+			<WizardSection isFirst={pageIndex === 0} isLast={pageIndex === pageStates.length - 1}
+				onNextPage={this.onWizardPageChange(pageIndex, true)}
+				onPreviousPage={this.onWizardPageChange(pageIndex, false)}
+			>
+				{fieldsByPageState[pageIndex]}
+			</WizardSection>
+		);
+	}
+
+	onWizardPageChange = (currPageIndex, forwards) => () => {
+		if (forwards) {
+			if (currPageIndex < pageStates.length - 1) {
+				this.props.callback(['wizard-page', pageStates[currPageIndex + 1]]);
+			}
+		} else {
+			if (currPageIndex > 0) {
+				this.props.callback(['wizard-page', pageStates[currPageIndex - 1]]);
+			}
+		}
+	} 
 
 	onFileChange = (fileProp) => (fileName, evt) => {
 		if (evt.target.files.length > 0) {
@@ -163,33 +220,36 @@ class ImportForm extends React.Component {
 
 	onDescriptionChange = description => this.props.callback(['description', description]);
 
-	onSubmitClicked = () => {
+	onCheckForErrors = () => {
 		const { file, fileFormat } = this.props.state;
-		this.setState({fileReadInprogress: true});
 
 		readFile(file).then(fileContent => {
 			this.props.callback(['set-status', 'Checking for errors...']);
+			this.props.callback(['file-content', fileContent]);
 
 			const errors = getErrors(file, fileContent, fileFormat);
 
 			if(errors.length) {
-				//there's some errors
 				this.props.callback(['errors', errors]);
 				this.props.callback(['set-status', 'There was some error found in the file']);
 			} else {
-				//no errors
-
-				this.props.postFile(contents, file.name);
-				this.props.postFile(this.createMetaDataFile(), file.name + '.json');
-				this.props.updateFile(file.name);
-				this.setState({fileReadInprogress: false});
-
 				this.props.callback(['set-status', '']);
 			}
 
-		}).catch(e => console.log(e));
+		}).catch(e => this.props.callback(['set-status', 'Unexpected error occured: ' + e.message]));
 
-		this.props.callback(['set-status', 'Reading file...']);		
+		this.props.callback(['set-status', 'Reading the file...']);		
+	}
+
+	onSaveFile = () => {
+		const { file, fileFormat } = this.props.state,
+			fileContent = this.props.fileContent
+		this.setState({ fileReadInprogress: true });
+
+		this.props.postFile(fileContent, file.name);
+		setTimeout(() => this.props.postFile(this.createMetaDataFile(), file.name + '.json'), 0);
+		
+		this.props.updateFile(file.name);
 	}
 
 	createMetaDataFile = () => {
@@ -213,19 +273,24 @@ class ImportPage extends React.Component {
 	}
 	render() {
 		const cohorts = getDropdownOptions(this.props.state.wizard.cohorts || []);
-		const status = this.props.state.import.status;
+		const { status, wizardPage, fileContent } = this.props.state.import;
 
 		return (
-			<div className={styles.container}>
-				<p className={styles.status}>{status}</p>
+			<div>
+				<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex}/>
+				<div className={styles.container}>
+					<p className={styles.status}>{status}</p>
 
-				<ImportForm cohorts={cohorts} 
-					callback={this.props.callback}
-					postFile={this.postFile}	
-					updateFile={this.updateFile}	
-					
-					state={this.props.state.import.form}
-				/>
+					<ImportForm cohorts={cohorts} 
+						callback={this.props.callback}
+						postFile={this.postFile}	
+						updateFile={this.updateFile}	
+						
+						wizardPage={wizardPage}
+						fileContent={fileContent}
+						state={this.props.state.import.form}
+					/>
+				</div>
 			</div>
 		);
 	}

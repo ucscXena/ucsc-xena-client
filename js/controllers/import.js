@@ -36,11 +36,11 @@ const importControls = {
     'import-file-done': (state, b, c) => {
         return state;
     },
-    'update-file-post!': (serverBus, state, newState, file) => serverBus.next(['update-file-done', updateFile(fileName)]),
-    'update-file-done': (state, b, c) => {
-        return state;
-    },
+    'update-file-post!': (serverBus, state, newState, fileName) => serverBus.next(['update-file-done', updateFile(fileName)]),
+    'update-file-done': (state, b, c) => assocIn(state, ['status'], 'File successfully saved!'),
     'set-status': (state, status, x) => assocIn(state, ['status'], status),
+    'wizard-page': (state, newPage) => assocIn(state, ['wizardPage'], newPage),
+    'file-content': (state, content) => assocIn(state, ['fileContent'], content)
 }
 
 const changeFormProp = propName => (state, propValue) => assocIn(state, ['form', propName], propValue);
