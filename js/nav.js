@@ -41,7 +41,8 @@ var links = [
 
 var helpLink = {
 	href: 'https://ucsc-xena.gitbook.io/project/',
-	label: 'Help'
+	label: 'Help',
+	target: '_blank'
 };
 
 var active = (l, activeLink) => l.nav === activeLink;
