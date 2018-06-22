@@ -33,8 +33,9 @@ class ColCard extends React.Component {
 			<Card className='Column'>
 				<div className={classNames(compStyles.headerContainer, sortable && 'Sortable-handle')}>
 					<CardAvatar colId={colId}/>
-					<div className={classNames(compStyles.controls, {[compStyles.showOnHover]: !wizardMode})}>
+					<div className={compStyles.controls}>
 						{controls}
+						<div className={classNames(compStyles.cover, {[compStyles.showOnHover]: !wizardMode})}/>
 					</div>
 				</div>
 				<div className={compStyles.titleContainer}>
