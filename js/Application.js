@@ -13,6 +13,17 @@ import appTheme from './appTheme';
 import nav from './nav';
 //var Perf = require('react/lib/ReactDefaultPerf');
 
+const stepperSteps = [
+	{ label: 'Select a Study to Explore' },
+	{ label: 'Select Your First Variable' },
+	{ label: 'Select Your Second Variable' }
+];
+const stepperStateIndex = {
+	'COHORT': 0,
+	'FIRST_COLUMN': 1,
+	'SECOND_COLUMN': 2
+};
+
 // should really be in a config file.
 const searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
 
@@ -73,7 +84,7 @@ class Application extends Component {
 				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}
 					{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
 						null}
-					{wizardMode ? <Stepper mode={stepperState} /> :
+					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> :
 						<AppControls {...otherProps} appState={state} help={searchHelp}
 									 zoom={zoom} onShowWelcome={() => onShowWelcome(true)}/>}
 

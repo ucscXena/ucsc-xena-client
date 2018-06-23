@@ -35,25 +35,25 @@ const functionByDataType = {
 
 const getSparseColumnRegExps = (fileFormat) => {
     const res = [
-        { regexp: /chr(om)/gi, name: 'chrom' },
-        { regexp: /start/gi, name: 'start' },
-        { regexp: /end/gi, name: 'end' },
+        { regexp: /chr(om)/i, name: 'chrom' },
+        { regexp: /start/i, name: 'start' },
+        { regexp: /end/i, name: 'end' },
     ];
 
     if (fileFormat === 'segmented') {
         res.push(
-            { regexp: /strand/gi, name: 'strand' },
-            { regexp: /value/gi, name: 'value' }
+            { regexp: /strand/i, name: 'strand' },
+            { regexp: /value/i, name: 'value' }
         );
     } else if (fileFormat === 'mutationVector') {
         res.push(
-            { regexp: /genes?/gi, name: 'genes' },
-            { regexp: /alt(ernate)?/gi, name: 'alternate' },
-            { regexp: /ref(erence)?/gi, name: 'reference' },
-            { regexp: /effect/gi, name: 'effect' },
-            { regexp: /dna[-_ ]*v?af/gi, name: 'dna_vaf' },
-            { regexp: /rna[-_ ]*v?af/gi, name: 'rna_vaf' },
-            { regexp: /amino[-_ ]*acid[-_ ]*(change)?/gi, name: 'amino_acid' }
+            { regexp: /genes?/i, name: 'genes' },
+            { regexp: /alt(ernate)?/i, name: 'alternate' },
+            { regexp: /ref(erence)?/i, name: 'reference' },
+            { regexp: /effect/i, name: 'effect' },
+            { regexp: /dna[-_ ]*v?af/i, name: 'dna_vaf' },
+            { regexp: /rna[-_ ]*v?af/i, name: 'rna_vaf' },
+            { regexp: /amino[-_ ]*acid[-_ ]*(change)?/i, name: 'amino_acid' }
         );
     }
 

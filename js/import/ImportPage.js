@@ -19,6 +19,7 @@ import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
 import getErrors from './errorChecking';
 
+//I feel like moving to separate constants file..
 const formatOptions = [
 	{
 		label: 'ROWs (identifiers)  x  COLUMNs (samples) -- often genomic data matrix',
@@ -55,7 +56,7 @@ const dataTypes = [
 	"PARADIGM pathway activity"
 ];
 
-var steps = [
+const steps = [
 	{ label: 'Select the file' },
 	{ label: 'Enter information about file' },
 	{ label: 'Check for errors' },
@@ -63,26 +64,23 @@ var steps = [
 	{ label: 'Step number five' }
 ];
 
-const pageStates = ['SELECT_FILE', 'FILE_INFO', 'CHECK_ERRORS', 'SAVE_FILE', 'STEP_FIVE'];
+const stepInfoHeader = [
+	'Please select the file',
+	'Enter information about file',
+	'Enter some more information',
+	'Check file for errors',
+	'Save file to the hub'
+];
 
-var pageStateIndex = pageStates.reduce((obj, currVal, i) => {
-	obj[currVal] = i;
-	return obj;
-}, {});
+const pageStates = ['SELECT_FILE', 'FILE_INFO', 'CHECK_ERRORS', 'SAVE_FILE', 'STEP_FIVE'];
+const pageStateIndex = _.object(pageStates, _.range(pageStates.length));
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 const dataTypeOptions = getDropdownOptions(dataTypes);
 
 const readFile = (handler) => {
 	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = (e) => {
-			resolve(e.target.result);
-		};
-		reader.onerror = (e) => {
-			reject(e.toString());
-		};
-		reader.readAsBinaryString(handler);
+		
 	});
 }
 
@@ -98,17 +96,19 @@ class ImportForm extends React.Component {
 	}
 
 	render() {
-		const { wizardPage } = this.props;
+		const { wizardPage } = this.props,
+			state = this.props.state || {};
 		return (
 			<div>
-				{this.renderWizardSection(this.props.state, wizardPage)}
+				{this.renderWizardSection(state, wizardPage)}
 			</div>
 		)
 	}
 
-	renderWizardSection = ({ cohort, customCohort, dataType, customDataType, fileFormat, displayName, 
+	renderWizardSection ({ cohort, customCohort, dataType, customDataType, fileFormat, displayName, 
 		description, file, probeMapFile, errors
-	}, wizardPage) => {
+	}, wizardPage) {
+		const disableSave = !file || !file.size;
 
 		const fieldsByPageState = {
 			0: <Input type='file' name='importFile' className={styles.field}
@@ -117,7 +117,7 @@ class ImportForm extends React.Component {
 			1: <div>
 					<Dropdown onChange={this.onFileFormatChange}
 						source={formatOptions}
-						value={fileFormat}
+						value={fileFormat || 'genomicMatrix'}
 						allowBlank={false}
 						label="File format"
 						className={styles.field}
@@ -162,14 +162,14 @@ class ImportForm extends React.Component {
 				</div>,
 			3: <div>
 				<Button icon='youtube_searched_for' label='Begin checking' raised
-					disabled={!file.size}
+					disabled={disableSave}
 					onClick={this.onCheckForErrors}
 				/>
 				<ErrorArea errors={errors} />
 
 				</div>,
 			4: <Button icon='save' label='Save' raised 
-					disabled={!file.size}
+					disabled={disableSave}
 					onClick={this.onSaveFile} 
 				/>
 		};
@@ -187,15 +187,8 @@ class ImportForm extends React.Component {
 	}
 
 	onWizardPageChange = (currPageIndex, forwards) => () => {
-		if (forwards) {
-			if (currPageIndex < pageStates.length - 1) {
-				this.props.callback(['wizard-page', pageStates[currPageIndex + 1]]);
-			}
-		} else {
-			if (currPageIndex > 0) {
-				this.props.callback(['wizard-page', pageStates[currPageIndex - 1]]);
-			}
-		}
+		const newPageIndex = Math.min(pageStates.length - 1, Math.max(0, currPageIndex + (forwards ? 1 : -1)));
+		this.props.callback(['wizard-page', pageStates[newPageIndex]]);
 	} 
 
 	onFileChange = (fileProp) => (fileName, evt) => {
@@ -222,21 +215,22 @@ class ImportForm extends React.Component {
 
 	onCheckForErrors = () => {
 		const { file, fileFormat } = this.props.state;
+		this.props.callback(['read-file', file]);
 
-		readFile(file).then(fileContent => {
-			this.props.callback(['set-status', 'Checking for errors...']);
-			this.props.callback(['file-content', fileContent]);
+		// readFile(file).then(fileContent => {
+		// 	this.props.callback(['set-status', 'Checking for errors...']);
+		// 	this.props.callback(['file-content', fileContent]);
 
-			const errors = getErrors(file, fileContent, fileFormat);
+		// 	const errors = getErrors(file, fileContent, fileFormat);
 
-			if(errors.length) {
-				this.props.callback(['errors', errors]);
-				this.props.callback(['set-status', 'There was some error found in the file']);
-			} else {
-				this.props.callback(['set-status', '']);
-			}
+		// 	if(errors.length) {
+		// 		this.props.callback(['errors', errors]);
+		// 		this.props.callback(['set-status', 'There was some error found in the file']);
+		// 	} else {
+		// 		this.props.callback(['set-status', '']);
+		// 	}
 
-		}).catch(e => this.props.callback(['set-status', 'Unexpected error occured: ' + e.message]));
+		// }).catch(e => this.props.callback(['set-status', 'Unexpected error occured: ' + e.message]));
 
 		this.props.callback(['set-status', 'Reading the file...']);		
 	}
@@ -246,8 +240,12 @@ class ImportForm extends React.Component {
 			fileContent = this.props.fileContent
 		this.setState({ fileReadInprogress: true });
 
-		this.props.postFile(fileContent, file.name);
-		setTimeout(() => this.props.postFile(this.createMetaDataFile(), file.name + '.json'), 0);
+		this.props.callback(['set-status', 'Saving file to local hub...']);	
+			
+		this.props.postFile([
+			{ contents: fileContent, name: file.name },
+			{ contents: this.createMetaDataFile(), name: file.name + '.json' }
+		]);
 		
 		this.props.updateFile(file.name);
 	}
@@ -275,9 +273,14 @@ class ImportPage extends React.Component {
 		const cohorts = getDropdownOptions(this.props.state.wizard.cohorts || []);
 		const { status, wizardPage, fileContent } = this.props.state.import;
 
+		const pageIndex = pageStateIndex[wizardPage] || 0;
+
 		return (
 			<div>
 				<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex}/>
+				<div className={styles.wizardTitle}>
+					{stepInfoHeader[pageIndex]}
+				</div>
 				<div className={styles.container}>
 					<p className={styles.status}>{status}</p>
 
@@ -295,10 +298,11 @@ class ImportPage extends React.Component {
 		);
 	}
 
-	postFile = (contents, fileName) => {
-		var formData = new FormData();
-		formData.append("file", new Blob([contents]), fileName);
-
+	postFile = (fileArr) => {
+		const formData = new FormData();
+		fileArr.forEach(f => {
+			formData.append("file", new Blob([f.contents]), f.name);
+		});
 		this.props.callback(['import-file', formData]);
 	}
 
