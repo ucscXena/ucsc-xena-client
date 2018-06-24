@@ -177,10 +177,15 @@ class ImportForm extends React.Component {
 					disabled={!fileSelected}
 					onClick={this.onCheckForErrors}
 				/>
+				<Button icon='youtube_searched_for' label='Re-read file' raised
+					onClick={this.onFileReRead}
+				/>
 				<ErrorArea errors={errors} 
 					showMore={this.state.showMoreErrors} 
 					onShowMoreToggle={this.onShowMoreToggle}
-					errorCheckInProgress={this.state.errorCheckInProgress}/>
+					errorCheckInProgress={this.state.errorCheckInProgress}
+					onBackToFirstPage={this.onBackToFirstPage}
+				/>
 
 				</div>,
 			4: <Button icon='save' label='Save' raised 
@@ -218,6 +223,11 @@ class ImportForm extends React.Component {
 		}
 	}
 
+	onFileReRead = () => {
+		this.props.callback(['set-status', 'Reading the file...']);
+		this.props.callback(['read-file', this.props.state.file]);
+	}
+
 	onFileFormatChange = format => this.props.callback(['file-format', format]);
 
 	onDataTypeChange = type => this.props.callback(['data-type', type]);
@@ -235,6 +245,10 @@ class ImportForm extends React.Component {
 	onDescriptionChange = description => this.props.callback(['description', description]);
 
 	onShowMoreToggle = () => this.setState({showMoreErrors: !this.state.showMoreErrors});
+
+	onBackToFirstPage = () => {
+		this.props.callback(['wizard-page', pageStates[0]]);
+	}
 
 	onCheckForErrors = () => {
 		const { file, fileFormat } = this.props.state,
@@ -358,7 +372,7 @@ const DropdownWithInput = ({ showInput, label, checkboxLbl, onDropdownChange, on
 	);
 }
 
-const ErrorArea = ({ errors, showMore, onShowMoreToggle, errorCheckInProgress }) => {
+const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, onBackToFirstPage }) => {
 	let items = (errors || []).map((error, i) => <p key={i} className={styles.errorLine}>{error}</p>),
 		showMoreText = null;
 
@@ -378,6 +392,12 @@ const ErrorArea = ({ errors, showMore, onShowMoreToggle, errorCheckInProgress })
 			<div style={{textAlign: 'center'}}>
 				{errorCheckInProgress && <ProgressBar type="circular" mode="indeterminate" />}
 			</div>
+
+			{!!errors.length &&
+				<Button icon='arrow_back' label='To file selection' raised 
+					onClick={onBackToFirstPage} 
+				/>
+			}
 		</div>
 	);
 }

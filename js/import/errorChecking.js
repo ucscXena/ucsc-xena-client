@@ -4,12 +4,13 @@ const SIZE_LIMIT = 1000;
 const MESSAGES = {
     FILE_SIZE_EXCEEDED: (size, allowedSize) => `File is too large: ${size} (allowed ${allowedSize})`,
     HEADER_COLUMN_MISMATCH: (lineNo) => `Line ${lineNo} has wrong number of values`,
-    COLUMN_IS_REQUIRED: (column) => `Column ${column} is required`
+    COLUMN_IS_REQUIRED: (column) => `Column ${column} is required`,
+    SAMPLE_ID_REQUIRED: "First column in dense file format must be sampleid"
 }
 
 const getErrorsDense = (lines) => {
     const errors = [];
-    errors.push(columnDataCountMatch(lines));
+    errors.push(...columnDataCountMatch(lines));
 
     return errors;
 }
@@ -90,19 +91,27 @@ const hasColumn = (header, columnName, regexp) => {
     }
 }
 
-const hasSampleColumn = header => hasColumn(header.split(/\t/g)[0], "sampleid", /sample[ _]*(name|id)?/gi);
+const hasSampleColumn = header => {
+    const err = hasColumn(header.split(/\t/g)[0], "sampleid", /sample[ _]*(name|id)?/gi);
+    if (err) {
+        return MESSAGES.SAMPLE_ID_REQUIRED;
+    }
+};
 
 const getColumns = line => line.split(/\t/g);
 const getColumnsCount = cols => cols.length;
 
 const columnDataCountMatch = (lines) => {
     const headerLen = getColumns(lines[0]).length;
+    const result = [];
 
     for (let i = 1; i < lines.length; i++) {
         if (getColumnsCount(getColumns(lines[i])) !== headerLen) {
-            return MESSAGES.HEADER_COLUMN_MISMATCH(i+1);
+            result.push(MESSAGES.HEADER_COLUMN_MISMATCH(i+1));
         }
     }
+
+    return result;
 }
 
 //for dense data

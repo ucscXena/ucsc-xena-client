@@ -25,6 +25,12 @@
 
 }
 
+.wizardButtons {
+	padding-top: 20px;
+	margin-top: 40px;
+    border-top: 1px solid;
+}
+
 .field {
 	width: 50%;
 	padding-right: 5%;

@@ -1,8 +1,9 @@
 "use strict";
 import React from 'react';
 import { Button } from 'react-toolbox/lib';
+import styles from './ImportPage.module.css';
 
-const styles = {
+const style = {
     right: { float: 'right' },
     buttons: { paddingTop: '20px' }
 };
@@ -14,12 +15,12 @@ export default class WizardSection extends React.Component {
         return (
             <div>
                 { this.props.children }
-                <div style={styles.buttons}>
+                <div className={styles.wizardButtons}>
                     <Button label='Previous step' raised style={{visibility: !isFirst ? 'visible' : 'hidden'}}
                         onClick={this.props.onPreviousPage}
                     />
                     {!isLast &&
-                        <Button label='Next step' raised style={styles.right}
+                        <Button label='Next step' raised style={style.right}
                             onClick={this.props.onNextPage}
                         />
                     }
