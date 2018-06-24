@@ -7,11 +7,15 @@ import _ from "../underscore_ext";
 
 import { ThemeProvider } from 'react-css-themr';
 import {
-	Input, Button, Dropdown, Checkbox, Tooltip
+	Input, Button, Dropdown, Checkbox, Tooltip,
+	ProgressBar, FontIcon
 
 } from 'react-toolbox/lib';
 
 const TooltipButton = Tooltip(Button);
+const TooltipInput = Tooltip(Input);
+const TooltipDropdown = Tooltip(Dropdown);
+const TooltipFontIcon = Tooltip(FontIcon);
 const TooltipDiv = Tooltip(<div></div>);
 
 import DefaultTextInput from '../views/DefaultTextInput';
@@ -78,12 +82,6 @@ const pageStateIndex = _.object(pageStates, _.range(pageStates.length));
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 const dataTypeOptions = getDropdownOptions(dataTypes);
 
-const readFile = (handler) => {
-	return new Promise((resolve, reject) => {
-		
-	});
-}
-
 class ImportForm extends React.Component {
 	constructor() {
 		super();
@@ -91,7 +89,9 @@ class ImportForm extends React.Component {
 			//ui state
 			hasOwnDataType: false,
 			hasOwnCohort: false,
-			fileReadInprogress: false
+			fileReadInprogress: false,
+			showMoreErrors: false,
+			errorCheckInProgress: false
 		};
 	}
 
@@ -108,19 +108,31 @@ class ImportForm extends React.Component {
 	renderWizardSection ({ cohort, customCohort, dataType, customDataType, fileFormat, displayName, 
 		description, file, probeMapFile, errors
 	}, wizardPage) {
-		const disableSave = !file || !file.size;
+		const fileSelected = file && !!file.size,
+			fileContent = this.props.fileContent;
 
 		const fieldsByPageState = {
-			0: <Input type='file' name='importFile' className={styles.field}
-					onChange={this.onFileChange('file')}
-				/>,
+			0: <div>
+					<TooltipInput type='file' name='importFile' className={styles.field}
+						style={{paddingLeft: 0}}
+						onChange={this.onFileChange('file')}
+						tooltip={"Select file to be uploaded"} tooltipPosition={'right'}
+						icon={<TooltipFontIcon style={{marginLeft: 0}}
+							value='info' tooltip={"Select file to be uploaded"} tooltipPosition={'top'} />
+						}
+					/>
+					{ fileSelected && <b>Selected file: { file.name } </b> }
+					{ fileSelected && <h4>File preview</h4> }
+					<CodeSnippet fileContent={fileContent} fileSelected={fileSelected}/>
+				</div>,
 			1: <div>
-					<Dropdown onChange={this.onFileFormatChange}
+					<TooltipDropdown onChange={this.onFileFormatChange}
 						source={formatOptions}
 						value={fileFormat || 'genomicMatrix'}
 						allowBlank={false}
 						label="File format"
 						className={styles.field}
+						tooltip={"Field for format or your file"} tooltipPosition={'right'}
 					/>
 
 					<DropdownWithInput showInput={this.state.hasOwnDataType}
@@ -162,14 +174,17 @@ class ImportForm extends React.Component {
 				</div>,
 			3: <div>
 				<Button icon='youtube_searched_for' label='Begin checking' raised
-					disabled={disableSave}
+					disabled={!fileSelected}
 					onClick={this.onCheckForErrors}
 				/>
-				<ErrorArea errors={errors} />
+				<ErrorArea errors={errors} 
+					showMore={this.state.showMoreErrors} 
+					onShowMoreToggle={this.onShowMoreToggle}
+					errorCheckInProgress={this.state.errorCheckInProgress}/>
 
 				</div>,
 			4: <Button icon='save' label='Save' raised 
-					disabled={disableSave}
+					disabled={!fileSelected}
 					onClick={this.onSaveFile} 
 				/>
 		};
@@ -192,8 +207,14 @@ class ImportForm extends React.Component {
 	} 
 
 	onFileChange = (fileProp) => (fileName, evt) => {
+		this.props.callback(['file-content', '']);
+		
 		if (evt.target.files.length > 0) {
-			this.props.callback([fileProp, evt.target.files[0]]);
+			const file = evt.target.files[0];
+			this.props.callback([fileProp, file]);
+
+			this.props.callback(['read-file', file]);
+			this.props.callback(['set-status', 'Reading the file...']);	
 		}
 	}
 
@@ -213,26 +234,27 @@ class ImportForm extends React.Component {
 
 	onDescriptionChange = description => this.props.callback(['description', description]);
 
+	onShowMoreToggle = () => this.setState({showMoreErrors: !this.state.showMoreErrors});
+
 	onCheckForErrors = () => {
-		const { file, fileFormat } = this.props.state;
-		this.props.callback(['read-file', file]);
+		const { file, fileFormat } = this.props.state,
+			fileContent = this.props.fileContent;
 
-		// readFile(file).then(fileContent => {
-		// 	this.props.callback(['set-status', 'Checking for errors...']);
-		// 	this.props.callback(['file-content', fileContent]);
+		this.setState({errorCheckInProgress: true});
+		this.props.callback(['set-status', 'Checking for errors...']);
+		this.props.callback(['errors', []]);
 
-		// 	const errors = getErrors(file, fileContent, fileFormat);
+		setTimeout(() => {
+			const errors = getErrors(file, fileContent, fileFormat);
 
-		// 	if(errors.length) {
-		// 		this.props.callback(['errors', errors]);
-		// 		this.props.callback(['set-status', 'There was some error found in the file']);
-		// 	} else {
-		// 		this.props.callback(['set-status', '']);
-		// 	}
-
-		// }).catch(e => this.props.callback(['set-status', 'Unexpected error occured: ' + e.message]));
-
-		this.props.callback(['set-status', 'Reading the file...']);		
+			if (errors.length) {
+				this.props.callback(['errors', errors]);
+				this.props.callback(['set-status', 'There was some error found in the file']);
+			} else {
+				this.props.callback(['set-status', '']);
+			}
+			this.setState({errorCheckInProgress: false});
+		}, 500);
 	}
 
 	onSaveFile = () => {
@@ -336,13 +358,47 @@ const DropdownWithInput = ({ showInput, label, checkboxLbl, onDropdownChange, on
 	);
 }
 
-const ErrorArea = ({ errors }) => {
-	const items = (errors || []).map((error, i) => <p key={i}>{error}</p>);
+const ErrorArea = ({ errors, showMore, onShowMoreToggle, errorCheckInProgress }) => {
+	let items = (errors || []).map((error, i) => <p key={i} className={styles.errorLine}>{error}</p>),
+		showMoreText = null;
+
+	if (items.length > 3 && !showMore) {
+		items = items.slice(0, 3);
+		showMoreText = <p className={styles.showMore} onClick={onShowMoreToggle}>Show more... ({errors.length} in total)</p>;
+	} else if (showMore) {
+		showMoreText = <p className={styles.showMore} onClick={onShowMoreToggle}>Show less...</p>
+	}
+
 	return (
 		<div className={styles.errorContainer}>
 			{items}
+			{showMoreText}
+			{!errors.length && !errorCheckInProgress && <p>File is good to go!</p>}
+
+			<div style={{textAlign: 'center'}}>
+				{errorCheckInProgress && <ProgressBar type="circular" mode="indeterminate" />}
+			</div>
 		</div>
-	)
+	);
+}
+
+const CodeSnippet = ({fileContent, fileSelected}) => {
+	const showProgress = !fileContent && fileSelected,
+		lines = fileContent.split('\n', 10);
+
+	return (
+		<div style={{textAlign: 'center'}}>
+			
+			{showProgress &&
+				<ProgressBar type="circular" mode="indeterminate" />
+			}
+			{!!fileContent && fileSelected &&
+				<textarea className={styles.codeSnippet} readOnly rows={10}
+					value={lines.join('\n') + '...'}
+				/>
+			}
+		</div>
+	);
 }
 
 const ThemedPage = (props) =>

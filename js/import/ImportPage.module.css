@@ -22,7 +22,7 @@
 }
 
 .errorContainer {
-	color:red;
+
 }
 
 .field {
@@ -37,4 +37,23 @@
 .status {
 	float: right;
 	margin: 0;
+}
+
+.errorLine {
+	margin: 0.3em 0 0.6em;
+	color: red;
+}
+
+.showMore{
+	text-decoration-line: underline;
+	font-size: 14px;
+    font-style: italic;
+	color: #122d31;
+	cursor: pointer;
+}
+
+.codeSnippet {
+	resize: none;
+	border-color: #c1bfbf;
+	width: 90%;
 }

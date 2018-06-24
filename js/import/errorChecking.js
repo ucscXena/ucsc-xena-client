@@ -42,18 +42,18 @@ const getSparseColumnRegExps = (fileFormat) => {
 
     if (fileFormat === 'segmented') {
         res.push(
-            { regexp: /strand/i, name: 'strand' },
+            // not required { regexp: /strand/i, name: 'strand' },
             { regexp: /value/i, name: 'value' }
         );
     } else if (fileFormat === 'mutationVector') {
         res.push(
-            { regexp: /genes?/i, name: 'genes' },
+            // not required { regexp: /genes?/i, name: 'genes' },
             { regexp: /alt(ernate)?/i, name: 'alternate' },
             { regexp: /ref(erence)?/i, name: 'reference' },
-            { regexp: /effect/i, name: 'effect' },
-            { regexp: /dna[-_ ]*v?af/i, name: 'dna_vaf' },
-            { regexp: /rna[-_ ]*v?af/i, name: 'rna_vaf' },
-            { regexp: /amino[-_ ]*acid[-_ ]*(change)?/i, name: 'amino_acid' }
+            // not required { regexp: /effect/i, name: 'effect' },
+            // not required { regexp: /dna[-_ ]*v?af/i, name: 'dna_vaf' },
+            // not required { regexp: /rna[-_ ]*v?af/i, name: 'rna_vaf' },
+            // not required { regexp: /amino[-_ ]*acid[-_ ]*(change)?/i, name: 'amino_acid' }
         );
     }
 
@@ -66,7 +66,6 @@ const getErrors = (file, contents, fileFormat) => {
         dataType = dataTypeByFileFormat[fileFormat],
         errCheckFunc = functionByDataType[dataType];
 
-    errors.push(checkSizeLimit(file));
     errors.push(hasSampleColumn(getColumns(lines[0])[0]));
 
     errors.push(...errCheckFunc(lines, fileFormat));    
@@ -91,7 +90,7 @@ const hasColumn = (header, columnName, regexp) => {
     }
 }
 
-const hasSampleColumn = header => hasColumn(header, "sampleid", /sample[ _]*(name|id)?/gi);
+const hasSampleColumn = header => hasColumn(header.split(/\t/g)[0], "sampleid", /sample[ _]*(name|id)?/gi);
 
 const getColumns = line => line.split(/\t/g);
 const getColumnsCount = cols => cols.length;
@@ -100,7 +99,7 @@ const columnDataCountMatch = (lines) => {
     const headerLen = getColumns(lines[0]).length;
 
     for (let i = 1; i < lines.length; i++) {
-        if (getColumnsCount(lines[i]) !== headerLen) {
+        if (getColumnsCount(getColumns(lines[i])) !== headerLen) {
             return MESSAGES.HEADER_COLUMN_MISMATCH(i+1);
         }
     }
