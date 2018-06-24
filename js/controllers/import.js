@@ -1,12 +1,12 @@
-/* eslint-disable */ 
+/* eslint-disable */
 'use strict';
 import Rx from '../rx';
 import { make, mount, compose } from './utils';
-import { encodeObject } from '../util';
-import { isArray, merge } from "../underscore_ext";
+// import { encodeObject } from '../util';
+// import { isArray, merge } from "../underscore_ext";
 import { servers } from '../defaultServers';
 
-import { assocIn, updateIn, assocInAll } from "../underscore_ext";
+import { assocIn, assocInAll } from "../underscore_ext";
 
 const postFile = (file) => {
     const payload = {
@@ -15,10 +15,10 @@ const postFile = (file) => {
         responseType: 'text',
         method: 'POST',
         crossDomain: true
-    }
+    };
 
     return Rx.Observable.ajax(payload).map(r => r.status);
-}
+};
 
 const updateFile = (fileName) => {
     const payload = {
@@ -27,12 +27,12 @@ const updateFile = (fileName) => {
         responseType: 'text',
         method: 'POST',
         crossDomain: true
-    }
+    };
     return Rx.Observable.ajax(payload).map(r => r.status);
-}
+};
 
 const readFile = (serverBus, state, newState, fileHandle) => {
-    if (!!fileHandle) {
+    if (fileHandle) {
         const reader = new FileReader();
         reader.onload = (e) => serverBus.next(['read-file-done', Rx.Observable.of(e.target.result)]);
         reader.onerror = (e) => serverBus.next(['set-status', e.toString()]);
@@ -41,7 +41,7 @@ const readFile = (serverBus, state, newState, fileHandle) => {
 };
 
 const importControls = {
-    'import-file-post!': (serverBus, state, newState, file) => serverBus.next(['import-file-done', postFile(file)]), 
+    'import-file-post!': (serverBus, state, newState, file) => serverBus.next(['import-file-done', postFile(file)]),
     'import-file-done': (state, b, c) => assocIn(state, ['status'], 'File successfully saved!'),
     'update-file-post!': (serverBus, state, newState, fileName) => serverBus.next(['update-file-done', updateFile(fileName)]),
     'update-file-done': (state, b, c) => assocIn(state, ['status'], 'File successfully saved!'),

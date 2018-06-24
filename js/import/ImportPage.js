@@ -1,24 +1,23 @@
-/* eslint-disable */
 'use strict';
 import React from 'react';
 import styles from './ImportPage.module.css';
-import appTheme from '../appTheme';
+// import appTheme from '../appTheme';
 import _ from "../underscore_ext";
 
-import { ThemeProvider } from 'react-css-themr';
+// import { ThemeProvider } from 'react-css-themr';
 import {
 	Input, Button, Dropdown, Checkbox, Tooltip,
 	ProgressBar, FontIcon
 
 } from 'react-toolbox/lib';
 
-const TooltipButton = Tooltip(Button);
+// const TooltipButton = Tooltip(Button);
 const TooltipInput = Tooltip(Input);
 const TooltipDropdown = Tooltip(Dropdown);
 const TooltipFontIcon = Tooltip(FontIcon);
-const TooltipDiv = Tooltip(<div></div>);
+// const TooltipDiv = Tooltip(<div></div>);
 
-import DefaultTextInput from '../views/DefaultTextInput';
+// import DefaultTextInput from '../views/DefaultTextInput';
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
 import getErrors from './errorChecking';
@@ -102,10 +101,10 @@ class ImportForm extends React.Component {
 			<div>
 				{this.renderWizardSection(state, wizardPage)}
 			</div>
-		)
+		);
 	}
 
-	renderWizardSection ({ cohort, customCohort, dataType, customDataType, fileFormat, displayName, 
+	renderWizardSection ({ cohort, customCohort, dataType, customDataType, fileFormat, displayName,
 		description, file, probeMapFile, errors
 	}, wizardPage) {
 		const fileSelected = file && !!file.size,
@@ -180,17 +179,17 @@ class ImportForm extends React.Component {
 				<Button icon='youtube_searched_for' label='Re-read file' raised
 					onClick={this.onFileReRead}
 				/>
-				<ErrorArea errors={errors} 
-					showMore={this.state.showMoreErrors} 
+				<ErrorArea errors={errors}
+					showMore={this.state.showMoreErrors}
 					onShowMoreToggle={this.onShowMoreToggle}
 					errorCheckInProgress={this.state.errorCheckInProgress}
 					onBackToFirstPage={this.onBackToFirstPage}
 				/>
 
 				</div>,
-			4: <Button icon='save' label='Save' raised 
+			4: <Button icon='save' label='Save' raised
 					disabled={!fileSelected}
-					onClick={this.onSaveFile} 
+					onClick={this.onSaveFile}
 				/>
 		};
 
@@ -209,17 +208,17 @@ class ImportForm extends React.Component {
 	onWizardPageChange = (currPageIndex, forwards) => () => {
 		const newPageIndex = Math.min(pageStates.length - 1, Math.max(0, currPageIndex + (forwards ? 1 : -1)));
 		this.props.callback(['wizard-page', pageStates[newPageIndex]]);
-	} 
+	}
 
 	onFileChange = (fileProp) => (fileName, evt) => {
 		this.props.callback(['file-content', '']);
-		
+
 		if (evt.target.files.length > 0) {
 			const file = evt.target.files[0];
 			this.props.callback([fileProp, file]);
 
 			this.props.callback(['read-file', file]);
-			this.props.callback(['set-status', 'Reading the file...']);	
+			this.props.callback(['set-status', 'Reading the file...']);
 		}
 	}
 
@@ -272,17 +271,18 @@ class ImportForm extends React.Component {
 	}
 
 	onSaveFile = () => {
-		const { file, fileFormat } = this.props.state,
-			fileContent = this.props.fileContent
+		const { file } = this.props.state,
+			fileContent = this.props.fileContent;
+
 		this.setState({ fileReadInprogress: true });
 
-		this.props.callback(['set-status', 'Saving file to local hub...']);	
-			
+		this.props.callback(['set-status', 'Saving file to local hub...']);
+
 		this.props.postFile([
 			{ contents: fileContent, name: file.name },
 			{ contents: this.createMetaDataFile(), name: file.name + '.json' }
 		]);
-		
+
 		this.props.updateFile(file.name);
 	}
 
@@ -320,11 +320,11 @@ class ImportPage extends React.Component {
 				<div className={styles.container}>
 					<p className={styles.status}>{status}</p>
 
-					<ImportForm cohorts={cohorts} 
+					<ImportForm cohorts={cohorts}
 						callback={this.props.callback}
-						postFile={this.postFile}	
-						updateFile={this.updateFile}	
-						
+						postFile={this.postFile}
+						updateFile={this.updateFile}
+
 						wizardPage={wizardPage}
 						fileContent={fileContent}
 						state={this.props.state.import.form}
@@ -370,7 +370,7 @@ const DropdownWithInput = ({ showInput, label, checkboxLbl, onDropdownChange, on
 			/>
 		</div>
 	);
-}
+};
 
 const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, onBackToFirstPage }) => {
 	let items = (errors || []).map((error, i) => <p key={i} className={styles.errorLine}>{error}</p>),
@@ -380,7 +380,7 @@ const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, o
 		items = items.slice(0, 3);
 		showMoreText = <p className={styles.showMore} onClick={onShowMoreToggle}>Show more... ({errors.length} in total)</p>;
 	} else if (showMore) {
-		showMoreText = <p className={styles.showMore} onClick={onShowMoreToggle}>Show less...</p>
+		showMoreText = <p className={styles.showMore} onClick={onShowMoreToggle}>Show less...</p>;
 	}
 
 	return (
@@ -394,13 +394,13 @@ const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, o
 			</div>
 
 			{!!errors.length &&
-				<Button icon='arrow_back' label='To file selection' raised 
-					onClick={onBackToFirstPage} 
+				<Button icon='arrow_back' label='To file selection' raised
+					onClick={onBackToFirstPage}
 				/>
 			}
 		</div>
 	);
-}
+};
 
 const CodeSnippet = ({fileContent, fileSelected}) => {
 	const showProgress = !fileContent && fileSelected,
@@ -408,7 +408,7 @@ const CodeSnippet = ({fileContent, fileSelected}) => {
 
 	return (
 		<div style={{textAlign: 'center'}}>
-			
+
 			{showProgress &&
 				<ProgressBar type="circular" mode="indeterminate" />
 			}
@@ -419,12 +419,12 @@ const CodeSnippet = ({fileContent, fileSelected}) => {
 			}
 		</div>
 	);
-}
+};
 
-const ThemedPage = (props) =>
-	<ThemeProvider theme={appTheme}>
-		<ImportPage />
-	</ThemeProvider>
+// const ThemedPage = (props) =>
+// 	<ThemeProvider theme={appTheme}>
+// 		<ImportPage />
+// 	</ThemeProvider>
 
 // header disappears after refresh
 export default ImportPage;
