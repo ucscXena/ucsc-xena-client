@@ -18,13 +18,56 @@ var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
-import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
+import {IconMenu as RTIconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 import Tooltip from 'react-toolbox/lib/tooltip';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
 var {RefGeneAnnotation} = require('../refGeneExons');
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
+
+var ESCAPE = 27;
+
+class IconMenu extends React.Component {
+	onKeyDown = ev => {
+		if (ev.keyCode === ESCAPE) {
+			this.ref.handleMenuHide();
+		}
+	}
+	cleanup() {
+		// We get an onHide() call from setting state in Menu, *and*
+		// from this.ref.handleMenuHide(), during this.onKeyDown. So,
+		// check if 'curtain' still exists before tear down.
+		if (this.curtain) {
+			document.body.removeChild(this.curtain);
+			document.removeEventListener('keydown', this.onKeyDown);
+			delete this.curtain;
+		}
+	}
+	componentWillUnmount() {
+		this.cleanup();
+	}
+	onHide = () => {
+		var {onHide} = this.props;
+		this.cleanup();
+		onHide && onHide();
+	}
+	onShow = () => {
+		var {onShow} = this.props;
+		this.curtain = document.createElement('div');
+		this.curtain.style = "position:absolute;top:0;left:0;width:100%;height:100%";
+		document.body.appendChild(this.curtain);
+		document.addEventListener('keydown', this.onKeyDown, false);
+		onShow && onShow();
+	}
+	onRef = ref => {
+		this.ref = ref;
+	}
+	render() {
+		var {onShow, onHide, ...others} = this.props;
+		return <RTIconMenu innerRef={this.onRef} onShow={this.onShow} onHide={this.onHide} {...others}/>;
+	}
+}
 
 const TooltipMenuItem = Tooltip(MenuItem);
 

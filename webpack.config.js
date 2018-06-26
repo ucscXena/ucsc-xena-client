@@ -23,6 +23,7 @@ module.exports = {
 	devServer: {
 		host: "localhost",
 		publicPath: '/',
+		disableHostCheck: true,
 		proxy: {
 			'/api/**': {
 				changeOrigin: true,
