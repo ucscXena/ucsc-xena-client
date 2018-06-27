@@ -116,7 +116,7 @@ class ApplicationContainer extends React.Component {
 			{stateError} = state,
 			computedState = selector(state),
 			{spreadsheet: {mode, ties: {open} = {}}, loadPending} = computedState,
-			stepperState = getStepperState(computedState),
+			stepperState = getStepperState(computedState.spreadsheet),
 			View = {
 				heatmap: SpreadsheetContainer,
 				chart: ChartView,
