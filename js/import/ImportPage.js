@@ -21,6 +21,7 @@ const TooltipFontIcon = Tooltip(FontIcon);
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
 import getErrors from './errorChecking';
+import { DenseTable } from './staticComponents';
 
 //I feel like moving to separate constants file..
 const formatOptions = [
@@ -81,6 +82,8 @@ const pageStateIndex = _.object(pageStates, _.range(pageStates.length));
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 const dataTypeOptions = getDropdownOptions(dataTypes);
 
+const isFileFormatDense = (format) => format === 'genomicMatrix' || format === 'clinicalMatrix';
+
 class ImportForm extends React.Component {
 	constructor() {
 		super();
@@ -125,14 +128,20 @@ class ImportForm extends React.Component {
 					<CodeSnippet fileContent={fileContent} fileSelected={fileSelected}/>
 				</div>,
 			1: <div>
-					<TooltipDropdown onChange={this.onFileFormatChange}
-						source={formatOptions}
-						value={fileFormat || 'genomicMatrix'}
-						allowBlank={false}
-						label="File format"
-						className={styles.field}
-						tooltip={"Field for format or your file"} tooltipPosition={'right'}
-					/>
+					<div style={{minHeight: '112px'}}>
+						<TooltipDropdown onChange={this.onFileFormatChange}
+							source={formatOptions}
+							value={fileFormat || 'genomicMatrix'}
+							allowBlank={false}
+							label="File format"
+							className={[styles.field, styles.inline].join(' ')}
+							tooltip={"Enter file format"} tooltipPosition={'right'}
+						/>
+
+						<DenseTable reverse={fileFormat === 'clinicalMatrix'}
+							visible={isFileFormatDense(fileFormat)}
+						/>
+					</div>
 
 					<DropdownWithInput showInput={this.state.hasOwnDataType}
 						label="Type of data" checkboxLbl="Or enter your own type"
@@ -402,7 +411,7 @@ const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, o
 	);
 };
 
-const CodeSnippet = ({fileContent, fileSelected}) => {
+const CodeSnippet = ({fileContent = "", fileSelected}) => {
 	const showProgress = !fileContent && fileSelected,
 		lines = fileContent.split('\n', 10);
 

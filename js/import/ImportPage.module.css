@@ -36,6 +36,10 @@
 	padding-right: 5%;
 }
 
+.inline {
+	display: inline-block;
+}
+
 .typeBox {
 	display: inline-block;
 }
@@ -63,3 +67,23 @@
 	border-color: #c1bfbf;
 	width: 90%;
 }
+
+.denseExample {
+	font-size: 0.85em;
+    border: 1px solid #c1bfbf;
+	background: #f9f9f9;
+	float: right;
+	-webkit-transition: 0.5s;
+	-moz-transition: 0.5s;
+	-o-transition: 0.5s;
+	transition: 0.5s;
+	opacity: 0;
+	visibility: hidden; 
+}
+
+.denseExampleShow {
+	opacity: 1;
+  	visibility: visible; 
+}
+
+
