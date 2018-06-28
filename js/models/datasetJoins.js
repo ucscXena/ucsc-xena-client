@@ -249,7 +249,8 @@ getField.add('float', (column, samplesList, fdata) => {
 	var cvtdData = _.mmap(column.fieldSpecs, samplesList, fdata, cvtField(column)),
 		field = concatValuesByFieldPosition(samplesList, cvtdData);
 
-	return computeMean(setProbes(field, fdata));
+	return _.assoc(computeMean(setProbes(field, fdata)),
+		'refGene', findFirstProp(fdata, 'refGene'));
 });
 
 // Combining coded fields:

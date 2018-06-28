@@ -182,8 +182,21 @@ function indexFieldResponse(fields, resp) {
 var fetch = ({dsID, fields}, samples) => datasetProbeValues(dsID, samples, fields)
 	.map(resp => ({req: indexFieldResponse(fields, resp)}));
 
-var fetchGeneProbes = ({dsID, fields, strand}, samples) => datasetGeneProbesValues(dsID, samples, fields)
-	.map(resp => ({req: flopIfNegStrand(strand, indexProbeGeneResponse(resp))}));
+var fetchRefGene = (fields, assembly) => {
+	var {name, host} = xenaQuery.refGene[assembly] || {};
+
+	return name ?
+		xenaQuery.refGeneExons(host, name, fields) :
+		Rx.Observable.of(null, Rx.Scheduler.asap);
+};
+
+var fetchGeneProbes = ({dsID, fields, assembly}, samples) =>
+	Rx.Observable.zip(
+		fetchRefGene(fields, assembly),
+		datasetGeneProbesValues(dsID, samples, fields),
+		(refGene, resp) => ({
+			req: flopIfNegStrand(_.getIn(refGene, [fields[0], 'strand']), indexProbeGeneResponse(resp)),
+			refGene}));
 
 // This should really be fetchCoded. Further, it should only return a single
 // code list, i.e. either a single clinical coded field, or a list of genomic

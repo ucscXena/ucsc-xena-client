@@ -102,7 +102,7 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 		//fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle'], fields.join(', ')),
 		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle']) || normalizedFields.join(', '),
 		colorClass: defaultColorClass,
-		assembly: meta.assembly
+		assembly: meta.assembly || _.getIn(meta, ['probemapMeta', 'assembly'])
 	};
 }
 
