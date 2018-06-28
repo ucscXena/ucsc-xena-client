@@ -490,7 +490,7 @@ class HubPage extends React.Component {
 			<div className={styles.datapages}>
 				{markdownValue(getIn(hubCohorts, [0, 'meta']))}
 				<h2>{getHubName(host)}{inHubs}</h2>
-				<p>Host address: {host}</p>
+				<p>Hub address: {host}</p>
 				<CohortSummary hubParams={hubParams} cohorts={coll} onCohort={this.onCohort}/>
 			</div>);
 	}
