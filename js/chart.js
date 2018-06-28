@@ -526,7 +526,7 @@ function render(root, callback, sessionStorage) {
 	}
 
 	function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
-		yfields, ycodemap, ydata, reverseStrand,
+		yfields, ycodemap, ydata,
 		offsets, xlabel, ylabel, STDEV,
 		scatterLabel, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
@@ -892,9 +892,6 @@ function render(root, callback, sessionStorage) {
 				chartOptions = highchartsHelper.columnChartOptions(
 					chartOptions, categories, xAxisTitle, "Histogram", ylabel, showLegend);
 			} else {
-				if (reverseStrand) {
-					displayCategories.reverse();
-				}
 				chartOptions = highchartsHelper.columnChartFloat (chartOptions, displayCategories, xAxisTitle, ylabel);
 			}
 			chart = new Highcharts.Chart(chartOptions);
@@ -1338,7 +1335,6 @@ function render(root, callback, sessionStorage) {
 				yProbes = _.getIn(xenaState, ['data', ycolumn, 'req', 'probes']),
 				yfields = yProbes ? yProbes :
 					((['segmented', 'mutation', 'SV'].indexOf(columns[ycolumn].fieldType) !== -1) ? [columns[ycolumn].fields[0]] : columns[ycolumn].fields),
-				reverseStrand = false,
 				samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 				yIsCategorical, xIsCategorical, xfield,
 				offsets = {},  // per y variable
@@ -1364,10 +1360,6 @@ function render(root, callback, sessionStorage) {
 				ycodemap = ["0", "1"];
 			}
 
-			//reverse display if ycolumn is on - strand
-			if (columns[ycolumn].strand && (columns[ycolumn].strand === '-' )) {
-				reverseStrand = true;
-			}
 			// single xfield only
 			if (xfields && xfields.length > 1) {
 				document.getElementById("myChart").innerHTML = "not applicable: x axis has more than one variable" +
@@ -1476,7 +1468,7 @@ function render(root, callback, sessionStorage) {
 			}
 
 			var thunk = offsets => drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
-				yfields, ycodemap, ydata, reverseStrand,
+				yfields, ycodemap, ydata,
 				offsets, xlabel, ylabel, STDEV,
 				scatterLabel, scatterColorData, scatterColorDataCodemap,
 				samplesMatched, columns, xcolumn, ycolumn, colorColumn);
