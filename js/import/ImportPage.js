@@ -20,7 +20,6 @@ const TooltipFontIcon = Tooltip(FontIcon);
 // import DefaultTextInput from '../views/DefaultTextInput';
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
-import getErrors from './errorChecking';
 import { DenseTable } from './staticComponents';
 
 //I feel like moving to separate constants file..
@@ -262,21 +261,22 @@ class ImportForm extends React.Component {
 		const { file, fileFormat } = this.props.state,
 			fileContent = this.props.fileContent;
 
-		this.setState({errorCheckInProgress: true});
-		this.props.callback(['set-status', 'Checking for errors...']);
-		this.props.callback(['errors', []]);
+		//this.setState({errorCheckInProgress: true});
+		// this.props.callback(['set-status', 'Checking for errors...']);
+		// this.props.callback(['errors', []]);
+		this.props.callback(['check-errors', file, fileContent, fileFormat]);
 
-		setTimeout(() => {
-			const errors = getErrors(file, fileContent, fileFormat);
+		// setTimeout(() => {
+		// 	const errors = getErrors(file, fileContent, fileFormat);
 
-			if (errors.length) {
-				this.props.callback(['errors', errors]);
-				this.props.callback(['set-status', 'There was some error found in the file']);
-			} else {
-				this.props.callback(['set-status', '']);
-			}
-			this.setState({errorCheckInProgress: false});
-		}, 500);
+		// 	if (errors.length) {
+		// 		this.props.callback(['errors', errors]);
+		// 		this.props.callback(['set-status', 'There was some error found in the file']);
+		// 	} else {
+		// 		this.props.callback(['set-status', '']);
+		// 	}
+		// 	this.setState({errorCheckInProgress: false});
+		// }, 500);
 	}
 
 	onSaveFile = () => {
@@ -382,7 +382,8 @@ const DropdownWithInput = ({ showInput, label, checkboxLbl, onDropdownChange, on
 };
 
 const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, onBackToFirstPage }) => {
-	let items = (errors || []).map((error, i) => <p key={i} className={styles.errorLine}>{error}</p>),
+	errors = errors || [];
+	let items = errors.map((error, i) => <p key={i} className={styles.errorLine}>{error}</p>),
 		showMoreText = null;
 
 	if (items.length > 3 && !showMore) {

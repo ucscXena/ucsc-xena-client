@@ -2,11 +2,10 @@
 'use strict';
 import Rx from '../rx';
 import { make, mount, compose } from './utils';
-// import { encodeObject } from '../util';
-// import { isArray, merge } from "../underscore_ext";
 import { servers } from '../defaultServers';
-
 import { assocIn, assocInAll } from "../underscore_ext";
+
+import getErrors from '../import/errorChecking';
 
 const postFile = (file) => {
     const payload = {
@@ -40,6 +39,18 @@ const readFile = (serverBus, state, newState, fileHandle) => {
     }
 };
 
+const checkForErrors = (file, fileContent, fileFormat) => {  
+    return Rx.Observable.create(obs => {
+        const errors = getErrors(file, fileContent, fileFormat);
+        setTimeout(() => {
+            obs.next(errors);
+            obs.complete();
+        }, 0);
+         
+        return () => {};
+    }).map(e => e);
+};
+
 const importControls = {
     'import-file-post!': (serverBus, state, newState, file) => serverBus.next(['import-file-done', postFile(file)]),
     'import-file-done': (state, b, c) => assocIn(state, ['status'], 'File successfully saved!'),
@@ -52,7 +63,13 @@ const importControls = {
             ['fileContent'], fileContent),
     'set-status': (state, status, x) => assocIn(state, ['status'], status),
     'wizard-page': (state, newPage) => assocIn(state, ['wizardPage'], newPage),
-    'file-content': (state, content) => assocIn(state, ['fileContent'], content)
+    'file-content': (state, content) => assocIn(state, ['fileContent'], content),
+    'check-errors-post!': (serverBus, state, newState, file, fileContent, fileFormat) => 
+        serverBus.next(['check-errors-done', checkForErrors(file, fileContent, fileFormat)]),
+    'check-errors-done': (state, errors) => 
+        assocInAll(state, 
+            ['status'], (errors.length ? 'There was some error found in the file' : ''),
+            ['form', 'errors'], errors)
 }
 
 const changeFormProp = propName => (state, propValue) => assocIn(state, ['form', propName], propValue);
