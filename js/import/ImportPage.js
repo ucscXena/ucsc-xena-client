@@ -60,11 +60,9 @@ const dataTypes = [
 ];
 
 const steps = [
-	{ label: 'Select the file' },
-	{ label: 'Enter information about file' },
-	{ label: 'Check for errors' },
-	{ label: 'Save file to hub' },
-	{ label: 'Step number five' }
+	{ label: 'Select data file' },
+	{ label: 'Tell us about your Data' },
+	{ label: 'Import' }
 ];
 
 const stepInfoHeader = [
@@ -75,8 +73,9 @@ const stepInfoHeader = [
 	'Save file to the hub'
 ];
 
-const pageStates = ['SELECT_FILE', 'FILE_INFO', 'CHECK_ERRORS', 'SAVE_FILE', 'STEP_FIVE'];
-const pageStateIndex = _.object(pageStates, _.range(pageStates.length));
+const pageStates = _.range(19);
+const pageRanges = [0, ...Array(14).fill(1), ...Array(3).fill(2), 3];
+const pageStateIndex = _.object(pageStates, pageRanges);
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 const dataTypeOptions = getDropdownOptions(dataTypes);
@@ -201,21 +200,19 @@ class ImportForm extends React.Component {
 				/>
 		};
 
-		const pageIndex = pageStateIndex[wizardPage] || 0;
-
 		return (
-			<WizardSection isFirst={pageIndex === 0} isLast={pageIndex === pageStates.length - 1}
-				onNextPage={this.onWizardPageChange(pageIndex, true)}
-				onPreviousPage={this.onWizardPageChange(pageIndex, false)}
+			<WizardSection isFirst={wizardPage === 0} isLast={wizardPage === pageStates.length - 1}
+				onNextPage={this.onWizardPageChange(wizardPage, true)}
+				onPreviousPage={this.onWizardPageChange(wizardPage, false)}
 			>
-				{fieldsByPageState[pageIndex]}
+				{fieldsByPageState[wizardPage]}
 			</WizardSection>
 		);
 	}
 
 	onWizardPageChange = (currPageIndex, forwards) => () => {
 		const newPageIndex = Math.min(pageStates.length - 1, Math.max(0, currPageIndex + (forwards ? 1 : -1)));
-		this.props.callback(['wizard-page', pageStates[newPageIndex]]);
+		this.props.callback(['wizard-page', newPageIndex]);
 	}
 
 	onFileChange = (fileProp) => (fileName, evt) => {
@@ -254,7 +251,7 @@ class ImportForm extends React.Component {
 	onShowMoreToggle = () => this.setState({showMoreErrors: !this.state.showMoreErrors});
 
 	onBackToFirstPage = () => {
-		this.props.callback(['wizard-page', pageStates[0]]);
+		this.props.callback(['wizard-page', 0]);
 	}
 
 	onCheckForErrors = () => {
@@ -318,13 +315,11 @@ class ImportPage extends React.Component {
 		const cohorts = getDropdownOptions(this.props.state.wizard.cohorts || []);
 		const { status, wizardPage, fileContent } = this.props.state.import;
 
-		const pageIndex = pageStateIndex[wizardPage] || 0;
-
 		return (
 			<div>
 				<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex}/>
 				<div className={styles.wizardTitle}>
-					{stepInfoHeader[pageIndex]}
+					{stepInfoHeader[wizardPage]}
 				</div>
 				<div className={styles.container}>
 					<p className={styles.status}>{status}</p>
