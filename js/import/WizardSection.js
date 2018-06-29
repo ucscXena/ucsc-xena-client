@@ -4,26 +4,32 @@ import { Button } from 'react-toolbox/lib';
 import styles from './ImportPage.module.css';
 
 const style = {
-    right: { float: 'right' },
+    next: { float: 'right', color: 'rgb(33, 33, 33)' },
+    cancel: { float: 'right', marginRight: '20px'},
     buttons: { paddingTop: '20px' }
 };
 
 export default class WizardSection extends React.Component {
     render() {
-        const { isLast, isFirst } = this.props;
+        const { isLast, isFirst, nextEnabled } = this.props;
 
         return (
             <div>
                 { this.props.children }
                 <div className={styles.wizardButtons}>
-                    <Button label='Previous step' raised style={{visibility: !isFirst ? 'visible' : 'hidden'}}
+                    <Button label='Back' raised style={{visibility: !isFirst ? 'visible' : 'hidden'}}
                         onClick={this.props.onPreviousPage}
                     />
+
                     {!isLast &&
-                        <Button label='Next step' raised style={style.right}
+                        <Button label='Next' raised style={style.next}
+                            accent={nextEnabled} disabled={!nextEnabled}
                             onClick={this.props.onNextPage}
                         />
                     }
+                    <Button label='Cancel' raised style={style.cancel}
+                            onClick={() => console.log("redirect to My hub page")}
+                    />
                 </div>
             </div>
         );

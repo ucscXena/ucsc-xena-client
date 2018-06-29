@@ -7,14 +7,14 @@ import _ from "../underscore_ext";
 // import { ThemeProvider } from 'react-css-themr';
 import {
 	Input, Button, Dropdown, Checkbox, Tooltip,
-	ProgressBar, FontIcon
+	ProgressBar
 
 } from 'react-toolbox/lib';
 
 // const TooltipButton = Tooltip(Button);
-const TooltipInput = Tooltip(Input);
+// const TooltipInput = Tooltip(Input);
 const TooltipDropdown = Tooltip(Dropdown);
-const TooltipFontIcon = Tooltip(FontIcon);
+// const TooltipFontIcon = Tooltip(FontIcon);
 // const TooltipDiv = Tooltip(<div></div>);
 
 // import DefaultTextInput from '../views/DefaultTextInput';
@@ -60,17 +60,9 @@ const dataTypes = [
 ];
 
 const steps = [
-	{ label: 'Select data file' },
+	{ label: 'Select a Data file' },
 	{ label: 'Tell us about your Data' },
 	{ label: 'Import' }
-];
-
-const stepInfoHeader = [
-	'Please select the file',
-	'Enter information about file',
-	'Enter some more information',
-	'Check file for errors',
-	'Save file to the hub'
 ];
 
 const pageStates = _.range(19);
@@ -111,21 +103,34 @@ class ImportForm extends React.Component {
 		const fileSelected = file && !!file.size,
 			fileContent = this.props.fileContent;
 
-		const fieldsByPageState = {
-			0: <div>
-					<TooltipInput type='file' name='importFile' className={styles.field}
-						style={{paddingLeft: 0}}
-						onChange={this.onFileChange('file')}
-						tooltip={"Select file to be uploaded"} tooltipPosition={'right'}
-						icon={<TooltipFontIcon style={{marginLeft: 0}}
-							value='info' tooltip={"Select file to be uploaded"} tooltipPosition={'top'} />
-						}
-					/>
-					{ fileSelected && <b>Selected file: { file.name } </b> }
+		const wrapWizard = (component, props) => {
+			return (
+				<WizardSection isFirst={wizardPage === 0} isLast={wizardPage === pageStates.length - 1}
+					onNextPage={this.onWizardPageChange(wizardPage, true)}
+					onPreviousPage={this.onWizardPageChange(wizardPage, false)}
+					{...props}
+				>
+					{component}
+				</WizardSection>
+			);
+		};
+
+		switch(wizardPage) {
+			case 0: return wrapWizard(<div>
+						<input type='file' id='file-input'
+							style={{display: 'none'}}
+							onChange={this.onFileChange('file')}
+						/>
+						<label htmlFor='file-input' className={styles.importFileLabel}>Select Data File</label>
+
+						{ fileSelected && <b>Selected file: { file.name } </b> }
+					</div>,
+					{ nextEnabled: fileSelected });
+			case 1: return wrapWizard(<div>
 					{ fileSelected && <h4>File preview</h4> }
 					<CodeSnippet fileContent={fileContent} fileSelected={fileSelected}/>
-				</div>,
-			1: <div>
+			</div>, { nextEnabled: fileSelected });
+			case 1: <div>
 					<div style={{minHeight: '112px'}}>
 						<TooltipDropdown onChange={this.onFileFormatChange}
 							source={formatOptions}
@@ -166,8 +171,8 @@ class ImportForm extends React.Component {
 					<Input type='file' name='probemap' className={styles.field} floating={true}
 						onChange={this.onFileChange('probemap-file')} label="Probe map file"
 					/>
-				</div>,
-			2: <div>
+				</div>;
+			case 2: <div>
 					<Input type='text' label="Display name" className={styles.field}
 						onChange={this.onDisplayNameChange}
 						value={displayName}
@@ -177,8 +182,8 @@ class ImportForm extends React.Component {
 						onChange={this.onDescriptionChange}
 						value={description}
 					/>
-				</div>,
-			3: <div>
+				</div>;
+			case 3: <div>
 				<Button icon='youtube_searched_for' label='Begin checking' raised
 					disabled={!fileSelected}
 					onClick={this.onCheckForErrors}
@@ -193,21 +198,12 @@ class ImportForm extends React.Component {
 					onBackToFirstPage={this.onBackToFirstPage}
 				/>
 
-				</div>,
-			4: <Button icon='save' label='Save' raised
+				</div>;
+			case 4: return wrapWizard(<Button icon='save' label='Save' raised
 					disabled={!fileSelected}
 					onClick={this.onSaveFile}
-				/>
+				/>);
 		};
-
-		return (
-			<WizardSection isFirst={wizardPage === 0} isLast={wizardPage === pageStates.length - 1}
-				onNextPage={this.onWizardPageChange(wizardPage, true)}
-				onPreviousPage={this.onWizardPageChange(wizardPage, false)}
-			>
-				{fieldsByPageState[wizardPage]}
-			</WizardSection>
-		);
 	}
 
 	onWizardPageChange = (currPageIndex, forwards) => () => {
@@ -215,7 +211,7 @@ class ImportForm extends React.Component {
 		this.props.callback(['wizard-page', newPageIndex]);
 	}
 
-	onFileChange = (fileProp) => (fileName, evt) => {
+	onFileChange = (fileProp) => (evt) => {
 		this.props.callback(['file-content', '']);
 
 		if (evt.target.files.length > 0) {
@@ -317,9 +313,12 @@ class ImportPage extends React.Component {
 
 		return (
 			<div>
-				<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex}/>
 				<div className={styles.wizardTitle}>
-					{stepInfoHeader[wizardPage]}
+					Importing data...
+					<Button icon='help_outline' label='Help' flat style={{float: 'right'}}/>
+					<div className={styles.stepperBox}>
+						<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex} flat={true} wideStep={true}/>
+					</div>
 				</div>
 				<div className={styles.container}>
 					<p className={styles.status}>{status}</p>
