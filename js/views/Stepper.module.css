@@ -22,6 +22,10 @@
 	width: 25%;
 }
 
+.wideStep {
+	width: 33%;
+}
+
 /* Step line */
 .step::after {
 	background-color: rgba(189, 189, 189, 1);

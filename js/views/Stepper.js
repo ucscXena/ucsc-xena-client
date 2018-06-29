@@ -29,17 +29,18 @@ var compStyles = require('./Stepper.module.css');
 
 class Stepper extends React.Component {
 	render() {
-		const { steps, stateIndex, mode } = this.props;
+		const { steps, stateIndex, mode, flat, wideStep } = this.props;
 
 		let getStepClassName = (index) => {
 			return classNames({
 				[compStyles.step]: true,
+				[compStyles.wideStep]: wideStep,
 				[compStyles.completed]: index < stateIndex[mode],
 				[compStyles.active]: index === stateIndex[mode]
 			});
 		};
 		return (
-			<RTBAppBar>
+			<RTBAppBar flat={flat}>
 				<ul className={compStyles.Stepper}>
 					{_.map(steps, (step, index) =>
 						<li className={getStepClassName(index)} key={index}>
