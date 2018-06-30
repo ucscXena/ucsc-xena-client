@@ -131,7 +131,7 @@ class ImportForm extends React.Component {
 						className={[styles.field, styles.typeBox].join(' ')}
 					/>
 					{ fileSelected && <h4>File preview</h4> }
-					<CodeSnippet fileContent={fileContent} fileSelected={fileSelected}/>
+					<DenseTable fileContent={fileContent}/>
 			</div>, { nextEnabled: !!dataType, fileName: file.name });
 			case 1: <div>
 					<div style={{minHeight: '112px'}}>
@@ -407,24 +407,24 @@ const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, o
 	);
 };
 
-const CodeSnippet = ({fileContent = "", fileSelected}) => {
-	const showProgress = !fileContent && fileSelected,
-		lines = fileContent.split('\n', 10);
+// const CodeSnippet = ({fileContent = "", fileSelected}) => {
+// 	const showProgress = !fileContent && fileSelected,
+// 		lines = fileContent.split('\n', 10);
 
-	return (
-		<div style={{textAlign: 'center'}}>
+// 	return (
+// 		<div style={{textAlign: 'center'}}>
 
-			{showProgress &&
-				<ProgressBar type="circular" mode="indeterminate" />
-			}
-			{!!fileContent && fileSelected &&
-				<textarea className={styles.codeSnippet} readOnly rows={10}
-					value={lines.join('\n') + '...'}
-				/>
-			}
-		</div>
-	);
-};
+// 			{showProgress &&
+// 				<ProgressBar type="circular" mode="indeterminate" />
+// 			}
+// 			{!!fileContent && fileSelected &&
+// 				<textarea className={styles.codeSnippet} readOnly rows={10}
+// 					value={lines.join('\n') + '...'}
+// 				/>
+// 			}
+// 		</div>
+// 	);
+// };
 
 // const ThemedPage = (props) =>
 // 	<ThemeProvider theme={appTheme}>

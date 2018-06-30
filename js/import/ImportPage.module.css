@@ -78,7 +78,7 @@
 
 .showMore{
 	text-decoration-line: underline;
-	font-size: 14px;
+	font-size: 0.9em;
     font-style: italic;
 	color: #122d31;
 	cursor: pointer;
@@ -92,20 +92,18 @@
 
 .denseExample {
 	font-size: 0.85em;
-    border: 1px solid #c1bfbf;
-	background: #f9f9f9;
-	float: right;
-	-webkit-transition: 0.5s;
-	-moz-transition: 0.5s;
-	-o-transition: 0.5s;
-	transition: 0.5s;
-	opacity: 0;
-	visibility: hidden; 
+    border: 1px solid #cfcdcd;
+	background: #fdfdfd;
+	margin: 0 auto;
 }
 
-.denseExampleShow {
-	opacity: 1;
-  	visibility: visible; 
+.denseExample td {
+	padding: 5px;
 }
+
+.denseExample .highlighted {
+	color: pink;
+}
+
 
 

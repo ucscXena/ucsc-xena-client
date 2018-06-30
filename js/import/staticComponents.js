@@ -1,65 +1,65 @@
 'use strict';
 import React from 'react';
-
 import cssClasses from './ImportPage.module.css';
 
-const styles = {
-    coloredColumns: {
-        color: '#1a535c'
-    },
-    header: {
-        fontWeight: 'bold',
-        padding: '5px'
-    },
-    td: {
-        padding: '5px'
-    }
+const maxColumns = 4,
+    numRows = 5,
+    maxNumRows = 20;
+
+const cropLines = lines => lines.map(l => l.length > maxColumns ? l.slice(0, maxColumns) : l);
+
+// To keep proper table shape when some columns are missing
+const padLines = lines => {
+    const maxLines = Math.max(...lines.map(l => l.length));
+    lines = cropLines(lines);
+    return lines.map(line => {
+        const diff = maxLines - line.length;
+        return diff > 0 ? [...line, ...Array(diff).fill(" ")] : line;
+    });
 };
 
-const header = ['sample', 'samples', 'sample_type'];
-let data = [
-    ['TCGA-E9-A3HO-01A', 'TCGA-E9-A3HO-01A', 'Primary Tumor'],
-    ['TCGA-BH-A0BW-01A', 'TCGA-BH-A0BW-01A', 'Primary Tumor'],
-    ['TCGA-BH-A1FN-01A', 'TCGA-BH-A1FN-01A', 'Primary Tumor']
-];
-
 class DenseTable extends React.Component {
-    constructor() {
-        super();
-        this.lastRows = [];
-    }
+    state = { showMore: false };
+
+    onShowMore = () => this.setState({showMore: !this.state.showMore});
 
     render() {
-        let rows = [],
-            visible = this.props.visible,
-            reverse = this.props.reverse;
+        const { fileContent, highlightRow, highlightColumn } = this.props,
+            lineCount = this.state.showMore ? maxNumRows : numRows;
 
-        if (reverse) {
-            rows = data.map((r, i) => [header[i], ...r]);
-        } else {
-            rows = [header, ...data];
-        }
+        let lines = fileContent.split('\n', lineCount)
+                            .map(line => line.split(/\t/g));
+        lines = padLines(lines);
 
-        const tableClass = visible ? [cssClasses.denseExample, cssClasses.denseExampleShow].join(' ') : cssClasses.denseExample;
-        const tableRows = rows.map((r, i) => (
+        const tableRows = lines.map((r, i) => (
             <tr key={i}>
                 {
-                    r.map((rr, j) => <td key={j} style={i === 0 && !reverse || j === 0 && reverse ? styles.header : styles.td}>{rr}</td>)
+                    r.map((rr, j) => <td key={j}
+                        className={highlightRow && i === 0 || highlightColumn && j === 0 ? cssClasses.highlighted : null}>
+                        {rr}</td>
+                    )
                 }
             </tr>)
         );
 
-        //for situation when table is reversed during 'disappear' animation
-        if (visible) {
-            this.lastRows = tableRows;
-        }
-
         return (
-            <table className={tableClass}>
-                <tbody>
-                    {this.lastRows}
-                </tbody>
-            </table>
+            <div>
+                <table className={cssClasses.denseExample}>
+                    <tbody>
+                        {tableRows}
+                    </tbody>
+                </table>
+               {this.renderShowMore()}
+            </div>
+        );
+    }
+
+    renderShowMore() {
+        return (
+            this.props.disableShowMore ? null :
+            <i className={cssClasses.showMore} onClick={this.onShowMore}>
+                {this.state.showMore ? "Show less..." : "Show more..."}
+            </i>
         );
     }
 };
