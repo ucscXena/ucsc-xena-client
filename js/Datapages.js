@@ -25,6 +25,8 @@ var {getHubParams} = require('./hubParams');
 
 var getHubName = host => get(serverNames, host, host);
 
+var isLocalHub = host => host === localHub;
+
 var pluralize = (str, count) => count === 1 ? `1 ${str}` : `${count} ${str}s`;
 
 // Get params from the anchor href. With RT Link, the anchor is parentElement.
@@ -120,6 +122,25 @@ var CohortSummary = ({cohorts, onCohort, hubParams}) => {
 					</li>)}
 			</ul>
 		</div>);
+};
+
+var CohortHeader = ({inHubs, host, onImport}) => {
+	return(
+		<div>
+			{isLocalHub(host) &&
+			<div className={styles.sidebar}>
+				<Button label={"Import Data"} onClick={onImport} accent />
+				<Button label={"Help"} accent />
+			</div>}
+
+			<h2>{getHubName(host)}{inHubs}</h2>
+			<p>Host address: {host}</p>
+
+			{isLocalHub(host) &&
+				<p>Welcome to your computer hub. You can use this hub to look at your
+					data or public data that isn't on Xena.</p>}
+		</div>
+	);
 };
 
 class CohortSummaryPage extends React.Component {
@@ -476,6 +497,8 @@ var defaultHost = params =>
 class HubPage extends React.Component {
 	onCohort = (ev) => { navHandler.call(this, ev); };
 
+	onImport = () => this.props.callback(['navigate', 'import']);
+
 	render() {
 		var {state, hubParams} = this.props,
 			{spreadsheet: {servers}} = state,
@@ -489,8 +512,7 @@ class HubPage extends React.Component {
 		return (
 			<div className={styles.datapages}>
 				{markdownValue(getIn(hubCohorts, [0, 'meta']))}
-				<h2>{getHubName(host)}{inHubs}</h2>
-				<p>Host address: {host}</p>
+				<CohortHeader inHubs={inHubs} host={host} onImport={this.onImport}/>
 				<CohortSummary hubParams={hubParams} cohorts={coll} onCohort={this.onCohort}/>
 			</div>);
 	}

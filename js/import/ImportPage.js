@@ -10,14 +10,11 @@ import {
 	ProgressBar
 
 } from 'react-toolbox/lib';
+import DefaultServers from "../defaultServers";
+const { servers: { localHub } } = DefaultServers;
 
-// const TooltipButton = Tooltip(Button);
-// const TooltipInput = Tooltip(Input);
 const TooltipDropdown = Tooltip(Dropdown);
-// const TooltipFontIcon = Tooltip(FontIcon);
-// const TooltipDiv = Tooltip(<div></div>);
 
-// import DefaultTextInput from '../views/DefaultTextInput';
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
 import { DenseTable } from './staticComponents';
@@ -103,6 +100,7 @@ class ImportForm extends React.Component {
 				<WizardSection isFirst={wizardPage === 0} isLast={wizardPage === pageStates.length - 1}
 					onNextPage={this.onWizardPageChange(wizardPage, true)}
 					onPreviousPage={this.onWizardPageChange(wizardPage, false)}
+					callback={this.props.callback} localHub={localHub}
 					{...props}
 				>
 					{component}
@@ -117,11 +115,11 @@ class ImportForm extends React.Component {
 							onChange={this.onFileChange('file')}
 						/>
 						<label htmlFor='file-input' className={styles.importFileLabel}>Select Data File</label>
-						
+
 						{ fileSelected && <b>Selected file: { file.name } </b> }
 
 						<div style={{marginTop: '1em'}}>
-							<Button icon='help_outline' label='Help on data file formatting' raised/>
+							<Button icon='help_outline' label='Help on data file formatting' accent/>
 						</div>
 					</div>,
 					{ nextEnabled: fileSelected });
@@ -300,9 +298,7 @@ class ImportForm extends React.Component {
 			cohort: this.state.hasOwnCohort ? state.customCohort : state.cohort,
 			label: state.displayName,
 			description: state.description,
-			//dataSubType: '',
 			dataSubType: this.state.hasOwnDataType ? state.customDataType : state.dataType,
-			//assembly: '',
 			type: state.fileFormat
 		}, null, 4);
 	}
