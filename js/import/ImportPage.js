@@ -7,7 +7,7 @@ import _ from "../underscore_ext";
 // import { ThemeProvider } from 'react-css-themr';
 import {
 	Input, Button, Dropdown, Checkbox, Tooltip,
-	ProgressBar
+	ProgressBar, RadioGroup, RadioButton
 
 } from 'react-toolbox/lib';
 import DefaultServers from "../defaultServers";
@@ -57,14 +57,26 @@ const steps = [
 	{ label: 'Import' }
 ];
 
-const pageStates = _.range(19);
-const pageRanges = [0, ...Array(14).fill(1), ...Array(3).fill(2), 3];
+const pageStates = _.range(7);
+const pageRanges = [0, ...Array(4).fill(1), 2, 3];
 const pageStateIndex = _.object(pageStates, pageRanges);
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 const dataTypeOptions = getDropdownOptions(dataTypes);
 
 const isFileFormatDense = (format) => format === 'genomicMatrix' || format === 'clinicalMatrix';
+
+const getPageStep = (index, forwards, dataType) => {
+	const skipDataType = dataType === 'mutation by position' || dataType === 'segmented copy number';
+	if (index === 1 && forwards && skipDataType) {
+		return 2;
+	} else if (index === 3 && skipDataType) {
+		return forwards ? 2 : -2;
+	} else if (index === 5 && !forwards && skipDataType) {
+		return -2;
+	}
+	return forwards ? 1 : -1;
+};
 
 class ImportForm extends React.Component {
 	constructor() {
@@ -176,16 +188,17 @@ class ImportForm extends React.Component {
 					/>
 				</div>;
 			case 2: return wrapWizard(<div>
-					<Input type='text' label="Display name" className={styles.field}
-						onChange={this.onDisplayNameChange}
-						value={displayName}
+					<RadioGroup name='comic' value={fileFormat} onChange={this.onFileFormatChange}>
+						<RadioButton label='Columns are sample names' value='genomicMatrix'/>
+						<RadioButton label='Rows are sample names' value='clinicalMatrix'/>
+					</RadioGroup>
+					<DenseTable fileContent={fileContent}
+						highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
 					/>
-
-					<Input type='text' label="Description" multiline={true} className={styles.field}
-						onChange={this.onDescriptionChange}
-						value={description}
-					/>
-				</div>, {fileName: file.name});
+				</div>, {fileName: file.name, nextEnabled: !!fileFormat});
+			case 3: return wrapWizard(<div>
+				Page 3
+			</div>, {fileName: file.name, nextEnabled: fileSelected});
 			case 3: <div>
 				<Button icon='youtube_searched_for' label='Begin checking' raised
 					disabled={!fileSelected}
@@ -202,15 +215,25 @@ class ImportForm extends React.Component {
 				/>
 
 				</div>;
+			case 4: return wrapWizard(<div>
+				Page 4
+			</div>, {fileName: file.name, nextEnabled: !!fileFormat});
 			case 4: return wrapWizard(<Button icon='save' label='Save' raised
 					disabled={!fileSelected}
 					onClick={this.onSaveFile}
 				/>);
+			case 5: return wrapWizard(<div>
+				Page 5
+				</div>, {fileName: file.name, nextEnabled: !!fileFormat});
+			case 6: return wrapWizard(<div>
+				Page 6
+				</div>, {fileName: file.name, nextEnabled: !!fileFormat});
 		};
 	}
 
 	onWizardPageChange = (currPageIndex, forwards) => () => {
-		const newPageIndex = Math.min(pageStates.length - 1, Math.max(0, currPageIndex + (forwards ? 1 : -1)));
+		const step = getPageStep(currPageIndex, forwards, this.props.state.dataType);
+		const newPageIndex = Math.min(pageStates.length - 1, Math.max(0, currPageIndex + step));
 		this.props.callback(['wizard-page', newPageIndex]);
 	}
 
