@@ -43,20 +43,15 @@ const formatOptions = [
 ];
 
 const dataTypes = [
-	"filter",
-	"phenotype",
-	"copy number",
-	"DNA methylation",
-	"exon expression",
-	"gene expression",
-	"gene expression RNAseq",
-	"gene expression Array",
-	"miRNA expression",
-	"somatic mutation (SNP and small INDELs)",
-	"somatic mutation (structural variant)",
-	"somatic mutation (gene-level)",
-	"protein expression RPPA",
-	"PARADIGM pathway activity"
+	"",
+	"phenotype/clinical/sample type",
+	"expression",
+	"gene-level copy number ",
+	"segmented copy number",
+	"mutation by position",
+	"gene-level mutation",
+	"methylation",
+	"other"
 ];
 
 const steps = [
@@ -122,14 +117,24 @@ class ImportForm extends React.Component {
 							onChange={this.onFileChange('file')}
 						/>
 						<label htmlFor='file-input' className={styles.importFileLabel}>Select Data File</label>
-
+						
 						{ fileSelected && <b>Selected file: { file.name } </b> }
+
+						<div style={{marginTop: '1em'}}>
+							<Button icon='help_outline' label='Help on data file formatting' raised/>
+						</div>
 					</div>,
 					{ nextEnabled: fileSelected });
 			case 1: return wrapWizard(<div>
+					<Dropdown onChange={this.onDataTypeChange}
+						source={dataTypeOptions}
+						value={dataType}
+						label={"Data type"}
+						className={[styles.field, styles.typeBox].join(' ')}
+					/>
 					{ fileSelected && <h4>File preview</h4> }
 					<CodeSnippet fileContent={fileContent} fileSelected={fileSelected}/>
-			</div>, { nextEnabled: fileSelected });
+			</div>, { nextEnabled: !!dataType, fileName: file.name });
 			case 1: <div>
 					<div style={{minHeight: '112px'}}>
 						<TooltipDropdown onChange={this.onFileFormatChange}
@@ -172,7 +177,7 @@ class ImportForm extends React.Component {
 						onChange={this.onFileChange('probemap-file')} label="Probe map file"
 					/>
 				</div>;
-			case 2: <div>
+			case 2: return wrapWizard(<div>
 					<Input type='text' label="Display name" className={styles.field}
 						onChange={this.onDisplayNameChange}
 						value={displayName}
@@ -182,7 +187,7 @@ class ImportForm extends React.Component {
 						onChange={this.onDescriptionChange}
 						value={description}
 					/>
-				</div>;
+				</div>, {fileName: file.name});
 			case 3: <div>
 				<Button icon='youtube_searched_for' label='Begin checking' raised
 					disabled={!fileSelected}

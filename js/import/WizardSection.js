@@ -11,10 +11,12 @@ const style = {
 
 export default class WizardSection extends React.Component {
     render() {
-        const { isLast, isFirst, nextEnabled } = this.props;
+        const { isLast, isFirst, nextEnabled, fileName } = this.props;
 
         return (
             <div>
+                { fileName && <p><b>File to Import: {fileName}</b></p> }
+
                 { this.props.children }
                 <div className={styles.wizardButtons}>
                     <Button label='Back' raised style={{visibility: !isFirst ? 'visible' : 'hidden'}}
