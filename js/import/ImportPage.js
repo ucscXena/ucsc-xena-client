@@ -18,6 +18,7 @@ const TooltipDropdown = Tooltip(Dropdown);
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
 import { DenseTable } from './staticComponents';
+import CohortSuggest from '../views/CohortSuggest';
 
 //I feel like moving to separate constants file..
 const formatOptions = [
@@ -82,6 +83,7 @@ class ImportForm extends React.Component {
 	constructor() {
 		super();
 		this.state = {
+			cohortSelect: null,
 			//ui state
 			hasOwnDataType: false,
 			hasOwnCohort: false,
@@ -188,17 +190,40 @@ class ImportForm extends React.Component {
 					/>
 				</div>;
 			case 2: return wrapWizard(<div>
-					<RadioGroup name='comic' value={fileFormat} onChange={this.onFileFormatChange}>
-						<RadioButton label='Columns are sample names' value='genomicMatrix'/>
-						<RadioButton label='Rows are sample names' value='clinicalMatrix'/>
-					</RadioGroup>
-					<DenseTable fileContent={fileContent}
-						highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
-					/>
+				<RadioGroup  value={fileFormat} onChange={this.onFileFormatChange}>
+					<RadioButton label='Columns are sample names' value='genomicMatrix' />
+					<RadioButton label='Rows are sample names' value='clinicalMatrix' />
+				</RadioGroup>
+				<DenseTable fileContent={fileContent}
+					highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
+				/>
 				</div>, {fileName: file.name, nextEnabled: !!fileFormat});
 			case 3: return wrapWizard(<div>
-				Page 3
-			</div>, {fileName: file.name, nextEnabled: fileSelected});
+				<RadioGroup value={this.state.cohortSelect} onChange={this.onCohortRadioChange}>
+						<RadioButton label="These samples don't overlap any other dataset" value='newCohort'/>
+						{ this.state.cohortSelect === 'newCohort' &&
+							<Input label="Study name" type="text" className={styles.field}
+							onChange={this.onCustomCohortChange} value={customCohort}
+						/>}
+						<RadioButton label="These samples overlap with another dataset I already uploaded" value='existingOwnCohort'/>
+						{ this.state.cohortSelect === 'existingOwnCohort' &&
+							<Dropdown onChange={this.onCohortChange}
+							source={getDropdownOptions(["", ...this.props.localCohorts])}
+							value={cohort}
+							label={"Study"}
+							className={[styles.field, styles.typeBox].join(' ')}
+						/>}
+						<RadioButton label="These samples overlap with a public study already in Xena (like TCGA)" value='existingPublicCohort'/>
+						{ this.state.cohortSelect === 'existingPublicCohort' &&
+							<CohortSuggest cohort={cohort} cohorts={this.props.cohorts}
+							onSelect={this.onCohortChange} className={styles.field} styles={{borderBottom: ' '}}
+							/>
+						}
+					</RadioGroup>
+				<DenseTable fileContent={fileContent}
+					highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
+				/>
+			</div>, {fileName: file.name, nextEnabled: this.isCohortPageNextEnabled() });
 			case 3: <div>
 				<Button icon='youtube_searched_for' label='Begin checking' raised
 					disabled={!fileSelected}
@@ -216,7 +241,14 @@ class ImportForm extends React.Component {
 
 				</div>;
 			case 4: return wrapWizard(<div>
-				Page 4
+				<RadioGroup value={fileFormat} onChange={this.onFileFormatChange}>
+						<RadioButton label="These samples don't overlap any other dataset" value='A'/>
+						<RadioButton label="These samples overlap with another dataset I already uploaded" value='B'/>
+						<RadioButton label="These samples overlap with a public study already in Xena (like TCGA)" value='C'/>
+					</RadioGroup>
+				<DenseTable fileContent={fileContent}
+					highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
+				/>
 			</div>, {fileName: file.name, nextEnabled: !!fileFormat});
 			case 4: return wrapWizard(<Button icon='save' label='Save' raised
 					disabled={!fileSelected}
@@ -252,6 +284,11 @@ class ImportForm extends React.Component {
 	onFileReRead = () => {
 		this.props.callback(['set-status', 'Reading the file...']);
 		this.props.callback(['read-file', this.props.state.file]);
+	}
+
+	onCohortRadioChange = value => {
+		this.props.callback(['cohort', ""]);
+		this.setState({cohortSelect: value});
 	}
 
 	onFileFormatChange = format => this.props.callback(['file-format', format]);
@@ -314,6 +351,14 @@ class ImportForm extends React.Component {
 		this.props.updateFile(file.name);
 	}
 
+	isCohortPageNextEnabled = () => {
+		const { customCohort, cohort } = this.props.state,
+			radioOption = this.state.cohortSelect;
+
+		return (radioOption === 'newCohort' && !!customCohort) || (radioOption === 'existingOwnCohort' && !!cohort) 
+			|| (radioOption === 'existingPublicCohort' && !!cohort);
+	}
+
 	createMetaDataFile = () => {
 		const state = this.props.state;
 		return JSON.stringify({
@@ -331,9 +376,15 @@ class ImportPage extends React.Component {
 	constructor() {
 		super();
 	}
+
+	componentDidMount() {
+		this.props.callback(['get-local-cohorts']);
+		this.props.callback(['set-default-custom-cohort']);
+	}
+
 	render() {
-		const cohorts = getDropdownOptions(this.props.state.wizard.cohorts || []);
-		const { status, wizardPage, fileContent } = this.props.state.import;
+		const cohorts = this.props.state.wizard.cohorts || [];
+		const { status, wizardPage, fileContent, localCohorts } = this.props.state.import;
 
 		return (
 			<div>
@@ -354,6 +405,8 @@ class ImportPage extends React.Component {
 
 						wizardPage={wizardPage}
 						fileContent={fileContent}
+						localCohorts={localCohorts}
+
 						state={this.props.state.import.form}
 					/>
 				</div>

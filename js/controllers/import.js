@@ -3,6 +3,7 @@
 import Rx from '../rx';
 import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
+import { cohortSummary } from '../xenaQuery';
 import { assocIn, assocInAll } from "../underscore_ext";
 
 import getErrors from '../import/errorChecking';
@@ -51,6 +52,12 @@ const checkForErrors = (file, fileContent, fileFormat) => {
     }).map(e => e);
 };
 
+const getCohortArray = cohorts => cohorts.map(c => c.cohort);
+
+const getDefaultCustomCohort = (localCohorts, name='New Study', number=1) => {
+    return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `New Study (${number})`, ++number);
+};
+
 const importControls = {
     'import-file-post!': (serverBus, state, newState, file) => serverBus.next(['import-file-done', postFile(file)]),
     'import-file-done': (state, b, c) => assocIn(state, ['status'], 'File successfully saved!'),
@@ -70,6 +77,16 @@ const importControls = {
         assocInAll(state, 
             ['status'], (errors.length ? 'There was some error found in the file' : ''),
             ['form', 'errors'], errors)
+};
+
+const query = {
+    'get-local-cohorts-post!': (serverBus, state, newState) => serverBus.next(['local-cohorts', cohortSummary(servers.localHub, [])]),
+    'local-cohorts': (state, cohorts) => {
+        const localCohorts = getCohortArray(cohorts);
+        return assocInAll(state, 
+            ['localCohorts'], localCohorts,
+            ['form', 'customCohort'], getDefaultCustomCohort(localCohorts));
+    }
 }
 
 const changeFormProp = propName => (state, propValue) => assocIn(state, ['form', propName], propValue);
@@ -90,4 +107,5 @@ const formControls = {
 
 export default  mount(compose(
     make(importControls), 
+    make(query),
     make(formControls)), ['import']);
