@@ -101,7 +101,9 @@ const formControls = {
     'probemap-file': changeFormProp('probeMapFile'),
     'display-name': changeFormProp('displayName'),
     'description': changeFormProp('description'),
-    'errors': changeFormProp('errors')
+    'errors': changeFormProp('errors'),
+    'genes': changeFormProp('genes'),
+    'probes': changeFormProp('probes')
 }
 
 

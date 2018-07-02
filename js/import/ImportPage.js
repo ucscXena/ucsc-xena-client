@@ -57,6 +57,19 @@ const steps = [
 	{ label: 'Tell us about your Data' },
 	{ label: 'Import' }
 ];
+const CONTANTS = {NONE_STR: 'None of these'};
+const tempGeneOptions = [
+	'',
+	'Gene1',
+	'Gene2',
+	CONTANTS.NONE_STR
+];
+const tempProbeOptions = [
+	'',
+	'Probe 1',
+	'Probe 2',
+	CONTANTS.NONE_STR
+];
 
 const pageStates = _.range(7);
 const pageRanges = [0, ...Array(4).fill(1), 2, 3];
@@ -67,8 +80,10 @@ const dataTypeOptions = getDropdownOptions(dataTypes);
 
 const isFileFormatDense = (format) => format === 'genomicMatrix' || format === 'clinicalMatrix';
 
+const skipByDataType = dataType => dataType === 'mutation by position' || dataType === 'segmented copy number';
+
 const getPageStep = (index, forwards, dataType) => {
-	const skipDataType = dataType === 'mutation by position' || dataType === 'segmented copy number';
+	const skipDataType = skipByDataType(dataType);
 	if (index === 1 && forwards && skipDataType) {
 		return 2;
 	} else if (index === 3 && skipDataType) {
@@ -84,6 +99,7 @@ class ImportForm extends React.Component {
 		super();
 		this.state = {
 			cohortSelect: null,
+			probeSelect: null,
 			//ui state
 			hasOwnDataType: false,
 			hasOwnCohort: false,
@@ -104,7 +120,7 @@ class ImportForm extends React.Component {
 	}
 
 	renderWizardSection ({ cohort, customCohort, dataType, customDataType, fileFormat, displayName,
-		description, file, probeMapFile, errors
+		description, file, probeMapFile, errors, genes, probes,
 	}, wizardPage) {
 		const fileSelected = file && !!file.size,
 			fileContent = this.props.fileContent;
@@ -142,7 +158,7 @@ class ImportForm extends React.Component {
 						source={dataTypeOptions}
 						value={dataType}
 						label={"Data type"}
-						className={[styles.field, styles.typeBox].join(' ')}
+						className={[styles.field, styles.inline].join(' ')}
 					/>
 					{ fileSelected && <h4>File preview</h4> }
 					<DenseTable fileContent={fileContent}/>
@@ -211,7 +227,7 @@ class ImportForm extends React.Component {
 							source={getDropdownOptions(["", ...this.props.localCohorts])}
 							value={cohort}
 							label={"Study"}
-							className={[styles.field, styles.typeBox].join(' ')}
+							className={[styles.field, styles.inline].join(' ')}
 						/>}
 						<RadioButton label="These samples overlap with a public study already in Xena (like TCGA)" value='existingPublicCohort'/>
 						{ this.state.cohortSelect === 'existingPublicCohort' &&
@@ -223,7 +239,10 @@ class ImportForm extends React.Component {
 				<DenseTable fileContent={fileContent}
 					highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
 				/>
-			</div>, {fileName: file.name, nextEnabled: this.isCohortPageNextEnabled() });
+			</div>, {
+				fileName: file.name,
+				onImport: skipByDataType(dataType) ? this.onImportClick : null,
+				nextEnabled: this.isCohortPageNextEnabled() });
 			case 3: <div>
 				<Button icon='youtube_searched_for' label='Begin checking' raised
 					disabled={!fileSelected}
@@ -241,26 +260,57 @@ class ImportForm extends React.Component {
 
 				</div>;
 			case 4: return wrapWizard(<div>
-				<RadioGroup value={fileFormat} onChange={this.onFileFormatChange}>
-						<RadioButton label="These samples don't overlap any other dataset" value='A'/>
-						<RadioButton label="These samples overlap with another dataset I already uploaded" value='B'/>
-						<RadioButton label="These samples overlap with a public study already in Xena (like TCGA)" value='C'/>
+				<RadioGroup value={this.state.probeSelect} onChange={this.onProbeRadioChange}>
+						<RadioButton label="My data uses gene or transcript names (e.g. TP53, ENST00000619485.4)" value='genes'/>
+						{this.renderDropdown(this.onGenesGhange, getDropdownOptions(tempGeneOptions), genes, "Genes",
+							this.state.probeSelect === 'genes')
+						}
+						{this.renderMailto("Xena import missing gene", "genes",
+							this.state.probeSelect === 'genes' && genes === CONTANTS.NONE_STR)
+						}
+						<RadioButton label="My data uses probe names or other identifiers (e.g. 211300_s_at)" value='probes'/>
+						{this.renderDropdown(this.onProbesChange, getDropdownOptions(tempProbeOptions), probes, "Probes",
+							this.state.probeSelect === 'probes')
+						}
+						{this.renderMailto("Xena import missing probe", "probes",
+							this.state.probeSelect === 'probes' && probes === CONTANTS.NONE_STR)
+						}
+						<RadioButton label="Neither" value='neither'/>
+						{this.renderMailto("Xena import missing identifiers", "identifiers", this.state.probeSelect === 'neither')}
 					</RadioGroup>
 				<DenseTable fileContent={fileContent}
 					highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
 				/>
-			</div>, {fileName: file.name, nextEnabled: !!fileFormat});
+			</div>, {fileName: file.name, onImport: this.onImportClick,
+				nextEnabled: this.isProbesNextPageEnabled()
+			});
 			case 4: return wrapWizard(<Button icon='save' label='Save' raised
 					disabled={!fileSelected}
 					onClick={this.onSaveFile}
 				/>);
-			case 5: return wrapWizard(<div>
-				Page 5
-				</div>, {fileName: file.name, nextEnabled: !!fileFormat});
+			case 5: return wrapWizard(<ErrorArea errors={errors}
+					showMore={this.state.showMoreErrors}
+					onShowMoreToggle={this.onShowMoreToggle}
+					errorCheckInProgress={this.state.errorCheckInProgress}
+					onBackToFirstPage={this.onBackToFirstPage}
+				/>, {fileName: file.name, nextEnabled: !!fileFormat});
 			case 6: return wrapWizard(<div>
 				Page 6
 				</div>, {fileName: file.name, nextEnabled: !!fileFormat});
 		};
+	}
+
+	renderDropdown(onChange, source, value, label, display) {
+		return display ?
+		<Dropdown onChange={onChange} source={source} value={value} label={label}
+			className={[styles.field, styles.inline]. join(' ')}
+		/> : null;
+	}
+
+	renderMailto(subject, keyword, display) {
+		return display ? <p className={styles.mailTo}><a href={`mailto:genome-cancer@soe.ucsc.edu?subject=${subject}`}>
+			Let us know which {keyword} you're using</a> so we can better support you in the future.</p>
+		: null;
 	}
 
 	onWizardPageChange = (currPageIndex, forwards) => () => {
@@ -290,6 +340,14 @@ class ImportForm extends React.Component {
 		this.props.callback(['cohort', ""]);
 		this.setState({cohortSelect: value});
 	}
+
+	onProbeRadioChange = value => {
+		this.setState({probeSelect: value});
+	}
+
+	onGenesGhange = value => this.props.callback(['genes', value]);
+
+	onProbesChange = value => this.props.callback(['probes', value]);
 
 	onFileFormatChange = format => this.props.callback(['file-format', format]);
 
@@ -351,12 +409,26 @@ class ImportForm extends React.Component {
 		this.props.updateFile(file.name);
 	}
 
+	onImportClick = () => {
+		this.props.callback(['wizard-page', this.props.wizardPage + 1]);
+		this.onCheckForErrors();
+		// this.onSaveFile();
+	}
+
 	isCohortPageNextEnabled = () => {
 		const { customCohort, cohort } = this.props.state,
 			radioOption = this.state.cohortSelect;
 
-		return (radioOption === 'newCohort' && !!customCohort) || (radioOption === 'existingOwnCohort' && !!cohort) 
+		return (radioOption === 'newCohort' && !!customCohort) || (radioOption === 'existingOwnCohort' && !!cohort)
 			|| (radioOption === 'existingPublicCohort' && !!cohort);
+	}
+
+	isProbesNextPageEnabled = () => {
+		const { genes, probes } = this.props.state,
+			radioOption = this.state.probeSelect;
+
+		return (radioOption === 'genes' && !!genes) || (radioOption === 'probes' && !!probes)
+			|| radioOption === 'neither';
 	}
 
 	createMetaDataFile = () => {
@@ -436,17 +508,17 @@ const DropdownWithInput = ({ showInput, label, checkboxLbl, onDropdownChange, on
 					source={dropdownSource}
 					value={dropdownVal}
 					label={label}
-					className={[styles.field, styles.typeBox].join(' ')}
+					className={[styles.field, styles.inline].join(' ')}
 				/> :
 				<Input type='text' label={label}
 					onChange={onInputChange}
 					value={inputVal}
-					className={[styles.field, styles.typeBox].join(' ')} />
+					className={[styles.field, styles.inline].join(' ')} />
 			}
 			<Checkbox onChange={onCheckboxChange}
 				checked={showInput}
 				label={checkboxLbl}
-				className={styles.typeBox}
+				className={styles.inline}
 			/>
 		</div>
 	);

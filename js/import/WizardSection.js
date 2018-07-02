@@ -11,7 +11,7 @@ const style = {
 
 export default class WizardSection extends React.Component {
     render() {
-        const { isLast, isFirst, nextEnabled,
+        const { isLast, isFirst, nextEnabled, onImport,
             fileName, callback, localHub } = this.props;
 
         return (
@@ -24,10 +24,16 @@ export default class WizardSection extends React.Component {
                         onClick={this.props.onPreviousPage}
                     />
 
-                    {!isLast &&
+                    {!isLast && !onImport &&
                         <Button label='Next' raised style={style.next}
                             accent={nextEnabled} disabled={!nextEnabled}
                             onClick={this.props.onNextPage}
+                        />
+                    }
+                    {!!onImport &&
+                        <Button label='Import' raised style={style.next}
+                            accent={nextEnabled} disabled={!nextEnabled}
+                            onClick={onImport}
                         />
                     }
                     <CancelButton callback={callback} localHub={localHub}/>

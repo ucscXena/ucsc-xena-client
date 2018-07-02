@@ -62,8 +62,10 @@
 	display: inline-block;
 }
 
-.typeBox {
+.mailTo{
 	display: inline-block;
+    width: 45%;
+    font-size: 0.9em;
 }
 
 .status {
