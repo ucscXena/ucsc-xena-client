@@ -341,6 +341,7 @@ function wrapDsIDParams(postMethods) {
 		'datasetProbeValues',
 		'datasetProbeSignature',
 		'datasetGeneProbesValues',
+		'datasetChromProbeValues',
 		'datasetGeneProbeAvg',
 		'datasetMetadata',
 		'featureList',

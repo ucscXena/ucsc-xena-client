@@ -616,7 +616,7 @@ class Column extends PureComponent {
 					layout={column.layout}
 					height={annotationHeight}
 					width={width}
-					mode={parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+					mode={parsePos(_.get(column.fieldList || column.fields, 0), _.getIn(column, ['assembly'])) ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null,
@@ -625,7 +625,7 @@ class Column extends PureComponent {
 					layout = {column.layout}
 					width = {width}
 					scaleHeight ={scaleHeight}
-					mode = {parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+					mode = {parsePos(_.get(column.fieldList || column.fields, 0), _.getIn(column, ['assembly'])) ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null;

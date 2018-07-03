@@ -9,8 +9,8 @@ var {greyHEX} = require('../color_helper');
 var parsePos = require('../parsePos');
 var exonLayout = require('../exonLayout');
 
-var {datasetProbeValues, datasetGeneProbeAvg, datasetGeneProbesValues,
-		fieldCodes} = xenaQuery;
+var {datasetChromProbeValues, datasetProbeValues, datasetGeneProbeAvg,
+	datasetGeneProbesValues, fieldCodes, refGeneRange} = xenaQuery;
 
 function second(x, y) {
 	return y;
@@ -105,7 +105,7 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 }
 
 function geneProbesToHeatmap(column, vizSettings, data, samples) {
-	var pos = false && parsePos(column.fields[0]); // disabled until we support the query
+	var pos = parsePos(column.fields[0]); // disabled until we support the query
 	if (!_.get(data, 'req') || !_.get(data, 'refGene')) {
 		return null;
 	}
@@ -222,6 +222,17 @@ var fetchRefGene = (fields, assembly) => {
 		Rx.Observable.of(null, Rx.Scheduler.asap);
 };
 
+function fetchChromProbes({dsID, assembly, fields}, samples) {
+	var {name, host} = xenaQuery.refGene[assembly] || {},
+		pos = parsePos(fields[0]);
+	return Rx.Observable.zip(
+			refGeneRange(host, name, pos.chrom, pos.baseStart, pos.baseEnd),
+			datasetChromProbeValues(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd),
+			(refGene, resp) => ({
+				req: indexProbeGeneResponse(resp),
+				refGene}));
+}
+
 var fetchGeneProbes = ({dsID, fields, assembly}, samples) =>
 	Rx.Observable.zip(
 		fetchRefGene(fields, assembly),
@@ -229,6 +240,9 @@ var fetchGeneProbes = ({dsID, fields, assembly}, samples) =>
 		(refGene, resp) => ({
 			req: flopIfNegStrand(_.getIn(refGene, [fields[0], 'strand']), indexProbeGeneResponse(resp)),
 			refGene}));
+
+var fetchGeneOrChromProbes = (field, samples) =>
+	(parsePos(field.fields[0]) ? fetchChromProbes : fetchGeneProbes)(field, samples);
 
 // This should really be fetchCoded. Further, it should only return a single
 // code list, i.e. either a single clinical coded field, or a list of genomic
@@ -285,7 +299,7 @@ function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {
 }
 
 ['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType => {
-	widgets.transform.add(fieldType, dataToHeatmap); // override geneProbes, below
+	widgets.transform.add(fieldType, dataToHeatmap);
 	widgets.cmp.add(fieldType, cmp);
 	widgets.download.add(fieldType, download);
 });
@@ -296,7 +310,7 @@ widgets.specialDownload.add('clinical', downloadCodedSampleListsJSON);
 
 module.exports = {
 	fetch,
-	fetchGeneProbes,
+	fetchGeneOrChromProbes,
 	fetchGene,
 	fetchFeature,
 };

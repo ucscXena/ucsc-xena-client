@@ -134,7 +134,7 @@ class RefGeneAnnotation extends React.Component {
 		}
 	}
 
-	computeAnnotationLanes = ({position, refGene, height}) => {
+	computeAnnotationLanes = ({position, refGene, height}, single) => {
 		var newAnnotationLanes;
 
 		if (position && refGene) {
@@ -154,13 +154,18 @@ class RefGeneAnnotation extends React.Component {
 					}
 				});
 				if (!added) { // add a new lane
-					lanes.push([val]);
+					if (!single || lanes.length === 0) {
+						lanes.push([val]);
+					} else {
+						lanes[0].push(val);
+					}
 				}
 			});
 			var perLaneHeight = _.min([height / (lanes.length || 1), 12]),
 				laneOffset = 0;// (height - perLaneHeight * lanes.length) / 2;
 
 			newAnnotationLanes = {
+				arrows: !(refGene.length > 1 && single),
 				lanes: lanes,
 				perLaneHeight: perLaneHeight,
 				laneOffset: laneOffset,
@@ -179,9 +184,9 @@ class RefGeneAnnotation extends React.Component {
 	};
 
 	draw = (props) => {
-		var {width, layout, mode, probePosition} = props;
-		this.computeAnnotationLanes(props);
-		var {lanes, perLaneHeight, laneOffset, annotationHeight} = this.annotationLanes;
+		var {width, layout, mode, column: {fieldType}, probePosition} = props;
+		this.computeAnnotationLanes(props, fieldType === 'geneProbes');
+		var {lanes, perLaneHeight, arrows, laneOffset, annotationHeight} = this.annotationLanes;
 
 		// white background
 		this.vg.box(0, 0, width, annotationHeight, 'white');
@@ -227,7 +232,9 @@ class RefGeneAnnotation extends React.Component {
 					ctx.fillStyle = shade2;
 					ctx.fillRect(pGeneStart, lineY, pGeneEnd - pGeneStart, 1);
 
-					drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, mode === 'coordinate' ? gene.strand : '+');
+					if (arrows) {
+						drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, mode === 'coordinate' ? gene.strand : '+');
+					}
 
 					// draw each segment
 					_.each(segments, ([pstart, pend, shade, y, h]) => {

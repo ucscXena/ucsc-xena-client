@@ -11,7 +11,7 @@ var fetch = multi((settings, samples) => samples.length > 0 ? settings.fetchType
 var xenaFetch = multi(x => `${x.fieldType}-${x.valueType}`); // make this fieldType?
 
 xenaFetch.add("probes-float", denseMatrix.fetch);
-xenaFetch.add("geneProbes-float", denseMatrix.fetchGeneProbes);
+xenaFetch.add("geneProbes-float", denseMatrix.fetchGeneOrChromProbes);
 xenaFetch.add("genes-float", denseMatrix.fetchGene);
 xenaFetch.add("clinical-float", denseMatrix.fetch);
 xenaFetch.add("clinical-coded", denseMatrix.fetchFeature);
