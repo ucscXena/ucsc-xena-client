@@ -12,7 +12,7 @@ var renderInputComponent = ({ref, onChange, ...props}) => (
 		spellCheck={false}
 		innerRef={el => ref(el && el.inputNode)}
 		onChange={(value, ev) => onChange(ev)}
-		label='Study'
+		label='Search for a study'
 		{...props} />);
 
 class CohortSuggest extends PureComponent {
