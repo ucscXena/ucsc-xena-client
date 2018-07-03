@@ -134,11 +134,10 @@ class RefGeneAnnotation extends React.Component {
 		}
 	}
 
-	computeAnnotationLanes = ({position, refGene, height, column}) => {
-		var fieldType = _.get(column, 'fieldType', undefined),
-			newAnnotationLanes;
+	computeAnnotationLanes = ({position, refGene, height}) => {
+		var newAnnotationLanes;
 
-		if (['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1 && position && refGene) {
+		if (position && refGene) {
 			var lanes = [],
 				[start, end] = position;
 
@@ -158,8 +157,8 @@ class RefGeneAnnotation extends React.Component {
 					lanes.push([val]);
 				}
 			});
-			var perLaneHeight = _.min([height / lanes.length, 12]),
-				laneOffset = (height - perLaneHeight * lanes.length) / 2;
+			var perLaneHeight = _.min([height / (lanes.length || 1), 12]),
+				laneOffset = 0;// (height - perLaneHeight * lanes.length) / 2;
 
 			newAnnotationLanes = {
 				lanes: lanes,
@@ -180,7 +179,7 @@ class RefGeneAnnotation extends React.Component {
 	};
 
 	draw = (props) => {
-		var {width, layout, mode} = props;
+		var {width, layout, mode, probePosition} = props;
 		this.computeAnnotationLanes(props);
 		var {lanes, perLaneHeight, laneOffset, annotationHeight} = this.annotationLanes;
 
@@ -197,7 +196,7 @@ class RefGeneAnnotation extends React.Component {
 			vg.width(width);
 		}
 
-		if ( _.isEmpty(layout.chrom) || _.isEmpty(lanes)) {
+		if ( _.isEmpty(layout.chrom)) {
 			return;
 		}
 
@@ -238,6 +237,28 @@ class RefGeneAnnotation extends React.Component {
 				});
 			});
 		});
+		// need to filter by region. Also, what about introns?
+		if (probePosition) {
+			let startY = annotationHeight,
+				endY = (lanes.length || 1) * perLaneHeight + 1;
+			pxTransformEach(layout, (toPx, [start, end]) => {
+				ctx.beginPath();
+				var positions = probePosition
+					.map((p, i) => [p, i])
+					.filter(([{chromstart, chromend}]) =>
+						chromstart <= end && start <= chromend);
+				positions.forEach(([{chromstart, chromend}, i]) => {
+					var startX = width / probePosition.length * (i + 0.5),
+						middle = (chromstart + chromend) / 2,
+						[endX] = toPx([middle, middle]);
+					ctx.moveTo(startX, startY);
+					ctx.lineTo(endX, endY);
+				});
+				ctx.lineWidth = 0.5;
+				ctx.strokeStyle = 'rgb(0, 0, 0)';
+				ctx.stroke();
+			});
+		}
 	};
 
 	tooltip = (ev) => {
@@ -247,7 +268,7 @@ class RefGeneAnnotation extends React.Component {
 			return;
 		}
 		var {x, y} = util.eventOffset(ev),
-			{annotationHeight, perLaneHeight, laneOffset, lanes} = this.annotationLanes,
+			{perLaneHeight, laneOffset, lanes} = this.annotationLanes,
 			rows = [],
 			assemblyString = encodeURIComponent(assembly),
 			contextPadding = Math.floor((layout.zoom.end - layout.zoom.start) / 4),
@@ -257,7 +278,7 @@ class RefGeneAnnotation extends React.Component {
 			posLayoutPaddingString = encodeURIComponent(posLayoutPadding),
 			GBurlZoom = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${posLayoutString}&position=${posLayoutPaddingString}`;
 
-		if (y > laneOffset && y < annotationHeight - laneOffset) {
+		if (y > laneOffset && y < laneOffset + lanes.length * perLaneHeight) {
 			var posStart = chromPositionFromScreen(layout, x - 0.5),
 				posEnd = chromPositionFromScreen(layout, x + 0.5),
 				matches = [],

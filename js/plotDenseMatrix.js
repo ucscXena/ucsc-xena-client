@@ -259,7 +259,8 @@ class extends PureComponent {
 	tooltip = (ev) => {
 		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
 			codes = _.get(data, 'codes'),
-			position = _.getIn(data, ['req', 'position']),
+			// support data.req.position for old bookmarks.
+			position = column.position || _.getIn(data, ['req', 'position']),
 			{assembly, fields, heatmap, width} = column;
 		return tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat(id), codes, position, width, zoom, samples, ev);
 	};

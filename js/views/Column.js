@@ -277,10 +277,12 @@ function supportsGeneAverage(column) {
 	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && (fieldList || fields).length === 1;
 }
 
-function matrixMenu(props, {onTumorMap, onMode}) {
-	var {cohort, column} = props,
-		{fieldType, noGeneDetail, fields, fieldSpecs} = column,
-		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs});
+function matrixMenu(props, {onTumorMap, onMode, onShowIntrons}) {
+	var {data, cohort, column} = props,
+		noData = !_.get(data, 'req'),
+		{fieldType, noGeneDetail, fields, fieldSpecs, showIntrons = false} = column,
+		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs}),
+		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
 
 	return addIdsToArr ([
 		supportsGeneAverage(column) ?
@@ -291,7 +293,8 @@ function matrixMenu(props, {onTumorMap, onMode}) {
 				: null,
 		tumorMapCohort ?
 			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`TumorMap`}/>
-			: null
+			: null,
+		fieldType === 'geneProbes' ? <MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/> : null,
 	]);
 }
 
@@ -373,6 +376,10 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 		.filter(([start, end]) => !(end < cdsStart || start > cdsEnd))
 		.map(([start, end]) => [Math.max(start, cdsStart), Math.min(end, cdsEnd)]);
 }
+
+var showPosition = column =>
+	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType);
+
 
 class Column extends PureComponent {
 	state = {
@@ -599,11 +606,12 @@ class Column extends PureComponent {
 			status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
-			annotation = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
+			annotation = showPosition(column) ?
 				<RefGeneAnnotation
 					column={column}
 					position={_.getIn(column, ['layout', 'chrom', 0])}
 					refGene={_.getIn(data, ['refGene'], {})}
+					probePosition={column.position}
 					tooltip={tooltip}
 					layout={column.layout}
 					height={annotationHeight}
@@ -612,7 +620,7 @@ class Column extends PureComponent {
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null,
-			scale = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
+			scale = showPosition(column) ?
 				<ChromPosition
 					layout = {column.layout}
 					width = {width}
