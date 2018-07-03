@@ -19,11 +19,11 @@
 }
 
 .welcomeText {
-	margin: 48px 0;
+	margin: 14px 0;
+	min-height: 178px;
 	padding-left: 24px;
 	padding-right: 24px;
 	position: relative;
-	height: 100%;
 }
 
 .welcomeText a {
@@ -32,15 +32,12 @@
 }
 
 .bulletWrapper {
-	position: absolute;
-	left: 50%;
 	bottom: 0;
+	position: absolute;
 }
 
 .bullets {
 	display: inline-block;
-	position: relative;
-	left: -50%;
 	cursor: default;
 }
 
@@ -75,7 +72,6 @@
 	}
 
 	.welcomeText {
-		align-self: center;
 		margin-left: 32px;
 		width: 58.33333333%; /* lg 7 */
 	}
@@ -96,7 +92,12 @@
 		transform: translateX(-50%);
 	}
 
-	.closeIcon {
+	.bulletWrapper {
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
+		.closeIcon {
 		right: 24px;
 		top: 24px;
 	}
