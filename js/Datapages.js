@@ -127,13 +127,14 @@ var CohortSummary = ({cohorts, onCohort, hubParams}) => {
 var CohortHeader = ({inHubs, host, onImport}) => {
 	return(
 		<div>
+			<h2 className={styles.inline}>{getHubName(host)}{inHubs}</h2>
+
 			{isLocalHub(host) &&
-			<div className={styles.sidebar}>
+			<div className={styles.headerButtons}>
 				<Button label={"Import Data"} onClick={onImport} accent />
 				<Button label={"Help"} accent />
 			</div>}
 
-			<h2>{getHubName(host)}{inHubs}</h2>
 			<p>Host address: {host}</p>
 
 			{isLocalHub(host) &&

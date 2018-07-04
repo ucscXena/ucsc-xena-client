@@ -134,3 +134,16 @@
 .tableControls *:first-child {
 	margin-left: 0;
 }
+
+.headerButtons {
+	display: inline-block;
+	margin-left: 25px;
+}
+
+.headerButtons button {
+	margin-right: 10px;
+}
+
+.inline {
+	display: inline-block;
+}

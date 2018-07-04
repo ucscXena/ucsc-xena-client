@@ -25,15 +25,21 @@ const pageStateIndex = _.object(pageStates, pageRanges);
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 
-const skipByDataType = dataType => dataType === 'mutation by position' || dataType === 'segmented copy number';
+const skipDenseOrientationPage = dataType => dataType === 'mutation by position' || dataType === 'segmented copy number';
+
+const skipProbeGenePage = dataType => skipDenseOrientationPage(dataType) || dataType === 'phenotype/clinical/sample type';
 
 const getPageStep = (index, forwards, dataType) => {
-	const skipDataType = skipByDataType(dataType);
-	if (index === 1 && forwards && skipDataType) {
+	const skipOrientationPage = skipDenseOrientationPage(dataType),
+		skipProbePage = skipProbeGenePage(dataType);
+
+	if (index === 1 && forwards && skipOrientationPage) {
 		return 2;
-	} else if (index === 3 && skipDataType) {
-		return forwards ? 2 : -2;
-	} else if (index === 5 && !forwards && skipDataType) {
+	} else if (index === 3 && skipProbePage && forwards) {
+		return 2;
+	} else if (index === 3 && skipOrientationPage && !forwards) {
+		return -2;
+	} else if (index === 5 && !forwards && skipProbePage) {
 		return -2;
 	}
 	return forwards ? 1 : -1;
@@ -73,7 +79,7 @@ class ImportForm extends React.Component {
 				{fileSelected && <b>Selected file: {file.name} </b>}
 
 				<div style={{ marginTop: '1em' }}>
-					<Button icon='help_outline' label='Help on data file formatting' accent />
+					<Button icon='help_outline' label='Help on data file formatting' accent flat={false}/>
 				</div>
 			</div>
 		);
@@ -215,7 +221,7 @@ class ImportForm extends React.Component {
 			case 3:
 				wizardProps = {
 					fileName: file.name,
-					onImport: skipByDataType(dataType) ? this.onImportClick : null,
+					onImport: skipProbeGenePage(dataType) ? this.onImportClick : null,
 					nextEnabled: this.isCohortPageNextEnabled()
 				};
 				component = this.fourthPage();
@@ -355,7 +361,7 @@ class ImportForm extends React.Component {
 	}
 
 	onImportClick = () => {
-		this.props.callback(['wizard-page', this.props.wizardPage + 1]);
+		this.props.callback(['wizard-page', this.props.wizardPage + getPageStep(this.props.wizardPage, true, this.props.state.dataType)]);
 		this.onCheckForErrors();
 		// this.onSaveFile();
 	}
@@ -407,7 +413,7 @@ class ImportPage extends React.Component {
 			<div>
 				<div className={styles.wizardTitle}>
 					Importing data...
-					<Button icon='help_outline' label='Help' flat style={{float: 'right'}}/>
+					<Button label='Help' accent style={{marginLeft: '30px', backgroundColor: '#f7f7f7'}}/>
 					<div className={styles.stepperBox}>
 						<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex} flat={true} wideStep={true}/>
 					</div>
@@ -470,10 +476,18 @@ const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, o
 	);
 };
 
-// const ThemedPage = (props) =>
-// 	<ThemeProvider theme={appTheme}>
-// 		<ImportPage />
-// 	</ThemeProvider>
+// class ThemedImport extends React.Component {
+// 	render() {
+// 		return (
+// 		<ThemeProvider theme={appTheme}>
+// 			<ImportPage {...this.props}/>
+// 		</ThemeProvider>);
+// 	}
+// }
+
+// var selector = state => state;
 
 // header disappears after refresh
+// Button background is hacked in!!!!
+// module.exports = props => <ThemedImport {...props} selector={selector}/>;
 export default ImportPage;

@@ -70,7 +70,7 @@ class CancelButton extends React.Component {
 						title='Are you sure you want to cancel import process ?'>
 					Current progress will be lost
 				</Dialog>
-				<Button onClick={this.onToggle} flat>Cancel</Button>
+				<Button onClick={this.onToggle} flat style={{backgroundColor: '#f7f7f7'}}>Cancel</Button>
 			</div>);
 	}
 }
