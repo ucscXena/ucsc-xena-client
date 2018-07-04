@@ -15,13 +15,15 @@ const getErrorsDense = (lines) => {
     return errors;
 }
 
-const getErrorsSparse = (lines, fileFormat) => {
+const getErrorsSparse = (lines, dataType) => {
     const errors = [];
-    errors.push(...hasSparseDataColumns(lines[0], fileFormat));
+    errors.push(...hasSparseDataColumns(lines[0], dataType));
 
     return errors;
 }
 
+//needs to be properly refactored with constants
+const getDataTypeTmp = (dataType) =>  dataType === 'mutation by position' || dataType === 'segmented copy number' ? 'sparse' : 'dense';
 const dataTypeByFileFormat = {
     'genomicMatrix': 'dense',
     'clinicalMatrix': 'dense',
@@ -34,19 +36,19 @@ const functionByDataType = {
     'sparse': getErrorsSparse
 }
 
-const getSparseColumnRegExps = (fileFormat) => {
+const getSparseColumnRegExps = (dataType) => {
     const res = [
         { regexp: /chr(om)/i, name: 'chrom' },
         { regexp: /start/i, name: 'start' },
         { regexp: /end/i, name: 'end' },
     ];
 
-    if (fileFormat === 'segmented') {
+    if (dataType === 'segmented copy number') {
         res.push(
             // not required { regexp: /strand/i, name: 'strand' },
             { regexp: /value/i, name: 'value' }
         );
-    } else if (fileFormat === 'mutationVector') {
+    } else if (dataType === 'mutation by position') {
         res.push(
             // not required { regexp: /genes?/i, name: 'genes' },
             { regexp: /alt(ernate)?/i, name: 'alternate' },
@@ -61,15 +63,15 @@ const getSparseColumnRegExps = (fileFormat) => {
     return res;
 }
 
-const getErrors = (file, contents, fileFormat) => {
+const getErrors = (file, contents, dataType) => {
     const errors = [],
         lines = contents.split('\n'),
-        dataType = dataTypeByFileFormat[fileFormat],
-        errCheckFunc = functionByDataType[dataType];
+        type = getDataTypeTmp(dataType),
+        errCheckFunc = functionByDataType[type];
 
     errors.push(hasSampleColumn(getColumns(lines[0])[0]));
 
-    errors.push(...errCheckFunc(lines, fileFormat));    
+    errors.push(...errCheckFunc(lines, dataType));    
 
     return errors.filter(e => !!e);
 }
@@ -80,8 +82,8 @@ const checkSizeLimit = (file) => {
     }
 }
 
-const hasSparseDataColumns = (header, fileFormat) => {
-    const colRegExps = getSparseColumnRegExps(fileFormat);
+const hasSparseDataColumns = (header, dataType) => {
+    const colRegExps = getSparseColumnRegExps(dataType);
     return colRegExps.map(r => hasColumn(header, r.name, r.regexp));
 }
 

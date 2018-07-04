@@ -46,7 +46,7 @@ const checkForErrors = (file, fileContent, fileFormat) => {
         setTimeout(() => {
             obs.next(errors);
             obs.complete();
-        }, 0);
+        }, 10000);
          
         return () => {};
     }).map(e => e);
@@ -59,16 +59,17 @@ const getDefaultCustomCohort = (localCohorts, name='New Study', number=1) => {
 };
 
 const importControls = {
+    'file': (state, fileHandle) => assocInAll(state, ['file'], fileHandle, ['fileName'], fileHandle.name),
     'import-file-post!': (serverBus, state, newState, file) => serverBus.next(['import-file-done', postFile(file)]),
-    'import-file-done': (state, b, c) => assocIn(state, ['status'], 'File successfully saved!'),
+    'import-file-done': (state) => assocIn(state, ['status'], 'File successfully saved!'),
     'update-file-post!': (serverBus, state, newState, fileName) => serverBus.next(['update-file-done', updateFile(fileName)]),
-    'update-file-done': (state, b, c) => assocIn(state, ['status'], 'File successfully saved!'),
+    'update-file-done': (state) => assocIn(state, ['status'], 'File successfully saved!'),
     'read-file-post!': readFile,
     'read-file-done': (state, fileContent) => 
         assocInAll(state, 
             ['status'], 'File successfully read!',
             ['fileContent'], fileContent),
-    'set-status': (state, status, x) => assocIn(state, ['status'], status),
+    'set-status': (state, status) => assocIn(state, ['status'], status),
     'wizard-page': (state, newPage) => assocIn(state, ['wizardPage'], newPage),
     'file-content': (state, content) => assocIn(state, ['fileContent'], content),
     'check-errors-post!': (serverBus, state, newState, file, fileContent, fileFormat) => 
@@ -76,7 +77,9 @@ const importControls = {
     'check-errors-done': (state, errors) => 
         assocInAll(state, 
             ['status'], (errors.length ? 'There was some error found in the file' : ''),
-            ['form', 'errors'], errors)
+            ['form', 'errors'], errors,
+            ['form', 'errorCheckInprogress'], false),
+    'clear-metadata': (state) => assocIn(state, ['form'], {})
 };
 
 const query = {
@@ -92,7 +95,6 @@ const query = {
 const changeFormProp = propName => (state, propValue) => assocIn(state, ['form', propName], propValue);
 
 const formControls = {
-    'file': changeFormProp('file'),
     'file-format': changeFormProp('fileFormat'),
     'data-type': changeFormProp('dataType'),
     'custom-data-type': changeFormProp('customDataType'),
@@ -103,7 +105,8 @@ const formControls = {
     'description': changeFormProp('description'),
     'errors': changeFormProp('errors'),
     'genes': changeFormProp('genes'),
-    'probes': changeFormProp('probes')
+    'probes': changeFormProp('probes'),
+    'error-check-inprogress': changeFormProp('errorCheckInprogress')
 }
 
 

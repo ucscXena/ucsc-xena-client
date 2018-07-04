@@ -59,16 +59,69 @@ class ImportForm extends React.Component {
 	}
 
 	render() {
-		const { wizardPage } = this.props,
-			state = this.props.state || {};
+		const { fileFormat, dataType } = this.props.state || {},
+			{ file, wizardPage, fileName } = this.props,
+			fileSelected = file && !!file.size;
+
+		let wizardProps = {},
+			component = null;
+
+		switch(wizardPage) {
+			case 0:
+				wizardProps = { nextEnabled: fileSelected };
+				component = this.firstPage(fileSelected, file);
+				break;
+			case 1:
+				wizardProps = { nextEnabled: !!dataType, fileName };
+				component = this.secondPage(fileSelected);
+				break;
+			case 2:
+				wizardProps = { fileName, nextEnabled: !!fileFormat };
+				component = this.thirdPage();
+				break;
+			case 3:
+				wizardProps = {
+					fileName,
+					onImport: skipProbeGenePage(dataType) ? this.onImportClick : null,
+					nextEnabled: this.isCohortPageNextEnabled()
+				};
+				component = this.fourthPage();
+				break;
+			case 4:
+				wizardProps = {
+					fileName,
+					onImport: this.onImportClick,
+					nextEnabled: this.isProbesNextPageEnabled()
+				};
+				component = this.fifthPage();
+				break;
+			case 5:
+				wizardProps = {
+					fileName,
+					showRetry: true,
+					onRetryFile: this.onRetryFile,
+					onRetryMetadata: this.onRetryMetadata
+				};
+				component = this.sixthPage(fileSelected);
+				break;
+			case 6:
+				component = <div>Page 6</div>;
+				wizardProps = { fileName, nextEnabled: !!fileFormat };
+		};
+
 		return (
-			<div>
-				{this.renderWizardSection(state, wizardPage)}
-			</div>
+			<WizardSection isFirst={wizardPage === 0} isLast={wizardPage === pageStates.length - 1}
+				onNextPage={this.onWizardPageChange(wizardPage, true)}
+				onPreviousPage={this.onWizardPageChange(wizardPage, false)}
+				callback={this.props.callback} localHub={localHub}
+				{...wizardProps}
+			>
+				{component}
+			</WizardSection>
 		);
 	}
 
-	firstPage(fileSelected, file) {
+	firstPage(fileSelected) {
 		return (
 			<div>
 				<input type='file' id='file-input' style={{ display: 'none' }}
@@ -76,7 +129,7 @@ class ImportForm extends React.Component {
 				/>
 				<label htmlFor='file-input' className={styles.importFileLabel}>Select Data File</label>
 
-				{fileSelected && <b>Selected file: {file.name} </b>}
+				{fileSelected && <b>Selected file: {this.props.fileName} </b>}
 
 				<div style={{ marginTop: '1em' }}>
 					<Button icon='help_outline' label='Help on data file formatting' accent flat={false}/>
@@ -179,7 +232,7 @@ class ImportForm extends React.Component {
 	}
 
 	sixthPage(fileSelected) {
-		const { errors } = this.props.state;
+		const { errors, errorCheckInprogress } = this.props.state;
 		return (
 			<div>
 				<Button icon='youtube_searched_for' label='Begin checking' raised
@@ -192,68 +245,9 @@ class ImportForm extends React.Component {
 				<ErrorArea errors={errors}
 					showMore={this.state.showMoreErrors}
 					onShowMoreToggle={this.onShowMoreToggle}
-					errorCheckInProgress={this.state.errorCheckInProgress}
-					onBackToFirstPage={this.onBackToFirstPage}
+					errorCheckInProgress={errorCheckInprogress}
 				/>
 			</div>
-		);
-	}
-
-	renderWizardSection ({ dataType, fileFormat, file }, wizardPage) {
-		const fileSelected = file && !!file.size;
-
-		let wizardProps = {},
-			component = null;
-
-		switch(wizardPage) {
-			case 0:
-				wizardProps = { nextEnabled: fileSelected };
-				component = this.firstPage(fileSelected, file);
-				break;
-			case 1:
-				wizardProps = { nextEnabled: !!dataType, fileName: file.name };
-				component = this.secondPage(fileSelected);
-				break;
-			case 2:
-				wizardProps = { fileName: file.name, nextEnabled: !!fileFormat };
-				component = this.thirdPage();
-				break;
-			case 3:
-				wizardProps = {
-					fileName: file.name,
-					onImport: skipProbeGenePage(dataType) ? this.onImportClick : null,
-					nextEnabled: this.isCohortPageNextEnabled()
-				};
-				component = this.fourthPage();
-				break;
-			case 4:
-				wizardProps = {
-					fileName: file.name,
-					onImport: this.onImportClick,
-					nextEnabled: this.isProbesNextPageEnabled()
-				};
-				component = this.fifthPage();
-				break;
-			case 5:
-				wizardProps = {
-					fileName: file.name, nextEnabled: !!fileFormat
-				};
-				component = this.sixthPage(fileSelected);
-				break;
-			case 6:
-				component = <div>Page 6</div>;
-				wizardProps = { fileName: file.name, nextEnabled: !!fileFormat };
-		};
-
-		return (
-			<WizardSection isFirst={wizardPage === 0} isLast={wizardPage === pageStates.length - 1}
-				onNextPage={this.onWizardPageChange(wizardPage, true)}
-				onPreviousPage={this.onWizardPageChange(wizardPage, false)}
-				callback={this.props.callback} localHub={localHub}
-				{...wizardProps}
-			>
-				{component}
-			</WizardSection>
 		);
 	}
 
@@ -320,10 +314,16 @@ class ImportForm extends React.Component {
 
 	onShowMoreToggle = () => this.setState({showMoreErrors: !this.state.showMoreErrors});
 
-	onBackToFirstPage = () => {
+	onRetryMetadata = () => {
+		this.props.callback(['clear-metadata']);
+		this.props.callback(['wizard-page', 1]);
+	}
+
+	onRetryFile = () => {
 		this.props.callback(['wizard-page', 0]);
 	}
 
+	// to be removed when error checking is properly done
 	onCheckForErrors = () => {
 		const { file, fileFormat } = this.props.state,
 			fileContent = this.props.fileContent;
@@ -346,7 +346,7 @@ class ImportForm extends React.Component {
 		// }, 500);
 	}
 
-	onSaveFile = () => {
+	saveFile = () => {
 		const { file } = this.props.state,
 			fileContent = this.props.fileContent;
 
@@ -361,9 +361,16 @@ class ImportForm extends React.Component {
 	}
 
 	onImportClick = () => {
-		this.props.callback(['wizard-page', this.props.wizardPage + getPageStep(this.props.wizardPage, true, this.props.state.dataType)]);
-		this.onCheckForErrors();
-		// this.onSaveFile();
+		const { file, dataType } = this.props.state,
+			{ fileContent, wizardPage } = this.props;
+
+		this.props.callback(['error-check-inprogress', true]);
+		this.props.callback(['wizard-page', wizardPage + getPageStep(wizardPage, true, dataType)]);
+		this.props.callback(['check-errors', file, fileContent, dataType]);
+
+		//we do not issue save if there's errors - saving has to be called done after error cheking
+		// maybe in .map on observable and then decide to do it or not
+		this.saveFile();
 	}
 
 	isCohortPageNextEnabled = () => {
@@ -407,7 +414,7 @@ class ImportPage extends React.Component {
 
 	render() {
 		const cohorts = this.props.state.wizard.cohorts || [];
-		const { status, wizardPage, fileContent, localCohorts } = this.props.state.import;
+		const { status, wizardPage, fileContent, localCohorts, file, fileName } = this.props.state.import;
 
 		return (
 			<div>
@@ -428,6 +435,7 @@ class ImportPage extends React.Component {
 						wizardPage={wizardPage}
 						fileContent={fileContent}
 						localCohorts={localCohorts}
+						file={file} fileName={fileName}
 
 						state={this.props.state.import.form}
 					/>
@@ -445,7 +453,7 @@ class ImportPage extends React.Component {
 	}
 }
 
-const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, onBackToFirstPage }) => {
+const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle }) => {
 	errors = errors || [];
 	let items = errors.map((error, i) => <p key={i} className={styles.errorLine}>{error}</p>),
 		showMoreText = null;
@@ -464,14 +472,9 @@ const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, o
 			{!errors.length && !errorCheckInProgress && <p>File is good to go!</p>}
 
 			<div style={{textAlign: 'center'}}>
-				{errorCheckInProgress && <ProgressBar type="circular" mode="indeterminate" />}
+				{errorCheckInProgress &&
+					<ProgressBar type="circular" mode="indeterminate" />}
 			</div>
-
-			{!!errors.length &&
-				<Button icon='arrow_back' label='To file selection' raised
-					onClick={onBackToFirstPage}
-				/>
-			}
 		</div>
 	);
 };

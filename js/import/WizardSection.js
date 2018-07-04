@@ -12,7 +12,9 @@ const style = {
 export default class WizardSection extends React.Component {
     render() {
         const { isLast, isFirst, nextEnabled, onImport,
-            fileName, callback, localHub } = this.props;
+            fileName, callback, localHub, showRetry
+        } = this.props;
+        const showNext = !isLast && !onImport && !showRetry;
 
         return (
             <div>
@@ -24,7 +26,7 @@ export default class WizardSection extends React.Component {
                         onClick={this.props.onPreviousPage}
                     />
 
-                    {!isLast && !onImport &&
+                    {showNext &&
                         <Button label='Next' raised style={style.next}
                             accent={nextEnabled} disabled={!nextEnabled}
                             onClick={this.props.onNextPage}
@@ -36,8 +38,24 @@ export default class WizardSection extends React.Component {
                             onClick={onImport}
                         />
                     }
+
+                    { showRetry && this.renderRetryButtons() }
+
                     <CancelButton callback={callback} localHub={localHub}/>
                 </div>
+            </div>
+        );
+    }
+
+    renderRetryButtons() {
+        return (
+            <div className={styles.retryButtons}>
+                <Button label='Retry file' raised style={style.next} accent
+                    onClick={this.props.onRetryFile}
+                />
+                <Button label='Retry metadata' raised style={style.next} accent
+                    onClick={this.props.onRetryMetadata}
+                />
             </div>
         );
     }

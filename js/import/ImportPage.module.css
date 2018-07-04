@@ -97,6 +97,8 @@
     border: 1px solid #cfcdcd;
 	background: #fdfdfd;
 	margin: 0 auto;
+	table-layout: fixed;
+    max-width: 100%;
 }
 
 .denseExample td {
@@ -107,5 +109,11 @@
 	background: rgb(230, 87, 111);
 }
 
+.retryButtons {
+	float: right;
+}
 
+.retryButtons button {
+	margin-right: 10px;
+}
 
