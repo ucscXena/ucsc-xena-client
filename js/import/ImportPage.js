@@ -25,6 +25,7 @@ const pageStateIndex = _.object(pageStates, pageRanges);
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 
+//needs constants
 const skipDenseOrientationPage = dataType => dataType === 'mutation by position' || dataType === 'segmented copy number';
 
 const skipProbeGenePage = dataType => skipDenseOrientationPage(dataType) || dataType === 'phenotype/clinical/sample type';
@@ -235,13 +236,18 @@ class ImportForm extends React.Component {
 		const { errors, errorCheckInprogress } = this.props.state;
 		return (
 			<div>
-				<Button icon='youtube_searched_for' label='Begin checking' raised
+				{/* <Button icon='youtube_searched_for' label='Begin checking' raised
 					disabled={!fileSelected}
 					onClick={this.onCheckForErrors}
 				/>
 				<Button icon='youtube_searched_for' label='Re-read file' raised
 					onClick={this.onFileReRead}
+				/> */}
+				<input type='file' id='file-input' style={{ display: 'none' }}
+					onChange={this.onFileReRead}
 				/>
+				<label htmlFor='file-input' className={styles.importFileLabel}>Retry file</label>
+
 				<ErrorArea errors={errors}
 					showMore={this.state.showMoreErrors}
 					onShowMoreToggle={this.onShowMoreToggle}
@@ -282,9 +288,14 @@ class ImportForm extends React.Component {
 		}
 	}
 
-	onFileReRead = () => {
-		this.props.callback(['set-status', 'Reading the file...']);
-		this.props.callback(['read-file', this.props.state.file]);
+	onFileReRead = (evt) => {
+		if (evt.target.files.length > 0) {
+			const file = evt.target.files[0];
+			// this.props.callback([fileProp, file]);
+			this.props.callback(['retry-file', file]);
+			// this.props.callback(['read-file', file]);
+			// this.props.callback(['set-status', 'Reading the file...']);
+		}
 	}
 
 	onCohortRadioChange = value => {
@@ -308,15 +319,12 @@ class ImportForm extends React.Component {
 
 	onCustomCohortChange = cohort => this.props.callback(['custom-cohort', cohort]);
 
-	onDisplayNameChange = displayName => this.props.callback(['display-name', displayName]);
-
-	onDescriptionChange = description => this.props.callback(['description', description]);
-
 	onShowMoreToggle = () => this.setState({showMoreErrors: !this.state.showMoreErrors});
 
 	onRetryMetadata = () => {
 		this.props.callback(['clear-metadata']);
 		this.props.callback(['wizard-page', 1]);
+		this.props.callback(['set-default-custom-cohort']);
 	}
 
 	onRetryFile = () => {
@@ -347,17 +355,17 @@ class ImportForm extends React.Component {
 	}
 
 	saveFile = () => {
-		const { file } = this.props.state,
+		const { file, fileName } = this.props.state,
 			fileContent = this.props.fileContent;
 
 		this.setState({ fileReadInprogress: true });
 		this.props.callback(['set-status', 'Saving file to local hub...']);
 
 		this.props.postFile([
-			{ contents: fileContent, name: file.name },
-			{ contents: this.createMetaDataFile(), name: file.name + '.json' }
+			{ contents: fileContent, name: fileName },
+			{ contents: this.createMetaDataFile(), name: fileName + '.json' }
 		]);
-		this.props.callback(['update-file', file.name]);
+		this.props.callback(['update-file', fileName]);
 	}
 
 	onImportClick = () => {
@@ -368,7 +376,7 @@ class ImportForm extends React.Component {
 		this.props.callback(['wizard-page', wizardPage + getPageStep(wizardPage, true, dataType)]);
 		this.props.callback(['check-errors', file, fileContent, dataType]);
 
-		//we do not issue save if there's errors - saving has to be called done after error cheking
+		//we do not issue save if there's errors - saving has to be called after error cheking
 		// maybe in .map on observable and then decide to do it or not
 		this.saveFile();
 	}
@@ -395,7 +403,7 @@ class ImportForm extends React.Component {
 			version: new Date().toISOString().split('T')[0],
 			cohort: this.state.cohortSelect === 'newCohort' ? state.customCohort : state.cohort,
 			label: state.displayName,
-			description: state.description,
+			description: '',
 			dataSubType: state.dataType,
 			type: state.fileFormat
 		}, null, 4);
@@ -409,7 +417,6 @@ class ImportPage extends React.Component {
 
 	componentDidMount() {
 		this.props.callback(['get-local-cohorts']);
-		this.props.callback(['set-default-custom-cohort']);
 	}
 
 	render() {
@@ -426,7 +433,7 @@ class ImportPage extends React.Component {
 					</div>
 				</div>
 				<div className={styles.container}>
-					<p className={styles.status}>{status}</p>
+					{/* <p className={styles.status}>{status}</p> */}
 
 					<ImportForm cohorts={cohorts}
 						callback={this.props.callback}

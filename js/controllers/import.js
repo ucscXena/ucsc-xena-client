@@ -4,7 +4,7 @@ import Rx from '../rx';
 import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
 import { cohortSummary } from '../xenaQuery';
-import { assocIn, assocInAll } from "../underscore_ext";
+import { assocIn, assocInAll, getIn } from "../underscore_ext";
 
 import getErrors from '../import/errorChecking';
 
@@ -31,13 +31,18 @@ const updateFile = (fileName) => {
     return Rx.Observable.ajax(payload).map(r => r.status);
 };
 
-const readFile = (serverBus, state, newState, fileHandle) => {
-    if (fileHandle) {
+const readFileObs = (fileHandle) => {
+    return Rx.Observable.create(obs => {
         const reader = new FileReader();
-        reader.onload = (e) => serverBus.next(['read-file-done', Rx.Observable.of(e.target.result)]);
-        reader.onerror = (e) => serverBus.next(['set-status', e.toString()]);
+        reader.onload = (e) => {
+            obs.next(e.target.result);
+            obs.complete();
+        };
+        //TODO show these errors 
+        reader.onerror = (e) => {}; 
         reader.readAsBinaryString(fileHandle);
-    }
+        return () => {};
+    });
 };
 
 const checkForErrors = (file, fileContent, fileFormat) => {  
@@ -46,7 +51,7 @@ const checkForErrors = (file, fileContent, fileFormat) => {
         setTimeout(() => {
             obs.next(errors);
             obs.complete();
-        }, 10000);
+        }, 0);
          
         return () => {};
     }).map(e => e);
@@ -64,7 +69,7 @@ const importControls = {
     'import-file-done': (state) => assocIn(state, ['status'], 'File successfully saved!'),
     'update-file-post!': (serverBus, state, newState, fileName) => serverBus.next(['update-file-done', updateFile(fileName)]),
     'update-file-done': (state) => assocIn(state, ['status'], 'File successfully saved!'),
-    'read-file-post!': readFile,
+    'read-file-post!': (serverBus, state, newState, fileHandle) => serverBus.next(['read-file-done', readFileObs(fileHandle)]),
     'read-file-done': (state, fileContent) => 
         assocInAll(state, 
             ['status'], 'File successfully read!',
@@ -79,7 +84,22 @@ const importControls = {
             ['status'], (errors.length ? 'There was some error found in the file' : ''),
             ['form', 'errors'], errors,
             ['form', 'errorCheckInprogress'], false),
-    'clear-metadata': (state) => assocIn(state, ['form'], {})
+    'clear-metadata': (state) => assocIn(state, ['form'], {}),
+    'retry-file-post!': (serverBus, state, newState, fileHandle) => 
+        serverBus.next(['retry-file-done',
+            readFileObs(fileHandle).flatMap(content => Rx.Observable.zip(
+                    checkForErrors(fileHandle, content, getIn(state, ['form', 'dataType'])),
+                    Rx.Observable.of(content),
+                    Rx.Observable.of(fileHandle.name)
+            ))
+        ]),
+    'retry-file-done': (state, [errors, fileContent, fileName]) =>  assocInAll(state, 
+            ['fileContent'], fileContent,
+            ['form', 'errors'], errors,
+            ['fileName'], fileName),
+    'set-default-custom-cohort': (state) => 
+        assocIn(state, ['form', 'customCohort'], getDefaultCustomCohort(getIn(state, ['localCohorts'])))
+    
 };
 
 const query = {
