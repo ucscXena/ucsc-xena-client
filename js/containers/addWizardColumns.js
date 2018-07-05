@@ -43,7 +43,7 @@ function getValueType(dataset, features, fields) {
 	return 'float';
 }
 
-function getFieldType(dataset, features, fields, probes) {
+function getFieldType(dataset, features, fields, probes, pos) {
 	if (dataset.type === 'mutationVector') {
 		return dataset.dataSubType.search(/SV|structural/i) !== -1 ? 'SV' : 'mutation';
 	}
@@ -53,7 +53,8 @@ function getFieldType(dataset, features, fields, probes) {
 	if (dataset.type === 'clinicalMatrix') {
 		return 'clinical';
 	}
-	return  probes ? 'probes' : (fields.length > 1 ? 'genes' : 'geneProbes');
+	// We treat probes in chrom view (pos) as geneProbes
+	return  probes ? 'probes' : ((fields.length > 1 && !pos) ? 'genes' : 'geneProbes');
 }
 
 function sigFields(fields, {genes, weights}) {
@@ -69,7 +70,7 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
 		pos = parsePos(input.trim(), meta.assembly),
         sig = parseGeneSignature(input.trim()),
-		fieldType = getFieldType(meta, features[dsID], fields, probes),
+		fieldType = getFieldType(meta, features[dsID], fields, probes, pos),
 		fieldsInput = sig ? sig.genes : parseInput(input),
 		normalizedFields = (
             pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :
