@@ -120,6 +120,8 @@ var getFeature = (fieldType, fieldSpecs) =>
 
 var getFieldLabel = fieldSpecs => findFirstProp(fieldSpecs, 'fieldLabel');
 
+var getShowIntrons = fieldSpecs => findFirstProp(fieldSpecs, 'showIntrons');
+
 var fillNullFields = fieldSpecs => _.map(fieldSpecs, fs => fs || nullField);
 
 // Create a composite fieldSpec from a list of fieldSpecs. This uses
@@ -138,6 +140,7 @@ function combineColSpecs(fieldSpecs, datasets) {
 		fieldType = getFieldType(resetFieldSpecs);
 
 	return m({
+		...(getShowIntrons(resetFieldSpecs) ? {showIntrons: true} : {}),
 		fields,
 		fieldSpecs: resetFieldSpecs,
 		fetchType: 'composite',

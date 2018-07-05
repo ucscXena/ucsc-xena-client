@@ -93,6 +93,7 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 	}
 
 	return {
+		...(fieldType === 'geneProbes' ? {showIntrons: true} : {}),
 		fields: normalizedFields,
 		fetchType: 'xena',
 		valueType: getValueType(meta, features[dsID], fields),
