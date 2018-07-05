@@ -106,7 +106,7 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 
 function geneProbesToHeatmap(column, vizSettings, data, samples) {
 	var pos = parsePos(column.fields[0]); // disabled until we support the query
-	if (!_.get(data, 'req') || !_.get(data, 'refGene')) {
+	if (!_.get(data, 'req') || _.isEmpty(_.get(data, 'refGene'))) {
 		return null;
 	}
 	var {req} = data,
