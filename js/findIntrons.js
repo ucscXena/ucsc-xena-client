@@ -25,7 +25,7 @@ function updateGroup(group, exon) {
 
 function mergeTop(groups, exon) {
 	var [first, ...rest] = groups;
-	if (first.start < exon.end && exon.start < first.end) {
+	if (first.start <= exon.end && exon.start <= first.end) {
 		return [updateGroup(first, exon), ...rest];
 	} else {
 		return [initGroup(exon), first, ...rest];
