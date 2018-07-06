@@ -22,7 +22,7 @@ import {IconMenu as RTIconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/m
 import Tooltip from 'react-toolbox/lib/tooltip';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
-var {RefGeneAnnotation} = require('../refGeneExons');
+import RefGeneAnnotation from '../refGeneExons';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
 

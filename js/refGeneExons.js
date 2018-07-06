@@ -11,6 +11,7 @@ var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
 var {rxEvents} = require('./react-utils');
 var util = require('./util');
+var {intronRegions, exonGroups} = require('./findIntrons');
 var {chromPositionFromScreen} = require('./exonLayout');
 
 // annotate an interval with cds status
@@ -30,7 +31,7 @@ var toIntvl = (start, end, i) => ({start: start, end: end, i: i});
 //
 // findIntervals(gene :: {cdsStart :: int, cdsEnd :: int, exonStarts :: [int, ...], exonEnds :: [int, ...]})
 //     :: [{start :: int, end :: int, i :: int, inCds :: boolean}, ...]
-function findIntervals(gene) {
+export function findIntervals(gene) {
 	if (_.isEmpty(gene)) {
 		return [];
 	}
@@ -94,6 +95,83 @@ function drawIntroArrows (ctx, xStart, xEnd, endY, segments, strand) {
 			}
 		}
 	}
+}
+
+var probeLayout = (layout, positions) =>
+	layoutPlot.pxTransformFlatmap(layout, toPx => positions.map((pos) => toPx([pos.chromstart, pos.chromend])));
+
+var probeGroups = probes =>
+	exonGroups(probes.map(([start, end]) => ({start, end})));
+
+function drawProbePositions(ctx, probePosition, annotationLanes, width, layout) {
+	var {lanes, perLaneHeight, annotationHeight} = annotationLanes,
+		startY = annotationHeight,
+		endY = (lanes.length || 1) * perLaneHeight + 1;
+
+	pxTransformEach(layout, (toPx, [start, end]) => {
+		ctx.beginPath();
+		var positions = probePosition
+			.map((p, i) => [p, i])
+			.filter(([{chromstart, chromend}]) =>
+				chromstart <= end && start <= chromend);
+		positions.forEach(([{chromstart, chromend}, i]) => {
+			var startX = width / probePosition.length * (i + 0.5),
+				middle = (chromstart + chromend) / 2,
+				[endX] = toPx([middle, middle]);
+			ctx.moveTo(startX, startY);
+			ctx.lineTo(endX, endY);
+		});
+		ctx.lineWidth = 0.5;
+		ctx.strokeStyle = 'rgb(0, 0, 0)';
+		ctx.stroke();
+	});
+}
+
+var probeOverlap = (start, end) => ([s, e]) => s < end && start < e;
+
+var bandColors = [
+	"#aec7e8", // light blue
+	"#000000",
+//	"#dbdb8d", // light mustard
+	"#ff9896"  // light salmon
+];
+
+function drawProbePositions1(ctx, probePosition, annotationLanes, width, layout) {
+	var {lanes, perLaneHeight, annotationHeight} = annotationLanes,
+		screenProbes = probeLayout(layout, probePosition),
+		gaps = intronRegions(probeGroups(screenProbes)),
+		largest = _.first(gaps.sort(([s0, e0], [s1, e1]) => (e1 - s1) - (e0 - s0)), 4)
+			.sort(([x], [y]) => x - y),
+		mapping = _.times(largest.length + 1, i => {
+			var start = _.getIn(largest, [i - 1, 0], -Infinity),
+				end = _.getIn(largest, [i, 1], Infinity),
+				pxRegionI = _.filterIndices(screenProbes, probeOverlap(start, end)),
+				minI = _.min(pxRegionI, i => screenProbes[i][0]),
+				maxI = _.max(pxRegionI, i => screenProbes[i][1]);
+
+			return [[_.min(pxRegionI), _.max(pxRegionI)],
+			        [screenProbes[minI][0], screenProbes[maxI][1]]];
+		}),
+		probeY = annotationHeight,
+		geneY = (lanes.length || 1) * perLaneHeight + 1,
+		midY = Math.round((probeY + geneY) / 2);
+
+	mapping.forEach(([[iStart, iEnd], [pxStart, pxEnd]], i) => {
+		ctx.fillStyle = bandColors[i % bandColors.length];
+		ctx.beginPath();
+		ctx.moveTo(width / probePosition.length * iStart, probeY);
+		ctx.lineTo(width / probePosition.length * (iEnd + 1), probeY);
+		ctx.lineTo(width / probePosition.length * (iEnd + 1), midY);
+		ctx.lineTo(width / probePosition.length * iStart, midY);
+		ctx.fill();
+
+		ctx.beginPath();
+		ctx.moveTo(pxStart, geneY);
+		ctx.lineTo(pxEnd + 1, geneY);
+		ctx.lineTo(pxEnd + 1, midY);
+		ctx.lineTo(pxStart, midY);
+		ctx.fill();
+	});
 }
 
 class RefGeneAnnotation extends React.Component {
@@ -244,27 +322,13 @@ class RefGeneAnnotation extends React.Component {
 				});
 			});
 		});
-		// need to filter by region. Also, what about introns?
-		if (probePosition) {
-			let startY = annotationHeight,
-				endY = (lanes.length || 1) * perLaneHeight + 1;
-			pxTransformEach(layout, (toPx, [start, end]) => {
-				ctx.beginPath();
-				var positions = probePosition
-					.map((p, i) => [p, i])
-					.filter(([{chromstart, chromend}]) =>
-						chromstart <= end && start <= chromend);
-				positions.forEach(([{chromstart, chromend}, i]) => {
-					var startX = width / probePosition.length * (i + 0.5),
-						middle = (chromstart + chromend) / 2,
-						[endX] = toPx([middle, middle]);
-					ctx.moveTo(startX, startY);
-					ctx.lineTo(endX, endY);
-				});
-				ctx.lineWidth = 0.5;
-				ctx.strokeStyle = 'rgb(0, 0, 0)';
-				ctx.stroke();
-			});
+		// what about introns?
+		if (!_.isEmpty(probePosition)) {
+			if (true) {
+				drawProbePositions1(ctx, probePosition, this.annotationLanes, width, layout);
+			} else {
+				drawProbePositions(ctx, probePosition, this.annotationLanes, width, layout);
+			}
 		}
 	};
 
@@ -329,7 +393,4 @@ class RefGeneAnnotation extends React.Component {
 
 //widgets.annotation.add('gene', props => <RefGeneAnnotation {...props}/>);
 
-module.exports = {
-	findIntervals: findIntervals,
-	RefGeneAnnotation: RefGeneAnnotation
-};
+export default RefGeneAnnotation;
