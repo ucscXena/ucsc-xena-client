@@ -106,11 +106,11 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 
 function geneProbesToHeatmap(column, vizSettings, data, samples) {
 	var pos = parsePos(column.fields[0]); // disabled until we support the query
-	if (!_.get(data, 'req') || _.isEmpty(_.get(data, 'refGene'))) {
+	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
 		return null;
 	}
 	var {req} = data,
-		refGeneObj = _.values(data.refGene)[0],
+		refGeneObj = _.first(_.values(data.refGene)),
 		maxXZoom = defaultXZoom(pos, refGeneObj, req.position),
 		{width, showIntrons = false, xzoom = maxXZoom} = column,
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
