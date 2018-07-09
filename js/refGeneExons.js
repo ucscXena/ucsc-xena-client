@@ -174,6 +174,57 @@ function drawProbePositions1(ctx, probePosition, annotationLanes, width, layout)
 	});
 }
 
+var probeHeight = 3;
+function drawProbePositions2(ctx, probePosition, annotationLanes, width, layout) {
+	var {lanes, perLaneHeight, annotationHeight} = annotationLanes,
+		screenProbes = probeLayout(layout, probePosition),
+		gaps = intronRegions(probeGroups(screenProbes)),
+		largest = _.first(gaps.sort(([s0, e0], [s1, e1]) => (e1 - s1) - (e0 - s0)), 4)
+			.sort(([x], [y]) => x - y),
+		mapping = _.times(largest.length + 1, i => {
+			var start = _.getIn(largest, [i - 1, 0], -Infinity),
+				end = _.getIn(largest, [i, 1], Infinity),
+				pxRegionI = _.filterIndices(screenProbes, probeOverlap(start, end)),
+				minI = _.min(pxRegionI, i => screenProbes[i][0]),
+				maxI = _.max(pxRegionI, i => screenProbes[i][1]);
+
+			return [[_.min(pxRegionI), _.max(pxRegionI)],
+			        [screenProbes[minI][0], screenProbes[maxI][1]], pxRegionI];
+		}),
+		probeY = annotationHeight,
+		geneY = (lanes.length || 1) * perLaneHeight + 1,
+		midY = Math.round((probeY + geneY) / 2);
+
+	mapping.forEach(([[iStart, iEnd], [pxStart, pxEnd], pxRegionI], i) => {
+		ctx.fillStyle = bandColors[i % bandColors.length];
+		ctx.beginPath();
+		ctx.moveTo(width / probePosition.length * iStart, probeY);
+		ctx.lineTo(width / probePosition.length * (iEnd + 1), probeY);
+		ctx.lineTo(width / probePosition.length * (iEnd + 1), midY);
+		ctx.lineTo(width / probePosition.length * iStart, midY);
+		ctx.fill();
+
+		ctx.beginPath();
+		ctx.moveTo(pxStart, geneY + probeHeight);
+		ctx.lineTo(pxEnd + 1, geneY + probeHeight);
+		ctx.lineTo(pxEnd + 1, midY);
+		ctx.lineTo(pxStart, midY);
+		ctx.fill();
+
+		ctx.beginPath();
+		ctx.fillStyle = bandColors[i % bandColors.length];
+
+		pxRegionI.forEach(i => {
+			var [pxStart, pxEnd] = screenProbes[i];
+			ctx.moveTo(pxStart, geneY);
+			ctx.lineTo(pxEnd + 1, geneY);
+			ctx.lineTo(pxEnd + 1, geneY + probeHeight);
+			ctx.lineTo(pxStart, geneY + probeHeight);
+			ctx.fill();
+		});
+	});
+}
+
 class RefGeneAnnotation extends React.Component {
 	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
@@ -325,6 +376,8 @@ class RefGeneAnnotation extends React.Component {
 		// what about introns?
 		if (!_.isEmpty(probePosition)) {
 			if (true) {
+				drawProbePositions2(ctx, probePosition, this.annotationLanes, width, layout);
+			} else if (true) {
 				drawProbePositions1(ctx, probePosition, this.annotationLanes, width, layout);
 			} else {
 				drawProbePositions(ctx, probePosition, this.annotationLanes, width, layout);
