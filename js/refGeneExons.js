@@ -307,19 +307,21 @@ function drawProbePositions4(ctx, probePosition, annotationLanes, width, layout)
 			        [screenProbes[minI][0], screenProbes[maxI][1]], pxRegionI];
 		}),
 		probeHeight = 2,
-		bandHeight = 2,
+		bandHeight = 1,
 		probeY = annotationHeight,
 		geneY = (lanes.length || 1) * perLaneHeight + 1;
 
 	mapping.forEach(([[iStart, iEnd], [pxStart, pxEnd], pxRegionI], i) => {
 		ctx.fillStyle = bandColors[i % bandColors.length];
+		// subcolumn group bands
 		ctx.beginPath();
 		ctx.moveTo(width / probePosition.length * iStart, probeY - bandHeight - probeHeight);
 		ctx.lineTo(width / probePosition.length * (iEnd + 1), probeY - bandHeight - probeHeight);
-		ctx.lineTo(width / probePosition.length * (iEnd + 1), probeY - bandHeight);
-		ctx.lineTo(width / probePosition.length * iStart, probeY - bandHeight);
+		ctx.lineTo(width / probePosition.length * (iEnd + 1), probeY - probeHeight);
+		ctx.lineTo(width / probePosition.length * iStart, probeY - probeHeight);
 		ctx.fill();
 
+		// probe group bands
 		ctx.beginPath();
 		ctx.moveTo(pxStart, geneY + probeHeight);
 		ctx.lineTo(pxEnd + 1, geneY + probeHeight);
@@ -339,8 +341,8 @@ function drawProbePositions4(ctx, probePosition, annotationLanes, width, layout)
 			ctx.fill();
 
 			ctx.beginPath();
-			ctx.moveTo(width / probePosition.length * i + 1, probeY - bandHeight);
-			ctx.lineTo(width / probePosition.length * (i + 1) - 1, probeY - bandHeight);
+			ctx.moveTo(width / probePosition.length * i + 1, probeY - probeHeight);
+			ctx.lineTo(width / probePosition.length * (i + 1) - 1, probeY - probeHeight);
 			ctx.lineTo(width / probePosition.length * (i + 1) - 1, probeY);
 			ctx.lineTo(width / probePosition.length * i + 1, probeY);
 			ctx.fill();
