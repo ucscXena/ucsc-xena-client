@@ -131,11 +131,12 @@ var probeOverlap = (start, end) => ([s, e]) => s < end && start < e;
 
 var bandColors = [
 	"#aec7e8", // light blue
-	"#000000",
+	"#555555",
 //	"#dbdb8d", // light mustard
 	"#ff9896"  // light salmon
 ];
 
+// highlight clusters
 function drawProbePositions1(ctx, probePosition, annotationLanes, width, layout) {
 	var {lanes, perLaneHeight, annotationHeight} = annotationLanes,
 		screenProbes = probeLayout(layout, probePosition),
@@ -174,7 +175,7 @@ function drawProbePositions1(ctx, probePosition, annotationLanes, width, layout)
 	});
 }
 
-var probeHeight = 3;
+// highlight clusters & add tick marks for probes
 function drawProbePositions2(ctx, probePosition, annotationLanes, width, layout) {
 	var {lanes, perLaneHeight, annotationHeight} = annotationLanes,
 		screenProbes = probeLayout(layout, probePosition),
@@ -191,6 +192,7 @@ function drawProbePositions2(ctx, probePosition, annotationLanes, width, layout)
 			return [[_.min(pxRegionI), _.max(pxRegionI)],
 			        [screenProbes[minI][0], screenProbes[maxI][1]], pxRegionI];
 		}),
+		probeHeight = 3,
 		probeY = annotationHeight,
 		geneY = (lanes.length || 1) * perLaneHeight + 1,
 		midY = Math.round((probeY + geneY) / 2);
@@ -225,6 +227,67 @@ function drawProbePositions2(ctx, probePosition, annotationLanes, width, layout)
 	});
 }
 
+// draw lines connecting groups
+function drawProbePositions3(ctx, probePosition, annotationLanes, width, layout) {
+	var {lanes, perLaneHeight, annotationHeight} = annotationLanes,
+		screenProbes = probeLayout(layout, probePosition),
+		gaps = intronRegions(probeGroups(screenProbes)),
+		largest = _.first(gaps.sort(([s0, e0], [s1, e1]) => (e1 - s1) - (e0 - s0)), 4)
+			.sort(([x], [y]) => x - y),
+		mapping = _.times(largest.length + 1, i => {
+			var start = _.getIn(largest, [i - 1, 0], -Infinity),
+				end = _.getIn(largest, [i, 1], Infinity),
+				pxRegionI = _.filterIndices(screenProbes, probeOverlap(start, end)),
+				minI = _.min(pxRegionI, i => screenProbes[i][0]),
+				maxI = _.max(pxRegionI, i => screenProbes[i][1]);
+
+			return [[_.min(pxRegionI), _.max(pxRegionI)],
+			        [screenProbes[minI][0], screenProbes[maxI][1]], pxRegionI];
+		}),
+		probeHeight = 2,
+		bandHeight = 2,
+		probeY = annotationHeight,
+		geneY = (lanes.length || 1) * perLaneHeight + 1;
+//		midY = Math.round((probeY + geneY) / 2);
+
+	mapping.forEach(([[iStart, iEnd], [pxStart, pxEnd], pxRegionI], i) => {
+		ctx.fillStyle = bandColors[i % bandColors.length];
+		ctx.beginPath();
+		ctx.moveTo(width / probePosition.length * iStart, probeY);
+		ctx.lineTo(width / probePosition.length * (iEnd + 1), probeY);
+		ctx.lineTo(width / probePosition.length * (iEnd + 1), probeY - bandHeight);
+		ctx.lineTo(width / probePosition.length * iStart, probeY - bandHeight);
+		ctx.fill();
+
+		ctx.beginPath();
+		ctx.moveTo(pxStart, geneY + probeHeight);
+		ctx.lineTo(pxEnd + 1, geneY + probeHeight);
+		ctx.lineTo(pxEnd + 1, geneY + probeHeight + bandHeight);
+		ctx.lineTo(pxStart, geneY + probeHeight + bandHeight);
+		ctx.fill();
+
+		ctx.beginPath();
+		ctx.fillStyle = bandColors[i % bandColors.length];
+
+		pxRegionI.forEach(i => {
+			var [pxStart, pxEnd] = screenProbes[i];
+			ctx.moveTo(pxStart, geneY);
+			ctx.lineTo(pxEnd + 1, geneY);
+			ctx.lineTo(pxEnd + 1, geneY + probeHeight);
+			ctx.lineTo(pxStart, geneY + probeHeight);
+			ctx.fill();
+		});
+
+		var midProbe = width / probePosition.length * (iStart + iEnd + 1) / 2,
+			midGene = (pxStart + pxEnd) / 2;
+		ctx.beginPath();
+		ctx.moveTo(midProbe, probeY - bandHeight);
+		ctx.lineTo(midGene, geneY + probeHeight + bandHeight);
+		ctx.strokeStyle = bandColors[i % bandColors.length];
+		ctx.lineWidth = 1.5;
+		ctx.stroke();
+	});
+}
 class RefGeneAnnotation extends React.Component {
 	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
@@ -376,6 +439,8 @@ class RefGeneAnnotation extends React.Component {
 		// what about introns?
 		if (!_.isEmpty(probePosition)) {
 			if (true) {
+				drawProbePositions3(ctx, probePosition, this.annotationLanes, width, layout);
+			} else if (true) {
 				drawProbePositions2(ctx, probePosition, this.annotationLanes, width, layout);
 			} else if (true) {
 				drawProbePositions1(ctx, probePosition, this.annotationLanes, width, layout);
