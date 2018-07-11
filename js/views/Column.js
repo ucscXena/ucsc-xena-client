@@ -279,12 +279,10 @@ function supportsGeneAverage(column) {
 	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && (fieldList || fields).length === 1;
 }
 
-function matrixMenu(props, {onTumorMap, onMode, onShowIntrons}) {
-	var {data, cohort, column} = props,
-		noData = !_.get(data, 'req'),
-		{fieldType, noGeneDetail, fields, fieldSpecs, showIntrons = false} = column,
-		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs}),
-		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns";
+function matrixMenu(props, {onTumorMap, onMode}) {
+	var {cohort, column} = props,
+		{fieldType, noGeneDetail, fields, fieldSpecs} = column,
+		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs});
 
 	return addIdsToArr ([
 		supportsGeneAverage(column) ?
@@ -295,8 +293,7 @@ function matrixMenu(props, {onTumorMap, onMode, onShowIntrons}) {
 				: null,
 		tumorMapCohort ?
 			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`TumorMap`}/>
-			: null,
-		fieldType === 'geneProbes' ? <MenuItem disabled={noData} onClick={onShowIntrons} caption={intronsItemName}/> : null,
+			: null
 	]);
 }
 
