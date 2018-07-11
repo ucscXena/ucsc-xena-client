@@ -46,7 +46,8 @@ export function findIntervals(gene) {
 
 var shade1 = '#cccccc',
 	shade2 = '#999999',
-	shade3 = '#000080';
+	shade3 = '#000080',
+	shade4 = '#FF0000';
 
 function getAnnotation (index, perLaneHeight, offset) {
 	return {
@@ -68,6 +69,7 @@ function drawIntroArrows (ctx, xStart, xEnd, endY, segments, strand) {
 	var arrowSize = 2, //arrowSize
 		gapSize = 4;
 
+	ctx.strokeStyle = shade2;
 	for (var i = xStart; i < xEnd; i = i + 10) {
 		var found = segments.filter(seg => (Math.abs(seg[0] - i) < gapSize ||
 				Math.abs(seg[0] - i - arrowSize) < gapSize ||
@@ -544,7 +546,7 @@ class RefGeneAnnotation extends React.Component {
 								[pstart, pend] = toPx([start, end]),
 								shade = (mode === "geneExon") ?
 									(i % 2 === 1 ? shade1 : shade2) :
-									(mode === "coordinate" ? shade3 : shade2);
+									(mode === "coordinate" ? (gene.strand === '-' ? shade3 : shade4) : shade2);
 							return [pstart, pend, shade, y, h];
 						}),
 						[pGeneStart, pGeneEnd] = toPx([gene.txStart, gene.txEnd]);
