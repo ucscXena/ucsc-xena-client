@@ -454,7 +454,8 @@ class RefGeneAnnotation extends React.Component {
 
 	// single: force a single lane, i.e. 'dense' mode. Unused.
 	computeAnnotationLanes = ({position, refGene, height, positionHeight = 0}, single) => {
-		var annotationHeight = height - positionHeight,
+		var bottomPad = positionHeight ? 1 : 0,
+			annotationHeight = height - positionHeight - bottomPad,
 			newAnnotationLanes;
 
 		if (position && refGene) {
@@ -482,7 +483,7 @@ class RefGeneAnnotation extends React.Component {
 				}
 			});
 			var perLaneHeight = _.min([annotationHeight / (lanes.length || 1), 12]),
-				laneOffset = 0;// (height - perLaneHeight * lanes.length) / 2;
+				laneOffset = annotationHeight - perLaneHeight * lanes.length;
 
 			newAnnotationLanes = {
 				arrows: !(refGene.length > 1 && single),
