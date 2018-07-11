@@ -102,7 +102,9 @@ function downloadJSON(downloadData) {
 	a.click();
 	document.body.removeChild(a);
 }
-var annotationHeight = 30,
+
+var annotationHeight = 47,
+	positionHeight = 17,
 	scaleHeight = 12;
 
 var styles = {
@@ -615,6 +617,7 @@ class Column extends PureComponent {
 					tooltip={tooltip}
 					layout={column.layout}
 					height={annotationHeight}
+					positionHeight={column.position ? positionHeight : 0}
 					width={width}
 					mode={parsePos(_.get(column.fieldList || column.fields, 0), _.getIn(column, ['assembly'])) ?
 						"coordinate" :

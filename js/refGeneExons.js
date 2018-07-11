@@ -364,13 +364,12 @@ function drawProbePositions4(ctx, probePosition, annotationLanes, width, layout)
 
 }
 
-function drawProbePositions5(ctx, probePosition, annotationLanes, width, layout) {
-	var {lanes, perLaneHeight, annotationHeight} = annotationLanes,
-		count = probePosition.length,
+function drawProbePositions5(ctx, probePosition, height, positionHeight, width, layout) {
+	var count = probePosition.length,
 		screenProbes = probeLayout(layout, probePosition),
 		probeHeight = 2,
-		probeY = annotationHeight,
-		geneY = (lanes.length || 1) * perLaneHeight + 1,
+		probeY = height,
+		geneY = height - positionHeight,
 // conventional rainbow scale
 //		colors = _.times(count, i => `hsl(${Math.round(i * 240 / count)}, 100%, 50%)`);
 		colors = _.times(count, isoluminant(0, count));
@@ -453,8 +452,10 @@ class RefGeneAnnotation extends React.Component {
 		}
 	}
 
-	computeAnnotationLanes = ({position, refGene, height}, single) => {
-		var newAnnotationLanes;
+	// single: force a single lane, i.e. 'dense' mode. Unused.
+	computeAnnotationLanes = ({position, refGene, height, positionHeight = 0}, single) => {
+		var annotationHeight = height - positionHeight,
+			newAnnotationLanes;
 
 		if (position && refGene) {
 			var lanes = [],
@@ -480,7 +481,7 @@ class RefGeneAnnotation extends React.Component {
 					}
 				}
 			});
-			var perLaneHeight = _.min([height / (lanes.length || 1), 12]),
+			var perLaneHeight = _.min([annotationHeight / (lanes.length || 1), 12]),
 				laneOffset = 0;// (height - perLaneHeight * lanes.length) / 2;
 
 			newAnnotationLanes = {
@@ -488,14 +489,14 @@ class RefGeneAnnotation extends React.Component {
 				lanes: lanes,
 				perLaneHeight: perLaneHeight,
 				laneOffset: laneOffset,
-				annotationHeight: height
+				annotationHeight
 			};
 		} else {
 			newAnnotationLanes = {
 				lanes: undefined,
 				perLaneHeight: undefined,
 				laneOffset: undefined,
-				annotationHeight: height
+				annotationHeight
 			};
 		}
 		// cache for tooltip
@@ -503,12 +504,12 @@ class RefGeneAnnotation extends React.Component {
 	};
 
 	draw = (props) => {
-		var {width, layout, mode, column: {fieldType}, probePosition} = props;
-		this.computeAnnotationLanes(props, fieldType === 'geneProbes');
-		var {lanes, perLaneHeight, arrows, laneOffset, annotationHeight} = this.annotationLanes;
+		var {width, layout, height, positionHeight, mode, probePosition} = props;
+		this.computeAnnotationLanes(props, false);
+		var {lanes, perLaneHeight, arrows, laneOffset} = this.annotationLanes;
 
 		// white background
-		this.vg.box(0, 0, width, annotationHeight, 'white');
+		this.vg.box(0, 0, width, height, 'white');
 
 		if (!width || !layout) {
 			return;
@@ -566,7 +567,7 @@ class RefGeneAnnotation extends React.Component {
 		// what about introns?
 		if (!_.isEmpty(probePosition)) {
 			if (true) {
-				drawProbePositions5(ctx, probePosition, this.annotationLanes, width, layout);
+				drawProbePositions5(ctx, probePosition, height, positionHeight, width, layout);
 			} else if (true) {
 				drawProbePositions4(ctx, probePosition, this.annotationLanes, width, layout);
 			} else if (true) {
