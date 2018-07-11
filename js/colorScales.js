@@ -131,7 +131,7 @@ function isoluminant(low, high) {
 			li = Math.floor(p),
 			l = isoStops[li],
 			f = p - li;
-		return `rgb(${~~(l[0] * f + h[0] * (1 - f))},${~~(l[1] * f + h[1] * (1 - f))},${~~(l[2] * f + h[2] * (1 - f))})`;
+		return `rgb(${~~(l[0] * (1 - f) + h[0] * f)},${~~(l[1] * (1 - f) + h[1] * f)},${~~(l[2] * (1 - f) + h[2] * f)})`;
 	};
 }
 
