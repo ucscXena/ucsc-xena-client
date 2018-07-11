@@ -113,6 +113,7 @@ function scaleTrendAmplitude(low, zero, high, origin, thresh, max) {
 	};
 }
 
+// https://stackoverflow.com/questions/7251872/is-there-a-better-color-scale-than-the-rainbow-colormap
 var isoStops = [
 	[0.847, 0.057, 0.057],
 	[0.527, 0.527, 0],
