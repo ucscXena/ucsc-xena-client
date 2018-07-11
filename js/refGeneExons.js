@@ -13,6 +13,7 @@ var {rxEvents} = require('./react-utils');
 var util = require('./util');
 var {intronRegions, exonGroups} = require('./findIntrons');
 var {chromPositionFromScreen} = require('./exonLayout');
+var {isoluminant} = require('./colorScales');
 
 // annotate an interval with cds status
 var inCds = ({cdsStart, cdsEnd}, intvl) =>
@@ -289,23 +290,26 @@ function drawProbePositions3(ctx, probePosition, annotationLanes, width, layout)
 	});
 }
 
-// draw lines connecting groups & add subcolumn markers
+function groupByGaps(screenProbes) {
+	var gaps = intronRegions(probeGroups(screenProbes)),
+		largest = _.first(gaps.sort(([s0, e0], [s1, e1]) => (e1 - s1) - (e0 - s0)), 4)
+			.sort(([x], [y]) => x - y);
+	return _.times(largest.length + 1, i => {
+		var start = _.getIn(largest, [i - 1, 0], -Infinity),
+			end = _.getIn(largest, [i, 1], Infinity),
+			pxRegionI = _.filterIndices(screenProbes, probeOverlap(start, end)),
+			minI = _.min(pxRegionI, i => screenProbes[i][0]),
+			maxI = _.max(pxRegionI, i => screenProbes[i][1]);
+
+		return [[_.min(pxRegionI), _.max(pxRegionI)],
+				[screenProbes[minI][0], screenProbes[maxI][1]], pxRegionI];
+	});
+}
+
 function drawProbePositions4(ctx, probePosition, annotationLanes, width, layout) {
 	var {lanes, perLaneHeight, annotationHeight} = annotationLanes,
 		screenProbes = probeLayout(layout, probePosition),
-		gaps = intronRegions(probeGroups(screenProbes)),
-		largest = _.first(gaps.sort(([s0, e0], [s1, e1]) => (e1 - s1) - (e0 - s0)), 4)
-			.sort(([x], [y]) => x - y),
-		mapping = _.times(largest.length + 1, i => {
-			var start = _.getIn(largest, [i - 1, 0], -Infinity),
-				end = _.getIn(largest, [i, 1], Infinity),
-				pxRegionI = _.filterIndices(screenProbes, probeOverlap(start, end)),
-				minI = _.min(pxRegionI, i => screenProbes[i][0]),
-				maxI = _.max(pxRegionI, i => screenProbes[i][1]);
-
-			return [[_.min(pxRegionI), _.max(pxRegionI)],
-			        [screenProbes[minI][0], screenProbes[maxI][1]], pxRegionI];
-		}),
+		mapping = groupByGaps(screenProbes),
 		probeHeight = 2,
 		bandHeight = 1,
 		probeY = annotationHeight,
@@ -359,6 +363,58 @@ function drawProbePositions4(ctx, probePosition, annotationLanes, width, layout)
 	});
 
 }
+
+function drawProbePositions5(ctx, probePosition, annotationLanes, width, layout) {
+	var {lanes, perLaneHeight, annotationHeight} = annotationLanes,
+		count = probePosition.length,
+		screenProbes = probeLayout(layout, probePosition),
+		probeHeight = 2,
+		probeY = annotationHeight,
+		geneY = (lanes.length || 1) * perLaneHeight + 1,
+// conventional rainbow scale
+//		colors = _.times(count, i => `hsl(${Math.round(i * 240 / count)}, 100%, 50%)`);
+		colors = _.times(count, isoluminant(0, count));
+
+
+	pxTransformEach(layout, (toPx, [start, end]) => {
+		ctx.lineWidth = 0.5;
+		var positions = probePosition
+			.map((p, i) => [p, i])
+			.filter(([{chromstart, chromend}]) =>
+				chromstart <= end && start <= chromend);
+		positions.forEach(([{chromstart, chromend}, i]) => {
+			var startX = width / probePosition.length * (i + 0.5),
+				middle = (chromstart + chromend) / 2,
+				[endX] = toPx([middle, middle]);
+			ctx.beginPath();
+			ctx.moveTo(startX, probeY - probeHeight);
+			ctx.lineTo(endX, geneY + probeHeight);
+			ctx.strokeStyle = colors[i];
+			ctx.stroke();
+		});
+	});
+
+	screenProbes.forEach(([pxStart, pxEnd], i) => {
+		ctx.beginPath();
+		ctx.moveTo(pxStart, geneY);
+		ctx.lineTo(pxEnd + 1, geneY);
+		ctx.lineTo(pxEnd + 1, geneY + probeHeight);
+		ctx.lineTo(pxStart, geneY + probeHeight);
+		ctx.fillStyle = colors[i];
+		ctx.fill();
+	});
+
+	_.times(screenProbes.length, i => {
+		ctx.beginPath();
+		ctx.moveTo(width / probePosition.length * i + 1, probeY - probeHeight);
+		ctx.lineTo(width / probePosition.length * (i + 1) - 1, probeY - probeHeight);
+		ctx.lineTo(width / probePosition.length * (i + 1) - 1, probeY);
+		ctx.lineTo(width / probePosition.length * i + 1, probeY);
+		ctx.fillStyle = colors[i];
+		ctx.fill();
+	});
+}
+
 class RefGeneAnnotation extends React.Component {
 	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
@@ -510,6 +566,8 @@ class RefGeneAnnotation extends React.Component {
 		// what about introns?
 		if (!_.isEmpty(probePosition)) {
 			if (true) {
+				drawProbePositions5(ctx, probePosition, this.annotationLanes, width, layout);
+			} else if (true) {
 				drawProbePositions4(ctx, probePosition, this.annotationLanes, width, layout);
 			} else if (true) {
 				drawProbePositions3(ctx, probePosition, this.annotationLanes, width, layout);
