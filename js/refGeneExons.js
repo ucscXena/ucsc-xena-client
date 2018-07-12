@@ -13,6 +13,8 @@ var {rxEvents} = require('./react-utils');
 var util = require('./util');
 var {chromPositionFromScreen} = require('./exonLayout');
 var {isoluminant} = require('./colorScales');
+import PureComponent from './PureComponent';
+var styles = require('./refGeneExons.module.css');
 
 // annotate an interval with cds status
 var inCds = ({cdsStart, cdsEnd}, intvl) =>
@@ -152,7 +154,7 @@ function drawProbePositions(ctx, probePosition, height, positionHeight, width, l
 	});
 }
 
-class RefGeneAnnotation extends React.Component {
+class RefGeneDrawing extends React.Component {
 	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
@@ -365,6 +367,47 @@ class RefGeneAnnotation extends React.Component {
 				onClick={this.props.onClick}
 				ref='canvas' />
 		);
+	}
+}
+
+class RefGeneHighlight extends PureComponent {
+	render () {
+		var {height, position} = this.props,
+			style = height ? {width: Math.max(position[1] - position[0], 1), height, left: position[0]} : {display: 'none'};
+		return (
+			<div className={styles.highlight}>
+				<div className={styles.box} style={style}/>
+			</div>);
+	}
+}
+
+class RefGeneAnnotation extends PureComponent {
+	state = {probe: undefined};
+	componentWillMount() {
+		this.sub = this.props.tooltip.subscribe(ev => {
+			if (_.getIn(ev, ['data', 'id']) === this.props.id) {
+				this.setState({probe: _.getIn(ev, ['data', 'fieldIndex'])});
+			} else if (this.state.probe !== null) {
+				this.setState({probe: undefined});
+			}
+		});
+	}
+	compnoentWillUnmount() {
+		this.sub.unsubscribe();
+	}
+	render() {
+		var {probePosition, height, positionHeight, layout} = this.props,
+			{probe} = this.state,
+			highlight = probe == null ? {} :
+				{
+					position: probeLayout(layout, [probePosition[probe]])[0],
+					height: height - positionHeight
+				};
+		return (
+			<div className={styles.refGene}>
+				<RefGeneDrawing {...this.props}/>
+				<RefGeneHighlight {...highlight}/>
+			</div>);
 	}
 }
 

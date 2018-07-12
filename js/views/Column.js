@@ -607,6 +607,7 @@ class Column extends PureComponent {
 			// move this to state to generalize to other annotations.
 			annotation = showPosition(column) ?
 				<RefGeneAnnotation
+					id={id}
 					column={column}
 					position={_.getIn(column, ['layout', 'chrom', 0])}
 					refGene={_.getIn(data, ['refGene'], {})}
