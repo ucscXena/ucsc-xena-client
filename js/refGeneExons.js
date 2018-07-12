@@ -392,7 +392,7 @@ class RefGeneAnnotation extends PureComponent {
 			}
 		});
 	}
-	compnoentWillUnmount() {
+	componentWillUnmount() {
 		this.sub.unsubscribe();
 	}
 	render() {
