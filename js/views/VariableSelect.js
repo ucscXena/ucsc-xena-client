@@ -446,6 +446,7 @@ class VariableSelect extends PureComponent {
 				onDoneInvalid: this.onDoneInvalid,
 				valid,
 				loading,
+				overlay,
 				width
 			},
 			dataTypeProps = {
@@ -486,13 +487,14 @@ class LoadingNotice extends React.Component {
 	render() {
 		var {preferred, datasets, features, basicFeatures} = this.props;
 		if (!preferred || !datasets || !features || !basicFeatures) {
-			let {colId, controls, title, width} = this.props,
+			let {colId, controls, overlay, title, width} = this.props,
 				wizardProps = {
 					colId,
 					controls,
-					title,
 					loading: true,
 					loadingCohort: true,
+					overlay,
+					title,
 					width
 				};
 			return <WizardCard {...wizardProps}/>;
