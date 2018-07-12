@@ -274,18 +274,18 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 }
 
 // Maybe put in a selector.
-function supportsGeneAverage(column) {
-	var {fieldType, fields, fieldList} = column;
-	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && (fieldList || fields).length === 1;
-}
+var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
+	!isChrom && _.contains(['geneProbes', 'genes'], fieldType) &&
+		(fieldList || fields).length === 1;
 
-function matrixMenu(props, {onTumorMap, onMode}) {
+
+function matrixMenu(props, {onTumorMap, onMode, isChrom}) {
 	var {cohort, column} = props,
 		{fieldType, noGeneDetail, fields, fieldSpecs} = column,
 		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs});
 
 	return addIdsToArr ([
-		supportsGeneAverage(column) ?
+		supportsGeneAverage(column, isChrom) ?
 			(fieldType === 'genes' ?
 				<MenuItem title={noGeneDetail ? 'no common probemap' : ''}
 					disabled={noGeneDetail} onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
@@ -596,11 +596,13 @@ class Column extends PureComponent {
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
 				interactive, append} = this.props,
+			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
+					_.getIn(column, ['assembly'])),
 			{specialDownloadMenu} = this.state,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
-				onSpecialDownload, specialDownloadMenu}),
+				onSpecialDownload, specialDownloadMenu, isChrom}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
@@ -617,7 +619,7 @@ class Column extends PureComponent {
 					height={annotationHeight}
 					positionHeight={column.position ? positionHeight : 0}
 					width={width}
-					mode={parsePos(_.get(column.fieldList || column.fields, 0), _.getIn(column, ['assembly'])) ?
+					mode={isChrom ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null,
@@ -626,7 +628,7 @@ class Column extends PureComponent {
 					layout = {column.layout}
 					width = {width}
 					scaleHeight ={scaleHeight}
-					mode = {parsePos(_.get(column.fieldList || column.fields, 0), _.getIn(column, ['assembly'])) ?
+					mode = {isChrom ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null;
