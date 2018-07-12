@@ -362,7 +362,7 @@ class VariableSelect extends PureComponent {
 		var {mode, advanced, valid, loading, error, basicFeatures} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
-			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
+			{colId, controls, datasets, features, helpText, overlay, preferred, title, width} = this.props,
 			contentSpecificHelp = _.getIn(helpText, [mode]),
 			ModeForm = getModeFields[mode],
 			wizardProps = {
@@ -374,6 +374,7 @@ class VariableSelect extends PureComponent {
 				onDoneInvalid: this.onDoneInvalid,
 				valid,
 				loading,
+				overlay,
 				width
 			},
 			dataTypeProps = {
@@ -413,13 +414,14 @@ class LoadingNotice extends React.Component {
 	render() {
 		var {preferred, datasets, features, basicFeatures} = this.props;
 		if (!preferred || !datasets || !features || !basicFeatures) {
-			let {colId, controls, title, width} = this.props,
+			let {colId, controls, overlay, title, width} = this.props,
 				wizardProps = {
 					colId,
 					controls,
-					title,
 					loading: true,
 					loadingCohort: true,
+					overlay,
+					title,
 					width
 				};
 			return <WizardCard {...wizardProps}/>;

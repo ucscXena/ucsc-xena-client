@@ -24,6 +24,7 @@
 var React = require('react');
 import {Button} from 'react-toolbox/lib/button';
 import {Card, CardTitle, CardText, CardActions} from 'react-toolbox/lib/card';
+
 var spinner = require('../ajax-loader.gif');
 
 // App dependencies
@@ -45,32 +46,37 @@ class WizardCard extends React.Component {
 	};
 
 	render() {
-		var {children, colId, controls, contentSpecificHelp,
-            title, valid, loading, loadingCohort, width} = this.props;
+		var {
+			children, colId, controls, contentSpecificHelp,
+			title, valid, loading, loadingCohort, overlay, width
+		} = this.props;
 		return (
-			<Card style={{width: width}} className={compStyles.WizardCard}>
-				<div className={compStyles.headerContainer}>
-					<CardAvatar colId={colId}/>
-					<div className={compStyles.controls}>
-						{controls}
+			<div>
+				<Card style={{width: width}} className={compStyles.WizardCard}>
+					<div className={compStyles.headerContainer}>
+						<CardAvatar colId={colId}/>
+						<div className={compStyles.controls}>
+							{controls}
+						</div>
 					</div>
-				</div>
-				<div className={compStyles.titleContainer}>
-					<CardTitle className={compStyles.title} title={title} />
-				</div>
-				<div className={compStyles.content}>
-					{contentSpecificHelp ? <CardText>{contentSpecificHelp}</CardText> : null}
-                    {loadingCohort ? <CardText>Loading datasets...</CardText> : null}
-					{children}
-				</div>
-				<CardActions className={compStyles.actions}>
-					{loading ? <img src={spinner}/> : null}
-					{valid ? <i className='material-icons'>done</i> : null}
-					<span onClick={this.onDoneInvalid}>
+					<div className={compStyles.titleContainer}>
+						<CardTitle className={compStyles.title} title={title}/>
+					</div>
+					<div className={compStyles.content}>
+						{contentSpecificHelp ? <CardText>{contentSpecificHelp}</CardText> : null}
+						{loadingCohort ? <CardText>Loading datasets...</CardText> : null}
+						{children}
+					</div>
+					<CardActions className={compStyles.actions}>
+						{loading ? <img src={spinner}/> : null}
+						{valid ? <i className='material-icons'>done</i> : null}
+						<span onClick={this.onDoneInvalid}>
 						<Button accent disabled={!valid} onClick={this.onDone}>Done</Button>
 					</span>
-				</CardActions>
-			</Card>
+					</CardActions>
+				</Card>
+				{overlay ? <div className={compStyles.wizardOverlay}/> : null}
+			</div>
 		);
 	}
 }

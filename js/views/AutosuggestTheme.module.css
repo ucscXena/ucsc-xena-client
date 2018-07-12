@@ -14,13 +14,16 @@
 
 .input {
 	border-bottom: 1px solid black12;
+	height: 77px; /* Allows input field access to full height of its container */
+	padding: 0;
 }
 
 .input input {
-	white-space: nowrap;
+	height: 100%; /* Input field to take up full height - to improve clickable area */
 	overflow: hidden;
+	padding: 20px 56px 20px 16px !important; /* 56px RHS to allow for close (X) icon */
 	text-overflow: ellipsis;
-	padding-right: 56px; /* 56px to allow for close (X) icon */
+	white-space: nowrap;
 }
 
 .inputOpen {
