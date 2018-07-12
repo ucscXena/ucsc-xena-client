@@ -266,7 +266,7 @@ function addWizardColumns(Component) {
 					...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		};
 
-	    render() {
+	    addColumns() {
 			var {children, appState, wizard} = this.props,
 				{cohort, wizardMode, defaultWidth, servers} = appState,
 				{cohorts, cohortPreferred, cohortMeta,
@@ -305,10 +305,16 @@ function addWizardColumns(Component) {
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
 						editing === i ? [el, <VariableSelect key={i} actionKey={i} pos={i} title='Add Variable'
 															 {...datasetSelectProps} controls={cancelIcon}/>] : [el]);
+			return withNewColumns.concat(
+				wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, width));
+		}
+
+		render() {
+			var {children, appState: {editing, wizardMode}} = this.props,
+				columns = editing != null || wizardMode ? this.addColumns() : children;
 			return (
 				<Component {...this.props}>
-					{withNewColumns.concat(
-						wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, width))}
+					{columns}
 				</Component>);
 		}
 	};
