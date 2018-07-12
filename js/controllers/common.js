@@ -10,7 +10,9 @@ var fetch = require('../fieldFetch');
 var kmModel = require('../models/km');
 var {getColSpec} = require('../models/datasetJoins');
 var {signatureField} = require('../models/fieldSpec');
-var {publicServers} = require('../defaultServers');
+var defaultServers = require('../defaultServers');
+var {publicServers} = defaultServers;
+var gaEvents = require('../gaEvents');
 // pick up signature fetch
 require('../models/signatures');
 
@@ -35,6 +37,29 @@ var allSamples = _.curry((cohort, max, server) => xenaQuery.cohortSamples(server
 
 function unionOfGroup(gb) {
 	return _.union(..._.map(gb, ([v]) => v));
+}
+
+function logSampleSources(cohortResps) {
+	var havingSamples = cohortResps.filter(([v]) => v.length > 0)
+			.map(([,, server]) => server),
+		types = new Set(havingSamples.map(s =>
+					s === defaultServers.servers.localHub ? 'localhost' :
+					// counting all ucsc-hosted hubs as public
+					s.indexOf('.xenahubs.net') !== -1 ? 'public' :
+					'private'));
+	if (types.has('localhost')) {
+		// user has samples on localhost hub
+		gaEvents('hubs', 'localhost');
+	}
+	if (types.has('private')) {
+		// user has samples on private hub that isn't localhost
+		gaEvents('hubs', 'private');
+	}
+	if (types.size > 1 && (types.has('localhost') || types.has('private'))) {
+		// user is joining samples across hubs, and not all of them
+		// are xena public hubs.
+		gaEvents('hubs', 'cohort join');
+	}
 }
 
 // Performance of this is probably poor, esp. due to underscore's horrible
@@ -64,6 +89,7 @@ var collateSamples = _.curry((cohorts, max, resps) => {
 		cohortSamples = unionOfGroup(resps || []).slice(0, max),
 		cohortOver = cohortSamples.length >= max,
 		hasPrivateSamples = cohortHasPrivateSamples(resps);
+	logSampleSources(resps);
 	return {samples: cohortSamples, over: serverOver || cohortOver, hasPrivateSamples};
 });
 

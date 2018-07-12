@@ -2,6 +2,7 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
 var Sortable = require('../views/Sortable');
+var gaEvents = require('../gaEvents');
 
 // We skip the first column to keep 'samples' on the left.
 function makeSortable(Component) {
@@ -9,6 +10,7 @@ function makeSortable(Component) {
 	    static displayName = 'SpreadsheetSortable';
 
 	    onReorder = (order) => {
+			gaEvents('spreadsheet', 'reorder');
 			this.props.callback(['order', order]);
 		};
 

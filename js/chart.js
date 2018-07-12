@@ -408,31 +408,40 @@ function render(root, callback, sessionStorage) {
 		}
 	}
 
-	function expUISetting(visible, expState, column, colSettings, dropDown, dropDownDiv) {
+	function expUISetting(visible, expState, column, colSettings, dropDown, dropDownDiv, data) {
 		if (visible && colSettings.units) {
 			dropDown.style.visibility = "visible";
+
+			//check current expState variable
+			if (expState[column] !== undefined) {
+				dropDownDiv.selectedIndex = expState[column];
+			}
+			else {
+				dropDownDiv.selectedIndex = 0;
+				expState[column] = 0;
+			}
+
 			var notLogScale = _.any(colSettings.units, unit => !unit || unit.search(/log/i) === -1);
 			if (notLogScale) {
-				dropDownDiv.selectedIndex === 0;
-				dropDownDiv.value = "none";
-				// unit labels
+				// unit labels first option
 				if (_.filter(colSettings.units, unit => unit).length === 0) {
 					dropDownDiv.options[0].text = "unknown";
 				} else {
 					dropDownDiv.options[0].text = colSettings.units.join();
 				}
-				dropDownDiv.options[1].text = '';
+				// unit labels second option
+				if (_.some(data, d => _.some(d, v => v < 0))) {
+					dropDownDiv.options[1].text = '';
+				} else {
+					if (_.filter(colSettings.units, unit => unit).length === 0) {
+						dropDownDiv.options[1].text = '';
+					} else {
+						dropDownDiv.options[1].text = "log2(" + colSettings.units.join() + "+1)";
+						dropDownDiv.options[1].value = "log2";
+					}
+				}
 			}
 			else {
-				//check current expState variable
-				if (expState[column] !== undefined) {
-					dropDownDiv.selectedIndex = expState[column];
-				}
-				else {
-					dropDownDiv.selectedIndex = 0;
-					expState[column] = 0;
-				}
-
 				// unit labels
 				dropDownDiv.options[0].text = colSettings.units.join();
 				var unitsString = colUnit(colSettings);
@@ -517,7 +526,7 @@ function render(root, callback, sessionStorage) {
 	}
 
 	function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
-		yfields, ycodemap, ydata, reverseStrand,
+		yfields, ycodemap, ydata,
 		offsets, xlabel, ylabel, STDEV,
 		scatterLabel, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
@@ -883,9 +892,6 @@ function render(root, callback, sessionStorage) {
 				chartOptions = highchartsHelper.columnChartOptions(
 					chartOptions, categories, xAxisTitle, "Histogram", ylabel, showLegend);
 			} else {
-				if (reverseStrand) {
-					displayCategories.reverse();
-				}
 				chartOptions = highchartsHelper.columnChartFloat (chartOptions, displayCategories, xAxisTitle, ylabel);
 			}
 			chart = new Highcharts.Chart(chartOptions);
@@ -1134,7 +1140,7 @@ function render(root, callback, sessionStorage) {
 				chart = new Highcharts.Chart(chartOptions);
 
 				function printSpearmanRho(div, xVector, yVector) {
-					var [xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x, y) {return x != null && y != null;}));
+					var [xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x) {return x[0] != null && x[1] != null;}));
 					var rho = jStat.corrcoeff(xlist, ylist); // r Pearson's Rho correlation coefficient
 					var spearmanRho = jStat.spearmancoeff(xlist, ylist); // (spearman's) rank correlation coefficient, rho
 					div.innerHTML = 'Pearson\'s rho<br>' +
@@ -1286,8 +1292,8 @@ function render(root, callback, sessionStorage) {
 		//initialization
 		document.getElementById("myChart").innerHTML = "Querying Xena ...";
 		normalizationUISetting(false);
-		expUISetting(false, expState, ycolumn, null, expYUIParent, expYUI);
-		expUISetting(false, expXState, xcolumn, null, expXUIParent, expXUI);
+		expUISetting(false, expState, ycolumn, null, expYUIParent, expYUI, null);
+		expUISetting(false, expXState, xcolumn, null, expXUIParent, expXUI, null);
 		scatterColorUISetting(false);
 
 		// save state cohort, xcolumn, ycolumn, colorcolumn
@@ -1329,7 +1335,6 @@ function render(root, callback, sessionStorage) {
 				yProbes = _.getIn(xenaState, ['data', ycolumn, 'req', 'probes']),
 				yfields = yProbes ? yProbes :
 					((['segmented', 'mutation', 'SV'].indexOf(columns[ycolumn].fieldType) !== -1) ? [columns[ycolumn].fields[0]] : columns[ycolumn].fields),
-				reverseStrand = false,
 				samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 				yIsCategorical, xIsCategorical, xfield,
 				offsets = {},  // per y variable
@@ -1355,10 +1360,6 @@ function render(root, callback, sessionStorage) {
 				ycodemap = ["0", "1"];
 			}
 
-			//reverse display if ycolumn is on - strand
-			if (columns[ycolumn].strand && (columns[ycolumn].strand === '-' )) {
-				reverseStrand = true;
-			}
 			// single xfield only
 			if (xfields && xfields.length > 1) {
 				document.getElementById("myChart").innerHTML = "not applicable: x axis has more than one variable" +
@@ -1383,10 +1384,10 @@ function render(root, callback, sessionStorage) {
 			}
 
 			// set y axis unit exponentiation UI
-			expUISetting(!yIsCategorical, expState, ycolumn, columns[ycolumn], expYUIParent, expYUI);
+			expUISetting(!yIsCategorical, expState, ycolumn, columns[ycolumn], expYUIParent, expYUI, ydata);
 
 			// set x axis unit exponentiation UI
-			expUISetting(!xIsCategorical && xcolumn !== "none", expXState, xcolumn, columns[xcolumn], expXUIParent, expXUI);
+			expUISetting(!xIsCategorical && xcolumn !== "none", expXState, xcolumn, columns[xcolumn], expXUIParent, expXUI, xdata);
 
 			// y exponentiation
 			if (yIsCategorical) {
@@ -1396,8 +1397,11 @@ function render(root, callback, sessionStorage) {
 			} else {
 				yExponentiation = expYUI.value;
 			}
+
 			if (yExponentiation === "exp2") {
 				ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
+			} else if (yExponentiation === "log2") {
+				ydata =  _.map(ydata, d => _.map(d, x => (x != null) ? Math.log2(x + 1) : null));
 			}
 
 			// x exponentiation
@@ -1410,6 +1414,8 @@ function render(root, callback, sessionStorage) {
 			}
 			if (xExponentiation === "exp2") {
 				xdata =  _.map(xdata, d => _.map(d, x => (x != null) ? Math.pow(2, x) : null));
+			} else if (xExponentiation === "log2") {
+				xdata =  _.map(xdata, d => _.map(d, x => (x != null) ? Math.log2(x + 1) : null));
 			}
 
 			// set x and y labels based on axis and normalization UI selection
@@ -1462,7 +1468,7 @@ function render(root, callback, sessionStorage) {
 			}
 
 			var thunk = offsets => drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
-				yfields, ycodemap, ydata, reverseStrand,
+				yfields, ycodemap, ydata,
 				offsets, xlabel, ylabel, STDEV,
 				scatterLabel, scatterColorData, scatterColorDataCodemap,
 				samplesMatched, columns, xcolumn, ycolumn, colorColumn);

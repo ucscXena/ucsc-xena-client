@@ -58,7 +58,7 @@ var gbURL = (assembly, pos) => {
 	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${positionString}&position=${regionString}`;
 };
 
-function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
+function tooltip(id, heatmap, assembly, fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
@@ -75,6 +75,8 @@ function tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat, codes, po
 		median = heatmap && prec(_.medianNull(heatmap[fieldIndex]));
 	return {
 		sampleID: sampleFormat(sampleID),
+		id,
+		fieldIndex,
 		rows: [
 			[['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos)]]] : []),
@@ -158,9 +160,9 @@ function renderFloatLegend(props) {
 var addWordBreaks = str => str.replace(/([_/])/g, '\u200B$1\u200B');
 
 function renderFloatLegendNew(props) {
-	var {units, colors, vizSettings} = props;
+	var {units, colors, data, vizSettings} = props;
 
-	if (!colors) {
+	if (_.isEmpty(data)) {
 		return null;
 	}
 
@@ -259,9 +261,10 @@ class extends PureComponent {
 	tooltip = (ev) => {
 		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
 			codes = _.get(data, 'codes'),
-			position = _.getIn(data, ['req', 'position']),
+			// support data.req.position for old bookmarks.
+			position = column.position || _.getIn(data, ['req', 'position']),
 			{assembly, fields, heatmap, width} = column;
-		return tooltip(heatmap, assembly, fields, sampleFormat, fieldFormat(id), codes, position, width, zoom, samples, ev);
+		return tooltip(id, heatmap, assembly, fields, sampleFormat, fieldFormat(id), codes, position, width, zoom, samples, ev);
 	};
 
 	// To reduce this set of properties, we could

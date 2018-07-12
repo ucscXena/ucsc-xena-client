@@ -90,13 +90,6 @@ function resetWizard(state) {
 		_.assoc(state, 'wizardMode', false, 'showWelcome', false) : state;
 }
 
-// Fetches the gene strand info for a geneProbes field.
-function fetchStrand(serverBus, state, id, gene, dataset) {
-	var {probemap, dsID} = dataset,
-		{host} = JSON.parse(dsID);
-	serverBus.next([['strand', id], xenaQuery.probemapGeneStrand(host, probemap, gene).catch(err => {console.log(err); return Rx.Observable.of('+');})]);
-}
-
 // Use min app width (1280px) if viewport width is currently smaller than min
 // app width. (App is responsive above 1280px but components are snapped at a
 // minimum width of 1280px)
@@ -113,7 +106,7 @@ var getPage = path =>
 	'heatmap';
 
 // XXX This same info also appears in urlParams.js
-var savedParams = params => _.pick(params, 'dataset', 'hubs', 'host', 'cohort', 'allIdentifiers');
+var savedParams = params => _.pick(params, 'dataset', 'addHub', 'removeHub', 'hubs', 'host', 'cohort', 'allIdentifiers');
 var setPage = (state, path, params) =>
 	_.assoc(state,
 			'page', getPage(path),
@@ -207,16 +200,8 @@ var spreadsheetControls = {
 		return resetWizard(newState);
 	},
 	'add-column-post!': (serverBus, state, newState, pos, ...idSettingsList) => {
-		idSettingsList.forEach(({id, settings}) => {
-			// For geneProbes, fetch the gene model (just strand right now), and defer the
-			// data fetch.
-			if (settings.fieldType === 'geneProbes') {
-				// Pick first fieldSpec, and 1st gene name.
-				fetchStrand(serverBus, state, id, settings.fieldSpecs[0].fields[0], settings.dataset);
-			} else {
-				fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
-			}
-		});
+		idSettingsList.forEach(({id}) =>
+			fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id])));
 	},
 	'edit-column': (state, editing) => _.assoc(state, 'editing', editing),
 	resize: (state, id, {width, height}) =>

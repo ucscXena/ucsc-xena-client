@@ -18,12 +18,56 @@ var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
-import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
+import {IconMenu as RTIconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 import Tooltip from 'react-toolbox/lib/tooltip';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
-var {RefGeneAnnotation} = require('../refGeneExons');
+import RefGeneAnnotation from '../refGeneExons';
 import { matches } from 'static-interval-tree';
+var gaEvents = require('../gaEvents');
+
+var ESCAPE = 27;
+
+class IconMenu extends React.Component {
+	onKeyDown = ev => {
+		if (ev.keyCode === ESCAPE) {
+			this.ref.handleMenuHide();
+		}
+	}
+	cleanup() {
+		// We get an onHide() call from setting state in Menu, *and*
+		// from this.ref.handleMenuHide(), during this.onKeyDown. So,
+		// check if 'curtain' still exists before tear down.
+		if (this.curtain) {
+			document.body.removeChild(this.curtain);
+			document.removeEventListener('keydown', this.onKeyDown);
+			delete this.curtain;
+		}
+	}
+	componentWillUnmount() {
+		this.cleanup();
+	}
+	onHide = () => {
+		var {onHide} = this.props;
+		this.cleanup();
+		onHide && onHide();
+	}
+	onShow = () => {
+		var {onShow} = this.props;
+		this.curtain = document.createElement('div');
+		this.curtain.style = "position:absolute;top:0;left:0;width:100%;height:100%";
+		document.body.appendChild(this.curtain);
+		document.addEventListener('keydown', this.onKeyDown, false);
+		onShow && onShow();
+	}
+	onRef = ref => {
+		this.ref = ref;
+	}
+	render() {
+		var {onShow, onHide, ...others} = this.props;
+		return <RTIconMenu innerRef={this.onRef} onShow={this.onShow} onHide={this.onHide} {...others}/>;
+	}
+}
 
 const TooltipMenuItem = Tooltip(MenuItem);
 
@@ -58,7 +102,9 @@ function downloadJSON(downloadData) {
 	a.click();
 	document.body.removeChild(a);
 }
-var annotationHeight = 30,
+
+var annotationHeight = 47,
+	positionHeight = 17,
 	scaleHeight = 12;
 
 var styles = {
@@ -330,6 +376,10 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 		.map(([start, end]) => [Math.max(start, cdsStart), Math.min(end, cdsEnd)]);
 }
 
+var showPosition = column =>
+	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType);
+
+
 class Column extends PureComponent {
 	state = {
 	    specialDownloadMenu: specialDownloadMenu
@@ -370,6 +420,7 @@ class Column extends PureComponent {
 
 	onDownload = () => {
 		var {column, data, samples, index, sampleFormat} = this.props;
+		gaEvents('spreadsheet', 'download', 'column');
 		download(widgets.download({column, data, samples, index: index, sampleFormat}));
 	};
 
@@ -382,6 +433,7 @@ class Column extends PureComponent {
 	};
 
 	onKm = () => {
+		gaEvents('spreadsheet', 'km');
 		this.props.onKm(this.props.id);
 	};
 
@@ -553,25 +605,28 @@ class Column extends PureComponent {
 			status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
-			annotation = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
+			annotation = showPosition(column) ?
 				<RefGeneAnnotation
+					id={id}
 					column={column}
 					position={_.getIn(column, ['layout', 'chrom', 0])}
 					refGene={_.getIn(data, ['refGene'], {})}
+					probePosition={column.position}
 					tooltip={tooltip}
 					layout={column.layout}
 					height={annotationHeight}
+					positionHeight={column.position ? positionHeight : 0}
 					width={width}
-					mode={parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+					mode={parsePos(_.get(column.fieldList || column.fields, 0), _.getIn(column, ['assembly'])) ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null,
-			scale = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
+			scale = showPosition(column) ?
 				<ChromPosition
 					layout = {column.layout}
 					width = {width}
 					scaleHeight ={scaleHeight}
-					mode = {parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+					mode = {parsePos(_.get(column.fieldList || column.fields, 0), _.getIn(column, ['assembly'])) ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null;

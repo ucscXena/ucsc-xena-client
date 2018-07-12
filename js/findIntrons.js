@@ -13,23 +13,27 @@ var initGroup = exon => ({
 	exons: [exon]
 });
 
+var push = (arr, v) => (arr.push(v), arr);
+
 // Update a group with an overlapping exon
 function updateGroup(group, exon) {
 	var newEnd = group.end < exon.end ? exon.end : group.end;
 	return {
 		start: group.start,
 		end: newEnd,
-		exons: [...group.exons, exon] // XXX potentially slow
+		exons: push(group.exons, exon)
 	};
 }
 
 function mergeTop(groups, exon) {
-	var [first, ...rest] = groups;
-	if (first.start < exon.end && exon.start < first.end) {
-		return [updateGroup(first, exon), ...rest];
+	var len = groups.length - 1,
+		last = groups[len];
+	if (last.start <= exon.end && exon.start <= last.end) {
+		groups[len] = updateGroup(last, exon);
 	} else {
-		return [initGroup(exon), first, ...rest];
+		groups.push(initGroup(exon));
 	}
+	return groups;
 }
 
 // findIntrons(exons :: [[{start, end}, {start, end}, ...], ...]) ::
@@ -42,7 +46,7 @@ function exonGroups(exons) {
 	}
 	var sorted = _.sortBy(exons, 'start'),
 		[first, ...rest] = sorted;
-	return rest.reduce(mergeTop, [initGroup(first)]).reverse();
+	return rest.reduce(mergeTop, [initGroup(first)]);
 }
 
 function intronRegions(groups) {

@@ -17,8 +17,9 @@ var {testHost} = require('./xenaQuery');
 var _ = require('./underscore_ext');
 var {serverNames} = require('./defaultServers');
 var styles = require('./hubPage.module.css');
-var {parseServer} = require('./hubParams');
+var {parseServer, getHubParams} = require('./hubParams');
 var nav = require('./nav');
+var {encodeObject} = require('./util');
 
 var RETURN = 13;
 
@@ -107,6 +108,7 @@ class Hub extends React.Component {
 
 	render() {
 		var {state, selector} = this.props,
+			hubParams = getHubParams(state),
 			{ping} = this.state,
 			servers = selector(state),
 			hostList = _.mapObject(servers, (s, h) => ({
@@ -129,7 +131,7 @@ class Hub extends React.Component {
 								<span className={classNames(styles.status, getStyle(h.statusStr))}>{h.statusStr}</span>
 							</div>
 							<div className={styles.hubNameContainer}>
-								<a href={`../datapages/?host=${h.host}`}>
+								<a href={`../datapages/?${encodeObject({host: h.host, ...hubParams})}`}>
 									{h.name}{h.reqStatus}
 								</a>
 							</div>

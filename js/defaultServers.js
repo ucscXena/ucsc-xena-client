@@ -9,7 +9,7 @@ var servers = {
 	pcawgHub: 'https://pcawg.xenahubs.net',
 	singlecellHub: 'https://singlecell.xenahubs.net',
 	pancanAtlasHub: 'https://pancanatlas.xenahubs.net',
-	treehouseHub: 'https://treehouse.xenahubs.net',
+	treehouseHub: 'https://xena.treehouse.gi.ucsc.edu',
 	gdcHub: "https://gdc.xenahubs.net"
 };
 

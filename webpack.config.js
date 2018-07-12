@@ -14,16 +14,16 @@ var htmlPlugin = process.argv.indexOf('--disable-html-plugin') === -1 ?
 
 module.exports = {
 	historyApiFallback: true,
-	entry: {heatmap: './js/main', docs: './js/docs'},
+	entry: {heatmap: './js/main', docs: './js/docs', register: './js/register'},
 	output: {
 		path: __dirname + "/build",
 		publicPath: "../",
 		filename: "[name].js"
 	},
 	devServer: {
-		host: "0.0.0.0",
-	        publicPath: '/',
-	        public: "ec2-52-91-209-29.compute-1.amazonaws.com:8080",
+		host: "localhost",
+		publicPath: '/',
+		disableHostCheck: true,
 		proxy: {
 			'/api/**': {
 				changeOrigin: true,

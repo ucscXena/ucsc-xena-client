@@ -32,3 +32,8 @@ def documents(doc_id):
 def doc_list(body):
     "Fetch document list for patient list"
     return requests.post(settings.TIES_URL + 'documents/list', headers=JSON_HEADERS, data=body)
+
+def doc_filter(body):
+    "Filter document list matching terms"
+    print("testing", )
+    return requests.post(settings.TIES_URL + 'documents/filter', data=body, headers=JSON_HEADERS)

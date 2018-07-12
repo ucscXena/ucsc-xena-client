@@ -9,13 +9,22 @@ var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers, datasetQuery, updateWizard} = require('./common');
 var Rx = require('../rx');
 
-function setHubs(state, {hubs}) {
-	return hubs ?
-		hubs.reduce(
-				(state, hub) => assocIn(state, ['servers', hub, 'user'], true),
-				state) :
-		state;
-}
+var hubsToAdd = ({hubs, addHub}) =>
+	(hubs || []).concat(addHub || []);
+
+var hubsToRemove = ({removeHub}) => removeHub || [];
+
+var removeHubs = (state, params) =>
+	hubsToRemove(params).reduce(
+			(state, hub) => assocIn(state, ['servers', hub, 'user'], false),
+			state);
+
+var addHubs = (state, params) =>
+	hubsToAdd(params).reduce(
+			(state, hub) => assocIn(state, ['servers', hub, 'user'], true),
+			state);
+
+var setHubs = (state, params) => removeHubs(addHubs(state, params), params);
 
 var {ajax, of, zip, zipArray} = Rx.Observable;
 var ajaxGet = url => ajax({url, crossDomain: true, method: 'GET', responseType: 'text'});

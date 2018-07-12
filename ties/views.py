@@ -98,3 +98,28 @@ def doc_list(request):
             json.dumps({'type': 'server',
                         'error': 'Error from TIES server (' + str(resp.status_code) + str(resp.text) + ')'}))
     return HttpResponse(resp.text)
+
+@csrf_exempt
+def doc_filter(request):
+    "Filter document list"
+    if not request.method == 'POST':
+        return HttpResponseBadRequest(json.dumps({'error': 'request.method not supported'}))
+    try:
+        json.loads(request.body)
+    except ValueError:
+        return HttpResponseServerError(
+            json.dumps({'error': 'invalid json in POST body'}))
+
+    try:
+        resp = ties.request.doc_filter(request.body)
+    #pylint: disable=broad-except
+    except Exception as err:
+        return HttpResponseServerError(
+            json.dumps({'type': 'server',
+                        'error': 'Error contacting TIES server (' + str(err) + ')'}))
+
+    if resp.status_code != 200:
+        return HttpResponseServerError(
+            json.dumps({'type': 'server',
+                        'error': 'Error contacting TIES server (' + str(resp) + ')'}))
+    return HttpResponse(resp.text)

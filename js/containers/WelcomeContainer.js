@@ -11,7 +11,7 @@ var links = [
 		'FOXM1a, FOXM1b, FOXM1c transcript expression in tumor vs. normal samples'],
 	['heatmap', 'a659e770d2599acfad6a8f9b5ffbe57f',
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma'],
-	['heatmap', 'dfe255e4b019a5a895d5c214db0f075e',
+	['heatmap', '6946d911d6b0cd473c442fe99f6a695a',
 		'KM plot (overall survival) of breast cancer PAM50 subtypes'],
 	['heatmap', '8781d82f49888ed62edbc51cb1018634',
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],

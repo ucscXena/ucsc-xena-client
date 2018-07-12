@@ -40,8 +40,9 @@ var links = [
 ];
 
 var helpLink = {
-	href: 'https://docs.google.com/a/soe.ucsc.edu/document/d/1CIWj6L8LAaHFmLek3yrbrjFKRm_l3Sy73lJ4wY-WM8Y',
-	label: 'Help'
+	href: 'https://ucsc-xena.gitbook.io/project/',
+	label: 'Help',
+	target: '_blank'
 };
 
 var active = (l, activeLink) => l.nav === activeLink;
@@ -61,7 +62,7 @@ class XenaNav extends React.Component {
 		let logoSrcSet = `${logoSantaCruz2xImg} 2x, ${logoSantaCruz3xImg} 3x`;
 		return (
 			<AppBar className={compStyles.NavAppBar}>
-				<a href='http://xena.ucsc.edu/'><img className={compStyles.logoXena} src={logoSantaCruzImg} srcSet={logoSrcSet}/></a>
+				<a href='http://xena.ucsc.edu/'><img title={window.ga ? '' : 'no analytics'} className={compStyles.logoXena} src={logoSantaCruzImg} srcSet={logoSrcSet}/></a>
 				<Navigation type="horizontal" routes={routes}>
 					{getState ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
 					<Link {...helpLink} />

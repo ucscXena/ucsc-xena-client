@@ -43,7 +43,7 @@ function getValueType(dataset, features, fields) {
 	return 'float';
 }
 
-function getFieldType(dataset, features, fields, probes) {
+function getFieldType(dataset, features, fields, probes, pos) {
 	if (dataset.type === 'mutationVector') {
 		return dataset.dataSubType.search(/SV|structural/i) !== -1 ? 'SV' : 'mutation';
 	}
@@ -53,7 +53,8 @@ function getFieldType(dataset, features, fields, probes) {
 	if (dataset.type === 'clinicalMatrix') {
 		return 'clinical';
 	}
-	return  probes ? 'probes' : (fields.length > 1 ? 'genes' : 'geneProbes');
+	// We treat probes in chrom view (pos) as geneProbes
+	return  probes ? 'probes' : ((fields.length > 1 && !pos) ? 'genes' : 'geneProbes');
 }
 
 function sigFields(fields, {genes, weights}) {
@@ -69,7 +70,7 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
 		pos = parsePos(input.trim(), meta.assembly),
         sig = parseGeneSignature(input.trim()),
-		fieldType = getFieldType(meta, features[dsID], fields, probes),
+		fieldType = getFieldType(meta, features[dsID], fields, probes, pos),
 		fieldsInput = sig ? sig.genes : parseInput(input),
 		normalizedFields = (
             pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :
@@ -92,6 +93,7 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 	}
 
 	return {
+		...(fieldType === 'geneProbes' ? {showIntrons: true} : {}),
 		fields: normalizedFields,
 		fetchType: 'xena',
 		valueType: getValueType(meta, features[dsID], fields),
@@ -102,7 +104,7 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 		//fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle'], fields.join(', ')),
 		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle']) || normalizedFields.join(', '),
 		colorClass: defaultColorClass,
-		assembly: meta.assembly
+		assembly: meta.assembly || _.getIn(meta, ['probemapMeta', 'assembly'])
 	};
 }
 
@@ -157,11 +159,15 @@ var activeHubs = hubs => _.keys(hubs).filter(hub => hubs[hub].user);
 var cohortName = cohort => _.get(cohort, 'name');
 var getCohortPreferred = (table, cohort) => _.get(table, cohortName(cohort));
 
-function getPreferedDatasets(cohort, cohortPreferred, hubs) {
+function getPreferedDatasets(cohort, cohortPreferred, hubs, datasets) {
 	var active = activeHubs(hubs),
-		// Only include datasets on active hubs.
+		// Only include datasets on active hubs & real existing datasets (more reliable against mistakes in the .json file)
 		preferred = _.pick(getCohortPreferred(cohortPreferred, cohort),
-							ds => _.contains(active, JSON.parse(ds).host));
+							ds => _.contains(active, JSON.parse(ds).host) && _.has(datasets, ds));
+
+	// filter out key used to support geneset/pathway view
+	preferred = _.pick(preferred, (ds, key) => key !==  "copy number for pathway view");
+
 	// Use isEmpty to handle 1) no configured preferred datasets or 2) preferred dataset list
 	// is empty after filtering by active hubs.
 	return _.isEmpty(preferred) ? [] : _.keys(preferred).map(type =>
@@ -260,14 +266,14 @@ function addWizardColumns(Component) {
 					...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		};
 
-	    render() {
+	    addColumns() {
 			var {children, appState, wizard} = this.props,
 				{cohort, wizardMode, defaultWidth, servers} = appState,
 				{cohorts, cohortPreferred, cohortMeta,
 					cohortPhenotype, datasets, features} = wizard,
 				stepperState = getStepperState(appState),
 				{editing} = appState,
-				preferred = cohortPreferred && getPreferedDatasets(cohort, cohortPreferred, servers),
+				preferred = cohortPreferred && getPreferedDatasets(cohort, cohortPreferred, servers, datasets),
 				preferredPhenotypes = cohortPhenotype && getPreferredPhenotypes(cohort, cohortPhenotype, servers),
 				width = defaultWidth,
 				cohortSelectProps = {
@@ -299,10 +305,16 @@ function addWizardColumns(Component) {
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
 						editing === i ? [el, <VariableSelect key={i} actionKey={i} pos={i} title='Add Variable'
 															 {...datasetSelectProps} controls={cancelIcon}/>] : [el]);
+			return withNewColumns.concat(
+				wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, width));
+		}
+
+		render() {
+			var {children, appState: {editing, wizardMode}} = this.props,
+				columns = editing != null || wizardMode ? this.addColumns() : children;
 			return (
 				<Component {...this.props}>
-					{withNewColumns.concat(
-						wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelectProps, width))}
+					{columns}
 				</Component>);
 		}
 	};

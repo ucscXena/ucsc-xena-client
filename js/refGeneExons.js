@@ -12,6 +12,9 @@ var {pxTransformEach} = layoutPlot;
 var {rxEvents} = require('./react-utils');
 var util = require('./util');
 var {chromPositionFromScreen} = require('./exonLayout');
+var {isoluminant} = require('./colorScales');
+import PureComponent from './PureComponent';
+var styles = require('./refGeneExons.module.css');
 
 // annotate an interval with cds status
 var inCds = ({cdsStart, cdsEnd}, intvl) =>
@@ -30,7 +33,7 @@ var toIntvl = (start, end, i) => ({start: start, end: end, i: i});
 //
 // findIntervals(gene :: {cdsStart :: int, cdsEnd :: int, exonStarts :: [int, ...], exonEnds :: [int, ...]})
 //     :: [{start :: int, end :: int, i :: int, inCds :: boolean}, ...]
-function findIntervals(gene) {
+export function findIntervals(gene) {
 	if (_.isEmpty(gene)) {
 		return [];
 	}
@@ -44,7 +47,8 @@ function findIntervals(gene) {
 
 var shade1 = '#cccccc',
 	shade2 = '#999999',
-	shade3 = '#000080';
+	shade3 = '#000080',
+	shade4 = '#FF0000';
 
 function getAnnotation (index, perLaneHeight, offset) {
 	return {
@@ -66,6 +70,7 @@ function drawIntroArrows (ctx, xStart, xEnd, endY, segments, strand) {
 	var arrowSize = 2, //arrowSize
 		gapSize = 4;
 
+	ctx.strokeStyle = shade2;
 	for (var i = xStart; i < xEnd; i = i + 10) {
 		var found = segments.filter(seg => (Math.abs(seg[0] - i) < gapSize ||
 				Math.abs(seg[0] - i - arrowSize) < gapSize ||
@@ -96,7 +101,60 @@ function drawIntroArrows (ctx, xStart, xEnd, endY, segments, strand) {
 	}
 }
 
-class RefGeneAnnotation extends React.Component {
+var probeLayout = (layout, positions) =>
+	layoutPlot.pxTransformFlatmap(layout, toPx => positions.map((pos) => toPx([pos.chromstart, pos.chromend])));
+
+function drawProbePositions(ctx, probePosition, height, positionHeight, width, layout) {
+	var count = probePosition.length,
+		screenProbes = probeLayout(layout, probePosition),
+		probeHeight = 2,
+		probeY = height,
+		geneY = height - positionHeight,
+// conventional rainbow scale
+//		colors = _.times(count, i => `hsl(${Math.round(i * 240 / count)}, 100%, 50%)`);
+		colors = _.times(count, isoluminant(0, count));
+
+
+	pxTransformEach(layout, (toPx, [start, end]) => {
+		ctx.lineWidth = 0.5;
+		var positions = probePosition
+			.map((p, i) => [p, i])
+			.filter(([{chromstart, chromend}]) =>
+				chromstart <= end && start <= chromend);
+		positions.forEach(([{chromstart, chromend}, i]) => {
+			var startX = width / probePosition.length * (i + 0.5),
+				middle = (chromstart + chromend) / 2,
+				[endX] = toPx([middle, middle]);
+			ctx.beginPath();
+			ctx.moveTo(startX, probeY - probeHeight);
+			ctx.lineTo(endX, geneY + probeHeight);
+			ctx.strokeStyle = colors[i];
+			ctx.stroke();
+		});
+	});
+
+	screenProbes.forEach(([pxStart, pxEnd], i) => {
+		ctx.beginPath();
+		ctx.moveTo(pxStart, geneY);
+		ctx.lineTo(pxEnd + 1, geneY);
+		ctx.lineTo(pxEnd + 1, geneY + probeHeight);
+		ctx.lineTo(pxStart, geneY + probeHeight);
+		ctx.fillStyle = colors[i];
+		ctx.fill();
+	});
+
+	_.times(screenProbes.length, i => {
+		ctx.beginPath();
+		ctx.moveTo(width / probePosition.length * i + 1, probeY - probeHeight);
+		ctx.lineTo(width / probePosition.length * (i + 1) - 1, probeY - probeHeight);
+		ctx.lineTo(width / probePosition.length * (i + 1) - 1, probeY);
+		ctx.lineTo(width / probePosition.length * i + 1, probeY);
+		ctx.fillStyle = colors[i];
+		ctx.fill();
+	});
+}
+
+class RefGeneDrawing extends React.Component {
 	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
@@ -134,11 +192,13 @@ class RefGeneAnnotation extends React.Component {
 		}
 	}
 
-	computeAnnotationLanes = ({position, refGene, height, column}) => {
-		var fieldType = _.get(column, 'fieldType', undefined),
+	// single: force a single lane, i.e. 'dense' mode. Unused.
+	computeAnnotationLanes = ({position, refGene, height, positionHeight = 0}, single) => {
+		var bottomPad = positionHeight ? 1 : 0,
+			annotationHeight = height - positionHeight - bottomPad,
 			newAnnotationLanes;
 
-		if (['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1 && position && refGene) {
+		if (position && refGene) {
 			var lanes = [],
 				[start, end] = position;
 
@@ -155,24 +215,29 @@ class RefGeneAnnotation extends React.Component {
 					}
 				});
 				if (!added) { // add a new lane
-					lanes.push([val]);
+					if (!single || lanes.length === 0) {
+						lanes.push([val]);
+					} else {
+						lanes[0].push(val);
+					}
 				}
 			});
-			var perLaneHeight = _.min([height / lanes.length, 12]),
-				laneOffset = (height - perLaneHeight * lanes.length) / 2;
+			var perLaneHeight = _.min([annotationHeight / (lanes.length || 1), 12]),
+				laneOffset = annotationHeight - perLaneHeight * lanes.length;
 
 			newAnnotationLanes = {
+				arrows: !(refGene.length > 1 && single),
 				lanes: lanes,
 				perLaneHeight: perLaneHeight,
 				laneOffset: laneOffset,
-				annotationHeight: height
+				annotationHeight
 			};
 		} else {
 			newAnnotationLanes = {
 				lanes: undefined,
 				perLaneHeight: undefined,
 				laneOffset: undefined,
-				annotationHeight: height
+				annotationHeight
 			};
 		}
 		// cache for tooltip
@@ -180,12 +245,12 @@ class RefGeneAnnotation extends React.Component {
 	};
 
 	draw = (props) => {
-		var {width, layout, mode} = props;
-		this.computeAnnotationLanes(props);
-		var {lanes, perLaneHeight, laneOffset, annotationHeight} = this.annotationLanes;
+		var {width, layout, height, positionHeight, mode, probePosition} = props;
+		this.computeAnnotationLanes(props, false);
+		var {lanes, perLaneHeight, arrows, laneOffset} = this.annotationLanes;
 
 		// white background
-		this.vg.box(0, 0, width, annotationHeight, 'white');
+		this.vg.box(0, 0, width, height, 'white');
 
 		if (!width || !layout) {
 			return;
@@ -197,7 +262,7 @@ class RefGeneAnnotation extends React.Component {
 			vg.width(width);
 		}
 
-		if ( _.isEmpty(layout.chrom) || _.isEmpty(lanes)) {
+		if ( _.isEmpty(layout.chrom)) {
 			return;
 		}
 
@@ -219,7 +284,7 @@ class RefGeneAnnotation extends React.Component {
 								[pstart, pend] = toPx([start, end]),
 								shade = (mode === "geneExon") ?
 									(i % 2 === 1 ? shade1 : shade2) :
-									(mode === "coordinate" ? shade3 : shade2);
+									(mode === "coordinate" ? (gene.strand === '-' ? shade3 : shade4) : shade2);
 							return [pstart, pend, shade, y, h];
 						}),
 						[pGeneStart, pGeneEnd] = toPx([gene.txStart, gene.txEnd]);
@@ -228,7 +293,9 @@ class RefGeneAnnotation extends React.Component {
 					ctx.fillStyle = shade2;
 					ctx.fillRect(pGeneStart, lineY, pGeneEnd - pGeneStart, 1);
 
-					drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, mode === 'coordinate' ? gene.strand : '+');
+					if (arrows) {
+						drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, mode === 'coordinate' ? gene.strand : '+');
+					}
 
 					// draw each segment
 					_.each(segments, ([pstart, pend, shade, y, h]) => {
@@ -238,6 +305,10 @@ class RefGeneAnnotation extends React.Component {
 				});
 			});
 		});
+		// what about introns?
+		if (!_.isEmpty(probePosition)) {
+			drawProbePositions(ctx, probePosition, height, positionHeight, width, layout);
+		}
 	};
 
 	tooltip = (ev) => {
@@ -247,7 +318,7 @@ class RefGeneAnnotation extends React.Component {
 			return;
 		}
 		var {x, y} = util.eventOffset(ev),
-			{annotationHeight, perLaneHeight, laneOffset, lanes} = this.annotationLanes,
+			{perLaneHeight, laneOffset, lanes} = this.annotationLanes,
 			rows = [],
 			assemblyString = encodeURIComponent(assembly),
 			contextPadding = Math.floor((layout.zoom.end - layout.zoom.start) / 4),
@@ -257,7 +328,7 @@ class RefGeneAnnotation extends React.Component {
 			posLayoutPaddingString = encodeURIComponent(posLayoutPadding),
 			GBurlZoom = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${posLayoutString}&position=${posLayoutPaddingString}`;
 
-		if (y > laneOffset && y < annotationHeight - laneOffset) {
+		if (y > laneOffset && y < laneOffset + lanes.length * perLaneHeight) {
 			var posStart = chromPositionFromScreen(layout, x - 0.5),
 				posEnd = chromPositionFromScreen(layout, x + 0.5),
 				matches = [],
@@ -299,9 +370,47 @@ class RefGeneAnnotation extends React.Component {
 	}
 }
 
+class RefGeneHighlight extends PureComponent {
+	render () {
+		var {height, position} = this.props,
+			style = height ? {width: Math.max(position[1] - position[0], 1), height, left: position[0]} : {display: 'none'};
+		return (
+			<div className={styles.highlight}>
+				<div className={styles.box} style={style}/>
+			</div>);
+	}
+}
+
+class RefGeneAnnotation extends PureComponent {
+	state = {probe: undefined};
+	componentWillMount() {
+		this.sub = this.props.tooltip.subscribe(ev => {
+			if (_.getIn(ev, ['data', 'id']) === this.props.id) {
+				this.setState({probe: _.getIn(ev, ['data', 'fieldIndex'])});
+			} else if (this.state.probe !== null) {
+				this.setState({probe: undefined});
+			}
+		});
+	}
+	componentWillUnmount() {
+		this.sub.unsubscribe();
+	}
+	render() {
+		var {probePosition, height, positionHeight, layout} = this.props,
+			{probe} = this.state,
+			highlight = probe == null ? {} :
+				{
+					position: probeLayout(layout, [probePosition[probe]])[0],
+					height: height - positionHeight
+				};
+		return (
+			<div className={styles.refGene}>
+				<RefGeneDrawing {...this.props}/>
+				<RefGeneHighlight {...highlight}/>
+			</div>);
+	}
+}
+
 //widgets.annotation.add('gene', props => <RefGeneAnnotation {...props}/>);
 
-module.exports = {
-	findIntervals: findIntervals,
-	RefGeneAnnotation: RefGeneAnnotation
-};
+export default RefGeneAnnotation;

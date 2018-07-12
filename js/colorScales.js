@@ -113,6 +113,29 @@ function scaleTrendAmplitude(low, zero, high, origin, thresh, max) {
 	};
 }
 
+// https://stackoverflow.com/questions/7251872/is-there-a-better-color-scale-than-the-rainbow-colormap
+var isoStops = [
+	[0.847, 0.057, 0.057],
+	[0.527, 0.527, 0],
+	[0, 0.592, 0],
+	[0, 0.559, 0.559],
+	[0.316, 0.316, 0.991],
+	[0.718, 0, 0.718]].map(fr => fr.map(v => 255 * v));
+
+function isoluminant(low, high) {
+	var count = isoStops.length,
+		stop = (high - low) / count,
+		clip = i => i < 0 ? 0 : i > count - 1 ? count - 1 : i;
+	return v => {
+		var p = clip((v - low) / stop),
+			h = isoStops[Math.ceil(p)],
+			li = Math.floor(p),
+			l = isoStops[li],
+			f = p - li;
+		return `rgb(${~~(l[0] * (1 - f) + h[0] * f)},${~~(l[1] * (1 - f) + h[1] * f)},${~~(l[2] * (1 - f) + h[2] * f)})`;
+	};
+}
+
 // A scale for when we have no data. Implements the scale API
 // so we don't have to put a bunch of special cases in the drawing code.
 var noDataScale = () => "gray";
@@ -135,5 +158,6 @@ var colorScale = {
 
 module.exports =  {
 	colorScale: ([type, ...args]) => saveMissing(colorScale[type](type, ...args)),
-	categoryMore: categoryMore
+	categoryMore: categoryMore,
+	isoluminant
 };
