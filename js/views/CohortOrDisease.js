@@ -22,7 +22,7 @@ class CohortOrDisease extends React.Component {
 
 	render() {
 		var {mode, cohort} = this.state,
-			{cohorts = [], cohortMeta, width} = this.props;
+			{cohorts = [], cohortMeta, overlay, width} = this.props;
 		var studyDiscoveryProps = {
 			label: 'Study Discovery',
 			value: mode,
@@ -34,6 +34,7 @@ class CohortOrDisease extends React.Component {
 			helpText: 'If you would like help determining the data set to use, Xena can suggest data sets if you provide a primary disease or tissue of origin.',
 			onDone: this.onDone,
 			valid: !!cohort,
+			overlay,
 			width
 		};
 		return (

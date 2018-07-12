@@ -130,18 +130,18 @@ function wizardColumns(wizardMode, stepperState, cohortSelectProps, datasetSelec
 	if (wizardMode) {
 		if (stepperState === 'COHORT') {
 			return [
-				<CohortOrDisease key='c1' {...cohortSelectProps}/>,
+				<CohortOrDisease key='c1' overlay={false} {...cohortSelectProps}/>,
 				<GhostVariableSelect key='c2' width={width} {...variableSelectConfig.FIRST_COLUMN}/>,
 				<GhostVariableSelect key='c3' width={width} {...variableSelectConfig.SECOND_COLUMN}/>];
 		}
 		if (stepperState === 'FIRST_COLUMN') {
 			return [
-				<VariableSelect key='c2' {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
+				<VariableSelect key='c2' overlay={false} {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>,
 				<GhostVariableSelect key='c3' width={width} {...variableSelectConfig.SECOND_COLUMN} />];
 		}
 		if (stepperState === 'SECOND_COLUMN') {
 			return [
-				<VariableSelect key='c3' {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>];
+				<VariableSelect key='c3' overlay={false} {...variableSelectConfig[stepperState]} {...datasetSelectProps}/>];
 		}
 	}
 	return [];
@@ -299,10 +299,11 @@ function addWizardColumns(Component) {
 								title='Edit Variable'
 								{...datasetSelectProps}
 								colId={el.props.label}
-								controls={cancelIcon}/> : el),
+								controls={cancelIcon}
+								overlay={true}/> : el),
 				withNewColumns = _.flatmap(withEditor, (el, i) =>
 						editing === i ? [el, <VariableSelect key={i} actionKey={i} pos={i} title='Add Variable'
-															 {...datasetSelectProps} controls={cancelIcon}/>] : [el]);
+															 {...datasetSelectProps} controls={cancelIcon} overlay={true}/>] : [el]);
 			return (
 				<Component {...this.props}>
 					{withNewColumns.concat(
