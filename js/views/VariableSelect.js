@@ -63,6 +63,30 @@ function selectedOptions(selected, options) {
 					_.assoc(opt, 'checked', true) : opt)));
 }
 
+var assemblyColors = {
+	hg18: '#00AA00',
+	hg19: '#AA0000',
+	hg38: '#0000AA',
+	default: '#999999'
+};
+
+var assemblyColor = assembly => _.get(assemblyColors, assembly, assemblyColors.default);
+
+var getAssembly = (datasets, dsID) =>
+	_.getIn(datasets, [dsID, 'assembly'],
+		_.getIn(datasets, [dsID, 'probemapMeta', 'assembly']));
+
+var setBadge = datasets => ds =>
+	_.Let((assembly = getAssembly(datasets, ds.value)) =>
+		assembly ? {
+			...ds,
+			badge: {label: assembly, style: {backgroundColor: assemblyColor(assembly)}}
+		} : ds);
+
+var setAssembly = (datasets, groups) =>
+	groups.map(group => _.updateIn(group, ['options'], list =>
+				list.map(setBadge(datasets))));
+
 var GenotypicForm = props => (
 	<div>
 		<GeneSuggest
@@ -77,8 +101,8 @@ var GenotypicForm = props => (
 			onAdditionalAction={props.onAdvancedClick}
 			onChange={props.onChange}
 			options={selectedOptions(props.selected,
-				props.advanced ? datasetList(props.datasets) :
-					preferredList(props.preferred))}/>
+				setAssembly(props.datasets, props.advanced ? datasetList(props.datasets) :
+					preferredList(props.preferred)))}/>
 	</div>);
 
 var basicFeatureLabels = (features, basicFeatures) => basicFeatures.map(i => ({value: i.toString(), label: features[i].label}));
@@ -229,18 +253,21 @@ var pluralDataset = i => i === 1 ? 'A dataset' : 'Some datasets';
 var pluralDo = i => i === 1 ? 'does' : 'do';
 var pluralHas = i => i === 1 ? 'has' : 'have';
 
-// XXX note that assembly can be mis-matched.
-// To check for this, we need to pull the assembly from the
-// compbined dataset metadata + probemap metadata.
-function getWarningText(matches) {
-	var warnings = _.groupBy(matches, m => m.warning),
+var fieldAssembly = datasets => (match, dsID) =>
+	match.type === 'chrom' ? getAssembly(datasets, dsID) : null;
+
+function getWarningText(matches, datasets, selected) {
+	var assemblies = _.uniq(
+			_.mmap(matches, selected, fieldAssembly(datasets)).filter(x => x)),
+		awarn = assemblies.length > 1 ? ['Your dataset selections include two different assemblies. For chromosome view, the assembly must be unique.'] : [],
+		warnings = _.groupBy(matches, m => m.warning),
 		unsupported = _.getIn(warnings, ['position-unsupported', 'length'], 0),
 		uwarn = unsupported ? [`${pluralDataset(unsupported)} in your selection ${pluralDo(unsupported)} not support a chromosome view.`] : [],
 		probes = _.getIn(warnings, ['too-many-probes', 'length'], 0),
 		max = _.min(warnings['too-many-probes'], m => m.end),
 		pwarn = probes ? [`${pluralDataset(probes)} in your selection ${pluralHas(probes)} too many probes at this scale. ${max.end} is the largest end coordinate viewable from this start position.`] : [];
 
-	return [...uwarn, ...pwarn];
+	return [...awarn, ...uwarn, ...pwarn];
 }
 
 // need to handle
@@ -398,10 +425,10 @@ class VariableSelect extends PureComponent {
 
 	render() {
 		var {mode, matches, advanced, valid, loading, error, basicFeatures} = this.state,
-			formError = getWarningText(matches).join(' ') || error,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
 			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
+			formError = getWarningText(matches, datasets, selected).join(' ') || error,
 			contentSpecificHelp = _.getIn(helpText, [mode]),
 			ModeForm = getModeFields[mode],
 			wizardProps = {

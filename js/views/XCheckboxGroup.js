@@ -43,7 +43,17 @@ class XCheckboxGroup extends PureComponent {
 				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
 				{_.map(options, group => [
 					group.label ? <span className={compStyles.subgroupHeader}>{group.label}</span> : null,
-					_.map(group.options, o => <span><Checkbox data-value={o.value} key={o.label} label={o.label} checked={o.checked} onChange={this.onChange}/></span>)
+					_.map(group.options, o => (<span>
+							<Checkbox
+								children={o.badge ?
+									<span className={compStyles.badge}
+										style={o.badge.style}>{o.badge.label}</span> :
+									[]}
+								data-value={o.value}
+								key={o.label}
+								label={o.label}
+								checked={o.checked}
+								onChange={this.onChange}/></span>))
 				])}
 			</div>
 		);

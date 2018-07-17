@@ -36,3 +36,21 @@
 .subgroupHeader:first-of-type {
 	padding-top: 8px;
 }
+
+.badge {
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	padding: 0 5px;
+	border-radius: 7px;
+	color: #FFFFFF;
+	transition: opacity 0.2s ease-in-out;
+}
+
+/* XXX Horrible hack to hide badge when hovering
+ * over dataset label, so user can see the full label
+ * when it's too long */
+[data-react-toolbox="label"]:hover + .badge {
+	opacity: 0;
+}
