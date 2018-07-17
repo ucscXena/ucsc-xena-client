@@ -1,6 +1,7 @@
 'use strict';
 
 import PureComponent from '../PureComponent';
+
 var React = require('react');
 var _ = require('../underscore_ext');
 var XCheckboxGroup = require('./XCheckboxGroup');
@@ -58,9 +59,9 @@ var returnPressed = cb => ev => ev.keyCode === RETURN && cb();
 function selectedOptions(selected, options) {
 	var smap = new Set(selected);
 	return options.map(group =>
-			_.updateIn(group, ['options'],
-				options => options.map(opt => smap.has(opt.value) ?
-					_.assoc(opt, 'checked', true) : opt)));
+		_.updateIn(group, ['options'],
+			options => options.map(opt => smap.has(opt.value) ?
+				_.assoc(opt, 'checked', true) : opt)));
 }
 
 var assemblyColors = {
@@ -105,7 +106,10 @@ var GenotypicForm = props => (
 					preferredList(props.preferred)))}/>
 	</div>);
 
-var basicFeatureLabels = (features, basicFeatures) => basicFeatures.map(i => ({value: i.toString(), label: features[i].label}));
+var basicFeatureLabels = (features, basicFeatures) => basicFeatures.map(i => ({
+	value: i.toString(),
+	label: features[i].label
+}));
 
 var allFeatureLabels = features => features.map((f, i) => ({value: i.toString(), label: f.label}));
 
@@ -213,7 +217,7 @@ var geneProbeMatch = (host, dsID, probemap, fields) =>
 			} : {
 				type: 'genes',
 				fields: genes
-	}).catch(err => {
+			}).catch(err => {
 		console.log(err);
 		return Rx.Observable.of({type: 'genes', fields: fields});
 	});
@@ -303,9 +307,9 @@ var featureIndexes = (features, list) =>
 
 class VariableSelect extends PureComponent {
 	constructor(props) {
-	    super(props);
-	    var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
-	    var defaults = {
+		super(props);
+		var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
+		var defaults = {
 			mode,
 			advanced: {
 				Genotypic: _.isEmpty(preferred),
@@ -329,7 +333,7 @@ class VariableSelect extends PureComponent {
 			valid: false
 		};
 
-	    this.state = fields && dataset ?
+		this.state = fields && dataset ?
 			applyInitialState[datasetMode(datasets, dataset)](fields, dataset, datasets, features, preferred, defaults) : defaults;
 	}
 
@@ -355,7 +359,7 @@ class VariableSelect extends PureComponent {
 			selected = events.select
 				.withLatestFrom(advanced, mode, (dataset, advanced, mode) => ([dataset, mode, advanced[mode]]))
 				.scan((selected, [{selectValue, isOn}, mode, advanced]) =>
-					_.updateIn(selected, [mode, advanced], selected => _.uniq((isOn ? _.conj : _.without)(selected, selectValue))),
+						_.updateIn(selected, [mode, advanced], selected => _.uniq((isOn ? _.conj : _.without)(selected, selectValue))),
 					this.state.selected)
 				.startWith(this.state.selected).publishReplay(1).refCount(),
 			value = events.field
@@ -371,7 +375,7 @@ class VariableSelect extends PureComponent {
 		// valid should only be set true after assessing disposition, but should be set false immediately on
 		// user input.
 		this.validSub = mode.combineLatest(advanced, selected, value,
-				(mode, advanced, selected, value) => ([mode, selected[mode][advanced[mode]], value[mode]]))
+			(mode, advanced, selected, value) => ([mode, selected[mode][advanced[mode]], value[mode]]))
 			.do(() => this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
 					matchFields(this.props.datasets, this.props.features, mode, selected, value))
@@ -446,7 +450,6 @@ class VariableSelect extends PureComponent {
 				onDoneInvalid: this.onDoneInvalid,
 				valid,
 				loading,
-				overlay,
 				width
 			},
 			dataTypeProps = {
@@ -487,13 +490,12 @@ class LoadingNotice extends React.Component {
 	render() {
 		var {preferred, datasets, features, basicFeatures} = this.props;
 		if (!preferred || !datasets || !features || !basicFeatures) {
-			let {colId, controls, overlay, title, width} = this.props,
+			let {colId, controls, title, width} = this.props,
 				wizardProps = {
 					colId,
 					controls,
 					loading: true,
 					loadingCohort: true,
-					overlay,
 					title,
 					width
 				};

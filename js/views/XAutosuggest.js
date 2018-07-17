@@ -39,8 +39,8 @@ class XAutosuggest extends React.Component {
 		return (
 			<div className={compStyles.XAutosuggest}>
 				<Autosuggest {...autoProps}
-							ref={this.callInputRef}
-							theme={autosuggestTheme}/>
+							 ref={this.callInputRef}
+							 theme={autosuggestTheme}/>
 				{value ? <i className='material-icons' onClick={onClear}>close</i> : null}
 			</div>
 		);

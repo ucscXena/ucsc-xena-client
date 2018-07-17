@@ -48,7 +48,7 @@ class WizardCard extends React.Component {
 	render() {
 		var {
 			children, colId, controls, contentSpecificHelp,
-			title, valid, loading, loadingCohort, overlay, width
+			title, valid, loading, loadingCohort, width
 		} = this.props;
 		return (
 			<div>
@@ -75,7 +75,6 @@ class WizardCard extends React.Component {
 					</span>
 					</CardActions>
 				</Card>
-				{overlay ? <div className={compStyles.wizardOverlay}/> : null}
 			</div>
 		);
 	}

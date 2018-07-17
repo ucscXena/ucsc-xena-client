@@ -6,13 +6,13 @@
  */
 
 @value black6 from '../../css/variables.css';
+
 @value black12 from '../../css/variables.css';
+
 @value black38 from '../../css/variables.css';
 
 .WizardCard {
 	min-height: 630px; /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
-	position: relative; /* For z-index */
-	z-index: 102; /* Positions wizard card above overlay for emphasis on active card */
 }
 
 /* Card actions specific to wizard */
@@ -61,15 +61,4 @@
 /* Body of wizard card including help text, if any, and children */
 .content {
 	flex: 1; /* Force content to fill space vertically so that actions are always push to bottom of card */
-}
-
-/* Overlay - to emphasise active card - full screen */
-.wizardOverlay {
-	background-color: rgba(255, 255, 255, 0.6);
-	height: 100vh;
-	left: 0;
-	position: fixed;
-	top: 0;
-	width: 100vw;
-	z-index: 100;
 }

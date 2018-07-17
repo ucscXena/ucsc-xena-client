@@ -22,8 +22,10 @@
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
+
 var React = require('react');
 import {Checkbox} from 'react-toolbox/lib/checkbox';
+
 var _ = require('../underscore_ext');
 var XInputToolbar = require('./XInputToolbar');
 
@@ -40,7 +42,8 @@ class XCheckboxGroup extends PureComponent {
 		var {additionalAction, label, onAdditionalAction, options} = this.props;
 		return (
 			<div className={compStyles.XCheckboxGroup}>
-				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
+				<XInputToolbar label={label} additionalAction={additionalAction}
+							   onAdditionalAction={onAdditionalAction}/>
 				{_.map(options, group => [
 					group.label ? <span className={compStyles.subgroupHeader}>{group.label}</span> : null,
 					_.map(group.options, o => (<span>
