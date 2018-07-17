@@ -81,10 +81,7 @@ var GenotypicForm = props => (
 					preferredList(props.preferred))}/>
 	</div>);
 
-var basicFeatureLabels = (features, basicFeatures) => basicFeatures.map(i => ({
-	value: i.toString(),
-	label: features[i].label
-}));
+var basicFeatureLabels = (features, basicFeatures) => basicFeatures.map(i => ({value: i.toString(), label: features[i].label}));
 
 var allFeatureLabels = features => features.map((f, i) => ({value: i.toString(), label: f.label}));
 

@@ -42,12 +42,10 @@ class XCheckboxGroup extends PureComponent {
 		var {additionalAction, label, onAdditionalAction, options} = this.props;
 		return (
 			<div className={compStyles.XCheckboxGroup}>
-				<XInputToolbar label={label} additionalAction={additionalAction}
-							   onAdditionalAction={onAdditionalAction}/>
+				<XInputToolbar label={label} additionalAction={additionalAction} onAdditionalAction={onAdditionalAction}/>
 				{_.map(options, group => [
 					group.label ? <span className={compStyles.subgroupHeader}>{group.label}</span> : null,
-					_.map(group.options, o => <span><Checkbox data-value={o.value} key={o.label} label={o.label}
-															  checked={o.checked} onChange={this.onChange}/></span>)
+					_.map(group.options, o => <span><Checkbox data-value={o.value} key={o.label} label={o.label} checked={o.checked} onChange={this.onChange}/></span>)
 				])}
 			</div>
 		);

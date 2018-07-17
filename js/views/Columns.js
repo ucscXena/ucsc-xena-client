@@ -1,6 +1,7 @@
 'use strict';
 
 import PureComponent from '../PureComponent';
+
 var React = require('react');
 
 class ColumnsWrapper extends React.Component {
@@ -18,9 +19,9 @@ var getColumns = wrapperFn => {
 	let Wrapper = wrapperFn(ColumnsWrapper);
 
 	return class extends PureComponent {
-	    static displayName = 'SpreadsheetColumns';
+		static displayName = 'SpreadsheetColumns';
 
-	    render() {
+		render() {
 			var {onClick, children, ...wrapperProps} = this.props;
 			return (
 				<Wrapper {...wrapperProps}>
