@@ -270,10 +270,8 @@ function addWizardColumns(Component) {
 		addColumns() {
 			var {children, appState, wizard} = this.props,
 				{cohort, wizardMode, defaultWidth, servers} = appState,
-				{
-					cohorts, cohortPreferred, cohortMeta,
-					cohortPhenotype, datasets, features
-				} = wizard,
+				{cohorts, cohortPreferred, cohortMeta,
+					cohortPhenotype, datasets, features} = wizard,
 				stepperState = getStepperState(appState),
 				{editing} = appState,
 				preferred = cohortPreferred && getPreferedDatasets(cohort, cohortPreferred, servers, datasets),
@@ -283,16 +281,14 @@ function addWizardColumns(Component) {
 					cohorts,
 					cohortMeta,
 					onSelect: this.onCohortSelect,
-					width
-				},
+					width},
 				datasetSelectProps = {
 					datasets,
 					features: features && sortFeatures(removeSampleID(consolidateFeatures(features))),
 					preferred,
 					basicFeatures: preferredPhenotypes,
 					onSelect: this.onDatasetSelect,
-					width
-				},
+					width},
 				columns = React.Children.toArray(children),
 				cancelIcon = <i className='material-icons' onClick={this.onCancel}>cancel</i>,
 				withEditor = columns.map(el =>

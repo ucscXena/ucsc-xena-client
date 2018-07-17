@@ -46,12 +46,9 @@ class WizardCard extends React.Component {
 	};
 
 	render() {
-		var {
-			children, colId, controls, contentSpecificHelp,
-			title, valid, loading, loadingCohort, width
-		} = this.props;
+		var {children, colId, controls, contentSpecificHelp,
+			title, valid, loading, loadingCohort, width} = this.props;
 		return (
-			<div>
 				<Card style={{width: width}} className={compStyles.WizardCard}>
 					<div className={compStyles.headerContainer}>
 						<CardAvatar colId={colId}/>
@@ -75,7 +72,6 @@ class WizardCard extends React.Component {
 					</span>
 					</CardActions>
 				</Card>
-			</div>
 		);
 	}
 }

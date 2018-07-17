@@ -27,10 +27,7 @@ class CohortOrDisease extends React.Component {
 			label: 'Study Discovery',
 			value: mode,
 			onChange: this.onChange,
-			options: [{label: 'Help me select a study', value: 'disease'}, {
-				label: 'I know the study I want to use',
-				value: 'cohort'
-			}]
+			options: [{label: 'Help me select a study', value: 'disease'}, {label: 'I know the study I want to use', value: 'cohort'}]
 		};
 		var wizardProps = {
 			title: 'Study',
