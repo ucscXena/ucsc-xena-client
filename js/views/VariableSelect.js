@@ -14,6 +14,7 @@ var Rx = require('../rx');
 var multi = require('../multi');
 var parseGeneSignature = require('../parseGeneSignature');
 var parseInput = require('../parseInput');
+var parsePos = require('../parsePos');
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
@@ -153,7 +154,7 @@ var applyInitialState = {
 var datasetMode = (datasets, dataset) =>
 	notIgnored(datasets[dataset]) ? 'Genotypic' : 'Phenotypic';
 
-var matchDatasetFields = multi((datasets, dsID, fields, isSignature) => {
+var matchDatasetFields = multi((datasets, dsID, value, fields, isSignature) => {
 	var meta = datasets[dsID];
 	return meta.type === 'genomicMatrix' && meta.probemap && !isSignature ? 'genomicMatrix-probemap' : meta.type;
 });
@@ -165,19 +166,21 @@ var matchDatasetFields = multi((datasets, dsID, fields, isSignature) => {
 // error to clear.
 
 // default to probes
-matchDatasetFields.dflt = (datasets, dsID, fields) =>
-	xenaQuery.matchFields(dsID, fields).map(fields => ({
+matchDatasetFields.dflt = (datasets, dsID, value, fields) => {
+	var warning = parsePos(value) ? 'position-unsupported' : undefined;
+	return xenaQuery.matchFields(dsID, fields).map(fields => ({
 		type: 'probes',
+		warning,
 		fields
 	})).catch(err => {
 		console.log(err);
-		return Rx.Observable.of({type: 'probes', fields: fields});
+		return Rx.Observable.of({type: 'probes', warning, fields: fields});
 	});
+};
 
-matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, fields) => {
-	const {host} = JSON.parse(dsID);
-	return Rx.Observable.zip(
-		xenaQuery.sparseDataMatchGenes(host, datasets[dsID].probemap, fields),
+var geneProbeMatch = (host, dsID, probemap, fields) =>
+	Rx.Observable.zip(
+		xenaQuery.sparseDataMatchGenes(host, probemap, fields),
 		xenaQuery.matchFields(dsID, fields),
 		(genes, probes) => _.filter(probes, _.identity).length > _.filter(genes, _.identity).length ?
 			{
@@ -190,9 +193,25 @@ matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, fields) => {
 		console.log(err);
 		return Rx.Observable.of({type: 'genes', fields: fields});
 	});
+
+var MAX_PROBES = 500;
+var chromLimit = (host, probemap, pos, fields) =>
+	xenaQuery.maxRange(host, probemap, pos.chrom, pos.baseStart, pos.baseEnd, MAX_PROBES)
+		.map(([end]) => ({
+			type: 'chrom',
+			fields,
+			warning: end == null ? undefined : 'too-many-probes',
+			end: end == null ? undefined : end - 1}));
+
+matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, value, fields) => {
+	const {host} = JSON.parse(dsID),
+		probemap = datasets[dsID].probemap,
+		pos = parsePos(value, datasets[dsID].probemapMeta.assembly);
+	return pos ? chromLimit(host, probemap, pos, fields)
+		: geneProbeMatch(host, dsID, probemap, fields);
 });
 
-function matchAssembly(datasets, dsID, fields) {
+function matchAssembly(datasets, dsID, value, fields) {
 	var ref = xenaQuery.refGene[datasets[dsID].assembly];
 	return xenaQuery.sparseDataMatchField(ref.host, 'name2', ref.name, fields).map(fields => ({
 		type: 'genes',
@@ -206,6 +225,24 @@ function matchAssembly(datasets, dsID, fields) {
 matchDatasetFields.add('genomicSegment', matchAssembly);
 matchDatasetFields.add('mutationVector', matchAssembly);
 
+var pluralDataset = i => i === 1 ? 'A dataset' : 'Some datasets';
+var pluralDo = i => i === 1 ? 'does' : 'do';
+var pluralHas = i => i === 1 ? 'has' : 'have';
+
+// XXX note that assembly can be mis-matched.
+// To check for this, we need to pull the assembly from the
+// compbined dataset metadata + probemap metadata.
+function getWarningText(matches) {
+	var warnings = _.groupBy(matches, m => m.warning),
+		unsupported = _.getIn(warnings, ['position-unsupported', 'length'], 0),
+		uwarn = unsupported ? [`${pluralDataset(unsupported)} in your selection ${pluralDo(unsupported)} not support a chromosome view.`] : [],
+		probes = _.getIn(warnings, ['too-many-probes', 'length'], 0),
+		max = _.min(warnings['too-many-probes'], m => m.end),
+		pwarn = probes ? [`${pluralDataset(probes)} in your selection ${pluralHas(probes)} too many probes at this scale. ${max.end} is the largest end coordinate viewable from this start position.`] : [];
+
+	return [...uwarn, ...pwarn];
+}
+
 // need to handle
 // phenotypic,
 // null field, null dataset
@@ -218,11 +255,12 @@ function matchFields(datasets, features, mode, selected, value) {
 	}
 	if (isValid.Genotypic(value, selected)) {
 		// Be sure to handle leading and trailing commas, as might occur during user edits
-		let sig = parseGeneSignature(value.trim()),
+		let tvalue = value.trim(),
+			sig = parseGeneSignature(tvalue),
 			fields = sig ? sig.genes : parseInput(value);
 		return Rx.Observable.zip(
-			...selected.map(dsID => matchDatasetFields(datasets, dsID, fields, sig)),
-			(...matches) => ({matches, valid: true}));
+			...selected.map(dsID => matchDatasetFields(datasets, dsID, tvalue, fields, sig)),
+			(...matches) => ({matches, valid: !_.any(matches, m => m.warning)}));
 	}
 	return Rx.Observable.of({valid: false});
 }
@@ -304,7 +342,7 @@ class VariableSelect extends PureComponent {
 			.do(() => this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
 					matchFields(this.props.datasets, this.props.features, mode, selected, value))
-			.subscribe(valid => this.setState({loading: false, ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
+			.subscribe(valid => this.setState({loading: false, matches: [], ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
 	}
 
 	componentWillUnmount() {
@@ -359,7 +397,8 @@ class VariableSelect extends PureComponent {
 	};
 
 	render() {
-		var {mode, advanced, valid, loading, error, basicFeatures} = this.state,
+		var {mode, matches, advanced, valid, loading, error, basicFeatures} = this.state,
+			formError = getWarningText(matches).join(' ') || error,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
 			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
@@ -382,11 +421,12 @@ class VariableSelect extends PureComponent {
 				onChange: this.on.mode,
 				options: [{label: 'Genomic', value: 'Genotypic'}, {label: 'Phenotypic', value: 'Phenotypic'}]
 			};
+
 		return (
 			<WizardCard {...wizardProps}>
 				<XRadioGroup {...dataTypeProps} />
 				<ModeForm
-					error={error}
+					error={formError}
 					onChange={this.onChange}
 					onReturn={this.onDone}
 					onFieldChange={this.on.field}

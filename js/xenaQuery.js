@@ -346,6 +346,7 @@ function wrapDsIDParams(postMethods) {
 		'datasetMetadata',
 		'featureList',
 		'fieldCodes',
+		'maxRange',
 		'refGeneExons',
 		'refGenePosition',
 		'refGeneRange',

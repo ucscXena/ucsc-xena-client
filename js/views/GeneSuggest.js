@@ -7,7 +7,8 @@ import Input from 'react-toolbox/lib/input';
 var {sparseDataMatchPartialField, refGene} = require('../xenaQuery');
 var _ = require('../underscore_ext');
 var {rxEvents} = require('../react-utils');
-require('./GeneSuggest.css');
+require('./GeneSuggest.css'); // react-autosuggest, global styles
+var styles = require('./GeneSuggest.module.css'); // react-toolbox, module styles
 var limit = 8;
 
 // Return the start and end indices of the word in 'value'
@@ -30,6 +31,8 @@ var defaultAssembly = 'hg38';
 
 var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 	<Input
+		theme={styles}
+		error={_.isString(error) ? error : null}
 		spellCheck={false}
 		innerRef={el => ref(el && el.inputNode)}
 		onChange={(value, ev) => onChange(ev)}
