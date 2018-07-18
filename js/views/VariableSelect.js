@@ -65,9 +65,9 @@ function selectedOptions(selected, options) {
 }
 
 var assemblyColors = {
-	hg18: '#00AA00',
-	hg19: '#AA0000',
-	hg38: '#0000AA',
+	hg18: '#88ADC9',
+	hg19: '#A69A29',
+	hg38: '#C997A1',
 	default: '#999999'
 };
 
