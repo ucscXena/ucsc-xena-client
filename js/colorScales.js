@@ -2,9 +2,8 @@
 
 // color scale variants
 
-var d3 = require('d3-scale');
 var _ = require('underscore');
-var {rgb, RGBtoHSV, HSVtoRGB} = require('./color_helper');
+var {rgb, RGBToHex, RGBtoHSV, HSVtoRGB} = require('./color_helper');
 
 // d3_category20, replace #7f7f7f gray (that aliases with our N/A gray of #808080) with dark grey #434348
 var categoryMore = [
@@ -30,47 +29,95 @@ var categoryMore = [
 		"#c7c7c7"  // light grey
 	];
 
-// Return a new function that preserves undefined arguments, otherwise calls the original function.
-// This is to work-around d3 scales.
-function saveMissing(fn) {
-	var newfn = function (v) {
-		return v == null ? v : fn(v);
-	};
-	return _.extend(newfn, fn); // This weirdness copies d3 fn methods
+var round = Math.round;
+function linearColorScale(domain, range) {
+	if (_.isString(domain[0])) {
+		debugger;
+	}
+
+	function scale(v, i = 0) {
+		if (v < domain[i]) {
+			if (i === 0) {
+				return range[0];
+			}
+			let dx = v - domain[i - 1],
+				x = domain[i] - domain[i - 1];
+
+			return [round(dx * (range[i][0] - range[i - 1][0]) / x + range[i - 1][0]),
+			        round(dx * (range[i][1] - range[i - 1][1]) / x + range[i - 1][1]),
+			        round(dx * (range[i][2] - range[i - 1][2]) / x + range[i - 1][2])];
+		}
+		if (i === domain.length - 1) {
+			return range[domain.length - 1];
+		}
+		return scale(v, i + 1);
+	}
+	return scale;
 }
 
+// for now, only support one range
+var log2ColorScale = ([d0, d1], [r0, r1]) => {
+	var mb = _.mmap(r0, r1, (c0, c1) => {
+		var ld0 = Math.log2(d0),
+			ld1 = Math.log2(d1),
+			m = (c1 - c0) / (ld1 - ld0),
+			b = c1 - m * ld1;
+		return {m, b};
+	});
+	return v => {
+		if (v < d0) {
+			return r0;
+		}
+		if (v > d1) {
+			return r1;
+		}
+		return [round(mb[0].m * Math.log2(v) + mb[0].b),
+		        round(mb[1].m * Math.log2(v) + mb[1].b),
+		        round(mb[2].m * Math.log2(v) + mb[2].b)];
+	};
+};
+
+// This behaves like a d3 scale, in that it provides range() and domain().
+// It additionally provides rgb(), which projects to an rgb triple, instead
+// of a color string, and rgbRange(), which returns the range as rgb triples.
+// It doesn't not support other d3 scale methods.
+var createScale = (scaleFn, domain, strRange) => {
+	var range = strRange.map(rgb),
+		scale = scaleFn(domain, range),
+		rgbFn = v => v == null ? v : scale(v),
+		fn = v => {
+			var rgb = rgbFn(v);
+			return rgb ? RGBToHex(...rgb) : rgb;
+		};
+	fn.range = () => strRange;
+	fn.domain = () => domain;
+	fn.rgbRange = () => range;
+	fn.rgb = rgbFn;
+	return fn;
+};
+
+var setPrecision = x => parseFloat(x.toPrecision(2));
+
 var scaleFloatSingle = (low, high, min, max) =>
-	d3.scaleLinear().domain([min, max]).range([low, high]);
+	createScale(linearColorScale, [min, max], [low, high]);
 
 var scaleFloatThresholdNegative = (low, zero, min, thresh) =>
-	d3.scaleLinear()
-		.domain(_.map([min, thresh], x => x.toPrecision(2)))
-		.range([low, zero]);
+	createScale(linearColorScale, _.map([min, thresh], setPrecision), [low, zero]);
 
 var scaleFloatThresholdPositive = (zero, high, thresh, max) =>
-	d3.scaleLinear()
-		.domain(_.map([thresh, max], x => x.toPrecision(2)))
-		.range([zero, high]);
+	createScale(linearColorScale, _.map([thresh, max], setPrecision), [zero, high]);
 
 var scaleFloatThreshold = (low, zero, high, min, minThresh, maxThresh, max) =>
-	d3.scaleLinear()
-		.domain(_.map([min, minThresh, maxThresh, max], x => x.toPrecision(2)))
-		.range([low, zero, zero, high]);
+	createScale(linearColorScale, _.map([min, minThresh, maxThresh, max], setPrecision), [low, zero, zero, high]);
 
 var scaleFloatThresholdLogNegative = (low, zero, min, thresh) =>
-	d3.scaleLog().base(2)
-		.domain(_.map([min, thresh], x => x.toPrecision(2)))
-		.range([low, zero]);
+	createScale(log2ColorScale, _.map([min, thresh], setPrecision), [low, zero]);
 
 var scaleFloatThresholdLogPositive = (zero, high, thresh, max) =>
-	d3.scaleLog().base(2)
-		.domain(_.map([thresh, max], x => x.toPrecision(2)))
-		.range([zero, high]);
+	createScale(log2ColorScale, _.map([thresh, max], setPrecision), [zero, high]);
 
 var scaleFloatLog = (low, high, min, max) =>
-	d3.scaleLog().base(2)
-		.domain(_.map([min, max], x => x.toPrecision(2)))
-		.range([low, high]);
+	createScale(log2ColorScale, _.map([min, max], setPrecision), [low, high]);
 
 //var ordinal = (count, custom) => d3.scaleOrdinal().range(custom || categoryMore).domain(_.range(count));
 // d3 ordinal scales will de-dup the domain using an incredibly slow algorithm.
@@ -82,9 +129,7 @@ var ordinal = (count, scale) => {
 function scaleFloatDouble(low, zero, high, min, max) {
 	var absmax = Math.max(-min, max);
 
-	return d3.scaleLinear()
-		.domain([-absmax, 0, absmax])
-		.range([low, zero, high]);
+	return createScale(linearColorScale, [-absmax, 0, absmax], [low, zero, high]);
 }
 
 var clip = (min, max, x) => x < min ? min : (x > max ? max : x);
@@ -157,7 +202,7 @@ var colorScale = {
 };
 
 module.exports =  {
-	colorScale: ([type, ...args]) => saveMissing(colorScale[type](type, ...args)),
+	colorScale: ([type, ...args]) => colorScale[type](type, ...args),
 	categoryMore: categoryMore,
 	isoluminant
 };
