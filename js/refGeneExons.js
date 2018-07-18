@@ -400,7 +400,7 @@ class RefGeneAnnotation extends PureComponent {
 	render() {
 		var {probePosition, height, positionHeight, layout} = this.props,
 			{probe, x} = this.state,
-			highlight = probe != null ? {
+			highlight = probe != null && _.get(probePosition, probe) ? {
 					position: probeLayout(layout, [probePosition[probe]])[0],
 					height: height - positionHeight
 				} : x != null ? {
