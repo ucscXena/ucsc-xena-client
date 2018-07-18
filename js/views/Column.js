@@ -218,7 +218,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'mutation',
 		rightAssembly = (["hg19", "hg38", "GRCh37", "GRCh38"].indexOf(assembly) !== -1) ? true : false,  //MuPIT support hg19, hg38
-		noMuPit = !rightValueType || !rightAssembly || wrongDataSubType || pos,
+		noMuPit = !rightValueType || !rightAssembly || !!wrongDataSubType || !!pos,
 		noData = !_.get(data, 'req'),
 		mupitItemName = noData ? 'MuPIT 3D Loading' : 'MuPIT 3D (' + assembly + ' coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
