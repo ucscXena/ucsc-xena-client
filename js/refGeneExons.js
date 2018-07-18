@@ -386,9 +386,11 @@ class RefGeneAnnotation extends PureComponent {
 	componentWillMount() {
 		this.sub = this.props.tooltip.subscribe(ev => {
 			if (_.getIn(ev, ['data', 'id']) === this.props.id) {
-				this.setState({probe: _.getIn(ev, ['data', 'fieldIndex'])});
-			} else if (this.state.probe !== null) {
-				this.setState({probe: undefined});
+				this.setState({
+					probe: _.getIn(ev, ['data', 'fieldIndex']),
+					x: _.getIn(ev, ['data', 'x'])});
+			} else if (this.state.probe !== null || this.state.x !== null) {
+				this.setState({probe: undefined, x: undefined});
 			}
 		});
 	}
@@ -397,12 +399,14 @@ class RefGeneAnnotation extends PureComponent {
 	}
 	render() {
 		var {probePosition, height, positionHeight, layout} = this.props,
-			{probe} = this.state,
-			highlight = probe == null ? {} :
-				{
+			{probe, x} = this.state,
+			highlight = probe != null ? {
 					position: probeLayout(layout, [probePosition[probe]])[0],
 					height: height - positionHeight
-				};
+				} : x != null ? {
+					position: [x, x + 1],
+					height: height - positionHeight
+				} : {};
 		return (
 			<div className={styles.refGene}>
 				<RefGeneDrawing {...this.props}/>

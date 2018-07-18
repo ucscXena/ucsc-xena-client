@@ -15,8 +15,9 @@ class Crosshair extends PureComponent {
 	}
 
 	onMouseMove = (ev) => {
+		var x = ev.clientX - ev.currentTarget.getBoundingClientRect().left;
 		if (!this.props.frozen) {
-			this.setState({mousing: true, x: ev.clientX, y: ev.clientY});
+			this.setState({mousing: true, x, y: ev.clientY});
 		}
 	};
 
@@ -29,16 +30,16 @@ class Crosshair extends PureComponent {
 	render() {
 		let {mousing, x, y} = this.state,
 			{onMouseMove, onMouseOut} = this,
-			{frozen, children} = this.props,
+			{frozen, height, children} = this.props,
 			cursor = frozen ? 'default' : 'none';
 		return (
 			<div style={{cursor}} onMouseMove={onMouseMove} onMouseOut={onMouseOut}>
 				{children}
+				{mousing ? <div className='crosshair crosshairV' style={{left: x, height}}/> : null}
 				{mousing ?
 					<Portal container={document.body}>
 						<div className='crosshairs'>
 							<span className='crosshair crosshairH' style={{top: y}}/>
-							<span className='crosshair crosshairV' style={{left: x}}/>
 						</div>
 					</Portal> : null}
 			</div>

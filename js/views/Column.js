@@ -25,6 +25,7 @@ var {ChromPosition} = require('../ChromPosition');
 import RefGeneAnnotation from '../refGeneExons';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
+var crosshair = require('./cursor.png');
 
 var ESCAPE = 27;
 
@@ -669,16 +670,14 @@ class Column extends PureComponent {
 							</div>
 						}
 						 wizardMode={wizardMode}>
-					<Crosshair frozen={!interactive || this.props.frozen}>
-						<div style={{height: annotationHeight + scaleHeight + 4}}>
-							{annotation ?
-								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-									{scale}
-									<div style={{height: 2}}/>
-									{annotation}
-								</DragSelect> : null}
-						</div>
-					</Crosshair>
+					<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: annotationHeight + scaleHeight + 4}}>
+						{annotation ?
+							<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+								{scale}
+								<div style={{height: 2}}/>
+								{annotation}
+							</DragSelect> : null}
+					</div>
 					<ResizeOverlay
 						enable={interactive}
 						onResizeStop={this.onResizeStop}
@@ -692,7 +691,7 @@ class Column extends PureComponent {
 							samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 							samplesMatched={samplesMatched}/>
 						<div style={{position: 'relative'}}>
-							<Crosshair frozen={!interactive || this.props.frozen}>
+							<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen}>
 								{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 								{getStatusView(status, this.onReload)}
 							</Crosshair>
