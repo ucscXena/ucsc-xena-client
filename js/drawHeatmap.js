@@ -81,7 +81,7 @@ var regionColorMethods = {
 	// For float scales, compute per-domain average values, and do a weighed mix of the colors.
 	'default': (scale, d) => {
 		var domainGroups = groupsByScale(d, scale),
-			groupColors = domainGroups.map(g => colorHelper.rgb(scale(_.meannull(g)))),
+			groupColors = domainGroups.map(g => scale.rgb(_.meannull(g))),
 			groupCounts = domainGroups.map(vs => vs.length),
 			total = _.sum(groupCounts);
 			// blend colors via rms
