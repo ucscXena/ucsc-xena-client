@@ -81,7 +81,7 @@ var setBadge = datasets => ds =>
 	_.Let((assembly = getAssembly(datasets, ds.value)) =>
 		assembly ? {
 			...ds,
-			badge: {label: assembly, style: {backgroundColor: assemblyColor(assembly)}}
+			badge: {label: assembly, style: {color: assemblyColor(assembly)}}
 		} : ds);
 
 var setAssembly = (datasets, groups) =>
