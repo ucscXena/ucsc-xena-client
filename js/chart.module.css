@@ -30,7 +30,7 @@
 .row {
 	align-items: center;
 	display: flex;
-	justify-content: space-between;
+	justify-content: flex-start;
 }
 
 .row+.row {
@@ -43,6 +43,16 @@
 	max-width: 33%;
 }
 
+/* Padding allocated to even columns */
+.column:nth-of-type(even) {
+	padding: 0 32px;
+}
+
+/* Right padding removed from last column, if even */
+.column:nth-of-type(even):last-of-type {
+	padding: 0 0 0 32px;
+}
+
 .column label {
 	display: block;
 	font-weight: normal; /* BS override */
@@ -53,6 +63,8 @@
 .stats {
 	composes: card;
 	display: none;
+	max-height: 100%;
+	overflow-y: scroll;
 	position: absolute;
 	right: 0;
 	top: 0;
