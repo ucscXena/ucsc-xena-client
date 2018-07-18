@@ -235,12 +235,18 @@ matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, value, fields)
 		: geneProbeMatch(host, dsID, probemap, fields);
 });
 
+var matchAnyPosition = fields => Rx.Observable.of({type: 'chrom', fields: fields});
+
+var normalizeGenes = (host, dsID, genes) =>
+	xenaQuery.sparseDataMatchField(host, 'name2', dsID, genes).map(fields => ({
+			type: 'genes',
+			fields
+		}));
+
 function matchAssembly(datasets, dsID, value, fields) {
-	var ref = xenaQuery.refGene[datasets[dsID].assembly];
-	return xenaQuery.sparseDataMatchField(ref.host, 'name2', ref.name, fields).map(fields => ({
-		type: 'genes',
-		fields
-	})).catch(err => {
+	var pos = parsePos(value, datasets[dsID].assembly),
+		ref = xenaQuery.refGene[datasets[dsID].assembly];
+	return (pos ? matchAnyPosition(fields) : normalizeGenes(ref.host, ref.name, fields)).catch(err => {
 		console.log(err);
 		return Rx.Observable.of({type: 'genes', fields: fields});
 	});
