@@ -363,6 +363,12 @@ function listSetsEqual(l1, l2) {
 	return _.every(l2, v => s1.has(v));
 }
 
+function anyRange(coll, start, end, pred = _.identity, i = start) {
+	return i === end ? false :
+		pred(coll[i]) ? true :
+		anyRange(coll, start, end, pred, i + 1);
+}
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -420,6 +426,7 @@ _.i = {
 };
 
 _.mixin({
+	anyRange,
 	apply,
 	array,
 	concat,
