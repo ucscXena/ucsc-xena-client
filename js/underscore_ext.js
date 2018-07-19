@@ -263,7 +263,7 @@ function mmapper(cols, n, fn) {
 
 function mmap(...args) {
 	var fn = args[args.length - 1];
-	return _.map(args[0], mmapper(args, args.length - 1, fn));
+	return (args[0] || []).map(mmapper(args, args.length - 1, fn));
 }
 
 function scanI(arr, fn, acc, i, out) {
