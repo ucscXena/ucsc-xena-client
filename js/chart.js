@@ -1500,14 +1500,14 @@ function render(root, callback, sessionStorage) {
 	// statistics
 	statsDiv = document.createElement("div");
 	statsDiv.className = compStyles.stats;
-	chartContainer.appendChild(statsDiv);
+	root.appendChild(statsDiv);
 
 	// left panel control
 	leftContainer = document.createElement("div");
 	leftContainer.setAttribute("id", "controlPanel");
 	leftContainer.className = compStyles.controlPanel;
 	leftContainer.style.width = chartWidth();
-	root.appendChild(leftContainer);
+	chartContainer.appendChild(leftContainer);
 
 	if (!(xenaState && xenaState.cohort && xenaState.samples && xenaState.columnOrder.length > 0)) {
 		document.getElementById("myChart").innerHTML =

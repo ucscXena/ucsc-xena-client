@@ -62,14 +62,11 @@
 /* Stats container */
 .stats {
 	composes: card;
+	composes: mdCaption from '../css/typography.module.css';
 	display: none;
-	max-height: 100%;
-	overflow-y: scroll;
-	position: absolute;
-	right: 0;
-	top: 0;
 }
 
 .stats.visible {
 	display: block;
+	height: 100%;
 }
