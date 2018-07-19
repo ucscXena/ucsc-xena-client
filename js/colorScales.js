@@ -31,10 +31,6 @@ var categoryMore = [
 
 var round = Math.round;
 function linearColorScale(domain, range) {
-	if (_.isString(domain[0])) {
-		debugger;
-	}
-
 	function scale(v, i = 0) {
 		if (v < domain[i]) {
 			if (i === 0) {
