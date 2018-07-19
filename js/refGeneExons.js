@@ -223,7 +223,10 @@ class RefGeneDrawing extends React.Component {
 				}
 			});
 			var perLaneHeight = _.min([annotationHeight / (lanes.length || 1), 12]),
-				laneOffset = annotationHeight - perLaneHeight * lanes.length;
+				// if no position annotation, vertically center refgene.
+				// Otherwise, push it against the position annotation.
+				centering = positionHeight ? 1 : 2,
+				laneOffset = (annotationHeight - perLaneHeight * lanes.length) / centering;
 
 			newAnnotationLanes = {
 				arrows: !(refGene.length > 1 && single),
