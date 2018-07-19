@@ -2,7 +2,6 @@
 
 var getLabel = require('./getLabel');
 var {hexToRGB, colorStr} = require ('./color_helper');
-var d3 = require('d3-scale');
 var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
 var highchartsHelper =  require ('./highcharts_helper');
@@ -528,7 +527,7 @@ function render(root, callback, sessionStorage) {
 	function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 		yfields, ycodemap, ydata,
 		offsets, xlabel, ylabel, STDEV,
-		scatterLabel, scatterColorData, scatterColorDataCodemap,
+		scatterLabel, scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
 		columns, xcolumn, ycolumn, colorColumn) {
 		var yIsCategorical = ycodemap ? true : false,
@@ -1111,29 +1110,24 @@ function render(root, callback, sessionStorage) {
 					colorScale, getCodedColor,
 					highlightSeries = [],
 					opacity = 0.6,
-					colorCode, color, colorLabel,
+					colorCode, colorMin, color, colorLabel,
 					useCodedSeries = scatterColorDataCodemap || !scatterColorData,
+					gray = `rgba(150,150,150,${opacity})`,
 					bin;
 
 				getCodedColor = code => {
 					if ("null" === code) {
-						var gray = {};
-						gray.r = 150;
-						gray.g = 150;
-						gray.b = 150;
-						gray.a = opacity;
-						return colorStr(gray);
+						return gray;
 					}
-					return colorStr(hexToRGB(colorScales.categoryMore[code % colorScales.categoryMore.length], opacity));
+					return colorStr(hexToRGB(scatterColorScale(code), opacity));
 				};
 
 				if (!useCodedSeries) {
 					average = highchartsHelper.average(scatterColorData);
 					stdDev = highchartsHelper.standardDeviation(scatterColorData, average);
+					colorMin = _.minnull(scatterColorData);
 					bin = stdDev * 0.1;
-					colorScale = d3.scaleLinear()
-						.domain([average - 2 * stdDev, average, average + 2 * stdDev])
-						.range(['blue', 'white', 'red']);
+					colorScale = v => v == null ? 'gray' : scatterColorScale(v);
 				}
 
 				chartOptions.legend.title.text = "";
@@ -1165,7 +1159,7 @@ function render(root, callback, sessionStorage) {
 								y: y
 							});
 						} else { // convert float to multi-seriese
-							colorCode = Math.floor((colorCode - average) / bin);
+							colorCode = Math.round((colorCode - colorMin) / bin) * bin + colorMin;
 							if (!multiSeries[colorCode]) {
 								multiSeries[colorCode] = {
 									"data": []
@@ -1202,7 +1196,7 @@ function render(root, callback, sessionStorage) {
 							color = customColors && customColors[colorLabel] ? customColors[colorLabel] : getCodedColor(colorCode);
 							showInLegend = true;
 						} else {
-							color = colorScale (colorCode * bin + average);
+							color = colorScale(colorCode);
 							colorLabel = columns[colorColumn].user.fieldLabel;
 							showInLegend = (i === 0) ? true : false;
 						}
@@ -1350,6 +1344,7 @@ function render(root, callback, sessionStorage) {
 				STDEV = {},  // per y variable
 				doScatter, scatterLabel,
 				scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
+				scatterColorScale,
 				yNormalization,
 				xExponentiation, yExponentiation;
 
@@ -1451,6 +1446,8 @@ function render(root, callback, sessionStorage) {
 			doScatter = !xIsCategorical && xfield && yfields.length === 1 ;
 			scatterColorUISetting(doScatter);
 			if (doScatter && colorColumn !== "none") {
+				let color = _.getIn(xenaState, ['columns', colorColumn, 'colors', 0]);
+				scatterColorScale = color && colorScales.colorScale(color);
 				scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values']);
 				scatterColorDataSegment = _.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
 				scatterColorDataCodemap = _.getIn(xenaState, ['data', colorColumn, 'codes']);
@@ -1479,7 +1476,7 @@ function render(root, callback, sessionStorage) {
 			var thunk = offsets => drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 				yfields, ycodemap, ydata,
 				offsets, xlabel, ylabel, STDEV,
-				scatterLabel, scatterColorData, scatterColorDataCodemap,
+				scatterLabel, scatterColorScale, scatterColorData, scatterColorDataCodemap,
 				samplesMatched, columns, xcolumn, ycolumn, colorColumn);
 
 			//offset

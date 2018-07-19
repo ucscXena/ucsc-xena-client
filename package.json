@@ -104,7 +104,6 @@
     "bootstrap": "3.3.4",
     "brfs": "^1.4.3",
     "classnames": "2.2.5",
-    "d3-scale": "^0.6.4",
     "ehmutable": "^1.2.0",
     "highcharts": "^6.0.7",
     "jStat": "1.5.3",
