@@ -46,7 +46,8 @@
 /* Assembly */
 .badge {
 	composes: mdCaption from '../../css/typography.module.css';
-	font-size: 10px; /* Overrides mdCaption */
+	font-size: 11px; /* Overrides mdCaption */
+	font-weight: 500;
 	line-height: 16px;
 	margin-top: -4px;
 	padding-left: 36px;
