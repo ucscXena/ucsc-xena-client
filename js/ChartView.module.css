@@ -9,5 +9,5 @@
 .ChartView {
 	margin: 48px 12px;
 	display: flex;
-	justify-content: space-between;
+	justify-content: flex-start;
 }
