@@ -1,9 +1,11 @@
 'use strict';
 
 import PureComponent from '../PureComponent';
+
 var React = require('react');
 import XAutosuggest from './XAutosuggest';
 import Input from 'react-toolbox/lib/input';
+
 var {sparseDataMatchPartialField, refGene} = require('../xenaQuery');
 var _ = require('../underscore_ext');
 var {rxEvents} = require('../react-utils');
@@ -36,7 +38,7 @@ var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 		spellCheck={false}
 		innerRef={el => ref(el && el.inputNode)}
 		onChange={(value, ev) => onChange(ev)}
-		label= {label || 'Add Gene or Position'}
+		label={label || 'Add Gene or Position'}
 		{...props} >
 		<i style={{color: 'red', opacity: error ? 1 : 0}} className='material-icons'>error</i>
 	</Input>

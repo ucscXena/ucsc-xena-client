@@ -38,12 +38,12 @@ class CohortOrDisease extends React.Component {
 		};
 		return (
 			<WizardCard {...wizardProps}>
-					<XRadioGroup {...studyDiscoveryProps} />
-					{mode === 'cohort' ?
-						<CohortSuggest onSelect={this.onSelect} cohorts={cohorts}
-									   cohort={cohort}/> :
-						<DiseaseSuggest onSelect={this.onSelect} cohorts={cohorts}
-										cohort={cohort} cohortMeta={cohortMeta}/>}
+				<XRadioGroup {...studyDiscoveryProps} />
+				{mode === 'cohort' ?
+					<CohortSuggest onSelect={this.onSelect} cohorts={cohorts}
+								   cohort={cohort}/> :
+					<DiseaseSuggest onSelect={this.onSelect} cohorts={cohorts}
+									cohort={cohort} cohortMeta={cohortMeta}/>}
 			</WizardCard>);
 	}
 }

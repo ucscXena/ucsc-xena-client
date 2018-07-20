@@ -22,8 +22,10 @@
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
+
 var React = require('react');
 import {Checkbox} from 'react-toolbox/lib/checkbox';
+
 var _ = require('../underscore_ext');
 var XInputToolbar = require('./XInputToolbar');
 
@@ -44,10 +46,10 @@ class XCheckboxGroup extends PureComponent {
 				{_.map(options, group => [
 					group.label ? <span className={compStyles.subgroupHeader}>{group.label}</span> : null,
 					_.map(group.options, o => (<span>
-							<Checkbox
+							<Checkbox className={o.badge ? compStyles.withBadge : null}
 								children={o.badge ?
-									<span className={compStyles.badge}
-										style={o.badge.style}>{o.badge.label}</span> :
+									<div className={compStyles.badge}
+										style={o.badge.style}>{o.badge.label}</div> :
 									[]}
 								data-value={o.value}
 								key={o.label}

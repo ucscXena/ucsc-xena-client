@@ -1,6 +1,7 @@
 'use strict';
 
 import PureComponent from '../PureComponent';
+
 var React = require('react');
 var _ = require('../underscore_ext');
 var XCheckboxGroup = require('./XCheckboxGroup');
@@ -58,15 +59,15 @@ var returnPressed = cb => ev => ev.keyCode === RETURN && cb();
 function selectedOptions(selected, options) {
 	var smap = new Set(selected);
 	return options.map(group =>
-			_.updateIn(group, ['options'],
-				options => options.map(opt => smap.has(opt.value) ?
-					_.assoc(opt, 'checked', true) : opt)));
+		_.updateIn(group, ['options'],
+			options => options.map(opt => smap.has(opt.value) ?
+				_.assoc(opt, 'checked', true) : opt)));
 }
 
 var assemblyColors = {
-	hg18: '#00AA00',
-	hg19: '#AA0000',
-	hg38: '#0000AA',
+	hg18: '#527DA4',
+	hg19: '#ff5722',
+	hg38: '#77ADA7',
 	default: '#999999'
 };
 
@@ -80,7 +81,7 @@ var setBadge = datasets => ds =>
 	_.Let((assembly = getAssembly(datasets, ds.value)) =>
 		assembly ? {
 			...ds,
-			badge: {label: assembly, style: {backgroundColor: assemblyColor(assembly)}}
+			badge: {label: assembly, style: {color: assemblyColor(assembly)}}
 		} : ds);
 
 var setAssembly = (datasets, groups) =>
@@ -213,7 +214,7 @@ var geneProbeMatch = (host, dsID, probemap, fields) =>
 			} : {
 				type: 'genes',
 				fields: genes
-	}).catch(err => {
+			}).catch(err => {
 		console.log(err);
 		return Rx.Observable.of({type: 'genes', fields: fields});
 	});
@@ -303,9 +304,9 @@ var featureIndexes = (features, list) =>
 
 class VariableSelect extends PureComponent {
 	constructor(props) {
-	    super(props);
-	    var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
-	    var defaults = {
+		super(props);
+		var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
+		var defaults = {
 			mode,
 			advanced: {
 				Genotypic: _.isEmpty(preferred),
@@ -329,7 +330,7 @@ class VariableSelect extends PureComponent {
 			valid: false
 		};
 
-	    this.state = fields && dataset ?
+		this.state = fields && dataset ?
 			applyInitialState[datasetMode(datasets, dataset)](fields, dataset, datasets, features, preferred, defaults) : defaults;
 	}
 
@@ -355,7 +356,7 @@ class VariableSelect extends PureComponent {
 			selected = events.select
 				.withLatestFrom(advanced, mode, (dataset, advanced, mode) => ([dataset, mode, advanced[mode]]))
 				.scan((selected, [{selectValue, isOn}, mode, advanced]) =>
-					_.updateIn(selected, [mode, advanced], selected => _.uniq((isOn ? _.conj : _.without)(selected, selectValue))),
+						_.updateIn(selected, [mode, advanced], selected => _.uniq((isOn ? _.conj : _.without)(selected, selectValue))),
 					this.state.selected)
 				.startWith(this.state.selected).publishReplay(1).refCount(),
 			value = events.field
@@ -371,7 +372,7 @@ class VariableSelect extends PureComponent {
 		// valid should only be set true after assessing disposition, but should be set false immediately on
 		// user input.
 		this.validSub = mode.combineLatest(advanced, selected, value,
-				(mode, advanced, selected, value) => ([mode, selected[mode][advanced[mode]], value[mode]]))
+			(mode, advanced, selected, value) => ([mode, selected[mode][advanced[mode]], value[mode]]))
 			.do(() => this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
 					matchFields(this.props.datasets, this.props.features, mode, selected, value))
@@ -490,9 +491,9 @@ class LoadingNotice extends React.Component {
 				wizardProps = {
 					colId,
 					controls,
-					title,
 					loading: true,
 					loadingCohort: true,
+					title,
 					width
 				};
 			return <WizardCard {...wizardProps}/>;

@@ -37,20 +37,18 @@
 	padding-top: 8px;
 }
 
-.badge {
-	position: absolute;
-	right: 0;
-	top: 0;
-	bottom: 0;
-	padding: 0 5px;
-	border-radius: 7px;
-	color: #FFFFFF;
-	transition: opacity 0.2s ease-in-out;
+/* Subgroup with assembly */
+.withBadge {
+	height: unset;
+	margin-bottom: -14px !important; /* Overrides bottom margin RTCheckboxTheme */
 }
 
-/* XXX Horrible hack to hide badge when hovering
- * over dataset label, so user can see the full label
- * when it's too long */
-[data-react-toolbox="label"]:hover + .badge {
-	opacity: 0;
+/* Assembly */
+.badge {
+	composes: mdCaption from '../../css/typography.module.css';
+	font-size: 11px; /* Overrides mdCaption */
+	font-weight: 500;
+	line-height: 16px;
+	margin-top: -4px;
+	padding-left: 36px;
 }
