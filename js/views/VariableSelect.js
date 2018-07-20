@@ -101,6 +101,7 @@ var GenotypicForm = props => (
 			additionalAction={!_.isEmpty(props.preferred) && (props.advanced ? 'Show Basic' : 'Show Advanced')}
 			onAdditionalAction={props.onAdvancedClick}
 			onChange={props.onChange}
+			hideBadge={props.hideAssembly}
 			options={selectedOptions(props.selected,
 				setAssembly(props.datasets, props.advanced ? datasetList(props.datasets) :
 					preferredList(props.preferred)))}/>
@@ -283,6 +284,7 @@ var guessFields = text => {
 		fields = sig ? sig.genes :
 			isPos ? [value] :
 			parseInput(value);
+
 	return {
 		value,
 		fields,
@@ -302,14 +304,14 @@ function matchFields(datasets, features, mode, selected, text) {
 	if (mode === 'Phenotypic') {
 		return Rx.Observable.of({valid: isValid.Phenotypic(text, selected, features)});
 	}
+	var guess = guessFields(text);
 	if (isValid.Genotypic(text, selected)) {
 		// Be sure to handle leading and trailing commas, as might occur during user edits
-		let guess = guessFields(text);
 		return Rx.Observable.zip(
 			...selected.map(dsID => matchDatasetFields(datasets, dsID, guess)),
 			(...matches) => ({matches, guess, valid: !_.any(matches, m => m.warning)}));
 	}
-	return Rx.Observable.of({valid: false});
+	return Rx.Observable.of({valid: false, guess});
 }
 
 var featureIndexes = (features, list) =>
@@ -480,6 +482,7 @@ class VariableSelect extends PureComponent {
 					onChange={this.onChange}
 					onReturn={this.onDone}
 					onFieldChange={this.on.field}
+					hideAssembly={!hasCoord}
 					datasets={datasets}
 					selected={selected}
 					value={value}

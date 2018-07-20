@@ -51,4 +51,10 @@
 	line-height: 16px;
 	margin-top: -4px;
 	padding-left: 36px;
+	opacity: 1;
+	transition: opacity 200ms ease-in-out;
+}
+
+.hideBadge .badge {
+	opacity: 0;
 }
