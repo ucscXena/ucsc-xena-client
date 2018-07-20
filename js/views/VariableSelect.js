@@ -179,9 +179,9 @@ var applyInitialState = {
 var datasetMode = (datasets, dataset) =>
 	notIgnored(datasets[dataset]) ? 'Genotypic' : 'Phenotypic';
 
-var matchDatasetFields = multi((datasets, dsID, value, fields, isSignature) => {
+var matchDatasetFields = multi((datasets, dsID, {sig}) => {
 	var meta = datasets[dsID];
-	return meta.type === 'genomicMatrix' && meta.probemap && !isSignature ? 'genomicMatrix-probemap' : meta.type;
+	return meta.type === 'genomicMatrix' && meta.probemap && !sig ? 'genomicMatrix-probemap' : meta.type;
 });
 
 // XXX The error handling here isn't great, because it can leave us with a
@@ -191,8 +191,8 @@ var matchDatasetFields = multi((datasets, dsID, value, fields, isSignature) => {
 // error to clear.
 
 // default to probes
-matchDatasetFields.dflt = (datasets, dsID, value, fields) => {
-	var warning = parsePos(value) ? 'position-unsupported' : undefined;
+matchDatasetFields.dflt = (datasets, dsID, {fields, isPos}) => {
+	var warning = isPos ? 'position-unsupported' : undefined;
 	return xenaQuery.matchFields(dsID, fields).map(fields => ({
 		type: 'probes',
 		warning,
@@ -228,7 +228,7 @@ var chromLimit = (host, probemap, pos, fields) =>
 			warning: end == null ? undefined : 'too-many-probes',
 			end: end == null ? undefined : end - 1}));
 
-matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, value, fields) => {
+matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, {value, fields}) => {
 	const {host} = JSON.parse(dsID),
 		probemap = datasets[dsID].probemap,
 		pos = parsePos(value, datasets[dsID].probemapMeta.assembly);
@@ -244,29 +244,27 @@ var normalizeGenes = (host, dsID, genes) =>
 			fields
 		}));
 
-function matchAssembly(datasets, dsID, value, fields) {
-	var pos = parsePos(value, datasets[dsID].assembly),
-		ref = xenaQuery.refGene[datasets[dsID].assembly];
-	return (pos ? matchAnyPosition(fields) : normalizeGenes(ref.host, ref.name, fields)).catch(err => {
+function matchWithAssembly(datasets, dsID, {fields, isPos}) {
+	var ref = xenaQuery.refGene[datasets[dsID].assembly];
+	return (isPos ? matchAnyPosition(fields) : normalizeGenes(ref.host, ref.name, fields)).catch(err => {
 		console.log(err);
 		return Rx.Observable.of({type: 'genes', fields: fields});
 	});
 }
 
-matchDatasetFields.add('genomicSegment', matchAssembly);
-matchDatasetFields.add('mutationVector', matchAssembly);
+matchDatasetFields.add('genomicSegment', matchWithAssembly);
+matchDatasetFields.add('mutationVector', matchWithAssembly);
 
 var pluralDataset = i => i === 1 ? 'A dataset' : 'Some datasets';
 var pluralDo = i => i === 1 ? 'does' : 'do';
 var pluralHas = i => i === 1 ? 'has' : 'have';
 
-var fieldAssembly = datasets => (match, dsID) =>
-	match.type === 'chrom' ? getAssembly(datasets, dsID) : null;
+var fieldAssembly = datasets => (match, dsID) => getAssembly(datasets, dsID);
 
-function getWarningText(matches, datasets, selected) {
-	var assemblies = _.uniq(
+function getWarningText(matches, datasets, selected, hasCoord) {
+	var assemblies = hasCoord && _.uniq(
 			_.mmap(matches, selected, fieldAssembly(datasets)).filter(x => x)),
-		awarn = assemblies.length > 1 ? ['Your dataset selections include two different assemblies. For chromosome view, the assembly must be unique.'] : [],
+		awarn = _.get(assemblies, 'length') > 1 ? ['Your dataset selections include two different assemblies. For chromosome view, the assembly must be unique.'] : [],
 		warnings = _.groupBy(matches, m => m.warning),
 		unsupported = _.getIn(warnings, ['position-unsupported', 'length'], 0),
 		uwarn = unsupported ? [`${pluralDataset(unsupported)} in your selection ${pluralDo(unsupported)} not support a chromosome view.`] : [],
@@ -277,24 +275,39 @@ function getWarningText(matches, datasets, selected) {
 	return [...awarn, ...uwarn, ...pwarn];
 }
 
+var guessFields = text => {
+	var value = text.trim(),
+		sig = parseGeneSignature(value),
+		isPos = value.match(/^chr[0-9xyXY]+[pq]?/),
+		hasCoord = value.match(/^chr[0-9xyXY]+[pq]?:/),
+		fields = sig ? sig.genes :
+			isPos ? [value] :
+			parseInput(value);
+	return {
+		value,
+		fields,
+		sig,
+		isPos,
+		hasCoord
+	};
+};
+
 // need to handle
 // phenotypic,
 // null field, null dataset
 // sparse,
 // dense with probemap,
 // dense without probemap
-function matchFields(datasets, features, mode, selected, value) {
+function matchFields(datasets, features, mode, selected, text) {
 	if (mode === 'Phenotypic') {
-		return Rx.Observable.of({valid: isValid.Phenotypic(value, selected, features)});
+		return Rx.Observable.of({valid: isValid.Phenotypic(text, selected, features)});
 	}
-	if (isValid.Genotypic(value, selected)) {
+	if (isValid.Genotypic(text, selected)) {
 		// Be sure to handle leading and trailing commas, as might occur during user edits
-		let tvalue = value.trim(),
-			sig = parseGeneSignature(tvalue),
-			fields = sig ? sig.genes : parseInput(value);
+		let guess = guessFields(text);
 		return Rx.Observable.zip(
-			...selected.map(dsID => matchDatasetFields(datasets, dsID, tvalue, fields, sig)),
-			(...matches) => ({matches, valid: !_.any(matches, m => m.warning)}));
+			...selected.map(dsID => matchDatasetFields(datasets, dsID, guess)),
+			(...matches) => ({matches, guess, valid: !_.any(matches, m => m.warning)}));
 	}
 	return Rx.Observable.of({valid: false});
 }
@@ -327,7 +340,8 @@ class VariableSelect extends PureComponent {
 				Genotypic: '',
 				Phenotypic: ''
 			},
-			valid: false
+			valid: false,
+			guess: {}
 		};
 
 		this.state = fields && dataset ?
@@ -431,11 +445,13 @@ class VariableSelect extends PureComponent {
 	};
 
 	render() {
-		var {mode, matches, advanced, valid, loading, error, basicFeatures} = this.state,
+		var {mode, matches, guess: {hasCoord}, advanced, valid,
+				loading, error, basicFeatures} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
 			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
-			formError = getWarningText(matches, datasets, selected).join(' ') || error,
+			formError = getWarningText(matches, datasets, selected, hasCoord).join(' ')
+				|| error,
 			contentSpecificHelp = _.getIn(helpText, [mode]),
 			ModeForm = getModeFields[mode],
 			wizardProps = {
