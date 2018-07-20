@@ -226,8 +226,11 @@ var chromLimit = (host, probemap, pos, fields) =>
 		.map(([end]) => ({
 			type: 'chrom',
 			fields,
-			warning: end == null ? undefined : 'too-many-probes',
-			end: end == null ? undefined : end - 1}));
+			...(end != null ? {
+				warning: 'too-many-probes',
+				start: pos.baseStart,
+				end: end - 1} : {})
+		}));
 
 matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, {value, fields}) => {
 	const {host} = JSON.parse(dsID),
@@ -258,12 +261,13 @@ matchDatasetFields.add('mutationVector', matchWithAssembly);
 
 var pluralDataset = i => i === 1 ? 'A dataset' : 'Some datasets';
 var pluralDo = i => i === 1 ? 'does' : 'do';
-var pluralHas = i => i === 1 ? 'has' : 'have';
+//var pluralHas = i => i === 1 ? 'has' : 'have';
 
 var fieldAssembly = datasets => (match, dsID) => getAssembly(datasets, dsID);
 
-function getWarningText(matches, datasets, selected, hasCoord) {
-	var assemblies = hasCoord && _.uniq(
+function getWarningText(matches, datasets, selected, hasCoord, value) {
+	var pos = parsePos(value),
+		assemblies = hasCoord && _.uniq(
 			_.mmap(matches, selected, fieldAssembly(datasets)).filter(x => x)),
 		awarn = _.get(assemblies, 'length') > 1 ? ['Your dataset selections include two different assemblies. For chromosome view, the assembly must be unique.'] : [],
 		warnings = _.groupBy(matches, m => m.warning),
@@ -271,7 +275,7 @@ function getWarningText(matches, datasets, selected, hasCoord) {
 		uwarn = unsupported ? [`${pluralDataset(unsupported)} in your selection ${pluralDo(unsupported)} not support a chromosome view.`] : [],
 		probes = _.getIn(warnings, ['too-many-probes', 'length'], 0),
 		max = _.min(warnings['too-many-probes'], m => m.end),
-		pwarn = probes ? [`${pluralDataset(probes)} in your selection ${pluralHas(probes)} too many probes at this scale. ${max.end} is the largest end coordinate viewable from this start position.`] : [];
+		pwarn = probes && pos ? [`There are too many data points to display. Please try a smaller region like ${pos.chrom}:${max.start}-${max.end}.`] : [];
 
 	return [...awarn, ...uwarn, ...pwarn];
 }
@@ -452,7 +456,7 @@ class VariableSelect extends PureComponent {
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
 			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
-			formError = getWarningText(matches, datasets, selected, hasCoord).join(' ')
+			formError = getWarningText(matches, datasets, selected, hasCoord, value).join(' ')
 				|| error,
 			contentSpecificHelp = _.getIn(helpText, [mode]),
 			ModeForm = getModeFields[mode],
