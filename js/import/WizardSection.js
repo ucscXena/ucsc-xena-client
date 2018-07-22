@@ -12,7 +12,7 @@ const style = {
 export default class WizardSection extends React.Component {
     render() {
         const { isLast, isFirst, nextEnabled, onImport,
-            fileName, callback, localHub, showRetry
+            fileName, showRetry
         } = this.props;
         const showNext = !isLast && !onImport && !showRetry;
 
@@ -41,7 +41,7 @@ export default class WizardSection extends React.Component {
 
                     { showRetry && this.renderRetryButtons() }
 
-                    <CancelButton callback={callback} localHub={localHub}/>
+                    <CancelButton onCancelImport={this.props.onCancelImport}/>
                 </div>
             </div>
         );
@@ -50,12 +50,16 @@ export default class WizardSection extends React.Component {
     renderRetryButtons() {
         return (
             <div className={styles.retryButtons}>
-                <Button label='Retry file' raised style={style.next} accent
+                {/* <Button label='Retry file' raised style={style.next} accent
                     onClick={this.props.onRetryFile}
-                />
-                <Button label='Retry metadata' raised style={style.next} accent
+                /> */}
+                <Button label='Edit Data Details' raised style={style.next} accent
                     onClick={this.props.onRetryMetadata}
                 />
+                <input type='file' id='file-input' style={{ display: 'none' }}
+					onChange={this.props.onFileReload}
+				/>
+				<label htmlFor='file-input' className={styles.retryButton}>Reload file</label>
             </div>
         );
     }
@@ -66,16 +70,12 @@ class CancelButton extends React.Component {
 
 	onToggle = () => {
 		this.setState({active: !this.state.active});
-	};
-
-	onReally = () => {
-		this.props.callback(['navigate', 'datapages', {host: this.props.localHub}]);
-	};
+    };
 
 	actions = () => {
 		return [
 			{label: 'No, I want to continue', onClick: this.onToggle, style: {color: '#377937'}},
-			{label: 'Yes, cancel import', onClick: this.onReally, style: {color: '#c95252'}}];
+			{label: 'Yes, cancel import', onClick: this.props.onCancelImport, style: {color: '#c95252'}}];
 	};
 
 	render() {

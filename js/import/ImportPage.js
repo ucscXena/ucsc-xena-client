@@ -27,6 +27,7 @@ const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val
 
 //needs constants
 const isPhenotypeData = dataType => dataType === 'phenotype/clinical/sample type';
+const isMutationOrSegmentedData = dataType => dataType === 'mutation by position' || dataType === 'segmented copy number';
 
 const getNextPageByDataType = (currIndex, forwards, dataType) => {
 	let pages = [];
@@ -121,7 +122,9 @@ class ImportForm extends React.Component {
 			<WizardSection isFirst={wizardPage === 0} isLast={wizardPage === pageStates.length - 1}
 				onNextPage={this.onWizardPageChange(wizardPage, true)}
 				onPreviousPage={this.onWizardPageChange(wizardPage, false)}
-				callback={this.props.callback} localHub={localHub}
+				callback={this.props.callback}
+				onCancelImport={this.onCancelImport}
+				onFileReload={this.onFileChange('file')}
 				{...wizardProps}
 			>
 				{component}
@@ -271,10 +274,10 @@ class ImportForm extends React.Component {
 				<Button icon='youtube_searched_for' label='Re-read file' raised
 					onClick={this.onFileReRead}
 				/> */}
-				<input type='file' id='file-input' style={{ display: 'none' }}
+				{/* <input type='file' id='file-input' style={{ display: 'none' }}
 					onChange={this.onFileReRead}
 				/>
-				<label htmlFor='file-input' className={styles.importFileLabel}>Retry file</label>
+				<label htmlFor='file-input' className={styles.retryButton}>Retry file</label> */}
 
 				<ErrorArea errors={errors}
 					showMore={this.state.showMoreErrors}
@@ -304,9 +307,8 @@ class ImportForm extends React.Component {
 	}
 
 	onFileChange = (fileProp) => (evt) => {
-		this.props.callback(['file-content', '']);
-
 		if (evt.target.files.length > 0) {
+			this.props.callback(['file-content', '']);
 			const file = evt.target.files[0];
 			this.props.callback([fileProp, file]);
 
@@ -326,12 +328,20 @@ class ImportForm extends React.Component {
 	}
 
 	onCohortRadioChange = value => {
-		this.props.callback(['cohort', ""]);
+		this.props.callback(['cohort', '']);
 		this.setState({cohortSelect: value});
 	}
 
 	onProbeRadioChange = value => {
 		this.setState({probeSelect: value});
+		if (value === 'neither') {
+			this.resetProbesAndGenes();
+		}
+	}
+
+	resetProbesAndGenes = () => {
+		this.props.callback(['genes', '']);
+		this.props.callback(['probes', '']);
 	}
 
 	onGenesGhange = value => this.props.callback(['genes', value]);
@@ -340,7 +350,22 @@ class ImportForm extends React.Component {
 
 	onFileFormatChange = format => this.props.callback(['file-format', format]);
 
-	onDataTypeChange = type => this.props.callback(['data-type', type]);
+	onDataTypeChange = type => {
+		this.resetFieldsOnDataTypeChange(type);
+		this.props.callback(['data-type', type]);
+	}
+
+	resetFieldsOnDataTypeChange = dataType => {
+		if (isMutationOrSegmentedData(dataType)) {
+			this.props.callback(['file-format', '']);
+			this.resetProbesAndGenes();
+		} else if (isPhenotypeData(dataType)) {
+			this.resetProbesAndGenes();
+			this.props.callback(['assembly', '']);
+		} else {
+			this.props.callback(['assembly', '']);
+		}
+	}
 
 	onCohortChange = cohort => this.props.callback(['cohort', cohort]);
 
@@ -348,7 +373,7 @@ class ImportForm extends React.Component {
 
 	onShowMoreToggle = () => this.setState({showMoreErrors: !this.state.showMoreErrors});
 
-	onAssemblyChange = assembly => this.props.callback(['assembly', assembly])
+	onAssemblyChange = assembly => this.props.callback(['assembly', assembly]);
 
 	onRetryMetadata = () => {
 		this.props.callback(['clear-metadata']);
@@ -381,6 +406,11 @@ class ImportForm extends React.Component {
 		// 	}
 		// 	this.setState({errorCheckInProgress: false});
 		// }, 500);
+	}
+
+	onCancelImport = () => {
+		this.props.callback(['navigate', 'datapages', {host: localHub}]);
+		this.props.callback(['cancel-import']);
 	}
 
 	saveFile = () => {

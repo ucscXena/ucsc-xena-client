@@ -4,13 +4,19 @@ import cssClasses from './ImportPage.module.css';
 
 const maxColumns = 4,
     numRows = 5,
-    maxNumRows = 20;
+    maxNumRows = 20,
+    maxSymbolsInCell = 30;
 
-const cropLines = lines => lines.map(l => l.length > maxColumns ? l.slice(0, maxColumns) : l);
+const cropColumnContent = cell => cell.length > maxSymbolsInCell ? cell.slice(0, maxSymbolsInCell) + '...' : cell;
+const cropLines = lines => lines.map(line => {
+    const cropped = line.length > maxColumns ? line.slice(0, maxColumns) : line;
+    return cropped.map(cropColumnContent);
+});
+
 
 // To keep proper table shape when some columns are missing
 const padLines = lines => {
-    const maxLines = Math.max(...lines.map(l => l.length));
+    const maxLines = Math.min(Math.max(...lines.map(l => l.length)), maxColumns);
     lines = cropLines(lines);
     return lines.map(line => {
         const diff = maxLines - line.length;
@@ -26,10 +32,11 @@ class DenseTable extends React.Component {
 
     render() {
         const { fileContent, highlightRow, highlightColumn } = this.props,
-            lineCount = this.state.showMore ? maxNumRows : numRows;
+            takeLines = this.state.showMore ? maxNumRows : numRows;
 
-        let lines = fileContent.split('\n', lineCount)
-                            .map(line => line.split(/\t/g));
+        let lines = fileContent.split(/\r\n|\r|\n/g);
+        let lineCount = lines.length;
+        lines = lines.slice(0, takeLines).map(line => line.split(/\t/g));
         lines = padLines(lines);
 
         const tableRows = lines.map((r, i) => (
@@ -50,14 +57,14 @@ class DenseTable extends React.Component {
                         {tableRows}
                     </tbody>
                 </table>
-               {this.renderShowMore()}
+               {this.renderShowMore(lineCount > numRows)}
             </div>
         );
     }
 
-    renderShowMore() {
+    renderShowMore(hasEnoughLines) {
         return (
-            this.props.disableShowMore ? null :
+            !hasEnoughLines ? null :
             <i className={cssClasses.showMore} onClick={this.onShowMore}>
                 {this.state.showMore ? "Show less..." : "Show more..."}
             </i>

@@ -65,7 +65,7 @@ const getSparseColumnRegExps = (dataType) => {
 
 const getErrors = (file, contents, dataType) => {
     const errors = [],
-        lines = contents.split('\n'),
+        lines = contents.trim().split('\n'),
         type = getDataTypeTmp(dataType),
         errCheckFunc = functionByDataType[type];
 

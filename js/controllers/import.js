@@ -8,6 +8,8 @@ import { assocIn, assocInAll, getIn } from "../underscore_ext";
 
 import getErrors from '../import/errorChecking';
 
+const defaultState = { wizardPage: 0};
+
 const postFile = (file) => {
     const payload = {
         url: `${servers.localHub}/upload/`,
@@ -98,8 +100,8 @@ const importControls = {
             ['form', 'errors'], errors,
             ['fileName'], fileName),
     'set-default-custom-cohort': (state) => 
-        assocIn(state, ['form', 'customCohort'], getDefaultCustomCohort(getIn(state, ['localCohorts'])))
-    
+        assocIn(state, ['form', 'customCohort'], getDefaultCustomCohort(getIn(state, ['localCohorts']))),
+    'cancel-import': () => defaultState
 };
 
 const query = {
