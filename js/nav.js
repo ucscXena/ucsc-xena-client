@@ -34,7 +34,6 @@ var links = [
 	{label: 'Visualization', nav: 'heatmap'},
 	{label: 'Transcripts', nav: 'transcripts'},
 	{label: 'Data Hubs', nav: 'hub'},
-	{label: 'Import', nav: 'import'},
 	// {href: 'https://genome-cancer.ucsc.edu/download/public/get-xena/index.html', label: 'Local Xena'},
 	{href: 'http://xena.ucsc.edu/private-hubs/', label: 'View My Data'},
 	{href: 'http://xena.ucsc.edu/xena-python-api/', label: 'Python'},

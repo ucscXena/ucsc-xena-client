@@ -131,15 +131,20 @@ var CohortHeader = ({inHubs, host, onImport}) => {
 
 			{isLocalHub(host) &&
 			<div className={styles.headerButtons}>
-				<Button label={"Import Data"} onClick={onImport} accent />
+				<Button label={"Load Data"} onClick={onImport} accent />
 				<Button label={"Help"} accent />
 			</div>}
 
 			<p>Host address: {host}</p>
 
-			{isLocalHub(host) &&
-				<p>Welcome to your computer hub. You can use this hub to look at your
-					data or public data that isn't on Xena.</p>}
+			{isLocalHub(host) && <div className={styles.descriptionBox}>
+				<p>A Local Xena Hub is an application on your computer for loading and storing data.</p>
+
+				<p>We support most types of genomic and/or phenotypic/clinical/annotation data.
+					This data can be your own or from another source, like GEO or a publication.</p>
+
+				<p>Data on a Local Xena Hub can only be viewed or accessed by the same computer on which it is running.</p>
+			</div>}
 		</div>
 	);
 };

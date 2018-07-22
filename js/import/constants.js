@@ -15,9 +15,9 @@ const dataTypes = [
 ];
 
 const steps = [
-	{ label: 'Select a Data file' },
-	{ label: 'Tell us about your Data' },
-	{ label: 'Import' }
+	{ label: 'Select a Data File' },
+	{ label: 'Add Data Details' },
+	{ label: 'Load Data' }
 ];
 
 const NONE_STR = 'None of these';

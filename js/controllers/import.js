@@ -126,6 +126,7 @@ const formControls = {
     'errors': changeFormProp('errors'),
     'genes': changeFormProp('genes'),
     'probes': changeFormProp('probes'),
+    'assembly': changeFormProp('assembly'),
     'error-check-inprogress': changeFormProp('errorCheckInprogress')
 }
 

@@ -26,24 +26,23 @@ const pageStateIndex = _.object(pageStates, pageRanges);
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 
 //needs constants
-const skipDenseOrientationPage = dataType => dataType === 'mutation by position' || dataType === 'segmented copy number';
+const isPhenotypeData = dataType => dataType === 'phenotype/clinical/sample type';
 
-const skipProbeGenePage = dataType => skipDenseOrientationPage(dataType) || dataType === 'phenotype/clinical/sample type';
-
-const getPageStep = (index, forwards, dataType) => {
-	const skipOrientationPage = skipDenseOrientationPage(dataType),
-		skipProbePage = skipProbeGenePage(dataType);
-
-	if (index === 1 && forwards && skipOrientationPage) {
-		return 2;
-	} else if (index === 3 && skipProbePage && forwards) {
-		return 2;
-	} else if (index === 3 && skipOrientationPage && !forwards) {
-		return -2;
-	} else if (index === 5 && !forwards && skipProbePage) {
-		return -2;
+const getNextPageByDataType = (currIndex, forwards, dataType) => {
+	let pages = [];
+	switch(dataType) {
+		case 'mutation by position':
+		case 'segmented copy number':
+			pages = [0, 1, 3, 5, 6];
+			break;
+		case 'phenotype/clinical/sample type':
+			pages = [0, 1, 2, 3, 6];
+			break;
+		default:
+			pages = [0, 1, 2, 3, 4, 6];
 	}
-	return forwards ? 1 : -1;
+
+	return pages[pages.indexOf(currIndex) + (forwards ? 1 : -1)];
 };
 
 class ImportForm extends React.Component {
@@ -60,7 +59,7 @@ class ImportForm extends React.Component {
 	}
 
 	render() {
-		const { fileFormat, dataType } = this.props.state || {},
+		const { fileFormat, dataType, assembly } = this.props.state || {},
 			{ file, wizardPage, fileName } = this.props,
 			fileSelected = file && !!file.size;
 
@@ -70,23 +69,23 @@ class ImportForm extends React.Component {
 		switch(wizardPage) {
 			case 0:
 				wizardProps = { nextEnabled: fileSelected };
-				component = this.firstPage(fileSelected, file);
+				component = this.fileSelectionPage(fileSelected, file);
 				break;
 			case 1:
 				wizardProps = { nextEnabled: !!dataType, fileName };
-				component = this.secondPage(fileSelected);
+				component = this.dataTypePage(fileSelected);
 				break;
 			case 2:
 				wizardProps = { fileName, nextEnabled: !!fileFormat };
-				component = this.thirdPage();
+				component = this.denseOrientationPage();
 				break;
 			case 3:
 				wizardProps = {
 					fileName,
-					onImport: skipProbeGenePage(dataType) ? this.onImportClick : null,
+					onImport: isPhenotypeData(dataType) ? this.onImportClick : null,
 					nextEnabled: this.isCohortPageNextEnabled()
 				};
-				component = this.fourthPage();
+				component = this.studySelectionPage();
 				break;
 			case 4:
 				wizardProps = {
@@ -94,18 +93,26 @@ class ImportForm extends React.Component {
 					onImport: this.onImportClick,
 					nextEnabled: this.isProbesNextPageEnabled()
 				};
-				component = this.fifthPage();
+				component = this.probeSelectionPage();
 				break;
 			case 5:
+				wizardProps = {
+					fileName,
+					onImport: this.onImportClick,
+					nextEnabled: !!assembly
+				};
+				component = this.assemblySelectionPage();
+				break;
+			case 6:
 				wizardProps = {
 					fileName,
 					showRetry: true,
 					onRetryFile: this.onRetryFile,
 					onRetryMetadata: this.onRetryMetadata
 				};
-				component = this.sixthPage(fileSelected);
+				component = this.importProgressPage();
 				break;
-			case 6:
+			case 7:
 				component = <div>Page 6</div>;
 				wizardProps = { fileName, nextEnabled: !!fileFormat };
 		};
@@ -122,7 +129,7 @@ class ImportForm extends React.Component {
 		);
 	}
 
-	firstPage(fileSelected) {
+	fileSelectionPage(fileSelected) {
 		return (
 			<div>
 				<input type='file' id='file-input' style={{ display: 'none' }}
@@ -139,29 +146,32 @@ class ImportForm extends React.Component {
 		);
 	}
 
-	secondPage(fileSelected) {
+	dataTypePage() {
 		const { dataType } = this.props.state;
 		return (
 			<div>
+				<b style={{marginRight: '20px', fontSize: '1.1em'}}>Choose the type of data</b>
 				<Dropdown onChange={this.onDataTypeChange}
 					source={dataTypeOptions}
 					value={dataType}
-					label={"Data type"}
 					className={[styles.field, styles.inline].join(' ')}
 				/>
-				{ fileSelected && <h4>File preview</h4> }
+				<div>
+					<Button label="I don't see my data type" accent flat={false}/>
+				</div>
+				<h4>File preview</h4>
 				<DenseTable fileContent={this.props.fileContent} />
 			</div>
 		);
 	}
 
-	thirdPage() {
+	denseOrientationPage() {
 		const { fileFormat } = this.props.state;
 		return (
 			<div>
 				<RadioGroup value={fileFormat} onChange={this.onFileFormatChange}>
-					<RadioButton label='Sample IDs are listed in the first column' value='clinicalMatrix' />
-					<RadioButton label='Sample IDs are listed in the first row' value='genomicMatrix' />
+					<RadioButton label='The first column is sample IDs' value='clinicalMatrix' />
+					<RadioButton label='The first row is sample IDs' value='genomicMatrix' />
 				</RadioGroup>
 				<DenseTable fileContent={this.props.fileContent}
 					highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
@@ -170,17 +180,18 @@ class ImportForm extends React.Component {
 		);
 	}
 
-	fourthPage() {
+	studySelectionPage() {
 		const { customCohort, cohort, fileFormat } = this.props.state;
 		return (
 			<div>
 				<RadioGroup value={this.state.cohortSelect} onChange={this.onCohortRadioChange}>
-					<RadioButton label="These samples don't overlap any other dataset" value='newCohort' />
+					<RadioButton label="These are the first data on these samples." value='newCohort' />
 					{this.state.cohortSelect === 'newCohort' &&
 						<Input label="Study name" type="text" className={styles.field}
 							onChange={this.onCustomCohortChange} value={customCohort}
 						/>}
-					<RadioButton label="These samples overlap with another dataset I already uploaded" value='existingOwnCohort' />
+					<RadioButton label="I have loaded other data on these samples and want to connect to it."
+						value='existingOwnCohort' />
 					{this.state.cohortSelect === 'existingOwnCohort' &&
 						<Dropdown onChange={this.onCohortChange}
 							source={getDropdownOptions(["", ...this.props.localCohorts])}
@@ -188,11 +199,14 @@ class ImportForm extends React.Component {
 							label={"Study"}
 							className={[styles.field, styles.inline].join(' ')}
 						/>}
-					<RadioButton label="These samples overlap with a public study already in Xena (like TCGA)" value='existingPublicCohort' />
+					<RadioButton label="There is other public data in Xena on these samples (e.g. TCGA) and want to connect to it."
+						value='existingPublicCohort' />
 					{this.state.cohortSelect === 'existingPublicCohort' &&
-						<CohortSuggest cohort={cohort} cohorts={this.props.cohorts}
-							onSelect={this.onCohortChange} className={styles.field} styles={{ borderBottom: ' ' }}
-						/>
+						<div className={styles.field}>
+							<CohortSuggest cohort={cohort} cohorts={this.props.cohorts}
+								onSelect={this.onCohortChange}
+							/>
+						</div>
 					}
 				</RadioGroup>
 				<DenseTable fileContent={this.props.fileContent}
@@ -202,14 +216,14 @@ class ImportForm extends React.Component {
 		);
 	}
 
-	fifthPage() {
+	probeSelectionPage() {
 		const probeSelect = this.state.probeSelect,
 			{ genes, probes, fileFormat } = this.props.state;
 		return (
 			<div>
 				<RadioGroup value={this.state.probeSelect} onChange={this.onProbeRadioChange}>
 					<RadioButton label="My data uses gene or transcript names (e.g. TP53, ENST00000619485.4)" value='genes' />
-					{this.renderDropdown(this.onGenesGhange, getDropdownOptions(tempGeneOptions), genes, "Genes",
+					{this.renderDropdown(this.onGenesGhange, getDropdownOptions(tempGeneOptions), genes, "Genes or transcripts",
 						probeSelect === 'genes')
 					}
 					{this.renderMailto("Xena import missing gene", "genes",
@@ -232,7 +246,21 @@ class ImportForm extends React.Component {
 		);
 	}
 
-	sixthPage(fileSelected) {
+	assemblySelectionPage() {
+		return (
+			<div>
+				<h4>Which reference genome was used to create this file?</h4>
+				<RadioGroup value={this.props.state.assembly} onChange={this.onAssemblyChange}>
+					<RadioButton label="hg18/GRCh36" value='hg18' />
+					<RadioButton label="hg19/GRCh37" value='hg19' />
+					<RadioButton label="hg38/GRCh38" value='hg38' />
+				</RadioGroup>
+				<DenseTable fileContent={this.props.fileContent} />
+			</div>
+		);
+	}
+
+	importProgressPage() {
 		const { errors, errorCheckInprogress } = this.props.state;
 		return (
 			<div>
@@ -271,8 +299,7 @@ class ImportForm extends React.Component {
 	}
 
 	onWizardPageChange = (currPageIndex, forwards) => () => {
-		const step = getPageStep(currPageIndex, forwards, this.props.state.dataType);
-		const newPageIndex = Math.min(pageStates.length - 1, Math.max(0, currPageIndex + step));
+		const newPageIndex = getNextPageByDataType(currPageIndex, forwards, this.props.state.dataType);
 		this.props.callback(['wizard-page', newPageIndex]);
 	}
 
@@ -321,6 +348,8 @@ class ImportForm extends React.Component {
 
 	onShowMoreToggle = () => this.setState({showMoreErrors: !this.state.showMoreErrors});
 
+	onAssemblyChange = assembly => this.props.callback(['assembly', assembly])
+
 	onRetryMetadata = () => {
 		this.props.callback(['clear-metadata']);
 		this.props.callback(['wizard-page', 1]);
@@ -355,7 +384,7 @@ class ImportForm extends React.Component {
 	}
 
 	saveFile = () => {
-		const { file, fileName } = this.props.state,
+		const { fileName } = this.props.state,
 			fileContent = this.props.fileContent;
 
 		this.setState({ fileReadInprogress: true });
@@ -373,7 +402,7 @@ class ImportForm extends React.Component {
 			{ fileContent, wizardPage } = this.props;
 
 		this.props.callback(['error-check-inprogress', true]);
-		this.props.callback(['wizard-page', wizardPage + getPageStep(wizardPage, true, dataType)]);
+		this.props.callback(['wizard-page', getNextPageByDataType(wizardPage, true, dataType)]);
 		this.props.callback(['check-errors', file, fileContent, dataType]);
 
 		//we do not issue save if there's errors - saving has to be called after error cheking
@@ -405,7 +434,8 @@ class ImportForm extends React.Component {
 			label: state.displayName,
 			description: '',
 			dataSubType: state.dataType,
-			type: state.fileFormat
+			type: state.fileFormat,
+			assembly: state.assembly
 		}, null, 4);
 	}
 }
@@ -421,12 +451,12 @@ class ImportPage extends React.Component {
 
 	render() {
 		const cohorts = this.props.state.wizard.cohorts || [];
-		const { status, wizardPage, fileContent, localCohorts, file, fileName } = this.props.state.import;
+		const { /*status,*/ wizardPage, fileContent, localCohorts, file, fileName } = this.props.state.import;
 
 		return (
 			<div>
 				<div className={styles.wizardTitle}>
-					Importing data...
+					Loading data...
 					<Button label='Help' accent style={{marginLeft: '30px', backgroundColor: '#f7f7f7'}}/>
 					<div className={styles.stepperBox}>
 						<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex} flat={true} wideStep={true}/>

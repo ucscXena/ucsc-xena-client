@@ -147,3 +147,7 @@
 .inline {
 	display: inline-block;
 }
+
+.descriptionBox p {
+	margin-bottom: 1em;
+}
