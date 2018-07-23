@@ -299,6 +299,9 @@ function transformPOSTMethods(postMethods) {
 		// Apply a transform that requires the 'host' parameter
 		datasetMetadata: postFn => (host, dataset) =>
 			postFn(host, dataset).map(resp => datasetListTransform(host, resp)),
+		// Apply a transform that requires the 'host' parameter
+		probemapList: postFn => host =>
+			postFn(host).map(resp => datasetListTransform(host, resp)),
 		sparseData: mapResponse(indexMutations),
 		sparseDataRange: mapResponse(indexMutations),
 		// Generate case permutations of the gene parameter
