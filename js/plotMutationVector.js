@@ -226,7 +226,7 @@ function posTooltip(layout, samples, sampleFormat, pixPerRow, index, assembly, x
 			gbURL(assembly, posRegionString(coordinate), posDoubleString(coordinate))]]]};
 }
 
-function tooltip(fieldType, fields, layout, nodes, samples, sampleFormat, zoom, assembly, ev) {
+function tooltip(id, fieldType, fields, layout, nodes, samples, sampleFormat, zoom, assembly, ev) {
 	var {x, y} = util.eventOffset(ev),
 		{height, count, index} = zoom,
 		pixPerRow = height / count,
@@ -235,9 +235,12 @@ function tooltip(fieldType, fields, layout, nodes, samples, sampleFormat, zoom, 
 				c => c || _.getIn(nodes, [0, 'data', 'chr'])),
 		closestNodes = closestNode[fieldType](nodes, zoom, x, y);
 
-	return closestNodes.length > 0 ?
-		sampleTooltip(sampleFormat, _.map(closestNodes, n => n.data), assembly, fields) :
-		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
+	return {
+		x,
+		id,
+		...(closestNodes.length > 0 ?
+			sampleTooltip(sampleFormat, _.pluck(closestNodes, 'data'), assembly, fields) :
+			posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y))};
 }
 
 var MutationColumn = hotOrNot(class extends PureComponent {
@@ -263,8 +266,8 @@ var MutationColumn = hotOrNot(class extends PureComponent {
 	}
 
 	tooltip = (ev) => {
-		var {column: {fieldType, fields, layout, nodes, assembly}, samples, sampleFormat, zoom} = this.props;
-		return tooltip(fieldType, fields, layout, nodes, samples, sampleFormat, zoom, assembly, ev);
+		var {column: {fieldType, fields, layout, nodes, assembly}, samples, sampleFormat, zoom, id} = this.props;
+		return tooltip(id, fieldType, fields, layout, nodes, samples, sampleFormat, zoom, assembly, ev);
 	};
 
 	render() {

@@ -31,19 +31,7 @@
 	display: flex;
 	line-height: 0;
 	justify-content: space-between;
-	padding: 16px;
-}
-
-.headerContainer:hover .controls.showOnHover {
-	opacity: 1;
-	visibility: visible;
-}
-
-/* Controls - close/menu etc icons displayed in header container */
-.controls.showOnHover {
-	opacity: 0;
-	visibility: hidden;
-	transition: opacity 200ms 150ms ease-in-out, visibility 200ms 150ms ease-in-out;
+	padding: 8px 16px;
 }
 
 /* Wrapper around controls that are passed in as a prop */
@@ -55,6 +43,33 @@
 /* Icons */
 .controls i {
 	cursor: pointer;
+}
+
+.controls {
+	position: relative;
+}
+
+/* Using a covering div to hide controls, instead of opacity,
+ * because opacity is inherited by a nested menu, which makes the menu wink in
+ * and out as the mouse moves. By using a cover, we do not affect the opacity
+ * of the menu.
+ */
+.cover, .headerContainer:hover .cover.showOnHover {
+	opacity: 0;
+	visibility: hidden;
+}
+
+.cover.showOnHover {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 1;
+	visibility: visible;
+	background-color: #ffffff;
+	pointer-events: none;
+	transition: opacity 200ms 150ms ease-in-out, visibility 200ms 150ms ease-in-out;
 }
 
 /* Wrapper around title/subtitle and controls. */

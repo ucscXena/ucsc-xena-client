@@ -28,8 +28,8 @@ function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
 		label = _.getIn(columns, [uuid, 'fieldLabel']),
 		fields = _.getIn(data, [uuid, 'req', 'probes'], columnFields);
-	if (fields.length === 1) {                           // 1 gene/probe, or 1 probe in gene: use default field label
-		return () => label;
+	if (fields.length === 1) {                           // 1 gene/probe, or 1 probe in gene
+		return field => (field === label) ? label : `${label} (${field})`;
 	} else if (fields.length === columnFields.length) {  // n > 1 genes/probes
 		return _.identity;
 	} else {                                             // n > 1 probes in gene
@@ -116,7 +116,7 @@ class ApplicationContainer extends React.Component {
 			{stateError} = state,
 			computedState = selector(state),
 			{spreadsheet: {mode, ties: {open} = {}}, loadPending} = computedState,
-			stepperState = getStepperState(computedState),
+			stepperState = getStepperState(computedState.spreadsheet),
 			View = {
 				heatmap: SpreadsheetContainer,
 				chart: ChartView,

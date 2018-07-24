@@ -68,30 +68,42 @@ function findRegions(index, height, count) {
 	return regions;
 }
 
-function groupsByScale(arr, scale) {
-	var domains = scale.domain(),
-		domainGroupBy = _.groupBy(arr, v => _.findIndexDefault(domains, d => v < d, domains.length));
+var gte = l => v => v >= l;
+var emptyDomain = () => ({count: 0, sum: 0});
 
-	return _.times(domains.length + 1, i => domainGroupBy[i] || []);
+function tallyDomains(d, start, end, domains, acc = _.times(domains.length + 1, emptyDomain), i = start) {
+	var v = d[i];
+	if (i === end) {
+		return acc;
+	}
+	if (v !== null) {
+		let i = _.findIndexDefault(domains, gte(v), domains.length);
+		acc[i].count++;
+		acc[i].sum += v;
+	}
+	return tallyDomains(d, start, end, domains, acc, i + 1);
 }
 
 var regionColorMethods = {
 	// For ordinal scales, subsample by picking a random data point.
-	'ordinal': (scale, d) => colorHelper.rgb(scale(d[Math.floor(d.length * Math.random())])),
+	// Doing slice here to simplify the random selection. We don't have
+	// many subcolumns with ordinal data, so this shouldn't be a performance problem.
+	'ordinal': (scale, d, start, end) => _.Let((s = d.slice(start, end)) =>
+			colorHelper.rgb(scale(s[Math.floor(s.length * Math.random())]))),
 	// For float scales, compute per-domain average values, and do a weighed mix of the colors.
-	'default': (scale, d) => {
-		var domainGroups = groupsByScale(d, scale),
-			groupColors = domainGroups.map(g => colorHelper.rgb(scale(_.meannull(g)))),
-			groupCounts = domainGroups.map(vs => vs.length),
+	'default': (scale, d, start, end) => {
+		var domainGroups = tallyDomains(d, start, end, scale.domain()),
+			groupColors = domainGroups.map(g => g.count ? scale.rgb(g.sum / g.count) : null),
+			groupCounts = domainGroups.map(g => g.count),
 			total = _.sum(groupCounts);
-			// blend colors via rms
-			return _.any(groupColors) ? _.times(3, ch =>
-					~~Math.sqrt(_.sum(_.mmap(groupColors, groupCounts,
-						(rgb, n) => rgb == null ? 0 : rgb[ch] * rgb[ch] * n / total)))) : null;
+		// blend colors via rms
+		return _.times(3, ch =>
+				~~Math.sqrt(_.sum(_.mmap(groupColors, groupCounts,
+					(rgb, n) => rgb == null ? 0 : rgb[ch] * rgb[ch] * n / total))));
 	}
 };
 
-var regionColor = (type, scale, d) => (regionColorMethods[type] || regionColorMethods.default)(scale, d);
+var regionColor = (type, scale, d, start, end) => (regionColorMethods[type] || regionColorMethods.default)(scale, d, start, end);
 
 function drawLayoutByPixel(vg, opts) {
 	var {height, width, index, count, layout, data, codes, colors} = opts,
@@ -110,16 +122,16 @@ function drawLayoutByPixel(vg, opts) {
 		img = ctx.createImageData(width, height);
 
 	layout.forEach(function (el, i) {
-		var rowData = data[i].slice(first, last),
+		var rowData = data[i],
 			colorScale = colorScales.colorScale(colors[i]);
 
 		// XXX watch for poor iterator performance in this for...of.
 		for (let rs of regions.keys()) {
-			var r = regions.get(rs),
-				d = rowData.slice(r.start, r.end + 1).filter(x => x != null);
+			var r = regions.get(rs);
 
-			if (d.length > 0) {
-				let color = regionColor(colors[i][0], colorScale, d);
+			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => v !== null)) {
+				let color = regionColor(colors[i][0], colorScale, rowData,
+				                        first + r.start, first + r.end + 1);
 
 				for (let y = rs; y < rs + r.height; ++y) {
 					let pxRow = y * width,

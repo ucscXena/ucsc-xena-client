@@ -28,7 +28,7 @@ var compStyles = require('./ColumnAdd.module.css');
 
 class ColumnAdd extends React.Component {
 	onClick = () => {
-		this.props.onClick();
+		this.props.onClick(this.props.actionKey);
 	};
 
 	onMouseOut = () => {

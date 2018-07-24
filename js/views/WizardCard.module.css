@@ -6,11 +6,13 @@
  */
 
 @value black6 from '../../css/variables.css';
+
 @value black12 from '../../css/variables.css';
+
 @value black38 from '../../css/variables.css';
 
 .WizardCard {
-	min-height: 630px; /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
+	min-height: 645px; /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup */
 }
 
 /* Card actions specific to wizard */
@@ -26,7 +28,7 @@
 	display: flex;
 	line-height: 0;
 	justify-content: space-between;
-	padding: 16px;
+	padding: 8px 16px;
 }
 
 /* Icons */

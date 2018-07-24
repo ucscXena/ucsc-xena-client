@@ -18,13 +18,57 @@ var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
-import {IconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
+import {IconMenu as RTIconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 import Tooltip from 'react-toolbox/lib/tooltip';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
-var {RefGeneAnnotation} = require('../refGeneExons');
+import RefGeneAnnotation from '../refGeneExons';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
+var crosshair = require('./cursor.png');
+
+var ESCAPE = 27;
+
+class IconMenu extends React.Component {
+	onKeyDown = ev => {
+		if (ev.keyCode === ESCAPE) {
+			this.ref.handleMenuHide();
+		}
+	}
+	cleanup() {
+		// We get an onHide() call from setting state in Menu, *and*
+		// from this.ref.handleMenuHide(), during this.onKeyDown. So,
+		// check if 'curtain' still exists before tear down.
+		if (this.curtain) {
+			document.body.removeChild(this.curtain);
+			document.removeEventListener('keydown', this.onKeyDown);
+			delete this.curtain;
+		}
+	}
+	componentWillUnmount() {
+		this.cleanup();
+	}
+	onHide = () => {
+		var {onHide} = this.props;
+		this.cleanup();
+		onHide && onHide();
+	}
+	onShow = () => {
+		var {onShow} = this.props;
+		this.curtain = document.createElement('div');
+		this.curtain.style = "position:absolute;top:0;left:0;width:100%;height:100%";
+		document.body.appendChild(this.curtain);
+		document.addEventListener('keydown', this.onKeyDown, false);
+		onShow && onShow();
+	}
+	onRef = ref => {
+		this.ref = ref;
+	}
+	render() {
+		var {onShow, onHide, ...others} = this.props;
+		return <RTIconMenu innerRef={this.onRef} onShow={this.onShow} onHide={this.onHide} {...others}/>;
+	}
+}
 
 const TooltipMenuItem = Tooltip(MenuItem);
 
@@ -59,7 +103,9 @@ function downloadJSON(downloadData) {
 	a.click();
 	document.body.removeChild(a);
 }
-var annotationHeight = 30,
+
+var annotationHeight = 47,
+	positionHeight = 17,
 	scaleHeight = 12;
 
 var styles = {
@@ -172,7 +218,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'mutation',
 		rightAssembly = (["hg19", "hg38", "GRCh37", "GRCh38"].indexOf(assembly) !== -1) ? true : false,  //MuPIT support hg19, hg38
-		noMuPit = !rightValueType || !rightAssembly || wrongDataSubType || pos,
+		noMuPit = !rightValueType || !rightAssembly || !!wrongDataSubType || !!pos,
 		noData = !_.get(data, 'req'),
 		mupitItemName = noData ? 'MuPIT 3D Loading' : 'MuPIT 3D (' + assembly + ' coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
@@ -229,18 +275,18 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 }
 
 // Maybe put in a selector.
-function supportsGeneAverage(column) {
-	var {fieldType, fields, fieldList} = column;
-	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && (fieldList || fields).length === 1;
-}
+var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
+	!isChrom && _.contains(['geneProbes', 'genes'], fieldType) &&
+		(fieldList || fields).length === 1;
 
-function matrixMenu(props, {onTumorMap, onMode}) {
+
+function matrixMenu(props, {onTumorMap, onMode, isChrom}) {
 	var {cohort, column} = props,
 		{fieldType, noGeneDetail, fields, fieldSpecs} = column,
 		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs});
 
 	return addIdsToArr ([
-		supportsGeneAverage(column) ?
+		supportsGeneAverage(column, isChrom) ?
 			(fieldType === 'genes' ?
 				<MenuItem title={noGeneDetail ? 'no common probemap' : ''}
 					disabled={noGeneDetail} onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
@@ -330,6 +376,10 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 		.filter(([start, end]) => !(end < cdsStart || start > cdsEnd))
 		.map(([start, end]) => [Math.max(start, cdsStart), Math.min(end, cdsEnd)]);
 }
+
+var showPosition = column =>
+	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType);
+
 
 class Column extends PureComponent {
 	state = {
@@ -547,34 +597,39 @@ class Column extends PureComponent {
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
 				interactive, append} = this.props,
+			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
+					_.getIn(column, ['assembly'])),
 			{specialDownloadMenu} = this.state,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
-				onSpecialDownload, specialDownloadMenu}),
+				onSpecialDownload, specialDownloadMenu, isChrom}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
-			annotation = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
+			annotation = showPosition(column) ?
 				<RefGeneAnnotation
+					id={id}
 					column={column}
 					position={_.getIn(column, ['layout', 'chrom', 0])}
 					refGene={_.getIn(data, ['refGene'], {})}
+					probePosition={column.position}
 					tooltip={tooltip}
 					layout={column.layout}
 					height={annotationHeight}
+					positionHeight={column.position ? positionHeight : 0}
 					width={width}
-					mode={parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+					mode={isChrom ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null,
-			scale = (['segmented', 'mutation', 'SV'].indexOf(column.fieldType) !== -1) ?
+			scale = showPosition(column) ?
 				<ChromPosition
 					layout = {column.layout}
 					width = {width}
 					scaleHeight ={scaleHeight}
-					mode = {parsePos(_.getIn(column, ['fields', 0]), _.getIn(column, ['assembly'])) ?
+					mode = {isChrom ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null;
@@ -615,16 +670,14 @@ class Column extends PureComponent {
 							</div>
 						}
 						 wizardMode={wizardMode}>
-					<Crosshair frozen={!interactive || this.props.frozen}>
-						<div style={{height: annotationHeight + scaleHeight + 4}}>
-							{annotation ?
-								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-									{scale}
-									<div style={{height: 2}}/>
-									{annotation}
-								</DragSelect> : null}
-						</div>
-					</Crosshair>
+					<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: annotationHeight + scaleHeight + 4}}>
+						{annotation ?
+							<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+								{scale}
+								<div style={{height: 2}}/>
+								{annotation}
+							</DragSelect> : null}
+					</div>
 					<ResizeOverlay
 						enable={interactive}
 						onResizeStop={this.onResizeStop}
@@ -638,7 +691,7 @@ class Column extends PureComponent {
 							samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 							samplesMatched={samplesMatched}/>
 						<div style={{position: 'relative'}}>
-							<Crosshair frozen={!interactive || this.props.frozen}>
+							<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen}>
 								{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 								{getStatusView(status, this.onReload)}
 							</Crosshair>

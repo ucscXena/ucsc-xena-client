@@ -20,7 +20,7 @@ var refGene = {
 	GRCh37: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg19_V24lift37'},
 	hg38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
 	GRCh38: {host: 'https://reference.xenahubs.net', name: 'gencode_good_hg38'},
-	mm9: {host: 'https://reference.xenahubs.net', name: 'gencode_good_mm10'}, // XXX wrong, but good enough
+	mm9: {host: 'https://reference.xenahubs.net', name: 'refgene_good_mm9'},
 	mm10: {host: 'https://reference.xenahubs.net', name: 'gencode_good_mm10'}
 };
 
@@ -299,6 +299,9 @@ function transformPOSTMethods(postMethods) {
 		// Apply a transform that requires the 'host' parameter
 		datasetMetadata: postFn => (host, dataset) =>
 			postFn(host, dataset).map(resp => datasetListTransform(host, resp)),
+		// Apply a transform that requires the 'host' parameter
+		probemapList: postFn => host =>
+			postFn(host).map(resp => datasetListTransform(host, resp)),
 		sparseData: mapResponse(indexMutations),
 		sparseDataRange: mapResponse(indexMutations),
 		// Generate case permutations of the gene parameter
@@ -341,10 +344,12 @@ function wrapDsIDParams(postMethods) {
 		'datasetProbeValues',
 		'datasetProbeSignature',
 		'datasetGeneProbesValues',
+		'datasetChromProbeValues',
 		'datasetGeneProbeAvg',
 		'datasetMetadata',
 		'featureList',
 		'fieldCodes',
+		'maxRange',
 		'refGeneExons',
 		'refGenePosition',
 		'refGeneRange',

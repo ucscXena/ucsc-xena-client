@@ -8,5 +8,6 @@
 /* Container around highcharts */
 .ChartView {
 	margin: 48px 12px;
-	position: relative; /* Required for positioning stats */
+	display: flex;
+	justify-content: flex-start;
 }
