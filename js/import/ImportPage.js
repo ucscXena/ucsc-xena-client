@@ -108,9 +108,11 @@ class ImportForm extends React.Component {
 			case 6:
 				wizardProps = {
 					fileName,
-					showRetry: !errorCheckInprogress,
+					showRetry: !errorCheckInprogress && !isImportSuccessful(this.props.state),
+					showSuccess: isImportSuccessful(this.props.state),
 					onRetryFile: this.onRetryFile,
-					onRetryMetadata: this.onRetryMetadata
+					onRetryMetadata: this.onRetryMetadata,
+					onImportMoreData: this.onImportMoreData
 				};
 				component = this.importProgressPage();
 				break;
@@ -394,7 +396,11 @@ class ImportForm extends React.Component {
 
 	onCancelImport = () => {
 		this.props.callback(['navigate', 'datapages', {host: localHub}]);
-		this.props.callback(['cancel-import']);
+		this.props.callback(['reset-import-state']);
+	}
+
+	onImportMoreData = () => {
+		this.props.callback(['reset-import-state']);
 	}
 
 	onImportClick = () => {

@@ -12,7 +12,7 @@ const style = {
 export default class WizardSection extends React.Component {
     render() {
         const { isLast, isFirst, nextEnabled, onImport,
-            fileName, showRetry
+            fileName, showRetry, showSuccess
         } = this.props;
         const showNext = !isLast && !onImport && !showRetry;
 
@@ -22,7 +22,7 @@ export default class WizardSection extends React.Component {
 
                 { this.props.children }
                 <div className={styles.wizardButtons}>
-                    <Button label='Back' raised style={{visibility: !isFirst ? 'visible' : 'hidden'}}
+                    <Button label='Back' raised style={{visibility: !isFirst && !showSuccess ? 'visible' : 'hidden'}}
                         onClick={this.props.onPreviousPage}
                     />
 
@@ -32,6 +32,7 @@ export default class WizardSection extends React.Component {
                             onClick={this.props.onNextPage}
                         />
                     }
+
                     {!!onImport &&
                         <Button label='Import' raised style={style.next}
                             accent={nextEnabled} disabled={!nextEnabled}
@@ -41,7 +42,10 @@ export default class WizardSection extends React.Component {
 
                     { showRetry && this.renderRetryButtons() }
 
-                    <CancelButton onCancelImport={this.props.onCancelImport}/>
+                    { showSuccess && this.renderSuccessButtons() }
+
+                    { !showSuccess &&
+                    <CancelButton onCancelImport={this.props.onCancelImport}/>}
                 </div>
             </div>
         );
@@ -50,9 +54,6 @@ export default class WizardSection extends React.Component {
     renderRetryButtons() {
         return (
             <div className={styles.retryButtons}>
-                {/* <Button label='Retry file' raised style={style.next} accent
-                    onClick={this.props.onRetryFile}
-                /> */}
                 <Button label='Edit Data Details' raised style={style.next} accent
                     onClick={this.props.onRetryMetadata}
                 />
@@ -60,6 +61,22 @@ export default class WizardSection extends React.Component {
 					onChange={this.props.onRetryFile}
 				/>
 				<label htmlFor='file-input' className={styles.retryButton}>Reload file</label>
+            </div>
+        );
+    }
+
+    renderSuccessButtons() {
+        return (
+            <div className={styles.retryButtons}>
+                <Button label='Finish' raised style={style.next} accent
+                    onClick={this.props.onRetryMetadata}
+                />
+                <Button label='Load more data' raised style={style.next} accent
+                    onClick={this.props.onImportMoreData}
+                />
+                <Button label='View data' raised style={style.next} accent
+                    onClick={this.props.onRetryMetadata}
+                />
             </div>
         );
     }

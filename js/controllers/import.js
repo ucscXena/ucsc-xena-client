@@ -146,7 +146,7 @@ const importControls = {
     'retry-file-done': retryFileDone,
     'set-default-custom-cohort': (state) => 
         assocIn(state, ['form', 'customCohort'], getDefaultCustomCohort(getIn(state, ['localCohorts']))),
-    'cancel-import': () => defaultState
+    'reset-import-state': () => defaultState
 };
 
 const query = {
