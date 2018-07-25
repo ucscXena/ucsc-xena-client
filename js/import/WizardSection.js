@@ -57,7 +57,7 @@ export default class WizardSection extends React.Component {
                     onClick={this.props.onRetryMetadata}
                 />
                 <input type='file' id='file-input' style={{ display: 'none' }}
-					onChange={this.props.onFileReload}
+					onChange={this.props.onRetryFile}
 				/>
 				<label htmlFor='file-input' className={styles.retryButton}>Reload file</label>
             </div>

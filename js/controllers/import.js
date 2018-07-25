@@ -10,6 +10,61 @@ import getErrors from '../import/errorChecking';
 
 const defaultState = { wizardPage: 0};
 
+const createMetaDataFile = (state) => {
+    return JSON.stringify({
+        version: new Date().toISOString().split('T')[0],
+        cohort: state.cohortRadio === 'newCohort' ? state.customCohort : state.cohort,
+        dataSubType: state.dataType,
+        type: state.fileFormat,
+        assembly: state.assembly
+    }, null, 4);
+};
+
+const retryFile = (state, fileHandle) => {
+    return readFileObs(fileHandle).flatMap(content => Rx.Observable.zip(
+        importFile({
+            fileName: fileHandle.name, 
+            fileContent: content,
+            file: fileHandle,
+            form: getIn(state, ['form'])
+        }),
+        // checkForErrors(fileHandle, content, getIn(state, ['form', 'dataType'])),
+        Rx.Observable.of(content),
+        Rx.Observable.of(fileHandle.name)
+    ));
+};
+
+const retryFileDone = (state, [errors, fileContent, fileName]) => {
+    state = assocInAll(state, ['fileContent'], fileContent,
+                            ['fileName'], fileName);
+    return importFileDone(state, errors);    
+};
+
+const importFile = ({ fileName, fileContent, file, form }) => {
+    const formData = new FormData();
+
+    formData.append("file", new Blob([fileContent]), fileName);
+    formData.append("file", new Blob([createMetaDataFile(form)]), fileName + '.json');
+
+    return checkForErrors(file, fileContent, form.fileFormat).flatMap(errors => 
+        errors.length ? 
+            Rx.Observable.of({ errors }) :
+            postFile(formData).concat(updateFile(fileName))
+                .catch(error => Rx.Observable.of({serverError: error.message})));
+};
+
+const importFileDone = (state, result) => {
+    state = assocIn(state, ['form', 'errorCheckInprogress'], false);
+
+    if(result.errors) {
+        return assocIn(state, ['form', 'errors'], result.errors);
+    } else if (result.serverError) {
+        return assocIn(state, ['form', 'serverError'], result.serverError);
+    } else {
+        return assocIn(state, ['form', 'errors'], []);
+    }
+}
+
 const postFile = (file) => {
     const payload = {
         url: `${servers.localHub}/upload/`,
@@ -19,7 +74,7 @@ const postFile = (file) => {
         crossDomain: true
     };
 
-    return Rx.Observable.ajax(payload).map(r => r.status);
+    return Rx.Observable.ajax(payload);
 };
 
 const updateFile = (fileName) => {
@@ -30,7 +85,7 @@ const updateFile = (fileName) => {
         method: 'POST',
         crossDomain: true
     };
-    return Rx.Observable.ajax(payload).map(r => r.status);
+    return Rx.Observable.ajax(payload);
 };
 
 const readFileObs = (fileHandle) => {
@@ -56,7 +111,7 @@ const checkForErrors = (file, fileContent, fileFormat) => {
         }, 0);
          
         return () => {};
-    }).map(e => e);
+    });
 };
 
 const getCohortArray = cohorts => cohorts.map(c => c.cohort);
@@ -67,8 +122,8 @@ const getDefaultCustomCohort = (localCohorts, name='New Study', number=1) => {
 
 const importControls = {
     'file': (state, fileHandle) => assocInAll(state, ['file'], fileHandle, ['fileName'], fileHandle.name),
-    'import-file-post!': (serverBus, state, newState, file) => serverBus.next(['import-file-done', postFile(file)]),
-    'import-file-done': (state) => assocIn(state, ['status'], 'File successfully saved!'),
+    'import-file-post!': (serverBus, state, newState, file) => serverBus.next(['import-file-done', importFile(state)]),
+    'import-file-done': importFileDone,
     'update-file-post!': (serverBus, state, newState, fileName) => serverBus.next(['update-file-done', updateFile(fileName)]),
     'update-file-done': (state) => assocIn(state, ['status'], 'File successfully saved!'),
     'read-file-post!': (serverBus, state, newState, fileHandle) => serverBus.next(['read-file-done', readFileObs(fileHandle)]),
@@ -87,18 +142,8 @@ const importControls = {
             ['form', 'errors'], errors,
             ['form', 'errorCheckInprogress'], false),
     'clear-metadata': (state) => assocIn(state, ['form'], {}),
-    'retry-file-post!': (serverBus, state, newState, fileHandle) => 
-        serverBus.next(['retry-file-done',
-            readFileObs(fileHandle).flatMap(content => Rx.Observable.zip(
-                    checkForErrors(fileHandle, content, getIn(state, ['form', 'dataType'])),
-                    Rx.Observable.of(content),
-                    Rx.Observable.of(fileHandle.name)
-            ))
-        ]),
-    'retry-file-done': (state, [errors, fileContent, fileName]) =>  assocInAll(state, 
-            ['fileContent'], fileContent,
-            ['form', 'errors'], errors,
-            ['fileName'], fileName),
+    'retry-file-post!': (serverBus, state, newState, fileHandle) => serverBus.next(['retry-file-done', retryFile(state, fileHandle)]),
+    'retry-file-done': retryFileDone,
     'set-default-custom-cohort': (state) => 
         assocIn(state, ['form', 'customCohort'], getDefaultCustomCohort(getIn(state, ['localCohorts']))),
     'cancel-import': () => defaultState
@@ -119,12 +164,10 @@ const changeFormProp = propName => (state, propValue) => assocIn(state, ['form',
 const formControls = {
     'file-format': changeFormProp('fileFormat'),
     'data-type': changeFormProp('dataType'),
-    'custom-data-type': changeFormProp('customDataType'),
+    'cohort-radio': changeFormProp('cohortRadio'),
     'cohort': changeFormProp('cohort'),
     'custom-cohort': changeFormProp('customCohort'),
     'probemap-file': changeFormProp('probeMapFile'),
-    'display-name': changeFormProp('displayName'),
-    'description': changeFormProp('description'),
     'errors': changeFormProp('errors'),
     'genes': changeFormProp('genes'),
     'probes': changeFormProp('probes'),
@@ -133,7 +176,7 @@ const formControls = {
 }
 
 
-export default  mount(compose(
+export default mount(compose(
     make(importControls), 
     make(query),
     make(formControls)), ['import']);

@@ -46,11 +46,12 @@ const getNextPageByDataType = (currIndex, forwards, dataType) => {
 	return pages[pages.indexOf(currIndex) + (forwards ? 1 : -1)];
 };
 
+const isImportSuccessful = ({ errors, errorCheckInprogress, serverError }) => (errorCheckInprogress === false && !serverError && !(errors && errors.length));
+
 class ImportForm extends React.Component {
 	constructor() {
 		super();
 		this.state = {
-			cohortSelect: null,
 			probeSelect: null,
 			//ui state
 			fileReadInprogress: false,
@@ -60,7 +61,7 @@ class ImportForm extends React.Component {
 	}
 
 	render() {
-		const { fileFormat, dataType, assembly } = this.props.state || {},
+		const { fileFormat, dataType, assembly, errorCheckInprogress } = this.props.state || {},
 			{ file, wizardPage, fileName } = this.props,
 			fileSelected = file && !!file.size;
 
@@ -107,7 +108,7 @@ class ImportForm extends React.Component {
 			case 6:
 				wizardProps = {
 					fileName,
-					showRetry: true,
+					showRetry: !errorCheckInprogress,
 					onRetryFile: this.onRetryFile,
 					onRetryMetadata: this.onRetryMetadata
 				};
@@ -184,18 +185,18 @@ class ImportForm extends React.Component {
 	}
 
 	studySelectionPage() {
-		const { customCohort, cohort, fileFormat } = this.props.state;
+		const { customCohort, cohortRadio, cohort, fileFormat } = this.props.state;
 		return (
 			<div>
-				<RadioGroup value={this.state.cohortSelect} onChange={this.onCohortRadioChange}>
+				<RadioGroup value={cohortRadio} onChange={this.onCohortRadioChange}>
 					<RadioButton label="These are the first data on these samples." value='newCohort' />
-					{this.state.cohortSelect === 'newCohort' &&
+					{cohortRadio === 'newCohort' &&
 						<Input label="Study name" type="text" className={styles.field}
 							onChange={this.onCustomCohortChange} value={customCohort}
 						/>}
 					<RadioButton label="I have loaded other data on these samples and want to connect to it."
 						value='existingOwnCohort' />
-					{this.state.cohortSelect === 'existingOwnCohort' &&
+					{cohortRadio === 'existingOwnCohort' &&
 						<Dropdown onChange={this.onCohortChange}
 							source={getDropdownOptions(["", ...this.props.localCohorts])}
 							value={cohort}
@@ -204,7 +205,7 @@ class ImportForm extends React.Component {
 						/>}
 					<RadioButton label="There is other public data in Xena on these samples (e.g. TCGA) and want to connect to it."
 						value='existingPublicCohort' />
-					{this.state.cohortSelect === 'existingPublicCohort' &&
+					{cohortRadio === 'existingPublicCohort' &&
 						<div className={styles.field}>
 							<CohortSuggest cohort={cohort} cohorts={this.props.cohorts}
 								onSelect={this.onCohortChange}
@@ -264,26 +265,35 @@ class ImportForm extends React.Component {
 	}
 
 	importProgressPage() {
-		const { errors, errorCheckInprogress } = this.props.state;
+		const { errors, errorCheckInprogress, serverError } = this.props.state;
+
 		return (
 			<div>
-				{/* <Button icon='youtube_searched_for' label='Begin checking' raised
-					disabled={!fileSelected}
-					onClick={this.onCheckForErrors}
-				/>
-				<Button icon='youtube_searched_for' label='Re-read file' raised
-					onClick={this.onFileReRead}
-				/> */}
-				{/* <input type='file' id='file-input' style={{ display: 'none' }}
-					onChange={this.onFileReRead}
-				/>
-				<label htmlFor='file-input' className={styles.retryButton}>Retry file</label> */}
+				{errorCheckInprogress && <p>Loading file...</p> }
 
 				<ErrorArea errors={errors}
 					showMore={this.state.showMoreErrors}
 					onShowMoreToggle={this.onShowMoreToggle}
 					errorCheckInProgress={errorCheckInprogress}
 				/>
+
+				{ serverError &&
+				<div>
+					<p style={{color: 'red'}}>Unexpected server error occured: {serverError}</p>
+					<p>Please <a href={`mailto:genome-cancer@soe.ucsc.edu?subject="Xena import: java error"`}>contact</a> the
+					 Xena team for help.</p>
+				</div>
+				}
+
+				{ isImportSuccessful(this.props.state) &&
+				<div>
+					<p>Success!</p>
+
+					<p>Note that when visualizing your data
+						you will need to enter [Ensembl IDs, HUGO gene names, the identifiers in your file].
+					</p>
+				</div>
+				}
 			</div>
 		);
 	}
@@ -317,19 +327,9 @@ class ImportForm extends React.Component {
 		}
 	}
 
-	onFileReRead = (evt) => {
-		if (evt.target.files.length > 0) {
-			const file = evt.target.files[0];
-			// this.props.callback([fileProp, file]);
-			this.props.callback(['retry-file', file]);
-			// this.props.callback(['read-file', file]);
-			// this.props.callback(['set-status', 'Reading the file...']);
-		}
-	}
-
 	onCohortRadioChange = value => {
 		this.props.callback(['cohort', '']);
-		this.setState({cohortSelect: value});
+		this.props.callback(['cohort-radio', value]);
 	}
 
 	onProbeRadioChange = value => {
@@ -376,36 +376,20 @@ class ImportForm extends React.Component {
 	onAssemblyChange = assembly => this.props.callback(['assembly', assembly]);
 
 	onRetryMetadata = () => {
+		this.setState({probeSelect: null});
+
 		this.props.callback(['clear-metadata']);
 		this.props.callback(['wizard-page', 1]);
 		this.props.callback(['set-default-custom-cohort']);
 	}
 
-	onRetryFile = () => {
-		this.props.callback(['wizard-page', 0]);
-	}
+	onRetryFile = (evt) => {
+		if (evt.target.files.length > 0) {
+			const file = evt.target.files[0];
 
-	// to be removed when error checking is properly done
-	onCheckForErrors = () => {
-		const { file, fileFormat } = this.props.state,
-			fileContent = this.props.fileContent;
-
-		//this.setState({errorCheckInProgress: true});
-		// this.props.callback(['set-status', 'Checking for errors...']);
-		// this.props.callback(['errors', []]);
-		this.props.callback(['check-errors', file, fileContent, fileFormat]);
-
-		// setTimeout(() => {
-		// 	const errors = getErrors(file, fileContent, fileFormat);
-
-		// 	if (errors.length) {
-		// 		this.props.callback(['errors', errors]);
-		// 		this.props.callback(['set-status', 'There was some error found in the file']);
-		// 	} else {
-		// 		this.props.callback(['set-status', '']);
-		// 	}
-		// 	this.setState({errorCheckInProgress: false});
-		// }, 500);
+			this.props.callback(['error-check-inprogress', true]);
+			this.props.callback(['retry-file', file]);
+		}
 	}
 
 	onCancelImport = () => {
@@ -413,39 +397,20 @@ class ImportForm extends React.Component {
 		this.props.callback(['cancel-import']);
 	}
 
-	saveFile = () => {
-		const { fileName } = this.props.state,
-			fileContent = this.props.fileContent;
-
-		this.setState({ fileReadInprogress: true });
-		this.props.callback(['set-status', 'Saving file to local hub...']);
-
-		this.props.postFile([
-			{ contents: fileContent, name: fileName },
-			{ contents: this.createMetaDataFile(), name: fileName + '.json' }
-		]);
-		this.props.callback(['update-file', fileName]);
-	}
-
 	onImportClick = () => {
-		const { file, dataType } = this.props.state,
-			{ fileContent, wizardPage } = this.props;
+		const { dataType } = this.props.state,
+			{ wizardPage } = this.props;
 
 		this.props.callback(['error-check-inprogress', true]);
+		this.props.callback(['import-file']);
 		this.props.callback(['wizard-page', getNextPageByDataType(wizardPage, true, dataType)]);
-		this.props.callback(['check-errors', file, fileContent, dataType]);
-
-		//we do not issue save if there's errors - saving has to be called after error cheking
-		// maybe in .map on observable and then decide to do it or not
-		this.saveFile();
 	}
 
 	isCohortPageNextEnabled = () => {
-		const { customCohort, cohort } = this.props.state,
-			radioOption = this.state.cohortSelect;
+		const { customCohort, cohort, cohortRadio } = this.props.state;
 
-		return (radioOption === 'newCohort' && !!customCohort) || (radioOption === 'existingOwnCohort' && !!cohort)
-			|| (radioOption === 'existingPublicCohort' && !!cohort);
+		return (cohortRadio === 'newCohort' && !!customCohort) || (cohortRadio === 'existingOwnCohort' && !!cohort)
+			|| (cohortRadio === 'existingPublicCohort' && !!cohort);
 	}
 
 	isProbesNextPageEnabled = () => {
@@ -534,9 +499,8 @@ const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle })
 
 	return (
 		<div className={styles.errorContainer}>
-			{items}
-			{showMoreText}
-			{!errors.length && !errorCheckInProgress && <p>File is good to go!</p>}
+			{ items }
+			{ showMoreText }
 
 			<div style={{textAlign: 'center'}}>
 				{errorCheckInProgress &&
