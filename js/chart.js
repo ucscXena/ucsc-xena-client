@@ -545,7 +545,6 @@ function render(root, callback, sessionStorage) {
 			code,
 			categories,
 			i, k,
-			colors = {},
 			average, stdDev,
 			pValue, dof,
 			total;
@@ -586,7 +585,6 @@ function render(root, callback, sessionStorage) {
 					xSampleCode[i] = code;
 				}
 			}
-
 			// remove empty xcode categories
 			xcodemap.map(function (code) {
 				if (xbinnedSample[code].length === 0) {
@@ -688,12 +686,8 @@ function render(root, callback, sessionStorage) {
 				}
 			};
 
-			customColors = getCustomColor(columns[xcolumn].fieldSpecs, columns[xcolumn].fields, columns[xcolumn].dataset);
-
-			xcodemap.forEach(function (code, i) {
-				colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length];
-			});
-
+			let scale = colorScales.colorScale(columns[xcolumn].colors[0]),
+				invCodeMap = _.invert(xcodemap);
 
 			// column chart setup
 			chartOptions = highchartsHelper.columnChartFloat(chartOptions, yfields, xlabel, ylabel);
@@ -710,21 +704,16 @@ function render(root, callback, sessionStorage) {
 
 				nNumberSeriese = nNumberMatrix[i];
 
-				// highlight coloring
-				if ( highlightcode.length !== 0 ) {
-					if ( highlightcode.indexOf(code) !== -1) {
-						colors[code] = 'gold';
-					} else {
-						colors[code] = "#A9A9A9";
-					}
-				}
+				let color = highlightcode.length === 0 ? scale(invCodeMap[code]) :
+					highlightcode.indexOf(code) === -1 ? '#A9A9A9' :
+					'gold';
 
 				dataSeriese = _.zip(lowerwhiskerSeriese, lowerSeriese, medianSeriese, upperSeriese, upperwhiskerSeriese);
 				highchartsHelper.addSeriesToColumn(
 					chart, 'boxplot', code,
 					dataSeriese, yIsCategorical,
 					yfields.length * xCategories.length < 30, showLegend,
-					customColors && customColors[code] ? customColors[code] : colors[code],
+					color,
 					nNumberSeriese);
 			}
 
@@ -1003,10 +992,8 @@ function render(root, callback, sessionStorage) {
 			var ycategories = Object.keys(ybinnedSample);
 
 			//code
-			customColors = getCustomColor(columns[ycolumn].fieldSpecs, columns[ycolumn].fields, columns[ycolumn].dataset);
-
-			ycodemap.map((code, i) =>
-				colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length]);
+			let scale = colorScales.colorScale(columns[ycolumn].colors[0]),
+				invCodeMap = _.invert(ycodemap);
 
 			// Pearson's chi-squared test pearson https://en.wikipedia.org/wiki/Pearson's_chi-squared_test
 			// note, another version of pearson's chi-squared test is G-test, Likelihood-ratio test, https://en.wikipedia.org/wiki/Likelihood-ratio_test
@@ -1052,7 +1039,7 @@ function render(root, callback, sessionStorage) {
 				highchartsHelper.addSeriesToColumn(
 					chart, 'column', code, ycodeSeries, yIsCategorical,
 					ycodemap.length * categories.length < 30, showLegend,
-					customColors && customColors[code] ? customColors[code] : colors[code], observed[i]);
+					scale(invCodeMap[code]), observed[i]);
 			}
 
 			// pearson chi-square test statistics
