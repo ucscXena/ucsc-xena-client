@@ -539,6 +539,7 @@ function getOs() {
 }
 
 var downloadDir = 'https://genome-cancer.ucsc.edu/download/public/get-xena';
+var i4jLogo = `${downloadDir}/install4j_small.png`;
 var updatesPath = `${downloadDir}/updates.xml`;
 var downloadPath = name => `${downloadDir}/${name}`;
 var getFileName = e => downloadPath(e.getAttribute('fileName'));
@@ -575,6 +576,8 @@ class XenaDownload extends React.Component {
 					 <Link className={styles.downloadLink} href={files[key]} title={info.help} label={info.description}/>) : null}
 				<br/>
 				<Link className={styles.helpLink} href='http://xena.ucsc.edu/private-hubs/'>Help</Link>
+				<br/>
+				<img src={i4jLogo}/>
 			</div>);
 	}
 }
