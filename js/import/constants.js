@@ -22,12 +22,12 @@ const steps = [
 
 const NONE_STR = 'None of these';
 
-const tempGeneOptions = [
-	'',
-	'Gene1',
-	'Gene2',
-	NONE_STR
-];
+// const tempGeneOptions = [
+// 	'',
+// 	'Gene1',
+// 	'Gene2',
+// 	NONE_STR
+// ];
 // const tempProbeOptions = [
 // 	'',
 // 	'Probe 1',
@@ -38,7 +38,7 @@ const tempGeneOptions = [
 module.exports = {
     dataTypeOptions: getDropdownOptions(dataTypes),
     steps,
-    tempGeneOptions,
+    // tempGeneOptions,
     // tempProbeOptions,
     NONE_STR
 };

@@ -12,7 +12,7 @@ const { servers: { localHub } } = DefaultServers;
 // import appTheme from '../appTheme';
 // import { ThemeProvider } from 'react-css-themr';
 
-import { dataTypeOptions, steps, tempGeneOptions, NONE_STR } from './constants';
+import { dataTypeOptions, steps, NONE_STR } from './constants';
 
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
@@ -24,6 +24,7 @@ const pageRanges = [0, ...Array(4).fill(1), 2, 3];
 const pageStateIndex = _.object(pageStates, pageRanges);
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
+const getProbemapOptions = probes => getDropdownOptions(["", ...probes, NONE_STR]);
 
 //needs constants
 const isPhenotypeData = dataType => dataType === 'phenotype/clinical/sample type';
@@ -230,14 +231,14 @@ class ImportForm extends React.Component {
 			<div>
 				<RadioGroup value={this.state.probeSelect} onChange={this.onProbeRadioChange}>
 					<RadioButton label="My data uses gene or transcript names (e.g. TP53, ENST00000619485.4)" value='genes' />
-					{this.renderDropdown(this.onGenesGhange, getDropdownOptions(tempGeneOptions), genes, "Genes or transcripts",
-						probeSelect === 'genes')
+					{this.renderDropdown(this.onGenesGhange, getProbemapOptions(_.getIn(this.props, ['probemaps', 'genes'])),
+					genes, "Genes or transcripts", probeSelect === 'genes')
 					}
 					{this.renderMailto("Xena import missing gene", "genes",
 						probeSelect === 'genes' && genes === NONE_STR)
 					}
 					<RadioButton label="My data uses probe names or other identifiers (e.g. 211300_s_at)" value='probes' />
-					{this.renderDropdown(this.onProbesChange, getDropdownOptions(["", ...this.props.probemaps, NONE_STR]),
+					{this.renderDropdown(this.onProbesChange, getProbemapOptions(_.getIn(this.props, ['probemaps', 'probes'])),
 						probes, "Probes", probeSelect === 'probes')
 					}
 					{this.renderMailto("Xena import missing probe", "probes",
@@ -268,11 +269,14 @@ class ImportForm extends React.Component {
 	}
 
 	importProgressPage() {
-		const { errors, errorCheckInprogress, serverError } = this.props.state;
+		const { errors, errorCheckInprogress, serverError } = this.props.state,
+			hasErrors = errors && !!errors.length;
 
 		return (
 			<div>
 				{errorCheckInprogress && <p>Loading file...</p> }
+
+				{ hasErrors && <p>There was some errors found in the file:</p> }
 
 				<ErrorArea errors={errors}
 					showMore={this.state.showMoreErrors}
@@ -314,8 +318,23 @@ class ImportForm extends React.Component {
 		: null;
 	}
 
+	isCohortPageNextEnabled = () => {
+		const { customCohort, cohort, cohortRadio } = this.props.state;
+
+		return (cohortRadio === 'newCohort' && !!customCohort) || (cohortRadio === 'existingOwnCohort' && !!cohort)
+			|| (cohortRadio === 'existingPublicCohort' && !!cohort);
+	}
+
+	isProbesNextPageEnabled = () => {
+		const { genes, probes } = this.props.state,
+			radioOption = this.state.probeSelect;
+
+		return (radioOption === 'genes' && !!genes) || (radioOption === 'probes' && !!probes)
+			|| radioOption === 'neither';
+	}
+
 	onWizardPageChange = (currPageIndex, forwards) => () => {
-		const newPageIndex = getNextPageByDataType(currPageIndex, forwards, this.props.state.dataType);
+		const newPageIndex = getNextPageByDataType(currPageIndex, forwards, _.getIn(this.props, ['state', 'dataType']));
 		this.props.callback(['wizard-page', newPageIndex]);
 	}
 
@@ -336,15 +355,8 @@ class ImportForm extends React.Component {
 	}
 
 	onProbeRadioChange = value => {
-		this.setState({probeSelect: value});
-		if (value === 'neither') {
-			this.resetProbesAndGenes();
-		}
-	}
-
-	resetProbesAndGenes = () => {
-		this.props.callback(['genes', '']);
-		this.props.callback(['probes', '']);
+		this.resetProbesAndGenes();
+		this.setState({ probeSelect: value });
 	}
 
 	onGenesGhange = value => this.props.callback(['genes', value]);
@@ -356,18 +368,6 @@ class ImportForm extends React.Component {
 	onDataTypeChange = type => {
 		this.resetFieldsOnDataTypeChange(type);
 		this.props.callback(['data-type', type]);
-	}
-
-	resetFieldsOnDataTypeChange = dataType => {
-		if (isMutationOrSegmentedData(dataType)) {
-			this.props.callback(['file-format', '']);
-			this.resetProbesAndGenes();
-		} else if (isPhenotypeData(dataType)) {
-			this.resetProbesAndGenes();
-			this.props.callback(['assembly', '']);
-		} else {
-			this.props.callback(['assembly', '']);
-		}
 	}
 
 	onCohortChange = cohort => this.props.callback(['cohort', cohort]);
@@ -401,7 +401,10 @@ class ImportForm extends React.Component {
 	}
 
 	onImportMoreData = () => {
+		this.setState({probeSelect: null});
 		this.props.callback(['reset-import-state']);
+		this.props.callback(['get-local-cohorts']);
+		this.props.callback(['get-probemaps']);
 	}
 
 	onImportClick = () => {
@@ -413,32 +416,21 @@ class ImportForm extends React.Component {
 		this.props.callback(['wizard-page', getNextPageByDataType(wizardPage, true, dataType)]);
 	}
 
-	isCohortPageNextEnabled = () => {
-		const { customCohort, cohort, cohortRadio } = this.props.state;
-
-		return (cohortRadio === 'newCohort' && !!customCohort) || (cohortRadio === 'existingOwnCohort' && !!cohort)
-			|| (cohortRadio === 'existingPublicCohort' && !!cohort);
+	resetFieldsOnDataTypeChange = dataType => {
+		if (isMutationOrSegmentedData(dataType)) {
+			this.props.callback(['file-format', '']);
+			this.resetProbesAndGenes();
+		} else if (isPhenotypeData(dataType)) {
+			this.resetProbesAndGenes();
+			this.props.callback(['assembly', '']);
+		} else {
+			this.props.callback(['assembly', '']);
+		}
 	}
 
-	isProbesNextPageEnabled = () => {
-		const { genes, probes } = this.props.state,
-			radioOption = this.state.probeSelect;
-
-		return (radioOption === 'genes' && !!genes) || (radioOption === 'probes' && !!probes)
-			|| radioOption === 'neither';
-	}
-
-	createMetaDataFile = () => {
-		const state = this.props.state;
-		return JSON.stringify({
-			version: new Date().toISOString().split('T')[0],
-			cohort: this.state.cohortSelect === 'newCohort' ? state.customCohort : state.cohort,
-			label: state.displayName,
-			description: '',
-			dataSubType: state.dataType,
-			type: state.fileFormat,
-			assembly: state.assembly
-		}, null, 4);
+	resetProbesAndGenes = () => {
+		this.props.callback(['genes', '']);
+		this.props.callback(['probes', '']);
 	}
 }
 

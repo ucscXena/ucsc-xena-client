@@ -4,11 +4,18 @@ import Rx from '../rx';
 import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
 import { cohortSummary, probemapList } from '../xenaQuery';
-import { assocIn, assocInAll, getIn } from "../underscore_ext";
+import { assocIn, assocInAll, getIn, groupBy, map } from "../underscore_ext";
 
 import getErrors from '../import/errorChecking';
 
-const defaultState = { wizardPage: 0};
+const referenceHost = 'https://reference.xenahubs.net';
+
+const getProbeGroups = probemaps => 
+    groupBy(probemaps, (p) => p.idtype === 'probe' || p.idtype === 'exon' ? 'probes' : 'genes');
+
+const getDefaultState = state => ({
+    wizardPage: 0
+});
 
 const createMetaDataFile = (state) => {
     return JSON.stringify({
@@ -16,7 +23,8 @@ const createMetaDataFile = (state) => {
         cohort: state.cohortRadio === 'newCohort' ? state.customCohort : state.cohort,
         dataSubType: state.dataType,
         type: state.fileFormat,
-        assembly: state.assembly
+        assembly: state.assembly,
+        probemap: state.genes || state.probes
     }, null, 4);
 };
 
@@ -146,7 +154,7 @@ const importControls = {
     'retry-file-done': retryFileDone,
     'set-default-custom-cohort': (state) => 
         assocIn(state, ['form', 'customCohort'], getDefaultCustomCohort(getIn(state, ['localCohorts']))),
-    'reset-import-state': () => defaultState
+    'reset-import-state': (state) => getDefaultState(state)
 };
 
 const query = {
@@ -157,8 +165,12 @@ const query = {
             ['localCohorts'], localCohorts,
             ['form', 'customCohort'], getDefaultCustomCohort(localCohorts));
     },
-    'get-probemaps-post!': serverBus => serverBus.next(['probemaps', probemapList(servers.publicHub)]),
-    'probemaps': (state, probemaps) => assocIn(state, ['probemaps'], probemaps.map(p => p.name))
+    'get-probemaps-post!': serverBus => serverBus.next(['set-probemaps', probemapList(referenceHost)]),
+    'set-probemaps': (state, probemaps) => {
+        probemaps = getProbeGroups(probemaps);
+        return assocInAll(state, ['probemaps', 'probes'], map(probemaps['probes'], p => p.name),
+                        ['probemaps', 'genes'], map(probemaps['genes'], p => p.name));
+    }
 
 }
 
