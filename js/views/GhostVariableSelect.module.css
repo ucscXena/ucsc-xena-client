@@ -12,7 +12,7 @@
 /* Core ghost container */
 .GhostVariableSelect {
 	border: 1px dashed black38;
-	min-height: 630px; /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup. Dupe of WizardCard. */
+	min-height: 645px; /* Must specify minimum height to maintain identical heights across cohort/disease and variable selects during wizard setup. Dupe of WizardCard. */
 }
 
 /* Header container - contains avatar */

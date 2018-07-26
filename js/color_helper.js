@@ -35,6 +35,13 @@ var colorStr = c => 'rgba(' + c.r + ', ' + c.g + ', ' + c.b + ', ' + c.a.toStrin
 var greyHEX = "#808080";
 var lightgreyHEX = "#dcdcdc";
 
+function standardizeColor(str) {
+	var ctx = document.createElement('canvas').getContext('2d');
+	ctx.fillStyle = str;
+	var c = hexToRGB(ctx.fillStyle);
+	return [c.r, c.g, c.b];
+}
+
 function rgb(color) {
     if (_.isArray(color)) {
         return color;
@@ -52,7 +59,7 @@ function rgb(color) {
             parseInt(color.substring(5, 7), 16)
         ];
     }
-    throw Error("Unknown color format " + color);
+    return standardizeColor(color);
 }
 
 // http://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color

@@ -78,8 +78,8 @@ class DragSelect extends React.Component {
 			} : {display: 'none'};
 		return (
 			<div {...containerProps} style={styles.wrapper} onMouseDown={this.dragStart}>
-				<div style={_.merge(styles.overlay, ostyle)}/>
 				{this.props.children}
+				<div style={_.merge(styles.overlay, ostyle)}/>
 			</div>);
 	}
 }

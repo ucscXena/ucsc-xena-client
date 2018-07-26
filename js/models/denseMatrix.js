@@ -6,9 +6,11 @@ var xenaQuery = require('../xenaQuery');
 var heatmapColors = require('../heatmapColors');
 var widgets = require('../columnWidgets');
 var {greyHEX} = require('../color_helper');
+var parsePos = require('../parsePos');
+var exonLayout = require('../exonLayout');
 
-var {datasetProbeValues, datasetGeneProbeAvg, datasetGeneProbesValues,
-		fieldCodes} = xenaQuery;
+var {datasetChromProbeValues, datasetProbeValues, datasetGeneProbeAvg,
+	datasetGeneProbesValues, fieldCodes, refGeneRange} = xenaQuery;
 
 function second(x, y) {
 	return y;
@@ -50,28 +52,17 @@ function computeHeatmap(vizSettings, data, fields, samples) {
 	});
 }
 
-var flopIfNegStrand = (strand, req) =>
-	// sorted by start of probe in transcript direction (strand), for negative strand, the start of the probe is chromend
-	// known issue: tie break
-	{
-		if (strand === '-') {
-			let sortedReq = _.sortBy(_.zip(req.position, req.probes, req.values), item => -(item[0].chromend));
-			let [sortedPosition, sortedProbes, sortedValues] = _.unzip(sortedReq);
-			return _.assoc(req,
-				'position', sortedPosition,
-				'probes', sortedProbes,
-				'values', sortedValues);
-		} else {
-			return req;
-		}
-	};
-
-	/*strand === '-' ?
-		_.assoc(req,
-				'position', _.reverse(req.position),
-				'probes', _.reverse(req.probes),
-				'values', _.reverse(req.values)) :
-		req;*/
+// sorted by start of probe in transcript direction (strand), for negative strand, the start of the probe is chromend
+// known issue: tie break
+var flopIfNegStrand = (strand, req) => {
+	var sortedReq = _.sortBy(_.zip(req.position, req.probes, req.values),
+			strand === '-' ? item => -(item[0].chromend) : item => item[0].chromstart),
+		[sortedPosition, sortedProbes, sortedValues] = _.unzip(sortedReq);
+	return _.assoc(req,
+		'position', sortedPosition,
+		'probes', sortedProbes,
+		'values', sortedValues);
+};
 
 var colorCodeMap = (codes, colors) =>
 	colors ? _.map(codes, c => colors[c] || greyHEX) : null;
@@ -79,6 +70,15 @@ var colorCodeMap = (codes, colors) =>
 var getCustomColor = (fieldSpecs, fields, dataset) =>
 	fields.length === 1 ?
 		_.getIn(dataset, ['customcolor', fieldSpecs[0].fields[0]], null) : null;
+
+var defaultXZoom = (pos, refGene, position) =>
+	pos ? {
+		start: pos.baseStart,
+		end: pos.baseEnd} :
+	!refGene ? undefined :
+	_.Let(({txStart, txEnd} = refGene) => ({
+		start: Math.min(txStart, ..._.pluck(position, 'chromstart')),
+		end: Math.max(txEnd, ..._.pluck(position, 'chromend'))}));
 
 function dataToHeatmap(column, vizSettings, data, samples) {
 	if (!_.get(data, 'req')) {
@@ -102,6 +102,38 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 	// in the rendering layer, to determine if we support KM and gene average.
 	// We could compute this in a selector, perhaps.
 	return {fields, fieldList: column.fields, heatmap, assembly, colors, units};
+}
+
+function geneProbesToHeatmap(column, vizSettings, data, samples) {
+	var pos = parsePos(column.fields[0]); // disabled until we support the query
+	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
+		return null;
+	}
+	var {req} = data,
+		refGeneObj = _.first(_.values(data.refGene)),
+		maxXZoom = defaultXZoom(pos, refGeneObj, req.position),
+		{width, showIntrons = false, xzoom = maxXZoom} = column,
+		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
+		// XXX Build layout that includes pxs for introns
+		layout = createLayout(refGeneObj, width, xzoom, pos),
+		// put exons in an index. Look up via layout. What about
+		// probes in introns? We can look them up as the "between" positions
+		// of the layout.
+		probesInView = _.filterIndices(req.position,
+				({chromstart, chromend}) => xzoom.start <= chromend && chromstart <= xzoom.end),
+
+		reqInView = _.updateIn(req,
+				['values'], values => probesInView.map(i => values[i]),
+				['probes'], probes => probesInView.map(i => probes[i]),
+				['mean'], mean => probesInView.map(i => mean[i])),
+		heatmapData = dataToHeatmap(column, vizSettings, {req: reqInView}, samples);
+
+	return {
+		...(probesInView.length ? heatmapData : {}),
+		layout,
+		position: probesInView.map(i => req.position[i]),
+		maxXZoom
+	};
 }
 
 //
@@ -182,8 +214,35 @@ function indexFieldResponse(fields, resp) {
 var fetch = ({dsID, fields}, samples) => datasetProbeValues(dsID, samples, fields)
 	.map(resp => ({req: indexFieldResponse(fields, resp)}));
 
-var fetchGeneProbes = ({dsID, fields, strand}, samples) => datasetGeneProbesValues(dsID, samples, fields)
-	.map(resp => ({req: flopIfNegStrand(strand, indexProbeGeneResponse(resp))}));
+var fetchRefGene = (fields, assembly) => {
+	var {name, host} = xenaQuery.refGene[assembly] || {};
+
+	return name ?
+		xenaQuery.refGeneExons(host, name, fields) :
+		Rx.Observable.of(null, Rx.Scheduler.asap);
+};
+
+function fetchChromProbes({dsID, assembly, fields}, samples) {
+	var {name, host} = xenaQuery.refGene[assembly] || {},
+		pos = parsePos(fields[0]);
+	return Rx.Observable.zip(
+			refGeneRange(host, name, pos.chrom, pos.baseStart, pos.baseEnd),
+			datasetChromProbeValues(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd),
+			(refGene, resp) => ({
+				req: indexProbeGeneResponse(resp),
+				refGene}));
+}
+
+var fetchGeneProbes = ({dsID, fields, assembly}, samples) =>
+	Rx.Observable.zip(
+		fetchRefGene(fields, assembly),
+		datasetGeneProbesValues(dsID, samples, fields),
+		(refGene, resp) => ({
+			req: flopIfNegStrand(_.getIn(refGene, [fields[0], 'strand']), indexProbeGeneResponse(resp)),
+			refGene}));
+
+var fetchGeneOrChromProbes = (field, samples) =>
+	(parsePos(field.fields[0]) ? fetchChromProbes : fetchGeneProbes)(field, samples);
 
 // This should really be fetchCoded. Further, it should only return a single
 // code list, i.e. either a single clinical coded field, or a list of genomic
@@ -245,11 +304,13 @@ function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {
 	widgets.download.add(fieldType, download);
 });
 
+widgets.transform.add('geneProbes', geneProbesToHeatmap);
+
 widgets.specialDownload.add('clinical', downloadCodedSampleListsJSON);
 
 module.exports = {
 	fetch,
-	fetchGeneProbes,
+	fetchGeneOrChromProbes,
 	fetchGene,
 	fetchFeature,
 };

@@ -241,8 +241,7 @@ function curryN(n, fn) {
 	return curryArgs(new Array(n), 0, fn);
 }
 
-function mmapper(cols, fn) {
-	var n = cols.length;
+function mmapper(cols, n, fn) {
 	// Unroll the most common cases.
 	switch (n) {
 		// case 1 looks like a noop, i.e. we could return fn. However _.map also passes 'this', which
@@ -263,9 +262,8 @@ function mmapper(cols, fn) {
 }
 
 function mmap(...args) {
-	var cols = args.slice(0, args.length - 1),
-		fn = args[args.length - 1];
-	return _.map(cols[0], mmapper(cols, fn));
+	var fn = args[args.length - 1];
+	return (args[0] || []).map(mmapper(args, args.length - 1, fn));
 }
 
 function scanI(arr, fn, acc, i, out) {
@@ -365,6 +363,12 @@ function listSetsEqual(l1, l2) {
 	return _.every(l2, v => s1.has(v));
 }
 
+function anyRange(coll, start, end, pred = _.identity, i = start) {
+	return i === end ? false :
+		pred(coll[i]) ? true :
+		anyRange(coll, start, end, pred, i + 1);
+}
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -422,6 +426,7 @@ _.i = {
 };
 
 _.mixin({
+	anyRange,
 	apply,
 	array,
 	concat,

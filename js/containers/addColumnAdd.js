@@ -51,7 +51,7 @@ function addColumnAdd(Component) {
 							actionKey={i}
 							last={i === lastIndex}
 							onHover={this.onHover}
-							onClick={() => this.onClick(i)}/>
+							onClick={this.onClick}/>
 					</div>));
 			return (
 				<Component {...otherProps}>

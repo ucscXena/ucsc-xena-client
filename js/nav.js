@@ -40,8 +40,9 @@ var links = [
 ];
 
 var helpLink = {
-	href: 'https://docs.google.com/a/soe.ucsc.edu/document/d/1CIWj6L8LAaHFmLek3yrbrjFKRm_l3Sy73lJ4wY-WM8Y',
-	label: 'Help'
+	href: 'https://ucsc-xena.gitbook.io/project/',
+	label: 'Help',
+	target: '_blank'
 };
 
 var active = (l, activeLink) => l.nav === activeLink;

@@ -8,7 +8,6 @@ var {resetZoom, fetchColumnData, fetchCohortData, setCohort,
 
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
-var {xenaFieldPaths, updateStrand} = require('../models/fieldSpec');
 var {compose, make, mount} = require('./utils');
 
 var phenoPat = /^phenotypes?$/i;
@@ -95,15 +94,6 @@ var spreadsheetControls = {
 	'samples-post!': (serverBus, state, newState, {samples}) =>
 		_.mapObject(_.get(newState, 'columns', {}), (settings, id) =>
 				fetchColumnData(serverBus, samples, id, settings)),
-	'strand': (state, id, strand) => {
-		// Update composite & all xena fields with strand info.
-		var settings = _.assoc(_.getIn(state, ['columns', id]), 'strand', strand);
-		return _.assocIn(state, ['columns', id], updateStrand(settings, xenaFieldPaths(settings), strand));
-	},
-	'strand-post!': (serverBus, state, newState, id) => {
-		// Fetch geneProbe data after we have the gene info.
-		fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id]));
-	},
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
 		columnOpen(state, id) ?

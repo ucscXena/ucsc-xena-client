@@ -685,7 +685,6 @@ module.exports = {
 	joinedVariantDirection,
 	chromColorGB,
 	SNVPvalue,
-	defaultXZoom,
 	fetch,
 	impact
 };
