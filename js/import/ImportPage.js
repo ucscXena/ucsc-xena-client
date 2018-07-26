@@ -12,7 +12,7 @@ const { servers: { localHub } } = DefaultServers;
 // import appTheme from '../appTheme';
 // import { ThemeProvider } from 'react-css-themr';
 
-import { dataTypeOptions, steps, tempGeneOptions, tempProbeOptions, NONE_STR } from './constants';
+import { dataTypeOptions, steps, tempGeneOptions, NONE_STR } from './constants';
 
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
@@ -225,6 +225,7 @@ class ImportForm extends React.Component {
 	probeSelectionPage() {
 		const probeSelect = this.state.probeSelect,
 			{ genes, probes, fileFormat } = this.props.state;
+
 		return (
 			<div>
 				<RadioGroup value={this.state.probeSelect} onChange={this.onProbeRadioChange}>
@@ -236,8 +237,8 @@ class ImportForm extends React.Component {
 						probeSelect === 'genes' && genes === NONE_STR)
 					}
 					<RadioButton label="My data uses probe names or other identifiers (e.g. 211300_s_at)" value='probes' />
-					{this.renderDropdown(this.onProbesChange, getDropdownOptions(tempProbeOptions), probes, "Probes",
-						probeSelect === 'probes')
+					{this.renderDropdown(this.onProbesChange, getDropdownOptions(["", ...this.props.probemaps, NONE_STR]),
+						probes, "Probes", probeSelect === 'probes')
 					}
 					{this.renderMailto("Xena import missing probe", "probes",
 						probeSelect === 'probes' && probes === NONE_STR)
@@ -448,11 +449,12 @@ class ImportPage extends React.Component {
 
 	componentDidMount() {
 		this.props.callback(['get-local-cohorts']);
+		this.props.callback(['get-probemaps']);
 	}
 
 	render() {
 		const cohorts = this.props.state.wizard.cohorts || [];
-		const { /*status,*/ wizardPage, fileContent, localCohorts, file, fileName } = this.props.state.import;
+		const { probemaps, wizardPage, fileContent, localCohorts, file, fileName } = this.props.state.import;
 
 		return (
 			<div>
@@ -464,8 +466,6 @@ class ImportPage extends React.Component {
 					</div>
 				</div>
 				<div className={styles.container}>
-					{/* <p className={styles.status}>{status}</p> */}
-
 					<ImportForm cohorts={cohorts}
 						callback={this.props.callback}
 						postFile={this.postFile}
@@ -473,6 +473,7 @@ class ImportPage extends React.Component {
 						wizardPage={wizardPage}
 						fileContent={fileContent}
 						localCohorts={localCohorts}
+						probemaps={probemaps}
 						file={file} fileName={fileName}
 
 						state={this.props.state.import.form}

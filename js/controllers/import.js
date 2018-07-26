@@ -3,7 +3,7 @@
 import Rx from '../rx';
 import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
-import { cohortSummary } from '../xenaQuery';
+import { cohortSummary, probemapList } from '../xenaQuery';
 import { assocIn, assocInAll, getIn } from "../underscore_ext";
 
 import getErrors from '../import/errorChecking';
@@ -150,13 +150,16 @@ const importControls = {
 };
 
 const query = {
-    'get-local-cohorts-post!': (serverBus, state, newState) => serverBus.next(['local-cohorts', cohortSummary(servers.localHub, [])]),
+    'get-local-cohorts-post!': serverBus => serverBus.next(['local-cohorts', cohortSummary(servers.localHub, [])]),
     'local-cohorts': (state, cohorts) => {
         const localCohorts = getCohortArray(cohorts);
         return assocInAll(state, 
             ['localCohorts'], localCohorts,
             ['form', 'customCohort'], getDefaultCustomCohort(localCohorts));
-    }
+    },
+    'get-probemaps-post!': serverBus => serverBus.next(['probemaps', probemapList(servers.publicHub)]),
+    'probemaps': (state, probemaps) => assocIn(state, ['probemaps'], probemaps.map(p => p.name))
+
 }
 
 const changeFormProp = propName => (state, propValue) => assocIn(state, ['form', propName], propValue);
