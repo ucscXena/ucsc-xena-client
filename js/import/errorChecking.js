@@ -1,11 +1,104 @@
 /* eslint-disable */
-const SIZE_LIMIT = 1000;
+const SIZE_LIMIT = 1000,
+    HEADER_LENGTH_LIMIT = 255;
 
 const MESSAGES = {
     FILE_SIZE_EXCEEDED: (size, allowedSize) => `File is too large: ${size} (allowed ${allowedSize})`,
     HEADER_COLUMN_MISMATCH: (lineNo) => `Line ${lineNo} has wrong number of values`,
     COLUMN_IS_REQUIRED: (column) => `Column ${column} is required`,
     SAMPLE_ID_REQUIRED: "First column in dense file format must be sampleid"
+}
+
+const getColumns = line => line.split(/\t/g);
+
+const ERRORS = [
+    {
+        //HEADER LENGTHS
+        level: 'error',
+        forType: ['dense', 'mutation by position', 'segmented copy number'],
+        getErrors: checkHeaderLen = (lines) => {
+            const message = (header) => `${header} is too long. Please limit to 255 characters`;
+
+            const headerNames = getColumns(lines[0]),
+                result = [];
+
+            headerNames.forEach(name => {
+                if(name.length > HEADER_LENGTH_LIMIT) {
+                    result.push(message(name));
+                }
+            });
+
+            return result;
+        }
+    },
+    {
+        //HEADER CHARACTERS
+        level: 'error',
+        forType: ['dense', 'mutation by position', 'segmented copy number'],
+        getErrors: checkHeaderCharacters = (lines) => {
+            const message = (header) => `Headers can only have xyz. Please change ${header}`;
+        }
+    },
+    {
+        //HEADER EMPTY
+        level: 'error',
+        forType: ['dense', 'mutation by position', 'segmented copy number'],
+        getErrors: checkHeaderCharacters = (lines) => {
+            const message = (header) => `Headers can only have xyz. Please change ${header}`;
+        }
+    },
+    {
+        //HEADER COLUMN COUNT MISMATCH
+        level: 'error',
+        forType: ['dense'],
+        getErrors: checkColumnMatch = (lines) => {
+            const message = () => "The number of headers doesn't match the number of columns. Please edit the file and reload";
+
+            const headerLen = getColumns(lines[0]).length,
+                result = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (getColumns(lines[i]).length !== headerLen) {
+                    result.push(message());
+                    break;
+                }
+            }
+            return result;
+        }
+    },
+    {
+        //DUPLICATE PROBE HEADERS
+        lavel: 'warning',
+        forType: ['dense'],
+        getErrors: checkDuplicateNames = (lines) => {
+            const message = (name) => 
+                `There are duplicate names in your file. An example is ${name}. We will load the first one and ignore all others.`;
+
+            
+        }
+    },
+    {
+        //DUPLICATE SAMPLE IDS
+    },
+    {
+        //SEGMENTED REQUIRED HEADERS
+    },
+    {
+        //MUTATION REQUIRED HEADERS
+    }
+];
+
+const getErrorClass = (dataType) => dataType === 'mutation by position' || dataType === 'segmented copy number' ? dataType: 'dense';
+ 
+const getErrorsNew = (dataType, fileContent, warnings) => {
+    const errorClass = getErrorClass(dataType),
+        filteredErrors = [];
+
+    filteredErrors = ERRORS.filter(err => err.forType.some(type => type === errorClass));
+
+    //get lines
+
+    //iterate through rules and return array
 }
 
 const getErrorsDense = (lines) => {
@@ -100,7 +193,6 @@ const hasSampleColumn = header => {
     }
 };
 
-const getColumns = line => line.split(/\t/g);
 const getColumnsCount = cols => cols.length;
 
 const columnDataCountMatch = (lines) => {

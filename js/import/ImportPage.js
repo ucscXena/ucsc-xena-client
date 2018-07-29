@@ -154,7 +154,8 @@ class ImportForm extends React.Component {
 	}
 
 	dataTypePage() {
-		const { dataType } = this.props.state;
+		const dataType = _.getIn(this.props, ['state', 'dataType']);
+
 		return (
 			<div>
 				<b style={{marginRight: '20px', fontSize: '1.1em'}}>Choose the type of data</b>

@@ -8,7 +8,8 @@ import { assocIn, assocInAll, getIn, groupBy, map } from "../underscore_ext";
 
 import getErrors from '../import/errorChecking';
 
-const referenceHost = 'https://reference.xenahubs.net';
+const referenceHost = 'https://reference.xenahubs.net',
+    defaultStudyName = 'My Study'
 
 const getProbeGroups = probemaps => 
     groupBy(probemaps, (p) => p.idtype === 'probe' || p.idtype === 'exon' ? 'probes' : 'genes');
@@ -22,9 +23,10 @@ const createMetaDataFile = (state) => {
         version: new Date().toISOString().split('T')[0],
         cohort: state.cohortRadio === 'newCohort' ? state.customCohort : state.cohort,
         dataSubType: state.dataType,
-        type: state.fileFormat,
+        type: "clinicalMatrix",//state.fileFormat,
         assembly: state.assembly,
-        probemap: state.genes || state.probes
+        probemap: state.genes || state.probes,
+        label: 'testlabel'
     }, null, 4);
 };
 
@@ -124,8 +126,8 @@ const checkForErrors = (file, fileContent, fileFormat) => {
 
 const getCohortArray = cohorts => cohorts.map(c => c.cohort);
 
-const getDefaultCustomCohort = (localCohorts, name='New Study', number=1) => {
-    return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `New Study (${number})`, ++number);
+const getDefaultCustomCohort = (localCohorts, name=defaultStudyName, number=1) => {
+    return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `${defaultStudyName} (${number})`, ++number);
 };
 
 const importControls = {
