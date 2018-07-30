@@ -66,10 +66,15 @@ function sigFields(fields, {genes, weights}) {
 	};
 }
 
+// XXX duplicated in VariableSelect.
+var getAssembly = (datasets, dsID) =>
+	_.getIn(datasets, [dsID, 'assembly'],
+		_.getIn(datasets, [dsID, 'probemapMeta', 'assembly']));
+
 // XXX handle position in all genomic datatypes?
 function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
-		pos = parsePos(input.trim(), meta.assembly),
+		pos = parsePos(input.trim(), getAssembly(datasets, dsID)),
 		sig = parseGeneSignature(input.trim()),
 		fieldType = getFieldType(meta, features[dsID], fields, probes, pos),
 		fieldsInput = sig ? sig.genes : parseInput(input),
