@@ -130,7 +130,7 @@ function drawLayoutByPixel(vg, opts) {
 		for (let rs of regions.keys()) {
 			var r = regions.get(rs);
 
-			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => v !== null)) {
+			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => v != null)) {
 				let color = regionColor(colors[i][0], colorScale, rowData,
 				                        first + r.start, first + r.end + 1);
 
