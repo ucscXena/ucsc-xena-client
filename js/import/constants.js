@@ -10,8 +10,7 @@ const dataTypes = [
 	"segmented copy number",
 	"mutation by position",
 	"gene-level mutation",
-	"methylation",
-	"other"
+	"methylation"
 ];
 
 const steps = [

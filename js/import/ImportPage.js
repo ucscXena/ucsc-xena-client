@@ -24,7 +24,7 @@ const pageRanges = [0, ...Array(4).fill(1), 2, 3];
 const pageStateIndex = _.object(pageStates, pageRanges);
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
-const getProbemapOptions = probes => getDropdownOptions(["", ...probes, NONE_STR]);
+const getProbemapOptions = probes => [{label: "", value: ""}, ...probes, {label: NONE_STR, value: NONE_STR}];
 
 //needs constants
 const isPhenotypeData = dataType => dataType === 'phenotype/clinical/sample type';
@@ -164,9 +164,8 @@ class ImportForm extends React.Component {
 					value={dataType}
 					className={[styles.field, styles.inline].join(' ')}
 				/>
-				<div>
-					<Button label="I don't see my data type" accent flat={false}/>
-				</div>
+				<Button label="I don't see my data type" accent flat={false}/>
+
 				<h4>File preview</h4>
 				<DenseTable fileContent={this.props.fileContent} />
 			</div>

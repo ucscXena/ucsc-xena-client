@@ -125,6 +125,7 @@ const checkForErrors = (file, fileContent, fileFormat) => {
 };
 
 const getCohortArray = cohorts => cohorts.map(c => c.cohort);
+const getValueLabelList = (items) => items.map(item => ({ label: item.label, value: item.name }));
 
 const getDefaultCustomCohort = (localCohorts, name=defaultStudyName, number=1) => {
     return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `${defaultStudyName} (${number})`, ++number);
@@ -170,10 +171,9 @@ const query = {
     'get-probemaps-post!': serverBus => serverBus.next(['set-probemaps', probemapList(referenceHost)]),
     'set-probemaps': (state, probemaps) => {
         probemaps = getProbeGroups(probemaps);
-        return assocInAll(state, ['probemaps', 'probes'], map(probemaps['probes'], p => p.name),
-                        ['probemaps', 'genes'], map(probemaps['genes'], p => p.name));
+        return assocInAll(state, ['probemaps', 'probes'], getValueLabelList(probemaps['probes']),
+                        ['probemaps', 'genes'], getValueLabelList(probemaps['genes']));
     }
-
 }
 
 const changeFormProp = propName => (state, propValue) => assocIn(state, ['form', propName], propValue);
