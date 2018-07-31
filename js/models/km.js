@@ -163,6 +163,22 @@ function partitionedVals3(avg, uniq, colorfn) { //eslint-disable-line no-unused-
 	};
 }
 
+function partitionedValsQuartile(avg, uniq, colorfn) {
+	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
+		min = _.min(vals),
+		max = _.max(vals),
+		low = vals[Math.round(vals.length / 4)],
+		high = vals[Math.round(3 * vals.length / 4)],
+		labelLow = low.toPrecision(4),
+		labelHigh = high.toPrecision(4);
+	return {
+		values: _.map(avg, saveNull(v => v < low ? 'low' : (v > high ? 'high' : null))),
+		groups: ['low', 'high'],
+		colors: [colorfn(min), colorfn(max)],
+		labels: [`< ${labelLow}`, `> ${labelHigh}`]
+	};
+}
+
 function partitionedVals2(avg, uniq, colorfn) {
 	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
 		min = _.min(vals),
@@ -176,6 +192,7 @@ function partitionedVals2(avg, uniq, colorfn) {
 		labels: [`< ${labelMid}`, `>= ${labelMid}`]
 	};
 }
+
 
 function floatVals(avg, uniq, colorfn) {
 	return {
@@ -194,7 +211,7 @@ function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
 		avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = _.first(colors.map(colorScale)),
-		partFn = splits === 3 ? partitionedVals3 : partitionedVals2,
+		partFn = splits === 3 ? partitionedVals3 : splits === 2 ? partitionedVals2 : partitionedValsQuartile,
 		maySplit = uniq.length > MAX;
 	return {clarification, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
 }

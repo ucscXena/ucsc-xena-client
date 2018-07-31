@@ -314,6 +314,10 @@ function makeSplits(splits, onSplits) {
 					<input value={3} type="radio" name="splits" checked={splits === 3} onChange={onSplits}/>
 					<span className={kmStyle.splitHint}>3 groups</span>
 				</label>
+				<label className={kmStyle.splitLabel}>
+					<input value={-4} type="radio" name="splits" checked={splits === -4} onChange={onSplits}/>
+					<span className={kmStyle.splitHint}>Quartile</span>
+				</label>
 			</div>
 		</form>);
 }
