@@ -162,7 +162,7 @@ function dataToDisplay(column, vizSettings, data, sortedSamples, index) {
 
 function index(fieldType, data) {
 	if (!_.get(data, 'req')) {
-		return null;
+		return {bySample: {}};
 	}
 
 	var {req: {rows, samplesInResp}} = data,
