@@ -209,11 +209,11 @@ function render(root, callback, sessionStorage) {
 			xcolumn = xdiv.options[xdiv.selectedIndex].value,
 			ycolumn = ydiv.options[ydiv.selectedIndex].value;
 
-		// x single float, disable y multiple float of series > 2
+		// x single float, disable y multiple float of series > 10
 		if (xcolumn !== "none" && !data[xcolumn].codes) {
 			_.map(ydiv.options, option => {
 				var y = option.value;
-				if (data[y].req.values && data[y].req.values.length > 2) {
+				if (data[y].req.values && data[y].req.values.length > 10) {
 					option.disabled = true;
 				}
 			});
@@ -1217,38 +1217,40 @@ function render(root, callback, sessionStorage) {
 				}
 			}
 
-			//scatter plot stats
-			function printSpearmanRho(div, xlabel, ylabel, xVector, yVector) {
-				var [xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x) {return x[0] != null && x[1] != null;}));
-				var rho = jStat.corrcoeff(xlist, ylist); // r Pearson's Rho correlation coefficient
-				var spearmanRho = jStat.spearmancoeff(xlist, ylist); // (spearman's) rank correlation coefficient, rho
-				if (div.innerHTML !== '') {
-					div.innerHTML += '<br>'  + '<br>';
-				}
-				div.innerHTML = div.innerHTML +
-					xlabel + ' ~ ' + ylabel + '<br>' +
-					'Pearson\'s rho<br>' +
-					'r = ' + rho.toPrecision(4) + '<br>' +
-					'Spearman\'s rank rho<br>' +
-					'ρ = ' + spearmanRho.toPrecision(4);
+			//scatter plot stats Pearson's rho/r, Spearman rank rho/ρ value
+			function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
+				[...Array(yfields.length).keys()].forEach(i => {
+					var ylabel = yfields[i],
+						yVector = ydata[i],
+						[xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x) {return x[0] != null && x[1] != null;})),
+						rho = jStat.corrcoeff(xlist, ylist), // r Pearson's Rho correlation coefficient
+						spearmanRho = jStat.spearmancoeff(xlist, ylist); // (spearman's) rank correlation coefficient, rho
+
+					if (div.innerHTML !== '') {
+						div.innerHTML += '<br>'  + '<br>';
+					}
+					div.innerHTML = div.innerHTML +
+						xlabel + ' ~ ' + ylabel + '<br>' +
+						'Pearson\'s rho<br>' +
+						'r = ' + rho.toPrecision(4) + '<br>' +
+						'Spearman\'s rank rho<br>' +
+						'ρ = ' + spearmanRho.toPrecision(4);
+				});
 			}
 
 			// pearson rho value when there are <= 10 series x y scatter plot
 			if (yfields.length <= 10 && xdata[0].length > 1) {
-				[...Array(yfields.length).keys()].forEach(i => {
-					if (xdata[0].length < 5000) {
-						//Pearson's Rho p value
-						printSpearmanRho(statsDiv, xfield, yfields[i], xdata[0], ydata[i]);
-					}
-					else { // a button to trigger stats for sample size > 5000, otherwise it is too slow
-						var btn = document.createElement("BUTTON"); // need to refractor to react style, and material UI css
-						statsDiv.appendChild(btn);
-						btn.innerHTML = "Run Stats";
-						btn.onclick = function() {
-							printSpearmanRho(statsDiv, xfield, yfields[i], xdata[0], ydata[i]);
-						};
-					}
-				});
+				if (xdata[0].length >= 5000) {
+					var btn = document.createElement("BUTTON"); // need to refractor to react style, and material UI css
+					statsDiv.appendChild(btn);
+					btn.innerHTML = "Run Stats";
+					btn.onclick = function() {
+						printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
+					};
+				} else {
+					printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
+				}
+
 				statsDiv.classList.toggle(compStyles.visible);
 			}
 
