@@ -151,7 +151,7 @@ function floatVals(avg, uniq, colorfn) {
 // We average 1st, then see how many unique values there are, then decide
 // whether to partition or not.
 function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
-	var clarification = heatmap.length > 1 ? 'gene-level average' : undefined,
+	var clarification = heatmap.length > 1 ? 'average' : undefined,
 		avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = _.first(colors.map(colorScale)),
