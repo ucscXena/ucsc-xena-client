@@ -17,14 +17,13 @@ var links = [
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
 	['heatmap', 'f9d1b795c2cb324d227a3a0472c3427c',
 		'PDL1 and PD1 expression across 39 cancer types in TCGA and TARGET'],
-	['heatmap', '70d808333cc4386e83646d48bb5f168c',
+	['heatmap', '1ee78896f84e5c0b55c6bd9ff1decff1',
 		'ERG-TMPRSS2 fusion by chr21 deletion in prostate cancer'],
-	['heatmap', '1ea93a012b832a72aaee9063549bf90d',
-		'Two pathways to telomere lengthening in lower grade glioma'],
-	['heatmap', '4e74d5763970ebc5821878cf111e0f4a',
-		'Genetic separation of lower grade gliomas into two disease entities: \
-		one characterized by loss of chromosome arms 1p and 19q and TERT over-expresssion, \
-		the other by TP53 and ATRX mutations.'],
+	['heatmap', '6eca4f596dc04446b6fcee5c62a28af2',
+		'Two pathways to telomere lengthening in lower grade glioma: TERT & ATRX'],
+	['heatmap', 'eb974f284bbffecffdf7438685e65a97',
+		'Genetic separation of lower grade gliomas: one characterized by loss of chromosome arms 1p and 19q, \
+		the other by TP53 mutations.'],
 	['transcripts', '25a9782db8c1166ce7bae6686e98124c',
 		'KRAS isoform expression in TCGA pancreatic cancer vs. GTEx pancreas normal']];
 
