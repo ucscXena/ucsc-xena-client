@@ -149,11 +149,11 @@ i.buttonIcon {
 }
 
 .splitLabel {
-    margin-left: 20px;
+    margin-left: 16px;
 }
 
 .splitHint {
-    margin-left: 10px;
+    margin-left: 8px;
 }
 
 .listItem, .activeListItem {

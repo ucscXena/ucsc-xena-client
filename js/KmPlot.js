@@ -306,17 +306,17 @@ function makeSplits(splits, onSplits) {
 		<form>
 			<div>
 				<br/>
-				<label className={kmStyle.splitLabel}>
+				<label className={kmStyle.splitLabel} title='2 groups: top 50%, bottom 50%'>
 					<input value={2} type="radio" name="splits" checked={splits === 2} onChange={onSplits}/>
 					<span className={kmStyle.splitHint}>2 groups</span>
 				</label>
-				<label className={kmStyle.splitLabel}>
+				<label className={kmStyle.splitLabel} title='3 groups: top 33%, middle 33%, bottom 33%'>
 					<input value={3} type="radio" name="splits" checked={splits === 3} onChange={onSplits}/>
 					<span className={kmStyle.splitHint}>3 groups</span>
 				</label>
-				<label className={kmStyle.splitLabel}>
+				<label className={kmStyle.splitLabel} title='Quartiles: top 25%, bottom 25%'>
 					<input value={-4} type="radio" name="splits" checked={splits === -4} onChange={onSplits}/>
-					<span className={kmStyle.splitHint}>Quartile</span>
+					<span className={kmStyle.splitHint}>Quartiles</span>
 				</label>
 			</div>
 		</form>);
