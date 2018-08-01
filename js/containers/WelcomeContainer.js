@@ -21,9 +21,9 @@ var links = [
 		'ERG-TMPRSS2 fusion by chr21 deletion in prostate cancer'],
 	['heatmap', '6eca4f596dc04446b6fcee5c62a28af2',
 		'Two pathways to telomere lengthening in lower grade glioma: TERT & ATRX'],
-	['heatmap', 'eb974f284bbffecffdf7438685e65a97',
-		'Genetic separation of lower grade gliomas: one characterized by loss of chromosome arms 1p and 19q, \
-		the other by TP53 mutations.'],
+	['heatmap', '86aa2f71f08db3fe81f192915a303d97',
+		'Genetic separation of lower grade gliomas: one characterized by loss of chromosomes 1p & 19q, \
+		the other by TP53 & ATRX mutations.'],
 	['transcripts', '25a9782db8c1166ce7bae6686e98124c',
 		'KRAS isoform expression in TCGA pancreatic cancer vs. GTEx pancreas normal']];
 
