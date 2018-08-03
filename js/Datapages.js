@@ -564,6 +564,18 @@ class ListPage extends React.Component {
 	}
 }
 
+class markdownPage extends React.Component {
+	render() {
+		var {state} = this.props,
+			content = getIn(state, ['datapages', 'markdownContent']);
+
+		return (
+			<div className={styles.datapages}>
+				{markdownValue(content)}
+			</div>);
+	}
+}
+
 var IdentifiersPage = props =>
 	<ListPage title='Identifiers' path='identifiers' {...props}/>;
 
@@ -574,7 +586,8 @@ var SamplesPage = props =>
 // Top-level dispatch to sub-pages
 //
 
-var getPage = ({dataset, host, cohort, allIdentifiers, allSamples}) =>
+var getPage = ({dataset, host, cohort, allIdentifiers, allSamples, markdown}) =>
+	markdown ? markdownPage :
 	allSamples ? SamplesPage :
 	allIdentifiers ? IdentifiersPage :
 	dataset && host ? DatasetPage :

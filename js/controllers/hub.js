@@ -36,6 +36,9 @@ var cohortMetaHost = 'https://rawgit.com/ucscXena/cohortMetaData/master';
 var cohortMeta = cohort => ajaxGet(`${cohortMetaHost}/cohort_${cohort}/info.mdown`).map(r => r.response)
 	.catch(() => of(undefined));
 
+var getMarkDown = url => ajaxGet(url).map(r => r.response)
+	.catch(() => of(undefined));
+
 var notGenomic = ["sampleMap", "probeMap", "genePred", "genePredExt"];
 var genomicCohortSummary = server =>
 		zipArray([cohortSummary(server, notGenomic), hubMeta(server)])
@@ -53,6 +56,11 @@ function fetchCohortData(serverBus, state) {
 		servers = userServers(state.spreadsheet);
 	serverBus.next(['cohort-data', datasetQuery(servers, {name: cohort}), cohort]);
 	serverBus.next(['cohort-data-meta', cohortMeta(cohort), cohort]);
+}
+
+function fetchMarkDown(serverBus, state) {
+	var {markdown} = state.params;
+	serverBus.next(['get-markdown', getMarkDown(markdown), markdown]);
 }
 
 // emit url if HEAD request succeeds
@@ -187,6 +195,11 @@ var controls = {
 		assocIn(state, ['datapages', 'samples'], {host, dataset, list}),
 	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
+	'get-markdown': (state, markdownContent, markdownURL) =>
+		assocIn(state,
+			   ['datapages', 'markdownContent'], markdownContent,
+			   ['datapages', 'markdownURL'], markdownURL),
+
 	// Force page load after delete, to refresh all data.
 	'dataset-deleted-post!': () => location.reload()
 };
@@ -242,6 +255,14 @@ var needSamples = state =>
 	getSection(state.params) === 'samples' &&
 	pick(state.params, 'dataset', 'host');
 
+var needMarkDown = state =>
+	state.page === 'datapages' &&
+	pick(state.params, 'markdown') &&
+	state.params.markdown;
+
+var hasAMarkDown = (state, markdown) =>
+	markdown === getIn(state, ['datapages', 'markdownURL']);
+
 var hasSamples = (state, {dataset, host}) =>
 	dataset === getIn(state, ['datapages', 'samples', 'dataset']) &&
 	host === getIn(state, ['datapages', 'samples', 'host']) &&
@@ -291,6 +312,11 @@ function datapagesPostActions(serverBus, state, newState, action) {
 	if (samples && !hasSamples(state, samples) &&
 			(type === 'init' || !isEqual(needSamples(state), samples))) {
 		fetchSamples(serverBus, newState);
+	}
+
+	var markdown = needMarkDown(newState);
+	if (markdown && !hasAMarkDown(state, markdown)) {
+		fetchMarkDown (serverBus, newState);
 	}
 }
 
