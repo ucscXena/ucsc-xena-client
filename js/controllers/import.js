@@ -56,7 +56,7 @@ const importFile = ({ fileName, fileContent, file, form }) => {
     formData.append("file", new Blob([fileContent]), fileName);
     formData.append("file", new Blob([createMetaDataFile(form)]), fileName + '.json');
 
-    return checkForErrors(file, fileContent, form.fileFormat).flatMap(errors => 
+    return checkForErrors(fileContent, form.fileFormat, form.dataType).flatMap(errors => 
         errors.length ? 
             Rx.Observable.of({ errors }) :
             postFile(formData).concat(updateFile(fileName))
@@ -112,9 +112,9 @@ const readFileObs = (fileHandle) => {
     });
 };
 
-const checkForErrors = (file, fileContent, fileFormat) => {  
+const checkForErrors = (fileContent, fileFormat, dataType) => {  
     return Rx.Observable.create(obs => {
-        const errors = getErrors(file, fileContent, fileFormat);
+        const errors = getErrors(fileContent, fileFormat, dataType);
         setTimeout(() => {
             obs.next(errors);
             obs.complete();

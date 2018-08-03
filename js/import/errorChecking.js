@@ -1,66 +1,148 @@
-/* eslint-disable */
-const SIZE_LIMIT = 1000,
-    HEADER_LENGTH_LIMIT = 255;
+'use strict';
 
-const MESSAGES = {
-    FILE_SIZE_EXCEEDED: (size, allowedSize) => `File is too large: ${size} (allowed ${allowedSize})`,
-    HEADER_COLUMN_MISMATCH: (lineNo) => `Line ${lineNo} has wrong number of values`,
-    COLUMN_IS_REQUIRED: (column) => `Column ${column} is required`,
-    SAMPLE_ID_REQUIRED: "First column in dense file format must be sampleid"
-}
+import _ from '../underscore_ext';
+
+const HEADER_LENGTH_LIMIT = 255,
+    MULTI_ERROR_LIMIT = 3;
+
+let ERRORS;
 
 const getColumns = line => line.split(/\t/g);
+const getFirstLine = lines => lines[0];
+const getFirstColumn = lines => lines.map(l => l[0]);
 
-const ERRORS = [
+// is files first row - sampleids ? (columns then represent record)
+const isColumns = fileFormat => fileFormat === 'genomicMatrix';
+
+const getHeaderNames = (lines, fileFormat) => isColumns(fileFormat) ? getFirstColumn(lines) : getFirstLine(lines);
+const getSampleIds = (lines, fileFormat) => {
+    const sampleLine = isColumns(fileFormat) ? getFirstLine(lines) : getFirstColumn(lines);
+    // first member is header name
+    return sampleLine.slice(1);
+};
+
+const transposeLines = lines => _.zip(...lines);
+
+const filterEmpty = arr => arr.filter(elem => !!elem);
+
+const getErrorClass = (dataType) => dataType === 'mutation by position' || dataType === 'segmented copy number' ? dataType : 'dense';
+
+const getMutationHeaderRegExps = () => {
+    return [
+        { regexp: /sample[ _]*(name|id)?/i, name: "'sampleid'"},
+        { regexp: /chr(om)/i, name: "'chrom'" },
+        { regexp: /start/i, name: "'start'" },
+        { regexp: /end/i, name: "'end'" },
+        { regexp: /alt(ernate)?/i, name: "'alternate'" },
+        { regexp: /ref(erence)?/i, name: "'reference'" }
+    ];
+};
+
+const getSegmentedHeaderRegExps = () => {
+    return [
+        { regexp: /sample[ _]*(name|id)?/i, name: "'sampleid'"},
+        { regexp: /chr(om)/i, name: "'chrom'" },
+        { regexp: /start/i, name: "'start'" },
+        { regexp: /end/i, name: "'end'" },
+        { regexp: /value/i, name: "'value'" }
+    ];
+};
+
+const getErrors = (fileContent, fileFormat, dataType) => {
+    const errorClass = getErrorClass(dataType);
+    let filteredErrors = [],
+        lines,
+        result = [];
+
+    filteredErrors = ERRORS.filter(err => err.forType.some(type => type === errorClass));
+
+    //get lines
+    lines = fileContent.trim().split('\n');
+    lines = lines.map(l => getColumns(l));
+
+    //iterate through rules and return array
+    filteredErrors.forEach(error => {
+        const messages = error.getErrors(lines, fileFormat);
+        if (messages) {
+            if (Array.isArray(messages)) {
+                result.push(...messages);
+            } else {
+                result.push(messages);
+            }
+        }
+    });
+
+    return result;
+};
+
+const hasColumn = (header, columnName, regexp) => {
+    if (!header.some(h => h.match(regexp))) {
+        return columnName;
+    }
+};
+
+const hasSparseDataColumns = (header, colRegExps) =>
+    filterEmpty(colRegExps.map(r => hasColumn(header, r.name, r.regexp)));
+
+
+ERRORS = [
     {
         //HEADER LENGTHS
         level: 'error',
         forType: ['dense', 'mutation by position', 'segmented copy number'],
-        getErrors: checkHeaderLen = (lines) => {
-            const message = (header) => `${header} is too long. Please limit to 255 characters`;
+        getErrors: (lines, fileFormat) => {
+            const message = (header) => `${header.slice(0, 100)}... is too long. Please limit to 255 characters`;
 
-            const headerNames = getColumns(lines[0]),
+            const headerNames = getHeaderNames(lines, fileFormat),
                 result = [];
 
             headerNames.forEach(name => {
-                if(name.length > HEADER_LENGTH_LIMIT) {
+                if (name.length > HEADER_LENGTH_LIMIT && result.length < MULTI_ERROR_LIMIT) {
                     result.push(message(name));
                 }
             });
 
-            return result;
+            return result.length ? result : null;
         }
     },
     {
         //HEADER CHARACTERS
         level: 'error',
         forType: ['dense', 'mutation by position', 'segmented copy number'],
-        getErrors: checkHeaderCharacters = (lines) => {
-            const message = (header) => `Headers can only have xyz. Please change ${header}`;
+        getErrors: () => {
+            // const message = (header) => `Headers can only have xyz. Please change ${header}`;
         }
     },
     {
         //HEADER EMPTY
         level: 'error',
-        forType: ['dense', 'mutation by position', 'segmented copy number'],
-        getErrors: checkHeaderCharacters = (lines) => {
-            const message = (header) => `Headers can only have xyz. Please change ${header}`;
+        forType: ['dense'],
+        getErrors: (lines, fileFormat) => {
+            const message = 'One or more of your headers is blank. Please edit the file and reload.';
+            const headerNames = getHeaderNames(lines, fileFormat);
+
+            if (headerNames.filter(h => h.trim() === '').length !== 0) {
+                return message;
+            }
         }
     },
     {
         //HEADER COLUMN COUNT MISMATCH
         level: 'error',
         forType: ['dense'],
-        getErrors: checkColumnMatch = (lines) => {
-            const message = () => "The number of headers doesn't match the number of columns. Please edit the file and reload";
+        getErrors: (lines, fileFormat) => {
+            const message = (line, trns) =>
+                `The number of headers doesn't match the number of columns on ${trns ? 'column' : 'line'} ${line}. Please edit the file and reload`;
 
-            const headerLen = getColumns(lines[0]).length,
-                result = [];
+            const headerLen = filterEmpty(getHeaderNames(lines, fileFormat)).length,
+                result = [],
+                isTransposed = isColumns(fileFormat);
+
+            lines = isTransposed ? transposeLines(lines) : lines;
 
             for (let i = 1; i < lines.length; i++) {
-                if (getColumns(lines[i]).length !== headerLen) {
-                    result.push(message());
-                    break;
+                if (filterEmpty(lines[i]).length !== headerLen && result.length < MULTI_ERROR_LIMIT) {
+                    result.push(message(i, isTransposed));
                 }
             }
             return result;
@@ -68,149 +150,59 @@ const ERRORS = [
     },
     {
         //DUPLICATE PROBE HEADERS
-        lavel: 'warning',
+        level: 'warning',
         forType: ['dense'],
-        getErrors: checkDuplicateNames = (lines) => {
-            const message = (name) => 
+        getErrors: (lines, fileFormat) => {
+            const message = (name) =>
                 `There are duplicate names in your file. An example is ${name}. We will load the first one and ignore all others.`;
+            const headerNames = filterEmpty(getHeaderNames(lines, fileFormat)),
+                duplicates = _.duplicates(headerNames);
 
-            
+            if (duplicates.length !== 0) {
+                return message(duplicates[0]);
+            }
         }
     },
     {
         //DUPLICATE SAMPLE IDS
+        level: 'warning',
+        forType: ['dense'],
+        getErrors: (lines, fileFormat) => {
+            const message = (sampleName) =>
+                `There are duplicate samples in your file. An example is ${sampleName}. We will load the first one and ignore all others.`;
+
+            const sampleIds = getSampleIds(lines, fileFormat),
+                duplicates = _.duplicates(sampleIds);
+
+            if (duplicates.length !== 0) {
+                return message(duplicates[0]);
+            }
+        }
     },
     {
         //SEGMENTED REQUIRED HEADERS
+        level: 'error',
+        forType: ['segmented copy number'],
+        getErrors: (lines) => {
+            const message = (missing) =>
+                `For segmented copy number data we require 5 columns: 'sample', 'chr', 'start', 'end', and 'value'. You are missing ${missing.join(', ')}. Please edit your file and reload.`;
+
+            const headerNames = getHeaderNames(lines);
+            return message(hasSparseDataColumns(headerNames, getSegmentedHeaderRegExps()));
+        }
     },
     {
         //MUTATION REQUIRED HEADERS
-    }
-];
+        level: 'error',
+        forType: ['mutation by position'],
+        getErrors: (lines) => {
+            const message = (missing) =>
+                `For mutation data we require 6 columns: 'sample', 'chr', 'start', 'end', 'ref' and 'alt'. You are missing ${missing.join(', ')}. Please edit your file and reload.`;
 
-const getErrorClass = (dataType) => dataType === 'mutation by position' || dataType === 'segmented copy number' ? dataType: 'dense';
- 
-const getErrorsNew = (dataType, fileContent, warnings) => {
-    const errorClass = getErrorClass(dataType),
-        filteredErrors = [];
-
-    filteredErrors = ERRORS.filter(err => err.forType.some(type => type === errorClass));
-
-    //get lines
-
-    //iterate through rules and return array
-}
-
-const getErrorsDense = (lines) => {
-    const errors = [];
-    errors.push(...columnDataCountMatch(lines));
-
-    return errors;
-}
-
-const getErrorsSparse = (lines, dataType) => {
-    const errors = [];
-    errors.push(...hasSparseDataColumns(lines[0], dataType));
-
-    return errors;
-}
-
-//needs to be properly refactored with constants
-const getDataTypeTmp = (dataType) =>  dataType === 'mutation by position' || dataType === 'segmented copy number' ? 'sparse' : 'dense';
-const dataTypeByFileFormat = {
-    'genomicMatrix': 'dense',
-    'clinicalMatrix': 'dense',
-    'mutationVector': 'sparse',
-    'segmented': 'sparse'
-};
-
-const functionByDataType = {
-    'dense': getErrorsDense,
-    'sparse': getErrorsSparse
-}
-
-const getSparseColumnRegExps = (dataType) => {
-    const res = [
-        { regexp: /chr(om)/i, name: 'chrom' },
-        { regexp: /start/i, name: 'start' },
-        { regexp: /end/i, name: 'end' },
-    ];
-
-    if (dataType === 'segmented copy number') {
-        res.push(
-            // not required { regexp: /strand/i, name: 'strand' },
-            { regexp: /value/i, name: 'value' }
-        );
-    } else if (dataType === 'mutation by position') {
-        res.push(
-            // not required { regexp: /genes?/i, name: 'genes' },
-            { regexp: /alt(ernate)?/i, name: 'alternate' },
-            { regexp: /ref(erence)?/i, name: 'reference' },
-            // not required { regexp: /effect/i, name: 'effect' },
-            // not required { regexp: /dna[-_ ]*v?af/i, name: 'dna_vaf' },
-            // not required { regexp: /rna[-_ ]*v?af/i, name: 'rna_vaf' },
-            // not required { regexp: /amino[-_ ]*acid[-_ ]*(change)?/i, name: 'amino_acid' }
-        );
-    }
-
-    return res;
-}
-
-const getErrors = (file, contents, dataType) => {
-    const errors = [],
-        lines = contents.trim().split('\n'),
-        type = getDataTypeTmp(dataType),
-        errCheckFunc = functionByDataType[type];
-
-    errors.push(hasSampleColumn(getColumns(lines[0])[0]));
-
-    errors.push(...errCheckFunc(lines, dataType));    
-
-    return errors.filter(e => !!e);
-}
-
-const checkSizeLimit = (file) => {
-    if (file.size >= SIZE_LIMIT) {
-        return MESSAGES.FILE_SIZE_EXCEEDED(file.size, SIZE_LIMIT);
-    }
-}
-
-const hasSparseDataColumns = (header, dataType) => {
-    const colRegExps = getSparseColumnRegExps(dataType);
-    return colRegExps.map(r => hasColumn(header, r.name, r.regexp));
-}
-
-const hasColumn = (header, columnName, regexp) => {
-    if(!header.match(regexp)) {
-        return MESSAGES.COLUMN_IS_REQUIRED(columnName);
-    }
-}
-
-const hasSampleColumn = header => {
-    const err = hasColumn(header.split(/\t/g)[0], "sampleid", /sample[ _]*(name|id)?/gi);
-    if (err) {
-        return MESSAGES.SAMPLE_ID_REQUIRED;
-    }
-};
-
-const getColumnsCount = cols => cols.length;
-
-const columnDataCountMatch = (lines) => {
-    const headerLen = getColumns(lines[0]).length;
-    const result = [];
-
-    for (let i = 1; i < lines.length; i++) {
-        if (getColumnsCount(getColumns(lines[i])) !== headerLen) {
-            result.push(MESSAGES.HEADER_COLUMN_MISMATCH(i+1));
+            const headerNames = getHeaderNames(lines);
+            return message(hasSparseDataColumns(headerNames, getMutationHeaderRegExps()));
         }
     }
-
-    return result;
-}
-
-//for dense data
-const checkUniqueSampleIDs = () => {
-
-}
+];
 
 export default getErrors;

@@ -330,6 +330,18 @@ function unique(arr, ...rest) {
 	return [...new Set(arr)];
 }
 
+function duplicates(arr) {
+	var sorted = arr.sort(),
+		result = [];
+
+	for(var i = 1; i < sorted.length; i++) {
+		if (arr[i - 1] === arr[i]) {
+			result.push(arr[i]);
+		}
+	}
+	return result;
+}
+
 // underscore union is slow, due to n^2 algorithm using _.contains.
 // Perserves order by using unique(), which preserves order by use of
 // Set.
@@ -433,6 +445,7 @@ _.mixin({
 	cmpNumberOrNull,
 	curry,
 	curryN, // useful if the fn as multiple arities.
+	duplicates,
 	filterIndices,
 	findIndexDefault,
 	findLastIndexDefault,
