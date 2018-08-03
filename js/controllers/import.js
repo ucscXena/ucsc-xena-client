@@ -23,10 +23,10 @@ const createMetaDataFile = (state) => {
         version: new Date().toISOString().split('T')[0],
         cohort: state.cohortRadio === 'newCohort' ? state.customCohort : state.cohort,
         dataSubType: state.dataType,
-        type: "clinicalMatrix",//state.fileFormat,
+        type: state.fileFormat,
         assembly: state.assembly,
         probemap: state.genes || state.probes,
-        label: 'testlabel'
+        // label: 'testlabel'
     }, null, 4);
 };
 
@@ -90,7 +90,7 @@ const postFile = (file) => {
 const updateFile = (fileName) => {
     const payload = {
         url: `${servers.localHub}/update/`,
-        body: {'filename': fileName},
+        body: {'file': fileName},
         responseType: 'text',
         method: 'POST',
         crossDomain: true

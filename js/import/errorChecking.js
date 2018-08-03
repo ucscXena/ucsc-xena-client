@@ -141,7 +141,7 @@ ERRORS = [
             lines = isTransposed ? transposeLines(lines) : lines;
 
             for (let i = 1; i < lines.length; i++) {
-                if (filterEmpty(lines[i]).length !== headerLen && result.length < MULTI_ERROR_LIMIT) {
+                if (lines[i].length !== headerLen && result.length < MULTI_ERROR_LIMIT) {
                     result.push(message(i, isTransposed));
                 }
             }
