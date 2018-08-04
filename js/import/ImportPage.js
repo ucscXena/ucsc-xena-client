@@ -119,7 +119,9 @@ class ImportForm extends React.Component {
 					onRetryFile: this.onRetryFile,
 					onRetryMetadata: this.onRetryMetadata,
 					onImportMoreData: this.onImportMoreData,
-					onLoadWithWarnings: this.onLoadWithWarnings
+					onLoadWithWarnings: this.onLoadWithWarnings,
+					onFinish: this.onFinishClick,
+					onViewData: this.onViewDataClick
 				};
 				component = this.importProgressPage();
 				break;
@@ -415,6 +417,16 @@ class ImportForm extends React.Component {
 		this.props.callback(['reset-import-state']);
 	}
 
+	onFinishClick = () => {
+		this.props.callback(['navigate', 'datapages', {dataset: this.props.fileName, host: localHub}]);
+		this.props.callback(['reset-import-state']);
+	}
+
+	onViewDataClick = () => {
+		this.props.onViz();
+		this.props.callback(['reset-import-state']);
+	}
+
 	onImportMoreData = () => {
 		this.setState({probeSelect: null});
 		this.props.callback(['reset-import-state']);
@@ -464,6 +476,13 @@ class ImportPage extends React.Component {
 		this.props.callback(['get-probemaps']);
 	}
 
+	onViz = () => {
+		const cohort = _.getIn(this.props.state, ['import', 'form', 'cohort']),
+			customCohort = _.getIn(this.props.state, ['import', 'form', 'customCohort']);
+		this.props.callback(['cohort', cohort ? cohort : customCohort]);
+		this.props.callback(['navigate', 'heatmap']);
+	};
+
 	render() {
 		const cohorts = this.props.state.wizard.cohorts || [];
 		const { probemaps, wizardPage, fileContent, localCohorts, file, fileName } = this.props.state.import;
@@ -486,6 +505,7 @@ class ImportPage extends React.Component {
 						localCohorts={localCohorts}
 						probemaps={probemaps}
 						file={file} fileName={fileName}
+						onViz={this.onViz}
 
 						state={this.props.state.import.form}
 					/>

@@ -75,13 +75,13 @@ export default class WizardSection extends React.Component {
         return (
             <div className={styles.retryButtons}>
                 <Button label='Finish' raised style={style.next} accent
-                    onClick={this.props.onRetryMetadata}
+                    onClick={this.props.onFinish}
                 />
                 <Button label='Load more data' raised style={style.next} accent
                     onClick={this.props.onImportMoreData}
                 />
                 <Button label='View data' raised style={style.next} accent
-                    onClick={this.props.onRetryMetadata}
+                    onClick={this.props.onViewData}
                 />
             </div>
         );
