@@ -38,7 +38,7 @@ const retryFile = (state, fileHandle) => {
             file: fileHandle,
             form: getIn(state, ['form'])
         }),
-        // checkForErrors(fileHandle, content, getIn(state, ['form', 'dataType'])),
+
         Rx.Observable.of(content),
         Rx.Observable.of(fileHandle.name)
     ));
@@ -50,29 +50,41 @@ const retryFileDone = (state, [errors, fileContent, fileName]) => {
     return importFileDone(state, errors);    
 };
 
-const importFile = ({ fileName, fileContent, file, form }) => {
+const importFile = ({ fileName, fileContent, file, form }, ignoreWarnings = false) => {
     const formData = new FormData();
 
     formData.append("file", new Blob([fileContent]), fileName);
     formData.append("file", new Blob([createMetaDataFile(form)]), fileName + '.json');
 
-    return checkForErrors(fileContent, form.fileFormat, form.dataType).flatMap(errors => 
-        errors.length ? 
-            Rx.Observable.of({ errors }) :
-            postFile(formData).concat(updateFile(fileName))
-                .catch(error => Rx.Observable.of({serverError: error.message})));
+    return checkForErrors(fileContent, form.fileFormat, form.dataType)
+        .flatMap(checkingRes => {
+            const { errors, warnings } = checkingRes;
+
+            if (errors.length) {
+                return Rx.Observable.of({ errors });
+            } else if (warnings.length && !ignoreWarnings) {
+                return Rx.Observable.of({ warnings });
+            } else {
+                return postFile(formData).concat(updateFile(fileName))
+                    .catch(error => Rx.Observable.of({serverError: error.message}))
+            }               
+        }
+    );
 };
 
 const importFileDone = (state, result) => {
     state = assocIn(state, ['form', 'errorCheckInprogress'], false);
+    state = assocInAll(state, ['form', 'errors'], [],
+                                ['form', 'warnings'], []);
 
     if(result.errors) {
         return assocIn(state, ['form', 'errors'], result.errors);
+    } else if (result.warnings) {
+        return assocIn(state, ['form', 'warnings'], result.warnings);
     } else if (result.serverError) {
         return assocIn(state, ['form', 'serverError'], result.serverError);
-    } else {
-        return assocIn(state, ['form', 'errors'], []);
     }
+    return state;
 }
 
 const postFile = (file) => {
@@ -114,9 +126,9 @@ const readFileObs = (fileHandle) => {
 
 const checkForErrors = (fileContent, fileFormat, dataType) => {  
     return Rx.Observable.create(obs => {
-        const errors = getErrors(fileContent, fileFormat, dataType);
+        const result = getErrors(fileContent, fileFormat, dataType);
         setTimeout(() => {
-            obs.next(errors);
+            obs.next(result);
             obs.complete();
         }, 0);
          
@@ -133,7 +145,7 @@ const getDefaultCustomCohort = (localCohorts, name=defaultStudyName, number=1) =
 
 const importControls = {
     'file': (state, fileHandle) => assocInAll(state, ['file'], fileHandle, ['fileName'], fileHandle.name),
-    'import-file-post!': (serverBus, state, newState, file) => serverBus.next(['import-file-done', importFile(state)]),
+    'import-file-post!': (serverBus, state) => serverBus.next(['import-file-done', importFile(state)]),
     'import-file-done': importFileDone,
     'update-file-post!': (serverBus, state, newState, fileName) => serverBus.next(['update-file-done', updateFile(fileName)]),
     'update-file-done': (state) => assocIn(state, ['status'], 'File successfully saved!'),
@@ -145,19 +157,13 @@ const importControls = {
     'set-status': (state, status) => assocIn(state, ['status'], status),
     'wizard-page': (state, newPage) => assocIn(state, ['wizardPage'], newPage),
     'file-content': (state, content) => assocIn(state, ['fileContent'], content),
-    'check-errors-post!': (serverBus, state, newState, file, fileContent, fileFormat) => 
-        serverBus.next(['check-errors-done', checkForErrors(file, fileContent, fileFormat)]),
-    'check-errors-done': (state, errors) => 
-        assocInAll(state, 
-            ['status'], (errors.length ? 'There was some error found in the file' : ''),
-            ['form', 'errors'], errors,
-            ['form', 'errorCheckInprogress'], false),
     'clear-metadata': (state) => assocIn(state, ['form'], {}),
     'retry-file-post!': (serverBus, state, newState, fileHandle) => serverBus.next(['retry-file-done', retryFile(state, fileHandle)]),
     'retry-file-done': retryFileDone,
     'set-default-custom-cohort': (state) => 
         assocIn(state, ['form', 'customCohort'], getDefaultCustomCohort(getIn(state, ['localCohorts']))),
-    'reset-import-state': (state) => getDefaultState(state)
+    'reset-import-state': (state) => getDefaultState(state),
+    'load-with-warnings-post!': (serverBus, state) => serverBus.next(['import-file-done', importFile(state, true)])
 };
 
 const query = {

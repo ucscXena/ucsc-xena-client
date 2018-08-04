@@ -78,6 +78,11 @@
 	color: red;
 }
 
+.warningLine {
+	margin: 0.3em 0 0.6em;
+	color: rgb(248, 125, 43);
+}
+
 .showMore{
 	text-decoration-line: underline;
 	font-size: 0.9em;

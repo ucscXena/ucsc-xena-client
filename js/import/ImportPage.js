@@ -47,7 +47,11 @@ const getNextPageByDataType = (currIndex, forwards, dataType) => {
 	return pages[pages.indexOf(currIndex) + (forwards ? 1 : -1)];
 };
 
-const isImportSuccessful = ({ errors, errorCheckInprogress, serverError }) => (errorCheckInprogress === false && !serverError && !(errors && errors.length));
+const hasErrorsOrLoading = ({ errors, errorCheckInprogress, serverError }) =>
+	(errorCheckInprogress === true || serverError || (errors && errors.length));
+const hasWarnings = ({ warnings }) => (warnings && warnings.length);
+
+const isImportSuccessful = (state) => !hasErrorsOrLoading(state) && !hasWarnings(state);
 
 class ImportForm extends React.Component {
 	constructor() {
@@ -111,9 +115,11 @@ class ImportForm extends React.Component {
 					fileName,
 					showRetry: !errorCheckInprogress && !isImportSuccessful(this.props.state),
 					showSuccess: isImportSuccessful(this.props.state),
+					showLoadWithWarnings: hasWarnings(this.props.state) && !hasErrorsOrLoading(this.props.state),
 					onRetryFile: this.onRetryFile,
 					onRetryMetadata: this.onRetryMetadata,
-					onImportMoreData: this.onImportMoreData
+					onImportMoreData: this.onImportMoreData,
+					onLoadWithWarnings: this.onLoadWithWarnings
 				};
 				component = this.importProgressPage();
 				break;
@@ -244,7 +250,7 @@ class ImportForm extends React.Component {
 					{this.renderMailto("Xena import missing probe", "probes",
 						probeSelect === 'probes' && probes === NONE_STR)
 					}
-					<RadioButton label="Neither" value='neither' />
+					<RadioButton label="Neither or I don't see my genes/transcripts/probes above" value='neither' />
 					{this.renderMailto("Xena import missing identifiers", "identifiers", probeSelect === 'neither')}
 				</RadioGroup>
 				<DenseTable fileContent={this.props.fileContent}
@@ -269,19 +275,28 @@ class ImportForm extends React.Component {
 	}
 
 	importProgressPage() {
-		const { errors, errorCheckInprogress, serverError } = this.props.state,
-			hasErrors = errors && !!errors.length;
+		const { errors, warnings, errorCheckInprogress, serverError } = this.props.state,
+			hasErr = errors && !!errors.length;
+
+		let errorText = null;
+
+		if (hasErr) {
+			errorText = <p>There was some errors found in the file:</p>;
+		} else if (hasWarnings(this.props.state)) {
+			errorText = <p>There was some warnings found in the file:</p>;
+		}
 
 		return (
 			<div>
-				{errorCheckInprogress && <p>Loading file...</p> }
+				{ errorCheckInprogress && <p>Loading file...</p> }
 
-				{ hasErrors && <p>There was some errors found in the file:</p> }
+				{ errorText }
 
-				<ErrorArea errors={errors}
+				<ErrorArea errors={hasErr ? errors : warnings}
 					showMore={this.state.showMoreErrors}
 					onShowMoreToggle={this.onShowMoreToggle}
 					errorCheckInProgress={errorCheckInprogress}
+					textClass={!hasErr ? styles.warningLine : styles.errorLine}
 				/>
 
 				{ serverError &&
@@ -416,6 +431,11 @@ class ImportForm extends React.Component {
 		this.props.callback(['wizard-page', getNextPageByDataType(wizardPage, true, dataType)]);
 	}
 
+	onLoadWithWarnings = () => {
+		this.props.callback(['error-check-inprogress', true]);
+		this.props.callback(['load-with-warnings']);
+	}
+
 	resetFieldsOnDataTypeChange = dataType => {
 		if (isMutationOrSegmentedData(dataType)) {
 			this.props.callback(['file-format', '']);
@@ -460,7 +480,6 @@ class ImportPage extends React.Component {
 				<div className={styles.container}>
 					<ImportForm cohorts={cohorts}
 						callback={this.props.callback}
-						postFile={this.postFile}
 
 						wizardPage={wizardPage}
 						fileContent={fileContent}
@@ -474,19 +493,11 @@ class ImportPage extends React.Component {
 			</div>
 		);
 	}
-
-	postFile = (fileArr) => {
-		const formData = new FormData();
-		fileArr.forEach(f => {
-			formData.append("file", new Blob([f.contents]), f.name);
-		});
-		this.props.callback(['import-file', formData]);
-	}
 }
 
-const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle }) => {
+const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, textClass }) => {
 	errors = errors || [];
-	let items = errors.map((error, i) => <p key={i} className={styles.errorLine}>{error}</p>),
+	let items = errors.map((error, i) => <p key={i} className={textClass}>{error}</p>),
 		showMoreText = null;
 
 	if (items.length > 3 && !showMore) {

@@ -25,7 +25,7 @@ const transposeLines = lines => _.zip(...lines);
 
 const filterEmpty = arr => arr.filter(elem => !!elem);
 
-const getErrorClass = (dataType) => dataType === 'mutation by position' || dataType === 'segmented copy number' ? dataType : 'dense';
+const getErrDataType = (dataType) => dataType === 'mutation by position' || dataType === 'segmented copy number' ? dataType : 'dense';
 
 const getMutationHeaderRegExps = () => {
     return [
@@ -48,31 +48,39 @@ const getSegmentedHeaderRegExps = () => {
     ];
 };
 
-const getErrors = (fileContent, fileFormat, dataType) => {
-    const errorClass = getErrorClass(dataType);
-    let filteredErrors = [],
-        lines,
-        result = [];
-
-    filteredErrors = ERRORS.filter(err => err.forType.some(type => type === errorClass));
-
-    //get lines
-    lines = fileContent.trim().split('\n');
-    lines = lines.map(l => getColumns(l));
-
-    //iterate through rules and return array
-    filteredErrors.forEach(error => {
+const gatherErrorMessages = (errors, lines, fileFormat) => {
+    const res = [];
+    errors.forEach(error => {
         const messages = error.getErrors(lines, fileFormat);
         if (messages) {
             if (Array.isArray(messages)) {
-                result.push(...messages);
+                res.push(...messages);
             } else {
-                result.push(messages);
+                res.push(messages);
             }
         }
     });
+    return res;
+};
 
-    return result;
+const getErrors = (fileContent, fileFormat, dataType) => {
+    const filterByDataType = getErrDataType(dataType);
+
+    let filteredErrors = ERRORS.filter(err => err.forType.some(dType => dType === filterByDataType)),
+        filteredWarnings = filteredErrors.filter(err => err.level === 'warning');
+
+    filteredErrors = filteredErrors.filter(err => err.level === 'error');
+
+    //get lines
+    const lines = fileContent.trim()
+        .split('\n')
+        .map(l => getColumns(l));
+
+    //iterate through rules and return array
+    const errors = gatherErrorMessages(filteredErrors, lines, fileFormat);
+    const warnings = gatherErrorMessages(filteredWarnings, lines, fileFormat);
+
+    return { errors, warnings };
 };
 
 const hasColumn = (header, columnName, regexp) => {
@@ -83,7 +91,6 @@ const hasColumn = (header, columnName, regexp) => {
 
 const hasSparseDataColumns = (header, colRegExps) =>
     filterEmpty(colRegExps.map(r => hasColumn(header, r.name, r.regexp)));
-
 
 ERRORS = [
     {

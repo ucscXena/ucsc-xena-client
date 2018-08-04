@@ -24,7 +24,6 @@ const padLines = lines => {
     });
 };
 
-//TODO rename to smth more accurate
 class DenseTable extends React.Component {
     state = { showMore: false };
 
