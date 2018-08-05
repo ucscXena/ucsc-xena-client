@@ -49,18 +49,23 @@ const getSegmentedHeaderRegExps = () => {
 };
 
 const gatherErrorMessages = (errors, lines, fileFormat) => {
-    const res = [];
+    const errMessages = [],
+        snippets = [];
+
     errors.forEach(error => {
         const messages = error.getErrors(lines, fileFormat);
         if (messages) {
+
+            snippets.push(error.getSnippets(lines)); // could be refactored a bit for readability. Maybe by making errors stateful
+
             if (Array.isArray(messages)) {
-                res.push(...messages);
+                errMessages.push(...messages);
             } else {
-                res.push(messages);
+                errMessages.push(messages);
             }
         }
     });
-    return res;
+    return [ errMessages, snippets ];
 };
 
 const getErrors = (fileContent, fileFormat, dataType) => {
@@ -73,14 +78,15 @@ const getErrors = (fileContent, fileFormat, dataType) => {
 
     //get lines
     const lines = fileContent.trim()
-        .split('\n')
+        .split(/\r\n|\r|\n/g)
         .map(l => getColumns(l));
 
     //iterate through rules and return array
-    const errors = gatherErrorMessages(filteredErrors, lines, fileFormat);
-    const warnings = gatherErrorMessages(filteredWarnings, lines, fileFormat);
+    const [errors, errorSnippets] = gatherErrorMessages(filteredErrors, lines, fileFormat);
+    const [warnings, warningSnippets] = gatherErrorMessages(filteredWarnings, lines, fileFormat);
+    const snippets = filterEmpty([...errorSnippets, ...warningSnippets]);
 
-    return { errors, warnings };
+    return { errors, warnings, snippets };
 };
 
 const hasColumn = (header, columnName, regexp) => {
@@ -110,7 +116,8 @@ ERRORS = [
             });
 
             return result.length ? result : null;
-        }
+        },
+        getSnippets: () => {}
     },
     {
         //HEADER CHARACTERS
@@ -131,7 +138,8 @@ ERRORS = [
             if (headerNames.filter(h => h.trim() === '').length !== 0) {
                 return message;
             }
-        }
+        },
+        getSnippets: () => {}
     },
     {
         //HEADER COLUMN COUNT MISMATCH
@@ -153,7 +161,8 @@ ERRORS = [
                 }
             }
             return result;
-        }
+        },
+        getSnippets: () => {}
     },
     {
         //DUPLICATE PROBE HEADERS
@@ -168,7 +177,8 @@ ERRORS = [
             if (duplicates.length !== 0) {
                 return message(duplicates[0]);
             }
-        }
+        },
+        getSnippets: () => {}
     },
     {
         //DUPLICATE SAMPLE IDS
@@ -184,7 +194,8 @@ ERRORS = [
             if (duplicates.length !== 0) {
                 return message(duplicates[0]);
             }
-        }
+        },
+        getSnippets: () => {}
     },
     {
         //SEGMENTED REQUIRED HEADERS
@@ -195,7 +206,17 @@ ERRORS = [
                 `For segmented copy number data we require 5 columns: 'sample', 'chr', 'start', 'end', and 'value'. You are missing ${missing.join(', ')}. Please edit your file and reload.`;
 
             const headerNames = getHeaderNames(lines);
-            return message(hasSparseDataColumns(headerNames, getSegmentedHeaderRegExps()));
+            const missingNames = hasSparseDataColumns(headerNames, getSegmentedHeaderRegExps());
+            return missingNames.length ? message(missingNames) : null;
+        },
+        getSnippets: (lines) => {
+            const exampleLines = [
+                ['sample', 'chrom', 'start', 'end', 'value'],
+                ['exampleSampleID', 'exampleChr', 'exampleStart', 'exampleEnd', 'examplevalue']
+            ];
+
+            const errorLines = lines.slice(0, 2);
+            return { exampleLines, errorLines };
         }
     },
     {
@@ -207,7 +228,17 @@ ERRORS = [
                 `For mutation data we require 6 columns: 'sample', 'chr', 'start', 'end', 'ref' and 'alt'. You are missing ${missing.join(', ')}. Please edit your file and reload.`;
 
             const headerNames = getHeaderNames(lines);
-            return message(hasSparseDataColumns(headerNames, getMutationHeaderRegExps()));
+            const missingNames = hasSparseDataColumns(headerNames, getMutationHeaderRegExps());
+            return missingNames.length ? message(missingNames) : null;
+        },
+        getSnippets: (lines) => {
+            const exampleLines = [
+                ['sample', 'chrom', 'start', 'end', 'ref', 'alt'],
+                ['exampleSampleID', 'exampleChr', 'exampleStart', 'exampleEnd', 'exampleRef', 'exampleAlt']
+            ];
+
+            const errorLines = lines.slice(0, 2);
+            return { exampleLines, errorLines };
         }
     }
 ];

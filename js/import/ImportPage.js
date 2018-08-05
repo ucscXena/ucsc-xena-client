@@ -16,7 +16,7 @@ import { dataTypeOptions, steps, NONE_STR } from './constants';
 
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
-import { DenseTable } from './staticComponents';
+import { DenseTable, ErrorPreview } from './staticComponents';
 import CohortSuggest from '../views/CohortSuggest';
 
 const pageStates = _.range(7);
@@ -277,7 +277,8 @@ class ImportForm extends React.Component {
 	}
 
 	importProgressPage() {
-		const { errors, warnings, errorCheckInprogress, serverError } = this.props.state,
+		const { errors, warnings, errorCheckInprogress, serverError,
+			errorSnippets } = this.props.state,
 			hasErr = errors && !!errors.length;
 
 		let errorText = null;
@@ -308,6 +309,8 @@ class ImportForm extends React.Component {
 					 Xena team for help.</p>
 				</div>
 				}
+
+				<ErrorPreview errorSnippets={errorSnippets} />
 
 				{ isImportSuccessful(this.props.state) &&
 				<div>

@@ -2,10 +2,10 @@
 import React from 'react';
 import cssClasses from './ImportPage.module.css';
 
-const maxColumns = 4,
+const maxColumns = 6,
     numRows = 5,
     maxNumRows = 20,
-    maxSymbolsInCell = 30;
+    maxSymbolsInCell = 20;
 
 const cropColumnContent = cell => cell.length > maxSymbolsInCell ? cell.slice(0, maxSymbolsInCell) + '...' : cell;
 const cropLines = lines => lines.map(line => {
@@ -23,6 +23,12 @@ const padLines = lines => {
         return diff > 0 ? [...line, ...Array(diff).fill(" ")] : line;
     });
 };
+
+const getSimpleTableRows = lines => lines.map((line, i) => (
+    <tr key={i}>
+        {line.map((col, j) => <td key={j}>{col}</td>)}
+    </tr>
+));
 
 class DenseTable extends React.Component {
     state = { showMore: false };
@@ -71,6 +77,29 @@ class DenseTable extends React.Component {
     }
 };
 
+const ErrorPreview = ({ errorSnippets = [] }) => {
+
+    if (!errorSnippets.length) {
+        return null;
+    }
+
+    const { errorLines, exampleLines } = errorSnippets[0];
+
+    const errLines = getSimpleTableRows(padLines(errorLines));
+    const exampLines = getSimpleTableRows(padLines(exampleLines));
+
+    return (
+        <div>
+            <p>Your file:</p>
+            <table className={cssClasses.denseExample} style={{background: '#f69292'}}>{ errLines }</table>
+
+            <p>Example of correct file:</p>
+            <table className={cssClasses.denseExample} style={{background: '#c7f2c7'}}>{ exampLines }</table>
+        </div>
+    );
+};
+
 export {
-    DenseTable
+    DenseTable,
+    ErrorPreview
 };

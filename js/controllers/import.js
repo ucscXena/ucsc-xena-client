@@ -58,10 +58,10 @@ const importFile = ({ fileName, fileContent, file, form }, ignoreWarnings = fals
 
     return checkForErrors(fileContent, form.fileFormat, form.dataType)
         .flatMap(checkingRes => {
-            const { errors, warnings } = checkingRes;
+            const { errors, warnings, snippets } = checkingRes;
 
             if (errors.length) {
-                return Rx.Observable.of({ errors });
+                return Rx.Observable.of({ errors, snippets });
             } else if (warnings.length && !ignoreWarnings) {
                 return Rx.Observable.of({ warnings });
             } else {
@@ -69,16 +69,19 @@ const importFile = ({ fileName, fileContent, file, form }, ignoreWarnings = fals
                     .catch(error => Rx.Observable.of({serverError: error.message}))
             }               
         }
-    );
+    );// does not work as expected. .catch(error => Rx.Observable.of({ serverError: error.message }));
 };
 
 const importFileDone = (state, result) => {
     state = assocIn(state, ['form', 'errorCheckInprogress'], false);
     state = assocInAll(state, ['form', 'errors'], [],
-                                ['form', 'warnings'], []);
+                                ['form', 'warnings'], [],
+                                ['form', 'errorSnippets'], []);
 
     if(result.errors) {
-        return assocIn(state, ['form', 'errors'], result.errors);
+        const snippets = result.snippets || [];
+        return assocInAll(state, ['form', 'errors'], result.errors,
+                                ['form', 'errorSnippets'], snippets);
     } else if (result.warnings) {
         return assocIn(state, ['form', 'warnings'], result.warnings);
     } else if (result.serverError) {
