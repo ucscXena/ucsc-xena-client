@@ -258,7 +258,8 @@ var needSamples = state =>
 var needMarkDown = state =>
 	state.page === 'datapages' &&
 	pick(state.params, 'markdown') &&
-	state.params.markdown;
+	state.params.markdown &&
+	state.params.markdown.indexOf("https://raw.githubusercontent.com/ucscXena/cohortMetaData/master") === 0;
 
 var hasAMarkDown = (state, markdown) =>
 	markdown === getIn(state, ['datapages', 'markdownURL']);
