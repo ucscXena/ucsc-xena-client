@@ -24,9 +24,8 @@ const createMetaDataFile = (state) => {
         cohort: state.cohortRadio === 'newCohort' ? state.customCohort : state.cohort,
         dataSubType: state.dataType,
         type: state.fileFormat,
-        assembly: state.assembly,
-        probemap: state.genes || state.probes,
-        // label: 'testlabel'
+        assembly: state.assembly || void 0,
+        probemap: state.genes || state.probes || void 0
     }, null, 4);
 };
 
@@ -66,10 +65,10 @@ const importFile = ({ fileName, fileContent, file, form }, ignoreWarnings = fals
                 return Rx.Observable.of({ warnings });
             } else {
                 return postFile(formData).concat(updateFile(fileName))
-                    .catch(error => Rx.Observable.of({serverError: error.message}))
+                    .catch(error => Rx.Observable.of({serverError: error.message}));
             }               
         }
-    );// does not work as expected. .catch(error => Rx.Observable.of({ serverError: error.message }));
+    ).catch(error => Rx.Observable.of({ serverError: error.message }, Rx.Scheduler.asap));
 };
 
 const importFileDone = (state, result) => {

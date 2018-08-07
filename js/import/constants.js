@@ -4,7 +4,7 @@ const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val
 
 const dataTypes = [
 	"",
-	"phenotype/clinical/sample type",
+	"phenotype",
 	"expression",
 	"gene-level copy number ",
 	"segmented copy number",

@@ -27,7 +27,7 @@ const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val
 const getProbemapOptions = probes => [{label: "", value: ""}, ...probes, {label: NONE_STR, value: NONE_STR}];
 
 //needs constants
-const isPhenotypeData = dataType => dataType === 'phenotype/clinical/sample type';
+const isPhenotypeData = dataType => dataType === 'phenotype';
 const isMutationOrSegmentedData = dataType => dataType === 'mutation by position' || dataType === 'segmented copy number';
 
 const getNextPageByDataType = (currIndex, forwards, dataType) => {
@@ -37,7 +37,7 @@ const getNextPageByDataType = (currIndex, forwards, dataType) => {
 		case 'segmented copy number':
 			pages = [0, 1, 3, 5, 6];
 			break;
-		case 'phenotype/clinical/sample type':
+		case 'phenotype':
 			pages = [0, 1, 2, 3, 6];
 			break;
 		default:
@@ -387,6 +387,7 @@ class ImportForm extends React.Component {
 
 	onDataTypeChange = type => {
 		this.resetFieldsOnDataTypeChange(type);
+		this.setFileFormatForSparse(type);
 		this.props.callback(['data-type', type]);
 	}
 
@@ -451,9 +452,15 @@ class ImportForm extends React.Component {
 		this.props.callback(['load-with-warnings']);
 	}
 
+	setFileFormatForSparse = dataType => {
+		if(isMutationOrSegmentedData(dataType)) {
+			const fileFormat = dataType === 'mutation by position' ? 'mutationVector' : 'genomicSegment';
+			this.props.callback(['file-format', fileFormat]);
+		}
+	}
+
 	resetFieldsOnDataTypeChange = dataType => {
 		if (isMutationOrSegmentedData(dataType)) {
-			this.props.callback(['file-format', '']);
 			this.resetProbesAndGenes();
 		} else if (isPhenotypeData(dataType)) {
 			this.resetProbesAndGenes();

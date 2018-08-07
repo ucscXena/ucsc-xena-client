@@ -29,8 +29,8 @@ const getErrDataType = (dataType) => dataType === 'mutation by position' || data
 
 const getMutationHeaderRegExps = () => {
     return [
-        { regexp: /sample[ _]*(name|id)?/i, name: "'sampleid'"},
-        { regexp: /chr(om)/i, name: "'chrom'" },
+        { regexp: /sample[ _]*(name|id)?/i, name: "'sample'"},
+        { regexp: /chr(om)?/i, name: "'chrom'" },
         { regexp: /start/i, name: "'start'" },
         { regexp: /end/i, name: "'end'" },
         { regexp: /alt(ernate)?/i, name: "'alternate'" },
@@ -40,8 +40,8 @@ const getMutationHeaderRegExps = () => {
 
 const getSegmentedHeaderRegExps = () => {
     return [
-        { regexp: /sample[ _]*(name|id)?/i, name: "'sampleid'"},
-        { regexp: /chr(om)/i, name: "'chrom'" },
+        { regexp: /sample[ _]*(name|id)?/i, name: "'sample'"},
+        { regexp: /chr(om)?/i, name: "'chrom'" },
         { regexp: /start/i, name: "'start'" },
         { regexp: /end/i, name: "'end'" },
         { regexp: /value/i, name: "'value'" }
@@ -203,7 +203,7 @@ ERRORS = [
         forType: ['segmented copy number'],
         getErrors: (lines) => {
             const message = (missing) =>
-                `For segmented copy number data we require 5 columns: 'sample', 'chr', 'start', 'end', and 'value'. You are missing ${missing.join(', ')}. Please edit your file and reload.`;
+                `For segmented copy number data we require 5 columns: 'sample', 'chrom', 'start', 'end', and 'value'. You are missing ${missing.join(', ')}. Please edit your file and reload.`;
 
             const headerNames = getHeaderNames(lines);
             const missingNames = hasSparseDataColumns(headerNames, getSegmentedHeaderRegExps());
@@ -212,7 +212,7 @@ ERRORS = [
         getSnippets: (lines) => {
             const exampleLines = [
                 ['sample', 'chrom', 'start', 'end', 'value'],
-                ['exampleSampleID', 'exampleChr', 'exampleStart', 'exampleEnd', 'examplevalue']
+                ['TCGA-OR-A5LT-01', 'chr1', '61735', '98588', '0.1842']
             ];
 
             const errorLines = lines.slice(0, 2);
@@ -225,7 +225,7 @@ ERRORS = [
         forType: ['mutation by position'],
         getErrors: (lines) => {
             const message = (missing) =>
-                `For mutation data we require 6 columns: 'sample', 'chr', 'start', 'end', 'ref' and 'alt'. You are missing ${missing.join(', ')}. Please edit your file and reload.`;
+                `For mutation data we require 6 columns: 'sample', 'chrom', 'start', 'end', 'reference' and 'alternate'. You are missing ${missing.join(', ')}. Please edit your file and reload.`;
 
             const headerNames = getHeaderNames(lines);
             const missingNames = hasSparseDataColumns(headerNames, getMutationHeaderRegExps());
@@ -233,8 +233,8 @@ ERRORS = [
         },
         getSnippets: (lines) => {
             const exampleLines = [
-                ['sample', 'chrom', 'start', 'end', 'ref', 'alt'],
-                ['exampleSampleID', 'exampleChr', 'exampleStart', 'exampleEnd', 'exampleRef', 'exampleAlt']
+                ['sample', 'chrom', 'start', 'end', 'reference', 'alternate'],
+                ['TCGA-PK-A5HB-01', 'chr1', '877831', '877831', 'T', 'C']
             ];
 
             const errorLines = lines.slice(0, 2);
