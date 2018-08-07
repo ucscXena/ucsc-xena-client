@@ -1,6 +1,14 @@
 #!/bin/bash
 set -o nounset
 set -o errexit
+set -o xtrace
+
+CIRCLE_PROJECT_USERNAME=${CIRCLE_PROJECT_USERNAME:-""}
+CIRCLE_PR_NUMBER=${CIRCLE_PR_NUMBER:-""}
+
+if [ "$CIRCLE_PROJECT_USERNAME" != 'ucscXena' ] || [ ! -z $CIRCLE_PR_NUMBER ]; then
+	exit;
+fi
 
 USER=ubuntu
 BUILD_DJANGO=build-django
@@ -20,6 +28,7 @@ requirements=$(echo ${requirements}) # drop carriage returns
 ssh -l${USER} ${HOST} <<-ENDSSH
     #set -o nounset # 'activate' accesses unbound vars
     set -o errexit
+    set -o xtrace
     cp ~/settings/site_settings.py /var/www/backend/django/server/site_settings.py
     . /var/www/backend/virtualenv/bin/activate
     pip install ${requirements}
