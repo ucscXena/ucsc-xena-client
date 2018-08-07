@@ -503,7 +503,10 @@ var defaultHost = params =>
 class HubPage extends React.Component {
 	onCohort = (ev) => { navHandler.call(this, ev); };
 
-	onImport = () => this.props.callback(['navigate', 'import']);
+	onImport = () => {
+		this.props.callback(['reset-import-state']);
+		this.props.callback(['navigate', 'import']);
+	}
 
 	render() {
 		var {state, hubParams} = this.props,
