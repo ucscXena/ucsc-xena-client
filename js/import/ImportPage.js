@@ -1,6 +1,7 @@
 'use strict';
 import React from 'react';
 import styles from './ImportPage.module.css';
+import nav from "../nav";
 import _ from "../underscore_ext";
 import {
 	Input, Button, Dropdown,
@@ -8,9 +9,6 @@ import {
 } from 'react-toolbox/lib';
 import DefaultServers from "../defaultServers";
 const { servers: { localHub } } = DefaultServers;
-
-// import appTheme from '../appTheme';
-// import { ThemeProvider } from 'react-css-themr';
 
 import { dataTypeOptions, steps, NONE_STR } from './constants';
 
@@ -481,9 +479,14 @@ class ImportPage extends React.Component {
 		super();
 	}
 
+	onNavigate = (page) => {
+		this.props.callback(['navigate', page]);
+	};
+
 	componentDidMount() {
 		this.props.callback(['get-local-cohorts']);
 		this.props.callback(['get-probemaps']);
+		nav({activeLink: 'hub', onNavigate: this.onNavigate});
 	}
 
 	onViz = () => {
