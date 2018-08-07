@@ -10,7 +10,7 @@ import {
 import DefaultServers from "../defaultServers";
 const { servers: { localHub } } = DefaultServers;
 
-import { dataTypeOptions, steps, NONE_STR } from './constants';
+import { dataTypeOptions, steps, NONE_STR, DATA_TYPE, FILE_FORMAT } from './constants';
 
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
@@ -25,17 +25,17 @@ const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val
 const getProbemapOptions = probes => [{label: "", value: ""}, ...probes, {label: NONE_STR, value: NONE_STR}];
 
 //needs constants
-const isPhenotypeData = dataType => dataType === 'phenotype';
-const isMutationOrSegmentedData = dataType => dataType === 'mutation by position' || dataType === 'segmented copy number';
+const isPhenotypeData = dataType => dataType === DATA_TYPE.PHENOTYPE;
+const isMutationOrSegmentedData = dataType => dataType === DATA_TYPE.MUTATION_BY_POS || dataType === DATA_TYPE.SEGMENTED_CN;
 
 const getNextPageByDataType = (currIndex, forwards, dataType) => {
 	let pages = [];
 	switch(dataType) {
-		case 'mutation by position':
-		case 'segmented copy number':
+		case DATA_TYPE.MUTATION_BY_POS:
+		case DATA_TYPE.SEGMENTED_CN:
 			pages = [0, 1, 3, 5, 6];
 			break;
-		case 'phenotype':
+		case DATA_TYPE.PHENOTYPE:
 			pages = [0, 1, 2, 3, 6];
 			break;
 		default:
@@ -183,11 +183,11 @@ class ImportForm extends React.Component {
 		return (
 			<div>
 				<RadioGroup value={fileFormat} onChange={this.onFileFormatChange}>
-					<RadioButton label='The first column is sample IDs' value='clinicalMatrix' />
-					<RadioButton label='The first row is sample IDs' value='genomicMatrix' />
+					<RadioButton label='The first column is sample IDs' value={FILE_FORMAT.CLINICAL_MATRIX} />
+					<RadioButton label='The first row is sample IDs' value={FILE_FORMAT.GENOMIC_MATRIX} />
 				</RadioGroup>
 				<DenseTable fileContent={this.props.fileContent}
-					highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
+					highlightRow={fileFormat === FILE_FORMAT.GENOMIC_MATRIX} highlightColumn={fileFormat === FILE_FORMAT.CLINICAL_MATRIX}
 				/>
 			</div>
 		);
@@ -223,7 +223,7 @@ class ImportForm extends React.Component {
 					}
 				</RadioGroup>
 				<DenseTable fileContent={this.props.fileContent}
-					highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
+					highlightRow={fileFormat === FILE_FORMAT.GENOMIC_MATRIX} highlightColumn={fileFormat === FILE_FORMAT.CLINICAL_MATRIX}
 				/>
 			</div>
 		);
@@ -254,7 +254,7 @@ class ImportForm extends React.Component {
 					{this.renderMailto("Xena import missing identifiers", "identifiers", probeSelect === 'neither')}
 				</RadioGroup>
 				<DenseTable fileContent={this.props.fileContent}
-					highlightRow={fileFormat === 'genomicMatrix'} highlightColumn={fileFormat === 'clinicalMatrix'}
+					highlightRow={fileFormat === FILE_FORMAT.GENOMIC_MATRIX} highlightColumn={fileFormat === FILE_FORMAT.CLINICAL_MATRIX}
 				/>
 			</div>
 		);
@@ -372,7 +372,7 @@ class ImportForm extends React.Component {
 	}
 
 	onProbeRadioChange = value => {
-		this.resetProbesAndGenes();
+		this.resetProbemap();
 		this.setState({ probeSelect: value });
 	}
 
@@ -449,25 +449,24 @@ class ImportForm extends React.Component {
 
 	setFileFormatForSparse = dataType => {
 		if(isMutationOrSegmentedData(dataType)) {
-			const fileFormat = dataType === 'mutation by position' ? 'mutationVector' : 'genomicSegment';
+			const fileFormat = dataType === DATA_TYPE.MUTATION_BY_POS ? FILE_FORMAT.MUTATION_VECTOR : FILE_FORMAT.GENOMIC_SEGMENT;
 			this.props.callback(['file-format', fileFormat]);
 		}
 	}
 
 	resetFieldsOnDataTypeChange = dataType => {
 		if (isMutationOrSegmentedData(dataType)) {
-			this.resetProbesAndGenes();
+			this.resetProbemap();
 		} else if (isPhenotypeData(dataType)) {
-			this.resetProbesAndGenes();
+			this.resetProbemap();
 			this.props.callback(['assembly', '']);
 		} else {
 			this.props.callback(['assembly', '']);
 		}
 	}
 
-	resetProbesAndGenes = () => {
-		this.props.callback(['genes', '']);
-		this.props.callback(['probes', '']);
+	resetProbemap = () => {
+		this.props.callback(['probemap', '']);
 	}
 }
 

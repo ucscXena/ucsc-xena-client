@@ -1,6 +1,7 @@
 'use strict';
 
 import _ from '../underscore_ext';
+import { FILE_FORMAT, DATA_TYPE } from './constants';
 
 const HEADER_LENGTH_LIMIT = 255,
     MULTI_ERROR_LIMIT = 3;
@@ -12,7 +13,7 @@ const getFirstLine = lines => lines[0];
 const getFirstColumn = lines => lines.map(l => l[0]);
 
 // is files first row - sampleids ? (columns then represent record)
-const isColumns = fileFormat => fileFormat === 'genomicMatrix';
+const isColumns = fileFormat => fileFormat === FILE_FORMAT.GENOMIC_MATRIX;
 
 const getHeaderNames = (lines, fileFormat) => isColumns(fileFormat) ? getFirstColumn(lines) : getFirstLine(lines);
 const getSampleIds = (lines, fileFormat) => {
@@ -25,7 +26,7 @@ const transposeLines = lines => _.zip(...lines);
 
 const filterEmpty = arr => arr.filter(elem => !!elem);
 
-const getErrDataType = (dataType) => dataType === 'mutation by position' || dataType === 'segmented copy number' ? dataType : 'dense';
+const getErrDataType = (dataType) => dataType === DATA_TYPE.MUTATION_BY_POS || dataType === DATA_TYPE.SEGMENTED_CN ? dataType : 'dense';
 
 const getMutationHeaderRegExps = () => {
     return [
@@ -102,7 +103,7 @@ ERRORS = [
     {
         //HEADER LENGTHS
         level: 'error',
-        forType: ['dense', 'mutation by position', 'segmented copy number'],
+        forType: ['dense', DATA_TYPE.MUTATION_BY_POS, DATA_TYPE.SEGMENTED_CN],
         getErrors: (lines, fileFormat) => {
             const message = (header) => `${header.slice(0, 100)}... is too long. Please limit to 255 characters`;
 
@@ -122,7 +123,7 @@ ERRORS = [
     {
         //HEADER CHARACTERS
         level: 'error',
-        forType: ['dense', 'mutation by position', 'segmented copy number'],
+        forType: ['dense', DATA_TYPE.MUTATION_BY_POS, DATA_TYPE.SEGMENTED_CN],
         getErrors: () => {
             // const message = (header) => `Headers can only have xyz. Please change ${header}`;
         }
@@ -200,7 +201,7 @@ ERRORS = [
     {
         //SEGMENTED REQUIRED HEADERS
         level: 'error',
-        forType: ['segmented copy number'],
+        forType: [DATA_TYPE.SEGMENTED_CN],
         getErrors: (lines) => {
             const message = (missing) =>
                 `For segmented copy number data we require 5 columns: 'sample', 'chrom', 'start', 'end', and 'value'. You are missing ${missing.join(', ')}. Please edit your file and reload.`;
@@ -222,7 +223,7 @@ ERRORS = [
     {
         //MUTATION REQUIRED HEADERS
         level: 'error',
-        forType: ['mutation by position'],
+        forType: [DATA_TYPE.MUTATION_BY_POS],
         getErrors: (lines) => {
             const message = (missing) =>
                 `For mutation data we require 6 columns: 'sample', 'chrom', 'start', 'end', 'reference' and 'alternate'. You are missing ${missing.join(', ')}. Please edit your file and reload.`;
