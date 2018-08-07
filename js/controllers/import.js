@@ -1,10 +1,9 @@
-/* eslint-disable */
 'use strict';
 import Rx from '../rx';
 import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
 import { cohortSummary, probemapList } from '../xenaQuery';
-import { assocIn, assocInAll, getIn, groupBy, map } from "../underscore_ext";
+import { assoc, assocIn, assocInAll, has, getIn, groupBy, object, pluck, pick } from "../underscore_ext";
 
 import getErrors from '../import/errorChecking';
 
@@ -25,7 +24,7 @@ const createMetaDataFile = (state) => {
         dataSubType: state.dataType,
         type: state.fileFormat,
         assembly: state.assembly || void 0,
-        probemap: state.genes || state.probes || void 0
+        probemap: getIn(state, ['probemap', 'name']) || void 0
     }, null, 4);
 };
 
@@ -138,8 +137,28 @@ const checkForErrors = (fileContent, fileFormat, dataType) => {
     });
 };
 
+const download = (host, name) => Rx.Observable.ajax({
+    url: host + '/download/' + name,
+    responseType: 'text',
+    method: 'GET',
+    crossDomain: true
+});
+
+const uploadProbemapFile = ({ name }) => {
+    const host = referenceHost;
+    return Rx.Observable.zip(download(host, name), download(host, name + '.json'))
+        .flatMap(([data, json]) => {
+            const formData = new FormData();
+            var fileName = name.replace(/(.*[/])/, ''); // take basename of file path
+
+            formData.append("file", new Blob([data.response]), fileName);
+            formData.append("file", new Blob([json.response]), fileName + '.json');
+
+            return postFile(formData).concat(updateFile(fileName));
+        });
+}
 const getCohortArray = cohorts => cohorts.map(c => c.cohort);
-const getValueLabelList = (items) => items.map(item => ({ label: item.label, value: item.name }));
+const getValueLabelList = (items) => items.map(item => ({label: item.label, value: {name: item.name, hash: item.hash}}));
 
 const getDefaultCustomCohort = (localCohorts, name=defaultStudyName, number=1) => {
     return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `${defaultStudyName} (${number})`, ++number);
@@ -147,7 +166,14 @@ const getDefaultCustomCohort = (localCohorts, name=defaultStudyName, number=1) =
 
 const importControls = {
     'file': (state, fileHandle) => assocInAll(state, ['file'], fileHandle, ['fileName'], fileHandle.name),
-    'import-file-post!': (serverBus, state) => serverBus.next(['import-file-done', importFile(state)]),
+    // 'import-file-post!': (serverBus, state) => serverBus.next(['import-file-done', importFile(state)]),
+    // XXX Should check by hash if the user-chosen probemap is in local-probmaps. If not,
+    // zip download() of probemap file and json file, and flatmap to importFile. importFile should upload
+    // probemap file &
+    'import-file-post!': (serverBus, state, newState) =>
+        serverBus.next(['import-file-done',
+            newState.form.probemap && !has(newState.localProbemaps, newState.form.probemap.hash) ?
+                uploadProbemapFile(newState.form.probemap).concat(importFile(state)) : importFile(state)]),
     'import-file-done': importFileDone,
     'update-file-post!': (serverBus, state, newState, fileName) => serverBus.next(['update-file-done', updateFile(fileName)]),
     'update-file-done': (state) => assocIn(state, ['status'], 'File successfully saved!'),
@@ -172,16 +198,23 @@ const query = {
     'get-local-cohorts-post!': serverBus => serverBus.next(['local-cohorts', cohortSummary(servers.localHub, [])]),
     'local-cohorts': (state, cohorts) => {
         const localCohorts = getCohortArray(cohorts);
-        return assocInAll(state, 
+        return assocInAll(state,
             ['localCohorts'], localCohorts,
             ['form', 'customCohort'], getDefaultCustomCohort(localCohorts));
     },
-    'get-probemaps-post!': serverBus => serverBus.next(['set-probemaps', probemapList(referenceHost)]),
+    //'get-probemaps-post!': serverBus => serverBus.next(['set-probemaps', probemapList(referenceHost)]),
+    'get-probemaps-post!': serverBus => {
+        serverBus.next(['set-probemaps', probemapList(referenceHost)])
+        // Fetch probemaps available on localhost
+        serverBus.next(['set-local-probemaps', probemapList(servers.localHub)])
+    },
     'set-probemaps': (state, probemaps) => {
         probemaps = getProbeGroups(probemaps);
         return assocInAll(state, ['probemaps', 'probes'], getValueLabelList(probemaps['probes']),
                         ['probemaps', 'genes'], getValueLabelList(probemaps['genes']));
-    }
+    },
+    // stash localhost probemaps, indexed by hash
+     'set-local-probemaps': (state, probemaps) => assoc(state, 'localProbemaps', object(pluck(probemaps, 'hash'), probemaps)),
 }
 
 const changeFormProp = propName => (state, propValue) => assocIn(state, ['form', propName], propValue);
@@ -192,10 +225,8 @@ const formControls = {
     'cohort-radio': changeFormProp('cohortRadio'),
     'cohort': changeFormProp('cohort'),
     'custom-cohort': changeFormProp('customCohort'),
-    'probemap-file': changeFormProp('probeMapFile'),
     'errors': changeFormProp('errors'),
-    'genes': changeFormProp('genes'),
-    'probes': changeFormProp('probes'),
+    'probemap': changeFormProp('probemap'),
     'assembly': changeFormProp('assembly'),
     'error-check-inprogress': changeFormProp('errorCheckInprogress')
 }

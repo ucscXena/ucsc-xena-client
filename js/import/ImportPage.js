@@ -231,24 +231,24 @@ class ImportForm extends React.Component {
 
 	probeSelectionPage() {
 		const probeSelect = this.state.probeSelect,
-			{ genes, probes, fileFormat } = this.props.state;
+			{ fileFormat, probemap } = this.props.state;
 
 		return (
 			<div>
-				<RadioGroup value={this.state.probeSelect} onChange={this.onProbeRadioChange}>
+				<RadioGroup value={probeSelect} onChange={this.onProbeRadioChange}>
 					<RadioButton label="My data uses gene or transcript names (e.g. TP53, ENST00000619485.4)" value='genes' />
-					{this.renderDropdown(this.onGenesGhange, getProbemapOptions(_.getIn(this.props, ['probemaps', 'genes'])),
-					genes, "Genes or transcripts", probeSelect === 'genes')
+					{this.renderDropdown(this.onProbemapChange, getProbemapOptions(_.getIn(this.props, ['probemaps', 'genes'])),
+					probemap, "Genes or transcripts", probeSelect === 'genes')
 					}
 					{this.renderMailto("Xena import missing gene", "genes",
-						probeSelect === 'genes' && genes === NONE_STR)
+						probeSelect === 'genes' && probemap === NONE_STR)
 					}
 					<RadioButton label="My data uses probe names or other identifiers (e.g. 211300_s_at)" value='probes' />
-					{this.renderDropdown(this.onProbesChange, getProbemapOptions(_.getIn(this.props, ['probemaps', 'probes'])),
-						probes, "Probes", probeSelect === 'probes')
+					{this.renderDropdown(this.onProbemapChange, getProbemapOptions(_.getIn(this.props, ['probemaps', 'probes'])),
+						probemap, "Probes", probeSelect === 'probes')
 					}
 					{this.renderMailto("Xena import missing probe", "probes",
-						probeSelect === 'probes' && probes === NONE_STR)
+						probeSelect === 'probes' && probemap === NONE_STR)
 					}
 					<RadioButton label="Neither or I don't see my genes/transcripts/probes above" value='neither' />
 					{this.renderMailto("Xena import missing identifiers", "identifiers", probeSelect === 'neither')}
@@ -344,11 +344,10 @@ class ImportForm extends React.Component {
 	}
 
 	isProbesNextPageEnabled = () => {
-		const { genes, probes } = this.props.state,
+		const { probemap } = this.props.state,
 			radioOption = this.state.probeSelect;
 
-		return (radioOption === 'genes' && !!genes) || (radioOption === 'probes' && !!probes)
-			|| radioOption === 'neither';
+		return !!probemap || radioOption === 'neither';
 	}
 
 	onWizardPageChange = (currPageIndex, forwards) => () => {
@@ -377,9 +376,7 @@ class ImportForm extends React.Component {
 		this.setState({ probeSelect: value });
 	}
 
-	onGenesGhange = value => this.props.callback(['genes', value]);
-
-	onProbesChange = value => this.props.callback(['probes', value]);
+	onProbemapChange = value => this.props.callback(['probemap', value]);
 
 	onFileFormatChange = format => this.props.callback(['file-format', format]);
 
@@ -553,18 +550,4 @@ const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, t
 	);
 };
 
-// class ThemedImport extends React.Component {
-// 	render() {
-// 		return (
-// 		<ThemeProvider theme={appTheme}>
-// 			<ImportPage {...this.props}/>
-// 		</ThemeProvider>);
-// 	}
-// }
-
-// var selector = state => state;
-
-// header disappears after refresh
-// Button background is hacked in!!!!
-// module.exports = props => <ThemedImport {...props} selector={selector}/>;
 export default ImportPage;
