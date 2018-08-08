@@ -142,7 +142,7 @@ workflows:
               - build
             filters:
               branches:
-                only: master
+                only: build-opts
         - deploy-cc:
             requires:
               - build
