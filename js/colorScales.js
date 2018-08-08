@@ -26,7 +26,7 @@ var categoryMore = [
 		"#c49c94", // light tan
 		"#f7b6d2", // light pink
 		"#98df8a", // light green
-		"#c7c7c7"  // light grey
+//		"#c7c7c7"  // light grey
 	];
 
 var round = Math.round;
