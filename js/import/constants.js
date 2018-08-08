@@ -1,7 +1,5 @@
 'use strict';
 
-const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
-
 const DATA_TYPE = {
 	PHENOTYPE: 'phenotype',
 	MUTATION_BY_POS: 'mutation by position',
@@ -16,14 +14,38 @@ const FILE_FORMAT = {
 };
 
 const dataTypesOpts = [
-	"",
-	DATA_TYPE.PHENOTYPE,
-	"expression",
-	"gene-level copy number ",
-	DATA_TYPE.SEGMENTED_CN,
-	DATA_TYPE.MUTATION_BY_POS,
-	"gene-level mutation",
-	"methylation"
+	{
+		label: '',
+		value: ''
+	},
+	{
+		label: 'phenotype/clinical/sample type',
+		value: DATA_TYPE.PHENOTYPE
+	},
+	{
+		label: 'expression',
+		value: "expression"
+	},
+	{
+		label: 'gene-level copy number',
+		value: 'gene-level copy number'
+	},
+	{
+		label: DATA_TYPE.SEGMENTED_CN,
+		value: DATA_TYPE.SEGMENTED_CN
+	},
+	{
+		label: DATA_TYPE.MUTATION_BY_POS,
+		value: DATA_TYPE.MUTATION_BY_POS
+	},
+	{
+		label: 'gene-level mutation',
+		value: 'gene-level mutation'
+	},
+	{
+		label: 'methylation',
+		value: 'methylation'
+	}
 ];
 
 const steps = [
@@ -35,7 +57,7 @@ const steps = [
 const NONE_STR = 'None of these';
 
 module.exports = {
-	dataTypeOptions: getDropdownOptions(dataTypesOpts),
+	dataTypeOptions: dataTypesOpts,
 	steps,
 	NONE_STR,
 	DATA_TYPE,

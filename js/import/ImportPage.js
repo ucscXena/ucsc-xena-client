@@ -313,10 +313,6 @@ class ImportForm extends React.Component {
 				{ isImportSuccessful(this.props.state) &&
 				<div>
 					<p>Success!</p>
-
-					<p>Note that when visualizing your data
-						you will need to enter [Ensembl IDs, HUGO gene names, the identifiers in your file].
-					</p>
 				</div>
 				}
 			</div>
