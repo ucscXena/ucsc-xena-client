@@ -38,9 +38,6 @@ jobs:
     # 'See docs on artifact collection here https://circleci.com/docs/2.0/artifacts/'
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     # This is based on your 1.0 configuration file or project settings
-    - run:
-        working_directory: ~/ucscXena/ucsc-xena-client
-        command: nvm install 6.7.0 && nvm alias default 6.7.0
     # Dependencies
     #   This would typically go in either a build or a build-and-test job when using workflows
     # Restore the dependency cache
@@ -103,9 +100,6 @@ jobs:
     - checkout
     - attach_workspace:
         at: ~/ucscXena/ucsc-xena-client
-    - run:
-        working_directory: ~/ucscXena/ucsc-xena-client
-        command: nvm install 6.7.0 && nvm alias default 6.7.0
     - run: HOST=ec2-52-91-68-9.compute-1.amazonaws.com ./deploy
   deploy-cc:
     working_directory: ~/ucscXena/ucsc-xena-client
@@ -119,9 +113,6 @@ jobs:
     - checkout
     - attach_workspace:
         at: ~/ucscXena/ucsc-xena-client
-    - run:
-        working_directory: ~/ucscXena/ucsc-xena-client
-        command: nvm install 6.7.0 && nvm alias default 6.7.0
     - run: HOST=ec2-18-208-128-81.compute-1.amazonaws.com ./deploy
   deploy-beta:
     working_directory: ~/ucscXena/ucsc-xena-client
@@ -135,9 +126,6 @@ jobs:
     - checkout
     - attach_workspace:
         at: ~/ucscXena/ucsc-xena-client
-    - run:
-        working_directory: ~/ucscXena/ucsc-xena-client
-        command: nvm install 6.7.0 && nvm alias default 6.7.0
     - run: HOST=ec2-52-23-185-93.compute-1.amazonaws.com ./deploy
 workflows:
     version: 2
