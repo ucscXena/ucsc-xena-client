@@ -28,7 +28,6 @@ jobs:
     # https://circleci.com/docs/2.0/circleci-images/
     docker:
     - image: circleci/python:2.7.15-node-browsers
-      command: /sbin/init
     steps:
     # Machine Setup
     #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
@@ -96,8 +95,6 @@ jobs:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
     - image: circleci/python:2.7.15-node-browsers
-      command: /sbin/init
-      command: /sbin/init
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
@@ -114,7 +111,6 @@ jobs:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
     - image: circleci/python:2.7.15-node-browsers
-      command: /sbin/init
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
@@ -131,7 +127,6 @@ jobs:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
     - image: circleci/python:2.7.15-node-browsers
-      command: /sbin/init
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
