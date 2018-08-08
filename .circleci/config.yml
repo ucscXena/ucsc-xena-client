@@ -54,15 +54,19 @@ jobs:
     - run: export PATH="~/ucscXena/ucsc-xena-client/node_modules/.bin:$PATH"
     - run: npm install
     # You can remove the conditional and simply install the requirements file you use
-    - run: pip install -r requirements.txt
-    - run: pip install unittest-xml-reporting
+    - run:
+        command: |
+          virtualenv env
+          . env/bin/activate
+          pip install -r requirements.txt
+          pip install unittest-xml-reporting
     # Save dependency cache
     - save_cache:
         key: v2-dep-{{ .Branch }}-{{ epoch }}
         paths:
         # This is a broad list of cache paths to include many possible development environments
         # You can probably delete some of these entries
-        - ~/virtualenvs
+        - ./env
         - ./node_modules
     - persist_to_workspace:
         root: ~/ucscXena/ucsc-xena-client
