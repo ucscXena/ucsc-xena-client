@@ -27,46 +27,47 @@ jobs:
     # To see the list of pre-built images that CircleCI provides for most common languages see
     # https://circleci.com/docs/2.0/circleci-images/
     docker:
-    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-      command: /sbin/init
+    - image: circleci/python:2.7.15-node-browsers
     steps:
     # Machine Setup
     #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
     # The following `checkout` command checks out your code to your working directory. In 1.0 we did this implicitly. In 2.0 you can choose where in the course of a job your code should be checked out.
+    - run: sudo apt-get install libssl1.0-dev
     - checkout
     # Prepare for artifact and test results  collection equivalent to how it was done on 1.0.
     # In many cases you can simplify this from what is generated here.
     # 'See docs on artifact collection here https://circleci.com/docs/2.0/artifacts/'
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     # This is based on your 1.0 configuration file or project settings
-    - run:
-        working_directory: ~/ucscXena/ucsc-xena-client
-        command: nvm install 6.7.0 && nvm alias default 6.7.0
     # Dependencies
     #   This would typically go in either a build or a build-and-test job when using workflows
     # Restore the dependency cache
     - restore_cache:
         keys:
         # This branch if available
-        - v1-dep-{{ .Branch }}-
+        - v2-dep-{{ .Branch }}-
         # Default branch if not
-        - v1-dep-master-
+        - v2-dep-master-
         # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
-        - v1-dep-
+        - v2-dep-
     # The following line was run implicitly in your 1.0 builds based on what CircleCI inferred about the structure of your project. In 2.0 you need to be explicit about which commands should be run. In some cases you can discard inferred commands if they are not relevant to your project.
     - run: if [ -z "${NODE_ENV:-}" ]; then export NODE_ENV=test; fi
     - run: export PATH="~/ucscXena/ucsc-xena-client/node_modules/.bin:$PATH"
     - run: npm install
     # You can remove the conditional and simply install the requirements file you use
-    - run: pip install -r requirements.txt
-    - run: pip install unittest-xml-reporting
+    - run:
+        command: |
+          virtualenv env
+          . env/bin/activate
+          pip install -r requirements.txt
+          pip install unittest-xml-reporting
     # Save dependency cache
     - save_cache:
-        key: v1-dep-{{ .Branch }}-{{ epoch }}
+        key: v2-dep-{{ .Branch }}-{{ epoch }}
         paths:
         # This is a broad list of cache paths to include many possible development environments
         # You can probably delete some of these entries
-        - ~/virtualenvs
+        - ./env
         - ./node_modules
     - persist_to_workspace:
         root: ~/ucscXena/ucsc-xena-client
@@ -95,53 +96,44 @@ jobs:
   deploy-dev:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
-    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-      command: /sbin/init
+    - image: circleci/python:2.7.15-node-browsers
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
         fingerprints:
           - "07:16:e6:26:26:57:ff:7b:3e:79:cf:e6:55:57:8b:1d"
+    - run: sudo apt-get install rsync
     - checkout
     - attach_workspace:
         at: ~/ucscXena/ucsc-xena-client
-    - run:
-        working_directory: ~/ucscXena/ucsc-xena-client
-        command: nvm install 6.7.0 && nvm alias default 6.7.0
     - run: HOST=ec2-52-91-68-9.compute-1.amazonaws.com ./deploy
   deploy-cc:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
-    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-      command: /sbin/init
+    - image: circleci/python:2.7.15-node-browsers
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
         fingerprints:
           - "07:16:e6:26:26:57:ff:7b:3e:79:cf:e6:55:57:8b:1d"
+    - run: sudo apt-get install rsync
     - checkout
     - attach_workspace:
         at: ~/ucscXena/ucsc-xena-client
-    - run:
-        working_directory: ~/ucscXena/ucsc-xena-client
-        command: nvm install 6.7.0 && nvm alias default 6.7.0
     - run: HOST=ec2-18-208-128-81.compute-1.amazonaws.com ./deploy
   deploy-beta:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
-    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-      command: /sbin/init
+    - image: circleci/python:2.7.15-node-browsers
     shell: /bin/bash --login
     steps:
     - add_ssh_keys:
         fingerprints:
           - "07:16:e6:26:26:57:ff:7b:3e:79:cf:e6:55:57:8b:1d"
+    - run: sudo apt-get install rsync
     - checkout
     - attach_workspace:
         at: ~/ucscXena/ucsc-xena-client
-    - run:
-        working_directory: ~/ucscXena/ucsc-xena-client
-        command: nvm install 6.7.0 && nvm alias default 6.7.0
     - run: HOST=ec2-52-23-185-93.compute-1.amazonaws.com ./deploy
 workflows:
     version: 2
