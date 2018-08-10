@@ -159,7 +159,8 @@ const uploadProbemapFile = ({ name }) => {
         });
 };
 const getCohortArray = cohorts => cohorts.map(c => c.cohort);
-const getValueLabelList = (items) => items.map(item => ({label: item.label, value: {name: item.name, hash: item.hash}}));
+const getValueLabelList = (items) => items.map(item => ({label: item.label, userlevel: item.userlevel, value: {name: item.name, hash: item.hash}}))
+    .filter(item => (item.userlevel === "basic"));
 
 const getDefaultCustomCohort = (localCohorts, name = defaultStudyName, number = 1) => {
     return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `${defaultStudyName} (${number})`, ++number);

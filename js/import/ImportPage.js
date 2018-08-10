@@ -22,7 +22,7 @@ const pageRanges = [0, ...Array(4).fill(1), 2, 3];
 const pageStateIndex = _.object(pageStates, pageRanges);
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
-const getProbemapOptions = probes => [{label: "", value: ""}, ...probes, {label: NONE_STR, value: NONE_STR}];
+const getProbemapOptions = probes => [{label: "", value: "", userlevel: "basic"}, ...(_.sortBy(probes, 'label')), {label: NONE_STR, userlevel: "basic", value: NONE_STR}];
 
 //needs constants
 const isPhenotypeData = dataType => dataType === DATA_TYPE.PHENOTYPE;
