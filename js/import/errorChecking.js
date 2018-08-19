@@ -22,8 +22,6 @@ const getSampleIds = (lines, fileFormat) => {
     return sampleLine.slice(1);
 };
 
-const transposeLines = lines => _.zip(...lines);
-
 const filterEmpty = arr => arr.filter(elem => !!elem);
 
 const getErrDataType = (dataType) => dataType === DATA_TYPE.MUTATION_BY_POS || dataType === DATA_TYPE.SEGMENTED_CN ? dataType : 'dense';
@@ -78,7 +76,7 @@ const getErrors = (fileContent, fileFormat, dataType) => {
     filteredErrors = filteredErrors.filter(err => err.level === 'error');
 
     //get lines
-    const lines = fileContent.trim()
+    let lines = fileContent.trim()
         .split(/\r\n|\r|\n/g)
         .map(l => getColumns(l));
 
@@ -110,11 +108,17 @@ ERRORS = [
             const headerNames = getHeaderNames(lines, fileFormat),
                 result = [];
 
-            headerNames.forEach(name => {
-                if (name.length > HEADER_LENGTH_LIMIT && result.length < MULTI_ERROR_LIMIT) {
+            for(let i = 0; i < headerNames.length; i++) {
+                const name = headerNames[i] || '';
+
+                if (name.length > HEADER_LENGTH_LIMIT) {
                     result.push(message(name));
+
+                    if(result.length >= MULTI_ERROR_LIMIT) {
+                        break;
+                    }
                 }
-            });
+            }
 
             return result.length ? result : null;
         },
@@ -147,18 +151,22 @@ ERRORS = [
         level: 'error',
         forType: ['dense'],
         getErrors: (lines, fileFormat) => {
-            const message = (line, trns) =>
-                `The number of headers doesn't match the number of columns on ${trns ? 'column' : 'line'} ${line}. Please edit the file and reload`;
+            const message = (line) =>
+                `The number of headers doesn't match the number of columns on line ${line}. Please edit the file and reload`;
 
-            const headerLen = filterEmpty(getHeaderNames(lines, fileFormat)).length,
+            const headerLen = lines[0].length,
                 result = [],
                 isTransposed = isColumns(fileFormat);
 
-            lines = isTransposed ? transposeLines(lines) : lines;
+            let i = isTransposed ? 0 : 1;
 
-            for (let i = 1; i < lines.length; i++) {
-                if (lines[i].length !== headerLen && result.length < MULTI_ERROR_LIMIT) {
-                    result.push(message(i, isTransposed));
+            for (i; i < lines.length; i++) {
+                if (lines[i].length !== headerLen) {
+                    result.push(message(i + 1));
+
+                    if(result.length >= MULTI_ERROR_LIMIT) {
+                        break;
+                    }
                 }
             }
             return result;

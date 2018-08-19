@@ -433,9 +433,9 @@ class ImportForm extends React.Component {
 		const { dataType } = this.props.state,
 			{ wizardPage } = this.props;
 
+		this.props.callback(['wizard-page', getNextPageByDataType(wizardPage, true, dataType)]);
 		this.props.callback(['error-check-inprogress', true]);
 		this.props.callback(['import-file']);
-		this.props.callback(['wizard-page', getNextPageByDataType(wizardPage, true, dataType)]);
 	}
 
 	onLoadWithWarnings = () => {
