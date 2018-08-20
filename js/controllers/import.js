@@ -5,6 +5,8 @@ import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
 import { cohortSummary, probemapList } from '../xenaQuery';
 import { assoc, assocIn, assocInAll, has, getIn, groupBy, object, pluck } from "../underscore_ext";
+import infer from '../import/infer.js';
+import { FILE_FORMAT } from '../import/constants';
 
 import getErrors from '../import/errorChecking';
 
@@ -166,6 +168,32 @@ const getDefaultCustomCohort = (localCohorts, name = defaultStudyName, number = 
     return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `${defaultStudyName} (${number})`, ++number);
 };
 
+// XXX This is a bit rough, just demonstrating how we might approach incorporating
+// the inferences on data format. We may get a suggestion of where the samples are
+// (1st column or 1st row), an ordered list of matching probemaps (or undefined),
+// and an ordered list of matching cohorts (or undefined). We stash all of these,
+// and pre-populate some form fields, like cohortRadio and fileFormat. We could
+// pre-poulate probemap, but due to the current probemap wizard screen it would
+// require first identifying the correct radio button (gene/transcript or probe).
+// We probably want to refactor that screen, instead. There's more we might
+// infer, e.g. if we match probemaps, it probably isn't a segmented or mutation
+// dataset, and we could drop those from the data type selection.
+const inferForm = (state, fileContent) => {
+	var inference = infer(fileContent),
+		{samples, probemaps, cohorts} = inference || {},
+		inferredOrientation = samples === 'row' ?
+				  FILE_FORMAT.GENOMIC_MATRIX : undefined,
+		cohort = getIn(cohorts, [0, 'name']),
+		probemap = getIn(probemaps, [0, 'name']);
+
+	return assocIn(state,
+			['recommended'], inference,
+			['form', 'fileFormat'], inferredOrientation,
+			['form', 'cohortRadio'], cohort ? 'existingPublicCohort' : undefined,
+			['form', 'cohort'], cohort,
+			['form', 'probemap'], probemap);
+};
+
 const importControls = {
     'file': (state, fileHandle) => assocInAll(state, ['file'], fileHandle, ['fileName'], fileHandle.name),
     'import-file-post!': (serverBus, state, newState) =>
@@ -177,7 +205,7 @@ const importControls = {
     'update-file-done': (state) => assocIn(state, ['status'], 'File successfully saved!'),
     'read-file-post!': (serverBus, state, newState, fileHandle) => serverBus.next(['read-file-done', readFileObs(fileHandle)]),
     'read-file-done': (state, fileContent) =>
-        assocInAll(state,
+        assocInAll(inferForm(state, fileContent),
             ['status'], 'File successfully read!',
             ['fileContent'], fileContent),
     'set-status': (state, status) => assocIn(state, ['status'], status),
@@ -218,7 +246,7 @@ const formControls = {
     'file-format': changeFormProp('fileFormat'),
     'data-type': changeFormProp('dataType'),
     'cohort-radio': changeFormProp('cohortRadio'),
-    'cohort': changeFormProp('cohort'),
+    'import-cohort': changeFormProp('cohort'),
     'custom-cohort': changeFormProp('customCohort'),
     'errors': changeFormProp('errors'),
     'probemap': changeFormProp('probemap'),

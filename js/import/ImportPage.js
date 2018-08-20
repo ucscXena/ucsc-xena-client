@@ -363,7 +363,7 @@ class ImportForm extends React.Component {
 	}
 
 	onCohortRadioChange = value => {
-		this.props.callback(['cohort', '']);
+		this.props.callback(['import-cohort', '']);
 		this.props.callback(['cohort-radio', value]);
 	}
 
@@ -382,7 +382,7 @@ class ImportForm extends React.Component {
 		this.props.callback(['data-type', type]);
 	}
 
-	onCohortChange = cohort => this.props.callback(['cohort', cohort]);
+	onCohortChange = cohort => this.props.callback(['import-cohort', cohort]);
 
 	onCustomCohortChange = cohort => this.props.callback(['custom-cohort', cohort]);
 
@@ -484,7 +484,7 @@ class ImportPage extends React.Component {
 	onViz = () => {
 		const cohort = _.getIn(this.props.state, ['import', 'form', 'cohort']),
 			customCohort = _.getIn(this.props.state, ['import', 'form', 'customCohort']);
-		this.props.callback(['cohort', cohort ? cohort : customCohort]);
+		this.props.callback(['import-cohort', cohort ? cohort : customCohort]);
 		this.props.callback(['navigate', 'heatmap']);
 	};
 
