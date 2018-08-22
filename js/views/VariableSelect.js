@@ -169,16 +169,21 @@ var applyInitialState = {
 			selected = [i],
 			valid = isValid[mode]('', selected);
 
-		return _.assocIn(defaults,
-			['mode'], mode,
-			['basicFeatures'], _.uniq([...defaults.basicFeatures, i]),
-			['selected', mode, false], selected,
-			['valid'], valid);
-	}
+		return i === '-1' ?
+			_.assocIn(defaults, ['unavailable'], true) :
+			_.assocIn(defaults,
+				['mode'], mode,
+				['basicFeatures'], _.uniq([...defaults.basicFeatures, i]),
+				['selected', mode, false], selected,
+				['valid'], valid);
+	},
+	'undefined': (fields, dataset, datasets, features, preferred, defaults) =>
+		_.assocIn(defaults, ['unavailable'], true)
 };
 
 var datasetMode = (datasets, dataset) =>
-	notIgnored(datasets[dataset]) ? 'Genotypic' : 'Phenotypic';
+	datasets[dataset] ? (notIgnored(datasets[dataset]) ? 'Genotypic' : 'Phenotypic') :
+		undefined;
 
 var matchDatasetFields = multi((datasets, dsID, {sig}) => {
 	var meta = datasets[dsID];
@@ -452,17 +457,19 @@ class VariableSelect extends PureComponent {
 
 	render() {
 		var {mode, matches, guess: {hasCoord}, advanced, valid,
-				loading, error, basicFeatures} = this.state,
+				loading, error, unavailable, basicFeatures} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
 			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
 			formError = getWarningText(matches, datasets, selected, hasCoord, value).join(' ')
 				|| error,
+			subtitle = unavailable ? 'This variable is currently unavailable. You may choose a different variable, or cancel to continue viewing the cached data.' : undefined,
 			contentSpecificHelp = _.getIn(helpText, [mode]),
 			ModeForm = getModeFields[mode],
 			wizardProps = {
 				colId,
 				controls,
+				subtitle,
 				title,
 				contentSpecificHelp,
 				onDone: this.onDone,
