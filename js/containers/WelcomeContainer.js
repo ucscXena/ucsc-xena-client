@@ -17,9 +17,9 @@ var links = [
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
 	['heatmap', 'f9d1b795c2cb324d227a3a0472c3427c',
 		'PDL1 and PD1 expression across 39 cancer types in TCGA and TARGET'],
-	['heatmap', '1ee78896f84e5c0b55c6bd9ff1decff1',
+	['heatmap', '9875171572aa5f9df2d5e1fc937fbe8e',
 		'ERG-TMPRSS2 fusion by chr21 deletion in prostate cancer'],
-	['heatmap', '6eca4f596dc04446b6fcee5c62a28af2',
+	['heatmap', '54a1a2d7ebf3a5e091d58431c23df85a',
 		'Two pathways to telomere lengthening in lower grade glioma: TERT & ATRX'],
 	['heatmap', '86aa2f71f08db3fe81f192915a303d97',
 		'Genetic separation of lower grade gliomas: one characterized by loss of chromosomes 1p & 19q, \
