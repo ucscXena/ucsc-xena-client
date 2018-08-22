@@ -139,7 +139,10 @@ workflows:
     version: 2
     build-n-deploy:
       jobs:
-        - build
+        - build:
+            filters:
+              tags:
+                only: /v[0-9]+(\.[0-9]+)*/
         - deploy-dev:
             requires:
               - build
@@ -157,6 +160,6 @@ workflows:
               - build
             filters:
               tags:
-                only: /^v[0-9]+(\.[0-9]+)*$/
+                only: /v[0-9]+(\.[0-9]+)*/
               branches:
                 ignore: /.*/
