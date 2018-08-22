@@ -122,8 +122,7 @@ class BookmarkMenu extends React.Component {
 		}
 	};
 
-	onViewBookmark(ev) {
-		var id = ev.currentTarget.dataset.action;
+	onViewBookmark(id) {
 		window.location = window.location.href + `?bookmark=${id}`;
 	}
 
@@ -161,9 +160,14 @@ class BookmarkMenu extends React.Component {
 					<input className={compStyles.bookmarkInput} ref={(input) => this.bookmarkEl = input} value={bookmark || ''}/>
 					<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>
 				</Menu>
-				<Menu position='auto' active={recent && recentBookmarks.length > 0} className={compStyles.iconBookmark} iconRipple={false} onHide={this.onRecentHide}>
+				<Menu onSelect={this.onViewBookmark}
+						position='auto'
+						active={recent && recentBookmarks.length > 0}
+						className={compStyles.iconBookmark}
+						iconRipple={false}
+						onHide={this.onRecentHide}>
 					{recentBookmarks.map(({id, time}) => (
-						<MenuItem onClick={this.onViewBookmark} key={id} data-action={id} title={null} caption={`${time.replace(/ GMT.*/, '')} (${id.slice(0, 4)})`}/>
+						<MenuItem key={id} value={id} title={null} caption={`${time.replace(/ GMT.*/, '')} (${id.slice(0, 4)})`}/>
 						))}
 				</Menu>
 			</div>);
