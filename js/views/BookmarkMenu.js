@@ -146,7 +146,7 @@ class BookmarkMenu extends React.Component {
 						<MenuItem onClick={this.onRecent} title={null} caption='Recent bookmarks'/> : null}
 					<MenuItem onClick={this.onExport} title={null} caption='Export'/>
 					<MenuItem onClick={this.onImport} title={null} caption='Import'/>
-					<Link className={compStyles.help} target='_blank' href='http://xena.ucsc.edu/bookmarks/' label='Help'/>
+					<Link className={compStyles.help} target='_blank' href='https://ucsc-xena.gitbook.io/project/overview-of-features/bookmarks' label='Help'/>
 					{bookmark || loading ? <MenuDivider/> : null}
 					{bookmark || loading ? (
 						<MenuItem
