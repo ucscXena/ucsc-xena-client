@@ -317,7 +317,11 @@ function addWizardColumns(Component) {
 
 		render() {
 			var {children, appState: {editing, wizardMode}} = this.props,
-				columns = editing != null || wizardMode ? this.addColumns() : children;
+				columns = editing != null || wizardMode ? this.addColumns() :
+					// This looks like a noop, but toArray changes element keys. If
+					// we don't do this, there's a mismatch in keys during editing,
+					// which causes expensive re-mounts.
+					React.Children.toArray(children);
 			return (
 				<Component {...this.props}>
 					{columns}
