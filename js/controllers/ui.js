@@ -16,8 +16,10 @@ var {compose, make, mount} = require('./utils');
 var {JSONToqueryString} = require('../dom_helper');
 var {parseBookmark} = require('../bookmark');
 import parseManifest from '../manifest';
+var gaEvents = require('../gaEvents');
 
 function fetchBookmark(serverBus, bookmark) {
+	gaEvents('bookmark', 'load');
 	serverBus.next(['bookmark', Rx.Observable.ajax({
 		responseType: 'text',
 		method: 'GET',

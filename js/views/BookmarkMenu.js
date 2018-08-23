@@ -9,6 +9,7 @@ var Rx = require('../rx');
 var {createBookmark, getRecent, setRecent} = require('../bookmark');
 
 var compStyles = require('./BookmarkMenu.module.css');
+var gaEvents = require('../gaEvents');
 
 // XXX This is a horrible work-around for react-toolbox menu limitations.
 // We want the Bookmark MenuItem to not close the menu. Menu closes when
@@ -45,6 +46,7 @@ class BookmarkMenu extends React.Component {
 	}
 
 	onBookmark = () => {
+		gaEvents('bookmark', 'create');
 		var {getState} = this.props;
 		this.setState({loading: true});
 		Rx.Observable.ajax({
@@ -75,6 +77,7 @@ class BookmarkMenu extends React.Component {
 	};
 
 	onExport = () => {
+		gaEvents('bookmark', 'export');
 		var {getState} = this.props;
 		var url = URL.createObjectURL(new Blob([JSON.stringify(getState())], { type: 'application/json' }));
 		var a = document.createElement('a');
@@ -90,6 +93,7 @@ class BookmarkMenu extends React.Component {
 	};
 
 	onImportSelected = (ev) => {
+		gaEvents('bookmark', 'import');
 		var file = ev.target.files[0],
 			reader = new FileReader(),
 			{onImport} = this.props;
