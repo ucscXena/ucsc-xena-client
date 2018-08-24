@@ -66,3 +66,24 @@ ff5c88ca4400e0d3e407c0a17580487f gdocs BTEP tutorial and derivatives
 0828c7116a3aa97ffaf1c6cbcfef5caa gdocs getting started docs.google.com/presentation/d/1J0cbcWLkf4zL3q9sOCU8tRg7nvjYqlySMurRTTtDCrg
 5566249ece6da961b903b43f9f5fe0d1 gdocs getting started docs.google.com/presentation/d/1J0cbcWLkf4zL3q9sOCU8tRg7nvjYqlySMurRTTtDCrg
 a72d4b9f3423ef5f8cd1faec339451c2 gdocs getting started docs.google.com/presentation/d/1J0cbcWLkf4zL3q9sOCU8tRg7nvjYqlySMurRTTtDCrg
+f692a82f02d048d4ca17132461f0dfd7 gitbook help how do i compare tumor vs normal
+5fcb1fc6d5894bd095b5994cc0ebd132 gitbook help how do i compare tumor vs normal
+d7c79a54a72523d6e41a4917ed74eaff gitbook help how do i make subgroups and compare gene expression
+2f4f49697161563400832a2453063af4 gitbook help how do i compare gene expression
+94e22b575af4689a7f40bba57c731317 gitbook help how do i multiple cancer types
+647fda97e21e3626d17788770855bd3c gitbook help how do i multiple cancer types
+d34a38000eca5f2bfcf936d5e06066dc gitbook help how do i multiple cancer types
+37937e465c28f5b9f287c960f641e1b9 gitbook help how do i multiple cancer types
+2401ccb792e256d7397008b24af20565 gitbook help features signatures
+2fb190b36465d2b9f0c9dcfc99fd8139 datapages cohort_human brain transcriptome (Darmanis PNAS 2015)
+ee5f4923ba2bfae9b43cb5607e7aa083 datapages cohort_Cancer Cell Line Encyclopedia (CCLE)
+363ce1ec484acc03ee67754bebb33a93 datapages cohort_1.3 Million Brain Cells from E18 Mice
+5fbbe464a39c8413e508630bb97d8d69 datapages ATAC-seq_Figure1FG
+3d71a8d22ac8b65207399f927ef50ea9 datapages ATAC-seq_Figure1FG
+ebc9f098f9fddb943cae09ad2e412917 datapages ATAC-seq_Figure1FG
+a39f856a91aee6339320116137982ab3 datapages ATAC-seq_Figure1FG
+50b215e3a402a711270b29e21c21a42c datapages ATAC-seq_Figure1FG
+bc7f3f46b042bcf5c099439c2816ff01 hub pages Toil
+f7c231271f45975124d20920c70e7643 hub pages pancan atlas
+a33c3e8433c11739df05f95b58c53575 hub pages pancan atlas
+db7f7034537c086fe40a8e096d27480f hub pages pcawg
