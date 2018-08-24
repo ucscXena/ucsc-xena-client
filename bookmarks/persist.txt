@@ -1,1 +1,34 @@
-86aa2f71f08db3fe81f192915a303d97 carousel LGG
+86aa2f71f08db3fe81f192915a303d97 carousel LGG 1p 19q
+ef22bef7c049426ceb011f0a7914ddc4 carousel FOXM1
+a659e770d2599acfad6a8f9b5ffbe57f carousel ICGC mutations
+6946d911d6b0cd473c442fe99f6a695a carousel PAM50 KM
+e5329f4cc13b80c91d3fd6810aac1a93 carousel LGG GBM
+f9d1b795c2cb324d227a3a0472c3427c carousel PDL1 TCGA TARGET
+9875171572aa5f9df2d5e1fc937fbe8e carousel ERG-TMPRSS2 PAAD
+54a1a2d7ebf3a5e091d58431c23df85a carousel TERT ATRX LGG
+25a9782db8c1166ce7bae6686e98124c carousel transcript view
+b0c41184460dcb7660994479dc6a13de ghost visual spreadsheet
+7d28acf849f6e5aa974bce6e014a5f1f ghost gene affect survival
+37623f6830b99f5135213b8cb7a99643 ghost gene affect survival
+80d9c57b471b654cc569d4ceb44e6591 ghost transcript view
+a41eaca4ce7772b8a6eb9614d3f73aec ghost getting started live example
+cbf492472144325cd22203c823bee8de ghost getting started live example
+94ce39c2f64cf3b69da27eb048b3db05 ghost getting started live example
+b7e699f56f9646e382ea15c358257417 ghost getting started live example
+7a0381a686a2f77ebdbdc41d818e825d ghost KM help
+fdb3fa1573bc4f293281c6059e7ca702 ghost whole-chrom segmented CNV
+3001c94bea71d6b0aa9de085ef02f637 ghost whole-chrom segmented CNV
+0e19457174cfd6d085c63e42f100f9f2 ghost segmented CNV
+3b36665153902a9fd70ebe1dcf25503c ghost segmented CNV
+afde237fe86016c42cf9c508ff443a65 ghost exon transcript
+27d8bc5b7904f768374a1eeae9baed81 ghost mutation
+732d22d848d7c709b3e68ee9beef4310 ghost mutation
+6098aca9a00041d6271f18f2b471a241 ghost mupit
+be9ace892275fa81257e7e03f2533b99 ghost box scatter
+3b4dd2fb39fab70324c5cda834abcbba ghost box scatter
+1c880a8cab1359f89b4be28272fc59c6 ghost pattern two genes
+95961d4af0391f6f79da11b6a8f30a61 ghost filter for KM
+0c7bd0c010ebf2b6dd7e2139f09d4c22 ghost filter for KM
+c31a64b02f5372698294dd0cdad48991 ghost filter for KM
+a56b47aefabb74042622547395a6b0a0 ghost filter for KM
+ff8e5ad1e307e246c076d0de754bd370 ghost filter for KM
