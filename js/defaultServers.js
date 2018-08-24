@@ -20,7 +20,7 @@ module.exports = {
 		[servers.publicHub]: 'UCSC public hub',
 		[servers.tcgaHub]: 'TCGA hub',
 		[servers.icgcHub]: 'ICGC hub',
-		[servers.toilHub]: 'GA4GH (TOIL) hub',
+		[servers.toilHub]: 'UCSC Toil RNAseq Recompute',
 		[servers.pcawgHub]: 'PCAWG public hub',
 		[servers.singlecellHub]: 'Single-cell RNAseq hub',
 		[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
