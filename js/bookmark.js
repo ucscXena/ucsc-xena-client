@@ -34,9 +34,9 @@ function setRecent(id) {
 module.exports = {
 	version,
 	hasBookmark: () => location.search.match(/^\?bookmark=/),
-	getBookmark: () => location.search.replace(/^\?bookmark=([0-9a-z]+)/, '$1'),
+	getBookmark: () => location.search.replace(/^\?bookmark=(_?[0-9a-z]+)/, '$1'),
 	resetBookmarkLocation: () => history.replaceState({}, 'UCSC Xena',
-			location.pathname + location.search.replace(/\?bookmark=([0-9a-z]+)/, '')),
+			location.pathname + location.search.replace(/\?bookmark=(_?[0-9a-z]+)/, '')),
 	createBookmark: stringify,
 	// Need to add version check & merge of state + bookmark.
 	parseBookmark: parse,

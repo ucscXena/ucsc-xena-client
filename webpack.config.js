@@ -14,7 +14,7 @@ var htmlPlugin = process.argv.indexOf('--disable-html-plugin') === -1 ?
 
 module.exports = {
 	historyApiFallback: true,
-	entry: {heatmap: './js/main', docs: './js/docs', register: './js/register'},
+	entry: {heatmap: './js/main', docs: './js/docs', register: './js/register', bookmarks: './js/admin/bookmarks.js'},
 	output: {
 		path: __dirname + "/build",
 		publicPath: "../",
@@ -27,11 +27,9 @@ module.exports = {
 		proxy: {
 			'/api/**': {
 				changeOrigin: true,
-				target: 'https://xenabrowser.net/api',
-				// XXX For TIES work, hit the dev backend.
-//				target: 'http://dev.xenabrowser.net/api',
+				target: 'http://dev.xenabrowser.net/api',
 				// For local django dev, use this instead & remove changeOrigin.
-				//target: 'http://localhost:8000/',
+//				target: 'http://localhost:8000/',
 				pathRewrite: {'^/api': ''}
 			}
 		}
