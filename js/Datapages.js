@@ -235,8 +235,8 @@ var getPreferred = (wizard, cohort) =>
 
 class CohortPage extends React.Component {
 	onViz = () => {
-		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
-			cohort = getIn(datapages, ['cohort', 'cohort'], COHORT_NULL);
+		var {params, spreadsheet: {cohort: currentCohort}} = this.props.state,
+			cohort = params.cohort;
 
 		if (cohort !== get(currentCohort, 'name')) {
 			this.props.callback(['cohort', cohort]);
@@ -249,7 +249,7 @@ class CohortPage extends React.Component {
 	render() {
 		var {hubParams, state: {datapages, params, wizard}} = this.props,
 			cohort = getIn(datapages, ['cohort', 'cohort']) === params.cohort ?
-				datapages.cohort : {cohort: '...', datasets: []},
+				datapages.cohort : {cohort: `${params.cohort} ...`, datasets: []},
 			{callback} = this.props,
 			dsGroups = groupBy(values(cohort.datasets), 'dataSubType'),
 			dataSubTypes = sortBy(keys(dsGroups), g => g.toLowerCase()),
