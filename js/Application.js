@@ -14,7 +14,7 @@ import nav from './nav';
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 // should really be in a config file.
-const searchHelp = 'http://xena.ghost.io/highlight-filter-help/';
+const searchHelp = 'https://ucsc-xena.gitbook.io/project/overview-of-features/filter-and-subgrouping';
 
 class Application extends Component {
 //	onPerf = () => {
