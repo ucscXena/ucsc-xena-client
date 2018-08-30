@@ -34,7 +34,7 @@ module.exports = {
 		servers.pancanAtlasHub,
 		servers.icgcHub,
 		servers.toilHub,
-		servers.treehouseHub,
+//		servers.treehouseHub,
 		servers.gdcHub
 	],
 	publicServers: [
@@ -44,7 +44,7 @@ module.exports = {
 		servers.toilHub,
 		servers.pancanAtlasHub,
 		servers.pcawgHub,
-		servers.treehouseHub,
+//		servers.treehouseHub,
 		servers.gdcHub
 	]
 };
