@@ -395,7 +395,8 @@ class DatasetPage extends React.Component {
 		var {callback, state, hubParams} = this.props,
 			{params: {host, dataset}, datapages} = state,
 			{meta, probeCount = 0, data, downloadLink, probemapLink, dataset: currentDataset,
-				host: currentHost} = get(datapages, 'dataset', {});
+				host: currentHost} = get(datapages, 'dataset', {}),
+			githubDescripton = get(datapages, 'datasetDescription', null);
 
 		if (!meta || currentHost !== host || currentDataset !== dataset) {
 			return (
@@ -419,7 +420,7 @@ class DatasetPage extends React.Component {
 				</div>
 				<h2>dataset: {(dataSubType ? dataSubType + ' - ' : '') + label}</h2>
 				{headerValue(longTitle)}
-				{htmlValue(description)}
+				{markdownValue(githubDescripton) || htmlValue(description)}
 				{setKey(flatten([
 					dataPair('cohort', cohort, toCohortLink(this.onCohort, hubParams)),
 					dataPair('dataset ID', name),

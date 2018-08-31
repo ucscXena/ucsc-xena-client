@@ -38,6 +38,9 @@ var hubMeta = host => ajaxGet(hostToGitURL(host)).catch(() => ajaxGet(`${host}/d
 var cohortMeta = cohort => ajaxGet(`${cohortMetaHost}/cohort_${cohort}/info.mdown`).map(r => r.response)
 	.catch(() => of(undefined));
 
+var datasetDescription = dataset => ajaxGet(`${cohortMetaHost}/dataset_${dataset.replace(/\//, '_')}/info.mdown`).map(r => r.response)
+	.catch(() => of(undefined));
+
 var getMarkDown = url => ajaxGet(url).map(r => r.response)
 	.catch(() => of(undefined));
 
@@ -57,7 +60,7 @@ function fetchCohortData(serverBus, state) {
 	var {cohort} = state.params,
 		servers = userServers(state.spreadsheet);
 	serverBus.next(['cohort-data', datasetQuery(servers, {name: cohort}), cohort]);
-	serverBus.next(['cohort-data-meta', cohortMeta(cohort), cohort]);
+	serverBus.next(['cohort-data-meta', cohortMeta(cohort)]);
 }
 
 function fetchMarkDown(serverBus, state) {
@@ -146,6 +149,7 @@ var datasetMetaAndLinks = (host, dataset) => {
 function fetchDataset(serverBus, state) {
 	var {host, dataset} = state.params;
 	serverBus.next(['dataset-meta', datasetMetaAndLinks(host, dataset), host, dataset]);
+	serverBus.next(['dataset-description', datasetDescription(dataset)]);
 }
 
 function fetchIdentifiers(serverBus, state) {
@@ -184,13 +188,14 @@ var controls = {
 				(list = []) => concat(list, cohorts)),
 	'cohort-data': (state, datasets, cohort) =>
 		assocIn(state,
-				['datapages', 'cohort', 'cohort'], cohort,
-				['datapages', 'cohort', 'datasets'], datasets),
+			   ['datapages', 'cohort', 'cohort'], cohort,
+			   ['datapages', 'cohort', 'datasets'], datasets),
 	'cohort-data-meta': (state, meta) =>
-		assocIn(state,
-			   ['datapages', 'cohort', 'meta'], meta),
+		assocIn(state, ['datapages', 'cohort', 'meta'], meta),
 	'dataset-meta': (state, metaAndLinks, host, dataset) =>
 		assocIn(state, ['datapages', 'dataset'], {host, dataset, ...metaAndLinks}),
+	'dataset-description': (state,  description) =>
+		assocIn(state, ['datapages', 'datasetDescription'], description),
 	'dataset-identifiers': (state, list, host, dataset) =>
 		assocIn(state, ['datapages', 'identifiers'], {host, dataset, list}),
 	'dataset-samples': (state, list, host, dataset) =>
