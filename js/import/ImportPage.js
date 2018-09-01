@@ -59,7 +59,6 @@ class ImportForm extends React.Component {
 	constructor() {
 		super();
 		this.state = {
-			probeSelect: null,
 			//ui state
 			fileReadInprogress: false,
 			showMoreErrors: false,
@@ -359,10 +358,11 @@ class ImportForm extends React.Component {
 	}
 
 	isProbesNextPageEnabled = () => {
-		const { probemap } = this.props.state,
-			radioOption = this.state.probeSelect;
+		const { probemap } = this.props.state;
 
-		return !!probemap || radioOption === 'neither';
+		const recommendedProbemaps = _.getIn(this.props, ['recommended', 'probemaps']);
+
+		return !!probemap || !(recommendedProbemaps && recommendedProbemaps.length);
 	}
 
 	onWizardBack = () => {
@@ -393,11 +393,6 @@ class ImportForm extends React.Component {
 		this.props.callback(['cohort-radio', value]);
 	}
 
-	onProbeRadioChange = value => {
-		this.resetProbemap();
-		this.setState({ probeSelect: value });
-	}
-
 	onProbemapChange = value => this.props.callback(['probemap', value]);
 
 	onFileFormatChange = format => this.props.callback(['file-format', format]);
@@ -417,8 +412,6 @@ class ImportForm extends React.Component {
 	onAssemblyChange = assembly => this.props.callback(['assembly', assembly]);
 
 	onRetryMetadata = () => {
-		this.setState({probeSelect: null});
-
 		this.props.callback(['clear-metadata']);
 		this.props.callback(['wizard-page', 1]);
 		this.props.callback(['set-default-custom-cohort']);
@@ -449,7 +442,6 @@ class ImportForm extends React.Component {
 	}
 
 	onImportMoreData = () => {
-		this.setState({probeSelect: null});
 		this.props.callback(['reset-import-state']);
 		this.props.callback(['get-local-cohorts']);
 		this.props.callback(['get-probemaps']);
