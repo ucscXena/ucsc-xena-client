@@ -22,7 +22,11 @@ const pageRanges = [0, ...Array(4).fill(1), 2, 3];
 const pageStateIndex = _.object(pageStates, pageRanges);
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
-const getProbemapOptions = probes => [{label: "", value: "", userlevel: "basic"}, ...(_.sortBy(probes, 'label')), {label: NONE_STR, userlevel: "basic", value: NONE_STR}];
+const getProbemapOptions = probes => [
+	{label: "", value: "", userlevel: "basic"},
+	...probes,
+	{label: NONE_STR, userlevel: "basic", value: NONE_STR}
+];
 
 const isPhenotypeData = dataType => dataType === DATA_TYPE.PHENOTYPE;
 const isMutationOrSegmentedData = dataType => dataType === DATA_TYPE.MUTATION_BY_POS || dataType === DATA_TYPE.SEGMENTED_CN;
@@ -56,7 +60,6 @@ class ImportForm extends React.Component {
 		super();
 		this.state = {
 			probeSelect: null,
-			pageHistory: [],
 			//ui state
 			fileReadInprogress: false,
 			showMoreErrors: false,
@@ -232,29 +235,42 @@ class ImportForm extends React.Component {
 	}
 
 	probeSelectionPage() {
-		const probeSelect = this.state.probeSelect,
-			{ fileFormat, probemap } = this.props.state;
+		const { fileFormat, probemap } = this.props.state;
+
+		const recommendedProbemaps = _.getIn(this.props, ['recommended', 'probemaps']);
+		const recommendationsExist = recommendedProbemaps && recommendedProbemaps.length;
+		let probemapsToShow = [],
+			seletedProbeMapLabel = '';
+
+		if (recommendationsExist) {
+			const existingProbemaps = _.getIn(this.props, ['probemaps']);
+
+			probemapsToShow = recommendedProbemaps
+				.map(p => existingProbemaps.find(existing => existing.value.name === p.name))
+				.filter(p => !!p);
+
+			seletedProbeMapLabel = _.getIn(probemapsToShow, [0, 'label']);
+		}
+
+		const text = recommendationsExist ?
+			<div>
+				<h4>We predict your data uses <b>{seletedProbeMapLabel}</b> type file.</h4>
+				<h4>If this is not correct, choose the correct one from the drop down</h4>
+			</div>
+			: <h4>We don't recognize the identifiers in your data. Sorry!</h4>;
 
 		return (
 			<div>
-				<RadioGroup value={probeSelect} onChange={this.onProbeRadioChange}>
-					<RadioButton label="My data uses gene or transcript names (e.g. TP53, ENST00000619485.4)" value='genes' />
-					{this.renderDropdown(this.onProbemapChange, getProbemapOptions(_.getIn(this.props, ['probemaps', 'genes'])),
-					probemap, "Genes or transcripts", probeSelect === 'genes')
-					}
-					{this.renderMailto("Xena import missing gene", "genes",
-						probeSelect === 'genes' && probemap === NONE_STR)
-					}
-					<RadioButton label="My data uses probe names or other identifiers (e.g. 211300_s_at)" value='probes' />
-					{this.renderDropdown(this.onProbemapChange, getProbemapOptions(_.getIn(this.props, ['probemaps', 'probes'])),
-						probemap, "Probes", probeSelect === 'probes')
-					}
-					{this.renderMailto("Xena import missing probe", "probes",
-						probeSelect === 'probes' && probemap === NONE_STR)
-					}
-					<RadioButton label="Neither or I don't see my genes/transcripts/probes above" value='neither' />
-					{this.renderMailto("Xena import missing identifiers", "identifiers", probeSelect === 'neither')}
-				</RadioGroup>
+				{text}
+				{!!recommendationsExist &&
+					<Dropdown
+					onChange={this.onProbemapChange}
+					source={getProbemapOptions(probemapsToShow)}
+					value={probemap}
+					className={[styles.field, styles.inline]. join(' ')}
+				/>}
+				{ this.renderMailto("Xena import missing identifiers", "identifiers", probemap === NONE_STR || !recommendationsExist) }
+
 				<DenseTable fileContent={this.props.fileContent}
 					highlightRow={fileFormat === FILE_FORMAT.GENOMIC_MATRIX} highlightColumn={fileFormat === FILE_FORMAT.CLINICAL_MATRIX}
 				/>
@@ -329,8 +345,9 @@ class ImportForm extends React.Component {
 	}
 
 	renderMailto(subject, keyword, display) {
-		return display ? <p className={styles.mailTo}><a href={`mailto:genome-cancer@soe.ucsc.edu?subject=${subject}`}>
-			Let us know which {keyword} you're using</a> so we can better support you in the future.</p>
+		return display ?
+		<p className={styles.mailTo}><a href={`mailto:genome-cancer@soe.ucsc.edu?subject=${subject}`}>
+		Let us know which {keyword} you're using</a> so we can better support you in the future.</p>
 		: null;
 	}
 
@@ -349,11 +366,12 @@ class ImportForm extends React.Component {
 	}
 
 	onWizardBack = () => {
-		this.props.callback(['wizard-page', this.state.pageHistory.pop()]);
+		this.props.callback(['wizard-page', this.props.wizardHistory.pop()]);
+		this.props.callback(['wizard-page-history', this.props.wizardHistory]);
 	}
 
 	onWizardNext = (currPageIndex) => () => {
-		this.setState({pageHistory: [...this.state.pageHistory, currPageIndex]});
+		this.props.callback(['wizard-page-history', [...this.props.wizardHistory, currPageIndex]]);
 
 		const newPageIndex = getNextPageByDataType(currPageIndex, _.getIn(this.props, ['state', 'dataType']));
 		this.props.callback(['wizard-page', newPageIndex]);
@@ -438,8 +456,8 @@ class ImportForm extends React.Component {
 	}
 
 	onImportClick = () => {
+		this.props.callback(['wizard-page-history', [...this.props.wizardHistory, this.props.wizardPage]]);
 
-		this.setState({pageHistory: [...this.state.pageHistory, this.props.wizardPage]});
 		this.props.callback(['wizard-page', PAGES.PROGRESS]);
 		this.props.callback(['error-check-inprogress', true]);
 		this.props.callback(['import-file']);
@@ -497,7 +515,17 @@ class ImportPage extends React.Component {
 
 	render() {
 		const cohorts = this.props.state.wizard.cohorts || [];
-		const { probemaps, wizardPage, fileContent, localCohorts, file, fileName } = this.props.state.import;
+		const {
+			probemaps,
+			wizardPage,
+			fileContent,
+			localCohorts,
+			file,
+			fileName,
+			wizardHistory,
+			recommended
+
+		} = this.props.state.import;
 
 		return (
 			<div>
@@ -512,7 +540,9 @@ class ImportPage extends React.Component {
 					<ImportForm cohorts={cohorts}
 						callback={this.props.callback}
 
+						recommended={recommended}
 						wizardPage={wizardPage}
+						wizardHistory={wizardHistory}
 						fileContent={fileContent}
 						localCohorts={localCohorts}
 						probemaps={probemaps}

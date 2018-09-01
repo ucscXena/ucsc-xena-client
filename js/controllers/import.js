@@ -4,7 +4,7 @@ import Rx from '../rx';
 import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
 import { cohortSummary, probemapList } from '../xenaQuery';
-import { assoc, assocIn, assocInAll, has, getIn, groupBy, object, pluck } from "../underscore_ext";
+import { assoc, assocIn, assocInAll, has, getIn, object, pluck } from "../underscore_ext";
 import infer from '../import/infer.js';
 import { FILE_FORMAT } from '../import/constants';
 
@@ -13,11 +13,9 @@ import getErrors from '../import/errorChecking';
 const referenceHost = 'https://reference.xenahubs.net',
     defaultStudyName = 'My Study';
 
-const getProbeGroups = probemaps =>
-    groupBy(probemaps, (p) => p.idtype === 'probe' || p.idtype === 'exon' ? 'probes' : 'genes');
-
 const getDefaultState = () => ({
-    wizardPage: 0
+    wizardPage: 0,
+    wizardHistory: []
 });
 
 const getBaseProbemapName = name => name ? name.replace(/(.*[/])/, '') : null;
@@ -161,8 +159,8 @@ const uploadProbemapFile = ({ name }) => {
         });
 };
 const getCohortArray = cohorts => cohorts.map(c => c.cohort);
-const getValueLabelList = (items) => items.map(item => ({label: item.label, userlevel: item.userlevel, value: {name: item.name, hash: item.hash}}))
-    .filter(item => (item.userlevel === "basic"));
+const getValueLabelList = (items) => items
+    .map(item => ({label: item.label, userlevel: item.userlevel, value: {name: item.name, hash: item.hash}}));
 
 const getDefaultCustomCohort = (localCohorts, name = defaultStudyName, number = 1) => {
     return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `${defaultStudyName} (${number})`, ++number);
@@ -184,7 +182,12 @@ const inferForm = (state, fileContent) => {
 		inferredOrientation = samples === 'row' ?
 				  FILE_FORMAT.GENOMIC_MATRIX : undefined,
 		cohort = getIn(cohorts, [0, 'name']),
-		probemap = getIn(probemaps, [0, 'name']);
+        probemap = getIn(probemaps, [0, 'name']);
+
+    probemap = getIn(
+            getIn(state, ['probemaps']).find(p => getIn(p, ['value', 'name']) === probemap),
+            ['value']
+        );
 
 	return assocIn(state,
 			['recommended'], inference,
@@ -209,6 +212,7 @@ const importControls = {
             ['fileContent'], fileContent),
     'set-status': (state, status) => assocIn(state, ['status'], status),
     'wizard-page': (state, newPage) => assocIn(state, ['wizardPage'], newPage),
+    'wizard-page-history': (state, newHistory) => assocIn(state, ['wizardHistory'], newHistory),
     'file-content': (state, content) => assocIn(state, ['fileContent'], content),
     'clear-metadata': (state) => assocIn(state, ['form'], {}),
     'retry-file-post!': (serverBus, state, newState, fileHandle) => serverBus.next(['retry-file-done', retryFile(state, fileHandle)]),
@@ -231,11 +235,7 @@ const query = {
         serverBus.next(['set-probemaps', probemapList(referenceHost)]);
         serverBus.next(['set-local-probemaps', probemapList(servers.localHub)]);
     },
-    'set-probemaps': (state, probemaps) => {
-        probemaps = getProbeGroups(probemaps);
-        return assocInAll(state, ['probemaps', 'probes'], getValueLabelList(probemaps.probes),
-                        ['probemaps', 'genes'], getValueLabelList(probemaps.genes));
-    },
+    'set-probemaps': (state, probemaps) => assocIn(state, ['probemaps'], getValueLabelList(probemaps)),
      'set-local-probemaps': (state, probemaps) => assoc(state, 'localProbemaps', object(pluck(probemaps, 'hash'), probemaps)),
 };
 
