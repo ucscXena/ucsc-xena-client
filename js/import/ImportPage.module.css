@@ -115,7 +115,8 @@
 }
 
 .retryButtons {
-	float: right;
+    float: right;
+    margin-left: 20px;
 }
 
 .retryButtons button {

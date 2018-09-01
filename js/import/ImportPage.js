@@ -10,7 +10,7 @@ import {
 import DefaultServers from "../defaultServers";
 const { servers: { localHub } } = DefaultServers;
 
-import { dataTypeOptions, steps, NONE_STR, DATA_TYPE, FILE_FORMAT } from './constants';
+import { dataTypeOptions, steps, NONE_STR, DATA_TYPE, FILE_FORMAT, PAGES } from './constants';
 
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
@@ -24,25 +24,25 @@ const pageStateIndex = _.object(pageStates, pageRanges);
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 const getProbemapOptions = probes => [{label: "", value: "", userlevel: "basic"}, ...(_.sortBy(probes, 'label')), {label: NONE_STR, userlevel: "basic", value: NONE_STR}];
 
-//needs constants
 const isPhenotypeData = dataType => dataType === DATA_TYPE.PHENOTYPE;
 const isMutationOrSegmentedData = dataType => dataType === DATA_TYPE.MUTATION_BY_POS || dataType === DATA_TYPE.SEGMENTED_CN;
+const isMutationSegmentedOrPhenotype = dataType => isPhenotypeData(dataType) || isMutationOrSegmentedData(dataType);
 
-const getNextPageByDataType = (currIndex, forwards, dataType) => {
+const getNextPageByDataType = (currIndex, dataType) => {
 	let pages = [];
 	switch(dataType) {
 		case DATA_TYPE.MUTATION_BY_POS:
 		case DATA_TYPE.SEGMENTED_CN:
-			pages = [0, 1, 3, 5, 6];
+			pages = [0, 1, 3, 5, PAGES.PROGRESS];
 			break;
 		case DATA_TYPE.PHENOTYPE:
-			pages = [0, 1, 2, 3, 6];
+			pages = [0, 1, 2, 3, PAGES.PROGRESS];
 			break;
 		default:
-			pages = [0, 1, 2, 3, 4, 6];
+			pages = [0, 1, 2, 3, PAGES.PROBE_SELECT, PAGES.PROGRESS];
 	}
 
-	return pages[pages.indexOf(currIndex) + (forwards ? 1 : -1)];
+	return pages[pages.indexOf(currIndex) + 1];
 };
 
 const hasErrorsOrLoading = ({ errors, errorCheckInprogress, serverError }) =>
@@ -56,6 +56,7 @@ class ImportForm extends React.Component {
 		super();
 		this.state = {
 			probeSelect: null,
+			pageHistory: [],
 			//ui state
 			fileReadInprogress: false,
 			showMoreErrors: false,
@@ -87,7 +88,8 @@ class ImportForm extends React.Component {
 			case 3:
 				wizardProps = {
 					fileName,
-					onImport: isPhenotypeData(dataType) ? this.onImportClick : null,
+					onImport: !isMutationOrSegmentedData(dataType) ? this.onImportClick : null,
+					showAdvancedNextLabel: !isMutationSegmentedOrPhenotype(dataType),
 					nextEnabled: this.isCohortPageNextEnabled()
 				};
 				component = this.studySelectionPage();
@@ -130,8 +132,8 @@ class ImportForm extends React.Component {
 
 		return (
 			<WizardSection isFirst={wizardPage === 0} isLast={wizardPage === pageStates.length - 1}
-				onNextPage={this.onWizardPageChange(wizardPage, true)}
-				onPreviousPage={this.onWizardPageChange(wizardPage, false)}
+				onNextPage={this.onWizardNext(wizardPage)}
+				onPreviousPage={this.onWizardBack}
 				callback={this.props.callback}
 				onCancelImport={this.onCancelImport}
 				onFileReload={this.onFileChange('file')}
@@ -346,8 +348,14 @@ class ImportForm extends React.Component {
 		return !!probemap || radioOption === 'neither';
 	}
 
-	onWizardPageChange = (currPageIndex, forwards) => () => {
-		const newPageIndex = getNextPageByDataType(currPageIndex, forwards, _.getIn(this.props, ['state', 'dataType']));
+	onWizardBack = () => {
+		this.props.callback(['wizard-page', this.state.pageHistory.pop()]);
+	}
+
+	onWizardNext = (currPageIndex) => () => {
+		this.setState({pageHistory: [...this.state.pageHistory, currPageIndex]});
+
+		const newPageIndex = getNextPageByDataType(currPageIndex, _.getIn(this.props, ['state', 'dataType']));
 		this.props.callback(['wizard-page', newPageIndex]);
 	}
 
@@ -430,10 +438,9 @@ class ImportForm extends React.Component {
 	}
 
 	onImportClick = () => {
-		const { dataType } = this.props.state,
-			{ wizardPage } = this.props;
 
-		this.props.callback(['wizard-page', getNextPageByDataType(wizardPage, true, dataType)]);
+		this.setState({pageHistory: [...this.state.pageHistory, this.props.wizardPage]});
+		this.props.callback(['wizard-page', PAGES.PROGRESS]);
 		this.props.callback(['error-check-inprogress', true]);
 		this.props.callback(['import-file']);
 	}

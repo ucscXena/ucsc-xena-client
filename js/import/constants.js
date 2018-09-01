@@ -48,6 +48,11 @@ const dataTypesOpts = [
 	}
 ];
 
+const PAGES = {
+	PROBE_SELECT: 4,
+	PROGRESS: 6,
+};
+
 const steps = [
 	{ label: 'Select a Data File' },
 	{ label: 'Add Data Details' },
@@ -61,5 +66,6 @@ module.exports = {
 	steps,
 	NONE_STR,
 	DATA_TYPE,
-	FILE_FORMAT
+	FILE_FORMAT,
+	PAGES,
 };

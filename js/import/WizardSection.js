@@ -4,17 +4,18 @@ import { Button, Dialog } from 'react-toolbox/lib';
 import styles from './ImportPage.module.css';
 
 const style = {
-    next: { float: 'right', color: 'rgb(33, 33, 33)' },
-    cancel: { float: 'right', marginRight: '20px', display: 'inline-block'},
+    next: { float: 'right', color: 'rgb(33, 33, 33)', marginLeft: '20px' },
+    cancel: { float: 'right', display: 'inline-block'},
     buttons: { paddingTop: '20px' }
 };
 
 export default class WizardSection extends React.Component {
     render() {
         const { isLast, isFirst, nextEnabled, onImport,
-            fileName, showRetry, showSuccess
+            fileName, showRetry, showSuccess, showAdvancedNextLabel
         } = this.props;
         const showNext = !isLast && !onImport && !showRetry;
+        const showBack = !isFirst && !showSuccess;
 
         return (
             <div>
@@ -22,21 +23,40 @@ export default class WizardSection extends React.Component {
 
                 { this.props.children }
                 <div className={styles.wizardButtons}>
-                    <Button label='Back' raised style={{visibility: !isFirst && !showSuccess ? 'visible' : 'hidden'}}
+                    <Button
+                        label='Back'
+                        raised
+                        style={{visibility: showBack ? 'visible' : 'hidden'}}
                         onClick={this.props.onPreviousPage}
                     />
 
                     {showNext &&
-                        <Button label='Next' raised style={style.next}
+                        <Button
+                            label={'Next'}
+                            raised
+                            style={style.next}
                             accent={nextEnabled} disabled={!nextEnabled}
                             onClick={this.props.onNextPage}
                         />
                     }
 
                     {!!onImport &&
-                        <Button label='Import' raised style={style.next}
-                            accent={nextEnabled} disabled={!nextEnabled}
+                        <Button
+                            label='Import'
+                            raised style={style.next}
+                            accent={nextEnabled}
+                            disabled={!nextEnabled}
                             onClick={onImport}
+                        />
+                    }
+
+                    {showAdvancedNextLabel &&
+                        <Button
+                            label={'Advanced'}
+                            raised
+                            style={style.next}
+                            disabled={!nextEnabled}
+                            onClick={this.props.onNextPage}
                         />
                     }
 

@@ -206,7 +206,6 @@ const importControls = {
     'read-file-post!': (serverBus, state, newState, fileHandle) => serverBus.next(['read-file-done', readFileObs(fileHandle)]),
     'read-file-done': (state, fileContent) =>
         assocInAll(inferForm(state, fileContent),
-            ['status'], 'File successfully read!',
             ['fileContent'], fileContent),
     'set-status': (state, status) => assocIn(state, ['status'], status),
     'wizard-page': (state, newPage) => assocIn(state, ['wizardPage'], newPage),
