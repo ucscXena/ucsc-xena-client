@@ -38,7 +38,7 @@ var hubMeta = host => ajaxGet(hostToGitURL(host)).catch(() => ajaxGet(`${host}/d
 var cohortMeta = cohort => ajaxGet(`${cohortMetaHost}/cohort_${cohort}/info.mdown`).map(r => r.response)
 	.catch(() => of(undefined));
 
-var datasetDescription = dataset => ajaxGet(`${cohortMetaHost}/dataset_${dataset.replace(/\//, '_')}/info.mdown`).map(r => r.response)
+var datasetDescription = dataset => ajaxGet(`${cohortMetaHost}/dataset/${dataset}/info.mdown`).map(r => r.response)
 	.catch(() => of(undefined));
 
 var getMarkDown = url => ajaxGet(url).map(r => r.response)
