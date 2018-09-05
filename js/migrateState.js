@@ -11,7 +11,7 @@
 
 var version = 1;
 
-var {assoc, flatten, get, getIn, isString, Let, omit, pick, updateIn, without} = require('./underscore_ext');
+var {assoc, get, getIn, Let, pick, isString, flatten, /*contains, */updateIn, without} = require('./underscore_ext');
 
 var setVersion = state => assoc(state, 'version', version);
 var getVersion = state =>
@@ -45,16 +45,11 @@ var migrations = [
 	[noComposite, splitPages, samplesToLeft]
 ];
 
-// treehouse is down & mucking up bookmarks
-var omitTreehouse = state =>
-	updateIn(state, ['spreadsheet', 'servers'],
-			servers => omit(servers, 'https://xena.treehouse.gi.ucsc.edu', 'https://xena.treehouse.gi.ucsc.edu:443'));
-
 function apply(state) {
 	var v = getVersion(state),
 		toDo = flatten(migrations.slice(v));
 
-	return omitTreehouse(setVersion(toDo.reduce((prev, fn) => fn(prev), state)));
+	return setVersion(toDo.reduce((prev, fn) => fn(prev), state));
 }
 
 module.exports = apply;
