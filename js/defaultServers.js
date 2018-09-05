@@ -37,6 +37,15 @@ module.exports = {
 		servers.treehouseHub,
 		servers.gdcHub
 	],
+	enabledServers: [
+		servers.localHub,
+		servers.publicHub,
+		servers.tcgaHub,
+		servers.pancanAtlasHub,
+		servers.icgcHub,
+		servers.toilHub,
+		servers.gdcHub
+	],
 	publicServers: [
 		servers.publicHub,
 		servers.tcgaHub,

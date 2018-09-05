@@ -4,11 +4,10 @@ var Rx = require('./rx');
 var _ = require('./underscore_ext');
 var {getErrorProps, logError} = require('./errors');
 var {getNotifications} = require('./notifications');
-var {defaultServers} = require('./defaultServers');
+var {defaultServers, enabledServers} = require('./defaultServers');
 
-var enabledServer = {user: true};
 var defaultServerState = _.object(defaultServers,
-		defaultServers.map(() => enabledServer));
+		defaultServers.map(s => ({user: _.contains(enabledServers, s)})));
 
 module.exports = function () {
 	// Create a channel for messages from the server. We want to avoid out-of-order
