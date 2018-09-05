@@ -47,9 +47,8 @@ var migrations = [
 
 // treehouse is down & mucking up bookmarks
 var omitTreehouse = state =>
-	state.spreadsheet ? updateIn(state, ['spreadsheet', 'servers'],
-			servers => omit(servers, 'https://xena.treehouse.gi.ucsc.edu', 'https://xena.treehouse.gi.ucsc.edu:443')) :
-		state;
+	updateIn(state, ['spreadsheet', 'servers'],
+			servers => omit(servers, 'https://xena.treehouse.gi.ucsc.edu', 'https://xena.treehouse.gi.ucsc.edu:443'));
 
 function apply(state) {
 	var v = getVersion(state),
