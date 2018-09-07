@@ -1,5 +1,4 @@
 'use strict';
-
 var _ = require('../underscore_ext');
 var multi = require('../multi');
 var {colorScale} = require('../colorScales');
@@ -18,14 +17,6 @@ var survivalOptions = {
 		tteFeature: 'OS.time',
 		label: 'Overall survival'
 	},
-	"dfiEv": {
-		patient: 'patient',
-		ev: 'dfiEv',
-		tte: 'dfiTte',
-		evFeature: 'DFI',
-		tteFeature: 'DFI.time',
-		label: 'Disease free interval'
-	},
 	"dssEv": {
 		patient: 'patient',
 		ev: 'dssEv',
@@ -33,6 +24,38 @@ var survivalOptions = {
 		evFeature: 'DSS',
 		tteFeature: 'DSS.time',
 		label: 'Disease specific survival'
+	},
+	"ddfsEv": {
+		patient: 'patient',
+		ev: 'ddfsEv',
+		tte: 'ddfsTte',
+		evFeature: 'DDFS',
+		tteFeature: 'DDFS.time',
+		label: 'Distant disease free survival'
+	},
+	"dmfsEv": {
+		patient: 'patient',
+		ev: 'dmfsEv',
+		tte: 'dmfsTte',
+		evFeature: 'DMFS',
+		tteFeature: 'DMFS.time',
+		label: 'Distant metastasis free survival'
+	},
+	"idfsEv": {
+		patient: 'patient',
+		ev: 'idfsEv',
+		tte: 'idfsTte',
+		evFeature: 'IDFS',
+		tteFeature: 'IDFS.time',
+		label: 'Invasive disease free survival'
+	},
+	"dfiEv": {
+		patient: 'patient',
+		ev: 'dfiEv',
+		tte: 'dfiTte',
+		evFeature: 'DFI',
+		tteFeature: 'DFI.time',
+		label: 'Disease free interval'
 	},
 	"pfiEv": {
 		patient: 'patient',
@@ -50,6 +73,22 @@ var survivalOptions = {
 		tteFeature: 'LRI.time',
 		label: 'Local recurrence interval'
 	},
+	"rrEv": {
+		patient: 'patient',
+		ev: 'rrEv',
+		tte: 'rrTte',
+		evFeature: 'RR',
+		tteFeature: 'RR.time',
+		label: 'Regional recurrence'
+	},
+	"driEv": {
+		patient: 'patient',
+		ev: 'driEv',
+		tte: 'driTte',
+		evFeature: 'DRI',
+		tteFeature: 'DRI.time',
+		label: 'Distant recurrence interval'
+	},
 	"dmiEv": {
 		patient: 'patient',
 		ev: 'dmiEv',
@@ -58,21 +97,21 @@ var survivalOptions = {
 		tteFeature: 'DMI.time',
 		label: 'Distant metastasis interval'
 	},
-	"ddfsEv": {
+	"mEv": {
 		patient: 'patient',
-		ev: 'ddfsEv',
-		tte: 'ddfsTte',
-		evFeature: 'DDFS',
-		tteFeature: 'DDFS.time',
-		label: 'Distant disease free survival'
+		ev: 'mEv',
+		tte: 'mTte',
+		evFeature: 'Metastasis',
+		tteFeature: 'Metastasis.time',
+		label: 'Metastasis'
 	},
-	"idfsEv": {
+	"rEv": {
 		patient: 'patient',
-		ev: 'idfsEv',
-		tte: 'idfsTte',
-		evFeature: 'IDFS',
-		tteFeature: 'IDFS.time',
-		label: 'Invasive disease free survival'
+		ev: 'rEv',
+		tte: 'rTte',
+		evFeature: 'Relapse',
+		tteFeature: 'Relapse.time',
+		label: 'Relapse'
 	},
 	"ev": {
 		patient: 'patient',
