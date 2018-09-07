@@ -8,6 +8,8 @@ var {RGBToHex} = require('../color_helper');
 
 var MAX = 10; // max number of groups to display.
 
+var getSplits = (splits) => splits ? splits : 2;
+
 var survivalOptions = {
 	"osEv": {
 		patient: 'patient',
@@ -211,7 +213,7 @@ function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
 		avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = _.first(colors.map(colorScale)),
-		partFn = splits === 3 ? partitionedVals3 : splits === 2 ? partitionedVals2 : partitionedValsQuartile,
+		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2,
 		maySplit = uniq.length > MAX;
 	return {clarification, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
 }
@@ -242,7 +244,7 @@ function segmentedVals(column, data, index, samples, splits) {
 		scale = colorScale(color),
 		[,,,, origin] = color,
 		colorfn = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin)),
-		partFn = splits === 3 ? partitionedVals3 : partitionedVals2;
+		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2;
 	return {maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
 }
 
@@ -348,7 +350,7 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		domain = bounds(survivalData.tte),
 		{tte, ev, patient} = cutoffData(survivalData, cutoff),
 		// Convert field to coded.
-		codedFeat = toCoded(column, data, index, samples, splits),
+		codedFeat = toCoded(column, data, index, samples, getSplits(splits)),
 		{values} = codedFeat,
 		usableSamples = _.filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
@@ -404,4 +406,4 @@ function pickSurvivalVars(featuresByDataset, user) {
 	return featureMapping;
 }
 
-module.exports = {makeGroups, pickSurvivalVars, survivalOptions};
+module.exports = {makeGroups, pickSurvivalVars, survivalOptions, getSplits};

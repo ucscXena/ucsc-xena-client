@@ -12,7 +12,7 @@ var Axis = require('./Axis');
 var {linear, linearTicks} = require('./scale');
 var pdf = require('./kmpdf');
 var NumberForm = require('./views/NumberForm');
-var {survivalOptions} = require('./models/km');
+var {survivalOptions, getSplits} = require('./models/km');
 var gaEvents = require('./gaEvents');
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
@@ -333,7 +333,7 @@ function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, sp
 			<Legend groups={groups}
 					setActiveLabel={setActiveLabel}
 					activeLabel={activeLabel}/>
-			{maySplit ? makeSplits(splits, onSplits) : null}
+			{maySplit ? makeSplits(getSplits(splits), onSplits) : null}
 			{warning}
 		</div>
 	);
