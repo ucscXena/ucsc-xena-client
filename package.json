@@ -23,6 +23,7 @@
     "dist": "npm run clean:dist && mkdir -p dist && cp -r js/* dist && NODE_ENV=production babel -d dist js && webpack --config webpack.dist.js",
     "prepublish": "npm run dist",
     "cypress:open": "cypress open",
+    "cypress:run": "cypress run -s cypress/integration/heatmap-spec.js",
     "cypress:gen": "mocha --require babel-core/register cypress/generators/suite.js"
   },
   "files": [
@@ -53,7 +54,7 @@
     "chai": "^3.5.0",
     "css-loader": "^0.28.1",
     "csslint": "^0.10.0",
-    "cypress": "^2.0.4",
+    "cypress": "^3.1.0",
     "eslint": "^1.10.3",
     "eslint-plugin-react": "^3.16.1",
     "exports-loader": "^0.6.2",

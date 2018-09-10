@@ -234,6 +234,7 @@ function addWizardColumns(Component) {
 			var {callback} = this.props;
 			this.sub = Rx.Observable.of(true)
 				.concat(Rx.Observable.fromEvent(window, 'resize'))
+				.filter(() => !window.cypressScreenshot) // cypress work-around
 				.debounceTime(200).subscribe(() =>
 					callback(['viewportWidth', document.documentElement.clientWidth]));
 		}

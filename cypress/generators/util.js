@@ -42,7 +42,7 @@ function runSequence(seq) {
 		// Save videos after failure
 		// Would like to save sequence files, too.
 		// Could set up another directory & do a before() method that
-		// deletes it, checking CYPRESS_trashAssetsBeforeHeadlessRuns, for
+		// deletes it, checking CYPRESS_trashAssetsBeforeRuns, for
 		// consistency.
 		// Would then want to generate the seq file names randomly. Or
 		// use the same name as the video file. That would be good, but
@@ -51,7 +51,7 @@ function runSequence(seq) {
 		// to get to the file name.
 		//
 		// We should be holding stdout, though, right?
-		process.env.CYPRESS_trashAssetsBeforeHeadlessRuns = 'false'; //eslint-disable-line camelcase
+		process.env.CYPRESS_trashAssetsBeforeRuns = 'false'; //eslint-disable-line camelcase
 		// Started video recording: /Users/craft/ucsc-xena-client/cypress/videos/a4bo5.mp4
 		console.log(e.stdout.toString());
 		console.log(e.stderr.toString());
