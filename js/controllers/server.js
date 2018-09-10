@@ -58,15 +58,18 @@ var wizardControls = {
 				preferred => _.map(preferred, ({host, dataset, feature}) => ({dsID: JSON.stringify({host, name: dataset}), name: feature}))))
 };
 
+var bookmarkPost = (serverBus, state, newState) => {
+	updateWizard(serverBus, state.spreadsheet, newState.spreadsheet,
+			{force: !_.getIn(newState, ['wizard', 'cohorts'])});
+};
+
 var controls = {
 	bookmark: (state, bookmark) => clearWizardCohort(resetLoadPending(_.merge(state, bookmark))),
 	'bookmark-error': state => resetLoadPending(_.assoc(state, 'stateError', 'bookmark')),
 	// Here we need to load cohort data if servers or cohort has changed,
 	// *or* if we never loaded cohort data (e.g. due to waiting on bookmark).
-	'bookmark-post!': (serverBus, state, newState) => {
-		updateWizard(serverBus, state.spreadsheet, newState.spreadsheet,
-				{force: !_.getIn(newState, ['wizard', 'cohorts'])});
-	},
+	'bookmark-post!': bookmarkPost,
+	'bookmark-error-post!': bookmarkPost,
 	'manifest': (state, {cohort, samples}) =>
 		clearWizardCohort(
 				_.updateIn(state, ['spreadsheet'], setCohort({name: cohort, sampleFilter: samples}, null))),
