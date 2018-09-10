@@ -10,7 +10,7 @@ f9d1b795c2cb324d227a3a0472c3427c carousel PDL1 TCGA TARGET
 b0c41184460dcb7660994479dc6a13de ghost visual spreadsheet
 7d28acf849f6e5aa974bce6e014a5f1f ghost gene affect survival
 37623f6830b99f5135213b8cb7a99643 ghost gene affect survival
-80d9c57b471b654cc569d4ceb44e6591 ghost transcript view
+80d9c57b471b654cc569d4ceb44e6591 ghost transcript view AND xena paper
 a41eaca4ce7772b8a6eb9614d3f73aec ghost getting started live example
 cbf492472144325cd22203c823bee8de ghost getting started live example
 94ce39c2f64cf3b69da27eb048b3db05 ghost getting started live example
@@ -34,7 +34,6 @@ a56b47aefabb74042622547395a6b0a0 ghost filter for KM
 ff8e5ad1e307e246c076d0de754bd370 ghost filter for KM
 6b236d77538128421ee9c32911ce173a xena paper
 2f9d783982879594dd0f52564058372d xena paper
-80d9c57b471b654cc569d4ceb44e6591 xena paper
 a9a7e45a9ddf709e66a44d6d9239f88b xena paper
 25fbe168b1d9e01d0ba6882664388181 xena paper
 92db485580786d1ef14c6c06b680201b xena paper
