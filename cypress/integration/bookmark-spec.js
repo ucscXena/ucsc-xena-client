@@ -31,5 +31,18 @@ describe('bookmark screenshot', function() {
 		cy.wait(2000); // XXX wrong wait
 		cy.scrollTo('topLeft');
 		screenshot('bookmark-' + bookmark);
+
+		cy.wrap(true).then(() => {
+			var mode = Cypress.$('[class^=AppControls-module__actions] i').first();
+			if (mode.length && mode[0].title === 'View as columns') {
+				mode[0].click();
+				cy.wait(2000); // XXX wrong wait
+				screenshot('bookmark-' + bookmark + '-spreadsheet');
+			} else if (Cypress.$('[class^=km-module__graph').length === 1) {
+				heatmapPage.spreadsheet.kaplanMeierClose().click();
+				cy.wait(2000); // XXX wrong wait
+				screenshot('bookmark-' + bookmark + '-spreadsheet');
+			}
+		});
 	});
 });

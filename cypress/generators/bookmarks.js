@@ -34,7 +34,7 @@ describe('page loading', function () {
 	it('should load bookmarks', function () {
 		process.env.CYPRESS_trashAssetsBeforeRuns = 'false'; //eslint-disable-line camelcase
 
-		bookmarks.slice(0, 2).forEach(bookmark => {
+		bookmarks.forEach(bookmark => {
 			loadBookmark(bookmark);
 		});
 	});
