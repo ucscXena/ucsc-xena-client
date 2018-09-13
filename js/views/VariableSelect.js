@@ -16,13 +16,13 @@ var multi = require('../multi');
 var parseGeneSignature = require('../parseGeneSignature');
 var parseInput = require('../parseInput');
 var parsePos = require('../parsePos');
+var {ignoredType} = require('../models/dataType');
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
 
-const ignoredType = ['probeMap', 'genePredExt', 'probemap', 'sampleMap']; // Important for unassigned cohort
 const ignoredClinical = (type, subtype) =>
-	type === 'clinicalMatrix' && !subtype || subtype.match(/^phenotypes?|filter/i);
+	type === 'clinicalMatrix' && !subtype || subtype.match(/^phenotypes?/i);
 
 var notIgnored = ({type, dataSubType}) => !_.contains(ignoredType, type) &&
 	!ignoredClinical(type, dataSubType);
