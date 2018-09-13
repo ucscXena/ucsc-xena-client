@@ -62,6 +62,8 @@ class CohortSuggest extends PureComponent {
 		this.setState({value: this.props.cohort || this.state.value});
 	};
 
+	shouldRenderSuggestions = () => true;
+
 	render() {
 		var {onChange, onBlur} = this,
 			{suggestions, value} = this.state;

@@ -47,6 +47,8 @@ class PhenotypeSuggest extends PureComponent {
 		}
 	};
 
+	shouldRenderSuggestions = () => true;
+
 	render() {
 		var {onChange} = this,
 			{onKeyDown, value = '', error} = this.props,
