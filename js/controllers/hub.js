@@ -7,6 +7,7 @@ var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
 var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers, datasetQuery, updateWizard} = require('./common');
+var {ignoredType} = require('../models/dataType');
 var Rx = require('../rx');
 
 var hubsToAdd = ({hubs, addHub}) =>
@@ -44,9 +45,8 @@ var datasetDescription = dataset => ajaxGet(`${cohortMetaHost}/dataset/${dataset
 var getMarkDown = url => ajaxGet(url).map(r => r.response)
 	.catch(() => of(undefined));
 
-var notGenomic = ["sampleMap", "probeMap", "genePred", "genePredExt"];
 var genomicCohortSummary = server =>
-		zipArray([cohortSummary(server, notGenomic), hubMeta(server)])
+		zipArray([cohortSummary(server, ignoredType), hubMeta(server)])
 		.map(([cohorts, meta]) => ({server, meta, cohorts}))
 		.catch(err => {console.log(err); return of({server, cohorts: []});});
 
