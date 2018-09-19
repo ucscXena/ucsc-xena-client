@@ -396,11 +396,11 @@ var refGeneExonCase = dsIDFn((host, dataset, genes) =>
 		.flatMap(caseGenes => refGeneExons(host, dataset, _.filter(caseGenes, _.identity))));
 
 function testStatus(host, timeout = 5000) {
-	return Rx.Observable.ajax(xenaPost(host, '(+ 1 2)'))
-		.map(s => ({status: s.response && 3 === JSON.parse(s.response) ? 'up' : 'down'}))
+	return Rx.Observable.ajax({url: host + '/ping/', method: 'GET', crossDomain: true, responseType: 'text'})
+		.map(s => ({status: s && 'pong' === s.response ? 'up' : 'down'}))
 		.timeoutWith(timeout, Rx.Observable.of({status: 'down'}))
 		.catch(({status, response}) => Rx.Observable.of(
-			{status: status === 503 && response === 'Database booting' ? 'starting' : 'down'}));
+			{status: status === 503 && response === 'Database booting' ? 'started' : 'down'}));
 }
 
 
