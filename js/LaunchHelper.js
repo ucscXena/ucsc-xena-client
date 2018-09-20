@@ -255,10 +255,10 @@ var wrap = (onStartup, Comp) => class extends PureComponent {
 		var {advanced, status, show} = this.state,
 			statusBadge =
 				status === 'up' ? (
-					<i title='Connected'
+					<i title='Connected to local Xena Hub'
 					   className={'material-icons ' + styles.badgeConnected}
 					   onClick={this.onShow}>signal_wifi_4_bar</i>) : (
-					<i title='Click to open launcher'
+					<i title='Not connected to local Xena Hub. Click for details.'
 					   className={'material-icons ' + styles.badgeDisconnected}
 					   onClick={this.onShow}>signal_wifi_off</i>);
 
