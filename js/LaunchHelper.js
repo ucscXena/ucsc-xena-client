@@ -188,7 +188,7 @@ var wrap = (onStartup, Comp) => class extends PureComponent {
 
 	componentDidMount() {
 		var shouldLaunch = !(this.props.localStatus === 'lost'),
-			ping = interval(refresh)
+			ping = interval(refresh).startWith(undefined)
 				.switchMapTo(testStatus(localHub, contactTimeout).map(({status}) => status)).share(),
 			firstDown = ping.first().filter(p => p === 'down'),
 			pingStarted = ping.filter(p => p === 'started'),
