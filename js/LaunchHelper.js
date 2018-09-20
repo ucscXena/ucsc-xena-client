@@ -181,7 +181,7 @@ var bootTimeout = 2 * 60 * 1000;
 
 var {of, interval} = Rx.Observable;
 
-var wrap = (onStartup, Comp) => class extends PureComponent {
+var wrap = Comp => class extends PureComponent {
 	static displayName = 'LaunchHelperWrapper';
 
 	state = {advanced: false, show: false, status: 'down'};
@@ -229,7 +229,9 @@ var wrap = (onStartup, Comp) => class extends PureComponent {
 	updatePing = nextStatus => {
 		this.props.callback(['localStatus', nextStatus]);
 		if (nextStatus === 'up' && this.state.status !== 'up') {
-			onStartup(this.props);
+			if (this.compRef) {
+				this.compRef.onStartup();
+			}
 			this.setState({show: false});
 		}
 		this.setState({status: nextStatus});
@@ -245,6 +247,10 @@ var wrap = (onStartup, Comp) => class extends PureComponent {
 
 	onShow = () => {
 		this.setState({show: true});
+	}
+
+	setCompRef = ref => {
+		this.compRef = ref;
 	}
 
 	actions = [
@@ -263,7 +269,7 @@ var wrap = (onStartup, Comp) => class extends PureComponent {
 					   onClick={this.onShow}>signal_wifi_off</i>);
 
 		return (
-			<Comp {...this.props} badge={statusBadge}>
+			<Comp ref={this.setCompRef} {...this.props} badge={statusBadge}>
 				<Dialog active={show} actions={this.actions}>
 					<a className={styles.helpLink} href='https://ucsc-xena.gitbook.io/project/local-xena-hub' target='_blank'>Help</a>
 					<h2>Starting Xena Hub </h2>
@@ -274,8 +280,8 @@ var wrap = (onStartup, Comp) => class extends PureComponent {
 	}
 };
 
-var wrapLaunchHelper = (shouldMount, onStartup, Comp) => {
-	var Wrapper = wrap(onStartup, Comp),
+var wrapLaunchHelper = (shouldMount, Comp) => {
+	var Wrapper = wrap(Comp),
 		LaunchHelperMounter = props => shouldMount(props) ? <Wrapper {...props}/> : <Comp {...props}/>;
 	return LaunchHelperMounter;
 };

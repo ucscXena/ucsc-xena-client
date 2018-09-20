@@ -379,10 +379,13 @@ var setKey = arr => arr.map((el, i) => React.cloneElement(el, {key: i}));
 
 var DatasetPage = wrapLaunchHelper(
 	props => getIn(props, ['state', 'params', 'host']) === localHub,
-	props => props.callback(['dataset-reset']),
 	class extends PureComponent {
 		static displayName = 'DatasetPage'
 		onCohort = (ev) => { navHandler.call(this, ev); };
+
+		onStartup() {
+			this.props.callback(['dataset-reset']);
+		}
 
 		onViz = () => {
 			var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
@@ -484,9 +487,12 @@ var defaultHost = params =>
 
 var HubPage = wrapLaunchHelper(
 	props => defaultHost(props.state.params).host === localHub,
-	props => props.callback(['cohort-summary-clear', {server: localHub}]),
 	class extends PureComponent {
 		onCohort = (ev) => {navHandler.call(this, ev);};
+
+		onStartup() {
+			this.props.callback(['cohort-summary-clear', {server: localHub}]);
+		}
 
 		render() {
 			var {state, hubParams, badge, children} = this.props,
