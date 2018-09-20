@@ -282,7 +282,7 @@ function datapagesPostActions(serverBus, state, newState, action) {
 
 	var dataset = needDataset(newState);
 	if (dataset && !hasDataset(state, dataset) &&
-			(type === 'init' || !isEqual(needDataset(state), dataset))) {
+			(type === 'init' || type === 'dataset-reset' || !isEqual(needDataset(state), dataset))) {
 		fetchDataset(serverBus, newState);
 	}
 
