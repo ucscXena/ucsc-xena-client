@@ -204,6 +204,7 @@ var wrap = (onStartup, Comp) => class extends PureComponent {
 
 		this.sub = ping.merge(timeouts)
 			.map(status => nextState(this.state.status, status))
+			.distinctUntilChanged()
 			.subscribe(this.updatePing);
 
 		this.sub.add(firstDown.subscribe(this.showAndLaunch(shouldLaunch)));
