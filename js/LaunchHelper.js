@@ -133,7 +133,7 @@ var statusHelp = {
 		</div>),
 	started: (
 		<div>
-			<p>Attempting to start the Xena Hub on your computer...</p>
+			<p>The Xena Hub is starting...</p>
 		</div>),
 	failed: (
 		<div>
