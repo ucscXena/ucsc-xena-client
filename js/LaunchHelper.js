@@ -81,9 +81,6 @@ var updatesPath = `${downloadDir}/updates.xml`;
 var downloadPath = name => `${downloadDir}/${name}`;
 var getFileName = e => downloadPath(e.getAttribute('fileName'));
 
-var refresh = 2000;
-var localTimeout = 500; // use a short timeout for localhost
-
 class XenaDownload extends React.Component {
 	state = {};
 
@@ -177,11 +174,12 @@ var nextState = (state, status) =>
 	state === 'up' ? 'lost' :
 	state;
 
+var refresh = 2000;
 var contactTimeout = 200;
 var launchTimeout = 10 * 1000;
 var bootTimeout = 2 * 60 * 1000;
 
-var EMPTY = Rx.Observable.empty();
+var {of, interval} = Rx.Observable;
 
 var wrap = (onStartup, Comp) => class extends PureComponent {
 	static displayName = 'LaunchHelperWrapper';
@@ -190,26 +188,25 @@ var wrap = (onStartup, Comp) => class extends PureComponent {
 
 	componentDidMount() {
 		var shouldLaunch = !(this.props.localStatus === 'lost'),
-			ping = Rx.Observable.interval(refresh)
-				.flatMap(() => testStatus(localHub, localTimeout)).share(),
-			pingNotDown = ping.filter(p => p.status !== 'down'),
-			pingStarting = ping.filter(p => p.status === 'started'),
-			pingUp = ping.filter(p => p.status === 'up'),
-			failed = Rx.Observable.of({status: 'failed'}),
-			launching = Rx.Observable.of({status: 'launching'}),
+			ping = interval(refresh)
+				.switchMapTo(testStatus(localHub, contactTimeout).map(({status}) => status)).share(),
+			firstDown = ping.first().filter(p => p === 'down'),
+			pingStarted = ping.filter(p => p === 'started'),
+			pingUp = ping.filter(p => p === 'up'),
+			failed = of('failed'),
+			failedStarting = of('failedStarting'),
+			launching = of('launching'),
 
-			contact = (shouldLaunch ? launching : failed)
-				.delay(contactTimeout).takeUntil(pingNotDown).share(),
-			launch = shouldLaunch ? contact.flatMap(() =>
-					failed.delay(launchTimeout).race(pingStarting.flatMap(() => failed.delay(bootTimeout)))) : EMPTY,
+			boot = pingStarted.first().switchMapTo(failedStarting.delay(bootTimeout)),
+			launch = firstDown.switchMap(() => shouldLaunch ? launching.concat(failed.delay(launchTimeout)) : failed),
 
-			timeouts = contact.concat(launch).takeUntil(pingUp);
+			timeouts = launch.takeUntil(pingStarted).merge(boot).takeUntil(pingUp);
 
 		this.sub = ping.merge(timeouts)
-			.map(({status}) => nextState(this.state.status, status))
+			.map(status => nextState(this.state.status, status))
 			.subscribe(this.updatePing);
 
-		this.sub.add(contact.subscribe(this.showAndLaunch(shouldLaunch)));
+		this.sub.add(firstDown.subscribe(this.showAndLaunch(shouldLaunch)));
 	}
 
 	componentWillUnmount() {

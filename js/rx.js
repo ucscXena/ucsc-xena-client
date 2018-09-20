@@ -46,6 +46,7 @@ require('rxjs/add/operator/scan');
 require('rxjs/add/operator/share');
 require('rxjs/add/operator/startWith');
 require('rxjs/add/operator/switchMap');
+require('rxjs/add/operator/switchMapTo');
 require('rxjs/add/operator/take');
 require('rxjs/add/operator/takeUntil');
 require('rxjs/add/operator/takeWhile');
