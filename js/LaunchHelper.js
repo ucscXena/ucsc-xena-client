@@ -275,9 +275,9 @@ var wrap = (onStartup, Comp) => class extends PureComponent {
 };
 
 var wrapLaunchHelper = (shouldMount, onStartup, Comp) => {
-	var Wrapper = wrap(onStartup, Comp);
-	return props => shouldMount(props) ? <Wrapper {...props}/> :
-		<Comp {...props}/>;
+	var Wrapper = wrap(onStartup, Comp),
+		LaunchHelperMounter = props => shouldMount(props) ? <Wrapper {...props}/> : <Comp {...props}/>;
+	return LaunchHelperMounter;
 };
 
 export default wrapLaunchHelper;
