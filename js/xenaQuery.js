@@ -395,14 +395,25 @@ var refGeneExonCase = dsIDFn((host, dataset, genes) =>
 	sparseDataMatchField('name2', host, dataset, genes)
 		.flatMap(caseGenes => refGeneExons(host, dataset, _.filter(caseGenes, _.identity))));
 
-function testStatus(host, timeout = 5000) {
-	return Rx.Observable.ajax({url: host + '/ping/', method: 'GET', crossDomain: true, responseType: 'text'})
-		.map(s => ({status: s && 'pong' === s.response ? 'up' : 'down'}))
+var {ajax} = Rx.Observable;
+
+var ping = host => ajax({
+	url: host + '/ping/',
+	method: 'GET',
+	crossDomain: true,
+	responseType: 'text'});
+
+var pingOrExp = host =>
+		ping(host).map(r => r.response === 'pong' ? 'up' : 'down').catch(e =>
+			e.status === 404 ? ajax(xenaPost(host, '(+ 1 2)')).map(r => JSON.parse(r.response) === 3 ? 'up' : 'down') :
+			Rx.Observable.throw(e));
+
+var testStatus = (host, timeout = 5000) =>
+	pingOrExp(host)
+		.map(s => ({status: s}))
 		.timeoutWith(timeout, Rx.Observable.of({status: 'down'}))
 		.catch(({status, response}) => Rx.Observable.of(
 			{status: status === 503 && response === 'Database booting' ? 'started' : 'down'}));
-}
-
 
 // test if host is up
 var testHost = (host, timeout = 5000) => testStatus(host, timeout).map(({status}) => status === 'up');
