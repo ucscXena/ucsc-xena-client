@@ -169,6 +169,7 @@ var controls = {
 	'refresh-cohorts': clearWizardCohort,
 	stateError: (state, error) => _.assoc(state, 'stateError', error),
 	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
+	'localStatus': (state, stat) => _.assoc(state, 'localStatus', stat)
 };
 
 var spreadsheetControls = {

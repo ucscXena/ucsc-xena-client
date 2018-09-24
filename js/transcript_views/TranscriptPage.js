@@ -88,8 +88,8 @@ class Transcripts extends React.Component {
 		});
 	};
 
-	onNavigate = (page) => {
-		this.props.callback(['navigate', page]);
+	onNavigate = (page, params) => {
+		this.props.callback(['navigate', page, params]);
 	};
 
 	onImport = (content) => {

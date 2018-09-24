@@ -57,7 +57,7 @@ function controlRunner(serverBus, controller) {
 //	obs.do(pushState).merge(setState) : obs;
 //
 var dropTransient = state =>
-	_.assoc(state, 'wizard', {}, 'datapages', undefined);
+	_.assoc(state, 'wizard', {}, 'datapages', undefined, 'localStatus', undefined);
 
 // Serialization
 var stringify = state => LZ.compressToUTF16(JSON.stringify(compactState(dropTransient(state))));
