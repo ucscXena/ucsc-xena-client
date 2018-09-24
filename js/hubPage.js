@@ -139,13 +139,15 @@ var Hub = wrapLaunchHelper(
 							<li key={h.host}>
 								<Checkbox className={styles.checkbox} onChange={this.onSelect} checked={h.selected}
 										  data-host={h.host}/>
-								<div className={styles.statusContainer}>
-									<span className={classNames(styles.status, getStyle(h.statusStr))}>{h.statusStr}</span>
-								</div>
+								{h.host === localHub ? null : (
+									<div className={styles.statusContainer}>
+										<span className={classNames(styles.status, getStyle(h.statusStr))}>{h.statusStr}</span>
+									</div>)}
 								<div className={styles.hubNameContainer}>
 									<a href={`../datapages/?${encodeObject({host: h.host, ...hubParams})}`}>
-										{h.name}{h.reqStatus}{h.host === localHub ? badge : null}
+										{h.name}
 									</a>
+									{h.host === localHub ? badge : h.reqStatus}
 								</div>
 								<i className={classNames('material-icons', styles.remove)} data-host={h.host}
 								   onClick={this.onRemove}>close</i>
