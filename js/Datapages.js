@@ -137,7 +137,7 @@ var CohortHeader = ({inHubs, host, onImport, badge}) => {
 				<Button label={"Help"} accent />
 			</div>}
 
-			<p>Host address: {host}</p>
+			{isLocalHub(host) ? null : <p>Host address: {host}</p>}
 
 			{isLocalHub(host) && <div className={styles.descriptionBox}>
 				<p>A Local Xena Hub is an application on your computer for loading and storing data.</p>
