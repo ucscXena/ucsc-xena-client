@@ -509,15 +509,16 @@ class ImportPage extends React.Component {
 		const cohorts = this.props.state.wizard.cohorts || [];
 		const {
 			probemaps,
-			wizardPage,
+			wizardPage = 0,
 			fileContent,
 			localCohorts,
 			file,
 			fileName,
-			wizardHistory,
+			form,
+			wizardHistory = [],
 			recommended
 
-		} = this.props.state.import;
+		} = this.props.state.import || {};
 
 		return (
 			<div>
@@ -541,7 +542,7 @@ class ImportPage extends React.Component {
 						file={file} fileName={fileName}
 						onViz={this.onViz}
 
-						state={this.props.state.import.form}
+						state={form}
 					/>
 				</div>
 			</div>
