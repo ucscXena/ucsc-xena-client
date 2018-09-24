@@ -44,6 +44,12 @@ class Application extends Component {
 	onHideError = () => {
 		this.props.callback(['stateError', undefined]);
 	};
+	onShowWelcome = () => {
+		this.props.onShowWelcome(true);
+	}
+	onHideWelcome = () => {
+		this.props.onShowWelcome(false);
+	}
 //	onSearchIDAndFilterColumn = (qsamplesList) => {
 //		var {state: {samples, cohortSamples}} = this.props,
 //			qsampleListObj = {},
@@ -59,7 +65,7 @@ class Application extends Component {
 //		this.onFilterColumn(matches, 'sample list', fieldLabel);
 //	};
 	render() {
-		let {state, stateError, children, onShowWelcome, stepperState, loadPending, ...otherProps} = this.props,
+		let {state, stateError, children, stepperState, loadPending, ...otherProps} = this.props,
 			{callback} = otherProps,
 			{wizardMode, showWelcome, zoom} = state;
 //			onSearchIDAndFilterColumn = this.onSearchIDAndFilterColumn;
@@ -71,11 +77,11 @@ class Application extends Component {
 		return (
 			<div>
 				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}
-					{showWelcome ? <Welcome onClick={() => onShowWelcome(false)} /> :
+					{showWelcome ? <Welcome onClick={this.onHideWelcome} /> :
 						null}
 					{wizardMode ? <Stepper mode={stepperState} /> :
 						<AppControls {...otherProps} appState={state} help={searchHelp}
-									 zoom={zoom} onShowWelcome={() => onShowWelcome(true)}/>}
+									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>}
 
 					<Grid onClick={this.onClick}>
 					{/*
