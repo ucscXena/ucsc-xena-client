@@ -1,0 +1,16 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying overrides to Xena's links.
+ *
+ */
+
+.link {
+	color: #337ab7;
+}
+
+.link:hover {
+	color: #23527c;
+	text-decoration: underline;
+}

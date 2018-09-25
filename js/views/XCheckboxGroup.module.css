@@ -40,6 +40,7 @@
 /* Subgroup with assembly */
 .withBadge {
 	height: unset;
+	line-height: 20px;
 	margin-bottom: -14px !important; /* Overrides bottom margin RTCheckboxTheme */
 }
 

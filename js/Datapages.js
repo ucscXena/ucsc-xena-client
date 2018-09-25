@@ -21,6 +21,7 @@ import Dialog from 'react-toolbox/lib/dialog';
 var {encodeObject, urlParams} = require('./util');
 import {ThemeProvider} from 'react-css-themr';
 var appTheme = require('./appTheme');
+var classNames = require('classnames');
 var {getHubParams} = require('./hubParams');
 
 var getHubName = host => get(serverNames, host, host);
@@ -48,7 +49,7 @@ var getUserServers = servers => keys(servers).filter(k => servers[k].user);
 
 var hubLink = (host, onClick, hubParams) => (
 	<Link
-		className={styles.link}
+		className={classNames(styles.link, styles.checkboxLink)}
 		href={'?' + encodeObject({host, ...hubParams})}
 		label={getHubName(host)}
 		onClick={onClick}/>);

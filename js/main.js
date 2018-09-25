@@ -10,7 +10,6 @@ import './ChromPosition';
 import './models/denseMatrix';
 import './models/mutationVector';
 import './models/segmented';
-// import 'bootstrap/dist/css/bootstrap.css';
 //var Application = require('./containers/ApplicationContainer');
 
 import uiController from './controllers/ui';

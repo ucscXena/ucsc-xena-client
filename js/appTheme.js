@@ -16,5 +16,6 @@ module.exports = {
 	RTCard: require('./views/RTCardTheme.module.css'),
 	RTCheckbox: require('./views/RTCheckboxTheme.module.css'),
 	RTInput: require('./views/RTInputTheme.module.css'),
+	RTLink: require('./views/RTLinkTheme.module.css'),
 	RTRadio: require('./views/RTRadioGroupTheme.module.css')
 };

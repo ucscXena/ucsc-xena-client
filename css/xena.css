@@ -14,7 +14,7 @@ body {
 	height: 100%;
 	min-height: 100vh;
 	min-width: 100%; /* Required due to display: inline-block */
-	padding-bottom: 115px; /* 115 for height of footer */
+	padding-bottom: 114px; /* 114 for height of footer */
 	position: relative;
 }
 
