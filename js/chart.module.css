@@ -37,6 +37,10 @@
 	margin-top: 24px;
 }
 
+.row select {
+	height: 38px;
+}
+
 /* Column inside control panel */
 .column {
 	composes: mdBody1 from '../css/typography.module.css';

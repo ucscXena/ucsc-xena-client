@@ -304,8 +304,7 @@ function makeGraph(groups, setActiveLabel, activeLabel, size, cohort, survInfoUR
 function makeSplits(splits, onSplits) {
 	return (
 		<form>
-			<div>
-				<br/>
+			<div className={kmStyle.splits}>
 				<label className={kmStyle.splitLabel} title='2 groups: top 50%, bottom 50%'>
 					<input value={2} type="radio" name="splits" checked={splits === 2} onChange={onSplits}/>
 					<span className={kmStyle.splitHint}>2 groups</span>
