@@ -381,6 +381,13 @@ function anyRange(coll, start, end, pred = _.identity, i = start) {
 		anyRange(coll, start, end, pred, i + 1);
 }
 
+// In theory one could apply zip, but 'apply' will blow the
+// stack on chrome.
+var transpose = coll =>
+	!coll || !coll.hasOwnProperty('length') ? [] :
+	coll.length === 0 ? coll :
+	coll[0].map((v, i) => coll.map(line => line[i]));
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -474,6 +481,7 @@ _.mixin({
 	splice,
 	spy,
 	sum: arr => _.reduce(arr, (x, y) => x + y, 0),
+	transpose,
 	union,
 	uniq: unique,
 	unique,

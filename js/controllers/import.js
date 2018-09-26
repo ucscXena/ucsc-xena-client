@@ -4,9 +4,10 @@ import Rx from '../rx';
 import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
 import { cohortSummary, probemapList } from '../xenaQuery';
-import { assoc, assocIn, assocInAll, has, getIn, object, pluck } from "../underscore_ext";
+import { assoc, assocIn, assocInAll, has, getIn, object, pluck, transpose } from "../underscore_ext";
 import infer from '../import/infer.js';
 import { FILE_FORMAT } from '../import/constants';
+const { CLINICAL_MATRIX, GENOMIC_MATRIX } = FILE_FORMAT;
 
 import getErrors from '../import/errorChecking';
 
@@ -79,8 +80,31 @@ const checkForErrors = (fileContent, fileFormat, dataType) => {
     });
 };
 
-const importFile = ({ fileName, fileContent, file, form }, ignoreWarnings = false) => {
-    const formData = new FormData();
+const parseTSV = content =>
+	content.replace(/\n$/, '').split(/\n/).map(line => line.split('\t'));
+
+const joinTSV = coll =>
+	coll.map(line => line.join('\t')).join('\n');
+
+const transposeFile = content =>
+	joinTSV(transpose(parseTSV(content)));
+
+const matchFormat = fileInfo => {
+	const {form: {fileFormat, dataType}, fileContent} = fileInfo;
+	return fileFormat === GENOMIC_MATRIX && dataType === 'phenotype' ?
+			assocIn(fileInfo,
+					['form', 'fileFormat'], CLINICAL_MATRIX,
+					['fileContent'], transposeFile(fileContent)) :
+		fileFormat === CLINICAL_MATRIX && dataType !== 'phenotype' ?
+			assocIn(fileInfo,
+					['form', 'fileFormat'], GENOMIC_MATRIX,
+					['fileContent'], transposeFile(fileContent)) :
+		fileInfo;
+};
+
+const importFile = (fileInfo, ignoreWarnings = false) => {
+	const { fileName, fileContent, form } = matchFormat(fileInfo),
+		formData = new FormData();
 
     formData.append("file", new Blob([fileContent]), fileName);
     formData.append("file", new Blob([createMetaDataFile(form)]), fileName + '.json');
@@ -180,7 +204,7 @@ const inferForm = (state, fileContent) => {
 	var inference = infer(fileContent),
 		{samples, probemaps, cohorts} = inference || {},
 		inferredOrientation = samples === 'row' ?
-				  FILE_FORMAT.GENOMIC_MATRIX : undefined,
+				  GENOMIC_MATRIX : undefined,
 		cohort = getIn(cohorts, [0, 'name']),
         probemap = getIn(probemaps, [0, 'name']);
 
