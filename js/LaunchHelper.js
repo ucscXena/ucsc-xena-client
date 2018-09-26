@@ -127,6 +127,7 @@ var statusHelp = {
 	launching: (
 		<div>
 			<p>Attempting to start the Xena Hub on your computer...</p>
+			<p>If a browser dialog appears, please check the "always open" option, and click the "open" button</p>
 		</div>),
 	started: (
 		<div>
@@ -134,6 +135,7 @@ var statusHelp = {
 		</div>),
 	failed: (
 		<div>
+			<p>If a browser dialog appears, please check the "always open" option, and click the "open" button</p>
 			<p>We were not able to start the Xena Hub for you. Please open the application from your Applications Folder,
 				or download it if you have not previously installed it.</p>
 			<p>The Xena Hub needs to be running for you to import or visualize data from your own computer.</p>
@@ -270,7 +272,7 @@ var wrap = Comp => class extends PureComponent {
 
 		return (
 			<Comp ref={this.setCompRef} {...this.props} badge={statusBadge}>
-				<Dialog active={show} actions={this.actions}>
+				<Dialog active={show} actions={this.actions} className={styles.dialog}>
 					<a className={styles.helpLink} href='https://ucsc-xena.gitbook.io/project/local-xena-hub' target='_blank'>Help</a>
 					<h2>Starting Xena Hub </h2>
 					{status === 'failed' ? <XenaDownload advanced={advanced} onShowAdvanced={this.onShowAdvanced}/> : null}

@@ -1,3 +1,9 @@
+.dialog {
+	width: 90%;
+	height: 90%;
+	border: none;
+}
+
 .download {
 	float: right;
 	margin-right: 10px;
