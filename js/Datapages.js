@@ -428,7 +428,7 @@ var DatasetPage = wrapLaunchHelper(
 		onSamples = (ev) => { navHandler.call(this, ev); };
 
 		render() {
-			var {callback, state, hubParams, children, badge} = this.props,
+			var {callback, state, hubParams, badge, localStatus} = this.props,
 				{params: {host, dataset}, datapages} = state,
 				{meta, probeCount = 0, data, downloadLink, probemapLink, dataset: currentDataset,
 					host: currentHost} = get(datapages, 'dataset', {});
@@ -436,9 +436,9 @@ var DatasetPage = wrapLaunchHelper(
 			if (!meta || currentHost !== host || currentDataset !== dataset) {
 				return (
 					<div className={styles.datapages}>
-						{children /* LaunchHelper */}
 						<h2>dataset: {dataset}...</h2>
 						<h3>hub: {host}{badge}</h3>
+						{localStatus}
 					</div>);
 			}
 			var {name, label = name, description, longTitle,
@@ -450,7 +450,6 @@ var DatasetPage = wrapLaunchHelper(
 
 			return (
 				<div className={styles.datapages}>
-					{children /* LaunchHelper */}
 					<div className={styles.sidebar}>
 						<Button onClick={this.onViz} accent>Visualize</Button>
 						{canDelete(meta, host) ?
@@ -458,6 +457,7 @@ var DatasetPage = wrapLaunchHelper(
 					</div>
 					<h2>dataset: {(dataSubType ? dataSubType + ' - ' : '') + label}</h2>
 					<h3>hub: {host}{badge}</h3>
+					{localStatus}
 					{headerValue(longTitle)}
 					{htmlValue(description)}
 					{setKey(flatten([
@@ -527,7 +527,7 @@ var HubPage = wrapLaunchHelper(
 		}
 
 		render() {
-			var {state, hubParams, badge, children} = this.props,
+			var {state, hubParams, badge, localStatus} = this.props,
 				{spreadsheet: {servers}} = state,
 				userServers = getUserServers(servers),
 				{host} = defaultHost(state.params),
@@ -539,9 +539,9 @@ var HubPage = wrapLaunchHelper(
 
 			return (
 				<div className={styles.datapages}>
-					{children /* LaunchHelper */}
 					{markdownValue(getIn(hubCohorts, [0, 'meta']))}
 					<CohortHeader inHubs={inHubs} host={host} onImport={this.onImport} badge={badge}/>
+					{localStatus}
 					<CohortSummary
 						hubParams={hubParams}
 						cohorts={coll}

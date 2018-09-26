@@ -118,7 +118,7 @@ var Hub = wrapLaunchHelper(
 		};
 
 		render() {
-			var {state, selector, children, badge} = this.props,
+			var {state, selector, localStatus, badge} = this.props,
 				hubParams = getHubParams(state),
 				{ping} = this.state,
 				servers = selector(state),
@@ -131,7 +131,6 @@ var Hub = wrapLaunchHelper(
 				}));
 			return (
 				<div className={styles.hubPage}>
-					{children /* LaunchHelper */}
 					<h1 className={typStyles.mdHeadline}>Data Hubs</h1>
 					<Card>
 						<ul className={styles.hubList}>
@@ -151,6 +150,7 @@ var Hub = wrapLaunchHelper(
 								</div>
 								<i className={classNames('material-icons', styles.remove)} data-host={h.host}
 								   onClick={this.onRemove}>close</i>
+								{h.host === localHub ? localStatus : null}
 							</li>
 							))}
 							<li>

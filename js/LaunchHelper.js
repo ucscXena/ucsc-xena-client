@@ -1,7 +1,6 @@
 'use strict';
 
 import React from 'react';
-import Dialog from 'react-toolbox/lib/dialog';
 import PureComponent from './PureComponent';
 var {map, pick, mapObject, getIn, get} = require('./underscore_ext');
 var {servers: {localHub}} = require('./defaultServers');
@@ -127,6 +126,7 @@ var statusHelp = {
 	launching: (
 		<div>
 			<p>Attempting to start the Xena Hub on your computer...</p>
+			<p>If a browser dialog appears, please check the "always open" option, and click the "open" button</p>
 		</div>),
 	started: (
 		<div>
@@ -134,6 +134,7 @@ var statusHelp = {
 		</div>),
 	failed: (
 		<div>
+			<p>If a browser dialog appears, please check the "always open" option, and click the "open" button</p>
 			<p>We were not able to start the Xena Hub for you. Please open the application from your Applications Folder,
 				or download it if you have not previously installed it.</p>
 			<p>The Xena Hub needs to be running for you to import or visualize data from your own computer.</p>
@@ -184,7 +185,7 @@ var {of, interval} = Rx.Observable;
 var wrap = Comp => class extends PureComponent {
 	static displayName = 'LaunchHelperWrapper';
 
-	state = {advanced: false, show: false, status: 'down'};
+	state = {advanced: false, status: 'down'};
 
 	componentDidMount() {
 		var shouldLaunch = !(this.props.localStatus === 'lost'),
@@ -207,7 +208,7 @@ var wrap = Comp => class extends PureComponent {
 			.distinctUntilChanged()
 			.subscribe(this.updatePing);
 
-		this.sub.add(firstDown.subscribe(this.showAndLaunch(shouldLaunch)));
+		this.sub.add(firstDown.subscribe(this.launch(shouldLaunch)));
 	}
 
 	componentWillUnmount() {
@@ -219,8 +220,7 @@ var wrap = Comp => class extends PureComponent {
 		}
 	}
 
-	showAndLaunch = shouldLaunch => () => {
-		this.setState({show: true});
+	launch = shouldLaunch => () => {
 		if (shouldLaunch) {
 			launch();
 		}
@@ -232,7 +232,6 @@ var wrap = Comp => class extends PureComponent {
 			if (this.compRef) {
 				this.compRef.onStartup();
 			}
-			this.setState({show: false});
 		}
 		this.setState({status: nextStatus});
 	}
@@ -241,41 +240,30 @@ var wrap = Comp => class extends PureComponent {
 		this.setState({advanced});
 	}
 
-	onHide = () => {
-		this.setState({show: false});
-	}
-
-	onShow = () => {
-		this.setState({show: true});
-	}
-
 	setCompRef = ref => {
 		this.compRef = ref;
 	}
 
 	actions = [
-		{label: 'Close', onClick: this.onHide}
 	];
 
 	render() {
-		var {advanced, status, show} = this.state,
+		var {advanced, status} = this.state,
 			statusBadge =
 				status === 'up' ? (
 					<i title='Connected to local Xena Hub'
-					   className={'material-icons ' + styles.badgeConnected}
-					   onClick={this.onShow}>lens</i>) : (
+					   className={'material-icons ' + styles.badgeConnected}>lens</i>) : (
 					<i title='Not connected to local Xena Hub. Click for details.'
-					   className={'material-icons ' + styles.badgeDisconnected}
-					   onClick={this.onShow}>lens</i>);
+					   className={'material-icons ' + styles.badgeDisconnected}>lens</i>);
 
 		return (
-			<Comp ref={this.setCompRef} {...this.props} badge={statusBadge}>
-				<Dialog active={show} actions={this.actions}>
-					<a className={styles.helpLink} href='https://ucsc-xena.gitbook.io/project/local-xena-hub' target='_blank'>Help</a>
-					<h2>Starting Xena Hub </h2>
-					{status === 'failed' ? <XenaDownload advanced={advanced} onShowAdvanced={this.onShowAdvanced}/> : null}
-					{statusHelp[status]}
-				</Dialog>
+			<Comp ref={this.setCompRef} {...this.props} badge={statusBadge}
+				localStatus={
+					<div>
+						<a className={styles.helpLink} href='https://ucsc-xena.gitbook.io/project/local-xena-hub' target='_blank'>Help</a>
+						{status === 'failed' ? <XenaDownload advanced={advanced} onShowAdvanced={this.onShowAdvanced}/> : null}
+						{statusHelp[status]}
+					</div>}>
 			</Comp>);
 	}
 };
