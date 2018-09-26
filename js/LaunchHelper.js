@@ -263,10 +263,10 @@ var wrap = Comp => class extends PureComponent {
 				status === 'up' ? (
 					<i title='Connected to local Xena Hub'
 					   className={'material-icons ' + styles.badgeConnected}
-					   onClick={this.onShow}>signal_wifi_4_bar</i>) : (
+					   onClick={this.onShow}>lens</i>) : (
 					<i title='Not connected to local Xena Hub. Click for details.'
 					   className={'material-icons ' + styles.badgeDisconnected}
-					   onClick={this.onShow}>signal_wifi_off</i>);
+					   onClick={this.onShow}>lens</i>);
 
 		return (
 			<Comp ref={this.setCompRef} {...this.props} badge={statusBadge}>
