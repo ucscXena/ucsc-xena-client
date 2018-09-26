@@ -184,7 +184,7 @@ var {of, interval} = Rx.Observable;
 var wrap = Comp => class extends PureComponent {
 	static displayName = 'LaunchHelperWrapper';
 
-	state = {advanced: false, show: false, status: 'down'};
+	state = {advanced: false, show: false, status: 'down', blurred: false};
 
 	componentDidMount() {
 		var shouldLaunch = !(this.props.localStatus === 'lost'),
@@ -206,6 +206,12 @@ var wrap = Comp => class extends PureComponent {
 			.map(status => nextState(this.state.status, status))
 			.distinctUntilChanged()
 			.subscribe(this.updatePing);
+
+		this.sub.add(
+			Rx.Observable.fromEvent(window, 'blur', () => true)
+				.merge(Rx.Observable.fromEvent(window, 'focus', () => false))
+				.startWith(!document.hasFocus())
+				.subscribe(blurred => this.setState({blurred})));
 
 		this.sub.add(firstDown.subscribe(this.showAndLaunch(shouldLaunch)));
 	}
@@ -258,7 +264,7 @@ var wrap = Comp => class extends PureComponent {
 	];
 
 	render() {
-		var {advanced, status, show} = this.state,
+		var {advanced, status, show, blurred} = this.state,
 			statusBadge =
 				status === 'up' ? (
 					<i title='Connected to local Xena Hub'
@@ -270,7 +276,7 @@ var wrap = Comp => class extends PureComponent {
 
 		return (
 			<Comp ref={this.setCompRef} {...this.props} badge={statusBadge}>
-				<Dialog active={show} actions={this.actions}>
+				<Dialog active={show} actions={this.actions} className={blurred ? styles.blurred : styles.dialog}>
 					<a className={styles.helpLink} href='https://ucsc-xena.gitbook.io/project/local-xena-hub' target='_blank'>Help</a>
 					<h2>Starting Xena Hub </h2>
 					{status === 'failed' ? <XenaDownload advanced={advanced} onShowAdvanced={this.onShowAdvanced}/> : null}
