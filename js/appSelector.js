@@ -103,8 +103,13 @@ var ammedWidthSelector = createFmapSelector(
 
 var index = state => ({...state, index: indexSelector(state)});
 var avg = state => ({...state, data: mergeKeys(state.data, avgSelector(state))});
-var match = state => _.Let((m = matchSelector(state), hl = _.spy('s', state.highlightSelect)) =>
-			({...state, samplesMatched: hl == null ? _.last(m.matches) : m.matches[hl], allMatches: m}));
+var match = state => _.Let((m = matchSelector(state), hl = state.highlightSelect) =>
+			({
+				...state,
+				samplesMatched: !m.matches ? null :
+					hl == null ? _.last(m.matches) :
+					m.matches[hl],
+				allMatches: m}));
 var sort = state => ({...state, samples: sortSelector(state)});
 var transform = state => ({...state, columns: mergeKeys(state.columns, transformSelector(state))});
 var ammedWidth = state => ({...state, columns: ammedWidthSelector(state)});
