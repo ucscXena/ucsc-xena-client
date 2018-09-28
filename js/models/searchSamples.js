@@ -158,32 +158,9 @@ function evalexp(ctx, expression) {
 	}, expression);
 }
 
-function createFieldIds(len) {
-	const A = 'A'.charCodeAt(0);
-	return _.times(len, i => String.fromCharCode(i + A));
-}
-
-function createFieldMap(columnOrder) {
-	return _.object(createFieldIds(columnOrder.length), columnOrder);
-}
-
-function searchSamples(search, columns, columnOrder, data, cohortSamples) {
-	if (!_.get(search, 'length')) {
-		return null;
-	}
-	let fieldMap = createFieldMap(columnOrder),
-		allSamples = _.range(_.get(cohortSamples, 'length'));
-	try {
-		var exp = parse(search.trim());
-		return evalexp({columns, data, fieldMap, cohortSamples, allSamples}, exp);
-	} catch(e) {
-		console.log('parsing error', e);
-		return [];
-	}
-}
-
 function treeToString(tree) {
 	return m({
+		cross: (...exprs) => _.map(exprs, treeToString).join(' ; '),
 		value: value => value,
 		'quoted-value': value => `"${value}"`,
 		and: (...factors) => _.map(factors, treeToString).join(' '),
@@ -198,8 +175,43 @@ function treeToString(tree) {
 	}, tree);
 }
 
+function evalcross(ctx, expr) {
+	// do this in the parser
+	var exprs = expr[0] === 'cross' ?
+		expr.slice(1) : [expr];
+	return {
+		exprs: exprs.map(treeToString),
+		matches: exprs.map(exp => evalexp(ctx, exp))
+	};
+}
+
+function createFieldIds(len) {
+	const A = 'A'.charCodeAt(0);
+	return _.times(len, i => String.fromCharCode(i + A));
+}
+
+function createFieldMap(columnOrder) {
+	return _.object(createFieldIds(columnOrder.length), columnOrder);
+}
+
+function searchSamples(search, columns, columnOrder, data, cohortSamples) {
+	if (!_.get(search, 'length')) {
+		return {exprs: null, matches: null};
+	}
+	let fieldMap = createFieldMap(columnOrder),
+		allSamples = _.range(_.get(cohortSamples, 'length'));
+	try {
+		var exp = parse(search.trim());
+		return evalcross({columns, data, fieldMap, cohortSamples, allSamples}, exp);
+	} catch(e) {
+		console.log('parsing error', e);
+		return {exprs: [], matches: [[]]};
+	}
+}
+
 function remapTreeFields(tree, mapping) {
 	return m({
+		cross: (...exprs) => ['cross', ..._.map(exprs, t => remapTreeFields(t, mapping))],
 		and: (...factors) => ['and', ..._.map(factors, t => remapTreeFields(t, mapping))],
 		or: (...terms) => ['or', ..._.map(terms, t => remapTreeFields(t, mapping))],
 		group: exp => ['group', remapTreeFields(exp, mapping)],
