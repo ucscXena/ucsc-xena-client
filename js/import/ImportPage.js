@@ -417,13 +417,9 @@ class ImportForm extends React.Component {
 		this.props.callback(['set-default-custom-cohort']);
 	}
 
-	onRetryFile = (evt) => {
-		if (evt.target.files.length > 0) {
-			const file = evt.target.files[0];
-
-			this.props.callback(['error-check-inprogress', true]);
-			this.props.callback(['retry-file', file]);
-		}
+	onRetryFile = () => {
+		this.props.callback(['error-check-inprogress', true]);
+		this.props.callback(['retry-file', this.props.file]);
 	}
 
 	onCancelImport = () => {
