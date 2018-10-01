@@ -77,10 +77,9 @@ export default class WizardSection extends React.Component {
                 <Button label='Edit Data Details' raised style={style.next} accent
                     onClick={this.props.onRetryMetadata}
                 />
-                <input type='file' id='file-input' style={{ display: 'none' }}
-					onChange={this.props.onRetryFile}
-				/>
-				<label htmlFor='file-input' className={styles.retryButton}>Reload file</label>
+                <Button label='Reload file' raised style={style.retryButton} accent
+                    onClick={this.props.onRetryFile}
+                />
 
                 { !!this.props.showLoadWithWarnings &&
                     <Button label='Load with warnings' raised style={style.next}
