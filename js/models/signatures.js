@@ -39,9 +39,9 @@ function evalIn({samples}, list) {
 function booleanCross(terms, i = 0, acc = []) {
 	return i === terms.length ? acc :
 		booleanCross(terms, i + 1,
-			acc.length === 0 ? [`!(${terms[i]})`, `(${terms[i]})`] :
-				acc.map(t => `${t} & !(${terms[i]})`).concat(
-					acc.map(t => `${t} & (${terms[i]})`)));
+			acc.length === 0 ? ['false', 'true'] :
+				acc.map(t => `${t};false`).concat(
+					acc.map(t => `${t};true`)));
 }
 
 function evalCross({samples}, lists, exprs) {
