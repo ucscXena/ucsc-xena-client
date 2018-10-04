@@ -4,7 +4,7 @@ import Rx from '../rx';
 import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
 import { cohortSummary, probemapList } from '../xenaQuery';
-import { assoc, assocIn, assocInAll, getIn, object, pluck } from "../underscore_ext";
+import { assoc, assocIn, assocInAll, get, getIn, object, pluck, updateIn } from "../underscore_ext";
 import Worker from 'worker-loader!./import-worker';
 
 const worker = new Worker();
