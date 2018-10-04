@@ -418,7 +418,7 @@ class ImportForm extends React.Component {
 	}
 
 	onRetryFile = () => {
-		this.props.callback(['error-check-inprogress', true]);
+		this.props.callback(['error-check-inprogress']);
 		this.props.callback(['retry-file', this.props.file]);
 	}
 
@@ -447,12 +447,12 @@ class ImportForm extends React.Component {
 		this.props.callback(['wizard-page-history', [...this.props.wizardHistory, this.props.wizardPage]]);
 
 		this.props.callback(['wizard-page', PAGES.PROGRESS]);
-		this.props.callback(['error-check-inprogress', true]);
+		this.props.callback(['error-check-inprogress']);
 		this.props.callback(['import-file']);
 	}
 
 	onLoadWithWarnings = () => {
-		this.props.callback(['error-check-inprogress', true]);
+		this.props.callback(['error-check-inprogress']);
 		this.props.callback(['load-with-warnings']);
 	}
 

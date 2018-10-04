@@ -38,7 +38,7 @@ const importFileDone = (state, result) =>
 		assoc(form,
 			  'errorCheckInprogress', false,
 			  'errors', get(result, 'errors', []),
-			  'warnings', get(spy('load result', result), 'warnings', []),
+			  'warnings', get(result, 'warnings', []),
 			  'errorSnippets', get(result, 'snippets', []),
 			  'serverError', get(result, 'serverError', undefined),
 			  'probemapError', get(result, 'probemapError', undefined)));
@@ -116,7 +116,10 @@ const formControls = {
     'errors': changeFormProp('errors'),
     'probemap': changeFormProp('probemap'),
     'assembly': changeFormProp('assembly'),
-    'error-check-inprogress': changeFormProp('errorCheckInprogress')
+	// We can only set this 'true' from the UI. It is reset from an action handler, after import.
+    'error-check-inprogress': state =>
+		// importFileDone will clear the error state if no errors are passed for the second arg.
+		assocIn(importFileDone(state), ['form', 'errorCheckInprogress'], true)
 };
 
 
