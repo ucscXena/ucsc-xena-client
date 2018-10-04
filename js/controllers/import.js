@@ -33,23 +33,15 @@ const getDefaultState = () => ({
     wizardHistory: []
 });
 
-const importFileDone = (state, result) => {
-    state = assocIn(state, ['form', 'errorCheckInprogress'], false);
-    state = assocInAll(state, ['form', 'errors'], [],
-                                ['form', 'warnings'], [],
-                                ['form', 'errorSnippets'], []);
-
-    if(result.errors) {
-        const snippets = result.snippets || [];
-        return assocInAll(state, ['form', 'errors'], result.errors,
-                                ['form', 'errorSnippets'], snippets);
-    } else if (result.warnings) {
-        return assocIn(state, ['form', 'warnings'], result.warnings);
-    } else if (result.serverError) {
-        return assocIn(state, ['form', 'serverError'], result.serverError);
-    }
-    return state;
-};
+const importFileDone = (state, result) =>
+	updateIn(state, ['form'], form =>
+		assoc(form,
+			  'errorCheckInprogress', false,
+			  'errors', get(result, 'errors', []),
+			  'warnings', get(spy('load result', result), 'warnings', []),
+			  'errorSnippets', get(result, 'snippets', []),
+			  'serverError', get(result, 'serverError', undefined),
+			  'probemapError', get(result, 'probemapError', undefined)));
 
 const retryFileDone = (state, [{fileContent}, errors]) =>
     importFileDone(assocInAll(state, ['fileContent'], fileContent), errors);
