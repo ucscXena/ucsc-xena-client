@@ -118,7 +118,7 @@ const uploadProbemapFile = ({ name }) => {
             formData.append("file", new Blob([json.response]), fileName + '.json');
 
             return postFile(formData).switchMapTo(updateFile(fileName));
-        });
+        }).catch(error => Rx.Observable.of({probemapError: error.message}));
 };
 
 // XXX This is a bit rough, just demonstrating how we might approach incorporating
@@ -171,10 +171,13 @@ var cmds = {
 		.do(fileContent => content = fileContent) // XXX setting local state
 		.map(content => [inferForm(probemaps, content), snippet(content)]),
 	postFile: (fileName, form, localProbemaps, ignoreWarnings) => {
-		const params = {form, fileName, fileContent: content};
+		const params = {form, fileName, fileContent: content},
+			doImport = importFile(params, ignoreWarnings);
 		return form.probemap && !has(localProbemaps, form.probemap.hash) ?
-			uploadProbemapFile(form.probemap).switchMapTo(importFile(params, ignoreWarnings)) :
-			importFile(params, ignoreWarnings);
+			uploadProbemapFile(form.probemap).switchMap(
+				pm => Object.hasOwnProperty(pm, 'probemapError') ? Rx.Observable.of(pm) :
+					doImport) :
+			doImport;
 	}
 };
 
