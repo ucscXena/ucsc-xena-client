@@ -56,15 +56,7 @@ const hasWarnings = ({ warnings }) => (warnings && warnings.length);
 const isImportSuccessful = (state) => !hasErrorsOrLoading(state) && !hasWarnings(state);
 
 class ImportForm extends React.Component {
-	constructor() {
-		super();
-		this.state = {
-			//ui state
-			fileReadInprogress: false,
-			showMoreErrors: false,
-			errorCheckInProgress: false
-		};
-	}
+	state = {showMoreErrors: false}
 
 	render() {
 		const { fileFormat, dataType, assembly, errorCheckInprogress } = this.props.state || {},
