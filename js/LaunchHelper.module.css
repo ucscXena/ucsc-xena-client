@@ -1,0 +1,40 @@
+.dialog {
+	width: 90%;
+	height: 90%;
+	border: none;
+}
+
+.download {
+	float: right;
+	margin-right: 10px;
+	padding: 10px;
+	background-color: #F8FCBA;
+}
+
+.helpLink {
+	float: right;
+}
+
+.advancedLink {
+	composes: mdCaption from '../css/typography.module.css';
+	cursor: pointer;
+}
+
+.downloadLink {
+	justify-content: normal;
+}
+
+.helpLink {
+	font-size: 110%;
+	justify-content: normal;
+}
+
+.badgeConnected {
+	cursor: pointer;
+	color: #77FFCC;
+}
+
+.badgeDisconnected {
+	cursor: pointer;
+	color: red;
+}

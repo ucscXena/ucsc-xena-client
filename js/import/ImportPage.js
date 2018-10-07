@@ -417,13 +417,9 @@ class ImportForm extends React.Component {
 		this.props.callback(['set-default-custom-cohort']);
 	}
 
-	onRetryFile = (evt) => {
-		if (evt.target.files.length > 0) {
-			const file = evt.target.files[0];
-
-			this.props.callback(['error-check-inprogress', true]);
-			this.props.callback(['retry-file', file]);
-		}
+	onRetryFile = () => {
+		this.props.callback(['error-check-inprogress']);
+		this.props.callback(['retry-file', this.props.file]);
 	}
 
 	onCancelImport = () => {
@@ -451,12 +447,12 @@ class ImportForm extends React.Component {
 		this.props.callback(['wizard-page-history', [...this.props.wizardHistory, this.props.wizardPage]]);
 
 		this.props.callback(['wizard-page', PAGES.PROGRESS]);
-		this.props.callback(['error-check-inprogress', true]);
+		this.props.callback(['error-check-inprogress']);
 		this.props.callback(['import-file']);
 	}
 
 	onLoadWithWarnings = () => {
-		this.props.callback(['error-check-inprogress', true]);
+		this.props.callback(['error-check-inprogress']);
 		this.props.callback(['load-with-warnings']);
 	}
 
@@ -509,15 +505,16 @@ class ImportPage extends React.Component {
 		const cohorts = this.props.state.wizard.cohorts || [];
 		const {
 			probemaps,
-			wizardPage,
+			wizardPage = 0,
 			fileContent,
 			localCohorts,
 			file,
 			fileName,
-			wizardHistory,
+			form,
+			wizardHistory = [],
 			recommended
 
-		} = this.props.state.import;
+		} = this.props.state.import || {};
 
 		return (
 			<div>
@@ -541,7 +538,7 @@ class ImportPage extends React.Component {
 						file={file} fileName={fileName}
 						onViz={this.onViz}
 
-						state={this.props.state.import.form}
+						state={form}
 					/>
 				</div>
 			</div>

@@ -98,8 +98,8 @@ class ApplicationContainer extends React.Component {
 		this.props.callback(['sampleFilter', null]);
 	};
 
-	onNavigate = (page) => {
-		this.props.callback(['navigate', page]);
+	onNavigate = (page, params) => {
+		this.props.callback(['navigate', page, params]);
 	};
 
 	onImport = (content) => {
