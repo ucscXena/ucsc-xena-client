@@ -1,6 +1,7 @@
 'use strict';
 import React from 'react';
 import cssClasses from './ImportPage.module.css';
+import { ProgressBar } from 'react-toolbox/lib';
 
 const maxColumns = 6,
     numRows = 5,
@@ -30,13 +31,13 @@ const getSimpleTableRows = lines => lines.map((line, i) => (
     </tr>
 ));
 
-class DenseTable extends React.Component {
+class FilePreview extends React.Component {
     state = { showMore: false };
 
     onShowMore = () => this.setState({showMore: !this.state.showMore});
 
     render() {
-        const { fileContent, highlightRow, highlightColumn } = this.props,
+        const { fileContent, highlightRow, highlightColumn, isLoading } = this.props,
             takeLines = this.state.showMore ? maxNumRows : numRows;
 
         let lines = fileContent.split(/\r\n|\r|\n/g);
@@ -56,14 +57,18 @@ class DenseTable extends React.Component {
         );
 
         return (
-            <div>
-                <table className={cssClasses.denseExample}>
-                    <tbody>
-                        {tableRows}
-                    </tbody>
-                </table>
-               {this.renderShowMore(lineCount > numRows)}
-            </div>
+            isLoading ?
+                <div style={{ textAlign: 'center' }}>
+                    <ProgressBar type="circular" mode="indeterminate" />
+                </div>
+                : <div>
+                    <table className={cssClasses.denseExample}>
+                        <tbody>
+                            {tableRows}
+                        </tbody>
+                    </table>
+                    {this.renderShowMore(lineCount > numRows)}
+                </div>
         );
     }
 
@@ -100,6 +105,6 @@ const ErrorPreview = ({ errorSnippets = [] }) => {
 };
 
 export {
-    DenseTable,
+    FilePreview,
     ErrorPreview
 };
