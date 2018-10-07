@@ -41,7 +41,10 @@ const importFileDone = (state, result) =>
 			  'warnings', get(result, 'warnings', []),
 			  'errorSnippets', get(result, 'snippets', []),
 			  'serverError', get(result, 'serverError', undefined),
-			  'probemapError', get(result, 'probemapError', undefined)));
+              'probemapError', get(result, 'probemapError', undefined)));
+
+const readFileDone = (state, [{recommended, form}, fileContent]) =>
+    ({...state, fileContent, recommended, fileReadInProgress: false, form: {...state.form, ...form}});
 
 const retryFileDone = (state, [{fileContent}, errors]) =>
     importFileDone(assocInAll(state, ['fileContent'], fileContent), errors);
@@ -65,11 +68,11 @@ const importControls = {
 	// Merge in any errors & status from the file save.
     'import-file-done': importFileDone,
     'read-file-post!': (serverBus, state, newState, fileHandle) =>
-		serverBus.next(['read-file-done', sendMessage(['loadFile', newState.probemaps, fileHandle])]),
+        serverBus.next(['read-file-done', sendMessage(['loadFile', newState.probemaps, fileHandle])]),
+    'file-read-inprogress': state => assocIn(state, ['fileReadInProgress'], true),
 	// XXX add spinner to file snippet & make sure back/forward make
 	// sense while waiting on this.
-	'read-file-done': (state, [{recommended, form}, fileContent]) =>
-		({...state, fileContent, recommended, form: {...state.form, ...form}}),
+	'read-file-done': readFileDone,
     'set-status': (state, status) => assocIn(state, ['status'], status),
     'wizard-page': (state, newPage) => assocIn(state, ['wizardPage'], newPage),
     'wizard-page-history': (state, newHistory) => assocIn(state, ['wizardHistory'], newHistory),
