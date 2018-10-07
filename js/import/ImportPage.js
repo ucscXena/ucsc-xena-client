@@ -68,7 +68,7 @@ class ImportForm extends React.Component {
 
 	render() {
 		const { fileFormat, dataType, assembly, errorCheckInprogress } = this.props.state || {},
-			{ file, wizardPage, fileName } = this.props,
+			{ file, wizardPage, fileName, fileReadInProgress } = this.props,
 			fileSelected = file && !!file.size;
 
 		let wizardProps = {},
@@ -80,7 +80,7 @@ class ImportForm extends React.Component {
 				component = this.fileSelectionPage(fileSelected, file);
 				break;
 			case 1:
-				wizardProps = { nextEnabled: !!dataType, fileName };
+				wizardProps = { nextEnabled: !!dataType && !fileReadInProgress, fileName };
 				component = this.dataTypePage(fileSelected);
 				break;
 			case 2:
