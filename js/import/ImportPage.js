@@ -14,7 +14,7 @@ import { dataTypeOptions, steps, NONE_STR, DATA_TYPE, FILE_FORMAT, PAGES } from 
 
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
-import { DenseTable, ErrorPreview } from './staticComponents';
+import { FilePreview, ErrorPreview } from './staticComponents';
 import CohortSuggest from '../views/CohortSuggest';
 
 const pageStates = _.range(7);
@@ -60,7 +60,7 @@ class ImportForm extends React.Component {
 
 	render() {
 		const { fileFormat, dataType, assembly, errorCheckInprogress } = this.props.state || {},
-			{ file, wizardPage, fileName } = this.props,
+			{ file, wizardPage, fileName, fileReadInProgress } = this.props,
 			fileSelected = file && !!file.size;
 
 		let wizardProps = {},
@@ -72,7 +72,7 @@ class ImportForm extends React.Component {
 				component = this.fileSelectionPage(fileSelected, file);
 				break;
 			case 1:
-				wizardProps = { nextEnabled: !!dataType, fileName };
+				wizardProps = { nextEnabled: !!dataType && !fileReadInProgress, fileName };
 				component = this.dataTypePage(fileSelected);
 				break;
 			case 2:
@@ -169,7 +169,7 @@ class ImportForm extends React.Component {
 				<Button label="I don't see my data type" accent flat={false}/>
 
 				<h4>File preview</h4>
-				<DenseTable fileContent={this.props.fileContent} />
+				{this.renderFilePreview()}
 			</div>
 		);
 	}
@@ -182,15 +182,13 @@ class ImportForm extends React.Component {
 					<RadioButton label='The first column is sample IDs' value={FILE_FORMAT.CLINICAL_MATRIX} />
 					<RadioButton label='The first row is sample IDs' value={FILE_FORMAT.GENOMIC_MATRIX} />
 				</RadioGroup>
-				<DenseTable fileContent={this.props.fileContent}
-					highlightRow={fileFormat === FILE_FORMAT.GENOMIC_MATRIX} highlightColumn={fileFormat === FILE_FORMAT.CLINICAL_MATRIX}
-				/>
+				{this.renderFilePreview(true)}
 			</div>
 		);
 	}
 
 	studySelectionPage() {
-		const { customCohort, cohortRadio, cohort, fileFormat } = this.props.state;
+		const { customCohort, cohortRadio, cohort } = this.props.state;
 		return (
 			<div>
 				<RadioGroup value={cohortRadio} onChange={this.onCohortRadioChange}>
@@ -218,15 +216,13 @@ class ImportForm extends React.Component {
 						</div>
 					}
 				</RadioGroup>
-				<DenseTable fileContent={this.props.fileContent}
-					highlightRow={fileFormat === FILE_FORMAT.GENOMIC_MATRIX} highlightColumn={fileFormat === FILE_FORMAT.CLINICAL_MATRIX}
-				/>
+				{this.renderFilePreview(true)}
 			</div>
 		);
 	}
 
 	probeSelectionPage() {
-		const { fileFormat, probemap } = this.props.state;
+		const { probemap } = this.props.state;
 
 		const recommendedProbemaps = _.getIn(this.props, ['recommended', 'probemaps']);
 		const recommendationsExist = recommendedProbemaps && recommendedProbemaps.length;
@@ -262,9 +258,7 @@ class ImportForm extends React.Component {
 				/>}
 				{ this.renderMailto("Xena import missing identifiers", "identifiers", probemap === NONE_STR || !recommendationsExist) }
 
-				<DenseTable fileContent={this.props.fileContent}
-					highlightRow={fileFormat === FILE_FORMAT.GENOMIC_MATRIX} highlightColumn={fileFormat === FILE_FORMAT.CLINICAL_MATRIX}
-				/>
+				{this.renderFilePreview(true)}
 			</div>
 		);
 	}
@@ -278,7 +272,7 @@ class ImportForm extends React.Component {
 					<RadioButton label="hg19/GRCh37" value='hg19' />
 					<RadioButton label="hg38/GRCh38" value='hg38' />
 				</RadioGroup>
-				<DenseTable fileContent={this.props.fileContent} />
+				{this.renderFilePreview()}
 			</div>
 		);
 	}
@@ -325,6 +319,20 @@ class ImportForm extends React.Component {
 				</div>
 				}
 			</div>
+		);
+	}
+
+	renderFilePreview(showHighlighting = false) {
+		const { fileContent, fileReadInProgress } = this.props;
+		const { fileFormat } = this.props.state;
+
+		return (
+			<FilePreview
+				fileContent={fileContent}
+				isLoading={fileReadInProgress}
+				highlightRow={fileFormat === FILE_FORMAT.GENOMIC_MATRIX && showHighlighting}
+				highlightColumn={fileFormat === FILE_FORMAT.CLINICAL_MATRIX && showHighlighting}
+			/>
 		);
 	}
 
@@ -375,6 +383,7 @@ class ImportForm extends React.Component {
 			const file = evt.target.files[0];
 			this.props.callback([fileProp, file]);
 
+			this.props.callback(['file-read-inprogress']);
 			this.props.callback(['read-file', file]);
 			this.props.callback(['set-status', 'Reading the file...']);
 		}
@@ -499,13 +508,13 @@ class ImportPage extends React.Component {
 			probemaps,
 			wizardPage = 0,
 			fileContent,
+			fileReadInProgress,
 			localCohorts,
 			file,
 			fileName,
 			form,
 			wizardHistory = [],
 			recommended
-
 		} = this.props.state.import || {};
 
 		return (
@@ -525,6 +534,7 @@ class ImportPage extends React.Component {
 						wizardPage={wizardPage}
 						wizardHistory={wizardHistory}
 						fileContent={fileContent}
+						fileReadInProgress={fileReadInProgress}
 						localCohorts={localCohorts}
 						probemaps={probemaps}
 						file={file} fileName={fileName}
