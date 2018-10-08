@@ -28,3 +28,13 @@ body {
 .minWidthWrapper {
 	min-width: appMinWidth;
 }
+
+/**
+ * Adding styling to <pre> tags that are pulled from a CMS to be displayed on hub info pages. 
+ */
+pre {
+	background-color: rgba(0,0,0,0.03);
+	padding: 8px;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+}
