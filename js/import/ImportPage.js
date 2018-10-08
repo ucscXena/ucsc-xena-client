@@ -498,7 +498,7 @@ class ImportPage extends React.Component {
 	onViz = () => {
 		const cohort = _.getIn(this.props.state, ['import', 'form', 'cohort']),
 			customCohort = _.getIn(this.props.state, ['import', 'form', 'customCohort']);
-		this.props.callback(['import-cohort', cohort ? cohort : customCohort]);
+		this.props.callback(['cohort', cohort ? cohort : customCohort]);
 		this.props.callback(['navigate', 'heatmap']);
 	};
 
