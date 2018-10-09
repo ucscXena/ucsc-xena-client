@@ -86,6 +86,9 @@ const getDefaultCustomCohort = (localCohorts, name = defaultStudyName, number = 
     return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `${defaultStudyName} (${number})`, ++number);
 };
 
+const fetchLocalProbemaps = serverBus =>
+        serverBus.next(['set-local-probemaps', probemapList(servers.localHub)]);
+
 const importControls = {
 	// XXX Important: this controller is stateful, due to maintaining a
 	// web worker.
@@ -95,6 +98,8 @@ const importControls = {
 
 	// Merge in any errors & status from the file save.
     'import-file-done': importFileDone,
+	// on dataset error, we may have loaded a probemap
+	'import-file-done-post!': fetchLocalProbemaps,
     'read-file-post!': (serverBus, state, newState, fileHandle) =>
         serverBus.next(['read-file-done', sendMessage(['loadFile', newState.probemaps, fileHandle])]),
     'file-read-inprogress': state => assocIn(state, ['fileReadInProgress'], true),
@@ -112,6 +117,8 @@ const importControls = {
 		serverBus.next(['retry-file-done', sendMessage(['loadFile', newState.probemaps, fileHandle])
 				.flatMap(newFile => postFile(newState).map(errors => ([newFile, errors])))]),
     'retry-file-done': retryFileDone,
+    // on dataset error, we may have loaded a probemap
+    'retry-file-done-post!': fetchLocalProbemaps,
     'set-default-custom-cohort': (state) =>
         assocIn(state, ['form', 'customCohort'], getDefaultCustomCohort(getIn(state, ['localCohorts']))),
     'reset-import-state': (state) => getDefaultState(state),
@@ -129,7 +136,7 @@ const query = {
     },
     'get-probemaps-post!': serverBus => {
         serverBus.next(['set-probemaps', probemapList(referenceHost)]);
-        serverBus.next(['set-local-probemaps', probemapList(servers.localHub)]);
+        fetchLocalProbemaps(serverBus);
     },
     'set-probemaps': (state, probemaps) => assocIn(state, ['probemaps'], getValueLabelList(probemaps)),
      'set-local-probemaps': (state, probemaps) => assoc(state, 'localProbemaps', object(pluck(probemaps, 'hash'), probemaps)),
