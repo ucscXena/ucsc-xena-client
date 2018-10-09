@@ -57,7 +57,7 @@ const readFileObs = fileHandle => {
             obs.next(e.target.result);
             obs.complete();
         };
-        reader.onerror = () => {};
+        reader.onerror = ev => obs.error(ev.target.error);
         reader.readAsBinaryString(fileHandle);
         return () => reading && reader.abort();
     });
