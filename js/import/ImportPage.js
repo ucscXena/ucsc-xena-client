@@ -49,8 +49,8 @@ const getNextPageByDataType = (currIndex, dataType) => {
 	return pages[pages.indexOf(currIndex) + 1];
 };
 
-const hasErrorsOrLoading = ({ errors, errorCheckInprogress, serverError }) =>
-	(errorCheckInprogress === true || serverError || (errors && errors.length));
+const hasErrorsOrLoading = ({ errors, errorCheckInprogress, serverError, probemapError }) =>
+	(errorCheckInprogress === true || serverError || probemapError || (errors && errors.length));
 const hasWarnings = ({ warnings }) => (warnings && warnings.length);
 
 const isImportSuccessful = (state) => !hasErrorsOrLoading(state) && !hasWarnings(state);
@@ -278,8 +278,9 @@ class ImportForm extends React.Component {
 	}
 
 	importProgressPage() {
-		const { errors, warnings, errorCheckInprogress, serverError,
+		const { errors, warnings, errorCheckInprogress, serverError, probemapError,
 			errorSnippets } = this.props.state,
+			serverOrProbemapError = serverError || probemapError,
 			hasErr = errors && !!errors.length;
 
 		let errorText = null;
@@ -303,9 +304,9 @@ class ImportForm extends React.Component {
 					textClass={!hasErr ? styles.warningLine : styles.errorLine}
 				/>
 
-				{ serverError &&
+				{ serverOrProbemapError &&
 				<div>
-					<p style={{color: 'red'}}>Unexpected server error occured: {serverError}</p>
+					<p style={{color: 'red'}}>Unexpected server error occured: {serverOrProbemapError}</p>
 					<p>Please <a href={`mailto:genome-cancer@soe.ucsc.edu?subject="Xena import: java error"`}>contact</a> the
 					 Xena team for help.</p>
 				</div>
