@@ -1,0 +1,17 @@
+.weeks {
+	list-style-type: none;
+}
+
+.week {
+	display: inline-block;
+	width: 100px;
+}
+
+.bookmarks {
+	list-style-type: none;
+}
+
+.id {
+	margin: 0px 20px;
+	font-family: monospace;
+}

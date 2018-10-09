@@ -1,25 +1,35 @@
 #!/bin/bash
 set -o nounset
 set -o errexit
+set -o xtrace
+
+CIRCLE_PROJECT_USERNAME=${CIRCLE_PROJECT_USERNAME:-""}
+CIRCLE_PR_NUMBER=${CIRCLE_PR_NUMBER:-""}
+
+if [ "$CIRCLE_PROJECT_USERNAME" != 'ucscXena' ] || [ ! -z $CIRCLE_PR_NUMBER ]; then
+	exit;
+fi
 
 USER=ubuntu
 BUILD_DJANGO=build-django
+RSYNC_OPTS=(-a --delete -e "ssh -o StrictHostKeyChecking=no")
 
 npm run build:prod -- --bail
 
 # deploy
-rsync -a --delete --rsync-path='sudo rsync' build/ ${USER}@${HOST}:/var/www/html
+rsync "${RSYNC_OPTS[@]}" --rsync-path='sudo rsync' build/ ${USER}@${HOST}:/var/www/html
 # copy to clean load directory, so we can rsync --delete
 rm -rf ${BUILD_DJANGO}
 mkdir ${BUILD_DJANGO}
 cp -a manage.py server bookmarks ties ${BUILD_DJANGO}
-rsync -a --delete ${BUILD_DJANGO}/ ${USER}@${HOST}:/var/www/backend/django
+rsync "${RSYNC_OPTS[@]}" ${BUILD_DJANGO}/ ${USER}@${HOST}:/var/www/backend/django
 
 requirements=$(cat requirements.txt)
 requirements=$(echo ${requirements}) # drop carriage returns
 ssh -l${USER} ${HOST} <<-ENDSSH
     #set -o nounset # 'activate' accesses unbound vars
     set -o errexit
+    set -o xtrace
     cp ~/settings/site_settings.py /var/www/backend/django/server/site_settings.py
     . /var/www/backend/virtualenv/bin/activate
     pip install ${requirements}

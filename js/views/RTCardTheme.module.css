@@ -40,6 +40,12 @@
 	margin-top: -4px;
 }
 
+.cardTitle.warning .subtitle {
+	color: red;
+	line-height: 12px;
+	font-size: 12px;
+}
+
 /* Card text container */
 .cardText {
 	border-bottom: 1px solid black12;

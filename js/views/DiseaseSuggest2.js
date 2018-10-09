@@ -193,11 +193,7 @@ class DiseaseSuggest extends PureComponent {
 		this.props.onSelect(value);
 	};
 
-	shouldRenderSuggestions = (value) => {
-		var position = this.input.selectionStart,
-			word = currentWord(value, position);
-		return word.length > 0;
-	};
+	shouldRenderSuggestions = () => true;
 
 	getSuggestionValue = (suggestion) => {
 		var position = this.input.selectionStart,

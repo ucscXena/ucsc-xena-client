@@ -175,6 +175,12 @@ Start a cypress interactive session with
 npm run cypress:open
 ```
 
+Run non-generative suites with
+
+```
+npm run cypress:run
+```
+
 Run generative tests with
 
 ```

@@ -99,6 +99,9 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 		}
 	};
 	chartOptions.plotOptions = {
+		series: {
+			animation: false
+		},
 		errorbar: {
 			color: 'gray'
 		}
@@ -205,6 +208,9 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 	}
 
 	chartOptions.plotOptions = {
+		series: {
+			animation: false
+		},
 		errorbar: {
 			color: 'gray'
 		}
@@ -266,6 +272,7 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 			},
 		},
 		series: {
+			animation: false,
 			turboThreshold: 0,
 			stickyTracking: false,
 			boostThreshold: 1000

@@ -264,8 +264,8 @@ var getPreferred = (wizard, cohort) =>
 
 class CohortPage extends React.Component {
 	onViz = () => {
-		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
-			cohort = getIn(datapages, ['cohort', 'cohort'], COHORT_NULL);
+		var {params, spreadsheet: {cohort: currentCohort}} = this.props.state,
+			cohort = params.cohort;
 
 		if (cohort !== get(currentCohort, 'name')) {
 			this.props.callback(['cohort', cohort]);
@@ -278,7 +278,7 @@ class CohortPage extends React.Component {
 	render() {
 		var {hubParams, state: {datapages, params, wizard}} = this.props,
 			cohort = getIn(datapages, ['cohort', 'cohort']) === params.cohort ?
-				datapages.cohort : {cohort: '...', datasets: []},
+				datapages.cohort : {cohort: `${params.cohort} ...`, datasets: []},
 			{callback} = this.props,
 			dsGroups = groupBy(values(cohort.datasets), 'dataSubType'),
 			dataSubTypes = sortBy(keys(dsGroups), g => g.toLowerCase()),
@@ -431,7 +431,8 @@ var DatasetPage = wrapLaunchHelper(
 			var {callback, state, hubParams, children, badge} = this.props,
 				{params: {host, dataset}, datapages} = state,
 				{meta, probeCount = 0, data, downloadLink, probemapLink, dataset: currentDataset,
-					host: currentHost} = get(datapages, 'dataset', {});
+					host: currentHost} = get(datapages, 'dataset', {}),
+				githubDescripton = get(datapages, 'datasetDescription', null);
 
 			if (!meta || currentHost !== host || currentDataset !== dataset) {
 				return (
@@ -459,7 +460,7 @@ var DatasetPage = wrapLaunchHelper(
 					<h2>dataset: {(dataSubType ? dataSubType + ' - ' : '') + label}</h2>
 					<h3>hub: {host}{badge}</h3>
 					{headerValue(longTitle)}
-					{htmlValue(description)}
+					{markdownValue(githubDescripton) || htmlValue(description)}
 					{setKey(flatten([
 						dataPair('cohort', cohort, toCohortLink(this.onCohort, hubParams)),
 						dataPair('dataset ID', name),
@@ -618,6 +619,18 @@ class ListPage extends React.Component {
 	}
 }
 
+class markdownPage extends React.Component {
+	render() {
+		var {state} = this.props,
+			content = getIn(state, ['datapages', 'markdownContent']);
+
+		return (
+			<div className={styles.datapages}>
+				{markdownValue(content)}
+			</div>);
+	}
+}
+
 var IdentifiersPage = props =>
 	<ListPage title='Identifiers' path='identifiers' {...props}/>;
 
@@ -628,7 +641,8 @@ var SamplesPage = props =>
 // Top-level dispatch to sub-pages
 //
 
-var getPage = ({dataset, host, cohort, allIdentifiers, allSamples}) =>
+var getPage = ({dataset, host, cohort, allIdentifiers, allSamples, markdown}) =>
+	markdown ? markdownPage :
 	allSamples ? SamplesPage :
 	allIdentifiers ? IdentifiersPage :
 	dataset && host ? DatasetPage :

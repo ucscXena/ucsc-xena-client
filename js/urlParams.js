@@ -35,7 +35,7 @@ var hubParams2 = pick(allParameters(), 'addHub', 'removeHub');
 
 function datasetParams() {
 	// only take the first of these
-	return mapObject(pick(allParameters(), 'cohort', 'dataset', 'host', 'allIdentifiers'), l => l[0]);
+	return mapObject(pick(allParameters(), 'cohort', 'dataset', 'host', 'allIdentifiers', 'markdown'), l => l[0]);
 }
 
 function manifest() {

@@ -4,20 +4,12 @@ import {Button} from 'react-toolbox/lib/button';
 import Link from 'react-toolbox/lib/link';
 import Tooltip from 'react-toolbox/lib/tooltip';
 var React = require('react');
-//var config = require('../config');
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
-var {createBookmark} = require('../bookmark');
-var konami = require('../konami');
+var {createBookmark, getRecent, setRecent} = require('../bookmark');
 
 var compStyles = require('./BookmarkMenu.module.css');
-
-var bookmarksDefault = false;
-if (process.env.NODE_ENV !== 'production') {
-	bookmarksDefault = true;
-}
-
-var asciiA = 65;
+var gaEvents = require('../gaEvents');
 
 // XXX This is a horrible work-around for react-toolbox menu limitations.
 // We want the Bookmark MenuItem to not close the menu. Menu closes when
@@ -36,21 +28,25 @@ var TooltipNoCloseMenuItem = Tooltip(NoCloseMenuItem);
 var privateWarning = 'Unable to create bookmark link due to private data in view. Use export instead';
 
 class BookmarkMenu extends React.Component {
-	state = {loading: false, bookmarks: bookmarksDefault, open: false};
+	state = {loading: false, open: false, recent: false};
 
-	componentWillMount() {
-		this.ksub = konami(asciiA).subscribe(this.enableBookmarks);
+	// RTB positions and clips the menu content according
+	// to the initial menu render size, which causes problems
+	// for dynamic content. This is a work-around which causes
+	// the Menu component to re-calculate its size every time
+	// we update.
+	componentDidUpdate() {
+		if (this.state.open && this.menuRef) {
+			this.menuRef.show();
+		}
 	}
 
-	componentWillUnmount() {
-		this.ksub.unsubscribe();
+	onRef = ref => {
+		this.menuRef = ref;
 	}
-
-	enableBookmarks = () => {
-		this.setState({bookmarks: true});
-	};
 
 	onBookmark = () => {
+		gaEvents('bookmark', 'create');
 		var {getState} = this.props;
 		this.setState({loading: true});
 		Rx.Observable.ajax({
@@ -67,6 +63,7 @@ class BookmarkMenu extends React.Component {
 
 	onSetBookmark = (resp) => {
 		var {id} = JSON.parse(resp.response);
+		setRecent(id);
 		this.setState({bookmark: `${location.href}?bookmark=${id}`, loading: false});
 	};
 
@@ -80,6 +77,7 @@ class BookmarkMenu extends React.Component {
 	};
 
 	onExport = () => {
+		gaEvents('bookmark', 'export');
 		var {getState} = this.props;
 		var url = URL.createObjectURL(new Blob([JSON.stringify(getState())], { type: 'application/json' }));
 		var a = document.createElement('a');
@@ -95,6 +93,7 @@ class BookmarkMenu extends React.Component {
 	};
 
 	onImportSelected = (ev) => {
+		gaEvents('bookmark', 'import');
 		var file = ev.target.files[0],
 			reader = new FileReader(),
 			{onImport} = this.props;
@@ -109,8 +108,16 @@ class BookmarkMenu extends React.Component {
 	};
 
 	onClick = () => {
-		this.setState({open: !this.state.open});
+		this.setState({open: !(this.state.open || this.state.recent), recent: false});
 	};
+
+	onRecent = () => {
+		this.setState({recent: !this.state.recent, open: false});
+	}
+
+	onRecentHide = () => {
+		this.setState({recent: false});
+	}
 
 	handleMenuHide = () => {
 		this.setState({open: false});
@@ -119,43 +126,53 @@ class BookmarkMenu extends React.Component {
 		}
 	};
 
+	onViewBookmark(id) {
+		window.location = window.location.href + `?bookmark=${id}`;
+	}
+
 	render() {
-		var {bookmarks, bookmark, loading, open} = this.state,
+		var {bookmark, loading, open, recent} = this.state,
 			{isPublic} = this.props,
+			recentBookmarks = getRecent(),
 			BookmarkElement = isPublic ? NoCloseMenuItem : TooltipNoCloseMenuItem;
 
-		if (!bookmarks) {
-			return null;
-		}
-		// min-width specified on first MenuItem of bookmark menu is a hack to
-		// force menu items to extend full width for both no bookmark and
-		// bookmark states. RTB positions and clips the menu content according
-		// to the initial menu item content which causes problems when we move
-		// from the "Your Bookmark is Loading" to "Copy to Clipboard" states.
-		// Do not remove this inline style!
-		//
-		// In similar fashion, it's important to render a placeholder for the
-		// eventual 'Copy' item. Otherwise it will be clipped, because Menu
-		// does not re-compute clipping when children change.
 		return (
 			<div style={{display: 'inline', position: 'relative'}}>
 				<Button onClick={this.onClick}>Bookmark</Button>
-				<Menu position='auto' active={open} onHide={this.handleMenuHide} className={compStyles.iconBookmark} iconRipple={false} onShow={this.resetBookmark}>
+				<Menu innerRef={this.onRef} position='topLeft' active={open} onHide={this.handleMenuHide} className={compStyles.iconBookmark} iconRipple={false} onShow={this.resetBookmark}>
 					<BookmarkElement
 						tooltip={privateWarning}
-						style={{minWidth: 218, pointerEvents: 'all' /* override MenuItem 'disabled' class */}}
+						style={{pointerEvents: 'all' /* override MenuItem 'disabled' class */}}
 						disabled={!isPublic}
 						onClick={this.onBookmark}
 						caption='Bookmark'/>
+					{recentBookmarks.length > (bookmark ? 1 : 0) ?
+						<MenuItem onClick={this.onRecent} title={null} caption='Recent bookmarks'/> : null}
 					<MenuItem onClick={this.onExport} title={null} caption='Export'/>
 					<MenuItem onClick={this.onImport} title={null} caption='Import'/>
-					<Link className={compStyles.help} target='_blank' href='http://xena.ucsc.edu/bookmarks/' label='Help'/>
-					<MenuDivider/>
-					{bookmark ? <MenuItem onClick={this.onCopyBookmarkToClipboard} caption='Copy Bookmark'/> : null}
-					{loading ? <MenuItem disabled={true} caption='Your Bookmark is Loading'/> : null}
-					{!bookmark && !loading ? <MenuItem className={compStyles.placeholder} disabled={true}>Placeholder</MenuItem> : null}
+					<Link className={compStyles.help} target='_blank' href='https://ucsc-xena.gitbook.io/project/overview-of-features/bookmarks' label='Help'/>
+					{bookmark || loading ? <MenuDivider/> : null}
+					{bookmark || loading ? (
+						<MenuItem
+							onClick={bookmark ? this.onCopyBookmarkToClipboard : undefined}
+							caption={bookmark ? 'Copy Bookmark' : 'Your Bookmark is Loading'}
+							disabled={!bookmark}/>) : null}
+					{bookmark ? (
+						<p className={compStyles.warning}>
+							Note: bookmarks are only guaranteed for 3 months after creation
+						</p>) : null}
 					<input className={compStyles.bookmarkInput} ref={(input) => this.bookmarkEl = input} value={bookmark || ''}/>
 					<input className={compStyles.importInput} ref='import' id='import' onChange={this.onImportSelected} type='file'/>
+				</Menu>
+				<Menu onSelect={this.onViewBookmark}
+						position='auto'
+						active={recent && recentBookmarks.length > 0}
+						className={compStyles.iconBookmark}
+						iconRipple={false}
+						onHide={this.onRecentHide}>
+					{recentBookmarks.map(({id, time}) => (
+						<MenuItem key={id} value={id} title={null} caption={`${time.replace(/ GMT.*/, '')} (${id.slice(0, 4)})`}/>
+						))}
 				</Menu>
 			</div>);
 	}

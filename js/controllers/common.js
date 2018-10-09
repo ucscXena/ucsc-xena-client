@@ -10,6 +10,7 @@ var fetch = require('../fieldFetch');
 var kmModel = require('../models/km');
 var {getColSpec} = require('../models/datasetJoins');
 var {signatureField} = require('../models/fieldSpec');
+var {ignoredType} = require('../models/dataType');
 var defaultServers = require('../defaultServers');
 var {publicServers} = defaultServers;
 var gaEvents = require('../gaEvents');
@@ -179,7 +180,7 @@ var fetchCohortData = (serverBus, state) => {
 var unionOfResults = resps => collectResults(resps, results => _.union(...results));
 
 function cohortQuery(servers) {
-	return Rx.Observable.zipArray(_.map(servers, s => reifyErrors(xenaQuery.allCohorts(s), {host: s})))
+	return Rx.Observable.zipArray(_.map(servers, s => reifyErrors(xenaQuery.allCohorts(s, ignoredType), {host: s})))
 			.flatMap(unionOfResults);
 }
 
