@@ -175,7 +175,7 @@ var cmds = {
 			doImport = importFile(params, ignoreWarnings);
 		return form.probemap && !has(localProbemaps, form.probemap.hash) ?
 			uploadProbemapFile(form.probemap).switchMap(
-				pm => Object.hasOwnProperty(pm, 'probemapError') ? Rx.Observable.of(pm) :
+				pm => has(pm, 'probemapError') ? Rx.Observable.of(pm) :
 					doImport) :
 			doImport;
 	}
