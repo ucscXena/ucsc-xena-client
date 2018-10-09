@@ -45,7 +45,7 @@ const updateFile = (fileName) => {
         method: 'POST',
         crossDomain: true
     };
-    return ajax(payload).map(r => r.response);
+    return ajax(payload).map(r => JSON.parse(r.response));
 };
 
 const readFileObs = fileHandle => {
@@ -183,6 +183,7 @@ var cmds = {
 
 // XXX catch errors here? would need to flag them somehow &
 // extract enough info to be serializable.
+// esp. need to handle file read errors.
 const wrapSlotRequest = ({msg: [tag, ...args], id}) =>
 	cmds[tag](...args).map(msg => ({msg, id}));
 

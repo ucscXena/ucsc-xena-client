@@ -3,9 +3,15 @@
 import Rx from '../rx';
 import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
-import { cohortSummary, probemapList } from '../xenaQuery';
-import { assoc, assocIn, assocInAll, get, getIn, object, pluck, updateIn } from "../underscore_ext";
+import { cohortSummary, probemapList, datasetStatus } from '../xenaQuery';
+import { assoc, assocIn, assocInAll, get, getIn, isArray, last, object, pluck, updateIn } from "../underscore_ext";
 import Worker from 'worker-loader!./import-worker';
+
+var loaderSocket = Rx.Observable.webSocket("ws://localhost:7222/load-events");
+
+var watchQueueFor = file =>
+	loaderSocket.takeWhile(({queue}) => queue.find(([name]) => name === file))
+		.last(null, null, 'done');
 
 const worker = new Worker();
 
@@ -36,18 +42,41 @@ const getDefaultState = () => ({
 const importFileDone = (state, result) =>
 	updateIn(state, ['form'], form =>
 		assoc(form,
-			  'errorCheckInprogress', false,
-			  'errors', get(result, 'errors', []),
-			  'warnings', get(result, 'warnings', []),
-			  'errorSnippets', get(result, 'snippets', []),
-			  'serverError', get(result, 'serverError', undefined),
-              'probemapError', get(result, 'probemapError', undefined)));
+			'errorCheckInprogress', false,
+			'errors', get(result, 'errors', []),
+			'warnings', get(result, 'warnings', []),
+			'errorSnippets', get(result, 'snippets', []),
+			'serverError', get(result, 'serverError', undefined),
+			'probemapError', get(result, 'probemapError', undefined)));
+
+const fileQueued = (fileName, queue) =>
+	isArray(queue) && get(last(queue), 0) === fileName;
 
 const readFileDone = (state, [{recommended, form}, fileContent]) =>
     ({...state, fileContent, recommended, fileReadInProgress: false, form: {...state.form, ...form}});
 
-const retryFileDone = (state, [{fileContent}, errors]) =>
+// XXX handle 'inference'
+const retryFileDone = (state, [[/*inference, */fileContent], errors]) =>
     importFileDone(assocInAll(state, ['fileContent'], fileContent), errors);
+
+function parseServerErrors(resp) {
+	const [{status, text}] = resp,
+		// Ignoring loader warnings, for now, since we can only have loader warnings
+		// if the user chose to ignore warnings before loading.
+		{/*loader, */error} = JSON.parse(text);
+	return status === 'loaded' ? {} : {
+		serverError: error || 'Unknown server error'
+	};
+}
+
+// emits error result in form {error, serverError, ...}
+const postFile = ({fileName, form, localProbemaps}, ignoreWarnings) =>
+	sendMessage(['postFile', fileName, form, localProbemaps, ignoreWarnings])
+	.flatMap(result => fileQueued(fileName, result) ?
+			watchQueueFor(fileName)
+				.switchMapTo(datasetStatus(servers.localHub, fileName))
+				.map(parseServerErrors)
+		: Rx.Observable.of(result));
 
 const getCohortArray = cohorts => cohorts.map(c => c.cohort);
 const getValueLabelList = (items) => items
@@ -62,8 +91,7 @@ const importControls = {
 	// web worker.
     'file': (state, fileHandle) => assocInAll(state, ['file'], fileHandle, ['fileName'], fileHandle.name),
     'import-file-post!': (serverBus, state, newState) =>
-		serverBus.next(['import-file-done',
-			sendMessage(['postFile', newState.fileName, newState.form, newState.localProbemaps])]),
+		serverBus.next(['import-file-done', postFile(newState)]),
 
 	// Merge in any errors & status from the file save.
     'import-file-done': importFileDone,
@@ -82,14 +110,13 @@ const importControls = {
 	// to merge in new inference when file changes.
     'retry-file-post!': (serverBus, state, newState, fileHandle) =>
 		serverBus.next(['retry-file-done', sendMessage(['loadFile', newState.probemaps, fileHandle])
-				.flatMap(newFile => sendMessage(['postFile', newState.fileName, newState.form, newState.localProbemaps]).map(errors => ([newFile, errors])))]),
+				.flatMap(newFile => postFile(newState).map(errors => ([newFile, errors])))]),
     'retry-file-done': retryFileDone,
     'set-default-custom-cohort': (state) =>
         assocIn(state, ['form', 'customCohort'], getDefaultCustomCohort(getIn(state, ['localCohorts']))),
     'reset-import-state': (state) => getDefaultState(state),
     'load-with-warnings-post!': (serverBus, state, newState) =>
-		serverBus.next(['import-file-done',
-			sendMessage(['postFile', newState.fileName, newState.form, newState.localProbemaps, true])])
+		serverBus.next(['import-file-done', postFile(newState, true)])
 };
 
 const query = {
