@@ -223,7 +223,6 @@ var linkedHub = state =>
 	state.params.host ? [state.params.host] : [];
 
 var needCohortHubs = state =>
-	state.page === 'datapages' &&
 	contains(['summary', 'hub'], getSection(state.params)) ?
 	uniq(userServers(state.spreadsheet).concat(linkedHub(state))) : [];
 
@@ -231,7 +230,6 @@ var hasCohortHubs = state => pluck(getIn(state, ['datapages', 'cohorts'], []), '
 
 
 var needACohort = state =>
-	state.page === 'datapages' &&
 	getSection(state.params) === 'cohort' &&
 	state.params.cohort;
 
@@ -239,7 +237,6 @@ var hasACohort = (state, cohort) =>
 	cohort === getIn(state, ['datapages', 'cohort', 'cohort']);
 
 var needDataset = state =>
-	state.page === 'datapages' &&
 	getSection(state.params) === 'dataset' &&
 	pick(state.params, 'dataset', 'host');
 
@@ -248,7 +245,6 @@ var hasDataset = (state, {dataset, host}) =>
 	host === getIn(state, ['datapages', 'dataset', 'host']);
 
 var needIdentifiers = state =>
-	state.page === 'datapages' &&
 	getSection(state.params) === 'identifiers' &&
 	pick(state.params, 'dataset', 'host');
 
@@ -258,12 +254,10 @@ var hasIdentifiers = (state, {dataset, host}) =>
 	getIn(state, ['datapages', 'identifiers', 'identifiers']);
 
 var needSamples = state =>
-	state.page === 'datapages' &&
 	getSection(state.params) === 'samples' &&
 	pick(state.params, 'dataset', 'host');
 
 var needMarkDown = state =>
-	state.page === 'datapages' &&
 	pick(state.params, 'markdown') &&
 	state.params.markdown &&
 	state.params.markdown.indexOf("https://raw.githubusercontent.com/ucscXena/cohortMetaData/master") === 0;
@@ -283,6 +277,10 @@ function datapagesPostActions(serverBus, state, newState, action) {
 	// XXX is this only relevant in 'init' and 'navigate' actions?
 	// Should we just dispatch on those?
 	var [type] = action;
+
+	if (!type === 'init' && !type === 'navigate' || state.page !== 'datapages') {
+		return;
+	}
 
 	var needHubs = needCohortHubs(newState);
 	if (needHubs) {
