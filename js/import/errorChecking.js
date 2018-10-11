@@ -76,7 +76,7 @@ const getErrors = (fileContent, fileFormat, dataType) => {
     filteredErrors = filteredErrors.filter(err => err.level === 'error');
 
     //get lines
-    let lines = fileContent.trim()
+    let lines = fileContent.replace(/[\n\r]*$/, '')
         .split(/\r\n|\r|\n/g)
         .map(l => getColumns(l));
 
