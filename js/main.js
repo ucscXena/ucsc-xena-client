@@ -66,6 +66,6 @@ const store = createStore();
 const main = window.document.getElementById('main');
 
 // XXX reducer
-const controller = compose(serverController, uiController, hubController, transcriptController/*, tiesController*/);
+const controller = compose(hubController, serverController, uiController, transcriptController/*, tiesController*/);
 
 connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});

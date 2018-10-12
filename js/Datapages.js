@@ -3,7 +3,7 @@
 require('./base');
 const React = require('react');
 var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
-	pluck, concat, where, contains, get, updateIn, range, Let,
+	contains, get, updateIn, range, Let, pick,
 	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext');
 var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx');
 var {parseDsID} = require('./xenaQuery');
@@ -100,7 +100,7 @@ var cohortLink = (cohort, onClick, hubParams) => (
 		onClick={onClick}/>);
 
 var collateCohorts = hubCohorts =>
-	concat(...pluck(hubCohorts, 'cohorts')).reduce(
+	flatten(values(hubCohorts)).reduce(
 		(acc, cohort) => updateIn(acc, [cohort.cohort],
 			(v = 0) => cohort.count + v),
 		{});
@@ -130,8 +130,8 @@ class CohortSummaryPage extends React.Component {
 		var {hubParams, state} = this.props,
 			{spreadsheet: {servers}} = state,
 			userServers = getUserServers(servers),
-			cohorts = getIn(this.props.state, ['datapages', 'cohorts'], []),
-			activeCohorts = cohorts.filter(c => contains(userServers, c.server)),
+			cohorts = getIn(this.props.state, ['datapages', 'cohorts'], {}),
+			activeCohorts = pick(cohorts, userServers),
 			combined = collateCohorts(activeCohorts);
 		return (
 			<div className={styles.datapages}>
@@ -183,7 +183,7 @@ var canDelete = ({status}, host) =>
 	host === localHub && contains(['loaded', 'error'], status);
 
 var markdownValue = value => {
-	if (value) {
+	if (value && !value.error) {
 		var converter = new showdown.Converter();
 		return (<div className={styles.header}
 			dangerouslySetInnerHTML={{__html: converter.makeHtml(value)}}/>);
@@ -248,21 +248,24 @@ class CohortPage extends React.Component {
 	onDataset = (ev) => { navHandler.call(this, ev); };
 
 	render() {
-		var {hubParams, state: {datapages, params, wizard}} = this.props,
-			cohort = getIn(datapages, ['cohort', 'cohort']) === params.cohort ?
-				datapages.cohort : {cohort: `${params.cohort} ...`, datasets: []},
-			{callback} = this.props,
-			dsGroups = groupBy(values(cohort.datasets), 'dataSubType'),
+		var {hubParams, callback,
+				state: {datapages, spreadsheet, params: {cohort}, wizard}} = this.props,
+			servers = getUserServers(spreadsheet.servers),
+			meta = getIn(datapages, ['cohort', cohort]),
+			datasetsByHost = pick(
+					getIn(datapages, ['cohortDatasets', cohort], {}), servers),
+			datasets = flatten(values(datasetsByHost)),
+			dsGroups = groupBy(values(datasets), 'dataSubType'),
 			dataSubTypes = sortBy(keys(dsGroups), g => g.toLowerCase()),
-			preferred = getPreferred(wizard, params.cohort);
+			preferred = getPreferred(wizard, cohort);
 
 		return (
 			<div className={styles.datapages}>
-				{markdownValue(cohort.meta)}
+				{markdownValue(meta)}
 				<div className={styles.sidebar}>
 					<Button onClick={this.onViz} accent>Visualize</Button>
 				</div>
-				<h2>cohort: {treehouse(cohort.cohort)}{cohort.cohort}</h2>
+				<h2>cohort: {treehouse(cohort)}{cohort}</h2>
 				{dataSubTypes.map(drawGroup(callback, dsGroups, preferred, this.onDataset, hubParams))}
 				{preferred.size === 0 ? null : (
 					<span>
@@ -380,8 +383,9 @@ class DatasetPage extends React.Component {
 	onCohort = (ev) => { navHandler.call(this, ev); };
 
 	onViz = () => {
-		var {datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
-			cohort = getIn(datapages, ['dataset', 'meta', 'cohort'], COHORT_NULL);
+		var {params: {host, dataset},
+				datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
+			cohort = getIn(datapages, ['dataset', host, dataset, 'meta', 'cohort'], COHORT_NULL);
 
 		if (cohort !== get(currentCohort, 'name')) {
 			this.props.callback(['cohort', cohort]);
@@ -395,11 +399,10 @@ class DatasetPage extends React.Component {
 	render() {
 		var {callback, state, hubParams} = this.props,
 			{params: {host, dataset}, datapages} = state,
-			{meta, probeCount = 0, data, downloadLink, probemapLink, dataset: currentDataset,
-				host: currentHost} = get(datapages, 'dataset', {}),
-			githubDescripton = get(datapages, 'datasetDescription', null);
+			{meta, probeCount = 0, data, downloadLink, probemapLink} = getIn(datapages, ['dataset', host, dataset], {}),
+			githubDescripton = getIn(datapages, ['datasetDescription', dataset], null);
 
-		if (!meta || currentHost !== host || currentDataset !== dataset) {
+		if (!meta) {
 			return (
 				<div className={styles.datapages}>
 					<h2>dataset: ...</h2>
@@ -483,14 +486,13 @@ class HubPage extends React.Component {
 			{spreadsheet: {servers}} = state,
 			userServers = getUserServers(servers),
 			{host} = defaultHost(state.params),
-			cohorts = getIn(state, ['datapages', 'cohorts'], []),
-			hubCohorts = where(cohorts, {server: host}),
+			hubCohorts = getIn(state, ['datapages', 'cohorts', host], []),
 			coll = collateCohorts(hubCohorts),
 			inHubs = contains(userServers, host) ?
 				'' : ' (not in my data hubs)';
 		return (
 			<div className={styles.datapages}>
-				{markdownValue(getIn(hubCohorts, [0, 'meta']))}
+				{markdownValue(getIn(state, ['datapages', 'hubMeta', host]))}
 				<h2>{getHubName(host)}{inHubs}</h2>
 				<p>Hub address: {host}</p>
 				<CohortSummary hubParams={hubParams} cohorts={coll} onCohort={this.onCohort}/>
@@ -513,11 +515,9 @@ class ListPage extends React.Component {
 	state = {};
 
 	componentWillMount() {
-		var {state, path} = this.props,
-			list = getIn(state, ['datapages', path, 'list']);
 		var events = rxEvents(this, 'list');
 		var chunks = events.list
-			.startWith(list)
+			.startWith(this.props.list)
 			.distinctUntilChanged()
 			.filter(identity)
 			.switchMap(ids => {
@@ -536,19 +536,12 @@ class ListPage extends React.Component {
 	}
 
 	componentWillReceiveProps(props) {
-		var {state, path} = props,
-			list = getIn(state, ['datapages', path, 'list']);
-
-		this.on.list(list);
+		this.on.list(props.list);
 	}
 
 	render() {
-		var {state, path, title} = this.props,
-			{params: {host, dataset}, datapages} = state,
-			{dataset: currentDataset, host: currentHost}
-				= getIn(datapages, [path], {}),
-			{chunks, total} = currentHost !== host || currentDataset !== dataset ?
-				{} : this.state,
+		var {dataset, title} = this.props,
+			{chunks, total} = this.state,
 			percent = !chunks ? ' 0%' :
 				chunks.length === total ? '' :
 				` ${Math.floor(chunks.length / total * 100)}%`;
@@ -569,7 +562,7 @@ class ListPage extends React.Component {
 class markdownPage extends React.Component {
 	render() {
 		var {state} = this.props,
-			content = getIn(state, ['datapages', 'markdownContent']);
+			content = getIn(state, ['datapages', 'markdown', state.params.markdown]);
 
 		return (
 			<div className={styles.datapages}>
@@ -579,10 +572,16 @@ class markdownPage extends React.Component {
 }
 
 var IdentifiersPage = props =>
-	<ListPage title='Identifiers' path='identifiers' {...props}/>;
+	Let(({state: {params: {host, dataset}}} = props) =>
+		(<ListPage title='Identifiers'
+			dataset={dataset}
+			list={getIn(props.state, ['datapages', 'identifiers', host, dataset])}/>));
 
 var SamplesPage = props =>
-	<ListPage title='Samples' path='samples' {...props}/>;
+	Let(({state: {params: {host, dataset}}} = props) =>
+		(<ListPage title='Samples'
+			dataset={dataset}
+			list={getIn(props.state, ['datapages', 'samples', host, dataset])}/>));
 
 //
 // Top-level dispatch to sub-pages
