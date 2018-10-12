@@ -15,6 +15,7 @@ var Rx = {
 require('rxjs/add/observable/bindCallback');
 require('rxjs/add/observable/defer');
 require('rxjs/add/observable/dom/ajax');
+require('rxjs/add/observable/empty');
 require('rxjs/add/observable/from');
 require('rxjs/add/observable/fromEvent');
 require('rxjs/add/observable/interval');
@@ -30,6 +31,7 @@ require('rxjs/add/operator/distinctUntilChanged');
 require('rxjs/add/operator/delay');
 require('rxjs/add/operator/do');
 require('rxjs/add/operator/filter');
+require('rxjs/add/operator/finally');
 require('rxjs/add/operator/groupBy');
 require('rxjs/add/operator/map');
 require('rxjs/add/operator/merge');
@@ -80,6 +82,23 @@ observableProto.spy = function (msg) {
 			inner.unsubscribe();
 			log(msg, "disposed");
 		});
+	});
+};
+
+// rxjs groupBy leaks observables. If using a duration selector,
+// it still leaks keys, which is bad for long-running processes where
+// the key space drifts. This version shouldn't leak so long as the
+// caller disposes of the group (e.g. with take()).
+observableProto.groupByNoLeak = function (keyFn) {
+	var observable = this,
+		groups = {},
+		sobs = observable.share();
+	return sobs.flatMap(x => {
+		var key = keyFn(x);
+		return groups[key] ? Rx.Observable.empty() :
+			Rx.Observable.of(
+				groups[key] = sobs.startWith(x).filter(y => keyFn(y) === key)
+					.finally(() => delete groups[key]));
 	});
 };
 
