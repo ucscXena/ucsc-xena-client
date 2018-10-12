@@ -36,11 +36,9 @@ module.exports = function () {
 	// wrapSlotRequest, etc. There's no handler. Where should we catch such
 	// errors & how to handle them?
 
-
-
 	// Subject of [slot, obs]. We group by slot and apply switchLatest.
-	var serverCh = serverBus.groupBy(([slot]) => slotId(slot))
-		.map(g => g.switchMap(wrapSlotRequest))
+	var serverCh = serverBus.groupByNoLeak(([slot]) => slotId(slot))
+		.map(g => g.switchMap(wrapSlotRequest).take(1))
 		.mergeAll();
 
 	var uiBus = new Rx.Subject();
