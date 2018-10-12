@@ -9,6 +9,7 @@ var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers, updateWizard} = require('./common');
 var {ignoredType} = require('../models/dataType');
 var Rx = require('../rx');
+import {defaultHost} from '../urlParams';
 
 var hubsToAdd = ({hubs, addHub}) =>
 	(hubs || []).concat(addHub || []);
@@ -169,13 +170,14 @@ var sectionDataMethods = {
 	summary: state =>
 		Let((servers = uniq(userServers(state.spreadsheet).concat(linkedHub(state)))) =>
 				servers.map(server => ['cohorts', server])),
-	hub: ({params: {host}}) => [
-		['hubMeta', host],
-		['cohorts', host]]
+	hub: ({params}) =>
+		Let(({host} = defaultHost(params)) => [
+			['hubMeta', host],
+			['cohorts', host]])
 };
 
 var sectionData = state =>
-	Let((method = sectionDataMethods[getSection(state.params)]) =>
+	Let((method = sectionDataMethods[getSection(defaultHost(state.params))]) =>
 		method ? method(state) : []);
 
 var fetchMethods = {

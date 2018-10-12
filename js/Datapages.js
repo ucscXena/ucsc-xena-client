@@ -18,6 +18,7 @@ var treehouseImg = require('../images/Treehouse.jpg');
 var {rxEvents} = require('./react-utils');
 var {servers: {localHub}, serverNames} = require('./defaultServers');
 import Dialog from 'react-toolbox/lib/dialog';
+import {defaultHost} from './urlParams';
 var {encodeObject, urlParams} = require('./util');
 import {ThemeProvider} from 'react-css-themr';
 var appTheme = require('./appTheme');
@@ -463,16 +464,6 @@ class DatasetPage extends React.Component {
 			</div>);
 	}
 }
-
-// Our handling of parameters 'hub' and 'host', is somewhat confusing. 'host'
-// means "show the hub page for this url". 'hub' means "add this url to the
-// active hub list, and, if in /datapages/ show the hub page for this url".
-// The 'hub' parameter can be repeated, which adds each hub to the active hub
-// list. Only the first one will be displayed when linking to /datapages/.
-// Needs refactor.
-var defaultHost = params =>
-	Let(({host, hubs} = params) =>
-			!host && hubs ? {...params, host: hubs[0]} : params);
 
 //
 // Hub page

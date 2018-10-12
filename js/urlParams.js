@@ -1,5 +1,5 @@
 'use strict';
-var {merge, pick, mapObject} = require('./underscore_ext');
+var {Let, merge, pick, mapObject} = require('./underscore_ext');
 var {hasBookmark, resetBookmarkLocation, getBookmark} = require('./bookmark');
 var {hasInlineState, resetInlineStateLocation} = require('./inlineState');
 var {hubParams: getHubParams} = require('./hubParams');
@@ -47,4 +47,14 @@ function getParams() {
 	return merge(hubParams2, bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest());
 }
 
-module.exports = getParams;
+// Our handling of parameters 'hub' and 'host', is somewhat confusing. 'host'
+// means "show the hub page for this url". 'hub' means "add this url to the
+// active hub list, and, if in /datapages/ show the hub page for this url".
+// The 'hub' parameter can be repeated, which adds each hub to the active hub
+// list. Only the first one will be displayed when linking to /datapages/.
+// Needs refactor.
+export var defaultHost = params =>
+	Let(({host, hubs} = params) =>
+			!host && hubs ? {...params, host: hubs[0]} : params);
+
+export default getParams;
