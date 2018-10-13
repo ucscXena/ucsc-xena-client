@@ -220,9 +220,7 @@ var datapagesPostActions = (serverBus, state, newState) => {
 
 	toFetch.forEach(path => {
 		queue.push(path);
-		// XXX we don't need 'path' as an extra arg at the end. Just use
-		// the slot 'path' in the reducer.
-		serverBus.next([['merge-data', path], fetchData(path), path]);
+		serverBus.next([['merge-data', path], fetchData(path)]);
 	});
 };
 
