@@ -416,7 +416,7 @@ class ImportForm extends React.Component {
 	onRetryMetadata = () => {
 		this.props.callback(['clear-metadata']);
 		this.props.callback(['wizard-page', 1]);
-		this.props.callback(['set-default-custom-cohort']);
+		this.props.callback(['retry-meta-data']);
 	}
 
 	onRetryFile = () => {

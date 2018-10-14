@@ -39,6 +39,10 @@ const getDefaultState = () => ({
     wizardHistory: []
 });
 
+const getDefaultCustomCohort = (localCohorts, name = defaultStudyName, number = 1) => {
+    return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `${defaultStudyName} (${number})`, ++number);
+};
+
 const importFileDone = (state, result) =>
 	updateIn(state, ['form'], form =>
 		assoc(form,
@@ -56,8 +60,23 @@ const readFileDone = (state, [{recommended, form}, fileContent]) =>
     ({...state, fileContent, recommended, fileReadInProgress: false, form: {...state.form, ...form}});
 
 // XXX handle 'inference'
-const retryFileDone = (state, [[/*inference, */fileContent], errors]) =>
-    importFileDone(assocInAll(state, ['fileContent'], fileContent), errors);
+const retryFileDone = (state, [[{recommended, form}, fileContent], errors]) => {
+    const stateWithInference = assocInAll(state,
+        ['recommended'], recommended,
+        ['retryForm'], form
+    );
+    return importFileDone(assocInAll(stateWithInference, ['fileContent'], fileContent), errors);
+};
+
+const onRetryMetaData = (state) => {
+    let retryForm = getIn(state, ['retryForm']) || {};
+    retryForm = {
+        ...retryForm,
+        customCohort: getDefaultCustomCohort(getIn(state, ['localCohorts']))
+    };
+    return assocInAll(state, ['form'], retryForm, ['retryForm'], undefined);
+};
+
 
 function parseServerErrors(resp) {
 	const [{status, text}] = resp,
@@ -81,10 +100,6 @@ const postFile = ({fileName, form, localProbemaps}, ignoreWarnings) =>
 const getCohortArray = cohorts => cohorts.map(c => c.cohort);
 const getValueLabelList = (items) => items
     .map(item => ({label: item.label, userlevel: item.userlevel, value: {name: item.name, hash: item.hash}}));
-
-const getDefaultCustomCohort = (localCohorts, name = defaultStudyName, number = 1) => {
-    return !localCohorts.includes(name) ? name : getDefaultCustomCohort(localCohorts, `${defaultStudyName} (${number})`, ++number);
-};
 
 const fetchLocalProbemaps = serverBus =>
         serverBus.next(['set-local-probemaps', probemapList(servers.localHub)]);
@@ -119,8 +134,7 @@ const importControls = {
     'retry-file-done': retryFileDone,
     // on dataset error, we may have loaded a probemap
     'retry-file-done-post!': fetchLocalProbemaps,
-    'set-default-custom-cohort': (state) =>
-        assocIn(state, ['form', 'customCohort'], getDefaultCustomCohort(getIn(state, ['localCohorts']))),
+    'retry-meta-data': onRetryMetaData,
     'reset-import-state': (state) => getDefaultState(state),
     'load-with-warnings-post!': (serverBus, state, newState) =>
 		serverBus.next(['import-file-done', postFile(newState, true)])
