@@ -145,17 +145,20 @@ var replayBookmark = xhr => {
 	}).as('readBookmark');
 };
 
-var screenshot = file => () => {
-	// This is a clunky work-around to get cypress controls out of the way while
-	// screenshotting.
-	var reporter = window.parent.document.getElementsByClassName('reporter-wrap')[0],
-		display = reporter.style.display;
-	reporter.style.display = 'none';
+var screenshot = file => {
+	cy.wait(200);
 
-	return cy.wait(100).screenshot(file).then(() => {
-		reporter.style.display = display;
-	});
+	// XXX disable responsive layout during screeshot
+	cy.window().then(w => w.cypressScreenshot = true);
+	cy.screenshot(file);
+	return cy.window().then(w => w.cypressScreenshot = false); // XXX move this to common pre-method or post-method, so it runs even if we crash
 };
+
+function compareScreenshots(a, b) {
+	cy.exec(`babel-node cypress/compareImages.js heatmap-spec.js ${a} ${b}`).then(result => {
+		expect(result.stdout, `differ: ${a}.png ${b}.png ${a}-${b}-diff.png`).to.contain('same');
+	});
+}
 
 // XXX would like to cover this in a generative test.
 describe('Datapages circuit', function () {
@@ -163,16 +166,17 @@ describe('Datapages circuit', function () {
 	it('retains heatmap view if cohort unchanged', function () {
 
 		renderASpreadsheet(true);
-		cy.scrollTo('topLeft').then(screenshot('heatmap'));
+		cy.scrollTo('topLeft');
+		screenshot('heatmap');
 
 		cy.visit(datapagesPage.url);
 		datapagesPage.cohortSelect(aCohort);
 		datapagesPage.cohortVisualize().click();
 
 		nav.waitForTransition(); // nav button animation
-		cy.scrollTo('topLeft').then(screenshot('heatmapAgain'));
-		cy.exec('babel-node cypress/compareImages.js heatmap heatmapAgain')
-			.its('stdout').should('contain', 'same');
+		cy.scrollTo('topLeft');
+		screenshot('heatmapAgain');
+		compareScreenshots('heatmap', 'heatmapAgain');
 	});
 });
 
@@ -190,7 +194,8 @@ describe('Bookmark', function() {
 
 		renderASpreadsheet();
 
-		cy.scrollTo('topLeft').then(screenshot('heatmap'));
+		cy.scrollTo('topLeft');
+		screenshot('heatmap');
 
 		nav.bookmarkMenu().click();
 		nav.bookmark().click();
@@ -204,14 +209,14 @@ describe('Bookmark', function() {
 		cy.visit(heatmapPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
 		spreadsheet.loadingSpinners().should('not.be.visible');
-		cy.scrollTo('topLeft').then(screenshot('heatmapBookmark'));
+		cy.scrollTo('topLeft');
+		screenshot('heatmapBookmark');
 
 		//
 		// Assert that the bookmark image matches the original heatmap
 		//
 
-		cy.exec('babel-node cypress/compareImages.js heatmap heatmapBookmark')
-			.its('stdout').should('contain', 'same');
+		compareScreenshots('heatmap', 'heatmapBookmark');
 
 		///////////////////////////////////////
 		// Bookmark KM
@@ -229,7 +234,8 @@ describe('Bookmark', function() {
 		spreadsheet.kaplanMeierButton(1).click({force: true});
 		cy.wait(bootstrapAnimation);
 		spreadsheet.kaplanMeier();
-		cy.scrollTo('topLeft').then(screenshot('kaplanMeier'));
+		cy.scrollTo('topLeft');
+		screenshot('kaplanMeier');
 
 		nav.bookmarkMenu().click();
 		nav.bookmark().click();
@@ -243,15 +249,15 @@ describe('Bookmark', function() {
 		cy.visit(heatmapPage.url + '?bookmark=a1b2', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=a1b2'));
 		spreadsheet.loadingSpinners().should('not.be.visible');
+		cy.scrollTo('topLeft');
 		cy.wait(bootstrapAnimation);
-		cy.scrollTo('topLeft').then(screenshot('kaplanMeierBookmark'));
+		screenshot('kaplanMeierBookmark');
 
 		//
 		// Assert that the bookmark image matches the original KM
 		//
 
-		cy.exec('babel-node cypress/compareImages.js kaplanMeier kaplanMeierBookmark')
-			.its('stdout').should('contain', 'same');
+		compareScreenshots('kaplanMeier', 'kaplanMeierBookmark');
 
 		spreadsheet.kaplanMeierClose().click();
 
@@ -263,7 +269,8 @@ describe('Bookmark', function() {
 
 		// XXX move to page object
 		cy.get('.highcharts-root').wait(highchartAnimation);
-		cy.scrollTo('topLeft').then(screenshot('chart'));
+		cy.scrollTo('topLeft');
+		screenshot('chart');
 
 		nav.bookmarkMenu().click();
 		nav.bookmark().click();
@@ -278,14 +285,14 @@ describe('Bookmark', function() {
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=abcd'));
 		// XXX move to page object
 		cy.get('.highcharts-root').wait(highchartAnimation);
-		cy.scrollTo('topLeft').then(screenshot('chartBookmark'));
+		cy.scrollTo('topLeft');
+		screenshot('chartBookmark');
 
 		//
 		// Assert that the bookmark image matches the original heatmap
 		//
 
-		cy.exec('babel-node cypress/compareImages.js chart chartBookmark')
-			.its('stdout').should('contain', 'same');
+		compareScreenshots('chart', 'chartBookmark');
 	});
 	it('Saves and restores transcript', function() {
 		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
@@ -296,7 +303,8 @@ describe('Bookmark', function() {
 
 		renderATranscript();
 
-		cy.scrollTo('topLeft').then(screenshot('transcript'));
+		cy.scrollTo('topLeft');
+		screenshot('transcript');
 
 		nav.bookmarkMenu().click();
 		nav.bookmark().click();
@@ -311,14 +319,14 @@ describe('Bookmark', function() {
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
 		nav.waitForTransition();
 		transcriptPage.bookmarkLoading().should('not.exist');
-		cy.scrollTo('topLeft').then(screenshot('transcriptBookmark'));
+		cy.scrollTo('topLeft');
+		screenshot('transcriptBookmark');
 
 		//
 		// Assert that the bookmark image matches the original heatmap
 		//
 
-		cy.exec('babel-node cypress/compareImages.js transcript transcriptBookmark')
-			.its('stdout').should('contain', 'same');
+		compareScreenshots('transcript', 'transcriptBookmark');
 	});
 	it('Doesn\'t conflict with other pages', function() {
 		cy.route('POST', '/api/bookmarks/bookmark', '{"id": "1234"}').as('bookmark');
@@ -330,11 +338,9 @@ describe('Bookmark', function() {
 
 		cy.visit(heatmapPage.url, {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		spreadsheet.waitForViewport();
-		// Hide "View live example" link because it keeps changing.
-		// XXX should we close the header, instead?
-		spreadsheet.examples().then(el => el.hide());
-		cy.scrollTo('topLeft').then(screenshot('initialSpreadsheet'));
-		spreadsheet.examples().then(el => el.show());
+		spreadsheet.hoverFirstExample();
+		cy.scrollTo('topLeft');
+		screenshot('initialSpreadsheet');
 		renderATranscript();
 
 		nav.bookmarkMenu().click();
@@ -349,12 +355,11 @@ describe('Bookmark', function() {
 		// Switch to heatmap
 		nav.spreadsheet().click();
 		nav.waitForTransition();
-		spreadsheet.examples().then(el => el.hide());
-		cy.scrollTo('topLeft').then(screenshot('afterBookmarkSpreadsheet'));
-		spreadsheet.examples().then(el => el.show());
+		spreadsheet.hoverFirstExample();
+		cy.scrollTo('topLeft');
+		screenshot('afterBookmarkSpreadsheet');
 
-		cy.exec('babel-node cypress/compareImages.js initialSpreadsheet afterBookmarkSpreadsheet')
-			.its('stdout').should('contain', 'same');
+		compareScreenshots('initialSpreadsheet', 'afterBookmarkSpreadsheet');
 
 		// Confirm wizard is functioning
 		renderASpreadsheet(false);
@@ -368,10 +373,12 @@ describe('Bookmark', function() {
 		wizard.cohortSelect(aCohort);
 		wizard.cohortDone().click();
 
+		wizard.geneExpression(); // wait for render
+
 		// screenshot & bookmark step 1
-		spreadsheet.examples().then(el => el.hide());
-		cy.scrollTo('topLeft').then(screenshot('step1'));
-		spreadsheet.examples().then(el => el.show());
+		spreadsheet.hoverFirstExample();
+		cy.scrollTo('topLeft');
+		screenshot('step1');
 
 		nav.bookmarkMenu().click();
 		nav.bookmark().click();
@@ -381,12 +388,12 @@ describe('Bookmark', function() {
 		cy.visit(heatmapPage.url + '?bookmark=1234', {onBeforeLoad: exec(clearSessionStorage, disableHelp)});
 		cy.wait('@readBookmark').then(xhr => expect(query(xhr.url)).to.equal('id=1234'));
 
-		wizard.cards(); // wait for render
+		wizard.geneExpression(); // wait for render
 
-		spreadsheet.examples().then(el => el.hide());
-		cy.scrollTo('topLeft').then(screenshot('step1Bookmark'));
-		spreadsheet.examples().then(el => el.show());
-		cy.exec('babel-node cypress/compareImages.js step1 step1Bookmark');
+		spreadsheet.hoverFirstExample();
+		cy.scrollTo('topLeft');
+		screenshot('step1Bookmark');
+		compareScreenshots('step1', 'step1Bookmark');
 
 		// Ensure sure step 2 still works
 		wizard.geneExpression().click();

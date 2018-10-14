@@ -32,6 +32,8 @@ var CardAvatar = require('./CardAvatar');
 
 // Styles
 var compStyles = require('./WizardCard.module.css');
+var cardStyles = require('./RTCardTheme.module.css');
+var classname = require('classnames');
 
 class WizardCard extends React.Component {
 	onDone = () => {
@@ -47,7 +49,7 @@ class WizardCard extends React.Component {
 
 	render() {
 		var {children, colId, controls, contentSpecificHelp,
-			title, valid, loading, loadingCohort, width} = this.props;
+			title, subtitle, valid, loading, loadingCohort, width} = this.props;
 		return (
 				<Card style={{width: width}} className={compStyles.WizardCard}>
 					<div className={compStyles.headerContainer}>
@@ -57,7 +59,7 @@ class WizardCard extends React.Component {
 						</div>
 					</div>
 					<div className={compStyles.titleContainer}>
-						<CardTitle className={compStyles.title} title={title}/>
+						<CardTitle className={classname(compStyles.title, subtitle ? cardStyles.warning : '')} title={title} subtitle={subtitle}/>
 					</div>
 					<div className={compStyles.content}>
 						{contentSpecificHelp ? <CardText>{contentSpecificHelp}</CardText> : null}

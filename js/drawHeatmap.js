@@ -89,7 +89,7 @@ var regionColorMethods = {
 	// For ordinal scales, subsample by picking a random data point.
 	// Doing slice here to simplify the random selection. We don't have
 	// many subcolumns with ordinal data, so this shouldn't be a performance problem.
-	'ordinal': (scale, d, start, end) => _.Let((s = d.slice(start, end).filter(x => x)) =>
+	'ordinal': (scale, d, start, end) => _.Let((s = d.slice(start, end).filter(x => x != null)) =>
 			s.length ? colorHelper.rgb(scale(s[Math.floor(s.length * Math.random())])) : gray),
 	// For float scales, compute per-domain average values, and do a weighed mix of the colors.
 	'default': (scale, d, start, end) => {
@@ -130,7 +130,7 @@ function drawLayoutByPixel(vg, opts) {
 		for (let rs of regions.keys()) {
 			var r = regions.get(rs);
 
-			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => v !== null)) {
+			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => v != null)) {
 				let color = regionColor(colors[i][0], colorScale, rowData,
 				                        first + r.start, first + r.end + 1);
 
@@ -193,5 +193,6 @@ var drawHeatmapByMethod = draw => (vg, props) => {
 };
 
 module.exports = {
-	drawHeatmap: drawHeatmapByMethod(drawLayoutByPixel)
+	drawHeatmap: drawHeatmapByMethod(drawLayoutByPixel),
+	tallyDomains
 };

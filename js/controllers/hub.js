@@ -7,6 +7,7 @@ var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
 var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers, datasetQuery, updateWizard} = require('./common');
+var {ignoredType} = require('../models/dataType');
 var Rx = require('../rx');
 
 var hubsToAdd = ({hubs, addHub}) =>
@@ -29,16 +30,23 @@ var setHubs = (state, params) => removeHubs(addHubs(state, params), params);
 var {ajax, of, zip, zipArray} = Rx.Observable;
 var ajaxGet = url => ajax({url, crossDomain: true, method: 'GET', responseType: 'text'});
 
-var hubMeta = host => ajaxGet(`${host}/download/meta/info.mdown`).map(r => r.response)
-	.catch(() => of(undefined));
-
 var cohortMetaHost = 'https://rawgit.com/ucscXena/cohortMetaData/master';
+
+var hostToGitURL = host => `${cohortMetaHost}/hub_${host.replace(/https?:\/\//, '')}/info.mdown`;
+var hubMeta = host => ajaxGet(hostToGitURL(host)).catch(() => ajaxGet(`${host}/download/meta/info.mdown`)).map(r => r.response)
+        .catch(() => of(undefined));
+
 var cohortMeta = cohort => ajaxGet(`${cohortMetaHost}/cohort_${cohort}/info.mdown`).map(r => r.response)
 	.catch(() => of(undefined));
 
-var notGenomic = ["sampleMap", "probeMap", "genePred", "genePredExt"];
+var datasetDescription = dataset => ajaxGet(`${cohortMetaHost}/dataset/${dataset}/info.mdown`).map(r => r.response)
+	.catch(() => of(undefined));
+
+var getMarkDown = url => ajaxGet(url).map(r => r.response)
+	.catch(() => of(undefined));
+
 var genomicCohortSummary = server =>
-		zipArray([cohortSummary(server, notGenomic), hubMeta(server)])
+		zipArray([cohortSummary(server, ignoredType), hubMeta(server)])
 		.map(([cohorts, meta]) => ({server, meta, cohorts}))
 		.catch(err => {console.log(err); return of({server, cohorts: []});});
 
@@ -52,7 +60,12 @@ function fetchCohortData(serverBus, state) {
 	var {cohort} = state.params,
 		servers = userServers(state.spreadsheet);
 	serverBus.next(['cohort-data', datasetQuery(servers, {name: cohort}), cohort]);
-	serverBus.next(['cohort-data-meta', cohortMeta(cohort), cohort]);
+	serverBus.next(['cohort-data-meta', cohortMeta(cohort)]);
+}
+
+function fetchMarkDown(serverBus, state) {
+	var {markdown} = state.params;
+	serverBus.next(['get-markdown', getMarkDown(markdown), markdown]);
 }
 
 // emit url if HEAD request succeeds
@@ -136,6 +149,7 @@ var datasetMetaAndLinks = (host, dataset) => {
 function fetchDataset(serverBus, state) {
 	var {host, dataset} = state.params;
 	serverBus.next(['dataset-meta', datasetMetaAndLinks(host, dataset), host, dataset]);
+	serverBus.next(['dataset-description', datasetDescription(dataset)]);
 }
 
 function fetchIdentifiers(serverBus, state) {
@@ -177,19 +191,25 @@ var controls = {
 				(list = []) => reject(list, pred)),
 	'cohort-data': (state, datasets, cohort) =>
 		assocIn(state,
-				['datapages', 'cohort', 'cohort'], cohort,
-				['datapages', 'cohort', 'datasets'], datasets),
+			   ['datapages', 'cohort', 'cohort'], cohort,
+			   ['datapages', 'cohort', 'datasets'], datasets),
 	'cohort-data-meta': (state, meta) =>
-		assocIn(state,
-			   ['datapages', 'cohort', 'meta'], meta),
+		assocIn(state, ['datapages', 'cohort', 'meta'], meta),
 	'dataset-meta': (state, metaAndLinks, host, dataset) =>
 		assocIn(state, ['datapages', 'dataset'], {host, dataset, ...metaAndLinks}),
+	'dataset-description': (state,  description) =>
+		assocIn(state, ['datapages', 'datasetDescription'], description),
 	'dataset-identifiers': (state, list, host, dataset) =>
 		assocIn(state, ['datapages', 'identifiers'], {host, dataset, list}),
 	'dataset-samples': (state, list, host, dataset) =>
 		assocIn(state, ['datapages', 'samples'], {host, dataset, list}),
 	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
+	'get-markdown': (state, markdownContent, markdownURL) =>
+		assocIn(state,
+			   ['datapages', 'markdownContent'], markdownContent,
+			   ['datapages', 'markdownURL'], markdownURL),
+
 	// Force page load after delete, to refresh all data.
 	'dataset-deleted-post!': () => location.reload(),
 };
@@ -245,6 +265,15 @@ var needSamples = state =>
 	getSection(state.params) === 'samples' &&
 	pick(state.params, 'dataset', 'host');
 
+var needMarkDown = state =>
+	state.page === 'datapages' &&
+	pick(state.params, 'markdown') &&
+	state.params.markdown &&
+	state.params.markdown.indexOf("https://raw.githubusercontent.com/ucscXena/cohortMetaData/master") === 0;
+
+var hasAMarkDown = (state, markdown) =>
+	markdown === getIn(state, ['datapages', 'markdownURL']);
+
 var hasSamples = (state, {dataset, host}) =>
 	dataset === getIn(state, ['datapages', 'samples', 'dataset']) &&
 	host === getIn(state, ['datapages', 'samples', 'host']) &&
@@ -296,6 +325,11 @@ function datapagesPostActions(serverBus, state, newState, action) {
 	if (samples && !hasSamples(state, samples) &&
 			(type === 'init' || !isEqual(needSamples(state), samples))) {
 		fetchSamples(serverBus, newState);
+	}
+
+	var markdown = needMarkDown(newState);
+	if (markdown && !hasAMarkDown(state, markdown)) {
+		fetchMarkDown (serverBus, newState);
 	}
 }
 

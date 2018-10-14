@@ -49,22 +49,14 @@ const getNextPageByDataType = (currIndex, dataType) => {
 	return pages[pages.indexOf(currIndex) + 1];
 };
 
-const hasErrorsOrLoading = ({ errors, errorCheckInprogress, serverError }) =>
-	(errorCheckInprogress === true || serverError || (errors && errors.length));
+const hasErrorsOrLoading = ({ errors, errorCheckInprogress, serverError, probemapError }) =>
+	(errorCheckInprogress === true || serverError || probemapError || (errors && errors.length));
 const hasWarnings = ({ warnings }) => (warnings && warnings.length);
 
 const isImportSuccessful = (state) => !hasErrorsOrLoading(state) && !hasWarnings(state);
 
 class ImportForm extends React.Component {
-	constructor() {
-		super();
-		this.state = {
-			//ui state
-			fileReadInprogress: false,
-			showMoreErrors: false,
-			errorCheckInProgress: false
-		};
-	}
+	state = {showMoreErrors: false}
 
 	render() {
 		const { fileFormat, dataType, assembly, errorCheckInprogress } = this.props.state || {},
@@ -286,8 +278,9 @@ class ImportForm extends React.Component {
 	}
 
 	importProgressPage() {
-		const { errors, warnings, errorCheckInprogress, serverError,
+		const { errors, warnings, errorCheckInprogress, serverError, probemapError,
 			errorSnippets } = this.props.state,
+			serverOrProbemapError = serverError || probemapError,
 			hasErr = errors && !!errors.length;
 
 		let errorText = null;
@@ -311,9 +304,9 @@ class ImportForm extends React.Component {
 					textClass={!hasErr ? styles.warningLine : styles.errorLine}
 				/>
 
-				{ serverError &&
+				{ serverOrProbemapError &&
 				<div>
-					<p style={{color: 'red'}}>Unexpected server error occured: {serverError}</p>
+					<p style={{color: 'red'}}>Unexpected server error occured: {serverOrProbemapError}</p>
 					<p>Please <a href={`mailto:genome-cancer@soe.ucsc.edu?subject="Xena import: java error"`}>contact</a> the
 					 Xena team for help.</p>
 				</div>
@@ -423,7 +416,7 @@ class ImportForm extends React.Component {
 	onRetryMetadata = () => {
 		this.props.callback(['clear-metadata']);
 		this.props.callback(['wizard-page', 1]);
-		this.props.callback(['set-default-custom-cohort']);
+		this.props.callback(['retry-meta-data']);
 	}
 
 	onRetryFile = () => {
@@ -506,7 +499,7 @@ class ImportPage extends React.Component {
 	onViz = () => {
 		const cohort = _.getIn(this.props.state, ['import', 'form', 'cohort']),
 			customCohort = _.getIn(this.props.state, ['import', 'form', 'customCohort']);
-		this.props.callback(['import-cohort', cohort ? cohort : customCohort]);
+		this.props.callback(['cohort', cohort ? cohort : customCohort]);
 		this.props.callback(['navigate', 'heatmap']);
 	};
 

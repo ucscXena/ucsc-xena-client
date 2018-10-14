@@ -45,7 +45,7 @@ const updateFile = (fileName) => {
         method: 'POST',
         crossDomain: true
     };
-    return ajax(payload).map(r => r.response);
+    return ajax(payload).map(r => JSON.parse(r.response));
 };
 
 const readFileObs = fileHandle => {
@@ -57,7 +57,7 @@ const readFileObs = fileHandle => {
             obs.next(e.target.result);
             obs.complete();
         };
-        reader.onerror = () => {};
+        reader.onerror = ev => obs.error(ev.target.error);
         reader.readAsBinaryString(fileHandle);
         return () => reading && reader.abort();
     });
@@ -175,7 +175,7 @@ var cmds = {
 			doImport = importFile(params, ignoreWarnings);
 		return form.probemap && !has(localProbemaps, form.probemap.hash) ?
 			uploadProbemapFile(form.probemap).switchMap(
-				pm => Object.hasOwnProperty(pm, 'probemapError') ? Rx.Observable.of(pm) :
+				pm => has(pm, 'probemapError') ? Rx.Observable.of(pm) :
 					doImport) :
 			doImport;
 	}
@@ -183,6 +183,7 @@ var cmds = {
 
 // XXX catch errors here? would need to flag them somehow &
 // extract enough info to be serializable.
+// esp. need to handle file read errors.
 const wrapSlotRequest = ({msg: [tag, ...args], id}) =>
 	cmds[tag](...args).map(msg => ({msg, id}));
 

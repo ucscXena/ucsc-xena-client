@@ -3,10 +3,11 @@ var fs = require('fs'),
     PNG = require('pngjs').PNG,
     pixelmatch = require('pixelmatch');
 
-var filePath = name => `${__dirname}/screenshots/${name}.png`;
-var file1 = process.argv[2];
-var file2 = process.argv[3];
-var left = process.argv[4] || 0;
+var dir = process.argv[2];
+var filePath = name => `${__dirname}/screenshots/${dir}/${name}.png`;
+var file1 = process.argv[3];
+var file2 = process.argv[4];
+var left = process.argv[5] || 0;
 
 var img1 = fs.createReadStream(filePath(file1))
 				.pipe(new PNG()).on('parsed', doneReading),
