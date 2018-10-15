@@ -10,6 +10,7 @@ var {userServers, updateWizard} = require('./common');
 var {ignoredType} = require('../models/dataType');
 var Rx = require('../rx');
 import {defaultHost} from '../urlParams';
+import cohortMetaData from '../cohortMetaData';
 
 var hubsToAdd = ({hubs, addHub}) =>
 	(hubs || []).concat(addHub || []);
@@ -31,16 +32,14 @@ var setHubs = (state, params) => removeHubs(addHubs(state, params), params);
 var {ajax, of, zip, zipArray} = Rx.Observable;
 var ajaxGet = url => ajax({url, crossDomain: true, method: 'GET', responseType: 'text'});
 
-var cohortMetaHost = 'https://ucscXena.github.io/cohortMetaData';
-
-var hostToGitURL = host => `${cohortMetaHost}/hub_${host.replace(/https?:\/\//, '')}/info.mdown`;
+var hostToGitURL = host => `${cohortMetaData}/hub_${host.replace(/https?:\/\//, '')}/info.mdown`;
 var hubMeta = host => ajaxGet(hostToGitURL(host)).catch(() => ajaxGet(`${host}/download/meta/info.mdown`)).map(r => r.response)
         .catch(() => of({error: 'not available'}));
 
-var cohortMeta = cohort => ajaxGet(`${cohortMetaHost}/cohort_${cohort}/info.mdown`).map(r => r.response)
+var cohortMeta = cohort => ajaxGet(`${cohortMetaData}/cohort_${cohort}/info.mdown`).map(r => r.response)
 	.catch(() => of({error: 'not available'}));
 
-var datasetDescription = dataset => ajaxGet(`${cohortMetaHost}/dataset/${dataset}/info.mdown`).map(r => r.response)
+var datasetDescription = dataset => ajaxGet(`${cohortMetaData}/dataset/${dataset}/info.mdown`).map(r => r.response)
 	.catch(() => of({error: 'not available'}));
 
 var getMarkDown = url => ajaxGet(url).map(r => r.response)

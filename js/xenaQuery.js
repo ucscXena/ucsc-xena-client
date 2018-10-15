@@ -9,6 +9,7 @@ var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
 var qs = require('./loadXenaQueries');
 
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
+import cohortMetaData from './cohortMetaData';
 
 ///////////////////////////////////////////////////////
 // support for hg18/GRCh36, hg19/GRCh37, hg38/GRCh38, mm10
@@ -404,11 +405,11 @@ function testHost (host) {
 		.catch(() => Rx.Observable.of(false));
 }
 
-var cohortMetaURL = "https://ucscXena.github.io/cohortMetaData/xenacohort_tag.json";
+var cohortMetaURL = `${cohortMetaData}/xenacohort_tag.json`;
 
-var cohortPreferredURL = "https://ucscXena.github.io/cohortMetaData/defaultDataset.json";
+var cohortPreferredURL = `${cohortMetaData}/defaultDataset.json`;
 
-var cohortPhenotypeURL = "https://ucscXena.github.io/cohortMetaData/defaultPhenotype.json";
+var cohortPhenotypeURL = `${cohortMetaData}/defaultPhenotype.json`;
 
 var fetchJSON = url =>
 	Rx.Observable.ajax({
