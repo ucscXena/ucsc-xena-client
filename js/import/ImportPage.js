@@ -58,7 +58,7 @@ const hasWarnings = ({ warnings }) => (warnings && warnings.length);
 const isImportSuccessful = (state) => !hasErrorsOrLoading(state) && !hasWarnings(state);
 
 class ImportForm extends React.Component {
-	state = {showMoreErrors: false}
+	state = {showMoreErrors: false, showMoreDataTypes: false}
 
 	render() {
 		const { fileFormat, dataType, assembly, errorCheckInprogress } = this.props.state || {},
@@ -155,17 +155,20 @@ class ImportForm extends React.Component {
 	}
 
 	dataTypePage() {
-		const dataType = _.getIn(this.props, ['state', 'dataType']);
+		const dataType = _.getIn(this.props, ['state', 'dataType']),
+			{showMoreDataTypes} = this.state;
 
 		return (
 			<div>
-				<b style={{marginRight: '20px', fontSize: '1.1em'}}>Choose the type of data</b>
-				<Dropdown onChange={this.onDataTypeChange}
-					source={dataTypeOptions}
-					value={dataType}
-					className={[styles.field, styles.inline].join(' ')}
-				/>
-				<Button label="I don't see my data type" accent flat={false}/>
+				<RadioGroup value={dataType} onChange={this.onDataTypeChange}>
+					{dataTypeOptions.slice(0, showMoreDataTypes ? 4 : 2).map(({label, value}) =>
+						 <RadioButton key={value} label={label} value={value}/>)}
+				</RadioGroup>
+				<p className={styles.showMore} onClick={this.onShowMoreDataTypesToggle}>
+					{showMoreDataTypes ? 'Less data types...' : 'More data types...'}
+				</p>
+
+				<Button className={styles.dataTypeHelp} label="HELP" accent flat={false}/>
 
 				<h4>File preview</h4>
 				{this.renderFilePreview()}
@@ -409,6 +412,8 @@ class ImportForm extends React.Component {
 	onCustomCohortChange = cohort => this.props.callback(['custom-cohort', cohort]);
 
 	onShowMoreToggle = () => this.setState({showMoreErrors: !this.state.showMoreErrors});
+
+	onShowMoreDataTypesToggle = () => this.setState({showMoreDataTypes: !this.state.showMoreDataTypes});
 
 	onAssemblyChange = assembly => this.props.callback(['assembly', assembly]);
 

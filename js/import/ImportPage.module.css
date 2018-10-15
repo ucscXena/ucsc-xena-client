@@ -38,6 +38,10 @@
     width: 150px;
 }
 
+.dataTypeHelp {
+	float: right;
+}
+
 .stepperBox{
 	border-top: 1px solid #cccaca;
     margin-top: 20px;

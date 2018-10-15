@@ -23,16 +23,12 @@ const FILE_FORMAT = {
 
 const dataTypesOpts = [
 	{
-		label: '',
-		value: ''
-	},
-	{
-		label: 'phenotype/clinical/sample type',
-		value: DATA_TYPE.PHENOTYPE
-	},
-	{
 		label: 'Genomic data: numbers in a rectangle (e.g. expression)',
 		value: DATA_TYPE.GENOMIC
+	},
+	{
+		label: "Phenotypic data: categories or non-genomic in a rectangle (e.g. age, mutation status: 'wt' or 'mutant')",
+		value: DATA_TYPE.PHENOTYPE
 	},
 	{
 		label: 'Segmented data: (e.g. segmented copy number data)',
