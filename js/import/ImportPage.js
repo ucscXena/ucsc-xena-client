@@ -17,8 +17,8 @@ import WizardSection from './WizardSection';
 import { FilePreview, ErrorPreview } from './staticComponents';
 import CohortSuggest from '../views/CohortSuggest';
 
-const pageStates = _.range(7);
-const pageRanges = [0, ...Array(4).fill(1), 2, 3];
+const pageStates = _.range(Object.keys(PAGES).length);
+const pageRanges = [0, ...Array(4).fill(1), 2, 3]; // XXX need a better way to express this
 const pageStateIndex = _.object(pageStates, pageRanges);
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
@@ -32,22 +32,24 @@ const isPhenotypeData = dataType => dataType === DATA_TYPE.PHENOTYPE;
 const isMutationOrSegmentedData = dataType => dataType === DATA_TYPE.MUTATION_BY_POS || dataType === DATA_TYPE.SEGMENTED_CN;
 const isMutationSegmentedOrPhenotype = dataType => isPhenotypeData(dataType) || isMutationOrSegmentedData(dataType);
 
-const getNextPageByDataType = (currIndex, dataType) => {
-	let pages = [];
-	switch(dataType) {
-		case DATA_TYPE.MUTATION_BY_POS:
-		case DATA_TYPE.SEGMENTED_CN:
-			pages = [0, 1, 3, 5, PAGES.PROGRESS];
-			break;
-		case DATA_TYPE.PHENOTYPE:
-			pages = [0, 1, 2, 3, PAGES.PROGRESS];
-			break;
-		default:
-			pages = [0, 1, 2, 3, PAGES.PROBE_SELECT, PAGES.PROGRESS];
-	}
+const getNextPageByDataType =
+	_.Let(({FILE, DATA_TYPE_SELECT, DENSE_ORIENTATION, STUDY, PROBE, ASSEMBLY, PROGRESS} = PAGES) =>
+		(currIndex, dataType) => {
+			let pages = [];
+			switch(dataType) {
+				case DATA_TYPE.MUTATION_BY_POS:
+				case DATA_TYPE.SEGMENTED_CN:
+					pages = [FILE, DATA_TYPE_SELECT, STUDY, ASSEMBLY, PROGRESS];
+					break;
+				case DATA_TYPE.PHENOTYPE:
+					pages = [FILE, DATA_TYPE_SELECT, DENSE_ORIENTATION, STUDY, PROGRESS];
+					break;
+				default:
+					pages = [FILE, DATA_TYPE_SELECT, DENSE_ORIENTATION, STUDY, PROBE, PROGRESS];
+			}
 
-	return pages[pages.indexOf(currIndex) + 1];
-};
+			return pages[pages.indexOf(currIndex) + 1];
+		});
 
 const hasErrorsOrLoading = ({ errors, errorCheckInprogress, serverError, probemapError }) =>
 	(errorCheckInprogress === true || serverError || probemapError || (errors && errors.length));
@@ -67,19 +69,19 @@ class ImportForm extends React.Component {
 			component = null;
 
 		switch(wizardPage) {
-			case 0:
+			case PAGES.FILE:
 				wizardProps = { nextEnabled: fileSelected };
 				component = this.fileSelectionPage(fileSelected, file);
 				break;
-			case 1:
+			case PAGES.DATA_TYPE_SELECT:
 				wizardProps = { nextEnabled: !!dataType && !fileReadInProgress, fileName };
 				component = this.dataTypePage(fileSelected);
 				break;
-			case 2:
+			case PAGES.DENSE_ORIENTATION:
 				wizardProps = { fileName, nextEnabled: !!fileFormat };
 				component = this.denseOrientationPage();
 				break;
-			case 3:
+			case PAGES.STUDY:
 				wizardProps = {
 					fileName,
 					onImport: !isMutationOrSegmentedData(dataType) ? this.onImportClick : null,
@@ -88,7 +90,7 @@ class ImportForm extends React.Component {
 				};
 				component = this.studySelectionPage();
 				break;
-			case 4:
+			case PAGES.PROBE:
 				wizardProps = {
 					fileName,
 					onImport: this.onImportClick,
@@ -96,7 +98,7 @@ class ImportForm extends React.Component {
 				};
 				component = this.probeSelectionPage();
 				break;
-			case 5:
+			case PAGES.ASSEMBLY:
 				wizardProps = {
 					fileName,
 					onImport: this.onImportClick,
@@ -104,7 +106,7 @@ class ImportForm extends React.Component {
 				};
 				component = this.assemblySelectionPage();
 				break;
-			case 6:
+			case PAGES.PROGRESS:
 				wizardProps = {
 					fileName,
 					showRetry: !errorCheckInprogress && !isImportSuccessful(this.props.state),
@@ -119,9 +121,6 @@ class ImportForm extends React.Component {
 				};
 				component = this.importProgressPage();
 				break;
-			case 7:
-				component = <div>Page 6</div>;
-				wizardProps = { fileName, nextEnabled: !!fileFormat };
 		};
 
 		return (
@@ -415,7 +414,7 @@ class ImportForm extends React.Component {
 
 	onRetryMetadata = () => {
 		this.props.callback(['clear-metadata']);
-		this.props.callback(['wizard-page', 1]);
+		this.props.callback(['wizard-page', PAGES.DATA_TYPE_SELECT]);
 		this.props.callback(['retry-meta-data']);
 	}
 

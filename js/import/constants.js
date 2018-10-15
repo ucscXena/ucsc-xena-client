@@ -49,8 +49,13 @@ const dataTypesOpts = [
 ];
 
 const PAGES = {
-	PROBE_SELECT: 4,
-	PROGRESS: 6,
+	FILE: 0,
+	DATA_TYPE_SELECT: 1,
+	DENSE_ORIENTATION: 2,
+	STUDY: 3,
+	PROBE: 4,
+	ASSEMBLY: 5,
+	PROGRESS: 6
 };
 
 const steps = [
