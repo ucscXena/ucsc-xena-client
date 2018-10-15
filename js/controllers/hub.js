@@ -31,7 +31,7 @@ var setHubs = (state, params) => removeHubs(addHubs(state, params), params);
 var {ajax, of, zip, zipArray} = Rx.Observable;
 var ajaxGet = url => ajax({url, crossDomain: true, method: 'GET', responseType: 'text'});
 
-var cohortMetaHost = 'https://rawgit.com/ucscXena/cohortMetaData/master';
+var cohortMetaHost = 'https://ucscXena.github.io/cohortMetaData';
 
 var hostToGitURL = host => `${cohortMetaHost}/hub_${host.replace(/https?:\/\//, '')}/info.mdown`;
 var hubMeta = host => ajaxGet(hostToGitURL(host)).catch(() => ajaxGet(`${host}/download/meta/info.mdown`)).map(r => r.response)

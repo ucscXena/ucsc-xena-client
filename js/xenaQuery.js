@@ -404,11 +404,11 @@ function testHost (host) {
 		.catch(() => Rx.Observable.of(false));
 }
 
-var cohortMetaURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/xenacohort_tag.json";
+var cohortMetaURL = "https://ucscXena.github.io/cohortMetaData/xenacohort_tag.json";
 
-var cohortPreferredURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/defaultDataset.json";
+var cohortPreferredURL = "https://ucscXena.github.io/cohortMetaData/defaultDataset.json";
 
-var cohortPhenotypeURL = "https://raw.githubusercontent.com/ucscXena/cohortMetaData/master/defaultPhenotype.json";
+var cohortPhenotypeURL = "https://ucscXena.github.io/cohortMetaData/defaultPhenotype.json";
 
 var fetchJSON = url =>
 	Rx.Observable.ajax({
