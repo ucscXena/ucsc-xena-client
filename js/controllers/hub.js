@@ -216,7 +216,7 @@ var datapagesPostActions = (serverBus, state, newState) => {
 	}
 
 	var toFetch = sectionData(newState)
-		.filter(path => !getIn(newState.datapages, path) && !find(queue, p => isEqual(p, path)));
+		.filter(path => getIn(newState.datapages, path) == null && !find(queue, p => isEqual(p, path)));
 
 	toFetch.forEach(path => {
 		queue.push(path);
@@ -239,13 +239,24 @@ var cachePolicy = {
 var clearCache = fn => (state, path, data) =>
 	(cachePolicy[path[0]] || cachePolicy.default)(fn(state, path, data), path);
 
+var enforceValue = (path, val) => {
+	if (val == null) {
+		// Fetch methods must return a value besides null or undefined. Otherwise
+		// this will create a request loop, where we fetch again because we can't
+		// tell the data has already been fetched.
+		console.error(`Received invalid response for path ${path}`);
+		return {error: 'invalid value'};
+	}
+	return val;
+};
+
 var controls = {
 	'init-post!': datapagesPostActions,
 	'navigate-post!': datapagesPostActions,
 	'history-post!': datapagesPostActions,
 	'enable-host-post!': datapagesPostActions,
 	'merge-data': clearCache((state, path, data) =>
-		assocIn(state, ['datapages', ...path], data)),
+		assocIn(state, ['datapages', ...path], enforceValue(path, data))),
 	'merge-data-post!': (serverBus, state, newState, path) => {
 		var i = queue.findIndex(p => isEqual(p, path));
 		queue.splice(i, 1);
