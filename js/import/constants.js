@@ -2,8 +2,16 @@
 
 const DATA_TYPE = {
 	PHENOTYPE: 'phenotype',
-	MUTATION_BY_POS: 'mutation by position',
-	SEGMENTED_CN: 'segmented copy number'
+	MUTATION_BY_POS: 'mutation',
+	SEGMENTED_CN: 'segmented',
+	GENOMIC: 'genomic'
+};
+
+const dataSubType = {
+	phenotype: 'phenotype',
+	mutation: 'mutation',
+	segmented: 'other',
+	genomic: 'other'
 };
 
 const FILE_FORMAT = {
@@ -23,28 +31,16 @@ const dataTypesOpts = [
 		value: DATA_TYPE.PHENOTYPE
 	},
 	{
-		label: 'expression',
-		value: "expression"
+		label: 'Genomic data: numbers in a rectangle (e.g. expression)',
+		value: DATA_TYPE.GENOMIC
 	},
 	{
-		label: 'gene-level copy number',
-		value: 'gene-level copy number'
-	},
-	{
-		label: DATA_TYPE.SEGMENTED_CN,
+		label: 'Segmented data: (e.g. segmented copy number data)',
 		value: DATA_TYPE.SEGMENTED_CN
 	},
 	{
-		label: DATA_TYPE.MUTATION_BY_POS,
+		label: 'Positional data: (e.g. positional mutation data)',
 		value: DATA_TYPE.MUTATION_BY_POS
-	},
-	{
-		label: 'gene-level mutation',
-		value: 'gene-level mutation'
-	},
-	{
-		label: 'methylation',
-		value: 'methylation'
 	}
 ];
 
@@ -68,6 +64,7 @@ const NONE_STR = 'None of these';
 
 module.exports = {
 	dataTypeOptions: dataTypesOpts,
+	dataSubType,
 	steps,
 	NONE_STR,
 	DATA_TYPE,

@@ -5,7 +5,7 @@ import Rx from '../rx';
 var {of, create, ajax, fromEvent} = Rx.Observable;
 import getErrors from '../import/errorChecking';
 import infer from '../import/infer.js';
-import {FILE_FORMAT} from '../import/constants';
+import {dataSubType, FILE_FORMAT} from '../import/constants';
 const {GENOMIC_MATRIX, CLINICAL_MATRIX} = FILE_FORMAT;
 import {assocIn, getIn, has, transpose} from '../underscore_ext';
 
@@ -18,7 +18,7 @@ const createMetaDataFile = (state) => {
     return JSON.stringify({
         version: new Date().toISOString().split('T')[0],
         cohort: state.cohortRadio === 'newCohort' ? state.customCohort : state.cohort,
-        dataSubType: state.dataType,
+        dataSubType: dataSubType[state.dataType],
         type: state.fileFormat,
         assembly: state.assembly || void 0,
         probemap: probemap ? probemap : void 0
