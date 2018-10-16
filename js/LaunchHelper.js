@@ -111,51 +111,33 @@ class XenaDownload extends React.Component {
 
 		return (
 			<div className={styles.download}>
-				{defaultInstall ? <Link className={styles.downloadLink} href={defaultInstall} label='Install UCSC Xena hub'/> : null}
-				{defaultInstall ? <span className={styles.advancedLink} onClick={this.onShowAdvanced}>Show {advanced ? 'Basic' : 'Advanced'}</span> : null}
+				<div className={styles.i4j}>
+					<p>Supported by <a href='https://www.ej-technologies.com/products/install4j/overview.html'><img src={i4jLogo}/></a></p>
+				</div>
+				<p>If this is your first time, {defaultInstall ?
+					<Link className={styles.downloadLink} href={defaultInstall} label='download and run a Local Xena hub.'/> : 'download and run a Local Xena hub, from the list below:'}</p>
+				{defaultInstall ? <span className={styles.advancedLink} onClick={this.onShowAdvanced}>{advanced ? 'Fewer options...' : 'More options...'}</span> : null}
 				{defaultInstall ? <br/> : null}
-				{(defaultInstall || advanced) ? null : 'Please download an installer'}
-				{(files && (advanced || !defaultInstall)) ? map(pick(osFiles, (_, k) => files[k]), (info, key) =>
-					 <Link className={styles.downloadLink} href={files[key]} title={info.help} label={info.description}/>) : null}
+				<div className={advanced || !defaultInstall ? styles.tableShow : styles.table}>{map(files ? pick(osFiles, (_, k) => files[k]) : [], (info, key) =>
+					 <Link className={styles.downloadList} href={files[key]} title={info.help} label={info.description}/>)}</div>
 				<br/>
-				<img src={i4jLogo}/>
 			</div>);
 	}
 }
 
+var launchingHelp = ['Launching...',
+	<p>If you see a browser dialog, and click the "open" button.</p>];
+
 var statusHelp = {
-	launching: (
-		<div>
-			<p>Attempting to start the Xena Hub on your computer...</p>
-			<p>If a browser dialog appears, please check the "always open" option, and click the "open" button</p>
-		</div>),
-	started: (
-		<div>
-			<p>The Xena Hub is starting...</p>
-		</div>),
-	failed: (
-		<div>
-			<p>If a browser dialog appears, please check the "always open" option, and click the "open" button</p>
-			<p>We were not able to start the Xena Hub for you. Please open the application from your Applications Folder,
-				or download it if you have not previously installed it.</p>
-			<p>The Xena Hub needs to be running for you to import or visualize data from your own computer.</p>
-		</div>),
-	failedStarting: (
-		<div>
-			<p>The Xena Hub is taking a long time to start. If you have a lot of local data, this is expected.
-			It should be ready soon. If it continues to be a problem, please contact us at genome-cancer@soe.ucsc.edu
-			</p>
-		</div>),
-	up: (
-		<div>
-			<p>Your local Xena Hub is running.</p>
-			<p>To view your data, use the "Visualization" button</p>
-		</div>),
-	lost: (
-		<div>
-			<p>We have lost contact with your local Xena Hub.</p>
-			<p>To re-start it, you may reload this page.</p>
-		</div>)
+	down: [],
+	launching: launchingHelp,
+	started: launchingHelp,
+	failed: launchingHelp,
+	failedStarting: launchingHelp,
+	up: ['Your local Xena Hub is running.',
+		<p>To view your data, use the "Visualization" button</p>],
+	lost: ['We have lost contact with your Local Xena Hub.',
+		<p>To re-start it, you may reload this page.</p>]
 };
 
 var launch = () => {
@@ -256,6 +238,7 @@ var wrap = Comp => class extends PureComponent {
 	}
 
 	actions = [
+		{label: 'Help', onClick: this.onHelp},
 		{label: 'Close', onClick: this.onHide}
 	];
 
@@ -268,15 +251,20 @@ var wrap = Comp => class extends PureComponent {
 					   onClick={this.onShow}>lens</i>) : (
 					<i title='Not connected to local Xena Hub. Click for details.'
 					   className={'material-icons ' + styles.badgeDisconnected}
-					   onClick={this.onShow}>lens</i>);
+					   onClick={this.onShow}>lens</i>),
+			[header, help] = statusHelp[status];
 
 		return (
 			<Comp ref={this.setCompRef} {...this.props} badge={statusBadge}>
-				<Dialog active={show} actions={this.actions} className={styles.dialog}>
-					<a className={styles.helpLink} href='https://ucsc-xena.gitbook.io/project/local-xena-hub' target='_blank'>Help</a>
-					<h2>Starting Xena Hub </h2>
-					{status === 'failed' ? <XenaDownload advanced={advanced} onShowAdvanced={this.onShowAdvanced}/> : null}
-					{statusHelp[status]}
+				<Dialog theme={{body: styles.body}} active={show} actions={this.actions} className={styles.dialog}>
+					<div className={styles.padding}></div>
+					<h2 className={styles.header}>{header}</h2>
+					<div className={styles.padding}></div>
+					<div className={styles.status}>
+						{help}
+						{status !== 'up' && status !== 'lost' ? <XenaDownload advanced={advanced} onShowAdvanced={this.onShowAdvanced}/> : null}
+					</div>
+					<p className={styles.footer}>A Local Xena Hub is an application on your computer for loading and storing data.</p>
 				</Dialog>
 			</Comp>);
 	}
