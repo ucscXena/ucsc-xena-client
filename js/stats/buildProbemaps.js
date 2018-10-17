@@ -36,7 +36,13 @@ function probeList(probemap) {
 	return post({
 		url: refHub + '/data/',
 		body: probes
-	}).retry(3).map(([, resp]) => ({...probemap, probes: JSON.parse(resp).name}));
+	}).retry(3).map(([, resp]) => {
+		try {
+			return {...probemap, probes: JSON.parse(resp).name};
+		} catch(e) {
+			console.log('parsing error ', resp.slice(0, 1000));
+		}
+	});
 }
 
 function buildFilters() {
@@ -50,7 +56,7 @@ function buildFilters() {
 			var mh = minHashFromList(probes);
 			fs.writeSync(out, JSON.stringify({name, hash: mh.hashvalues}));
 			first = false;
-		}, () => {},
+		}, err => {console.log('error', err);},
 		() => {
 			fs.writeSync(out, ']');
 			fs.closeSync(out);
