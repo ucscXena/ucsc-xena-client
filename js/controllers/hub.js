@@ -1,10 +1,11 @@
 'use strict';
 var {updateIn, dissoc, pick, isEqual, Let, get, uniq, identity,
-	pluck, getIn, assocIn} = require('../underscore_ext');
+	last, mapObject, initial, merge, pluck, getIn, assocIn} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
+var {servers: {localHub}} = require('../defaultServers');
 var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers, updateWizard} = require('./common');
 var {ignoredType} = require('../models/dataType');
@@ -192,7 +193,7 @@ var fetchMethods = {
 	// iterate over the userServer list, not this cache.
 	cohortDatasets: (cohort, server) =>
 		datasetList(server, [cohort]).catch(() => of([])),
-	cohorts: server => cohortSummary(server, ignoredType),
+	cohorts: server => cohortSummary(server, ignoredType).catch(() => of([])),
 	hubMeta: hubMeta
 };
 
@@ -206,6 +207,7 @@ var fetchData = ([type, ...args]) => fetchMethods[type](...args);
 // XXX Local mutatable state. The effects controller is stateful wrt
 // data queries.
 var queue = [];
+var outOfDate = {};
 
 // XXX Do we need to handle more actions? We're only handling a minimum.
 var datapagesPostActions = (serverBus, state, newState) => {
@@ -215,7 +217,8 @@ var datapagesPostActions = (serverBus, state, newState) => {
 	}
 
 	var toFetch = sectionData(newState)
-		.filter(path => getIn(newState.datapages, path) == null && !find(queue, p => isEqual(p, path)));
+		.filter(path => (getIn(newState.datapages, path) == null || getIn(outOfDate, path))
+				&& !find(queue, p => isEqual(p, path)));
 
 	toFetch.forEach(path => {
 		queue.push(path);
@@ -248,16 +251,55 @@ var enforceValue = (path, val) => {
 	return val;
 };
 
+function invalidateKey(path) {
+	outOfDate = assocIn(outOfDate, path, true);
+}
+
+function invalidateKeysUnder(state, path) {
+	outOfDate = updateIn(outOfDate, path, ood =>
+		merge(ood, mapObject(getIn(state, path, {}), () => true)));
+}
+
+function invalidatePick(state, path, key) {
+	Object.keys(getIn(state, path, {})).map(k0 => [...path, k0, key])
+		.forEach(invalidateKey);
+}
+
+
+// ['cohorts', host]
+// ['hubMeta', host]
+// ['samples', host, *]
+// ['identifiers', host, *]
+// ['dataset', host, *]
+// ['cohortDatasets', *, host]
+function invalidateLocalHub(state) {
+	var datapages = get(state, 'datapages');
+	invalidateKey(['cohorts', localHub]);
+	invalidateKey(['hubMeta', localHub]);
+	invalidateKeysUnder(datapages, ['samples', localHub]);
+	invalidateKeysUnder(datapages, ['identifiers', localHub]);
+	invalidatePick(datapages, ['cohortDatasets'], 'host');
+}
+
+function clearPath(path) {
+	outOfDate = updateIn(outOfDate, initial(path), p => p && dissoc(p, last(path)));
+}
+
 var controls = {
 	'init-post!': datapagesPostActions,
 	'navigate-post!': datapagesPostActions,
 	'history-post!': datapagesPostActions,
 	'enable-host-post!': datapagesPostActions,
+	'localStatus-post!': (serverBus, state, newState) => {
+		invalidateLocalHub(newState);
+		datapagesPostActions(serverBus, state, newState);
+	},
 	'merge-data': clearCache((state, path, data) =>
 		assocIn(state, ['datapages', ...path], enforceValue(path, data))),
 	'merge-data-post!': (serverBus, state, newState, path) => {
 		var i = queue.findIndex(p => isEqual(p, path));
 		queue.splice(i, 1);
+		clearPath(path);
 	},
 	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
