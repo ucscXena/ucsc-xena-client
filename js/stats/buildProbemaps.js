@@ -41,6 +41,7 @@ function probeList(probemap) {
 			return {...probemap, probes: JSON.parse(resp).name};
 		} catch(e) {
 			console.log('parsing error ', resp.slice(0, 1000));
+			process.exit();
 		}
 	});
 }
