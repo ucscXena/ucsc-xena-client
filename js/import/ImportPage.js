@@ -23,8 +23,7 @@ const pageStateIndex = _.object(pageStates, pageRanges);
 
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 const getProbemapOptions = probes => [
-	{label: "", value: "", userlevel: "basic"},
-	...probes,
+	...probes.map(({label, value: {name}}) => ({label, value: name})),
 	{label: NONE_STR, userlevel: "basic", value: NONE_STR}
 ];
 
@@ -224,22 +223,15 @@ class ImportForm extends React.Component {
 	}
 
 	probeSelectionPage() {
-		const { probemap } = this.props.state;
-
-		const recommendedProbemaps = _.getIn(this.props, ['recommended', 'probemaps']);
-		const recommendationsExist = recommendedProbemaps && recommendedProbemaps.length;
-		let probemapsToShow = [],
-			seletedProbeMapLabel = '';
-
-		if (recommendationsExist) {
-			const existingProbemaps = _.getIn(this.props, ['probemaps']);
-
-			probemapsToShow = recommendedProbemaps
+		const recommendedProbemaps = _.getIn(this.props, ['recommended', 'probemaps'], []);
+		const existingProbemaps = _.getIn(this.props, ['probemaps']);
+		const probemapsToShow = recommendedProbemaps
 				.map(p => existingProbemaps.find(existing => existing.value.name === p.name))
-				.filter(p => !!p);
+				.filter(_.identity);
+		const recommendationsExist = recommendedProbemaps.length;
+		const {probemap = _.getIn(probemapsToShow, [0, 'value'])} = this.props.state;
 
-			seletedProbeMapLabel = _.getIn(probemapsToShow, [0, 'label']);
-		}
+		const seletedProbeMapLabel = _.getIn(probemapsToShow, [0, 'label'], '');
 
 		const text = recommendationsExist ?
 			<div>
@@ -255,8 +247,8 @@ class ImportForm extends React.Component {
 					<Dropdown
 					onChange={this.onProbemapChange}
 					source={getProbemapOptions(probemapsToShow)}
-					value={probemap}
-					className={[styles.field, styles.inline]. join(' ')}
+					value={_.get(probemap, 'name')}
+					className={[styles.probemap, styles.inline]. join(' ')}
 				/>}
 				{ this.renderMailto("Xena import missing identifiers", "identifiers", probemap === NONE_STR || !recommendationsExist) }
 
@@ -361,11 +353,7 @@ class ImportForm extends React.Component {
 	}
 
 	isProbesNextPageEnabled = () => {
-		const { probemap } = this.props.state;
-
-		const recommendedProbemaps = _.getIn(this.props, ['recommended', 'probemaps']);
-
-		return !!probemap || !(recommendedProbemaps && recommendedProbemaps.length);
+		return true;
 	}
 
 	onWizardBack = () => {
@@ -397,7 +385,10 @@ class ImportForm extends React.Component {
 		this.props.callback(['cohort-radio', value]);
 	}
 
-	onProbemapChange = value => this.props.callback(['probemap', value]);
+	onProbemapChange = value => {
+		var {probemaps} = this.props;
+		this.props.callback(['probemap', probemaps.find(({value: {name}}) => name === value).value]);
+	};
 
 	onFileFormatChange = format => this.props.callback(['file-format', format]);
 
