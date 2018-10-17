@@ -1,4 +1,7 @@
+@value black87 from '../css/variables.css';
+
 .datapages {
+	color: black87;
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 20px;
@@ -48,6 +51,11 @@
 
 .dataHubs {
 	float: right;
+}
+
+.dataHubs .checkboxLink {
+	height: 18px;
+	line-height: 18px;
 }
 
 .sidebar {
@@ -120,6 +128,8 @@
 
 .list {
 	font-size: 16px;
+	padding-top: 0;
+	padding-bottom: 0;
 }
 
 .tableControls * {

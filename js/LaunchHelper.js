@@ -213,7 +213,7 @@ var wrap = Comp => class extends PureComponent {
 	updatePing = nextStatus => {
 		this.props.callback(['localStatus', nextStatus]);
 		if (nextStatus === 'up' && this.state.status !== 'up') {
-			if (this.compRef) {
+			if (this.compRef && this.compRef.onStartup) {
 				this.compRef.onStartup();
 			}
 			this.setState({show: false});

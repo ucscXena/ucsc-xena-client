@@ -169,7 +169,7 @@ class Transcripts extends React.Component {
 		return (
 				<div className={styles.main}>
 					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
-					<a className={styles.selectors} style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
+					<a className={styles.selectorsLink} style={{fontSize: "0.85em"}} href="http://xena.ucsc.edu/transcript-view-help/">Help with transcripts</a>
 					<div className={styles.selectors} style={{width: "1200px", height: "80px"}}>
 						<div className={styles.geneBox} style={{float: "left", width: "300px"}}>
 							<GeneSuggest label="Add Gene (e.g. KRAS)" value={this.state.input}
@@ -194,7 +194,8 @@ class Transcripts extends React.Component {
 						</div>
 						<div>
 							<span className={styles.selectors}>Expression Unit</span>
-							<select ref="unit" onChange={this.onLoadData} value={unit}>
+							<select ref="unit" onChange={this.onLoadData} value={unit}
+								style={{color: dropdownColor, backgroundColor: dropdownBackgroundColorBottom}}>
 								<option value="tpm">{unitLabels.tpm.dropdown}</option>
 								<option value="isoformPercentage">{unitLabels.isoformPercentage.dropdown}</option>
 							</select>

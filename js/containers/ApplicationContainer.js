@@ -110,6 +110,10 @@ class ApplicationContainer extends React.Component {
 		}
 	};
 
+	onHighlightSelect = highlight => {
+		this.props.callback(['highlightSelect', highlight]);
+	}
+
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback} = this.props,
@@ -131,6 +135,7 @@ class ApplicationContainer extends React.Component {
 					stepperState={stepperState}
 					Spreadsheet={SpreadsheetContainer}
 					onHighlightChange={this.on.highlightChange}
+					onHighlightSelect={this.onHighlightSelect}
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
 					onNavigate={this.onNavigate}

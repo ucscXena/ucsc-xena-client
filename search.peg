@@ -7,7 +7,12 @@
     }
 }
 
-start =  Expression
+start =  Cross
+
+Cross
+  = left: Expression tail:(_ ';' _ Cross)* {
+    return tail.length ? concat(['cross', left], tail.map(last)) : left;
+  }
 
 Expression
   = left:Term tail:(_ 'OR' _ Term)* {
@@ -32,7 +37,7 @@ Field
       }
 
 Value = NeValue / LeValue / GeValue / LtValue / GtValue / EqValue / QuotedValue / PlainValue
-PlainValue = ! 'OR' [^ \t()]+ { return ['value', text()]; }
+PlainValue = ! 'OR' [^ \t();]+ { return ['value', text()]; }
 QuotedValue = '"' [^"]* '"' {
    var val = text();
    return ['quoted-value', val.slice(1, val.length - 1)];

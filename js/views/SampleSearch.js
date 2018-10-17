@@ -5,6 +5,7 @@ var React = require('react');
 import Input from 'react-toolbox/lib/input';
 import {IconMenu, MenuItem} from 'react-toolbox/lib/menu';
 var classNames = require('classnames');
+var Rx = require('../rx');
 
 // Styles
 var compStyles = require('./SampleSearch.module.css');
@@ -80,8 +81,29 @@ var compStyles = require('./SampleSearch.module.css');
 //	}
 //});
 
+function countChar(str, c, max) {
+	var count = 0;
+	for (var i = 0; i < max; ++i) {
+		if (str[i] === c) {
+			count += 1;
+		}
+	}
+	return count;
+}
+
 class SampleSearch extends PureComponent {
 	state = {value: this.props.value};
+
+	componentDidMount() {
+		var highlight = new Rx.Subject();
+		this.highlight = highlight.next.bind(highlight);
+		this.sub = highlight.startWith(undefined).distinctUntilChanged()
+			.subscribe(hl => this.props.onHighlightSelect(hl));
+	}
+
+	componentWillUnmount() {
+		this.sub.unsubscribe();
+	}
 
 	componentWillReceiveProps(newProps) {
 		if (this.state.value === this.props.value) {
@@ -104,6 +126,21 @@ class SampleSearch extends PureComponent {
 		onChange(value);
 	};
 
+	setRef = ref => {
+		this.input = ref && ref.inputNode;
+	}
+
+	onCaret = () => {
+		var hl = this.input ?
+			countChar(this.state.value, ';', this.input.selectionStart) :
+			undefined;
+		this.highlight(hl);
+	}
+
+	onHideCaret = () => {
+		this.highlight(undefined);
+	}
+
 	render() {
 		var {matches, sampleCount, onFilter, onZoom, onCreateColumn, onResetSampleFilter, mode} = this.props,
 			{value} = this.state,
@@ -112,6 +149,11 @@ class SampleSearch extends PureComponent {
 		return (
 			<div className={compStyles.SampleSearch}>
 				<Input className={compStyles.inputContainer}
+					onKeyUp={this.onCaret}
+					onClick={this.onCaret}
+					onFocus={this.onCaret}
+					onBlur={this.onHideCaret}
+					innerRef={this.setRef}
 					spellCheck={false}
 					type='text'
 					value={value || ''}

@@ -14,7 +14,7 @@ body {
 	height: 100%;
 	min-height: 100vh;
 	min-width: 100%; /* Required due to display: inline-block */
-	padding-bottom: 115px; /* 115 for height of footer */
+	padding-bottom: 114px; /* 114 for height of footer */
 	position: relative;
 }
 
@@ -27,4 +27,14 @@ body {
  */
 .minWidthWrapper {
 	min-width: appMinWidth;
+}
+
+/**
+ * Adding styling to <pre> tags that are pulled from a CMS to be displayed on hub info pages. 
+ */
+pre {
+	background-color: rgba(0,0,0,0.03);
+	padding: 8px;
+	white-space: pre-wrap;
+	word-wrap: break-word;
 }

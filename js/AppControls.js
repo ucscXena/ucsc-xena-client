@@ -73,11 +73,11 @@ var TiesActions = ({onTies, onTiesColumn}) => (
 		<a onClick={onTies} className={compStyles.filterHelp}><i className='material-icons'>close</i></a>
 	</div>);
 
-function getFilterColumn(title, samples, opts = {}) {
+function getFilterColumn(title, sampleSets, exprs, opts = {}) {
 	var field = signatureField(title, {
 			columnLabel: 'filter',
 			valueType: 'coded',
-			signature: ['in', samples],
+			signature: ['cross', sampleSets, exprs],
 			...opts
 		}),
 		colSpec = getColSpec([field], []),
@@ -116,11 +116,11 @@ class AppControls extends PureComponent {
 	};
 
 	onFilterColumn = () => {
-		const {appState: {cohortSamples, sampleSearch, samplesMatched}, callback} = this.props,
-			matching = _.map(samplesMatched, i => cohortSamples[i]);
+		const {appState: {cohortSamples, sampleSearch, allMatches}, callback} = this.props,
+			matching = _.map(allMatches.matches, matchSet => _.map(matchSet, i => cohortSamples[i]));
 
 		gaEvents('spreadsheet', 'samplesearch', 'new column');
-		callback(['add-column', 0, getFilterColumn(sampleSearch, matching, {filter: sampleSearch})]);
+		callback(['add-column', 0, getFilterColumn(sampleSearch, matching, allMatches.exprs, {filter: sampleSearch})]);
 	};
 
 	onTiesColumn = () => {
@@ -129,7 +129,7 @@ class AppControls extends PureComponent {
 			pcodes = patient.data.codes,
 			keep = new Set(Object.keys(filter).filter(k => filter[k]).map(i => docs[i].patient)),
 			matching = cohortSamples.filter((s, i) => keep.has(pcodes[pindex[i]]));
-		callback(['add-column', 0, getFilterColumn('TIES selection', matching)]);
+		callback(['add-column', 0, getFilterColumn('TIES selection', matching)]); // XXX broken
 		callback(['ties-dismiss']);
 	};
 
@@ -183,7 +183,7 @@ class AppControls extends PureComponent {
 
 	render() {
 		var {appState: {cohort, mode, columnOrder, showWelcome, samples, sampleSearch, samplesMatched, /*tiesEnabled, */ties},
-				onReset, help, onResetSampleFilter, onHighlightChange, callback} = this.props,
+				onReset, help, onResetSampleFilter, onHighlightChange, onHighlightSelect, callback} = this.props,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			{onPdf, onDownload, onShowWelcome, onMode} = this,
 			tiesOpen = _.get(ties, 'open'),
@@ -211,6 +211,7 @@ class AppControls extends PureComponent {
 							<BasicSearch {...{
 								value: sampleSearch,
 								matches,
+								onHighlightSelect,
 								sampleCount: samples.length,
 								onFilter: this.onFilter,
 								onZoom: this.onFilterZoom,
