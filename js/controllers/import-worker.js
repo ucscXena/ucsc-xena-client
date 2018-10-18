@@ -17,7 +17,7 @@ const createMetaDataFile = (state) => {
     const probemap = getBaseProbemapName(getIn(state, ['probemap', 'name']));
     return JSON.stringify({
         version: new Date().toISOString().split('T')[0],
-        cohort: state.cohortRadio === 'newCohort' ? state.customCohort : state.cohort,
+        cohort: state[state.cohortRadio],
         dataSubType: dataSubType[state.dataType],
         type: state.fileFormat,
         assembly: state.assembly || void 0,
@@ -148,8 +148,8 @@ const inferForm = (knownProbemaps, fileContent) => {
 		recommended: inference,
 		form: {
 			fileFormat: inferredOrientation,
-			cohortRadio: cohort ? 'existingPublicCohort' : undefined,
-			cohort,
+			cohortRadio: cohort ? 'publicCohort' : undefined,
+			publicCohort: cohort,
 			probemap
 		}
 	};

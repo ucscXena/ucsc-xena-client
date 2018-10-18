@@ -189,30 +189,30 @@ class ImportForm extends React.Component {
 	}
 
 	studySelectionPage() {
-		const { customCohort, cohortRadio, cohort } = this.props.state;
+		const { cohortRadio, newCohort, publicCohort, localCohort } = this.props.state;
 		return (
 			<div>
 				<RadioGroup value={cohortRadio} onChange={this.onCohortRadioChange}>
 					<RadioButton label="These are the first data on these samples." value='newCohort' />
 					{cohortRadio === 'newCohort' &&
 						<Input label="Study name" type="text" className={styles.field}
-							onChange={this.onCustomCohortChange} value={customCohort}
+							onChange={this.onNewCohortChange} value={newCohort}
 						/>}
 					<RadioButton label="I have loaded other data on these samples and want to connect to it."
-						value='existingOwnCohort' />
-					{cohortRadio === 'existingOwnCohort' &&
-						<Dropdown onChange={this.onCohortChange}
+						value='localCohort' />
+					{cohortRadio === 'localCohort' &&
+						<Dropdown onChange={this.onLocalCohortChange}
 							source={getDropdownOptions(["", ...this.props.localCohorts])}
-							value={cohort}
+							value={localCohort}
 							label={"Study"}
 							className={[styles.field, styles.inline].join(' ')}
 						/>}
 					<RadioButton label="There is other public data in Xena on these samples (e.g. TCGA) and want to connect to it."
-						value='existingPublicCohort' />
-					{cohortRadio === 'existingPublicCohort' &&
+						value='publicCohort' />
+					{cohortRadio === 'publicCohort' &&
 						<div className={styles.field}>
-							<CohortSuggest cohort={cohort} cohorts={this.props.cohorts}
-								onSelect={this.onCohortChange}
+							<CohortSuggest cohort={publicCohort} cohorts={this.props.cohorts}
+								onSelect={this.onPublicCohortChange}
 							/>
 						</div>
 					}
@@ -346,10 +346,9 @@ class ImportForm extends React.Component {
 	}
 
 	isCohortPageNextEnabled = () => {
-		const { customCohort, cohort, cohortRadio } = this.props.state;
+		const { cohortRadio } = this.props.state;
 
-		return (cohortRadio === 'newCohort' && !!customCohort) || (cohortRadio === 'existingOwnCohort' && !!cohort)
-			|| (cohortRadio === 'existingPublicCohort' && !!cohort);
+		return !!(cohortRadio && this.props.state[cohortRadio]);
 	}
 
 	isProbesNextPageEnabled = () => {
@@ -381,7 +380,6 @@ class ImportForm extends React.Component {
 	}
 
 	onCohortRadioChange = value => {
-		this.props.callback(['import-cohort', '']);
 		this.props.callback(['cohort-radio', value]);
 	}
 
@@ -398,9 +396,11 @@ class ImportForm extends React.Component {
 		this.props.callback(['data-type', type]);
 	}
 
-	onCohortChange = cohort => this.props.callback(['import-cohort', cohort]);
+	onPublicCohortChange = cohort => this.props.callback(['import-publicCohort', cohort]);
 
-	onCustomCohortChange = cohort => this.props.callback(['custom-cohort', cohort]);
+	onLocalCohortChange = cohort => this.props.callback(['import-localCohort', cohort]);
+
+	onNewCohortChange = cohort => this.props.callback(['import-newCohort', cohort]);
 
 	onShowMoreToggle = () => this.setState({showMoreErrors: !this.state.showMoreErrors});
 
@@ -492,9 +492,9 @@ class ImportPage extends React.Component {
 	}
 
 	onViz = () => {
-		const cohort = _.getIn(this.props.state, ['import', 'form', 'cohort']),
-			customCohort = _.getIn(this.props.state, ['import', 'form', 'customCohort']);
-		this.props.callback(['cohort', cohort ? cohort : customCohort]);
+		const form = this.props.state.import.form,
+			cohort = form[form.cohortRadio];
+		this.props.callback(['cohort', cohort]);
 		this.props.callback(['navigate', 'heatmap']);
 	};
 

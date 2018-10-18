@@ -72,7 +72,7 @@ const onRetryMetaData = (state) => {
     let retryForm = getIn(state, ['retryForm']) || {};
     retryForm = {
         ...retryForm,
-        customCohort: getDefaultCustomCohort(getIn(state, ['localCohorts']))
+        newCohort: getDefaultCustomCohort(getIn(state, ['localCohorts']))
     };
     return assocInAll(state, ['form'], retryForm, ['retryForm'], undefined);
 };
@@ -146,7 +146,7 @@ const query = {
         const localCohorts = getCohortArray(cohorts);
         return assocInAll(state,
             ['localCohorts'], localCohorts,
-            ['form', 'customCohort'], getDefaultCustomCohort(localCohorts));
+            ['form', 'newCohort'], getDefaultCustomCohort(localCohorts));
     },
     'get-probemaps-post!': serverBus => {
         serverBus.next(['set-probemaps', probemapList(referenceHost)]);
@@ -162,8 +162,9 @@ const formControls = {
     'file-format': changeFormProp('fileFormat'),
     'data-type': changeFormProp('dataType'),
     'cohort-radio': changeFormProp('cohortRadio'),
-    'import-cohort': changeFormProp('cohort'),
-    'custom-cohort': changeFormProp('customCohort'),
+    'import-publicCohort': changeFormProp('publicCohort'),
+    'import-localCohort': changeFormProp('localCohort'),
+    'import-newCohort': changeFormProp('newCohort'),
     'errors': changeFormProp('errors'),
     'probemap': changeFormProp('probemap'),
     'assembly': changeFormProp('assembly'),
