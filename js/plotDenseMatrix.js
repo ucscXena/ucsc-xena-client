@@ -58,7 +58,7 @@ var gbURL = (assembly, pos, hgtCustomtext) => {
 	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}
 			&highlight=${assemblyString}.${positionString}
 			&position=${regionString}
-			${hgtCustomtext ? `&hgt.Customtext=${hgtCustomtext}` : ''}`;
+			${hgtCustomtext ? `&hgt.customText=${hgtCustomtext}` : ''}`;
 };
 
 function tooltip(id, heatmap, assembly, hgtCustomtext, fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
