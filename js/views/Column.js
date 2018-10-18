@@ -378,7 +378,8 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 }
 
 var showPosition = column =>
-	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType);
+	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType) &&
+	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
 
 class Column extends PureComponent {
