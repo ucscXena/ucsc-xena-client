@@ -2,7 +2,7 @@
 
 import {servers} from '../defaultServers';
 import Rx from '../rx';
-var {of, create, ajax, fromEvent} = Rx.Observable;
+var {defer, of, create, ajax, fromEvent} = Rx.Observable;
 import getErrors from '../import/errorChecking';
 import infer from '../import/infer.js';
 import {dataSubType, FILE_FORMAT} from '../import/constants';
@@ -185,7 +185,8 @@ var cmds = {
 // extract enough info to be serializable.
 // esp. need to handle file read errors.
 const wrapSlotRequest = ({msg: [tag, ...args], id}) =>
-	cmds[tag](...args).map(msg => ({msg, id}));
+	// using defer so we can capture any errors thrown in the handlers
+	defer(() => cmds[tag](...args)).catch(err => of({serverError: err.message})).map(msg => ({msg, id}));
 
 var recvQ = fromEvent(self, 'message').map(({data}) => data);
 
