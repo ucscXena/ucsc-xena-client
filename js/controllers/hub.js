@@ -266,23 +266,28 @@ function invalidatePick(state, path, key) {
 }
 
 
-// ['cohorts', host]
-// ['hubMeta', host]
-// ['samples', host, *]
-// ['identifiers', host, *]
-// ['dataset', host, *]
-// ['cohortDatasets', *, host]
+// ['cohorts', localHub]
+// ['hubMeta', localHub]
+// ['samples', localHub, *]
+// ['identifiers', localHub, *]
+// ['dataset', localHub, *]
+// ['cohortDatasets', *, localHub]
 function invalidateLocalHub(state) {
 	var datapages = get(state, 'datapages');
 	invalidateKey(['cohorts', localHub]);
 	invalidateKey(['hubMeta', localHub]);
 	invalidateKeysUnder(datapages, ['samples', localHub]);
 	invalidateKeysUnder(datapages, ['identifiers', localHub]);
-	invalidatePick(datapages, ['cohortDatasets'], 'host');
+	invalidatePick(datapages, ['cohortDatasets'], localHub);
 }
 
 function clearPath(path) {
 	outOfDate = updateIn(outOfDate, initial(path), p => p && dissoc(p, last(path)));
+}
+
+function hubChangePost(serverBus, state, newState) {
+	invalidateLocalHub(newState);
+	datapagesPostActions(serverBus, state, newState);
 }
 
 var controls = {
@@ -290,10 +295,8 @@ var controls = {
 	'navigate-post!': datapagesPostActions,
 	'history-post!': datapagesPostActions,
 	'enable-host-post!': datapagesPostActions,
-	'localStatus-post!': (serverBus, state, newState) => {
-		invalidateLocalHub(newState);
-		datapagesPostActions(serverBus, state, newState);
-	},
+	'localStatus-post!': hubChangePost,
+	'localQueue-post!': hubChangePost,
 	'merge-data': clearCache((state, path, data) =>
 		assocIn(state, ['datapages', ...path], enforceValue(path, data))),
 	'merge-data-post!': (serverBus, state, newState, path) => {
@@ -303,9 +306,6 @@ var controls = {
 	},
 	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
-
-	// Force page load after delete, to refresh all data.
-	'dataset-deleted-post!': () => location.reload()
 };
 
 module.exports = compose(

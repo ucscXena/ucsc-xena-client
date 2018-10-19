@@ -21,6 +21,7 @@ import importController from './controllers/import';
 import PageContainer from './containers/PageContainer';
 import selector from './appSelector';
 import { compose } from './controllers/utils';
+import connectionController from './controllers/connection';
 
 const connector = require('./connector');
 const createStore = require('./store');
@@ -71,6 +72,6 @@ const store = createStore();
 const main = window.document.getElementById('main');
 
 // XXX reducer
-const controller = compose(hubController, serverController, uiController, transcriptController, importController/*, tiesController*/);
+const controller = compose(connectionController(store.uiBus), hubController, serverController, uiController, transcriptController, importController/*, tiesController*/);
 
 connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});

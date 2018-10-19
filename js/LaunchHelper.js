@@ -4,9 +4,7 @@ import React from 'react';
 import Dialog from 'react-toolbox/lib/dialog';
 import PureComponent from './PureComponent';
 var {map, pick, mapObject, getIn, get} = require('./underscore_ext');
-var {servers: {localHub}} = require('./defaultServers');
 var platform = require('platform');
-var {testStatus} = require('./xenaQuery');
 var Rx = require('./rx');
 import Link from 'react-toolbox/lib/link';
 import styles from './LaunchHelper.module.css';
@@ -129,11 +127,9 @@ var launchingHelp = ['Launching...',
 	<p>If you see a browser dialog, and click the "open" button.</p>];
 
 var statusHelp = {
-	down: [],
-	launching: launchingHelp,
+	undefined: [],
+	down: launchingHelp,
 	started: launchingHelp,
-	failed: launchingHelp,
-	failedStarting: launchingHelp,
 	up: ['Your local Xena Hub is running.',
 		<p>To view your data, use the "Visualization" button</p>],
 	lost: ['We have lost contact with your Local Xena Hub.',
@@ -151,74 +147,34 @@ var launch = () => {
 	i.src = 'ucscxena://';
 };
 
-// up/down/launching/started/failed/failedStarting
-
-var nextState = (state, status) =>
-	status !== 'down' ? status :
-	state === 'up' ? 'lost' :
-	state;
-
-var refresh = 2000;
-var contactTimeout = 200;
-var launchTimeout = 10 * 1000;
-var bootTimeout = 2 * 60 * 1000;
-
-var {of, interval} = Rx.Observable;
-
+// XXX Note that we re-render on every change of the wrapped
+// component. Maybe should put dialog in a separate component to
+// avoid re-rendering it.
 var wrap = Comp => class extends PureComponent {
 	static displayName = 'LaunchHelperWrapper';
 
-	state = {advanced: false, show: false, status: 'down'};
+	constructor(props) {
+		super(props);
+		// If we just arrived on a page that requires the hub, and status is
+		// 'down' but not 'lost' (i.e. user shutdown), try to start.
+		this.state = {advanced: false, show: props.state.localStatus === 'down'};
+	}
 
 	componentDidMount() {
-		var shouldLaunch = !(this.props.localStatus === 'lost'),
-			ping = interval(refresh).startWith(undefined)
-				.switchMapTo(testStatus(localHub, contactTimeout).map(({status}) => status)).share(),
-			firstDown = ping.first().filter(p => p === 'down'),
-			pingStarted = ping.filter(p => p === 'started'),
-			pingUp = ping.filter(p => p === 'up'),
-			failed = of('failed'),
-			failedStarting = of('failedStarting'),
-			launching = of('launching'),
-
-			boot = pingStarted.first().switchMapTo(failedStarting.delay(bootTimeout)),
-			launch = firstDown.switchMap(() => shouldLaunch ? launching.concat(failed.delay(launchTimeout)) : failed),
-
-			timeouts = launch.takeUntil(pingStarted).merge(boot).takeUntil(pingUp);
-
-		this.sub = ping.merge(timeouts)
-			.map(status => nextState(this.state.status, status))
-			.distinctUntilChanged()
-			.subscribe(this.updatePing);
-
-		this.sub.add(firstDown.subscribe(this.showAndLaunch(shouldLaunch)));
-	}
-
-	componentWillUnmount() {
-		if (this.timeoutID) {
-			clearTimeout(this.timeoutID);
-		}
-		if (this.sub) {
-			this.sub.unsubscribe();
-		}
-	}
-
-	showAndLaunch = shouldLaunch => () => {
-		this.setState({show: true});
-		if (shouldLaunch) {
+		if (this.props.state.localStatus === 'down') {
 			launch();
 		}
 	}
 
-	updatePing = nextStatus => {
-		this.props.callback(['localStatus', nextStatus]);
-		if (nextStatus === 'up' && this.state.status !== 'up') {
-			if (this.compRef && this.compRef.onStartup) {
-				this.compRef.onStartup();
-			}
+	componentWillReceiveProps(props) {
+		// If localStatus was not set (no ping yet, from server) and changes to 'down',
+		// show dialog & try to launch.
+		if (!this.props.state.localStatus && props.state.localStatus === 'down') {
+			this.setState({show: true});
+			launch();
+		} else if (props.state.localStatus === 'up') {
 			this.setState({show: false});
 		}
-		this.setState({status: nextStatus});
 	}
 
 	onShowAdvanced = advanced => {
@@ -243,7 +199,8 @@ var wrap = Comp => class extends PureComponent {
 	];
 
 	render() {
-		var {advanced, status, show} = this.state,
+		var {advanced, show} = this.state,
+			{localStatus: status} = this.props.state,
 			statusBadge =
 				status === 'up' ? (
 					<i title='Connected to local Xena Hub'

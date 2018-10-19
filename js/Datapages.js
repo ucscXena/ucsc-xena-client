@@ -184,7 +184,7 @@ class DeleteButton extends React.Component {
 
 	onReally = () => {
 		var {name} = this.props;
-		this.props.callback(['navigate', 'datapages', {host: localHub}]);
+		this.setState({active: false});
 		this.props.callback(['delete-dataset', localHub, name]);
 	};
 

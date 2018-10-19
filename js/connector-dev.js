@@ -24,7 +24,7 @@ function logError(err) {
 }
 
 var dropTransient = state =>
-	_.assoc(state, 'wizard', {}, 'datapages', undefined, 'localStatus', undefined, 'import', undefined);
+	_.assoc(state, 'wizard', {}, 'datapages', undefined, 'localStatus', undefined, 'localQueue', undefined,  'import', undefined);
 
 
 // serialization
