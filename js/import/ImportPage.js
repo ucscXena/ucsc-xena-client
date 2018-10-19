@@ -481,14 +481,14 @@ class ImportPage extends React.Component {
 		super();
 	}
 
-	onNavigate = (page) => {
-		this.props.callback(['navigate', page]);
+	onNavigate = (page, params) => {
+		this.props.callback(['navigate', page, params]);
 	};
 
 	componentDidMount() {
 		this.props.callback(['get-local-cohorts']);
 		this.props.callback(['get-probemaps']);
-		nav({activeLink: 'hub', onNavigate: this.onNavigate});
+		nav({activeLink: 'datapages', onNavigate: this.onNavigate});
 	}
 
 	onViz = () => {
