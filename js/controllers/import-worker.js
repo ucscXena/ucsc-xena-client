@@ -8,6 +8,7 @@ import infer from '../import/infer.js';
 import {dataSubType, FILE_FORMAT} from '../import/constants';
 const {GENOMIC_MATRIX, CLINICAL_MATRIX} = FILE_FORMAT;
 import {assocIn, getIn, has, transpose} from '../underscore_ext';
+require('./html5-formdata-polyfill'); // for safari
 
 const referenceHost = 'https://reference.xenahubs.net';
 
