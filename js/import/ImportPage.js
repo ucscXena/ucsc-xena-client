@@ -188,6 +188,13 @@ class ImportForm extends React.Component {
 		);
 	}
 
+	setLocalCohortRef = ref => {
+		if (ref && !this.props.state.localCohort) {
+			ref.inputNode.focus();
+		}
+		this.localCohortRef = ref;
+	}
+
 	studySelectionPage() {
 		const { cohortRadio, newCohort, publicCohort, localCohort } = this.props.state;
 		return (
@@ -201,10 +208,10 @@ class ImportForm extends React.Component {
 					<RadioButton label="I have loaded other data on these samples and want to connect to it."
 						value='localCohort' />
 					{cohortRadio === 'localCohort' &&
-						<Dropdown onChange={this.onLocalCohortChange}
+						<Dropdown innerRef={this.setLocalCohortRef} onChange={this.onLocalCohortChange}
 							source={getDropdownOptions(["", ...this.props.localCohorts])}
 							value={localCohort}
-							label={"Study"}
+							label={"Select a study"}
 							className={[styles.field, styles.inline].join(' ')}
 						/>}
 					<RadioButton label="There is other public data in Xena on these samples (e.g. TCGA) and want to connect to it."
