@@ -10,7 +10,8 @@ var servers = {
 	singlecellHub: 'https://singlecell.xenahubs.net',
 	pancanAtlasHub: 'https://pancanatlas.xenahubs.net',
 	treehouseHub: 'https://xena.treehouse.gi.ucsc.edu:443',
-	gdcHub: "https://gdc.xenahubs.net"
+	gdcHub: "https://gdc.xenahubs.net",
+	atacSeqHub: "https://atacseq.xenahubs.net"
 };
 
 module.exports = {
@@ -35,7 +36,8 @@ module.exports = {
 		servers.icgcHub,
 		servers.toilHub,
 		servers.treehouseHub,
-		servers.gdcHub
+		servers.gdcHub,
+		servers.atacSeqHub
 	],
 	enabledServers: [
 		servers.localHub,
@@ -44,7 +46,8 @@ module.exports = {
 		servers.pancanAtlasHub,
 		servers.icgcHub,
 		servers.toilHub,
-		servers.gdcHub
+		servers.gdcHub,
+		servers.atacSeqHub
 	],
 	publicServers: [
 		servers.publicHub,
@@ -54,6 +57,7 @@ module.exports = {
 		servers.pancanAtlasHub,
 		servers.pcawgHub,
 		servers.treehouseHub,
-		servers.gdcHub
+		servers.gdcHub,
+		servers.atacSeqHub
 	]
 };
