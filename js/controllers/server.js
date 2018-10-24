@@ -3,13 +3,12 @@
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
 var {reifyErrors, collectResults} = require('./errors');
-var {resetZoom, fetchColumnData, fetchCohortData, setCohort,
+var {resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering,
 	fetchColumnData, updateWizard, clearWizardCohort} = require('./common');
 
 var xenaQuery = require('../xenaQuery');
 var {allFieldMetadata} = xenaQuery;
 var {compose, make, mount} = require('./utils');
-
 var phenoPat = /^phenotypes?$/i;
 function featuresQuery(datasets) {
 	var clinicalMatrices = _.filter(datasets,
@@ -102,6 +101,13 @@ var spreadsheetControls = {
 		columnOpen(state, id) ?
 			_.assocIn(state, ["data", id], _.assoc(data, 'status', 'loaded'))
 			: state,
+	'widget-data-post!': (serverBus, state, newState, id) => {
+		if (_.getIn(newState, ['columns', id], 'clustering') != null) {
+			fetchClustering(serverBus, newState, id);
+		}
+	},
+	'cluster-result': (state, id, order) =>
+		_.assocIn(state, ['data', id, 'clustering', 'probes'], order),
 	'widget-data-error': (state, id) =>
 		columnOpen(state, id) ?
 			_.assocIn(state, ["data", id, 'status'], 'error') : state,

@@ -17,6 +17,29 @@ var gaEvents = require('../gaEvents');
 // pick up signature fetch
 require('../models/signatures');
 
+import Worker from 'worker-loader!./cluster-worker';
+
+const worker = new Worker();
+
+// XXX error handling? What do we do with errors in the worker?
+const workerObs = Rx.Observable.fromEvent(worker, 'message').share();
+var msgId = 0;
+
+// sendMessage wraps worker messages in ajax-like observables, by assigning
+// unique ids to each request, and waiting for a single response with the
+// same id. The worker must echo the id in the response.
+const sendMessage = msg => {
+        var id = msgId++;
+        worker.postMessage({msg, id});
+        return workerObs.filter(ev => ev.data.id === id).take(1).map(ev => ev.data.msg);
+};
+
+function fetchClustering(serverBus, state, id) {
+	var data = _.getIn(state, ['data', id]);
+	// maybe prune the data that we send?
+	serverBus.next([['cluster-result', id], sendMessage(['cluster', data])]);
+}
+
 var datasetResults = resps => collectResults(resps, servers =>
 		_.object(_.flatmap(servers, s => _.map(s.datasets, d => [d.dsID, d]))));
 
@@ -105,9 +128,6 @@ function fetchSamples(serverBus, servers, cohort, allowOverSamples) {
 }
 
 function fetchColumnData(serverBus, samples, id, settings) {
-
-	// XXX  Note that the widget-data-xxx slots are leaked in the groupBy
-	// in main.js. We need a better mechanism.
 //	if (Math.random() > 0.5) { // testing error handling
 		serverBus.next([['widget-data', id], fetch(settings, samples)]);
 //	} else {
@@ -276,6 +296,7 @@ module.exports = {
 	fetchCohortData,
 	fetchCohorts,
 	fetchColumnData,
+	fetchClustering,
 	fetchDatasets,
 	fetchSamples,
 	fetchSurvival,
