@@ -85,11 +85,11 @@ function reOrderFields(column, data) {
 	if (column.clustering === 'probes' && probeOrder) {
 		return _.updateIn(data, ['req'], req => {
 			var {mean, position, probes, values} = req;
-			return _.merge(req, {
-				mean: mean && probeOrder.map(i => mean[i]),
-				position: position && probeOrder.map(i => position[i]),
-				probes: probes && probeOrder.map(i => probes[i]),
-				values: values && probeOrder.map(i => values[i])});
+			return _.merge(req,
+				mean ? {mean: probeOrder.map(i => mean[i])} : {},
+				position ? {position: probeOrder.map(i => position[i])} : {},
+				probes ? {probes: probeOrder.map(i => probes[i])} : {},
+				values ? {values: probeOrder.map(i => values[i])} : {});
 		});
 	}
 	return data;
