@@ -83,21 +83,26 @@ var defaultXZoom = (pos, refGene, position) =>
 function reOrderFields(column, data) {
 	var probeOrder = _.getIn(data, ['clustering', 'probes']);
 	if (column.clustering === 'probes' && probeOrder) {
-		return _.updateIn(data, ['req'], req => {
-			var {mean, position, probes, values} = req;
-			return _.merge(req,
-				mean ? {mean: probeOrder.map(i => mean[i])} : {},
-				position ? {position: probeOrder.map(i => position[i])} : {},
-				probes ? {probes: probeOrder.map(i => probes[i])} : {},
-				values ? {values: probeOrder.map(i => values[i])} : {});
-		});
+		return {
+			data: _.updateIn(data, ['req'], req => {
+					var {mean, position, probes, values} = req;
+					return _.merge(req,
+						mean ? {mean: probeOrder.map(i => mean[i])} : {},
+						position ? {position: probeOrder.map(i => position[i])} : {},
+						probes ? {probes: probeOrder.map(i => probes[i])} : {},
+						values ? {values: probeOrder.map(i => values[i])} : {});
+				}),
+			column: column.fieldType === 'geneProbes' ? column :
+				_.assoc(column, 'fields', probeOrder.map(i => column.fields[i]))
+		};
 	}
-	return data;
+	return {column, data};
 }
 
 var reorderFieldsTransform = fn =>
-	(column, vizSettings, data, samples) =>
-	 fn(column, vizSettings, reOrderFields(column, data), samples);
+	(column0, vizSettings, data0, samples) =>
+		_.Let(({column, data} = reOrderFields(column0, data0)) =>
+			 fn(column, vizSettings, data, samples));
 
 function dataToHeatmap(column, vizSettings, data, samples) {
 	if (!_.get(data, 'req')) {
