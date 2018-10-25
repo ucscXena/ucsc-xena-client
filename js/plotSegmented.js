@@ -164,7 +164,7 @@ function posTooltip(layout, samples, sampleFormat, pixPerRow, index, assembly, x
 			gbURL(assembly, posRegionString(chrom, coordinate), posDoubleString(chrom, coordinate))]]]};
 }
 
-function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, assembly, ev) {
+function tooltip(id, fieldType, layout, nodes, samples, sampleFormat, zoom, gene, assembly, ev) {
 	var {x, y} = util.eventOffset(ev),
 		{height, count, index} = zoom,
 		pixPerRow = height / count,
@@ -173,9 +173,11 @@ function tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, gene, as
 				c => c || _.getIn(nodes, [0, 'data', 'chr'])),
 		node = closestNode(nodes, zoom, x, y);
 
-	return node ?
-		sampleTooltip(lo.chromName, sampleFormat, node.data, gene, assembly) :
-		posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y);
+	return {
+		x,
+		id, ...(node ?
+			sampleTooltip(lo.chromName, sampleFormat, node.data, gene, assembly) :
+			posTooltip(lo, samples, sampleFormat, pixPerRow, index, assembly, x, y))};
 }
 
 var SegmentedColumn = hotOrNot(class extends PureComponent {
@@ -201,8 +203,8 @@ var SegmentedColumn = hotOrNot(class extends PureComponent {
 	}
 
 	tooltip = (ev) => {
-		var {column: {fieldType, layout, nodes, fields, assembly}, samples, sampleFormat, zoom} = this.props;
-		return tooltip(fieldType, layout, nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
+		var {column: {fieldType, layout, nodes, fields, assembly}, samples, sampleFormat, zoom, id} = this.props;
+		return tooltip(id, fieldType, layout, nodes, samples, sampleFormat, zoom, fields[0], assembly, ev);
 	};
 
 	render() {

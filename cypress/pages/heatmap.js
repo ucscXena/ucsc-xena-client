@@ -8,7 +8,7 @@ var exactMatch = (selector, str)  =>
 
 var wizard = {
 	// The cohort card input field
-	cohortInput: () => cy.contains('label', 'Study').siblings('input'),
+	cohortInput: () => cy.contains('label', 'Search for a study').siblings('input'),
 	cohortSuggestItems: () => cy.get('[class^=AutosuggestTheme-module__suggestion__]'),
 	// Select a cohort from the drop-down
 	cohortSelect: cohort => exactMatch('li', cohort).click(),
@@ -34,8 +34,9 @@ var spreadsheet = {
 	kaplanMeier: () => cy.get('[class*=km-module__mainDialog]'),
 	kaplanMeierClose: () => cy.get('[class*=km-module__mainDialogClose]'),
 	loadingSpinners: () => cy.get('[data-xena="loading"]'),
-	// "View live example" link
-	examples: () => cy.get('[class^=Welcome-module] a'),
+	// over on first example to prevent cycling
+	hoverFirstExample: () => cy.get('[class^=Welcome-module__bullet] [data-index="0"]')
+		.then(el => el[0].dispatchEvent(new Event('mouseover', {bubbles: true}))),
 	waitForViewport: () => cy.wait(200) // 200ms delay to fire viewportWidth
 };
 

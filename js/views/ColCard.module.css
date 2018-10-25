@@ -31,7 +31,7 @@
 	display: flex;
 	line-height: 0;
 	justify-content: space-between;
-	padding: 16px;
+	padding: 8px 16px;
 }
 
 /* Wrapper around controls that are passed in as a prop */

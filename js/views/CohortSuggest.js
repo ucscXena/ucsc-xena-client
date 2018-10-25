@@ -12,19 +12,19 @@ var renderInputComponent = ({ref, onChange, ...props}) => (
 		spellCheck={false}
 		innerRef={el => ref(el && el.inputNode)}
 		onChange={(value, ev) => onChange(ev)}
-		label='Study'
+		label='Search for a study'
 		{...props} />);
+
+var getSuggestions = (value, cohorts) => {
+	const wordValues = value.toLowerCase().trim().split(/\s+/);
+	return cohorts.filter(c => _.every(wordValues, value => c.toLowerCase().indexOf(value) > -1)).sort();
+};
 
 class CohortSuggest extends PureComponent {
 	state = {suggestions: [], value: this.props.cohort || ""};
 
-	onSuggestionsFetchRequested = ({ value }) => {
-		const wordValues = value.toLowerCase().trim().split(/\s+/);
-
-		const filteredSuggestions = this.props.cohorts.filter(c =>
-			_.every(wordValues, value => c.toLowerCase().indexOf(value) > -1)).sort();
-
-		this.setState({ suggestions: filteredSuggestions });
+	onSuggestionsFetchRequested = ({value}) => {
+		this.setState({ suggestions: getSuggestions(value, this.props.cohorts) });
 	};
 
 	onSuggestionsClearRequested = () => {
@@ -32,7 +32,11 @@ class CohortSuggest extends PureComponent {
 	};
 
 	componentWillReceiveProps(props) {
-		this.setState({value: this.state.value || props.cohort || ""});
+		var value = this.state.value || props.cohort || "";
+		this.setState({
+			value,
+			suggestions: value.trim().length > 0 ? getSuggestions(value, props.cohorts) : []
+		});
 	}
 
 	onClear = () => {
@@ -57,6 +61,8 @@ class CohortSuggest extends PureComponent {
 	onBlur = () => {
 		this.setState({value: this.props.cohort || this.state.value});
 	};
+
+	shouldRenderSuggestions = () => true;
 
 	render() {
 		var {onChange, onBlur} = this,

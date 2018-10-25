@@ -99,6 +99,7 @@
 .mdCaption {
 	font-size: 12px;
 	letter-spacing: .02em;
+	line-height: 16px;
 }
 
 .mdButton {

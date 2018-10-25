@@ -25,12 +25,35 @@ var m = (methods, exp, defaultMethod) => {
 // for example.
 
 function evalIn({samples}, list) {
-	var set = _.object(list, list);
+	var set = _.object(list, list); // XXX use Set?
 	return {
 		req: {
 			values: [_.map(samples, s => _.has(set, s) ? 1 : 0)]
 		},
 		codes: ['false', 'true']
+	};
+}
+
+// cross product of boolean terms, as text, e.g. for 2 terms,
+// !a !b, a !b, !a b, a b
+function booleanCross(terms, i = 0, acc = []) {
+	return i === terms.length ? acc :
+		booleanCross(terms, i + 1,
+			acc.length === 0 ? ['false', 'true'] :
+				acc.map(t => `${t};false`).concat(
+					acc.map(t => `${t};true`)));
+}
+
+function evalCross({samples}, lists, exprs) {
+	var sets = lists.map(l => new Set(l)),
+		bits = _.times(lists.length, i => 1 << i); // 1, 2
+
+	console.log(bits);
+	return {
+		req: {
+			values: [_.map(samples, s => _.sum(bits.filter((v, i) => sets[i].has(s))))]
+		},
+		codes: booleanCross(exprs)
 	};
 }
 
@@ -58,6 +81,7 @@ var sigResult = dataValues => {
 function evalexp(ctx, expression) {
 	return m({
 		'in': list => immediate(evalIn(ctx, list)),
+		'cross': (lists, exprs) => immediate(evalCross(ctx, lists, exprs)),
 		'samples': () => immediate(samplesAsData(ctx)),
 		'geneSignature': (dsID, probes, weights) =>
 			datasetProbeSignature(dsID, ctx.samples, probes, weights)

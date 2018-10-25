@@ -10,7 +10,6 @@ import './ChromPosition';
 import './models/denseMatrix';
 import './models/mutationVector';
 import './models/segmented';
-import 'bootstrap/dist/css/bootstrap.css';
 //var Application = require('./containers/ApplicationContainer');
 
 import uiController from './controllers/ui';
@@ -67,6 +66,6 @@ const store = createStore();
 const main = window.document.getElementById('main');
 
 // XXX reducer
-const controller = compose(serverController, uiController, hubController, transcriptController/*, tiesController*/);
+const controller = compose(hubController, serverController, uiController, transcriptController/*, tiesController*/);
 
 connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});

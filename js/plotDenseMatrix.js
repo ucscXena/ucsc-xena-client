@@ -51,14 +51,17 @@ var posRegionString = p => {
 	var pad = Math.round((p.chromend - p.chromstart) / 2);
 	return `${p.chrom}:${util.addCommas(p.chromstart - pad)}-${util.addCommas(p.chromend + pad)}`;
 };
-var gbURL = (assembly, pos) => {
+var gbURL = (assembly, pos, hgtCustomtext) => {
 	var assemblyString = encodeURIComponent(assembly),
 		positionString = encodeURIComponent(posString(pos)),
 		regionString = encodeURIComponent(posRegionString(pos));
-	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&highlight=${assemblyString}.${positionString}&position=${regionString}`;
+	return `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}
+			&highlight=${assemblyString}.${positionString}
+			&position=${regionString}
+			${hgtCustomtext ? `&hgt.customText=${hgtCustomtext}` : ''}`;
 };
 
-function tooltip(id, heatmap, assembly, fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
+function tooltip(id, heatmap, assembly, hgtCustomtext, fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
@@ -79,7 +82,7 @@ function tooltip(id, heatmap, assembly, fields, sampleFormat, fieldFormat, codes
 		fieldIndex,
 		rows: [
 			[['labelValue', label, val]],
-			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos)]]] : []),
+			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos, hgtCustomtext)]]] : []),
 			...((!code && (mean !== 'NA') && (median !== 'NA') ? [[['labelValue', 'Mean (Median)', mean + ' (' +
 	         median + ')' ]]] : []))]
 	};
@@ -263,8 +266,10 @@ class extends PureComponent {
 			codes = _.get(data, 'codes'),
 			// support data.req.position for old bookmarks.
 			position = column.position || _.getIn(data, ['req', 'position']),
-			{assembly, fields, heatmap, width} = column;
-		return tooltip(id, heatmap, assembly, fields, sampleFormat, fieldFormat(id), codes, position, width, zoom, samples, ev);
+			{assembly, fields, heatmap, width, dataset} = column,
+			hgtCustomtext = _.getIn(dataset, ['probemapMeta', 'hgt.customtext']);
+		return tooltip(id, heatmap, assembly, hgtCustomtext, fields, sampleFormat, fieldFormat(id),
+			codes, position, width, zoom, samples, ev);
 	};
 
 	// To reduce this set of properties, we could

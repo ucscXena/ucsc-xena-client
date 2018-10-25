@@ -16,8 +16,10 @@ var {compose, make, mount} = require('./utils');
 var {JSONToqueryString} = require('../dom_helper');
 var {parseBookmark} = require('../bookmark');
 import parseManifest from '../manifest';
+var gaEvents = require('../gaEvents');
 
 function fetchBookmark(serverBus, bookmark) {
+	gaEvents('bookmark', 'load');
 	serverBus.next(['bookmark', Rx.Observable.ajax({
 		responseType: 'text',
 		method: 'GET',
@@ -106,7 +108,7 @@ var getPage = path =>
 	'heatmap';
 
 // XXX This same info also appears in urlParams.js
-var savedParams = params => _.pick(params, 'dataset', 'addHub', 'removeHub', 'hubs', 'host', 'cohort', 'allIdentifiers');
+var savedParams = params => _.pick(params, 'dataset', 'addHub', 'removeHub', 'hubs', 'host', 'cohort', 'allIdentifiers', 'markdown');
 var setPage = (state, path, params) =>
 	_.assoc(state,
 			'page', getPage(path),
@@ -284,6 +286,9 @@ var spreadsheetControls = {
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
 		serverBus.next(['chart-average-data', Rx.Observable.of(offsets, Rx.Scheduler.async), thunk]),
 	'sample-search': (state, text) => _.assoc(state, 'sampleSearch', text),
+	// XXX maybe this should be transient state, instead, since it's not
+	// meaningful after reload?
+	'highlightSelect': (state, highlight) => _.assoc(state, 'highlightSelect', highlight),
 	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id),
 	'sortDirection': (state, id, newDir) =>
 		_.assocIn(state, ['columns', id, 'sortDirection'], newDir),

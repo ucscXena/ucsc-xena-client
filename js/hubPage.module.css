@@ -12,8 +12,9 @@
 
 /* Hub page container - add padding to match vis container */
 .hubPage {
-	padding: 48px;
 	line-height: 1.15; /* bootstrap is messing with this */
+	color: black87;
+	padding: 48px;
 }
 
 /* Hub list */

@@ -36,3 +36,26 @@
 .subgroupHeader:first-of-type {
 	padding-top: 8px;
 }
+
+/* Subgroup with assembly */
+.withBadge {
+	height: unset;
+	line-height: 20px;
+	margin-bottom: -14px !important; /* Overrides bottom margin RTCheckboxTheme */
+}
+
+/* Assembly */
+.badge {
+	composes: mdCaption from '../../css/typography.module.css';
+	font-size: 11px; /* Overrides mdCaption */
+	font-weight: 500;
+	line-height: 16px;
+	margin-top: -4px;
+	padding-left: 36px;
+	opacity: 1;
+	transition: opacity 200ms ease-in-out;
+}
+
+.hideBadge .badge {
+	opacity: 0;
+}

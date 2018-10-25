@@ -67,6 +67,10 @@
 						js: "{%=o.htmlWebpackPlugin.files.chunks.docs.entry%}",
 						css: "{%=o.htmlWebpackPlugin.files.chunks.docs.css[0]%}"
 					},
+					bookmarks: {
+						js: "{%=o.htmlWebpackPlugin.files.chunks.bookmarks.entry%}",
+						css: "{%=o.htmlWebpackPlugin.files.chunks.bookmarks.css[0]%}"
+					},
 					{% } %}
 					heatmap: {
 						js: "{%=o.htmlWebpackPlugin.files.chunks.heatmap.entry%}",

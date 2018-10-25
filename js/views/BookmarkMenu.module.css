@@ -26,6 +26,14 @@
 	visibility: hidden;
 }
 
+.warning {
+	font-size: 80%;
+	padding: 0 16px;
+	margin: 0;
+	white-space: normal;
+	width: 100%;
+}
+
 /* position above the app */
 .wrapper {
 	margin: 5;

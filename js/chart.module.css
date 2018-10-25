@@ -30,17 +30,46 @@
 .row {
 	align-items: center;
 	display: flex;
-	justify-content: space-between;
+	justify-content: flex-start;
 }
 
 .row+.row {
 	margin-top: 24px;
 }
 
+.row select {
+	background-color: #fff;
+	background-image: none;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+	color: #555;
+	display: block;
+	font-size: 14px;
+	height: 34px;
+	padding: 6px 12px;
+	transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+	width: 100%;
+}
+
+.row select:focus {
+	outline: none;
+}
+
 /* Column inside control panel */
 .column {
 	composes: mdBody1 from '../css/typography.module.css';
 	max-width: 33%;
+}
+
+/* Padding allocated to even columns */
+.column:nth-of-type(even) {
+	padding: 0 32px;
+}
+
+/* Right padding removed from last column, if even */
+.column:nth-of-type(even):last-of-type {
+	padding: 0 0 0 32px;
 }
 
 .column label {
@@ -52,12 +81,12 @@
 /* Stats container */
 .stats {
 	composes: card;
+	composes: mdCaption from '../css/typography.module.css';
 	display: none;
-	position: absolute;
-	right: 0;
-	top: 0;
 }
 
 .stats.visible {
 	display: block;
+	height: 100%;
+	margin-left: 24px;
 }

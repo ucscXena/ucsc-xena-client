@@ -1,22 +1,22 @@
 .main {
-  font-size:14px;
-  margin: 0px auto;
-  padding-top: 20px;
-  width: 1200px;
-  background-color: rgba(0,0,0,0);
+	font-size: 14px;
+	margin: 0px auto;
+	padding-top: 20px;
+	width: 1200px;
+	background-color: rgba(0, 0, 0, 0);
 }
 
 .main span {
-  -webkit-font-smoothing: subpixel-antialiased;
+	-webkit-font-smoothing: subpixel-antialiased;
 }
 
 .geneBox * {
-  border-bottom: 0;
+	border-bottom: 0;
 }
 
 .horizontalSegment {
-  margin: 0px 20px;
-  height: 90px;
+	margin: 0px 20px;
+	height: 90px;
 }
 
 .horizontalSegmentButton {
@@ -32,62 +32,73 @@
 	color: #ff6b6b;
 }
 
-.selectors {
-  margin: 0px 20px;
+.selectors, .selectorsLink {
+	margin: 0px 20px;
+}
+
+.selectorsLink {
+	composes: mdCaption from '../../css/typography.module.css';
+	color: #337ab7;
+}
+
+.selectorsLink:hover {
+	color: #23527c;
+	text-decoration: underline;
 }
 
 .densityplot--label-div--zoom {
-  margin-left: 205px;
-  position: absolute;
-  height: 40px;
-  text-align: center;
+	margin-left: 205px;
+	position: absolute;
+	height: 40px;
+	text-align: center;
 }
+
 .densityplot--label-x {
-  position: absolute;
-  font-size: .75em;
-  transform: translate(-50%, 0);
-  bottom: 0px;
+	position: absolute;
+	font-size: .75em;
+	transform: translate(-50%, 0);
+	bottom: 0px;
 }
 
 .densityplot--label--axis-x {
-  height: 1px;
-  width: 100%;
-  background-color: black;
-  bottom: 0px;
-  position: absolute;
+	height: 1px;
+	width: 100%;
+	background-color: black;
+	bottom: 0px;
+	position: absolute;
 }
 
 .densityplot--label-y {
-  display: inline-block;
-  width: 0px;
-  margin-top: 60px;
-  float: left;
-  -webkit-transform: rotate(-90deg);
+	display: inline-block;
+	width: 0px;
+	margin-top: 60px;
+	float: left;
+	-webkit-transform: rotate(-90deg);
 	-moz-transform: rotate(-90deg);
 	transform: rotate(-90deg);
 }
 
 .densityplot--label-vertical-tick {
-  width: 1px;
-  height: 4px;
-  position: absolute;
-  bottom: 0px;
-  background-color: black;
+	width: 1px;
+	height: 4px;
+	position: absolute;
+	bottom: 0px;
+	background-color: black;
 }
 
 .densityplot--label-div-zero {
-  margin-left: 160px;
-  position: absolute;
-  height: 50px;
-  width: 50px;
-  display: inline-block;
-  text-align: center;
+	margin-left: 160px;
+	position: absolute;
+	height: 50px;
+	width: 50px;
+	display: inline-block;
+	text-align: center;
 }
 
 .densityplot--label-zero {
-  font-size: .85em;
-  line-height: 10px;
-  -webkit-transform: rotate(-90deg);
+	font-size: .85em;
+	line-height: 10px;
+	-webkit-transform: rotate(-90deg);
 	-moz-transform: rotate(-90deg);
 	transform: rotate(-90deg);
 }

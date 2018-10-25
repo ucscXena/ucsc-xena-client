@@ -1,5 +1,4 @@
 'use strict';
-
 var _ = require('../underscore_ext');
 var multi = require('../multi');
 var {colorScale} = require('../colorScales');
@@ -8,6 +7,8 @@ var {RGBToHex} = require('../color_helper');
 //var {segmentAverage} = require('./segmented');
 
 var MAX = 10; // max number of groups to display.
+
+var getSplits = (splits) => splits ? splits : 2;
 
 var survivalOptions = {
 	"osEv": {
@@ -18,14 +19,6 @@ var survivalOptions = {
 		tteFeature: 'OS.time',
 		label: 'Overall survival'
 	},
-	"dfiEv": {
-		patient: 'patient',
-		ev: 'dfiEv',
-		tte: 'dfiTte',
-		evFeature: 'DFI',
-		tteFeature: 'DFI.time',
-		label: 'Disease free interval'
-	},
 	"dssEv": {
 		patient: 'patient',
 		ev: 'dssEv',
@@ -33,6 +26,38 @@ var survivalOptions = {
 		evFeature: 'DSS',
 		tteFeature: 'DSS.time',
 		label: 'Disease specific survival'
+	},
+	"ddfsEv": {
+		patient: 'patient',
+		ev: 'ddfsEv',
+		tte: 'ddfsTte',
+		evFeature: 'DDFS',
+		tteFeature: 'DDFS.time',
+		label: 'Distant disease free survival'
+	},
+	"dmfsEv": {
+		patient: 'patient',
+		ev: 'dmfsEv',
+		tte: 'dmfsTte',
+		evFeature: 'DMFS',
+		tteFeature: 'DMFS.time',
+		label: 'Distant metastasis free survival'
+	},
+	"idfsEv": {
+		patient: 'patient',
+		ev: 'idfsEv',
+		tte: 'idfsTte',
+		evFeature: 'IDFS',
+		tteFeature: 'IDFS.time',
+		label: 'Invasive disease free survival'
+	},
+	"dfiEv": {
+		patient: 'patient',
+		ev: 'dfiEv',
+		tte: 'dfiTte',
+		evFeature: 'DFI',
+		tteFeature: 'DFI.time',
+		label: 'Disease free interval'
 	},
 	"pfiEv": {
 		patient: 'patient',
@@ -50,6 +75,22 @@ var survivalOptions = {
 		tteFeature: 'LRI.time',
 		label: 'Local recurrence interval'
 	},
+	"rrEv": {
+		patient: 'patient',
+		ev: 'rrEv',
+		tte: 'rrTte',
+		evFeature: 'RR',
+		tteFeature: 'RR.time',
+		label: 'Regional recurrence'
+	},
+	"driEv": {
+		patient: 'patient',
+		ev: 'driEv',
+		tte: 'driTte',
+		evFeature: 'DRI',
+		tteFeature: 'DRI.time',
+		label: 'Distant recurrence interval'
+	},
 	"dmiEv": {
 		patient: 'patient',
 		ev: 'dmiEv',
@@ -58,21 +99,21 @@ var survivalOptions = {
 		tteFeature: 'DMI.time',
 		label: 'Distant metastasis interval'
 	},
-	"ddfsEv": {
+	"mEv": {
 		patient: 'patient',
-		ev: 'ddfsEv',
-		tte: 'ddfsTte',
-		evFeature: 'DDFS',
-		tteFeature: 'DDFS.time',
-		label: 'Distant disease free survival'
+		ev: 'mEv',
+		tte: 'mTte',
+		evFeature: 'Metastasis',
+		tteFeature: 'Metastasis.time',
+		label: 'Metastasis'
 	},
-	"idfsEv": {
+	"rEv": {
 		patient: 'patient',
-		ev: 'idfsEv',
-		tte: 'idfsTte',
-		evFeature: 'IDFS',
-		tteFeature: 'IDFS.time',
-		label: 'Invasive disease free survival'
+		ev: 'rEv',
+		tte: 'rTte',
+		evFeature: 'Relapse',
+		tteFeature: 'Relapse.time',
+		label: 'Relapse'
 	},
 	"ev": {
 		patient: 'patient',
@@ -124,6 +165,22 @@ function partitionedVals3(avg, uniq, colorfn) { //eslint-disable-line no-unused-
 	};
 }
 
+function partitionedValsQuartile(avg, uniq, colorfn) {
+	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
+		min = _.min(vals),
+		max = _.max(vals),
+		low = vals[Math.round(vals.length / 4)],
+		high = vals[Math.round(3 * vals.length / 4)],
+		labelLow = low.toPrecision(4),
+		labelHigh = high.toPrecision(4);
+	return {
+		values: _.map(avg, saveNull(v => v < low ? 'low' : (v > high ? 'high' : null))),
+		groups: ['low', 'high'],
+		colors: [colorfn(min), colorfn(max)],
+		labels: [`< ${labelLow}`, `> ${labelHigh}`]
+	};
+}
+
 function partitionedVals2(avg, uniq, colorfn) {
 	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
 		min = _.min(vals),
@@ -138,6 +195,7 @@ function partitionedVals2(avg, uniq, colorfn) {
 	};
 }
 
+
 function floatVals(avg, uniq, colorfn) {
 	return {
 		values: avg,
@@ -151,11 +209,11 @@ function floatVals(avg, uniq, colorfn) {
 // We average 1st, then see how many unique values there are, then decide
 // whether to partition or not.
 function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
-	var clarification = heatmap.length > 1 ? 'gene-level average' : undefined,
+	var clarification = heatmap.length > 1 ? 'average' : undefined,
 		avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = _.first(colors.map(colorScale)),
-		partFn = splits === 3 ? partitionedVals3 : partitionedVals2,
+		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2,
 		maySplit = uniq.length > MAX;
 	return {clarification, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
 }
@@ -186,7 +244,7 @@ function segmentedVals(column, data, index, samples, splits) {
 		scale = colorScale(color),
 		[,,,, origin] = color,
 		colorfn = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin)),
-		partFn = splits === 3 ? partitionedVals3 : partitionedVals2;
+		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2;
 	return {maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
 }
 
@@ -292,7 +350,7 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		domain = bounds(survivalData.tte),
 		{tte, ev, patient} = cutoffData(survivalData, cutoff),
 		// Convert field to coded.
-		codedFeat = toCoded(column, data, index, samples, splits),
+		codedFeat = toCoded(column, data, index, samples, getSplits(splits)),
 		{values} = codedFeat,
 		usableSamples = _.filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
@@ -348,4 +406,4 @@ function pickSurvivalVars(featuresByDataset, user) {
 	return featureMapping;
 }
 
-module.exports = {makeGroups, pickSurvivalVars, survivalOptions};
+module.exports = {makeGroups, pickSurvivalVars, survivalOptions, getSplits};

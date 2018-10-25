@@ -25,6 +25,7 @@ var {ChromPosition} = require('../ChromPosition');
 import RefGeneAnnotation from '../refGeneExons';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
+var crosshair = require('./cursor.png');
 
 var ESCAPE = 27;
 
@@ -217,7 +218,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		rightValueType = valueType === 'mutation',
 		wrongDataSubType = column.fieldType !== 'mutation',
 		rightAssembly = (["hg19", "hg38", "GRCh37", "GRCh38"].indexOf(assembly) !== -1) ? true : false,  //MuPIT support hg19, hg38
-		noMuPit = !rightValueType || !rightAssembly || wrongDataSubType || pos,
+		noMuPit = !rightValueType || !rightAssembly || !!wrongDataSubType || !!pos,
 		noData = !_.get(data, 'req'),
 		mupitItemName = noData ? 'MuPIT 3D Loading' : 'MuPIT 3D (' + assembly + ' coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
@@ -274,18 +275,18 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 }
 
 // Maybe put in a selector.
-function supportsGeneAverage(column) {
-	var {fieldType, fields, fieldList} = column;
-	return ['geneProbes', 'genes'].indexOf(fieldType) >= 0 && (fieldList || fields).length === 1;
-}
+var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
+	!isChrom && _.contains(['geneProbes', 'genes'], fieldType) &&
+		(fieldList || fields).length === 1;
 
-function matrixMenu(props, {onTumorMap, onMode}) {
+
+function matrixMenu(props, {onTumorMap, onMode, isChrom}) {
 	var {cohort, column} = props,
 		{fieldType, noGeneDetail, fields, fieldSpecs} = column,
 		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs});
 
 	return addIdsToArr ([
-		supportsGeneAverage(column) ?
+		supportsGeneAverage(column, isChrom) ?
 			(fieldType === 'genes' ?
 				<MenuItem title={noGeneDetail ? 'no common probemap' : ''}
 					disabled={noGeneDetail} onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
@@ -377,7 +378,8 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 }
 
 var showPosition = column =>
-	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType);
+	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType) &&
+	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
 
 class Column extends PureComponent {
@@ -596,11 +598,13 @@ class Column extends PureComponent {
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
 				interactive, append} = this.props,
+			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
+					_.getIn(column, ['assembly'])),
 			{specialDownloadMenu} = this.state,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
-				onSpecialDownload, specialDownloadMenu}),
+				onSpecialDownload, specialDownloadMenu, isChrom}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
@@ -617,7 +621,7 @@ class Column extends PureComponent {
 					height={annotationHeight}
 					positionHeight={column.position ? positionHeight : 0}
 					width={width}
-					mode={parsePos(_.get(column.fieldList || column.fields, 0), _.getIn(column, ['assembly'])) ?
+					mode={isChrom ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null,
@@ -626,7 +630,7 @@ class Column extends PureComponent {
 					layout = {column.layout}
 					width = {width}
 					scaleHeight ={scaleHeight}
-					mode = {parsePos(_.get(column.fieldList || column.fields, 0), _.getIn(column, ['assembly'])) ?
+					mode = {isChrom ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null;
@@ -667,16 +671,14 @@ class Column extends PureComponent {
 							</div>
 						}
 						 wizardMode={wizardMode}>
-					<Crosshair frozen={!interactive || this.props.frozen}>
-						<div style={{height: annotationHeight + scaleHeight + 4}}>
-							{annotation ?
-								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-									{scale}
-									<div style={{height: 2}}/>
-									{annotation}
-								</DragSelect> : null}
-						</div>
-					</Crosshair>
+					<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: annotationHeight + scaleHeight + 4}}>
+						{annotation ?
+							<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
+								{scale}
+								<div style={{height: 2}}/>
+								{annotation}
+							</DragSelect> : null}
+					</div>
 					<ResizeOverlay
 						enable={interactive}
 						onResizeStop={this.onResizeStop}
@@ -690,7 +692,7 @@ class Column extends PureComponent {
 							samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 							samplesMatched={samplesMatched}/>
 						<div style={{position: 'relative'}}>
-							<Crosshair frozen={!interactive || this.props.frozen}>
+							<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen}>
 								{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 								{getStatusView(status, this.onReload)}
 							</Crosshair>

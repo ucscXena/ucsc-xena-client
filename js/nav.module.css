@@ -7,6 +7,10 @@
  */
 
 .logoXena {
+	line-height: 0;
+}
+
+.logoXena img {
 	max-width: 139px;
 	height: auto;
 }

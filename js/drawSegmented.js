@@ -198,12 +198,10 @@ function drawImgSegmentsPixel(vg, colorSpec, index, count, width, height, zoom, 
 }
 
 var drawSegmentedByMethod = drawSegments => (vg, props) => {
-	let {width, zoom, nodes, color} = props,
+	let {width, zoom, nodes = [], color} = props,
 		{count, height, index} = zoom;
-	if (!nodes) {
-		vg.box(0, 0, width, height, "gray");
-		return;
-	}
+
+	drawBackground(vg, width, height);
 
 	let {samples, index: {bySample: samplesInDS}} = props,
 		last = index + count,
@@ -211,10 +209,8 @@ var drawSegmentedByMethod = drawSegments => (vg, props) => {
 		hasValue = samples.slice(index, index + count).map(s => samplesInDS[s]),
 		stripes = backgroundStripes(hasValue);
 
-	if (nodes.length > 0) {
-		drawBackground(vg, width, height);
-		drawSegments(vg, color, index, count, width, height, zoom, toDraw);
-	}
+	drawSegments(vg, color, index, count, width, height, zoom, toDraw);
+
 	vg.labels(() => {
 		labelNulls(vg, width, height, count, stripes);
 		labelValues(vg, width, zoom, toDraw);

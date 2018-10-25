@@ -24,6 +24,7 @@
 var React = require('react');
 import {Button} from 'react-toolbox/lib/button';
 import {Card, CardTitle, CardText, CardActions} from 'react-toolbox/lib/card';
+
 var spinner = require('../ajax-loader.gif');
 
 // App dependencies
@@ -31,6 +32,8 @@ var CardAvatar = require('./CardAvatar');
 
 // Styles
 var compStyles = require('./WizardCard.module.css');
+var cardStyles = require('./RTCardTheme.module.css');
+var classname = require('classnames');
 
 class WizardCard extends React.Component {
 	onDone = () => {
@@ -46,31 +49,31 @@ class WizardCard extends React.Component {
 
 	render() {
 		var {children, colId, controls, contentSpecificHelp,
-            title, valid, loading, loadingCohort, width} = this.props;
+			title, subtitle, valid, loading, loadingCohort, width} = this.props;
 		return (
-			<Card style={{width: width}} className={compStyles.WizardCard}>
-				<div className={compStyles.headerContainer}>
-					<CardAvatar colId={colId}/>
-					<div className={compStyles.controls}>
-						{controls}
+				<Card style={{width: width}} className={compStyles.WizardCard}>
+					<div className={compStyles.headerContainer}>
+						<CardAvatar colId={colId}/>
+						<div className={compStyles.controls}>
+							{controls}
+						</div>
 					</div>
-				</div>
-				<div className={compStyles.titleContainer}>
-					<CardTitle className={compStyles.title} title={title} />
-				</div>
-				<div className={compStyles.content}>
-					{contentSpecificHelp ? <CardText>{contentSpecificHelp}</CardText> : null}
-                    {loadingCohort ? <CardText>Loading datasets...</CardText> : null}
-					{children}
-				</div>
-				<CardActions className={compStyles.actions}>
-					{loading ? <img src={spinner}/> : null}
-					{valid ? <i className='material-icons'>done</i> : null}
-					<span onClick={this.onDoneInvalid}>
+					<div className={compStyles.titleContainer}>
+						<CardTitle className={classname(compStyles.title, subtitle ? cardStyles.warning : '')} title={title} subtitle={subtitle}/>
+					</div>
+					<div className={compStyles.content}>
+						{contentSpecificHelp ? <CardText>{contentSpecificHelp}</CardText> : null}
+						{loadingCohort ? <CardText>Loading datasets...</CardText> : null}
+						{children}
+					</div>
+					<CardActions className={compStyles.actions}>
+						{loading ? <img src={spinner}/> : null}
+						{valid ? <i className='material-icons'>done</i> : null}
+						<span onClick={this.onDoneInvalid}>
 						<Button accent disabled={!valid} onClick={this.onDone}>Done</Button>
 					</span>
-				</CardActions>
-			</Card>
+					</CardActions>
+				</Card>
 		);
 	}
 }

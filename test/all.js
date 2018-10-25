@@ -24,3 +24,4 @@ require('./findIntrons');
 require('./layoutPlot');
 //require('./matrix-test');
 require('./Legend');
+require('./drawHeatmap');

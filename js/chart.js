@@ -2,7 +2,6 @@
 
 var getLabel = require('./getLabel');
 var {hexToRGB, colorStr} = require ('./color_helper');
-var d3 = require('d3-scale');
 var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
 var highchartsHelper =  require ('./highcharts_helper');
@@ -210,17 +209,17 @@ function render(root, callback, sessionStorage) {
 			xcolumn = xdiv.options[xdiv.selectedIndex].value,
 			ycolumn = ydiv.options[ydiv.selectedIndex].value;
 
-		// x single float, disable y multiple float of series > 2
+		// x single float, disable y multiple float of series > 10
 		if (xcolumn !== "none" && !data[xcolumn].codes) {
 			_.map(ydiv.options, option => {
 				var y = option.value;
-				if (data[y].req.values && data[y].req.values.length > 2) {
+				if (data[y].req.values && data[y].req.values.length > 10) {
 					option.disabled = true;
 				}
 			});
 		}
-		// if y is multiple float, disable x single float series > 2
-		if (data[ycolumn].req.values && data[ycolumn].req.values.length > 2) {
+		// if y is multiple float, disable x single float series > 10
+		if (data[ycolumn].req.values && data[ycolumn].req.values.length > 10) {
 			_.map(xdiv.options, option => {
 				var x = option.value;
 				if (x !== "none" && !data[x].codes) {
@@ -528,7 +527,7 @@ function render(root, callback, sessionStorage) {
 	function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 		yfields, ycodemap, ydata,
 		offsets, xlabel, ylabel, STDEV,
-		scatterLabel, scatterColorData, scatterColorDataCodemap,
+		scatterLabel, scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
 		columns, xcolumn, ycolumn, colorColumn) {
 		var yIsCategorical = ycodemap ? true : false,
@@ -546,7 +545,6 @@ function render(root, callback, sessionStorage) {
 			code,
 			categories,
 			i, k,
-			colors = {},
 			average, stdDev,
 			pValue, dof,
 			total;
@@ -587,7 +585,6 @@ function render(root, callback, sessionStorage) {
 					xSampleCode[i] = code;
 				}
 			}
-
 			// remove empty xcode categories
 			xcodemap.map(function (code) {
 				if (xbinnedSample[code].length === 0) {
@@ -689,12 +686,8 @@ function render(root, callback, sessionStorage) {
 				}
 			};
 
-			customColors = getCustomColor(columns[xcolumn].fieldSpecs, columns[xcolumn].fields, columns[xcolumn].dataset);
-
-			xcodemap.forEach(function (code, i) {
-				colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length];
-			});
-
+			let scale = colorScales.colorScale(columns[xcolumn].colors[0]),
+				invCodeMap = _.invert(xcodemap);
 
 			// column chart setup
 			chartOptions = highchartsHelper.columnChartFloat(chartOptions, yfields, xlabel, ylabel);
@@ -711,21 +704,16 @@ function render(root, callback, sessionStorage) {
 
 				nNumberSeriese = nNumberMatrix[i];
 
-				// highlight coloring
-				if ( highlightcode.length !== 0 ) {
-					if ( highlightcode.indexOf(code) !== -1) {
-						colors[code] = 'gold';
-					} else {
-						colors[code] = "#A9A9A9";
-					}
-				}
+				let color = highlightcode.length === 0 ? scale(invCodeMap[code]) :
+					highlightcode.indexOf(code) === -1 ? '#A9A9A9' :
+					'gold';
 
 				dataSeriese = _.zip(lowerwhiskerSeriese, lowerSeriese, medianSeriese, upperSeriese, upperwhiskerSeriese);
 				highchartsHelper.addSeriesToColumn(
 					chart, 'boxplot', code,
 					dataSeriese, yIsCategorical,
 					yfields.length * xCategories.length < 30, showLegend,
-					customColors && customColors[code] ? customColors[code] : colors[code],
+					color,
 					nNumberSeriese);
 			}
 
@@ -754,8 +742,8 @@ function render(root, callback, sessionStorage) {
 
 						statsDiv.innerHTML += (
 							(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
-							't = ' + tStatistics.toPrecision(4) + '<br>' +
-							'p = ' + pValue.toPrecision(4) + '<br>'
+							'p = ' + pValue.toPrecision(4) + ', ' +
+							'(t = ' + tStatistics.toPrecision(4) + ')<br>'
 						);
 					}
 				});
@@ -811,8 +799,8 @@ function render(root, callback, sessionStorage) {
 
 					statsDiv.innerHTML += (
 						(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
-						'f = ' + fScore.toPrecision(4) + '<br>' +
-						'p = ' + pValue.toPrecision(4) + '<br>'
+						'p = ' + pValue.toPrecision(4) + ', ' +
+						'(f = ' + fScore.toPrecision(4) + ')<br>'
 					);
 				});
 				statsDiv.classList.toggle(compStyles.visible);
@@ -1004,10 +992,8 @@ function render(root, callback, sessionStorage) {
 			var ycategories = Object.keys(ybinnedSample);
 
 			//code
-			customColors = getCustomColor(columns[ycolumn].fieldSpecs, columns[ycolumn].fields, columns[ycolumn].dataset);
-
-			ycodemap.map((code, i) =>
-				colors[code] = colorScales.categoryMore[i % colorScales.categoryMore.length]);
+			let scale = colorScales.colorScale(columns[ycolumn].colors[0]),
+				invCodeMap = _.invert(ycodemap);
 
 			// Pearson's chi-squared test pearson https://en.wikipedia.org/wiki/Pearson's_chi-squared_test
 			// note, another version of pearson's chi-squared test is G-test, Likelihood-ratio test, https://en.wikipedia.org/wiki/Likelihood-ratio_test
@@ -1053,7 +1039,7 @@ function render(root, callback, sessionStorage) {
 				highchartsHelper.addSeriesToColumn(
 					chart, 'column', code, ycodeSeries, yIsCategorical,
 					ycodemap.length * categories.length < 30, showLegend,
-					customColors && customColors[code] ? customColors[code] : colors[code], observed[i]);
+					scale(invCodeMap[code]), observed[i]);
 			}
 
 			// pearson chi-square test statistics
@@ -1069,8 +1055,8 @@ function render(root, callback, sessionStorage) {
 
 				pValue = 1 - jStat.chisquare.cdf( chisquareStats, dof);
 				statsDiv.innerHTML = 'Pearson\'s chi-squared test<br>' +
-						'χ2 = ' + chisquareStats.toPrecision(4) + '<br>' +
-						'p = ' + pValue.toPrecision(4);
+						'p = ' + pValue.toPrecision(4) + ', ' +
+						'(χ2 = ' + chisquareStats.toPrecision(4) + ')';
 				statsDiv.classList.toggle(compStyles.visible);
 			}
 
@@ -1111,60 +1097,28 @@ function render(root, callback, sessionStorage) {
 					colorScale, getCodedColor,
 					highlightSeries = [],
 					opacity = 0.6,
-					colorCode, color, colorLabel,
+					colorCode, colorMin, color, colorLabel,
 					useCodedSeries = scatterColorDataCodemap || !scatterColorData,
+					gray = `rgba(150,150,150,${opacity})`,
 					bin;
 
 				getCodedColor = code => {
 					if ("null" === code) {
-						var gray = {};
-						gray.r = 150;
-						gray.g = 150;
-						gray.b = 150;
-						gray.a = opacity;
-						return colorStr(gray);
+						return gray;
 					}
-					return colorStr(hexToRGB(colorScales.categoryMore[code % colorScales.categoryMore.length], opacity));
+					return colorStr(hexToRGB(scatterColorScale(code), opacity));
 				};
 
 				if (!useCodedSeries) {
 					average = highchartsHelper.average(scatterColorData);
 					stdDev = highchartsHelper.standardDeviation(scatterColorData, average);
+					colorMin = _.minnull(scatterColorData);
 					bin = stdDev * 0.1;
-					colorScale = d3.scaleLinear()
-						.domain([average - 2 * stdDev, average, average + 2 * stdDev])
-						.range(['blue', 'white', 'red']);
+					colorScale = v => v == null ? 'gray' : scatterColorScale(v);
 				}
 
 				chartOptions.legend.title.text = "";
 				chart = new Highcharts.Chart(chartOptions);
-
-				function printSpearmanRho(div, xVector, yVector) {
-					var [xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x) {return x[0] != null && x[1] != null;}));
-					var rho = jStat.corrcoeff(xlist, ylist); // r Pearson's Rho correlation coefficient
-					var spearmanRho = jStat.spearmancoeff(xlist, ylist); // (spearman's) rank correlation coefficient, rho
-					div.innerHTML = 'Pearson\'s rho<br>' +
-						'r = ' + rho.toPrecision(4) + '<br>' +
-						'Spearman\'s rank rho<br>' +
-						'ρ = ' + spearmanRho.toPrecision(4);
-				}
-
-				// pearson rho value when there is only single series x y scatter plot
-				if (yfields.length === 1 && xdata[0].length > 1) {
-					if (xdata[0].length < 5000) {
-						//Pearson's Rho p value
-						printSpearmanRho(statsDiv, xdata[0], ydata[0]);
-					}
-					else { // a button to trigger stats for sample size > 5000, otherwise it is too slow
-						var btn = document.createElement("BUTTON"); // need to refractor to react style, and material UI css
-						statsDiv.appendChild(btn);
-						btn.innerHTML = "Run Stats";
-						btn.onclick = function() {
-							printSpearmanRho(statsDiv, xdata[0], ydata[0]);
-						};
-					}
-					statsDiv.classList.toggle(compStyles.visible);
-				}
 
 				yfield = yfields[0];
 				for (i = 0; i < xdata[0].length; i++) {
@@ -1192,7 +1146,7 @@ function render(root, callback, sessionStorage) {
 								y: y
 							});
 						} else { // convert float to multi-seriese
-							colorCode = Math.floor((colorCode - average) / bin);
+							colorCode = Math.round((colorCode - colorMin) / bin) * bin + colorMin;
 							if (!multiSeries[colorCode]) {
 								multiSeries[colorCode] = {
 									"data": []
@@ -1229,7 +1183,7 @@ function render(root, callback, sessionStorage) {
 							color = customColors && customColors[colorLabel] ? customColors[colorLabel] : getCodedColor(colorCode);
 							showInLegend = true;
 						} else {
-							color = colorScale (colorCode * bin + average);
+							color = colorScale(colorCode);
 							colorLabel = columns[colorColumn].user.fieldLabel;
 							showInLegend = (i === 0) ? true : false;
 						}
@@ -1262,6 +1216,44 @@ function render(root, callback, sessionStorage) {
 					}, false);
 				}
 			}
+
+			//scatter plot stats Pearson's rho/r, Spearman rank rho/ρ value
+			function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
+				[...Array(yfields.length).keys()].forEach(i => {
+					var ylabel = yfields[i],
+						yVector = ydata[i],
+						[xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x) {return x[0] != null && x[1] != null;})),
+						rho = jStat.corrcoeff(xlist, ylist), // r Pearson's Rho correlation coefficient
+						spearmanRho = jStat.spearmancoeff(xlist, ylist); // (spearman's) rank correlation coefficient, rho
+
+					if (div.innerHTML !== '') {
+						div.innerHTML += '<br>'  + '<br>';
+					}
+					div.innerHTML = div.innerHTML +
+						xlabel + ' ~ ' + ylabel + '<br>' +
+						'Pearson\'s rho<br>' +
+						'r = ' + rho.toPrecision(4) + '<br>' +
+						'Spearman\'s rank rho<br>' +
+						'ρ = ' + spearmanRho.toPrecision(4);
+				});
+			}
+
+			// pearson rho value when there are <= 10 series x y scatter plot
+			if (yfields.length <= 10 && xdata[0].length > 1) {
+				if (xdata[0].length >= 5000) {
+					var btn = document.createElement("BUTTON"); // need to refractor to react style, and material UI css
+					statsDiv.appendChild(btn);
+					btn.innerHTML = "Run Stats";
+					btn.onclick = function() {
+						printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
+					};
+				} else {
+					printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
+				}
+
+				statsDiv.classList.toggle(compStyles.visible);
+			}
+
 			chart.redraw();
 		}
 	}
@@ -1341,6 +1333,7 @@ function render(root, callback, sessionStorage) {
 				STDEV = {},  // per y variable
 				doScatter, scatterLabel,
 				scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
+				scatterColorScale,
 				yNormalization,
 				xExponentiation, yExponentiation;
 
@@ -1442,6 +1435,8 @@ function render(root, callback, sessionStorage) {
 			doScatter = !xIsCategorical && xfield && yfields.length === 1 ;
 			scatterColorUISetting(doScatter);
 			if (doScatter && colorColumn !== "none") {
+				let color = _.getIn(xenaState, ['columns', colorColumn, 'colors', 0]);
+				scatterColorScale = color && colorScales.colorScale(color);
 				scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values']);
 				scatterColorDataSegment = _.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
 				scatterColorDataCodemap = _.getIn(xenaState, ['data', colorColumn, 'codes']);
@@ -1470,7 +1465,7 @@ function render(root, callback, sessionStorage) {
 			var thunk = offsets => drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 				yfields, ycodemap, ydata,
 				offsets, xlabel, ylabel, STDEV,
-				scatterLabel, scatterColorData, scatterColorDataCodemap,
+				scatterLabel, scatterColorScale, scatterColorData, scatterColorDataCodemap,
 				samplesMatched, columns, xcolumn, ycolumn, colorColumn);
 
 			//offset
@@ -1494,14 +1489,14 @@ function render(root, callback, sessionStorage) {
 	// statistics
 	statsDiv = document.createElement("div");
 	statsDiv.className = compStyles.stats;
-	chartContainer.appendChild(statsDiv);
+	root.appendChild(statsDiv);
 
 	// left panel control
 	leftContainer = document.createElement("div");
 	leftContainer.setAttribute("id", "controlPanel");
 	leftContainer.className = compStyles.controlPanel;
 	leftContainer.style.width = chartWidth();
-	root.appendChild(leftContainer);
+	chartContainer.appendChild(leftContainer);
 
 	if (!(xenaState && xenaState.cohort && xenaState.samples && xenaState.columnOrder.length > 0)) {
 		document.getElementById("myChart").innerHTML =

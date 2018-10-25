@@ -223,7 +223,10 @@ class RefGeneDrawing extends React.Component {
 				}
 			});
 			var perLaneHeight = _.min([annotationHeight / (lanes.length || 1), 12]),
-				laneOffset = annotationHeight - perLaneHeight * lanes.length;
+				// if no position annotation, vertically center refgene.
+				// Otherwise, push it against the position annotation.
+				centering = positionHeight ? 1 : 2,
+				laneOffset = (annotationHeight - perLaneHeight * lanes.length) / centering;
 
 			newAnnotationLanes = {
 				arrows: !(refGene.length > 1 && single),
@@ -386,9 +389,11 @@ class RefGeneAnnotation extends PureComponent {
 	componentWillMount() {
 		this.sub = this.props.tooltip.subscribe(ev => {
 			if (_.getIn(ev, ['data', 'id']) === this.props.id) {
-				this.setState({probe: _.getIn(ev, ['data', 'fieldIndex'])});
-			} else if (this.state.probe !== null) {
-				this.setState({probe: undefined});
+				this.setState({
+					probe: _.getIn(ev, ['data', 'fieldIndex']),
+					x: _.getIn(ev, ['data', 'x'])});
+			} else if (this.state.probe !== null || this.state.x !== null) {
+				this.setState({probe: undefined, x: undefined});
 			}
 		});
 	}
@@ -397,12 +402,14 @@ class RefGeneAnnotation extends PureComponent {
 	}
 	render() {
 		var {probePosition, height, positionHeight, layout} = this.props,
-			{probe} = this.state,
-			highlight = probe == null ? {} :
-				{
+			{probe, x} = this.state,
+			highlight = probe != null && _.get(probePosition, probe) ? {
 					position: probeLayout(layout, [probePosition[probe]])[0],
 					height: height - positionHeight
-				};
+				} : x != null ? {
+					position: [x, x + 1],
+					height: height - positionHeight
+				} : {};
 		return (
 			<div className={styles.refGene}>
 				<RefGeneDrawing {...this.props}/>

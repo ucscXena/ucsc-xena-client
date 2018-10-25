@@ -6,7 +6,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var LZ = require('./lz-string');
 var nostate = require('./nostate');
-var urlParams = require('./urlParams');
+import urlParams from './urlParams';
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
 var {schemaCheckThrow} = require('./schemaCheck');
