@@ -42,7 +42,10 @@ export function differenceMatrix(data, diff) {
 	var len = data.length,
 		dlen = (len * (len - 1)) / 2,
 		d = new Array(dlen),
-		I = diff(data[0], data[0]); // compute single value for identity
+		I = diff(data[0], data[0]); // compute single value for identity.
+		                            // note: this is wrong if data[0] has
+		                            // no data. We don't currently use the
+		                            // diagonal, so doesn't affect us.
 
 	/* compute lower triangle */
 	for (var i = 1; i < len; ++i) {

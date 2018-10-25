@@ -8,12 +8,16 @@ import Rx from '../rx';
 
 var {fromEvent} = Rx.Observable;
 
-var pearson = (a, b) => 1 - jStat.corrcoeff(a, b);
+var pearson = (a, b) => {
+	return isNaN(a[0]) || isNaN(b[0]) ? Infinity :
+		1 - jStat.corrcoeff(a, b);
+};
 
 var fillNulls = data =>
 	data.map(row => {
-		var mean = meannull(row);
-		return row.map(v => v == null ? mean : v);
+		var mean = meannull(row),
+			replValue = mean == null ? NaN : mean; // handle null column
+		return row.map(v => v == null ? replValue : v);
 	});
 
 var cmds = {
