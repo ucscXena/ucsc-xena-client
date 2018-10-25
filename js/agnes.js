@@ -68,7 +68,7 @@ function setP(nodes, p) {
 		nodes.push(n.left);
 		nodes.push(n.right);
 	}
-	setP(nodes, p);
+	return setP(nodes, p);
 }
 
 // agnes method with simple linkage. Since simple linkage is the global minimum
