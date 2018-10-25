@@ -3,7 +3,7 @@
 
 import {agnes, treeOrder} from '../agnes';
 import {jStat} from 'jStat';
-import {getIn} from '../underscore_ext.js';
+import {getIn, meannull} from '../underscore_ext.js';
 import Rx from '../rx';
 
 var {fromEvent} = Rx.Observable;
@@ -11,7 +11,10 @@ var {fromEvent} = Rx.Observable;
 var pearson = (a, b) => 1 - jStat.corrcoeff(a, b);
 
 var fillNulls = data =>
-	data.map(row => row.map(v => v == null ? 0 : v));
+	data.map(row => {
+		var mean = meannull(row);
+		return row.map(v => v == null ? mean : v);
+	});
 
 var cmds = {
 	cluster: data => {
