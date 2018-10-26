@@ -102,7 +102,7 @@ var spreadsheetControls = {
 			_.assocIn(state, ["data", id], _.assoc(data, 'status', 'loaded'))
 			: state,
 	'widget-data-post!': (serverBus, state, newState, id) => {
-		if (_.getIn(newState, ['columns', id], 'clustering') != null) {
+		if (_.getIn(newState, ['columns', id, 'clustering']) != null) {
 			fetchClustering(serverBus, newState, id);
 		}
 	},
