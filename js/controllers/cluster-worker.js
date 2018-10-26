@@ -3,32 +3,47 @@
 
 import {agnes, treeOrder} from '../agnes';
 import {jStat} from 'jStat';
-import {getIn, meannull} from '../underscore_ext.js';
+import {getIn} from '../underscore_ext.js';
 import Rx from '../rx';
 
 var {fromEvent} = Rx.Observable;
 
-var pearson = (a, b) => {
-	return isNaN(a[0]) || isNaN(b[0]) ? Infinity :
-		1 - jStat.corrcoeff(a, b);
-};
+var pearson = (a, b) => 1 - jStat.corrcoeff(a, b);
 
-var fillNulls = data =>
-	data.map(row => {
-		var mean = meannull(row),
-			replValue = mean == null ? NaN : mean; // handle null column
-		return row.map(v => v == null ? replValue : v);
+var fillNulls = (data, mean) =>
+	data.map((row, i) => row.map(v => v == null ? mean(i) : v));
+
+// filter and create map of old index to new index, plus list of
+// elided indices.
+var filterWithMap = (list, pred) => {
+	var out = [],
+		map = [],
+		omitted = [];
+	list.forEach((v, i) => {
+		if (pred(v, i)) {
+			out.push(v);
+			map.push(i);
+		} else {
+			omitted.push(i);
+		}
 	});
+	return [out, map, omitted];
+};
 
 var cmds = {
 	cluster: data => {
-		// check for empty or null values
-		var values = fillNulls(getIn(data, ['req', 'values'], []));
+		var mean = getIn(data, ['req', 'mean'], []),
+			all = getIn(data, ['req', 'values'], []),
+			// null columns will have null mean. Filter them out before
+			// trying to cluster. Tack them on the end, later.
+			[cols, mapping, omit] = filterWithMap(all, (_, i) => mean[i] != null),
+			values = fillNulls(cols, i => mean[mapping[i]]);
+
 		if (!values.length) {
-			return [];
+			return omit;
 		}
 		var c = agnes(values, pearson);
-		return treeOrder(c);
+		return treeOrder(c).map(i => mapping[i]).concat(omit);
 	}
 };
 

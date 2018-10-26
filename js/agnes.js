@@ -43,9 +43,6 @@ export function differenceMatrix(data, diff) {
 		dlen = (len * (len - 1)) / 2,
 		d = new Array(dlen),
 		I = diff(data[0], data[0]); // compute single value for identity.
-		                            // note: this is wrong if data[0] has
-		                            // no data. We don't currently use the
-		                            // diagonal, so doesn't affect us.
 
 	/* compute lower triangle */
 	for (var i = 1; i < len; ++i) {
@@ -93,7 +90,7 @@ export function agnes(data, diff) {
 		var {i, j} = invCoord(k),
 			nI = leaves[i].p || leaves[i],
 			nJ = leaves[j].p || leaves[j];
-		if (nI !== nJ) { // already in same cluster
+		if (nI !== nJ) { // not already in same cluster
 			tree = {left: nI, right: nJ};
 			setP([nI, nJ], tree);
 		}
