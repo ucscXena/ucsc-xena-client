@@ -141,6 +141,7 @@ function combineColSpecs(fieldSpecs, datasets) {
 
 	return m({
 		...(getShowIntrons(resetFieldSpecs) ? {showIntrons: true} : {}),
+		...(fieldSpecs[0].vizSettings ? _.pick(fieldSpecs[0], 'vizSettings') : {}),
 		fields,
 		fieldSpecs: resetFieldSpecs,
 		fetchType: 'composite',

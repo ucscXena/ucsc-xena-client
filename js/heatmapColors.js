@@ -66,6 +66,7 @@ function colorCoded(column, settings, codes, __, customColors) {
 
 
 function colorFloatGenomicData(column, settings = {}, codes, data) {
+	// not sure why we're looking up vizSettings when it's already passed in as 'settings'.
 	var vizSettings = _.getIn(column, ["vizSettings", "colNormalization"]),
 		defaultNormalization = column.defaultNormalization,
 		colSubtractMean = (vizSettings === "subset") ||

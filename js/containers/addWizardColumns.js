@@ -71,6 +71,10 @@ var getAssembly = (datasets, dsID) =>
 	_.getIn(datasets, [dsID, 'assembly'],
 		_.getIn(datasets, [dsID, 'probemapMeta', 'assembly']));
 
+var getDefaultVizSettings = meta =>
+	// use default vizSettings if we have min and max.
+	_.has(meta, 'min') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'min', 'max', 'minStart', 'maxStart')} : {};
+
 // XXX handle position in all genomic datatypes?
 function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
@@ -101,6 +105,7 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 	return {
 		...(fieldType === 'geneProbes' ? {showIntrons: true} : {}),
 		...(_.getIn(meta, ['probemapMeta', 'dataSubType']) === 'regulon' ? {clustering: 'probes'} : {}),
+		...(getDefaultVizSettings(meta)),
 		fields: normalizedFields,
 		fetchType: 'xena',
 		valueType: getValueType(meta, features[dsID], fields),
