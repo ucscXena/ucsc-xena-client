@@ -4,7 +4,7 @@ var _ = require('../underscore_ext');
 var Rx = require('../rx');
 var xenaQuery = require('../xenaQuery');
 var {userServers, setCohort, fetchSamples,
-	fetchColumnData, fetchCohortData, fetchSurvival,
+	fetchColumnData, fetchCohortData, fetchSurvival, fetchClustering,
 	updateWizard, clearWizardCohort} = require('./common');
 var {setFieldType} = require('../models/fieldSpec');
 var {setNotifications} = require('../notifications');
@@ -180,6 +180,13 @@ var spreadsheetControls = {
 		fetchCohortPreferred(serverBus);
 		fetchCohortPhenotype(serverBus);
 		updateWizard(serverBus, state, newState, {force: true});
+	},
+	cluster: (state, id, value) =>
+		_.assocIn(state, ['columns', id, 'clustering'], value),
+	'cluster-post!': (serverBus, state, newState, id, value) => {
+		if (value != null && _.getIn(newState, ['data', id, 'clustering', 'probes']) == null) {
+			fetchClustering(serverBus, newState, id);
+		}
 	},
 	sampleFilter: (state, sampleFilter) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, ['sampleFilter'], sampleFilter),
