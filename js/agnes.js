@@ -80,22 +80,42 @@ function setP(nodes, p) {
 //
 // Do we actually need to hold the full tree, just to extract the order?
 // Maybe we can reduce the memory requirements?
+function join(d, leaves, order, tree, n = leaves.length - 1, oi = 0) {
+	var k = order[oi],
+		{i, j} = invCoord(k),
+		li = leaves[i],
+		lj = leaves[j];
+		if (li.p !== lj.p || li.p === undefined) { // not already in same cluster
+			// place cluster according to dendsort MOLO rules, Sakai, et al
+			tree =
+				li.p ?
+					(lj.p ?
+						// two clusters; put tightest on left
+						(li.p.d < lj.p.d ?
+							{left: li.p, right: lj.p, d: li.p.d + d[k]} :
+							{left: lj.p, right: li.p, d: lj.p.d + d[k]}) :
+						// cluster in i; put it on left
+						{left: li.p, right: lj, d: li.p.d + d[k]}) :
+					lj.p ?
+						// cluster in j, put it on left
+						{left: lj.p, right: li, d: lj.p.d + d[k]} :
+						// two leaves; put lower index (j) on left(?)
+						{left: lj, right: li, d: d[k]};
+
+			setP([tree.left, tree.right], tree);
+
+			return n > 1 ? join(d, leaves, order, tree, n - 1, oi + 1) :
+				tree;
+		}
+		return join(d, leaves, order, tree, n, oi + 1);
+}
+
 export function agnes(data, diff) {
 	var [, d] = differenceMatrix(data, diff),
 		order = range(d.length).sort((i, j) => d[i] - d[j]),
-		leaves = times(data.length, i => ({i, p: undefined})),
-		tree;
+		leaves = times(data.length, i => ({i, p: undefined}));
 
-	order.forEach(k => {
-		var {i, j} = invCoord(k),
-			nI = leaves[i].p || leaves[i],
-			nJ = leaves[j].p || leaves[j];
-		if (nI !== nJ) { // not already in same cluster
-			tree = {left: nI, right: nJ};
-			setP([nI, nJ], tree);
-		}
-	});
-	return tree;
+	return join(d, leaves, order);
 }
 
 function treeOrderN(nodes, acc = []) {
@@ -106,8 +126,8 @@ function treeOrderN(nodes, acc = []) {
 	if (!n.left) {
 		acc.push(n.i);
 	} else {
-		nodes.push(n.left);
 		nodes.push(n.right);
+		nodes.push(n.left);
 	}
 	return treeOrderN(nodes, acc);
 }
