@@ -153,6 +153,7 @@ function combineColSpecs(fieldSpecs, datasets) {
 		noGeneDetail: !uniqProbemap, // XXX is this wrong? also have to check field len.
 		assembly: getAssembly(fieldType, resetFieldSpecs),
 		sFeature: getFeature(fieldType, resetFieldSpecs), // XXX deprecate?
+		clustering: _.get(fieldSpecs[0], 'clustering'),
 		// until we ditch composite, copy these for signatures
 		dsID: _.get(fieldSpecs[0], 'dsID'),
 		missing: _.get(fieldSpecs[0], 'missing'),
