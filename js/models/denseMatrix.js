@@ -80,9 +80,14 @@ var defaultXZoom = (pos, refGene, position) =>
 		start: Math.min(txStart, ..._.pluck(position, 'chromstart')),
 		end: Math.max(txEnd, ..._.pluck(position, 'chromend'))}));
 
+var supportsClustering = ({fieldType, fields}) =>
+	_.contains(['genes', 'probes'], fieldType) && fields.length > 2 ||
+	fieldType === 'geneProbes';
+
 function reOrderFields(column, data) {
 	var probeOrder = _.getIn(data, ['clustering', 'probes']);
-	if (column.clustering === 'probes' && probeOrder) {
+	if (supportsClustering(column) && column.clustering === 'probes' &&
+			data.status !== 'loading' && probeOrder && data.req) {
 		return {
 			data: _.updateIn(data, ['req'], req => {
 					var {mean, position, probes, values} = req;
