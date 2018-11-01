@@ -2,10 +2,8 @@
 
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
-var xenaQuery = require('../xenaQuery');
 var {userServers, setCohort, fetchSamples,
-	fetchColumnData, fetchCohortData, fetchSurvival, fetchClustering,
-	updateWizard, clearWizardCohort} = require('./common');
+	fetchColumnData, fetchCohortData, fetchSurvival, fetchClustering} = require('./common');
 var {setFieldType} = require('../models/fieldSpec');
 var {setNotifications} = require('../notifications');
 var fetchSamplesFrom = require('../samplesFrom');
@@ -35,21 +33,6 @@ function fetchManifest(serverBus, url) {
 	}).map(r => parseManifest(r.response))]);
 }
 
-function exampleQuery(dsID, count) {
-	return xenaQuery.datasetFieldExamples(dsID, count)
-		.map(list => _.pluck(list, 'name'));
-}
-
-function fetchExamples(serverBus, dsID, count = 2) {
-	serverBus.next(['columnEdit-examples', exampleQuery(dsID, count)]);
-}
-
-var {featureList} = xenaQuery;
-
-function fetchFeatures(serverBus, dsID) {
-	return serverBus.next(['columnEdit-features', featureList(dsID)]);
-}
-
 var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
 	_.assoc(state, 'zoomHelp', true) : state;
 
@@ -63,18 +46,6 @@ function getChartOffsets(column) {
 			values = _.getIn(data, ['req', 'values']);
 		return _.object(fields, _.map(values, _.meannull));
 	});
-}
-
-function fetchCohortMeta(serverBus) {
-	serverBus.next(['cohortMeta', xenaQuery.fetchCohortMeta]);
-}
-
-function fetchCohortPreferred(serverBus) {
-	serverBus.next(['cohortPreferred', xenaQuery.fetchCohortPreferred]);
-}
-
-function fetchCohortPhenotype(serverBus) {
-	serverBus.next(['cohortPhenotype', xenaQuery.fetchCohortPhenotype]);
 }
 
 function setLoadingState(state, params) {
@@ -118,10 +89,8 @@ var paramList = params => _.isEmpty(params) ? '' : `?${JSONToqueryString(params)
 
 var controls = {
 	init: (state, pathname = '/', params = {}) => {
-		var wizardUpate = params.hubs || params.inlineState ?
-				clearWizardCohort : _.identity,
-			next = setLoadingState(state, params);
-		return wizardUpate(setPage(next, pathname, params));
+		var next = setLoadingState(state, params);
+		return setPage(next, pathname, params);
 	},
 	'init-post!': (serverBus, state, newState, pathname, params) => {
 		var bookmark = _.get(params, 'bookmark'),
@@ -131,22 +100,6 @@ var controls = {
 			fetchState(serverBus);
 		} else if (bookmark) {
 			fetchBookmark(serverBus, bookmark);
-		} else {
-			// 'servers' is in spreadsheet state. After loading a bookmark or inline
-			// state, we need to update wizard data. Otherwise, we need to load
-			// wizard data here.
-
-			updateWizard(serverBus, state.spreadsheet, newState.spreadsheet, {force: true});
-		}
-		// These are independent of server settings.
-		if (!newState.wizard.cohortMeta) {
-			fetchCohortMeta(serverBus);
-		}
-		if (!newState.wizard.cohortPreferred) {
-			fetchCohortPreferred(serverBus);
-		}
-		if (!newState.wizard.cohortPhenotype) {
-			fetchCohortPhenotype(serverBus);
 		}
 		if (manifest) {
 			fetchManifest(serverBus, manifest);
@@ -158,29 +111,19 @@ var controls = {
 		_.Let(({path, params = {}} = history) =>
 			_.assoc(state, 'page', getPage(path), 'params', params)),
 	cohort: (state, cohort, width) =>
-		clearWizardCohort(
-			_.updateIn(state, ['spreadsheet'], setCohort({name: cohort}, width))),
+		_.updateIn(state, ['spreadsheet'], setCohort({name: cohort}, width)),
 	'cohort-post!': (serverBus, state, newState) =>
+		// XXX just samples, now
 		fetchCohortData(serverBus, newState.spreadsheet),
 	cohortReset: state =>
-			clearWizardCohort(
-				_.updateIn(state, ['spreadsheet'], setCohort(undefined, undefined))),
-	'import': (state, newState) => clearWizardCohort(_.merge(state, newState)),
+		_.updateIn(state, ['spreadsheet'], setCohort(undefined, undefined)),
+	'import': (state, newState) => _.merge(state, newState),
 	'import-error': state => _.assoc(state, 'stateError', 'import'),
-	'refresh-cohorts': clearWizardCohort,
 	stateError: (state, error) => _.assoc(state, 'stateError', error),
 	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
 };
 
 var spreadsheetControls = {
-	'import-post!': (serverBus, state, newState) =>
-		updateWizard(serverBus, state, newState, {force: true}),
-	'refresh-cohorts-post!': (serverBus, state, newState) => {
-		fetchCohortMeta(serverBus);
-		fetchCohortPreferred(serverBus);
-		fetchCohortPhenotype(serverBus);
-		updateWizard(serverBus, state, newState, {force: true});
-	},
 	cluster: (state, id, value) =>
 		_.assocIn(state, ['columns', id, 'clustering'], value),
 	'cluster-post!': (serverBus, state, newState, id, value) => {
@@ -258,15 +201,6 @@ var spreadsheetControls = {
 		fetchColumnData(serverBus, newState.cohortSamples, id, _.getIn(newState, ['columns', id])),
 	vizSettings: (state, column, settings) =>
 		_.assocIn(state, ['columns', column, 'vizSettings'], settings),
-	'edit-dataset-post!': (serverBus, state, newState, dsID, meta) => {
-		if (!_.contains(['mutationVector', 'clinicalMatrix', 'genomicSegment'],
-				meta.type)) {
-			fetchExamples(serverBus, dsID);
-		}
-		if (_.contains(['mutationVector', 'genomicSegment'], meta.type)) {
-			fetchFeatures(serverBus, dsID);
-		}
-	},
 	'columnLabel': (state, id, value) =>
 		_.assocIn(state, ['columns', id, 'user', 'columnLabel'], value),
 	'fieldLabel': (state, id, value) =>
@@ -280,7 +214,7 @@ var spreadsheetControls = {
 			['km', 'title'], _.getIn(state, ['columns', id, 'user', 'columnLabel']),
 			['km', 'label'], _.getIn(state, ['columns', id, 'user', 'fieldLabel']),
 			['km', 'survivalType'], _.intersection([_.getIn(state, ['km', 'survivalType'])], _.keys(_.getIn(state, ['survival']))) [0]),
-	// see km-open-post! in controls, above. Requires wizard.datasets.
+	// see km-open-post! in controls, above. Requires wizard.cohortFeatures.
 	'km-close': state => _.assocIn(state, ['km', 'id'], null),
 	'km-cutoff': (state, value) => _.assocIn(state, ['km', 'cutoff'], value),
 	'km-splits': (state, value) => _.assocIn(state, ['km', 'splits'], value),

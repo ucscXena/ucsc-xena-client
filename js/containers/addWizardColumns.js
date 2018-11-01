@@ -197,7 +197,7 @@ function getPreferredPhenotypes(cohort, cohortPreferredPhenotypes, hubs) {
 var consolidateFeatures = featureSet => {
 	return _.reduce(featureSet, (all, features, dsID) => {
 		let strippedFeatures = _.toArray(_.mapObject(features, f =>
-			_.extend(f, {dsID: dsID, label: (f.longtitle || f.name)})));
+			_.merge(f, {dsID: dsID, label: (f.longtitle || f.name)})));
 		return all.concat(strippedFeatures);
 	}, []);
 };
@@ -251,16 +251,7 @@ function addWizardColumns(Component) {
 
 		componentWillReceiveProps(newProps) {
 			var {editing} = newProps;
-			// XXX set timeout here for flipping back, when done.
 			this.setState({editing});
-			// XXX If we had a cohort but lost it (e.g. due to change in servers),
-			// and the columnEdit is closed: open it.
-//			if (!this.state.openColumnEdit &&
-//				this.props.appState.cohort[0] &&
-//				!newProps.appState.cohort[0]) {
-//
-//				this.setState({openColumnEdit: true});
-//			}
 		}
 
 		onCancel = () => {

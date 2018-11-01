@@ -10,7 +10,6 @@ var fetch = require('../fieldFetch');
 var kmModel = require('../models/km');
 var {getColSpec} = require('../models/datasetJoins');
 var {signatureField} = require('../models/fieldSpec');
-var {ignoredType} = require('../models/dataType');
 var defaultServers = require('../defaultServers');
 var {publicServers} = defaultServers;
 var gaEvents = require('../gaEvents');
@@ -192,39 +191,9 @@ var userServers = state => _.keys(state.servers).filter(h => state.servers[h].us
 var fetchCohortData = (serverBus, state) => {
 	let user = userServers(state);
 	if (state.cohort) {
-		fetchDatasets(serverBus, user, state.cohort);
 		fetchSamples(serverBus, user, state.cohort, state.allowOverSamples);
 	}
 };
-
-var unionOfResults = resps => collectResults(resps, results => _.union(...results));
-
-function cohortQuery(servers) {
-	return Rx.Observable.zipArray(_.map(servers, s => reifyErrors(xenaQuery.allCohorts(s, ignoredType), {host: s})))
-			.flatMap(unionOfResults);
-}
-
-function fetchCohorts(serverBus, state, newState, {force} = {}) {
-	var user = userServers(state),
-		newUser = userServers(newState);
-	if (force || !_.listSetsEqual(user, newUser)) {
-		serverBus.next(['cohorts', cohortQuery(newUser)]);
-	}
-}
-
-function updateWizard(serverBus, state, newState, opts = {}) {
-	fetchCohorts(serverBus, state, newState, opts);
-	let user = userServers(newState);
-	// If there's a bookmark on wizard mode step 2, will we fail
-	// to load the dataset?
-	if (newState.cohort && (opts.force || (newState.cohort.name !== _.get(state.cohort, 'name')))) {
-		fetchDatasets(serverBus, user, newState.cohort);
-	}
-}
-
-var clearWizardCohort = state =>
-	_.assocIn(state, ['wizard', 'datasets'], undefined,
-					 ['wizard', 'features'], undefined);
 
 //
 // survival fields
@@ -253,17 +222,17 @@ function mapToObj(keys, fn) {
 	return _.object(keys, _.map(keys, fn));
 }
 
-function survivalFields(cohort, datasets, features) {
-	var vars = kmModel.pickSurvivalVars(features),
+function survivalFields(cohortFeatures) {
+	var vars = kmModel.pickSurvivalVars(cohortFeatures),
 		fields = {};
 
 	if (hasSurvFields(vars)) {
-		fields[`patient`] = getColSpec([codedFieldSpec(vars.patient)], datasets);
+		fields[`patient`] = getColSpec([codedFieldSpec(vars.patient)]);
 
 		_.values(kmModel.survivalOptions).forEach(function(option) {
 			if (vars[option.ev] && vars[option.tte]) {
-				fields[option.ev] = getColSpec([probeFieldSpec(vars[option.ev])], datasets);
-				fields[option.tte] = getColSpec([probeFieldSpec(vars[option.tte])], datasets);
+				fields[option.ev] = getColSpec([probeFieldSpec(vars[option.ev])]);
+				fields[option.tte] = getColSpec([probeFieldSpec(vars[option.tte])]);
 			}
 		});
 
@@ -277,9 +246,9 @@ function survivalFields(cohort, datasets, features) {
 
 // If field set has changed, re-fetch.
 function fetchSurvival(serverBus, state) {
-	let {wizard: {datasets, features},
+	let {wizard: {cohortFeatures},
 			spreadsheet: {cohort, survival, cohortSamples}} = state,
-		fields = survivalFields(cohort, datasets, features),
+		fields = survivalFields(cohortFeatures[cohort.name]),
 		survFields = _.keys(fields),
 		refetch = _.some(survFields,
 				f => !_.isEqual(fields[f], _.getIn(survival, [f, 'field']))),
@@ -294,7 +263,6 @@ function fetchSurvival(serverBus, state) {
 
 module.exports = {
 	fetchCohortData,
-	fetchCohorts,
 	fetchColumnData,
 	fetchClustering,
 	fetchDatasets,
@@ -303,7 +271,5 @@ module.exports = {
 	resetZoom,
 	setCohort,
 	userServers,
-	updateWizard,
-	clearWizardCohort,
 	datasetQuery
 };
