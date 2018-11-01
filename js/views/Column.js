@@ -279,22 +279,31 @@ var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
 	!isChrom && _.contains(['geneProbes', 'genes'], fieldType) &&
 		(fieldList || fields).length === 1;
 
+// Duplicated in denseMatrix.js, because of the weirdness with
+// fields vs. probes.
+var supportsClustering = ({fieldType, fields}) =>
+	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
-function matrixMenu(props, {onTumorMap, onMode, isChrom}) {
+function matrixMenu(props, {onTumorMap, onMode, onCluster, isChrom}) {
 	var {cohort, column} = props,
-		{fieldType, noGeneDetail, fields, fieldSpecs} = column,
-		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs});
+		{fieldType, noGeneDetail, fields, fieldSpecs, clustering} = column,
+		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs}),
+		order = clustering == null ? 'clusters' :
+			fieldType === 'geneProbes' ? 'position' : 'list';
 
-	return addIdsToArr ([
+	return addIdsToArr([
+		supportsClustering(column) ?
+			<MenuItem onClick={onCluster} caption={`Order by ${order}`} /> :
+			null,
 		supportsGeneAverage(column, isChrom) ?
 			(fieldType === 'genes' ?
 				<MenuItem title={noGeneDetail ? 'no common probemap' : ''}
 					disabled={noGeneDetail} onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
-				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>)
-				: null,
+				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>) :
+				null,
 		tumorMapCohort ?
-			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`TumorMap`}/>
-			: null
+			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`TumorMap`}/> :
+			null
 	]);
 }
 
@@ -378,7 +387,8 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 }
 
 var showPosition = column =>
-	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType);
+	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType) &&
+	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
 
 class Column extends PureComponent {
@@ -458,6 +468,11 @@ class Column extends PureComponent {
 
 	onShowIntrons = () => {
 		this.props.onShowIntrons(this.props.id);
+	};
+
+	onCluster = () => {
+		this.props.onCluster(this.props.id,
+			this.props.column.clustering ? undefined : 'probes');
 	};
 
 	onSortVisible = () => {
@@ -601,9 +616,9 @@ class Column extends PureComponent {
 					_.getIn(column, ['assembly'])),
 			{specialDownloadMenu} = this.state,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
-			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
+			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
-				onSpecialDownload, specialDownloadMenu, isChrom}),
+				onCluster, onSpecialDownload, specialDownloadMenu, isChrom}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),

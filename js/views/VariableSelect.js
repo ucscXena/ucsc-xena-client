@@ -511,12 +511,23 @@ class VariableSelect extends PureComponent {
 // try to initialize state when we're not holding the cohort
 // data. There might be a better state model that avoids this.
 //
-// Cohort data is expected to be falsey if not loaded, empty
-// if loaded but nothing for this cohort, or non-empty otherwise.
+// We are passed data incrementally as it arrives from the servers,
+// so use a timeout to decide if we should keep waiting.
 class LoadingNotice extends React.Component {
+	state={wait: true};
+
+	componentWillMount() {
+		this.timeout = setTimeout(() => this.setState({wait: false}), 3000);
+	}
+
+	componentWillUnmount() {
+		clearTimeout(this.timeout);
+	}
+
 	render() {
-		var {preferred, datasets, features, basicFeatures} = this.props;
-		if (!preferred || !datasets || !features || !basicFeatures) {
+		var {preferred, datasets, features, basicFeatures} = this.props,
+			{wait} = this.state;
+		if (wait && (!preferred || _.isEmpty(datasets) || _.isEmpty(features) || !basicFeatures)) {
 			let {colId, controls, title, width} = this.props,
 				wizardProps = {
 					colId,

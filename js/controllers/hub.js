@@ -7,7 +7,7 @@ var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
 var {servers: {localHub}} = require('../defaultServers');
 var {delete: deleteDataset} = require('../xenaAdmin');
-var {userServers, updateWizard} = require('./common');
+var {userServers} = require('./common');
 var {ignoredType} = require('../models/dataType');
 var Rx = require('../rx');
 import {defaultHost} from '../urlParams';
@@ -124,24 +124,16 @@ var datasetMetaAndLinks = (host, dataset) => {
 			({meta, data, probeCount, downloadLink, probemapLink}));
 };
 
-// wrapper to discard extra params
-var hostUpdateWizard = (serverBus, state, newState) =>
-	updateWizard(serverBus, state, newState);
-
 var spreadsheetControls = {
 	'init': (state, pathname = '/', params) => setHubs(state, params),
 	'add-host': (state, host) =>
 		assocIn(state, ['servers', host], {user: true}),
-	'add-host-post!': hostUpdateWizard,
 	'remove-host': (state, host) =>
 		updateIn(state, ['servers'], s => dissoc(s, host)),
-	'remove-host-post!': hostUpdateWizard,
 	'enable-host': (state, host, list) =>
 		assocIn(state, ['servers', host, list], true),
-	'enable-host-post!': hostUpdateWizard,
 	'disable-host': (state, host, list) =>
 		assocIn(state, ['servers', host, list], false),
-	'disable-host-post!': hostUpdateWizard
 };
 
 var linkedHub = state =>

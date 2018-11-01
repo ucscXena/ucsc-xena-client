@@ -141,6 +141,7 @@ function combineColSpecs(fieldSpecs, datasets) {
 
 	return m({
 		...(getShowIntrons(resetFieldSpecs) ? {showIntrons: true} : {}),
+		...(fieldSpecs[0].vizSettings ? _.pick(fieldSpecs[0], 'vizSettings') : {}),
 		fields,
 		fieldSpecs: resetFieldSpecs,
 		fetchType: 'composite',
@@ -153,6 +154,7 @@ function combineColSpecs(fieldSpecs, datasets) {
 		noGeneDetail: !uniqProbemap, // XXX is this wrong? also have to check field len.
 		assembly: getAssembly(fieldType, resetFieldSpecs),
 		sFeature: getFeature(fieldType, resetFieldSpecs), // XXX deprecate?
+		clustering: _.get(fieldSpecs[0], 'clustering'),
 		// until we ditch composite, copy these for signatures
 		dsID: _.get(fieldSpecs[0], 'dsID'),
 		missing: _.get(fieldSpecs[0], 'missing'),

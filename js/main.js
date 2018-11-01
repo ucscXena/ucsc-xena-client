@@ -15,6 +15,7 @@ import './models/segmented';
 import uiController from './controllers/ui';
 import serverController from './controllers/server';
 import hubController from './controllers/hub';
+import wizardController from './controllers/wizard';
 import transcriptController from './controllers/transcripts';
 import importController from './controllers/import';
 //import tiesController from './controllers/ties';
@@ -50,6 +51,10 @@ if (module.hot) {
 		let newModule = require('./controllers/hub');
 		_.extend(hubController, newModule);
 	});
+	module.hot.accept('./controllers/wizard', () => {
+		let newModule = require('./controllers/wizard');
+		_.extend(wizardController, newModule);
+	});
 	module.hot.accept('./controllers/transcripts', () => {
 		let newModule = require('./controllers/transcripts');
 		_.extend(transcriptController, newModule);
@@ -72,6 +77,6 @@ const store = createStore();
 const main = window.document.getElementById('main');
 
 // XXX reducer
-const controller = compose(connectionController(store.uiBus), hubController, serverController, uiController, transcriptController, importController/*, tiesController*/);
+const controller = compose(connectionController(store.uiBus), hubController, wizardController, serverController, uiController, transcriptController, importController/*, tiesController*/);
 
 connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});
