@@ -279,6 +279,8 @@ var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
 	!isChrom && _.contains(['geneProbes', 'genes'], fieldType) &&
 		(fieldList || fields).length === 1;
 
+// Duplicated in denseMatrix.js, because of the weirdness with
+// fields vs. probes.
 var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
