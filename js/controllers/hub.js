@@ -273,7 +273,7 @@ function invalidateLocalHub(state) {
 	invalidatePick(datapages, ['cohortDatasets'], localHub);
 }
 
-function clearPath(path) {
+function validatePath(path) {
 	outOfDate = updateIn(outOfDate, initial(path), p => p && dissoc(p, last(path)));
 }
 
@@ -294,7 +294,7 @@ var controls = {
 	'merge-data-post!': (serverBus, state, newState, path) => {
 		var i = queue.findIndex(p => isEqual(p, path));
 		queue.splice(i, 1);
-		clearPath(path);
+		validatePath(path);
 	},
 	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),

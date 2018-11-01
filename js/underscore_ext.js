@@ -375,6 +375,21 @@ function listSetsEqual(l1, l2) {
 	return _.every(l2, v => s1.has(v));
 }
 
+// Return paths in obj which match path, where path is a path array
+// of form [key | matchKeys.any, key | matchKeys.any, ...].
+// key will match a literal string key. any will match any key.
+// E.g. ['a', matchKey.any] will match ['a', 'b'], ['a', 'c'] in
+// {a: {b: 0, c: 1}}
+var any = {};
+var matchKeys = (obj, path, i = 0)  =>
+	i === path.length ? [path] :
+	path[i] === any ? Object.keys(obj)
+		.map(k => matchKeys(obj[k], splice(path, i, 1, k), i + 1)).flatten() :
+	!obj.hasOwnProperty(path[i]) ? [] :
+	matchKeys(obj[path[i]], path, i + 1);
+
+matchKeys.any = any;
+
 function anyRange(coll, start, end, pred = _.identity, i = start) {
 	return i === end ? false :
 		pred(coll[i]) ? true :
@@ -463,6 +478,7 @@ _.mixin({
 	groupByConsec,
 	insert,
 	listSetsEqual,
+	matchKeys,
 	maxWith,
 	maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
 	meannull,

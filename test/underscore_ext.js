@@ -84,4 +84,46 @@ describe('underscore_ext', function () {
 			setsEqual(_.union([], [], []), []);
 		});
 	});
+	describe('#matchKeys', function () {
+		var state = {
+			foo: {
+				a: {
+					b: 3
+				},
+				c: 7
+			},
+			bar: {
+				a: {
+					b: 3,
+					c: 7,
+					d: 8
+				},
+				e: {
+					f: 1
+				}
+			}
+		};
+		var {any} = _.matchKeys;
+		it('should match any sub-key', function() {
+			assert.deepEqual(_.matchKeys(state, ['foo', 'a', any]), [['foo', 'a', 'b']]);
+		});
+		it('should match multiple any sub-keys', function() {
+			assert.deepEqual(_.matchKeys(state, ['foo', any]), [['foo', 'a'], ['foo', 'c']]);
+		});
+		it('should match sub-key under any', function() {
+			assert.deepEqual(_.matchKeys(state, [any, 'a']), [['foo', 'a'], ['bar', 'a']]);
+		});
+		it('should not match unknown key', function() {
+			assert.deepEqual(_.matchKeys(state, ['baz']), []);
+		});
+		it('should not match unknown key under any', function() {
+			assert.deepEqual(_.matchKeys(state, [any, 'baz']), []);
+		});
+		it('should match sub-key under any, skipping non-matching high keys', function() {
+			assert.deepEqual(_.matchKeys(state, [any, 'e']), [['bar', 'e']]);
+		});
+		it('should match any under any', function() {
+			assert.deepEqual(_.matchKeys(state, [any, any]), [['foo', 'a'], ['foo', 'c'], ['bar', 'a'], ['bar', 'e']]);
+		});
+	});
 });

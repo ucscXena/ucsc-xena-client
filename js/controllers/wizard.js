@@ -4,7 +4,7 @@
 // The dataset fetch is pretty much identical, and could probably
 // be shared with hub.js.
 
-import {Let, assocIn, find, flatmap, fmap, getIn, groupBy, identity, isEqual, map, pick, updateIn} from '../underscore_ext';
+import {Let, assocIn, dissoc, find, flatmap, fmap, getIn, groupBy, identity, initial, isEqual, last, map, matchKeys, pick, updateIn} from '../underscore_ext';
 import {allCohorts, datasetList, allFieldMetadata} from '../xenaQuery';
 import {ignoredType} from '../models/dataType';
 import xenaQuery from '../xenaQuery';
@@ -45,6 +45,7 @@ var isPhenotype = ds => ds.type === 'clinicalMatrix' &&
 		(!ds.dataSubType || ds.dataSubType.match(phenoPat));
 
 
+// {wizard: {cohortDatasets: {[cohort]: {[server]: [dataset, ...]}}}}
 var allPhenoDatasets = (state, cohort, servers) =>
 	flatmap(
 		pick(getIn(state, ['wizard', 'cohortDatasets', state.spreadsheet.cohort.name], {}),
@@ -92,6 +93,7 @@ var fetchData = ([type, ...args]) => fetchMethods[type](...args);
 // XXX Local mutatable state. The effects controller is stateful wrt
 // data queries.
 var queue = [];
+var outOfDate = {};
 
 var wizardPostActions = (serverBus, state, newState) => {
 	if (newState.page !== 'heatmap') {
@@ -100,7 +102,8 @@ var wizardPostActions = (serverBus, state, newState) => {
 	}
 
 	var toFetch = wizardData(newState)
-		.filter(path => getIn(newState.wizard, path) == null && !find(queue, p => isEqual(p, path)));
+		.filter(path => (getIn(newState.wizard, path) == null || getIn(outOfDate, path))
+				&& !find(queue, p => isEqual(p, path)));
 
 	toFetch.forEach(path => {
 		queue.push(path);
@@ -138,12 +141,36 @@ var enforceValue = (path, val) => {
 	return val;
 };
 
+function invalidatePath(state, pattern) {
+	matchKeys(state, pattern).forEach(path => {
+		outOfDate = assocIn(outOfDate, path, true);
+	});
+}
+
+// mark as valid
+function validatePath(path) {
+	outOfDate = updateIn(outOfDate, initial(path), p => p && dissoc(p, last(path)));
+}
+
+var invalidateCohorts = Let(({any} = matchKeys) =>
+	function ({wizard}) {
+		invalidatePath(wizard, ['cohortMeta']);
+		invalidatePath(wizard, ['cohortPreferred']);
+		invalidatePath(wizard, ['cohortPhenotype']);
+		invalidatePath(wizard, ['serverCohorts', any]);
+		invalidatePath(wizard, ['cohortDatasets', any, any]);
+		invalidatePath(wizard, ['cohortFeatures', any, any, any]);
+	});
+
 var controls = {
+	'refresh-cohorts-post!': (serverBus, state, newState) =>
+		invalidateCohorts(newState),
 	'wizard-merge-data': clearCache((state, path, data) =>
 		assocIn(state, ['wizard', ...path], enforceValue(path, data))),
 	'wizard-merge-data-post!': (serverBus, state, newState, path) => {
 		var i = queue.findIndex(p => isEqual(p, path));
 		queue.splice(i, 1);
+		validatePath(path);
 	},
 };
 

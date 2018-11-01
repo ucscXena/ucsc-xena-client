@@ -126,6 +126,10 @@ var controls = {
 };
 
 var spreadsheetControls = {
+	'refresh-cohorts-post!': (serverBus, state, newState) => {
+		// reload samples
+		fetchCohortData(serverBus, newState);
+	},
 	cluster: (state, id, value) =>
 		_.assocIn(state, ['columns', id, 'clustering'], value),
 	'cluster-post!': (serverBus, state, newState, id, value) => {
