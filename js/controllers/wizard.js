@@ -6,6 +6,7 @@
 
 import {Let, assocIn, dissoc, find, flatmap, fmap, getIn, groupBy, identity, initial, isEqual, last, map, matchKeys, pick, updateIn} from '../underscore_ext';
 import {allCohorts, datasetList, allFieldMetadata} from '../xenaQuery';
+var {servers: {localHub}} = require('../defaultServers');
 import {ignoredType} from '../models/dataType';
 import xenaQuery from '../xenaQuery';
 import Rx from '../rx';
@@ -162,7 +163,16 @@ var invalidateCohorts = Let(({any} = matchKeys) =>
 		invalidatePath(wizard, ['cohortFeatures', any, any, any]);
 	});
 
+var invalidateLocalHub = Let(({any} = matchKeys) =>
+	function (_, __, {wizard}) {
+		invalidatePath(wizard, ['serverCohorts', localHub]);
+		invalidatePath(wizard, ['cohortDatasets', any, localHub]);
+		invalidatePath(wizard, ['cohortFeatures', any, localHub, any]);
+	});
+
 var controls = {
+	'localStatus-post!': invalidateLocalHub,
+	'localQueue-post!': invalidateLocalHub,
 	'refresh-cohorts-post!': (serverBus, state, newState) =>
 		invalidateCohorts(newState),
 	'wizard-merge-data': clearCache((state, path, data) =>
@@ -179,4 +189,4 @@ var fetchController = {
 	postAction: wizardPostActions
 };
 
-export default compose(make(controls), fetchController);
+export default compose(fetchController, make(controls));
