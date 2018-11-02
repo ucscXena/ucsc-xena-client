@@ -1,6 +1,6 @@
 'use strict';
-var {updateIn, dissoc, pick, isEqual, Let, get, uniq, identity,
-	last, mapObject, initial, merge, pluck, getIn, assocIn} = require('../underscore_ext');
+var {Let, assocIn, dissoc, get, getIn, identity, initial, isEqual, last,
+	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList,
@@ -243,20 +243,11 @@ var enforceValue = (path, val) => {
 	return val;
 };
 
-function invalidateKey(path) {
-	outOfDate = assocIn(outOfDate, path, true);
+function invalidatePath(state, pattern) {
+	matchKeys(state, pattern).forEach(path => {
+		outOfDate = assocIn(outOfDate, path, true);
+	});
 }
-
-function invalidateKeysUnder(state, path) {
-	outOfDate = updateIn(outOfDate, path, ood =>
-		merge(ood, mapObject(getIn(state, path, {}), () => true)));
-}
-
-function invalidatePick(state, path, key) {
-	Object.keys(getIn(state, path, {})).map(k0 => [...path, k0, key])
-		.forEach(invalidateKey);
-}
-
 
 // ['cohorts', localHub]
 // ['hubMeta', localHub]
@@ -264,14 +255,16 @@ function invalidatePick(state, path, key) {
 // ['identifiers', localHub, *]
 // ['dataset', localHub, *]
 // ['cohortDatasets', *, localHub]
-function invalidateLocalHub(state) {
-	var datapages = get(state, 'datapages');
-	invalidateKey(['cohorts', localHub]);
-	invalidateKey(['hubMeta', localHub]);
-	invalidateKeysUnder(datapages, ['samples', localHub]);
-	invalidateKeysUnder(datapages, ['identifiers', localHub]);
-	invalidatePick(datapages, ['cohortDatasets'], localHub);
-}
+var invalidateLocalHub = Let(({any} = matchKeys) =>
+	function (state) {
+		var datapages = get(state, 'datapages', {});
+		invalidatePath(datapages, ['cohorts', localHub]);
+		invalidatePath(datapages, ['hubMeta', localHub]);
+		invalidatePath(datapages, ['samples', localHub, any]);
+		invalidatePath(datapages, ['identifiers', localHub, any]);
+		invalidatePath(datapages, ['dataset', localHub, any]);
+		invalidatePath(datapages, ['cohortDatasets', any, localHub]);
+	});
 
 function validatePath(path) {
 	outOfDate = updateIn(outOfDate, initial(path), p => p && dissoc(p, last(path)));
