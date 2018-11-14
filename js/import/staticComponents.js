@@ -79,13 +79,13 @@ class FilePreview extends React.Component {
     }
 };
 
-const ErrorPreview = ({ errorSnippets = [] }) => {
+const ErrorPreview = ({ errorSnippets = [], errorLines }) => {
 
     if (!errorSnippets.length) {
         return null;
     }
 
-    const { errorLines, exampleLines } = errorSnippets[0];
+    const { exampleLines } = errorSnippets[0];
 
     const errLines = getSimpleTableRows(padLines(errorLines));
     const exampLines = getSimpleTableRows(padLines(exampleLines));

@@ -282,6 +282,7 @@ class ImportForm extends React.Component {
 	importProgressPage() {
 		const { errors, warnings, errorCheckInprogress, serverError, probemapError,
 			errorSnippets } = this.props.state,
+			{fileContent} = this.props,
 			serverOrProbemapError = serverError || probemapError,
 			hasErr = errors && !!errors.length;
 
@@ -314,7 +315,11 @@ class ImportForm extends React.Component {
 				</div>
 				}
 
-				<ErrorPreview errorSnippets={errorSnippets} />
+				{
+					// XXX hard-coding errorLines to the file header, since that's the only case we
+					// currently handle.
+				}
+				<ErrorPreview errorSnippets={errorSnippets} errorLines={fileContent.slice(0, 2)} />
 
 				{ isImportSuccessful(this.props.state) &&
 				<div>
@@ -540,6 +545,7 @@ class ImportPage extends React.Component {
 						fileContent={fileContent}
 						fileReadInProgress={fileReadInProgress}
 						localCohorts={localCohorts}
+						fileContent={fileContent}
 						probemaps={probemaps}
 						file={file} fileName={fileName}
 						onViz={this.onViz}

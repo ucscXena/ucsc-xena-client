@@ -173,9 +173,7 @@ HEADER_ERRORS = [
 				state.snippets.push({
 					exampleLines: [
 						['sample', 'chrom', 'start', 'end', 'value'],
-						['TCGA-OR-A5LT-01', 'chr1', '61735', '98588', '0.1842']],
-					// XXX no way to include multiple lines from here
-					errorLines: [line.join('\t')]
+						['TCGA-OR-A5LT-01', 'chr1', '61735', '98588', '0.1842']]
 				});
 
 			}
@@ -191,8 +189,7 @@ HEADER_ERRORS = [
 				state.snippets.push({
 					exampleLines: [
 						['sample', 'chrom', 'start', 'end', 'reference', 'alternate'],
-						['TCGA-PK-A5HB-01', 'chr1', '877831', '877831', 'T', 'C']],
-					errorLines: [line.join('\t')]
+						['TCGA-PK-A5HB-01', 'chr1', '877831', '877831', 'T', 'C']]
 				});
 			}
         }
