@@ -61,9 +61,9 @@ class ImportForm extends React.Component {
 	state = {showMoreErrors: false, showMoreDataTypes: false}
 
 	render() {
-		const { fileFormat, dataType, assembly, errorCheckInprogress } = this.props.state || {},
+		const { fileFormat, dataType, assembly, errorCheckInprogress, serverError } = this.props.state || {},
 			{ file, wizardPage, fileName, fileReadInProgress } = this.props,
-			fileSelected = file && !!file.size;
+			fileSelected = file && !!file.size && !serverError;
 
 		let wizardProps = {},
 			component = null;
@@ -138,6 +138,7 @@ class ImportForm extends React.Component {
 	}
 
 	fileSelectionPage(fileSelected) {
+		var serverError = _.getIn(this.props, ['state', 'serverError']);
 		return (
 			<div>
 				<input type='file' id='file-input' style={{ display: 'none' }}
@@ -146,6 +147,13 @@ class ImportForm extends React.Component {
 				<label htmlFor='file-input' className={styles.importFileLabel}>Select Data File</label>
 
 				{fileSelected && <b>Selected file: {this.props.fileName} </b>}
+
+				{serverError ?  (
+					<div>
+						<p>We were unable to read this file, due to the following error:</p>
+						<pre>{serverError}</pre>
+					</div>
+				) : null}
 
 				<div style={{ marginTop: '1em' }}>
 					<Button icon='help_outline' label='Help on data file formatting' accent flat={false}/>

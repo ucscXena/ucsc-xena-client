@@ -4,7 +4,7 @@ import Rx from '../rx';
 import { make, mount, compose } from './utils';
 import { servers } from '../defaultServers';
 import { cohortSummary, probemapList, datasetStatus } from '../xenaQuery';
-import { assoc, assocIn, assocInAll, get, getIn, isArray, last, object, pluck, updateIn } from "../underscore_ext";
+import { Let, assoc, assocIn, assocInAll, get, getIn, has, isArray, last, object, pluck, updateIn } from "../underscore_ext";
 import Worker from 'worker-loader!./import-worker';
 
 var loaderSocket = Rx.Observable.webSocket("ws://localhost:7222/load-events");
@@ -56,8 +56,11 @@ const importFileDone = (state, result) =>
 const fileQueued = (fileName, queue) =>
 	isArray(queue) && get(last(queue), 0) === fileName;
 
-const readFileDone = (state, [{recommended, form}, fileContent]) =>
-    ({...state, fileContent, recommended, fileReadInProgress: false, form: {...state.form, ...form}});
+const readFileDone = (state, result) =>
+	has(result, 'serverError') ?
+		assocIn(state, ['form', 'serverError'], result.serverError) :
+		Let(([{recommended, form}, fileContent] = result) =>
+		 ({...state, fileContent, recommended, fileReadInProgress: false, form: {...state.form, ...form}}));
 
 // XXX handle 'inference'
 const retryFileDone = (state, [[{recommended, form}, fileContent], errors]) => {
@@ -121,6 +124,7 @@ const importControls = {
 		fetchLocalProbemaps(serverBus, state, newState);
 //		console.log(`load time ${(Date.now() - t0) / 1000} sec`);
 	},
+	'read-file': state => assocIn(state, ['form', 'serverError'], undefined),
     'read-file-post!': (serverBus, state, newState, fileHandle) =>
         serverBus.next(['read-file-done', sendMessage(['loadFile', newState.probemaps, fileHandle])]),
     'file-read-inprogress': state => assocIn(state, ['fileReadInProgress'], true),
