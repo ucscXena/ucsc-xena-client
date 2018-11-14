@@ -5,9 +5,10 @@ import nav from "../nav";
 import _ from "../underscore_ext";
 import {
 	Input, Button, Dropdown,
-	ProgressBar, RadioGroup, RadioButton
+	RadioGroup, RadioButton
 } from 'react-toolbox/lib';
 import DefaultServers from "../defaultServers";
+import loader from './loader.gif';
 const { servers: { localHub } } = DefaultServers;
 
 import { dataTypeOptions, steps, NONE_STR, DATA_TYPE, FILE_FORMAT, PAGES } from './constants';
@@ -569,8 +570,7 @@ const ErrorArea = ({ errors, showMore, errorCheckInProgress, onShowMoreToggle, t
 			{ showMoreText }
 
 			<div style={{textAlign: 'center'}}>
-				{errorCheckInProgress &&
-					<ProgressBar type="circular" mode="indeterminate" />}
+				{errorCheckInProgress && <img src={loader}/>}
 			</div>
 		</div>
 	);

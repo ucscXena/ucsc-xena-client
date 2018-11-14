@@ -1,7 +1,7 @@
 'use strict';
 import React from 'react';
 import cssClasses from './ImportPage.module.css';
-import { ProgressBar } from 'react-toolbox/lib';
+import loader from './loader.gif';
 
 const maxColumns = 6,
     numRows = 5,
@@ -56,7 +56,7 @@ class FilePreview extends React.Component {
         return (
             isLoading ?
                 <div style={{ textAlign: 'center' }}>
-                    <ProgressBar type="circular" mode="indeterminate" />
+					<img src={loader}/>
                 </div>
                 : <div>
                     <table className={cssClasses.denseExample}>
