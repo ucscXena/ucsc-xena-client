@@ -46,7 +46,6 @@ require('rxjs/add/operator/merge');
 require('rxjs/add/operator/mergeAll');
 require('rxjs/add/operator/mergeMap');
 require('rxjs/add/operator/publishReplay');
-require('rxjs/add/operator/race');
 require('rxjs/add/operator/reduce');
 require('rxjs/add/operator/retry');
 require('rxjs/add/operator/retryWhen');
