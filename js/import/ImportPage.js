@@ -287,9 +287,9 @@ class ImportForm extends React.Component {
 		let errorText = null;
 
 		if (hasErr) {
-			errorText = <p>There was some errors found in the file:</p>;
+			errorText = <p>There were some errors found in the file:</p>;
 		} else if (hasWarnings(this.props.state)) {
-			errorText = <p>There was some warnings found in the file:</p>;
+			errorText = <p>There were some warnings found in the file:</p>;
 		}
 
 		return (
@@ -376,7 +376,7 @@ class ImportForm extends React.Component {
 
 	onFileChange = (fileProp) => (evt) => {
 		if (evt.target.files.length > 0) {
-			this.props.callback(['file-content', '']);
+			this.props.callback(['file-content', []]);
 			const file = evt.target.files[0];
 			this.props.callback([fileProp, file]);
 

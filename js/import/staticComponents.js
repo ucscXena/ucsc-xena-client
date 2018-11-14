@@ -38,12 +38,9 @@ class FilePreview extends React.Component {
 
     render() {
         const { fileContent, highlightRow, highlightColumn, isLoading } = this.props,
-            takeLines = this.state.showMore ? maxNumRows : numRows;
-
-        let lines = fileContent.split(/\r\n|\r|\n/g);
-        let lineCount = lines.length;
-        lines = lines.slice(0, takeLines).map(line => line.split(/\t/g));
-        lines = padLines(lines);
+            takeLines = this.state.showMore ? maxNumRows : numRows,
+			lineCount = fileContent.length,
+			lines = padLines(fileContent.slice(0, takeLines));
 
         const tableRows = lines.map((r, i) => (
             <tr key={i}>

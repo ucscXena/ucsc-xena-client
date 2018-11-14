@@ -1,6 +1,6 @@
 'use strict';
 
-
+import 'babel-polyfill';
 import {agnes, treeOrder} from '../agnes';
 import {jStat} from 'jStat';
 import {getIn} from '../underscore_ext.js';

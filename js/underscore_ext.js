@@ -403,6 +403,9 @@ var transpose = coll =>
 	coll.length === 0 ? coll :
 	coll[0].map((v, i) => coll.map(line => line[i]));
 
+// mutating 'push' that returns the array
+var push = (arr, v) => (arr.push(v), arr);
+
 // Starting some iterator methods here, but there are some performance
 // concerns. babel generators are slow, possibly due to injecting a try/catch.
 //
@@ -412,27 +415,11 @@ var transpose = coll =>
 //	}
 //}
 //
-// Trying to avoid a generator function, due to performance, but this iterator
-// can't be used in places that expect an iterable, e.g. spread operator,
-// Array.from(), for...of.
-//
-//function imap(arr, fn) {
-//	return {
-//		next: function() {
-//			var n = arr.next();
-//			if (n.done) {
-//				return {done: true};
-//			}
-//			return fn(n.value);
-//		}
-//	}
-//}
-//
+
 // Iterable version. Wow, this is ugly.
-function imap(arr, fn) {
-	var iter = arr[Symbol.iterator]();
+function imap(iterable, fn) {
 	return {
-		[Symbol.iterator]: () => ({
+		[Symbol.iterator]: (iter = iterable[Symbol.iterator]()) => ({
 			next: () => {
 				var n = iter.next();
 				return n.done ? {done: true} : {value: fn(n.value)};
@@ -441,9 +428,21 @@ function imap(arr, fn) {
 	};
 }
 
+// repeat an iterable n times.
+function* repeat(n, iterable) {
+	while (n--) {
+		yield* iterable[Symbol.iterator]();
+	}
+}
+
 function valToStr(v) {
 	return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
 }
+
+// string slice() will hold a copy of the original string, which
+// will run us out of memory when processing buffers. So, force
+// a mem copy.
+var copyStr = str => (' ' + str).slice(1);
 
 //
 //function* irange(n) {
@@ -454,9 +453,9 @@ function valToStr(v) {
 //
 //// tack on an iterator namespace. We should probably find a better
 //// functional methods library that supports iterators.
-_.i = {
-	map: imap
-//	range: irange
+_.iterable = {
+	map: imap,
+	repeat
 };
 
 _.mixin({
@@ -464,6 +463,7 @@ _.mixin({
 	apply,
 	array,
 	concat,
+	copyStr,
 	cmpNumberOrNull,
 	curry,
 	curryN, // useful if the fn as multiple arities.
@@ -492,6 +492,7 @@ _.mixin({
 	partitionN,
 	pluckPaths,
 	pluckPathsArray,
+	push,
 	reverse,
 	scan,
 	splice,

@@ -104,17 +104,23 @@ const getValueLabelList = (items) => items
 const fetchLocalProbemaps = serverBus =>
         serverBus.next(['set-local-probemaps', probemapList(servers.localHub)]);
 
+//var t0;
 const importControls = {
 	// XXX Important: this controller is stateful, due to maintaining a
 	// web worker.
     'file': (state, fileHandle) => assocInAll(state, ['file'], fileHandle, ['fileName'], fileHandle.name),
-    'import-file-post!': (serverBus, state, newState) =>
-		serverBus.next(['import-file-done', postFile(newState)]),
+    'import-file-post!': (serverBus, state, newState) => {
+//		t0 = Date.now();
+		serverBus.next(['import-file-done', postFile(newState)]);
+	},
 
 	// Merge in any errors & status from the file save.
     'import-file-done': importFileDone,
 	// on dataset error, we may have loaded a probemap
-	'import-file-done-post!': fetchLocalProbemaps,
+	'import-file-done-post!': (serverBus, state, newState) => {
+		fetchLocalProbemaps(serverBus, state, newState);
+//		console.log(`load time ${(Date.now() - t0) / 1000} sec`);
+	},
     'read-file-post!': (serverBus, state, newState, fileHandle) =>
         serverBus.next(['read-file-done', sendMessage(['loadFile', newState.probemaps, fileHandle])]),
     'file-read-inprogress': state => assocIn(state, ['fileReadInProgress'], true),
