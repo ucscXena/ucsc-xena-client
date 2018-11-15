@@ -2,37 +2,9 @@
 
 var React = require('react');
 var _ = require('../underscore_ext');
-var {rxEvents} = require('../react-utils');
 var getLabel = require('../getLabel');
 var {supportsEdit} = require('../models/fieldSpec');
 var {addCommas} = require('../util');
-var gaEvents = require('../gaEvents');
-
-function zoomIn(pos, samples, zoom) {
-	var {count, index} = zoom;
-	var nCount = Math.max(1, Math.round(count / 3)),
-		maxIndex = samples - nCount,
-		nIndex = Math.max(0, Math.min(Math.round(index + pos * count - nCount / 2), maxIndex));
-
-	return _.merge(zoom, {count: nCount, index: nIndex});
-}
-
-function zoomOut(samples, zoom) {
-	var {count, index} = zoom;
-	var nCount = Math.min(samples, Math.round(count * 3)),
-		maxIndex = samples - nCount,
-		nIndex = Math.max(0, Math.min(Math.round(index + (count - nCount) / 2), maxIndex));
-
-	return _.merge(zoom, {count: nCount, index: nIndex});
-}
-
-function targetPos(ev) {
-	var bb = ev.currentTarget.getBoundingClientRect();
-	return (ev.clientY - bb.top) / ev.currentTarget.clientHeight;
-}
-
-var zoomInClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
-var zoomOutClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
 function fixSampleTitle(column, i, samples, wizardMode, cohort) {
 	return i === 0 ? _.updateIn(column,
@@ -76,31 +48,17 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 			_.assoc(this.state.interactive, key, interactive)});
 	};
 
-	componentWillMount() {
-		var events = rxEvents(this, 'plotClick');
-
-		this.plotClick = events.plotClick.subscribe(ev => {
-			let {callback, appState: {zoom, samples}} = this.props;
-			if (zoomOutClick(ev)) {
-				gaEvents('spreadsheet', 'zoom', 'out');
-				callback(['zoom', zoomOut(samples.length, zoom)]);
-			} else if (zoomInClick(ev)) {
-				gaEvents('spreadsheet', 'zoom', 'in');
-				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
-			}
-		});
-	}
-
-	componentWillUnmount() {
-		this.plotClick.unsubscribe();
-	}
-
 	onResize = (id, size) => {
 		this.props.callback(['resize', id, size]);
 	};
 
 	onXZoom = (id, xzoom) => {
 		this.props.callback(['xzoom', id, xzoom]);
+	};
+
+	onYZoom = (yzoom) => {
+		this.props.callback(['enableTransition'], false);
+		this.props.callback(['zoom', yzoom]);
 	};
 
 	onRemove = (id) => {
@@ -163,15 +121,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		this.props.callback(['cohortReset']);
 	};
 
-	onPlotClick = (ev) => {
-		// Having callback that checks isInteractive is better than only
-		// passing a callback when isInteractive is true, because the latter
-		// causes downstream props to change, which causes re-renders.
-		if (isInteractive(this.props, this.state)) {
-			this.on.plotClick(ev);
-		}
-	};
-
 	onAbout = (host, dataset) => {
         this.props.callback(['navigate', 'datapages', {host, dataset}]);
 	};
@@ -199,7 +148,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						interactive={interactive}
 						hasSurvival={hasSurvival}
 						cohort={appState.cohort}
-                        onAbout={this.onAbout}
+						onAbout={this.onAbout}
 						onViz={this.onOpenVizSettings}
 						onEdit={supportsEdit(_.get(appState.columns, id)) &&
 							interactive ? this.onEdit : null}
@@ -210,16 +159,17 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						onCluster={this.onCluster}
 						onSortVisible={this.onSortVisible}
 						onMode={this.onMode}
+						onInteractive={this.onInteractive}
 						onKm={this.onKm}
 						onSortDirection={this.onSortDirection}
 						onXZoom={this.onXZoom}
+						onYZoom={this.onYZoom}
 						onRemove={this.onRemove}
 						onResize={this.onResize}
 						onReload={this.onReload}
 						actionKey={id}
 						first={i === 0}
 						{...columnProps}
-						onClick={this.onPlotClick}
 						{...columnSelector(id, i, appState)}
 						wizardMode={wizardMode}
 						editing={appState.editing}

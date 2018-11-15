@@ -7,25 +7,9 @@ var vgmixed = require('./vgmixed');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var styles = {
-	canvas: {
-		position: 'relative',
-		left: 0,
-		top: 0,
-		zIndex: 1
-	},
-	labels: {
-		position: 'relative',
-		left: 0,
-		zIndex: 2
-	},
-	wrapper: {
-		position: 'relative',
-		zIndex: 1,
-		overflow: 'hidden',
-		backgroundColor: 'gray'
-	}
-};
+// Styles
+var compStyles = require('./CanvasDrawing.module.css');
+var classNames = require('classnames');
 
 class CanvasDrawing extends React.Component {
 	componentWillReceiveProps(newProps) {
@@ -39,11 +23,13 @@ class CanvasDrawing extends React.Component {
 	}
 
 	render() {
-		var {width, zoom: {height}, wrapperProps} = this.props;
+		var {width, zoom: {height}, wrapperProps} = this.props,
+			{className, ...props} = wrapperProps || {},
+			classes = classNames(className, compStyles.wrapper); // Must add tooltip class, if specified in props
 		return (
-			<div ref='div' {...wrapperProps} style={{...styles.wrapper, width, height}}>
-				<canvas style={styles.canvas} ref='canvas'/>
-				<div style={{...styles.labels, top: -height, width, height}} ref='labels'/>
+			<div ref='div' {...props} className={classes} style={{width, height}}>
+				<canvas className={compStyles.canvas} ref='canvas'/>
+				<div className={compStyles.labels} style={{top: -height, width, height}} ref='labels'/>
 			</div>
 		);
 	}

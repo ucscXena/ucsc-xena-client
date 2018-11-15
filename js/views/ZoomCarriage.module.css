@@ -1,0 +1,58 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling Xena sample zoom carriage component.
+ */
+
+@value black24 from '../../css/variables.css';
+@value black54 from '../../css/variables.css';
+
+/* Zoom Carriage */
+.zoomCarriage {
+	left: 0;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	width: 10px;
+}
+
+/* Carriage */
+.carriage {
+	align-items: center;
+	background-color: rgba(255, 255, 255, 0.85);
+	border: 1px solid black24;
+	border-radius: 1px;
+	box-sizing: border-box;
+	display: flex; /* Zoom control */
+	justify-content: space-around;
+	left: -5px;
+	position: absolute;
+	width: 20px;
+	z-index: 100;
+}
+
+/* Carriage lines */
+.carriageLines {
+	border: 0.5px dashed black24;
+	left: 15px;
+	position: absolute;
+	transition: none;
+}
+
+/* Upper carriage line */
+.carriageLines.upper {
+	transform-origin: bottom left;
+}
+
+/* Lower carriage line */
+.carriageLines.lower {
+	transform-origin: top left;
+}
+
+
+/* Carriage lines transition for the the add column hover animation */
+.carriageLines.transitionRotate {
+	transition: transform 200ms 150ms ease-in-out; /* Match transition of margin of ColCard, this is for animating the add column hover functionality */
+}
+
