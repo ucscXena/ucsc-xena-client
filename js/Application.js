@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { Grid, Row, Col } from "react-material-responsive-grid";
 import { AppControls } from './AppControls';
 import { KmPlot } from './KmPlot';
+import SheetControls from './SheetControls';
 import StateError from'./StateError';
 import _  from './underscore_ext';
 import { Stepper } from './views/Stepper';
@@ -93,7 +94,7 @@ class Application extends Component {
 					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> :
 						<AppControls {...otherProps} appState={state} help={searchHelp}
 									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>}
-
+						 <SheetControls actionsDisabled={true} statusDisabled={false}/>
 					<Grid onClick={this.onClick}>
 					{/*
 						<Row>
