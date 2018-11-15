@@ -1,0 +1,80 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling Xena Sheet Control.
+ *
+ */
+
+@value black3 from '../css/variables.css';
+@value black6 from '../css/variables.css';
+@value black12 from '../css/variables.css';
+@value black38 from '../css/variables.css';
+@value black87 from '../css/variables.css';
+
+/* Sheet controls */
+.sheetControls {
+	align-items: flex-start;
+	background-color: #ffffff;
+	border-bottom: 1px solid black12;
+	display: flex;
+	justify-content: space-between;
+	padding: 4px 20px;
+}
+
+.sheetStatus {
+	display: flex;
+	flex: 1;
+	flex-wrap: wrap;
+}
+
+.status {
+	align-items: center;
+	cursor: default;
+	background-color: black3;
+	border-radius: 2px;
+	display: flex;
+	height: inherit;
+	margin: 2px 4px;
+	padding: 2px 6px;
+}
+
+.label {
+	composes: mdOverline from '../css/typography.module.css';
+}
+
+.state {
+	composes: xenaCode from '../css/typography.module.css';
+	margin-left: 4px;
+}
+
+.status i {
+	color: black38;
+	cursor: pointer;
+	font-size: 12px;
+	margin-left: 8px;
+}
+
+.status.disabled i {
+	color: black6;
+	cursor: default;
+}
+
+.sheetActions {
+	align-items: center;
+	display: flex;
+	height: 24px; /* Required to maintain centered buttons when status chips wrap to new line */
+	padding-right: 4px;
+}
+
+.action {
+	composes: xenaTextButton from '../css/typography.module.css';
+	color: var(--color-accent);
+	cursor: pointer;
+	margin-left: 32px;
+}
+
+.action.disabled {
+	color: black12;
+	cursor: default;
+}
