@@ -11,6 +11,7 @@
 
 // Core dependencies, components
 var React = require('react');
+var _ = require('./underscore_ext');
 
 // App dependencies
 var SheetStatus = require('./views/SheetStatus');
@@ -28,12 +29,18 @@ var FilterArray = ["None"];
 class SheetControls extends React.Component {
 
 	render() {
-		var {actionsDisabled, statusDisabled} = this.props;
+		var {actionsDisabled, appState, statusDisabled} = this.props,
+			count = _.getIn(this.props, ['zoom', 'count']) || 0,
+			index = _.getIn(this.props, ['zoom', 'index']) || 0,
+			filterLabel = 'Filter:',
+			zoomLabel = count === appState.samples.length ? 'Zoom:' : 'Zoomed',
+			zoomState = count === appState.samples.length ? 'None' :
+				`to rows ${index + 1} - ${index + count}`;
 		return (
 			<div className={compStyles.sheetControls}>
 				<div className={compStyles.sheetStatus}>
-					<SheetStatus disabled={false} label="Zoom" sheetState="None"/>
-					{FilterArray.map((filter, i) => <SheetStatus key={i} disabled={statusDisabled} label="Filter"
+					<SheetStatus disabled={false} label={zoomLabel} sheetState={zoomState}/>
+					{FilterArray.map((filter, i) => <SheetStatus key={i} disabled={statusDisabled} label={filterLabel}
 																 sheetState={filter}/>)}
 				</div>
 				<div className={compStyles.sheetActions}>
