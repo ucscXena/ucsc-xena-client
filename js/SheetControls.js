@@ -29,7 +29,7 @@ var FilterArray = ["None"];
 class SheetControls extends React.Component {
 
 	render() {
-		var {actionsDisabled, appState, statusDisabled} = this.props,
+		var {actionsDisabled, appState, clearZoom, statusDisabled} = this.props,
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
 			filterLabel = 'Filter:',
@@ -39,7 +39,7 @@ class SheetControls extends React.Component {
 		return (
 			<div className={compStyles.sheetControls}>
 				<div className={compStyles.sheetStatus}>
-					<SheetStatus disabled={false} label={zoomLabel} sheetState={zoomState}/>
+					<SheetStatus disabled={statusDisabled} label={zoomLabel} onClose={clearZoom} sheetState={zoomState}/>
 					{FilterArray.map((filter, i) => <SheetStatus key={i} disabled={statusDisabled} label={filterLabel}
 																 sheetState={filter}/>)}
 				</div>
