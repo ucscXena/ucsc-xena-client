@@ -24,12 +24,12 @@ class SheetStatus extends React.Component {
 	}
 
 	render() {
-		var {disabled, label, sheetState} = this.props;
+		var {disabled, label, onClose, sheetState} = this.props;
 		return (
 			<div className={classNames(compStyles.status, {[compStyles.disabled]: disabled})}>
 				<span className={compStyles.label}>{label}</span>
 				<span className={compStyles.state}>{sheetState}</span>
-				{this.showCancel(sheetState) ? <i className='material-icons'>close</i> : null}
+				{this.showCancel(sheetState) ? <i className='material-icons' onClick={disabled ? null : onClose}>close</i> : null}
 			</div>
 		);
 	}
