@@ -99,11 +99,11 @@ class Application extends Component {
 				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}
 					{showWelcome ? <Welcome onClick={this.onHideWelcome} /> :
 						null}
-					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> :
+					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> : <div>
 						<AppControls {...otherProps} appState={state} help={searchHelp}
-									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>}
+									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>
 						 <SheetControls actionsDisabled={true} appState={state} clearZoom={this.onClearZoom}
-										statusDisabled={editing !== null} zoom={zoom}/>
+										statusDisabled={editing !== null} zoom={zoom}/></div>}
 					<Grid onClick={this.onClick}>
 					{/*
 						<Row>
