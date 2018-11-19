@@ -17,14 +17,7 @@ var _ = require('./underscore_ext');
 var SheetStatus = require('./views/SheetStatus');
 
 // Styles
-// var classNames = require('classnames');
 var compStyles = require('./SheetControls.module.css');
-
-// TODO this is for filters - remove
-// var FilterArray = ["None"];
-
-// TODO create state for when sheetControls mode is active/inactive. Inactive when in edit/create mode.
-// TODO inactive mode, sheetActions state disabled is true and SheetStatus state disabled is true
 
 class SheetControls extends React.Component {
 

@@ -8,26 +8,9 @@
 
 @value black3 from '../../css/variables.css';
 @value black6 from '../../css/variables.css';
-@value black12 from '../../css/variables.css';
 @value black38 from '../../css/variables.css';
-@value black87 from '../../css/variables.css';
 
-/* Sheet controls */
-.sheetControls {
-	align-items: flex-start;
-	background-color: #ffffff;
-	border-bottom: 1px solid black12;
-	display: flex;
-	justify-content: space-between;
-	padding: 4px 20px;
-}
-
-.sheetStatus {
-	display: flex;
-	flex: 1;
-	flex-wrap: wrap;
-}
-
+/* Status indicator */
 .status {
 	align-items: center;
 	cursor: default;
@@ -39,15 +22,18 @@
 	padding: 2px 6px;
 }
 
-.label {
-	composes: mdOverline from '../../css/typography.module.css';
+/* Label and state font */
+.label, .state {
+	composes: mdCaption from '../../css/typography.module.css';
+	letter-spacing: 0.4px;
 }
 
+/* State */
 .state {
-	composes: xenaCode from '../../css/typography.module.css';
 	margin-left: 4px;
 }
 
+/* Close */
 .status i {
 	color: black38;
 	cursor: pointer;
@@ -55,26 +41,8 @@
 	margin-left: 8px;
 }
 
+/* Close disabled */
 .status.disabled i {
 	color: black6;
-	cursor: default;
-}
-
-.sheetActions {
-	align-items: center;
-	display: flex;
-	height: 24px; /* Required to maintain centered buttons when status chips wrap to new line */
-	padding-right: 4px;
-}
-
-.action {
-	composes: xenaTextButton from '../../css/typography.module.css';
-	color: var(--color-accent);
-	cursor: pointer;
-	margin-left: 32px;
-}
-
-.action.disabled {
-	color: black12;
 	cursor: default;
 }
