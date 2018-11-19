@@ -29,7 +29,7 @@ class SheetStatus extends React.Component {
 			<div className={classNames(compStyles.status, {[compStyles.disabled]: disabled})}>
 				<div className={compStyles.label}>{label}</div>
 				<div className={compStyles.state}>{sheetState}</div>
-				{this.showCancel(sheetState) ? <i className='material-icons' onClick={disabled ? null : onClose}>close</i> : null}
+				{this.showCancel(sheetState) ? <i className='material-icons' onClick={disabled ? null : onClose} title='Cancel zoom'>close</i> : null}
 			</div>
 		);
 	}
