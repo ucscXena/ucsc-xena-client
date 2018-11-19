@@ -189,18 +189,14 @@ class AppControls extends PureComponent {
 			tiesOpen = _.get(ties, 'open'),
 			cohortName = _.get(cohort, 'name'),
 			hasColumn = !!columnOrder.length,
-			index = _.getIn(this.props, ['zoom', 'index']) || 0,
-			count = _.getIn(this.props, ['zoom', 'count']) || 0,
 			sampleFilter = _.get(cohort, 'sampleFilter'),
-			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null,
-			fraction = count === samples.length ? '' :
-				`- Zoomed to ${index + 1} - ${index + count}`;
+			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null;
 		return (
 				<AppBar>
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
 						<div className={compStyles.titleContainer}>
 							<span className={compStyles.title}>{cohortName}</span>
-							<span className={compStyles.subtitle}>{filter} {samples.length} Samples {fraction ? fraction : null}</span>
+							<span className={compStyles.subtitle}>{filter} {samples.length} Samples</span>
 						</div>
 						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>
 						<i className='material-icons' onClick={onReset} title='Pick new cohort'>close</i>
