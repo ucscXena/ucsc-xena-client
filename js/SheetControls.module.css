@@ -13,9 +13,10 @@
 	align-items: flex-start;
 	background-color: #ffffff;
 	border-bottom: 1px solid black12;
+	box-sizing: border-box;
 	display: flex;
 	justify-content: space-between;
-	padding: 4px 20px;
+	padding: 0 20px;
 }
 
 /* Sheet Status */
@@ -23,6 +24,7 @@
 	display: flex;
 	flex: 1;
 	flex-wrap: wrap;
+	margin: 4px 0;
 }
 
 /* Sheet Actions */
@@ -30,6 +32,7 @@
 	align-items: center;
 	display: flex;
 	height: 24px; /* Required to maintain centered buttons when status chips wrap to new line */
+	margin: 4px 0;
 	padding-right: 4px;
 }
 
