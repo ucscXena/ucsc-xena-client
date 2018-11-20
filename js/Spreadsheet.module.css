@@ -20,7 +20,7 @@
 	min-width: 272px;
 	position: fixed;
 	text-align: left;
-	top: 152px;
+	top: 169px;
 	white-space: nowrap;
 	z-index: 999;
 }
@@ -38,6 +38,6 @@
 	border-top: 1px solid black6;
 	display: flex;
 	justify-content: flex-end;
-	padding: 8px 16px;
 	margin-top: 24px;
+	padding: 8px 16px;
 }

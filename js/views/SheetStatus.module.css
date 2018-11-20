@@ -13,19 +13,25 @@
 /* Status indicator */
 .status {
 	align-items: center;
-	cursor: default;
 	background-color: black3;
 	border-radius: 2px;
+	cursor: default;
 	display: flex;
-	height: inherit;
+	height: 20px;
 	margin: 2px 4px;
-	padding: 2px 6px;
+	padding: 0 6px;
 }
 
 /* Label and state font */
 .label, .state {
 	composes: mdCaption from '../../css/typography.module.css';
 	letter-spacing: 0.4px;
+	line-height: 20px;
+}
+
+/* Label */
+.label {
+	text-transform: uppercase;
 }
 
 /* State */
