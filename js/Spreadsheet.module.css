@@ -8,7 +8,8 @@
 @value black6 from '../css/variables.css';
 
 .Spreadsheet {
-	padding: 48px 0;
+	display: flex;
+	padding: 16px 0 48px;
 }
 
 .zoomDialog {
