@@ -28,11 +28,11 @@ var compStyles = require('./ColCard.module.css');
 
 class ColCard extends React.Component {
 	render() {
-		var {children, sortable, controls, colId, subtitle, title, wizardMode} = this.props;
+		var {children, sortable, controls, colId, subtitle, title, wizardMode, zoomCard} = this.props;
 		return (
-			<Card className='Column'>
+			<Card className={classNames(compStyles.Column, {[compStyles.zoomCard]: zoomCard})}>
 				<div className={classNames(compStyles.headerContainer, sortable && 'Sortable-handle')}>
-					<CardAvatar colId={colId}/>
+					<CardAvatar colId={colId} zoomCard={zoomCard}/>
 					<div className={compStyles.controls}>
 						{controls}
 						<div className={classNames(compStyles.cover, {[compStyles.showOnHover]: !wizardMode})}/>

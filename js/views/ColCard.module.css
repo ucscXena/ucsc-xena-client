@@ -89,3 +89,15 @@
 .title > div {
 	width: 100%; /* Force RTB title to be full width */ 
 }
+
+/* Zoom card header container */
+.zoomCard .headerContainer {
+	border-bottom: 1px solid transparent;
+	padding: 8px 0;
+}
+
+/* Zoom card title container */
+.zoomCard .titleContainer {
+	border-bottom: 1px solid transparent;
+	padding: 8px 0;
+}
