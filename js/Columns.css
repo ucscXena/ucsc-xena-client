@@ -1,9 +1,10 @@
+/* TODO review margin */
 /** Column wrapper, for both wizard and completed setup */
 .Columns {
 	align-items: flex-start; /* Don't need to vertically stretch individual columns as wizard/ghost cards have min height and col cards have canvas with height specified */
 	display: flex;
-	margin-left: 12px; /* Match 24px gutter (12px from grid + 12px here) */
-	margin-right: 12px; /* Match 24px gutter (12px from grid + 12px here) */
+	margin-left: 16px; /* Match 24px gutter (12px from grid + 12px here) */
+	margin-right: 16px; /* Match 24px gutter (12px from grid + 12px here) */
 }
 
 .Columns canvas {
