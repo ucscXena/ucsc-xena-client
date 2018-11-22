@@ -1,5 +1,5 @@
 'use strict';
-var {Let, assocIn, dissoc, get, getIn, identity, initial, isEqual, last,
+var {Let, assocIn, dissoc, get, identity,
 	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
@@ -12,6 +12,7 @@ var {ignoredType} = require('../models/dataType');
 var Rx = require('../rx');
 import {defaultHost} from '../urlParams';
 import cohortMetaData from '../cohortMetaData';
+import query from './query';
 
 var hubsToAdd = ({hubs, addHub}) =>
 	(hubs || []).concat(addHub || []);
@@ -169,6 +170,7 @@ var sectionDataMethods = {
 };
 
 var sectionData = state =>
+	state.page !== 'datapages' ? [] :
 	Let((method = sectionDataMethods[getSection(defaultHost(state.params))]) =>
 		method ? method(state) : []);
 
@@ -189,35 +191,6 @@ var fetchMethods = {
 	hubMeta: hubMeta
 };
 
-// To make this more general, would need to follow the path until
-// we hit a dispatch method, then pass args.
-// XXX should this inject a common 'error' value, if the query fails?
-// We would need to update some views where we currently map to empty
-// array on error.
-var fetchData = ([type, ...args]) => fetchMethods[type](...args);
-
-// XXX Local mutatable state. The effects controller is stateful wrt
-// data queries.
-var queue = [];
-var outOfDate = {};
-
-// XXX Do we need to handle more actions? We're only handling a minimum.
-var datapagesPostActions = (serverBus, state, newState) => {
-	if (newState.page !== 'datapages') {
-		// Note this means we don't do any cache operations when we leave the page.
-		return;
-	}
-
-	var toFetch = sectionData(newState)
-		.filter(path => (getIn(newState.datapages, path) == null || getIn(outOfDate, path))
-				&& !find(queue, p => isEqual(p, path)));
-
-	toFetch.forEach(path => {
-		queue.push(path);
-		serverBus.next([['merge-data', path], fetchData(path)]);
-	});
-};
-
 var cachePolicy = {
 	// cache all hosts
 	cohorts: identity,
@@ -229,25 +202,8 @@ var cachePolicy = {
 		updateIn(state, ['datapages', path[0]], item => pick(item, path[1]))
 };
 
-var clearCache = fn => (state, path, data) =>
-	(cachePolicy[path[0]] || cachePolicy.default)(fn(state, path, data), path);
-
-var enforceValue = (path, val) => {
-	if (val == null) {
-		// Fetch methods must return a value besides null or undefined. Otherwise
-		// this will create a request loop, where we fetch again because we can't
-		// tell the data has already been fetched.
-		console.error(`Received invalid response for path ${path}`);
-		return {error: 'invalid value'};
-	}
-	return val;
-};
-
-function invalidatePath(state, pattern) {
-	matchKeys(state, pattern).forEach(path => {
-		outOfDate = assocIn(outOfDate, path, true);
-	});
-}
+var {controller: fetchController, invalidatePath} =
+	query(fetchMethods, sectionData, cachePolicy, 'datapages');
 
 // ['cohorts', localHub]
 // ['hubMeta', localHub]
@@ -266,33 +222,18 @@ var invalidateLocalHub = Let(({any} = matchKeys) =>
 		invalidatePath(datapages, ['cohortDatasets', any, localHub]);
 	});
 
-function validatePath(path) {
-	outOfDate = updateIn(outOfDate, initial(path), p => p && dissoc(p, last(path)));
-}
-
 function hubChangePost(serverBus, state, newState) {
 	invalidateLocalHub(newState);
-	datapagesPostActions(serverBus, state, newState);
 }
 
 var controls = {
-	'init-post!': datapagesPostActions,
-	'navigate-post!': datapagesPostActions,
-	'history-post!': datapagesPostActions,
-	'enable-host-post!': datapagesPostActions,
 	'localStatus-post!': hubChangePost,
 	'localQueue-post!': hubChangePost,
-	'merge-data': clearCache((state, path, data) =>
-		assocIn(state, ['datapages', ...path], enforceValue(path, data))),
-	'merge-data-post!': (serverBus, state, newState, path) => {
-		var i = queue.findIndex(p => isEqual(p, path));
-		queue.splice(i, 1);
-		validatePath(path);
-	},
 	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
 };
 
 module.exports = compose(
+		fetchController,
 		mount(make(spreadsheetControls), ['spreadsheet']),
 		make(controls));

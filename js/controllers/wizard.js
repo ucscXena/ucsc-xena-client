@@ -1,10 +1,6 @@
 'use strict';
-// A third experiment in more declarative fetch. Copying this from
-// hub.js. Should extract into a common component if it works well.
-// The dataset fetch is pretty much identical, and could probably
-// be shared with hub.js.
 
-import {Let, assocIn, dissoc, find, flatmap, fmap, getIn, groupBy, identity, initial, isEqual, last, map, matchKeys, pick, updateIn} from '../underscore_ext';
+import {Let, flatmap, fmap, getIn, groupBy, identity, map, matchKeys, pick, updateIn} from '../underscore_ext';
 import {allCohorts, datasetList, allFieldMetadata} from '../xenaQuery';
 var {servers: {localHub}} = require('../defaultServers');
 import {ignoredType} from '../models/dataType';
@@ -12,6 +8,7 @@ import xenaQuery from '../xenaQuery';
 import Rx from '../rx';
 var {userServers} = require('./common');
 import {make, compose} from './utils';
+import query from './query';
 
 var {of} = Rx.Observable;
 
@@ -57,6 +54,7 @@ var allPhenoDatasets = (state, cohort, servers) =>
 // Do we really have to handle linkedHub here?? Shouldn't it be set in state?
 // Depends on order of our reducers? We shouldn't have to deal with it here.
 var wizardData = state =>
+	state.page !== 'heatmap' ? [] :
 	Let(({spreadsheet} = state, servers = userServers(spreadsheet)) => [
 		['cohortMeta'],
 		['cohortPreferred'],
@@ -84,34 +82,6 @@ var fetchMethods = {
 	cohortPhenotype: () => fetchCohortPhenotype()
 };
 
-// To make this more general, would need to follow the path until
-// we hit a dispatch method, then pass args.
-// XXX should this inject a common 'error' value, if the query fails?
-// We would need to update some views where we currently map to empty
-// array on error.
-var fetchData = ([type, ...args]) => fetchMethods[type](...args);
-
-// XXX Local mutatable state. The effects controller is stateful wrt
-// data queries.
-var queue = [];
-var outOfDate = {};
-
-var wizardPostActions = (serverBus, state, newState) => {
-	if (newState.page !== 'heatmap') {
-		// Note this means we don't do any cache operations when we leave the page.
-		return;
-	}
-
-	var toFetch = wizardData(newState)
-		.filter(path => (getIn(newState.wizard, path) == null || getIn(outOfDate, path))
-				&& !find(queue, p => isEqual(p, path)));
-
-	toFetch.forEach(path => {
-		queue.push(path);
-		serverBus.next([['wizard-merge-data', path], fetchData(path)]);
-	});
-};
-
 // XXX review this for wizard
 var cachePolicy = {
 	// cache all hosts
@@ -128,30 +98,8 @@ var cachePolicy = {
 		updateIn(state, ['wizard', path[0]], item => pick(item, path[1]))
 };
 
-var clearCache = fn => (state, path, data) =>
-	(cachePolicy[path[0]] || cachePolicy.default)(fn(state, path, data), path);
-
-var enforceValue = (path, val) => {
-	if (val == null) {
-		// Fetch methods must return a value besides null or undefined. Otherwise
-		// this will create a request loop, where we fetch again because we can't
-		// tell the data has already been fetched.
-		console.error(`Received invalid response for path ${path}`);
-		return {error: 'invalid value'};
-	}
-	return val;
-};
-
-function invalidatePath(state, pattern) {
-	matchKeys(state, pattern).forEach(path => {
-		outOfDate = assocIn(outOfDate, path, true);
-	});
-}
-
-// mark as valid
-function validatePath(path) {
-	outOfDate = updateIn(outOfDate, initial(path), p => p && dissoc(p, last(path)));
-}
+var {controller: fetchController, invalidatePath} =
+	query(fetchMethods, wizardData, cachePolicy, 'wizard');
 
 var invalidateCohorts = Let(({any} = matchKeys) =>
 	function ({wizard}) {
@@ -175,18 +123,6 @@ var controls = {
 	'localQueue-post!': invalidateLocalHub,
 	'refresh-cohorts-post!': (serverBus, state, newState) =>
 		invalidateCohorts(newState),
-	'wizard-merge-data': clearCache((state, path, data) =>
-		assocIn(state, ['wizard', ...path], enforceValue(path, data))),
-	'wizard-merge-data-post!': (serverBus, state, newState, path) => {
-		var i = queue.findIndex(p => isEqual(p, path));
-		queue.splice(i, 1);
-		validatePath(path);
-	},
-};
-
-var fetchController = {
-	action: identity,
-	postAction: wizardPostActions
 };
 
 export default compose(fetchController, make(controls));
