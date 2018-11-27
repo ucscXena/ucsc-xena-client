@@ -10,3 +10,10 @@
 	margin-right: 4px; /* Remainder of 16px gutter between indicator and Columns */
 	position: relative;
 }
+
+.zoomCarriage {
+	height: 100%;
+	left: -5px;
+	position: absolute;
+	top: 0;
+}

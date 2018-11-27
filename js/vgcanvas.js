@@ -81,6 +81,15 @@ function vgcanvas(el, vgw, vgh) {
 			clipReset();
 		},
 
+		dashedLine = function(x, y, mtx, mty, c) {
+			ctx.setLineDash([2, 2, 4, 4]);
+			ctx.beginPath();
+			ctx.moveTo(x, y);
+			ctx.lineTo(mtx, mty);
+			ctx.strokeStyle = c;
+			ctx.stroke();
+		},
+
 		width = function (w) {
 			if (_.isNumber(w)) {
 				el.width = w;
@@ -263,6 +272,7 @@ function vgcanvas(el, vgw, vgh) {
 		clipRect,
 		clipReset,
 		clip,
+		dashedLine,
 		text,
 		textCentered,
 		textCenteredPushRight,
