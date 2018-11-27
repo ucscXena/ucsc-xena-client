@@ -12,6 +12,10 @@
 	padding: 16px 0 48px;
 }
 
+.sampleZoomIndicator {
+    margin: 0 4px 0 12px;
+}
+
 .zoomDialog {
 	background-color: #ffffff;
 	border-radius: 2px;
