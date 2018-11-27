@@ -404,9 +404,17 @@ var ping = host => ajax({
 	crossDomain: true,
 	responseType: 'text'});
 
+var toStatusDep = r =>
+	JSON.parse(r.response) === 3 ? 'old' :
+	'down';
+
+var toStatus = r =>
+	r.response === 'pong' ? 'up' :
+	'down';
+
 var pingOrExp = host =>
-		ping(host).map(r => r.response === 'pong' ? 'up' : 'down').catch(e =>
-			e.status === 404 ? ajax(xenaPost(host, '(+ 1 2)')).map(r => JSON.parse(r.response) === 3 ? 'up' : 'down') :
+		ping(host).map(toStatus).catch(e =>
+			e.status === 404 ? ajax(xenaPost(host, '(+ 1 2)')).map(toStatusDep) :
 			Rx.Observable.throw(e));
 
 var testStatus = (host, timeout = 5000) =>

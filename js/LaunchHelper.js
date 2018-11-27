@@ -101,7 +101,7 @@ class XenaDownload extends React.Component {
 
 	render() {
 		var {files} = this.state,
-			{advanced} = this.props,
+			{isFirst, advanced} = this.props,
 			os = getOs(),
 			arch = os === 'OS X' ? osxArch() : getIn(platform, ['os', 'architecture']),
 			defaultTarget = getIn(defaults, [os, arch]),
@@ -112,7 +112,7 @@ class XenaDownload extends React.Component {
 				<div className={styles.i4j}>
 					<p>Supported by <a href='https://www.ej-technologies.com/products/install4j/overview.html'><img src={i4jLogo}/></a></p>
 				</div>
-				<p>If this is your first time, {defaultInstall ?
+				<p>{isFirst ? 'If this is your first time, ' : 'Please '}{defaultInstall ?
 					<Link className={styles.downloadLink} href={defaultInstall} label='download and run a Local Xena hub.'/> : 'download and run a Local Xena hub, from the list below:'}</p>
 				{defaultInstall ? <span className={styles.advancedLink} onClick={this.onShowAdvanced}>{advanced ? 'Fewer options...' : 'More options...'}</span> : null}
 				{defaultInstall ? <br/> : null}
@@ -132,6 +132,8 @@ var statusHelp = {
 	started: launchingHelp,
 	up: ['Your local Xena Hub is running.',
 		<p>To view your data, use the "Visualization" button</p>],
+	old: ['Your local Xena Hub is out of date.',
+		<p></p>],
 	lost: ['We have lost contact with your Local Xena Hub.',
 		<p>To re-start it, you may reload this page.</p>]
 };
@@ -219,7 +221,7 @@ var wrap = Comp => class extends PureComponent {
 					<div className={styles.padding}></div>
 					<div className={styles.status}>
 						{help}
-						{status !== 'up' && status !== 'lost' ? <XenaDownload advanced={advanced} onShowAdvanced={this.onShowAdvanced}/> : null}
+						{status !== 'up' && status !== 'lost' ? <XenaDownload isFirst={status !== 'old'} advanced={advanced} onShowAdvanced={this.onShowAdvanced}/> : null}
 					</div>
 					<p className={styles.footer}>A Local Xena Hub is an application on your computer for loading and storing data.</p>
 				</Dialog>
