@@ -134,9 +134,13 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 }
 
 function geneProbesToHeatmap(column, vizSettings, data, samples) {
-	var pos = parsePos(column.fields[0]); // disabled until we support the query
-	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
+	var pos = parsePos(column.fields[0]);
+	if (_.isEmpty(data) || _.isEmpty(data.req) || !data.refGene) {
 		return null;
+	}
+	if (!pos && _.isEmpty(data.refGene)) {
+		// got refGene, but it's empty.
+		return dataToHeatmap(column, vizSettings, data, samples);
 	}
 	var {req} = data,
 		refGeneObj = _.first(_.values(data.refGene)),
