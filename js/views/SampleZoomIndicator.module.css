@@ -1,0 +1,12 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling Xena sample zoom indicator component.
+ */
+
+.sampleZoomIndicator {
+	margin-left: 12px; /* Match 24px gutter (12px from grid + 12px here) */
+	margin-right: 4px; /* Remainder of 16px gutter between indicator and Columns */
+	position: relative;
+}

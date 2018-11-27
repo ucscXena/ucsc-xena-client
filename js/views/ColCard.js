@@ -30,7 +30,7 @@ class ColCard extends React.Component {
 	render() {
 		var {children, sortable, controls, colId, subtitle, title, wizardMode, zoomCard} = this.props;
 		return (
-			<Card className={classNames(compStyles.Column, {[compStyles.zoomCard]: zoomCard})}>
+			<Card className={classNames('Column', {[compStyles.zoomCard]: zoomCard})}>
 				<div className={classNames(compStyles.headerContainer, sortable && 'Sortable-handle')}>
 					<CardAvatar colId={colId} zoomCard={zoomCard}/>
 					<div className={compStyles.controls}>
