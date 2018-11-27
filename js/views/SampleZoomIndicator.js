@@ -18,6 +18,9 @@ var CanvasDrawing = require('../CanvasDrawing');
 var {drawSamples} = require('../drawSamples');
 var ColCard = require('./ColCard');
 
+// Styles
+var compStyles = require('./SampleZoomIndicator.module.css');
+
 class SampleZoomIndicator extends PureComponent {
 
 	render() {
@@ -27,7 +30,7 @@ class SampleZoomIndicator extends PureComponent {
 			width = 10;
 
 		return (
-			<div style={{width: width, position: 'relative'}}>
+			<div className={compStyles.sampleZoomIndicator} style={{width: width}}>
 				<ColCard zoomCard={true}>
 					<div style={{height: 63}}/>
 					<CanvasDrawing
