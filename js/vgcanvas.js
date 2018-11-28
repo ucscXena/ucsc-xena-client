@@ -88,6 +88,7 @@ function vgcanvas(el, vgw, vgh) {
 			ctx.lineTo(mtx, mty);
 			ctx.strokeStyle = c;
 			ctx.stroke();
+			ctx.setLineDash([]);
 		},
 
 		width = function (w) {

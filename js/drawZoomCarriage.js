@@ -8,8 +8,12 @@ function draw(vg, opts) {
 		zch = Math.round((height / samplesCount).toFixed(2) * count),
 		zcw = 20;
 
+	/* Clear */
+	vg.clear(0, 0, width, height);
+
 	vg.smoothing(false); // For some reason this works better if we do it every time.
 
+	/* Zoom Carriage */
 	vg.drawRectangles([[0.5, posY, zcw, zch]],
 		{
 			fillStyle: 'rgba(255, 255, 255, 0.8)',
