@@ -206,7 +206,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						interactive={interactive}
 						hasSurvival={hasSurvival}
 						cohort={appState.cohort}
-                        onAbout={this.onAbout}
+						onAbout={this.onAbout}
 						onViz={this.onOpenVizSettings}
 						onEdit={supportsEdit(_.get(appState.columns, id)) &&
 							interactive ? this.onEdit : null}

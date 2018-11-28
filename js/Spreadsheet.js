@@ -41,7 +41,7 @@ var getSpreadsheet = columnsWrapper => {
 					}) : null;
 			return (
 				<div className={compStyles.Spreadsheet}>
-					{zoom.count < samples.length ? <SampleZoomIndicator data={data.samples} column={columns.samples} samples={samples} zoom={zoom} zoomOut={onZoomOut}></SampleZoomIndicator> : null }
+					{zoom.count < samples.length ? <SampleZoomIndicator data={data.samples} column={columns.samples} samples={samples} zoom={zoom} zoomOut={onZoomOut}/> : null }
 					<Columns appState={this.props.appState} {...otherProps}>
 						{children}
 					</Columns>
