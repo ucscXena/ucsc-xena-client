@@ -21,7 +21,6 @@ class ZoomCarriage extends PureComponent {
 	render() {
 		var {samplesCount, width, zoom} = this.props;
 
-		console.log(zoom);
 		return (
 			<CanvasDrawing
 				ref='plot'

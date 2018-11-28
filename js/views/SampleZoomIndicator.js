@@ -28,12 +28,20 @@ function noZoom(samples, zoom) {
 	return _.merge(zoom, {count: samples, index: 0});
 }
 
+function getZoomControlYPos(samplesCount, zoom) {
+		var posY = (Math.round((zoom.height / samplesCount) * zoom.index) - 9),
+		zch = Math.round((zoom.height / samplesCount).toFixed(2) * zoom.count / 2);
+
+	return (posY + zch);
+}
+
 class SampleZoomIndicator extends PureComponent {
 
 	render() {
-		var {data, column, samples, zoom} = this.props,
+		var {data, column, zoomOut, samples, zoom} = this.props,
 			{heatmap} = column,
 			codes = _.get(data, 'codes'),
+			zoomControlYPos = getZoomControlYPos(samples.length, zoom),
 			width = 10;
 
 		return (
@@ -48,7 +56,7 @@ class SampleZoomIndicator extends PureComponent {
 							width={width}
 							zoom={noZoom(samples.length, zoom)}
 							heatmapData={heatmap}/>
-						<div className={compStyles.zoomCarriage}><ZoomCarriage samplesCount={samples.length} width={31} zoom={zoom}/></div>
+						<div className={compStyles.zoomCarriage}><a className={compStyles.zoomControl} style={{top: zoomControlYPos}} onClick={zoomOut}><i className='material-icons'>remove_circle</i></a><ZoomCarriage samplesCount={samples.length} width={31} zoom={zoom}/></div>
 					</div>
 				</ColCard>
 			</div>);
