@@ -28,6 +28,7 @@ class ZoomCarriage extends PureComponent {
 				draw={drawZoomCarriage}
 				samplesCount={samplesCount}
 				width={width}
+				zoomCarriage={true}
 				zoom={zoom}/>);
 	}
 };

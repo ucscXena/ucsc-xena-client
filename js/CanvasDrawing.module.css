@@ -1,0 +1,30 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling canvas drawing component.
+ */
+
+.canvas {
+	left: 0;
+	position: relative;
+	top: 0;
+	z-index: 1
+}
+
+.labels {
+	left: 0;
+	position: relative;
+	z-index: 2
+}
+
+.wrapper {
+	background-color: gray;
+	overflow: hidden;
+	position: relative;
+	z-index: 1;
+}
+
+.zoomCarriage {
+	background-color: transparent;
+}
