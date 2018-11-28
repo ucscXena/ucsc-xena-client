@@ -103,6 +103,12 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		this.props.callback(['xzoom', id, xzoom]);
 	};
 
+	onZoomOut = () => {
+		let {callback, appState: {zoom, samples}} = this.props;
+		gaEvents('spreadsheet', 'zoom', 'out');
+		callback(['zoom', zoomOut(samples.length, zoom)]);
+	};
+
 	onRemove = (id) => {
 		this.props.callback(['remove', id]);
 	};
@@ -190,6 +196,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 					onAddColumn={this.onAddColumn}
 					onOpenVizSettings={this.onOpenVizSettings}
 					onVizSettings={this.onVizSettings}
+					onZoomOut={this.onZoomOut}
 					interactive={interactive}
 					onInteractive={this.onInteractive}
 					{...this.props}>
