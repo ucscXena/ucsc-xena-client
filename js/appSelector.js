@@ -151,8 +151,8 @@ var datasetsSelector = createSelector(
 
 // XXX should try to deprecate this & use cohortFeatures
 var featuresByDsID = cohortFeatures =>
-	_.object(_.map(cohortFeatures, (datasets, host) =>
-		_.flatmap(datasets, (features, dataset) =>
+	_.object(_.flatmap(cohortFeatures, (datasets, host) =>
+		_.map(datasets, (features, dataset) =>
 			[JSON.stringify({host, name: dataset}), features])));
 
 var featuresSelector = createSelector(
