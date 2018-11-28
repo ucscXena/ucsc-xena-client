@@ -28,24 +28,34 @@ function noZoom(samples, zoom) {
 	return _.merge(zoom, {count: samples, index: 0});
 }
 
-function getZoomControlYPos(samplesCount, zoom) {
-		var posY = (Math.round((zoom.height / samplesCount) * zoom.index) - 9),
-		zch = Math.round((zoom.height / samplesCount).toFixed(2) * zoom.count / 2);
-
-	return (posY + zch);
-}
+// function getZoomControlYPos(samplesCount, zoom) {
+// 		var posY = Math.round(zoom.height / samplesCount * zoom.index) - 8,
+// 		zch = ((zoom.height / samplesCount).toFixed(2)) * zoom.count / 2;
+//
+// 	return (posY + zch);
+// }
 
 class SampleZoomIndicator extends PureComponent {
+	state = {zWidth: 31};
+
+	increaseWidth = () => {
+		this.setState({zWidth: 23});
+	};
+
+	decreaseWidth = () => {
+		this.setState({zWidth: 31});
+	};
 
 	render() {
-		var {data, column, zoomOut, samples, zoom} = this.props,
+		var {data, column, samples, zoom} = this.props,
+			{zWidth} = this.state,
 			{heatmap} = column,
 			codes = _.get(data, 'codes'),
-			zoomControlYPos = getZoomControlYPos(samples.length, zoom),
 			width = 10;
+			// zoomControlYPos = getZoomControlYPos(samples.length, zoom),
 
 		return (
-			<div className={compStyles.sampleZoomIndicator} style={{width: width}}>
+			<div className={compStyles.sampleZoomIndicator} style={{width: width}} onMouseOver={this.increaseWidth} onMouseOut={this.decreaseWidth}>
 				<ColCard zoomCard={true}>
 					<div style={{height: 63}}/>
 					<div style={{position: 'relative'}}>
@@ -56,7 +66,7 @@ class SampleZoomIndicator extends PureComponent {
 							width={width}
 							zoom={noZoom(samples.length, zoom)}
 							heatmapData={heatmap}/>
-						<div className={compStyles.zoomCarriage}><a className={compStyles.zoomControl} style={{top: zoomControlYPos}} onClick={zoomOut}><i className='material-icons'>remove_circle</i></a><ZoomCarriage samplesCount={samples.length} width={31} zoom={zoom}/></div>
+						<ZoomCarriage samplesCount={samples.length} width={zWidth} zoom={zoom}/>
 					</div>
 				</ColCard>
 			</div>);
