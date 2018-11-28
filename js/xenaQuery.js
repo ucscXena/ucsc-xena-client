@@ -425,7 +425,7 @@ var testStatus = (host, timeout = 5000) =>
 			{status: status === 503 && response === 'Database booting' ? 'started' : 'down'}));
 
 // test if host is up
-var testHost = (host, timeout = 5000) => testStatus(host, timeout).map(({status}) => status === 'up');
+var testHost = (host, timeout = 5000) => testStatus(host, timeout).map(({status}) => status === 'up' || status === 'old');
 
 var cohortMetaURL = `${cohortMetaData}/xenacohort_tag.json`;
 
