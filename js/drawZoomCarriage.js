@@ -1,5 +1,7 @@
 'use strict';
 
+// Reference http://diveintohtml5.info/canvas.html
+// x and y start position moved by 0.5px
 function draw(vg, opts) {
 	var {count, height, index, samplesCount, width} = opts,
 		posY = Math.round((height / samplesCount) * index) + 0.5,
