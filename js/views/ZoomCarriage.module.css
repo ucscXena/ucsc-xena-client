@@ -19,10 +19,13 @@
 
 /* Carriage */
 .carriage {
+	align-items: center;
 	background-color: rgba(255, 255, 255, 0.85);
 	border: 1px solid black24;
 	border-radius: 1px;
 	box-sizing: border-box;
+	display: flex; /* Zoom control */
+	justify-content: space-around;
 	left: -5px;
 	position: absolute;
 	width: 20px;
@@ -46,25 +49,19 @@
 	transform-origin: top left;
 }
 
-/* Zoom control */
+/* Zoom control - hide */
 .zoomCarriage .zoomControl {
 	display: none;
 }
 
 /* Zoom control - show on zoomCarriage hover */
 .zoomCarriage:hover .zoomControl {
-	cursor: pointer;
-	display: block;
-	left: 50%;
-	position: absolute;
-	top: 50%;
-	transform: translate(-50%, -50%);
-	z-index: 101;
-}
-
-/* Zoom out icon */
-.zoomCarriage:hover .zoomControl i {
 	color: black54;
+	cursor: pointer;
+	display: flex;
+	font-family: "Material Icons";
 	font-size: 18px;
+	line-height: 18px;
+	z-index: 101;
 }
 
