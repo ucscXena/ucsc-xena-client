@@ -37,7 +37,7 @@ class ZoomCarriage extends PureComponent {
 		return (
 			<div className={compStyles.zoomCarriage}>
 				<div className={compStyles.carriage} style={{height: carriageHeight, top: startOfCarriage}}>
-					<a className={compStyles.zoomControl} onClick={zoomOut}><i className='material-icons'>remove_circle</i></a>
+					<div className={compStyles.zoomControl} onClick={zoomOut}>remove_circle</div>
 				</div>
 				<div className={classNames(compStyles.carriageLines, compStyles.upper)}
 					 style={{top: startOfCarriage, transform: this.getRotation(angleUpper), width: upperLine}}/>
