@@ -115,7 +115,7 @@ var Hub = class extends React.Component {
 	};
 
 	render() {
-		var {state, selector, children, badge} = this.props,
+		var {state, selector, badge} = this.props,
 			hubParams = getHubParams(state),
 			{ping} = this.state,
 			servers = selector(state),
@@ -128,7 +128,6 @@ var Hub = class extends React.Component {
 			}));
 		return (
 			<div className={styles.hubPage}>
-				{children /* LaunchHelper */}
 				<h1 className={typStyles.mdHeadline}>Data Hubs</h1>
 				<Card>
 					<ul className={styles.hubList}>
