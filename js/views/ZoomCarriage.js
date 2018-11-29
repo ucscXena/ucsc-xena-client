@@ -14,29 +14,35 @@ var React = require('react');
 
 // Styles
 var compStyles = require('./ZoomCarriage.module.css');
+var classNames = require('classnames');
 
 class ZoomCarriage extends PureComponent {
 
 	getRotation = (angle) => {
-		return "rotate(" + angle + "deg)";
+		return 'rotate(' + angle + 'deg)';
 	};
 
+
 	render() {
-		var {samplesCount, zoom} = this.props,
-		topPos = Math.round((zoom.height / samplesCount) * zoom.index),
-		heightCarriage = Math.round((zoom.height / samplesCount).toFixed(2) * zoom.count),
-		botPos = topPos + heightCarriage - 1,
-		botLength = zoom.height - topPos - heightCarriage,
-		angleUpperIndicator = Math.atan(topPos / 11) * 180 / Math.PI,
-		lengthUpperIndicator = Math.sqrt(Math.pow(11, 2) + Math.pow(topPos, 2)),
-		angleLowerIndicator = Math.atan((botLength) / 11) * 180 / Math.PI,
-		lengthLowerIndicator = Math.sqrt(Math.pow(11, 2) + Math.pow(botLength, 2));
+		var {samplesCount, zoom, zoomOut} = this.props,
+			startOfCarriage = Math.round((zoom.height / samplesCount) * zoom.index),
+			carriageHeight = Math.round((zoom.height / samplesCount).toFixed(2) * zoom.count),
+			endOfCarriage = startOfCarriage + carriageHeight - 1,
+			endCarriageToBottom = zoom.height - startOfCarriage - carriageHeight,
+			angleUpper = -Math.atan(startOfCarriage / 11) * 180 / Math.PI,
+			upperLine = Math.sqrt(Math.pow(11, 2) + Math.pow(startOfCarriage, 2)),
+			angleLower = Math.atan((endCarriageToBottom) / 11) * 180 / Math.PI,
+			lowerLine = Math.sqrt(Math.pow(11, 2) + Math.pow(endCarriageToBottom, 2));
 
 		return (
 			<div className={compStyles.zoomCarriage}>
-				<div className={compStyles.carriage} style={{height: heightCarriage, top: topPos}}/>
-				<div className={compStyles.carriageLines} style={{top: topPos, transform: this.getRotation(-angleUpperIndicator), width: lengthUpperIndicator}}/>
-				<div className={compStyles.carriageLines} style={{top: botPos, transform: this.getRotation(angleLowerIndicator), width: lengthLowerIndicator}}/>
+				<div className={compStyles.carriage} style={{height: carriageHeight, top: startOfCarriage}}>
+					<a className={compStyles.zoomControl} onClick={zoomOut}><i className='material-icons'>remove_circle</i></a>
+				</div>
+				<div className={classNames(compStyles.carriageLines, compStyles.upper)}
+					 style={{top: startOfCarriage, transform: this.getRotation(angleUpper), width: upperLine}}/>
+				<div className={classNames(compStyles.carriageLines, compStyles.lower)}
+					 style={{top: endOfCarriage, transform: this.getRotation(angleLower), width: lowerLine}}/>
 			</div>);
 	}
 };

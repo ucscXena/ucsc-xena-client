@@ -13,31 +13,3 @@
 	margin-right: 4px; /* Remainder of 16px gutter between indicator and Columns */
 	position: relative;
 }
-
-/* Zoom Carriage */
-.zoomCarriage {
-	height: 100%;
-	left: -5px;
-	position: absolute;
-	top: 0;
-}
-
-/* Zoom control */
-.zoomCarriage .zoomControl {
-	display: none;
-}
-
-/* Zoom control - show on zoomCarriage hover */
-.zoomCarriage:hover .zoomControl {
-	cursor: pointer;
-	display: block;
-	left: 1.5px; /* zoomCarriage left position 0.5px */
-	position: absolute;
-	z-index: 100;
-}
-
-/* Zoom out icon */
-.zoomCarriage:hover .zoomControl i {
-	color: black54;
-	font-size: 18px;
-}
