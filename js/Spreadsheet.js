@@ -5,12 +5,12 @@ var React = require('react');
 require('react-resizable/css/styles.css');
 var getColumns = require('./views/Columns');
 import SampleZoomIndicator from './views/SampleZoomIndicator';
-var classNames = require('classnames');
 import {Button} from 'react-toolbox/lib/button';
 
 // Styles
 require('./Columns.css'); // XXX switch to js styles
 var compStyles = require('./Spreadsheet.module.css');
+var classNames = require('classnames');
 
 function zoomPopover(props) {
 	return (
@@ -41,7 +41,7 @@ var getSpreadsheet = columnsWrapper => {
 					}) : null;
 			return (
 				<div className={compStyles.Spreadsheet}>
-					{zoom.count < samples.length ? <SampleZoomIndicator data={data.samples} column={columns.samples} samples={samples} zoom={zoom} zoomOut={onZoomOut}/> : null }
+					{zoom.count < samples.length ? <SampleZoomIndicator data={data.samples} column={columns.samples} samples={samples} zoom={zoom} onZoomOut={onZoomOut}/> : null }
 					<Columns appState={this.props.appState} {...otherProps}>
 						{children}
 					</Columns>

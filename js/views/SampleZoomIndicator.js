@@ -28,34 +28,16 @@ function noZoom(samples, zoom) {
 	return _.merge(zoom, {count: samples, index: 0});
 }
 
-// function getZoomControlYPos(samplesCount, zoom) {
-// 		var posY = Math.round(zoom.height / samplesCount * zoom.index) - 8,
-// 		zch = ((zoom.height / samplesCount).toFixed(2)) * zoom.count / 2;
-//
-// 	return (posY + zch);
-// }
-
 class SampleZoomIndicator extends PureComponent {
-	state = {zWidth: 31};
-
-	increaseWidth = () => {
-		this.setState({zWidth: 23});
-	};
-
-	decreaseWidth = () => {
-		this.setState({zWidth: 31});
-	};
 
 	render() {
-		var {data, column, samples, zoom} = this.props,
-			{zWidth} = this.state,
+		var {data, column, samples, zoom, onZoomOut} = this.props,
 			{heatmap} = column,
 			codes = _.get(data, 'codes'),
 			width = 10;
-			// zoomControlYPos = getZoomControlYPos(samples.length, zoom),
 
 		return (
-			<div className={compStyles.sampleZoomIndicator} style={{width: width}} onMouseOver={this.increaseWidth} onMouseOut={this.decreaseWidth}>
+			<div className={compStyles.sampleZoomIndicator} style={{width: width}}>
 				<ColCard zoomCard={true}>
 					<div style={{height: 63}}/>
 					<div style={{position: 'relative'}}>
@@ -66,7 +48,7 @@ class SampleZoomIndicator extends PureComponent {
 							width={width}
 							zoom={noZoom(samples.length, zoom)}
 							heatmapData={heatmap}/>
-						<ZoomCarriage samplesCount={samples.length} width={zWidth} zoom={zoom}/>
+						<ZoomCarriage samplesCount={samples.length} width={width} zoom={zoom} zoomOut={onZoomOut}/>
 					</div>
 				</ColCard>
 			</div>);
