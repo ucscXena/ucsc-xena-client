@@ -235,6 +235,7 @@ var spreadsheetControls = {
 	'sample-search': (state, text) => _.assoc(state, 'sampleSearch', text),
 	// XXX maybe this should be transient state, instead, since it's not
 	// meaningful after reload?
+	'columnHover': (state, hovering) => _.assoc(state, 'columnHover', hovering),
 	'highlightSelect': (state, highlight) => _.assoc(state, 'highlightSelect', highlight),
 	'vizSettings-open': (state, id) => _.assoc(state, 'openVizSettings', id),
 	'sortDirection': (state, id, newDir) =>
