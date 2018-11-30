@@ -6,6 +6,7 @@
  */
 
 @value black24 from '../../css/variables.css';
+
 @value black54 from '../../css/variables.css';
 
 /* Zoom Carriage */
@@ -37,6 +38,7 @@
 	border: 0.5px dashed black24;
 	left: 15px;
 	position: absolute;
+	transition: transform 200ms 150ms ease-in-out; /* Match transition of margin of ColCard, this is for animating the add column hover functionality */
 }
 
 /* Upper carriage line */

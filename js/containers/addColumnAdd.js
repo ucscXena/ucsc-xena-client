@@ -32,8 +32,11 @@ function addColumnAdd(Component) {
 		};
 
 	    onHover = (index, hovering) => {
-	    	console.log(hovering);
-			this.props.callback(['columnHover', hovering]);
+
+	    	if ( index === 0 ) {
+				this.props.callback(['columnHover', hovering]);
+			}
+
 			this.setState({hover: hovering ? index : null});
 		};
 
