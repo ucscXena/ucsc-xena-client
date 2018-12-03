@@ -156,7 +156,7 @@ class ImportForm extends React.Component {
 				) : null}
 
 				<div style={{ marginTop: '1em' }}>
-					<Button icon='help_outline' label='Help on data file formatting' accent flat={false}/>
+					<Button icon='help_outline' target='_blank' href='https://ucsc-xena.gitbook.io/project/local-xena-hub/data-format-specifications' label='Help on data file formatting' accent flat={false}/>
 				</div>
 			</div>
 		);
@@ -176,7 +176,7 @@ class ImportForm extends React.Component {
 					{showMoreDataTypes ? 'Less data types...' : 'More data types...'}
 				</p>
 
-				<Button className={styles.dataTypeHelp} label="HELP" accent flat={false}/>
+				<Button href='https://ucsc-xena.gitbook.io/project/local-xena-hub/data-format-specifications' target='_blank' className={styles.dataTypeHelp} label="HELP" accent flat={false}/>
 
 				<h4>File preview</h4>
 				{this.renderFilePreview()}
@@ -538,7 +538,7 @@ class ImportPage extends React.Component {
 			<div>
 				<div className={styles.wizardTitle}>
 					Loading data...
-					<Button label='Help' accent style={{marginLeft: '30px', backgroundColor: '#f7f7f7'}}/>
+					<Button label='Help' target='_blank' href='https://ucsc-xena.gitbook.io/project/local-xena-hub' accent style={{marginLeft: '30px', backgroundColor: '#f7f7f7'}}/>
 					<div className={styles.stepperBox}>
 						<Stepper mode={wizardPage} steps={steps} stateIndex={pageStateIndex} flat={true} wideStep={true}/>
 					</div>
