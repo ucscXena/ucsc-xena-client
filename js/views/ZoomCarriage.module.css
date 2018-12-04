@@ -34,7 +34,7 @@
 }
 
 /* Carriage lines */
-.carriageLines {
+.zoomCarriage .carriageLines {
 	border: 0.5px dashed black24;
 	left: 15px;
 	position: absolute;
@@ -42,13 +42,18 @@
 }
 
 /* Upper carriage line */
-.carriageLines.upper {
+.zoomCarriage .carriageLines.upper {
 	transform-origin: bottom left;
 }
 
 /* Lower carriage line */
-.carriageLines.lower {
+.zoomCarriage .carriageLines.lower {
 	transform-origin: top left;
+}
+
+/* Carriage lines transition for animating the add column hover */
+.zoomCarriage:hover .carriageLines, .zoomCarriage.noTransition .carriageLines {
+	transition: none;
 }
 
 /* Zoom control - hide */
