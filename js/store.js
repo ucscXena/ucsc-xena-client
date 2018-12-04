@@ -49,7 +49,6 @@ module.exports = function () {
 		spreadsheet: {
 			columnOrder: [],
 			columns: {},
-			hovering: false,
 			mode: 'heatmap',
 			notifications: getNotifications(),
 			servers: defaultServerState,

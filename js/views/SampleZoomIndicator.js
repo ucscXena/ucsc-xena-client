@@ -31,7 +31,7 @@ function noZoom(samples, zoom) {
 class SampleZoomIndicator extends PureComponent {
 
 	render() {
-		var {data, column, columnHover, samples, zoom, onZoomOut} = this.props,
+		var {data, column, addColumnAddHover, samples, zoom, onZoomOut} = this.props,
 			{heatmap} = column,
 			codes = _.get(data, 'codes'),
 			width = 10;
@@ -48,7 +48,7 @@ class SampleZoomIndicator extends PureComponent {
 							width={width}
 							zoom={noZoom(samples.length, zoom)}
 							heatmapData={heatmap}/>
-						<ZoomCarriage columnHover={columnHover} samplesCount={samples.length} width={width} zoom={zoom} zoomOut={onZoomOut}/>
+						<ZoomCarriage addColumnAddHover={addColumnAddHover} samplesCount={samples.length} width={width} zoom={zoom} zoomOut={onZoomOut}/>
 					</div>
 				</ColCard>
 			</div>);
