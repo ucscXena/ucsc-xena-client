@@ -136,7 +136,7 @@ var CohortHeader = ({inHubs, host, onImport, badge}) => {
 			{isLocalHub(host) &&
 			<div className={styles.headerButtons}>
 				<Button label={"Load Data"} onClick={onImport} accent />
-				<Button label={"Help"} accent />
+				<Button label={"Help"} target="_blank" href='https://ucsc-xena.gitbook.io/project/local-xena-hub' accent />
 			</div>}
 
 			{isLocalHub(host) ? null : <p>Host address: {host}</p>}
