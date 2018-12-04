@@ -34,13 +34,13 @@ function addColumnAdd(Component) {
 	    onHover = (index, hovering) => {
 
 	    	if ( index === 0 ) {
-				this.props.callback(['columnHover', hovering]);
+				this.props.callback(['addColumnAddHover', hovering]);
 			}
 
 			this.setState({hover: hovering ? index : null});
 		};
 
-	    render() {
+		render() {
 			var {children, ...otherProps} = this.props,
 				{appState: {wizardMode}, interactive} = otherProps,
 				{hover} = this.state,
