@@ -196,7 +196,7 @@ var wrap = Comp => class extends PureComponent {
 	}
 
 	actions = [
-		{label: 'Help', onClick: this.onHelp},
+		{label: 'Help', target: '_blank', href: 'https://ucsc-xena.gitbook.io/project/local-xena-hub'},
 		{label: 'Close', onClick: this.onHide}
 	];
 
