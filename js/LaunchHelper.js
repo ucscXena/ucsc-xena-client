@@ -159,7 +159,7 @@ var wrap = Comp => class extends PureComponent {
 		super(props);
 		// If we just arrived on a page that requires the hub, and status is
 		// 'down' but not 'lost' (i.e. user shutdown), try to start.
-		this.state = {advanced: false, show: props.state.localStatus === 'down'};
+		this.state = {advanced: false, show: props.state.localStatus === 'down' || props.state.localStatus === 'old'};
 	}
 
 	componentDidMount() {
