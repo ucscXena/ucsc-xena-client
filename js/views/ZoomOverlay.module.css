@@ -1,0 +1,10 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Custom CSS styling of zoom overlay.
+ */
+
+.ZoomOverlay {
+    display: flex;
+}
