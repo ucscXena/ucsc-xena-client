@@ -84,9 +84,11 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 			if (zoomOutClick(ev)) {
 				gaEvents('spreadsheet', 'zoom', 'out');
 				callback(['zoom', zoomOut(samples.length, zoom)]);
+				callback(['enableTransition'], false);
 			} else if (zoomInClick(ev)) {
 				gaEvents('spreadsheet', 'zoom', 'in');
 				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
+				callback(['enableTransition'], false);
 			}
 		});
 	}
@@ -107,6 +109,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		let {callback, appState: {zoom, samples}} = this.props;
 		gaEvents('spreadsheet', 'zoom', 'out');
 		callback(['zoom', zoomOut(samples.length, zoom)]);
+		callback(['enableTransition'], false);
 	};
 
 	onRemove = (id) => {
