@@ -24,7 +24,7 @@ class ZoomCarriage extends PureComponent {
 
 
 	render() {
-		var {addColumnAddHover, samplesCount, zoom, zoomOut} = this.props,
+		var {addColumnAddHover, enableTransition, samplesCount, zoom, zoomOut} = this.props,
 			zoomCarriageMargin = addColumnAddHover ? 3 : 11,
 			carriageStart = Math.round((zoom.height / samplesCount) * zoom.index),
 			carriageHeight = Math.round((zoom.height / samplesCount).toFixed(2) * zoom.count),
@@ -35,16 +35,14 @@ class ZoomCarriage extends PureComponent {
 			lowerAngle = Math.atan((heightBelowCarriage) / zoomCarriageMargin) * 180 / Math.PI,
 			lowerLine = Math.sqrt(Math.pow(zoomCarriageMargin, 2) + Math.pow(heightBelowCarriage, 2));
 
-		console.log(addColumnAddHover);
-
 		return (
 			<div className={compStyles.zoomCarriage}>
 				<div className={compStyles.carriage} style={{height: carriageHeight, top: carriageStart}}>
 					<div className={compStyles.zoomControl} onClick={zoomOut}>remove_circle</div>
 				</div>
-				<div className={classNames(compStyles.carriageLines, compStyles.upper)}
+				<div className={classNames(compStyles.carriageLines, compStyles.upper, {[compStyles.transitionRotate]: enableTransition})}
 					 style={{top: carriageStart, transform: this.getRotation(upperAngle), width: upperLine}}/>
-				<div className={classNames(compStyles.carriageLines, compStyles.lower)}
+				<div className={classNames(compStyles.carriageLines, compStyles.lower, {[compStyles.transitionRotate]: enableTransition})}
 					 style={{top: carriageEnd, transform: this.getRotation(lowerAngle), width: lowerLine}}/>
 			</div>);
 	}
