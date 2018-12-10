@@ -6,7 +6,6 @@
  */
 
 @value black24 from '../../css/variables.css';
-
 @value black54 from '../../css/variables.css';
 
 /* Zoom Carriage */
@@ -34,26 +33,27 @@
 }
 
 /* Carriage lines */
-.zoomCarriage .carriageLines {
+.carriageLines {
 	border: 0.5px dashed black24;
 	left: 15px;
 	position: absolute;
-	transition: transform 200ms 150ms ease-in-out; /* Match transition of margin of ColCard, this is for animating the add column hover functionality */
+	transition: none;
 }
 
 /* Upper carriage line */
-.zoomCarriage .carriageLines.upper {
+.carriageLines.upper {
 	transform-origin: bottom left;
 }
 
 /* Lower carriage line */
-.zoomCarriage .carriageLines.lower {
+.carriageLines.lower {
 	transform-origin: top left;
 }
 
-/* Carriage lines transition for animating the add column hover */
-.zoomCarriage:hover .carriageLines, .zoomCarriage.noTransition .carriageLines {
-	transition: none;
+
+/* Carriage lines transition for the the add column hover animation */
+.carriageLines.transitionRotate {
+	transition: transform 200ms 150ms ease-in-out; /* Match transition of margin of ColCard, this is for animating the add column hover functionality */
 }
 
 /* Zoom control - hide */
