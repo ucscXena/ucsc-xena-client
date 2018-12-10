@@ -8,15 +8,6 @@ var {supportsEdit} = require('../models/fieldSpec');
 var {addCommas} = require('../util');
 var gaEvents = require('../gaEvents');
 
-function zoomIn(pos, samples, zoom) {
-	var {count, index} = zoom;
-	var nCount = Math.max(1, Math.round(count / 3)),
-		maxIndex = samples - nCount,
-		nIndex = Math.max(0, Math.min(Math.round(index + pos * count - nCount / 2), maxIndex));
-
-	return _.merge(zoom, {count: nCount, index: nIndex});
-}
-
 function zoomOut(samples, zoom) {
 	var {count, index} = zoom;
 	var nCount = Math.min(samples, Math.round(count * 3)),
@@ -26,12 +17,6 @@ function zoomOut(samples, zoom) {
 	return _.merge(zoom, {count: nCount, index: nIndex});
 }
 
-function targetPos(ev) {
-	var bb = ev.currentTarget.getBoundingClientRect();
-	return (ev.clientY - bb.top) / ev.currentTarget.clientHeight;
-}
-
-var zoomInClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
 var zoomOutClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
 function fixSampleTitle(column, i, samples, wizardMode, cohort) {
@@ -84,12 +69,8 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 			if (zoomOutClick(ev)) {
 				gaEvents('spreadsheet', 'zoom', 'out');
 				callback(['zoom', zoomOut(samples.length, zoom)]);
-				callback(['enableTransition'], false);
-			} else if (zoomInClick(ev)) {
-				gaEvents('spreadsheet', 'zoom', 'in');
-				callback(['zoom', zoomIn(targetPos(ev), samples.length, zoom)]);
-				callback(['enableTransition'], false);
 			}
+			// TODO add back callback(['enableTransition'], false); on zoom in/zoom out
 		});
 	}
 
@@ -103,6 +84,10 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 
 	onXZoom = (id, xzoom) => {
 		this.props.callback(['xzoom', id, xzoom]);
+	};
+
+	onYZoom = (yzoom) => {
+		this.props.callback(['zoom', yzoom]);
 	};
 
 	onZoomOut = () => {
@@ -223,6 +208,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						onKm={this.onKm}
 						onSortDirection={this.onSortDirection}
 						onXZoom={this.onXZoom}
+						onYZoom={this.onYZoom}
 						onRemove={this.onRemove}
 						onResize={this.onResize}
 						onReload={this.onReload}

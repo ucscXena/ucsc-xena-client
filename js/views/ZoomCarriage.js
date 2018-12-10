@@ -34,7 +34,6 @@ class ZoomCarriage extends PureComponent {
 			upperLine = Math.sqrt(Math.pow(zoomCarriageMargin, 2) + Math.pow(carriageStart, 2)),
 			lowerAngle = Math.atan((heightBelowCarriage) / zoomCarriageMargin) * 180 / Math.PI,
 			lowerLine = Math.sqrt(Math.pow(zoomCarriageMargin, 2) + Math.pow(heightBelowCarriage, 2));
-
 		return (
 			<div className={compStyles.zoomCarriage}>
 				<div className={compStyles.carriage} style={{height: carriageHeight, top: carriageStart}}>

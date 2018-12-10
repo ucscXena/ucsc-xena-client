@@ -386,10 +386,92 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 		.map(([start, end]) => [Math.max(start, cdsStart), Math.min(end, cdsEnd)]);
 }
 
+// TODO revisit
+var geneHeight = () => {
+	return annotationHeight + scaleHeight + 4;
+};
+
 var showPosition = column =>
 	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType) &&
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
+var zoomDirection = selection => {
+	var {start, end, ...zone} = selection,
+		g = zone === 'g',
+		distanceX = Math.abs(start.x - end.x),
+		distanceY = Math.abs(start.y - end.y),
+		direction = g ? 'h' : distanceX > distanceY ? 'h' : 'v',
+		h = direction === 'h';
+	return {
+		...zone,
+		direction,
+		start: h ? start.x : start.y,
+		end: h ? end.x : end.y
+	};
+};
+
+var zoomFlop = (selection) => {
+	var {start, end, ...rest} = selection,
+		flip = end < start;
+	return {
+		...rest,
+		...(flip ? {end: start, start: end} : {start, end})
+	};
+};
+
+var zoomTrim = selection => {
+	var {zone, start, end} = selection,
+		height = geneHeight(),
+		g = zone === 'g';
+		return {
+			start,
+			end: {
+				x: end.x,
+				y: g ? (end.y > height ? height : end.y) : (end.y < height ? height + 1 : end.y)
+			},
+			zone
+		};
+};
+
+var zoomZone = selection => {
+	var {start} = selection,
+		zone = start.y <= geneHeight() ? 'g' : 's';
+	return {
+		...selection,
+		zone
+	};
+};
+
+var xGeneDragZoom = (props, pos) => {
+	var {column: {layout}, onXZoom, id} = props,
+		[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
+	onXZoom(id, {start, end});
+};
+
+var xSamplesDragZoom = (props, pos) => {
+	var {start, end} = pos,
+		{id, onXZoom, column: {layout, position}} = props,
+		{pxLen} = layout,
+		columnSize = pxLen / position.length,
+		startIndex = Math.floor(start / columnSize),
+		endIndex = Math.floor(end / columnSize),
+		startChrom = position[startIndex].chromstart,
+		endChrom = position[endIndex].chromend;
+
+	var chromStartEnd = startChrom > endChrom ? {start: endChrom, end: startChrom} : {start: startChrom, end: endChrom};
+	onXZoom(id, chromStartEnd);
+};
+
+var samplesDragZoom = (props, pos) => {
+	var {start, end} = pos,
+		{onYZoom, zoom} = props,
+		{count, height} = zoom,
+		rowSize = height / count,
+		startIndex = Math.floor((start - 63) / rowSize), // TODO revisit 63
+		endIndex = Math.floor((end - 63) / rowSize);
+
+		onYZoom(_.merge(zoom, {index: startIndex, count: endIndex - startIndex}));
+};
 
 class Column extends PureComponent {
 	state = {
@@ -420,6 +502,26 @@ class Column extends PureComponent {
 	componentWillUnmount() {
 		this.ksub.unsubscribe();
 	}
+
+	onDrag = (/*selection*/) => {
+		// this.props.onDrag && this.props.onDrag(selection);
+	};
+
+	onDragSelect = (selection) => {
+		var selectionIndicator = zoomFlop(zoomDirection(zoomTrim(zoomZone(selection)))),
+			{direction, zone, start, end} = selectionIndicator;
+		if (direction === 'h') {
+			if ( zone === 'g' ) {
+				xGeneDragZoom(this.props, {start, end});
+			}
+			else {
+				xSamplesDragZoom(this.props, {start, end});
+			}
+		}
+		else {
+			samplesDragZoom(this.props, {start, end});
+		}
+	};
 
 	onResizeStop = (size) => {
 		this.props.onResize(this.props.id, size);
@@ -498,12 +600,6 @@ class Column extends PureComponent {
 				position = getPosition(maxXZoom, '', '');
 			onXZoom(id, position);
 		}
-	};
-
-	onXDragZoom = (pos) => {
-		var {column: {layout}, onXZoom, id} = this.props,
-			[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
-		onXZoom(id, {start, end});
 	};
 
 	onMenuToggle = (open) => {
@@ -685,33 +781,35 @@ class Column extends PureComponent {
 							</div>
 						}
 						 wizardMode={wizardMode}>
-					<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: annotationHeight + scaleHeight + 4}}>
-						{annotation ?
-							<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-								{scale}
-								<div style={{height: 2}}/>
-								{annotation}
-							</DragSelect> : null}
-					</div>
-					<ResizeOverlay
-						enable={interactive}
-						onResizeStop={this.onResizeStop}
-						width={width}
-						minWidth={this.getControlWidth}
-						height={zoom.height}>
-						<SpreadSheetHighlight
-							animate={searching}
-							width={width}
-							height={zoom.height}
-							samples={samples.slice(zoom.index, zoom.index + zoom.count)}
-							samplesMatched={samplesMatched}/>
-						<div style={{position: 'relative'}}>
-							<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen}>
-								{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
-								{getStatusView(status, this.onReload)}
-							</Crosshair>
+					<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onDrag={this.onDrag} onSelect={this.onDragSelect}>
+						<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
+							{annotation ?
+								<div>
+									{scale}
+									<div style={{height: 2}}/>
+									{annotation}
+								</div> : null}
 						</div>
-					</ResizeOverlay>
+						<ResizeOverlay
+							enable={interactive}
+							onResizeStop={this.onResizeStop}
+							width={width}
+							minWidth={this.getControlWidth}
+							height={zoom.height}>
+							<SpreadSheetHighlight
+								animate={searching}
+								width={width}
+								height={zoom.height}
+								samples={samples.slice(zoom.index, zoom.index + zoom.count)}
+								samplesMatched={samplesMatched}/>
+							<div style={{position: 'relative'}}>
+								<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen}>
+									{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
+									{getStatusView(status, this.onReload)}
+								</Crosshair>
+							</div>
+						</ResizeOverlay>
+					</DragSelect>
 				</ColCard>
 				{append}
 			</div>
