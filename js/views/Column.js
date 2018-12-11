@@ -448,17 +448,21 @@ var xGeneDragZoom = (props, pos) => {
 	onXZoom(id, {start, end});
 };
 
+// gene probes view - annotation with subcolumns and dog leg
+// segmented view - annotation with no subcolumns, straight up pixel
+// mutation view  - annotation with no subcolumns, straight up pixel
+// no annotation - pheno, random list of probes, gene set?
 var xSamplesDragZoom = (props, pos) => {
 	var {start, end} = pos,
-		{id, onXZoom, column: {layout, position}} = props,
-		{pxLen} = layout,
+		{id, column: {layout, position}, onXZoom} = props,
+		{pxLen, reversed} = layout,
 		columnSize = pxLen / position.length,
 		startIndex = Math.floor(start / columnSize),
 		endIndex = Math.floor(end / columnSize),
 		startChrom = position[startIndex].chromstart,
 		endChrom = position[endIndex].chromend;
 
-	var chromStartEnd = startChrom > endChrom ? {start: endChrom, end: startChrom} : {start: startChrom, end: endChrom};
+	var chromStartEnd = reversed ? {start: endChrom, end: startChrom} : {start: startChrom, end: endChrom};
 	onXZoom(id, chromStartEnd);
 };
 
@@ -469,7 +473,6 @@ var samplesDragZoom = (props, pos) => {
 		rowSize = height / count,
 		startIndex = Math.floor((start - 63) / rowSize), // TODO revisit 63
 		endIndex = Math.floor((end - 63) / rowSize);
-
 		onYZoom(_.merge(zoom, {index: startIndex, count: endIndex - startIndex}));
 };
 
