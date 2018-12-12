@@ -199,6 +199,8 @@ class ImportForm extends React.Component {
 
 	setLocalCohortRef = ref => {
 		if (ref && !this.props.state.localCohort) {
+			// XXX inputNode has gone away in rt 2.0.0-beta.13. Not sure
+			// why. For now, pinning the version to beta.12.
 			ref.inputNode.focus();
 		}
 		this.localCohortRef = ref;
