@@ -73,7 +73,7 @@ var getAssembly = (datasets, dsID) =>
 
 var getDefaultVizSettings = meta =>
 	// use default vizSettings if we have min and max.
-	_.has(meta, 'min') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'min', 'max', 'minStart', 'maxStart')} : {};
+	_.has(meta, 'min') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} : {};
 
 // XXX handle position in all genomic datatypes?
 function columnSettings(datasets, features, dsID, input, fields, probes) {
