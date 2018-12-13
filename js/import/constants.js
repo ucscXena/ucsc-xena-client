@@ -8,10 +8,10 @@ const DATA_TYPE = {
 };
 
 const dataSubType = {
-	phenotype: 'phenotype',
+	phenotype: '',
 	mutation: 'mutation',
-	segmented: 'other',
-	genomic: 'other'
+	segmented: 'copy number segments',
+	genomic: ''
 };
 
 const FILE_FORMAT = {
