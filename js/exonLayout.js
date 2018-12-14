@@ -5,6 +5,7 @@
 var spLen = 3; // size of intronic region to draw between exons
 
 var _ = require('./underscore_ext');
+var {pxTransformReverse} = require('./layoutPlot');
 
 // reverse layout if on negative strand.
 var reverseIf = (strand, arr) =>
@@ -192,6 +193,9 @@ var chromPositionFromScreen = (layout, x) =>
 // closed coord len
 var chrlen = ([s, e]) => e - s + 1;
 
+var screenToChromPosition = (layout, startChrom, endChrom) => {
+	return pxTransformReverse(layout, startChrom, endChrom);
+};
 
 module.exports = {
 	chromLayout,
@@ -204,5 +208,6 @@ module.exports = {
 	zoomCount: (layout, start, end) =>
 		_.sum(applyClip(layout.chrom, {start, end}).map(chrlen)),
 	chromPositionFromScreen,
-	chromRangeFromScreen
+	chromRangeFromScreen,
+	screenToChromPosition
 };
