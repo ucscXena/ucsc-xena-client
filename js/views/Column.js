@@ -14,7 +14,7 @@ var mutationVector = require('../models/mutationVector');
 //var ValidatedInput = require('./ValidatedInput');
 var konami = require('../konami');
 var Crosshair = require('./Crosshair');
-var {chromRangeFromScreen} = require('../exonLayout');
+var {chromRangeFromScreen, screenToChromPosition} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
@@ -26,6 +26,7 @@ import RefGeneAnnotation from '../refGeneExons';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
 var crosshair = require('./cursor.png');
+var ZoomOverlay = require('./ZoomOverlay');
 
 var ESCAPE = 27;
 
@@ -284,6 +285,11 @@ var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
 var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
+// True if field type is geneProbes, otherwise false (for mutation view, segmented view and columns with no annotation)
+var supportsSubcolumns = ({fieldType}) => {
+	return fieldType === 'geneProbes';
+};
+
 function matrixMenu(props, {onTumorMap, onMode, onCluster, isChrom}) {
 	var {cohort, column} = props,
 		{fieldType, noGeneDetail, fields, fieldSpecs, clustering} = column,
@@ -386,9 +392,16 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 		.map(([start, end]) => [Math.max(start, cdsStart), Math.min(end, cdsEnd)]);
 }
 
-// TODO revisit
 var geneHeight = () => {
 	return annotationHeight + scaleHeight + 4;
+};
+
+// Calculate index of prob from the specified pixel point
+var screenToProbeIndex = (props, px) => {
+	var {column: {layout, position}} = props,
+		{pxLen} = layout,
+		columnSize = pxLen / position.length;
+	return Math.floor(px / columnSize);
 };
 
 var showPosition = column =>
@@ -397,7 +410,7 @@ var showPosition = column =>
 
 var zoomDirection = selection => {
 	var {start, end, ...zone} = selection,
-		g = zone === 'g',
+		g = zone === 'a',
 		distanceX = Math.abs(start.x - end.x),
 		distanceY = Math.abs(start.y - end.y),
 		direction = g ? 'h' : distanceX > distanceY ? 'h' : 'v',
@@ -419,65 +432,53 @@ var zoomFlop = (selection) => {
 	};
 };
 
-var zoomTrim = selection => {
-	var {zone, start, end} = selection,
-		height = geneHeight(),
-		g = zone === 'g';
-		return {
-			start,
-			end: {
-				x: end.x,
-				y: g ? (end.y > height ? height : end.y) : (end.y < height ? height + 1 : end.y)
-			},
-			zone
-		};
-};
-
-var zoomZone = selection => {
-	var {start} = selection,
-		zone = start.y <= geneHeight() ? 'g' : 's';
+var zoomZone = (selection, zone) => {
 	return {
 		...selection,
 		zone
 	};
 };
 
-var xGeneDragZoom = (props, pos) => {
+var zoomTranslateSelection = (selection, zone) => {
+	return zoomFlop(zoomDirection(zoomZone(selection, zone)));
+};
+
+// Horizontal zoom across annotation, or across samples where there are no subcolumns (eg segmented view or mutation
+// view)
+var xAnnotationDragZoomSelect = (props, pos) => {
 	var {column: {layout}, onXZoom, id} = props,
 		[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
 	onXZoom(id, {start, end});
 };
 
-// gene probes view - annotation with subcolumns and dog leg
-// segmented view - annotation with no subcolumns, straight up pixel
-// mutation view  - annotation with no subcolumns, straight up pixel
-// no annotation - pheno, random list of probes, gene set?
-var xSamplesDragZoom = (props, pos) => {
-	var {start, end} = pos,
+// Horizontal zoom across samples with subcolumns (ie gene probes view)
+var xSamplesSubcolumnDragZoomSelect = (props, selection) => {
+	var {start, end} = selection,
 		{id, column: {layout, position}, onXZoom} = props,
-		{pxLen, reversed} = layout,
-		columnSize = pxLen / position.length,
-		startIndex = Math.floor(start / columnSize),
-		endIndex = Math.floor(end / columnSize),
-		startChrom = position[startIndex].chromstart,
-		endChrom = position[endIndex].chromend;
+		{reversed} = layout,
+		startIndex = screenToProbeIndex(props, start),
+		endIndex = screenToProbeIndex(props, end),
+		chromstart = position[startIndex].chromstart,
+		chromend = position[endIndex].chromend,
+		zoom = reversed ? {start: chromend, end: chromstart} : {start: chromstart, end: chromend};
 
-	var chromStartEnd = reversed ? {start: endChrom, end: startChrom} : {start: startChrom, end: endChrom};
-	onXZoom(id, chromStartEnd);
+	onXZoom(id, zoom);
 };
 
-var samplesDragZoom = (props, pos) => {
-	var {start, end} = pos,
+// Vertical zoom across samples
+var ySamplesDragZoomSelect = (props, selection) => {
+	var {start, end} = selection,
 		{onYZoom, zoom} = props,
 		{count, height} = zoom,
-		rowSize = height / count,
-		startIndex = Math.floor((start - 63) / rowSize), // TODO revisit 63
-		endIndex = Math.floor((end - 63) / rowSize);
+		rowSize = (height - 1) / count,
+		startIndex = Math.floor(start / rowSize),
+		endIndex = Math.floor(end / rowSize);
 		onYZoom(_.merge(zoom, {index: startIndex, count: endIndex - startIndex}));
 };
 
 class Column extends PureComponent {
 	state = {
+		dragZoom: {},
 	    specialDownloadMenu: specialDownloadMenu
 	};
 
@@ -506,24 +507,24 @@ class Column extends PureComponent {
 		this.ksub.unsubscribe();
 	}
 
-	onDrag = (/*selection*/) => {
-		// this.props.onDrag && this.props.onDrag(selection);
-	};
+	onDragZoom = (selection) => {
+		var {column} = this.props,
+			{layout, position} = column,
+			translatedSelection = zoomTranslateSelection(selection, 's'),
+			{start, end} = translatedSelection,
+			subColumns = supportsSubcolumns(column),
+			pxStart, pxEnd;
 
-	onDragSelect = (selection) => {
-		var selectionIndicator = zoomFlop(zoomDirection(zoomTrim(zoomZone(selection)))),
-			{direction, zone, start, end} = selectionIndicator;
-		if (direction === 'h') {
-			if ( zone === 'g' ) {
-				xGeneDragZoom(this.props, {start, end});
-			}
-			else {
-				xSamplesDragZoom(this.props, {start, end});
-			}
+		if ( subColumns ) {
+			var startIndex = screenToProbeIndex(this.props, start),
+				endIndex = screenToProbeIndex(this.props, end),
+				startColumn = position[startIndex],
+				endColumn = position[endIndex];
+			pxStart = subColumns ? screenToChromPosition(layout, startColumn.chromstart, startColumn.chromend) : null;
+			pxEnd = subColumns ? screenToChromPosition(layout, endColumn.chromstart, endColumn.chromend) : null;
 		}
-		else {
-			samplesDragZoom(this.props, {start, end});
-		}
+		// TODO mim reversed?
+		this.setState({dragZoom: {selection: translatedSelection, pxStart, pxEnd, samplesOffset: geneHeight()}});
 	};
 
 	onResizeStop = (size) => {
@@ -578,6 +579,22 @@ class Column extends PureComponent {
 	onCluster = () => {
 		this.props.onCluster(this.props.id,
 			this.props.column.clustering ? undefined : 'probes');
+	};
+
+	onAnnotationDragZoomSelect = (selection) => {
+		var translatedSelection = zoomTranslateSelection(selection, 'a'),
+			{start, end} = translatedSelection;
+		xAnnotationDragZoomSelect(this.props, {start, end});
+	};
+
+	onSamplesDragZoomSelect = (selection) => {
+		var translatedSelection = zoomTranslateSelection(selection, 's'),
+			{start, end} = translatedSelection,
+			{column} = this.props,
+			h = translatedSelection.direction === 'h',
+			subcolumns = supportsSubcolumns(column),
+			zoomFn = h ? (subcolumns ? xSamplesSubcolumnDragZoomSelect : xAnnotationDragZoomSelect) : ySamplesDragZoomSelect;
+		zoomFn(this.props, {start, end});
 	};
 
 	onSortVisible = () => {
@@ -713,7 +730,8 @@ class Column extends PureComponent {
 				interactive, append} = this.props,
 			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
 					_.getIn(column, ['assembly'])),
-			{specialDownloadMenu} = this.state,
+			{specialDownloadMenu, dragZoom} = this.state,
+			{selection, pxStart, pxEnd, samplesOffset} = dragZoom,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
@@ -755,67 +773,71 @@ class Column extends PureComponent {
 		// can't use Splitbutton.
 		// XXX put position into a css module
 		return (
-			<div style={{width: width, position: 'relative'}}>
-				<ColCard colId={label}
-						sortable={!first}
-						title={<DefaultTextInput
-							disabled={!interactive}
-							onChange={this.onColumnLabel}
-							value={{default: columnLabel, user: user.columnLabel}} />}
-						subtitle={<DefaultTextInput
-							disabled={!interactive}
-							onChange={this.onFieldLabel}
-							value={{default: fieldLabel, user: user.fieldLabel}} />}
-						controls={!interactive ? (first ? refreshIcon : null) :
-							<div>
-								{first ? null : (
-									<IconMenu icon='more_vert' menuRipple iconRipple={false}>
-										{menu}
-										{menu && <MenuDivider />}
-										<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
-										caption='Kaplan Meier Plot'/>
-										<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
-										<MenuItem onClick={this.onDownload} caption='Download'/>
-										{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
-										<MenuItem onClick={this.onViz} caption='Display'/>
-										<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
-										<MenuItem onClick={this.onRemove} caption='Remove'/>
-										</IconMenu>)}
+				<div style={{width: width, position: 'relative'}}>
+					<ZoomOverlay selection={selection} pxStart={pxStart} pxEnd={pxEnd} samplesOffset={samplesOffset}>
+						<ColCard colId={label}
+								sortable={!first}
+								title={<DefaultTextInput
+									disabled={!interactive}
+									onChange={this.onColumnLabel}
+									value={{default: columnLabel, user: user.columnLabel}} />}
+								subtitle={<DefaultTextInput
+									disabled={!interactive}
+									onChange={this.onFieldLabel}
+									value={{default: fieldLabel, user: user.fieldLabel}} />}
+								controls={!interactive ? (first ? refreshIcon : null) :
+									<div>
+										{first ? null : (
+											<IconMenu icon='more_vert' menuRipple iconRipple={false}>
+												{menu}
+												{menu && <MenuDivider />}
+												<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
+												caption='Kaplan Meier Plot'/>
+												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
+												<MenuItem onClick={this.onDownload} caption='Download'/>
+												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
+												<MenuItem onClick={this.onViz} caption='Display'/>
+												<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
+												<MenuItem onClick={this.onRemove} caption='Remove'/>
+												</IconMenu>)}
+									</div>
+								}
+								 wizardMode={wizardMode}>
+							<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
+								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onAnnotationDragZoomSelect}>
+									{annotation ?
+										<div>
+											{scale}
+											<div style={{height: 2}}/>
+											{annotation}
+										</div> : null}
+								</DragSelect>
 							</div>
-						}
-						 wizardMode={wizardMode}>
-					<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onDrag={this.onDrag} onSelect={this.onDragSelect}>
-						<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
-							{annotation ?
-								<div>
-									{scale}
-									<div style={{height: 2}}/>
-									{annotation}
-								</div> : null}
-						</div>
-						<ResizeOverlay
-							enable={interactive}
-							onResizeStop={this.onResizeStop}
-							width={width}
-							minWidth={this.getControlWidth}
-							height={zoom.height}>
-							<SpreadSheetHighlight
-								animate={searching}
+							<ResizeOverlay
+								enable={interactive}
+								onResizeStop={this.onResizeStop}
 								width={width}
-								height={zoom.height}
-								samples={samples.slice(zoom.index, zoom.index + zoom.count)}
-								samplesMatched={samplesMatched}/>
-							<div style={{position: 'relative'}}>
-								<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen}>
-									{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
-									{getStatusView(status, this.onReload)}
-								</Crosshair>
-							</div>
-						</ResizeOverlay>
-					</DragSelect>
-				</ColCard>
-				{append}
-			</div>
+								minWidth={this.getControlWidth}
+								height={zoom.height}>
+								<SpreadSheetHighlight
+									animate={searching}
+									width={width}
+									height={zoom.height}
+									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
+									samplesMatched={samplesMatched}/>
+								<div style={{position: 'relative'}}>
+									<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen}>
+										<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onDrag={this.onDragZoom} onSelect={this.onSamplesDragZoomSelect}>
+											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
+										</DragSelect>
+										{getStatusView(status, this.onReload)}
+									</Crosshair>
+								</div>
+							</ResizeOverlay>
+						</ColCard>
+					</ZoomOverlay>
+					{append}
+				</div>
 		);
 	}
 }

@@ -55,7 +55,7 @@ class DragSelect extends React.Component {
 			if (dragging) {
 				this.props.onDrag && this.props.onDrag(selection);
 			}
-			if (ev.selection) { // TODO revisit
+			if (ev.selection) {
 				this.props.onSelect && this.props.onSelect(ev.selection);
 			}
 		});
