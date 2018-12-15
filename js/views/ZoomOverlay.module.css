@@ -5,6 +5,28 @@
  * Custom CSS styling of zoom overlay.
  */
 
+@value black24 from '../../css/variables.css';
+
 .ZoomOverlay {
-    display: flex;
+	display: flex;
+}
+
+.overlay {
+	background-color: black24;
+	pointer-events: none;
+	-webkit-touch-callout: none;
+	user-select: none;
+	z-index: 999999;
+}
+
+.overlayV {
+	left: 0;
+	position: fixed;
+	width: 100%;
+}
+
+.overlayH {
+	height: 100%;
+	position: absolute;
+	top: 0;
 }
