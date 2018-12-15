@@ -22,7 +22,6 @@ class ZoomCarriage extends PureComponent {
 		return 'rotate(' + angle + 'deg)';
 	};
 
-
 	render() {
 		var {addColumnAddHover, enableTransition, samplesCount, zoom, zoomOut} = this.props,
 			zoomCarriageMargin = addColumnAddHover ? 3 : 11,
