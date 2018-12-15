@@ -9,6 +9,7 @@
 // TODO method mouseDown - do not want to render overlay if shift click - confirm ok
 // TODO clear previous DOM render of overlay between mouseDown events
 // TODO bugfix for sample only spreadsheet - vertical zoom after attempt for horizontal zoom
+// TODO need for zones to be set up to restrict render of overlay when user not in that zone
 
 'use strict';
 
