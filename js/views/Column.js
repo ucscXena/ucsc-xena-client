@@ -479,7 +479,7 @@ var ySamplesDragZoomSelect = (props, selection) => {
 class Column extends PureComponent {
 	state = {
 		dragZoom: {},
-	    specialDownloadMenu: specialDownloadMenu
+		specialDownloadMenu: specialDownloadMenu
 	};
 
 	//	addAnnotationHelp(target) {
@@ -614,6 +614,12 @@ class Column extends PureComponent {
 		}
 	};
 
+	onXZoomClear = () => {
+		let {id, column: {maxXZoom}, onXZoom} = this.props,
+			position = getPosition(maxXZoom, '', '');
+		onXZoom(id, position);
+	};
+
 	onXZoomOut = (ev) => {
 		if (ev.shiftKey) {
 			let {id, column: {maxXZoom}, onXZoom} = this.props,
@@ -730,6 +736,7 @@ class Column extends PureComponent {
 				interactive, append} = this.props,
 			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
 					_.getIn(column, ['assembly'])),
+			isXAnnotation = !((_.get(column.xzoom, ['start']) === _.get(column.maxXZoom, ['start'])) && ((_.get(column.xzoom, ['end'])) === (_.get(column.maxXZoom, ['end'])))),
 			{specialDownloadMenu, dragZoom} = this.state,
 			{selection, pxStart, pxEnd, samplesOffset} = dragZoom,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
@@ -785,6 +792,8 @@ class Column extends PureComponent {
 									disabled={!interactive}
 									onChange={this.onFieldLabel}
 									value={{default: fieldLabel, user: user.fieldLabel}} />}
+								onClick={this.onXZoomClear}
+								xAnnotationZoom={annotation && isXAnnotation}
 								controls={!interactive ? (first ? refreshIcon : null) :
 									<div>
 										{first ? null : (
