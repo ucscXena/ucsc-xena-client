@@ -397,9 +397,8 @@ var geneHeight = () => {
 };
 
 // Calculate index of prob from the specified pixel point
-var screenToProbeIndex = (props, px) => {
-	var {column: {layout, position}} = props,
-		{pxLen} = layout,
+var screenToProbeIndex = ({layout, position}, px) => {
+	var {pxLen} = layout,
 		columnSize = pxLen / position.length;
 	return Math.floor(px / columnSize);
 };
@@ -408,20 +407,53 @@ var showPosition = column =>
 	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType) &&
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
-var zoomDirection = selection => {
-	var {start, end, geneZoom, ...zone} = selection,
+// Start and end coordinates of connectors between annotation and samples, or samples and annotation, for columns
+// with probes.
+var zoomConnectors = (column, selection) => {
+	var {layout, position} = column,
+		{direction, subcolumns, zone} = selection,
+		a = zone === 'a',
+		h = direction === 'h',
+		connectors = {};
+	if ( a ) {
+		connectors = {
+			start: 0,
+			end: 0
+		};
+	}
+	else if ( h && subcolumns ) {
+		var {probes: {start, end}} = selection,
+			startColumn = position[start],
+			endColumn = position[end];
+		connectors = {
+			start: screenToChromPosition(layout, startColumn.chromstart, startColumn.chromend),
+			end: screenToChromPosition(layout, endColumn.chromstart, endColumn.chromend)
+		};
+	};
+	return {
+		...selection,
+		connectors
+	};
+};
+
+// Direction of drag action, either horizontal (h) or vertical (v), parse start and end points into single start and
+// end values
+var zoomDirection = (selection) => {
+	var {start, end, geneZoom, zone, ...rest} = selection,
 		a = zone === 'a',
 		direction = a ? 'h' : (geneZoom ? (Math.abs(start.x - end.x) > Math.abs(start.y - end.y) ? 'h' : 'v') : 'v'),
 		h = direction === 'h';
 	return {
-		...zone,
+		zone,
 		direction,
 		geneZoom,
 		start: h ? start.x : start.y,
-		end: h ? end.x : end.y
+		end: h ? end.x : end.y,
+		...rest
 	};
 };
 
+// True start and end values of drag action (start should be smaller than end)
 var zoomFlop = (selection) => {
 	var {start, end, ...rest} = selection,
 		flip = end < start;
@@ -431,13 +463,32 @@ var zoomFlop = (selection) => {
 	};
 };
 
-var zoomGenesSupported = (column, selection) => {
+// Gene zoom - true if there is an annotation for the column. Subcolumns - true if we're looking at column with gene
+// probes.
+var zoomGenes = (column, selection) => {
 	return {
 		geneZoom: showPosition(column),
+		subcolumns: supportsSubcolumns(column),
 		...selection
 	};
 };
 
+// Calculate probe indices from start and end pixels. Only applicable to columns with gene probes and a drag action over
+// samples area.
+var zoomProbes = (column, selection) => {
+	var {start, end, subcolumns, zone} = selection,
+		s = zone === 's',
+		probes = subcolumns && s ? {
+			start: screenToProbeIndex(column, start),
+			end: screenToProbeIndex(column, end)
+		} : {};
+	return {
+		probes,
+		...selection
+	};
+};
+
+// Either annotation (a) or samples (s)
 var zoomZone = (selection, zone) => {
 	return {
 		...selection,
@@ -446,28 +497,25 @@ var zoomZone = (selection, zone) => {
 };
 
 var zoomTranslateSelection = (column, selection, zone) => {
-	return zoomFlop(zoomDirection(zoomGenesSupported(column, zoomZone(selection, zone))));
+	return zoomConnectors(column, zoomProbes(column, zoomFlop(zoomDirection(zoomGenes(column, zoomZone(selection, zone))))));
 };
 
 // Horizontal zoom across annotation, or across samples where there are no subcolumns (eg segmented view or mutation
 // view)
-var xAnnotationDragZoomSelect = (props, pos) => {
+var xAnnotationDragZoomSelect = (props, selection) => {
 	var {column: {layout}, onXZoom, id} = props,
-		[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
+		[start, end] = chromRangeFromScreen(layout, selection.start, selection.end);
 	onXZoom(id, {start, end});
 };
 
 // Horizontal zoom across samples with subcolumns (ie gene probes view)
 var xSamplesSubcolumnDragZoomSelect = (props, selection) => {
-	var {start, end} = selection,
+	var {probes: {start, end}} = selection,
 		{id, column: {layout, position}, onXZoom} = props,
 		{reversed} = layout,
-		startIndex = screenToProbeIndex(props, start),
-		endIndex = screenToProbeIndex(props, end),
-		chromstart = position[startIndex].chromstart,
-		chromend = position[endIndex].chromend,
+		chromstart = position[start].chromstart,
+		chromend = position[end].chromend,
 		zoom = reversed ? {start: chromend, end: chromstart} : {start: chromstart, end: chromend};
-
 	onXZoom(id, zoom);
 };
 
@@ -567,44 +615,35 @@ class Column extends PureComponent {
 			this.props.column.clustering ? undefined : 'probes');
 	};
 
+	onAnnotationDragZoom = (selection) => {
+		var {column} = this.props,
+			translatedSelection = zoomTranslateSelection(column, selection, 'a');
+		// TODO mim reversed?
+		this.setState({dragZoom: {selection: translatedSelection}});
+	};
+
 	onAnnotationDragZoomSelect = (selection) => {
 		var {column} = this.props,
-			translatedSelection = zoomTranslateSelection(column, selection, 'a'),
-			{start, end} = translatedSelection;
+			translatedSelection = zoomTranslateSelection(column, selection, 'a');
 		this.setState({dragZoom: {}});
-		xAnnotationDragZoomSelect(this.props, {start, end});
+		xAnnotationDragZoomSelect(this.props, translatedSelection);
 	};
 
 	onSamplesDragZoom = (selection) => {
 		var {column} = this.props,
-			{layout, position} = column,
-			translatedSelection = zoomTranslateSelection(column, selection, 's'),
-			h = translatedSelection.direction === 'h',
-			subColumns = supportsSubcolumns(column),
-			pxStart, pxEnd;
-
-		if ( h && subColumns ) {
-			var {start, end} = translatedSelection,
-				startIndex = screenToProbeIndex(this.props, start),
-				endIndex = screenToProbeIndex(this.props, end),
-				startColumn = position[startIndex],
-				endColumn = position[endIndex];
-			pxStart = subColumns ? screenToChromPosition(layout, startColumn.chromstart, startColumn.chromend) : null;
-			pxEnd = subColumns ? screenToChromPosition(layout, endColumn.chromstart, endColumn.chromend) : null;
-		}
+			translatedSelection = zoomTranslateSelection(column, selection, 's');
 		// TODO mim reversed?
-		this.setState({dragZoom: {selection: translatedSelection, pxStart, pxEnd}});
+		this.setState({dragZoom: {selection: translatedSelection}});
 	};
 
 	onSamplesDragZoomSelect = (selection) => {
 		var {column} = this.props,
 			translatedSelection = zoomTranslateSelection(column, selection, 's'),
-			{start, end} = translatedSelection,
-			h = translatedSelection.direction === 'h',
-			subcolumns = supportsSubcolumns(column),
+			{direction, subcolumns} = translatedSelection,
+			h = direction === 'h',
 			zoomFn = h ? (subcolumns ? xSamplesSubcolumnDragZoomSelect : xAnnotationDragZoomSelect) : ySamplesDragZoomSelect;
 		this.setState({dragZoom: {}});
-		zoomFn(this.props, {start, end});
+		zoomFn(this.props, translatedSelection);
 	};
 
 	onSortVisible = () => {
@@ -823,7 +862,7 @@ class Column extends PureComponent {
 								}
 								 wizardMode={wizardMode}>
 							<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
-								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onAnnotationDragZoomSelect}>
+								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onDrag={this.onAnnotationDragZoom} onSelect={this.onAnnotationDragZoomSelect}>
 									{annotation ?
 										<div>
 											{scale}

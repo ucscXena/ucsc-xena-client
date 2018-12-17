@@ -2,7 +2,7 @@
  * UCSC Xena Client
  * http://xena.ucsc.edu
  *
- * Overlay displayed on mousedown and drag of gene or samples zoom.
+ * Overlay displayed on mousedown and drag over gene or samples zoom.
  */
 
 // TODO freeze addColumn hover while mouse down
