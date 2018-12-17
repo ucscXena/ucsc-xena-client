@@ -6,9 +6,7 @@
  */
 
 @value black6 from '../../css/variables.css';
-
 @value black12 from '../../css/variables.css';
-
 @value black38 from '../../css/variables.css';
 
 /* Core styling of column. 'Column' class must not be namespaced as it is used in page-vizualization functionality, as 
@@ -81,7 +79,7 @@
 	height: 61px; /* Includes border */
 	margin-bottom: 8px; /* Add additional margin here to prevent visualization from bumping up against title */
 	padding: 8px 16px;
-	position: relative;
+	position: relative; /* Positions geneZoomControl */
 }
 
 .title {
@@ -94,7 +92,7 @@
 }
 
 /* Gene zoom */
-.geneZoomReference {
+.geneZoomControl {
 	align-items: center;
 	bottom: 0;
 	display: flex;
@@ -107,7 +105,7 @@
 }
 
 /* Clear gene zoom */
-.geneZoomReference i {
+.geneZoomControl i {
 	font-size: 10px;
 	opacity: 0.38;
 	margin-left: 4px;
