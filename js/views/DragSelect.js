@@ -44,8 +44,11 @@ class DragSelect extends React.Component {
 			return Rx.Observable.fromEvent(window, 'mousemove').map(function (mm) {
 				var endX = targetXPos(target, mm, bb.width),
 					endY = targetYPos(target, mm, bb.height);
-
-				selection = {start: {x: startX, y: startY}, end: {x: endX, y: endY}};
+				selection = {
+					start: {x: startX, y: startY},
+					end: {x: endX, y: endY},
+					offset: {x: bb.left, y: bb.top}
+				};
 				return {dragging: true, ...selection};
 			}).takeUntil(Rx.Observable.fromEvent(window, 'mouseup'))
 			.concat(Rx.Observable.defer(() => Rx.Observable.of({selection})));
