@@ -1,0 +1,56 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Rules necessary for styling crosshair component.
+ */
+
+.crosshairs {
+	pointer-events: none;
+	position: relative;
+	user-select: none;
+	-webkit-touch-callout: none;
+	z-index: 999999;
+}
+
+.crosshair {
+	background-image: url('./dots.gif');
+	pointer-events: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+}
+
+.crosshair.zoomCrosshair {
+	background-image: url('./zoomDots.png');
+}
+
+.crosshairH {
+	height: 1px;
+	left: 0;
+	width: 100%;
+	position: fixed;
+}
+
+.crosshairV {
+	bottom: 0;
+	position: absolute;
+	top: 0;
+	width: 1px;
+	z-index: 999999;
+}
+
+.zoomCrosshair.crosshairV {
+	position: fixed;
+}
+
+.crosshairTarget {
+	border: 1px dashed rgba(0, 0, 0, 0.87);
+	border-radius: 50%;
+	height: 13px;
+	pointer-events: none;
+	position: absolute;
+	user-select: none;
+	-webkit-touch-callout: none;
+	width: 13px;
+	z-index: 999999;
+}
