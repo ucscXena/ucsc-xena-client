@@ -60,7 +60,6 @@ const getErrors = (dataType, state) => {
 		} else {
 			gatherErrorMessages(state, dataType, dataTypeErrors, lineCols, i);
 		}
-			state.rows = new Set();
 
 		i += 1;
 	};
