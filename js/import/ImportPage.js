@@ -247,7 +247,7 @@ class ImportForm extends React.Component {
 				.map(p => existingProbemaps.find(existing => existing.value.name === p.name))
 				.filter(_.identity);
 		const recommendationsExist = recommendedProbemaps.length;
-		const {probemap = _.getIn(probemapsToShow, [0, 'value'])} = this.props.state;
+		const {probemap = {name: NONE_STR}} = this.props.state;
 
 		const seletedProbeMapLabel = _.getIn(probemapsToShow, [0, 'label'], '');
 
@@ -407,8 +407,9 @@ class ImportForm extends React.Component {
 	}
 
 	onProbemapChange = value => {
-		var {probemaps} = this.props;
-		this.props.callback(['probemap', probemaps.find(({value: {name}}) => name === value).value]);
+		var {probemaps} = this.props,
+			pm = probemaps.find(({value: {name}}) => name === value);
+		this.props.callback(['probemap', pm ? pm.value : undefined]);
 	};
 
 	onFileFormatChange = format => this.props.callback(['file-format', format]);
