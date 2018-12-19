@@ -106,7 +106,7 @@ var samplesPxToSubcolumnIndex = ({layout, position}, px) => {
 };
 
 // Calculate indicator start and end in annotation, from samples pixel point. Find the subcolumn for the pixel point,
-// then use the start/end chrom for the subcolumn to claculate the chrom position in the annotation.
+// then use the start/end chrom for the subcolumn to calculate the chrom position in the annotation.
 var samplesPxToAnnotationPx = (column, screenPx) => {
 	var {layout, position} = column,
 		subcolumnIndex = samplesPxToSubcolumnIndex(column, screenPx),
@@ -114,13 +114,23 @@ var samplesPxToAnnotationPx = (column, screenPx) => {
 	return screenToChromPosition(layout, subcolumn.chromstart, subcolumn.chromend);
 };
 
-var overlayFromAnnotationZone = ({column, start, end}) => {
-	var iStartEnd = annotationStartEndPxToSamplesStartEndPx(column, start, end);
-	return {sstart: start, send: end, istart: iStartEnd.start, iend: iStartEnd.end};
+// Calculate the indicator start and end points in annotation, from the samples start and end points.
+var samplesStartEndPxToAnnotationStartEndPx = (column, direction, start, end) => {
+	var istart = null, iend = null;
+	if ( direction === 'h' ) {
+		istart = samplesPxToAnnotationPx(column, start);
+		iend = samplesPxToAnnotationPx(column, end);
+	}
+	return {istart, iend};
 };
 
-var overlayFromSamplesZone = ({column, start, end}) =>
-	({sstart: start, send: end, istart: samplesPxToAnnotationPx(column, start), iend: samplesPxToAnnotationPx(column, end)});
+var overlayFromAnnotationZone = ({column, start, end}) => {
+	var sStartEnd = annotationStartEndPxToSamplesStartEndPx(column, start, end);
+	return {sstart: sStartEnd.start, send: sStartEnd.end, istart: start, iend: end};
+};
+
+var overlayFromSamplesZone = ({column, direction, start, end}) =>
+	({sstart: start, send: end, ...samplesStartEndPxToAnnotationStartEndPx(column, direction, start, end)});
 
 var overlayWithSubcolumns = (params) =>
 	params.zone === 'a' ? overlayFromAnnotationZone(params) : overlayFromSamplesZone(params);
