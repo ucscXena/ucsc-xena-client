@@ -147,7 +147,10 @@ zoom.overlay.add('clinical', overlayWithoutSubcolumns);
 // Zoom - gene/horizontal zoom requires chromstart/chromend values, samples/vertical zoom requires index and count.
 //
 
-var geneZoom = ({column: {layout}, istart, iend}) => chromRangeFromScreen(layout, istart, iend); // TODO change to return {start, end} not [start, end]
+var geneZoom = ({column: {layout}, istart, iend}) => {
+	var [start, end] = chromRangeFromScreen(layout, istart, iend);
+	return {start, end};
+};
 
 var samplesZoom = ({yZoom, sstart, send}) => {
 	var {count, height} = yZoom,
