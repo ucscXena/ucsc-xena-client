@@ -205,6 +205,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						onCluster={this.onCluster}
 						onSortVisible={this.onSortVisible}
 						onMode={this.onMode}
+						onInteractive={this.onInteractive}
 						onKm={this.onKm}
 						onSortDirection={this.onSortDirection}
 						onXZoom={this.onXZoom}
