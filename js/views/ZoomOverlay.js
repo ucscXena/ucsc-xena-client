@@ -5,9 +5,6 @@
  * Overlay displayed on mousedown and drag over gene or samples zoom.
  */
 
-// TODO freeze addColumn hover while mouse down
-// TODO method mouseDown - do not want to render overlay if shift click - confirm ok
-
 'use strict';
 
 // Core dependencies, components

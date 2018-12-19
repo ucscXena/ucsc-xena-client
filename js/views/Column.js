@@ -543,14 +543,6 @@ class Column extends PureComponent {
 		onXZoom(id, position);
 	};
 
-	onXZoomOut = (ev) => {
-		if (ev.shiftKey) {
-			let {id, column: {maxXZoom}, onXZoom} = this.props,
-				position = getPosition(maxXZoom, '', '');
-			onXZoom(id, position);
-		}
-	};
-
 	onMenuToggle = (open) => {
 		var {xzoomable} = this.state,
 			{column: {xzoom, maxXZoom, valueType}, onXZoom, id} = this.props;
@@ -736,7 +728,7 @@ class Column extends PureComponent {
 								}
 								 wizardMode={wizardMode}>
 							<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
-								<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut}
+								<DragSelect enabled={!wizardMode}
 											onDrag={(s) => this.onDragZoom(s, 'a')} onSelect={(s) => this.onDragZoomSelect(s, 'a')}>
 									{annotation ?
 										<div>
@@ -760,7 +752,7 @@ class Column extends PureComponent {
 									samplesMatched={samplesMatched}/>
 								<div style={{position: 'relative'}}>
 									<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen} zoomMode={selection ? true : false}>
-										<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut}
+										<DragSelect enabled={!wizardMode}
 													onDrag={(s) => this.onDragZoom(s, 's')} onSelect={(s) => this.onDragZoomSelect(s, 's')}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 										</DragSelect>

@@ -15,7 +15,7 @@ var classNames = require('classnames');
 function zoomPopover(props) {
 	return (
 		<div className={classNames(compStyles.zoomDialog, {[compStyles.active]: props.active})}>
-			<div className={compStyles.content}>Shift-click on data to zoom out.<br/>Click to zoom in.</div>
+			<div className={compStyles.content}>Click and drag to zoom in.</div>
 			<div className={compStyles.actions}>
 				<Button accent onClick={props.onDisableClick}>GOT IT</Button>
 			</div>
