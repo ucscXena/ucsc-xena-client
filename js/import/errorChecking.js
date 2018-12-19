@@ -10,7 +10,7 @@ const HEADER_LENGTH_LIMIT = 255,
 
 let ERRORS, HEADER_ERRORS;
 
-const getColumns = line => line.split(/\t/g);
+const getColumns = line => line.replace(/[\r\n]+$/, '').split(/\t/g);
 
 const filterEmpty = arr => arr.filter(elem => !!elem);
 
