@@ -2,7 +2,7 @@
 
 var React = require('react');
 var _ = require('../underscore_ext');
-var {rxEvents} = require('../react-utils');
+// var {rxEvents} = require('../react-utils');
 var getLabel = require('../getLabel');
 var {supportsEdit} = require('../models/fieldSpec');
 var {addCommas} = require('../util');
@@ -16,8 +16,6 @@ function zoomOut(samples, zoom) {
 
 	return _.merge(zoom, {count: nCount, index: nIndex});
 }
-
-var zoomOutClick = ev => !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.shiftKey;
 
 function fixSampleTitle(column, i, samples, wizardMode, cohort) {
 	return i === 0 ? _.updateIn(column,
@@ -60,23 +58,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		this.setState({interactive:
 			_.assoc(this.state.interactive, key, interactive)});
 	};
-
-	componentWillMount() {
-		var events = rxEvents(this, 'plotClick');
-
-		this.plotClick = events.plotClick.subscribe(ev => {
-			let {callback, appState: {zoom, samples}} = this.props;
-			if (zoomOutClick(ev)) {
-				gaEvents('spreadsheet', 'zoom', 'out');
-				callback(['zoom', zoomOut(samples.length, zoom)]);
-			}
-			// TODO add back callback(['enableTransition'], false); on zoom in/zoom out
-		});
-	}
-
-	componentWillUnmount() {
-		this.plotClick.unsubscribe();
-	}
 
 	onResize = (id, size) => {
 		this.props.callback(['resize', id, size]);
@@ -157,15 +138,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		this.props.callback(['cohortReset']);
 	};
 
-	onPlotClick = (ev) => {
-		// Having callback that checks isInteractive is better than only
-		// passing a callback when isInteractive is true, because the latter
-		// causes downstream props to change, which causes re-renders.
-		if (isInteractive(this.props, this.state)) {
-			this.on.plotClick(ev);
-		}
-	};
-
 	onAbout = (host, dataset) => {
         this.props.callback(['navigate', 'datapages', {host, dataset}]);
 	};
@@ -216,7 +188,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						actionKey={id}
 						first={i === 0}
 						{...columnProps}
-						onClick={this.onPlotClick}
 						{...columnSelector(id, i, appState)}
 						wizardMode={wizardMode}
 						editing={appState.editing}/>))}

@@ -2,7 +2,7 @@
  * UCSC Xena Client
  * http://xena.ucsc.edu
  *
- * Zoom-related functions.
+ * Zoom-related functions - transforms of drag and drag select events.
  */
 
 'use strict';
