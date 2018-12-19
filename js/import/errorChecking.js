@@ -137,7 +137,7 @@ HEADER_ERRORS = [
         //HEADER EMPTY
         forType: ['dense', MUTATION_BY_POS, SEGMENTED_CN],
         getErrors: (state, dataType, line) => {
-            if (line.find(h => h.trim() === '') === '') {
+            if (line.some(h => h.trim() === '')) {
 				state.errors.push('One or more of your headers is blank. Please edit the file and reload.');
             }
         }
