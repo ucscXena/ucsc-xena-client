@@ -515,9 +515,8 @@ class Column extends PureComponent {
 		var {id, onXZoom, onYZoom, zoom} = this.props,
 			translatedSelection = zoomTranslateSelection(this.props, selection, zone),
 			h = translatedSelection.direction === 'h',
-			zoomTo = translatedSelection.zoomTo,
-			[start, end] = zoomTo;
-		h ? onXZoom(id, {start, end}) : onYZoom(_.merge(zoom, zoomTo));
+			zoomTo = translatedSelection.zoomTo;
+		h ? onXZoom(id, {start: zoomTo.start, end: zoomTo.end}) : onYZoom(_.merge(zoom, zoomTo));
 	};
 
 	onSortVisible = () => {

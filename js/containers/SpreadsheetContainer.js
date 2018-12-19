@@ -2,7 +2,6 @@
 
 var React = require('react');
 var _ = require('../underscore_ext');
-// var {rxEvents} = require('../react-utils');
 var getLabel = require('../getLabel');
 var {supportsEdit} = require('../models/fieldSpec');
 var {addCommas} = require('../util');
