@@ -16,27 +16,48 @@ var {Portal} = require('react-overlays');
 
 // Styles
 var compStyles = require('./ZoomOverlay.module.css');
-var classNames = require('classnames');
+
+// Overlay for horizontal drag.
+var OverlayHorizontal = props => {
+	var {geneHeight, height, positionHeight, selection} = props,
+		{connectors, end, start} = selection,
+		twoDivs = (53 + 69),
+		probPosTop = (twoDivs + (geneHeight - positionHeight)),
+		probPosBottom = (probPosTop + positionHeight - 2),
+		bottomPos = (twoDivs + geneHeight + height),
+		polygonPoints = connectors.start !== undefined ? `${connectors.start},0 ${connectors.end},0 ${connectors.end},${probPosTop} ${end},${probPosBottom} ${end},${bottomPos} ${start},${bottomPos} ${start},${probPosBottom} ${connectors.start},${probPosTop} ${connectors.start},0` : `${start},0 ${end},0 ${end},${bottomPos} ${start},${bottomPos} ${start},0`;
+
+	return (
+		<div>
+			<svg className={compStyles.overlayH}>
+				<polygon points={polygonPoints}/>
+			</svg>
+		</div>
+	);
+};
+
+// Overlay for vertical drag.
+var OverlayVertical = props => {
+	var {selection} = props,
+		{end, offset, start} = selection,
+		length = end - start,
+		top = offset.y + start;
+
+	return (
+		<Portal container={document.body}>
+			<div className={compStyles.overlayV} style={{height: length, top: top}}/>
+		</Portal>
+	);
+};
 
 class ZoomOverlay extends React.Component {
 	render() {
-		var {selection, children} = this.props,
-			direction, length, left, top;
-		if ( selection ) {
-			var {start, end, offset} = selection;
-			({direction} = selection),
-			length = end - start,
-			left = start,
-			top = offset.y + start;
-		}
+		var {children, ...overlayProps} = this.props,
+			Overlay = (overlayProps.selection ? overlayProps.selection.direction === 'h' ? OverlayHorizontal : OverlayVertical : null);
 		return (
 			<div className={compStyles.ZoomOverlay}>
 				{children}
-				{selection ? direction === 'v' ?
-					<Portal container={document.body}>
-						<div className={classNames(compStyles.overlay, compStyles.overlayV)} style={{height: length, top: top}}/>
-					</Portal> :
-					<div className={classNames(compStyles.overlay, compStyles.overlayH)} style={{left: left, width: length}}/> : null}
+				{overlayProps.selection ? <Overlay {...overlayProps}>{children}</Overlay> : null}
 			</div>
 		);
 	}

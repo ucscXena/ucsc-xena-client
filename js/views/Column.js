@@ -830,7 +830,7 @@ class Column extends PureComponent {
 		// XXX put position into a css module
 		return (
 				<div style={{width: width, position: 'relative'}}>
-					<ZoomOverlay selection={selection}>
+					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height} positionHeight={column.position ? positionHeight : 0} selection={selection}>
 						<ColCard colId={label}
 								sortable={!first}
 								title={<DefaultTextInput

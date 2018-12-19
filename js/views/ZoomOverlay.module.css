@@ -11,22 +11,22 @@
 	display: flex;
 }
 
-.overlay {
+/* Vertical drag overlay */
+.overlayV {
 	background-color: black24;
+	left: 0;
 	pointer-events: none;
+	position: fixed;
 	-webkit-touch-callout: none;
 	user-select: none;
+	width: 100%;
 	z-index: 999999;
 }
 
-.overlayV {
-	left: 0;
-	position: fixed;
-	width: 100%;
-}
-
+/* Horizontal drag overlay */
 .overlayH {
-	height: 100%;
+	fill: black24;
+	left: 0;
+	overflow: visible !important;
 	position: absolute;
-	top: 0;
 }
