@@ -102,7 +102,7 @@ const postFile = ({fileName, form, localProbemaps}, ignoreWarnings) =>
 
 const getCohortArray = cohorts => cohorts.map(c => c.cohort);
 const getValueLabelList = (items) => items
-    .map(item => ({label: item.label, userlevel: item.userlevel, value: {name: item.name, hash: item.hash}}));
+    .map(item => ({label: item.label, value: {name: item.name, hash: item.hash}}));
 
 const fetchLocalProbemaps = serverBus =>
         serverBus.next(['set-local-probemaps', probemapList(servers.localHub)]);

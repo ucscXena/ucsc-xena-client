@@ -25,7 +25,7 @@ const pageStateIndex = _.object(pageStates, pageRanges);
 const getDropdownOptions = strArr => strArr.map(val => ({ label: val, value: val }));
 const getProbemapOptions = probes => [
 	...probes.map(({label, value: {name}}) => ({label, value: name})),
-	{label: NONE_STR, userlevel: "basic", value: NONE_STR}
+	{label: NONE_STR, value: NONE_STR}
 ];
 
 const isPhenotypeData = dataType => dataType === DATA_TYPE.PHENOTYPE;
