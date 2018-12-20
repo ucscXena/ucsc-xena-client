@@ -157,7 +157,7 @@ var samplesZoom = ({yZoom, sstart, send}) => {
 		rowSize = (height - 1) / count,
 		startIndex = Math.floor(sstart / rowSize),
 		endIndex = Math.floor(send / rowSize);
-	return {index: startIndex, count: endIndex - startIndex};
+	return {index: startIndex, count: (endIndex - startIndex) + 1};
 };
 
 var zoomInAnnotatedColumn = (params) =>
