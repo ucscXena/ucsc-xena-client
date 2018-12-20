@@ -67,6 +67,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 	};
 
 	onYZoom = (yzoom) => {
+		this.props.callback(['enableTransition'], false);
 		this.props.callback(['zoom', yzoom]);
 	};
 

@@ -20,10 +20,11 @@ class ZoomOverlay extends React.Component {
 		if (selection) {
 			var {direction, offset, overlay} = selection,
 				annotationZoom = direction === 'h' ? true : false,
+				noSamples = overlay.send === null && overlay.sstart === null,
 				iEnd = overlay.iend,
 				iStart = overlay.istart,
-				sEnd = overlay.send,
-				sStart = overlay.sstart,
+				sEnd = annotationZoom && noSamples ? (((iEnd - iStart)  / 2) + iStart) : overlay.send,
+				sStart = annotationZoom && noSamples ? (((iEnd - iStart)  / 2) + iStart) : overlay.sstart,
 				sEndSamples = sEnd + offset.y,
 				sStartSamples = sStart + offset.y,
 				iStartSamples = iStart ? iStart + offset.y : sStartSamples,
@@ -36,7 +37,8 @@ class ZoomOverlay extends React.Component {
 				posX1Samples = (iStartSamples === sStartSamples) && (iEndSamples === sEndSamples) ? 20 : 26, // Spreadsheet A left position
 				posX2Samples = (iStartSamples === sStartSamples) && (iEndSamples === sEndSamples) ? posX1Samples : (posX1Samples + 12), // Spreadsheet A left position, zoom mode
 				posX3Samples = window.innerWidth,
-				polygonPoints = annotationZoom ? `${iStart},${posY1Annotation} ${iEnd},${posY1Annotation} ${iEnd},${posY3Annotation} ${sEnd},${posY4Annotation} ${sEnd},${posY5Annotation} ${sStart},${posY5Annotation} ${sStart},${posY4Annotation} ${iStart},${posY3Annotation} ${iStart},${posY1Annotation}` : `0,${iStartSamples} ${posX1Samples},${iStartSamples} ${posX2Samples},${sStartSamples} ${posX3Samples},${sStartSamples} ${posX3Samples},${sEndSamples} ${posX2Samples},${sEndSamples} ${posX1Samples},${iEndSamples} 0,${iEndSamples} 0,${sStartSamples}`;
+				polygonPoints = annotationZoom ? `${iStart},${posY1Annotation} ${iEnd},${posY1Annotation} ${iEnd},${posY3Annotation} ${sEnd},${posY4Annotation} ${sEnd},${posY5Annotation} ${sStart},${posY5Annotation} ${sStart},${posY4Annotation} ${iStart},${posY3Annotation} ${iStart},${posY1Annotation}` :
+					`0,${iStartSamples} ${posX1Samples},${iStartSamples} ${posX2Samples},${sStartSamples} ${posX3Samples},${sStartSamples} ${posX3Samples},${sEndSamples} ${posX2Samples},${sEndSamples} ${posX1Samples},${iEndSamples} 0,${iEndSamples} 0,${sStartSamples}`;
 		}
 		return (
 			<div className={compStyles.ZoomOverlay}>
