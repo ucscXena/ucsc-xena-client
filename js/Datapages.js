@@ -485,9 +485,9 @@ var DatasetPage = wrapLaunchHelper(
 					{status === 'loaded' ?
 						<span className={styles.tableControls}>
 							{type === 'genomicMatrix' ?
-								`${probeCount.toLocaleString()} identifiers X ${count} samples` : null}
+								`${probeCount.toLocaleString()} identifiers X ${count} samples ` : null}
 							{type === 'clinicalMatrix' ?
-								`${count} samples X ${probeCount.toLocaleString()} identifiers` : null}
+								`${count} samples X ${probeCount.toLocaleString()} identifiers ` : null}
 							<Link
 								href={'?' + encodeObject({host, dataset, allIdentifiers: true, ...hubParams})}
 								onClick={this.onIdentifiers} label='All Identifiers'/>
