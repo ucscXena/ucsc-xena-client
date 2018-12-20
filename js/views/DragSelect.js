@@ -21,7 +21,7 @@ function crosshairXPos(target, ev, width) {
 
 function crosshairYPos(target, ev, height) {
 	var bb = target.getBoundingClientRect();
-	return clip(bb.left, bb.left + height - 1, ev.clientY);
+	return clip(bb.top, bb.top + height - 1, ev.clientY);
 }
 
 function targetXPos(target, ev, width) {
