@@ -25,8 +25,10 @@
 
 /* Horizontal drag overlay */
 .overlayH {
+	bottom: 0;
 	fill: black24;
 	left: 0;
 	overflow: visible !important;
 	position: absolute;
+	width: 100%;
 }
