@@ -88,24 +88,6 @@ function pxTransformEach(layout, fn) {
 	_.times(chrom.length, i => pxTransformI(layout, fn, i));
 }
 
-function pxTransformReverse(layout, chromstart, chromend) {
-
-	var i = 0;
-	var {screen, chrom, reversed} = layout,
-		pos = chrom[i];
-	var [start, end] = pos;
-	var [sstart, send] = screen[i];
-	var flop = flopIf(reversed, start, end);
-	var toPx = x => floor(sstart + (x - start + 1) * (send - sstart) / (end - start + 1));
-	var clip = ([s, e]) => [max(s, start), min(e, end)];
-	var middle = (chromstart + chromend) / 2;
-
-	var [px] = _.map(halfOpen(clip(flop([middle, middle]))), toPx);
-	return px;
-}
-
-
-
 // This is hacky. Should really have started w/this, instead of
 // with pxTransformEach.
 function pxTransformFlatmap(layout, fn) {
@@ -119,6 +101,5 @@ function pxTransformFlatmap(layout, fn) {
 module.exports = {
 	pxTransformInterval,
 	pxTransformEach,
-	pxTransformFlatmap,
-	pxTransformReverse
+	pxTransformFlatmap
 };

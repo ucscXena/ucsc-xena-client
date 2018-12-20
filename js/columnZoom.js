@@ -8,7 +8,7 @@
 'use strict';
 
 // Dependencies
-var {chromRangeFromScreen, screenToChromPosition} = require('./exonLayout');
+var {chromRangeFromScreen} = require('./exonLayout');
 var multi = require('./multi');
 var _ = require('./underscore_ext');
 
@@ -63,9 +63,9 @@ var flopChrom = (chromstart, chromend, reversed) =>
 
 // True if start/end range falls within range of position, or spans position
 var chromRangeInBin = ([chromstart, chromend], {start, end}) =>
-	(chromstart > start && chromstart < end) || // start is in position
-	(chromend > start && chromend < end) || // end is in position
-	(chromstart < start && chromend > end); // start/end spans position
+	(chromstart >= start && chromstart <= end) || // start is in position
+	(chromend >= start && chromend <= end) || // end is in position
+	(chromstart <= start && chromend >= end); // start/end spans position
 
 // Returns width of each subcolumn
 var subcolumnWidth = (layout, position) => {
@@ -81,15 +81,21 @@ var subcolumnIndexToStartEndPx = ({layout, position}, i) => {
 	return {start, end};
 };
 
+// Return the set of subcolumn indices where the chromrange either falls into, or spans.
+var overlapSubcolumnIndices = (column, chromRange) => {
+	var {layout, position} = column,
+		{reversed} = layout;
+	return position
+		.map(({chromstart, chromend}, i) => ({i, ...flopChrom(chromstart, chromend, reversed)}))
+		.filter(pos => chromRangeInBin(chromRange, pos))
+		.map(({i}) => i);
+};
+
 // Calculate subcolumn start and end pixel points from the specified annotation start and end pixel points.
 var annotationStartEndPxToSamplesStartEndPx = (column, startPx, endPx) => {
-	var {layout, position} = column,
-		{reversed} = layout,
+	var {layout} = column,
 		chromRange = chromRangeFromScreen(layout, startPx, endPx),
-		overlaps = position
-			.map(({chromstart, chromend}, i) => ({i, ...flopChrom(chromstart, chromend, reversed)}))
-			.filter(pos => chromRangeInBin(chromRange, pos))
-			.map(({i}) => i),
+		overlaps = overlapSubcolumnIndices(column, chromRange),
 		start = null, end = null;
 		if ( overlaps.length ) {
 			var minIndex = _.min(overlaps),
@@ -105,21 +111,34 @@ var samplesPxToSubcolumnIndex = ({layout, position}, px) => {
 	return Math.floor(px / subcolumnWidth(layout, position));
 };
 
-// Calculate indicator start and end in annotation, from samples pixel point. Find the subcolumn for the pixel point,
-// then use the start/end chrom for the subcolumn to calculate the chrom position in the annotation.
-var samplesPxToAnnotationPx = (column, screenPx) => {
-	var {layout, position} = column,
-		subcolumnIndex = samplesPxToSubcolumnIndex(column, screenPx),
-		subcolumn = position[subcolumnIndex];
-	return screenToChromPosition(layout, subcolumn.chromstart, subcolumn.chromend);
-};
-
 // Calculate the indicator start and end points in annotation, from the samples start and end points.
 var samplesStartEndPxToAnnotationStartEndPx = (column, direction, start, end) => {
-	var istart = null, iend = null;
+	var {layout, position} = column,
+		istart = null, iend = null;
 	if ( direction === 'h' ) {
-		istart = samplesPxToAnnotationPx(column, start);
-		iend = samplesPxToAnnotationPx(column, end);
+		// Find start and end subcolumns from pixel points
+		var {baseLen, pxLen, reversed, zoom} = layout,
+			startIndex = samplesPxToSubcolumnIndex(column, start),
+			endIndex = samplesPxToSubcolumnIndex(column, end),
+			// Grab set of selected subcolumns
+			selectedPos = position.slice(startIndex, endIndex + 1),
+			// Find the min and max chroms within the selected set of subcolumns
+			minChrom = _.min(selectedPos.map(p => p.chromstart)),
+			maxChrom = _.max(selectedPos.map(p => p.chromend)),
+			// Create start and end range from min and max chroms
+			chromRange = [minChrom, maxChrom],
+			// Find all subcolumns that contain min and max chrom
+			subcolumns = position.filter(({chromstart, chromend}) =>
+				chromRangeInBin(chromRange, {start: chromstart, end: chromend})),
+			// Find true min and max chroms
+			trueMinChrom = _.min(subcolumns.map(p => p.chromstart)),
+			trueMaxChrom = _.max(subcolumns.map(p => p.chromend)),
+			// Calculate pixel points in annotation, based on min and max chroms
+			columnSize = pxLen / baseLen,
+			startPx = Math.floor((trueMinChrom - zoom.start) * columnSize),
+			endPx = Math.ceil((trueMaxChrom - zoom.start) * columnSize);
+		istart = reversed ? pxLen - endPx : startPx;
+		iend = reversed ? pxLen - startPx : endPx;
 	}
 	return {istart, iend};
 };
