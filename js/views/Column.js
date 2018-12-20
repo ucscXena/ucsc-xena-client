@@ -8,13 +8,13 @@ var DragSelect = require('./DragSelect');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
 var ResizeOverlay = require('./ResizeOverlay');
 var widgets = require('../columnWidgets');
+var zoom = require('../columnZoom');
 var aboutDatasetMenu = require('./aboutDatasetMenu');
 var spinner = require('../ajax-loader.gif');
 var mutationVector = require('../models/mutationVector');
 //var ValidatedInput = require('./ValidatedInput');
 var konami = require('../konami');
 var Crosshair = require('./Crosshair');
-var {chromRangeFromScreen} = require('../exonLayout');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
 var {publicServers} = require('../defaultServers');
@@ -26,6 +26,7 @@ import RefGeneAnnotation from '../refGeneExons';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
 var crosshair = require('./cursor.png');
+var ZoomOverlay = require('./ZoomOverlay');
 
 var ESCAPE = 27;
 
@@ -386,14 +387,39 @@ function filterExonsByCDS(exonStarts, exonEnds, cdsStart, cdsEnd) {
 		.map(([start, end]) => [Math.max(start, cdsStart), Math.min(end, cdsEnd)]);
 }
 
+var geneHeight = () => {
+	return annotationHeight + scaleHeight + 4;
+};
+
 var showPosition = column =>
 	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType) &&
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
+// Drag mapped to: direction, samples start, samples end, indicator start, indicator end (where indicator is either
+// annotation or sample zoom), offset x, offset y, samples height
+// Select mapped to: direction, data start and data end
+var zoomTranslateSelection = (props, selection, zone) => {
+	var {column} = props,
+		yZoom = props.zoom,
+		{crosshair, start, end, offset} = selection,
+		{fieldType} = column,
+		direction = zoom.direction({fieldType, start, end, zone}),
+		startEndPx = zoom.startEndPx({direction, start, end}),
+		overlay = zoom.overlay({column, direction, fieldType, ...startEndPx, zone}),
+		zoomTo = zoom.zoomTo({column, direction, fieldType, ...overlay, yZoom});
+	return {
+		crosshair,
+		direction,
+		offset,
+		overlay,
+		zoomTo
+	};
+};
 
 class Column extends PureComponent {
 	state = {
-	    specialDownloadMenu: specialDownloadMenu
+		dragZoom: {},
+		specialDownloadMenu: specialDownloadMenu
 	};
 
 	//	addAnnotationHelp(target) {
@@ -410,6 +436,10 @@ class Column extends PureComponent {
 	enableHiddenFeatures = () => {
 		specialDownloadMenu = true;
 		this.setState({specialDownloadMenu: true});
+	};
+
+	toggleInteractive = (interactive) => {
+		this.props.onInteractive('zoom', interactive);
 	};
 
 	componentWillMount() {
@@ -475,6 +505,22 @@ class Column extends PureComponent {
 			this.props.column.clustering ? undefined : 'probes');
 	};
 
+	onDragZoom = (selection, zone) => {
+		this.toggleInteractive(false);
+		var translatedSelection = zoomTranslateSelection(this.props, selection, zone);
+		this.setState({dragZoom: {selection: translatedSelection}});
+	};
+
+	onDragZoomSelect = (selection, zone) => {
+		this.toggleInteractive(true);
+		var {id, onXZoom, onYZoom, zoom} = this.props,
+			translatedSelection = zoomTranslateSelection(this.props, selection, zone),
+			h = translatedSelection.direction === 'h',
+			zoomTo = translatedSelection.zoomTo;
+		this.setState({dragZoom: {}});
+		h ? onXZoom(id, {start: zoomTo.start, end: zoomTo.end}) : onYZoom(_.merge(zoom, zoomTo));
+	};
+
 	onSortVisible = () => {
 		var {id, column} = this.props;
 		var value = _.get(column, 'sortVisible',
@@ -492,18 +538,10 @@ class Column extends PureComponent {
 		}
 	};
 
-	onXZoomOut = (ev) => {
-		if (ev.shiftKey) {
-			let {id, column: {maxXZoom}, onXZoom} = this.props,
-				position = getPosition(maxXZoom, '', '');
-			onXZoom(id, position);
-		}
-	};
-
-	onXDragZoom = (pos) => {
-		var {column: {layout}, onXZoom, id} = this.props,
-			[start, end] = chromRangeFromScreen(layout, pos.start, pos.end);
-		onXZoom(id, {start, end});
+	onXZoomClear = () => {
+		let {id, column: {maxXZoom}, onXZoom} = this.props,
+			position = getPosition(maxXZoom, '', '');
+		onXZoom(id, position);
 	};
 
 	onMenuToggle = (open) => {
@@ -614,7 +652,9 @@ class Column extends PureComponent {
 				interactive, append} = this.props,
 			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
 					_.getIn(column, ['assembly'])),
-			{specialDownloadMenu} = this.state,
+			isXAnnotation = !((_.get(column.xzoom, ['start']) === _.get(column.maxXZoom, ['start'])) && ((_.get(column.xzoom, ['end'])) === (_.get(column.maxXZoom, ['end'])))),
+			{specialDownloadMenu, dragZoom} = this.state,
+			{selection} = dragZoom,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
@@ -656,65 +696,75 @@ class Column extends PureComponent {
 		// can't use Splitbutton.
 		// XXX put position into a css module
 		return (
-			<div style={{width: width, position: 'relative'}}>
-				<ColCard colId={label}
-						sortable={!first}
-						title={<DefaultTextInput
-							disabled={!interactive}
-							onChange={this.onColumnLabel}
-							value={{default: columnLabel, user: user.columnLabel}} />}
-						subtitle={<DefaultTextInput
-							disabled={!interactive}
-							onChange={this.onFieldLabel}
-							value={{default: fieldLabel, user: user.fieldLabel}} />}
-						controls={!interactive ? (first ? refreshIcon : null) :
-							<div>
-								{first ? null : (
-									<IconMenu icon='more_vert' menuRipple iconRipple={false}>
-										{menu}
-										{menu && <MenuDivider />}
-										<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
-										caption='Kaplan Meier Plot'/>
-										<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
-										<MenuItem onClick={this.onDownload} caption='Download'/>
-										{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
-										<MenuItem onClick={this.onViz} caption='Display'/>
-										<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
-										<MenuItem onClick={this.onRemove} caption='Remove'/>
-										</IconMenu>)}
+				<div style={{width: width, position: 'relative'}}>
+					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height} positionHeight={column.position ? positionHeight : 0} selection={selection}>
+						<ColCard colId={label}
+								sortable={!first}
+								title={<DefaultTextInput
+									disabled={!interactive}
+									onChange={this.onColumnLabel}
+									value={{default: columnLabel, user: user.columnLabel}} />}
+								subtitle={<DefaultTextInput
+									disabled={!interactive}
+									onChange={this.onFieldLabel}
+									value={{default: fieldLabel, user: user.fieldLabel}} />}
+								onClick={this.onXZoomClear}
+								xAnnotationZoom={annotation && isXAnnotation}
+								controls={!interactive ? (first ? refreshIcon : null) :
+									<div>
+										{first ? null : (
+											<IconMenu icon='more_vert' menuRipple iconRipple={false}>
+												{menu}
+												{menu && <MenuDivider />}
+												<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
+												caption='Kaplan Meier Plot'/>
+												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
+												<MenuItem onClick={this.onDownload} caption='Download'/>
+												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
+												<MenuItem onClick={this.onViz} caption='Display'/>
+												<MenuItem disabled={!this.props.onEdit} onClick={this.onEdit} caption='Edit'/>
+												<MenuItem onClick={this.onRemove} caption='Remove'/>
+												</IconMenu>)}
+									</div>
+								}
+								 wizardMode={wizardMode}>
+							<div style={{cursor: selection ? 'none' : annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
+									<DragSelect enabled={!wizardMode}
+											onDrag={(s) => this.onDragZoom(s, 'a')} onSelect={(s) => this.onDragZoomSelect(s, 'a')}>
+									{annotation ?
+										<div>
+											{scale}
+											<div style={{height: 2}}/>
+											{annotation}
+										</div> : null}
+								</DragSelect>
 							</div>
-						}
-						 wizardMode={wizardMode}>
-					<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: annotationHeight + scaleHeight + 4}}>
-						{annotation ?
-							<DragSelect enabled={!wizardMode} onClick={this.onXZoomOut} onSelect={this.onXDragZoom}>
-								{scale}
-								<div style={{height: 2}}/>
-								{annotation}
-							</DragSelect> : null}
-					</div>
-					<ResizeOverlay
-						enable={interactive}
-						onResizeStop={this.onResizeStop}
-						width={width}
-						minWidth={this.getControlWidth}
-						height={zoom.height}>
-						<SpreadSheetHighlight
-							animate={searching}
-							width={width}
-							height={zoom.height}
-							samples={samples.slice(zoom.index, zoom.index + zoom.count)}
-							samplesMatched={samplesMatched}/>
-						<div style={{position: 'relative'}}>
-							<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen}>
-								{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
-								{getStatusView(status, this.onReload)}
-							</Crosshair>
-						</div>
-					</ResizeOverlay>
-				</ColCard>
-				{append}
-			</div>
+							<ResizeOverlay
+								enable={interactive}
+								onResizeStop={this.onResizeStop}
+								width={width}
+								minWidth={this.getControlWidth}
+								height={zoom.height}>
+								<SpreadSheetHighlight
+									animate={searching}
+									width={width}
+									height={zoom.height}
+									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
+									samplesMatched={samplesMatched}/>
+								<div style={{position: 'relative'}}>
+									<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen} selection={selection}>
+										<DragSelect enabled={!wizardMode}
+													onDrag={(s) => this.onDragZoom(s, 's')} onSelect={(s) => this.onDragZoomSelect(s, 's')}>
+											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
+										</DragSelect>
+										{getStatusView(status, this.onReload)}
+									</Crosshair>
+								</div>
+							</ResizeOverlay>
+						</ColCard>
+					</ZoomOverlay>
+					{append}
+				</div>
 		);
 	}
 }

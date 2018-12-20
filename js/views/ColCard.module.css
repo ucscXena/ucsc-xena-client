@@ -79,6 +79,7 @@
 	height: 61px; /* Includes border */
 	margin-bottom: 8px; /* Add additional margin here to prevent visualization from bumping up against title */
 	padding: 8px 16px;
+	position: relative; /* Positions geneZoomControl */
 }
 
 .title {
@@ -87,7 +88,27 @@
 }
 
 .title > div {
-	width: 100%; /* Force RTB title to be full width */ 
+	width: 100%; /* Force RTB title to be full width */
+}
+
+/* Gene zoom */
+.geneZoomControl {
+	align-items: center;
+	bottom: 0;
+	display: flex;
+	color: var(--color-primary-contrast);
+	cursor: pointer;
+	font-size: 8px;
+	left: 16px;
+	position: absolute;
+	text-transform: uppercase;
+}
+
+/* Clear gene zoom */
+.geneZoomControl i {
+	font-size: 10px;
+	opacity: 0.38;
+	margin-left: 4px;
 }
 
 /* Zoom card header container */

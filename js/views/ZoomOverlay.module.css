@@ -1,0 +1,40 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * Custom CSS styling of zoom overlay.
+ */
+
+@value black24 from '../../css/variables.css';
+
+.ZoomOverlay {
+	display: flex;
+}
+
+.overlay {
+	pointer-events: none;
+	-webkit-touch-callout: none;
+	user-select: none;
+	z-index: 999999;
+}
+
+/* Horizontal drag overlay */
+.overlayH {
+	bottom: 0;
+	fill: rgba(136, 136, 136, 0.45);
+	left: 0;
+	overflow: visible !important;
+	position: absolute;
+	width: 100%;
+}
+
+/* Vertical drag overlay */
+.overlayV {
+	fill: rgba(136, 136, 136, 0.45);
+	left: 0;
+	top: 0;
+	width: 100%;
+	overflow: visible !important;
+	position: fixed;
+	z-index: 999999;
+}

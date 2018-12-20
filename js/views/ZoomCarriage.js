@@ -22,7 +22,6 @@ class ZoomCarriage extends PureComponent {
 		return 'rotate(' + angle + 'deg)';
 	};
 
-
 	render() {
 		var {addColumnAddHover, enableTransition, samplesCount, zoom, zoomOut} = this.props,
 			zoomCarriageMargin = addColumnAddHover ? 3 : 11,
@@ -34,7 +33,6 @@ class ZoomCarriage extends PureComponent {
 			upperLine = Math.sqrt(Math.pow(zoomCarriageMargin, 2) + Math.pow(carriageStart, 2)),
 			lowerAngle = Math.atan((heightBelowCarriage) / zoomCarriageMargin) * 180 / Math.PI,
 			lowerLine = Math.sqrt(Math.pow(zoomCarriageMargin, 2) + Math.pow(heightBelowCarriage, 2));
-
 		return (
 			<div className={compStyles.zoomCarriage}>
 				<div className={compStyles.carriage} style={{height: carriageHeight, top: carriageStart}}>
