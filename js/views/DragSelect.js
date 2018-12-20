@@ -14,6 +14,16 @@ var styles = {
 
 var clip = (min, max, x) => x < min ? min : (x > max ? max : x);
 
+function crosshairXPos(target, ev, width) {
+	var bb = target.getBoundingClientRect();
+	return clip(bb.left, bb.left + width - 1, ev.clientX);
+}
+
+function crosshairYPos(target, ev, height) {
+	var bb = target.getBoundingClientRect();
+	return clip(bb.left, bb.left + height - 1, ev.clientY);
+}
+
 function targetXPos(target, ev, width) {
 	var bb = target.getBoundingClientRect();
 	return clip(0, width - 1, ev.clientX - bb.left);
@@ -42,12 +52,17 @@ class DragSelect extends React.Component {
 				selection;
 
 			return Rx.Observable.fromEvent(window, 'mousemove').map(function (mm) {
-				var endX = targetXPos(target, mm, bb.width),
-					endY = targetYPos(target, mm, bb.height);
+				var {width, height} = bb,
+					endX = targetXPos(target, mm, width),
+					endY = targetYPos(target, mm, height),
+					crosshairX = crosshairXPos(target, mm, width),
+					crosshairY = crosshairYPos(target, mm, height);
+
 				selection = {
 					start: {x: startX, y: startY},
 					end: {x: endX, y: endY},
-					offset: {x: bb.left, y: bb.top}
+					offset: {x: bb.left, y: bb.top},
+					crosshair: {x: crosshairX, y: crosshairY}
 				};
 				return {dragging: true, ...selection};
 			}).takeUntil(Rx.Observable.fromEvent(window, 'mouseup'))
