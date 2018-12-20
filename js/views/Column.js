@@ -516,6 +516,7 @@ class Column extends PureComponent {
 			translatedSelection = zoomTranslateSelection(this.props, selection, zone),
 			h = translatedSelection.direction === 'h',
 			zoomTo = translatedSelection.zoomTo;
+		this.setState({dragZoom: {}});
 		h ? onXZoom(id, {start: zoomTo.start, end: zoomTo.end}) : onYZoom(_.merge(zoom, zoomTo));
 	};
 
