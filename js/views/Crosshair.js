@@ -9,6 +9,7 @@
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
+
 var React = require('react');
 var {Portal} = require('react-overlays');
 
@@ -17,21 +18,18 @@ var compStyles = require('./Crosshair.module.css');
 var classNames = require('classnames');
 
 class Crosshair extends PureComponent {
-	state = {mousing: false, x: -1, xTarget: -1, y: -1, yTarget: -1};
+	state = {mousing: false, x: -1, y: -1};
 
 	componentWillReceiveProps(nextProps) {
-		if (!nextProps.frozen && !nextProps.zoomMode) {
+		if (!nextProps.frozen) {
 			this.setState({mousing: false, x: -1, y: -1});
 		}
 	}
 
 	onMouseMove = (ev) => {
-		var {zoomMode} = this.props,
-		x = zoomMode ? ev.clientX : ev.clientX - ev.currentTarget.getBoundingClientRect().left;
-		var xTarget = x - ev.currentTarget.getBoundingClientRect().left - 6;
-		var yTarget = ev.clientY - ev.currentTarget.getBoundingClientRect().top - 6;
+		var x = ev.clientX - ev.currentTarget.getBoundingClientRect().left;
 		if (!this.props.frozen) {
-			this.setState({mousing: true, x, xTarget, y: ev.clientY, yTarget});
+			this.setState({mousing: true, x, y: ev.clientY});
 		}
 	};
 
@@ -42,19 +40,46 @@ class Crosshair extends PureComponent {
 	};
 
 	render() {
-		let {mousing, x, xTarget, y, yTarget} = this.state,
+		let {mousing, x, y} = this.state,
 			{onMouseMove, onMouseOut} = this,
-			{frozen, height, zoomMode, children} = this.props,
-			cursor = frozen ? 'default' : 'none';
+			{frozen, height, selection, children} = this.props,
+			zoomMode = selection ? true : false,
+			cursor = zoomMode ? 'none' : frozen ? 'default' : 'none';
+		if (selection) {
+			var {crosshair} = selection,
+				xZoomTarget = crosshair.x - 6,
+				yZoomTarget = crosshair.y - 6;
+		}
+		let getCrosshairVClassName = (zoomMode) => {
+			return classNames({
+				[compStyles.crosshairV]: !zoomMode,
+				[compStyles.inspectCrosshair]: !zoomMode,
+				[compStyles.zoomCrosshairV]: zoomMode
+			});
+		};
+		let getCrosshairHClassName = (zoomMode) => {
+			return classNames({
+				[compStyles.crosshairH]: !zoomMode,
+				[compStyles.inspectCrosshair]: !zoomMode,
+				[compStyles.zoomCrosshairH]: zoomMode
+			});
+		};
 		return (
 			<div style={{cursor}} onMouseMove={onMouseMove} onMouseOut={onMouseOut}>
 				{children}
-				{mousing || zoomMode ? <div className={classNames(compStyles.crosshair, compStyles.crosshairV, {[compStyles.zoomCrosshair]: zoomMode})} style={{left: x, height: zoomMode ? 'unset' : height}}/> : null}
-				{zoomMode ? <div className={compStyles.crosshairTarget} style={{left: xTarget, top: yTarget}}/> : null}
-				{mousing || zoomMode ?
+				{zoomMode || mousing ?
+					<div
+						className={classNames(compStyles.crosshair, getCrosshairVClassName(zoomMode))}
+						style={{left: zoomMode ? crosshair.x : x, height: zoomMode ? '100%' : height}}/> : null}
+				{zoomMode ?
+					<div className={classNames(compStyles.crosshair, compStyles.crosshairTarget)}
+						 style={{left: xZoomTarget, top: yZoomTarget}}/> : null}
+				{zoomMode || mousing ?
 					<Portal container={document.body}>
-						<div className={compStyles.crosshairs}>
-							<span className={classNames(compStyles.crosshair, compStyles.crosshairH, {[compStyles.zoomCrosshair]: zoomMode})} style={{top: y}}/>
+						<div className={classNames(compStyles.crosshairs)}>
+									<span
+										className={classNames(compStyles.crosshair, getCrosshairHClassName(zoomMode))}
+										style={{top: zoomMode ? crosshair.y : y}}/>
 						</div>
 					</Portal> : null}
 			</div>

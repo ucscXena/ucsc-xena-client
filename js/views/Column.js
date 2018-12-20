@@ -728,8 +728,8 @@ class Column extends PureComponent {
 									</div>
 								}
 								 wizardMode={wizardMode}>
-							<div style={{cursor: annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
-								<DragSelect enabled={!wizardMode}
+							<div style={{cursor: selection ? 'none' : annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
+									<DragSelect enabled={!wizardMode}
 											onDrag={(s) => this.onDragZoom(s, 'a')} onSelect={(s) => this.onDragZoomSelect(s, 'a')}>
 									{annotation ?
 										<div>
@@ -752,7 +752,7 @@ class Column extends PureComponent {
 									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 									samplesMatched={samplesMatched}/>
 								<div style={{position: 'relative'}}>
-									<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen} zoomMode={selection ? true : false}>
+									<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen} selection={selection}>
 										<DragSelect enabled={!wizardMode}
 													onDrag={(s) => this.onDragZoom(s, 's')} onSelect={(s) => this.onDragZoomSelect(s, 's')}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
