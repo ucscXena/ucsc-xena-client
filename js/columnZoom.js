@@ -135,10 +135,10 @@ var samplesStartEndPxToAnnotationStartEndPx = (column, direction, start, end) =>
 			trueMaxChrom = _.max(subcolumns.map(p => p.chromend)),
 			// Calculate pixel points in annotation, based on min and max chroms
 			columnSize = pxLen / baseLen,
-			startPx = Math.floor((trueMinChrom - zoom.start) * columnSize),
-			endPx = Math.ceil((trueMaxChrom - zoom.start) * columnSize);
-		istart = reversed ? pxLen - endPx : startPx;
-		iend = reversed ? pxLen - startPx : endPx;
+			startPx = (trueMinChrom - zoom.start) * columnSize,
+			endPx = (trueMaxChrom - zoom.start) * columnSize;
+		istart = Math.floor(reversed ? pxLen - endPx : startPx);
+		iend = Math.ceil(reversed ? pxLen - startPx : endPx);
 	}
 	return {istart, iend};
 };
