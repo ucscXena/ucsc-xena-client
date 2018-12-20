@@ -11,24 +11,30 @@
 	display: flex;
 }
 
-/* Vertical drag overlay */
-.overlayV {
-	background-color: black24;
-	left: 0;
+.overlay {
 	pointer-events: none;
-	position: fixed;
 	-webkit-touch-callout: none;
 	user-select: none;
-	width: 100%;
 	z-index: 999999;
 }
 
 /* Horizontal drag overlay */
 .overlayH {
 	bottom: 0;
-	fill: black24;
+	fill: rgba(136, 136, 136, 0.45);
 	left: 0;
 	overflow: visible !important;
 	position: absolute;
 	width: 100%;
+}
+
+/* Vertical drag overlay */
+.overlayV {
+	fill: rgba(136, 136, 136, 0.45);
+	left: 0;
+	top: 0;
+	width: 100%;
+	overflow: visible !important;
+	position: fixed;
+	z-index: 999999;
 }

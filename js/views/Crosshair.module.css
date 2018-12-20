@@ -14,43 +14,57 @@
 }
 
 .crosshair {
-	background-image: url('./dots.gif');
 	pointer-events: none;
 	user-select: none;
 	-webkit-touch-callout: none;
+	z-index: 999999;
 }
 
-.crosshair.zoomCrosshair {
-	background-image: url('./zoomDots.png');
+/* Crosshair */
+.inspectCrosshair {
+	background-image: url('./dots.gif');
 }
 
+/* Horizontal crosshair */
 .crosshairH {
 	height: 1px;
 	left: 0;
-	width: 100%;
 	position: fixed;
+	width: 100%;
 }
 
+/* Vertical crosshair */
 .crosshairV {
 	bottom: 0;
 	position: absolute;
 	top: 0;
 	width: 1px;
-	z-index: 999999;
 }
 
-.zoomCrosshair.crosshairV {
+/* Horizontal zoom crosshair */
+.zoomCrosshairH {
+	background-image: url('./zoomDots.png');
+	height: 1px;
+	left: 0;
 	position: fixed;
+	width: 100%;
 }
 
+/* Vertical zoom crosshair */
+.zoomCrosshairV {
+	background-image: url('./zoomDots.png');
+	position: fixed;
+	top: 0;
+	width: 1px;
+}
+
+/* Zoom target */
 .crosshairTarget {
 	border: 1px dashed rgba(0, 0, 0, 0.87);
 	border-radius: 50%;
 	height: 13px;
-	pointer-events: none;
-	position: absolute;
-	user-select: none;
-	-webkit-touch-callout: none;
+	left: 0;
+	position: fixed;
+	top: 0;
 	width: 13px;
-	z-index: 999999;
 }
