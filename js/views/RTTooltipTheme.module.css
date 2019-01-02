@@ -8,16 +8,10 @@
 
 /* Tooltip wrapper */
 .tooltip {
-	align-items: center;
-	display: flex;
 	padding: 4px;
 }
 
 /* Tooltip inner element */
 .tooltipInner {
-	composes: mdCaption from '../../css/typography.module.css';
-	background: #0F3137;
-	font-size: 10px;
-	font-weight: 400;
 	padding: 4px 6px;
 }
