@@ -15,6 +15,7 @@ var _ = require('./underscore_ext');
 
 // App dependencies
 var SheetStatus = require('./views/SheetStatus');
+import Tooltip from 'react-toolbox/lib/tooltip';
 
 // Styles
 var compStyles = require('./SheetControls.module.css');
@@ -26,13 +27,15 @@ class SheetControls extends React.Component {
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
 			/*filterLabel = 'Filter:',*/
-			zoomLabel = count === appState.samples.length ? 'Zoom:' : 'Zoomed',
-			zoomState = count === appState.samples.length ? 'None' :
-				`to rows ${index + 1} - ${index + count}`;
+			zoomed = count !== appState.samples.length,
+			zoomLabel = zoomed ? 'Zoomed' : 'Zoom:',
+			zoomState = zoomed ? `to rows ${index + 1} - ${index + count}` : 'None',
+			zoomStatus = (<SheetStatus disabled={statusDisabled} label={zoomLabel} onClose={clearZoom} sheetState={zoomState}/>),
+			ZoomTooltip = Tooltip('zoomStatus');
 		return (
 			<div className={compStyles.sheetControls}>
 				<div className={compStyles.sheetStatus}>
-					<SheetStatus disabled={statusDisabled} label={zoomLabel} onClose={clearZoom} sheetState={zoomState}/>
+					{zoomed ? zoomStatus : <ZoomTooltip tooltip='Zoom - click and drag'>{zoomStatus}</ZoomTooltip>}
 					{/*{FilterArray.map((filter, i) => <SheetStatus key={i} disabled={statusDisabled} label={filterLabel}
 																 sheetState={filter}/>)}*/}
 				</div>

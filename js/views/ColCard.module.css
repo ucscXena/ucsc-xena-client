@@ -100,6 +100,7 @@
 	cursor: pointer;
 	font-size: 8px;
 	left: 16px;
+	line-height: normal;
 	position: absolute;
 	text-transform: uppercase;
 }
