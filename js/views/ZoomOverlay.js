@@ -19,7 +19,7 @@ class ZoomOverlay extends React.Component {
 		var {geneHeight, height, positionHeight, selection, children} = this.props;
 		if (selection) {
 			var {direction, offset, overlay} = selection,
-				annotationZoom = direction === 'h' ? true : false,
+				annotationZoom = direction === 'h',
 				noSamples = overlay.send === null && overlay.sstart === null,
 				iEnd = overlay.iend,
 				iStart = overlay.istart,
