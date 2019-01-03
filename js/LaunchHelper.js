@@ -83,7 +83,15 @@ class XenaDownload extends React.Component {
 	state = {};
 
 	componentDidMount() {
-		this.sub = Rx.Observable.ajax({method: 'GET', responseType: 'xml', url: updatesPath, crossDomain: true}).subscribe(xml => {
+		// Haven't been able to get the browsers to use the etags from
+		// the server. It might need some other header to indicate that
+		// the doc should be considered expired. This doesn't help in
+		// the current deployment, because the headers for the doc have already
+		// been served. A tacky work-around is to append a random query string,
+		// forcing the client to bypass its cache.
+		// Note that the etags do appear to work for some files, like the
+		// image files.
+		this.sub = Rx.Observable.ajax({method: 'GET', responseType: 'xml', url: updatesPath + '?x=' + Math.random().toString(), crossDomain: true}).subscribe(xml => {
 			var files = matchPaths([...xml.response.getElementsByTagName('entry')]
 								   .map(getFileName));
 
