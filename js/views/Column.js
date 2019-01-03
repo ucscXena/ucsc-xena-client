@@ -26,6 +26,7 @@ import RefGeneAnnotation from '../refGeneExons';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
 var crosshair = require('./cursor.png');
+var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
 
 var ESCAPE = 27;
@@ -412,6 +413,7 @@ var zoomTranslateSelection = (props, selection, zone) => {
 		direction,
 		offset,
 		overlay,
+		zone,
 		zoomTo
 	};
 };
@@ -657,6 +659,8 @@ class Column extends PureComponent {
 			{selection} = dragZoom,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
+			xZoomRange = ((_.get(column.maxXZoom, ['end'])) - (_.get(column.maxXZoom, ['start']))),
+			xAnnotationRange = (((_.get(column.xzoom, ['end'])) - (_.get(column.xzoom, ['start']))) / xZoomRange * 100).toFixed(1),
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
 				onCluster, onSpecialDownload, specialDownloadMenu, isChrom}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
@@ -709,6 +713,7 @@ class Column extends PureComponent {
 									onChange={this.onFieldLabel}
 									value={{default: fieldLabel, user: user.fieldLabel}} />}
 								onClick={this.onXZoomClear}
+								xAnnotationRange={xAnnotationRange}
 								xAnnotationZoom={annotation && isXAnnotation}
 								controls={!interactive ? (first ? refreshIcon : null) :
 									<div>
@@ -752,12 +757,13 @@ class Column extends PureComponent {
 									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 									samplesMatched={samplesMatched}/>
 								<div style={{position: 'relative'}}>
-									<Crosshair height={zoom.height} frozen={!interactive || this.props.frozen} selection={selection}>
+									<Crosshair frozen={!interactive || this.props.frozen} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
 										<DragSelect enabled={!wizardMode}
 													onDrag={(s) => this.onDragZoom(s, 's')} onSelect={(s) => this.onDragZoomSelect(s, 's')}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 										</DragSelect>
 										{getStatusView(status, this.onReload)}
+										<ZoomHelpTag selection={selection} xZoomRange={xZoomRange} />
 									</Crosshair>
 								</div>
 							</ResizeOverlay>

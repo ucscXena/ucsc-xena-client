@@ -42,13 +42,15 @@ class Crosshair extends PureComponent {
 	render() {
 		let {mousing, x, y} = this.state,
 			{onMouseMove, onMouseOut} = this,
-			{frozen, height, selection, children} = this.props,
+			{frozen, geneHeight, height, selection, children} = this.props,
 			zoomMode = selection ? true : false,
 			cursor = zoomMode ? 'none' : frozen ? 'default' : 'none';
 		if (selection) {
-			var {crosshair} = selection,
+			var {crosshair, offset, zone} = selection,
 				xZoomTarget = crosshair.x - 6,
-				yZoomTarget = crosshair.y - 6;
+				yZoomTarget = crosshair.y - 6,
+				crosshairVHeight = geneHeight + 8 + height,
+				crosshairVTop = zone === 'a' ? offset.y - 8 : offset.y - geneHeight - 8;
 		}
 		let getCrosshairVClassName = (zoomMode) => {
 			return classNames({
@@ -70,7 +72,7 @@ class Crosshair extends PureComponent {
 				{zoomMode || mousing ?
 					<div
 						className={classNames(compStyles.crosshair, getCrosshairVClassName(zoomMode))}
-						style={{left: zoomMode ? crosshair.x : x, height: zoomMode ? '100%' : height}}/> : null}
+						style={{bottom: zoomMode ? 'unset' : 0, left: zoomMode ? crosshair.x : x, height: zoomMode ? crosshairVHeight : height, top: zoomMode ? crosshairVTop : 'unset'}}/> : null}
 				{zoomMode ?
 					<div className={classNames(compStyles.crosshair, compStyles.crosshairTarget)}
 						 style={{left: xZoomTarget, top: yZoomTarget}}/> : null}
