@@ -102,11 +102,19 @@
 	left: 16px;
 	line-height: normal;
 	position: absolute;
+	right: 16px;
 	text-transform: uppercase;
+}
+
+.geneZoomControl span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* Clear gene zoom */
 .geneZoomControl i {
+	flex-shrink: 0;
 	font-size: 10px;
 	opacity: 0.38;
 	margin-left: 4px;

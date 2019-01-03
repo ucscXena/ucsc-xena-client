@@ -654,7 +654,7 @@ class Column extends PureComponent {
 				interactive, append} = this.props,
 			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
 					_.getIn(column, ['assembly'])),
-			isXAnnotation = !((_.get(column.xzoom, ['start']) === _.get(column.maxXZoom, ['start'])) && ((_.get(column.xzoom, ['end'])) === (_.get(column.maxXZoom, ['end'])))),
+			isXAnnotation = column.xzoom !== undefined && !((_.get(column.xzoom, ['start']) === _.get(column.maxXZoom, ['start'])) && ((_.get(column.xzoom, ['end'])) === (_.get(column.maxXZoom, ['end'])))),
 			{specialDownloadMenu, dragZoom} = this.state,
 			{selection} = dragZoom,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
