@@ -23,9 +23,11 @@ class CanvasDrawing extends React.Component {
 	}
 
 	render() {
-		var {width, zoom: {height}, zoomCarriage, wrapperProps} = this.props;
+		var {width, zoom: {height}, wrapperProps} = this.props,
+			{className, ...props} = wrapperProps || {},
+			classes = classNames(className, compStyles.wrapper); // Must add tooltip class, if specified in props
 		return (
-			<div ref='div' {...wrapperProps} className={classNames(compStyles.wrapper, {[compStyles.zoomCarriage]: zoomCarriage})} style={{width, height}}>
+			<div ref='div' {...props} className={classes} style={{width, height}}>
 				<canvas className={compStyles.canvas} ref='canvas'/>
 				<div className={compStyles.labels} style={{top: -height, width, height}} ref='labels'/>
 			</div>
