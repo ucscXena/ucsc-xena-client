@@ -37,6 +37,7 @@ var directionInNonAnnotatedColumn = () => 'v';
 // @param {fieldType, start, end, zone}
 zoom.direction.add('geneProbes', directionInAnnotatedColumn);
 zoom.direction.add('segmented', directionInAnnotatedColumn);
+zoom.direction.add('mutation', directionInAnnotatedColumn);
 zoom.direction.add('clinical', directionInNonAnnotatedColumn);
 
 //
@@ -160,6 +161,7 @@ var overlayWithoutSubcolumns = ({start, end}) => ({sstart: start, send: end, ist
 // -- start and end are pixel points in the target zone where the drag zoom event occurred (either samples or annotation)
 zoom.overlay.add('geneProbes', overlayWithSubcolumns);
 zoom.overlay.add('segmented', overlayWithoutSubcolumns);
+zoom.overlay.add('mutation', overlayWithoutSubcolumns);
 zoom.overlay.add('clinical', overlayWithoutSubcolumns);
 
 //
@@ -188,6 +190,7 @@ var zoomInAnnotatedColumn = (params) =>
 // -- yZoom is the current samples/vertical zoom state
 zoom.zoomTo.add('geneProbes', zoomInAnnotatedColumn);
 zoom.zoomTo.add('segmented', zoomInAnnotatedColumn);
+zoom.zoomTo.add('mutation', zoomInAnnotatedColumn);
 zoom.zoomTo.add('clinical', samplesZoom);
 
 module.exports = zoom;
