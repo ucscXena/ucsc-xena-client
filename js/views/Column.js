@@ -404,9 +404,10 @@ var zoomTranslateSelection = (props, selection, zone) => {
 		yZoom = props.zoom,
 		{crosshair, start, end, offset} = selection,
 		{fieldType} = column,
+		annotated = showPosition(column),
 		direction = zoom.direction({fieldType, start, end, zone}),
 		startEndPx = zoom.startEndPx({direction, start, end}),
-		overlay = zoom.overlay({column, direction, fieldType, ...startEndPx, zone}),
+		overlay = zoom.overlay({annotated, column, direction, fieldType, ...startEndPx, zone}),
 		zoomTo = zoom.zoomTo({column, direction, fieldType, ...overlay, yZoom});
 	return {
 		crosshair,
