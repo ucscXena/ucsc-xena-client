@@ -13,7 +13,7 @@ var request = require('request');
 var Rx = require('rxjs');
 var post = Rx.Observable.bindNodeCallback(request.post);
 
-var {publicServers} = require('../js/defaultServers');
+var {publicServers} = require('../defaultServers');
 
 var allCohortsQuery = `
     (map :cohort
