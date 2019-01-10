@@ -207,7 +207,8 @@ class ImportForm extends React.Component {
 	}
 
 	studySelectionPage() {
-		const { cohortRadio, newCohort, publicCohort, localCohort } = this.props.state;
+		const { cohortRadio, newCohort, publicCohort, localCohort } = this.props.state,
+			cohorts = _.getIn(this.props, ['recommended', 'cohorts']);
 		return (
 			<div>
 				<RadioGroup value={cohortRadio} onChange={this.onCohortRadioChange}>
@@ -229,7 +230,7 @@ class ImportForm extends React.Component {
 						value='publicCohort' />
 					{cohortRadio === 'publicCohort' &&
 						<div className={styles.field}>
-							<CohortSuggest cohort={publicCohort} cohorts={this.props.cohorts}
+							<CohortSuggest cohort={publicCohort} cohorts={_.pluck(cohorts, 'name')}
 								onSelect={this.onPublicCohortChange}
 							/>
 						</div>
