@@ -24,7 +24,7 @@ class ZoomHelpTag extends React.Component {
 				crosshairVFromRightBounds = document.body.offsetWidth - crosshair.x,
 				sampleRowFrom = zoomTo.index + 1,
 				sampleRowTo = zoomTo.index + zoomTo.count,
-				tagInstruction = overlay.sstart === overlay.send ? 'Drag to zoom' : annotationZoom ? `Zoomed to ${annotationPct}%` : `Zoomed to rows ${sampleRowFrom} - ${sampleRowTo}`,
+				tagInstruction = overlay.sstart === overlay.send ? 'Drag to zoom' : annotationZoom ? `Zoom to ${annotationPct}%` : `Zoom to rows ${sampleRowFrom} - ${sampleRowTo}`,
 				tagPosLeft = zone === 'a' ? crosshair.x : annotationZoom ? (offset.x + overlay.sstart === crosshair.x) ? 'unset' : crosshair.x : crosshair.x,
 				tagPosRight = annotationZoom && zone === 's' && (offset.x + overlay.sstart === crosshair.x) ? crosshairVFromRightBounds : 'unset',
 				tagPosTop = zone === 'a' ? (offset.y - 48) : annotationZoom ? crosshair.y : (offset.y + overlay.sstart === crosshair.y) ? (crosshair.y - 40) : crosshair.y;

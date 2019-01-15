@@ -35,7 +35,7 @@ class SheetControls extends React.Component {
 		return (
 			<div className={compStyles.sheetControls}>
 				<div className={compStyles.sheetStatus}>
-					{zoomed ? zoomStatus : <ZoomTooltip tooltip='Zoom - click and drag'>{zoomStatus}</ZoomTooltip>}
+					{zoomed ? zoomStatus : <ZoomTooltip tooltip='Click and drag to zoom'>{zoomStatus}</ZoomTooltip>}
 					{/*{FilterArray.map((filter, i) => <SheetStatus key={i} disabled={statusDisabled} label={filterLabel}
 																 sheetState={filter}/>)}*/}
 				</div>
