@@ -38,7 +38,7 @@ var fetchCohortPhenotype = () =>
 			preferred => map(preferred, ({host, dataset, feature}) =>
 				   ({dsID: JSON.stringify({host, name: dataset}), name: feature}))));
 
-var phenoPat = /^phenotypes?$/i;
+var phenoPat = /^phenotype/i;  // match ../viwes/VariableSelect.js definition of phenotype data
 var isPhenotype = ds => ds.type === 'clinicalMatrix' &&
 		(!ds.dataSubType || ds.dataSubType.match(phenoPat));
 
