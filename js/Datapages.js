@@ -139,7 +139,7 @@ var CohortHeader = ({inHubs, host, onImport, badge}) => {
 				<Button label={"Help"} target="_blank" href='https://ucsc-xena.gitbook.io/project/local-xena-hub' accent />
 			</div>}
 
-			{isLocalHub(host) ? null : <p>Host address: {host}</p>}
+			{isLocalHub(host) ? null : <p>Hub address: {host}</p>}
 
 			{isLocalHub(host) && <div className={styles.descriptionBox}>
 				<p>A Local Xena Hub is an application on your computer for loading and storing data.</p>
