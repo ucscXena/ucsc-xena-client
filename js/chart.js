@@ -742,7 +742,7 @@ function render(root, callback, sessionStorage) {
 
 						statsDiv.innerHTML += (
 							(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
-							'p = ' + pValue.toPrecision(4) + ', ' +
+							'p = ' + pValue.toPrecision(4) + ' ' +
 							'(t = ' + tStatistics.toPrecision(4) + ')<br>'
 						);
 					}
@@ -799,7 +799,7 @@ function render(root, callback, sessionStorage) {
 
 					statsDiv.innerHTML += (
 						(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
-						'p = ' + pValue.toPrecision(4) + ', ' +
+						'p = ' + pValue.toPrecision(4) + ' ' +
 						'(f = ' + fScore.toPrecision(4) + ')<br>'
 					);
 				});
@@ -1055,7 +1055,7 @@ function render(root, callback, sessionStorage) {
 
 				pValue = 1 - jStat.chisquare.cdf( chisquareStats, dof);
 				statsDiv.innerHTML = 'Pearson\'s chi-squared test<br>' +
-						'p = ' + pValue.toPrecision(4) + ', ' +
+						'p = ' + pValue.toPrecision(4) + ' ' +
 						'(χ2 = ' + chisquareStats.toPrecision(4) + ')';
 				statsDiv.classList.toggle(compStyles.visible);
 			}
