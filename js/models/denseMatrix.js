@@ -200,7 +200,10 @@ function zoomableDataToHeatmap(column, vizSettings, data, samples) {
 			['values'], () => valuesInView,
 			['mean'], mean => _.range(start, endIndex).map(i => mean[i]));
 
-	return dataToHeatmap(column, vizSettings, {req: reqInView}, samples);
+	return {
+		...dataToHeatmap(column, vizSettings, {req: reqInView}, samples),
+		maxXZoom: {start: 0, end: values.length}
+	};
 }
 
 //
