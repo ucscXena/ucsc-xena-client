@@ -237,9 +237,10 @@ function indexGeneResponse(samples, genes, data) {
 }
 
 function indexFieldResponse(fields, resp) {
-	var [position, data] = resp;
+	var [{name, position}, data] = resp,
+		posMap = _.object(name, position);
 	return {
-		position,
+		position: fields.map(f => posMap[f]),
 		...meanNanResponse(fields, data)
 	};
 }
