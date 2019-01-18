@@ -148,11 +148,12 @@ function geneProbesToHeatmap(column, vizSettings, data, samples) {
 	}
 	var showPos = showPosition(column),
 		{req} = data,
+		{values} = req,
 		refGeneObj = _.first(_.values(data.refGene)),
-		maxXZoom = defaultXZoom(pos, refGeneObj, req.position),
+		maxChromXZoom = defaultXZoom(pos, refGeneObj, req.position),
 		{width, showIntrons = false, xzoom} = column,
 		// Use maxXZoom when there is no gene model (as xzoom is subcolumn indices)
-		chromXZoom = showPos ? (xzoom || maxXZoom) : maxXZoom,
+		chromXZoom = showPos ? (xzoom || maxChromXZoom) : maxChromXZoom,
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
 		// XXX Build layout that includes pxs for introns
 		layout = createLayout(refGeneObj, width, chromXZoom, pos),
@@ -181,7 +182,7 @@ function geneProbesToHeatmap(column, vizSettings, data, samples) {
 		...(probesInView.length ? heatmapData : {}),
 		layout,
 		position: probesInView.map(i => req.position[i]),
-		maxXZoom
+		maxXZoom: (showPos ? maxChromXZoom : {start: 0, end: values.length})
 	};
 }
 
