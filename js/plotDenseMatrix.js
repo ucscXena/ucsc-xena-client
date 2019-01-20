@@ -62,7 +62,7 @@ var gbURL = (assembly, pos, hgtCustomtext, hubUrl) => {
 			${hgtCustomtext ? `&hgt.customText=${hgtCustomtext}` : ''}`;
 };
 
-function tooltip(id, heatmap, assembly, hgtCustomtext, hubUrl,
+function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 	fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
@@ -76,8 +76,8 @@ function tooltip(id, heatmap, assembly, hgtCustomtext, hubUrl,
 		label = fieldFormat(field);
 
 	val = code ? code : prec(val);
-	let mean = heatmap && prec(_.meannull(heatmap[fieldIndex])),
-		median = heatmap && prec(_.medianNull(heatmap[fieldIndex]));
+	let mean = avg && prec(avg.mean),
+		median = avg && prec(avg.median);
 	return {
 		sampleID: sampleFormat(sampleID),
 		id,
@@ -85,8 +85,7 @@ function tooltip(id, heatmap, assembly, hgtCustomtext, hubUrl,
 		rows: [
 			[['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos, hgtCustomtext, hubUrl)]]] : []),
-			...((!code && (mean !== 'NA') && (median !== 'NA') ? [[['labelValue', 'Mean (Median)', mean + ' (' +
-	         median + ')' ]]] : []))]
+			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['labelValue', 'Mean (Median)', `${mean} (${median})`]]] : [])]
 	};
 }
 
@@ -268,10 +267,11 @@ class extends PureComponent {
 			codes = _.get(data, 'codes'),
 			// support data.req.position for old bookmarks.
 			position = column.position || _.getIn(data, ['req', 'position']),
+			avg = _.get(data, 'avg'),
 			{assembly, fields, heatmap, width, dataset} = column,
 			hgtCustomtext = _.getIn(dataset, ['probemapMeta', 'hgt.customtext']),
 			hubUrl = _.getIn(dataset, ['probemapMeta', 'huburl']);
-		return tooltip(id, heatmap, assembly, hgtCustomtext, hubUrl, fields, sampleFormat, fieldFormat(id),
+		return tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl, fields, sampleFormat, fieldFormat(id),
 			codes, position, width, zoom, samples, ev);
 	};
 

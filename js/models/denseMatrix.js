@@ -194,6 +194,7 @@ var cmp = ({fields}, {req: {values, probes} = {values, probes}} = {}) =>
 //
 
 // Convert nanstr and compute mean.
+// XXX deprecate this & use avg selector (widgets.avg) instead.
 function meanNanResponse(probes, data) {
 	var values = _.map(data, field => _.map(field, xenaQuery.nanstr)),
 		mean = _.map(data, _.meannull);
@@ -333,11 +334,24 @@ function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {
 	};
 }
 
+function denseAverage(column, data) {
+	var values = _.getIn(data, ['req', 'values'], []);
+	return {
+		avg: {
+			mean: values.map(_.meannull),
+			median: values.map(_.medianNull)
+		}
+	};
+}
+
 ['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType => {
 	widgets.transform.add(fieldType, reorderFieldsTransform(dataToHeatmap));
 	widgets.cmp.add(fieldType, cmp);
 	widgets.download.add(fieldType, download);
 });
+
+['probes', 'geneProbes', 'genes'].forEach(fieldType =>
+	widgets.avg.add(fieldType, denseAverage));
 
 widgets.transform.add('geneProbes', reorderFieldsTransform(geneProbesToHeatmap));
 
