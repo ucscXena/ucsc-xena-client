@@ -22,7 +22,7 @@ const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
 
 const ignoredClinical = (type, subtype) =>
-	type === 'clinicalMatrix' && (!subtype || subtype.match(/^phenotype/i));
+	type === 'clinicalMatrix' && (!subtype || subtype.match(/^phenotype/i));  // match ../controllers/wizard.js definition of phenotype data
 
 var notIgnored = ({type, dataSubType}) => !_.contains(ignoredType, type) &&
 	!ignoredClinical(type, dataSubType);
