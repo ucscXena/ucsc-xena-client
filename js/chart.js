@@ -666,6 +666,68 @@ function render(root, callback, sessionStorage) {
 				}
 			}
 
+			// sort by median of xCategories if yfiedls.length === 1
+			if (xCategories.length > 0 && yfields.length === 1) {
+				var medians, sortedIndex,
+					NEWxCategories = [],
+					NEWmeanMatrix = [],
+					NEWmedianMatrix = [], // median row is x and column is y
+					NEWupperMatrix = [], // 75 percentile row is x and column is y
+					NEWlowerMatrix = [], // 25 percentile row is x and column is y
+					NEWupperwhiskerMatrix = [], // upperwhisker percentile row is x and column is y
+					NEWlowerwhiskerMatrix = [], // lowerwhisker percentile row is x and column is y
+					NEWstdMatrix = [], // row is x and column is y
+					NEWnNumberMatrix = []; // number of data points (real data points) for dataMatrix
+
+				k = 0; // the sorting only apply to the situation yfields.length === 1, => k=0
+				medians = _.map(medianMatrix, function(x, i) {
+						return {
+							value: x[k],
+							index: i
+						};
+					});
+				// remove xCategory given yfield[k] with no data, then sort
+				medians = _.sortBy(_.filter(medians, x => !isNaN(x.value)), "value");
+				sortedIndex = _.map(medians, x => x.index);
+
+				// init row is x by column y
+				for (i = 0; i < xCategories.length; i++) {
+					row = [];
+					for (var j = 0; j < yfields.length; j++) {
+						row.push(NaN);
+					}
+					NEWmeanMatrix.push(_.clone(row));
+					NEWmedianMatrix.push(_.clone(row));
+					NEWupperMatrix.push(_.clone(row));
+					NEWlowerMatrix.push(_.clone(row));
+					NEWupperwhiskerMatrix.push(_.clone(row));
+					NEWlowerwhiskerMatrix.push(_.clone(row));
+					NEWstdMatrix.push(_.clone(row));
+					NEWnNumberMatrix.push(_.clone(row));
+					NEWxCategories.push(NaN);
+				}
+				_.each(sortedIndex, function(pos, i) {
+					NEWmeanMatrix[i][k] = meanMatrix[pos][k];
+					NEWmedianMatrix[i][k] = medianMatrix[pos][k];
+					NEWupperMatrix[i][k] = upperMatrix[pos][k];
+					NEWlowerMatrix[i][k] = lowerMatrix[pos][k];
+					NEWupperwhiskerMatrix[i][k] = upperwhiskerMatrix[pos][k];
+					NEWlowerwhiskerMatrix[i][k] = lowerwhiskerMatrix[pos][k];
+					NEWstdMatrix[i][k] = stdMatrix[pos][k];
+					NEWnNumberMatrix[i][k] = nNumberMatrix[pos][k];
+				});
+				NEWxCategories = _.map(sortedIndex, pos => xCategories[pos]);
+
+				meanMatrix = NEWmeanMatrix;
+				medianMatrix = NEWmedianMatrix;
+				upperMatrix = NEWupperMatrix;
+				lowerMatrix = NEWlowerMatrix;
+				upperwhiskerMatrix = NEWupperwhiskerMatrix;
+				lowerwhiskerMatrix = NEWlowerwhiskerMatrix;
+				stdMatrix = NEWstdMatrix;
+				nNumberMatrix = NEWnNumberMatrix;
+				xCategories = NEWxCategories;
+			}
 
 			//add data seriese
 			var offsetsSeries = [],
@@ -707,7 +769,6 @@ function render(root, callback, sessionStorage) {
 				let color = highlightcode.length === 0 ? scale(invCodeMap[code]) :
 					highlightcode.indexOf(code) === -1 ? '#A9A9A9' :
 					'gold';
-
 				dataSeriese = _.zip(lowerwhiskerSeriese, lowerSeriese, medianSeriese, upperSeriese, upperwhiskerSeriese);
 				highchartsHelper.addSeriesToColumn(
 					chart, 'boxplot', code,
