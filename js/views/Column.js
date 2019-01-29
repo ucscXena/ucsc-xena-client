@@ -250,29 +250,32 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 		}
 	});
 
-	var foundCohort = cohort.name.search(/^TCGA/) !== -1 || cohort.name.search(/^Treehouse/) !== -1  ? cohort : undefined;
-
-	if (!foundCohort || !foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
+	if (!foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
 		_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1)) {
 		return null;
 	}
 
-	if (foundCohort.name === "Treehouse public expression dataset (July 2017)") {
+	if (cohort.name === "Treehouse public expression dataset (July 2017)") {
 		return {
 			map: "Treehouse/THPED_July2017",
 			layout: "mRNA"
 		};
-	} else if (foundCohort.name === "Treehouse PED v8") {
+	} else if (cohort.name === "Treehouse PED v8") {
 		return {
 			map: "Treehouse/TreehousePEDv8",
 			layout: ""
 		};
-	} else if (foundCohort.name === "Treehouse PED v5 April 2018") {
+	} else if (cohort.name === "Treehouse PED v5 April 2018") {
 		return {
 			map: "Treehouse/TreehousePEDv8_April2008",
 			layout: ""
 		};
-	} else if (foundCohort.name.search(/^TCGA/) !== -1) {
+	} else if (cohort.name === "GDC Pan-Cancer (PANCAN)") {
+		return {
+			map: "remapped_pancan_mrna_20190128",
+			layout: "layout"
+		};
+	} else if (cohort.name.search(/^TCGA/) !== -1) {
 		return {
 			map: "PancanAtlas/SampleMap",
 			layout: "mRNA"
@@ -570,15 +573,14 @@ class Column extends PureComponent {
 			data = _.getIn(this.props, ['data']),
 			valueType = _.getIn(this.props, ['column', 'valueType']),
 			fieldType = _.getIn(this.props, ['column', 'fieldType']),
-			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout,
-			customColor = _.getIn(this.props, ['column', 'dataset', 'customcolor']);
+			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout;
 
 		var ds = JSON.parse(fieldSpecs.dsID),
 			hub = ds.host,
 			dataset = ds.name,
-			feature = (fieldType !== "geneProbes") ? fieldSpecs.fields[0] : _.getIn(data, ['req', 'probes', 0]);
+			feature = (fieldType !== "geneProbes") ? fieldSpecs.fields[0] : _.getIn(data, ['req', 'probes', 0]),
+			customColor = _.getIn(this.props, ['column', 'dataset', 'customcolor', feature]); // object, key value pair
 
-		customColor = _.extend(customColor, );
 
 		url = url + "&hub=" + hub + "/data/";
 		url = url + "&dataset=" + dataset;
@@ -586,12 +588,11 @@ class Column extends PureComponent {
 
 		if (valueType === "coded") {
 			var codes = _.getIn(data, ['codes']),
-				cat, colorhex,
-				colors = _.isEmpty(customColor) ? categoryMore : customColor;
+				cat, colorhex;
 
 			_.map(codes, (code, i) => {
 				cat = code;
-				colorhex = colors[i % colors.length];
+				colorhex = _.isEmpty(customColor) ? categoryMore[i % categoryMore.length] : customColor[code];
 				colorhex = colorhex.slice(1, colorhex.length);
 				url = url + "&cat=" + encodeURIComponent(cat);
 				url = url + "&color=" + colorhex;
