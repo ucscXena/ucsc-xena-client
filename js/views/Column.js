@@ -250,22 +250,30 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 		}
 	});
 
-	var foundCohort = cohort.name.search(/^TCGA/) !== -1 || cohort.name === "Treehouse public expression dataset (July 2017)" ? cohort : undefined;
+	var foundCohort = cohort.name.search(/^TCGA/) !== -1 || cohort.name.search(/^Treehouse/) !== -1  ? cohort : undefined;
 
 	if (!foundCohort || !foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
 		_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1)) {
 		return null;
 	}
 
-	if (foundCohort.name === "Treehouse public expression dataset (July 2017)" ) {
+	if (foundCohort.name === "Treehouse public expression dataset (July 2017)") {
 		return {
-			label: "Treehouse",
 			map: "Treehouse/THPED_July2017",
+			layout: "mRNA"
+		};
+	} else if (foundCohort.name === "Treehouse PED v8") {
+		return {
+			map: "Treehouse/TreehousePEDv8",
+			layout: ""
+		};
+	} else if (foundCohort.name === "Treehouse PED v5 April 2018") {
+		return {
+			map: "Treehouse/TreehousePEDv8_April2008",
 			layout: ""
 		};
 	} else if (foundCohort.name.search(/^TCGA/) !== -1) {
 		return {
-			label: "TCGA Pancan Atlas",
 			map: "PancanAtlas/SampleMap",
 			layout: "mRNA"
 		};
