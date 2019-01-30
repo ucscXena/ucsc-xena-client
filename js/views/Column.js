@@ -281,6 +281,9 @@ var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
 	!isChrom && _.contains(['geneProbes', 'genes'], fieldType) &&
 		(fieldList || fields).length === 1;
 
+var supportsGeneZoom = ({fieldType}) =>
+	_.contains(['genes', 'probes', 'geneProbes', 'mutation', 'segmented', 'SV'], fieldType);
+
 // Duplicated in denseMatrix.js, because of the weirdness with
 // fields vs. probes.
 var supportsClustering = ({fieldType, fields}) =>
@@ -655,7 +658,10 @@ class Column extends PureComponent {
 				interactive, append} = this.props,
 			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
 					_.getIn(column, ['assembly'])),
-			isXAnnotation = column.xzoom !== undefined && !((_.get(column.xzoom, ['start']) === _.get(column.maxXZoom, ['start'])) && ((_.get(column.xzoom, ['end'])) === (_.get(column.maxXZoom, ['end'])))),
+			geneZoomable = supportsGeneZoom(column),
+			geneZoomed = column.xzoom !== undefined &&
+							!((_.get(column.xzoom, ['start']) === _.get(column.maxXZoom, ['start']))
+							&& ((_.get(column.xzoom, ['end'])) === (_.get(column.maxXZoom, ['end'])))),
 			{specialDownloadMenu, dragZoom} = this.state,
 			{selection} = dragZoom,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
@@ -702,7 +708,8 @@ class Column extends PureComponent {
 		// XXX put position into a css module
 		return (
 				<div style={{width: width, position: 'relative'}}>
-					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height} positionHeight={column.position ? positionHeight : 0} selection={selection}>
+					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height}
+								 positionHeight={column.position ? positionHeight : 0} selection={selection}>
 						<ColCard colId={label}
 								sortable={!first}
 								title={<DefaultTextInput
@@ -715,7 +722,7 @@ class Column extends PureComponent {
 									value={{default: fieldLabel, user: user.fieldLabel}} />}
 								onClick={this.onXZoomClear}
 								xAnnotationRange={xAnnotationRange}
-								xAnnotationZoom={annotation && isXAnnotation}
+								xAnnotationZoom={geneZoomable && geneZoomed}
 								controls={!interactive ? (first ? refreshIcon : null) :
 									<div>
 										{first ? null : (
