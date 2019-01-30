@@ -119,7 +119,7 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 	var {req, codes = {}} = data,
 		{dataset, fieldSpecs, fieldType} = column,
 		fieldsKey = fieldType === 'geneProbes' ? 'probes' : 'values',
-		fields = _.get(req, fieldsKey, column.fields),
+		fields = (fieldType === 'genes' || fieldType === 'probes') ? column.fields : _.get(req, fieldsKey, column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples),
 		customColors = colorCodeMap(codes, getCustomColor(fieldSpecs, fields, dataset)),
 		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
