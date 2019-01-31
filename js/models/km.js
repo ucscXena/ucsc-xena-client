@@ -7,8 +7,10 @@ var {RGBToHex} = require('../color_helper');
 //var {segmentAverage} = require('./segmented');
 
 var MAX = 10; // max number of groups to display.
+var diseaseDefault = 'PANCAN';
 
 var getSplits = (splits) => splits ? splits : 2;
+var getDiseaseType = (disease) => disease ? disease : diseaseDefault;
 
 var survivalOptions = {
 	"osEv": {
@@ -145,12 +147,23 @@ function codedVals({heatmap, colors, fields}, {codes}) {
 
 var saveNull = fn => v => v == null ? v : fn(v);
 
+var emptyGroups = {
+	values: [],
+	groups: [],
+	colors: [],
+	labels: []
+};
+
 // XXX Here we include samples that might not have tte and ev, when
 // picking the range. Ideal would be to partition not including
 // samples w/o survival data.
-function partitionedVals3(avg, uniq, colorfn) { //eslint-disable-line no-unused-vars
-	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
-		min = _.min(vals),
+function partitionedVals3(avg, uniq, colorfn, selectedSampleIndex) { //eslint-disable-line no-unused-vars
+	let vals = _.map(selectedSampleIndex, i => avg[i]);
+	vals = _.without(vals, null, undefined).sort((a, b) => a - b);
+	if (vals.length === 0) {
+		return emptyGroups;
+	}
+	let	min = _.min(vals),
 		max = _.max(vals),
 		low = vals[Math.round(vals.length / 3)],
 		high = vals[Math.round(2 * vals.length / 3)],
@@ -165,9 +178,13 @@ function partitionedVals3(avg, uniq, colorfn) { //eslint-disable-line no-unused-
 	};
 }
 
-function partitionedValsQuartile(avg, uniq, colorfn) {
-	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
-		min = _.min(vals),
+function partitionedValsQuartile(avg, uniq, colorfn, selectedSampleIndex) {
+	let vals = _.map(selectedSampleIndex, i => avg[i]);
+	vals = _.without(vals, null, undefined).sort((a, b) => a - b);
+	if (vals.length === 0) {
+		return emptyGroups;
+	}
+	let	min = _.min(vals),
 		max = _.max(vals),
 		low = vals[Math.round(vals.length / 4)],
 		high = vals[Math.round(3 * vals.length / 4)],
@@ -181,9 +198,13 @@ function partitionedValsQuartile(avg, uniq, colorfn) {
 	};
 }
 
-function partitionedVals2(avg, uniq, colorfn) {
-	let vals = _.without(avg, null, undefined).sort((a, b) => a - b),
-		min = _.min(vals),
+function partitionedVals2(avg, uniq, colorfn, selectedSampleIndex) {
+	let vals = _.map(selectedSampleIndex, i => avg[i]);
+	vals = _.without(vals, null, undefined).sort((a, b) => a - b);
+	if (vals.length === 0) {
+		return emptyGroups;
+	}
+	let	min = _.min(vals),
 		max = _.max(vals),
 		mid = vals[Math.round(vals.length / 2)],
 		labelMid = mid.toPrecision(4);
@@ -194,7 +215,6 @@ function partitionedVals2(avg, uniq, colorfn) {
 		labels: [`< ${labelMid}`, `>= ${labelMid}`]
 	};
 }
-
 
 function floatVals(avg, uniq, colorfn) {
 	return {
@@ -208,14 +228,14 @@ function floatVals(avg, uniq, colorfn) {
 // We use data.display so the values reflect normalization settings.
 // We average 1st, then see how many unique values there are, then decide
 // whether to partition or not.
-function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
+function floatOrPartitionVals({heatmap, colors}, data, index, samples, selectedSampleIndex, splits) {
 	var clarification = heatmap.length > 1 ? 'average' : undefined,
 		avg = average(heatmap),
 		uniq = _.without(_.uniq(avg), null, undefined),
 		colorfn = _.first(colors.map(colorScale)),
 		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2,
 		maySplit = uniq.length > MAX;
-	return {clarification, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
+	return {clarification, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn, selectedSampleIndex)};
 }
 
 function mutationVals(column, data, {bySample}, sortedSamples) {
@@ -236,7 +256,7 @@ function mutationVals(column, data, {bySample}, sortedSamples) {
 
 //var avgOrNull = (rows, xzoom) => _.isEmpty(rows) ? null : segmentAverage(rows, xzoom);
 
-function segmentedVals(column, data, index, samples, splits) {
+function segmentedVals(column, data, index, samples, selectedSampleIndex, splits) {
 	var {color} = column,
 		avg = _.getIn(data, ['avg', 'geneValues', 0]),
 		bySampleSortAvg = samples.map( sample => avg[sample]),  // ordered by current sample sort
@@ -245,7 +265,7 @@ function segmentedVals(column, data, index, samples, splits) {
 		[,,,, origin] = color,
 		colorfn = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin)),
 		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2;
-	return {maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
+	return {maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn, selectedSampleIndex)};
 }
 
 var toCoded = multi(fs => fs.valueType);
@@ -345,16 +365,31 @@ var bounds = x => [_.minnull(x), _.maxnull(x)];
 // 4) pick at-most MAX groups
 // 5) compute km
 
-function makeGroups(column, data, index, cutoff, splits, survivalType, survival, samples) {
+function makeGroups(column, data, index, cutoff, splits, survivalType, survival, samples, disease, diseaseData) {
+	// samples are sorted samples in the spreadsheet
 	let survivalData = findSurvDataByType(getFieldData(survival), survivalType),
 		domain = bounds(survivalData.tte),
 		{tte, ev, patient} = cutoffData(survivalData, cutoff),
-		// Convert field to coded.
-		codedFeat = toCoded(column, data, index, samples, getSplits(splits)),
+		selectedSampleIndex = samples;
+
+	//selected samples - currently disease type only
+	if (diseaseData) {
+		let diseaseCode = _.getIn(diseaseData, ['codes'], []).indexOf(disease),
+			diseaseDataValues = _.getIn(diseaseData, ['req', 'values', 0]),
+			sortedDiseaseDataValues = _.map(samples, s => diseaseDataValues[s]); // sorted as in spreadsheet
+		selectedSampleIndex = _.filterIndices(sortedDiseaseDataValues, v => (diseaseCode === -1 || v === diseaseCode));
+	}
+
+	// Convert field to coded.
+	let codedFeat = _.isEmpty(selectedSampleIndex) ? emptyGroups :
+			toCoded(column, data, index, samples, selectedSampleIndex, getSplits(splits)),
 		{values} = codedFeat,
 		usableSamples = _.filterIndices(samples, (s, i) =>
-			has(tte, s) && has(ev, s) && has(values, i)),
-		patientWarning = warnDupPatients(usableSamples, samples, patient),
+			has(tte, s) && has(ev, s) && has(values, i));
+
+	usableSamples = _.intersection(usableSamples, selectedSampleIndex);
+
+	let	patientWarning = warnDupPatients(usableSamples, samples, patient),
 		groupedIndices = _.groupBy(usableSamples, i => values[i]),
 		usableData = filterByGroups(codedFeat, groupedIndices),
 		{groups, colors, labels, warning, clarification} = usableData,
@@ -403,4 +438,4 @@ function pickSurvivalVars(cohortFeatures, user) {
 			'patient', _.getIn(user, [`patient`], patient));
 }
 
-module.exports = {makeGroups, pickSurvivalVars, survivalOptions, getSplits};
+module.exports = {makeGroups, pickSurvivalVars, survivalOptions, getSplits, getDiseaseType, diseaseDefault};
