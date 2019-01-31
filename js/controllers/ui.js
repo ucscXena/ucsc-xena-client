@@ -225,6 +225,7 @@ var spreadsheetControls = {
 	'km-cutoff': (state, value) => _.assocIn(state, ['km', 'cutoff'], value),
 	'km-splits': (state, value) => _.assocIn(state, ['km', 'splits'], value),
 	'km-survivalType': (state, value) => _.assocIn(state, ['km', 'survivalType'], value),
+	'km-disease': (state, value) => _.assocIn(state, ['km', 'disease'], value),
 	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),
 	'chart': state => _.assoc(state, 'mode', 'chart'),
 	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState),
