@@ -201,11 +201,11 @@ var geneZoomWithoutGeneModel = (params) => {
 
 var samplesZoom = ({yZoom, sstart, send}) => {
 	var {count, height, index} = yZoom,
-		rowSize = (height - 1) / count,
+		rowSize = (height) / count,
 		startIndex = Math.floor(sstart / rowSize) + index,
 		endIndex = Math.floor(send / rowSize) + index;
 
-	return {index: startIndex, count: (endIndex - startIndex)};
+	return {index: startIndex, count: (endIndex - startIndex + 1)};
 };
 
 var zoomByDirection = (params) =>

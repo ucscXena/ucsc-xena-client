@@ -667,7 +667,7 @@ class Column extends PureComponent {
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			xZoomRange = ((_.get(column.maxXZoom, ['end'])) - (_.get(column.maxXZoom, ['start']))),
-			xAnnotationRange = (((_.get(column.xzoom, ['end'])) - (_.get(column.xzoom, ['start']))) / xZoomRange * 100).toFixed(1),
+			xAnnotationRange = Math.round(((_.get(column.xzoom, ['end'])) - (_.get(column.xzoom, ['start']))) / xZoomRange * 100),
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
 				onCluster, onSpecialDownload, specialDownloadMenu, isChrom}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),

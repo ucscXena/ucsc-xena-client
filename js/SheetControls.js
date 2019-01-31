@@ -29,7 +29,7 @@ class SheetControls extends React.Component {
 			/*filterLabel = 'Filter:',*/
 			zoomed = count !== appState.samples.length,
 			zoomLabel = zoomed ? 'Zoomed' : 'Zoom:',
-			zoomState = zoomed ? `to rows ${index + 1} - ${index + count}` : 'None',
+			zoomState = zoomed ? (index === index + count - 1) ? `to row ${index + 1}` : `to rows ${index + 1} - ${index + count}` : 'None',
 			zoomStatus = (<SheetStatus disabled={statusDisabled} label={zoomLabel} onClose={clearZoom} sheetState={zoomState}/>),
 			ZoomTooltip = Tooltip('zoomStatus');
 		return (

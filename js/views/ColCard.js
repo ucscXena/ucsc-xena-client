@@ -43,7 +43,7 @@ class ColCard extends React.Component {
 					<CardTitle className={compStyles.title} title={title} subtitle={subtitle}/>
 					{xAnnotationZoom ?
 						<div className={compStyles.geneZoomControl} onClick={onClick}
-							 title={`Zoomed to ${xAnnotationRange}%`}><span>Zoomed to {xAnnotationRange}%</span><i
+							 title={`Zoomed to ${xAnnotationRange < 1 ? `< 1` : xAnnotationRange}%`}><span>Zoomed to {xAnnotationRange < 1 ? `< 1` : xAnnotationRange}%</span><i
 							className='material-icons'>cancel</i></div> :
 						null }
 				</div>
