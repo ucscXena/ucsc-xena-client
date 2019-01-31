@@ -84,6 +84,9 @@ var matchSelector = createSelector(
 
 var mergeKeys = (a, b) => _.mapObject(a, (v, k) => _.merge(v, b[k]));
 
+var findDiseaseColumn = columns => (
+	_.findKey(columns, c => c.fieldType === 'clinical' && c.valueType === 'coded' && c.fieldLabel === 'disease_code.project'));
+
 var kmSelector = createSelector(
 		state => state.samples,
 		state => _.getIn(state, ['columns', _.getIn(state, ['km', 'id'])]),
@@ -92,9 +95,13 @@ var kmSelector = createSelector(
 		state => _.getIn(state, ['km', 'cutoff']),
 		state => _.getIn(state, ['km', 'splits']),
 		state => _.getIn(state, ['km', 'survivalType']),
+		state => _.getIn(state, ['km', 'disease']),
 		state => state.survival,
-		(samples, column, data, index, cutoff, splits, survivalType, survival) =>
-			column && survival && km.makeGroups(column, data, index, cutoff, splits, survivalType, survival, samples));
+		state => findDiseaseColumn(state.columns),
+		state => state,
+		(samples, column, data, index, cutoff, splits, survivalType, diseaseType, survival, diseaseColumn, state) =>
+			column && survival &&
+			km.makeGroups(column, data, index, cutoff, splits, survivalType, survival, samples, diseaseType, _.getIn(state, ['data', diseaseColumn])));
 
 // Enforce default width in wizardMode
 var ammedWidthSelector = createFmapSelector(
@@ -118,13 +125,22 @@ var ammedWidth = state => ({...state, columns: ammedWidthSelector(state)});
 var setPublic = state => ({...state, isPublic: isPublicSelector(state)});
 
 // kmGroups transform calculates the km data, and merges it into the state.km object.
+var kmGroups = state => {
+	var diseaseColumn = findDiseaseColumn(state.columns),
+		diseaseCodes = _.getIn(state, ['data', diseaseColumn, 'codes']),
+		diseaseData = _.getIn(state, ['data', diseaseColumn, 'req', 'values', 0]),
+		samples = state.samples,
+		filteredDiseaseCodes = [];
 
-var kmGroups = state => ({...state, km: { ...state.km, groups: kmSelector(state)}});
+	if (diseaseData) {
+		var	uniqDiseaseData = _.uniq(_.map(samples, s => diseaseData[s]));
+		filteredDiseaseCodes = _.without(_.map(uniqDiseaseData, data => diseaseCodes[data]), null, undefined).sort();
+	}
+	return ({...state, km: { ...state.km, diseaseCodes: filteredDiseaseCodes, groups: kmSelector(state)}});
+};
 
 var spreadsheetSelector = selector =>
 		state => _.updateIn(state, ['spreadsheet'], selector);
-
-//
 
 var supportsTies = state => _.getIn(state, ['cohort', 'name'], '').indexOf('TCGA') === 0;
 
