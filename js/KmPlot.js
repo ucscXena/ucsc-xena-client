@@ -12,7 +12,7 @@ var Axis = require('./Axis');
 var {linear, linearTicks} = require('./scale');
 var pdf = require('./kmpdf');
 var NumberForm = require('./views/NumberForm');
-var {survivalOptions, getSplits} = require('./models/km');
+var {survivalOptions, getSplits, getDiseaseType, diseaseDefault} = require('./models/km');
 var gaEvents = require('./gaEvents');
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
@@ -321,6 +321,23 @@ function makeSplits(splits, onSplits) {
 		</form>);
 }
 
+function makeDiseaseSplits(diseaseType, diseaseCodes, onDiseaseType) {
+	return (
+		<form>
+			<div className={kmStyle.splits}>
+				<label className={kmStyle.splitLabel} title={diseaseDefault}>
+					<input value={diseaseDefault} type="radio" name="disease" checked={diseaseType === diseaseDefault} onChange={onDiseaseType}/>
+					<span className={kmStyle.splitHint}>Pancan</span>
+				</label>
+				{_.map(diseaseCodes, code =>
+				<label className={kmStyle.splitLabel} title={code}>
+					<input value={code} type="radio" name="disease" checked={diseaseType === code} onChange={onDiseaseType}/>
+					<span className={kmStyle.splitHint}>{code}</span>
+				</label>)}
+			</div>
+		</form>);
+}
+
 function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, splits, onSplits, label, clarification, warning) {
 	// get new size based on size ratio for definitions column
 	return (
@@ -334,6 +351,18 @@ function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, sp
 					activeLabel={activeLabel}/>
 			{maySplit ? makeSplits(getSplits(splits), onSplits) : null}
 			{warning}
+			<br/>
+			<br/>
+		</div>
+	);
+}
+
+function makeDiseaseDefinitions(size, diseaseCodes, diseaseType, onDiseaseType) {
+	// get new size based on size ratio for definitions column
+	return (
+		<div className={kmStyle.definitions} style={{width: size.width}}>
+			{diseaseCodes.length === 0 ? null : <label>Disease</label>}
+			{diseaseCodes.length === 0 ? null : makeDiseaseSplits(getDiseaseType(diseaseType), diseaseCodes, onDiseaseType)}
 		</div>
 	);
 }
@@ -393,6 +422,11 @@ class KmPlot extends PureComponent {
 		callback(['km-splits', parseInt(ev.target.value, 10)]);
 	};
 
+	onDiseaseSplits = (ev) => {
+		var {callback} = this.props;
+		callback(['km-disease', ev.target.value]);
+	};
+
 	onSurvType = (ev) => {
 		var {callback} = this.props;
 		callback(['km-survivalType', ev]);
@@ -405,7 +439,7 @@ class KmPlot extends PureComponent {
 	}
 
 	render() {
-		let {km: {splits = 2, title, label, groups, cutoff, survivalType}, survivalKeys, cohort, dims} = this.props,
+		let {km: {splits = 2, disease = 0, title, label, groups, cutoff, survivalType, diseaseCodes}, survivalKeys, cohort, dims} = this.props,
 			// groups may be undefined if data hasn't loaded yet.
 			maySplit = _.get(groups, 'maySplit', false),
 			min = _.getIn(groups, ['domain', 0]),
@@ -426,7 +460,8 @@ class KmPlot extends PureComponent {
 				}}>
 				<h1>Loading...</h1>
 			</div>
-			: (_.isEmpty(groups.colors)
+			: <div>
+				{_.isEmpty(groups.colors)
 					? <div><h3>Unfortunately, KM plot can not be made. There is no survival data overlapping column
 						data.</h3></div>
 					: <div>
@@ -443,7 +478,9 @@ class KmPlot extends PureComponent {
 						{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions,
 							maySplit, splits, this.onSplits, label, clarification, warning)}
 					</div>
-			);
+				}
+				{makeDiseaseDefinitions(sectionDims.definitions, diseaseCodes, disease, this.onDiseaseSplits)}
+			</div>;
 
 		const actions = [
 			{
