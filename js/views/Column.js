@@ -272,7 +272,7 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 		};
 	} else if (cohort.name === "GDC Pan-Cancer (PANCAN)") {
 		return {
-			map: "remapped_pancan_mrna_20190128",
+			map: "xena_test/remapped_pancan_mrna",
 			layout: "layout"
 		};
 	} else if (cohort.name.search(/^TCGA/) !== -1) {
