@@ -23,6 +23,7 @@ var getStepperState = require('./getStepperState');
 var Application = require('../Application');
 //import TiesContainer from './TiesContainer';
 var {schemaCheckThrow} = require('../schemaCheck');
+import wrapLaunchHelper from '../LaunchHelper';
 
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
@@ -98,8 +99,8 @@ class ApplicationContainer extends React.Component {
 		this.props.callback(['sampleFilter', null]);
 	};
 
-	onNavigate = (page) => {
-		this.props.callback(['navigate', page]);
+	onNavigate = (page, params) => {
+		this.props.callback(['navigate', page, params]);
 	};
 
 	onImport = (content) => {
@@ -116,7 +117,7 @@ class ApplicationContainer extends React.Component {
 
 	// XXX Change state to appState in Application, for consistency.
 	render() {
-		let {state, selector, callback} = this.props,
+		let {state, selector, callback, children} = this.props,
 			{stateError} = state,
 			computedState = selector(state),
 			{spreadsheet: {mode, ties: {open} = {}}, loadPending} = computedState,
@@ -152,8 +153,12 @@ class ApplicationContainer extends React.Component {
 					appState={computedState.spreadsheet}
 					wizard={computedState.wizard}
 					callback={callback}/>
+				{children}
 			</Application>);
 	}
 }
 
-module.exports = ApplicationContainer;
+// add pop-up notification for old hubs.
+module.exports = wrapLaunchHelper(
+		props => _.getIn(props, ['state', 'localStatus']) === 'old',
+		ApplicationContainer);

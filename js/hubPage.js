@@ -15,7 +15,7 @@ var typStyles = require('../css/typography.module.css');
 
 var {testHost} = require('./xenaQuery');
 var _ = require('./underscore_ext');
-var {serverNames} = require('./defaultServers');
+var {servers: {localHub}, serverNames} = require('./defaultServers');
 var styles = require('./hubPage.module.css');
 var {parseServer, getHubParams} = require('./hubParams');
 var nav = require('./nav');
@@ -37,13 +37,15 @@ var reqStatus = (ping) =>
 
 var checkHost = host => testHost(host).take(1).map(v => ({[host]: v}));
 
-class Hub extends React.Component {
+var Hub = class extends React.Component {
+	static displayName = 'Hub';
+
 	state = {
-	    ping: {}
+		ping: {}
 	};
 
-	onNavigate = (page) => {
-		this.props.callback(['navigate', page]);
+	onNavigate = (page, params) => {
+		this.props.callback(['navigate', page, params]);
 	};
 
 	componentDidMount() {
@@ -53,10 +55,16 @@ class Hub extends React.Component {
 			allHosts = _.keys(selector(state));
 
 		nav({activeLink: 'hub', onNavigate: this.onNavigate});
+		this.ping = new Rx.Subject();
 
-		this.sub = Rx.Observable.from(allHosts.map(checkHost))
-			.mergeAll()
+		this.sub = this.ping.switchMapTo(Rx.Observable.from(allHosts.map(checkHost)).mergeAll())
 			.subscribe(this.updatePing);
+
+		this.ping.next();
+	}
+
+	onStartup = () => {
+		this.ping.next();
 	}
 
 	componentWillUnmount() {
@@ -107,7 +115,7 @@ class Hub extends React.Component {
 	};
 
 	render() {
-		var {state, selector} = this.props,
+		var {state, selector, badge} = this.props,
 			hubParams = getHubParams(state),
 			{ping} = this.state,
 			servers = selector(state),
@@ -132,8 +140,9 @@ class Hub extends React.Component {
 							</div>
 							<div className={styles.hubNameContainer}>
 								<a href={`../datapages/?${encodeObject({host: h.host, ...hubParams})}`}>
-									{h.name}{h.reqStatus}
+									{h.name}
 								</a>
+								{h.host === localHub ? badge : h.reqStatus}
 							</div>
 							<i className={classNames('material-icons', styles.remove)} data-host={h.host}
 							   onClick={this.onRemove}>close</i>
@@ -150,7 +159,7 @@ class Hub extends React.Component {
 				</Card>
 			</div>);
 	}
-}
+};
 
 var selector = state => state.spreadsheet.servers;
 

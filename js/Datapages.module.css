@@ -60,11 +60,12 @@
 
 .sidebar {
 	float: right;
-	width: 20%;
+	width: 25%;
 }
 
 .sidebar button {
-	display: block
+	display: inline-block;
+	margin-right: 10px;
 }
 
 .description {
@@ -142,4 +143,21 @@
 
 .tableControls *:first-child {
 	margin-left: 0;
+}
+
+.headerButtons {
+	display: inline-block;
+	margin-left: 25px;
+}
+
+.headerButtons button {
+	margin-right: 10px;
+}
+
+.inline {
+	display: inline-block;
+}
+
+.descriptionBox p {
+	margin-bottom: 1em;
 }

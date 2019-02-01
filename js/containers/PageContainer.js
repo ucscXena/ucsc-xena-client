@@ -6,6 +6,7 @@ import Datapages from '../Datapages';
 import Transcripts from '../transcript_views/TranscriptPage';
 import {hot} from 'react-hot-loader';
 import {overrideComponentTypeChecker} from 'react-toolbox';
+import ImportPage from '../import/ImportPage';
 
 // react hot loader messes up class checks in react-toolbox. Override
 // the class checker in dev.
@@ -23,7 +24,8 @@ const pages = {
 	'hub': Hub,
 	'heatmap': Application,
 	'datapages': Datapages,
-	'transcripts': Transcripts
+	'transcripts': Transcripts,
+	'import': ImportPage
 };
 const notFound = () => <p>Oops... can't find this page</p>;
 const PageContainer = (props) => {

@@ -58,6 +58,7 @@ module.exports = {
 		servers.pcawgHub,
 		servers.treehouseHub,
 		servers.gdcHub,
-		servers.atacSeqHub
+		servers.atacSeqHub,
+		'https://tdi.xenahubs.net'
 	]
 };

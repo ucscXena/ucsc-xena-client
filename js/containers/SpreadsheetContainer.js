@@ -131,6 +131,10 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		this.props.callback(['showIntrons', id]);
 	};
 
+	onCluster = (id, value) => {
+		this.props.callback(['cluster', id, value]);
+	};
+
 	onSortVisible = (id, value) => {
 		this.props.callback(['sortVisible', id, value]);
 	};
@@ -203,6 +207,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						onColumnLabel={this.onColumnLabel}
 						onReset={this.onReset}
 						onShowIntrons={this.onShowIntrons}
+						onCluster={this.onCluster}
 						onSortVisible={this.onSortVisible}
 						onMode={this.onMode}
 						onKm={this.onKm}

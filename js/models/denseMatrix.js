@@ -80,6 +80,35 @@ var defaultXZoom = (pos, refGene, position) =>
 		start: Math.min(txStart, ..._.pluck(position, 'chromstart')),
 		end: Math.max(txEnd, ..._.pluck(position, 'chromend'))}));
 
+var supportsClustering = ({fieldType, fields}) =>
+	_.contains(['genes', 'probes'], fieldType) && fields.length > 2 ||
+	fieldType === 'geneProbes';
+
+function reOrderFields(column, data) {
+	var probeOrder = _.getIn(data, ['clustering', 'probes']);
+	if (supportsClustering(column) && column.clustering === 'probes' &&
+			data.status !== 'loading' && probeOrder && data.req) {
+		return {
+			data: _.updateIn(data, ['req'], req => {
+					var {mean, position, probes, values} = req;
+					return _.merge(req,
+						mean ? {mean: probeOrder.map(i => mean[i])} : {},
+						position ? {position: probeOrder.map(i => position[i])} : {},
+						probes ? {probes: probeOrder.map(i => probes[i])} : {},
+						values ? {values: probeOrder.map(i => values[i])} : {});
+				}),
+			column: column.fieldType === 'geneProbes' ? column :
+				_.assoc(column, 'fields', probeOrder.map(i => column.fields[i]))
+		};
+	}
+	return {column, data};
+}
+
+var reorderFieldsTransform = fn =>
+	(column0, vizSettings, data0, samples) =>
+		_.Let(({column, data} = reOrderFields(column0, data0)) =>
+			 fn(column, vizSettings, data, samples));
+
 function dataToHeatmap(column, vizSettings, data, samples) {
 	if (!_.get(data, 'req')) {
 		return null;
@@ -105,9 +134,13 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 }
 
 function geneProbesToHeatmap(column, vizSettings, data, samples) {
-	var pos = parsePos(column.fields[0]); // disabled until we support the query
-	if (_.isEmpty(data) || _.isEmpty(data.req) || (!pos && _.isEmpty(data.refGene))) {
+	var pos = parsePos(column.fields[0]);
+	if (_.isEmpty(data) || _.isEmpty(data.req) || !data.refGene) {
 		return null;
+	}
+	if (!pos && _.isEmpty(data.refGene)) {
+		// got refGene, but it's empty.
+		return dataToHeatmap(column, vizSettings, data, samples);
 	}
 	var {req} = data,
 		refGeneObj = _.first(_.values(data.refGene)),
@@ -161,6 +194,7 @@ var cmp = ({fields}, {req: {values, probes} = {values, probes}} = {}) =>
 //
 
 // Convert nanstr and compute mean.
+// XXX deprecate this & use avg selector (widgets.avg) instead.
 function meanNanResponse(probes, data) {
 	var values = _.map(data, field => _.map(field, xenaQuery.nanstr)),
 		mean = _.map(data, _.meannull);
@@ -204,9 +238,11 @@ function indexGeneResponse(samples, genes, data) {
 }
 
 function indexFieldResponse(fields, resp) {
-	var [position, data] = resp;
+	var [namePos, data] = resp;
 	return {
-		position,
+		position: namePos &&
+			_.Let(({name, position} = namePos, posMap = _.object(name, position)) =>
+				fields.map(f => posMap[f])),
 		...meanNanResponse(fields, data)
 	};
 }
@@ -298,13 +334,26 @@ function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {
 	};
 }
 
+function denseAverage(column, data) {
+	var values = _.getIn(data, ['req', 'values'], []);
+	return {
+		avg: {
+			mean: values.map(_.meannull),
+			median: values.map(_.medianNull)
+		}
+	};
+}
+
 ['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType => {
-	widgets.transform.add(fieldType, dataToHeatmap);
+	widgets.transform.add(fieldType, reorderFieldsTransform(dataToHeatmap));
 	widgets.cmp.add(fieldType, cmp);
 	widgets.download.add(fieldType, download);
 });
 
-widgets.transform.add('geneProbes', geneProbesToHeatmap);
+['probes', 'geneProbes', 'genes'].forEach(fieldType =>
+	widgets.avg.add(fieldType, denseAverage));
+
+widgets.transform.add('geneProbes', reorderFieldsTransform(geneProbesToHeatmap));
 
 widgets.specialDownload.add('clinical', downloadCodedSampleListsJSON);
 

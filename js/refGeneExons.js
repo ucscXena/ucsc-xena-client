@@ -45,10 +45,10 @@ export function findIntervals(gene) {
 				i => inCds(gene, i));
 }
 
-var shade1 = '#cccccc',
-	shade2 = '#999999',
-	shade3 = '#000080',
-	shade4 = '#FF0000';
+var shade1 = '#cccccc',  //light grey
+	shade2 = '#000000',  //black
+	shade3 = '#000080',  //blue
+	shade4 = '#FF0000';  //red
 
 function getAnnotation (index, perLaneHeight, offset) {
 	return {

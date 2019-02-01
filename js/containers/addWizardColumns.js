@@ -71,6 +71,10 @@ var getAssembly = (datasets, dsID) =>
 	_.getIn(datasets, [dsID, 'assembly'],
 		_.getIn(datasets, [dsID, 'probemapMeta', 'assembly']));
 
+var getDefaultVizSettings = meta =>
+	// use default vizSettings if we have min and max.
+	_.has(meta, 'min') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} : {};
+
 // XXX handle position in all genomic datatypes?
 function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
@@ -100,6 +104,8 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 
 	return {
 		...(fieldType === 'geneProbes' ? {showIntrons: true} : {}),
+		...(_.getIn(meta, ['probemapMeta', 'dataSubType']) === 'regulon' ? {clustering: 'probes'} : {}),
+		...(getDefaultVizSettings(meta)),
 		fields: normalizedFields,
 		fetchType: 'xena',
 		valueType: getValueType(meta, features[dsID], fields),
@@ -191,7 +197,7 @@ function getPreferredPhenotypes(cohort, cohortPreferredPhenotypes, hubs) {
 var consolidateFeatures = featureSet => {
 	return _.reduce(featureSet, (all, features, dsID) => {
 		let strippedFeatures = _.toArray(_.mapObject(features, f =>
-			_.extend(f, {dsID: dsID, label: (f.longtitle || f.name)})));
+			_.merge(f, {dsID: dsID, label: (f.longtitle || f.name)})));
 		return all.concat(strippedFeatures);
 	}, []);
 };
@@ -245,16 +251,7 @@ function addWizardColumns(Component) {
 
 		componentWillReceiveProps(newProps) {
 			var {editing} = newProps;
-			// XXX set timeout here for flipping back, when done.
 			this.setState({editing});
-			// XXX If we had a cohort but lost it (e.g. due to change in servers),
-			// and the columnEdit is closed: open it.
-//			if (!this.state.openColumnEdit &&
-//				this.props.appState.cohort[0] &&
-//				!newProps.appState.cohort[0]) {
-//
-//				this.setState({openColumnEdit: true});
-//			}
 		}
 
 		onCancel = () => {

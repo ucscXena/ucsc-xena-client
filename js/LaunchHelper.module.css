@@ -1,0 +1,78 @@
+.dialog {
+	width: 90%;
+	height: 90%;
+	border: none;
+	text-align: center;
+}
+
+.body {
+	display: flex;
+	flex-direction: column;
+}
+
+.padding {
+	flex-grow: 3;
+}
+
+.status {
+	flex-grow: 2;
+}
+
+.footer {
+	flex-grow: 1;
+}
+
+.download {
+}
+
+.helpLink {
+	float: right;
+}
+
+.advancedLink {
+	composes: mdCaption from '../css/typography.module.css';
+	cursor: pointer;
+}
+
+.downloadLink {
+	display: inline;
+}
+
+.downloadLink abbr {
+	text-transform: none;
+}
+
+.downloadList {
+	font-size: 14px;
+}
+
+.i4j {
+	position: absolute;
+	right: 20px;
+	width: 100px;
+}
+
+.table {
+	height: 0;
+	overflow: hidden;
+}
+
+.tableShow {
+	composes: table;
+	height: auto;
+}
+
+.helpLink {
+	font-size: 110%;
+	justify-content: normal;
+}
+
+.badgeConnected {
+	cursor: pointer;
+	color: #77FFCC;
+}
+
+.badgeDisconnected {
+	cursor: pointer;
+	color: red;
+}

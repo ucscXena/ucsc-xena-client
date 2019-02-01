@@ -75,7 +75,7 @@ var TiesActions = ({onTies, onTiesColumn}) => (
 
 function getFilterColumn(title, sampleSets, exprs, opts = {}) {
 	var field = signatureField(title, {
-			columnLabel: 'filter',
+			columnLabel: 'Subgroup',
 			valueType: 'coded',
 			signature: ['cross', sampleSets, exprs],
 			...opts

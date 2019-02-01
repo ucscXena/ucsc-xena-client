@@ -140,18 +140,18 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 				rangeErrors;
 
 			/*jshint -W018 */ /* allow xor idiom */
-			if (!s.minStart !== !s.maxStart) { // xor
-				missing.minStart = 'Both 0% values must be given to take effect.';
+			if (!s.minstart !== !s.maxstart) { // xor
+				missing.minstart = 'Both 0% values must be given to take effect.';
 			}
 			// XXX check for missin min & max
 
-			if (s.minStart && s.maxStart && !fmtErrors.minStart && !fmtErrors.maxStart) {
+			if (s.minstart && s.maxstart && !fmtErrors.minstart && !fmtErrors.maxstart) {
 				// wrong if missing maxStart: we compare against the wrong thing.
 				rangeErrors = {
 					max: null,
-					maxStart: vals.maxStart <= vals.max ? null :  'Should be lower than max',
-					minStart: vals.minStart <= vals.maxStart ? null : 'Should be lower than maxStart',
-					min: vals.min <= vals.minStart ? null : 'Should be lower than minStart'
+					maxstart: vals.maxstart <= vals.max ? null :  'Should be lower than max',
+					minstart: vals.minstart <= vals.maxstart ? null : 'Should be lower than maxStart',
+					min: vals.min <= vals.minstart ? null : 'Should be lower than minStart'
 				};
 			} else {
 				rangeErrors = {
@@ -186,8 +186,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	var scaleAnnotations = {
 		float: {
 			"max": "max: high color 100% saturation",
-			"maxStart": "maxStart: high color 0% saturation",
-			"minStart": "minStart: low color 0% saturation",
+			"maxstart": "maxStart: high color 0% saturation",
+			"minstart": "minStart: low color 0% saturation",
 			"min": "min: low color 100% saturation"
 		},
 		segmented: {
@@ -199,8 +199,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	var scaleDefaults = {
 		float: {
 			max: 1,
-			maxStart: null,
-			minStart: null,
+			maxstart: null,
+			minstart: null,
 			min: -1
 		},
 		segmented: {
@@ -589,7 +589,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	var oldSettings = state,
 		currentSettings = {state: state},
 		colorParams = {
-			float: ["max", "maxStart", "minStart", "min"],
+			float: ["max", "maxstart", "minstart", "min"],
 			segmented: ["origin", "thresh", "max"]
 		};
 

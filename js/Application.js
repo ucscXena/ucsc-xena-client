@@ -13,6 +13,17 @@ import appTheme from './appTheme';
 import nav from './nav';
 //var Perf = require('react/lib/ReactDefaultPerf');
 
+const stepperSteps = [
+	{ label: 'Select a Study to Explore' },
+	{ label: 'Select Your First Variable' },
+	{ label: 'Select Your Second Variable' }
+];
+const stepperStateIndex = {
+	'COHORT': 0,
+	'FIRST_COLUMN': 1,
+	'SECOND_COLUMN': 2
+};
+
 // should really be in a config file.
 const searchHelp = 'https://ucsc-xena.gitbook.io/project/overview-of-features/filter-and-subgrouping';
 
@@ -79,7 +90,7 @@ class Application extends Component {
 				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}
 					{showWelcome ? <Welcome onClick={this.onHideWelcome} /> :
 						null}
-					{wizardMode ? <Stepper mode={stepperState} /> :
+					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> :
 						<AppControls {...otherProps} appState={state} help={searchHelp}
 									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>}
 

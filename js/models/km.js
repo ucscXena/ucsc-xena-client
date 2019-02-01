@@ -376,34 +376,31 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 	};
 }
 
-var featureID = (dsID, feature) => ({
-	dsID: dsID,
-	name: _.getIn(feature, ['name'])
-});
+var toDsID = (host, name) => JSON.stringify({host, name});
 
-// I believe 'user' is current unused. It's passed the spreadsheet.km object, which
-// I believe in theory would hold user override of the survival columns.
-function pickSurvivalVars(featuresByDataset, user) {
-	var allFeatures = _.flatmap(featuresByDataset,
-			(features, dsID) => _.map(features, f => featureID(dsID, f))),
-		featureMapping = {},
-		patient = _.find(allFeatures, ({name}) => name === '_PATIENT') || _.find(allFeatures, ({name}) => name === 'sampleID');
+var allFeatures = cohortFeatures =>
+	_.flatmap(cohortFeatures, (datasets, server) =>
+		_.flatmap(datasets, (features, dataset) =>
+			_.map(features, f => ({dsID: toDsID(server, dataset), name: f.name}))));
 
-	_.values(survivalOptions).forEach(function(option) {
-		var evFeature = _.find(allFeatures, ({name}) => name === option.evFeature);
-		var tteFeature = _.find(allFeatures, ({name}) => name === option.tteFeature);
-		featureMapping[option.ev] =  _.getIn(user, [option.ev], evFeature);
-		featureMapping[option.tte] = _.getIn(user, [option.tte], tteFeature);
-	});
-	//ev = _.find(allFeatures, ({name}) => name === '_EVENT'),
-	//tte = _.find(allFeatures, ({name}) => name === '_TIME_TO_EVENT'),
-	featureMapping[`patient`] = _.getIn(user, [`patient`], patient);
-	//{
-	//	ev: _.getIn(user, ['ev'], ev),
-	//	tte: _.getIn(user, ['tte'], tte),
-	//};
+var featuresByName = cohortFeatures =>
+	_.Let((all = allFeatures(cohortFeatures)) =>
+			_.object(_.pluck(all, 'name'), all));
 
-	return featureMapping;
+// 'user' is passed the spreadsheet.km object, which
+// holds user override of the survival columns.
+// XXX This is all a bit wrong, because feature names are not unique
+// across datasets.
+function pickSurvivalVars(cohortFeatures, user) {
+	var byName = featuresByName(cohortFeatures),
+		patient = byName._PATIENT || byName.sampleID,
+		featureMapping = _.flatmap(survivalOptions, option => [
+			[option.ev, _.getIn(user, [option.ev], byName[option.evFeature])],
+			[option.tte, _.getIn(user, [option.tte], byName[option.tteFeature])]
+		]);
+
+	return _.assoc(_.object(featureMapping),
+			'patient', _.getIn(user, [`patient`], patient));
 }
 
 module.exports = {makeGroups, pickSurvivalVars, survivalOptions, getSplits};

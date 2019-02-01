@@ -1,0 +1,171 @@
+.container {
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	padding: 40px;
+	padding-top: 20px;
+	width: 80%;
+	background-color: #ffffff;
+	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
+}
+
+.probemap {
+	width: 100%;
+}
+
+.wizardTitle {
+	margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    padding: 10px 40px;
+    width: 80%;
+    background-color: #ffffff;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
+    font-size: 25px;
+}
+
+.importFileLabel {
+	cursor: pointer;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
+    border-radius: 2px;
+    height: 48px;
+	padding: 0px 16px;
+	margin-right: 30px;
+    vertical-align: center;
+    justify-content: center;
+    align-content: center;
+    display: inline-flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+    width: 150px;
+}
+
+.dataTypeHelp {
+	float: right;
+}
+
+.stepperBox{
+	border-top: 1px solid #cccaca;
+    margin-top: 20px;
+}
+
+.errorContainer {
+
+}
+
+.wizardButtons {
+	padding-top: 20px;
+	margin-top: 40px;
+    border-top: 1px solid;
+}
+
+.field {
+	width: 50%;
+	padding-right: 5%;
+}
+
+.inline {
+	display: inline-block;
+}
+
+.mailTo{
+	display: inline-block;
+    width: 45%;
+    font-size: 0.9em;
+}
+
+.status {
+	float: right;
+	margin: 0;
+}
+
+.errorLine {
+	margin: 0.3em 0 0.6em;
+	color: red;
+}
+
+.warningLine {
+	margin: 0.3em 0 0.6em;
+	color: rgb(248, 125, 43);
+}
+
+.showMore{
+	text-decoration-line: underline;
+	font-size: 0.9em;
+    font-style: italic;
+	color: #122d31;
+	cursor: pointer;
+}
+
+.codeSnippet {
+	resize: none;
+	border-color: #c1bfbf;
+	width: 90%;
+}
+
+.denseExample {
+	font-size: 0.85em;
+    border: 1px solid #cfcdcd;
+	background: #fdfdfd;
+	margin: 0 auto;
+	table-layout: fixed;
+    max-width: 100%;
+}
+
+.denseExample td {
+	padding: 5px;
+}
+
+.denseExample .highlighted {
+	background: rgb(230, 87, 111);
+}
+
+.retryButtons {
+    float: right;
+    margin-left: 20px;
+}
+
+.retryButtons button {
+	margin-right: 10px;
+}
+
+.retryButton {
+	margin-right: 10px;
+	background: #4cc9c0;
+    border-radius: 2px;
+    min-width: 90px;
+    padding: 0 12px;
+    align-content: center;
+    -ms-flex-align: center;
+    align-items: center;
+    border: 0;
+    cursor: pointer;
+    display: inline-block;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    font-size: 14px;
+    font-weight: 500;
+    height: 36px;
+    -ms-flex-pack: center;
+    justify-content: center;
+    letter-spacing: 0;
+    line-height: 36px;
+    outline: none;
+    padding: 0 10px;
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: box-shadow 0.2s cubic-bezier(0.4, 0, 1, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    box-sizing: border-box;
+    font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
+}
+

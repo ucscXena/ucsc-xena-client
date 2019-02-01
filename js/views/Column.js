@@ -250,22 +250,33 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 		}
 	});
 
-	var foundCohort = cohort.name.search(/^TCGA/) !== -1 || cohort.name === "Treehouse public expression dataset (July 2017)" ? cohort : undefined;
-
-	if (!foundCohort || !foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
+	if (!foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
 		_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1)) {
 		return null;
 	}
 
-	if (foundCohort.name === "Treehouse public expression dataset (July 2017)" ) {
+	if (cohort.name === "Treehouse public expression dataset (July 2017)") {
 		return {
-			label: "Treehouse",
 			map: "Treehouse/THPED_July2017",
+			layout: "mRNA"
+		};
+	} else if (cohort.name === "Treehouse PED v8") {
+		return {
+			map: "Treehouse/TreehousePEDv8",
 			layout: ""
 		};
-	} else if (foundCohort.name.search(/^TCGA/) !== -1) {
+	} else if (cohort.name === "Treehouse PED v5 April 2018") {
 		return {
-			label: "TCGA Pancan Atlas",
+			map: "Treehouse/TreehousePEDv8_April2008",
+			layout: ""
+		};
+	} else if (cohort.name === "GDC Pan-Cancer (PANCAN)") {
+		return {
+			map: "xena_test/remapped_pancan_mrna",
+			layout: "layout"
+		};
+	} else if (cohort.name.search(/^TCGA/) !== -1) {
+		return {
 			map: "PancanAtlas/SampleMap",
 			layout: "mRNA"
 		};
@@ -279,22 +290,31 @@ var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
 	!isChrom && _.contains(['geneProbes', 'genes'], fieldType) &&
 		(fieldList || fields).length === 1;
 
+// Duplicated in denseMatrix.js, because of the weirdness with
+// fields vs. probes.
+var supportsClustering = ({fieldType, fields}) =>
+	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
-function matrixMenu(props, {onTumorMap, onMode, isChrom}) {
+function matrixMenu(props, {onTumorMap, onMode, onCluster, isChrom}) {
 	var {cohort, column} = props,
-		{fieldType, noGeneDetail, fields, fieldSpecs} = column,
-		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs});
+		{fieldType, noGeneDetail, fields, fieldSpecs, clustering} = column,
+		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs}),
+		order = clustering == null ? 'clusters' :
+			fieldType === 'geneProbes' ? 'position' : 'list';
 
-	return addIdsToArr ([
+	return addIdsToArr([
+		supportsClustering(column) ?
+			<MenuItem onClick={onCluster} caption={`Order by ${order}`} /> :
+			null,
 		supportsGeneAverage(column, isChrom) ?
 			(fieldType === 'genes' ?
 				<MenuItem title={noGeneDetail ? 'no common probemap' : ''}
 					disabled={noGeneDetail} onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
-				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>)
-				: null,
+				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>) :
+				null,
 		tumorMapCohort ?
-			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`TumorMap`}/>
-			: null
+			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`TumorMap`}/> :
+			null
 	]);
 }
 
@@ -461,6 +481,11 @@ class Column extends PureComponent {
 		this.props.onShowIntrons(this.props.id);
 	};
 
+	onCluster = () => {
+		this.props.onCluster(this.props.id,
+			this.props.column.clustering ? undefined : 'probes');
+	};
+
 	onSortVisible = () => {
 		var {id, column} = this.props;
 		var value = _.get(column, 'sortVisible',
@@ -548,15 +573,14 @@ class Column extends PureComponent {
 			data = _.getIn(this.props, ['data']),
 			valueType = _.getIn(this.props, ['column', 'valueType']),
 			fieldType = _.getIn(this.props, ['column', 'fieldType']),
-			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout,
-			customColor = _.getIn(this.props, ['column', 'dataset', 'customcolor']);
+			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout;
 
 		var ds = JSON.parse(fieldSpecs.dsID),
 			hub = ds.host,
 			dataset = ds.name,
-			feature = (fieldType !== "geneProbes") ? fieldSpecs.fields[0] : _.getIn(data, ['req', 'probes', 0]);
+			feature = (fieldType !== "geneProbes") ? fieldSpecs.fields[0] : _.getIn(data, ['req', 'probes', 0]),
+			customColor = _.getIn(this.props, ['column', 'dataset', 'customcolor', feature]); // object, key value pair
 
-		customColor = _.extend(customColor, );
 
 		url = url + "&hub=" + hub + "/data/";
 		url = url + "&dataset=" + dataset;
@@ -564,12 +588,11 @@ class Column extends PureComponent {
 
 		if (valueType === "coded") {
 			var codes = _.getIn(data, ['codes']),
-				cat, colorhex,
-				colors = _.isEmpty(customColor) ? categoryMore : customColor;
+				cat, colorhex;
 
 			_.map(codes, (code, i) => {
 				cat = code;
-				colorhex = colors[i % colors.length];
+				colorhex = _.isEmpty(customColor) ? categoryMore[i % categoryMore.length] : customColor[code];
 				colorhex = colorhex.slice(1, colorhex.length);
 				url = url + "&cat=" + encodeURIComponent(cat);
 				url = url + "&color=" + colorhex;
@@ -602,9 +625,9 @@ class Column extends PureComponent {
 					_.getIn(column, ['assembly'])),
 			{specialDownloadMenu} = this.state,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
-			{onMode, onTumorMap, onMuPit, onShowIntrons, onSortVisible, onSpecialDownload} = this,
+			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
-				onSpecialDownload, specialDownloadMenu, isChrom}),
+				onCluster, onSpecialDownload, specialDownloadMenu, isChrom}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),

@@ -7,6 +7,8 @@ var widgets = require('./columnWidgets');
 var km = require('./models/km');
 var {searchSamples} = require('./models/searchSamples');
 var isPublicSelector = require('./isPublicSelector');
+// XXX should move userServers, or maybe put it in a selector
+var {userServers} = require('./controllers/common');
 
 var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
@@ -129,6 +131,45 @@ var supportsTies = state => _.getIn(state, ['cohort', 'name'], '').indexOf('TCGA
 var tiesSelector = state =>
 	_.assoc(state, 'tiesEnabled', supportsTies(state));
 
+var pickUserServers = (obj, servers) => _.pick(obj, userServers({servers}));
+
+var cohortsSelector = createSelector(
+		state => state.wizard.serverCohorts,
+		state => state.spreadsheet.servers,
+		(serverCohorts, servers) =>
+			_.uniq(_.flatten(_.values(pickUserServers(serverCohorts, servers)))));
+
+var indexBy = (key, list) => _.object(_.pluck(list, key), list);
+
+var datasetsSelector = createSelector(
+		state => _.get(state.wizard.cohortDatasets,
+					_.get(state.spreadsheet.cohort, 'name'), {}),
+		state => state.spreadsheet.servers,
+		(cohortDatasets, servers) =>
+			indexBy('dsID',
+				_.flatten(_.values(pickUserServers(cohortDatasets, servers)))));
+
+// XXX should try to deprecate this & use cohortFeatures
+var featuresByDsID = cohortFeatures =>
+	_.object(_.flatmap(cohortFeatures, (datasets, host) =>
+		_.map(datasets, (features, dataset) =>
+			[JSON.stringify({host, name: dataset}), features])));
+
+var featuresSelector = createSelector(
+		state => _.get(state.wizard.cohortFeatures,
+					_.get(state.spreadsheet.cohort, 'name'), {}),
+		state => state.spreadsheet.servers,
+		(cohortFeatures, servers) =>
+			featuresByDsID(pickUserServers(cohortFeatures, servers)));
+
+var setWizardProps = selector => state =>
+	selector(_.updateIn(state, ['wizard'], wizard =>
+				_.merge(wizard, {
+					cohorts: cohortsSelector(state),
+					datasets: datasetsSelector(state),
+					features: featuresSelector(state)
+				})));
+
 ///////
 // This is the main transform ('selector') of the application state, before passing to the view.
 // We build indexes of the column data, sort samples by the column data, transform
@@ -146,10 +187,13 @@ var hasSurvival = survival =>
 		option => _.get(survival, option.ev) && _.get(survival, option.tte)) && _.get(survival, 'patient'));
 
 var survivalSelector = createSelector(
-	state => state.wizard.features,
+	state => state.wizard.cohortFeatures,
+	state => state.spreadsheet.cohort,
 	state => state.spreadsheet.km,
-	(features, kmState) => hasSurvival(km.pickSurvivalVars(features, kmState)));
+	(cohortFeatures, cohort, user) =>
+		cohort && cohortFeatures &&
+			hasSurvival(km.pickSurvivalVars(cohortFeatures[cohort.name], user)));
 
 var setSurvival = selector => state => selector(_.assocIn(state, ['spreadsheet', 'hasSurvival'], survivalSelector(state)));
 
-module.exports = setSurvival(spreadsheetSelector(selector));
+module.exports = setWizardProps(setSurvival(spreadsheetSelector(selector)));

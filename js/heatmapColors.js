@@ -41,8 +41,8 @@ function colorFloat({colorClass}, settings = {}, codes, data) {
 		[low, zero, high] = defaultColors[settings.colorClass || colorClass],
 		min = ( settings.min != null ) ? settings.min : _.minnull(values),
 		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
-		minStart = settings.minStart,
-		maxStart = settings.maxStart,
+		minStart = settings.minstart,
+		maxStart = settings.maxstart,
 		spec;
 
 	if (!isNumber(max) || !isNumber(min)) {
@@ -66,6 +66,7 @@ function colorCoded(column, settings, codes, __, customColors) {
 
 
 function colorFloatGenomicData(column, settings = {}, codes, data) {
+	// not sure why we're looking up vizSettings when it's already passed in as 'settings'.
 	var vizSettings = _.getIn(column, ["vizSettings", "colNormalization"]),
 		defaultNormalization = column.defaultNormalization,
 		colSubtractMean = (vizSettings === "subset") ||
@@ -100,8 +101,8 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 	}
 
 	var	[low, zero, high] = defaultColors[settings.colorClass || colorClass],
-		minStart = settings.minStart,
-		maxStart = settings.maxStart,
+		minStart = settings.minstart,
+		maxStart = settings.maxstart,
 		spec,
 		mid,
 		absmax,

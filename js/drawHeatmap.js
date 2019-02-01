@@ -41,37 +41,30 @@ function floatLabels(rowData, minSpan) {
 	return [...nnLabels, ...nullLabels];
 }
 
-// Like groupBy, but combine new elements with the group, using
-// the reducing function fn.
-// We use a Map for ordered, numeric keys.
-function reduceByKey(arr, keyFn = x => x, fn) {
-	var ret = new Map();
-	arr.forEach(e => {
-		var k = keyFn(e);
-		ret.set(k, fn(e, k, ret.get(k)));
-	});
-	return ret;
+function *projectSamples(height, count) {
+	for (var i = 0; i < count; ++i) {
+		var y = Math.floor(i * height / count),
+			h = Math.floor((i + 1) * height / count) - y;
+		yield {y, start: i, end: i, height: h};
+	}
 }
 
-function findRegions(index, height, count) {
-	// Find pixel regions having the same set of samples, e.g.
-	// 10 samples in 1 px, or 1 sample over 10 px. Record the
-	// range of samples in the region.
-	var regions = reduceByKey(_.range(count), i => ~~(i * height / count),
-			(i, y, r) => r ? {...r, end: i} : {y, start: i, end: i}),
-		starts = [...regions.keys()],
-		se = _.partitionN(starts, 2, 1, [height]);
+function *projectPixels(height, count) {
+	for (var y = 0; y < height; ++y) {
+		var start = Math.ceil(y * count / height),
+			end = Math.ceil((y + 1) * count / height) - 1;
+		yield {y, start, end, height: 1};
+	}
+}
 
-	// XXX side-effecting map
-	_.mmap(starts, se, (start, [s, e]) => regions.get(start).height = e - s);
-
-	return regions;
+export function findRegions(height, count) {
+	return (height > count ? projectSamples : projectPixels)(height, count);
 }
 
 var gte = l => v => v >= l;
 var emptyDomain = () => ({count: 0, sum: 0});
 
-function tallyDomains(d, start, end, domains, acc = _.times(domains.length + 1, emptyDomain), i = start) {
+export function tallyDomains(d, start, end, domains, acc = _.times(domains.length + 1, emptyDomain), i = start) {
 	var v = d[i];
 	if (i === end) {
 		return acc;
@@ -118,26 +111,25 @@ function drawLayoutByPixel(vg, opts) {
 		return;
 	}
 
-	var regions = findRegions(index, height, count),
-		ctx = vg.context(),
+	var ctx = vg.context(),
 		img = ctx.createImageData(width, height);
 
 	layout.forEach(function (el, i) {
+		var regions = findRegions(height, count);
 		var rowData = data[i],
 			colorScale = colorScales.colorScale(colors[i]);
 
 		// XXX watch for poor iterator performance in this for...of.
-		for (let rs of regions.keys()) {
-			var r = regions.get(rs);
-
+		for (let r of regions) {
 			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => v != null)) {
 				let color = regionColor(colors[i][0], colorScale, rowData,
 				                        first + r.start, first + r.end + 1);
 
-				for (let y = rs; y < rs + r.height; ++y) {
+				for (let y = r.y; y < r.y + r.height; ++y) {
 					let pxRow = y * width,
 						buffStart = (pxRow + el.start) * 4,
 						buffEnd = (pxRow + el.start + el.size) * 4;
+					// try typed array at 32 bits, to do this assignment faster?
 					for (let l = buffStart; l < buffEnd; l += 4) {
 						img.data[l] = color[0];
 						img.data[l + 1] = color[1];
@@ -147,7 +139,6 @@ function drawLayoutByPixel(vg, opts) {
 				}
 			}
 		}
-
 	});
 	ctx.putImageData(img, 0, 0);
 
@@ -159,7 +150,6 @@ function drawLayoutByPixel(vg, opts) {
 		if (el.size - 2 * labelMargin >= minTxtWidth) {
 			let labels = codes ? codeLabels(codes, rowData, minSpan) : floatLabels(rowData, minSpan),
 				h = height / count,
-				labelColors = rowData.map(colorScale),
 				uniqStates = _.filter(_.uniq(rowData), c => c != null),
 				colorWhiteBlack = (uniqStates.length === 2 &&  // looking for [0,1]  columns color differently
 					_.indexOf(uniqStates, 1) !== -1 && _.indexOf(uniqStates, 0) !== -1) ? true : false,
@@ -167,9 +157,10 @@ function drawLayoutByPixel(vg, opts) {
 
 			vg.clip(el.start + labelMargin, 0, el.size - labelMargin, height, () =>
 					labels.forEach(([l, i, ih]) => /* label, index, count */
+						_.Let((labelColor = colorScale(rowData[i])) =>
 							vg.textCenteredPushRight(el.start + labelMargin, h * i - 1, el.size - labelMargin,
-								h * ih, (codedColor && labelColors[i]) ? colorHelper.contrastColor(labelColors[i]) : 'black',
-								labelFont, l)));
+								h * ih, (codedColor && labelColor) ? colorHelper.contrastColor(labelColor) : 'black',
+								labelFont, l))));
 		}
 	});
 }
@@ -192,7 +183,4 @@ var drawHeatmapByMethod = draw => (vg, props) => {
 	});
 };
 
-module.exports = {
-	drawHeatmap: drawHeatmapByMethod(drawLayoutByPixel),
-	tallyDomains
-};
+export var drawHeatmap = drawHeatmapByMethod(drawLayoutByPixel);

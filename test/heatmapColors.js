@@ -135,8 +135,8 @@ describe('heatmapColors', function () {
 				column = {fieldType: 'probes', colorClass: 'expression'},
 				settings1 = {
 					min: -12,
-					minStart: -11,
-					maxStart: 6,
+					minstart: -11,
+					maxstart: 6,
 					max: 7
 				},
 				settings2 = {

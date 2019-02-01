@@ -1,16 +1,18 @@
 'use strict';
-var {updateIn, dissoc, pick, isEqual, Let, get, uniq, identity,
-	pluck, getIn, assocIn} = require('../underscore_ext');
+var {Let, assocIn, dissoc, get, identity,
+	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
+var {servers: {localHub}} = require('../defaultServers');
 var {delete: deleteDataset} = require('../xenaAdmin');
-var {userServers, updateWizard} = require('./common');
+var {userServers} = require('./common');
 var {ignoredType} = require('../models/dataType');
 var Rx = require('../rx');
 import {defaultHost} from '../urlParams';
 import cohortMetaData from '../cohortMetaData';
+import query from './query';
 
 var hubsToAdd = ({hubs, addHub}) =>
 	(hubs || []).concat(addHub || []);
@@ -123,24 +125,16 @@ var datasetMetaAndLinks = (host, dataset) => {
 			({meta, data, probeCount, downloadLink, probemapLink}));
 };
 
-// wrapper to discard extra params
-var hostUpdateWizard = (serverBus, state, newState) =>
-	updateWizard(serverBus, state, newState);
-
 var spreadsheetControls = {
 	'init': (state, pathname = '/', params) => setHubs(state, params),
 	'add-host': (state, host) =>
 		assocIn(state, ['servers', host], {user: true}),
-	'add-host-post!': hostUpdateWizard,
 	'remove-host': (state, host) =>
 		updateIn(state, ['servers'], s => dissoc(s, host)),
-	'remove-host-post!': hostUpdateWizard,
 	'enable-host': (state, host, list) =>
 		assocIn(state, ['servers', host, list], true),
-	'enable-host-post!': hostUpdateWizard,
 	'disable-host': (state, host, list) =>
 		assocIn(state, ['servers', host, list], false),
-	'disable-host-post!': hostUpdateWizard
 };
 
 var linkedHub = state =>
@@ -176,6 +170,7 @@ var sectionDataMethods = {
 };
 
 var sectionData = state =>
+	state.page !== 'datapages' ? [] :
 	Let((method = sectionDataMethods[getSection(defaultHost(state.params))]) =>
 		method ? method(state) : []);
 
@@ -192,37 +187,9 @@ var fetchMethods = {
 	// iterate over the userServer list, not this cache.
 	cohortDatasets: (cohort, server) =>
 		datasetList(server, [cohort]).catch(() => of([])),
-	cohorts: server => cohortSummary(server, ignoredType),
+	cohorts: server => cohortSummary(server, ignoredType).catch(() => of([])),
 	hubMeta: hubMeta
 };
-
-// To make this more general, would need to follow the path until
-// we hit a dispatch method, then pass args.
-// XXX should this inject a common 'error' value, if the query fails?
-// We would need to update some views where we currently map to empty
-// array on error.
-var fetchData = ([type, ...args]) => fetchMethods[type](...args);
-
-// XXX Local mutatable state. The effects controller is stateful wrt
-// data queries.
-var queue = [];
-
-// XXX Do we need to handle more actions? We're only handling a minimum.
-var datapagesPostActions = (serverBus, state, newState) => {
-	if (newState.page !== 'datapages') {
-		// Note this means we don't do any cache operations when we leave the page.
-		return;
-	}
-
-	var toFetch = sectionData(newState)
-		.filter(path => getIn(newState.datapages, path) == null && !find(queue, p => isEqual(p, path)));
-
-	toFetch.forEach(path => {
-		queue.push(path);
-		serverBus.next([['merge-data', path], fetchData(path)]);
-	});
-};
-
 
 var cachePolicy = {
 	// cache all hosts
@@ -235,38 +202,38 @@ var cachePolicy = {
 		updateIn(state, ['datapages', path[0]], item => pick(item, path[1]))
 };
 
-var clearCache = fn => (state, path, data) =>
-	(cachePolicy[path[0]] || cachePolicy.default)(fn(state, path, data), path);
+var {controller: fetchController, invalidatePath} =
+	query(fetchMethods, sectionData, cachePolicy, 'datapages');
 
-var enforceValue = (path, val) => {
-	if (val == null) {
-		// Fetch methods must return a value besides null or undefined. Otherwise
-		// this will create a request loop, where we fetch again because we can't
-		// tell the data has already been fetched.
-		console.error(`Received invalid response for path ${path}`);
-		return {error: 'invalid value'};
-	}
-	return val;
-};
+// ['cohorts', localHub]
+// ['hubMeta', localHub]
+// ['samples', localHub, *]
+// ['identifiers', localHub, *]
+// ['dataset', localHub, *]
+// ['cohortDatasets', *, localHub]
+var invalidateLocalHub = Let(({any} = matchKeys) =>
+	function (state) {
+		var datapages = get(state, 'datapages', {});
+		invalidatePath(datapages, ['cohorts', localHub]);
+		invalidatePath(datapages, ['hubMeta', localHub]);
+		invalidatePath(datapages, ['samples', localHub, any]);
+		invalidatePath(datapages, ['identifiers', localHub, any]);
+		invalidatePath(datapages, ['dataset', localHub, any]);
+		invalidatePath(datapages, ['cohortDatasets', any, localHub]);
+	});
+
+function hubChangePost(serverBus, state, newState) {
+	invalidateLocalHub(newState);
+}
 
 var controls = {
-	'init-post!': datapagesPostActions,
-	'navigate-post!': datapagesPostActions,
-	'history-post!': datapagesPostActions,
-	'enable-host-post!': datapagesPostActions,
-	'merge-data': clearCache((state, path, data) =>
-		assocIn(state, ['datapages', ...path], enforceValue(path, data))),
-	'merge-data-post!': (serverBus, state, newState, path) => {
-		var i = queue.findIndex(p => isEqual(p, path));
-		queue.splice(i, 1);
-	},
+	'localStatus-post!': hubChangePost,
+	'localQueue-post!': hubChangePost,
 	'delete-dataset-post!': (serverBus, state, newState, host, name) =>
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
-
-	// Force page load after delete, to refresh all data.
-	'dataset-deleted-post!': () => location.reload()
 };
 
 module.exports = compose(
+		fetchController,
 		mount(make(spreadsheetControls), ['spreadsheet']),
 		make(controls));
