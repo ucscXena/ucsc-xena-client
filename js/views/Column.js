@@ -8,7 +8,7 @@ var DragSelect = require('./DragSelect');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
 var ResizeOverlay = require('./ResizeOverlay');
 var widgets = require('../columnWidgets');
-var zoom = require('../columnZoom');
+var columnZoom = require('../columnZoom');
 var aboutDatasetMenu = require('./aboutDatasetMenu');
 var spinner = require('../ajax-loader.gif');
 var mutationVector = require('../models/mutationVector');
@@ -281,9 +281,6 @@ var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
 	!isChrom && _.contains(['geneProbes', 'genes'], fieldType) &&
 		(fieldList || fields).length === 1;
 
-var supportsGeneZoom = ({fieldType}) =>
-	_.contains(['genes', 'probes', 'geneProbes', 'mutation', 'segmented', 'SV'], fieldType);
-
 // Duplicated in denseMatrix.js, because of the weirdness with
 // fields vs. probes.
 var supportsClustering = ({fieldType, fields}) =>
@@ -408,10 +405,10 @@ var zoomTranslateSelection = (props, selection, zone) => {
 		{crosshair, start, end, offset} = selection,
 		{fieldType} = column,
 		annotated = showPosition(column),
-		direction = zoom.direction({fieldType, start, end, zone}),
-		startEndPx = zoom.startEndPx({direction, start, end}),
-		overlay = zoom.overlay({annotated, column, direction, fieldType, ...startEndPx, zone}),
-		zoomTo = zoom.zoomTo({annotated, column, direction, fieldType, ...overlay, yZoom});
+		direction = columnZoom.direction({fieldType, start, end, zone}),
+		startEndPx = columnZoom.startEndPx({direction, start, end}),
+		overlay = columnZoom.overlay({annotated, column, direction, fieldType, ...startEndPx, zone}),
+		zoomTo = columnZoom.zoomTo({annotated, column, direction, fieldType, ...overlay, yZoom});
 	return {
 		crosshair,
 		direction,
@@ -658,16 +655,13 @@ class Column extends PureComponent {
 				interactive, append} = this.props,
 			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
 					_.getIn(column, ['assembly'])),
-			geneZoomable = supportsGeneZoom(column),
-			geneZoomed = column.xzoom !== undefined &&
-							!((_.get(column.xzoom, ['start']) === _.get(column.maxXZoom, ['start']))
-							&& ((_.get(column.xzoom, ['end'])) === (_.get(column.maxXZoom, ['end'])))),
 			{specialDownloadMenu, dragZoom} = this.state,
 			{selection} = dragZoom,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
-			xZoomRange = ((_.get(column.maxXZoom, ['end'])) - (_.get(column.maxXZoom, ['start']))),
-			xAnnotationRange = Math.round(((_.get(column.xzoom, ['end'])) - (_.get(column.xzoom, ['start']))) / xZoomRange * 100),
+			geneZoomable = columnZoom.supportsGeneZoom(column),
+			geneZoomed = columnZoom.geneZoomed(column),
+			geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
 				onCluster, onSpecialDownload, specialDownloadMenu, isChrom}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
@@ -721,8 +715,8 @@ class Column extends PureComponent {
 									onChange={this.onFieldLabel}
 									value={{default: fieldLabel, user: user.fieldLabel}} />}
 								onClick={this.onXZoomClear}
-								xAnnotationRange={xAnnotationRange}
-								xAnnotationZoom={geneZoomable && geneZoomed}
+								 geneZoomPct={geneZoomPct}
+								 geneZoomed={geneZoomable && geneZoomed}
 								controls={!interactive ? (first ? refreshIcon : null) :
 									<div>
 										{first ? null : (
@@ -771,7 +765,7 @@ class Column extends PureComponent {
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 										</DragSelect>
 										{getStatusView(status, this.onReload)}
-										<ZoomHelpTag selection={selection} xZoomRange={xZoomRange} />
+										<ZoomHelpTag column={column} selection={selection}/>
 									</Crosshair>
 								</div>
 							</ResizeOverlay>
