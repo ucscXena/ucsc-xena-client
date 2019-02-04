@@ -255,34 +255,30 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 		return null;
 	}
 
-	if (cohort.name === "Treehouse public expression dataset (July 2017)") {
-		return {
-			map: "Treehouse/THPED_July2017",
-			layout: "mRNA"
+	var tumorMapLinkout = {
+			'Treehouse public expression dataset (July 2017)': {
+				map: "Treehouse/THPED_July2017",
+				layout: "mRNA"
+			},
+			'Treehouse PED v8': {
+				map: "Treehouse/TreehousePEDv8",
+				layout: ""
+			},
+			'Treehouse PED v5 April 2018': {
+				map: "Treehouse/TreehousePEDv8_April2008",
+				layout: ""
+			},
+			'TCGA Pan-Cancer (PANCAN)': {
+				map: "PancanAtlas/SampleMap",
+				layout: "mRNA"
+			},
+			'GDC Pan-Cancer (PANCAN)': {
+				map: "xena_test/remapped_pancan_mrna",
+				layout: "layout"
+			}
 		};
-	} else if (cohort.name === "Treehouse PED v8") {
-		return {
-			map: "Treehouse/TreehousePEDv8",
-			layout: ""
-		};
-	} else if (cohort.name === "Treehouse PED v5 April 2018") {
-		return {
-			map: "Treehouse/TreehousePEDv8_April2008",
-			layout: ""
-		};
-	} else if (cohort.name === "GDC Pan-Cancer (PANCAN)") {
-		return {
-			map: "xena_test/remapped_pancan_mrna",
-			layout: "layout"
-		};
-	} else if (cohort.name.search(/^TCGA/) !== -1) {
-		return {
-			map: "PancanAtlas/SampleMap",
-			layout: "mRNA"
-		};
-	} else {
-		return null;
-	}
+
+	return _.getIn(tumorMapLinkout, [cohort.name]);
 }
 
 // Maybe put in a selector.
@@ -313,7 +309,7 @@ function matrixMenu(props, {onTumorMap, onMode, onCluster, isChrom}) {
 				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>) :
 				null,
 		tumorMapCohort ?
-			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`TumorMap`}/> :
+			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`Tumor Map`}/> :
 			null
 	]);
 }
