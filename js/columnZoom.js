@@ -19,9 +19,14 @@ var fieldTypeSelector = ({fieldType}) => fieldType;
 // Zoom interface
 var zoom = {
 	direction: multi(fieldTypeSelector),
+	geneZoomed: multi(fieldTypeSelector),
+	geneZoomLength: multi(fieldTypeSelector),
+	maxGeneZoomLength: multi(fieldTypeSelector),
 	overlay: multi(fieldTypeSelector),
 	startEndPx: multi(directionSelector),
-	zoomTo: multi(fieldTypeSelector)
+	supportsGeneZoom: multi(fieldTypeSelector),
+	zoomTo: multi(fieldTypeSelector),
+	zoomToLength: multi(fieldTypeSelector)
 };
 
 //
@@ -74,8 +79,8 @@ var chromRangeInBin = ([chromstart, chromend], {start, end}) =>
 	(chromstart <= start && chromend >= end); // start/end spans position
 
 // Returns width of each subcolumn
-var subcolumnWidth = (columnWidth, position) => {
-	return columnWidth / position.length;
+var subcolumnWidth = (columnWidth, subcolumns) => {
+	return columnWidth / subcolumns.length;
 };
 
 // Return pixel x coordinates for the specified subcolumn index
@@ -143,8 +148,8 @@ var samplesStartEndPxToAnnotationStartEndPx = (column, direction, start, end) =>
 			columnSize = pxLen / baseLen,
 			startPx = (trueMinChrom - zoom.start) * columnSize,
 			endPx = (trueMaxChrom - zoom.start) * columnSize;
-		istart = Math.floor(reversed ? pxLen - endPx : startPx);
-		iend = Math.ceil(reversed ? pxLen - startPx : endPx);
+		istart = _.max([Math.floor(reversed ? pxLen - endPx : startPx), 0]);
+		iend = _.min([Math.floor(reversed ? pxLen - startPx : endPx), pxLen - 1]);
 	}
 	return {istart, iend};
 };
@@ -176,7 +181,8 @@ zoom.overlay.add('SV', overlayWithoutSubcolumns);
 zoom.overlay.add('clinical', overlayWithoutSubcolumns);
 
 //
-// Zoom - gene/horizontal zoom requires chromstart/chromend values, samples/vertical zoom requires index and count.
+// Zoom - gene/horizontal zoom requires chromstart/chromend values for columns with corresponding gene model or subcolumn
+// indices columns without a gene model. Samples/vertical zoom requires index and count.
 //
 
 var geneZoomWithGeneModel = ({column: {layout}, istart, iend}) => {
@@ -186,16 +192,13 @@ var geneZoomWithGeneModel = ({column: {layout}, istart, iend}) => {
 
 var geneZoomWithoutGeneModel = (params) => {
 	var {column, sstart, send} = params,
-		{width, fields, xzoom} = column,
-		start = samplesPxToSubcolumnIndex(width, fields, sstart),
-		end = samplesPxToSubcolumnIndex(width, fields, send);
-	if ( xzoom ) {
-		var subcolumnsInZoom = _.range(xzoom.start, xzoom.end + 1);
-		return {
-			start: subcolumnsInZoom[start],
-			end: subcolumnsInZoom[end]
-		};
-	}
+		// Use fieldList here as zoom indices are always relative to the complete (max zoom) set of fields
+		{width, fieldList, xzoom, maxXZoom} = column,
+		zStart = xzoom ? xzoom.start : maxXZoom.start,
+		zEnd = xzoom ? xzoom.end : maxXZoom.end,
+		fieldsInZoomRange = fieldList.slice(zStart, zEnd + 1),
+		start = zStart + samplesPxToSubcolumnIndex(width, fieldsInZoomRange, sstart),
+		end = zStart + samplesPxToSubcolumnIndex(width, fieldsInZoomRange, send);
 	return {start, end};
 };
 
@@ -224,5 +227,84 @@ zoom.zoomTo.add('probes', zoomByDirection);
 zoom.zoomTo.add('genes', zoomByDirection);
 zoom.zoomTo.add('SV', zoomByDirection);
 zoom.zoomTo.add('clinical', samplesZoom);
+
+//
+// Calculate the maximum possible gene zoom length
+//
+
+var maxGeneZoomRange = (column) => _.get(column.maxXZoom, ['end']) - _.get(column.maxXZoom, ['start']);
+
+// x zoom is indices for columns without corresponding gene model, add 1 to get length
+var maxGeneZoomRangeByIndices = (column) => maxGeneZoomRange(column) + 1;
+
+zoom.maxGeneZoomLength.add('geneProbes', maxGeneZoomRange);
+zoom.maxGeneZoomLength.add('segmented', maxGeneZoomRange);
+zoom.maxGeneZoomLength.add('mutation', maxGeneZoomRange);
+zoom.maxGeneZoomLength.add('probes', maxGeneZoomRangeByIndices);
+zoom.maxGeneZoomLength.add('genes', maxGeneZoomRangeByIndices);
+zoom.maxGeneZoomLength.add('SV', maxGeneZoomRange);
+zoom.maxGeneZoomLength.add('clinical', maxGeneZoomRange);
+
+//
+// Calculate current gene zoom length
+//
+
+var geneZoomRange = (column) => _.get(column.xzoom, ['end']) - _.get(column.xzoom, ['start']);
+
+// x zoom is indices for columns without corresponding gene model, add 1 to get length
+var geneZoomRangeByIndices = (column) => geneZoomRange(column) + 1;
+
+zoom.geneZoomLength.add('geneProbes', geneZoomRange);
+zoom.geneZoomLength.add('segmented', geneZoomRange);
+zoom.geneZoomLength.add('mutation', geneZoomRange);
+zoom.geneZoomLength.add('probes', geneZoomRangeByIndices);
+zoom.geneZoomLength.add('genes', geneZoomRangeByIndices);
+zoom.geneZoomLength.add('SV', geneZoomRange);
+zoom.geneZoomLength.add('clinical', geneZoomRange);
+
+//
+// Calculate length of zoom to
+//
+
+var zoomToLength = ({zoomTo}) => _.get(zoomTo, ['end']) - _.get(zoomTo, ['start']);
+
+// x zoom is indices for columns without corresponding gene model, add 1 to get length
+var zoomToLengthByIndices = (params) => zoomToLength(params) + 1;
+
+zoom.zoomToLength.add('geneProbes', zoomToLength);
+zoom.zoomToLength.add('segmented', zoomToLength);
+zoom.zoomToLength.add('mutation', zoomToLength);
+zoom.zoomToLength.add('probes', zoomToLengthByIndices);
+zoom.zoomToLength.add('genes', zoomToLengthByIndices);
+zoom.zoomToLength.add('SV', zoomToLength);
+zoom.zoomToLength.add('clinical', zoomToLength);
+
+//
+// True if gene/horizontal zoom is possible for column type
+//
+
+var geneZoomSupported = () => true;
+var geneZoomNotSupported = () => false;
+
+zoom.supportsGeneZoom.add('geneProbes', geneZoomSupported);
+zoom.supportsGeneZoom.add('segmented', geneZoomSupported);
+zoom.supportsGeneZoom.add('mutation', geneZoomSupported);
+zoom.supportsGeneZoom.add('probes', geneZoomSupported);
+zoom.supportsGeneZoom.add('genes', geneZoomSupported);
+zoom.supportsGeneZoom.add('SV', geneZoomSupported);
+zoom.supportsGeneZoom.add('clinical', geneZoomNotSupported);
+
+//
+// True if there is currently a gene zoom for the column
+//
+
+var geneZoomed = (column) =>
+	column.xzoom !== undefined &&
+	!((_.get(column.xzoom, ['start']) === _.get(column.maxXZoom, ['start']))
+	&& ((_.get(column.xzoom, ['end'])) === (_.get(column.maxXZoom, ['end']))));
+
+['geneProbes', 'segmented', 'mutation', 'probes', 'genes', 'SV', 'clinical'].forEach(fieldType => {
+	zoom.geneZoomed.add(fieldType, geneZoomed);
+});
 
 module.exports = zoom;

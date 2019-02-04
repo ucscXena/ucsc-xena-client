@@ -117,9 +117,8 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 		return null;
 	}
 	var {req, codes = {}} = data,
-		{dataset, fieldSpecs, fieldType} = column,
-		fieldsKey = fieldType === 'geneProbes' ? 'probes' : 'values',
-		fields = (fieldType === 'genes' || fieldType === 'probes') ? column.fields : _.get(req, fieldsKey, column.fields),
+		{dataset, fieldSpecs} = column,
+		fields = _.get(req, 'probes', column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples),
 		customColors = colorCodeMap(codes, getCustomColor(fieldSpecs, fields, dataset)),
 		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
@@ -191,19 +190,29 @@ function zoomableDataToHeatmap(column, vizSettings, data, samples) {
 		return null;
 	}
 	var {req} = data,
-		{values} = req,
-		{xzoom = {}} = column,
-		{start = 0, end = values.length} = xzoom,
+		{values, position} = req,
+		{xzoom = {}, fields} = column,
+		maxXZoomStart = 0, // use 0 index here as we are dealing with an array of subcolumns
+		maxXZoomEnd = values.length - 1,
+		{start = maxXZoomStart, end = maxXZoomEnd} = xzoom,
 		endIndex = end + 1,
 		valuesInView = values.slice(start, endIndex),
+		positionInView = position.slice(start, endIndex),
 		reqInView = _.updateIn(req,
 			['values'], () => valuesInView,
-			['mean'], mean => _.range(start, endIndex).map(i => mean[i]));
+			['mean'], mean => _.range(start, endIndex).map(i => mean[i]),
+			['position'], () => positionInView),
+		// Update set of fields to just the fields in the current x zoom range
+		zoomedColumn = Object.assign({}, column, {
+			fields: fields.slice(start, endIndex)
+		}),
+		heatmap = {
+			...dataToHeatmap(zoomedColumn, vizSettings, {req: reqInView}, samples),
+			maxXZoom: {start: maxXZoomStart, end: maxXZoomEnd},
+			fieldList: fields // Set field list to complete (max zoom) set of fields
+		};
 
-	return {
-		...dataToHeatmap(column, vizSettings, {req: reqInView}, samples),
-		maxXZoom: {start: 0, end: values.length}
-	};
+	return heatmap;
 }
 
 //
