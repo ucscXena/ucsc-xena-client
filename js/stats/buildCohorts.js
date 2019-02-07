@@ -8,12 +8,13 @@ var Rx = require('rxjs');
 var post = Rx.Observable.bindNodeCallback(request.post);
 var fs = require('fs');
 import {Minhash} from 'minhash';
-
+var _ = require('underscore');
 var request = require('request');
 var Rx = require('rxjs');
 var post = Rx.Observable.bindNodeCallback(request.post);
 
-var {publicServers} = require('../defaultServers');
+var {publicServers, enabledServers} = require('../defaultServers');
+var enabledPublicServers = _.intersection(publicServers, enabledServers);
 
 var allCohortsQuery = `
     (map :cohort
@@ -39,14 +40,14 @@ function spy(msg, x) {
 var uniq = arrs => [...new Set([].concat(...arrs))];
 
 var cohortList = Rx.Observable.zip(
-		...publicServers.map(host => post({
+		...enabledPublicServers.map(host => post({
 			url: host + '/data/',
 			body: allCohortsQuery
 		}).catch(() => Rx.Observable.of([spy('error host', host), '[]']))), (...resps) => uniq(resps.map(([, resp]) => JSON.parse(resp))));//.map(cohorts => cohorts.slice(0, 2));
 
 var sampleList = cohort =>
 	Rx.Observable.zip(
-		...publicServers.map(host => post({
+		...enabledPublicServers.map(host => post({
 			url: host + '/data/',
 			body: cohortSamplesQuery(cohort)
 		}).catch(() => Rx.Observable.of([host, '[]']))), (...resps) => uniq(resps.map(([, resp]) => JSON.parse(resp))));
