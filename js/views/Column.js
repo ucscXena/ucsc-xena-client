@@ -265,7 +265,7 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 				layout: ""
 			},
 			'Treehouse PED v5 April 2018': {
-				map: "Treehouse/TreehousePEDv8_April2008",
+				map: "Treehouse/TreehousePEDv5_April2008",
 				layout: ""
 			},
 			'TCGA Pan-Cancer (PANCAN)': {
