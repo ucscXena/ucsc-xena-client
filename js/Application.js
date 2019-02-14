@@ -12,6 +12,7 @@ import '../css/index.css'; // Root styles file (reset, fonts, globals)
 import { ThemeProvider } from 'react-css-themr';
 import appTheme from './appTheme';
 import nav from './nav';
+var gaEvents = require('./gaEvents');
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 const stepperSteps = [
@@ -81,6 +82,7 @@ class Application extends Component {
 	};
 	onZoomOut = () => {
 		const {state: {samples, zoom}} = this.props;
+		gaEvents('spreadsheet', 'zoom', 'out');
 		this.props.callback(['zoom', zoomOut(samples.length, zoom)]);
 		this.props.callback(['enableTransition', false]);
 	};
