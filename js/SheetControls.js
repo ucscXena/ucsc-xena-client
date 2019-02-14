@@ -23,19 +23,23 @@ var compStyles = require('./SheetControls.module.css');
 class SheetControls extends React.Component {
 
 	render() {
-		var {appState, clearZoom, statusDisabled} = this.props,
+		var {appState, clearZoom, statusDisabled, zoomOut} = this.props,
 			count = _.getIn(this.props, ['zoom', 'count']) || 0,
 			index = _.getIn(this.props, ['zoom', 'index']) || 0,
 			/*filterLabel = 'Filter:',*/
 			zoomed = count !== appState.samples.length,
 			zoomLabel = zoomed ? 'Zoomed' : 'Zoom:',
 			zoomState = zoomed ? (index === index + count - 1) ? `to row ${index + 1}` : `to rows ${index + 1} - ${index + count}` : 'None',
-			zoomStatus = (<SheetStatus disabled={statusDisabled} label={zoomLabel} onClose={clearZoom} sheetState={zoomState}/>),
+			zoomStatus = (<SheetStatus disabled={statusDisabled} label={zoomLabel} sheetState={zoomState}/>),
 			ZoomTooltip = Tooltip('zoomStatus');
 		return (
 			<div className={compStyles.sheetControls}>
 				<div className={compStyles.sheetStatus}>
 					{zoomed ? zoomStatus : <ZoomTooltip tooltip='Click and drag to zoom'>{zoomStatus}</ZoomTooltip>}
+					{zoomed ? <div className={compStyles.zoomActions}>
+						<span className={compStyles.action} onClick={zoomOut}>Zoom Out</span>
+						<span className={compStyles.action} onClick={clearZoom}>Clear Zoom</span>
+					</div> : null}
 					{/*{FilterArray.map((filter, i) => <SheetStatus key={i} disabled={statusDisabled} label={filterLabel}
 																 sheetState={filter}/>)}*/}
 				</div>

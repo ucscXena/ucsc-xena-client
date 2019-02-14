@@ -7,15 +7,6 @@ var {supportsEdit} = require('../models/fieldSpec');
 var {addCommas} = require('../util');
 var gaEvents = require('../gaEvents');
 
-function zoomOut(samples, zoom) {
-	var {count, index} = zoom;
-	var nCount = Math.min(samples, Math.round(count * 3)),
-		maxIndex = samples - nCount,
-		nIndex = Math.max(0, Math.min(Math.round(index + (count - nCount) / 2), maxIndex));
-
-	return _.merge(zoom, {count: nCount, index: nIndex});
-}
-
 function fixSampleTitle(column, i, samples, wizardMode, cohort) {
 	return i === 0 ? _.updateIn(column,
 		['user', 'fieldLabel'], label => wizardMode ?
@@ -69,13 +60,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 	onYZoom = (yzoom) => {
 		this.props.callback(['enableTransition'], false);
 		this.props.callback(['zoom', yzoom]);
-	};
-
-	onZoomOut = () => {
-		let {callback, appState: {zoom, samples}} = this.props;
-		gaEvents('spreadsheet', 'zoom', 'out');
-		callback(['zoom', zoomOut(samples.length, zoom)]);
-		callback(['enableTransition'], false);
 	};
 
 	onRemove = (id) => {
@@ -156,7 +140,6 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 					onAddColumn={this.onAddColumn}
 					onOpenVizSettings={this.onOpenVizSettings}
 					onVizSettings={this.onVizSettings}
-					onZoomOut={this.onZoomOut}
 					interactive={interactive}
 					onInteractive={this.onInteractive}
 					{...this.props}>

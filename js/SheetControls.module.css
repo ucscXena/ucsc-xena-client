@@ -27,6 +27,12 @@
 	margin: 4px 0;
 }
 
+/* Zoom Actions */
+.zoomActions {
+	align-items: center;
+	display: flex;
+}
+
 /* Sheet Actions */
 .sheetActions {
 	align-items: center;
@@ -48,4 +54,16 @@
 .action.disabled {
 	color: black12;
 	cursor: default;
+}
+
+/* Sheet action text button */
+.sheetActions .action {
+	margin-left: 32px;
+}
+
+/* Zoom out and clear zoom text button */
+.zoomActions .action {
+	height: 24px; /* Required to maintain centered buttons when status chips wrap to new line */
+	line-height: 24px;
+	margin: 0 8px;
 }

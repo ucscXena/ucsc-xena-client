@@ -56,19 +56,3 @@
 	transition: transform 200ms 150ms ease-in-out; /* Match transition of margin of ColCard, this is for animating the add column hover functionality */
 }
 
-/* Zoom control - hide */
-.zoomCarriage .zoomControl {
-	display: none;
-}
-
-/* Zoom control - show on zoomCarriage hover */
-.zoomCarriage:hover .zoomControl {
-	color: black54;
-	cursor: pointer;
-	display: flex;
-	font-family: "Material Icons";
-	font-size: 18px;
-	line-height: 18px;
-	z-index: 101;
-}
-

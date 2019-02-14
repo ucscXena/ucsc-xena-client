@@ -79,7 +79,7 @@
 	height: 61px; /* Includes border */
 	margin-bottom: 8px; /* Add additional margin here to prevent visualization from bumping up against title */
 	padding: 8px 16px;
-	position: relative; /* Positions geneZoomControl */
+	position: relative; /* Positions zoomControl */
 }
 
 .title {
@@ -91,8 +91,8 @@
 	width: 100%; /* Force RTB title to be full width */
 }
 
-/* Gene zoom */
-.geneZoomControl {
+/* Zoom control */
+.zoomControl {
 	align-items: center;
 	bottom: 0;
 	display: flex;
@@ -106,17 +106,17 @@
 	text-transform: uppercase;
 }
 
-.geneZoomControl span {
+.zoomControl span {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-/* Clear gene zoom */
-.geneZoomControl i {
+/* Clear zoom */
+.zoomControl i {
 	flex-shrink: 0;
 	font-size: 10px;
-	opacity: 0.38;
+	opacity: 0.54;
 	margin-left: 4px;
 }
 

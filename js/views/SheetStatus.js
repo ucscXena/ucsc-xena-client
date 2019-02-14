@@ -18,18 +18,12 @@ var compStyles = require('./SheetStatus.module.css');
 
 class SheetStatus extends React.Component {
 
-	showCancel = (sheetState) => {
-
-		return (sheetState !== 'None');
-	}
-
 	render() {
-		var {disabled, label, onClose, sheetState} = this.props;
+		var {disabled, label, sheetState} = this.props;
 		return (
 			<div className={classNames(compStyles.status, {[compStyles.disabled]: disabled})}>
 				<div className={compStyles.label}>{label}</div>
 				<div className={compStyles.state}>{sheetState}</div>
-				{this.showCancel(sheetState) ? <i className='material-icons' onClick={disabled ? null : onClose} title='Cancel zoom'>close</i> : null}
 			</div>
 		);
 	}

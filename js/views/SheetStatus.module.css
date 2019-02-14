@@ -38,17 +38,3 @@
 .state {
 	margin-left: 4px;
 }
-
-/* Close */
-.status i {
-	color: black38;
-	cursor: pointer;
-	font-size: 12px;
-	margin-left: 8px;
-}
-
-/* Close disabled */
-.status.disabled i {
-	color: black6;
-	cursor: default;
-}

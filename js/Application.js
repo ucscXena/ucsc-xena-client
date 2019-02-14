@@ -32,6 +32,15 @@ function clearZoom(samples, zoom) {
 	return _.merge(zoom, {count: samples, index: 0});
 }
 
+function zoomOut(samples, zoom) {
+	var {count, index} = zoom;
+	var nCount = Math.min(samples, Math.round(count * 3)),
+		maxIndex = samples - nCount,
+		nIndex = Math.max(0, Math.min(Math.round(index + (count - nCount) / 2), maxIndex));
+
+	return _.merge(zoom, {count: nCount, index: nIndex});
+}
+
 class Application extends Component {
 //	onPerf = () => {
 //		if (this.perf) {
@@ -70,6 +79,11 @@ class Application extends Component {
 	onHideWelcome = () => {
 		this.props.onShowWelcome(false);
 	};
+	onZoomOut = () => {
+		const {state: {samples, zoom}} = this.props;
+		this.props.callback(['zoom', zoomOut(samples.length, zoom)]);
+		this.props.callback(['enableTransition', false]);
+	};
 //	onSearchIDAndFilterColumn = (qsamplesList) => {
 //		var {state: {samples, cohortSamples}} = this.props,
 //			qsampleListObj = {},
@@ -103,7 +117,7 @@ class Application extends Component {
 						<AppControls {...otherProps} appState={state} help={searchHelp}
 									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>
 						 <SheetControls actionsDisabled={true} appState={state} clearZoom={this.onClearZoom}
-										statusDisabled={editing !== null} zoom={zoom}/></div>}
+										statusDisabled={editing !== null} zoom={zoom} zoomOut={this.onZoomOut}/></div>}
 					<Grid onClick={this.onClick}>
 					{/*
 						<Row>

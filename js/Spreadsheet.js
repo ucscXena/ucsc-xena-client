@@ -33,7 +33,7 @@ var getSpreadsheet = columnsWrapper => {
 		};
 
 	    render() {
-			var {appState: {data, addColumnAddHover, columns, enableTransition, samples, zoom, zoomHelp}, children, onZoomOut, ...otherProps} = this.props,
+			var {appState: {data, addColumnAddHover, columns, enableTransition, samples, zoom, zoomHelp}, children, ...otherProps} = this.props,
 				zoomHelper = zoomHelp ?
 					zoomPopover({
 						active: true,
@@ -41,7 +41,7 @@ var getSpreadsheet = columnsWrapper => {
 					}) : null;
 			return (
 				<div className={compStyles.Spreadsheet}>
-					{zoom.count < samples.length ? <SampleZoomIndicator column={columns.samples} addColumnAddHover={addColumnAddHover} enableTransition={enableTransition} data={data.samples} samples={samples} zoom={zoom} onZoomOut={onZoomOut}/> : null }
+					{zoom.count < samples.length ? <SampleZoomIndicator column={columns.samples} addColumnAddHover={addColumnAddHover} enableTransition={enableTransition} data={data.samples} samples={samples} zoom={zoom}/> : null }
 					<Columns appState={this.props.appState} {...otherProps}>
 						{children}
 					</Columns>
