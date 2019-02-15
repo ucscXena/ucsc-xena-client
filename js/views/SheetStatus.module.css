@@ -12,7 +12,7 @@
 
 /* Animation zoom controls */
 .zoomAnimation {
-	animation-duration: 3s;
+	animation-duration: 1s;
 	animation-name: zoomAnimation;
 }
 
