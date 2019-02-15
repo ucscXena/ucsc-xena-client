@@ -15,34 +15,3 @@
 .sampleZoomIndicator {
     margin: 0 4px 0 12px;
 }
-
-.zoomDialog {
-	background-color: #ffffff;
-	border-radius: 2px;
-	box-shadow: 0 19px 60px rgba(0, 0, 0, .3), 0 15px 20px rgba(0, 0, 0, .22); /* Based on <Dialog>. */
-	display: none;
-	left: 24px;
-	min-width: 272px;
-	position: fixed;
-	text-align: left;
-	top: 169px;
-	white-space: nowrap;
-	z-index: 999;
-}
-
-.zoomDialog.active {
-	display: block;
-}
-
-.content {
-	composes: mdBody1 from '../css/typography.module.css';
-	padding: 16px;
-}
-
-.actions {
-	border-top: 1px solid black6;
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 24px;
-	padding: 8px 16px;
-}

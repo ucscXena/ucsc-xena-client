@@ -10,6 +10,19 @@
 @value black6 from '../../css/variables.css';
 @value black38 from '../../css/variables.css';
 
+/* Animation zoom controls */
+.zoomAnimation {
+	animation-duration: 3s;
+	animation-name: zoomAnimation;
+}
+
+/* Animation zoom controls */
+@keyframes zoomAnimation {
+	0% {opacity: 0;}
+	25% {opacity: 0}
+	100% {opacity: 1;}
+}
+
 /* Status indicator */
 .status {
 	align-items: center;
