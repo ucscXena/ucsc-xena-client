@@ -47,8 +47,7 @@ var helpLink = {
 };
 
 var geneSetsLink = {
-    // href: 'https://xenageneset.berkeleybop.io/xena/',
-    href: 'http://xenademo.berkeleybop.io/xena/',
+    href: 'https://xenageneset.berkeleybop.io/xena/',
     label: 'Gene Sets',
     target: '_blank'
 };
