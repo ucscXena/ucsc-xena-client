@@ -192,11 +192,11 @@ var geneZoomWithGeneModel = ({column: {layout}, istart, iend}) => {
 
 var geneZoomWithoutGeneModel = (params) => {
 	var {column, sstart, send} = params,
-		// Use fieldList here as zoom indices are always relative to the complete (max zoom) set of fields
-		{width, fieldList, xzoom, maxXZoom} = column,
+		{width, fieldList, fields, fieldType, xzoom, maxXZoom} = column,
 		zStart = xzoom ? xzoom.start : maxXZoom.start,
 		zEnd = xzoom ? xzoom.end : maxXZoom.end,
-		fieldsInZoomRange = fieldList.slice(zStart, zEnd + 1),
+		// Use fieldList here for genes/probes as zoom indices are always relative to the complete (max zoom) set of fields
+		fieldsInZoomRange = fieldType === 'geneProbes' ? fields : fieldList.slice(zStart, zEnd + 1),
 		start = zStart + samplesPxToSubcolumnIndex(width, fieldsInZoomRange, sstart),
 		end = zStart + samplesPxToSubcolumnIndex(width, fieldsInZoomRange, send);
 	return {start, end};
