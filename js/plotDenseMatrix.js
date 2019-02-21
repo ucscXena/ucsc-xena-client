@@ -214,8 +214,8 @@ function renderCodedLegend(props) {
 
 var HeatmapLegend = hotOrNot(class extends PureComponent {
 	render() {
-		var {column, data, newLegend} = this.props,
-			{units, heatmap, colors, valueType, vizSettings, defaultNormalization} = column,
+		var {column, newLegend} = this.props,
+			{units, heatmap, colors, valueType, vizSettings, defaultNormalization, codes} = column,
 			props = {
 				units,
 				colors,
@@ -223,7 +223,7 @@ var HeatmapLegend = hotOrNot(class extends PureComponent {
 				defaultNormalization,
 				data: heatmap,
 				coded: valueType === 'coded',
-				codes: _.get(data, 'codes'),
+				codes: codes,
 			};
 		return (props.coded ? renderCodedLegend :
 			newLegend ? renderFloatLegendNew :
@@ -264,7 +264,7 @@ class extends PureComponent {
 
 	tooltip = (ev) => {
 		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
-			codes = _.get(data, 'codes'),
+			{codes} = column,
 			// support data.req.position for old bookmarks.
 			position = column.position || _.getIn(data, ['req', 'position']),
 			avg = _.get(data, 'avg'),
@@ -279,9 +279,8 @@ class extends PureComponent {
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
 	render() {
-		var {data, column, zoom} = this.props,
-			{heatmap, colors} = column,
-			codes = _.get(data, 'codes');
+		var {column, zoom} = this.props,
+			{heatmap, colors, codes} = column;
 
 		return (
 			<CanvasDrawing

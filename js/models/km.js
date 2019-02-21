@@ -131,7 +131,7 @@ function average(data) {
 
 // Currently assumes we have only one field. Right now we only
 // handle coded phenotype data, and limit it to one-per-column.
-function codedVals({heatmap, colors, fields}, {codes}) {
+function codedVals({heatmap, colors, codes}) {
 	var groups = _.range(codes.length),
 		colorfn = _.first(colors.map(colorScale));
 

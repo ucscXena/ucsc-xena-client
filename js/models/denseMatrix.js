@@ -113,7 +113,10 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 	if (!_.get(data, 'req')) {
 		return null;
 	}
-	var {req, codes = {}} = data,
+
+	var {req} = data,
+		vizSettingCodes = _.values(_.getIn(column, ['vizSettings', 'codes'])),
+		codes = _.isEmpty(vizSettingCodes) ? data.codes : vizSettingCodes,
 		{dataset, fieldSpecs} = column,
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples),
@@ -130,7 +133,7 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 	// field id maps to multiple probes, but we need the original field list
 	// in the rendering layer, to determine if we support KM and gene average.
 	// We could compute this in a selector, perhaps.
-	return {fields, fieldList: column.fields, heatmap, assembly, colors, units};
+	return {fields, fieldList: column.fields, heatmap, assembly, colors, units, codes};
 }
 
 function geneProbesToHeatmap(column, vizSettings, data, samples) {
@@ -306,10 +309,10 @@ function tsvProbeMatrix(heatmap, samples, fields, codes) {
 	return [fieldNames, tsvData];
 }
 
-function download({column, data, samples, sampleFormat}) {
-	var {fields, heatmap} = column,
+function download({column, samples, sampleFormat}) {
+	var {fields, heatmap, codes} = column,
 		tsvSamples = _.map(samples, sampleFormat);
-	return tsvProbeMatrix(heatmap, tsvSamples, fields, data.codes);
+	return tsvProbeMatrix(heatmap, tsvSamples, fields, codes);
 }
 
 function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {

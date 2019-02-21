@@ -93,6 +93,7 @@ function download([fields, rows]) {
 	a.click();
 	document.body.removeChild(a);
 }
+
 function downloadJSON(downloadData) {
 	// use blob for bug in chrome: https://code.google.com/p/chromium/issues/detail?id=373182
 	var url = URL.createObjectURL(new Blob([JSON.stringify(downloadData/*, undefined, 4*/)], { type: 'text/json' }));

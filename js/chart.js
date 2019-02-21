@@ -206,11 +206,12 @@ function render(root, callback, sessionStorage) {
 		_.map(ydiv.options, option => option.disabled = false);
 
 		var data = _.getIn(xenaState, ['data']),
+			columns = _.getIn(xenaState, ['columns']),
 			xcolumn = xdiv.options[xdiv.selectedIndex].value,
 			ycolumn = ydiv.options[ydiv.selectedIndex].value;
 
 		// x single float, disable y multiple float of series > 10
-		if (xcolumn !== "none" && !data[xcolumn].codes) {
+		if (xcolumn !== "none" && !columns[xcolumn].codes) {
 			_.map(ydiv.options, option => {
 				var y = option.value;
 				if (data[y].req.values && data[y].req.values.length > 10) {
@@ -222,7 +223,7 @@ function render(root, callback, sessionStorage) {
 		if (data[ycolumn].req.values && data[ycolumn].req.values.length > 10) {
 			_.map(xdiv.options, option => {
 				var x = option.value;
-				if (x !== "none" && !data[x].codes) {
+				if (x !== "none" && !columns[x].codes) {
 					option.disabled = true;
 				}
 			});
@@ -281,7 +282,7 @@ function render(root, callback, sessionStorage) {
 			if (data[column].req.rows && data[column].req.rows.length === 0) { //bad column
 				return;
 			}
-			if (data[column].codes && _.uniq(data[column].req.values[0]).length > 100) { // ignore any coded columns with too many items, like in most cases, the "samples" column
+			if (columns[column].codes && _.uniq(data[column].req.values[0]).length > 100) { // ignore any coded columns with too many items, like in most cases, the "samples" column
 				return;
 			}
 			if ((selectorID === "Xaxis" || selectorID === "Color") &&
@@ -343,7 +344,7 @@ function render(root, callback, sessionStorage) {
 				var xvalue = xdiv.options[xdiv.selectedIndex].value,
 					yvalue = div.options[div.selectedIndex].value;
 
-				if (xvalue !== "none" && !data[xvalue].codes && data[yvalue].req.values.length > 2) { // x if float and y is multi-float series with >2 series
+				if (xvalue !== "none" && !columns[xvalue].codes && data[yvalue].req.values.length > 2) { // x if float and y is multi-float series with >2 series
 					xdiv.options.selectedIndex = xdiv.options.length - 1;
 					xvalue = "none";
 				}
@@ -1379,10 +1380,10 @@ function render(root, callback, sessionStorage) {
 		ylabel = ydiv.options[ydiv.selectedIndex].text;
 
 		(function() {
-			var xcodemap = _.getIn(xenaState, ['data', xcolumn, 'codes']),
+			var xcodemap = _.getIn(xenaState, ['columns', xcolumn, 'codes']),
 				xdata = _.getIn(xenaState, ['data', xcolumn, 'req', 'values']),
 				xdataSegment = _.getIn(xenaState, ['data', xcolumn, 'req', 'rows']),
-				ycodemap = _.getIn(xenaState, ['data', ycolumn, 'codes']),
+				ycodemap = _.getIn(xenaState, ['columns', ycolumn, 'codes']),
 				ydata = _.getIn(xenaState, ['data', ycolumn, 'req', 'values']),
 				ydataSegment = _.getIn(xenaState, ['data', ycolumn, 'req', 'rows']),
 				yProbes = _.getIn(xenaState, ['data', ycolumn, 'req', 'probes']),
@@ -1500,7 +1501,7 @@ function render(root, callback, sessionStorage) {
 				scatterColorScale = color && colorScales.colorScale(color);
 				scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values']);
 				scatterColorDataSegment = _.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
-				scatterColorDataCodemap = _.getIn(xenaState, ['data', colorColumn, 'codes']);
+				scatterColorDataCodemap = _.getIn(xenaState, ['columns', colorColumn, 'codes']);
 				scatterLabel = columns[colorColumn].user.fieldLabel;
 
 				if (scatterColorDataSegment) {
