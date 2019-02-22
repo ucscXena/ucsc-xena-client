@@ -27,6 +27,8 @@ import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
 var crosshair = require('./cursor.png');
 
+import { fetchCohortTumorMeta as tumorMapLinkoutMeta }  from '../xenaQuery';
+
 var ESCAPE = 27;
 
 class IconMenu extends React.Component {
@@ -256,30 +258,30 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 		return null;
 	}
 
-	var tumorMapLinkout = {
-			'Treehouse public expression dataset (July 2017)': {
-				map: "Treehouse/THPED_July2017",
-				layout: "mRNA"
-			},
-			'Treehouse PED v8': {
-				map: "Treehouse/TreehousePEDv8",
-				layout: ""
-			},
-			'Treehouse PED v5 April 2018': {
-				map: "Treehouse/TreehousePEDv5_April2008",
-				layout: ""
-			},
-			'TCGA Pan-Cancer (PANCAN)': {
-				map: "PancanAtlas/SampleMap",
-				layout: "mRNA"
-			},
-			'GDC Pan-Cancer (PANCAN)': {
-				map: "xena_test/remapped_pancan_mrna",
-				layout: "layout"
-			}
-		};
+	// var tumorMapLinkout = {
+	// 		'Treehouse public expression dataset (July 2017)': {
+	// 			map: "Treehouse/THPED_July2017",
+	// 			layout: "mRNA"
+	// 		},
+	// 		'Treehouse PED v8': {
+	// 			map: "Treehouse/TreehousePEDv8",
+	// 			layout: ""
+	// 		},
+	// 		'Treehouse PED v5 April 2018': {
+	// 			map: "Treehouse/TreehousePEDv5_April2008",
+	// 			layout: ""
+	// 		},
+	// 		'TCGA Pan-Cancer (PANCAN)': {
+	// 			map: "PancanAtlas/SampleMap",
+	// 			layout: "mRNA"
+	// 		},
+	// 		'GDC Pan-Cancer (PANCAN)': {
+	// 			map: "xena_test/remapped_pancan_mrna",
+	// 			layout: "layout"
+	// 		}
+	// 	};
 
-	return _.getIn(tumorMapLinkout, [cohort.name]);
+	return _.getIn(tumorMapLinkoutMeta, [cohort.name]);
 }
 
 // Maybe put in a selector.
