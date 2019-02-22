@@ -46,6 +46,12 @@ var helpLink = {
 	target: '_blank'
 };
 
+var geneSetsLink = {
+    href: 'https://xenageneset.berkeleybop.io/xena/',
+    label: 'Gene Sets',
+    target: '_blank'
+};
+
 var active = (l, activeLink) => l.nav === activeLink;
 
 class XenaNav extends React.Component {
@@ -62,7 +68,8 @@ class XenaNav extends React.Component {
 				<a href='http://xena.ucsc.edu/' className={compStyles.logoXena}><img title={window.ga ? '' : 'no analytics'} src={logoSantaCruzImg} srcSet={logoSrcSet}/></a>
 				<Navigation type="horizontal" routes={routes}>
 					{getState ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
-					<Link {...helpLink} />
+					<Link {...geneSetsLink} />
+                    <Link {...helpLink} />
 				</Navigation>
 			</AppBar>
 		);
