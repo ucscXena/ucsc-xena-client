@@ -667,9 +667,14 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			return (
 				<div>
 					<Row>
+						<Col xs4={1} xs8={1} sm={1}>
+							<div className={vizSettingStyle.selectLabel}>
+								Color
+							</div>
+						</Col>
 						<Col xs4={4} xs8={4} sm={6}>
 							<div className={vizSettingStyle.selectLabel}>
-								Edit label
+								Label
 							</div>
 						</Col>
 					</Row>
@@ -736,7 +741,7 @@ class VizSettings extends React.Component {
 			<Dialog
 				actions={actions}
 				active={true}
-				title='Display Settings'
+				title='Adjust Display Settings'
 				className={vizSettingStyle.dialog}
 				onEscKeyDown={onRequestHide}
 				onOverlayClick={onRequestHide}
