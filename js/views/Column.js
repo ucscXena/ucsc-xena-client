@@ -27,6 +27,10 @@ import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
 var crosshair = require('./cursor.png');
 
+var Rx = require('../rx');
+import cohortMetaData from '../cohortMetaData';
+
+
 var ESCAPE = 27;
 
 class IconMenu extends React.Component {
@@ -240,6 +244,14 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 	]);
 }
 
+var fetchJSON = url =>
+	Rx.Observable.ajax({
+		url,
+		method: 'GET',
+		responseType: 'json',
+		crossDomain: true
+	}).map(xhr => xhr.response);
+
 function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 	// link to tumorMap from any public xena hub columns
 	// data be queried directly from xena
@@ -256,30 +268,10 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 		return null;
 	}
 
-	var tumorMapLinkout = {
-			'Treehouse public expression dataset (July 2017)': {
-				map: "Treehouse/THPED_July2017",
-				layout: "mRNA"
-			},
-			'Treehouse PED v8': {
-				map: "Treehouse/TreehousePEDv8",
-				layout: ""
-			},
-			'Treehouse PED v5 April 2018': {
-				map: "Treehouse/TreehousePEDv5_April2008",
-				layout: ""
-			},
-			'TCGA Pan-Cancer (PANCAN)': {
-				map: "PancanAtlas/SampleMap",
-				layout: "mRNA"
-			},
-			'GDC Pan-Cancer (PANCAN)': {
-				map: "xena_test/remapped_pancan_mrna",
-				layout: "layout"
-			}
-		};
+	var tumorMapLinkoutURL = `${cohortMetaData}/defaultTumormap.json`;
+	var tumorMapLinkoutMeta = fetchJSON(tumorMapLinkoutURL);
 
-	return _.getIn(tumorMapLinkout, [cohort.name]);
+	return _.getIn(tumorMapLinkoutMeta, [cohort.name]);
 }
 
 // Maybe put in a selector.
