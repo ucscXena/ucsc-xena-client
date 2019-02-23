@@ -38,29 +38,36 @@ var parsePos = require('../parsePos');
 
 var colors = {
 	categoryMutation: [
-		//"#C7C7C7",	// lighter gray
-		"#9b9b9b",  // darker grey
-		"#2CA02C",  // green
-		"#1F77B4",  // blue
-		"#FF7F0E",  // orange
-		"#D62728"   // red
+		["#9b9b9b", 'Intron/RNA'],  // darker grey code: 0
+		["#2CA02C", 'Silent'], // green  code:1
+		["#1F77B4", 'Missense/Inframe'], // blue  code:2
+		["#FF7F0E", 'Splice'], // orange  code:3
+		["#D62728", 'Deleterious'],  // red  code:4
+		["#c5b0d5", "Complex/Other/Unannotated"] // light lavender missing/no code
 	],
 	af: {r: 255, g: 0, b: 0},
-	darkGrey: "#9b9b9b", // for unknown function
-	grey: "#808080" // for null
+	darkGrey: "#9b9b9b", // for SV default
+	missing: "#c5b0d5" // light lavender for no impact annotation or annotation outside of impact code
 };
 
-function inorderLegend(colorMap, valsInData) {
+function impactLegend(colorMap, valsInData) {
 	var inData = new Set(valsInData),
 		missing = _.object(
 			_.map(_.filter([...inData], v => !_.has(colorMap, v)),
-				v => [v, colors.grey])),
+				v => [v, colors.missing])),
 		extendedMap = _.merge(colorMap, missing),
 		colorList = _.filter(_.pairs(extendedMap), ([val]) => inData.has(val)).reverse(); // Legend reverses
+
+	//groupBy color
+	let colorGroups = _.mapObject(_.groupBy(colorList, ([, color]) => color), (val) => _.pluck(val, 0)),
+		mutationColors = _.keys(colorGroups), // color square
+		titles = _.values(colorGroups).map(impactList => impactList.map(i => i !== '' ? i : "unannotated").join("\n")), // mouse over text
+		labels = mutationColors.map(color => _.find(colors.categoryMutation, ([c, ]) => color === c)[1]); //visible text
+
 	return {
-		colors: _.pluck(colorList, 1),
-		labels: _.pluck(colorList, 0),
-		align: 'left'
+		colors: mutationColors,
+		titles: titles,
+		labels: labels,
 	};
 }
 
@@ -141,7 +148,7 @@ var impact = {
 		"5'UTR": 0,
 		'5_prime_UTR_variant': 0,
 		'3_prime_UTR_variant': 0,
-		'Complex Substitution': 0,
+		//'Complex Substitution': 0,
 		'intron_variant': 0,
 		'intron': 0,
 		'Intron': 0,
@@ -201,7 +208,7 @@ var impact = {
 		"X": "#F2BBD2",
 		"Y": "#B6EBEA"
 	},
-	impactColor = _.mapObject(impact, i => colors.categoryMutation[i]),
+	impactColor = _.mapObject(impact, i => colors.categoryMutation[i][0]),
 	saveUndef = f => v => v == null ? v : f(v),
 	round = Math.round,
 	decimateFreq = saveUndef(v => round(v * 31) / 32), // reduce to 32 vals
@@ -222,18 +229,18 @@ var impact = {
 	features = {
 		impact: {
 			get: v => v.effect,
-			color: (colorMap, v) => colorMap[v] || colors.grey,
-			legend: inorderLegend
+			color: (colorMap, v) => colorMap[v] || colors.missing,
+			legend: impactLegend
 		},
 		// dna_vaf and rna_vaf need to be updated to reflect the call params.
 		'dna_vaf': {
 			get: v => v.dna_vaf == null ? undefined : decimateFreq(v.dna_vaf),
-			color: v => colorStr(v == null ? colors.grey : _.assoc(colors.af, 'a', v)),
+			color: v => colorStr(v == null ? colors.missing : _.assoc(colors.af, 'a', v)),
 			legend: vafLegend
 		},
 		'rna_vaf': {
 			get: v => v.rna_vaf == null ? undefined : decimateFreq(v.rna_vaf),
-			color: v => colorStr(v == null ? colors.grey : _.assoc(colors.af, 'a', v)),
+			color: v => colorStr(v == null ? colors.missing : _.assoc(colors.af, 'a', v)),
 			legend: vafLegend
 		}
 	};

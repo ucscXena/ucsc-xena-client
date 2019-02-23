@@ -639,8 +639,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 					<Row key={i}>
 						<Col xs4={1} xs8={1} sm={1}>
 							<div className={vizSettingStyle.categoryColor}
-								style={{
-									backgroundColor: backgroundColor}}/>
+								style={{backgroundColor: backgroundColor}}/>
 						</Col>
 						<Col xs4={4} xs8={4} sm={6}>
 							<Input type='text'

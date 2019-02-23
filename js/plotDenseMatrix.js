@@ -102,7 +102,7 @@ function categoryLegend(dataIn, colorScale, codes) {
 		colors = _.map(data, colorScale),
 		labels = _.map(data, d => codes[d]);
 
-	return {colors: colors, labels: labels};
+	return {colors: colors, labels: labels, titles: labels};
 }
 
 // Color scale cases

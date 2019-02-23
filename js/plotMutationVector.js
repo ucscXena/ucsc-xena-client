@@ -33,14 +33,16 @@ function drawLegend({column}) {
 	if (!column.legend) {
 		return null;
 	}
-	var {colors, labels, align} = column.legend;
+	var {colors, labels, titles} = column.legend,
+		header = "Variant Impact";
 
 	return (
 		<Legend
-			colors={['rgb(255,255,255)', ...colors]}
-			labels={['no variant', ...labels]}
-			align={align}
-			ellipsis='' />
+			colors={colors}
+			labels={labels}
+			titles={titles}
+			addNullNotation={1}
+			header={header}/>
 	);
 }
 
@@ -183,7 +185,7 @@ function sampleTooltip(sampleFormat, dataList, assembly, fields) {
 						gbMultiColorURL(assembly, dataDisplayRegion, [[posDoubleString(data), '#AA0000' ], [dataRegion, '#aec7e8']], defaultSNVSVGBsetting(assembly)) :
 						gbURL(assembly, posRegionString(data), posDoubleString (data), defaultSNVSVGBsetting(assembly))],
 
-			effect = ['value', fmtIf(data.effect, x => `${x}, `) + //eslint-disable-line comma-spacing
+			effect = ['value', fmtIf(data.effect, x => `${x}, `, `unannotated`) + //eslint-disable-line comma-spacing
 						fmtIf(data.gene, x => `${x}`)  +
 						fmtIf(data.aminoAcid, x => ` (${x})`) +
 						fmtIf(data.altGene, x => ` connect to ${x} `)
