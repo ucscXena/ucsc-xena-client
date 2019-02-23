@@ -26,10 +26,10 @@ import RefGeneAnnotation from '../refGeneExons';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
 var crosshair = require('./cursor.png');
-
-import { fetchCohortTumorMeta as tumorMapLinkoutMeta }  from '../xenaQuery';
+import cohortMetaData from '../cohortMetaData';
 
 var ESCAPE = 27;
+var tumorMapLinkoutMeta = '';
 
 class IconMenu extends React.Component {
 	onKeyDown = ev => {
@@ -245,6 +245,8 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 	// link to tumorMap from any public xena hub columns
 	// data be queried directly from xena
+	var cohortTumorMapLinkoutURL = `${cohortMetaData}/defaultTumormap.json`;
+	fetch(cohortTumorMapLinkoutURL).then(res => res.json()).then(res => {  tumorMapLinkoutMeta = res;});
 	var foundPublicHub = _.any(fieldSpecs, obj => {
 		if (obj.dsID) {
 			return publicServers.indexOf(JSON.parse(obj.dsID).host) !== -1;
@@ -394,6 +396,8 @@ class Column extends PureComponent {
 	//				{target}
 	//			</OverlayTrigger>);
 	//	},
+
+
 	enableHiddenFeatures = () => {
 		specialDownloadMenu = true;
 		this.setState({specialDownloadMenu: true});
