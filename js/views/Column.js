@@ -240,7 +240,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 	]);
 }
 
-function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
+function tumorMapCompatible({fieldType, fields, fieldSpecs}) {
 	// link to tumorMap from any public xena hub columns
 	// data be queried directly from xena
 	var foundPublicHub = _.any(fieldSpecs, obj => {
@@ -253,33 +253,10 @@ function supportsTumorMap({fieldType, fields, cohort, fieldSpecs}) {
 
 	if (!foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
 		_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1)) {
-		return null;
+		return false;
 	}
 
-	var tumorMapLinkout = {
-			'Treehouse public expression dataset (July 2017)': {
-				map: "Treehouse/THPED_July2017",
-				layout: "mRNA"
-			},
-			'Treehouse PED v8': {
-				map: "Treehouse/TreehousePEDv8",
-				layout: ""
-			},
-			'Treehouse PED v5 April 2018': {
-				map: "Treehouse/TreehousePEDv5_April2008",
-				layout: ""
-			},
-			'TCGA Pan-Cancer (PANCAN)': {
-				map: "PancanAtlas/SampleMap",
-				layout: "mRNA"
-			},
-			'GDC Pan-Cancer (PANCAN)': {
-				map: "xena_test/remapped_pancan_mrna",
-				layout: "layout"
-			}
-		};
-
-	return _.getIn(tumorMapLinkout, [cohort.name]);
+	return true;
 }
 
 // Maybe put in a selector.
@@ -292,10 +269,10 @@ var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
 var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
-function matrixMenu(props, {onTumorMap, onMode, onCluster, isChrom}) {
-	var {cohort, column} = props,
+function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, isChrom}) {
+	var {column} = props,
 		{fieldType, noGeneDetail, fields, fieldSpecs, clustering} = column,
-		tumorMapCohort = supportsTumorMap({fieldType, fields, cohort, fieldSpecs}),
+		supportTumorMap = thisTumorMap && tumorMapCompatible({fieldType, fields, fieldSpecs}),
 		order = clustering == null ? 'clusters' :
 			fieldType === 'geneProbes' ? 'position' : 'list';
 
@@ -309,8 +286,8 @@ function matrixMenu(props, {onTumorMap, onMode, onCluster, isChrom}) {
 					disabled={noGeneDetail} onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
 				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>) :
 				null,
-		tumorMapCohort ?
-			<MenuItem onClick={(e) => onTumorMap(tumorMapCohort, e)} caption={`Tumor Map`}/> :
+		supportTumorMap ?
+			<MenuItem onClick={(e) => onTumorMap(thisTumorMap, e)} caption={`Tumor Map`}/> :
 			null
 	]);
 }
@@ -617,13 +594,14 @@ class Column extends PureComponent {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
-				interactive, append} = this.props,
+				interactive, append, cohort, tumorMap} = this.props,
 			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
 					_.getIn(column, ['assembly'])),
 			{specialDownloadMenu} = this.state,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
-			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, onShowIntrons, onSortVisible,
+			thisTumorMap = _.getIn(tumorMap, [cohort.name]),
+			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, thisTumorMap, onShowIntrons, onSortVisible,
 				onCluster, onSpecialDownload, specialDownloadMenu, isChrom}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			status = _.get(data, 'status'),

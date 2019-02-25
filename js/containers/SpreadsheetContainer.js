@@ -179,7 +179,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 	render() {
 		var columnProps = _.pick(this.props,
 				['searching', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
-			{appState} = this.props,
+			{appState, wizard: {cohortTumorMap}} = this.props,
 			{columnOrder, wizardMode, hasSurvival} = appState,
 			interactive = isInteractive(this.props, this.state);
 
@@ -222,7 +222,8 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						onClick={this.onPlotClick}
 						{...columnSelector(id, i, appState)}
 						wizardMode={wizardMode}
-						editing={appState.editing}/>))}
+						editing={appState.editing}
+						tumorMap={cohortTumorMap}/>))}
 			</Spreadsheet>);
 	}
 };
