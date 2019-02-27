@@ -659,12 +659,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 								   className={vizSettingStyle.categoryInput}
 								   onChange={this.handleChange.bind(this, i)}/>
 						</Col>
-						<Col>
-							<Button onMouseUp={this.onRest.bind(this, i, originalCode)}
-								className={vizSettingStyle.confirmButton}>
-								Reset
-							</Button>
-						</Col>
+						{code !== originalCode ?
+							<Col>
+								<Button onMouseUp={this.onRest.bind(this, i, originalCode)}
+									className={vizSettingStyle.cancelButton}>
+									Reset
+								</Button>
+							</Col> : null}
 					</Row>
 				);
 			});
