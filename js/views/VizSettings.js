@@ -46,13 +46,14 @@ import {categoryMore} from "../colorScales";
 
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
 	defaultColorClass, valueType, fieldType, data, units, column) {
-	var state = vizState;
+
 	class DatasetSetting extends React.Component {
 		render() {
-			let settingsContent = valueType === "float" || valueType === 'segmented' ? <AllFloat /> :
+			let settingsContent =
+				valueType === "float" || valueType === 'segmented' ? <AllFloat /> :
 				valueType === "mutation" && fieldType === 'SV' ? <Sv /> :
 				valueType === "coded" ? <Coded /> :
-					<NoSettings />;
+				<NoSettings />;
 			return (
 				<div>
 					{settingsContent}
@@ -117,7 +118,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	class FinishButtonBar extends React.Component {
 	    handleCancelClick = () => {
 			hide();
-			onVizSettings(id, state);
+			onVizSettings(id, oldSettings);
 		};
 
 	    handleDoneClick = () => {
@@ -254,7 +255,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 	        this.state = {
 				mode: custom ? "Custom" : "Auto",
-				settings: custom ? _.pick(oldSettings, colorParams[valueType]) : scaleDefaults[valueType],
+				settings: custom ? _.pick(state, colorParams[valueType]) : scaleDefaults[valueType],
 				errors: {}
 			};
 	    }
@@ -603,27 +604,38 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	//user label for Categories
 	class CategoricalTable extends React.Component {
 	    constructor(props) {
+	        var parseVizSettingCodes = (str) => {
+				if (! _.isString(str)) {return undefined;}
+
+				let codes = JSON.parse(str),
+					observed = JSON.stringify(_.keys(codes).sort(function sortNumber(a, b) {return a - b;})),
+					expected = JSON.stringify(_.range(_.keys(codes).length).map(x => x.toString()));
+
+				if (observed === expected) {
+					return codes;
+				}
+				return undefined;
+			};
+
 	        super(props);
-	        this.state = getVizSettings('codes') || _.object(_.range(data.codes.length), data.codes);
+	        this.state = parseVizSettingCodes(getVizSettings('codes')) || _.object(_.range(data.codes.length), data.codes);
 	    }
 
 		handleChange = (i, value) => {
 			let codes = this.state;
 
-			codes[i.toString()] = value;
-			setVizSettings('codes', codes);
-			this.setState({i: value});
+			codes[i] = value;
+			setVizSettings('codes', JSON.stringify(codes));
+			this.setState({[i]: value});
 		};
 
-		keyDownFunction = (i, originalCode, event) => {
-			if (event.key === 'Enter' && event.target.value === '') {
-				let codes = this.state,
-					value = originalCode;
+		onRest = (i, originalCode) => {
+			let codes = this.state,
+				value = originalCode;
 
-				codes[i.toString()] = value;
-				setVizSettings('codes', codes);
-				this.setState({i: value});
-			}
+			codes[i] = value;
+			setVizSettings('codes', JSON.stringify(codes));
+			this.setState({[i]: value});
 		};
 
 
@@ -645,8 +657,13 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 							<Input type='text'
 								   value={code}
 								   className={vizSettingStyle.categoryInput}
-								   onKeyPress={this.keyDownFunction.bind(this, i, originalCode)}
 								   onChange={this.handleChange.bind(this, i)}/>
+						</Col>
+						<Col>
+							<Button onMouseUp={this.onRest.bind(this, i, originalCode)}
+								className={vizSettingStyle.confirmButton}>
+								Reset
+							</Button>
 						</Col>
 					</Row>
 				);
@@ -683,7 +700,8 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 	}
 
-	var oldSettings = state,
+	var state = vizState,
+		oldSettings = state ? JSON.parse(JSON.stringify(state)) : undefined,
 		currentSettings = {state: state},
 		colorParams = {
 			float: ["max", "maxstart", "minstart", "min"],

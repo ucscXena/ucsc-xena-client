@@ -34,7 +34,7 @@ function drawLegend({column}) {
 		return null;
 	}
 	var {colors, labels, titles} = column.legend,
-		header = "Variant Impact";
+		labelheader = "Variant Impact";
 
 	return (
 		<Legend
@@ -42,7 +42,7 @@ function drawLegend({column}) {
 			labels={labels}
 			titles={titles}
 			addNullNotation={1}
-			header={header}/>
+			labelheader={labelheader}/>
 	);
 }
 

@@ -225,6 +225,7 @@ var HeatmapLegend = hotOrNot(class extends PureComponent {
 				coded: valueType === 'coded',
 				codes: codes,
 			};
+
 		return (props.coded ? renderCodedLegend :
 			newLegend ? renderFloatLegendNew :
 			renderFloatLegend)(props);
