@@ -72,14 +72,14 @@ var getCustomColor = (fieldSpecs, fields, dataset) =>
 		_.getIn(dataset, ['customcolor', fieldSpecs[0].fields[0]], null) : null;
 
 var defaultXZoom = (pos, refGene, position, showPos, values) =>
-	showPos ? (pos ? {
-			start: pos.baseStart,
-			end: pos.baseEnd} :
-		!refGene ? undefined :
-			_.Let(({txStart, txEnd} = refGene) => ({
-				start: Math.min(txStart, ..._.pluck(position, 'chromstart')),
-				end: Math.max(txEnd, ..._.pluck(position, 'chromend'))}))) :
-		{start: 0, end: values.length};
+	!showPos ? {start: 0, end: values.length} :
+		pos ? {
+				start: pos.baseStart,
+				end: pos.baseEnd} :
+			!refGene ? undefined :
+				_.Let(({txStart, txEnd} = refGene) => ({
+					start: Math.min(txStart, ..._.pluck(position, 'chromstart')),
+					end: Math.max(txEnd, ..._.pluck(position, 'chromend'))}));
 
 var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes'], fieldType) && fields.length > 2 ||
