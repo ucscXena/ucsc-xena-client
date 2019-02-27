@@ -42,12 +42,8 @@ var directionInColumnWithoutGeneModel = ({start, end}) => directionFromStartEnd(
 var directionSampleZoomOnlyColumn = () => 'v';
 
 // @param {fieldType, start, end, zone}
-zoom.direction.add('geneProbes', directionInColumnWithGeneModel);
-zoom.direction.add('segmented', directionInColumnWithGeneModel);
-zoom.direction.add('mutation', directionInColumnWithGeneModel);
-zoom.direction.add('probes', directionInColumnWithGeneModel);
+zoom.direction.dflt = directionInColumnWithGeneModel;
 zoom.direction.add('genes', directionInColumnWithoutGeneModel);
-zoom.direction.add('SV', directionInColumnWithGeneModel);
 zoom.direction.add('clinical', directionSampleZoomOnlyColumn);
 
 //
@@ -172,13 +168,8 @@ var overlayWithoutSubcolumns = ({start, end}) => ({sstart: start, send: end, ist
 
 // @param {annotated, column, direction, fieldType, start, end, zone}
 // -- start and end are pixel points in the target zone where the drag zoom event occurred (either samples or annotation)
+zoom.overlay.dflt = overlayWithoutSubcolumns;
 zoom.overlay.add('geneProbes', overlayWithSubcolumns);
-zoom.overlay.add('segmented', overlayWithoutSubcolumns);
-zoom.overlay.add('mutation', overlayWithoutSubcolumns);
-zoom.overlay.add('probes', overlayWithoutSubcolumns);
-zoom.overlay.add('genes', overlayWithoutSubcolumns);
-zoom.overlay.add('SV', overlayWithoutSubcolumns);
-zoom.overlay.add('clinical', overlayWithoutSubcolumns);
 
 //
 // Zoom - gene/horizontal zoom requires chromstart/chromend values for columns with corresponding gene model or subcolumn
@@ -220,12 +211,7 @@ var zoomByDirection = (params) =>
 // -- sstart and ssend are pixel points in the samples zone
 // -- istart and iend are pixel points in the annotation (indicator) zone
 // -- yZoom is the current samples/vertical zoom state
-zoom.zoomTo.add('geneProbes', zoomByDirection);
-zoom.zoomTo.add('segmented', zoomByDirection);
-zoom.zoomTo.add('mutation', zoomByDirection);
-zoom.zoomTo.add('probes', zoomByDirection);
-zoom.zoomTo.add('genes', zoomByDirection);
-zoom.zoomTo.add('SV', zoomByDirection);
+zoom.zoomTo.dflt = zoomByDirection;
 zoom.zoomTo.add('clinical', samplesZoom);
 
 //
@@ -237,13 +223,10 @@ var maxGeneZoomRange = (column) => _.get(column.maxXZoom, ['end']) - _.get(colum
 // x zoom is indices for columns without corresponding gene model, add 1 to get length
 var maxGeneZoomRangeByIndices = (column) => maxGeneZoomRange(column) + 1;
 
-zoom.maxGeneZoomLength.add('geneProbes', maxGeneZoomRange);
-zoom.maxGeneZoomLength.add('segmented', maxGeneZoomRange);
-zoom.maxGeneZoomLength.add('mutation', maxGeneZoomRange);
-zoom.maxGeneZoomLength.add('probes', maxGeneZoomRangeByIndices);
-zoom.maxGeneZoomLength.add('genes', maxGeneZoomRangeByIndices);
-zoom.maxGeneZoomLength.add('SV', maxGeneZoomRange);
-zoom.maxGeneZoomLength.add('clinical', maxGeneZoomRange);
+zoom.maxGeneZoomLength.dflt = maxGeneZoomRange;
+['probes', 'genes'].forEach(fieldType => {
+	zoom.maxGeneZoomLength.add(fieldType, maxGeneZoomRangeByIndices);
+});
 
 //
 // Calculate current gene zoom length
@@ -254,13 +237,10 @@ var geneZoomRange = (column) => _.get(column.xzoom, ['end']) - _.get(column.xzoo
 // x zoom is indices for columns without corresponding gene model, add 1 to get length
 var geneZoomRangeByIndices = (column) => geneZoomRange(column) + 1;
 
-zoom.geneZoomLength.add('geneProbes', geneZoomRange);
-zoom.geneZoomLength.add('segmented', geneZoomRange);
-zoom.geneZoomLength.add('mutation', geneZoomRange);
-zoom.geneZoomLength.add('probes', geneZoomRangeByIndices);
-zoom.geneZoomLength.add('genes', geneZoomRangeByIndices);
-zoom.geneZoomLength.add('SV', geneZoomRange);
-zoom.geneZoomLength.add('clinical', geneZoomRange);
+zoom.geneZoomLength.dflt = geneZoomRange;
+['probes', 'genes'].forEach(fieldType => {
+	zoom.geneZoomLength.add(fieldType, geneZoomRangeByIndices);
+});
 
 //
 // Calculate length of zoom to
@@ -271,13 +251,10 @@ var zoomToLength = ({zoomTo}) => _.get(zoomTo, ['end']) - _.get(zoomTo, ['start'
 // x zoom is indices for columns without corresponding gene model, add 1 to get length
 var zoomToLengthByIndices = (params) => zoomToLength(params) + 1;
 
-zoom.zoomToLength.add('geneProbes', zoomToLength);
-zoom.zoomToLength.add('segmented', zoomToLength);
-zoom.zoomToLength.add('mutation', zoomToLength);
-zoom.zoomToLength.add('probes', zoomToLengthByIndices);
-zoom.zoomToLength.add('genes', zoomToLengthByIndices);
-zoom.zoomToLength.add('SV', zoomToLength);
-zoom.zoomToLength.add('clinical', zoomToLength);
+zoom.zoomToLength.dflt = zoomToLength;
+['probes', 'genes'].forEach(fieldType => {
+	zoom.zoomToLength.add(fieldType, zoomToLengthByIndices);
+});
 
 //
 // True if gene/horizontal zoom is possible for column type
@@ -286,12 +263,7 @@ zoom.zoomToLength.add('clinical', zoomToLength);
 var geneZoomSupported = () => true;
 var geneZoomNotSupported = () => false;
 
-zoom.supportsGeneZoom.add('geneProbes', geneZoomSupported);
-zoom.supportsGeneZoom.add('segmented', geneZoomSupported);
-zoom.supportsGeneZoom.add('mutation', geneZoomSupported);
-zoom.supportsGeneZoom.add('probes', geneZoomSupported);
-zoom.supportsGeneZoom.add('genes', geneZoomSupported);
-zoom.supportsGeneZoom.add('SV', geneZoomSupported);
+zoom.supportsGeneZoom.dflt = geneZoomSupported;
 zoom.supportsGeneZoom.add('clinical', geneZoomNotSupported);
 
 //
