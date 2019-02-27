@@ -71,14 +71,15 @@ var getCustomColor = (fieldSpecs, fields, dataset) =>
 	fields.length === 1 ?
 		_.getIn(dataset, ['customcolor', fieldSpecs[0].fields[0]], null) : null;
 
-var defaultXZoom = (pos, refGene, position) =>
-	pos ? {
+var defaultXZoom = (pos, refGene, position, showPos, values) =>
+	showPos ? (pos ? {
 			start: pos.baseStart,
 			end: pos.baseEnd} :
 		!refGene ? undefined :
 			_.Let(({txStart, txEnd} = refGene) => ({
 				start: Math.min(txStart, ..._.pluck(position, 'chromstart')),
-				end: Math.max(txEnd, ..._.pluck(position, 'chromend'))}));
+				end: Math.max(txEnd, ..._.pluck(position, 'chromend'))}))) :
+		{start: 0, end: values.length};
 
 var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes'], fieldType) && fields.length > 2 ||
@@ -149,7 +150,7 @@ function geneProbesToHeatmap(column, vizSettings, data, samples) {
 		{req} = data,
 		{values} = req,
 		refGeneObj = _.first(_.values(data.refGene)),
-		maxChromXZoom = defaultXZoom(pos, refGeneObj, req.position),
+		maxChromXZoom = defaultXZoom(pos, refGeneObj, req.position, showPos, values),
 		{width, showIntrons = false, xzoom} = column,
 		// Use maxXZoom when there is no gene model (as xzoom is subcolumn indices)
 		chromXZoom = showPos ? (xzoom || maxChromXZoom) : maxChromXZoom,
@@ -181,7 +182,7 @@ function geneProbesToHeatmap(column, vizSettings, data, samples) {
 		...(probesInView.length ? heatmapData : {}),
 		layout,
 		position: probesInView.map(i => req.position[i]),
-		maxXZoom: (showPos ? maxChromXZoom : {start: 0, end: values.length})
+		maxXZoom: maxChromXZoom
 	};
 }
 
