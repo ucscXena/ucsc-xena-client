@@ -1,0 +1,17 @@
+/**
+ * UCSC Xena Client
+ * http://xena.ucsc.edu
+ *
+ * React Toolbox theme for applying global overrides to Tooltip components.
+ *
+ */
+
+/* Tooltip wrapper */
+.tooltip {
+	padding: 4px;
+}
+
+/* Tooltip inner element */
+.tooltipInner {
+	padding: 4px 6px;
+}

@@ -72,7 +72,6 @@ function pxTransformI(layout, fn, i) {
 
 	var [start, end] = pos;
 	var [sstart, send] = screen[i];
-
 	// If reversed, we mirror the coords in the exon, rather than swapping all the bounds. This might
 	// be simpler.
 	var flop = flopIf(reversed, start, end);
@@ -88,7 +87,6 @@ function pxTransformEach(layout, fn) {
 
 	_.times(chrom.length, i => pxTransformI(layout, fn, i));
 }
-
 
 // This is hacky. Should really have started w/this, instead of
 // with pxTransformEach.

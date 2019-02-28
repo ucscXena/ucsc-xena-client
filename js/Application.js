@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { Grid, Row, Col } from "react-material-responsive-grid";
 import { AppControls } from './AppControls';
 import { KmPlot } from './KmPlot';
+import SheetControls from './SheetControls';
 import StateError from'./StateError';
 import _  from './underscore_ext';
 import { Stepper } from './views/Stepper';
@@ -11,6 +12,7 @@ import '../css/index.css'; // Root styles file (reset, fonts, globals)
 import { ThemeProvider } from 'react-css-themr';
 import appTheme from './appTheme';
 import nav from './nav';
+var gaEvents = require('./gaEvents');
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 const stepperSteps = [
@@ -26,6 +28,19 @@ const stepperStateIndex = {
 
 // should really be in a config file.
 const searchHelp = 'https://ucsc-xena.gitbook.io/project/overview-of-features/filter-and-subgrouping';
+
+function clearZoom(samples, zoom) {
+	return _.merge(zoom, {count: samples, index: 0});
+}
+
+function zoomOut(samples, zoom) {
+	var {count, index} = zoom;
+	var nCount = Math.min(samples, Math.round(count * 3)),
+		maxIndex = samples - nCount,
+		nIndex = Math.max(0, Math.min(Math.round(index + (count - nCount) / 2), maxIndex));
+
+	return _.merge(zoom, {count: nCount, index: nIndex});
+}
 
 class Application extends Component {
 //	onPerf = () => {
@@ -52,15 +67,25 @@ class Application extends Component {
 		// nested render to different DOM tree
 		nav({isPublic, getState, onImport, onNavigate, activeLink: 'heatmap'});
 	}
+	onClearZoom = () => {
+		const {state: {samples, zoom}} = this.props;
+		this.props.callback(['zoom', clearZoom(samples.length, zoom)]);
+	};
 	onHideError = () => {
 		this.props.callback(['stateError', undefined]);
 	};
 	onShowWelcome = () => {
 		this.props.onShowWelcome(true);
-	}
+	};
 	onHideWelcome = () => {
 		this.props.onShowWelcome(false);
-	}
+	};
+	onZoomOut = () => {
+		const {state: {samples, zoom}} = this.props;
+		gaEvents('spreadsheet', 'zoom', 'out');
+		this.props.callback(['zoom', zoomOut(samples.length, zoom)]);
+		this.props.callback(['enableTransition', false]);
+	};
 //	onSearchIDAndFilterColumn = (qsamplesList) => {
 //		var {state: {samples, cohortSamples}} = this.props,
 //			qsampleListObj = {},
@@ -78,7 +103,7 @@ class Application extends Component {
 	render() {
 		let {state, stateError, children, stepperState, loadPending, ...otherProps} = this.props,
 			{callback} = otherProps,
-			{wizardMode, showWelcome, zoom} = state;
+			{editing, wizardMode, showWelcome, zoom} = state;
 //			onSearchIDAndFilterColumn = this.onSearchIDAndFilterColumn;
 
 		if (loadPending) {
@@ -90,10 +115,11 @@ class Application extends Component {
 				<div style={{position: 'relative'}}> {/* Necessary for containing KmPlot pop-up */}
 					{showWelcome ? <Welcome onClick={this.onHideWelcome} /> :
 						null}
-					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> :
+					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> : <div>
 						<AppControls {...otherProps} appState={state} help={searchHelp}
-									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>}
-
+									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>
+						 <SheetControls actionsDisabled={true} appState={state} clearZoom={this.onClearZoom}
+										statusDisabled={editing !== null} zoom={zoom} zoomOut={this.onZoomOut}/></div>}
 					<Grid onClick={this.onClick}>
 					{/*
 						<Row>

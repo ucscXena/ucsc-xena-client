@@ -9,7 +9,6 @@ function zoomIn(index, count, total, pos) {
 		nindex = Math.max(0, Math.min(index + pos * count - ncount / 2, maxIndex));
 	return [nindex, ncount];
 }
-
 function zoomOut(index, count, total) {
 	var ncount = Math.min(total, Math.round(count * 3)),
 		maxIndex = total - ncount,

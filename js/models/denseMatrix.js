@@ -44,7 +44,7 @@ function computeHeatmap(vizSettings, data, fields, samples) {
 	}
 	var {probes, values} = data,
 		transform = second;
-		//transform = (colnormalization && mean && _.partial(subbykey, mean)) || second;
+	//transform = (colnormalization && mean && _.partial(subbykey, mean)) || second;
 
 	return map(probes || fields, function (p, i) {
 		var suTrans = saveMissing(v => transform(i, v));
@@ -56,7 +56,7 @@ function computeHeatmap(vizSettings, data, fields, samples) {
 // known issue: tie break
 var flopIfNegStrand = (strand, req) => {
 	var sortedReq = _.sortBy(_.zip(req.position, req.probes, req.values),
-			strand === '-' ? item => -(item[0].chromend) : item => item[0].chromstart),
+		strand === '-' ? item => -(item[0].chromend) : item => item[0].chromstart),
 		[sortedPosition, sortedProbes, sortedValues] = _.unzip(sortedReq);
 	return _.assoc(req,
 		'position', sortedPosition,
@@ -71,14 +71,15 @@ var getCustomColor = (fieldSpecs, fields, dataset) =>
 	fields.length === 1 ?
 		_.getIn(dataset, ['customcolor', fieldSpecs[0].fields[0]], null) : null;
 
-var defaultXZoom = (pos, refGene, position) =>
-	pos ? {
-		start: pos.baseStart,
-		end: pos.baseEnd} :
-	!refGene ? undefined :
-	_.Let(({txStart, txEnd} = refGene) => ({
-		start: Math.min(txStart, ..._.pluck(position, 'chromstart')),
-		end: Math.max(txEnd, ..._.pluck(position, 'chromend'))}));
+var defaultXZoom = (pos, refGene, position, showPos, values) =>
+	!showPos ? {start: 0, end: values.length} :
+		pos ? {
+				start: pos.baseStart,
+				end: pos.baseEnd} :
+			!refGene ? undefined :
+				_.Let(({txStart, txEnd} = refGene) => ({
+					start: Math.min(txStart, ..._.pluck(position, 'chromstart')),
+					end: Math.max(txEnd, ..._.pluck(position, 'chromend'))}));
 
 var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes'], fieldType) && fields.length > 2 ||
@@ -87,16 +88,16 @@ var supportsClustering = ({fieldType, fields}) =>
 function reOrderFields(column, data) {
 	var probeOrder = _.getIn(data, ['clustering', 'probes']);
 	if (supportsClustering(column) && column.clustering === 'probes' &&
-			data.status !== 'loading' && probeOrder && data.req) {
+		data.status !== 'loading' && probeOrder && data.req) {
 		return {
 			data: _.updateIn(data, ['req'], req => {
-					var {mean, position, probes, values} = req;
-					return _.merge(req,
-						mean ? {mean: probeOrder.map(i => mean[i])} : {},
-						position ? {position: probeOrder.map(i => position[i])} : {},
-						probes ? {probes: probeOrder.map(i => probes[i])} : {},
-						values ? {values: probeOrder.map(i => values[i])} : {});
-				}),
+				var {mean, position, probes, values} = req;
+				return _.merge(req,
+					mean ? {mean: probeOrder.map(i => mean[i])} : {},
+					position ? {position: probeOrder.map(i => position[i])} : {},
+					probes ? {probes: probeOrder.map(i => probes[i])} : {},
+					values ? {values: probeOrder.map(i => values[i])} : {});
+			}),
 			column: column.fieldType === 'geneProbes' ? column :
 				_.assoc(column, 'fields', probeOrder.map(i => column.fields[i]))
 		};
@@ -107,13 +108,15 @@ function reOrderFields(column, data) {
 var reorderFieldsTransform = fn =>
 	(column0, vizSettings, data0, samples) =>
 		_.Let(({column, data} = reOrderFields(column0, data0)) =>
-			 fn(column, vizSettings, data, samples));
+			fn(column, vizSettings, data, samples));
+
+var showPosition = column =>
+	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
 function dataToHeatmap(column, vizSettings, data, samples) {
 	if (!_.get(data, 'req')) {
 		return null;
 	}
-
 	var parseVizSettingCodes = (str) => {
 		if (! _.isString(str)) {return undefined;}
 
@@ -136,9 +139,9 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 		customColors = colorCodeMap(codes, getCustomColor(fieldSpecs, fields, dataset)),
 		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
 		colors = map(fields, (p, i) =>
-					 heatmapColors.colorSpec(column, vizSettings, codes,
-					 	{'values': heatmap[i], 'mean': req.mean ? req.mean[i] : undefined},
-					 	customColors)),
+			heatmapColors.colorSpec(column, vizSettings, codes,
+				{'values': heatmap[i], 'mean': req.mean ? req.mean[i] : undefined},
+				customColors)),
 		units = [_.get(dataset, 'unit')];
 
 	// column.fields is overwritten by this, which is problematic. It was
@@ -158,31 +161,74 @@ function geneProbesToHeatmap(column, vizSettings, data, samples) {
 		// got refGene, but it's empty.
 		return dataToHeatmap(column, vizSettings, data, samples);
 	}
-	var {req} = data,
+	var showPos = showPosition(column),
+		{req} = data,
+		{values} = req,
 		refGeneObj = _.first(_.values(data.refGene)),
-		maxXZoom = defaultXZoom(pos, refGeneObj, req.position),
-		{width, showIntrons = false, xzoom = maxXZoom} = column,
+		maxChromXZoom = defaultXZoom(pos, refGeneObj, req.position, showPos, values),
+		{width, showIntrons = false, xzoom} = column,
+		// Use maxXZoom when there is no gene model (as xzoom is subcolumn indices)
+		chromXZoom = showPos ? (xzoom || maxChromXZoom) : maxChromXZoom,
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
 		// XXX Build layout that includes pxs for introns
-		layout = createLayout(refGeneObj, width, xzoom, pos),
+		layout = createLayout(refGeneObj, width, chromXZoom, pos),
+		probesInView, reqInView, heatmapData;
+
+	if ( showPos ) {
 		// put exons in an index. Look up via layout. What about
 		// probes in introns? We can look them up as the "between" positions
 		// of the layout.
 		probesInView = _.filterIndices(req.position,
-				({chromstart, chromend}) => xzoom.start <= chromend && chromstart <= xzoom.end),
+			({chromstart, chromend}) => chromXZoom.start <= chromend && chromstart <= chromXZoom.end);
+	}
+	else {
+		var position = req.position,
+			{start = 0, end = position.length} = xzoom || {};
+		probesInView = _.filterIndices(position, (p, i) => i >= start && i <= end);
+	}
 
-		reqInView = _.updateIn(req,
-				['values'], values => probesInView.map(i => values[i]),
-				['probes'], probes => probesInView.map(i => probes[i]),
-				['mean'], mean => probesInView.map(i => mean[i])),
-		heatmapData = dataToHeatmap(column, vizSettings, {req: reqInView}, samples);
+	reqInView = _.updateIn(req,
+		['values'], values => probesInView.map(i => values[i]),
+		['probes'], probes => probesInView.map(i => probes[i]),
+		['mean'], mean => probesInView.map(i => mean[i]));
+	heatmapData = dataToHeatmap(column, vizSettings, {req: reqInView}, samples);
 
 	return {
 		...(probesInView.length ? heatmapData : {}),
 		layout,
 		position: probesInView.map(i => req.position[i]),
-		maxXZoom
+		maxXZoom: maxChromXZoom
 	};
+}
+
+function zoomableDataToHeatmap(column, vizSettings, data, samples) {
+	if (!_.get(data, 'req')) {
+		return null;
+	}
+	var {req} = data,
+		{values, position} = req,
+		{xzoom = {}, fields} = column,
+		maxXZoomStart = 0, // use 0 index here as we are dealing with an array of subcolumns
+		maxXZoomEnd = values.length - 1,
+		{start = maxXZoomStart, end = maxXZoomEnd} = xzoom,
+		endIndex = end + 1,
+		valuesInView = values.slice(start, endIndex),
+		positionInView = position.slice(start, endIndex),
+		reqInView = _.updateIn(req,
+			['values'], () => valuesInView,
+			['mean'], mean => _.range(start, endIndex).map(i => mean[i]),
+			['position'], () => positionInView),
+		// Update set of fields to just the fields in the current x zoom range
+		zoomedColumn = Object.assign({}, column, {
+			fields: fields.slice(start, endIndex)
+		}),
+		heatmap = {
+			...dataToHeatmap(zoomedColumn, vizSettings, {req: reqInView}, samples),
+			maxXZoom: {start: maxXZoomStart, end: maxXZoomEnd},
+			fieldList: fields // Set field list to complete (max zoom) set of fields
+		};
+
+	return heatmap;
 }
 
 //
@@ -193,8 +239,8 @@ var {cmpNumberOrNull} = _;
 
 function cmpSamples(probes, data, s1, s2) {
 	var diff = data && find(data, function (f) {
-			return cmpNumberOrNull(f[s1], f[s2]);
-		});
+		return cmpNumberOrNull(f[s1], f[s2]);
+	});
 	if (diff) {
 		return cmpNumberOrNull(diff[s1], diff[s2]);
 	} else {
@@ -278,11 +324,11 @@ function fetchChromProbes({dsID, assembly, fields}, samples) {
 	var {name, host} = xenaQuery.refGene[assembly] || {},
 		pos = parsePos(fields[0]);
 	return Rx.Observable.zip(
-			refGeneRange(host, name, pos.chrom, pos.baseStart, pos.baseEnd),
-			datasetChromProbeValues(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd),
-			(refGene, resp) => ({
-				req: indexProbeGeneResponse(resp),
-				refGene}));
+		refGeneRange(host, name, pos.chrom, pos.baseStart, pos.baseEnd),
+		datasetChromProbeValues(dsID, samples, pos.chrom, pos.baseStart, pos.baseEnd),
+		(refGene, resp) => ({
+			req: indexProbeGeneResponse(resp),
+			refGene}));
 }
 
 var fetchGeneProbes = ({dsID, fields, assembly}, samples) =>
@@ -300,13 +346,13 @@ var fetchGeneOrChromProbes = (field, samples) =>
 // code list, i.e. either a single clinical coded field, or a list of genomic
 // fields all with the same code values.
 var fetchFeature = ({dsID, fields}, samples) => Rx.Observable.zipArray(
-		datasetProbeValues(dsID, samples, fields)
-			.map(resp => indexFieldResponse(fields, resp)),
-		fieldCodes(dsID, fields)
-	).map(([req, codes]) => ({req, codes: _.values(codes)[0]}));
+	datasetProbeValues(dsID, samples, fields)
+		.map(resp => indexFieldResponse(fields, resp)),
+	fieldCodes(dsID, fields)
+).map(([req, codes]) => ({req, codes: _.values(codes)[0]}));
 
 var fetchGene = ({dsID, fields}, samples) => datasetGeneProbeAvg(dsID, samples, fields)
-			.map(resp => ({req: indexGeneResponse(samples, fields, resp)}));
+	.map(resp => ({req: indexGeneResponse(samples, fields, resp)}));
 
 ////////////////////////////////
 // download of on-screen data
@@ -314,8 +360,8 @@ var fetchGene = ({dsID, fields}, samples) => datasetGeneProbeAvg(dsID, samples, 
 function tsvProbeMatrix(heatmap, samples, fields, codes) {
 	var fieldNames = ['sample'].concat(fields);
 	var coded = _.map(fields, (f, i) => codes ?
-			_.map(heatmap[i], _.propertyOf(codes)) :
-			heatmap[i]);
+		_.map(heatmap[i], _.propertyOf(codes)) :
+		heatmap[i]);
 	var transposed = _.zip.apply(null, coded);
 	var tsvData = _.map(samples, (sample, i) => [sample].concat(transposed[i]));
 
@@ -361,7 +407,6 @@ function denseAverage(column, data) {
 }
 
 ['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType => {
-	widgets.transform.add(fieldType, reorderFieldsTransform(dataToHeatmap));
 	widgets.cmp.add(fieldType, cmp);
 	widgets.download.add(fieldType, download);
 });
@@ -369,7 +414,10 @@ function denseAverage(column, data) {
 ['probes', 'geneProbes', 'genes'].forEach(fieldType =>
 	widgets.avg.add(fieldType, denseAverage));
 
+widgets.transform.add('probes', reorderFieldsTransform(zoomableDataToHeatmap));
 widgets.transform.add('geneProbes', reorderFieldsTransform(geneProbesToHeatmap));
+widgets.transform.add('genes', reorderFieldsTransform(zoomableDataToHeatmap));
+widgets.transform.add('clinical', reorderFieldsTransform(dataToHeatmap));
 
 widgets.specialDownload.add('clinical', downloadCodedSampleListsJSON);
 
