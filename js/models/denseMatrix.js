@@ -213,7 +213,7 @@ function zoomableDataToHeatmap(column, vizSettings, data, samples) {
 		{start = maxXZoomStart, end = maxXZoomEnd} = xzoom,
 		endIndex = end + 1,
 		valuesInView = values.slice(start, endIndex),
-		positionInView = position.slice(start, endIndex),
+		positionInView = position ? position.slice(start, endIndex) : position,
 		reqInView = _.updateIn(req,
 			['values'], () => valuesInView,
 			['mean'], mean => _.range(start, endIndex).map(i => mean[i]),
