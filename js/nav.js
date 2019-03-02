@@ -17,6 +17,8 @@ import AppBar from 'react-toolbox/lib/app_bar';
 import Navigation from 'react-toolbox/lib/navigation';
 import {ThemeProvider} from 'react-css-themr';
 import Link from 'react-toolbox/lib/link';
+import {Menu, MenuItem} from 'react-toolbox/lib/menu';
+import {Button} from 'react-toolbox/lib/button';
 var navTheme = require('./navTheme');
 var BookmarkMenu = require('./views/BookmarkMenu');
 var {servers: {localHub}} = require('./defaultServers');
@@ -35,13 +37,13 @@ var links = [
 	{label: 'Visualization', nav: 'heatmap'},
 	{label: 'Transcripts', nav: 'transcripts'},
 	{label: 'Data Hubs', nav: 'hub'},
-	// {href: 'https://genome-cancer.ucsc.edu/download/public/get-xena/index.html', label: 'Local Xena'},
 	{label: 'View My Data', nav: 'datapages', params: {addHub: localHub, host: localHub}},
-	{href: 'http://xena.ucsc.edu/xena-python-api/', label: 'Python'},
 ];
 
+var helproot = 'https://ucsc-xena.gitbook.io/project/';
+
 var helpLink = {
-	href: 'https://ucsc-xena.gitbook.io/project/',
+	href: helproot,
 	label: 'Help',
 	target: '_blank'
 };
@@ -52,7 +54,52 @@ var geneSetsLink = {
     target: '_blank'
 };
 
+var pythonLink = {
+    href: helproot + 'overview-of-features/accessing-data-through-python',
+    label: 'Python',
+    target: '_blank'
+};
+
 var active = (l, activeLink) => l.nav === activeLink;
+
+class MoreToolsMenu extends React.Component {
+	state = {
+		anchorEl: null,
+	};
+
+	onClick = event => {
+		this.setState({ anchorEl: event.currentTarget });
+	};
+
+	handleClose = () => {
+		this.setState({ anchorEl: null });
+	};
+
+	handleSelect = (url) => {
+		window.open(url);
+	};
+
+	render() {
+		let {anchorEl} = this.state;
+
+		return (
+				<div style={{display: "inline", position: 'relative'}}>
+					<Button
+						onClick={this.onClick}>
+						More Tools
+					</Button>
+					<Menu position='topLeft'
+						active={Boolean(anchorEl)}
+						onHide={this.handleClose}
+						className={compStyles.menu}
+					>
+						<MenuItem onClick={this.handleSelect.bind(this, pythonLink.href)} caption={pythonLink.label}/>
+						<MenuItem onClick={this.handleSelect.bind(this, geneSetsLink.href)} caption={geneSetsLink.label}/>
+					 </Menu>
+				</div>
+		);
+	}
+}
 
 class XenaNav extends React.Component {
 	render() {
@@ -68,8 +115,8 @@ class XenaNav extends React.Component {
 				<a href='http://xena.ucsc.edu/' className={compStyles.logoXena}><img title={window.ga ? '' : 'no analytics'} src={logoSantaCruzImg} srcSet={logoSrcSet}/></a>
 				<Navigation type="horizontal" routes={routes}>
 					{getState ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
-					<Link {...geneSetsLink} />
-                    <Link {...helpLink} />
+					<Link {...helpLink} />
+					<MoreToolsMenu/>
 				</Navigation>
 			</AppBar>
 		);
