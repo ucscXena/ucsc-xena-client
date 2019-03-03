@@ -76,8 +76,9 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		label = fieldFormat(field);
 
 	val = code ? code : prec(val);
-	let mean = avg && prec(avg.mean),
-		median = avg && prec(avg.median);
+	let mean = avg && prec(avg.mean[fieldIndex]),
+		median = avg && prec(avg.median[fieldIndex]);
+
 	return {
 		sampleID: sampleFormat(sampleID),
 		id,
