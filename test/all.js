@@ -25,3 +25,4 @@ require('./layoutPlot');
 //require('./matrix-test');
 require('./Legend');
 require('./drawHeatmap');
+require('./binpackJSON');
