@@ -81,24 +81,39 @@ ERRORS = [
         getErrors: (state, dataType, line, i) => {
 			var c = state.columnMismatch || 0;
 			if (line.length !== state.headerLen && c < MULTI_ERROR_LIMIT) {
-				state.errors.push(`The number of headers doesn't match the number of columns on line ${i + 1}. Please edit the file and reload`);
+				state.errors.push(`The number of headers doesn't match the number of columns on line ${i + 1}. \
+					Please edit the file and reload.`);
 				state.columnMismatch = c + 1;
 			}
         }
     },
     {
         //DUPLICATE ROW KEY
-        forType: ['dense'],
-        getErrors: (state, dataType, line/*, i*/) => {
+		forType: ['dense'],
+		getErrors: (state, dataType, line/*, i*/) => {
 			if (!state.duplicateRows && state.rows.has(line[0])) {
 				if (dataType === GENOMIC) {
-					state.warnings.push(`There are duplicate probe names in your file. An example is ${line[0]}. We will load the first one and rename the duplicates.`);
+					state.warnings.push(`There are duplicate probe names in your file. An example is ${line[0]}. \
+						We will load the first one and rename the duplicates.`);
 				} else {
-					state.warnings.push(`There are duplicate sample names in your file. An example is ${line[0]}. We will load the first one and ignore all others.`);
+					state.warnings.push(`There are duplicate sample names in your file. An example is ${line[0]}. \
+						We will load the first one and ignore all others.`);
 				}
 				state.duplicateRows = true;
 			} else {
 				state.rows.add(_.copyStr(line[0]));
+			}
+		}
+    },
+    {
+		//GENOMIC MATRIX SHOULD ONLY HAS NUMBERS and NAs, NO OTHER VALUES SHOULD BE ALLOWED INCLUDING NULL
+		forType: ['dense'],
+			getErrors: (state, dataType, line, i) => {
+			var badNumbers = line.filter((x, i) => i !== 0 && isNaN(x) && x !== 'NA');
+			if (badNumbers.length) {
+				state.errors.push(`Only NUMBER (e.g. 1, 3.2) or 'NA' is allowed in the genomic data. \
+					We detected other values, such as '${badNumbers[0]}', on line ${i + 1}. \
+					Please edit the file and reload.`);
 			}
         }
     }
