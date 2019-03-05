@@ -3,7 +3,7 @@
 import _ from '../underscore_ext';
 import {DATA_TYPE} from './constants';
 
-const {MUTATION_BY_POS, SEGMENTED_CN, GENOMIC} = DATA_TYPE;
+const {MUTATION_BY_POS, SEGMENTED_CN, GENOMIC, PHENOTYPE} = DATA_TYPE;
 
 const HEADER_LENGTH_LIMIT = 255,
     MULTI_ERROR_LIMIT = 3;
@@ -13,8 +13,6 @@ let ERRORS, HEADER_ERRORS;
 const getColumns = line => line.replace(/[\r\n]+$/, '').split(/\t/g);
 
 const filterEmpty = arr => arr.filter(elem => !!elem);
-
-const getErrDataType = (dataType) => dataType === MUTATION_BY_POS || dataType === SEGMENTED_CN ? dataType : 'dense';
 
 const getMutationHeaderRegExps = [
 	{ regexp: /sample[ _]*(name|id)?/i, name: "'sample'"},
@@ -42,10 +40,10 @@ const gatherErrorMessages = (state, dataType, errors, line, i) => {
 // Return function that error checks a line, keeping results (imperatively)
 // in 'state'.
 const getErrors = (dataType, state) => {
-    var filterByDataType = getErrDataType(dataType),
-		dataTypeErrors = ERRORS.filter(err => err.forType.some(dType => dType === filterByDataType)),
-		dataTypeHeaderErrors = HEADER_ERRORS.filter(err => err.forType.some(dType => dType === filterByDataType)),
+    var dataTypeErrors = ERRORS.filter(err => err.forType.some(dType => dType === dataType)),
+		dataTypeHeaderErrors = HEADER_ERRORS.filter(err => err.forType.some(dType => dType === dataType)),
 		i = 0;
+
 	state.errors = [];
 	state.warnings = [];
 	state.snippets = [];
@@ -77,7 +75,7 @@ const hasSparseDataColumns = (header, colRegExps) =>
 ERRORS = [
     {
         //HEADER COLUMN COUNT MISMATCH
-        forType: [MUTATION_BY_POS, SEGMENTED_CN, 'dense'], // XXX for all types?
+        forType: [MUTATION_BY_POS, SEGMENTED_CN, GENOMIC, PHENOTYPE], // XXX for all types?
         getErrors: (state, dataType, line, i) => {
 			var c = state.columnMismatch || 0;
 			if (line.length !== state.headerLen && c < MULTI_ERROR_LIMIT) {
@@ -89,7 +87,7 @@ ERRORS = [
     },
     {
         //DUPLICATE ROW KEY
-		forType: ['dense'],
+		forType: [GENOMIC, PHENOTYPE],
 		getErrors: (state, dataType, line/*, i*/) => {
 			if (!state.duplicateRows && state.rows.has(line[0])) {
 				if (dataType === GENOMIC) {
@@ -107,7 +105,7 @@ ERRORS = [
     },
     {
 		//GENOMIC MATRIX SHOULD ONLY HAS NUMBERS and NAs, NO OTHER VALUES SHOULD BE ALLOWED INCLUDING NULL
-		forType: ['dense'],
+		forType: [GENOMIC],
 			getErrors: (state, dataType, line, i) => {
 			var badNumbers = line.filter((x, i) => i !== 0 && isNaN(x) && x !== 'NA');
 			if (badNumbers.length) {
@@ -122,7 +120,7 @@ ERRORS = [
 HEADER_ERRORS = [
     {
         //HEADER LENGTHS
-        forType: ['dense', MUTATION_BY_POS, SEGMENTED_CN],
+        forType: [GENOMIC, PHENOTYPE, MUTATION_BY_POS, SEGMENTED_CN],
         getErrors: (state, dataType, line) => {
             const message = (header) => `${header.slice(0, 100)}... is too long. Please limit to 255 characters`;
 
@@ -143,14 +141,14 @@ HEADER_ERRORS = [
     },
     { // XXX discard, or maybe check for quotes?
         //HEADER CHARACTERS
-        forType: ['dense', MUTATION_BY_POS, SEGMENTED_CN],
+        forType: [GENOMIC, PHENOTYPE, MUTATION_BY_POS, SEGMENTED_CN],
         getErrors: (/*state, line*/) => {
             // const message = (header) => `Headers can only have xyz. Please change ${header}`;
         }
     },
     {
         //HEADER EMPTY
-        forType: ['dense', MUTATION_BY_POS, SEGMENTED_CN],
+        forType: [GENOMIC, PHENOTYPE, MUTATION_BY_POS, SEGMENTED_CN],
         getErrors: (state, dataType, line) => {
             if (line.some(h => h.trim() === '')) {
 				state.errors.push('One or more of your headers is blank. Please edit the file and reload.');
@@ -159,7 +157,7 @@ HEADER_ERRORS = [
     },
     {
         //DUPLICATE HEADER KEYS
-        forType: ['dense'],
+        forType: [GENOMIC, PHENOTYPE],
         getErrors: (state, dataType, line) => {
 			var headers = new Set(),
 				dup = _.find(line, s => {
