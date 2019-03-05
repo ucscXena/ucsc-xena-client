@@ -122,10 +122,10 @@ class XenaDownload extends React.Component {
 				</div>
 				<p>
 					<br/>
-					<span className={styles.largeFont}>{isFirst ? 'If this is your first time, ' : 'Please '}</span>
+					<span className={styles.largeFont}>{isFirst ? 'If this is your first time, ' : 'If nothing prompts from browser, '}</span>
 					{defaultInstall ?
-						<Link className={styles.downloadLink} href={defaultInstall} label='click here to download and install a Local Xena hub.'/> :
-						'download and run a Local Xena hub, from the list below:'}
+						<Link className={styles.downloadLink} href={defaultInstall} label='download & run a Local Xena hub.'/> :
+						'download & run a Local Xena hub, from the list below:'}
 				</p>
 				{defaultInstall ? <span className={styles.advancedLink} onClick={this.onShowAdvanced}>{advanced ? 'Fewer options...' : 'More options...'}</span> : null}
 				{defaultInstall ? <br/> : null}
@@ -137,7 +137,7 @@ class XenaDownload extends React.Component {
 }
 
 var launchingHelp = ['Launching...',
-	<p>If you see a browser dialog, and click the "open" button.</p>];
+	<p>Please click <b>Open UCSC xena</b> if you see the system dialog.</p>];
 
 var statusHelp = {
 	undefined: [],
