@@ -1282,11 +1282,10 @@ function render(root, callback, sessionStorage) {
 
 			// utility function to calculate p value from a given coefficient
 			function pValueFromCoefficient(coeff, length) {
-			    var tScore = coeff * (Math.sqrt(length - 2) / Math.sqrt(1 - (coeff * coeff)));
-			    var pValue = jStat.ttest(tScore, length - 2, 2);//p value from t value with n-2 dof and 2 tails
-			    return(pValue);
-                //return(10);
-            }
+				var tScore = coeff * (Math.sqrt(length - 2) / Math.sqrt(1 - (coeff * coeff)));
+				var pValue = jStat.ttest(tScore, length - 2, 2);//p value from t value with n-2 dof and 2 tails
+				return(pValue);
+			}
 
 			//scatter plot stats Pearson's rho/r, Spearman rank rho/ρ value
 			function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
@@ -1296,8 +1295,8 @@ function render(root, callback, sessionStorage) {
 						[xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x) {return x[0] != null && x[1] != null;})),
 						rho = jStat.corrcoeff(xlist, ylist), // r Pearson's Rho correlation coefficient
 						spearmanRho = jStat.spearmancoeff(xlist, ylist), // (spearman's) rank correlation coefficient, rho
-                        pValueRho = pValueFromCoefficient(rho, ylist.length), // P value from pearson's rho value and length of ylist
-                        pValueSpearmanRho = pValueFromCoefficient(spearmanRho, ylist.length); // P value from spearman rho value and length of ylist
+						pValueRho = pValueFromCoefficient(rho, ylist.length), // P value from pearson's rho value and length of ylist
+						pValueSpearmanRho = pValueFromCoefficient(spearmanRho, ylist.length); // P value from spearman rho value and length of ylist
 
 					if (div.innerHTML !== '') {
 						div.innerHTML += '<br>'  + '<br>';
@@ -1306,11 +1305,10 @@ function render(root, callback, sessionStorage) {
 						xlabel + ' ~ ' + ylabel + '<br>' +
 						'Pearson\'s rho<br>' +
 						'r = ' + rho.toPrecision(4) + ' , ' +
-                        'p = ' + pValueRho.toPrecision(4) + '<br>' +
-                        'Spearman\'s rank rho<br>' +
+						'p = ' + pValueRho.toPrecision(4) + '<br>' +
+						'Spearman\'s rank rho<br>' +
 						'ρ = ' + spearmanRho.toPrecision(4) + ' , ' +
 						'p = ' + pValueSpearmanRho.toPrecision(4) + '<br>';
-
 				});
 			}
 
