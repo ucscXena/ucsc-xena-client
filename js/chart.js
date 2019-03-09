@@ -1304,11 +1304,11 @@ function render(root, callback, sessionStorage) {
 					div.innerHTML = div.innerHTML +
 						xlabel + ' ~ ' + ylabel + '<br>' +
 						'Pearson\'s rho<br>' +
-						'r = ' + rho.toPrecision(4) + ' , ' +
-						'p = ' + pValueRho.toPrecision(4) + '<br>' +
+						'r = ' + rho.toPrecision(4) + '  ' +
+						'( ' + 'p = ' + pValueRho.toPrecision(4) + ' )' + '<br>' +
 						'Spearman\'s rank rho<br>' +
-						'ρ = ' + spearmanRho.toPrecision(4) + ' , ' +
-						'p = ' + pValueSpearmanRho.toPrecision(4) + '<br>';
+						'rho = ' + spearmanRho.toPrecision(4) + '  ' +
+						'( ' + 'p = ' + pValueSpearmanRho.toPrecision(4) + ' )' + '<br>';
 				});
 			}
 
