@@ -13,6 +13,7 @@ var {signatureField} = require('../models/fieldSpec');
 var defaultServers = require('../defaultServers');
 var {publicServers} = defaultServers;
 var gaEvents = require('../gaEvents');
+var {htfc} = require('../htfc');
 // pick up signature fetch
 require('../models/signatures');
 
@@ -56,7 +57,7 @@ function fetchDatasets(serverBus, servers, cohort) {
 
 const MAX_SAMPLES = 50 * 1000;
 
-var allSamples = _.curry((cohort, max, server) => xenaQuery.cohortSamples(server, cohort, max === Infinity ? null : max));
+var allSamples = _.curry((cohort, max, server) => xenaQuery.cohortSamplesHTFC(server, cohort, max === Infinity ? null : max));
 
 function unionOfGroup(gb) {
 	return _.union(..._.map(gb, ([v]) => v));
@@ -107,7 +108,7 @@ var cohortSamplesQuery =
 		_.map(servers, allSamples(name, max))
 			.map((resp, j) => resp.map(samples => [filterSamples(sampleFilter, samples), samples.length >= max, servers[j]]));
 
-var collateSamples = _.curry((cohorts, max, resps) => {
+var collateSamples = _.curry((cohorts, max, resps) => {//eslint-disable-line no-unused-vars
 	var serverOver = _.any(resps, ([, over]) => over),
 		cohortSamples = unionOfGroup(resps || []).slice(0, max),
 		cohortOver = cohortSamples.length >= max,
@@ -119,7 +120,9 @@ var collateSamples = _.curry((cohorts, max, resps) => {
 // reifyErrors should be pass the server name, but in this expression we don't have it.
 function samplesQuery(servers, cohort, max) {
 	return Rx.Observable.zipArray(cohortSamplesQuery(servers, max, cohort).map(reifyErrors))
-		.flatMap(resps => collectResults(resps, collateSamples(cohort, max)));
+		// XXX fix this
+		//.flatMap(resps => collectResults(resps, collateSamples(cohort, max)));
+		.flatMap(resps => collectResults(resps, resps => ({samples: htfc(resps[0][0]), over: false, hasPrivateSamples: false})));
 }
 
 function fetchSamples(serverBus, servers, cohort, allowOverSamples) {

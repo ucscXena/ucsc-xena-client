@@ -2,6 +2,7 @@
 
 'use strict';
 
+import {concatBins, parse} from './binpackJSON';
 var Rx = require('./rx');
 var _ = require('./underscore_ext');
 var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
@@ -38,7 +39,8 @@ var transcript = {
 ///////////////////////////////////////////////////////
 // Serialization helpers
 
-var jsonResp = xhr => JSON.parse(xhr.response);
+// XXX make dispatch server-specific, so we don't have to update all at once.
+var jsonResp = xhr => JSON.parse(xhr.response); //eslint-disable-line no-unused-vars
 
 var quote = s => s == null ? 'nil' : ('"' + s + '"'); // XXX should escape "
 var toString = x => x.toString();
@@ -246,6 +248,20 @@ function xenaPost(host, query) {
 	};
 }
 
+var xenaPostBPJ = (host, query) => ({
+		crossDomain: true,
+		headers: {'Content-Type': 'application/binpack-edn', 'accept': 'application/binpack-json'},
+		url: host + '/data/',
+		body: query,
+		// rxjs 5 defaults to 'json', which will cause the browser to parse
+		// the response before it gets to us. That would be fine, except it's
+		// not well supported cross-browser. In particular, it fails in
+		// phantom 1.9 and IE. If removing this, also remove the JSON.parse
+		// from jsonResp.
+		responseType: 'arraybuffer',
+		method: 'POST'
+	});
+
 function marshallParam(p) {
 	if (_.isString(p)) {
 		return quote(p);
@@ -262,12 +278,22 @@ function xenaCall(queryFn, ...params) {
 	return `(${queryFn} ${params.map(marshallParam).join(' ')})`;
 }
 
+function xenaCallBPJ(queryFn, ...params) {
+	var bins = params.filter(p => p instanceof Uint8Array),
+		i = 0,
+		ps = params.map(p => p instanceof Uint8Array ?
+				{$type: "ref", value: {"$bin": i++}} : p),
+		edn = xenaCall(queryFn, ...ps);
+
+	return concatBins(bins, edn);
+}
+
 // Given a host, query, and parameters, marshall the parameters and dispatch a
 // POST, returning an observable.
 function doPost(query, host, ...params) {
 	return Rx.Observable.ajax(
-		xenaPost(host, xenaCall(query, ...params))
-	).map(jsonResp);
+		xenaPostBPJ(host, xenaCallBPJ(query, ...params))
+	).map(xhr => parse(new Uint8Array(xhr.response)));
 }
 
 // Create POST methods for all of the xena queries.
