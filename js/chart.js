@@ -1280,7 +1280,9 @@ function render(root, callback, sessionStorage) {
 				}
 			}
 
-			// utility function to calculate p value from a given coefficient
+			// utility function to calculate p value from a given coefficient using "Testing using Student's t-distribution" method
+			// spearman rank https://en.wikipedia.org/wiki/Spearman's_rank_correlation_coefficient#Determining_significance
+			// pearson correlation https://en.wikipedia.org/wiki/Pearson_correlation_coefficient#Testing_using_Student's_t-distribution
 			function pValueFromCoefficient(coeff, length) {
 				var tScore = coeff * (Math.sqrt(length - 2) / Math.sqrt(1 - (coeff * coeff)));
 				var pValue = jStat.ttest(tScore, length - 2, 2);//p value from t value with n-2 dof and 2 tails
@@ -1305,10 +1307,10 @@ function render(root, callback, sessionStorage) {
 						xlabel + ' ~ ' + ylabel + '<br>' +
 						'Pearson\'s rho<br>' +
 						'r = ' + rho.toPrecision(4) + '  ' +
-						'( ' + 'p = ' + pValueRho.toPrecision(4) + ' )' + '<br>' +
+						'(p = ' + pValueRho.toPrecision(4) + ')' + '<br>' +
 						'Spearman\'s rank rho<br>' +
 						'rho = ' + spearmanRho.toPrecision(4) + '  ' +
-						'( ' + 'p = ' + pValueSpearmanRho.toPrecision(4) + ' )' + '<br>';
+						'(p = ' + pValueSpearmanRho.toPrecision(4) + ')' + '<br>';
 				});
 			}
 

@@ -255,7 +255,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 
 	        this.state = {
 				mode: custom ? "Custom" : "Auto",
-				settings: custom ? _.pick(state, colorParams[valueType]) : scaleDefaults[valueType],
+				settings: custom ? _.pick(oldSettings, colorParams[valueType]) : scaleDefaults[valueType],
 				errors: {}
 			};
 	    }
@@ -702,7 +702,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	}
 
 	var state = vizState,
-		oldSettings = state ? JSON.parse(JSON.stringify(state)) : undefined,
+		oldSettings = state,
 		currentSettings = {state: state},
 		colorParams = {
 			float: ["max", "maxstart", "minstart", "min"],

@@ -29,3 +29,8 @@
 .avatar.ghost {
 	border: 0.5px dashed black38;
 }
+
+/* Zoom card without avatar. */
+.noAvatar {
+	min-height: 36px;
+}

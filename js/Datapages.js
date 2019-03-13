@@ -129,13 +129,16 @@ var CohortSummary = ({cohorts, onCohort, hubParams, action}) => {
 };
 
 var CohortHeader = ({inHubs, host, onImport, badge}) => {
+	let localHubUp = getIn(badge, ['props', 'title']) === "Connected to local Xena Hub";
+
 	return(
 		<div>
 			<h2 className={styles.inline}>{getHubName(host)}{inHubs}{badge}</h2>
 
 			{isLocalHub(host) &&
 			<div className={styles.headerButtons}>
-				<Button label={"Load Data"} onClick={onImport} accent />
+				{localHubUp ? <Button label={"Load Data"} onClick={onImport} accent /> :
+					null }
 				<Button label={"Help"} target="_blank" href='https://ucsc-xena.gitbook.io/project/local-xena-hub' accent />
 			</div>}
 
@@ -145,7 +148,7 @@ var CohortHeader = ({inHubs, host, onImport, badge}) => {
 				<p>A Local Xena Hub is an application on your computer for loading and storing data.</p>
 
 				<p>We support most types of genomic and/or phenotypic/clinical/annotation data.
-					This data can be your own or from another source, like GEO or a publication.</p>
+					This data can be your own or from another source, such as a publication.</p>
 
 				<p>Data on a Local Xena Hub can only be viewed or accessed by the same computer on which it is running.</p>
 			</div>}

@@ -192,7 +192,6 @@ var chromPositionFromScreen = (layout, x) =>
 // closed coord len
 var chrlen = ([s, e]) => e - s + 1;
 
-
 module.exports = {
 	chromLayout,
 	intronLayout,
