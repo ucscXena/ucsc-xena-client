@@ -6,7 +6,7 @@ import {setToJSON, stringify, parse} from '../js/binpackJSON';
 var assert = require('assert');
 
 
-describe.only('binpackJSON', function () {
+describe('binpackJSON', function () {
 	describe('serialize', function () {
 		it('deepEquals arrays', function () {
 			assert.deepEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]));
