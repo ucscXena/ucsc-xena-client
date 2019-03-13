@@ -16,13 +16,13 @@ function writeInt(buff, offset, i) {
 	buff[offset + 3] = 0xff & (i >> 24);
 }
 
-function writeBin(buff, bin, offset) {
+export function writeBin(buff, bin, offset) {
 	writeInt(buff, offset, bin.length);
 	buff.set(bin, offset + 4);
 }
 
 // XXX this is wrong for unicode
-function writeStr(buff, str, offset) {
+export function writeStr(buff, str, offset) {
 	var len = str.length;
 	writeInt(buff, offset, len);
 	for (var x = 0; x < len; ++x) {
@@ -64,19 +64,23 @@ export function toJSON() {
 
 var align  = x => Math.ceil(x / 4) * 4;
 
-export function stringify(obj) {
-	bins = [];
-	var json = JSON.stringify(obj),
-		// XXX json.length here is wrong for unicode
-		lens = bins.map(b => Math.ceil(b.length / 4) * 4 + 4),
+export function concatBins(bins, expr) {
+	var lens = bins.map(b => Math.ceil(b.length / 4) * 4 + 4),
 		offsets = _.scan(lens, (acc, x) => acc + x, 0),
-		len = _.sum(bins.map(b => align(b.length) + 4)) + 4 + align(json.length),
+		// XXX expr.length here is wrong for unicode
+		len = _.sum(bins.map(b => align(b.length) + 4)) + 4 + align(expr.length),
 		buff = new Uint8Array(len);
 
 	bins.forEach((bin, i) => writeBin(buff, bin, offsets[i - 1] || 0));
-	writeStr(buff, json, offsets[offsets.length - 1]);
+	writeStr(buff, expr, offsets[offsets.length - 1]);
 
 	return buff;
+}
+
+export function stringify(obj) {
+	bins = [];
+	var json = JSON.stringify(obj);
+	return concatBins(bins, json);
 }
 
 var hop = Object.prototype.hasOwnProperty;
