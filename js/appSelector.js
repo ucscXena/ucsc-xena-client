@@ -19,15 +19,6 @@ var indexSelector = createFmapSelector(
 				state.data[key]]),
 		args => widgets.index(...args));
 
-function cmpString(s1, s2) {
-	if (s1 > s2) {
-		return 1;
-	} else if (s2 > s1) {
-		return -1;
-	}
-	return 0;
-}
-
 var invert = (dir, fn) => dir === 'reverse' ? (s1, s2) => fn(s2, s1) : fn;
 
 var sortSelector = createSelector(
@@ -37,15 +28,17 @@ var sortSelector = createSelector(
 	state => state.data,
 	state => state.index,
 	(cohortSamples, columns, columnOrder, data, index) => {
-		var getSampleID = i => _.get(cohortSamples, i),
-			order = columnOrder.slice(1), // skip 'samples' in sort
+		var order = columnOrder.slice(1), // skip 'samples' in sort
 			cmpFns = _.fmap(columns,
 				(c, id) => invert(c.sortDirection, widgets.cmp(columns[id], data[id], index[id]))),
 			// XXX should further profile this to see how much it's costing us
 			// to create a findValue callback on every cmpFn call.
 			cmpFn = (s1, s2) =>
-				_.findValue(order, id => cmpFns[id](s1, s2)) ||
-					cmpString(getSampleID(s1), getSampleID(s2));
+				_.findValue(order, id => cmpFns[id](s1, s2));
+				// Disabling sample sort. Note that Array sort can't be assumed to be
+				// stable, so if we want to rely on sorted data from the server, we must
+				// implement a stable sort for the other columns.
+//					cmpString(getSampleID(s1), getSampleID(s2));
 
 		return _.range((cohortSamples || []).length).sort(cmpFn);
 	}
