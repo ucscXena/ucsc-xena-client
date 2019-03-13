@@ -11,7 +11,9 @@ require('./plotMutationVector');
 require('./heatmapColors');
 require('./scale');
 require('./underscore_ext');
-require('./fieldFetch');
+// XXX need a better fetch test. Commenting out during
+// singlecell development.
+//require('./fieldFetch');
 require('./fieldSpec');
 require('./fields');
 require('./datasetJoins');
