@@ -1285,7 +1285,13 @@ function render(root, callback, sessionStorage) {
 			// pearson correlation https://en.wikipedia.org/wiki/Pearson_correlation_coefficient#Testing_using_Student's_t-distribution
 			function pValueFromCoefficient(coeff, length) {
 				var tScore = coeff * (Math.sqrt(length - 2) / Math.sqrt(1 - (coeff * coeff)));
-				var pValue = jStat.ttest(tScore, length - 2, 2);//p value from t value with n-2 dof and 2 tails
+				var pValue;
+
+				if (isFinite(tScore)) { // If the value of tScore is Finite, then the pValue is calculated from the t Test
+					pValue = jStat.ttest(tScore, length - 2, 2); //p value from t value with n-2 dof and 2 tails
+				} else { // If the value of tScore is Infinite, then pValue is 0
+					pValue = 0;
+				}
 				return(pValue);
 			}
 
