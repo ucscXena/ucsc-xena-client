@@ -24,9 +24,8 @@ export function writeBin(buff, bin, offset) {
 // XXX this is wrong for unicode
 export function writeStr(buff, str, offset) {
 	var len = str.length;
-	writeInt(buff, offset, len);
 	for (var x = 0; x < len; ++x) {
-		buff[offset + 4 + x] = str.charCodeAt(x);
+		buff[offset + x] = str.charCodeAt(x);
 	}
 }
 
@@ -34,7 +33,7 @@ export function writeStr(buff, str, offset) {
 function readStr(buff) {
 	var len = buff.length,
 		str = '';
-	for (var i = 0; i < len; ++i) {
+	for (var i = 0; buff[i] !== 0 && i < len; ++i) {
 		str += String.fromCharCode(buff[i]);
 	}
 	return str;
@@ -66,13 +65,17 @@ var align  = x => Math.ceil(x / 4) * 4;
 
 export function concatBins(bins, expr) {
 	var lens = bins.map(b => Math.ceil(b.length / 4) * 4 + 4),
-		offsets = _.scan(lens, (acc, x) => acc + x, 0),
+		txtLen = align(expr.length + 1),
+		offsets = _.scan(lens, (acc, x) => acc + x, txtLen),
 		// XXX expr.length here is wrong for unicode
-		len = _.sum(bins.map(b => align(b.length) + 4)) + 4 + align(expr.length),
+		len = _.sum(bins.map(b => align(b.length) + 4)) + txtLen,
 		buff = new Uint8Array(len);
 
-	bins.forEach((bin, i) => writeBin(buff, bin, offsets[i - 1] || 0));
-	writeStr(buff, expr, offsets[offsets.length - 1]);
+	// Note that align(), above, ensures that the string is null-terminated,
+	// because typed arrays are initialized to zero. I.e. we skip the zero, we
+	// don't write it.
+	writeStr(buff, expr, 0);
+	bins.forEach((bin, i) => writeBin(buff, bin, offsets[i]));
 
 	return buff;
 }
@@ -91,14 +94,15 @@ export function parse(buff) {
 	var out = [],
 		buff32 = new Uint32Array(buff.buffer),
 		len = buff.length,
-		inP = 0,
+		txtLen = align(buff.indexOf(0)),
+		inP = txtLen,
 		binLen;
 	while (inP < len) {
 		binLen = buff32[inP >> 2];
 		out.push(buff.slice(inP + 4, inP + 4 + binLen));
 		inP += 4 + align(binLen);
 	}
-	return JSON.parse(readStr(out[out.length - 1]), (k, v) =>
+	return JSON.parse(readStr(buff), (k, v) =>
 			v == null ? v :
 			hop.call(v, '$type') && v.$type === 'ref' ? setToJSON(out[v.value.$bin]) :
 			v);
