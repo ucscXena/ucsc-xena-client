@@ -336,6 +336,19 @@ export function htfc(data) {
 			}
 			return true;
 		},
+		getOwnPropertyDescriptor(obj, prop) {
+			if (prop === 'length') {
+				return {configurable: false, enumerable: false};
+			}
+			var i = parseInt(prop, 10);
+			if (isNaN(i)) {
+				return obj.getOwnPropertyDescriptor(prop);
+			}
+			if (i < 0 || i >= length) {
+				return undefined;
+			}
+			return {configurable: true, enumerable: true};
+		},
 		get: (obj, prop) => {
 			if (prop === 'length') {
 				return length;
