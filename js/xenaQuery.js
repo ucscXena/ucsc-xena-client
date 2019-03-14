@@ -270,6 +270,9 @@ function marshallParam(p) {
 		// XXX Note this only works with string arrays.
 		return arrayfmt(p);
 	}
+	if (_.isObject(p)) {
+		return `{${_.keys(p).map(k => `"${k}" ${marshallParam(p[k])}`).join(' ')}}`;
+	}
 	return p == null ? 'nil' : p;
 }
 
@@ -279,10 +282,10 @@ function xenaCall(queryFn, ...params) {
 }
 
 function xenaCallBPJ(queryFn, ...params) {
-	var bins = params.filter(p => p instanceof Uint8Array),
+	var bins = params.map(p => p.proxied).filter(p => p),
 		i = 0,
-		ps = params.map(p => p instanceof Uint8Array ?
-				{$type: "ref", value: {"$bin": i++}} : p),
+		ps = params.map(p => _.Let((b = p.proxied) =>
+						b ? {$type: "ref", value: {"$bin": i++}} : p)),
 		edn = xenaCall(queryFn, ...ps);
 
 	return concatBins(bins, edn);

@@ -340,6 +340,9 @@ export function htfc(data) {
 			if (prop === 'length') {
 				return length;
 			}
+			if (prop === 'proxied') {
+				return data;
+			}
 			var i = parseInt(prop, 10);
 			if (isNaN(i)) {
 				return obj[prop];
