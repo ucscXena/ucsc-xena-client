@@ -255,10 +255,15 @@ var cmp = ({fields}, {req: {values, probes} = {values, probes}} = {}) =>
 // data fetches
 //
 
+// XXX Put the polymorphism someplace else, e.g. in binpack, based
+// on a data type identifier, or something.
+var toArray = x =>
+	x instanceof Uint8Array ? new Float32Array(x.buffer) : x;
+
 // Convert nanstr and compute mean.
 // XXX deprecate this & use avg selector (widgets.avg) instead.
 function meanNanResponse(probes, data) {
-	var values = _.map(data, field => _.map(field, xenaQuery.nanstr)),
+	var values = _.map(data, field => _.map(toArray(field), xenaQuery.nanstr)),
 		mean = _.map(data, _.meannull);
 
 	return {values, mean};
