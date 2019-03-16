@@ -132,6 +132,10 @@ i.buttonIcon {
 	margin: 0px 0 15px 50px;
 }
 
+.downloadButton {
+	margin: 5px 0 25px 50px;
+}
+
 .helpButton {
 	margin-left: 20px;
 }
