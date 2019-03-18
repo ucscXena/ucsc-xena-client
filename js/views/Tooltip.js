@@ -15,7 +15,7 @@ var element = {
 	labelValue: (i, l, v) => (
 		<span key={i}>{l}: {v}</span>
 	),
-	url: (i, text, url) =>  (
+	url: (i, text, url) => (
 		<span key={i}><a href={url} target='_blank'>{text}</a></span>
 	),
 //	popOver: (i, text, dataList) => (
@@ -25,6 +25,36 @@ var element = {
 
 function overlay() {
 	return <div className={compStyles.overlay}/>;
+}
+
+function rowsOut(rows, frozen) {
+
+	let showGeneList = true;
+	let geneList = rows.filter(row => row[0][1].includes('Gene'));
+	geneList = geneList.length > 0 ? geneList.map(geneUrl => geneUrl[1]) : '';
+	let showXGenes = frozen ? geneList.length : 3;
+
+	return _.map(rows, (row, i) => {
+
+		if (row[0][1].includes('Gene') && showGeneList === true) {
+			showGeneList = false;
+			return (
+				<li key={i}>
+					<span>Gene</span>
+					{geneList.slice(0, showXGenes).map(([type, ...args], j) => element[type](j, ...args))}
+					{geneList.length > showXGenes ?
+						<span className={compStyles.moreGene}>+ {geneList.length - showXGenes} more</span> : null}
+				</li>
+			);
+		}
+
+		else if (!row[0][1].includes('Gene')) {
+			return (
+				<li key={i}>
+					{row.map(([type, ...args], k) => element[type](k, ...args))}
+				</li>);
+		}
+	});
 }
 
 //var PopOverVariants = React.createClass({
@@ -79,37 +109,37 @@ function overlay() {
 
 class Tooltip extends PureComponent {
 	render() {
-		var {data, open, onClick, onClose, frozen} = this.props,
+		var {data, onClick, onClose, frozen} = this.props,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 
-		// no tooltip info
+		// no tooltip, helper links
 		if (!rows && !sampleID) {
-			return (<div/>);
+			return (<div className={compStyles.Tooltip}>
+				<ul className={compStyles.content}>
+					<li className={compStyles.tooltipHint}><a
+						href='https://ucsc-xena.gitbook.io/project/overview-of-features/visual-spreadsheet#zooming'
+						target='_blank' rel='noopener noreferrer'>Zoom Help</a></li>
+					<li className={compStyles.tooltipHint}><a
+						href='https://ucsc-xena.gitbook.io/project/how-do-i/freeze-and-un-freeze-tooltip'
+						target='_blank' rel='noopener noreferrer'>Tooltip Help</a></li>
+				</ul>
+			</div>);
 		}
 
-		var rowsOut = _.map(rows, (row, i) => (
-			<li key={i}>
-				{row.map(([type, ...args], i) => element[type](i, ...args))}
-			</li>
-		));
 		var closeIcon = frozen ? <i className='material-icons' onClick={onClose}>close</i> : null;
 		var sample = sampleID ? <span>{sampleID}</span> : null;
 
 		return (
 			<div onClick={onClick}>
 				{frozen ? overlay(onClick) : null}
-				<div className={classNames(compStyles.Tooltip, {[compStyles.open]: open})}>
+				<div className={classNames(compStyles.Tooltip, {[compStyles.frozen]: frozen})}>
 					<ul className={compStyles.content}>
-						<li className={compStyles.title}>{sample}{closeIcon}</li>
-						{rowsOut}
+						{sample ? <li className={compStyles.title}>{sample}</li> : null}
+						<li className={compStyles.tooltipHint}>{`${meta.name}-click to ${frozen ? 'unfreeze' : 'freeze'} tooltip`}</li>
+						{rowsOut(rows, frozen)}
 					</ul>
-					<div className={compStyles.actions}>
-						<span className={compStyles.zoomHint}>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"} tooltip`}</span>
-						<a href="https://ucsc-xena.gitbook.io/project/how-do-i/freeze-and-un-freeze-tooltip" target="_blank">
-							<i className='material-icons'>help</i>
-						</a>
-					</div>
+					{closeIcon}
 				</div>
 			</div>
 		);
