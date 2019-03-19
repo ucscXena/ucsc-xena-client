@@ -52,19 +52,12 @@
 	z-index: 998;
 }
 
-/* Sample display text */
-.title {
-	composes: mdBody1 from '../../css/typography.module.css';
-	align-items: center;
-	color: black87 !important;
-	display: flex;
-	justify-content: space-between;
-}
-
 /* Rows */
 .content {
 	composes: mdBody1 from '../../css/typography.module.css';
 	align-items: center;
+	animation-duration: 300ms;
+	animation-name: contentAnimation;
 	display: flex;
 	list-style: none;
 	overflow-x: auto; /* Horizontal scroll - hide webkit scrollbar unless actively scrolling. */
@@ -77,14 +70,36 @@
 	display: none;
 }
 
-.content li {
+/* Animation content */
+@keyframes contentAnimation {
+	0% {opacity: 0;}
+	100% {opacity: 1;}
+}
+
+/* All <li>, excluding .title */
+.content li:not(.title) {
 	align-items: center;
 	color: black54;
 	display: flex;
 }
 
+/* Last <li> */
 .content li:last-of-type {
 	padding-right: 16px;
+}
+
+/* Sample display text */
+.title {
+	composes: mdBody1 from '../../css/typography.module.css';
+	align-items: flex-start;
+	color: black87;
+	display: flex;
+	flex-direction: column;
+}
+
+/* alt-click helper text */
+.subTitle {
+	margin-top: -4px;
 }
 
 /* Dot */
@@ -98,7 +113,8 @@
 	width: 4px;
 }
 
-.content li span:not(:first-of-type) {
+/* Secondary spans within <li>, excluding .title */
+.content li:not(.title) span:not(:first-of-type) {
 	margin-left: 8px;
 }
 
