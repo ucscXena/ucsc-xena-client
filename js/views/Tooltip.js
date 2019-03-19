@@ -1,6 +1,7 @@
 'use strict';
 
 import PureComponent from '../PureComponent';
+
 var React = require('react');
 var _ = require('../underscore_ext');
 var meta = require('../meta');
@@ -133,10 +134,13 @@ class Tooltip extends PureComponent {
 		return (
 			<div onClick={onClick}>
 				{frozen ? overlay(onClick) : null}
-				<div className={classNames(compStyles.Tooltip, {[compStyles.frozen]: frozen})}>
+				<div key={sampleID} className={classNames(compStyles.Tooltip, {[compStyles.frozen]: frozen})}>
 					<ul className={compStyles.content}>
-						{sample ? <li className={compStyles.title}>{sample}</li> : null}
-						<li className={compStyles.tooltipHint}>{`${meta.name}-click to ${frozen ? 'unfreeze' : 'freeze'} tooltip`}</li>
+						<li className={compStyles.title}>
+							{sample}
+							<span
+								className={classNames(compStyles.tooltipHint, {[compStyles.subTitle]: sample !== null})}>{`${meta.name}-click to ${frozen ? 'unfreeze' : 'freeze'} tooltip`}</span>
+						</li>
 						{rowsOut(rows, frozen)}
 					</ul>
 					{closeIcon}
