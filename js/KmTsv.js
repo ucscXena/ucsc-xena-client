@@ -1,7 +1,7 @@
 
 'use strict';
-var _ = require('./underscore_ext');
-
+var testvalue = require('./models/km');
+/*
 function objectToTsv(data) {
     const tsvRows = [];
     //Header for first row
@@ -54,12 +54,13 @@ function lineGroup({ g }) {
     id = 0;
     const tsvData = objectToTsv(data);
     tsvdownload(tsvData);
-};
-function download({ colors, labels, curves }) {
-    _.each(_.zip(colors, labels, curves), g => {
-        lineGroup({ g });
-    });
-
+};*/
+function download() {
+    // _.each(_.zip(colors, labels, curves), g => {
+    //     lineGroup({ g });
+    // });
+    let data = testvalue.temp();
+    console.log((data[1]).patient.data.codes[35]);
 
 };
 
