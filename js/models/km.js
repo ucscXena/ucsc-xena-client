@@ -333,6 +333,14 @@ function findSurvDataByType(survivalData, survivalType) {
 	};
 }
 
+var storedData;
+function survivaldata(survival, survivalType) {
+	storedData = [findSurvDataByType(getFieldData(survival), survivalType), survival];
+}
+function exportData() {
+	return storedData;
+}
+
 var bounds = x => [_.minnull(x), _.maxnull(x)];
 
 // After toCoded, we can still end up with empty groups if
@@ -362,6 +370,7 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
 		curves = groups.map((g, i) => km.compute(gtte[i], gev[i])),
 		pV = pValue(gtte, gev);
+		survivaldata(survival, survivalType);
 
 	return {
 		colors,
@@ -403,4 +412,4 @@ function pickSurvivalVars(cohortFeatures, user) {
 			'patient', _.getIn(user, [`patient`], patient));
 }
 
-module.exports = {makeGroups, pickSurvivalVars, survivalOptions, getSplits};
+module.exports = {makeGroups, pickSurvivalVars, survivalOptions, getSplits, exportData};

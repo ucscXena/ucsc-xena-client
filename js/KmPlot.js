@@ -14,6 +14,7 @@ var pdf = require('./kmpdf');
 var NumberForm = require('./views/NumberForm');
 var {survivalOptions, getSplits} = require('./models/km');
 var gaEvents = require('./gaEvents');
+var Tsv = require('./KmTsv');
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
 var margin = {top: 20, right: 30, bottom: 30, left: 50};
@@ -384,6 +385,11 @@ class KmPlot extends PureComponent {
 		pdf(this.props.km.groups);
 	};
 
+	download = () => {
+		gaEvents("spreadsheet", "pdf", "km");
+		Tsv(this.props.km.groups);
+	};
+
 	help = () => {
 		window.location.href = "https://ucsc-xena.gitbook.io/project/overview-of-features/kaplan-meier-plots";
 	};
@@ -442,6 +448,10 @@ class KmPlot extends PureComponent {
 							survivalType, survivalTypes, this.onSurvType, min, max, this.onCutoff, cutoff)}
 						{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions,
 							maySplit, splits, this.onSplits, label, clarification, warning)}
+						<Button onClick={this.download} className={kmStyle.downloadButton}>
+							<i className={`material-icons ${kmStyle.buttonIcon}`}>file_download</i>
+							<span className={kmStyle.buttonText}>Download</span>
+						</Button>
 					</div>
 			);
 

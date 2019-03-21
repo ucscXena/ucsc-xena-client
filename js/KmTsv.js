@@ -1,7 +1,7 @@
 
 'use strict';
 var testvalue = require('./models/km');
-/*
+
 function objectToTsv(data) {
     const tsvRows = [];
     //Header for first row
@@ -32,35 +32,24 @@ function tsvdownload(data) {
     document.body.removeChild(a);
 };
 
-//Generating Sample ID
-var id = 0;
-function generateID() {
-    id += 1;
-    return (id);
+function mappingData(data) {
+    let survData = data[0], survival = data[1];
+
+    const tempdata = survData.patient.map(row => ({
+        'SampleID': survival.patient.data.codes[row],
+        'OS': survData.ev[survData.patient.indexOf(row)],
+        'OS.Time': survData.tte[survData.patient.indexOf(row)],
+        // Group: row.n
+    }));
+
+    const tsvData = objectToTsv(tempdata);
+    tsvdownload(tsvData);
 };
 
-function lineGroup({ g }) {
-    var [, , curve] = g,
-        censors = curve.filter(pt => !pt.e);
-
-    const data = censors.map(row => ({
-        SampleID: generateID(),
-        OS: row.s,
-        Time: row.t,
-        Group: row.n
-    }
-    ));
-
-    id = 0;
-    const tsvData = objectToTsv(data);
-    tsvdownload(tsvData);
-};*/
 function download() {
-    // _.each(_.zip(colors, labels, curves), g => {
-    //     lineGroup({ g });
-    // });
-    let data = testvalue.temp();
-    console.log((data[1]).patient.data.codes[35]);
+    let data = testvalue.exportData();
+    //console.log((data[1]).patient.data.codes[35]);
+    mappingData(data);
 
 };
 
