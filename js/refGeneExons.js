@@ -46,9 +46,10 @@ export function findIntervals(gene) {
 }
 
 var shade1 = '#cccccc',  //light grey
-	shade2 = '#000000',  //black
+	shade2 = '#000005',  //black
 	shade3 = '#000080',  //blue
-	shade4 = '#FF0000';  //red
+	shade4 = '#FF0000',  //red
+	shade5 = '#79CDCD';  //darkslategray5 used on gene's name annotation
 
 function getAnnotation (index, perLaneHeight, offset) {
 	return {
@@ -152,6 +153,59 @@ function drawProbePositions(ctx, probePosition, height, positionHeight, width, l
 		ctx.fillStyle = colors[i];
 		ctx.fill();
 	});
+}
+
+//Function to write GEN tags according to position
+function writeGENnamepositions(ctx, xStart, xEnd, endY, GENname, upPlace, place) {
+	var gapSize = 6;     			   //size of letters
+	ctx.fillStyle = shade5;           //shade5 darkslategray5
+	ctx.font = "8px";
+
+	if(place === "up") {
+		if( upPlace === undefined) { ctx.fillText(GENname, xStart + 1, endY - 8); }     //write the name in the start of the GEN
+		else {ctx.fillText(GENname, upPlace, endY - 8); }							  //write the name in the middle of the GEN
+	}else if(place === "right") {
+		ctx.fillText(GENname, xEnd + gapSize, endY + 3);
+	}else {
+		ctx.fillText(GENname, xStart - (GENname.length * gapSize), endY + 3);
+	}
+}
+
+function isEmpty(obj) {
+    for(var key in obj) {
+        if(obj.hasOwnProperty(key)) {
+            return false; }
+    }
+    return true;
+}
+
+function checkValidZone(xStart, xEnd, yStart, segments, GENsize, ctx) {
+	ctx.imageSmoothingEnabled = true;
+	var gapsize = 6;
+	var midGEN = (xStart + xEnd) / 2;
+
+	var upProve = ctx.getImageData( xStart, yStart - 12, GENsize.length * gapsize, gapsize),					// get an rectangle of the size of the GEN name located up the line of the Gene
+		midProve = ctx.getImageData( midGEN, yStart - 12, GENsize.length * gapsize, gapsize),					//get an rectangle of the size of the GEN name located in the middle of the line of the Gene
+		rightProve = ctx.getImageData(xStart + 4, yStart + 2, GENsize.length * gapsize, gapsize),				//get an rectangle of the size of the GEN name located right the line of the Gene
+		leftProve = ctx.getImageData(xStart - GENsize.length * gapsize, yStart + 2, GENsize.length * gapsize, gapsize); // get an rectangle of the size of the GEN name located left the line of the Gene
+
+	var replacer = function(k, v) { if (v === undefined || v === 255 || v === 0) { return; } return v; };	//create a replacer to filter pixels
+	var upData = JSON.stringify(upProve, replacer), 															// get JSON of ctx
+		midData = JSON.stringify(midProve, replacer), 															// get JSON of ctx
+		rightData = JSON.stringify(rightProve, replacer), 														// get JSON of ctx
+		leftData = JSON.stringify(leftProve, replacer);															// get JSON of ctx
+
+	if(isEmpty(JSON.parse(upData).data)) {
+		return { confirm: true, place: "up", upPlace: undefined };
+	}else if(isEmpty(JSON.parse(midData).data)) {
+		return { confirm: true, place: "up", upPlace: parseInt(midGEN) };
+	}else if(isEmpty(JSON.parse(rightData).data)) {
+		return { confirm: true, place: "right", upPlace: undefined };
+	}else if(isEmpty(JSON.parse(leftData).data)) {
+		return { confirm: true, place: "left", upPlace: undefined };
+	}
+
+	return { confirm: false, place: "", upPlace: undefined };
 }
 
 class RefGeneDrawing extends React.Component {
@@ -269,10 +323,11 @@ class RefGeneDrawing extends React.Component {
 			return;
 		}
 
+		var genes = 0;
 		//drawing start here, one lane at a time
 		lanes.forEach((lane, k) => {
 			var annotation = getAnnotation(k, perLaneHeight, laneOffset);
-
+			genes = (genes > lane.length ? genes : lane.length);
 			lane.forEach(gene => {
 				var intervals = findIntervals(gene),
 					indx = index(intervals),
@@ -307,6 +362,28 @@ class RefGeneDrawing extends React.Component {
 					});
 				});
 			});
+
+			//here starts the tags' writting
+			if(genes < 40) {
+				lane.forEach(gene => {
+				var intervals = findIntervals(gene),
+				indx = index(intervals),
+				lineY = laneOffset + perLaneHeight * (k + 0.5);
+				pxTransformEach(layout, (toPx, [start, end]) => {
+					var nodes = matches(indx, {start: start, end: end}),
+						segments = nodes.map(({start, end, inCds}) => {
+					var {y, h} = annotation[inCds ? 'cds' : 'utr'],
+						[pstart, pend] = toPx([start, end]);
+							return [pstart, pend, y, h];
+					}),
+						[pGeneStart, pGeneEnd] = toPx([gene.txStart, gene.txEnd]);
+						let { confirm, place, upPlace } = checkValidZone(pGeneStart, pGeneEnd, lineY, segments, gene.name2, ctx);         //here checks if is possible to write the GEN names
+						if(confirm) {
+							writeGENnamepositions(ctx, pGeneStart, pGeneEnd, lineY, gene.name2, upPlace, place);			//here writes the GEN names
+						}
+					});
+				});
+			}
 		});
 		// what about introns?
 		if (!_.isEmpty(probePosition)) {

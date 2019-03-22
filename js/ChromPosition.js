@@ -109,10 +109,10 @@ class ChromPosition extends React.Component {
 		this.draw(width, scaleHeight, layout, mode);
 	}
 
-	/*componentWillReceiveProps() {
+	componentWillReceiveProps() {
 		var {width, layout, scaleHeight, mode} = this.props;
 		this.draw(width, scaleHeight, layout, mode);
-	},*/
+	}
 	render() {
 		var {width, layout, scaleHeight, mode} = this.props;
 
