@@ -1,4 +1,3 @@
-
 'use strict';
 var testvalue = require('./models/km');
 
@@ -19,6 +18,18 @@ function objectToTsv(data) {
     }
     return tsvRows.join('\n');
 };
+
+function findingGroup(groupTte, Tte) {
+	if (groupTte.length === 2) {
+		return (groupTte[1].includes(Tte) ? 'high' : 'low');
+	}
+	else if (groupTte.length === 3) {
+		if (groupTte[2].includes(Tte)) {
+			return 'high';
+		}
+		return (groupTte[1].includes(Tte) ? 'middle' : 'low');
+	}
+};
 //downlaod function
 function tsvdownload(data) {
     const blob = new Blob([data], { type: 'text/tsv' });
@@ -34,23 +45,22 @@ function tsvdownload(data) {
 
 function mappingData(data) {
     let survData = data[0], survival = data[1];
-
+    var groupTte = data[2];
     const tempdata = survData.patient.map(row => ({
         'SampleID': survival.patient.data.codes[row],
         'OS': survData.ev[survData.patient.indexOf(row)],
         'OS.Time': survData.tte[survData.patient.indexOf(row)],
-        // Group: row.n
+        'Group': findingGroup(groupTte, survData.tte[survData.patient.indexOf(row)])
     }));
-
-    const tsvData = objectToTsv(tempdata);
+    //filter null OS and OS.time value
+    const filteredData = tempdata.filter(value => value.OS != null);
+    const tsvData = objectToTsv(filteredData);
     tsvdownload(tsvData);
 };
 
 function download() {
     let data = testvalue.exportData();
-    //console.log((data[1]).patient.data.codes[35]);
     mappingData(data);
-
 };
 
 module.exports = download;

@@ -334,8 +334,8 @@ function findSurvDataByType(survivalData, survivalType) {
 }
 
 var storedData;
-function survivaldata(survival, survivalType) {
-	storedData = [findSurvDataByType(getFieldData(survival), survivalType), survival];
+function survivaldata(survival, survivalType, gtte) {
+	storedData = [findSurvDataByType(getFieldData(survival), survivalType), survival, gtte];
 }
 function exportData() {
 	return storedData;
@@ -370,7 +370,7 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
 		curves = groups.map((g, i) => km.compute(gtte[i], gev[i])),
 		pV = pValue(gtte, gev);
-		survivaldata(survival, survivalType);
+		survivaldata(survival, survivalType, gtte);
 
 	return {
 		colors,
@@ -402,7 +402,7 @@ var featuresByName = cohortFeatures =>
 // across datasets.
 function pickSurvivalVars(cohortFeatures, user) {
 	var byName = featuresByName(cohortFeatures),
-		patient = byName._PATIENT || byName.sampleID,
+		patient = byName.sampleID || byName._PATIENT,
 		featureMapping = _.flatmap(survivalOptions, option => [
 			[option.ev, _.getIn(user, [option.ev], byName[option.evFeature])],
 			[option.tte, _.getIn(user, [option.tte], byName[option.tteFeature])]
