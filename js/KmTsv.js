@@ -21,13 +21,13 @@ function objectToTsv(data) {
 
 function findingGroup(groupTte, Tte) {
 	if (groupTte.length === 2) {
-		return (groupTte[1].includes(Tte) ? 'high' : 'low');
+		return (groupTte[1].includes(Tte) ? 'higher-line' : 'lower-line');
 	}
 	else if (groupTte.length === 3) {
 		if (groupTte[2].includes(Tte)) {
-			return 'high';
+			return 'higher-line';
 		}
-		return (groupTte[1].includes(Tte) ? 'middle' : 'low');
+		return (groupTte[1].includes(Tte) ? 'middle-line' : 'lower-line');
 	}
 };
 //downlaod function
