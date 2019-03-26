@@ -142,6 +142,7 @@ var spreadsheetControls = {
 			'survival', null),
 	'sampleFilter-post!': (serverBus, state, newState) =>
 		fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples),
+	'addColumnAddHover': (state, hovering) => _.assoc(state, 'addColumnAddHover', hovering),
 	'add-column': (state, posOrId, ...idSettingsList) => {
 		var {columnOrder, columns, sampleSearch, data} = state, // old settings
 			isPos = _.isNumber(posOrId),
@@ -161,6 +162,7 @@ var spreadsheetControls = {
 		idSettingsList.forEach(({id}) =>
 			fetchColumnData(serverBus, state.cohortSamples, id, _.getIn(newState, ['columns', id])));
 	},
+	'enableTransition': (state, value) => _.assoc(state, 'enableTransition', value),
 	'edit-column': (state, editing) => _.assoc(state, 'editing', editing),
 	resize: (state, id, {width, height}) =>
 		_.assocInAll(state,

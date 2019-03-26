@@ -59,6 +59,7 @@ module.exports = {
 		servers.treehouseHub,
 		servers.gdcHub,
 		servers.atacSeqHub,
-		"https://tdi.xenahubs.net"
+		servers.singlecellHub,
+		'https://tdi.xenahubs.net'
 	]
 };

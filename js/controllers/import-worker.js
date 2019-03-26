@@ -297,7 +297,7 @@ var cmds = {
 	postFile: (fileName, form, localProbemaps, ignoreWarnings) => {
 		const params = {form, fileName, file},
 			doImport = importFile(params, ignoreWarnings, metrics);
-		return form.probemap && !has(localProbemaps, form.probemap.hash) ?
+		return form.probemap && (!has(localProbemaps, form.probemap.hash) || has(localProbemaps[form.probemap.hash], 'error')) ?
 			uploadProbemapFile(form.probemap).switchMap(
 				pm => has(pm, 'probemapError') ? Rx.Observable.of(pm) :
 					doImport) :

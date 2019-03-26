@@ -42,15 +42,18 @@ import {Dropdown} from 'react-toolbox/lib/dropdown';
 import {Button} from 'react-toolbox/lib/button';
 import {Input} from 'react-toolbox/lib/input';
 import vizSettingStyle from "./VizSettings.module.css";
+import {categoryMore} from "../colorScales";
 
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
-	defaultColorClass, valueType, fieldType, data, units) {
-	var state = vizState;
+	defaultColorClass, valueType, fieldType, data, units, column) {
+
 	class DatasetSetting extends React.Component {
 		render() {
-			let settingsContent = valueType === "float" || valueType === 'segmented' ? <AllFloat /> :
+			let settingsContent =
+				valueType === "float" || valueType === 'segmented' ? <AllFloat /> :
 				valueType === "mutation" && fieldType === 'SV' ? <Sv /> :
-					<NoSettings />;
+				valueType === "coded" ? <Coded /> :
+				<NoSettings />;
 			return (
 				<div>
 					{settingsContent}
@@ -87,6 +90,18 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			);
 		}
 	}
+	class Coded extends React.Component {
+		render() {
+			return (
+				<div>
+					<div>
+						<CategoricalTable />
+					</div>
+					<br />
+				</div>
+			);
+		}
+	}
 	class NoSettings extends React.Component {
 		render() {
 			return (
@@ -103,7 +118,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 	class FinishButtonBar extends React.Component {
 	    handleCancelClick = () => {
 			hide();
-			onVizSettings(id, state);
+			onVizSettings(id, oldSettings);
 		};
 
 	    handleDoneClick = () => {
@@ -586,7 +601,108 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 	}
 
-	var oldSettings = state,
+	//user label for Categories
+	class CategoricalTable extends React.Component {
+	    constructor(props) {
+	        var parseVizSettingCodes = (str) => {
+				if (! _.isString(str)) {return undefined;}
+
+				let codes = JSON.parse(str),
+					observed = JSON.stringify(_.keys(codes).sort(function sortNumber(a, b) {return a - b;})),
+					expected = JSON.stringify(_.range(_.keys(codes).length).map(x => x.toString()));
+
+				if (observed === expected) {
+					return codes;
+				}
+				return undefined;
+			};
+
+	        super(props);
+	        this.state = parseVizSettingCodes(getVizSettings('codes')) || _.object(_.range(data.codes.length), data.codes);
+	    }
+
+		handleChange = (i, value) => {
+			let codes = this.state;
+
+			codes[i] = value;
+			setVizSettings('codes', JSON.stringify(codes));
+			this.setState({[i]: value});
+		};
+
+		onRest = (i, originalCode) => {
+			let codes = this.state,
+				value = originalCode;
+
+			codes[i] = value;
+			setVizSettings('codes', JSON.stringify(codes));
+			this.setState({[i]: value});
+		};
+
+
+		buildCoded = (index, codes, originalCodes, customColors) => {
+			var node = index.map((i) => {
+				let code = codes[i.toString()],
+					originalCode = originalCodes[i],
+					defaultColorNumber = categoryMore.length,
+					customColor = _.getIn(customColors, [code]),
+					backgroundColor = customColor ?  customColor : categoryMore[i % defaultColorNumber];
+
+				return (
+					<Row key={i}>
+						<Col xs4={1} xs8={1} sm={1}>
+							<div className={vizSettingStyle.categoryColor}
+								style={{backgroundColor: backgroundColor}}/>
+						</Col>
+						<Col xs4={4} xs8={4} sm={6}>
+							<Input type='text'
+								   value={code}
+								   className={vizSettingStyle.categoryInput}
+								   onChange={this.handleChange.bind(this, i)}/>
+						</Col>
+						{code !== originalCode ?
+							<Col>
+								<Button onMouseUp={this.onRest.bind(this, i, originalCode)}
+									className={vizSettingStyle.cancelButton}>
+									Reset
+								</Button>
+							</Col> : null}
+					</Row>
+				);
+			});
+			return node;
+		};
+
+	    render() {
+			let field = _.getIn(column, ['fields', 0]),
+				customColors = _.getIn(column, ['dataset', 'customcolor', field]),
+				codes = this.state,
+				originalCodes = _.getIn(data, ['codes']),
+				index = _.intersection(_.getIn(data, ['req', 'values', 0]), _.range(data.codes.length));
+
+			index.sort(function sortNumber(a, b) {return a - b;}).reverse();
+
+			return (
+				<div>
+					<Row>
+						<Col xs4={1} xs8={1} sm={1}>
+							<div className={vizSettingStyle.selectLabel}>
+								Color
+							</div>
+						</Col>
+						<Col xs4={4} xs8={4} sm={6}>
+							<div className={vizSettingStyle.selectLabel}>
+								Label
+							</div>
+						</Col>
+					</Row>
+					{this.buildCoded(index, codes, originalCodes, customColors)}
+				</div>
+			);
+		}
+	}
+
+	var state = vizState,
+		oldSettings = state,
 		currentSettings = {state: state},
 		colorParams = {
 			float: ["max", "maxstart", "minstart", "min"],
@@ -608,8 +724,11 @@ class SettingsWrapper extends React.Component {
 	}
 
 	componentDidMount() {
-		var {refs: {content}, props: {data, units, onVizSettings, vizSettings, id, defaultNormalization, colorClass, valueType, fieldType, onRequestHide}} = this;
-		this.currentSettings = vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization, colorClass, valueType, fieldType, data, units);
+		var {refs: {content}, props: {data, column, units, onVizSettings, vizSettings, id,
+			defaultNormalization, colorClass, valueType, fieldType, onRequestHide}} = this;
+
+		this.currentSettings = vizSettingsWidget(content, onVizSettings, vizSettings, id, onRequestHide, defaultNormalization,
+			colorClass, valueType, fieldType, data, units, column);
 	}
 
 	render() {
@@ -640,7 +759,7 @@ class VizSettings extends React.Component {
 			<Dialog
 				actions={actions}
 				active={true}
-				title='Dataset Visualization Settings'
+				title='Adjust Display Settings'
 				className={vizSettingStyle.dialog}
 				onEscKeyDown={onRequestHide}
 				onOverlayClick={onRequestHide}

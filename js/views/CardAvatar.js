@@ -21,10 +21,11 @@ var compStyles = require('./CardAvatar.module.css');
 
 class CardAvatar extends React.Component {
 	render() {
-		var {colId} = this.props,
-			ghost = !colId;
+		var {colId, zoomCard} = this.props,
+			ghost = !colId,
+			noAvatar = zoomCard;
 		return (
-			<div className={classNames(compStyles.avatar, {[compStyles.ghost]: ghost})}>{colId}</div>
+			<div className={classNames({[compStyles.avatar]: !noAvatar}, {[compStyles.ghost]: ghost}, {[compStyles.noAvatar]: noAvatar})}>{colId}</div>
 		);
 	}
 }

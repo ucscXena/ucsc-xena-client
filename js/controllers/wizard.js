@@ -38,6 +38,9 @@ var fetchCohortPhenotype = () =>
 			preferred => map(preferred, ({host, dataset, feature}) =>
 				   ({dsID: JSON.stringify({host, name: dataset}), name: feature}))));
 
+var fetchTumorMap = () =>
+	xenaQuery.fetchTumorMap.map(res => res).catch(() => {});
+
 var phenoPat = /^phenotype/i;  // match ../viwes/VariableSelect.js definition of phenotype data
 var isPhenotype = ds => ds.type === 'clinicalMatrix' &&
 		(!ds.dataSubType || ds.dataSubType.match(phenoPat));
@@ -59,6 +62,7 @@ var wizardData = state =>
 		['cohortMeta'],
 		['cohortPreferred'],
 		['cohortPhenotype'],
+		['cohortTumorMap'],
 		...servers.map(server => ['serverCohorts', server]),
 		...(spreadsheet.cohort ?
 			servers.map(server => ['cohortDatasets', spreadsheet.cohort.name, server]) :
@@ -79,7 +83,8 @@ var fetchMethods = {
 		.catch(() => of([])),
 	cohortMeta: () => fetchCohortMeta(),
 	cohortPreferred: () => fetchCohortPreferred(),
-	cohortPhenotype: () => fetchCohortPhenotype()
+	cohortPhenotype: () => fetchCohortPhenotype(),
+	cohortTumorMap: () => fetchTumorMap()
 };
 
 // XXX review this for wizard
@@ -90,6 +95,7 @@ var cachePolicy = {
 	cohortMeta: identity,
 	cohortPreferred: identity,
 	cohortPhenotype: identity,
+	cohortTumorMap: identity,
 
 	// cache a single key (cohort): the last cohort updated.
 	// ['cohortDatasets', cohort, server]

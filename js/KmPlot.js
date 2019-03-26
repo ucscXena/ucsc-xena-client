@@ -414,7 +414,7 @@ class KmPlot extends PureComponent {
 	};
 
 	help = () => {
-		window.location.href = "http://xena.ucsc.edu/km-plot-help/";
+		window.location.href = "https://ucsc-xena.gitbook.io/project/overview-of-features/kaplan-meier-plots";
 	};
 
 	onSplits = (ev) => {

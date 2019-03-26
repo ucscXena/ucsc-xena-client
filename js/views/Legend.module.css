@@ -15,15 +15,35 @@
 	border-radius: 2px;
 }
 
+.item {
+	overflow: auto
+}
+
 .label {
 	composes: mdCaption from '../../css/typography.module.css';
 	display: block;
-	text-align: center;
+	margin-left: 20px;
 	font-weight: normal; /* BS override */
 	overflow: hidden;
 	padding: 4px;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.colorBox {
+	composes: mdCaption from '../../css/typography.module.css';
+	float: left;
+	margin: 4px;
+	height: 15px;
+	width: 15px;
+	border: 1px;
+	border-style: solid;
+}
+
+.header {
+	display: block;
+	text-align: center;
+	padding-bottom: 4px;
 }
 
 .footnotes {
@@ -32,4 +52,10 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.null {
+	composes: mdCaption from '../../css/typography.module.css';
+	display: block;
+	text-align: center;
 }

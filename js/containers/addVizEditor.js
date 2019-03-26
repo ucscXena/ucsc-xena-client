@@ -23,7 +23,9 @@ function addVizEditor(Component) {
 				{appState} = componentProps,
 				{openVizSettings} = appState,
 				data = appState.data[openVizSettings],
+				column = appState.columns[openVizSettings],
 				units = appState.columns[openVizSettings] && appState.columns[openVizSettings].units;
+
 			return (
 				<Component {...componentProps}>
 					{this.props.children}
@@ -33,6 +35,7 @@ function addVizEditor(Component) {
 							onRequestHide={this.onHideViz}
 							onVizSettings={onVizSettings}
 							data={data}
+							column={column}
 							units={units}
 							{...vizSettingsSelector(appState, openVizSettings)}/> :
 						null}

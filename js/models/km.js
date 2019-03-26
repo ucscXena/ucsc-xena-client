@@ -133,7 +133,7 @@ function average(data) {
 
 // Currently assumes we have only one field. Right now we only
 // handle coded phenotype data, and limit it to one-per-column.
-function codedVals({heatmap, colors, fields}, {codes}) {
+function codedVals({heatmap, colors, codes}) {
 	var groups = _.range(codes.length),
 		colorfn = _.first(colors.map(colorScale));
 
@@ -298,7 +298,7 @@ function warnDupPatients(usableSamples, samples, patient) {
 		`Some individuals' survival data are used more than once in the KM plot.
 		There are ${dups.length} samples affected.
 		For more information and how to remove such duplications,
-		see http://xena.ucsc.edu/km-filtering-out/ .`
+		see https://ucsc-xena.gitbook.io/project/how-do-i/how-do-i-remove-duplicate-samples-from-a-km-plot .`
 		: null;
 }
 

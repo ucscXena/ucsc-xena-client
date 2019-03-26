@@ -11,6 +11,7 @@ var colorScales = require ('./colorScales');
 var customColors = {};
 var jStat = require('jStat').jStat;
 
+
 // Styles
 var compStyles = require('./chart.module.css');
 
@@ -206,11 +207,12 @@ function render(root, callback, sessionStorage) {
 		_.map(ydiv.options, option => option.disabled = false);
 
 		var data = _.getIn(xenaState, ['data']),
+			columns = _.getIn(xenaState, ['columns']),
 			xcolumn = xdiv.options[xdiv.selectedIndex].value,
 			ycolumn = ydiv.options[ydiv.selectedIndex].value;
 
 		// x single float, disable y multiple float of series > 10
-		if (xcolumn !== "none" && !data[xcolumn].codes) {
+		if (xcolumn !== "none" && !columns[xcolumn].codes) {
 			_.map(ydiv.options, option => {
 				var y = option.value;
 				if (data[y].req.values && data[y].req.values.length > 10) {
@@ -222,7 +224,7 @@ function render(root, callback, sessionStorage) {
 		if (data[ycolumn].req.values && data[ycolumn].req.values.length > 10) {
 			_.map(xdiv.options, option => {
 				var x = option.value;
-				if (x !== "none" && !data[x].codes) {
+				if (x !== "none" && !columns[x].codes) {
 					option.disabled = true;
 				}
 			});
@@ -281,7 +283,7 @@ function render(root, callback, sessionStorage) {
 			if (data[column].req.rows && data[column].req.rows.length === 0) { //bad column
 				return;
 			}
-			if (data[column].codes && _.uniq(data[column].req.values[0]).length > 100) { // ignore any coded columns with too many items, like in most cases, the "samples" column
+			if (columns[column].codes && _.uniq(data[column].req.values[0]).length > 100) { // ignore any coded columns with too many items, like in most cases, the "samples" column
 				return;
 			}
 			if ((selectorID === "Xaxis" || selectorID === "Color") &&
@@ -343,7 +345,7 @@ function render(root, callback, sessionStorage) {
 				var xvalue = xdiv.options[xdiv.selectedIndex].value,
 					yvalue = div.options[div.selectedIndex].value;
 
-				if (xvalue !== "none" && !data[xvalue].codes && data[yvalue].req.values.length > 2) { // x if float and y is multi-float series with >2 series
+				if (xvalue !== "none" && !columns[xvalue].codes && data[yvalue].req.values.length > 2) { // x if float and y is multi-float series with >2 series
 					xdiv.options.selectedIndex = xdiv.options.length - 1;
 					xvalue = "none";
 				}
@@ -1278,6 +1280,21 @@ function render(root, callback, sessionStorage) {
 				}
 			}
 
+			// utility function to calculate p value from a given coefficient using "Testing using Student's t-distribution" method
+			// spearman rank https://en.wikipedia.org/wiki/Spearman's_rank_correlation_coefficient#Determining_significance
+			// pearson correlation https://en.wikipedia.org/wiki/Pearson_correlation_coefficient#Testing_using_Student's_t-distribution
+			function pValueFromCoefficient(coeff, length) {
+				var tScore = coeff * (Math.sqrt(length - 2) / Math.sqrt(1 - (coeff * coeff)));
+				var pValue;
+
+				if (isFinite(tScore)) { // If the value of tScore is Finite, then the pValue is calculated from the t Test
+					pValue = jStat.ttest(tScore, length - 2, 2); //p value from t value with n-2 dof and 2 tails
+				} else { // If the value of tScore is Infinite, then pValue is 0
+					pValue = 0;
+				}
+				return(pValue);
+			}
+
 			//scatter plot stats Pearson's rho/r, Spearman rank rho/ρ value
 			function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
 				[...Array(yfields.length).keys()].forEach(i => {
@@ -1285,7 +1302,9 @@ function render(root, callback, sessionStorage) {
 						yVector = ydata[i],
 						[xlist, ylist] = _.unzip(_.filter(_.zip(xVector, yVector), function (x) {return x[0] != null && x[1] != null;})),
 						rho = jStat.corrcoeff(xlist, ylist), // r Pearson's Rho correlation coefficient
-						spearmanRho = jStat.spearmancoeff(xlist, ylist); // (spearman's) rank correlation coefficient, rho
+						spearmanRho = jStat.spearmancoeff(xlist, ylist), // (spearman's) rank correlation coefficient, rho
+						pValueRho = pValueFromCoefficient(rho, ylist.length), // P value from pearson's rho value and length of ylist
+						pValueSpearmanRho = pValueFromCoefficient(spearmanRho, ylist.length); // P value from spearman rho value and length of ylist
 
 					if (div.innerHTML !== '') {
 						div.innerHTML += '<br>'  + '<br>';
@@ -1293,9 +1312,11 @@ function render(root, callback, sessionStorage) {
 					div.innerHTML = div.innerHTML +
 						xlabel + ' ~ ' + ylabel + '<br>' +
 						'Pearson\'s rho<br>' +
-						'r = ' + rho.toPrecision(4) + '<br>' +
+						'r = ' + rho.toPrecision(4) + '  ' +
+						'(p = ' + pValueRho.toPrecision(4) + ')' + '<br>' +
 						'Spearman\'s rank rho<br>' +
-						'ρ = ' + spearmanRho.toPrecision(4);
+						'rho = ' + spearmanRho.toPrecision(4) + '  ' +
+						'(p = ' + pValueSpearmanRho.toPrecision(4) + ')' + '<br>';
 				});
 			}
 
@@ -1379,10 +1400,10 @@ function render(root, callback, sessionStorage) {
 		ylabel = ydiv.options[ydiv.selectedIndex].text;
 
 		(function() {
-			var xcodemap = _.getIn(xenaState, ['data', xcolumn, 'codes']),
+			var xcodemap = _.getIn(xenaState, ['columns', xcolumn, 'codes']),
 				xdata = _.getIn(xenaState, ['data', xcolumn, 'req', 'values']),
 				xdataSegment = _.getIn(xenaState, ['data', xcolumn, 'req', 'rows']),
-				ycodemap = _.getIn(xenaState, ['data', ycolumn, 'codes']),
+				ycodemap = _.getIn(xenaState, ['columns', ycolumn, 'codes']),
 				ydata = _.getIn(xenaState, ['data', ycolumn, 'req', 'values']),
 				ydataSegment = _.getIn(xenaState, ['data', ycolumn, 'req', 'rows']),
 				yProbes = _.getIn(xenaState, ['data', ycolumn, 'req', 'probes']),
@@ -1500,7 +1521,7 @@ function render(root, callback, sessionStorage) {
 				scatterColorScale = color && colorScales.colorScale(color);
 				scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values']);
 				scatterColorDataSegment = _.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
-				scatterColorDataCodemap = _.getIn(xenaState, ['data', colorColumn, 'codes']);
+				scatterColorDataCodemap = _.getIn(xenaState, ['columns', colorColumn, 'codes']);
 				scatterLabel = columns[colorColumn].user.fieldLabel;
 
 				if (scatterColorDataSegment) {
