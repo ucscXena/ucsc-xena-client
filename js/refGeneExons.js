@@ -185,16 +185,9 @@ function writeGENnamepositions(ctx, xStart, xEnd, y, perLaneHeight, start, stran
 function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWidth, ctx) {
 	var labelSize = ctx.measureText(label).width,
 		pad = 2,
-
+		// up down zone test line start and end
 		boxStart = _.min([xStart, xEnd - labelSize]),
-		boxEnd = _.max([xEnd, xStart + labelSize]),
-		upBox = y - perLaneHeight > 0 ? ctx.getImageData( boxStart, y - perLaneHeight, boxEnd - boxStart + 1, 1) : undefined,
-		downBox = y + perLaneHeight < height ? ctx.getImageData( boxStart, y + perLaneHeight, boxEnd - boxStart + 1, 1) : undefined,
-
-		//get the middle line the size of the GENE name located right of the Gene
-		rightBox = xEnd + pad >= columnWidth ? undefined : ctx.getImageData(xEnd, y, labelSize + pad, 1),
-		// get the middle line the size of the GENE name located left of the Gene
-		leftBox = xStart <= pad ? undefined : ctx.getImageData(xStart - labelSize - pad, y, labelSize + pad, 1);
+		boxEnd = _.max([xEnd, xStart + labelSize]);
 
 	var findMaxGap = data => {
 		var maxGap = 0,
@@ -237,19 +230,55 @@ function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWid
 		return true;
 	};
 
-	var [upStart, upEnd] = upBox ? findMaxGap(upBox.data) : [undefined, undefined];
-	var [downStart, downEnd] = downBox ? findMaxGap(downBox.data) : [undefined, undefined];
-	if (labelSize < (upEnd - upStart + 2)) {
-		return {confirm: true, placement: "up", start: (upEnd + upStart - labelSize) / 2};
-	} else if (labelSize < (downEnd - downStart + 2)) {
-		return {confirm: true, placement: "down", start: (downEnd + downStart - labelSize) / 2};
-	} else if (rightBox && allWhitePixel(rightBox.data)) {
-		return {confirm: true, placement: "right"};
-	} else if (leftBox && allWhitePixel(leftBox.data)) {
-		return {confirm: true, placement: "left" };
-	} else {
-		return {confirm: false};
-	}
+	var checkUpZone = () => {
+		let upBox, upStart, upEnd;
+
+		if (y - perLaneHeight > 0) {
+			upBox = ctx.getImageData(boxStart, y - perLaneHeight, boxEnd - boxStart + 1, 1);
+			[upStart, upEnd] = findMaxGap(upBox.data);
+			if (labelSize < (upEnd - upStart + 2)) {
+				return {confirm: true, placement: "up", start: (upEnd + upStart - labelSize) / 2};
+			}
+		}
+		return undefined;
+	};
+
+	var checkDownZone = () => {
+		let downBox, downStart, downEnd;
+
+		if (y + perLaneHeight < height) {
+			downBox = ctx.getImageData( boxStart, y + perLaneHeight, boxEnd - boxStart + 1, 1);
+			[downStart, downEnd] = findMaxGap(downBox.data);
+			if (labelSize < (downEnd - downStart + 2)) {
+				return {confirm: true, placement: "down", start: (downEnd + downStart - labelSize) / 2};
+			}
+		}
+		return undefined;
+	};
+
+	var checkRightZone = () => {
+		//get the middle line the size of the GENE name located right of the Gene
+		if (xEnd + pad < columnWidth) {
+			let rightBox = ctx.getImageData(xEnd, y, labelSize + pad, 1);
+			if (allWhitePixel(rightBox.data)) {
+				return {confirm: true, placement: "right"};
+			}
+		}
+		return undefined;
+	};
+
+	var checkLeftZone = () => {
+		// get the middle line the size of the GENE name located left of the Gene
+		if (xStart > pad) {
+			let leftBox = ctx.getImageData(xStart - labelSize - pad, y, labelSize + pad, 1);
+			if (allWhitePixel(leftBox.data)) {
+				return {confirm: true, placement: "left" };
+			}
+		}
+		return undefined;
+	};
+
+	return checkUpZone() || checkDownZone() || checkRightZone() || checkLeftZone() || {confirm: false};
 }
 
 class RefGeneDrawing extends React.Component {
