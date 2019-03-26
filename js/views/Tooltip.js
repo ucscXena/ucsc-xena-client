@@ -16,6 +16,9 @@ var element = {
 	labelValue: (i, l, v) => (
 		<span key={i}>{l}: {v}</span>
 	),
+	meanMedian: (i, v1, v2) => (
+		<span key={i}>{v1} {v2}</span>
+	),
 	url: (i, text, url) => (
 		<span key={i}><a href={url} target='_blank'>{text}</a></span>
 	),
@@ -34,6 +37,21 @@ function rowsOut(rows, frozen) {
 	let geneList = rows.filter(row => row[0][1].includes('Gene'));
 	geneList = geneList.length > 0 ? geneList.map(geneUrl => geneUrl[1]) : '';
 	let showXGenes = frozen ? geneList.length : 3;
+
+	rows = rows.map(row => {
+
+		if (row[0][1].includes('Mean') && !frozen) {
+
+			let meanRegex = /[^0-9-.]/g;
+			let meanMedian = row[0][2].split(' ');
+			let meanValue = meanMedian[0].includes('undefined') ? '--' : Number(meanMedian[0]).toFixed(3);
+			let medianValue = meanMedian[1].includes('undefined') ? '--' : Number(meanMedian[1].replace(meanRegex, '')).toFixed(3);
+			row[0][0] = 'meanMedian';
+			row[0][1] = `Mean: ${meanValue}`;
+			row[0][2] = `Median: ${medianValue}`;
+		}
+		return row;
+	});
 
 	return _.map(rows, (row, i) => {
 
@@ -136,11 +154,11 @@ class Tooltip extends PureComponent {
 				{frozen ? overlay(onClick) : null}
 				<div key={sampleID} className={classNames(compStyles.Tooltip, {[compStyles.frozen]: frozen})}>
 					<ul className={compStyles.content}>
-						<li className={compStyles.title}>
+						{sampleID ? <li className={compStyles.title}>
 							{sample}
-							<span
-								className={classNames(compStyles.tooltipHint, {[compStyles.subTitle]: sample !== null})}>{`${meta.name}-click to ${frozen ? 'unfreeze' : 'freeze'} tooltip`}</span>
-						</li>
+						</li> : null}
+						<li
+							className={compStyles.tooltipHint}>{`${meta.name}-click to ${frozen ? 'unfreeze' : 'freeze'} tooltip`}</li>
 						{rowsOut(rows, frozen)}
 					</ul>
 					{closeIcon}
