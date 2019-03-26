@@ -137,6 +137,9 @@ class Tooltip extends PureComponent {
 			return (<div className={compStyles.Tooltip}>
 				<ul className={compStyles.content}>
 					<li className={compStyles.tooltipHint}><a
+						href='https://ucsc-xena.gitbook.io/project/'
+						target='_blank' rel='noopener noreferrer'>User Guide</a></li>
+					<li className={compStyles.tooltipHint}><a
 						href='https://ucsc-xena.gitbook.io/project/overview-of-features/visual-spreadsheet#zooming'
 						target='_blank' rel='noopener noreferrer'>Zoom Help</a></li>
 					<li className={compStyles.tooltipHint}><a
