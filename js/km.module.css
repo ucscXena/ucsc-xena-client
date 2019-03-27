@@ -115,25 +115,27 @@ div.warningDialog {
 }
 
 i.buttonIcon {
-	margin-right: 10px;
-	margin-top: 10px;
-	box-sizing: border-box;
-	font-size: 18px;
 	color: #757575;
+	vertical-align: middle;
 }
 
 .buttonText {
-	display: inline-block;
-	margin-top: -10px;
 	color: #757575;
 }
 
 .PDFButton {
-	margin: 0px 0 15px 50px;
+	margin-left: 50px;
+	min-width: 0;
+}
+
+.downloadButton {
+	margin-left: 20px;
+	min-width: 0;
 }
 
 .helpButton {
 	margin-left: 20px;
+	min-width: 0;
 }
 
 .pWarningIcon {
