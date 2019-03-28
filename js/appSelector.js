@@ -21,6 +21,22 @@ var indexSelector = createFmapSelector(
 
 var invert = (dir, fn) => dir === 'reverse' ? (s1, s2) => fn(s2, s1) : fn;
 
+var sortSubSelector = _.memoize1(
+	(length, columns, data, index) => {
+		var cmpFns = _.map(columns,
+				(c, i) => invert(c.sortDirection, widgets.cmp(columns[i], data[i], index[i]))),
+			// XXX should further profile this to see how much it's costing us
+			// to create a findValue callback on every cmpFn call.
+			cmpFn = (s1, s2) =>
+				_.findValue(cmpFns, cmpFns => cmpFns(s1, s2));
+				// Disabling sample sort. Note that Array sort can't be assumed to be
+				// stable, so if we want to rely on sorted data from the server, we must
+				// implement a stable sort for the other columns.
+//					cmpString(getSampleID(s1), getSampleID(s2));
+
+		return _.range(length).sort(cmpFn);
+});
+
 var sortSelector = createSelector(
 	state => state.cohortSamples,
 	state => _.fmap(state.columns, c => _.pick(c, 'fieldType', 'fields', 'xzoom', 'sortVisible', 'sortDirection')),
@@ -28,19 +44,12 @@ var sortSelector = createSelector(
 	state => state.data,
 	state => state.index,
 	(cohortSamples, columns, columnOrder, data, index) => {
-		var order = columnOrder.slice(1), // skip 'samples' in sort
-			cmpFns = _.fmap(columns,
-				(c, id) => invert(c.sortDirection, widgets.cmp(columns[id], data[id], index[id]))),
-			// XXX should further profile this to see how much it's costing us
-			// to create a findValue callback on every cmpFn call.
-			cmpFn = (s1, s2) =>
-				_.findValue(order, id => cmpFns[id](s1, s2));
-				// Disabling sample sort. Note that Array sort can't be assumed to be
-				// stable, so if we want to rely on sorted data from the server, we must
-				// implement a stable sort for the other columns.
-//					cmpString(getSampleID(s1), getSampleID(s2));
-
-		return _.range((cohortSamples || []).length).sort(cmpFn);
+		var length = (cohortSamples || []).length,
+			order = columnOrder.slice(1).filter(id => _.getIn(data, [id, 'req'])),
+			icolumns = order.map(id => columns[id]),
+			idata = order.map(id => data[id]),
+			iindex = order.map(id => index[id]);
+		return sortSubSelector(length, icolumns, idata, iindex);
 	}
 );
 
