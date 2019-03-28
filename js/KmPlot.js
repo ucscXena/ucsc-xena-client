@@ -386,8 +386,7 @@ class KmPlot extends PureComponent {
 	};
 
 	download = () => {
-		gaEvents("spreadsheet", "pdf", "km");
-		Tsv(this.props.km.groups);
+		Tsv();
 	};
 
 	help = () => {
@@ -444,14 +443,14 @@ class KmPlot extends PureComponent {
 							<i className={`material-icons ${kmStyle.buttonIcon}`}>help</i>
 							<span className={kmStyle.buttonText}>Help</span>
 						</Button>
+						<Button onClick={this.download} className={kmStyle.downloadButton}>
+							<i className={`material-icons ${kmStyle.buttonIcon}`}>file_download</i>
+							<span className={kmStyle.buttonText}>download</span>
+						</Button>
 						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph, cohort, survInfoURL,
 							survivalType, survivalTypes, this.onSurvType, min, max, this.onCutoff, cutoff)}
 						{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions,
 							maySplit, splits, this.onSplits, label, clarification, warning)}
-						<Button onClick={this.download} className={kmStyle.downloadButton}>
-							<i className={`material-icons ${kmStyle.buttonIcon}`}>file_download</i>
-							<span className={kmStyle.buttonText}>Download</span>
-						</Button>
 					</div>
 			);
 
