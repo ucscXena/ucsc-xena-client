@@ -186,8 +186,8 @@ function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWid
 	var labelSize = ctx.measureText(label).width,
 		pad = 2,
 		// up down zone test line start and end
-		boxStart = _.min([xStart, xEnd - labelSize]),
-		boxEnd = _.max([xEnd, xStart + labelSize]);
+		boxStart = _.min([xStart, xEnd - labelSize + 1]),
+		boxEnd = _.max([xEnd, xStart + labelSize - 1]);
 
 	var findMaxGap = data => {
 		var maxGap = 0,
@@ -236,7 +236,7 @@ function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWid
 		if (y - perLaneHeight > 0) {
 			upBox = ctx.getImageData(boxStart, y - perLaneHeight, boxEnd - boxStart + 1, 1);
 			[upStart, upEnd] = findMaxGap(upBox.data);
-			if (labelSize < (upEnd - upStart + 2)) {
+			if (labelSize < (upEnd - upStart + pad)) {
 				return {confirm: true, placement: "up", start: (upEnd + upStart - labelSize) / 2};
 			}
 		}
@@ -249,7 +249,7 @@ function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWid
 		if (y + perLaneHeight < height) {
 			downBox = ctx.getImageData( boxStart, y + perLaneHeight, boxEnd - boxStart + 1, 1);
 			[downStart, downEnd] = findMaxGap(downBox.data);
-			if (labelSize < (downEnd - downStart + 2)) {
+			if (labelSize < (downEnd - downStart + pad)) {
 				return {confirm: true, placement: "down", start: (downEnd + downStart - labelSize) / 2};
 			}
 		}
@@ -454,7 +454,7 @@ class RefGeneDrawing extends React.Component {
 		});
 
 		//draw gene labels when relatively zoomed-in
-		var labelGene =  lanes[0].length < width / 10 ? true : false;
+		var labelGene =  (lanes.length > 0 && lanes[0].length < width / 10) ? true : false;
 		// gene name drawing
 		if (labelGene) {
 			// sort to draw bigger genes' labels first
