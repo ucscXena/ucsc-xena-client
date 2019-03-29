@@ -240,7 +240,7 @@ function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWid
 				return {confirm: true, placement: "up", start: (upEnd + upStart - labelSize) / 2};
 			}
 		}
-		return undefined;
+		return;
 	};
 
 	var checkDownZone = () => {
@@ -253,7 +253,7 @@ function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWid
 				return {confirm: true, placement: "down", start: (downEnd + downStart - labelSize) / 2};
 			}
 		}
-		return undefined;
+		return;
 	};
 
 	var checkRightZone = () => {
@@ -264,7 +264,7 @@ function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWid
 				return {confirm: true, placement: "right"};
 			}
 		}
-		return undefined;
+		return;
 	};
 
 	var checkLeftZone = () => {
@@ -275,7 +275,7 @@ function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWid
 				return {confirm: true, placement: "left" };
 			}
 		}
-		return undefined;
+		return;
 	};
 
 	return checkUpZone() || checkDownZone() || checkRightZone() || checkLeftZone() || {confirm: false};
@@ -364,9 +364,6 @@ class RefGeneDrawing extends React.Component {
 			};
 		} else {
 			newAnnotationLanes = {
-				lanes: undefined,
-				perLaneHeight: undefined,
-				laneOffset: undefined,
 				annotationHeight
 			};
 		}
