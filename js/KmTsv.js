@@ -1,6 +1,7 @@
 'use strict';
-var testvalue = require('./models/km');
 
+var kmjsFunction = require('./models/km');
+//Converting object to tsv
 function objectToTsv(data) {
     const tsvRows = [];
     //Header for first row
@@ -13,7 +14,7 @@ function objectToTsv(data) {
             const escaped = ('' + row[header]).replace(/"/g, '\\"');
             return `"${escaped}"`;
         });
-        tsvRows.push(values.join('	'));
+        tsvRows.push(values.join('\t'));
 
     }
     return tsvRows.join('\n');
@@ -42,7 +43,7 @@ function tsvdownload(data) {
     a.click();
     document.body.removeChild(a);
 };
-
+//This function maps the data with category
 function mappingData(data) {
     let survData = data[0], survival = data[1];
     var groupTte = data[2];
@@ -59,7 +60,7 @@ function mappingData(data) {
 };
 
 function download() {
-    let data = testvalue.exportData();
+    let data = kmjsFunction.exportData();
     mappingData(data);
 };
 

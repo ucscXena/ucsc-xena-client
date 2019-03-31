@@ -402,7 +402,7 @@ var featuresByName = cohortFeatures =>
 // across datasets.
 function pickSurvivalVars(cohortFeatures, user) {
 	var byName = featuresByName(cohortFeatures),
-		patient = byName.sampleID || byName._PATIENT,
+		patient = byName._PATIENT || byName.sampleID,
 		featureMapping = _.flatmap(survivalOptions, option => [
 			[option.ev, _.getIn(user, [option.ev], byName[option.evFeature])],
 			[option.tte, _.getIn(user, [option.tte], byName[option.tteFeature])]
