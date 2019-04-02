@@ -334,8 +334,8 @@ function findSurvDataByType(survivalData, survivalType) {
 }
 
 var storedData;
-function survivaldata(survival, survivalType, gtte) {
-	storedData = [findSurvDataByType(getFieldData(survival), survivalType), survival, gtte];
+function survivaldata(survival, survivalType, gtte, geneExpressionvalues) {
+	storedData = [findSurvDataByType(getFieldData(survival), survivalType), geneExpressionvalues, gtte];
 }
 function exportData() {
 	return storedData;
@@ -370,7 +370,8 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
 		curves = groups.map((g, i) => km.compute(gtte[i], gev[i])),
 		pV = pValue(gtte, gev);
-		survivaldata(survival, survivalType, gtte);
+		var geneExpressionvalues = column.heatmap;
+		survivaldata(survival, survivalType, gtte, geneExpressionvalues);
 
 	return {
 		colors,

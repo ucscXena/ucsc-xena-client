@@ -15,11 +15,10 @@ function objectToTsv(data) {
             return `"${escaped}"`;
         });
         tsvRows.push(values.join('\t'));
-
     }
     return tsvRows.join('\n');
 };
-
+/*
 function findingGroup(groupTte, Tte) {
 	if (groupTte.length === 2) {
 		return (groupTte[1].includes(Tte) ? 'higher-line' : 'lower-line');
@@ -30,7 +29,7 @@ function findingGroup(groupTte, Tte) {
 		}
 		return (groupTte[1].includes(Tte) ? 'middle-line' : 'lower-line');
 	}
-};
+};*/
 //downlaod function
 function tsvdownload(data) {
     const blob = new Blob([data], { type: 'text/tsv' });
@@ -45,17 +44,23 @@ function tsvdownload(data) {
 };
 //This function maps the data with category
 function mappingData(data) {
-    let survData = data[0], survival = data[1];
-    var groupTte = data[2];
+    let survData = data[0], geneValues = data[1];
+    //var groupTte = data[2];
     const tempdata = survData.patient.map(row => ({
-        'SampleID': survival.patient.data.codes[row],
-        'OS': survData.ev[survData.patient.indexOf(row)],
-        'OS.Time': survData.tte[survData.patient.indexOf(row)],
-        'Group': findingGroup(groupTte, survData.tte[survData.patient.indexOf(row)])
+        //'SampleID': survival.patient.data.codes[row],
+        'patient': row,
+        'tte': survData.tte[survData.patient.indexOf(row)],
+        'ev': survData.ev[survData.patient.indexOf(row)],
+        //'Group': findingGroup(groupTte, survData.tte[survData.patient.indexOf(row)])
     }));
-    //filter null OS and OS.time value
-    const filteredData = tempdata.filter(value => value.OS != null);
-    const tsvData = objectToTsv(filteredData);
+    //filter null ev and tte value
+    const filteredData = tempdata.filter(value => value.ev != null);
+    const makeData = filteredData.map(row => ({
+        'Time to event': row.tte,
+        'Event': row.ev,
+        'Column value': geneValues[0][filteredData.indexOf(row)]
+    }));
+    const tsvData = objectToTsv(makeData);
     tsvdownload(tsvData);
 };
 
