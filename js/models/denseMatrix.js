@@ -87,12 +87,16 @@ function reOrderFields(column, data) {
 		data.status !== 'loading' && probeOrder && data.req) {
 		return {
 			data: _.updateIn(data, ['req'], req => {
-				var {mean, position, probes, values} = req;
+				var {position, probes, values} = req;
 				return _.merge(req,
-					mean ? {mean: probeOrder.map(i => mean[i])} : {},
 					position ? {position: probeOrder.map(i => position[i])} : {},
 					probes ? {probes: probeOrder.map(i => probes[i])} : {},
 					values ? {values: probeOrder.map(i => values[i])} : {});
+			}, ['avg'], avg => {
+				return avg ? {
+					mean: probeOrder.map(i => avg.mean[i]),
+					median: probeOrder.median(i => avg.median[i]),
+				} : undefined;
 			}),
 			column: column.fieldType === 'geneProbes' ? column :
 				_.assoc(column, 'fields', probeOrder.map(i => column.fields[i]))
@@ -136,7 +140,7 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
 		colors = map(fields, (p, i) =>
 			heatmapColors.colorSpec(column, vizSettings, codes,
-				{'values': heatmap[i], 'mean': req.mean ? req.mean[i] : undefined},
+				{'values': heatmap[i], 'mean': _.getIn(data, ['avg', 'mean'])},
 				customColors)),
 		units = [_.get(dataset, 'unit')];
 
@@ -186,7 +190,7 @@ function geneProbesToHeatmap(column, vizSettings, data, samples) {
 	reqInView = _.updateIn(req,
 		['values'], values => probesInView.map(i => values[i]),
 		['probes'], probes => probesInView.map(i => probes[i]),
-		['mean'], mean => probesInView.map(i => mean[i]));
+		['mean'], () => probesInView.map(i => data.avg.mean[i]));
 	heatmapData = dataToHeatmap(column, vizSettings, {req: reqInView}, samples);
 
 	return {
@@ -212,7 +216,7 @@ function zoomableDataToHeatmap(column, vizSettings, data, samples) {
 		positionInView = position ? position.slice(start, endIndex) : position,
 		reqInView = _.updateIn(req,
 			['values'], () => valuesInView,
-			['mean'], mean => _.range(start, endIndex).map(i => mean[i]),
+			['mean'], () => _.range(start, endIndex).map(i => data.avg.mean[i]),
 			['position'], () => positionInView),
 		// Update set of fields to just the fields in the current x zoom range
 		zoomedColumn = Object.assign({}, column, {
