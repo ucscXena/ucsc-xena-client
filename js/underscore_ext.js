@@ -173,7 +173,7 @@ function medianNull(values) {
 		notNaN = firstNaN !== -1 ? sorted.slice(0, firstNaN) : sorted,
 		n = notNaN.length;
 
-	return (notNaN[Math.ceil(n / 2)] + notNaN[Math.floor(n / 2)]) / 2;
+	return (notNaN[Math.ceil((n - 1) / 2)] + notNaN[Math.floor((n - 1) / 2)]) / 2;
 }
 
 function fmapMemoize1(fn) {
