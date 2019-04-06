@@ -81,5 +81,6 @@ const main = window.document.getElementById('main');
 const controller = compose(connectionController(store.uiBus), hubController, wizardController, serverController, uiController, transcriptController, importController/*, tiesController*/);
 
 xenaWasm.loaded.then(() => {
-	connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});
+	// XXX disable persist during singlecell dev, due to data size
+	connector({...store, controller, main, selector, Page: PageContainer, persist: false, history: false});
 });
