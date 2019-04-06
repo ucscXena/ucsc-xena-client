@@ -12,16 +12,6 @@ var exonLayout = require('../exonLayout');
 var {datasetChromProbeValues, datasetProbeValues, datasetGeneProbeAvg,
 	datasetGeneProbesValues, fieldCodes, refGeneRange} = xenaQuery;
 
-function second(x, y) {
-	return y;
-}
-
-function saveMissing(fn) {
-	return function (v) {
-		return v == null ? v : fn(v);
-	};
-}
-
 /*
 // Decide whether to normalize, perfering the user setting to the
 // dataset default setting.
@@ -35,6 +25,14 @@ function subbykey(subtrahend, key, val) {
 }
 */
 
+function mapIndicies(arr, indicies) {
+	var out = new Array(indicies.length);
+	for (var i = 0; i < arr.length; ++i) {
+		out[i] = arr[indicies[i]];
+	}
+	return out;
+}
+
 // Returns 2d array of numbers, probes X samples.
 // [[number, ...], [number, ...]]
 // Performs sorting and normalization.
@@ -42,13 +40,11 @@ function computeHeatmap(vizSettings, data, fields, samples) {
 	if (!data) {
 		return [];
 	}
-	var {probes, values} = data,
-		transform = second;
-	//transform = (colnormalization && mean && _.partial(subbykey, mean)) || second;
+	var {probes, values} = data;
 
 	return map(probes || fields, function (p, i) {
-		var suTrans = saveMissing(v => transform(i, v));
-		return map(samples, s => suTrans(_.getIn(values, [i, s])));
+		var v = values[i];
+		return v ? mapIndicies(v, samples) : [];
 	});
 }
 
@@ -258,26 +254,23 @@ var cmp = ({fields}, {req: {values, probes} = {values, probes}} = {}) =>
 // XXX Put the polymorphism someplace else, e.g. in binpack, based
 // on a data type identifier, or something.
 var toArray = x =>
-	x instanceof Uint8Array ? new Float32Array(x.buffer) : x;
+	x instanceof Uint8Array ? new Float32Array(x.buffer) : new Float32Array(x);
 
-// Convert nanstr and compute mean.
-// XXX deprecate this & use avg selector (widgets.avg) instead.
-function meanNanResponse(probes, data) {
-	var values = _.map(data, field => _.map(toArray(field), xenaQuery.nanstr)),
-		mean = _.map(data, _.meannull);
+function toArrays(data) {
+	var values = _.map(data, field => toArray(field));
 
-	return {values, mean};
+	return {values};
 }
 
 function indexProbeGeneResponse(data) {
 	var [{name, position}, vals] = data;
-	return _.extend({probes: name, position}, meanNanResponse(name, vals));
+	return _.extend({probes: name, position}, toArrays(vals));
 }
 
 function fillNulls(samples, data) {
 	return _.map(data, geneData =>
 		geneData.length === 0 ?
-			_.times(samples.length, _.constant(null)) : geneData);
+			(new Float32Array(samples.length)).fill(NaN) : geneData);
 }
 
 function orderByQuery(genes, data) {
@@ -300,7 +293,7 @@ function probeSpan({position}) {
 function indexGeneResponse(samples, genes, data) {
 	return {
 		position: data.map(probeSpan),
-		...meanNanResponse(genes, fillNulls(samples, orderByQuery(genes, data)))
+		...toArrays(fillNulls(samples, orderByQuery(genes, data)))
 	};
 }
 
@@ -310,7 +303,7 @@ function indexFieldResponse(fields, resp) {
 		position: namePos &&
 			_.Let(({name, position} = namePos, posMap = _.object(name, position)) =>
 				fields.map(f => posMap[f])),
-		...meanNanResponse(fields, data)
+		...toArrays(data)
 	};
 }
 

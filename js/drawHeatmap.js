@@ -14,7 +14,7 @@ function findContiguous(arr, min) {
 	var start, end = 0, length = arr.length, res = [], clen;
 	while (end < length) {
 		start = end;
-		while (end < length && arr[start] === arr[end]) {
+		while (end < length && (arr[start] === arr[end] || isNaN(arr[start] && isNaN(arr[end])))) {
 			++end;
 		}
 		clen = end - start;

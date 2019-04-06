@@ -3,6 +3,7 @@
 var _ = require('underscore');
 var ehmutable = require('ehmutable');
 var defer = require('./defer');
+var fastDeepEqual = require('fast-deep-equal');
 
 var slice = Array.prototype.slice;
 
@@ -108,17 +109,17 @@ function memoize1(fn) {
 }
 
 function meannull(values) {
-	var count = 0, sum = 0;
 	if (!values) {
 		return null;
 	}
-	sum = _.reduce(values, function (sum, v) {
-		if (v != null) {
+	var count = 0, sum = 0, len = values.length, v;
+	for (var i = 0; i < len; ++i) {
+		v = values[i];
+		if (!isNaN(v)) {
 			count += 1;
-			return sum + v;
+			sum += v;
 		}
-		return sum;
-	}, 0);
+	}
 	if (count > 0) {
 		return sum / count;
 	}
@@ -142,26 +143,37 @@ function meannull(values) {
 //}
 
 function cmpNumberOrNull(v1, v2) {
-	if (v1 == null && v2 == null) {
+	if (isNaN(v1) && isNaN(v2)) {
 		return 0;
-	} else if (v1 == null) {
+	} else if (isNaN(v1)) {
 		return 1;
-	} else if (v2 == null) {
+	} else if (isNaN(v2)) {
 		return -1;
 	}
 	return v2 - v1;
 }
 
+function firstNaNIndex(arr) {
+	var l = arr.length;
+	for (var i = 0; i < l; ++i) {
+		if (isNaN(arr[i])) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+// XXX move to wasm
 function medianNull(values) {
 	if (!values) {
 		return null;
 	}
 	var sorted = values.slice(0).sort(cmpNumberOrNull),
-		firstNull = sorted.indexOf(null),
-		notNull = firstNull !== -1 ? sorted.slice(0, firstNull) : sorted,
-		n = notNull.length;
+		firstNaN = firstNaNIndex(values),
+		notNaN = firstNaN !== -1 ? sorted.slice(0, firstNaN) : sorted,
+		n = notNaN.length;
 
-	return (notNull[Math.ceil(n / 2)] + notNull[Math.floor(n / 2)]) / 2;
+	return (notNaN[Math.ceil(n / 2)] + notNaN[Math.floor(n / 2)]) / 2;
 }
 
 function fmapMemoize1(fn) {
@@ -444,6 +456,33 @@ function valToStr(v) {
 // a mem copy.
 var copyStr = str => (' ' + str).slice(1);
 
+function minnull(arr) {
+	var r = Infinity,
+		n = arr.length,
+		v;
+	while (n) {
+		v = arr[--n];
+		if (v < r) {
+			r = v;
+		}
+	}
+	return r;
+}
+
+// cache these in the column data
+function maxnull(arr) {
+	var r = -Infinity,
+		n = arr.length,
+		v;
+	while (n) {
+		v = arr[--n];
+		if (v > r) {
+			r = v;
+		}
+	}
+	return r;
+}
+
 //
 //function* irange(n) {
 //	for (let i = 0; i < n; ++i) {
@@ -477,15 +516,16 @@ _.mixin({
 	fmapMemoize1,
 	groupByConsec,
 	insert,
+	isEqual: fastDeepEqual,
 	listSetsEqual,
 	matchKeys,
 	maxWith,
-	maxnull: arr => _.max(arr, v => v == null || isNaN(v) ? -Infinity : v),
+	maxnull,
 	meannull,
 	medianNull,
 	memoize1,
 	merge: (...args) => _.extend.apply(null, [{}].concat(args)),
-	minnull: arr => _.min(arr, v => v == null || isNaN(v) ? Infinity : v),
+	minnull,
 	mmap,
 	negate,
 	objectFn,

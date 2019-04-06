@@ -100,6 +100,7 @@
     "brfs": "^1.4.3",
     "classnames": "2.2.5",
     "ehmutable": "^1.4.0",
+    "fast-deep-equal": "git+ssh://git@github.com/ucscXena/fast-deep-equal.git",
     "highcharts": "^6.0.7",
     "jStat": "1.5.3",
     "linear-algebra": "3.1.1",
