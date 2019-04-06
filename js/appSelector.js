@@ -9,6 +9,7 @@ var {searchSamples} = require('./models/searchSamples');
 var isPublicSelector = require('./isPublicSelector');
 // XXX should move userServers, or maybe put it in a selector
 var {userServers} = require('./controllers/common');
+var {fradixSortL16$64} = require('./xenaWasm');
 
 var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
@@ -19,22 +20,27 @@ var indexSelector = createFmapSelector(
 				state.data[key]]),
 		args => widgets.index(...args));
 
-var invert = (dir, fn) => dir === 'reverse' ? (s1, s2) => fn(s2, s1) : fn;
+// XXX can we have an implicit index list in the sort
+// entry? I.e. on first pass inject the index instead of
+// doing a lookup?
+var indiciesSelector = _.memoize1(n => {
+	var out = new Uint32Array(n);
+	for (var i = 0; i < n; ++i) {
+		out[i] = i;
+	}
+	return out;
+});
 
+// XXX Doesn't handle sparse data, or sort direction.
 var sortSubSelector = _.memoize1(
-	(length, columns, data, index) => {
-		var cmpFns = _.map(columns,
-				(c, i) => invert(c.sortDirection, widgets.cmp(columns[i], data[i], index[i]))),
-			// XXX should further profile this to see how much it's costing us
-			// to create a findValue callback on every cmpFn call.
-			cmpFn = (s1, s2) =>
-				_.findValue(cmpFns, cmpFns => cmpFns(s1, s2));
-				// Disabling sample sort. Note that Array sort can't be assumed to be
-				// stable, so if we want to rely on sorted data from the server, we must
-				// implement a stable sort for the other columns.
-//					cmpString(getSampleID(s1), getSampleID(s2));
+	(length, columns, data) => {
+		var sorted;
+		var indicies = indiciesSelector(length);
+		var d = _.flatmap(data, d => _.getIn(d, ['req', 'values']))
+			.filter(x => x.length);
 
-		return _.range(length).sort(cmpFn);
+		sorted = fradixSortL16$64(d, indicies).reverse();
+		return sorted || indicies;
 });
 
 var sortSelector = createSelector(
@@ -43,13 +49,15 @@ var sortSelector = createSelector(
 	state => state.columnOrder,
 	state => state.data,
 	state => state.index,
-	(cohortSamples, columns, columnOrder, data, index) => {
+	(cohortSamples, columns, columnOrder, data/*, index*/) => {
 		var length = (cohortSamples || []).length,
 			order = columnOrder.slice(1).filter(id => _.getIn(data, [id, 'req'])),
 			icolumns = order.map(id => columns[id]),
-			idata = order.map(id => data[id]),
-			iindex = order.map(id => index[id]);
-		return sortSubSelector(length, icolumns, idata, iindex);
+			idata = order.map(id => data[id]);
+			// XXX Previously used for sparse data.
+			// How to handle this if sort depends on zoom?
+			//iindex = order.map(id => index[id]);
+		return sortSubSelector(length, icolumns, idata);
 	}
 );
 

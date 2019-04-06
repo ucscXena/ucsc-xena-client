@@ -26,6 +26,7 @@ import connectionController from './controllers/connection';
 
 const connector = require('./connector');
 const createStore = require('./store');
+const xenaWasm = require('./xenaWasm');
 
 // Hot load controllers. Note that hot loading won't work if one of the methods
 // is captured in a closure or variable which we can't access.  References to
@@ -79,4 +80,6 @@ const main = window.document.getElementById('main');
 // XXX reducer
 const controller = compose(connectionController(store.uiBus), hubController, wizardController, serverController, uiController, transcriptController, importController/*, tiesController*/);
 
-connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});
+xenaWasm.loaded.then(() => {
+	connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});
+});

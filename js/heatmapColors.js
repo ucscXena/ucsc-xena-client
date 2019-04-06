@@ -4,6 +4,7 @@
 
 var _ = require('underscore');
 var multi = require('./multi');
+var {faminmax} = require('./xenaWasm');
 
 var isNumber = _.isNumber;
 
@@ -76,8 +77,8 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 		colorClass = column.colorClass;
 
 	var values = data.values,
-		originalMin = _.minnull(values),
-		originalMax = _.maxnull(values),
+		// XXX consider moving data.values to avoid a copy into wasm
+		{min: originalMin, max: originalMax} = faminmax(values),
 		transformedMax, transformedMin,
 		mean = data.mean;
 

@@ -70,6 +70,7 @@ module.exports = {
 				extract: true // XXX see webpack.prod.js
 			},
 			{ test: /\.json$/, loader: "json" },
+			{ test: /\.wasm$/, loaders: ['arraybuffer-loader'] },
 			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
 		]
 	},
@@ -84,7 +85,8 @@ module.exports = {
 		fallback: path.join(__dirname, "node_modules"), // handle 'npm ln'
 		alias: {
 			'redboxOptions': path.join(__dirname, 'redboxOptions.json'),
-			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim')
+			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim'),
+			'fs': path.join(__dirname, 'empty') // hack for emscripten preamble.js
 		},
 		extensions: ['', '.js', '.json', '.coffee']
 	},
