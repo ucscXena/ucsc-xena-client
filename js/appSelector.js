@@ -78,7 +78,7 @@ var transformSelector = createFmapSelector(
 var avgSelector = createFmapSelector(
 		state => _.fmap(state.columns,
 			(column, key) => [
-				_.omit(column, 'user'), // Review column schema + widget.avg.
+				_.pick(column, 'fieldType', 'fields', 'xzoom'),
 				state.data[key],
 				_.get(state.cohortSamples, 'length', 0),
 				state.index[key]]),
