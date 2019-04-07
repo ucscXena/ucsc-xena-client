@@ -64,6 +64,11 @@ export function fradixSort16$64Init() {
 	Module.ccall('fradixSort16_64_init', null, [], []);
 }
 
+var floatSize = 4;
+export function fradixSort16Init() {
+	Module.ccall('fradixSort16_init', null, [], []);
+}
+
 export function faminmaxInit() {
 	Module.ccall('faminmax_init');
 }
@@ -76,12 +81,24 @@ function toFloatArray(arr) {
 	return F32;
 }
 
-var floatSize = 4;
 export function faminmax(arr) {
 	var arrW = toWASM(arr.BYTES_PER_ELEMENT ? arr : toFloatArray(arr));
 	var r = Module.ccall('faminmax', 'number', ['number', 'number'],
 			[arrW, arr.length]);
+	Module._free(arrW);
 	return {min: Module.getValue(r, 'float'), max: Module.getValue(r + floatSize, 'float')};
+}
+
+export function fameanmedian(arr) {
+	var arrW = toWASM(arr.BYTES_PER_ELEMENT ? arr : toFloatArray(arr));
+	var r = Module.ccall('fameanmedian', 'number', ['number', 'number'],
+			[arrW, arr.length]);
+	Module._free(arrW);
+	return {mean: Module.getValue(r, 'float'), median: Module.getValue(r + floatSize, 'float')};
+}
+
+export function fameanmedianInit() {
+	Module.ccall('fameanmedian_init', null, [], []);
 }
 
 // importer for wasm code, to work around the async.
@@ -89,5 +106,7 @@ export function faminmax(arr) {
 export var loaded = wasm().then(m => {
 	Module = m;
 	fradixSort16$64Init();
+	fradixSort16Init();
 	faminmaxInit();
+	fameanmedianInit();
 });

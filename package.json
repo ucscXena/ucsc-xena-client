@@ -124,7 +124,7 @@
     "science": "^1.9.3",
     "showdown": "1.3.0",
     "static-interval-tree": "^1.3.0",
-    "ucsc-xena-wasm": "^1.0.0",
+    "ucsc-xena-wasm": "^1.1.0",
     "underscore": "^1.7.0"
   }
 }

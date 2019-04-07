@@ -8,9 +8,9 @@ var widgets = require('../columnWidgets');
 var {greyHEX} = require('../color_helper');
 var parsePos = require('../parsePos');
 var exonLayout = require('../exonLayout');
-
 var {datasetChromProbeValues, datasetProbeValues, datasetGeneProbeAvg,
 	datasetGeneProbesValues, fieldCodes, refGeneRange} = xenaQuery;
+var {fameanmedian} = require('../xenaWasm');
 
 /*
 // Decide whether to normalize, perfering the user setting to the
@@ -399,11 +399,12 @@ function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {
 }
 
 function denseAverage(column, data) {
-	var values = _.getIn(data, ['req', 'values'], []);
+	var values = _.getIn(data, ['req', 'values'], []),
+		mm = values.map(fameanmedian);
 	return {
 		avg: {
-			mean: values.map(_.meannull),
-			median: values.map(_.medianNull)
+			mean: _.pluck(mm, 'mean'),
+			median: _.pluck(mm, 'median')
 		}
 	};
 }

@@ -163,7 +163,6 @@ function firstNaNIndex(arr) {
 	return -1;
 }
 
-// XXX move to wasm
 function medianNull(values) {
 	if (!values) {
 		return null;
