@@ -56,7 +56,7 @@ var logStop = jsc.record({
 
 var rgbArray = rgb => [(rgb >> 16) & 0xff, (rgb >> 8) & 0xff, rgb & 0xff];
 
-describe.only('wasmColor', function () {
+describe('wasmColor', function () {
 	describe('#wasmColor', function () {
 		it('should return value', function () {
 			var rgb = xenaWasm.getColorLinear([0, 1], [[0, 0, 0], [255, 255, 255]], 0.5);
