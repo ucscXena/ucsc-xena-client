@@ -49,10 +49,7 @@ export function fradixSortL16$64(input, indicies) {
 		indiciesW = toWASM(indicies),
 		N = indicies.length;
 
-	Module.ccall('fradixSortL16_64', null,
-		// list, listM, N, indicies
-		['number', 'number', 'number', 'number'],
-		[list, input.length, N, indiciesW]);
+	Module._fradixSortL16_64(list, input.length, N, indiciesW);
 
 	var r = new Uint32Array(Module.HEAPU8.buffer.slice(indiciesW, indiciesW + 4 * N));
 	freeList(list, input.length);
@@ -60,19 +57,7 @@ export function fradixSortL16$64(input, indicies) {
 	return r;
 }
 
-export function fradixSort16$64Init() {
-	Module.ccall('fradixSort16_64_init', null, [], []);
-}
-
 var floatSize = 4;
-export function fradixSort16Init() {
-	Module.ccall('fradixSort16_init', null, [], []);
-}
-
-export function faminmaxInit() {
-	Module.ccall('faminmax_init');
-}
-
 // Float32Array.from is comically slow, so do this instead.
 // Also, consider keeping the data in the wasm heap.
 function toFloatArray(arr) {
@@ -83,22 +68,16 @@ function toFloatArray(arr) {
 
 export function faminmax(arr) {
 	var arrW = toWASM(arr.BYTES_PER_ELEMENT ? arr : toFloatArray(arr));
-	var r = Module.ccall('faminmax', 'number', ['number', 'number'],
-			[arrW, arr.length]);
+	var r = Module._faminmax(arrW, arr.length);
 	Module._free(arrW);
 	return {min: Module.getValue(r, 'float'), max: Module.getValue(r + floatSize, 'float')};
 }
 
 export function fameanmedian(arr) {
 	var arrW = toWASM(arr.BYTES_PER_ELEMENT ? arr : toFloatArray(arr));
-	var r = Module.ccall('fameanmedian', 'number', ['number', 'number'],
-			[arrW, arr.length]);
+	var r = Module._fameanmedian(arrW, arr.length);
 	Module._free(arrW);
 	return {mean: Module.getValue(r, 'float'), median: Module.getValue(r + floatSize, 'float')};
-}
-
-export function fameanmedianInit() {
-	Module.ccall('fameanmedian_init', null, [], []);
 }
 
 function allocScale64(domain, range) {
@@ -129,8 +108,7 @@ export function getColorLog(domainIn, range, value) {
 		Module.setValue(lines + i * 8, m, 'double');
 		Module.setValue(lines + 3 * 8 + i * 8, b, 'double');
 	}
-	var r = Module.ccall('get_color_log_as_number', 'number', ['number', 'number'],
-			[scale, lines, value]);
+	var r = Module._get_color_log_as_number(scale, lines, value);
 	Module._free(scale);
 	Module._free(lines);
 
@@ -140,8 +118,7 @@ export function getColorLog(domainIn, range, value) {
 // Just for testing. You wouldn't want to call this from js in a loop.
 export function getColorLinear(domain, range, value) {
 	var scale = allocScale64(domain, range);
-	var r = Module.ccall('get_color_linear_as_number', 'number', ['number', 'number', 'number'],
-			[scale, value]);
+	var r = Module._get_color_linear_as_number(scale, value);
 	Module._free(scale);
 	return r;
 }
@@ -150,8 +127,8 @@ export function getColorLinear(domain, range, value) {
 
 export var loaded = wasm().then(m => {
 	Module = m;
-	fradixSort16$64Init();
-	fradixSort16Init();
-	faminmaxInit();
-	fameanmedianInit();
+	Module._fradixSort16_64_init();
+	Module._fradixSort16_init();
+	Module._faminmax_init();
+	Module._fameanmedian_init();
 });
