@@ -6,7 +6,7 @@ var config = require('./webpack.config');
 
 config.output.filename = "testBundle.js";
 config.output.publicPath = "";
-config.entry = {test: 'mocha!./test/all.js'};
+config.entry = {test: 'mocha?delay=true!./test/all.js'};
 config.plugins = [
 	new HtmlWebpackPlugin({
 		title: "UCSC Xena",

@@ -101,6 +101,51 @@ export function fameanmedianInit() {
 	Module.ccall('fameanmedian_init', null, [], []);
 }
 
+function allocScale64(domain, range) {
+	var scale = Module._malloc(4 + (8 + 3) * 4);
+	Module.setValue(scale + 8 * 4, domain.length, 'i32');
+	for (var i = 0; i < domain.length; ++i) {
+		Module.setValue(scale + i * 8, domain[i], 'double');
+		Module.setValue(scale + 36 + i * 3, range[i][0], 'i8');
+		Module.setValue(scale + 36 + i * 3 + 1, range[i][1], 'i8');
+		Module.setValue(scale + 36 + i * 3 + 2, range[i][2], 'i8');
+	}
+	return scale;
+}
+
+var setPrecision = x => parseFloat(x.toPrecision(2));
+// Just for testing. You wouldn't want to call this from js in a loop.
+export function getColorLog(domainIn, range, value) {
+	var domain = domainIn.map(setPrecision);
+	var scale = allocScale64(domain, range);
+	var lines = Module._malloc(8 * 6);
+	var [r0, r1] = range;
+	var ld0 = Math.log2(domain[0]);
+	var ld1 = Math.log2(domain[1]);
+	var m, b;
+	for (var i = 0; i < 3; ++i) {
+		m = (r1[i] - r0[i]) / (ld1 - ld0);
+		b = r1[i] - m * ld1;
+		Module.setValue(lines + i * 8, m, 'double');
+		Module.setValue(lines + 3 * 8 + i * 8, b, 'double');
+	}
+	var r = Module.ccall('get_color_log_as_number', 'number', ['number', 'number'],
+			[scale, lines, value]);
+	Module._free(scale);
+	Module._free(lines);
+
+	return r;
+}
+
+// Just for testing. You wouldn't want to call this from js in a loop.
+export function getColorLinear(domain, range, value) {
+	var scale = allocScale64(domain, range);
+	var r = Module.ccall('get_color_linear_as_number', 'number', ['number', 'number', 'number'],
+			[scale, value]);
+	Module._free(scale);
+	return r;
+}
+
 // importer for wasm code, to work around the async.
 
 export var loaded = wasm().then(m => {

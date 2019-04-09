@@ -1,4 +1,4 @@
-/*global require: false */
+/*global require: false, run: false */
 "use strict";
 require('babel-polyfill');
 // This needs refactor. Might want to return mutationVector methods in exports,
@@ -28,3 +28,6 @@ require('./layoutPlot');
 require('./Legend');
 require('./drawHeatmap');
 require('./binpackJSON');
+
+var xenaWasm = require('../js/xenaWasm');
+xenaWasm.loaded.then(() => run());
