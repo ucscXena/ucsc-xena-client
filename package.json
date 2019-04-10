@@ -7,7 +7,7 @@
   "scripts": {
     "test": "webpack-dev-server --config webpack.test.js --devtool eval --port 8081",
     "pretest:headless": "webpack --config webpack.test.js --devtool eval",
-    "test:headless": "mocha-chrome --reporter xunit --file test-results.xml build/index.html",
+    "test:headless": "mocha-chrome --reporter xunit build/index.html",
     "lint": "eslint --no-color js/*.js js/*/*.js test/*.js",
     "eslint": "eslint",
     "clean": "rimraf build/*",
