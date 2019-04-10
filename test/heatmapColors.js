@@ -187,15 +187,15 @@ describe('heatmapColors', function () {
 
 			// positive data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: {a: 1, b: 2, c: 3}}, dataset),
+					{values: [1, 2, 3]}, dataset),
 				['float-pos', '#ffffff', '#ff0000', 1, 3]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: {a: -1, b: -2, c: -3}}, dataset),
+					{values: [-1, -2, -3]}, dataset),
 				['float-neg', '#0000ff',  '#ffffff', -3, -1]);
 			// neg-pos data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: {a: -1, b: -2, c: 3}}, dataset),
+					{values: [-1, -2, 3]}, dataset),
 				['float', '#0000ff', '#ffffff', '#ff0000', -2, 3]);
 		});
 		it('should return ordinal scale for clinical category', function() {
@@ -203,8 +203,7 @@ describe('heatmapColors', function () {
 				settings = null,
 				codes = ['A', 'B', 'C', 'D'];
 
-			assert.deepEqual(colorSpec(column, settings, codes,
-					{a: 1, b: 2, c: 3}),
+			assert.deepEqual(colorSpec(column, settings, codes, [1, 2, 3]),
 				['ordinal', 4, undefined]);
 		});
 		it('should return linear thresholded scales for genomic data', function() {
@@ -215,15 +214,15 @@ describe('heatmapColors', function () {
 			// positive data
 			// Threshold is 1/4 from bottom -> zero, 1/8 from top -> high
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: {a: 0, b: 2, c: 24}}, dataset),
+					{values: [0, 2, 24]}, dataset),
 				['float-thresh-pos', '#000000', '#ff0000', 6, 21]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: {a: 0, b: -2, c: -24}}, dataset),
+					{values: [0, -2, -24]}, dataset),
 				['float-thresh-neg', '#00ff00',  '#000000', -21, -6]);
 			// neg-pos data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: {a: -8, b: -2, c: 24}}, dataset),
+					{values: [-8, -2, 24]}, dataset),
 				['float-thresh', '#00ff00', '#000000', '#ff0000', -12, -3, 3, 12]);
 		});
 		it('should return linear thresholded scales for custom setting', function() {
@@ -242,11 +241,11 @@ describe('heatmapColors', function () {
 				codes;
 
 			assert.deepEqual(colorSpec(column, settings1, codes,
-					{a: NaN, b: NaN, c: NaN}, dataset),
+					[NaN, NaN, NaN], dataset),
 				['float-thresh', '#00ff00', '#000000', '#ff0000', -12, -11, 6, 7]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings2, codes,
-					{a: NaN, b: NaN, c: NaN}, dataset),
+					[NaN, NaN, NaN], dataset),
 				['float-thresh', '#00ff00',  '#000000', '#ff0000', -8, 1, 7, 16]);
 		});
 	});
