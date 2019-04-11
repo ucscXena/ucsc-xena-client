@@ -385,6 +385,7 @@ var showPosition = column =>
 // annotation or sample zoom), offset x, offset y, samples height
 // Select mapped to: direction, data start and data end
 var zoomTranslateSelection = (props, selection, zone) => {
+
 	var {column} = props,
 		yZoom = props.zoom,
 		{crosshair, start, end, offset} = selection,
@@ -394,6 +395,7 @@ var zoomTranslateSelection = (props, selection, zone) => {
 		startEndPx = columnZoom.startEndPx({direction, start, end}),
 		overlay = columnZoom.overlay({annotated, column, direction, fieldType, ...startEndPx, zone}),
 		zoomTo = columnZoom.zoomTo({annotated, column, direction, fieldType, ...overlay, yZoom});
+
 	return {
 		crosshair,
 		direction,

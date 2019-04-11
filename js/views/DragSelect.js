@@ -31,7 +31,7 @@ function targetXPos(target, ev, width) {
 
 function targetYPos(target, ev, height) {
 	var bb = target.getBoundingClientRect();
-	return clip(0, height - 1, ev.clientY - bb.top);
+	return clip(0, height, ev.clientY - bb.top);
 }
 
 // Browsers give us coordinates that aren't always within the element. We

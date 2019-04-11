@@ -194,9 +194,8 @@ var samplesZoom = ({yZoom, sstart, send}) => {
 	var {count, height, index} = yZoom,
 		rowSize = (height) / count,
 		startIndex = Math.floor(sstart / rowSize) + index,
-		endIndex = Math.floor(send / rowSize) + index;
-
-	return {index: startIndex, count: (endIndex - startIndex + 1)};
+		endIndex = Math.ceil(send / rowSize) + index;
+	return {index: startIndex, count: (endIndex - startIndex)};
 };
 
 var zoomByDirection = (params) =>
