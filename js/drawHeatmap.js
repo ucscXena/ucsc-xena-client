@@ -124,17 +124,18 @@ function drawLayoutByPixel(vg, opts) {
 			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => !isNaN(v))) {
 				let color = regionColor(colors[i][0], colorScale, rowData,
 				                        first + r.start, first + r.end + 1);
-
-				for (let y = r.y; y < r.y + r.height; ++y) {
-					let pxRow = y * width,
-						buffStart = (pxRow + el.start) * 4,
-						buffEnd = (pxRow + el.start + el.size) * 4;
-					// try typed array at 32 bits, to do this assignment faster?
-					for (let l = buffStart; l < buffEnd; l += 4) {
-						img.data[l] = color[0];
-						img.data[l + 1] = color[1];
-						img.data[l + 2] = color[2];
-						img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
+				if (color) {
+					for (let y = r.y; y < r.y + r.height; ++y) {
+						let pxRow = y * width,
+							buffStart = (pxRow + el.start) * 4,
+							buffEnd = (pxRow + el.start + el.size) * 4;
+						// try typed array at 32 bits, to do this assignment faster?
+						for (let l = buffStart; l < buffEnd; l += 4) {
+							img.data[l] = color[0];
+							img.data[l + 1] = color[1];
+							img.data[l + 2] = color[2];
+							img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
+						}
 					}
 				}
 			}
