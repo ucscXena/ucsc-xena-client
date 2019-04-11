@@ -121,7 +121,7 @@ function drawLayoutByPixel(vg, opts) {
 
 		// XXX watch for poor iterator performance in this for...of.
 		for (let r of regions) {
-			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => v != null)) {
+			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => !isNaN(v))) {
 				let color = regionColor(colors[i][0], colorScale, rowData,
 				                        first + r.start, first + r.end + 1);
 

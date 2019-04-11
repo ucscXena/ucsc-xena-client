@@ -80,7 +80,7 @@ var log2ColorScale = ([d0, d1], [r0, r1]) => {
 var createScale = (scaleFn, domain, strRange) => {
 	var range = strRange.map(rgb),
 		scale = scaleFn(domain, range),
-		rgbFn = v => v == null ? v : scale(v),
+		rgbFn = v => isNaN(v) ? v : scale(v),
 		fn = v => {
 			var rgb = rgbFn(v);
 			return rgb ? RGBToHex(...rgb) : rgb;
