@@ -1,5 +1,7 @@
 'use strict';
 
+var config = require('./config');
+
 var servers = {
 	localHub: 'https://local.xena.ucsc.edu:7223',
 	publicHub: 'https://ucscpublic.xenahubs.net',
@@ -7,7 +9,7 @@ var servers = {
 	icgcHub: 'https://icgc.xenahubs.net',
 	toilHub: 'https://toil.xenahubs.net',
 	pcawgHub: 'https://pcawg.xenahubs.net',
-	singlecellHub: 'https://singlecell.xenahubs.net',
+	singlecellHub: 'https://singlecellnew.xenahubs.net',
 	pancanAtlasHub: 'https://pancanatlas.xenahubs.net',
 	treehouseHub: 'https://xena.treehouse.gi.ucsc.edu:443',
 	gdcHub: "https://gdc.xenahubs.net",
@@ -28,8 +30,10 @@ module.exports = {
 		[servers.treehouseHub]: 'Treehouse Hub',
 		[servers.gdcHub]: 'GDC Hub'
 	},
-	defaultServers: [
-		/*
+
+	defaultServers: config.singlecell ? [
+		servers.singlecellHub,
+	] : [
 		servers.localHub,
 		servers.publicHub,
 		servers.tcgaHub,
@@ -39,11 +43,11 @@ module.exports = {
 		servers.treehouseHub,
 		servers.gdcHub,
 		servers.atacSeqHub,
-		*/
-		"https://singlecellnew.xenahubs.net",
 	],
-	enabledServers: [
-		/*
+
+	enabledServers: config.singlecell ? [
+		servers.singlecellHub,
+	] : [
 		servers.localHub,
 		servers.publicHub,
 		servers.tcgaHub,
@@ -52,9 +56,8 @@ module.exports = {
 		servers.toilHub,
 		servers.gdcHub,
 		servers.atacSeqHub,
-		*/
-		"https://singlecellnew.xenahubs.net",
 	],
+
 	publicServers: [
 		servers.publicHub,
 		servers.tcgaHub,

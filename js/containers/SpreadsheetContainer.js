@@ -5,11 +5,12 @@ var _ = require('../underscore_ext');
 var getLabel = require('../getLabel');
 var {supportsEdit} = require('../models/fieldSpec');
 var {addCommas} = require('../util');
+var config = require('../config');
 
 function fixSampleTitle(column, i, samples, wizardMode, cohort) {
 	return i === 0 ? _.updateIn(column,
 		['user', 'fieldLabel'], label => wizardMode ?
-			`${addCommas(samples.length)} samples` : label,
+			`${addCommas(samples.length)} ${config.singlecell ? 'cell' : 'samples'}` : label,
 		['user', 'columnLabel'], label => wizardMode ? cohort.name : label) :
 	column;
 }

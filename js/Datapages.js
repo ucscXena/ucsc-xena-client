@@ -26,6 +26,7 @@ var classNames = require('classnames');
 var {getHubParams} = require('./hubParams');
 import PureComponent from './PureComponent';
 import wrapLaunchHelper from './LaunchHelper';
+var config = require('./config');
 
 var getHubName = host => get(serverNames, host, host);
 
@@ -226,6 +227,7 @@ var markdownValue = value => {
 
 var datasetLink = (callback, preferred, onClick, hubParams) => ds => {
 	var [host] = parseDsID(ds.dsID);
+
 	return (
 		<li key={ds.name}>
 			<Link
@@ -236,7 +238,7 @@ var datasetLink = (callback, preferred, onClick, hubParams) => ds => {
 			{preferred.has(ds.dsID) ? <span className={styles.star}>*</span> : null}
 			{ds.status !== 'loaded' ?
 				<span className={styles.count}> [{ds.status}]</span> : null}
-			{ds.status === 'loaded' ?
+			{!config.singlecell && ds.status === 'loaded' ?
 				<span className={styles.count}> (n={(ds.count || 0).toLocaleString()})</span> :
 				null}
 			<span> {getHubName(host)}</span>
@@ -482,7 +484,7 @@ var DatasetPage = wrapLaunchHelper(
 							dataPair('raw data', url, toLink)),
 						dataPair('wrangling', wranglingProcedure, toHTML),
 						dataPair('input data format', FORMAT_MAPPING[type])]))}
-					{status === 'loaded' ?
+					{!config.singlecell && status === 'loaded' ?
 						<span className={styles.tableControls}>
 							{type === 'genomicMatrix' ?
 								`${probeCount.toLocaleString()} identifiers X ${count} samples ` : null}
@@ -495,7 +497,7 @@ var DatasetPage = wrapLaunchHelper(
 								href={'?' + encodeObject({host, dataset, allSamples: true, ...hubParams})}
 								onClick={this.onSamples} label='All Samples'/>
 						</span> : null}
-					{dataMethod(meta)(meta, data)}
+					{config.singlecell ? null : dataMethod(meta)(meta, data)}
 				</div>);
 		}
 });
@@ -521,7 +523,9 @@ var HubPage = wrapLaunchHelper(
 				{host} = defaultHost(state.params),
 				hubCohorts = getIn(state, ['datapages', 'cohorts', host], []),
 				coll = collateCohorts(hubCohorts),
-				inHubs = contains(userServers, host) ?
+				inHubs = contains(userServers,
+						host[host.length - 1] === "/" /* ok when host ends with / https://singlecellnew.xenahubs.net/ */ ?
+							host.slice(0, -1) : host) ?
 					'' : ' (not in my data hubs)';
 
 			return (

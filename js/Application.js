@@ -13,6 +13,8 @@ import { ThemeProvider } from 'react-css-themr';
 import appTheme from './appTheme';
 import nav from './nav';
 var gaEvents = require('./gaEvents');
+var config = require('./config');
+
 //var Perf = require('react/lib/ReactDefaultPerf');
 
 const stepperSteps = [
@@ -109,6 +111,8 @@ class Application extends Component {
 		if (loadPending) {
 			return <p style={{margin: 10}}>Loading your view...</p>;
 		}
+
+		showWelcome = config.singlecell ? false : showWelcome; // hard-coded for single cell browser
 
 		return (
 			<div>

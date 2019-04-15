@@ -4,6 +4,7 @@ var _ = require('./underscore_ext');
 var colorHelper = require('./color_helper');
 var labelMargin = 1; // left & right margin
 var labelFont = 12;
+var config = require('./config');
 
 // Pick a stripe sample height that is at least one line of text, and is
 // a roundish number of samples (10, 50, 100, 500, 1000, ...).
@@ -62,7 +63,7 @@ function draw(vg, opts) {
 			);
 		} else {
 			let mid = Math.floor(height / sh / 2),
-				label = `${samplesInStripe} samples`,
+				label = config.singlecell ? `${samplesInStripe} cells` : `${samplesInStripe} samples`,
 				labelWidth = vg.textWidth(labelFont, label);
 
 			vg.box((width - labelWidth) / 2 - 2, mid * sh, 1, sh, 'black');
@@ -76,7 +77,7 @@ function draw(vg, opts) {
 						sh,
 						labelColors[mid % 2],
 						labelFont,
-						`${samplesInStripe} samples`));
+						config.singlecell ? `${samplesInStripe} cells` : `${samplesInStripe} samples`));
 		}
 	}
 }

@@ -20,6 +20,7 @@ import Link from 'react-toolbox/lib/link';
 var navTheme = require('./navTheme');
 var BookmarkMenu = require('./views/BookmarkMenu');
 var {servers: {localHub}} = require('./defaultServers');
+var config = require('./config');
 
 // Styles
 var compStyles = require('./nav.module.css');
@@ -30,14 +31,17 @@ var logoSantaCruz2xImg = require('../images/logoSantaCruz@2x.png');
 var logoSantaCruz3xImg = require('../images/logoSantaCruz@3x.png');
 
 // Locals
-var links = [
+var links = config.singlecell ? [
 	{label: 'Data Sets', nav: 'datapages'},
 	{label: 'Visualization', nav: 'heatmap'},
-	{label: 'Transcripts', nav: 'transcripts'},
 	{label: 'Data Hubs', nav: 'hub'},
-	// {href: 'https://genome-cancer.ucsc.edu/download/public/get-xena/index.html', label: 'Local Xena'},
-	{label: 'View My Data', nav: 'datapages', params: {addHub: localHub, host: localHub}},
-	{href: 'http://xena.ucsc.edu/xena-python-api/', label: 'Python'},
+] : [
+	{label: 'Data Sets', nav: 'datapages'},
+	{label: 'Visualization', nav: 'heatmap'},
+	{label: 'Transcripts', nav: 'transcripts'}, //not shown for single cell browser
+	{label: 'Data Hubs', nav: 'hub'},
+	{label: 'View My Data', nav: 'datapages', params: {addHub: localHub, host: localHub}}, // not shown for single cell browser
+	{href: 'http://xena.ucsc.edu/xena-python-api/', label: 'Python'}, // not shown for single cell browser
 ];
 
 var helpLink = {
@@ -63,12 +67,13 @@ class XenaNav extends React.Component {
 			return {...others, onClick, active: active(l, activeLink)};
 		});
 		let logoSrcSet = `${logoSantaCruz2xImg} 2x, ${logoSantaCruz3xImg} 3x`;
+
 		return (
 			<AppBar className={compStyles.NavAppBar}>
 				<a href='http://xena.ucsc.edu/' className={compStyles.logoXena}><img title={window.ga ? '' : 'no analytics'} src={logoSantaCruzImg} srcSet={logoSrcSet}/></a>
 				<Navigation type="horizontal" routes={routes}>
-					{getState ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
-					<Link {...geneSetsLink} />
+					{getState && !config.singlecell ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
+					{config.singlecell ? null : <Link {...geneSetsLink} />}
                     <Link {...helpLink} />
 				</Navigation>
 			</AppBar>

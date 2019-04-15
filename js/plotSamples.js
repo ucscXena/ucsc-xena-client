@@ -9,6 +9,7 @@ var React = require('react');
 var CanvasDrawing = require('./CanvasDrawing');
 var {rxEvents} = require('./react-utils');
 var {drawSamples} = require('./drawSamples');
+var config = require('./config');
 
 // Since we don't set module.exports, but instead register ourselves
 // with columWidgets, react-hot-loader can't handle the updates automatically.
@@ -44,7 +45,7 @@ function tooltip(heatmap, sampleFormat, codes, width, zoom, samples, ev) {
 
 	return {
 		sampleID: sampleFormat(sampleID),
-		rows: [[['labelValue', 'sample', code]]]
+		rows: [[['labelValue', config.singlecell ? 'cell' : 'sample', code]]]
 	};
 }
 

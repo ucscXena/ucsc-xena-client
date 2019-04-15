@@ -14,6 +14,8 @@ import { signatureField } from './models/fieldSpec';
 import { getColSpec } from './models/datasetJoins';
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
+var {addCommas} = require('./util');
+var config = require('./config');
 
 // Styles
 var compStyles = require('./AppControls.module.css');
@@ -196,12 +198,13 @@ class AppControls extends PureComponent {
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
 						<div className={compStyles.titleContainer}>
 							<span className={compStyles.title}>{cohortName}</span>
-							<span className={compStyles.subtitle}>{filter} {samples.length} Samples</span>
+							<span className={compStyles.subtitle}>{filter} {addCommas(samples.length)} {config.singlecell ? 'Cells' : 'Samples'}</span>
 						</div>
 						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>
 						<i className='material-icons' onClick={onReset} title='Pick new cohort'>close</i>
 					</div>
-					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
+					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}
+						style={{display: config.singlecell ? 'none' : 'inline'}}>
 						{tiesOpen ?
 							<TiesSearch {...{onTies: this.onTies}}/> :
 							<BasicSearch {...{

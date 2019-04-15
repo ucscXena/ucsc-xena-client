@@ -16,6 +16,7 @@ var gaEvents = require('../gaEvents');
 var {htfc} = require('../htfc');
 // pick up signature fetch
 require('../models/signatures');
+var config = require('../config');
 
 import Worker from 'worker-loader!./cluster-worker';
 
@@ -161,8 +162,8 @@ function addSampleColumn(state, width) {
 	if (!_.get(state.cohort, ['name'])) {
 		return state;
 	}
-	var field = signatureField('samples', {
-			columnLabel: 'Sample ID',
+	var field = signatureField(config.singlecell ? 'cells' : 'samples', {
+			columnLabel: config.singlecell ? 'Cell ID' : 'Sample ID',
 			valueType: 'coded',
 			signature: ['samples']
 		}),

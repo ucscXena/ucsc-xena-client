@@ -13,6 +13,7 @@ var Rx = require('../rx');
 import {defaultHost} from '../urlParams';
 import cohortMetaData from '../cohortMetaData';
 import query from './query';
+var config = require('../config');
 
 var hubsToAdd = ({hubs, addHub}) =>
 	(hubs || []).concat(addHub || []);
@@ -116,12 +117,15 @@ var probeCountMethod = ({type = 'genomicMatrix'} = {}) =>
 var datasetMetaAndLinks = (host, dataset) => {
 	var metaQ = datasetMetadata(host, dataset).map(m => m[0]).share(),
 		downloadQ = checkDownload(host, dataset),
-		dataQ = metaQ.mergeMap(meta => snippetMethod(meta)(host, dataset)),
-		probeCountQ = metaQ.mergeMap(meta => probeCountMethod(meta)(host, dataset)),
+		dataQ = config.singlecell ?  undefined /* hardcode single cell */: metaQ.mergeMap(meta => snippetMethod(meta)(host, dataset)),
+		probeCountQ = config.singlecell ?  undefined /* hardcode single cell */: metaQ.mergeMap(meta => probeCountMethod(meta)(host, dataset)),
 		probemapQ = metaQ.mergeMap(meta =>
 			get(meta, 'probeMap') ? checkDownload(host, meta.probeMap) : of(undefined));
 
-	return zip(metaQ, dataQ, probeCountQ, downloadQ, probemapQ, (meta, data, probeCount, downloadLink, probemapLink) =>
+	return config.singlecell ?
+		zip(metaQ,  downloadQ, probemapQ, (meta, downloadLink, probemapLink) => // hardcode single cell
+			({meta, downloadLink, probemapLink})) :
+		zip(metaQ,  dataQ, probeCountQ, downloadQ, probemapQ, (meta, data, probeCount, downloadLink, probemapLink) =>
 			({meta, data, probeCount, downloadLink, probemapLink}));
 };
 
