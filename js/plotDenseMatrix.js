@@ -35,7 +35,7 @@ var colorFns = vs => _.map(vs, colorScales.colorScale);
 var prec = (function () {
 	var precision = 6,
 		factor = Math.pow(10, precision);
-	return val => (val == null) ? 'NA' : Math.round((val * factor)) / factor;
+	return val => (isNaN(val)) ? 'NA' : Math.round((val * factor)) / factor;
 }());
 
 // We're getting events with coords < 0. Not sure if this
@@ -98,7 +98,7 @@ function categoryLegend(dataIn, colorScale, codes) {
 		return {colors: [], labels: []};
 	}
 	// only finds categories for the current data in the column
-	var data = _.reject(_.uniq(dataIn), x => x == null).sort((v1, v2) =>  v1 - v2),
+	var data = _.reject(_.uniq(dataIn), x => isNaN(x)).sort((v1, v2) =>  v1 - v2),
 		colors = _.map(data, colorScale),
 		labels = _.map(data, d => codes[d]);
 
