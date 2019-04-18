@@ -4,6 +4,7 @@ var _ = require('./underscore_ext');
 var partition = require('./partition');
 var colorScales = require('./colorScales');
 var colorHelper = require('./color_helper');
+var xenaWasm = require('./xenaWasm');
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -14,7 +15,7 @@ function findContiguous(arr, min) {
 	var start, end = 0, length = arr.length, res = [], clen;
 	while (end < length) {
 		start = end;
-		while (end < length && (arr[start] === arr[end] || isNaN(arr[start] && isNaN(arr[end])))) {
+		while (end < length && (arr[start] === arr[end] || isNaN(arr[start]) && isNaN(arr[end]))) {
 			++end;
 		}
 		clen = end - start;
@@ -97,7 +98,7 @@ var regionColorMethods = {
 	}
 };
 
-var regionColor = (type, scale, d, start, end) => (regionColorMethods[type] || regionColorMethods.default)(scale, d, start, end);
+export var regionColor = (type, scale, d, start, end) => (regionColorMethods[type] || regionColorMethods.default)(scale, d, start, end);
 
 function drawLayoutByPixel(vg, opts) {
 	var {height, width, index, count, layout, data, codes, colors} = opts,
@@ -105,52 +106,60 @@ function drawLayoutByPixel(vg, opts) {
 		first = Math.floor(index),
 		last  = Math.ceil(index + count);
 
-	// reset image
-	vg.box(0, 0, width, height, "gray");
 	if (data.length === 0) { // no features to draw
+		vg.box(0, 0, width, height, "gray");
 		return;
 	}
 
+	// XXX should the wasm stuff be in xenaWasm?
 	var ctx = vg.context(),
-		img = ctx.createImageData(width, height);
+		dataP = xenaWasm.Module._malloc(data[0].length * 4),
+		dataPView = new Float32Array(xenaWasm.Module.HEAPU8.buffer, dataP, data[0].length),
+		imgP = xenaWasm.Module._malloc(width * height * 4),
+		img32 = new Uint32Array(xenaWasm.Module.HEAPU8.buffer, imgP, width * height);
+	img32.fill(0xFF808080); // opaque gray
 
 	layout.forEach(function (el, i) {
-		var regions = findRegions(height, count);
 		var rowData = data[i],
-			colorScale = colorScales.colorScale(colors[i]);
+			colorScale = xenaWasm.getColorScale(colors[i]);
 
-		// XXX watch for poor iterator performance in this for...of.
-		for (let r of regions) {
-			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => v != null)) {
-				let color = regionColor(colors[i][0], colorScale, rowData,
-				                        first + r.start, first + r.end + 1);
+		dataPView.set(rowData);
 
-				for (let y = r.y; y < r.y + r.height; ++y) {
-					let pxRow = y * width,
-						buffStart = (pxRow + el.start) * 4,
-						buffEnd = (pxRow + el.start + el.size) * 4;
-					// try typed array at 32 bits, to do this assignment faster?
-					for (let l = buffStart; l < buffEnd; l += 4) {
-						img.data[l] = color[0];
-						img.data[l + 1] = color[1];
-						img.data[l + 2] = color[2];
-						img.data[l + 3] = 255; // XXX can we set + 3 to 255 globally?
-					}
-				}
-			}
-		}
+		xenaWasm.Module._draw_subcolumn(
+			colorScale.method,
+			colorScale.scale,
+			dataP,
+			first,
+			count,
+			imgP,
+			width,
+			height,
+			el.start,
+			el.size);
+
+		xenaWasm.Module._free(colorScale.scale);// Maybe avoid this alloc
 	});
-	ctx.putImageData(img, 0, 0);
+	// XXX views are stale after a wasm call, so create them as needed.
+	var img = new Uint8ClampedArray(xenaWasm.Module.HEAPU8.buffer, imgP, width * height * 4);
+
+	ctx.putImageData(new ImageData(img, width), 0, 0);
+
+	xenaWasm.Module._free(dataP);
+	xenaWasm.Module._free(imgP);
 
 	layout.forEach(function (el, i) {
-		var rowData = data[i].slice(first, last),
-			colorScale = colorScales.colorScale(colors[i]);
 		// Add labels
-		var minSpan = labelFont / (height / count);
 		if (el.size - 2 * labelMargin >= minTxtWidth) {
-			let labels = codes ? codeLabels(codes, rowData, minSpan) : floatLabels(rowData, minSpan),
+			let minSpan = labelFont / (height / count),
+				// XXX this slice is slow. Maybe try a view, or pass (first,last),
+				// or don't compute the slice until we know there's room for
+				// labels.
+				rowData = data[i].slice(first, last),
+				colorScale = colorScales.colorScale(colors[i]),
+				labels = codes ? codeLabels(codes, rowData, minSpan) : floatLabels(rowData, minSpan),
 				h = height / count,
-				uniqStates = _.filter(_.uniq(rowData), c => c != null),
+				// XXX watch this performance
+				uniqStates = _.filter(_.uniq(rowData), c => !isNaN(c)),
 				colorWhiteBlack = (uniqStates.length === 2 &&  // looking for [0,1]  columns color differently
 					_.indexOf(uniqStates, 1) !== -1 && _.indexOf(uniqStates, 0) !== -1) ? true : false,
 				codedColor = colorWhiteBlack || codes; // coloring as coded column: coded column or binary float column (0s and 1s)
@@ -164,7 +173,6 @@ function drawLayoutByPixel(vg, opts) {
 		}
 	});
 }
-
 var drawHeatmapByMethod = draw => (vg, props) => {
 	var {heatmapData = [], codes, colors, width,
 			zoom: {index, count, height}} = props;
