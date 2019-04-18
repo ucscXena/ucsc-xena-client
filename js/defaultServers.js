@@ -29,6 +29,7 @@ module.exports = {
 		[servers.gdcHub]: 'GDC Hub'
 	},
 	defaultServers: [
+		/*
 		servers.localHub,
 		servers.publicHub,
 		servers.tcgaHub,
@@ -37,9 +38,12 @@ module.exports = {
 		servers.toilHub,
 		servers.treehouseHub,
 		servers.gdcHub,
-		servers.atacSeqHub
+		servers.atacSeqHub,
+		*/
+		"https://singlecellnew.xenahubs.net",
 	],
 	enabledServers: [
+		/*
 		servers.localHub,
 		servers.publicHub,
 		servers.tcgaHub,
@@ -47,7 +51,9 @@ module.exports = {
 		servers.icgcHub,
 		servers.toilHub,
 		servers.gdcHub,
-		servers.atacSeqHub
+		servers.atacSeqHub,
+		*/
+		"https://singlecellnew.xenahubs.net",
 	],
 	publicServers: [
 		servers.publicHub,
