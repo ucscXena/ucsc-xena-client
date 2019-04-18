@@ -52,17 +52,13 @@ var logStop = jsc.record({
 	range: jsc.tuple([color, color])
 });
 
-//var fourStop = jsc.tuple([colorStop, colorStop, colorStop, colorStop]);
-
-var rgbArray = rgb => [(rgb >> 16) & 0xff, (rgb >> 8) & 0xff, rgb & 0xff];
+var rgbArray = rgb => [rgb & 0xff, (rgb >> 8) & 0xff, (rgb >> 16) & 0xff];
 
 describe('wasmColor', function () {
 	describe('#wasmColor', function () {
 		it('should return value', function () {
 			var rgb = xenaWasm.getColorLinear([0, 1], [[0, 0, 0], [255, 255, 255]], 0.5);
-			var r = rgb & 0xff;
-			var g = (rgb >> 8) & 0xff;
-			var b = (rgb >> 16) & 0xff;
+			var [r, g, b] = rgbArray(rgb);
 			assert(r === 128);
 			assert(g === 128);
 			assert(b === 128);
