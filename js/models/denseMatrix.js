@@ -1,7 +1,7 @@
 'use strict';
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
-var {map, find} = _;
+var {find} = _;
 var xenaQuery = require('../xenaQuery');
 var heatmapColors = require('../heatmapColors');
 var widgets = require('../columnWidgets');
@@ -10,42 +10,16 @@ var parsePos = require('../parsePos');
 var exonLayout = require('../exonLayout');
 var {datasetChromProbeValues, datasetProbeValues, datasetGeneProbeAvg,
 	datasetGeneProbesValues, fieldCodes, refGeneRange} = xenaQuery;
-var {fameanmedian} = require('../xenaWasm');
+var {fameanmedian, mapIndicies} = require('../xenaWasm');
 
-/*
-// Decide whether to normalize, perfering the user setting to the
-// dataset default setting.
-function shouldNormalize(vizSettings, defaultNormalization) {
-	var user = _.getIn(vizSettings, ['colnormalization']);
-	return user === 'subset' || (user == null && defaultNormalization === true);
-}
-
-function subbykey(subtrahend, key, val) {
-	return val - subtrahend[key];
-}
-*/
-
-function mapIndicies(arr, indicies) {
-	var out = new Array(indicies.length);
-	for (var i = 0; i < arr.length; ++i) {
-		out[i] = arr[indicies[i]];
-	}
-	return out;
-}
-
-// Returns 2d array of numbers, probes X samples.
-// [[number, ...], [number, ...]]
 // Performs sorting and normalization.
-function computeHeatmap(vizSettings, data, fields, samples) {
+// XXX Consider retaining the data in the original order & accessing
+// it through an index.
+function computeHeatmap(data, samples) {
 	if (!data) {
 		return [];
 	}
-	var {probes, values} = data;
-
-	return map(probes || fields, function (p, i) {
-		var v = values[i];
-		return v ? mapIndicies(v, samples) : [];
-	});
+	return mapIndicies(data.values, samples);
 }
 
 // sorted by start of probe in transcript direction (strand), for negative strand, the start of the probe is chromend
@@ -135,10 +109,10 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 		codes = vizSettingCodes || data.codes,
 		{dataset, fieldSpecs} = column,
 		fields = _.get(req, 'probes', column.fields),
-		heatmap = computeHeatmap(vizSettings, req, fields, samples),
+		heatmap = computeHeatmap(req, samples),
 		customColors = colorCodeMap(codes, getCustomColor(fieldSpecs, fields, dataset)),
 		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
-		colors = map(fields, (p, i) =>
+		colors = fields.map((p, i) =>
 			heatmapColors.colorSpec(column, vizSettings, codes,
 				{'values': heatmap[i], 'mean': _.getIn(data, ['avg', 'mean'])},
 				customColors)),

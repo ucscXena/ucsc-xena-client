@@ -259,3 +259,27 @@ export var loaded = wasm().then(m => {
 	Module._faminmax_init();
 	Module._fameanmedian_init();
 });
+
+var empty = new Float32Array([]);
+export function mapIndicies(data, indicies) {
+	var count = indicies.length,
+		input = Module._malloc(count * floatSize),
+		output = Module._malloc(count * floatSize),
+		indiciesW = allocArray(indicies),
+		output32 = output / floatSize,
+		ret = [];
+
+	for (var i = 0; i < data.length; ++i) {
+		if (data[i]) {
+			Module.HEAPF32.set(data[i], input / floatSize);
+			Module._map_indicies(count, indiciesW, input, output);
+			ret.push(Module.HEAPF32.slice(output32, output32 + count));
+		} else {
+			ret.push(empty);
+		}
+	}
+	Module._free(input);
+	Module._free(output);
+	Module._free(indiciesW);
+	return ret;
+}
