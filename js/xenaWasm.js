@@ -104,6 +104,19 @@ export function fameanmedian(arr) {
 	return {mean: Module.getValue(r, 'float'), median: Module.getValue(r + floatSize, 'float')};
 }
 
+export function fastats(arr) {
+	var arrW = allocArrayAsType('float', arr);
+	var r = Module._fameanmedian(arrW, arr.length);
+	var s = Module._faminmax(arrW, arr.length);
+	Module._free(arrW);
+	return {
+		mean: Module.getValue(r, 'float'),
+		median: Module.getValue(r + floatSize, 'float'),
+		min: Module.getValue(s, 'float'),
+		max: Module.getValue(s + floatSize, 'float')
+	};
+}
+
 var rgb = (r, g, b) => ((255 << 24) | ((b) << 16) | ((g) << 8) | r);
 
 function allocScale(domain, range, m, b) {
@@ -269,6 +282,7 @@ export function mapIndicies(data, indicies) {
 		output32 = output / floatSize,
 		ret = [];
 
+	// About 30% of the time is spent copying.
 	for (var i = 0; i < data.length; ++i) {
 		if (data[i]) {
 			Module.HEAPF32.set(data[i], input / floatSize);

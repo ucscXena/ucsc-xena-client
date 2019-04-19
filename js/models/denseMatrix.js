@@ -10,7 +10,7 @@ var parsePos = require('../parsePos');
 var exonLayout = require('../exonLayout');
 var {datasetChromProbeValues, datasetProbeValues, datasetGeneProbeAvg,
 	datasetGeneProbesValues, fieldCodes, refGeneRange} = xenaQuery;
-var {fameanmedian, mapIndicies} = require('../xenaWasm');
+var {fastats, mapIndicies} = require('../xenaWasm');
 
 // Performs sorting and normalization.
 // XXX Consider retaining the data in the original order & accessing
@@ -112,9 +112,11 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 		heatmap = computeHeatmap(req, samples),
 		customColors = colorCodeMap(codes, getCustomColor(fieldSpecs, fields, dataset)),
 		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
+		// XXX store avg in row format, so we don't have to do this?
+		getAvg = i => _.mapObject(_.get(data, 'avg', {}), v => v[i]),
 		colors = fields.map((p, i) =>
 			heatmapColors.colorSpec(column, vizSettings, codes,
-				{'values': heatmap[i], 'mean': _.getIn(data, ['avg', 'mean'])},
+				{values: heatmap[i], avg: getAvg(i)},
 				customColors)),
 		units = [_.get(dataset, 'unit')];
 
@@ -179,7 +181,7 @@ function zoomableDataToHeatmap(column, vizSettings, data, samples) {
 	if (!_.get(data, 'req')) {
 		return null;
 	}
-	var {req} = data,
+	var {req, avg} = data,
 		{values, position} = req,
 		{xzoom = {}, fields} = column,
 		maxXZoomStart = 0, // use 0 index here as we are dealing with an array of subcolumns
@@ -188,16 +190,16 @@ function zoomableDataToHeatmap(column, vizSettings, data, samples) {
 		endIndex = end + 1,
 		valuesInView = values.slice(start, endIndex),
 		positionInView = position ? position.slice(start, endIndex) : position,
+		avgInView = _.mapObject(avg, v => v.slice(start, endIndex)),
 		reqInView = _.updateIn(req,
 			['values'], () => valuesInView,
-			['mean'], () => _.range(start, endIndex).map(i => data.avg.mean[i]),
 			['position'], () => positionInView),
 		// Update set of fields to just the fields in the current x zoom range
 		zoomedColumn = Object.assign({}, column, {
 			fields: fields.slice(start, endIndex)
 		}),
 		heatmap = {
-			...dataToHeatmap(zoomedColumn, vizSettings, {req: reqInView}, samples),
+			...dataToHeatmap(zoomedColumn, vizSettings, {req: reqInView, avg: avgInView}, samples),
 			maxXZoom: {start: maxXZoomStart, end: maxXZoomEnd},
 			fieldList: fields // Set field list to complete (max zoom) set of fields
 		};
@@ -374,11 +376,13 @@ function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {
 
 function denseAverage(column, data) {
 	var values = _.getIn(data, ['req', 'values'], []),
-		mm = values.map(fameanmedian);
+		mm = values.map(fastats);
 	return {
 		avg: {
 			mean: _.pluck(mm, 'mean'),
-			median: _.pluck(mm, 'median')
+			median: _.pluck(mm, 'median'),
+			min: _.pluck(mm, 'min'),
+			max: _.pluck(mm, 'max')
 		}
 	};
 }

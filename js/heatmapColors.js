@@ -4,7 +4,6 @@
 
 var _ = require('underscore');
 var multi = require('./multi');
-var {faminmax} = require('./xenaWasm');
 
 var isNumber = _.isNumber;
 
@@ -40,6 +39,7 @@ var colorRange = multi(colorRangeType);
 function colorFloat({colorClass}, settings = {}, codes, data) {
 	var values = data.values,
 		[low, zero, high] = defaultColors[settings.colorClass || colorClass],
+		// XXX Are we hitting this minnull call?
 		min = ( settings.min != null ) ? settings.min : _.minnull(values),
 		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
 		minStart = settings.minstart,
@@ -76,11 +76,10 @@ function colorFloatGenomicData(column, settings = {}, codes, data) {
 			(vizSettings == null && defaultNormalization && defaultNormalization === 'log2(x)'),
 		colorClass = column.colorClass;
 
-	var values = data.values,
-		// XXX consider moving data.values to avoid a copy into wasm
-		{min: originalMin, max: originalMax} = faminmax(values),
-		transformedMax, transformedMin,
-		mean = data.mean;
+	var originalMin = data.avg.min,
+		originalMax = data.avg.max,
+		mean = data.avg.mean,
+		transformedMax, transformedMin;
 
 	if (colSubtractMean) {
 		transformedMin = originalMin - mean;
