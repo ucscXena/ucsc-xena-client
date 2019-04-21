@@ -34,7 +34,7 @@ function codeLabels(codes, rowData, minSpan) {
 
 function floatLabels(rowData, minSpan) {
 	var nnLabels = minSpan <= 1 ?
-			_.filter(rowData.map((v, i) => {
+			_.filter(_.map(rowData, (v, i) => {
  				return (v % 1) ? [v.toPrecision([3]), i, 1] : [v, i, 1]; // display float with 3 significant digit, integer no change
  			}), ([v]) => v !== null) : [],
 		nullLabels = _.filter(findContiguous(rowData, minSpan).map(([start, len]) => [rowData[start], start, len]),
@@ -101,7 +101,7 @@ var regionColorMethods = {
 export var regionColor = (type, scale, d, start, end) => (regionColorMethods[type] || regionColorMethods.default)(scale, d, start, end);
 
 function drawLayoutByPixel(vg, opts) {
-	var {height, width, index, count, layout, data, codes, colors} = opts,
+	var {samples, data, height, width, index, count, layout, codes, colors} = opts,
 		minTxtWidth = vg.textWidth(labelFont, 'WWWW'),
 		first = Math.floor(index),
 		last  = Math.ceil(index + count);
@@ -111,24 +111,29 @@ function drawLayoutByPixel(vg, opts) {
 		return;
 	}
 
+	// XXX Keep in mind that every _malloc call & every API call that may
+	// invoke malloc can invalidate any views we have, so it's best to use the
+	// Module.HEAP* views, which are updated automatically.
+
 	// XXX should the wasm stuff be in xenaWasm?
 	var ctx = vg.context(),
+		sampP = xenaWasm.allocArray(samples),
 		dataP = xenaWasm.Module._malloc(data[0].length * 4),
-		dataPView = new Float32Array(xenaWasm.Module.HEAPU8.buffer, dataP, data[0].length),
-		imgP = xenaWasm.Module._malloc(width * height * 4),
-		img32 = new Uint32Array(xenaWasm.Module.HEAPU8.buffer, imgP, width * height);
-	img32.fill(0xFF808080); // opaque gray
+		imgP = xenaWasm.Module._malloc(width * height * 4);
+
+	xenaWasm.Module.HEAPU32.fill(0xFF808080, imgP / 4, imgP / 4 + width * height);
 
 	layout.forEach(function (el, i) {
 		var rowData = data[i],
 			colorScale = xenaWasm.getColorScale(colors[i]);
 
-		dataPView.set(rowData);
+		xenaWasm.Module.HEAPF32.set(rowData, dataP / 4);
 
 		xenaWasm.Module._draw_subcolumn(
 			colorScale.method,
 			colorScale.scale,
 			dataP,
+			sampP,
 			first,
 			count,
 			imgP,
@@ -144,6 +149,7 @@ function drawLayoutByPixel(vg, opts) {
 
 	ctx.putImageData(new ImageData(img, width), 0, 0);
 
+	xenaWasm.Module._free(sampP);
 	xenaWasm.Module._free(dataP);
 	xenaWasm.Module._free(imgP);
 
@@ -154,7 +160,8 @@ function drawLayoutByPixel(vg, opts) {
 				// XXX this slice is slow. Maybe try a view, or pass (first,last),
 				// or don't compute the slice until we know there's room for
 				// labels.
-				rowData = data[i].slice(first, last),
+				subcol = data[i],
+				rowData = samples.slice(first, last).map(j => subcol[j]),
 				colorScale = colorScales.colorScale(colors[i]),
 				labels = codes ? codeLabels(codes, rowData, minSpan) : floatLabels(rowData, minSpan),
 				h = height / count,
@@ -174,8 +181,10 @@ function drawLayoutByPixel(vg, opts) {
 	});
 }
 var drawHeatmapByMethod = draw => (vg, props) => {
-	var {heatmapData = [], codes, colors, width,
+	var {codes, colors, width, samples, data,
 			zoom: {index, count, height}} = props;
+
+	var heatmapData = _.getIn(data, ['req', 'values'], []);
 
 	vg.labels(() => {
 		draw(vg, {
@@ -186,7 +195,8 @@ var drawHeatmapByMethod = draw => (vg, props) => {
 			data: heatmapData,
 			codes,
 			layout: partition.offsets(width, 0, heatmapData.length),
-			colors
+			colors,
+			samples
 		});
 	});
 };

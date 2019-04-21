@@ -25,7 +25,7 @@ function stripeHeight(start, end, height) {
 }
 
 function draw(vg, opts) {
-	var {height, width, index, count, data, codes} = opts,
+	var {height, width, index, count, data, codes, samples} = opts,
 		minTxtWidth = vg.textWidth(labelFont, 'WWWW'),
 		first = Math.floor(index),
 		last = Math.ceil(index + count),
@@ -41,14 +41,12 @@ function draw(vg, opts) {
 	var labelColors = ['#CCCCDD', '#FFFFFF'].map(colorHelper.contrastColor);
 
 	// Add labels
-	var rowData = data[0].slice(first, last);
-
 	if (width - 2 * labelMargin >= minTxtWidth) {
 		if (samplesInStripe === 1) {
 			let h = height / count;
 
 			vg.clip(labelMargin, 0, width - labelMargin, height, () =>
-				rowData.forEach((v, i) =>
+				_.range(first, last).forEach((s, i) =>
 					vg.textCenteredPushRight(
 						labelMargin,
 						h * i - 1,
@@ -56,7 +54,7 @@ function draw(vg, opts) {
 						h,
 						labelColors[i % 2],
 						labelFont,
-						codes[v]
+						codes[data[samples[s]]]
 					)
 				)
 			);
@@ -82,7 +80,7 @@ function draw(vg, opts) {
 }
 
 var drawSamples = (vg, props) => {
-	let {heatmapData, codes, width, zoom} = props,
+	let {heatmapData, samples, codes, width, zoom} = props,
 		{count, height, index} = zoom;
 
 	if (_.isEmpty(heatmapData)) { // no features to draw
@@ -97,6 +95,7 @@ var drawSamples = (vg, props) => {
 			index,
 			count,
 			data: heatmapData,
+			samples,
 			codes
 		});
 	});
