@@ -37,11 +37,10 @@ function colorRangeType(column) {
 var colorRange = multi(colorRangeType);
 
 function colorFloat({colorClass}, settings = {}, codes, data) {
-	var values = data.values,
-		[low, zero, high] = defaultColors[settings.colorClass || colorClass],
+	var [low, zero, high] = defaultColors[settings.colorClass || colorClass],
 		// XXX Are we hitting this minnull call?
-		min = ( settings.min != null ) ? settings.min : _.minnull(values),
-		max = ( settings.max != null ) ? settings.max : _.maxnull(values),
+		min = ( settings.min != null ) ? settings.min : data.avg.min,
+		max = ( settings.max != null ) ? settings.max : data.avg.max,
 		minStart = settings.minstart,
 		maxStart = settings.maxstart,
 		spec;
