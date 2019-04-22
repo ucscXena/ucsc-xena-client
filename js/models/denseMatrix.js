@@ -1,7 +1,7 @@
 'use strict';
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
-var {map, find} = _;
+var {find} = _;
 var xenaQuery = require('../xenaQuery');
 var heatmapColors = require('../heatmapColors');
 var widgets = require('../columnWidgets');
@@ -10,43 +10,7 @@ var parsePos = require('../parsePos');
 var exonLayout = require('../exonLayout');
 var {datasetChromProbeValues, datasetProbeValues, datasetGeneProbeAvg,
 	datasetGeneProbesValues, fieldCodes, refGeneRange} = xenaQuery;
-var {fameanmedian} = require('../xenaWasm');
-
-/*
-// Decide whether to normalize, perfering the user setting to the
-// dataset default setting.
-function shouldNormalize(vizSettings, defaultNormalization) {
-	var user = _.getIn(vizSettings, ['colnormalization']);
-	return user === 'subset' || (user == null && defaultNormalization === true);
-}
-
-function subbykey(subtrahend, key, val) {
-	return val - subtrahend[key];
-}
-*/
-
-function mapIndicies(arr, indicies) {
-	var out = new Array(indicies.length);
-	for (var i = 0; i < arr.length; ++i) {
-		out[i] = arr[indicies[i]];
-	}
-	return out;
-}
-
-// Returns 2d array of numbers, probes X samples.
-// [[number, ...], [number, ...]]
-// Performs sorting and normalization.
-function computeHeatmap(vizSettings, data, fields, samples) {
-	if (!data) {
-		return [];
-	}
-	var {probes, values} = data;
-
-	return map(probes || fields, function (p, i) {
-		var v = values[i];
-		return v ? mapIndicies(v, samples) : [];
-	});
-}
+var {fastats} = require('../xenaWasm');
 
 // sorted by start of probe in transcript direction (strand), for negative strand, the start of the probe is chromend
 // known issue: tie break
@@ -113,7 +77,7 @@ var reorderFieldsTransform = fn =>
 var showPosition = column =>
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
-function dataToHeatmap(column, vizSettings, data, samples) {
+function dataToHeatmap(column, vizSettings, data) {
 	if (!_.get(data, 'req')) {
 		return null;
 	}
@@ -135,12 +99,13 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 		codes = vizSettingCodes || data.codes,
 		{dataset, fieldSpecs} = column,
 		fields = _.get(req, 'probes', column.fields),
-		heatmap = computeHeatmap(vizSettings, req, fields, samples),
 		customColors = colorCodeMap(codes, getCustomColor(fieldSpecs, fields, dataset)),
 		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
-		colors = map(fields, (p, i) =>
+		// XXX store avg in row format, so we don't have to do this?
+		getAvg = i => _.mapObject(_.get(data, 'avg', {}), v => v[i]),
+		colors = fields.map((p, i) =>
 			heatmapColors.colorSpec(column, vizSettings, codes,
-				{'values': heatmap[i], 'mean': _.getIn(data, ['avg', 'mean'])},
+				{avg: getAvg(i)},
 				customColors)),
 		units = [_.get(dataset, 'unit')];
 
@@ -149,17 +114,17 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 	// field id maps to multiple probes, but we need the original field list
 	// in the rendering layer, to determine if we support KM and gene average.
 	// We could compute this in a selector, perhaps.
-	return {fields, fieldList: column.fields, heatmap, assembly, colors, units, codes};
+	return {fields, fieldList: column.fields, assembly, colors, units, codes};
 }
 
-function geneProbesToHeatmap(column, vizSettings, data, samples) {
+function geneProbesToHeatmap(column, vizSettings, data) {
 	var pos = parsePos(column.fields[0]);
 	if (_.isEmpty(data) || _.isEmpty(data.req) || !data.refGene) {
 		return null;
 	}
 	if (!pos && _.isEmpty(data.refGene)) {
 		// got refGene, but it's empty.
-		return dataToHeatmap(column, vizSettings, data, samples);
+		return dataToHeatmap(column, vizSettings, data);
 	}
 	var showPos = showPosition(column),
 		{req} = data,
@@ -191,7 +156,7 @@ function geneProbesToHeatmap(column, vizSettings, data, samples) {
 		['values'], values => probesInView.map(i => values[i]),
 		['probes'], probes => probesInView.map(i => probes[i]),
 		['mean'], () => probesInView.map(i => data.avg.mean[i]));
-	heatmapData = dataToHeatmap(column, vizSettings, {req: reqInView}, samples);
+	heatmapData = dataToHeatmap(column, vizSettings, {req: reqInView});
 
 	return {
 		...(probesInView.length ? heatmapData : {}),
@@ -201,11 +166,11 @@ function geneProbesToHeatmap(column, vizSettings, data, samples) {
 	};
 }
 
-function zoomableDataToHeatmap(column, vizSettings, data, samples) {
+function zoomableDataToHeatmap(column, vizSettings, data) {
 	if (!_.get(data, 'req')) {
 		return null;
 	}
-	var {req} = data,
+	var {req, avg} = data,
 		{values, position} = req,
 		{xzoom = {}, fields} = column,
 		maxXZoomStart = 0, // use 0 index here as we are dealing with an array of subcolumns
@@ -214,16 +179,16 @@ function zoomableDataToHeatmap(column, vizSettings, data, samples) {
 		endIndex = end + 1,
 		valuesInView = values.slice(start, endIndex),
 		positionInView = position ? position.slice(start, endIndex) : position,
+		avgInView = _.mapObject(avg, v => v.slice(start, endIndex)),
 		reqInView = _.updateIn(req,
 			['values'], () => valuesInView,
-			['mean'], () => _.range(start, endIndex).map(i => data.avg.mean[i]),
 			['position'], () => positionInView),
 		// Update set of fields to just the fields in the current x zoom range
 		zoomedColumn = Object.assign({}, column, {
 			fields: fields.slice(start, endIndex)
 		}),
 		heatmap = {
-			...dataToHeatmap(zoomedColumn, vizSettings, {req: reqInView}, samples),
+			...dataToHeatmap(zoomedColumn, vizSettings, {req: reqInView, avg: avgInView}),
 			maxXZoom: {start: maxXZoomStart, end: maxXZoomEnd},
 			fieldList: fields // Set field list to complete (max zoom) set of fields
 		};
@@ -400,11 +365,13 @@ function downloadCodedSampleListsJSON({data, samples, sampleFormat}) {
 
 function denseAverage(column, data) {
 	var values = _.getIn(data, ['req', 'values'], []),
-		mm = values.map(fameanmedian);
+		mm = values.map(fastats);
 	return {
 		avg: {
 			mean: _.pluck(mm, 'mean'),
-			median: _.pluck(mm, 'median')
+			median: _.pluck(mm, 'median'),
+			min: _.pluck(mm, 'min'),
+			max: _.pluck(mm, 'max')
 		}
 	};
 }
@@ -414,7 +381,9 @@ function denseAverage(column, data) {
 	widgets.download.add(fieldType, download);
 });
 
-['probes', 'geneProbes', 'genes'].forEach(fieldType =>
+// note we compute mean & median for categorical, which isn't
+// useful. Might want to skip that.
+['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType =>
 	widgets.avg.add(fieldType, denseAverage));
 
 widgets.transform.add('probes', reorderFieldsTransform(zoomableDataToHeatmap));

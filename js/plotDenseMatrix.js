@@ -71,7 +71,7 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		pos = _.get(position, fieldIndex),
 		field = fields[fieldIndex];
 
-	var val = _.getIn(heatmap, [fieldIndex, sampleIndex]),
+	var val = _.getIn(heatmap, [fieldIndex, sampleID]),
 		code = _.get(codes, val),
 		label = fieldFormat(field);
 
@@ -213,6 +213,7 @@ function renderCodedLegend(props) {
 }
 
 var HeatmapLegend = hotOrNot(class extends PureComponent {
+	static displayName = 'HeatmapLegend';
 	render() {
 		var {column, newLegend} = this.props,
 			{units, heatmap, colors, valueType, vizSettings, defaultNormalization, codes} = column,
@@ -243,6 +244,7 @@ var HeatmapColumn = hotOrNot(//
 
 
 class extends PureComponent {
+	static displayName = 'DenseMatrix';
 	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
 
@@ -268,8 +270,9 @@ class extends PureComponent {
 			{codes} = column,
 			// support data.req.position for old bookmarks.
 			position = column.position || _.getIn(data, ['req', 'position']),
+			heatmap = _.getIn(data, ['req', 'values'], []),
 			avg = _.get(data, 'avg'),
-			{assembly, fields, heatmap, width, dataset} = column,
+			{assembly, fields, width, dataset} = column,
 			hgtCustomtext = _.getIn(dataset, ['probemapMeta', 'hgt.customtext']),
 			hubUrl = _.getIn(dataset, ['probemapMeta', 'huburl']);
 		return tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl, fields, sampleFormat, fieldFormat(id),
@@ -280,7 +283,7 @@ class extends PureComponent {
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
 	render() {
-		var {column, zoom} = this.props,
+		var {column, samples, data, zoom} = this.props,
 			{heatmap, colors, codes} = column;
 
 		return (
@@ -298,6 +301,8 @@ class extends PureComponent {
 					width={_.get(column, 'width')}
 					zoom={zoom}
 					colors={colors}
+					samples={samples}
+					data={data}
 					heatmapData={heatmap}/>);
 	}
 });

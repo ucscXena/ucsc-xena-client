@@ -183,15 +183,15 @@ describe('heatmapColors', function () {
 
 			// positive data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: [1, 2, 3]}, dataset),
+					{avg: {min: 1, max: 3}}, dataset),
 				['float-pos', '#ffffff', '#ff0000', 1, 3]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: [-1, -2, -3]}, dataset),
+					{avg: {min: -3, max: -1}}, dataset),
 				['float-neg', '#0000ff',  '#ffffff', -3, -1]);
 			// neg-pos data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: [-1, -2, 3]}, dataset),
+					{avg: {min: -2, max: 3}}, dataset),
 				['float', '#0000ff', '#ffffff', '#ff0000', -2, 3]);
 		});
 		it('should return ordinal scale for clinical category', function() {
@@ -210,15 +210,15 @@ describe('heatmapColors', function () {
 			// positive data
 			// Threshold is 1/4 from bottom -> zero, 1/8 from top -> high
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: [0, 2, 24]}, dataset),
+					{avg: {min: 0, max: 24}}, dataset),
 				['float-thresh-pos', '#000000', '#ff0000', 6, 21]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: [0, -2, -24]}, dataset),
+					{avg: {min: -24, max: 0}}, dataset),
 				['float-thresh-neg', '#00ff00',  '#000000', -21, -6]);
 			// neg-pos data
 			assert.deepEqual(colorSpec(column, settings, codes,
-					{values: [-8, -2, 24]}, dataset),
+					{avg: {min: -8, max: 24}}, dataset),
 				['float-thresh', '#00ff00', '#000000', '#ff0000', -12, -3, 3, 12]);
 		});
 		it('should return linear thresholded scales for custom setting', function() {
@@ -237,11 +237,11 @@ describe('heatmapColors', function () {
 				codes;
 
 			assert.deepEqual(colorSpec(column, settings1, codes,
-					[NaN, NaN, NaN], dataset),
+									   {avg: {min: -Infinity, max: Infinity}}, dataset),
 				['float-thresh', '#00ff00', '#000000', '#ff0000', -12, -11, 6, 7]);
 			// negative data
 			assert.deepEqual(colorSpec(column, settings2, codes,
-					[NaN, NaN, NaN], dataset),
+									   {avg: {min: -Infinity, max: Infinity}}, dataset),
 				['float-thresh', '#00ff00',  '#000000', '#ff0000', -8, 1, 7, 16]);
 		});
 	});

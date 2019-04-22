@@ -32,7 +32,7 @@ function allocArrayAsType(type, arr) {
 };
 
 // Take a typed array & copy it into the heap
-function allocArray(arr) {
+export function allocArray(arr) {
 	var addr = Module._malloc(arr.length * arr.BYTES_PER_ELEMENT),
 	u8 = new Uint8Array(arr.buffer);
 	Module.HEAPU8.set(u8, addr);
@@ -104,6 +104,19 @@ export function fameanmedian(arr) {
 	return {mean: Module.getValue(r, 'float'), median: Module.getValue(r + floatSize, 'float')};
 }
 
+export function fastats(arr) {
+	var arrW = allocArrayAsType('float', arr);
+	var r = Module._fameanmedian(arrW, arr.length);
+	var s = Module._faminmax(arrW, arr.length);
+	Module._free(arrW);
+	return {
+		mean: Module.getValue(r, 'float'),
+		median: Module.getValue(r + floatSize, 'float'),
+		min: Module.getValue(s, 'float'),
+		max: Module.getValue(s + floatSize, 'float')
+	};
+}
+
 var rgb = (r, g, b) => ((255 << 24) | ((b) << 16) | ((g) << 8) | r);
 
 function allocScale(domain, range, m, b) {
@@ -147,18 +160,19 @@ var allocOrdinal = scale =>
 				[scale.length, ...scale.map(c => rgb(...rgbFromHex(c)))]);
 
 // For testing.
-export function tallyDomains(data, start, end, domain) {
+export function tallyDomains(data, order, start, end, domain) {
 	var b = [0, 0, 0];
 	var s = allocScale(domain, [b, b, b]);
 	var struct = Module.struct.summary;
-	var d = Module._malloc(data.length * 4);
 	var summary = Module._malloc(struct.size);
-	Module.HEAPF32.set(data, d / 4);
-	Module._tally_domains(summary, s, d, start, end);
+	var d = allocArrayAsType('float', data);
+	var o = allocArrayAsType('u32', order);
+	Module._tally_domains(summary, s, d, o, start, end);
 	var ret = {
 		sum: getArrayField(summary, 'summary', 'sum', domain.length + 1, 'double'),
 		count: getArrayField(summary, 'summary', 'count', domain.length + 1, 'u32')
 	};
+	Module._free(o);
 	Module._free(d);
 	Module._free(s);
 	Module._free(summary);
@@ -197,10 +211,12 @@ export function getColorLinear(domain, range, value) {
 	return r;
 }
 
-export function regionColorLinearTest(domain, range, data, start, end) {
+export function regionColorLinearTest(domain, range, data, order, start, end) {
 	var scale = allocScale(domain, range);
 	var d = allocArrayAsType('float', data);
-	var r = Module._region_color_linear_test(scale, d, start, end);
+	var o = allocArrayAsType('u32', order);
+	var r = Module._region_color_linear_test(scale, d, o, start, end);
+	Module._free(o);
 	Module._free(d);
 	Module._free(scale);
 	return r;
