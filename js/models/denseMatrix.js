@@ -90,14 +90,11 @@ function reOrderFields(column, data) {
 	if (supportsClustering(column) && column.clustering === 'probes' &&
 		data.status !== 'loading' && probeOrder && data.req) {
 		return {
-			data: _.updateIn(data, ['req'], req => {
-				var {mean, position, probes, values} = req;
-				return _.merge(req,
-					mean ? {mean: probeOrder.map(i => mean[i])} : {},
-					position ? {position: probeOrder.map(i => position[i])} : {},
-					probes ? {probes: probeOrder.map(i => probes[i])} : {},
-					values ? {values: probeOrder.map(i => values[i])} : {});
-			}),
+			data: _.updateIn(data,
+							['req', 'position'], position => position && probeOrder.map(i => position[i]),
+							['req', 'values'], values => values && probeOrder.map(i => values[i]),
+							['req', 'probes'], probes => probes && probeOrder.map(i => probes[i]),
+							['avg'], avg => avg && _.mapObject(avg, v => probeOrder.map(i => v[i]))),
 			column: column.fieldType === 'geneProbes' ? column :
 				_.assoc(column, 'fields', probeOrder.map(i => column.fields[i]))
 		};
@@ -130,7 +127,7 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 		return undefined;
 	};
 
-	var {req} = data,
+	var {req, avg} = data,
 		vizSettingCodes = parseVizSettingCodes(_.getIn(column, ['vizSettings', 'codes'])),
 		codes = vizSettingCodes || data.codes,
 		{dataset, fieldSpecs} = column,
@@ -140,7 +137,7 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
 		colors = map(fields, (p, i) =>
 			heatmapColors.colorSpec(column, vizSettings, codes,
-				{'values': heatmap[i], 'mean': req.mean ? req.mean[i] : undefined},
+				{'values': heatmap[i], 'mean': _.getIn(avg, ['mean', i])},
 				customColors)),
 		units = [_.get(dataset, 'unit')];
 
@@ -149,7 +146,7 @@ function dataToHeatmap(column, vizSettings, data, samples) {
 	// field id maps to multiple probes, but we need the original field list
 	// in the rendering layer, to determine if we support KM and gene average.
 	// We could compute this in a selector, perhaps.
-	return {fields, fieldList: column.fields, heatmap, assembly, colors, units, codes};
+	return {fields, fieldList: column.fields, heatmap, avg, assembly, colors, units, codes};
 }
 
 function geneProbesToHeatmap(column, vizSettings, data, samples) {
@@ -172,31 +169,23 @@ function geneProbesToHeatmap(column, vizSettings, data, samples) {
 		createLayout = pos ? exonLayout.chromLayout : (showIntrons ? exonLayout.intronLayout : exonLayout.layout),
 		// XXX Build layout that includes pxs for introns
 		layout = createLayout(refGeneObj, width, chromXZoom, pos),
-		probesInView, reqInView, heatmapData;
-
-	if ( showPos ) {
-		// put exons in an index. Look up via layout. What about
-		// probes in introns? We can look them up as the "between" positions
-		// of the layout.
-		probesInView = _.filterIndices(req.position,
-			({chromstart, chromend}) => chromXZoom.start <= chromend && chromstart <= chromXZoom.end);
-	}
-	else {
-		var position = req.position,
-			{start = 0, end = position.length} = xzoom || {};
-		probesInView = _.filterIndices(position, (p, i) => i >= start && i <= end);
-	}
-
-	reqInView = _.updateIn(req,
-		['values'], values => probesInView.map(i => values[i]),
-		['probes'], probes => probesInView.map(i => probes[i]),
-		['mean'], mean => probesInView.map(i => mean[i]));
-	heatmapData = dataToHeatmap(column, vizSettings, {req: reqInView}, samples);
+		{start = 0, end = req.position.length} = xzoom || {},
+		endIndex = end + 1,
+		probesInView = showPos ?
+			_.filterIndices(req.position,
+				({chromstart, chromend}) => chromXZoom.start <= chromend && chromstart <= chromXZoom.end) :
+			probesInView = _.range(start, endIndex),
+		dataInView = _.updateIn(data,
+								['req', 'position'], position => position ? probesInView.map(i => position[i]) : position,
+								['req', 'values'], values => probesInView.map(i => values[i]),
+								['req', 'probes'], probes => probesInView.map(i => probes[i]),
+								['avg'], avg => _.mapObject(avg, v => probesInView.map(i => v[i]))),
+		heatmapData = dataToHeatmap(column, vizSettings, dataInView, samples);
 
 	return {
 		...(probesInView.length ? heatmapData : {}),
 		layout,
-		position: probesInView.map(i => req.position[i]),
+		position: dataInView.req.position,
 		maxXZoom: maxChromXZoom
 	};
 }
@@ -206,24 +195,23 @@ function zoomableDataToHeatmap(column, vizSettings, data, samples) {
 		return null;
 	}
 	var {req} = data,
-		{values, position} = req,
+		{values} = req,
 		{xzoom = {}, fields} = column,
 		maxXZoomStart = 0, // use 0 index here as we are dealing with an array of subcolumns
 		maxXZoomEnd = values.length - 1,
 		{start = maxXZoomStart, end = maxXZoomEnd} = xzoom,
 		endIndex = end + 1,
-		valuesInView = values.slice(start, endIndex),
-		positionInView = position ? position.slice(start, endIndex) : position,
-		reqInView = _.updateIn(req,
-			['values'], () => valuesInView,
-			['mean'], mean => _.range(start, endIndex).map(i => mean[i]),
-			['position'], () => positionInView),
+		dataInView = _.updateIn(data,
+								['req', 'position'], position => position ? position.slice(start, endIndex) : position,
+								['req', 'values'], values => values.slice(start, endIndex),
+								['avg'], avg => _.mapObject(avg, v => v.slice(start, endIndex))),
+
 		// Update set of fields to just the fields in the current x zoom range
 		zoomedColumn = Object.assign({}, column, {
 			fields: fields.slice(start, endIndex)
 		}),
 		heatmap = {
-			...dataToHeatmap(zoomedColumn, vizSettings, {req: reqInView}, samples),
+			...dataToHeatmap(zoomedColumn, vizSettings, dataInView, samples),
 			maxXZoom: {start: maxXZoomStart, end: maxXZoomEnd},
 			fieldList: fields // Set field list to complete (max zoom) set of fields
 		};

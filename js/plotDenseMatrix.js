@@ -266,10 +266,9 @@ class extends PureComponent {
 
 	tooltip = (ev) => {
 		var {samples, data, column, zoom, sampleFormat, fieldFormat, id} = this.props,
-			{codes} = column,
+			{codes, avg} = column,
 			// support data.req.position for old bookmarks.
 			position = column.position || _.getIn(data, ['req', 'position']),
-			avg = _.get(data, 'avg'),
 			{assembly, fields, heatmap, width, dataset} = column,
 			hgtCustomtext = _.getIn(dataset, ['probemapMeta', 'hgt.customtext']),
 			hubUrl = _.getIn(dataset, ['probemapMeta', 'huburl']);
