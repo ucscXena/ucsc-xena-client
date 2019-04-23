@@ -34,8 +34,14 @@
 	cursor: pointer;
 }
 
+.largeFont {
+	font-size: 200%;
+	opacity: 0.8;
+}
+
 .downloadLink {
-	display: inline;
+	font-size: 200%;
+	text-decoration: underline;
 }
 
 .downloadLink abbr {

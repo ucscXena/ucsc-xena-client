@@ -154,6 +154,133 @@ function drawProbePositions(ctx, probePosition, height, positionHeight, width, l
 	});
 }
 
+// Function to write GENE according to position
+function writeGENnamepositions(ctx, xStart, xEnd, y, perLaneHeight, start, strand, label, placement) {
+	var lettersize = ctx.measureText('M').width,
+		labelSize = ctx.measureText(label).width,
+		pad = 2;
+
+	ctx.fillStyle =
+		strand === "+" ? "red" :
+		strand === "-" ? "blue" : "black";
+	ctx.font = "8px";
+
+	// By default the vertical text-alignment (baseline) is set to "alphabetic" which uses the general bottom of the text for the y coordinate.
+	switch(placement) {
+		case "up":
+			ctx.fillText(label, start, y - perLaneHeight / 2 - pad);
+			break;
+		case "down":
+			ctx.fillText(label, start, y + perLaneHeight / 2 + lettersize + pad);
+			break;
+		case "right" :
+			ctx.fillText(label, xEnd + pad, y + lettersize / 2 - 1);
+			break;
+		case "left" :
+			ctx.fillText(label, xStart - labelSize - pad, y + lettersize / 2 - 1);
+			break;
+	}
+}
+
+function checkValidZone(xStart, xEnd, y, perLaneHeight, height, label, columnWidth, ctx) {
+	var labelSize = ctx.measureText(label).width,
+		pad = 2,
+		// up down zone test line start and end
+		boxStart = _.min([xStart, xEnd - labelSize + 1]),
+		boxEnd = _.max([xEnd, xStart + labelSize - 1]);
+
+	var findMaxGap = data => {
+		var maxGap = 0,
+			maxStart = 0,
+			maxEnd = 0,
+			start = -1,
+			end = 0;
+
+		for (var i = 0; i < data.length; i = i + 4) {
+			if (data.slice(i, i + 3).reduce((a, b) => a + b) === 255 * 3 || data[i + 3] === 0) { // white pixel
+				if (start === -1) { // restart
+					start = i;
+				}
+				end = i;
+			} else { // color pixel
+				if ((end - start) > maxGap) {
+					maxGap = end - start;
+					maxStart = start;
+					maxEnd = end;
+				}
+				start = -1;
+				end = -1;
+			}
+		}
+
+		if ((end - start) > maxGap) {
+			maxStart = start;
+			maxEnd = end;
+		}
+
+		return [boxStart + maxStart / 4, boxStart + maxEnd / 4];
+	};
+
+	var allWhitePixel = data => {
+		for (var i = 0; i < data.length; i = i + 4) {
+			if (data.slice(i, i + 3).reduce((a, b) => a + b) !== 255 * 3 && data[i + 3] !== 0) { // white pixel
+				return false;
+			}
+		}
+		return true;
+	};
+
+	var checkUpZone = () => {
+		let upBox, upStart, upEnd;
+
+		if (y - perLaneHeight > 0) {
+			upBox = ctx.getImageData(boxStart, y - perLaneHeight, boxEnd - boxStart + 1, 1);
+			[upStart, upEnd] = findMaxGap(upBox.data);
+			if (labelSize < (upEnd - upStart + pad)) {
+				return {confirm: true, placement: "up", start: (upEnd + upStart - labelSize) / 2};
+			}
+		}
+		return;
+	};
+
+	var checkDownZone = () => {
+		let downBox, downStart, downEnd;
+
+		if (y + perLaneHeight < height) {
+			downBox = ctx.getImageData( boxStart, y + perLaneHeight, boxEnd - boxStart + 1, 1);
+			[downStart, downEnd] = findMaxGap(downBox.data);
+			if (labelSize < (downEnd - downStart + pad)) {
+				return {confirm: true, placement: "down", start: (downEnd + downStart - labelSize) / 2};
+			}
+		}
+		return;
+	};
+
+	var checkRightZone = () => {
+		//get the middle line the size of the GENE name located right of the Gene
+		if (xEnd + pad < columnWidth) {
+			let rightBox = ctx.getImageData(xEnd, y, labelSize + pad, 1);
+			if (allWhitePixel(rightBox.data)) {
+				return {confirm: true, placement: "right"};
+			}
+		}
+		return;
+	};
+
+	var checkLeftZone = () => {
+		// get the middle line the size of the GENE name located left of the Gene
+		if (xStart > pad) {
+			let leftBox = ctx.getImageData(xStart - labelSize - pad, y, labelSize + pad, 1);
+			if (allWhitePixel(leftBox.data)) {
+				return {confirm: true, placement: "left" };
+			}
+		}
+		return;
+	};
+
+	return checkUpZone() || checkDownZone() || checkRightZone() || checkLeftZone() || {confirm: false};
+}
+
 class RefGeneDrawing extends React.Component {
 	componentWillMount() {
 		var events = rxEvents(this, 'mouseout', 'mousemove', 'mouseover');
@@ -237,9 +364,6 @@ class RefGeneDrawing extends React.Component {
 			};
 		} else {
 			newAnnotationLanes = {
-				lanes: undefined,
-				perLaneHeight: undefined,
-				laneOffset: undefined,
 				annotationHeight
 			};
 		}
@@ -269,19 +393,22 @@ class RefGeneDrawing extends React.Component {
 			return;
 		}
 
+		var genePositions = [];
 		//drawing start here, one lane at a time
 		lanes.forEach((lane, k) => {
-			var annotation = getAnnotation(k, perLaneHeight, laneOffset);
+			var annotation = getAnnotation(k, perLaneHeight, laneOffset),
+				lineY = laneOffset + perLaneHeight * (k + 0.5);
 
 			lane.forEach(gene => {
 				var intervals = findIntervals(gene),
 					indx = index(intervals),
-					lineY = laneOffset + perLaneHeight * (k + 0.5);
-
+					pGeneStart, pGeneEnd,
+					transformedLayouts = [];
 
 				//find segments for one gene
 				pxTransformEach(layout, (toPx, [start, end]) => {
-					var nodes = matches(indx, {start: start, end: end}),
+					var pLayoutStart, pLayoutEnd,
+						nodes = matches(indx, {start: start, end: end}),
 						segments = nodes.map(({i, start, end, inCds}) => {
 							var {y, h} = annotation[inCds ? 'cds' : 'utr'],
 								[pstart, pend] = toPx([start, end]),
@@ -289,15 +416,16 @@ class RefGeneDrawing extends React.Component {
 									(i % 2 === 1 ? shade1 : shade2) :
 									(mode === "coordinate" ? (gene.strand === '-' ? shade3 : shade4) : shade2);
 							return [pstart, pend, shade, y, h];
-						}),
-						[pGeneStart, pGeneEnd] = toPx([gene.txStart, gene.txEnd]);
+						});
+
+					[pLayoutStart, pLayoutEnd] = toPx([gene.txStart, gene.txEnd]);
 
 					// draw a line across the gene
 					ctx.fillStyle = shade2;
-					ctx.fillRect(pGeneStart, lineY, pGeneEnd - pGeneStart, 1);
+					ctx.fillRect(pLayoutStart, lineY, pLayoutEnd - pLayoutStart, 1);
 
 					if (arrows) {
-						drawIntroArrows (ctx, pGeneStart, pGeneEnd, lineY, segments, mode === 'coordinate' ? gene.strand : '+');
+						drawIntroArrows (ctx, pLayoutStart, pLayoutEnd, lineY, segments, mode === 'coordinate' ? gene.strand : '+');
 					}
 
 					// draw each segment
@@ -305,9 +433,47 @@ class RefGeneDrawing extends React.Component {
 						ctx.fillStyle = shade;
 						ctx.fillRect(pstart, y, (pend - pstart) || 1, h);
 					});
+
+					transformedLayouts.push([pLayoutStart, pLayoutEnd]);
 				});
+
+				transformedLayouts.sort((x, y) => x[0] < y[0]);
+				pGeneStart = transformedLayouts[0][0];
+				pGeneEnd = transformedLayouts[transformedLayouts.length - 1][1];
+				genePositions.push({
+						pGeneStart: pGeneStart,
+						pGeneEnd: pGeneEnd,
+						lineY: lineY,
+						label: gene.name2,
+						strand: mode === 'coordinate' ? gene.strand : undefined
+					});
 			});
 		});
+
+		//draw gene labels when relatively zoomed-in
+		var labelGene =  (lanes.length > 0 && lanes[0].length < width / 10) ? true : false;
+		// gene name drawing
+		if (labelGene) {
+			// sort to draw bigger genes' labels first
+			genePositions.sort((x, y) => {
+				return (y.pGeneEnd - y.pGeneStart) - (x.pGeneEnd - x.pGeneStart);
+			});
+			var count = 0;
+			genePositions.forEach(x => {
+				// checks if is possible to write the gene name
+				let {confirm, placement, start} =
+					checkValidZone(x.pGeneStart, x.pGeneEnd, x.lineY, perLaneHeight, perLaneHeight * lanes.length, x.label, width, ctx);
+
+				// write gene name
+				if (confirm) {
+					count ++;
+					if ((x.pGeneEnd - x.pGeneStart) > 2 || count <= 10) { // draw relatively bigger genes' labels: at least 3 pixel wide or top 10 largest genes
+						writeGENnamepositions(ctx, x.pGeneStart, x.pGeneEnd, x.lineY, perLaneHeight, start, x.strand, x.label, placement);
+					}
+				}
+			});
+		}
+
 		// what about introns?
 		if (!_.isEmpty(probePosition)) {
 			drawProbePositions(ctx, probePosition, height, positionHeight, width, layout);

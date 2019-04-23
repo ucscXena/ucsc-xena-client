@@ -120,8 +120,13 @@ class XenaDownload extends React.Component {
 				<div className={styles.i4j}>
 					<p>Supported by <a href='https://www.ej-technologies.com/products/install4j/overview.html'><img src={i4jLogo}/></a></p>
 				</div>
-				<p>{isFirst ? 'If this is your first time, ' : 'Please '}{defaultInstall ?
-					<Link className={styles.downloadLink} href={defaultInstall} label='download and run a Local Xena hub.'/> : 'download and run a Local Xena hub, from the list below:'}</p>
+				<p>
+					<br/>
+					<span className={styles.largeFont}>{isFirst ? 'If this is your first time, ' : 'If nothing prompts from browser, '}</span>
+					{defaultInstall ?
+						<Link className={styles.downloadLink} href={defaultInstall} label='download & run a Local Xena hub.'/> :
+						'download & run a Local Xena hub, from the list below:'}
+				</p>
 				{defaultInstall ? <span className={styles.advancedLink} onClick={this.onShowAdvanced}>{advanced ? 'Fewer options...' : 'More options...'}</span> : null}
 				{defaultInstall ? <br/> : null}
 				<div className={advanced || !defaultInstall ? styles.tableShow : styles.table}>{map(files ? pick(osFiles, (_, k) => files[k]) : [], (info, key) =>
@@ -132,7 +137,7 @@ class XenaDownload extends React.Component {
 }
 
 var launchingHelp = ['Launching...',
-	<p>If you see a browser dialog, and click the "open" button.</p>];
+	<p>Please click <b>Open UCSC xena</b> if you see the system dialog.</p>];
 
 var statusHelp = {
 	undefined: [],
@@ -142,7 +147,7 @@ var statusHelp = {
 		<p>To view your data, use the "Visualization" button</p>],
 	old: ['Your local Xena Hub is out of date.',
 		<p></p>],
-	lost: ['We have lost contact with your Local Xena Hub.',
+	lost: ['We have lost contact with your Local Xena hub.',
 		<p>To re-start it, you may reload this page.</p>]
 };
 

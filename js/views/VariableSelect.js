@@ -112,7 +112,7 @@ var basicFeatureLabels = (features, basicFeatures) => basicFeatures.map(i => ({v
 var allFeatureLabels = features => features.map((f, i) => ({value: i.toString(), label: f.label}));
 
 var PhenotypicForm = props => {
-	var options = (props.advanced ? allFeatureLabels : basicFeatureLabels)(props.features, props.basicFeatures);
+	var options = (props.advanced ? allFeatureLabels : basicFeatureLabels)(props.features, _.union(props.basicFeatures, props.selected));
 	return (
 		<div>
 			<XCheckboxGroup
@@ -173,7 +173,7 @@ var applyInitialState = {
 			_.assocIn(defaults, ['unavailable'], true) :
 			_.assocIn(defaults,
 				['mode'], mode,
-				['basicFeatures'], _.uniq([...defaults.basicFeatures, i]),
+				['basicFeatures'], defaults.basicFeatures,
 				['selected', mode, false], selected,
 				['valid'], valid);
 	},
