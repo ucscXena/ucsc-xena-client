@@ -271,8 +271,7 @@ class extends PureComponent {
 			{codes, avg} = column,
 			// support data.req.position for old bookmarks.
 			position = column.position || _.getIn(data, ['req', 'position']),
-			heatmap = _.getIn(data, ['req', 'values'], []),
-			{assembly, fields, width, dataset} = column,
+			{assembly, fields, heatmap, width, dataset} = column,
 			hgtCustomtext = _.getIn(dataset, ['probemapMeta', 'hgt.customtext']),
 			hubUrl = _.getIn(dataset, ['probemapMeta', 'huburl']);
 		return tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl, fields, sampleFormat, fieldFormat(id),
@@ -283,7 +282,7 @@ class extends PureComponent {
 	//    - Drop data & move codes into the 'display' obj, outside of data
 	// Might also want to copy fields into 'display', so we can drop req probes
 	render() {
-		var {column, samples, data, zoom} = this.props,
+		var {column, samples, zoom} = this.props,
 			{heatmap, colors, codes} = column;
 
 		return (
@@ -302,7 +301,6 @@ class extends PureComponent {
 					zoom={zoom}
 					colors={colors}
 					samples={samples}
-					data={data}
 					heatmapData={heatmap}/>);
 	}
 });

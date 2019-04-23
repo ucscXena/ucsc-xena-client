@@ -92,11 +92,12 @@ function dataToHeatmap(column, vizSettings, data) {
 		codes = vizSettingCodes || data.codes,
 		{dataset, fieldSpecs} = column,
 		fields = _.get(req, 'probes', column.fields),
+		heatmap = req.values,
 		customColors = colorCodeMap(codes, getCustomColor(fieldSpecs, fields, dataset)),
 		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
 		colors = fields.map((p, i) =>
 			heatmapColors.colorSpec(column, vizSettings, codes,
-				{'mean': _.getIn(avg, ['mean', i])},
+				{avg: _.mapObject(avg, v => v[i])},
 				customColors)),
 		units = [_.get(dataset, 'unit')];
 
@@ -105,7 +106,7 @@ function dataToHeatmap(column, vizSettings, data) {
 	// field id maps to multiple probes, but we need the original field list
 	// in the rendering layer, to determine if we support KM and gene average.
 	// We could compute this in a selector, perhaps.
-	return {fields, fieldList: column.fields, avg, assembly, colors, units, codes};
+	return {fields, fieldList: column.fields, heatmap, avg, assembly, colors, units, codes};
 }
 
 function geneProbesToHeatmap(column, vizSettings, data) {
