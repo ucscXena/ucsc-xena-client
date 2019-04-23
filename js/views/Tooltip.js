@@ -106,7 +106,9 @@ class Tooltip extends PureComponent {
 					</ul>
 					<div className={compStyles.actions}>
 						<span className={compStyles.zoomHint}>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"} tooltip`}</span>
-						<a href="http://xena.ucsc.edu/spreadsheet-zoom/" target="_blank"><i className='material-icons'>help</i></a>
+						<a href="https://ucsc-xena.gitbook.io/project/how-do-i/freeze-and-un-freeze-tooltip" target="_blank">
+							<i className='material-icons'>help</i>
+						</a>
 					</div>
 				</div>
 			</div>

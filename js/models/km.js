@@ -278,7 +278,7 @@ function warnDupPatients(usableSamples, samples, patient) {
 		`Some individuals' survival data are used more than once in the KM plot.
 		There are ${dups.length} samples affected.
 		For more information and how to remove such duplications,
-		see http://xena.ucsc.edu/km-filtering-out/ .`
+		see https://ucsc-xena.gitbook.io/project/how-do-i/how-do-i-remove-duplicate-samples-from-a-km-plot .`
 		: null;
 }
 

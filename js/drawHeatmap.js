@@ -181,10 +181,8 @@ function drawLayoutByPixel(vg, opts) {
 	});
 }
 var drawHeatmapByMethod = draw => (vg, props) => {
-	var {codes, colors, width, samples, data,
+	var {heatmapData = [], codes, colors, width, samples,
 			zoom: {index, count, height}} = props;
-
-	var heatmapData = _.getIn(data, ['req', 'values'], []);
 
 	vg.labels(() => {
 		draw(vg, {

@@ -82,8 +82,7 @@ class extends PureComponent {
 	tooltip = (ev) => {
 		var {samples, data, column, zoom, sampleFormat} = this.props,
 			codes = _.get(data, 'codes'),
-			heatmap = _.getIn(data, ['req', 'values'], []),
-			{width} = column;
+			{heatmap, width} = column;
 		return tooltip(heatmap, sampleFormat, codes, width, zoom, samples, ev);
 	};
 
@@ -92,6 +91,7 @@ class extends PureComponent {
 	// Might also want to copy fields into 'display', so we can drop req probes
 	render() {
 		var {data, samples, column, zoom} = this.props,
+			{heatmap} = column,
 			codes = _.get(data, 'codes');
 		return (
 			<CanvasDrawing
@@ -108,7 +108,7 @@ class extends PureComponent {
 					width={_.get(column, 'width')}
 					samples={samples}
 					zoom={zoom}
-					heatmapData={_.getIn(data, ['req', 'values', 0], [])}/>);
+					heatmapData={heatmap}/>);
 	}
 });
 
