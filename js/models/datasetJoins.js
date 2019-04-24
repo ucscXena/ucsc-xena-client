@@ -6,7 +6,6 @@ var Rx = require('../rx');
 var {remapSamples, remapCodes, floatToCoded, concatValuesByFieldPosition,
 		concatMutation, computeMean} = require('./fieldData');
 var samplesFrom = require('../samplesFrom');
-var {nullField} = require('./fieldSpec');
 
 // Strategies for joining field metadata with composite cohorts.
 
@@ -122,8 +121,6 @@ var getFieldLabel = fieldSpecs => findFirstProp(fieldSpecs, 'fieldLabel');
 
 var getShowIntrons = fieldSpecs => findFirstProp(fieldSpecs, 'showIntrons');
 
-var fillNullFields = fieldSpecs => _.map(fieldSpecs, fs => fs || nullField);
-
 // Create a composite fieldSpec from a list of fieldSpecs. This uses
 // a number of heuristics to determine the 'best' combined view over
 // the fieldSpecs, for some definition of 'best'.
@@ -167,7 +164,7 @@ function combineColSpecs(fieldSpecs, datasets) {
 // samples connect to a particular fieldSpec? So, here we always return
 // a 'composite', even for single datasets.
 function getColSpec(fieldSpecs, datasets) {
-	return combineColSpecs(fillNullFields(fieldSpecs), datasets);
+	return combineColSpecs(fieldSpecs, datasets);
 }
 
 // Convert field valueType.
