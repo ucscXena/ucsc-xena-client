@@ -8,16 +8,13 @@ var highchartsHelper =  require ('./highcharts_helper');
 require('highcharts/modules/boost')(Highcharts);
 var _ = require('./underscore_ext');
 var colorScales = require ('./colorScales');
-var customColors = {};
 var jStat = require('jStat').jStat;
+var {getCustomColor} = require('./models/denseMatrix');
 
+var customColors = {};
 
 // Styles
 var compStyles = require('./chart.module.css');
-
-var getCustomColor = (fieldSpecs, fields, dataset) =>
-	fields.length === 1 ?
-		_.getIn(dataset, ['customcolor', fieldSpecs[0].fields[0]], null) : null;
 
 var chartHeight = () =>
 	window.innerHeight * 0.7 + "px";
@@ -1235,7 +1232,7 @@ function render(root, callback, sessionStorage) {
 				}
 
 				if (colorColumn !== "none") { // custome categorial color
-					customColors = getCustomColor(columns[colorColumn].fieldSpecs, columns[colorColumn].fields, columns[colorColumn].dataset);
+					customColors = getCustomColor(columns[colorColumn].fields, columns[colorColumn].dataset);
 				}
 
 				_.keys(multiSeries).map( (colorCode, i) => {
