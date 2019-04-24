@@ -242,19 +242,14 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 	]);
 }
 
-function tumorMapCompatible({fieldType, fields, fieldSpecs}) {
+function tumorMapCompatible(column) {
+	var {fieldType, dsID, fields, fieldSpecs} = column;
 	// link to tumorMap from any public xena hub columns
 	// data be queried directly from xena
-	var foundPublicHub = _.any(fieldSpecs, obj => {
-		if (obj.dsID) {
-			return publicServers.indexOf(JSON.parse(obj.dsID).host) !== -1;
-		} else {
-			return false;
-		}
-	});
+	var foundPublicHub = dsID && publicServers.indexOf(JSON.parse(dsID).host) !== -1;
 
-	if (!foundPublicHub || (['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
-		_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1)) {
+	if (!foundPublicHub || ['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
+			_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1) {
 		return false;
 	}
 
@@ -273,8 +268,8 @@ var supportsClustering = ({fieldType, fields}) =>
 
 function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, isChrom}) {
 	var {column} = props,
-		{fieldType, noGeneDetail, fields, fieldSpecs, clustering} = column,
-		supportTumorMap = thisTumorMap && tumorMapCompatible({fieldType, fields, fieldSpecs}),
+		{fieldType, noGeneDetail, clustering} = column,
+		supportTumorMap = thisTumorMap && tumorMapCompatible(column),
 		order = clustering == null ? 'clusters' :
 			fieldType === 'geneProbes' ? 'position' : 'list';
 
@@ -590,7 +585,7 @@ class Column extends PureComponent {
 			fieldType = _.getIn(this.props, ['column', 'fieldType']),
 			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout;
 
-		var ds = JSON.parse(fieldSpecs.dsID),
+		var ds = JSON.parse(this.props.column.dsID),
 			hub = ds.host,
 			dataset = ds.name,
 			feature = (fieldType !== "geneProbes") ? fieldSpecs.fields[0] : _.getIn(data, ['req', 'probes', 0]),
