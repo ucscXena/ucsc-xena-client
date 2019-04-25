@@ -300,8 +300,8 @@ function addWizardColumns(Component) {
 							key={editing}
 							actionKey={editing}
 							pos={editing}
-							fields={appState.columns[editing].fieldSpecs[0].fields}
-							dataset={appState.columns[editing].fieldSpecs[0].dsID}
+							fields={appState.columns[editing].fieldList}
+							dataset={appState.columns[editing].dsID}
 							title='Edit Variable'
 							{...datasetSelectProps}
 							colId={el.props.label}

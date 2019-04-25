@@ -248,7 +248,13 @@ function tumorMapCompatible(column) {
 	// data be queried directly from xena
 	var foundPublicHub = dsID && publicServers.indexOf(JSON.parse(dsID).host) !== -1;
 
-	if (!foundPublicHub || ['geneProbes', 'genes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
+	// The intent is to support anything that can be queried as a single value
+	// with (xena-query {:select}). Here 'fields' is the fields or probes list.
+	// We can only send a single probe, so check for length 1. Note in
+	// particular the case of an ensembl genes probemap, which is a geneProbes
+	// column with probe list of one, which is supported.
+	// We can't support gene average, so no 'genes' columns.
+	if (!foundPublicHub || ['geneProbes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
 			_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1) {
 		return false;
 	}
@@ -578,17 +584,14 @@ class Column extends PureComponent {
 
 	onTumorMap = (tumorMap) => {
 		// TumorMap/Xena API https://tumormap.ucsc.edu/query/addAttributeXena.html
-		// only use spec of the first cohort (in the context of composite cohort)
-		var fieldSpecs = _.getIn(this.props, ['column', 'fieldSpecs', 0]),
-			data = _.getIn(this.props, ['data']),
+		var data = _.getIn(this.props, ['data']),
 			valueType = _.getIn(this.props, ['column', 'valueType']),
-			fieldType = _.getIn(this.props, ['column', 'fieldType']),
 			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout;
 
 		var ds = JSON.parse(this.props.column.dsID),
 			hub = ds.host,
 			dataset = ds.name,
-			feature = (fieldType !== "geneProbes") ? fieldSpecs.fields[0] : _.getIn(data, ['req', 'probes', 0]),
+			feature = this.props.column.fields[0], // gene or probe
 			customColor = _.getIn(this.props, ['column', 'dataset', 'customcolor', feature]); // object, key value pair
 
 
