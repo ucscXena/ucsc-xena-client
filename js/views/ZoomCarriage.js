@@ -25,9 +25,9 @@ class ZoomCarriage extends PureComponent {
 	render() {
 		var {addColumnAddHover, enableTransition, samplesCount, zoom} = this.props,
 			zoomCarriageMargin = addColumnAddHover ? 3 : 11,
-			carriageStart = Math.round((zoom.height / samplesCount) * zoom.index),
-			carriageHeight = Math.round((zoom.height / samplesCount).toFixed(2) * zoom.count),
-			carriageEnd = carriageStart + carriageHeight - 1,
+			carriageStart = Math.floor((zoom.height / samplesCount) * zoom.index),
+			carriageHeight = Math.floor((zoom.height / samplesCount) * zoom.count),
+			carriageEnd = carriageStart + carriageHeight,
 			heightBelowCarriage = zoom.height - carriageStart - carriageHeight,
 			upperAngle = -Math.atan(carriageStart / zoomCarriageMargin) * 180 / Math.PI,
 			upperLine = Math.sqrt(Math.pow(zoomCarriageMargin, 2) + Math.pow(carriageStart, 2)),
