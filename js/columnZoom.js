@@ -191,11 +191,48 @@ var geneZoomWithoutGeneModel = (params) => {
 };
 
 var samplesZoom = ({yZoom, sstart, send}) => {
-	var {count, height, index} = yZoom,
-		rowSize = (height) / count,
-		startIndex = Math.floor(sstart / rowSize) + index,
-		endIndex = Math.ceil(send / rowSize) + index;
-	return {index: startIndex, count: (endIndex - startIndex)};
+
+    // project user mouse down and mouse up pixel positions on to the samples array.
+	// sstart and send are the start and end pixels selected on the canvas
+    // and will range from 0 to canvas height -1.
+
+    // we want to find the first (lowest) sample index covered by sstart and last (highest) sample index
+    // sample covered by send.
+
+    var sampleCount = yZoom.count;					// number of samples in the canvas
+    var pixelCount = yZoom.height;					// number of pixels in the canvas
+    var samplesPerPx = sampleCount / pixelCount;	// number of samples in a pixel
+    var sampleIndexOffset = yZoom.index;			// starting sample index in the canvas
+
+    // to find the new starting index
+    // sstart is the distance in pixels from the start of the canvas to the to start of the starting pixel
+    // for example, the start of px 0 is 0 pixels from the start of the canvas, px 1 is 1 px from the start of the canvas.
+
+    // sstart (pixels)  * samples/Pixel is samples.
+    // take the floor of the samples to remove any fractional sample.
+    // add the current starting index to get the new start index.
+    var startIndex = Math.floor( sstart * samplesPerPx) + sampleIndexOffset;
+
+
+    // to find the new ending index
+	// add one to the send pixel index as we want the distance in pixels to the top of the pixel (the start of the next one)
+    var endDistance = send + 1;
+
+
+    //var endIndex = Math.ceil(endDistance * samplesPerPx) + sampleIndexOffset - 1 ;
+
+    var endIndex = Math.floor(endDistance * samplesPerPx) + sampleIndexOffset;
+
+    // accuracy of the math can make endIndex greater than the end of the samples.
+	// trim back if its over.
+	var maxIndex = sampleCount + sampleIndexOffset - 1;
+    endIndex = (endIndex > (maxIndex)) ? maxIndex : endIndex;
+
+   // console.log(sampleIndexOffset, sampleCount, pixelCount, samplesPerPx, startIndex, endIndex);
+
+    var index = startIndex;
+    var count = endIndex - startIndex + 1;
+    return { index, count };
 };
 
 var zoomByDirection = (params) =>
