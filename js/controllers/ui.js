@@ -6,8 +6,6 @@ var {userServers, setCohort, fetchSamples,
 	fetchColumnData, fetchCohortData, fetchSurvival, fetchClustering} = require('./common');
 var {setFieldType} = require('../models/fieldSpec');
 var {setNotifications} = require('../notifications');
-var fetchSamplesFrom = require('../samplesFrom');
-var fetch = require('../fieldFetch');
 var {remapFields} = require('../models/searchSamples');
 var {fetchInlineState} = require('../inlineState');
 var {compose, make, mount} = require('./utils');
@@ -39,14 +37,6 @@ var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
 var zoomHelpClose = state =>
 	_.assocIn(_.dissoc(state, 'zoomHelp'),
 			['notifications', 'zoomHelp'], true);
-
-function getChartOffsets(column) {
-	return fetchSamplesFrom(column).flatMap(samples => fetch(column, samples)).map(data => {
-		var fields = _.getIn(data, ['req', 'probes'], column.fields),
-			values = _.getIn(data, ['req', 'values']);
-		return _.object(fields, _.map(values, _.meannull));
-	});
-}
 
 function setLoadingState(state, params) {
 	var pending =  (_.get(params, 'bookmark') || _.get(params, 'inlineState')) ?
@@ -230,8 +220,6 @@ var spreadsheetControls = {
 	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),
 	'chart': state => _.assoc(state, 'mode', 'chart'),
 	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState),
-	'chart-set-average-cohort-post!': (serverBus, state, newState, id, thunk) =>
-		serverBus.next(['chart-average-data', getChartOffsets(newState.columns[id]), thunk]),
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
 		serverBus.next(['chart-average-data', Rx.Observable.of(offsets, Rx.Scheduler.async), thunk]),
 	'sample-search': (state, text) => _.assoc(state, 'sampleSearch', text),
