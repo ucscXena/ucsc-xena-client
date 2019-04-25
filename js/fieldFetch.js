@@ -22,7 +22,4 @@ xenaFetch.add('SV-mutation', mutationVector.fetch);
 fetch.add('xena', xenaFetch);
 fetch.add('empty', () => Rx.Observable.of(null, Rx.Scheduler.asap));
 
-fetch.add('composite', (column, samples) =>
-		  fetch(column.fieldSpecs[0], samples));
-
 module.exports = fetch;

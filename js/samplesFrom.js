@@ -1,4 +1,5 @@
 'use strict';
+// XXX deprecate this file.
 var xenaQuery = require('./xenaQuery');
 var {datasetSamples} = xenaQuery;
 

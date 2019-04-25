@@ -7,7 +7,6 @@ var CohortOrDisease = require('../views/CohortOrDisease');
 var VariableSelect = require('../views/VariableSelect');
 var GhostVariableSelect = require('../views/GhostVariableSelect');
 var getStepperState = require('./getStepperState');
-var {getColSpec} = require('../models/datasetJoins');
 var {defaultColorClass} = require('../heatmapColors');
 var uuid = require('../uuid');
 var Rx = require('../rx');
@@ -210,15 +209,14 @@ var removeSampleID = features => _.filter(features, f => f.name !== "sampleID");
 var computeSettings = _.curry((datasets, features, inputFields, width, dataset, matches) => {
 	var ds = datasets[dataset];
 	var settings = columnSettings(datasets, features, dataset, inputFields, matches.fields, matches.type === 'probes'),
-		colSpec = getColSpec([settings], datasets),
 		columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +
 			(ds.dataSubType && ds.dataSubType.match(/phenotype/i) ? '' : ds.label);
 
-	return _.assoc(colSpec,
+	return _.assoc(settings,
 		'width', _.contains(['mutationVector', 'segmented'], ds.type) ? typeWidth.chrom : typeWidth.matrix,
 		'dataset', ds,
 		'columnLabel', columnLabel,
-		'user', {columnLabel: columnLabel, fieldLabel: colSpec.fieldLabel});
+		'user', {columnLabel: columnLabel, fieldLabel: settings.fieldLabel});
 });
 
 // 1) if appState.editing, then set editing state, and render editor.

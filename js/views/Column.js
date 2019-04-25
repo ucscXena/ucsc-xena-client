@@ -243,7 +243,7 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 }
 
 function tumorMapCompatible(column) {
-	var {fieldType, dsID, fields, fieldSpecs} = column;
+	var {fieldType, fetchType, dsID, fields} = column;
 	// link to tumorMap from any public xena hub columns
 	// data be queried directly from xena
 	var foundPublicHub = dsID && publicServers.indexOf(JSON.parse(dsID).host) !== -1;
@@ -255,7 +255,7 @@ function tumorMapCompatible(column) {
 	// column with probe list of one, which is supported.
 	// We can't support gene average, so no 'genes' columns.
 	if (!foundPublicHub || ['geneProbes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
-			_.any(fieldSpecs, obj => obj.fetchType === "signature")  || fields.length !== 1) {
+			fetchType === "signature"  || fields.length !== 1) {
 		return false;
 	}
 
@@ -274,7 +274,7 @@ var supportsClustering = ({fieldType, fields}) =>
 
 function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, isChrom}) {
 	var {column} = props,
-		{fieldType, noGeneDetail, clustering} = column,
+		{fieldType, clustering} = column,
 		supportTumorMap = thisTumorMap && tumorMapCompatible(column),
 		order = clustering == null ? 'clusters' :
 			fieldType === 'geneProbes' ? 'position' : 'list';
@@ -285,8 +285,7 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, isChrom
 			null,
 		supportsGeneAverage(column, isChrom) ?
 			(fieldType === 'genes' ?
-				<MenuItem title={noGeneDetail ? 'no common probemap' : ''}
-					disabled={noGeneDetail} onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
+				<MenuItem onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
 				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>) :
 				null,
 		supportTumorMap ?
