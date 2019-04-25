@@ -22,7 +22,7 @@ class SheetStatus extends React.Component {
 		var {disabled, label, sheetState} = this.props;
 		return (
 			<div className={classNames(compStyles.status, {[compStyles.disabled]: disabled}, {[compStyles.zoomAnimation]: sheetState !== 'None'})}>
-				<div className={compStyles.label}>{label}</div>
+				{label ? <div className={compStyles.label}>{label}</div> : null}
 				<div className={compStyles.state}>{sheetState}</div>
 			</div>
 		);
