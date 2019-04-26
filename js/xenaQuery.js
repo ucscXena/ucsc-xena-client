@@ -464,6 +464,8 @@ var cohortPhenotypeURL = `${cohortMetaData}/defaultPhenotype.json`;
 
 var tumorMapURL = `${cohortMetaData}/defaultTumormap.json`;
 
+var cellBrowserURL = `${cohortMetaData}/defaultCellBrowser.json`;
+
 var fetchJSON = url =>
 	Rx.Observable.ajax({
 		url,
@@ -498,4 +500,5 @@ module.exports = {
 	fetchCohortPreferred: fetchJSON(cohortPreferredURL),
 	fetchCohortPhenotype: fetchJSON(cohortPhenotypeURL),
 	fetchTumorMap: fetchJSON(tumorMapURL),
+	fetchCellBrowser: fetchJSON(cellBrowserURL),
 };
