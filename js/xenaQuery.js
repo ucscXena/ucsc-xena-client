@@ -321,6 +321,9 @@ function transformPOSTMethods(postMethods) {
 		// requires the 'fields' parameter.
 		matchFields: postFn => (host, dataset, fields) =>
 			postFn(host, dataset, _.map(fields, f => f.toLowerCase()))
+				.map(list => alignMatches(fields, list)),
+		matchFieldsFaster: postFn => (host, dataset, fields) =>
+			postFn(host, dataset, _.flatmap(fields, permuteCase))
 				.map(list => alignMatches(fields, list))
 	};
 
@@ -355,6 +358,7 @@ function wrapDsIDParams(postMethods) {
 		'refGenePosition',
 		'refGeneRange',
 		'matchFields',
+		'matchFieldsFaster',
 		'segmentedDataRange',
 		'segmentedDataExamples',
 		'sparseData',
@@ -382,6 +386,12 @@ var sparseDataMatchField = _.curry((field, host, dataset, genes) =>
 		queryPosts.sparseDataMatchFieldSlow :
 		queryPosts.sparseDataMatchField)(host, field, dataset, genes));
 
+// Override matchField to dispatch to the slow version
+// if necessary.
+var matchFields = (host, dataset, probes) =>
+	(_.max(_.map(probes, permuteBitCount)) > 7 ?
+		 queryPosts.matchFields :
+		 queryPosts.matchFieldsFaster)(host, dataset, probes);
 
 // Look up gene strand from refGene, using the assembly specified
 // in the probemap metadata
@@ -452,6 +462,7 @@ module.exports = {
 	refGeneExonCase,
 	refGeneRange,
 	sparseDataMatchGenes: dsIDFn(sparseDataMatchField('genes')),
+	matchFields: dsIDFn(matchFields),
 
 	// helpers:
 	parseDsID,
