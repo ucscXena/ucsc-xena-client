@@ -103,11 +103,10 @@ class Application extends Component {
 //		this.onFilterColumn(matches, 'sample list', fieldLabel);
 //	};
 	render() {
-		let {state, stateError, children, stepperState, loadPending, ...otherProps} = this.props,
+		let {state, wizard, stateError, children, stepperState, loadPending, ...otherProps} = this.props,
 			{callback} = otherProps,
 			{editing, wizardMode, showWelcome, zoom} = state;
 //			onSearchIDAndFilterColumn = this.onSearchIDAndFilterColumn;
-
 		if (loadPending) {
 			return <p style={{margin: 10}}>Loading your view...</p>;
 		}
@@ -120,7 +119,7 @@ class Application extends Component {
 					{showWelcome ? <Welcome onClick={this.onHideWelcome} /> :
 						null}
 					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> : <div>
-						<AppControls {...otherProps} appState={state} help={searchHelp}
+						<AppControls {...otherProps} appState={state} wizard={wizard} help={searchHelp}
 									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>
 						 <SheetControls actionsDisabled={true} appState={state} clearZoom={this.onClearZoom}
 										statusDisabled={editing !== null} zoom={zoom} zoomOut={this.onZoomOut}/></div>}

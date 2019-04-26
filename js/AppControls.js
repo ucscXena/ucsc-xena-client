@@ -6,6 +6,7 @@ var React = require('react');
 var pdf = require('./pdfSpreadsheet');
 var _ = require('./underscore_ext');
 import AppBar from 'react-toolbox/lib/app_bar';
+import Button from 'react-toolbox/lib/button';
 var konami = require('./konami');
 var widgets = require('./columnWidgets');
 var classNames = require('classnames');
@@ -55,6 +56,11 @@ var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, has
 		{(hasColumn && mode === 'heatmap') ? <i className='material-icons' onClick={onPdf} title='Download as PDF'>picture_as_pdf</i> : null}
 		{hasColumn ? <i className='material-icons' onClick={onDownload} title='Download as tsv'>cloud_download</i> : null}
 		{showWelcome ? null : <i className='material-icons' onClick={onShowWelcome}>help</i>}
+	</div>);
+
+var SingleCellActions = ({cellBrowser, onCellBrowser}) => (
+	<div className={compStyles.actions}>
+		{cellBrowser ? <Button accent onClick={(e) => onCellBrowser(cellBrowser, e)}>2D Cluster View</Button> : null}
 	</div>);
 
 var BasicSearch = ({help, onTies, tiesEnabled, ...searchProps}) => (
@@ -183,11 +189,17 @@ class AppControls extends PureComponent {
 		this.props.onShowWelcome();
 	};
 
+	onCellBrowser = (cellBrowser) => {
+		var cellBrowserURL = 'https://cells.ucsc.edu/?ds=';
+		window.open(cellBrowserURL + cellBrowser, '_blank');
+	}
+
 	render() {
 		var {appState: {cohort, mode, columnOrder, showWelcome, samples, sampleSearch, samplesMatched, /*tiesEnabled, */ties},
+				wizard: {cohortCellBrowser},
 				onReset, help, onResetSampleFilter, onHighlightChange, onHighlightSelect, callback} = this.props,
 			matches = _.get(samplesMatched, 'length', samples.length),
-			{onPdf, onDownload, onShowWelcome, onMode} = this,
+			{onPdf, onDownload, onShowWelcome, onMode, onCellBrowser} = this,
 			tiesOpen = _.get(ties, 'open'),
 			cohortName = _.get(cohort, 'name'),
 			hasColumn = !!columnOrder.length,
@@ -203,28 +215,33 @@ class AppControls extends PureComponent {
 						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>
 						<i className='material-icons' onClick={onReset} title='Pick new cohort'>close</i>
 					</div>
-					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}
-						style={{display: config.singlecell ? 'none' : 'inline'}}>
+					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
 						{tiesOpen ?
 							<TiesSearch {...{onTies: this.onTies}}/> :
-							<BasicSearch {...{
-								value: sampleSearch,
-								matches,
-								onHighlightSelect,
-								sampleCount: samples.length,
-								onFilter: this.onFilter,
-								onZoom: this.onFilterZoom,
-								onCreateColumn: this.onFilterColumn,
-								onChange: onHighlightChange,
-								mode,
-								onResetSampleFilter,
-								cohort,
-								callback,
-								help,
-								onTies: this.onTies,
-								tiesEnabled: false}}/>}
+							config.singlecell ? null :
+								<BasicSearch {...{
+									value: sampleSearch,
+									matches,
+									onHighlightSelect,
+									sampleCount: samples.length,
+									onFilter: this.onFilter,
+									onZoom: this.onFilterZoom,
+									onCreateColumn: this.onFilterColumn,
+									onChange: onHighlightChange,
+									mode,
+									onResetSampleFilter,
+									cohort,
+									callback,
+									help,
+									onTies: this.onTies,
+									tiesEnabled: false}}/>}
 						{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
-							<Actions {...{onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}}/>}
+							config.singlecell ?
+								<SingleCellActions {...{
+									cellBrowser: _.getIn(cohortCellBrowser, [cohort.name]),
+									onCellBrowser
+								}}/> :
+								<Actions {...{onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}}/>}
 					</div>
 				</AppBar>
 		);

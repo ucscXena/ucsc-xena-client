@@ -144,6 +144,7 @@ class ApplicationContainer extends React.Component {
 					loadPending={loadPending}
 					stateError={stateError}
 					state={computedState.spreadsheet}
+					wizard={computedState.wizard}
 					callback={callback}>
 				<View
 					stepperState={stepperState}
