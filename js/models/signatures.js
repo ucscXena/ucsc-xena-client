@@ -48,7 +48,6 @@ function evalCross({samples}, lists, exprs) {
 	var sets = lists.map(l => new Set(l)),
 		bits = _.times(lists.length, i => 1 << i); // 1, 2
 
-	console.log(bits);
 	return {
 		req: {
 			values: [_.map(samples, s => _.sum(bits.filter((v, i) => sets[i].has(s))))]
