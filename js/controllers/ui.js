@@ -13,6 +13,8 @@ var {JSONToqueryString} = require('../dom_helper');
 var {parseBookmark} = require('../bookmark');
 import parseManifest from '../manifest';
 var gaEvents = require('../gaEvents');
+import * as columnsParam from '../columnsParam';
+import xenaQuery from '../xenaQuery';
 
 function fetchBookmark(serverBus, bookmark) {
 	gaEvents('bookmark', 'load');
@@ -31,6 +33,10 @@ function fetchManifest(serverBus, url) {
 	}).map(r => parseManifest(r.response))]);
 }
 
+function fetchDatasetCohort(serverBus, {host, name}) {
+	serverBus.next(['dataset-cohort', xenaQuery.datasetCohort(host, name)]);
+}
+
 var warnZoom = state => !_.getIn(state, ['notifications', 'zoomHelp']) ?
 	_.assoc(state, 'zoomHelp', true) : state;
 
@@ -38,11 +44,9 @@ var zoomHelpClose = state =>
 	_.assocIn(_.dissoc(state, 'zoomHelp'),
 			['notifications', 'zoomHelp'], true);
 
-function setLoadingState(state, params) {
-	var pending =  (_.get(params, 'bookmark') || _.get(params, 'inlineState')) ?
+var setLoadingState = (state, params) =>
+	_.any(['bookmark', 'inlineState', 'columns'], p => _.get(params, p)) ?
 		_.assoc(state, 'loadPending', true) : state;
-	return pending;
-}
 
 function fetchState(serverBus) {
 	serverBus.next(['inlineState', fetchInlineState()]);
@@ -69,30 +73,40 @@ var getPage = path =>
 	path === '/import/' ? 'import' :
 	'heatmap';
 
-// XXX This same info also appears in urlParams.js
-var savedParams = params => _.pick(params, 'dataset', 'addHub', 'removeHub', 'hubs', 'host', 'cohort', 'allIdentifiers', 'markdown');
 var setPage = (state, path, params) =>
 	_.assoc(state,
 			'page', getPage(path),
-			'params', savedParams(params));
+			'params', params);
 
 var paramList = params => _.isEmpty(params) ? '' : `?${JSONToqueryString(params)}`;
 
 var controls = {
 	init: (state, pathname = '/', params = {}) => {
-		var next = setLoadingState(state, params);
-		return setPage(next, pathname, params);
+		var next = setLoadingState(state, params),
+			cohort = columnsParam.cohort(params.columns),
+			page = setPage(next, pathname, params);
+			setCohort(cohort);
+		return cohort ?
+			_.updateIn(page, ['spreadsheet'], setCohort({name: cohort})) :
+			page;
 	},
-	'init-post!': (serverBus, state, newState, pathname, params) => {
+	'init-post!': (serverBus, state, newState, pathname, params = {}) => {
 		var bookmark = _.get(params, 'bookmark'),
+			cohort = columnsParam.cohort(params.columns),
 			inlineState = _.get(params, 'inlineState'),
 			manifest = _.get(params, 'manifest');
 		if (inlineState) {
 			fetchState(serverBus);
 		} else if (bookmark) {
 			fetchBookmark(serverBus, bookmark);
+		} else if (cohort) {
+			fetchCohortData(serverBus, newState.spreadsheet);
+		} else if (params.columns) { // have columns but no cohort
+			// All cohorts must match, so take the first one &
+			// later filter any datasets not in the cohort.
+			fetchDatasetCohort(serverBus, params.columns[0]);
 		}
-		if (manifest) {
+		if (manifest) { // not sure why this is separate. bookmark + manifest??
 			fetchManifest(serverBus, manifest);
 		}
 	},

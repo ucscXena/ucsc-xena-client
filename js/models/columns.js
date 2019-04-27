@@ -123,9 +123,10 @@ var guessFields = text => {
 // sparse,
 // dense with probemap,
 // dense without probemap
-export function matchFields(datasets, features, mode, selected, text) {
+// XXX can we deprecate 'mode', since we can get it from datasets[selected]?
+export function matchFields(datasets, mode, selected, text) {
 	if (mode === 'Phenotypic') {
-		return Rx.Observable.of({valid: isValid.Phenotypic(text, selected, features)});
+		return Rx.Observable.of({valid: isValid.Phenotypic(text, selected), matches: [{fields: [text.trim()]}]});
 	}
 	var guess = guessFields(text);
 	if (isValid.Genotypic(text, selected)) {
@@ -160,7 +161,7 @@ function getValueType(dataset, features, fields) {
 	return 'float';
 }
 
-function getFieldType(dataset, features, fields, probes, pos) {
+function getFieldType(dataset, fields, probes, pos) {
 	if (dataset.type === 'mutationVector') {
 		return dataset.dataSubType.search(/SV|structural/i) !== -1 ? 'SV' : 'mutation';
 	}
@@ -196,7 +197,7 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
 		pos = parsePos(input.trim(), getAssembly(datasets, dsID)),
 		sig = parseGeneSignature(input.trim()),
-		fieldType = getFieldType(meta, features[dsID], fields, probes, pos),
+		fieldType = getFieldType(meta, fields, probes, pos),
 		fieldsInput = sig ? sig.genes : parseInput(input),
 		normalizedFields = (
 			pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :
