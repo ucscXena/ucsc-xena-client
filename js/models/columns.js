@@ -237,16 +237,19 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 	};
 }
 
-export var computeSettings = _.curry((datasets, features, inputFields, width, dataset, matches) => {
+export var computeSettings = _.curry((datasets, features, inputFields, opts, dataset, matches) => {
 	var ds = datasets[dataset];
 	var settings = columnSettings(datasets, features, dataset, inputFields, matches.fields, matches.type === 'probes'),
 		columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +
 			(ds.dataSubType && ds.dataSubType.match(/phenotype/i) ? '' : ds.label);
 
-	return _.assoc(settings,
-		'width', _.contains(['mutationVector', 'segmented'], ds.type) ? typeWidth.chrom : typeWidth.matrix,
-		'dataset', ds,
-		'columnLabel', columnLabel,
-		'user', {columnLabel: columnLabel, fieldLabel: settings.fieldLabel});
+	return _.assocIn(settings,
+		['width'], _.contains(['mutationVector', 'segmented'], ds.type) ? typeWidth.chrom : typeWidth.matrix,
+		['dataset'], ds,
+		['columnLabel'], columnLabel,
+		['user'], {columnLabel: columnLabel, fieldLabel: settings.fieldLabel},
+		...(opts || []).flatten()
+	);
+
 });
 
