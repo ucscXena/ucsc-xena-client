@@ -14,9 +14,6 @@ require('./underscore_ext');
 // XXX need a better fetch test. Commenting out during
 // singlecell development.
 //require('./fieldFetch');
-require('./fieldSpec');
-require('./fields');
-require('./datasetJoins');
 require('./compactData');
 require('./parsePos');
 require('./permuteCase');

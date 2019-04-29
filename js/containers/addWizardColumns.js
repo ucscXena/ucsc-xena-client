@@ -7,118 +7,9 @@ var CohortOrDisease = require('../views/CohortOrDisease');
 var VariableSelect = require('../views/VariableSelect');
 var GhostVariableSelect = require('../views/GhostVariableSelect');
 var getStepperState = require('./getStepperState');
-var {getColSpec} = require('../models/datasetJoins');
-var {defaultColorClass} = require('../heatmapColors');
 var uuid = require('../uuid');
 var Rx = require('../rx');
-var parsePos = require('../parsePos');
-var parseGeneSignature = require('../parseGeneSignature');
-var parseInput = require('../parseInput');
-var {signatureField} = require('../models/fieldSpec');
-
-/*function toWordList(str) {
-	// Have to wrap trim because it takes a 2nd param.
-	return _.filter(_.map(str.split(/,| |\n|\t/), s => s.trim(), _.identity));
-}*/
-
-var typeWidth = {
-	matrix: 136,
-	chrom: 200
-};
-
-// 'features' is a problem here, because they are not unique across datasets.
-// How do we look up features w/o a dataset?
-function getValueType(dataset, features, fields) {
-	var {type} = dataset,
-		valuetype = _.getIn(features, [fields[0], 'valuetype']);
-
-	if (type === 'mutationVector') {
-		return 'mutation';
-	}
-	if (type === 'genomicSegment') {
-		return 'segmented';
-	}
-	if (type === 'clinicalMatrix') {
-		return valuetype === 'category' ? 'coded' : 'float';
-	}
-	return 'float';
-}
-
-function getFieldType(dataset, features, fields, probes, pos) {
-	if (dataset.type === 'mutationVector') {
-		return dataset.dataSubType.search(/SV|structural/i) !== -1 ? 'SV' : 'mutation';
-	}
-	if (dataset.type === 'genomicSegment') {
-		return 'segmented';
-	}
-	if (dataset.type === 'clinicalMatrix') {
-		return 'clinical';
-	}
-	// We treat probes in chrom view (pos) as geneProbes
-	return  probes ? 'probes' : ((fields.length > 1 && !pos) ? 'genes' : 'geneProbes');
-}
-
-function sigFields(fields, {genes, weights}) {
-	return {
-		missing: genes.filter((p, i) => !fields[i]),
-		genes: fields.filter(p => p),
-		weights: weights.filter((p, i) => fields[i])
-	};
-}
-
-// XXX duplicated in VariableSelect.
-var getAssembly = (datasets, dsID) =>
-	_.getIn(datasets, [dsID, 'assembly'],
-		_.getIn(datasets, [dsID, 'probemapMeta', 'assembly']));
-
-var getDefaultVizSettings = meta =>
-	// use default vizSettings if we have min and max.
-	_.has(meta, 'min') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} : {};
-
-// XXX handle position in all genomic datatypes?
-function columnSettings(datasets, features, dsID, input, fields, probes) {
-	var meta = datasets[dsID],
-		pos = parsePos(input.trim(), getAssembly(datasets, dsID)),
-		sig = parseGeneSignature(input.trim()),
-		fieldType = getFieldType(meta, features[dsID], fields, probes, pos),
-		fieldsInput = sig ? sig.genes : parseInput(input),
-		normalizedFields = (
-			pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :
-				((['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1) ?
-					[fields[0]] : fields).map((f, i) => f ? f : fieldsInput[i] + " (unknown)"));
-
-	// My god, this is a disaster.
-	if (sig) {
-		let {missing, genes, weights} = sigFields(fields, sig),
-			missingLabel = _.isEmpty(missing) ? '' : ` (missing terms: ${missing.join(', ')})`;
-		return signatureField('signature' + missingLabel, {
-			signature: ['geneSignature', dsID, genes, weights],
-			missing,
-			fieldType: 'probes',
-			defaultNormalization: meta.colnormalization,
-			colorClass: defaultColorClass,
-			fields: [input],
-			dsID
-		});
-	}
-
-	return {
-		...(fieldType === 'geneProbes' ? {showIntrons: true} : {}),
-		...(_.getIn(meta, ['probemapMeta', 'dataSubType']) === 'regulon' ? {clustering: 'probes'} : {}),
-		...(getDefaultVizSettings(meta)),
-		fields: normalizedFields,
-		fetchType: 'xena',
-		valueType: getValueType(meta, features[dsID], fields),
-		fieldType: fieldType,
-		dsID,
-		defaultNormalization: meta.colnormalization,
-		// XXX this assumes fields[0] doesn't appear in features if ds is genomic
-		//fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle'], fields.join(', ')),
-		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle']) || normalizedFields.join(', '),
-		colorClass: defaultColorClass,
-		assembly: meta.assembly || _.getIn(meta, ['probemapMeta', 'assembly'])
-	};
-}
+import {computeSettings, typeWidth} from '../models/columns';
 
 // Configuration for first and second variable select cards that are displayed during wizard.
 var variableSelectConfig = {
@@ -206,21 +97,6 @@ var sortFeatures = features => _.sortBy(features, f => f.label.toUpperCase());
 
 var removeSampleID = features => _.filter(features, f => f.name !== "sampleID");
 
-
-var computeSettings = _.curry((datasets, features, inputFields, width, dataset, matches) => {
-	var ds = datasets[dataset];
-	var settings = columnSettings(datasets, features, dataset, inputFields, matches.fields, matches.type === 'probes'),
-		colSpec = getColSpec([settings], datasets),
-		columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +
-			(ds.dataSubType && ds.dataSubType.match(/phenotype/i) ? '' : ds.label);
-
-	return _.assoc(colSpec,
-		'width', _.contains(['mutationVector', 'segmented'], ds.type) ? typeWidth.chrom : typeWidth.matrix,
-		'dataset', ds,
-		'columnLabel', columnLabel,
-		'user', {columnLabel: columnLabel, fieldLabel: colSpec.fieldLabel});
-});
-
 // 1) if appState.editing, then set editing state, and render editor.
 // 2) if wizard mode
 //      add cohort editor, or
@@ -263,9 +139,9 @@ function addWizardColumns(Component) {
 		};
 
 		onDatasetSelect = (posOrId, input, datasetList, fieldList) => {
-			var {wizard: {datasets, features}, appState: {defaultWidth}} = this.props,
+			var {wizard: {datasets, features}} = this.props,
 				isPos = _.isNumber(posOrId),
-				settingsList = _.mmap(datasetList, fieldList, computeSettings(datasets, features, input, defaultWidth));
+				settingsList = _.mmap(datasetList, fieldList, computeSettings(datasets, features, input, null));
 			this.props.callback(['add-column', posOrId,
 				...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		};
@@ -300,8 +176,8 @@ function addWizardColumns(Component) {
 							key={editing}
 							actionKey={editing}
 							pos={editing}
-							fields={appState.columns[editing].fieldSpecs[0].fields}
-							dataset={appState.columns[editing].fieldSpecs[0].dsID}
+							fields={appState.columns[editing].fieldList}
+							dataset={appState.columns[editing].dsID}
 							title='Edit Variable'
 							{...datasetSelectProps}
 							colId={el.props.label}

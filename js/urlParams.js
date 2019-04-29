@@ -1,9 +1,11 @@
 'use strict';
-var {Let, merge, pick, mapObject} = require('./underscore_ext');
+var {getIn, Let, merge, pick, mapObject} = require('./underscore_ext');
 var {hasBookmark, resetBookmarkLocation, getBookmark} = require('./bookmark');
 var {hasInlineState, resetInlineStateLocation} = require('./inlineState');
 var {hubParams: getHubParams} = require('./hubParams');
 var {allParameters} = require('./util');
+import {columnsParam} from './columnsParam';
+import {heatmapParam} from './heatmapParam';
 
 // This is all really wonky & needs refactor.
 
@@ -44,7 +46,11 @@ function manifest() {
 }
 
 function getParams() {
-	return merge(hubParams2, bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest());
+	var columns = columnsParam(),
+		// ignore heatmap param w/o column param.
+		heatmap = getIn(columns, ['columns', 'length'], 0) > 0 ? heatmapParam() : {};
+	return merge(hubParams2, bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest(), columns,
+		heatmap);
 }
 
 // Our handling of parameters 'hub' and 'host', is somewhat confusing. 'host'
