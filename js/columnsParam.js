@@ -60,6 +60,7 @@ var pickAllowed = c => pick(c, columnAllowed);
 
 var columnSchema = list =>
 	isArray(list) &&
+	list.length > 0 &&
 	list.every(column =>
 			isObject(column) &&
 			(has(column, 'name') && has(column, 'host') || has(column, 'cohort') && has(column, 'type')) &&

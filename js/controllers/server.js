@@ -41,6 +41,11 @@ var featuresByID = state => {
 	return _.object(all);
 };
 
+var setHeatmapParams = state =>
+	state.params.heatmap ? _.updateIn(state, ['spreadsheet'],
+		spreadsheet => _.assocIn(spreadsheet, ...state.params.heatmap.flatten()))
+		: state;
+
 var linkedColumns = (state, [fieldResp, ids]) => {
 	var columnParams = state.params.columns,
 		byID = datasetsByID(state),
@@ -52,7 +57,7 @@ var linkedColumns = (state, [fieldResp, ids]) => {
 
 	return _.reduce(columns,
 			 (acc, spec, i) => _.assocIn(acc, ['spreadsheet', 'columns', ids[i]], spec),
-			 _.updateIn(resetLoadPending(state),
+			 _.updateIn(resetLoadPending(setHeatmapParams(state)),
 					['spreadsheet'], s => _.dissoc(s, 'fieldMatches'),
 					['spreadsheet', 'columnOrder'], o => o.concat(ids),
 					['spreadsheet', 'wizardMode'], () => false));
