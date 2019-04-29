@@ -243,6 +243,9 @@ export var computeSettings = _.curry((datasets, features, inputFields, opts, dat
 		columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +
 			(ds.dataSubType && ds.dataSubType.match(/phenotype/i) ? '' : ds.label);
 
+	// XXX need a way to validate settings that depend on column type, i.e.
+	// fieldType geneProbes only works for matrix with probemap.
+	// Or, a possible refactor of the schema to make this simpler?
 	return _.assocIn(settings,
 		['width'], _.contains(['mutationVector', 'segmented'], ds.type) ? typeWidth.chrom : typeWidth.matrix,
 		['dataset'], ds,
