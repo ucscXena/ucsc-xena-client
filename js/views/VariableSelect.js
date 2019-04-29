@@ -10,13 +10,10 @@ var WizardCard = require('./WizardCard');
 var GeneSuggest = require('./GeneSuggest');
 var PhenotypeSuggest = require('./PhenotypeSuggest');
 var {rxEvents} = require('../react-utils');
-var xenaQuery = require('../xenaQuery');
-var Rx = require('../rx');
-var multi = require('../multi');
-var parseGeneSignature = require('../parseGeneSignature');
-var parseInput = require('../parseInput');
 var parsePos = require('../parsePos');
 var {ignoredType} = require('../models/dataType');
+import {matchFields, isValid, isValueValid} from '../models/columns';
+
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
@@ -138,16 +135,6 @@ var getModeFields = {
 	Phenotypic: PhenotypicForm
 };
 
-var isValueValid = {
-	Genotypic: value => value.trim().length > 0,
-	Phenotypic: () => true
-};
-
-var isValid = {
-	Genotypic: (value, selected) => isValueValid.Genotypic(value) && selected.length > 0,
-	Phenotypic: (value, selected) => selected.length > 0
-};
-
 var applyInitialState = {
 	Genotypic: (fields, dataset, datasets, features, preferred, defaults) => {
 		var mode = 'Genotypic',
@@ -185,85 +172,6 @@ var datasetMode = (datasets, dataset) =>
 	datasets[dataset] ? (notIgnored(datasets[dataset]) ? 'Genotypic' : 'Phenotypic') :
 		undefined;
 
-var matchDatasetFields = multi((datasets, dsID, {sig}) => {
-	var meta = datasets[dsID];
-	return meta.type === 'genomicMatrix' && meta.probemap && !sig ? 'genomicMatrix-probemap' : meta.type;
-});
-
-// XXX The error handling here isn't great, because it can leave us with a
-// field of the wrong case, e.g. foxm1 vs. FOXM1, or treat a probe as a gene.
-// However, it's better to handle it than to lose the observable, which wedges
-// the widget. Better handling would warn the user and wait for the network
-// error to clear.
-
-// default to probes
-matchDatasetFields.dflt = (datasets, dsID, {fields, isPos}) => {
-	var warning = isPos ? 'position-unsupported' : undefined;
-	return xenaQuery.matchFields(dsID, fields).map(fields => ({
-		type: 'probes',
-		warning,
-		fields
-	})).catch(err => {
-		console.log(err);
-		return Rx.Observable.of({type: 'probes', warning, fields: fields});
-	});
-};
-
-var geneProbeMatch = (host, dsID, probemap, fields) =>
-	Rx.Observable.zip(
-		xenaQuery.sparseDataMatchGenes(host, probemap, fields),
-		xenaQuery.matchFields(dsID, fields),
-		(genes, probes) => _.filter(probes, _.identity).length > _.filter(genes, _.identity).length ?
-			{
-				type: 'probes',
-				fields: probes
-			} : {
-				type: 'genes',
-				fields: genes
-			}).catch(err => {
-		console.log(err);
-		return Rx.Observable.of({type: 'genes', fields: fields});
-	});
-
-var MAX_PROBES = 500;
-var chromLimit = (host, probemap, pos, fields) =>
-	xenaQuery.maxRange(host, probemap, pos.chrom, pos.baseStart, pos.baseEnd, MAX_PROBES)
-		.map(([end]) => ({
-			type: 'chrom',
-			fields,
-			...(end != null ? {
-				warning: 'too-many-probes',
-				start: pos.baseStart,
-				end: end - 1} : {})
-		}));
-
-matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, {value, fields}) => {
-	const {host} = JSON.parse(dsID),
-		probemap = datasets[dsID].probemap,
-		pos = parsePos(value, datasets[dsID].probemapMeta.assembly);
-	return pos ? chromLimit(host, probemap, pos, fields)
-		: geneProbeMatch(host, dsID, probemap, fields);
-});
-
-var matchAnyPosition = fields => Rx.Observable.of({type: 'chrom', fields: fields});
-
-var normalizeGenes = (host, dsID, genes) =>
-	xenaQuery.sparseDataMatchField(host, 'name2', dsID, genes).map(fields => ({
-			type: 'genes',
-			fields
-		}));
-
-function matchWithAssembly(datasets, dsID, {fields, isPos}) {
-	var ref = xenaQuery.refGene[datasets[dsID].assembly];
-	return (isPos ? matchAnyPosition(fields) : normalizeGenes(ref.host, ref.name, fields)).catch(err => {
-		console.log(err);
-		return Rx.Observable.of({type: 'genes', fields: fields});
-	});
-}
-
-matchDatasetFields.add('genomicSegment', matchWithAssembly);
-matchDatasetFields.add('mutationVector', matchWithAssembly);
-
 var pluralDataset = i => i === 1 ? 'A dataset' : 'Some datasets';
 var pluralDo = i => i === 1 ? 'does' : 'do';
 //var pluralHas = i => i === 1 ? 'has' : 'have';
@@ -283,44 +191,6 @@ function getWarningText(matches, datasets, selected, hasCoord, value) {
 		pwarn = probes && pos ? [`There are too many data points to display. Please try a smaller region like ${pos.chrom}:${max.start}-${max.end}.`] : [];
 
 	return [...awarn, ...uwarn, ...pwarn];
-}
-
-var guessFields = text => {
-	var value = text.trim(),
-		sig = parseGeneSignature(value),
-		isPos = value.match(/^chr[0-9xyXY]+[pq]?/),
-		hasCoord = value.match(/^chr[0-9xyXY]+[pq]?:/),
-		fields = sig ? sig.genes :
-			isPos ? [value] :
-			parseInput(value);
-
-	return {
-		value,
-		fields,
-		sig,
-		isPos,
-		hasCoord
-	};
-};
-
-// need to handle
-// phenotypic,
-// null field, null dataset
-// sparse,
-// dense with probemap,
-// dense without probemap
-function matchFields(datasets, features, mode, selected, text) {
-	if (mode === 'Phenotypic') {
-		return Rx.Observable.of({valid: isValid.Phenotypic(text, selected, features)});
-	}
-	var guess = guessFields(text);
-	if (isValid.Genotypic(text, selected)) {
-		// Be sure to handle leading and trailing commas, as might occur during user edits
-		return Rx.Observable.zip(
-			...selected.map(dsID => matchDatasetFields(datasets, dsID, guess)),
-			(...matches) => ({matches, guess, valid: !_.any(matches, m => m.warning)}));
-	}
-	return Rx.Observable.of({valid: false, guess});
 }
 
 var featureIndexes = (features, list) =>
@@ -400,7 +270,7 @@ class VariableSelect extends PureComponent {
 			(mode, advanced, selected, value) => ([mode, selected[mode][advanced[mode]], value[mode]]))
 			.do(() => this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
-					matchFields(this.props.datasets, this.props.features, mode, selected, value))
+					matchFields(this.props.datasets, mode, selected, value))
 			.subscribe(valid => this.setState({loading: false, matches: [], ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
 	}
 

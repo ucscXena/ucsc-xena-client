@@ -4,6 +4,7 @@ var {hasBookmark, resetBookmarkLocation, getBookmark} = require('./bookmark');
 var {hasInlineState, resetInlineStateLocation} = require('./inlineState');
 var {hubParams: getHubParams} = require('./hubParams');
 var {allParameters} = require('./util');
+import {columnsParam} from './columnsParam';
 
 // This is all really wonky & needs refactor.
 
@@ -44,7 +45,7 @@ function manifest() {
 }
 
 function getParams() {
-	return merge(hubParams2, bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest());
+	return merge(hubParams2, bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest(), columnsParam());
 }
 
 // Our handling of parameters 'hub' and 'host', is somewhat confusing. 'host'

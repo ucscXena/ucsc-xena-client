@@ -9,9 +9,9 @@
 //
 //
 
-var version = 1;
+var version = 2; // XXX duplicated in store.js?
 
-var {assoc, get, getIn, Let, pick, isString, flatten, /*contains, */updateIn, without} = require('./underscore_ext');
+var {assoc, flatten, get, getIn, Let, mapObject, merge, omit, pick, isString, updateIn, without} = require('./underscore_ext');
 
 var setVersion = state => assoc(state, 'version', version);
 var getVersion = state =>
@@ -22,10 +22,8 @@ var noComposite = state => assoc(state,
 		'cohortSamples', state.cohortSamples[0]);
 
 var spreadsheetProps = ['columnOrder', 'columns', 'mode', 'notifications', 'servers', 'showWelcome', 'wizardMode', 'zoom', 'defaultWidth', 'data', 'cohort', 'cohortSamples', 'km', 'survival', 'sampleSearch', 'samplesOver', 'editing', 'openVizSettings', 'chartState', 'hasPrivateSamples'];
-//var dropProps = ['cohortMeta', 'cohortPreferred', 'cohortPhenotype', 'cohorts', 'datasets', 'features', 'samples', 'columnEdit'];
 
 var splitPages = state => {
-//	console.log('Unhandled state', pick(state, (v, k) => !contains(spreadsheetProps, k) && !contains(dropProps, k)));
 	return {
 		spreadsheet: pick(state, spreadsheetProps),
 		page: 'heatmap'
@@ -40,9 +38,14 @@ var samplesToLeft = state =>
 		updateIn(state, ['spreadsheet', 'columnOrder'], order => ['samples', ...without(order, 'samples')]) :
 		state;
 
+var noFieldSpec = state =>
+	updateIn(state, ['spreadsheet', 'columns'], columns =>
+			mapObject(columns, column => merge(omit(column, 'fieldSpecs'), getIn(column, ['fieldSpecs', 0], {}))));
+
 // This must be sorted, with later versions appearing last.
 var migrations = [
-	[noComposite, splitPages, samplesToLeft]
+	[noComposite, splitPages, samplesToLeft], // to v1
+	[noFieldSpec]                             // to v2
 ];
 
 function apply(state) {

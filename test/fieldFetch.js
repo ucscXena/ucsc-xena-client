@@ -6,7 +6,6 @@ var {isObject, isNumber, isArray, getIn, get, every, pluck} =
 	require('../js/underscore_ext');
 var fetch = require('../js/fieldFetch');
 require('../js/models/denseMatrix');
-require('../js/models/datasetJoins');
 var Rx = require('../js/rx');
 
 var assert = require('assert');

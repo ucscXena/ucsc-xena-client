@@ -11,7 +11,6 @@ var widgets = require('./columnWidgets');
 var classNames = require('classnames');
 var gaEvents = require('./gaEvents');
 import { signatureField } from './models/fieldSpec';
-import { getColSpec } from './models/datasetJoins';
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
 
@@ -80,10 +79,9 @@ function getFilterColumn(title, sampleSets, exprs, opts = {}) {
 			signature: ['cross', sampleSets, exprs],
 			...opts
 		}),
-		colSpec = getColSpec([field], []),
-		settings = _.assoc(colSpec,
+		settings = _.assoc(field,
 				'width', 136,
-				'user', _.pick(colSpec, ['columnLabel', 'fieldLabel']));
+				'user', _.pick(field, ['columnLabel', 'fieldLabel']));
 	return {id: uuid(), settings};
 }
 

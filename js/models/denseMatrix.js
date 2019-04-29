@@ -27,9 +27,9 @@ var flopIfNegStrand = (strand, req) => {
 var colorCodeMap = (codes, colors) =>
 	colors ? _.map(codes, c => colors[c] || greyHEX) : null;
 
-var getCustomColor = (fieldSpecs, fields, dataset) =>
+var getCustomColor = (fields, dataset) =>
 	fields.length === 1 ?
-		_.getIn(dataset, ['customcolor', fieldSpecs[0].fields[0]], null) : null;
+		_.getIn(dataset, ['customcolor', fields[0]], null) : null;
 
 var defaultXZoom = (pos, refGene, position, showPos, values) =>
 	!showPos ? {start: 0, end: values.length} :
@@ -90,10 +90,10 @@ function dataToHeatmap(column, vizSettings, data) {
 	var {req, avg} = data,
 		vizSettingCodes = parseVizSettingCodes(_.getIn(column, ['vizSettings', 'codes'])),
 		codes = vizSettingCodes || data.codes,
-		{dataset, fieldSpecs} = column,
+		{dataset} = column,
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = req.values,
-		customColors = colorCodeMap(codes, getCustomColor(fieldSpecs, fields, dataset)),
+		customColors = colorCodeMap(codes, getCustomColor(column.fields, dataset)),
 		assembly = _.getIn(dataset, ['probemapMeta', 'assembly']),
 		colors = fields.map((p, i) =>
 			heatmapColors.colorSpec(column, vizSettings, codes,
@@ -381,4 +381,5 @@ module.exports = {
 	fetchGeneOrChromProbes,
 	fetchGene,
 	fetchFeature,
+	getCustomColor
 };

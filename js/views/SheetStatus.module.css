@@ -48,6 +48,6 @@
 }
 
 /* State */
-.state {
+.status > div:not(:first-of-type) {
 	margin-left: 4px;
 }

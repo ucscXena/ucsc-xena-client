@@ -30,8 +30,8 @@ class SheetControls extends React.Component {
 			/*filterLabel = 'Filter:',*/
 			mode = appState.mode,
 			zoomed = count !== appState.samples.length,
-			zoomLabel = zoomed ? 'Zoomed' : 'Zoom:',
-			zoomState = zoomed ? (index === index + count - 1) ? `to row ${index + 1}` : `to rows ${index + 1} - ${index + count}` : 'None',
+			zoomLabel = zoomed ? 'Zoomed' : null,
+			zoomState = zoomed ? (index === index + count - 1) ? `to row ${index + 1}` : `to rows ${index + 1} - ${index + count}` : 'Click and drag in column to zoom',
 			zoomStatus = (<SheetStatus className={compStyles.zoomAnimate} disabled={statusDisabled} label={zoomLabel} sheetState={zoomState}/>),
 			ZoomTooltip = Tooltip('zoomStatus');
 		return (

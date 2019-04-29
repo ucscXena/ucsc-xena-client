@@ -8,7 +8,6 @@ var _ = require('../underscore_ext');
 var {reifyErrors, collectResults} = require('./errors');
 var fetch = require('../fieldFetch');
 var kmModel = require('../models/km');
-var {getColSpec} = require('../models/datasetJoins');
 var {signatureField} = require('../models/fieldSpec');
 var defaultServers = require('../defaultServers');
 var {publicServers} = defaultServers;
@@ -167,10 +166,9 @@ function addSampleColumn(state, width) {
 			signature: ['samples']
 		}),
 		newOrder = _.has(state.columns, 'samples') ? state.columnOrder : [...state.columnOrder, 'samples'],
-		colSpec = getColSpec([field], {}),
-		settings = _.assoc(colSpec,
+		settings = _.assoc(field,
 				'width', Math.round(width == null ? 136 : width),
-				'user', _.pick(colSpec, ['columnLabel', 'fieldLabel'])),
+				'user', _.pick(field, ['columnLabel', 'fieldLabel'])),
 		newState = _.assocIn(state,
 			['columns', 'samples'], settings,
 			['columnOrder'], newOrder);
@@ -230,12 +228,12 @@ function survivalFields(cohortFeatures) {
 		fields = {};
 
 	if (hasSurvFields(vars)) {
-		fields[`patient`] = getColSpec([codedFieldSpec(vars.patient)]);
+		fields[`patient`] = codedFieldSpec(vars.patient);
 
 		_.values(kmModel.survivalOptions).forEach(function(option) {
 			if (vars[option.ev] && vars[option.tte]) {
-				fields[option.ev] = getColSpec([probeFieldSpec(vars[option.ev])]);
-				fields[option.tte] = getColSpec([probeFieldSpec(vars[option.tte])]);
+				fields[option.ev] = probeFieldSpec(vars[option.ev]);
+				fields[option.tte] = probeFieldSpec(vars[option.tte]);
 			}
 		});
 
