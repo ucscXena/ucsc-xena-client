@@ -2,7 +2,7 @@
 
 import multi from '../multi';
 import * as xenaQuery from '../xenaQuery';
-import * as Rx from '../rx';
+import {Observable, Scheduler} from '../rx';
 import * as _ from '../underscore_ext';
 import parsePos from '../parsePos';
 import parseInput from '../parseInput';
@@ -30,12 +30,12 @@ matchDatasetFields.dflt = (datasets, dsID, {fields, isPos}) => {
 		fields
 	})).catch(err => {
 		console.log(err);
-		return Rx.Observable.of({type: 'probes', warning, fields: fields});
+		return Observable.of({type: 'probes', warning, fields: fields}, Scheduler.asap);
 	});
 };
 
 var geneProbeMatch = (host, dsID, probemap, fields) =>
-	Rx.Observable.zip(
+	Observable.zip(
 		xenaQuery.sparseDataMatchGenes(host, probemap, fields),
 		xenaQuery.matchFields(dsID, fields),
 		(genes, probes) => _.filter(probes, _.identity).length > _.filter(genes, _.identity).length ?
@@ -47,7 +47,7 @@ var geneProbeMatch = (host, dsID, probemap, fields) =>
 				fields: genes
 			}).catch(err => {
 		console.log(err);
-		return Rx.Observable.of({type: 'genes', fields: fields});
+		return Observable.of({type: 'genes', fields: fields}, Scheduler.asap);
 	});
 
 var MAX_PROBES = 500;
@@ -70,7 +70,7 @@ matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, {value, fields
 		: geneProbeMatch(host, dsID, probemap, fields);
 });
 
-var matchAnyPosition = fields => Rx.Observable.of({type: 'chrom', fields: fields});
+var matchAnyPosition = fields => Observable.of({type: 'chrom', fields: fields}, Scheduler.asap);
 
 var normalizeGenes = (host, dsID, genes) =>
 	xenaQuery.sparseDataMatchField(host, 'name2', dsID, genes).map(fields => ({
@@ -82,7 +82,7 @@ function matchWithAssembly(datasets, dsID, {fields, isPos}) {
 	var ref = xenaQuery.refGene[datasets[dsID].assembly];
 	return (isPos ? matchAnyPosition(fields) : normalizeGenes(ref.host, ref.name, fields)).catch(err => {
 		console.log(err);
-		return Rx.Observable.of({type: 'genes', fields: fields});
+		return Observable.of({type: 'genes', fields: fields}, Scheduler.asap);
 	});
 }
 
@@ -126,16 +126,16 @@ var guessFields = text => {
 // XXX can we deprecate 'mode', since we can get it from datasets[selected]?
 export function matchFields(datasets, mode, selected, text) {
 	if (mode === 'Phenotypic') {
-		return Rx.Observable.of({valid: isValid.Phenotypic(text, selected), matches: [{fields: [text.trim()]}]});
+		return Observable.of({valid: isValid.Phenotypic(text, selected), matches: [{fields: [text.trim()]}]}, Scheduler.asap);
 	}
 	var guess = guessFields(text);
 	if (isValid.Genotypic(text, selected)) {
 		// Be sure to handle leading and trailing commas, as might occur during user edits
-		return Rx.Observable.zip(
+		return Observable.zip(
 			...selected.map(dsID => matchDatasetFields(datasets, dsID, guess)),
 			(...matches) => ({matches, guess, valid: !_.any(matches, m => m.warning)}));
 	}
-	return Rx.Observable.of({valid: false, guess});
+	return Observable.of({valid: false, guess}, Scheduler.asap);
 }
 
 export var typeWidth = {
