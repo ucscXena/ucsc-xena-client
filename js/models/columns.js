@@ -89,13 +89,8 @@ function matchWithAssembly(datasets, dsID, {fields, isPos}) {
 matchDatasetFields.add('genomicSegment', matchWithAssembly);
 matchDatasetFields.add('mutationVector', matchWithAssembly);
 
-export var isValueValid = {
-	Genotypic: value => value.trim().length > 0,
-	Phenotypic: () => true
-};
-
-export var isValid = {
-	Genotypic: (value, selected) => isValueValid.Genotypic(value) && selected.length > 0,
+var isValid = {
+	Genotypic: (value, selected) => value.trim().length > 0 && selected.length > 0,
 	Phenotypic: (value, selected) => selected.length > 0
 };
 

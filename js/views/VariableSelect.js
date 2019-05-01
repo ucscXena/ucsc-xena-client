@@ -12,7 +12,7 @@ var PhenotypeSuggest = require('./PhenotypeSuggest');
 var {rxEvents} = require('../react-utils');
 var parsePos = require('../parsePos');
 var {ignoredType} = require('../models/dataType');
-import {matchFields, isValid, isValueValid} from '../models/columns';
+import {matchFields} from '../models/columns';
 
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
@@ -140,29 +140,25 @@ var applyInitialState = {
 		var mode = 'Genotypic',
 			isPreferred = _.contains(_.pluck(preferred, 'dsID'), dataset),
 			value = fields.join(' '),
-			selected = [dataset],
-			valid = isValid[mode](value, selected);
+			selected = [dataset];
 
 		return _.assocIn(defaults,
 			['mode'], mode,
 			['advanced', mode], !isPreferred,
 			['value', mode], value,
-			['selected', mode, !isPreferred], selected,
-			['valid'], valid);
+			['selected', mode, !isPreferred], selected);
 	},
 	Phenotypic: (fields, dataset, datasets, features, preferred, defaults) => {
 		var mode = 'Phenotypic',
 			i = _.findIndex(features, _.matcher({dsID: dataset, name: fields[0]})).toString(),
-			selected = [i],
-			valid = isValid[mode]('', selected);
+			selected = [i];
 
 		return i === '-1' ?
 			_.assocIn(defaults, ['unavailable'], true) :
 			_.assocIn(defaults,
 				['mode'], mode,
 				['basicFeatures'], defaults.basicFeatures,
-				['selected', mode, false], selected,
-				['valid'], valid);
+				['selected', mode, false], selected);
 	},
 	'undefined': (fields, dataset, datasets, features, preferred, defaults) =>
 		_.assocIn(defaults, ['unavailable'], true)
@@ -305,11 +301,14 @@ class VariableSelect extends PureComponent {
 	};
 
 	onDoneInvalid = () => {
-		var {features} = this.props,
-			{mode} = this.state,
+		var {mode} = this.state,
 			value = this.state.value[mode];
 
-		if (!isValueValid[mode](value, features)) {
+		// Highlight the input field, since the user has forgotten it.
+		// Might want to also scroll it into position, and also
+		// scroll it into position if there's another error, like
+		// assembly mismatch.
+		if (mode === 'Genotypic' && value.trim().length === 0) {
 			this.setState({error: true});
 		}
 	};
