@@ -40,7 +40,7 @@ function tooltip(heatmap, sampleFormat, codes, width, zoom, samples, ev) {
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex];
 
-	var val = _.getIn(heatmap, [0, sampleIndex]),
+	var val = _.getIn(heatmap, [0, sampleID]),
 		code = _.get(codes, val, 'NA');
 
 	return {
