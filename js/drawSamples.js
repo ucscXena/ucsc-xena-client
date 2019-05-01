@@ -54,7 +54,7 @@ function draw(vg, opts) {
 						h,
 						labelColors[i % 2],
 						labelFont,
-						codes[data[samples[s]]]
+						codes[data[0][samples[s]]]
 					)
 				)
 			);
