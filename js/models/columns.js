@@ -171,8 +171,10 @@ var getDefaultVizSettings = meta =>
 	// use default vizSettings if we have min and max.
 	_.has(meta, 'min') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} : {};
 
-function columnSettings(datasets, features, dsID, input, fields, probes) {
-	var meta = datasets[dsID],
+function columnSettings(datasets, features, dsID, matches) {
+	var {fields, value: input} = matches,
+		probes = matches.type === 'probes',
+		meta = datasets[dsID],
 		pos = parsePos(input.trim(), getAssembly(datasets, dsID)),
 		sig = parseGeneSignature(input.trim()),
 		fieldType = getFieldType(meta, fields, probes, pos),
@@ -215,9 +217,9 @@ function columnSettings(datasets, features, dsID, input, fields, probes) {
 	};
 }
 
-export var computeSettings = _.curry((datasets, features, inputFields, opts, dataset, matches) => {
+export var computeSettings = _.curry((datasets, features, opts, dataset, matches) => {
 	var ds = datasets[dataset];
-	var settings = columnSettings(datasets, features, dataset, inputFields, matches.fields, matches.type === 'probes'),
+	var settings = columnSettings(datasets, features, dataset, matches),
 		columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +
 			(ds.dataSubType && ds.dataSubType.match(/phenotype/i) ? '' : ds.label);
 

@@ -53,7 +53,7 @@ var linkedColumns = (state, [fieldResp, ids]) => {
 		columns = _.mmap(columnParams, fieldResp,
 			(column, matches) =>
 				_.Let((dsID = JSON.stringify({host: column.host, name: column.name})) =>
-				computeSettings(byID, features, column.fields, column.opts, dsID, matches))); // XXX 0?
+				computeSettings(byID, features, column.opts, dsID, matches)));
 
 	return _.reduce(columns,
 			 (acc, spec, i) => _.assocIn(acc, ['spreadsheet', 'columns', ids[i]], spec),
