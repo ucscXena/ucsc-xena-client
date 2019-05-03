@@ -220,12 +220,14 @@ var matchFields = {
 			...selected.map(i =>
 				doMatch(datasets, features[i].dsID, features[i].name)))
 		.map(matches => ({matches, valid: selected.length > 0})),
+
 	Genotypic: ({datasets}, selected, text) =>
 		text.trim().length === 0 ? Observable.of({valid: false}, Scheduler.asap) :
 		// XXX apply assembly warnings & set validity
 		Observable.zipArray(
 			...selected.map(dsID => doMatch(datasets, dsID, text)))
-		.map(matches => ({matches, valid: !_.any(matches, m => m.warning), guess: _.pick(parsePos(text), 'hasCoord')})),
+		.map(matches => ({matches, valid: !_.any(matches, m => m.warning), ..._.pick(parsePos(text), 'hasCoord')})),
+
 	Analytic: ({datasets, analytic}, selected) =>
 		Observable.zipArray(
 			...selected.map(i =>
@@ -264,7 +266,7 @@ class VariableSelect extends PureComponent {
 				Analytic: ''
 			},
 			valid: false,
-			guess: {}
+			hasCoord: false
 		};
 
 		this.state = fields && dataset ?
@@ -360,7 +362,7 @@ class VariableSelect extends PureComponent {
 	};
 
 	render() {
-		var {mode, matches, guess: {hasCoord}, advanced, valid,
+		var {mode, matches, hasCoord, advanced, valid,
 				loading, error, unavailable, basicFeatures} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
