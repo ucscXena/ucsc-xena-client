@@ -172,11 +172,9 @@ var getDefaultVizSettings = meta =>
 	_.has(meta, 'min') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} : {};
 
 function columnSettings(datasets, features, dsID, matches) {
-	var {fields, value: input} = matches,
+	var {fields, value: input, pos, sig} = matches,
 		probes = matches.type === 'probes',
 		meta = datasets[dsID],
-		pos = parsePos(input.trim(), getAssembly(datasets, dsID)),
-		sig = parseGeneSignature(input.trim()),
 		fieldType = getFieldType(meta, fields, probes, pos),
 		fieldsInput = sig ? sig.genes : parseInput(input),
 		normalizedFields = (
