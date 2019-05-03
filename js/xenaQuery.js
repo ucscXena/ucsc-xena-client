@@ -444,6 +444,27 @@ var cohortPreferredURL = `${cohortMetaData}/defaultDataset.json`;
 
 var cohortPhenotypeURL = `${cohortMetaData}/defaultPhenotype.json`;
 
+var cohortAnalyticURL =  `${cohortMetaData}/analytic.json`;
+// For testing
+//var analyticTest = encodeURIComponent(JSON.stringify({
+//	'TCGA Breast Cancer (BRCA)': [
+//		{
+//			name: 'TCGA.BRCA.sampleMap/AgilentG4502A_07_3',
+//			host: 'https://tcga.xenahubs.net',
+//			fields: '=TP53 + FOXM1',
+//			label: 'a signature', // label in wizard
+//			width: 250
+//		},
+//		{
+//			name: 'TCGA.BRCA.sampleMap/BRCA_clinicalMatrix',
+//			host: 'https://tcga.xenahubs.net',
+//			fields: 'CN_Clusters_nature2012',
+//			label: 'a phenotype', // label in wizard
+//		},
+//	]
+//}));
+//var cohortAnalyticURL = `data:application/json,${analyticTest}`;
+
 var tumorMapURL = `${cohortMetaData}/defaultTumormap.json`;
 
 var fetchJSON = url =>
@@ -452,7 +473,8 @@ var fetchJSON = url =>
 		method: 'GET',
 		responseType: 'json',
 		crossDomain: true
-	}).map(xhr => xhr.response);
+	}).map(xhr => xhr.response)
+	.catch(() => Rx.Observable.of({}, Rx.Scheduler.asap));
 
 
 module.exports = {
@@ -480,5 +502,6 @@ module.exports = {
 	fetchCohortMeta: fetchJSON(cohortMetaURL),
 	fetchCohortPreferred: fetchJSON(cohortPreferredURL),
 	fetchCohortPhenotype: fetchJSON(cohortPhenotypeURL),
+	fetchCohortAnalytic: fetchJSON(cohortAnalyticURL),
 	fetchTumorMap: fetchJSON(tumorMapURL),
 };

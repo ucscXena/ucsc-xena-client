@@ -12,7 +12,8 @@ var PhenotypeSuggest = require('./PhenotypeSuggest');
 var {rxEvents} = require('../react-utils');
 var parsePos = require('../parsePos');
 var {ignoredType} = require('../models/dataType');
-import {matchFields} from '../models/columns';
+import {matchDatasetFields} from '../models/columns';
+import {Observable, Scheduler} from '../rx';
 
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
@@ -130,9 +131,21 @@ var PhenotypicForm = props => {
 		</div>);
 };
 
+var AnalyticForm = props => {
+	var options = props.analytic.map(({label}, i) => ({value: i.toString(), label: label}));
+	return (
+		<div>
+			<XCheckboxGroup
+				label='Variable'
+				onChange={props.onChange}
+				options={selectedOptions(props.selected, [{options}])}/>
+		</div>);
+};
+
 var getModeFields = {
 	Genotypic: GenotypicForm,
-	Phenotypic: PhenotypicForm
+	Phenotypic: PhenotypicForm,
+	Analytic: AnalyticForm
 };
 
 var applyInitialState = {
@@ -174,8 +187,10 @@ var pluralDo = i => i === 1 ? 'does' : 'do';
 
 var fieldAssembly = datasets => (match, dsID) => getAssembly(datasets, dsID);
 
+// XXX take intersection of matched fields if some are missing.
 function getWarningText(matches, datasets, selected, hasCoord, value) {
 	var pos = parsePos(value),
+		// XXX This is wrong. Should do the checking during matchFields & just look up the warning text here.
 		assemblies = hasCoord && _.uniq(
 			_.mmap(matches, selected, fieldAssembly(datasets)).filter(x => x)),
 		awarn = _.get(assemblies, 'length') > 1 ? ['Your dataset selections include two different assemblies. For chromosome view, the assembly must be unique.'] : [],
@@ -192,6 +207,32 @@ function getWarningText(matches, datasets, selected, hasCoord, value) {
 var featureIndexes = (features, list) =>
 	list.map(f => _.findIndex(features, _.matcher(f)).toString()).filter(x => x !== "-1");
 
+var toDsID = ({host, name}) => JSON.stringify({host, name});
+
+var doMatch = (datasets, dsID, field) =>
+	matchDatasetFields(datasets, dsID, field)
+		.map(r => ({...r, dataset: datasets[dsID]}));
+
+// This is still kinda wonky, dispatching on mode before dispatching on type.
+var matchFields = {
+	Phenotypic: ({datasets, features}, selected) =>
+		Observable.zipArray(
+			...selected.map(i =>
+				doMatch(datasets, features[i].dsID, features[i].name)))
+		.map(matches => ({matches, valid: selected.length > 0})),
+	Genotypic: ({datasets}, selected, text) =>
+		text.trim().length === 0 ? Observable.of({valid: false}, Scheduler.asap) :
+		// XXX apply assembly warnings & set validity
+		Observable.zipArray(
+			...selected.map(dsID => doMatch(datasets, dsID, text)))
+		.map(matches => ({matches, valid: !_.any(matches, m => m.warning), guess: _.pick(parsePos(text), 'hasCoord')})),
+	Analytic: ({datasets, analytic}, selected) =>
+		Observable.zipArray(
+			...selected.map(i =>
+				doMatch(datasets, toDsID(analytic[i]), analytic[i].fields)))
+		.map(matches => ({matches, valid: selected.length > 0}))
+};
+
 class VariableSelect extends PureComponent {
 	constructor(props) {
 		super(props);
@@ -200,7 +241,8 @@ class VariableSelect extends PureComponent {
 			mode,
 			advanced: {
 				Genotypic: _.isEmpty(preferred),
-				Phenotypic: false
+				Phenotypic: false,
+				Analytic: false
 			},
 			basicFeatures: featureIndexes(features, basicFeatures),
 			selected: {
@@ -211,11 +253,15 @@ class VariableSelect extends PureComponent {
 				Phenotypic: {
 					true: [], // advanced
 					false: [] // !advanced
+				},
+				Analytic: {
+					false: []
 				}
 			},
 			value: {
 				Genotypic: '',
-				Phenotypic: ''
+				Phenotypic: '',
+				Analytic: ''
 			},
 			valid: false,
 			guess: {}
@@ -266,7 +312,7 @@ class VariableSelect extends PureComponent {
 			(mode, advanced, selected, value) => ([mode, selected[mode][advanced[mode]], value[mode]]))
 			.do(() => this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
-					matchFields(this.props.datasets, mode, selected, value))
+					matchFields[mode](this.props, selected, value))
 			.subscribe(valid => this.setState({loading: false, matches: [], ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
 	}
 
@@ -283,21 +329,10 @@ class VariableSelect extends PureComponent {
 	};
 
 	onDone = () => {
-		var {pos, features, onSelect} = this.props,
-			{mode, advanced, valid, matches} = this.state,
-			value = this.state.value[mode],
-			selected = this.state.selected[mode][advanced[mode]];
+		var {pos, onSelect} = this.props,
+			{matches} = this.state;
 
-		if (valid) {
-			if (mode === 'Genotypic') {
-				onSelect(pos, value, selected, matches);
-			} else {
-				let selectedFeatures = selected.map(s => features[s]),
-					datasets = _.pluck(selectedFeatures, 'dsID'),
-					fields = selectedFeatures.map(f => ({fields: [f.name]}));
-				onSelect(pos, "", datasets, fields);
-			}
-		}
+		onSelect(pos, matches);
 	};
 
 	onDoneInvalid = () => {
@@ -329,7 +364,8 @@ class VariableSelect extends PureComponent {
 				loading, error, unavailable, basicFeatures} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
-			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
+			{colId, controls, datasets, features, preferred, analytic, title,
+				helpText, width} = this.props,
 			formError = getWarningText(matches, datasets, selected, hasCoord, value).join(' ')
 				|| error,
 			subtitle = unavailable ? 'This variable is currently unavailable. You may choose a different variable, or cancel to continue viewing the cached data.' : undefined,
@@ -351,7 +387,11 @@ class VariableSelect extends PureComponent {
 				label: 'Select Data Type',
 				value: mode,
 				onChange: this.on.mode,
-				options: [{label: 'Genomic', value: 'Genotypic'}, {label: 'Phenotypic', value: 'Phenotypic'}]
+				options: [
+					{label: 'Genomic', value: 'Genotypic'},
+					{label: 'Phenotypic', value: 'Phenotypic'},
+					...(!_.isEmpty(analytic) ? [{label: 'Analytic', value: 'Analytic'}] : [])
+				]
 			};
 
 		return (
@@ -368,6 +408,7 @@ class VariableSelect extends PureComponent {
 					value={value}
 					features={features}
 					preferred={preferred}
+					analytic={analytic}
 					basicFeatures={basicFeatures}
 					onAddFeature={this.onAddFeature}
 					onAdvancedClick={this.on.advanced}
@@ -394,9 +435,9 @@ class LoadingNotice extends React.Component {
 	}
 
 	render() {
-		var {preferred, datasets, features, basicFeatures} = this.props,
+		var {analytic, preferred, datasets, features, basicFeatures} = this.props,
 			{wait} = this.state;
-		if (wait && (!preferred || _.isEmpty(datasets) || _.isEmpty(features) || !basicFeatures)) {
+		if (wait && (!preferred || _.isEmpty(datasets) || _.isEmpty(features) || !basicFeatures || !analytic)) {
 			let {colId, controls, title, width} = this.props,
 				wizardProps = {
 					colId,

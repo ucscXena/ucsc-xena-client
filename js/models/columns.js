@@ -10,8 +10,33 @@ import parseGeneSignature from '../parseGeneSignature';
 import {signatureField} from '../models/fieldSpec';
 import {defaultColorClass} from '../heatmapColors';
 
-var matchDatasetFields = multi((datasets, dsID, {sig}) => {
-	var meta = datasets[dsID];
+// XXX duplicated in VariableSelect.
+var getAssembly = (datasets, dsID) =>
+	_.getIn(datasets, [dsID, 'assembly'],
+		_.getIn(datasets, [dsID, 'probemapMeta', 'assembly']));
+
+export var guessFields = text => {
+	var value = text.trim(),
+		sig = parseGeneSignature(value),
+		pos = parsePos(value),
+		hasCoord = value.match(/^chr[0-9xyXY]+[pq]?:/),
+		fields = sig ? sig.genes :
+			pos ? [value] :
+			parseInput(value);
+
+	return {
+		value,
+		fields,
+		sig,
+		pos,
+		hasCoord
+	};
+};
+
+export var matchDatasetFields = multi((datasets, dsID, input) => {
+	var meta = datasets[dsID],
+		{sig} = guessFields(input);
+	// Do field matching against probemap if we have one & aren't doing a signature.
 	return meta.type === 'genomicMatrix' && meta.probemap && !sig ? 'genomicMatrix-probemap' : meta.type;
 });
 
@@ -22,9 +47,12 @@ var matchDatasetFields = multi((datasets, dsID, {sig}) => {
 // error to clear.
 
 // default to probes
-matchDatasetFields.dflt = (datasets, dsID, {fields, isPos}) => {
-	var warning = isPos ? 'position-unsupported' : undefined;
+matchDatasetFields.dflt = (datasets, dsID, input) => {
+	var guess = guessFields(input, getAssembly(datasets, dsID)),
+		{fields, pos} = guess,
+		warning = pos ? 'position-unsupported' : undefined;
 	return xenaQuery.matchFields(dsID, fields).map(fields => ({
+		...guess,
 		type: 'probes',
 		warning,
 		fields
@@ -34,83 +62,65 @@ matchDatasetFields.dflt = (datasets, dsID, {fields, isPos}) => {
 	});
 };
 
-var geneProbeMatch = (host, dsID, probemap, fields) =>
+var geneProbeMatch = (host, dsID, probemap, guess) =>
 	Observable.zip(
-		xenaQuery.sparseDataMatchGenes(host, probemap, fields),
-		xenaQuery.matchFields(dsID, fields),
-		(genes, probes) => _.filter(probes, _.identity).length > _.filter(genes, _.identity).length ?
-			{
-				type: 'probes',
-				fields: probes
-			} : {
-				type: 'genes',
-				fields: genes
-			}).catch(err => {
+		xenaQuery.sparseDataMatchGenes(host, probemap, guess.fields),
+		xenaQuery.matchFields(dsID, guess.fields),
+		(genes, probes) => _.filter(probes).length > _.filter(genes).length ?
+			{...guess, type: 'probes', fields: probes} :
+			{...guess, type: 'genes', fields: genes}
+	).catch(err => {
 		console.log(err);
-		return Observable.of({type: 'genes', fields: fields}, Scheduler.asap);
+		return Observable.of({...guess, type: 'genes'}, Scheduler.asap);
 	});
 
 var MAX_PROBES = 500;
-var chromLimit = (host, probemap, pos, fields) =>
-	xenaQuery.maxRange(host, probemap, pos.chrom, pos.baseStart, pos.baseEnd, MAX_PROBES)
+var chromLimit = (host, probemap, guess) =>
+	xenaQuery.maxRange(host, probemap, guess.pos.chrom,
+				guess.pos.baseStart, guess.pos.baseEnd, MAX_PROBES)
 		.map(([end]) => ({
+			...guess,
 			type: 'chrom',
-			fields,
 			...(end != null ? {
 				warning: 'too-many-probes',
-				start: pos.baseStart,
+				start: guess.pos.baseStart,
 				end: end - 1} : {})
 		}));
 
-matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, {value, fields}) => {
-	const {host} = JSON.parse(dsID),
-		probemap = datasets[dsID].probemap,
-		pos = parsePos(value, datasets[dsID].probemapMeta.assembly);
-	return pos ? chromLimit(host, probemap, pos, fields)
-		: geneProbeMatch(host, dsID, probemap, fields);
+matchDatasetFields.add('genomicMatrix-probemap', (datasets, dsID, input) => {
+	const guess = guessFields(input, getAssembly(datasets, dsID)),
+		{host} = JSON.parse(dsID),
+		probemap = datasets[dsID].probemap;
+	return guess.pos ? chromLimit(host, probemap, guess)
+		: geneProbeMatch(host, dsID, probemap, guess);
 });
 
-var matchAnyPosition = fields => Observable.of({type: 'chrom', fields: fields}, Scheduler.asap);
+var matchAnyPosition = guess => Observable.of({...guess, type: 'chrom'}, Scheduler.asap);
 
-var normalizeGenes = (host, dsID, genes) =>
-	xenaQuery.sparseDataMatchField(host, 'name2', dsID, genes).map(fields => ({
+var normalizeGenes = (host, dsID, guess) =>
+	xenaQuery.sparseDataMatchField(host, 'name2', dsID, guess.fields).map(fields => ({
+			...guess,
 			type: 'genes',
 			fields
 		}));
 
-function matchWithAssembly(datasets, dsID, {fields, isPos}) {
-	var ref = xenaQuery.refGene[datasets[dsID].assembly];
-	return (isPos ? matchAnyPosition(fields) : normalizeGenes(ref.host, ref.name, fields)).catch(err => {
+function matchWithAssembly(datasets, dsID, input) {
+	var guess = guessFields(input),
+		ref = xenaQuery.refGene[datasets[dsID].assembly];
+	return (guess.pos ? matchAnyPosition(guess) : normalizeGenes(ref.host, ref.name, guess)).catch(err => {
 		console.log(err);
-		return Observable.of({type: 'genes', fields: fields}, Scheduler.asap);
+		return Observable.of({...guess, type: 'genes'}, Scheduler.asap);
 	});
 }
 
 matchDatasetFields.add('genomicSegment', matchWithAssembly);
 matchDatasetFields.add('mutationVector', matchWithAssembly);
 
-var isValid = {
-	Genotypic: (value, selected) => value.trim().length > 0 && selected.length > 0,
-	Phenotypic: (value, selected) => selected.length > 0
-};
+function matchPhenotype(datasets, dsID, input) {
+	return Observable.of({value: input, fields: [input]}, Scheduler.asap);
+}
 
-var guessFields = text => {
-	var value = text.trim(),
-		sig = parseGeneSignature(value),
-		isPos = value.match(/^chr[0-9xyXY]+[pq]?/),
-		hasCoord = value.match(/^chr[0-9xyXY]+[pq]?:/),
-		fields = sig ? sig.genes :
-			isPos ? [value] :
-			parseInput(value);
-
-	return {
-		value,
-		fields,
-		sig,
-		isPos,
-		hasCoord
-	};
-};
+matchDatasetFields.add('clinicalMatrix', matchPhenotype);
 
 // need to handle
 // phenotypic,
@@ -118,20 +128,6 @@ var guessFields = text => {
 // sparse,
 // dense with probemap,
 // dense without probemap
-// XXX can we deprecate 'mode', since we can get it from datasets[selected]?
-export function matchFields(datasets, mode, selected, text) {
-	if (mode === 'Phenotypic') {
-		return Observable.of({valid: isValid.Phenotypic(text, selected), matches: [{fields: [text.trim()]}]}, Scheduler.asap);
-	}
-	var guess = guessFields(text);
-	if (isValid.Genotypic(text, selected)) {
-		// Be sure to handle leading and trailing commas, as might occur during user edits
-		return Observable.zip(
-			...selected.map(dsID => matchDatasetFields(datasets, dsID, guess)),
-			(...matches) => ({matches, guess, valid: !_.any(matches, m => m.warning)}));
-	}
-	return Observable.of({valid: false, guess}, Scheduler.asap);
-}
 
 export var typeWidth = {
 	matrix: 136,
@@ -143,17 +139,10 @@ export var typeWidth = {
 function getValueType(dataset, features, fields) {
 	var {type} = dataset,
 		valuetype = _.getIn(features, [fields[0], 'valuetype']);
-
-	if (type === 'mutationVector') {
-		return 'mutation';
-	}
-	if (type === 'genomicSegment') {
-		return 'segmented';
-	}
-	if (type === 'clinicalMatrix') {
-		return valuetype === 'category' ? 'coded' : 'float';
-	}
-	return 'float';
+	return type === 'mutationVector' ? 'mutation' :
+		type === 'genomicSegment' ? 'segmented' :
+		type === 'clinicalMatrix' && valuetype === 'category' ? 'coded' :
+		'float';
 }
 
 function getFieldType(dataset, fields, probes, pos) {
@@ -178,16 +167,10 @@ function sigFields(fields, {genes, weights}) {
 	};
 }
 
-// XXX duplicated in VariableSelect.
-var getAssembly = (datasets, dsID) =>
-	_.getIn(datasets, [dsID, 'assembly'],
-		_.getIn(datasets, [dsID, 'probemapMeta', 'assembly']));
-
 var getDefaultVizSettings = meta =>
 	// use default vizSettings if we have min and max.
 	_.has(meta, 'min') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} : {};
 
-// XXX handle position in all genomic datatypes?
 function columnSettings(datasets, features, dsID, input, fields, probes) {
 	var meta = datasets[dsID],
 		pos = parsePos(input.trim(), getAssembly(datasets, dsID)),

@@ -1,7 +1,7 @@
 'use strict';
 
 var _ = require('../underscore_ext');
-import {computeSettings, matchFields} from '../models/columns';
+import {computeSettings, matchDatasetFields} from '../models/columns';
 var {resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering} = require('./common');
 var {compose, make, mount} = require('./utils');
 import * as Rx from '../rx';
@@ -51,9 +51,9 @@ var linkedColumns = (state, [fieldResp, ids]) => {
 		byID = datasetsByID(state),
 		features = featuresByID(state),
 		columns = _.mmap(columnParams, fieldResp,
-			(column, {matches}) =>
+			(column, matches) =>
 				_.Let((dsID = JSON.stringify({host: column.host, name: column.name})) =>
-				computeSettings(byID, features, column.fields, column.opts, dsID, matches[0]))); // XXX 0?
+				computeSettings(byID, features, column.fields, column.opts, dsID, matches))); // XXX 0?
 
 	return _.reduce(columns,
 			 (acc, spec, i) => _.assocIn(acc, ['spreadsheet', 'columns', ids[i]], spec),
@@ -131,7 +131,7 @@ var controls = {
 				Rx.Observable.zip(...columns.map(
 					// XXX handle non-matching dataset name
 					c =>  _.Let((dsID = JSON.stringify({host: c.host, name: c.name})) =>
-						matchFields(byId, byId[dsID].type === 'clinicalMatrix' ? 'Phenotypic' : 'Genomic', [dsID], c.fields)))),
+						matchDatasetFields(byId, dsID, c.fields)))),
 				// Note that uuid is a side-effect, and can't be run in a reducer.
 				_.times(columns.length, uuid)]);
 		}
