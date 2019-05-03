@@ -15,10 +15,10 @@ var getAssembly = (datasets, dsID) =>
 	_.getIn(datasets, [dsID, 'assembly'],
 		_.getIn(datasets, [dsID, 'probemapMeta', 'assembly']));
 
-export var guessFields = text => {
+export var guessFields = (text, assembly) => {
 	var value = text.trim(),
 		sig = parseGeneSignature(value),
-		pos = parsePos(value),
+		pos = parsePos(value, assembly),
 		hasCoord = value.match(/^chr[0-9xyXY]+[pq]?:/),
 		fields = sig ? sig.genes :
 			pos ? [value] :
@@ -105,7 +105,7 @@ var normalizeGenes = (host, dsID, guess) =>
 		}));
 
 function matchWithAssembly(datasets, dsID, input) {
-	var guess = guessFields(input),
+	var guess = guessFields(input, getAssembly(datasets, dsID)),
 		ref = xenaQuery.refGene[datasets[dsID].assembly];
 	return (guess.pos ? matchAnyPosition(guess) : normalizeGenes(ref.host, ref.name, guess)).catch(err => {
 		console.log(err);
