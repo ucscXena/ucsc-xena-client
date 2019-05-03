@@ -188,12 +188,8 @@ var pluralDo = i => i === 1 ? 'does' : 'do';
 var fieldAssembly = datasets => (match, dsID) => getAssembly(datasets, dsID);
 
 // XXX take intersection of matched fields if some are missing.
-function getWarningText(matches, datasets, selected, hasCoord, value) {
+function getWarningText(matches, datasets, selected, topWarnings, value) {
 	var pos = parsePos(value),
-		// XXX This is wrong. Should do the checking during matchFields & just look up the warning text here.
-		assemblies = hasCoord && _.uniq(
-			_.mmap(matches, selected, fieldAssembly(datasets)).filter(x => x)),
-		awarn = _.get(assemblies, 'length') > 1 ? ['Your dataset selections include two different assemblies. For chromosome view, the assembly must be unique.'] : [],
 		warnings = _.groupBy(matches, m => m.warning),
 		unsupported = _.getIn(warnings, ['position-unsupported', 'length'], 0),
 		uwarn = unsupported ? [`${pluralDataset(unsupported)} in your selection ${pluralDo(unsupported)} not support a chromosome view.`] : [],
@@ -201,7 +197,7 @@ function getWarningText(matches, datasets, selected, hasCoord, value) {
 		max = _.min(warnings['too-many-probes'], m => m.end),
 		pwarn = probes && pos ? [`There are too many data points to display. Please try a smaller region like ${pos.chrom}:${max.start}-${max.end}.`] : [];
 
-	return [...awarn, ...uwarn, ...pwarn];
+	return [...topWarnings, ...uwarn, ...pwarn];
 }
 
 var featureIndexes = (features, list) =>
@@ -212,6 +208,22 @@ var toDsID = ({host, name}) => JSON.stringify({host, name});
 var doMatch = (datasets, dsID, field) =>
 	matchDatasetFields(datasets, dsID, field)
 		.map(r => ({...r, dataset: datasets[dsID]}));
+
+var fieldAssembly = datasets => match => getAssembly(datasets, match.dataset.dsID);
+
+var assemblyError = 'Your dataset selections include two different assemblies. For chromosome coordinates, the assembly must be unique.';
+
+var genomicMatches = (datasets, text) => matches => {
+	var {hasCoord} = parsePos(text) || {},
+		assemblies = _.uniq(_.map(matches, fieldAssembly(datasets)).filter(x => x)),
+		warnings = hasCoord && assemblies.length > 1 ? [assemblyError] : [];
+	return {
+		matches,
+		hasCoord,
+		warnings,
+		valid: !_.any(matches, m => m.warning) && _.isEmpty(warnings)
+	};
+};
 
 // This is still kinda wonky, dispatching on mode before dispatching on type.
 var matchFields = {
@@ -226,7 +238,7 @@ var matchFields = {
 		// XXX apply assembly warnings & set validity
 		Observable.zipArray(
 			...selected.map(dsID => doMatch(datasets, dsID, text)))
-		.map(matches => ({matches, valid: !_.any(matches, m => m.warning), ..._.pick(parsePos(text), 'hasCoord')})),
+		.map(genomicMatches(datasets, text)),
 
 	Analytic: ({datasets, analytic}, selected) =>
 		Observable.zipArray(
@@ -266,7 +278,8 @@ class VariableSelect extends PureComponent {
 				Analytic: ''
 			},
 			valid: false,
-			hasCoord: false
+			hasCoord: false,
+			warnings: []
 		};
 
 		this.state = fields && dataset ?
@@ -315,7 +328,7 @@ class VariableSelect extends PureComponent {
 			.do(() => this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
 					matchFields[mode](this.props, selected, value))
-			.subscribe(valid => this.setState({loading: false, matches: [], ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
+			.subscribe(valid => this.setState({loading: false, warnings: [], matches: [], ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
 	}
 
 	componentWillUnmount() {
@@ -362,13 +375,13 @@ class VariableSelect extends PureComponent {
 	};
 
 	render() {
-		var {mode, matches, hasCoord, advanced, valid,
+		var {mode, matches, hasCoord, advanced, valid, warnings,
 				loading, error, unavailable, basicFeatures} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
 			{colId, controls, datasets, features, preferred, analytic, title,
 				helpText, width} = this.props,
-			formError = getWarningText(matches, datasets, selected, hasCoord, value).join(' ')
+			formError = getWarningText(matches, datasets, selected, warnings, value).join(' ')
 				|| error,
 			subtitle = unavailable ? 'This variable is currently unavailable. You may choose a different variable, or cancel to continue viewing the cached data.' : undefined,
 			contentSpecificHelp = _.getIn(helpText, [mode]),
