@@ -167,9 +167,9 @@ function sigFields(fields, {genes, weights}) {
 	};
 }
 
-var getDefaultVizSettings = meta =>
-	// use default vizSettings if we have min and max.
-	_.has(meta, 'min') && _.has(meta, 'max') ? {vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} : {};
+// use default vizSettings if we have min and max.
+var getDefaultVizSettings = meta => _.has(meta, 'min') && _.has(meta, 'max') ?
+	{vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} : {};
 
 function columnSettings(datasets, features, dsID, matches) {
 	var {fields, value: input, pos, sig} = matches,
@@ -200,18 +200,17 @@ function columnSettings(datasets, features, dsID, matches) {
 	return {
 		...(fieldType === 'geneProbes' ? {showIntrons: true} : {}),
 		...(_.getIn(meta, ['probemapMeta', 'dataSubType']) === 'regulon' ? {clustering: 'probes'} : {}),
-		...(getDefaultVizSettings(meta)),
+		...getDefaultVizSettings(meta),
 		fields: normalizedFields,
 		fetchType: 'xena',
 		valueType: getValueType(meta, features[dsID], fields),
-		fieldType: fieldType,
+		fieldType,
 		dsID,
 		defaultNormalization: meta.colnormalization,
 		// XXX this assumes fields[0] doesn't appear in features if ds is genomic
-		//fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle'], fields.join(', ')),
 		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle']) || normalizedFields.join(', '),
 		colorClass: defaultColorClass,
-		assembly: meta.assembly || _.getIn(meta, ['probemapMeta', 'assembly'])
+		assembly: getAssembly(datasets, dsID)
 	};
 }
 
