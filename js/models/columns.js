@@ -176,11 +176,10 @@ function columnSettings(datasets, features, dsID, matches) {
 		probes = matches.type === 'probes',
 		meta = datasets[dsID],
 		fieldType = getFieldType(meta, fields, probes, pos),
-		fieldsInput = sig ? sig.genes : parseInput(input),
-		normalizedFields = (
+		normalizedFields =
 			pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :
-				((['segmented', 'mutation', 'SV'].indexOf(fieldType) !== -1) ?
-					[fields[0]] : fields).map((f, i) => f ? f : fieldsInput[i] + " (unknown)"));
+			_.contains(['segmented', 'mutation', 'SV'], fieldType) ? [fields[0]] :
+			fields;
 
 	// My god, this is a disaster.
 	if (sig) {

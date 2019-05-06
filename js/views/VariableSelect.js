@@ -212,11 +212,24 @@ var doMatch = (datasets, dsID, field) =>
 var fieldAssembly = datasets => match => getAssembly(datasets, match.dataset.dsID);
 
 var assemblyError = 'Your dataset selections include two different assemblies. For chromosome coordinates, the assembly must be unique.';
+var fieldError = 'No matches for these field names';
 
-var genomicMatches = (datasets, text) => matches => {
-	var {hasCoord} = parsePos(text) || {},
+function intersectFields(matches) {
+	if (matches.length === 0) {
+		return matches;
+	}
+	var intersection = _.filterIndices(matches[0].fields, (f, i) => _.every(matches, m => m.fields[i]));
+	return _.map(matches, m => _.updateIn(m, ['fields'], fields => intersection.map(i => fields[i])));
+}
+
+var genomicMatches = (datasets, text) => matchesIn => {
+	var matches = intersectFields(matchesIn),
+		{hasCoord} = parsePos(text) || {},
 		assemblies = _.uniq(_.map(matches, fieldAssembly(datasets)).filter(x => x)),
-		warnings = hasCoord && assemblies.length > 1 ? [assemblyError] : [];
+		assembly = hasCoord && assemblies.length > 1 ? [assemblyError] : [],
+		nomatch = matches.length && matches[0].fields.length === 0 ?  [fieldError] : [],
+		warnings = [...assembly, ...nomatch];
+
 	return {
 		matches,
 		hasCoord,
