@@ -242,8 +242,10 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 	]);
 }
 
+var isSig = column => column.fetchType === 'signature';
+
 function tumorMapCompatible(column) {
-	var {fieldType, fetchType, dsID, fields} = column;
+	var {fieldType, dsID, fields} = column;
 	// link to tumorMap from any public xena hub columns
 	// data be queried directly from xena
 	var foundPublicHub = dsID && publicServers.indexOf(JSON.parse(dsID).host) !== -1;
@@ -255,24 +257,28 @@ function tumorMapCompatible(column) {
 	// column with probe list of one, which is supported.
 	// We can't support gene average, so no 'genes' columns.
 	if (!foundPublicHub || ['geneProbes', 'probes', 'clinical'].indexOf(fieldType) === -1 ||
-			fetchType === "signature"  || fields.length !== 1) {
+			isSig(column) || fields.length !== 1) {
 		return false;
 	}
 
 	return true;
 }
 
+var isChrom = column =>
+	parsePos(_.get(column.fieldList || column.fields, 0),
+			_.getIn(column, ['assembly']));
+
 // Maybe put in a selector.
-var supportsGeneAverage = ({fieldType, fields, fieldList}, isChrom) =>
-	!isChrom && _.contains(['geneProbes', 'genes'], fieldType) &&
-		(fieldList || fields).length === 1;
+var supportsGeneAverage = column =>
+	!isChrom(column) && !isSig(column) && _.contains(['geneProbes', 'genes'], column.fieldType) &&
+		(column.fieldList || column.fields).length === 1;
 
 // Duplicated in denseMatrix.js, because of the weirdness with
 // fields vs. probes.
 var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
-function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, isChrom}) {
+function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster}) {
 	var {column} = props,
 		{fieldType, clustering} = column,
 		supportTumorMap = thisTumorMap && tumorMapCompatible(column),
@@ -283,7 +289,7 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, isChrom
 		supportsClustering(column) ?
 			<MenuItem onClick={onCluster} caption={`Order by ${order}`} /> :
 			null,
-		supportsGeneAverage(column, isChrom) ?
+		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?
 				<MenuItem onClick={(e) => onMode(e, 'geneProbes')} caption='Detailed view'/> :
 				<MenuItem onClick={(e) => onMode(e, 'genes')} caption='Gene average'/>) :
@@ -635,15 +641,13 @@ class Column extends PureComponent {
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
 				interactive, append, cohort, tumorMap} = this.props,
-			isChrom = !!parsePos(_.get(column.fieldList || column.fields, 0),
-					_.getIn(column, ['assembly'])),
 			{specialDownloadMenu, dragZoom} = this.state,
 			{selection} = dragZoom,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			thisTumorMap = _.getIn(tumorMap, [cohort.name]),
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, thisTumorMap, onShowIntrons, onSortVisible,
-				onCluster, onSpecialDownload, specialDownloadMenu, isChrom}),
+				onCluster, onSpecialDownload, specialDownloadMenu, isSig}),
 			geneZoomable = columnZoom.supportsGeneZoom(column),
 			geneZoomed = columnZoom.geneZoomed(column),
 			geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
@@ -663,7 +667,7 @@ class Column extends PureComponent {
 					height={annotationHeight}
 					positionHeight={column.position ? positionHeight : 0}
 					width={width}
-					mode={isChrom ?
+					mode={isChrom(column) ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null,
@@ -672,7 +676,7 @@ class Column extends PureComponent {
 					layout = {column.layout}
 					width = {width}
 					scaleHeight ={scaleHeight}
-					mode = {isChrom ?
+					mode = {isChrom(column) ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
 				: null;

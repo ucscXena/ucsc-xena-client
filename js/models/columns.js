@@ -33,11 +33,10 @@ export var guessFields = (text, assembly) => {
 	};
 };
 
-export var matchDatasetFields = multi((datasets, dsID, input) => {
-	var meta = datasets[dsID],
-		{sig} = guessFields(input);
+export var matchDatasetFields = multi((datasets, dsID) => {
+	var meta = datasets[dsID];
 	// Do field matching against probemap if we have one & aren't doing a signature.
-	return meta.type === 'genomicMatrix' && meta.probemap && !sig ? 'genomicMatrix-probemap' : meta.type;
+	return meta.type === 'genomicMatrix' && meta.probemap ? 'genomicMatrix-probemap' : meta.type;
 });
 
 // XXX The error handling here isn't great, because it can leave us with a
@@ -188,7 +187,7 @@ function columnSettings(datasets, features, dsID, matches) {
 		return signatureField('signature' + missingLabel, {
 			signature: ['geneSignature', dsID, genes, weights],
 			missing,
-			fieldType: 'probes',
+			fieldType: matches.type,
 			defaultNormalization: meta.colnormalization,
 			colorClass: defaultColorClass,
 			fields: [input],
