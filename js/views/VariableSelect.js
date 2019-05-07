@@ -212,7 +212,8 @@ var doMatch = (datasets, dsID, field) =>
 var fieldAssembly = datasets => match => getAssembly(datasets, match.dataset.dsID);
 
 var assemblyError = 'Your dataset selections include two different assemblies. For chromosome coordinates, the assembly must be unique.';
-var fieldError = 'None of these fields are available on all selected datasets';
+var fieldError = 'None of these fields are available on all selected datasets.';
+var sigError = 'Unable to parse signature.';
 
 function intersectFields(matches) {
 	if (matches.length === 0) {
@@ -228,7 +229,9 @@ var genomicMatches = (datasets, text) => matchesIn => {
 		assemblies = _.uniq(_.map(matches, fieldAssembly(datasets)).filter(x => x)),
 		assembly = hasCoord && assemblies.length > 1 ? [assemblyError] : [],
 		nomatch = matches.length && matches[0].fields.length === 0 ?  [fieldError] : [],
-		warnings = [...assembly, ...nomatch];
+		sig = text.trim()[0] === '=' && !_.getIn(matches, [0, 'sig']),
+		// With a signature error, the other errors are not meaningful.
+		warnings = sig ? [sigError] : [...assembly, ...nomatch];
 
 	return {
 		matches,
@@ -248,7 +251,6 @@ var matchFields = {
 
 	Genotypic: ({datasets}, selected, text) =>
 		text.trim().length === 0 || !selected.length ? Observable.of({valid: false}, Scheduler.asap) :
-		// XXX apply assembly warnings & set validity
 		Observable.zipArray(
 			...selected.map(dsID => doMatch(datasets, dsID, text)))
 		.map(genomicMatches(datasets, text)),
