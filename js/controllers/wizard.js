@@ -38,6 +38,9 @@ var fetchCohortPhenotype = () =>
 			preferred => map(preferred, ({host, dataset, feature}) =>
 				   ({dsID: JSON.stringify({host, name: dataset}), name: feature}))));
 
+var fetchCohortAnalytic = () =>
+	xenaQuery.fetchCohortAnalytic;
+
 var fetchTumorMap = () =>
 	xenaQuery.fetchTumorMap.map(res => res).catch(() => {});
 
@@ -62,6 +65,7 @@ var wizardData = state =>
 		['cohortMeta'],
 		['cohortPreferred'],
 		['cohortPhenotype'],
+		['cohortAnalytic'],
 		['cohortTumorMap'],
 		...servers.map(server => ['serverCohorts', server]),
 		...(spreadsheet.cohort ?
@@ -84,6 +88,7 @@ var fetchMethods = {
 	cohortMeta: () => fetchCohortMeta(),
 	cohortPreferred: () => fetchCohortPreferred(),
 	cohortPhenotype: () => fetchCohortPhenotype(),
+	cohortAnalytic: () => fetchCohortAnalytic(),
 	cohortTumorMap: () => fetchTumorMap()
 };
 
@@ -95,6 +100,7 @@ var cachePolicy = {
 	cohortMeta: identity,
 	cohortPreferred: identity,
 	cohortPhenotype: identity,
+	cohortAnalytic: identity,
 	cohortTumorMap: identity,
 
 	// cache a single key (cohort): the last cohort updated.
@@ -112,6 +118,7 @@ var invalidateCohorts = Let(({any} = matchKeys) =>
 		invalidatePath(wizard, ['cohortMeta']);
 		invalidatePath(wizard, ['cohortPreferred']);
 		invalidatePath(wizard, ['cohortPhenotype']);
+		invalidatePath(wizard, ['cohortAnalytic']);
 		invalidatePath(wizard, ['serverCohorts', any]);
 		invalidatePath(wizard, ['cohortDatasets', any, any]);
 		invalidatePath(wizard, ['cohortFeatures', any, any, any]);

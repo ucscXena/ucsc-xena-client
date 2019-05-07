@@ -14,7 +14,7 @@ function parse(str) {
 		var list = parser(str.slice(1).trim());
 		return {
 			weights: pluck(list, 0),
-				genes: pluck(list, 1)
+			genes: pluck(list, 1)
 		};
 	} catch (e) {
 		console.log('parsing error', e);

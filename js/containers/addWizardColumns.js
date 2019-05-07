@@ -60,26 +60,46 @@ var preferredLabels = {
 
 var activeHubs = hubs => _.keys(hubs).filter(hub => hubs[hub].user);
 var cohortName = cohort => _.get(cohort, 'name');
-var getCohortPreferred = (table, cohort) => _.get(table, cohortName(cohort));
+var getByCohort = (table, cohort, def) => _.get(table, cohortName(cohort), def);
 
 function getPreferedDatasets(cohort, cohortPreferred, hubs, datasets) {
+	if (!cohortPreferred) {
+		return; // signify 'not loaded'
+	}
 	var active = activeHubs(hubs),
-		// Only include datasets on active hubs & real existing datasets (more reliable against mistakes in the .json file)
-		preferred = _.pick(getCohortPreferred(cohortPreferred, cohort),
-			ds => _.contains(active, JSON.parse(ds).host) && _.has(datasets, ds));
+		// Only include datasets on active hubs & real existing datasets (more
+		// reliable against mistakes in the .json file)
+		avail = ds => _.contains(active, JSON.parse(ds).host) && _.has(datasets, ds),
+		// filter out key used to support geneset/pathway view
+		notPathway = (ds, key) => key !== "copy number for pathway view",
+		preferred = _.pick(getByCohort(cohortPreferred, cohort, {}),
+			(ds, key) => avail(ds) && notPathway(ds, key));
 
-	// filter out key used to support geneset/pathway view
-	preferred = _.pick(preferred, (ds, key) => key !== "copy number for pathway view");
-
-	// Use isEmpty to handle 1) no configured preferred datasets or 2) preferred dataset list
-	// is empty after filtering by active hubs.
+	// Use isEmpty to handle 1) no configured preferred datasets or 2)
+	// preferred dataset list is empty after filtering by active hubs.
 	return _.isEmpty(preferred) ? [] : _.keys(preferred).map(type =>
 		({dsID: preferred[type], label: preferredLabels[type]}));
 }
 
-function getPreferredPhenotypes(cohort, cohortPreferredPhenotypes, hubs) {
+function getAnalytic(cohort, cohortAnalytic, hubs, datasets) {
+	if (!cohortAnalytic) {
+		return; // signify 'not loaded'
+	}
 	var active = activeHubs(hubs),
-		preferred = _.filter(getCohortPreferred(cohortPreferredPhenotypes, cohort),
+		// Only include datasets on active hubs & real existing datasets (more reliable against mistakes in the .json file)
+		analytic = _.filter(getByCohort(cohortAnalytic, cohort, []),
+			ds => _.Let((dsID = JSON.stringify(_.pick(ds, 'host', 'name'))) =>
+				_.contains(active, ds.host) && _.has(datasets, dsID)));
+
+	return _.isEmpty(analytic) ? [] : analytic;
+}
+
+function getPreferredPhenotypes(cohort, cohortPreferredPhenotypes, hubs) {
+	if (!cohortPreferredPhenotypes) {
+		return; // signify 'not loaded'
+	}
+	var active = activeHubs(hubs),
+		preferred = _.filter(getByCohort(cohortPreferredPhenotypes, cohort, []),
 			({dsID}) => _.contains(active, JSON.parse(dsID).host));
 
 	return _.isEmpty(preferred) ? [] : preferred;
@@ -138,23 +158,24 @@ function addWizardColumns(Component) {
 			this.props.callback(['cohort', cohort, typeWidth.matrix]);
 		};
 
-		onDatasetSelect = (posOrId, input, datasetList, fieldList) => {
+		onDatasetSelect = (posOrId, selected) => {
 			var {wizard: {datasets, features}} = this.props,
 				isPos = _.isNumber(posOrId),
-				settingsList = _.mmap(datasetList, fieldList, computeSettings(datasets, features, input, null));
+				settingsList = _.map(selected, s =>
+					computeSettings(datasets, features, null, s.dataset.dsID, s));
 			this.props.callback(['add-column', posOrId,
 				...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		};
-
 		addColumns() {
 			var {children, appState, wizard} = this.props,
 				{cohort, wizardMode, defaultWidth, servers} = appState,
-				{cohorts, cohortPreferred, cohortMeta,
+				{cohorts, cohortPreferred, cohortAnalytic, cohortMeta,
 					cohortPhenotype, datasets, features} = wizard,
 				stepperState = getStepperState(appState),
 				{editing} = appState,
-				preferred = cohortPreferred && getPreferedDatasets(cohort, cohortPreferred, servers, datasets),
-				preferredPhenotypes = cohortPhenotype && getPreferredPhenotypes(cohort, cohortPhenotype, servers),
+				analytic = getAnalytic(cohort, cohortAnalytic, servers, datasets),
+				preferred = getPreferedDatasets(cohort, cohortPreferred, servers, datasets),
+				preferredPhenotypes = getPreferredPhenotypes(cohort, cohortPhenotype, servers),
 				width = defaultWidth,
 				cohortSelectProps = {
 					cohorts,
@@ -165,6 +186,7 @@ function addWizardColumns(Component) {
 					datasets,
 					features: features && sortFeatures(removeSampleID(consolidateFeatures(features))),
 					preferred,
+					analytic: analytic,
 					basicFeatures: preferredPhenotypes,
 					onSelect: this.onDatasetSelect,
 					width},
@@ -176,7 +198,7 @@ function addWizardColumns(Component) {
 							key={editing}
 							actionKey={editing}
 							pos={editing}
-							fields={appState.columns[editing].fieldList}
+							fields={appState.columns[editing].fieldList || appState.columns[editing].fields}
 							dataset={appState.columns[editing].dsID}
 							title='Edit Variable'
 							{...datasetSelectProps}

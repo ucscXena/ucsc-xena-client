@@ -3,7 +3,7 @@
 var _ = require('../underscore_ext');
 var fieldFetch = require('../fieldFetch');
 var Rx = require('../rx');
-var {datasetProbeSignature, nanstr} = require('../xenaQuery');
+var {datasetProbeSignature, datasetGeneSignature, nanstr} = require('../xenaQuery');
 
 var immediate = x => Rx.Observable.of(x, Rx.Scheduler.asap);
 
@@ -65,7 +65,7 @@ function samplesAsData({samples}) {
 	};
 }
 
-var sigResult = dataValues => {
+var sigProbeResult = dataValues => {
 	var values = _.map(dataValues, nanstr),
 		mean = _.meannull(values);
 
@@ -77,19 +77,25 @@ var sigResult = dataValues => {
 	};
 };
 
+var sigGeneResult = ({scores}) => sigProbeResult(scores);
+
+var sigFetch = {
+	probes: (...args) => datasetProbeSignature(...args).map(sigProbeResult),
+	genes: (...args) => datasetGeneSignature(...args).map(sigGeneResult)
+};
+
 function evalexp(ctx, expression) {
 	return m({
 		'in': list => immediate(evalIn(ctx, list)),
 		'cross': (lists, exprs) => immediate(evalCross(ctx, lists, exprs)),
 		'samples': () => immediate(samplesAsData(ctx)),
 		'geneSignature': (dsID, probes, weights) =>
-			datasetProbeSignature(dsID, ctx.samples, probes, weights)
-				.map(sigResult)
+			sigFetch[ctx.column.fieldType](dsID, ctx.samples, probes, weights)
 	}, expression);
 }
 
 function fetchSignature(column, samples) {
-	return evalexp({samples}, column.signature);
+	return evalexp({samples, column}, column.signature);
 }
 
 fieldFetch.add('signature', fetchSignature);
