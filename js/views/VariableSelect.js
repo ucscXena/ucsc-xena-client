@@ -247,7 +247,7 @@ var matchFields = {
 		.map(matches => ({matches, valid: selected.length > 0})),
 
 	Genotypic: ({datasets}, selected, text) =>
-		text.trim().length === 0 ? Observable.of({valid: false}, Scheduler.asap) :
+		text.trim().length === 0 || !selected.length ? Observable.of({valid: false}, Scheduler.asap) :
 		// XXX apply assembly warnings & set validity
 		Observable.zipArray(
 			...selected.map(dsID => doMatch(datasets, dsID, text)))
