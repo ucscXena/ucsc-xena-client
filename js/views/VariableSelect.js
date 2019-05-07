@@ -12,7 +12,8 @@ var PhenotypeSuggest = require('./PhenotypeSuggest');
 var {rxEvents} = require('../react-utils');
 var parsePos = require('../parsePos');
 var {ignoredType} = require('../models/dataType');
-import {matchFields, isValid, isValueValid} from '../models/columns';
+import {matchDatasetFields} from '../models/columns';
+import {Observable, Scheduler} from '../rx';
 
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
@@ -130,9 +131,21 @@ var PhenotypicForm = props => {
 		</div>);
 };
 
+var AnalyticForm = props => {
+	var options = props.analytic.map(({label}, i) => ({value: i.toString(), label: label}));
+	return (
+		<div>
+			<XCheckboxGroup
+				label='Variable'
+				onChange={props.onChange}
+				options={selectedOptions(props.selected, [{options}])}/>
+		</div>);
+};
+
 var getModeFields = {
 	Genotypic: GenotypicForm,
-	Phenotypic: PhenotypicForm
+	Phenotypic: PhenotypicForm,
+	Analytic: AnalyticForm
 };
 
 var applyInitialState = {
@@ -140,29 +153,25 @@ var applyInitialState = {
 		var mode = 'Genotypic',
 			isPreferred = _.contains(_.pluck(preferred, 'dsID'), dataset),
 			value = fields.join(' '),
-			selected = [dataset],
-			valid = isValid[mode](value, selected);
+			selected = [dataset];
 
 		return _.assocIn(defaults,
 			['mode'], mode,
 			['advanced', mode], !isPreferred,
 			['value', mode], value,
-			['selected', mode, !isPreferred], selected,
-			['valid'], valid);
+			['selected', mode, !isPreferred], selected);
 	},
 	Phenotypic: (fields, dataset, datasets, features, preferred, defaults) => {
 		var mode = 'Phenotypic',
 			i = _.findIndex(features, _.matcher({dsID: dataset, name: fields[0]})).toString(),
-			selected = [i],
-			valid = isValid[mode]('', selected);
+			selected = [i];
 
 		return i === '-1' ?
 			_.assocIn(defaults, ['unavailable'], true) :
 			_.assocIn(defaults,
 				['mode'], mode,
 				['basicFeatures'], defaults.basicFeatures,
-				['selected', mode, false], selected,
-				['valid'], valid);
+				['selected', mode, false], selected);
 	},
 	'undefined': (fields, dataset, datasets, features, preferred, defaults) =>
 		_.assocIn(defaults, ['unavailable'], true)
@@ -178,11 +187,9 @@ var pluralDo = i => i === 1 ? 'does' : 'do';
 
 var fieldAssembly = datasets => (match, dsID) => getAssembly(datasets, dsID);
 
-function getWarningText(matches, datasets, selected, hasCoord, value) {
+// XXX take intersection of matched fields if some are missing.
+function getWarningText(matches, datasets, selected, topWarnings, value) {
 	var pos = parsePos(value),
-		assemblies = hasCoord && _.uniq(
-			_.mmap(matches, selected, fieldAssembly(datasets)).filter(x => x)),
-		awarn = _.get(assemblies, 'length') > 1 ? ['Your dataset selections include two different assemblies. For chromosome view, the assembly must be unique.'] : [],
 		warnings = _.groupBy(matches, m => m.warning),
 		unsupported = _.getIn(warnings, ['position-unsupported', 'length'], 0),
 		uwarn = unsupported ? [`${pluralDataset(unsupported)} in your selection ${pluralDo(unsupported)} not support a chromosome view.`] : [],
@@ -190,11 +197,70 @@ function getWarningText(matches, datasets, selected, hasCoord, value) {
 		max = _.min(warnings['too-many-probes'], m => m.end),
 		pwarn = probes && pos ? [`There are too many data points to display. Please try a smaller region like ${pos.chrom}:${max.start}-${max.end}.`] : [];
 
-	return [...awarn, ...uwarn, ...pwarn];
+	return [...topWarnings, ...uwarn, ...pwarn];
 }
 
 var featureIndexes = (features, list) =>
 	list.map(f => _.findIndex(features, _.matcher(f)).toString()).filter(x => x !== "-1");
+
+var toDsID = ({host, name}) => JSON.stringify({host, name});
+
+var doMatch = (datasets, dsID, field) =>
+	matchDatasetFields(datasets, dsID, field)
+		.map(r => ({...r, dataset: datasets[dsID]}));
+
+var fieldAssembly = datasets => match => getAssembly(datasets, match.dataset.dsID);
+
+var assemblyError = 'Your dataset selections include two different assemblies. For chromosome coordinates, the assembly must be unique.';
+var fieldError = 'None of these fields are available on all selected datasets.';
+var sigError = 'Unable to parse signature.';
+
+function intersectFields(matches) {
+	if (matches.length === 0) {
+		return matches;
+	}
+	var intersection = _.filterIndices(matches[0].fields, (f, i) => _.every(matches, m => m.fields[i]));
+	return _.map(matches, m => _.updateIn(m, ['fields'], fields => intersection.map(i => fields[i])));
+}
+
+var genomicMatches = (datasets, text) => matchesIn => {
+	var matches = intersectFields(matchesIn),
+		{hasCoord} = parsePos(text) || {},
+		assemblies = _.uniq(_.map(matches, fieldAssembly(datasets)).filter(x => x)),
+		assembly = hasCoord && assemblies.length > 1 ? [assemblyError] : [],
+		nomatch = matches.length && matches[0].fields.length === 0 ?  [fieldError] : [],
+		sig = text.trim()[0] === '=' && !_.getIn(matches, [0, 'sig']),
+		// With a signature error, the other errors are not meaningful.
+		warnings = sig ? [sigError] : [...assembly, ...nomatch];
+
+	return {
+		matches,
+		hasCoord,
+		warnings,
+		valid: !_.any(matches, m => m.warning) && _.isEmpty(warnings)
+	};
+};
+
+// This is still kinda wonky, dispatching on mode before dispatching on type.
+var matchFields = {
+	Phenotypic: ({datasets, features}, selected) =>
+		Observable.zipArray(
+			...selected.map(i =>
+				doMatch(datasets, features[i].dsID, features[i].name)))
+		.map(matches => ({matches, valid: selected.length > 0})),
+
+	Genotypic: ({datasets}, selected, text) =>
+		text.trim().length === 0 || !selected.length ? Observable.of({valid: false}, Scheduler.asap) :
+		Observable.zipArray(
+			...selected.map(dsID => doMatch(datasets, dsID, text)))
+		.map(genomicMatches(datasets, text)),
+
+	Analytic: ({datasets, analytic}, selected) =>
+		Observable.zipArray(
+			...selected.map(i =>
+				doMatch(datasets, toDsID(analytic[i]), analytic[i].fields)))
+		.map(matches => ({matches, valid: selected.length > 0}))
+};
 
 class VariableSelect extends PureComponent {
 	constructor(props) {
@@ -204,7 +270,8 @@ class VariableSelect extends PureComponent {
 			mode,
 			advanced: {
 				Genotypic: _.isEmpty(preferred),
-				Phenotypic: false
+				Phenotypic: false,
+				Analytic: false
 			},
 			basicFeatures: featureIndexes(features, basicFeatures),
 			selected: {
@@ -215,14 +282,19 @@ class VariableSelect extends PureComponent {
 				Phenotypic: {
 					true: [], // advanced
 					false: [] // !advanced
+				},
+				Analytic: {
+					false: []
 				}
 			},
 			value: {
 				Genotypic: '',
-				Phenotypic: ''
+				Phenotypic: '',
+				Analytic: ''
 			},
 			valid: false,
-			guess: {}
+			hasCoord: false,
+			warnings: []
 		};
 
 		this.state = fields && dataset ?
@@ -270,8 +342,8 @@ class VariableSelect extends PureComponent {
 			(mode, advanced, selected, value) => ([mode, selected[mode][advanced[mode]], value[mode]]))
 			.do(() => this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
-					matchFields(this.props.datasets, mode, selected, value))
-			.subscribe(valid => this.setState({loading: false, matches: [], ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
+					matchFields[mode](this.props, selected, value))
+			.subscribe(valid => this.setState({loading: false, warnings: [], matches: [], ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
 	}
 
 	componentWillUnmount() {
@@ -287,29 +359,21 @@ class VariableSelect extends PureComponent {
 	};
 
 	onDone = () => {
-		var {pos, features, onSelect} = this.props,
-			{mode, advanced, valid, matches} = this.state,
-			value = this.state.value[mode],
-			selected = this.state.selected[mode][advanced[mode]];
+		var {pos, onSelect} = this.props,
+			{matches} = this.state;
 
-		if (valid) {
-			if (mode === 'Genotypic') {
-				onSelect(pos, value, selected, matches);
-			} else {
-				let selectedFeatures = selected.map(s => features[s]),
-					datasets = _.pluck(selectedFeatures, 'dsID'),
-					fields = selectedFeatures.map(f => ({fields: [f.name]}));
-				onSelect(pos, "", datasets, fields);
-			}
-		}
+		onSelect(pos, matches);
 	};
 
 	onDoneInvalid = () => {
-		var {features} = this.props,
-			{mode} = this.state,
+		var {mode} = this.state,
 			value = this.state.value[mode];
 
-		if (!isValueValid[mode](value, features)) {
+		// Highlight the input field, since the user has forgotten it.
+		// Might want to also scroll it into position, and also
+		// scroll it into position if there's another error, like
+		// assembly mismatch.
+		if (mode === 'Genotypic' && value.trim().length === 0) {
 			this.setState({error: true});
 		}
 	};
@@ -326,12 +390,13 @@ class VariableSelect extends PureComponent {
 	};
 
 	render() {
-		var {mode, matches, guess: {hasCoord}, advanced, valid,
+		var {mode, matches, hasCoord, advanced, valid, warnings,
 				loading, error, unavailable, basicFeatures} = this.state,
 			value = this.state.value[mode],
 			selected = this.state.selected[mode][advanced[mode]],
-			{colId, controls, datasets, features, preferred, title, helpText, width} = this.props,
-			formError = getWarningText(matches, datasets, selected, hasCoord, value).join(' ')
+			{colId, controls, datasets, features, preferred, analytic, title,
+				helpText, width} = this.props,
+			formError = getWarningText(matches, datasets, selected, warnings, value).join(' ')
 				|| error,
 			subtitle = unavailable ? 'This variable is currently unavailable. You may choose a different variable, or cancel to continue viewing the cached data.' : undefined,
 			contentSpecificHelp = _.getIn(helpText, [mode]),
@@ -352,7 +417,11 @@ class VariableSelect extends PureComponent {
 				label: 'Select Data Type',
 				value: mode,
 				onChange: this.on.mode,
-				options: [{label: 'Genomic', value: 'Genotypic'}, {label: 'Phenotypic', value: 'Phenotypic'}]
+				options: [
+					{label: 'Genomic', value: 'Genotypic'},
+					{label: 'Phenotypic', value: 'Phenotypic'},
+					...(!_.isEmpty(analytic) ? [{label: 'Analytic', value: 'Analytic'}] : [])
+				]
 			};
 
 		return (
@@ -369,6 +438,7 @@ class VariableSelect extends PureComponent {
 					value={value}
 					features={features}
 					preferred={preferred}
+					analytic={analytic}
 					basicFeatures={basicFeatures}
 					onAddFeature={this.onAddFeature}
 					onAdvancedClick={this.on.advanced}
@@ -395,9 +465,9 @@ class LoadingNotice extends React.Component {
 	}
 
 	render() {
-		var {preferred, datasets, features, basicFeatures} = this.props,
+		var {analytic, preferred, datasets, features, basicFeatures} = this.props,
 			{wait} = this.state;
-		if (wait && (!preferred || _.isEmpty(datasets) || _.isEmpty(features) || !basicFeatures)) {
+		if (wait && (!preferred || _.isEmpty(datasets) || _.isEmpty(features) || !basicFeatures || !analytic)) {
 			let {colId, controls, title, width} = this.props,
 				wizardProps = {
 					colId,

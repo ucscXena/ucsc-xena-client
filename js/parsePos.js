@@ -36,6 +36,6 @@ module.exports = function (text, assembly) {
 			baseStart = 1;
 			baseEnd = maxEnd;
 		}
-		return {chrom, baseStart, baseEnd};
+		return {chrom, baseStart, baseEnd, hasCoord: pos[3] !== undefined};
 	}
 };
