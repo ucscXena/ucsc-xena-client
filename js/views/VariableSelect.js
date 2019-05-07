@@ -212,7 +212,7 @@ var doMatch = (datasets, dsID, field) =>
 var fieldAssembly = datasets => match => getAssembly(datasets, match.dataset.dsID);
 
 var assemblyError = 'Your dataset selections include two different assemblies. For chromosome coordinates, the assembly must be unique.';
-var fieldError = 'No matches for these field names';
+var fieldError = 'None of these fields are available on all selected datasets';
 
 function intersectFields(matches) {
 	if (matches.length === 0) {
