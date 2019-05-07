@@ -133,6 +133,10 @@ export var typeWidth = {
 	chrom: 200
 };
 
+var typeClass = dataset =>
+	_.contains(['mutationVector', 'segmented'], dataset.type) ? 'chrom' :
+	'matrix';
+
 // 'features' is a problem here, because they are not unique across datasets.
 // How do we look up features w/o a dataset?
 function getValueType(dataset, features, fields) {
@@ -144,7 +148,11 @@ function getValueType(dataset, features, fields) {
 		'float';
 }
 
-function getFieldType(dataset, fields, probes, pos) {
+function getFieldType(dataset, fields, matches, pos) {
+	var {sig, type} = matches;
+	if (sig) {
+		return type;
+	}
 	if (dataset.type === 'mutationVector') {
 		return dataset.dataSubType.search(/SV|structural/i) !== -1 ? 'SV' : 'mutation';
 	}
@@ -155,7 +163,7 @@ function getFieldType(dataset, fields, probes, pos) {
 		return 'clinical';
 	}
 	// We treat probes in chrom view (pos) as geneProbes
-	return  probes ? 'probes' : ((fields.length > 1 && !pos) ? 'genes' : 'geneProbes');
+	return  type === 'probes' ? 'probes' : ((fields.length > 1 && !pos) ? 'genes' : 'geneProbes');
 }
 
 function sigFields(fields, {genes, weights}) {
@@ -170,64 +178,60 @@ function sigFields(fields, {genes, weights}) {
 var getDefaultVizSettings = meta => _.has(meta, 'min') && _.has(meta, 'max') ?
 	{vizSettings: _.pick(meta, 'min', 'max', 'minstart', 'maxstart')} : {};
 
+var xenaField = (datasets, features, settings) => ({
+	...settings,
+	fetchType: 'xena',
+	...(_.getIn(settings.dataset, ['probemapMeta', 'dataSubType']) === 'regulon' ? {clustering: 'probes'} : {}),
+	...getDefaultVizSettings(settings.dataset),
+	valueType: getValueType(settings.dataset, features[settings.dsID], settings.fields),
+	assembly: getAssembly(datasets, settings.dsID)
+});
+
 function columnSettings(datasets, features, dsID, matches) {
-	var {fields, value: input, pos, sig} = matches,
-		probes = matches.type === 'probes',
-		meta = datasets[dsID],
-		fieldType = getFieldType(meta, fields, probes, pos),
+	var {fields, value, pos, sig} = matches,
+		dataset = datasets[dsID],
+		fieldType = getFieldType(dataset, fields, matches, pos),
+		{missing, genes, weights} = sig ? sigFields(fields, sig) : {},
 		normalizedFields =
+			sig ? [value] :
 			pos ? [`${pos.chrom}:${pos.baseStart}-${pos.baseEnd}`] :
 			_.contains(['segmented', 'mutation', 'SV'], fieldType) ? [fields[0]] :
-			fields;
-
-	// My god, this is a disaster.
-	if (sig) {
-		let {missing, genes, weights} = sigFields(fields, sig),
-			missingLabel = _.isEmpty(missing) ? '' : ` (missing terms: ${missing.join(', ')})`;
-		return signatureField('signature' + missingLabel, {
-			signature: ['geneSignature', dsID, genes, weights],
-			missing,
-			fieldType: matches.type,
-			defaultNormalization: meta.colnormalization,
+			fields,
+		columnLabel =
+			!dataset.dataSubType ? dataset.label :
+			dataset.dataSubType.match(/phenotype/i) ? '' :
+			`${dataset.dataSubType} - ${dataset.label}`,
+		fieldLabel =
+			sig ? `signature${_.isEmpty(missing) ? '' : ` (missing terms: ${missing.join(', ')})`}` :
+			dataset.type === 'clinicalMatrix' ? _.getIn(features, [dsID, fields[0], 'longtitle']) || fields[0] :
+			normalizedFields.join(', '),
+		defaults = {
+			...(fieldType === 'geneProbes' ? {showIntrons: true} : {}),
 			colorClass: defaultColorClass,
-			fields: [input],
-			dsID
-		});
-	}
+			columnLabel,
+			dataset,
+			defaultNormalization: dataset.colnormalization,
+			dsID,
+			fields: normalizedFields,
+			fieldLabel,
+			fieldType,
+			user: {columnLabel, fieldLabel},
+			width: typeWidth[typeClass(dataset)],
+		};
 
-	return {
-		...(fieldType === 'geneProbes' ? {showIntrons: true} : {}),
-		...(_.getIn(meta, ['probemapMeta', 'dataSubType']) === 'regulon' ? {clustering: 'probes'} : {}),
-		...getDefaultVizSettings(meta),
-		fields: normalizedFields,
-		fetchType: 'xena',
-		valueType: getValueType(meta, features[dsID], fields),
-		fieldType,
-		dsID,
-		defaultNormalization: meta.colnormalization,
-		// XXX this assumes fields[0] doesn't appear in features if ds is genomic
-		fieldLabel: _.getIn(features, [dsID, fields[0], 'longtitle']) || normalizedFields.join(', '),
-		colorClass: defaultColorClass,
-		assembly: getAssembly(datasets, dsID)
-	};
+	return sig ? signatureField(fieldLabel, {
+			...defaults,
+			signature: ['geneSignature', dsID, genes, weights],
+			missing
+		}) : xenaField(datasets, features, defaults);
 }
 
 export var computeSettings = _.curry((datasets, features, opts, dataset, matches) => {
-	var ds = datasets[dataset];
-	var settings = columnSettings(datasets, features, dataset, matches),
-		columnLabel = ((ds.dataSubType && !ds.dataSubType.match(/phenotype/i)) ? (ds.dataSubType + ' - ') : '') +
-			(ds.dataSubType && ds.dataSubType.match(/phenotype/i) ? '' : ds.label);
+	var settings = columnSettings(datasets, features, dataset, matches);
 
 	// XXX need a way to validate settings that depend on column type, i.e.
 	// fieldType geneProbes only works for matrix with probemap.
 	// Or, a possible refactor of the schema to make this simpler?
-	return _.assocIn(settings,
-		['width'], _.contains(['mutationVector', 'segmented'], ds.type) ? typeWidth.chrom : typeWidth.matrix,
-		['dataset'], ds,
-		['columnLabel'], columnLabel,
-		['user'], {columnLabel: columnLabel, fieldLabel: settings.fieldLabel},
-		...(opts || []).flatten()
-	);
+	return _.assocIn(settings, ...(opts || []).flatten());
 
 });
-
