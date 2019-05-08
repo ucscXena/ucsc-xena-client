@@ -76,7 +76,7 @@ if (module.hot) {
 const store = createStore();
 const main = window.document.getElementById('main');
 
-// XXX reducer
-const controller = compose(connectionController(store.uiBus), hubController, wizardController, serverController, uiController, transcriptController, importController/*, tiesController*/);
+// controllers run in the opposite order as listed in compose().
+const controller = compose(connectionController(store.uiBus), hubController, serverController, wizardController, uiController, transcriptController, importController/*, tiesController*/);
 
 connector({...store, controller, main, selector, Page: PageContainer, persist: true, history: false});
