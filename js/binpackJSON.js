@@ -94,7 +94,7 @@ export function parse(buff) {
 	var out = [],
 		buff32 = new Uint32Array(buff.buffer),
 		len = buff.length,
-		txtLen = align(buff.indexOf(0)),
+		txtLen = align(buff.indexOf(0) + 1),
 		inP = txtLen,
 		binLen;
 	while (inP < len) {
