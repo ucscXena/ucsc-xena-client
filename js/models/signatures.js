@@ -3,9 +3,10 @@
 var _ = require('../underscore_ext');
 var fieldFetch = require('../fieldFetch');
 var Rx = require('../rx');
-var {datasetProbeSignature, datasetGeneSignature, nanstr} = require('../xenaQuery');
+var {datasetProbeSignature, datasetGeneSignature} = require('../xenaQuery');
 
 var immediate = x => Rx.Observable.of(x, Rx.Scheduler.asap);
+import {toArrays} from './denseMatrix';
 
 // dispatch on variant type (data, not genetic, variant)
 var m = (methods, exp, defaultMethod) => {
@@ -66,14 +67,8 @@ function samplesAsData({samples}) {
 }
 
 var sigProbeResult = dataValues => {
-	var values = _.map(dataValues, nanstr),
-		mean = _.meannull(values);
-
 	return {
-		req: {
-			values: [values],
-			mean: [mean]
-		}
+		req: toArrays([dataValues])
 	};
 };
 

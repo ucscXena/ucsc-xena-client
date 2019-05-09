@@ -381,5 +381,6 @@ module.exports = {
 	fetchGeneOrChromProbes,
 	fetchGene,
 	fetchFeature,
-	getCustomColor
+	getCustomColor,
+	toArrays
 };
