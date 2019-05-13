@@ -526,10 +526,7 @@ var HubPage = wrapLaunchHelper(
 				{host} = defaultHost(state.params),
 				hubCohorts = getIn(state, ['datapages', 'cohorts', host], []),
 				coll = collateCohorts(hubCohorts),
-				inHubs = contains(userServers,
-						host[host.length - 1] === "/" /* ok when host ends with / https://singlecellnew.xenahubs.net/ */ ?
-							host.slice(0, -1) : host) ?
-					'' : ' (not in my data hubs)';
+				inHubs = contains(userServers, host) ? '' : ' (not in my data hubs)';
 
 			return (
 				<div className={styles.datapages}>

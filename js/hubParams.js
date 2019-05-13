@@ -15,8 +15,12 @@ function parseServer(s) {
 		path = tokens[5] || '',
 		serverUrl = proto + host + (port ? ':' + port : '') + path;
 
+	//allow trailing slash in hub name e.g. https://singlecellnew.xenahubs.net/
+	serverUrl = serverUrl.replace(/\/$/, "");
 	//*.xenahubs.net:443 server drop 443
 	serverUrl = serverUrl.replace(/.xenahubs.net:443$/, ".xenahubs.net");
+
+	console.log(serverUrl);
 	return serverUrl;
 }
 
