@@ -353,7 +353,10 @@ function transformPOSTMethods(postMethods) {
 				.map(list => alignMatches(fields, list)),
 		matchFieldsFaster: postFn => (host, dataset, fields) =>
 			postFn(host, dataset, _.flatmap(fields, permuteCase))
-				.map(list => alignMatches(fields, list))
+				.map(list => alignMatches(fields, list)),
+		matchPartialField: postFn => (host, dataset, prefix, limit) =>
+			postFn(host, dataset, prefixPatterns(prefix), limit)
+			.map(filterByPrefix(prefix))
 	};
 
 	var mapPostFn = (transform, name) => transform(postMethods[name]),
@@ -390,6 +393,7 @@ function wrapDsIDParams(postMethods) {
 		'refGeneRange',
 		'matchFields',
 		'matchFieldsFaster',
+		'matchPartialField',
 		'segmentedDataRange',
 		'segmentedDataExamples',
 		'sparseData',
