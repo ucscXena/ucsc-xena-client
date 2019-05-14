@@ -1,6 +1,6 @@
 'use strict';
 import {allParameters} from './util';
-import {flatmap, has, identity, isArray, isBoolean, isObject, isNumber, Let, merge, omit, pick} from './underscore_ext';
+import {flatmap, getIn, has, identity, isArray, isBoolean, isObject, isNumber, Let, map, mapObject, merge, omit, pick} from './underscore_ext';
 
 var columnOptPaths = {
 	width: ['width'],
@@ -40,6 +40,22 @@ var columnOptCleaner = {
 };
 var columnOptClean = (opt, v) => (columnOptCleaner[opt] || identity)(v);
 var columnOpts = Object.keys(columnOptPaths);
+
+// invert columnOptCleaner. For creating links.
+var columnOptSetter = {
+	sortDirection: s =>
+		s ? s : invalid,
+	normalize: v =>
+		v === 'none' ? 'none' :
+		v === 'mean' ? 'subset' :
+		v === 'log2(x)' ? 'log2' :
+		v === 'normal2' ? 'normal2' :
+		invalid, // default
+	geneAverage: v =>
+		v === 'genes' ? true :
+		invalid // default
+};
+var columnOptSet = (opt, v) => (columnOptSetter[opt] || identity)(v);
 
 var columnRequired = [
 	'name',
@@ -88,3 +104,21 @@ export var cohort = columns =>
 
 // XXX currently unused
 export var dataset = columns => columns[0].name;
+
+var columnDatasetFields = column => ({
+	...JSON.parse(column.dsID),
+	fields: column.fields.join(' ')
+});
+
+var columnOptions = column =>
+	pick(
+		mapObject(columnOptPaths, (path, key) =>
+			columnOptSet(key, getIn(column, path))),
+		v => v !== invalid);
+
+var encode = x => encodeURIComponent(JSON.stringify(x));
+
+// extract from state
+export var getColumns = state =>
+	encode(map(omit(getIn(state, ['spreadsheet', 'columns'], {}), 'samples'),
+		column => merge(columnOptions(column), columnDatasetFields(column))));
