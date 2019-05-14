@@ -120,7 +120,7 @@ class XenaNav extends React.Component {
 			<AppBar className={compStyles.NavAppBar}>
 				<a href='http://xena.ucsc.edu/' className={compStyles.logoXena}><img title={window.ga ? '' : 'no analytics'} src={logoSantaCruzImg} srcSet={logoSrcSet}/></a>
 				<Navigation type="horizontal" routes={routes}>
-					{getState && !config.singlecell ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
+					{getState ? <BookmarkMenu isPublic={isPublic} getState={getState} onImport={onImport}/> : null}
 					<Link {...helpLink} />
 					{config.singlecell ?  null : <MoreToolsMenu/>}
 				</Navigation>

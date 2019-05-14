@@ -10,7 +10,7 @@ var React = require('react');
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
 var {createBookmark, getRecent, setRecent} = require('../bookmark');
-
+var config = require('../config');
 var compStyles = require('./BookmarkMenu.module.css');
 var gaEvents = require('../gaEvents');
 
@@ -154,18 +154,18 @@ class BookmarkMenu extends React.Component {
 			<div style={{display: 'inline', position: 'relative'}}>
 				<Button onClick={this.onClick}>Bookmark</Button>
 				<Menu innerRef={this.onRef} position='topLeft' active={open} onHide={this.handleMenuHide} className={compStyles.iconBookmark} iconRipple={false} onShow={this.resetBookmark}>
-					<BookmarkElement
+					{config.singlecell ? null : <BookmarkElement
 						tooltip={privateWarning}
 						style={{pointerEvents: 'all' /* override MenuItem 'disabled' class */}}
 						disabled={!isPublic}
 						onClick={this.onBookmark}
-						caption='Bookmark'/>
-					{recentBookmarks.length > (bookmark ? 1 : 0) ?
+						caption='Bookmark'/>}
+					{!config.singlecell && recentBookmarks.length > (bookmark ? 1 : 0) ?
 						<MenuItem onClick={this.onRecent} title={null} caption='Recent bookmarks'/> : null}
-					<MenuItem onClick={this.onExport} title={null} caption='Export'/>
-					<MenuItem onClick={this.onImport} title={null} caption='Import'/>
-					{linking ? <Link target='_blank' href={`${location.href}heatmap/?columns=${getColumns(getState())}&heatmap=${getHeatmap(getState())}`} label='Link'/> : null}
-					<Link className={compStyles.help} target='_blank' href='https://ucsc-xena.gitbook.io/project/overview-of-features/bookmarks' label='Help'/>
+					{config.singlecell ? null : <MenuItem onClick={this.onExport} title={null} caption='Export'/>}
+					{config.singlecell ? null : <MenuItem onClick={this.onImport} title={null} caption='Import'/>}
+					{config.singlecell || linking ? <Link target='_blank' href={`${location.href}heatmap/?columns=${getColumns(getState())}&heatmap=${getHeatmap(getState())}`} label='Link'/> : null}
+					{config.singlecell ? null : <Link className={compStyles.help} target='_blank' href='https://ucsc-xena.gitbook.io/project/overview-of-features/bookmarks' label='Help'/>}
 					{bookmark || loading ? <MenuDivider/> : null}
 					{bookmark || loading ? (
 						<MenuItem
