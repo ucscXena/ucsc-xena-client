@@ -3,6 +3,9 @@ import {Menu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 import {Button} from 'react-toolbox/lib/button';
 import Link from 'react-toolbox/lib/link';
 import Tooltip from 'react-toolbox/lib/tooltip';
+import {getColumns} from '../columnsParam';
+import {getHeatmap} from '../heatmapParam';
+var konami = require('../konami');
 var React = require('react');
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
@@ -27,8 +30,19 @@ var TooltipNoCloseMenuItem = Tooltip(NoCloseMenuItem);
 
 var privateWarning = 'Unable to create bookmark link due to private data in view. Use export instead';
 
+var linking = false;
+
 class BookmarkMenu extends React.Component {
 	state = {loading: false, open: false, recent: false};
+
+	componentWillMount() {
+		var asciiC = 67;
+		this.ksub = konami(asciiC).subscribe(() => {linking = true;});
+	}
+
+	componentWillUnmount() {
+		this.ksub.unsubscribe();
+	}
 
 	// RTB positions and clips the menu content according
 	// to the initial menu render size, which causes problems
@@ -132,7 +146,7 @@ class BookmarkMenu extends React.Component {
 
 	render() {
 		var {bookmark, loading, open, recent} = this.state,
-			{isPublic} = this.props,
+			{isPublic, getState} = this.props,
 			recentBookmarks = getRecent(),
 			BookmarkElement = isPublic ? NoCloseMenuItem : TooltipNoCloseMenuItem;
 
@@ -150,6 +164,7 @@ class BookmarkMenu extends React.Component {
 						<MenuItem onClick={this.onRecent} title={null} caption='Recent bookmarks'/> : null}
 					<MenuItem onClick={this.onExport} title={null} caption='Export'/>
 					<MenuItem onClick={this.onImport} title={null} caption='Import'/>
+					{linking ? <Link target='_blank' href={`${location.href}heatmap/?columns=${getColumns(getState())}&heatmap=${getHeatmap(getState())}`} label='Link'/> : null}
 					<Link className={compStyles.help} target='_blank' href='https://ucsc-xena.gitbook.io/project/overview-of-features/bookmarks' label='Help'/>
 					{bookmark || loading ? <MenuDivider/> : null}
 					{bookmark || loading ? (
