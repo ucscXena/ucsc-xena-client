@@ -71,9 +71,9 @@ var assemblyColors = {
 
 var assemblyColor = assembly => _.get(assemblyColors, assembly, assemblyColors.default);
 
-var getAssembly = (datasets, dsID) =>
+var getAssembly = _.curry((datasets, dsID) =>
 	_.getIn(datasets, [dsID, 'assembly'],
-		_.getIn(datasets, [dsID, 'probemapMeta', 'assembly']));
+		_.getIn(datasets, [dsID, 'probemapMeta', 'assembly'])));
 
 var setBadge = datasets => ds =>
 	_.Let((assembly = getAssembly(datasets, ds.value)) =>
@@ -86,12 +86,21 @@ var setAssembly = (datasets, groups) =>
 	groups.map(group => _.updateIn(group, ['options'], list =>
 				list.map(setBadge(datasets))));
 
+var defaultAssembly = 'hg38';
+// For gene lookup, use the first assembly we find. If no datasets
+// are selected, use a default so the user can get gene suggestions before
+// selecting a dataset.
+var firstAssembly = (datasets, selected) =>
+	selected.length === 0 ? defaultAssembly :
+	_.findValue(selected, getAssembly(datasets));
+
 var GenotypicForm = props => (
 	<div>
 		<GeneSuggest
 			dataset={props.selected.length === 1 &&
 				props.datasets[props.selected[0]].type === 'genomicMatrix' ?
 				props.selected[0] : undefined}
+			assembly={firstAssembly(props.datasets, props.selected)}
 			error={props.error}
 			value={props.value}
 			onKeyDown={returnPressed(props.onReturn)}
@@ -188,8 +197,6 @@ var pluralDataset = i => i === 1 ? 'A dataset' : 'Some datasets';
 var pluralDo = i => i === 1 ? 'does' : 'do';
 //var pluralHas = i => i === 1 ? 'has' : 'have';
 
-var fieldAssembly = datasets => (match, dsID) => getAssembly(datasets, dsID);
-
 // XXX take intersection of matched fields if some are missing.
 function getWarningText(matches, datasets, selected, topWarnings, value) {
 	var pos = parsePos(value),
@@ -212,8 +219,6 @@ var doMatch = (datasets, dsID, field) =>
 	matchDatasetFields(datasets, dsID, field)
 		.map(r => ({...r, dataset: datasets[dsID]}));
 
-var fieldAssembly = datasets => match => getAssembly(datasets, match.dataset.dsID);
-
 var assemblyError = 'Your dataset selections include two different assemblies. For chromosome coordinates, the assembly must be unique.';
 var fieldError = 'None of these fields are available on all selected datasets.';
 var sigError = 'Unable to parse signature.';
@@ -229,7 +234,7 @@ function intersectFields(matches) {
 var genomicMatches = (datasets, text) => matchesIn => {
 	var matches = intersectFields(matchesIn),
 		{hasCoord} = parsePos(text) || {},
-		assemblies = _.uniq(_.map(matches, fieldAssembly(datasets)).filter(x => x)),
+		assemblies = _.uniq(_.map(matches, getAssembly(datasets)).filter(x => x)),
 		assembly = hasCoord && assemblies.length > 1 ? [assemblyError] : [],
 		nomatch = matches.length && matches[0].fields.length === 0 ?  [fieldError] : [],
 		sig = text.trim()[0] === '=' && !_.getIn(matches, [0, 'sig']),
