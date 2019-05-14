@@ -30,8 +30,6 @@ function currentWord(value, position) {
 	return value.slice(i, j);
 }
 
-var defaultAssembly = 'hg38';
-
 var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 	<Input
 		theme={styles}
@@ -49,12 +47,13 @@ var empty = Observable.of([], Scheduler.asap);
 
 // host and name are for gene lookup.
 // dataset is for probe lookup
-var fetchSuggestions = ({host, name}, dataset, value) =>
+var fetchSuggestions = (assembly, dataset, value) =>
 	Observable.zip(
-		sparseDataMatchPartialField(host, 'name2', name, value, limit).catch(() => empty),
+		assembly ? sparseDataMatchPartialField(assembly.host, 'name2', assembly.name, value, limit).catch(() => empty) :
+		empty,
 		dataset ? matchPartialField(dataset, value, limit).catch(() => empty) :
 		empty,
-		(genes, probes) => genes.concat(probes).sort());
+		(genes, probes) => _.uniq(genes.concat(probes)).sort());
 
 // Currently we only match against refGene hg38 genes. We could, instead, match
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
@@ -63,12 +62,12 @@ class GeneSuggest extends PureComponent {
 	state = {suggestions: []};
 
 	componentWillMount() {
-		var {host, name} = refGene[this.props.assembly] || refGene[defaultAssembly];
+		var assembly = refGene[this.props.assembly];
 		var events = rxEvents(this, 'change');
 		this.change = events.change
 			.distinctUntilChanged(_.isEqual)
 			.debounceTime(200)
-			.switchMap(value => fetchSuggestions({host, name}, this.props.dataset, value))
+			.switchMap(value => fetchSuggestions(assembly, this.props.dataset, value))
 			.subscribe(matches => this.setState({suggestions: matches}));
 	}
 
