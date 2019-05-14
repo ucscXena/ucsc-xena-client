@@ -7,7 +7,7 @@ var servers = {
 	icgcHub: 'https://icgc.xenahubs.net',
 	toilHub: 'https://toil.xenahubs.net',
 	pcawgHub: 'https://pcawg.xenahubs.net',
-	singlecellHub: 'https://singlecell.xenahubs.net',
+	singlecellHub: 'https://singlecellnew.xenahubs.net',
 	pancanAtlasHub: 'https://pancanatlas.xenahubs.net',
 	treehouseHub: 'https://xena.treehouse.gi.ucsc.edu:443',
 	gdcHub: "https://gdc.xenahubs.net",
@@ -40,7 +40,7 @@ module.exports = {
 		servers.gdcHub,
 		servers.atacSeqHub,
 		*/
-		"https://singlecellnew.xenahubs.net",
+		servers.singlecellHub
 	],
 	enabledServers: [
 		/*
@@ -53,7 +53,7 @@ module.exports = {
 		servers.gdcHub,
 		servers.atacSeqHub,
 		*/
-		"https://singlecellnew.xenahubs.net",
+		servers.singlecellHub
 	],
 	publicServers: [
 		servers.publicHub,
