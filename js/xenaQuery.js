@@ -3,6 +3,7 @@
 'use strict';
 
 import {concatBins, parse} from './binpackJSON';
+import {servers} from './defaultServers';
 var Rx = require('./rx');
 var _ = require('./underscore_ext');
 var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
@@ -291,13 +292,31 @@ function xenaCallBPJ(queryFn, ...params) {
 	return concatBins(bins, edn);
 }
 
+
 // Given a host, query, and parameters, marshall the parameters and dispatch a
 // POST, returning an observable.
-function doPost(query, host, ...params) {
+function doPostBPJ(query, host, ...params) {
 	return Rx.Observable.ajax(
 		xenaPostBPJ(host, xenaCallBPJ(query, ...params))
 	).map(xhr => parse(new Uint8Array(xhr.response)));
 }
+
+function doPostJSON(query, host, ...params) {
+	return Rx.Observable.ajax(
+		xenaPost(host, xenaCall(query, ...params))
+	).map(jsonResp);
+}
+
+// XXX Should discover this automatically, instead of having a list
+var hubMethod = {
+	[servers.localHub]: doPostBPJ,
+	[servers.singlecellHub]: doPostBPJ
+};
+var getHubMethod = hub => _.get(hubMethod, hub, doPostJSON);
+
+
+var doPost = (query, host, ...params) => getHubMethod(host)(query, host, ...params);
+
 
 // Create POST methods for all of the xena queries.
 var queryPosts = _.mapObject(qs, query =>
