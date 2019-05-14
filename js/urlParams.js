@@ -1,5 +1,5 @@
 'use strict';
-var {getIn, Let, merge, pick, mapObject} = require('./underscore_ext');
+var {getIn, Let, merge, mapObject, pick, pluck, uniq, updateIn} = require('./underscore_ext');
 var {hasBookmark, resetBookmarkLocation, getBookmark} = require('./bookmark');
 var {hasInlineState, resetInlineStateLocation} = require('./inlineState');
 var {hubParams: getHubParams} = require('./hubParams');
@@ -47,9 +47,12 @@ function manifest() {
 
 function getParams() {
 	var columns = columnsParam(),
+		hasCols = getIn(columns, ['columns', 'length'], 0) > 0,
 		// ignore heatmap param w/o column param.
-		heatmap = getIn(columns, ['columns', 'length'], 0) > 0 ? heatmapParam() : {};
-	return merge(hubParams2, bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest(), columns,
+		heatmap = hasCols ? heatmapParam() : {},
+		hub2 = hasCols ? updateIn(hubParams2, ['addHub'], (hubs = []) => uniq(hubs.concat(pluck(columns.columns, 'host')))) :
+			hubParams2;
+	return merge(hub2, bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest(), columns,
 		heatmap);
 }
 

@@ -67,11 +67,11 @@ var linkedColumns = (state, [fieldResp, ids]) => {
 // server in state.
 var datasetsLoaded = state => {
 	var cohortDatasets = _.get(state.wizard.cohortDatasets,
-		_.get(state.spreadsheet.cohort, 'name'), {}),
+			_.get(state.spreadsheet.cohort, 'name'), {}),
 		servers = state.spreadsheet.servers,
 		dsServers = _.pluck(state.params.columns, 'host');
 	return dsServers.every(s => cohortDatasets[s]) ||
-		Object.keys(servers).every(s => cohortDatasets[s]);
+		Object.keys(servers).every(s => !servers[s].user || cohortDatasets[s]);
 };
 
 // true if we have all the features loaded. Assumes that all
@@ -89,11 +89,30 @@ var featuresLoaded = state => {
 		_.has(loaded, d.host) && _.has(loaded[d.host], d.name));
 };
 
+var filterDatasets = state => {
+	var cohortDatasets = _.get(state.wizard.cohortDatasets,
+			_.get(state.spreadsheet.cohort, 'name'), {});
+	return _.updateIn(state, ['params', 'columns'], columns =>
+		columns.filter(({host, name}) =>
+				_.has(cohortDatasets, host) && // note: should be true, since we add all linked hosts
+				_.find(cohortDatasets[host], ds => ds.name === name)));
+};
+
+var dsMsg = badDataset => badDataset.length ?
+	` These datasets are not known: ${badDataset.map(({host, name}) => `${host}/${name}`).join(', ')}.` : '';
+
+var datasetError = badDataset =>
+	 `We are unable to load some columns.${dsMsg(badDataset)}`;
+
 // if loadPending & we have columns, only load when
 // when we have datasets & features
 var shouldLoadColumns = state =>
 	state.loadPending && _.getIn(state, ['params', 'columns']) &&
 	datasetsLoaded(state) && featuresLoaded(state);
+
+var setLinkedCohortError = state =>
+	_.assoc(resetLoadPending(state), 'stateError',
+		`We are unable to find the cohort for dataset ${state.params.columns[0].name} on host ${state.params.columns[0].host}. Please check the spelling, and your network connectivity.`);
 
 var controls = {
 	// XXX was clearWizardCohort just cleaning up bad bookmarks? Do we need to handle that case?
@@ -122,6 +141,23 @@ var controls = {
 					fetchColumnData(serverBus, samples, id, settings));
 		}
 	},
+	'wizard-merge-data': state => {
+		if (shouldLoadColumns(state)) {
+			var cohortDatasets = _.get(state.wizard.cohortDatasets,
+					_.get(state.spreadsheet.cohort, 'name'), {}),
+				// Note we implicitly add all hubs in a linked column list,
+				// so the hubs should all be known.
+				badDataset = state.params.columns.filter(({host, name}) =>
+					_.has(cohortDatasets, host) &&
+					!_.find(cohortDatasets[host], ds => ds.name === name)),
+				next = filterDatasets(badDataset.length ?
+					_.assoc(state, 'stateError', datasetError(badDataset)) :
+					state);
+
+			return next.params.columns.length > 0 ? next : resetLoadPending(state);
+		}
+		return state;
+	},
 	'wizard-merge-data-post!': (serverBus, state, newState) => {
 		if (shouldLoadColumns(newState)) {
 			// This is just unbelievable. Should be much simpler.
@@ -129,7 +165,6 @@ var controls = {
 				columns = newState.params.columns;
 			serverBus.next(['columns-match-fields',
 				Rx.Observable.zip(...columns.map(
-					// XXX handle non-matching dataset name
 					c =>  _.Let((dsID = JSON.stringify({host: c.host, name: c.name})) =>
 						matchDatasetFields(byId, dsID, c.fields)))),
 				// Note that uuid is a side-effect, and can't be run in a reducer.
@@ -145,20 +180,24 @@ var controls = {
 			_.mapObject(_.get(newState.spreadsheet, 'columns', {}), (settings, id) =>
 					fetchColumnData(serverBus, newState.spreadsheet.cohortSamples, id, settings));
 		}
+	},
+	'dataset-cohort': (state, resp)  => {
+		var cohort = _.getIn(resp, [0, 'cohort']);
+		return cohort ?
+			_.updateIn(state, ['spreadsheet'],
+				state => setCohort({name: cohort}, undefined, state)) :
+			setLinkedCohortError(state);
+	},
+	'dataset-cohort-error': setLinkedCohortError,
+	'dataset-cohort-post!': (serverBus, state, newState, resp) => {
+		var cohort = _.getIn(resp, [0, 'cohort']);
+		if (cohort) {
+			fetchCohortData(serverBus, newState.spreadsheet);
+		}
 	}
 };
 
 var spreadsheetControls = {
-	'dataset-cohort': (state, resp)  => {
-		var cohort = _.getIn(resp, [0, 'cohort']);
-		return cohort ? setCohort({name: cohort}, undefined, state) : state;
-	},
-	'dataset-cohort-post!': (serverBus, state, newState, resp) => {
-		var cohort = _.getIn(resp, [0, 'cohort']);
-		if (cohort) {
-			fetchCohortData(serverBus, newState);
-		} // XXX set error if no cohort, e.g. if dataset is unknown
-	},
 	// XXX Here we drop the update if the column is no longer open.
 	'widget-data': (state, id, data) =>
 		columnOpen(state, id) ?

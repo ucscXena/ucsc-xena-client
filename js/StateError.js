@@ -4,6 +4,12 @@ import PureComponent from './PureComponent';
 var React = require('react');
 import stateErrorStyle from './StateError.module.css';
 import Dialog from 'react-toolbox/lib/dialog';
+import {contains} from './underscore_ext';
+
+var stateTypes = ['bookmark', 'import', 'session'];
+var getMsg = error =>
+	contains(stateTypes, error) ? `We were unable to restore the view from your ${this.props.error}, possibly due to software updates. Sorry about that!` :
+	error;
 
 class StateError extends PureComponent {
 	componentDidMount() {
@@ -13,6 +19,7 @@ class StateError extends PureComponent {
 	}
 
 	render() {
+		var message = getMsg(this.props.error);
 
 		const actions = [
 			{
@@ -33,8 +40,7 @@ class StateError extends PureComponent {
 					theme={{
 						wrapper: stateErrorStyle.dialogWrapper,
 						overlay: stateErrorStyle.dialogOverlay}}>
-					<p>We were unable to restore the view from your {this.props.error}, possibly due to software
-						updates. Sorry about that!</p>
+					<p style={{wordWrap: 'break-word'}}>{message}</p>
 				</Dialog>
 			</div>
 		);

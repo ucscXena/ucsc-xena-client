@@ -29,7 +29,7 @@ var addHubs = (state, params) =>
 			(state, hub) => assocIn(state, ['servers', hub, 'user'], true),
 			state);
 
-var setHubs = (state, params) => removeHubs(addHubs(state, params), params);
+var setHubs = (state, params) => addHubs(removeHubs(state, params), params);
 
 var {ajax, of, zip, zipArray} = Rx.Observable;
 var ajaxGet = url => ajax({url, crossDomain: true, method: 'GET', responseType: 'text'});

@@ -106,65 +106,11 @@ function categoryLegend(dataIn, colorScale, codes) {
 	return {colors: colors, labels: labels, titles: labels};
 }
 
-// Color scale cases
-// Use the domain of the scale as the label.
-// If using thresholded scales, add '<' '>' to labels.
-
-var cases = ([tag], arg, c) => c[tag](arg);
-
-function legendForColorscale(colorSpec) {
-	var scale = colorScales.colorScale(colorSpec),
-		values = scale.domain(),
-		colors = _.map(values, scale);
-
-	var labels = cases(colorSpec, values, {
-		'no-data': () => [],
-		'float': _.identity,
-		'float-pos': _.identity,
-		'float-neg': _.identity,
-		'float-thresh': ([nl, nh, pl, ph]) => [nl, nh, pl, ph],
-		'float-thresh-pos': ([low, high]) => [low, high],
-		'float-thresh-neg': ([low, high]) => [low, high],
-		'float-thresh-log-pos': ([low, high]) => [low, high],
-		'float-thresh-log-neg': ([low, high]) => [low, high],
-		'float-log': ([low, high]) => [low, high],
-	});
-
-	return {colors, labels};
-}
-
-// We never want to draw multiple legends. We only draw the 1st scale
-// passed in. The caller should provide labels/colors in the 'legend' prop
-// if there are multiple scales.
-function renderFloatLegend(props) {
-	var {units, colors, vizSettings, data} = props;
-
-	if (_.isEmpty(data)) {
-		return <Legend colors={[]} labels={''} footnotes={[]}/>;;
-	}
-	var subColColor = _.max(colors, colorList => _.uniq(colorList.slice(Math.ceil(colorList.length / 2.0))).length),
-		{labels, colors: legendColors} = legendForColorscale(subColColor),
-		unitText = units[0],
-		footnotes = [units && units[0] ? <span title={unitText}>{unitText}</span> : null],
-		hasViz = vizSettings => !isNaN(_.getIn(vizSettings, ['min'])),
-		multiScaled = colors && colors.length > 1 && !hasViz(vizSettings);
-
-	if (multiScaled) {
-		labels = labels.map((label, i) => {
-			if (i === 0) {return "lower";}
-			else if(i === labels.length - 1) {return "higher";}
-			else {return "";}
-		});
-	}
-
-	return <Legend colors={legendColors} labels={labels} footnotes={footnotes}/>;
-}
-
 // might want to use <wbr> here, instead, so cut & paste work better, but that
 // will require a recursive split/flatmap to inject the <wbr> elements.
 var addWordBreaks = str => str.replace(/([_/])/g, '\u200B$1\u200B');
 
-function renderFloatLegendNew(props) {
+function renderFloatLegend(props) {
 	var {units, colors, data, vizSettings} = props;
 
 	if (_.isEmpty(data)) {
@@ -216,7 +162,7 @@ function renderCodedLegend(props) {
 var HeatmapLegend = hotOrNot(class extends PureComponent {
 	static displayName = 'HeatmapLegend';
 	render() {
-		var {column, newLegend} = this.props,
+		var {column} = this.props,
 			{units, heatmap, colors, valueType, vizSettings, defaultNormalization, codes} = column,
 			props = {
 				units,
@@ -229,7 +175,6 @@ var HeatmapLegend = hotOrNot(class extends PureComponent {
 			};
 
 		return (props.coded ? renderCodedLegend :
-			newLegend ? renderFloatLegendNew :
 			renderFloatLegend)(props);
 	}
 });
