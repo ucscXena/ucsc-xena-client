@@ -89,6 +89,9 @@ var setAssembly = (datasets, groups) =>
 var GenotypicForm = props => (
 	<div>
 		<GeneSuggest
+			dataset={props.selected.length === 1 &&
+				props.datasets[props.selected[0]].type === 'genomicMatrix' ?
+				props.selected[0] : undefined}
 			error={props.error}
 			value={props.value}
 			onKeyDown={returnPressed(props.onReturn)}

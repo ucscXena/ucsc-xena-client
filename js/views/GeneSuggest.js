@@ -5,8 +5,9 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 import XAutosuggest from './XAutosuggest';
 import Input from 'react-toolbox/lib/input';
+import {Observable, Scheduler} from '../rx';
 
-var {sparseDataMatchPartialField, refGene} = require('../xenaQuery');
+var {matchPartialField, sparseDataMatchPartialField, refGene} = require('../xenaQuery');
 var _ = require('../underscore_ext');
 var {rxEvents} = require('../react-utils');
 require('./GeneSuggest.css'); // react-autosuggest, global styles
@@ -44,6 +45,15 @@ var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 	</Input>
 );
 
+// host and name are for gene lookup.
+// dataset is for probe lookup
+var fetchSuggestions = ({host, name}, dataset, value) =>
+	Observable.zip(
+		sparseDataMatchPartialField(host, 'name2', name, value, limit),
+		dataset ? matchPartialField(dataset, value, limit) :
+		Observable.of([], Scheduler.asap),
+		(genes, probes) => genes.concat(probes).sort());
+
 // Currently we only match against refGene hg38 genes. We could, instead, match
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
 // require some more work to dispatch the query for each type.
@@ -56,7 +66,8 @@ class GeneSuggest extends PureComponent {
 		this.change = events.change
 			.distinctUntilChanged(_.isEqual)
 			.debounceTime(200)
-			.switchMap(value => sparseDataMatchPartialField(host, 'name2', name, value, limit)).subscribe(matches => this.setState({suggestions: matches}));
+			.switchMap(value => fetchSuggestions({host, name}, this.props.dataset, value))
+			.subscribe(matches => this.setState({suggestions: matches}));
 	}
 
 	componentWillUnmount() {
