@@ -45,13 +45,15 @@ var renderInputComponent = ({ref, onChange, label, error, ...props}) => (
 	</Input>
 );
 
+var empty = Observable.of([], Scheduler.asap);
+
 // host and name are for gene lookup.
 // dataset is for probe lookup
 var fetchSuggestions = ({host, name}, dataset, value) =>
 	Observable.zip(
-		sparseDataMatchPartialField(host, 'name2', name, value, limit),
-		dataset ? matchPartialField(dataset, value, limit) :
-		Observable.of([], Scheduler.asap),
+		sparseDataMatchPartialField(host, 'name2', name, value, limit).catch(() => empty),
+		dataset ? matchPartialField(dataset, value, limit).catch(() => empty) :
+		empty,
 		(genes, probes) => genes.concat(probes).sort());
 
 // Currently we only match against refGene hg38 genes. We could, instead, match
