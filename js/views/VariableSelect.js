@@ -52,7 +52,7 @@ var preferredList = preferred => ([
 ]);
 
 var RETURN = 13;
-var returnPressed = cb => ev => ev.keyCode === RETURN && cb();
+var returnPressed = cb => cb ? ev => ev.keyCode === RETURN && cb() : undefined;
 
 function selectedOptions(selected, options) {
 	var smap = new Set(selected);
@@ -433,7 +433,7 @@ class VariableSelect extends PureComponent {
 				<ModeForm
 					error={formError}
 					onChange={this.onChange}
-					onReturn={this.onDone}
+					onReturn={valid ? this.onDone : undefined}
 					onFieldChange={this.on.field}
 					hideAssembly={!hasCoord}
 					datasets={datasets}
