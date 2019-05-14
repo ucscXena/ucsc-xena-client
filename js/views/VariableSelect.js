@@ -107,7 +107,7 @@ var GenotypicForm = props => (
 			onChange={props.onFieldChange}
 			type='text'/>
 		<XCheckboxGroup
-			label='Assay Type'
+			label='Dataset'
 			additionalAction={!_.isEmpty(props.preferred) && (props.advanced ? 'Show Basic' : 'Show Advanced')}
 			onAdditionalAction={props.onAdvancedClick}
 			onChange={props.onChange}
