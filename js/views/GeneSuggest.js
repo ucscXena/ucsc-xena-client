@@ -62,12 +62,11 @@ class GeneSuggest extends PureComponent {
 	state = {suggestions: []};
 
 	componentWillMount() {
-		var assembly = refGene[this.props.assembly];
 		var events = rxEvents(this, 'change');
 		this.change = events.change
 			.distinctUntilChanged(_.isEqual)
 			.debounceTime(200)
-			.switchMap(value => fetchSuggestions(assembly, this.props.dataset, value))
+			.switchMap(value => fetchSuggestions(refGene[this.props.assembly], this.props.dataset, value))
 			.subscribe(matches => this.setState({suggestions: matches}));
 	}
 
