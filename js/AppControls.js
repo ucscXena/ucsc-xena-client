@@ -188,8 +188,7 @@ class AppControls extends PureComponent {
 	};
 
 	onCellBrowser = (cellBrowser) => {
-		var cellBrowserURL = 'https://cells.ucsc.edu/?ds=';
-		window.open(cellBrowserURL + cellBrowser, '_blank');
+		window.open(cellBrowser, '_blank');
 	}
 
 	render() {
