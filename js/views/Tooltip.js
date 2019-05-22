@@ -1,7 +1,6 @@
 'use strict';
 
 import PureComponent from '../PureComponent';
-
 var React = require('react');
 var _ = require('../underscore_ext');
 var meta = require('../meta');
@@ -16,12 +15,20 @@ var element = {
 	labelValue: (i, l, v) => (
 		<span key={i}>{l}: {v}</span>
 	),
-	meanMedian: (i, v1, v2) => (
-		<span key={i}>{v1} {v2}</span>
-	),
 	url: (i, text, url) => (
 		<span key={i}><a href={url} target='_blank'>{text}</a></span>
 	),
+	urls: (i, urls, frozen) => {
+		let visibleCount = frozen ? urls.length : 3,
+			visible = urls.slice(0, visibleCount),
+			moreCount = urls.length - visibleCount;
+		return (
+			<span key={i}>
+				{visible.map(([type, ...args], j) => (element[type](j, ...args)))}
+				{moreCount > 0 ? <span className={compStyles.moreGene}>+ {moreCount} more</span> : null}
+			</span>
+		);
+	}
 //	popOver: (i, text, dataList) => (
 //		<span key={i}><a><PopOverVariants label={text} body={dataList}/></a></span>
 //	),
@@ -29,51 +36,6 @@ var element = {
 
 function overlay() {
 	return <div className={compStyles.overlay}/>;
-}
-
-function rowsOut(rows, frozen) {
-
-	let showGeneList = true;
-	let geneList = rows.filter(row => row[0][1].includes('Gene'));
-	geneList = geneList.length > 0 ? geneList.map(geneUrl => geneUrl[1]) : '';
-	let showXGenes = frozen ? geneList.length : 3;
-
-	rows = rows.map(row => {
-
-		if (row[0][1].includes('Mean') && !frozen) {
-
-			let meanRegex = /[^0-9-.]/g;
-			let meanMedian = row[0][2].split(' ');
-			let meanValue = meanMedian[0].includes('undefined') ? '--' : Number(meanMedian[0]).toFixed(3);
-			let medianValue = meanMedian[1].includes('undefined') ? '--' : Number(meanMedian[1].replace(meanRegex, '')).toFixed(3);
-			row[0][0] = 'meanMedian';
-			row[0][1] = `Mean: ${meanValue}`;
-			row[0][2] = `Median: ${medianValue}`;
-		}
-		return row;
-	});
-
-	return _.map(rows, (row, i) => {
-
-		if (row[0][1].includes('Gene') && showGeneList === true) {
-			showGeneList = false;
-			return (
-				<li key={i}>
-					<span>Gene</span>
-					{geneList.slice(0, showXGenes).map(([type, ...args], j) => element[type](j, ...args))}
-					{geneList.length > showXGenes ?
-						<span className={compStyles.moreGene}>+ {geneList.length - showXGenes} more</span> : null}
-				</li>
-			);
-		}
-
-		else if (!row[0][1].includes('Gene')) {
-			return (
-				<li key={i}>
-					{row.map(([type, ...args], k) => element[type](k, ...args))}
-				</li>);
-		}
-	});
 }
 
 //var PopOverVariants = React.createClass({
@@ -149,6 +111,13 @@ class Tooltip extends PureComponent {
 			</div>);
 		}
 
+		var rowsOut = _.map(rows, (row, i) => (
+			<li key={i}>
+				{row.map(([type, ...args], k) => type === 'urls' ?
+					element[type](k, args, frozen) :
+					element[type](k, ...args))}
+			</li>
+		));
 		var closeIcon = frozen ? <i className='material-icons' onClick={onClose}>close</i> : null;
 		var sample = sampleID ? <span>{sampleID}</span> : null;
 
@@ -162,7 +131,7 @@ class Tooltip extends PureComponent {
 						</li> : null}
 						<li
 							className={compStyles.tooltipHint}>{`${meta.name}-click to ${frozen ? 'unfreeze' : 'freeze'} tooltip`}</li>
-						{rowsOut(rows, frozen)}
+						{rowsOut}
 					</ul>
 					{closeIcon}
 				</div>

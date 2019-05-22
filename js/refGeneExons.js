@@ -510,13 +510,15 @@ class RefGeneDrawing extends React.Component {
 			});
 
 			if (matches.length > 0)	{
+				var urls = [];
 				matches.forEach(match => {
 					var posGene = `${match.chrom}:${util.addCommas(match.txStart)}-${util.addCommas(match.txEnd)}`,
 						positionGeneString = encodeURIComponent(posGene),
 						GBurlGene = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=${assemblyString}&position=${positionGeneString}&enableHighlightingDialog=0`;
 
-					rows.push([['value', 'Gene '], ['url', `${match.name2}`, GBurlGene]]);
+					urls.push(['url', `${match.name2}`, GBurlGene]);
 				});
+				rows.push([['value', 'Gene '], ['urls', ...urls]]);
 			}
 		}
 
