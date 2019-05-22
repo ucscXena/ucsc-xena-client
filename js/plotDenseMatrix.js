@@ -86,7 +86,7 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		rows: [
 			[['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos, hgtCustomtext, hubUrl)]]] : []),
-			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['labelValue', 'Mean (Median)', `${mean} (${median})`]]] : [])]
+			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['label', `Mean: ${mean} Median: ${median}`]]] : [])]
 	};
 }
 

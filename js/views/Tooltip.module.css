@@ -8,24 +8,38 @@
 @value black6 from '../../css/variables.css';
 @value black12 from '../../css/variables.css';
 @value black38 from '../../css/variables.css';
+@value black54 from '../../css/variables.css';
+@value black87 from '../../css/variables.css';
 
 .Tooltip {
+	align-items: center;
 	background-color: #ffffff;
-	border-radius: 2px;
-	box-shadow: 0 19px 60px rgba(0, 0, 0, .3), 0 15px 20px rgba(0, 0, 0, .22); /* Based on <Dialog>. */
-	display: none; /* Hidden by default */
-	min-width: 272px;
-	overflow: hidden;
-	position: fixed;
-	right: 24px;
-	text-align: left;
-	top: 24px;
-	white-space: nowrap;
-	z-index: 999;
+	border-bottom: 1px solid black6;
+	display: flex;
+	height: 32px;
+	justify-content: space-between;
+	left: 0;
+	padding: 0 24px;
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 100%;
 }
 
-.Tooltip.open {
-	display: block; /* Show on hover of column */
+/* Fade on horizontal scroll - RHS */
+.Tooltip.frozen::after {
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0), #ffffff, #ffffff);
+	content: '';
+	height: 100%;
+	position: absolute;
+	right: 48px; /* Positions before close icon */
+	top: 0;
+	width: 16px;
+}
+
+/* Tooltip - frozen */
+.Tooltip.frozen {
+	z-index: 999;
 }
 
 .overlay {
@@ -38,60 +52,93 @@
 	z-index: 998;
 }
 
-/* Sample display text */
-.title {
-	align-items: center;
-	composes: mdTitle from '../../css/typography.module.css';
-	display: flex;
-	justify-content: space-between;
-}
-
-/* Close icon */
-.title i {
-	cursor: pointer;
-	line-height: 0; /* Prevent icon from jiggling title on show/hide when freezing/unfreezing */
-}
-
 /* Rows */
 .content {
 	composes: mdBody1 from '../../css/typography.module.css';
+	align-items: center;
+	animation-duration: 200ms;
+	animation-name: contentAnimation;
+	display: flex;
 	list-style: none;
-	margin: 8px;
+	overflow-x: auto; /* Horizontal scroll - hide webkit scrollbar unless actively scrolling. */
+	-ms-overflow-style: -ms-autohiding-scrollbar; /* Hide scrollbar in IE unless actively scrolling. */
+	white-space: nowrap;
+	width: 100%;
 }
 
-.content li {
-	padding: 8px 0;
+.content::-webkit-scrollbar {
+	display: none;
 }
 
-.content li:not(:first-child) {
-	border-top: 1px solid black6;
+/* Animation content */
+@keyframes contentAnimation {
+	0% {opacity: 0.12;}
+	60% {opacity: 0.12;}
+	100% {opacity: 1;}
 }
 
+/* All <li>, excluding .title */
+.content li:not(.title) {
+	align-items: center;
+	color: black54;
+	display: flex;
+}
+
+/* Last <li> */
+.content li:last-of-type {
+	padding-right: 16px;
+}
+
+/* Sample display text */
+.title {
+	composes: mdBody1 from '../../css/typography.module.css';
+	align-items: flex-start;
+	color: black87;
+	display: flex;
+	flex-direction: column;
+	min-width: 124px;
+}
+
+/* Dot */
+.content li:not(:first-child):before {
+	background-color: black12;
+	border-radius: 4px;
+	content: '';
+	display: inline-flex;
+	height: 4px;
+	margin: 0 8px;
+	width: 4px;
+}
+
+/* Secondary spans within <li>, excluding .title */
+.content li:not(.title) span:not(:first-of-type) {
+	margin-left: 8px;
+}
+
+/* Content with link */
 .content a {
 	color: var(--color-accent);
 	transition: color 0.35s;
 }
 
+/* Content with link - hover state */
 .content a:hover {
 	color: var(--color-primary-contrast);
 	text-decoration: none;
 }
 
-/* Zoom hint text and help link */
-.actions {
-	align-items: center;
-	border-top: 1px solid black6;
-	display: flex;
-	justify-content: space-between;
-	padding: 8px;
-	margin-top: 24px;
-}
-
-.zoomHint {
+/* Tooltip helper text, "+ more" */
+.tooltipHint, .moreGene {
 	composes: mdCaption from '../../css/typography.module.css';
+	color: black38 !important;
 }
 
-.actions a {
-	color: black38;
-	line-height: 0;
+.moreGene {
+	font-size: 10px;
+}
+
+/* Close icon - to unfreeze tooltip */
+.Tooltip i {
+	color: black54;
+	cursor: pointer;
 }
