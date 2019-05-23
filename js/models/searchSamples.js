@@ -12,23 +12,37 @@ function invert(matches, allSamples) {
 	return _.difference(allSamples, matches);
 }
 
-function filterSampleIds(cohortSamples, cmp, str) {
-	return _.filterIndices(cohortSamples, s => cmp(str, s));
+var sampleMethods = {
+	EXACT: (x, y) => x === y,
+	CONTAINS: includes
+};
+
+// XXX need a more specific name than filterIndices for the wasm
+// method, since filterIndices is much more general, taking a
+// cmp fn.
+// XXX watch at Array.from performance. Converting here because
+// underscore union() botches the result with typed arrays. Should probably
+// switch to bitmaps.
+function filterSampleIds(cohortSamples, type, str) {
+	var fi = cohortSamples[Symbol.for('filterIndices')],
+		cmp = sampleMethods[type];
+	return fi ? Array.from(fi(str, type)) : _.filterIndices(cohortSamples, s => cmp(str, s));
 }
 
 function searchSampleIds(cohortSamples, str) {
-	return filterSampleIds(cohortSamples, includes, str);
+	return filterSampleIds(cohortSamples, 'CONTAINS', str);
 }
 
 function searchSampleIdsExact(cohortSamples, str) {
-	return filterSampleIds(cohortSamples, (x, y) => x === y, str);
+	return filterSampleIds(cohortSamples, 'EXACT', str);
 }
 
 var searchCoded = _.curry((cmp, ctx, search, data) => {
 	var {req: {values: [field]}, codes} = data,
+		matches = new Set(_.filterIndices(codes, code => cmp(search, code))),
 		filter = search === 'null' ?
-			v => v === null :
-			v => _.has(codes, v) && cmp(search, codes[v]);
+			v => isNaN(v) :
+			v => matches.has(v); // is this faster than groupby?
 	return _.filterIndices(field, filter);
 });
 
@@ -125,7 +139,7 @@ var m = (methods, exp, defaultMethod) => {
 
 function searchAll(ctx, methods, search) {
 	let {cohortSamples, columns, data} = ctx;
-	return _.union(..._.map(columns, (c, key) => methods[c.valueType](ctx, search, data[key])),
+	return _.union(..._.map(_.omit(columns, 'samples'), (c, key) => methods[c.valueType](ctx, search, data[key])),
 				   methods.samples(cohortSamples, search));
 }
 
@@ -151,6 +165,7 @@ function evalexp(ctx, expression) {
 		value: search => searchAll(ctx, searchMethod, search),
 		'quoted-value': search => searchAll(ctx, searchExactMethod, search),
 		ne: exp => invert(evalexp(ctx, exp), ctx.allSamples),
+		// XXX intersection and union in underscore are n^2
 		and: (...exprs) => _.intersection(...exprs.map(e => evalexp(ctx, e))),
 		or: (...exprs) => _.union(...exprs.map(e => evalexp(ctx, e))),
 		group: exp => evalexp(ctx, exp),
