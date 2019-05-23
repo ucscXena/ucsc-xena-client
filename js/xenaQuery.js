@@ -458,6 +458,8 @@ var cohortAnalyticURL =  `${cohortMetaData}/analytic.json`;
 //			host: 'https://tcga.xenahubs.net',
 //			fields: '=TP53 + FOXM1',
 //			label: 'a signature', // label in wizard
+//			columnLabel: 'My cool signature',
+//			fieldLabel: 'Something something TP53',
 //			width: 250
 //		},
 //		{
