@@ -66,7 +66,8 @@ class GeneSuggest extends PureComponent {
 		this.change = events.change
 			.distinctUntilChanged(_.isEqual)
 			.debounceTime(200)
-			.switchMap(value => fetchSuggestions(refGene[this.props.assembly], this.props.dataset, value))
+			.switchMap(value => value.trim() === '' ? empty :
+				fetchSuggestions(refGene[this.props.assembly], this.props.dataset, value))
 			.subscribe(matches => this.setState({suggestions: matches}));
 	}
 
@@ -78,9 +79,7 @@ class GeneSuggest extends PureComponent {
 		var position = this.input.selectionStart,
 			word = currentWord(value, position);
 
-		if (word !== '') {
-			this.on.change(word);
-		}
+		this.on.change(word);
 	};
 
 	shouldRenderSuggestions = (value) => {
@@ -90,7 +89,7 @@ class GeneSuggest extends PureComponent {
 	};
 
 	onSuggestionsClearRequested = () => {
-		this.setState({suggestions: []});
+		this.on.change('');
 	};
 
 	onChange = (ev, {newValue, method}) => {
