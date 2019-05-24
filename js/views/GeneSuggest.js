@@ -53,7 +53,7 @@ var fetchSuggestions = (assembly, dataset, value) =>
 		empty,
 		dataset ? matchPartialField(dataset, value, limit).catch(() => empty) :
 		empty,
-		(genes, probes) => _.uniq(genes.concat(probes)).sort());
+		(genes, probes) => genes.sort().concat(_.difference(probes, genes).sort()));
 
 // Currently we only match against refGene hg38 genes. We could, instead, match
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
