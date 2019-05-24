@@ -65,7 +65,7 @@ class GeneSuggest extends PureComponent {
 		var events = rxEvents(this, 'change');
 		this.change = events.change
 			.debounceTime(200)
-			.switchMap(value => fetchSuggestions(refGene[this.props.assembly], this.props.dataset, value))
+			.switchMap(value => value === undefined ? empty : fetchSuggestions(refGene[this.props.assembly], this.props.dataset, value))
 			.subscribe(matches => this.setState({suggestions: matches}));
 	}
 
@@ -85,7 +85,7 @@ class GeneSuggest extends PureComponent {
 	};
 
 	onSuggestionsClearRequested = () => {
-		this.on.change('');
+		this.on.change(undefined);
 	};
 
 	onChange = (ev, {newValue, method}) => {
@@ -120,14 +120,32 @@ class GeneSuggest extends PureComponent {
 		}
 	};
 
+	setAutosuggest = v => {
+		this.autosuggest = v;
+	}
+
+	onKeyDown = ev => {
+		// We'd like <return> to select a suggestion when suggestions are shown,
+		// but invoke "Done" when suggestions are not shown. react-autosuggest
+		// won't tell us when it's open. So, we have to inspect the child state
+		// to infer when it's open.
+		if (this.props.onKeyDown &&
+			(!_.getIn(this, ['autosuggest', 'state', 'isFocused']) ||
+				_.getIn(this, ['autosuggest', 'state', 'isCollapsed']))) {
+
+			this.props.onKeyDown(ev);
+		}
+	}
+
 	render() {
-		var {onChange} = this,
-			{onKeyDown, value = '', label, error} = this.props,
+		var {onChange, onKeyDown} = this,
+			{value = '', label, error} = this.props,
 			{suggestions} = this.state;
 
 		return (
 			<XAutosuggest
 				inputRef={this.setInput}
+				autosuggestRef={this.setAutosuggest}
 				suggestions={suggestions}
 				onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
 				onSuggestionsClearRequested={this.onSuggestionsClearRequested}

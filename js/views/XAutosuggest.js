@@ -16,6 +16,20 @@
  * onClear - Called on click of clear (X) button.
  */
 
+/*
+ * Unfortunate behaviors of react-autosuggest
+ * ghost suggestions
+ *   https://github.com/moroshko/react-autosuggest/issues/596
+ * escape clears input
+ *   This is part of ARIA specification, but react-autosuggest implements it
+ *   at variance with the spec (an editable autosuggest should clear the
+ *   suggested text, not all text), and in practice the prescribed AIRA
+ *   behavior is not usable, because escape also closes suggestions, making
+ *   it very common to lose input accidentally.
+ *
+ */
+
+
 'use strict';
 
 // Core dependencies, components
@@ -28,9 +42,12 @@ import compStyles from './XAutosuggest.module.css';
 
 class XAutosuggest extends React.Component {
 	callInputRef = autosuggest => {
-		var {inputRef} = this.props;
+		var {inputRef, autosuggestRef} = this.props;
 		if (inputRef) {
 			inputRef(autosuggest && autosuggest.input);
+		}
+		if (autosuggestRef) {
+			autosuggestRef(autosuggest);
 		}
 	}
 
