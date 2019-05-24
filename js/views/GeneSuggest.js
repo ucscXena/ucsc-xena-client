@@ -104,10 +104,12 @@ class GeneSuggest extends PureComponent {
 	getSuggestionValue = (suggestion) => {
 		var position = this.input.selectionStart,
 			value = this.input.value,
-			[i, j] = currentWordPosition(value, position);
+			[i, j] = currentWordPosition(value, position),
+			withSuggestion = value.slice(0, i) + suggestion + value.slice(j),
+			space = withSuggestion[withSuggestion.length - 1] === ' ' ? '' : ' ';
 
 		// splice the suggestion into the current word
-		return value.slice(0, i) + suggestion + value.slice(j);
+		return withSuggestion + space;
 	};
 
 	setInput = (input) => {
