@@ -198,7 +198,6 @@ var pluralDataset = i => i === 1 ? 'A dataset' : 'Some datasets';
 var pluralDo = i => i === 1 ? 'does' : 'do';
 //var pluralHas = i => i === 1 ? 'has' : 'have';
 
-// XXX take intersection of matched fields if some are missing.
 function getWarningText(matches, datasets, selected, topWarnings, value) {
 	var pos = parsePos(value),
 		warnings = _.groupBy(matches, m => m.warning),
