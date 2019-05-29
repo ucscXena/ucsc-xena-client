@@ -96,6 +96,9 @@
 	color: black87;
 	display: flex;
 	flex-direction: column;
+}
+
+.title span {
 	min-width: 124px;
 }
 
