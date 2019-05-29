@@ -56,8 +56,6 @@
 .content {
 	composes: mdBody1 from '../../css/typography.module.css';
 	align-items: center;
-	animation-duration: 200ms;
-	animation-name: contentAnimation;
 	display: flex;
 	list-style: none;
 	overflow-x: auto; /* Horizontal scroll - hide webkit scrollbar unless actively scrolling. */
@@ -68,13 +66,6 @@
 
 .content::-webkit-scrollbar {
 	display: none;
-}
-
-/* Animation content */
-@keyframes contentAnimation {
-	0% {opacity: 0.12;}
-	60% {opacity: 0.12;}
-	100% {opacity: 1;}
 }
 
 /* All <li>, excluding .title */
