@@ -53,7 +53,7 @@ var fetchSuggestions = (assembly, dataset, value) =>
 		empty,
 		dataset ? matchPartialField(dataset, value, limit).catch(() => empty) :
 		empty,
-		(genes, probes) => _.uniq(genes.concat(probes)).sort());
+		(genes, probes) => genes.sort().concat(_.difference(probes, genes).sort()));
 
 // Currently we only match against refGene hg38 genes. We could, instead, match
 // on specific datasets (probemap, mutation, segmented, refGene), but that will
@@ -64,9 +64,8 @@ class GeneSuggest extends PureComponent {
 	componentWillMount() {
 		var events = rxEvents(this, 'change');
 		this.change = events.change
-			.distinctUntilChanged(_.isEqual)
 			.debounceTime(200)
-			.switchMap(value => fetchSuggestions(refGene[this.props.assembly], this.props.dataset, value))
+			.switchMap(value => value === undefined ? empty : fetchSuggestions(refGene[this.props.assembly], this.props.dataset, value))
 			.subscribe(matches => this.setState({suggestions: matches}));
 	}
 
@@ -78,19 +77,15 @@ class GeneSuggest extends PureComponent {
 		var position = this.input.selectionStart,
 			word = currentWord(value, position);
 
-		if (word !== '') {
-			this.on.change(word);
-		}
+		this.on.change(word);
 	};
 
-	shouldRenderSuggestions = (value) => {
-		var position = this.input.selectionStart,
-			word = currentWord(value, position);
-		return word.length > 0;
+	shouldRenderSuggestions = () => {
+		return true;
 	};
 
 	onSuggestionsClearRequested = () => {
-		this.setState({suggestions: []});
+		this.on.change(undefined);
 	};
 
 	onChange = (ev, {newValue, method}) => {
@@ -109,10 +104,12 @@ class GeneSuggest extends PureComponent {
 	getSuggestionValue = (suggestion) => {
 		var position = this.input.selectionStart,
 			value = this.input.value,
-			[i, j] = currentWordPosition(value, position);
+			[i, j] = currentWordPosition(value, position),
+			withSuggestion = value.slice(0, i) + suggestion + value.slice(j),
+			space = withSuggestion[withSuggestion.length - 1] === ' ' ? '' : ' ';
 
 		// splice the suggestion into the current word
-		return value.slice(0, i) + suggestion + value.slice(j);
+		return withSuggestion + space;
 	};
 
 	setInput = (input) => {
@@ -123,14 +120,32 @@ class GeneSuggest extends PureComponent {
 		}
 	};
 
+	setAutosuggest = v => {
+		this.autosuggest = v;
+	}
+
+	onKeyDown = ev => {
+		// We'd like <return> to select a suggestion when suggestions are shown,
+		// but invoke "Done" when suggestions are not shown. react-autosuggest
+		// won't tell us when it's open. So, we have to inspect the child state
+		// to infer when it's open.
+		if (this.props.onKeyDown &&
+			(!_.getIn(this, ['autosuggest', 'state', 'isFocused']) ||
+				_.getIn(this, ['autosuggest', 'state', 'isCollapsed']))) {
+
+			this.props.onKeyDown(ev);
+		}
+	}
+
 	render() {
-		var {onChange} = this,
-			{onKeyDown, value = '', label, error} = this.props,
+		var {onChange, onKeyDown} = this,
+			{value = '', label, error} = this.props,
 			{suggestions} = this.state;
 
 		return (
 			<XAutosuggest
 				inputRef={this.setInput}
+				autosuggestRef={this.setAutosuggest}
 				suggestions={suggestions}
 				onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
 				onSuggestionsClearRequested={this.onSuggestionsClearRequested}

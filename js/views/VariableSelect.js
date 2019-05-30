@@ -14,6 +14,7 @@ var parsePos = require('../parsePos');
 var {ignoredType} = require('../models/dataType');
 import {matchDatasetFields} from '../models/columns';
 import {Observable, Scheduler} from '../rx';
+import {getOpts} from '../columnsParam';
 
 
 const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
@@ -197,7 +198,6 @@ var pluralDataset = i => i === 1 ? 'A dataset' : 'Some datasets';
 var pluralDo = i => i === 1 ? 'does' : 'do';
 //var pluralHas = i => i === 1 ? 'has' : 'have';
 
-// XXX take intersection of matched fields if some are missing.
 function getWarningText(matches, datasets, selected, topWarnings, value) {
 	var pos = parsePos(value),
 		warnings = _.groupBy(matches, m => m.warning),
@@ -215,9 +215,9 @@ var featureIndexes = (features, list) =>
 
 var toDsID = ({host, name}) => JSON.stringify({host, name});
 
-var doMatch = (datasets, dsID, field) =>
+var doMatch = (datasets, dsID, field, opts = []) =>
 	matchDatasetFields(datasets, dsID, field)
-		.map(r => ({...r, dataset: datasets[dsID]}));
+		.map(r => ({...r, dataset: datasets[dsID], opts}));
 
 var assemblyError = 'Your dataset selections include two different assemblies. For chromosome coordinates, the assembly must be unique.';
 var fieldError = 'None of these fields are available on all selected datasets.';
@@ -266,7 +266,7 @@ var matchFields = {
 	Analytic: ({datasets, analytic}, selected) =>
 		Observable.zipArray(
 			...selected.map(i =>
-				doMatch(datasets, toDsID(analytic[i]), analytic[i].fields)))
+				doMatch(datasets, toDsID(analytic[i]), analytic[i].fields, getOpts(analytic[i]))))
 		.map(matches => ({matches, valid: selected.length > 0}))
 };
 

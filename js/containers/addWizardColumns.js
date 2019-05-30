@@ -162,7 +162,7 @@ function addWizardColumns(Component) {
 			var {wizard: {datasets, features}} = this.props,
 				isPos = _.isNumber(posOrId),
 				settingsList = _.map(selected, s =>
-					computeSettings(datasets, features, null, s.dataset.dsID, s));
+					computeSettings(datasets, features, s.opts, s.dataset.dsID, s));
 			this.props.callback(['add-column', posOrId,
 				...settingsList.map((settings, i) => ({id: !i && !isPos ? posOrId : uuid(), settings}))]);
 		};

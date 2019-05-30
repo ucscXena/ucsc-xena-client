@@ -97,6 +97,8 @@ export function columnsParam() {
 	return {};
 }
 
+export var getOpts = c => mergeOpts(pickAllowed(c)).opts;
+
 // XXX not really implemented. The idea was to allow 'basic' data types
 // via cohort + type.
 export var cohort = columns =>
