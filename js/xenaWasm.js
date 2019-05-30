@@ -154,6 +154,13 @@ function getArrayField(ptr, name, field, length, type) {
 			ptr + struct.offset[field] + t.BYTES_PER_ELEMENT * length).buffer);
 }
 
+function getArrayPtrField(ptr, name, field, length, type) {
+	var struct = Module.struct[name];
+	var t = Module[arrTypes[type]];
+	var p = Module.getValue(ptr + struct.offset[field], '*');
+	return new t.constructor(Module.HEAPU8.slice(p, p + t.BYTES_PER_ELEMENT * length).buffer);
+}
+
 var allocOrdinal = scale =>
 	// this requires a cast, because we're starting with untyped arrays
 	allocArrayAsType('u32',
@@ -265,6 +272,30 @@ var colorScale = {
 };
 
 export var getColorScale = ([type, ...args]) => colorScale[type](...args);
+
+// htfc
+
+export function htfcStore(data) {
+	// The wasm call will hold this until it is called again, at which point
+	// the previous buffer is freed. It might be better to free the data before
+	// passing in more. We could, in fact, do this by passing in NULL.
+	var buff = allocArray(data);
+	Module._htfc_store(buff, data.length);
+}
+
+export function htfcSearch(str, type) {
+	var searchType = Module.enum.search_type;
+	var s = allocArray(new Uint8Array(Array.prototype.map.call(str, x => x.charCodeAt(0)).concat([0])));
+
+	var r = Module._htfc_search_store(s, searchType[type]);
+	var len = Module.getValue(r + Module.struct.search_result.offset.count, 'i32');
+	var matches = getArrayPtrField(r, 'search_result', 'matches', len, 'u32');
+
+	Module._free(Module.getValue(r + Module.struct.search_result.offset.matches, '*'));
+	Module._free(s);
+	return matches;
+}
+
 
 // importer for wasm code, to work around the async.
 

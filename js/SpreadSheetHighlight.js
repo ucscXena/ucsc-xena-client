@@ -20,6 +20,31 @@ var style = {
 	transition: 'border-color 0.3s linear'
 };
 
+// singleton img data
+var highlightImg = _.memoize1((width, height, samplesMatched, samples) => {
+	var img = new Uint32Array(width * height);
+	img.fill(0xFFFFFFFF);
+	if (samplesMatched) {
+		let matches = [];
+		for (let i = 0; i < samplesMatched.length; ++i) {
+			matches[samplesMatched[i]] = 1;
+		}
+		let count = samples.length,
+			rows = new Array(height);
+		for (let i = 0; i < samples.length; ++i) {
+			if (matches[samples[i]]) {
+				rows.fill(1, i * height / count, (i + 1) * height / count + 1);
+			}
+		}
+		for (let i = 0; i < height; ++i) {
+			if (rows[i]) {
+				img.fill(0xFF000000, width * i, width * (i + 1));
+			}
+		}
+	}
+	return new ImageData(new Uint8ClampedArray(img.buffer), width);
+});
+
 class SpreadSheetHighlight extends React.Component {
 	state = {animate: false};
 
@@ -46,35 +71,16 @@ class SpreadSheetHighlight extends React.Component {
 	}
 
 	draw = (props) => {
-		var {samples, samplesMatched, height} = props,
+		var {samples, samplesMatched, height, width} = props,
 			{vg} = this;
 
 		if (vg.height() !== height) {
 			vg.height(height);
 		}
 
-		vg.clear(0, 0, tickWidth, height);
-		if (!samplesMatched) {
-			return;
-		}
-		// Previously we used _.object, but hit a Safari bug https://bugs.webkit.org/show_bug.cgi?id=177772
-		// with assigning numeric values to numeric keys. So, using an Array instead.
-		var matchMap = samplesMatched.reduce((acc, v, i) => { acc[v] = i; return acc; }, new Array(samples.length)),
-			stripeGroups = _.groupByConsec(samples, s => _.has(matchMap, s)),
-			stripes = _.scan(stripeGroups, (acc, g) => acc + g.length, 0),
-			hasMatch = _.map(stripeGroups, (s, i) => _.has(matchMap, stripeGroups[i][0])),
-			pixPerRow = height / samples.length;
-
-
-		vg.box(0, 0, tickWidth, height, 'rgba(0, 0, 0, 0)'); // transparent black
-
-		var rects = _.flatmap(_.initial(stripes).map((offset, i) => (!hasMatch[i] ? [] : [[
-			0, offset * pixPerRow,
-			tickWidth, Math.max(pixPerRow * (stripes[i + 1] - offset), 1)
-		]])));
-		if (rects.length > 0) {
-			vg.drawRectangles(rects, {fillStyle: 'rgba(0, 0, 0, 1)'});
-		}
+		var ctx = vg.context();
+		var img = highlightImg(width, height, samplesMatched, samples);
+		ctx.putImageData(img, 0, 0);
 	};
 
 	render() {

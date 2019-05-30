@@ -1,6 +1,7 @@
 'use strict';
 
 var _ = require('./underscore_ext');
+var xenaWasm = require('./xenaWasm');
 
 /*eslint-disable no-unused-vars */
 // [bin dictionary]
@@ -317,11 +318,18 @@ function uncompressDict(dict) {
 	return bins;
 }
 
+// XXX note global state, from htfcStore.
+function filterIndices(str, type) {
+	return xenaWasm.htfcSearch(str, type);
+}
+
 export function htfc(data) {
 	var dict = isoDict(new Uint8Array(data)),
 		{binSize, length} = dict,
 		cache,
 		cacheId;
+
+	xenaWasm.htfcStore(data); // XXX global state
 	return new Proxy([], {
 		has: (obj, prop) => {
 			if (prop === 'length') {
@@ -355,6 +363,9 @@ export function htfc(data) {
 			}
 			if (prop === 'proxied') {
 				return data;
+			}
+			if (prop === Symbol.for('filterIndices')) {
+				return filterIndices;
 			}
 			var i = parseInt(prop, 10);
 			if (isNaN(i)) {
