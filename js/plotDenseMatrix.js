@@ -75,7 +75,7 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		code = _.get(codes, val),
 		label = fieldFormat(field);
 
-	val = code ? code : prec(val);
+	val = code ? code : prec(val).toFixed(2);
 	let mean = avg && prec(avg.mean[fieldIndex]),
 		median = avg && prec(avg.median[fieldIndex]);
 
@@ -86,7 +86,7 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		rows: [
 			[['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos, hgtCustomtext, hubUrl)]]] : []),
-			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['label', `Mean: ${mean} Median: ${median}`]]] : [])]
+			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['label', `Mean: ${mean.toFixed(2)} Median: ${median.toFixed(2)}`]]] : [])]
 	};
 }
 

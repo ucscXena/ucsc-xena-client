@@ -102,7 +102,7 @@ var gbURL = (assembly, pos, highlightPos) => {
 function sampleTooltip(chrom, sampleFormat, data, gene, assembly) {
 	var posDisplay = data && (data.start === data.end) ? posStartString(chrom, data) : posDoubleString(chrom, data),
 		posURL = ['url',  `${assembly} ${posDisplay}`, gbURL(assembly, posRegionString(chrom, data), posDoubleString(chrom, data))],
-		value = ['labelValue', 'value', `${data.value}`];
+		value = ['labelValue', 'value', `${data.value.toFixed(2)}`];
 
 	return {
 		rows: dropNulls([

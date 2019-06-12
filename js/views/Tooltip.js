@@ -9,11 +9,16 @@ var classNames = require('classnames');
 // Styles
 var compStyles = require('./Tooltip.module.css');
 
+// Adds a non-breaking space before non-negative value to prevent value jiggle on display
+function normalizeSign(value) {
+	return value >= 0 ? `\u00a0${value}` : value;
+}
+
 var element = {
-	value: (i, v) => <span key={i}>{v}</span>,
+	value: (i, v) => <span key={i}>{normalizeSign(v)}</span>,
 	label: (i, l) => <span key={i}>{l}</span>,
 	labelValue: (i, l, v) => (
-		<span key={i}>{l}: {v}</span>
+		<span key={i}>{l}: {normalizeSign(v)}</span>
 	),
 	url: (i, text, url) => (
 		<span key={i}><a href={url} target='_blank'>{text}</a></span>
