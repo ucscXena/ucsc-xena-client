@@ -170,7 +170,7 @@ class Transcripts extends React.Component {
 				<div className={styles.main}>
 					{stateError ? <StateError onHide={this.onHideError} error={stateError}/> : null}
 					<a className={styles.selectorsLink} style={{fontSize: "0.85em"}}
-						href="https://xena.ghost.io/transcript-view-help/">Help with transcripts</a>
+						href="https://ucsc-xena.gitbook.io/project/overview-of-features/transcript-view/">Help with transcripts</a>
 					<div className={styles.selectors} style={{width: "1200px", height: "80px"}}>
 						<div className={styles.geneBox} style={{float: "left", width: "300px"}}>
 							<GeneSuggest assembly='hg38' label="Add Gene (e.g. KRAS)" value={this.state.input}
