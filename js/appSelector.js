@@ -9,6 +9,9 @@ var {searchSamples} = require('./models/searchSamples');
 var isPublicSelector = require('./isPublicSelector');
 // XXX should move userServers, or maybe put it in a selector
 var {userServers} = require('./controllers/common');
+import {defaultWidth} from './controllers/ui';
+
+var minWidth = defaultWidth(0);
 
 var createSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
@@ -98,7 +101,7 @@ var kmSelector = createSelector(
 
 // Enforce default width in wizardMode
 var ammedWidthSelector = createFmapSelector(
-		({columns, wizardMode, defaultWidth}) =>
+		({columns, wizardMode, defaultWidth = minWidth}) =>
 			_.fmap(columns, column => ({column, wizardMode, defaultWidth})),
 		({column, wizardMode, defaultWidth}) => wizardMode ?
 			_.assoc(column, 'width', defaultWidth) : column);
