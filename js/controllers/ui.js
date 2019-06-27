@@ -60,7 +60,7 @@ function resetWizard(state) {
 // Use min app width (1280px) if viewport width is currently smaller than min
 // app width. (App is responsive above 1280px but components are snapped at a
 // minimum width of 1280px)
-var defaultWidth = viewportWidth => {
+export var defaultWidth = viewportWidth => {
 	var width = (viewportWidth < 1280 ? 1280 : viewportWidth);
 	return Math.floor((width - 48) / 4) - 16; // Allow for 2 x 24px gutter on viewport, plus 16px margin for column
 };
@@ -255,6 +255,6 @@ var spreadsheetControls = {
 			c => c ? _.assoc(c, 'xzoom', xzoom) : c)
 };
 
-module.exports = compose(
-		mount(make(spreadsheetControls), ['spreadsheet']),
-		make(controls));
+export default compose(
+	mount(make(spreadsheetControls), ['spreadsheet']),
+	make(controls));

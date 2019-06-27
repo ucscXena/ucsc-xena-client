@@ -3,7 +3,7 @@ var _ = require('./underscore_ext');
 
 function permuteCaseArray(str, i = 0) {
 	if (i === str.length) {
-		return [''];
+		return [['']];
 	}
 	var c = str[i],
 		u = c.toLowerCase(),
