@@ -282,12 +282,11 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster}) {
 	var {column} = props,
 		{fieldType, clustering} = column,
 		supportTumorMap = thisTumorMap && tumorMapCompatible(column),
-		order = clustering == null ? 'clusters' :
-			fieldType === 'geneProbes' ? 'position' : 'list';
+		order = clustering == null ? 'Cluster' : 'Uncluster';
 
 	return addIdsToArr([
 		supportsClustering(column) ?
-			<MenuItem onClick={onCluster} caption={`Order by ${order}`} /> :
+			<MenuItem onClick={onCluster} caption={order} /> :
 			null,
 		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?
