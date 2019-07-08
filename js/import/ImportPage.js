@@ -75,7 +75,7 @@ class ImportForm extends React.Component {
 				break;
 			case PAGES.DATA_TYPE_SELECT:
 				wizardProps = { nextEnabled: !!dataType && !fileReadInProgress, fileName };
-				component = this.dataTypePage(fileSelected);
+				component = this.dataTypePage(fileReadInProgress);
 				break;
 			case PAGES.DENSE_ORIENTATION:
 				wizardProps = { fileName, nextEnabled: !!fileFormat };
@@ -162,7 +162,7 @@ class ImportForm extends React.Component {
 		);
 	}
 
-	dataTypePage() {
+	dataTypePage(fileReadInProgress) {
 		const dataType = _.getIn(this.props, ['state', 'dataType']),
 			{showMoreDataTypes} = this.state;
 
@@ -170,7 +170,7 @@ class ImportForm extends React.Component {
 			<div>
 				<RadioGroup value={dataType} onChange={this.onDataTypeChange}>
 					{dataTypeOptions.slice(0, showMoreDataTypes ? 4 : 2).map(({label, value}) =>
-						 <RadioButton key={value} label={label} value={value}/>)}
+						 <RadioButton disabled={!!fileReadInProgress} key={value} label={label} value={value}/>)}
 				</RadioGroup>
 				<p className={styles.showMore} onClick={this.onShowMoreDataTypesToggle}>
 					{showMoreDataTypes ? 'Less data types...' : 'More data types...'}
