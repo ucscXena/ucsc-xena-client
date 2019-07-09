@@ -29,6 +29,7 @@ var gaEvents = require('../gaEvents');
 var crosshair = require('./cursor.png');
 var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
+var config = require('../config');
 
 var ESCAPE = 27;
 
@@ -287,7 +288,7 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster}) {
 
 	return addIdsToArr([
 		supportsClustering(column) ?
-			<MenuItem onClick={onCluster} caption={order} /> :
+			<MenuItem onClick={onCluster} caption={order} disabled={config.singlecell} /> :
 			null,
 		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?
