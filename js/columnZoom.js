@@ -107,6 +107,12 @@ var annotationPxToSamplesPx = (column, startPx, endPx) => {
 			start = subcolumnToPx(column, minIndex).start;
 			end = subcolumnToPx(column, maxIndex).end;
 		}
+
+		if (_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) === 'regulon') {
+			start = startPx;
+			end = endPx;
+		}
+
 	return {start, end};
 };
 
