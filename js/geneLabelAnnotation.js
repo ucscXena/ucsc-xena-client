@@ -17,10 +17,11 @@ class GeneLabelAnnotation extends PureComponent {
 
 		var items = laneNum > maxLane ? null : list.map((text, index) => { // display at most 5 lanes
 			var left = subColWidth * index,
-				bottom = laneHeight * (index % laneNum) - height,
+				textAlign = list.length === 1 ? 'center' : 'left',
+				bottom = laneHeight * (index % laneNum),
 				textWidth = width - left,
-				color = subColumnIndex && index === subColumnIndex.index ? 'red' : 'black',
-				fontWeight = subColumnIndex && index === subColumnIndex.index ? 'bold' : 'normal';
+				color = subColumnIndex && index === subColumnIndex.index && list.length !== 1 ? 'red' : 'black',
+				fontWeight = subColumnIndex && index === subColumnIndex.index && list.length !== 1 ? 'bold' : 'normal';
 
 			return (
 				<div key={index}
@@ -29,6 +30,7 @@ class GeneLabelAnnotation extends PureComponent {
 						bottom: bottom,
 						position: 'absolute',
 						width: textWidth,
+						textAlign: textAlign,
 						overflow: 'hidden',
 						fontSize: geneLableFont}}>
 					<label style = {{color: color, fontWeight: fontWeight}}>
@@ -38,7 +40,7 @@ class GeneLabelAnnotation extends PureComponent {
 		});
 
 		return (
-			<div>
+			<div style={{width: width, height: height}}>
 				{items}
 			</div>
 		);
