@@ -6,6 +6,27 @@ import PureComponent from './PureComponent';
 var geneLableFont = 12;
 var maxLane = 5;
 
+class GeneLabel extends PureComponent {
+	render () {
+		var {index, left, bottom, textWidth, textAlign, text, color, fontWeight} = this.props;
+
+		return (
+			<div key={index}
+					style={{
+						left: left,
+						bottom: bottom,
+						position: 'absolute',
+						width: textWidth,
+						textAlign: textAlign,
+						overflow: 'hidden',
+						fontSize: geneLableFont}}>
+					<label style = {{color: color, fontWeight: fontWeight}}>
+						{text}
+					</label>
+				</div>);
+	}
+}
+
 class GeneLabelAnnotation extends PureComponent {
 	render() {
 		var {width, height, list, subColumnIndex} = this.props;
@@ -24,19 +45,16 @@ class GeneLabelAnnotation extends PureComponent {
 				fontWeight = subColumnIndex && index === subColumnIndex.index && list.length !== 1 ? 'bold' : 'normal';
 
 			return (
-				<div key={index}
-					style={{
-						left: left,
-						bottom: bottom,
-						position: 'absolute',
-						width: textWidth,
-						textAlign: textAlign,
-						overflow: 'hidden',
-						fontSize: geneLableFont}}>
-					<label style = {{color: color, fontWeight: fontWeight}}>
-						{text}
-					</label>
-				</div>);
+				<GeneLabel
+					index = {index}
+					left = {left}
+					bottom = {bottom}
+					textWidth = {textWidth}
+					textAlign = {textAlign}
+					text = {text}
+					color = {color}
+					fontWeight = {fontWeight}
+					/>);
 		});
 
 		return (
