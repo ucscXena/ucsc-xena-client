@@ -8,22 +8,21 @@ var maxLane = 5;
 
 class GeneLabel extends PureComponent {
 	render () {
-		var {index, left, bottom, textWidth, textAlign, text, color, fontWeight} = this.props;
+		var {left, bottom, textWidth, textAlign, text, color, fontWeight} = this.props;
 
 		return (
-			<div key={index}
-					style={{
-						left: left,
-						bottom: bottom,
-						position: 'absolute',
-						width: textWidth,
-						textAlign: textAlign,
-						overflow: 'hidden',
-						fontSize: geneLableFont}}>
-					<label style = {{color: color, fontWeight: fontWeight}}>
-						{text}
-					</label>
-				</div>);
+			<div style={{
+					left: left,
+					bottom: bottom,
+					position: 'absolute',
+					width: textWidth,
+					textAlign: textAlign,
+					overflow: 'hidden',
+					fontSize: geneLableFont}}>
+				<label style = {{color: color, fontWeight: fontWeight}}>
+					{text}
+				</label>
+			</div>);
 	}
 }
 
@@ -46,7 +45,7 @@ class GeneLabelAnnotation extends PureComponent {
 
 			return (
 				<GeneLabel
-					index = {index}
+					key = {index}
 					left = {left}
 					bottom = {bottom}
 					textWidth = {textWidth}
