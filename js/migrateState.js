@@ -39,8 +39,10 @@ var samplesToLeft = state =>
 		state;
 
 var noFieldSpec = state =>
+	get(state, 'spreadsheet') ?
 	updateIn(state, ['spreadsheet', 'columns'], columns =>
-			mapObject(columns, column => merge(omit(column, 'fieldSpecs'), getIn(column, ['fieldSpecs', 0], {}))));
+			mapObject(columns, column => merge(omit(column, 'fieldSpecs'), getIn(column, ['fieldSpecs', 0], {})))) :
+	state;
 
 // This must be sorted, with later versions appearing last.
 var migrations = [
