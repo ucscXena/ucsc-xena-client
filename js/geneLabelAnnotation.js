@@ -52,8 +52,7 @@ class GeneLabelAnnotation extends PureComponent {
 					textAlign = {textAlign}
 					text = {text}
 					color = {color}
-					fontWeight = {fontWeight}
-					/>);
+					fontWeight = {fontWeight}/>);
 		});
 
 		return (
