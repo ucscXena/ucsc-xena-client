@@ -8,7 +8,7 @@ import {contains} from './underscore_ext';
 
 var stateTypes = ['bookmark', 'import', 'session'];
 var getMsg = error =>
-	contains(stateTypes, error) ? `We were unable to restore the view from your ${this.props.error}, possibly due to software updates. Sorry about that!` :
+	contains(stateTypes, error) ? `We were unable to restore the view from your ${error}, possibly due to software updates. Sorry about that!` :
 	error;
 
 class StateError extends PureComponent {
