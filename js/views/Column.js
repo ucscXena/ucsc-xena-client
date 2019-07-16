@@ -23,11 +23,13 @@ import Tooltip from 'react-toolbox/lib/tooltip';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
 import RefGeneAnnotation from '../refGeneExons';
+import {GeneLabelAnnotation, geneLableFont, maxLane} from '../geneLabelAnnotation';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
 var crosshair = require('./cursor.png');
 var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
+var config = require('../config');
 
 var ESCAPE = 27;
 
@@ -286,7 +288,7 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster}) {
 
 	return addIdsToArr([
 		supportsClustering(column) ?
-			<MenuItem onClick={onCluster} caption={order} /> :
+			<MenuItem onClick={onCluster} caption={order} disabled={config.singlecell} /> :
 			null,
 		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?
@@ -386,7 +388,12 @@ var showPosition = column =>
 	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType) &&
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
-// Drag mapped to: direction, samples start, samples end, indicator start, indicator end (where indicator is either
+var showGeneLabel = column =>
+	_.contains(['genes', 'probes'], column.fieldType) ||
+	(column.fieldType === 'geneProbes' &&
+	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) === 'regulon');
+
+	// Drag mapped to: direction, samples start, samples end, indicator start, indicator end (where indicator is either
 // annotation or sample zoom), offset x, offset y, samples height
 // Select mapped to: direction, data start and data end
 var zoomTranslateSelection = (props, selection, zone) => {
@@ -414,6 +421,7 @@ var zoomTranslateSelection = (props, selection, zone) => {
 class Column extends PureComponent {
 	state = {
 		dragZoom: {},
+		subColumnIndex: {},
 		specialDownloadMenu: specialDownloadMenu
 	};
 
@@ -437,9 +445,58 @@ class Column extends PureComponent {
 		this.props.onInteractive('zoom', interactive);
 	};
 
+	onMouseMove = (e) => {
+		var {column} = this.props,
+			{width} = column,
+			subColumnIndex = this.state.subColumnIndex;
+
+		if (!_.isEmpty(subColumnIndex)) {
+			var aveSize = subColumnIndex.aveSize,
+				laneNum = Math.ceil(column.fields.length / (width / aveSize)),
+				subColumnWidth =  width / column.fields.length;
+
+			if (laneNum <= maxLane) {
+				var offsetX = e.clientX - e.currentTarget.getBoundingClientRect().left,
+					index = Math.floor(offsetX / subColumnWidth);
+
+				this.setState({subColumnIndex: {
+					...this.state.subColumnIndex,
+					index: index,
+					mousing: true
+				}});
+			}
+		}
+	};
+
+	onMouseOut = () => {
+		var subColumnIndex = this.state.subColumnIndex;
+		if (!_.isEmpty(subColumnIndex)) {
+			this.setState({subColumnIndex: {
+				...this.state.subColumnIndex,
+				index: -1,
+				mousing: false
+			}});
+		}
+	};
+
+	initSubColumnIndex = () => {
+		var {column} = this.props;
+		if (_.contains(['probes', 'genes'], column.fieldType) ||
+				_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) === 'regulon') {
+			var aveSize = geneLableFont * (column.fields.reduce( (total, x) => total + (x ? x.length : 0), 0) / column.fields.length);
+
+			this.setState({subColumnIndex: {
+				index: -1,
+				aveSize: aveSize,
+				mousing: false
+			}});
+		}
+	};
+
 	componentWillMount() {
 		var asciiA = 65;
 		this.ksub = konami(asciiA).subscribe(this.enableHiddenFeatures);
+		this.initSubColumnIndex();
 	}
 
 	componentWillUnmount() {
@@ -640,7 +697,7 @@ class Column extends PureComponent {
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
 				interactive, append, cohort, tumorMap} = this.props,
-			{specialDownloadMenu, dragZoom} = this.state,
+			{specialDownloadMenu, dragZoom, subColumnIndex} = this.state,
 			{selection} = dragZoom,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
@@ -678,6 +735,13 @@ class Column extends PureComponent {
 					mode = {isChrom(column) ?
 						"coordinate" :
 						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
+				: null,
+			geneLabel = showGeneLabel(column) ?
+				<GeneLabelAnnotation
+					width={width}
+					height={annotationHeight + scaleHeight}
+					list = {column.fields}
+					subColumnIndex = {this.state.subColumnIndex}/>
 				: null;
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
@@ -729,7 +793,7 @@ class Column extends PureComponent {
 											{scale}
 											<div style={{height: 2}}/>
 											{annotation}
-										</div> : null}
+										</div> : geneLabel}
 								</DragSelect>
 							</div>
 							<ResizeOverlay
@@ -744,8 +808,8 @@ class Column extends PureComponent {
 									height={zoom.height}
 									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 									samplesMatched={samplesMatched}/>
-								<div style={{position: 'relative'}}>
-									<Crosshair frozen={!interactive || this.props.frozen} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
+								<div style={{position: 'relative'}} onMouseMove={this.onMouseMove} onMouseOut={this.onMouseOut}>
+									<Crosshair frozen={!interactive || this.props.frozen} mousing={subColumnIndex.mousing} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
 										<DragSelect enabled={!wizardMode}
 													onDrag={(s) => this.onDragZoom(s, 's')} onSelect={(s) => this.onDragZoomSelect(s, 's')}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
