@@ -27,9 +27,12 @@ import wrapLaunchHelper from '../LaunchHelper';
 
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
+		sig = _.getIn(columns, [uuid, 'fetchType']) === 'signature',
 		label = _.getIn(columns, [uuid, 'fieldLabel']),
 		fields = _.getIn(data, [uuid, 'req', 'probes'], columnFields);
-	if (fields.length === 1) {                           // 1 gene/probe, or 1 probe in gene
+	if (sig) {
+		return _.identity;
+	} else if (fields.length === 1) {                           // 1 gene/probe, or 1 probe in gene
 		return field => (field === label) ? label : `${label} (${field})`;
 	} else if (fields.length === columnFields.length) {  // n > 1 genes/probes
 		return _.identity;

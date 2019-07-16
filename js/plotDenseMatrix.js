@@ -63,7 +63,7 @@ var gbURL = (assembly, pos, hgtCustomtext, hubUrl) => {
 };
 
 function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
-	fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
+	fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, fetchType, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
@@ -84,7 +84,7 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		id,
 		fieldIndex,
 		rows: [
-			[['labelValue', label, val]],
+			[[fetchType === 'signature' ? 'sig' : 'labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos, hgtCustomtext, hubUrl)]]] : []),
 			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['label', `Mean: ${mean} Median: ${median}`]]] : [])]
 	};
@@ -214,11 +214,11 @@ class extends PureComponent {
 			{codes, avg} = column,
 			// support data.req.position for old bookmarks.
 			position = column.position || _.getIn(data, ['req', 'position']),
-			{assembly, fields, heatmap, width, dataset} = column,
+			{assembly, fields, heatmap, fetchType, width, dataset} = column,
 			hgtCustomtext = _.getIn(dataset, ['probemapMeta', 'hgt.customtext']),
 			hubUrl = _.getIn(dataset, ['probemapMeta', 'huburl']);
 		return tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl, fields, sampleFormat, fieldFormat(id),
-			codes, position, width, zoom, samples, ev);
+			codes, position, width, zoom, samples, fetchType, ev);
 	};
 
 	// To reduce this set of properties, we could
