@@ -461,7 +461,8 @@ class Column extends PureComponent {
 
 				this.setState({subColumnIndex: {
 					...this.state.subColumnIndex,
-					index: index
+					index: index,
+					mousing: true
 				}});
 			}
 		}
@@ -472,7 +473,8 @@ class Column extends PureComponent {
 		if (!_.isEmpty(subColumnIndex)) {
 			this.setState({subColumnIndex: {
 				...this.state.subColumnIndex,
-				index: -1
+				index: -1,
+				mousing: false
 			}});
 		}
 	};
@@ -485,7 +487,8 @@ class Column extends PureComponent {
 
 			this.setState({subColumnIndex: {
 				index: -1,
-				aveSize: aveSize
+				aveSize: aveSize,
+				mousing: false
 			}});
 		}
 	};
@@ -694,7 +697,7 @@ class Column extends PureComponent {
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
 				interactive, append, cohort, tumorMap} = this.props,
-			{specialDownloadMenu, dragZoom} = this.state,
+			{specialDownloadMenu, dragZoom, subColumnIndex} = this.state,
 			{selection} = dragZoom,
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
@@ -806,7 +809,7 @@ class Column extends PureComponent {
 									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 									samplesMatched={samplesMatched}/>
 								<div style={{position: 'relative'}} onMouseMove={this.onMouseMove} onMouseOut={this.onMouseOut}>
-									<Crosshair frozen={!interactive || this.props.frozen} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
+									<Crosshair frozen={!interactive || this.props.frozen} mousing={subColumnIndex.mousing} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
 										<DragSelect enabled={!wizardMode}
 													onDrag={(s) => this.onDragZoom(s, 's')} onSelect={(s) => this.onDragZoomSelect(s, 's')}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}

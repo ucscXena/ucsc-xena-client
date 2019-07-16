@@ -21,7 +21,7 @@ class Crosshair extends PureComponent {
 	state = {mousing: false, x: -1, y: -1};
 
 	componentWillReceiveProps(nextProps) {
-		if (!nextProps.frozen) {
+		if (!nextProps.frozen && !nextProps.mousing) {
 			this.setState({mousing: false, x: -1, y: -1});
 		}
 	}
