@@ -32,16 +32,21 @@ class GeneLabelAnnotation extends PureComponent {
 
 		var	subColWidth = width / list.length,
 			aveSize = subColumnIndex.aveSize,
-			laneNum = Math.ceil(list.length / (width / aveSize)),
+			textAlign = list.length === 1 ? 'center' : 'left',
+			laneNum = list.length === 1 ?  1 : Math.ceil(list.length / (width / aveSize)),
 			laneHeight = height / laneNum;
 
 		var items = laneNum > maxLane ? null : list.map((text, index) => { // display at most 5 lanes
 			var left = subColWidth * index,
-				textAlign = list.length === 1 ? 'center' : 'left',
 				bottom = laneHeight * (index % laneNum),
 				textWidth = width - left,
 				color = subColumnIndex && index === subColumnIndex.index && list.length !== 1 ? 'red' : 'black',
 				fontWeight = subColumnIndex && index === subColumnIndex.index && list.length !== 1 ? 'bold' : 'normal';
+
+			if (list.length === 1) { // for single probe/gene/signature column, shorten text so that it will not go over vertically due to line wrapping
+				text = text.slice(0, subColWidth * maxLane / geneLableFont) +
+					(subColWidth * maxLane / geneLableFont < text.length ?  ' ...' : '');
+			}
 
 			return (
 				<GeneLabel
