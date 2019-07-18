@@ -15,6 +15,11 @@ var element = {
 	labelValue: (i, l, v) => (
 		<span key={i}>{l}: {v}</span>
 	),
+	sig: (i, lHover, lFrozen, val, frozen) => {
+		return (
+			<span key={i}>{frozen ? lFrozen : lHover}: {val}</span>
+		);
+	},
 	url: (i, text, url) => (
 		<span key={i}><a href={url} target='_blank'>{text}</a></span>
 	),
@@ -114,8 +119,7 @@ class Tooltip extends PureComponent {
 		var rowsOut = _.map(rows, (row, i) => (
 			<li key={i}>
 				{row.map(([type, ...args], k) => type === 'urls' ?
-					element[type](k, args, frozen) :
-					element[type](k, ...args))}
+					element[type](k, args, frozen) : type === 'sig' ? element[type](k, ...args, frozen) : element[type](k, ...args))}
 			</li>
 		));
 		var closeIcon = frozen ? <i className='material-icons' onClick={onClose}>close</i> : null;
