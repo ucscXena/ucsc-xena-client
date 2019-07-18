@@ -64,8 +64,8 @@ var gbURL = (assembly, pos, hgtCustomtext, hubUrl) => {
 
 function sigTooltip(genes, missing, fields, val) {
 	let visibleCount = 2,
-		visible = genes.splice(0, visibleCount),
 		moreCount = genes.length - visibleCount,
+		visible = genes.slice(0, visibleCount),
 		moreLabel = moreCount > 0 ? ` + ${moreCount} more` : '',
 		missingLabel = missing ? ` (missing terms: ${missing.join(' ')}) ` : '';
 	return [['sig',
