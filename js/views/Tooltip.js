@@ -15,22 +15,9 @@ var element = {
 	labelValue: (i, l, v) => (
 		<span key={i}>{l}: {v}</span>
 	),
-	sig: (i, l, v, frozen) => {
-		if (!frozen) {
-			let visibleCount = 2,
-				signature = l.split(' (= '),
-				missingTerms = signature[1].split(' '),
-				visible = missingTerms.slice(0, visibleCount),
-				moreCount = missingTerms.length - visible.length,
-				label = signature[0] + ' (= ' + visible.join(' ');
-			return (
-				<span key={i}>
-					<span>{label}{moreCount > 0 ? <span>{` ... + ${moreCount} more)`}</span> : ')'}: {v}</span>
-				</span>
-			);
-		}
+	sig: (i, lHover, lFrozen, val, frozen) => {
 		return (
-			<span key={i}>{l}: {v}</span>
+			<span key={i}>{frozen ? lFrozen : lHover}: {val}</span>
 		);
 	},
 	url: (i, text, url) => (
