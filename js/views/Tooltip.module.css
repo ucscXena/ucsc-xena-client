@@ -99,6 +99,7 @@
 	border-radius: 4px;
 	content: '';
 	display: inline-flex;
+	flex: none;
 	height: 4px;
 	margin: 0 8px;
 	width: 4px;
@@ -128,6 +129,7 @@
 }
 
 .moreGene {
+	align-self: center;
 	font-size: 10px;
 }
 
