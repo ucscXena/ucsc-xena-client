@@ -62,7 +62,7 @@ var gbURL = (assembly, pos, hgtCustomtext, hubUrl) => {
 			${hgtCustomtext ? `&hgt.customText=${hgtCustomtext}` : ''}`;
 };
 
-function sigTooltip(genes, missing, fields, val) {
+function sigTooltip(genes, missing, val) {
 	let visibleCount = 2,
 		moreCount = genes.length - visibleCount,
 		visible = genes.slice(0, visibleCount),
@@ -70,9 +70,9 @@ function sigTooltip(genes, missing, fields, val) {
 		missingLabel = missing ? ` (missing terms: ${missing.join(' ')}) ` : '';
 	return [['sig',
 			 // label on hover
-			 `signature${missingLabel}(= ${visible.join('+ ')}${moreLabel})`,
+			 `signature${missingLabel}(= ${visible.join(' + ')}${moreLabel})`,
 			 // label on freeze
-			 `signature${missingLabel}(${fields})`,
+			 `signature${missingLabel}(${genes.join(' + ')})`,
 			 val]];
 }
 
@@ -99,7 +99,7 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		id,
 		fieldIndex,
 		rows: [
-			sig ? sigTooltip(genes, missing, fields, val) : [['labelValue', label, val]],
+			sig ? sigTooltip(genes, missing, val) : [['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos, hgtCustomtext, hubUrl)]]] : []),
 			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['label', `Mean: ${mean} Median: ${median}`]]] : [])]
 	};
