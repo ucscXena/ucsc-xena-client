@@ -67,12 +67,12 @@ function sigTooltip(genes, missing, val) {
 		moreCount = genes.length - visibleCount,
 		visible = genes.slice(0, visibleCount),
 		moreLabel = moreCount > 0 ? ` + ${moreCount} more` : '',
-		missingLabel = missing ? ` (missing terms: ${missing.join(' ')}) ` : '';
+		missingLabel = missing.length ? `(missing terms: ${missing.join(' ')}) ` : '';
 	return [['sig',
 			 // label on hover
-			 `signature${missingLabel}(= ${visible.join(' + ')}${moreLabel})`,
+			 `signature ${missingLabel}(= ${visible.join(' + ')}${moreLabel})`,
 			 // label on freeze
-			 `signature${missingLabel}(${genes.join(' + ')})`,
+			 `signature ${missingLabel}(= ${genes.join(' + ')})`,
 			 val]];
 }
 
