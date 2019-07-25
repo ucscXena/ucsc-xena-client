@@ -1,6 +1,9 @@
 # UCSC Xena Client
 Functional genomics browser
 
+## UCSC Xena Roadmap
+[Roadmap](https://github.com/ucscXena/ucsc-xena-client/wiki/UCSC-Xena-Roadmap)
+
 ## Developer docs
 
 This is a browser app, written in javascript. The primary technologies we use
