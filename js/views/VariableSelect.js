@@ -231,10 +231,12 @@ function intersectFields(matches) {
 	return _.map(matches, m => _.updateIn(m, ['fields'], fields => intersection.map(i => fields[i])));
 }
 
+var fieldAssembly = datasets => match => getAssembly(datasets, match.dataset.dsID);
+
 var genomicMatches = (datasets, text) => matchesIn => {
 	var matches = intersectFields(matchesIn),
 		{hasCoord} = parsePos(text) || {},
-		assemblies = _.uniq(_.map(matches, getAssembly(datasets)).filter(x => x)),
+		assemblies = _.uniq(_.map(matches, fieldAssembly(datasets)).filter(x => x)),
 		assembly = hasCoord && assemblies.length > 1 ? [assemblyError] : [],
 		nomatch = matches.length && matches[0].fields.length === 0 ?  [fieldError] : [],
 		sig = text.trim()[0] === '=' && !_.getIn(matches, [0, 'sig']),
