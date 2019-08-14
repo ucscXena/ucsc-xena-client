@@ -554,7 +554,7 @@ class Column extends PureComponent {
 
 	onCluster = () => {
 		this.props.onCluster(this.props.id,
-			this.props.column.clustering ? undefined : 'probes');
+			this.props.column.clustering ? undefined : 'probes', this.props.data);
 	};
 
 	onDragZoom = (selection, zone) => {

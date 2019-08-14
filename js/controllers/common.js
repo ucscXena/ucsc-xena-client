@@ -32,8 +32,10 @@ const sendMessage = msg => {
         return workerObs.filter(ev => ev.data.id === id).take(1).map(ev => ev.data.msg);
 };
 
-function fetchClustering(serverBus, state, id) {
-	var data = _.getIn(state, ['data', id]);
+// data is passed here due to a problem with evaluation order.
+// We need data.avg, which is computed in the selector. So, we
+// have to pass it in from a view, rather than take it from app state.
+function fetchClustering(serverBus, state, id, data) {
 	// maybe prune the data that we send?
 	serverBus.next([['cluster-result', id], sendMessage(['cluster', data])]);
 }

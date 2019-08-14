@@ -32,7 +32,7 @@ var filterWithMap = (list, pred) => {
 
 var cmds = {
 	cluster: data => {
-		var mean = getIn(data, ['req', 'mean'], []),
+		var mean = getIn(data, ['avg', 'mean'], []),
 			all = getIn(data, ['req', 'values'], []),
 			// null columns will have null mean. Filter them out before
 			// trying to cluster. Tack them on the end, later.
