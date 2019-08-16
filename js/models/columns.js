@@ -167,11 +167,11 @@ function getFieldType(dataset, fields, matches, pos) {
 }
 
 function sigFields(fields, {genes, weights}) {
-	var matches = new Set(fields);
+	var matches = new Set(fields.map(s => s.toLowerCase()));
 	return {
-		missing: genes.filter(g => !matches.has(g)),
+		missing: genes.filter(g => !matches.has(g.toLowerCase())),
 		genes: fields,
-		weights: weights.filter((p, i) => matches.has(genes[i]))
+		weights: weights.filter((p, i) => matches.has(genes[i].toLowerCase()))
 	};
 }
 
