@@ -162,10 +162,11 @@ var getModeFields = {
 };
 
 var applyInitialState = {
-	Genotypic: (fields, dataset, datasets, features, preferred, defaults) => {
+	Genotypic: (text, fields, dataset, datasets, features, preferred, defaults) => {
 		var mode = 'Genotypic',
 			isPreferred = _.contains(_.pluck(preferred, 'dsID'), dataset),
-			value = fields.join(' '),
+			// old bookmarks may not have a 'text' property
+			value = text || fields.join(' '),
 			selected = [dataset];
 
 		return _.assocIn(defaults,
@@ -174,7 +175,7 @@ var applyInitialState = {
 			['value', mode], value,
 			['selected', mode, !isPreferred], selected);
 	},
-	Phenotypic: (fields, dataset, datasets, features, preferred, defaults) => {
+	Phenotypic: (text, fields, dataset, datasets, features, preferred, defaults) => {
 		var mode = 'Phenotypic',
 			i = _.findIndex(features, _.matcher({dsID: dataset, name: fields[0]})).toString(),
 			selected = [i];
@@ -186,7 +187,7 @@ var applyInitialState = {
 				['basicFeatures'], defaults.basicFeatures,
 				['selected', mode, false], selected);
 	},
-	'undefined': (fields, dataset, datasets, features, preferred, defaults) =>
+	'undefined': (text, fields, dataset, datasets, features, preferred, defaults) =>
 		_.assocIn(defaults, ['unavailable'], true)
 };
 
@@ -275,7 +276,7 @@ var matchFields = {
 class VariableSelect extends PureComponent {
 	constructor(props) {
 		super(props);
-		var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
+		var {text, fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
 		var defaults = {
 			mode,
 			advanced: {
@@ -308,7 +309,7 @@ class VariableSelect extends PureComponent {
 		};
 
 		this.state = fields && dataset ?
-			applyInitialState[datasetMode(datasets, dataset)](fields, dataset, datasets, features, preferred, defaults) : defaults;
+			applyInitialState[datasetMode(datasets, dataset)](text, fields, dataset, datasets, features, preferred, defaults) : defaults;
 	}
 
 	componentWillReceiveProps({features, basicFeatures}) {

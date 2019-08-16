@@ -216,6 +216,7 @@ function columnSettings(datasets, features, dsID, matches) {
 			fieldLabel,
 			fieldType,
 			user: {columnLabel, fieldLabel},
+			value,
 			width: typeWidth[typeClass(dataset)],
 		};
 
