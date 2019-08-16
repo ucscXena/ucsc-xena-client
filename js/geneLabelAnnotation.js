@@ -17,6 +17,7 @@ class GeneLabel extends PureComponent {
 					position: 'absolute',
 					width: textWidth,
 					textAlign: textAlign,
+					whiteSpace: 'nowrap',
 					overflow: 'hidden',
 					fontSize: geneLableFont}}>
 				<label style = {{color: color, fontWeight: fontWeight}}>
