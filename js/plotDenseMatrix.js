@@ -101,7 +101,7 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		rows: [
 			sig ? sigTooltip(genes, missing, val) : [['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos, hgtCustomtext, hubUrl)]]] : []),
-			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['label', `Mean: ${mean} Median: ${median}`]]] : [])]
+			...(!codes && (mean !== 'NA') && (median !== 'NA') ? [[['label', `Mean: ${mean} Median: ${median}`]]] : [])]
 	};
 }
 

@@ -399,7 +399,7 @@ function denseAverage(column, data) {
 	widgets.download.add(fieldType, download);
 });
 
-['probes', 'geneProbes', 'genes'].forEach(fieldType =>
+['probes', 'geneProbes', 'genes', 'clinical'].forEach(fieldType =>
 	widgets.avg.add(fieldType, denseAverage));
 
 widgets.transform.add('probes', reorderFieldsTransform(zoomableDataToHeatmap));
