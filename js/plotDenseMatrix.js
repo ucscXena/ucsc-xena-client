@@ -62,18 +62,33 @@ var gbURL = (assembly, pos, hgtCustomtext, hubUrl) => {
 			${hgtCustomtext ? `&hgt.customText=${hgtCustomtext}` : ''}`;
 };
 
+function sigTooltip(genes, missing, val) {
+	let visibleCount = 2,
+		moreCount = genes.length - visibleCount,
+		visible = genes.slice(0, visibleCount),
+		moreLabel = moreCount > 0 ? ` + ${moreCount} more` : '',
+		missingLabel = missing.length ? `(missing terms: ${missing.join(' ')}) ` : '';
+	return [['sig',
+			 // label on hover
+			 `signature ${missingLabel}(= ${visible.join(' + ')}${moreLabel})`,
+			 // label on freeze
+			 `signature ${missingLabel}(= ${genes.join(' + ')})`,
+			 val]];
+}
+
 function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
-	fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, ev) {
+	fields, sampleFormat, fieldFormat, codes, position, width, zoom, samples, {genes, missing}, ev) {
 	var coord = util.eventOffset(ev),
 		sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index)),
 		sampleID = samples[sampleIndex],
 		fieldIndex = bounded(0, fields.length, Math.floor(coord.x * fields.length / width)),
 		pos = _.get(position, fieldIndex),
-		field = fields[fieldIndex];
+		field = fields[fieldIndex],
+		sig = !!genes;
 
 	var val = _.getIn(heatmap, [fieldIndex, sampleIndex]),
 		code = _.get(codes, val),
-		label = fieldFormat(field);
+		label = sig ? 'signature' : fieldFormat(field);
 
 	val = code ? code : prec(val);
 	let mean = avg && prec(avg.mean[fieldIndex]),
@@ -84,9 +99,9 @@ function tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl,
 		id,
 		fieldIndex,
 		rows: [
-			[['labelValue', label, val]],
+			sig ? sigTooltip(genes, missing, val) : [['labelValue', label, val]],
 			...(pos && assembly ? [[['url', `${assembly} ${posString(pos)}`, gbURL(assembly, pos, hgtCustomtext, hubUrl)]]] : []),
-			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['labelValue', 'Mean (Median)', `${mean} (${median})`]]] : [])]
+			...(!code && (mean !== 'NA') && (median !== 'NA') ? [[['label', `Mean: ${mean} Median: ${median}`]]] : [])]
 	};
 }
 
@@ -214,11 +229,12 @@ class extends PureComponent {
 			{codes, avg} = column,
 			// support data.req.position for old bookmarks.
 			position = column.position || _.getIn(data, ['req', 'position']),
-			{assembly, fields, heatmap, width, dataset} = column,
+			{assembly, fields, heatmap, width, dataset, missing, signature} = column,
+			[, , genes] = signature || [],
 			hgtCustomtext = _.getIn(dataset, ['probemapMeta', 'hgt.customtext']),
 			hubUrl = _.getIn(dataset, ['probemapMeta', 'huburl']);
 		return tooltip(id, heatmap, avg, assembly, hgtCustomtext, hubUrl, fields, sampleFormat, fieldFormat(id),
-			codes, position, width, zoom, samples, ev);
+			codes, position, width, zoom, samples, {genes, missing}, ev);
 	};
 
 	// To reduce this set of properties, we could

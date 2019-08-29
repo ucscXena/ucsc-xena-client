@@ -15,9 +15,25 @@ var element = {
 	labelValue: (i, l, v) => (
 		<span key={i}>{l}: {v}</span>
 	),
-	url: (i, text, url) =>  (
+	sig: (i, lHover, lFrozen, val, frozen) => {
+		return (
+			<span key={i}>{frozen ? lFrozen : lHover}: {val}</span>
+		);
+	},
+	url: (i, text, url) => (
 		<span key={i}><a href={url} target='_blank'>{text}</a></span>
 	),
+	urls: (i, urls, frozen) => {
+		let visibleCount = frozen ? urls.length : 3,
+			visible = urls.slice(0, visibleCount),
+			moreCount = urls.length - visibleCount;
+		return (
+			<span key={i}>
+				{visible.map(([type, ...args], j) => (element[type](j, ...args)))}
+				{moreCount > 0 ? <span className={compStyles.moreGene}>+ {moreCount} more</span> : null}
+			</span>
+		);
+	}
 //	popOver: (i, text, dataList) => (
 //		<span key={i}><a><PopOverVariants label={text} body={dataList}/></a></span>
 //	),
@@ -79,18 +95,31 @@ function overlay() {
 
 class Tooltip extends PureComponent {
 	render() {
-		var {data, open, onClick, onClose, frozen} = this.props,
+		var {data, onClick, onClose, frozen} = this.props,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 
-		// no tooltip info
+		// no tooltip, helper links
 		if (!rows && !sampleID) {
-			return (<div/>);
+			return (<div className={compStyles.Tooltip}>
+				<ul className={compStyles.content}>
+					<li className={compStyles.tooltipHint}><a
+						href='https://ucsc-xena.gitbook.io/project/'
+						target='_blank' rel='noopener noreferrer'>User Guide</a></li>
+					<li className={compStyles.tooltipHint}><a
+						href='https://ucsc-xena.gitbook.io/project/overview-of-features/visual-spreadsheet#zooming'
+						target='_blank' rel='noopener noreferrer'>Zoom Help</a></li>
+					<li className={compStyles.tooltipHint}><a
+						href='https://ucsc-xena.gitbook.io/project/how-do-i/freeze-and-un-freeze-tooltip'
+						target='_blank' rel='noopener noreferrer'>Tooltip Help</a></li>
+				</ul>
+			</div>);
 		}
 
 		var rowsOut = _.map(rows, (row, i) => (
 			<li key={i}>
-				{row.map(([type, ...args], i) => element[type](i, ...args))}
+				{row.map(([type, ...args], k) => type === 'urls' ?
+					element[type](k, args, frozen) : type === 'sig' ? element[type](k, ...args, frozen) : element[type](k, ...args))}
 			</li>
 		));
 		var closeIcon = frozen ? <i className='material-icons' onClick={onClose}>close</i> : null;
@@ -99,17 +128,16 @@ class Tooltip extends PureComponent {
 		return (
 			<div onClick={onClick}>
 				{frozen ? overlay(onClick) : null}
-				<div className={classNames(compStyles.Tooltip, {[compStyles.open]: open})}>
+				<div key={sampleID} className={classNames(compStyles.Tooltip, {[compStyles.frozen]: frozen})}>
 					<ul className={compStyles.content}>
-						<li className={compStyles.title}>{sample}{closeIcon}</li>
+						{sampleID ? <li className={compStyles.title}>
+							{sample}
+						</li> : null}
+						<li
+							className={compStyles.tooltipHint}>{`${meta.name}-click to ${frozen ? 'unfreeze' : 'freeze'} tooltip`}</li>
 						{rowsOut}
 					</ul>
-					<div className={compStyles.actions}>
-						<span className={compStyles.zoomHint}>{`${meta.name}-click to ${frozen ? "unfreeze" : "freeze"} tooltip`}</span>
-						<a href="https://ucsc-xena.gitbook.io/project/how-do-i/freeze-and-un-freeze-tooltip" target="_blank">
-							<i className='material-icons'>help</i>
-						</a>
-					</div>
+					{closeIcon}
 				</div>
 			</div>
 		);
