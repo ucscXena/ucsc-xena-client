@@ -18,15 +18,16 @@ module.exports = {
 	servers,
 	serverNames: {
 		[servers.localHub]: "My computer hub",
-		[servers.publicHub]: 'UCSC public hub',
-		[servers.tcgaHub]: 'TCGA hub',
-		[servers.icgcHub]: 'ICGC hub',
-		[servers.toilHub]: 'UCSC Toil RNAseq Recompute',
-		[servers.pcawgHub]: 'PCAWG public hub',
-		[servers.singlecellHub]: 'Single-cell RNAseq hub',
+		[servers.publicHub]: 'UCSC Public Hub',
+		[servers.tcgaHub]: 'TCGA Hub',
+		[servers.icgcHub]: 'ICGC Hub',
+		[servers.toilHub]: 'UCSC Toil RNA-seq Recompute',
+		[servers.pcawgHub]: 'PCAWG Public Hub',
+		[servers.singlecellHub]: 'Single-cell RNAseq Hub',
 		[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
 		[servers.treehouseHub]: 'Treehouse Hub',
-		[servers.gdcHub]: 'GDC Hub'
+		[servers.gdcHub]: 'GDC Hub',
+		[servers.atacSeqHub]: 'ATAC-seq Hub'
 	},
 	defaultServers: [
 		servers.localHub,
