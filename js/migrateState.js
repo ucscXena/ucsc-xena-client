@@ -9,9 +9,10 @@
 //
 //
 
-var version = 2; // XXX duplicated in store.js?
+var version = 3; // XXX duplicated in store.js?
 
 var {assoc, flatten, get, getIn, Let, mapObject, merge, omit, pick, isString, updateIn, without} = require('./underscore_ext');
+var {servers: {localHub, oldLocalHub}} = require('./defaultServers');
 
 var setVersion = state => assoc(state, 'version', version);
 var getVersion = state =>
@@ -44,10 +45,17 @@ var noFieldSpec = state =>
 			mapObject(columns, column => merge(omit(column, 'fieldSpecs'), getIn(column, ['fieldSpecs', 0], {})))) :
 	state;
 
+var noLocalCert = state =>
+	getIn(state, ['spreadsheet', 'servers', oldLocalHub]) ?
+		updateIn(state, ['spreadsheet', 'servers'], servers =>
+			assoc(omit(servers, oldLocalHub), localHub, servers[oldLocalHub])) :
+		state;
+
 // This must be sorted, with later versions appearing last.
 var migrations = [
 	[noComposite, splitPages, samplesToLeft], // to v1
-	[noFieldSpec]                             // to v2
+	[noFieldSpec],                            // to v2
+	[noLocalCert]                             // to v3
 ];
 
 function apply(state) {

@@ -15,9 +15,10 @@ var {ignoredType} = require('../models/dataType');
 import {matchDatasetFields} from '../models/columns';
 import {Observable, Scheduler} from '../rx';
 import {getOpts} from '../columnsParam';
+import {servers} from '../defaultServers';
 
 
-const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
+const LOCAL_DOMAIN = servers.localHub;
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
 
 const ignoredClinical = (type, subtype) =>

@@ -1,7 +1,8 @@
 'use strict';
 
 var servers = {
-	localHub: 'https://local.xena.ucsc.edu:7223',
+	oldLocalHub: 'https://local.xena.ucsc.edu:7223',
+	localHub: 'http://127.0.0.1:7222',
 	publicHub: 'https://ucscpublic.xenahubs.net',
 	tcgaHub: 'https://tcga.xenahubs.net',
 	icgcHub: 'https://icgc.xenahubs.net',
