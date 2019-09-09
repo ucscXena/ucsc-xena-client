@@ -219,7 +219,11 @@ var wrap = Comp => class extends PureComponent {
 					<i title='Not connected to local Xena Hub. Click for details.'
 					   className={'material-icons ' + styles.badgeDisconnected}
 					   onClick={this.onShow}>lens</i>),
-			[header, help] = statusHelp[status];
+			unsupported = platform.name.match(/safari/i) && status === 'down',
+			[header, help] = unsupported ? [
+				`${platform.name} does not support viewing your own data. Please use Chrome or Firefox`,
+				<p></p>
+			] : statusHelp[status];
 
 		return (
 			<Comp ref={this.setCompRef} {...this.props} badge={statusBadge}>
