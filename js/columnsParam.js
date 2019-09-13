@@ -1,6 +1,6 @@
 'use strict';
 import {allParameters} from './util';
-import {flatmap, getIn, has, identity, isArray, isBoolean, isObject, isNumber, Let, map, mapObject, merge, omit, pick} from './underscore_ext';
+import {flatmap, getIn, has, identity, isArray, isBoolean, isObject, isNumber, Let, map, mapObject, merge, omit, pick, find} from './underscore_ext';
 
 var columnOptPaths = {
 	width: ['width'],
