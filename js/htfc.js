@@ -346,7 +346,7 @@ export function htfc(data) {
 		},
 		getOwnPropertyDescriptor(obj, prop) {
 			if (prop === 'length') {
-				return {configurable: false, enumerable: false};
+				return {configurable: false, enumerable: false, writable: true};
 			}
 			var i = parseInt(prop, 10);
 			if (isNaN(i)) {
