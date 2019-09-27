@@ -3,7 +3,8 @@
 var config = require('./config');
 
 var servers = {
-	localHub: 'https://local.xena.ucsc.edu:7223',
+	oldLocalHub: 'https://local.xena.ucsc.edu:7223',
+	localHub: 'http://127.0.0.1:7222',
 	publicHub: 'https://ucscpublic.xenahubs.net',
 	tcgaHub: 'https://tcga.xenahubs.net',
 	icgcHub: 'https://icgc.xenahubs.net',
@@ -20,15 +21,16 @@ module.exports = {
 	servers,
 	serverNames: {
 		[servers.localHub]: "My computer hub",
-		[servers.publicHub]: 'UCSC public hub',
-		[servers.tcgaHub]: 'TCGA hub',
-		[servers.icgcHub]: 'ICGC hub',
-		[servers.toilHub]: 'UCSC Toil RNAseq Recompute',
-		[servers.pcawgHub]: 'PCAWG public hub',
-		[servers.singlecellHub]: 'Single-cell RNAseq hub',
+		[servers.publicHub]: 'UCSC Public Hub',
+		[servers.tcgaHub]: 'TCGA Hub',
+		[servers.icgcHub]: 'ICGC Hub',
+		[servers.toilHub]: 'UCSC Toil RNA-seq Recompute',
+		[servers.pcawgHub]: 'PCAWG Public Hub',
+		[servers.singlecellHub]: 'Single-cell RNAseq Hub',
 		[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
 		[servers.treehouseHub]: 'Treehouse Hub',
-		[servers.gdcHub]: 'GDC Hub'
+		[servers.gdcHub]: 'GDC Hub',
+		[servers.atacSeqHub]: 'ATAC-seq Hub'
 	},
 
 	defaultServers: config.singlecell ? [

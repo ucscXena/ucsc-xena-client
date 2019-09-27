@@ -15,9 +15,10 @@ var {ignoredType} = require('../models/dataType');
 import {matchDatasetFields} from '../models/columns';
 import {Observable, Scheduler} from '../rx';
 import {getOpts} from '../columnsParam';
+import {servers} from '../defaultServers';
 
 
-const LOCAL_DOMAIN = 'https://local.xena.ucsc.edu:7223';
+const LOCAL_DOMAIN = servers.localHub;
 const LOCAL_DOMAIN_LABEL = 'My Computer Hub';
 
 const ignoredClinical = (type, subtype) =>
@@ -108,7 +109,7 @@ var GenotypicForm = props => (
 			onChange={props.onFieldChange}
 			type='text'/>
 		<XCheckboxGroup
-			label='Assay Type'
+			label='Dataset'
 			additionalAction={!_.isEmpty(props.preferred) && (props.advanced ? 'Show Basic' : 'Show Advanced')}
 			onAdditionalAction={props.onAdvancedClick}
 			onChange={props.onChange}
@@ -162,10 +163,11 @@ var getModeFields = {
 };
 
 var applyInitialState = {
-	Genotypic: (fields, dataset, datasets, features, preferred, defaults) => {
+	Genotypic: (text, fields, dataset, datasets, features, preferred, defaults) => {
 		var mode = 'Genotypic',
 			isPreferred = _.contains(_.pluck(preferred, 'dsID'), dataset),
-			value = fields.join(' '),
+			// old bookmarks may not have a 'text' property
+			value = text || fields.join(' '),
 			selected = [dataset];
 
 		return _.assocIn(defaults,
@@ -174,7 +176,7 @@ var applyInitialState = {
 			['value', mode], value,
 			['selected', mode, !isPreferred], selected);
 	},
-	Phenotypic: (fields, dataset, datasets, features, preferred, defaults) => {
+	Phenotypic: (text, fields, dataset, datasets, features, preferred, defaults) => {
 		var mode = 'Phenotypic',
 			i = _.findIndex(features, _.matcher({dsID: dataset, name: fields[0]})).toString(),
 			selected = [i];
@@ -186,7 +188,7 @@ var applyInitialState = {
 				['basicFeatures'], defaults.basicFeatures,
 				['selected', mode, false], selected);
 	},
-	'undefined': (fields, dataset, datasets, features, preferred, defaults) =>
+	'undefined': (text, fields, dataset, datasets, features, preferred, defaults) =>
 		_.assocIn(defaults, ['unavailable'], true)
 };
 
@@ -231,10 +233,12 @@ function intersectFields(matches) {
 	return _.map(matches, m => _.updateIn(m, ['fields'], fields => intersection.map(i => fields[i])));
 }
 
+var fieldAssembly = datasets => match => getAssembly(datasets, match.dataset.dsID);
+
 var genomicMatches = (datasets, text) => matchesIn => {
 	var matches = intersectFields(matchesIn),
 		{hasCoord} = parsePos(text) || {},
-		assemblies = _.uniq(_.map(matches, getAssembly(datasets)).filter(x => x)),
+		assemblies = _.uniq(_.map(matches, fieldAssembly(datasets)).filter(x => x)),
 		assembly = hasCoord && assemblies.length > 1 ? [assemblyError] : [],
 		nomatch = matches.length && matches[0].fields.length === 0 ?  [fieldError] : [],
 		sig = text.trim()[0] === '=' && !_.getIn(matches, [0, 'sig']),
@@ -273,7 +277,7 @@ var matchFields = {
 class VariableSelect extends PureComponent {
 	constructor(props) {
 		super(props);
-		var {fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
+		var {text, fields, dataset, datasets, features, preferred, basicFeatures, mode = 'Genotypic'} = props;
 		var defaults = {
 			mode,
 			advanced: {
@@ -306,7 +310,7 @@ class VariableSelect extends PureComponent {
 		};
 
 		this.state = fields && dataset ?
-			applyInitialState[datasetMode(datasets, dataset)](fields, dataset, datasets, features, preferred, defaults) : defaults;
+			applyInitialState[datasetMode(datasets, dataset)](text, fields, dataset, datasets, features, preferred, defaults) : defaults;
 	}
 
 	componentWillReceiveProps({features, basicFeatures}) {

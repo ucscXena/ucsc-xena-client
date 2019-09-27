@@ -15,11 +15,6 @@ var osFiles = {
 			description: "OSX installer, bundled JRE",
 			help: "Recommended for OSX 10.7 and above"
 		},
-		osxNoJre: {
-			pattern: "ucsc_xena_macos_[_0-9]*.dmg",
-			description: "OSX installer, no JRE",
-			help: "Recommended for OSX 10.6"
-		},
 		win32: {
 			pattern: "ucsc_xena_windows_[_0-9]*.exe",
 			description: "Windows 32 bit installer, bundled JRE",
@@ -36,7 +31,7 @@ var osFiles = {
 			help: "Recommended for linux server deployments"
 		}
 	}, defaults = {
-		'OS X': {32: 'osxNoJre', 64: 'osxJre'},
+		'OS X': {64: 'osxJre'},
 		'Windows': {32: 'win32', 64: 'win64'},
 		'Linux': {32: 'tar', 64: 'tar'}
 	};
@@ -224,7 +219,11 @@ var wrap = Comp => class extends PureComponent {
 					<i title='Not connected to local Xena Hub. Click for details.'
 					   className={'material-icons ' + styles.badgeDisconnected}
 					   onClick={this.onShow}>lens</i>),
-			[header, help] = statusHelp[status];
+			unsupported = platform.name.match(/safari/i) && status === 'down',
+			[header, help] = unsupported ? [
+				`${platform.name} does not support viewing your own data. Please use Chrome or Firefox`,
+				<p></p>
+			] : statusHelp[status];
 
 		return (
 			<Comp ref={this.setCompRef} {...this.props} badge={statusBadge}>

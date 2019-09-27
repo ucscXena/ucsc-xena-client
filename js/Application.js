@@ -130,7 +130,7 @@ class Application extends Component {
 						</Row>
 					*/}
 						<Row>
-							<Col xs4={4}>
+							<Col xs4={4} style={{position: 'relative'}}>
 						{children}
 							</Col>
 						</Row>

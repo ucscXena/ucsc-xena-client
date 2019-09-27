@@ -136,9 +136,9 @@ var spreadsheetControls = {
 	},
 	cluster: (state, id, value) =>
 		_.assocIn(state, ['columns', id, 'clustering'], value),
-	'cluster-post!': (serverBus, state, newState, id, value) => {
+	'cluster-post!': (serverBus, state, newState, id, value, data) => {
 		if (value != null && _.getIn(newState, ['data', id, 'clustering', 'probes']) == null) {
-			fetchClustering(serverBus, newState, id);
+			fetchClustering(serverBus, newState, id, data);
 		}
 	},
 	sampleFilter: (state, sampleFilter) => _.assoc(state,

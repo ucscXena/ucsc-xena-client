@@ -24,6 +24,7 @@ var Application = require('../Application');
 //import TiesContainer from './TiesContainer';
 var {schemaCheckThrow} = require('../schemaCheck');
 import wrapLaunchHelper from '../LaunchHelper';
+var migrateState = require('../migrateState');
 
 function getFieldFormat(uuid, columns, data) {
 	var columnFields = _.getIn(columns, [uuid, 'fields']),
@@ -105,7 +106,7 @@ class ApplicationContainer extends React.Component {
 
 	onImport = (content) => {
 		try {
-			this.props.callback(['import', schemaCheckThrow(JSON.parse(content))]);
+			this.props.callback(['import', schemaCheckThrow(migrateState(JSON.parse(content)))]);
 		} catch (err) {
 			this.props.callback(['import-error']);
 		}
