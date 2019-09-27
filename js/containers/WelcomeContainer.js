@@ -24,7 +24,7 @@ var links = [
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
 	['transcripts', '25a9782db8c1166ce7bae6686e98124c',
 		'KRAS isoform expression in TCGA pancreatic cancer vs. GTEx pancreas normal'],
-	['heatmap', 'b62b660e6029947f51ce5745945cce90',
+	['heatmap', 'dfc37064d62ea0c0302881c05277b7b3',
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma']];
 
 
