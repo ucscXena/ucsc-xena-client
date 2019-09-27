@@ -310,7 +310,8 @@ function doPostJSON(query, host, ...params) {
 // XXX Should discover this automatically, instead of having a list
 var hubMethod = {
 	[servers.localHub]: doPostBPJ,
-	[servers.singlecellHub]: doPostBPJ
+	[servers.singlecellHub]: doPostBPJ,
+	["http://ec2-54-210-85-186.compute-1.amazonaws.com:7280"]: doPostBPJ
 };
 var getHubMethod = hub => _.get(hubMethod, hub, doPostJSON);
 
