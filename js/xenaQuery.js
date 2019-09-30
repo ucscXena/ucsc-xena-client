@@ -3,7 +3,6 @@
 'use strict';
 
 import {concatBins, parse} from './binpackJSON';
-import {servers} from './defaultServers';
 var Rx = require('./rx');
 var _ = require('./underscore_ext');
 var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
@@ -309,11 +308,9 @@ function doPostJSON(query, host, ...params) {
 
 // XXX Should discover this automatically, instead of having a list
 var hubMethod = {
-	[servers.localHub]: doPostBPJ,
-	[servers.singlecellHub]: doPostBPJ,
-	["http://ec2-54-210-85-186.compute-1.amazonaws.com:7280"]: doPostBPJ
+	["https://reference.xenahubs.net"]: doPostJSON
 };
-var getHubMethod = hub => _.get(hubMethod, hub, doPostJSON);
+var getHubMethod = hub => _.get(hubMethod, hub, doPostBPJ);
 
 
 var doPost = (query, host, ...params) => getHubMethod(host)(query, host, ...params);
