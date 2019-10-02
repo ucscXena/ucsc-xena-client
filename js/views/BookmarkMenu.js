@@ -164,7 +164,7 @@ class BookmarkMenu extends React.Component {
 						<MenuItem onClick={this.onRecent} title={null} caption='Recent bookmarks'/> : null}
 					{config.singlecell ? null : <MenuItem onClick={this.onExport} title={null} caption='Export'/>}
 					{config.singlecell ? null : <MenuItem onClick={this.onImport} title={null} caption='Import'/>}
-					{config.singlecell || linking ? <Link target='_blank' href={`${location.href.replace(/heatmap*/, 'heatmap')}heatmap/?columns=${getColumns(getState())}&heatmap=${getHeatmap(getState())}`} label='Link'/> : null}
+					{config.singlecell || linking ? <Link target='_blank' href={`${location.href.replace(/heatmap.*/, '')}heatmap/?columns=${getColumns(getState())}&heatmap=${getHeatmap(getState())}`} label='Link'/> : null}
 					{config.singlecell ? null : <Link className={compStyles.help} target='_blank' href='https://ucsc-xena.gitbook.io/project/overview-of-features/bookmarks' label='Help'/>}
 					{bookmark || loading ? <MenuDivider/> : null}
 					{bookmark || loading ? (
