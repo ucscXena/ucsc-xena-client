@@ -17,7 +17,8 @@ RSYNC_OPTS=(-rlp --delete -e "ssh -o StrictHostKeyChecking=no")
 npm run build:prod -- --bail
 
 # deploy
-rsync "${RSYNC_OPTS[@]}" --rsync-path='sudo rsync' build/ ${USER}@${HOST}:/var/www/html
+# excluding config.js so we don't delete it.
+rsync "${RSYNC_OPTS[@]}" --exclude=config.js build/ ${USER}@${HOST}:/var/www/html
 # copy to clean load directory, so we can rsync --delete
 rm -rf ${BUILD_DJANGO}
 mkdir ${BUILD_DJANGO}
