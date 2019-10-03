@@ -122,6 +122,21 @@ jobs:
     - attach_workspace:
         at: ~/ucscXena/ucsc-xena-client
     - run: HOST=ec2-18-208-128-81.compute-1.amazonaws.com ./deploy
+  deploy-singlecell:
+    working_directory: ~/ucscXena/ucsc-xena-client
+    docker:
+    - image: circleci/python:2.7.15-node-browsers
+    shell: /bin/bash --login
+    steps:
+    - add_ssh_keys:
+        fingerprints:
+          - "07:16:e6:26:26:57:ff:7b:3e:79:cf:e6:55:57:8b:1d"
+    - run: sudo apt-get install rsync
+    - checkout
+    - attach_workspace:
+        at: ~/ucscXena/ucsc-xena-client
+    - run: HOST=ec2-54-166-198-137.compute-1.amazonaws.com ./deploy
+    - run: HOST=ec2-3-95-199-18.compute-1.amazonaws.com ./deploy
   deploy-beta:
     working_directory: ~/ucscXena/ucsc-xena-client
     docker:
@@ -156,6 +171,12 @@ workflows:
             filters:
               branches:
                 only: cc-staging
+        - deploy-singlecell:
+            requires:
+              - build
+            filters:
+              branches:
+                only: singlecell_jing
         - deploy-beta:
             requires:
               - build
