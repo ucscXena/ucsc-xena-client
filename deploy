@@ -12,7 +12,7 @@ fi
 
 USER=ubuntu
 BUILD_DJANGO=build-django
-RSYNC_OPTS=(-a --delete -e "ssh -o StrictHostKeyChecking=no")
+RSYNC_OPTS=(-rlp --delete -e "ssh -o StrictHostKeyChecking=no")
 
 npm run build:prod -- --bail
 
