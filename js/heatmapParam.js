@@ -10,7 +10,7 @@ import {parse} from './models/searchParser';
 var heatmapOptPaths = {
 	showWelcome: ['showWelcome'],
 	search: ['sampleSearch'],
-	sampleHighlight: ['sampleSearch'],
+	searchSampleList: ['sampleSearch'],
 	mode: ['mode']
 };
 
@@ -36,7 +36,7 @@ var heatmapOptCleaner = {
 		s === 'chart' ? s :
 		invalid,
 	search: s => searchIsValid(s) ? s : invalid,
-	sampleHighlight: s => isStringArray(s) ? arrayToSearch(s) : invalid,
+	searchSampleList: s => isStringArray(s) ? arrayToSearch(s) : invalid,
 	showWelcome: v => isBoolean(v) ? v : invalid,
 };
 var heatmapOptClean = (opt, v) => (heatmapOptCleaner[opt] || identity)(v);
@@ -45,7 +45,7 @@ var heatmapOpts = Object.keys(heatmapOptPaths);
 var heatmapOptSetter = {
 	mode: s => s ? s : invalid,
 	search: s => searchIsValid(s) ? s : invalid,
-	sampleHighlight: () => invalid, // don't try to save a sample highlight
+	searchSampleList: () => invalid, // don't try to save a sample highlight
 	showWelcome: v => v == null ? invalid : v
 };
 var heatmapOptSet = (opt, v) => (heatmapOptSetter[opt] || identity)(v);
