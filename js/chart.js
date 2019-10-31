@@ -1,7 +1,7 @@
 'use strict';
 
 var getLabel = require('./getLabel');
-var {hexToRGB, colorStr} = require ('./color_helper');
+var {hexToRGB, colorStr, RGBToHex} = require ('./color_helper');
 var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
 var highchartsHelper =  require ('./highcharts_helper');
@@ -1514,16 +1514,25 @@ function render(root, callback, sessionStorage) {
 			doScatter = !xIsCategorical && xfield && yfields.length === 1 ;
 			scatterColorUISetting(doScatter);
 			if (doScatter && colorColumn !== "none") {
-				let color = _.getIn(xenaState, ['columns', colorColumn, 'colors', 0]);
-				scatterColorScale = color && colorScales.colorScale(color);
-				scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values']);
 				scatterColorDataSegment = _.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
+				let color;
+				if (scatterColorDataSegment) {
+					color = _.getIn(xenaState, ['columns', colorColumn, 'color']);
+					let scale = colorScales.colorScale(color),
+						[,,,, origin] = color;
+
+					// see km.js:segmentedVals(). This is a work-around for
+					// trend-amplitude scales. We should deprecate them.
+					scatterColorScale = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin));
+					scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'avg', 'geneValues']);
+				} else {
+					color = _.getIn(xenaState, ['columns', colorColumn, 'colors', 0]);
+					scatterColorScale = color && colorScales.colorScale(color);
+					scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values']);
+				}
 				scatterColorDataCodemap = _.getIn(xenaState, ['columns', colorColumn, 'codes']);
 				scatterLabel = columns[colorColumn].user.fieldLabel;
 
-				if (scatterColorDataSegment) {
-					scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'avg', 'geneValues']);
-				}
 				scatterColorData = scatterColorData[0];
 			}
 
