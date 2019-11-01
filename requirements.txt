@@ -4,6 +4,6 @@ Django==1.10
 idna==2.6
 psycopg2==2.7.3.2
 PyJWT==1.5.3
-requests==2.18.4
+requests==2.20.0
 urllib3==1.22
 wheel==0.24.0
