@@ -41,7 +41,7 @@ function findMatch(pattern, list) {
 }
 
 var matchPaths = serverFiles =>
-	mapObject(osFiles, ({pattern}, key) =>
+	mapObject(osFiles, (obj, key) =>
 			  findMatch(osFiles[key].pattern, serverFiles));
 
 var parseInt10 = s => parseInt(s, 10);

@@ -125,7 +125,7 @@ var datasetMetaAndLinks = (host, dataset) => {
 };
 
 var spreadsheetControls = {
-	'init': (state, pathname = '/', params) => setHubs(state, params),
+	'init': (state, pathname, params) => setHubs(state, params),
 	'add-host': (state, host) =>
 		assocIn(state, ['servers', host], {user: true}),
 	'remove-host': (state, host) =>

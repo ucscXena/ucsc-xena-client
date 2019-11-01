@@ -49,7 +49,7 @@ function exonGroups(exons) {
 }
 
 function intronRegions(groups) {
-	return groups.slice(1).map(({start, end}, i) => ([groups[i].end, start]));
+	return groups.slice(1).map(({start}, i) => ([groups[i].end, start]));
 }
 
 
