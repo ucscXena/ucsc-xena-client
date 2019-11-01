@@ -5,7 +5,6 @@
  * Zoom-related functions - transforms of drag and drag select events.
  */
 
-'use strict';
 
 // Dependencies
 var {chromRangeFromScreen} = require('./exonLayout');

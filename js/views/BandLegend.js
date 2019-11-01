@@ -1,4 +1,3 @@
-'use strict';
 
 import React from 'react';
 import CanvasDrawing2 from '../CanvasDrawing2';

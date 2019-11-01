@@ -1,4 +1,3 @@
-'use strict';
 var {drawMutations, drawSV} = require('./drawMutations');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');

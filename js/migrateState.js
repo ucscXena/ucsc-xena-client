@@ -1,4 +1,3 @@
-'use strict';
 
 // Desired behavior:
 // When we change the state structure, add a migration.

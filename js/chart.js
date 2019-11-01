@@ -1,4 +1,3 @@
-'use strict';
 
 var getLabel = require('./getLabel');
 var {hexToRGB, colorStr, RGBToHex} = require ('./color_helper');

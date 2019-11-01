@@ -1,4 +1,3 @@
-'use strict';
 import {Menu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 import {Button} from 'react-toolbox/lib/button';
 import Link from 'react-toolbox/lib/link';
@@ -21,7 +20,7 @@ var gaEvents = require('../gaEvents');
 // MenuItem, we avoid this.
 class NoCloseMenuItem extends React.Component {
 	render() {
-		var {tooltip, ...otherProps} = this.props;
+		var otherProps = _.omit(this.props, 'tooltip');
 		return <MenuItem {...otherProps}/>;
 	}
 }

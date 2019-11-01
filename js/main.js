@@ -1,4 +1,3 @@
-'use strict';
 import './base';
 import _ from './underscore_ext';
 import './plotDenseMatrix';

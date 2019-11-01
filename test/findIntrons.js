@@ -1,5 +1,4 @@
 /*global it: false, require: false, module: false, console: false, describe: false */
-'use strict';
 
 var assert = require('assert');
 var jv = require('jsverify');

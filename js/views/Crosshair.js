@@ -5,7 +5,6 @@
  * Crosshair component.
  */
 
-'use strict';
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';

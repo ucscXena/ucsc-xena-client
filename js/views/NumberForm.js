@@ -1,4 +1,3 @@
-'use strict';
 var React = require('react');
 var _ = require('../underscore_ext');
 import Input from 'react-toolbox/lib/input';
@@ -47,7 +46,8 @@ class NumberForm extends React.Component {
 	};
 
 	render() {
-		var {min, max, dflt, initialValue, ...other} = this.props,
+		var {min, max} = this.props,
+			other = _.omit(this.props, 'min', 'max', 'dflt', 'initialValue'),
 			{value, focused} = this.state;
 		return (
 			<form className="form-horizontal">

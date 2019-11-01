@@ -1,4 +1,3 @@
-'use strict';
 
 // Helper methods needed by multiple controllers.
 

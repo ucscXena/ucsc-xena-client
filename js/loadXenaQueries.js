@@ -1,5 +1,4 @@
 // Load all xena queries
-'use strict';
 
 var glob = require("glob");
 

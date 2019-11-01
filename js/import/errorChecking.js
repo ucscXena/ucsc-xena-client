@@ -1,4 +1,3 @@
-'use strict';
 
 import _ from '../underscore_ext';
 import {DATA_TYPE} from './constants';

@@ -1,4 +1,3 @@
-'use strict';
 import {allParameters} from './util';
 import {flatmap, getIn, has, identity, isArray, isBoolean, isObject, isNumber, Let, map, mapObject, merge, omit, pick, find} from './underscore_ext';
 

@@ -1,4 +1,3 @@
-'use strict';
 
 // Domain logic for segmented datasets.
 

@@ -1,4 +1,3 @@
-'use strict';
 import PureComponent from '../PureComponent';
 var React = require('react');
 var Sortable = require('../views/Sortable');

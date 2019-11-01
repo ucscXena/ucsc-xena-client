@@ -1,4 +1,3 @@
-'use strict';
 import React, { Component } from 'react';
 import { Grid, Row, Col } from "react-material-responsive-grid";
 import { AppControls } from './AppControls';

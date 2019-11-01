@@ -1,4 +1,3 @@
-'use strict';
 import React, {Component} from 'react';
 var ReactDOM = require('react-dom');
 var Rx = require('../rx');

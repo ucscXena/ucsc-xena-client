@@ -1,4 +1,3 @@
-'use strict';
 
 // ArrayBuffer to string.
 //

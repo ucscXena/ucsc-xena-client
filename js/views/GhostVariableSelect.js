@@ -10,7 +10,6 @@
  * width - Width of card.
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

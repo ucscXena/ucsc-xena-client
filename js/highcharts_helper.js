@@ -1,4 +1,3 @@
-'use strict';
 
 var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);

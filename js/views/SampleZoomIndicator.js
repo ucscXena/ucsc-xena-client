@@ -6,7 +6,6 @@
  *
  */
 
-'use strict';
 
 // TODO review insertion of div with height refer Column.js line 688
 

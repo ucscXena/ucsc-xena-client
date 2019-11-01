@@ -1,4 +1,3 @@
-'use strict';
 
 require('./base');
 const React = require('react');

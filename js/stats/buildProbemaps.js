@@ -1,4 +1,3 @@
-'use strict';
 
 // Utility script to build minhash for probemaps on the
 // reference hub.

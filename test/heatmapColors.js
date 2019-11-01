@@ -1,5 +1,4 @@
 /*global describe: false, it: false, require: false, assert: false */
-"use strict";
 
 var assert = require('assert');
 var {colorSpec} = require('../js/heatmapColors');

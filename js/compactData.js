@@ -1,4 +1,3 @@
-'use strict';
 
 // ad hoc reversible state transforms that make it more compressable.
 

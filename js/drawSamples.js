@@ -1,4 +1,3 @@
-'use strict';
 
 var _ = require('./underscore_ext');
 var colorHelper = require('./color_helper');

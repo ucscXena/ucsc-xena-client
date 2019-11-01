@@ -1,4 +1,3 @@
-'use strict';
 var _ = require('./underscore_ext');
 
 // properities of Error objects which we want to serialize.

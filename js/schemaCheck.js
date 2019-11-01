@@ -1,4 +1,3 @@
-'use strict';
 
 var {isString, isArray, isObject, isBoolean, isNumber, Let} = require('./underscore_ext');
 

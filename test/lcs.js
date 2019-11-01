@@ -1,5 +1,4 @@
 /*global require: false, it: false, console: false, describe: false, mocha: false */
-'use strict';
 var lcs = require('../js/lcs');
 
 var assert = require('assert');

@@ -1,4 +1,3 @@
-'use strict';
 
 // XXX move Application to views
 var React = require('react');

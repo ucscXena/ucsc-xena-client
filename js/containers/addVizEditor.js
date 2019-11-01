@@ -1,4 +1,3 @@
-'use strict';
 var React = require('react');
 var VizSettings = require('../views/VizSettings');
 var _ = require('../underscore_ext');

@@ -1,6 +1,5 @@
 /*eslint camelcase: 0, no-multi-spaces: 0, no-mixed-spaces-and-tabs: 0 */
 
-'use strict';
 
 var Rx = require('./rx');
 var _ = require('./underscore_ext');

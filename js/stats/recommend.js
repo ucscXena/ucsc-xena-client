@@ -1,4 +1,3 @@
-'use strict';
 
 var {sortBy} = require('../underscore_ext');
 var Minhash = require('minhash/src/minhash');

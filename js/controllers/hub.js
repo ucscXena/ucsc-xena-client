@@ -1,4 +1,3 @@
-'use strict';
 var {Let, assocIn, dissoc, get, identity,
 	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');

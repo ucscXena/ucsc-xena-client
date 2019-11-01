@@ -17,7 +17,6 @@
  * onChange - called when selected radio value is changed.
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

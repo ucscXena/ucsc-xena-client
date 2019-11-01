@@ -1,4 +1,3 @@
-'use strict';
 
 import {Let, flatmap, fmap, getIn, groupBy, identity, map, matchKeys, pick, updateIn} from '../underscore_ext';
 import {allCohorts, datasetList, allFieldMetadata} from '../xenaQuery';

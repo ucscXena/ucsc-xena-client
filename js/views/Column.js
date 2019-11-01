@@ -1,4 +1,3 @@
-'use strict';
 
 import PureComponent from '../PureComponent';
 var React = require('react');
@@ -69,7 +68,7 @@ class IconMenu extends React.Component {
 		this.ref = ref;
 	}
 	render() {
-		var {onShow, onHide, ...others} = this.props;
+		var others = _.omit(this.props, 'onShow', 'onHide');
 		return <RTIconMenu innerRef={this.onRef} onShow={this.onShow} onHide={this.onHide} {...others}/>;
 	}
 }

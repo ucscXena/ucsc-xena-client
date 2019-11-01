@@ -1,4 +1,3 @@
-'use strict';
 
 /*
  * Text input element with a default value which will

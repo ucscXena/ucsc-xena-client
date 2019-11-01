@@ -5,7 +5,6 @@
  * Component for listing radio or checkbox meta data, when viewing advanced mode.
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

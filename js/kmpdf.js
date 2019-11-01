@@ -6,7 +6,6 @@
 // port of KmPlot to pdf is a compromise.
 // Another strategy worth exploring is walking the DOM to generate pdf calls. That
 // might also work for highcharts.
-'use strict';
 var _ = require('./underscore_ext');
 var {linear, linearTicks} = require('./scale');
 

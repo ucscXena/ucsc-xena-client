@@ -5,7 +5,6 @@
  * Xena footer, writes itself into the element with ID "footer" in page.template.
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

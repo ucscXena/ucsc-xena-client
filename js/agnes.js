@@ -1,4 +1,3 @@
-'use strict';
 
 import {range, times} from './underscore_ext';
 

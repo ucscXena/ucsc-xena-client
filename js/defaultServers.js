@@ -1,4 +1,3 @@
-'use strict';
 
 var servers = {
 	oldLocalHub: 'https://local.xena.ucsc.edu:7223',

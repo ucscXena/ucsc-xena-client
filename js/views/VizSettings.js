@@ -32,7 +32,6 @@
 // The default column normalization is fetched from the server. Instead it should come from
 // the state, or from a data cache, because we've fetched that already.
 
-'use strict';
 var _ = require('../underscore_ext');
 var React = require('react');
 var ReactDOM = require('react-dom');

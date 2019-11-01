@@ -1,4 +1,3 @@
-'use strict';
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
 var {map, find} = _;
@@ -174,7 +173,7 @@ function geneProbesToHeatmap(column, vizSettings, data, samples) {
 		probesInView = showPos ?
 			_.filterIndices(req.position,
 				({chromstart, chromend}) => chromXZoom.start <= chromend && chromstart <= chromXZoom.end) :
-			probesInView = _.range(start, endIndex),
+			_.range(start, endIndex),
 		dataInView = _.updateIn(data,
 								['req', 'position'], position => position ? probesInView.map(i => position[i]) : position,
 								['req', 'values'], values => probesInView.map(i => values[i]),
@@ -236,7 +235,7 @@ function cmpSamples(probes, data, s1, s2) {
 	}
 }
 
-var cmp = ({fields}, {req: {values, probes} = {values, probes}} = {}) =>
+var cmp = ({fields}, {req: {values, probes} = {}}) =>
 	(s1, s2) => cmpSamples(probes || fields, values, s1, s2); // XXX having probes here is unfortunate.
 
 //

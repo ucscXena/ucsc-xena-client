@@ -1,4 +1,3 @@
-'use strict';
 var React = require('react');
 import {MenuItem} from 'react-toolbox/lib/menu';
 var {parseDsID} = require('../xenaQuery');

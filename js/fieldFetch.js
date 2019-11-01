@@ -1,4 +1,3 @@
-'use strict';
 
 var multi = require('./multi');
 var denseMatrix = require('./models/denseMatrix');

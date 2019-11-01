@@ -1,4 +1,3 @@
-'use strict';
 
 // Find contiguous intron regions across a set of transcripts, i.e.
 // regions without any exons. These are not, strictly speaking, 'introns',

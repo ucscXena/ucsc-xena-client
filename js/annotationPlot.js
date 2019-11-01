@@ -1,6 +1,5 @@
 // deprecated. Was used to draw ga4gh annotations.
 /*global require: false, module: false */
-'use strict';
 
 var _ = require('underscore');
 var {matches} = require('static-interval-tree');

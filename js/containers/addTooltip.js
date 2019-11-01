@@ -1,4 +1,3 @@
-'use strict';
 
 var Tooltip = require('../views/Tooltip');
 import PureComponent from '../PureComponent';

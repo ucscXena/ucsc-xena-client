@@ -1,4 +1,3 @@
-'use strict';
 var {drawHeatmap} = require('./drawHeatmap');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');

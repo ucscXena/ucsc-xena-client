@@ -1,4 +1,3 @@
-'use strict';
 
 var {flatmap, apply, map, first, zip, times, isArray, constant, mapObject, groupBy} = require('./underscore_ext');
 

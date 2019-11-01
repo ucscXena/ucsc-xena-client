@@ -1,4 +1,3 @@
-'use strict';
 var {drawSegmented} = require('./drawSegmented.js');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');

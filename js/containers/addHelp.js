@@ -1,4 +1,3 @@
-'use strict';
 
 var React = require('react');
 var HelpBox = require('../views/HelpBox');

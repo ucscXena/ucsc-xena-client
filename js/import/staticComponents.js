@@ -1,4 +1,3 @@
-'use strict';
 import React from 'react';
 import cssClasses from './ImportPage.module.css';
 import loader from './loader.gif';

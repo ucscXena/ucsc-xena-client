@@ -1,4 +1,3 @@
-'use strict';
 
 import kmStyle from "./km.module.css";
 var _ = require('./underscore_ext');

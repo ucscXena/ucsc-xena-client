@@ -1,4 +1,3 @@
-'use strict';
 var _ = require('./underscore_ext');
 
 function permuteCaseArray(str, i = 0) {

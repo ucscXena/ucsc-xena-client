@@ -1,4 +1,3 @@
-"use strict";
 import React from 'react';
 import { Button, Dialog } from 'react-toolbox/lib';
 import styles from './ImportPage.module.css';

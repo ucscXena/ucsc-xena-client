@@ -1,4 +1,3 @@
-'use strict';
 import React from 'react';
 import Application from './ApplicationContainer';
 import  Hub  from '../hubPage';

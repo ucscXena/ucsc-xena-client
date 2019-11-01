@@ -1,4 +1,3 @@
-'use strict';
 
 var React = require('react');
 import PureComponent from '../PureComponent';

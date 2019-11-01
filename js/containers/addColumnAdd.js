@@ -5,7 +5,6 @@
  * Structural component, giving each column a sibling "add column" component.
  */
 
-'use strict';
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';

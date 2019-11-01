@@ -30,7 +30,6 @@
  */
 
 
-'use strict';
 
 // Core dependencies, components
 import React from 'react';

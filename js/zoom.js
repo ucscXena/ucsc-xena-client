@@ -1,4 +1,3 @@
-'use strict';
 
 // pos :: number, position in current zoom to be centered, as fraction of count
 // state :: {index :: number, count :: number}, current zoom position

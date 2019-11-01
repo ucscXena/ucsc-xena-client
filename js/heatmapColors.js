@@ -1,4 +1,3 @@
-'use strict';
 
 // Pick color scales based on metadata
 
