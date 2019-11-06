@@ -1,5 +1,5 @@
-
 var Highcharts = require('highcharts/highstock');
+require('highcharts/modules/exporting')(Highcharts);
 require('highcharts/highcharts-more')(Highcharts);
 
 function hcLabelRender() {
@@ -58,7 +58,16 @@ var chartOptions = {
 	credits: {
 		text: 'xena.ucsc.edu',
 		href: 'http://xena.ucsc.edu'
-	}
+	},
+    navigation: {
+        buttonOptions: {
+		theme: {
+			style: {
+				color: '#4cc9c0',
+			}
+		}
+        }
+    }
 };
 
 // x categorical, Y categorical
