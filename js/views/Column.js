@@ -788,7 +788,7 @@ class Column extends PureComponent {
 												<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
 													caption='Kaplan Meier Plot'/>
 												<MenuItem onClick={this.onChart} disabled={chartDisabled}
-													caption='Chart Analysis'/>
+													caption='Chart & Statistics'/>
 												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
 												<MenuItem onClick={this.onDownload} caption='Download'/>
 												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}

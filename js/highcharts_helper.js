@@ -61,11 +61,11 @@ var chartOptions = {
 	},
     navigation: {
         buttonOptions: {
-		theme: {
-			style: {
-				color: '#4cc9c0',
+			theme: {
+				style: {
+					color: '#4cc9c0',
+				}
 			}
-		}
         }
     }
 };
