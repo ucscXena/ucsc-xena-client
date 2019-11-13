@@ -1,5 +1,5 @@
 import {allParameters} from './util';
-import {flatmap, get, getIn, identity, isArray, isBoolean, isObject, isString, Let, mapObject, pick} from './underscore_ext';
+import {flatmap, get, getIn, groupBy, identity, isArray, isBoolean, isObject, isString, Let, mapObject, pick} from './underscore_ext';
 
 import {parse} from './models/searchParser';
 
@@ -10,6 +10,7 @@ var heatmapOptPaths = {
 	showWelcome: ['showWelcome'],
 	search: ['sampleSearch'],
 	searchSampleList: ['sampleSearch'],
+	filter: ['sampleFilter'],
 	mode: ['mode']
 };
 
@@ -36,6 +37,7 @@ var heatmapOptCleaner = {
 		invalid,
 	search: s => searchIsValid(s) ? s : invalid,
 	searchSampleList: s => isStringArray(s) ? arrayToSearch(s) : invalid,
+	filter: s => searchIsValid(s) ? s : invalid,
 	showWelcome: v => isBoolean(v) ? v : invalid,
 };
 var heatmapOptClean = (opt, v) => (heatmapOptCleaner[opt] || identity)(v);
@@ -45,6 +47,7 @@ var heatmapOptSetter = {
 	mode: s => s ? s : invalid,
 	search: s => searchIsValid(s) ? s : invalid,
 	searchSampleList: () => invalid, // don't try to save a sample highlight
+	filter: () => invalid, // don't try to save a sample filter
 	showWelcome: v => v == null ? invalid : v
 };
 var heatmapOptSet = (opt, v) => (heatmapOptSetter[opt] || identity)(v);
@@ -63,7 +66,8 @@ export function heatmapParam() {
 		try {
 			var opts = cleanOpts(JSON.parse(heatmap[0]));
 			if (heatmapSchema(opts)) {
-				return {heatmap: opts};
+				var {true: [[, filter]] = [[]], false: other} = groupBy(opts, ([[k]]) => k === 'sampleFilter');
+				return {heatmap: other, filter};
 			}
 			console.log(`Invalid heatmap parameter ${opts}`);
 		} catch(e) {
