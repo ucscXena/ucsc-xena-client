@@ -241,7 +241,7 @@ function render(root, callback, sessionStorage) {
 
 		if (xenaState && xenaState.chartState) {
 			if (selectorID === "Xaxis") {
-				storedColumn = spreadsheetColumn ? 'none' : xenaState.chartState.xcolumn;
+				storedColumn = spreadsheetColumn && spreadsheetColumn !== xenaState.chartState.ycolumn ? 'none' : xenaState.chartState.xcolumn;
 			} else if (selectorID === "Yaxis") {
 				storedColumn = spreadsheetColumn ? spreadsheetColumn : xenaState.chartState.ycolumn;
 			} else if (selectorID === "Color") {
