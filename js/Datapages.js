@@ -214,7 +214,7 @@ class DeleteButton extends React.Component {
 var canDelete = ({status}, host) =>
 	host === localHub && contains(['loaded', 'error'], status);
 
-var markdownValue = value => {
+var markdownValue = (value) => {
 	if (value && !value.error) {
 		var converter = new showdown.Converter();
 		return (<div className={styles.header}
@@ -277,7 +277,14 @@ class CohortPage extends React.Component {
 		this.props.callback(['navigate', 'heatmap']);
 	};
 
+	clickVizButton = (ev) => {
+		if (ev.target.name === 'cohortButton') {
+			this.onViz();
+		}
+	}
+
 	onDataset = (ev) => { navHandler.call(this, ev); };
+
 
 	render() {
 		var {hubParams, callback,
@@ -292,7 +299,7 @@ class CohortPage extends React.Component {
 			preferred = getPreferred(wizard, cohort);
 
 		return (
-			<div className={styles.datapages}>
+			<div className={styles.datapages} onClick={this.clickVizButton}>
 				{markdownValue(meta)}
 				<div className={styles.sidebar}>
 					<Button onClick={this.onViz} accent>Visualize</Button>
