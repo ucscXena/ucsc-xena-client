@@ -18,7 +18,6 @@
  * onDone - Called when DONE button is clicked.
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

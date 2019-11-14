@@ -16,7 +16,6 @@
  * Displayed initially when user is in "set up" mode.
  */
 
-'use strict';
 
 // Core dependencies, components
 var classNames = require('classnames');

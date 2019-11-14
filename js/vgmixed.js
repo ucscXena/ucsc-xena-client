@@ -1,4 +1,3 @@
-"use strict";
 
 // This is a mixed-mode vg renderer, using canvas for paint directives, and DOM
 // for labels. It is *very* simplistic, and doesn't expose a coherent interface,

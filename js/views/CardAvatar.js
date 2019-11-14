@@ -10,7 +10,6 @@
  * colId - ID of column (eg 'A', 'B').
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

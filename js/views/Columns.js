@@ -1,6 +1,6 @@
-'use strict';
 
 import PureComponent from '../PureComponent';
+import {omit} from '../underscore_ext.js';
 
 var React = require('react');
 
@@ -22,7 +22,8 @@ var getColumns = wrapperFn => {
 		static displayName = 'SpreadsheetColumns';
 
 		render() {
-			var {onClick, children, ...wrapperProps} = this.props;
+			var {children} = this.props,
+				wrapperProps = omit(this.props, 'onClick', 'children');
 			return (
 				<Wrapper {...wrapperProps}>
 					{children}

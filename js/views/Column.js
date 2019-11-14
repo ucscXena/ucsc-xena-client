@@ -1,4 +1,3 @@
-'use strict';
 
 import PureComponent from '../PureComponent';
 var React = require('react');
@@ -69,7 +68,7 @@ class IconMenu extends React.Component {
 		this.ref = ref;
 	}
 	render() {
-		var {onShow, onHide, ...others} = this.props;
+		var others = _.omit(this.props, 'onShow', 'onHide');
 		return <RTIconMenu innerRef={this.onRef} onShow={this.onShow} onHide={this.onHide} {...others}/>;
 	}
 }
@@ -363,6 +362,13 @@ function disableKM(column, hasSurvival) {
 	return [false, ''];
 }
 
+function disableChart(column) {
+	if (_.contains(['mutation', 'SV'], column.fieldType)) {
+		return true;
+	}
+	return false;
+}
+
 function getCodingVariants(index, exons) {
 	const resultSet = new Set();
 
@@ -528,6 +534,11 @@ class Column extends PureComponent {
 	onKm = () => {
 		gaEvents('spreadsheet', 'km');
 		this.props.onKm(this.props.id);
+	};
+
+	onChart = () => {
+		gaEvents('spreadsheet', 'columnChart');
+		this.props.onChart(this.props.id);
 	};
 
 	onSortDirection = () => {
@@ -708,6 +719,7 @@ class Column extends PureComponent {
 			geneZoomed = columnZoom.geneZoomed(column),
 			geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
+			chartDisabled = disableChart(column),
 			status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
@@ -774,7 +786,9 @@ class Column extends PureComponent {
 												{menu}
 												{menu && <MenuDivider />}
 												<MenuItem title={kmTitle} onClick={this.onKm} disabled={kmDisabled}
-												caption='Kaplan Meier Plot'/>
+													caption='Kaplan Meier Plot'/>
+												<MenuItem onClick={this.onChart} disabled={chartDisabled}
+													caption='Chart & Statistics'/>
 												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
 												<MenuItem onClick={this.onDownload} caption='Download'/>
 												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}

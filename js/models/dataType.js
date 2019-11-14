@@ -1,4 +1,3 @@
-'use strict';
 
 var ignoredType = ["probeMap", "probemap", "genePredExt"];
 

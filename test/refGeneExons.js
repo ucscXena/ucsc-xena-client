@@ -1,6 +1,5 @@
 
 /*global describe: false, it: false, require: false */
-"use strict";
 var {findIntervals} = require('../js/refGeneExons');
 var assert = require('assert');
 

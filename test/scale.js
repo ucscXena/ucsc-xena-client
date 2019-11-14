@@ -1,5 +1,4 @@
 /*global describe: false, it: false, require: false */
-'use strict';
 var assert = require('assert');
 var jsc = require('jsverify');
 var scale = require('../js/scale');

@@ -1,4 +1,3 @@
-'use strict';
 
 // Utilities for handling errors in async actions.
 

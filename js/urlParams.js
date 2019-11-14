@@ -1,4 +1,3 @@
-'use strict';
 var {getIn, Let, merge, mapObject, pick, pluck, uniq, updateIn} = require('./underscore_ext');
 var {hasBookmark, resetBookmarkLocation, getBookmark} = require('./bookmark');
 var {hasInlineState, resetInlineStateLocation} = require('./inlineState');

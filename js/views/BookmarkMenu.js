@@ -1,4 +1,3 @@
-'use strict';
 import {Menu, MenuItem, MenuDivider} from 'react-toolbox/lib/menu';
 import {Button} from 'react-toolbox/lib/button';
 import Link from 'react-toolbox/lib/link';
@@ -21,7 +20,7 @@ var gaEvents = require('../gaEvents');
 // MenuItem, we avoid this.
 class NoCloseMenuItem extends React.Component {
 	render() {
-		var {tooltip, ...otherProps} = this.props;
+		var otherProps = _.omit(this.props, 'tooltip');
 		return <MenuItem {...otherProps}/>;
 	}
 }
@@ -166,6 +165,7 @@ class BookmarkMenu extends React.Component {
 					{config.singlecell ? null : <MenuItem onClick={this.onImport} title={null} caption='Import'/>}
 					{config.singlecell || linking ? <Link target='_blank' href={`${location.href.replace(/heatmap.*/, '')}heatmap/?columns=${getColumns(getState())}&heatmap=${getHeatmap(getState())}`} label='Link'/> : null}
 					{config.singlecell ? null : <Link className={compStyles.help} target='_blank' href='https://ucsc-xena.gitbook.io/project/overview-of-features/bookmarks' label='Help'/>}
+
 					{bookmark || loading ? <MenuDivider/> : null}
 					{bookmark || loading ? (
 						<MenuItem

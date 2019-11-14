@@ -1,4 +1,3 @@
-'use strict';
 
 var {pluck} = require('./underscore_ext');
 var parser = require('./models/geneSignatureParser').parse;

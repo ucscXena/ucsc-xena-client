@@ -9,7 +9,6 @@
  * Single action, onClick, is invoked to update the visibility state of the welcome bar.
  */
 
-'use strict';
 
 // Core dependencies, components
 import React, { Component } from 'react';

@@ -1,4 +1,3 @@
-'use strict';
 
 import 'babel-polyfill';
 import {servers} from '../defaultServers';

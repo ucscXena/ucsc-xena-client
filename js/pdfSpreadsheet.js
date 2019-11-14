@@ -1,4 +1,3 @@
-'use strict';
 var styles = require('./spreadsheetStyles');
 var widgets = require('./columnWidgets');
 

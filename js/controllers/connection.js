@@ -1,4 +1,3 @@
-'use strict';
 
 import Rx from '../rx';
 import {Let, get, getIn, isEqual} from '../underscore_ext';

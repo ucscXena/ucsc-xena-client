@@ -1,7 +1,6 @@
-'use strict';
 
 var getLabel = require('./getLabel');
-var {hexToRGB, colorStr} = require ('./color_helper');
+var {hexToRGB, colorStr, RGBToHex} = require ('./color_helper');
 var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
 var highchartsHelper =  require ('./highcharts_helper');
@@ -231,7 +230,8 @@ function render(root, callback, sessionStorage) {
 	function axisSelector(selectorID) {
 		var div, option, column, storedColumn,
 			columns, columnOrder,
-			data;
+			data,
+			spreadsheetColumn = _.getIn(xenaState, ['chartState', 'spreadsheetColumn']);
 
 		if (xenaState) {
 			columnOrder = xenaState.columnOrder;
@@ -240,14 +240,12 @@ function render(root, callback, sessionStorage) {
 		}
 
 		if (xenaState && xenaState.chartState) {
-			if (xenaState.cohort && (_.isEqual(xenaState.cohort, xenaState.chartState.cohort))) {
-				if (selectorID === "Xaxis") {
-					storedColumn = xenaState.chartState.xcolumn;
-				} else if (selectorID === "Yaxis") {
-					storedColumn = xenaState.chartState.ycolumn;
-				} else if (selectorID === "Color") {
-					storedColumn = xenaState.chartState.colorColumn;
-				}
+			if (selectorID === "Xaxis") {
+				storedColumn = spreadsheetColumn && spreadsheetColumn !== xenaState.chartState.ycolumn ? 'none' : xenaState.chartState.xcolumn;
+			} else if (selectorID === "Yaxis") {
+				storedColumn = spreadsheetColumn ? spreadsheetColumn : xenaState.chartState.ycolumn;
+			} else if (selectorID === "Color") {
+				storedColumn = xenaState.chartState.colorColumn;
 			}
 		}
 
@@ -523,6 +521,21 @@ function render(root, callback, sessionStorage) {
 		}
 	}
 
+	function newChart(chartOptions) {
+	    chartOptions.exporting = {
+			buttons: {
+				contextButton: {enabled: false},
+				closeButton: {
+					text: 'CLOSE',
+					onclick: function () {
+						callback(['heatmap']);
+					}
+				}
+			}
+		};
+		return new Highcharts.Chart(chartOptions);
+	}
+
 	function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 		yfields, ycodemap, ydata,
 		offsets, xlabel, ylabel, STDEV,
@@ -752,7 +765,7 @@ function render(root, callback, sessionStorage) {
 
 			// column chart setup
 			chartOptions = highchartsHelper.columnChartFloat(chartOptions, yfields, xlabel, ylabel);
-			chart = new Highcharts.Chart(chartOptions);
+			chart = newChart(chartOptions);
 
 			for (i = 0; i < xCategories.length; i++) {
 				code = xCategories[i];
@@ -942,7 +955,7 @@ function render(root, callback, sessionStorage) {
 			} else {
 				chartOptions = highchartsHelper.columnChartFloat (chartOptions, displayCategories, xAxisTitle, ylabel);
 			}
-			chart = new Highcharts.Chart(chartOptions);
+			chart = newChart(chartOptions);
 
 			//add data to seriese
 			displayCategories.forEach(function (code) {
@@ -1047,7 +1060,7 @@ function render(root, callback, sessionStorage) {
 				chartOptions, categories.map(code => code + " (" + xbinnedSample[code].length + ")"),
 				xAxisTitle, 'Distribution', ylabel, showLegend);
 
-			chart = new Highcharts.Chart(chartOptions);
+			chart = newChart(chartOptions);
 
 			var ycategories = Object.keys(ybinnedSample);
 
@@ -1128,7 +1141,7 @@ function render(root, callback, sessionStorage) {
 			chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, samplesLength);
 
 			if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
-				chart = new Highcharts.Chart(chartOptions);
+				chart = newChart(chartOptions);
 
 				for (k = 0; k < yfields.length; k++) {
 					var series = [];
@@ -1178,7 +1191,7 @@ function render(root, callback, sessionStorage) {
 				}
 
 				chartOptions.legend.title.text = "";
-				chart = new Highcharts.Chart(chartOptions);
+				chart = newChart(chartOptions);
 
 				yfield = yfields[0];
 				for (i = 0; i < xdata[0].length; i++) {
@@ -1367,18 +1380,16 @@ function render(root, callback, sessionStorage) {
 		expUISetting(false, expXState, xcolumn, null, expXUIParent, expXUI, null);
 		scatterColorUISetting(false);
 
-		// save state cohort, xcolumn, ycolumn, colorcolumn
+		// save state xcolumn, ycolumn, colorcolumn, normalizationState, expState, expXState
 		if (xenaState) {
-			xenaState.chartState = {
-				"cohort": cohort,
-				"xcolumn": xcolumn,
-				"ycolumn": ycolumn,
-				"colorColumn": colorColumn,
-				"normalizationState": normalizationState,
-				"expState": expState,
-				"expXState": expXState
-			};
 			columns = xenaState.columns;
+			xenaState.chartState = xenaState.chartState || {};
+			xenaState.chartState.xcolumn = xcolumn;
+			xenaState.chartState.ycolumn = ycolumn;
+			xenaState.chartState.colorColumn = colorColumn;
+			xenaState.chartState.normalizationState = normalizationState;
+			xenaState.chartState.expState = expState;
+			xenaState.chartState.expXState = expXState;
 			setStorage(xenaState);
 		}
 
@@ -1514,16 +1525,25 @@ function render(root, callback, sessionStorage) {
 			doScatter = !xIsCategorical && xfield && yfields.length === 1 ;
 			scatterColorUISetting(doScatter);
 			if (doScatter && colorColumn !== "none") {
-				let color = _.getIn(xenaState, ['columns', colorColumn, 'colors', 0]);
-				scatterColorScale = color && colorScales.colorScale(color);
-				scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values']);
 				scatterColorDataSegment = _.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
+				let color;
+				if (scatterColorDataSegment) {
+					color = _.getIn(xenaState, ['columns', colorColumn, 'color']);
+					let scale = colorScales.colorScale(color),
+						[,,,, origin] = color;
+
+					// see km.js:segmentedVals(). This is a work-around for
+					// trend-amplitude scales. We should deprecate them.
+					scatterColorScale = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin));
+					scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'avg', 'geneValues']);
+				} else {
+					color = _.getIn(xenaState, ['columns', colorColumn, 'colors', 0]);
+					scatterColorScale = color && colorScales.colorScale(color);
+					scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values']);
+				}
 				scatterColorDataCodemap = _.getIn(xenaState, ['columns', colorColumn, 'codes']);
 				scatterLabel = columns[colorColumn].user.fieldLabel;
 
-				if (scatterColorDataSegment) {
-					scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'avg', 'geneValues']);
-				}
 				scatterColorData = scatterColorData[0];
 			}
 
@@ -1569,6 +1589,9 @@ function render(root, callback, sessionStorage) {
 	statsDiv = document.createElement("div");
 	statsDiv.className = compStyles.stats;
 	root.appendChild(statsDiv);
+
+	// close button
+
 
 	// left panel control
 	leftContainer = document.createElement("div");

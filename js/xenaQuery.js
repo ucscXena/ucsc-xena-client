@@ -1,6 +1,5 @@
 /*eslint camelcase: 0, no-multi-spaces: 0, no-mixed-spaces-and-tabs: 0 */
 
-'use strict';
 
 import {concatBins, parse} from './binpackJSON';
 var Rx = require('./rx');

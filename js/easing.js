@@ -1,4 +1,3 @@
-'use strict';
 
 // http://www.gizma.com/easing/
 

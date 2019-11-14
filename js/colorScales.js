@@ -1,4 +1,3 @@
-'use strict';
 
 // color scale variants
 

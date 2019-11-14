@@ -17,7 +17,6 @@
  * onHover - called on mouse over and mouse out on component.
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

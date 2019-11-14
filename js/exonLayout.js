@@ -1,4 +1,3 @@
-'use strict';
 
 // Screen layout of exons for a single gene.
 

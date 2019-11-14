@@ -1,4 +1,3 @@
-'use strict';
 var {identity, updateIn, getIn} = require('../underscore_ext');
 
 var make = controls => ({

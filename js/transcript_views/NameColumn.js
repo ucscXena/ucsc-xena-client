@@ -1,4 +1,3 @@
-'use strict';
 var React = require('react');
 var colorScales = require('../colorScales');
 var {contrastColor} = require('../color_helper');

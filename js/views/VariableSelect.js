@@ -1,4 +1,3 @@
-'use strict';
 
 import PureComponent from '../PureComponent';
 
@@ -100,7 +99,7 @@ var GenotypicForm = props => (
 	<div>
 		<GeneSuggest
 			dataset={props.selected.length === 1 &&
-				props.datasets[props.selected[0]].type === 'genomicMatrix' ?
+				_.indexOf(['genomicMatrix', 'clinicalMatrix'], props.datasets[props.selected[0]].type) !== -1 ?
 				props.selected[0] : undefined}
 			assembly={firstAssembly(props.datasets, props.selected)}
 			error={props.error}

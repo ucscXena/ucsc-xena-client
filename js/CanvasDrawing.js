@@ -1,6 +1,5 @@
 // React component to manages redrawing a canvas element.
 
-'use strict';
 
 var _ = require('./underscore_ext');
 var vgmixed = require('./vgmixed');

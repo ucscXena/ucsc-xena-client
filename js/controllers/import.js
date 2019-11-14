@@ -1,4 +1,3 @@
-'use strict';
 
 import Rx from '../rx';
 import { make, mount, compose } from './utils';

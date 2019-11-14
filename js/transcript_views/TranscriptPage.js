@@ -1,4 +1,3 @@
-'use strict';
 var _ = require('../underscore_ext');
 const React = require('react');
 const NameColumn = require('./NameColumn');

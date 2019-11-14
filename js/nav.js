@@ -7,7 +7,6 @@
  * This is a light wrapper component around React Toolbox's AppBar component.
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

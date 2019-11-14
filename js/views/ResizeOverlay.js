@@ -1,4 +1,3 @@
-'use strict';
 
 var React = require('react');
 var Resizable = require('react-resizable').Resizable;

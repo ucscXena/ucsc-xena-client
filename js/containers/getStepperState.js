@@ -1,4 +1,3 @@
-'use strict';
 
 // maybe should put this in appSelector
 

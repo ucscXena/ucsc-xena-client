@@ -1,5 +1,4 @@
 /*global define: false */
-'use strict';
 var Rx = require('./rx');
 var {encodeObject} = require('./util');
 var {isArray, merge} = require('./underscore_ext');

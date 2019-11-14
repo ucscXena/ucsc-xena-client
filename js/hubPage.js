@@ -1,4 +1,3 @@
-'use strict';
 
 require('./base');
 var React = require('react');

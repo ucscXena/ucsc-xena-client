@@ -1,4 +1,3 @@
-'use strict';
 var _ = require('../underscore_ext');
 var {compose, make, mount} = require('./utils');
 var tiesQuery = require('../tiesQuery');

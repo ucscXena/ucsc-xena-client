@@ -1,4 +1,3 @@
-'use strict';
 import React from 'react';
 import styles from './ImportPage.module.css';
 import nav from "../nav";
@@ -557,7 +556,6 @@ class ImportPage extends React.Component {
 						fileContent={fileContent}
 						fileReadInProgress={fileReadInProgress}
 						localCohorts={localCohorts}
-						fileContent={fileContent}
 						probemaps={probemaps}
 						file={file} fileName={fileName}
 						onViz={this.onViz}

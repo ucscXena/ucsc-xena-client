@@ -1,4 +1,3 @@
-'use strict';
 var _ = require('../underscore_ext');
 var multi = require('../multi');
 var {colorScale} = require('../colorScales');
@@ -66,6 +65,14 @@ var survivalOptions = {
 		evFeature: 'PFI',
 		tteFeature: 'PFI.time',
 		label: 'Progression free interval'
+	},
+	"pfsEv": {
+		patient: 'patient',
+		ev: 'pfsEv',
+		tte: 'pfsTte',
+		evFeature: 'PFS',
+		tteFeature: 'PFS.time',
+		label: 'Progression free survival'
 	},
 	"lriEv": {
 		patient: 'patient',

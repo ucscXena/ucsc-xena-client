@@ -1,4 +1,3 @@
-'use strict';
 var React = require('react');
 var CohortSuggest = require('./CohortSuggest');
 var DiseaseSuggest = require('./DiseaseSuggest2');

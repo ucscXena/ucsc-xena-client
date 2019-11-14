@@ -1,4 +1,3 @@
-'use strict';
 
 // Domain logic for mutation datasets.
 

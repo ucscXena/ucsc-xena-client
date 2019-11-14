@@ -18,7 +18,6 @@
  * onChange - called when a checkbox value is changed.
  */
 
-'use strict';
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';

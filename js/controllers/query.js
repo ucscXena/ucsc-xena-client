@@ -1,4 +1,3 @@
-'use strict';
 
 import {assocIn, dissoc, find, getIn, identity, initial, isEqual, last, matchKeys, updateIn} from '../underscore_ext';
 import {make, compose} from './utils';

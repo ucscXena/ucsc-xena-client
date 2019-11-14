@@ -1,4 +1,3 @@
-'use strict';
 var React = require('react');
 var _ = require('../underscore_ext');
 var {allExons, exonGroups, intronRegions} = require('../findIntrons');

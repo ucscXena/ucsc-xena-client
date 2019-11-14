@@ -15,7 +15,6 @@
  * - onAdditionalAction
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

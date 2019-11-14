@@ -1,5 +1,4 @@
 /*eslint-disable camelcase */
-'use strict';
 
 var jStat = require('jStat').jStat,
 	_ = require('./underscore_ext'),

@@ -1,4 +1,3 @@
-'use strict';
 
 var _ = require('../underscore_ext');
 var Rx = require('../rx');
@@ -231,8 +230,11 @@ var spreadsheetControls = {
 	'km-cutoff': (state, value) => _.assocIn(state, ['km', 'cutoff'], value),
 	'km-splits': (state, value) => _.assocIn(state, ['km', 'splits'], value),
 	'km-survivalType': (state, value) => _.assocIn(state, ['km', 'survivalType'], value),
-	'heatmap': state => _.assoc(state, 'mode', 'heatmap'),
+	'heatmap': state => _.assocInAll(state,
+		['mode'], 'heatmap',
+		['chartState', 'spreadsheetColumn'], null),
 	'chart': state => _.assoc(state, 'mode', 'chart'),
+	'chart-set-column': (state, id) => _.assocIn(state, ['chartState', 'spreadsheetColumn'], id),
 	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState),
 	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
 		serverBus.next(['chart-average-data', Rx.Observable.of(offsets, Rx.Scheduler.async), thunk]),

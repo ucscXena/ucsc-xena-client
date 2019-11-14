@@ -1,4 +1,3 @@
-'use strict';
 
 import PureComponent from '../PureComponent';
 
@@ -105,11 +104,10 @@ class GeneSuggest extends PureComponent {
 		var position = this.input.selectionStart,
 			value = this.input.value,
 			[i, j] = currentWordPosition(value, position),
-			withSuggestion = value.slice(0, i) + suggestion + value.slice(j),
-			space = withSuggestion[withSuggestion.length - 1] === ' ' ? '' : ' ';
+			withSuggestion = value.slice(0, i) + suggestion + value.slice(j);
 
 		// splice the suggestion into the current word
-		return withSuggestion + space;
+		return withSuggestion;
 	};
 
 	setInput = (input) => {

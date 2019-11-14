@@ -1,4 +1,3 @@
-'use strict';
 
 import {isString, isArray, isObject} from './underscore_ext';
 

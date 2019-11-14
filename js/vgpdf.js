@@ -1,4 +1,3 @@
-"use strict";
 
 // XXX Warning: opacity other than 1 is not interpreted correctly.
 var style = function (c) {

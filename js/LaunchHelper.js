@@ -1,4 +1,3 @@
-'use strict';
 
 import React from 'react';
 import Dialog from 'react-toolbox/lib/dialog';
@@ -42,7 +41,7 @@ function findMatch(pattern, list) {
 }
 
 var matchPaths = serverFiles =>
-	mapObject(osFiles, ({pattern}, key) =>
+	mapObject(osFiles, (obj, key) =>
 			  findMatch(osFiles[key].pattern, serverFiles));
 
 var parseInt10 = s => parseInt(s, 10);

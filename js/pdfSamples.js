@@ -1,4 +1,3 @@
-'use strict';
 var {drawSamples} = require('./drawSamples');
 var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');

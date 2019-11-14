@@ -1,5 +1,4 @@
 /*global require: false, it: false, console: false, describe: false, mocha: false */
-'use strict';
 
 var _ = require('../js/underscore_ext');
 var {isObject, isNumber, isArray, getIn, get, every, pluck} =

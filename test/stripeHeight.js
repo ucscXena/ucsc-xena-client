@@ -1,5 +1,4 @@
 /*global it: false, describe: false, mocha: false */
-'use strict';
 var {stripeHeight} = require('../js/drawSamples');
 
 var assert = require('assert');

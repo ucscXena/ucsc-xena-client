@@ -8,7 +8,6 @@
  * See https://github.com/react-toolbox/react-toolbox#customizing-all-instances-of-a-component-type for details.
  */
 
-'use strict';
 
 module.exports = {
 	RTAppBar: require('./navRTAppBarTheme.module.css'),

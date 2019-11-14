@@ -1,4 +1,3 @@
-'use strict';
 
 import multi from '../multi';
 import * as xenaQuery from '../xenaQuery';

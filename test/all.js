@@ -1,5 +1,4 @@
-/*global require: false, run: false */
-"use strict";
+/*global require: false */
 require('babel-polyfill');
 // This needs refactor. Might want to return mutationVector methods in exports,
 // and call widget.*.add elsewhere, so we can test the methods w/o widgets.

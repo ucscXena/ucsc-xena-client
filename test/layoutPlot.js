@@ -1,5 +1,4 @@
 /*global it: false, describe: false */
-'use strict';
 var assert = require('assert');
 var jv = require('jsverify');
 var _ = require('../js/underscore_ext');

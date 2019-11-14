@@ -6,7 +6,6 @@
  *
  */
 
-'use strict';
 
 import PureComponent from '../PureComponent';
 

@@ -1,7 +1,7 @@
-'use strict';
 
 var _ = require('../underscore_ext');
 import {computeSettings, matchDatasetFields} from '../models/columns';
+import {searchSamples} from '../models/searchSamples';
 var {resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering} = require('./common');
 var {compose, make, mount} = require('./utils');
 import * as Rx from '../rx';
@@ -48,6 +48,7 @@ var setHeatmapParams = state =>
 
 var linkedColumns = (state, [fieldResp, ids]) => {
 	var columnParams = state.params.columns,
+		maybeResetLoadPending = _.getIn(state, ['params', 'filter']) ? _.identity : resetLoadPending,
 		byID = datasetsByID(state),
 		features = featuresByID(state),
 		columns = _.mmap(columnParams, fieldResp,
@@ -57,7 +58,7 @@ var linkedColumns = (state, [fieldResp, ids]) => {
 
 	return _.reduce(columns,
 			 (acc, spec, i) => _.assocIn(acc, ['spreadsheet', 'columns', ids[i]], spec),
-			 _.updateIn(resetLoadPending(setHeatmapParams(state)),
+			 _.updateIn(maybeResetLoadPending(setHeatmapParams(state)),
 					['spreadsheet'], s => _.dissoc(s, 'fieldMatches'),
 					['spreadsheet', 'columnOrder'], o => o.concat(ids),
 					['spreadsheet', 'wizardMode'], () => false));
@@ -193,6 +194,23 @@ var controls = {
 		var cohort = _.getIn(resp, [0, 'cohort']);
 		if (cohort) {
 			fetchCohortData(serverBus, newState.spreadsheet);
+		}
+	},
+	'widget-data': state => {
+		var filter = _.getIn(state, ['params', 'filter']);
+		if (filter && _.every(state.spreadsheet.data, d => d.status === 'loaded')) {
+			return resetLoadPending(_.updateIn(state, ['params'], p => _.dissoc(p, 'filter')));
+		}
+		return state;
+	},
+	'widget-data-post!': (serverBus, state, newState) => {
+		var filter = _.getIn(state, ['params', 'filter']);
+		if (filter && _.every(newState.spreadsheet.data, d => d.status === 'loaded')) {
+			var {spreadsheet: {columns, columnOrder, data, cohortSamples}} = newState;
+			var matches = searchSamples(filter, columns, columnOrder, data, cohortSamples);
+			// XXX no support for cross. Always take the first.
+			var nextSamples = matches.matches[0].map(i => cohortSamples[i]);
+			serverBus.next(['sampleFilter', Rx.Observable.of(nextSamples, Rx.Scheduler.async)]);
 		}
 	}
 };

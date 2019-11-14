@@ -1,4 +1,3 @@
-'use strict';
 
 var _ = require('./underscore_ext');
 var colorHelper = require('./color_helper');
@@ -85,7 +84,9 @@ var drawSamples = (vg, props) => {
 		{count, height, index} = zoom;
 
 	if (_.isEmpty(heatmapData)) { // no features to draw
-		vg.box(0, 0, width, height, "gray");
+		vg.labels(() => {
+			vg.box(0, 0, width, height, "gray");
+		});
 		return;
 	}
 

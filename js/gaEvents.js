@@ -1,5 +1,4 @@
 /*global ga: false */
-'use strict';
 
 var config = require('./config');
 

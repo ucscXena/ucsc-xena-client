@@ -1,4 +1,3 @@
-'use strict';
 require('./base');
 
 // import controller for the transcript view actions

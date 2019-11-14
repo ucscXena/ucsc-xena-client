@@ -31,7 +31,6 @@
  * <HelpBox x={882} y={271} w={280} o={'Right'}><p>Each row contains data from a single sample.</p><p>Row order is determined by sorting the rows by their column values.</p></HelpBox>
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

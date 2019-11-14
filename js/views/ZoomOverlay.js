@@ -5,7 +5,6 @@
  * Overlay displayed on mousedown and drag over gene or samples zoom.
  */
 
-'use strict';
 
 // Core dependencies, components
 var React = require('react');

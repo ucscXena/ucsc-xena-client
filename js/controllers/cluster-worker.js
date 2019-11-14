@@ -1,4 +1,3 @@
-'use strict';
 
 import 'babel-polyfill';
 import {agnes, treeOrder} from '../agnes';

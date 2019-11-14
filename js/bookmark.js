@@ -1,4 +1,3 @@
-'use strict';
 
 var LZ = require('./lz-string');
 var {uniq} = require('./underscore_ext');

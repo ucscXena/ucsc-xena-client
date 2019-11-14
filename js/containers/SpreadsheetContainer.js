@@ -1,4 +1,3 @@
-'use strict';
 
 var React = require('react');
 var _ = require('../underscore_ext');
@@ -90,6 +89,11 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		this.props.callback(['showIntrons', id]);
 	};
 
+	onChart = (id) => {
+		this.props.callback(['chart-set-column', id]);
+		this.props.callback(['chart']);
+	};
+
 	onCluster = (id, value, data) => {
 		this.props.callback(['cluster', id, value, data]);
 	};
@@ -162,6 +166,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						onMode={this.onMode}
 						onInteractive={this.onInteractive}
 						onKm={this.onKm}
+						onChart={this.onChart}
 						onSortDirection={this.onSortDirection}
 						onXZoom={this.onXZoom}
 						onYZoom={this.onYZoom}

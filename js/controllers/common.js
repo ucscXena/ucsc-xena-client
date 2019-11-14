@@ -1,4 +1,3 @@
-'use strict';
 
 // Helper methods needed by multiple controllers.
 
@@ -231,7 +230,7 @@ function survivalFields(cohortFeatures) {
 		fields = {};
 
 	if (hasSurvFields(vars)) {
-		fields[`patient`] = codedFieldSpec(vars.patient);
+		fields.patient = codedFieldSpec(vars.patient);
 
 		_.values(kmModel.survivalOptions).forEach(function(option) {
 			if (vars[option.ev] && vars[option.tte]) {

@@ -1,4 +1,3 @@
-'use strict';
 
 var Rx = require('../rx');
 var {empty} = Rx.Observable;

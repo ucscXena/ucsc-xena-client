@@ -2,7 +2,6 @@
 // Adapted from http://dbaron.org/log/20100309-faster-timeouts
 // as suggested by mozilla's MDN.
 
-'use strict';
 var _ = require('underscore');
 var timeouts = [],
 	args = [],
