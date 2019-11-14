@@ -143,6 +143,7 @@ function resetZoom(state) {
 var setCohortRelatedFields = (state, cohort) =>
 	_.assoc(state,
 		'cohort', cohort,
+		'sampleSearch', '',
 		'hasPrivateSamples', false,
 		'cohortSamples', [],
 		'columns', {},
