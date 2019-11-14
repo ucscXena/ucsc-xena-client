@@ -1,4 +1,5 @@
 /*global config: false */
-config.singlecell = true;
-module.exports = config;
-
+try {
+	config.singlecell = true;
+	module.exports = config;
+} catch (e) {}
