@@ -280,7 +280,7 @@ class CohortPage extends React.Component {
 	};
 
 	clickVizButton = (ev) => {
-		if (ev.target.name === 'cohortButton') {
+		if (ev.target.className === 'cohortButton') {
 			this.onViz();
 		}
 	}
