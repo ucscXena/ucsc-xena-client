@@ -1,6 +1,4 @@
 /*global require: false, it: false, console: false, describe: false, mocha: false */
-'use strict';
-
 import {setToJSON, stringify, parse} from '../js/binpackJSON';
 //import _ from '../js/underscore_ext';
 var assert = require('assert');

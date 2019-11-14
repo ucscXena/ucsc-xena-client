@@ -5,7 +5,7 @@ var {isEqual} = require('./underscore_ext');
 var logDiff, logTime, diff; //eslint-disable-line no-unused-vars
 
 if (process.env.NODE_ENV !== 'production') {
-	var diff = (a, b) => {
+	diff = (a, b) => {
 		Object.keys(a).forEach(p => {
 			if (!b.hasOwnProperty(p)) {
 				console.log('key deleted:', p);

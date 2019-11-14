@@ -1,4 +1,3 @@
-'use strict';
 var wasm = require('ucsc-xena-wasm');
 var _ = require('./underscore_ext');
 var {rgb: rgbFromHex} = require('./color_helper');
@@ -8,12 +7,13 @@ export var Module;
 
 // view is deferred because Module doesn't resolve until later.
 // Alternatively, we could put this after the promise.
+/*
 var arrTypes = {
 	'double': {ctor: Float64Array, width: 8, view: () => Module.HEAPF64},
 	'float': {ctor: Float32Array, width: 4, view: () => Module.HEAPF32},
 	'u32': {ctor: Uint32Array, width: 4, view: () => Module.HEAPU32}
 };
-
+*/
 var arrTypes = {
 	'double': 'HEAPF64',
 	'float': 'HEAPF32',
