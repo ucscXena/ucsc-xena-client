@@ -1,4 +1,3 @@
-
 import PureComponent from '../PureComponent';
 var React = require('react');
 var _ = require('../underscore_ext');
@@ -363,7 +362,7 @@ function disableKM(column, hasSurvival) {
 }
 
 function disableChart(column) {
-	if (_.contains(['mutation', 'SV'], column.fieldType)) {
+	if (_.contains(['mutation', 'SV'], column.fieldType) || config.singlecell) {
 		return true;
 	}
 	return false;
@@ -789,7 +788,8 @@ class Column extends PureComponent {
 													caption='Kaplan Meier Plot'/>
 												<MenuItem onClick={this.onChart} disabled={chartDisabled}
 													caption='Chart & Statistics'/>
-												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
+												<MenuItem onClick={this.onSortDirection} disabled={config.singlecell}
+													caption='Reverse sort'/>
 												<MenuItem onClick={this.onDownload} caption='Download'/>
 												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
 												<MenuItem onClick={this.onViz} caption='Display'/>
