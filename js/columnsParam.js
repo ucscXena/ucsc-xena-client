@@ -82,12 +82,14 @@ var columnSchema = list =>
 			has(column, 'fields'));
 
 export function columnsParam() {
-	var {columns} = allParameters();
+	var {columns, filterColumns} = allParameters();
 	if (columns) {
 		try {
-			var list = JSON.parse(columns).map(c => mergeOpts(pickAllowed(c)));
+			var visibleColumns = JSON.parse(columns);
+			var filterOnly = filterColumns ? JSON.parse(filterColumns) : [];
+			var list = visibleColumns.concat(filterOnly).map(c => mergeOpts(pickAllowed(c)));
 			if (columnSchema(list)) {
-				return {columns: list};
+				return {columns: list, visible: visibleColumns.length + 1}; // +1 for sampleID
 			}
 		} catch(e) {
 			console.log(`Failed to parse columns ${columns}`);
