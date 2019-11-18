@@ -316,6 +316,10 @@ function transformPOSTMethods(postMethods) {
 		sparseDataMatchFieldSlow: postFn => (host, field, dataset, genes) =>
 			postFn(host, field, dataset, genes.map(g => g.toLowerCase()))
 			.map(list => alignMatches(genes, list)),
+		// Generate case permutations of the gene parameter
+		matchGenesWithProbes: postFn => (host, dataset, genes) =>
+			postFn(host, dataset, _.flatmap(genes, permuteCase))
+			.map(list => alignMatches(genes, list)),
 		// Convert fields to lower-case, for matching, and apply a transform that
 		// requires the 'fields' parameter.
 		matchFields: postFn => (host, dataset, fields) =>
@@ -363,6 +367,7 @@ function wrapDsIDParams(postMethods) {
 		'refGeneRange',
 		'matchFields',
 		'matchFieldsFaster',
+		'matchGenesWithProbes',
 		'matchPartialField',
 		'segmentedDataRange',
 		'segmentedDataExamples',
