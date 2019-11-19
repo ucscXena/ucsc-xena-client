@@ -16,12 +16,13 @@
                             ((xena-query {:select ["name"]
                                           :from [probemap]
                                           :where [:in :any "genes" [gene]]}) "name")]
-                        (:count (car (query {:select [[:%count.field.name :count]]
-                                             :limit 1
-                                             :from [:field]
-                                             :join [:dataset [:= :dataset.id :dataset_id]
-                                                    {:table [[[:name :varchar probes]] :T]} [:= :T.name :field.name]]
-                                             :where [:= :dataset.name dataset]})))))
+                        (:count (car (query {:select [[:%count.* :count]]
+                                             :from [{:select [:field.name]
+                                                     :limit 1
+                                                     :from [:field]
+                                                     :join [:dataset [:= :dataset.id :dataset_id]
+                                                            {:table [[[:name :varchar probes]] :T]} [:= :T.name :field.name]]
+                                                     :where [:= :dataset.name dataset]}]})))))
                     matches)
         filtered (map :name (query {:select [:name]
                                     :from [{:table [[[:name :varchar matches] [:count :int probes]] :T]}]
