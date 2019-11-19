@@ -281,10 +281,9 @@ class CohortPage extends React.Component {
 		if (ev.target.className === 'cohortButton') {
 			this.onViz();
 		}
-	}
+	};
 
 	onDataset = (ev) => { navHandler.call(this, ev); };
-
 
 	render() {
 		var {hubParams, callback,
@@ -523,6 +522,24 @@ var HubPage = wrapLaunchHelper(
 			this.props.callback(['navigate', 'import']);
 		}
 
+		onViz = (cohort) => {
+			if (!cohort) {return;}
+
+			var {spreadsheet: {cohort: currentCohort}} = this.props.state;
+
+			if (cohort !== get(currentCohort, 'name')) {
+				this.props.callback(['cohort', cohort]);
+			}
+			this.props.callback(['navigate', 'heatmap']);
+		};
+
+		clickVizButton = (ev) => {
+			if (ev.target.className === 'hubButton') {
+				var cohort = ev.target.getAttribute("cohort");
+				this.onViz(cohort);
+			}
+		};
+
 		render() {
 			var {state, hubParams, badge, children} = this.props,
 				{spreadsheet: {servers}} = state,
@@ -534,7 +551,7 @@ var HubPage = wrapLaunchHelper(
 					'' : ' (not in my data hubs)';
 
 			return (
-				<div className={styles.datapages}>
+				<div className={styles.datapages} onClick={this.clickVizButton}>
 					{children /* LaunchHelper */}
 					{markdownValue(getIn(state, ['datapages', 'hubMeta', host]))}
 					<CohortHeader inHubs={inHubs} host={host} onImport={this.onImport} badge={badge}/>
