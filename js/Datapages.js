@@ -535,8 +535,7 @@ var HubPage = wrapLaunchHelper(
 
 		clickVizButton = (ev) => {
 			if (ev.target.className === 'hubButton') {
-				var cohort = ev.target.getAttribute("cohort");
-				this.onViz(cohort);
+				this.onViz(ev.target.dataset.cohort);
 			}
 		};
 
