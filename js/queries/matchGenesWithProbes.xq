@@ -25,5 +25,5 @@
                     matches)
         filtered (map :name (query {:select [:name]
                                     :from [{:table [[[:name :varchar matches] [:count :int probes]] :T]}]
-                                    :where [:= :count 1]}))]
+                                    :where [:<> :count 0]}))]
     filtered))
