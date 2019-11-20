@@ -34,7 +34,7 @@ export var guessFields = (text, assembly) => {
 
 export var matchDatasetFields = multi((datasets, dsID) => {
 	var meta = datasets[dsID];
-	// Do field matching against probemap if we have one & aren't doing a signature.
+	// Do field matching against probemap if we have one
 	return meta.type === 'genomicMatrix' && meta.probemap ? 'genomicMatrix-probemap' : meta.type;
 });
 
@@ -62,7 +62,7 @@ matchDatasetFields.dflt = (datasets, dsID, input) => {
 
 var geneProbeMatch = (host, dsID, probemap, guess) =>
 	Observable.zip(
-		xenaQuery.sparseDataMatchGenes(host, probemap, guess.fields),
+		xenaQuery.matchGenesWithProbes(dsID, guess.fields),
 		xenaQuery.matchFields(dsID, guess.fields),
 		(genes, probes) => _.filter(probes).length > _.filter(genes).length ?
 			{...guess, type: 'probes', fields: probes} :

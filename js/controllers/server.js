@@ -115,6 +115,22 @@ var setLinkedCohortError = state =>
 	_.assoc(resetLoadPending(state), 'stateError',
 		`We are unable to find the cohort for dataset ${state.params.columns[0].name} on host ${state.params.columns[0].host}. Please check the spelling, and your network connectivity.`);
 
+var dropFilter = state => _.updateIn(state, ['params'], p => _.omit(p, 'filter', 'filterColumns', 'visible'));
+
+var dropHidden = (state, visible) => _.updateIn(state, ['spreadsheet'], spreadsheet => {
+	var {columns, columnOrder, data} = spreadsheet,
+		newOrder = columnOrder.slice(0, visible);
+	return _.assoc(spreadsheet,
+		'columns', _.pick(columns, newOrder),
+		'data', _.pick(data, newOrder),
+		'columnOrder', newOrder);
+});
+
+var mergeWidgetData = (state, id, data) =>
+	columnOpen(state, id) ?
+		_.assocIn(state, ["data", id], _.assoc(data, 'status', 'loaded'))
+		: state;
+
 var controls = {
 	// XXX was clearWizardCohort just cleaning up bad bookmarks? Do we need to handle that case?
 	// How do we handle cohortSamples reloading generally, and with respect to restoring state?
@@ -199,14 +215,18 @@ var controls = {
 	'widget-data': state => {
 		var filter = _.getIn(state, ['params', 'filter']);
 		if (filter && _.every(state.spreadsheet.data, d => d.status === 'loaded')) {
-			return resetLoadPending(_.updateIn(state, ['params'], p => _.dissoc(p, 'filter')));
+			var visible = _.getIn(state, ['params', 'visible']);
+			return resetLoadPending(dropFilter(dropHidden(state, visible)));
 		}
 		return state;
 	},
-	'widget-data-post!': (serverBus, state, newState) => {
+	'widget-data-post!': (serverBus, state, newState, id, widgetData) => {
 		var filter = _.getIn(state, ['params', 'filter']);
-		if (filter && _.every(newState.spreadsheet.data, d => d.status === 'loaded')) {
-			var {spreadsheet: {columns, columnOrder, data, cohortSamples}} = newState;
+		// This is weird. We re-compute the merged widget data, in case we
+		// discarded it as 'hidden', above.
+		var merged = mergeWidgetData(state.spreadsheet, id, widgetData);
+		if (filter && _.every(merged.data, d => d.status === 'loaded')) {
+			var {columns, columnOrder, data, cohortSamples} = merged;
 			var matches = searchSamples(filter, columns, columnOrder, data, cohortSamples);
 			// XXX no support for cross. Always take the first.
 			var nextSamples = matches.matches[0].map(i => cohortSamples[i]);
@@ -217,10 +237,7 @@ var controls = {
 
 var spreadsheetControls = {
 	// XXX Here we drop the update if the column is no longer open.
-	'widget-data': (state, id, data) =>
-		columnOpen(state, id) ?
-			_.assocIn(state, ["data", id], _.assoc(data, 'status', 'loaded'))
-			: state,
+	'widget-data': mergeWidgetData,
 	'widget-data-post!': (serverBus, state, newState, id) => {
 		if (_.getIn(newState, ['columns', id, 'clustering']) != null) {
 			fetchClustering(serverBus, newState, id);
