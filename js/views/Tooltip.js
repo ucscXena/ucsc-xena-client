@@ -129,6 +129,7 @@ class Tooltip extends PureComponent {
 				{frozen ? overlay(onClick) : null}
 				<div key={sampleID} className={classNames(compStyles.Tooltip, {[compStyles.frozen]: frozen})}>
 					<ul className={compStyles.content}>
+						{sampleID ? "sample: " : null}
 						{sampleID ? <li className={compStyles.title}>
 							{sample}
 						</li> : null}
