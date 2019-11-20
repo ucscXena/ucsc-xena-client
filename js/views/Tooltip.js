@@ -4,6 +4,7 @@ var React = require('react');
 var _ = require('../underscore_ext');
 var meta = require('../meta');
 var classNames = require('classnames');
+var config = require('../config');
 
 // Styles
 var compStyles = require('./Tooltip.module.css');
@@ -129,7 +130,7 @@ class Tooltip extends PureComponent {
 				{frozen ? overlay(onClick) : null}
 				<div key={sampleID} className={classNames(compStyles.Tooltip, {[compStyles.frozen]: frozen})}>
 					<ul className={compStyles.content}>
-						{sampleID ? "sample: " : null}
+						{sampleID ? config.singlecell ? "cell:" : "sample: " : null}
 						{sampleID ? <li className={compStyles.title}>
 							{sample}
 						</li> : null}
