@@ -9,6 +9,7 @@ var _ = require('./underscore_ext');
 var colorScales = require ('./colorScales');
 var jStat = require('jStat').jStat;
 var {getCustomColor} = require('./models/denseMatrix');
+var gaEvents = require('./gaEvents');
 
 var customColors = {};
 
@@ -528,6 +529,7 @@ function render(root, callback, sessionStorage) {
 				closeButton: {
 					text: 'CLOSE',
 					onclick: function () {
+						gaEvents('spreadsheet', 'columnChart-close');
 						callback(['heatmap']);
 					}
 				}
