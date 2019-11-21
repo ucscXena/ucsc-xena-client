@@ -10,7 +10,8 @@ require('./plotMutationVector');
 require('./heatmapColors');
 require('./scale');
 require('./underscore_ext');
-require('./fieldFetch');
+// this is unreliable in CI
+//require('./fieldFetch');
 require('./compactData');
 require('./parsePos');
 require('./permuteCase');
