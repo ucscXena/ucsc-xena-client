@@ -208,7 +208,7 @@ function columnSettings(datasets, features, dsID, matches) {
 			dataset.type === 'clinicalMatrix' ? _.getIn(features, [dsID, fields[0], 'longtitle']) || fields[0] :
 			normalizedFields.join(', '),
 		defaults = {
-			...(fieldType === 'geneProbes' ? {showIntrons: true} : {}),
+			...(['geneProbes', 'segmented'].indexOf(fieldType) !== -1 ? {showIntrons: true} : {}),
 			colorClass: defaultColorClass,
 			columnLabel,
 			dataset,
