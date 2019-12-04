@@ -536,7 +536,7 @@ class Column extends PureComponent {
 	};
 
 	onChart = () => {
-		gaEvents('spreadsheet', 'columnChart');
+		gaEvents('spreadsheet', 'columnChart-open');
 		this.props.onChart(this.props.id);
 	};
 
