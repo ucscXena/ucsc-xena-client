@@ -61,6 +61,7 @@ module.exports = {
 		servers.gdcHub,
 		servers.atacSeqHub,
 		servers.singlecellHub,
-		'https://tdi.xenahubs.net'
+		'https://tdi.xenahubs.net',
+		'https://luad.xenahubs.net'
 	]
 };
