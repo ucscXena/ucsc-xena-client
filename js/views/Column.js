@@ -395,7 +395,7 @@ var showPosition = column =>
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
 var showGeneLabel = column =>
-	_.contains(['genes', 'probes'], column.fieldType) ||
+	_.contains(['genes', 'probes', 'clinical'], column.fieldType) ||
 	(column.fieldType === 'geneProbes' &&
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) === 'regulon');
 
