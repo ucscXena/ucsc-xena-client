@@ -1,7 +1,7 @@
 
 var _ = require('./underscore_ext');
 var {contrastColor, lightgreyHEX} = require('./color_helper');
-var {impact} = require('./models/mutationVector');
+var {impact, getSNVEffect} = require('./models/mutationVector');
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
 
@@ -60,7 +60,7 @@ function drawImpactNodes(vg, width, zoom, smallVariants) {
 
 	// --------- small variants drawing start here ---------
 	var varByImp = _.groupByConsec(smallVariants, v => v.color);
-	varByImp = _.sortBy(varByImp, list => impact[list[0].data.effect]); // draw variants from low to high impact
+	varByImp = _.sortBy(varByImp, list => impact[getSNVEffect(impact, list[0].data.effect)]); // draw variants from low to high impact
 
 	varByImp.forEach(vars => {
 		var points = vars.map(v => {
