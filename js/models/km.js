@@ -3,6 +3,7 @@ var multi = require('../multi');
 var {colorScale} = require('../colorScales');
 var km = require('../km'); // move km down?
 var {RGBToHex} = require('../color_helper');
+var mv = require('./mutationVector');
 //var {segmentAverage} = require('./segmented');
 
 var MAX = 10; // max number of groups to display.
@@ -202,7 +203,6 @@ function partitionedVals2(avg, uniq, colorfn) {
 	};
 }
 
-
 function floatVals(avg, uniq, colorfn) {
 	return {
 		values: avg,
@@ -226,18 +226,32 @@ function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
 }
 
 function mutationVals(column, data, {bySample}, sortedSamples) {
-	var mutCode = _.mapObject(bySample, vs => vs.length > 0 ? 1 : 0);
+	var mutCode = _.mapObject(bySample, vs => {
+			var worstImpact = Math.max(...vs.map(variant => mv.impact[mv.getSNVEffect(mv.impact, variant.effect)])),
+				impactCategory = worstImpact >= 2 ? 2 : worstImpact >= 0 ? 1 : 0;
+			return impactCategory;
+		}),
+		groups = _.unique(_.values(mutCode)).sort(),
+		colors = [
+           "#ffffff", // white
+           "#888888", // gray
+           "#9467bd"  // dark purple
+		],
+		labels = [
+			"no mutation",
+			"other mutation",
+			"non-silent mutation"
+		];
+
+
+//		colors = groups.map(g => (g < 0) ? "#ffffff" : mv.colors.categoryMutation[g][0]),
+//		labels = groups.map(g => (g < 0) ? "no mutation" : mv.colors.categoryMutation[g][1]);
+
 	return {
 		values: _.map(sortedSamples, s => mutCode[s]),
-		groups: [0, 1],
-		colors: [
-			"#ffffff", // white
-			"#9467bd"  // dark purple
-		],
-		labels: [
-			'No Mutation',
-			'Has Mutation'
-		]
+		groups: groups,
+		colors: groups.map(g => colors[g]),
+		labels: groups.map(g => labels[g]),
 	};
 }
 

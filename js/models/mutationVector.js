@@ -677,5 +677,6 @@ module.exports = {
 	SNVPvalue,
 	fetch,
 	impact,
-	getSNVEffect
+	getSNVEffect,
+	colors
 };
