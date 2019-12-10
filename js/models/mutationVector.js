@@ -49,19 +49,31 @@ var colors = {
 	missing: "#c5b0d5" // light lavender for no impact annotation or annotation outside of impact code
 };
 
+var	getSNVEffect = (colorMap, effect) => { // match case insensitive, beginning of word
+		var effectKey = _.keys(colorMap).find(key => {
+			var patt = new RegExp('^' + key, "i");
+			return patt.test(effect);
+		});
+		return effectKey;
+	};
+
 function impactLegend(colorMap, valsInData) {
-	var inData = new Set(valsInData),
-		missing = _.object(
-			_.map(_.filter([...inData], v => !_.has(colorMap, v)),
-				v => [v, colors.missing])),
-		extendedMap = _.merge(colorMap, missing),
-		colorList = _.filter(_.pairs(extendedMap), ([val]) => inData.has(val)).reverse(); // Legend reverses
+	var missing = _.filter(valsInData, v => !getSNVEffect(colorMap, v)),
+		colorList = _.filter(_.pairs(colorMap), ([val]) => {
+				var patt = new RegExp('^' + val, "i");
+				return valsInData.find(effect => patt.test(effect));
+			}).reverse(); // Legend reverses
+
+	if (missing.length !== 0) {
+		colorList = _.merge(colorList, [["unannotated", colors.missing]]);
+	}
 
 	//groupBy color
 	let colorGroups = _.mapObject(_.groupBy(colorList, ([, color]) => color), (val) => _.pluck(val, 0)),
 		mutationColors = _.keys(colorGroups), // color square
-		titles = _.values(colorGroups).map(impactList => impactList.map(i => i !== '' ? i : "unannotated").join("\n")), // mouse over text
+		titles = _.values(colorGroups).map(impactList => impactList.join("\n")), // mouse over text
 		labels = mutationColors.map(color => _.find(colors.categoryMutation, ([c, ]) => color === c)[1]); //visible text
+
 
 	return {
 		colors: mutationColors,
@@ -72,87 +84,60 @@ function impactLegend(colorMap, valsInData) {
 
 var impact = {
 		//destroy protein
-		'Nonsense_Mutation': 4,
 		'Nonsense': 4,
-		'frameshift_variant': 4,
-		'Frameshift': 4,
 		'stop_gained': 4,
-		'Stop Gained': 4,
-		'Frame_Shift_Del': 4,
-		'Frame_Shift_Ins': 4,
-		'Frameshift Deletion': 4,
-		'Frameshift Insertion': 4,
+		'Frameshift': 4,
+		'Frame_Shift': 4,
+		'De_novo_Start_OutOfFrame': 4,
 
 		//splice related
-		'splice_acceptor_variant': 3,
-		'splice_acceptor_variant&intron_variant': 3,
-		'splice_donor_variant': 3,
-		'splice_donor_variant&intron_variant': 3,
-		'SpliceAcceptorDeletion': 3,
-		'SpliceAcceptorSNV': 3,
-		'SpliceDonorBlockSubstitution': 3,
-		'SpliceDonorDeletion': 3,
-		'SpliceDonorSNV': 3,
-		'Splice_Site': 3,
-		'splice_region_variant': 3,
-		'splice_region_variant&intron_variant': 3,
+		'splice': 3,
 
 		//modify protein
 		'missense': 2,
-		'non_coding_exon_variant': 2,
-		'missense_variant': 2,
-		'Missense Variant': 2,
-		'Missense_Mutation': 2,
-		'Missense': 2,
+		'NON_SYNONYMOUS': 2,
+		'NONSYNONYMOUS': 2,
 		'MultiAAMissense': 2,
 		'start_lost': 2,
 		'start_gained': 2,
-		'De_novo_Start_OutOfFrame': 2,
+		'STOP_LOST': 2,
+		'Nonstop_Mutation': 2,
 		'Translation_Start_Site': 2,
 		'CdsStartSNV': 2,
 		'De_novo_Start_InFrame': 2,
-		'stop_lost': 2,
-		'Stop Lost': 2,
-		'Nonstop_Mutation': 2,
-		'initiator_codon_variant': 2,
-		'5_prime_UTR_premature_start_codon_gain_variant': 2,
+		'initiator_codon': 2,
+		'5_prime_UTR_premature_start_codon_gain': 2,
 		'disruptive_inframe_deletion': 2,
 		'disruptive_inframe_insertion': 2,
-		'inframe_deletion': 2,
-		'Inframe Deletion': 2,
-		'InFrameDeletion': 2,
-		'inframe_insertion': 2,
-		'Inframe Insertion': 2,
-		'InFrameInsertion': 2,
-		'In_Frame_Del': 2,
-		'In_Frame_Ins': 2,
-		'Indel': 2,
+		'inframe': 2,
+		'In_Frame': 2,
+		'CODON': 2,
 
 		//do not modify protein
-		'synonymous_variant': 1,
-		'Synonymous Variant': 1,
 		'Synonymous': 1,
 		'Silent': 1,
-		'stop_retained_variant': 1,
+		'stop_retained': 1,
+		'TF_BINDING_SITE': 1,
 
 		//mutations effect we don't know
 		'lincRNA': 0,
 		'RNA': 0,
 		'exon_variant': 0,
-		'upstream_gene_variant': 0,
-		'downstream_gene_variant': 0,
+		'NON_CODING_EXON': 0,
+		'upstream': 0,
+		'downstream': 0,
 		"5'Flank": 0,
 		"3'Flank": 0,
 		"3'UTR": 0,
 		"5'UTR": 0,
-		'5_prime_UTR_variant': 0,
-		'3_prime_UTR_variant': 0,
-		//'Complex Substitution': 0,
-		'intron_variant': 0,
+		'UTR_3_PRIME': 0,
+		'UTR_5_PRIME': 0,
+		'5_prime_UTR': 0,
+		'3_prime_UTR': 0,
 		'intron': 0,
-		'Intron': 0,
-		'intergenic_region': 0,
-		'IGR': 0
+		'intergenic': 0,
+		'IGR': 0,
+		'INTRAGENIC': 0
 	},
 	chromColorGB = { //genome browser chrom coloring
 		"1": "#996600",
@@ -228,7 +213,7 @@ var impact = {
 	features = {
 		impact: {
 			get: v => v.effect,
-			color: (colorMap, v) => colorMap[v] || colors.missing,
+			color: (colorMap, v) => colorMap[getSNVEffect(colorMap, v)] || colors.missing,
 			legend: impactLegend
 		},
 		// dna_vaf and rna_vaf need to be updated to reflect the call params.
@@ -288,7 +273,6 @@ var getExonPadding = mutationDataType => {
 		};
 	}
 };
-
 
 function evalMut(flip, mut) {
 	return {
@@ -692,5 +676,6 @@ module.exports = {
 	chromColorGB,
 	SNVPvalue,
 	fetch,
-	impact
+	impact,
+	getSNVEffect
 };

@@ -54,7 +54,7 @@ function closestNodeSNV(nodes, zoom, x, y) {
 			Math.abs(y - toYPx(zoom, n).y) < cutoffY &&
 			(x > n.xStart - cutoffX) && (x < n.xEnd + cutoffX));
 
-	var closest = _.max(nearBy, n => mv.impact[n.data.effect] || 0),
+	var closest = _.max(nearBy, n => mv.impact[mv.getSNVEffect(mv.impact, n.data.effect)] || 0),
 		//multiple records of the same location same sample
 		allClosest = _.filter(nearBy, n => (n.data.start === closest.data.start) &&
 			(n.data.end === closest.data.end) &&
