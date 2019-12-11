@@ -108,7 +108,8 @@ function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y,
 	};
 	chartOptions.plotOptions = {
 		series: {
-			animation: false
+			animation: false,
+			borderColor: '#303030'
 		},
 		errorbar: {
 			color: 'gray'
