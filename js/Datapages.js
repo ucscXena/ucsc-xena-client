@@ -428,6 +428,9 @@ var DatasetPage = wrapLaunchHelper(
 					datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 				cohort = getIn(datapages, ['dataset', host, dataset, 'meta', 'cohort'], COHORT_NULL);
 
+			if (getIn(this.props.state, ['spreadsheet', 'servers', host, 'user']) !== true) {
+				this.props.callback(['add-host', host]);
+			}
 			if (cohort !== get(currentCohort, 'name')) {
 				this.props.callback(['cohort', cohort]);
 			}
