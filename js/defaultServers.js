@@ -11,7 +11,8 @@ var servers = {
 	pancanAtlasHub: 'https://pancanatlas.xenahubs.net',
 	treehouseHub: 'https://xena.treehouse.gi.ucsc.edu:443',
 	gdcHub: "https://gdc.xenahubs.net",
-	atacSeqHub: "https://atacseq.xenahubs.net"
+	atacSeqHub: "https://atacseq.xenahubs.net",
+	kidsFirstHub: "https://kidsfirst.xenahubs.net"
 };
 
 module.exports = {
@@ -27,7 +28,8 @@ module.exports = {
 		[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
 		[servers.treehouseHub]: 'Treehouse Hub',
 		[servers.gdcHub]: 'GDC Hub',
-		[servers.atacSeqHub]: 'ATAC-seq Hub'
+		[servers.atacSeqHub]: 'ATAC-seq Hub',
+		[servers.kidsFirstHub]: 'Kids First Hub'
 	},
 	defaultServers: [
 		servers.localHub,
@@ -38,7 +40,8 @@ module.exports = {
 		servers.toilHub,
 		servers.treehouseHub,
 		servers.gdcHub,
-		servers.atacSeqHub
+		servers.atacSeqHub,
+		servers.kidsFirstHub
 	],
 	enabledServers: [
 		servers.localHub,
@@ -48,7 +51,8 @@ module.exports = {
 		servers.icgcHub,
 		servers.toilHub,
 		servers.gdcHub,
-		servers.atacSeqHub
+		servers.atacSeqHub,
+		servers.kidsFirstHub
 	],
 	publicServers: [
 		servers.publicHub,
@@ -61,6 +65,7 @@ module.exports = {
 		servers.gdcHub,
 		servers.atacSeqHub,
 		servers.singlecellHub,
+		servers.kidsFirstHub,
 		'https://tdi.xenahubs.net',
 		'https://luad.xenahubs.net'
 	]
