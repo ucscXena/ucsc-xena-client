@@ -568,7 +568,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			let optionValue = this.state.optionValue,
 				options = {
 					SV: [
-						{"key": "default", "label": "grey"},
+						{"key": "default", "label": "lavender"},
 						{"key": "chromosomeGB", "label": "by chromosome (Genome Browser)"},
 						{"key": "chromosomePCAWG", "label": "by chromosome (PCAWG)"},
 					]

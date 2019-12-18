@@ -45,7 +45,7 @@ var colors = {
 		["#c5b0d5", "Complex/Other/Unannotated"] // light lavender missing/no code
 	],
 	af: {r: 255, g: 0, b: 0},
-	darkGrey: "#9b9b9b", // for SV default
+	SVdefaultColor: "#c5b0d5", // light lavender
 	missing: "#c5b0d5" // light lavender for no impact annotation or annotation outside of impact code
 };
 
@@ -205,7 +205,7 @@ var impact = {
 		// have to explicitly call hexToRGB to avoid map passing in index.
 		colors: chromColorMap ?
 			_.values(chromColorMap).map(h => hexToRGB(h)).map(colorStr).reverse() :
-			[colors.darkGrey],
+			[colors.SVdefaultColor],
 		labels: chromColorMap ? _.keys(chromColorMap).map(key => "chr" + key).reverse() :
 			['structural variant'],
 		align: 'left'
@@ -455,8 +455,8 @@ function findSVNodes(byPosition, layout, colorMap, samples) {
 				xEnd,
 				y,
 				color: colorMap ?
-					colorMap[chromFromAlt(alt)] || colorMap[chr.replace(/chr/i, "")] || colors.darkGrey :
-					colors.darkGrey,
+					colorMap[chromFromAlt(alt)] || colorMap[chr.replace(/chr/i, "")] || colors.SVdefaultColor :
+					colors.SVdefaultColor,
 				subrow: i,
 				rowCount: count,
 				data: v.variant
