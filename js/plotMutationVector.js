@@ -1,4 +1,3 @@
-
 var _ = require('./underscore_ext');
 var Rx = require('./rx');
 import PureComponent from './PureComponent';
@@ -28,7 +27,7 @@ function hotOrNot(component) {
 	return module.makeHot ? module.makeHot(component) : component;
 }
 
-function drawLegend({column}) {
+function drawMutationLegend({column}) {
 	if (!column.legend) {
 		return null;
 	}
@@ -40,6 +39,24 @@ function drawLegend({column}) {
 			colors={colors}
 			labels={labels}
 			titles={titles}
+			addNullNotation={1}
+			labelheader={labelheader}/>
+	);
+}
+
+function drawSVLegend({column}) {
+	if (!column.legend) {
+		return null;
+	}
+	var {colors, labels, titles} = column.legend,
+		labelheader = "Variant Impact";
+
+	return (
+		<Legend
+			colors={colors}
+			labels={labels}
+			titles={titles}
+			addBreakend={1}
 			addNullNotation={1}
 			labelheader={labelheader}/>
 	);
@@ -300,5 +317,5 @@ widgets.column.add('mutation',
 widgets.column.add('SV',
 		props => <MutationColumn draw={drawSV} {...props} />);
 
-widgets.legend.add('mutation', drawLegend);
-widgets.legend.add('SV', drawLegend);
+widgets.legend.add('mutation', drawMutationLegend);
+widgets.legend.add('SV', drawSVLegend);

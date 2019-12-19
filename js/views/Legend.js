@@ -14,7 +14,7 @@ class Legend extends React.Component {
 	static defaultProps = { max: 40 };
 
 	render() {
-		var {labels, colors, titles, max, labelheader, footnotes, addNullNotation = 0} = this.props,
+		var {labels, colors, titles, max, labelheader, footnotes, addBreakend = 0, addNullNotation = 0} = this.props,
 			ellipsis = labels.length > max,
 			items = _.map(_.last(_.zip(labels, colors, titles), max), ([l, c, t], i) => {
 				return (
@@ -30,6 +30,12 @@ class Legend extends React.Component {
 									{text}
 								</div>) :
 								null,
+			breakend = (
+				<div className={compStyles.item}>
+					<div className={compStyles.breakendBar}/>
+					<label className={compStyles.label}>breakend</label>
+				</div>
+				),
 			nullNotation = (
 				<div title={nodata.text}>
 					<label className={compStyles.null} style={{backgroundColor: nodata.color}}>
@@ -42,6 +48,7 @@ class Legend extends React.Component {
 				{items ? <div className={compStyles.column}>
 							{labelheader ? <label className={compStyles.header}>{labelheader}</label> : null}
 							{items}
+							{addBreakend ? breakend : null}
 							{addNullNotation ? nullNotation : null}
 						</div> :
 					null}
