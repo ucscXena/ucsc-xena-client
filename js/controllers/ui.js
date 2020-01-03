@@ -15,6 +15,8 @@ import parseManifest from '../manifest';
 var gaEvents = require('../gaEvents');
 import * as columnsParam from '../columnsParam';
 import xenaQuery from '../xenaQuery';
+import {hfcFilter} from '../xenaWasm';
+import {hfc} from '../hfc';
 
 function fetchBookmark(serverBus, bookmark) {
 	gaEvents('bookmark', 'load');
@@ -142,10 +144,16 @@ var spreadsheetControls = {
 		}
 	},
 	sampleFilter: (state, sampleFilter) => _.assoc(state,
-			'cohort', _.assocIn(state.cohort, ['sampleFilter'], sampleFilter),
+			'cohort', _.assocIn(state.cohort, ['sampleFilter'], !!sampleFilter),
 			'survival', null),
-	'sampleFilter-post!': (serverBus, state, newState) =>
-		fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples),
+	'sampleFilter-post!': (serverBus, state, newState, sampleFilter) => {
+		if (sampleFilter) {
+			hfcFilter(sampleFilter);
+			serverBus.next(['samples', Rx.Observable.of({samples: hfc(), over: false, hasPrivateSamples: newState.hasPrivateSamples}, Rx.Scheduler.async)]);
+		} else {
+			fetchSamples(serverBus, userServers(newState), newState.cohort, newState.allowOverSamples);
+		}
+	},
 	'addColumnAddHover': (state, hovering) => _.assoc(state, 'addColumnAddHover', hovering),
 	'add-column': (state, posOrId, ...idSettingsList) => {
 		var {columnOrder, columns, sampleSearch, data} = state, // old settings

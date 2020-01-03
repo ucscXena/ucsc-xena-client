@@ -106,7 +106,7 @@ function drawLayoutByPixel(vg, opts) {
 		first = Math.floor(index),
 		last  = Math.ceil(index + count);
 
-	if (data.length === 0) { // no features to draw
+	if (data.length === 0 || data[0].length !== samples.length) { // no data
 		vg.box(0, 0, width, height, "gray");
 		return;
 	}
