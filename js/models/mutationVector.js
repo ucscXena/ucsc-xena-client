@@ -418,19 +418,26 @@ function findSNVNodes(byPosition, layout, colorMap, feature, samples) {
 
 
 	// _.uniq is something like O(n^2). Using ES6 Set, which should be more like O(n).
-	var matches = new Set(_.flatmap(layout.chrom,
-				([start, end]) => intervalTree.matches(byPosition, {start, end})));
+	var matches = _.groupBy([...new Set(_.flatmap(layout.chrom,
+				([start, end]) => intervalTree.matches(byPosition, {start, end})))],
+				v => v.variant.sample);
 
-	return sortfn([...matches].map(v => {
-		var [xStart, xEnd] = minSize(pxTransformInterval(layout, [v.start, v.end]));
-		return {
-			xStart,
-			xEnd,
-			y: sindex[v.variant.sample],
-			color: color(colorMap, get(v.variant)), // needed for sort, before drawing.
-			data: v.variant
-		};
-	}), v => v.color);
+	return _.flatmap(matches, vars => {
+		var count = vars.length;
+
+		return sortfn(vars.map((v, i) => {
+			var [xStart, xEnd] = minSize(pxTransformInterval(layout, [v.start, v.end]));
+			return {
+				xStart,
+				xEnd,
+				y: sindex[v.variant.sample],
+				color: color(colorMap, get(v.variant)), // needed for sort, before drawing.
+				subrow: i,
+				rowCount: count,
+				data: v.variant
+			};
+		}), v => v.color);
+	});
 }
 
 function findSVNodes(byPosition, layout, colorMap, samples) {

@@ -204,7 +204,7 @@ function sampleTooltip(sampleFormat, dataList, assembly, fields) {
 			effect = ['value', fmtIf(data.effect, x => `${x}, `, `unannotated`) + //eslint-disable-line comma-spacing
 						fmtIf(data.gene, x => `${x}`)  +
 						fmtIf(data.aminoAcid, x => ` (${x})`) +
-						fmtIf(data.altGene, x => ` connect to ${x} `)
+						fmtIf(data.altGene, x => `--${x} `)
 						];
 		return dropNulls([
 				[effect],
