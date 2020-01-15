@@ -144,7 +144,7 @@ function scaleTrendAmplitude(low, zero, high, origin, thresh, max) {
 		// power is [0, dataMax], representing avg. distance from zero point.
 		lookup: (trend, power) => {
 			if (power == null) {
-				return [128, 128, 128];
+				return rgb(zero);
 			}
 			var h = clip(h0, h1, h0 + trend * (h1 - h0));
 			var s = clip(0, 1, (power - thresh) / (max - origin - thresh));
