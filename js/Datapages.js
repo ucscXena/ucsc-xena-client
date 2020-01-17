@@ -552,6 +552,10 @@ var HubPage = wrapLaunchHelper(
 				inHubs = contains(userServers, host) ?
 					'' : ' (not in my data hubs)';
 
+			if (!contains(userServers, host)) {
+				this.props.callback(['add-host', host]);
+			}
+
 			return (
 				<div className={styles.datapages} onClick={this.clickVizButton}>
 					{children /* LaunchHelper */}

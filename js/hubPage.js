@@ -138,7 +138,10 @@ var Hub = class extends React.Component {
 								<span className={classNames(styles.status, getStyle(h.statusStr))}>{h.statusStr}</span>
 							</div>
 							<div className={styles.hubNameContainer}>
-								<a href={`../datapages/?${encodeObject({host: h.host, ...hubParams})}`}>
+								<a href={`../datapages/?${encodeObject({
+									host: h.host,
+									addHub: hubParams.addHub,
+									removeHub: hubParams.removeHub.filter( hub => hub !== h.host)})}`}>
 									{h.name}
 								</a>
 								{h.host === localHub ? badge : h.reqStatus}
