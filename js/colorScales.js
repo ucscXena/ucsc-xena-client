@@ -116,9 +116,8 @@ var scaleFloatLog = (low, high, min, max) =>
 
 //var ordinal = (count, custom) => d3.scaleOrdinal().range(custom || categoryMore).domain(_.range(count));
 // d3 ordinal scales will de-dup the domain using an incredibly slow algorithm.
-var ordinal = (count, scale) => {
-	scale = scale || categoryMore; // handle null
-	return v => scale[v % scale.length];
+var ordinal = (count, custom) => {
+	return v => custom && custom[v] ? custom[v] : categoryMore[v % categoryMore.length];
 };
 
 function scaleFloatDouble(low, zero, high, min, max) {

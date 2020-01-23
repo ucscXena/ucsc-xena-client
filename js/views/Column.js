@@ -658,16 +658,15 @@ class Column extends PureComponent {
 
 	onTumorMap = (tumorMap) => {
 		// TumorMap/Xena API https://tumormap.ucsc.edu/query/addAttributeXena.html
-		var data = _.getIn(this.props, ['data']),
-			valueType = _.getIn(this.props, ['column', 'valueType']),
+		var {data, column} = this.props,
+			{valueType} = column,
 			url = "https://tumormap.ucsc.edu/?xena=addAttr&p=" + tumorMap.map + "&layout=" + tumorMap.layout;
 
 		var ds = JSON.parse(this.props.column.dsID),
 			hub = ds.host,
 			dataset = ds.name,
 			feature = this.props.column.fields[0], // gene or probe
-			customColor = _.getIn(this.props, ['column', 'dataset', 'customcolor', feature]); // object, key value pair
-
+			customColors = _.getIn(column, ['colors', 0, 2]);
 
 		url = url + "&hub=" + hub + "/data/";
 		url = url + "&dataset=" + dataset;
@@ -676,10 +675,9 @@ class Column extends PureComponent {
 		if (valueType === "coded") {
 			var codes = _.getIn(data, ['codes']),
 				cat, colorhex;
-
 			_.map(codes, (code, i) => {
 				cat = code;
-				colorhex = _.isEmpty(customColor) ? categoryMore[i % categoryMore.length] : customColor[code];
+				colorhex = customColors ? customColors[i] : categoryMore[i % categoryMore.length];
 				colorhex = colorhex.slice(1, colorhex.length);
 				url = url + "&cat=" + encodeURIComponent(cat);
 				url = url + "&color=" + colorhex;
