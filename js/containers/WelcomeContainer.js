@@ -21,7 +21,7 @@ var links = [
 		'MGMT promoter DNA methylation is inversely correlated with MGMT expression'],
 	['heatmap', '0f9954a525987445ba7faef1e2081027',
 		'Copy number for EGFR, PTEN, chromosome 1, 7, 10, 19 in TCGA brain tumors'],
-	['transcripts', '25a9782db8c1166ce7bae6686e98124c',
+	['transcripts', '75fd7d99bbc1bb04aae9b4e5e34b077f',
 		'KRAS isoform expression in TCGA pancreatic cancer vs. GTEx pancreas normal'],
 	['heatmap', 'dfc37064d62ea0c0302881c05277b7b3',
 		'Mutation pile-ups in intron enhancers in ICGC lymphoma']];
