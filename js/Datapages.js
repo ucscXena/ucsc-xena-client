@@ -1,4 +1,3 @@
-
 require('./base');
 const React = require('react');
 var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
@@ -105,8 +104,8 @@ var cohortLink = (cohort, onClick, hubParams) => (
 
 var collateCohorts = hubCohorts =>
 	flatten(values(hubCohorts)).reduce(
-		(acc, cohort) => updateIn(acc, [cohort.cohort],
-			(v = 0) => cohort.count + v),
+		(acc, cohort) => cohort.cohort ?
+			updateIn(acc, [cohort.cohort], (v = 0) => cohort.count + v) : acc,
 		{});
 
 var CohortSummary = ({cohorts, onCohort, hubParams, action}) => {
