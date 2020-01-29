@@ -1,4 +1,4 @@
-var {getIn, Let, merge, mapObject, pick, pluck, uniq, updateIn} = require('./underscore_ext');
+var {get, getIn, Let, merge, mapObject, pick, pluck, uniq, updateIn} = require('./underscore_ext');
 var {hasBookmark, resetBookmarkLocation, getBookmark} = require('./bookmark');
 var {hasInlineState, resetInlineStateLocation} = require('./inlineState');
 var {hubParams: getHubParams} = require('./hubParams');
@@ -34,6 +34,11 @@ function hubParams() {
 
 var hubParams2 = pick(allParameters(), 'addHub', 'removeHub');
 
+function fixLocalhost(obj) {
+	return get(obj, 'host') ?
+		updateIn(obj, ['host'], host => host === 'https://local.xena.ucsc.edu:7223' ? 'http://127.0.0.1:7222' : host) : obj;
+}
+
 function datasetParams() {
 	// only take the first of these
 	return mapObject(pick(allParameters(), 'cohort', 'dataset', 'host', 'allIdentifiers', 'markdown'), l => l[0]);
@@ -51,7 +56,7 @@ function getParams() {
 		heatmap = hasCols ? heatmapParam() : {},
 		hub2 = hasCols ? updateIn(hubParams2, ['addHub'], (hubs = []) => uniq(hubs.concat(pluck(columns.columns, 'host')))) :
 			hubParams2;
-	return merge(hub2, bookmarkParam(), inlineStateParam(), hubParams(), datasetParams(), manifest(), columns,
+	return merge(hub2, bookmarkParam(), inlineStateParam(), hubParams(), fixLocalhost(datasetParams()), manifest(), columns,
 		heatmap);
 }
 
