@@ -2,7 +2,8 @@
 
 import PureComponent from './PureComponent';
 var React = require('react');
-var pdf = require('./pdfSpreadsheet');
+import pdfSpreadsheet from './pdfSpreadsheet';
+import pdfChart from './pdfChart';
 var _ = require('./underscore_ext');
 import AppBar from 'react-toolbox/lib/app_bar';
 var konami = require('./konami');
@@ -15,6 +16,11 @@ import uuid from './uuid';
 
 // Styles
 var compStyles = require('./AppControls.module.css');
+
+var modePdf = {
+	chart: pdfChart,
+	heatmap: pdfSpreadsheet
+};
 
 var modeIcon = {
 	chart: 'view_column',
@@ -48,7 +54,7 @@ var asciiB = 66;
 var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}) => (
 	<div className={compStyles.actions}>
 		{hasColumn ? <i className='material-icons' onClick={onMode} title={modeHelp[mode]}>{modeIcon[mode]}</i> : null}
-		{(hasColumn && mode === 'heatmap') ? <i className='material-icons' onClick={onPdf} title='Download as PDF'>picture_as_pdf</i> : null}
+		{hasColumn ? <i className='material-icons' onClick={onPdf} title='Download as PDF'>picture_as_pdf</i> : null}
 		{hasColumn ? <i className='material-icons' onClick={onDownload} title='Download as tsv'>cloud_download</i> : null}
 		{showWelcome ? null : <i className='material-icons' onClick={onShowWelcome}>help</i>}
 	</div>);
@@ -142,8 +148,10 @@ class AppControls extends PureComponent {
 	};
 
 	onPdf = () => {
-		gaEvents('spreadsheet', 'pdf', 'spreadsheet');
-		pdf(this.props.appState);
+		var {appState: {mode}} = this.props;
+
+		gaEvents('spreadsheet', 'pdf', mode === 'heatmap' ? 'spreadsheet' : 'chart');
+		modePdf[mode](this.props.appState);
 	};
 
 	onCohortSelect = (value) => {

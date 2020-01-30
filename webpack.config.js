@@ -38,7 +38,9 @@ module.exports = {
 		loaders: [
 			{ test: /loadXenaQueries.js$/, loader: "val" },
 			{ test: /\.xq$/, loader: "raw" },
-			{ test: /pdfkit|png-js/, loader: "transform?brfs" },
+			{ test: /pdfkit|png-js|fontkit[/\\]index.js$|unicode-properties[/\\]index.js$|linebreak[/\\]src[/\\]linebreaker.js/, loader: "transform?brfs" },
+			{ test: /src[/\\]assets/, loader: "arraybuffer" },
+			{ test: /\.afm$/, loader: "raw" },
 			{
 				test: /\.js$/,
 				include: [
@@ -84,7 +86,8 @@ module.exports = {
 		fallback: path.join(__dirname, "node_modules"), // handle 'npm ln'
 		alias: {
 			'redboxOptions': path.join(__dirname, 'redboxOptions.json'),
-			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim')
+			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim'),
+			'fs': 'pdfkit/js/virtual-fs.js'
 		},
 		extensions: ['', '.js', '.json', '.coffee']
 	},

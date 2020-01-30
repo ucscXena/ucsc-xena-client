@@ -52,4 +52,4 @@ var download = state => {
 	});
 };
 
-module.exports = download;
+export default download;
