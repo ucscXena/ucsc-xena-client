@@ -38,9 +38,19 @@ module.exports = {
 		loaders: [
 			{ test: /loadXenaQueries.js$/, loader: "val" },
 			{ test: /\.xq$/, loader: "raw" },
-			{ test: /pdfkit|png-js|fontkit[/\\]index.js$|unicode-properties[/\\]index.js$|linebreak[/\\]src[/\\]linebreaker.js/, loader: "transform?brfs" },
+			//// bunch of special loading required for pdfkit
+			{ test: /png-js|fontkit[/\\]index.js$|unicode-properties[/\\]index.js$/, loader: "transform?brfs!babel" },
+			{ test: /pdfkit.js/, loader: "transform?brfs!babel" },
+			{ test: /dfa[/\\]index.js/, loader: "babel" },
+			{ test: /svg-to-pdfkit[/\\]source.js/, loader: "babel" },
+			{ test: /unicode-trie[/\\]index.js/, loader: "babel" },
+			{ test: /unicode-trie[/\\]swap.js/, loader: "babel" },
+			{ test: /linebreak[/\\]src[/\\]pairs.js/, loader: "babel" },
+			{ test: /linebreak[/\\]src[/\\]linebreaker.js/, loader: "transform?brfs!babel" },
+			{ test: /unicode-properties[/\\]unicode-properties.browser.cjs.js/, loader: "babel" },
 			{ test: /src[/\\]assets/, loader: "arraybuffer" },
 			{ test: /\.afm$/, loader: "raw" },
+			////
 			{
 				test: /\.js$/,
 				include: [
