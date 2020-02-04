@@ -185,7 +185,8 @@ var applyInitialState = {
 			_.assocIn(defaults,
 				['mode'], mode,
 				['basicFeatures'], defaults.basicFeatures,
-				['selected', mode, false], selected);
+				['selected', mode, false], selected,
+				['selected', mode, true], selected);
 	},
 	'undefined': (text, fields, dataset, datasets, features, preferred, defaults) =>
 		_.assocIn(defaults, ['unavailable'], true)
