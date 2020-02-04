@@ -69,6 +69,7 @@ module.exports = {
 		servers.singlecellHub,
 		servers.kidsFirstHub,
 		'https://tdi.xenahubs.net',
-		'https://luad.xenahubs.net'
+		'https://luad.xenahubs.net',
+		'https://preview.xenahubs.net'
 	]
 };
