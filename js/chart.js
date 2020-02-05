@@ -1253,7 +1253,7 @@ function render(root, callback, sessionStorage) {
 					if (scatterColorData) {
 						if (useCodedSeries) {
 							colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
-							color = _.getIn(customColors, colorCode) || getCodedColor(colorCode);
+							color = customColors ? customColors[colorCode] : getCodedColor(colorCode);
 							showInLegend = true;
 						} else {
 							color = colorScale(colorCode);
