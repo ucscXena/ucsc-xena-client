@@ -541,7 +541,14 @@ class Column extends PureComponent {
 		this.props.onChart(this.props.id);
 	};
 
-	onSortDirection = () => {
+  showGeneSetComparison = () => {
+    // generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort)
+    const GENE_SET_URL = 'http://xenademo.berkeleybop.io/xena';
+    window.open(GENE_SET_URL, '_blank');
+  };
+
+
+  onSortDirection = () => {
 		var newDir = _.get(this.props.column, 'sortDirection', 'forward') === 'forward' ?
 			'reverse' : 'forward';
 		this.props.onSortDirection(this.props.id, newDir);
@@ -787,6 +794,7 @@ class Column extends PureComponent {
 													caption='Kaplan Meier Plot'/>
 												<MenuItem onClick={this.onChart} disabled={chartDisabled}
 													caption='Chart & Statistics'/>
+                        <MenuItem onClick={this.showGeneSetComparison} caption='Gene Set Comparison'/>
 												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
 												<MenuItem onClick={this.onDownload} caption='Download'/>
 												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
