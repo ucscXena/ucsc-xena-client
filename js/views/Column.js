@@ -542,8 +542,16 @@ class Column extends PureComponent {
 	};
 
   showGeneSetComparison = () => {
-    // generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort)
-    const GENE_SET_URL = 'http://xenademo.berkeleybop.io/xena';
+    // generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
+    http://xenademo.berkeleybop.io/xena/#cohort1=TCGA%20Ovarian%20Cancer%20(OV)&cohort2=TCGA%20Prostate%20Cancer%20(PRAD)&filter=BPA%20Gene%20Expression&geneset=ATP5G2_tf_targets&selectedSubCohorts1=OVCA.Differentiated,OVCA.Immunoreactive,OVCA.Mesenchymal,OVCA.Proliferative,UNASSIGNED&selectedSubCohorts2=PRAD.1-ERG,PRAD.2-ETV1,PRAD.3-ETV4,PRAD.4-FLI1,PRAD.5-SPOP,PRAD.6-FOXA1,PRAD.7-IDH1,PRAD.8-other,UNASSIGNED
+    console.log('cohort', this.props.cohort);
+    console.log('all props', this.props);
+    const cohortName = this.props.cohort.name ;
+
+    const filter = 'BPA Gene Expression';
+    const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
+    // const ROOT_URL = 'http://localhost:2992/xena';
+    let GENE_SET_URL = `${ROOT_URL}cohort1=${cohortName}&cohort2=${cohortName}&filter=${filter}`;
     window.open(GENE_SET_URL, '_blank');
   };
 
