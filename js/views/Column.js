@@ -573,35 +573,47 @@ class Column extends PureComponent {
     // http://xenademo.berkeleybop.io/xena/#cohort1=TCGA%20Stomach%20Cancer%20(STAD)&cohort2=TCGA%20Stomach%20Cancer%20(STAD)&filter=BPA%20Gene%20Expression&geneset=IFI6_tf_targets&selectedSubCohorts1=From_Xena_Cohort1&selectedSubCohorts2=From_Xena_Cohort2&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort1:TCGA-BR-8384-01,TCGA-BR-4371-01&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01&cohort1Color=green&cohort2Color=pink
     console.log('cohort', this.props.cohort);
     console.log('all props', this.props);
-    const {column: {heatmap}, cohort, samples} = this.props;
-    const cohortName = cohort.name;
+    const {column: {heatmap, codes, fieldType}, cohort: {name, sampleFilter}, samples} = this.props;
     const heatmapData = heatmap[0];
     const subCohortLabels = _.uniq(heatmapData);
     if (subCohortLabels.length !== 2) {
       alert('run number of labels');
       return;
     }
-    const subCohortData = [];
-    subCohortData.push([]);
-    subCohortData.push([]);
+
+    let subCohortNames ;
+    // if(fieldType === 'probes') {
+      subCohortNames = [subCohortLabels[0], subCohortLabels[1]];
+    // }
+    // else{
+    //   subCohortNames = [
+    //     codes[subCohortLabels[0]],
+    //     codes[subCohortLabels[1]],
+    //   ];
+    // }
+
+    let subCohortData = [[], []];
     for (const d in heatmapData) {
-      subCohortData[subCohortLabels.indexOf(heatmapData[d])].push(samples[d]);
+      subCohortData[subCohortLabels.indexOf(heatmapData[d])].push(sampleFilter[samples[d]]);
     }
-    console.log('sub cohort labels', subCohortLabels);
-    console.log('sub cohort data', subCohortData);
+    console.log('sub cohort names', subCohortNames);
+    console.log('codes', codes);
+    console.log('subCohortData', subCohortData);
+    console.log('subCohortLabels', subCohortLabels);
 
     // subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01
     // selectedSubCohorts1=From_Xena_Cohort1
     // cohort1Color=green
     // cohort2Color=green
-    const subCohortA = `subCohortSamples=${cohortName}:${subCohortLabels[0]}:${subCohortData[0]}&selectedSubCohorts1=${subCohortLabels[0]}`;
-    const subCohortB = `subCohortSamples=${cohortName}:${subCohortLabels[1]}:${subCohortData[1]}&selectedSubCohorts2=${subCohortLabels[1]}`;
+    const subCohortA = `subCohortSamples=${name}:${subCohortNames[0]}:${subCohortData[0]}&selectedSubCohorts1=${subCohortNames[0]}`;
+    const subCohortB = `subCohortSamples=${name}:${subCohortNames[1]}:${subCohortData[1]}&selectedSubCohorts2=${subCohortNames[1]}`;
 
 
-    const filter = 'BPA Gene Expression';
-    const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
-    // const ROOT_URL = 'http://localhost:2992/xena';
-    let GENE_SET_URL = `${ROOT_URL}cohort1=${cohortName}&cohort2=${cohortName}&filter=${filter}&${subCohortA}&${subCohortB}`;
+    let filter = 'BPA Gene Expression';
+    if(fieldType === 'probes') {filter = 'Copy Number';}
+    // const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
+    const ROOT_URL = 'http://localhost:3000/xena/#';
+    let GENE_SET_URL = `${ROOT_URL}cohort1=${name}&cohort2=${name}&filter=${filter}&${subCohortA}&${subCohortB}`;
     window.open(GENE_SET_URL, '_blank');
   };
 
