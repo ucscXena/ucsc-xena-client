@@ -4,6 +4,7 @@ import Tooltip from 'react-toolbox/lib/tooltip';
 import RefGeneAnnotation from '../refGeneExons';
 import {GeneLabelAnnotation, geneLableFont, maxLane} from '../geneLabelAnnotation';
 import {matches} from 'static-interval-tree';
+import DETAIL_DATASET_FOR_GENESET from '../stats/defaultDatasetForGeneset';
 
 var React = require('react');
 var _ = require('../underscore_ext');
@@ -553,24 +554,12 @@ class Column extends PureComponent {
     this.props.onChart(this.props.id);
   };
 
-  isBinary = () => {
-    console.log('is binary', this.props);
-    let {column: {heatmap, legend, fieldType}} = this.props;
-    if(fieldType === 'probes') {
-      if (!heatmap || heatmap.length !== 1) {
-        return false;
-      }
-      const heatmapData = heatmap[0];
-      const uniqueData = _.uniq(heatmapData);
-      return uniqueData.length === 2;
-    }
-    else
-    if(fieldType === 'mutation') {
-      return legend.labels.length === 2;
-    }
-    else{
-      return false ;
-    }
+
+  canDoGeneSetComparison = () => {
+    let {column: {fieldType}, data: {codes}, cohort: {name}} = this.props;
+    if(fieldType !== 'clinical') {return false ;}
+    if(!codes || codes.length !== 2 ) {return false ;}
+    return DETAIL_DATASET_FOR_GENESET[name] !== undefined;
   };
 
   /**
@@ -583,20 +572,20 @@ class Column extends PureComponent {
     // http://xenademo.berkeleybop.io/xena/#cohort1=TCGA%20Stomach%20Cancer%20(STAD)&cohort2=TCGA%20Stomach%20Cancer%20(STAD)&filter=BPA%20Gene%20Expression&geneset=IFI6_tf_targets&selectedSubCohorts1=From_Xena_Cohort1&selectedSubCohorts2=From_Xena_Cohort2&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort1:TCGA-BR-8384-01,TCGA-BR-4371-01&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01&cohort1Color=green&cohort2Color=pink
     console.log('cohort', this.props.cohort);
     console.log('all props', this.props);
-    const {column: {heatmap, codes, fieldType, legend}, cohort: {name, sampleFilter}, samples, index: {bySample}} = this.props;
+    const {column: {heatmap, codes, fieldType}, cohort: {name, sampleFilter}, samples } = this.props;
 
 
     let subCohortLabels ;
     let subCohortData = [[], []];
 
-    if(fieldType === 'mutation') {
-      subCohortLabels = legend.labels;
-      for(const d in bySample) {
-        subCohortLabels.indexOf(bySample[d][0].effect);
-      }
-    }
-    else
-    if(fieldType === 'probes') {
+    // if(fieldType === 'mutation') {
+    //   subCohortLabels = legend.labels;
+    //   for(const d in bySample) {
+    //     subCohortLabels.indexOf(bySample[d][0].effect);
+    //   }
+    // }
+    // else
+    // if(fieldType === 'probes') {
       const heatmapData = heatmap[0];
       subCohortLabels = _.uniq(heatmapData);
       if (subCohortLabels.length !== 2) {
@@ -606,7 +595,7 @@ class Column extends PureComponent {
       for (const d in heatmapData) {
         subCohortData[subCohortLabels.indexOf(heatmapData[d])].push(sampleFilter[samples[d]]);
       }
-    }
+    // }
 
     let subCohortNames ;
     // if(fieldType === 'probes') {
@@ -823,7 +812,7 @@ class Column extends PureComponent {
       geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
       [kmDisabled, kmTitle] = disableKM(column, hasSurvival),
       chartDisabled = disableChart(column),
-      isBinary = this.isBinary(),
+      canDoGeneSetComparison = this.canDoGeneSetComparison(),
       status = _.get(data, 'status'),
       refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
       // move this to state to generalize to other annotations.
@@ -893,8 +882,10 @@ class Column extends PureComponent {
                                      caption='Kaplan Meier Plot'/>
                            <MenuItem onClick={this.onChart} disabled={chartDisabled}
                                      caption='Chart & Statistics'/>
-                           <MenuItem disabled={!isBinary} onClick={this.showGeneSetComparison}
+                           {canDoGeneSetComparison &&
+                           <MenuItem onClick={this.showGeneSetComparison}
                                      caption='Gene Set Comparison'/>
+                           }
                            <MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
                            <MenuItem onClick={this.onDownload} caption='Download'/>
                            {aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
