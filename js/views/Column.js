@@ -554,13 +554,23 @@ class Column extends PureComponent {
   };
 
   isBinary = () => {
-    let {column: {heatmap}} = this.props;
-    if (!heatmap || heatmap.length !== 1) {
-      return false;
+    console.log('is binary', this.props);
+    let {column: {heatmap, legend, fieldType}} = this.props;
+    if(fieldType === 'probes') {
+      if (!heatmap || heatmap.length !== 1) {
+        return false;
+      }
+      const heatmapData = heatmap[0];
+      const uniqueData = _.uniq(heatmapData);
+      return uniqueData.length === 2;
     }
-    const heatmapData = heatmap[0];
-    const uniqueData = _.uniq(heatmapData);
-    return uniqueData.length === 2;
+    else
+    if(fieldType === 'mutation') {
+      return legend.labels.length === 2;
+    }
+    else{
+      return false ;
+    }
   };
 
   /**
@@ -573,12 +583,29 @@ class Column extends PureComponent {
     // http://xenademo.berkeleybop.io/xena/#cohort1=TCGA%20Stomach%20Cancer%20(STAD)&cohort2=TCGA%20Stomach%20Cancer%20(STAD)&filter=BPA%20Gene%20Expression&geneset=IFI6_tf_targets&selectedSubCohorts1=From_Xena_Cohort1&selectedSubCohorts2=From_Xena_Cohort2&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort1:TCGA-BR-8384-01,TCGA-BR-4371-01&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01&cohort1Color=green&cohort2Color=pink
     console.log('cohort', this.props.cohort);
     console.log('all props', this.props);
-    const {column: {heatmap, codes, fieldType}, cohort: {name, sampleFilter}, samples} = this.props;
-    const heatmapData = heatmap[0];
-    const subCohortLabels = _.uniq(heatmapData);
-    if (subCohortLabels.length !== 2) {
-      alert('run number of labels');
-      return;
+    const {column: {heatmap, codes, fieldType, legend}, cohort: {name, sampleFilter}, samples, index: {bySample}} = this.props;
+
+
+    let subCohortLabels ;
+    let subCohortData = [[], []];
+
+    if(fieldType === 'mutation') {
+      subCohortLabels = legend.labels;
+      for(const d in bySample) {
+        subCohortLabels.indexOf(bySample[d][0].effect);
+      }
+    }
+    else
+    if(fieldType === 'probes') {
+      const heatmapData = heatmap[0];
+      subCohortLabels = _.uniq(heatmapData);
+      if (subCohortLabels.length !== 2) {
+        alert('run number of labels');
+        return;
+      }
+      for (const d in heatmapData) {
+        subCohortData[subCohortLabels.indexOf(heatmapData[d])].push(sampleFilter[samples[d]]);
+      }
     }
 
     let subCohortNames ;
@@ -592,10 +619,6 @@ class Column extends PureComponent {
     //   ];
     // }
 
-    let subCohortData = [[], []];
-    for (const d in heatmapData) {
-      subCohortData[subCohortLabels.indexOf(heatmapData[d])].push(sampleFilter[samples[d]]);
-    }
     console.log('sub cohort names', subCohortNames);
     console.log('codes', codes);
     console.log('subCohortData', subCohortData);
@@ -611,6 +634,7 @@ class Column extends PureComponent {
 
     let filter = 'BPA Gene Expression';
     if(fieldType === 'probes') {filter = 'Copy Number';}
+    if(fieldType === 'mutation') {filter = 'Mutation';}
     // const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
     const ROOT_URL = 'http://localhost:3000/xena/#';
     let GENE_SET_URL = `${ROOT_URL}cohort1=${name}&cohort2=${name}&filter=${filter}&${subCohortA}&${subCohortB}`;
