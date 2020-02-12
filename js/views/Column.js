@@ -556,8 +556,9 @@ class Column extends PureComponent {
 
 
   canDoGeneSetComparison = () => {
-    let {column: {fieldType}, data: {codes}, cohort: {name}} = this.props;
+    let {column: {fieldType, valueType}, data: {codes}, cohort: {name}} = this.props;
     if(fieldType !== 'clinical') {return false ;}
+    if(valueType !== 'coded') {return false ;}
     if(!codes || codes.length !== 2 ) {return false ;}
     return DETAIL_DATASET_FOR_GENESET[name] !== undefined;
   };
@@ -572,53 +573,34 @@ class Column extends PureComponent {
     // http://xenademo.berkeleybop.io/xena/#cohort1=TCGA%20Stomach%20Cancer%20(STAD)&cohort2=TCGA%20Stomach%20Cancer%20(STAD)&filter=BPA%20Gene%20Expression&geneset=IFI6_tf_targets&selectedSubCohorts1=From_Xena_Cohort1&selectedSubCohorts2=From_Xena_Cohort2&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort1:TCGA-BR-8384-01,TCGA-BR-4371-01&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01&cohort1Color=green&cohort2Color=pink
     console.log('cohort', this.props.cohort);
     console.log('all props', this.props);
-    const {column: {heatmap, codes, fieldType}, cohort: {name, sampleFilter}, samples } = this.props;
+    const {column: {heatmap, codes, fieldType}, cohort: {name} } = this.props;
 
 
-    let subCohortLabels ;
-    let subCohortData = [[], []];
 
-    // if(fieldType === 'mutation') {
-    //   subCohortLabels = legend.labels;
-    //   for(const d in bySample) {
-    //     subCohortLabels.indexOf(bySample[d][0].effect);
-    //   }
-    // }
-    // else
-    // if(fieldType === 'probes') {
       const heatmapData = heatmap[0];
-      subCohortLabels = _.uniq(heatmapData);
-      if (subCohortLabels.length !== 2) {
-        alert('run number of labels');
+      if (codes.length !== 2) {
+        alert('Not binary data');
         return;
       }
+
+    let subCohortData = [[], []];
       for (const d in heatmapData) {
-        subCohortData[subCohortLabels.indexOf(heatmapData[d])].push(sampleFilter[samples[d]]);
+        console.log(d, heatmapData[d]);
+        // get sample
+        const sampleId = `TCGA-ABC-${d}`;
+        subCohortData[heatmapData[d]].push(sampleId);
       }
-    // }
 
-    let subCohortNames ;
-    // if(fieldType === 'probes') {
-      subCohortNames = [subCohortLabels[0], subCohortLabels[1]];
-    // }
-    // else{
-    //   subCohortNames = [
-    //     codes[subCohortLabels[0]],
-    //     codes[subCohortLabels[1]],
-    //   ];
-    // }
-
-    console.log('sub cohort names', subCohortNames);
     console.log('codes', codes);
     console.log('subCohortData', subCohortData);
-    console.log('subCohortLabels', subCohortLabels);
+    console.log('subCohortLabels', codes);
 
     // subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01
     // selectedSubCohorts1=From_Xena_Cohort1
     // cohort1Color=green
     // cohort2Color=green
-    const subCohortA = `subCohortSamples=${name}:${subCohortNames[0]}:${subCohortData[0]}&selectedSubCohorts1=${subCohortNames[0]}`;
-    const subCohortB = `subCohortSamples=${name}:${subCohortNames[1]}:${subCohortData[1]}&selectedSubCohorts2=${subCohortNames[1]}`;
+    const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}`;
+    const subCohortB = `subCohortSamples=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}`;
 
 
     let filter = 'BPA Gene Expression';
