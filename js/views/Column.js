@@ -29,6 +29,8 @@ var crosshair = require('./cursor.png');
 var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
 var config = require('../config');
+import DETAIL_DATASET_FOR_GENESET from '../stats/defaultDatasetForGeneset';
+
 
 var ESCAPE = 27;
 
@@ -541,6 +543,46 @@ class Column extends PureComponent {
 		this.props.onChart(this.props.id);
 	};
 
+  canDoGeneSetComparison = () => {
+    let {column: {fieldType, valueType}, data: {codes}, cohort: {name}} = this.props;
+    if(fieldType !== 'clinical') {return false ;}
+    if(valueType !== 'coded') {return false ;}
+    if(!codes || codes.length !== 2 ) {return false ;}
+    return DETAIL_DATASET_FOR_GENESET[name] !== undefined;
+  };
+
+  /**
+   * We build out the URL.
+   * generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
+   */
+  showGeneSetComparison = () => {
+    const {column: {heatmap, codes}, cohort: {name} } = this.props;
+
+    const heatmapData = heatmap[0];
+    if (!heatmapData || codes.length !== 2) {
+      alert('Not binary data');
+      return;
+    }
+    const sampleData = _.map(this.props.samples, this.props.sampleFormat);
+    let subCohortData = [[], []];
+    for (const d in heatmapData) {
+      subCohortData[heatmapData[d]].push(sampleData[d]);
+    }
+
+    // subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01
+    // selectedSubCohorts1=From_Xena_Cohort1
+    // cohort1Color=green
+    // cohort2Color=green
+    const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}`;
+    const subCohortB = `subCohortSamples=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}`;
+
+    const filter = 'BPA Gene Expression';
+    // const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
+    const ROOT_URL = 'http://localhost:3000/xena/#';
+    let GENE_SET_URL = `${ROOT_URL}cohort1=${name}&cohort2=${name}&filter=${filter}&${subCohortA}&${subCohortB}`;
+    window.open(GENE_SET_URL, '_blank');
+  };
+
 	onSortDirection = () => {
 		var newDir = _.get(this.props.column, 'sortDirection', 'forward') === 'forward' ?
 			'reverse' : 'forward';
@@ -718,7 +760,8 @@ class Column extends PureComponent {
 			geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			chartDisabled = disableChart(column),
-			status = _.get(data, 'status'),
+      canDoGeneSetComparison = this.canDoGeneSetComparison(),
+      status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
 			annotation = showPosition(column) ?
@@ -787,6 +830,10 @@ class Column extends PureComponent {
 													caption='Kaplan Meier Plot'/>
 												<MenuItem onClick={this.onChart} disabled={chartDisabled}
 													caption='Chart & Statistics'/>
+                        {canDoGeneSetComparison &&
+                        <MenuItem onClick={this.showGeneSetComparison}
+                                  caption='Gene Set Comparison'/>
+                        }
 												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
 												<MenuItem onClick={this.onDownload} caption='Download'/>
 												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
