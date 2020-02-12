@@ -557,6 +557,10 @@ class Column extends PureComponent {
    */
   showGeneSetComparison = () => {
     const {column: {heatmap, codes}, cohort: {name} } = this.props;
+    // console.log('input propss',this.props);
+    // var colorCodeMap = (codes, colors) =>
+    //   colors ? _.map(codes, (c, i) => colors[c] || categoryMore[i % categoryMore.length]) : null;
+    // console.log('color coded map',colorCodeMap(codes),categoryMore)
 
     const heatmapData = heatmap[0];
     if (!heatmapData || codes.length !== 2) {
@@ -571,10 +575,8 @@ class Column extends PureComponent {
 
     // subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01
     // selectedSubCohorts1=From_Xena_Cohort1
-    // cohort1Color=green
-    // cohort2Color=green
-    const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}`;
-    const subCohortB = `subCohortSamples=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}`;
+    const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}&cohort1Color=${categoryMore[0]}`;
+    const subCohortB = `subCohortSamples=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}&cohort2Color=${categoryMore[1]}`;
 
     const filter = 'BPA Gene Expression';
     // const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
