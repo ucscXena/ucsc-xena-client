@@ -565,33 +565,21 @@ class Column extends PureComponent {
 
   /**
    * We build out the URL.
-   * We assume that heatmap only has two types of data
+   * generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
    */
   showGeneSetComparison = () => {
-    // generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
-    // http://xenademo.berkeleybop.io/xena/#cohort1=TCGA%20Ovarian%20Cancer%20(OV)&cohort2=TCGA%20Prostate%20Cancer%20(PRAD)&filter=BPA%20Gene%20Expression&geneset=ATP5G2_tf_targets&selectedSubCohorts1=OVCA.Differentiated,OVCA.Immunoreactive,OVCA.Mesenchymal,OVCA.Proliferative,UNASSIGNED&selectedSubCohorts2=PRAD.1-ERG,PRAD.2-ETV1,PRAD.3-ETV4,PRAD.4-FLI1,PRAD.5-SPOP,PRAD.6-FOXA1,PRAD.7-IDH1,PRAD.8-other,UNASSIGNED
-    // http://xenademo.berkeleybop.io/xena/#cohort1=TCGA%20Stomach%20Cancer%20(STAD)&cohort2=TCGA%20Stomach%20Cancer%20(STAD)&filter=BPA%20Gene%20Expression&geneset=IFI6_tf_targets&selectedSubCohorts1=From_Xena_Cohort1&selectedSubCohorts2=From_Xena_Cohort2&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort1:TCGA-BR-8384-01,TCGA-BR-4371-01&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01&cohort1Color=green&cohort2Color=pink
-    console.log('cohort', this.props.cohort);
-    console.log('all props', this.props);
     const {column: {heatmap, codes}, cohort: {name} } = this.props;
 
     const heatmapData = heatmap[0];
-    if (codes.length !== 2) {
+    if (!heatmapData || codes.length !== 2) {
       alert('Not binary data');
       return;
     }
-
+    const sampleData = _.map(this.props.samples, this.props.sampleFormat);
     let subCohortData = [[], []];
       for (const d in heatmapData) {
-        console.log(d, heatmapData[d]);
-        // get sample
-        const sampleId = `TCGA-ABC-${d}`;
-        subCohortData[heatmapData[d]].push(sampleId);
+        subCohortData[heatmapData[d]].push(sampleData[d]);
       }
-
-    console.log('codes', codes);
-    console.log('subCohortData', subCohortData);
-    console.log('subCohortLabels', codes);
 
     // subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01
     // selectedSubCohorts1=From_Xena_Cohort1
@@ -599,7 +587,6 @@ class Column extends PureComponent {
     // cohort2Color=green
     const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}`;
     const subCohortB = `subCohortSamples=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}`;
-
 
     const filter = 'BPA Gene Expression';
     // const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
