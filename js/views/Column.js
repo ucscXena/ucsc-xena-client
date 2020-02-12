@@ -573,15 +573,13 @@ class Column extends PureComponent {
     // http://xenademo.berkeleybop.io/xena/#cohort1=TCGA%20Stomach%20Cancer%20(STAD)&cohort2=TCGA%20Stomach%20Cancer%20(STAD)&filter=BPA%20Gene%20Expression&geneset=IFI6_tf_targets&selectedSubCohorts1=From_Xena_Cohort1&selectedSubCohorts2=From_Xena_Cohort2&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort1:TCGA-BR-8384-01,TCGA-BR-4371-01&subCohortSamples=TCGA%20Stomach%20Cancer%20(STAD):From_Xena_Cohort2:TCGA-D7-6822-01,TCGA-BR-8485-01&cohort1Color=green&cohort2Color=pink
     console.log('cohort', this.props.cohort);
     console.log('all props', this.props);
-    const {column: {heatmap, codes, fieldType}, cohort: {name} } = this.props;
+    const {column: {heatmap, codes}, cohort: {name} } = this.props;
 
-
-
-      const heatmapData = heatmap[0];
-      if (codes.length !== 2) {
-        alert('Not binary data');
-        return;
-      }
+    const heatmapData = heatmap[0];
+    if (codes.length !== 2) {
+      alert('Not binary data');
+      return;
+    }
 
     let subCohortData = [[], []];
       for (const d in heatmapData) {
@@ -603,9 +601,7 @@ class Column extends PureComponent {
     const subCohortB = `subCohortSamples=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}`;
 
 
-    let filter = 'BPA Gene Expression';
-    if(fieldType === 'probes') {filter = 'Copy Number';}
-    if(fieldType === 'mutation') {filter = 'Mutation';}
+    const filter = 'BPA Gene Expression';
     // const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
     const ROOT_URL = 'http://localhost:3000/xena/#';
     let GENE_SET_URL = `${ROOT_URL}cohort1=${name}&cohort2=${name}&filter=${filter}&${subCohortA}&${subCohortB}`;
