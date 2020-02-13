@@ -320,6 +320,9 @@ function transformPOSTMethods(postMethods) {
 		matchGenesWithProbes: postFn => (host, dataset, genes) =>
 			postFn(host, dataset, _.flatmap(genes, permuteCase))
 			.map(list => alignMatches(genes, list)),
+		matchGenesWithProbesSlow: postFn => (host, dataset, genes) =>
+			postFn(host, dataset, genes.map(g => g.toLowerCase()))
+			.map(list => alignMatches(genes, list)),
 		// Convert fields to lower-case, for matching, and apply a transform that
 		// requires the 'fields' parameter.
 		matchFields: postFn => (host, dataset, fields) =>
@@ -395,6 +398,13 @@ var sparseDataMatchField = _.curry((field, host, dataset, genes) =>
 	(_.max(_.map(genes, permuteBitCount)) > 7 ?
 		queryPosts.sparseDataMatchFieldSlow :
 		queryPosts.sparseDataMatchField)(host, field, dataset, genes));
+
+// Override matchGenesWithProbes to dispatch to the 'Slow' version
+// if necessary.
+var matchGenesWithProbes = (host, dataset, genes) =>
+	(_.max(_.map(genes, permuteBitCount)) > 7 ?
+		queryPosts.matchGenesWithProbesSlow :
+		queryPosts.matchGenesWithProbes)(host, dataset, genes);
 
 // Override matchField to dispatch to the slow version
 // if necessary.
@@ -497,6 +507,7 @@ module.exports = {
 	refGeneRange,
 	sparseDataMatchGenes: dsIDFn(sparseDataMatchField('genes')),
 	matchFields: dsIDFn(matchFields),
+	matchGenesWithProbes: dsIDFn(matchGenesWithProbes),
 
 	// helpers:
 	parseDsID,
