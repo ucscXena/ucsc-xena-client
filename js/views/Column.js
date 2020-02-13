@@ -548,7 +548,7 @@ class Column extends PureComponent {
     if(fieldType !== 'clinical') {return false ;}
     if(valueType !== 'coded') {return false ;}
     if(!codes || codes.length !== 2 ) {return false ;}
-    return DETAIL_DATASET_FOR_GENESET[name] !== undefined;
+    return DETAIL_DATASET_FOR_GENESET.find(name);
   };
 
   /**
