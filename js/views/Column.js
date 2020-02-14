@@ -549,7 +549,7 @@ class Column extends PureComponent {
     if(valueType !== 'coded') {return false ;}
     if(!codes || codes.length !== 2 ) {return false ;}
     // TODO: pull from common source
-    return DETAIL_DATASET_FOR_GENESET.find(name);
+    return DETAIL_DATASET_FOR_GENESET.hasOwnProperty(name);
   };
 
   /**
