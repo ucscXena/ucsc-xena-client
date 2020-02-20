@@ -278,9 +278,12 @@ class CohortPage extends React.Component {
 
 	clickVizButton = (ev) => {
 		if (ev.target.className === 'cohortButton') {
+			ev.target.dataset.bookmark ?
+			window.open(`${document.location.origin}/?bookmark=${ev.target.dataset.bookmark}`, "_self") :
 			this.onViz();
 		}
 	};
+
 
 	onDataset = (ev) => { navHandler.call(this, ev); };
 
