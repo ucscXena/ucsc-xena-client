@@ -30,6 +30,9 @@ var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
 var config = require('../config');
 import DETAIL_DATASET_FOR_GENESET from '../stats/defaultDatasetForGeneset';
+import {GeneSetViewDialog} from './GeneSetViewDialog';
+
+
 
 
 var ESCAPE = 27;
@@ -39,7 +42,7 @@ class IconMenu extends React.Component {
 		if (ev.keyCode === ESCAPE) {
 			this.ref.handleMenuHide();
 		}
-	}
+	};
 	cleanup() {
 		// We get an onHide() call from setting state in Menu, *and*
 		// from this.ref.handleMenuHide(), during this.onKeyDown. So,
@@ -57,7 +60,7 @@ class IconMenu extends React.Component {
 		var {onHide} = this.props;
 		this.cleanup();
 		onHide && onHide();
-	}
+	};
 	onShow = () => {
 		var {onShow} = this.props;
 		this.curtain = document.createElement('div');
@@ -65,10 +68,10 @@ class IconMenu extends React.Component {
 		document.body.appendChild(this.curtain);
 		document.addEventListener('keydown', this.onKeyDown, false);
 		onShow && onShow();
-	}
+	};
 	onRef = ref => {
 		this.ref = ref;
-	}
+	};
 	render() {
 		var others = _.omit(this.props, 'onShow', 'onHide');
 		return <RTIconMenu innerRef={this.onRef} onShow={this.onShow} onHide={this.onHide} {...others}/>;
@@ -430,7 +433,10 @@ class Column extends PureComponent {
 	state = {
 		dragZoom: {},
 		subColumnIndex: {},
-		specialDownloadMenu: specialDownloadMenu
+		specialDownloadMenu: specialDownloadMenu,
+		showGeneSetWizard: false,
+		geneSetUrl: undefined,
+
 	};
 
 	//	addAnnotationHelp(target) {
@@ -552,6 +558,12 @@ class Column extends PureComponent {
    return DETAIL_DATASET_FOR_GENESET.indexOf(name);
   };
 
+	hideGeneSetWizard = () => {
+		this.setState({
+			showGeneSetWizard: false,
+		});
+	};
+
   /**
    * We build out the URL.
    * generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
@@ -571,16 +583,20 @@ class Column extends PureComponent {
 
     // const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}&cohort1Color=${categoryMore[0]}`;
     // const subCohortB = `subCohortSamples=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}&cohort2Color=${categoryMore[1]}`;
-		const subCohortA = `subCohortSamples1=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}&cohort1Color=${categoryMore[0]}`;
-		const subCohortB = `subCohortSamples2=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}&cohort2Color=${categoryMore[1]}`;
+	const subCohortA = `subCohortSamples1=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}&cohort1Color=${categoryMore[0]}`;
+	const subCohortB = `subCohortSamples2=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}&cohort2Color=${categoryMore[1]}`;
 
-		// const filter = 'BPA Gene Expression';
-    // const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
-    const ROOT_URL = 'http://localhost:3000/xena/#';
-		// http://localhost:3000/#wizard=analysis&cohort=TCGA%20Ovarian%20Cancer%20(OV)&view=Mutation
-    // let GENE_SET_URL = `${ROOT_URL}cohort1=${name}&cohort2=${name}&filter=${filter}&${subCohortA}&${subCohortB}`;
-		let GENE_SET_URL = `${ROOT_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`;
-		window.open(GENE_SET_URL, '_blank');
+	// const filter = 'BPA Gene Expression';
+	// const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
+	const ROOT_URL = 'http://localhost:3000/xena/#';
+	// http://localhost:3000/#wizard=analysis&cohort=TCGA%20Ovarian%20Cancer%20(OV)&view=Mutation
+
+	this.setState({
+	  geneSetUrl: `${ROOT_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`,
+	  showGeneSetWizard: true,
+	  onHide: this.hideGeneSetWizard,
+	});
+	// window.open(GENE_SET_URL, '_blank');
   };
 
 	onSortDirection = () => {
@@ -797,6 +813,7 @@ class Column extends PureComponent {
 					subColumnIndex = {this.state.subColumnIndex}/>
 				: null;
 
+
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
 		// tooltips) for children. We must use a different tag, e.g. 'label'.
 		// Button and Dropdown.Toggle will allow overriding the tag.  However
@@ -805,6 +822,7 @@ class Column extends PureComponent {
 		// XXX put position into a css module
 		return (
 				<div style={{width: width, position: 'relative'}}>
+					<GeneSetViewDialog showGeneSetWizard={this.state.showGeneSetWizard} geneSetUrl={this.state.geneSetUrl} onHide={this.hideGeneSetWizard}/>
 					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height}
 								 positionHeight={column.position ? positionHeight : 0} selection={selection}>
 						<ColCard colId={label}
