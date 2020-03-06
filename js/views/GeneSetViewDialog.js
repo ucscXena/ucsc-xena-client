@@ -10,6 +10,9 @@ export class GeneSetViewDialog extends PureComponent {
     //     var body = document.getElementById("body");
     //     body.style.overflow = "auto";
     // }
+    actions = [
+        { label: "Cancel", onClick: this.props.onHide },
+    ];
 
     render() {
 
@@ -22,10 +25,10 @@ export class GeneSetViewDialog extends PureComponent {
         //         onClick: this.props.onHide
         //     },
         // ];
-        console.log('loading', this.props);
 
         return (
             <Dialog
+                actions={this.actions}
                 active={showGeneSetWizard}
                 onEscKeyDown={onHide}
                 onOverlayClick={onHide}
@@ -33,13 +36,15 @@ export class GeneSetViewDialog extends PureComponent {
                 //     wrapper: kmStyle.dialogWrapper,
                 //     overlay: kmStyle.dialogOverlay}}>
                 >
-                Cats:
+                <h3>Gene Set Comparison Wizard</h3>
+                <hr/>
                 <Iframe url={geneSetUrl}
                     src={geneSetUrl}
-                    width="450px"
-                    height="450px"
+                    width="100%"
+                    height="100%"
                     id="myId"
                     display="block"
+                    loading='Loading wizard'
                     position="relative"
                 />
                 {/*{this.props.body}*/}
