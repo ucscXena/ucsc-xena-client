@@ -569,6 +569,8 @@ class Column extends PureComponent {
    * generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
    */
   showGeneSetComparison = () => {
+
+    console.log('kittens');
     const {column: {heatmap, codes}, cohort: {name} } = this.props;
     const heatmapData = heatmap[0];
     if (!heatmapData || codes.length !== 2) {
@@ -587,12 +589,15 @@ class Column extends PureComponent {
 	const subCohortB = `subCohortSamples2=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}&cohort2Color=${categoryMore[1]}`;
 
 	// const filter = 'BPA Gene Expression';
-	// const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
-	const ROOT_URL = 'http://localhost:3000/xena/#';
+	const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
+	// const ROOT_URL = 'http://localhost:3000/xena/#';
 	// http://localhost:3000/#wizard=analysis&cohort=TCGA%20Ovarian%20Cancer%20(OV)&view=Mutation
 
+   const finalUrl = `${ROOT_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`;
+   console.log('final url', finalUrl);
+
 	this.setState({
-	  geneSetUrl: `${ROOT_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`,
+	  geneSetUrl: `${finalUrl}`,
 	  showGeneSetWizard: true,
 	  onHide: this.hideGeneSetWizard,
 	});
