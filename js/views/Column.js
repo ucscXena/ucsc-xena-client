@@ -569,8 +569,6 @@ class Column extends PureComponent {
    * generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
    */
   showGeneSetComparison = () => {
-
-    console.log('kittens');
     const {column: {heatmap, codes}, cohort: {name} } = this.props;
     const heatmapData = heatmap[0];
     if (!heatmapData || codes.length !== 2) {
