@@ -549,13 +549,22 @@ class Column extends PureComponent {
 		this.props.onChart(this.props.id);
 	};
 
+	getHeatMapCodes = (data)  => {
+    return _.uniq(data);
+  };
+
+
   canDoGeneSetComparison = () => {
-    let {column: {fieldType, valueType}, data: {codes}, cohort: {name}} = this.props;
+    let {column: {fieldType, valueType, heatmap}, data: {codes}, cohort: {name}} = this.props;
+    if(this.props.column.fieldLabel === 'sample_type') {
+      console.log(this.props);
+    }
     if(fieldType !== 'clinical') {return false ;}
     if(valueType !== 'coded') {return false ;}
-    if(!codes || codes.length !== 2 ) {return false ;}
+    if(!codes || codes.length < 2 ) {return false ;}
+    if(DETAIL_DATASET_FOR_GENESET.indexOf(name) < 0) {return false;}
+    return (this.getHeatMapCodes(heatmap[0]).length);
     // TODO: pull from common source
-   return DETAIL_DATASET_FOR_GENESET.indexOf(name);
   };
 
 	hideGeneSetWizard = () => {
@@ -564,6 +573,15 @@ class Column extends PureComponent {
 		});
 	};
 
+
+	// TODO: move this somewhere else
+  objectFlip(obj) {
+    return Object.keys(obj).reduce((ret, key) => {
+      ret[obj[key]] = key;
+      return ret;
+    }, {});
+  }
+
   /**
    * We build out the URL.
    * generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
@@ -571,14 +589,11 @@ class Column extends PureComponent {
   showGeneSetComparison = () => {
     const {column: {heatmap, codes}, cohort: {name} } = this.props;
     const heatmapData = heatmap[0];
-    if (!heatmapData || codes.length !== 2) {
-      alert('Not binary data');
-      return;
-    }
+    const heatmapCodes = this.objectFlip(this.getHeatMapCodes(heatmapData));
     const sampleData = _.map(this.props.samples, this.props.sampleFormat);
     let subCohortData = [[], []];
     for (const d in heatmapData) {
-      subCohortData[heatmapData[d]].push(sampleData[d]);
+      subCohortData[heatmapCodes[heatmapData[d]]].push(sampleData[d]);
     }
 
     // const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}&cohort1Color=${categoryMore[0]}`;
