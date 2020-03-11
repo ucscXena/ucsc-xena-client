@@ -556,14 +556,12 @@ class Column extends PureComponent {
 
   canDoGeneSetComparison = () => {
     let {column: {fieldType, valueType, heatmap}, data: {codes}, cohort: {name}} = this.props;
-    if(this.props.column.fieldLabel === 'sample_type') {
-      console.log(this.props);
-    }
+    console.log(this.props);
     if(fieldType !== 'clinical') {return false ;}
     if(valueType !== 'coded') {return false ;}
     if(!codes || codes.length < 2 ) {return false ;}
     if(DETAIL_DATASET_FOR_GENESET.indexOf(name) < 0) {return false;}
-    return (this.getHeatMapCodes(heatmap[0]).length);
+    return (this.getHeatMapCodes(heatmap[0]).length === 2);
     // TODO: pull from common source
   };
 
@@ -602,7 +600,8 @@ class Column extends PureComponent {
 	const subCohortB = `subCohortSamples2=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}&cohort2Color=${categoryMore[1]}`;
 
 	// const filter = 'BPA Gene Expression';
-    const ROOT_URL = process.env.NODE_ENV === 'production' ? 'http://xenademo.berkeleybop.io/xena/#' : 'http://localhost:3000/xena/#';
+  //   const ROOT_URL = process.env.NODE_ENV === 'production' ? 'http://xenademo.berkeleybop.io/xena/#' : 'http://localhost:3000/xena/#';
+    const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
 	// http://localhost:3000/#wizard=analysis&cohort=TCGA%20Ovarian%20Cancer%20(OV)&view=Mutation
    const finalUrl = `${ROOT_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`;
    console.log('final url', finalUrl);
