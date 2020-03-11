@@ -550,7 +550,7 @@ class Column extends PureComponent {
 	};
 
 	getHeatMapCodes = (data)  => {
-    return _.uniq(data);
+    return _.uniq(data).filter( f => f !== null);
   };
 
 
@@ -586,18 +586,21 @@ class Column extends PureComponent {
    */
   showGeneSetComparison = () => {
     const {column: {heatmap, codes}, cohort: {name} } = this.props;
-    const heatmapData = heatmap[0];
+    const heatmapData = heatmap[0].filter( f => f !== null);
     const heatmapCodes = this.objectFlip(this.getHeatMapCodes(heatmapData));
     const sampleData = _.map(this.props.samples, this.props.sampleFormat);
+    const heatmapLabels = Object.keys(heatmapCodes).map( c => codes[c]);
     let subCohortData = [[], []];
+    // const heatmapLabels = [codes[heatmapCodes[0]], codes[heatmapCodes[1]]];
+    // console.log(codes, heatmapLabels, heatmapCodes, heatmapData);
     for (const d in heatmapData) {
-      subCohortData[heatmapCodes[heatmapData[d]]].push(sampleData[d]);
+        subCohortData[heatmapCodes[heatmapData[d]]].push(sampleData[d]);
     }
 
     // const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}&cohort1Color=${categoryMore[0]}`;
     // const subCohortB = `subCohortSamples=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}&cohort2Color=${categoryMore[1]}`;
-	const subCohortA = `subCohortSamples1=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}&cohort1Color=${categoryMore[0]}`;
-	const subCohortB = `subCohortSamples2=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}&cohort2Color=${categoryMore[1]}`;
+	const subCohortA = `subCohortSamples1=${name}:${heatmapLabels[0]}:${subCohortData[0]}&selectedSubCohorts1=${heatmapLabels[0]}&cohort1Color=${categoryMore[0]}`;
+	const subCohortB = `subCohortSamples2=${name}:${heatmapLabels[1]}:${subCohortData[1]}&selectedSubCohorts2=${heatmapLabels[1]}&cohort2Color=${categoryMore[1]}`;
 
 	// const filter = 'BPA Gene Expression';
   //   const ROOT_URL = process.env.NODE_ENV === 'production' ? 'http://xenademo.berkeleybop.io/xena/#' : 'http://localhost:3000/xena/#';
