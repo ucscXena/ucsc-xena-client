@@ -598,8 +598,8 @@ class Column extends PureComponent {
 
     // const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}&cohort1Color=${categoryMore[0]}`;
     // const subCohortB = `subCohortSamples=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}&cohort2Color=${categoryMore[1]}`;
-	const subCohortA = `subCohortSamples1=${name}:${heatmapLabels[0]}:${subCohortData[0]}&selectedSubCohorts1=${heatmapLabels[0]}&cohort1Color=${categoryMore[0]}`;
-	const subCohortB = `subCohortSamples2=${name}:${heatmapLabels[1]}:${subCohortData[1]}&selectedSubCohorts2=${heatmapLabels[1]}&cohort2Color=${categoryMore[1]}`;
+	const subCohortA = `subCohortSamples1=${name}:${heatmapLabels[0]}:${subCohortData[0]}&selectedSubCohorts1=${heatmapLabels[0]}&cohort1Color=${categoryMore[heatmapCodes[0]]}`;
+	const subCohortB = `subCohortSamples2=${name}:${heatmapLabels[1]}:${subCohortData[1]}&selectedSubCohorts2=${heatmapLabels[1]}&cohort2Color=${categoryMore[heatmapCodes[1]]}`;
 
 	// const filter = 'BPA Gene Expression';
   //   const ROOT_URL = process.env.NODE_ENV === 'production' ? 'http://xenademo.berkeleybop.io/xena/#' : 'http://localhost:3000/xena/#';
