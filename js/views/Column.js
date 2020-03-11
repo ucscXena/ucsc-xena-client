@@ -587,14 +587,13 @@ class Column extends PureComponent {
   showGeneSetComparison = () => {
     const {column: {heatmap, codes}, cohort: {name} } = this.props;
     const heatmapData = heatmap[0].filter( f => f !== null);
-    const heatmapCodes = this.objectFlip(this.getHeatMapCodes(heatmapData));
+    const heatmapCodes = this.getHeatMapCodes(heatmapData);
+    const heatmapLookup = this.objectFlip(heatmapCodes);
     const sampleData = _.map(this.props.samples, this.props.sampleFormat);
-    const heatmapLabels = Object.keys(heatmapCodes).map( c => codes[c]);
     let subCohortData = [[], []];
-    // const heatmapLabels = [codes[heatmapCodes[0]], codes[heatmapCodes[1]]];
-    // console.log(codes, heatmapLabels, heatmapCodes, heatmapData);
+    const heatmapLabels = [codes[heatmapCodes[0]], codes[heatmapCodes[1]]];
     for (const d in heatmapData) {
-        subCohortData[heatmapCodes[heatmapData[d]]].push(sampleData[d]);
+        subCohortData[heatmapLookup[heatmapData[d]]].push(sampleData[d]);
     }
 
     // const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}&cohort1Color=${categoryMore[0]}`;
