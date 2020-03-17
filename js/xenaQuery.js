@@ -274,7 +274,7 @@ const sendMessage = msg => {
 	var id = msgId++;
 	if (window.opener) {
 		// should this 'localize' be here or in the notebook?
-		var localizedMsg = _.assoc(msg, 'url', msg.url.replace(/^notebook::/, 'http://localhost:7222'));
+		var localizedMsg = _.assoc(msg, 'url', msg.url.replace(/^notebook:/, 'http://localhost:7222'));
 		window.opener.postMessage({msg: localizedMsg, id}, "*"); // XXX fix *
 		// XXX need a timeout, or something, here
 		return notebookObs.filter(ev => ev.data.id === id).take(1).map(ev => ev.data);
@@ -283,7 +283,7 @@ const sendMessage = msg => {
 };
 
 var dispatchQuery = query =>
-	(query.url.indexOf('notebook::') === 0 ? sendMessage : ajax)(query);
+	(query.url.indexOf('notebook:') === 0 ? sendMessage : ajax)(query);
 
 // Given a host, query, and parameters, marshall the parameters and dispatch a
 // POST, returning an observable.
