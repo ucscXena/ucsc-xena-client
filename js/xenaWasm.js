@@ -273,25 +273,55 @@ var colorScale = {
 
 export var getColorScale = ([type, ...args]) => colorScale[type](...args);
 
-// htfc
+// hfc
 
-export function htfcStore(data) {
+export function hfcSet(data) {
 	// The wasm call will hold this until it is called again, at which point
 	// the previous buffer is freed. It might be better to free the data before
 	// passing in more. We could, in fact, do this by passing in NULL.
 	var buff = allocArray(data);
-	Module._htfc_store(buff, data.length);
+	Module._hfc_set(buff, data.length);
 }
 
-export function htfcSearch(str, type) {
+export function hfcSetEmpty() {
+	// see note in hfcSet
+	Module._hfc_set_empty();
+}
+
+export function hfcFilter(list) {
+	var s = allocArray(new Uint32Array(list));
+	Module._hfc_filter(s, list.length);
+	Module._free(s);
+}
+
+export function hfcMerge(data) {
+	var buff = allocArray(data);
+	Module._hfc_merge(buff, data.length);
+}
+
+export function hfcLookup(i) {
+	// does this need to dup the string?
+	return Module.UTF8ToString(Module._hfc_lookup(i));
+}
+
+export function hfcLength() {
+	return Module._hfc_length();
+}
+
+export function hfcBuffer() {
+	var buff = Module._hfc_buff();
+	var len = Module._hfc_buff_length();
+	return new Uint8Array(Module.HEAPU8.buffer.slice(buff, buff + len));
+}
+
+export function hfcSearch(str, type) {
 	var searchType = Module.enum.search_type;
 	var s = allocArray(new Uint8Array(Array.prototype.map.call(str, x => x.charCodeAt(0)).concat([0])));
 
-	var r = Module._htfc_search_store(s, searchType[type]);
+	var r = Module._hfc_search(s, searchType[type]);
 	var len = Module.getValue(r + Module.struct.search_result.offset.count, 'i32');
 	var matches = getArrayPtrField(r, 'search_result', 'matches', len, 'u32');
 
-	Module._free(Module.getValue(r + Module.struct.search_result.offset.matches, '*'));
 	Module._free(s);
 	return matches;
 }

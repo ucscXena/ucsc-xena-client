@@ -105,10 +105,9 @@ class AppControls extends PureComponent {
 	}
 
 	onFilter = () => {
-		const {callback, appState: {samplesMatched, cohortSamples}} = this.props,
-			matching = _.map(samplesMatched, i => cohortSamples[i]);
+		const {callback, appState: {samplesMatched}} = this.props;
 		gaEvents('spreadsheet', 'samplesearch', 'filter');
-		callback(['sampleFilter', matching]);
+		callback(['sampleFilter', samplesMatched]);
 	};
 
 	onFilterZoom = () => {

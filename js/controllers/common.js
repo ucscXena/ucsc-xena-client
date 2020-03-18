@@ -11,10 +11,11 @@ var {signatureField} = require('../models/fieldSpec');
 var defaultServers = require('../defaultServers');
 var {publicServers} = defaultServers;
 var gaEvents = require('../gaEvents');
-var {htfc} = require('../htfc');
+import {hfc} from '../hfc';
 // pick up signature fetch
 require('../models/signatures');
 var config = require('../config');
+import {hfcLength, hfcMerge, hfcSetEmpty} from '../xenaWasm';
 
 import Worker from 'worker-loader!./cluster-worker';
 
@@ -58,13 +59,9 @@ function fetchDatasets(serverBus, servers, cohort) {
 
 const MAX_SAMPLES = 50 * 1000;
 
-var allSamples = _.curry((cohort, max, server) => xenaQuery.cohortSamplesHTFC(server, cohort, max === Infinity ? null : max));
+var allSamples = _.curry((cohort, max, server) => xenaQuery.cohortSamplesHFC(server, cohort, max === Infinity ? null : max));
 
-function unionOfGroup(gb) {
-	return _.union(..._.map(gb, ([v]) => v));
-}
-
-function logSampleSources(cohortResps) {
+function logSampleSources(cohortResps) {//eslint-disable-line no-unused-vars
 	var havingSamples = cohortResps.filter(([v]) => v.length > 0)
 			.map(([,, server]) => server),
 		types = new Set(havingSamples.map(s =>
@@ -87,43 +84,33 @@ function logSampleSources(cohortResps) {
 	}
 }
 
-// Performance of this is probably poor, esp. due to underscore's horrible
-// n^2 set operations.
-function cohortHasPrivateSamples(cohortResps) {
-	var {'true': pub, 'false': priv} = _.groupBy(cohortResps, ([,, server]) => _.contains(publicServers, server)),
-		pubSamps = unionOfGroup(pub),
-		privSamps = unionOfGroup(priv);
-	return _.difference(privSamps, pubSamps).length > 0;
-}
-
-function filterSamples(sampleFilter, samples) {
-	return sampleFilter ? _.intersection(sampleFilter, samples) : samples;
-}
-
 // For the cohort, query all servers,
 // return a stream per-cohort, each of which returns an event
 // [cohort, [sample, ...]].
 // By not combining them here, we can uniformly handle errors, below.
 var cohortSamplesQuery =
-	(servers, max, {name, sampleFilter}) =>
+	(servers, max, {name}) =>
 		_.map(servers, allSamples(name, max))
-			.map((resp, j) => resp.map(samples => [filterSamples(sampleFilter, samples), samples.length >= max, servers[j]]));
+			.map((resp, j) => resp.map(samples => [samples, servers[j]]));
 
-var collateSamples = _.curry((cohorts, max, resps) => {//eslint-disable-line no-unused-vars
-	var serverOver = _.any(resps, ([, over]) => over),
-		cohortSamples = unionOfGroup(resps || []).slice(0, max),
-		cohortOver = cohortSamples.length >= max,
-		hasPrivateSamples = cohortHasPrivateSamples(resps);
-	logSampleSources(resps);
-	return {samples: cohortSamples, over: serverOver || cohortOver, hasPrivateSamples};
+var collateSamples = _.curry((cohorts, max, resps) => {
+	hfcSetEmpty();
+	var {'true': pub = [], 'false': priv = []} = _.groupBy(resps, ([, server]) => _.contains(publicServers, server));
+	pub.forEach(([samples]) => {
+		hfcMerge(samples);
+	});
+	var pubLength = hfcLength();
+	priv.forEach(([samples]) => {
+		hfcMerge(samples);
+	});
+
+	return {samples: hfc(), over: false, hasPrivateSamples: hfcLength() > pubLength};
 });
 
 // reifyErrors should be pass the server name, but in this expression we don't have it.
 function samplesQuery(servers, cohort, max) {
 	return Rx.Observable.zipArray(cohortSamplesQuery(servers, max, cohort).map(reifyErrors))
-		// XXX fix this
-		//.flatMap(resps => collectResults(resps, collateSamples(cohort, max)));
-		.flatMap(resps => collectResults(resps, resps => ({samples: htfc(resps[0][0]), over: false, hasPrivateSamples: false})));
+		.flatMap(resps => collectResults(resps, collateSamples(cohort, max)));
 }
 
 function fetchSamples(serverBus, servers, cohort, allowOverSamples) {
