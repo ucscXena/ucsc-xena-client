@@ -24,7 +24,7 @@ export class GeneSetViewDialog extends PureComponent {
                 <hr/>
                 <Iframe url={geneSetUrl}
                     src={geneSetUrl}
-                    width="100%"
+                    width="700px"
                     height="500px"
                     id="myId"
                     display="block"

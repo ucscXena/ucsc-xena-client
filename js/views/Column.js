@@ -596,15 +596,11 @@ class Column extends PureComponent {
         subCohortData[heatmapLookup[heatmapData[d]]].push(sampleData[d]);
     }
 
-    // const subCohortA = `subCohortSamples=${name}:${codes[0]}:${subCohortData[0]}&selectedSubCohorts1=${codes[0]}&cohort1Color=${categoryMore[0]}`;
-    // const subCohortB = `subCohortSamples=${name}:${codes[1]}:${subCohortData[1]}&selectedSubCohorts2=${codes[1]}&cohort2Color=${categoryMore[1]}`;
 	const subCohortA = `subCohortSamples1=${name}:${heatmapLabels[0]}:${subCohortData[0]}&selectedSubCohorts1=${heatmapLabels[0]}&cohort1Color=${categoryMore[heatmapCodes[0]]}`;
 	const subCohortB = `subCohortSamples2=${name}:${heatmapLabels[1]}:${subCohortData[1]}&selectedSubCohorts2=${heatmapLabels[1]}&cohort2Color=${categoryMore[heatmapCodes[1]]}`;
 
-	// const filter = 'BPA Gene Expression';
-  //   const ROOT_URL = process.env.NODE_ENV === 'production' ? 'http://xenademo.berkeleybop.io/xena/#' : 'http://localhost:3000/xena/#';
-    const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
-	// http://localhost:3000/#wizard=analysis&cohort=TCGA%20Ovarian%20Cancer%20(OV)&view=Mutation
+    // const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
+    const ROOT_URL = 'http://localhost:3000/#';
    const finalUrl = `${ROOT_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`;
    console.log('final url', finalUrl);
 
@@ -867,7 +863,7 @@ class Column extends PureComponent {
 													caption='Chart & Statistics'/>
                         {canDoGeneSetComparison &&
                         <MenuItem onClick={this.showGeneSetComparison}
-                                  caption='Gene Set Comparison'/>
+                                  caption='Differential geneset view'/>
                         }
 												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
 												<MenuItem onClick={this.onDownload} caption='Download'/>
