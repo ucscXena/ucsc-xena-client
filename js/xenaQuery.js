@@ -263,8 +263,7 @@ function xenaCall(queryFn, ...params) {
 	return `(${queryFn} ${params.map(marshallParam).join(' ')})`;
 }
 
-const notebookObs = Rx.Observable.fromEvent(window, 'message')
-	.filter(ev => ev.origin === 'https://notebooks.firecloud.org').share();
+const notebookObs = Rx.Observable.fromEvent(window, 'message').share();
 var msgId = 0;
 
 // sendMessage wraps worker messages in ajax-like observables, by assigning
