@@ -19,8 +19,9 @@ export class GeneSetViewDialog extends PureComponent {
                 active={showGeneSetWizard}
                 onEscKeyDown={onHide}
                 onOverlayClick={onHide}
+                type='large'
                 >
-                <h3>Gene Set Comparison Wizard</h3>
+                <h3>Differential Geneset Visualization</h3>
                 <hr/>
                 <Iframe url={geneSetUrl}
                     src={geneSetUrl}

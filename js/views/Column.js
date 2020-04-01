@@ -863,7 +863,7 @@ class Column extends PureComponent {
 													caption='Chart & Statistics'/>
                         {canDoGeneSetComparison &&
                         <MenuItem onClick={this.showGeneSetComparison}
-                                  caption='Differential geneset view'/>
+                                  caption='Differential Geneset View'/>
                         }
 												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
 												<MenuItem onClick={this.onDownload} caption='Download'/>
