@@ -62,7 +62,7 @@
 	<script type="text/javascript">
 		(function () {
 			var pages = {
-					{% if (process.env.NODE_ENV !== '"production"') { %}
+					{% if (process.env.NODE_ENV !== 'production') { %}
 					docs: {
 						js: "{%=o.htmlWebpackPlugin.files.chunks.docs.entry%}",
 						css: "{%=o.htmlWebpackPlugin.files.chunks.docs.css[0]%}"
