@@ -1,7 +1,7 @@
 var {Let, assocIn, dissoc, get, identity,
 	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
-var {cohortSummary, datasetMetadata, datasetSamplesHTFCExamples, datasetFieldN,
+var {cohortSummary, datasetMetadata, datasetSamplesHFCExamples, datasetFieldN,
 	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
 var {servers: {localHub}} = require('../defaultServers');
@@ -64,15 +64,18 @@ var checkDownload = (host, dataset) => {
 
 var noSnippets = () => of(undefined);
 
+// XXX See note in models/denseMatrix.js. Move this to binpack, or something.
+var toArray = x => new Float32Array(x.buffer);
+
 function fetchMatrixDataSnippets(host, dataset, meta, nProbes = 10, nSamples = 10) {
-	var samplesQ = datasetSamplesHTFCExamples(host, dataset, nSamples).share(),
+	var samplesQ = datasetSamplesHFCExamples(host, dataset, nSamples).share(),
 		fieldQ = datasetFieldExamples(host, dataset, nProbes).share(),
 		codeQ = fieldQ.mergeMap(probes => fieldCodes(host, dataset, probes)),
 		dataQ = zipArray(samplesQ, fieldQ)
 			.mergeMap(([samples, fields]) => datasetFetch(host, dataset, samples, fields));
 
 	return zipArray(samplesQ, fieldQ, codeQ, dataQ)
-		.map(([samples, fields, codes, data]) => ({samples, fields, codes, data}))
+		.map(([samples, fields, codes, data]) => ({samples, fields, codes, data: data.map(toArray)}))
 		.catch(noSnippets);
 }
 
