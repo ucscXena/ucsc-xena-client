@@ -11,6 +11,8 @@ var qs = require('./loadXenaQueries');
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
 import cohortMetaData from './cohortMetaData';
 
+var {ajax} = Rx.Observable;
+
 ///////////////////////////////////////////////////////
 // support for hg18/GRCh36, hg19/GRCh37, hg38/GRCh38, mm10
 // Xena refGene is the composite gene model we build, NOT literally "refGene annotation"
@@ -305,6 +307,27 @@ function doPostJSON(query, host, ...params) {
 	).map(jsonResp);
 }
 
+const notebookObs = Rx.Observable.fromEvent(window, 'message').share();
+var msgId = 0;
+
+// sendMessage wraps worker messages in ajax-like observables, by assigning
+// unique ids to each request, and waiting for a single response with the
+// same id. The worker must echo the id in the response.
+const sendMessage = msg => {
+	var id = msgId++;
+	if (window.opener) {
+		// should this 'localize' be here or in the notebook?
+		var localizedMsg = _.assoc(msg, 'url', msg.url.replace(/^notebook:/, 'http://localhost:7222'));
+		window.opener.postMessage({msg: localizedMsg, id}, "*"); // XXX fix *
+		// XXX need a timeout, or something, here
+		return notebookObs.filter(ev => ev.data.id === id).take(1).map(ev => ev.data);
+	}
+	return Rx.Observable.of({status: 0, response: ''}, Rx.Scheduler.asap);
+};
+
+var dispatchQuery = query =>
+	(query.url.indexOf('notebook:') === 0 ? sendMessage : ajax)(query);
+
 // XXX Should discover this automatically, instead of having a list
 var hubMethod = {
 	["https://reference.xenahubs.net"]: doPostJSON
@@ -365,6 +388,9 @@ function transformPOSTMethods(postMethods) {
 		// Generate case permutations of the gene parameter
 		matchGenesWithProbes: postFn => (host, dataset, genes) =>
 			postFn(host, dataset, _.flatmap(genes, permuteCase))
+			.map(list => alignMatches(genes, list)),
+		matchGenesWithProbesSlow: postFn => (host, dataset, genes) =>
+			postFn(host, dataset, genes.map(g => g.toLowerCase()))
 			.map(list => alignMatches(genes, list)),
 		// Convert fields to lower-case, for matching, and apply a transform that
 		// requires the 'fields' parameter.
@@ -442,6 +468,13 @@ var sparseDataMatchField = _.curry((field, host, dataset, genes) =>
 		queryPosts.sparseDataMatchFieldSlow :
 		queryPosts.sparseDataMatchField)(host, field, dataset, genes));
 
+// Override matchGenesWithProbes to dispatch to the 'Slow' version
+// if necessary.
+var matchGenesWithProbes = (host, dataset, genes) =>
+	(_.max(_.map(genes, permuteBitCount)) > 7 ?
+		queryPosts.matchGenesWithProbesSlow :
+		queryPosts.matchGenesWithProbes)(host, dataset, genes);
+
 // Override matchField to dispatch to the slow version
 // if necessary.
 var matchFields = (host, dataset, probes) =>
@@ -462,9 +495,7 @@ var refGeneExonCase = dsIDFn((host, dataset, genes) =>
 	sparseDataMatchField('name2', host, dataset, genes)
 		.flatMap(caseGenes => refGeneExons(host, dataset, _.filter(caseGenes, _.identity))));
 
-var {ajax} = Rx.Observable;
-
-var ping = host => ajax({
+var ping = host => dispatchQuery({
 	url: host + '/ping/',
 	method: 'GET',
 	crossDomain: true,
@@ -480,7 +511,7 @@ var toStatus = r =>
 
 var pingOrExp = host =>
 		ping(host).map(toStatus).catch(e =>
-			e.status === 404 ? ajax(xenaPost(host, '(+ 1 2)')).map(toStatusDep) :
+			e.status === 404 ? dispatchQuery(xenaPost(host, '(+ 1 2)')).map(toStatusDep) :
 			Rx.Observable.throw(e));
 
 var testStatus = (host, timeout = 5000) =>
@@ -545,6 +576,7 @@ module.exports = {
 	refGeneRange,
 	sparseDataMatchGenes: dsIDFn(sparseDataMatchField('genes')),
 	matchFields: dsIDFn(matchFields),
+	matchGenesWithProbes: dsIDFn(matchGenesWithProbes),
 
 	// helpers:
 	parseDsID,

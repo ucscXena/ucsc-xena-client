@@ -13,7 +13,9 @@ var servers = {
 	pancanAtlasHub: 'https://pancanatlas.xenahubs.net',
 	treehouseHub: 'https://xena.treehouse.gi.ucsc.edu:443',
 	gdcHub: "https://gdc.xenahubs.net",
-	atacSeqHub: "https://atacseq.xenahubs.net"
+	atacSeqHub: "https://atacseq.xenahubs.net",
+	kidsFirstHub: "https://kidsfirst.xenahubs.net",
+	notebook: "notebook:"
 };
 
 module.exports = {
@@ -24,12 +26,14 @@ module.exports = {
 		[servers.tcgaHub]: 'TCGA Hub',
 		[servers.icgcHub]: 'ICGC Hub',
 		[servers.toilHub]: 'UCSC Toil RNA-seq Recompute',
-		[servers.pcawgHub]: 'PCAWG Public Hub',
+		[servers.pcawgHub]: 'PCAWG Hub',
 		[servers.singlecellHub]: 'Single-cell RNAseq Hub',
 		[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
 		[servers.treehouseHub]: 'Treehouse Hub',
 		[servers.gdcHub]: 'GDC Hub',
-		[servers.atacSeqHub]: 'ATAC-seq Hub'
+		[servers.atacSeqHub]: 'ATAC-seq Hub',
+		[servers.kidsFirstHub]: 'Kids First Hub',
+		[servers.notebook]: 'jupyter notebook'
 	},
 
 	defaultServers: config.singlecell ? [
@@ -40,10 +44,13 @@ module.exports = {
 		servers.tcgaHub,
 		servers.pancanAtlasHub,
 		servers.icgcHub,
+		servers.pcawgHub,
 		servers.toilHub,
 		servers.treehouseHub,
 		servers.gdcHub,
 		servers.atacSeqHub,
+		servers.kidsFirstHub,
+		servers.notebook
 	],
 
 	enabledServers: config.singlecell ? [
@@ -54,9 +61,12 @@ module.exports = {
 		servers.tcgaHub,
 		servers.pancanAtlasHub,
 		servers.icgcHub,
+		servers.pcawgHub,
 		servers.toilHub,
 		servers.gdcHub,
 		servers.atacSeqHub,
+		servers.kidsFirstHub,
+		servers.notebook
 	],
 
 	publicServers: [
@@ -70,7 +80,9 @@ module.exports = {
 		servers.gdcHub,
 		servers.atacSeqHub,
 		servers.singlecellHub,
+		servers.kidsFirstHub,
 		'https://tdi.xenahubs.net',
-		'https://luad.xenahubs.net'
+		'https://luad.xenahubs.net',
+		'https://preview.xenahubs.net'
 	]
 };

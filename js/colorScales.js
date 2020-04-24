@@ -116,9 +116,8 @@ var scaleFloatLog = (low, high, min, max) =>
 
 //var ordinal = (count, custom) => d3.scaleOrdinal().range(custom || categoryMore).domain(_.range(count));
 // d3 ordinal scales will de-dup the domain using an incredibly slow algorithm.
-var ordinal = (count, scale) => {
-	scale = scale || categoryMore; // handle null
-	return v => scale[v % scale.length];
+var ordinal = (count, custom) => {
+	return v => custom && custom[v] ? custom[v] : categoryMore[v % categoryMore.length];
 };
 
 function scaleFloatDouble(low, zero, high, min, max) {
@@ -144,7 +143,7 @@ function scaleTrendAmplitude(low, zero, high, origin, thresh, max) {
 		// power is [0, dataMax], representing avg. distance from zero point.
 		lookup: (trend, power) => {
 			if (power == null) {
-				return [128, 128, 128];
+				return rgb(zero);
 			}
 			var h = clip(h0, h1, h0 + trend * (h1 - h0));
 			var s = clip(0, 1, (power - thresh) / (max - origin - thresh));

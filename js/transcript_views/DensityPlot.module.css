@@ -18,6 +18,36 @@
 	 * as the data is not positioned. */
 	position: relative;
 	top: 50%;
+	float: left;
+}
+
+.densityPlot--vscal--label {
+	display: inline-block;
+	margin-left: -225px;
+	font-size: 10px;
+	float: left;
+	position: relative;
+}
+
+.densityPlot--vscal--tick {
+	display: inline-block;
+	background-color: black;
+	margin-left: -203px;
+	height: 1px;
+	width: 5px;
+	float: left;
+	position: relative;
+}
+
+.densityPlot--scale--Axis {
+	width: 1px;
+	background-color: black;
+	/* position relative puts the axis above the data, so long
+	 * as the data is not positioned. */
+	position: relative;
+	margin: -1px;
+	top: 3px;
+	float: left;
 }
 
 .densityPlot--row--studyA {

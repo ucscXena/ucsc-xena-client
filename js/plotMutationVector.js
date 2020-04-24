@@ -1,4 +1,3 @@
-
 var _ = require('./underscore_ext');
 var Rx = require('./rx');
 import PureComponent from './PureComponent';
@@ -28,7 +27,7 @@ function hotOrNot(component) {
 	return module.makeHot ? module.makeHot(component) : component;
 }
 
-function drawLegend({column}) {
+function drawMutationLegend({column}) {
 	if (!column.legend) {
 		return null;
 	}
@@ -45,6 +44,24 @@ function drawLegend({column}) {
 	);
 }
 
+function drawSVLegend({column}) {
+	if (!column.legend) {
+		return null;
+	}
+	var {colors, labels, titles} = column.legend,
+		labelheader = "Variant Impact";
+
+	return (
+		<Legend
+			colors={colors}
+			labels={labels}
+			titles={titles}
+			addBreakend={1}
+			addNullNotation={1}
+			labelheader={labelheader}/>
+	);
+}
+
 function closestNodeSNV(nodes, zoom, x, y) {
 	var cutoffX = radius,
 		{index, height, count} = zoom,
@@ -54,7 +71,7 @@ function closestNodeSNV(nodes, zoom, x, y) {
 			Math.abs(y - toYPx(zoom, n).y) < cutoffY &&
 			(x > n.xStart - cutoffX) && (x < n.xEnd + cutoffX));
 
-	var closest = _.max(nearBy, n => mv.impact[n.data.effect] || 0),
+	var closest = _.max(nearBy, n => mv.impact[mv.getSNVEffect(mv.impact, n.data.effect)] || 0),
 		//multiple records of the same location same sample
 		allClosest = _.filter(nearBy, n => (n.data.start === closest.data.start) &&
 			(n.data.end === closest.data.end) &&
@@ -187,7 +204,7 @@ function sampleTooltip(sampleFormat, dataList, assembly, fields) {
 			effect = ['value', fmtIf(data.effect, x => `${x}, `, `unannotated`) + //eslint-disable-line comma-spacing
 						fmtIf(data.gene, x => `${x}`)  +
 						fmtIf(data.aminoAcid, x => ` (${x})`) +
-						fmtIf(data.altGene, x => ` connect to ${x} `)
+						fmtIf(data.altGene, x => `--${x} `)
 						];
 		return dropNulls([
 				[effect],
@@ -300,5 +317,5 @@ widgets.column.add('mutation',
 widgets.column.add('SV',
 		props => <MutationColumn draw={drawSV} {...props} />);
 
-widgets.legend.add('mutation', drawLegend);
-widgets.legend.add('SV', drawLegend);
+widgets.legend.add('mutation', drawMutationLegend);
+widgets.legend.add('SV', drawSVLegend);

@@ -40,6 +40,18 @@
 	border-style: solid;
 }
 
+.breakendBar {
+	composes: mdCaption from '../../css/typography.module.css';
+	float: left;
+	margin: 4px;
+	height: 15px;
+	width: 2px;
+	margin-right: 18px;
+	border: 1px;
+	border-style: solid;
+	background: black;
+}
+
 .header {
 	display: block;
 	text-align: center;

@@ -426,8 +426,14 @@ class KmPlot extends PureComponent {
 				<h1>Loading...</h1>
 			</div>
 			: (_.isEmpty(groups.colors)
-					? <div><h3>Unfortunately, KM plot can not be made. There is no survival data overlapping column
-						data.</h3></div>
+					? <div>
+						<div>
+							{makeSurvivalTypeUI(cohort, survInfoURL, survivalType, survivalTypes, this.onSurvType)}
+						</div>
+						<div>
+							<h3>Unfortunately, KM plot can not be made. There is no survival data overlapping column data.</h3>
+						</div>
+					</div>
 					: <div>
 						<Button onClick={this.pdf} className={kmStyle.PDFButton}>
 							<i className={`material-icons ${kmStyle.buttonIcon}`}>file_download</i>

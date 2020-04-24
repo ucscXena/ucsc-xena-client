@@ -8,10 +8,7 @@ require('highcharts/modules/boost')(Highcharts);
 var _ = require('./underscore_ext');
 var colorScales = require ('./colorScales');
 var jStat = require('jStat').jStat;
-var {getCustomColor} = require('./models/denseMatrix');
 var gaEvents = require('./gaEvents');
-
-var customColors = {};
 
 // Styles
 var compStyles = require('./chart.module.css');
@@ -1173,6 +1170,7 @@ function render(root, callback, sessionStorage) {
 					highlightSeries = [],
 					opacity = 0.6,
 					colorCode, colorMin, color, colorLabel,
+					customColors,
 					useCodedSeries = scatterColorDataCodemap || !scatterColorData,
 					gray = `rgba(150,150,150,${opacity})`,
 					bin;
@@ -1181,7 +1179,7 @@ function render(root, callback, sessionStorage) {
 					if ("null" === code) {
 						return gray;
 					}
-					return colorStr(hexToRGB(scatterColorScale(code), opacity));
+					return colorStr(hexToRGB(colorScales.categoryMore[code % colorScales.categoryMore.length], opacity));
 				};
 
 				if (!useCodedSeries) {
@@ -1247,7 +1245,7 @@ function render(root, callback, sessionStorage) {
 				}
 
 				if (colorColumn !== "none") { // custome categorial color
-					customColors = getCustomColor(columns[colorColumn].fields, columns[colorColumn].dataset);
+					customColors = _.getIn(columns[colorColumn], ['colors', 0, 2]);
 				}
 
 				_.keys(multiSeries).map( (colorCode, i) => {
@@ -1255,7 +1253,7 @@ function render(root, callback, sessionStorage) {
 					if (scatterColorData) {
 						if (useCodedSeries) {
 							colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
-							color = customColors && customColors[colorLabel] ? customColors[colorLabel] : getCodedColor(colorCode);
+							color = customColors ? customColors[colorCode] : getCodedColor(colorCode);
 							showInLegend = true;
 						} else {
 							color = colorScale(colorCode);

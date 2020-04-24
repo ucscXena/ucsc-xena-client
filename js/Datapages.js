@@ -1,4 +1,3 @@
-
 require('./base');
 const React = require('react');
 var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
@@ -106,8 +105,8 @@ var cohortLink = (cohort, onClick, hubParams) => (
 
 var collateCohorts = hubCohorts =>
 	flatten(values(hubCohorts)).reduce(
-		(acc, cohort) => updateIn(acc, [cohort.cohort],
-			(v = 0) => cohort.count + v),
+		(acc, cohort) => cohort.cohort ?
+			updateIn(acc, [cohort.cohort], (v = 0) => cohort.count + v) : acc,
 		{});
 
 var CohortSummary = ({cohorts, onCohort, hubParams, action}) => {
@@ -281,9 +280,12 @@ class CohortPage extends React.Component {
 
 	clickVizButton = (ev) => {
 		if (ev.target.className === 'cohortButton') {
+			ev.target.dataset.bookmark ?
+			window.open(`${document.location.origin}/?bookmark=${ev.target.dataset.bookmark}`, "_self") :
 			this.onViz();
 		}
 	};
+
 
 	onDataset = (ev) => { navHandler.call(this, ev); };
 
@@ -430,6 +432,9 @@ var DatasetPage = wrapLaunchHelper(
 					datapages, spreadsheet: {cohort: currentCohort}} = this.props.state,
 				cohort = getIn(datapages, ['dataset', host, dataset, 'meta', 'cohort'], COHORT_NULL);
 
+			if (getIn(this.props.state, ['spreadsheet', 'servers', host, 'user']) !== true) {
+				this.props.callback(['add-host', host]);
+			}
 			if (cohort !== get(currentCohort, 'name')) {
 				this.props.callback(['cohort', cohort]);
 			}
@@ -549,6 +554,10 @@ var HubPage = wrapLaunchHelper(
 				hubCohorts = getIn(state, ['datapages', 'cohorts', host], []),
 				coll = collateCohorts(hubCohorts),
 				inHubs = contains(userServers, host) ? '' : ' (not in my data hubs)';
+
+			if (!contains(userServers, host)) {
+				this.props.callback(['add-host', host]);
+			}
 
 			return (
 				<div className={styles.datapages} onClick={this.clickVizButton}>

@@ -4,7 +4,7 @@ var {find} = _;
 var xenaQuery = require('../xenaQuery');
 var heatmapColors = require('../heatmapColors');
 var widgets = require('../columnWidgets');
-var {greyHEX} = require('../color_helper');
+var {categoryMore} = require('../colorScales');
 var parsePos = require('../parsePos');
 var exonLayout = require('../exonLayout');
 var {datasetChromProbeValues, datasetProbeValues, datasetGeneProbeAvg,
@@ -24,7 +24,7 @@ var flopIfNegStrand = (strand, req) => {
 };
 
 var colorCodeMap = (codes, colors) =>
-	colors ? _.map(codes, c => colors[c] || greyHEX) : null;
+	colors ? _.map(codes, (c, i) => colors[c] || categoryMore[i % categoryMore.length]) : null;
 
 var getCustomColor = (fields, dataset) =>
 	fields.length === 1 ?
@@ -380,6 +380,6 @@ module.exports = {
 	fetchGeneOrChromProbes,
 	fetchGene,
 	fetchFeature,
-	getCustomColor,
+//	getCustomColor,
 	toArrays
 };

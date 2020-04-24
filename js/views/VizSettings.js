@@ -568,7 +568,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			let optionValue = this.state.optionValue,
 				options = {
 					SV: [
-						{"key": "default", "label": "grey"},
+						{"key": "default", "label": "lavender"},
 						{"key": "chromosomeGB", "label": "by chromosome (Genome Browser)"},
 						{"key": "chromosomePCAWG", "label": "by chromosome (PCAWG)"},
 					]
@@ -642,9 +642,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 			var node = index.map((i) => {
 				let code = codes[i.toString()],
 					originalCode = originalCodes[i],
-					defaultColorNumber = categoryMore.length,
-					customColor = _.getIn(customColors, [code]),
-					backgroundColor = customColor ?  customColor : categoryMore[i % defaultColorNumber];
+					backgroundColor = customColors ?  customColors[i] : categoryMore[i % categoryMore.length];
 
 				return (
 					<Row key={i}>
@@ -672,8 +670,7 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		};
 
 	    render() {
-			let field = _.getIn(column, ['fields', 0]),
-				customColors = _.getIn(column, ['dataset', 'customcolor', field]),
+			let customColors = _.getIn(column, ['colors', 0, 2]),
 				codes = this.state,
 				originalCodes = _.getIn(data, ['codes']),
 				index = _.intersection(_.getIn(data, ['req', 'values', 0]), _.range(data.codes.length));
