@@ -41,8 +41,9 @@ var sortSubSelector = _.memoize1(
 		var indicies = indiciesSelector(length);
 		var d = _.flatmap(data, d => _.getIn(d, ['req', 'values']))
 			.filter(x => x.length);
+		var dir = _.pluck(columns, 'sortDirection');
 
-		sorted = fradixSortL16$64(d, indicies).reverse();
+		sorted = fradixSortL16$64(d, dir, indicies);
 		return sorted || indicies;
 });
 
