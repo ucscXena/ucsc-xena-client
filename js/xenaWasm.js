@@ -76,12 +76,16 @@ function freeList(list, n) {
 // XXX See also SPLIT_MEMORY, which may resolve this problem by
 // using a different growth mechanism.
 
-export function fradixSortL16$64(input, indicies) {
+export function fradixSortL16$64(input, direction, indicies) {
 	var list = marshalList(input),
 		indiciesW = allocArray(indicies),
-		N = indicies.length;
+		N = indicies.length,
+		dirs = Module._malloc(input.length * 4); // 4 byte enums? We should probe this.
 
-	Module._fradixSortL16_64(list, input.length, N, indiciesW);
+	for (var i = 0; i < input.length; ++i) {
+		Module.setValue(dirs + i * 4, direction[i] === 'reverse' ? Module.enum.direction.UP : Module.enum.direction.DOWN, 'i32');
+	}
+	Module._fradixSortL16_64(list, dirs, input.length, N, indiciesW);
 
 	var r = new Uint32Array(Module.HEAPU8.buffer.slice(indiciesW, indiciesW + 4 * N));
 	freeList(list, input.length);
