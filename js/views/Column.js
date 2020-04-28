@@ -786,7 +786,7 @@ class Column extends PureComponent {
 													caption='Kaplan Meier Plot'/>
 												<MenuItem onClick={this.onChart} disabled={chartDisabled}
 													caption='Chart & Statistics'/>
-												<MenuItem onClick={this.onSortDirection} disabled={config.singlecell}
+												<MenuItem onClick={this.onSortDirection}
 													caption='Reverse sort'/>
 												<MenuItem onClick={this.onDownload} caption='Download'/>
 												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}
