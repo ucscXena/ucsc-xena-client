@@ -364,7 +364,7 @@ export function htfc(data) {
 			if (prop === 'proxied') {
 				return data;
 			}
-			if (prop === Symbol.for('filterIndices')) {
+			if (prop === 'filterIndices') {
 				return filterIndices;
 			}
 			var i = parseInt(prop, 10);

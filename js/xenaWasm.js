@@ -6,15 +6,7 @@ var {categoryMore} = require('./colorScales');
 
 export var Module;
 
-// view is deferred because Module doesn't resolve until later.
-// Alternatively, we could put this after the promise.
-var arrTypes = {
-	'double': {ctor: Float64Array, width: 8, view: () => Module.HEAPF64},
-	'float': {ctor: Float32Array, width: 4, view: () => Module.HEAPF32},
-	'u32': {ctor: Uint32Array, width: 4, view: () => Module.HEAPU32}
-};
-
-var arrTypes = {
+export var arrTypes = {
 	'double': 'HEAPF64',
 	'float': 'HEAPF32',
 	'u32': 'HEAPU32',
@@ -32,10 +24,10 @@ function allocArrayAsType(type, arr) {
 };
 
 // Take a typed array & copy it into the heap
-export function allocArray(arr) {
-	var addr = Module._malloc(arr.length * arr.BYTES_PER_ELEMENT),
+export function allocArray(arr, M = Module) {
+	var addr = M._malloc(arr.length * arr.BYTES_PER_ELEMENT),
 	u8 = new Uint8Array(arr.buffer);
-	Module.HEAPU8.set(u8, addr);
+	M.HEAPU8.set(u8, addr);
 	return addr;
 };
 
@@ -44,7 +36,7 @@ export function allocArray(arr) {
 
 var pointerSize = 4;
 function marshalList(arrays) {
-	var arrWASM = arrays.map(allocArray),
+	var arrWASM = arrays.map(a => allocArray(a)), // lambda to defeat map extra params
 		list = Module._malloc(arrWASM.length * pointerSize);
 
 	arrWASM.forEach(function(a, i) {
@@ -158,11 +150,11 @@ function getArrayField(ptr, name, field, length, type) {
 			ptr + struct.offset[field] + t.BYTES_PER_ELEMENT * length).buffer);
 }
 
-function getArrayPtrField(ptr, name, field, length, type) {
-	var struct = Module.struct[name];
-	var t = Module[arrTypes[type]];
-	var p = Module.getValue(ptr + struct.offset[field], '*');
-	return new t.constructor(Module.HEAPU8.slice(p, p + t.BYTES_PER_ELEMENT * length).buffer);
+export function getArrayPtrField(ptr, name, field, length, type, M = Module) {
+	var struct = M.struct[name];
+	var t = M[arrTypes[type]];
+	var p = M.getValue(ptr + struct.offset[field], '*');
+	return new t.constructor(M.HEAPU8.slice(p, p + t.BYTES_PER_ELEMENT * length).buffer);
 }
 
 var allocOrdinal = scale =>
@@ -276,60 +268,6 @@ var colorScale = {
 };
 
 export var getColorScale = ([type, ...args]) => colorScale[type](...args);
-
-// hfc
-
-export function hfcSet(data) {
-	// The wasm call will hold this until it is called again, at which point
-	// the previous buffer is freed. It might be better to free the data before
-	// passing in more. We could, in fact, do this by passing in NULL.
-	var buff = allocArray(data);
-	Module._hfc_set(buff, data.length);
-}
-
-export function hfcSetEmpty() {
-	// see note in hfcSet
-	Module._hfc_set_empty();
-}
-
-export function hfcFilter(list) {
-	var s = allocArray(new Uint32Array(list));
-	Module._hfc_filter(s, list.length);
-	Module._free(s);
-}
-
-export function hfcMerge(data) {
-	var buff = allocArray(data);
-	Module._hfc_merge(buff, data.length);
-}
-
-export function hfcLookup(i) {
-	// does this need to dup the string?
-	return Module.UTF8ToString(Module._hfc_lookup(i));
-}
-
-export function hfcLength() {
-	return Module._hfc_length();
-}
-
-export function hfcBuffer() {
-	var buff = Module._hfc_buff();
-	var len = Module._hfc_buff_length();
-	return new Uint8Array(Module.HEAPU8.buffer.slice(buff, buff + len));
-}
-
-export function hfcSearch(str, type) {
-	var searchType = Module.enum.search_type;
-	var s = allocArray(new Uint8Array(Array.prototype.map.call(str, x => x.charCodeAt(0)).concat([0])));
-
-	var r = Module._hfc_search(s, searchType[type]);
-	var len = Module.getValue(r + Module.struct.search_result.offset.count, 'i32');
-	var matches = getArrayPtrField(r, 'search_result', 'matches', len, 'u32');
-
-	Module._free(s);
-	return matches;
-}
-
 
 // importer for wasm code, to work around the async.
 

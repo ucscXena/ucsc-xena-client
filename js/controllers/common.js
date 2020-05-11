@@ -15,7 +15,6 @@ var gaEvents = require('../gaEvents');
 import {hfc} from '../hfc';
 // pick up signature fetch
 require('../models/signatures');
-import {hfcLength, hfcMerge, hfcSetEmpty} from '../xenaWasm';
 
 import Worker from 'worker-loader!./cluster-worker';
 
@@ -92,23 +91,17 @@ var cohortSamplesQuery =
 			.map((resp, j) => resp.map(samples => [samples, servers[j]]));
 
 var collateSamples = _.curry((cohorts, max, resps) => {
-	hfcSetEmpty();
 	var {'true': pub = [], 'false': priv = []} = _.groupBy(resps, ([, server]) => _.contains(publicServers, server));
-	pub.forEach(([samples]) => {
-		hfcMerge(samples);
-	});
-	var pubLength = hfcLength();
-	priv.forEach(([samples]) => {
-		hfcMerge(samples);
-	});
-
-	return {samples: hfc(), over: false, hasPrivateSamples: hfcLength() > pubLength};
+	return hfc(pub, priv).map(samples => ({
+		samples, over: false, hasPrivateSamples: samples.hasPrivateSamples
+	}));
 });
 
 // reifyErrors should be pass the server name, but in this expression we don't have it.
 function samplesQuery(servers, cohort, max) {
 	return Rx.Observable.zipArray(cohortSamplesQuery(servers, max, cohort).map(reifyErrors))
-		.flatMap(resps => collectResults(resps, collateSamples(cohort, max)));
+		.flatMap(resps => collectResults(resps, _.identity))
+		.flatMap(collateSamples(cohort, max));
 }
 
 function fetchSamples(serverBus, servers, cohort, allowOverSamples) {
