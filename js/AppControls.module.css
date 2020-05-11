@@ -10,6 +10,17 @@
 @value black38 from '../css/variables.css';
 @value black87 from '../css/variables.css';
 
+i.overWarning.hidden {
+	display: none;
+}
+
+i.overWarning {
+	vertical-align: sub;
+	display: inline;
+	font-size: 17px;
+	color: #8d0000 !important;
+}
+
 .appliedFilter {
 	cursor: pointer
 }
