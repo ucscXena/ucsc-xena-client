@@ -8,7 +8,7 @@ var highchartsHelper =  require ('./highcharts_helper');
 require('highcharts/modules/boost')(Highcharts);
 var _ = require('./underscore_ext');
 var colorScales = require ('./colorScales');
-var jStat = require('jStat').jStat;
+var jStat = require('./jStatShim');
 var {getCustomColor} = require('./models/denseMatrix');
 
 var customColors = {};
