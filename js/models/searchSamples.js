@@ -23,7 +23,7 @@ var sampleMethods = {
 // underscore union() botches the result with typed arrays. Should probably
 // switch to bitmaps.
 function filterSampleIds(cohortSamples, type, str) {
-	var fi = cohortSamples[Symbol.for('filterIndices')],
+	var fi = cohortSamples.filterIndices,
 		cmp = sampleMethods[type];
 	return fi ? Array.from(fi(str, type)) : _.filterIndices(cohortSamples, s => cmp(str, s));
 }

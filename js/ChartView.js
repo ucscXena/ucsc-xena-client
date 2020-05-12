@@ -46,7 +46,7 @@ class ChartView extends React.Component {
 		require.ensure(['./chart'], () => {
 			this.chart = require('./chart');
 			root.innerHTML = '';
-			this.destroy = this.chart.render(root, callback, {xena: JSON.stringify(appState)});
+			this.destroy = this.chart.render(root, callback, {xena: appState});
 		});
 	};
 
