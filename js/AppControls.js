@@ -54,17 +54,13 @@ function download([fields, rows]) {
 
 var asciiB = 66;
 
-var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}) => (
+var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, onCellBrowser, cellBrowser, hasColumn}) => (
 	<div className={compStyles.actions}>
 		{hasColumn ? <i className='material-icons' onClick={onMode} title={modeHelp[mode]}>{modeIcon[mode]}</i> : null}
 		{hasColumn ? <i className='material-icons' onClick={onPdf} title='Download as PDF'>picture_as_pdf</i> : null}
 		{hasColumn ? <i className='material-icons' onClick={onDownload} title='Download as tsv'>cloud_download</i> : null}
-		{showWelcome ? null : <i className='material-icons' onClick={onShowWelcome}>help</i>}
-	</div>);
-
-var SingleCellActions = ({cellBrowser, onCellBrowser}) => (
-	<div className={compStyles.actions}>
-		{cellBrowser ? <Button accent onClick={(e) => onCellBrowser(cellBrowser, e)}>2D Cluster View</Button> : null}
+		{showWelcome || config.singlecell ? null : <i className='material-icons' onClick={onShowWelcome}>help</i>}
+		{cellBrowser ? <Button accent className={compStyles.actions} onClick={(e) => onCellBrowser(cellBrowser, e)}>2D Cluster View</Button> : null}
 	</div>);
 
 var BasicSearch = ({help, onTies, tiesEnabled, ...searchProps}) => (
@@ -207,7 +203,9 @@ class AppControls extends PureComponent {
 			cohortName = _.get(cohort, 'name'),
 			hasColumn = !!columnOrder.length,
 			sampleFilter = _.get(cohort, 'sampleFilter'),
-			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null;
+			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null,
+			cellBrowser = _.getIn(cohortCellBrowser, [cohort.name]);
+
 		return (
 				<AppBar>
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
@@ -219,9 +217,7 @@ class AppControls extends PureComponent {
 						<i className='material-icons' onClick={onReset} title='Pick new cohort'>close</i>
 					</div>
 					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
-						{tiesOpen ?
-							<TiesSearch {...{onTies: this.onTies}}/> :
-							config.singlecell ? null :
+						{tiesOpen ? <TiesSearch {...{onTies: this.onTies}}/> :
 								<BasicSearch {...{
 									value: sampleSearch,
 									matches,
@@ -239,12 +235,8 @@ class AppControls extends PureComponent {
 									onTies: this.onTies,
 									tiesEnabled: false}}/>}
 						{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
-							config.singlecell ?
-								<SingleCellActions {...{
-									cellBrowser: _.getIn(cohortCellBrowser, [cohort.name]),
-									onCellBrowser
-								}}/> :
-								<Actions {...{onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}}/>}
+								<Actions {...{onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode,
+									onCellBrowser, cellBrowser, hasColumn}}/>}
 					</div>
 				</AppBar>
 		);
