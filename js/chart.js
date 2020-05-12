@@ -22,32 +22,49 @@ var chartHeight = () =>
 var chartWidth = () =>
 	window.innerWidth * 0.7 + "px";
 
+// return cardinalty, up to max (avoids full iteration of collection)
+function cardinality(coll, max) {
+	var s = new Set();
+	var l = coll.length;
+	for (var i = 0; i < l && coll.size < max; ++i) {
+		s.add(coll[i]);
+	}
+	return s.size;
+}
+
 function render(root, callback, sessionStorage) {
 	var xdiv, ydiv, xAxisDiv, yAxisDiv, // x y  axis dropdown
 		colorDiv, colorAxisDiv, // color dropdown
 		statsDiv, // statistics
 		row, axisContainer,
 		leftContainer, chartContainer,
-		xenaState = sessionStorage.xena ? JSON.parse(sessionStorage.xena) : undefined,
+		xenaState = sessionStorage.xena ? sessionStorage.xena : undefined,
+		chartState = _.get(xenaState, 'chartState', {}),
 		cohort, samplesLength, cohortSamples, updateArgs, update,
 		normalizationState = {},
 		expState = {},
 		expXState = {},
 		chart;
 
+		function setState(keys, value) {
+			chartState = _.assocIn(chartState, keys, value);
+			normalizationState = _.getIn(chartState, ['normalizationState'], {});
+			expState = _.getIn(chartState, ['expState'], {});
+			expXState = _.getIn(chartState, ['expXState'], {});
+		}
+
 		if (xenaState)	{
 			cohort = xenaState.cohort;
 			samplesLength = xenaState.samples.length;
 			cohortSamples = xenaState.cohortSamples;
-			normalizationState = _.getIn(xenaState, ['chartState', 'normalizationState'], {});
-			expState = _.getIn(xenaState, ['chartState', 'expState'], {});
-			expXState = _.getIn(xenaState, ['chartState', 'expXState'], {});
+			normalizationState = _.getIn(chartState, ['normalizationState'], {});
+			expState = _.getIn(chartState, ['expState'], {});
+			expXState = _.getIn(chartState, ['expXState'], {});
 		}
 		updateArgs = [cohort, samplesLength, cohortSamples];
 
-	function setStorage(state) {
-		sessionStorage.xena = JSON.stringify(state);
-		callback(['chart-set-state', state.chartState]);
+	function setStorage() {
+		callback(['chart-set-state', chartState]);
 	}
 
 	function columnLabel (i, colSetting) {
@@ -90,7 +107,7 @@ function render(root, callback, sessionStorage) {
 		dropDownDiv.selectedIndex = 0;  //tocken, action in normalizationUISetting function
 
 		dropDownDiv.addEventListener('change', function () {
-			normalizationState[xenaState.chartState.ycolumn] = dropDownDiv.selectedIndex;
+			setState(['normalizationState', chartState.ycolumn], dropDownDiv.selectedIndex);
 			update.apply(this, updateArgs);
 		});
 
@@ -131,7 +148,7 @@ function render(root, callback, sessionStorage) {
 		dropDownDiv.selectedIndex = 0;
 
 		dropDownDiv.addEventListener('change', function () {
-			expState[xenaState.chartState.ycolumn] = dropDownDiv.selectedIndex;
+			setState(['expState', chartState.ycolumn], dropDownDiv.selectedIndex);
 			update.apply(this, updateArgs);
 		});
 
@@ -172,7 +189,7 @@ function render(root, callback, sessionStorage) {
 		dropDownDiv.selectedIndex = 0;
 
 		dropDownDiv.addEventListener('change', function () {
-			expXState[xenaState.chartState.xcolumn] = dropDownDiv.selectedIndex;
+			setState(['expXState', chartState.xcolumn], dropDownDiv.selectedIndex);
 			update.apply(this, updateArgs);
 		});
 
@@ -239,14 +256,14 @@ function render(root, callback, sessionStorage) {
 			data = xenaState.data;
 		}
 
-		if (xenaState && xenaState.chartState) {
-			if (xenaState.cohort && (_.isEqual(xenaState.cohort, xenaState.chartState.cohort))) {
+		if (xenaState && chartState) {
+			if (xenaState.cohort && (_.isEqual(xenaState.cohort, chartState.cohort))) {
 				if (selectorID === "Xaxis") {
-					storedColumn = xenaState.chartState.xcolumn;
+					storedColumn = chartState.xcolumn;
 				} else if (selectorID === "Yaxis") {
-					storedColumn = xenaState.chartState.ycolumn;
+					storedColumn = chartState.ycolumn;
 				} else if (selectorID === "Color") {
-					storedColumn = xenaState.chartState.colorColumn;
+					storedColumn = chartState.colorColumn;
 				}
 			}
 		}
@@ -280,7 +297,7 @@ function render(root, callback, sessionStorage) {
 			if (data[column].req.rows && data[column].req.rows.length === 0) { //bad column
 				return;
 			}
-			if (columns[column].codes && _.uniq(data[column].req.values[0]).length > 100) { // ignore any coded columns with too many items, like in most cases, the "samples" column
+			if (columns[column].codes && cardinality(data[column].req.values[0]) === 100) { // ignore any coded columns with too many items, like in most cases, the "samples" column
 				return;
 			}
 			if ((selectorID === "Xaxis" || selectorID === "Color") &&
@@ -411,13 +428,8 @@ function render(root, callback, sessionStorage) {
 			dropDown.style.visibility = "visible";
 
 			//check current expState variable
-			if (expState[column] !== undefined) {
-				dropDownDiv.selectedIndex = expState[column];
-			}
-			else {
-				dropDownDiv.selectedIndex = 0;
-				expState[column] = 0;
-			}
+			dropDownDiv.selectedIndex = _.getIn(chartState, [expState, column], 0);
+			setState([expState, column], dropDownDiv.selectedIndex);
 
 			var notLogScale = _.any(colSettings.units, unit => !unit || unit.search(/log/i) === -1);
 			if (notLogScale) {
@@ -1029,8 +1041,9 @@ function render(root, callback, sessionStorage) {
 			var ySamples = _.flatten(_.values(ybinnedSample));
 
 			// remove empty xcode categories and recal xbinnedSample[code] with samples actually has values in Y
+			var ySamplesSet = new Set(ySamples);
 			xcodemap.forEach(function (code) {
-				xbinnedSample[code] =  _.intersection(xbinnedSample[code], ySamples);
+				xbinnedSample[code] =  xbinnedSample[code].filter(x => ySamplesSet.has(x));
 				if (xbinnedSample[code].length === 0) {
 					delete xbinnedSample[code];
 				}
@@ -1077,10 +1090,12 @@ function render(root, callback, sessionStorage) {
 				xMargin.push(xbinnedSample[code].length);
 				xRatio.push(xMargin[k] / total);
 			}
+
 			for (i = 0; i < ycategories.length; i++) {
 				code = ycategories[i];
+				var ybinnedSampleSet = new Set(ybinnedSample[code]);
 				for (k = 0; k < categories.length; k++) {
-					observed[i][k] = _.intersection(ybinnedSample[code], xbinnedSample[categories[k]]).length;
+					observed[i][k] = xbinnedSample[categories[k]].filter(x => ybinnedSampleSet.has(x)).length;
 					expected[i][k] = xRatio[k] * yMargin[i];
 				}
 			}
@@ -1363,13 +1378,13 @@ function render(root, callback, sessionStorage) {
 		//initialization
 		document.getElementById("myChart").innerHTML = "Querying Xena ...";
 		normalizationUISetting(false);
-		expUISetting(false, expState, ycolumn, null, expYUIParent, expYUI, null);
-		expUISetting(false, expXState, xcolumn, null, expXUIParent, expXUI, null);
+		expUISetting(false, 'expState', ycolumn, null, expYUIParent, expYUI, null);
+		expUISetting(false, 'expXState', xcolumn, null, expXUIParent, expXUI, null);
 		scatterColorUISetting(false);
 
 		// save state cohort, xcolumn, ycolumn, colorcolumn
 		if (xenaState) {
-			xenaState.chartState = {
+			chartState = {
 				"cohort": cohort,
 				"xcolumn": xcolumn,
 				"ycolumn": ycolumn,
@@ -1379,7 +1394,7 @@ function render(root, callback, sessionStorage) {
 				"expXState": expXState
 			};
 			columns = xenaState.columns;
-			setStorage(xenaState);
+			setStorage();
 		}
 
 		if (!((columns[xcolumn] || xcolumn === "none") && columns[ycolumn])) {
@@ -1456,10 +1471,10 @@ function render(root, callback, sessionStorage) {
 			}
 
 			// set y axis unit exponentiation UI
-			expUISetting(!yIsCategorical, expState, ycolumn, columns[ycolumn], expYUIParent, expYUI, ydata);
+			expUISetting(!yIsCategorical, 'expState', ycolumn, columns[ycolumn], expYUIParent, expYUI, ydata);
 
 			// set x axis unit exponentiation UI
-			expUISetting(!xIsCategorical && xcolumn !== "none", expXState, xcolumn, columns[xcolumn], expXUIParent, expXUI, xdata);
+			expUISetting(!xIsCategorical && xcolumn !== "none", 'expXState', xcolumn, columns[xcolumn], expXUIParent, expXUI, xdata);
 
 			// y exponentiation
 			if (yIsCategorical) {
