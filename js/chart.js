@@ -10,7 +10,6 @@ var colorScales = require ('./colorScales');
 var jStat = require('./jStatShim');
 var gaEvents = require('./gaEvents');
 
-
 // Styles
 var compStyles = require('./chart.module.css');
 
@@ -246,8 +245,8 @@ function render(root, callback, sessionStorage) {
 	function axisSelector(selectorID) {
 		var div, option, column, storedColumn,
 			columns, columnOrder,
-			data;
-//			spreadsheetColumn = _.getIn(xenaState, ['chartState', 'spreadsheetColumn']);
+			data,
+			spreadsheetColumn = chartState.spreadsheetColumn;
 
 		if (xenaState) {
 			columnOrder = xenaState.columnOrder;
@@ -258,9 +257,9 @@ function render(root, callback, sessionStorage) {
 		if (xenaState && chartState) {
 			if (xenaState.cohort && (_.isEqual(xenaState.cohort, chartState.cohort))) {
 				if (selectorID === "Xaxis") {
-					storedColumn = chartState.xcolumn;
+					storedColumn = spreadsheetColumn && spreadsheetColumn !== chartState.ycolumn ? 'none' : chartState.xcolumn;
 				} else if (selectorID === "Yaxis") {
-					storedColumn = chartState.ycolumn;
+					storedColumn = spreadsheetColumn ? spreadsheetColumn : chartState.ycolumn;
 				} else if (selectorID === "Color") {
 					storedColumn = chartState.colorColumn;
 				}

@@ -362,7 +362,7 @@ function disableKM(column, hasSurvival) {
 }
 
 function disableChart(column) {
-	if (_.contains(['mutation', 'SV'], column.fieldType) || config.singlecell) {
+	if (_.contains(['mutation', 'SV'], column.fieldType)) {
 		return true;
 	}
 	return false;
