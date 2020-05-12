@@ -30,6 +30,7 @@ var XInputToolbar = require('./XInputToolbar');
 var classNames = require('classnames');
 
 // Styles
+require('../../css/typography.module.css'); // coerce order so XCheckboxGroup overrides typography
 var compStyles = require('./XCheckboxGroup.module.css');
 
 class XCheckboxGroup extends PureComponent {
