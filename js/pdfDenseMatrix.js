@@ -3,10 +3,11 @@ var _ = require('./underscore_ext');
 var widgets = require('./columnWidgets');
 
 function pdf(id, column, vg, state) {
-	let {zoom} = state,
+	let {samples, zoom} = state,
 		{heatmap, colors, codes} = column;
 
 	drawHeatmap(vg, {
+		samples,
 		codes,
 		width: _.getIn(column, ['width']),
 		zoom,
