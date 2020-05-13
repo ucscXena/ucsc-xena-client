@@ -206,6 +206,7 @@ class AppControls extends PureComponent {
 								matches,
 								onHighlightSelect,
 								sampleCount: samples.length,
+								sampleFilter,
 								onFilter: this.onFilter,
 								onZoom: this.onFilterZoom,
 								onCreateColumn: this.onFilterColumn,
