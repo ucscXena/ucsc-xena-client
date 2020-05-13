@@ -19,7 +19,7 @@ config.plugins = config.plugins.concat([
 	new webpack.DefinePlugin({
 		"process.env.NODE_ENV": '"production"' // * see above.
 	}),
-	new ExtractTextPlugin({filename: "[name].[contenthash].css", allChunks: false}),
+	new ExtractTextPlugin({filename: "[name].[contenthash].css", allChunks: true}),
 	new webpack.optimize.CommonsChunkPlugin({name: 'init', filename: "init.[chunkhash].js"})
 ]);
 
