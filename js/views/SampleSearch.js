@@ -141,7 +141,7 @@ class SampleSearch extends PureComponent {
 	}
 
 	render() {
-		var {matches, sampleCount, onFilter, onZoom, onCreateColumn, onResetSampleFilter, mode} = this.props,
+		var {matches, sampleFilter, sampleCount, onFilter, onZoom, onCreateColumn, onResetSampleFilter, mode} = this.props,
 			{value} = this.state,
 			disableActions = !(matches > 0 && matches < sampleCount),
 			noshow = (mode !== "heatmap");
@@ -165,7 +165,7 @@ class SampleSearch extends PureComponent {
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
 				<IconMenu title='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
 					<MenuItem disabled={disableActions} caption='Filter' onClick={onFilter}/>
-					<MenuItem caption='Clear Filter' onClick={onResetSampleFilter}/>
+					<MenuItem caption='Clear Filter' disabled={!sampleFilter} onClick={onResetSampleFilter}/>
 					<MenuItem disabled={disableActions} caption='Zoom' onClick={onZoom}/>
 					<MenuItem disabled={disableActions} caption='New Column' onClick={onCreateColumn}/>
 				</IconMenu>}

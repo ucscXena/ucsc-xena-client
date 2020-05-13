@@ -217,23 +217,25 @@ class AppControls extends PureComponent {
 						<i className='material-icons' onClick={onReset} title='Pick new cohort'>close</i>
 					</div>
 					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
-						{tiesOpen ? <TiesSearch {...{onTies: this.onTies}}/> :
-								<BasicSearch {...{
-									value: sampleSearch,
-									matches,
-									onHighlightSelect,
-									sampleCount: samples.length,
-									onFilter: this.onFilter,
-									onZoom: this.onFilterZoom,
-									onCreateColumn: this.onFilterColumn,
-									onChange: onHighlightChange,
-									mode,
-									onResetSampleFilter,
-									cohort,
-									callback,
-									help,
-									onTies: this.onTies,
-									tiesEnabled: false}}/>}
+						{tiesOpen ?
+							<TiesSearch {...{onTies: this.onTies}}/> :
+							<BasicSearch {...{
+								value: sampleSearch,
+								matches,
+								onHighlightSelect,
+								sampleCount: samples.length,
+								sampleFilter,
+								onFilter: this.onFilter,
+								onZoom: this.onFilterZoom,
+								onCreateColumn: this.onFilterColumn,
+								onChange: onHighlightChange,
+								mode,
+								onResetSampleFilter,
+								cohort,
+								callback,
+								help,
+								onTies: this.onTies,
+								tiesEnabled: false}}/>}
 						{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
 								<Actions {...{onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode,
 									onCellBrowser, cellBrowser, hasColumn}}/>}
