@@ -7,8 +7,19 @@ var includes = (target, str) => {
 	return str.toLowerCase().indexOf(target.toLowerCase()) !== -1;
 };
 
-function invert(matches, allSamples) {
-	return _.difference(allSamples, matches);
+// This assumes that 'matches' is in ascending order.
+function invert(matches, sampleCount) {
+	var ret = new Array(sampleCount - matches.length);
+	for (var i = 0, j = 0, k = 0, m = matches[j]; i < sampleCount; ++i) {
+		if (i === m) {
+			j += 1;
+			m = matches[j];
+		} else {
+			ret[k] = i;
+			k += 1;
+		}
+	}
+	return ret;
 }
 
 var sampleMethods = {
@@ -65,11 +76,11 @@ var searchFloat = _.curry((dataField, cmp, ctx, search, data) => {
 	return _.filterIndices(_.map(values[0], cmp(searchVal)), _.identity);
 });
 
-var searchMutation = _.curry((cmp, {allSamples}, search, data) => {
+var searchMutation = _.curry((cmp, {sampleCount}, search, data) => {
 	var {req: {rows, samplesInResp}} = data;
 
 	if (search === 'null') {
-		return invert(samplesInResp, allSamples);
+		return invert(samplesInResp, sampleCount);
 	}
 
 	// omit 'sample' from the variant search, because it is not stable:
@@ -149,7 +160,7 @@ function evalFieldExp(ctx, expression, column, data) {
 	return m({
 		value: search => searchMethod[column.valueType](ctx, search, data),
 		'quoted-value': search => searchExactMethod[column.valueType](ctx, search, data),
-		ne: exp => invert(evalFieldExp(ctx, exp, column, data), ctx.allSamples),
+		ne: exp => invert(evalFieldExp(ctx, exp, column, data), ctx.sampleCount),
 		lt: search => searchLt[column.valueType](ctx, search, data),
 		gt: search => searchGt[column.valueType](ctx, search, data),
 		le: search => searchLe[column.valueType](ctx, search, data),
@@ -163,7 +174,7 @@ function evalexp(ctx, expression) {
 	return m({
 		value: search => searchAll(ctx, searchMethod, search),
 		'quoted-value': search => searchAll(ctx, searchExactMethod, search),
-		ne: exp => invert(evalexp(ctx, exp), ctx.allSamples),
+		ne: exp => invert(evalexp(ctx, exp), ctx.sampleCount),
 		// XXX intersection and union in underscore are n^2
 		and: (...exprs) => _.intersection(...exprs.map(e => evalexp(ctx, e))),
 		or: (...exprs) => _.union(...exprs.map(e => evalexp(ctx, e))),
@@ -213,10 +224,10 @@ function searchSamples(search, columns, columnOrder, data, cohortSamples) {
 		return {exprs: null, matches: null};
 	}
 	let fieldMap = createFieldMap(columnOrder),
-		allSamples = _.range(_.get(cohortSamples, 'length'));
+		sampleCount = _.get(cohortSamples, 'length');
 	try {
 		var exp = parse(search.trim());
-		return evalcross({columns, data, fieldMap, cohortSamples, allSamples}, exp);
+		return evalcross({columns, data, fieldMap, cohortSamples, sampleCount}, exp);
 	} catch(e) {
 		console.log('parsing error', e);
 		return {exprs: [], matches: [[]]};
