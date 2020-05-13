@@ -50,7 +50,7 @@ function evalCross({samples}, lists, exprs) {
 
 	return {
 		req: {
-			values: [_.map(samples, s => _.sum(bits.filter((v, i) => sets[i].has(s))))]
+			values: [new Float32Array(_.map(samples, s => _.sum(bits.filter((v, i) => sets[i].has(s)))))]
 		},
 		codes: booleanCross(exprs)
 	};
