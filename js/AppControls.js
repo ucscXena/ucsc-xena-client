@@ -202,7 +202,7 @@ class AppControls extends PureComponent {
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
 						<div className={compStyles.titleContainer}>
 							<span className={compStyles.title}>{cohortName}</span>
-							<span className={compStyles.subtitle}>{filter} {samples.length} Samples<i onClick={onAllowOverSamples} title="Limited for performance. Click to see all." className={`${compStyles.overWarning} ${displayOver} material-icons`}>warning</i></span>
+							<span className={compStyles.subtitle}>{filter} {samples.length} Samples<i onClick={onAllowOverSamples} title="Samples on screen limited to 50000 for performance. Click to see all samples." className={`${compStyles.overWarning} ${displayOver} material-icons`}>warning</i></span>
 						</div>
 						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>
 						<i className='material-icons' onClick={onReset} title='Pick new cohort'>close</i>
