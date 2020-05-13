@@ -1,4 +1,3 @@
-
 var getLabel = require('./getLabel');
 var {hexToRGB, colorStr, RGBToHex} = require ('./color_helper');
 var Highcharts = require('highcharts/highstock');
@@ -255,14 +254,14 @@ function render(root, callback, sessionStorage) {
 		}
 
 		if (xenaState && chartState) {
-			if (xenaState.cohort && (_.isEqual(xenaState.cohort, chartState.cohort))) {
-				if (selectorID === "Xaxis") {
-					storedColumn = spreadsheetColumn && spreadsheetColumn !== chartState.ycolumn ? 'none' : chartState.xcolumn;
-				} else if (selectorID === "Yaxis") {
-					storedColumn = spreadsheetColumn ? spreadsheetColumn : chartState.ycolumn;
-				} else if (selectorID === "Color") {
-					storedColumn = chartState.colorColumn;
-				}
+			if (selectorID === "Xaxis") {
+				storedColumn = spreadsheetColumn && spreadsheetColumn !== chartState.ycolumn ? 'none' :
+					_.isEqual(xenaState.cohort, chartState.cohort) ? chartState.xcolumn : null;
+			} else if (selectorID === "Yaxis") {
+				storedColumn = spreadsheetColumn ? spreadsheetColumn :
+					_.isEqual(xenaState.cohort, chartState.cohort) ? chartState.ycolumn :  null;
+			} else if (selectorID === "Color") {
+				storedColumn = _.isEqual(xenaState.cohort, chartState.cohort) ? chartState.colorColumn : null;
 			}
 		}
 
@@ -1378,6 +1377,7 @@ function render(root, callback, sessionStorage) {
 			xlabel, ylabel,
 			xunit, yunit,
 			columns,
+			spreadsheetColumn =  _.getIn(chartState, ['spreadsheetColumn']),
 			normUI = document.getElementById("ynormalization"),
 			expYUIParent = document.getElementById("expYDropDown"),
 			expYUI = document.getElementById("yExponentiation"),
@@ -1406,7 +1406,8 @@ function render(root, callback, sessionStorage) {
 				"colorColumn": colorColumn,
 				"normalizationState": normalizationState,
 				"expState": expState,
-				"expXState": expXState
+				"expXState": expXState,
+				"spreadsheetColumn": spreadsheetColumn
 			};
 			columns = xenaState.columns;
 			setStorage();
