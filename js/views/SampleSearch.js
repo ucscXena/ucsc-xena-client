@@ -5,6 +5,7 @@ import Input from 'react-toolbox/lib/input';
 import {IconMenu, MenuItem} from 'react-toolbox/lib/menu';
 var classNames = require('classnames');
 var Rx = require('../rx');
+var config = require('../config');
 
 // Styles
 var compStyles = require('./SampleSearch.module.css');
@@ -167,7 +168,7 @@ class SampleSearch extends PureComponent {
 					<MenuItem disabled={disableActions} caption='Filter' onClick={onFilter}/>
 					<MenuItem caption='Clear Filter' onClick={onResetSampleFilter}/>
 					<MenuItem disabled={disableActions} caption='Zoom' onClick={onZoom}/>
-					<MenuItem disabled={disableActions} caption='New Column' onClick={onCreateColumn}/>
+					<MenuItem disabled={disableActions || config.singlecell} caption='New Column' onClick={onCreateColumn}/>
 				</IconMenu>}
 			</div>
 		);
