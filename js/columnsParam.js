@@ -121,7 +121,7 @@ var columnOptions = column =>
 
 var encode = x => encodeURIComponent(JSON.stringify(x));
 
-// extract from state
+// extract from state, isgnore all columns of fetchType === signature, e.g. samples, subgroup/New Column, genomic signature
 export var getColumns = state =>
-	encode(map(omit(getIn(state, ['spreadsheet', 'columns'], {}), 'samples'),
+	encode(map(omit(getIn(state, ['spreadsheet', 'columns'], {}), value => value.fetchType === 'signature'),
 		column => merge(columnOptions(column), columnDatasetFields(column))));
