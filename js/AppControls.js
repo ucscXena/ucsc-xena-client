@@ -12,6 +12,7 @@ var classNames = require('classnames');
 var gaEvents = require('./gaEvents');
 import { signatureField } from './models/fieldSpec';
 import { SampleSearch } from './views/SampleSearch';
+import {columnData} from './models/searchSamples';
 import uuid from './uuid';
 
 // Styles
@@ -72,11 +73,11 @@ var TiesActions = ({onTies, onTiesColumn}) => (
 		<a onClick={onTies} className={compStyles.filterHelp}><i className='material-icons'>close</i></a>
 	</div>);
 
-function getFilterColumn(title, sampleSets, exprs, opts = {}) {
+function getFilterColumn(samples, title, matches, exprs, opts = {}) {
 	var field = signatureField(title, {
 			columnLabel: 'Subgroup',
 			valueType: 'coded',
-			signature: ['cross', sampleSets, exprs],
+			signature: ['data', columnData(samples, matches, exprs)],
 			...opts
 		}),
 		settings = _.assoc(field,
@@ -113,11 +114,10 @@ class AppControls extends PureComponent {
 	};
 
 	onFilterColumn = () => {
-		const {appState: {cohortSamples, sampleSearch, allMatches}, callback} = this.props,
-			matching = _.map(allMatches.matches, matchSet => _.map(matchSet, i => cohortSamples[i]));
+		const {appState: {cohortSamples, sampleSearch, allMatches}, callback} = this.props;
 
 		gaEvents('spreadsheet', 'samplesearch', 'new column');
-		callback(['add-column', 0, getFilterColumn(sampleSearch, matching, allMatches.exprs, {filter: sampleSearch})]);
+		callback(['add-column', 0, getFilterColumn(cohortSamples, sampleSearch, allMatches.matches, allMatches.exprs, {filter: sampleSearch})]);
 	};
 
 	onTiesColumn = () => {
