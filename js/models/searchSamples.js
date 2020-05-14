@@ -262,8 +262,44 @@ function remapFields(oldOrder, order, exp) {
 	return treeToString(remapTreeFields(tree, mapping));
 }
 
+function membershipSum(samples, lists, bits) {
+	var ret = new Float32Array(samples.length);
+	lists.forEach((list, b) => {
+		var len = list.length;
+		var bit = bits[b];
+		for (var i = 0; i < len; i++) {
+			var j = list[i];
+			ret[j] += bit;
+		}
+	});
+	return ret;
+}
+
+// cross product of boolean terms, as text, e.g. for 2 terms,
+// !a !b, a !b, !a b, a b
+function booleanCross(terms, i = 0, acc = []) {
+	return i === terms.length ? acc :
+		booleanCross(terms, i + 1,
+			acc.length === 0 ? ['false', 'true'] :
+				acc.map(t => `${t};false`).concat(
+					acc.map(t => `${t};true`)));
+}
+
+function columnData(samples, lists, exprs) {
+	var bits = _.times(lists.length, i => 1 << i); // 1, 2
+	var column = membershipSum(samples, lists, bits);
+
+	return {
+		req: {
+			values: [column]
+		},
+		codes: booleanCross(exprs)
+	};
+}
+
 module.exports = {
 	searchSamples,
+	columnData,
 	treeToString,
 	remapFields,
 	parse
