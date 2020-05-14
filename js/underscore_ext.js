@@ -361,6 +361,21 @@ function union(...args) {
 	return unique(flattened);
 }
 
+// underscore intersection is slow, due to n^2 algorithm using _.contains.
+function intersection(...args) {
+	if (!args.length) {
+		return [];
+	}
+	// start with shortest list
+	args.sort((a, b) => a.length - b.length);
+	var f = args.shift();
+	while (f.length && args.length) {
+		var n = new Set(args.shift());
+		f = f.filter(v => n.has(v));
+	}
+	return f;
+}
+
 // make unique by appending numbered suffix
 function uniquify(strs) {
 	var counts = {};
@@ -515,6 +530,7 @@ _.mixin({
 	fmapMemoize1,
 	groupByConsec,
 	insert,
+	intersection,
 	isEqual: fastDeepEqual,
 	listSetsEqual,
 	matchKeys,
