@@ -3,12 +3,13 @@
 'use strict';
 
 import {concatBins, parse} from './binpackJSON';
-import {servers} from './defaultServers';
+import {hfcCompress} from './hfc';
 var Rx = require('./rx');
 var _ = require('./underscore_ext');
 var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
 // Load all query files as a map of strings.
 var qs = require('./loadXenaQueries');
+var wasm = require('ucsc-xena-wasm');
 
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
 import cohortMetaData from './cohortMetaData';
@@ -219,6 +220,15 @@ function indexTranscripts(resp) {
 	return collateRows(resp).map(transcriptAttrs);
 }
 
+function encodeSamples(samples) {
+	// samples is either an array, or a binary blob (Uint8Array) with
+	// compressed data.
+	return _.isArray(samples) ?
+		Rx.Observable.bindCallback(wasm().then)()
+			.map(Module => hfcCompress(Module, samples)) :
+		Rx.Observable.of(samples);
+}
+
 // Generate sql patterns for case-insensitive match of a prefix, by
 // permutting the characters having case, up to the character limit 'maxPermute'.
 // The results have to be filtered, since they may contain spurious matches.
@@ -292,35 +302,82 @@ function xenaCallBPJ(queryFn, ...params) {
 	return concatBins(bins, edn);
 }
 
+var BPJAlts = {
+	cohortSamples: 'cohortSamplesHFC',
+	datasetSamplesExamples: 'datasetSamplesHFCExamples'
+};
+
+var getBPJQuery = name => _.get(qs, _.get(BPJAlts, name, name));
 
 // Given a host, query, and parameters, marshall the parameters and dispatch a
 // POST, returning an observable.
-function doPostBPJ(query, host, ...params) {
+function doPostBPJ(name, host, ...params) {
+	var query = getBPJQuery(name);
 	return Rx.Observable.ajax(
 		xenaPostBPJ(host, xenaCallBPJ(query, ...params))
-	).map(xhr => parse(new Uint8Array(xhr.response)));
+	).map(ajax => ({ajax, resp: parse(new Uint8Array(ajax.response))}));
 }
 
-function doPostJSON(query, host, ...params) {
+function doPostJSON(name, host, ...params) {
+	var query = qs[name];
 	return Rx.Observable.ajax(
 		xenaPost(host, xenaCall(query, ...params))
-	).map(jsonResp);
+	).map(ajax => ({ajax, resp: jsonResp(ajax)}));
 }
 
-// XXX Should discover this automatically, instead of having a list
-var hubMethod = {
-	[servers.localHub]: doPostBPJ,
-	[servers.singlecellHub]: doPostBPJ
-};
-var getHubMethod = hub => _.get(hubMethod, hub, doPostJSON);
+// This is weird, but we enabled the header after implementing bpj, so
+// the server supports bpj if the header is readable. If status is zero,
+// this check doesn't mean anything.
+var getAPI = xhr => xhr.getResponseHeader('Xena-API') ? 'bpj' : 'json';
 
+// cache of hub API version. We try this first.
+var disposition = {};
 
-var doPost = (query, host, ...params) => getHubMethod(host)(query, host, ...params);
+var getResp = ({resp}) => resp;
+
+// These 'try' methods are much too subtle, and reflect the failure modes
+// when we send a query by the wrong method. CORS confuses things substantially,
+// because we can't distinguish a CORS failure from a connection-refused, or
+// other client-side failure.
+function tryBPJPost(name, host, ...params) {
+	return doPostBPJ(name, host, ...params).map(getResp)
+		.catch(err => err.xhr.status !== 0 ?
+			Rx.Observable.throw(err, Rx.Scheduler.asap) :
+			doPostJSON(name, host, ...params).map(getResp)
+				.do(() => disposition[host] = 'json')
+			.catch(() => Rx.Observable.throw(err, Rx.Scheduler.asap)));
+}
+
+function tryJSONPost(name, host, ...params) {
+	function swapAndRet(x) {
+		disposition[host] = 'bpj';
+		return x;
+	}
+	return doPostJSON(name, host, ...params)
+		.flatMap(({resp, ajax}) =>
+			getAPI(ajax.xhr) === 'bpj' ?
+				swapAndRet(doPostBPJ(name, host, ...params)).map(getResp) :
+				Rx.Observable.of(resp, Rx.Scheduler.asap))
+		.catch(err =>
+			getAPI(err.xhr) === 'bpj' ?
+				swapAndRet(doPostBPJ(name, host, ...params)).map(getResp) :
+				Rx.Observable.throw(err, Rx.Scheduler.asap));
+}
+
+function doPost(name, host, ...params) {
+	var cached = disposition[host] = disposition[host] || 'bpj';
+	return cached === 'json' ?
+		tryJSONPost(name, host, ...params) :
+		tryBPJPost(name, host, ...params);
+}
 
 
 // Create POST methods for all of the xena queries.
-var queryPosts = _.mapObject(qs, query =>
-		(...args) => doPost(query, ...args));
+// We need to now support queries that change depending on the wire protocol.
+// That includes the transforms, below. So, we need to wrap it after this point,
+// query and transform selected with the POST method.
+var queryPosts = _.mapObject(qs, (query, name) =>
+		(...args) => doPost(name, ...args));
 
 ////////////////////////////////////////////////////
 // Extend POST methods
@@ -375,7 +432,10 @@ function transformPOSTMethods(postMethods) {
 				.map(list => alignMatches(fields, list)),
 		matchPartialField: postFn => (host, dataset, prefix, limit) =>
 			postFn(host, dataset, prefixPatterns(prefix), limit)
-			.map(filterByPrefix(prefix))
+			.map(filterByPrefix(prefix)),
+		// XXX review 'max' parameter, for singlecell branch
+		cohortSamples: postFn => (host, cohort, max) =>
+			postFn(host, cohort, max).flatMap(encodeSamples)
 	};
 
 	var mapPostFn = (transform, name) => transform(postMethods[name]),

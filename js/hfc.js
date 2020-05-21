@@ -2,7 +2,7 @@
 
 var wasm = require('ucsc-xena-wasm');
 var Rx = require('./rx');
-import {allocArray, getArrayPtrField} from './xenaWasm';
+import {allocArray, allocStrings, getArrayPtrField} from './xenaWasm';
 
 function hfcSet(Module, data) {
 	// The wasm call will hold this until it is called again, at which point
@@ -150,6 +150,22 @@ hfcFilter = function(ModuleIn, list, hasPrivateSamples) {
 		return hfcProxy(Module, hasPrivateSamples);
 	});
 };
+
+export function hfcCompress(Module, strings) {
+	var {list, buff} = allocStrings(strings, Module);
+	var hfc = Module._hfc_compress(strings.length, list);
+	Module._free(buff);
+	Module._free(list);
+	var struct = Module.struct.bytes;
+	var bytes = {
+		buff: Module.getValue(hfc + struct.offset.bytes, '*'),
+		length: Module.getValue(hfc + struct.offset.len, 'i32')
+	};
+	var ret = new Uint8Array(Module.HEAP8.buffer.slice(bytes.buff, bytes.buff + bytes.length));
+	Module._free(bytes.buff);
+	Module._free(bytes);
+	return ret;
+}
 
 export function hfc(pub, priv) {
 	return Rx.Observable.bindCallback(wasm().then)().map(Module => {

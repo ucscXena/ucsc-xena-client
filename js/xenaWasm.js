@@ -31,10 +31,27 @@ export function allocArray(arr, M = Module) {
 	return addr;
 };
 
+var pointerSize = 4;
+
+export function allocStrings(arr, M = Module) {
+	var sorted = arr.slice().sort();
+	var total = sorted.reduce((acc, s) => acc + s.length + 1, 0);
+	var list = M._malloc(sorted.length * pointerSize);
+	var buff = M._malloc(total);
+	var offset = 0;
+	sorted.forEach((s, i) => {
+		var ptr = buff + offset;
+		M.writeAsciiToMemory(s, ptr, false);
+		M.setValue(list + i * pointerSize, ptr, '*');
+		offset += s.length + 1;
+	});
+
+	return {list, buff};
+}
+
 //var allocArrayOrAsType = (arr, type) =>
 //	arr.BYTES_PER_ELEMENT ? allocArray(arr) : allocArrayAsType(type, arr);
 
-var pointerSize = 4;
 function marshalList(arrays) {
 	var arrWASM = arrays.map(a => allocArray(a)), // lambda to defeat map extra params
 		list = Module._malloc(arrWASM.length * pointerSize);
