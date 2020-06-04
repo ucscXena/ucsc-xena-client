@@ -556,7 +556,6 @@ class Column extends PureComponent {
 
   canDoGeneSetComparison = () => {
     let {column: {fieldType, valueType, heatmap}, data: {codes}, cohort: {name}} = this.props;
-    console.log(this.props);
     if(fieldType !== 'clinical') {return false ;}
     if(valueType !== 'coded') {return false ;}
     if(!codes || codes.length < 2 ) {return false ;}
@@ -602,7 +601,6 @@ class Column extends PureComponent {
     const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
     // const ROOT_URL = 'http://localhost:3000/#';
    const finalUrl = `${ROOT_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`;
-   // console.log('final url', finalUrl);
 
 	this.setState({
 	  geneSetUrl: `${finalUrl}`,
@@ -824,7 +822,6 @@ class Column extends PureComponent {
 					list = {column.fields}
 					subColumnIndex = {this.state.subColumnIndex}/>
 				: null;
-
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
 		// tooltips) for children. We must use a different tag, e.g. 'label'.
