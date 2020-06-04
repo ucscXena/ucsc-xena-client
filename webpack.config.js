@@ -1,19 +1,29 @@
 /*global require: false, module: false, __dirname: false */
-'use strict';
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var webpack = require('webpack');
 var path = require('path');
+
 var reactToolboxVariables = require('./reactToolboxVariables');
+
+var postcssPlugins = [
+	require('postcss-cssnext')({
+		features: {
+			customProperties: {
+				variables: reactToolboxVariables
+			}
+		}
+	}),
+	require('postcss-modules-values')
+];
 
 var htmlPlugin = process.argv.indexOf('--disable-html-plugin') === -1 ?
 	[new HtmlWebpackPlugin({
 		title: "UCSC Xena",
 		filename: "index.html",
-		template: "page.template"
+		inject: false,
+		template: "!!blueimp-tmpl-loader!page.template"
 	})] : [];
 
 module.exports = {
-	historyApiFallback: true,
 	entry: {heatmap: './js/main', docs: './js/docs', register: './js/register', bookmarks: './js/admin/bookmarks.js'},
 	output: {
 		path: __dirname + "/build",
@@ -24,6 +34,7 @@ module.exports = {
 		host: "localhost",
 		publicPath: '/',
 		disableHostCheck: true,
+		historyApiFallback: true,
 		proxy: {
 			'/api/**': {
 				changeOrigin: true,
@@ -35,22 +46,39 @@ module.exports = {
 		}
 	},
 	module: {
-		loaders: [
-			{ test: /loadXenaQueries.js$/, loader: "val" },
-			{ test: /\.xq$/, loader: "raw" },
+		rules: [
+			{ test: /loadXenaQueries.js$/, loader: "val-loader" },
+			{ test: /\.xq$/, loader: "raw-loader" },
 			//// bunch of special loading required for pdfkit
-			{ test: /png-js|fontkit[/\\]index.js$|unicode-properties[/\\]index.js$/, loader: "transform?brfs!babel" },
-			{ test: /pdfkit.js/, loader: "transform?brfs!babel" },
-			{ test: /dfa[/\\]index.js/, loader: "babel" },
-			{ test: /svg-to-pdfkit[/\\]source.js/, loader: "babel" },
-			{ test: /unicode-trie[/\\]index.js/, loader: "babel" },
-			{ test: /unicode-trie[/\\]swap.js/, loader: "babel" },
-			{ test: /linebreak[/\\]src[/\\]pairs.js/, loader: "babel" },
-			{ test: /linebreak[/\\]src[/\\]linebreaker.js/, loader: "transform?brfs!babel" },
-			{ test: /unicode-properties[/\\]unicode-properties.browser.cjs.js/, loader: "babel" },
-			{ test: /src[/\\]assets/, loader: "arraybuffer" },
-			{ test: /\.afm$/, loader: "raw" },
-			////
+			{
+				test: /png-js|fontkit[/\\]index.js$|unicode-properties[/\\]index.js$/,
+				use: [
+					{ loader: 'transform-loader', options: { brfs: true } },
+					{ loader: 'babel-loader' }
+				]
+			},
+			{
+				test: /pdfkit.js/,
+				use: [
+					{ loader: 'transform-loader', options: { brfs: true } },
+					{ loader: 'babel-loader' }
+				]
+			},
+			{ test: /dfa[/\\]index.js/, loader: "babel-loader" },
+			{ test: /svg-to-pdfkit[/\\]source.js/, loader: "babel-loader" },
+			{ test: /unicode-trie[/\\]index.js/, loader: "babel-loader" },
+			{ test: /unicode-trie[/\\]swap.js/, loader: "babel-loader" },
+			{ test: /linebreak[/\\]src[/\\]pairs.js/, loader: "babel-loader" },
+			{
+				test: /linebreak[/\\]src[/\\]linebreaker.js/,
+				use: [
+					{ loader: 'transform-loader', options: { brfs: true } },
+					{ loader: 'babel-loader' }
+				]
+			},
+			{ test: /unicode-properties[/\\]unicode-properties.browser.cjs.js/, loader: "babel-loader" },
+			{ test: /src[/\\]assets/, loader: "arraybuffer-loader" },
+			{ test: /\.afm$/, loader: "raw-loader" },
 			{
 				test: /\.js$/,
 				include: [
@@ -58,59 +86,74 @@ module.exports = {
 					path.join(__dirname, 'test'),
 					path.join(__dirname, 'doc')
 				],
-				loaders: ['babel-loader'],
-				type: 'js'
+				loader: ['babel-loader']
 			},
 			{
 				// css modules
 				test: path => path.match(/\.css$/) && (path.indexOf('toolbox') !== -1 || path.match(/\.module\.css$/)),
 				// must be two-element array. See webpack.prod.js
-				loaders: [
-					'style-loader',
-					'css-loader?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments',
-				],
-				extract: true // XXX see webpack.prod.js
+				use: [
+					{ loader: 'style-loader'},
+					{
+						loader: 'css-loader',
+						options: {
+							sourceMap: true,
+							modules: true,
+							importLoaders: 1,
+							localIdentName: '[name]__[local]___[hash:base64:5]',
+						}
+					},
+					{
+						loader: 'postcss-loader',
+						options: {
+							sourceMap: true,
+							sourceComments: true,
+							plugins: () => postcssPlugins
+						}
+					}
+				]
 			},
 			{
 				// 'sourceMap' and 'modules' breaks existing css, so handle them separately
 				test: path => path.match(/\.css$/) && !(path.indexOf('toolbox') !== -1 || path.match(/\.module\.css$/)),
 				// must be two-element array. See webpack.prod.js
-				loaders: [
-					'style-loader',
-					'css-loader?importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments'
-				],
-				extract: true // XXX see webpack.prod.js
+				use: [
+					{ loader: 'style-loader' },
+					{
+						loader: 'css-loader',
+						options: {
+							importLoaders: 1,
+							localIdentName: '[name]__[local]___[hash:base64:5]'
+						}
+					},
+					{
+						loader: 'postcss-loader',
+						options: {
+							sourceMap: true,
+							sourceComments: true,
+							plugins: () => postcssPlugins
+						}
+					}
+				]
 			},
-			{ test: /\.json$/, loader: "json" },
-			{ test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i, loaders: ['url?limit=10000'] }
+			{
+				test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i,
+				loader: 'url-loader',
+				options: { limit: 10000 }
+			}
 		]
 	},
-	plugins: htmlPlugin.concat([
-		new webpack.OldWatchingPlugin()
-	]),
-	resolveLoader: {
-		// http://webpack.github.io/docs/troubleshooting.html#npm-linked-modules-doesn-t-find-their-dependencies
-		fallback: path.join(__dirname, "node_modules")  // handle 'npm ln' for loaders
-	},
+	plugins: htmlPlugin.concat([]),
 	resolve: {
-		fallback: path.join(__dirname, "node_modules"), // handle 'npm ln'
+		// pdfkit exports es6 modules, which webpack will prefer by default, but
+		// getting them to build correctly is extremely complicated. So, we configure
+		// webpack to prefer commonjs modules ('main').
+		mainFields: ['browser', 'main', 'module'],
 		alias: {
 			'redboxOptions': path.join(__dirname, 'redboxOptions.json'),
 			'redux-devtools': path.join(__dirname, 'js/redux-devtool-shim'),
 			'fs': 'pdfkit/js/virtual-fs.js'
 		},
-		extensions: ['', '.js', '.json', '.coffee']
-	},
-	postcss: () => {
-		return [
-			require('postcss-cssnext')({
-				features: {
-					customProperties: {
-						variables: reactToolboxVariables
-					}
-				}
-			}),
-			require('postcss-modules-values'),
-		];
+		extensions: ['.js', '.json', '.coffee']
 	}
 };

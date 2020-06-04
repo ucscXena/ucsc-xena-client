@@ -115,6 +115,10 @@ class ApplicationContainer extends React.Component {
 		this.props.callback(['highlightSelect', highlight]);
 	}
 
+	onAllowOverSamples = () => {
+		this.props.callback(['allowOverSamples', true]);
+	};
+
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback, children} = this.props,
@@ -137,6 +141,7 @@ class ApplicationContainer extends React.Component {
 					Spreadsheet={SpreadsheetContainer}
 					onHighlightChange={this.on.highlightChange}
 					onHighlightSelect={this.onHighlightSelect}
+					onAllowOverSamples={this.onAllowOverSamples}
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
 					onNavigate={this.onNavigate}

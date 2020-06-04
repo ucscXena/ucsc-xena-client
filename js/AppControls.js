@@ -187,8 +187,9 @@ class AppControls extends PureComponent {
 	};
 
 	render() {
-		var {appState: {cohort, mode, columnOrder, showWelcome, samples, sampleSearch, samplesMatched, /*tiesEnabled, */ties},
-				onReset, help, onResetSampleFilter, onHighlightChange, onHighlightSelect, callback} = this.props,
+		var {appState: {cohort, samplesOver, allowOverSamples, mode, columnOrder, showWelcome, samples, sampleSearch, samplesMatched, /*tiesEnabled, */ties},
+				onReset, help, onResetSampleFilter, onHighlightChange, onHighlightSelect, onAllowOverSamples, callback} = this.props,
+			displayOver = samplesOver && !allowOverSamples ? '' : compStyles.hidden,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			{onPdf, onDownload, onShowWelcome, onMode} = this,
 			tiesOpen = _.get(ties, 'open'),
@@ -201,7 +202,7 @@ class AppControls extends PureComponent {
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
 						<div className={compStyles.titleContainer}>
 							<span className={compStyles.title}>{cohortName}</span>
-							<span className={compStyles.subtitle}>{filter} {samples.length} Samples</span>
+							<span className={compStyles.subtitle}>{filter} {samples.length} Samples<i onClick={onAllowOverSamples} title="Samples on screen limited to 50000 for performance. Click to see all samples." className={`${compStyles.overWarning} ${displayOver} material-icons`}>warning</i></span>
 						</div>
 						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>
 						<i className='material-icons' onClick={onReset} title='Pick new cohort'>close</i>
