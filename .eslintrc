@@ -55,6 +55,6 @@
 		// would like to enable this, but it emits errors on functions
 		// returning jsx, which is madness.
 		"react/display-name": 0,
-		semi: [2, "always"]
+		"semi": [2, "always"]
 	}
 }
