@@ -78,6 +78,11 @@ class IconMenu extends React.Component {
 	}
 }
 
+
+function uniqueNotNull(data) {
+  return _.uniq(data).filter( f => f !== null);
+}
+
 const TooltipMenuItem = Tooltip(MenuItem);
 
 const tooltipConfig = (message) => {
@@ -549,19 +554,19 @@ class Column extends PureComponent {
 		this.props.onChart(this.props.id);
 	};
 
-	getHeatMapCodes = (data)  => {
-    return _.uniq(data).filter( f => f !== null);
-  };
 
 
-  canDoGeneSetComparison = () => {
+	canDoGeneSetComparison = () => {
     let {column: {fieldType, valueType, heatmap}, data: {codes}, cohort: {name}} = this.props;
-    if(fieldType !== 'clinical') {return false ;}
-    if(valueType !== 'coded') {return false ;}
-    if(!codes || codes.length < 2 ) {return false ;}
-    if(DETAIL_DATASET_FOR_GENESET.indexOf(name) < 0) {return false;}
-    return (this.getHeatMapCodes(heatmap[0]).length === 2);
-    // TODO: pull from common source
+    if(
+      fieldType !== 'clinical' ||
+      valueType !== 'coded' ||
+      !codes || codes.length < 2  ||
+      DETAIL_DATASET_FOR_GENESET.indexOf(name) < 0
+    ) {
+      return false ;
+    }
+    return (uniqueNotNull(heatmap[0]).length === 2);
   };
 
 	hideGeneSetWizard = () => {
@@ -586,8 +591,8 @@ class Column extends PureComponent {
   showGeneSetComparison = () => {
     const {column: {heatmap, codes}, cohort: {name} } = this.props;
     const heatmapData = heatmap[0].filter( f => f !== null);
-    const heatmapCodes = this.getHeatMapCodes(heatmapData);
-    const heatmapLookup = this.objectFlip(heatmapCodes);
+    const heatmapCodes = uniqueNotNull(heatmapData);
+    const heatmapLookup = _.invert(heatmapCodes);
     const sampleData = _.map(this.props.samples, this.props.sampleFormat);
     let subCohortData = [[], []];
     const heatmapLabels = [codes[heatmapCodes[0]], codes[heatmapCodes[1]]];
@@ -786,7 +791,7 @@ class Column extends PureComponent {
 			geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			chartDisabled = disableChart(column),
-      canDoGeneSetComparison = this.canDoGeneSetComparison(),
+	    canDoGeneSetComparison = this.canDoGeneSetComparison(),
       status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
