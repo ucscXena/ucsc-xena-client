@@ -35,6 +35,9 @@ module.exports = {
 		publicPath: '/',
 		disableHostCheck: true,
 		historyApiFallback: true,
+		headers: {
+			"Content-Security-Policy-Report-Only": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src *; img-src *"
+		},
 		proxy: {
 			'/api/**': {
 				changeOrigin: true,
@@ -138,8 +141,7 @@ module.exports = {
 			},
 			{
 				test: /\.(jpe?g|png|gif|svg|eot|woff2?|ttf)$/i,
-				loader: 'url-loader',
-				options: { limit: 10000 }
+				loader: 'file-loader'
 			}
 		]
 	},
