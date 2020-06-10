@@ -39,6 +39,7 @@ var whiteList = {
 	header: ['style'],
 	hr: ['style'],
 	i: ['style'],
+	iframe: ['src', 'width', 'height', 'frameborder', 'allowfullscreen'],
 	img: ['src', 'alt', 'title', 'width', 'height', 'style'],
 	ins: ['datetime', 'style'],
 	li: ['style'],
