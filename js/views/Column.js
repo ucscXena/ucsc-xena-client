@@ -29,6 +29,10 @@ var crosshair = require('./cursor.png');
 var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
 var config = require('../config');
+import {AVAILABLE_GENESET_COHORTS, GeneSetViewDialog} from './GeneSetViewDialog';
+
+
+
 
 var ESCAPE = 27;
 
@@ -37,7 +41,7 @@ class IconMenu extends React.Component {
 		if (ev.keyCode === ESCAPE) {
 			this.ref.handleMenuHide();
 		}
-	}
+	};
 	cleanup() {
 		// We get an onHide() call from setting state in Menu, *and*
 		// from this.ref.handleMenuHide(), during this.onKeyDown. So,
@@ -55,7 +59,7 @@ class IconMenu extends React.Component {
 		var {onHide} = this.props;
 		this.cleanup();
 		onHide && onHide();
-	}
+	};
 	onShow = () => {
 		var {onShow} = this.props;
 		this.curtain = document.createElement('div');
@@ -63,14 +67,19 @@ class IconMenu extends React.Component {
 		document.body.appendChild(this.curtain);
 		document.addEventListener('keydown', this.onKeyDown, false);
 		onShow && onShow();
-	}
+	};
 	onRef = ref => {
 		this.ref = ref;
-	}
+	};
 	render() {
 		var others = _.omit(this.props, 'onShow', 'onHide');
 		return <RTIconMenu innerRef={this.onRef} onShow={this.onShow} onHide={this.onHide} {...others}/>;
 	}
+}
+
+
+function uniqueNotNull(data) {
+  return _.uniq(data).filter( f => f !== null);
 }
 
 const TooltipMenuItem = Tooltip(MenuItem);
@@ -428,7 +437,10 @@ class Column extends PureComponent {
 	state = {
 		dragZoom: {},
 		subColumnIndex: {},
-		specialDownloadMenu: specialDownloadMenu
+		specialDownloadMenu: specialDownloadMenu,
+		showGeneSetWizard: false,
+		geneSetUrl: undefined,
+
 	};
 
 	//	addAnnotationHelp(target) {
@@ -540,6 +552,58 @@ class Column extends PureComponent {
 		gaEvents('spreadsheet', 'columnChart-open');
 		this.props.onChart(this.props.id);
 	};
+
+
+
+	canDoGeneSetComparison = () => {
+    let {column: {fieldType, valueType, heatmap}, data: {codes}, cohort: {name}} = this.props;
+    if(
+      fieldType !== 'clinical' ||
+      valueType !== 'coded' ||
+      !codes || codes.length < 2  ||
+      AVAILABLE_GENESET_COHORTS.indexOf(name) < 0
+    ) {
+      return false ;
+    }
+    return (uniqueNotNull(heatmap[0]).length === 2);
+  };
+
+	hideGeneSetWizard = () => {
+		this.setState({
+			showGeneSetWizard: false,
+		});
+	};
+
+
+  /**
+   * We build out the URL.
+   * generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
+   */
+  showGeneSetComparison = () => {
+    const {column: {heatmap, codes}, cohort: {name} } = this.props;
+    const heatmapData = heatmap[0].filter( f => f !== null);
+    const heatmapCodes = uniqueNotNull(heatmapData);
+    const heatmapLookup = _.invert(heatmapCodes);
+    const sampleData = _.map(this.props.samples, this.props.sampleFormat);
+    let subCohortData = [[], []];
+    const heatmapLabels = [codes[heatmapCodes[0]], codes[heatmapCodes[1]]];
+    for (const d in heatmapData) {
+        subCohortData[heatmapLookup[heatmapData[d]]].push(sampleData[d]);
+    }
+
+	const subCohortA = `subCohortSamples1=${name}:${heatmapLabels[0]}:${subCohortData[0]}&selectedSubCohorts1=${heatmapLabels[0]}&cohort1Color=${categoryMore[heatmapCodes[0]]}`;
+	const subCohortB = `subCohortSamples2=${name}:${heatmapLabels[1]}:${subCohortData[1]}&selectedSubCohorts2=${heatmapLabels[1]}&cohort2Color=${categoryMore[heatmapCodes[1]]}`;
+
+    const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
+    // const ROOT_URL = 'http://localhost:3000/#';
+   const finalUrl = `${ROOT_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`;
+
+	this.setState({
+	  geneSetUrl: `${finalUrl}`,
+	  showGeneSetWizard: true,
+	  onHide: this.hideGeneSetWizard,
+	});
+  };
 
 	onSortDirection = () => {
 		var newDir = _.get(this.props.column, 'sortDirection', 'forward') === 'forward' ?
@@ -718,7 +782,8 @@ class Column extends PureComponent {
 			geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			chartDisabled = disableChart(column),
-			status = _.get(data, 'status'),
+	    canDoGeneSetComparison = this.canDoGeneSetComparison(),
+      status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
 			annotation = showPosition(column) ?
@@ -762,6 +827,7 @@ class Column extends PureComponent {
 		// XXX put position into a css module
 		return (
 				<div style={{width: width, position: 'relative'}}>
+					<GeneSetViewDialog showGeneSetWizard={this.state.showGeneSetWizard} geneSetUrl={this.state.geneSetUrl} onHide={this.hideGeneSetWizard}/>
 					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height}
 								 positionHeight={column.position ? positionHeight : 0} selection={selection}>
 						<ColCard colId={label}
@@ -787,6 +853,10 @@ class Column extends PureComponent {
 													caption='Kaplan Meier Plot'/>
 												<MenuItem onClick={this.onChart} disabled={chartDisabled}
 													caption='Chart & Statistics'/>
+                        {canDoGeneSetComparison &&
+                        <MenuItem onClick={this.showGeneSetComparison}
+                                  caption='Differential Geneset View'/>
+                        }
 												<MenuItem onClick={this.onSortDirection} caption='Reverse sort'/>
 												<MenuItem onClick={this.onDownload} caption='Download'/>
 												{aboutDatasetMenu(this.onAbout, _.get(dataset, 'dsID'))}

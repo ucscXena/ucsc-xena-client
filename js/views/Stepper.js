@@ -24,6 +24,7 @@ import {AppBar as RTBAppBar} from 'react-toolbox/lib/app_bar';
 var _ = require('../underscore_ext');
 
 // Styles
+require('../../css/typography.module.css'); // coerce order so Stepper overrides typography
 var compStyles = require('./Stepper.module.css');
 
 class Stepper extends React.Component {

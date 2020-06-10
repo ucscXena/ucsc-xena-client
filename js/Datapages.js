@@ -24,6 +24,8 @@ var classNames = require('classnames');
 var {getHubParams} = require('./hubParams');
 import PureComponent from './PureComponent';
 import wrapLaunchHelper from './LaunchHelper';
+import xss from './xss';
+
 
 var getHubName = host => get(serverNames, host, host);
 
@@ -217,7 +219,7 @@ var markdownValue = (value) => {
 	if (value && !value.error) {
 		var converter = new showdown.Converter();
 		return (<div className={styles.header}
-			dangerouslySetInnerHTML={{__html: converter.makeHtml(value)}}/>);
+			dangerouslySetInnerHTML={{__html: xss(converter.makeHtml(value))}}/>);
 	}
 };
 
@@ -278,9 +280,12 @@ class CohortPage extends React.Component {
 
 	clickVizButton = (ev) => {
 		if (ev.target.className === 'cohortButton') {
+			ev.target.dataset.bookmark ?
+			window.open(`${document.location.origin}/?bookmark=${ev.target.dataset.bookmark}`, "_self") :
 			this.onViz();
 		}
 	};
+
 
 	onDataset = (ev) => { navHandler.call(this, ev); };
 
@@ -349,11 +354,11 @@ var toDownloadLink = value => (
 		{'; '}
 		<a href={jsonLink(value)}>Full metadata</a>
 	</span>);
-var toHTML = value => <span dangerouslySetInnerHTML={{__html: value}}/>;
+var toHTML = value => <span dangerouslySetInnerHTML={{__html: xss(value)}}/>;
 
 var headerValue = value => value && <p className={styles.header}>{value}</p>;
 var htmlValue = value => value &&
-	<p className={styles.header} dangerouslySetInnerHTML={{__html: value}}/>;
+	<p className={styles.header} dangerouslySetInnerHTML={{__html: xss(value)}}/>;
 
 // XXX Does not display load warning in pop-up
 // XXX Does not use red/blue coloring for error vs. other load status (e.g. 'loading')

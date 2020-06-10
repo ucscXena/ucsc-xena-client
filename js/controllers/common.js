@@ -145,6 +145,7 @@ var setCohortRelatedFields = (state, cohort) =>
 		'cohort', cohort,
 		'sampleSearch', '',
 		'hasPrivateSamples', false,
+		'allowOverSamples', false,
 		'cohortSamples', [],
 		'columns', {},
 		'columnOrder', [],

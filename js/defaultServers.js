@@ -12,7 +12,8 @@ var servers = {
 	treehouseHub: 'https://xena.treehouse.gi.ucsc.edu:443',
 	gdcHub: "https://gdc.xenahubs.net",
 	atacSeqHub: "https://atacseq.xenahubs.net",
-	kidsFirstHub: "https://kidsfirst.xenahubs.net"
+	kidsFirstHub: "https://kidsfirst.xenahubs.net",
+	notebook: "notebook:"
 };
 
 module.exports = {
@@ -29,7 +30,8 @@ module.exports = {
 		[servers.treehouseHub]: 'Treehouse Hub',
 		[servers.gdcHub]: 'GDC Hub',
 		[servers.atacSeqHub]: 'ATAC-seq Hub',
-		[servers.kidsFirstHub]: 'Kids First Hub'
+		[servers.kidsFirstHub]: 'Kids First Hub',
+		[servers.notebook]: 'jupyter notebook'
 	},
 	defaultServers: [
 		servers.localHub,
@@ -42,7 +44,8 @@ module.exports = {
 		servers.treehouseHub,
 		servers.gdcHub,
 		servers.atacSeqHub,
-		servers.kidsFirstHub
+		servers.kidsFirstHub,
+		servers.notebook
 	],
 	enabledServers: [
 		servers.localHub,
@@ -54,7 +57,8 @@ module.exports = {
 		servers.toilHub,
 		servers.gdcHub,
 		servers.atacSeqHub,
-		servers.kidsFirstHub
+		servers.kidsFirstHub,
+		servers.notebook
 	],
 	publicServers: [
 		servers.publicHub,
