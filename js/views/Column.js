@@ -576,14 +576,6 @@ class Column extends PureComponent {
 	};
 
 
-	// TODO: move this somewhere else
-  objectFlip(obj) {
-    return Object.keys(obj).reduce((ret, key) => {
-      ret[obj[key]] = key;
-      return ret;
-    }, {});
-  }
-
   /**
    * We build out the URL.
    * generate URL with cohort A, cohort B, samples A (and name a sub cohort), samples B (and name a sub cohort), analysis
