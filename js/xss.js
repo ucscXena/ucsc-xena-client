@@ -2,6 +2,7 @@ import xss from 'xss';
 
 var whiteList = {
 	a: ['target', 'href', 'title', 'style'],
+	button: ['class', 'data-cohort', 'data-bookmark'],
 	abbr: ['title', 'style'],
 	address: ['style'],
 	area: ['shape', 'coords', 'href', 'alt', 'style'],
