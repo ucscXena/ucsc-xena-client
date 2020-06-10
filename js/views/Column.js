@@ -29,8 +29,7 @@ var crosshair = require('./cursor.png');
 var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
 var config = require('../config');
-import DETAIL_DATASET_FOR_GENESET from '../stats/defaultDatasetForGeneset';
-import {GeneSetViewDialog} from './GeneSetViewDialog';
+import {AVAILABLE_GENESET_COHORTS, GeneSetViewDialog} from './GeneSetViewDialog';
 
 
 
@@ -562,7 +561,7 @@ class Column extends PureComponent {
       fieldType !== 'clinical' ||
       valueType !== 'coded' ||
       !codes || codes.length < 2  ||
-      DETAIL_DATASET_FOR_GENESET.indexOf(name) < 0
+      AVAILABLE_GENESET_COHORTS.indexOf(name) < 0
     ) {
       return false ;
     }
