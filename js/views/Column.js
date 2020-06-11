@@ -594,7 +594,7 @@ class Column extends PureComponent {
 	const subCohortA = `subCohortSamples1=${name}:${heatmapLabels[0]}:${subCohortData[0]}&selectedSubCohorts1=${heatmapLabels[0]}&cohort1Color=${categoryMore[heatmapCodes[0]]}`;
 	const subCohortB = `subCohortSamples2=${name}:${heatmapLabels[1]}:${subCohortData[1]}&selectedSubCohorts2=${heatmapLabels[1]}&cohort2Color=${categoryMore[heatmapCodes[1]]}`;
 
-    const ROOT_URL = 'http://xenademo.berkeleybop.io/xena/#';
+    const ROOT_URL = 'https://xenademo.berkeleybop.io/xena/#';
     // const ROOT_URL = 'http://localhost:3000/#';
    const finalUrl = `${ROOT_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`;
 
