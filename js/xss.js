@@ -28,6 +28,8 @@ var whiteList = {
 	dl: ['style'],
 	dt: ['style'],
 	em: ['style'],
+	figure: ['style'],
+	figcaption: ['style'],
 	font: ['color', 'size', 'face', 'style'],
 	footer: ['style'],
 	h1: ['style'],
