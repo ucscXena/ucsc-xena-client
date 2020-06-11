@@ -19,6 +19,7 @@ import Dialog from 'react-toolbox/lib/dialog';
 import {defaultHost} from './urlParams';
 var {encodeObject, urlParams} = require('./util');
 import {ThemeProvider} from 'react-css-themr';
+require('../css/typography.module.css'); // coerce css order
 var appTheme = require('./appTheme');
 var classNames = require('classnames');
 var {getHubParams} = require('./hubParams');
