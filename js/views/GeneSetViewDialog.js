@@ -53,7 +53,7 @@ export class GeneSetViewDialog extends PureComponent {
         const actions = [
             {
             children: [<i className='material-icons'>close</i>],
-            className: kmStyle.warningDialogClose,
+            className: kmStyle.mainDialogClose,
             onClick: this.props.onHide
             },
         ];
