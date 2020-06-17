@@ -1,7 +1,6 @@
-// import Iframe from "react-iframe";
-
 var React = require('react');
 import Dialog from "react-toolbox/lib/dialog";
+import Iframe from "react-iframe";
 import PureComponent from '../PureComponent';
 import genesetViewerStyle from "./genesetviewer.module.css";
 
@@ -42,33 +41,10 @@ export const AVAILABLE_GENESET_COHORTS = [
   "Cancer Cell Line Encyclopedia (Breast)"
 ];
 
-// export const GENESETS_VIEWER_URL = 'https://xenageneset.berkeleybop.io/xena/#';
-export const GENESETS_VIEWER_URL = 'http://localhost:3000/#';
+export const GENESETS_VIEWER_URL = 'https://xenageneset.berkeleybop.io/xena/#';
+// export const GENESETS_VIEWER_URL = 'http://localhost:3000/#';
 
 export class GeneSetViewDialog extends PureComponent {
-
-  componentDidMount() {
-    console.log('moutning');
-    var iframe = document.getElementById('genesetViewerId');
-    iframe.style.backgroundColor = 'yellow';
-    console.log('C');
-    console.log('viewer', iframe);
-    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-    console.log('document', innerDoc);
-    // console.log('html', innerDoc.html);
-    console.log('body', innerDoc.body);
-    // console.log('style', viewer.contentDocument.style);
-    // viewer.contentDocument.style.backgroundColor = 'blue';
-  }
-
-  componentDidUpdate() {
-    // var viewer = document.getElementById('genesetViewerId');
-    // console.log('B');
-    // console.log('viewer', viewer );
-    // console.log('document', viewer.document);
-    // console.log('style', viewer.document.style);
-    // viewer.document.style.backgroundColor = 'blue';
-  }
 
   render() {
 
@@ -80,7 +56,6 @@ export class GeneSetViewDialog extends PureComponent {
             onClick: this.props.onHide
             },
         ];
-        // alert('loading '+geneSetUrl)
 
         return (
             <Dialog
@@ -96,27 +71,16 @@ export class GeneSetViewDialog extends PureComponent {
                 >
                 <h3>Differential Geneset Visualization</h3>
                 <hr/>
-                <iframe
-                  src={geneSetUrl}
-                  width="100%"
-                  className={genesetViewerStyle.iframe}
-                  height="500px"
-                  id="genesetViewerId"
-                  style={{backgroundColor: 'hotpink'}}
-                  // display="block"
-                  // loading='Loading wizard'
-                  // position="relative"
+                <Iframe url={geneSetUrl}
+                    src={geneSetUrl}
+                    width="100%"
+                    className={genesetViewerStyle.genesetiframe}
+                    height="400px"
+                    id="myId"
+                    display="block"
+                    loading='Loading wizard'
+                    position="relative"
                 />
-                {/*<Iframe url={geneSetUrl}*/}
-                {/*    src={geneSetUrl}*/}
-                {/*    width="100%"*/}
-                {/*        className={genesetViewerStyle.iframe}*/}
-                {/*    height="500px"*/}
-                {/*    id="myId"*/}
-                {/*    display="block"*/}
-                {/*    loading='Loading wizard'*/}
-                {/*    position="relative"*/}
-                {/*/>*/}
             </Dialog>
         );
     }
