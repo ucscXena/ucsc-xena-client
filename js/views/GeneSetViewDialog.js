@@ -64,13 +64,12 @@ export class GeneSetViewDialog extends PureComponent {
                 className={genesetViewerStyle.mainDialog}
                 onEscKeyDown={onHide}
                 onOverlayClick={onHide}
+                title='Differential Geneset Visualization'
                 theme={{
                   dialog: genesetViewerStyle.dialogBase,
                   wrapper: genesetViewerStyle.dialogWrapper,
                 }}
                 >
-                <h3>Differential Geneset Visualization</h3>
-                <hr/>
                 <Iframe url={geneSetUrl}
                     src={geneSetUrl}
                     width="100%"
