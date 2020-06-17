@@ -74,7 +74,7 @@ export class GeneSetViewDialog extends PureComponent {
                     src={geneSetUrl}
                     width="100%"
                     className={genesetViewerStyle.genesetiframe}
-                    height="400px"
+                    height="350px"
                     id="myId"
                     display="block"
                     loading='Loading wizard'

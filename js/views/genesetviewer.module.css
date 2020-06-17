@@ -23,7 +23,8 @@ button.mainDialogClose {
 }
 
 div.mainDialog {
-	width: 850px;
+	width: 580px;
+  height: 400px;
 	max-height: inherit;
 	padding-top: 10px;
 	margin-top: 30px;
