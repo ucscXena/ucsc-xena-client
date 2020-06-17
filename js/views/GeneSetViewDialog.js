@@ -1,9 +1,9 @@
-import Iframe from "react-iframe";
+// import Iframe from "react-iframe";
 
 var React = require('react');
 import Dialog from "react-toolbox/lib/dialog";
 import PureComponent from '../PureComponent';
-import kmStyle from "../km.module.css";
+import genesetViewerStyle from "./genesetviewer.module.css";
 
 export const AVAILABLE_GENESET_COHORTS = [
   "TCGA Liver Cancer (LIHC)",
@@ -43,44 +43,80 @@ export const AVAILABLE_GENESET_COHORTS = [
 ];
 
 // export const GENESETS_VIEWER_URL = 'https://xenageneset.berkeleybop.io/xena/#';
-export const GENESETS_VIEWER_URL = 'http://localhost:3000';
+export const GENESETS_VIEWER_URL = 'http://localhost:3000/#';
 
 export class GeneSetViewDialog extends PureComponent {
 
-    render() {
+  componentDidMount() {
+    console.log('moutning');
+    var iframe = document.getElementById('genesetViewerId');
+    iframe.style.backgroundColor = 'yellow';
+    console.log('C');
+    console.log('viewer', iframe);
+    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+    console.log('document', innerDoc);
+    // console.log('html', innerDoc.html);
+    console.log('body', innerDoc.body);
+    // console.log('style', viewer.contentDocument.style);
+    // viewer.contentDocument.style.backgroundColor = 'blue';
+  }
+
+  componentDidUpdate() {
+    // var viewer = document.getElementById('genesetViewerId');
+    // console.log('B');
+    // console.log('viewer', viewer );
+    // console.log('document', viewer.document);
+    // console.log('style', viewer.document.style);
+    // viewer.document.style.backgroundColor = 'blue';
+  }
+
+  render() {
 
         let {showGeneSetWizard, onHide, geneSetUrl} = this.props;
         const actions = [
             {
             children: [<i className='material-icons'>close</i>],
-            className: kmStyle.mainDialogClose,
+            className: genesetViewerStyle.mainDialogClose,
             onClick: this.props.onHide
             },
         ];
+        // alert('loading '+geneSetUrl)
 
         return (
             <Dialog
                 actions={actions}
                 active={showGeneSetWizard}
-                className={kmStyle.mainDialog}
+                className={genesetViewerStyle.mainDialog}
                 onEscKeyDown={onHide}
                 onOverlayClick={onHide}
                 theme={{
-                  dialog: kmStyle.dialogBase,
-                  wrapper: kmStyle.dialogWrapper,
+                  dialog: genesetViewerStyle.dialogBase,
+                  wrapper: genesetViewerStyle.dialogWrapper,
                 }}
                 >
                 <h3>Differential Geneset Visualization</h3>
                 <hr/>
-                <Iframe url={geneSetUrl}
-                    src={geneSetUrl}
-                    width="700px"
-                    height="500px"
-                    id="myId"
-                    display="block"
-                    loading='Loading wizard'
-                    position="relative"
+                <iframe
+                  src={geneSetUrl}
+                  width="100%"
+                  className={genesetViewerStyle.iframe}
+                  height="500px"
+                  id="genesetViewerId"
+                  style={{backgroundColor: 'hotpink'}}
+                  // display="block"
+                  // loading='Loading wizard'
+                  // position="relative"
                 />
+                {/*<Iframe url={geneSetUrl}*/}
+                {/*    src={geneSetUrl}*/}
+                {/*    width="100%"*/}
+                {/*        className={genesetViewerStyle.iframe}*/}
+                {/*    height="500px"*/}
+                {/*    id="myId"*/}
+                {/*    display="block"*/}
+                {/*    loading='Loading wizard'*/}
+                {/*    position="relative"*/}
+                {/*/>*/}
             </Dialog>
         );
     }

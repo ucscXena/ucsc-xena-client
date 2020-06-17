@@ -827,7 +827,9 @@ class Column extends PureComponent {
 		// XXX put position into a css module
 		return (
 				<div style={{width: width, position: 'relative'}}>
-					<GeneSetViewDialog showGeneSetWizard={this.state.showGeneSetWizard} geneSetUrl={this.state.geneSetUrl} onHide={this.hideGeneSetWizard}/>
+          { this.state.geneSetUrl &&
+          <GeneSetViewDialog showGeneSetWizard={this.state.showGeneSetWizard} geneSetUrl={this.state.geneSetUrl} onHide={this.hideGeneSetWizard}/>
+          }
 					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height}
 								 positionHeight={column.position ? positionHeight : 0} selection={selection}>
 						<ColCard colId={label}
