@@ -29,7 +29,7 @@ var crosshair = require('./cursor.png');
 var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
 var config = require('../config');
-import {AVAILABLE_GENESET_COHORTS, GeneSetViewDialog} from './GeneSetViewDialog';
+import {AVAILABLE_GENESET_COHORTS, GENESETS_VIEWER_URL, GeneSetViewDialog} from './GeneSetViewDialog';
 
 
 
@@ -595,9 +595,8 @@ class Column extends PureComponent {
 	const subCohortB = `subCohortSamples2=${name}:${heatmapLabels[1]}:${subCohortData[1]}&selectedSubCohorts2=${heatmapLabels[1]}&cohort2Color=${categoryMore[heatmapCodes[1]]}`;
 
     // const ROOT_URL = 'https://xenademo.berkeleybop.io/xena/#';
-    const ROOT_URL = 'https://xenageneset.berkeleybop.io/xena/#';
     // const ROOT_URL = 'http://localhost:3000/#';
-   const finalUrl = `${ROOT_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`;
+   const finalUrl = `${GENESETS_VIEWER_URL}cohort=${name}&wizard=analysis&${subCohortA}&${subCohortB}`;
 
 	this.setState({
 	  geneSetUrl: `${finalUrl}`,

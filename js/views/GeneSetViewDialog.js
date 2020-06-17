@@ -3,6 +3,7 @@ import Iframe from "react-iframe";
 var React = require('react');
 import Dialog from "react-toolbox/lib/dialog";
 import PureComponent from '../PureComponent';
+import kmStyle from "../km.module.css";
 
 export const AVAILABLE_GENESET_COHORTS = [
   "TCGA Liver Cancer (LIHC)",
@@ -41,22 +42,31 @@ export const AVAILABLE_GENESET_COHORTS = [
   "Cancer Cell Line Encyclopedia (Breast)"
 ];
 
+export const GENESETS_VIEWER_URL = 'https://xenageneset.berkeleybop.io/xena/#';
+
 export class GeneSetViewDialog extends PureComponent {
-    actions = [
-        { label: "Close", onClick: this.props.onHide },
-    ];
 
     render() {
 
         let {showGeneSetWizard, onHide, geneSetUrl} = this.props;
+        const actions = [
+            {
+            children: [<i className='material-icons'>close</i>],
+            className: kmStyle.warningDialogClose,
+            onClick: this.props.onHide
+            },
+        ];
 
         return (
             <Dialog
-                actions={this.actions}
+                actions={actions}
                 active={showGeneSetWizard}
                 onEscKeyDown={onHide}
                 onOverlayClick={onHide}
-                type='large'
+                theme={{
+                  dialog: kmStyle.dialogBase,
+                  wrapper: kmStyle.dialogWrapper,
+                }}
                 >
                 <h3>Differential Geneset Visualization</h3>
                 <hr/>
