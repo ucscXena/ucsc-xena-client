@@ -42,7 +42,8 @@ export const AVAILABLE_GENESET_COHORTS = [
   "Cancer Cell Line Encyclopedia (Breast)"
 ];
 
-export const GENESETS_VIEWER_URL = 'https://xenageneset.berkeleybop.io/xena/#';
+// export const GENESETS_VIEWER_URL = 'https://xenageneset.berkeleybop.io/xena/#';
+export const GENESETS_VIEWER_URL = 'http://localhost:3000';
 
 export class GeneSetViewDialog extends PureComponent {
 
@@ -61,6 +62,7 @@ export class GeneSetViewDialog extends PureComponent {
             <Dialog
                 actions={actions}
                 active={showGeneSetWizard}
+                className={kmStyle.mainDialog}
                 onEscKeyDown={onHide}
                 onOverlayClick={onHide}
                 theme={{
