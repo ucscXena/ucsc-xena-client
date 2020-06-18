@@ -8,6 +8,8 @@
  */
 
 
+import {GENESETS_VIEWER_URL} from "./views/GeneSetViewDialog";
+
 // Core dependencies, components
 var React = require('react');
 var ReactDOM = require('react-dom');
@@ -48,7 +50,7 @@ var helpLink = {
 };
 
 var geneSetsLink = {
-    href: 'https://xenageneset.berkeleybop.io/xena/',
+    href: {GENESETS_VIEWER_URL},
     label: 'Gene Sets',
     target: '_blank'
 };

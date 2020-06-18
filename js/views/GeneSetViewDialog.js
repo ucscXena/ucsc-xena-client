@@ -1,8 +1,8 @@
-import Iframe from "react-iframe";
-
 var React = require('react');
 import Dialog from "react-toolbox/lib/dialog";
+import Iframe from "react-iframe";
 import PureComponent from '../PureComponent';
+import genesetViewerStyle from "./genesetviewer.module.css";
 
 export const AVAILABLE_GENESET_COHORTS = [
   "TCGA Liver Cancer (LIHC)",
@@ -41,29 +41,40 @@ export const AVAILABLE_GENESET_COHORTS = [
   "Cancer Cell Line Encyclopedia (Breast)"
 ];
 
-export class GeneSetViewDialog extends PureComponent {
-    actions = [
-        { label: "Close", onClick: this.props.onHide },
-    ];
+export const GENESETS_VIEWER_URL = 'https://xenageneset.berkeleybop.io/xena/#';
+// export const GENESETS_VIEWER_URL = 'http://localhost:3000/#';
 
-    render() {
+export class GeneSetViewDialog extends PureComponent {
+
+  render() {
 
         let {showGeneSetWizard, onHide, geneSetUrl} = this.props;
+        const actions = [
+            {
+            children: [<i className='material-icons'>close</i>],
+            className: genesetViewerStyle.mainDialogClose,
+            onClick: this.props.onHide
+            },
+        ];
 
         return (
             <Dialog
-                actions={this.actions}
+                actions={actions}
                 active={showGeneSetWizard}
+                className={genesetViewerStyle.mainDialog}
                 onEscKeyDown={onHide}
                 onOverlayClick={onHide}
-                type='large'
+                title='Differential Geneset Visualization'
+                theme={{
+                  dialog: genesetViewerStyle.dialogBase,
+                  wrapper: genesetViewerStyle.dialogWrapper,
+                }}
                 >
-                <h3>Differential Geneset Visualization</h3>
-                <hr/>
                 <Iframe url={geneSetUrl}
                     src={geneSetUrl}
-                    width="700px"
-                    height="500px"
+                    width="100%"
+                    className={genesetViewerStyle.genesetiframe}
+                    height="350px"
                     id="myId"
                     display="block"
                     loading='Loading wizard'
