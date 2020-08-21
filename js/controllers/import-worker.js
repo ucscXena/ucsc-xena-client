@@ -1,5 +1,5 @@
 
-import 'babel-polyfill';
+import "core-js/stable";
 import {servers} from '../defaultServers';
 import Rx from '../rx';
 var {ajax, create, defer, empty, from, fromEvent, of} = Rx.Observable;

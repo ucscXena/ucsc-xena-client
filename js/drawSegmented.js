@@ -1,4 +1,5 @@
 
+import "regenerator-runtime/runtime";
 var _ = require('./underscore_ext');
 var colorScales = require('./colorScales');
 

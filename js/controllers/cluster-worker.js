@@ -1,5 +1,4 @@
-
-import 'babel-polyfill';
+import "core-js/stable";
 import {agnes, treeOrder} from '../agnes';
 import {jStat} from 'jStat';
 import {getIn} from '../underscore_ext.js';

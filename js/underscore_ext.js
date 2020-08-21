@@ -2,6 +2,7 @@
 var _ = require('underscore');
 var ehmutable = require('ehmutable');
 var defer = require('./defer');
+import "regenerator-runtime/runtime";
 
 var slice = Array.prototype.slice;
 
