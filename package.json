@@ -105,7 +105,7 @@
     "brfs": "^1.4.3",
     "classnames": "2.2.5",
     "ehmutable": "^1.4.0",
-    "highcharts": "^6.0.7",
+    "highcharts": "^8.2.0",
     "jStat": "1.5.3",
     "linear-algebra": "3.1.1",
     "lz-string": "^1.4.4",
