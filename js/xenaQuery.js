@@ -1,5 +1,6 @@
 /*eslint camelcase: 0, no-multi-spaces: 0, no-mixed-spaces-and-tabs: 0 */
 
+//'use strict';
 
 import {concatBins, parse} from './binpackJSON';
 import {hfcCompress} from './hfc';
@@ -12,8 +13,6 @@ var wasm = require('ucsc-xena-wasm');
 
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
 import cohortMetaData from './cohortMetaData';
-
-var {ajax} = Rx.Observable;
 
 ///////////////////////////////////////////////////////
 // support for hg18/GRCh36, hg19/GRCh37, hg38/GRCh38, mm10
@@ -423,13 +422,6 @@ function transformPOSTMethods(postMethods) {
 		sparseDataMatchFieldSlow: postFn => (host, field, dataset, genes) =>
 			postFn(host, field, dataset, genes.map(g => g.toLowerCase()))
 			.map(list => alignMatches(genes, list)),
-		// Generate case permutations of the gene parameter
-		matchGenesWithProbes: postFn => (host, dataset, genes) =>
-			postFn(host, dataset, _.flatmap(genes, permuteCase))
-			.map(list => alignMatches(genes, list)),
-		matchGenesWithProbesSlow: postFn => (host, dataset, genes) =>
-			postFn(host, dataset, genes.map(g => g.toLowerCase()))
-			.map(list => alignMatches(genes, list)),
 		// Convert fields to lower-case, for matching, and apply a transform that
 		// requires the 'fields' parameter.
 		matchFields: postFn => (host, dataset, fields) =>
@@ -480,7 +472,6 @@ function wrapDsIDParams(postMethods) {
 		'refGeneRange',
 		'matchFields',
 		'matchFieldsFaster',
-		'matchGenesWithProbes',
 		'matchPartialField',
 		'segmentedDataRange',
 		'segmentedDataExamples',
@@ -509,13 +500,6 @@ var sparseDataMatchField = _.curry((field, host, dataset, genes) =>
 		queryPosts.sparseDataMatchFieldSlow :
 		queryPosts.sparseDataMatchField)(host, field, dataset, genes));
 
-// Override matchGenesWithProbes to dispatch to the 'Slow' version
-// if necessary.
-var matchGenesWithProbes = (host, dataset, genes) =>
-	(_.max(_.map(genes, permuteBitCount)) > 7 ?
-		queryPosts.matchGenesWithProbesSlow :
-		queryPosts.matchGenesWithProbes)(host, dataset, genes);
-
 // Override matchField to dispatch to the slow version
 // if necessary.
 var matchFields = (host, dataset, probes) =>
@@ -536,7 +520,9 @@ var refGeneExonCase = dsIDFn((host, dataset, genes) =>
 	sparseDataMatchField('name2', host, dataset, genes)
 		.flatMap(caseGenes => refGeneExons(host, dataset, _.filter(caseGenes, _.identity))));
 
-var ping = host => dispatchQuery({
+var {ajax} = Rx.Observable;
+
+var ping = host => ajax({
 	url: host + '/ping/',
 	method: 'GET',
 	crossDomain: true,
@@ -552,7 +538,7 @@ var toStatus = r =>
 
 var pingOrExp = host =>
 		ping(host).map(toStatus).catch(e =>
-			e.status === 404 ? dispatchQuery(xenaPost(host, '(+ 1 2)')).map(toStatusDep) :
+			e.status === 404 ? ajax(xenaPost(host, '(+ 1 2)')).map(toStatusDep) :
 			Rx.Observable.throw(e));
 
 var testStatus = (host, timeout = 5000) =>
@@ -596,8 +582,6 @@ var cohortAnalyticURL =  `${cohortMetaData}/analytic.json`;
 
 var tumorMapURL = `${cohortMetaData}/defaultTumormap.json`;
 
-var cellBrowserURL = `${cohortMetaData}/defaultCellBrowser.json`;
-
 var fetchJSON = url =>
 	Rx.Observable.ajax({
 		url,
@@ -617,7 +601,6 @@ module.exports = {
 	refGeneRange,
 	sparseDataMatchGenes: dsIDFn(sparseDataMatchField('genes')),
 	matchFields: dsIDFn(matchFields),
-	matchGenesWithProbes: dsIDFn(matchGenesWithProbes),
 
 	// helpers:
 	parseDsID,
@@ -636,5 +619,4 @@ module.exports = {
 	fetchCohortPhenotype: fetchJSON(cohortPhenotypeURL),
 	fetchCohortAnalytic: fetchJSON(cohortAnalyticURL),
 	fetchTumorMap: fetchJSON(tumorMapURL),
-	fetchCellBrowser: fetchJSON(cellBrowserURL),
 };
