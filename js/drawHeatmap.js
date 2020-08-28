@@ -160,7 +160,7 @@ function drawLayoutByPixel(vg, opts) {
 				// or don't compute the slice until we know there's room for
 				// labels.
 				subcol = data[i],
-				rowData = samples.slice(first, last).map(j => subcol[j]),
+				rowData = Float32Array.from(samples.slice(first, last)).map(j => subcol[j]),
 				colorScale = colorScales.colorScale(colors[i]),
 				labels = codes ? codeLabels(codes, rowData, minSpan) : floatLabels(rowData, minSpan),
 				h = height / count,
