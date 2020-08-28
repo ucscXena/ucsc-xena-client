@@ -58,7 +58,7 @@ function fetchDatasets(serverBus, servers, cohort) {
 
 const MAX_SAMPLES = 50 * 1000;
 
-var allSamples = _.curry((cohort, max, server) => xenaQuery.cohortSamplesHFC(server, cohort, max === Infinity ? null : max));
+var allSamples = _.curry((cohort, max, server) => xenaQuery.cohortSamples(server, cohort, max === Infinity ? null : max));
 
 function logSampleSources(cohortResps) {//eslint-disable-line no-unused-vars
 	var havingSamples = cohortResps.filter(([v]) => v.length > 0)

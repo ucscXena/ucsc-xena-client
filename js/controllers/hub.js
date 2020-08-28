@@ -1,7 +1,7 @@
 var {Let, assocIn, dissoc, get, identity,
 	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext');
 var {make, mount, compose} = require('./utils');
-var {cohortSummary, datasetMetadata, datasetSamplesHFCExamples, datasetFieldN,
+var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
 var {servers: {localHub}} = require('../defaultServers');
@@ -68,7 +68,7 @@ var noSnippets = () => of(undefined);
 var toArray = x => new Float32Array(x.buffer);
 
 function fetchMatrixDataSnippets(host, dataset, meta, nProbes = 10, nSamples = 10) {
-	var samplesQ = datasetSamplesHFCExamples(host, dataset, nSamples).share(),
+	var samplesQ = datasetSamplesExamples(host, dataset, nSamples).share(),
 		fieldQ = datasetFieldExamples(host, dataset, nProbes).share(),
 		codeQ = fieldQ.mergeMap(probes => fieldCodes(host, dataset, probes)),
 		dataQ = zipArray(samplesQ, fieldQ)
