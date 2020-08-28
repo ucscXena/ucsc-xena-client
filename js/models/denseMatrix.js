@@ -319,7 +319,9 @@ function tsvProbeMatrix(heatmap, samples, fields, codes) {
 
 function download({column, samples, sampleFormat}) {
 	var {fields, heatmap, codes} = column,
-		tsvSamples = _.map(samples, sampleFormat);
+		tsvSamples = _.map(samples, sampleFormat),
+		sampleFloatCast = Float32Array.from(samples); // needed for keep floating point number/null to be cast to integer
+	heatmap = heatmap.map(oneColumn => sampleFloatCast.map(i => oneColumn[i]));
 	return tsvProbeMatrix(heatmap, tsvSamples, fields, codes);
 }
 
