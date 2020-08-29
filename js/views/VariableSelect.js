@@ -128,7 +128,7 @@ var PhenotypicForm = props => {
 		<div>
 			<XCheckboxGroup
 				label='Phenotype'
-				additionalAction={props.advanced ? 'Show Basic' : 'Show All'}
+				additionalAction={!_.isEmpty(props.basicFeatures) && (props.advanced ? 'Show Basic' : 'Show All')}
 				onAdditionalAction={props.onAdvancedClick}
 				onChange={props.onChange}
 				options={selectedOptions(props.selected, [{options}])}/>
@@ -278,7 +278,7 @@ class VariableSelect extends PureComponent {
 			mode,
 			advanced: {
 				Genotypic: _.isEmpty(preferred),
-				Phenotypic: false,
+				Phenotypic: _.isEmpty(basicFeatures),
 				Analytic: false
 			},
 			basicFeatures: featureIndexes(features, basicFeatures),
