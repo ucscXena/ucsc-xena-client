@@ -1,13 +1,13 @@
 import PureComponent from '../PureComponent';
 
 var React = require('react');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var CohortOrDisease = require('../views/CohortOrDisease');
 var VariableSelect = require('../views/VariableSelect');
 var GhostVariableSelect = require('../views/GhostVariableSelect');
 var getStepperState = require('./getStepperState');
 var uuid = require('../uuid');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 import {computeSettings, typeWidth} from '../models/columns';
 
 // Configuration for first and second variable select cards that are displayed during wizard.

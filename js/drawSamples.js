@@ -1,6 +1,6 @@
 
-var _ = require('./underscore_ext');
-var colorHelper = require('./color_helper');
+var _ = require('./underscore_ext').default;
+var colorHelper = require('./color_helper').default;
 var labelMargin = 1; // left & right margin
 var labelFont = 12;
 

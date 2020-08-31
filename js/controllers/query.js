@@ -1,5 +1,5 @@
 
-import {assocIn, dissoc, find, getIn, identity, initial, isEqual, last, matchKeys, updateIn} from '../underscore_ext';
+var {assocIn, dissoc, find, getIn, identity, initial, isEqual, last, matchKeys, updateIn} = require('../underscore_ext').default;
 import {make, compose} from './utils';
 
 // syncs data in memory with data on server, as a function of app state.

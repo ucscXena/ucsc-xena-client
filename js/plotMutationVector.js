@@ -1,30 +1,21 @@
-var _ = require('./underscore_ext');
-var Rx = require('./rx');
+var _ = require('./underscore_ext').default;
+var Rx = require('./rx').default;
 import PureComponent from './PureComponent';
 var React = require('react');
 var Legend = require('./views/Legend');
 var {rxEvents} = require('./react-utils');
 var widgets = require('./columnWidgets');
-var util = require('./util');
+var util = require('./util').default;
 var CanvasDrawing = require('./CanvasDrawing');
 var mv = require('./models/mutationVector');
 var {drawSV, drawMutations, radius, toYPx, toYPxSubRow, minVariantHeight, splitRows} = require('./drawMutations');
 var {chromPositionFromScreen} = require('./exonLayout');
 
-// Since we don't set module.exports, but instead register ourselves
-// with columWidgets, react-hot-loader can't handle the updates automatically.
-// Accept hot loading here.
-if (module.hot) {
-	module.hot.accept();
-	module.hot.accept('./models/mutationVector', () => {
-		mv = require('./models/mutationVector');
-	});
-}
-
-// Since there are multiple components in the file we have to use makeHot
+// Since there are multiple components in the file we have to use hot
 // explicitly.
+import {hot} from 'react-hot-loader';
 function hotOrNot(component) {
-	return module.makeHot ? module.makeHot(component) : component;
+	return module.hot ? hot(module)(component) : component;
 }
 
 function drawMutationLegend({column}) {

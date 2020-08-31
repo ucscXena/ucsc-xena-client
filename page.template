@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{%=o.htmlWebpackPlugin.options.title || 'UCSC Xena'%}</title>
+    <title>UCSC Xena</title>
 	<script type="text/javascript">
 	// Keep near the top of the page so it executes immediately.
 	(function (cssCode) {
@@ -53,32 +53,15 @@
 		<div id="footer">
 		</div>
 	</div>
-	{% if (o.htmlWebpackPlugin.files.chunks.init) { %}
-	<script src="{%=o.htmlWebpackPlugin.files.chunks.init.entry%}"></script>
-		{% if (o.htmlWebpackPlugin.files.chunks.init.css) { %}
-	<link href="{%=o.htmlWebpackPlugin.files.chunks.init.css[0]%}" rel="stylesheet">
-		{% } %}
-	{% } %}
 	<script type="text/javascript">
 		(function () {
 			var pages = {
-					{% if (process.env.NODE_ENV !== 'production') { %}
-					docs: {
-						js: "{%=o.htmlWebpackPlugin.files.chunks.docs.entry%}",
-						css: "{%=o.htmlWebpackPlugin.files.chunks.docs.css[0]%}"
-					},
-					bookmarks: {
-						js: "{%=o.htmlWebpackPlugin.files.chunks.bookmarks.entry%}",
-						css: "{%=o.htmlWebpackPlugin.files.chunks.bookmarks.css[0]%}"
-					},
-					{% } %}
-					heatmap: {
-						js: "{%=o.htmlWebpackPlugin.files.chunks.heatmap.entry%}",
-						css: "{%=o.htmlWebpackPlugin.files.chunks.heatmap.css[0]%}"
-					},
-					register: {
-						js: "{%=o.htmlWebpackPlugin.files.chunks.register.entry%}",
-					}
+					<% if (process.env.NODE_ENV !== 'production') { %>
+					docs: <%=JSON.stringify(templateParams.compilation.namedChunks.get('docs').files)%>,
+					bookmarks: <%=JSON.stringify(templateParams.compilation.namedChunks.get('bookmarks').files)%>,
+					<% } %>
+					heatmap: <%=JSON.stringify(templateParams.compilation.namedChunks.get('heatmap').files)%>,
+					register: <%=JSON.stringify(templateParams.compilation.namedChunks.get('register').files)%>,
 				},
 				path = document.location.pathname,
 				page = (function () {
@@ -106,10 +89,14 @@
 				document.getElementsByTagName("body")[0].appendChild(css);
 			}
 
-			addScript(page.js);
-			if (page.css) {
-				addStyle(page.css);
-			}
+			page.forEach(function (file) {
+				if (file.match(/\.js$/)) {
+					addScript('/' + file);
+				}
+				if (file.match(/\.css$/)) {
+					addStyle('/' + file);
+				}
+			});
 		}());
 	</script>
   </body>

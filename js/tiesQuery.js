@@ -1,4 +1,4 @@
-var Rx = require('./rx');
+var Rx = require('./rx').default;
 
 var docs = samples =>  Rx.Observable.ajax({
         url: '/api/ties/documents/list',

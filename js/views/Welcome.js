@@ -12,7 +12,7 @@
 
 // Core dependencies, components
 import React, { Component } from 'react';
-import { times } from './../underscore_ext';
+var {times} = require('./../underscore_ext').default;
 
 // Styles
 import compStyles from'./Welcome.module.css';

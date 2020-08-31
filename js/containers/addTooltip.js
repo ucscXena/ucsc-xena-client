@@ -4,8 +4,8 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 var {rxEvents} = require('../react-utils');
 var meta = require('../meta');
-var _ = require('../underscore_ext');
-var Rx = require('../rx');
+var _ = require('../underscore_ext').default;
+var Rx = require('../rx').default;
 
 function addTooltip(Component) {
 	return class extends PureComponent {

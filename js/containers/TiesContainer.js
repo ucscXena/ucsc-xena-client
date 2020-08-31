@@ -2,7 +2,7 @@
 var React = require('react');
 import PureComponent from '../PureComponent';
 import Ties from '../views/TiesPlaceholder';
-var {pick} = require('../underscore_ext');
+var {pick} = require('../underscore_ext').default;
 
 class TiesContainer extends PureComponent {
 	static displayName = 'TiesContainer';

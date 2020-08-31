@@ -1,13 +1,13 @@
 
 // XXX move Application to views
 var React = require('react');
-//var _ = require('../underscore_ext');
+//var _ = require('../underscore_ext').default;
 var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
 var ChartView = require('../ChartView');
 var Column = require('../views/Column');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var {rxEvents} = require('../react-utils');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 // Spreadsheet options
 var addTooltip = require('./addTooltip');
 //var disableSelect = require('./disableSelect');
@@ -164,6 +164,6 @@ class ApplicationContainer extends React.Component {
 }
 
 // add pop-up notification for old hubs.
-module.exports = wrapLaunchHelper(
+export default wrapLaunchHelper(
 		props => _.getIn(props, ['state', 'localStatus']) === 'old',
 		ApplicationContainer);

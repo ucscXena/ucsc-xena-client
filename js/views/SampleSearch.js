@@ -4,7 +4,7 @@ var React = require('react');
 import Input from 'react-toolbox/lib/input';
 import {IconMenu, MenuItem} from 'react-toolbox/lib/menu';
 var classNames = require('classnames');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 
 // Styles
 var compStyles = require('./SampleSearch.module.css');
@@ -90,7 +90,7 @@ function countChar(str, c, max) {
 	return count;
 }
 
-class SampleSearch extends PureComponent {
+export class SampleSearch extends PureComponent {
 	state = {value: this.props.value};
 
 	componentDidMount() {
@@ -173,5 +173,3 @@ class SampleSearch extends PureComponent {
 		);
 	}
 }
-
-module.exports = { SampleSearch };

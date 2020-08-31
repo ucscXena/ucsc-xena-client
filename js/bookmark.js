@@ -1,6 +1,6 @@
 
 var LZ = require('./lz-string');
-var {uniq} = require('./underscore_ext');
+var {uniq} = require('./underscore_ext').default;
 var {compactState, expandState} = require('./compactData');
 var migrateState = require('./migrateState');
 var {schemaCheckThrow} = require('./schemaCheck');

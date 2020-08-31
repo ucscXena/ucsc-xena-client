@@ -2,7 +2,7 @@
 // color scale variants
 
 var _ = require('underscore');
-var {rgb, RGBToHex, RGBtoHSV, HSVtoRGB} = require('./color_helper');
+var {rgb, RGBToHex, RGBtoHSV, HSVtoRGB} = require('./color_helper').default;
 
 // d3_category20, replace #7f7f7f gray (that aliases with our N/A gray of #808080) with dark grey #434348
 var categoryMore = [
@@ -180,7 +180,7 @@ function isoluminant(low, high) {
 var noDataScale = () => "gray";
 noDataScale.domain = () => [];
 
-var colorScale = {
+var colorScaleByType = {
 	'no-data': () => noDataScale,
 	'float-pos': (__, ...args) => scaleFloatSingle(...args),
 	'float-neg': (__, ...args) => scaleFloatSingle(...args),
@@ -195,8 +195,10 @@ var colorScale = {
 	'ordinal': (__, ...args) => ordinal(...args)
 };
 
-module.exports =  {
-	colorScale: ([type, ...args]) => colorScale[type](type, ...args),
-	categoryMore: categoryMore,
+var colorScale = ([type, ...args]) => colorScaleByType[type](type, ...args);
+
+export {
+	colorScale,
+	categoryMore,
 	isoluminant
 };

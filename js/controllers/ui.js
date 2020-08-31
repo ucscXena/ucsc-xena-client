@@ -1,19 +1,18 @@
-
-var _ = require('../underscore_ext');
-var Rx = require('../rx');
+var _ = require('../underscore_ext').default;
+var Rx = require('../rx').default;
 var {userServers, setCohort, fetchSamples,
 	fetchColumnData, fetchCohortData, fetchSurvival, fetchClustering} = require('./common');
 var {setFieldType} = require('../models/fieldSpec');
 var {setNotifications} = require('../notifications');
 var {remapFields} = require('../models/searchSamples');
 var {fetchInlineState} = require('../inlineState');
-var {compose, make, mount} = require('./utils');
+import {make, mount, compose} from './utils';
 var {JSONToqueryString} = require('../dom_helper');
 var {parseBookmark} = require('../bookmark');
 import parseManifest from '../manifest';
 var gaEvents = require('../gaEvents');
 import * as columnsParam from '../columnsParam';
-import xenaQuery from '../xenaQuery';
+var xenaQuery = require('../xenaQuery');
 
 function fetchBookmark(serverBus, bookmark) {
 	gaEvents('bookmark', 'load');

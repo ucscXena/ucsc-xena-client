@@ -1,14 +1,14 @@
 
 // Domain logic for segmented datasets.
 
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var widgets = require('../columnWidgets');
 var xenaQuery = require('../xenaQuery');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformInterval} = require('../layoutPlot');
-var heatmapColors = require('../heatmapColors');
+import * as heatmapColors from '../heatmapColors';
 var parsePos = require('../parsePos');
 
 function groupedLegend(colorMap, valsInData) { //eslint-disable-line no-unused-vars

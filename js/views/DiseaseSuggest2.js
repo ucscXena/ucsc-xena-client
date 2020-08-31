@@ -2,7 +2,7 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
 import Input from 'react-toolbox/lib/input';
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 require('./GeneSuggest.css'); // XXX rename file
 var lcs = require('../lcs');
 import XAutosuggest from './XAutosuggest';

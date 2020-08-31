@@ -1,7 +1,7 @@
 
 import React from 'react';
 import CanvasDrawing2 from '../CanvasDrawing2';
-import {rgb} from '../color_helper';
+var {rgb} = require('../color_helper').default;
 
 //// Styles
 var compStyles = require('./BandLegend.module.css');

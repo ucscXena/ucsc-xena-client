@@ -1,8 +1,6 @@
-
 import PureComponent from '../PureComponent';
-
 var React = require('react');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var XCheckboxGroup = require('./XCheckboxGroup');
 var XRadioGroup = require('./XRadioGroup');
 var WizardCard = require('./WizardCard');
@@ -12,9 +10,9 @@ var {rxEvents} = require('../react-utils');
 var parsePos = require('../parsePos');
 var {ignoredType} = require('../models/dataType');
 import {matchDatasetFields} from '../models/columns';
-import {Observable, Scheduler} from '../rx';
+var {Observable, Scheduler} = require('../rx').default;
 import {getOpts} from '../columnsParam';
-import {servers} from '../defaultServers';
+var {servers} = require('../defaultServers');
 
 
 const LOCAL_DOMAIN = servers.localHub;
@@ -355,6 +353,7 @@ class VariableSelect extends PureComponent {
 			.do(() => this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
 					matchFields[mode](this.props, selected, value))
+					.spy('match')
 			.subscribe(valid => this.setState({loading: false, warnings: [], matches: [], ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
 	}
 

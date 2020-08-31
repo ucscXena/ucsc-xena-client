@@ -1,15 +1,13 @@
 import './base';
-import _ from './underscore_ext';
+var _ = require('./underscore_ext').default;
 import './plotDenseMatrix';
 import './plotMutationVector';
 import './plotSegmented';
 import './plotSamples';
-import './refGeneExons';
 import './ChromPosition';
 import './models/denseMatrix';
 import './models/mutationVector';
 import './models/segmented';
-//var Application = require('./containers/ApplicationContainer');
 
 import uiController from './controllers/ui';
 import serverController from './controllers/server';
@@ -39,27 +37,27 @@ const createStore = require('./store');
 
 if (module.hot) {
 	module.hot.accept('./controllers/ui', () => {
-		let newModule = require('./controllers/ui');
+		let newModule = require('./controllers/ui').default;
 		_.extend(uiController, newModule);
 	});
 	module.hot.accept('./controllers/server', () => {
-		let newModule = require('./controllers/server');
+		let newModule = require('./controllers/server').default;
 		_.extend(serverController, newModule);
 	});
 	module.hot.accept('./controllers/hub', () => {
-		let newModule = require('./controllers/hub');
+		let newModule = require('./controllers/hub').default;
 		_.extend(hubController, newModule);
 	});
 	module.hot.accept('./controllers/wizard', () => {
-		let newModule = require('./controllers/wizard');
+		let newModule = require('./controllers/wizard').default;
 		_.extend(wizardController, newModule);
 	});
 	module.hot.accept('./controllers/transcripts', () => {
-		let newModule = require('./controllers/transcripts');
+		let newModule = require('./controllers/transcripts').default;
 		_.extend(transcriptController, newModule);
 	});
 	module.hot.accept('./controllers/import', () => {
-		let newModule = require('./controllers/import');
+		let newModule = require('./controllers/import').default;
 		_.extend(importController, newModule);
 	});
 //	module.hot.accept('./controllers/ties', () => {

@@ -70,5 +70,5 @@ class GeneLabelAnnotation extends PureComponent {
 	}
 }
 
-module.exports = {GeneLabelAnnotation, geneLableFont, maxLane};
+export {GeneLabelAnnotation, geneLableFont, maxLane};
 

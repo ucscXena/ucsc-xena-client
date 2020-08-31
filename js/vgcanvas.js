@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 var style = function (c) {
 	if (_.isArray(c)) {

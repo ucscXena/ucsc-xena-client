@@ -1,6 +1,6 @@
 var {Let, assocIn, dissoc, get, identity,
-	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext');
-var {make, mount, compose} = require('./utils');
+	matchKeys, pick, pluck, uniq, updateIn} = require('../underscore_ext').default;
+import {make, mount, compose} from './utils';
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
@@ -8,7 +8,7 @@ var {servers: {localHub}} = require('../defaultServers');
 var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers} = require('./common');
 var {ignoredType} = require('../models/dataType');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 import {defaultHost} from '../urlParams';
 import cohortMetaData from '../cohortMetaData';
 import query from './query';
@@ -232,7 +232,7 @@ var controls = {
 		serverBus.next(['dataset-deleted', deleteDataset(host, name)]),
 };
 
-module.exports = compose(
+export default compose(
 		fetchController,
 		mount(make(spreadsheetControls), ['spreadsheet']),
 		make(controls));

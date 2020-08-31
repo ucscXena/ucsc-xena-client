@@ -1,10 +1,8 @@
-
-import {Let, flatmap, fmap, getIn, groupBy, identity, map, matchKeys, pick, updateIn} from '../underscore_ext';
-import {allCohorts, datasetList, allFieldMetadata} from '../xenaQuery';
+var {Let, flatmap, fmap, getIn, groupBy, identity, map, matchKeys, pick, updateIn} = require('../underscore_ext').default;
+var xenaQuery = require('../xenaQuery');
 var {servers: {localHub}} = require('../defaultServers');
 import {ignoredType} from '../models/dataType';
-import xenaQuery from '../xenaQuery';
-import Rx from '../rx';
+var Rx = require('../rx').default;
 var {userServers} = require('./common');
 import {make, compose} from './utils';
 import query from './query';
@@ -79,10 +77,10 @@ var fetchMethods = {
 	// OTOH it will fetch any recently enabled hubs. So, the view should
 	// iterate over the userServer list, not this cache.
 	cohortDatasets: (cohort, server) =>
-		datasetList(server, [cohort]).catch(() => of([])),
-	cohortFeatures: (cohort, server, dataset) => allFieldMetadata(server, dataset)
+		xenaQuery.datasetList(server, [cohort]).catch(() => of([])),
+	cohortFeatures: (cohort, server, dataset) => xenaQuery.allFieldMetadata(server, dataset)
 		.catch(() => of([])),
-	serverCohorts: server => allCohorts(server, ignoredType)
+	serverCohorts: server => xenaQuery.allCohorts(server, ignoredType)
 		.catch(() => of([])),
 	cohortMeta: () => fetchCohortMeta(),
 	cohortPreferred: () => fetchCohortPreferred(),

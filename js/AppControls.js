@@ -1,16 +1,14 @@
-
-
 import PureComponent from './PureComponent';
 var React = require('react');
 import pdfSpreadsheet from './pdfSpreadsheet';
 import pdfChart from './pdfChart';
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 import AppBar from 'react-toolbox/lib/app_bar';
 var konami = require('./konami');
 var widgets = require('./columnWidgets');
 var classNames = require('classnames');
 var gaEvents = require('./gaEvents');
-import { signatureField } from './models/fieldSpec';
+var {signatureField} = require('./models/fieldSpec');
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
 
@@ -91,7 +89,7 @@ function getFilterColumn(title, sampleSets, exprs, opts = {}) {
 }
 
 // XXX drop this.props.style? Not sure it's used.
-class AppControls extends PureComponent {
+export class AppControls extends PureComponent {
 	componentWillMount() {
 		this.nsub = konami(asciiB).subscribe(() => {
 			this.props.callback(['notifications-enable']);
@@ -233,5 +231,3 @@ class AppControls extends PureComponent {
 		);
 	}
 }
-
-module.exports = { AppControls };

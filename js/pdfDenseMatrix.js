@@ -1,5 +1,5 @@
 var {drawHeatmap} = require('./drawHeatmap');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var widgets = require('./columnWidgets');
 
 function pdf(id, column, vg, state) {

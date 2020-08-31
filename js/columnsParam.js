@@ -1,5 +1,5 @@
-import {allParameters} from './util';
-import {flatmap, getIn, has, identity, isArray, isBoolean, isObject, isNumber, Let, map, mapObject, merge, omit, pick, find} from './underscore_ext';
+var {allParameters} = require('./util').default;
+var {flatmap, getIn, has, identity, isArray, isBoolean, isObject, isNumber, Let, map, mapObject, merge, omit, pick, find} = require('./underscore_ext').default;
 
 var columnOptPaths = {
 	width: ['width'],

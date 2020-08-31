@@ -2,12 +2,12 @@ require('./base');
 const React = require('react');
 var {uniq, flatten, sortBy, groupBy, map, flatmap, partitionN, mapObject,
 	contains, get, updateIn, range, Let, pick,
-	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext');
-var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx');
+	zip, identity, getIn, sum, keys, values, mmap} = require('./underscore_ext').default;
+var {Observable: {from}, Scheduler: {animationFrame}} = require('./rx').default;
 var {parseDsID} = require('./xenaQuery');
 import Link from 'react-toolbox/lib/link';
 var styles = require('./Datapages.module.css');
-var nav = require('./nav');
+import nav from './nav';
 import {Checkbox} from 'react-toolbox/lib/checkbox';
 import {Button} from 'react-toolbox/lib/button';
 var showdown = require('showdown');
@@ -17,9 +17,8 @@ var {rxEvents} = require('./react-utils');
 var {servers: {localHub}, serverNames} = require('./defaultServers');
 import Dialog from 'react-toolbox/lib/dialog';
 import {defaultHost} from './urlParams';
-var {encodeObject, urlParams} = require('./util');
+var {encodeObject, urlParams} = require('./util').default;
 import {ThemeProvider} from 'react-css-themr';
-require('../css/typography.module.css'); // coerce css order
 var appTheme = require('./appTheme');
 var classNames = require('classnames');
 var {getHubParams} = require('./hubParams');
@@ -700,4 +699,4 @@ class ThemedDatapages extends React.Component {
 
 var selector = state => state;
 
-module.exports = props => <ThemedDatapages {...props} selector={selector}/>;
+export default props => <ThemedDatapages {...props} selector={selector}/>;

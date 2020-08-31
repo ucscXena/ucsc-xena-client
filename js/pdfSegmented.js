@@ -1,5 +1,5 @@
 var {drawSegmented} = require('./drawSegmented.js');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var widgets = require('./columnWidgets');
 
 var pdf = (id, column, vg, state, i) => {

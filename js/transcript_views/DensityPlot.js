@@ -1,6 +1,6 @@
 
 var React = require('react');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var styles = require('./DensityPlot.module.css');
 var sc = require('science');
 

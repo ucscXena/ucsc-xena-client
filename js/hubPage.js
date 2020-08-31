@@ -1,7 +1,7 @@
 
 require('./base');
 var React = require('react');
-var Rx = require('./rx');
+var Rx = require('./rx').default;
 import {ThemeProvider} from 'react-css-themr';
 import '../css/index.css'; // Root styles file (reset, fonts, globals)
 var appTheme = require('./appTheme');
@@ -13,12 +13,12 @@ import {Checkbox} from 'react-toolbox/lib/checkbox';
 var typStyles = require('../css/typography.module.css');
 
 var {testHost} = require('./xenaQuery');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var {servers: {localHub}, serverNames} = require('./defaultServers');
 var styles = require('./hubPage.module.css');
 var {parseServer, getHubParams} = require('./hubParams');
-var nav = require('./nav');
-var {encodeObject} = require('./util');
+import nav from './nav';
+var {encodeObject} = require('./util').default;
 
 var RETURN = 13;
 
@@ -174,4 +174,4 @@ class ThemedHub extends React.Component {
 	}
 }
 
-module.exports = ThemedHub;
+export default ThemedHub;

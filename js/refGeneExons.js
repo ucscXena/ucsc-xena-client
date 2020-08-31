@@ -1,15 +1,15 @@
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Rx = require('./rx');
+var Rx = require('./rx').default;
 var intervalTree = require('static-interval-tree');
 var vgcanvas = require('./vgcanvas');
 var layoutPlot = require('./layoutPlot');
 var {matches, index} = intervalTree;
 var {pxTransformEach} = layoutPlot;
 var {rxEvents} = require('./react-utils');
-var util = require('./util');
+var util = require('./util').default;
 var {chromPositionFromScreen} = require('./exonLayout');
 var {isoluminant} = require('./colorScales');
 import PureComponent from './PureComponent';
@@ -551,7 +551,7 @@ class RefGeneHighlight extends PureComponent {
 	}
 }
 
-class RefGeneAnnotation extends PureComponent {
+export class RefGeneAnnotation extends PureComponent {
 	state = {probe: undefined};
 	componentWillMount() {
 		this.sub = this.props.tooltip.subscribe(ev => {
@@ -584,7 +584,3 @@ class RefGeneAnnotation extends PureComponent {
 			</div>);
 	}
 }
-
-//widgets.annotation.add('gene', props => <RefGeneAnnotation {...props}/>);
-
-export default RefGeneAnnotation;

@@ -10,7 +10,7 @@
 
 // Core dependencies, components
 var React = require('react');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 // App dependencies
 var SheetStatus = require('./views/SheetStatus');
@@ -53,4 +53,4 @@ class SheetControls extends React.Component {
 	}
 }
 
-module.exports = SheetControls;
+export default SheetControls;

@@ -1,4 +1,4 @@
-var {identity, updateIn, getIn} = require('../underscore_ext');
+var {identity, updateIn, getIn} = require('../underscore_ext').default;
 
 var make = controls => ({
 	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
@@ -21,8 +21,4 @@ var compose = (...controllers) => {
 	};
 };
 
-module.exports = {
-	make,
-	mount,
-	compose
-};
+export {make, mount, compose};

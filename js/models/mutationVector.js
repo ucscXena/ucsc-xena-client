@@ -1,14 +1,14 @@
 
 // Domain logic for mutation datasets.
 
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var widgets = require('../columnWidgets');
 var xenaQuery = require('../xenaQuery');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 var exonLayout = require('../exonLayout');
 var intervalTree = require('static-interval-tree');
 var {pxTransformInterval} = require('../layoutPlot');
-var {hexToRGB, colorStr} = require('../color_helper');
+var {hexToRGB, colorStr} = require('../color_helper').default;
 var jStat = require('jStat').jStat;
 var parsePos = require('../parsePos');
 

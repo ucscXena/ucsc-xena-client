@@ -1,8 +1,8 @@
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var multi = require('../multi');
 var {colorScale} = require('../colorScales');
 var km = require('../km'); // move km down?
-var {RGBToHex} = require('../color_helper');
+var {RGBToHex} = require('../color_helper').default;
 //var {segmentAverage} = require('./segmented');
 
 var MAX = 10; // max number of groups to display.

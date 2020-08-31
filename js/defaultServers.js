@@ -1,5 +1,4 @@
-
-var servers = {
+export const servers = {
 	oldLocalHub: 'https://local.xena.ucsc.edu:7223',
 	localHub: 'http://127.0.0.1:7222',
 	publicHub: 'https://ucscpublic.xenahubs.net',
@@ -16,64 +15,64 @@ var servers = {
 	notebook: "notebook:"
 };
 
-module.exports = {
-	servers,
-	serverNames: {
-		[servers.localHub]: "My computer hub",
-		[servers.publicHub]: 'UCSC Public Hub',
-		[servers.tcgaHub]: 'TCGA Hub',
-		[servers.icgcHub]: 'ICGC Hub',
-		[servers.toilHub]: 'UCSC Toil RNA-seq Recompute',
-		[servers.pcawgHub]: 'PCAWG Hub',
-		[servers.singlecellHub]: 'Single-cell RNAseq Hub',
-		[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
-		[servers.treehouseHub]: 'Treehouse Hub',
-		[servers.gdcHub]: 'GDC Hub',
-		[servers.atacSeqHub]: 'ATAC-seq Hub',
-		[servers.kidsFirstHub]: 'Kids First Hub',
-		[servers.notebook]: 'jupyter notebook'
-	},
-	defaultServers: [
-		servers.localHub,
-		servers.publicHub,
-		servers.tcgaHub,
-		servers.pancanAtlasHub,
-		servers.icgcHub,
-		servers.pcawgHub,
-		servers.toilHub,
-		servers.treehouseHub,
-		servers.gdcHub,
-		servers.atacSeqHub,
-		servers.kidsFirstHub,
-		servers.notebook
-	],
-	enabledServers: [
-		servers.localHub,
-		servers.publicHub,
-		servers.tcgaHub,
-		servers.pancanAtlasHub,
-		servers.icgcHub,
-		servers.pcawgHub,
-		servers.toilHub,
-		servers.gdcHub,
-		servers.atacSeqHub,
-		servers.kidsFirstHub,
-		servers.notebook
-	],
-	publicServers: [
-		servers.publicHub,
-		servers.tcgaHub,
-		servers.icgcHub,
-		servers.toilHub,
-		servers.pancanAtlasHub,
-		servers.pcawgHub,
-		servers.treehouseHub,
-		servers.gdcHub,
-		servers.atacSeqHub,
-		servers.singlecellHub,
-		servers.kidsFirstHub,
-		'https://tdi.xenahubs.net',
-		'https://luad.xenahubs.net',
-		'https://preview.xenahubs.net'
-	]
+export const serverNames = {
+	[servers.localHub]: "My computer hub",
+	[servers.publicHub]: 'UCSC Public Hub',
+	[servers.tcgaHub]: 'TCGA Hub',
+	[servers.icgcHub]: 'ICGC Hub',
+	[servers.toilHub]: 'UCSC Toil RNA-seq Recompute',
+	[servers.pcawgHub]: 'PCAWG Hub',
+	[servers.singlecellHub]: 'Single-cell RNAseq Hub',
+	[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
+	[servers.treehouseHub]: 'Treehouse Hub',
+	[servers.gdcHub]: 'GDC Hub',
+	[servers.atacSeqHub]: 'ATAC-seq Hub',
+	[servers.kidsFirstHub]: 'Kids First Hub',
+	[servers.notebook]: 'jupyter notebook'
 };
+
+export const defaultServers = [
+	servers.localHub,
+	servers.publicHub,
+	servers.tcgaHub,
+	servers.pancanAtlasHub,
+	servers.icgcHub,
+	servers.pcawgHub,
+	servers.toilHub,
+	servers.treehouseHub,
+	servers.gdcHub,
+	servers.atacSeqHub,
+	servers.kidsFirstHub,
+	servers.notebook
+];
+
+export const enabledServers = [
+	servers.localHub,
+	servers.publicHub,
+	servers.tcgaHub,
+	servers.pancanAtlasHub,
+	servers.icgcHub,
+	servers.pcawgHub,
+	servers.toilHub,
+	servers.gdcHub,
+	servers.atacSeqHub,
+	servers.kidsFirstHub,
+	servers.notebook
+];
+
+export const publicServers = [
+	servers.publicHub,
+	servers.tcgaHub,
+	servers.icgcHub,
+	servers.toilHub,
+	servers.pancanAtlasHub,
+	servers.pcawgHub,
+	servers.treehouseHub,
+	servers.gdcHub,
+	servers.atacSeqHub,
+	servers.singlecellHub,
+	servers.kidsFirstHub,
+	'https://tdi.xenahubs.net',
+	'https://luad.xenahubs.net',
+	'https://preview.xenahubs.net'
+];

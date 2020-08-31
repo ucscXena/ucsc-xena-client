@@ -1,23 +1,24 @@
 {
-	"presets": ["react", "es2015"],
+	sourceType: 'unambiguous',
+	"presets": [
+		"@babel/preset-react",
+		["@babel/preset-env", {"useBuiltIns": "entry", "corejs": {version: 3, proposals: true}}]
+	],
 	"plugins": [
-		"transform-object-rest-spread",
-		"transform-runtime",
+		"@babel/plugin-transform-modules-commonjs",
+		"@babel/plugin-proposal-object-rest-spread",
+		"@babel/plugin-transform-runtime",
 		"tailcall-optimization",
-		"transform-class-properties",
-		"react-hot-loader/babel"
+		"@babel/plugin-proposal-class-properties",
 	],
 	"env": {
 		"development": {
 			"plugins": [
-				"transform-object-rest-spread",
+				"@babel/plugin-transform-modules-commonjs",
+				"@babel/plugin-proposal-object-rest-spread",
+				"@babel/plugin-transform-runtime",
 				"tailcall-optimization",
-				["react-transform", {
-					"transforms": [{
-						"transform": "react-transform-catch-errors",
-						"imports": ["react", "redbox-react", "redboxOptions"]
-					}]
-				}]
+				"@babel/plugin-proposal-class-properties"
 			]
 		}
 	}

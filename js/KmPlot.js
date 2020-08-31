@@ -1,6 +1,6 @@
 
 import kmStyle from "./km.module.css";
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 import PureComponent from './PureComponent';
 var React = require('react');
 import {Button, IconButton} from 'react-toolbox/lib/button';
@@ -476,4 +476,4 @@ class KmPlot extends PureComponent {
 	}
 }
 
-module.exports = {KmPlot};
+export {KmPlot};

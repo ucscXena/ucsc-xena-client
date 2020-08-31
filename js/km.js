@@ -1,7 +1,7 @@
 /*eslint-disable camelcase */
 
 var jStat = require('jStat').jStat,
-	_ = require('./underscore_ext'),
+	_ = require('./underscore_ext').default,
 	linearAlgebra = require('linear-algebra')(),
 	Matrix = linearAlgebra.Matrix;
 

@@ -21,10 +21,9 @@
 var classNames = require('classnames');
 var React = require('react');
 import {AppBar as RTBAppBar} from 'react-toolbox/lib/app_bar';
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 
 // Styles
-require('../../css/typography.module.css'); // coerce order so Stepper overrides typography
 var compStyles = require('./Stepper.module.css');
 
 class Stepper extends React.Component {
@@ -53,4 +52,4 @@ class Stepper extends React.Component {
 	}
 }
 
-module.exports = { Stepper };
+export {Stepper};

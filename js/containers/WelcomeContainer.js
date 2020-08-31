@@ -1,7 +1,7 @@
 
 import PureComponent from '../PureComponent';
 var React = require('react');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 var Welcome = require('../views/Welcome');
 var {rxEvents} = require('../react-utils');
 
@@ -64,4 +64,4 @@ class WelcomeContainer extends PureComponent {
 	}
 }
 
-module.exports = WelcomeContainer;
+export default WelcomeContainer;

@@ -1,6 +1,6 @@
 
 var {Component} = require('react');
-var {isEqual} = require('./underscore_ext');
+var {isEqual} = require('./underscore_ext').default;
 
 var logDiff; //eslint-disable-line no-unused-vars
 

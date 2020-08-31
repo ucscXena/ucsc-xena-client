@@ -1,6 +1,6 @@
 /*global describe: false, it: false, require: false */
 var assert = require('assert');
-//var _ = require('../js/underscore_ext');
+//var _ = require('../js/underscore_ext').default;
 
 var {tallyDomains} = require('../js/drawHeatmap');
 

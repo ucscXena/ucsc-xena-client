@@ -1,9 +1,9 @@
 import React, {Component} from 'react';
 var ReactDOM = require('react-dom');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 var main = window.document.getElementById('main');
-var {allParameters} = require('../util');
-var {sortBy} = require('../underscore_ext');
+var {allParameters} = require('../util').default;
+var {sortBy} = require('../underscore_ext').default;
 
 var compStyles = require('./bookmarks.module.css');
 

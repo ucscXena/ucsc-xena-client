@@ -1,5 +1,5 @@
 
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var {parse} = require('./searchParser');
 //var {shouldNormalize, shouldLog} = require('./denseMatrix');
 

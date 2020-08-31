@@ -1,7 +1,5 @@
-
-import 'babel-polyfill';
-import {servers} from '../defaultServers';
-import Rx from '../rx';
+var {servers} = require('../defaultServers');
+var Rx = require('../rx').default;
 var {ajax, create, defer, empty, from, fromEvent, of} = Rx.Observable;
 var EMPTY = empty();
 var {asap} = Rx.Scheduler;
@@ -9,7 +7,7 @@ import getErrors from '../import/errorChecking';
 import infer from '../import/infer.js';
 import {dataSubType, FILE_FORMAT} from '../import/constants';
 const {GENOMIC_MATRIX, CLINICAL_MATRIX} = FILE_FORMAT;
-import {Let, assocIn, copyStr, getIn, has, iterable} from '../underscore_ext';
+var {Let, assocIn, copyStr, getIn, has, iterable} = require('../underscore_ext').default;
 import backPressure from '../import/backPressure';
 import chunkReader from '../import/chunkReader';
 require('./html5-formdata-polyfill'); // for safari

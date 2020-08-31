@@ -1,4 +1,4 @@
-import _ from './underscore_ext';
+var _ = require('./underscore_ext').default;
 
 var download = () => {
 	require.ensure(['pdfkit', 'svg-to-pdfkit', 'blob-stream'], () => {

@@ -1,6 +1,6 @@
 
 import PureComponent from '../PureComponent';
-import {omit} from '../underscore_ext.js';
+var {omit} = require('../underscore_ext').default;
 
 var React = require('react');
 

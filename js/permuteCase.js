@@ -1,4 +1,4 @@
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 function permuteCaseArray(str, i = 0) {
 	if (i === str.length) {

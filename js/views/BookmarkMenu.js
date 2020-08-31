@@ -6,8 +6,8 @@ import {getColumns} from '../columnsParam';
 import {getHeatmap} from '../heatmapParam';
 var konami = require('../konami');
 var React = require('react');
-var _ = require('../underscore_ext');
-var Rx = require('../rx');
+var _ = require('../underscore_ext').default;
+var Rx = require('../rx').default;
 var {createBookmark, getRecent, setRecent} = require('../bookmark');
 
 var compStyles = require('./BookmarkMenu.module.css');

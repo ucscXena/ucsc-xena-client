@@ -1,8 +1,8 @@
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var partition = require('./partition');
-var colorScales = require('./colorScales');
-var colorHelper = require('./color_helper');
+import {colorScale} from './colorScales';
+var colorHelper = require('./color_helper').default;
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -116,12 +116,12 @@ function drawLayoutByPixel(vg, opts) {
 	layout.forEach(function (el, i) {
 		var regions = findRegions(height, count);
 		var rowData = data[i],
-			colorScale = colorScales.colorScale(colors[i]);
+			colorScaleFn = colorScale(colors[i]);
 
 		// XXX watch for poor iterator performance in this for...of.
 		for (let r of regions) {
 			if (_.anyRange(rowData, first + r.start, first + r.end + 1, v => v != null)) {
-				let color = regionColor(colors[i][0], colorScale, rowData,
+				let color = regionColor(colors[i][0], colorScaleFn, rowData,
 				                        first + r.start, first + r.end + 1);
 
 				for (let y = r.y; y < r.y + r.height; ++y) {
@@ -143,7 +143,7 @@ function drawLayoutByPixel(vg, opts) {
 
 	layout.forEach(function (el, i) {
 		var rowData = data[i].slice(first, last),
-			colorScale = colorScales.colorScale(colors[i]);
+			colorScaleFn = colorScale(colors[i]);
 		// Add labels
 		var minSpan = labelFont / (height / count);
 		if (el.size - 2 * labelMargin >= minTxtWidth) {
@@ -156,7 +156,7 @@ function drawLayoutByPixel(vg, opts) {
 
 			vg.clip(el.start + labelMargin, 0, el.size - labelMargin, height, () =>
 					labels.forEach(([l, i, ih]) => /* label, index, count */
-						_.Let((labelColor = colorScale(rowData[i])) =>
+						_.Let((labelColor = colorScaleFn(rowData[i])) =>
 							vg.textCenteredPushRight(el.start + labelMargin, h * i - 1, el.size - labelMargin,
 								h * ih, (codedColor && labelColor) ? colorHelper.contrastColor(labelColor) : 'black',
 								labelFont, l))));

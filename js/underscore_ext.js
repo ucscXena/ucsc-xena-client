@@ -383,7 +383,7 @@ var any = {};
 var matchKeys = (obj, path, i = 0)  =>
 	i === path.length ? [path] :
 	path[i] === any ? Object.keys(obj)
-		.map(k => matchKeys(obj[k], splice(path, i, 1, k), i + 1)).flatten() :
+		.map(k => matchKeys(obj[k], splice(path, i, 1, k), i + 1)).flat() :
 	!obj.hasOwnProperty(path[i]) ? [] :
 	matchKeys(obj[path[i]], path, i + 1);
 
@@ -509,4 +509,4 @@ _.mixin({
 	Let: f => f()
 });
 
-module.exports = _;
+export default _;

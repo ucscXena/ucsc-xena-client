@@ -1,4 +1,4 @@
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 const React = require('react');
 const NameColumn = require('./NameColumn');
 // const {Exons} = require('./Exons');
@@ -6,11 +6,11 @@ const ExonsOnly = require('./ExonsOnly');
 var {DensityPlot, bottomColor, topColor, plotWidth} = require('./DensityPlot');
 const GeneSuggest = require('../views/GeneSuggest');
 var {linearTicks} = require('../scale');
-var nav = require('../nav');
+import nav from '../nav';
 var styles = require('./TranscriptPage.module.css');
-var StateError = require('../StateError');
+var {StateError} = require('../StateError');
 var {schemaCheckThrow} = require('../schemaCheck');
-var spinner = require('../ajax-loader.gif');
+import spinner from '../ajax-loader.gif';
 
 function getStatusView(status, onReload) {
 	if (status === 'loading') {
@@ -252,4 +252,4 @@ class TranscriptsContainer extends React.Component {
 	}
 }
 
-module.exports = TranscriptsContainer;
+export default TranscriptsContainer;
