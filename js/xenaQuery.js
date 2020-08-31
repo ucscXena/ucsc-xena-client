@@ -1,11 +1,11 @@
 /*eslint camelcase: 0, no-multi-spaces: 0, no-mixed-spaces-and-tabs: 0 */
 
 
-var Rx = require('./rx');
-var _ = require('./underscore_ext');
+var Rx = require('./rx').default;
+var _ = require('./underscore_ext').default;
 var {permuteCase, permuteBitCount, prefixBitLimit} = require('./permuteCase');
 // Load all query files as a map of strings.
-var qs = require('./loadXenaQueries');
+import * as qs from './loadXenaQueries';
 
 var maxPermute = 7; // max number of chars to permute for case-insensitive match
 import cohortMetaData from './cohortMetaData';

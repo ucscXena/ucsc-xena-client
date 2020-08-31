@@ -32,7 +32,7 @@
 // The default column normalization is fetched from the server. Instead it should come from
 // the state, or from a data cache, because we've fetched that already.
 
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var React = require('react');
 var ReactDOM = require('react-dom');
 var {Row, Col} = require("react-material-responsive-grid");
@@ -41,7 +41,7 @@ import {Dropdown} from 'react-toolbox/lib/dropdown';
 import {Button} from 'react-toolbox/lib/button';
 import {Input} from 'react-toolbox/lib/input';
 import vizSettingStyle from "./VizSettings.module.css";
-import {categoryMore} from "../colorScales";
+var {categoryMore} = require("../colorScales");
 
 function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNormalization,
 	defaultColorClass, valueType, fieldType, data, units, column) {

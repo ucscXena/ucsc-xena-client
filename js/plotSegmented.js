@@ -1,28 +1,22 @@
 
-var _ = require('./underscore_ext');
-var Rx = require('./rx');
+var _ = require('./underscore_ext').default;
+var Rx = require('./rx').default;
 import PureComponent from './PureComponent';
 var React = require('react');
 var BandLegend = require('./views/BandLegend');
 var {rxEvents} = require('./react-utils');
 var widgets = require('./columnWidgets');
-var util = require('./util');
+var util = require('./util').default;
 var CanvasDrawing = require('./CanvasDrawing');
 var {drawSegmented, toYPx} = require('./drawSegmented');
 var {chromPositionFromScreen} = require('./exonLayout');
-var colorScales = require('./colorScales');
+import {colorScale} from './colorScales';
 
-// Since we don't set module.exports, but instead register ourselves
-// with columWidgets, react-hot-loader can't handle the updates automatically.
-// Accept hot loading here.
-if (module.hot) {
-	module.hot.accept();
-}
-
-// Since there are multiple components in the file we have to use makeHot
+// Since there are multiple components in the file we have to use hot
 // explicitly.
+import {hot} from 'react-hot-loader';
 function hotOrNot(component) {
-	return module.makeHot ? module.makeHot(component) : component;
+	return module.hot ? hot(module)(component) : component;
 }
 
 // might want to use <wbr> here, instead, so cut & paste work better, but that
@@ -39,7 +33,7 @@ function renderFloatLegend(props) {
 		footnotes = [<span title={unitText}>{addWordBreaks(unitText)}</span>];
 
 	var [origin, , max] = color.slice(4),
-		powerScale = colorScales.colorScale(color).lookup,
+		powerScale = colorScale(color).lookup,
 		scale = v => v < origin ?
 			powerScale(0, origin - v) :
 			powerScale(1, v - origin),

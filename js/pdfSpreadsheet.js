@@ -5,7 +5,7 @@ require('./pdfMutationVector');
 require('./pdfDenseMatrix');
 require('./pdfSegmented');
 require('./pdfSamples');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 var totalWidth = cols =>
 	(cols.length - 1) * styles.column.margin +

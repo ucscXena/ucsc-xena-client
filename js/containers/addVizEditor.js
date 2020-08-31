@@ -1,6 +1,6 @@
 var React = require('react');
 var VizSettings = require('../views/VizSettings');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 
 var vizSettingsState = ['defaultNormalization', 'colorClass', 'vizSettings', 'valueType', 'fieldType'];
 function vizSettingsSelector(appState, columnId) {

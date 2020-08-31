@@ -1,6 +1,6 @@
 
-var _ = require('./underscore_ext');
-var {contrastColor, greyHEX} = require('./color_helper');
+var _ = require('./underscore_ext').default;
+var {contrastColor, greyHEX} = require('./color_helper').default;
 var {impact, getSNVEffect} = require('./models/mutationVector');
 var labelFont = 12;
 var labelMargin = 1; // left & right margin

@@ -1,5 +1,5 @@
 var React = require('react');
-var CohortSuggest = require('./CohortSuggest');
+import {CohortSuggest} from '../views/CohortSuggest';
 var DiseaseSuggest = require('./DiseaseSuggest2');
 var XRadioGroup = require('./XRadioGroup');
 var WizardCard = require('./WizardCard');

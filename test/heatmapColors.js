@@ -1,7 +1,7 @@
 /*global describe: false, it: false, require: false, assert: false */
 
 var assert = require('assert');
-var {colorSpec} = require('../js/heatmapColors');
+import {colorSpec} from '../js/heatmapColors';
 var {colorScale} = require('../js/colorScales');
 var _ = require('underscore');
 

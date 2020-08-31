@@ -1,6 +1,6 @@
 
 var React = require('react');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 
 // Styles
 var compStyles = require('./Legend.module.css');

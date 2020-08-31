@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var unicode = require('./unicode_utils');
 var chromInfo = require('./chromInfo');
 var centromere = require('./centromere');

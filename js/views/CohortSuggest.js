@@ -1,8 +1,7 @@
-
 import React from 'react';
 import PureComponent from '../PureComponent';
 import Input from 'react-toolbox/lib/input';
-import _ from '../underscore_ext';
+var _ = require('../underscore_ext').default;
 import './GeneSuggest.css'; // XXX rename file
 import XAutosuggest from './XAutosuggest';
 
@@ -19,7 +18,7 @@ var getSuggestions = (value, cohorts) => {
 	return cohorts.filter(c => _.every(wordValues, value => c.toLowerCase().indexOf(value) > -1)).sort();
 };
 
-class CohortSuggest extends PureComponent {
+export class CohortSuggest extends PureComponent {
 	state = {suggestions: [], value: this.props.cohort || ""};
 
 	onSuggestionsFetchRequested = ({value}) => {
@@ -82,5 +81,3 @@ class CohortSuggest extends PureComponent {
 		);
 	}
 }
-
-module.exports = CohortSuggest;

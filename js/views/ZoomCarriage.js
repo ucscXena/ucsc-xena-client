@@ -43,4 +43,4 @@ class ZoomCarriage extends PureComponent {
 	}
 };
 
-module.exports = ZoomCarriage;
+export default ZoomCarriage;

@@ -1,6 +1,6 @@
 
 var React = require('react');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var vgcanvas = require('./vgcanvas');
 
 var tickWidth = 5,

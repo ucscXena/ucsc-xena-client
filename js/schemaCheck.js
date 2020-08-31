@@ -1,5 +1,5 @@
 
-var {isString, isArray, isObject, isBoolean, isNumber, Let} = require('./underscore_ext');
+var {isString, isArray, isObject, isBoolean, isNumber, Let} = require('./underscore_ext').default;
 
 var optBoolean = v => v === undefined || isBoolean(v);
 var optObject = o => o === undefined || isObject(o);

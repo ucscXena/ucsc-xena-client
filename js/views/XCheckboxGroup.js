@@ -25,12 +25,11 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 import {Checkbox} from 'react-toolbox/lib/checkbox';
 
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var XInputToolbar = require('./XInputToolbar');
 var classNames = require('classnames');
 
 // Styles
-require('../../css/typography.module.css'); // coerce order so XCheckboxGroup overrides typography
 var compStyles = require('./XCheckboxGroup.module.css');
 
 class XCheckboxGroup extends PureComponent {

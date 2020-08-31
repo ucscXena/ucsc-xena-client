@@ -1,5 +1,5 @@
 var React = require('react');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 import Input from 'react-toolbox/lib/input';
 var {rxEvents} = require('../react-utils');
 

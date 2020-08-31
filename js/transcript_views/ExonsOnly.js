@@ -1,5 +1,5 @@
 var React = require('react');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var {allExons, exonGroups, intronRegions} = require('../findIntrons');
 var {box, renderExon} = require('./Exons');
 var styles = require('./Exons.module.css');

@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var {createSelectorCreator, defaultMemoize} = require('reselect');
 var {createFmapSelector} = require('./selectors');
 var widgets = require('./columnWidgets');
@@ -198,4 +198,4 @@ var survivalSelector = createSelector(
 
 var setSurvival = selector => state => selector(_.assocIn(state, ['spreadsheet', 'hasSurvival'], survivalSelector(state)));
 
-module.exports = setWizardProps(setSurvival(spreadsheetSelector(selector)));
+export default setWizardProps(setSurvival(spreadsheetSelector(selector)));

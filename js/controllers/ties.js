@@ -1,7 +1,7 @@
-var _ = require('../underscore_ext');
-var {compose, make, mount} = require('./utils');
+var _ = require('../underscore_ext').default;
+import {make, mount, compose} from './utils';
 var tiesQuery = require('../tiesQuery');
-//var Rx = require('../rx');
+//var Rx = require('../rx').default;
 var {fetchSurvival} = require('./common');
 
 var collateDocs = patients => docs => {

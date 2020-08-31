@@ -1,12 +1,12 @@
 import React from 'react';
 import styles from './ImportPage.module.css';
 import nav from "../nav";
-import _ from "../underscore_ext";
+var _ = require('../underscore_ext').default;
 import {
 	Input, Button, Dropdown,
 	RadioGroup, RadioButton
 } from 'react-toolbox/lib';
-import DefaultServers from "../defaultServers";
+import * as DefaultServers from '../defaultServers';
 import loader from './loader.gif';
 const { servers: { localHub } } = DefaultServers;
 
@@ -15,7 +15,7 @@ import { dataTypeOptions, steps, NONE_STR, DATA_TYPE, FILE_FORMAT, PAGES } from 
 import { Stepper } from '../views/Stepper';
 import WizardSection from './WizardSection';
 import { FilePreview, ErrorPreview } from './staticComponents';
-import CohortSuggest from '../views/CohortSuggest';
+import {CohortSuggest} from '../views/CohortSuggest';
 
 const pageStates = _.range(Object.keys(PAGES).length);
 const pageRanges = [0, ...Array(4).fill(1), 2, 3]; // XXX need a better way to express this

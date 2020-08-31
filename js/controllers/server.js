@@ -1,10 +1,9 @@
-
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 import {computeSettings, matchDatasetFields} from '../models/columns';
-import {searchSamples} from '../models/searchSamples';
+var {searchSamples} = require('../models/searchSamples');
 var {resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering} = require('./common');
-var {compose, make, mount} = require('./utils');
-import * as Rx from '../rx';
+import {make, mount, compose} from './utils';
+var Rx = require('../rx').default;
 var uuid = require('../uuid');
 
 var columnOpen = (state, id) => _.has(_.get(state, 'columns'), id);
@@ -43,7 +42,7 @@ var featuresByID = state => {
 
 var setHeatmapParams = state =>
 	state.params.heatmap ? _.updateIn(state, ['spreadsheet'],
-		spreadsheet => _.assocIn(spreadsheet, ...state.params.heatmap.flatten()))
+		spreadsheet => _.assocIn(spreadsheet, ...state.params.heatmap.flat()))
 		: state;
 
 var linkedColumns = (state, [fieldResp, ids]) => {
@@ -254,6 +253,6 @@ var spreadsheetControls = {
 	'chart-average-data-post!': (serverBus, state, newState, offsets, thunk) => thunk(offsets)
 };
 
-module.exports = compose(
+export default compose(
 		make(controls),
 		mount(make(spreadsheetControls), ['spreadsheet']));

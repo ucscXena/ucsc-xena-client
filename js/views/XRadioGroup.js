@@ -22,7 +22,7 @@
 var React = require('react');
 import {RadioButton, RadioGroup} from 'react-toolbox/lib/radio';
 //import {RadioButton} from 'react-toolbox/lib/radio';
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var XRadioMeta = require('./XRadioMeta');
 var XInputToolbar = require('./XInputToolbar');
 

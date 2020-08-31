@@ -2,9 +2,9 @@
 import React from 'react';
 import Dialog from 'react-toolbox/lib/dialog';
 import PureComponent from './PureComponent';
-var {map, pick, mapObject, getIn, get} = require('./underscore_ext');
+var {map, pick, mapObject, getIn, get} = require('./underscore_ext').default;
 var platform = require('platform');
-var Rx = require('./rx');
+var Rx = require('./rx').default;
 import Link from 'react-toolbox/lib/link';
 import styles from './LaunchHelper.module.css';
 
@@ -85,7 +85,7 @@ class XenaDownload extends React.Component {
 		// forcing the client to bypass its cache.
 		// Note that the etags do appear to work for some files, like the
 		// image files.
-		this.sub = Rx.Observable.ajax({method: 'GET', responseType: 'xml', url: updatesPath + '?x=' + Math.random().toString(), crossDomain: true}).subscribe(xml => {
+		this.sub = Rx.Observable.ajax({method: 'GET', responseType: 'document', url: updatesPath + '?x=' + Math.random().toString(), crossDomain: true}).subscribe(xml => {
 			var files = matchPaths([...xml.response.getElementsByTagName('entry')]
 								   .map(getFileName));
 
@@ -124,7 +124,7 @@ class XenaDownload extends React.Component {
 				{defaultInstall ? <span className={styles.advancedLink} onClick={this.onShowAdvanced}>{advanced ? 'Fewer options...' : 'More options...'}</span> : null}
 				{defaultInstall ? <br/> : null}
 				<div className={advanced || !defaultInstall ? styles.tableShow : styles.table}>{map(files ? pick(osFiles, (_, k) => files[k]) : [], (info, key) =>
-					 <Link className={styles.downloadList} href={files[key]} title={info.help} label={info.description}/>)}</div>
+					 <Link key={key} className={styles.downloadList} href={files[key]} title={info.help} label={info.description}/>)}</div>
 				<br/>
 			</div>);
 	}

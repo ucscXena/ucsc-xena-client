@@ -23,8 +23,7 @@
 var React = require('react');
 import {Button} from 'react-toolbox/lib/button';
 import {Card, CardTitle, CardText, CardActions} from 'react-toolbox/lib/card';
-
-var spinner = require('../ajax-loader.gif');
+import spinner from '../ajax-loader.gif';
 
 // App dependencies
 var CardAvatar = require('./CardAvatar');

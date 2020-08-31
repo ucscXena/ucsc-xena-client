@@ -1,7 +1,7 @@
 /*global it: false, describe: false */
 var assert = require('assert');
 var jv = require('jsverify');
-var _ = require('../js/underscore_ext');
+var _ = require('../js/underscore_ext').default;
 var {pxTransformEach} = require('../js/layoutPlot');
 
 var opts = {

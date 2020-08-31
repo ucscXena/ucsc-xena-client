@@ -1,6 +1,6 @@
 
-var Rx = require('./rx');
-var _ = require('./underscore_ext');
+var Rx = require('./rx').default;
+var _ = require('./underscore_ext').default;
 var {getErrorProps, logError} = require('./errors');
 var {getNotifications} = require('./notifications');
 var {defaultServers, enabledServers} = require('./defaultServers');

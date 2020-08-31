@@ -1,12 +1,12 @@
 
 var getLabel = require('./getLabel');
-var {hexToRGB, colorStr, RGBToHex} = require ('./color_helper');
+var {hexToRGB, colorStr, RGBToHex} = require ('./color_helper').default;
 var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
 var highchartsHelper =  require ('./highcharts_helper');
 require('highcharts/modules/boost')(Highcharts);
-var _ = require('./underscore_ext');
-var colorScales = require ('./colorScales');
+var _ = require('./underscore_ext').default;
+import * as colorScales from './colorScales';
 var jStat = require('jStat').jStat;
 var gaEvents = require('./gaEvents');
 

@@ -1,5 +1,5 @@
-var _ = require('./underscore_ext');
-var Rx = require('./rx');
+var _ = require('./underscore_ext').default;
+var Rx = require('./rx').default;
 
 // XXX Should also do a takeUntil componentWillUnmount, perhaps
 // via rx-react.

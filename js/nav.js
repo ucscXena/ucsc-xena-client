@@ -13,7 +13,7 @@ import {GENESETS_VIEWER_URL} from "./views/GeneSetViewDialog";
 // Core dependencies, components
 var React = require('react');
 var ReactDOM = require('react-dom');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 import AppBar from 'react-toolbox/lib/app_bar';
 import Navigation from 'react-toolbox/lib/navigation';
 import {ThemeProvider} from 'react-css-themr';
@@ -28,9 +28,9 @@ var {servers: {localHub}} = require('./defaultServers');
 var compStyles = require('./nav.module.css');
 
 // Images
-var logoSantaCruzImg = require('../images/logoSantaCruz.png');
-var logoSantaCruz2xImg = require('../images/logoSantaCruz@2x.png');
-var logoSantaCruz3xImg = require('../images/logoSantaCruz@3x.png');
+import logoSantaCruzImg from '../images/logoSantaCruz.png';
+import logoSantaCruz2xImg from '../images/logoSantaCruz@2x.png';
+import logoSantaCruz3xImg from '../images/logoSantaCruz@3x.png';
 
 // Locals
 var links = [
@@ -135,4 +135,4 @@ class ThemedNav extends React.Component {
 
 var nav = document.getElementById('navMenuMain');
 
-module.exports = props => ReactDOM.render(<ThemedNav {...props} />, nav);
+export default props => ReactDOM.render(<ThemedNav {...props} />, nav);

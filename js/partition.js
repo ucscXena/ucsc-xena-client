@@ -1,5 +1,5 @@
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 // Partition n bins (e.g. pixels) proportional to sizes,
 // distributing bins that won't evenly divide.

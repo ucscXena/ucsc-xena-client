@@ -1,7 +1,7 @@
 
 // ad hoc reversible state transforms that make it more compressable.
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var arrays = require('./arrays');
 
 var to32BinStr = arr => arrays.ab2str(Uint32Array.from(arr).buffer);

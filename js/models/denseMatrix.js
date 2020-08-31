@@ -1,8 +1,8 @@
-var _ = require('../underscore_ext');
-var Rx = require('../rx');
+var _ = require('../underscore_ext').default;
+var Rx = require('../rx').default;
 var {map, find} = _;
 var xenaQuery = require('../xenaQuery');
-var heatmapColors = require('../heatmapColors');
+import * as heatmapColors from '../heatmapColors';
 var widgets = require('../columnWidgets');
 var {categoryMore} = require('../colorScales');
 var parsePos = require('../parsePos');

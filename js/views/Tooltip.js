@@ -1,7 +1,7 @@
 
 import PureComponent from '../PureComponent';
 var React = require('react');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var meta = require('../meta');
 var classNames = require('classnames');
 

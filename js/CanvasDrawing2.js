@@ -1,7 +1,7 @@
 // React component to manages redrawing a canvas element.
 
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 var vgcanvas = require('./vgcanvas');
 var React = require('react');
 var ReactDOM = require('react-dom');
@@ -60,4 +60,4 @@ class CanvasDrawing extends React.Component {
 	};
 }
 
-module.exports = CanvasDrawing;
+export default CanvasDrawing;

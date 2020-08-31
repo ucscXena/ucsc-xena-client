@@ -1,9 +1,9 @@
 
-var _ = require('./underscore_ext');
-var Rx = require('./rx');
+var _ = require('./underscore_ext').default;
+var Rx = require('./rx').default;
 var widgets = require('./columnWidgets');
-var colorScales = require('./colorScales');
-var util = require('./util');
+import {colorScale} from './colorScales';
+var util = require('./util').default;
 var Legend = require('./views/Legend');
 var BandLegend = require('./views/BandLegend');
 import PureComponent from './PureComponent';
@@ -12,20 +12,14 @@ var CanvasDrawing = require('./CanvasDrawing');
 var {rxEvents} = require('./react-utils');
 var {drawHeatmap} = require('./drawHeatmap');
 
-// Since we don't set module.exports, but instead register ourselves
-// with columWidgets, react-hot-loader can't handle the updates automatically.
-// Accept hot loading here.
-if (module.hot) {
-	module.hot.accept();
-}
-
-// Since there are multiple components in the file we have to use makeHot
+// Since there are multiple components in the file we have to use hot
 // explicitly.
+import {hot} from 'react-hot-loader';
 function hotOrNot(component) {
-	return module.makeHot ? module.makeHot(component) : component;
+	return module.hot ? hot(module)(component) : component;
 }
 
-var colorFns = vs => _.map(vs, colorScales.colorScale);
+var colorFns = vs => _.map(vs, colorScale);
 
 //
 // Tooltip
@@ -137,7 +131,7 @@ function renderFloatLegend(props) {
 		return null;
 	}
 
-	var scale = colorScales.colorScale(colorSpec),
+	var scale = colorScale(colorSpec),
 		values = scale.domain(),
 		footnotes = units && units[0] ? [<span title={units[0]}>{addWordBreaks(units[0])}</span>] : null,
 		hasViz = !isNaN(_.getIn(vizSettings, ['min'])),

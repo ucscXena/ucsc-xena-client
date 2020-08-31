@@ -1,16 +1,15 @@
-
 import PureComponent from './PureComponent';
 var React = require('react');
 import stateErrorStyle from './StateError.module.css';
 import Dialog from 'react-toolbox/lib/dialog';
-import {contains} from './underscore_ext';
+var {contains} = require('./underscore_ext').default;
 
 var stateTypes = ['bookmark', 'import', 'session'];
 var getMsg = error =>
 	contains(stateTypes, error) ? `We were unable to restore the view from your ${error}, possibly due to software updates. Sorry about that!` :
 	error;
 
-class StateError extends PureComponent {
+export class StateError extends PureComponent {
 	componentDidMount() {
 		document.documentElement.scrollTop = 0;
 		var body = document.getElementById("body");
@@ -45,5 +44,3 @@ class StateError extends PureComponent {
 		);
 	}
 }
-
-module.exports = StateError;

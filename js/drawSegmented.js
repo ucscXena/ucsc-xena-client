@@ -1,7 +1,5 @@
-
-import "regenerator-runtime/runtime";
-var _ = require('./underscore_ext');
-var colorScales = require('./colorScales');
+var _ = require('./underscore_ext').default;
+import {colorScale} from './colorScales';
 
 var labelFont = 12;
 var labelMargin = 1; // left & right margin
@@ -121,7 +119,7 @@ function trendPowerNullIter(iter, zero) {
 // respectively. This avoids the problem of averaging, which draws nearby
 // amplification and deletion as white, since they average to zero.
 function* segmentRegions(colorSpec, index, count, width, height, zoom, nodes) {
-	var {lookup} = colorScales.colorScale(colorSpec),
+	var {lookup} = colorScale(colorSpec),
 		[,,,, zero] = colorSpec,
 		regions = findRegions(index, height, count),
 		toPxRow = v => ~~((v.y - index) * height / count), // ~~ for floor

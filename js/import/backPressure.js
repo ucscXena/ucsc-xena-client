@@ -1,5 +1,5 @@
 
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 var {empty} = Rx.Observable;
 var EMPTY = empty();
 

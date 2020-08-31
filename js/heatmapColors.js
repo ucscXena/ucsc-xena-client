@@ -195,8 +195,8 @@ colorRange.add('coded', colorCoded);
 colorRange.add('floatGenomicData', colorFloatGenomicData);
 colorRange.add('segmented', colorSegmented);
 
-module.exports =  {
-	colorSpec: colorRange,
+export {
+	colorRange as colorSpec,
 	defaultColors,
 	defaultColorClass,
 	defaultNormal2color

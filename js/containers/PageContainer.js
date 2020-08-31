@@ -1,11 +1,15 @@
 import React from 'react';
 import Application from './ApplicationContainer';
-import  Hub  from '../hubPage';
+import Hub from '../hubPage';
 import Datapages from '../Datapages';
 import Transcripts from '../transcript_views/TranscriptPage';
-import {hot} from 'react-hot-loader';
 import {overrideComponentTypeChecker} from 'react-toolbox';
 import ImportPage from '../import/ImportPage';
+
+import {hot} from 'react-hot-loader';
+function hotOrNot(component) {
+	return module.hot ? hot(module)(component) : component;
+}
 
 // react hot loader messes up class checks in react-toolbox. Override
 // the class checker in dev.
@@ -33,4 +37,4 @@ const PageContainer = (props) => {
 	return <Page {...props}/>;
 };
 
-export default hot(module)(PageContainer);
+export default hotOrNot(PageContainer);

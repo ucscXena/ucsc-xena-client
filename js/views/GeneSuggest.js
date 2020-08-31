@@ -1,13 +1,10 @@
-
 import PureComponent from '../PureComponent';
-
 var React = require('react');
 import XAutosuggest from './XAutosuggest';
 import Input from 'react-toolbox/lib/input';
-import {Observable, Scheduler} from '../rx';
-
+var {Observable, Scheduler} = require('../rx').default;
 var {matchPartialField, sparseDataMatchPartialField, refGene} = require('../xenaQuery');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var {rxEvents} = require('../react-utils');
 require('./GeneSuggest.css'); // react-autosuggest, global styles
 var styles = require('./GeneSuggest.module.css'); // react-toolbox, module styles

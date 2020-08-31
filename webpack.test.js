@@ -9,7 +9,7 @@ config.plugins = [
 		title: "UCSC Xena",
 		filename: "index.html",
 		inject: false,
-		template: "!!blueimp-tmpl-loader!test.template"
+		template: "test.template"
 	})
 ];
 

@@ -1,8 +1,7 @@
-import "core-js/stable";
 import {agnes, treeOrder} from '../agnes';
 import {jStat} from 'jStat';
-import {getIn} from '../underscore_ext.js';
-import Rx from '../rx';
+var {getIn} = require('../underscore_ext').default;
+var Rx = require('../rx').default;
 
 var {fromEvent} = Rx.Observable;
 

@@ -1,7 +1,7 @@
 
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var xenaQuery = require('../xenaQuery');
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 
 // the expression dataset and phenodataset must be on the same host
 var expressionHost = 'https://kidsfirst.xenahubs.net';
@@ -104,7 +104,7 @@ var controls = {
 	transcriptZoom: (state, name) => _.updateIn(state, ['transcripts', 'zoom', name], z => !z)
 };
 
-module.exports = {
+export default {
 	action: (state, [tag, ...args]) => (controls[tag] || identity)(state, ...args),
 	postAction: (serverBus, state, newState, [tag, ...args]) => (controls[tag + '-post!'] || identity)(serverBus, state, newState, ...args)
 };

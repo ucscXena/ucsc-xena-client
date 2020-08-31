@@ -1,7 +1,6 @@
-
 import PureComponent from '../PureComponent';
 var React = require('react');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var DefaultTextInput = require('./DefaultTextInput');
 var DragSelect = require('./DragSelect');
 var SpreadSheetHighlight = require('../SpreadSheetHighlight');
@@ -9,7 +8,7 @@ var ResizeOverlay = require('./ResizeOverlay');
 var widgets = require('../columnWidgets');
 var columnZoom = require('../columnZoom');
 var aboutDatasetMenu = require('./aboutDatasetMenu');
-var spinner = require('../ajax-loader.gif');
+import spinner from '../ajax-loader.gif';
 var mutationVector = require('../models/mutationVector');
 //var ValidatedInput = require('./ValidatedInput');
 var konami = require('../konami');
@@ -21,11 +20,11 @@ import {IconMenu as RTIconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/m
 import Tooltip from 'react-toolbox/lib/tooltip';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
-import RefGeneAnnotation from '../refGeneExons';
+import {RefGeneAnnotation} from '../refGeneExons';
 import {GeneLabelAnnotation, geneLableFont, maxLane} from '../geneLabelAnnotation';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
-var crosshair = require('./cursor.png');
+import crosshair from './cursor.png';
 var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
 var config = require('../config');

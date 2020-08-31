@@ -9,7 +9,7 @@
 // Dependencies
 var {chromRangeFromScreen} = require('./exonLayout');
 var multi = require('./multi');
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 // Selectors
 var directionSelector = ({direction}) => direction;

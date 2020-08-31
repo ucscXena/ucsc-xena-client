@@ -1,15 +1,14 @@
 
 // Helper methods needed by multiple controllers.
 
-var Rx = require('../rx');
+var Rx = require('../rx').default;
 var xenaQuery = require('../xenaQuery');
-var _ = require('../underscore_ext');
+var _ = require('../underscore_ext').default;
 var {reifyErrors, collectResults} = require('./errors');
 var fetch = require('../fieldFetch');
 var kmModel = require('../models/km');
 var {signatureField} = require('../models/fieldSpec');
-var defaultServers = require('../defaultServers');
-var {publicServers} = defaultServers;
+var {servers: allServers, publicServers} = require('../defaultServers');
 var gaEvents = require('../gaEvents');
 // pick up signature fetch
 require('../models/signatures');
@@ -66,7 +65,7 @@ function logSampleSources(cohortResps) {
 	var havingSamples = cohortResps.filter(([v]) => v.length > 0)
 			.map(([,, server]) => server),
 		types = new Set(havingSamples.map(s =>
-					s === defaultServers.servers.localHub ? 'localhost' :
+					s === allServers.localHub ? 'localhost' :
 					// counting all ucsc-hosted hubs as public
 					s.indexOf('.xenahubs.net') !== -1 ? 'public' :
 					'private'));

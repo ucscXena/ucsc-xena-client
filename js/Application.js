@@ -3,8 +3,8 @@ import { Grid, Row, Col } from "react-material-responsive-grid";
 import { AppControls } from './AppControls';
 import { KmPlot } from './KmPlot';
 import SheetControls from './SheetControls';
-import StateError from'./StateError';
-import _  from './underscore_ext';
+import {StateError} from'./StateError';
+var _ = require('./underscore_ext').default;
 import { Stepper } from './views/Stepper';
 import Welcome from './containers/WelcomeContainer';
 import '../css/index.css'; // Root styles file (reset, fonts, globals)

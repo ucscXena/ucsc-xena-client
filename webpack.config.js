@@ -20,10 +20,12 @@ var htmlPlugin = process.argv.indexOf('--disable-html-plugin') === -1 ?
 		title: "UCSC Xena",
 		filename: "index.html",
 		inject: false,
-		template: "!!blueimp-tmpl-loader!page.template"
+		//template: "!!blueimp-tmpl-loader!page.template"
+		template: "page.template"
 	})] : [];
 
 module.exports = {
+	mode: 'development',
 	entry: {heatmap: './js/main', docs: './js/docs', register: './js/register', bookmarks: './js/admin/bookmarks.js'},
 	output: {
 		path: __dirname + "/build",
@@ -101,9 +103,10 @@ module.exports = {
 						loader: 'css-loader',
 						options: {
 							sourceMap: true,
-							modules: true,
+							modules: {
+								localIdentName: '[name]__[local]___[hash:base64:5]'
+							},
 							importLoaders: 1,
-							localIdentName: '[name]__[local]___[hash:base64:5]',
 						}
 					},
 					{
@@ -117,7 +120,7 @@ module.exports = {
 				]
 			},
 			{
-				// 'sourceMap' and 'modules' breaks existing css, so handle them separately
+				// 'modules' breaks existing css, so handle them separately
 				test: path => path.match(/\.css$/) && !(path.indexOf('toolbox') !== -1 || path.match(/\.module\.css$/)),
 				// must be two-element array. See webpack.prod.js
 				use: [
@@ -126,14 +129,12 @@ module.exports = {
 						loader: 'css-loader',
 						options: {
 							importLoaders: 1,
-							localIdentName: '[name]__[local]___[hash:base64:5]'
 						}
 					},
 					{
 						loader: 'postcss-loader',
 						options: {
 							sourceMap: true,
-							sourceComments: true,
 							plugins: () => postcssPlugins
 						}
 					}

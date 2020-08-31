@@ -10,7 +10,7 @@
 	"extends": [
 		"plugin:react/recommended"
 	],
-	"parser": "babel-eslint",
+	"parser": "@babel/eslint-parser",
 	"rules": {
 		"arrow-spacing": 2,
 		"camelcase": 2,

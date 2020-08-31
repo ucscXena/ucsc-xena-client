@@ -10,7 +10,7 @@
 
 var version = 3; // XXX duplicated in store.js?
 
-var {assoc, flatten, get, getIn, Let, mapObject, merge, omit, pick, isString, updateIn, without} = require('./underscore_ext');
+var {assoc, flatten, get, getIn, Let, mapObject, merge, omit, pick, isString, updateIn, without} = require('./underscore_ext').default;
 var {servers: {localHub, oldLocalHub}} = require('./defaultServers');
 
 var setVersion = state => assoc(state, 'version', version);

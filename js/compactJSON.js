@@ -18,7 +18,7 @@
 // to do a linear search with _.isEqual, or use a hashing method, or use better
 // underlying data structures (i.e. not plain js).
 
-var _ = require('./underscore_ext');
+var _ = require('./underscore_ext').default;
 
 
 var isRef = x => _.has(x, '$ref');
