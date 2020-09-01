@@ -50,7 +50,7 @@ var helpLink = {
 };
 
 var geneSetsLink = {
-    href: {GENESETS_VIEWER_URL},
+    href: GENESETS_VIEWER_URL,
     label: 'Gene Sets',
     target: '_blank'
 };
