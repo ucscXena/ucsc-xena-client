@@ -353,7 +353,6 @@ class VariableSelect extends PureComponent {
 			.do(() => this.setState({valid: false, loading: true})) // XXX side-effects
 			.debounceTime(200).switchMap(([mode, selected, value]) =>
 					matchFields[mode](this.props, selected, value))
-					.spy('match')
 			.subscribe(valid => this.setState({loading: false, warnings: [], matches: [], ...valid}), err => {console.log(err); this.setState({valid: false, loading: false});});
 	}
 
