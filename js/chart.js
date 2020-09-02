@@ -9,6 +9,7 @@ var _ = require('./underscore_ext').default;
 import * as colorScales from './colorScales';
 var jStat = require('jStat').jStat;
 var gaEvents = require('./gaEvents');
+import spinner from './ajax-loader.gif';
 
 // Styles
 var compStyles = require('./chart.module.css');
@@ -1613,9 +1614,14 @@ function render(root, callback, sessionStorage) {
 
 	// y axis selector and Y value controls
 	yAxisDiv = axisSelector("Yaxis", update, updateArgs);
-	if (!ydiv) {
+	var loading = _.any(_.getIn(xenaState, ['data']), d => d.status === 'loading');
+	if (loading) {
 		document.getElementById("myChart").innerHTML =
-			"There is no plottable data, please add some by first clicking the \"Visual Spreadsheet\" button, then the \"+ Data\" button.";
+			`<img src=${spinner}/> Waiting for column data to load`;
+		return;
+	} else if (!ydiv) {
+		document.getElementById("myChart").innerHTML =
+			"There is no plottable data. Please add some columns from the spreadsheet view.";
 		return;
 	}
 	row = document.createElement("div");
