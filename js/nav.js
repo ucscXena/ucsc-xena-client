@@ -49,7 +49,7 @@ var helpLink = {
 	target: '_blank'
 };
 
-var geneSetsLink = { //eslint-disable-line no-unused-vars
+var geneSetsLink = {
     href: GENESETS_VIEWER_URL,
     label: 'Gene Sets',
     target: '_blank'
@@ -95,7 +95,7 @@ class MoreToolsMenu extends React.Component {
 						className={compStyles.menu}
 					>
 						<MenuItem onClick={this.handleSelect.bind(this, pythonLink.href)} caption={pythonLink.label}/>
-						{/*<MenuItem onClick={this.handleSelect.bind(this, geneSetsLink.href)} caption={geneSetsLink.label}/>*/}
+						<MenuItem onClick={this.handleSelect.bind(this, geneSetsLink.href)} caption={geneSetsLink.label}/>
 					 </Menu>
 				</div>
 		);
