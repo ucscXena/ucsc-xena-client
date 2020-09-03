@@ -781,7 +781,7 @@ class Column extends PureComponent {
 			geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			chartDisabled = disableChart(column),
-	    canDoGeneSetComparison = this.canDoGeneSetComparison(),
+	    canDoGeneSetComparison = false && this.canDoGeneSetComparison(),
       status = _.get(data, 'status'),
 			refreshIcon = (<i className='material-icons' onClick={onReset}>close</i>),
 			// move this to state to generalize to other annotations.
