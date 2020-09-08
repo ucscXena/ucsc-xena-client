@@ -1153,7 +1153,7 @@ function render(root, callback, sessionStorage) {
 			var sampleLabels = cohortSamples,
 				x, y;
 
-			chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, samplesLength);
+			chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel);
 
 			if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
 				chart = newChart(chartOptions);

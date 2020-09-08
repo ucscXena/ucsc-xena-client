@@ -228,7 +228,7 @@ function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
 	return chartOptions;
 }
 
-function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
+function scatterChart(chartOptions, xlabel, ylabel) {
 	var xAxisTitle = xlabel,
 		yAxisTitle = ylabel;
 
@@ -276,8 +276,8 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	chartOptions.plotOptions = {
 		scatter: {
 			marker: {
-				radius: samplesLength > 10000 ? 1 : 2,
-				opacity: 0.1
+				//radius: samplesLength > 10000 ? 1 : 2, // need a way to dynamically set the spot radius
+				opacity: 0.01
 			},
 		},
 		series: {
