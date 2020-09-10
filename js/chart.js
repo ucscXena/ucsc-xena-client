@@ -31,6 +31,7 @@ function cardinality(coll, max) {
 function render(root, callback, sessionStorage) {
 	var xdiv, ydiv, xAxisDiv, yAxisDiv, // x y  axis dropdown
 		colorDiv, colorAxisDiv, // color dropdown
+		colorRadiusDiv, // color radius UI
 		statsDiv, // statistics
 		row, axisContainer,
 		leftContainer, chartContainer,
@@ -40,6 +41,8 @@ function render(root, callback, sessionStorage) {
 		normalizationState = {},
 		expState = {},
 		expXState = {},
+		scatterState = {},
+		scatterLocalState = {},
 		chart;
 
 		function setState(keys, value) {
@@ -47,6 +50,23 @@ function render(root, callback, sessionStorage) {
 			normalizationState = _.getIn(chartState, ['normalizationState'], {});
 			expState = _.getIn(chartState, ['expState'], {});
 			expXState = _.getIn(chartState, ['expXState'], {});
+			scatterState = _.getIn(chartState, ['scatterState'], {});
+		}
+
+        // save the current x scatter zoom
+		function setStateScatterXRange (event) {
+			var x1 = event.min,
+				x2 = event.max;
+			scatterLocalState =  _.assocIn(scatterLocalState, ['x1'], x1);
+			scatterLocalState =  _.assocIn(scatterLocalState, ['x2'], x2);
+		}
+
+        // save the current y scatter zoom
+		function setStateScatterYRange (event) {
+			var y1 = event.min,
+				y2 = event.max;
+			scatterLocalState =  _.assocIn(scatterLocalState, ['y1'], y1);
+			scatterLocalState =  _.assocIn(scatterLocalState, ['y2'], y2);
 		}
 
 		if (xenaState)	{
@@ -56,6 +76,7 @@ function render(root, callback, sessionStorage) {
 			normalizationState = _.getIn(chartState, ['normalizationState'], {});
 			expState = _.getIn(chartState, ['expState'], {});
 			expXState = _.getIn(chartState, ['expXState'], {});
+			scatterState = _.getIn(chartState, ['scatterState'], {});
 		}
 		updateArgs = [cohort, samplesLength, cohortSamples];
 
@@ -194,6 +215,30 @@ function render(root, callback, sessionStorage) {
 		labelDiv.appendChild(document.createTextNode("X unit "));
 		node.appendChild(labelDiv);
 		node.appendChild(dropDownDiv);
+		return node;
+	}
+
+	function buildColorRadiusUI() {
+		var textInputDiv,
+			node = document.createElement("div"),
+			labelDiv = document.createElement("label");
+
+		textInputDiv = document.createElement("INPUT");
+		textInputDiv.setAttribute("type", "text");
+		//textInputDiv.setAttribute("class", "form-control");  // css needed
+		textInputDiv.setAttribute("value", "1");
+		textInputDiv.setAttribute("id", "colorRadius");
+
+		textInputDiv.addEventListener('input', function (e) {
+			setState(['scatterState', 'radius'], e.target.value);
+			update.apply(this);
+		});
+
+		node.className = compStyles.column;
+		node.setAttribute("id", "colorRadiusDiv");
+		labelDiv.appendChild(document.createTextNode("Radius "));
+		node.appendChild(labelDiv);
+		node.appendChild(textInputDiv);
 		return node;
 	}
 
@@ -465,13 +510,19 @@ function render(root, callback, sessionStorage) {
 	}
 
 	function scatterColorUISetting(visible) {
+		var radiusUI = document.getElementById("colorRadius");
 		if (visible) {
 			colorAxisDiv.style.visibility = "visible";
+			colorRadiusDiv.style.visibility = 'visible';
+			//check current scatterState variable
+			if (scatterState.radius !== undefined) {
+				radiusUI.value = _.getIn(scatterState, ['radius'], 1);
+			}
 		} else {
 			colorAxisDiv.style.visibility = "hidden";
+			colorRadiusDiv.style.visibility = "hidden";
 		}
 	}
-
 
 	// returns key:array
 	// categorical: key:array  ------  key is the category
@@ -553,7 +604,7 @@ function render(root, callback, sessionStorage) {
 		offsets, xlabel, ylabel, STDEV,
 		scatterLabel, scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
-		columns, xcolumn, ycolumn, colorColumn) {
+		columns, xcolumn, ycolumn, colorColumn, colorRadius) {
 		var yIsCategorical = ycodemap ? true : false,
 			xIsCategorical = xcodemap ? true : false,
 			chartOptions = _.clone(highchartsHelper.chartOptions),
@@ -1153,11 +1204,36 @@ function render(root, callback, sessionStorage) {
 			var sampleLabels = cohortSamples,
 				x, y;
 
-			chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, samplesLength);
+			chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, colorRadius);
+
+			chartOptions.xAxis.events = {
+				afterSetExtremes: function(event) {
+					setStateScatterXRange (event);
+				}
+			};
+			chartOptions.yAxis.events = {
+				afterSetExtremes: function(event) {
+					setStateScatterYRange (event);
+				}
+			};
+
+			chart = newChart(chartOptions);
+			chart.showResetZoom();
+
+			if ((_.getIn(scatterLocalState, ['xcolumn']) === xcolumn) &&  (_.getIn(scatterLocalState, ['ycolumn']) === ycolumn)) {
+				let x1 = scatterLocalState.x1,
+					x2 = scatterLocalState.x2,
+					y1 = scatterLocalState.y1,
+					y2 = scatterLocalState.y2;
+
+				chart.xAxis[0].setExtremes(x1, x2);
+				chart.yAxis[0].setExtremes(y1, y2);
+			}
+
+			scatterLocalState =  _.assocIn(scatterLocalState, ['xcolumn'], xcolumn);
+			scatterLocalState =  _.assocIn(scatterLocalState, ['ycolumn'], ycolumn);
 
 			if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
-				chart = newChart(chartOptions);
-
 				for (k = 0; k < yfields.length; k++) {
 					var series = [];
 
@@ -1205,9 +1281,6 @@ function render(root, callback, sessionStorage) {
 					bin = stdDev * 0.1;
 					colorScale = v => v == null ? 'gray' : scatterColorScale(v);
 				}
-
-				chartOptions.legend.title.text = "";
-				chart = newChart(chartOptions);
 
 				yfield = yfields[0];
 				for (i = 0; i < xdata[0].length; i++) {
@@ -1384,7 +1457,8 @@ function render(root, callback, sessionStorage) {
 			expXUIParent = document.getElementById("expXDropDown"),
 			expXUI = document.getElementById("xExponentiation"),
 			XdropDownDiv = document.getElementById("Xaxis"),
-			YdropDownDiv = document.getElementById("Yaxis");
+			YdropDownDiv = document.getElementById("Yaxis"),
+			colorRadiusTextInput = document.getElementById("colorRadius");
 
 		xcolumn = xdiv.options[xdiv.selectedIndex].value;
 		ycolumn = ydiv.options[ydiv.selectedIndex].value;
@@ -1397,7 +1471,7 @@ function render(root, callback, sessionStorage) {
 		expUISetting(false, 'expXState', xcolumn, null, expXUIParent, expXUI, null);
 		scatterColorUISetting(false);
 
-		// save state xcolumn, ycolumn, colorcolumn, normalizationState, expState, expXState
+		// save state xcolumn, ycolumn, colorcolumn, normalizationState, expState, expXState, scatterState
 		if (xenaState) {
 			chartState = {
 				"cohort": cohort,
@@ -1407,6 +1481,7 @@ function render(root, callback, sessionStorage) {
 				"normalizationState": normalizationState,
 				"expState": expState,
 				"expXState": expXState,
+				'scatterState': scatterState,
 				"spreadsheetColumn": spreadsheetColumn
 			};
 			columns = xenaState.columns;
@@ -1469,7 +1544,6 @@ function render(root, callback, sessionStorage) {
 					"<br>x: " + xlabel + " : " + xfields;
 				return;
 			}
-
 
 			yIsCategorical = ycodemap ? true : false;
 			xfield = xfields ? xfields[0] : undefined;
@@ -1585,7 +1659,7 @@ function render(root, callback, sessionStorage) {
 				yfields, ycodemap, ydata,
 				offsets, xlabel, ylabel, STDEV,
 				scatterLabel, scatterColorScale, scatterColorData, scatterColorDataCodemap,
-				samplesMatched, columns, xcolumn, ycolumn, colorColumn);
+				samplesMatched, columns, xcolumn, ycolumn, colorColumn, colorRadiusTextInput.value);
 
 			//offset
 			if (yNormalization === "subset" || yNormalization === "subset_stdev") {
@@ -1663,6 +1737,10 @@ function render(root, callback, sessionStorage) {
 	row = document.createElement("div");
 	row.className = compStyles.row;
 	row.appendChild(colorAxisDiv);
+
+	// markder radius
+	colorRadiusDiv = buildColorRadiusUI();
+	row.appendChild(colorRadiusDiv);
 	axisContainer.appendChild(row);
 
 	leftContainer.appendChild(axisContainer);
