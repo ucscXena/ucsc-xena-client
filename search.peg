@@ -1,17 +1,26 @@
 {
-	function last(arr) {
-    	return arr[arr.length - 1];
+    function last(arr) {
+        return arr[arr.length - 1];
     }
-    function concat(arr, arrs) {
-        return arr.concat(arrs);
+    function concat(arr, arr2) {
+        return arr.concat(arr2);
     }
 }
 
 start =  Cross
 
+CrossBreak
+  = ';' {
+    // return break positions, for UI
+    return location().start.offset;
+  }
+
 Cross
-  = left: Expression tail:(_ ';' _ Cross)* {
-    return tail.length ? concat(['cross', left], tail.map(last)) : left;
+  = left: Expression tail:(_ CrossBreak _ Cross)* {
+    var rest = tail[0]; // there's only ever one
+    var crossbreak = 1, cross = 3; // parser objects
+    var exps = 1, pos = 2; // cross variant args: ['cross', exps, pos]
+    return rest ? ['cross', concat([left], rest[cross][exps]), concat([rest[crossbreak]], rest[cross][pos])] : ['cross', [left], []];
   }
 
 Expression

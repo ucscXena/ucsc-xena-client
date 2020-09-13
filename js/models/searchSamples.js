@@ -159,7 +159,7 @@ function evalexp(ctx, expression) {
 
 function treeToString(tree) {
 	return m({
-		cross: (...exprs) => _.map(exprs, treeToString).join(' ; '),
+		cross: exprs => _.map(exprs, treeToString).join(' ; '),
 		value: value => value,
 		'quoted-value': value => `"${value}"`,
 		and: (...factors) => _.map(factors, treeToString).join(' '),
@@ -174,13 +174,14 @@ function treeToString(tree) {
 	}, tree);
 }
 
-function evalcross(ctx, expr) {
-	// do this in the parser
-	var exprs = expr[0] === 'cross' ?
-		expr.slice(1) : [expr];
+function evalsearch(ctx, search) {
+	var prefix = search.length - search.trimStart().length;
+	var expr = parse(search.trim());
+	var [/*cross*/, exprs, offsets] = expr;
 	return {
 		exprs: exprs.map(treeToString),
-		matches: exprs.map(exp => evalexp(ctx, exp))
+		matches: exprs.map(exp => evalexp(ctx, exp)),
+		offsets: offsets.map(o => o + prefix)
 	};
 }
 
@@ -200,8 +201,7 @@ function searchSamples(search, columns, columnOrder, data, cohortSamples) {
 	let fieldMap = createFieldMap(columnOrder),
 		allSamples = _.range(_.get(cohortSamples, 'length'));
 	try {
-		var exp = parse(search.trim());
-		return evalcross({columns, data, fieldMap, cohortSamples, allSamples}, exp);
+		return evalsearch({columns, data, fieldMap, cohortSamples, allSamples}, search);
 	} catch(e) {
 		console.log('parsing error', e);
 		return {exprs: [], matches: [[]]};
@@ -210,7 +210,7 @@ function searchSamples(search, columns, columnOrder, data, cohortSamples) {
 
 function remapTreeFields(tree, mapping) {
 	return m({
-		cross: (...exprs) => ['cross', ..._.map(exprs, t => remapTreeFields(t, mapping))],
+		cross: exprs => ['cross', _.map(exprs, t => remapTreeFields(t, mapping))],
 		and: (...factors) => ['and', ..._.map(factors, t => remapTreeFields(t, mapping))],
 		or: (...terms) => ['or', ..._.map(terms, t => remapTreeFields(t, mapping))],
 		group: exp => ['group', remapTreeFields(exp, mapping)],

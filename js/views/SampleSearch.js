@@ -80,14 +80,12 @@ var compStyles = require('./SampleSearch.module.css');
 //	}
 //});
 
-function countChar(str, c, max) {
-	var count = 0;
-	for (var i = 0; i < max; ++i) {
-		if (str[i] === c) {
-			count += 1;
-		}
+function findSubExpr(offsets, i) {
+	var j = 0;
+	while (i > offsets[j]) {
+		++j;
 	}
-	return count;
+	return j;
 }
 
 export class SampleSearch extends PureComponent {
@@ -131,7 +129,7 @@ export class SampleSearch extends PureComponent {
 
 	onCaret = () => {
 		var hl = this.input ?
-			countChar(this.state.value, ';', this.input.selectionStart) :
+			findSubExpr(this.props.offsets, this.input.selectionStart) :
 			undefined;
 		this.highlight(hl);
 	}
