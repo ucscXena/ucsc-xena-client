@@ -351,7 +351,10 @@ function matchRangeFloat(data, samples, id, start, end) {
 	return `${id}:>=${min} ${id}:<=${max}`;
 }
 
-function matchNone() {
+function matchRangeMutation(data, samples, id, start/*, end*/) {
+	if (data.req.samplesInResp.indexOf(samples[start]) === -1) {
+		return `${id}:=null`;
+	}
 	return '';
 }
 
@@ -369,7 +372,7 @@ function matchRangeSegmented(data, samples, id, start, end) {
 var matchRangeMethod = {
 	coded: matchRangeCoded,
 	float: matchRangeFloat,
-	mutation: matchNone,
+	mutation: matchRangeMutation,
 	segmented: matchRangeSegmented,
 	samples: matchRangeCoded
 };
