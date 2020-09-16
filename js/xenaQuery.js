@@ -580,7 +580,9 @@ var cohortAnalyticURL =  `${cohortMetaData}/analytic.json`;
 //}));
 //var cohortAnalyticURL = `data:application/json,${analyticTest}`;
 
+
 var tumorMapURL = `${cohortMetaData}/defaultTumormap.json`;
+var cellBrowserURL = `${cohortMetaData}/defaultCellBrowser.json`;
 
 var fetchJSON = url =>
 	Rx.Observable.ajax({
@@ -619,4 +621,5 @@ module.exports = {
 	fetchCohortPhenotype: fetchJSON(cohortPhenotypeURL),
 	fetchCohortAnalytic: fetchJSON(cohortAnalyticURL),
 	fetchTumorMap: fetchJSON(tumorMapURL),
+	fetchCellBrowser: fetchJSON(cellBrowserURL),
 };
