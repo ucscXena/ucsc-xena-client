@@ -635,6 +635,7 @@ class Column extends PureComponent {
 		this.toggleInteractive(false);
 		var translatedSelection = zoomTranslateSelection(this.props, selection, 'f');
 		var flop = selection.start.y > selection.end.y;
+		this.setState({dragZoom: {selection: translatedSelection, picking: true}});
 		this.props.onPickSamplesSelect(this.props.id, translatedSelection.zoomTo, flop);
 	}
 
@@ -642,6 +643,7 @@ class Column extends PureComponent {
 		this.toggleInteractive(true);
 		var translatedSelection = zoomTranslateSelection(this.props, selection, 'f');
 		var flop = selection.start.y > selection.end.y;
+		this.setState({dragZoom: {}});
 		this.props.onPickSamplesSelect(this.props.id, translatedSelection.zoomTo, flop, true);
 	}
 
@@ -856,7 +858,7 @@ class Column extends PureComponent {
           <GeneSetViewDialog showGeneSetWizard={this.state.showGeneSetWizard} geneSetUrl={this.state.geneSetUrl} onHide={this.hideGeneSetWizard}/>
           }
 					<ZoomOverlay geneHeight={geneHeight()} height={zoom.height}
-								 positionHeight={column.position ? positionHeight : 0} selection={selection}>
+								 positionHeight={column.position ? positionHeight : 0} {...dragZoom}>
 						<ColCard colId={label}
 								sortable={!first}
 								title={<DefaultTextInput
@@ -922,7 +924,7 @@ class Column extends PureComponent {
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 										</DragSelect>
 										{getStatusView(status, this.onReload)}
-										<ZoomHelpTag column={column} selection={selection}/>
+										<ZoomHelpTag column={column} {...dragZoom}/>
 									</Crosshair>
 								</div>
 							</ResizeOverlay>

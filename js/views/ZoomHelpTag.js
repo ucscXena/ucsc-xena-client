@@ -14,10 +14,8 @@ var columnZoom = require('../columnZoom');
 // Styles
 var compStyles = require('./ZoomHelpTag.module.css');
 
-// Return zoom text when user has pressed mouse down but has not yet moved the mouse
-var defaultText = () => {
-	return 'Drag to zoom';
-};
+// zoom text when user has pressed mouse down but has not yet moved the mouse
+var defaultText = 'Drag to zoom';
 
 // Return zoom text when user is currently executing a horizontal zoom
 var geneZoomText = (annotationPct) => {
@@ -25,15 +23,15 @@ var geneZoomText = (annotationPct) => {
 };
 
 // Return zoom text when user is currently executing a vertical zoom
-var sampleZoomText = (zoomTo) => {
+var sampleZoomText = (prefix, zoomTo) => {
 	var sampleRowFrom = zoomTo.index + 1,
 		sampleRowTo = zoomTo.index + zoomTo.count;
-	return zoomTo.count === 1 ? `Zoom to row ${sampleRowFrom}` : `Zoom to rows ${sampleRowFrom} - ${sampleRowTo}`;
+	return zoomTo.count === 1 ? `${prefix} row ${sampleRowFrom}` : `${prefix} rows ${sampleRowFrom} - ${sampleRowTo}`;
 };
 
 class ZoomHelpTag extends React.Component {
 	render() {
-		var {column, selection} = this.props;
+		var {column, selection, picking} = this.props;
 		if (selection) {
 			var {crosshair, direction, offset, overlay, zone, zoomTo} = selection,
 				{fieldType} = column,
@@ -41,7 +39,11 @@ class ZoomHelpTag extends React.Component {
 				geneZoomPct = Math.round(zoomToLength / columnZoom.maxGeneZoomLength(column) * 100),
 				annotationZoom = direction === 'h',
 				noZoom = overlay.sstart === overlay.send,
-				tagInstruction = noZoom ? defaultText() : annotationZoom ? geneZoomText(geneZoomPct) : sampleZoomText(zoomTo),
+				tagInstruction =
+					picking ? sampleZoomText('Picking', zoomTo) :
+					noZoom ? defaultText :
+					annotationZoom ? geneZoomText(geneZoomPct) :
+					sampleZoomText('Zoom to', zoomTo),
 				crosshairVFromRightBounds = document.body.offsetWidth - crosshair.x,
 				tagPosLeft = zone === 'a' ? crosshair.x : annotationZoom ? (offset.x + overlay.sstart === crosshair.x) ? 'unset' : crosshair.x : crosshair.x,
 				tagPosRight = annotationZoom && zone === 's' && (offset.x + overlay.sstart === crosshair.x) ? crosshairVFromRightBounds : 'unset',
