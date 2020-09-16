@@ -137,8 +137,8 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		// the new term.
 		// 'flop' is true if the drag start is below the drag end. This is used
 		// to clip the drag end point if it extends into an incongruous region.
-		var oldSearch = (this.state.picking ? this.state.oldSearch
-				: this.props.appState.sampleSearch);
+		var oldSearch = ((this.state.picking ? this.state.oldSearch
+					: this.props.appState.sampleSearch) || '').trim();
 
 		if (!this.state.picking) {
 			this.setState({picking: true, oldSearch: this.props.appState.sampleSearch});
@@ -150,12 +150,12 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 			last = columnOrder.indexOf(id),
 			ids = columnOrder.slice(0, last + 1),
 			cols = ids.map(c => columns[c]),
-			colData = ids.map(c => data[c]);
+			colData = ids.map(c => data[c]),
+			search = (oldSearch.length ? `${oldSearch} OR ` : '')
+				+ pickSamplesFilter(flop, colData, samples, cols, id, zoom);
 
-		// splice the new term into the front, where it's more visible to the user.
-		this.props.callback(['sample-search',
-				pickSamplesFilter(flop, colData, samples, cols, id, zoom) +
-				((oldSearch || '').trim().length ? ` OR ${oldSearch}` : '')]);
+		this.props.callback(['sample-search', search,
+				[oldSearch.length, search.length]]);
 	};
 
 	render() {

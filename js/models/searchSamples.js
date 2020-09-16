@@ -408,7 +408,7 @@ function pickSamplesFilter(flop, dataIn, samples, columnsIn, id, range) {
 	var {start, end} = (flop ? extendDown : extendUp)(range, neq);
 
 	return leftCols.map((column, i) => matchEqualMethod[column.valueType](data[i], samples,
-				toFieldId(i + 1), start)).join(' ') + ' ' +
+				toFieldId(i + 1), start)).join(' ') + (leftCols.length ? ' ' : '') +
 			matchRangeMethod[thisCol.valueType](_.last(data), samples,
 					toFieldId(columnsIn.length - 1), start, end, leftCols.length === 0);
 }

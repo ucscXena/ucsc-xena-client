@@ -111,6 +111,14 @@ export class SampleSearch extends PureComponent {
 		// and move the carat to the end.
 	}
 
+	componentDidUpdate() {
+		if (this.props.selection && this.state.value === this.props.value) {
+			this.input.focus();
+			this.input.setSelectionRange(...this.props.selection);
+			this.input.scrollLeft = this.input.scrollWidth;
+		}
+	}
+
 	onChange = (value) => {
 		var {onChange} = this.props;
 		this.setState({value});
