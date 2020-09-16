@@ -24,6 +24,11 @@ i.menuDisabled {
 	cursor: default;
 }
 
+.dark {
+	background: black38;
+	color: rgba(0, 0, 0, 0.54); /* some other color? */
+}
+
 /* Filter input container */
 .inputContainer {
 	margin-right: 4px;

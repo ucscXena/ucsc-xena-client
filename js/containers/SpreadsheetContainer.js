@@ -4,6 +4,7 @@ var _ = require('../underscore_ext').default;
 var getLabel = require('../getLabel');
 var {supportsEdit} = require('../models/fieldSpec');
 var {addCommas} = require('../util').default;
+import {pickSamplesFilter} from '../models/searchSamples';
 
 function fixSampleTitle(column, i, samples, wizardMode, cohort) {
 	return i === 0 ? _.updateIn(column,
@@ -129,9 +130,37 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
         this.props.callback(['navigate', 'datapages', {host, dataset}]);
 	};
 
+	onPickSamplesSelect = (id, zoom, flop, finish) => {
+		// This will be called from a drag-select callback, where 'finish' is
+		// false during the drag and true on mouseup.  We stash the current
+		// search term in local state during the initial call, and splice in
+		// the new term.
+		// 'flop' is true if the drag start is below the drag end. This is used
+		// to clip the drag end point if it extends into an incongruous region.
+		var oldSearch = (this.state.picking ? this.state.oldSearch
+				: this.props.appState.sampleSearch);
+
+		if (!this.state.picking) {
+			this.setState({picking: true, oldSearch: this.props.appState.sampleSearch});
+		}
+		if (finish) {
+			this.setState({picking: false, oldSearch: null});
+		}
+		var {data, columns, columnOrder, samples} = this.props.appState,
+			last = columnOrder.indexOf(id),
+			ids = columnOrder.slice(1, last + 1),
+			cols = ids.map(c => columns[c]),
+			colData = ids.map(c => data[c]);
+
+		// splice the new term into the front, where it's more visible to the user.
+		this.props.callback(['sample-search',
+				pickSamplesFilter(flop, colData, samples, cols, id, zoom) +
+				((oldSearch || '').trim().length ? ` OR ${oldSearch}` : '')]);
+	};
+
 	render() {
 		var columnProps = _.pick(this.props,
-				['searching', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
+				['pickSamples', 'searching', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
 			{appState, wizard: {cohortTumorMap}} = this.props,
 			{columnOrder, wizardMode, hasSurvival} = appState,
 			interactive = isInteractive(this.props, this.state);
@@ -172,6 +201,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						onRemove={this.onRemove}
 						onResize={this.onResize}
 						onReload={this.onReload}
+						onPickSamplesSelect={this.onPickSamplesSelect}
 						actionKey={id}
 						first={i === 0}
 						{...columnProps}

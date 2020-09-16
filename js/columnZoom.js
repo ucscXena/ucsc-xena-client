@@ -34,7 +34,10 @@ var zoom = {
 
 var direction = (start, end) => Math.abs(start.x - end.x) > Math.abs(start.y - end.y) ? 'h' : 'v';
 
-var directionWithGeneModel = ({start, end, zone}) => zone === 'a' ? 'h' : direction(start, end);
+var directionWithGeneModel = ({start, end, zone}) =>
+	zone === 'a' ? 'h' :
+	zone === 'f' ? 'v' :
+	direction(start, end);
 
 var directionSamplesOnly = () => 'v';
 

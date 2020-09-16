@@ -15,6 +15,7 @@ var {Portal} = require('react-overlays');
 // Styles
 var compStyles = require('./Crosshair.module.css');
 var classNames = require('classnames');
+import pickerCursor from './colorize-24px.svg';
 
 class Crosshair extends PureComponent {
 	state = {mousing: false, x: -1, y: -1};
@@ -41,9 +42,13 @@ class Crosshair extends PureComponent {
 	render() {
 		let {mousing, x, y} = this.state,
 			{onMouseMove, onMouseOut} = this,
-			{frozen, geneHeight, height, selection, children} = this.props,
+			{frozen, picker, geneHeight, height, selection, children} = this.props,
 			zoomMode = selection ? true : false,
-			cursor = zoomMode ? 'none' : frozen ? 'default' : 'none';
+			cursor =
+				picker ? `url(${pickerCursor}) 0 22, none` :
+				zoomMode ? 'none' :
+				frozen ? 'default' :
+				'none';
 		if (selection) {
 			var {crosshair, offset, zone} = selection,
 				xZoomTarget = crosshair.x - 6,

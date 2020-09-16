@@ -185,9 +185,11 @@ function evalsearch(ctx, search) {
 	};
 }
 
+const A = 'A'.charCodeAt(0);
+var toFieldId = i => String.fromCharCode(i + A);
+
 function createFieldIds(len) {
-	const A = 'A'.charCodeAt(0);
-	return _.times(len, i => String.fromCharCode(i + A));
+	return _.times(len, toFieldId);
 }
 
 function createFieldMap(columnOrder) {
@@ -228,17 +230,182 @@ function remapFields(oldOrder, order, exp) {
 	if (!_.get(exp, 'length')) {
 		return null;
 	}
+	try {
+		var tree = parse(exp.trim());
+	} catch {
+		return null;
+	}
 	var fieldIds = createFieldIds(order.length),
 		oldFieldMap = _.invert(createFieldMap(oldOrder)),
 		newOrder = _.map(order, uuid => oldFieldMap[uuid]),
-		mapping = _.object(newOrder, fieldIds),
-		tree = parse(exp.trim());
+		mapping = _.object(newOrder, fieldIds);
 	return treeToString(remapTreeFields(tree, mapping));
+}
+
+function extendUp({index, count}, pred) {
+	var start = index, i;
+	for (i = index + 1; i < index + count; ++i) {
+		if (pred(start, i)) {
+			break;
+		}
+	}
+	return {
+		start,
+		end: i
+	};
+}
+
+function extendDown({index, count}, pred) {
+	var end = index + count, i;
+	for (i = end - 2; i >= index; --i) {
+		if (pred(end - 1, i)) {
+			break;
+		}
+	}
+	return {
+		start: i + 1,
+		end,
+	};
+}
+
+function equalMatrix(data, samples, s0, s1) {
+	var values = _.getIn(data, ['req', 'values']);
+	return values.length > 1 ? false :
+		values[0][samples[s0]] === values[0][samples[s1]];
+}
+
+function equalFalse() {
+	return false;
+}
+
+function equalSegmented(data, samples, s0, s1) {
+	var values = _.getIn(data, ['avg', 'values']);
+	return values[samples[s0]] === values[samples[s1]];
+}
+
+
+var equalMethod = {
+	coded: equalMatrix,
+	float: equalMatrix,
+	mutation: equalFalse,
+	segmented: equalSegmented,
+	samples: equalFalse
+};
+
+var codeOrNull = (codes, val) => val == null ? 'null' : `"${codes[val]}"`;
+
+function matchEqualCoded(data, samples, id, s) {
+	var {req: {values: [field]}, codes} = data;
+	return `${id}:=${codeOrNull(codes, field[samples[s]])}`;
+}
+
+function matchEqualFloat(data, samples, id, s) {
+	if (_.every(data.req.values, field => field[samples[s]] == null)) {
+		return `${id}:=null`;
+	}
+	if (data.req.values.length !== 1) {
+		return '';
+	}
+	var {req: {values: [field]}} = data;
+	return `${id}:=${field[samples[s]]}`;
+}
+
+function matchEqualSegmented(data, samples, id, s) {
+	var {avg: {values: [field]}} = data;
+	return `${id}:=${field[samples[s]]}`;
+}
+
+function matchEqualMutation() {
+	return '';
+}
+
+var matchEqualMethod = {
+	coded: matchEqualCoded,
+	float: matchEqualFloat,
+	mutation: matchEqualMutation,
+	segmented: matchEqualSegmented,
+	samples: matchEqualCoded
+};
+
+function matchRangeCoded(data, samples, id, start, end, first) {
+	var {req: {values: [field]}, codes} = data,
+		matches = _.uniq(_.range(start, end).map(i => field[samples[i]]))
+			.map(v => codeOrNull(codes, v)),
+		terms = matches.map(c => `${id}:=${c}`).join(' OR ');
+
+	return first || matches.length === 1 ? terms : `(${terms})`;
+}
+
+function matchRangeFloat(data, samples, id, start, end) {
+	// XXX review meaning of null on multivalued columns
+	if (_.every(data.req.values, field => field[samples[start]] == null)) {
+		return `${id}:=null`;
+	}
+	if (data.req.values.length !== 1) {
+		return '';
+	}
+	var {req: {values: [field]}} = data,
+		matches = [start, end - 1].map(i => field[samples[i]]),
+		max = _.max(matches),
+		min = _.min(matches);
+	return `${id}:>=${min} ${id}:<=${max}`;
+}
+
+function matchNone() {
+	return '';
+}
+
+function matchRangeSegmented(data, samples, id, start, end) {
+	if (_.every(data.avg.values, field => field[samples[start]] == null)) {
+		return `${id}:=null`;
+	}
+	var {avg: {values: [field]}} = data,
+		matches = [start, end - 1].map(i => field[samples[i]]),
+		max = _.max(matches),
+		min = _.min(matches);
+	return `${id}:>=${min} ${id}:<=${max}`;
+}
+
+var matchRangeMethod = {
+	coded: matchRangeCoded,
+	float: matchRangeFloat,
+	mutation: matchNone,
+	segmented: matchRangeSegmented,
+	samples: matchRangeCoded
+};
+
+var nullMismatchMethod = {
+	float: (data, s0, s1) =>
+		// XXX review meaning of null on multivalued columns
+		(data.req.values[0][s0] == null) !== (data.req.values[0][s1] == null),
+	coded: () => false,
+	mutation: () => false,
+	segmented: (data, s0, s1) =>
+		(data.avg.values[0][s0] == null) !== (data.avg.values[0][s1] == null)
+};
+
+function pickSamplesFilter(flop, data, samples, columns, id, range) {
+	var leftCols = _.initial(columns),
+		thisCol = _.last(columns);
+	var neq = (mark, i) =>
+			nullMismatchMethod[thisCol.valueType](_.last(data), samples[mark], samples[i]) ||
+			!_.every(leftCols,
+					(column, j) => equalMethod[column.valueType](data[j], samples, mark, i));
+
+	// XXX Note that these methods will behave badly on null data in singlecell branch, due to
+	// NaN !== NaN.
+	var {start, end} = (flop ? extendDown : extendUp)(range, neq);
+
+	return leftCols.map((column, i) => matchEqualMethod[column.valueType](data[i], samples,
+				toFieldId(i + 1), start)).join(' ') + ' ' +
+			matchRangeMethod[thisCol.valueType](_.last(data), samples,
+					toFieldId(columns.length), start, end, leftCols.length === 0);
 }
 
 module.exports = {
 	searchSamples,
 	treeToString,
 	remapFields,
+	pickSamplesFilter,
 	parse
 };

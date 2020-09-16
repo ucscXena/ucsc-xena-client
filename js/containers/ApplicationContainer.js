@@ -47,8 +47,13 @@ var SpreadsheetContainer = getSpreadsheetContainer(Column, Spreadsheet);
 
 
 class ApplicationContainer extends React.Component {
+	state = {
+		pickSamples: false
+	};
+
 	onSearch = (value) => {
 		var {callback} = this.props;
+		this.setState({searchReplace: false});
 		callback(['sample-search', value]);
 	};
 
@@ -119,9 +124,14 @@ class ApplicationContainer extends React.Component {
 		this.props.callback(['allowOverSamples', true]);
 	};
 
+	onPickSamples = () => {
+		this.setState({pickSamples: !this.state.pickSamples});
+	}
+
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback, children} = this.props,
+			{pickSamples} = this.state,
 			{stateError} = state,
 			computedState = selector(state),
 			{spreadsheet: {mode, ties: {open} = {}}, loadPending} = computedState,
@@ -138,10 +148,12 @@ class ApplicationContainer extends React.Component {
 					onWizardMode={this.onWizardMode}
 					onShowWelcome={this.onShowWelcome}
 					stepperState={stepperState}
-					Spreadsheet={SpreadsheetContainer}
+					Spreadsheet={SpreadsheetContainer /* XXX */}
 					onHighlightChange={this.on.highlightChange}
 					onHighlightSelect={this.onHighlightSelect}
 					onAllowOverSamples={this.onAllowOverSamples}
+					pickSamples={pickSamples}
+					onPickSamples={this.onPickSamples}
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
 					onNavigate={this.onNavigate}
@@ -157,6 +169,7 @@ class ApplicationContainer extends React.Component {
 					sampleFormat={this.sampleFormat}
 					appState={computedState.spreadsheet}
 					wizard={computedState.wizard}
+					pickSamples={pickSamples}
 					callback={callback}/>
 				{children}
 			</Application>);

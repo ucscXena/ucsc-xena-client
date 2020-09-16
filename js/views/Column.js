@@ -631,13 +631,27 @@ class Column extends PureComponent {
 			this.props.column.clustering ? undefined : 'probes', this.props.data);
 	};
 
-	onDragZoom = (selection, zone) => {
+	onPickSamplesDrag = selection => {
+		this.toggleInteractive(false);
+		var translatedSelection = zoomTranslateSelection(this.props, selection, 'f');
+		var flop = selection.start.y > selection.end.y;
+		this.props.onPickSamplesSelect(this.props.id, translatedSelection.zoomTo, flop);
+	}
+
+	onPickSamplesDragSelect  = selection => {
+		this.toggleInteractive(true);
+		var translatedSelection = zoomTranslateSelection(this.props, selection, 'f');
+		var flop = selection.start.y > selection.end.y;
+		this.props.onPickSamplesSelect(this.props.id, translatedSelection.zoomTo, flop, true);
+	}
+
+	onDragZoom(selection, zone) {
 		this.toggleInteractive(false);
 		var translatedSelection = zoomTranslateSelection(this.props, selection, zone);
 		this.setState({dragZoom: {selection: translatedSelection}});
 	};
 
-	onDragZoomSelect = (selection, zone) => {
+	onDragZoomSelect(selection, zone) {
 		this.toggleInteractive(true);
 		var {id, onXZoom, onYZoom, zoom} = this.props,
 			translatedSelection = zoomTranslateSelection(this.props, selection, zone),
@@ -646,6 +660,11 @@ class Column extends PureComponent {
 		this.setState({dragZoom: {}});
 		h ? onXZoom(id, {start: zoomTo.start, end: zoomTo.end}) : onYZoom(_.merge(zoom, zoomTo));
 	};
+
+	onDragZoomSelectS = selection => this.onDragZoomSelect(selection, 's');
+	onDragZoomSelectA = selection => this.onDragZoomSelect(selection, 'a');
+	onDragZoomS = selection => this.onDragZoom(selection, 's');
+	onDragZoomA = selection => this.onDragZoom(selection, 'a');
 
 	onSortVisible = () => {
 		var {id, column} = this.props;
@@ -768,9 +787,16 @@ class Column extends PureComponent {
 		var {first, id, label, samples, samplesMatched, column, index,
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
-				interactive, append, cohort, tumorMap} = this.props,
+				pickSamples, interactive, append, cohort, tumorMap} = this.props,
 			{specialDownloadMenu, dragZoom, subColumnIndex} = this.state,
 			{selection} = dragZoom,
+			zoomMethod = pickSamples ? {
+					onDrag: this.onPickSamplesDrag,
+					onSelect: this.onPickSamplesDragSelect
+				} : {
+					onDrag: this.onDragZoomS,
+					onSelect: this.onDragZoomSelectS
+				},
 			{width, dataset, columnLabel, fieldLabel, user} = column,
 			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			thisTumorMap = _.getIn(tumorMap, [cohort.name]),
@@ -869,8 +895,7 @@ class Column extends PureComponent {
 								}
 								 wizardMode={wizardMode}>
 							<div style={{cursor: selection ? 'none' : annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
-									<DragSelect enabled={!wizardMode}
-											onDrag={(s) => this.onDragZoom(s, 'a')} onSelect={(s) => this.onDragZoomSelect(s, 'a')}>
+									<DragSelect enabled={!wizardMode} onDrag={this.onDragZoomA} onSelect={this.onDragZoomSelectA}>
 									{annotation ?
 										<div>
 											{scale}
@@ -892,9 +917,8 @@ class Column extends PureComponent {
 									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 									samplesMatched={samplesMatched}/>
 								<div style={{position: 'relative'}} onMouseMove={this.onMouseMove} onMouseOut={this.onMouseOut}>
-									<Crosshair frozen={!interactive || this.props.frozen} mousing={subColumnIndex.mousing} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
-										<DragSelect enabled={!wizardMode}
-													onDrag={(s) => this.onDragZoom(s, 's')} onSelect={(s) => this.onDragZoomSelect(s, 's')}>
+									<Crosshair picker={pickSamples} frozen={!interactive || this.props.frozen} mousing={subColumnIndex.mousing} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
+										<DragSelect enabled={!wizardMode} allowClick={pickSamples} {...zoomMethod}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 										</DragSelect>
 										{getStatusView(status, this.onReload)}
