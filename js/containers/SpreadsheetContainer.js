@@ -148,7 +148,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		}
 		var {data, columns, columnOrder, samples} = this.props.appState,
 			last = columnOrder.indexOf(id),
-			ids = columnOrder.slice(1, last + 1),
+			ids = columnOrder.slice(0, last + 1),
 			cols = ids.map(c => columns[c]),
 			colData = ids.map(c => data[c]);
 

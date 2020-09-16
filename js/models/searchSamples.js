@@ -384,7 +384,15 @@ var nullMismatchMethod = {
 		(data.avg.values[0][s0] == null) !== (data.avg.values[0][s1] == null)
 };
 
-function pickSamplesFilter(flop, data, samples, columns, id, range) {
+function pickSamplesFilter(flop, dataIn, samples, columnsIn, id, range) {
+	// This weirdness is special handling for drag on sampleID. Normally
+	// we don't consider sampleID for the filter range, so we slice(1) the
+	// columns and data to skip it. If the user specifically drags on the
+	// sampleIDs then we leave it in, but it's the only column. We use
+	// the original column count, columnsIn.length, for setting the field id.
+	var [columns, data] =
+		columnsIn.length === 1 ? [columnsIn, dataIn] :
+		[columnsIn.slice(1), dataIn.slice(1)];
 	var leftCols = _.initial(columns),
 		thisCol = _.last(columns);
 	var neq = (mark, i) =>
@@ -399,7 +407,7 @@ function pickSamplesFilter(flop, data, samples, columns, id, range) {
 	return leftCols.map((column, i) => matchEqualMethod[column.valueType](data[i], samples,
 				toFieldId(i + 1), start)).join(' ') + ' ' +
 			matchRangeMethod[thisCol.valueType](_.last(data), samples,
-					toFieldId(columns.length), start, end, leftCols.length === 0);
+					toFieldId(columnsIn.length - 1), start, end, leftCols.length === 0);
 }
 
 module.exports = {
