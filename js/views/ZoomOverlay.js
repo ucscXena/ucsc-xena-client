@@ -15,8 +15,8 @@ var compStyles = require('./ZoomOverlay.module.css');
 
 class ZoomOverlay extends React.Component {
 	render() {
-		var {pickSamples, geneHeight, height, positionHeight, selection, children} = this.props,
-			active = selection && !pickSamples;
+		var {picking, geneHeight, height, positionHeight, selection, children} = this.props,
+			active = selection && !picking;
 		if (active) {
 			var {direction, offset, overlay} = selection,
 				annotationZoom = direction === 'h',
