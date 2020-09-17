@@ -111,8 +111,14 @@ export class SampleSearch extends PureComponent {
 		// and move the carat to the end.
 	}
 
-	componentDidUpdate() {
-		if (this.props.selection && this.state.value === this.props.value) {
+	componentDidUpdate(prevProps) {
+		// We want to set the selection and scroll position when the user is
+		// picking samples, but not if editing the search field, or if other
+		// props change (e.g. changing mode). So, only set it if there is
+		// a selection prop (user has picked samples), the value has changed,
+		// but there aren't local value changes.
+		if (this.props.selection && this.state.value === this.props.value &&
+				this.props.value !== prevProps.value) {
 			this.input.focus();
 			this.input.setSelectionRange(...this.props.selection);
 			this.input.scrollLeft = this.input.scrollWidth;
