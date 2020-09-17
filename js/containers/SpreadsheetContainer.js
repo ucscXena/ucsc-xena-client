@@ -146,13 +146,14 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		if (finish) {
 			this.setState({picking: false, oldSearch: null});
 		}
-		var {data, columns, columnOrder, samples} = this.props.appState,
+		var {data, index, columns, columnOrder, samples} = this.props.appState,
 			last = columnOrder.indexOf(id),
 			ids = columnOrder.slice(0, last + 1),
 			cols = ids.map(c => columns[c]),
 			colData = ids.map(c => data[c]),
+			colIndex = ids.map(c => index[c]),
 			search = (oldSearch.length ? `${oldSearch} OR ` : '')
-				+ pickSamplesFilter(flop, colData, samples, cols, id, zoom);
+				+ pickSamplesFilter(flop, colData, colIndex, samples, cols, id, zoom);
 
 		this.props.callback(['sample-search', search,
 				[oldSearch.length, search.length]]);

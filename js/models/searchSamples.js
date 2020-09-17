@@ -268,7 +268,7 @@ function extendDown({index, count}, pred) {
 	};
 }
 
-function equalMatrix(data, samples, s0, s1) {
+function equalMatrix(data, index, samples, s0, s1) {
 	var values = _.getIn(data, ['req', 'values']);
 	return values.length > 1 ? false :
 		values[0][samples[s0]] === values[0][samples[s1]];
@@ -278,28 +278,47 @@ function equalFalse() {
 	return false;
 }
 
-function equalSegmented(data, samples, s0, s1) {
+var mutationRegion = list =>
+	list == null ? 'null' :
+	list.length === 0 ? 'none' :
+	'mutation';
+
+// Allow drag in null and no-mutation areas, but not in
+// mutations, because the mutations fix the subsort, and
+// the resulting expression wouldn't make much sense.
+function equalMutation(data, index, samples, s0, s1) {
+	var r0 = mutationRegion(index.bySample[samples[s0]]),
+		r1 = mutationRegion(index.bySample[samples[s1]]);
+
+	return r0 === r1 && r0 !== 'mutation';
+}
+
+function equalSegmented(data, index, samples, s0, s1) {
 	var values = _.getIn(data, ['avg', 'values']);
 	return values[samples[s0]] === values[samples[s1]];
 }
 
 
+// These methods are used to clip the pick region, by enforcing
+// that values in columns on the left are "equal". Otherwise we
+// get weird combinatorical expressions when dragging across different
+// values on the left.
 var equalMethod = {
 	coded: equalMatrix,
 	float: equalMatrix,
-	mutation: equalFalse,
+	mutation: equalMutation,
 	segmented: equalSegmented,
 	samples: equalFalse
 };
 
 var codeOrNull = (codes, val) => val == null ? 'null' : `"${codes[val]}"`;
 
-function matchEqualCoded(data, samples, id, s) {
+function matchEqualCoded(data, index, samples, id, s) {
 	var {req: {values: [field]}, codes} = data;
 	return `${id}:=${codeOrNull(codes, field[samples[s]])}`;
 }
 
-function matchEqualFloat(data, samples, id, s) {
+function matchEqualFloat(data, index, samples, id, s) {
 	if (_.every(data.req.values, field => field[samples[s]] == null)) {
 		return `${id}:=null`;
 	}
@@ -310,13 +329,19 @@ function matchEqualFloat(data, samples, id, s) {
 	return `${id}:=${field[samples[s]]}`;
 }
 
-function matchEqualSegmented(data, samples, id, s) {
+function matchEqualSegmented(data, index, samples, id, s) {
 	var {avg: {values: [field]}} = data;
 	return `${id}:=${field[samples[s]]}`;
 }
 
-function matchEqualMutation() {
-	return '';
+var mutationMatches = {
+	null: id => `${id}:=null`,
+	none: id => `${id}:!=chr ${id}:!=null`,
+	mutation: id => `${id}:=chr`
+};
+
+function matchEqualMutation(data, index, samples, id, s) {
+	return mutationMatches[mutationRegion(index.bySample[samples[s]])](id);
 }
 
 var matchEqualMethod = {
@@ -327,7 +352,7 @@ var matchEqualMethod = {
 	samples: matchEqualCoded
 };
 
-function matchRangeCoded(data, samples, id, start, end, first) {
+function matchRangeCoded(data, index, samples, id, start, end, first) {
 	var {req: {values: [field]}, codes} = data,
 		matches = _.uniq(_.range(start, end).map(i => field[samples[i]]))
 			.map(v => codeOrNull(codes, v)),
@@ -336,7 +361,7 @@ function matchRangeCoded(data, samples, id, start, end, first) {
 	return first || matches.length === 1 ? terms : `(${terms})`;
 }
 
-function matchRangeFloat(data, samples, id, start, end) {
+function matchRangeFloat(data, index, samples, id, start, end) {
 	// XXX review meaning of null on multivalued columns
 	if (_.every(data.req.values, field => field[samples[start]] == null)) {
 		return `${id}:=null`;
@@ -351,14 +376,17 @@ function matchRangeFloat(data, samples, id, start, end) {
 	return `${id}:>=${min} ${id}:<=${max}`;
 }
 
-function matchRangeMutation(data, samples, id, start/*, end*/) {
-	if (data.req.samplesInResp.indexOf(samples[start]) === -1) {
-		return `${id}:=null`;
-	}
-	return '';
+function matchRangeMutation(data, index, samples, id, start, end, first) {
+	var regions = {};
+	_.range(start, end).forEach(s => {
+		regions[mutationRegion(index.bySample[samples[s]])] = true;
+	});
+	var terms = Object.keys(regions).map(r => mutationMatches[r](id)).join(' OR ');
+
+	return first || terms.length === 1 ? terms : `(${terms})`;
 }
 
-function matchRangeSegmented(data, samples, id, start, end) {
+function matchRangeSegmented(data, index, samples, id, start, end) {
 	if (_.every(data.avg.values, field => field[samples[start]] == null)) {
 		return `${id}:=null`;
 	}
@@ -387,29 +415,29 @@ var nullMismatchMethod = {
 		(data.avg.values[0][s0] == null) !== (data.avg.values[0][s1] == null)
 };
 
-function pickSamplesFilter(flop, dataIn, samples, columnsIn, id, range) {
+function pickSamplesFilter(flop, dataIn, indexIn, samples, columnsIn, id, range) {
 	// This weirdness is special handling for drag on sampleID. Normally
 	// we don't consider sampleID for the filter range, so we slice(1) the
 	// columns and data to skip it. If the user specifically drags on the
 	// sampleIDs then we leave it in, but it's the only column. We use
 	// the original column count, columnsIn.length, for setting the field id.
-	var [columns, data] =
-		columnsIn.length === 1 ? [columnsIn, dataIn] :
-		[columnsIn.slice(1), dataIn.slice(1)];
+	var [columns, data, index] =
+		columnsIn.length === 1 ? [columnsIn, dataIn, indexIn] :
+		[columnsIn.slice(1), dataIn.slice(1), indexIn.slice(1)];
 	var leftCols = _.initial(columns),
 		thisCol = _.last(columns);
 	var neq = (mark, i) =>
 			nullMismatchMethod[thisCol.valueType](_.last(data), samples[mark], samples[i]) ||
 			!_.every(leftCols,
-					(column, j) => equalMethod[column.valueType](data[j], samples, mark, i));
+					(column, j) => equalMethod[column.valueType](data[j], index[j], samples, mark, i));
 
 	// XXX Note that these methods will behave badly on null data in singlecell branch, due to
 	// NaN !== NaN.
 	var {start, end} = (flop ? extendDown : extendUp)(range, neq);
 
-	return leftCols.map((column, i) => matchEqualMethod[column.valueType](data[i], samples,
+	return leftCols.map((column, i) => matchEqualMethod[column.valueType](data[i], index[i], samples,
 				toFieldId(i + 1), start)).join(' ') + (leftCols.length ? ' ' : '') +
-			matchRangeMethod[thisCol.valueType](_.last(data), samples,
+			matchRangeMethod[thisCol.valueType](_.last(data), _.last(index), samples,
 					toFieldId(columnsIn.length - 1), start, end, leftCols.length === 0);
 }
 
