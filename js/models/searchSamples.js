@@ -295,7 +295,7 @@ function equalMutation(data, index, samples, s0, s1) {
 
 function equalSegmented(data, index, samples, s0, s1) {
 	var values = _.getIn(data, ['avg', 'values']);
-	return values[samples[s0]] === values[samples[s1]];
+	return values[0][samples[s0]] === values[0][samples[s1]];
 }
 
 
