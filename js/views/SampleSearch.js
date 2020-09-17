@@ -119,7 +119,10 @@ export class SampleSearch extends PureComponent {
 		// but there aren't local value changes.
 		if (this.props.selection && this.state.value === this.props.value &&
 				this.props.value !== prevProps.value) {
-			this.input.focus();
+			// We have to set focus for the selection to be visible. If this
+			// is problematic, we'll need to implement our own selection highlight
+			// until the element has focus.
+			this.input.focus({preventScroll: true});
 			this.input.setSelectionRange(...this.props.selection);
 			this.input.scrollLeft = this.input.scrollWidth;
 		}
