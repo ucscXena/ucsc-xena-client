@@ -39,6 +39,7 @@ i.menuDisabled {
 	border-bottom: 1px solid black12 !important; /* Using important here to override RTB inputElement styles. */
 	padding-left: 0 !important;
 	padding-right: 0 !important;
+	text-overflow: ellipsis;
 	width: 400px;
 }
 
