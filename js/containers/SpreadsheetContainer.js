@@ -132,31 +132,18 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 
 	onPickSamplesSelect = (id, zoom, flop, finish) => {
 		// This will be called from a drag-select callback, where 'finish' is
-		// false during the drag and true on mouseup.  We stash the current
-		// search term in local state during the initial call, and splice in
-		// the new term.
+		// false during the drag and true on mouseup.
 		// 'flop' is true if the drag start is below the drag end. This is used
 		// to clip the drag end point if it extends into an incongruous region.
-		var oldSearch = ((this.state.picking ? this.state.oldSearch
-					: this.props.appState.sampleSearch) || '').trim();
-
-		if (!this.state.picking) {
-			this.setState({picking: true, oldSearch: this.props.appState.sampleSearch});
-		}
-		if (finish) {
-			this.setState({picking: false, oldSearch: null});
-		}
 		var {data, index, columns, columnOrder, samples} = this.props.appState,
 			last = columnOrder.indexOf(id),
 			ids = columnOrder.slice(0, last + 1),
 			cols = ids.map(c => columns[c]),
 			colData = ids.map(c => data[c]),
 			colIndex = ids.map(c => index[c]),
-			search = (oldSearch.length ? `${oldSearch} OR ` : '')
-				+ pickSamplesFilter(flop, colData, colIndex, samples, cols, id, zoom);
+			newTerm = pickSamplesFilter(flop, colData, colIndex, samples, cols, id, zoom);
 
-		this.props.callback(['sample-search', search,
-				[oldSearch.length, search.length]]);
+		this.props.onPicking(newTerm, finish);
 	};
 
 	render() {

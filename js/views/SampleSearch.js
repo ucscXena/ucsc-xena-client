@@ -111,19 +111,15 @@ export class SampleSearch extends PureComponent {
 		// and move the carat to the end.
 	}
 
-	componentDidUpdate(prevProps) {
-		// We want to set the selection and scroll position when the user is
-		// picking samples, but not if editing the search field, or if other
-		// props change (e.g. changing mode). So, only set it if there is
-		// a selection prop (user has picked samples), the value has changed,
-		// but there aren't local value changes.
-		if (this.props.selection && this.state.value === this.props.value &&
-				this.props.value !== prevProps.value) {
+	componentDidUpdate() {
+		var oldSearch = this.props.oldSearch;
+		// oldSearch will update before value, so we have to check for both.
+		if (oldSearch != null && this.props.value) {
 			// We have to set focus for the selection to be visible. If this
 			// is problematic, we'll need to implement our own selection highlight
 			// until the element has focus.
 			this.input.focus({preventScroll: true});
-			this.input.setSelectionRange(...this.props.selection);
+			this.input.setSelectionRange(oldSearch.length, this.props.value.length);
 			this.input.scrollLeft = this.input.scrollWidth;
 		}
 	}
@@ -145,7 +141,7 @@ export class SampleSearch extends PureComponent {
 	}
 
 	onCaret = () => {
-		var hl = this.input ?
+		var hl = this.input && this.props.offsets ?
 			findSubExpr(this.props.offsets, this.input.selectionStart) :
 			undefined;
 		this.highlight(hl);

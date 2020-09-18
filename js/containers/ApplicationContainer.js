@@ -128,6 +128,18 @@ class ApplicationContainer extends React.Component {
 		this.setState({pickSamples: !this.state.pickSamples});
 	}
 
+	onPicking = (newTerm, finish) => {
+		var oldSearch = (this.state.oldSearch == null ?
+				this.props.state.spreadsheet.sampleSearch : this.state.oldSearch) || '',
+			sampleSearch = (oldSearch ? `${oldSearch} OR ` : '') + newTerm;
+		this.setState({oldSearch});
+		this.props.callback(['sample-search', sampleSearch]);
+		if (finish) {
+			// There's potentially a race here with callback()
+			_.defer(() => this.setState({oldSearch: null}));
+		}
+	}
+
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback, children} = this.props,
@@ -154,6 +166,7 @@ class ApplicationContainer extends React.Component {
 					onAllowOverSamples={this.onAllowOverSamples}
 					pickSamples={pickSamples}
 					onPickSamples={this.onPickSamples}
+					oldSearch={this.state.oldSearch}
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
 					onNavigate={this.onNavigate}
@@ -170,6 +183,7 @@ class ApplicationContainer extends React.Component {
 					appState={computedState.spreadsheet}
 					wizard={computedState.wizard}
 					pickSamples={pickSamples}
+					onPicking={this.onPicking}
 					callback={callback}/>
 				{children}
 			</Application>);

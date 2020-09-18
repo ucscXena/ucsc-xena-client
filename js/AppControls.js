@@ -188,7 +188,7 @@ export class AppControls extends PureComponent {
 		var {appState: {cohort, samplesOver, allowOverSamples, mode, columnOrder, showWelcome,
 					samples, sampleSearch, sampleSearchSelection, samplesMatched, allMatches, /*tiesEnabled, */ties},
 				onReset, help, onResetSampleFilter, onHighlightChange, onHighlightSelect,
-				onAllowOverSamples, pickSamples, onPickSamples, callback} = this.props,
+				onAllowOverSamples, oldSearch, pickSamples, onPickSamples, callback} = this.props,
 			displayOver = samplesOver && !allowOverSamples ? '' : compStyles.hidden,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			{onPdf, onDownload, onShowWelcome, onMode} = this,
@@ -212,6 +212,7 @@ export class AppControls extends PureComponent {
 							<TiesSearch {...{onTies: this.onTies}}/> :
 							<BasicSearch {...{
 								value: sampleSearch,
+								oldSearch,
 								selection: sampleSearchSelection,
 								matches,
 								offsets: allMatches.offsets,
