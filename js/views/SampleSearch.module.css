@@ -41,6 +41,11 @@ i.menuDisabled {
 	padding-right: 0 !important;
 	text-overflow: ellipsis;
 	width: 400px;
+	transition: width 500ms;
+}
+
+.picking.inputContainer input {
+	width: 800px;
 }
 
 .subtitle {

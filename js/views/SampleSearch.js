@@ -159,7 +159,7 @@ export class SampleSearch extends PureComponent {
 			noshow = (mode !== "heatmap");
 		return (
 			<div className={compStyles.SampleSearch}>
-				<Input className={compStyles.inputContainer}
+				<Input className={classNames(compStyles.inputContainer, pickSamples && compStyles.picking)}
 					onKeyUp={this.onCaret}
 					onClick={this.onCaret}
 					onFocus={this.onCaret}

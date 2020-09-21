@@ -50,6 +50,11 @@ i.overWarning {
 	border-right: 1px solid black12;
 	padding-right: 10px;
 	width: 452px; /* Matches min (default) width of wizard columns, snapped at 1280px */
+	transition: width 500ms;
+}
+
+.picking.cohort {
+	width: 120px;
 }
 
 /* Positions the first and any other i after the title and subtitle to the end of the left container */

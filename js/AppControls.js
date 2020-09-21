@@ -199,7 +199,7 @@ export class AppControls extends PureComponent {
 			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null;
 		return (
 				<AppBar>
-					<div className={classNames(compStyles.appBarContainer, compStyles.cohort)}>
+					<div className={classNames(compStyles.appBarContainer, compStyles.cohort, pickSamples && compStyles.picking)}>
 						<div className={compStyles.titleContainer}>
 							<span className={compStyles.title}>{cohortName}</span>
 							<span className={compStyles.subtitle}>{filter} {samples.length} Samples<i onClick={onAllowOverSamples} title="Samples on screen limited to 50000 for performance. Click to see all samples." className={`${compStyles.overWarning} ${displayOver} material-icons`}>warning</i></span>
