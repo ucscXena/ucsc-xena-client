@@ -1,6 +1,7 @@
 
 var React = require('react');
 import PureComponent from './PureComponent';
+var {getIn} = require('./underscore_ext').default;
 
 var geneLableFont = 12;
 var maxLane = 5;
@@ -27,8 +28,22 @@ class GeneLabel extends PureComponent {
 }
 
 class GeneLabelAnnotation extends PureComponent {
+	state = {
+		fieldIndex: -1
+	}
+	componentWillMount() {
+		this.sub = this.props.tooltip.subscribe(ev => {
+			this.setState({
+				fieldIndex: getIn(ev, ['data', 'fieldIndex'], -1)
+			});
+		});
+	}
+	componentWillUnmount() {
+		this.sub.unsubscribe();
+	}
 	render() {
-		var {width, height, list, subColumnIndex} = this.props;
+		var {width, height, list, subColumnIndex} = this.props,
+			{fieldIndex} = this.state;
 
 		var	subColWidth = width / list.length,
 			aveSize = subColumnIndex.aveSize,
@@ -41,8 +56,8 @@ class GeneLabelAnnotation extends PureComponent {
 			var left = subColWidth * index,
 				bottom = laneHeight * (index % laneNum),
 				textWidth = width - left,
-				color = subColumnIndex && index === subColumnIndex.index && list.length !== 1 ? 'red' : 'black',
-				fontWeight = subColumnIndex && index === subColumnIndex.index && list.length !== 1 ? 'bold' : 'normal';
+				color = subColumnIndex && index === fieldIndex && list.length !== 1 ? 'red' : 'black',
+				fontWeight = subColumnIndex && index === fieldIndex && list.length !== 1 ? 'bold' : 'normal';
 
 			if (list.length === 1) { // for single probe/gene/signature column, shorten text so that it will not go over vertically due to line wrapping
 				text = text.slice(0, subColWidth * maxLane / geneLableFont) +

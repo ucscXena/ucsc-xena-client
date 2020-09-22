@@ -22,7 +22,7 @@ import Tooltip from 'react-toolbox/lib/tooltip';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
 import {RefGeneAnnotation} from '../refGeneExons';
-import {GeneLabelAnnotation, geneLableFont, maxLane} from '../geneLabelAnnotation';
+import {GeneLabelAnnotation, geneLableFont} from '../geneLabelAnnotation';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
 import crosshair from './cursor.png';
@@ -467,50 +467,15 @@ class Column extends PureComponent {
 		this.props.onInteractive('zoom', interactive);
 	};
 
-	// XXX Should probably move this state down, so it doesn't re-render
-	// Column on mouse move. Can we pass tooltip to GeneLabelAnnotation instead?
-	onMouseMove = (e) => {
-		var {column} = this.props,
-			{width} = column,
-			subColumnIndex = this.state.subColumnIndex;
-
-		if (!_.isEmpty(subColumnIndex)) {
-			var aveSize = subColumnIndex.aveSize,
-				laneNum = Math.ceil(column.fields.length / (width / aveSize)),
-				subColumnWidth =  width / column.fields.length;
-
-			if (laneNum <= maxLane) {
-				var offsetX = e.clientX - e.currentTarget.getBoundingClientRect().left,
-					index = Math.floor(offsetX / subColumnWidth);
-
-				this.setState({subColumnIndex: {
-					...this.state.subColumnIndex,
-					index: index
-				}});
-			}
-		}
-	};
-
-	onMouseOut = () => {
-		var subColumnIndex = this.state.subColumnIndex;
-		if (!_.isEmpty(subColumnIndex)) {
-			this.setState({subColumnIndex: {
-				...this.state.subColumnIndex,
-				index: -1
-			}});
-		}
-	};
-
 	initSubColumnIndex = () => {
 		var {column} = this.props;
 		if (_.contains(['probes', 'genes'], column.fieldType) ||
-				_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) === 'regulon') {
-			var aveSize = geneLableFont * (column.fields.reduce( (total, x) => total + (x ? x.length : 0), 0) / column.fields.length);
+				_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType'])
+					=== 'regulon') {
+			var aveSize = geneLableFont * (column.fields.reduce((total, x) =>
+					total + (x ? x.length : 0), 0) / column.fields.length);
 
-			this.setState({subColumnIndex: {
-				index: -1,
-				aveSize: aveSize
-			}});
+			this.setState({subColumnIndex: {aveSize}});
 		}
 	};
 
@@ -857,6 +822,7 @@ class Column extends PureComponent {
 				: null,
 			geneLabel = showGeneLabel(column) ?
 				<GeneLabelAnnotation
+					tooltip={tooltip}
 					width={width}
 					height={annotationHeight + scaleHeight}
 					list = {column.fields}
@@ -935,7 +901,7 @@ class Column extends PureComponent {
 									height={zoom.height}
 									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 									samplesMatched={samplesMatched}/>
-								<div style={{position: 'relative'}} onMouseMove={this.onMouseMove} onMouseOut={this.onMouseOut}>
+								<div style={{position: 'relative'}}>
 									<Crosshair canPickSamples={this.canPickSamples} picker={pickSamples} interactive={interactive} geneHeight={geneHeight()} height={zoom.height} selection={selection} tooltip={tooltip}>
 										<DragSelect enabled={this.dragEnabled} allowClick={pickSamples} {...zoomMethod}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
