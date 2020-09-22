@@ -102,7 +102,7 @@ class Tooltip extends PureComponent {
 		this.sub.unsubscribe();
 	}
 	render() {
-		var {onClick, onClose} = this.props,
+		var {onClose} = this.props,
 			{data, frozen} = this.state.tooltip,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
@@ -134,8 +134,8 @@ class Tooltip extends PureComponent {
 		var sample = sampleID ? <span>{sampleID}</span> : null;
 
 		return (
-			<div onClick={onClick}>
-				{frozen ? overlay(onClick) : null}
+			<div>
+				{frozen ? overlay() : null}
 				<div key={sampleID} className={classNames(compStyles.Tooltip, {[compStyles.frozen]: frozen})}>
 					<ul className={compStyles.content}>
 						{sampleID ? "sample: " : null}

@@ -8,7 +8,6 @@
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
-var {pick} = require('../underscore_ext').default;
 
 var React = require('react');
 var {Portal} = require('react-overlays');
@@ -24,13 +23,21 @@ class Crosshair extends PureComponent {
 	state = {mousing: false, x: -1, y: -1};
 
 	componentWillMount() {
-		this.sub = this.props.tooltip.subscribe(ev => this.setState(pick(ev, 'frozen')));
+		this.sub = this.props.tooltip.subscribe(ev => {
+			var {frozen} = ev;
+			this.setState({frozen});
+
+			if (this.state.frozen && !frozen) { // just unfroze
+				this.setState({mousing: false, x: -1, y: -1});
+			}
+
+		});
 	}
 	componentWillUnmount() {
 		this.sub.unsubscribe();
 	}
 	componentWillReceiveProps(nextProps) {
-		if (!frozen(nextProps, this.state) && !nextProps.mousing) {
+		if (!frozen(nextProps, this.state)) {
 			this.setState({mousing: false, x: -1, y: -1});
 		}
 	}

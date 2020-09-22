@@ -467,6 +467,8 @@ class Column extends PureComponent {
 		this.props.onInteractive('zoom', interactive);
 	};
 
+	// XXX Should probably move this state down, so it doesn't re-render
+	// Column on mouse move. Can we pass tooltip to GeneLabelAnnotation instead?
 	onMouseMove = (e) => {
 		var {column} = this.props,
 			{width} = column,
@@ -483,8 +485,7 @@ class Column extends PureComponent {
 
 				this.setState({subColumnIndex: {
 					...this.state.subColumnIndex,
-					index: index,
-					mousing: true
+					index: index
 				}});
 			}
 		}
@@ -495,8 +496,7 @@ class Column extends PureComponent {
 		if (!_.isEmpty(subColumnIndex)) {
 			this.setState({subColumnIndex: {
 				...this.state.subColumnIndex,
-				index: -1,
-				mousing: false
+				index: -1
 			}});
 		}
 	};
@@ -509,8 +509,7 @@ class Column extends PureComponent {
 
 			this.setState({subColumnIndex: {
 				index: -1,
-				aveSize: aveSize,
-				mousing: false
+				aveSize: aveSize
 			}});
 		}
 	};
@@ -861,7 +860,7 @@ class Column extends PureComponent {
 					width={width}
 					height={annotationHeight + scaleHeight}
 					list = {column.fields}
-					subColumnIndex = {this.state.subColumnIndex}/>
+					subColumnIndex = {subColumnIndex}/>
 				: null;
 
 		// FF 'button' tag will not emit 'mouseenter' events (needed for
@@ -937,7 +936,7 @@ class Column extends PureComponent {
 									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 									samplesMatched={samplesMatched}/>
 								<div style={{position: 'relative'}} onMouseMove={this.onMouseMove} onMouseOut={this.onMouseOut}>
-									<Crosshair canPickSamples={this.canPickSamples} picker={pickSamples} interactive={interactive} mousing={subColumnIndex.mousing} geneHeight={geneHeight()} height={zoom.height} selection={selection} tooltip={tooltip}>
+									<Crosshair canPickSamples={this.canPickSamples} picker={pickSamples} interactive={interactive} geneHeight={geneHeight()} height={zoom.height} selection={selection} tooltip={tooltip}>
 										<DragSelect enabled={this.dragEnabled} allowClick={pickSamples} {...zoomMethod}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 										</DragSelect>

@@ -21,8 +21,8 @@ function addTooltip(Component) {
 			var tooltip = events.tooltip.merge(toggle).merge(close)
 				// If open + user clicks, toggle freeze of display.
 				.scan(([tt, frozen], ev) =>
-							ev === 'toggle' ? [tt, tt.open && !frozen] : [ev, frozen],
-						[{open: false}, false])
+							ev === 'toggle' ? [tt, !frozen] : [ev, frozen],
+						[{}, false])
 				// Filter frozen events until frozen state changes.
 				.distinctUntilChanged(_.isEqual, ([ev, frozen]) => frozen ? frozen : [ev, frozen])
 				.map(([ev, frozen]) => _.assoc(ev, 'frozen', frozen))
@@ -44,7 +44,7 @@ function addTooltip(Component) {
 				<Component
 					{...props}
 					onClick={onClick}
-					append= {wizardMode ? null : <Tooltip show={interactive} onClose={this.on.close} onClick={this.on.click} tooltip={this.tooltipEv}/>}>
+					append= {wizardMode ? null : <Tooltip show={interactive} onClose={this.on.close} tooltip={this.tooltipEv}/>}>
 					{React.Children.map(children, el =>
 						React.cloneElement(el, {
 							tooltip: this.ev.tooltip
