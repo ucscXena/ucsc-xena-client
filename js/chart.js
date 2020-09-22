@@ -1361,6 +1361,9 @@ function render(root, callback, sessionStorage) {
 						showInLegend: showInLegend,
 						data: multiSeries[colorCode].data,
 						color: color,
+						marker: {
+							symbol: 'circle',
+						}
 					}, false);
 				});
 
