@@ -937,7 +937,7 @@ class Column extends PureComponent {
 									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 									samplesMatched={samplesMatched}/>
 								<div style={{position: 'relative'}} onMouseMove={this.onMouseMove} onMouseOut={this.onMouseOut}>
-									<Crosshair canPickSamples={this.canPickSamples} picker={pickSamples} frozen={!interactive || this.props.frozen} mousing={subColumnIndex.mousing} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
+									<Crosshair canPickSamples={this.canPickSamples} picker={pickSamples} interactive={interactive} mousing={subColumnIndex.mousing} geneHeight={geneHeight()} height={zoom.height} selection={selection} tooltip={tooltip}>
 										<DragSelect enabled={this.dragEnabled} allowClick={pickSamples} {...zoomMethod}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 										</DragSelect>

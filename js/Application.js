@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+import React from 'react';
+import PureComponent from './PureComponent';
 import { Grid, Row, Col } from "react-material-responsive-grid";
 import { AppControls } from './AppControls';
 import { KmPlot } from './KmPlot';
@@ -12,7 +13,7 @@ import { ThemeProvider } from 'react-css-themr';
 import appTheme from './appTheme';
 import nav from './nav';
 var gaEvents = require('./gaEvents');
-//var Perf = require('react/lib/ReactDefaultPerf');
+//var Perf = require('react-dom/lib/ReactPerf');
 
 const stepperSteps = [
 	{ label: 'Select a Study to Explore' },
@@ -41,7 +42,7 @@ function zoomOut(samples, zoom) {
 	return _.merge(zoom, {count: nCount, index: nIndex});
 }
 
-class Application extends Component {
+class Application extends PureComponent {
 //	onPerf = () => {
 //		if (this.perf) {
 //			this.perf = false;

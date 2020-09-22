@@ -1,4 +1,3 @@
-
 import PureComponent from '../PureComponent';
 var React = require('react');
 var _ = require('../underscore_ext').default;
@@ -93,8 +92,18 @@ function overlay() {
 //});
 
 class Tooltip extends PureComponent {
+	state = {
+		tooltip: {open: false},
+	};
+	componentWillMount() {
+		this.sub = this.props.tooltip.subscribe(ev => this.setState({tooltip: ev}));
+	}
+	componentWillUnmount() {
+		this.sub.unsubscribe();
+	}
 	render() {
-		var {data, onClick, onClose, frozen} = this.props,
+		var {onClick, onClose} = this.props,
+			{data, frozen} = this.state.tooltip,
 			rows = _.getIn(data, ['rows']),
 			sampleID = _.getIn(data, ['sampleID']);
 

@@ -1,7 +1,5 @@
-
-// XXX move Application to views
+import PureComponent from '../PureComponent';
 var React = require('react');
-//var _ = require('../underscore_ext').default;
 var {getSpreadsheetContainer} = require('./SpreadsheetContainer');
 var ChartView = require('../ChartView');
 var Column = require('../views/Column');
@@ -10,7 +8,6 @@ var {rxEvents} = require('../react-utils');
 var Rx = require('../rx').default;
 // Spreadsheet options
 var addTooltip = require('./addTooltip');
-//var disableSelect = require('./disableSelect');
 var addWizardColumns = require('./addWizardColumns');
 var addVizEditor = require('./addVizEditor');
 var makeSortable = require('./makeSortable');
@@ -46,7 +43,7 @@ var Spreadsheet = getSpreadsheet(columnsWrapper);
 var SpreadsheetContainer = getSpreadsheetContainer(Column, Spreadsheet);
 
 
-class ApplicationContainer extends React.Component {
+class ApplicationContainer extends PureComponent {
 	state = {
 		pickSamples: false
 	};

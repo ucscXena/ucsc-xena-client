@@ -8,6 +8,7 @@
 
 // Core dependencies, components
 import PureComponent from '../PureComponent';
+var {pick} = require('../underscore_ext').default;
 
 var React = require('react');
 var {Portal} = require('react-overlays');
@@ -17,11 +18,19 @@ var compStyles = require('./Crosshair.module.css');
 var classNames = require('classnames');
 import pickerCursor from './colorize-24px.svg';
 
+var frozen = (props, state) => !props.interactive || state.frozen;
+
 class Crosshair extends PureComponent {
 	state = {mousing: false, x: -1, y: -1};
 
+	componentWillMount() {
+		this.sub = this.props.tooltip.subscribe(ev => this.setState(pick(ev, 'frozen')));
+	}
+	componentWillUnmount() {
+		this.sub.unsubscribe();
+	}
 	componentWillReceiveProps(nextProps) {
-		if (!nextProps.frozen && !nextProps.mousing) {
+		if (!frozen(nextProps, this.state) && !nextProps.mousing) {
 			this.setState({mousing: false, x: -1, y: -1});
 		}
 	}
@@ -29,13 +38,13 @@ class Crosshair extends PureComponent {
 	onMouseMove = (ev) => {
 		var x = ev.clientX - ev.currentTarget.getBoundingClientRect().left,
 			noaction = this.props.picker && !this.props.canPickSamples(ev);
-		if (!this.props.frozen) {
+		if (!frozen(this.props, this.state)) {
 			this.setState({mousing: true, x, y: ev.clientY, noaction});
 		}
 	};
 
 	onMouseOut = () => {
-		if (!this.props.frozen) {
+		if (!frozen(this.props, this.state)) {
 			this.setState({mousing: false});
 		}
 	};
@@ -43,13 +52,13 @@ class Crosshair extends PureComponent {
 	render() {
 		let {noaction, mousing, x, y} = this.state,
 			{onMouseMove, onMouseOut} = this,
-			{frozen, picker, geneHeight, height, selection, children} = this.props,
+			{picker, geneHeight, height, selection, children} = this.props,
 			zoomMode = selection ? true : false,
 			cursor =
 				noaction ? 'not-allowed' :
 				picker ? `url(${pickerCursor}) 0 22, none` :
 				zoomMode ? 'none' :
-				frozen ? 'default' :
+				frozen(this.props, this.state) ? 'default' :
 				'none';
 		if (selection) {
 			var {crosshair, offset, zone} = selection,

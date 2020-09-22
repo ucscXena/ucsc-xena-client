@@ -9,13 +9,9 @@ var Rx = require('../rx').default;
 
 function addTooltip(Component) {
 	return class extends PureComponent {
-	    static displayName = 'SpreadsheetTooltip';
+		static displayName = 'SpreadsheetTooltip';
 
-	    state = {
-	        tooltip: {open: false},
-	    };
-
-	    componentWillMount() {
+		componentWillMount() {
 			var events = this.ev = rxEvents(this, 'tooltip', 'click', 'close');
 
 			var toggle = events.click.filter(ev => ev[meta.key])
@@ -36,29 +32,22 @@ function addTooltip(Component) {
 			// the 'frozen' functionality. This allows listeners to 'freeze',
 			// e.g. the probe position highlight.
 			this.ev.tooltip = Rx.Subject.create(events.tooltip, tooltip);
-
-			this.sub = tooltip.subscribe(ev => this.setState({tooltip: ev}));
-		}
-
-	    componentWillUnmount() {
-			this.sub.unsubscribe();
+			this.tooltipEv = tooltip; // this is awkward. Need it for children.
 		}
 
 	    render() {
 			var {children, ...props} = this.props,
 				{appState, interactive} = props,
 				{wizardMode} = appState,
-				open = this.state.tooltip.open && interactive,
 				onClick = interactive ? this.on.click : null;
 			return (
 				<Component
 					{...props}
 					onClick={onClick}
-					append= {wizardMode ? null : <Tooltip show={interactive} onClose={this.on.close} onClick={this.on.click} {...{...this.state.tooltip, open}}/>}>
+					append= {wizardMode ? null : <Tooltip show={interactive} onClose={this.on.close} onClick={this.on.click} tooltip={this.tooltipEv}/>}>
 					{React.Children.map(children, el =>
 						React.cloneElement(el, {
-							tooltip: this.ev.tooltip,
-							frozen: this.state.tooltip.frozen
+							tooltip: this.ev.tooltip
 						}))}
 				</Component>);
 		}

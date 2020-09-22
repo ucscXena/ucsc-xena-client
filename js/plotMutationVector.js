@@ -263,10 +263,9 @@ var MutationColumn = hotOrNot(class extends PureComponent {
 				return events.mousemove
 					.takeUntil(events.mouseout)
 					.map(ev => ({
-						data: this.tooltip(ev),
-						open: true
+						data: this.tooltip(ev)
 					})) // look up current data
-					.concat(Rx.Observable.of({open: false}));
+					.concat(Rx.Observable.of({}));
 			}).subscribe(this.props.tooltip);
 	}
 
