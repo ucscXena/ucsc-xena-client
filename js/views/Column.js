@@ -1,4 +1,5 @@
 import PureComponent from '../PureComponent';
+var util = require('../util').default;
 var React = require('react');
 var _ = require('../underscore_ext').default;
 var DefaultTextInput = require('./DefaultTextInput');
@@ -30,8 +31,12 @@ var ZoomOverlay = require('./ZoomOverlay');
 var config = require('../config');
 import {AVAILABLE_GENESET_COHORTS, GENESETS_VIEWER_URL, GeneSetViewDialog} from './GeneSetViewDialog';
 
-
-
+// We're getting events with coords < 0. Not sure if this
+// is a side-effect of the react event system. This will
+// restrict values to the given range.
+function bounded(min, max, x) {
+	return x < min ? min : (x > max ? max : x);
+}
 
 var ESCAPE = 27;
 
@@ -631,6 +636,19 @@ class Column extends PureComponent {
 			this.props.column.clustering ? undefined : 'probes', this.props.data);
 	};
 
+	canPickSamples = ev => {
+		var {samples, zoom} = this.props,
+			coord = util.eventOffset(ev),
+			sampleIndex = bounded(0, samples.length, Math.floor((coord.y * zoom.count / zoom.height) + zoom.index));
+
+		return this.props.canPickSamples(this.props.id, sampleIndex);
+	}
+
+	dragEnabled = ev => {
+		return !this.props.wizardMode &&
+			!(this.props.pickSamples && !this.canPickSamples(ev));
+	}
+
 	onPickSamplesDrag = selection => {
 		this.toggleInteractive(false);
 		var translatedSelection = zoomTranslateSelection(this.props, selection, 'f');
@@ -897,7 +915,7 @@ class Column extends PureComponent {
 								}
 								 wizardMode={wizardMode}>
 							<div style={{cursor: selection ? 'none' : annotation ? `url(${crosshair}) 12 12, crosshair` : 'default', height: geneHeight()}}>
-									<DragSelect enabled={!wizardMode} onDrag={this.onDragZoomA} onSelect={this.onDragZoomSelectA}>
+									<DragSelect enabled={this.dragEnabled} onDrag={this.onDragZoomA} onSelect={this.onDragZoomSelectA}>
 									{annotation ?
 										<div>
 											{scale}
@@ -919,8 +937,8 @@ class Column extends PureComponent {
 									samples={samples.slice(zoom.index, zoom.index + zoom.count)}
 									samplesMatched={samplesMatched}/>
 								<div style={{position: 'relative'}} onMouseMove={this.onMouseMove} onMouseOut={this.onMouseOut}>
-									<Crosshair picker={pickSamples} frozen={!interactive || this.props.frozen} mousing={subColumnIndex.mousing} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
-										<DragSelect enabled={!wizardMode} allowClick={pickSamples} {...zoomMethod}>
+									<Crosshair canPickSamples={this.canPickSamples} picker={pickSamples} frozen={!interactive || this.props.frozen} mousing={subColumnIndex.mousing} geneHeight={geneHeight()} height={zoom.height} selection={selection}>
+										<DragSelect enabled={this.dragEnabled} allowClick={pickSamples} {...zoomMethod}>
 											{widgets.column({ref: 'plot', id, column, data, index, zoom, samples, onClick, fieldFormat, sampleFormat, tooltip})}
 										</DragSelect>
 										{getStatusView(status, this.onReload)}

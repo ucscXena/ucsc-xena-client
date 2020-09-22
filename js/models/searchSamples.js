@@ -441,10 +441,46 @@ function pickSamplesFilter(flop, dataIn, indexIn, samples, columnsIn, id, range)
 					toFieldId(columnsIn.length - 1), start, end, leftCols.length === 0);
 }
 
+
+var subsortableMethod = {
+	coded: (column, data) => data.req,
+	float: (column, data, index, samples, si) => data.req &&
+		data.req.values.length === 1  && data.req.values[0][samples[si]] == null,
+	segmented: (column, data, index, samples, si) => data.avg &&
+		data.avg.values.length === 1  && data.avg.values[0][samples[si]] == null,
+	mutation: (column, data, index, samples, si) => data.req &&
+		_.isEmpty(index.bySample[samples[si]])
+};
+
+var subsortable = (column, ...args) => subsortableMethod[column.valueType](column, ...args);
+
+var sortableMethod = {
+	coded: (column, data) => data.req,
+	float: (column, data) => data.req && data.req.values.length === 1,
+	segmented: (column, data) => data.avg,
+	mutation: (column, data, index, samples, si) => data.req &&
+		_.isEmpty(index.bySample[samples[si]])
+};
+var sortable = (column, ...args) => sortableMethod[column.valueType](column, ...args);
+
+function canPickSamples(columns, data, index, samples, columnOrder, id, si) {
+	if (id === columnOrder[0]) { // sampleIDs
+		return true;
+	}
+
+	var canSubsort = _.every(_.range(1, columnOrder.indexOf(id)), c => {
+		var id = columnOrder[c];
+		return subsortable(columns[id], data[id], index[id], samples, si);
+	});
+
+	return canSubsort && sortable(columns[id], data[id], index[id], samples, si);
+}
+
 module.exports = {
 	searchSamples,
 	treeToString,
 	remapFields,
 	pickSamplesFilter,
+	canPickSamples,
 	parse
 };

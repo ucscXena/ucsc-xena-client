@@ -4,7 +4,7 @@ var _ = require('../underscore_ext').default;
 var getLabel = require('../getLabel');
 var {supportsEdit} = require('../models/fieldSpec');
 var {addCommas} = require('../util').default;
-import {pickSamplesFilter} from '../models/searchSamples';
+import {canPickSamples, pickSamplesFilter} from '../models/searchSamples';
 
 function fixSampleTitle(column, i, samples, wizardMode, cohort) {
 	return i === 0 ? _.updateIn(column,
@@ -130,6 +130,12 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
         this.props.callback(['navigate', 'datapages', {host, dataset}]);
 	};
 
+	canPickSamples = (id, sampleIndex) => {
+		var {data, index, columns, columnOrder, samples} = this.props.appState;
+		return canPickSamples(columns, data, index, samples, columnOrder,
+				id, sampleIndex);
+	}
+
 	onPickSamplesSelect = (id, zoom, flop, finish) => {
 		// This will be called from a drag-select callback, where 'finish' is
 		// false during the drag and true on mouseup.
@@ -190,6 +196,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						onResize={this.onResize}
 						onReload={this.onReload}
 						onPickSamplesSelect={this.onPickSamplesSelect}
+						canPickSamples={this.canPickSamples}
 						actionKey={id}
 						first={i === 0}
 						{...columnProps}

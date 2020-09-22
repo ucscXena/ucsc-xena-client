@@ -27,9 +27,10 @@ class Crosshair extends PureComponent {
 	}
 
 	onMouseMove = (ev) => {
-		var x = ev.clientX - ev.currentTarget.getBoundingClientRect().left;
+		var x = ev.clientX - ev.currentTarget.getBoundingClientRect().left,
+			noaction = this.props.picker && !this.props.canPickSamples(ev);
 		if (!this.props.frozen) {
-			this.setState({mousing: true, x, y: ev.clientY});
+			this.setState({mousing: true, x, y: ev.clientY, noaction});
 		}
 	};
 
@@ -40,11 +41,12 @@ class Crosshair extends PureComponent {
 	};
 
 	render() {
-		let {mousing, x, y} = this.state,
+		let {noaction, mousing, x, y} = this.state,
 			{onMouseMove, onMouseOut} = this,
 			{frozen, picker, geneHeight, height, selection, children} = this.props,
 			zoomMode = selection ? true : false,
 			cursor =
+				noaction ? 'not-allowed' :
 				picker ? `url(${pickerCursor}) 0 22, none` :
 				zoomMode ? 'none' :
 				frozen ? 'default' :

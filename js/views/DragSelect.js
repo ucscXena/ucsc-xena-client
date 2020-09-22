@@ -45,7 +45,7 @@ function getSelection(target, ev, start) {
 class DragSelect extends React.Component {
 	// When allowClick is false we discard zero-length drags. If true
 	// we will invoke onSelect with a zero-length selection.
-	static defaultProps = {enabled: true, allowClick: false};
+	static defaultProps = {enabled: () => true, allowClick: false};
 
 	componentWillMount() {
 		var mousedown = new Rx.Subject();
@@ -70,7 +70,7 @@ class DragSelect extends React.Component {
 				this.props.onSelect && this.props.onSelect(ev.selection);
 			}
 		});
-		this.dragStart = ev => this.props.enabled && mousedown.next(ev);
+		this.dragStart = ev => this.props.enabled(ev) && mousedown.next(ev);
 	}
 
 	componentWillUnmount() {
