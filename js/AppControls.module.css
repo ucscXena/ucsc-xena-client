@@ -93,10 +93,6 @@ i.overWarning {
 	display: flex;
 }
 
-.filterHelp {
-	margin-left: -4px; /* Pull help icon in closer to filter icon */
-}
-
 /* Actions section, inside tools eg chart/visualization toggle, download, PDF, bookmark */
 .actions {
 	display: flex;

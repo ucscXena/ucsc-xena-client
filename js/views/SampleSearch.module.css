@@ -13,6 +13,19 @@
 	display: flex;
 }
 
+.SampleSearch button {
+	margin-left: 2px;
+	margin-right: 2px;
+}
+
+.SampleSearch button.selected {
+	background: rgba(33, 33, 33, 0.2); /* can we get this from a variable? */
+}
+
+.filterHelp {
+	margin-left: -4px; /* Pull help icon in closer to filter icon */
+}
+
 /* Filter menu */
 .filterMenu {
 	margin-left: 4px; /* Match margin-left of app bar icons (to match disabled menu icon) */
@@ -32,7 +45,45 @@ i.menuDisabled {
 /* Filter input container */
 .inputContainer {
 	margin-right: 4px;
+	margin-left: 4px;
+	padding: 0;
 }
+
+.dropDownArrow {
+	position: absolute;
+	right: 0;
+	top: -0.6em;
+	opacity: 0.5;
+}
+
+.hasHistory {
+	opacity: 1;
+}
+
+.history {
+	position: absolute;
+	left: 0;
+	bottom: auto !important;
+	width: 100%;
+	z-index: 1; /* not sure why this is needed */
+	clip: rect(0, 0, 0, 0);
+}
+
+.historyActive {
+	clip: unset;
+}
+
+.menuItem {
+	height: 32px
+}
+
+.menuItem span {
+	font-size: 14px;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
 
 /* Input element - override RT theme (and our own global overrides) */
 .inputContainer input {
@@ -53,4 +104,7 @@ i.menuDisabled {
 	color: black38;
 	display: block;
 	line-height: 16px;
+	overflow: hidden;
+	transition: width 500ms;
+	white-space: nowrap;
 }

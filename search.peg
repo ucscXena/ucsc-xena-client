@@ -34,7 +34,10 @@ Term
    }
 
 Factor
- = Grouping / Field / Value
+ = Grouping / Field / Value / Not
+
+Not
+  = 'NOT' _ factor:Factor { return ['ne', factor]; }
  
 Grouping
   = '(' exp:Expression ')' { return ['group', exp]; }
@@ -46,7 +49,7 @@ Field
       }
 
 Value = NeValue / LeValue / GeValue / LtValue / GtValue / EqValue / QuotedValue / PlainValue
-PlainValue = ! 'OR' [^ \t();]+ { return ['value', text()]; }
+PlainValue = ! 'OR' ! 'NOT' [^ \t();]+ { return ['value', text()]; }
 QuotedValue = '"' [^"]* '"' {
    var val = text();
    return ['quoted-value', val.slice(1, val.length - 1)];
@@ -59,7 +62,7 @@ GeValue = '>=' value:PlainValue { return ['ge', value[1]]; }
 LeValue = '<=' value:PlainValue { return ['le', value[1]]; }
 
 FieldName
-  = ! 'OR' [a-zA-Z][^ \t:=]* { return text(); }
+  = ! 'OR' ! 'NOT' [a-zA-Z][^ \t:=]* { return text(); }
 
 _ "whitespace"
   = [ \t\n\r]* {return text(); }

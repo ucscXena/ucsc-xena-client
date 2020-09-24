@@ -143,12 +143,11 @@ function evalFieldExp(ctx, expression, column, data) {
 	}, expression);
 }
 
-// XXX should rename ne to not, since we've implemented it that way.
-// Unary ! or NOT can be implemented using the same operation.
 function evalexp(ctx, expression) {
 	return m({
 		value: search => searchAll(ctx, searchMethod, search),
 		'quoted-value': search => searchAll(ctx, searchExactMethod, search),
+		// 'ne' is also 'not'
 		ne: exp => invert(evalexp(ctx, exp), ctx.allSamples),
 		and: (...exprs) => _.intersection(...exprs.map(e => evalexp(ctx, e))),
 		or: (...exprs) => _.union(...exprs.map(e => evalexp(ctx, e))),
@@ -482,5 +481,6 @@ module.exports = {
 	remapFields,
 	pickSamplesFilter,
 	canPickSamples,
-	parse
+	parse,
+	invert
 };
