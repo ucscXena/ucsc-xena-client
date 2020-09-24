@@ -243,9 +243,8 @@ export class SampleSearch extends PureComponent {
 		this.highlight(undefined);
 	}
 
-	onMode = ev => {
-		var searchMode = ev.target.dataset.mode,
-			{value, history} = this.state,
+	setMode(searchMode, clear) {
+		var {value, history} = this.state,
 			trimmed = (value || '').trim(),
 			nextHistory = trimmed && history.indexOf(trimmed) === -1 ?
 				history.concat([trimmed]) : history;
@@ -255,43 +254,38 @@ export class SampleSearch extends PureComponent {
 		});
 		// XXX note this erases a search term even if the user
 		// earlier kept it.
-		if (searchMode === 'off') {
+		if (clear) {
 			this.onChange('');
 		}
 		this.props.onPickSamples();
 	}
 
+	onMode = ev => {
+		this.setMode(ev.target.dataset.mode, true);
+	}
+
 	onKeep = () => {
 		this.props.onFilter();
-		this.onChange('');
-		this.setState({searchMode: 'off'});
-		this.props.onPickSamples();
+		this.setMode('off', true);
 	}
 
 	onRemove = () => {
 		this.props.onFilter(true);
-		this.onChange('');
-		this.setState({searchMode: 'off'});
-		this.props.onPickSamples();
+		this.setMode('off', true);
 	}
 
 	onSubgroup = () => {
 		this.props.onCreateColumn();
-		this.onChange('');
-		this.setState({searchMode: 'off'});
-		this.props.onPickSamples();
+		this.setMode('off', true);
 	}
 
 	onZoom = () => {
 		this.props.onZoom();
-		this.onChange('');
-		this.setState({searchMode: 'off'});
-		this.props.onPickSamples();
+		this.setMode('off', true);
 	}
 
 	onContinue = () => {
-		this.setState({searchMode: 'off'});
-		this.props.onPickSamples();
+		this.setMode('off', false);
 	}
 
 	onOpenHistory = () => {
