@@ -294,7 +294,7 @@ export class SampleSearch extends PureComponent {
 
 	onHistory = ev => {
 		var {value} = ev.currentTarget.dataset;
-		this.setState({value});
+		this.props.onChange(value);
 	}
 
 	// These two are hacks to keep local state synced with the menu, e.g.
