@@ -121,8 +121,8 @@ class ApplicationContainer extends PureComponent {
 		this.props.callback(['allowOverSamples', true]);
 	};
 
-	onPickSamples = () => {
-		this.setState({pickSamples: !this.state.pickSamples});
+	onPickSamples = pickSamples => {
+		this.setState({pickSamples});
 	}
 
 	onPicking = (newTerm, finish) => {

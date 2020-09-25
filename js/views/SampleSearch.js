@@ -258,7 +258,7 @@ export class SampleSearch extends PureComponent {
 		if (clear) {
 			this.onChange('');
 		}
-		this.props.onPickSamples();
+		this.props.onPickSamples(searchMode !== 'off');
 	}
 
 	onMode = ev => {
