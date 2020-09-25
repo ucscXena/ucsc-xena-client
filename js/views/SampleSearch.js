@@ -250,7 +250,8 @@ export class SampleSearch extends PureComponent {
 				history.concat([trimmed]) : history;
 		this.setState({
 			searchMode,
-			history: nextHistory
+			history: nextHistory,
+			historyOpen: false
 		});
 		// XXX note this erases a search term even if the user
 		// earlier kept it.
