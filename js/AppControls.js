@@ -13,6 +13,12 @@ var {invert} = require('./models/searchSamples');
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
 
+// allows hot loading below inline function components
+import {hot} from 'react-hot-loader';
+function hotOrNot(component) {
+	return module.hot ? hot(module)(component) : component;
+}
+
 // Styles
 var compStyles = require('./AppControls.module.css');
 
@@ -58,11 +64,11 @@ var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, has
 		{showWelcome ? null : <i className='material-icons' onClick={onShowWelcome}>help</i>}
 	</div>);
 
-var BasicSearch = ({onTies, tiesEnabled, ...searchProps}) => (
+var BasicSearch = hotOrNot(({onTies, tiesEnabled, ...searchProps}) => (
 	<div className={compStyles.filter}>
 		<SampleSearch {...searchProps}/>
 		{tiesEnabled ? <a onClick={onTies} className={compStyles.ties}><i className='material-icons'>toys</i></a> : null}
-	</div>);
+	</div>));
 
 var TiesSearch = () => (
 		<div className={compStyles.filter}>
