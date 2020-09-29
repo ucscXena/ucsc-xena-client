@@ -139,6 +139,7 @@ var spreadsheetControls = {
 			fetchClustering(serverBus, newState, id, data);
 		}
 	},
+	searchMode: (state, mode) => _.assoc(state, 'searchMode', mode),
 	sampleFilter: (state, sampleFilter) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, ['sampleFilter'], sampleFilter),
 			'survival', null),

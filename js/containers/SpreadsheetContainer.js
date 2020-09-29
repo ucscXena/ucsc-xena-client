@@ -154,9 +154,9 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 
 	render() {
 		var columnProps = _.pick(this.props,
-				['pickSamples', 'searching', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
+				['searching', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
 			{appState, wizard: {cohortTumorMap}} = this.props,
-			{columnOrder, wizardMode, hasSurvival} = appState,
+			{columnOrder, wizardMode, hasSurvival, searchMode} = appState,
 			interactive = isInteractive(this.props, this.state);
 
 		// XXX prune callback from this.props
@@ -195,6 +195,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						onRemove={this.onRemove}
 						onResize={this.onResize}
 						onReload={this.onReload}
+						pickSamples={searchMode != null}
 						onPickSamplesSelect={this.onPickSamplesSelect}
 						canPickSamples={this.canPickSamples}
 						actionKey={id}

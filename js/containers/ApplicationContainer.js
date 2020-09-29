@@ -45,9 +45,7 @@ var SpreadsheetContainer = getSpreadsheetContainer(Column, Spreadsheet);
 
 class ApplicationContainer extends PureComponent {
 	state = {
-		pickSamples: false
 	};
-
 	onSearch = (value) => {
 		var {callback} = this.props;
 		this.setState({searchReplace: false});
@@ -121,10 +119,6 @@ class ApplicationContainer extends PureComponent {
 		this.props.callback(['allowOverSamples', true]);
 	};
 
-	onPickSamples = pickSamples => {
-		this.setState({pickSamples});
-	}
-
 	onPicking = (newTerm, finish) => {
 		var oldSearch = (this.state.oldSearch == null ?
 				this.props.state.spreadsheet.sampleSearch : this.state.oldSearch) || '',
@@ -140,7 +134,6 @@ class ApplicationContainer extends PureComponent {
 	// XXX Change state to appState in Application, for consistency.
 	render() {
 		let {state, selector, callback, children} = this.props,
-			{pickSamples} = this.state,
 			{stateError} = state,
 			computedState = selector(state),
 			{spreadsheet: {mode, ties: {open} = {}}, loadPending} = computedState,
@@ -161,8 +154,6 @@ class ApplicationContainer extends PureComponent {
 					onHighlightChange={this.on.highlightChange}
 					onHighlightSelect={this.onHighlightSelect}
 					onAllowOverSamples={this.onAllowOverSamples}
-					pickSamples={pickSamples}
-					onPickSamples={this.onPickSamples}
 					oldSearch={this.state.oldSearch}
 					sampleFormat={this.sampleFormat}
 					getState={this.getState}
@@ -179,7 +170,6 @@ class ApplicationContainer extends PureComponent {
 					sampleFormat={this.sampleFormat}
 					appState={computedState.spreadsheet}
 					wizard={computedState.wizard}
-					pickSamples={pickSamples}
 					onPicking={this.onPicking}
 					callback={callback}/>
 				{children}

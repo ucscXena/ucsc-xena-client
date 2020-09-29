@@ -92,13 +92,12 @@ function findSubExpr(offsets, i) {
 }
 
 var input = comp => {
-	var {matches, pickSamples, mode} = comp.props,
+	var {matches, mode} = comp.props,
 		{value} = comp.state,
 		hasHistory = comp.state.history.length > 0,
-		style = comp.state.searchMode === 'off' ? {width: 0} : {},
 		noshow = (mode !== "heatmap");
 
-	return <Input key='input' style={style} className={classNames(compStyles.inputContainer, pickSamples && compStyles.picking)}
+	return <Input key='input' className={classNames(compStyles.inputContainer, compStyles.picking)}
 			onKeyUp={comp.onCaret}
 			onClick={comp.onCaret}
 			onFocus={comp.onCaret}
@@ -123,7 +122,7 @@ var input = comp => {
 					<MenuItem className={compStyles.menuItem} onClick={comp.onHistory}
 						data-value={b} key={i} value={b} caption={b}/>)}
 		</Menu>
-		<span style={style} className={compStyles.subtitle}>{`${matches} matching samples`}</span>
+		<span className={compStyles.subtitle}>{`${matches} matching samples`}</span>
 	</Input>;
 };
 
@@ -179,7 +178,6 @@ var modeButtons = {
 export class SampleSearch extends PureComponent {
 	state = {
 		value: this.props.value,
-		searchMode: 'off',
 		history: []
 	};
 
@@ -248,8 +246,8 @@ export class SampleSearch extends PureComponent {
 			trimmed = (value || '').trim(),
 			nextHistory = trimmed && history.indexOf(trimmed) === -1 ?
 				history.concat([trimmed]) : history;
+
 		this.setState({
-			searchMode,
 			history: nextHistory,
 			historyOpen: false
 		});
@@ -258,7 +256,7 @@ export class SampleSearch extends PureComponent {
 		if (clear) {
 			this.onChange('');
 		}
-		this.props.onPickSamples(searchMode !== 'off');
+		this.props.onSearchMode(searchMode === 'off' ? null : searchMode);
 	}
 
 	onMode = ev => {
@@ -309,11 +307,10 @@ export class SampleSearch extends PureComponent {
 	}
 
 	render() {
-		var {matches, sampleCount, mode} = this.props,
-			{searchMode} = this.state,
+		var {matches, sampleCount, searchMode, mode} = this.props,
 			disableActions = !(matches > 0 && matches < sampleCount),
 			noshow = (mode !== "heatmap"),
-			buttons = noshow ? null : modeButtons[searchMode](this, disableActions);
+			buttons = noshow ? null : modeButtons[searchMode || 'off'](this, disableActions);
 		return (
 			<div className={compStyles.SampleSearch}>
 				{buttons}

@@ -106,6 +106,10 @@ export class AppControls extends PureComponent {
 		this.nsub.unsubscribe();
 	}
 
+	onSearchMode = mode => {
+		this.props.callback(['searchMode', mode]);
+	}
+
 	onFilter = inv => {
 		const {callback, appState: {samplesMatched, cohortSamples}} = this.props,
 			m = inv ? invert(samplesMatched, _.range(cohortSamples.length)) :
@@ -194,9 +198,9 @@ export class AppControls extends PureComponent {
 
 	render() {
 		var {appState: {cohort, samplesOver, allowOverSamples, mode, columnOrder, showWelcome,
-					samples, sampleSearch, sampleSearchSelection, samplesMatched, allMatches, /*tiesEnabled, */ties},
+					samples, sampleSearch, searchMode, sampleSearchSelection, samplesMatched, allMatches, /*tiesEnabled, */ties},
 				onReset, onResetSampleFilter, onHighlightChange, onHighlightSelect,
-				onAllowOverSamples, oldSearch, pickSamples, onPickSamples, callback} = this.props,
+				onAllowOverSamples, oldSearch, callback} = this.props,
 			displayOver = samplesOver && !allowOverSamples ? '' : compStyles.hidden,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			{onPdf, onDownload, onShowWelcome, onMode} = this,
@@ -207,7 +211,7 @@ export class AppControls extends PureComponent {
 			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null;
 		return (
 				<AppBar>
-					<div className={classNames(compStyles.appBarContainer, compStyles.cohort, pickSamples && compStyles.picking)}>
+					<div className={classNames(compStyles.appBarContainer, compStyles.cohort, searchMode && compStyles.picking)}>
 						<div className={compStyles.titleContainer}>
 							<span className={compStyles.title}>{cohortName}</span>
 							<span className={compStyles.subtitle}>{filter} {samples.length} Samples<i onClick={onAllowOverSamples} title="Samples on screen limited to 50000 for performance. Click to see all samples." className={`${compStyles.overWarning} ${displayOver} material-icons`}>warning</i></span>
@@ -226,11 +230,11 @@ export class AppControls extends PureComponent {
 								offsets: allMatches.offsets,
 								onHighlightSelect,
 								sampleCount: samples.length,
+								searchMode: searchMode,
+								onSearchMode: this.onSearchMode,
 								onFilter: this.onFilter,
 								onZoom: this.onFilterZoom,
 								onCreateColumn: this.onFilterColumn,
-								pickSamples: pickSamples,
-								onPickSamples: onPickSamples,
 								onChange: onHighlightChange,
 								mode,
 								onResetSampleFilter: sampleFilter && onResetSampleFilter,
