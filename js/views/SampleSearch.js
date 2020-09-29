@@ -240,12 +240,13 @@ export class SampleSearch extends PureComponent {
 		this.highlight(undefined);
 	}
 
-	setMode(searchMode, clear) {
-		var {value} = this.state,
+	setMode(searchMode, optIn) {
+		var opt = Object.assign({clear: true, history: true}, optIn),
+			{value} = this.state,
 			{onHistory} = this.props,
 			trimmed = (value || '').trim();
 
-		if (trimmed) {
+		if (opt.history && trimmed) {
 			onHistory(trimmed);
 		}
 		this.setState({
@@ -253,7 +254,7 @@ export class SampleSearch extends PureComponent {
 		});
 		// XXX note this erases a search term even if the user
 		// earlier kept it.
-		if (clear) {
+		if (opt.clear) {
 			this.onChange('');
 		}
 		this.props.onSearchMode(searchMode === 'off' ? null : searchMode);
@@ -265,26 +266,29 @@ export class SampleSearch extends PureComponent {
 
 	onKeep = () => {
 		this.props.onFilter();
-		this.setMode('off', true);
+		this.setMode('off');
 	}
 
 	onRemove = () => {
 		this.props.onFilter(true);
-		this.setMode('off', true);
+		this.setMode('off');
 	}
 
 	onSubgroup = () => {
+		// have to add to history before the columns reorder, to
+		// prevent the history having wrong column ids.
+		this.props.onHistory(this.state.value.trim());
 		this.props.onCreateColumn();
-		this.setMode('off', true);
+		this.setMode('off', {history: false});
 	}
 
 	onZoom = () => {
 		this.props.onZoom();
-		this.setMode('off', true);
+		this.setMode('off');
 	}
 
 	onContinue = () => {
-		this.setMode('off', false);
+		this.setMode('off', {clear: false});
 	}
 
 	onOpenHistory = () => {
