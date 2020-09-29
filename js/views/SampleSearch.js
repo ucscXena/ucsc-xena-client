@@ -135,8 +135,7 @@ var close = comp =>
 
 var modeButtons = {
 	filter: (comp, disabled) => [
-		<Button key='filter' className={compStyles.selected} data-mode='off'
-			onClick={comp.onMode}>Filter</Button>,
+		<span key='filter' className={compStyles.label}>Filter</span>,
 		input(comp),
 		<Button key='keep' disabled={disabled} onClick={comp.onKeep}>Keep</Button>,
 		<Button key='remove' disabled={disabled} onClick={comp.onRemove}>Remove</Button>,
@@ -144,8 +143,7 @@ var modeButtons = {
 		help
 	],
 	subgroup: (comp, disabled) => [
-		<Button key='subgroup' className={compStyles.selected} data-mode='off'
-				onClick={comp.onMode}>Subgroup</Button>,
+		<span key='subgroup' className={compStyles.label}>Subgroup</span>,
 		input(comp),
 		<Button key='make-subgroup' disabled={disabled} onClick={comp.onSubgroup}>
 			Make subgroups</Button>,
@@ -153,8 +151,7 @@ var modeButtons = {
 		help
 	],
 	find: (comp, disabled) => [
-		<Button key='find' className={compStyles.selected} data-mode='off'
-			onClick={comp.onMode}>Find</Button>,
+		<span key='find' className={compStyles.label}>Highlight</span>,
 		input(comp),
 		<Button key='continue' disabled={disabled} onClick={comp.onContinue}>
 			Continue</Button>,
@@ -166,7 +163,7 @@ var modeButtons = {
 		<Button key='filter' data-mode='filter' onClick={comp.onMode}>Filter</Button>,
 		<Button key='subgroup' data-mode='subgroup' onClick={comp.onMode}>
 			Subgroup</Button>,
-		<Button key='find' data-mode='find' onClick={comp.onMode}>Find</Button>,
+		<Button key='find' data-mode='find' onClick={comp.onMode}>Highlight</Button>,
 		help,
 		comp.props.onResetSampleFilter ?
 			<Button key='clear' onClick={comp.props.onResetSampleFilter}>

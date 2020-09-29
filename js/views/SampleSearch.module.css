@@ -22,6 +22,13 @@
 	background: rgba(33, 33, 33, 0.2); /* can we get this from a variable? */
 }
 
+.label {
+	color: rgb(33, 33, 33); /* can we get this from a variable? */
+	padding-left: 12px;
+	padding-right: 12px;
+}
+
+
 .filterHelp {
 	margin-left: -4px; /* Pull help icon in closer to filter icon */
 }
