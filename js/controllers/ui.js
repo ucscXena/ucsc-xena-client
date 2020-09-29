@@ -140,6 +140,9 @@ var spreadsheetControls = {
 		}
 	},
 	searchMode: (state, mode) => _.assoc(state, 'searchMode', mode),
+	searchHistory: (state, search) => _.updateIn(state, ['searchHistory'],
+			// put at front, limit length, and make unique
+			history => _.uniq([search].concat((history || [])).slice(0, 20))),
 	sampleFilter: (state, sampleFilter) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, ['sampleFilter'], sampleFilter),
 			'survival', null),

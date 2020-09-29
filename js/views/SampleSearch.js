@@ -92,9 +92,9 @@ function findSubExpr(offsets, i) {
 }
 
 var input = comp => {
-	var {matches, mode} = comp.props,
+	var {matches, mode, history} = comp.props,
 		{value} = comp.state,
-		hasHistory = comp.state.history.length > 0,
+		hasHistory = history.length > 0,
 		noshow = (mode !== "heatmap");
 
 	return <Input key='input' className={classNames(compStyles.inputContainer, compStyles.picking)}
@@ -118,7 +118,7 @@ var input = comp => {
 		<Menu theme={{static: compStyles.history, active: compStyles.historyActive}}
 				onShow={comp.onShowHistory} onHide={comp.onHideHistory}
 				position='static' active={comp.state.historyOpen}>
-			{comp.state.history.map((b, i) =>
+			{history.map((b, i) =>
 					<MenuItem className={compStyles.menuItem} onClick={comp.onHistory}
 						data-value={b} key={i} value={b} caption={b}/>)}
 		</Menu>
@@ -178,7 +178,6 @@ var modeButtons = {
 export class SampleSearch extends PureComponent {
 	state = {
 		value: this.props.value,
-		history: []
 	};
 
 	componentDidMount() {
@@ -242,13 +241,14 @@ export class SampleSearch extends PureComponent {
 	}
 
 	setMode(searchMode, clear) {
-		var {value, history} = this.state,
-			trimmed = (value || '').trim(),
-			nextHistory = trimmed && history.indexOf(trimmed) === -1 ?
-				history.concat([trimmed]) : history;
+		var {value} = this.state,
+			{onHistory} = this.props,
+			trimmed = (value || '').trim();
 
+		if (trimmed) {
+			onHistory(trimmed);
+		}
 		this.setState({
-			history: nextHistory,
 			historyOpen: false
 		});
 		// XXX note this erases a search term even if the user
