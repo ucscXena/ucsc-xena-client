@@ -1,5 +1,4 @@
 /*global require: false, module: false, process: false */
-var webpack = require('webpack');
 var config = require('./webpack.config');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserJSPlugin = require('terser-webpack-plugin');
@@ -20,7 +19,6 @@ config.plugins = config.plugins.concat([
 	new MiniCssExtractPlugin({
 		filename: '[name].[contenthash].css'
 	}),
-/*	new webpack.optimize.CommonsChunkPlugin({name: 'init', filename: "init.[chunkhash].js"}) */
 ]);
 
 // Amend css loaders with MiniCssExtractPlugin.
