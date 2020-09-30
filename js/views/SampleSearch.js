@@ -140,7 +140,12 @@ var input = comp => {
 				onShow={comp.onShowHistory} onHide={comp.onHideHistory}
 				position='static' active={comp.state.historyOpen}>
 			{history.map((b, i) =>
-					<MenuItem className={compStyles.menuItem} onClick={comp.onHistory}
+					// Note that Menu onSelect is broken in dev because of component
+					// identity comparisons, and MenuItem events are broken in prod
+					// because of RT deferring callbacks with a setState call, thus
+					// allowing currentTarget to be nulled, so our only option here
+					// is to create closures on every render. Very annoying.
+					<MenuItem className={compStyles.menuItem} onClick={() => comp.onHistory(b)}
 						data-value={b} key={i} value={b} caption={b}/>)}
 		</Menu>
 		<span className={compStyles.subtitle}>{`${matches} matching samples`}</span>
@@ -318,8 +323,7 @@ export class SampleSearch extends PureComponent {
 		this.setState({historyOpen: !this.state.historyOpen});
 	}
 
-	onHistory = ev => {
-		var {value} = ev.currentTarget.dataset;
+	onHistory = value => {
 		this.props.onChange(value);
 	}
 
