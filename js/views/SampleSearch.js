@@ -6,6 +6,11 @@ import {Button} from 'react-toolbox/lib/button';
 var classNames = require('classnames');
 var Rx = require('../rx').default;
 import {Menu, MenuItem} from 'react-toolbox/lib/menu';
+import Tooltip from 'react-toolbox/lib/tooltip';
+
+var TooltipButton = Tooltip(Button);
+var TooltipInput = Tooltip(({inputRef, ...props}) =>
+		<Input innerRef={inputRef} {...props}/>);
 
 // Styles
 var compStyles = require('./SampleSearch.module.css');
@@ -90,6 +95,18 @@ function findSubExpr(offsets, i) {
 	}
 	return j;
 }
+var tooltips = {
+	filter: 'Filter samples',
+	subgroup: 'Create sample subgroups from data on the screen',
+	find: 'Highlight or zoom in on a selection of samples',
+	clear: 'Clear current filter and show all samples in the study',
+	input: 'Examples: "missense", "null","B:>2"',
+	keep: 'Keep only the selected samples on the screen',
+	remove: 'Remove the selected samples from the screen',
+	makeSubgroup: 'Matched samples will be one subgroup and non-matched samples will be the other subgroup',
+	highlight: 'Highlight selected samples',
+	zoom: 'Zoom in to selected samples'
+};
 
 var input = comp => {
 	var {matches, mode, history} = comp.props,
@@ -97,17 +114,18 @@ var input = comp => {
 		hasHistory = history.length > 0,
 		noshow = (mode !== "heatmap");
 
-	return <Input key='input' className={classNames(compStyles.inputContainer, compStyles.picking)}
+	return <TooltipInput key='input'
+			className={classNames(compStyles.inputContainer, compStyles.picking)}
+			tooltip={tooltips.input}
 			onKeyUp={comp.onCaret}
 			onClick={comp.onCaret}
 			onFocus={comp.onCaret}
 			onBlur={comp.onHideCaret}
-			innerRef={comp.setRef}
+			inputRef={comp.setRef}
 			spellCheck={false}
 			type='text'
 			value={value || ''}
-			title={value}
-			placeholder='Find samples e.g. TCGA-DB-A4XH, missense'
+			placeholder='Click on visual spreadsheet or type here to select samples'
 			onChange={comp.onChange}
 			disabled={noshow}>
 		<i onClick={comp.onOpenHistory}
@@ -123,7 +141,7 @@ var input = comp => {
 						data-value={b} key={i} value={b} caption={b}/>)}
 		</Menu>
 		<span className={compStyles.subtitle}>{`${matches} matching samples`}</span>
-	</Input>;
+	</TooltipInput>;
 };
 
 var help = <a key='help' href={searchHelp} target='_blank'
@@ -137,37 +155,42 @@ var modeButtons = {
 	filter: (comp, disabled) => [
 		<span key='filter' className={compStyles.label}>Filter</span>,
 		input(comp),
-		<Button key='keep' disabled={disabled} onClick={comp.onKeep}>Keep</Button>,
-		<Button key='remove' disabled={disabled} onClick={comp.onRemove}>Remove</Button>,
+		<TooltipButton tooltip={tooltips.keep} key='keep' disabled={disabled}
+			onClick={comp.onKeep}>Keep</TooltipButton>,
+		<TooltipButton tooltip={tooltips.remove} key='remove' disabled={disabled}
+			onClick={comp.onRemove}>Remove</TooltipButton>,
 		close(comp),
 		help
 	],
 	subgroup: (comp, disabled) => [
 		<span key='subgroup' className={compStyles.label}>Subgroup</span>,
 		input(comp),
-		<Button key='make-subgroup' disabled={disabled} onClick={comp.onSubgroup}>
-			Make subgroups</Button>,
+		<TooltipButton tooltip={tooltips.makeSubgroup}key='make-subgroup'
+			disabled={disabled} onClick={comp.onSubgroup}>Make subgroups</TooltipButton>,
 		close(comp),
 		help
 	],
 	find: (comp, disabled) => [
 		<span key='find' className={compStyles.label}>Highlight</span>,
 		input(comp),
-		<Button key='continue' disabled={disabled} onClick={comp.onContinue}>
-			Continue</Button>,
-		<Button key='zoom' disabled={disabled} onClick={comp.onZoom}>Zoom</Button>,
+		<TooltipButton tooltip={tooltips.highlight} key='continue' disabled={disabled}
+			onClick={comp.onContinue}>Highlight</TooltipButton>,
+		<TooltipButton tooltip={tooltips.zoom} key='zoom' disabled={disabled}
+			onClick={comp.onZoom}>Zoom</TooltipButton>,
 		close(comp),
 		help
 	],
 	off: comp => [
-		<Button key='filter' data-mode='filter' onClick={comp.onMode}>Filter</Button>,
-		<Button key='subgroup' data-mode='subgroup' onClick={comp.onMode}>
-			Subgroup</Button>,
-		<Button key='find' data-mode='find' onClick={comp.onMode}>Highlight</Button>,
+		<TooltipButton tooltip={tooltips.filter} key='filter' data-mode='filter'
+			onClick={comp.onMode}>Filter</TooltipButton>,
+		<TooltipButton tooltip={tooltips.subgroup} key='subgroup' data-mode='subgroup'
+			onClick={comp.onMode}>Subgroup</TooltipButton>,
+		<TooltipButton tooltip={tooltips.find} key='find' data-mode='find'
+			onClick={comp.onMode}>Highlight</TooltipButton>,
 		help,
 		comp.props.onResetSampleFilter ?
-			<Button key='clear' onClick={comp.props.onResetSampleFilter}>
-				Clear Filter</Button> :
+			<TooltipButton tooltip={tooltips.clear} key='clear'
+				onClick={comp.props.onResetSampleFilter}>Clear Filter</TooltipButton> :
 			null
 	]
 };
