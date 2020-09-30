@@ -11,6 +11,8 @@ import Tooltip from 'react-toolbox/lib/tooltip';
 var TooltipButton = Tooltip(Button);
 var TooltipInput = Tooltip(({inputRef, ...props}) =>
 		<Input innerRef={inputRef} {...props}/>);
+var TooltipI = Tooltip('i');
+
 
 // Styles
 var compStyles = require('./SampleSearch.module.css');
@@ -105,7 +107,8 @@ var tooltips = {
 	remove: 'Remove the selected samples from the screen',
 	makeSubgroup: 'Matched samples will be one subgroup and non-matched samples will be the other subgroup',
 	highlight: 'Highlight selected samples',
-	zoom: 'Zoom in to selected samples'
+	zoom: 'Zoom in to selected samples',
+	history: 'Previous search text'
 };
 
 var input = comp => {
@@ -128,10 +131,10 @@ var input = comp => {
 			placeholder='Click on visual spreadsheet or type here to select samples'
 			onChange={comp.onChange}
 			disabled={noshow}>
-		<i onClick={comp.onOpenHistory}
+		<TooltipI tooltip={tooltips.history} onClick={comp.onOpenHistory}
 				className={classNames(compStyles.dropDownArrow,
 					hasHistory && compStyles.hasHistory, 'material-icons')}>
-				arrow_drop_down</i>
+				arrow_drop_down</TooltipI>
 
 		<Menu theme={{static: compStyles.history, active: compStyles.historyActive}}
 				onShow={comp.onShowHistory} onHide={comp.onHideHistory}
