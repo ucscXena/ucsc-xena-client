@@ -225,7 +225,7 @@ function render(root, callback, sessionStorage) {
 
 		textInputDiv = document.createElement("INPUT");
 		textInputDiv.setAttribute("type", "text");
-		//textInputDiv.setAttribute("class", "form-control");  // css needed
+		textInputDiv.setAttribute("class", "form-control");  // css needed
 		textInputDiv.setAttribute("value", "1");
 		textInputDiv.setAttribute("id", "colorRadius");
 
@@ -510,20 +510,25 @@ function render(root, callback, sessionStorage) {
 	}
 
 	function scatterColorUISetting(visible) {
-		var radiusUI = document.getElementById("colorRadius");
 		if (visible) {
 			colorAxisDiv.style.visibility = "visible";
+		} else {
+			colorAxisDiv.style.visibility = "hidden";
+		}
+	}
+
+	function radiusUISetting(visible) {
+		var radiusUI = document.getElementById("colorRadius");
+		if (visible) {
 			colorRadiusDiv.style.visibility = 'visible';
 			//check current scatterState variable
 			if (scatterState.radius !== undefined) {
 				radiusUI.value = _.getIn(scatterState, ['radius'], 1);
 			}
 		} else {
-			colorAxisDiv.style.visibility = "hidden";
 			colorRadiusDiv.style.visibility = "hidden";
 		}
 	}
-
 	// returns key:array
 	// categorical: key:array  ------  key is the category
 	// float:  key: {xcode:array} key is the identifier, xcode is the xcode
@@ -980,7 +985,7 @@ function render(root, callback, sessionStorage) {
 					offset = _.values(offsets)[0],
 					stdev = _.values(STDEV)[0];
 
-				valueList.sort((a, b) => a - b);
+				valueList = valueList.sort((a, b) => isFinite(a - b) ? a - b : isFinite(a) ? -1 : 1).filter(x => isFinite(x));
 
 				var min = valueList[0],
 					max = valueList[valueList.length - 1],
@@ -1268,7 +1273,7 @@ function render(root, callback, sessionStorage) {
 					bin;
 
 				getCodedColor = code => {
-					if ("null" === code) {
+					if ("null" === code || !isFinite(code)) {
 						return gray;
 					}
 					return colorStr(hexToRGB(colorScales.categoryMore[code % colorScales.categoryMore.length], opacity));
@@ -1473,6 +1478,7 @@ function render(root, callback, sessionStorage) {
 		expUISetting(false, 'expState', ycolumn, null, expYUIParent, expYUI, null);
 		expUISetting(false, 'expXState', xcolumn, null, expXUIParent, expXUI, null);
 		scatterColorUISetting(false);
+		radiusUISetting(false);
 
 		// save state xcolumn, ycolumn, colorcolumn, normalizationState, expState, expXState, scatterState
 		if (xenaState) {
@@ -1520,6 +1526,7 @@ function render(root, callback, sessionStorage) {
 				offsets = {},  // per y variable
 				STDEV = {},  // per y variable
 				doScatter, scatterLabel,
+				doRadius,
 				scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 				scatterColorScale,
 				yNormalization,
@@ -1617,6 +1624,9 @@ function render(root, callback, sessionStorage) {
 			} else if (normUI.options[normUI.selectedIndex].value === "subset_stdev") {
 				ylabel = ylabel + '<br>z-tranformed';
 			}
+
+			doRadius = !xIsCategorical && xfield;// && yfields.length === 1 ;
+			radiusUISetting(doRadius);
 
 			// set scatterPlot coloring UI
 			doScatter = !xIsCategorical && xfield && yfields.length === 1 ;
@@ -1740,9 +1750,12 @@ function render(root, callback, sessionStorage) {
 	row = document.createElement("div");
 	row.className = compStyles.row;
 	row.appendChild(colorAxisDiv);
+	axisContainer.appendChild(row);
 
 	// markder radius
 	colorRadiusDiv = buildColorRadiusUI();
+	row = document.createElement("div");
+	row.className = compStyles.row;
 	row.appendChild(colorRadiusDiv);
 	axisContainer.appendChild(row);
 
