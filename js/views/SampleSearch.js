@@ -174,7 +174,7 @@ var modeButtons = {
 		<span key='subgroup' className={compStyles.label}>Subgroup</span>,
 		input(comp),
 		<TooltipButton tooltip={tooltips.makeSubgroup}key='make-subgroup'
-			disabled={disabled} onClick={comp.onSubgroup}>Make subgroups</TooltipButton>,
+			disabled={disabled} onClick={comp.onSubgroup}>Make new column</TooltipButton>,
 		close(comp),
 		help
 	],
