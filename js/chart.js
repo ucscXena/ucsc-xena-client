@@ -1297,7 +1297,7 @@ function render(root, callback, sessionStorage) {
 						colorCode = 0;
 					}
 
-					if (null != x && null != y && null != colorCode) {
+					if (null != x && null != y && null != colorCode && isFinite(colorCode)) {
 						y = (y - offsets[yfield]) / STDEV[yfield];
 						if (useCodedSeries) { // use multi-seriese
 							if (!multiSeries[colorCode]) {
