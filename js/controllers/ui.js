@@ -233,10 +233,12 @@ var spreadsheetControls = {
 		['mode'], 'heatmap',
 		['chartState', 'spreadsheetColumn'], null),
 	'chart': state => _.assoc(state, 'mode', 'chart'),
-	'chart-set-column': (state, id) => _.assocIn(state, ['chartState', 'spreadsheetColumn'], id),
+	'chart-set-column': (state, id) =>
+		id === _.getIn(state, ['chartState', 'ycolumn']) ? state :
+			_.assocIn(state,
+				['chartState', 'ycolumn'], id,
+				['chartState', 'xcolumn'], 'none'),
 	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState),
-	'chart-set-average-post!': (serverBus, state, newState, offsets, thunk) =>
-		serverBus.next(['chart-average-data', Rx.Observable.of(offsets, Rx.Scheduler.async), thunk]),
 	'sample-search': (state, text, selection) =>
 		_.assoc(state, 'sampleSearch', text, 'sampleSearchSelection', selection),
 	// XXX maybe this should be transient state, instead, since it's not

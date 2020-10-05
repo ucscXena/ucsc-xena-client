@@ -34,6 +34,7 @@ class ChartView extends React.Component {
 		if (this.chart) {
 			let height = this.chart.chartHeight(),
 				width = this.chart.chartWidth();
+			// XXX rename myChart
 			document.getElementById("myChart").style.height = height;
 			document.getElementById("myChart").style.width = width;
 			document.getElementById("controlPanel").style.width = width;
@@ -46,7 +47,7 @@ class ChartView extends React.Component {
 		require.ensure(['./chart'], () => {
 			this.chart = require('./chart');
 			root.innerHTML = '';
-			this.destroy = this.chart.render(root, callback, {xena: JSON.stringify(appState)});
+			this.destroy = this.chart.render(root, callback, appState);
 		});
 	};
 

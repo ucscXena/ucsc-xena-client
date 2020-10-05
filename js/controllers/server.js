@@ -247,10 +247,7 @@ var spreadsheetControls = {
 	'widget-data-error': (state, id) =>
 		columnOpen(state, id) ?
 			_.assocIn(state, ["data", id, 'status'], 'error') : state,
-	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival),
-	// XXX Here we should be updating application state. Instead we invoke a callback, because
-	// chart.js can't handle passed-in state updates.
-	'chart-average-data-post!': (serverBus, state, newState, offsets, thunk) => thunk(offsets)
+	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival)
 };
 
 export default compose(
