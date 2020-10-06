@@ -24,6 +24,7 @@
 .controlPanel {
 	composes: card;
 	margin-top: 24px;
+	width: 70vw;
 }
 
 /* Row inside control panel */
@@ -90,3 +91,26 @@
 	height: 100%;
 	margin-left: 24px;
 }
+
+.chart {
+	width: 70vw;
+	height: 70vh;
+}
+
+.ChartView {
+	margin: 48px 12px;
+	display: flex;
+	justify-content: flex-start;
+}
+
+.error {
+	width: 70vw;
+	height: 70vh;
+	padding: 20px;
+	display: block;
+}
+
+.error button {
+	float: right;
+}
+

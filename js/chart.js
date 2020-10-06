@@ -1,5 +1,5 @@
-
-var getLabel = require('./getLabel');
+var React = require('react');
+import PureComponent from './PureComponent';
 var {hexToRGB, colorStr, RGBToHex} = require ('./color_helper').default;
 var Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);
@@ -9,45 +9,32 @@ var _ = require('./underscore_ext').default;
 import * as colorScales from './colorScales';
 var jStat = require('jStat').jStat;
 var gaEvents = require('./gaEvents');
-import spinner from './ajax-loader.gif';
 import multi from './multi';
+import {suitableColumns, columnLabel, v} from './chartUtils.js';
+import {Button} from 'react-toolbox/lib/button';
+import {Card} from 'react-toolbox/lib/card';
+import classNames from 'classnames';
 
 // Styles
 var compStyles = require('./chart.module.css');
 
-var chartHeight = () =>
-	window.innerHeight * 0.7 + "px";
-
-var chartWidth = () =>
-	window.innerWidth * 0.7 + "px";
-
-var el = type => (children, {style, ...attrs} = {}) => {
-	var d = document.createElement(type);
-	Object.assign(d, attrs);
-	Object.assign(d.style, style);
-	children.forEach(c => {
-		d.appendChild(c);
-	});
-	return d;
-};
+var isChild = x => x === null || typeof x === 'string' || React.isValidElement(x);
+// Render tag with list of children, and optional props as first argument.
+var el = type => (...args) =>
+	args.length === 0 ? React.createElement(type, {}) :
+	isChild(args[0]) ? React.createElement(type, {}, ...args) :
+	React.createElement(type, args[0], ...args.slice(1));
 
 var div = el('div');
 var select = el('select');
 var option = el('option');
 var label = el('label');
 
-var textNode = text => document.createTextNode(text);
+var button = el(Button);
+var card = el(Card);
 
-// The string 'none' has been used in several user settings where null or
-// undefined would be more typical. Since we have stored state like this,
-// we retain the behavior and use this helper to retrive values that
-// might be 'none'.
-var v = x => x === 'none' ? undefined : x;
+var textNode = _.identity;
 
-function columnLabel (i, colSetting) {
-	var	label = [colSetting.user.fieldLabel, colSetting.user.columnLabel].filter(e => e.trim() !== '').join(" - ");
-	return "column " + getLabel(i) + ": " + label;
-}
 
 // utility function to calculate p value from a given coefficient using "Testing using Student's t-distribution" method
 // spearman rank https://en.wikipedia.org/wiki/Spearman's_rank_correlation_coefficient#Determining_significance
@@ -89,138 +76,74 @@ function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
 	});
 }
 
-// hide/show control, and fill in cached state
-function normalizationUISetting(visible, normalizationState, ycolumn) {
-	var dropDown = document.getElementById("normDropDown"),
-		dropDownDiv = document.getElementById("ynormalization");
-
-	if (visible) {
-		dropDown.style.visibility = "visible";
-
-		//check current normalizationState variable
-		if (normalizationState[ycolumn] !== undefined) {
-			dropDownDiv.selectedIndex = normalizationState[ycolumn];
-		}
-	} else {
-		dropDown.style.visibility = "hidden";
-	}
-}
+var getOpt = opt => option({key: opt.value, ...opt});
 
 var normalizationOptions = [{
 		"value": "none",
-		"text": "none",
+		"label": "none",
 	}, //no normalization
 	{
 		"value": "subset",
-		"text": "subtract mean",
+		"label": "subtract mean",
 	}, //selected sample level current heatmap normalization
 	{
 		"value": "subset_stdev",
-		"text": "subtract mean, divide stdev (z-score)",
+		"label": "subtract mean, divide stdev (z-score)",
 	} //selected sample level current heatmap normalization
 ];
 
-function buildNormalizationDropdown(onUpdate) {
+function buildNormalizationDropdown(index, onUpdate) {
 	var dropDownDiv =
-		select(normalizationOptions.map(({value, text}) => option([], {value, textContent: text})),
-			{id: 'ynormalization', selectedIndex: 0, className: 'form-control'});
+		select({
+				className: 'form-control',
+				value: normalizationOptions[index || 0].value,
+				onChange: ev => onUpdate(ev.currentTarget.selectedIndex)},
+			...normalizationOptions.map(getOpt));
 
-	dropDownDiv.addEventListener('change', function () {
-		onUpdate(dropDownDiv.selectedIndex);
-	});
-
-	return div([label([textNode("Y data linear transform ")]), dropDownDiv], {className: compStyles.column, id: 'normDropDown'});
+	return div({className: compStyles.column},
+			label(textNode("Y data linear transform ")),
+			dropDownDiv);
 }
 
-function buildExpDropdown({id, parentID, label: text, onChange}) {
-	var dropDown = [{
-				"value": "none",
-				"index": 0
-			},
-			{
-				//convert x -> base-2 exponential value of x, for when viewing raw RNAseq data, xena typically converts RNAseq values into log2 space.
-				"value": "exp2",
-				"index": 1
-			},
-		];
+function buildExpDropdown({opts, index, label: text, onChange}) {
+	var dropDownDiv =
+		select({className: 'form-control', value: opts[index || 0].value,
+				onChange: ev => onChange(ev.currentTarget.selectedIndex)},
+				...opts.map(getOpt));
 
-	// XXX text is pasted in later, based on dataset units
-	var dropDownDiv = select(dropDown.map(({value}) => option([], {value})),
-			{id, className: 'form-control', selectedIndex: 0});
-
-	dropDownDiv.addEventListener('change', function () {
-		onChange(dropDownDiv.selectedIndex);
-	});
-
-	return div([label([textNode(text)]), dropDownDiv], {id: parentID, className: compStyles.column});
+	return div({className: compStyles.column}, label(textNode(text)), dropDownDiv);
 }
 
-function buildEmptyChartContainer() {
-	return div([], {id: 'myChart', style: {width: chartWidth(), height: chartHeight()}});
-}
+var isFloat = (columns, id) => v(id) && !columns[id].codes;
+var bigMulti = (columns, id) => columns[id].fields.length > 10;
 
-function axisReview (xdiv, ydiv, xenaState) {
-	_.forEach(xdiv.options, option => option.disabled = false);
-	_.forEach(ydiv.options, option => option.disabled = false);
+// disable x float vs y with many subcolumns.
+var disableMismatch = (columns, x, y, opt) =>
+	isFloat(columns, x) && bigMulti(columns, y) ? _.assoc(opt, 'disabled', true) : opt;
 
-	var {data, columns} = xenaState,
-		xcolumn = xdiv.options[xdiv.selectedIndex].value, // XXX this looks bad
-		ycolumn = ydiv.options[ydiv.selectedIndex].value;
+var disableXMismatch = ({chartState: {ycolumn}, columns}) => opt =>
+	disableMismatch(columns, opt.value, ycolumn, opt);
 
-	// x single float, disable y multiple float of series > 10
-	if (v(xcolumn) && !columns[xcolumn].codes) {
-		_.forEach(ydiv.options, option => {
-			var y = option.value;
-			if (data[y].req.values && data[y].req.values.length > 10) {
-				option.disabled = true;
-			}
-		});
-	}
-	// if y is multiple float, disable x single float series > 10
-	if (data[ycolumn].req.values && data[ycolumn].req.values.length > 10) {
-		_.forEach(xdiv.options, option => {
-			var x = option.value;
-			if (x !== "none" && !columns[x].codes) {
-				option.disabled = true;
-			}
-		});
-	}
-}
-
-var suitableColumns = ({columnOrder, columns, data}, allowMulti) =>
-	columnOrder.map((column, i) => ({value: column, text: columnLabel(i, columns[column])}))
-		.filter(({value: column}) =>
-			!(
-				(column === "samples") ||  //ignore samples column
-				(columns[column].valueType === "mutation") || // to be implemented
-				(data[column].status !== "loaded") || //bad column
-				(data[column].req.values && data[column].req.values.length === 0) || //bad column
-				(data[column].req.rows && data[column].req.rows.length === 0) || //bad column
-				(columns[column].codes && _.uniq(data[column].req.values[0]).length > 100) || // ignore any coded columns with too many items, like in most cases, the "samples" column
-				(!allowMulti &&
-					data[column].req.values && data[column].req.values.length !== 1)));
+var disableYMismatch = ({chartState: {xcolumn}, columns}) => opt =>
+	disableMismatch(columns, xcolumn, opt.value, opt);
 
 var axisSettings = {
 	Yaxis: {
 		prop: 'ycolumn',
 		label: 'Y axis',
-		options: state => suitableColumns(state, true)
+		options: state => suitableColumns(state, true).map(disableYMismatch(state))
 	},
 	Xaxis: {
 		prop: 'xcolumn',
 		label: 'X axis',
-		options: state => suitableColumns(state, false).concat([{
-			value: 'none',
-			text: 'Histogram/Distribution'
-		}])
+		options: state => suitableColumns(state, false).map(disableXMismatch(state))
+			.concat([{value: 'none', label: 'Histogram/Distribution'}])
 	},
 	Color: {
 		prop: 'colorColumn',
 		label: 'Color',
-		options: state => [{
-			value: 'none',
-			text: 'None'
-		}].concat(suitableColumns(state, false))
+		options: state => [{value: 'none', label: 'None'}]
+			.concat(suitableColumns(state, false))
 	}
 };
 
@@ -228,40 +151,15 @@ function axisSelector(xenaState, selectorID, onChange) {
 	var {prop, label: text, options} = axisSettings[selectorID],
 		storedColumn = _.get(xenaState.chartState, prop),
 		axisOpts = options(xenaState),
-		selected = _.findIndex(axisOpts, opt => opt.value === storedColumn),
+		value = storedColumn || 'none',
 		sel;
 
-	sel = select(
-		axisOpts.map(({value, text}) => (option([], {value, textContent: text}))),
-		{id: selectorID, className: 'form-control'});
-
-	if (selected !== -1) {
-		sel.selectedIndex = selected;
-	}
-
-	if (sel.length === 0 ) {
-		return;
-	}
-
-	if (!storedColumn && selectorID === "Xaxis") {
-		sel.selectedIndex = sel.options.length - 1;
-	}
-
-	sel.addEventListener('change', () => {
-		onChange(sel.options[sel.selectedIndex].value);
-	});
+	sel = select({className: 'form-control', value, onChange},
+		...axisOpts.map(getOpt));
 
 	return (
-		div([label([textNode(text)]), div([sel])],
-			{className: compStyles.column}));
-}
-
-function scatterColorUISetting(div, visible) {
-	if (visible) {
-		div.style.visibility = "visible";
-	} else {
-		div.style.visibility = "hidden";
-	}
+		div({className: compStyles.column},
+			label(textNode(text)), div(sel)));
 }
 
 function colUnit(colSettings) {
@@ -279,28 +177,11 @@ var someNegative = data => _.some(data, d => _.some(d, v => v < 0));
 var expOptions = (column, data)  =>
 	!(column && column.units) ? [] :
 	logScale(column) ? [
-		{value: 'none', text: colUnit(column)},
-		{value: 'exp2', text: removeLogUnit(column)}] :
-	[{value: 'none', text: hasUnits(column) ? colUnit(column) : 'unknown'},
-		someNegative(data) || !hasUnits(column) ? {disabled: true, text: ''} :
-		{value: 'log2', text: `log2(${colUnit(column)}+1)`}];
-
-function expUISetting(visible, state, opts, dropDown, dropDownDiv) {
-	if (visible) {
-		dropDown.style.visibility = 'visible';
-		dropDownDiv.selectedIndex = state || 0;
-		opts.forEach(({text, value, disabled}, i) => {
-			dropDownDiv.options[i].text = text;
-			dropDownDiv.options[i].value = value;
-			dropDownDiv.options[i].disabled = disabled;
-		});
-	} else {
-		dropDown.style.visibility = 'hidden';
-		// XXX We stash this to remember the state of visible, which
-		// is pretty wonky.
-		dropDownDiv.value = 'none';
-	}
-}
+		{value: 'none', label: colUnit(column)},
+		{value: 'exp2', label: removeLogUnit(column)}] :
+	[{value: 'none', label: hasUnits(column) ? colUnit(column) : 'unknown'},
+		someNegative(data) || !hasUnits(column) ? {disabled: true, label: ''} :
+		{value: 'log2', label: `log2(${colUnit(column)}+1)`}];
 
 function newChart(chartOptions, callback) {
 	chartOptions.exporting = {
@@ -394,7 +275,7 @@ function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 		pValue, dof,
 		total, chart;
 
-	document.getElementById("myChart").innerHTML = "Generating chart ...";
+//	document.getElementById("myChart").innerHTML = "Generating chart ...";
 	statsDiv.innerHTML = "";
 	statsDiv.classList.toggle(compStyles.visible, false);
 
@@ -1147,11 +1028,11 @@ function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 	return chart;
 }
 
-var getColumnValuesM = multi(({columns}, id) => columns[id].valueType);
-getColumnValuesM.add('float', ({data}, id) => _.getIn(data[id], ['req', 'values']));
-getColumnValuesM.add('coded', ({data}, id) => _.getIn(data[id], ['req', 'values']));
-getColumnValuesM.add('segmented', ({data}, id) => _.getIn(data[id], ['avg', 'geneValues']));
-var getColumnValues = (state, id) => v(id) && getColumnValuesM(state, id);
+var getColumnValues = multi(({columns}, id) => v(id) && columns[id].valueType);
+getColumnValues.add('float', ({data}, id) => _.getIn(data[id], ['req', 'values']));
+getColumnValues.add('coded', ({data}, id) => _.getIn(data[id], ['req', 'values']));
+getColumnValues.add('segmented', ({data}, id) => _.getIn(data[id], ['avg', 'geneValues']));
+getColumnValues.add('undefined', () => undefined);
 
 var dataOffsets = (norm, data, fields) =>
 	!norm ? _.object(fields, _.times(fields.length, () => 0)) :
@@ -1163,7 +1044,7 @@ function axisLabel({columns, columnOrder}, id, showUnits, opts, expState, norm) 
 		return '';
 	}
 	var label = columnLabel(columnOrder.indexOf(id), columns[id]),
-		unit = showUnits ? '<br>Unit: ' + opts[expState[id]].text : '',
+		unit = showUnits ? '<br>Unit: ' + opts[expState[id]].label : '',
 		noralization = norm === 'subset' ? '<br>mean-centered' :
 			norm === 'subset_stdev' ? '<br>z-tranformed' : '';
 	return label + unit + noralization;
@@ -1175,10 +1056,8 @@ var expMethods = {
 	none: _.identity
 };
 
-function applyExp(data, setting) {
-	var norm = _.get(setting, 'value');
-	return norm ? expMethods[norm](data) : data;
-}
+var applyExp = (data, setting) =>
+	expMethods[_.get(setting, 'value', 'none')](data);
 
 // this looks expensive
 var isBinary = (codes, data) => !codes && data &&
@@ -1212,7 +1091,7 @@ function callDrawChart(xenaState, params) {
 		scatterColorScale;
 
 	ydata = applyExp(ydata, yexpOpts[chartState.expState[ycolumn]]);
-	xdata = applyExp(xdata, xexpOpts[chartState.expXState[xcolumn]]);
+	xdata = xdata && applyExp(xdata, xexpOpts[chartState.expXState[xcolumn]]);
 
 	if (doScatter && v(colorColumn)) {
 		scatterColorDataSegment = _.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
@@ -1237,7 +1116,6 @@ function callDrawChart(xenaState, params) {
 		scatterColorData = scatterColorData[0];
 	}
 
-	// XXX Is there a default setting? If so, where is it set?
 	var yNormalization = !ycodemap &&
 		_.Let((n = normalizationOptions[
 					chartState.normalizationState[chartState.ycolumn]]) =>
@@ -1259,64 +1137,63 @@ function callDrawChart(xenaState, params) {
 			samplesMatched, columns, xcolumn, ycolumn, colorColumn, cohortSamples, callback);
 };
 
-function render(root, callback, xenaState) {
-	var colorAxisDiv, // color dropdown
-		chartState = _.get(xenaState, 'chartState', {
-			expState: {},
-			expXState: {},
-			normalizationState: {},
-			ycolumn: _.getIn(suitableColumns(xenaState, true), [0, 'value']),
-		}),
-		set = (...args) => {
-			chartState = _.assocIn(chartState, ...args);
-		},
-		update,
-		chart;
-
-	function setStorage(state) {
-		callback(['chart-set-state', state.chartState]);
+class HighchartView extends PureComponent {
+	shouldComponentUpdate() {
+		return false;
 	}
 
-	function destroy() {
-		if (chart) {
-			chart.destroy();
-			chart = undefined;
+	componentDidMount() {
+		callDrawChart(this.props.xenaState, this.props.drawProps);
+	}
+
+	componentWillReceiveProps(newProps) {
+		if (!_.isEqual(newProps, this.props)) {
+			callDrawChart(newProps.xenaState, newProps.drawProps);
 		}
 	}
 
-	// This gets called internally when a control changes value. If
-	// something outside chartState changes, render() is called.
-	// Weirdly, we don't call destroy from render(), though we do call it
-	// on unmount, which perhaps is equivalent. Question is do we ever
-	// call render when chart is defined.
-	//
-	// We always destroy the chart at this point, so it's unclear what the
-	// point is of maintaining a local state. Would make more sense to
-	// pass in chartState from a react component.
+	render() {
+		return div({id: 'myChart', className: compStyles.chart});
+	}
+}
+var highchartView = el(HighchartView);
 
-	// We want this to be a function that takes only the current state
-	// and renders a chart into the div. So, it shouldn't know about UI
-	// controls. Separate out the UI accesses below.
-	//
-	// Some UI updates are in response to state change, e.g. setting
-	// normalization by the cached value. If we move that up, this layer
-	// only takes the value from state.
-	update = function () {
-		var oldDiv = document.getElementById("myChart");
-		oldDiv.parentElement.replaceChild(buildEmptyChartContainer(), oldDiv);
+class Chart extends PureComponent {
+
+	destroy = () => {
+		if (this.chart) {
+			this.chart.destroy();
+			this.chart = undefined;
+		}
+	}
+
+	componentWillUnmount() {
+		this.destroy();
+	}
+
+	render() {
+		var {callback, appState: xenaState} = this.props,
+			{chartState} = xenaState,
+			set = (...args) => {
+				chartState = _.assocIn(chartState, ...args);
+				callback(['chart-set-state', chartState]);
+			};
+
+		// XXX note that this will also display if data is still loading, which is
+		// a bit misleading.
+		if (!(v(chartState.ycolumn) && xenaState.cohort && xenaState.samples &&
+				xenaState.columnOrder.length > 0)) {
+			return card({className: classNames(compStyles.ChartView, compStyles.error)},
+				"There is no plottable data. Please add some from the Visual Spreadsheet.",
+				button({label: 'Close', onClick: () => callback(['heatmap'])}));
+		}
+
+		// y axis selector and Y value controls
+		var yAxisDiv = axisSelector(xenaState, 'Yaxis', ev => {
+			set(['ycolumn'], ev.currentTarget.value);
+		});
+
 		var {xcolumn, ycolumn, colorColumn} = chartState,
-
-			// for setting units in dropdowns
-			expYUIParent = document.getElementById("expYDropDown"),
-			expYUI = document.getElementById("yExponentiation"),
-			expXUIParent = document.getElementById("expXDropDown"),
-			expXUI = document.getElementById("xExponentiation"),
-
-			// retreive value, take label, and update compatible column selections
-			xdiv = document.getElementById("Xaxis"),
-			ydiv = document.getElementById("Yaxis"),
-
-
 			{columns} = xenaState,
 			xdata = getColumnValues(xenaState, xcolumn),
 			xcodemap = getCodes(columns, xdata, xcolumn),
@@ -1328,125 +1205,53 @@ function render(root, callback, xenaState) {
 			yfields = columns[ycolumn].fields,
 			doScatter = !xcodemap && xfield && yfields.length === 1;
 
-		//initialization
-		document.getElementById("myChart").innerHTML = "Querying Xena ...";
-		// XXX not sure if we need to initialize expState and expXState,
-		// or normalizationState. Currently only doing the 1st two, but
-		// all three have the same update pattern.
-		//
-		// This seems like it could break categorical columns, because
-		// they shouldn't have an expState.
-		if (chartState.expState[ycolumn] === undefined) {
-			set(['expState', ycolumn], 0);
-		}
-		if (chartState.expXState[xcolumn] === undefined) {
-			set(['expXState', xcolumn], 0);
-		}
-		scatterColorUISetting(colorAxisDiv, false);
-
-		axisReview(xdiv, ydiv, xenaState);
-
-		// save state
-
-		setStorage({chartState});
-
-		if (!((columns[xcolumn] || !v(xcolumn)) && columns[ycolumn])) {
-			document.getElementById("myChart").innerHTML = "Problem";
-			return;
-		}
-
-		// set y axis normalization UI
-		normalizationUISetting(!ycodemap, chartState.normalizationState, ycolumn);
-
-		// set y axis unit exponentiation UI
-		expUISetting(!ycodemap && columns[ycolumn].units,
-			chartState.expState[ycolumn], yexpOpts, expYUIParent, expYUI);
-
-		// set x axis unit exponentiation UI
-		expUISetting(v(xcolumn) && !xcodemap && columns[xcolumn].units,
-				chartState.expXState[xcolumn], xexpOpts, expXUIParent, expXUI);
-
-		// set scatterPlot coloring UI
-		scatterColorUISetting(colorAxisDiv, doScatter);
-
-		chart = callDrawChart(xenaState, {ydata, yexpOpts, chartState, ycolumn,
+		var drawProps = {ydata, yexpOpts, chartState, ycolumn,
 			xdata, xexpOpts, xcolumn, doScatter, colorColumn, columns,
-			xcodemap, ycodemap, destroy, yfields, xfield, callback});
+			xcodemap, ycodemap, destroy: this.destroy, yfields, xfield, callback};
+
+		var colorAxisDiv = doScatter ? axisSelector(xenaState, 'Color',
+				ev => set(['colorColumn'], ev.currentTarget.value)) : null;
+
+		var yExp = ycodemap ? null :
+			buildExpDropdown({
+				opts: yexpOpts,
+				index: chartState.expState[ycolumn],
+				label: 'Y unit',
+				onChange: i => set(['expState', ycolumn], i)});
+
+		var xExp = !v(xcolumn) || xcodemap ? null :
+			buildExpDropdown({
+				opts: xexpOpts,
+				index: chartState.expXState[xcolumn],
+				label: 'X unit',
+				onChange: i => set(['expXState', chartState.xcolumn], i)});
+
+		var normalization = ycodemap ? null :
+			buildNormalizationDropdown(
+				chartState.normalizationState[ycolumn],
+				i => set(['normalizationState', chartState.ycolumn], i));
+
+		var HCV =
+			div(highchartView({xenaState, drawProps}),
+				div({id: 'controlPanel', className: compStyles.controlPanel},
+					div(
+						div({className: compStyles.row},
+							yAxisDiv,
+							yExp,
+							normalization),
+						div({className: compStyles.row},
+							axisSelector(xenaState, 'Xaxis',
+								ev => set(['xcolumn'], ev.currentTarget.value)),
+							xExp),
+						div({className: compStyles.row}, [colorAxisDiv]))));
+
+
+		// statistics XXX note that we scribble over this. Should either render
+		// it in react, or make another wrapper component so react won't touch it.
+		// otoh, since we always re-render, it kinda works as-is.
+		var stats = div({id: 'stats', className: compStyles.stats});
+		return div({className: compStyles.ChartView}, HCV, stats);
 	};
+}
 
-	if (!(xenaState.cohort && xenaState.samples && xenaState.columnOrder.length > 0)) {
-		document.getElementById("myChart").innerHTML =
-			"There is no data, please add some by first clicking the \"Visual Spreadsheet\" button, then the \"+ Data\" button.";
-		return;
-	}
-
-	// y axis selector and Y value controls
-	var yAxisDiv = axisSelector(xenaState, 'Yaxis', id => {
-		set(['ycolumn'], id);
-		update();
-	});
-
-	var loading = _.any(_.getIn(xenaState, ['data']), d => d.status === 'loading');
-	if (loading) {
-		document.getElementById("myChart").innerHTML =
-			`<img src=${spinner}/> Waiting for column data to load`;
-		return;
-	} else if (!yAxisDiv) {
-		document.getElementById("myChart").innerHTML =
-			"There is no plottable data. Please add some columns from the spreadsheet view.";
-		return;
-	}
-
-	colorAxisDiv = axisSelector(xenaState, 'Color', id => {
-		set(['colorColumn'], id);
-		update();
-	});
-
-	root.appendChild(
-		div([
-			buildEmptyChartContainer(),
-			div([
-				div([
-					div([
-						yAxisDiv,
-						buildExpDropdown({
-							id: 'yExponentiation',
-							parentID: 'expYDropDown',
-							label: 'Y unit',
-							onChange: i => {
-								set(['expState', chartState.ycolumn], i);
-								update();
-							}}),
-						buildNormalizationDropdown(i => {
-							set(['normalizationState',
-								chartState.ycolumn], i);
-							update();
-						})],
-						{className: compStyles.row}),
-
-					div([
-						axisSelector(xenaState, 'Xaxis', id => {
-							set(['xcolumn'], id);
-							update();
-						}),
-						buildExpDropdown({
-							id: 'xExponentiation',
-							parentID: 'expXDropDown',
-							label: 'X unit',
-							onChange: i => {
-								set(['expXState', chartState.xcolumn], i);
-								update();
-							}})],
-						{className: compStyles.row}),
-					div([colorAxisDiv], {className: compStyles.row})])],
-				{id: 'controlPanel', className: compStyles.controlPanel,
-					style: {width: chartWidth()}})]));
-
-	// statistics
-	root.appendChild(div([], {id: 'stats', className: compStyles.stats}));
-
-	update();
-	return destroy;
-};
-
-module.exports = {render, chartHeight, chartWidth};
+export default Chart;

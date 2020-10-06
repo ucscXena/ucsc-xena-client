@@ -12,6 +12,7 @@ var {parseBookmark} = require('../bookmark');
 import parseManifest from '../manifest';
 var gaEvents = require('../gaEvents');
 import * as columnsParam from '../columnsParam';
+import {defaultState as chartDefaultState} from '../chartUtils';
 var xenaQuery = require('../xenaQuery');
 
 function fetchBookmark(serverBus, bookmark) {
@@ -232,13 +233,14 @@ var spreadsheetControls = {
 	'heatmap': state => _.assocInAll(state,
 		['mode'], 'heatmap',
 		['chartState', 'spreadsheetColumn'], null),
-	'chart': state => _.assoc(state, 'mode', 'chart'),
+	'chart': state => chartDefaultState(_.assoc(state, 'mode', 'chart')),
 	'chart-set-column': (state, id) =>
 		id === _.getIn(state, ['chartState', 'ycolumn']) ? state :
 			_.assocIn(state,
 				['chartState', 'ycolumn'], id,
 				['chartState', 'xcolumn'], 'none'),
-	'chart-set-state': (state, chartState) => _.assoc(state, 'chartState', chartState),
+	'chart-set-state': (state, chartState) => chartDefaultState(
+			_.assoc(state, 'chartState', chartState)),
 	'sample-search': (state, text, selection) =>
 		_.assoc(state, 'sampleSearch', text, 'sampleSearchSelection', selection),
 	// XXX maybe this should be transient state, instead, since it's not
