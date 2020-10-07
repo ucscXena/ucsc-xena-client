@@ -275,7 +275,6 @@ function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 		pValue, dof,
 		total, chart;
 
-//	document.getElementById("myChart").innerHTML = "Generating chart ...";
 	statsDiv.innerHTML = "";
 	statsDiv.classList.toggle(compStyles.visible, false);
 
@@ -1153,7 +1152,7 @@ class HighchartView extends PureComponent {
 	}
 
 	render() {
-		return div({id: 'myChart', className: compStyles.chart});
+		return div({id: 'xenaChart', className: compStyles.chart});
 	}
 }
 var highchartView = el(HighchartView);

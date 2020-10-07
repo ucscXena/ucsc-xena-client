@@ -23,7 +23,7 @@ function hcLabelRender() {
 
 var chartOptions = {
 	chart: {
-		renderTo: 'myChart',
+		renderTo: 'xenaChart',
 	},
 	subtitle: {
 		useHTML: true
