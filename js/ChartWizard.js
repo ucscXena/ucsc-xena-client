@@ -150,7 +150,7 @@ var scatterInit = ({columns, chartState: {ycolumn, xcolumn, setColumn}}) => ({
 		v(ycolumn) && isFloat(columns, ycolumn) ? ycolumn : undefined,
 		xcolumn: v(xcolumn) && isFloat(columns, xcolumn) ? xcolumn : undefined
 });
-// XXX this isn't quite right. It return true if we have only one dataset.
+
 var scatterCanDraw = appState => {
 	var y = _.pluck(scatterYDatasets(appState), 'value'),
 		x = _.pluck(scatterXDatasets(appState), 'value');
@@ -195,13 +195,6 @@ var icons = {
 var modeButton = (appState, onMode) => props =>
 	button({onClick: onMode, icon: icons[props['data-mode']],
 		disabled: !canDraw[props['data-mode']](appState), ...props});
-
-//var startPage = ({onMode, onClose, props: {appState}}) =>
-//	card(div(
-//			h2('What do you want to make?'),
-//			closeButton(onClose),
-//			button({onClick: onClose, label: 'Back', className: styles.back}),
-//			...startModes.map(modeButton(appState, onMode))));
 
 var startPage = ({onMode, onClose, props: {appState}}) =>
 	wizard({title: 'What do you want to make?', onClose,
