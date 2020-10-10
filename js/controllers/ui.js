@@ -232,13 +232,10 @@ var spreadsheetControls = {
 	'km-survivalType': (state, value) => _.assocIn(state, ['km', 'survivalType'], value),
 	'heatmap': state => _.assocInAll(state,
 		['mode'], 'heatmap',
-		['chartState', 'spreadsheetColumn'], null),
-	'chart': state => chartDefaultState(_.assoc(state, 'mode', 'chart')),
-	'chart-set-column': (state, id) =>
-		id === _.getIn(state, ['chartState', 'ycolumn']) ? state :
-			_.assocIn(state,
-				['chartState', 'ycolumn'], id,
-				['chartState', 'xcolumn'], 'none'),
+		['chartState', 'setColumn'], null),
+	'chart': (state, id) => chartDefaultState(_.assocIn(state,
+				['mode'], 'chart',
+				['chartState', 'setColumn'], id)),
 	'chart-set-state': (state, chartState) => chartDefaultState(
 			_.assoc(state, 'chartState', chartState)),
 	'sample-search': (state, text, selection) =>

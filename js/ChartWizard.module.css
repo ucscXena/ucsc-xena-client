@@ -1,0 +1,40 @@
+
+
+.close {
+	float: right;
+	cursor: pointer;
+}
+
+.back {
+	float: left;
+}
+
+.done {
+	float: right;
+}
+
+.modes {
+	display: flex;
+	flex-direction: column;
+}
+
+.modes button {
+	margin: 2px;
+}
+
+.modes img {
+	height: 37px;
+	vertical-align: middle;
+}
+
+.wizard {
+	width: 50%;
+	max-width: 600px;
+	margin: 50px auto;
+	padding: 20px;
+}
+
+.actions {
+	margin-top: 10px;
+}
+

@@ -19,6 +19,20 @@
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12); /* Based on MD card */
 }
 
+.right {
+	display: flex;
+	flex-direction: column;
+	margin-left: 5px;
+	height: 70vh;
+}
+
+.actions {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	flex-grow: 1;
+}
+
 
 /* Container around control panel (Y Axis, X Axis, Color etc) */
 .controlPanel {
@@ -88,7 +102,7 @@
 
 .stats.visible {
 	display: block;
-	height: 100%;
+	margin-bottom: 5px;
 	margin-left: 24px;
 }
 

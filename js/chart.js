@@ -1187,12 +1187,7 @@ class Chart extends PureComponent {
 				button({label: 'Close', onClick: () => callback(['heatmap'])}));
 		}
 
-		// y axis selector and Y value controls
-		var yAxisDiv = axisSelector(xenaState, 'Yaxis', ev => {
-			set(['ycolumn'], ev.currentTarget.value);
-		});
-
-		var {xcolumn, ycolumn, colorColumn} = chartState,
+		var {xcolumn, ycolumn, colorColumn, advanced} = chartState,
 			{columns} = xenaState,
 			xdata = getColumnValues(xenaState, xcolumn),
 			xcodemap = getCodes(columns, xdata, xcolumn),
@@ -1210,6 +1205,8 @@ class Chart extends PureComponent {
 
 		var colorAxisDiv = doScatter ? axisSelector(xenaState, 'Color',
 				ev => set(['colorColumn'], ev.currentTarget.value)) : null;
+		var swapAxes = doScatter ? button({label: 'Swap X and Y',
+			onClick: () => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)}) : null;
 
 		var yExp = ycodemap ? null :
 			buildExpDropdown({
@@ -1230,26 +1227,35 @@ class Chart extends PureComponent {
 				chartState.normalizationState[ycolumn],
 				i => set(['normalizationState', chartState.ycolumn], i));
 
+		var advOpt = advanced ?
+			div({id: 'controlPanel', className: compStyles.controlPanel},
+				div(
+					div({className: compStyles.row},
+						yExp,
+						normalization),
+					div({className: compStyles.row},
+						xExp),
+					div({className: compStyles.row}, colorAxisDiv))) : null;
+
 		var HCV =
 			div(highchartView({xenaState, drawProps}),
-				div({id: 'controlPanel', className: compStyles.controlPanel},
-					div(
-						div({className: compStyles.row},
-							yAxisDiv,
-							yExp,
-							normalization),
-						div({className: compStyles.row},
-							axisSelector(xenaState, 'Xaxis',
-								ev => set(['xcolumn'], ev.currentTarget.value)),
-							xExp),
-						div({className: compStyles.row}, [colorAxisDiv]))));
+				advOpt);
 
 
-		// statistics XXX note that we scribble over this. Should either render
+		// statistics XXX note that we scribble over stats. Should either render
 		// it in react, or make another wrapper component so react won't touch it.
 		// otoh, since we always re-render, it kinda works as-is.
-		var stats = div({id: 'stats', className: compStyles.stats});
-		return div({className: compStyles.ChartView}, HCV, stats);
+
+		return div({className: compStyles.ChartView},
+				HCV,
+				div({className: compStyles.right},
+					div({id: 'stats', className: compStyles.stats}),
+					div({className: compStyles.actions},
+						button({label: 'Make another graph', onClick:
+						() => set(['setColumn'], ycolumn)}),
+						swapAxes,
+						button({label: advanced ? 'Hide options' : 'Advanced options',
+							onClick: () => set(['advanced'], !advanced)}))));
 	};
 }
 

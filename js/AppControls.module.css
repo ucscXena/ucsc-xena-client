@@ -45,6 +45,12 @@ i.overWarning {
 	margin-left: 4px;
 }
 
+/* Handle disabled pdf menu icon. RTB does not have this functionality out of the box so we have to hand roll here. */
+i.disabled {
+	color: black12;
+	cursor: default;
+}
+
 /* Left-hand container, displaying cohort name, sample count and refresh/reload icons */
 .cohort {
 	border-right: 1px solid black12;

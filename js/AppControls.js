@@ -11,6 +11,7 @@ var gaEvents = require('./gaEvents');
 var {signatureField} = require('./models/fieldSpec');
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
+import {showWizard as showChartWizard} from './chartUtils.js';
 
 // Styles
 var compStyles = require('./AppControls.module.css');
@@ -52,7 +53,7 @@ var asciiB = 66;
 var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}) => (
 	<div className={compStyles.actions}>
 		{hasColumn ? <i className='material-icons' onClick={onMode} title={modeHelp[mode]}>{modeIcon[mode]}</i> : null}
-		{hasColumn ? <i className='material-icons' onClick={onPdf} title='Download as PDF'>picture_as_pdf</i> : null}
+		{hasColumn ? <i className={classNames('material-icons', onPdf ? null : compStyles.disabled)} onClick={onPdf} title='Download as PDF'>picture_as_pdf</i> : null}
 		{hasColumn ? <i className='material-icons' onClick={onDownload} title='Download as tsv'>cloud_download</i> : null}
 		{showWelcome ? null : <i className='material-icons' onClick={onShowWelcome}>help</i>}
 	</div>);
@@ -195,6 +196,7 @@ export class AppControls extends PureComponent {
 			tiesOpen = _.get(ties, 'open'),
 			cohortName = _.get(cohort, 'name'),
 			hasColumn = !!columnOrder.length,
+			disablePDF = showChartWizard(this.props.appState),
 			sampleFilter = _.get(cohort, 'sampleFilter'),
 			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null;
 		return (
@@ -232,7 +234,7 @@ export class AppControls extends PureComponent {
 								onTies: this.onTies,
 								tiesEnabled: false}}/>}
 						{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
-							<Actions {...{onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}}/>}
+							<Actions {...{onPdf: disablePDF ? undefined : onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode, hasColumn}}/>}
 					</div>
 				</AppBar>
 		);
