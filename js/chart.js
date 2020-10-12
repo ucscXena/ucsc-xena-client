@@ -199,495 +199,74 @@ function newChart(chartOptions, callback) {
 	return new Highcharts.Chart(chartOptions);
 }
 
-// returns key:array
-// categorical: key:array  ------  key is the category
-// float:  key: {xcode:array} key is the identifier, xcode is the xcode
-function parseYDataElement(yfield, ycodemap, ydataElement, xcategories, xSampleCode) {
-	var i, code,
-		ybinnedSample = {};
-
-	if (ycodemap) { // y: categorical in matrix data
-		ycodemap.forEach(function (code) {
-			ybinnedSample[code] = [];
-		});
-
-		// probes by samples
-		for (i = 0; i < ydataElement.length; i++) {
-			code = ycodemap[ydataElement[i]];
-			if (code) {
-				ybinnedSample[code].push(i);
-			}
-		}
-
-		// remove empty ycode categories
-		ycodemap.forEach(function (code) {
-			if (ybinnedSample[code].length === 0) {
-				delete ybinnedSample[code];
-			}
-		});
-	} else { // y: float in matrix data -- binned by xcode
-		if (xcategories) {
-			ybinnedSample[yfield] = {};
-			xcategories.forEach(function (code) {
-				ybinnedSample[yfield][code] = [];
-			});
-		} else {
-			ybinnedSample[yfield] = [];
-		}
-
-		for (i = 0; i < ydataElement.length; i++) {
-			if (null != ydataElement[i]) {
-				if (xSampleCode) {
-					code = xSampleCode[i];
-					if (code) {
-						ybinnedSample[yfield][code].push(ydataElement[i]);
-					}
-				} else {
-					ybinnedSample[yfield].push(ydataElement[i]);
-				}
-			}
-		}
-	}
-	return ybinnedSample;
+// group field0 by code0, where field1 has value
+function groupIndexWithValueByCode(field0, codes0, field1) {
+	var indicies = _.range(field0.length).filter(i => field1[i] != null);
+	var groups = _.groupBy(indicies, i => codes0[field0[i]]);
+	delete groups[undefined];
+	return groups;
 }
 
-function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
-		yfields, ycodemap, ydata,
-		offsets, xlabel, ylabel, STDEV,
-		scatterLabel, scatterColorScale, scatterColorData, scatterColorDataCodemap,
-		samplesMatched,
-		columns, xcolumn, ycolumn, colorColumn, cohortSamples, callback) {
-	var chartOptions = _.clone(highchartsHelper.chartOptions),
-		statsDiv = document.getElementById('stats'),
-		xAxisTitle,
-		ybinnedSample,
-		dataSeriese,
-		nNumberSeriese,
-		yfield,
-		ydataElement,
-		showLegend,
-		xbinnedSample,
-		xSampleCode,
-		code,
-		categories,
-		i, k,
-		average, stdDev,
-		pValue, dof,
-		total, chart;
 
-	statsDiv.innerHTML = "";
-	statsDiv.classList.toggle(compStyles.visible, false);
+// XXX We should really group by value, and covert values
+// to codes late, but the current implementation uses
+// codes early.
+function groupIndexByCode(field, codes) {
+	var groups = _.groupBy(_.range(field.length), i => codes[field[i]]);
+	delete groups[undefined];
+	return groups;
+}
 
+// XXX as above, we should instead group by value and map to
+// codes late.
+// Group values of field0 by codes of field1. Omit null in field0,
+// and empty code groups.
+function groupValuesByCodes(field0, field1, codes1) {
+	var groups = _.groupBy(field0, (v, i) => codes1[field1[i]]);
+	delete groups[undefined]; // skip empty code groups
+	return _.mapObject(groups, g => g.filter(x => x != null)); // skip field0 nulls
+}
 
-	chartOptions.subtitle = {
-		text: "cohort: " + _.get(cohort, 'name') + " (n=" + samplesLength + ")"
-	};
+// poor man's lazy seq
+function* constantly (fn) {
+	while (true) {
+		yield fn();
+	}
+}
 
-	if (xcodemap && !ycodemap) { // x : categorical y float
-		var xCategories = [],
-			meanMatrix = [],
-			medianMatrix = [], // median row is x and column is y
-			upperMatrix = [], // 75 percentile row is x and column is y
-			lowerMatrix = [], // 25 percentile row is x and column is y
-			upperwhiskerMatrix = [], // upperwhisker percentile row is x and column is y
-			lowerwhiskerMatrix = [], // lowerwhisker percentile row is x and column is y
-			stdMatrix = [], // row is x and column is y
-			nNumberMatrix = [], // number of data points (real data points) for dataMatrix
-			row,
-			highlightcode = [];
+function initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap, STDEV}) {
+	// matrices, row is x and column is y:
+	// mean
+	// median
+	// upper --  75 percentile
+	// lower --  25 percentile
+	// upperwhisker --  upperwhisker percentile
+	// lowerwhisker --  lowerwhisker percentile
+	// std
+	// nNumber -- number of data points (real data points) for dataMatrix
 
-		xSampleCode = {};
-		xbinnedSample = {};
-		// x data
-		xcodemap.forEach(function (code) {
-			xbinnedSample[code] = [];
-		});
+	// init average matrix std matrix // row is x by column y
+	var [meanMatrix, medianMatrix, upperMatrix, lowerMatrix,
+		upperwhiskerMatrix, lowerwhiskerMatrix, stdMatrix, nNumberMatrix] =
+			constantly(() =>
+				_.times(xCategories.length, () => new Array(yfields.length).fill(NaN)));
 
-		//probes by samples
+	// Y data and fill in the matrix
+	for (let k = 0; k < yfields.length; k++) {
+		let yfield = yfields[k];
+		let ydataElement = ydata[k];
+		let ybinnedSample = groupValuesByCodes(ydataElement, xdata[0], xcodemap);
 
-		for (i = 0; i < xdata[0].length; i++) {
-			code = xcodemap[xdata[0][i]];
-			if (code) {
-				xbinnedSample[code].push(i);
-				xSampleCode[i] = code;
-			}
-		}
-		// remove empty xcode categories
-		xcodemap.map(function (code) {
-			if (xbinnedSample[code].length === 0) {
-				delete xbinnedSample[code];
-			} else {
-				xCategories.push(code);
-			}
-		});
+		for (let i = 0; i < xCategories.length; i++) {
+			let code = xCategories[i];
+			let data, m;
+			if (ybinnedSample[code].length) {
+				data = ybinnedSample[code],
+				m = data.length;
 
-		// highlight categories identification : if all the samples in the category are part of the highlighted samples, the caterory will be highlighted
-		if (samplesMatched && samplesMatched.length !== samplesLength) {
-			xCategories.map(function (code) {
-				if (xbinnedSample[code].every(sample => samplesMatched.indexOf(sample) !== -1)) {
-					highlightcode.push(code);
-				}
-			});
-		}
-
-		// init average matrix std matrix // row is x by column y
-		for (i = 0; i < xCategories.length; i++) {
-			row = [];
-			for (k = 0; k < yfields.length; k++) {
-				row.push(NaN);
-			}
-			meanMatrix.push(_.clone(row));
-			medianMatrix.push(_.clone(row));
-			upperMatrix.push(_.clone(row));
-			lowerMatrix.push(_.clone(row));
-			upperwhiskerMatrix.push(_.clone(row));
-			lowerwhiskerMatrix.push(_.clone(row));
-			stdMatrix.push(_.clone(row));
-			nNumberMatrix.push(_.clone(row));
-		}
-
-		// Y data and fill in the matrix
-		for (k = 0; k < yfields.length; k++) {
-			yfield = yfields[k];
-			ydataElement = ydata[k];
-			ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, xCategories, xSampleCode);
-
-			for (i = 0; i < xCategories.length; i++) {
-				code = xCategories[i];
-				let data, m;
-				if (ybinnedSample[yfield][code].length) {
-					data = ybinnedSample[yfield][code],
-					m = data.length;
-
-					data.sort((a, b) => a - b);
-					average =  highchartsHelper.average(data);
-					stdDev = highchartsHelper.standardDeviation(data, average);
-
-					// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
-					var median = data[Math.floor( m / 2)],
-						lower =  data[Math.floor( m / 4)],
-						upper =  data[Math.floor( 3 * m / 4)],
-						whisker = 1.5 * (upper - lower),
-						upperwhisker = _.findIndex(data, x => x > upper + whisker),
-						lowerwhisker = _.findLastIndex(data, x => x < lower - whisker);
-
-					upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
-					lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
-					meanMatrix[i][k] = average / STDEV[yfield];
-					medianMatrix[i][k] = median / STDEV[yfield];
-					lowerMatrix[i][k] = lower / STDEV[yfield];
-
-					upperMatrix[i][k] = upper / STDEV[yfield];
-					lowerwhiskerMatrix[i][k] = lowerwhisker / STDEV[yfield];
-					upperwhiskerMatrix[i][k] = upperwhisker / STDEV[yfield];
-					nNumberMatrix[i][k] = m;
-
-					if (!isNaN(stdDev)) {
-						stdMatrix[i][k] = stdDev / STDEV[yfield];
-					} else {
-						stdMatrix[i][k] = NaN;
-					}
-				} else {
-					nNumberMatrix[i][k] = 0;
-				}
-			}
-		}
-
-		// sort by median of xCategories if yfiedls.length === 1
-		if (xCategories.length > 0 && yfields.length === 1) {
-			var medians, sortedIndex,
-				NEWxCategories = [],
-				NEWmeanMatrix = [],
-				NEWmedianMatrix = [], // median row is x and column is y
-				NEWupperMatrix = [], // 75 percentile row is x and column is y
-				NEWlowerMatrix = [], // 25 percentile row is x and column is y
-				NEWupperwhiskerMatrix = [], // upperwhisker percentile row is x and column is y
-				NEWlowerwhiskerMatrix = [], // lowerwhisker percentile row is x and column is y
-				NEWstdMatrix = [], // row is x and column is y
-				NEWnNumberMatrix = []; // number of data points (real data points) for dataMatrix
-
-			k = 0; // the sorting only apply to the situation yfields.length === 1, => k=0
-			medians = _.map(medianMatrix, function(x, i) {
-					return {
-						value: x[k],
-						index: i
-					};
-				});
-			// remove xCategory given yfield[k] with no data, then sort
-			medians = _.sortBy(_.filter(medians, x => !isNaN(x.value)), "value");
-			sortedIndex = _.map(medians, x => x.index);
-
-			// init row is x by column y
-			for (i = 0; i < xCategories.length; i++) {
-				row = [];
-				for (var j = 0; j < yfields.length; j++) {
-					row.push(NaN);
-				}
-				NEWmeanMatrix.push(_.clone(row));
-				NEWmedianMatrix.push(_.clone(row));
-				NEWupperMatrix.push(_.clone(row));
-				NEWlowerMatrix.push(_.clone(row));
-				NEWupperwhiskerMatrix.push(_.clone(row));
-				NEWlowerwhiskerMatrix.push(_.clone(row));
-				NEWstdMatrix.push(_.clone(row));
-				NEWnNumberMatrix.push(_.clone(row));
-				NEWxCategories.push(NaN);
-			}
-			_.each(sortedIndex, function(pos, i) {
-				NEWmeanMatrix[i][k] = meanMatrix[pos][k];
-				NEWmedianMatrix[i][k] = medianMatrix[pos][k];
-				NEWupperMatrix[i][k] = upperMatrix[pos][k];
-				NEWlowerMatrix[i][k] = lowerMatrix[pos][k];
-				NEWupperwhiskerMatrix[i][k] = upperwhiskerMatrix[pos][k];
-				NEWlowerwhiskerMatrix[i][k] = lowerwhiskerMatrix[pos][k];
-				NEWstdMatrix[i][k] = stdMatrix[pos][k];
-				NEWnNumberMatrix[i][k] = nNumberMatrix[pos][k];
-			});
-			NEWxCategories = _.map(sortedIndex, pos => xCategories[pos]);
-
-			meanMatrix = NEWmeanMatrix;
-			medianMatrix = NEWmedianMatrix;
-			upperMatrix = NEWupperMatrix;
-			lowerMatrix = NEWlowerMatrix;
-			upperwhiskerMatrix = NEWupperwhiskerMatrix;
-			lowerwhiskerMatrix = NEWlowerwhiskerMatrix;
-			stdMatrix = NEWstdMatrix;
-			nNumberMatrix = NEWnNumberMatrix;
-			xCategories = NEWxCategories;
-		}
-
-		//add data seriese
-		var offsetsSeries = [],
-			cutOffset;
-
-		showLegend = true;
-		// offsets
-		for (k = 0; k < yfields.length; k++) {
-			yfield = yfields[k];
-			offsetsSeries.push(offsets[yfield] / STDEV[yfield]);
-		}
-
-		cutOffset = function([average, offset]) {
-			if (!isNaN(average)) {
-				return average - offset;
-			} else {
-				return "";
-			}
-		};
-
-		let scale = colorScales.colorScale(columns[xcolumn].colors[0]),
-			invCodeMap = _.invert(xcodemap);
-
-		// column chart setup
-		chartOptions = highchartsHelper.columnChartFloat(chartOptions, yfields, xlabel, ylabel);
-		chart = newChart(chartOptions, callback);
-
-		for (i = 0; i < xCategories.length; i++) {
-			code = xCategories[i];
-			// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
-			var medianSeriese = (_.zip(medianMatrix[i], offsetsSeries)).map(cutOffset),
-				upperSeriese = (_.zip(upperMatrix[i], offsetsSeries)).map(cutOffset),
-				lowerSeriese = (_.zip(lowerMatrix[i], offsetsSeries)).map(cutOffset),
-				upperwhiskerSeriese = (_.zip(upperwhiskerMatrix[i], offsetsSeries)).map(cutOffset),
-				lowerwhiskerSeriese = (_.zip(lowerwhiskerMatrix[i], offsetsSeries)).map(cutOffset);
-
-			nNumberSeriese = nNumberMatrix[i];
-
-			let color = highlightcode.length === 0 ? scale(invCodeMap[code]) :
-				highlightcode.indexOf(code) === -1 ? '#A9A9A9' :
-				'gold';
-			dataSeriese = _.zip(lowerwhiskerSeriese, lowerSeriese, medianSeriese, upperSeriese, upperwhiskerSeriese);
-			highchartsHelper.addSeriesToColumn(
-				chart, 'boxplot', code,
-				dataSeriese, ycodemap,
-				yfields.length * xCategories.length < 30, showLegend,
-				color,
-				nNumberSeriese);
-		}
-
-		// p value when there is only 2 group comparison student t-test
-		// https://en.wikipedia.org/wiki/Welch%27s_t-test
-		if (xCategories.length === 2) {
-			statsDiv.innerHTML = 'Welch\'s t-test<br>';
-			_.range(yfields.length).map(k => {
-				if (nNumberMatrix[0][k] > 1 && nNumberMatrix[1][k] > 1) {
-					yfield = yfields[k];
-					// p value calculation using Welch's t-test
-					let x1 = meanMatrix[0][k], // mean1
-						x2 = meanMatrix[1][k], // mean2
-						v1 = stdMatrix[0][k] * stdMatrix[0][k], //variance 1
-						v2 = stdMatrix[1][k] * stdMatrix[1][k], //variance 2
-						n1 = nNumberMatrix[0][k], // number 1
-						n2 = nNumberMatrix[1][k], // number 2
-						vCombined = v1 / n1 + v2 / n2, // pooled variance
-						sCombined = Math.sqrt(vCombined), //pool sd
-						tStatistics = (x1 - x2) / sCombined, // t statistics,
-						cdf;
-
-					dof = vCombined * vCombined / ((v1 / n1) * (v1 / n1) / (n1 - 1) + (v2 / n2) * (v2 / n2) / (n2 - 1)), // degree of freedom
-					cdf = jStat.studentt.cdf(tStatistics, dof),
-					pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
-
-					statsDiv.innerHTML += (
-						(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
-						'p = ' + pValue.toPrecision(4) + ' ' +
-						'(t = ' + tStatistics.toPrecision(4) + ')<br>'
-					);
-				}
-			});
-			statsDiv.classList.toggle(compStyles.visible);
-		}
-
-		// p value for >2 groups one-way ANOVA
-		// https://en.wikipedia.org/wiki/One-way_analysis_of_variance
-		else if (xCategories.length > 2) {
-			statsDiv.innerHTML = 'One-way Anova<br>';
-			_.range(yfields.length).map(k => {
-				yfield = yfields[k];
-				ydataElement = ydata[k];
-				ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, xCategories, xSampleCode);
-
-				let flattenArray = _.flatten(xCategories.map(code => ybinnedSample[yfield][code])),
-					// Calculate the overall mean
-					totalMean = flattenArray.reduce((sum, el) => sum + el, 0) / flattenArray.length,
-					//Calculate the "between-group" sum of squared differences
-					sB = _.range(xCategories.length).reduce((sum, index) => {
-						if (nNumberMatrix[index][0] > 0) {
-							return sum + nNumberMatrix[index][k] * Math.pow((meanMatrix[index][k] - totalMean), 2);
-						} else {
-							return sum;
-						}
-					}, 0),
-					// between-group degrees of freedom
-					fB = _.range(xCategories.length).filter(index => nNumberMatrix[index][k] > 0).length - 1,
-					// between-group mean square differences
-					msB = sB / fB,
-					// Calculate the "within-group" sum of squares
-					sW = _.range(xCategories.length).reduce((sum, index) => {
-						if (nNumberMatrix[index][k] > 0) {
-							return sum + Math.pow(stdMatrix[index][k], 2) * nNumberMatrix[index][k];
-						} else {
-							return sum;
-						}
-					}, 0),
-					// within-group degrees of freedom
-					fW = _.range(xCategories.length).reduce((sum, index) => {
-						if (nNumberMatrix[index][k] > 0) {
-							return sum + nNumberMatrix[index][k] - 1;
-						} else {
-							return sum;
-						}
-					}, 0),
-					// within-group mean difference
-					msW = sW / fW,
-					//  F-ratio
-					fScore = msB / msW,
-					// p value
-					pValue = jStat.ftest(fScore, fB, fW);
-
-				statsDiv.innerHTML += (
-					(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
-					'p = ' + pValue.toPrecision(4) + ' ' +
-					'(f = ' + fScore.toPrecision(4) + ')<br>'
-				);
-			});
-			statsDiv.classList.toggle(compStyles.visible);
-		}
-
-		chart.redraw();
-	} else if (!xfield) { //summary view --- messsy code
-		var displayCategories;
-
-		dataSeriese = [];
-		nNumberSeriese = [];
-		ybinnedSample = {};
-		xcodemap = true;
-
-		for (k = 0; k < yfields.length; k++) {
-			yfield = yfields[k];
-			ydataElement = ydata[k];
-
-			if (ycodemap) { //  fields.length ==1
-				ybinnedSample = parseYDataElement(
-					yfield, ycodemap, ydataElement, undefined, undefined);
-			} else { // floats
-				ybinnedSample[yfield] = parseYDataElement(
-					yfield, ycodemap, ydataElement, undefined, undefined)[yfield];
-			}
-		}
-
-		total = 0;
-		if (ycodemap) {
-			categories = Object.keys(ybinnedSample);
-			categories.forEach(function (code) {
-				total = total + ybinnedSample[code].length;
-			});
-		} else {
-			categories = yfields;
-		}
-
-		// single parameter float do historgram with smart tick marks
-		if (!ycodemap && yfields.length === 1) {
-			var valueList = _.values(ybinnedSample)[0],
-				offset = _.values(offsets)[0],
-				stdev = _.values(STDEV)[0];
-
-			valueList.sort((a, b) => a - b);
-
-			var min = valueList[0],
-				max = valueList[valueList.length - 1],
-				N = 20,
-				gap = (max - min) / (N * stdev),
-				gapRoundedLower =  Math.pow(10, Math.floor(Math.log(gap) / Math.LN10)), // get a sense of the scale the gap, 0.01, 0.1, 1, 10 ...
-				gapList = [gapRoundedLower, gapRoundedLower * 2, gapRoundedLower * 5, gapRoundedLower * 10], // within the scale, find the closet to this list of easily readable intervals 1,2,5,10
-				gapRounded = _.min(gapList, x => Math.abs(gap - x )),
-				maxRounded = Math.ceil((max - offset) / stdev / gapRounded) * gapRounded,
-				minRounded = Math.floor((min - offset) / stdev / gapRounded) * gapRounded;
-
-			categories = _.range(minRounded, maxRounded, gapRounded);
-			categories = categories.map( bin =>
-				(Math.floor(bin * 100) / 100) + ' to ' + (Math.floor((bin + gapRounded) * 100) / 100));
-			ybinnedSample = {};
-			categories.map(bin => ybinnedSample[bin] = 0);
-			valueList.map( value => {
-				var binIndex = Math.floor(((value - offset) / stdev - minRounded) / gapRounded),
-					bin = categories[binIndex];
-				ybinnedSample[bin] = ybinnedSample[bin] + 1;
-			});
-		}
-
-		xAxisTitle = xlabel;
-		showLegend = false;
-
-		displayCategories = categories.slice(0);
-		if (ycodemap) {
-			chartOptions = highchartsHelper.columnChartOptions(
-				chartOptions, categories.map(code => code + " (" + ybinnedSample[code].length + ")"),
-				xAxisTitle, "Distribution", ylabel, showLegend);
-		} else if (yfields.length === 1) {
-			chartOptions = highchartsHelper.columnChartOptions(
-				chartOptions, categories, xAxisTitle, "Histogram", ylabel, showLegend);
-		} else {
-			chartOptions = highchartsHelper.columnChartFloat (chartOptions, displayCategories, xAxisTitle, ylabel);
-		}
-		chart = newChart(chartOptions, callback);
-
-		//add data to seriese
-		displayCategories.forEach(function (code) {
-			var value;
-			if (ycodemap) {
-				value = ybinnedSample[code].length;
-				dataSeriese.push(value * 100 / total);
-				nNumberSeriese.push(value);
-			} else if (yfields.length === 1) {
-				value = ybinnedSample[code];
-				dataSeriese.push(value);
-			} else {
-				var data = ybinnedSample[code],
-					m = data.length;
 				data.sort((a, b) => a - b);
-				average = highchartsHelper.average(data);
-				stdDev = highchartsHelper.standardDeviation(data, average);
+				let average =  highchartsHelper.average(data);
+				let stdDev = highchartsHelper.standardDeviation(data, average);
 
 				// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
 				var median = data[Math.floor( m / 2)],
@@ -699,332 +278,661 @@ function drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
 
 				upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
 				lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
+				meanMatrix[i][k] = average / STDEV[yfield];
+				medianMatrix[i][k] = median / STDEV[yfield];
+				lowerMatrix[i][k] = lower / STDEV[yfield];
 
-				median = (median - offsets[code]) / STDEV[code];
-				lower = (lower - offsets[code]) / STDEV[code];
-				upper = (upper - offsets[code]) / STDEV[code];
-				upperwhisker = (upperwhisker - offsets[code]) / STDEV[code];
-				lowerwhisker = (lowerwhisker - offsets[code]) / STDEV[code];
+				upperMatrix[i][k] = upper / STDEV[yfield];
+				lowerwhiskerMatrix[i][k] = lowerwhisker / STDEV[yfield];
+				upperwhiskerMatrix[i][k] = upperwhisker / STDEV[yfield];
+				nNumberMatrix[i][k] = m;
 
-				dataSeriese.push([lowerwhisker, lower, median, upper, upperwhisker]);
-				nNumberSeriese.push(m);
-			}
-		});
-
-		// add seriese to chart
-		var seriesLabel, chartType;
-
-		if (ycodemap) {
-			seriesLabel = " ";
-			chartType = 'column';
-		} else if (yfields.length === 1) {
-			seriesLabel = " ";
-			chartType = 'line';
-		} else {
-			seriesLabel = "average";
-			chartType = 'boxplot';
-		}
-		highchartsHelper.addSeriesToColumn(chart, chartType, seriesLabel,
-			dataSeriese, ycodemap, categories.length < 30, showLegend,
-			0, nNumberSeriese);
-		chart.redraw();
-	} else if (xcodemap && ycodemap) { // x y : categorical --- messsy code
-		//both x and Y is a single variable, i.e. yfields has array size of 1
-		xSampleCode = {};
-		xbinnedSample = {};
-
-		// x data
-		xcodemap.map(code => xbinnedSample[code] = []);
-
-		//probes by samples
-		for (i = 0; i < xdata[0].length; i++) {
-			code = xcodemap[xdata[0][i]];
-			if (code) {
-				if (xbinnedSample[code]) {
-					xbinnedSample[code].push(i);
+				if (!isNaN(stdDev)) {
+					stdMatrix[i][k] = stdDev / STDEV[yfield];
 				} else {
-					xbinnedSample[code] = [i];
+					stdMatrix[i][k] = NaN;
 				}
-				xSampleCode[i] = code;
+			} else {
+				nNumberMatrix[i][k] = 0;
+			}
+		}
+	}
+	return {meanMatrix, medianMatrix, upperMatrix, lowerMatrix, upperwhiskerMatrix,
+			lowerwhiskerMatrix, stdMatrix, nNumberMatrix};
+}
+
+function sortMatrices(xCategories, matrices) {
+	let {medianMatrix} = matrices,
+		sortedIndex = _.sortBy(
+				_.range(medianMatrix.length).filter(i => !isNaN(medianMatrix[i][0])),
+				i => medianMatrix[i][0]),
+			reorder = m => _.map(sortedIndex, i => m[i]);
+
+	return [reorder(xCategories), _.mapObject(matrices, m => reorder(m))];
+}
+
+var cutOffset = (average, offset) => !isNaN(average) ? average - offset : "";
+var cutOffsetFn = offsetsSeries =>
+	values => _.mmap(values, offsetsSeries, cutOffset);
+
+function floatVCoded({samplesLength, xcodemap, xdata,
+		yfields, ycodemap, ydata,
+		offsets, xlabel, ylabel, STDEV,
+		samplesMatched,
+		columns, xcolumn, callback}, chartOptions) {
+
+	var statsDiv = document.getElementById('stats'),
+		ybinnedSample,
+		yfield,
+		ydataElement,
+		showLegend,
+		pValue, dof;
+
+	var xbinnedSample = groupIndexByCode(xdata[0], xcodemap);
+	var xCategories = xcodemap.filter(c => xbinnedSample[c]);
+
+	// highlight categories identification: if all the samples in the category
+	// are part of the highlighted samples, the caterory will be highlighted
+	var highlightcode = (samplesMatched && samplesMatched.length !== samplesLength) ?
+		xCategories.filter(code =>
+			xbinnedSample[code].every(s => samplesMatched.indexOf(s) !== -1)) :
+		[];
+
+	var matrices =
+		initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap, STDEV});
+
+	// sort by median of xCategories if yfiedls.length === 1
+	if (xCategories.length > 0 && yfields.length === 1) {
+		[xCategories, matrices] = sortMatrices(xCategories, matrices);
+	}
+	var {meanMatrix, medianMatrix, upperMatrix, lowerMatrix, upperwhiskerMatrix,
+			lowerwhiskerMatrix, stdMatrix, nNumberMatrix} = matrices,
+		// offsets
+		cutOffsets = cutOffsetFn(yfields.map(field => offsets[field] / STDEV[field])),
+		scale = colorScales.colorScale(columns[xcolumn].colors[0]),
+		invCodeMap = _.invert(xcodemap);
+
+	// column chart setup
+	chartOptions = highchartsHelper.columnChartFloat(chartOptions, yfields, xlabel, ylabel);
+	var chart = newChart(chartOptions, callback);
+	showLegend = true;
+
+	xCategories.forEach((code, i) => {
+		// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
+		var medianSeries = cutOffsets(medianMatrix[i]),
+			upperSeries = cutOffsets(upperMatrix[i]),
+			lowerSeries = cutOffsets(lowerMatrix[i]),
+			upperwhiskerSeries = cutOffsets(upperwhiskerMatrix[i]),
+			lowerwhiskerSeries = cutOffsets(lowerwhiskerMatrix[i]),
+			nNumberSeries = nNumberMatrix[i],
+			color = highlightcode.length === 0 ? scale(invCodeMap[code]) :
+				highlightcode.indexOf(code) === -1 ? '#A9A9A9' :
+				'gold',
+			dataSeries = _.zip(lowerwhiskerSeries, lowerSeries, medianSeries,
+					upperSeries, upperwhiskerSeries);
+		highchartsHelper.addSeriesToColumn(
+			chart, 'boxplot', code,
+			dataSeries, ycodemap,
+			yfields.length * xCategories.length < 30, showLegend,
+			color,
+			nNumberSeries);
+	});
+
+	// p value when there is only 2 group comparison student t-test
+	// https://en.wikipedia.org/wiki/Welch%27s_t-test
+	if (xCategories.length === 2) {
+		statsDiv.innerHTML = 'Welch\'s t-test<br>';
+		_.range(yfields.length).map(k => {
+			if (nNumberMatrix[0][k] > 1 && nNumberMatrix[1][k] > 1) {
+				yfield = yfields[k];
+				// p value calculation using Welch's t-test
+				let x1 = meanMatrix[0][k], // mean1
+					x2 = meanMatrix[1][k], // mean2
+					v1 = stdMatrix[0][k] * stdMatrix[0][k], //variance 1
+					v2 = stdMatrix[1][k] * stdMatrix[1][k], //variance 2
+					n1 = nNumberMatrix[0][k], // number 1
+					n2 = nNumberMatrix[1][k], // number 2
+					vCombined = v1 / n1 + v2 / n2, // pooled variance
+					sCombined = Math.sqrt(vCombined), //pool sd
+					tStatistics = (x1 - x2) / sCombined, // t statistics,
+					cdf;
+
+				dof = vCombined * vCombined / ((v1 / n1) * (v1 / n1) / (n1 - 1) + (v2 / n2) * (v2 / n2) / (n2 - 1)), // degree of freedom
+				cdf = jStat.studentt.cdf(tStatistics, dof),
+				pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
+
+				statsDiv.innerHTML += (
+					(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
+					'p = ' + pValue.toPrecision(4) + ' ' +
+					'(t = ' + tStatistics.toPrecision(4) + ')<br>'
+				);
+			}
+		});
+		statsDiv.classList.toggle(compStyles.visible);
+	}
+
+	// p value for >2 groups one-way ANOVA
+	// https://en.wikipedia.org/wiki/One-way_analysis_of_variance
+	else if (xCategories.length > 2) {
+		statsDiv.innerHTML = 'One-way Anova<br>';
+		_.range(yfields.length).map(k => {
+			yfield = yfields[k];
+			ydataElement = ydata[k];
+			ybinnedSample = groupValuesByCodes(ydataElement, xdata[0], xcodemap);
+
+			let flattenArray = _.flatten(xCategories.map(code => ybinnedSample[code])),
+				// Calculate the overall mean
+				totalMean = flattenArray.reduce((sum, el) => sum + el, 0) / flattenArray.length,
+				//Calculate the "between-group" sum of squared differences
+				sB = _.range(xCategories.length).reduce((sum, index) => {
+					if (nNumberMatrix[index][0] > 0) {
+						return sum + nNumberMatrix[index][k] * Math.pow((meanMatrix[index][k] - totalMean), 2);
+					} else {
+						return sum;
+					}
+				}, 0),
+				// between-group degrees of freedom
+				fB = _.range(xCategories.length).filter(index => nNumberMatrix[index][k] > 0).length - 1,
+				// between-group mean square differences
+				msB = sB / fB,
+				// Calculate the "within-group" sum of squares
+				sW = _.range(xCategories.length).reduce((sum, index) => {
+					if (nNumberMatrix[index][k] > 0) {
+						return sum + Math.pow(stdMatrix[index][k], 2) * nNumberMatrix[index][k];
+					} else {
+						return sum;
+					}
+				}, 0),
+				// within-group degrees of freedom
+				fW = _.range(xCategories.length).reduce((sum, index) => {
+					if (nNumberMatrix[index][k] > 0) {
+						return sum + nNumberMatrix[index][k] - 1;
+					} else {
+						return sum;
+					}
+				}, 0),
+				// within-group mean difference
+				msW = sW / fW,
+				//  F-ratio
+				fScore = msB / msW,
+				// p value
+				pValue = jStat.ftest(fScore, fB, fW);
+
+			statsDiv.innerHTML += (
+				(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
+				'p = ' + pValue.toPrecision(4) + ' ' +
+				'(f = ' + fScore.toPrecision(4) + ')<br>'
+			);
+		});
+		statsDiv.classList.toggle(compStyles.visible);
+	}
+
+	chart.redraw();
+	return chart;
+}
+
+// single column
+function summary({
+		yfields, ycodemap, ydata,
+		offsets, xlabel, ylabel, STDEV,
+		callback}, chartOptions) {
+
+	var xAxisTitle,
+		ybinnedSample,
+		dataSeriese,
+		nNumberSeriese,
+		yfield,
+		ydataElement,
+		showLegend,
+		categories,
+		k,
+		total, chart;
+	var displayCategories;
+
+	dataSeriese = [];
+	nNumberSeriese = [];
+	ybinnedSample = {};
+
+	for (k = 0; k < yfields.length; k++) {
+		yfield = yfields[k];
+		ydataElement = ydata[k];
+
+		if (ycodemap) { //  fields.length ==1
+			ybinnedSample = groupIndexByCode(ydataElement, ycodemap);
+		} else { // floats
+			ybinnedSample[yfield] = ydataElement.filter(x => x != null);
+		}
+	}
+
+	total = 0;
+	if (ycodemap) {
+		categories = Object.keys(ybinnedSample);
+		categories.forEach(function (code) {
+			total = total + ybinnedSample[code].length;
+		});
+	} else {
+		categories = yfields;
+	}
+
+	// single parameter float do historgram with smart tick marks
+	if (!ycodemap && yfields.length === 1) {
+		var valueList = _.values(ybinnedSample)[0],
+			offset = _.values(offsets)[0],
+			stdev = _.values(STDEV)[0];
+
+		valueList.sort((a, b) => a - b);
+
+		var min = valueList[0],
+			max = valueList[valueList.length - 1],
+			N = 20,
+			gap = (max - min) / (N * stdev),
+			gapRoundedLower =  Math.pow(10, Math.floor(Math.log(gap) / Math.LN10)), // get a sense of the scale the gap, 0.01, 0.1, 1, 10 ...
+			gapList = [gapRoundedLower, gapRoundedLower * 2, gapRoundedLower * 5, gapRoundedLower * 10], // within the scale, find the closet to this list of easily readable intervals 1,2,5,10
+			gapRounded = _.min(gapList, x => Math.abs(gap - x )),
+			maxRounded = Math.ceil((max - offset) / stdev / gapRounded) * gapRounded,
+			minRounded = Math.floor((min - offset) / stdev / gapRounded) * gapRounded;
+
+		categories = _.range(minRounded, maxRounded, gapRounded);
+		categories = categories.map( bin =>
+			(Math.floor(bin * 100) / 100) + ' to ' + (Math.floor((bin + gapRounded) * 100) / 100));
+		ybinnedSample = {};
+		categories.map(bin => ybinnedSample[bin] = 0);
+		valueList.map( value => {
+			var binIndex = Math.floor(((value - offset) / stdev - minRounded) / gapRounded),
+				bin = categories[binIndex];
+			ybinnedSample[bin] = ybinnedSample[bin] + 1;
+		});
+	}
+
+	xAxisTitle = xlabel;
+	showLegend = false;
+
+	displayCategories = categories.slice(0);
+	if (ycodemap) {
+		chartOptions = highchartsHelper.columnChartOptions(
+			chartOptions, categories.map(code => code + " (" + ybinnedSample[code].length + ")"),
+			xAxisTitle, "Distribution", ylabel, showLegend);
+	} else if (yfields.length === 1) {
+		chartOptions = highchartsHelper.columnChartOptions(
+			chartOptions, categories, xAxisTitle, "Histogram", ylabel, showLegend);
+	} else {
+		chartOptions = highchartsHelper.columnChartFloat (chartOptions, displayCategories, xAxisTitle, ylabel);
+	}
+	chart = newChart(chartOptions, callback);
+
+	//add data to seriese
+	displayCategories.forEach(function (code) {
+		var value;
+		if (ycodemap) {
+			value = ybinnedSample[code].length;
+			dataSeriese.push(value * 100 / total);
+			nNumberSeriese.push(value);
+		} else if (yfields.length === 1) {
+			value = ybinnedSample[code];
+			dataSeriese.push(value);
+		} else {
+			var data = ybinnedSample[code],
+				m = data.length;
+			data.sort((a, b) => a - b);
+
+			// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
+			var median = data[Math.floor( m / 2)],
+				lower =  data[Math.floor( m / 4)],
+				upper =  data[Math.floor( 3 * m / 4)],
+				whisker = 1.5 * (upper - lower),
+				upperwhisker = _.findIndex(data, x => x > upper + whisker),
+				lowerwhisker = _.findLastIndex(data, x => x < lower - whisker);
+
+			upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
+			lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
+
+			median = (median - offsets[code]) / STDEV[code];
+			lower = (lower - offsets[code]) / STDEV[code];
+			upper = (upper - offsets[code]) / STDEV[code];
+			upperwhisker = (upperwhisker - offsets[code]) / STDEV[code];
+			lowerwhisker = (lowerwhisker - offsets[code]) / STDEV[code];
+
+			dataSeriese.push([lowerwhisker, lower, median, upper, upperwhisker]);
+			nNumberSeriese.push(m);
+		}
+	});
+
+	// add seriese to chart
+	var seriesLabel, chartType;
+
+	if (ycodemap) {
+		seriesLabel = " ";
+		chartType = 'column';
+	} else if (yfields.length === 1) {
+		seriesLabel = " ";
+		chartType = 'line';
+	} else {
+		seriesLabel = "average";
+		chartType = 'boxplot';
+	}
+	highchartsHelper.addSeriesToColumn(chart, chartType, seriesLabel,
+		dataSeriese, ycodemap, categories.length < 30, showLegend,
+		0, nNumberSeriese);
+	chart.redraw();
+	return chart;
+}
+
+function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
+		columns, ycolumn, callback}, chartOptions) {
+
+	var statsDiv = document.getElementById('stats'),
+		showLegend,
+		code,
+		categories,
+		i, k,
+		pValue, dof,
+		total, chart;
+
+	// Y data: yfields can only have array size of 1
+	var ybinnedSample = groupIndexByCode(ydata[0], ycodemap);
+
+	var xbinnedSample = groupIndexWithValueByCode(xdata[0], xcodemap, ydata[0]);
+
+	// column chart setup
+	// XXX this order may be weird
+	categories = _.keys(xbinnedSample);
+
+
+	showLegend = true;
+
+	chartOptions = highchartsHelper.columnChartOptions(
+		chartOptions, categories.map(code => code + " (" + xbinnedSample[code].length + ")"),
+		xlabel, 'Distribution', ylabel, showLegend);
+
+	chart = newChart(chartOptions, callback);
+
+	// XXX this order may be weird
+	var ycategories = Object.keys(ybinnedSample);
+
+	//code
+	let scale = colorScales.colorScale(columns[ycolumn].colors[0]),
+		invCodeMap = _.invert(ycodemap);
+
+	// Pearson's chi-squared test pearson https://en.wikipedia.org/wiki/Pearson's_chi-squared_test
+	// note, another version of pearson's chi-squared test is G-test, Likelihood-ratio test, https://en.wikipedia.org/wiki/Likelihood-ratio_test
+	var observed = [],
+		expected = [],
+		xRatio = [],
+		xMargin = [],
+		yMargin = [];
+
+	total = 0.0;
+	for (i = 0; i < ycategories.length; i++) {
+		code = ycategories[i];
+		observed.push(new Array(categories.length));
+		expected.push(new Array(categories.length));
+		yMargin.push(ybinnedSample[code].length);
+		total += yMargin[i];
+	}
+	// fill expected matrix
+	for (k = 0; k < categories.length; k++) {
+		code = categories[k];
+		xMargin.push(xbinnedSample[code].length);
+		xRatio.push(xMargin[k] / total);
+	}
+	for (i = 0; i < ycategories.length; i++) {
+		code = ycategories[i];
+		for (k = 0; k < categories.length; k++) {
+			observed[i][k] = _.intersection(ybinnedSample[code], xbinnedSample[categories[k]]).length;
+			expected[i][k] = xRatio[k] * yMargin[i];
+		}
+	}
+
+	for (i = 0; i < ycategories.length; i++) {
+		code = ycategories[i];
+		var ycodeSeries = new Array(categories.length);
+		for (k = 0; k < categories.length; k++) {
+			if (xMargin[k] && observed[i][k]) {
+				ycodeSeries[k] = parseFloat(((observed[i][k] / xMargin[k]) * 100).toPrecision(3));
+			} else {
+				ycodeSeries[k] = 0;
 			}
 		}
 
-		// Y data: yfields can only have array size of 1
-		yfield = yfields[0];
-		ydataElement = ydata[0];
-		ybinnedSample = parseYDataElement(yfield, ycodemap, ydataElement, categories, xSampleCode);
+		highchartsHelper.addSeriesToColumn(
+			chart, 'column', code, ycodeSeries, ycodemap,
+			ycodemap.length * categories.length < 30, showLegend,
+			scale(invCodeMap[code]), observed[i]);
+	}
 
-		var ySamples = _.flatten(_.values(ybinnedSample));
+	// pearson chi-square test statistics
+	dof = (ycategories.length - 1) * (categories.length - 1);
+	if (dof) {
+		var chisquareStats = 0.0;
 
-		// remove empty xcode categories and recal xbinnedSample[code] with samples actually has values in Y
-		xcodemap.forEach(function (code) {
-			xbinnedSample[code] =  _.intersection(xbinnedSample[code], ySamples);
-			if (xbinnedSample[code].length === 0) {
-				delete xbinnedSample[code];
+		for (i = 0; i < ycategories.length; i++) {
+			for (k = 0; k < categories.length; k++) {
+				chisquareStats += Math.pow((observed[i][k] - expected[i][k]), 2) / expected[i][k];
 			}
-		});
+		}
 
-		// column chart setup
-		categories = _.keys(xbinnedSample);
+		pValue = 1 - jStat.chisquare.cdf( chisquareStats, dof);
+		statsDiv.innerHTML = 'Pearson\'s chi-squared test<br>' +
+				'p = ' + pValue.toPrecision(4) + ' ' +
+				'(χ2 = ' + chisquareStats.toPrecision(4) + ')';
+		statsDiv.classList.toggle(compStyles.visible);
+	}
 
-		xAxisTitle = xlabel;
+	chart.redraw();
+	return chart;
+}
 
-		showLegend = true;
+function floatVFloat({samplesLength, xfield, xdata,
+		yfields, ydata,
+		offsets, xlabel, ylabel, STDEV,
+		scatterColorScale, scatterColorData, scatterColorDataCodemap,
+		samplesMatched,
+		columns, colorColumn, cohortSamples, callback}, chartOptions) {
 
-		chartOptions = highchartsHelper.columnChartOptions(
-			chartOptions, categories.map(code => code + " (" + xbinnedSample[code].length + ")"),
-			xAxisTitle, 'Distribution', ylabel, showLegend);
+	var statsDiv = document.getElementById('stats'),
+		yfield,
+		i, k,
+		average, stdDev,
+		chart;
 
+	var sampleLabels = cohortSamples,
+		x, y;
+
+	chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, samplesLength);
+
+	if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
 		chart = newChart(chartOptions, callback);
 
-		var ycategories = Object.keys(ybinnedSample);
+		for (k = 0; k < yfields.length; k++) {
+			var series = [];
 
-		//code
-		let scale = colorScales.colorScale(columns[ycolumn].colors[0]),
-			invCodeMap = _.invert(ycodemap);
-
-		// Pearson's chi-squared test pearson https://en.wikipedia.org/wiki/Pearson's_chi-squared_test
-		// note, another version of pearson's chi-squared test is G-test, Likelihood-ratio test, https://en.wikipedia.org/wiki/Likelihood-ratio_test
-		var observed = [],
-			expected = [],
-			xRatio = [],
-			xMargin = [],
-			yMargin = [];
-
-		total = 0.0;
-		for (i = 0; i < ycategories.length; i++) {
-			code = ycategories[i];
-			observed.push(new Array(categories.length));
-			expected.push(new Array(categories.length));
-			yMargin.push(ybinnedSample[code].length);
-			total += yMargin[i];
-		}
-		// fill expected matrix
-		for (k = 0; k < categories.length; k++) {
-			code = categories[k];
-			xMargin.push(xbinnedSample[code].length);
-			xRatio.push(xMargin[k] / total);
-		}
-		for (i = 0; i < ycategories.length; i++) {
-			code = ycategories[i];
-			for (k = 0; k < categories.length; k++) {
-				observed[i][k] = _.intersection(ybinnedSample[code], xbinnedSample[categories[k]]).length;
-				expected[i][k] = xRatio[k] * yMargin[i];
-			}
-		}
-
-		for (i = 0; i < ycategories.length; i++) {
-			code = ycategories[i];
-			var ycodeSeries = new Array(categories.length);
-			for (k = 0; k < categories.length; k++) {
-				if (xMargin[k] && observed[i][k]) {
-					ycodeSeries[k] = parseFloat(((observed[i][k] / xMargin[k]) * 100).toPrecision(3));
-				} else {
-					ycodeSeries[k] = 0;
-				}
-			}
-
-			highchartsHelper.addSeriesToColumn(
-				chart, 'column', code, ycodeSeries, ycodemap,
-				ycodemap.length * categories.length < 30, showLegend,
-				scale(invCodeMap[code]), observed[i]);
-		}
-
-		// pearson chi-square test statistics
-		dof = (ycategories.length - 1) * (categories.length - 1);
-		if (dof) {
-			var chisquareStats = 0.0;
-
-			for (i = 0; i < ycategories.length; i++) {
-				for (k = 0; k < categories.length; k++) {
-					chisquareStats += Math.pow((observed[i][k] - expected[i][k]), 2) / expected[i][k];
-				}
-			}
-
-			pValue = 1 - jStat.chisquare.cdf( chisquareStats, dof);
-			statsDiv.innerHTML = 'Pearson\'s chi-squared test<br>' +
-					'p = ' + pValue.toPrecision(4) + ' ' +
-					'(χ2 = ' + chisquareStats.toPrecision(4) + ')';
-			statsDiv.classList.toggle(compStyles.visible);
-		}
-
-		chart.redraw();
-	} else { // x y float scatter plot
-		var sampleLabels = cohortSamples,
-			x, y;
-
-		chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, samplesLength);
-
-		if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
-			chart = newChart(chartOptions, callback);
-
-			for (k = 0; k < yfields.length; k++) {
-				var series = [];
-
-				yfield = yfields[k];
-				for (i = 0; i < xdata[0].length; i++) {
-					x = xdata[0][i];
-					y = ydata[k][i];
-					if (null != x && null != y) {
-						y = (y - offsets[yfield]) / STDEV[yfield];
-						series.push({
-							name: sampleLabels[i],
-							x: x,
-							y: y
-						});
-					}
-
-				}
-				chart.addSeries({
-					name: yfield,
-					data: series
-				}, false);
-			}
-		} else { // y single subcolumn  --- coloring with a 3rd column
-			var multiSeries = {},
-				colorScale, getCodedColor,
-				highlightSeries = [],
-				opacity = 0.6,
-				colorCode, colorMin, color, colorLabel,
-				customColors,
-				useCodedSeries = scatterColorDataCodemap || !scatterColorData,
-				gray = `rgba(150,150,150,${opacity})`,
-				bin;
-
-			getCodedColor = code => {
-				if ("null" === code) {
-					return gray;
-				}
-				return colorStr(hexToRGB(colorScales.categoryMore[code % colorScales.categoryMore.length], opacity));
-			};
-
-			if (!useCodedSeries) {
-				average = highchartsHelper.average(scatterColorData);
-				stdDev = highchartsHelper.standardDeviation(scatterColorData, average);
-				colorMin = _.minnull(scatterColorData);
-				bin = stdDev * 0.1;
-				colorScale = v => v == null ? 'gray' : scatterColorScale(v);
-			}
-
-			chartOptions.legend.title.text = "";
-			chart = newChart(chartOptions, callback);
-
-			yfield = yfields[0];
+			yfield = yfields[k];
 			for (i = 0; i < xdata[0].length; i++) {
 				x = xdata[0][i];
-				y = ydata[0][i];
-				if (scatterColorData) {
-					colorCode = scatterColorData[i];
-				} else {
-					colorCode = 0;
-				}
-
-				if (null != x && null != y && null != colorCode) {
+				y = ydata[k][i];
+				if (null != x && null != y) {
 					y = (y - offsets[yfield]) / STDEV[yfield];
-					if (useCodedSeries) { // use multi-seriese
-						if (!multiSeries[colorCode]) {
-							multiSeries[colorCode] = {
-								"data": []
-							};
-						}
-						multiSeries[colorCode].data.push({
-							colorLabel: scatterColorDataCodemap ?
-								(scatterColorDataCodemap[colorCode] || "null (no data)") : '',
-							name: sampleLabels[i],
-							x: x,
-							y: y
-						});
-					} else { // convert float to multi-seriese
-						colorCode = Math.round((colorCode - colorMin) / bin) * bin + colorMin;
-						if (!multiSeries[colorCode]) {
-							multiSeries[colorCode] = {
-								"data": []
-							};
-						}
-						multiSeries[colorCode].data.push({
-							colorLabel: scatterColorData[i],
-							name: sampleLabels[i],
-							x: x,
-							y: y,
-						});
-					}
-
-					if (samplesMatched && samplesLength !== samplesMatched.length &&
-						samplesMatched.indexOf(i) !== -1) {
-						highlightSeries.push({
-							name: sampleLabels[i],
-							x: x,
-							y: y
-						});
-					}
-				}
-			}
-
-			if (v(colorColumn)) { // custome categorial color
-				customColors = _.getIn(columns[v(colorColumn)], ['colors', 0, 2]);
-			}
-
-			_.keys(multiSeries).map( (colorCode, i) => {
-				var showInLegend;
-				if (scatterColorData) {
-					if (useCodedSeries) {
-						colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
-						color = customColors ? customColors[colorCode] : getCodedColor(colorCode);
-						showInLegend = true;
-					} else {
-						color = colorScale(colorCode);
-						colorLabel = columns[colorColumn].user.fieldLabel;
-						showInLegend = (i === 0) ? true : false;
-					}
-
-				} else {
-					color = null;
-					colorLabel = "sample";
-					showInLegend = true;
+					series.push({
+						name: sampleLabels[i],
+						x: x,
+						y: y
+					});
 				}
 
-				chart.addSeries({
-					name: colorLabel,
-					showInLegend: showInLegend,
-					data: multiSeries[colorCode].data,
-					color: color,
-				}, false);
-			});
-
-			// add highlightSeries color in gold with black border
-			if (highlightSeries.length > 0 ) {
-				chart.addSeries({
-					name: "highlighted samples",
-					data: highlightSeries,
-					marker: {
-						symbol: 'circle',
-						lineColor: 'black',
-						fillColor: 'gold',
-						lineWidth: 1,
-					}
-				}, false);
 			}
+			chart.addSeries({
+				name: yfield,
+				data: series
+			}, false);
+		}
+	} else { // y single subcolumn  --- coloring with a 3rd column
+		var multiSeries = {},
+			colorScale, getCodedColor,
+			highlightSeries = [],
+			opacity = 0.6,
+			colorCode, colorMin, color, colorLabel,
+			customColors,
+			useCodedSeries = scatterColorDataCodemap || !scatterColorData,
+			gray = `rgba(150,150,150,${opacity})`,
+			bin;
+
+		getCodedColor = code => {
+			if ("null" === code) {
+				return gray;
+			}
+			return colorStr(hexToRGB(colorScales.categoryMore[code % colorScales.categoryMore.length], opacity));
+		};
+
+		if (!useCodedSeries) {
+			average = highchartsHelper.average(scatterColorData);
+			stdDev = highchartsHelper.standardDeviation(scatterColorData, average);
+			colorMin = _.minnull(scatterColorData);
+			bin = stdDev * 0.1;
+			colorScale = v => v == null ? 'gray' : scatterColorScale(v);
 		}
 
-		// pearson rho value when there are <= 10 series x y scatter plot
-		if (yfields.length <= 10 && xdata[0].length > 1) {
-			if (xdata[0].length >= 5000) {
-				var btn = document.createElement("BUTTON"); // need to refractor to react style, and material UI css
-				statsDiv.appendChild(btn);
-				btn.innerHTML = "Run Stats";
-				btn.onclick = function() {
-					printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
-				};
+		chartOptions.legend.title.text = "";
+		chart = newChart(chartOptions, callback);
+
+		yfield = yfields[0];
+		for (i = 0; i < xdata[0].length; i++) {
+			x = xdata[0][i];
+			y = ydata[0][i];
+			if (scatterColorData) {
+				colorCode = scatterColorData[i];
 			} else {
-				printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
+				colorCode = 0;
 			}
 
-			statsDiv.classList.toggle(compStyles.visible);
+			if (null != x && null != y && null != colorCode) {
+				y = (y - offsets[yfield]) / STDEV[yfield];
+				if (useCodedSeries) { // use multi-seriese
+					if (!multiSeries[colorCode]) {
+						multiSeries[colorCode] = {
+							"data": []
+						};
+					}
+					multiSeries[colorCode].data.push({
+						colorLabel: scatterColorDataCodemap ?
+							(scatterColorDataCodemap[colorCode] || "null (no data)") : '',
+						name: sampleLabels[i],
+						x: x,
+						y: y
+					});
+				} else { // convert float to multi-seriese
+					colorCode = Math.round((colorCode - colorMin) / bin) * bin + colorMin;
+					if (!multiSeries[colorCode]) {
+						multiSeries[colorCode] = {
+							"data": []
+						};
+					}
+					multiSeries[colorCode].data.push({
+						colorLabel: scatterColorData[i],
+						name: sampleLabels[i],
+						x: x,
+						y: y,
+					});
+				}
+
+				if (samplesMatched && samplesLength !== samplesMatched.length &&
+					samplesMatched.indexOf(i) !== -1) {
+					highlightSeries.push({
+						name: sampleLabels[i],
+						x: x,
+						y: y
+					});
+				}
+			}
 		}
 
-		chart.redraw();
+		if (v(colorColumn)) { // custome categorial color
+			customColors = _.getIn(columns[v(colorColumn)], ['colors', 0, 2]);
+		}
+
+		_.keys(multiSeries).map( (colorCode, i) => {
+			var showInLegend;
+			if (scatterColorData) {
+				if (useCodedSeries) {
+					colorLabel = scatterColorDataCodemap[colorCode] || "null (no data)";
+					color = customColors ? customColors[colorCode] : getCodedColor(colorCode);
+					showInLegend = true;
+				} else {
+					color = colorScale(colorCode);
+					colorLabel = columns[colorColumn].user.fieldLabel;
+					showInLegend = (i === 0) ? true : false;
+				}
+
+			} else {
+				color = null;
+				colorLabel = "sample";
+				showInLegend = true;
+			}
+
+			chart.addSeries({
+				name: colorLabel,
+				showInLegend: showInLegend,
+				data: multiSeries[colorCode].data,
+				color: color,
+			}, false);
+		});
+
+		// add highlightSeries color in gold with black border
+		if (highlightSeries.length > 0 ) {
+			chart.addSeries({
+				name: "highlighted samples",
+				data: highlightSeries,
+				marker: {
+					symbol: 'circle',
+					lineColor: 'black',
+					fillColor: 'gold',
+					lineWidth: 1,
+				}
+			}, false);
+		}
 	}
+
+	// pearson rho value when there are <= 10 series x y scatter plot
+	if (yfields.length <= 10 && xdata[0].length > 1) {
+		if (xdata[0].length >= 5000) {
+			var btn = document.createElement("BUTTON"); // need to refractor to react style, and material UI css
+			statsDiv.appendChild(btn);
+			btn.innerHTML = "Run Stats";
+			btn.onclick = function() {
+				printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
+			};
+		} else {
+			printPearsonAndSpearmanRho(statsDiv, xfield, yfields, xdata[0], ydata);
+		}
+
+		statsDiv.classList.toggle(compStyles.visible);
+	}
+
+	chart.redraw();
 	return chart;
+}
+
+function drawChart(params) {
+	var {cohort, samplesLength, xfield, xcodemap, ycodemap } = params;
+	var chartOptions = _.clone(highchartsHelper.chartOptions),
+		statsDiv = document.getElementById('stats');
+
+	statsDiv.innerHTML = "";
+	statsDiv.classList.toggle(compStyles.visible, false);
+
+
+	chartOptions.subtitle = {
+		text: "cohort: " + _.get(cohort, 'name') + " (n=" + samplesLength + ")"
+	};
+
+	if (xcodemap && !ycodemap) {
+		return floatVCoded(params, chartOptions);
+	} else if (!xfield) {
+		return summary(params, chartOptions);
+	} else if (xcodemap && ycodemap) {
+		return codedVCoded(params, chartOptions);
+	} else {
+		return floatVFloat(params, chartOptions);
+	}
 }
 
 var getColumnValues = multi(({columns}, id) => v(id) && columns[id].valueType);
@@ -1085,7 +993,6 @@ function callDrawChart(xenaState, params) {
 			xcodemap, ycodemap, destroy, yfields, xfield, callback} = params,
 		{cohort, cohortSamples, samples: {length: samplesLength}} = xenaState,
 		samplesMatched = _.getIn(xenaState, ['samplesMatched']),
-		scatterLabel,
 		scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 		scatterColorScale;
 
@@ -1110,8 +1017,6 @@ function callDrawChart(xenaState, params) {
 			scatterColorData = _.getIn(xenaState, ['data', colorColumn, 'req', 'values']);
 		}
 		scatterColorDataCodemap = _.getIn(xenaState, ['columns', colorColumn, 'codes']);
-		scatterLabel = columns[colorColumn].user.fieldLabel;
-
 		scatterColorData = scatterColorData[0];
 	}
 
@@ -1129,11 +1034,11 @@ function callDrawChart(xenaState, params) {
 			chartState.expState, yNormalization);
 
 	destroy();
-	return drawChart(cohort, samplesLength, xfield, xcodemap, xdata,
-			yfields, ycodemap, ydata,
-			dataOffsets(yNormalization, ydata, yfields), xlabel, ylabel, STDEV,
-			scatterLabel, scatterColorScale, scatterColorData, scatterColorDataCodemap,
-			samplesMatched, columns, xcolumn, ycolumn, colorColumn, cohortSamples, callback);
+	return drawChart({cohort, samplesLength, xfield, xcodemap, xdata,
+		yfields, ycodemap, ydata,
+		offsets: dataOffsets(yNormalization, ydata, yfields), xlabel, ylabel, STDEV,
+		scatterColorScale, scatterColorData, scatterColorDataCodemap,
+		samplesMatched, columns, xcolumn, ycolumn, colorColumn, cohortSamples, callback});
 };
 
 class HighchartView extends PureComponent {
@@ -1197,6 +1102,8 @@ class Chart extends PureComponent {
 			xexpOpts = expOptions(columns[xcolumn], xdata),
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
 			yfields = columns[ycolumn].fields,
+			// doScatter is really "show scatter color selector", which
+			// we only do if y is single-valued.
 			doScatter = !xcodemap && xfield && yfields.length === 1;
 
 		var drawProps = {ydata, yexpOpts, chartState, ycolumn,
