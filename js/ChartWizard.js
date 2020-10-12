@@ -95,12 +95,16 @@ var boxOrViolinInit = appState => {
 var boxOrViolinCanDraw = appState =>
 	boxOrViolinDatasets(appState).y.length > 0;
 
+var isValid = ({ycolumn, xcolumn}, appState) =>
+	v(ycolumn) && v(xcolumn) || v(ycolumn) && isMulti(appState, {value: ycolumn});
+
+
 var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 		state, props: {appState}}) =>
 	wizard({title: "Boxplot or violin plot", onClose,
 			left: button({onClick: onMode, 'data-mode': 'start', label: 'Back',
 				className: styles.back}),
-			right: doneButton(xyIsSet(state) && onDone)},
+			right: doneButton(isValid(state, appState) && onDone)},
 		div({className: styles.modes},
 			div(label('I want a'),
 				...boxOrViolinModes.map(props => button({onClick: onChart, ...props}))),
