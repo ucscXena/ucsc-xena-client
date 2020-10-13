@@ -12,7 +12,7 @@ var {parseBookmark} = require('../bookmark');
 import parseManifest from '../manifest';
 var gaEvents = require('../gaEvents');
 import * as columnsParam from '../columnsParam';
-import {defaultState as chartDefaultState} from '../chartUtils';
+import {defaultState as chartDefaultState} from '../chart/utils';
 var xenaQuery = require('../xenaQuery');
 
 function fetchBookmark(serverBus, bookmark) {

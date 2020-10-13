@@ -11,7 +11,7 @@ var gaEvents = require('./gaEvents');
 var {signatureField} = require('./models/fieldSpec');
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
-import {showWizard as showChartWizard} from './chartUtils.js';
+import {showWizard as showChartWizard} from './chart/utils.js';
 
 // Styles
 var compStyles = require('./AppControls.module.css');

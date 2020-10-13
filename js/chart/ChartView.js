@@ -1,7 +1,7 @@
 var React = require('react');
-import PureComponent from './PureComponent';
-import {showWizard} from './chartUtils';
-var _ = require('./underscore_ext').default;
+import PureComponent from '../PureComponent';
+import {showWizard} from './utils';
+var _ = require('../underscore_ext').default;
 
 var isBinary = (codes, data) => !codes && data &&
 	_.flatten(data).every(c => _.indexOf([0, 1], c) !== -1 || c == null);

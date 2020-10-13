@@ -1,11 +1,11 @@
 var React = require('react');
-import PureComponent from './PureComponent';
+import PureComponent from '../PureComponent';
 import {Card} from 'react-toolbox/lib/card';
 import {Button} from 'react-toolbox/lib/button';
 import {Dropdown} from 'react-toolbox/lib/dropdown';
 import Chart from './chart';
-var _ = require('./underscore_ext').default;
-import {v, suitableColumns} from './chartUtils';
+var _ = require('../underscore_ext').default;
+import {v, suitableColumns} from './utils';
 import boxplotImg from './boxplot.png';
 
 var isChild = x => x === null || typeof x === 'string' || React.isValidElement(x);

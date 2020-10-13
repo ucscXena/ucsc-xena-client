@@ -1,5 +1,5 @@
-import getLabel from './getLabel';
-var _ = require('./underscore_ext').default;
+import getLabel from '../getLabel';
+var _ = require('../underscore_ext').default;
 
 // The string 'none' has been used in several user settings where null or
 // undefined would be more typical. Since we have stored state like this,
