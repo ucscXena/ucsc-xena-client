@@ -57,6 +57,16 @@ describe('underscore_ext', function () {
 			assert.deepEqual(m({foo: {bar: 5}}, {foo: a}),
 				{foo: a});
 		});
+		it('should not change array type', function () {
+			var r = m({foo: {baz: 5}}, {foo: {bar: [5]}});
+			assert.deepEqual(r, {foo: {baz: 5, bar: [5]}});
+			assert(_.isArray(r.foo.bar));
+		});
+		it('should merge arrays', function () {
+			var r = m({foo: {baz: ['a', 'b', 'c']}}, {foo: {baz: [, 'x']}});
+			assert.deepEqual(r, {foo: {baz: ['a', 'x', 'c']}});
+			assert(_.isArray(r.foo.baz));
+		});
 
 	});
     describe('#maxWith', function () {
