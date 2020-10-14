@@ -438,6 +438,23 @@ function valToStr(v) {
 	return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
 }
 
+function deepMerge1(a, b) {
+	_.keys(b).forEach(k => {
+		var v = !_.isFunction(b[k]) && _.isObject(b[k]) ?
+			deepMerge1(_.get(a, k), b[k]) : b[k];
+		a = _.assoc(a, k, v);
+	});
+	return a;
+}
+
+// immutably deep merge nested objects, retaining identity if value is unchanged
+function deepMerge(a, ...args) {
+	args.forEach(arg => {
+		a = deepMerge1(a, arg);
+	});
+	return a;
+}
+
 // string slice() will hold a copy of the original string, which
 // will run us out of memory when processing buffers. So, force
 // a mem copy.
@@ -466,6 +483,7 @@ _.mixin({
 	cmpNumberOrNull,
 	curry,
 	curryN, // useful if the fn as multiple arities.
+	deepMerge,
 	duplicates,
 	filterIndices,
 	findIndexDefault,

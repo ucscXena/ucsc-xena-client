@@ -4,6 +4,61 @@ var assert = require('assert');
 var jsc = require('jsverify');
 
 describe('underscore_ext', function () {
+	describe('#deepMerge', function () {
+		var m = _.deepMerge;
+		it('should create object', function () {
+			assert.deepEqual(m(null, {foo: true}), {foo: true});
+			assert.deepEqual(m(undefined, {foo: true}), {foo: true});
+			// intermediate object
+			assert.deepEqual(m({}, {foo: {bar: {baz: 5}}}), {foo: {bar: {baz: 5}}});
+		});
+		it('should merge object props', function () {
+			assert.deepEqual(m({foo: true}, {bar: 5}), {foo: true, bar: 5});
+			assert.deepEqual(m({foo: true}, {foo: 5}), {foo: 5});
+		});
+		it('should merge nested object props', function () {
+			assert.deepEqual(m({foo: {bar: 5}}, {foo: {baz: 'x'}}),
+				{foo: {bar: 5, baz: 'x'}});
+			assert.deepEqual(m({foo: {bar: 5}}, {foo: {bar: 7}}),
+				{foo: {bar: 7}});
+			assert.deepEqual(m({foo: {bar: {baz: 5}}}, {foo: {bar: {baz: 12}}}),
+				{foo: {bar: {baz: 12}}});
+		});
+		it('should not modifiy args', function () {
+			var a = {foo: {bar: 5}},
+				b = {foo: {baz: 'x'}},
+				aj = JSON.stringify(a),
+				bj = JSON.stringify(b);
+
+			m({foo: {bar: 5}}, {foo: {baz: 'x'}});
+
+			assert.deepEqual(a, JSON.parse(aj));
+			assert.deepEqual(b, JSON.parse(bj));
+		});
+		it('should merge undefined', function () {
+			assert.deepEqual(m({foo: {bar: 5}, baz: 7}, {foo: undefined}),
+				{foo: undefined, baz: 7});
+		});
+		it('should merge undefined', function () {
+			assert.deepEqual(m({foo: {bar: 5}, baz: 7}, {foo: undefined}),
+				{foo: undefined, baz: 7});
+		});
+		it('should retain unmodified object', function () {
+			var a = {foo: {bar: 5, baz: 7}};
+			// assert identity is the same
+			assert.equal(m(a, {foo: {bar: 5}}), a);
+		});
+		it('should merge multiple objects', function () {
+			assert.deepEqual(m({foo: {bar: 5}}, {foo: {baz: 'x'}}, {bar: 12}),
+				{bar: 12, foo: {bar: 5, baz: 'x'}});
+		});
+		it('should not merge function properties', function () {
+			var a = () => {};
+			assert.deepEqual(m({foo: {bar: 5}}, {foo: a}),
+				{foo: a});
+		});
+
+	});
     describe('#maxWith', function () {
         it('should return max using cmp fn', function() {
             assert.equal(_.maxWith([5, 4, 3, 2, 1], (x, y) => x - y), 1);
