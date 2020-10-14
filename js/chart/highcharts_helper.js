@@ -1,6 +1,7 @@
 var Highcharts = require('highcharts/highstock');
 require('highcharts/modules/exporting')(Highcharts);
 require('highcharts/highcharts-more')(Highcharts);
+var _ = require('../underscore_ext').default;
 
 function hcLabelRender() {
 	var s = this.name;
@@ -70,224 +71,222 @@ var chartOptions = {
     }
 };
 
+var barTooltip = (xAxisTitle, Y) => ({
+	headerFormat: xAxisTitle + ' : {point.key}<br>',
+	formatter: function () {
+		var nNumber = _.get(this.series.userOptions.description, this.point.x, 0);
+		return Y + '=<b>' + this.series.name + '</b>'
+			+ '<br>'
+			+ '<b>' + this.point.y + '%</b>'
+			+ '</b><br>'
+			+ 'n = ' + nNumber;
+	},
+	hideDelay: 0
+});
+
+var histoTooltip = (categories, Y) => ({
+	formatter: function () {
+		return Y + '<br>' + categories[this.point.x]
+			+ '<br>'
+			+ '<b> n = ' + this.point.y + '</b>';
+	},
+	hideDelay: 0
+});
+
+var distTooltip = (categories, Y) => ({
+	formatter: function () {
+		return Y + '=' + categories[this.point.x]
+			+ '<br>'
+			+ '<b>' + this.point.y.toPrecision(3) + '%</b>';
+	},
+	hideDelay: 0
+});
+
+
+var codedTooltip = (isHisto, xAxisTitle, categories, Y) =>
+	xAxisTitle ? barTooltip(xAxisTitle, Y) :
+	isHisto ? histoTooltip(categories, Y) :
+	distTooltip(categories, Y);
+
 // x categorical, Y categorical
-function columnChartOptions (chartOptions, categories, xAxisTitle, yAxisType, Y, showLegend) {
-	var yAxisTitle = yAxisType === 'Histogram' ? 'Histogram' : 'Distribution';
+function columnChartOptions(chartOptions, categories, xAxisTitle, yAxisType, Y, showLegend) {
+	var isHisto = yAxisType === 'Histogram',
+		yAxisTitle = isHisto ? 'Histogram' : 'Distribution';
 
-	chartOptions.chart.zoomType = 'x';
-	chartOptions.legend.align = 'right';
-	chartOptions.legend.verticalAlign = 'middle';
-	chartOptions.legend.layout = 'vertical';
-
-	chartOptions.legend.title.style = {
-		width: "100px",
-		fontStyle: 'italic'
-	};
-
-	if (showLegend) {
-		chartOptions.legend.title.text = Y;
-	} else {
-		chartOptions.legend.title = {};
-	}
-
-	chartOptions.title = {
-		text: yAxisTitle + " of " + Y + ((xAxisTitle === "") ? "" : " according to " + xAxisTitle)
-	};
-	chartOptions.xAxis = {
-		title: {
-			text: xAxisTitle
+	var opts = {
+		chart: {zoomType: 'x'},
+		legend: {
+			align: 'right',
+			verticalAlign: 'middle',
+			layout: 'vertical',
+			title: {
+				style: {
+					width: "100px",
+					fontStyle: 'italic'
+				},
+				text: Y
+			},
+			enabled: showLegend
 		},
-		type: 'category',
-		categories: categories,
-		minRange: -1
-	};
-	chartOptions.yAxis = {
 		title: {
-			text: yAxisType === "Histogram" ? "count" : "distribution"
-		}
-	};
-	chartOptions.plotOptions = {
-		series: {
-			animation: false,
-			borderColor: '#303030'
+			text: `${yAxisTitle} of ${Y}${xAxisTitle && " according to "}${xAxisTitle}`
 		},
-		errorbar: {
-			color: 'gray'
-		}
-	};
-	//tooltip
-	if (xAxisTitle === "" && yAxisType === 'Histogram') { //histogram
-		chartOptions.tooltip = {
-			formatter: function () {
-					return Y + '<br>' + categories[this.point.x]
-						+ '<br>'
-						+ '<b> n = ' + this.point.y + '</b>';
+		xAxis: {
+			title: {
+				text: xAxisTitle
 			},
-			hideDelay: 0
-		};
-	} else if (xAxisTitle === "" && yAxisType !== 'Histogram') { //distribution
-		chartOptions.tooltip = {
-			formatter: function () {
-				return Y + '=' + categories[this.point.x]
-					+ '<br>'
-					+ '<b>' + this.point.y.toPrecision(3) + '%</b>';
+			type: 'category',
+			categories: categories,
+			minRange: -1,
+			labels: categories.length > 15 ? {
+				rotation: -90
+			} : {}
+		},
+		yAxis: {
+			title: {
+				text: isHisto ? 'count' : 'distribution'
 			},
-			hideDelay: 0
-		};
-	} else {
-		chartOptions.tooltip = {
-			headerFormat: xAxisTitle + ' : {point.key}<br>',
-			formatter: function () {
-				var nNumber = this.series.userOptions.description ? this.series.userOptions.description[this.point.x] : 0;
-				return Y + '=<b>' + this.series.name + '</b>'
-					+ '<br>'
-					+ '<b>' + this.point.y + '%</b>'
-					+ '</b><br>'
-					+ 'n = ' + nNumber;
+			labels: {
+				format: isHisto ? '{value}' : '{value} %'
+			}
+		},
+		plotOptions: {
+			series: {
+				animation: false,
+				borderColor: '#303030'
 			},
-			hideDelay: 0
-		};
-	}
-
-	if (categories.length > 15) {
-		chartOptions.xAxis.labels = {
-			rotation: -90
-		};
-	}
-
-	chartOptions.yAxis.labels = {
-		format: yAxisType === "Histogram" ? '{value}' : '{value} %'
+			errorbar: {
+				color: 'gray'
+			}
+		},
+		tooltip: codedTooltip(isHisto, xAxisTitle, categories, Y)
 	};
 
-	return chartOptions;
+	return _.deepMerge(chartOptions, opts);
 }
 
 // x categorical y float  boxplot
-function columnChartFloat (chartOptions, categories, xAxisTitle, yAxisTitle) {
-	chartOptions.chart.zoomType = 'x';
-	chartOptions.legend.align = 'right';
-	chartOptions.legend.margin = 5;
-	chartOptions.legend.title.text = xAxisTitle;
-	chartOptions.legend.verticalAlign = 'middle';
-	chartOptions.legend.layout = 'vertical';
-
-	chartOptions.title = {
-		text: '' // boxplot no chart tile because both x and y axis are clearlly marked.
-	};
-
-	chartOptions.xAxis = {
-		title: {
-			text: xAxisTitle
+function columnChartFloat(chartOptions, categories, xAxisTitle, yAxisTitle) {
+	var opts = {
+		chart: {
+			zoomType: 'x'
 		},
-		type: 'category',
-		categories: categories.length === 1 ? [''] : categories,
-		minRange: -1
-	};
-
-	chartOptions.yAxis = {
-		title: {
-			text: yAxisTitle
+		legend: {
+			align: 'right',
+			margin: 5,
+			title: {text: xAxisTitle},
+			verticalAlign: 'middle',
+			layout: 'vertical'
+		},
+		// boxplot no chart tile because both x and y axis are clearlly marked.
+		title: {text: ''},
+		xAxis: {
+			title: {text: xAxisTitle},
+			type: 'category',
+			categories: categories.length === 1 ? [''] : categories,
+			minRange: -1,
+			labels: categories.length > 5 ? {rotation: -90} : {}
+		},
+		yAxis: {
+			title: {text: yAxisTitle}
+		},
+		tooltip: {
+			headerFormat: xAxisTitle + ' : {series.name}<br>',
+			formatter: function () {
+				var nNumber = this.series.userOptions.description ? this.series.userOptions.description[this.point.x] : 0;
+				return (xAxisTitle ? xAxisTitle + ' : ' : '')
+					+ this.series.name + '<br>'
+					+ (categories.length > 1 ?  yAxisTitle + ' ' : '' )
+					+ categories[this.point.x]
+					+ ': <b>'
+					+ this.point.median.toPrecision(3) + '</b>'
+					+ ' (' + this.point.low.toPrecision(3) + ','
+					+ this.point.q1.toPrecision(3) + ','
+					+ this.point.q3.toPrecision(3) + ','
+					+ this.point.high.toPrecision(3) + ')<br>'
+					+ '</b><br>'
+					+ (nNumber ? 'n = ' + nNumber : '');
+			},
+			hideDelay: 0
+		},
+		plotOptions: {
+			series: {
+				animation: false
+			},
+			errorbar: {
+				color: 'gray'
+			}
 		}
 	};
 
-	chartOptions.tooltip = {
-		headerFormat: xAxisTitle + ' : {series.name}<br>',
-		formatter: function () {
-			var nNumber = this.series.userOptions.description ? this.series.userOptions.description[this.point.x] : 0;
-			return (xAxisTitle ? xAxisTitle + ' : ' : '')
-				+ this.series.name + '<br>'
-				+ (categories.length > 1 ?  yAxisTitle + ' ' : '' )
-				+ categories[this.point.x]
-				+ ': <b>'
-				+ this.point.median.toPrecision(3) + '</b>'
-				+ ' (' + this.point.low.toPrecision(3) + ','
-				+ this.point.q1.toPrecision(3) + ','
-				+ this.point.q3.toPrecision(3) + ','
-				+ this.point.high.toPrecision(3) + ')<br>'
-				+ '</b><br>'
-				+ (nNumber ? 'n = ' + nNumber : '');
-		},
-		hideDelay: 0
-	};
-
-	if (categories.length > 5) {
-		chartOptions.xAxis.labels = {
-		rotation: -90
-		};
-	}
-
-	chartOptions.plotOptions = {
-		series: {
-			animation: false
-		},
-		errorbar: {
-			color: 'gray'
-		}
-	};
-
-	return chartOptions;
+	return _.deepMerge(chartOptions, opts);
 }
 
 function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	var xAxisTitle = xlabel,
 		yAxisTitle = ylabel;
 
-	chartOptions.chart.zoomType = 'xy';
-	chartOptions.chart.type = 'scatter';
-	chartOptions.chart.boost = {
-        useGPUTranslations: true,
-        usePreAllocated: true
-    };
-	chartOptions.legend.align = 'right';
-	chartOptions.legend.verticalAlign = 'middle';
-	chartOptions.legend.layout = 'vertical';
-	chartOptions.title = {
-		text: '' // scatter plot no chart tile because both x and y axis are clearlly marked.
-	};
-	chartOptions.xAxis = {
-		title: {
-			text: xAxisTitle
-		},
-		minRange: -1,
-		crosshair: true
-	};
-	chartOptions.yAxis = {
-		title: {
-			text: yAxisTitle
-		},
-		gridLineWidth: 0,
-		tickWidth: 1,
-		lineWidth: 1,
-		crosshair: true,
-		scrollbar: {
-			enabled: true,
-			showFull: false
-		}
-	};
-	chartOptions.tooltip = {
-		hideDelay: 0,
-		formatter: function () {
-			return '<b>' + this.point.colorLabel + '</b><br>' +
-				'sample: ' + this.point.name + '<br>' +
-				'x: ' + this.point.x.toPrecision(3) + '<br>' +
-				'y: ' + this.point.y.toPrecision(3);
+	var opts = {
+		chart: {
+			zoomType: 'xy',
+			type: 'scatter',
+			boost: {
+				useGPUTranslations: true,
+				usePreAllocated: true
 			}
-	};
-	chartOptions.plotOptions = {
-		scatter: {
-			marker: {
-				radius: samplesLength > 10000 ? 1 : 2,
-				opacity: 0.1
-			},
 		},
-		series: {
-			animation: false,
-			turboThreshold: 0,
-			stickyTracking: false,
-			boostThreshold: 1000
+		legend: {
+			align: 'right',
+			verticalAlign: 'middle',
+			layout: 'vertical'
+		},
+		// scatter plot no chart tile because both x and y axis are clearlly marked.
+		title: {text: ''},
+		xAxis: {
+			title: {
+				text: xAxisTitle
+			},
+			minRange: -1,
+			crosshair: true
+		},
+		yAxis: {
+			title: {
+				text: yAxisTitle
+			},
+			gridLineWidth: 0,
+			tickWidth: 1,
+			lineWidth: 1,
+			crosshair: true,
+			scrollbar: {
+				enabled: true,
+				showFull: false
+			}
+		},
+		tooltip: {
+			hideDelay: 0,
+			formatter: function () {
+				return '<b>' + this.point.colorLabel + '</b><br>' +
+					'sample: ' + this.point.name + '<br>' +
+					'x: ' + this.point.x.toPrecision(3) + '<br>' +
+					'y: ' + this.point.y.toPrecision(3);
+				}
+		},
+		plotOptions: {
+			scatter: {
+				marker: {
+					radius: samplesLength > 10000 ? 1 : 2,
+					opacity: 0.1
+				},
+			},
+			series: {
+				animation: false,
+				turboThreshold: 0,
+				stickyTracking: false,
+				boostThreshold: 1000
+			}
 		}
 	};
-	return chartOptions;
+	return _.deepMerge(chartOptions, opts);
 }
 
 function addSeriesToColumn (chart, chartType, sName, ycodeSeries, yIsCategorical,

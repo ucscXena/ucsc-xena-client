@@ -184,18 +184,19 @@ var expOptions = (column, data)  =>
 		{value: 'log2', label: `log2(${colUnit(column)}+1)`}];
 
 function newChart(chartOptions, callback) {
-	chartOptions.exporting = {
-		buttons: {
-			contextButton: {enabled: false},
-			closeButton: {
-				text: 'CLOSE',
-				onclick: function () {
-					gaEvents('spreadsheet', 'columnChart-close');
-					callback(['heatmap']);
+	chartOptions = _.deepMerge(chartOptions, {
+		exporting: {
+			buttons: {
+				contextButton: {enabled: false},
+				closeButton: {
+					text: 'CLOSE',
+					onclick: function () {
+						gaEvents('spreadsheet', 'columnChart-close');
+						callback(['heatmap']);
+					}
 				}
 			}
-		}
-	};
+	}});
 	return new Highcharts.Chart(chartOptions);
 }
 
@@ -791,7 +792,9 @@ function floatVFloat({samplesLength, xfield, xdata,
 			colorScale = v => v == null ? 'gray' : scatterColorScale(v);
 		}
 
-		chartOptions.legend.title.text = "";
+		chartOptions = _.deepMerge(chartOptions, {
+			legend: {title: {text: ''}}
+		});
 		chart = newChart(chartOptions, callback);
 
 		yfield = yfields[0];
@@ -912,17 +915,14 @@ function floatVFloat({samplesLength, xfield, xdata,
 }
 
 function drawChart(params) {
-	var {cohort, samplesLength, xfield, xcodemap, ycodemap } = params;
-	var chartOptions = _.clone(highchartsHelper.chartOptions),
+	var {cohort, samplesLength, xfield, xcodemap, ycodemap } = params,
+		subtitle = `cohort: ${_.get(cohort, 'name')} (n=${samplesLength})`,
+		chartOptions = _.assoc(highchartsHelper.chartOptions,
+			'subtitle', {text: subtitle}),
 		statsDiv = document.getElementById('stats');
 
 	statsDiv.innerHTML = "";
 	statsDiv.classList.toggle(compStyles.visible, false);
-
-
-	chartOptions.subtitle = {
-		text: "cohort: " + _.get(cohort, 'name') + " (n=" + samplesLength + ")"
-	};
 
 	if (xcodemap && !ycodemap) {
 		return floatVCoded(params, chartOptions);
