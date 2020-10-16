@@ -14,6 +14,7 @@ import {suitableColumns, columnLabel, v} from './utils.js';
 import {Button} from 'react-toolbox/lib/button';
 import {Card} from 'react-toolbox/lib/card';
 import classNames from 'classnames';
+var sc = require('science');
 
 // Styles
 var compStyles = require('./chart.module.css');
@@ -316,17 +317,140 @@ var cutOffset = (average, offset) => !isNaN(average) ? average - offset : "";
 var cutOffsetFn = offsetsSeries =>
 	values => _.mmap(values, offsetsSeries, cutOffset);
 
+function boxplot({xCategories, matrices, yfields, scale, chart, ycodemap,
+		cutOffsets}) {
+	var {medianMatrix, upperMatrix, lowerMatrix, upperwhiskerMatrix,
+		lowerwhiskerMatrix, nNumberMatrix} = matrices;
+
+	xCategories.forEach((code, i) => {
+		// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
+		var medianSeries = cutOffsets(medianMatrix[i]),
+			upperSeries = cutOffsets(upperMatrix[i]),
+			lowerSeries = cutOffsets(lowerMatrix[i]),
+			upperwhiskerSeries = cutOffsets(upperwhiskerMatrix[i]),
+			lowerwhiskerSeries = cutOffsets(lowerwhiskerMatrix[i]),
+			nNumberSeries = nNumberMatrix[i],
+			color = scale(code),
+			dataSeries = _.zip(lowerwhiskerSeries, lowerSeries, medianSeries,
+					upperSeries, upperwhiskerSeries);
+		highchartsHelper.addSeriesToColumn({
+			chart,
+			type: 'boxplot',
+			name: code,
+			data: dataSeries,
+			yIsCategorical: ycodemap, // XXX isn't this in the chart object already?
+			showDataLabel: yfields.length * xCategories.length < 30,
+			showInLegend: true,
+			color,
+			description: nNumberSeries});
+	});
+}
+
+var violinSamples = 30; // XXX is 30 points good?
+function processViolin(min, max, offset, groups) {
+	var r = _.range(min, max, (max - min) / violinSamples);
+
+	return groups.map((g, i) => sc.stats.kde().sample(g)(r)
+			// adding i moves each graph right so they don't overlap.
+			// offset shifts the whole group to the right of the previous yfield.
+			.map(([x, y]) => [x, offset + i - y, offset + i + y]));
+}
+
+function violinplot({xCategories, yfields,  matrices: m, ydata, xdata, xcodemap, chart, scale}) {
+
+	var min = _.min(m.lowerwhiskerMatrix.map(d => _.min(d))),
+		max = _.max(m.upperwhiskerMatrix.map(d => _.max(d))),
+		padding = (max - min) * 0.1; // area to sample above & below the whiskers
+
+	var data = yfields.map((field, i) => {
+		let ybinnedSample = groupValuesByCodes(ydata[i], xdata[0], xcodemap),
+			// offset pushes each yfield group to the right, and leaves a gap
+			offset = i * (xCategories.length + 1);
+
+		return processViolin(min - padding, max + padding, offset,
+			xCategories.map(c => ybinnedSample[c]));
+	}).flat();
+
+	data.forEach((data, i) => {
+		var cat = i % xCategories.length,
+			code = xCategories[cat],
+			field = Math.floor(i / xCategories.length),
+			color = scale(code),
+			stats = {
+				code,
+				field: yfields[field],
+				n: m.nNumberMatrix[cat][field],
+				upperwhisker: m.upperwhiskerMatrix[cat][field],
+				upper: m.upperMatrix[cat][field],
+				median: m.medianMatrix[cat][field],
+				lower: m.lowerMatrix[cat][field],
+				lowerwhisker: m.lowerwhiskerMatrix[cat][field],
+			};
+		highchartsHelper.addSeriesToColumn({
+			chart,
+			type: 'areasplinerange',
+			name: code, // XXX not sure we need this
+			data,
+			showDataLabel: yfields.length * xCategories.length < 30,
+			showInLegend: i < xCategories.length,
+			color,
+			marker: {enabled: false},
+			description: stats});
+	});
+
+	yfields.forEach((yfield, i) => {
+		xCategories.forEach((code, j) => {
+			var y = i * (xCategories.length + 1) + j;
+			highchartsHelper.addSeriesToColumn({
+				chart,
+				type: 'line',
+				color: 'black',
+				lineWidth: 3,
+				data: [[m.lowerMatrix[j][i], y], [m.upperMatrix[j][i], y]]
+			});
+			highchartsHelper.addSeriesToColumn({
+				chart,
+				type: 'line',
+				color: 'black',
+				lineWidth: 1,
+				data: [[m.lowerwhiskerMatrix[j][i], y],
+					[m.upperwhiskerMatrix[j][i], y]]
+			});
+		});
+	});
+	var medians =
+		yfields.flatMap((yfield, i) => xCategories.map((code, j) => {
+			var y = i * (xCategories.length + 1) + j;
+			return [m.medianMatrix[j][i], y] ;
+		}));
+	highchartsHelper.addSeriesToColumn({
+				chart,
+				type: 'scatter',
+				marker: {
+					symbol: 'circle',
+					fillColor: 'white',
+					radius: 1.5
+				},
+				data: medians});
+}
+
+var fvcOptions = violin => violin ?
+	highchartsHelper.violinOptions :
+	highchartsHelper.boxplotOptions;
+
+var fvcChart = violin => violin ?
+	violinplot : boxplot;
+
 function floatVCoded({samplesLength, xcodemap, xdata,
 		yfields, ycodemap, ydata,
 		offsets, xlabel, ylabel, STDEV,
-		samplesMatched,
+		samplesMatched, violin,
 		columns, xcolumn, callback}, chartOptions) {
 
 	var statsDiv = document.getElementById('stats'),
 		ybinnedSample,
 		yfield,
 		ydataElement,
-		showLegend,
 		pValue, dof;
 
 	var xbinnedSample = groupIndexByCode(xdata[0], xcodemap);
@@ -346,38 +470,22 @@ function floatVCoded({samplesLength, xcodemap, xdata,
 	if (xCategories.length > 0 && yfields.length === 1) {
 		[xCategories, matrices] = sortMatrices(xCategories, matrices);
 	}
-	var {meanMatrix, medianMatrix, upperMatrix, lowerMatrix, upperwhiskerMatrix,
-			lowerwhiskerMatrix, stdMatrix, nNumberMatrix} = matrices,
+	var {meanMatrix, stdMatrix, nNumberMatrix} = matrices,
 		// offsets
 		cutOffsets = cutOffsetFn(yfields.map(field => offsets[field] / STDEV[field])),
-		scale = colorScales.colorScale(columns[xcolumn].colors[0]),
-		invCodeMap = _.invert(xcodemap);
+		scale = _.Let((cs = colorScales.colorScale(columns[xcolumn].colors[0]),
+					invCodeMap = _.invert(xcodemap)) =>
+			highlightcode.length === 0 ?
+				code => cs(invCodeMap[code]) :
+				code => highlightcode.indexOf(code) === -1 ? '#A9A9A9' : 'gold');
 
-	// column chart setup
-	chartOptions = highchartsHelper.columnChartFloat(chartOptions, yfields, xlabel, ylabel);
+	chartOptions = fvcOptions(violin)({chartOptions,
+		categories: yfields, xAxisTitle: xlabel, yAxisTitle: ylabel});
+
 	var chart = newChart(chartOptions, callback);
-	showLegend = true;
 
-	xCategories.forEach((code, i) => {
-		// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
-		var medianSeries = cutOffsets(medianMatrix[i]),
-			upperSeries = cutOffsets(upperMatrix[i]),
-			lowerSeries = cutOffsets(lowerMatrix[i]),
-			upperwhiskerSeries = cutOffsets(upperwhiskerMatrix[i]),
-			lowerwhiskerSeries = cutOffsets(lowerwhiskerMatrix[i]),
-			nNumberSeries = nNumberMatrix[i],
-			color = highlightcode.length === 0 ? scale(invCodeMap[code]) :
-				highlightcode.indexOf(code) === -1 ? '#A9A9A9' :
-				'gold',
-			dataSeries = _.zip(lowerwhiskerSeries, lowerSeries, medianSeries,
-					upperSeries, upperwhiskerSeries);
-		highchartsHelper.addSeriesToColumn(
-			chart, 'boxplot', code,
-			dataSeries, ycodemap,
-			yfields.length * xCategories.length < 30, showLegend,
-			color,
-			nNumberSeries);
-	});
+	fvcChart(violin)({xCategories, matrices, yfields, ydata, xdata, xcodemap,
+		scale, chart, ycodemap, cutOffsets});
 
 	// p value when there is only 2 group comparison student t-test
 	// https://en.wikipedia.org/wiki/Welch%27s_t-test
@@ -557,7 +665,8 @@ function summary({
 		chartOptions = highchartsHelper.columnChartOptions(
 			chartOptions, categories, xAxisTitle, "Histogram", ylabel, showLegend);
 	} else {
-		chartOptions = highchartsHelper.columnChartFloat (chartOptions, displayCategories, xAxisTitle, ylabel);
+		chartOptions = highchartsHelper.boxplotOptions({chartOptions,
+			categories: displayCategories, xAxisTitle, yAxisTitle: ylabel});
 	}
 	chart = newChart(chartOptions, callback);
 
@@ -611,9 +720,16 @@ function summary({
 		seriesLabel = "average";
 		chartType = 'boxplot';
 	}
-	highchartsHelper.addSeriesToColumn(chart, chartType, seriesLabel,
-		dataSeriese, ycodemap, categories.length < 30, showLegend,
-		0, nNumberSeriese);
+	highchartsHelper.addSeriesToColumn({
+		chart,
+		type: chartType,
+		name: seriesLabel,
+		data: dataSeriese,
+		yIsCategorical: ycodemap,
+		showDataLabel: categories.length < 30,
+		showInLegend: showLegend,
+		color: 0,
+		description: nNumberSeriese});
 	chart.redraw();
 	return chart;
 }
@@ -695,10 +811,16 @@ function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 			}
 		}
 
-		highchartsHelper.addSeriesToColumn(
-			chart, 'column', code, ycodeSeries, ycodemap,
-			ycodemap.length * categories.length < 30, showLegend,
-			scale(invCodeMap[code]), observed[i]);
+		highchartsHelper.addSeriesToColumn({
+			chart,
+			type: 'column',
+			name: code,
+			data: ycodeSeries,
+			yIsCategorical: ycodemap,
+			showDataLabel: ycodemap.length * categories.length < 30,
+			showInLegend: showLegend,
+			color: scale(invCodeMap[code]),
+			description: observed[i]});
 	}
 
 	// pearson chi-square test statistics
@@ -915,7 +1037,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 }
 
 function drawChart(params) {
-	var {cohort, samplesLength, xfield, xcodemap, ycodemap } = params,
+	var {cohort, samplesLength, xfield, xcodemap, ycodemap} = params,
 		subtitle = `cohort: ${_.get(cohort, 'name')} (n=${samplesLength})`,
 		chartOptions = _.assoc(highchartsHelper.chartOptions,
 			'subtitle', {text: subtitle}),
@@ -987,11 +1109,15 @@ function getStdev(fields, data, norm) {
 	return _.object(fields, stdev);
 }
 
+// XXX note duplication of parameters, as xcolumn, ycolumn, colorColumn are in
+// chartState, and chartState is in xenaState. Clean this up. codemaps Should
+// also be in xenaState, but check that binary cast to coded happens first.
 function callDrawChart(xenaState, params) {
 	var {ydata, yexpOpts, chartState, ycolumn,
 			xdata, xexpOpts, xcolumn, doScatter, colorColumn, columns,
 			xcodemap, ycodemap, destroy, yfields, xfield, callback} = params,
 		{cohort, cohortSamples, samples: {length: samplesLength}} = xenaState,
+		violin = _.getIn(chartState, ['violin']),
 		samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 		scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 		scatterColorScale;
@@ -1035,7 +1161,7 @@ function callDrawChart(xenaState, params) {
 
 	destroy();
 	return drawChart({cohort, samplesLength, xfield, xcodemap, xdata,
-		yfields, ycodemap, ydata,
+		yfields, ycodemap, ydata, violin,
 		offsets: dataOffsets(yNormalization, ydata, yfields), xlabel, ylabel, STDEV,
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched, columns, xcolumn, ycolumn, colorColumn, cohortSamples, callback});
@@ -1092,7 +1218,7 @@ class Chart extends PureComponent {
 				button({label: 'Close', onClick: () => callback(['heatmap'])}));
 		}
 
-		var {xcolumn, ycolumn, colorColumn, advanced} = chartState,
+		var {xcolumn, ycolumn, colorColumn, advanced, violin} = chartState,
 			{columns} = xenaState,
 			xdata = getColumnValues(xenaState, xcolumn),
 			xcodemap = getCodes(columns, xdata, xcolumn),
@@ -1134,6 +1260,10 @@ class Chart extends PureComponent {
 				chartState.normalizationState[ycolumn],
 				i => set(['normalizationState', chartState.ycolumn], i));
 
+		var violinOpt = !xcodemap || ycodemap ? null :
+			button({label: violin ? 'Boxplot' : 'Violin plot',
+				onClick: () => set(['violin'], !violin)});
+
 		var advOpt = advanced ?
 			div({id: 'controlPanel', className: compStyles.controlPanel},
 				div(
@@ -1159,8 +1289,9 @@ class Chart extends PureComponent {
 					div({id: 'stats', className: compStyles.stats}),
 					div({className: compStyles.actions},
 						button({label: 'Make another graph', onClick:
-						() => set(['setColumn'], ycolumn)}),
+							() => set(['setColumn'], ycolumn)}),
 						swapAxes,
+						violinOpt,
 						button({label: advanced ? 'Hide options' : 'Advanced options',
 							onClick: () => set(['advanced'], !advanced)}))));
 	};

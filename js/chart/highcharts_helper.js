@@ -2,6 +2,9 @@ var Highcharts = require('highcharts/highstock');
 require('highcharts/modules/exporting')(Highcharts);
 require('highcharts/highcharts-more')(Highcharts);
 var _ = require('../underscore_ext').default;
+var styles = require('./chart.module.css');
+import ReactDOMServer from 'react-dom/server';
+import {div, table, tr, td, tbody, b} from './react-hyper';
 
 function hcLabelRender() {
 	var s = this.name;
@@ -30,7 +33,7 @@ var chartOptions = {
 		useHTML: true
 	},
     scrollbar: {
-        enabled: true
+        enabled: false
     },
 	legend: {
 		title: {
@@ -165,11 +168,139 @@ function columnChartOptions(chartOptions, categories, xAxisTitle, yAxisType, Y, 
 	return _.deepMerge(chartOptions, opts);
 }
 
-// x categorical y float  boxplot
-function columnChartFloat(chartOptions, categories, xAxisTitle, yAxisTitle) {
+var tableBody = (...args) => table(tbody(...args));
+var trd = (...args) => tr(...args.map(e => td(e.toString())));
+
+var layoutStats = ({n, upperwhisker, upper, median, lower, lowerwhisker,
+		field, code}) =>
+	ReactDOMServer.renderToStaticMarkup(
+		div({className: styles.violinTooltip},
+			b(`${field}: ${code}`),
+			tableBody(
+				trd('n', n),
+				trd('upper', upperwhisker),
+				trd('Q3', upper),
+				trd('median', median),
+				trd('Q1', lower),
+				trd('lower', lowerwhisker))));
+
+function violinOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 	var opts = {
 		chart: {
-			zoomType: 'x'
+			zoomType: 'y',
+			inverted: true,
+			// animation of y axis looks odd, and is unreliable. There doesn't
+			// appear to be a way to disable it directly, so disabling animations
+			// globally, here.
+			animation: false
+		},
+		// scroll doesn't update the secondary axes that render ticks and
+		// labels, which makes it confusing. Also, it re-renders the violins
+		// during the scroll, which is compute intensive, and causes the scroll
+		// to stutter. Leaving it off. It's still possible to zoom in & out
+		// without scroll.
+		scrollbar: {enabled: false},
+		legend: {
+			align: 'right',
+			margin: 5,
+			title: {text: xAxisTitle},
+			verticalAlign: 'middle',
+			layout: 'vertical'
+		},
+		// violin no chart tile because both x and y axis are clearlly marked.
+		title: {text: undefined},
+		yAxis: [{
+			title: '', // XXX is there a flag for this?
+			type: 'category',
+//			XXX add rotation, below
+			labels: /*categories.length > 5 ? {rotation: -90} :*/ {
+				enabled: false
+			},
+			gridLineWidth: 0,
+		}, {
+			// Getting tick marks and labels aligned correctly is challenging.
+			// Want it to look like
+			//     |   category A    |   category B   |
+			// But there's no way to center labels in the categories. Also,
+			// there's no way to draw labels in positions without tick marks.
+			// So, we create a second axis for tick marks, and a third for
+			// labels, adding empty categories as necessary so everything is
+			// aligned.
+			type: 'category',
+			min: 0,
+			max: categories.length,
+			tickWidth: 1,
+			tickmarkPlacement: 'on',
+			labels: {enabled: false},
+			title: '',
+			lineWidth: 1,
+			gridLineWidth: 0,
+			endOnTick: false,
+			startOnTick: false,
+		}, {
+			type: 'category',
+			// The strategy here is to add blank categories between our
+			// categories so the labels appear centered on our categories,
+			// instead of on the edge.
+			categories: [categories[0], ...categories.slice(1)
+				.map(c => ['', c]).flat()],
+			gridLineWidth: 0,
+			min: -1,
+			max: categories.length + 1,
+			title: {text: xAxisTitle},
+			offset: -4,
+			labels: {
+				enabled: true,
+				formatter: function ({pos}) {
+					return this.axis.categories[pos];
+				}
+			},
+			endOnTick: false,
+			startOnTick: false,
+		}],
+		xAxis: {
+			title: {text: yAxisTitle},
+			gridLineWidth: 1,
+			reversed: false,
+			scrollbar: {enabled: false, height: 0}
+		},
+		tooltip: {
+			headerFormat: xAxisTitle + ' : {series.name}<br>',
+			useHTML: true,
+			formatter: function () {
+				return layoutStats(this.series.userOptions.description);
+			},
+			hideDelay: 0
+		},
+		plotOptions: {
+			series: {
+				animation: false,
+				// Don't highlight the kde interpolation points on hover.
+				states: {hover: {enabled: false}}
+			},
+			line: {
+				enableMouseTracking: false,
+				marker: {enabled: false},
+				showInLegend: false,
+			},
+			scatter: {
+				enableMouseTracking: false,
+				showInLegend: false,
+			}
+		}
+	};
+
+	return _.deepMerge(chartOptions, opts);
+}
+
+// x categorical y float  boxplot
+function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
+	var opts = {
+		chart: {
+			zoomType: 'x',
+		},
+		scrollbar: {
+			enabled: false
 		},
 		legend: {
 			align: 'right',
@@ -185,10 +316,13 @@ function columnChartFloat(chartOptions, categories, xAxisTitle, yAxisTitle) {
 			type: 'category',
 			categories: categories.length === 1 ? [''] : categories,
 			minRange: -1,
-			labels: categories.length > 5 ? {rotation: -90} : {}
+			labels: categories.length > 5 ? {rotation: -90} : {},
+			gridLineWidth: 0,
 		},
 		yAxis: {
-			title: {text: yAxisTitle}
+			title: {text: yAxisTitle},
+			gridLineWidth: 1,
+			reversed: false
 		},
 		tooltip: {
 			headerFormat: xAxisTitle + ' : {series.name}<br>',
@@ -211,7 +345,10 @@ function columnChartFloat(chartOptions, categories, xAxisTitle, yAxisTitle) {
 		},
 		plotOptions: {
 			series: {
-				animation: false
+				animation: false,
+				line: {
+					tooltip: {enabled: false}
+				}
 			},
 			errorbar: {
 				color: 'gray'
@@ -289,34 +426,25 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 	return _.deepMerge(chartOptions, opts);
 }
 
-function addSeriesToColumn (chart, chartType, sName, ycodeSeries, yIsCategorical,
-	showDataLabel, showLegend, color, nNumberSeriese = undefined) {
-	var seriesOptions = {
-		name: sName,
-		type: chartType,
-		data: ycodeSeries,
+var labelMethod = {
+	true: { // category
+		enabled: true,
+		formatter: function () { return this.point.y.toPrecision(3) + '%'; }
+	},
+	false: {
+		enabled: true,
+		format: '{point.median}'
+	}
+};
+
+function addSeriesToColumn({chart, yIsCategorical = false, showDataLabel = true,
+		...opts}) {
+	var dataLabels = !showDataLabel ? {} : labelMethod[!!yIsCategorical];
+	var seriesOptions = _.deepMerge({
 		maxPointWidth: 50,
-		color: color,
-		description: nNumberSeriese  // use description to carry n=xx information
-	};
+		dataLabels,
+	}, opts);
 
-	if (!showLegend) {
-		seriesOptions.showInLegend = false;
-	}
-
-	if (showDataLabel) {
-		if ( yIsCategorical) {
-			seriesOptions.dataLabels = {
-				enabled: true,
-				formatter: function () { return this.point.y.toPrecision(3) + '%';}
-			};
-		} else {  // boxplot data label is not implemented in highchart, yet
-			seriesOptions.dataLabels = {
-				enabled: true,
-				format: '{point.median}'
-			};
-		}
-	}
 	chart.addSeries(seriesOptions, false);
 }
 
@@ -348,7 +476,8 @@ module.exports = {
 	standardDeviation,
 	average,
 	columnChartOptions,
-	columnChartFloat,
+	boxplotOptions,
+	violinOptions,
 	scatterChart,
 	addSeriesToColumn
 };

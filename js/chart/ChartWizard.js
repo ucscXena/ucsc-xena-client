@@ -98,6 +98,8 @@ var boxOrViolinCanDraw = appState =>
 var isValid = ({ycolumn, xcolumn}, appState) =>
 	v(ycolumn) && v(xcolumn) || v(ycolumn) && isMulti(appState, {value: ycolumn});
 
+var bvDisabled = (state, props) =>
+	(props['data-chart'] === 'violin') ===  !!state.violin;
 
 var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 		state, props: {appState}}) =>
@@ -107,7 +109,9 @@ var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 			right: doneButton(isValid(state, appState) && onDone)},
 		div({className: styles.modes},
 			div(label('I want a'),
-				...boxOrViolinModes.map(props => button({onClick: onChart, ...props}))),
+				...boxOrViolinModes.map(props =>
+					button({onClick: onChart, disabled: bvDisabled(state, props),
+						...props}))),
 			div(dropdown({label: 'Showing data from:', onChange: onY,
 				value: state.ycolumn, source: boxOrViolinYDatasets(appState)})),
 			div(dropdown({label: 'Subgroup samples by', onChange: onX,
@@ -217,11 +221,12 @@ var page = {
 export default class ChartWizard extends PureComponent {
 	constructor(props) {
 	    super(props);
-		var {chartState: {ycolumn, xcolumn, setColumn} = {}} = this.props.appState;
+		var {chartState: {ycolumn, xcolumn, violin, setColumn} = {}} = this.props.appState;
 	    this.state = {
 			mode: v(ycolumn) && !setColumn ? 'chart' : 'start',
 			ycolumn,
-			xcolumn
+			xcolumn,
+			violin
 		};
 	}
 
@@ -247,15 +252,16 @@ export default class ChartWizard extends PureComponent {
 		this.props.callback(['heatmap']);
 	}
 	onChart = ev => {
-		this.setState({chart: ev.currentTarget.dataset.chart});
+		this.setState({violin: ev.currentTarget.dataset.chart === 'violin'});
 	}
 	onDone = () => {
 		var {callback, appState} = this.props,
-			{ycolumn, xcolumn} = this.state;
+			{ycolumn, xcolumn, violin} = this.state;
 		callback(['chart-set-state',
 			_.assocIn(appState.chartState,
 				['ycolumn'], ycolumn,
 				['xcolumn'], xcolumn,
+				['violin'], violin,
 				['setColumn'], undefined)]);
 	}
 	onX = xcolumn => {
