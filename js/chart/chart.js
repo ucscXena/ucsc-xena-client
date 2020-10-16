@@ -1113,7 +1113,7 @@ function callDrawChart(xenaState, params) {
 		scatterColorScale;
 
 	ydata = applyExp(ydata, yexpOpts[chartState.expState[ycolumn]]);
-	xdata = xdata && applyExp(xdata, xexpOpts[chartState.expXState[xcolumn]]);
+	xdata = xdata && applyExp(xdata, xexpOpts[chartState.expState[xcolumn]]);
 
 	if (doScatter && v(colorColumn)) {
 		scatterColorDataSegment = _.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
@@ -1144,7 +1144,7 @@ function callDrawChart(xenaState, params) {
 	var STDEV = getStdev(yfields, ydata, yNormalization);
 
 	var xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexpOpts,
-			chartState.expXState);
+			chartState.expState);
 
 	var ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexpOpts,
 			chartState.expState, yNormalization);
@@ -1241,9 +1241,9 @@ class Chart extends PureComponent {
 		var xExp = !v(xcolumn) || xcodemap ? null :
 			buildExpDropdown({
 				opts: xexpOpts,
-				index: chartState.expXState[xcolumn],
+				index: chartState.expState[xcolumn],
 				label: 'X unit',
-				onChange: i => set(['expXState', chartState.xcolumn], i)});
+				onChange: i => set(['expState', chartState.xcolumn], i)});
 
 		var normalization = ycodemap ? null :
 			buildNormalizationDropdown(

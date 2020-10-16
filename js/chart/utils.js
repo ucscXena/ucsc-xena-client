@@ -44,7 +44,7 @@ var initSettings = chartState => {
 	}
 	var xcolumn = chartState.xcolumn;
 	if (v(xcolumn)) {
-		chartState = setIfNot(chartState, ['expXState', xcolumn], 0);
+		chartState = setIfNot(chartState, ['expState', xcolumn], 0);
 	}
 	return chartState;
 };

@@ -44,7 +44,7 @@ module.exports = function () {
 	var uiCh = uiBus;
 
 	var initialState = {
-		version: 3, // XXX duplicated in migrateState.js?
+		version: 4, // XXX duplicated in migrateState.js?
 		spreadsheet: {
 			columnOrder: [],
 			columns: {},
