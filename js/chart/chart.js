@@ -236,7 +236,7 @@ function* constantly (fn) {
 	}
 }
 
-function initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap, STDEV}) {
+function initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap}) {
 	// matrices, row is x and column is y:
 	// mean
 	// median
@@ -255,7 +255,6 @@ function initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap, STDEV}) 
 
 	// Y data and fill in the matrix
 	for (let k = 0; k < yfields.length; k++) {
-		let yfield = yfields[k];
 		let ydataElement = ydata[k];
 		let ybinnedSample = groupValuesByCodes(ydataElement, xdata[0], xcodemap);
 
@@ -280,17 +279,17 @@ function initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap, STDEV}) 
 
 				upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
 				lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
-				meanMatrix[i][k] = average / STDEV[yfield];
-				medianMatrix[i][k] = median / STDEV[yfield];
-				lowerMatrix[i][k] = lower / STDEV[yfield];
+				meanMatrix[i][k] = average;
+				medianMatrix[i][k] = median;
+				lowerMatrix[i][k] = lower;
 
-				upperMatrix[i][k] = upper / STDEV[yfield];
-				lowerwhiskerMatrix[i][k] = lowerwhisker / STDEV[yfield];
-				upperwhiskerMatrix[i][k] = upperwhisker / STDEV[yfield];
+				upperMatrix[i][k] = upper;
+				lowerwhiskerMatrix[i][k] = lowerwhisker;
+				upperwhiskerMatrix[i][k] = upperwhisker;
 				nNumberMatrix[i][k] = m;
 
 				if (!isNaN(stdDev)) {
-					stdMatrix[i][k] = stdDev / STDEV[yfield];
+					stdMatrix[i][k] = stdDev;
 				} else {
 					stdMatrix[i][k] = NaN;
 				}
@@ -313,22 +312,17 @@ function sortMatrices(xCategories, matrices) {
 	return [reorder(xCategories), _.mapObject(matrices, m => reorder(m))];
 }
 
-var cutOffset = (average, offset) => !isNaN(average) ? average - offset : "";
-var cutOffsetFn = offsetsSeries =>
-	values => _.mmap(values, offsetsSeries, cutOffset);
-
-function boxplot({xCategories, matrices, yfields, scale, chart, ycodemap,
-		cutOffsets}) {
+function boxplot({xCategories, matrices, yfields, scale, chart, ycodemap}) {
 	var {medianMatrix, upperMatrix, lowerMatrix, upperwhiskerMatrix,
 		lowerwhiskerMatrix, nNumberMatrix} = matrices;
 
 	xCategories.forEach((code, i) => {
 		// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
-		var medianSeries = cutOffsets(medianMatrix[i]),
-			upperSeries = cutOffsets(upperMatrix[i]),
-			lowerSeries = cutOffsets(lowerMatrix[i]),
-			upperwhiskerSeries = cutOffsets(upperwhiskerMatrix[i]),
-			lowerwhiskerSeries = cutOffsets(lowerwhiskerMatrix[i]),
+		var medianSeries = medianMatrix[i],
+			upperSeries = upperMatrix[i],
+			lowerSeries = lowerMatrix[i],
+			upperwhiskerSeries = upperwhiskerMatrix[i],
+			lowerwhiskerSeries = lowerwhiskerMatrix[i],
 			nNumberSeries = nNumberMatrix[i],
 			color = scale(code),
 			dataSeries = _.zip(lowerwhiskerSeries, lowerSeries, medianSeries,
@@ -443,7 +437,7 @@ var fvcChart = violin => violin ?
 
 function floatVCoded({samplesLength, xcodemap, xdata,
 		yfields, ycodemap, ydata,
-		offsets, xlabel, ylabel, STDEV,
+		xlabel, ylabel,
 		samplesMatched, violin,
 		columns, xcolumn, callback}, chartOptions) {
 
@@ -464,15 +458,13 @@ function floatVCoded({samplesLength, xcodemap, xdata,
 		[];
 
 	var matrices =
-		initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap, STDEV});
+		initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap});
 
-	// sort by median of xCategories if yfiedls.length === 1
+	// sort by median of xCategories if yfields.length === 1
 	if (xCategories.length > 0 && yfields.length === 1) {
 		[xCategories, matrices] = sortMatrices(xCategories, matrices);
 	}
 	var {meanMatrix, stdMatrix, nNumberMatrix} = matrices,
-		// offsets
-		cutOffsets = cutOffsetFn(yfields.map(field => offsets[field] / STDEV[field])),
 		scale = _.Let((cs = colorScales.colorScale(columns[xcolumn].colors[0]),
 					invCodeMap = _.invert(xcodemap)) =>
 			highlightcode.length === 0 ?
@@ -485,7 +477,7 @@ function floatVCoded({samplesLength, xcodemap, xdata,
 	var chart = newChart(chartOptions, callback);
 
 	fvcChart(violin)({xCategories, matrices, yfields, ydata, xdata, xcodemap,
-		scale, chart, ycodemap, cutOffsets});
+		scale, chart, ycodemap});
 
 	// p value when there is only 2 group comparison student t-test
 	// https://en.wikipedia.org/wiki/Welch%27s_t-test
@@ -583,7 +575,7 @@ function floatVCoded({samplesLength, xcodemap, xdata,
 // single column
 function summary({
 		yfields, ycodemap, ydata,
-		offsets, xlabel, ylabel, STDEV,
+		xlabel, ylabel,
 		callback}, chartOptions) {
 
 	var xAxisTitle,
@@ -625,21 +617,19 @@ function summary({
 
 	// single parameter float do historgram with smart tick marks
 	if (!ycodemap && yfields.length === 1) {
-		var valueList = _.values(ybinnedSample)[0],
-			offset = _.values(offsets)[0],
-			stdev = _.values(STDEV)[0];
+		var valueList = _.values(ybinnedSample)[0];
 
 		valueList.sort((a, b) => a - b);
 
 		var min = valueList[0],
 			max = valueList[valueList.length - 1],
 			N = 20,
-			gap = (max - min) / (N * stdev),
+			gap = (max - min) / N,
 			gapRoundedLower =  Math.pow(10, Math.floor(Math.log(gap) / Math.LN10)), // get a sense of the scale the gap, 0.01, 0.1, 1, 10 ...
 			gapList = [gapRoundedLower, gapRoundedLower * 2, gapRoundedLower * 5, gapRoundedLower * 10], // within the scale, find the closet to this list of easily readable intervals 1,2,5,10
 			gapRounded = _.min(gapList, x => Math.abs(gap - x )),
-			maxRounded = Math.ceil((max - offset) / stdev / gapRounded) * gapRounded,
-			minRounded = Math.floor((min - offset) / stdev / gapRounded) * gapRounded;
+			maxRounded = Math.ceil(max / gapRounded) * gapRounded,
+			minRounded = Math.floor(min / gapRounded) * gapRounded;
 
 		categories = _.range(minRounded, maxRounded, gapRounded);
 		categories = categories.map( bin =>
@@ -647,7 +637,7 @@ function summary({
 		ybinnedSample = {};
 		categories.map(bin => ybinnedSample[bin] = 0);
 		valueList.map( value => {
-			var binIndex = Math.floor(((value - offset) / stdev - minRounded) / gapRounded),
+			var binIndex = Math.floor((value - minRounded) / gapRounded),
 				bin = categories[binIndex];
 			ybinnedSample[bin] = ybinnedSample[bin] + 1;
 		});
@@ -695,12 +685,6 @@ function summary({
 
 			upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
 			lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
-
-			median = (median - offsets[code]) / STDEV[code];
-			lower = (lower - offsets[code]) / STDEV[code];
-			upper = (upper - offsets[code]) / STDEV[code];
-			upperwhisker = (upperwhisker - offsets[code]) / STDEV[code];
-			lowerwhisker = (lowerwhisker - offsets[code]) / STDEV[code];
 
 			dataSeriese.push([lowerwhisker, lower, median, upper, upperwhisker]);
 			nNumberSeriese.push(m);
@@ -847,7 +831,7 @@ function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 
 function floatVFloat({samplesLength, xfield, xdata,
 		yfields, ydata,
-		offsets, xlabel, ylabel, STDEV,
+		xlabel, ylabel,
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
 		columns, colorColumn, cohortSamples, callback}, chartOptions) {
@@ -874,7 +858,6 @@ function floatVFloat({samplesLength, xfield, xdata,
 				x = xdata[0][i];
 				y = ydata[k][i];
 				if (null != x && null != y) {
-					y = (y - offsets[yfield]) / STDEV[yfield];
 					series.push({
 						name: sampleLabels[i],
 						x: x,
@@ -930,7 +913,6 @@ function floatVFloat({samplesLength, xfield, xdata,
 			}
 
 			if (null != x && null != y && null != colorCode) {
-				y = (y - offsets[yfield]) / STDEV[yfield];
 				if (useCodedSeries) { // use multi-seriese
 					if (!multiSeries[colorCode]) {
 						multiSeries[colorCode] = {
@@ -1103,17 +1085,14 @@ function getStdev(fields, data, norm) {
 // chartState, and chartState is in xenaState. Clean this up. codemaps Should
 // also be in xenaState, but check that binary cast to coded happens first.
 function callDrawChart(xenaState, params) {
-	var {ydata, yexpOpts, chartState, ycolumn,
-			xdata, xexpOpts, xcolumn, doScatter, colorColumn, columns,
-			xcodemap, ycodemap, destroy, yfields, xfield, callback} = params,
-		{cohort, cohortSamples, samples: {length: samplesLength}} = xenaState,
+	var {ydata, yexpOpts, ycolumn, xdata, xexpOpts, xcolumn, doScatter,
+			colorColumn, xcodemap, ycodemap, destroy, yfields} = params,
+		{chartState, cohort, cohortSamples,
+			samples: {length: samplesLength}} = xenaState,
 		violin = _.getIn(chartState, ['violin']),
 		samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 		scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 		scatterColorScale;
-
-	ydata = applyExp(ydata, yexpOpts[chartState.expState[ycolumn]]);
-	xdata = xdata && applyExp(xdata, xexpOpts[chartState.expState[xcolumn]]);
 
 	if (doScatter && v(colorColumn)) {
 		scatterColorDataSegment = _.getIn(xenaState, ['data', colorColumn, 'req', 'rows']);
@@ -1136,12 +1115,27 @@ function callDrawChart(xenaState, params) {
 		scatterColorData = scatterColorData[0];
 	}
 
+	ydata = applyExp(ydata, yexpOpts[chartState.expState[ycolumn]]);
+	xdata = xdata && applyExp(xdata, xexpOpts[chartState.expState[xcolumn]]);
+
 	var yNormalization = !ycodemap &&
 		_.Let((n = normalizationOptions[
 					chartState.normalizationState[chartState.ycolumn]]) =>
 				n && v(n.value));
 
-	var STDEV = getStdev(yfields, ydata, yNormalization);
+
+	if (!ycodemap) {
+		let offsets = dataOffsets(yNormalization, ydata, yfields),
+			STDEV = getStdev(yfields, ydata, yNormalization);
+
+		// XXX simplify these if not set. No need to build arrays of ones and zeros.
+		// XXX Or better: just transform the axes.
+
+		// mean normalize
+		ydata = ydata.map((data, i) => data.map(d => d === null ? null : d - offsets[yfields[i]]));
+		// z-score
+		ydata = ydata.map((data, i) => _.map(data, d => d / STDEV[yfields[i]]));
+	}
 
 	var xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexpOpts,
 			chartState.expState);
@@ -1150,11 +1144,15 @@ function callDrawChart(xenaState, params) {
 			chartState.expState, yNormalization);
 
 	destroy();
-	return drawChart({cohort, samplesLength, xfield, xcodemap, xdata,
-		yfields, ycodemap, ydata, violin,
-		offsets: dataOffsets(yNormalization, ydata, yfields), xlabel, ylabel, STDEV,
+	// XXX omit unused downstream params? e.g. chartState?
+	return drawChart(_.merge(params, {
+		xlabel, ylabel,
+		cohort, cohortSamples, samplesLength, // why both cohortSamples an samplesLength??
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
-		samplesMatched, columns, xcolumn, ycolumn, colorColumn, cohortSamples, callback});
+		samplesMatched,
+		violin,
+		xdata, ydata // normalized
+	}));
 };
 
 class HighchartView extends PureComponent {
@@ -1195,12 +1193,13 @@ class Chart extends PureComponent {
 		var {callback, appState: xenaState} = this.props,
 			{chartState} = xenaState,
 			set = (...args) => {
-				chartState = _.assocIn(chartState, ...args);
-				callback(['chart-set-state', chartState]);
+				var cs = _.assocIn(chartState, ...args);
+				callback(['chart-set-state', cs]);
 			};
 
 		// XXX note that this will also display if data is still loading, which is
 		// a bit misleading.
+		// XXX this should now be happening in ChartWizard, so we should drop this.
 		if (!(v(chartState.ycolumn) && xenaState.cohort && xenaState.samples &&
 				xenaState.columnOrder.length > 0)) {
 			return card({className: classNames(compStyles.ChartView, compStyles.error)},
@@ -1222,7 +1221,7 @@ class Chart extends PureComponent {
 			// we only do if y is single-valued.
 			doScatter = !xcodemap && xfield && yfields.length === 1;
 
-		var drawProps = {ydata, yexpOpts, chartState, ycolumn,
+		var drawProps = {ydata, yexpOpts, ycolumn,
 			xdata, xexpOpts, xcolumn, doScatter, colorColumn, columns,
 			xcodemap, ycodemap, destroy: this.destroy, yfields, xfield, callback};
 
