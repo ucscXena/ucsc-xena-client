@@ -1088,16 +1088,6 @@ var expMethods = {
 var applyExp = (data, setting) =>
 	expMethods[_.get(setting, 'value', 'none')](data);
 
-// this looks expensive
-var isBinary = (codes, data) => !codes && data &&
-	_.flatten(data).every(c => _.indexOf([0, 1], c) !== -1 || c == null);
-
-// treat binary float as categorical
-function getCodes(columns, data, id) {
-	var codes = _.getIn(columns, [id, 'codes']);
-	return isBinary(codes, data) ? ['0', '1'] : codes;
-}
-
 function getStdev(fields, data, norm) {
 	var stdev = (norm !== 'subset_stdev') ?
 		new Array(fields.length).fill(1) :
@@ -1221,9 +1211,9 @@ class Chart extends PureComponent {
 		var {xcolumn, ycolumn, colorColumn, advanced, violin} = chartState,
 			{columns} = xenaState,
 			xdata = getColumnValues(xenaState, xcolumn),
-			xcodemap = getCodes(columns, xdata, xcolumn),
+			xcodemap = _.getIn(columns, [xcolumn, 'codes']),
 			ydata = getColumnValues(xenaState, ycolumn),
-			ycodemap = getCodes(columns, ydata, ycolumn),
+			ycodemap = _.getIn(columns, [ycolumn, 'codes']),
 			yexpOpts = expOptions(columns[ycolumn], ydata),
 			xexpOpts = expOptions(columns[xcolumn], xdata),
 			xfield = _.getIn(xenaState.columns, [xcolumn, 'fields', 0]),
