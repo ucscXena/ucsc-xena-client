@@ -1035,12 +1035,12 @@ getColumnValues.add('coded', ({data}, id) => _.getIn(data[id], ['req', 'values']
 getColumnValues.add('segmented', ({data}, id) => _.getIn(data[id], ['avg', 'geneValues']));
 getColumnValues.add('undefined', () => undefined);
 
-function axisLabel({columns, columnOrder}, id, showUnits, opts, expState, norm) {
+function axisLabel({columns, columnOrder}, id, showUnits, exp, norm) {
 	if (!v(id)) {
 		return '';
 	}
 	var label = columnLabel(columnOrder.indexOf(id), columns[id]),
-		unit = showUnits ? '<br>Unit: ' + opts[expState[id]].label : '',
+		unit = showUnits ? '<br>Unit: ' + exp.label : '',
 		noralization = norm === 'subset' ? '<br>mean-centered' :
 			norm === 'subset_stdev' ? '<br>z-tranformed' : '';
 	return label + unit + noralization;
@@ -1070,11 +1070,11 @@ function getStdev(fields, data, norm) {
 // chartState, and chartState is in xenaState. Clean this up. codemaps Should
 // also be in xenaState, but check that binary cast to coded happens first.
 function callDrawChart(xenaState, params) {
-	var {ydata, yexpOpts, ycolumn, xdata, xexpOpts, xcolumn, doScatter,
+	var {ydata, yexp, ycolumn, xdata, xexp, xcolumn, doScatter,
 			colorColumn, xcodemap, ycodemap, destroy, yfields} = params,
 		{chartState, cohort, cohortSamples,
 			samples: {length: samplesLength}} = xenaState,
-		violin = _.getIn(chartState, ['violin']),
+		{violin} = chartState,
 		samplesMatched = _.getIn(xenaState, ['samplesMatched']),
 		scatterColorData, scatterColorDataCodemap, scatterColorDataSegment,
 		scatterColorScale;
@@ -1100,8 +1100,8 @@ function callDrawChart(xenaState, params) {
 		scatterColorData = scatterColorData[0];
 	}
 
-	ydata = applyExp(ydata, yexpOpts[chartState.expState[ycolumn]]);
-	xdata = xdata && applyExp(xdata, xexpOpts[chartState.expState[xcolumn]]);
+	ydata = applyExp(ydata, yexp);
+	xdata = xdata && applyExp(xdata, xexp);
 
 	var yNormalization = !ycodemap &&
 		_.Let((n = normalizationOptions[
@@ -1125,11 +1125,9 @@ function callDrawChart(xenaState, params) {
 		ydata = ydata.map((data, i) => _.map(data, d => d === null ? null : d / STDEV[yfields[i]]));
 	}
 
-	var xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexpOpts,
-			chartState.expState);
+	var xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexp);
 
-	var ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexpOpts,
-			chartState.expState, yNormalization);
+	var ylabel = axisLabel(xenaState, ycolumn, !ycodemap, yexp, yNormalization);
 
 	destroy();
 	// XXX omit unused downstream params? e.g. chartState?
@@ -1209,9 +1207,13 @@ class Chart extends PureComponent {
 			// we only do if y is single-valued.
 			doScatter = !xcodemap && xfield && yfields.length === 1;
 
-		var drawProps = {ydata, yexpOpts, ycolumn,
-			xdata, xexpOpts, xcolumn, doScatter, colorColumn, columns,
-			xcodemap, ycodemap, destroy: this.destroy, yfields, xfield, callback};
+		var drawProps = {ydata, ycolumn,
+			xdata, xcolumn, doScatter, colorColumn, columns,
+			xcodemap, ycodemap, yfields, xfield, callback,
+			destroy: this.destroy,
+			yexp: yexpOpts[chartState.expState[ycolumn]],
+			xexp: xexpOpts[chartState.expState[xcolumn]]
+		};
 
 		var colorAxisDiv = doScatter ? axisSelector(xenaState, 'Color',
 				ev => set(['colorColumn'], ev.currentTarget.value)) : null;
