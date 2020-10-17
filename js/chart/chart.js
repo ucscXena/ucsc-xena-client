@@ -1132,7 +1132,7 @@ function callDrawChart(xenaState, params) {
 	if (!ycodemap) {
 		let STDEV = getStdev(yfields, ydata, yNormalization);
 		// z-score
-		ydata = ydata.map((data, i) => _.map(data, d => d / STDEV[yfields[i]]));
+		ydata = ydata.map((data, i) => _.map(data, d => d === null ? null : d / STDEV[yfields[i]]));
 	}
 
 	var xlabel = axisLabel(xenaState, xcolumn, !xcodemap, xexpOpts,
