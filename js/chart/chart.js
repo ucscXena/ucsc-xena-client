@@ -1045,11 +1045,6 @@ getColumnValues.add('coded', ({data}, id) => _.getIn(data[id], ['req', 'values']
 getColumnValues.add('segmented', ({data}, id) => _.getIn(data[id], ['avg', 'geneValues']));
 getColumnValues.add('undefined', () => undefined);
 
-var dataOffsets = (norm, data, fields) =>
-	!norm ? _.object(fields, _.times(fields.length, () => 0)) :
-	_.object(fields,
-		_.map(data, d => highchartsHelper.average(_.filter(d, x => x != null))));
-
 function axisLabel({columns, columnOrder}, id, showUnits, opts, expState, norm) {
 	if (!v(id)) {
 		return '';
@@ -1124,15 +1119,18 @@ function callDrawChart(xenaState, params) {
 				n && v(n.value));
 
 
-	if (!ycodemap) {
-		let offsets = dataOffsets(yNormalization, ydata, yfields),
-			STDEV = getStdev(yfields, ydata, yNormalization);
-
-		// XXX simplify these if not set. No need to build arrays of ones and zeros.
-		// XXX Or better: just transform the axes.
-
+	// XXX just transform the axes.
+	if (yNormalization) {
 		// mean normalize
-		ydata = ydata.map((data, i) => data.map(d => d === null ? null : d - offsets[yfields[i]]));
+		ydata = ydata.map(data => {
+			var mean = _.meannull(data);
+			return data.map(x => x === null ? x : x - mean);
+		});
+	}
+
+	// XXX just transform the axes.
+	if (!ycodemap) {
+		let STDEV = getStdev(yfields, ydata, yNormalization);
 		// z-score
 		ydata = ydata.map((data, i) => _.map(data, d => d / STDEV[yfields[i]]));
 	}
