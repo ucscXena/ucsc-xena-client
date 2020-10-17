@@ -111,6 +111,44 @@ var codedTooltip = (isHisto, xAxisTitle, categories, Y) =>
 	isHisto ? histoTooltip(categories, Y) :
 	distTooltip(categories, Y);
 
+function densityChart({chartOptions, Y}) {
+	var opts = {
+		chart: {zoomType: 'x'},
+		legend: {
+			enabled: false
+		},
+		title: {
+			text: `Density of ${Y}`
+		},
+		xAxis: {
+			title: {
+				text: ''
+			},
+			type: 'linear'
+		},
+		yAxis: {
+			title: {
+				text: 'Samples per unit'
+			},
+			labels: {
+				format: '{value}'
+			}
+		},
+		plotOptions: {
+			series: {
+				animation: false,
+			},
+		},
+		tooltip: {
+			formatter: function() {
+				return this.point.y.toPrecision(3);
+			}
+		}
+	};
+	return _.deepMerge(chartOptions, opts);
+}
+
+
 // x categorical, Y categorical
 function columnChartOptions(chartOptions, categories, xAxisTitle, yAxisType, Y, showLegend) {
 	var isHisto = yAxisType === 'Histogram',
@@ -473,6 +511,7 @@ function standardDeviation(values, avg) {
 
 module.exports = {
 	chartOptions,
+	densityChart,
 	standardDeviation,
 	average,
 	columnChartOptions,

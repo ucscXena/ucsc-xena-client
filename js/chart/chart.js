@@ -572,11 +572,38 @@ function floatVCoded({samplesLength, xcodemap, xdata,
 	return chart;
 }
 
+function densityplot({chartOptions, field, Y, data, callback}) {
+	chartOptions = highchartsHelper.densityChart({chartOptions, yaxis: field, Y});
+	var nndata = _.filter(data, x => x !== null),
+		min = _.min(nndata),
+		max = _.max(nndata),
+		points = 100, // number of points to interpolate, on screen
+		N = nndata.length,
+		density = sc.stats.kde().sample(nndata)
+			(_.range(min, max, (max - min) / points))
+			// area is one. If we multiply by N, the area is N, and the y axis
+			// is samples per x-axis unit.
+			.map(([x, d]) => [x, d * N]);
+
+	var chart = newChart(chartOptions, callback);
+	highchartsHelper.addSeriesToColumn({
+		chart,
+		type: 'areaspline',
+		data: density,
+		marker: {enabled: false}
+	});
+	chart.redraw();
+	return chart;
+}
+
 // single column
-function summary({
-		yfields, ycodemap, ydata,
-		xlabel, ylabel,
-		callback}, chartOptions) {
+function summary({yfields, ycodemap, ydata, xlabel, ylabel, callback}, chartOptions) {
+
+	// single parameter float
+	if (!ycodemap && yfields.length === 1) {
+		return densityplot({chartOptions, field: yfields[0], Y: ylabel,
+			data: ydata[0], callback});
+	}
 
 	var xAxisTitle,
 		ybinnedSample,
@@ -615,34 +642,6 @@ function summary({
 		categories = yfields;
 	}
 
-	// single parameter float do historgram with smart tick marks
-	if (!ycodemap && yfields.length === 1) {
-		var valueList = _.values(ybinnedSample)[0];
-
-		valueList.sort((a, b) => a - b);
-
-		var min = valueList[0],
-			max = valueList[valueList.length - 1],
-			N = 20,
-			gap = (max - min) / N,
-			gapRoundedLower =  Math.pow(10, Math.floor(Math.log(gap) / Math.LN10)), // get a sense of the scale the gap, 0.01, 0.1, 1, 10 ...
-			gapList = [gapRoundedLower, gapRoundedLower * 2, gapRoundedLower * 5, gapRoundedLower * 10], // within the scale, find the closet to this list of easily readable intervals 1,2,5,10
-			gapRounded = _.min(gapList, x => Math.abs(gap - x )),
-			maxRounded = Math.ceil(max / gapRounded) * gapRounded,
-			minRounded = Math.floor(min / gapRounded) * gapRounded;
-
-		categories = _.range(minRounded, maxRounded, gapRounded);
-		categories = categories.map( bin =>
-			(Math.floor(bin * 100) / 100) + ' to ' + (Math.floor((bin + gapRounded) * 100) / 100));
-		ybinnedSample = {};
-		categories.map(bin => ybinnedSample[bin] = 0);
-		valueList.map( value => {
-			var binIndex = Math.floor((value - minRounded) / gapRounded),
-				bin = categories[binIndex];
-			ybinnedSample[bin] = ybinnedSample[bin] + 1;
-		});
-	}
-
 	xAxisTitle = xlabel;
 	showLegend = false;
 
@@ -651,9 +650,6 @@ function summary({
 		chartOptions = highchartsHelper.columnChartOptions(
 			chartOptions, categories.map(code => code + " (" + ybinnedSample[code].length + ")"),
 			xAxisTitle, "Distribution", ylabel, showLegend);
-	} else if (yfields.length === 1) {
-		chartOptions = highchartsHelper.columnChartOptions(
-			chartOptions, categories, xAxisTitle, "Histogram", ylabel, showLegend);
 	} else {
 		chartOptions = highchartsHelper.boxplotOptions({chartOptions,
 			categories: displayCategories, xAxisTitle, yAxisTitle: ylabel});
@@ -667,9 +663,6 @@ function summary({
 			value = ybinnedSample[code].length;
 			dataSeriese.push(value * 100 / total);
 			nNumberSeriese.push(value);
-		} else if (yfields.length === 1) {
-			value = ybinnedSample[code];
-			dataSeriese.push(value);
 		} else {
 			var data = ybinnedSample[code],
 				m = data.length;
@@ -697,9 +690,6 @@ function summary({
 	if (ycodemap) {
 		seriesLabel = " ";
 		chartType = 'column';
-	} else if (yfields.length === 1) {
-		seriesLabel = " ";
-		chartType = 'line';
 	} else {
 		seriesLabel = "average";
 		chartType = 'boxplot';
