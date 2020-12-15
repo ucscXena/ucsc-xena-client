@@ -4,7 +4,7 @@ import {make, mount, compose} from './utils';
 var {cohortSummary, datasetMetadata, datasetSamplesExamples, datasetFieldN,
 	datasetFieldExamples, fieldCodes, datasetField, datasetFetch, datasetList,
 	datasetSamples, sparseDataExamples, segmentDataExamples} = require('../xenaQuery');
-var {servers: {localHub}} = require('../defaultServers');
+var {servers: {localHub}, serverS3url} = require('../defaultServers');
 var {delete: deleteDataset} = require('../xenaAdmin');
 var {userServers} = require('./common');
 var {ignoredType} = require('../models/dataType');
@@ -54,11 +54,15 @@ var head = url => ajax({url, crossDomain: true, method: 'HEAD'}).map(() => url);
 var checkDownload = (host, dataset) => {
 	var link = `${host}/download/${dataset}`,
 		gzlink = `${link}.gz`,
+		s3link = `${serverS3url[host]}/${dataset}`,
+		s3gzlink = `${s3link}.gz`,
 		dl = head(link),
 		gzdl = head(gzlink),
+		s3dl = head(s3link),
+		s3gzdl = head (s3gzlink),
 		nodl = of(undefined);
 
-	return dl.catch(() => gzdl).catch(() => nodl);
+	return s3gzdl.catch(() => s3dl).catch(() => gzdl).catch(() => dl).catch(() => nodl);
 };
 
 var noSnippets = () => of(undefined);

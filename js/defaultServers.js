@@ -31,6 +31,19 @@ export const serverNames = {
 	[servers.notebook]: 'jupyter notebook'
 };
 
+export const serverS3url = {
+	//[servers.publicHub]: 'UCSC Public Hub',
+	//[servers.tcgaHub]: 'TCGA Hub',
+	//[servers.icgcHub]: 'ICGC Hub',
+	//[servers.toilHub]: 'UCSC Toil RNA-seq Recompute',
+	//[servers.pcawgHub]: 'PCAWG Hub',
+	//[servers.singlecellHub]: 'Single-cell RNAseq Hub',
+	//[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
+	[servers.gdcHub]: 'https://gdc-hub.s3.us-east-1.amazonaws.com/latest'
+	//[servers.atacSeqHub]: 'ATAC-seq Hub',
+	//[servers.kidsFirstHub]: 'Kids First Hub'
+};
+
 export const defaultServers = [
 	servers.localHub,
 	servers.publicHub,
