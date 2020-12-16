@@ -32,16 +32,16 @@ export const serverNames = {
 };
 
 export const serverS3url = {
-	//[servers.publicHub]: 'UCSC Public Hub',
-	//[servers.tcgaHub]: 'TCGA Hub',
-	//[servers.icgcHub]: 'ICGC Hub',
-	//[servers.toilHub]: 'UCSC Toil RNA-seq Recompute',
-	//[servers.pcawgHub]: 'PCAWG Hub',
+	[servers.publicHub]: 'https://ucsc-public-main-xena-hub.s3.us-east-1.amazonaws.com/latest',
+	[servers.tcgaHub]: 'https://tcga-xena-hub.s3.us-east-1.amazonaws.com/latest',
+	[servers.icgcHub]: 'https://icgc-xena-hub.s3.us-east-1.amazonaws.com/latest',
+	[servers.toilHub]: 'https://toil-xena-hub.s3.us-east-1.amazonaws.com/latest',
+	[servers.pcawgHub]: 'https://pcawg-hub.s3.us-east-1.amazonaws.com/latest',
 	//[servers.singlecellHub]: 'Single-cell RNAseq Hub',
-	//[servers.pancanAtlasHub]: 'Pan-Cancer Atlas Hub',
-	[servers.gdcHub]: 'https://gdc-hub.s3.us-east-1.amazonaws.com/latest'
-	//[servers.atacSeqHub]: 'ATAC-seq Hub',
-	//[servers.kidsFirstHub]: 'Kids First Hub'
+	[servers.pancanAtlasHub]: 'https://tcga-pancan-atlas-hub.s3.us-east-1.amazonaws.com/latest',
+	[servers.gdcHub]: 'https://gdc-hub.s3.us-east-1.amazonaws.com/latest',
+	[servers.atacSeqHub]: 'https://tcgaatacseq.s3.us-east-1.amazonaws.com/latest',
+	[servers.kidsFirstHub]: 'https://kidsfirstxena.s3.us-east-1.amazonaws.com/latest'
 };
 
 export const defaultServers = [
