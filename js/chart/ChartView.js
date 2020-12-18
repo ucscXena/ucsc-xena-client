@@ -6,6 +6,8 @@ var _ = require('../underscore_ext').default;
 var isBinary = (codes, data) => !codes && data &&
 	_.flatten(data).every(c => _.indexOf([0, 1], c) !== -1 || c == null);
 
+// XXX should we cache this for larger datasets? Or
+// compute it when we load data?
 function castBinary(appState) {
 	var {columns, data} = appState;
 	// Using this pattern instead of mapObject to avoid creating a new

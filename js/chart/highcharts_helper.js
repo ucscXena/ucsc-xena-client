@@ -1,6 +1,3 @@
-var Highcharts = require('highcharts/highstock');
-require('highcharts/modules/exporting')(Highcharts);
-require('highcharts/highcharts-more')(Highcharts);
 var _ = require('../underscore_ext').default;
 var styles = require('./chart.module.css');
 import ReactDOMServer from 'react-dom/server';
@@ -222,17 +219,18 @@ var layoutStats = ({n, upperwhisker, upper, median, lower, lowerwhisker,
 				trd('Q1', lower),
 				trd('lower', lowerwhisker))));
 
-function violinOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
+function violinOptions({chartOptions, categories, series, xAxisTitle, yAxisTitle}) {
 	var opts = {
+		boost: {enabled: false},
 		chart: {
-			zoomType: 'y',
+			zoomType: 'xy',
 			inverted: true,
 			// animation of y axis looks odd, and is unreliable. There doesn't
 			// appear to be a way to disable it directly, so disabling animations
 			// globally, here.
-			animation: false
+			animation: false,
 		},
-		// scroll doesn't update the secondary axes that render ticks and
+		// scroll doesn't update the secondary axis that renders ticks and
 		// labels, which makes it confusing. Also, it re-renders the violins
 		// during the scroll, which is compute intensive, and causes the scroll
 		// to stutter. Leaving it off. It's still possible to zoom in & out
@@ -248,47 +246,29 @@ function violinOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 		// violin no chart tile because both x and y axis are clearlly marked.
 		title: {text: undefined},
 		yAxis: [{
-			title: '', // XXX is there a flag for this?
+			title: '',
 			type: 'category',
-//			XXX add rotation, below
-			labels: /*categories.length > 5 ? {rotation: -90} :*/ {
+			labels: {
 				enabled: false
 			},
 			gridLineWidth: 0,
-		}, {
-			// Getting tick marks and labels aligned correctly is challenging.
-			// Want it to look like
-			//     |   category A    |   category B   |
-			// But there's no way to center labels in the categories. Also,
-			// there's no way to draw labels in positions without tick marks.
-			// So, we create a second axis for tick marks, and a third for
-			// labels, adding empty categories as necessary so everything is
-			// aligned.
-			type: 'category',
-			min: 0,
-			max: categories.length,
-			tickWidth: 1,
-			tickmarkPlacement: 'on',
-			labels: {enabled: false},
-			title: '',
-			lineWidth: 1,
-			gridLineWidth: 0,
-			endOnTick: false,
 			startOnTick: false,
+			endOnTick: false,
+			min: -0.5,
+			max: categories.length * (series + 1) - 1.5
 		}, {
 			type: 'category',
-			// The strategy here is to add blank categories between our
-			// categories so the labels appear centered on our categories,
-			// instead of on the edge.
-			categories: [categories[0], ...categories.slice(1)
-				.map(c => ['', c]).flat()],
+			lineWidth: 1,
+			tickWidth: 1,
+			tickmarkPlacement: 'between',
+			categories,
+			min: -0.5,
+			max: categories.length - 0.5,
 			gridLineWidth: 0,
-			min: -1,
-			max: categories.length + 1,
 			title: {text: xAxisTitle},
-			offset: -4,
 			labels: {
 				enabled: true,
+				rotation: categories.length > 5 ? -90 : 0,
 				formatter: function ({pos}) {
 					return this.axis.categories[pos];
 				}

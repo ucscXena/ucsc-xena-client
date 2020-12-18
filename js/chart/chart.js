@@ -36,6 +36,32 @@ var card = el(Card);
 
 var textNode = _.identity;
 
+// group field0 by code0, where field1 has value
+function groupIndexWithValueByCode(field0, codes0, field1) {
+	var indicies = _.range(field0.length).filter(i => field1[i] != null);
+	var groups = _.groupBy(indicies, i => codes0[field0[i]]);
+	delete groups[undefined];
+	return groups;
+}
+
+
+// XXX We should really group by value, and covert values
+// to codes late, but the current implementation uses
+// codes early. See groupIndex.
+function groupIndexByCode(field, codes) {
+	var groups = _.groupBy(_.range(field.length), i => codes[field[i]]);
+	delete groups[undefined];
+	return groups;
+}
+
+function groupIndex(field) {
+	var groups = _.groupBy(_.range(field.length), i => field[i]);
+	delete groups.null;
+	return groups;
+}
+
+var groupValues = (field, groups) =>
+	groups.map(indices => indices.map(i => field[i]).filter(x => x != null));
 
 // utility function to calculate p value from a given coefficient using "Testing using Student's t-distribution" method
 // spearman rank https://en.wikipedia.org/wiki/Spearman's_rank_correlation_coefficient#Determining_significance
@@ -75,6 +101,97 @@ function printPearsonAndSpearmanRho(div, xlabel, yfields, xVector, ydata) {
 			'rho = ' + spearmanRho.toPrecision(4) + '  ' +
 			'(p = ' + pValueSpearmanRho.toPrecision(4) + ')' + '<br>';
 	});
+}
+
+// p value when there is only 2 group comparison student t-test
+// https://en.wikipedia.org/wiki/Welch%27s_t-test
+function welch({meanMatrix, stdMatrix, nNumberMatrix}, yfields) {
+	var statsDiv = document.getElementById('stats');
+	statsDiv.innerHTML = 'Welch\'s t-test<br>';
+	_.range(yfields.length).map(k => {
+		if (nNumberMatrix[0][k] > 1 && nNumberMatrix[1][k] > 1) {
+			let yfield = yfields[k];
+			// p value calculation using Welch's t-test
+			let x1 = meanMatrix[0][k], // mean1
+				x2 = meanMatrix[1][k], // mean2
+				v1 = stdMatrix[0][k] * stdMatrix[0][k], //variance 1
+				v2 = stdMatrix[1][k] * stdMatrix[1][k], //variance 2
+				n1 = nNumberMatrix[0][k], // number 1
+				n2 = nNumberMatrix[1][k], // number 2
+				vCombined = v1 / n1 + v2 / n2, // pooled variance
+				sCombined = Math.sqrt(vCombined), //pool sd
+				tStatistics = (x1 - x2) / sCombined, // t statistics,
+				dof = vCombined * vCombined / ((v1 / n1) * (v1 / n1) / (n1 - 1)
+					+ (v2 / n2) * (v2 / n2) / (n2 - 1)), // degree of freedom
+				cdf = jStat.studentt.cdf(tStatistics, dof),
+				pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
+
+			statsDiv.innerHTML += (
+				(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
+				'p = ' + pValue.toPrecision(4) + ' ' +
+				'(t = ' + tStatistics.toPrecision(4) + ')<br>'
+			);
+		}
+	});
+	statsDiv.classList.toggle(compStyles.visible);
+}
+
+// p value for >2 groups one-way ANOVA
+// https://en.wikipedia.org/wiki/One-way_analysis_of_variance
+function anova({matrices: {nNumberMatrix, meanMatrix, stdMatrix},
+		yfields, ydata, groups}) {
+	var statsDiv = document.getElementById('stats');
+	statsDiv.innerHTML = 'One-way Anova<br>';
+	_.range(yfields.length).map(k => {
+		let yfield = yfields[k],
+			ydataElement = ydata[k],
+			ybinnedSample = groupValues(ydataElement, groups);
+
+		let flattenArray = _.flatten(ybinnedSample),
+			// Calculate the overall mean
+			totalMean = flattenArray.reduce((sum, el) => sum + el, 0) / flattenArray.length,
+			//Calculate the "between-group" sum of squared differences
+			sB = _.range(groups.length).reduce((sum, index) => {
+				if (nNumberMatrix[index][0] > 0) {
+					return sum + nNumberMatrix[index][k] * Math.pow((meanMatrix[index][k] - totalMean), 2);
+				} else {
+					return sum;
+				}
+			}, 0),
+			// between-group degrees of freedom
+			fB = _.range(groups.length).filter(index => nNumberMatrix[index][k] > 0).length - 1,
+			// between-group mean square differences
+			msB = sB / fB,
+			// Calculate the "within-group" sum of squares
+			sW = _.range(groups.length).reduce((sum, index) => {
+				if (nNumberMatrix[index][k] > 0) {
+					return sum + Math.pow(stdMatrix[index][k], 2) * nNumberMatrix[index][k];
+				} else {
+					return sum;
+				}
+			}, 0),
+			// within-group degrees of freedom
+			fW = _.range(groups.length).reduce((sum, index) => {
+				if (nNumberMatrix[index][k] > 0) {
+					return sum + nNumberMatrix[index][k] - 1;
+				} else {
+					return sum;
+				}
+			}, 0),
+			// within-group mean difference
+			msW = sW / fW,
+			//  F-ratio
+			fScore = msB / msW,
+			// p value
+			pValue = jStat.ftest(fScore, fB, fW);
+
+		statsDiv.innerHTML += (
+			(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
+			'p = ' + pValue.toPrecision(4) + ' ' +
+			'(f = ' + fScore.toPrecision(4) + ')<br>'
+		);
+	});
+	statsDiv.classList.toggle(compStyles.visible);
 }
 
 var getOpt = opt => option({key: opt.value, ...opt});
@@ -201,32 +318,30 @@ function newChart(chartOptions, callback) {
 	return new Highcharts.Chart(chartOptions);
 }
 
-// group field0 by code0, where field1 has value
-function groupIndexWithValueByCode(field0, codes0, field1) {
-	var indicies = _.range(field0.length).filter(i => field1[i] != null);
-	var groups = _.groupBy(indicies, i => codes0[field0[i]]);
-	delete groups[undefined];
-	return groups;
-}
 
+const LOWERWHISKER = 0;
+const LOWER = 1;
+const MEDIAN = 2;
+const UPPER = 3;
+const UPPERWHISKER = 4;
+const BOXLEN = 5;
 
-// XXX We should really group by value, and covert values
-// to codes late, but the current implementation uses
-// codes early.
-function groupIndexByCode(field, codes) {
-	var groups = _.groupBy(_.range(field.length), i => codes[field[i]]);
-	delete groups[undefined];
-	return groups;
-}
+function boxplotPoint(data) {
+	var m = data.length;
+	data.sort((a, b) => a - b);
 
-// XXX as above, we should instead group by value and map to
-// codes late.
-// Group values of field0 by codes of field1. Omit null in field0,
-// and empty code groups.
-function groupValuesByCodes(field0, field1, codes1) {
-	var groups = _.groupBy(field0, (v, i) => codes1[field1[i]]);
-	delete groups[undefined]; // skip empty code groups
-	return _.mapObject(groups, g => g.filter(x => x != null)); // skip field0 nulls
+	// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
+	var median = data[Math.floor( m / 2)],
+		lower =  data[Math.floor( m / 4)],
+		upper =  data[Math.floor( 3 * m / 4)],
+		whisker = 1.5 * (upper - lower),
+		upperwhisker = data[
+			_.findIndexDefault(data, x => x > upper + whisker, data.length) - 1],
+		lowerwhisker = data[
+			_.findLastIndexDefault(data, x => x < lower - whisker, -1) + 1];
+
+	// This must match BOX order
+	return [lowerwhisker, lower, median, upper, upperwhisker];
 }
 
 // poor man's lazy seq
@@ -236,7 +351,9 @@ function* constantly (fn) {
 	}
 }
 
-function initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap}) {
+var nobox = new Array(BOXLEN).fill(NaN);
+
+function initFVCMatrices({ydata, groups}) {
 	// matrices, row is x and column is y:
 	// mean
 	// median
@@ -248,174 +365,172 @@ function initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap}) {
 	// nNumber -- number of data points (real data points) for dataMatrix
 
 	// init average matrix std matrix // row is x by column y
-	var [meanMatrix, medianMatrix, upperMatrix, lowerMatrix,
-		upperwhiskerMatrix, lowerwhiskerMatrix, stdMatrix, nNumberMatrix] =
+	var [meanMatrix, stdMatrix, nNumberMatrix] =
 			constantly(() =>
-				_.times(xCategories.length, () => new Array(yfields.length).fill(NaN)));
+				_.times(groups.length, () => new Array(ydata.length).fill(NaN))),
+		boxes = _.times(groups.length, () => new Array(ydata.length));
+
 
 	// Y data and fill in the matrix
-	for (let k = 0; k < yfields.length; k++) {
-		let ydataElement = ydata[k];
-		let ybinnedSample = groupValuesByCodes(ydataElement, xdata[0], xcodemap);
+	ydata.forEach((ydataElement, k) => {
+		let ybinnedSample = groupValues(ydataElement, groups);
 
-		for (let i = 0; i < xCategories.length; i++) {
-			let code = xCategories[i];
-			let data, m;
-			if (ybinnedSample[code].length) {
-				data = ybinnedSample[code],
-				m = data.length;
-
-				data.sort((a, b) => a - b);
+		// Note that xCategories has already been null filtered on x, so it's not
+		// the same as xcodemap.
+		ybinnedSample.forEach((data, i) => {
+			let m = data.length;
+			nNumberMatrix[i][k] = m;
+			boxes[i][k] = m ? boxplotPoint(data) : nobox;
+			if (m) {
 				let average =  highchartsHelper.average(data);
-				let stdDev = highchartsHelper.standardDeviation(data, average);
-
-				// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
-				var median = data[Math.floor( m / 2)],
-					lower =  data[Math.floor( m / 4)],
-					upper =  data[Math.floor( 3 * m / 4)],
-					whisker = 1.5 * (upper - lower),
-					upperwhisker = _.findIndex(data, x => x > upper + whisker),
-					lowerwhisker = _.findLastIndex(data, x => x < lower - whisker);
-
-				upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
-				lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
 				meanMatrix[i][k] = average;
-				medianMatrix[i][k] = median;
-				lowerMatrix[i][k] = lower;
-
-				upperMatrix[i][k] = upper;
-				lowerwhiskerMatrix[i][k] = lowerwhisker;
-				upperwhiskerMatrix[i][k] = upperwhisker;
-				nNumberMatrix[i][k] = m;
-
-				if (!isNaN(stdDev)) {
-					stdMatrix[i][k] = stdDev;
-				} else {
-					stdMatrix[i][k] = NaN;
-				}
-			} else {
-				nNumberMatrix[i][k] = 0;
+				stdMatrix[i][k] = highchartsHelper.standardDeviation(data, average);
 			}
-		}
-	}
-	return {meanMatrix, medianMatrix, upperMatrix, lowerMatrix, upperwhiskerMatrix,
-			lowerwhiskerMatrix, stdMatrix, nNumberMatrix};
+		});
+	});
+	return {meanMatrix, boxes, stdMatrix, nNumberMatrix};
 }
 
-function sortMatrices(xCategories, matrices) {
-	let {medianMatrix} = matrices,
+function sortMatrices(xCategories, groups, colors, matrices) {
+	let {boxes} = matrices,
 		sortedIndex = _.sortBy(
-				_.range(medianMatrix.length).filter(i => !isNaN(medianMatrix[i][0])),
-				i => medianMatrix[i][0]),
+				_.range(boxes.length).filter(i => !isNaN(boxes[i][0][MEDIAN])),
+				i => boxes[i][0][MEDIAN]),
 			reorder = m => _.map(sortedIndex, i => m[i]);
 
-	return [reorder(xCategories), _.mapObject(matrices, m => reorder(m))];
+	return [reorder(xCategories), reorder(groups), reorder(colors),
+			   _.mapObject(matrices, m => reorder(m))];
 }
 
-function boxplot({xCategories, matrices, yfields, scale, chart, ycodemap}) {
-	var {medianMatrix, upperMatrix, lowerMatrix, upperwhiskerMatrix,
-		lowerwhiskerMatrix, nNumberMatrix} = matrices;
+function boxplot({xCategories, matrices, yfields, colors, chart}) {
+	var {boxes, nNumberMatrix} = matrices;
 
 	xCategories.forEach((code, i) => {
 		// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
-		var medianSeries = medianMatrix[i],
-			upperSeries = upperMatrix[i],
-			lowerSeries = lowerMatrix[i],
-			upperwhiskerSeries = upperwhiskerMatrix[i],
-			lowerwhiskerSeries = lowerwhiskerMatrix[i],
-			nNumberSeries = nNumberMatrix[i],
-			color = scale(code),
-			dataSeries = _.zip(lowerwhiskerSeries, lowerSeries, medianSeries,
-					upperSeries, upperwhiskerSeries);
+		var nNumberSeries = nNumberMatrix[i],
+			color = colors[i],
+			dataSeries = boxes[i];
+
 		highchartsHelper.addSeriesToColumn({
 			chart,
 			type: 'boxplot',
 			name: code,
 			data: dataSeries,
-			yIsCategorical: ycodemap, // XXX isn't this in the chart object already?
+			yIsCategorical: false,
 			showDataLabel: yfields.length * xCategories.length < 30,
-			showInLegend: true,
+			showInLegend: code != null,
 			color,
 			description: nNumberSeries});
 	});
 }
 
-var violinSamples = 30; // XXX is 30 points good?
-function processViolin(min, max, offset, groups) {
-	var r = _.range(min, max, (max - min) / violinSamples);
+var violinSamples = 30;
 
-	return groups.map((g, i) => sc.stats.kde().sample(g)(r)
-			// adding i moves each graph right so they don't overlap.
-			// offset shifts the whole group to the right of the previous yfield.
-			.map(([x, y]) => [x, offset + i - y, offset + i + y]));
-}
+function violinplot({xCategories, yfields, matrices: {boxes, nNumberMatrix},
+		ydata, groups, chart, colors}) {
 
-function violinplot({xCategories, yfields,  matrices: m, ydata, xdata, xcodemap, chart, scale}) {
-
-	var min = _.min(m.lowerwhiskerMatrix.map(d => _.min(d))),
-		max = _.max(m.upperwhiskerMatrix.map(d => _.max(d))),
-		padding = (max - min) * 0.1; // area to sample above & below the whiskers
-
+	// build kde and sample it
 	var data = yfields.map((field, i) => {
-		let ybinnedSample = groupValuesByCodes(ydata[i], xdata[0], xcodemap),
-			// offset pushes each yfield group to the right, and leaves a gap
-			offset = i * (xCategories.length + 1);
+		// XXX this duplicates the grouping done in initFVCMatrices. We need
+		// the matricies to draw the iqr and whiskers.
+		//
+		// XXX this is also duplicated in the anova stats
+		let ybinnedSample = groupValues(ydata[i], groups);
 
-		return processViolin(min - padding, max + padding, offset,
-			xCategories.map(c => ybinnedSample[c]));
+		return ybinnedSample.map(g => {
+			// Only sample the region having data, for each group. Don't extend
+			// to the global data range. This helps visually indicate the data range,
+			// and reduces compute.
+			var gmin = _.min(g),
+				gmax = _.max(g),
+				step = (gmax - gmin) / violinSamples,
+				innerRange = _.times(violinSamples + 1, i => gmin + i * step);
+
+			return sc.stats.kde().sample(g)(innerRange);
+		});
+	});
+
+	// place groups across the x axis, and scale violin peak
+	data = data.map((yfield, i) => {
+		var offset = i * (groups.length + 1);
+		return yfield.map((group, j) => {
+			var y0 = offset + j;
+			var upper = _.max(group.map(([, y]) => y));
+			return group.map(([x, y]) => {
+				// scale to fixed width. This prevents direct comparison
+				// of two violins, but makes the shape more apparent. Without
+				// this scaling, the graph width is essentially unbounded, since
+				// a cluster of points will cause a very wide peak.
+				var width = y / (upper * groups.length);
+				return [x, y0 + width, y0 - width];
+			});
+		});
 	}).flat();
 
+
+	// here we're taking a flatted list of violin data. We align it with
+	// boxplot data by some math. The flatted list is by mapping
+	// yfields & x catageories.
 	data.forEach((data, i) => {
-		var cat = i % xCategories.length,
+		var cat = i % groups.length,
 			code = xCategories[cat],
-			field = Math.floor(i / xCategories.length),
-			color = scale(code),
+			field = Math.floor(i / groups.length),
+			color = colors[cat],
+			[lowerwhisker, lower, median, upper, upperwhisker] = boxes[cat][field],
 			stats = {
 				code,
 				field: yfields[field],
-				n: m.nNumberMatrix[cat][field],
-				upperwhisker: m.upperwhiskerMatrix[cat][field],
-				upper: m.upperMatrix[cat][field],
-				median: m.medianMatrix[cat][field],
-				lower: m.lowerMatrix[cat][field],
-				lowerwhisker: m.lowerwhiskerMatrix[cat][field],
+				n: nNumberMatrix[cat][field],
+				lowerwhisker,
+				lower,
+				median,
+				upper,
+				upperwhisker
 			};
+		// draw the body of the violin
 		highchartsHelper.addSeriesToColumn({
 			chart,
 			type: 'areasplinerange',
-			name: code, // XXX not sure we need this
+			name: code, // for legend
 			data,
-			showDataLabel: yfields.length * xCategories.length < 30,
-			showInLegend: i < xCategories.length,
+			showDataLabel: yfields.length * groups.length < 30,
+			showInLegend: code != null && i < groups.length,
 			color,
 			marker: {enabled: false},
 			description: stats});
 	});
 
+	// here we iterate yfields & x catgories, and pull from boxplot data
+	// for each. We use the x categories to project to the right offset.
 	yfields.forEach((yfield, i) => {
 		xCategories.forEach((code, j) => {
-			var y = i * (xCategories.length + 1) + j;
+			var y = i * (groups.length + 1) + j;
+			// draw the inner quartile range
 			highchartsHelper.addSeriesToColumn({
+				boost: {enabled: true},
 				chart,
 				type: 'line',
 				color: 'black',
 				lineWidth: 3,
-				data: [[m.lowerMatrix[j][i], y], [m.upperMatrix[j][i], y]]
+				data: [[boxes[j][i][LOWER], y], [boxes[j][i][UPPER], y]]
 			});
+			// draw the whisker range
 			highchartsHelper.addSeriesToColumn({
 				chart,
 				type: 'line',
 				color: 'black',
 				lineWidth: 1,
-				data: [[m.lowerwhiskerMatrix[j][i], y],
-					[m.upperwhiskerMatrix[j][i], y]]
+				data: [[boxes[j][i][LOWERWHISKER], y],
+					[boxes[j][i][UPPERWHISKER], y]]
 			});
 		});
 	});
+	// here we again iterate y fields & x categories, and pull from the
+	// boxplot data, flattening into a single series.
 	var medians =
-		yfields.flatMap((yfield, i) => xCategories.map((code, j) => {
-			var y = i * (xCategories.length + 1) + j;
-			return [m.medianMatrix[j][i], y] ;
+		yfields.flatMap((yfield, i) => groups.map((code, j) => {
+			var y = i * (groups.length + 1) + j;
+			return [boxes[j][i][MEDIAN], y] ;
 		}));
 	highchartsHelper.addSeriesToColumn({
 				chart,
@@ -435,144 +550,63 @@ var fvcOptions = violin => violin ?
 var fvcChart = violin => violin ?
 	violinplot : boxplot;
 
-function floatVCoded({samplesLength, xcodemap, xdata,
-		yfields, ycodemap, ydata,
-		xlabel, ylabel,
-		samplesMatched, violin,
-		columns, xcolumn, callback}, chartOptions) {
+// It might make sense to split this into two functions instead of having
+// two polymorphic calls in here, and not much else.
+function boxOrViolin({groups, xCategories, colors, yfields, ydata,
+		xlabel, ylabel, violin, callback}, chartOptions) {
 
-	var statsDiv = document.getElementById('stats'),
-		ybinnedSample,
-		yfield,
-		ydataElement,
-		pValue, dof;
-
-	var xbinnedSample = groupIndexByCode(xdata[0], xcodemap);
-	var xCategories = xcodemap.filter(c => xbinnedSample[c]);
-
-	// highlight categories identification: if all the samples in the category
-	// are part of the highlighted samples, the caterory will be highlighted
-	var highlightcode = (samplesMatched && samplesMatched.length !== samplesLength) ?
-		xCategories.filter(code =>
-			xbinnedSample[code].every(s => samplesMatched.indexOf(s) !== -1)) :
-		[];
-
-	var matrices =
-		initFVCMatrices({xCategories, yfields, ydata, xdata, xcodemap});
+	var matrices = initFVCMatrices({ydata, groups});
 
 	// sort by median of xCategories if yfields.length === 1
 	if (xCategories.length > 0 && yfields.length === 1) {
-		[xCategories, matrices] = sortMatrices(xCategories, matrices);
+		[xCategories, groups, colors, matrices] = sortMatrices(xCategories, groups, colors, matrices);
 	}
-	var {meanMatrix, stdMatrix, nNumberMatrix} = matrices,
-		scale = _.Let((cs = colorScales.colorScale(columns[xcolumn].colors[0]),
-					invCodeMap = _.invert(xcodemap)) =>
-			highlightcode.length === 0 ?
-				code => cs(invCodeMap[code]) :
-				code => highlightcode.indexOf(code) === -1 ? '#A9A9A9' : 'gold');
 
-	chartOptions = fvcOptions(violin)({chartOptions,
+	chartOptions = fvcOptions(violin)({chartOptions, series: xCategories.length,
 		categories: yfields, xAxisTitle: xlabel, yAxisTitle: ylabel});
 
 	var chart = newChart(chartOptions, callback);
 
-	fvcChart(violin)({xCategories, matrices, yfields, ydata, xdata, xcodemap,
-		scale, chart, ycodemap});
+	fvcChart(violin)({xCategories, groups, matrices, yfields, ydata, colors, chart});
 
-	// p value when there is only 2 group comparison student t-test
-	// https://en.wikipedia.org/wiki/Welch%27s_t-test
 	if (xCategories.length === 2) {
-		statsDiv.innerHTML = 'Welch\'s t-test<br>';
-		_.range(yfields.length).map(k => {
-			if (nNumberMatrix[0][k] > 1 && nNumberMatrix[1][k] > 1) {
-				yfield = yfields[k];
-				// p value calculation using Welch's t-test
-				let x1 = meanMatrix[0][k], // mean1
-					x2 = meanMatrix[1][k], // mean2
-					v1 = stdMatrix[0][k] * stdMatrix[0][k], //variance 1
-					v2 = stdMatrix[1][k] * stdMatrix[1][k], //variance 2
-					n1 = nNumberMatrix[0][k], // number 1
-					n2 = nNumberMatrix[1][k], // number 2
-					vCombined = v1 / n1 + v2 / n2, // pooled variance
-					sCombined = Math.sqrt(vCombined), //pool sd
-					tStatistics = (x1 - x2) / sCombined, // t statistics,
-					cdf;
-
-				dof = vCombined * vCombined / ((v1 / n1) * (v1 / n1) / (n1 - 1) + (v2 / n2) * (v2 / n2) / (n2 - 1)), // degree of freedom
-				cdf = jStat.studentt.cdf(tStatistics, dof),
-				pValue = 2 * (cdf > 0.5 ? (1 - cdf) : cdf);
-
-				statsDiv.innerHTML += (
-					(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
-					'p = ' + pValue.toPrecision(4) + ' ' +
-					'(t = ' + tStatistics.toPrecision(4) + ')<br>'
-				);
-			}
-		});
-		statsDiv.classList.toggle(compStyles.visible);
-	}
-
-	// p value for >2 groups one-way ANOVA
-	// https://en.wikipedia.org/wiki/One-way_analysis_of_variance
-	else if (xCategories.length > 2) {
-		statsDiv.innerHTML = 'One-way Anova<br>';
-		_.range(yfields.length).map(k => {
-			yfield = yfields[k];
-			ydataElement = ydata[k];
-			ybinnedSample = groupValuesByCodes(ydataElement, xdata[0], xcodemap);
-
-			let flattenArray = _.flatten(xCategories.map(code => ybinnedSample[code])),
-				// Calculate the overall mean
-				totalMean = flattenArray.reduce((sum, el) => sum + el, 0) / flattenArray.length,
-				//Calculate the "between-group" sum of squared differences
-				sB = _.range(xCategories.length).reduce((sum, index) => {
-					if (nNumberMatrix[index][0] > 0) {
-						return sum + nNumberMatrix[index][k] * Math.pow((meanMatrix[index][k] - totalMean), 2);
-					} else {
-						return sum;
-					}
-				}, 0),
-				// between-group degrees of freedom
-				fB = _.range(xCategories.length).filter(index => nNumberMatrix[index][k] > 0).length - 1,
-				// between-group mean square differences
-				msB = sB / fB,
-				// Calculate the "within-group" sum of squares
-				sW = _.range(xCategories.length).reduce((sum, index) => {
-					if (nNumberMatrix[index][k] > 0) {
-						return sum + Math.pow(stdMatrix[index][k], 2) * nNumberMatrix[index][k];
-					} else {
-						return sum;
-					}
-				}, 0),
-				// within-group degrees of freedom
-				fW = _.range(xCategories.length).reduce((sum, index) => {
-					if (nNumberMatrix[index][k] > 0) {
-						return sum + nNumberMatrix[index][k] - 1;
-					} else {
-						return sum;
-					}
-				}, 0),
-				// within-group mean difference
-				msW = sW / fW,
-				//  F-ratio
-				fScore = msB / msW,
-				// p value
-				pValue = jStat.ftest(fScore, fB, fW);
-
-			statsDiv.innerHTML += (
-				(yfields.length > 1 ? ('<br>' + yfield + '<br>') : '') +
-				'p = ' + pValue.toPrecision(4) + ' ' +
-				'(f = ' + fScore.toPrecision(4) + ')<br>'
-			);
-		});
-		statsDiv.classList.toggle(compStyles.visible);
+		welch(matrices, yfields);
+	} else if (xCategories.length > 2) {
+		anova({matrices, yfields, ydata, groups});
 	}
 
 	chart.redraw();
 	return chart;
 }
 
-function densityplot({chartOptions, field, Y, data, callback}) {
+// compute group sample indices, codes, and colors, then draw
+// box or violin plot.
+function floatVCoded({xdata, xcodemap, xcolumn, columns, cohortSamples,
+		samplesMatched, ...params}, chartOptions) {
+
+	var groupsByValue = groupIndex(xdata[0]),
+		values = _.range(xcodemap.length).filter(v => groupsByValue[v]),
+		xCategories = values.map(v => xcodemap[v]),
+		groups = values.map(v => groupsByValue[v]);
+
+
+	var highlightValue = samplesMatched &&
+				samplesMatched.length !== cohortSamples.length ?
+		_.Let((matches = new Set(samplesMatched)) =>
+			new Set(values.filter((v, i) => groups[i].every(s => matches.has(s))))) :
+		null;
+
+	var scale = highlightValue ?
+		v => highlightValue.has(v) ? 'gold' : '#A9A9A9' :
+		colorScales.colorScale(columns[xcolumn].colors[0]);
+
+	var colors = values.map(scale);
+
+	return boxOrViolin({groups, xCategories, colors, ...params}, chartOptions);
+}
+
+function densityplot({yfields: [field], ylabel: Y, ydata: [data],
+		callback}, chartOptions) {
 	chartOptions = highchartsHelper.densityChart({chartOptions, yaxis: field, Y});
 	var nndata = _.filter(data, x => x !== null),
 		min = _.min(nndata),
@@ -590,123 +624,54 @@ function densityplot({chartOptions, field, Y, data, callback}) {
 		chart,
 		type: 'areaspline',
 		data: density,
-		marker: {enabled: false}
-	});
+		marker: {enabled: false}});
 	chart.redraw();
 	return chart;
 }
 
-// single column
-function summary({yfields, ycodemap, ydata, xlabel, ylabel, callback}, chartOptions) {
+function summaryBoxplot(params, chartOptions) {
+	var {cohortSamples} = params,
+		groups = [_.range(0, cohortSamples.length)],
+		colors = ['#0000FF80', 'blue'],
+		xCategories = [null];
+	return boxOrViolin({groups, colors, xCategories, ...params}, chartOptions);
+}
 
-	// single parameter float
-	if (!ycodemap && yfields.length === 1) {
-		return densityplot({chartOptions, field: yfields[0], Y: ylabel,
-			data: ydata[0], callback});
-	}
+function summaryColumn({ydata, ycodemap, xlabel, ylabel, callback}, chartOptions) {
+	var lengths = _.mapObject(groupIndexByCode(ydata[0], ycodemap), g => g.length),
+		categories = ycodemap.filter(c => _.has(lengths, c)),
+		total = _.sum(_.values(lengths)),
+		nNumberSeries = categories.map(code => lengths[code]),
+		dataSeries = nNumberSeries.map(len => len * 100 / total);
 
-	var xAxisTitle,
-		ybinnedSample,
-		dataSeriese,
-		nNumberSeriese,
-		yfield,
-		ydataElement,
-		showLegend,
-		categories,
-		k,
-		total, chart;
-	var displayCategories;
+	chartOptions = highchartsHelper.columnChartOptions(chartOptions,
+		categories.map(code => `${code} (${lengths[code]})`),
+		xlabel, "Distribution", ylabel, false);
 
-	dataSeriese = [];
-	nNumberSeriese = [];
-	ybinnedSample = {};
+	var chart = newChart(chartOptions, callback);
 
-	for (k = 0; k < yfields.length; k++) {
-		yfield = yfields[k];
-		ydataElement = ydata[k];
-
-		if (ycodemap) { //  fields.length ==1
-			ybinnedSample = groupIndexByCode(ydataElement, ycodemap);
-		} else { // floats
-			ybinnedSample[yfield] = ydataElement.filter(x => x != null);
-		}
-	}
-
-	total = 0;
-	if (ycodemap) {
-		categories = Object.keys(ybinnedSample);
-		categories.forEach(function (code) {
-			total = total + ybinnedSample[code].length;
-		});
-	} else {
-		categories = yfields;
-	}
-
-	xAxisTitle = xlabel;
-	showLegend = false;
-
-	displayCategories = categories.slice(0);
-	if (ycodemap) {
-		chartOptions = highchartsHelper.columnChartOptions(
-			chartOptions, categories.map(code => code + " (" + ybinnedSample[code].length + ")"),
-			xAxisTitle, "Distribution", ylabel, showLegend);
-	} else {
-		chartOptions = highchartsHelper.boxplotOptions({chartOptions,
-			categories: displayCategories, xAxisTitle, yAxisTitle: ylabel});
-	}
-	chart = newChart(chartOptions, callback);
-
-	//add data to seriese
-	displayCategories.forEach(function (code) {
-		var value;
-		if (ycodemap) {
-			value = ybinnedSample[code].length;
-			dataSeriese.push(value * 100 / total);
-			nNumberSeriese.push(value);
-		} else {
-			var data = ybinnedSample[code],
-				m = data.length;
-			data.sort((a, b) => a - b);
-
-			// http://onlinestatbook.com/2/graphing_distributions/boxplots.html
-			var median = data[Math.floor( m / 2)],
-				lower =  data[Math.floor( m / 4)],
-				upper =  data[Math.floor( 3 * m / 4)],
-				whisker = 1.5 * (upper - lower),
-				upperwhisker = _.findIndex(data, x => x > upper + whisker),
-				lowerwhisker = _.findLastIndex(data, x => x < lower - whisker);
-
-			upperwhisker = (upperwhisker === -1) ? data[data.length - 1 ] : data[upperwhisker - 1];
-			lowerwhisker = (lowerwhisker === -1) ? data[0] : data[lowerwhisker + 1];
-
-			dataSeriese.push([lowerwhisker, lower, median, upper, upperwhisker]);
-			nNumberSeriese.push(m);
-		}
-	});
-
-	// add seriese to chart
-	var seriesLabel, chartType;
-
-	if (ycodemap) {
-		seriesLabel = " ";
-		chartType = 'column';
-	} else {
-		seriesLabel = "average";
-		chartType = 'boxplot';
-	}
 	highchartsHelper.addSeriesToColumn({
 		chart,
-		type: chartType,
-		name: seriesLabel,
-		data: dataSeriese,
-		yIsCategorical: ycodemap,
+		type: 'column',
+		name: ' ',
+		data: dataSeries,
+		yIsCategorical: true,
 		showDataLabel: categories.length < 30,
-		showInLegend: showLegend,
+		showInLegend: false,
 		color: 0,
-		description: nNumberSeriese});
+		description: nNumberSeries});
 	chart.redraw();
 	return chart;
 }
+
+var summary = multi(({ycodemap, yfields}) =>
+	ycodemap ? 'column' :
+	yfields.length > 1 ? 'boxplot' :
+	'density');
+
+summary.add('column', summaryColumn);
+summary.add('boxplot', summaryBoxplot);
+summary.add('density', densityplot);
 
 function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 		columns, ycolumn, callback}, chartOptions) {
@@ -1151,6 +1116,11 @@ class HighchartView extends PureComponent {
 	}
 
 	componentWillReceiveProps(newProps) {
+		// XXX if we can make linear transforms just an update
+		// of axes, compare state here to decide whether to redraw or
+		// update axes. Should check that all relevant state coming in
+		// is identical, except for transform settings of the plot
+		// on-screen.
 		if (!_.isEqual(newProps, this.props)) {
 			callDrawChart(newProps.xenaState, newProps.drawProps);
 		}
@@ -1239,9 +1209,10 @@ class Chart extends PureComponent {
 				chartState.normalizationState[ycolumn],
 				i => set(['normalizationState', chartState.ycolumn], i));
 
-		var violinOpt = !xcodemap || ycodemap ? null :
+		var violinOpt = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
 			button({label: violin ? 'Boxplot' : 'Violin plot',
-				onClick: () => set(['violin'], !violin)});
+				onClick: () => set(['violin'], !violin)}) :
+			null;
 
 		var advOpt = advanced ?
 			div({id: 'controlPanel', className: compStyles.controlPanel},
