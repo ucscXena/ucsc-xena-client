@@ -6,7 +6,7 @@ import {Dropdown} from 'react-toolbox/lib/dropdown';
 import Chart from './chart';
 var _ = require('../underscore_ext').default;
 import {v, suitableColumns} from './utils';
-import boxplotImg from './boxplot.png';
+import './icons.css';
 
 var isChild = x => x === null || typeof x === 'string' || React.isValidElement(x);
 // Render tag with list of children, and optional props as first argument.
@@ -20,7 +20,7 @@ var label = el('label');
 var h2 = el('h2');
 var i = el('i');
 var a = el('a');
-var img = el('img');
+var span = el('span');
 
 var button = el(Button);
 var card = el(Card);
@@ -45,28 +45,30 @@ var wizard = ({onClose, title, left = null, right = null}, ...children) =>
 		div({className: styles.actions}, left, right));
 
 //
-// boxplot/violin selections
+// compare subgroups selections
 //
 
 var boxOrViolinModes = [
-	{'data-chart': 'boxplot', label: 'Box plot', icon: img({src: boxplotImg})},
-	{'data-chart': 'violin', label: 'Violin plot'},
+	{'data-chart': 'boxplot', label: 'Box plot',
+		icon: i({className: 'icon icon-box'})},
+	{'data-chart': 'violin', label: 'Violin plot',
+		icon: i({className: 'icon icon-violin'})}
 ];
 
 var isFloat = (columns, id) => !columns[id].codes;
 var optIsFloat = ({columns}) => ({value}) => isFloat(columns, value);
 var optNotFloat = x => y => !optIsFloat(x)(y);
-var isMulti = ({columns}) => ({value}) => columns[value].fields.length > 1;
+var isMulti = _.curry(({columns}, {value}) =>
+		isFloat(columns, value) && columns[value].fields.length > 1);
 
 var yIsSet = ({ycolumn}) => v(ycolumn);
 var xyIsSet = ({ycolumn, xcolumn}) => v(ycolumn) && v(xcolumn);
 
 // if y is multi, allow 'none' for x to do field boxplot
-var noX = ({columns}, id) => columns[id].fields.length > 1 ?
+var noX = ({columns}, id) => v(id) && columns[id].fields.length > 1 ?
 	[{value: 'none', label: 'Column fields'}] : [];
 
-var boxOrViolinYDatasets = appState => suitableColumns(appState, true)
-	.filter(optIsFloat(appState));
+var boxOrViolinYDatasets = appState => suitableColumns(appState, true);
 
 var boxOrViolinXDatasets = appState => suitableColumns(appState, false)
 	.filter(optNotFloat(appState));
@@ -78,14 +80,15 @@ var boxOrViolinDatasets = appState => {
 	return {x, y: x.length ? y : y.filter(isMulti(appState))};
 };
 
-var getY = (columns, id) => v(id) && isFloat(columns, id) ? id : undefined;
-var getX = (columns, y, id) => id === 'none' && y && isMulti(columns, id) ||
-	v(id) && !isFloat(columns, id) ? id : undefined;
+// If x is 'none' and y is multi, use 'none'.
+// If x is set, and isn't same as y, and isn't float, use it.
+var getX = (columns, y, id) => id === 'none' && v(y) && isMulti({columns}, {value: y}) ||
+	v(id) && id !== y && !isFloat(columns, id) ? id : undefined;
 
 var boxOrViolinInit = appState => {
 	var {columns, chartState: {xcolumn, ycolumn, setColumn}} = appState,
-		y = getY(columns, setColumn) || v(ycolumn),
-		x = getX(columns, y, setColumn) || getX(columns, y, xcolumn) || undefined;
+		y = v(setColumn) || v(ycolumn), // column selection, or previous view
+		x = getX(columns, y, xcolumn);
 	return {
 		ycolumn: y,
 		xcolumn: x
@@ -98,45 +101,52 @@ var boxOrViolinCanDraw = appState =>
 var isValid = ({ycolumn, xcolumn}, appState) =>
 	v(ycolumn) && v(xcolumn) || v(ycolumn) && isMulti(appState, {value: ycolumn});
 
+// should ask for type if y is float
+var needType = (state, appState) =>
+	isValid(state, appState) && isFloat(appState.columns, state.ycolumn);
+
 var bvDisabled = (state, props) =>
 	(props['data-chart'] === 'violin') ===  !!state.violin;
 
 var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 		state, props: {appState}}) =>
-	wizard({title: "Boxplot or violin plot", onClose,
+	wizard({title: "Compare subgroups", onClose,
 			left: button({onClick: onMode, 'data-mode': 'start', label: 'Back',
 				className: styles.back}),
 			right: doneButton(isValid(state, appState) && onDone)},
 		div({className: styles.modes},
-			div(label('I want a'),
-				...boxOrViolinModes.map(props =>
-					button({onClick: onChart, disabled: bvDisabled(state, props),
-						...props}))),
-			div(dropdown({label: 'Showing data from:', onChange: onY,
+			div(dropdown({label: 'Show data from:', onChange: onY,
 				value: state.ycolumn, source: boxOrViolinYDatasets(appState)})),
 			div(dropdown({label: 'Subgroup samples by', onChange: onX,
 				value: state.xcolumn,
 				source: boxOrViolinXDatasets(appState)
-					.concat(noX(appState, state.ycolumn))}))));
+					.concat(noX(appState, state.ycolumn))})),
+			needType(state, appState) ?
+				div(label('I want a'),
+					...boxOrViolinModes.map(props =>
+						button({onClick: onChart, disabled: bvDisabled(state, props),
+							...props}))) :
+				null));
 
 //
 // histogram/distribution selection
+// can also draw boxplot, for multi-valued columns
 //
 
-var histDatasets = appState => suitableColumns(appState, false);
+var histDatasets = appState => suitableColumns(appState, true);
 var histInit = ({chartState: {ycolumn, setColumn}}) => ({
 	ycolumn: setColumn || v(ycolumn),
 	xcolumn: undefined
 });
-var histCanDraw = appState => suitableColumns(appState, false).length > 0;
+var histCanDraw = appState => suitableColumns(appState, true).length > 0;
 
 var histOrDistPage = ({onY, onMode, onDone, onClose, state, props: {appState}}) =>
-	wizard({title: "Histogram or distribution", onClose,
+	wizard({title: 'See a Column Distribution', onClose,
 			left: button({onClick: onMode, 'data-mode': 'start', label: 'Back',
 				className: styles.back}),
 			right: doneButton(yIsSet(state) && onDone)},
 		div({className: styles.modes},
-			dropdown({label: 'Pick a column to make a histogram from:', onChange: onY,
+			dropdown({label: 'Show data from', onChange: onY,
 			value: state.ycolumn, source: histDatasets(appState)})));
 
 //
@@ -190,14 +200,21 @@ var canDraw = {
 	scatter: scatterCanDraw
 };
 
+var modeLabel = text => span({className: styles.label}, text);
+
 var startModes = [
-	{'data-mode': 'boxOrViolin', label: 'Box plot or Violin plot'},
-	{'data-mode': 'histOrDist', label: 'Histogram or distribution'},
-	{'data-mode': 'scatter', label: 'Scatter plot'}
+	{'data-mode': 'boxOrViolin', label: modeLabel('Compare subgroups')},
+	{'data-mode': 'histOrDist', label: modeLabel('See a column distribution')},
+	{'data-mode': 'scatter', label: modeLabel('Make a scatter plot')}
 ];
 
+var iconList = (...icons) => span({className: styles.icons}, ...(icons.map(icon =>
+				i({className: 'icon icon-' + icon}))));
+
 var icons = {
-	boxOrViolin: img({src: boxplotImg})
+	boxOrViolin: iconList('box', 'violin'),
+	histOrDist: iconList('bar'),
+	scatter: iconList('scatter')
 };
 
 var modeButton = (appState, onMode) => props =>
@@ -205,7 +222,7 @@ var modeButton = (appState, onMode) => props =>
 		disabled: !canDraw[props['data-mode']](appState), ...props});
 
 var startPage = ({onMode, onClose, props: {appState}}) =>
-	wizard({title: 'What do you want to make?', onClose,
+	wizard({title: 'What do you want to do?', onClose,
 		left: button({onClick: onClose, label: 'Back', className: styles.back})},
 		div({className: styles.modes},
 			...startModes.map(modeButton(appState, onMode))));

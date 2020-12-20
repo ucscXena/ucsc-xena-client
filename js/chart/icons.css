@@ -1,0 +1,30 @@
+@font-face {
+    font-family: "icons";
+    src: url("icons.eot?2ca57feebc315eb2e85668058cbb592b#iefix") format("embedded-opentype"),
+url("icons.woff2?2ca57feebc315eb2e85668058cbb592b") format("woff2"),
+url("icons.woff?2ca57feebc315eb2e85668058cbb592b") format("woff");
+}
+
+i[class^="icon-"]:before, i[class*=" icon-"]:before {
+    font-family: icons !important;
+    font-style: normal;
+    font-weight: normal !important;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-bar:before {
+    content: "\f101";
+}
+.icon-box:before {
+    content: "\f102";
+}
+.icon-scatter:before {
+    content: "\f103";
+}
+.icon-violin:before {
+    content: "\f104";
+}

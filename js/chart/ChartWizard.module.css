@@ -14,6 +14,7 @@
 }
 
 .modes {
+	margin: 0 15%;
 	display: flex;
 	flex-direction: column;
 }
@@ -22,8 +23,17 @@
 	margin: 2px;
 }
 
-.modes img {
-	height: 37px;
+.modes .label {
+	float: left;
+	width: 40%; /* this is weird & probably broken */
+}
+
+.icons i {
+	margin: 0 6px;
+}
+
+.modes i {
+	font-size: 140%;
 	vertical-align: middle;
 }
 
