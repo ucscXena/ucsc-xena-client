@@ -1,4 +1,3 @@
-var React = require('react');
 import PureComponent from '../PureComponent';
 import {Card} from 'react-toolbox/lib/card';
 import {Button} from 'react-toolbox/lib/button';
@@ -7,26 +6,12 @@ import Chart from './chart';
 var _ = require('../underscore_ext').default;
 import {v, suitableColumns} from './utils';
 import './icons.css';
-
-var isChild = x => x === null || typeof x === 'string' || React.isValidElement(x);
-// Render tag with list of children, and optional props as first argument.
-var el = type => (...args) =>
-	args.length === 0 ? React.createElement(type, {}) :
-	isChild(args[0]) ? React.createElement(type, {}, ...args) :
-	React.createElement(type, args[0], ...args.slice(1));
-
-var div = el('div');
-var label = el('label');
-var h2 = el('h2');
-var i = el('i');
-var a = el('a');
-var span = el('span');
+import {div, label, h2, i, a, span, el} from './react-hyper';
 
 var button = el(Button);
 var card = el(Card);
 var chart = el(Chart);
 var dropdown = el(Dropdown);
-
 
 var styles = require('./ChartWizard.module.css');
 

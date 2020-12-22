@@ -1,4 +1,3 @@
-var React = require('react');
 import PureComponent from '../PureComponent';
 var {hexToRGB, colorStr, RGBToHex} = require ('../color_helper').default;
 var Highcharts = require('highcharts/highstock');
@@ -8,33 +7,21 @@ require('highcharts/modules/boost')(Highcharts);
 var _ = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 var jStat = require('jStat').jStat;
-var gaEvents = require('../gaEvents');
+//var gaEvents = require('../gaEvents');
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';
-import {Button} from 'react-toolbox/lib/button';
+import {Button, IconButton} from 'react-toolbox/lib/button';
 import {Card} from 'react-toolbox/lib/card';
 import classNames from 'classnames';
 var sc = require('science');
+import {div, select, option, label, el, textNode} from './react-hyper';
 
 // Styles
 var compStyles = require('./chart.module.css');
 
-var isChild = x => x === null || typeof x === 'string' || React.isValidElement(x);
-// Render tag with list of children, and optional props as first argument.
-var el = type => (...args) =>
-	args.length === 0 ? React.createElement(type, {}) :
-	isChild(args[0]) ? React.createElement(type, {}, ...args) :
-	React.createElement(type, args[0], ...args.slice(1));
-
-var div = el('div');
-var select = el('select');
-var option = el('option');
-var label = el('label');
-
 var button = el(Button);
+var iconButton = el(IconButton);
 var card = el(Card);
-
-var textNode = _.identity;
 
 // group field0 by code0, where field1 has value
 function groupIndexWithValueByCode(field0, codes0, field1) {
@@ -301,23 +288,9 @@ var expOptions = (column, data)  =>
 		someNegative(data) || !hasUnits(column) ? {disabled: true, label: ''} :
 		{value: 'log2', label: `log2(${colUnit(column)}+1)`}];
 
-function newChart(chartOptions, callback) {
-	chartOptions = _.deepMerge(chartOptions, {
-		exporting: {
-			buttons: {
-				contextButton: {enabled: false},
-				closeButton: {
-					text: 'CLOSE',
-					onclick: function () {
-						gaEvents('spreadsheet', 'columnChart-close');
-						callback(['heatmap']);
-					}
-				}
-			}
-	}});
-	return new Highcharts.Chart(chartOptions);
+function newChart(opts) {
+	return new Highcharts.Chart(opts);
 }
-
 
 const LOWERWHISKER = 0;
 const LOWER = 1;
@@ -553,7 +526,7 @@ var fvcChart = violin => violin ?
 // It might make sense to split this into two functions instead of having
 // two polymorphic calls in here, and not much else.
 function boxOrViolin({groups, xCategories, colors, yfields, ydata,
-		xlabel, ylabel, violin, callback}, chartOptions) {
+		xlabel, ylabel, violin}, chartOptions) {
 
 	var matrices = initFVCMatrices({ydata, groups});
 
@@ -565,7 +538,7 @@ function boxOrViolin({groups, xCategories, colors, yfields, ydata,
 	chartOptions = fvcOptions(violin)({chartOptions, series: xCategories.length,
 		categories: yfields, xAxisTitle: xlabel, yAxisTitle: ylabel});
 
-	var chart = newChart(chartOptions, callback);
+	var chart = newChart(chartOptions);
 
 	fvcChart(violin)({xCategories, groups, matrices, yfields, ydata, colors, chart});
 
@@ -605,8 +578,7 @@ function floatVCoded({xdata, xcodemap, xcolumn, columns, cohortSamples,
 	return boxOrViolin({groups, xCategories, colors, ...params}, chartOptions);
 }
 
-function densityplot({yfields: [field], ylabel: Y, ydata: [data],
-		callback}, chartOptions) {
+function densityplot({yfields: [field], ylabel: Y, ydata: [data]}, chartOptions) {
 	chartOptions = highchartsHelper.densityChart({chartOptions, yaxis: field, Y});
 	var nndata = _.filter(data, x => x !== null),
 		min = _.min(nndata),
@@ -619,7 +591,7 @@ function densityplot({yfields: [field], ylabel: Y, ydata: [data],
 			// is samples per x-axis unit.
 			.map(([x, d]) => [x, d * N]);
 
-	var chart = newChart(chartOptions, callback);
+	var chart = newChart(chartOptions);
 	highchartsHelper.addSeriesToColumn({
 		chart,
 		type: 'areaspline',
@@ -637,7 +609,7 @@ function summaryBoxplot(params, chartOptions) {
 	return boxOrViolin({groups, colors, xCategories, ...params}, chartOptions);
 }
 
-function summaryColumn({ydata, ycodemap, xlabel, ylabel, callback}, chartOptions) {
+function summaryColumn({ydata, ycodemap, xlabel, ylabel}, chartOptions) {
 	var lengths = _.mapObject(groupIndexByCode(ydata[0], ycodemap), g => g.length),
 		categories = ycodemap.filter(c => _.has(lengths, c)),
 		total = _.sum(_.values(lengths)),
@@ -648,7 +620,7 @@ function summaryColumn({ydata, ycodemap, xlabel, ylabel, callback}, chartOptions
 		categories.map(code => `${code} (${lengths[code]})`),
 		xlabel, "Distribution", ylabel, false);
 
-	var chart = newChart(chartOptions, callback);
+	var chart = newChart(chartOptions);
 
 	highchartsHelper.addSeriesToColumn({
 		chart,
@@ -674,7 +646,7 @@ summary.add('boxplot', summaryBoxplot);
 summary.add('density', densityplot);
 
 function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
-		columns, ycolumn, callback}, chartOptions) {
+		columns, ycolumn}, chartOptions) {
 
 	var statsDiv = document.getElementById('stats'),
 		showLegend,
@@ -700,7 +672,7 @@ function codedVCoded({xcodemap, xdata, ycodemap, ydata, xlabel, ylabel,
 		chartOptions, categories.map(code => code + " (" + xbinnedSample[code].length + ")"),
 		xlabel, 'Distribution', ylabel, showLegend);
 
-	chart = newChart(chartOptions, callback);
+	chart = newChart(chartOptions);
 
 	// XXX this order may be weird
 	var ycategories = Object.keys(ybinnedSample);
@@ -789,7 +761,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 		xlabel, ylabel,
 		scatterColorScale, scatterColorData, scatterColorDataCodemap,
 		samplesMatched,
-		columns, colorColumn, cohortSamples, callback}, chartOptions) {
+		columns, colorColumn, cohortSamples}, chartOptions) {
 
 	var statsDiv = document.getElementById('stats'),
 		yfield,
@@ -803,7 +775,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 	chartOptions = highchartsHelper.scatterChart(chartOptions, xlabel, ylabel, samplesLength);
 
 	if (yfields.length > 1) { // y multi-subcolumns -- only happen with genomic y data
-		chart = newChart(chartOptions, callback);
+		chart = newChart(chartOptions);
 
 		for (k = 0; k < yfields.length; k++) {
 			var series = [];
@@ -855,7 +827,7 @@ function floatVFloat({samplesLength, xfield, xdata,
 		chartOptions = _.deepMerge(chartOptions, {
 			legend: {title: {text: ''}}
 		});
-		chart = newChart(chartOptions, callback);
+		chart = newChart(chartOptions);
 
 		yfield = yfields[0];
 		for (i = 0; i < xdata[0].length; i++) {
@@ -1130,7 +1102,19 @@ class HighchartView extends PureComponent {
 		return div({id: 'xenaChart', className: compStyles.chart});
 	}
 }
-var highchartView = el(HighchartView);
+var highchartViewSelect = el(HighchartView);
+
+// XXX This is suboptimal. We drop 'advanced' from chartState because
+// otherwise it causes a re-render when the user expands the options.
+// Should probably not be putting 'advanced' in the global state, but
+// instead keep it in local state. We could also prune what we send
+// to HighchartView, but that's a larger refactor.
+var highchartView = props =>
+	highchartViewSelect(
+		_.updateIn(props, ['xenaState', 'chartState'], cs => _.omit(cs, 'advanced'))) ;
+
+var closeButton = onClose =>
+	iconButton({className: compStyles.close, onClick: onClose, icon: 'close'});
 
 class Chart extends PureComponent {
 
@@ -1143,6 +1127,10 @@ class Chart extends PureComponent {
 
 	componentWillUnmount() {
 		this.destroy();
+	}
+
+	onClose = () => {
+		this.props.callback(['heatmap']);
 	}
 
 	render() {
@@ -1214,18 +1202,23 @@ class Chart extends PureComponent {
 				onClick: () => set(['violin'], !violin)}) :
 			null;
 
-		var advOpt = advanced ?
-			div({id: 'controlPanel', className: compStyles.controlPanel},
-				div(
+		var advOpt =
+			div({className: compStyles.controlPanel},
+				div({className: compStyles.accordion +
+						(advanced ? ` ${compStyles.show}` : '')},
 					div({className: compStyles.row},
 						yExp,
 						normalization),
-					div({className: compStyles.row},
+					xExp && div({className: compStyles.row},
 						xExp),
-					div({className: compStyles.row}, colorAxisDiv))) : null;
+					colorAxisDiv && div({className: compStyles.row}, colorAxisDiv)));
 
 		var HCV =
 			div(highchartView({xenaState, drawProps}),
+				button({label: advanced ? 'Hide options' : 'Advanced options',
+					className: compStyles.advanced,
+					icon: advanced ? 'expand_less' : 'expand_more',
+					onClick: () => set(['advanced'], !advanced)}),
 				advOpt);
 
 
@@ -1234,16 +1227,15 @@ class Chart extends PureComponent {
 		// otoh, since we always re-render, it kinda works as-is.
 
 		return div({className: compStyles.ChartView},
+				closeButton(this.onClose),
 				HCV,
 				div({className: compStyles.right},
-					div({id: 'stats', className: compStyles.stats}),
 					div({className: compStyles.actions},
 						button({label: 'Make another graph', onClick:
 							() => set(['setColumn'], ycolumn)}),
 						swapAxes,
-						violinOpt,
-						button({label: advanced ? 'Hide options' : 'Advanced options',
-							onClick: () => set(['advanced'], !advanced)}))));
+						violinOpt),
+					div({id: 'stats', className: compStyles.stats})));
 	};
 }
 
