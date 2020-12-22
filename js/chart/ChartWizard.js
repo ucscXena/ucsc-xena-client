@@ -4,7 +4,7 @@ import {Button} from 'react-toolbox/lib/button';
 import {Dropdown} from 'react-toolbox/lib/dropdown';
 import Chart from './chart';
 var _ = require('../underscore_ext').default;
-import {v, suitableColumns} from './utils';
+import {v, showWizard, suitableColumns} from './utils';
 import './icons.css';
 import {div, label, h2, i, a, span, el} from './react-hyper';
 
@@ -223,9 +223,9 @@ var page = {
 export default class ChartWizard extends PureComponent {
 	constructor(props) {
 	    super(props);
-		var {chartState: {ycolumn, xcolumn, violin, setColumn} = {}} = this.props.appState;
+		var {chartState: {ycolumn, xcolumn, violin} = {}} = this.props.appState;
 	    this.state = {
-			mode: v(ycolumn) && !setColumn ? 'chart' : 'start',
+			mode: showWizard(this.props.appState) ? 'start' : 'chart',
 			ycolumn,
 			xcolumn,
 			violin
@@ -236,9 +236,9 @@ export default class ChartWizard extends PureComponent {
 	// or column data arrive. In that case more columns could be available
 	// to this wizard. We shouldn't see changes to y & x except from ourselves.
 	componentWillReceiveProps(props) {
-		var {appState: {chartState: {ycolumn, setColumn} = {}}} = props;
+		var {appState} = props;
 		// maybe set xcolumn & ycolumn too
-		if (v(ycolumn) && !setColumn)  {
+		if (!showWizard(appState)) {
 			this.setState({mode: 'chart'});
 		} else if (this.state.mode !== 'start') {
 			this.setState({mode: 'start'});
@@ -251,7 +251,12 @@ export default class ChartWizard extends PureComponent {
 		this.setState({mode, ...init[mode](appState)});
 	}
 	onClose = () => {
-		this.props.callback(['heatmap']);
+		var {callback, appState: {chartState = {}}} = this.props;
+		callback(['chart-set-state',
+				_.assoc(chartState,
+					'setColumn', undefined,
+					'another', false)]);
+		callback([chartState.another ? 'chart' : 'heatmap']);
 	}
 	onChart = ev => {
 		this.setState({violin: ev.currentTarget.dataset.chart === 'violin'});
@@ -260,11 +265,12 @@ export default class ChartWizard extends PureComponent {
 		var {callback, appState} = this.props,
 			{ycolumn, xcolumn, violin} = this.state;
 		callback(['chart-set-state',
-			_.assocIn(appState.chartState,
-				['ycolumn'], ycolumn,
-				['xcolumn'], xcolumn,
-				['violin'], violin,
-				['setColumn'], undefined)]);
+			_.assoc(appState.chartState,
+				'ycolumn', ycolumn,
+				'xcolumn', xcolumn,
+				'violin', violin,
+				'setColumn', undefined,
+				'another', false)]);
 	}
 	onX = xcolumn => {
 		var {ycolumn} = this.state;

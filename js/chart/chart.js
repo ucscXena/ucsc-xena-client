@@ -1227,7 +1227,7 @@ class Chart extends PureComponent {
 				div({className: compStyles.right},
 					div({className: compStyles.actions},
 						button({label: 'Make another graph', onClick:
-							() => set(['setColumn'], ycolumn)}),
+							() => set(['another'], true)}),
 						swapAxes,
 						violinOpt),
 					div({id: 'stats', className: compStyles.stats})));
