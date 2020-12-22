@@ -1210,11 +1210,11 @@ class Chart extends PureComponent {
 
 		var HCV =
 			div(highchartView({xenaState, drawProps}),
-				button({label: advanced ? 'Hide options' : 'Advanced options',
+				yExp && button({label: advanced ? 'Hide options' : 'Advanced options',
 					className: compStyles.advanced,
 					icon: advanced ? 'expand_less' : 'expand_more',
 					onClick: () => set(['advanced'], !advanced)}),
-				advOpt);
+				yExp && advOpt);
 
 
 		// statistics XXX note that we scribble over stats. Should either render
