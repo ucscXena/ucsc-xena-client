@@ -8,9 +8,10 @@
 //
 //
 
-var version = 3; // XXX duplicated in store.js?
+var version = 4; // XXX duplicated in store.js?
 
-var {assoc, flatten, get, getIn, Let, mapObject, merge, omit, pick, isString, updateIn, without} = require('./underscore_ext').default;
+var {assoc, flatten, get, getIn, Let, mapObject, merge, omit, pick, isString,
+	updateIn, without} = require('./underscore_ext').default;
 var {servers: {localHub, oldLocalHub}} = require('./defaultServers');
 
 var setVersion = state => assoc(state, 'version', version);
@@ -50,11 +51,30 @@ var noLocalCert = state =>
 			assoc(omit(servers, oldLocalHub), localHub, servers[oldLocalHub])) :
 		state;
 
+// chart mode. Tracking exp separately for x and y doesn't make sense. To
+// avoid breaking existing views, prefer the exp setting for current x and y,
+// from either setting. This will affect "a vs. a" charts with different exp
+// setting, but they're not worth preserving.
+var noExpX = state =>
+	get(state, 'spreadsheet') ?
+		updateIn(state, ['spreadsheet', 'chartState'], chartState => {
+			if (chartState) {
+				var {expState, expXState, xcolumn, ycolumn} = chartState;
+				chartState = omit(chartState, 'expXState');
+				return assoc(chartState, 'expState',
+					merge(expXState, expState,
+						pick(expXState, xcolumn),
+						pick(expState, ycolumn)));
+			}
+		}) :
+	state;
+
 // This must be sorted, with later versions appearing last.
 var migrations = [
 	[noComposite, splitPages, samplesToLeft], // to v1
 	[noFieldSpec],                            // to v2
-	[noLocalCert]                             // to v3
+	[noLocalCert],                            // to v3
+	[noExpX]                                  // to v4
 ];
 
 function apply(state) {

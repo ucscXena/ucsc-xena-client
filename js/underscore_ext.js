@@ -438,6 +438,27 @@ function valToStr(v) {
 	return (!isNaN(v) && (v !== null) && (v !== undefined)) ? "" + v : "";
 }
 
+var mergable = o => _.isObject(o) && !_.isFunction(o);
+
+function deepMerge1(a, b) {
+	_.keys(b).forEach(k => {
+		var ak = _.get(a, k),
+			v = mergable(ak) && mergable(b[k]) ?
+				deepMerge1(ak, b[k]) : b[k];
+		a = _.assoc(a, k, v);
+	});
+	return a;
+}
+
+// immutably deep merge nested objects, retaining identity if value is unchanged.
+// Doesn't handle complex types, e.g. typed arrays, Date, Map, Set.
+function deepMerge(a, ...args) {
+	args.forEach(arg => {
+		a = deepMerge1(a, arg);
+	});
+	return a;
+}
+
 // string slice() will hold a copy of the original string, which
 // will run us out of memory when processing buffers. So, force
 // a mem copy.
@@ -466,6 +487,7 @@ _.mixin({
 	cmpNumberOrNull,
 	curry,
 	curryN, // useful if the fn as multiple arities.
+	deepMerge,
 	duplicates,
 	filterIndices,
 	findIndexDefault,

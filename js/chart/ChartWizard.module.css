@@ -1,0 +1,50 @@
+
+
+.close {
+	float: right;
+	cursor: pointer;
+}
+
+.back {
+	float: left;
+}
+
+.done {
+	float: right;
+}
+
+.modes {
+	margin: 0 15%;
+	display: flex;
+	flex-direction: column;
+}
+
+.modes button {
+	margin: 2px;
+}
+
+.modes .label {
+	float: left;
+	width: 40%; /* this is weird & probably broken */
+}
+
+.icons i {
+	margin: 0 6px;
+}
+
+.modes i {
+	font-size: 140%;
+	vertical-align: middle;
+}
+
+.wizard {
+	width: 50%;
+	max-width: 600px;
+	margin: 50px auto;
+	padding: 20px;
+}
+
+.actions {
+	margin-top: 10px;
+}
+

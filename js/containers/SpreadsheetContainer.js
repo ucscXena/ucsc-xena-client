@@ -90,8 +90,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 	};
 
 	onChart = (id) => {
-		this.props.callback(['chart-set-column', id]);
-		this.props.callback(['chart']);
+		this.props.callback(['chart', id]);
 	};
 
 	onCluster = (id, value, data) => {

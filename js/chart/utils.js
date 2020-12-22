@@ -1,5 +1,5 @@
-import getLabel from './getLabel';
-var _ = require('./underscore_ext').default;
+import getLabel from '../getLabel';
+var _ = require('../underscore_ext').default;
 
 // The string 'none' has been used in several user settings where null or
 // undefined would be more typical. Since we have stored state like this,
@@ -32,9 +32,6 @@ export var suitableColumns = ({columnOrder, columns, data}, allowMulti) =>
 			label: columnLabel(i, columns[id])}))
 		.filter(({value: id}) => isSuitable({data, columns}, allowMulti, id));
 
-var defaultY = xenaState =>
-	_.getIn(suitableColumns(xenaState, true), [0, 'value']);
-
 var setIfNot = (state, path, value) =>
 	v(_.getIn(state, path)) ? state : _.assocIn(state, path, value);
 
@@ -47,40 +44,32 @@ var initSettings = chartState => {
 	}
 	var xcolumn = chartState.xcolumn;
 	if (v(xcolumn)) {
-		chartState = setIfNot(chartState, ['expXState', xcolumn], 0);
+		chartState = setIfNot(chartState, ['expState', xcolumn], 0);
 	}
 	return chartState;
 };
 
-var resetColumn = (xenaState, chartState, column) => {
+var resetColumn = (xenaState, chartState, column, allowMulti) => {
 	var id = _.get(chartState, column);
-	return v(id) && !isSuitable(xenaState, false, id) ?
+	return v(id) && !isSuitable(xenaState, allowMulti, id) ?
 		_.assoc(chartState, column, 'none') : chartState;
 };
 
 // Handle
 //  initialization, if chartState doesn't exist.
 //  resetting columns, if they've been removed.
-//  picking default columns, if none set.
 //  setting exp and norm for active columns.
 export var defaultState = xenaState => {
 	var chartState = xenaState.chartState;
-	var ycolumn = _.get(chartState, 'ycolumn');
-	// we reset ycolumn separately because if it changes we want to clear
-	// xcolumn, which might conflict with the new y. See disableMismatch().
-	// Alternatively, we could reset xcolumn only if it conflicts with y,
-	// below.
-	if (!v(ycolumn) || !isSuitable(xenaState, true, ycolumn)) {
-		// column was deleted or was never set
-		chartState = _.assoc(chartState,
-			'ycolumn', defaultY(xenaState),
-			'xcolumn', 'none');
-	} // chartState exists at this point
 
-	chartState = resetColumn(xenaState, chartState, 'xcolumn');
-	chartState = resetColumn(xenaState, chartState, 'colorColumn');
+	chartState = resetColumn(xenaState, chartState, 'ycolumn', true);
+	chartState = resetColumn(xenaState, chartState, 'xcolumn', false);
+	chartState = resetColumn(xenaState, chartState, 'colorColumn', false);
 
 	chartState = initSettings(chartState);
 	// assoc will discard noop assignments, so won't cause re-render.
 	return _.assoc(xenaState, 'chartState', chartState);
 };
+
+export var showWizard = ({chartState: {ycolumn, setColumn} = {}}) =>
+	!v(ycolumn) || setColumn;
