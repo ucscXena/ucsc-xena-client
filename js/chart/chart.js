@@ -1175,7 +1175,9 @@ class Chart extends PureComponent {
 
 		var colorAxisDiv = doScatter ? axisSelector(xenaState, 'Color',
 				ev => set(['colorColumn'], ev.currentTarget.value)) : null;
-		var swapAxes = doScatter ? button({label: 'Swap X and Y',
+		var codedVCoded = v(xcolumn) && !isFloat(columns, xcolumn) && v(ycolumn) &&
+			!isFloat(columns, ycolumn);
+		var swapAxes = codedVCoded || doScatter ? button({label: 'Swap X and Y',
 			onClick: () => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)}) : null;
 
 		var yExp = ycodemap ? null :
