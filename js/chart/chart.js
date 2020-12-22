@@ -1046,7 +1046,6 @@ function callDrawChart(xenaState, params) {
 				n && v(n.value));
 
 
-	// XXX just transform the axes.
 	if (yNormalization) {
 		// mean normalize
 		ydata = ydata.map(data => {
@@ -1055,7 +1054,6 @@ function callDrawChart(xenaState, params) {
 		});
 	}
 
-	// XXX just transform the axes.
 	if (!ycodemap) {
 		let STDEV = getStdev(yfields, ydata, yNormalization);
 		// z-score
@@ -1088,11 +1086,6 @@ class HighchartView extends PureComponent {
 	}
 
 	componentWillReceiveProps(newProps) {
-		// XXX if we can make linear transforms just an update
-		// of axes, compare state here to decide whether to redraw or
-		// update axes. Should check that all relevant state coming in
-		// is identical, except for transform settings of the plot
-		// on-screen.
 		if (!_.isEqual(newProps, this.props)) {
 			callDrawChart(newProps.xenaState, newProps.drawProps);
 		}
