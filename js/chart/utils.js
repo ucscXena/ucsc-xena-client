@@ -71,5 +71,5 @@ export var defaultState = xenaState => {
 	return _.assoc(xenaState, 'chartState', chartState);
 };
 
-export var showWizard = ({chartState: {ycolumn, setColumn} = {}}) =>
-	!v(ycolumn) || setColumn;
+export var showWizard = ({mode, chartState: {ycolumn, setColumn} = {}}) =>
+	mode === 'chart' && (!v(ycolumn) || setColumn);
