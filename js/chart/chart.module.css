@@ -136,7 +136,7 @@
 	justify-content: flex-start;
 }
 
-.close {
+button.close { /* have to use button to force the override */
 	position: absolute;
 	top: 20px;
 	right: 30px;
