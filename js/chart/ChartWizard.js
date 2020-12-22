@@ -263,11 +263,13 @@ export default class ChartWizard extends PureComponent {
 	}
 	onDone = () => {
 		var {callback, appState} = this.props,
-			{ycolumn, xcolumn, violin} = this.state;
+			{chartState: {colorColumn} = {}} = appState,
+			{ycolumn, xcolumn, violin, mode} = this.state;
 		callback(['chart-set-state',
 			_.assoc(appState.chartState,
 				'ycolumn', ycolumn,
 				'xcolumn', xcolumn,
+				'colorColumn', mode === 'scatter' ? colorColumn : undefined,
 				'violin', violin,
 				'setColumn', undefined,
 				'another', false)]);
