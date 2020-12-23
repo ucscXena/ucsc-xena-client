@@ -197,7 +197,7 @@ var iconList = (...icons) => span({className: styles.icons}, ...(icons.map(icon 
 				i({className: 'icon icon-' + icon}))));
 
 var icons = {
-	boxOrViolin: iconList('box', 'violin'),
+	boxOrViolin: iconList('box'),
 	histOrDist: iconList('bar'),
 	scatter: iconList('scatter')
 };
