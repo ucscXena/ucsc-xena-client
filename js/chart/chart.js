@@ -1193,7 +1193,7 @@ class Chart extends PureComponent {
 				i => set(['normalizationState', chartState.ycolumn], i));
 
 		var violinOpt = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
-			button({label: violin ? 'Boxplot' : 'Violin plot',
+			button({label: `View as  ${violin ? 'boxplot' : 'violin plot'}`,
 				onClick: () => set(['violin'], !violin)}) :
 			null;
 
