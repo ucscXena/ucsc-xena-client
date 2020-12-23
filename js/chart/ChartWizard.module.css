@@ -1,5 +1,3 @@
-
-
 .close {
 	float: right;
 	cursor: pointer;
@@ -14,26 +12,37 @@
 }
 
 .modes {
-	margin: 0 22%;
+	margin: 0 15%;
 	display: flex;
 	flex-direction: column;
 }
 
 .modes button {
-	margin: 2px;
+	margin-top: 2px;
+	/* this centers the buttons on the start page, but might
+	 * do odd things on other pages. Not sure. */
+	margin-left: auto;
+	margin-right: auto;
+	width: 21em;
+	text-align: left;
 }
 
-/* XXX this selector is ridiculous */
 .modes button span:first-child {
 	float: right;
 }
 
-.modes .label {
-	float: left;
+[data-react-toolbox="radio-button"] i, .modes button i {
+	margin: 0 6px;
 }
 
-.icons i {
-	margin: 0 6px;
+/* line up the radio buttons with the other inputs */
+.modes [data-react-toolbox="radio-group"] {
+	padding: 6px 24px;
+}
+
+.radio span:first-child {
+	display: inline-block;
+	width: 4.4em;
 }
 
 .modes i {
@@ -56,4 +65,3 @@
 .actions {
 	margin-top: 10px;
 }
-

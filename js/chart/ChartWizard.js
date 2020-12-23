@@ -1,17 +1,21 @@
 import PureComponent from '../PureComponent';
 import {Card} from 'react-toolbox/lib/card';
 import {Button} from 'react-toolbox/lib/button';
+import {RadioGroup, RadioButton} from 'react-toolbox/lib/radio';
 import {Dropdown} from 'react-toolbox/lib/dropdown';
 import Chart from './chart';
 var _ = require('../underscore_ext').default;
 import {v, showWizard, suitableColumns} from './utils';
 import './icons.css';
 import {div, label, h2, i, a, span, el} from './react-hyper';
+import classNames from 'classnames';
 
 var button = el(Button);
 var card = el(Card);
 var chart = el(Chart);
 var dropdown = el(Dropdown);
+var radioGroup = el(RadioGroup);
+var radioButton = el(RadioButton);
 
 var styles = require('./ChartWizard.module.css');
 
@@ -29,15 +33,17 @@ var wizard = ({onClose, title, left = null, right = null}, ...children) =>
 		div(...children),
 		div({className: styles.actions}, left, right));
 
+var iconI = icon => i({className: classNames('icon',  'icon-' + icon)});
+
 //
 // compare subgroups selections
 //
 
 var boxOrViolinModes = [
-	{'data-chart': 'boxplot', label: 'Box plot',
-		icon: i({className: 'icon icon-box'})},
-	{'data-chart': 'violin', label: 'Violin plot',
-		icon: i({className: 'icon icon-violin'})}
+	{label: span({className: styles.radio}, span('Box plot'), iconI('box')),
+		value: 'boxplot'},
+	{label: span({className: styles.radio}, span('Violin plot'), iconI('violin')),
+		value: 'violin'}
 ];
 
 var isFloat = (columns, id) => !columns[id].codes;
@@ -90,9 +96,6 @@ var isValid = ({ycolumn, xcolumn}, appState) =>
 var needType = (state, appState) =>
 	isValid(state, appState) && isFloat(appState.columns, state.ycolumn);
 
-var bvDisabled = (state, props) =>
-	(props['data-chart'] === 'violin') ===  !!state.violin;
-
 var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 		state, props: {appState}}) =>
 	wizard({title: "Compare subgroups", onClose,
@@ -108,9 +111,9 @@ var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 					.concat(noX(appState, state.ycolumn))})),
 			needType(state, appState) ?
 				div(label('I want a'),
-					...boxOrViolinModes.map(props =>
-						button({onClick: onChart, disabled: bvDisabled(state, props),
-							...props}))) :
+					radioGroup({name: 'boxOrViolin', onChange: onChart,
+						value: state.violin ? 'violin' : 'boxplot'},
+						...boxOrViolinModes.map(props => radioButton(props)))) :
 				null));
 
 //
@@ -185,21 +188,16 @@ var canDraw = {
 	scatter: scatterCanDraw
 };
 
-var modeLabel = text => span({className: styles.label}, text);
-
 var startModes = [
-	{'data-mode': 'boxOrViolin', label: modeLabel('Compare subgroups')},
-	{'data-mode': 'histOrDist', label: modeLabel('See a column distribution')},
-	{'data-mode': 'scatter', label: modeLabel('Make a scatter plot')}
+	{'data-mode': 'boxOrViolin', label: 'Compare subgroups'},
+	{'data-mode': 'histOrDist', label: 'See a column distribution'},
+	{'data-mode': 'scatter', label: 'Make a scatter plot'}
 ];
 
-var iconList = (...icons) => span({className: styles.icons}, ...(icons.map(icon =>
-				i({className: 'icon icon-' + icon}))));
-
 var icons = {
-	boxOrViolin: iconList('box'),
-	histOrDist: iconList('bar'),
-	scatter: iconList('scatter')
+	boxOrViolin: iconI('box'),
+	histOrDist: iconI('bar'),
+	scatter: iconI('scatter')
 };
 
 var modeButton = (appState, onMode) => props =>
@@ -258,8 +256,8 @@ export default class ChartWizard extends PureComponent {
 					'another', false)]);
 		callback([chartState.another ? 'chart' : 'heatmap']);
 	}
-	onChart = ev => {
-		this.setState({violin: ev.currentTarget.dataset.chart === 'violin'});
+	onChart = value => {
+		this.setState({violin: value === 'violin'});
 	}
 	onDone = () => {
 		var {callback, appState} = this.props,
