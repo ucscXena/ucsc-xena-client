@@ -3,16 +3,14 @@ import {Card} from 'react-toolbox/lib/card';
 import {Button} from 'react-toolbox/lib/button';
 import {RadioGroup, RadioButton} from 'react-toolbox/lib/radio';
 import {Dropdown} from 'react-toolbox/lib/dropdown';
-import Chart from './chart';
 var _ = require('../underscore_ext').default;
-import {v, showWizard, suitableColumns} from './utils';
+import {v, suitableColumns} from './utils';
 import './icons.css';
 import {div, label, h2, i, a, span, el} from './react-hyper';
 import classNames from 'classnames';
 
 var button = el(Button);
 var card = el(Card);
-var chart = el(Chart);
 var dropdown = el(Dropdown);
 var radioGroup = el(RadioGroup);
 var radioButton = el(RadioButton);
@@ -215,7 +213,6 @@ var page = {
 	boxOrViolin: boxOrViolinPage,
 	histOrDist: histOrDistPage,
 	scatter: scatterPage,
-	chart: ({props}) => chart(props)
 };
 
 export default class ChartWizard extends PureComponent {
@@ -223,24 +220,11 @@ export default class ChartWizard extends PureComponent {
 	    super(props);
 		var {chartState: {ycolumn, xcolumn, violin} = {}} = this.props.appState;
 	    this.state = {
-			mode: showWizard(this.props.appState) ? 'start' : 'chart',
+			mode: 'start',
 			ycolumn,
 			xcolumn,
 			violin
 		};
-	}
-
-	// Most actions are blocked in this mode, but we could have datasets
-	// or column data arrive. In that case more columns could be available
-	// to this wizard. We shouldn't see changes to y & x except from ourselves.
-	componentWillReceiveProps(props) {
-		var {appState} = props;
-		// maybe set xcolumn & ycolumn too
-		if (!showWizard(appState)) {
-			this.setState({mode: 'chart'});
-		} else if (this.state.mode !== 'start') {
-			this.setState({mode: 'start'});
-		}
 	}
 
 	onMode = ev => {
