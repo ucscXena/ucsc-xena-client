@@ -14,7 +14,7 @@
 }
 
 .modes {
-	margin: 0 15%;
+	margin: 0 22%;
 	display: flex;
 	flex-direction: column;
 }
@@ -23,9 +23,13 @@
 	margin: 2px;
 }
 
+/* XXX this selector is ridiculous */
+.modes button span:first-child {
+	float: right;
+}
+
 .modes .label {
 	float: left;
-	width: 40%; /* this is weird & probably broken */
 }
 
 .icons i {
@@ -42,6 +46,11 @@
 	max-width: 600px;
 	margin: 50px auto;
 	padding: 20px;
+}
+
+.wizard h2 {
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .actions {
