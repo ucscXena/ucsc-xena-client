@@ -140,6 +140,9 @@ var spreadsheetControls = {
 			fetchClustering(serverBus, newState, id, data);
 		}
 	},
+	searchHistory: (state, search) => _.updateIn(state, ['searchHistory'],
+			// put at front, limit length, and make unique
+			history => _.uniq([search].concat((history || [])).slice(0, 20))),
 	sampleFilter: (state, sampleFilter) => _.assoc(state,
 			'cohort', _.assocIn(state.cohort, ['sampleFilter'], sampleFilter),
 			'survival', null),
@@ -157,6 +160,8 @@ var spreadsheetControls = {
 				'columns', _.merge(columns, _.object(ids, settingsList)),
 				'columnOrder', newOrder,
 				'sampleSearch', remapFields(columnOrder, newOrder, sampleSearch),
+				'searchHistory', state.searchHistory &&
+					state.searchHistory.map(remapFields(columnOrder, newOrder)),
 				'editing', null, // is editing always off after column add?
 				'data', _.merge(data, _.object(ids, ids.map(_.constant({'status': 'loading'})))));
 		return resetWizard(newState);
@@ -182,7 +187,10 @@ var spreadsheetControls = {
 				'columns', _.dissoc(columns, id),
 				'columnOrder', _.without(columnOrder, id),
 				'data', _.dissoc(data, id));
-		return _.assoc(ns, 'sampleSearch', remapFields(state.columnOrder, ns.columnOrder, state.sampleSearch));
+		return _.assoc(ns,
+				'sampleSearch', remapFields(state.columnOrder, ns.columnOrder, state.sampleSearch),
+				'searchHistory', state.searchHistory &&
+					state.searchHistory.map(remapFields(state.columnOrder, ns.columnOrder)));
 	},
 	order: (state, order) => {
 		// Filter out 'editing' columns
@@ -190,7 +198,9 @@ var spreadsheetControls = {
 			editing = _.findIndexDefault(order.slice(1), _.isNumber, state.editing);
 		return _.assoc(state, 'columnOrder', newOrder,
 			'editing', editing,
-			'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch));
+			'sampleSearch', remapFields(state.columnOrder, order, state.sampleSearch),
+			'searchHistory', state.searchHistory &&
+				state.searchHistory.map(remapFields(state.columnOrder, order)));
 	},
 	zoom: (state, zoom) => warnZoom(_.assoc(state, "zoom", zoom)),
 	'zoom-help-close': zoomHelpClose,

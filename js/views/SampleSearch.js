@@ -2,11 +2,35 @@
 import PureComponent from '../PureComponent';
 var React = require('react');
 import Input from 'react-toolbox/lib/input';
-import {IconMenu, MenuItem} from 'react-toolbox/lib/menu';
+import {IconMenu, Menu, MenuItem} from 'react-toolbox/lib/menu';
 var classNames = require('classnames');
 var Rx = require('../rx').default;
 import Tooltip from 'react-toolbox/lib/tooltip';
-var _ = require('../underscore_ext').default;
+
+var TooltipInput = Tooltip(({inputRef, ...props}) =>
+		<Input innerRef={inputRef} {...props}/>);
+var TooltipI = Tooltip('i');
+
+// The Tooltip component will get mouse enter/leave events on menu children,
+// causing the tooltip to display in front of the menu when it is open. There's
+// no way to disable the Tooltip while the menu is open. This is a workaround
+// that intercepts the onMouseEnter method that is injected by the Tooltip
+// component, and filters events based on the event target type.
+class IconMenuWrapper extends PureComponent {
+	onMouseEnter = ev => {
+		if (ev.target.type === 'button') {
+			this.props.onMouseEnter(ev);
+		}
+	}
+	render() {
+		var {onMouseEnter, ...props} = this.props; //eslint-disable-line no-unused-vars
+		return <IconMenu onMouseEnter={this.onMouseEnter} {...props}/>;
+	}
+}
+
+
+var TooltipIconMenu = Tooltip(IconMenuWrapper);
+
 
 // Styles
 var compStyles = require('./SampleSearch.module.css');
@@ -89,9 +113,65 @@ function findSubExpr(offsets, i) {
 	}
 	return j;
 }
+var tooltips = {
+	filter: 'Filter samples',
+	subgroup: 'Create sample subgroups from data on the screen',
+	find: 'Highlight or zoom in on a selection of samples',
+	clear: 'Clear current filter and show all samples in the study',
+	input: 'Examples: "missense", "null","B:>2"',
+	keep: 'Keep only the selected samples on the screen',
+	remove: 'Remove the selected samples from the screen',
+	makeSubgroup: 'Matched samples will be one subgroup and non-matched samples will be the other subgroup',
+	highlight: 'Highlight selected samples',
+	zoom: 'Zoom in to selected samples',
+	history: 'Previous search text'
+};
 
-var TTI = Tooltip(props => <i {..._.omit(props, 'theme')}/>);
-var TTIconMenu = Tooltip(IconMenu);
+var placeholder = {
+	true: 'Click on visual spreadsheet or type here to select samples',
+	false: 'Type here to select samples'
+};
+
+var input = comp => {
+	var {matches, mode, history, pickSamples} = comp.props,
+		{value} = comp.state,
+		hasHistory = history.length > 0,
+		noshow = (mode !== "heatmap");
+
+	return (<TooltipInput key='input'
+			className={classNames(compStyles.inputContainer, pickSamples && compStyles.picking)}
+			tooltip={tooltips.input}
+			onKeyUp={comp.onCaret}
+			onClick={comp.onCaret}
+			onFocus={comp.onCaret}
+			onBlur={comp.onHideCaret}
+			inputRef={comp.setRef}
+			spellCheck={false}
+			type='text'
+			value={value || ''}
+			placeholder={placeholder[pickSamples]}
+			onChange={comp.onChange}
+			disabled={noshow}>
+		<TooltipI tooltip={tooltips.history} onClick={comp.onOpenHistory}
+				className={classNames(compStyles.dropDownArrow,
+					hasHistory && compStyles.hasHistory, 'material-icons')}>
+				arrow_drop_down</TooltipI>
+
+		<Menu theme={{static: compStyles.history, active: compStyles.historyActive}}
+				onShow={comp.onShowHistory} onHide={comp.onHideHistory}
+				position='static' active={comp.state.historyOpen}>
+			{history.map((b, i) =>
+					// Note that Menu onSelect is broken in dev because of component
+					// identity comparisons, and MenuItem events are broken in prod
+					// because of RT deferring callbacks with a setState call, thus
+					// allowing currentTarget to be nulled, so our only option here
+					// is to create closures on every render. Very annoying.
+					<MenuItem className={compStyles.menuItem} onClick={() => comp.onHistory(b)}
+						data-value={b} key={i} value={b} caption={b}/>)}
+		</Menu>
+		<span className={compStyles.subtitle}>{`${matches} matching samples`}</span>
+	</TooltipInput>);
+};
 
 export class SampleSearch extends PureComponent {
 	state = {value: this.props.value};
@@ -156,37 +236,65 @@ export class SampleSearch extends PureComponent {
 		this.highlight(undefined);
 	}
 
+	onOpenHistory = () => {
+		this.setState({historyOpen: !this.state.historyOpen});
+	}
+
+	onHistory = value => {
+		this.setState({historyOpen: false});
+		this.props.onHistory(value); // move to front of history
+		this.props.onChange(value);
+	}
+
+	// These two are hacks to keep local state synced with the menu, e.g.
+	// when the user closes it by clicking outside the menu.
+	onShowHistory = () => {
+		this.setState({historyOpen: true});
+	}
+
+	onHideHistory = () => {
+		this.setState({historyOpen: false});
+	}
+
+	onRemove = () => {
+		this.props.onHistory(this.state.value.trim());
+		this.props.onFilter(true);
+	}
+
+	onKeep = () => {
+		this.props.onHistory(this.state.value.trim());
+		this.props.onFilter(false);
+	}
+
+	onCreateColumn = () => {
+		// have to add to history before the columns reorder, to
+		// prevent the history having wrong column ids.
+		this.props.onHistory(this.state.value.trim());
+		this.props.onCreateColumn();
+	}
+
+	onZoom = () => {
+		this.props.onHistory(this.state.value.trim());
+		this.props.onZoom();
+	}
+
 	render() {
-		var {matches, pickSamples, sampleCount, onFilter, onZoom, onCreateColumn,
-				onPickSamples, onResetSampleFilter, mode} = this.props,
-			{value} = this.state,
+		var {matches, sampleCount, mode, pickSamples, onPickSamples, onResetSampleFilter} = this.props,
 			disableActions = !(matches > 0 && matches < sampleCount),
 			noshow = (mode !== "heatmap");
 		return (
 			<div className={compStyles.SampleSearch}>
-				<Input className={classNames(compStyles.inputContainer, pickSamples && compStyles.picking)}
-					onKeyUp={this.onCaret}
-					onClick={this.onCaret}
-					onFocus={this.onCaret}
-					onBlur={this.onHideCaret}
-					innerRef={this.setRef}
-					spellCheck={false}
-					type='text'
-					value={value || ''}
-					title={value}
-					placeholder='Find samples e.g. TCGA-DB-A4XH, missense'
-					onChange={this.onChange}
-					disabled={noshow}>
-				<span className={compStyles.subtitle}>{`${matches} matching samples`}</span>
-				</Input>
-				<TTI className={classNames('material-icons', pickSamples ? compStyles.dark : '')} onClick={onPickSamples} tooltip='Pick samples'>colorize</TTI>
+				{input(this)}
+				<TooltipI className={classNames('material-icons', pickSamples ? compStyles.dark : '')}
+					onClick={onPickSamples} tooltip='Pick samples'>colorize</TooltipI>
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
-				<TTIconMenu tooltip='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
-					<MenuItem disabled={disableActions} caption='Filter' onClick={onFilter}/>
+				<TooltipIconMenu tooltip='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
+					<MenuItem disabled={disableActions} caption='Keep samples' onClick={this.onKeep}/>
+					<MenuItem disabled={disableActions} caption='Remove samples' onClick={this.onRemove}/>
 					<MenuItem caption='Clear Filter' onClick={onResetSampleFilter}/>
-					<MenuItem disabled={disableActions} caption='Zoom' onClick={onZoom}/>
-					<MenuItem disabled={disableActions} caption='New Column' onClick={onCreateColumn}/>
-				</TTIconMenu>}
+					<MenuItem disabled={disableActions} caption='Zoom' onClick={this.onZoom}/>
+					<MenuItem disabled={disableActions} caption='New Column' onClick={this.onCreateColumn}/>
+				</TooltipIconMenu>}
 			</div>
 		);
 	}

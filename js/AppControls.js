@@ -110,6 +110,10 @@ export class AppControls extends PureComponent {
 		this.nsub.unsubscribe();
 	}
 
+	onSearchHistory = search => {
+		this.props.callback(['searchHistory', search]);
+	}
+
 	onFilter = inv => {
 		const {callback, appState: {samplesMatched, cohortSamples}} = this.props,
 			m = inv ? invert(samplesMatched, _.range(cohortSamples.length)) :
@@ -198,7 +202,7 @@ export class AppControls extends PureComponent {
 
 	render() {
 		var {appState: {cohort, samplesOver, allowOverSamples, mode, showWelcome,
-					samples, sampleSearch, sampleSearchSelection, samplesMatched, allMatches, /*tiesEnabled, */ties},
+					samples, sampleSearch, searchHistory, sampleSearchSelection, samplesMatched, allMatches, /*tiesEnabled, */ties},
 				onReset, help, onResetSampleFilter, onHighlightChange, onHighlightSelect,
 				onAllowOverSamples, oldSearch, pickSamples, onPickSamples, callback} = this.props,
 			displayOver = samplesOver && !allowOverSamples ? '' : compStyles.hidden,
@@ -231,6 +235,8 @@ export class AppControls extends PureComponent {
 								offsets: allMatches.offsets,
 								onHighlightSelect,
 								sampleCount: samples.length,
+								history: searchHistory || [],
+								onHistory: this.onSearchHistory,
 								onFilter: this.onFilter,
 								onZoom: this.onFilterZoom,
 								onCreateColumn: this.onFilterColumn,
