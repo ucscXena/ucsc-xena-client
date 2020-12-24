@@ -152,7 +152,7 @@ var input = comp => {
 			placeholder={placeholder[pickSamples]}
 			onChange={comp.onChange}
 			disabled={noshow}>
-		<TooltipI tooltip={tooltips.history} onClick={comp.onOpenHistory}
+		<TooltipI tooltip={tooltips.history} onClick={hasHistory ? comp.onOpenHistory : null}
 				className={classNames(compStyles.dropDownArrow,
 					hasHistory && compStyles.hasHistory, 'material-icons')}>
 				arrow_drop_down</TooltipI>
