@@ -53,17 +53,17 @@ function download([fields, rows]) {
 var asciiB = 66;
 
 var TTIcon = Tooltip(props => <i {..._.omit(props, 'theme')} />);
-var icon = (i, disabled, tooltip, onClick) =>
+var icon = (i, tooltip, onClick, disabled) =>
 	<TTIcon className={classNames('material-icons', disabled && compStyles.disabled)}
 		onClick={onClick}
 		tooltip={tooltip}>{i}</TTIcon>;
 
 var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}) => (
 	<div className={compStyles.actions}>
-		{icon(modeIcon[mode], !onMode, modeHelp[!onMode || mode], onMode)}
-		{icon('picture_as_pdf', !onPdf, 'Download as PDF', onPdf)}
-		{icon('cloud_download', false, 'Download as tsv', onDownload)}
-		{showWelcome ? null : icon('help', false, 'Show carousel', onShowWelcome)}
+		{icon(modeIcon[mode], modeHelp[!onMode || mode], onMode, !onMode)}
+		{icon('picture_as_pdf', 'Download as PDF', onPdf, !onPdf)}
+		{icon('cloud_download', 'Download as tsv', onDownload)}
+		{showWelcome ? null : icon('help', 'Show carousel', onShowWelcome)}
 	</div>);
 
 var BasicSearch = ({help, onTies, tiesEnabled, ...searchProps}) => (
@@ -214,8 +214,8 @@ export class AppControls extends PureComponent {
 							<span className={compStyles.title}>{cohortName}</span>
 							<span className={compStyles.subtitle}>{filter} {samples.length} Samples<i onClick={onAllowOverSamples} title="Samples on screen limited to 50000 for performance. Click to see all samples." className={`${compStyles.overWarning} ${displayOver} material-icons`}>warning</i></span>
 						</div>
-						<i className='material-icons' onClick={this.onRefresh} title='Reload cohort data'>refresh</i>
-						<i className='material-icons' onClick={onReset} title='Pick new cohort'>close</i>
+						{icon('refresh', 'Reload cohort data', this.onRefresh)}
+						{icon('close', 'Pick new cohort', onReset)}
 					</div>
 					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
 						{tiesOpen ?

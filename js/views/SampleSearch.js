@@ -5,6 +5,8 @@ import Input from 'react-toolbox/lib/input';
 import {IconMenu, MenuItem} from 'react-toolbox/lib/menu';
 var classNames = require('classnames');
 var Rx = require('../rx').default;
+import Tooltip from 'react-toolbox/lib/tooltip';
+var _ = require('../underscore_ext').default;
 
 // Styles
 var compStyles = require('./SampleSearch.module.css');
@@ -87,6 +89,9 @@ function findSubExpr(offsets, i) {
 	}
 	return j;
 }
+
+var TTI = Tooltip(props => <i {..._.omit(props, 'theme')}/>);
+var TTIconMenu = Tooltip(IconMenu);
 
 export class SampleSearch extends PureComponent {
 	state = {value: this.props.value};
@@ -174,14 +179,14 @@ export class SampleSearch extends PureComponent {
 					disabled={noshow}>
 				<span className={compStyles.subtitle}>{`${matches} matching samples`}</span>
 				</Input>
-				<i className={classNames('material-icons', pickSamples ? compStyles.dark : '')} onClick={onPickSamples} title='Pick samples'>colorize</i>
+				<TTI className={classNames('material-icons', pickSamples ? compStyles.dark : '')} onClick={onPickSamples} tooltip='Pick samples'>colorize</TTI>
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
-				<IconMenu title='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
+				<TTIconMenu tooltip='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
 					<MenuItem disabled={disableActions} caption='Filter' onClick={onFilter}/>
 					<MenuItem caption='Clear Filter' onClick={onResetSampleFilter}/>
 					<MenuItem disabled={disableActions} caption='Zoom' onClick={onZoom}/>
 					<MenuItem disabled={disableActions} caption='New Column' onClick={onCreateColumn}/>
-				</IconMenu>}
+				</TTIconMenu>}
 			</div>
 		);
 	}
