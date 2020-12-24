@@ -37,8 +37,6 @@ class ChartView extends PureComponent {
 		var {appState, ...otherProps} = this.props,
 			{Chart, ChartWizard} = this.state,
 			Mode = showWizard(appState) ? ChartWizard : Chart;
-		// XXX Why do we pick chart vs. wizard here, and also in the wizard?
-		// Also see note in Chart::render()
 		return Mode ? <Mode appState={castBinary(appState)} {...otherProps}/> : <span/>;
 	}
 }
