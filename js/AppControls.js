@@ -9,6 +9,7 @@ var widgets = require('./columnWidgets');
 var classNames = require('classnames');
 var gaEvents = require('./gaEvents');
 var {signatureField} = require('./models/fieldSpec');
+var {invert} = require('./models/searchSamples');
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
 import {anyCanDraw, showWizard as showChartWizard} from './chart/utils.js';
@@ -109,9 +110,11 @@ export class AppControls extends PureComponent {
 		this.nsub.unsubscribe();
 	}
 
-	onFilter = () => {
+	onFilter = inv => {
 		const {callback, appState: {samplesMatched, cohortSamples}} = this.props,
-			matching = _.map(samplesMatched, i => cohortSamples[i]);
+			m = inv ? invert(samplesMatched, _.range(cohortSamples.length)) :
+				samplesMatched,
+			matching = _.map(m, i => cohortSamples[i]);
 		gaEvents('spreadsheet', 'samplesearch', 'filter');
 		callback(['sampleFilter', matching]);
 	};
