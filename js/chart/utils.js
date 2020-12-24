@@ -73,3 +73,57 @@ export var defaultState = xenaState => {
 
 export var showWizard = ({mode, chartState: {ycolumn, setColumn, another} = {}}) =>
 	mode === 'chart' && (!v(ycolumn) || setColumn || another);
+
+//
+// dataset selections for ChartWizard, per-mode. These are moved to this file
+// so we can check if anything is drawable (anyCanDraw) from AppControls,
+// without needing to load all the rest of the chart code.
+//
+
+export var isFloat = (columns, id) => !columns[id].codes;
+var optIsFloat = ({columns}) => ({value}) => isFloat(columns, value);
+var optNotFloat = x => y => !optIsFloat(x)(y);
+export var isMulti = _.curry(({columns}, {value}) =>
+		isFloat(columns, value) && columns[value].fields.length > 1);
+
+var optNotBigMulti = ({columns}) => ({value}) => columns[value].fields.length <= 10;
+var and = (a, b) => x => y => a(x)(y) && b(x)(y); // getting crazy with the point-free
+
+// limit subcolumns in Y to something reasonable
+export var scatterYDatasets = appState => suitableColumns(appState, true)
+	.filter(and(optIsFloat, optNotBigMulti)(appState));
+
+export var scatterXDatasets = appState => suitableColumns(appState, false)
+	.filter(optIsFloat(appState));
+
+var scatterCanDraw = appState => {
+	var y = _.pluck(scatterYDatasets(appState), 'value'),
+		x = _.pluck(scatterXDatasets(appState), 'value');
+	return x.length && y.length && _.uniq(y.concat(x)).length > 1;
+};
+
+var histCanDraw = appState => suitableColumns(appState, true).length > 0;
+
+export var boxOrViolinYDatasets = appState => suitableColumns(appState, true);
+
+export var boxOrViolinXDatasets = appState => suitableColumns(appState, false)
+	.filter(optNotFloat(appState));
+
+var boxOrViolinDatasets = appState => {
+	var x = boxOrViolinXDatasets(appState),
+		y = boxOrViolinYDatasets(appState);
+	// If x is empty, only allow multi columns
+	return {x, y: x.length ? y : y.filter(isMulti(appState))};
+};
+
+var boxOrViolinCanDraw = appState =>
+	boxOrViolinDatasets(appState).y.length > 0;
+
+
+export var canDraw = {
+	boxOrViolin: boxOrViolinCanDraw,
+	histOrDist: histCanDraw,
+	scatter: scatterCanDraw
+};
+
+export var anyCanDraw = appState => _.any(_.values(canDraw), x => x(appState));

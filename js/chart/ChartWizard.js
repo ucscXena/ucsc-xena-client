@@ -4,7 +4,8 @@ import {Button} from 'react-toolbox/lib/button';
 import {RadioGroup, RadioButton} from 'react-toolbox/lib/radio';
 import {Dropdown} from 'react-toolbox/lib/dropdown';
 var _ = require('../underscore_ext').default;
-import {v, suitableColumns} from './utils';
+import {v, suitableColumns, canDraw, boxOrViolinXDatasets, boxOrViolinYDatasets,
+	isMulti, isFloat, scatterYDatasets, scatterXDatasets} from './utils';
 import './icons.css';
 import {div, label, h2, i, a, span, el} from './react-hyper';
 import classNames from 'classnames';
@@ -44,30 +45,12 @@ var boxOrViolinModes = [
 		value: 'violin'}
 ];
 
-var isFloat = (columns, id) => !columns[id].codes;
-var optIsFloat = ({columns}) => ({value}) => isFloat(columns, value);
-var optNotFloat = x => y => !optIsFloat(x)(y);
-var isMulti = _.curry(({columns}, {value}) =>
-		isFloat(columns, value) && columns[value].fields.length > 1);
-
 var yIsSet = ({ycolumn}) => v(ycolumn);
 var xyIsSet = ({ycolumn, xcolumn}) => v(ycolumn) && v(xcolumn);
 
 // if y is multi, allow 'none' for x to do field boxplot
 var noX = ({columns}, id) => v(id) && columns[id].fields.length > 1 ?
 	[{value: 'none', label: 'Column fields'}] : [];
-
-var boxOrViolinYDatasets = appState => suitableColumns(appState, true);
-
-var boxOrViolinXDatasets = appState => suitableColumns(appState, false)
-	.filter(optNotFloat(appState));
-
-var boxOrViolinDatasets = appState => {
-	var x = boxOrViolinXDatasets(appState),
-		y = boxOrViolinYDatasets(appState);
-	// If x is empty, only allow multi columns
-	return {x, y: x.length ? y : y.filter(isMulti(appState))};
-};
 
 // If x is 'none' and y is multi, use 'none'.
 // If x is set, and isn't same as y, and isn't float, use it.
@@ -83,9 +66,6 @@ var boxOrViolinInit = appState => {
 		xcolumn: x
 	};
 };
-
-var boxOrViolinCanDraw = appState =>
-	boxOrViolinDatasets(appState).y.length > 0;
 
 var isValid = ({ycolumn, xcolumn}, appState) =>
 	v(ycolumn) && v(xcolumn) || v(ycolumn) && isMulti(appState, {value: ycolumn});
@@ -124,8 +104,6 @@ var histInit = ({chartState: {ycolumn, setColumn}}) => ({
 	ycolumn: setColumn || v(ycolumn),
 	xcolumn: undefined
 });
-var histCanDraw = appState => suitableColumns(appState, true).length > 0;
-
 var histOrDistPage = ({onY, onMode, onDone, onClose, state, props: {appState}}) =>
 	wizard({title: 'See a Column Distribution', onClose,
 			left: button({onClick: onMode, 'data-mode': 'start', label: 'Back',
@@ -139,27 +117,11 @@ var histOrDistPage = ({onY, onMode, onDone, onClose, state, props: {appState}}) 
 // scatter plot selection
 //
 
-var optNotBigMulti = ({columns}) => ({value}) => columns[value].fields.length <= 10;
-var and = (a, b) => x => y => a(x)(y) && b(x)(y); // getting crazy with the point-free
-
-// limit subcolumns in Y to something reasonable
-var scatterYDatasets = appState => suitableColumns(appState, true)
-	.filter(and(optIsFloat, optNotBigMulti)(appState));
-
-var scatterXDatasets = appState => suitableColumns(appState, false)
-	.filter(optIsFloat(appState));
-
 var scatterInit = ({columns, chartState: {ycolumn, xcolumn, setColumn}}) => ({
 	ycolumn: setColumn && isFloat(columns, setColumn) ? setColumn :
 		v(ycolumn) && isFloat(columns, ycolumn) ? ycolumn : undefined,
 		xcolumn: v(xcolumn) && isFloat(columns, xcolumn) ? xcolumn : undefined
 });
-
-var scatterCanDraw = appState => {
-	var y = _.pluck(scatterYDatasets(appState), 'value'),
-		x = _.pluck(scatterXDatasets(appState), 'value');
-	return x.length && y.length && _.uniq(y.concat(x)).length > 1;
-};
 
 var scatterPage = ({onY, onX, onMode, onDone, onClose, state, props: {appState}}) =>
 	wizard({title: "Scatter plot", onClose,
@@ -178,12 +140,6 @@ var init = {
 	boxOrViolin: boxOrViolinInit,
 	histOrDist: histInit,
 	scatter: scatterInit,
-};
-
-var canDraw = {
-	boxOrViolin: boxOrViolinCanDraw,
-	histOrDist: histCanDraw,
-	scatter: scatterCanDraw
 };
 
 var startModes = [
