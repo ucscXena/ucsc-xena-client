@@ -91,7 +91,14 @@ var createScale = (scaleFn, domain, strRange) => {
 	return fn;
 };
 
-var setPrecision = x => parseFloat(x.toPrecision(2));
+// Rounding the domain in this fashion causes problems if the domain is small,
+// e.g. 10.33333 to 10.33337, because the endpoints may be rounded toward each
+// other, e.g. 10.3 to 10.3. To be effective here, it would need to consider
+// the scale of the domain before rounding. Instead, we keep full precision here
+// and round in the display, e.g. legend, and user color settings.
+//var setPrecision = x => parseFloat(x.toPrecision(2));
+
+var setPrecision = x => x;
 
 var scaleFloatSingle = (low, high, min, max) =>
 	createScale(linearColorScale, [min, max], [low, high]);
