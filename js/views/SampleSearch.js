@@ -291,9 +291,9 @@ export class SampleSearch extends PureComponent {
 				<TooltipIconMenu tooltip='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
 					<MenuItem disabled={disableActions} caption='Keep samples' onClick={this.onKeep}/>
 					<MenuItem disabled={disableActions} caption='Remove samples' onClick={this.onRemove}/>
-					<MenuItem caption='Clear Filter' onClick={onResetSampleFilter}/>
+					<MenuItem caption='Clear samples filter' onClick={onResetSampleFilter}/>
 					<MenuItem disabled={disableActions} caption='Zoom' onClick={this.onZoom}/>
-					<MenuItem disabled={disableActions} caption='New Column' onClick={this.onCreateColumn}/>
+					<MenuItem disabled={disableActions} caption='New column' onClick={this.onCreateColumn}/>
 				</TooltipIconMenu>}
 			</div>
 		);
