@@ -36,15 +36,16 @@ i.menuDisabled {
 	padding: 0;
 }
 
-.dropDownArrow {
+/* i is necessary to override material ui display setting */
+i.dropDownArrow {
 	position: absolute;
 	right: 0;
 	top: -0.6em;
-	opacity: 0.5;
+	display: none;
 }
 
-.hasHistory {
-	opacity: 1;
+i.hasHistory {
+	display: inline-block;
 }
 
 .history {
