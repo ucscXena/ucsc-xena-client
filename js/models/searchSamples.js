@@ -314,7 +314,7 @@ var codeOrNull = (codes, val) => val == null ? 'null' : `"${codes[val]}"`;
 
 function matchEqualCoded(data, index, samples, id, s) {
 	var {req: {values: [field]}, codes} = data;
-	return `${id}:=${codeOrNull(codes, field[samples[s]])}`;
+	return `${id}:${codeOrNull(codes, field[samples[s]])}`;
 }
 
 function matchEqualFloat(data, index, samples, id, s) {
@@ -355,7 +355,7 @@ function matchRangeCoded(data, index, samples, id, start, end, first) {
 	var {req: {values: [field]}, codes} = data,
 		matches = _.uniq(_.range(start, end).map(i => field[samples[i]]))
 			.map(v => codeOrNull(codes, v)),
-		terms = matches.map(c => `${id}:=${c}`).join(' OR ');
+		terms = matches.map(c => `${id}:${c}`).join(' OR ');
 
 	return first || matches.length === 1 ? terms : `(${terms})`;
 }
