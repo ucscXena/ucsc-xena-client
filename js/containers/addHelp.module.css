@@ -1,0 +1,25 @@
+/* probably shouldn't have css in a container module */
+
+/* Dashed line row marker, used by right help boxes only. */
+.rowMarker {
+/*	pointer-events: none; */
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 100vw;
+	left: -40vw;
+	z-index: 1000;
+}
+
+@value black38 from '../../css/variables.css';
+
+.rowMarker:after {
+	border: 1px dashed black38;
+	content: '';
+	display: block;
+	position: absolute;
+	top: 50%;
+	z-index: 2;
+	width: 100%;
+}
+

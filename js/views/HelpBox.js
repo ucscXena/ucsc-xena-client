@@ -15,8 +15,6 @@
  *
  * State
  * -----
- * - x: Position of left hand side of help box.
- * - y: Position of top of help box.
  * - w: Width of help box.
  * - o: Orientation of help box (to determine where to place/point help box triangle), 'Right' or 'Below'.
  *
@@ -28,7 +26,7 @@
  * <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
  *
  * For example,
- * <HelpBox x={882} y={271} w={280} o={'Right'}><p>Each row contains data from a single sample.</p><p>Row order is determined by sorting the rows by their column values.</p></HelpBox>
+ * <HelpBox w={280} o={'Right'}><p>Each row contains data from a single sample.</p><p>Row order is determined by sorting the rows by their column values.</p></HelpBox>
  */
 
 
@@ -40,26 +38,22 @@ import {Button} from 'react-toolbox/lib/button';
 // Styles
 var compStyles = require('./HelpBox.module.css');
 
+// XXX move this comment
 // Setup for help box displayed to right of item being highlighted (with row marker). 27.5 used in width calculations
 // of marker comes from 16px margin (standard MD width) plus 11.5px for triangle. This smaller width creates the
 // necessary break between the marker and the right triangle.
-var HelpBoxR = props => {
-	var {w, children} = props;
-	return (
-		<div className={classNames(compStyles.HelpBox, compStyles.withMarker, compStyles.helpRight)} >
-			<div className={compStyles.rowMarker} />
-			<div style={{width: w}} className={compStyles.helpBoxBounds}>
-				{children}
-			</div>
-		</div>
-	);
+
+var boxStyle = {
+	Right: compStyles.helpRight,
+	Below: compStyles.helpBelow,
+	Above: compStyles.helpAbove
 };
 
 // Setup for help box displayed below item being highlighted.
-var HelpBoxB = props => {
-	var {w, children} = props;
+var Box = props => {
+	var {w, o, children} = props;
 	return (
-		<div style={{width: w}} className={classNames(compStyles.HelpBox, compStyles.helpBoxBounds, compStyles.helpBelow)}>
+		<div style={{width: w}} className={classNames(compStyles.HelpBox, boxStyle[o])}>
 			{children}
 		</div>
 	);
@@ -71,8 +65,7 @@ class HelpBox extends React.Component {
 	};
 
 	render() {
-		var {children, o, ...boxProps} = this.props;
-		var Box = (o === 'Right') ? HelpBoxR : HelpBoxB;
+		var {children, ...boxProps} = this.props;
 		return (
 			<Box {...boxProps}>
 				<div className={compStyles.helpBoxContent}>
