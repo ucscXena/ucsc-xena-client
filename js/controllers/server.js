@@ -2,6 +2,7 @@ var _ = require('../underscore_ext').default;
 import {computeSettings, matchDatasetFields} from '../models/columns';
 var {searchSamples} = require('../models/searchSamples');
 var {resetZoom, fetchColumnData, fetchCohortData, setCohort, fetchClustering} = require('./common');
+var {getNotifications} = require('../notifications');
 import {make, mount, compose} from './utils';
 var Rx = require('../rx').default;
 var uuid = require('../uuid');
@@ -133,7 +134,16 @@ var mergeWidgetData = (state, id, data) =>
 var controls = {
 	// XXX was clearWizardCohort just cleaning up bad bookmarks? Do we need to handle that case?
 	// How do we handle cohortSamples reloading generally, and with respect to restoring state?
-	bookmark: (state, bookmark) => resetLoadPending(_.merge(state, bookmark)),
+	bookmark: (state, bookmark) =>
+		resetLoadPending(
+				_.merge(state,
+					// discard bookmark notifications setting. If we create
+					// an empty spreadsheet object we get errors later, e.g.
+					// on a transcript view bookmark. So, test first.
+					bookmark.spreadsheet ?
+						_.assocIn(bookmark, ['spreadsheet', 'notifications'],
+							getNotifications()) :
+						bookmark)),
 	'bookmark-error': state => resetLoadPending(_.assoc(state, 'stateError', 'bookmark')),
 	// Here we need to load cohort data if servers or cohort has changed,
 	// *or* if we never loaded cohort data (e.g. due to waiting on bookmark).
