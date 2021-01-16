@@ -6,7 +6,7 @@ import {RadioGroup, RadioButton} from 'react-toolbox/lib/radio';
 import {Dropdown} from 'react-toolbox/lib/dropdown';
 var _ = require('../underscore_ext').default;
 import {v, suitableColumns, canDraw, boxOrViolinXDatasets, boxOrViolinYDatasets,
-	isMulti, isFloat, scatterYDatasets, scatterXDatasets} from './utils';
+	isFloat, scatterYDatasets, scatterXDatasets} from './utils';
 import './icons.css';
 import {div, label, h2, i, a, span, el} from './react-hyper';
 import classNames from 'classnames';
@@ -49,13 +49,8 @@ var boxOrViolinModes = [
 var yIsSet = ({ycolumn}) => v(ycolumn);
 var xyIsSet = ({ycolumn, xcolumn}) => v(ycolumn) && v(xcolumn);
 
-// if y is multi, allow 'none' for x to do field boxplot
-var noX = ({columns}, id) => v(id) && columns[id].fields.length > 1 ?
-	[{value: 'none', label: 'Column fields'}] : [];
-
-// If x is 'none' and y is multi, use 'none'.
 // If x is set, and isn't same as y, and isn't float, use it.
-var getX = (columns, y, id) => id === 'none' && v(y) && isMulti({columns}, {value: y}) ||
+var getX = (columns, y, id) =>
 	v(id) && id !== y && !isFloat(columns, id) ? id : undefined;
 
 var boxOrViolinInit = appState => {
@@ -68,26 +63,24 @@ var boxOrViolinInit = appState => {
 	};
 };
 
-var isValid = ({ycolumn, xcolumn}, appState) =>
-	v(ycolumn) && v(xcolumn) || v(ycolumn) && isMulti(appState, {value: ycolumn});
+var isValid = ({ycolumn, xcolumn}) => v(ycolumn) && v(xcolumn);
 
 // should ask for type if y is float
 var needType = (state, appState) =>
-	isValid(state, appState) && isFloat(appState.columns, state.ycolumn);
+	isValid(state) && isFloat(appState.columns, state.ycolumn);
 
 var boxOrViolinPage = ({onMode, onDone, onChart, onX, onY, onClose,
 		state, props: {appState}}) =>
 	wizard({title: "Compare subgroups", onClose,
 			left: button({onClick: onMode, 'data-mode': 'start', label: 'Back',
 				className: styles.back}),
-			right: doneButton(isValid(state, appState) && onDone)},
+			right: doneButton(isValid(state) && onDone)},
 		div({className: styles.modes},
 			div(dropdown({label: 'Show data from:', onChange: onY,
 				value: state.ycolumn, source: boxOrViolinYDatasets(appState)})),
 			div(dropdown({label: 'Subgroup samples by', onChange: onX,
 				value: state.xcolumn,
-				source: boxOrViolinXDatasets(appState)
-					.concat(noX(appState, state.ycolumn))})),
+				source: boxOrViolinXDatasets(appState)})),
 			needType(state, appState) ?
 				div(label('I want a'),
 					radioGroup({name: 'boxOrViolin', onChange: onChart,

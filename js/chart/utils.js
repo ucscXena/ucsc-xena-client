@@ -112,12 +112,13 @@ export var boxOrViolinXDatasets = appState => suitableColumns(appState, false)
 var boxOrViolinDatasets = appState => {
 	var x = boxOrViolinXDatasets(appState),
 		y = boxOrViolinYDatasets(appState);
-	// If x is empty, only allow multi columns
-	return {x, y: x.length ? y : y.filter(isMulti(appState))};
+
+	return {x, y};
 };
 
 var boxOrViolinCanDraw = appState =>
-	boxOrViolinDatasets(appState).y.length > 0;
+	boxOrViolinDatasets(appState).y.length > 0 &&
+	boxOrViolinDatasets(appState).x.length > 0;
 
 
 export var canDraw = {
