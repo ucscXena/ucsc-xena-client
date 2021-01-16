@@ -227,7 +227,7 @@ export class AppControls extends PureComponent {
 			sampleFilter = _.get(cohort, 'sampleFilter'),
 			filter = sampleFilter ? <span onClick={this.onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null;
 		return (
-				<AppBar>
+				<AppBar theme={{inner: compStyles.inner}}>
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort, pickSamples && compStyles.picking)}>
 						<div className={compStyles.titleContainer}>
 							<span className={compStyles.title}>{cohortName}</span>
@@ -262,6 +262,8 @@ export class AppControls extends PureComponent {
 								callback,
 								onTies: this.onTies,
 								tiesEnabled: false}}/>}
+					</div>
+					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
 						{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
 							<Actions {...{onPdf: disablePDF ? undefined : onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}}/>}
 					</div>

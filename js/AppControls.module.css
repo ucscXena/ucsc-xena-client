@@ -88,6 +88,7 @@ i.disabled {
 
 /* Right-hand container, containing filter and download etc icons */
 .tools {
+	border-right: 1px solid black12;
 	display: flex;
 	flex: 1;
 	padding-left: 16px;
@@ -103,6 +104,11 @@ i.disabled {
 .actions {
 	display: flex;
 	margin-left: auto;
+}
+
+div.inner {
+	/* 24px for left padding, plus 10 for right scrollbar */
+	width: calc(100vw - 34px) !important;
 }
 
 /* Help icon */
