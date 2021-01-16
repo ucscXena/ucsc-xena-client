@@ -322,7 +322,7 @@ class Search extends PureComponent {
 						<MenuItem disabled={disableActions} caption='Remove samples' onClick={this.onRemove}/>
 						<MenuItem caption='Clear samples filter' onClick={onResetSampleFilter}/>
 						<MenuItem disabled={disableActions} caption='Zoom' onClick={this.onZoom}/>
-						<MenuItem disabled={disableActions} caption='New column' onClick={this.onCreateColumn}/>
+						<MenuItem disabled={disableActions} caption='New subgroup column' onClick={this.onCreateColumn}/>
 					</TooltipIconMenu>)}
 				<a onClick={this.props.help.start}><i className='material-icons'>help_outline</i></a>
 			</div>
