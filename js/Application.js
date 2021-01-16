@@ -26,9 +26,6 @@ const stepperStateIndex = {
 	'SECOND_COLUMN': 2
 };
 
-// should really be in a config file.
-const searchHelp = 'https://ucsc-xena.gitbook.io/project/overview-of-features/filter-and-subgrouping';
-
 function clearZoom(samples, zoom) {
 	return _.merge(zoom, {count: samples, index: 0});
 }
@@ -116,7 +113,7 @@ class Application extends PureComponent {
 					{showWelcome ? <Welcome onClick={this.onHideWelcome} /> :
 						null}
 					{wizardMode ? <Stepper mode={stepperState} steps={stepperSteps} stateIndex={stepperStateIndex}/> : <div>
-						<AppControls {...otherProps} appState={state} help={searchHelp}
+						<AppControls {...otherProps} appState={state}
 									 zoom={zoom} onShowWelcome={this.onShowWelcome}/>
 						 <SheetControls actionsDisabled={true} appState={state} clearZoom={this.onClearZoom}
 										statusDisabled={editing !== null} zoom={zoom} zoomOut={this.onZoomOut}/></div>}

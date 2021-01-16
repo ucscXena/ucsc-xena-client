@@ -1,4 +1,3 @@
-
 import PureComponent from '../PureComponent';
 var React = require('react');
 import Input from 'react-toolbox/lib/input';
@@ -6,6 +5,8 @@ import {IconMenu, Menu, MenuItem} from 'react-toolbox/lib/menu';
 var classNames = require('classnames');
 var Rx = require('../rx').default;
 import Tooltip from 'react-toolbox/lib/tooltip';
+import {createVignette} from '../containers/vignette';
+import HelpBox from '../views/HelpBox';
 
 var TooltipInput = Tooltip(({inputRef, ...props}) =>
 		<Input innerRef={inputRef} {...props}/>);
@@ -173,7 +174,31 @@ var input = comp => {
 	</TooltipInput>);
 };
 
-export class SampleSearch extends PureComponent {
+const searchHelp = 'https://ucsc-xena.gitbook.io/project/overview-of-features/filter-and-subgrouping';
+
+var helpSteps = [
+	'pickHelp',
+	props => (
+		<HelpBox o='Below' w={400} onClose={props.onClose}>
+			<h3>Filtering and subgrouping</h3>
+			<p>Toggle dropper mode to enable selecting samples interactively,
+			then click or drag on a data column to add rows to your selection.</p>
+		</HelpBox>),
+	'inputHelp',
+	props => (
+		<HelpBox o='Below' w={400} onClose={props.onClose}>
+			<p>As you select rows, the search expression will update with your selection.</p>
+			<p>You can also type a search expression here without using the dropper mode.</p>
+		</HelpBox>),
+	'actionHelp',
+	props => (
+		<HelpBox o='Below' w={400} onClose={props.onClose}>
+			<p>When you have added all your rows of interest, use the menu to filter or create subgroups from your selection.</p>
+			<a href={searchHelp} target='_blank'>Filter/subgroup documentation</a>
+		</HelpBox>)
+];
+
+class Search extends PureComponent {
 	state = {value: this.props.value};
 
 	componentDidMount() {
@@ -280,22 +305,29 @@ export class SampleSearch extends PureComponent {
 
 	render() {
 		var {matches, sampleCount, mode, pickSamples, onPickSamples, onResetSampleFilter} = this.props,
+			{inputHelp, pickHelp, actionHelp} = this.props,
 			disableActions = !(matches > 0 && matches < sampleCount),
 			noshow = (mode !== "heatmap");
+
 		return (
 			<div className={compStyles.SampleSearch}>
-				{input(this)}
-				<TooltipI className={classNames('material-icons', pickSamples ? compStyles.dark : '')}
-					onClick={onPickSamples} tooltip='Pick samples'>colorize</TooltipI>
+				{inputHelp(input(this))}
+				{pickHelp(
+					<TooltipI className={classNames('material-icons', pickSamples ? compStyles.dark : '')}
+						onClick={onPickSamples} tooltip='Pick samples'>colorize</TooltipI>)}
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
-				<TooltipIconMenu tooltip='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
-					<MenuItem disabled={disableActions} caption='Keep samples' onClick={this.onKeep}/>
-					<MenuItem disabled={disableActions} caption='Remove samples' onClick={this.onRemove}/>
-					<MenuItem caption='Clear samples filter' onClick={onResetSampleFilter}/>
-					<MenuItem disabled={disableActions} caption='Zoom' onClick={this.onZoom}/>
-					<MenuItem disabled={disableActions} caption='New column' onClick={this.onCreateColumn}/>
-				</TooltipIconMenu>}
+				actionHelp(
+					<TooltipIconMenu tooltip='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
+						<MenuItem disabled={disableActions} caption='Keep samples' onClick={this.onKeep}/>
+						<MenuItem disabled={disableActions} caption='Remove samples' onClick={this.onRemove}/>
+						<MenuItem caption='Clear samples filter' onClick={onResetSampleFilter}/>
+						<MenuItem disabled={disableActions} caption='Zoom' onClick={this.onZoom}/>
+						<MenuItem disabled={disableActions} caption='New column' onClick={this.onCreateColumn}/>
+					</TooltipIconMenu>)}
+				<a onClick={this.props.help.start}><i className='material-icons'>help_outline</i></a>
 			</div>
 		);
 	}
 }
+
+export var SampleSearch = createVignette(helpSteps, Search);

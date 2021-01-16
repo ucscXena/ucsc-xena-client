@@ -67,10 +67,9 @@ var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}) =>
 		{showWelcome ? null : icon('help', 'Show carousel', onShowWelcome)}
 	</div>);
 
-var BasicSearch = ({help, onTies, tiesEnabled, ...searchProps}) => (
+var BasicSearch = ({onTies, tiesEnabled, ...searchProps}) => (
 	<div className={compStyles.filter}>
 		<SampleSearch {...searchProps}/>
-		{help ? <a href={help} target='_blank' className={compStyles.filterHelp}><i className='material-icons'>help_outline</i></a> : null}
 		{tiesEnabled ? <a onClick={onTies} className={compStyles.ties}><i className='material-icons'>toys</i></a> : null}
 	</div>);
 
@@ -203,7 +202,7 @@ export class AppControls extends PureComponent {
 	render() {
 		var {appState: {cohort, samplesOver, allowOverSamples, mode, showWelcome,
 					samples, sampleSearch, searchHistory, sampleSearchSelection, samplesMatched, allMatches, /*tiesEnabled, */ties},
-				onReset, help, onResetSampleFilter, onHighlightChange, onHighlightSelect,
+				onReset, onResetSampleFilter, onHighlightChange, onHighlightSelect,
 				onAllowOverSamples, oldSearch, pickSamples, onPickSamples, callback} = this.props,
 			displayOver = samplesOver && !allowOverSamples ? '' : compStyles.hidden,
 			matches = _.get(samplesMatched, 'length', samples.length),
@@ -247,7 +246,6 @@ export class AppControls extends PureComponent {
 								onResetSampleFilter,
 								cohort,
 								callback,
-								help,
 								onTies: this.onTies,
 								tiesEnabled: false}}/>}
 						{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
