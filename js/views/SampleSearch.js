@@ -317,7 +317,7 @@ class Search extends PureComponent {
 						onClick={onPickSamples} tooltip='Pick samples'>colorize</TooltipI>)}
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
 				actionHelp(
-					<TooltipIconMenu tooltip='Filter actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
+					<TooltipIconMenu tooltip='Filter / subgroup actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
 						<MenuItem disabled={disableActions} caption='Keep samples' onClick={this.onKeep}/>
 						<MenuItem disabled={disableActions} caption='Remove samples' onClick={this.onRemove}/>
 						<MenuItem caption='Clear samples filter' onClick={onResetSampleFilter}/>
