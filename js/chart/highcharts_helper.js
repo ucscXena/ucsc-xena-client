@@ -199,7 +199,7 @@ var layoutStats = ({n, upperwhisker, upper, median, lower, lowerwhisker,
 		field, code}) =>
 	ReactDOMServer.renderToStaticMarkup(
 		div({className: styles.violinTooltip},
-			b(`${field}: ${code}`),
+			b(code ? `${field}: ${code}` : field),
 			tableBody(
 				trd('n', n),
 				trd('upper', statsPrec(upperwhisker)),
