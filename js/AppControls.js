@@ -110,6 +110,7 @@ export class AppControls extends PureComponent {
 	}
 
 	onSearchHistory = search => {
+		gaEvents('spreadsheet', 'samplesearch', 'history');
 		this.props.callback(['searchHistory', search]);
 	}
 
@@ -118,9 +119,14 @@ export class AppControls extends PureComponent {
 			m = inv ? invert(samplesMatched, _.range(cohortSamples.length)) :
 				samplesMatched,
 			matching = _.map(m, i => cohortSamples[i]);
-		gaEvents('spreadsheet', 'samplesearch', 'filter');
+		gaEvents('spreadsheet', 'samplesearch', inv ? 'remove' : 'keep');
 		callback(['sampleFilter', matching]);
 	};
+
+	onResetSampleFilter = () => {
+		gaEvents('spreadsheet', 'samplesearch', 'clear');
+		this.props.onResetSampleFilter();
+	}
 
 	onFilterZoom = () => {
 		const {appState: {samples, samplesMatched, zoom: {height}}, callback} = this.props,
@@ -199,11 +205,18 @@ export class AppControls extends PureComponent {
 		this.props.onShowWelcome();
 	};
 
+	onPickSamples = () => {
+		var {pickSamples} = this.props;
+		gaEvents('spreadsheet', 'samplesearch',
+			'picking-' + (pickSamples ? 'end' : 'start'));
+		this.props.onPickSamples();
+	}
+
 	render() {
 		var {appState: {cohort, samplesOver, allowOverSamples, mode, showWelcome,
 					samples, sampleSearch, searchHistory, sampleSearchSelection, samplesMatched, allMatches, /*tiesEnabled, */ties},
-				onReset, onResetSampleFilter, onHighlightChange, onHighlightSelect,
-				onAllowOverSamples, oldSearch, pickSamples, onPickSamples, callback} = this.props,
+				onReset, onHighlightChange, onHighlightSelect,
+				onAllowOverSamples, oldSearch, pickSamples, callback} = this.props,
 			displayOver = samplesOver && !allowOverSamples ? '' : compStyles.hidden,
 			matches = _.get(samplesMatched, 'length', samples.length),
 			{onPdf, onDownload, onShowWelcome} = this,
@@ -212,7 +225,7 @@ export class AppControls extends PureComponent {
 			cohortName = _.get(cohort, 'name'),
 			disablePDF = showChartWizard(this.props.appState),
 			sampleFilter = _.get(cohort, 'sampleFilter'),
-			filter = sampleFilter ? <span onClick={onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null;
+			filter = sampleFilter ? <span onClick={this.onResetSampleFilter} className={compStyles.appliedFilter}>Filtered to </span> : null;
 		return (
 				<AppBar>
 					<div className={classNames(compStyles.appBarContainer, compStyles.cohort, pickSamples && compStyles.picking)}>
@@ -241,10 +254,10 @@ export class AppControls extends PureComponent {
 								onZoom: this.onFilterZoom,
 								onCreateColumn: this.onFilterColumn,
 								pickSamples: pickSamples,
-								onPickSamples: onPickSamples,
+								onPickSamples: this.onPickSamples,
 								onChange: onHighlightChange,
 								mode,
-								onResetSampleFilter,
+								onResetSampleFilter: this.onResetSampleFilter,
 								cohort,
 								callback,
 								onTies: this.onTies,
