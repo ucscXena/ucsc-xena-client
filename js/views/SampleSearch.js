@@ -2,6 +2,7 @@ import PureComponent from '../PureComponent';
 var React = require('react');
 import Input from 'react-toolbox/lib/input';
 import {IconMenu, Menu, MenuItem} from 'react-toolbox/lib/menu';
+import {IconButton} from 'react-toolbox/lib/button';
 var classNames = require('classnames');
 var Rx = require('../rx').default;
 import Tooltip from 'react-toolbox/lib/tooltip';
@@ -11,6 +12,7 @@ import HelpBox from '../views/HelpBox';
 var TooltipInput = Tooltip(({inputRef, ...props}) =>
 		<Input innerRef={inputRef} {...props}/>);
 var TooltipI = Tooltip('i');
+var TooltipIconButton = Tooltip(IconButton);
 
 // The Tooltip component will get mouse enter/leave events on menu children,
 // causing the tooltip to display in front of the menu when it is open. There's
@@ -153,9 +155,9 @@ var input = comp => {
 			placeholder={placeholder[pickSamples]}
 			onChange={comp.onChange}
 			disabled={noshow}>
-		<TooltipI tooltip={tooltips.history} onClick={hasHistory ? comp.onOpenHistory : null}
+		<TooltipI tooltip={tooltips.history} onClick={hasHistory && !noshow ? comp.onOpenHistory : null}
 				className={classNames(compStyles.dropDownArrow,
-					hasHistory && compStyles.hasHistory, 'material-icons')}>
+					!noshow && hasHistory && compStyles.hasHistory, 'material-icons')}>
 				arrow_drop_down</TooltipI>
 
 		<Menu theme={{static: compStyles.history, active: compStyles.historyActive}}
@@ -313,8 +315,8 @@ class Search extends PureComponent {
 			<div className={compStyles.SampleSearch}>
 				{inputHelp(input(this))}
 				{pickHelp(
-					<TooltipI className={classNames('material-icons', pickSamples ? compStyles.dark : '')}
-						onClick={onPickSamples} tooltip='Pick samples'>colorize</TooltipI>)}
+					<TooltipIconButton icon='colorize' className={pickSamples ? compStyles.dark : ''}
+						disabled={noshow} onClick={onPickSamples} tooltip='Pick samples'/>)}
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
 				actionHelp(
 					<TooltipIconMenu tooltip='Filter / subgroup actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
@@ -324,7 +326,8 @@ class Search extends PureComponent {
 						<MenuItem disabled={disableActions} caption='Zoom' onClick={this.onZoom}/>
 						<MenuItem disabled={disableActions} caption='New subgroup column' onClick={this.onCreateColumn}/>
 					</TooltipIconMenu>)}
-				<a onClick={this.props.help.start}><i className='material-icons'>help_outline</i></a>
+				<IconButton icon='help_outline' disabled={noshow}
+					onClick={this.props.help.start}/>
 			</div>
 		);
 	}
