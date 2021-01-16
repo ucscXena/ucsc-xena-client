@@ -393,7 +393,7 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 			showDataLabel: yfields.length * xCategories.length < 30,
 			showInLegend: code != null,
 			color,
-			description: nNumberSeries});
+			description: nNumberSeries[0]});
 	});
 }
 

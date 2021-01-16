@@ -332,21 +332,30 @@ function boxplotOptions({chartOptions, categories, xAxisTitle, yAxisTitle}) {
 			reversed: false
 		},
 		tooltip: {
+			outside: true,
+			positioner: function(width, height, point) {
+				// The docs for this method are poor, and I'm uncertain about
+				// this calculation, esp. for y.
+				return {
+					x: point.plotX + this.chart.plotLeft,
+					y: point.plotY + height - 10 + this.chart.plotTop
+				};
+			},
 			headerFormat: xAxisTitle + ' : {series.name}<br>',
+			useHTML: true,
 			formatter: function () {
-				var nNumber = this.series.userOptions.description ? this.series.userOptions.description[this.point.x] : 0;
-				return (xAxisTitle ? xAxisTitle + ' : ' : '')
-					+ this.series.name + '<br>'
-					+ (categories.length > 1 ?  yAxisTitle + ' ' : '' )
-					+ categories[this.point.x]
-					+ ': <b>'
-					+ this.point.median.toPrecision(3) + '</b>'
-					+ ' (' + this.point.low.toPrecision(3) + ','
-					+ this.point.q1.toPrecision(3) + ','
-					+ this.point.q3.toPrecision(3) + ','
-					+ this.point.high.toPrecision(3) + ')<br>'
-					+ '</b><br>'
-					+ (nNumber ? 'n = ' + nNumber : '');
+				// highchart injects a default name 'Series 1'
+				var code = this.series.name === 'Series 1' ? null : this.series.name;
+				return layoutStats({
+					n: this.series.userOptions.description,
+					upperwhisker: this.point.high,
+					upper: this.point.q3,
+					median: this.point.median,
+					lower: this.point.q1,
+					lowerwhisker: this.point.low,
+					field: categories[this.point.x],
+					code
+				});
 			},
 			hideDelay: 0
 		},
