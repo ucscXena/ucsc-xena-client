@@ -304,7 +304,7 @@ class Search extends PureComponent {
 	}
 
 	render() {
-		var {matches, sampleCount, mode, pickSamples, onPickSamples, onResetSampleFilter} = this.props,
+		var {matches, sampleCount, sampleFilter, mode, pickSamples, onPickSamples, onResetSampleFilter} = this.props,
 			{inputHelp, pickHelp, actionHelp} = this.props,
 			disableActions = !(matches > 0 && matches < sampleCount),
 			noshow = (mode !== "heatmap");
@@ -320,7 +320,7 @@ class Search extends PureComponent {
 					<TooltipIconMenu tooltip='Filter / subgroup actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
 						<MenuItem disabled={disableActions} caption='Keep samples' onClick={this.onKeep}/>
 						<MenuItem disabled={disableActions} caption='Remove samples' onClick={this.onRemove}/>
-						<MenuItem caption='Clear samples filter' onClick={onResetSampleFilter}/>
+						<MenuItem disabled={!sampleFilter} caption='Clear samples filter' onClick={onResetSampleFilter}/>
 						<MenuItem disabled={disableActions} caption='Zoom' onClick={this.onZoom}/>
 						<MenuItem disabled={disableActions} caption='New subgroup column' onClick={this.onCreateColumn}/>
 					</TooltipIconMenu>)}

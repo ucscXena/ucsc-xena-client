@@ -228,6 +228,7 @@ export class AppControls extends PureComponent {
 							<TiesSearch {...{onTies: this.onTies}}/> :
 							<BasicSearch {...{
 								value: sampleSearch,
+								sampleFilter,
 								oldSearch,
 								selection: sampleSearchSelection,
 								matches,
