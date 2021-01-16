@@ -16,6 +16,22 @@ import classNames from 'classnames';
 var sc = require('science');
 import {div, select, option, label, el, textNode} from './react-hyper';
 
+var nrd = sc.stats.bandwidth.nrd;
+var variance = sc.stats.variance;
+
+function kde() {
+	var k = sc.stats.kde();
+	k.bandwidth(function(x) {
+		var bw = nrd(x);
+		if (bw === 0) {
+			bw = variance(x);
+		}
+
+		return bw;
+	});
+	return k;
+}
+
 // Styles
 var compStyles = require('./chart.module.css');
 
@@ -419,7 +435,7 @@ function violinplot({xCategories, yfields, matrices: {boxes, nNumberMatrix},
 				step = (gmax - gmin) / violinSamples,
 				innerRange = _.times(violinSamples + 1, i => gmin + i * step);
 
-			return sc.stats.kde().sample(g)(innerRange);
+			return kde().sample(g)(innerRange);
 		});
 	});
 
@@ -585,7 +601,7 @@ function densityplot({yfields: [field], ylabel: Y, ydata: [data]}, chartOptions)
 		max = _.max(nndata),
 		points = 100, // number of points to interpolate, on screen
 		N = nndata.length,
-		density = sc.stats.kde().sample(nndata)
+		density = kde().sample(nndata)
 			(_.range(min, max, (max - min) / points))
 			// area is one. If we multiply by N, the area is N, and the y axis
 			// is samples per x-axis unit.
