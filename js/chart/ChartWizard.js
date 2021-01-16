@@ -118,11 +118,12 @@ var histOrDistPage = ({onY, onMode, onDone, onClose, state, props: {appState}}) 
 // scatter plot selection
 //
 
-var scatterInit = ({columns, chartState: {ycolumn, xcolumn, setColumn}}) => ({
-	ycolumn: setColumn && isFloat(columns, setColumn) ? setColumn :
-		v(ycolumn) && isFloat(columns, ycolumn) ? ycolumn : undefined,
-		xcolumn: v(xcolumn) && isFloat(columns, xcolumn) ? xcolumn : undefined
-});
+var scatterInit = ({columns, chartState: {ycolumn, xcolumn, setColumn}}) =>
+	_.Let((y = setColumn && isFloat(columns, setColumn) ? setColumn :
+		v(ycolumn) && isFloat(columns, ycolumn) ? ycolumn : undefined) =>
+			({ycolumn: y,
+			  xcolumn: v(xcolumn) && isFloat(columns, xcolumn)
+					&& xcolumn !== y ? xcolumn : undefined}));
 
 var scatterPage = ({onY, onX, onMode, onDone, onClose, state, props: {appState}}) =>
 	wizard({title: "Scatter plot", onClose,
