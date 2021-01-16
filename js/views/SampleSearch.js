@@ -129,7 +129,7 @@ var tooltips = {
 };
 
 var placeholder = {
-	true: 'Click on visual spreadsheet or type here to select samples',
+	true: 'Click on a column or type here to select samples',
 	false: 'Type here to select samples'
 };
 
