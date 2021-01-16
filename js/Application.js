@@ -66,6 +66,7 @@ class Application extends PureComponent {
 	}
 	onClearZoom = () => {
 		const {state: {samples, zoom}} = this.props;
+		gaEvents('spreadsheet', 'zoom', 'clear');
 		this.props.callback(['zoom', clearZoom(samples.length, zoom)]);
 	};
 	onHideError = () => {

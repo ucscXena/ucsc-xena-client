@@ -1,5 +1,5 @@
-
 var React = require('react');
+var gaEvents = require('../gaEvents');
 var _ = require('../underscore_ext').default;
 var getLabel = require('../getLabel');
 var {supportsEdit} = require('../models/fieldSpec');
@@ -53,10 +53,12 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 	};
 
 	onXZoom = (id, xzoom) => {
+		gaEvents('spreadsheet', 'zoom', 'x');
 		this.props.callback(['xzoom', id, xzoom]);
 	};
 
 	onYZoom = (yzoom) => {
+		gaEvents('spreadsheet', 'zoom', 'in');
 		this.props.callback(['enableTransition'], false);
 		this.props.callback(['zoom', yzoom]);
 	};
