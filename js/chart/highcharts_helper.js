@@ -193,6 +193,7 @@ function columnChartOptions(chartOptions, categories, xAxisTitle, yAxisType, Y, 
 
 var tableBody = (...args) => table(tbody(...args));
 var trd = (...args) => tr(...args.map(e => td(e.toString())));
+var statsPrec = x => x.toPrecision(3);
 
 var layoutStats = ({n, upperwhisker, upper, median, lower, lowerwhisker,
 		field, code}) =>
@@ -201,11 +202,11 @@ var layoutStats = ({n, upperwhisker, upper, median, lower, lowerwhisker,
 			b(`${field}: ${code}`),
 			tableBody(
 				trd('n', n),
-				trd('upper', upperwhisker),
-				trd('Q3', upper),
-				trd('median', median),
-				trd('Q1', lower),
-				trd('lower', lowerwhisker))));
+				trd('upper', statsPrec(upperwhisker)),
+				trd('Q3', statsPrec(upper)),
+				trd('median', statsPrec(median)),
+				trd('Q1', statsPrec(lower)),
+				trd('lower', statsPrec(lowerwhisker)))));
 
 function violinOptions({chartOptions, categories, series, xAxisTitle, yAxisTitle}) {
 	var opts = {
