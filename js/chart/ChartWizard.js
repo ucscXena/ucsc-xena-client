@@ -1,4 +1,5 @@
 import PureComponent from '../PureComponent';
+var gaEvents = require('../gaEvents');
 import {Card} from 'react-toolbox/lib/card';
 import {Button} from 'react-toolbox/lib/button';
 import {RadioGroup, RadioButton} from 'react-toolbox/lib/radio';
@@ -142,6 +143,12 @@ var init = {
 	scatter: scatterInit,
 };
 
+var modeTxt = {
+	boxOrViolin: 'compare',
+	histOrDist: 'distribution',
+	scatter: 'scatter'
+};
+
 var startModes = [
 	{'data-mode': 'boxOrViolin', label: 'Compare subgroups'},
 	{'data-mode': 'histOrDist', label: 'See a column distribution'},
@@ -194,6 +201,9 @@ export default class ChartWizard extends PureComponent {
 				_.assoc(chartState,
 					'setColumn', undefined,
 					'another', false)]);
+		if (!chartState.another) {
+			gaEvents('spreadsheet', 'columnChart-close');
+		}
 		callback([chartState.another ? 'chart' : 'heatmap']);
 	}
 	onChart = value => {
@@ -203,6 +213,10 @@ export default class ChartWizard extends PureComponent {
 		var {callback, appState} = this.props,
 			{chartState: {colorColumn} = {}} = appState,
 			{ycolumn, xcolumn, violin, mode} = this.state;
+		gaEvents('chart', modeTxt[mode]);
+		if (mode === 'boxOrViolin') {
+			gaEvents('chart', violin ? 'violin' : 'boxplot');
+		}
 		callback(['chart-set-state',
 			_.assoc(appState.chartState,
 				'ycolumn', ycolumn,

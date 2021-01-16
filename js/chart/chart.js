@@ -7,7 +7,7 @@ require('highcharts/modules/boost')(Highcharts);
 var _ = require('../underscore_ext').default;
 import * as colorScales from '../colorScales';
 var jStat = require('jStat').jStat;
-//var gaEvents = require('../gaEvents');
+var gaEvents = require('../gaEvents');
 import multi from '../multi';
 import {suitableColumns, columnLabel, v} from './utils.js';
 import {Button, IconButton} from 'react-toolbox/lib/button';
@@ -1109,6 +1109,17 @@ var highchartView = props =>
 var closeButton = onClose =>
 	iconButton({className: compStyles.close, onClick: onClose, icon: 'close'});
 
+// wrap handlers to add gaEvents
+var gaSwap = fn => () => {
+	gaEvents('chart', 'swapAxes');
+	fn();
+};
+
+var gaViolin = fn => () => {
+	gaEvents('chart', 'toggleViolin');
+	fn();
+};
+
 class Chart extends PureComponent {
 
 	destroy = () => {
@@ -1123,6 +1134,7 @@ class Chart extends PureComponent {
 	}
 
 	onClose = () => {
+		gaEvents('spreadsheet', 'columnChart-close');
 		this.props.callback(['heatmap']);
 	}
 
@@ -1171,7 +1183,8 @@ class Chart extends PureComponent {
 		var codedVCoded = v(xcolumn) && !isFloat(columns, xcolumn) && v(ycolumn) &&
 			!isFloat(columns, ycolumn);
 		var swapAxes = codedVCoded || doScatter ? button({label: 'Swap X and Y',
-			onClick: () => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn)}) : null;
+			onClick: gaSwap(() => set(['ycolumn'], xcolumn, ['xcolumn'], ycolumn))}) :
+			null;
 
 		var yExp = ycodemap ? null :
 			buildExpDropdown({
@@ -1194,7 +1207,7 @@ class Chart extends PureComponent {
 
 		var violinOpt = (xcodemap && !ycodemap) || (!v(xcolumn) && yfields.length > 1) ?
 			button({label: `View as  ${violin ? 'boxplot' : 'violin plot'}`,
-				onClick: () => set(['violin'], !violin)}) :
+				onClick: gaViolin(() => set(['violin'], !violin))}) :
 			null;
 
 		var advOpt =
