@@ -183,19 +183,18 @@ var helpSteps = [
 	props => (
 		<HelpBox o='Below' w={400} onClose={props.onClose}>
 			<h3>Filtering and subgrouping</h3>
-			<p>Toggle dropper mode to enable selecting samples interactively,
-			then click or drag on a data column to add rows to your selection.</p>
+			<p>Click to enter dropper mode, then click or drag on a column to select samples.</p>
 		</HelpBox>),
 	'inputHelp',
 	props => (
 		<HelpBox o='Below' w={400} onClose={props.onClose}>
-			<p>As you select rows, the search expression will update with your selection.</p>
-			<p>You can also type a search expression here without using the dropper mode.</p>
+			<p>As you select samples, the expression will update with your selection.</p>
+			<p>You can also type a search expression here.</p>
 		</HelpBox>),
 	'actionHelp',
 	props => (
 		<HelpBox o='Below' w={400} onClose={props.onClose}>
-			<p>When you have added all your rows of interest, use the menu to filter or create subgroups from your selection.</p>
+			<p>When you have added all your samples, use the menu to filter or create subgroups from your selection.</p>
 			<a href={searchHelp} target='_blank'>Filter/subgroup documentation</a>
 		</HelpBox>)
 ];
