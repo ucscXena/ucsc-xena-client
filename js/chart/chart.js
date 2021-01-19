@@ -1136,6 +1136,11 @@ var gaViolin = fn => () => {
 	fn();
 };
 
+var gaAnother = fn => () => {
+	gaEvents('chart', 'another');
+	fn();
+};
+
 class Chart extends PureComponent {
 
 	destroy = () => {
@@ -1257,7 +1262,7 @@ class Chart extends PureComponent {
 				div({className: compStyles.right},
 					div({className: compStyles.actions},
 						button({label: 'Make another graph', onClick:
-							() => set(['another'], true)}),
+							gaAnother(() => set(['another'], true))}),
 						swapAxes,
 						violinOpt),
 					div({id: 'stats', className: compStyles.stats})));
