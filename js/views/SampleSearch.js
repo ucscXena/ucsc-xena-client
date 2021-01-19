@@ -121,7 +121,7 @@ var tooltips = {
 	subgroup: 'Create sample subgroups from data on the screen',
 	find: 'Highlight or zoom in on a selection of samples',
 	clear: 'Clear current filter and show all samples in the study',
-	input: 'Examples: "missense", "null","B:>2"',
+	input: 'Examples: "null","B:>5 OR B:<2"',
 	keep: 'Keep only the selected samples on the screen',
 	remove: 'Remove the selected samples from the screen',
 	makeSubgroup: 'Matched samples will be one subgroup and non-matched samples will be the other subgroup',
@@ -132,7 +132,7 @@ var tooltips = {
 
 var placeholder = {
 	true: 'Click on a column or type here to select samples',
-	false: 'Type here to select samples'
+	false: 'Type here or use dropper to select samples'
 };
 
 var input = comp => {
@@ -319,7 +319,7 @@ class Search extends PureComponent {
 						disabled={noshow} onClick={onPickSamples} tooltip='Pick samples'/>)}
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
 				actionHelp(
-					<TooltipIconMenu tooltip='Filter / subgroup actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
+					<TooltipIconMenu tooltip='Filter + subgroup actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>
 						<MenuItem disabled={disableActions} caption='Keep samples' onClick={this.onKeep}/>
 						<MenuItem disabled={disableActions} caption='Remove samples' onClick={this.onRemove}/>
 						<MenuItem disabled={!sampleFilter} caption='Clear samples filter' onClick={onResetSampleFilter}/>
