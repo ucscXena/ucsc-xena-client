@@ -1230,12 +1230,13 @@ class Chart extends PureComponent {
 			div({className: compStyles.controlPanel},
 				div({className: compStyles.accordion +
 						(advanced ? ` ${compStyles.show}` : '')},
+					colorAxisDiv && div({className: compStyles.row},
+						colorAxisDiv),
 					div({className: compStyles.row},
 						yExp,
 						normalization),
 					xExp && div({className: compStyles.row},
-						xExp),
-					colorAxisDiv && div({className: compStyles.row}, colorAxisDiv)));
+						xExp)));
 
 		var HCV =
 			div(highchartView({xenaState, drawProps}),
