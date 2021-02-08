@@ -12,7 +12,7 @@ import {Checkbox} from 'react-toolbox/lib/checkbox';
 import {Button} from 'react-toolbox/lib/button';
 var showdown = require('showdown');
 var {stripHTML} = require('./dom_helper');
-var treehouseImg = require('../images/Treehouse.jpg');
+import treehouseImg from '../images/Treehouse.jpg';
 var {rxEvents} = require('./react-utils');
 var {servers: {localHub}, serverNames} = require('./defaultServers');
 import Dialog from 'react-toolbox/lib/dialog';
