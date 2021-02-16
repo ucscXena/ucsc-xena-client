@@ -234,6 +234,6 @@ export var computeSettings = _.curry((datasets, features, opts, dataset, matches
 	// XXX need a way to validate settings that depend on column type, i.e.
 	// fieldType geneProbes only works for matrix with probemap.
 	// Or, a possible refactor of the schema to make this simpler?
-  return _.assocIn(settings, ..._.flatten((opts || [])));
+  return _.assocIn(settings, ...(opts || []).flat());
 
 });
