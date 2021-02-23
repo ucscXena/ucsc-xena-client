@@ -36,6 +36,21 @@ function isInteractive(props, state) {
 	return !wizardMode && editing == null && _.every(interactive);
 }
 
+function getPreferredExpression(props) {
+	var {appState, wizard: {cohortPreferred, cohortDatasets}} = props,
+		cohort = appState.cohort.name,
+		exp = _.getIn(cohortPreferred, [cohort, 'gene expression']);
+	if (exp) {
+		var {host, name} = JSON.parse(exp),
+			datasets = _.getIn(cohortDatasets, [cohort, host]);
+
+		if (datasets) {
+			var ds = datasets.find(ds => ds.name === name);
+			return {name, host, probemap: ds.probemap};
+		}
+	}
+}
+
 var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Component {
 	static displayName = 'SpreadsheetContainer';
 
@@ -158,6 +173,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 				['pickSamples', 'searching', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
 			{appState, wizard: {cohortTumorMap}} = this.props,
 			{columnOrder, wizardMode, hasSurvival} = appState,
+			preferredExpression = getPreferredExpression(this.props),
 			interactive = isInteractive(this.props, this.state);
 
 		// XXX prune callback from this.props
@@ -176,6 +192,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 						interactive={interactive}
 						hasSurvival={hasSurvival}
 						cohort={appState.cohort}
+						preferredExpression={preferredExpression}
 						onAbout={this.onAbout}
 						onViz={this.onOpenVizSettings}
 						onEdit={supportsEdit(_.get(appState.columns, id)) &&

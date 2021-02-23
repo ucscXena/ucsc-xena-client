@@ -292,8 +292,8 @@ var supportsGeneAverage = column =>
 var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
-function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster}) {
-	var {column} = props,
+function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff}) {
+	var {column, preferredExpression} = props,
 		{fieldType, clustering} = column,
 		supportTumorMap = thisTumorMap && tumorMapCompatible(column),
 		order = clustering == null ? 'Cluster' : 'Uncluster';
@@ -301,6 +301,9 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster}) {
 	return addIdsToArr([
 		supportsClustering(column) ?
 			<MenuItem onClick={onCluster} caption={order} disabled={config.singlecell} /> :
+			null,
+		preferredExpression && column.codes ?
+			<MenuItem onClick={onDiff} caption='Differential expression' /> :
 			null,
 		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?
@@ -722,6 +725,35 @@ class Column extends PureComponent {
 		window.open(url + `${uriList}`);
 	};
 
+	onDiff = () => {
+		var {preferredExpression, samples: indicies, sampleFormat, data} = this.props,
+			samples = indicies.map(sampleFormat),
+			payload = JSON.stringify({preferredExpression, samples, data}),
+			notebook = 'http://localhost:5000';
+
+
+		var w = window.open(notebook);
+
+		var count = 0, d = 50;
+		var i = setInterval(function() {
+			w.postMessage(payload, '*');
+			count++;
+			if (count > 2 * 1000 * 60 / d) { // try for 2 minutes
+				clearInterval(i);
+				i = null;
+			}
+
+		}, d);
+		window.addEventListener("message", () => {
+			//	  if (event.origin !== "http://localhost:5000")
+			//		return;
+			if (i != null) {
+				clearInterval(i);
+				i = null;
+			}
+		}, false);
+	}
+
 	onTumorMap = (tumorMap) => {
 		// TumorMap/Xena API https://tumormap.ucsc.edu/query/addAttributeXena.html
 		var {data, column} = this.props,
@@ -782,10 +814,11 @@ class Column extends PureComponent {
 					onSelect: this.onDragZoomSelectS
 				},
 			{width, dataset, columnLabel, fieldLabel, user} = column,
-			{onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
+			{onDiff, onMode, onTumorMap, onMuPit, onCluster, onShowIntrons, onSortVisible, onSpecialDownload} = this,
 			thisTumorMap = _.getIn(tumorMap, [cohort.name]),
-			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, thisTumorMap, onShowIntrons, onSortVisible,
-				onCluster, onSpecialDownload, specialDownloadMenu, isSig}),
+			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, thisTumorMap,
+				onShowIntrons, onSortVisible, onCluster, onSpecialDownload,
+				onDiff, specialDownloadMenu, isSig}),
 			geneZoomable = columnZoom.supportsGeneZoom(column),
 			geneZoomed = columnZoom.geneZoomed(column),
 			geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
