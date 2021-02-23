@@ -38,7 +38,7 @@ function isInteractive(props, state) {
 
 function getPreferredExpression(props) {
 	var {appState, wizard: {cohortPreferred, cohortDatasets}} = props,
-		cohort = appState.cohort.name,
+		cohort = _.getIn(appState, ['cohort', 'name']),
 		exp = _.getIn(cohortPreferred, [cohort, 'gene expression']);
 	if (exp) {
 		var {host, name} = JSON.parse(exp),
