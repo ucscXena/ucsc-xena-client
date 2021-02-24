@@ -46,7 +46,7 @@ function getPreferredExpression(props) {
 
 		if (datasets) {
 			var ds = datasets.find(ds => ds.name === name);
-			return {name, host, probemap: ds.probemap, unit: ds.unit};
+			return {name, host, probemap: ds.probemap, unit: ds.unit, label: ds.label};
 		}
 	}
 }
