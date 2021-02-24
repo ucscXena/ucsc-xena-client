@@ -727,7 +727,7 @@ class Column extends PureComponent {
 
 	onDiff = () => {
 		var {preferredExpression, samples: indicies, sampleFormat, data} = this.props,
-			samples = indicies.map(sampleFormat),
+			samples = _.times(indicies.length, sampleFormat),
 			payload = JSON.stringify({preferredExpression, samples, data}),
 			notebook = 'http://localhost:5000';
 
