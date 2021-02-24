@@ -726,11 +726,12 @@ class Column extends PureComponent {
 	};
 
 	onDiff = () => {
-		var {preferredExpression, samples: indicies, sampleFormat, data} = this.props,
+		var {preferredExpression, samples: indicies, sampleFormat, data, cohort, column} = this.props,
 			samples = _.times(indicies.length, sampleFormat),
-			payload = JSON.stringify({preferredExpression, samples, data}),
-			notebook = 'http://localhost:5000';
-
+			fieldLabel = _.getIn(column, ['user', 'fieldLabel']),
+			payload = JSON.stringify({preferredExpression, samples, data, cohort, fieldLabel}),
+			//notebook = 'http://localhost:5000';
+			notebook = 'http://analysis.xenahubs.net';
 
 		var w = window.open(notebook);
 

@@ -39,14 +39,24 @@ function isInteractive(props, state) {
 function getPreferredExpression(props) {
 	var {appState, wizard: {cohortPreferred, cohortDatasets}} = props,
 		cohort = _.getIn(appState, ['cohort', 'name']),
-		exp = _.getIn(cohortPreferred, [cohort, 'gene expression']);
+		exp = _.getIn(cohortPreferred, [cohort, 'gene expression']),
+		datasets, ds;
+
 	if (exp) {
-		var {host, name} = JSON.parse(exp),
-			datasets = _.getIn(cohortDatasets, [cohort, host]);
+		var {host, name} = JSON.parse(exp);
+		datasets = _.getIn(cohortDatasets, [cohort, host]);
 
 		if (datasets) {
-			var ds = datasets.find(ds => ds.name === name);
+			ds = datasets.find(ds => ds.name === name);
 			return {name, host, probemap: ds.probemap, unit: ds.unit, label: ds.label};
+		}
+	} else {
+		datasets = _.getIn(cohortDatasets, [cohort]);
+		if (datasets) {
+			ds = _.values(datasets).flat().find(ds => ds.datasubtype && ds.datasubtype.match(/gene expression/i));
+			if (ds) {
+				return {name: ds.name, host: ds.host, probemap: ds.probemap, unit: ds.unit, label: ds.label};
+			}
 		}
 	}
 }
