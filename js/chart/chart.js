@@ -400,16 +400,18 @@ function boxplot({xCategories, matrices, yfields, colors, chart}) {
 			color = colors[i],
 			dataSeries = boxes[i];
 
-		highchartsHelper.addSeriesToColumn({
-			chart,
-			type: 'boxplot',
-			name: code,
-			data: dataSeries,
-			yIsCategorical: false,
-			showDataLabel: yfields.length * xCategories.length < 30,
-			showInLegend: code != null,
-			color,
-			description: nNumberSeries[0]});
+		if (nNumberSeries[0]) {
+			highchartsHelper.addSeriesToColumn({
+				chart,
+				type: 'boxplot',
+				name: code,
+				data: dataSeries,
+				yIsCategorical: false,
+				showDataLabel: yfields.length * xCategories.length < 30,
+				showInLegend: code != null,
+				color,
+				description: nNumberSeries[0]});
+		}
 	});
 }
 
