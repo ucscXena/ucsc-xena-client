@@ -52,9 +52,9 @@ var head = url => ajax({url, crossDomain: true, method: 'HEAD'}).map(() => url);
 // Check for dataset download link. If not there, try the link with '.gz'
 // suffix. If not there, return undefined.
 var checkDownload = (host, dataset) => {
-	var link = `${host}/download/${dataset}`,
+	var link = `${host}/download/${encodeURIComponent(dataset)}`,
 		gzlink = `${link}.gz`,
-		s3link = `${serverS3url[host]}/${dataset}`,
+		s3link = `${serverS3url[host]}/${encodeURIComponent(dataset)}`,
 		s3gzlink = `${s3link}.gz`,
 		dl = head(link),
 		gzdl = head(gzlink),
