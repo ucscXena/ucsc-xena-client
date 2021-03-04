@@ -729,7 +729,9 @@ class Column extends PureComponent {
 		var {preferredExpression, samples: indicies, sampleFormat, data, cohort, column} = this.props,
 			samples = _.times(indicies.length, sampleFormat),
 			fieldLabel = _.getIn(column, ['user', 'fieldLabel']),
-			payload = JSON.stringify({preferredExpression, samples, data, cohort, fieldLabel}),
+			uniqValues = _.uniq(_.getIn(data, ['req', 'values', 0])),
+			filteredCodes = data.codes.filter((code, i) => uniqValues.includes(i)),
+			payload = JSON.stringify({preferredExpression, filteredCodes, samples, data, cohort, fieldLabel}),
 			//notebook = 'http://localhost:5000';
 			notebook = 'http://analysis.xenahubs.net';
 
