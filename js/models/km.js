@@ -222,22 +222,24 @@ function floatOrPartitionVals({heatmap, colors}, data, index, samples, splits) {
 		colorfn = _.first(colors.map(colorScale)),
 		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2,
 		maySplit = uniq.length > MAX;
-	return {clarification, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
+	return {columnValues: avg, clarification, maySplit, ...(maySplit ? partFn : floatVals)(avg, uniq, colorfn)};
 }
+
+var mutLabel = [
+	'No Mutation',
+	'Has Mutation'
+];
 
 function mutationVals(column, data, {bySample}, sortedSamples) {
 	var mutCode = _.mapObject(bySample, vs => vs.length > 0 ? 1 : 0);
 	return {
-		values: _.map(sortedSamples, s => mutCode[s]),
-		groups: [0, 1],
+		values: _.map(sortedSamples, s => mutLabel[mutCode[s]]),
+		groups: mutLabel,
 		colors: [
 			"#ffffff", // white
 			"#9467bd"  // dark purple
 		],
-		labels: [
-			'No Mutation',
-			'Has Mutation'
-		]
+		labels: mutLabel
 	};
 }
 
@@ -252,7 +254,7 @@ function segmentedVals(column, data, index, samples, splits) {
 		[,,,, origin] = color,
 		colorfn = v => RGBToHex(...v < origin ? scale.lookup(0, origin - v) : scale.lookup(1, v - origin)),
 		partFn = splits === -4 ? partitionedValsQuartile : splits === 3 ? partitionedVals3 : partitionedVals2;
-	return {maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
+	return {columnValues: avg, maySplit: true, ...partFn(bySampleSortAvg, uniq, colorfn)};
 }
 
 var toCoded = multi(fs => fs.valueType);
@@ -333,11 +335,7 @@ function findSurvDataByType(survivalData, survivalType) {
 		return null;
 	}
 
-	return {
-		patient: survivalData[survivalOptions[survivalType].patient],
-		tte: survivalData[survivalOptions[survivalType].tte],
-		ev: survivalData[survivalOptions[survivalType].ev]
-	};
+	return _.mapObject(survivalOptions[survivalType], _.propertyOf(survivalData));
 }
 
 var bounds = x => [_.minnull(x), _.maxnull(x)];
@@ -352,13 +350,14 @@ var bounds = x => [_.minnull(x), _.maxnull(x)];
 // 4) pick at-most MAX groups
 // 5) compute km
 
-function makeGroups(column, data, index, cutoff, splits, survivalType, survival, samples) {
+function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
+		samples, cohortSamples) {
 	let survivalData = findSurvDataByType(getFieldData(survival), survivalType),
 		domain = bounds(survivalData.tte),
 		{tte, ev, patient} = cutoffData(survivalData, cutoff),
 		// Convert field to coded.
 		codedFeat = toCoded(column, data, index, samples, getSplits(splits)),
-		{values} = codedFeat,
+		{values, columnValues} = codedFeat,
 		usableSamples = _.filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
 		patientWarning = warnDupPatients(usableSamples, samples, patient),
@@ -368,9 +367,21 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		gtte = groups.map(g => groupedIndices[g].map(i => tte[samples[i]])),
 		gev = groups.map(g => groupedIndices[g].map(i => ev[samples[i]])),
 		curves = groups.map((g, i) => km.compute(gtte[i], gev[i])),
-		pV = pValue(gtte, gev);
+		pV = pValue(gtte, gev),
+		patientCodes = survival.patient.data.codes;
 
+	// XXX The sample order here is odd, and should be refactored. It
+	// results from using column.heatmap instead of data.req. We shouldn't
+	// need to care about the spreadsheet sort order.
 	return {
+		download: () => ({
+			sample: usableSamples.map(s => cohortSamples[samples[s]]),
+			patient: usableSamples.map(s => patientCodes[patient[samples[s]]]),
+			ev: usableSamples.map(s => ev[samples[s]]),
+			tte: usableSamples.map(s => tte[samples[s]]),
+			group: usableSamples.map(s => values[s]),
+			...(columnValues ? {data: usableSamples.map(s => columnValues[s])} : {})
+		}),
 		colors,
 		labels,
 		curves,

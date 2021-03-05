@@ -1,4 +1,3 @@
-
 import kmStyle from "./km.module.css";
 var _ = require('./underscore_ext').default;
 import PureComponent from './PureComponent';
@@ -6,6 +5,7 @@ var React = require('react');
 import {Button, IconButton} from 'react-toolbox/lib/button';
 import Dropdown from 'react-toolbox/lib/dropdown';
 import Dialog from 'react-toolbox/lib/dialog';
+import Tooltip from 'react-toolbox/lib/tooltip';
 
 var Axis = require('./Axis');
 var {linear, linearTicks} = require('./scale');
@@ -13,6 +13,21 @@ var pdf = require('./kmpdf');
 var NumberForm = require('./views/NumberForm');
 var {survivalOptions, getSplits} = require('./models/km');
 var gaEvents = require('./gaEvents');
+
+var TTIcon = Tooltip(props => <i {..._.omit(props, 'theme')} />);
+
+// XXX there's overlap here with react-toolbox IconButton. Not sure
+// why we need both. Copied this pattern from AppControls, so it would
+// match.
+var icon = (i, tooltip, onClick) =>
+	<TTIcon className='material-icons'
+		onClick={onClick}
+		tooltip={tooltip}>{i}</TTIcon>;
+
+var iconLink = (i, href) =>
+	<a href={href} target='_blank'><i className='material-icons'>{i}</i></a>;
+
+var kmHelpURL = 'https://ucsc-xena.gitbook.io/project/overview-of-features/kaplan-meier-plots';
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
 var margin = {top: 20, right: 30, bottom: 30, left: 50};
@@ -378,14 +393,27 @@ class KmPlot extends PureComponent {
 		this.setState({ activeLabel: label });
 	};
 
-	pdf = () => {
+	onPdf = () => {
 		gaEvents('spreadsheet', 'pdf', 'km');
 		pdf(this.props.km.groups);
 	};
 
-	help = () => {
-		window.location.href = "https://ucsc-xena.gitbook.io/project/overview-of-features/kaplan-meier-plots";
-	};
+	onDownload = () => {
+		gaEvents('spreadsheet', 'download', 'km');
+		var data = this.props.km.groups.download(),
+			keys = Object.keys(data);
+
+
+		var txt = [keys.join('\t')].concat(data[keys[0]].map((v, i) => keys.map(k => data[k][i]).join('\t'))).join('\n');
+		// use blob for bug in chrome: https://code.google.com/p/chromium/issues/detail?id=373182
+		var url = URL.createObjectURL(new Blob([txt], { type: 'text/tsv' }));
+		var a = document.createElement('a');
+		var filename = 'survival.tsv';
+		_.extend(a, { id: filename, download: filename, href: url });
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+	}
 
 	onSplits = (ev) => {
 		var {callback} = this.props;
@@ -435,14 +463,11 @@ class KmPlot extends PureComponent {
 						</div>
 					</div>
 					: <div>
-						<Button onClick={this.pdf} className={kmStyle.PDFButton}>
-							<i className={`material-icons ${kmStyle.buttonIcon}`}>file_download</i>
-							<span className={kmStyle.buttonText}>PDF</span>
-						</Button>
-						<Button onClick={this.help} className={kmStyle.helpButton}>
-							<i className={`material-icons ${kmStyle.buttonIcon}`}>help</i>
-							<span className={kmStyle.buttonText}>Help</span>
-						</Button>
+						<span className={kmStyle.actions}>
+							{icon('picture_as_pdf', 'Download as PDF', this.onPdf)}
+							{icon('cloud_download', 'Download as tsv', this.onDownload)}
+							{iconLink('help', kmHelpURL)}
+						</span>
 						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph, cohort, survInfoURL,
 							survivalType, survivalTypes, this.onSurvType, min, max, this.onCutoff, cutoff)}
 						{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions,

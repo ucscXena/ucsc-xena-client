@@ -128,12 +128,17 @@ i.buttonIcon {
 	color: #757575;
 }
 
-.PDFButton {
+.actions {
 	margin: 0px 0 15px 50px;
 }
 
-.helpButton {
-	margin-left: 20px;
+.actions i {
+	margin-right: 20px;
+	cursor: pointer;
+}
+
+.actions a {
+	color: unset;
 }
 
 .pWarningIcon {
