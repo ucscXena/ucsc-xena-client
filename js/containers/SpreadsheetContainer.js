@@ -55,7 +55,7 @@ function getPreferredExpression(props) {
 		if (datasets) {
 			ds = _.values(datasets).flat().find(ds => ds.datasubtype && ds.datasubtype.match(/gene expression/i));
 			if (ds) {
-				return {name: ds.name, host: ds.host, probemap: ds.probemap, unit: ds.unit, label: ds.label};
+				return {name: JSON.parse(ds.dsID).name, host: JSON.parse(ds.dsID).host, probemap: ds.probemap, unit: ds.unit, label: ds.label};
 			}
 		}
 	}
