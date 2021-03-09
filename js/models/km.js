@@ -341,7 +341,7 @@ function findSurvDataByType(survivalData, survivalType) {
 		return null;
 	}
 
-	return _.mapObject(survivalOptions[survivalType], _.propertyOf(survivalData));
+	return _.mapObject(survivalOptions[survivalType], v => survivalData[v] || v);
 }
 
 var kmColumnLabel = ({user: {columnLabel, fieldLabel}}) =>
@@ -386,8 +386,8 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		download: () => ({
 			sample: usableSamples.map(s => cohortSamples[samples[s]]),
 			patient: usableSamples.map(s => patientCodes[patient[samples[s]]]),
-			ev: usableSamples.map(s => ev[samples[s]]),
-			tte: usableSamples.map(s => tte[samples[s]]),
+			[survivalData.evFeature]: usableSamples.map(s => ev[samples[s]]),
+			[survivalData.tteFeature]: usableSamples.map(s => tte[samples[s]]),
 			// defer toDownload because it's expensive
 			[kmColumnLabel(column)]: _.Let((vals = toDownload(values, download)) =>
 				usableSamples.map(s => vals[s])),
