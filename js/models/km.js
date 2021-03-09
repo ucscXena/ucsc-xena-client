@@ -146,9 +146,15 @@ function codedVals({heatmap, colors, codes}) {
 		groups: groups,
 		colors: groups.map(colorfn),
 		labels: codes,
-		values: heatmap[0]
+		values: heatmap[0],
+		// XXX This nonsense is because coded columns are represented
+		// differently, with 'values' not being human readable. So, we
+		// provide a converting lambda, here.
+		download: () => heatmap[0].map(v => codes[v])
 	};
 }
+
+var toDownload = (values, download) => download ? download() : values;
 
 var saveNull = fn => v => v == null ? v : fn(v);
 
@@ -338,6 +344,9 @@ function findSurvDataByType(survivalData, survivalType) {
 	return _.mapObject(survivalOptions[survivalType], _.propertyOf(survivalData));
 }
 
+var kmColumnLabel = ({user: {columnLabel, fieldLabel}}) =>
+	columnLabel ? `${columnLabel}: ${fieldLabel}` : fieldLabel;
+
 var bounds = x => [_.minnull(x), _.maxnull(x)];
 
 // After toCoded, we can still end up with empty groups if
@@ -357,7 +366,7 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		{tte, ev, patient} = cutoffData(survivalData, cutoff),
 		// Convert field to coded.
 		codedFeat = toCoded(column, data, index, samples, getSplits(splits)),
-		{values, columnValues} = codedFeat,
+		{values, download, columnValues} = codedFeat,
 		usableSamples = _.filterIndices(samples, (s, i) =>
 			has(tte, s) && has(ev, s) && has(values, i)),
 		patientWarning = warnDupPatients(usableSamples, samples, patient),
@@ -379,7 +388,9 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 			patient: usableSamples.map(s => patientCodes[patient[samples[s]]]),
 			ev: usableSamples.map(s => ev[samples[s]]),
 			tte: usableSamples.map(s => tte[samples[s]]),
-			group: usableSamples.map(s => values[s]),
+			// defer toDownload because it's expensive
+			[kmColumnLabel(column)]: _.Let((vals = toDownload(values, download)) =>
+				usableSamples.map(s => vals[s])),
 			...(columnValues ? {data: usableSamples.map(s => columnValues[s])} : {})
 		}),
 		colors,
