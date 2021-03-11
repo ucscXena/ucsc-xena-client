@@ -109,26 +109,26 @@ var reorderFieldsTransform = fn =>
 var showPosition = column =>
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
-function dataToHeatmap(column, vizSettings, data, samples) {
+function getUserCodes(column) {
+	var user = _.getIn(column, ['vizSettings', 'codes']);
+	return user && JSON.parse(user);
+}
+
+// overlay category codes with user settings
+function setUserCodes(column, data) {
+	var user = getUserCodes(column);
+	return user ? _.updateIn(data, ['codes'],
+				codes => _.times(codes.length, i => user[i])) :
+		data;
+}
+
+function dataToHeatmap(column, vizSettings, dataIn, samples) {
+	var data = setUserCodes(column, dataIn);
 	if (!_.get(data, 'req')) {
 		return null;
 	}
-	var parseVizSettingCodes = (str) => {
-		if (! _.isString(str)) {return undefined;}
 
-		let codes = JSON.parse(str),
-			observed = JSON.stringify(_.keys(codes).sort(function sortNumber(a, b) {return a - b;})),
-			expected = JSON.stringify(_.range(_.keys(codes).length).map(x => x.toString()));
-
-		if (observed === expected) {
-			return _.values(codes);
-		}
-		return undefined;
-	};
-
-	var {req, avg} = data,
-		vizSettingCodes = parseVizSettingCodes(_.getIn(column, ['vizSettings', 'codes'])),
-		codes = vizSettingCodes || data.codes,
+	var {req, avg, codes} = data,
 		{dataset} = column,
 		fields = _.get(req, 'probes', column.fields),
 		heatmap = computeHeatmap(vizSettings, req, fields, samples),
@@ -412,5 +412,6 @@ module.exports = {
 	fetch,
 	fetchGeneOrChromProbes,
 	fetchGene,
-	fetchFeature
+	fetchFeature,
+	setUserCodes
 };

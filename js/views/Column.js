@@ -30,6 +30,7 @@ var ZoomHelpTag = require('./ZoomHelpTag');
 var ZoomOverlay = require('./ZoomOverlay');
 var config = require('../config');
 import {AVAILABLE_GENESET_COHORTS, GENESETS_VIEWER_URL, GeneSetViewDialog} from './GeneSetViewDialog';
+import {setUserCodes} from '../models/denseMatrix';
 
 // We're getting events with coords < 0. Not sure if this
 // is a side-effect of the react event system. This will
@@ -726,7 +727,9 @@ class Column extends PureComponent {
 	};
 
 	onDiff = () => {
-		var {preferredExpression, samples: indicies, sampleFormat, data, cohort, column} = this.props,
+		var {preferredExpression, samples: indicies, sampleFormat, data: dataIn, cohort,
+				column} = this.props,
+			data = setUserCodes(column, dataIn),
 			samples = _.times(indicies.length, sampleFormat),
 			fieldLabel = _.getIn(column, ['user', 'fieldLabel']),
 			uniqValues = _.uniq(_.getIn(data, ['req', 'values', 0])),

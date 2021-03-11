@@ -600,24 +600,14 @@ function vizSettingsWidget(node, onVizSettings, vizState, id, hide, defaultNorma
 		}
 	}
 
+	var parseVizSettingCodes = str => _.isString(str) && JSON.parse(str);
+
 	//user label for Categories
 	class CategoricalTable extends React.Component {
 	    constructor(props) {
-	        var parseVizSettingCodes = (str) => {
-				if (! _.isString(str)) {return undefined;}
-
-				let codes = JSON.parse(str),
-					observed = JSON.stringify(_.keys(codes).sort(function sortNumber(a, b) {return a - b;})),
-					expected = JSON.stringify(_.range(_.keys(codes).length).map(x => x.toString()));
-
-				if (observed === expected) {
-					return codes;
-				}
-				return undefined;
-			};
-
 	        super(props);
-	        this.state = parseVizSettingCodes(getVizSettings('codes')) || _.object(_.range(data.codes.length), data.codes);
+	        this.state = parseVizSettingCodes(getVizSettings('codes')) ||
+				_.object(_.range(data.codes.length), data.codes);
 	    }
 
 		handleChange = (i, value) => {

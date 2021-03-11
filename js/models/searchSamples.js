@@ -1,6 +1,6 @@
-
 var _ = require('../underscore_ext').default;
 var {parse} = require('./searchParser');
+import {setUserCodes} from './denseMatrix';
 //var {shouldNormalize, shouldLog} = require('./denseMatrix');
 
 var includes = (target, str) => {
@@ -195,12 +195,16 @@ function createFieldMap(columnOrder) {
 	return _.object(createFieldIds(columnOrder.length), columnOrder);
 }
 
-function searchSamples(search, columns, columnOrder, data, cohortSamples) {
+var setUserCodesAll = (columns, data) =>
+	_.mapObject(data, (d, id) => setUserCodes(columns[id], d));
+
+function searchSamples(search, columns, columnOrder, dataIn, cohortSamples) {
 	if (!_.get(search, 'length')) {
 		return {exprs: null, matches: null};
 	}
 	let fieldMap = createFieldMap(columnOrder),
-		allSamples = _.range(_.get(cohortSamples, 'length'));
+		allSamples = _.range(_.get(cohortSamples, 'length')),
+		data = setUserCodesAll(columns, dataIn);
 	try {
 		return evalsearch({columns, data, fieldMap, cohortSamples, allSamples}, search);
 	} catch(e) {
