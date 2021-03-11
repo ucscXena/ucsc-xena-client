@@ -727,6 +727,7 @@ class Column extends PureComponent {
 	};
 
 	onDiff = () => {
+		gaEvents('spreadsheet', 'DEA');
 		var {preferredExpression, samples: indicies, sampleFormat, data: dataIn, cohort,
 				column} = this.props,
 			data = setUserCodes(column, dataIn),
