@@ -87,16 +87,22 @@ function uniqueNotNull(data) {
   return _.uniq(data).filter( f => f !== null);
 }
 
-const TooltipMenuItem = Tooltip(MenuItem);
+const TooltipMenuItem_ = Tooltip(MenuItem);
 
-const tooltipConfig = (message) => {
-	return {
-		tooltipDelay: 750,
-		tooltip: message,
-		tooltipPosition: "horizontal",
-		style: { pointerEvents: 'all' }
-	};
+
+const tooltipConfig = {
+	tooltipDelay: 750,
+	tooltipPosition: "horizontal",
+	style: {pointerEvents: 'all'}
 };
+
+// menu item that shows tooltip when disabled. react-toolbox Tooltip
+// doesn't allow hiding of the tooltip, or setting to null, so we have
+// to remove the Tooltip component entirely.
+var TooltipMenuItem = props => props.disabled ?
+	<TooltipMenuItem_ {...{...props, ...tooltipConfig}}/> :
+	<MenuItem {..._.omit(props, 'tooltip')}/>;
+
 
 // XXX move this?
 function download([fields, rows]) {
@@ -241,12 +247,14 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		mupitItemName = noData ? 'MuPIT 3D Loading' : 'MuPIT 3D (' + assembly + ' coding)',
 		sortVisibleItemName = sortVisible ? 'Sort using full region' : 'Sort using zoom region',
 		intronsItemName =  showIntrons ? 'Hide introns' : "Show introns",
+		mupitTooltip = pos ? 'Only available for gene view' :
+			noMuPit ? 'Only available for SNPs on hg19 and hg38' :
+			null,
 		mupitMenuItem = null;
 
 	if (data && !(_.isEmpty(data.refGene))) {
-		mupitMenuItem = pos ? <TooltipMenuItem disabled={noMuPit} {...tooltipConfig("Only available for gene view")} caption={mupitItemName}/>
-		                    : ( noMuPit ? <TooltipMenuItem disabled={noMuPit} {...tooltipConfig("Only available for SNPs on hg19 and hg38")} caption={mupitItemName}/>
-								: <MenuItem onClick={(e) => onMuPit(assembly, e)} caption={mupitItemName}/>);
+		mupitMenuItem = <TooltipMenuItem onClick={(e) => onMuPit(assembly, e)}
+			disabled={noMuPit} tooltip={mupitTooltip} caption={mupitItemName}/>;
 	}
 
 	return addIdsToArr([
@@ -294,7 +302,7 @@ var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
 function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff}) {
-	var {column, preferredExpression} = props,
+	var {column, isPublic, preferredExpression} = props,
 		{fieldType, clustering} = column,
 		supportTumorMap = thisTumorMap && tumorMapCompatible(column),
 		order = clustering == null ? 'Cluster' : 'Uncluster';
@@ -304,7 +312,8 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff}
 			<MenuItem onClick={onCluster} caption={order} disabled={config.singlecell} /> :
 			null,
 		preferredExpression && column.codes ?
-			<MenuItem onClick={onDiff} caption='Differential expression' /> :
+			<TooltipMenuItem onClick={onDiff} disabled={!isPublic}
+				tooltip='Private data not allowed' caption='Differential expression' /> :
 			null,
 		supportsGeneAverage(column) ?
 			(fieldType === 'genes' ?

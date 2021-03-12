@@ -182,7 +182,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 		var columnProps = _.pick(this.props,
 				['pickSamples', 'searching', 'fieldFormat', 'sampleFormat', 'samplesMatched']),
 			{appState, wizard: {cohortTumorMap}} = this.props,
-			{columnOrder, wizardMode, hasSurvival} = appState,
+			{columnOrder, wizardMode, hasSurvival, isPublic} = appState,
 			preferredExpression = getPreferredExpression(this.props),
 			interactive = isInteractive(this.props, this.state);
 
@@ -199,6 +199,7 @@ var getSpreadsheetContainer = (Column, Spreadsheet) => class extends React.Compo
 
 				{_.map(columnOrder, (id, i) => (
 					<Column
+						isPublic={isPublic}
 						interactive={interactive}
 						hasSurvival={hasSurvival}
 						cohort={appState.cohort}
