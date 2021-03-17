@@ -120,12 +120,20 @@ var datasetMetaAndLinks = (host, dataset) => {
 	var metaQ = datasetMetadata(host, dataset).map(m => m[0]).share(),
 		downloadQ = checkDownload(host, dataset),
 		dataQ = metaQ.mergeMap(meta => snippetMethod(meta)(host, dataset)),
-		probeCountQ = metaQ.mergeMap(meta => probeCountMethod(meta)(host, dataset)),
 		probemapQ = metaQ.mergeMap(meta =>
 			get(meta, 'probeMap') ? checkDownload(host, meta.probeMap) : of(undefined));
 
-	return zip(metaQ, dataQ, probeCountQ, downloadQ, probemapQ, (meta, data, probeCount, downloadLink, probemapLink) =>
-			({meta, data, probeCount, downloadLink, probemapLink}));
+	return zip(metaQ, dataQ, downloadQ, probemapQ, (meta, data, probeCount, downloadLink, probemapLink) =>
+			({meta, data, downloadLink, probemapLink}));
+};
+
+// XXX This re-fetches the dataset metadata. We split this out
+// because the probe query can be slow. It would be better to fetch
+// the metadata once, but currently the controller/query.js mechanisms
+// don't implement dependent queries.
+var datasetProbeCount = (host, dataset) => {
+	var metaQ = datasetMetadata(host, dataset).map(m => m[0]);
+	return metaQ.mergeMap(meta => probeCountMethod(meta)(host, dataset));
 };
 
 var spreadsheetControls = {
@@ -157,6 +165,7 @@ var sectionDataMethods = {
 	identifiers: ({params: {host, dataset}}) => [['identifiers', host, dataset]],
 	dataset: ({params: {host, dataset}}) => [
 		['dataset', host, dataset],
+		['datasetProbeCount', host, dataset],
 		['datasetDescription', dataset]],
 	markdown: ({params: {markdown}}) => [['markdown', markdown]],
 	cohort: ({params: {cohort}, spreadsheet}) => [
@@ -181,7 +190,8 @@ var fetchMethods = {
 	samples: (host, dataset) => datasetSamples(host, dataset, null),
 	identifiers: datasetField,
 	dataset: datasetMetaAndLinks,
-	datasetDescription: datasetDescription,
+	datasetDescription,
+	datasetProbeCount,
 	markdown: getMarkDown,
 	cohort: cohortMeta,
 	// XXX Note that this will cache lists from hubs that the user has

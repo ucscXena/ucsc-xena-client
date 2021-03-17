@@ -25,6 +25,7 @@ var {getHubParams} = require('./hubParams');
 import PureComponent from './PureComponent';
 import wrapLaunchHelper from './LaunchHelper';
 import xss from './xss';
+import spinner from './ajax-loader.gif';
 
 
 var getHubName = host => get(serverNames, host, host);
@@ -421,6 +422,11 @@ var dataMethod = ({type = 'genomicMatrix', status} = {}) =>
 
 var setKey = arr => arr.map((el, i) => React.cloneElement(el, {key: i}));
 
+var getProbeCount = (datapages, host, dataset) => {
+	var pc = getIn(datapages, ['datasetProbeCount', host, dataset]);
+	return pc == null ? <img src={spinner}/> : pc.toLocaleString();
+};
+
 var DatasetPage = wrapLaunchHelper(
 	props => getIn(props, ['state', 'params', 'host']) === localHub,
 	class extends PureComponent {
@@ -447,14 +453,15 @@ var DatasetPage = wrapLaunchHelper(
 		render() {
 			var {callback, state, hubParams, children, badge} = this.props,
 				{params: {host, dataset}, datapages} = state,
-				{meta, probeCount = 0, data, downloadLink, probemapLink} = getIn(datapages, ['dataset', host, dataset], {}),
+				{meta, data, downloadLink, probemapLink} = getIn(datapages, ['dataset', host, dataset], {}),
+				probeCount = getProbeCount(datapages, host, dataset),
 				githubDescripton = getIn(datapages, ['datasetDescription', dataset], null);
 
 			if (!meta) {
 				return (
 					<div className={styles.datapages}>
 						{children /* LaunchHelper */}
-						<h2>dataset: {dataset}...</h2>
+						<h2>dataset: {dataset}...<img src={spinner}/></h2>
 						<h3>hub: {host}{badge}</h3>
 					</div>);
 			}
@@ -499,10 +506,11 @@ var DatasetPage = wrapLaunchHelper(
 						dataPair('input data format', FORMAT_MAPPING[type])]))}
 					{status === 'loaded' ?
 						<span className={styles.tableControls}>
+							{type === 'genomicMatrix' ? probeCount : null}
 							{type === 'genomicMatrix' ?
-								`${probeCount.toLocaleString()} identifiers X ${count} samples ` : null}
+								` identifiers X ${count} samples ` : null}
 							{type === 'clinicalMatrix' ?
-								`${count} samples X ${probeCount.toLocaleString()} identifiers ` : null}
+								`${count} samples X ${probeCount} identifiers ` : null}
 							<Link
 								href={'?' + encodeObject({host, dataset, allIdentifiers: true, ...hubParams})}
 								onClick={this.onIdentifiers} label='All Identifiers'/>

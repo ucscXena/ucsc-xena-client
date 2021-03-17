@@ -158,6 +158,11 @@
 	margin-left: 0;
 }
 
+.tableControls img { /* spinner */
+	margin: 0 10px;
+	vertical-align: 'middle';
+}
+
 .headerButtons {
 	display: inline-block;
 	margin-left: 25px;
