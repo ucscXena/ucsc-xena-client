@@ -253,8 +253,8 @@ function mutationMenu(props, {onMuPit, onShowIntrons, onSortVisible}) {
 		mupitMenuItem = null;
 
 	if (data && !(_.isEmpty(data.refGene))) {
-		mupitMenuItem = <TooltipMenuItem onClick={(e) => onMuPit(assembly, e)}
-			disabled={noMuPit} tooltip={mupitTooltip} caption={mupitItemName}/>;
+		mupitMenuItem = (<TooltipMenuItem onClick={(e) => onMuPit(assembly, e)}
+			disabled={noMuPit} tooltip={mupitTooltip} caption={mupitItemName}/>);
 	}
 
 	return addIdsToArr([
@@ -302,7 +302,7 @@ var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
 function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff}) {
-	var {column, isPublic, preferredExpression} = props,
+	var {column, isPublic, preferredExpression, data} = props,
 		{fieldType, clustering} = column,
 		supportTumorMap = thisTumorMap && tumorMapCompatible(column),
 		order = clustering == null ? 'Cluster' : 'Uncluster';
@@ -311,7 +311,7 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff}
 		supportsClustering(column) ?
 			<MenuItem onClick={onCluster} caption={order} disabled={config.singlecell} /> :
 			null,
-		preferredExpression && column.codes ?
+		preferredExpression && column.codes && column.codes.filter((code, i) => _.uniq(_.getIn(data, ['req', 'values', 0])).includes(i)).length > 1 ?
 			<TooltipMenuItem onClick={onDiff} disabled={!isPublic}
 				tooltip='Private data not allowed' caption='Differential expression' /> :
 			null,
