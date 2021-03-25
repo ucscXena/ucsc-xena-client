@@ -123,7 +123,7 @@ var datasetMetaAndLinks = (host, dataset) => {
 		probemapQ = metaQ.mergeMap(meta =>
 			get(meta, 'probeMap') ? checkDownload(host, meta.probeMap) : of(undefined));
 
-	return zip(metaQ, dataQ, downloadQ, probemapQ, (meta, data, probeCount, downloadLink, probemapLink) =>
+	return zip(metaQ, dataQ, downloadQ, probemapQ, (meta, data, downloadLink, probemapLink) =>
 			({meta, data, downloadLink, probemapLink}));
 };
 
