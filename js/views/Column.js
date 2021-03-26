@@ -301,6 +301,11 @@ var supportsGeneAverage = column =>
 var supportsClustering = ({fieldType, fields}) =>
 	_.contains(['genes', 'probes', 'geneProbes'], fieldType) && fields.length > 2;
 
+var supportsDEA = (column, data) =>
+	column.codes &&
+	_.reject(_.uniq(_.getIn(data, ['req', 'values', 0])),
+		x => x == null).length > 1;
+
 function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff}) {
 	var {column, isPublic, preferredExpression, data} = props,
 		{fieldType, clustering} = column,
@@ -311,7 +316,7 @@ function matrixMenu(props, {onTumorMap, thisTumorMap, onMode, onCluster, onDiff}
 		supportsClustering(column) ?
 			<MenuItem onClick={onCluster} caption={order} disabled={config.singlecell} /> :
 			null,
-		preferredExpression && column.codes && column.codes.filter((code, i) => _.uniq(_.getIn(data, ['req', 'values', 0])).includes(i)).length > 1 ?
+		preferredExpression && supportsDEA(column, data) ?
 			<TooltipMenuItem onClick={onDiff} disabled={!isPublic}
 				tooltip='Private data not allowed' caption='Differential expression' /> :
 			null,
