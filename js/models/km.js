@@ -331,8 +331,9 @@ function cutoffData(survivalData, cutoff) {
 	};
 }
 
-function findSurvDataByType(survivalData, survivalType) {
-	var	eligibleSurv = _.keys(survivalOptions);
+function findSurvDataByType(survival, survivalType) {
+	var	survivalData = getFieldData(survival),
+		eligibleSurv = _.keys(survivalOptions);
 
 	survivalType = survivalType ? survivalType :
 		_.intersection(_.keys(survivalData), eligibleSurv)[0];
@@ -341,7 +342,10 @@ function findSurvDataByType(survivalData, survivalType) {
 		return null;
 	}
 
-	return _.mapObject(survivalOptions[survivalType], v => survivalData[v] || v);
+	return {
+		unit: survival[survivalType].field.unit,
+		survivalData: _.mapObject(survivalOptions[survivalType],
+				v => survivalData[v] || v)};
 }
 
 var kmColumnLabel = ({user: {columnLabel, fieldLabel}}) =>
@@ -361,7 +365,7 @@ var bounds = x => [_.minnull(x), _.maxnull(x)];
 
 function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		samples, cohortSamples) {
-	let survivalData = findSurvDataByType(getFieldData(survival), survivalType),
+	let {unit, survivalData} = findSurvDataByType(survival, survivalType),
 		domain = bounds(survivalData.tte),
 		{tte, ev, patient} = cutoffData(survivalData, cutoff),
 		// Convert field to coded.
@@ -401,6 +405,7 @@ function makeGroups(column, data, index, cutoff, splits, survivalType, survival,
 		patientWarning,
 		domain,
 		maySplit: codedFeat.maySplit,
+		unit,
 		...pV
 	};
 }

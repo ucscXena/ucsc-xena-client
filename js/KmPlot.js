@@ -32,7 +32,7 @@ var iconLink = (i, href) =>
 var kmHelpURL = 'https://ucsc-xena.gitbook.io/project/overview-of-features/kaplan-meier-plots';
 
 // Basic sizes. Should make these responsive. How to make the svg responsive?
-var margin = {top: 20, right: 30, bottom: 30, left: 50};
+var margin = {top: 20, right: 80, bottom: 30, left: 50};
 
 // XXX point at 100%? [xdomain[0] - 1, 1]
 function line(xScale, yScale, values) {
@@ -86,7 +86,7 @@ function getPlotDims({curves}, size) {
 	return {height, width, xdomain, xrange, ydomain, yrange};
 }
 
-function renderKmSVG({groups, size, plotDims, onMouse}) {
+function renderKmSVG({groups, size, plotDims, unit, onMouse}) {
 	var {height, xdomain, xrange, ydomain, yrange} = plotDims,
 		xScale = linear(xdomain, xrange),
 		yScale = linear(ydomain, yrange),
@@ -113,8 +113,16 @@ function renderKmSVG({groups, size, plotDims, onMouse}) {
 					range={xrange}
 					scale={xScale}
 					tickfn={linearTicks}
-					orientation='bottom'
-				/>
+					orientation='bottom'>
+					{unit ?
+						<text
+							y='-7'
+							x={xrange[1] + 5}
+							dy='.71em'
+							textAnchor='start'>
+							{unit}
+						</text> : null}
+				</Axis>
 				<Axis
 					groupProps={{
 						className: `y ${kmStyle.axis}`
@@ -339,7 +347,7 @@ class KmPlot extends PureComponent {
 		eventClose: 'km-close',
 		dims: {
 			height: 360,
-			width: 472.5
+			width: 522.5
 		}
 	};
 
@@ -429,7 +437,7 @@ class KmPlot extends PureComponent {
 	renderPlot() {
 		let {km: {splits = 2, label, groups, cutoff, survivalType},
 				survivalKeys, cohort, dims} = this.props,
-			{maySplit, warning, clarification, domain: [min, max]} = groups,
+			{unit, maySplit, warning, clarification, domain: [min, max]} = groups,
 			{activeGroup} = this.state,
 			gClass = groupClass(activeGroup, 'Highlight'),
 			survivalTypes = _.intersection(survivalKeys, _.keys(survivalOptions)),
@@ -437,7 +445,7 @@ class KmPlot extends PureComponent {
 		return (
 			<div className={gClass}>
 				<div className={kmStyle.topPanel}>
-					{kmSVG({groups, onMouse: this.onMouse, size: dims, plotDims})}
+					{kmSVG({groups, onMouse: this.onMouse, size: dims, plotDims, unit})}
 					<div className={kmStyle.rightPanel}>
 						<div className={kmStyle.actions}>
 							{icon('picture_as_pdf', 'Download as PDF', this.onPdf)}

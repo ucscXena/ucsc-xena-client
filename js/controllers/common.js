@@ -244,9 +244,15 @@ function survivalFields(cohortFeatures) {
 	return fields;
 }
 
+function addFieldUnit(datasetHubs, field) {
+	var {dsID, fields: [name]} = field,
+		meta = _.concat(..._.values(datasetHubs)).find(m => m.dsID === dsID);
+	return _.assoc(field, 'unit', _.getIn(meta, ['units', name]));
+}
+
 // If field set has changed, re-fetch.
 function fetchSurvival(serverBus, state) {
-	let {wizard: {cohortFeatures},
+	let {wizard: {cohortFeatures, cohortDatasets},
 			spreadsheet: {cohort, survival, cohortSamples}} = state,
 		fields = survivalFields(cohortFeatures[cohort.name]),
 		survFields = _.keys(fields),
@@ -254,7 +260,9 @@ function fetchSurvival(serverBus, state) {
 				f => !_.isEqual(fields[f], _.getIn(survival, [f, 'field']))),
 		queries = _.map(survFields, key => fetch(fields[key], cohortSamples)),
 		collate = data => mapToObj(survFields,
-				(k, i) => ({field: fields[k], data: data[i]}));
+				(k, i) => ({
+					field: addFieldUnit(cohortDatasets[cohort.name], fields[k]),
+					data: data[i]}));
 
 	refetch && serverBus.next([
 			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
