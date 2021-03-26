@@ -2,10 +2,12 @@ import kmStyle from "./km.module.css";
 var _ = require('./underscore_ext').default;
 import PureComponent from './PureComponent';
 var React = require('react');
-import {Button, IconButton} from 'react-toolbox/lib/button';
+import {Button} from 'react-toolbox/lib/button';
 import Dropdown from 'react-toolbox/lib/dropdown';
 import Dialog from 'react-toolbox/lib/dialog';
 import Tooltip from 'react-toolbox/lib/tooltip';
+// XXX move this file out of chart directory
+import {el, div, h1, h3, label, span} from './chart/react-hyper';
 
 var Axis = require('./Axis');
 var {linear, linearTicks} = require('./scale');
@@ -48,16 +50,7 @@ function censorLines(xScale, yScale, censors, className) {
 	);
 }
 
-function calcDims (viewDims, sizeRatios) {
-	return _.mapObject(sizeRatios, (section) => {
-		return _.mapObject(section, (ratio, side) => viewDims[side] * ratio);
-	});
-}
-
-function checkIfActive(currentLabel, activeLabel) {
-	// check whether this line group should be set to Active
-	return !!activeLabel && (activeLabel === currentLabel);
-}
+var groupClass = (i, x = '') => i == null ? null : kmStyle['group' + x + i];
 
 class LineGroup extends React.Component {
 	shouldComponentUpdate(newProps) {
@@ -65,21 +58,17 @@ class LineGroup extends React.Component {
 	}
 
 	render() {
-		let {xScale, yScale, g, setActiveLabel, isActive} = this.props;
-		let [color, label, curve] = g;
-		var censors = curve.filter(pt => !pt.e);
-
-		let outlineStyle = isActive ? kmStyle.outlineHover : kmStyle.outline;
-		let lineStyle = isActive ? kmStyle.lineHover : kmStyle.line;
+		let {i, groups, xScale, yScale, onMouse} = this.props,
+			{colors, labels, curves} = groups,
+			censors = curves[i].filter(pt => !pt.e);
 
 		return (
-			<g key={label} className={kmStyle.subgroup} stroke={color}
-			   	onMouseOver={(e) => setActiveLabel(e, label)}
-			   	onMouseOut={(e) => setActiveLabel(e, '')}>
-				<path className={outlineStyle} d={line(xScale, yScale, curve)}/>
-				<path className={lineStyle} d={line(xScale, yScale, curve)}/>
-				{censorLines(xScale, yScale, censors, outlineStyle)}
-				{censorLines(xScale, yScale, censors, lineStyle)}
+			<g key={labels[i]} data-group={i} className={kmStyle.subgroup + ' ' + groupClass(i)}
+					stroke={colors[i]} onMouseOver={onMouse} onMouseOut={onMouse}>
+				<path className={kmStyle.outline} d={line(xScale, yScale, curves[i])}/>
+				<path className={kmStyle.line} d={line(xScale, yScale, curves[i])}/>
+				{censorLines(xScale, yScale, censors, kmStyle.outline)}
+				{censorLines(xScale, yScale, censors, kmStyle.line)}
 			</g>
 		);
 	}
@@ -87,31 +76,33 @@ class LineGroup extends React.Component {
 
 var bounds = x => [_.min(x), _.max(x)];
 
-function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
+function getPlotDims({curves}, size) {
 	var height = size.height - margin.top - margin.bottom,
 		width = size.width - margin.left - margin.right,
 		xdomain = bounds(_.pluck(_.flatten(curves), 't')),
 		xrange = [0, width],
 		ydomain = [0, 1],
-		yrange = [height, 0],
-		xScale = linear(xdomain, xrange),
-		yScale = linear(ydomain, yrange);
+		yrange = [height, 0];
+	return {height, width, xdomain, xrange, ydomain, yrange};
+}
 
-	var groupSvg = _.zip(colors, labels, curves).map((g, index) => {
-		let [, label] = g;
-		// passing bounds to force update when scales change
-		return (<LineGroup
-				key={index}
+function renderKmSVG({groups, size, plotDims, onMouse}) {
+	var {height, xdomain, xrange, ydomain, yrange} = plotDims,
+		xScale = linear(xdomain, xrange),
+		yScale = linear(ydomain, yrange),
+		groupSvg = _.times(groups.curves.length, i =>
+			// passing bounds to force update when scales change
+			(<LineGroup
+				key={i}
+				i={i}
+				groups={groups}
 				bounds={[xdomain, xrange, ydomain, yrange]}
 				xScale={xScale}
 				yScale={yScale}
-				g={g}
-				isActive={label === activeLabel}
-				setActiveLabel={setActiveLabel}/>);
-	});
+				onMouse={onMouse}/>));
 
 	return (
-		<svg width={size.width} height={size.height}>
+		<svg className={kmStyle.graph} width={size.width} height={size.height}>
 			<g transform={`translate(${margin.left}, ${margin.top})`}>
 				<Axis
 					groupProps={{
@@ -148,6 +139,15 @@ function svg({colors, labels, curves}, setActiveLabel, activeLabel, size) {
 		</svg>
 	);
 }
+
+// Using a full component here to cache the rendering during mouseover.
+class KmSVG extends PureComponent {
+	render() {
+		return renderKmSVG(this.props);
+	}
+}
+
+var kmSVG = el(KmSVG);
 
 var formatPValue = v => v == null ? String.fromCharCode(8709) : v.toPrecision(4);
 
@@ -223,7 +223,7 @@ class PValue extends PureComponent {
 						/> : null}
 				</div>
 				<div>
-					<span>Log-rank test statistics = {formatPValue(logRank)}</span>
+					Log-rank test statistics = {formatPValue(logRank)}
 				</div>
 			</div>
 		);
@@ -235,85 +235,72 @@ function sampleCount(curve) {
 	return _.getIn(curve, [0, 'n'], String.fromCharCode(8709));
 }
 
-function makeLegendKey([color, curves, label], setActiveLabel, activeLabel) {
+function makeLegendKey({colors, curves}, i) {
 	// show colored line and category of curve
-	let isActive = checkIfActive(label, activeLabel);
-	let labelClassName = isActive ? kmStyle.activeListItem : kmStyle.listItem;
 	let legendLineStyle = {
-		backgroundColor: color,
-		border: (isActive ? 2 : 1).toString() + 'px solid',
-		display: 'inline-block',
-		height: 6,
-		width: 25,
-		verticalAlign: 'middle'
+		backgroundColor: colors[i]
 	};
 
 	return (
-		<li
-			key={label}
-			className={labelClassName}
-			onMouseOver={(e) => setActiveLabel(e, label)}
-			onMouseOut={(e) => setActiveLabel(e, '')}>
-			<span style={legendLineStyle}/> {label} (n={sampleCount(curves)})
-		</li>
-
-	);
+			<span key={label} className={kmStyle.listItem}>
+				<span className={kmStyle.legendLine}
+					style={legendLineStyle}/>{label} (n={sampleCount(curves[i])})
+			</span>);
 }
 
-class Legend extends PureComponent {
-	render() {
-		let { groups, setActiveLabel, activeLabel } = this.props;
-		let {colors, curves, labels} = groups;
-		let sets = _.zip(colors, curves, labels)
-				.map(set => makeLegendKey(set, setActiveLabel, activeLabel));
+function makeSurvivalTypeUI(cohort, survType, survivalTypes, onSurvType) {
+	return (
+		<Dropdown className={kmStyle.survType}
+			source = {survivalTypes.map(t => ({
+						value: t,
+						label: survivalOptions[t].label
+					}))}
+			value = {survType || survivalTypes[0]}
+			onChange={onSurvType} />);
+}
 
-		return (
-			<div className={kmStyle.legend}>{sets}</div>
-		);
+// When looking up the at-risk at a particular time, we need
+// the first point that is greater than or equal to time t.
+// If t is after the last point, at-risk is zero.
+var atRisk = (curve, t) => {
+	var p = curve.find(p => p.t >= t);
+	return p ? p.n : 0;
+};
+var atRiskSpan = curve => t => span(atRisk(curve, t).toString());
+
+function renderRiskTable({groups, groupLabel, clarification, warning, onMouse,
+		plotDims}) {
+	var {curves} = groups,
+		{xdomain, xrange} = plotDims,
+		xScale = linear(xdomain, xrange),
+		ticks = linearTicks(...xdomain),
+		// note that our scales clip, so we can't project beyond
+		// the domain. Instead, project from within the domain.
+		// XXX Why should xdomain start at zero? It doesn't make sense.
+		x0 = xScale(ticks[0]),
+		x1 = xScale(ticks[1]),
+		cellWidth = x1 - x0,
+		maxX = cellWidth * ticks.length,
+		leftMargin = {marginLeft: margin.left + x0 - cellWidth / 2},
+		rowStyle = {style: {width: maxX}};
+
+	return div({className: kmStyle.atRisk, style: leftMargin},
+			div(div(rowStyle, 'At risk'),
+				div(label(groupLabel, clarification && ` ${clarification}`))),
+			..._.times(curves.length, i =>
+				div({className: groupClass(i), 'data-group': i, onMouseOut: onMouse, onMouseOver: onMouse},
+					div(rowStyle, ...ticks.map(atRiskSpan(curves[i]))),
+					makeLegendKey(groups, i))),
+			...(warning ? [div(div(rowStyle), div(warning))] : []));
+}
+
+class RiskTable extends PureComponent {
+	render() {
+		return renderRiskTable(this.props);
 	}
 }
 
-var survURL = {
-	"TCGA PanCanAtlas": encodeURI(
-		"https://www.cell.com/action/showFullTableImage?isHtml=true&tableId=tbl3&pii=S0092867418302290&code=cell-site")
-};
-
-function makeSurvivalTypeUI (cohort, survInfoURL, survType, survivalTypes, onSurvType) {
-	return (
-		<div className={kmStyle.survTypeContainer}>
-			<Dropdown className={kmStyle.survType}
-				source = {survivalTypes.map(t => ({
-							value: t,
-							label: survivalOptions[t].label
-						}))}
-				value = {survType || survivalTypes[0]}
-				onChange={onSurvType}
-			/>
-			{survInfoURL ?
-				<IconButton onClick={() => (window.location.href = survInfoURL)}>
-					<i className={`material-icons ${kmStyle.infoIcon}`}>info</i>
-				</IconButton> : null}
-		</div>
-	);
-}
-
-function makeGraph(groups, setActiveLabel, activeLabel, size, cohort, survInfoURL,
-	survType, survivalTypes, onSurvType, min, max, onCutoff, cutoff) {
-	return (
-		<div className={kmStyle.graph}>
-			{svg(groups, setActiveLabel, activeLabel, {height: 0.8 * size.height, width: 0.9 * size.width})}
-			{makeSurvivalTypeUI(cohort, survInfoURL, survType, survivalTypes, onSurvType)}
-			<div>
-				<NumberForm
-					onChange={onCutoff}
-					dflt={max}
-					min={min}
-					max={max}
-					initialValue={cutoff}/>
-			</div>
-		</div>
-	);
-}
+var riskTable = el(RiskTable);
 
 function makeSplits(splits, onSplits) {
 	return (
@@ -335,42 +322,24 @@ function makeSplits(splits, onSplits) {
 		</form>);
 }
 
-function makeDefinitions(groups, setActiveLabel, activeLabel, size, maySplit, splits, onSplits, label, clarification, warning) {
+function makeDefinitions(groups, maySplit, splits, onSplits) {
 	// get new size based on size ratio for definitions column
 	return (
-		<div className={kmStyle.definitions} style={{width: size.width}}>
+		<div className={kmStyle.definitions}>
 			<PValue pValue={groups.pValue} logRank={groups.KM_stats}
 				patientWarning={groups.patientWarning}/>
 			<br/>
-			<label>{label} {clarification}</label>
-			<Legend groups={groups}
-					setActiveLabel={setActiveLabel}
-					activeLabel={activeLabel}/>
 			{maySplit ? makeSplits(getSplits(splits), onSplits) : null}
-			{warning}
 		</div>
 	);
 }
-
-var plotSize = {
-	ratios: {
-		graph: {
-			width: 0.75,
-			height: 1.0
-		},
-		definitions: {
-			width: 0.4,
-			height: 1.0
-		}
-	}
-};
 
 class KmPlot extends PureComponent {
 	static defaultProps = {
 		eventClose: 'km-close',
 		dims: {
-			height: 450,
-			width: 700
+			height: 360,
+			width: 472.5
 		}
 	};
 
@@ -431,73 +400,94 @@ class KmPlot extends PureComponent {
 		body.style.overflow = "auto";
 	}
 
-	render() {
-		let {km: {splits = 2, title, label, groups, cutoff, survivalType}, survivalKeys, cohort, dims} = this.props,
-			// groups may be undefined if data hasn't loaded yet.
-			maySplit = _.get(groups, 'maySplit', false),
-			min = _.getIn(groups, ['domain', 0]),
-			max = _.getIn(groups, ['domain', 1]),
-			warning = _.get(groups, 'warning'),
-			clarification = _.get(groups, 'clarification'),
-			{activeLabel} = this.state,
-			sectionDims = calcDims(dims, plotSize.ratios),
-			survivalTypes = _.intersection(survivalKeys, _.keys(survivalOptions)),
-			survInfoURL = _.getIn(survURL, [cohort], null);
+	renderLoading() {
+		var style = {
+			height: this.props.dims.height,
+			textAlign: 'center',
+			verticalAlign: 'center'
+		};
+		return div({style}, h1('Loading...'));
+	}
 
-		let Content = _.isEmpty(groups)
-			? <div
-				style={{
-					height: dims.height,
-					textAlign: 'center',
-					verticalAlign: 'center'
-				}}>
-				<h1>Loading...</h1>
-			</div>
-			: (_.isEmpty(groups.colors)
-					? <div>
-						<div>
-							{makeSurvivalTypeUI(cohort, survInfoURL, survivalType, survivalTypes, this.onSurvType)}
-						</div>
-						<div>
-							<h3>Unfortunately, KM plot can not be made. There is no survival data overlapping column data.</h3>
-						</div>
-					</div>
-					: <div>
-						<span className={kmStyle.actions}>
+	onMouse = ev => {
+		var group = _.getIn(ev, ['currentTarget', 'dataset', 'group']);
+		if (group) {
+			this.setState({activeGroup: ev.type === 'mouseout' ? null : group});
+		}
+	}
+
+	renderNoOverlap() {
+		var {km: {survivalType}, survivalKeys, cohort} = this.props,
+			survivalTypes = _.intersection(survivalKeys, _.keys(survivalOptions)),
+			msg = 'Unfortunately, KM plot can not be made. There is no survival data overlapping column data.';
+		return div(
+				div(makeSurvivalTypeUI(cohort, survivalType, survivalTypes,
+						this.onSurvType)),
+				div(h3(msg)));
+	}
+
+	renderPlot() {
+		let {km: {splits = 2, label, groups, cutoff, survivalType},
+				survivalKeys, cohort, dims} = this.props,
+			{maySplit, warning, clarification, domain: [min, max]} = groups,
+			{activeGroup} = this.state,
+			gClass = groupClass(activeGroup, 'Highlight'),
+			survivalTypes = _.intersection(survivalKeys, _.keys(survivalOptions)),
+			plotDims = getPlotDims(groups, dims);
+		return (
+			<div className={gClass}>
+				<div className={kmStyle.topPanel}>
+					{kmSVG({groups, onMouse: this.onMouse, size: dims, plotDims})}
+					<div className={kmStyle.rightPanel}>
+						<div className={kmStyle.actions}>
 							{icon('picture_as_pdf', 'Download as PDF', this.onPdf)}
 							{icon('cloud_download', 'Download as tsv', this.onDownload)}
 							{iconLink('help', kmHelpURL)}
-						</span>
-						{makeGraph(groups, this.setActiveLabel, activeLabel, sectionDims.graph, cohort, survInfoURL,
-							survivalType, survivalTypes, this.onSurvType, min, max, this.onCutoff, cutoff)}
-						{makeDefinitions(groups, this.setActiveLabel, activeLabel, sectionDims.definitions,
+						</div>
+						<h4>{label}</h4>
+						{makeDefinitions(groups,
 							maySplit, splits, this.onSplits, label, clarification, warning)}
+						{makeSurvivalTypeUI(cohort, survivalType, survivalTypes, this.onSurvType)}
+						<NumberForm
+							onChange={this.onCutoff}
+							dflt={max}
+							min={min}
+							max={max}
+							initialValue={cutoff}/>
 					</div>
-			);
+				</div>
+				{riskTable({groups, groupLabel: label, clarification, warning,
+							   onMouse: this.onMouse, plotDims})}
+			</div>);
+	}
+
+	render() {
+		let {km: {title, groups}} = this.props,
+			Content =
+				_.isEmpty(groups) ? this.renderLoading() :
+				_.isEmpty(groups.colors) ? this.renderNoOverlap() :
+				this.renderPlot();
 
 		const actions = [
 			{
 				children: [<i className='material-icons'>close</i>],
 				className: kmStyle.mainDialogClose,
 				onClick: this.hide
-			},
+			}
 		];
 		return (
-			<div>
-				<Dialog
-					actions={actions}
-					active={true}
-					title={'Kaplan Meier ' + title}
-					className={kmStyle.mainDialog}
-					onEscKeyDown={this.hide}
-					onOverlayClick={this.hide}
-					theme={{
-						wrapper: kmStyle.dialogWrapper,
-						overlay: kmStyle.dialogOverlay}}>
-					{Content}
-				</Dialog>
-			</div>
-		);
+			<Dialog
+				actions={actions}
+				active={true}
+				title={'Kaplan Meier ' + title}
+				className={kmStyle.mainDialog}
+				onEscKeyDown={this.hide}
+				onOverlayClick={this.hide}
+				theme={{
+					wrapper: kmStyle.dialogWrapper,
+					overlay: kmStyle.dialogOverlay}}>
+				{Content}
+			</Dialog>);
 	}
 }
 

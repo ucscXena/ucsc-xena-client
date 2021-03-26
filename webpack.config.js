@@ -5,6 +5,7 @@ var path = require('path');
 var reactToolboxVariables = require('./reactToolboxVariables');
 
 var postcssPlugins = [
+	require('postcss-for'),
 	require('postcss-cssnext')({
 		features: {
 			customProperties: {

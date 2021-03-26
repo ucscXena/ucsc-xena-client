@@ -50,7 +50,7 @@ class NumberForm extends React.Component {
 			other = _.omit(this.props, 'min', 'max', 'dflt', 'initialValue'),
 			{value, focused} = this.state;
 		return (
-			<form className="form-horizontal">
+			<form>
 				<Input
 					{...other}
 					onBlur={this.onBlur}
@@ -58,7 +58,7 @@ class NumberForm extends React.Component {
 					type='text'
 					value={'' + value}
 					label={`Custom survival time cutoff`}
-					placeholder={focused ? `Enter a number between ${min} and ${max}` : undefined}
+					placeholder={focused ? `Enter between ${min} and ${max}` : undefined}
 					onChange={this.on.change}/>
 			</form>
 		);
