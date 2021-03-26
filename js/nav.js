@@ -61,6 +61,12 @@ var pythonLink = {
     target: '_blank'
 };
 
+var publicationLink = {
+	href: 'https://ucscxena.github.io',
+	label: 'Publication Page',
+	target: '_blank'
+};
+
 var active = (l, activeLink) => l.nav === activeLink;
 
 class MoreToolsMenu extends React.Component {
@@ -94,6 +100,7 @@ class MoreToolsMenu extends React.Component {
 						onHide={this.handleClose}
 						className={compStyles.menu}
 					>
+						<MenuItem onClick={this.handleSelect.bind(this, publicationLink.href)} caption={publicationLink.label}/>
 						<MenuItem onClick={this.handleSelect.bind(this, pythonLink.href)} caption={pythonLink.label}/>
 						<MenuItem onClick={this.handleSelect.bind(this, geneSetsLink.href)} caption={geneSetsLink.label}/>
 					 </Menu>
