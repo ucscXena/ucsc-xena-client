@@ -21,7 +21,7 @@ import {IconMenu as RTIconMenu, MenuItem, MenuDivider} from 'react-toolbox/lib/m
 import Tooltip from 'react-toolbox/lib/tooltip';
 var ColCard = require('./ColCard');
 var {ChromPosition} = require('../ChromPosition');
-import {RefGeneAnnotation} from '../refGeneExons';
+import RefGeneAnnotation from '../refGeneExons';
 import {GeneLabelAnnotation, geneLableFont} from '../geneLabelAnnotation';
 import { matches } from 'static-interval-tree';
 var gaEvents = require('../gaEvents');
@@ -31,6 +31,8 @@ var ZoomOverlay = require('./ZoomOverlay');
 var config = require('../config');
 import {AVAILABLE_GENESET_COHORTS, GENESETS_VIEWER_URL, GeneSetViewDialog} from './GeneSetViewDialog';
 import {setUserCodes} from '../models/denseMatrix';
+import {isChrom, getGeneMode} from '../models/columns';
+
 
 // We're getting events with coords < 0. Not sure if this
 // is a side-effect of the react event system. This will
@@ -128,7 +130,7 @@ function downloadJSON(downloadData) {
 	document.body.removeChild(a);
 }
 
-var annotationHeight = 47,
+export var annotationHeight = 47,
 	positionHeight = 17,
 	scaleHeight = 12;
 
@@ -287,10 +289,6 @@ function tumorMapCompatible(column) {
 	return true;
 }
 
-var isChrom = column =>
-	parsePos(_.get(column.fieldList || column.fields, 0),
-			_.getIn(column, ['assembly']));
-
 // Maybe put in a selector.
 var supportsGeneAverage = column =>
 	!isChrom(column) && !isSig(column) && _.contains(['geneProbes', 'genes'], column.fieldType) &&
@@ -421,7 +419,7 @@ var geneHeight = () => {
 	return annotationHeight + scaleHeight + 4;
 };
 
-var showPosition = column =>
+export var showPosition = column =>
 	_.contains(['segmented', 'mutation', 'SV', 'geneProbes'], column.fieldType) &&
 	_.getIn(column, ['dataset', 'probemapMeta', 'dataSubType']) !== 'regulon';
 
@@ -455,7 +453,7 @@ var zoomTranslateSelection = (props, selection, zone) => {
 	};
 };
 
-class Column extends PureComponent {
+export default class Column extends PureComponent {
 	state = {
 		dragZoom: {},
 		subColumnIndex: {},
@@ -860,19 +858,14 @@ class Column extends PureComponent {
 					layout={column.layout}
 					height={annotationHeight}
 					positionHeight={column.position ? positionHeight : 0}
-					width={width}
-					mode={isChrom(column) ?
-						"coordinate" :
-						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
+					width={width}/>
 				: null,
 			scale = showPosition(column) ?
 				<ChromPosition
 					layout = {column.layout}
 					width = {width}
 					scaleHeight ={scaleHeight}
-					mode = {isChrom(column) ?
-						"coordinate" :
-						((_.getIn(column, ['showIntrons']) === true) ?  "geneIntron" : "geneExon")}/>
+					mode = {getGeneMode(column)}/>
 				: null,
 			geneLabel = showGeneLabel(column) ?
 				<GeneLabelAnnotation
@@ -972,5 +965,3 @@ class Column extends PureComponent {
 		);
 	}
 }
-
-module.exports = Column;

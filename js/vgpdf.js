@@ -1,8 +1,10 @@
+var _ = require('./underscore_ext').default;
 
 // XXX Warning: opacity other than 1 is not interpreted correctly.
 var style = function (c) {
 	return c.match(/^rgba?\(/)  ?
-			c.match(/rgba?\(([0-9]+), ([0-9]+), ([0-9]+)(, 1)?\)/).slice(1, 4) : c;
+			c.match(/rgba?\(([0-9]+), *([0-9]+), *([0-9]+)(, 1)?\)/).slice(1, 4) :
+			c;
 };
 
 module.exports = function (doc, vgw, vgh) {
@@ -176,6 +178,24 @@ module.exports = function (doc, vgw, vgh) {
 					doc.stroke(style(strokeStyle));
 				}
 			}
+		},
+
+		// This takes a new vg and a callback. The callback is passed
+		// a wrapped copy of the vg that will mirror any rendering
+		// onto this vgpdf. The point of this is as a work-around for
+		// pdf output from rendering routines that use pixel inspection
+		// for layout. We run those routines as given, allowing the
+		// pixel inspection to work, and copy the resulting rendering
+		// calls to the vgpdf.
+		mirror = function(vg, cb) {
+			var wrap = _.mapObject(vg, (fn, k) =>
+				(...args) => {
+					if (this[k]) {
+						this[k](...args);
+					}
+					return vg[k](...args);
+				});
+			cb(wrap);
 		};
 
 	return {
@@ -203,6 +223,7 @@ module.exports = function (doc, vgw, vgh) {
 		textWidth,
 		translate,
 		verticalTextRight,
-		width
+		width,
+		mirror
 	};
 };

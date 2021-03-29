@@ -237,3 +237,12 @@ export var computeSettings = _.curry((datasets, features, opts, dataset, matches
   return _.assocIn(settings, ...(opts || []).flat());
 
 });
+
+export var isChrom = column =>
+	parsePos(_.get(column.fieldList || column.fields, 0),
+			_.getIn(column, ['assembly']));
+
+export var getGeneMode = column =>
+	isChrom(column) ?  "coordinate" :
+	_.getIn(column, ['showIntrons']) === true ? "geneIntron" :
+	"geneExon";
