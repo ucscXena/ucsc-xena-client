@@ -9,6 +9,7 @@ var _ = require('./underscore_ext').default;
 import {drawRefGeneExons} from './refGeneExons';
 import {showPosition, annotationHeight, positionHeight} from './views/Column';
 import vgcanvas from './vgcanvas';
+import {zoomText} from './columnZoom';
 
 var totalWidth = cols =>
 	(cols.length - 1) * styles.column.margin +
@@ -34,6 +35,11 @@ var columnLabels = {
 		font: 14,
 		style: '#707070'
 	}
+};
+
+var zoomLabel = {
+	height: 6,
+	margin: {h: 16}
 };
 
 function txtEllipsis(vg, font, width, txt) {
@@ -66,6 +72,7 @@ function drawColumnLabel(vg, column) {
 	});
 }
 
+
 var download = state => {
 	require.ensure(['pdfkit', 'blob-stream', './vgpdf'], () => {
 		var PDFDocument = require('pdfkit');
@@ -74,7 +81,8 @@ var download = state => {
 		let columns = state.columnOrder.map(id => state.columns[id]),
 			data = state.data,
 			width = totalWidth(columns),
-			annotationY = 2 * columnLabels.height,
+			zoomY = 2 * columnLabels.height + zoomLabel.height,
+			annotationY = zoomY + zoomLabel.height,
 			columnY = annotationY + annotationHeight,
 			// pdfkit zlib is pathologically slow.
 			doc = new PDFDocument({compress: false,
@@ -85,8 +93,11 @@ var download = state => {
 			offsets = getOffsets(columns);
 
 		columns.forEach((column, i) => {
+			var zoom = zoomText(column).toUpperCase();
+
 			vg.translate(offsets[i], 0, () => {
 				drawColumnLabel(vg, column);
+				vg.text(zoomLabel.margin.h, zoomY, '#ff6b6b', 8, zoom);
 			});
 			if (showPosition(column)) {
 				vg.translate(offsets[i], annotationY, () => {

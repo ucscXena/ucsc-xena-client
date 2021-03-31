@@ -309,4 +309,14 @@ var geneZoomed = (column) =>
 	zoom.geneZoomed.add(fieldType, geneZoomed);
 });
 
-module.exports = zoom;
+var zoomPct = column =>
+	Math.round(zoom.geneZoomLength(column) / zoom.maxGeneZoomLength(column) * 100);
+
+var lt1Txt = x => x < 1 ? '< 1' : x.toString();
+
+var zoomText = column =>
+	(zoom.supportsGeneZoom(column) && zoom.geneZoomed(column)) ?
+	`Zoomed to ${lt1Txt(zoomPct(column))}%` : '';
+
+
+module.exports = {zoomText, ...zoom};

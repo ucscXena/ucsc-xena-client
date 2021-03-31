@@ -838,9 +838,6 @@ export default class Column extends PureComponent {
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, thisTumorMap,
 				onShowIntrons, onSortVisible, onCluster, onSpecialDownload,
 				onDiff, specialDownloadMenu, isSig}),
-			geneZoomable = columnZoom.supportsGeneZoom(column),
-			geneZoomed = columnZoom.geneZoomed(column),
-			geneZoomPct = Math.round(columnZoom.geneZoomLength(column) / columnZoom.maxGeneZoomLength(column) * 100),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			chartDisabled = disableChart(column),
 	    canDoGeneSetComparison = false && this.canDoGeneSetComparison(),
@@ -900,8 +897,7 @@ export default class Column extends PureComponent {
 									onChange={this.onFieldLabel}
 									value={{default: fieldLabel, user: user.fieldLabel}} />}
 								onClick={this.onXZoomClear}
-								 geneZoomPct={geneZoomPct}
-								 geneZoomed={geneZoomable && geneZoomed}
+								geneZoomText={columnZoom.zoomText(column)}
 								controls={!interactive ? (first ? refreshIcon : null) :
 									<div>
 										{first ? null : (
