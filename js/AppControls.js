@@ -9,7 +9,7 @@ var widgets = require('./columnWidgets');
 var classNames = require('classnames');
 var gaEvents = require('./gaEvents');
 var {signatureField} = require('./models/fieldSpec');
-var {invert} = require('./models/searchSamples');
+var {invert, searchSamples} = require('./models/searchSamples');
 import { SampleSearch } from './views/SampleSearch';
 import uuid from './uuid';
 import {anyCanDraw, showWizard as showChartWizard} from './chart/utils.js';
@@ -122,6 +122,14 @@ export class AppControls extends PureComponent {
 		gaEvents('spreadsheet', 'samplesearch', inv ? 'remove' : 'keep');
 		callback(['sampleFilter', matching]);
 	};
+
+	onIntersection = () => {
+		var {columns, columnOrder, data, cohortSamples} = this.props.appState,
+			m = _.last(searchSamples("!=null", columns,
+					columnOrder, data, cohortSamples).matches),
+			matching = _.map(m, i => cohortSamples[i]);
+		this.props.callback(['sampleFilter', matching]);
+	}
 
 	onResetSampleFilter = () => {
 		gaEvents('spreadsheet', 'samplesearch', 'clear');
@@ -251,6 +259,7 @@ export class AppControls extends PureComponent {
 								history: searchHistory || [],
 								onHistory: this.onSearchHistory,
 								onFilter: this.onFilter,
+								onIntersection: this.onIntersection,
 								onZoom: this.onFilterZoom,
 								onCreateColumn: this.onFilterColumn,
 								pickSamples: pickSamples,

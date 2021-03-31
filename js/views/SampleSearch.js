@@ -305,7 +305,8 @@ class Search extends PureComponent {
 	}
 
 	render() {
-		var {matches, sampleCount, sampleFilter, mode, pickSamples, onPickSamples, onResetSampleFilter} = this.props,
+		var {matches, sampleCount, sampleFilter, mode, pickSamples, onPickSamples,
+				onIntersection, onResetSampleFilter} = this.props,
 			{inputHelp, pickHelp, actionHelp} = this.props,
 			disableActions = !(matches > 0 && matches < sampleCount),
 			noshow = (mode !== "heatmap");
@@ -316,6 +317,11 @@ class Search extends PureComponent {
 				{pickHelp(
 					<TooltipIconButton icon='colorize' className={pickSamples ? compStyles.dark : ''}
 						disabled={noshow} onClick={onPickSamples} tooltip='Pick samples'/>)}
+				<TooltipIconButton
+					icon={<span className={compStyles.intersection}>∩</span>}
+					disabled={noshow}
+					onClick={onIntersection}
+					tooltip='Keep samples with values in all columns'/>
 				{noshow ? <i className={classNames('material-icons', compStyles.menuDisabled)}>filter_list</i> :
 				actionHelp(
 					<TooltipIconMenu tooltip='Filter + subgroup actions' className={compStyles.filterMenu} icon='filter_list' iconRipple={false} position='topLeft'>

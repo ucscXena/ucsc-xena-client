@@ -14,14 +14,17 @@
 }
 
 /* Filter menu */
-.filterMenu {
-	margin-left: 4px; /* Match margin-left of app bar icons (to match disabled menu icon) */
+
+.intersection {
+	font-weight: bold;
+	font-size: 24px;
 }
 
 /* Handle disabled filter menu icon. RTB does not have this functionality out of the box so we have to hand roll here. */
 i.menuDisabled {
 	color: rgba(0, 0, 0, 0.26) !important; /* match RTB disabled text */
 	cursor: default;
+	margin-left: 0 !important;
 }
 
 .dark {
