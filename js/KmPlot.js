@@ -74,12 +74,10 @@ class LineGroup extends React.Component {
 	}
 }
 
-var bounds = x => [_.min(x), _.max(x)];
-
-function getPlotDims({curves}, size) {
+function getPlotDims({domain}, size) {
 	var height = size.height - margin.top - margin.bottom,
 		width = size.width - margin.left - margin.right,
-		xdomain = bounds(_.pluck(_.flatten(curves), 't')),
+		xdomain = domain,
 		xrange = [0, width],
 		ydomain = [0, 1],
 		yrange = [height, 0];
