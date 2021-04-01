@@ -243,16 +243,16 @@ function sampleCount(curve) {
 	return _.getIn(curve, [0, 'n'], String.fromCharCode(8709));
 }
 
-function makeLegendKey({colors, curves}, i) {
+function makeLegendKey({colors, curves, labels}, i) {
 	// show colored line and category of curve
 	let legendLineStyle = {
 		backgroundColor: colors[i]
 	};
 
 	return (
-			<span key={label} className={kmStyle.listItem}>
+			<span key={labels[i]} className={kmStyle.listItem}>
 				<span className={kmStyle.legendLine}
-					style={legendLineStyle}/>{label} (n={sampleCount(curves[i])})
+					style={legendLineStyle}/>{labels[i]} (n={sampleCount(curves[i])})
 			</span>);
 }
 
