@@ -309,7 +309,7 @@ function filterByGroups(feature, groupedIndices) {
 		labels: nlabels,
 		colors: ncolors,
 		groups: ngroups,
-		warning: notEmpty.length > MAX ? `Limited drawing to ${MAX} categories` : undefined,
+		warning: notEmpty.length > MAX ? `Limited to ${MAX} categories` : undefined,
 		clarification: clarification
 	};
 }
