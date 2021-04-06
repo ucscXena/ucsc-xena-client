@@ -160,3 +160,7 @@ button.advanced { /* have to use button to force the override */
 	 *  sure what the correct strategy is here. */
 	background: transparent;
 }
+
+:global(.highcharts-scatter-series) :global(.highcharts-point) {
+	transform: scale(4) translate(-5px, -8px);
+}

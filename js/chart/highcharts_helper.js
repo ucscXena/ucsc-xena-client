@@ -428,7 +428,8 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 			scatter: {
 				marker: {
 					radius: samplesLength > 10000 ? 1 : 2,
-					opacity: 0.1
+					opacity: 0.1,
+					symbol: 'circle'
 				},
 			},
 			series: {
