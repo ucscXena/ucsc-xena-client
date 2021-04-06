@@ -15,11 +15,6 @@
 
 /* Filter menu */
 
-.intersection {
-	font-weight: bold;
-	font-size: 24px;
-}
-
 /* Handle disabled filter menu icon. RTB does not have this functionality out of the box so we have to hand roll here. */
 i.menuDisabled {
 	color: rgba(0, 0, 0, 0.26) !important; /* match RTB disabled text */
