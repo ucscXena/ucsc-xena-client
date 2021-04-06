@@ -1271,4 +1271,21 @@ class Chart extends PureComponent {
 	};
 }
 
+// Implement a custom 'legendRadius' to override the marker.radius
+// in the legend.
+Highcharts.wrap(Highcharts.Series.prototype, 'drawLegendSymbol',
+	function (proceed, legend) {
+		var lr = _.getIn(legend, ['chart', 'userOptions', 'plotOptions',
+			'scatter', 'marker', 'legendRadius']);
+		if (lr) {
+			var r = this.options.marker.radius;
+			this.options.marker.radius = lr;
+			proceed.call(this, legend);
+			this.options.marker.radius = r;
+		} else {
+			proceed.call(this, legend);
+		}
+	});
+
+
 export default Chart;

@@ -428,6 +428,12 @@ function scatterChart(chartOptions, xlabel, ylabel, samplesLength) {
 			scatter: {
 				marker: {
 					radius: samplesLength > 10000 ? 1 : 2,
+					// custom property to override radius in
+					// the legend. See chart.js. highcharts
+					// will clip this to the label height, so
+					// make it large & let the clip pick the
+					// right size.
+					legendRadius: 20,
 					opacity: 0.1,
 					symbol: 'circle'
 				},
