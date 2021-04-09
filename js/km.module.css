@@ -139,6 +139,10 @@ line.outlineHover {
  * right panel
  */
 
+.rightPanel {
+	width: 33%;
+}
+
 .rightPanel h4 {
 	color: black;
 }
