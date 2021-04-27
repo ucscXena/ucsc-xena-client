@@ -283,7 +283,10 @@ function violinOptions({chartOptions, categories, series, xAxisTitle, yAxisTitle
 			series: {
 				animation: false,
 				// Don't highlight the kde interpolation points on hover.
-				states: {hover: {enabled: false}}
+				states: {hover: {enabled: false}},
+				events: {
+					legendItemClick: () => false
+				}
 			},
 			line: {
 				enableMouseTracking: false,
