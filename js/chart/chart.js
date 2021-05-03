@@ -572,15 +572,17 @@ function boxOrViolin({groups, xCategories, colors, yfields, ydata,
 
 // compute group sample indices, codes, and colors, then draw
 // box or violin plot.
-function floatVCoded({xdata, xcodemap, xcolumn, columns, cohortSamples,
-		samplesMatched, ...params}, chartOptions) {
+function floatVCoded({xdata, xcodemap, xcolumn, columns, /*cohortSamples,
+		samplesMatched, //commnet out see below */ ...params}, chartOptions) {
 
 	var groupsByValue = groupIndex(xdata[0]),
 		values = _.range(xcodemap.length).filter(v => groupsByValue[v]),
 		xCategories = values.map(v => xcodemap[v]),
 		groups = values.map(v => groupsByValue[v]);
 
-
+	// comment out: advanced feature to highlight a category in box/violin plot if it is completely composed of highlight samples
+	// the problem of this code is that if none of the categories is completely composed of highlight samples, all bars/violoin plots are gray
+	/*
 	var highlightValue = samplesMatched &&
 				samplesMatched.length !== cohortSamples.length ?
 		_.Let((matches = new Set(samplesMatched)) =>
@@ -590,6 +592,9 @@ function floatVCoded({xdata, xcodemap, xcolumn, columns, cohortSamples,
 	var scale = highlightValue ?
 		v => highlightValue.has(v) ? 'gold' : '#A9A9A9' :
 		colorScales.colorScale(columns[xcolumn].colors[0]);
+	*/
+
+	var scale = colorScales.colorScale(columns[xcolumn].colors[0]);
 
 	var colors = values.map(scale);
 
