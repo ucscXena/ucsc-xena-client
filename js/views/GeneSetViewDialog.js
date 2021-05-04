@@ -41,8 +41,7 @@ export const AVAILABLE_GENESET_COHORTS = [
   "Cancer Cell Line Encyclopedia (Breast)"
 ];
 
-export const GENESETS_VIEWER_URL = 'https://xenageneset.berkeleybop.io/xena/#';
-// export const GENESETS_VIEWER_URL = 'http://localhost:3000/#';
+export const GENESETS_VIEWER_URL = 'https://xenagoweb.xenahubs.net/xena/#';
 
 export class GeneSetViewDialog extends PureComponent {
 
