@@ -128,6 +128,7 @@ export class AppControls extends PureComponent {
 			m = _.last(searchSamples("!=null", columns,
 					columnOrder, data, cohortSamples).matches),
 			matching = _.map(m, i => cohortSamples[i]);
+		gaEvents('spreadsheet', 'samplesearch', 'nulls');
 		this.props.callback(['sampleFilter', matching]);
 	}
 
