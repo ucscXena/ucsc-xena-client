@@ -10,7 +10,7 @@ var links = [
 		'FOXM1a, FOXM1b, FOXM1c transcript expression in tumor vs. normal samples'],
 	['heatmap', 'cd6d8adead7d720fea7df197dc807147',
 		'ERG-TMPRSS2 fusion by chr21 deletion in prostate cancer'],
-	['heatmap', 'ff06e17b50faa9ec3045ab174dd19907',
+	['heatmap', 'e381bdc7dffb8af7d934d97335c08fb3',
 		'KM plot (overall survival) of breast cancer PAM50 subtypes'],
 	['heatmap', '6451afae2ee964475a2eb9c79d46900c',
 		'Genetic separation of lower grade gliomas: one characterized by loss of chromosomes 1p & 19q, \
