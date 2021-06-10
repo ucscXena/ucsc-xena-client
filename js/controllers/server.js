@@ -257,7 +257,9 @@ var spreadsheetControls = {
 	'widget-data-error': (state, id) =>
 		columnOpen(state, id) ?
 			_.assocIn(state, ["data", id, 'status'], 'error') : state,
-	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival)
+	'km-survival-data': (state, survival) => _.assoc(state, 'survival', survival),
+	'map-data': (state, data, dsID, dims) =>
+			_.assocIn(state, ['map', 'data', dsID], _.object(dims, data))
 };
 
 export default compose(

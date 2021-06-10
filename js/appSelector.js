@@ -9,6 +9,7 @@ var isPublicSelector = require('./isPublicSelector');
 // XXX should move userServers, or maybe put it in a selector
 var {userServers} = require('./controllers/common');
 import {defaultWidth} from './controllers/ui';
+import {maps} from './models/map';
 
 var minWidth = defaultWidth(0);
 
@@ -199,4 +200,12 @@ var survivalSelector = createSelector(
 
 var setSurvival = selector => state => selector(_.assocIn(state, ['spreadsheet', 'hasSurvival'], survivalSelector(state)));
 
-export default setWizardProps(setSurvival(spreadsheetSelector(selector)));
+var mapSelector = createSelector(
+	state => state.spreadsheet.cohort,
+	state => state.wizard.cohortDatasets,
+	(cohort, cohortDatasets) => maps(cohort, cohortDatasets));
+
+var findMaps = selector => state => selector(_.assocIn(state,
+	['spreadsheet', 'map', 'available'], mapSelector(state)));
+
+export default setWizardProps(findMaps(setSurvival(spreadsheetSelector(selector))));

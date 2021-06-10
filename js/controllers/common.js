@@ -268,12 +268,22 @@ function fetchSurvival(serverBus, state) {
 			'km-survival-data', Rx.Observable.zipArray(...queries).map(collate)]);
 }
 
+function fetchMap(serverBus, state) {
+	var {spreadsheet: {cohortSamples}} = state,
+		[dsID, params] = state.spreadsheet.map.map,
+		dims = params.dimension,
+		queries = _.map(dims, name => fetch(probeFieldSpec({dsID, name}), cohortSamples));
+
+	serverBus.next(['map-data', Rx.Observable.zipArray(...queries), dsID, dims]);
+}
+
 
 module.exports = {
 	fetchCohortData,
 	fetchColumnData,
 	fetchClustering,
 	fetchDatasets,
+	fetchMap,
 	fetchSamples,
 	fetchSurvival,
 	resetZoom,

@@ -59,9 +59,10 @@ var icon = (i, tooltip, onClick, disabled) =>
 		onClick={onClick}
 		tooltip={tooltip}>{i}</TTIcon>;
 
-var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}) => (
+var Actions = ({onPdf, onDownload, onShowWelcome, showWelcome, onMode, onMap, mode}) => (
 	<div className={compStyles.actions}>
 		{icon(modeIcon[mode], modeHelp[!onMode || mode], onMode, !onMode)}
+		{icon('grade', 'Map', onMap, !onMap)}
 		{icon('picture_as_pdf', 'Download as PDF', onPdf, !onPdf)}
 		{icon('cloud_download', 'Download as tsv', onDownload)}
 		{showWelcome ? null : icon('help', 'Show carousel', onShowWelcome)}
@@ -170,6 +171,13 @@ export class AppControls extends PureComponent {
 		callback([modeEvent[mode]]);
 	};
 
+	onMap = () => {
+		var {callback} = this.props;
+		gaEvents('spreadsheet', 'map');
+		callback(['map', true]);
+	}
+
+
 	onRefresh = () => {
 		var {callback} = this.props;
 		callback(['refresh-cohorts']);
@@ -228,7 +236,7 @@ export class AppControls extends PureComponent {
 				onAllowOverSamples, oldSearch, pickSamples, callback} = this.props,
 			displayOver = samplesOver && !allowOverSamples ? '' : compStyles.hidden,
 			matches = _.get(samplesMatched, 'length', samples.length),
-			{onPdf, onDownload, onShowWelcome} = this,
+			{onMap, onPdf, onDownload, onShowWelcome} = this,
 			onMode = anyCanDraw(this.props.appState) ? this.onMode : undefined,
 			tiesOpen = _.get(ties, 'open'),
 			cohortName = _.get(cohort, 'name'),
@@ -275,7 +283,7 @@ export class AppControls extends PureComponent {
 					</div>
 					<div className={classNames(compStyles.appBarContainer, compStyles.tools)}>
 						{tiesOpen ? <TiesActions onTies={this.onTies} onTiesColumn={this.onTiesColumn}/> :
-							<Actions {...{onPdf: disablePDF ? undefined : onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}}/>}
+							<Actions {...{onMap, onPdf: disablePDF ? undefined : onPdf, onDownload, onShowWelcome, showWelcome, onMode, mode}}/>}
 					</div>
 				</AppBar>
 		);

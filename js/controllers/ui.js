@@ -1,6 +1,7 @@
 var _ = require('../underscore_ext').default;
 var Rx = require('../rx').default;
-var {userServers, setCohort, fetchSamples,
+import {maps} from '../models/map';
+var {userServers, setCohort, fetchSamples, fetchMap,
 	fetchColumnData, fetchCohortData, fetchSurvival, fetchClustering} = require('./common');
 var {setFieldType} = require('../models/fieldSpec');
 var {setNotifications} = require('../notifications');
@@ -125,7 +126,26 @@ var controls = {
 	'import-error': state => _.assoc(state, 'stateError', 'import'),
 	stateError: (state, error) => _.assoc(state, 'stateError', error),
 	'km-open-post!': (serverBus, state, newState) => fetchSurvival(serverBus, newState, {}), // 2nd param placeholder for km.user
-	'localStatus': (state, stat) => _.assoc(state, 'localStatus', stat)
+	'localStatus': (state, stat) => _.assoc(state, 'localStatus', stat),
+	// ui will open map... requires selected map information, and any
+	// settings. Also need the data
+	'map': (state, open) => {
+		return _.assocIn(state,
+			['spreadsheet', 'map', 'open'], open,
+			['spreadsheet', 'map', 'map'], open && _.first(
+				maps(state.spreadsheet.cohort, state.wizard.cohortDatasets)));
+	},
+	'map-post!': (serverBus, state, newState, open) => {
+		if (open) {
+			fetchMap(serverBus, newState);
+		}
+	},
+	'map-select': (state, map) => _.assocIn(state, ['spreadsheet', 'map', 'map'], map),
+	'map-select-post!': (serverBus, state, newState) => {
+		fetchMap(serverBus, newState);
+	},
+	'map-color': (state, column) =>
+		_.assocIn(state, ['spreadsheet', 'map', 'colorColumn'], column)
 };
 
 var spreadsheetControls = {

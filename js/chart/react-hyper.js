@@ -10,6 +10,7 @@ export var el = type => (...args) =>
 
 export var a = el('a');
 export var b = el('b');
+export var canvas = el('canvas');
 export var div = el('div');
 export var h1 = el('h1');
 export var h2 = el('h2');
@@ -18,6 +19,7 @@ export var i = el('i');
 export var img = el('img');
 export var label = el('label');
 export var option = el('option');
+export var p = el('p');
 export var select = el('select');
 export var span = el('span');
 export var table = el('table');
