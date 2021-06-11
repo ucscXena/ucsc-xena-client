@@ -30,15 +30,12 @@ function particles(sprite, size, vertices, color) {
 	return new THREE.Points(geometry, material);
 }
 
-function tooltipPoint(size, sprite) {
-	const geometry = new THREE.BufferGeometry();
-	geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
-	var material = new THREE.PointsMaterial({size, sizeAttenuation: true,
-		map: sprite, alphaTest: 0.5, transparent: false});
-	material.color.setHSL([255, 0, 0]);
-	var points = new THREE.Points(geometry, material);
-	points.visible = false;
-	return points;
+function tooltipPoint(size) {
+	const geometry = new THREE.SphereGeometry(size / 6, 32, 32);
+	var material = new THREE.MeshBasicMaterial({color: 0x000000});
+	var tooltip = new THREE.Mesh(geometry, material);
+	tooltip.visible = false;
+	return tooltip;
 }
 
 function textTexture(text, sz) {
@@ -237,7 +234,7 @@ function points(el, props) {
 
 		tooltip.forEach(t => scene.remove(t));
 		tooltip = [tooltipPoint(size * 1.2, sprite)];
-//		tooltip.renderOrder = 2; // XXX not working. Need to bring tooltip to front.
+		tooltip[0].renderOrder = 2; // XXX layering is still odd. Not sure of sol'n.
 		tooltip.forEach(t => scene.add(t));
 
 
