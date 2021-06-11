@@ -62,27 +62,28 @@ var labelMaterial = (txt, sz = 12) => _.Let((map = textTexture(txt, sz)) => [map
 // we should measure from the canvas.
 // Resolution is set by canvas resolution, which depends on
 // font size: larger font size for more pixels.
-function labelx(txt, min, max, height = 180) {
+var lHeight = 180;
+function labelx(txt, min, max, twoD) {
 	var [aspect, material] = labelMaterial(txt, 24);
-	var geometry = new THREE.BoxGeometry(height * aspect, height, 1)
-		.translate(height * aspect / 2, height / 4, 0);
+	var geometry = new THREE.BoxGeometry(lHeight * aspect, lHeight, 1)
+		.translate(lHeight * aspect / 2, lHeight / 4, 0);
 	return new THREE.Mesh(geometry, material)
-		.translateX(max).translateY(min).translateZ(min);
+		.translateX(max).translateY(min).translateZ(twoD ? 0 : min);
 }
 
-function labely(txt, min, max, height = 180) {
+function labely(txt, min, max, twoD) {
 	var [aspect, material] = labelMaterial(txt, 24);
-	var geometry = new THREE.BoxGeometry(height * aspect, height, 1)
-		.translate(height * aspect / 2, height / 4, 0);
+	var geometry = new THREE.BoxGeometry(lHeight * aspect, lHeight, 1)
+		.translate(lHeight * aspect / 2, lHeight / 4, 0);
 	return new THREE.Mesh(geometry, material)
-		.translateY(max).translateX(min).translateZ(min)
+		.translateY(max).translateX(min).translateZ(twoD ? 0 : min)
 		.rotateZ(Math.PI / 2);
 }
 
-function labelz(txt, min, max, height = 180) {
+function labelz(txt, min, max) {
 	var [aspect, material] = labelMaterial(txt, 24);
-	var geometry = new THREE.BoxGeometry(height * aspect, height, 1)
-		.translate(-height * aspect / 2, height / 4, 0);
+	var geometry = new THREE.BoxGeometry(lHeight * aspect, lHeight, 1)
+		.translate(-lHeight * aspect / 2, lHeight / 4, 0);
 	return new THREE.Mesh(geometry, material)
 		.translateZ(max).translateX(min).translateY(min)
 		.rotateY(Math.PI / 2);
@@ -94,8 +95,7 @@ var near = ([ev0, ev1]) =>
 	Math.abs(ev0.clientX - ev1.clientX) < thresh &&
 		Math.abs(ev0.clientY - ev1.clientY) < thresh;
 
-var twoD = false;
-var maxZoom = 100; // for 2d view
+//var maxZoom = 100; // for 2d orthographic view
 
 var perspective = 55;
 
@@ -119,6 +119,7 @@ function points(el, props) {
 		pointGroups = [], // zero or one, like a 'maybe'.
 		axes = [],
 		labels = [],
+		twoD,
 		size;
 
 	var raycaster = new THREE.Raycaster();
@@ -148,7 +149,7 @@ function points(el, props) {
 		var point1 = new THREE.Vector3();
 		var point2 = new THREE.Vector3();
 		point1.setFromMatrixPosition(camera.matrixWorld);
-		if (!twoD) {
+//		if (!twoD) {
 			labels.forEach(label => {
 				label.updateMatrix();
 				point2.setFromMatrixPosition(label.matrixWorld);
@@ -157,7 +158,7 @@ function points(el, props) {
 				label.scale.set(s, s, s);
 				label.updateMatrix();
 			});
-		}
+//		}
 
 		render();
 	}
@@ -177,9 +178,9 @@ function points(el, props) {
 		// slope (1 - 10) / 99 = -9 / 99 = - 1 / 11
 		// intersect = 10 + 1 / 11 ?
 		// thresh = (10 + 1 / 11) -1 / 11 * zoom
-		if (twoD) {
-			raycaster.params.Points.threshold = (10 + 1 / 11) - 1 / 11 * camera.zoom;
-		}
+//		if (twoD) {
+//			raycaster.params.Points.threshold = (10 + 1 / 11) - 1 / 11 * camera.zoom;
+//		}
 
 		var color = pointGroups[0].geometry.getAttribute('color').array;
 		if (lastColor) {
@@ -212,19 +213,21 @@ function points(el, props) {
 
 	function setGroups(props) {
 		var {colorColumn} = props.data,
+			// must have at least columns[0]. Extend to 3 dimensions.
+			columns = _.times(3, i => props.data.columns[i] ||
+				new Array(props.data.columns[0].length).fill(0)),
 			colorScale = colorColumn ? colorScales.colorScale(props.data.colors)
 				: () => '#00f000';
 
 		pointGroups.forEach(g => scene.remove(g)); // empty the current groups
 		pointGroups = [particles(sprite, size,
-			_.times(props.data.columns[0].length,
-				i => props.data.columns.map(c => c[i])).flat(),
-			toColor(colorColumn || _.range(props.data.columns[0].length),
-				colorScale))];
+			_.times(columns[0].length, i => columns.map(c => c[i])).flat(),
+			toColor(colorColumn || _.range(columns[0].length), colorScale))];
 		pointGroups.forEach(g => scene.add(g));
 	}
 
 	function init(props) {
+		twoD = props.data.columns.length === 2;
 		var min = _.minnull(props.data.columns.map(_.minnull)),
 			max = _.maxnull(props.data.columns.map(_.maxnull));
 
@@ -235,42 +238,40 @@ function points(el, props) {
 
 		// on change of map, we need to recreate axes, labels, and tooltip.
 		axes.forEach(a => scene.remove(a));
-		axes = [new Axes3d(resolution, min, max)];
+		axes = [new Axes3d(resolution, min, max, props.data.columns.length)];
 		axes.forEach(a => scene.add(a));
 
 		labels.forEach(l => scene.remove(l));
 		labels = _.mmap(props.data.labels, [labelx, labely, labelz],
-			(label, fn) => fn(label, min, max));
+			(label, fn) => fn(label, min, max, twoD));
 		labels.forEach(l => scene.add(l));
 
 		var c = (max + min) / 2;
-//		twoD = true;
 		if (twoD) {
-			console.error('FIXME');
-			// This changes controls, too.
-			camera = new THREE.OrthographicCamera(-max, max, max, -max, 2, 4000);
-			camera.position.z = min + 2 * (max - min);
+//			camera = new THREE.OrthographicCamera(-max, max, max, -max, 2, 4000);
+			camera.position.z = c + (max - min);
 			camera.position.y = c;
 			camera.position.x = c;
-			pointGroups.forEach(target => {
-				target.material.size = 10;
-			});
-			raycaster.params.Points.threshold = 1;
+//			pointGroups.forEach(target => {
+//				target.material.size = 10;
+//			});
+//			raycaster.params.Points.threshold = 1;
 		} else {
-//			camera = new THREE.PerspectiveCamera(perspective, width / height, 2, 4000);
 			camera.position.z = min + 2 * (max - min);
 			camera.position.y = max + (max - min);
 			camera.position.x = max + (max - min);
 		}
 
 		if (twoD) {
-			controls.maxZoom = maxZoom;
-			controls.minZoom = 1;
+//			controls.maxZoom = maxZoom; // Orthographic
+//			controls.minZoom = 1;
+			controls.maxDistance =  2 * (max - min);
+			controls.minDistance = .10 * (max - min);
 		} else {
 			controls.maxDistance =  2 * (max - min);
 			controls.minDistance = .25 * (max - min);
 		}
-		controls.target = new THREE.Vector3(c, c, c);
+		controls.target = new THREE.Vector3(c, c, twoD ? 0 : c);
 		if (twoD) {
 			controls.enableRotate = false;
 		}
