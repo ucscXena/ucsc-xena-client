@@ -23,19 +23,12 @@ function particles(sprite, size, vertices, color) {
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 	geometry.setAttribute('color', new THREE.Float32BufferAttribute(color, 3));
 	var material = new THREE.PointsMaterial({size,
+		// XXX note that fog is true by default. Not sure it should be.
 		map: sprite,
 		transparent: false,
 		alphaTest: 0.5,
 		vertexColors: true});
 	return new THREE.Points(geometry, material);
-}
-
-function tooltipPoint(size) {
-	const geometry = new THREE.SphereGeometry(size / 6, 32, 32);
-	var material = new THREE.MeshBasicMaterial({color: 0x000000});
-	var tooltip = new THREE.Mesh(geometry, material);
-	tooltip.visible = false;
-	return tooltip;
 }
 
 function textTexture(text, sz) {
@@ -125,7 +118,6 @@ function points(el, props) {
 	var resolution = new THREE.Vector2(width, height),
 		pointGroups = [], // zero or one, like a 'maybe'.
 		axes = [],
-		tooltip = [],
 		labels = [],
 		size;
 
@@ -170,6 +162,9 @@ function points(el, props) {
 		render();
 	}
 
+	var lastColor;
+	var lastColorI;
+	var black = new THREE.Color(0x000000);
 	function onClick(ev)  {
 		var rect = ev.target.getBoundingClientRect();
 		mouse.x = (ev.clientX - rect.left) / rect.width * 2 - 1;
@@ -186,16 +181,32 @@ function points(el, props) {
 			raycaster.params.Points.threshold = (10 + 1 / 11) - 1 / 11 * camera.zoom;
 		}
 
+		var color = pointGroups[0].geometry.getAttribute('color').array;
+		if (lastColor) {
+			color[lastColorI * 3] = lastColor[0];
+			color[lastColorI * 3 + 1] = lastColor[1];
+			color[lastColorI * 3 + 2] = lastColor[2];
+			lastColor = undefined;
+		}
+
+
 		var intersects = raycaster.intersectObjects(pointGroups, false);
 		if (intersects.length) {
 			var i = intersects[0].index;
-			tooltip[0].position.fromArray(intersects[0].object.geometry.attributes.position.array, i * 3);
-			tooltip[0].visible = true;
+			lastColorI = i;
+			lastColor = [
+				color[i * 3],
+				color[i * 3 + 1],
+				color[i * 3 + 2]];
+			color[i * 3] = black.r;
+			color[i * 3 + 1] = black.g;
+			color[i * 3 + 2] = black.b;
+
 			props.onTooltip(intersects[0].index);
 		} else {
-			tooltip[0].visible = false;
 			props.onTooltip(null);
 		}
+		pointGroups[0].geometry.getAttribute('color').needsUpdate = true;
 		animate();
 	}
 
@@ -232,12 +243,6 @@ function points(el, props) {
 			(label, fn) => fn(label, min, max));
 		labels.forEach(l => scene.add(l));
 
-		tooltip.forEach(t => scene.remove(t));
-		tooltip = [tooltipPoint(size * 1.2, sprite)];
-		tooltip[0].renderOrder = 2; // XXX layering is still odd. Not sure of sol'n.
-		tooltip.forEach(t => scene.add(t));
-
-
 		var c = (max + min) / 2;
 //		twoD = true;
 		if (twoD) {
@@ -250,7 +255,6 @@ function points(el, props) {
 			pointGroups.forEach(target => {
 				target.material.size = 10;
 			});
-			tooltip[0].material.size = 12;
 			raycaster.params.Points.threshold = 1;
 		} else {
 //			camera = new THREE.PerspectiveCamera(perspective, width / height, 2, 4000);
