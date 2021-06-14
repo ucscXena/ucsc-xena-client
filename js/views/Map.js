@@ -193,7 +193,13 @@ function points(el, props) {
 
 		var intersects = raycaster.intersectObjects(pointGroups, false);
 		if (intersects.length) {
-			var i = intersects[0].index;
+			var i;
+			if (twoD) {
+				// lower index is always on the bottom
+				i = _.maxWith(intersects, (a, b) => b.index - a.index).index;
+			} else {
+				i = intersects[0].index;
+			}
 			lastColorI = i;
 			lastColor = [
 				color[i * 3],
