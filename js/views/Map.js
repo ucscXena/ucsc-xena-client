@@ -15,6 +15,28 @@ import Rx from '../rx';
 import {suitableColumns} from '../chart/utils';
 import * as colorScales from '../colorScales';
 
+
+function setPickingMap(sprite, pickingSprite) {
+	var img = sprite.image;
+	var {width, height} = img;
+	var c = pickingSprite.image;
+	c.width = width;
+	c.height = height;
+
+	var ctx = c.getContext('2d');
+	ctx.drawImage(img, 0, 0);
+	var data = ctx.getImageData(0, 0, width, height).data;
+	var data32 = new Uint32Array(data.buffer);
+	// trim the shadow
+	_.times(data32.length, i => {
+		if (data32[i] !== 0xffffffff) {
+			data32[i] = 0;
+		}
+	});
+	ctx.putImageData(new ImageData(data, width, height), 0, 0);
+	pickingSprite.needsUpdate = true;
+}
+
 var drawing = false; // XXX singleton
 
 function particles(sprite, size, vertices, color) {
@@ -23,13 +45,26 @@ function particles(sprite, size, vertices, color) {
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 	geometry.setAttribute('color', new THREE.Float32BufferAttribute(color, 3));
 	var material = new THREE.PointsMaterial({size,
-		// XXX note that fog is true by default. Not sure it should be.
 		map: sprite,
 		transparent: false,
 		alphaTest: 0.5,
 		vertexColors: true});
 	return new THREE.Points(geometry, material);
 }
+
+var pickingClone = (sprite, len) => points => {
+	var geometry = points.geometry.clone(),
+		material = points.material.clone(),
+		c = new THREE.Color(),
+		color = _.times(len, i => {
+			c.setHex(i);
+			return [c.r, c.g, c.b];
+		}).flat();
+	material.map = sprite;
+	material.needsUpdate = true;
+	geometry.setAttribute('color', new THREE.Float32BufferAttribute(color, 3));
+	return new THREE.Points(geometry, material);
+};
 
 function textTexture(text, sz) {
 	var c = document.createElement('canvas'),
@@ -117,15 +152,19 @@ function points(el, props) {
 	var {height, width} = el.getBoundingClientRect(); // XXX is this correct?
 	var resolution = new THREE.Vector2(width, height),
 		pointGroups = [], // zero or one, like a 'maybe'.
+		pickingGroups = [], // zero or one, like a 'maybe'.
 		axes = [],
 		labels = [],
 		twoD,
 		size;
 
-	var raycaster = new THREE.Raycaster();
 	var mouse = new THREE.Vector2();
 	var sprite = new THREE.TextureLoader().load(disc);
+	var pickingCanvas = document.createElement('canvas');
+	var pickingSprite = new THREE.Texture(pickingCanvas);
 	var scene = new THREE.Scene();
+	var pickingScene = new THREE.Scene();
+	var pickingTarget = new THREE.WebGLRenderTarget(1, 1);
 
 	scene.background = new THREE.Color(0xffffff);
 
@@ -139,9 +178,26 @@ function points(el, props) {
 
 	el.style.touchAction = 'none'; // XXX render this in react?
 
+	function pick() {
+		camera.setViewOffset(renderer.domElement.width, renderer.domElement.height,
+			mouse.x * window.devicePixelRatio | 0,
+			mouse.y * window.devicePixelRatio | 0, 1, 1 );
+		renderer.setRenderTarget(pickingTarget);
+		renderer.render(pickingScene, camera);
+
+		camera.clearViewOffset(); // clear the view offset
+		const pixelBuffer = new Uint8Array(4); // single pixel
+		renderer.readRenderTargetPixels(pickingTarget, 0, 0, 1, 1, pixelBuffer);
+
+		//interpret the pixel as an ID
+		const id = pixelBuffer[0] << 16 | pixelBuffer[1] << 8 | pixelBuffer[2];
+		renderer.setRenderTarget(null);
+		return id;
+	}
+
 	function render() {
 		renderer.render(scene, camera);
-		return controls.update();
+		controls.update();
 	}
 
 	function animate() {
@@ -166,21 +222,12 @@ function points(el, props) {
 	var lastColor;
 	var lastColorI;
 	var black = new THREE.Color(0x000000);
+
 	function onClick(ev)  {
 		var rect = ev.target.getBoundingClientRect();
-		mouse.x = (ev.clientX - rect.left) / rect.width * 2 - 1;
-		mouse.y = -(ev.clientY - rect.top) / rect.height * 2 + 1;
 
-		raycaster.setFromCamera(mouse, camera);
-
-		// thresh 10 at zoom 1
-		// thresh 1 at zoom 100
-		// slope (1 - 10) / 99 = -9 / 99 = - 1 / 11
-		// intersect = 10 + 1 / 11 ?
-		// thresh = (10 + 1 / 11) -1 / 11 * zoom
-//		if (twoD) {
-//			raycaster.params.Points.threshold = (10 + 1 / 11) - 1 / 11 * camera.zoom;
-//		}
+		mouse.x = ev.clientX - rect.left;
+		mouse.y = ev.clientY - rect.top;
 
 		var color = pointGroups[0].geometry.getAttribute('color').array;
 		if (lastColor) {
@@ -190,16 +237,8 @@ function points(el, props) {
 			lastColor = undefined;
 		}
 
-
-		var intersects = raycaster.intersectObjects(pointGroups, false);
-		if (intersects.length) {
-			var i;
-			if (twoD) {
-				// lower index is always on the bottom
-				i = _.maxWith(intersects, (a, b) => b.index - a.index).index;
-			} else {
-				i = intersects[0].index;
-			}
+		var i = pick();
+		if (i != null) {
 			lastColorI = i;
 			lastColor = [
 				color[i * 3],
@@ -209,11 +248,12 @@ function points(el, props) {
 			color[i * 3 + 1] = black.g;
 			color[i * 3 + 2] = black.b;
 
-			props.onTooltip(intersects[0].index);
+			props.onTooltip(i);
 		} else {
 			props.onTooltip(null);
 		}
 		pointGroups[0].geometry.getAttribute('color').needsUpdate = true;
+
 		animate();
 	}
 
@@ -230,6 +270,10 @@ function points(el, props) {
 			_.times(columns[0].length, i => columns.map(c => c[i])).flat(),
 			toColor(colorColumn || _.range(columns[0].length), colorScale))];
 		pointGroups.forEach(g => scene.add(g));
+
+		pickingGroups.forEach(g => pickingScene.remove(g));
+		pickingGroups = pointGroups.map(pickingClone(pickingSprite, columns[0].length));
+		pickingGroups.forEach(g => pickingScene.add(g));
 	}
 
 	function init(props) {
@@ -239,7 +283,6 @@ function points(el, props) {
 
 		size = (max - min) / 50;
 
-		raycaster.params.Points.threshold = size / 5;
 		setGroups(props);
 
 		// on change of map, we need to recreate axes, labels, and tooltip.
@@ -254,14 +297,9 @@ function points(el, props) {
 
 		var c = (max + min) / 2;
 		if (twoD) {
-//			camera = new THREE.OrthographicCamera(-max, max, max, -max, 2, 4000);
 			camera.position.z = c + (max - min);
 			camera.position.y = c;
 			camera.position.x = c;
-//			pointGroups.forEach(target => {
-//				target.material.size = 10;
-//			});
-//			raycaster.params.Points.threshold = 1;
 		} else {
 			camera.position.z = min + 2 * (max - min);
 			camera.position.y = max + (max - min);
@@ -269,8 +307,6 @@ function points(el, props) {
 		}
 
 		if (twoD) {
-//			controls.maxZoom = maxZoom; // Orthographic
-//			controls.minZoom = 1;
 			controls.maxDistance =  2 * (max - min);
 			controls.minDistance = .10 * (max - min);
 		} else {
@@ -320,6 +356,7 @@ function points(el, props) {
 
 	// initial draw must wait for loading
 	THREE.DefaultLoadingManager.onLoad = () => {
+		setPickingMap(sprite, pickingSprite);
 		animate();
 	};
 

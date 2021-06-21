@@ -41,6 +41,7 @@ div.mainDialog {
 .graph {
 	width: 100%;
 	height: 100%;
+	cursor: url(cursor.png) 12 12, crosshair;
 	/* don't allow graph size to change */
 /*	flex: 0 0 auto; */
 }
