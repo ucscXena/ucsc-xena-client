@@ -14,7 +14,9 @@ import Axes3d from './Axes3d';
 import Rx from '../rx';
 import {suitableColumns} from '../chart/utils';
 import * as colorScales from '../colorScales';
+var konami = require('../konami');
 
+var debug = false;
 
 function setPickingMap(sprite, pickingSprite) {
 	var img = sprite.image;
@@ -195,8 +197,16 @@ function points(el, props) {
 		return id;
 	}
 
+	var toggle = false;
 	function render() {
-		renderer.render(scene, camera);
+		if (toggle) {
+			renderer.render(pickingScene, camera);
+		} else {
+			renderer.render(scene, camera);
+		}
+		if (debug) {
+			toggle = !toggle;
+		}
 		controls.update();
 	}
 
@@ -445,6 +455,15 @@ var sideBar = el(SideBar);
 export class Map extends PureComponent {
 	state = {
 		tooltip: null
+	}
+	componentWillMount() {
+		var asciiC = 67;
+		this.ksub = konami(asciiC).subscribe(() => {
+			debug = true;
+		});
+	}
+	componentWillUnmount() {
+		this.ksub.unsubscribe();
 	}
 	onTooltip = i => {
 		if (i === null) {
