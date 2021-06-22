@@ -8,6 +8,7 @@ import {canvas, div, el, label, option, p, select, textNode}
 import * as THREE from 'three/build/three';
 import {OrbitControls} from './OrbitControls';
 import disc from './disc.png';
+import picker from './picker.png';
 var dialog = el(Dialog);
 var _ = require('../underscore_ext').default;
 import Axes3d from './Axes3d';
@@ -17,27 +18,6 @@ import * as colorScales from '../colorScales';
 var konami = require('../konami');
 
 var debug = false;
-
-function setPickingMap(sprite, pickingSprite) {
-	var img = sprite.image;
-	var {width, height} = img;
-	var c = pickingSprite.image;
-	c.width = width;
-	c.height = height;
-
-	var ctx = c.getContext('2d');
-	ctx.drawImage(img, 0, 0);
-	var data = ctx.getImageData(0, 0, width, height).data;
-	var data32 = new Uint32Array(data.buffer);
-	// trim the shadow
-	_.times(data32.length, i => {
-		if (data32[i] !== 0xffffffff) {
-			data32[i] = 0;
-		}
-	});
-	ctx.putImageData(new ImageData(data, width, height), 0, 0);
-	pickingSprite.needsUpdate = true;
-}
 
 var drawing = false; // XXX singleton
 
@@ -166,8 +146,7 @@ function points(el, props) {
 
 	var mouse = new THREE.Vector2();
 	var sprite = new THREE.TextureLoader().load(disc);
-	var pickingCanvas = document.createElement('canvas');
-	var pickingSprite = new THREE.Texture(pickingCanvas);
+	var pickingSprite = new THREE.TextureLoader().load(picker);
 	var scene = new THREE.Scene();
 	var pickingScene = new THREE.Scene();
 	var pickingTarget = new THREE.WebGLRenderTarget(1, 1);
@@ -370,7 +349,6 @@ function points(el, props) {
 
 	// initial draw must wait for loading
 	THREE.DefaultLoadingManager.onLoad = () => {
-		setPickingMap(sprite, pickingSprite);
 		animate();
 	};
 
