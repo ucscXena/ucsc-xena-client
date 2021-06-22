@@ -453,9 +453,9 @@ export class Map extends PureComponent {
 		}
 		var {state} = this.props;
 		var sampleID = state.cohortSamples[i];
-		var colorID = state.map.colorColumn;
+		var colorID = state.map.colorColumn || 'none';
 		var value, valTxt;
-		if (colorID) {
+		if (colorID !== 'none') {
 			value = state.data[colorID].req.values[0][i];
 			valTxt = _.get(state.data[colorID].codes, value, String(value));
 		}
