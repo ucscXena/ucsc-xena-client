@@ -62,7 +62,11 @@ var pickingClone = (sprite, len) => points => {
 			c.setHex(i);
 			return [c.r, c.g, c.b];
 		}).flat();
-	material.map = sprite;
+	// If we use map, a shadow is drawn between overlapping points. The
+	// shadow color will alias with other points.
+	// If we use alphamap, there's no shadow.
+	material.map = undefined;
+	material.alphaMap = sprite;
 	material.needsUpdate = true;
 	geometry.setAttribute('color', new THREE.Float32BufferAttribute(color, 3));
 	return new THREE.Points(geometry, material);
