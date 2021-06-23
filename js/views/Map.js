@@ -329,7 +329,10 @@ function points(el, props) {
 
 	function update(newProps) {
 		if (_.isEqual(newProps.data.columns, props.data.columns)) {
-			setGroups(newProps);
+			if (!_.isEqual(newProps.data.colorColumn, props.data.colorColumn)) {
+				lastColor = undefined; // XXX this is pretty horrible, as state management.
+				setGroups(newProps);
+			}
 			if (!_.isEqual(newProps.data.view, props.data.view)) {
 				setView(newProps.data.view);
 			}
