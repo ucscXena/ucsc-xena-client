@@ -15,6 +15,7 @@ import Axes3d from './Axes3d';
 import Rx from '../rx';
 import {suitableColumns} from '../chart/utils';
 import * as colorScales from '../colorScales';
+var {rxEvents} = require('../react-utils');
 var konami = require('../konami');
 
 var debug = false;
@@ -269,6 +270,11 @@ function points(el, props) {
 		pickingGroups.forEach(g => pickingScene.add(g));
 	}
 
+	function setView({position, target}) {
+		camera.position.set(...position);
+		controls.target.set(...target);
+	}
+
 	function init(props) {
 		twoD = props.data.columns.length === 2;
 		var min = _.minnull(props.data.columns.map(_.minnull)),
@@ -290,26 +296,28 @@ function points(el, props) {
 
 		var c = (max + min) / 2;
 		if (twoD) {
-			camera.position.z = c + (max - min);
-			camera.position.y = c;
-			camera.position.x = c;
-		} else {
-			camera.position.z = min + 2 * (max - min);
-			camera.position.y = max + (max - min);
-			camera.position.x = max + (max - min);
-		}
-
-		if (twoD) {
 			controls.maxDistance =  2 * (max - min);
 			controls.minDistance = .10 * (max - min);
 		} else {
 			controls.maxDistance =  2 * (max - min);
 			controls.minDistance = .25 * (max - min);
 		}
-		controls.target = new THREE.Vector3(c, c, twoD ? 0 : c);
-		if (twoD) {
-			controls.enableRotate = false;
+		if (props.data.view) {
+			setView(props.data.view);
+		} else {
+			if (twoD) {
+				camera.position.z = c + (max - min);
+				camera.position.y = c;
+				camera.position.x = c;
+			} else {
+				camera.position.z = min + 2 * (max - min);
+				camera.position.y = max + (max - min);
+				camera.position.x = max + (max - min);
+			}
+
+			controls.target = new THREE.Vector3(c, c, twoD ? 0 : c);
 		}
+		controls.enableRotate = !twoD;
 
 		controls.update();
 		// Force update so we can compute camera distance from labels on the
@@ -322,6 +330,9 @@ function points(el, props) {
 	function update(newProps) {
 		if (_.isEqual(newProps.data.columns, props.data.columns)) {
 			setGroups(newProps);
+			if (!_.isEqual(newProps.data.view, props.data.view)) {
+				setView(newProps.data.view);
+			}
 		} else {
 			init(newProps);
 		}
@@ -334,6 +345,7 @@ function points(el, props) {
 			requestAnimationFrame(animate);
 			drawing = true;
 		}
+		props.onMove({position: camera.position.toArray(), target: controls.target.toArray()});
 	});
 
 	// 'onclick' event will fire even if there is a drag, which
@@ -361,25 +373,30 @@ class MapDrawing extends Component {
 	}
 
 	componentDidMount() {
-		var {onTooltip, data} = this.props;
-		this.update = points(this.refs.map, {onTooltip, data});
+		var {onTooltip, onMove, data} = this.props;
+		var events = rxEvents(this, 'move');
+		this.move = events.move
+			.debounceTime(1000)
+			.subscribe(onMove);
+
+		this.update = points(this.refs.map, {onTooltip, onMove: this.on.move, data});
 	}
 
 	componentWillReceiveProps(newProps) {
 		var {onTooltip, data} = newProps;
 		if (!_.isEqual(this.props, newProps)) {
-			this.update({onTooltip, data});
+			this.update({onTooltip, onMove: this.on.move, data});
 		}
 	}
 
 	componentWillUnmount() {
 		drawing = false; // XXX is this necessary?
+		this.move.unsubscribe();
 	}
 
 	render() {
 		return canvas({ref: 'map', className: styles.graph});
 	}
-
 }
 
 var mapDrawing = el(MapDrawing);
@@ -447,6 +464,9 @@ export class Map extends PureComponent {
 	componentWillUnmount() {
 		this.ksub.unsubscribe();
 	}
+	onMove = pos => {
+		this.props.callback(['map-view', pos]);
+	}
 	onTooltip = i => {
 		if (i === null) {
 			this.setState({tooltip: null});
@@ -480,7 +500,7 @@ export class Map extends PureComponent {
 				className: styles.mainDialogClose,
 				onClick: this.onHide
 			}],
-			{onTooltip, onColor, onMap, state: {tooltip}, props: {state}} = this;
+			{onTooltip, onMove, onColor, onMap, state: {tooltip}, props: {state}} = this;
 
 		var mapState = _.get(state, 'map'),
 			[dsID, params] = _.get(mapState, 'map', []),
@@ -494,10 +514,11 @@ export class Map extends PureComponent {
 			availableMaps = state.map.available,
 			mapValue = _.findIndex(availableMaps,
 				_.partial(_.isEqual, _.get(mapState, 'map'))),
+			view = _.get(mapState, 'view'),
 			labels = _.get(params, 'dimension', []);
 
 		var data = _.every(columns, _.identity) ?
-			{columns, colorColumn, colors, labels} : undefined;
+			{columns, colorColumn, colors, labels, view} : undefined;
 
 		return dialog({active: true, actions, onEscKeyDown: this.onHide,
 					onOverlayClick: this.onHide,
@@ -505,7 +526,7 @@ export class Map extends PureComponent {
 					theme: {wrapper: styles.dialogWrapper,
 						overlay: styles.dialogOverlay}},
 				div({className: styles.content},
-					data ? mapDrawing({onTooltip, data}) : 'spin spin spin',
+					data ? mapDrawing({onTooltip, onMove, data}) : 'spin spin spin',
 					sideBar({tooltip, state, maps: availableMaps, mapValue, onColor, onMap})));
 	}
 }
