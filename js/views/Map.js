@@ -3,7 +3,7 @@ import Dialog from 'react-toolbox/lib/dialog';
 import {Component} from 'react';
 import PureComponent from '../PureComponent';
 import styles from './Map.module.css';
-import {canvas, div, el, label, option, p, select, textNode}
+import {a, canvas, div, el, label, option, p, select, textNode}
 	from '../chart/react-hyper.js';
 import * as THREE from 'three/build/three';
 import {OrbitControls} from './OrbitControls';
@@ -19,6 +19,7 @@ var {rxEvents} = require('../react-utils');
 var konami = require('../konami');
 
 var debug = false;
+var radeon = false;
 
 var drawing = false; // XXX singleton
 
@@ -181,6 +182,22 @@ function points(el, props) {
 		return id;
 	}
 
+	function pickRadeon() {
+		var pickingTarget = new THREE.WebGLRenderTarget(~~width, ~~height); // allocate elsewhere
+		renderer.setRenderTarget(pickingTarget);
+		renderer.render(pickingScene, camera);
+
+		const pixelBuffer = new Uint8Array(4);
+		var y = ~~(height - mouse.y * window.devicePixelRatio);
+		var x = mouse.x * window.devicePixelRatio | 0;
+		renderer.readRenderTargetPixels(pickingTarget, x, y, 1, 1, pixelBuffer);
+
+		//interpret the pixel as an ID
+		const id = pixelBuffer[0] << 16 | pixelBuffer[1] << 8 | pixelBuffer[2];
+		renderer.setRenderTarget(null);
+		return id;
+	}
+
 	var toggle = false;
 	function render() {
 		if (toggle) {
@@ -231,7 +248,7 @@ function points(el, props) {
 			lastColor = undefined;
 		}
 
-		var i = pick();
+		var i = radeon ? pickRadeon() : pick();
 		if (i != null) {
 			lastColorI = i;
 			lastColor = [
@@ -435,6 +452,13 @@ function mapSelector(availableMaps, value, onChange) {
 }
 
 export class SideBar extends PureComponent {
+	state = {
+		radeon
+	}
+	onRadeon = () => {
+		this.setState({radeon: !radeon});
+		radeon = !radeon;
+	}
 	onColor = ev => {
 		this.props.onColor(ev.currentTarget.value);
 	}
@@ -447,6 +471,8 @@ export class SideBar extends PureComponent {
 		return div({className: styles.sideBar},
 			mapSelector(maps, mapValue, this.onMap),
 			colorSelector(state, this.onColor),
+			a({onClick: this.onRadeon},
+				(radeon ? 'Disable' : 'Enable') + ' radeon'),
 			tooltip && p(`Sample ${tooltip.sampleID}`),
 			tooltip && tooltip.valTxt ? p(`Value: ${tooltip.valTxt}`) : null);
 	}
