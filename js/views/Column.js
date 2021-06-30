@@ -12,7 +12,6 @@ var aboutDatasetMenu = require('./aboutDatasetMenu');
 import spinner from '../ajax-loader.gif';
 var mutationVector = require('../models/mutationVector');
 //var ValidatedInput = require('./ValidatedInput');
-var konami = require('../konami');
 var Crosshair = require('./Crosshair');
 var parsePos = require('../parsePos');
 var {categoryMore} = require('../colorScales');
@@ -371,12 +370,7 @@ function getPosition(maxXZoom, pStart, pEnd) {
 			end <= maxXZoom.end) ? {start, end} : null;
 }
 
-var specialDownloadMenu = false;
 //var annotationHelpText =  'Drag zoom. Shift-click zoom out.';
-
-if (process.env.NODE_ENV !== 'production') {
-	specialDownloadMenu = true;
-}
 
 // For geneProbes we will average across probes to compute KM. For
 // other types, we can't support multiple fields.
@@ -457,7 +451,6 @@ export default class Column extends PureComponent {
 	state = {
 		dragZoom: {},
 		subColumnIndex: {},
-		specialDownloadMenu: specialDownloadMenu,
 		showGeneSetWizard: false,
 		geneSetUrl: undefined,
 
@@ -474,10 +467,6 @@ export default class Column extends PureComponent {
 	//				{target}
 	//			</OverlayTrigger>);
 	//	},
-	enableHiddenFeatures = () => {
-		specialDownloadMenu = true;
-		this.setState({specialDownloadMenu: true});
-	};
 
 	toggleInteractive = (interactive) => {
 		this.props.onInteractive('zoom', interactive);
@@ -496,13 +485,7 @@ export default class Column extends PureComponent {
 	};
 
 	componentWillMount() {
-		var asciiA = 65;
-		this.ksub = konami(asciiA).subscribe(this.enableHiddenFeatures);
 		this.initSubColumnIndex();
-	}
-
-	componentWillUnmount() {
-		this.ksub.unsubscribe();
 	}
 
 	onResizeStop = (size) => {
@@ -823,7 +806,7 @@ export default class Column extends PureComponent {
 				zoom, data, fieldFormat, sampleFormat, hasSurvival, searching,
 				onClick, tooltip, wizardMode, onReset,
 				pickSamples, interactive, append, cohort, tumorMap} = this.props,
-			{specialDownloadMenu, dragZoom, subColumnIndex} = this.state,
+			{dragZoom, subColumnIndex} = this.state,
 			{selection} = dragZoom,
 			zoomMethod = pickSamples ? {
 					onDrag: this.onPickSamplesDrag,
@@ -837,7 +820,7 @@ export default class Column extends PureComponent {
 			thisTumorMap = _.getIn(tumorMap, [cohort.name]),
 			menu = optionMenu(this.props, {onMode, onMuPit, onTumorMap, thisTumorMap,
 				onShowIntrons, onSortVisible, onCluster, onSpecialDownload,
-				onDiff, specialDownloadMenu, isSig}),
+				onDiff, isSig}),
 			[kmDisabled, kmTitle] = disableKM(column, hasSurvival),
 			chartDisabled = disableChart(column),
 	    canDoGeneSetComparison = false && this.canDoGeneSetComparison(),
